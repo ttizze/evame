@@ -6,17 +6,12 @@ import { useFetcher } from "@remix-run/react";
 import type { MetaFunction } from "@remix-run/react";
 import { useSearchParams } from "@remix-run/react";
 import Linkify from "linkify-react";
-import { Lock, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import { useState } from "react";
+import { PageCard } from "~/components/PageCard";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "~/components/ui/card";
+import { CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import {
 	Pagination,
 	PaginationContent,
@@ -27,10 +22,8 @@ import {
 	PaginationPrevious,
 } from "~/components/ui/pagination";
 import i18nServer from "~/i18n.server";
-import { LikeButton } from "~/routes/resources+/like-button";
 import { authenticator } from "~/utils/auth.server";
 import { DeletePageDialog } from "./components/DeletePageDialog";
-import { PageActionsDropdown } from "./components/PageActionsDropdown";
 import {
 	archivePage,
 	togglePagePublicStatus,
@@ -185,43 +178,15 @@ export default function UserPage() {
 			</div>
 			<div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
 				{sanitizedUserWithPages.pages.map((page) => (
-					<Card
+					<PageCard
 						key={page.id}
-						className="h-full relative  w-full overflow-hidden"
-					>
-						{isOwner && (
-							<div className="absolute top-2 right-2">
-								<PageActionsDropdown
-									editPath={`/${sanitizedUserWithPages.userName}/page/${page.slug}/edit`}
-									onTogglePublic={() => togglePagePublicStatus(page.id)}
-									onDelete={() => handleArchive(page.id)}
-									isPublished={page.isPublished}
-								/>
-							</div>
-						)}
-						<CardHeader>
-							<Link
-								to={`/${sanitizedUserWithPages.userName}/page/${page.slug}`}
-								key={page.id}
-								className="h-full"
-							>
-								<CardTitle className="flex items-center pr-3 break-all overflow-wrap-anywhere">
-									{page.isPublished ? "" : <Lock className="h-4 w-4 mr-2" />}
-									{page.title}
-								</CardTitle>
-							</Link>
-							<CardDescription>{page.createdAt}</CardDescription>
-						</CardHeader>
-						<CardContent className="flex justify-end">
-							<LikeButton
-								liked={page.likePages.length > 0}
-								likeCount={page._count.likePages}
-								slug={page.slug}
-								showCount
-								className=" justify-self-end"
-							/>
-						</CardContent>
-					</Card>
+						pageCard={page}
+						pageLink={`/${sanitizedUserWithPages.userName}/page/${page.slug}`}
+						userLink={`/${sanitizedUserWithPages.userName}`}
+						showOwnerActions={isOwner}
+						onTogglePublicStatus={togglePagePublicStatus}
+						onArchive={handleArchive}
+					/>
 				))}
 			</div>
 

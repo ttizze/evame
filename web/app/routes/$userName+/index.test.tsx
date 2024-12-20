@@ -83,7 +83,7 @@ describe("UserProfile", () => {
 
 		render(<RemixStub initialEntries={["/testuser"]} />);
 
-		expect(await screen.findByText("Test User")).toBeInTheDocument();
+		expect((await screen.findAllByText("Test User"))[0]).toBeInTheDocument();
 		expect(
 			await screen.findByText("This is a test profile"),
 		).toBeInTheDocument();
@@ -110,7 +110,7 @@ describe("UserProfile", () => {
 		]);
 		render(<RemixStub initialEntries={["/testuser"]} />);
 
-		expect(await screen.findByText("Test User")).toBeInTheDocument();
+		expect((await screen.findAllByText("Test User"))[0]).toBeInTheDocument();
 		expect(
 			await screen.findByText("This is a test profile"),
 		).toBeInTheDocument();

@@ -6,7 +6,7 @@ export async function fetchPaginatedPublicPages(
 	currentUserId?: number,
 ) {
 	const skip = (page - 1) * pageSize;
-	const [pages, totalCount] = await Promise.all([
+	const [pagesWithInfo, totalCount] = await Promise.all([
 		prisma.page.findMany({
 			where: {
 				isPublished: true,
@@ -25,6 +25,8 @@ export async function fetchPaginatedPublicPages(
 			select: {
 				id: true,
 				slug: true,
+				title: true,
+				isPublished: true,
 				createdAt: true,
 				user: {
 					select: {
@@ -64,16 +66,14 @@ export async function fetchPaginatedPublicPages(
 			},
 		}),
 	]);
-	const pagesWithTitle = pages.map((page) => {
-		return {
-			...page,
-			title: page.sourceTexts.filter((item) => item.number === 0)[0].text,
-		};
-	});
 
 	return {
-		pages: pagesWithTitle,
+		pagesWithInfo,
 		totalPages: Math.ceil(totalCount / pageSize),
 		currentPage: page,
 	};
 }
+
+export type FetchPaginatedPublicPagesReturn = Awaited<
+	ReturnType<typeof fetchPaginatedPublicPages>
+>;

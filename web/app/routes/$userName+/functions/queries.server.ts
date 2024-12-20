@@ -64,6 +64,11 @@ export async function fetchSanitizedUserWithPages(
 	const pages = user.pages.map((page) => ({
 		...page,
 		title: page.sourceTexts.filter((item) => item.number === 0)[0]?.text,
+		user: {
+			userName: user.userName,
+			displayName: user.displayName,
+			icon: user.icon,
+		},
 	}));
 
 	const sanitizedUser = sanitizeUser(user);
