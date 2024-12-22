@@ -47,7 +47,7 @@ export function TranslationSection({
 				<>
 					<div className="flex items-center justify-end">
 						<Link
-							to={`/${bestTranslationWithVote?.user.userName}`}
+							to={`/user/${bestTranslationWithVote?.user.userName}`}
 							className="!no-underline mr-2"
 						>
 							<p className="text-sm text-gray-500 text-right flex justify-end items-center">

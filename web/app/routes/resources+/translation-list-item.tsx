@@ -81,7 +81,7 @@ export function TranslationListItem({
 			</div>
 			<div className="flex items-center justify-end">
 				<Link
-					to={`/${translation.user.userName}`}
+					to={`/user/${translation.user.userName}`}
 					className="!no-underline mr-2"
 				>
 					<p className="text-sm text-gray-500 text-right flex justify-end items-center  ">

@@ -26,12 +26,12 @@ export const handle: SEOHandle = {
 		]);
 
 		const pageEntries = pages.map((page) => ({
-			route: `/${page.user.userName}/page/${page.slug}`,
+			route: `/user/${page.user.userName}/page/${page.slug}`,
 			lastmod: page.updatedAt.toISOString(),
 		}));
 
 		const userEntries = users.map((user) => ({
-			route: `/${user.userName}`,
+			route: `/user/${user.userName}`,
 			lastmod: user.updatedAt.toISOString(),
 		}));
 
