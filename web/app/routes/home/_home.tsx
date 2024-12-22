@@ -1,16 +1,9 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { data } from "@remix-run/node";
-import { Link, useLoaderData, useSearchParams } from "@remix-run/react";
+import { useLoaderData, useSearchParams } from "@remix-run/react";
 import type { MetaFunction } from "@remix-run/react";
 import { CalendarPlus } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "~/components/ui/card";
+import { PageCard } from "~/components/PageCard";
 import {
 	Pagination,
 	PaginationContent,
@@ -21,10 +14,8 @@ import {
 	PaginationPrevious,
 } from "~/components/ui/pagination";
 import i18nServer from "~/i18n.server";
-import { LikeButton } from "~/routes/resources+/like-button";
 import { authenticator } from "~/utils/auth.server";
 import { fetchPaginatedPublicPages } from "./functions/queries.server";
-
 export const meta: MetaFunction = () => {
 	return [{ title: "Home - Latest Pages" }];
 };
@@ -69,49 +60,12 @@ export default function Home() {
 			</h1>
 			<div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
 				{pagesWithInfoAndLocaleDate.map((page) => (
-					<Card
+					<PageCard
 						key={page.id}
-						className="h-full relative w-full overflow-hidden"
-					>
-						<CardHeader>
-							<Link
-								to={`/${page.user.userName}/page/${locale}/${page.slug}`}
-								className="block"
-							>
-								<CardTitle className="flex items-center pr-3 break-all overflow-wrap-anywhere">
-									{page.title}
-								</CardTitle>
-								<CardDescription>{page.createdAt}</CardDescription>
-							</Link>
-						</CardHeader>
-						<CardContent>
-							<div className="flex justify-between items-center">
-								<Link
-									to={`/${page.user.userName}`}
-									className="flex items-center"
-								>
-									<Avatar className="w-6 h-6 mr-2">
-										<AvatarImage
-											src={page.user.icon}
-											alt={page.user.displayName}
-										/>
-										<AvatarFallback>
-											{page.user.displayName.charAt(0).toUpperCase()}
-										</AvatarFallback>
-									</Avatar>
-									<span className="text-sm text-gray-600">
-										{page.user.displayName}
-									</span>
-								</Link>
-								<LikeButton
-									liked={page.likePages.length > 0}
-									likeCount={page._count.likePages}
-									slug={page.slug}
-									showCount
-								/>
-							</div>
-						</CardContent>
-					</Card>
+						pageCard={page}
+						pageLink={`/${page.user.userName}/page/${page.slug}`}
+						userLink={`/${page.user.userName}`}
+					/>
 				))}
 			</div>
 			<div className="mt-8 flex justify-center">

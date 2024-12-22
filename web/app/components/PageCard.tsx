@@ -16,11 +16,10 @@ import type { PageCardType } from "~/routes/types";
 type PageCardProps = {
 	pageCard: PageCardType;
 	pageLink: string;
-	userLink?: string;
+	userLink: string;
 	showOwnerActions?: boolean;
 	onTogglePublicStatus?: (pageId: number) => void;
 	onArchive?: (pageId: number) => void;
-	showUserInfo?: boolean;
 };
 
 export function PageCard({
@@ -30,7 +29,6 @@ export function PageCard({
 	showOwnerActions = false,
 	onTogglePublicStatus,
 	onArchive,
-	showUserInfo = false,
 }: PageCardProps) {
 	return (
 		<Card className="h-full relative w-full overflow-hidden">
@@ -55,22 +53,21 @@ export function PageCard({
 			</CardHeader>
 			<CardContent>
 				<div className="flex justify-between items-center">
-					{showUserInfo && userLink && (
-						<Link to={userLink} className="flex items-center">
-							<Avatar className="w-6 h-6 mr-2">
-								<AvatarImage
-									src={pageCard.user.icon}
-									alt={pageCard.user.displayName}
-								/>
-								<AvatarFallback>
-									{pageCard.user.displayName.charAt(0).toUpperCase()}
-								</AvatarFallback>
-							</Avatar>
-							<span className="text-sm text-gray-600">
-								{pageCard.user.displayName}
-							</span>
-						</Link>
-					)}
+					<Link to={userLink} className="flex items-center">
+						<Avatar className="w-6 h-6 mr-2">
+							<AvatarImage
+								src={pageCard.user.icon}
+								alt={pageCard.user.displayName}
+							/>
+							<AvatarFallback>
+								{pageCard.user.displayName.charAt(0).toUpperCase()}
+							</AvatarFallback>
+						</Avatar>
+						<span className="text-sm text-gray-600">
+							{pageCard.user.displayName}
+						</span>
+					</Link>
+
 					<LikeButton
 						liked={pageCard.likePages.length > 0}
 						likeCount={pageCard._count.likePages}

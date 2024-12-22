@@ -41,8 +41,9 @@ async function addRequiredData() {
 		{
 			text: "Evame is an innovative open-source platform that enables everyone to read articles in their native language, regardless of the original language. Through user-contributed content and collaborative translations, we break down language barriers, fostering global understanding and knowledge sharing.",
 			number: 1,
+			textAndOccurrenceHash:
+				"evame-is-an-innovative-open-source-platform-that-enables-everyone-to-read-articles-in-their-native-language-regardless-of-the-original-language-through-user-contributed-content-and-collaborative-translations-we-break-down-language-barriers-fostering-global-understanding-and-knowledge-sharing",
 			pageId: evameEnPage.id,
-			textAndOccurrenceHash: "evame-is-an-innovative-open-source-platform-that-enables-everyone-to-read-articles-in-their-native-language-regardless-of-the-original-language-through-user-contributed-content-and-collaborative-translations-we-break-down-language-barriers-fostering-global-understanding-and-knowledge-sharing",
 			translations: [
 				{
 					text: "Evameは、誰もが母国語で文章を読めるようにする革新的なオープンソースプラットフォームです。ユーザーによる投稿と翻訳を通じて、言語の障壁を取り除き、世界中の理解と知識の共有を促進します。",
@@ -66,7 +67,8 @@ async function addRequiredData() {
 			text: "Evameは、誰もが母国語で文章を読めるようにする革新的なオープンソースプラットフォームです。ユーザーによる投稿と翻訳を通じて、言語の障壁を取り除き、世界中の理解と知識の共有を促進します。",
 			number: 1,
 			pageId: evameJaPage.id,
-			textAndOccurrenceHash: "evame-is-an-innovative-open-source-platform-that-enables-everyone-to-read-articles-in-their-native-language-regardless-of-the-original-language-through-user-contributed-content-and-collaborative-translations-we-break-down-language-barriers-fostering-global-understanding-and-knowledge-sharing",
+			textAndOccurrenceHash:
+				"evame-is-an-innovative-open-source-platform-that-enables-everyone-to-read-articles-in-their-native-language-regardless-of-the-original-language-through-user-contributed-content-and-collaborative-translations-we-break-down-language-barriers-fostering-global-understanding-and-knowledge-sharing",
 			translations: [
 				{
 					text: "Evame is an innovative open-source platform that enables everyone to read articles in their native language, regardless of the original language. Through user-contributed content and collaborative translations, we break down language barriers, fostering global understanding and knowledge sharing.",
@@ -141,9 +143,9 @@ async function upsertSourceTextWithTranslations(
 		update: {},
 		create: {
 			text: sourceText.text,
-			textAndOccurrenceHash: sourceText.textAndOccurrenceHash,
 			number: sourceText.number,
 			pageId: sourceText.pageId,
+			textAndOccurrenceHash: sourceText.textAndOccurrenceHash,
 		},
 	});
 
