@@ -22,6 +22,7 @@ interface LocaleSelectorProps {
 	locale: string;
 }
 
+//TODOradix uiのせいで開発環境のモバイルで文字がぼける androidでもボケてたら対応する
 export default function LocaleSelector({ locale }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
 	const [currentLocale, setCurrentLocale] = useState(locale);
