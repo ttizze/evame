@@ -5,7 +5,6 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { useLocation } from "@remix-run/react";
 import { useNavigation } from "@remix-run/react";
-import { Link } from "@remix-run/react";
 import { CheckCircle } from "lucide-react";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
@@ -16,7 +15,7 @@ import { Separator } from "~/components/ui/separator";
 import { sessionStorage } from "~/utils/session.server";
 import { authenticator } from "../../../../utils/auth.server";
 import { GoogleForm } from "../../../resources+/google-form";
-
+import { LocaleLink } from "~/components/LocaleLink";
 const loginSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),
 });
@@ -130,13 +129,13 @@ export default function LoginPage() {
 					</Form>
 					<div className="text-center text-sm text-gray-500 my-2">
 						Login means you agree to our{" "}
-						<Link to="/terms" className="underline">
+						<LocaleLink to="/terms" className="underline">
 							Terms of Service
-						</Link>{" "}
+						</LocaleLink>{" "}
 						and{" "}
-						<Link to="/privacy" className="underline">
+						<LocaleLink to="/privacy" className="underline">
 							Privacy Policy
-						</Link>
+						</LocaleLink>
 					</div>
 				</CardContent>
 			</Card>

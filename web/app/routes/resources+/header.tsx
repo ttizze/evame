@@ -1,7 +1,7 @@
 import { data } from "@remix-run/node";
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
-import { NavLink } from "@remix-run/react";
+import { NavLocaleLink } from "~/components/NavLocaleLink";
 import { Search } from "lucide-react";
 import { BaseHeaderLayout } from "~/components/BaseHeaderLayout";
 import { StartButton } from "~/components/StartButton";
@@ -37,7 +37,7 @@ export async function action({ request }: ActionFunctionArgs) {
 export function Header({ currentUser }: HeaderProps) {
 	const rightExtra = (
 		<>
-			<NavLink
+			<NavLocaleLink
 				to="/search"
 				className={({ isPending }) =>
 					isPending
@@ -46,7 +46,7 @@ export function Header({ currentUser }: HeaderProps) {
 				}
 			>
 				<Search className="w-6 h-6 " />
-			</NavLink>
+			</NavLocaleLink>
 			{currentUser ? (
 				<NewPageButton userName={currentUser.userName} />
 			) : (

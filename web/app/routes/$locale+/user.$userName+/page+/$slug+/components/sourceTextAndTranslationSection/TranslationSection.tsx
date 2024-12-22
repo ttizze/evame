@@ -1,4 +1,4 @@
-import { Link } from "@remix-run/react";
+import { LocaleLink } from "~/components/LocaleLink";
 import { Languages, Plus } from "lucide-react";
 import { useState } from "react";
 import { useHydrated } from "remix-utils/use-hydrated";
@@ -46,14 +46,14 @@ export function TranslationSection({
 			{isSelected && (
 				<>
 					<div className="flex items-center justify-end">
-						<Link
+						<LocaleLink
 							to={`/user/${bestTranslationWithVote?.user.userName}`}
 							className="!no-underline mr-2"
 						>
 							<p className="text-sm text-gray-500 text-right flex justify-end items-center">
 								by: {bestTranslationWithVote?.user.displayName}
 							</p>
-						</Link>
+						</LocaleLink>
 						<VoteButtons translationWithVote={bestTranslationWithVote} />
 					</div>
 					<AddAndVoteTranslations

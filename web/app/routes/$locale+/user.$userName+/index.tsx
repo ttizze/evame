@@ -32,6 +32,7 @@ import {
 	fetchPageById,
 	fetchSanitizedUserWithPages,
 } from "./functions/queries.server";
+import { LocaleLink } from "~/components/LocaleLink";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
@@ -160,11 +161,11 @@ export default function UserPage() {
 							<CardTitle className="text-2xl font-bold flex justify-between items-center">
 								<div>{sanitizedUserWithPages.displayName}</div>
 								{isOwner && (
-									<Link to={`/user/${sanitizedUserWithPages.userName}/edit`}>
+									<LocaleLink to={`/user/${sanitizedUserWithPages.userName}/edit`}>
 										<Button variant="ghost">
 											<Settings className="w-6 h-6" />
 										</Button>
-									</Link>
+									</LocaleLink>
 								)}
 							</CardTitle>
 						</CardHeader>

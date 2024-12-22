@@ -1,4 +1,4 @@
-import { NavLink } from "@remix-run/react";
+import { NavLocaleLink } from "~/components/NavLocaleLink";
 import { MoreVertical } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -36,7 +36,7 @@ export function PageActionsDropdown({
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				<DropdownMenuItem asChild>
-					<NavLink to={editPath}>Edit</NavLink>
+					<NavLocaleLink to={editPath}>Edit</NavLocaleLink>
 				</DropdownMenuItem>
 				<DropdownMenuItem onSelect={onTogglePublic}>
 					{isPublished ? "Make Private" : "Make Public"}

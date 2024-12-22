@@ -3,13 +3,13 @@ import { getZodConstraint, parseWithZod } from "@conform-to/zod";
 import type { ActionFunctionArgs } from "@remix-run/node";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { useActionData, useNavigation } from "@remix-run/react";
-import { Link } from "@remix-run/react";
 import { Form } from "@remix-run/react";
 import type { MetaFunction } from "@remix-run/react";
 import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { authenticator } from "~/utils/auth.server";
+import { LocaleLink } from "~/components/LocaleLink";
 import { searchTitle } from "./functions/queries.server";
 
 export const meta: MetaFunction = () => {
@@ -79,12 +79,12 @@ export default function Search() {
 										key={result.id}
 										className="hover:bg-gray-300 dark:hover:bg-gray-700 transition duration-150 rounded-lg"
 									>
-										<Link
+										<LocaleLink
 											to={`/user/${result.user.userName}/page/${encodeURIComponent(result.slug)}`}
 											className="block p-2 text-inherit no-underline"
 										>
 											<h3 className="font-bold">{result.title}</h3>
-										</Link>
+										</LocaleLink>
 									</li>
 								))}
 							</ul>

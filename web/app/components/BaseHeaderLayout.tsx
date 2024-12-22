@@ -1,4 +1,6 @@
 import { Link } from "@remix-run/react";
+import { LocaleLink } from "~/components/LocaleLink";
+import { NavLocaleLink } from "~/components/NavLocaleLink";
 import { Form, NavLink } from "@remix-run/react";
 import { LogOutIcon, SettingsIcon } from "lucide-react";
 import type { ReactNode } from "react";
@@ -30,14 +32,14 @@ export function BaseHeaderLayout({
 		<header className="z-10 w-full">
 			<div className="max-w-7xl mx-auto py-2 md:py-4 px-2 md:px-6 lg:px-8 flex justify-between items-center">
 				<div className="flex items-center gap-4">
-					<Link to="/home" className="flex items-center">
+					<LocaleLink to="/home" className="flex items-center">
 						<img
 							src="/logo.svg"
 							alt="Evame"
 							className="h-8 w-20 dark:invert"
 							aria-label="Evame Logo"
 						/>
-					</Link>
+					</LocaleLink>
 					{leftExtra}
 				</div>
 				<div className="flex items-center gap-4">
@@ -57,7 +59,7 @@ export function BaseHeaderLayout({
 							</DropdownMenuTrigger>
 							<DropdownMenuContent className="m-2 p-0 rounded-xl min-w-40">
 								<DropdownMenuItem asChild>
-									<NavLink
+									<NavLocaleLink
 										to={`/user/${currentUser.userName}`}
 										className={({ isPending }) =>
 											isPending
@@ -71,11 +73,11 @@ export function BaseHeaderLayout({
 												@{currentUser.userName}
 											</span>
 										</div>
-									</NavLink>
+									</NavLocaleLink>
 								</DropdownMenuItem>
 								<DropdownMenuSeparator className="my-0" />
 								<DropdownMenuItem asChild>
-									<NavLink
+									<NavLocaleLink
 										to={`/user/${currentUser.userName}/page-management`}
 										className={({ isPending }) =>
 											isPending
@@ -85,7 +87,7 @@ export function BaseHeaderLayout({
 									>
 										<SettingsIcon className="w-4 h-4" />
 										Page Management
-									</NavLink>
+									</NavLocaleLink>
 								</DropdownMenuItem>
 								<DropdownMenuItem asChild>
 									<ModeToggle />

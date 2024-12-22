@@ -1,5 +1,5 @@
 import type { UserAITranslationInfo } from "@prisma/client";
-import { Link } from "@remix-run/react";
+import { LocaleLink } from "~/components/LocaleLink";
 import { Hash, Loader2 } from "lucide-react";
 import { useHydrated } from "remix-utils/use-hydrated";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -65,8 +65,8 @@ export function ContentWithTranslations({
 			</div>
 
 			<div className="flex items-center not-prose">
-				<Link
-					to={`/${pageWithTranslations.user.userName}`}
+				<LocaleLink
+					to={`/user/${pageWithTranslations.user.userName}`}
 					className="flex items-center mr-2 !no-underline hover:text-gray-700"
 				>
 					<Avatar className="w-12 h-12 flex-shrink-0 mr-3 ">
@@ -86,7 +86,7 @@ export function ContentWithTranslations({
 							{pageWithTranslations.page.createdAt}
 						</span>
 					</div>
-				</Link>
+				</LocaleLink>
 			</div>
 			<TranslateActionSection
 				pageId={pageWithTranslations.page.id}

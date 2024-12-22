@@ -1,6 +1,5 @@
 import { useSearchParams } from "@remix-run/react";
 import { useFetcher } from "@remix-run/react";
-import { Link } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -25,6 +24,7 @@ import {
 import { DeletePageDialog } from "../../components/DeletePageDialog";
 import { PageActionsDropdown } from "../../components/PageActionsDropdown";
 import type { PageWithTitle } from "../types";
+import { LocaleLink } from "~/components/LocaleLink";
 interface PageManagementTabProps {
 	pagesWithTitle: PageWithTitle[];
 	totalPages: number;
@@ -183,9 +183,9 @@ export function PageManagementTab({
 									/>
 								</TableCell>
 								<TableCell className="font-medium">
-									<Link to={`/user/${userName}/page/${pageWithTitle.slug}`}>
+									<LocaleLink to={`/user/${userName}/page/${pageWithTitle.slug}`}>
 										{pageWithTitle.title}
-									</Link>
+									</LocaleLink>
 								</TableCell>
 								<TableCell>
 									{getStatusBadge(pageWithTitle.isPublished)}
