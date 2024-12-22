@@ -25,7 +25,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		const user = await authenticator.authenticate("google", request);
 
 		if (user) {
-			return redirect(`/${user.userName}`);
+			return redirect(`/user/${user.userName}`);
 		}
 
 		return redirect("/auth/login");
