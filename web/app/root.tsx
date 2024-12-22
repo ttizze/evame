@@ -81,7 +81,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 	const data = useRouteLoaderData<typeof loader>("root");
 	const { gaTrackingId, locale } = data ?? {};
 	const location = useLocation();
-	const isEditorPage = /^\/[\w-]+\/[\w-]+\/page\/[\w-]+\/edit$/.test(
+	const isEditorPage = /^\/[\w-]+\/user\/[\w-]+\/page\/[\w-]+\/edit$/.test(
 		location.pathname,
 	);
 
@@ -141,7 +141,7 @@ function App() {
 	const { locale } = useLoaderData<typeof loader>();
 	useChangeLanguage(locale);
 	const location = useLocation();
-	const isSpecialLayout = /^\/[\w-]+\/[\w-]+\/page\/[\w-]+\/edit$/.test(
+	const isSpecialLayout = /^\/[\w-]+\/user\/[\w-]+\/page\/[\w-]+\/edit$/.test(
 		location.pathname,
 	);
 
