@@ -2,7 +2,7 @@ import { createCookie } from "@remix-run/node";
 import { RemixI18Next } from "remix-i18next/server";
 import * as i18n from "~/utils/i18n";
 
-export const localeCookie = createCookie("targetLanguage", {
+export const localeCookie = createCookie("locale", {
 	path: "/",
 	sameSite: "lax",
 	secure: process.env.NODE_ENV === "production",
@@ -11,8 +11,8 @@ export const localeCookie = createCookie("targetLanguage", {
 
 export default new RemixI18Next({
 	detection: {
-		supportedLanguages: i18n.supportedLngs,
-		fallbackLanguage: i18n.fallbackLng,
+		supportedLanguages: i18n.supportedLocalesCodes,
+		fallbackLanguage: i18n.fallbackLocale,
 		cookie: localeCookie,
 	},
 	// This is the configuration for i18next used

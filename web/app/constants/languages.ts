@@ -1,9 +1,9 @@
-export type TargetLanguage = {
+export type LocaleInfo = {
 	code: string;
 	name: string;
 };
 
-export const targetLanguages: TargetLanguage[] = [
+export const supportedLocales: LocaleInfo[] = [
 	{ code: "ab", name: "Аҧсуа" },
 	{ code: "aa", name: "Afaraf" },
 	{ code: "af", name: "Afrikaans" },

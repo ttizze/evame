@@ -49,7 +49,7 @@ describe("translate関数テスト (geminiのみモック)", () => {
 			data: {
 				userId: user.id,
 				pageId: page.id,
-				targetLanguage: "ja",
+				locale: "ja",
 				aiModel: "test-model",
 			},
 		});
@@ -71,7 +71,7 @@ describe("translate関数テスト (geminiのみモック)", () => {
 			aiModel: "test-model",
 			userId,
 			numberedContent: "dummy-content",
-			targetLanguage: "ja",
+			locale: "ja",
 			pageId,
 			title: "Test Page",
 			numberedElements: [
@@ -99,7 +99,7 @@ describe("translate関数テスト (geminiのみモック)", () => {
 
 		// 翻訳結果がDBに保存されているか確認
 		const translatedTexts = await prisma.translateText.findMany({
-			where: { targetLanguage: "ja" },
+			where: { locale: "ja" },
 		});
 		expect(translatedTexts.length).toBeGreaterThanOrEqual(2);
 		expect(translatedTexts.some((t) => t.text === "こんにちは")).toBe(true);
@@ -113,7 +113,7 @@ describe("translate関数テスト (geminiのみモック)", () => {
 			aiModel: "test-model",
 			userId,
 			numberedContent: "dummy-content",
-			targetLanguage: "ja",
+			locale: "ja",
 			pageId,
 			title: "Test Page",
 			numberedElements: [
@@ -136,7 +136,7 @@ describe("translate関数テスト (geminiのみモック)", () => {
 
 		// 翻訳結果が1つも無いことを確認
 		const translatedTexts = await prisma.translateText.findMany({
-			where: { targetLanguage: "ja" },
+			where: { locale: "ja" },
 		});
 		expect(translatedTexts.length).toBe(0);
 	});
@@ -148,7 +148,7 @@ describe("translate関数テスト (geminiのみモック)", () => {
 			aiModel: "test-model",
 			userId,
 			numberedContent: "dummy-content",
-			targetLanguage: "ja",
+			locale: "ja",
 			pageId,
 			title: "Test Page",
 			numberedElements: [
@@ -177,7 +177,7 @@ describe("translate関数テスト (geminiのみモック)", () => {
 
 		// 翻訳結果確認
 		const translatedTexts = await prisma.translateText.findMany({
-			where: { targetLanguage: "ja" },
+			where: { locale: "ja" },
 		});
 		expect(translatedTexts.length).toBeGreaterThanOrEqual(2);
 		expect(translatedTexts.some((t) => t.text === "こんにちは")).toBe(true);

@@ -34,7 +34,7 @@ export async function addUserTranslation(
 	sourceTextId: number,
 	text: string,
 	userId: number,
-	targetLanguage: string,
+	locale: string,
 ) {
 	const sourceText = await prisma.sourceText.findUnique({
 		where: { id: sourceTextId },
@@ -43,7 +43,7 @@ export async function addUserTranslation(
 	if (sourceText) {
 		await prisma.translateText.create({
 			data: {
-				targetLanguage,
+				locale,
 				text,
 				sourceTextId,
 				userId,

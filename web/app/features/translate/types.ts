@@ -9,7 +9,7 @@ export interface TranslateJobParams {
 	userAITranslationInfoId: number;
 	geminiApiKey: string;
 	aiModel: string;
-	targetLanguage: string;
+	locale: string;
 	title: string;
 	numberedContent: string;
 	numberedElements: NumberedElement[];

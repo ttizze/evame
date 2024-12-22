@@ -9,7 +9,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "~/components/ui/card";
-import { PageActionsDropdown } from "~/routes/$userName+/components/PageActionsDropdown";
+import { PageActionsDropdown } from "~/routes/$locale+/user.$userName+/components/PageActionsDropdown";
 import { LikeButton } from "~/routes/resources+/like-button";
 import type { PageCardType } from "~/routes/types";
 

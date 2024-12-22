@@ -6,8 +6,8 @@ import remarkRehype from "remark-rehype";
 import {
 	upsertPageWithHtml,
 	upsertTitle,
-} from "~/routes/$userName+/page+/$slug+/edit/functions/mutations.server";
-import { rehypeAddDataId } from "~/routes/$userName+/page+/$slug+/edit/utils/processHtmlContent";
+} from "~/routes/$locale+/user.$userName+/page+/$slug+/edit/functions/mutations.server";
+import { rehypeAddDataId } from "~/routes/$locale+/user.$userName+/page+/$slug+/edit/utils/processHtmlContent";
 
 export async function processMarkdownContent(
 	title: string,

@@ -28,7 +28,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	const submission = parseWithZod(await request.formData(), {
 		schema,
 	});
-	const targetLanguage = await i18nServer.getLocale(request);
+	const locale = await i18nServer.getLocale(request);
 
 	if (submission.status !== "success") {
 		return { lastResult: submission.reply() };
@@ -38,7 +38,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		submission.value.sourceTextId,
 		submission.value.text,
 		currentUser.id,
-		targetLanguage,
+		locale,
 	);
 	return {
 		lastResult: submission.reply({ resetForm: true }),

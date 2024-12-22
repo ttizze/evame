@@ -1,5 +1,5 @@
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
-import { createUserAITranslationInfo } from "~/routes/$userName+/page+/$slug+/functions/mutations.server";
+import { createUserAITranslationInfo } from "~/routes/$locale+/user.$userName+/page+/$slug+/functions/mutations.server";
 import { getNonSanitizedUserbyUserName } from "~/routes/functions/queries.server";
 import { prisma } from "~/utils/prisma";
 
@@ -16,7 +16,7 @@ async function getAllPagesByUserId(userId: number) {
 (async () => {
 	try {
 		const USER_NAME = "evame";
-		const TARGET_LANGUAGE = "en";
+		const LOCALE = "en";
 		const AI_MODEL = "gemini-1.5-flash";
 		const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 		if (!GEMINI_API_KEY) {
@@ -53,7 +53,7 @@ async function getAllPagesByUserId(userId: number) {
 				nonSanitizedUser.id,
 				page.id,
 				AI_MODEL,
-				TARGET_LANGUAGE,
+				LOCALE,
 			);
 
 			// キューに追加
@@ -64,7 +64,7 @@ async function getAllPagesByUserId(userId: number) {
 				aiModel: AI_MODEL,
 				userId: nonSanitizedUser.id,
 				pageId: page.id,
-				targetLanguage: TARGET_LANGUAGE,
+				locale: LOCALE,
 				title: title,
 				numberedContent: page.content,
 				numberedElements: page.sourceTexts,
