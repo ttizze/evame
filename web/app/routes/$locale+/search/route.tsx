@@ -80,7 +80,7 @@ export default function Search() {
 										className="hover:bg-gray-300 dark:hover:bg-gray-700 transition duration-150 rounded-lg"
 									>
 										<Link
-											to={`/${result.user.userName}/page/${encodeURIComponent(result.slug)}`}
+											to={`/user/${result.user.userName}/page/${encodeURIComponent(result.slug)}`}
 											className="block p-2 text-inherit no-underline"
 										>
 											<h3 className="font-bold">{result.title}</h3>

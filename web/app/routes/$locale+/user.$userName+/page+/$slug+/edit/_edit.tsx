@@ -57,7 +57,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	if (!userName || !slug) throw new Error("Invalid params");
 
 	const currentUser = await authenticator.isAuthenticated(request, {
-		failureRedirect: "/login",
+		failureRedirect: "/auth/login",
 	});
 
 	if (currentUser.userName !== userName) {
@@ -78,7 +78,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 	if (!userName || !slug) throw new Error("Invalid params");
 
 	const currentUser = await authenticator.isAuthenticated(request, {
-		failureRedirect: "/login",
+		failureRedirect: "/auth/login",
 	});
 	if (currentUser.userName !== userName) {
 		throw new Response("Unauthorized", { status: 403 });

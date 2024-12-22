@@ -45,7 +45,7 @@ export function SourceTextAndTranslationSection({
 					{isOwner && slug && (
 						<div className="ml-auto">
 							<NavLink
-								to={`/${currentUserName}/page/${slug}/edit`}
+								to={`/user/${currentUserName}/page/${slug}/edit`}
 								className={({ isPending }) =>
 									isPending ? "opacity-50" : "opacity-100"
 								}

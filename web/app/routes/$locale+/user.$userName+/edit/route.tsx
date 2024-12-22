@@ -65,7 +65,7 @@ const schema = z.object({
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request, {
-		failureRedirect: "/login",
+		failureRedirect: "/auth/login",
 	});
 	if (currentUser.userName !== params.userName) {
 		throw new Response("Unauthorized", { status: 403 });
@@ -79,7 +79,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request, {
-		failureRedirect: "/login",
+		failureRedirect: "/auth/login",
 	});
 	const submission = parseWithZod(await request.formData(), { schema });
 	if (submission.status !== "success") {
@@ -111,7 +111,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		const headers = new Headers({
 			"Set-Cookie": await commitSession(session),
 		});
-		return redirect(`/${updatedUser.userName}/edit`, { headers });
+		return redirect(`/user/${updatedUser.userName}/edit`, { headers });
 	} catch (error) {
 		return submission.reply({
 			formErrors: [error instanceof Error ? error.message : "Unknown error"],
@@ -195,7 +195,7 @@ export default function EditProfile() {
 							<div className="flex items-center gap-2">
 								<span className="text-sm">Current URL:</span>
 								<code className="px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-lg">
-									evame.tech/{currentUser.userName}
+									evame.tech/user/{currentUser.userName}
 								</code>
 							</div>
 							<div className="space-y-1 text-sm text-amber-500">

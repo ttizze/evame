@@ -160,7 +160,7 @@ export default function UserPage() {
 							<CardTitle className="text-2xl font-bold flex justify-between items-center">
 								<div>{sanitizedUserWithPages.displayName}</div>
 								{isOwner && (
-									<Link to={`/${sanitizedUserWithPages.userName}/edit`}>
+									<Link to={`/user/${sanitizedUserWithPages.userName}/edit`}>
 										<Button variant="ghost">
 											<Settings className="w-6 h-6" />
 										</Button>
@@ -181,8 +181,8 @@ export default function UserPage() {
 					<PageCard
 						key={page.id}
 						pageCard={page}
-						pageLink={`/${sanitizedUserWithPages.userName}/page/${page.slug}`}
-						userLink={`/${sanitizedUserWithPages.userName}`}
+						pageLink={`/user/${sanitizedUserWithPages.userName}/page/${page.slug}`}
+						userLink={`/user/${sanitizedUserWithPages.userName}`}
 						showOwnerActions={isOwner}
 						onTogglePublicStatus={togglePagePublicStatus}
 						onArchive={handleArchive}
