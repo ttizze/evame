@@ -1,4 +1,4 @@
-import { Link } from "@remix-run/react";
+import { LocaleLink } from "~/components/LocaleLink";
 
 export default function PrivacyPolicyPage() {
 	return (
@@ -99,9 +99,9 @@ export default function PrivacyPolicyPage() {
 				</section>
 
 				<div className="mt-8">
-					<Link to="/" className="text-blue-600 hover:underline">
+					<LocaleLink to="/" className="text-blue-600 hover:underline">
 						Return to Home
-					</Link>
+					</LocaleLink>
 				</div>
 			</main>
 		</div>

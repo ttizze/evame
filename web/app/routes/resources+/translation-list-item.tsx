@@ -1,9 +1,9 @@
 import { data } from "@remix-run/node";
 import type { ActionFunctionArgs } from "@remix-run/node";
-import { Link } from "@remix-run/react";
 import { useFetcher } from "@remix-run/react";
 import { EllipsisVertical } from "lucide-react";
 import { z } from "zod";
+import { LocaleLink } from "~/components/LocaleLink";
 import { Button } from "~/components/ui/button";
 import {
 	DropdownMenu,
@@ -80,14 +80,14 @@ export function TranslationListItem({
 				)}
 			</div>
 			<div className="flex items-center justify-end">
-				<Link
+				<LocaleLink
 					to={`/user/${translation.user.userName}`}
 					className="!no-underline mr-2"
 				>
 					<p className="text-sm text-gray-500 text-right flex justify-end items-center  ">
 						by: {translation.user.displayName}
 					</p>
-				</Link>
+				</LocaleLink>
 				<VoteButtons translationWithVote={translation} />
 			</div>
 		</div>

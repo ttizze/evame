@@ -1,7 +1,7 @@
-import { NavLink } from "@remix-run/react";
 import { Lock } from "lucide-react";
 import { SquarePen } from "lucide-react";
 import type { ReactNode } from "react";
+import { NavLocaleLink } from "~/components/NavLocaleLink";
 import type { SourceTextWithTranslations } from "../../types";
 import { TranslationSection } from "./TranslationSection";
 interface SourceTextAndTranslationSectionProps {
@@ -44,14 +44,14 @@ export function SourceTextAndTranslationSection({
 					</span>
 					{isOwner && slug && (
 						<div className="ml-auto">
-							<NavLink
+							<NavLocaleLink
 								to={`/user/${currentUserName}/page/${slug}/edit`}
 								className={({ isPending }) =>
 									isPending ? "opacity-50" : "opacity-100"
 								}
 							>
 								<SquarePen className="w-5 h-5" />
-							</NavLink>
+							</NavLocaleLink>
 						</div>
 					)}
 				</div>

@@ -1,6 +1,5 @@
-// PageCard.tsx
-import { Link } from "@remix-run/react";
 import { Lock } from "lucide-react";
+import { LocaleLink } from "~/components/LocaleLink";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
 	Card,
@@ -12,7 +11,6 @@ import {
 import { PageActionsDropdown } from "~/routes/$locale+/user.$userName+/components/PageActionsDropdown";
 import { LikeButton } from "~/routes/resources+/like-button";
 import type { PageCardType } from "~/routes/types";
-
 type PageCardProps = {
 	pageCard: PageCardType;
 	pageLink: string;
@@ -43,17 +41,17 @@ export function PageCard({
 				</div>
 			)}
 			<CardHeader>
-				<Link to={pageLink} className="block">
+				<LocaleLink to={pageLink} className="block">
 					<CardTitle className="flex items-center pr-3 break-all overflow-wrap-anywhere">
 						{!pageCard.isPublished && <Lock className="h-4 w-4 mr-2" />}
 						{pageCard.title}
 					</CardTitle>
 					<CardDescription>{pageCard.createdAt}</CardDescription>
-				</Link>
+				</LocaleLink>
 			</CardHeader>
 			<CardContent>
 				<div className="flex justify-between items-center">
-					<Link to={userLink} className="flex items-center">
+					<LocaleLink to={userLink} className="flex items-center">
 						<Avatar className="w-6 h-6 mr-2">
 							<AvatarImage
 								src={pageCard.user.icon}
@@ -66,7 +64,7 @@ export function PageCard({
 						<span className="text-sm text-gray-600">
 							{pageCard.user.displayName}
 						</span>
-					</Link>
+					</LocaleLink>
 
 					<LikeButton
 						liked={pageCard.likePages.length > 0}
