@@ -2,7 +2,6 @@ import type { LoaderFunctionArgs } from "@remix-run/node";
 import { data } from "@remix-run/node";
 import { useLoaderData, useSearchParams } from "@remix-run/react";
 import type { MetaFunction } from "@remix-run/react";
-import { CalendarPlus } from "lucide-react";
 import { PageCard } from "~/components/PageCard";
 import {
 	Pagination,
@@ -54,9 +53,7 @@ export default function Home() {
 
 	return (
 		<div className="container mx-auto px-4">
-			<h1 className="text-xl font-bold mb-6 flex items-center gap-2">
-				New✨️
-			</h1>
+			<h1 className="text-xl font-bold mb-6 flex items-center gap-2">New✨️</h1>
 			<div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
 				{pagesWithInfoAndLocaleDate.map((page) => (
 					<PageCard
