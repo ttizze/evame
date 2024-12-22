@@ -2,9 +2,9 @@ import type { MetaFunction } from "@remix-run/node";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import i18nServer from "~/i18n.server";
+import { SourceTextAndTranslationSection } from "~/routes/$locale+/$userName+/page+/$slug+/components/sourceTextAndTranslationSection/SourceTextAndTranslationSection";
+import { fetchPageWithTranslations } from "~/routes/$locale+/$userName+/page+/$slug+/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
-import { SourceTextAndTranslationSection } from "../$userName+/page+/$locale+/$slug+/components/sourceTextAndTranslationSection/SourceTextAndTranslationSection";
-import { fetchPageWithTranslations } from "../$userName+/page+/$locale+/$slug+/functions/queries.server";
 import { StartButton } from "../../components/StartButton";
 
 export const meta: MetaFunction = () => {
@@ -40,7 +40,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	}
 	return {
 		currentUser,
-		topPageWithTranslations,
 		heroTitle,
 		heroText,
 	};

@@ -3,7 +3,7 @@ import { Authenticator, AuthorizationError } from "remix-auth";
 import { EmailLinkStrategy } from "remix-auth-email-link";
 import { FormStrategy } from "remix-auth-form";
 import { GoogleStrategy } from "remix-auth-google";
-import { sendMagicLink } from "~/routes/auth/login/utils/send-magic-link.server";
+import { sendMagicLink } from "~/routes/$locale+/auth/login/utils/send-magic-link.server";
 import type { SanitizedUser } from "../types";
 import { prisma } from "./prisma";
 import { sanitizeUser } from "./sanitizeUser";

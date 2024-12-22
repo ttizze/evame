@@ -8,7 +8,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "~/components/ui/card";
-import { authenticator } from "../../../utils/auth.server";
+import { authenticator } from "../../../../utils/auth.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request, {

@@ -1,6 +1,5 @@
-import type { LinksFunction } from "@remix-run/node";
-import type { LoaderFunctionArgs } from "@remix-run/node";
-import { data } from "@remix-run/node";
+import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
+import { data, redirect } from "@remix-run/node";
 import {
 	Links,
 	Meta,
@@ -8,10 +7,11 @@ import {
 	Scripts,
 	ScrollRestoration,
 	isRouteErrorResponse,
+	useLoaderData,
+	useLocation,
 	useRouteError,
+	useRouteLoaderData,
 } from "@remix-run/react";
-import { useLocation } from "@remix-run/react";
-import { useLoaderData, useRouteLoaderData } from "@remix-run/react";
 import { captureRemixErrorBoundaryError, withSentry } from "@sentry/remix";
 import { useEffect } from "react";
 import { useChangeLanguage } from "remix-i18next/react";
@@ -32,6 +32,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		: (process.env.GOOGLE_ANALYTICS_ID ?? "");
 	const currentUser = await authenticator.isAuthenticated(request);
 	const locale = (await i18nServer.getLocale(request)) || "en";
+	const url = new URL(request.url);
+	if (!url.pathname.startsWith(`/${locale}`)) {
+		url.pathname = `/${locale}${url.pathname}`;
+		return redirect(url.toString());
+	}
 	return data(
 		{
 			isDevelopment,
@@ -76,7 +81,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 	const data = useRouteLoaderData<typeof loader>("root");
 	const { gaTrackingId, locale } = data ?? {};
 	const location = useLocation();
-	const isEditorPage = /^\/[\w-]+\/page\/[\w-]+\/edit$/.test(location.pathname);
+	const isEditorPage = /^\/[\w-]+\/[\w-]+\/page\/[\w-]+\/edit$/.test(location.pathname);
 
 	useEffect(() => {
 		if (gaTrackingId?.length) {
@@ -134,7 +139,7 @@ function App() {
 	const { locale } = useLoaderData<typeof loader>();
 	useChangeLanguage(locale);
 	const location = useLocation();
-	const isSpecialLayout = /^\/[\w-]+\/page\/[\w-]+\/edit$/.test(
+	const isSpecialLayout = /^\/[\w-]+\/[\w-]+\/page\/[\w-]+\/edit$/.test(
 		location.pathname,
 	);
 

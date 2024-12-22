@@ -11,8 +11,8 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import type { TranslationWithVote } from "~/routes/$userName+/page+/$locale+/$slug+/types";
-import { sanitizeAndParseText } from "~/routes/$userName+/page+/$locale+/$slug+/utils/sanitize-and-parse-text.client";
+import type { TranslationWithVote } from "~/routes/$locale+/$userName+/page+/$slug+/types";
+import { sanitizeAndParseText } from "~/routes/$locale+/$userName+/page+/$slug+/utils/sanitize-and-parse-text.client";
 import { authenticator } from "~/utils/auth.server";
 import { deleteOwnTranslation } from "./functions/mutations.server";
 import { VoteButtons } from "./vote-buttons";

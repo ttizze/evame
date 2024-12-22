@@ -17,7 +17,7 @@ import {
 } from "~/components/ui/popover";
 import { supportedLocales } from "~/constants/languages";
 import { cn } from "~/utils/cn";
-
+import { useSubmit } from "@remix-run/react";
 interface LocaleSelectorProps {
 	locale: string;
 }
@@ -28,13 +28,24 @@ export default function LocaleSelector({ locale }: LocaleSelectorProps) {
 
 	const params = useParams();
 	const { userName, slug } = params;
+	const submit = useSubmit();
 
 	const handleLocaleChange = (value: string) => {
 		setCurrentLocale(value);
 		setOpen(false);
-		const newUrl = `/${userName}/page/${value}/${slug}`;
-		window.location.href = newUrl;
-	};
+
+    // hidden FormDataを作って actionへ送る
+    const formData = new FormData();
+    formData.set("locale", value);
+    formData.set("userName", userName ?? "");
+    formData.set("slug", slug ?? "");
+
+    // POST /resources/locale-selector
+    submit(formData, {
+      method: "post",
+      action: "/resources/locale-selector",
+    });
+  };
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>

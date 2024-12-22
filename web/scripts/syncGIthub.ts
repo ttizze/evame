@@ -9,7 +9,7 @@ import { JSDOM } from "jsdom"; // HTMLパース用
 import pLimit from "p-limit";
 
 // プロジェクト固有のインポート
-import { upsertTags } from "~/routes/$userName+/page+/$locale+/$slug+/edit/functions/mutations.server";
+import { upsertTags } from "~/routes/$locale+/$userName+/page+/$slug+/edit/functions/mutations.server";
 import { prisma } from "~/utils/prisma";
 import { processMarkdownContent } from "./processMarkdownContent";
 

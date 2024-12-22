@@ -76,7 +76,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request, {
-		failureRedirect: "/login",
+		failureRedirect: "/auth/login",
 	});
 	const formData = await request.formData();
 	const intent = formData.get("intent");
