@@ -63,8 +63,8 @@ export default function Home() {
 					<PageCard
 						key={page.id}
 						pageCard={page}
-						pageLink={`/${page.user.userName}/page/${page.slug}`}
-						userLink={`/${page.user.userName}`}
+						pageLink={`/user/${page.user.userName}/page/${page.slug}`}
+						userLink={`/user/${page.user.userName}`}
 					/>
 				))}
 			</div>

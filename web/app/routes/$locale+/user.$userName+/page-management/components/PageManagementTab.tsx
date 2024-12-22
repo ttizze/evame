@@ -183,7 +183,7 @@ export function PageManagementTab({
 									/>
 								</TableCell>
 								<TableCell className="font-medium">
-									<Link to={`/${userName}/page/${pageWithTitle.slug}`}>
+									<Link to={`/user/${userName}/page/${pageWithTitle.slug}`}>
 										{pageWithTitle.title}
 									</Link>
 								</TableCell>
@@ -193,7 +193,7 @@ export function PageManagementTab({
 								<TableCell>{pageWithTitle.updatedAt}</TableCell>
 								<TableCell>
 									<PageActionsDropdown
-										editPath={`/${userName}/page/${pageWithTitle.slug}/edit`}
+										editPath={`/user/${userName}/page/${pageWithTitle.slug}/edit`}
 										onTogglePublic={() => handleTogglePublic(pageWithTitle.id)}
 										onDelete={() => {
 											setSelectedPages([pageWithTitle.id]);

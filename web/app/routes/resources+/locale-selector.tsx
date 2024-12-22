@@ -16,9 +16,9 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	let redirectPath = `/${newLocale}`;
 	if (userName && slug) {
-		redirectPath += `/${userName}/page/${slug}`;
+		redirectPath += `/user/${userName}/page/${slug}`;
 	} else if (userName) {
-		redirectPath += `/${userName}`;
+		redirectPath += `/user/${userName}`;
 	}
 
 	return redirect(redirectPath, { headers });

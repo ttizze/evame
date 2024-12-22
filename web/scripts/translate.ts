@@ -1,5 +1,5 @@
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
-import { createUserAITranslationInfo } from "~/routes/$locale+/$userName+/page+/$slug+/functions/mutations.server";
+import { createUserAITranslationInfo } from "~/routes/$locale+/user.$userName+/page+/$slug+/functions/mutations.server";
 import { getNonSanitizedUserbyUserName } from "~/routes/functions/queries.server";
 import { prisma } from "~/utils/prisma";
 

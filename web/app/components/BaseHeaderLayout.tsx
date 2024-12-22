@@ -58,7 +58,7 @@ export function BaseHeaderLayout({
 							<DropdownMenuContent className="m-2 p-0 rounded-xl min-w-40">
 								<DropdownMenuItem asChild>
 									<NavLink
-										to={`/${currentUser.userName}`}
+										to={`/user/${currentUser.userName}`}
 										className={({ isPending }) =>
 											isPending
 												? "opacity-50"
@@ -76,7 +76,7 @@ export function BaseHeaderLayout({
 								<DropdownMenuSeparator className="my-0" />
 								<DropdownMenuItem asChild>
 									<NavLink
-										to={`/${currentUser.userName}/page-management`}
+										to={`/user/${currentUser.userName}/page-management`}
 										className={({ isPending }) =>
 											isPending
 												? "opacity-50"

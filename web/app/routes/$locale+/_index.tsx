@@ -2,8 +2,8 @@ import type { MetaFunction } from "@remix-run/node";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import i18nServer from "~/i18n.server";
-import { SourceTextAndTranslationSection } from "~/routes/$locale+/$userName+/page+/$slug+/components/sourceTextAndTranslationSection/SourceTextAndTranslationSection";
-import { fetchPageWithTranslations } from "~/routes/$locale+/$userName+/page+/$slug+/functions/queries.server";
+import { SourceTextAndTranslationSection } from "~/routes/$locale+/user.$userName+/page+/$slug+/components/sourceTextAndTranslationSection/SourceTextAndTranslationSection";
+import { fetchPageWithTranslations } from "~/routes/$locale+/user.$userName+/page+/$slug+/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
 import { StartButton } from "../../components/StartButton";
 

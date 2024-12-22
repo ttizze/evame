@@ -18,7 +18,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { validateGeminiApiKey } from "~/features/translate/services/gemini";
-import { uploadImage } from "~/routes/$locale+/$userName+/utils/uploadImage";
+import { uploadImage } from "~/routes/$locale+/user.$userName+/utils/uploadImage";
 import { authenticator } from "~/utils/auth.server";
 import { cn } from "~/utils/cn";
 import { sanitizeUser } from "~/utils/sanitizeUser";

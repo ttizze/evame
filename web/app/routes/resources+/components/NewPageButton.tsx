@@ -24,7 +24,7 @@ export const NewPageButton = ({ userName }: NewPageButtonProps) => {
 	const handleNewPage = () => {
 		setIsLoading(true);
 		const newSlug = generateSlug();
-		navigate(`/${userName}/page/${newSlug}/edit`);
+		navigate(`/user/${userName}/page/${newSlug}/edit`);
 	};
 
 	return (
