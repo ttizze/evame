@@ -1,4 +1,5 @@
 import { useParams } from "@remix-run/react";
+import { useSubmit } from "@remix-run/react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -17,7 +18,6 @@ import {
 } from "~/components/ui/popover";
 import { supportedLocales } from "~/constants/languages";
 import { cn } from "~/utils/cn";
-import { useSubmit } from "@remix-run/react";
 interface LocaleSelectorProps {
 	locale: string;
 }
@@ -34,18 +34,18 @@ export default function LocaleSelector({ locale }: LocaleSelectorProps) {
 		setCurrentLocale(value);
 		setOpen(false);
 
-    // hidden FormDataを作って actionへ送る
-    const formData = new FormData();
-    formData.set("locale", value);
-    formData.set("userName", userName ?? "");
-    formData.set("slug", slug ?? "");
+		// hidden FormDataを作って actionへ送る
+		const formData = new FormData();
+		formData.set("locale", value);
+		formData.set("userName", userName ?? "");
+		formData.set("slug", slug ?? "");
 
-    // POST /resources/locale-selector
-    submit(formData, {
-      method: "post",
-      action: "/resources/locale-selector",
-    });
-  };
+		// POST /resources/locale-selector
+		submit(formData, {
+			method: "post",
+			action: "/resources/locale-selector",
+		});
+	};
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>

@@ -81,7 +81,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 	const data = useRouteLoaderData<typeof loader>("root");
 	const { gaTrackingId, locale } = data ?? {};
 	const location = useLocation();
-	const isEditorPage = /^\/[\w-]+\/[\w-]+\/page\/[\w-]+\/edit$/.test(location.pathname);
+	const isEditorPage = /^\/[\w-]+\/[\w-]+\/page\/[\w-]+\/edit$/.test(
+		location.pathname,
+	);
 
 	useEffect(() => {
 		if (gaTrackingId?.length) {
