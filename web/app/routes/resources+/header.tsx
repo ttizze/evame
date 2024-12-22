@@ -1,9 +1,9 @@
 import { data } from "@remix-run/node";
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
-import { NavLocaleLink } from "~/components/NavLocaleLink";
 import { Search } from "lucide-react";
 import { BaseHeaderLayout } from "~/components/BaseHeaderLayout";
+import { NavLocaleLink } from "~/components/NavLocaleLink";
 import { StartButton } from "~/components/StartButton";
 import type { SanitizedUser } from "~/types";
 import { authenticator } from "~/utils/auth.server";

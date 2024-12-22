@@ -1,10 +1,9 @@
-import { Link } from "@remix-run/react";
-import { LocaleLink } from "~/components/LocaleLink";
-import { NavLocaleLink } from "~/components/NavLocaleLink";
-import { Form, NavLink } from "@remix-run/react";
+import { Form } from "@remix-run/react";
 import { LogOutIcon, SettingsIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { LocaleLink } from "~/components/LocaleLink";
 import { ModeToggle } from "~/components/ModeToggle";
+import { NavLocaleLink } from "~/components/NavLocaleLink";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
 	DropdownMenu,

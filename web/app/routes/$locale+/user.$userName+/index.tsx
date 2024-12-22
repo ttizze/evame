@@ -8,6 +8,7 @@ import { useSearchParams } from "@remix-run/react";
 import Linkify from "linkify-react";
 import { Settings } from "lucide-react";
 import { useState } from "react";
+import { LocaleLink } from "~/components/LocaleLink";
 import { PageCard } from "~/components/PageCard";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
@@ -32,7 +33,6 @@ import {
 	fetchPageById,
 	fetchSanitizedUserWithPages,
 } from "./functions/queries.server";
-import { LocaleLink } from "~/components/LocaleLink";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
@@ -161,7 +161,9 @@ export default function UserPage() {
 							<CardTitle className="text-2xl font-bold flex justify-between items-center">
 								<div>{sanitizedUserWithPages.displayName}</div>
 								{isOwner && (
-									<LocaleLink to={`/user/${sanitizedUserWithPages.userName}/edit`}>
+									<LocaleLink
+										to={`/user/${sanitizedUserWithPages.userName}/edit`}
+									>
 										<Button variant="ghost">
 											<Settings className="w-6 h-6" />
 										</Button>

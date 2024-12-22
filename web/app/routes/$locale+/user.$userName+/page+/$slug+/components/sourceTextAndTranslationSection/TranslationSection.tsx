@@ -1,7 +1,7 @@
-import { LocaleLink } from "~/components/LocaleLink";
 import { Languages, Plus } from "lucide-react";
 import { useState } from "react";
 import { useHydrated } from "remix-utils/use-hydrated";
+import { LocaleLink } from "~/components/LocaleLink";
 import { VoteButtons } from "~/routes/resources+/vote-buttons";
 import type { SourceTextWithTranslations } from "../../types";
 import { sanitizeAndParseText } from "../../utils/sanitize-and-parse-text.client";

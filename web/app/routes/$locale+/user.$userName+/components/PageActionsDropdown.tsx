@@ -1,5 +1,5 @@
-import { NavLocaleLink } from "~/components/NavLocaleLink";
 import { MoreVertical } from "lucide-react";
+import { NavLocaleLink } from "~/components/NavLocaleLink";
 import { Button } from "~/components/ui/button";
 import {
 	DropdownMenu,

@@ -7,6 +7,7 @@ import { useLocation } from "@remix-run/react";
 import { useNavigation } from "@remix-run/react";
 import { CheckCircle } from "lucide-react";
 import { z } from "zod";
+import { LocaleLink } from "~/components/LocaleLink";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
@@ -15,7 +16,6 @@ import { Separator } from "~/components/ui/separator";
 import { sessionStorage } from "~/utils/session.server";
 import { authenticator } from "../../../../utils/auth.server";
 import { GoogleForm } from "../../../resources+/google-form";
-import { LocaleLink } from "~/components/LocaleLink";
 const loginSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),
 });

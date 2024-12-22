@@ -6,10 +6,10 @@ import { useActionData, useNavigation } from "@remix-run/react";
 import { Form } from "@remix-run/react";
 import type { MetaFunction } from "@remix-run/react";
 import { z } from "zod";
+import { LocaleLink } from "~/components/LocaleLink";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { authenticator } from "~/utils/auth.server";
-import { LocaleLink } from "~/components/LocaleLink";
 import { searchTitle } from "./functions/queries.server";
 
 export const meta: MetaFunction = () => {

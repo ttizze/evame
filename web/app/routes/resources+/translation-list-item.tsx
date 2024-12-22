@@ -3,6 +3,7 @@ import type { ActionFunctionArgs } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
 import { EllipsisVertical } from "lucide-react";
 import { z } from "zod";
+import { LocaleLink } from "~/components/LocaleLink";
 import { Button } from "~/components/ui/button";
 import {
 	DropdownMenu,
@@ -15,7 +16,6 @@ import { sanitizeAndParseText } from "~/routes/$locale+/user.$userName+/page+/$s
 import { authenticator } from "~/utils/auth.server";
 import { deleteOwnTranslation } from "./functions/mutations.server";
 import { VoteButtons } from "./vote-buttons";
-import { LocaleLink } from "~/components/LocaleLink";
 
 const schema = z.object({
 	translationId: z.number(),

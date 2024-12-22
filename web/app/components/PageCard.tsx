@@ -1,6 +1,5 @@
-// PageCard.tsx
-import { Link } from "@remix-run/react";
 import { Lock } from "lucide-react";
+import { LocaleLink } from "~/components/LocaleLink";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
 	Card,
@@ -12,7 +11,6 @@ import {
 import { PageActionsDropdown } from "~/routes/$locale+/user.$userName+/components/PageActionsDropdown";
 import { LikeButton } from "~/routes/resources+/like-button";
 import type { PageCardType } from "~/routes/types";
-import { LocaleLink } from "~/components/LocaleLink";
 type PageCardProps = {
 	pageCard: PageCardType;
 	pageLink: string;

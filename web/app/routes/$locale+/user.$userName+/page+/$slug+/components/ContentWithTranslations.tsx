@@ -1,7 +1,7 @@
 import type { UserAITranslationInfo } from "@prisma/client";
-import { LocaleLink } from "~/components/LocaleLink";
 import { Hash, Loader2 } from "lucide-react";
 import { useHydrated } from "remix-utils/use-hydrated";
+import { LocaleLink } from "~/components/LocaleLink";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import type {
 	PageWithTranslations,

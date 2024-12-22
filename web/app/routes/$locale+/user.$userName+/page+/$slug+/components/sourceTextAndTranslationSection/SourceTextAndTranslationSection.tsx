@@ -1,7 +1,7 @@
-import { NavLocaleLink } from "~/components/NavLocaleLink";
 import { Lock } from "lucide-react";
 import { SquarePen } from "lucide-react";
 import type { ReactNode } from "react";
+import { NavLocaleLink } from "~/components/NavLocaleLink";
 import type { SourceTextWithTranslations } from "../../types";
 import { TranslationSection } from "./TranslationSection";
 interface SourceTextAndTranslationSectionProps {
