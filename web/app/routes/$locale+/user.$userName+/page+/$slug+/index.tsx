@@ -60,7 +60,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const locale = await i18nServer.getLocale(request);
-	const {  slug } = params;
+	const { slug } = params;
 	if (!slug) {
 		throw new Response("Missing URL parameter", { status: 400 });
 	}

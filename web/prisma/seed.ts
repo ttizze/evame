@@ -72,7 +72,7 @@ async function addRequiredData() {
 			translations: [
 				{
 					text: "Evame is an innovative open-source platform that enables everyone to read articles in their native language, regardless of the original language. Through user-contributed content and collaborative translations, we break down language barriers, fostering global understanding and knowledge sharing.",
-						locale: "en",
+					locale: "en",
 				},
 			],
 		},
