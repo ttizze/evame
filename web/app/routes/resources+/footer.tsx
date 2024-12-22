@@ -1,5 +1,5 @@
-import { LocaleLink } from "~/components/LocaleLink";
 import { FaDiscord, FaGithub } from "react-icons/fa";
+import { LocaleLink } from "~/components/LocaleLink";
 
 export function Footer() {
 	return (
