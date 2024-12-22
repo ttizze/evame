@@ -10,7 +10,7 @@ interface SeedText {
 	textAndOccurrenceHash: string;
 	translations: {
 		text: string;
-		targetLanguage: string;
+		locale: string;
 	}[];
 }
 
@@ -34,7 +34,7 @@ async function addRequiredData() {
 			translations: [
 				{
 					text: "世界に向けて書く",
-					targetLanguage: "ja",
+					locale: "ja",
 				},
 			],
 		},
@@ -47,7 +47,7 @@ async function addRequiredData() {
 			translations: [
 				{
 					text: "Evameは、誰もが母国語で文章を読めるようにする革新的なオープンソースプラットフォームです。ユーザーによる投稿と翻訳を通じて、言語の障壁を取り除き、世界中の理解と知識の共有を促進します。",
-					targetLanguage: "ja",
+					locale: "ja",
 				},
 			],
 		},
@@ -59,7 +59,7 @@ async function addRequiredData() {
 			translations: [
 				{
 					text: "Write to the World",
-					targetLanguage: "en",
+					locale: "en",
 				},
 			],
 		},
@@ -72,7 +72,7 @@ async function addRequiredData() {
 			translations: [
 				{
 					text: "Evame is an innovative open-source platform that enables everyone to read articles in their native language, regardless of the original language. Through user-contributed content and collaborative translations, we break down language barriers, fostering global understanding and knowledge sharing.",
-					targetLanguage: "en",
+						locale: "en",
 				},
 			],
 		},
@@ -156,7 +156,7 @@ async function upsertSourceTextWithTranslations(
 					text: translation.text,
 					sourceTextId: upsertedSourceText.id,
 					userId,
-					targetLanguage: translation.targetLanguage,
+					locale: translation.locale,
 				},
 			}),
 		),

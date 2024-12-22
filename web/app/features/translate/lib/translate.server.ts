@@ -147,7 +147,7 @@ async function saveTranslations(
 				return null;
 			}
 			return {
-				targetLanguage: locale,
+				locale,
 				text: translation.text,
 				sourceTextId,
 				userId: systemUserId,

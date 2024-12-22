@@ -44,7 +44,7 @@ export async function fetchPageWithTranslations(
 			sourceTexts: {
 				include: {
 					translateTexts: {
-						where: { targetLanguage: locale, isArchived: false },
+						where: { locale, isArchived: false },
 						include: {
 							user: true,
 							votes: {
@@ -116,7 +116,7 @@ export async function fetchLatestUserAITranslationInfo(
 	locale: string,
 ) {
 	return await prisma.userAITranslationInfo.findFirst({
-		where: { pageId, userId, targetLanguage: locale },
+		where: { pageId, userId, locale },
 		orderBy: { createdAt: "desc" },
 	});
 }

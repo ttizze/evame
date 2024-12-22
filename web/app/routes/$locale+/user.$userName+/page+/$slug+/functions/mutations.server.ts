@@ -35,7 +35,7 @@ export async function createUserAITranslationInfo(
 			data: {
 				userId,
 				pageId,
-				targetLanguage: locale,
+				locale,
 				aiModel,
 				aiTranslationStatus: "pending",
 				aiTranslationProgress: 0,

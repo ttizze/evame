@@ -1,20 +1,17 @@
 import { useForm } from "@conform-to/react";
 import { parseWithZod } from "@conform-to/zod";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
 import { data } from "@remix-run/node";
 import { useActionData } from "@remix-run/react";
 import type { MetaFunction } from "@remix-run/react";
 import { useLoaderData } from "@remix-run/react";
 import { useState } from "react";
-import { supportedLocales } from "~/constants/languages";
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
 import i18nServer from "~/i18n.server";
 import { localeCookie } from "~/i18n.server";
 import { getNonSanitizedUserbyUserName } from "~/routes/functions/queries.server";
 import { LikeButton } from "~/routes/resources+/like-button";
 import { authenticator } from "~/utils/auth.server";
-import { fallbackLocale } from "~/utils/i18n";
 import { ContentWithTranslations } from "./components/ContentWithTranslations";
 import { FloatingControls } from "./components/FloatingControls";
 import { createUserAITranslationInfo } from "./functions/mutations.server";
@@ -62,15 +59,13 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
-	const { locale, slug } = params;
+	const locale = await i18nServer.getLocale(request);
+	const {  slug } = params;
 	if (!slug) {
 		throw new Response("Missing URL parameter", { status: 400 });
 	}
 
 	const currentUser = await authenticator.isAuthenticated(request);
-	if (!locale || !supportedLocales.find((l) => l.code === locale)) {
-		return redirect(`/${currentUser?.userName}/page/${fallbackLocale}/${slug}`);
-	}
 	const nonSanitizedUser = await getNonSanitizedUserbyUserName(
 		currentUser?.userName ?? "",
 	);

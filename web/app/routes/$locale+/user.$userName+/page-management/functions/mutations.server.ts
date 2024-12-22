@@ -4,7 +4,7 @@ export async function createUserAITranslationInfo(
 	userId: number,
 	pageId: number,
 	aiModel: string,
-	targetLanguage: string,
+	locale: string,
 ) {
 	try {
 		const userAITranslationInfo = await prisma.userAITranslationInfo.create({
@@ -12,7 +12,7 @@ export async function createUserAITranslationInfo(
 				userId,
 				pageId,
 				aiModel,
-				targetLanguage,
+				locale,
 				aiTranslationStatus: "pending",
 				aiTranslationProgress: 0,
 			},
