@@ -1,4 +1,4 @@
-import { Link } from "@remix-run/react";
+import { LocaleLink } from "~/components/LocaleLink";
 import { FaDiscord, FaGithub } from "react-icons/fa";
 
 export function Footer() {
@@ -6,18 +6,18 @@ export function Footer() {
 		<footer className="mt-auto">
 			<div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
 				<div className="flex justify-center items-center text-sm text-gray-600 dark:text-gray-300 gap-4">
-					<Link
+					<LocaleLink
 						to="/privacy"
 						className="hover:text-gray-900 dark:hover:text-white"
 					>
 						Privacy Policy
-					</Link>
-					<Link
+					</LocaleLink>
+					<LocaleLink
 						to="/terms"
 						className="hover:text-gray-900 dark:hover:text-white"
 					>
 						Terms of Service
-					</Link>
+					</LocaleLink>
 					<a
 						href="https://github.com/ttizze/eveeve"
 						target="_blank"
