@@ -1,7 +1,6 @@
 // LocaleLink.tsx
 import { Link, useParams } from "@remix-run/react";
 
-
 export function LocaleLink({
 	to,
 	children,
@@ -11,7 +10,7 @@ export function LocaleLink({
 	children: React.ReactNode;
 	className?: string;
 }) {
-  const { locale } = useParams();
+	const { locale } = useParams();
 
 	const path = `/${locale}${to}`;
 
