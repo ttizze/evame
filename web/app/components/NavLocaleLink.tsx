@@ -1,10 +1,4 @@
-import { NavLink, type NavLinkProps, useMatches } from "@remix-run/react";
-
-function useRootData() {
-	const matches = useMatches();
-	const rootMatch = matches.find((match) => match.id === "root");
-	return rootMatch?.data as { locale?: string } | undefined;
-}
+import { NavLink, type NavLinkProps, useParams } from "@remix-run/react";
 
 // NavLinkProps を継承
 type NavLocaleLinkProps = Omit<NavLinkProps, "to"> & {
@@ -17,20 +11,13 @@ export function NavLocaleLink({
 	children,
 	...rest
 }: NavLocaleLinkProps) {
-	const rootData = useRootData();
-	const locale = rootData?.locale ?? "en";
+	const { locale } = useParams();
 
-	// 先頭のスラッシュを削除したうえで "/:locale" を付与
 	const normalized = to.startsWith("/") ? to.slice(1) : to;
 	const path = `/${locale}/${normalized}`;
 
 	return (
-		<NavLink
-			to={path}
-			// className が「文字列」or「コールバック」どちらでもOK
-			className={className}
-			{...rest}
-		>
+		<NavLink to={path} className={className} {...rest}>
 			{children}
 		</NavLink>
 	);
