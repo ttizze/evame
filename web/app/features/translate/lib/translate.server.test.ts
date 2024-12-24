@@ -3,7 +3,7 @@
 // Gemini側が途中で失敗した場合（空レスポンス等で翻訳ができない）のテストケースを追加している。
 // Prismaは実際にはテスト用DB等が必要だが、この例ではあくまで構成例である。
 
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { prisma } from "~/utils/prisma";
 import { translate } from "../lib/translate.server"; // テスト対象となるtranslate関数
 import { getGeminiModelResponse } from "../services/gemini";
@@ -55,7 +55,6 @@ describe("translate関数テスト (geminiのみモック)", () => {
 		});
 		userAITranslationInfoId = userAITranslationInfo.id;
 	});
-
 
 	test("正常ケース：Geminiモックレスポンスを与えて結果が成功するか", async () => {
 		const params: TranslateJobParams = {

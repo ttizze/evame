@@ -22,9 +22,9 @@ export const NewPageButton = ({ userName }: NewPageButtonProps) => {
 	const navigate = useNavigate();
 	const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    setIsLoading(false);
-  }, []);
+	useEffect(() => {
+		setIsLoading(false);
+	}, []);
 
 	const handleNewPage = () => {
 		setIsLoading(true);
