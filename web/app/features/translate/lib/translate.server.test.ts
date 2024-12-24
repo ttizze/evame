@@ -56,13 +56,6 @@ describe("translate関数テスト (geminiのみモック)", () => {
 		userAITranslationInfoId = userAITranslationInfo.id;
 	});
 
-	afterEach(async () => {
-		// テスト後のクリーンアップ（必要に応じて）
-		await prisma.translateText.deleteMany();
-		await prisma.userAITranslationInfo.deleteMany();
-		await prisma.page.deleteMany();
-		await prisma.user.deleteMany();
-	});
 
 	test("正常ケース：Geminiモックレスポンスを与えて結果が成功するか", async () => {
 		const params: TranslateJobParams = {
