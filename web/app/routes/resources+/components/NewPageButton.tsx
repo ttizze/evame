@@ -1,6 +1,6 @@
 import { useNavigate } from "@remix-run/react";
 import { Loader2, PencilIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const generateSlug = (length = 8): string => {
 	const charset =
@@ -21,6 +21,11 @@ interface NewPageButtonProps {
 export const NewPageButton = ({ userName }: NewPageButtonProps) => {
 	const navigate = useNavigate();
 	const [isLoading, setIsLoading] = useState(false);
+
+	useEffect(() => {
+		setIsLoading(false);
+	}, []);
+
 	const handleNewPage = () => {
 		setIsLoading(true);
 		const newSlug = generateSlug();
