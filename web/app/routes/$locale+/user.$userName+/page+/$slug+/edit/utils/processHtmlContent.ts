@@ -14,7 +14,6 @@ import type { VFile } from "vfile";
 import {
 	synchronizePageSourceTexts,
 	upsertPageWithHtml,
-	upsertTitle,
 } from "../functions/mutations.server";
 import { generateHashForText } from "./generateHashForText";
 
@@ -152,6 +151,5 @@ export async function processHtmlContent(
 		sourceLanguage,
 		isPublished,
 	);
-	await upsertTitle(pageSlug, title);
 	return page;
 }

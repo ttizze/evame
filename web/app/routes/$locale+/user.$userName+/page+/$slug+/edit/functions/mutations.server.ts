@@ -20,15 +20,6 @@ export async function upsertPageWithHtml(
 	});
 }
 
-export async function upsertTitle(pageSlug: string, title: string) {
-	const page = await prisma.page.findUnique({ where: { slug: pageSlug } });
-	if (!page) return;
-	await prisma.page.update({
-		where: { id: page.id },
-		data: { title: title },
-	});
-}
-
 export async function upsertTags(tags: string[], pageId: number) {
 	// 重複タグを除去
 	const uniqueTags = Array.from(new Set(tags));

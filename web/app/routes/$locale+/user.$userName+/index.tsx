@@ -23,28 +23,33 @@ import {
 	PaginationPrevious,
 } from "~/components/ui/pagination";
 import i18nServer from "~/i18n.server";
+import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
+import { sanitizeUser } from "~/utils/sanitizeUser";
+import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
 import { DeletePageDialog } from "./components/DeletePageDialog";
 import {
 	archivePage,
 	togglePagePublicStatus,
 } from "./functions/mutations.server";
-import {
-	fetchPageById,
-	fetchSanitizedUserWithPages,
-} from "./functions/queries.server";
+import { fetchPageById } from "./functions/queries.server";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Profile" }];
 	}
-	return [{ title: data.sanitizedUserWithPages.displayName }];
+	return [{ title: data.sanitizedUser.displayName }];
 };
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const locale = await i18nServer.getLocale(request);
 	const { userName } = params;
 	if (!userName) throw new Error("Username is required");
+
+	const nonSanitizedUser = await fetchUserByUserName(userName);
+	if (!nonSanitizedUser) {
+		throw new Response("Not Found", { status: 404 });
+	}
 
 	const url = new URL(request.url);
 	const page = Number(url.searchParams.get("page") || "1");
@@ -53,25 +58,24 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
 	const isOwner = currentUser?.userName === userName;
 
-	const sanitizedUserWithPages = await fetchSanitizedUserWithPages(
-		userName,
-		page,
-		pageSize,
-	);
-	if (!sanitizedUserWithPages) throw new Response("Not Found", { status: 404 });
+	const { pagesWithInfo, totalPages, currentPage } =
+		await fetchPaginatedPagesWithInfo({
+			page,
+			pageSize,
+			currentUserId: currentUser?.id,
+			pageOwnerId: nonSanitizedUser.id,
+			onlyUserOwn: true,
+			locale,
+		});
+	if (!pagesWithInfo) throw new Response("Not Found", { status: 404 });
+	const sanitizedUser = await sanitizeUser(nonSanitizedUser);
 
-	const sanitizedUserWithPagesLocalized = {
-		...sanitizedUserWithPages,
-		pages: sanitizedUserWithPages.pages.map((page) => ({
-			...page,
-			createdAt: new Date(page.createdAt).toLocaleDateString(locale),
-		})),
-	};
 	return {
-		sanitizedUserWithPages: sanitizedUserWithPagesLocalized,
+		pagesWithInfo,
 		isOwner,
-		totalPages: sanitizedUserWithPages.totalPages,
-		currentPage: sanitizedUserWithPages.currentPage,
+		totalPages,
+		currentPage,
+		sanitizedUser,
 	};
 }
 
@@ -104,7 +108,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function UserPage() {
-	const { sanitizedUserWithPages, isOwner, totalPages, currentPage } =
+	const { pagesWithInfo, isOwner, totalPages, currentPage, sanitizedUser } =
 		useLoaderData<typeof loader>();
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [pageToDelete, setPageToDelete] = useState<number | null>(null);
@@ -144,14 +148,14 @@ export default function UserPage() {
 			<div className="mb-6 w-full overflow-hidden ">
 				<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 					<div className=" flex  justify-start">
-						<Link to={`${sanitizedUserWithPages.icon}`}>
+						<Link to={`${sanitizedUser.icon}`}>
 							<Avatar className="w-32 h-32">
 								<AvatarImage
-									src={sanitizedUserWithPages.icon}
-									alt={sanitizedUserWithPages.displayName}
+									src={sanitizedUser.icon}
+									alt={sanitizedUser.displayName}
 								/>
 								<AvatarFallback>
-									{sanitizedUserWithPages.displayName.charAt(0).toUpperCase()}
+									{sanitizedUser.displayName.charAt(0).toUpperCase()}
 								</AvatarFallback>
 							</Avatar>
 						</Link>
@@ -159,11 +163,9 @@ export default function UserPage() {
 					<div className="md:col-span-3">
 						<CardHeader className="p-0">
 							<CardTitle className="text-2xl font-bold flex justify-between items-center">
-								<div>{sanitizedUserWithPages.displayName}</div>
+								<div>{sanitizedUser.displayName}</div>
 								{isOwner && (
-									<LocaleLink
-										to={`/user/${sanitizedUserWithPages.userName}/edit`}
-									>
+									<LocaleLink to={`/user/${sanitizedUser.userName}/edit`}>
 										<Button variant="ghost">
 											<Settings className="w-6 h-6" />
 										</Button>
@@ -173,19 +175,19 @@ export default function UserPage() {
 						</CardHeader>
 						<CardContent className="break-all overflow-wrap-anywhere mt-2 p-0">
 							<Linkify options={{ className: "underline" }}>
-								{sanitizedUserWithPages.profile}
+								{sanitizedUser.profile}
 							</Linkify>
 						</CardContent>
 					</div>
 				</div>
 			</div>
 			<div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-				{sanitizedUserWithPages.pages.map((page) => (
+				{pagesWithInfo.map((page) => (
 					<PageCard
 						key={page.id}
 						pageCard={page}
-						pageLink={`/user/${sanitizedUserWithPages.userName}/page/${page.slug}`}
-						userLink={`/user/${sanitizedUserWithPages.userName}`}
+						pageLink={`/user/${sanitizedUser.userName}/page/${page.slug}`}
+						userLink={`/user/${sanitizedUser.userName}`}
 						showOwnerActions={isOwner}
 						onTogglePublicStatus={togglePagePublicStatus}
 						onArchive={handleArchive}
@@ -250,7 +252,7 @@ export default function UserPage() {
 				</Pagination>
 			</div>
 
-			{sanitizedUserWithPages.pages.length === 0 && (
+			{pagesWithInfo.length === 0 && (
 				<p className="text-center text-gray-500 mt-10">
 					{isOwner ? "You haven't created any pages yet." : "No pages yet."}
 				</p>
