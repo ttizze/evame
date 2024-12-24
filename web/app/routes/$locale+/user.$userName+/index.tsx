@@ -153,10 +153,8 @@ export default function UserPage() {
 		<div>
 			<Card className="mb-8">
 				<CardHeader className="pb-4">
-					{/* flexで左右に配置 */}
-					<div className="flex items-center justify-between">
-						{/* 左側：アバター+ユーザ名 */}
-						<div className="flex items-center space-x-4">
+					<div className="flex w-full flex-col md:flex-row">
+						<div>
 							<Link to={`${sanitizedUser.icon}`}>
 								<Avatar className="w-20 h-20 md:w-24 md:h-24">
 									<AvatarImage
@@ -168,29 +166,32 @@ export default function UserPage() {
 									</AvatarFallback>
 								</Avatar>
 							</Link>
+						</div>
+						<div className="mt-2 md:mt-0 md:ml-4 flex items-center justify-between w-full">
 							<div>
-								<CardTitle className="text-2xl font-bold ">
+								<CardTitle className="text-xl md:text-2xl font-bold">
 									{sanitizedUser.displayName}
 								</CardTitle>
 								<CardDescription className="text-sm text-gray-500">
 									@{sanitizedUser.userName}
 								</CardDescription>
 							</div>
+
+							{isOwner && (
+								<LocaleLink to={`/user/${sanitizedUser.userName}/edit`}>
+									<Button
+										variant="secondary"
+										className="flex items-center rounded-full"
+									>
+										<Settings className="w-4 h-4" />
+										<span className="ml-2 text-sm">Edit Profile</span>
+									</Button>
+								</LocaleLink>
+							)}
 						</div>
-						{/* 右側：設定マークを右端に配置 */}
-						{isOwner && (
-							<LocaleLink to={`/user/${sanitizedUser.userName}/edit`}>
-								<Button
-									variant="secondary"
-									className="flex items-center rounded-full"
-								>
-									<Settings className="w-6 h-6" />
-									<span className="ml-2">Edit Profile</span>
-								</Button>
-							</LocaleLink>
-						)}
 					</div>
 				</CardHeader>
+
 				<CardContent className="mt-4">
 					<Linkify options={{ className: "underline" }}>
 						{sanitizedUser.profile}
