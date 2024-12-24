@@ -1,11 +1,11 @@
-import { franc } from "franc";
+import cld from "cld";
 import { JSDOM } from "jsdom";
 
 export async function getPageSourceLanguage(
-	numberedContent: string,
+	htmlContent: string,
 	title: string,
 ): Promise<string> {
-	const doc = new JSDOM(numberedContent);
+	const doc = new JSDOM(htmlContent);
 
 	for (const el of doc.window.document.querySelectorAll("code, a")) {
 		el.remove();
@@ -18,22 +18,28 @@ export async function getPageSourceLanguage(
 		},
 	];
 
-	const elements = doc.window.document.querySelectorAll("[data-number]");
+	const elements = doc.window.document.querySelectorAll(
+		"p, h1, h2, h3, h4, h5, h6, li, td, th",
+	);
 
-	for (const element of elements) {
-		const dataNumber = element.getAttribute("data-number");
-		if (dataNumber !== null) {
-			textElements.push({
-				number: Number(dataNumber),
-				text: element.textContent?.trim() || "",
-			});
-		}
+	for (const [index, element] of elements.entries()) {
+		textElements.push({
+			number: index + 1,
+			text: element.textContent?.trim() || "",
+		});
 	}
 
 	const sortedContent = textElements
 		.sort((a, b) => a.number - b.number)
 		.map((element) => element.text)
 		.join("\n");
-	const language = await franc(sortedContent);
-	return language;
+	console.log(sortedContent);
+	try {
+		const { detect } = cld;
+		const result = await detect(sortedContent);
+		return result.languages[0]?.code || "und";
+	} catch (error) {
+		console.error("Error detecting language:", error);
+		return "und";
+	}
 }
