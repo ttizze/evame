@@ -65,6 +65,15 @@ describe("UserProfile", () => {
 			},
 			include: { pages: true },
 		});
+		await prisma.user.create({
+			data: {
+				userName: "testuser2",
+				displayName: "Test User2",
+				email: "testuser2@example.com",
+				icon: "https://example.com/icon2.jpg",
+				profile: "This is a test profile2",
+			},
+		});
 	});
 
 	test("loader returns correct data and menu is displayed for authenticated owner", async () => {
@@ -97,7 +106,29 @@ describe("UserProfile", () => {
 		expect(await screen.findByText("Make Private")).toBeInTheDocument();
 		expect(await screen.findByText("Delete")).toBeInTheDocument();
 	});
+	test("loader returns correct data and no pages message is displayed when user has no pages", async () => {
+		// @ts-ignore
+		vi.mocked(authenticator.isAuthenticated).mockResolvedValue({
+			id: 1,
+			userName: "testuser2",
+		});
+		const RemixStub = createRemixStub([
+			{
+				path: "/:userName",
+				Component: UserProfile,
+				loader,
+			},
+		]);
 
+		render(<RemixStub initialEntries={["/testuser2"]} />);
+
+		expect(await screen.findByText("Test User2")).toBeInTheDocument();
+		expect(
+			await screen.findByText("You haven't created any pages yet."),
+		).toBeInTheDocument();
+		const menuButton = screen.queryByLabelText("More options");
+		expect(menuButton).not.toBeInTheDocument();
+	});
 	test("loader returns correct data and menu is not displayed for unauthenticated visitor", async () => {
 		// @ts-ignore
 		vi.mocked(authenticator.isAuthenticated).mockResolvedValue(null);

@@ -12,7 +12,13 @@ import { LocaleLink } from "~/components/LocaleLink";
 import { PageCard } from "~/components/PageCard";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
-import { CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import {
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "~/components/ui/card";
+import { Card } from "~/components/ui/card";
 import {
 	Pagination,
 	PaginationContent,
@@ -23,28 +29,33 @@ import {
 	PaginationPrevious,
 } from "~/components/ui/pagination";
 import i18nServer from "~/i18n.server";
+import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
+import { sanitizeUser } from "~/utils/sanitizeUser";
+import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
 import { DeletePageDialog } from "./components/DeletePageDialog";
 import {
 	archivePage,
 	togglePagePublicStatus,
 } from "./functions/mutations.server";
-import {
-	fetchPageById,
-	fetchSanitizedUserWithPages,
-} from "./functions/queries.server";
+import { fetchPageById } from "./functions/queries.server";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Profile" }];
 	}
-	return [{ title: data.sanitizedUserWithPages.displayName }];
+	return [{ title: data.sanitizedUser.displayName }];
 };
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const locale = await i18nServer.getLocale(request);
 	const { userName } = params;
 	if (!userName) throw new Error("Username is required");
+
+	const nonSanitizedUser = await fetchUserByUserName(userName);
+	if (!nonSanitizedUser) {
+		throw new Response("Not Found", { status: 404 });
+	}
 
 	const url = new URL(request.url);
 	const page = Number(url.searchParams.get("page") || "1");
@@ -53,25 +64,24 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
 	const isOwner = currentUser?.userName === userName;
 
-	const sanitizedUserWithPages = await fetchSanitizedUserWithPages(
-		userName,
-		page,
-		pageSize,
-	);
-	if (!sanitizedUserWithPages) throw new Response("Not Found", { status: 404 });
+	const { pagesWithInfo, totalPages, currentPage } =
+		await fetchPaginatedPagesWithInfo({
+			page,
+			pageSize,
+			currentUserId: currentUser?.id,
+			pageOwnerId: nonSanitizedUser.id,
+			onlyUserOwn: true,
+			locale,
+		});
+	if (!pagesWithInfo) throw new Response("Not Found", { status: 404 });
+	const sanitizedUser = await sanitizeUser(nonSanitizedUser);
 
-	const sanitizedUserWithPagesLocalized = {
-		...sanitizedUserWithPages,
-		pages: sanitizedUserWithPages.pages.map((page) => ({
-			...page,
-			createdAt: new Date(page.createdAt).toLocaleDateString(locale),
-		})),
-	};
 	return {
-		sanitizedUserWithPages: sanitizedUserWithPagesLocalized,
+		pagesWithInfo,
 		isOwner,
-		totalPages: sanitizedUserWithPages.totalPages,
-		currentPage: sanitizedUserWithPages.currentPage,
+		totalPages,
+		currentPage,
+		sanitizedUser,
 	};
 }
 
@@ -104,7 +114,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function UserPage() {
-	const { sanitizedUserWithPages, isOwner, totalPages, currentPage } =
+	const { pagesWithInfo, isOwner, totalPages, currentPage, sanitizedUser } =
 		useLoaderData<typeof loader>();
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [pageToDelete, setPageToDelete] = useState<number | null>(null);
@@ -140,52 +150,61 @@ export default function UserPage() {
 	};
 
 	return (
-		<div className="">
-			<div className="mb-6 w-full overflow-hidden ">
-				<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-					<div className=" flex  justify-start">
-						<Link to={`${sanitizedUserWithPages.icon}`}>
-							<Avatar className="w-32 h-32">
-								<AvatarImage
-									src={sanitizedUserWithPages.icon}
-									alt={sanitizedUserWithPages.displayName}
-								/>
-								<AvatarFallback>
-									{sanitizedUserWithPages.displayName.charAt(0).toUpperCase()}
-								</AvatarFallback>
-							</Avatar>
-						</Link>
+		<div>
+			<Card className="mb-8">
+				<CardHeader className="pb-4">
+					{/* flexで左右に配置 */}
+					<div className="flex items-center justify-between">
+						{/* 左側：アバター+ユーザ名 */}
+						<div className="flex items-center space-x-4">
+							<Link to={`${sanitizedUser.icon}`}>
+								<Avatar className="w-20 h-20 md:w-24 md:h-24">
+									<AvatarImage
+										src={sanitizedUser.icon}
+										alt={sanitizedUser.displayName}
+									/>
+									<AvatarFallback>
+										{sanitizedUser.displayName.charAt(0).toUpperCase()}
+									</AvatarFallback>
+								</Avatar>
+							</Link>
+							<div>
+								<CardTitle className="text-2xl font-bold ">
+									{sanitizedUser.displayName}
+								</CardTitle>
+								<CardDescription className="text-sm text-gray-500">
+									@{sanitizedUser.userName}
+								</CardDescription>
+							</div>
+						</div>
+						{/* 右側：設定マークを右端に配置 */}
+						{isOwner && (
+							<LocaleLink to={`/user/${sanitizedUser.userName}/edit`}>
+								<Button
+									variant="secondary"
+									className="flex items-center rounded-full"
+								>
+									<Settings className="w-6 h-6" />
+									<span className="ml-2">Edit Profile</span>
+								</Button>
+							</LocaleLink>
+						)}
 					</div>
-					<div className="md:col-span-3">
-						<CardHeader className="p-0">
-							<CardTitle className="text-2xl font-bold flex justify-between items-center">
-								<div>{sanitizedUserWithPages.displayName}</div>
-								{isOwner && (
-									<LocaleLink
-										to={`/user/${sanitizedUserWithPages.userName}/edit`}
-									>
-										<Button variant="ghost">
-											<Settings className="w-6 h-6" />
-										</Button>
-									</LocaleLink>
-								)}
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="break-all overflow-wrap-anywhere mt-2 p-0">
-							<Linkify options={{ className: "underline" }}>
-								{sanitizedUserWithPages.profile}
-							</Linkify>
-						</CardContent>
-					</div>
-				</div>
-			</div>
+				</CardHeader>
+				<CardContent className="mt-4">
+					<Linkify options={{ className: "underline" }}>
+						{sanitizedUser.profile}
+					</Linkify>
+				</CardContent>
+			</Card>
+
 			<div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-				{sanitizedUserWithPages.pages.map((page) => (
+				{pagesWithInfo.map((page) => (
 					<PageCard
 						key={page.id}
 						pageCard={page}
-						pageLink={`/user/${sanitizedUserWithPages.userName}/page/${page.slug}`}
-						userLink={`/user/${sanitizedUserWithPages.userName}`}
+						pageLink={`/user/${sanitizedUser.userName}/page/${page.slug}`}
+						userLink={`/user/${sanitizedUser.userName}`}
 						showOwnerActions={isOwner}
 						onTogglePublicStatus={togglePagePublicStatus}
 						onArchive={handleArchive}
@@ -193,64 +212,66 @@ export default function UserPage() {
 				))}
 			</div>
 
-			<div className="mt-8 flex justify-center">
-				<Pagination className="mt-4">
-					<PaginationContent className="w-full justify-between">
-						<PaginationItem>
-							<PaginationPrevious
-								onClick={() => handlePageChange(currentPage - 1)}
-								className={`${
-									currentPage === 1 ? "pointer-events-none opacity-50" : ""
-								}`}
-							/>
-						</PaginationItem>
-						<div className="flex items-center space-x-2">
-							{Array.from({ length: totalPages }, (_, i) => i + 1).map(
-								(pageNumber) => {
-									if (
-										pageNumber === 1 ||
-										pageNumber === totalPages ||
-										(pageNumber >= currentPage - 1 &&
-											pageNumber <= currentPage + 1)
-									) {
-										return (
-											<PaginationItem key={`page-${pageNumber}`}>
-												<PaginationLink
-													onClick={() => handlePageChange(pageNumber)}
-													isActive={currentPage === pageNumber}
-												>
-													{pageNumber}
-												</PaginationLink>
-											</PaginationItem>
-										);
-									}
-									if (
-										pageNumber === currentPage - 2 ||
-										pageNumber === currentPage + 2
-									) {
-										return (
-											<PaginationEllipsis key={`ellipsis-${pageNumber}`} />
-										);
-									}
-									return null;
-								},
-							)}
-						</div>
-						<PaginationItem>
-							<PaginationNext
-								onClick={() => handlePageChange(currentPage + 1)}
-								className={
-									currentPage === totalPages
-										? "pointer-events-none opacity-50"
-										: ""
-								}
-							/>
-						</PaginationItem>
-					</PaginationContent>
-				</Pagination>
-			</div>
+			{pagesWithInfo.length > 0 && (
+				<div className="mt-8 flex justify-center">
+					<Pagination className="mt-4">
+						<PaginationContent className="w-full justify-between">
+							<PaginationItem>
+								<PaginationPrevious
+									onClick={() => handlePageChange(currentPage - 1)}
+									className={`${
+										currentPage === 1 ? "pointer-events-none opacity-50" : ""
+									}`}
+								/>
+							</PaginationItem>
+							<div className="flex items-center space-x-2">
+								{Array.from({ length: totalPages }, (_, i) => i + 1).map(
+									(pageNumber) => {
+										if (
+											pageNumber === 1 ||
+											pageNumber === totalPages ||
+											(pageNumber >= currentPage - 1 &&
+												pageNumber <= currentPage + 1)
+										) {
+											return (
+												<PaginationItem key={`page-${pageNumber}`}>
+													<PaginationLink
+														onClick={() => handlePageChange(pageNumber)}
+														isActive={currentPage === pageNumber}
+													>
+														{pageNumber}
+													</PaginationLink>
+												</PaginationItem>
+											);
+										}
+										if (
+											pageNumber === currentPage - 2 ||
+											pageNumber === currentPage + 2
+										) {
+											return (
+												<PaginationEllipsis key={`ellipsis-${pageNumber}`} />
+											);
+										}
+										return null;
+									},
+								)}
+							</div>
+							<PaginationItem>
+								<PaginationNext
+									onClick={() => handlePageChange(currentPage + 1)}
+									className={`${
+										currentPage === totalPages
+											? "pointer-events-none opacity-50"
+											: ""
+									}`}
+								/>
+							</PaginationItem>
+						</PaginationContent>
+					</Pagination>
+				</div>
+			)}
 
-			{sanitizedUserWithPages.pages.length === 0 && (
+			{pagesWithInfo.length === 0 && (
 				<p className="text-center text-gray-500 mt-10">
 					{isOwner ? "You haven't created any pages yet." : "No pages yet."}
 				</p>

@@ -9,7 +9,7 @@ import { useState } from "react";
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
 import i18nServer from "~/i18n.server";
 import { localeCookie } from "~/i18n.server";
-import { getNonSanitizedUserbyUserName } from "~/routes/functions/queries.server";
+import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { LikeButton } from "~/routes/resources+/like-button";
 import { authenticator } from "~/utils/auth.server";
 import { ContentWithTranslations } from "./components/ContentWithTranslations";
@@ -66,7 +66,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	}
 
 	const currentUser = await authenticator.isAuthenticated(request);
-	const nonSanitizedUser = await getNonSanitizedUserbyUserName(
+	const nonSanitizedUser = await fetchUserByUserName(
 		currentUser?.userName ?? "",
 	);
 	const hasGeminiApiKey = !!nonSanitizedUser?.geminiApiKey;
@@ -131,9 +131,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	const submission = parseWithZod(await request.formData(), {
 		schema: actionSchema,
 	});
-	const nonSanitizedUser = await getNonSanitizedUserbyUserName(
-		currentUser.userName,
-	);
+	const nonSanitizedUser = await fetchUserByUserName(currentUser.userName);
 	if (!nonSanitizedUser) {
 		throw new Response("User not found", { status: 404 });
 	}

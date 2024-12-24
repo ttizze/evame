@@ -1,6 +1,6 @@
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
 import { createUserAITranslationInfo } from "~/routes/$locale+/user.$userName+/page+/$slug+/functions/mutations.server";
-import { getNonSanitizedUserbyUserName } from "~/routes/functions/queries.server";
+import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { prisma } from "~/utils/prisma";
 
 // 実際にはgetAllPagesByUserIdを何らかの形で用意する必要がある
@@ -24,7 +24,7 @@ async function getAllPagesByUserId(userId: number) {
 			process.exit(1);
 		}
 
-		const nonSanitizedUser = await getNonSanitizedUserbyUserName(USER_NAME);
+		const nonSanitizedUser = await fetchUserByUserName(USER_NAME);
 		if (!nonSanitizedUser) {
 			console.error(`User ${USER_NAME} not found.`);
 			process.exit(1);

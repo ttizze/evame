@@ -8,11 +8,11 @@ import {
 	CardHeader,
 	CardTitle,
 } from "~/components/ui/card";
+import type { PageCardLocalizedType } from "~/routes/$locale+/functions/queries.server";
 import { PageActionsDropdown } from "~/routes/$locale+/user.$userName+/components/PageActionsDropdown";
 import { LikeButton } from "~/routes/resources+/like-button";
-import type { PageCardType } from "~/routes/types";
 type PageCardProps = {
-	pageCard: PageCardType;
+	pageCard: PageCardLocalizedType;
 	pageLink: string;
 	userLink: string;
 	showOwnerActions?: boolean;
@@ -44,7 +44,7 @@ export function PageCard({
 				<LocaleLink to={pageLink} className="block">
 					<CardTitle className="flex items-center pr-3 break-all overflow-wrap-anywhere">
 						{!pageCard.isPublished && <Lock className="h-4 w-4 mr-2" />}
-						{pageCard.title}
+						{pageCard.sourceTexts[0].text}
 					</CardTitle>
 					<CardDescription>{pageCard.createdAt}</CardDescription>
 				</LocaleLink>

@@ -3,10 +3,7 @@ import rehypeStringify from "rehype-stringify";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
-import {
-	upsertPageWithHtml,
-	upsertTitle,
-} from "~/routes/$locale+/user.$userName+/page+/$slug+/edit/functions/mutations.server";
+import { upsertPageWithHtml } from "~/routes/$locale+/user.$userName+/page+/$slug+/edit/functions/mutations.server";
 import { rehypeAddDataId } from "~/routes/$locale+/user.$userName+/page+/$slug+/edit/utils/processHtmlContent";
 
 export async function processMarkdownContent(
@@ -42,6 +39,5 @@ export async function processMarkdownContent(
 		sourceLanguage,
 		isPublished,
 	);
-	await upsertTitle(pageSlug, title);
 	return page;
 }
