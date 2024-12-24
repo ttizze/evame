@@ -179,7 +179,10 @@ export default function UserPage() {
 
 							{isOwner && (
 								<LocaleLink to={`/user/${sanitizedUser.userName}/edit`}>
-									<Button variant="secondary" className="flex items-center rounded-full">
+									<Button
+										variant="secondary"
+										className="flex items-center rounded-full"
+									>
 										<Settings className="w-4 h-4" />
 										<span className="ml-2 text-sm">Edit Profile</span>
 									</Button>
@@ -217,8 +220,9 @@ export default function UserPage() {
 							<PaginationItem>
 								<PaginationPrevious
 									onClick={() => handlePageChange(currentPage - 1)}
-									className={`${currentPage === 1 ? "pointer-events-none opacity-50" : ""
-										}`}
+									className={`${
+										currentPage === 1 ? "pointer-events-none opacity-50" : ""
+									}`}
 								/>
 							</PaginationItem>
 							<div className="flex items-center space-x-2">
@@ -256,10 +260,11 @@ export default function UserPage() {
 							<PaginationItem>
 								<PaginationNext
 									onClick={() => handlePageChange(currentPage + 1)}
-									className={`${currentPage === totalPages
-										? "pointer-events-none opacity-50"
-										: ""
-										}`}
+									className={`${
+										currentPage === totalPages
+											? "pointer-events-none opacity-50"
+											: ""
+									}`}
 								/>
 							</PaginationItem>
 						</PaginationContent>
