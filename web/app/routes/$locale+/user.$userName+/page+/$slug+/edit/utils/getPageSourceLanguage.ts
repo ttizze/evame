@@ -33,7 +33,7 @@ export async function getPageSourceLanguage(
 		.sort((a, b) => a.number - b.number)
 		.map((element) => element.text)
 		.join("\n");
-	console.log(sortedContent);
+		
 	try {
 		const { detect } = cld;
 		const result = await detect(sortedContent);
