@@ -11,7 +11,7 @@ services:
   branch: main
   plan: starter
   region: singapore
-  buildCommand: pnpm install && pnpm run build
+  buildCommand: npm ci --production=false && npm run build && npm prune --production
   startCommand: npx prisma migrate deploy && npx prisma generate && pnpm start
   rootDir: web
   envVars:
