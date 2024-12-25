@@ -147,5 +147,6 @@
 	},
 	"engines": {
 		"node": "22.12.0"
-	}
+	},
+	"trustedDependencies": ["@biomejs/biome", "@sentry/cli", "protobufjs"]
 }
