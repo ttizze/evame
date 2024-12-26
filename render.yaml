@@ -11,7 +11,7 @@ services:
   branch: main
   plan: starter
   region: singapore
-  buildCommand: bun run install && bun run build
+  buildCommand: bun install && bun run build
   startCommand: bunx prisma migrate deploy && bunx prisma generate && bun run start
   rootDir: web
   envVars:
