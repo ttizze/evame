@@ -1,4 +1,4 @@
-import cld from "cld";
+import { loadModule } from "cld3-asm";
 import { JSDOM } from "jsdom";
 
 export async function getPageSourceLanguage(
@@ -34,12 +34,19 @@ export async function getPageSourceLanguage(
 		.map((element) => element.text)
 		.join("\n");
 
+	let cld = null;
 	try {
-		const { detect } = cld;
-		const result = await detect(sortedContent);
-		return result.languages[0]?.code || "und";
+		const cldFactory = await loadModule();
+		cld = cldFactory.create();
+		const result = await cld.findLanguage(sortedContent);
+		const languageCode = result?.language || "und";
+		return languageCode;
 	} catch (error) {
 		console.error("Error detecting language:", error);
 		return "und";
+	} finally {
+		if (cld) {
+			cld.dispose();
+		}
 	}
 }
