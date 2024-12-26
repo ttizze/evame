@@ -160,7 +160,7 @@ model SourceText {
   page           Page            @relation(fields: [pageId], references: [id], onDelete: Cascade)
   pageId         Int             @map("page_id")
   createdAt      DateTime        @default(now()) @map("created_at")
-  updatedAt      DateTime        @default(now()) @updatedAt @map("updated_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
 
   @@unique([pageId, number])
   @@unique([pageId, textAndOccurrenceHash])
