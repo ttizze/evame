@@ -11,8 +11,8 @@ services:
   branch: main
   plan: starter
   region: singapore
-  buildCommand: npm ci --production=false && npm run build && npm prune --production
-  startCommand: npx prisma migrate deploy && npx prisma generate && pnpm start
+  buildCommand: bun run install && bun run build
+  startCommand: bunx prisma migrate deploy && bunx prisma generate && bun run start
   rootDir: web
   envVars:
     - key: DATABASE_URL
