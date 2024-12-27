@@ -33,19 +33,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
 	const locale = (await i18nServer.getLocale(request)) || "en";
 	const url = new URL(request.url);
-	if (!url.pathname.startsWith(`/${locale}`)) {
+	const pathSegments: string[] = url.pathname.split("/").filter(Boolean);
+	if (pathSegments.length === 0) {
 		url.pathname = `/${locale}${url.pathname}`;
 		return redirect(url.toString());
 	}
+	const currentLocale = pathSegments[0];
 	return data(
 		{
 			isDevelopment,
 			currentUser,
-			locale,
+			locale: currentLocale,
 			gaTrackingId,
 		},
 		{
-			headers: { "Set-Cookie": await localeCookie.serialize(locale) },
+			headers: { "Set-Cookie": await localeCookie.serialize(currentLocale) },
 		},
 	);
 }

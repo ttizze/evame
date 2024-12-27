@@ -3,7 +3,6 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { data } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { z } from "zod";
-import i18nServer from "~/i18n.server";
 import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
 import { PageManagementTab } from "./components/PageManagementTab";
@@ -23,14 +22,17 @@ const togglePublicSchema = z.object({
 	intent: z.literal("togglePublic"),
 });
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ params, request }: LoaderFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request, {
 		failureRedirect: "/auth/login",
 	});
 
 	const nonSanitizedUser = await fetchUserByUserName(currentUser.userName);
 	const hasGeminiApiKey = !!nonSanitizedUser?.geminiApiKey;
-	const locale = await i18nServer.getLocale(request);
+	const locale = params.locale;
+	if (!locale) {
+		throw new Response("Missing locale", { status: 400 });
+	}
 	const url = new URL(request.url);
 	const page = Number(url.searchParams.get("page") || "1");
 	const search = url.searchParams.get("search") || "";

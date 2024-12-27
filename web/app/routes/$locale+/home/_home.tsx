@@ -13,7 +13,6 @@ import {
 	PaginationPrevious,
 } from "~/components/ui/pagination";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import i18nServer from "~/i18n.server";
 import { authenticator } from "~/utils/auth.server";
 import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
 import type { PageCardLocalizedType } from "../functions/queries.server";
@@ -22,8 +21,11 @@ export const meta: MetaFunction = () => {
 	return [{ title: "Home - Latest Pages" }];
 };
 
-export async function loader({ request }: LoaderFunctionArgs) {
-	const locale = await i18nServer.getLocale(request);
+export async function loader({ params, request }: LoaderFunctionArgs) {
+	const locale = params.locale;
+	if (!locale) {
+		throw new Response("Missing locale", { status: 400 });
+	}
 	const url = new URL(request.url);
 
 	// タブ状態 ( new / recommended )

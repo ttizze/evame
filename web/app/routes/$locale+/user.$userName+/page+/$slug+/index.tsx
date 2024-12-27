@@ -1,14 +1,10 @@
 import { useForm } from "@conform-to/react";
 import { parseWithZod } from "@conform-to/zod";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { data } from "@remix-run/node";
-import { useActionData } from "@remix-run/react";
 import type { MetaFunction } from "@remix-run/react";
-import { useLoaderData } from "@remix-run/react";
+import { useActionData, useLoaderData } from "@remix-run/react";
 import { useState } from "react";
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
-import i18nServer from "~/i18n.server";
-import { localeCookie } from "~/i18n.server";
 import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { LikeButton } from "~/routes/resources+/like-button";
 import { authenticator } from "~/utils/auth.server";
@@ -59,10 +55,13 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
-	const locale = await i18nServer.getLocale(request);
+	const locale = params.locale;
+	if (!locale) {
+		throw new Response("Missing locale", { status: 400 });
+	}
 	const { slug } = params;
 	if (!slug) {
-		throw new Response("Missing URL parameter", { status: 400 });
+		throw new Response("Missing slug", { status: 400 });
 	}
 
 	const currentUser = await authenticator.isAuthenticated(request);
@@ -106,28 +105,24 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		pageWithTranslations.page.id,
 		currentUser?.id ?? 0,
 	);
-	return data(
-		{
-			locale,
-			pageWithTranslations,
-			currentUser,
-			hasGeminiApiKey,
-			userAITranslationInfo,
-			sourceTitleWithTranslations,
-			sourceTitleWithBestTranslationTitle,
-			likeCount,
-			isLikedByUser,
-		},
-		{
-			headers: { "Set-Cookie": await localeCookie.serialize(locale) },
-		},
-	);
+	return {
+		locale,
+		pageWithTranslations,
+		currentUser,
+		hasGeminiApiKey,
+		userAITranslationInfo,
+		sourceTitleWithTranslations,
+		sourceTitleWithBestTranslationTitle,
+		likeCount,
+		isLikedByUser,
+	};
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({ request, params }: ActionFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request, {
 		failureRedirect: "/auth/login",
 	});
+
 	const submission = parseWithZod(await request.formData(), {
 		schema: actionSchema,
 	});
@@ -135,8 +130,11 @@ export async function action({ request }: ActionFunctionArgs) {
 	if (!nonSanitizedUser) {
 		throw new Response("User not found", { status: 404 });
 	}
-	const locale = await i18nServer.getLocale(request);
 
+	const locale = params.locale;
+	if (!locale) {
+		throw new Response("Missing locale", { status: 400 });
+	}
 	if (submission.status !== "success") {
 		return { intent: null, lastResult: submission.reply(), slug: null };
 	}
