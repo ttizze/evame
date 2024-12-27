@@ -104,6 +104,7 @@ export function ContentWithTranslations({
 					currentUserName={currentUserName}
 					showOriginal={showOriginal}
 					showTranslation={showTranslation}
+					locale={locale}
 				/>
 			)}
 		</>

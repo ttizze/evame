@@ -83,7 +83,7 @@ async function getRankingEntries(
 async function generateRankingMarkdown(
 	rankingEntries: RankingEntry[],
 	titleToSlugMap: Map<string, string>,
-	rankingTitle = "人気ランキングページ",
+	rankingTitle = "青空文庫人気ランキングページ",
 ): Promise<string> {
 	let rankingMarkdown = `## ${rankingTitle}\n\n`;
 	// ソートして順位順に並べる（念のため）
@@ -92,7 +92,7 @@ async function generateRankingMarkdown(
 		const pageSlug = titleToSlugMap.get(entry.title);
 		if (pageSlug) {
 			// 内部リンク
-			rankingMarkdown += `${entry.rank}. [${entry.title}](/evame/page/${pageSlug}) - ${entry.author}\n`;
+			rankingMarkdown += `${entry.rank}. [${entry.title}](/user/evame/page/${pageSlug}) - ${entry.author}\n`;
 		} else {
 			// リンクなし
 			rankingMarkdown += `${entry.rank}. ${entry.title} - ${entry.author}\n`;
@@ -220,11 +220,8 @@ async function processMarkdownFile(
 
 		// タグのアップサート
 		if (attributes.tags && page && page.id) {
-			const tags = attributes.tags.map((tag) => `NDC${tag}`);
-			await upsertTags(tags, page.id);
+			await upsertTags(attributes.tags, page.id);
 		}
-
-		console.log("処理完了:", slug);
 	} catch (error) {
 		console.error(`❌ エラー (${filePath}):`, error);
 	}
@@ -294,7 +291,7 @@ async function syncGithub() {
 
 		// ランキングMarkdownの処理
 		await processMarkdownContent(
-			"人気ランキングページ",
+			"青空文庫人気ランキングページ",
 			rankingMarkdown,
 			rankingPageSlug,
 			adminUser.id,
