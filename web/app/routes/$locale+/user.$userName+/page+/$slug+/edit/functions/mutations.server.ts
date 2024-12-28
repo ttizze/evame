@@ -89,29 +89,35 @@ export async function synchronizePageSourceTexts(
 		.map((t) => t.id);
 
 	// (トランザクション1)
-	await prisma.$transaction(async (tx) => {
-		// 不要テキスト削除
-		if (hashesToDelete.length > 0) {
-			await tx.sourceText.deleteMany({
-				where: {
-					pageId,
-					id: { in: hashesToDelete },
-				},
-			});
-		}
+	await prisma.$transaction(
+		async (tx) => {
+			// 不要テキスト削除
+			if (hashesToDelete.length > 0) {
+				await tx.sourceText.deleteMany({
+					where: {
+						pageId,
+						id: { in: hashesToDelete },
+					},
+				});
+			}
 
-		// 既存テキストオフセット
-		const existingIds = existingSourceTexts.map((t) => t.id);
-		if (existingIds.length > 0) {
-			await tx.sourceText.updateMany({
-				where: {
-					pageId,
-					id: { in: existingIds },
-				},
-				data: { number: { increment: OFFSET } },
-			});
-		}
-	});
+			// 既存テキストオフセット
+			const existingIds = existingSourceTexts.map((t) => t.id);
+			if (existingIds.length > 0) {
+				await tx.sourceText.updateMany({
+					where: {
+						pageId,
+						id: { in: existingIds },
+					},
+					data: { number: { increment: OFFSET } },
+				});
+			}
+		},
+		{
+			maxWait: 50000,
+			timeout: 100000,
+		},
+	);
 	// トランザクション1終了
 
 	// 2. 既存テキストのnumberを更新
@@ -150,15 +156,21 @@ export async function synchronizePageSourceTexts(
 
 	if (newInserts.length > 0) {
 		// (トランザクション3)
-		await prisma.$transaction(async (tx) => {
-			for (let i = 0; i < newInserts.length; i += BATCH_SIZE) {
-				const batch = newInserts.slice(i, i + BATCH_SIZE);
-				await tx.sourceText.createMany({
-					data: batch,
-					skipDuplicates: true,
-				});
-			}
-		});
+		await prisma.$transaction(
+			async (tx) => {
+				for (let i = 0; i < newInserts.length; i += BATCH_SIZE) {
+					const batch = newInserts.slice(i, i + BATCH_SIZE);
+					await tx.sourceText.createMany({
+						data: batch,
+						skipDuplicates: true,
+					});
+				}
+			},
+			{
+				maxWait: 50000,
+				timeout: 100000,
+			},
+		);
 		// トランザクション3終了
 
 		// 挿入後のID再取得 (トランザクション外でも可)
