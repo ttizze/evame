@@ -12,6 +12,18 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
 
+  next_db:
+    image: postgres:16
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+    ports:
+      - '5434:5432'
+    volumes:
+      - next_db:/var/lib/postgresql/data
+
   test_db:
     image: postgres:16
     restart: always
@@ -60,6 +72,8 @@ services:
 
 volumes:
   db:
+    driver: local
+  next_db:
     driver: local
   test_db:
     driver: local
