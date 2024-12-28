@@ -111,7 +111,11 @@ export async function synchronizePageSourceTexts(
 				data: { number: { increment: OFFSET } },
 			});
 		}
-	});
+	},
+  {
+    maxWait: 50000,
+    timeout: 100000,
+  });
 	// トランザクション1終了
 
 	// 2. 既存テキストのnumberを更新
@@ -158,6 +162,10 @@ export async function synchronizePageSourceTexts(
 					skipDuplicates: true,
 				});
 			}
+		},
+		{
+			maxWait: 50000,
+			timeout: 100000,
 		});
 		// トランザクション3終了
 
