@@ -208,38 +208,39 @@ async function processMarkdownFile(
 			throw new Error("adminユーザーが見つかりません");
 		}
 
+		// リトライロジックを追加
+		const maxRetries = 5;
+		let retries = 0;
+		while (retries < maxRetries) {
+			try {
+				// Markdownコンテンツの処理
+				const page = await processMarkdownContent(
+					title,
+					body,
+					slug,
+					adminUser.id,
+					"en",
+					true,
+				);
 
-    // リトライロジックを追加
-    const maxRetries = 5;
-    let retries = 0;
-    while (retries < maxRetries) {
-      try {
-        // Markdownコンテンツの処理
-        const page = await processMarkdownContent(
-          title,
-          body,
-          slug,
-          adminUser.id,
-          "en",
-          true,
-        );
-
-        // タグのアップサート
-        if (attributes.tags && page && page.id) {
-          await upsertTags(attributes.tags, page.id);
-        }
-        break; // 成功したらループを抜ける
-      } catch (error ) {
-        if (retries < maxRetries) {
-          console.log(`リトライ中 (${retries + 1}/${maxRetries}): ${filePath} ${error}`);
-          retries++;
-          await new Promise(resolve => setTimeout(resolve, 1000 * retries)); // 少し待ってからリトライ
-        } else {
-          console.error(`❌ エラー (${filePath}):`, error);
-          throw error; // リトライ回数を超えたらエラーを投げる
-        }
-      }
-    }
+				// タグのアップサート
+				if (attributes.tags && page && page.id) {
+					await upsertTags(attributes.tags, page.id);
+				}
+				break; // 成功したらループを抜ける
+			} catch (error) {
+				if (retries < maxRetries) {
+					console.log(
+						`リトライ中 (${retries + 1}/${maxRetries}): ${filePath} ${error}`,
+					);
+					retries++;
+					await new Promise((resolve) => setTimeout(resolve, 1000 * retries)); // 少し待ってからリトライ
+				} else {
+					console.error(`❌ エラー (${filePath}):`, error);
+					throw error; // リトライ回数を超えたらエラーを投げる
+				}
+			}
+		}
 	} catch (error) {
 		console.error(`❌ エラー (${filePath}):`, error);
 	}
