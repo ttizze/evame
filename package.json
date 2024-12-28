@@ -2,9 +2,9 @@
 	"scripts": {
 		"check": "bunx @biomejs/biome check --write ."
 	},
-	"dependencies": { "@prisma/client": "5.20.0" },
+	"dependencies": { },
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
-		"prisma": "5.20.0"
+		"typescript": "^5.7.2"
 	}
 }
