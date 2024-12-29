@@ -50,5 +50,5 @@ jobs:
         run: |
           cd web
           bunx prisma migrate dev && bunx prisma migrate deploy
-          vitest
+          bunx vitest
 
