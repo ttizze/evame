@@ -95,6 +95,45 @@ model Page {
   @@index([slug])
 }
 
+model SourceText {
+  id             Int             @id @default(autoincrement())
+  text           String
+  number         Int
+  textAndOccurrenceHash String @map("text_and_occurrence_hash")
+  translateTexts TranslateText[]
+  page           Page            @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  pageId         Int             @map("page_id")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  @@unique([pageId, number])
+  @@unique([pageId, textAndOccurrenceHash])
+  @@map("source_texts")
+  @@index([pageId])
+  @@index([number])
+  @@index([textAndOccurrenceHash])
+}
+
+model TranslateText {
+  id             Int        @id @default(autoincrement())
+  locale String
+  text           String
+  sourceTextId   Int        @map("source_text_id")
+  userId         Int        @map("user_id")
+  point          Int        @default(0)
+  isArchived     Boolean    @default(false) @map("is_archived")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  sourceText     SourceText @relation(fields: [sourceTextId], references: [id], onDelete: Cascade)
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes          Vote[]
+
+  @@map("translate_texts")
+  @@index([sourceTextId])
+  @@index([userId])
+  @@index([locale])
+}
+
+
 model LikePage {
   id        Int      @id @default(autoincrement())
   userId    Int      @map("user_id")
@@ -149,44 +188,6 @@ model TagPage {
   @@map("tag_pages")
   @@index([tagId])
   @@index([pageId])
-}
-
-model SourceText {
-  id             Int             @id @default(autoincrement())
-  text           String
-  number         Int
-  textAndOccurrenceHash String @map("text_and_occurrence_hash")
-  translateTexts TranslateText[]
-  page           Page            @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  pageId         Int             @map("page_id")
-  createdAt      DateTime        @default(now()) @map("created_at")
-  updatedAt      DateTime        @updatedAt @map("updated_at")
-
-  @@unique([pageId, number])
-  @@unique([pageId, textAndOccurrenceHash])
-  @@map("source_texts")
-  @@index([pageId])
-  @@index([number])
-  @@index([textAndOccurrenceHash])
-}
-
-model TranslateText {
-  id             Int        @id @default(autoincrement())
-  locale String
-  text           String
-  sourceTextId   Int        @map("source_text_id")
-  userId         Int        @map("user_id")
-  point          Int        @default(0)
-  isArchived     Boolean    @default(false) @map("is_archived")
-  createdAt      DateTime   @default(now()) @map("created_at")
-  sourceText     SourceText @relation(fields: [sourceTextId], references: [id], onDelete: Cascade)
-  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  votes          Vote[]
-
-  @@map("translate_texts")
-  @@index([sourceTextId])
-  @@index([userId])
-  @@index([locale])
 }
 
 model Vote {

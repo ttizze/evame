@@ -41,6 +41,13 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 		? firstImageMatch[1]
 		: pageWithTranslations.user.icon;
 
+	const alternateLinks = data.otherLocales.map((locale: string) => ({
+		tagName: "link",
+		rel: "alternate",
+		hrefLang: locale,
+		href: `/${locale}/user/${data.pageWithTranslations.user.userName}/page/${data.pageWithTranslations.page.slug}`,
+	}));
+
 	return [
 		{ title: sourceTitleWithBestTranslationTitle },
 		{ name: "description", content: description },
@@ -52,6 +59,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 		{ name: "twitter:title", content: sourceTitleWithBestTranslationTitle },
 		{ name: "twitter:description", content: description },
 		{ name: "twitter:image", content: imageUrl },
+		...alternateLinks,
 	];
 };
 
@@ -106,6 +114,10 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		pageWithTranslations.page.id,
 		currentUser?.id ?? 0,
 	);
+	const otherLocales = pageWithTranslations.existLocales.filter(
+		(exLocale) => exLocale !== locale,
+	);
+
 	return {
 		locale,
 		pageWithTranslations,
@@ -116,6 +128,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		sourceTitleWithBestTranslationTitle,
 		likeCount,
 		isLikedByUser,
+		otherLocales,
 	};
 }
 
