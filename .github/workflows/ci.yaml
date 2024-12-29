@@ -35,6 +35,7 @@ jobs:
         run: |
           cd web
           echo "TIPTAP_PRO_API_KEY=${{ secrets.TIPTAP_PRO_API_KEY }}" >> .env
+          echo "DATABASE_URL=postgresql://postgres:password@localhost:5432/testdb?schema=public" >> .env
 
       - name: Install dependencies
         run: |
@@ -50,6 +51,4 @@ jobs:
           cd web
           bun run test-migrate
           bun run test
-        env:
-          DATABASE_URL: postgresql://postgres:password@localhost:5432/testdb?schema=public
 
