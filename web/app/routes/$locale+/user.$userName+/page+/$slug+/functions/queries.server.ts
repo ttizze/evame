@@ -67,6 +67,23 @@ export async function fetchPageWithTranslations(
 
 	if (!page) return null;
 
+	const titleText = await prisma.sourceText.findFirst({
+		where: {
+			pageId: page.id,
+			number: 0,
+		},
+		include: {
+			translateTexts: {
+				where: { isArchived: false },
+				select: { locale: true }, // 今回はロケールだけわかればOKなので select を絞る
+			},
+		},
+	});
+
+	const existLocales = titleText
+		? Array.from(new Set(titleText.translateTexts.map((t) => t.locale)))
+		: [];
+
 	return {
 		page: {
 			...page,
@@ -91,6 +108,7 @@ export async function fetchPageWithTranslations(
 				bestTranslationWithVote,
 			};
 		}),
+		existLocales,
 	};
 }
 

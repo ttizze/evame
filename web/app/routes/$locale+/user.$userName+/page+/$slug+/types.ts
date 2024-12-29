@@ -31,6 +31,7 @@ export type PageWithTranslations = {
 	user: SanitizedUser;
 	tagPages: TagPageWithTag[];
 	sourceTextWithTranslations: SourceTextWithTranslations[];
+	existLocales: string[];
 };
 
 export const translateSchema = z.object({
