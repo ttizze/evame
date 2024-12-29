@@ -16,9 +16,10 @@ const generateSlug = (length = 8): string => {
 };
 interface NewPageButtonProps {
 	userName: string;
+	locale: string;
 }
 
-export const NewPageButton = ({ userName }: NewPageButtonProps) => {
+export const NewPageButton = ({ userName, locale }: NewPageButtonProps) => {
 	const navigate = useNavigate();
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -29,7 +30,7 @@ export const NewPageButton = ({ userName }: NewPageButtonProps) => {
 	const handleNewPage = () => {
 		setIsLoading(true);
 		const newSlug = generateSlug();
-		navigate(`/user/${userName}/page/${newSlug}/edit`);
+		navigate(`/${locale}/user/${userName}/page/${newSlug}/edit`);
 	};
 
 	return (

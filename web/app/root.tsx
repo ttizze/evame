@@ -162,7 +162,7 @@ function CommonLayout({
 	children,
 	isSpecialLayout = true,
 }: { children: React.ReactNode; isSpecialLayout: boolean }) {
-	const { currentUser } = useLoaderData<typeof loader>();
+	const { currentUser, locale } = useLoaderData<typeof loader>();
 
 	if (isSpecialLayout) {
 		return <>{children}</>;
@@ -170,7 +170,7 @@ function CommonLayout({
 
 	return (
 		<>
-			<Header currentUser={currentUser} />
+			<Header currentUser={currentUser} locale={locale} />
 			<main className="mb-5 mt-3 md:mt-5 flex-grow tracking-wider">
 				<div className="mx-auto px-2 max-w-4xl">{children}</div>
 			</main>

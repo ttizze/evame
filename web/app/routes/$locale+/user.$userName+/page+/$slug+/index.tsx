@@ -22,6 +22,7 @@ import {
 import { actionSchema } from "./types";
 import { getBestTranslation } from "./utils/getBestTranslation";
 import { stripHtmlTags } from "./utils/stripHtmlTags";
+
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Page Not Found" }];

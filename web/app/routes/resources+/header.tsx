@@ -11,6 +11,7 @@ import { NewPageButton } from "./components/NewPageButton";
 
 interface HeaderProps {
 	currentUser: SanitizedUser | null;
+	locale: string;
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -34,7 +35,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	return data({ error: "Invalid intent" }, { status: 400 });
 }
 
-export function Header({ currentUser }: HeaderProps) {
+export function Header({ currentUser, locale }: HeaderProps) {
 	const rightExtra = (
 		<>
 			<NavLocaleLink
@@ -48,7 +49,7 @@ export function Header({ currentUser }: HeaderProps) {
 				<Search className="w-6 h-6 " />
 			</NavLocaleLink>
 			{currentUser ? (
-				<NewPageButton userName={currentUser.userName} />
+				<NewPageButton userName={currentUser.userName} locale={locale} />
 			) : (
 				<StartButton />
 			)}
