@@ -31,6 +31,11 @@ jobs:
         with:
           bun-version: 'latest'
 
+      - name: Create .env
+        run: |
+          cd web
+          echo "TIPTAP_PRO_API_KEY=${{ secrets.TIPTAP_PRO_API_KEY }}" >> .env
+
       - name: Install dependencies
         run: |
           cd web
