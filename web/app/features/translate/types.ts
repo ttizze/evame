@@ -11,6 +11,5 @@ export interface TranslateJobParams {
 	aiModel: string;
 	locale: string;
 	title: string;
-	numberedContent: string;
 	numberedElements: NumberedElement[];
 }

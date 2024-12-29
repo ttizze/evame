@@ -21,7 +21,7 @@ import {
 import { actionSchema } from "./types";
 import { getBestTranslation } from "./utils/getBestTranslation";
 import { stripHtmlTags } from "./utils/stripHtmlTags";
-
+import i18nServer from "~/i18n.server";
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Page Not Found" }];
@@ -55,9 +55,9 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
-	const locale = params.locale;
+	let locale = params.locale;
 	if (!locale) {
-		throw new Response("Missing locale", { status: 400 });
+		locale = (await i18nServer.getLocale(request)) || "en";
 	}
 	const { slug } = params;
 	if (!slug) {
@@ -131,9 +131,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
 		throw new Response("User not found", { status: 404 });
 	}
 
-	const locale = params.locale;
+	let locale = params.locale;
 	if (!locale) {
-		throw new Response("Missing locale", { status: 400 });
+		locale = (await i18nServer.getLocale(request)) || "en";
 	}
 	if (submission.status !== "success") {
 		return { intent: null, lastResult: submission.reply(), slug: null };
@@ -159,6 +159,10 @@ export async function action({ request, params }: ActionFunctionArgs) {
 			slug: null,
 		};
 	}
+	const numberedElements = pageWithSourceTexts.sourceTexts.map((item) => ({
+		number: item.number,
+		text: item.text,
+	}));
 	const userAITranslationInfo = await createUserAITranslationInfo(
 		nonSanitizedUser.id,
 		pageWithSourceTexts.id,
@@ -175,8 +179,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 		pageId: pageWithSourceTexts.id,
 		locale: locale,
 		title: pageWithSourceTexts.title,
-		numberedContent: pageWithSourceTexts.content,
-		numberedElements: pageWithSourceTexts.sourceTexts,
+		numberedElements: numberedElements,
 	});
 	return {
 		lastResult: submission.reply({ resetForm: true }),

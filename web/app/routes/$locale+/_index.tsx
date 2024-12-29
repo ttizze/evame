@@ -5,7 +5,7 @@ import { SourceTextAndTranslationSection } from "~/routes/$locale+/user.$userNam
 import { fetchPageWithTranslations } from "~/routes/$locale+/user.$userName+/page+/$slug+/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
 import { StartButton } from "../../components/StartButton";
-
+import i18nServer from "~/i18n.server";
 export const meta: MetaFunction = () => {
 	return [
 		{ title: "Evame" },
@@ -19,9 +19,9 @@ export const meta: MetaFunction = () => {
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
-	const locale = params.locale;
+	let locale = params.locale;
 	if (!locale) {
-		throw new Response("Missing locale", { status: 400 });
+		locale = (await i18nServer.getLocale(request)) || "en";
 	}
 	const pageName = locale === "en" ? "evame-ja" : "evame";
 	const topPageWithTranslations = await fetchPageWithTranslations(
