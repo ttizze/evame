@@ -84,7 +84,7 @@ export async function getTexTraTranslation(
 				method: "POST",
 				body: params,
 			});
-      console.log("response", response);
+			console.log("response", response);
 			if (!response.ok) {
 				throw new Error(
 					`Translation API request failed. HTTP Status: ${response.status}`,
@@ -92,7 +92,6 @@ export async function getTexTraTranslation(
 			}
 
 			const data = await response.json();
-
 
 			return data.resultset.result.text;
 		} catch (error) {

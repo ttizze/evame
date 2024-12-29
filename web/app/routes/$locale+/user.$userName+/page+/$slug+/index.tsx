@@ -5,6 +5,7 @@ import type { MetaFunction } from "@remix-run/react";
 import { useActionData, useLoaderData } from "@remix-run/react";
 import { useState } from "react";
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
+import i18nServer from "~/i18n.server";
 import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { LikeButton } from "~/routes/resources+/like-button";
 import { authenticator } from "~/utils/auth.server";
@@ -21,7 +22,6 @@ import {
 import { actionSchema } from "./types";
 import { getBestTranslation } from "./utils/getBestTranslation";
 import { stripHtmlTags } from "./utils/stripHtmlTags";
-import i18nServer from "~/i18n.server";
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Page Not Found" }];

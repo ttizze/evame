@@ -8,9 +8,9 @@ import TextareaAutosize from "react-textarea-autosize";
 import { z } from "zod";
 import { StartButton } from "~/components/StartButton";
 import { Button } from "~/components/ui/button";
+import i18nServer from "~/i18n.server";
 import { authenticator } from "~/utils/auth.server";
 import { addUserTranslation } from "./functions/mutations.server";
-import i18nServer from "~/i18n.server";
 const schema = z.object({
 	sourceTextId: z.number(),
 	text: z

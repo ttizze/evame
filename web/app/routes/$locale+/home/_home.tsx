@@ -13,10 +13,10 @@ import {
 	PaginationPrevious,
 } from "~/components/ui/pagination";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import i18nServer from "~/i18n.server";
 import { authenticator } from "~/utils/auth.server";
 import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
 import type { PageCardLocalizedType } from "../functions/queries.server";
-import i18nServer from "~/i18n.server";
 
 export const meta: MetaFunction = () => {
 	return [{ title: "Home - Latest Pages" }];
