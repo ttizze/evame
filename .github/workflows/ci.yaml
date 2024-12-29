@@ -49,6 +49,6 @@ jobs:
       - name: Run Tests
         run: |
           cd web
-          bun run test-migrate
+          bunx prisma migrate dev && bunx prisma migrate deploy
           bun run test
 
