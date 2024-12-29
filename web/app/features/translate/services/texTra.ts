@@ -67,7 +67,7 @@ export async function getTexTraTranslation(
 			// 以下は「特許翻訳エンジン（英語→日本語）patentNT_en_ja」の例です。
 			// 別エンジンを使う場合はURLやパラメータを置き換えてください。
 			const translationUrl =
-				"https://mt-auto-minhon-mlt.ucri.jgn-x.jp/api/mt/patentNT_en_ja/";
+				"https://mt-auto-minhon-mlt.ucri.jgn-x.jp/api/mt/voicetraNT_ja_en/";
 
 			// リクエストボディ
 			const params = new URLSearchParams({
@@ -84,7 +84,7 @@ export async function getTexTraTranslation(
 				method: "POST",
 				body: params,
 			});
-
+			console.log("response", response);
 			if (!response.ok) {
 				throw new Error(
 					`Translation API request failed. HTTP Status: ${response.status}`,
@@ -93,18 +93,7 @@ export async function getTexTraTranslation(
 
 			const data = await response.json();
 
-			// TexTraのレスポンス仕様に合わせてエラー判定
-			if (!data.resultset || data.resultset.code !== "0") {
-				// code=0 以外はエラー扱いにする
-				const message =
-					data.resultset?.message ||
-					"Translation error (no message provided by API)";
-				throw new Error(message);
-			}
-
-			// 翻訳結果 (data.resultset.result.text) を取得
-			const translatedText = data.resultset.result.text;
-			return translatedText;
+			return data.resultset.result.text;
 		} catch (error) {
 			lastError = error as Error;
 			console.error(`Translation attempt ${retryCount + 1} failed:`, lastError);

@@ -3,6 +3,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { data } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { z } from "zod";
+import i18nServer from "~/i18n.server";
 import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
 import { PageManagementTab } from "./components/PageManagementTab";
@@ -11,7 +12,6 @@ import {
 	togglePagePublicStatus,
 } from "./functions/mutations.server";
 import { fetchPaginatedOwnPages } from "./functions/queries.server";
-
 const archiveSchema = z.object({
 	pageIds: z.string().transform((val) => val.split(",").map(Number)),
 	intent: z.literal("archive"),
@@ -29,9 +29,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
 	const nonSanitizedUser = await fetchUserByUserName(currentUser.userName);
 	const hasGeminiApiKey = !!nonSanitizedUser?.geminiApiKey;
-	const locale = params.locale;
+	let locale = params.locale;
 	if (!locale) {
-		throw new Response("Missing locale", { status: 400 });
+		locale = (await i18nServer.getLocale(request)) || "en";
 	}
 	const url = new URL(request.url);
 	const page = Number(url.searchParams.get("page") || "1");

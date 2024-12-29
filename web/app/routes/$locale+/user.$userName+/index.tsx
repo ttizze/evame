@@ -28,6 +28,7 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from "~/components/ui/pagination";
+import i18nServer from "~/i18n.server";
 import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
 import { sanitizeUser } from "~/utils/sanitizeUser";
@@ -38,7 +39,6 @@ import {
 	togglePagePublicStatus,
 } from "./functions/mutations.server";
 import { fetchPageById } from "./functions/queries.server";
-
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Profile" }];
@@ -47,9 +47,9 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 };
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
-	const locale = params.locale;
+	let locale = params.locale;
 	if (!locale) {
-		throw new Response("Missing locale", { status: 400 });
+		locale = (await i18nServer.getLocale(request)) || "en";
 	}
 	const { userName } = params;
 	if (!userName) throw new Error("Username is required");
