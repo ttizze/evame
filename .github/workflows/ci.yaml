@@ -38,8 +38,7 @@ jobs:
 
       - name: Run Biome
         run: |
-          cd web
-          bun run check
+          bun x biome ci .
 
       - name: Run Tests
         run: |
