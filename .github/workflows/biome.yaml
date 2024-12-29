@@ -1,18 +1,54 @@
-name: Biome Check
+name: CI
 
 on:
   pull_request:
   workflow_dispatch:
 
 jobs:
-  biome-check:
+  ci-check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          cd web
+          npm ci
+
       - name: Setup Biome
         uses: biomejs/setup-biome@v2
         with:
           version: latest
+
       - name: Run Biome
-        run: biome ci .
+        run: |
+          cd web
+          biome ci .
+
+      - name: Run Tests
+        run: |
+          cd web
+          npm run test
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/testdb?schema=public
