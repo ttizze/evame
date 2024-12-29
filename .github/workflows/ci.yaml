@@ -26,29 +26,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: 18
+          bun-version: 'latest'
 
       - name: Install dependencies
         run: |
           cd web
-          npm ci
-
-      - name: Setup Biome
-        uses: biomejs/setup-biome@v2
-        with:
-          version: latest
+          bun install
 
       - name: Run Biome
         run: |
           cd web
-          biome ci .
+          bun run check
 
       - name: Run Tests
         run: |
           cd web
-          npm run test
+          bun run test
         env:
           DATABASE_URL: postgresql://postgres:password@localhost:5432/testdb?schema=public
