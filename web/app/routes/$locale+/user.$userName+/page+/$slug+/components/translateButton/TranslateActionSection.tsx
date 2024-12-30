@@ -4,7 +4,6 @@ import { useState } from "react";
 import { supportedLocaleOptions } from "~/constants/languages";
 import LocaleSelector from "./LocaleSelector";
 import { TranslateSettingsDialog } from "./TranslateSettingsDialog";
-import { useMoveLocale } from "./hooks/useMoveLocale";
 type TranslateActionSectionProps = {
 	pageId: number;
 	hasGeminiApiKey: boolean;
@@ -23,12 +22,11 @@ export function TranslateActionSection({
 	existLocales,
 }: TranslateActionSectionProps) {
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-	const moveLocale = useMoveLocale();
-	const pageLocaleOptions = supportedLocaleOptions.find(
+	let pageLocaleOptions = supportedLocaleOptions.find(
 		(sl) => sl.code === pageLocale,
 	);
 	if (!pageLocaleOptions) {
-		throw new Error("Current locale not found");
+		pageLocaleOptions = { code: "und", name: "Unknown" };
 	}
 	const merged = [
 		pageLocaleOptions,

@@ -10,8 +10,8 @@ import pLimit from "p-limit";
 
 // プロジェクト固有のインポート
 import { upsertTags } from "~/routes/$locale+/user.$userName+/page+/$slug+/edit/functions/mutations.server";
-import { getPageSourceLanguage } from "~/routes/$locale+/user.$userName+/page+/$slug+/edit/utils/getPageSourceLanguage";
 import { prisma } from "~/utils/prisma";
+import { getMarkdownSourceLanguage } from "./getMarkdownSourceLanguage";
 import { processMarkdownContent } from "./processMarkdownContent";
 // 定数の定義
 const __filename = fileURLToPath(import.meta.url);
@@ -213,7 +213,7 @@ async function processMarkdownFile(
 		let retries = 0;
 		while (retries < maxRetries) {
 			try {
-				const sourceLanguage = await getPageSourceLanguage(body, title);
+				const sourceLanguage = await getMarkdownSourceLanguage(body, title);
 				const page = await processMarkdownContent(
 					title,
 					body,
