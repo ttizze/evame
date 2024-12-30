@@ -212,6 +212,7 @@ export default function Page() {
 		locale,
 		likeCount,
 		isLikedByUser,
+		otherLocales
 	} = useLoaderData<typeof loader>();
 	const actionData = useActionData<typeof action>();
 	const [form, fields] = useForm({
@@ -232,6 +233,7 @@ export default function Page() {
 					hasGeminiApiKey={hasGeminiApiKey}
 					userAITranslationInfo={userAITranslationInfo}
 					locale={locale}
+					otherLocales={otherLocales}
 					showOriginal={showOriginal}
 					showTranslation={showTranslation}
 				/>

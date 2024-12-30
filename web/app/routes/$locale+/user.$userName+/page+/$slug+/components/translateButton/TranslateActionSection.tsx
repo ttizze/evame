@@ -1,44 +1,88 @@
-import type { UserAITranslationInfo } from "@prisma/client";
-import { ChevronsUpDown, Languages } from "lucide-react";
+import { Languages } from "lucide-react";
 import { useState } from "react";
-import { Button } from "~/components/ui/button";
-import { supportedLocales } from "~/constants/languages";
-import { cn } from "~/utils/cn";
+import type { UserAITranslationInfo } from "@prisma/client";
 import { TranslateSettingsDialog } from "./TranslateSettingsDialog";
+import { supportedLocales } from "~/constants/languages";
+// shadcn/uiのSelect
+import {
+	Select,
+	SelectContent,
+	SelectGroup,
+	SelectItem,
+	SelectLabel,
+	SelectTrigger,
+	SelectValue,
+} from "~/components/ui/select";
 
 type TranslateActionSectionProps = {
 	pageId: number;
-	userAITranslationInfo: UserAITranslationInfo | null;
 	hasGeminiApiKey: boolean;
+	userAITranslationInfo: UserAITranslationInfo | null;
 	locale: string;
+	otherLocales: string[]; 
 };
 
 export function TranslateActionSection({
 	pageId,
-	userAITranslationInfo,
 	hasGeminiApiKey,
+	userAITranslationInfo,
 	locale,
+	otherLocales,
 }: TranslateActionSectionProps) {
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
+	const existingOptions = otherLocales.map((lc) => {
+		const localeName =
+			supportedLocales.find((sl) => sl.code === lc)?.name || lc;
+		return { code: lc, name: localeName };
+	});
+
+	// 現在のロケールの名前
+	const currentLocaleName =
+		supportedLocales.find((sl) => sl.code === locale)?.name || locale;
+
+	// ▼「翻訳を追加する」をクリックした時の処理
+	const handleCreateNewTranslation = () => {
+		console.log("翻訳を追加する");
+		setIsSettingsOpen(true);
+	};
+
+	const handleChange = (selectedCode: string) => {
+		// 例: 選択された言語にページ遷移するなど
+		// ここで navigate(`/...`) や window.location などを使って
+		// 別の locale ページへ移動してもOK
+		// console.log("Selected locale:", selectedCode);
+	};
+
 	return (
-		<div>
-			<div className="flex items-center pt-3">
-				<Languages className="w-4 h-4 mr-2" />
-				<Button
-					variant="outline"
-					className={cn(
-						"h-8 w-auto min-w-[200px] justify-between rounded-xl font-normal",
-						"hover:bg-accent hover:text-accent-foreground",
-					)}
-					onClick={() => setIsSettingsOpen(true)}
-				>
-					<span className="md:w-auto">
-						{supportedLocales.find((l) => l.code === locale)?.name || locale}
-					</span>
-					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-				</Button>
+		<div className="pt-3">
+			<div className="flex items-center gap-2">
+				<Languages className="w-4 h-4" />
+				<Select onValueChange={handleChange}>
+					<SelectTrigger className="w-[200px] rounded-xl ">
+						<SelectValue placeholder={currentLocaleName} />
+					</SelectTrigger>
+					<SelectContent>
+						{existingOptions.map((item) => (
+							<SelectItem key={item.code} value={item.code}>
+								{item.name}
+							</SelectItem>
+						))}
+						<div className="my-1 border-t border-gray-200 dark:border-neutral-600" />
+						<SelectItem
+							value="__addTranslation__"
+							onClick={(e) => {
+								e.stopPropagation();
+								handleCreateNewTranslation();
+							}}
+						>
+							翻訳を追加する
+						</SelectItem>
+					</SelectContent>
+				</Select>
 			</div>
+
+			{/* ▼ 翻訳設定ダイアログ ▼ */}
 			<TranslateSettingsDialog
 				open={isSettingsOpen}
 				onOpenChange={setIsSettingsOpen}
