@@ -1,5 +1,5 @@
-import { supportedLocales } from "~/constants/languages";
-export const supportedLocalesCodes = supportedLocales.map(
+import { supportedLocaleOptions } from "~/constants/languages";
+export const supportedLocalesCodes = supportedLocaleOptions.map(
 	(locale) => locale.code,
 );
 export const fallbackLocale = "en";

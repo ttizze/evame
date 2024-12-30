@@ -41,12 +41,14 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 		? firstImageMatch[1]
 		: pageWithTranslations.user.icon;
 
-	const alternateLinks = data.otherLocales.map((locale: string) => ({
-		tagName: "link",
-		rel: "alternate",
-		hrefLang: locale,
-		href: `/${locale}/user/${data.pageWithTranslations.user.userName}/page/${data.pageWithTranslations.page.slug}`,
-	}));
+	const alternateLinks = data.existLocales
+		.filter((locale: string) => locale !== data.locale)
+		.map((locale: string) => ({
+			tagName: "link",
+			rel: "alternate",
+			hrefLang: locale,
+			href: `/${locale}/user/${data.pageWithTranslations.user.userName}/page/${data.pageWithTranslations.page.slug}`,
+		}));
 
 	return [
 		{ title: sourceTitleWithBestTranslationTitle },
@@ -114,9 +116,6 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		pageWithTranslations.page.id,
 		currentUser?.id ?? 0,
 	);
-	const otherLocales = pageWithTranslations.existLocales.filter(
-		(exLocale) => exLocale !== locale,
-	);
 
 	return {
 		locale,
@@ -128,7 +127,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		sourceTitleWithBestTranslationTitle,
 		likeCount,
 		isLikedByUser,
-		otherLocales,
+		existLocales: pageWithTranslations.existLocales,
 	};
 }
 
@@ -212,7 +211,7 @@ export default function Page() {
 		locale,
 		likeCount,
 		isLikedByUser,
-		otherLocales,
+		existLocales,
 	} = useLoaderData<typeof loader>();
 	const actionData = useActionData<typeof action>();
 	const [form, fields] = useForm({
@@ -233,7 +232,7 @@ export default function Page() {
 					hasGeminiApiKey={hasGeminiApiKey}
 					userAITranslationInfo={userAITranslationInfo}
 					locale={locale}
-					otherLocales={otherLocales}
+					existLocales={existLocales}
 					showOriginal={showOriginal}
 					showTranslation={showTranslation}
 				/>

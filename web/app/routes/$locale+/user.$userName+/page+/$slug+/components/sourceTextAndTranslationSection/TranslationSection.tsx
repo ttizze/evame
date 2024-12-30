@@ -32,7 +32,7 @@ export function TranslationSection({
 		: bestTranslationWithVote.translateText.text;
 
 	return (
-		<div className={"group relative"}>
+		<span className={"group relative"}>
 			<span
 				className="notranslate inline-block py-2 text-gray-700 dark:text-gray-200"
 				onMouseUp={(e) => {
@@ -63,6 +63,6 @@ export function TranslationSection({
 					/>
 				</>
 			)}
-		</div>
+		</span>
 	);
 }

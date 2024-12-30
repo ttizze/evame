@@ -1,86 +1,62 @@
 import type { UserAITranslationInfo } from "@prisma/client";
 import { Languages } from "lucide-react";
 import { useState } from "react";
-// shadcn/uiのSelect
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "~/components/ui/select";
-import { supportedLocales } from "~/constants/languages";
+import { supportedLocaleOptions } from "~/constants/languages";
+import LocaleSelector from "./LocaleSelector";
 import { TranslateSettingsDialog } from "./TranslateSettingsDialog";
-
+import { useMoveLocale } from "./hooks/useMoveLocale";
 type TranslateActionSectionProps = {
 	pageId: number;
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
+	pageLocale: string;
 	locale: string;
-	otherLocales: string[];
+	existLocales: string[];
 };
 
 export function TranslateActionSection({
 	pageId,
 	hasGeminiApiKey,
 	userAITranslationInfo,
+	pageLocale,
 	locale,
-	otherLocales,
+	existLocales,
 }: TranslateActionSectionProps) {
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+	const moveLocale = useMoveLocale();
+	const pageLocaleOptions = supportedLocaleOptions.find(
+		(sl) => sl.code === pageLocale,
+	);
+	if (!pageLocaleOptions) {
+		throw new Error("Current locale not found");
+	}
+	const merged = [
+		pageLocaleOptions,
+		...existLocales.map((lc) => {
+			const localeName =
+				supportedLocaleOptions.find((sl) => sl.code === lc)?.name || lc;
+			return { code: lc, name: localeName };
+		}),
+	];
 
-	const existingOptions = otherLocales.map((lc) => {
-		const localeName =
-			supportedLocales.find((sl) => sl.code === lc)?.name || lc;
-		return { code: lc, name: localeName };
+	const existingOptions = merged.filter((option, index, self) => {
+		return self.findIndex((o) => o.code === option.code) === index;
 	});
-
-	// 現在のロケールの名前
-	const currentLocaleName =
-		supportedLocales.find((sl) => sl.code === locale)?.name || locale;
-
-	// ▼「翻訳を追加する」をクリックした時の処理
-	const handleCreateNewTranslation = () => {
-		console.log("翻訳を追加する");
-		setIsSettingsOpen(true);
-	};
-
-	const handleChange = (selectedCode: string) => {
-		// 例: 選択された言語にページ遷移するなど
-		// ここで navigate(`/...`) や window.location などを使って
-		// 別の locale ページへ移動してもOK
-		// console.log("Selected locale:", selectedCode);
-	};
+	const currentLocaleCode =
+		supportedLocaleOptions.find((sl) => sl.code === locale)?.code || locale;
 
 	return (
 		<div className="pt-3">
 			<div className="flex items-center gap-2">
 				<Languages className="w-4 h-4" />
-				<Select onValueChange={handleChange}>
-					<SelectTrigger className="w-[200px] rounded-xl ">
-						<SelectValue placeholder={currentLocaleName} />
-					</SelectTrigger>
-					<SelectContent>
-						{existingOptions.map((item) => (
-							<SelectItem key={item.code} value={item.code}>
-								{item.name}
-							</SelectItem>
-						))}
-						<div className="my-1 border-t border-gray-200 dark:border-neutral-600" />
-						<SelectItem
-							value="__addTranslation__"
-							onClick={(e) => {
-								e.stopPropagation();
-								handleCreateNewTranslation();
-							}}
-						>
-							翻訳を追加する
-						</SelectItem>
-					</SelectContent>
-				</Select>
+				<LocaleSelector
+					className="w-[200px]"
+					localeOptions={existingOptions}
+					defaultLocaleCode={currentLocaleCode}
+					setIsSettingsOpen={setIsSettingsOpen}
+				/>
 			</div>
 
-			{/* ▼ 翻訳設定ダイアログ ▼ */}
 			<TranslateSettingsDialog
 				open={isSettingsOpen}
 				onOpenChange={setIsSettingsOpen}
