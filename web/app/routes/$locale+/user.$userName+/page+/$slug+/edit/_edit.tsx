@@ -15,10 +15,7 @@ import { useCallback, useEffect } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
-import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
 import { authenticator } from "~/utils/auth.server";
-import { createUserAITranslationInfo } from "../functions/mutations.server";
-import { fetchPageWithSourceTexts } from "../functions/queries.server";
 import { EditHeader } from "./components/EditHeader";
 import { TagInput } from "./components/TagInput";
 import { Editor } from "./components/editor/Editor";
@@ -108,45 +105,6 @@ export async function action({ request, params }: ActionFunctionArgs) {
 	if (tags) {
 		await upsertTags(tags, page.id);
 	}
-
-	if (isPublishedBool) {
-		const geminiApiKey = process.env.GEMINI_API_KEY;
-		if (!geminiApiKey) {
-			throw new Error("GEMINI_API_KEY is not set");
-		}
-		let locale = params.locale;
-		if (locale === "en") {
-			locale = "ja";
-		} else {
-			locale = "en";
-		}
-		const userAITranslationInfo = await createUserAITranslationInfo(
-			currentUser.id,
-			page.id,
-			"gemini-1.5-flash-latest",
-			locale,
-		);
-
-		const pageWithSourceTexts = await fetchPageWithSourceTexts(page.id);
-		if (!pageWithSourceTexts) {
-			throw new Error("Page not found");
-		}
-		const numberedElements = pageWithSourceTexts.sourceTexts.map((item) => ({
-			number: item.number,
-			text: item.text,
-		}));
-		const queue = getTranslateUserQueue(currentUser.id);
-		await queue.add(`translate-${currentUser.id}`, {
-			userAITranslationInfoId: userAITranslationInfo.id,
-			geminiApiKey: geminiApiKey,
-			aiModel: "gemini-1.5-flash-latest",
-			userId: currentUser.id,
-			pageId: page.id,
-			locale: locale,
-			title: title,
-			numberedElements: numberedElements,
-		});
-	}
 	return null;
 }
 
@@ -226,6 +184,7 @@ export default function EditPage() {
 							setCurrentIsPublished(isPublished);
 							handleContentChange();
 						}}
+						pageId={page?.id}
 					/>
 					<main
 						className="w-full max-w-3xl prose dark:prose-invert prose-sm sm:prose lg:prose-lg 
