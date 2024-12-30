@@ -1,13 +1,13 @@
 import type { MetaFunction } from "@remix-run/node";
 import type { LoaderFunctionArgs } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
+import { supportedLocales } from "~/constants/languages";
 import i18nServer from "~/i18n.server";
 import { SourceTextAndTranslationSection } from "~/routes/$locale+/user.$userName+/page+/$slug+/components/sourceTextAndTranslationSection/SourceTextAndTranslationSection";
 import { fetchPageWithTranslations } from "~/routes/$locale+/user.$userName+/page+/$slug+/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
 import { StartButton } from "../../components/StartButton";
-import { supportedLocales } from "~/constants/languages";
-import { redirect } from "@remix-run/node";
 
 export const meta: MetaFunction = () => {
 	return [
