@@ -18,6 +18,7 @@ interface ContentWithTranslationsProps {
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
 	locale: string;
+	existLocales: string[];
 	showOriginal: boolean;
 	showTranslation: boolean;
 }
@@ -29,6 +30,7 @@ export function ContentWithTranslations({
 	hasGeminiApiKey,
 	userAITranslationInfo,
 	locale,
+	existLocales,
 	showOriginal = true,
 	showTranslation = true,
 }: ContentWithTranslationsProps) {
@@ -92,7 +94,9 @@ export function ContentWithTranslations({
 				pageId={pageWithTranslations.page.id}
 				userAITranslationInfo={userAITranslationInfo}
 				hasGeminiApiKey={hasGeminiApiKey}
+				pageLocale={pageWithTranslations.page.sourceLanguage}
 				locale={locale}
+				existLocales={existLocales}
 			/>
 			{!isHydrated ? (
 				<div className="w-full h-full flex items-center justify-center">

@@ -1,44 +1,60 @@
 import type { UserAITranslationInfo } from "@prisma/client";
-import { ChevronsUpDown, Languages } from "lucide-react";
+import { Languages } from "lucide-react";
 import { useState } from "react";
-import { Button } from "~/components/ui/button";
-import { supportedLocales } from "~/constants/languages";
-import { cn } from "~/utils/cn";
+import { supportedLocaleOptions } from "~/constants/languages";
+import LocaleSelector from "./LocaleSelector";
 import { TranslateSettingsDialog } from "./TranslateSettingsDialog";
-
 type TranslateActionSectionProps = {
 	pageId: number;
-	userAITranslationInfo: UserAITranslationInfo | null;
 	hasGeminiApiKey: boolean;
+	userAITranslationInfo: UserAITranslationInfo | null;
+	pageLocale: string;
 	locale: string;
+	existLocales: string[];
 };
 
 export function TranslateActionSection({
 	pageId,
-	userAITranslationInfo,
 	hasGeminiApiKey,
+	userAITranslationInfo,
+	pageLocale,
 	locale,
+	existLocales,
 }: TranslateActionSectionProps) {
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+	let pageLocaleOptions = supportedLocaleOptions.find(
+		(sl) => sl.code === pageLocale,
+	);
+	if (!pageLocaleOptions) {
+		pageLocaleOptions = { code: "und", name: "Unknown" };
+	}
+	const merged = [
+		pageLocaleOptions,
+		...existLocales.map((lc) => {
+			const localeName =
+				supportedLocaleOptions.find((sl) => sl.code === lc)?.name || lc;
+			return { code: lc, name: localeName };
+		}),
+	];
+
+	const existingOptions = merged.filter((option, index, self) => {
+		return self.findIndex((o) => o.code === option.code) === index;
+	});
+	const currentLocaleCode =
+		supportedLocaleOptions.find((sl) => sl.code === locale)?.code || locale;
 
 	return (
-		<div>
-			<div className="flex items-center pt-3">
-				<Languages className="w-4 h-4 mr-2" />
-				<Button
-					variant="outline"
-					className={cn(
-						"h-8 w-auto min-w-[200px] justify-between rounded-xl font-normal",
-						"hover:bg-accent hover:text-accent-foreground",
-					)}
-					onClick={() => setIsSettingsOpen(true)}
-				>
-					<span className="md:w-auto">
-						{supportedLocales.find((l) => l.code === locale)?.name || locale}
-					</span>
-					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-				</Button>
+		<div className="pt-3">
+			<div className="flex items-center gap-2">
+				<Languages className="w-4 h-4" />
+				<LocaleSelector
+					className="w-[200px]"
+					localeOptions={existingOptions}
+					defaultLocaleCode={currentLocaleCode}
+					setIsSettingsOpen={setIsSettingsOpen}
+				/>
 			</div>
+
 			<TranslateSettingsDialog
 				open={isSettingsOpen}
 				onOpenChange={setIsSettingsOpen}

@@ -2,7 +2,7 @@ import type { MetaFunction } from "@remix-run/node";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
-import { supportedLocales } from "~/constants/languages";
+import { supportedLocaleOptions } from "~/constants/languages";
 import i18nServer from "~/i18n.server";
 import { SourceTextAndTranslationSection } from "~/routes/$locale+/user.$userName+/page+/$slug+/components/sourceTextAndTranslationSection/SourceTextAndTranslationSection";
 import { fetchPageWithTranslations } from "~/routes/$locale+/user.$userName+/page+/$slug+/functions/queries.server";
@@ -23,7 +23,7 @@ export const meta: MetaFunction = () => {
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
 	let locale = params.locale;
-	if (!locale || !supportedLocales.some((l) => l.code === locale)) {
+	if (!locale || !supportedLocaleOptions.some((l) => l.code === locale)) {
 		locale = (await i18nServer.getLocale(request)) || "en";
 		const url = new URL(request.url);
 		url.pathname = `/${locale}${url.pathname}`;

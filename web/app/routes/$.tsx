@@ -1,5 +1,5 @@
 import { type LoaderFunctionArgs, redirect } from "@remix-run/node";
-import { supportedLocales } from "~/constants/languages";
+import { supportedLocaleOptions } from "~/constants/languages";
 import i18nServer from "~/i18n.server";
 export async function loader({ request }: LoaderFunctionArgs) {
 	const url = new URL(request.url);
@@ -11,7 +11,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	}
 
 	const firstSegment = pathSegments[0];
-	if (!supportedLocales.some((l) => l.code === firstSegment)) {
+	if (!supportedLocaleOptions.some((l) => l.code === firstSegment)) {
 		const locale = (await i18nServer.getLocale(request)) || "en";
 		url.pathname = `/${locale}${url.pathname}`;
 		return redirect(url.toString());

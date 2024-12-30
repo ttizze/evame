@@ -30,7 +30,7 @@ export function SourceTextAndTranslationSection({
 	return (
 		<>
 			{showOriginal && (
-				<div className="flex items-center">
+				<span className="flex items-center">
 					<span
 						className={`inline-block ${
 							sourceTextWithTranslations.translationsWithVotes.length === 0 ||
@@ -54,7 +54,7 @@ export function SourceTextAndTranslationSection({
 							</NavLocaleLink>
 						</div>
 					)}
-				</div>
+				</span>
 			)}
 			{showTranslation &&
 				sourceTextWithTranslations.translationsWithVotes.length > 0 && (
