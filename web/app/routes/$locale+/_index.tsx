@@ -6,6 +6,9 @@ import { SourceTextAndTranslationSection } from "~/routes/$locale+/user.$userNam
 import { fetchPageWithTranslations } from "~/routes/$locale+/user.$userName+/page+/$slug+/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
 import { StartButton } from "../../components/StartButton";
+import { supportedLocales } from "~/constants/languages";
+import { redirect } from "@remix-run/node";
+
 export const meta: MetaFunction = () => {
 	return [
 		{ title: "Evame" },
@@ -20,8 +23,9 @@ export const meta: MetaFunction = () => {
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
 	let locale = params.locale;
-	if (!locale) {
+	if (!locale || !supportedLocales.some((l) => l.code === locale)) {
 		locale = (await i18nServer.getLocale(request)) || "en";
+		return redirect(`/${locale}/home`);
 	}
 	const pageName = locale === "en" ? "evame-ja" : "evame";
 	const topPageWithTranslations = await fetchPageWithTranslations(
