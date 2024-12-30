@@ -25,7 +25,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	let locale = params.locale;
 	if (!locale || !supportedLocales.some((l) => l.code === locale)) {
 		locale = (await i18nServer.getLocale(request)) || "en";
-		return redirect(`/${locale}/home`);
+		const url = new URL(request.url);
+		url.pathname = `/${locale}${url.pathname}`;
+		return redirect(url.toString());
 	}
 	const pageName = locale === "en" ? "evame-ja" : "evame";
 	const topPageWithTranslations = await fetchPageWithTranslations(
