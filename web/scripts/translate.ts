@@ -66,7 +66,6 @@ async function getAllPagesByUserId(userId: number) {
 				pageId: page.id,
 				locale: LOCALE,
 				title: title,
-				numberedContent: page.content,
 				numberedElements: page.sourceTexts,
 			});
 
