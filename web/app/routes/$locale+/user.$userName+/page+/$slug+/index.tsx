@@ -212,7 +212,7 @@ export default function Page() {
 		locale,
 		likeCount,
 		isLikedByUser,
-		otherLocales
+		otherLocales,
 	} = useLoaderData<typeof loader>();
 	const actionData = useActionData<typeof action>();
 	const [form, fields] = useForm({

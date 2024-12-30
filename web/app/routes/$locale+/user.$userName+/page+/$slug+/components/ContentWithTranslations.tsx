@@ -18,7 +18,7 @@ interface ContentWithTranslationsProps {
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
 	locale: string;
-	otherLocales: string[]
+	otherLocales: string[];
 	showOriginal: boolean;
 	showTranslation: boolean;
 }

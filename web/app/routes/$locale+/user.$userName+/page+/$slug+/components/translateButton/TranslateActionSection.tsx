@@ -1,25 +1,23 @@
+import type { UserAITranslationInfo } from "@prisma/client";
 import { Languages } from "lucide-react";
 import { useState } from "react";
-import type { UserAITranslationInfo } from "@prisma/client";
-import { TranslateSettingsDialog } from "./TranslateSettingsDialog";
-import { supportedLocales } from "~/constants/languages";
 // shadcn/uiのSelect
 import {
 	Select,
 	SelectContent,
-	SelectGroup,
 	SelectItem,
-	SelectLabel,
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
+import { supportedLocales } from "~/constants/languages";
+import { TranslateSettingsDialog } from "./TranslateSettingsDialog";
 
 type TranslateActionSectionProps = {
 	pageId: number;
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
 	locale: string;
-	otherLocales: string[]; 
+	otherLocales: string[];
 };
 
 export function TranslateActionSection({
