@@ -1,5 +1,6 @@
-import { useFetcher } from "@remix-run/react";
-import { Check, Globe, Loader2, Lock } from "lucide-react";
+import { useFetcher, useLocation } from "@remix-run/react";
+import { Link } from "@remix-run/react";
+import { Check, Globe, LinkIcon, Loader2, Lock } from "lucide-react";
 import { useState } from "react";
 import { BaseHeaderLayout } from "~/components/BaseHeaderLayout";
 import { Button } from "~/components/ui/button";
@@ -8,13 +9,14 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "~/components/ui/popover";
+import { Separator } from "~/components/ui/separator";
 import type { SanitizedUser } from "~/types";
-
 interface EditHeaderProps {
 	currentUser: SanitizedUser;
 	initialIsPublished: boolean | undefined;
 	hasUnsavedChanges: boolean;
 	onPublishChange: (isPublished: boolean) => void;
+	pageId: number | undefined;
 }
 
 export function EditHeader({
@@ -22,11 +24,13 @@ export function EditHeader({
 	initialIsPublished,
 	hasUnsavedChanges,
 	onPublishChange,
+	pageId,
 }: EditHeaderProps) {
 	const fetcher = useFetcher();
+	const location = useLocation();
 	const isSubmitting = fetcher.state === "submitting";
 	const [isPublished, setIsPublished] = useState(initialIsPublished);
-
+	const pagePath = location.pathname.replace(/\/edit$/, "");
 	const handlePublishChange = (newPublishState: boolean) => {
 		setIsPublished(newPublishState);
 		onPublishChange(newPublishState);
@@ -86,6 +90,7 @@ export function EditHeader({
 						<Globe className="w-4 h-4" />
 						<span>Public</span>
 					</button>
+
 					<button
 						type="button"
 						className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors duration-200 hover:bg-secondary/80 disabled:opacity-50 disabled:pointer-events-none"
@@ -95,6 +100,18 @@ export function EditHeader({
 						<Lock className="w-4 h-4" />
 						<span>Private</span>
 					</button>
+					{pageId && (
+						<>
+							<Separator />
+							<Link
+								to={pagePath}
+								className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors duration-200 hover:bg-secondary/80 disabled:opacity-50 disabled:pointer-events-none"
+							>
+								<LinkIcon className="w-4 h-4" />
+								<span>Preview</span>
+							</Link>
+						</>
+					)}
 				</div>
 			</PopoverContent>
 		</Popover>

@@ -71,7 +71,7 @@ export function ContentWithTranslations({
 					to={`/user/${pageWithTranslations.user.userName}`}
 					className="flex items-center mr-2 !no-underline hover:text-gray-700"
 				>
-					<Avatar className="w-12 h-12 flex-shrink-0 mr-3 ">
+					<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
 						<AvatarImage
 							src={pageWithTranslations.user.icon}
 							alt={pageWithTranslations.user.displayName}

@@ -314,7 +314,7 @@ async function syncGithub() {
 			rankingMarkdown,
 			rankingPageSlug,
 			adminUser.id,
-			"en",
+			"ja",
 			true,
 		);
 
