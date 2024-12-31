@@ -1,96 +1,309 @@
-import { getFormProps, getInputProps, useForm } from "@conform-to/react";
-import { getZodConstraint, parseWithZod } from "@conform-to/zod";
-import type { ActionFunctionArgs } from "@remix-run/node";
-import type { LoaderFunctionArgs } from "@remix-run/node";
-import { useActionData, useNavigation } from "@remix-run/react";
-import { Form } from "@remix-run/react";
-import type { MetaFunction } from "@remix-run/react";
+import { parseWithZod } from "@conform-to/zod";
+import type { Tag } from "@prisma/client";
+import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
+import { data } from "@remix-run/node";
+import { Form, useLoaderData, useSearchParams } from "@remix-run/react";
+import { Edit3, FileText, HashIcon, UserIcon } from "lucide-react";
+import { useState } from "react";
 import { z } from "zod";
 import { LocaleLink } from "~/components/LocaleLink";
-import { Button } from "~/components/ui/button";
+import { PaginationBar } from "~/components/PaginationBar";
 import { Input } from "~/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { authenticator } from "~/utils/auth.server";
-import { searchTitle } from "./functions/queries.server";
+import {
+	type PageWithRelations,
+	searchContent,
+	searchTags,
+	searchTitle,
+	searchUsers,
+} from "./functions/queries.server";
+export const CATEGORIES = ["title", "user", "tags", "content"] as const;
+export type Category = (typeof CATEGORIES)[number];
+import type { SanitizedUser } from "~/types";
 
-export const meta: MetaFunction = () => {
-	return [{ title: "Search" }, { name: "robots", content: "noindex" }];
-};
-
+// Zod スキーマ
 const schema = z.object({
 	query: z.string().min(1, "Search query is required"),
+	category: z.enum(CATEGORIES),
 });
+
+const PAGE_SIZE = 10;
+/** カテゴリー定義 */
+
+export const meta: MetaFunction = () => [
+	{ title: "Search" },
+	{ name: "robots", content: "noindex" },
+];
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
-	return { currentUser };
-}
+	const url = new URL(request.url);
+	const formData = Object.fromEntries(url.searchParams.entries());
+	const page = Number.parseInt(formData.page || "1", 10);
 
-export async function action({ request }: ActionFunctionArgs) {
-	const formData = await request.formData();
-	const submission = parseWithZod(formData, { schema });
+	// バリデーション
+	const submission = parseWithZod(new URLSearchParams(formData), { schema });
 	if (submission.status !== "success") {
-		return { lastResult: submission.reply(), searchResults: [] };
+		// バリデ失敗 => 空結果
+		return {
+			currentUser,
+			query: "",
+			category: "title" as Category,
+			page,
+			totalCount: 0,
+			totalPages: 0,
+			pages: [],
+			tags: [],
+			sanitizedUsers: [],
+		};
 	}
-	const { query } = submission.value;
 
-	const searchResults = await searchTitle(query);
-	return { lastResult: submission.reply(), searchResults };
+	const { query, category } = submission.value;
+	const skip = (page - 1) * PAGE_SIZE;
+	const take = PAGE_SIZE;
+
+	// カテゴリ別に検索
+	let pages: PageWithRelations[] | undefined = undefined;
+	let tags: Tag[] | undefined = undefined;
+	let sanitizedUsers: SanitizedUser[] | undefined = undefined;
+	let totalCount = 0;
+
+	switch (category) {
+		case "title": {
+			const { pages: resultPages, totalCount: cnt } = await searchTitle(
+				query,
+				skip,
+				take,
+			);
+			pages = resultPages;
+			totalCount = cnt;
+			break;
+		}
+		case "content": {
+			const { pages: resultPages, totalCount: cnt } = await searchContent(
+				query,
+				skip,
+				take,
+			);
+			pages = resultPages;
+			totalCount = cnt;
+			break;
+		}
+		case "tags": {
+			const { tags: resultTags, totalCount: cnt } = await searchTags(
+				query,
+				skip,
+				take,
+			);
+			tags = resultTags;
+			totalCount = cnt;
+			break;
+		}
+		case "user": {
+			const { users: resultUsers, totalCount: cnt } = await searchUsers(
+				query,
+				skip,
+				take,
+			);
+			sanitizedUsers = resultUsers;
+			totalCount = cnt;
+			break;
+		}
+	}
+
+	// 総ページ数
+	const totalPages = Math.ceil(totalCount / take);
+
+	return data(
+		{
+			query,
+			category,
+			page,
+			pages,
+			tags,
+			sanitizedUsers,
+			totalCount,
+			totalPages,
+		},
+		{
+			headers: {
+				"Cache-Control": "max-age=300, s-maxage=3600",
+			},
+		},
+	);
 }
 
-export default function Search() {
-	const actionData = useActionData<typeof action>();
-	const navigation = useNavigation();
-	const isSearching = navigation.state === "submitting";
+// UIコンポーネント (デザインは変更なし)
+export default function SearchPage() {
+	const { query, page, totalPages, pages, tags, sanitizedUsers, category } =
+		useLoaderData<typeof loader>();
+	const [searchParams, setSearchParams] = useSearchParams();
+	const [currentCategory, setCurrentCategory] = useState<Category>(category);
 
-	const [form, fields] = useForm({
-		id: "search-form",
-		constraint: getZodConstraint(schema),
-		lastResult: actionData?.lastResult,
-		onValidate({ formData }) {
-			return parseWithZod(formData, { schema });
-		},
-		shouldValidate: "onBlur",
-		shouldRevalidate: "onInput",
-	});
+	// アイコン切り替え
+	function renderIcon(cat: Category) {
+		switch (cat) {
+			case "title":
+				return <FileText className="mr-1 h-4 w-4" />;
+			case "user":
+				return <UserIcon className="mr-1 h-4 w-4" />;
+			case "tags":
+				return <HashIcon className="mr-1 h-4 w-4" />;
+			case "content":
+				return <Edit3 className="mr-1 h-4 w-4" />;
+			default:
+				return null;
+		}
+	}
+
+	// ページ変更
+	function handlePageChange(newPage: number) {
+		setSearchParams({
+			query: query,
+			category: currentCategory,
+			page: String(newPage),
+		});
+	}
 
 	return (
-		<div>
-			<div className="container mx-auto max-w-4xl min-h-50 py-10">
-				<Form method="post" {...getFormProps(form)}>
-					<div className="flex gap-2">
-						<Input
-							{...getInputProps(fields.query, { type: "text" })}
-							placeholder="Titles or translation titles..."
-							className="w-full"
-						/>
-						<Button type="submit" disabled={isSearching}>
-							{isSearching ? "Searching..." : "Search"}
-						</Button>
-					</div>
-				</Form>
-				{actionData?.searchResults && (
-					<div className=" shadow-lg rounded-md z-10  ">
-						{actionData.searchResults.length === 0 ? (
-							<p className="p-2 text-gray-500">No results found.</p>
-						) : (
-							<ul className="max-h-60 overflow-y-auto">
-								{actionData.searchResults.map((result) => (
-									<li
-										key={result.id}
-										className="hover:bg-gray-300 dark:hover:bg-gray-700 transition duration-150 rounded-lg"
-									>
-										<LocaleLink
-											to={`/user/${result.user.userName}/page/${encodeURIComponent(result.slug)}`}
-											className="block p-2 text-inherit no-underline"
-										>
-											<h3 className="font-bold">{result.title}</h3>
-										</LocaleLink>
-									</li>
-								))}
-							</ul>
-						)}
+		<div className="container mx-auto p-4">
+			{/* 検索フォーム */}
+			<Form method="get" className="mb-6">
+				<input type="hidden" name="category" value={currentCategory} />
+				<div className="relative">
+					<Input
+						type="search"
+						name="query"
+						defaultValue={query}
+						placeholder="Search..."
+						className="w-full px-4 py-3 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+					/>
+				</div>
+			</Form>
+
+			{/* タブ */}
+			<Tabs
+				value={currentCategory}
+				onValueChange={(val) => {
+					setCurrentCategory(val as Category);
+					setSearchParams({
+						query: searchParams.get("query") ?? "",
+						category: val,
+					});
+				}}
+			>
+				<TabsList className="mb-6 border-b w-full flex rounded-full">
+					{CATEGORIES.map((cat) => (
+						<TabsTrigger
+							key={cat}
+							value={cat}
+							className="flex-1 items-center justify-center rounded-full text-sm"
+						>
+							{renderIcon(cat)}
+							{cat.charAt(0).toUpperCase() + cat.slice(1)}
+						</TabsTrigger>
+					))}
+				</TabsList>
+				{CATEGORIES.map((cat) => (
+					<TabsContent key={cat} value={cat} />
+				))}
+			</Tabs>
+
+			{/* 検索結果 */}
+			<div className="space-y-4">
+				{/* カテゴリごとに表示する配列が違う */}
+				{currentCategory === "tags" && tags?.length === 0 && (
+					<p className="text-gray-500">No results found.</p>
+				)}
+				{currentCategory === "user" && sanitizedUsers?.length === 0 && (
+					<p className="text-gray-500">No results found.</p>
+				)}
+				{(currentCategory === "title" || currentCategory === "content") &&
+					pages?.length === 0 && (
+						<p className="text-gray-500">No results found.</p>
+					)}
+
+				{/* タグの表示 */}
+				{currentCategory === "tags" && tags && tags.length > 0 && (
+					<div className="space-y-4">
+						{tags.map((tag) => (
+							<div
+								key={tag.id}
+								className="flex items-start p-4 rounded-lg transition"
+							>
+								<div className="flex-1">
+									<h3 className="font-medium text-gray-900">{tag.name}</h3>
+								</div>
+							</div>
+						))}
 					</div>
 				)}
+
+				{/* ユーザーの表示 */}
+				{currentCategory === "user" &&
+					sanitizedUsers &&
+					sanitizedUsers.length > 0 && (
+						<div className="space-y-4">
+							{sanitizedUsers.map((usr: SanitizedUser) => (
+								<div
+									key={usr.id}
+									className="flex items-start p-4  rounded-lg transition"
+								>
+									<div className="flex-1">
+										<LocaleLink to={`/user/${usr.userName}`}>
+											<h3 className="text-xl font-bold">{usr.displayName}</h3>
+											<span className="text-gray-500 text-sm">
+												@{usr.userName}
+											</span>
+										</LocaleLink>
+									</div>
+								</div>
+							))}
+						</div>
+					)}
+
+				{/* Page (title/content) の表示 */}
+				{(currentCategory === "title" || currentCategory === "content") &&
+					pages &&
+					pages.length > 0 && (
+						<div className="space-y-4">
+							{pages.map((pageItem) => (
+								<div
+									key={pageItem.id}
+									className="flex items-start p-4  rounded-lg transition"
+								>
+									<div className="flex-1">
+										<LocaleLink
+											to={`/user/${pageItem.sanitizedUser.userName}/page/${pageItem.slug}`}
+										>
+											<h3 className="">{pageItem.sourceText.text}</h3>
+										</LocaleLink>
+										<div className="text-sm text-gray-500 mt-1">
+											By:{" "}
+											{pageItem.sanitizedUser.displayName ||
+												pageItem.sanitizedUser.userName}
+										</div>
+										{pageItem.updatedAt && (
+											<div className="text-xs text-gray-400 mt-2">
+												Last updated:{" "}
+												{new Date(pageItem.updatedAt).toLocaleDateString()}
+											</div>
+										)}
+									</div>
+								</div>
+							))}
+						</div>
+					)}
+			</div>
+
+			{/* ページャー */}
+			<div className="mt-4 flex items-center gap-4">
+				<PaginationBar
+					totalPages={totalPages}
+					currentPage={page}
+					onPageChange={handlePageChange}
+				/>
 			</div>
 		</div>
 	);

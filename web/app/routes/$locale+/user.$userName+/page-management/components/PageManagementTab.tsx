@@ -2,18 +2,11 @@ import { useSearchParams } from "@remix-run/react";
 import { useFetcher } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { LocaleLink } from "~/components/LocaleLink";
+import { PaginationBar } from "~/components/PaginationBar";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
-import {
-	Pagination,
-	PaginationContent,
-	PaginationItem,
-	PaginationLink,
-	PaginationNext,
-	PaginationPrevious,
-} from "~/components/ui/pagination";
 import {
 	Table,
 	TableBody,
@@ -211,36 +204,11 @@ export function PageManagementTab({
 			</div>
 
 			<div className="flex justify-center mt-4">
-				<Pagination>
-					<PaginationContent>
-						{currentPage > 1 && (
-							<PaginationItem>
-								<PaginationPrevious
-									onClick={() => handlePageChange(currentPage - 1)}
-								/>
-							</PaginationItem>
-						)}
-						{Array.from({ length: totalPages }, (_, i) => i + 1).map(
-							(pageNum) => (
-								<PaginationItem key={pageNum}>
-									<PaginationLink
-										onClick={() => handlePageChange(pageNum)}
-										isActive={pageNum === currentPage}
-									>
-										{pageNum}
-									</PaginationLink>
-								</PaginationItem>
-							),
-						)}
-						{currentPage < totalPages && (
-							<PaginationItem>
-								<PaginationNext
-									onClick={() => handlePageChange(currentPage + 1)}
-								/>
-							</PaginationItem>
-						)}
-					</PaginationContent>
-				</Pagination>
+				<PaginationBar
+					totalPages={totalPages}
+					currentPage={currentPage}
+					onPageChange={handlePageChange}
+				/>
 			</div>
 
 			<DeletePageDialog
