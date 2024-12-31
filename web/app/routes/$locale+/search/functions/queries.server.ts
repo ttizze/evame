@@ -1,137 +1,157 @@
+// app/routes/search/functions/queries.server.ts
+
+import type { Page, SourceText, Tag, TagPage, User } from "@prisma/client";
+import type { SanitizedUser } from "~/types";
 import { prisma } from "~/utils/prisma";
-import type { Category } from "../route";
+import { sanitizeUser } from "~/utils/sanitizeUser";
 
-export async function searchByCategory(query: string, category: Category, skip: number, take: number) {
-  const trimmed = query.trim();
-  if (!trimmed) return {
-    results: [],
-    totalPages: 0,
-    currentPage: 0,
-  };
+/** Page + リレーションを含む型 (title/content 用) */
+export type PageWithRelations = Page & {
+	sourceText: SourceText;
+	sanitizedUser: SanitizedUser;
+	tagPages: Array<TagPage & { tag: Tag }>;
+};
 
-  switch (category) {
-    case "title":
-      // sourceText からテキストを検索して、Page を取り出して返す
-      // number: 0 のもの（タイトル用と想定）を対象にする
-      const titleResults = await prisma.sourceText.findMany({
-				skip,
-				take,
-        where: {
-          text: { contains: trimmed, mode: "insensitive" },
-          number: 0,
-        },
-        include: {
-          page: {
-            include: {
-              user: true,
-              tagPages: {
-                include: { tag: true },
-              },
-            },
-          },
-        },
-      });
-			const titleTotalCount = await prisma.sourceText.count({
-				where: {
-					text: { contains: trimmed, mode: "insensitive" },
-					number: 0,
-				},
-			});
-			const titleTotalPages = Math.ceil(titleTotalCount / take);	
-      return {
-					results: titleResults.map((r) => r.page),
-					totalPages: titleTotalPages,
-					currentPage: skip / take + 1,
-				};
-
-			case "content":
-				const contentResults = await prisma.page.findMany({
-					skip,
-					take,
-					where: {
-						content: {
-							contains: trimmed,
-							mode: "insensitive",
-						},
-					},
+/** タイトル検索 (sourceText.number=0) → PageWithRelations[] */
+export async function searchTitle(
+	query: string,
+	skip: number,
+	take: number,
+): Promise<{
+	pages: PageWithRelations[];
+	totalCount: number;
+}> {
+	const [srcTexts, count] = await Promise.all([
+		prisma.sourceText.findMany({
+			skip,
+			take,
+			where: {
+				text: { contains: query, mode: "insensitive" },
+				number: 0,
+			},
+			include: {
+				page: {
 					include: {
 						user: true,
-						tagPages: {
-							include: { tag: true },
+						tagPages: { include: { tag: true } },
+						// number=0 のソーステキストを1つだけ取りたい場合
+						sourceTexts: {
+							where: {
+								number: 0,
+							},
 						},
-					},
-				});
-				const contentTotalCount = await prisma.page.count({
-					where: {
-						content: {
-							contains: trimmed,
-							mode: "insensitive",
-						},
-					},
-				});
-				const contentTotalPages = Math.ceil(contentTotalCount / take);
-				return {
-					results: contentResults,
-					totalPages: contentTotalPages,
-					currentPage: skip / take + 1,
-				};
-
-
-    case "tags":
-      const tagResults = await prisma.tag.findMany({
-        skip,
-        take,
-        where: {
-          name: {
-            contains: trimmed,
-            mode: "insensitive",
-          },
-      }});
-			const tagTotalCount = await prisma.tag.count({
-				where: {
-					name: {
-						contains: trimmed,
-						mode: "insensitive",
 					},
 				},
-			});
-			const tagTotalPages = Math.ceil(tagTotalCount / take);
-			return {
-				results: tagResults,
-				totalPages: tagTotalPages,
-				currentPage: skip / take + 1,
-			};	
+			},
+		}),
+		prisma.sourceText.count({
+			where: {
+				text: { contains: query, mode: "insensitive" },
+				number: 0,
+			},
+		}),
+	]);
 
-			case "user":
-				const userResults = await prisma.user.findMany({
-					skip,
-					take,
+	const pages = srcTexts.map((st) => ({
+		...st.page,
+		sourceText: st,
+		sanitizedUser: sanitizeUser(st.page.user),
+	})) as PageWithRelations[];
+	return { pages, totalCount: count };
+}
+
+/** コンテンツ検索 (Page.content) → PageWithRelations[] */
+export async function searchContent(
+	query: string,
+	skip: number,
+	take: number,
+): Promise<{
+	pages: PageWithRelations[];
+	totalCount: number;
+}> {
+	const [pages, count] = await Promise.all([
+		prisma.page.findMany({
+			skip,
+			take,
+			where: {
+				content: { contains: query, mode: "insensitive" },
+			},
+			include: {
+				user: true,
+				tagPages: { include: { tag: true } },
+				sourceTexts: {
 					where: {
-						displayName: {
-							contains: trimmed,
-							mode: "insensitive",
-						},
+						number: 0,
 					},
-				});
-				const userTotalCount = await prisma.user.count({
-					where: {
-						displayName: {
-							contains: trimmed,
-							mode: "insensitive",
-						},
-					},
-				});
-				const userTotalPages = Math.ceil(userTotalCount / take);
-				return {
-					results: userResults,
-					totalPages: userTotalPages,
-					currentPage: skip / take + 1,
-				};
-    default:
-      return {
-				results: [],
-				totalPages: 0,
-				currentPage: 0,
-			};
-  }
+				},
+			},
+		}),
+		prisma.page.count({
+			where: {
+				content: { contains: query, mode: "insensitive" },
+			},
+		}),
+	]);
+	const pagesWithRelations = pages.map((page) => ({
+		...page,
+		sourceText: page.sourceTexts[0],
+		sanitizedUser: sanitizeUser(page.user),
+	})) as PageWithRelations[];
+	return { pages: pagesWithRelations, totalCount: count };
+}
+
+/** タグ検索 (Tag.name) → Tag[] */
+export async function searchTags(
+	query: string,
+	skip: number,
+	take: number,
+): Promise<{
+	tags: Tag[];
+	totalCount: number;
+}> {
+	const [tags, count] = await Promise.all([
+		prisma.tag.findMany({
+			skip,
+			take,
+			where: {
+				name: { contains: query, mode: "insensitive" },
+			},
+		}),
+		prisma.tag.count({
+			where: {
+				name: { contains: query, mode: "insensitive" },
+			},
+		}),
+	]);
+	return { tags, totalCount: count };
+}
+
+/** ユーザー検索 (User.displayName) → User[] */
+export async function searchUsers(
+	query: string,
+	skip: number,
+	take: number,
+): Promise<{
+	users: User[];
+	totalCount: number;
+}> {
+	const [users, count] = await Promise.all([
+		prisma.user.findMany({
+			skip,
+			take,
+			where: {
+				displayName: { contains: query, mode: "insensitive" },
+			},
+		}),
+		prisma.user.count({
+			where: {
+				displayName: { contains: query, mode: "insensitive" },
+			},
+		}),
+	]);
+	const usersWithSanitized = users.map((user) => ({
+		...user,
+		sanitizedUser: sanitizeUser(user),
+	})) as User[];
+	return { users: usersWithSanitized, totalCount: count };
 }

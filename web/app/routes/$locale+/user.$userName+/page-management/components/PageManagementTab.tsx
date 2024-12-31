@@ -2,18 +2,11 @@ import { useSearchParams } from "@remix-run/react";
 import { useFetcher } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { LocaleLink } from "~/components/LocaleLink";
+import { PaginationBar } from "~/components/PaginationBar";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
-import {
-	Pagination,
-	PaginationContent,
-	PaginationItem,
-	PaginationLink,
-	PaginationNext,
-	PaginationPrevious,
-} from "~/components/ui/pagination";
 import {
 	Table,
 	TableBody,
@@ -25,7 +18,6 @@ import {
 import { DeletePageDialog } from "../../components/DeletePageDialog";
 import { PageActionsDropdown } from "../../components/PageActionsDropdown";
 import type { PageWithTitle } from "../types";
-import { PaginationBar } from "~/components/PaginationBar";
 interface PageManagementTabProps {
 	pagesWithTitle: PageWithTitle[];
 	totalPages: number;
@@ -212,11 +204,11 @@ export function PageManagementTab({
 			</div>
 
 			<div className="flex justify-center mt-4">
-			<PaginationBar
-          totalPages={totalPages}
-          currentPage={currentPage}
-          onPageChange={handlePageChange}
-        />
+				<PaginationBar
+					totalPages={totalPages}
+					currentPage={currentPage}
+					onPageChange={handlePageChange}
+				/>
 			</div>
 
 			<DeletePageDialog
