@@ -1,5 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { data } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
 import { useLoaderData, useSearchParams } from "@remix-run/react";
 import type { MetaFunction } from "@remix-run/react";
 import { PageCard } from "~/components/PageCard";
@@ -18,7 +19,6 @@ import { authenticator } from "~/utils/auth.server";
 import { commitSession, getSession } from "~/utils/session.server";
 import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
 import type { PageCardLocalizedType } from "../functions/queries.server";
-import { redirect } from "@remix-run/node";
 export const meta: MetaFunction = () => {
 	return [{ title: "Home - Latest Pages" }];
 };

@@ -1,5 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import type { ActionFunctionArgs } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { Link } from "@remix-run/react";
 import { useFetcher } from "@remix-run/react";
@@ -33,6 +34,7 @@ import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
 import { sanitizeUser } from "~/utils/sanitizeUser";
 import { getSession } from "~/utils/session.server";
+import { commitSession } from "~/utils/session.server";
 import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
 import { DeletePageDialog } from "./components/DeletePageDialog";
 import {
@@ -40,8 +42,6 @@ import {
 	togglePagePublicStatus,
 } from "./functions/mutations.server";
 import { fetchPageById } from "./functions/queries.server";
-import { redirect } from "@remix-run/node";
-import { commitSession } from "~/utils/session.server";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
