@@ -7,7 +7,7 @@ export default VitestConfig.defineConfig({
 		env: {
 			SESSION_SECRET: "test",
 			DATABASE_URL:
-				"postgresql://postgres:password@localhost:5433/postgres?schema=public",
+				"postgresql://postgres:password@localhost:5433/testdb?schema=public",
 		},
 		environment: "vprisma",
 		setupFiles: ["vitest-environment-vprisma/setup", "vitest.setup.ts"],

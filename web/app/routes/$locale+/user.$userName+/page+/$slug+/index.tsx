@@ -23,6 +23,8 @@ import {
 import { actionSchema } from "./types";
 import { getBestTranslation } from "./utils/getBestTranslation";
 import { stripHtmlTags } from "./utils/stripHtmlTags";
+import { redirect } from "@remix-run/node";
+import { commitSession } from "~/utils/session.server";
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Page Not Found" }];
@@ -81,6 +83,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	if (!currentUser && !guestId) {
 		guestId = crypto.randomUUID();
 		session.set("guestId", guestId);
+		return redirect(request.url, {
+			headers: { "Set-Cookie": await commitSession(session) },
+		});
 	}
 	const nonSanitizedUser = await fetchUserByUserName(
 		currentUser?.userName ?? "",
