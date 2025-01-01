@@ -1,6 +1,7 @@
 import { useForm } from "@conform-to/react";
 import { parseWithZod } from "@conform-to/zod";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
 import type { MetaFunction } from "@remix-run/react";
 import { useActionData, useLoaderData } from "@remix-run/react";
 import { useState } from "react";
@@ -9,6 +10,8 @@ import i18nServer from "~/i18n.server";
 import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { LikeButton } from "~/routes/resources+/like-button";
 import { authenticator } from "~/utils/auth.server";
+import { getSession } from "~/utils/session.server";
+import { commitSession } from "~/utils/session.server";
 import { ContentWithTranslations } from "./components/ContentWithTranslations";
 import { FloatingControls } from "./components/FloatingControls";
 import { createUserAITranslationInfo } from "./functions/mutations.server";
@@ -22,7 +25,6 @@ import {
 import { actionSchema } from "./types";
 import { getBestTranslation } from "./utils/getBestTranslation";
 import { stripHtmlTags } from "./utils/stripHtmlTags";
-
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Page Not Found" }];
@@ -76,24 +78,33 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	}
 
 	const currentUser = await authenticator.isAuthenticated(request);
+	const session = await getSession(request.headers.get("Cookie"));
+	let guestId = session.get("guestId");
+	if (!currentUser && !guestId) {
+		guestId = crypto.randomUUID();
+		session.set("guestId", guestId);
+		return redirect(request.url, {
+			headers: { "Set-Cookie": await commitSession(session) },
+		});
+	}
 	const nonSanitizedUser = await fetchUserByUserName(
 		currentUser?.userName ?? "",
 	);
 	const hasGeminiApiKey = !!nonSanitizedUser?.geminiApiKey;
 	const pageWithTranslations = await fetchPageWithTranslations(
 		slug,
-		currentUser?.id ?? 0,
 		locale,
+		currentUser?.id,
 	);
 
 	if (!pageWithTranslations) {
 		throw new Response("Failed to fetch article", { status: 500 });
 	}
 	const isOwner = pageWithTranslations?.user.userName === currentUser?.userName;
-	if (pageWithTranslations.page.isArchived) {
-		throw new Response("Page not found", { status: 404 });
-	}
-	if (!isOwner && !pageWithTranslations.page.isPublished) {
+	if (
+		pageWithTranslations.page.isArchived ||
+		(!isOwner && !pageWithTranslations.page.isPublished)
+	) {
 		throw new Response("Page not found", { status: 404 });
 	}
 	const sourceTitleWithTranslations =
@@ -114,7 +125,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const likeCount = await fetchLikeCount(pageWithTranslations.page.id);
 	const isLikedByUser = await fetchIsLikedByUser(
 		pageWithTranslations.page.id,
-		currentUser?.id ?? 0,
+		currentUser?.id,
+		guestId,
 	);
 
 	return {

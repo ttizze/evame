@@ -4,6 +4,11 @@ import * as VitestConfig from "vitest/config";
 export default VitestConfig.defineConfig({
 	test: {
 		globals: true,
+		env: {
+			SESSION_SECRET: "test",
+			DATABASE_URL:
+				"postgresql://postgres:password@localhost:5433/testdb?schema=public",
+		},
 		environment: "vprisma",
 		setupFiles: ["vitest-environment-vprisma/setup", "vitest.setup.ts"],
 		environmentOptions: {
