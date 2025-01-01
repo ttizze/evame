@@ -3,16 +3,24 @@ import { useFetcher } from "@remix-run/react";
 import { Heart } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { authenticator } from "~/utils/auth.server";
+import { commitSession, getSession } from "~/utils/session.server";
 import { toggleLike } from "./functions/mutations.server";
 
 export async function action({ params, request }: ActionFunctionArgs) {
-	const user = await authenticator.isAuthenticated(request, {
-		failureRedirect: "/auth/login",
-	});
+	const currentUser = await authenticator.isAuthenticated(request);
+	const session = await getSession(request.headers.get("Cookie"));
+	let guestId = session.get("guestId");
+	if (!currentUser && !guestId) {
+		guestId = crypto.randomUUID();
+		session.set("guestId", guestId);
+	}
+
 	const formData = await request.formData();
 	const slug = formData.get("slug") as string;
-	const liked = await toggleLike(user.id, slug);
-	return { liked };
+	const liked = await toggleLike(slug, currentUser?.id, guestId);
+	return new Response(JSON.stringify({ liked }), {
+		headers: { "Set-Cookie": await commitSession(session) },
+	});
 }
 
 type LikeButtonProps = {
@@ -30,6 +38,7 @@ export function LikeButton({
 	showCount,
 	className = "",
 }: LikeButtonProps) {
+	console.log("liked", liked);
 	const fetcher = useFetcher<typeof action>();
 
 	return (

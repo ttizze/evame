@@ -15,9 +15,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import i18nServer from "~/i18n.server";
 import { authenticator } from "~/utils/auth.server";
+import { getSession } from "~/utils/session.server";
 import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
 import type { PageCardLocalizedType } from "../functions/queries.server";
-
 export const meta: MetaFunction = () => {
 	return [{ title: "Home - Latest Pages" }];
 };
@@ -40,7 +40,12 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
 	// ログインユーザー
 	const currentUser = await authenticator.isAuthenticated(request);
-
+	const session = await getSession(request.headers.get("Cookie"));
+	let guestId = session.get("guestId");
+	if (!currentUser && !guestId) {
+		guestId = crypto.randomUUID();
+		session.set("guestId", guestId);
+	}
 	let pagesWithInfo: PageCardLocalizedType[];
 	let totalPages: number;
 	let currentPage: number;
@@ -51,6 +56,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			page: recommendedPage,
 			pageSize: 9,
 			currentUserId: currentUser?.id,
+			currentGuestId: guestId,
 			isRecommended: true,
 			locale,
 		});
@@ -62,6 +68,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			page: newPage,
 			pageSize: 9,
 			currentUserId: currentUser?.id,
+			currentGuestId: guestId,
 			locale,
 		});
 		pagesWithInfo = result.pagesWithInfo;

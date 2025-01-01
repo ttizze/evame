@@ -45,6 +45,7 @@ type FetchParams = {
 	page?: number;
 	pageSize?: number;
 	currentUserId?: number;
+	currentGuestId?: string;
 	pageOwnerId?: number;
 	isRecommended?: boolean;
 	onlyUserOwn?: boolean;
@@ -55,6 +56,7 @@ export async function fetchPaginatedPagesWithInfo({
 	page = 1,
 	pageSize = 9,
 	currentUserId,
+	currentGuestId,
 	pageOwnerId,
 	isRecommended = false,
 	onlyUserOwn = false,
@@ -87,6 +89,14 @@ export async function fetchPaginatedPagesWithInfo({
 	} else {
 		orderBy = { createdAt: "desc" };
 	}
+	let likeWhere: Prisma.LikePageWhereInput;
+	if (currentUserId) {
+		likeWhere = { userId: currentUserId };
+	} else if (currentGuestId) {
+		likeWhere = { guestId: currentGuestId };
+	} else {
+		throw new Error("User ID or Guest ID is required");
+	}
 
 	// findMany & countを同時に呼び出し
 	const [pages, totalCount] = await Promise.all([
@@ -98,14 +108,13 @@ export async function fetchPaginatedPagesWithInfo({
 			select: {
 				...pageCardSelect,
 				likePages: {
-					where: { userId: currentUserId },
+					where: likeWhere,
 					select: { userId: true },
 				},
 			},
 		}),
 		prisma.page.count({ where: baseWhere }),
 	]);
-
 	const pagesWithInfo: PageCardLocalizedType[] = pages.map((p) => ({
 		...p,
 		createdAt: new Date(p.createdAt).toLocaleDateString(locale),

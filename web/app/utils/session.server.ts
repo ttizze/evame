@@ -3,6 +3,7 @@ import type { SanitizedUser } from "~/types";
 
 type Session = {
 	user?: SanitizedUser;
+	guestId?: string;
 };
 
 if (!process.env.SESSION_SECRET) {

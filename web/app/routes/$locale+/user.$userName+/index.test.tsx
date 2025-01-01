@@ -2,11 +2,11 @@ import { createRemixStub } from "@remix-run/testing";
 import { render, screen, waitFor } from "@testing-library/react";
 import { expect, test } from "vitest";
 import "@testing-library/jest-dom";
+import type { User } from "@prisma/client";
 import { userEvent } from "@testing-library/user-event";
 import { authenticator } from "~/utils/auth.server";
 import { prisma } from "~/utils/prisma";
 import UserProfile, { loader, action } from "./index";
-
 vi.mock("~/utils/auth.server", () => ({
 	authenticator: {
 		isAuthenticated: vi.fn(),
@@ -14,8 +14,10 @@ vi.mock("~/utils/auth.server", () => ({
 }));
 
 describe("UserProfile", () => {
+	let testUser: User;
+	let testUser2: User;
 	beforeEach(async () => {
-		await prisma.user.create({
+		const createdUser = await prisma.user.create({
 			data: {
 				userName: "testuser",
 				displayName: "Test User",
@@ -65,7 +67,7 @@ describe("UserProfile", () => {
 			},
 			include: { pages: true },
 		});
-		await prisma.user.create({
+		const createdUser2 = await prisma.user.create({
 			data: {
 				userName: "testuser2",
 				displayName: "Test User2",
@@ -73,6 +75,17 @@ describe("UserProfile", () => {
 				icon: "https://example.com/icon2.jpg",
 				profile: "This is a test profile2",
 			},
+		});
+		testUser = createdUser;
+		testUser2 = createdUser2;
+	});
+
+	afterEach(async () => {
+		await prisma.user.delete({
+			where: { id: testUser.id },
+		});
+		await prisma.user.delete({
+			where: { id: testUser2.id },
 		});
 	});
 

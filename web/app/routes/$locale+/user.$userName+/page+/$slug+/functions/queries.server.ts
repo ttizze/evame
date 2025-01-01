@@ -34,8 +34,8 @@ export async function fetchPageWithSourceTexts(pageId: number) {
 
 export async function fetchPageWithTranslations(
 	slug: string,
-	currentUserId: number | null,
 	locale: string,
+	currentUserId?: number,
 ): Promise<PageWithTranslations | null> {
 	const page = await prisma.page.findFirst({
 		where: { slug },
@@ -48,9 +48,9 @@ export async function fetchPageWithTranslations(
 						include: {
 							user: true,
 							votes: {
-								where: currentUserId ? { userId: currentUserId } : undefined,
-								orderBy: { updatedAt: "desc" },
-								take: 1,
+								where: currentUserId
+									? { userId: currentUserId }
+									: { userId: -1 },
 							},
 						},
 						orderBy: [{ point: "desc" }, { createdAt: "desc" }],
@@ -112,22 +112,6 @@ export async function fetchPageWithTranslations(
 	};
 }
 
-export async function getLastReadDataNumber(userId: number, pageId: number) {
-	const readHistory = await prisma.userReadHistory.findUnique({
-		where: {
-			userId_pageId: {
-				userId: userId,
-				pageId: pageId,
-			},
-		},
-		select: {
-			lastReadDataNumber: true,
-		},
-	});
-
-	return readHistory?.lastReadDataNumber ?? 0;
-}
-
 export async function fetchLatestUserAITranslationInfo(
 	pageId: number,
 	userId: number,
@@ -145,9 +129,22 @@ export async function fetchLikeCount(pageId: number) {
 	});
 	return likeCount;
 }
-export async function fetchIsLikedByUser(pageId: number, userId: number) {
-	const like = await prisma.likePage.findFirst({
-		where: { pageId, userId },
-	});
-	return !!like;
+export async function fetchIsLikedByUser(
+	pageId: number,
+	userId?: number,
+	guestId?: string,
+) {
+	if (userId) {
+		const like = await prisma.likePage.findFirst({
+			where: { pageId, userId },
+		});
+		return !!like;
+	}
+	if (guestId) {
+		const like = await prisma.likePage.findFirst({
+			where: { pageId, guestId },
+		});
+		return !!like;
+	}
+	return false;
 }

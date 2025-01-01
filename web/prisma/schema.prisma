@@ -136,13 +136,15 @@ model TranslateText {
 
 model LikePage {
   id        Int      @id @default(autoincrement())
-  userId    Int      @map("user_id")
+  userId    Int?      @map("user_id")
+  guestId   String?   @map("guest_id")
   pageId    Int      @map("page_id")
   createdAt DateTime @default(now()) @map("created_at")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@unique([userId, pageId])
+  @@unique([guestId, pageId])
   @@map("like_pages")
   @@index([userId])
   @@index([pageId])

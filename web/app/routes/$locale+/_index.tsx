@@ -32,8 +32,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const pageName = locale === "en" ? "evame-ja" : "evame";
 	const topPageWithTranslations = await fetchPageWithTranslations(
 		pageName,
-		currentUser?.id ?? 0,
 		locale,
+		currentUser?.id,
 	);
 	if (!topPageWithTranslations) {
 		throw new Response("Not Found", { status: 404 });

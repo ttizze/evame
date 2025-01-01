@@ -11,6 +11,7 @@ export async function fetchSanitizedUserWithPages(
 		where: { userName },
 		select: { id: true },
 	});
+	if (!userID) return null;
 	const [user, totalCount] = await Promise.all([
 		prisma.user.findUnique({
 			where: { userName },
@@ -23,7 +24,7 @@ export async function fetchSanitizedUserWithPages(
 						createdAt: true,
 						likePages: {
 							where: {
-								userId: userID?.id,
+								userId: userID.id,
 							},
 							select: {
 								userId: true,
