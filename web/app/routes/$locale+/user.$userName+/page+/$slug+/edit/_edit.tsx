@@ -24,6 +24,7 @@ import { upsertTags } from "./functions/mutations.server";
 import { getAllTags, getPageBySlug } from "./functions/queries.server";
 import { useKeyboardVisible } from "./hooks/useKeyboardVisible";
 import { getPageSourceLanguage } from "./utils/getPageSourceLanguage";
+import { handlePageTranslation } from "./utils/handlePageTranslation";
 import { processHtmlContent } from "./utils/processHtmlContent";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
@@ -104,6 +105,20 @@ export async function action({ request, params }: ActionFunctionArgs) {
 	);
 	if (tags) {
 		await upsertTags(tags, page.id);
+	}
+	if (page.isPublished) {
+		const geminiApiKey = process.env.GEMINI_API_KEY;
+		if (!geminiApiKey) {
+			throw new Error("Gemini API key is not set");
+		}
+
+		await handlePageTranslation({
+			currentUserId: currentUser.id,
+			pageId: page.id,
+			sourceLanguage,
+			geminiApiKey,
+			title,
+		});
 	}
 	return null;
 }
