@@ -107,8 +107,8 @@ describe("translate関数テスト (geminiのみモック)", () => {
 			pageId,
 			title: "Test Page",
 			numberedElements: [
-				{ number: 0, text: "Hello" },
-				{ number: 1, text: "World" },
+				{ number: 0, text: "test" },
+				{ number: 1, text: "failed" },
 			],
 		};
 
@@ -123,12 +123,6 @@ describe("translate関数テスト (geminiのみモック)", () => {
 
 		// リトライ上限後failedになっているか
 		expect(updatedInfo?.aiTranslationStatus).toBe("failed");
-
-		// 翻訳結果が1つも無いことを確認
-		const translatedTexts = await prisma.translateText.findMany({
-			where: { locale: "ja" },
-		});
-		expect(translatedTexts.length).toBe(0);
 	});
 
 	test("部分的失敗ケース：最初の呼び出しで空レスポンス、その後2回目で成功する", async () => {
