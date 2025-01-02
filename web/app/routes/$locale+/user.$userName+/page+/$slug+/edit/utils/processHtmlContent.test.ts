@@ -69,8 +69,8 @@ describe("processHtmlContent", () => {
       <p>This is a line.</p>
       <p>This is another line.</p>
       <ul>
-        <li>List item 1</li>
-        <li>List item 2</li>
+        <li><p>List item 1</p></li>
+        <li><p>List item 2</p></li>
       </ul>
     `;
 
@@ -116,8 +116,8 @@ describe("processHtmlContent", () => {
       <p>This is another line.</p>
       <p>new line</p>
       <ol>
-        <li>List item 1</li>
-        <li>List item 2</li>
+        <li><p>List item 1</p></li>
+        <li><p>List item 2</p></li>
       </ol>
     `;
 

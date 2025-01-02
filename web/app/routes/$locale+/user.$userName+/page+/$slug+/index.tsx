@@ -236,7 +236,7 @@ export default function Page() {
 
 	return (
 		<div className="w-full max-w-3xl mx-auto">
-			<article className="w-full prose dark:prose-invert prose-a:underline prose-a:decoration-dotted sm:prose lg:prose-lg mx-auto px-2 mb-20">
+			<article className="w-full prose dark:prose-invert prose-a:underline prose-a:decoration-dotted sm:prose lg:prose-lg mx-auto px-4 mb-20">
 				<ContentWithTranslations
 					pageWithTranslations={pageWithTranslations}
 					sourceTitleWithTranslations={sourceTitleWithTranslations}
