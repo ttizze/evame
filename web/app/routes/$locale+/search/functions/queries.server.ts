@@ -30,6 +30,8 @@ export async function searchTitle(
 						number: 0,
 					},
 				},
+				isArchived: false,
+				isPublished: true,
 			},
 			select: pageCardSelect,
 		}),
@@ -41,6 +43,8 @@ export async function searchTitle(
 						number: 0,
 					},
 				},
+				isArchived: false,
+				isPublished: true,
 			},
 		}),
 	]);
@@ -77,6 +81,8 @@ export async function searchByTag(
 						},
 					},
 				},
+				isArchived: false,
+				isPublished: true,
 			},
 			select: pageCardSelect,
 		}),
@@ -89,6 +95,8 @@ export async function searchByTag(
 						},
 					},
 				},
+				isArchived: false,
+				isPublished: true,
 			},
 		}),
 	]);
@@ -119,12 +127,16 @@ export async function searchContent(
 			take,
 			where: {
 				content: { contains: query, mode: "insensitive" },
+				isArchived: false,
+				isPublished: true,
 			},
 			select: pageCardSelect,
 		}),
 		prisma.page.count({
 			where: {
 				content: { contains: query, mode: "insensitive" },
+				isArchived: false,
+				isPublished: true,
 			},
 		}),
 	]);
