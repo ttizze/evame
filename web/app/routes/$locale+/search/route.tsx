@@ -73,24 +73,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	switch (category) {
 		case "title": {
-			// タグページ検索の場合は、そのタグを持つページを検索
-			if (formData.tagpage === "true") {
-				const { pages: resultPages, totalCount: cnt } = await searchByTag(
-					query,
-					skip,
-					take,
-				);
-				pages = resultPages;
-				totalCount = cnt;
-			} else {
-				const { pages: resultPages, totalCount: cnt } = await searchTitle(
-					query,
-					skip,
-					take,
-				);
-				pages = resultPages;
-				totalCount = cnt;
-			}
+			const { pages: resultPages, totalCount: cnt } = await searchTitle(
+				query,
+				skip,
+				take,
+			);
+			pages = resultPages;
+			totalCount = cnt;
 			break;
 		}
 		case "content": {
@@ -104,13 +93,23 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			break;
 		}
 		case "tags": {
-			const { tags: resultTags, totalCount: cnt } = await searchTags(
-				query,
-				skip,
-				take,
-			);
-			tags = resultTags;
-			totalCount = cnt;
+			if (formData.tagpage === "true") {
+				const { pages: resultPages, totalCount: cnt } = await searchByTag(
+					query,
+					skip,
+					take,
+				);
+				pages = resultPages;
+				totalCount = cnt;
+			} else {
+				const { tags: resultTags, totalCount: cnt } = await searchTags(
+					query,
+					skip,
+					take,
+				);
+				tags = resultTags;
+				totalCount = cnt;
+			}
 			break;
 		}
 		case "user": {
@@ -243,15 +242,43 @@ export default function SearchPage() {
 						{tags.map((tag) => (
 							<LocaleLink
 								key={tag.id}
-								to={`/search?query=${encodeURIComponent(tag.name)}&category=title&tagpage=true`}
-								className="flex items-start p-4 rounded-lg transition hover:bg-gray-50"
+								to={`/search?query=${encodeURIComponent(tag.name)}&category=tags&tagpage=true`}
+								className="flex items-start p-4 rounded-lg "
 							>
 								<p className=" ">{tag.name}</p>
 							</LocaleLink>
 						))}
 					</div>
 				)}
-
+				{currentCategory === "tags" && pages && pages.length > 0 && (
+					<div className="space-y-4">
+						{pages.map((pageItem) => (
+							<div
+								key={pageItem.id}
+								className="flex items-start p-4  rounded-lg transition"
+							>
+								<div className="flex-1">
+									<LocaleLink
+										to={`/user/${pageItem.sanitizedUser.userName}/page/${pageItem.slug}`}
+									>
+										<h3 className="">{pageItem.sourceText.text}</h3>
+									</LocaleLink>
+									<div className="text-sm text-gray-500 mt-1">
+										By:{" "}
+										{pageItem.sanitizedUser.displayName ||
+											pageItem.sanitizedUser.userName}
+									</div>
+									{pageItem.updatedAt && (
+										<div className="text-xs text-gray-400 mt-2">
+											Last updated:{" "}
+											{new Date(pageItem.updatedAt).toLocaleDateString()}
+										</div>
+									)}
+								</div>
+							</div>
+						))}
+					</div>
+				)}
 				{/* ユーザーの表示 */}
 				{currentCategory === "user" &&
 					sanitizedUsers &&
