@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { authenticator } from "~/utils/auth.server";
 import {
 	type PageWithRelations,
+	searchByTag,
 	searchContent,
 	searchTags,
 	searchTitle,
@@ -26,6 +27,7 @@ import type { SanitizedUser } from "~/types";
 const schema = z.object({
 	query: z.string().min(1, "Search query is required"),
 	category: z.enum(CATEGORIES),
+	tagpage: z.string().optional(),
 });
 
 const PAGE_SIZE = 10;
@@ -71,13 +73,24 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	switch (category) {
 		case "title": {
-			const { pages: resultPages, totalCount: cnt } = await searchTitle(
-				query,
-				skip,
-				take,
-			);
-			pages = resultPages;
-			totalCount = cnt;
+			// タグページ検索の場合は、そのタグを持つページを検索
+			if (formData.tagpage === "true") {
+				const { pages: resultPages, totalCount: cnt } = await searchByTag(
+					query,
+					skip,
+					take,
+				);
+				pages = resultPages;
+				totalCount = cnt;
+			} else {
+				const { pages: resultPages, totalCount: cnt } = await searchTitle(
+					query,
+					skip,
+					take,
+				);
+				pages = resultPages;
+				totalCount = cnt;
+			}
 			break;
 		}
 		case "content": {
@@ -228,14 +241,13 @@ export default function SearchPage() {
 				{currentCategory === "tags" && tags && tags.length > 0 && (
 					<div className="space-y-4">
 						{tags.map((tag) => (
-							<div
+							<LocaleLink
 								key={tag.id}
-								className="flex items-start p-4 rounded-lg transition"
+								to={`/search?query=${encodeURIComponent(tag.name)}&category=title&tagpage=true`}
+								className="flex items-start p-4 rounded-lg transition hover:bg-gray-50"
 							>
-								<div className="flex-1">
-									<h3 className="font-medium text-gray-900">{tag.name}</h3>
-								</div>
-							</div>
+								<p className=" ">{tag.name}</p>
+							</LocaleLink>
 						))}
 					</div>
 				)}

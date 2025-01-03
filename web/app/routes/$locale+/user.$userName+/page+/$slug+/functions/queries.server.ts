@@ -83,19 +83,21 @@ export async function fetchPageWithTranslations(
 	const existLocales = titleText
 		? Array.from(new Set(titleText.translateTexts.map((t) => t.locale)))
 		: [];
-
+	const { user, ...pageWithoutUser } = page;
 	return {
 		page: {
-			...page,
+			...pageWithoutUser,
 			createdAt: page.createdAt.toLocaleString(locale),
 		},
-		user: sanitizeUser(page.user),
+		sanitizedUser: sanitizeUser(user),
 		tagPages: page.tagPages,
 		sourceTextWithTranslations: page.sourceTexts.map((sourceText) => {
 			const translationsWithVotes = sourceText.translateTexts.map(
 				(translateText) => ({
-					translateText,
-					user: sanitizeUser(translateText.user),
+					translateText: {
+						...translateText,
+						user: sanitizeUser(translateText.user),
+					},
 					vote: translateText.votes[0] || null,
 				}),
 			);

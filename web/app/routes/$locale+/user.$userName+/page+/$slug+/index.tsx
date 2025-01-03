@@ -41,7 +41,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	);
 	const imageUrl = firstImageMatch
 		? firstImageMatch[1]
-		: pageWithTranslations.user.icon;
+		: pageWithTranslations.sanitizedUser.icon;
 
 	const alternateLinks = data.existLocales
 		.filter((locale: string) => locale !== data.locale)
@@ -49,7 +49,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 			tagName: "link",
 			rel: "alternate",
 			hrefLang: locale,
-			href: `/${locale}/user/${data.pageWithTranslations.user.userName}/page/${data.pageWithTranslations.page.slug}`,
+			href: `/${locale}/user/${data.pageWithTranslations.sanitizedUser.userName}/page/${data.pageWithTranslations.page.slug}`,
 		}));
 
 	return [
@@ -100,7 +100,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	if (!pageWithTranslations) {
 		throw new Response("Failed to fetch article", { status: 500 });
 	}
-	const isOwner = pageWithTranslations?.user.userName === currentUser?.userName;
+	const isOwner =
+		pageWithTranslations?.sanitizedUser.userName === currentUser?.userName;
 	if (
 		pageWithTranslations.page.isArchived ||
 		(!isOwner && !pageWithTranslations.page.isPublished)

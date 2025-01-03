@@ -47,7 +47,9 @@ export function ContentWithTranslations({
 						showOriginal={showOriginal}
 						showTranslation={showTranslation}
 						currentUserName={currentUserName}
-						isOwner={pageWithTranslations.user.userName === currentUserName}
+						isOwner={
+							pageWithTranslations.sanitizedUser.userName === currentUserName
+						}
 						slug={pageWithTranslations.page.slug}
 					/>
 				)}
@@ -68,21 +70,23 @@ export function ContentWithTranslations({
 
 			<div className="flex items-center not-prose">
 				<LocaleLink
-					to={`/user/${pageWithTranslations.user.userName}`}
+					to={`/user/${pageWithTranslations.sanitizedUser.userName}`}
 					className="flex items-center mr-2 !no-underline hover:text-gray-700"
 				>
 					<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
 						<AvatarImage
-							src={pageWithTranslations.user.icon}
-							alt={pageWithTranslations.user.displayName}
+							src={pageWithTranslations.sanitizedUser.icon}
+							alt={pageWithTranslations.sanitizedUser.displayName}
 						/>
 						<AvatarFallback>
-							{pageWithTranslations.user.displayName.charAt(0).toUpperCase()}
+							{pageWithTranslations.sanitizedUser.displayName
+								.charAt(0)
+								.toUpperCase()}
 						</AvatarFallback>
 					</Avatar>
 					<div className="flex flex-col">
 						<span className="text-sm">
-							{pageWithTranslations.user.displayName}
+							{pageWithTranslations.sanitizedUser.displayName}
 						</span>
 						<span className="text-xs text-gray-500">
 							{pageWithTranslations.page.createdAt}

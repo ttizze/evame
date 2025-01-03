@@ -52,12 +52,71 @@ export async function searchTitle(
 		}),
 	]);
 
-	const pages = srcTexts.map((st) => ({
-		...st.page,
-		sourceText: st,
-		sanitizedUser: sanitizeUser(st.page.user),
-	})) as PageWithRelations[];
+	const pages = srcTexts.map((st) => {
+		const { user, ...pageWithoutUser } = st.page;
+		return {
+			...pageWithoutUser,
+			sourceText: st,
+			sanitizedUser: sanitizeUser(user),
+		};
+	}) as PageWithRelations[];
 	return { pages, totalCount: count };
+}
+
+/** タグ名でページを検索 */
+export async function searchByTag(
+	tagName: string,
+	skip: number,
+	take: number,
+): Promise<{
+	pages: PageWithRelations[];
+	totalCount: number;
+}> {
+	const [pages, count] = await Promise.all([
+		prisma.page.findMany({
+			skip,
+			take,
+			where: {
+				tagPages: {
+					some: {
+						tag: {
+							name: tagName,
+						},
+					},
+				},
+			},
+			include: {
+				user: true,
+				tagPages: { include: { tag: true } },
+				sourceTexts: {
+					where: {
+						number: 0,
+					},
+				},
+			},
+		}),
+		prisma.page.count({
+			where: {
+				tagPages: {
+					some: {
+						tag: {
+							name: tagName,
+						},
+					},
+				},
+			},
+		}),
+	]);
+
+	const pagesWithRelations = pages.map((page) => {
+		const { user, ...pageWithoutUser } = page;
+		return {
+			...pageWithoutUser,
+			sourceText: page.sourceTexts[0],
+			sanitizedUser: sanitizeUser(user),
+		};
+	}) as PageWithRelations[];
+	return { pages: pagesWithRelations, totalCount: count };
 }
 
 /** コンテンツ検索 (Page.content) → PageWithRelations[] */
@@ -92,11 +151,14 @@ export async function searchContent(
 			},
 		}),
 	]);
-	const pagesWithRelations = pages.map((page) => ({
-		...page,
-		sourceText: page.sourceTexts[0],
-		sanitizedUser: sanitizeUser(page.user),
-	})) as PageWithRelations[];
+	const pagesWithRelations = pages.map((page) => {
+		const { user, ...pageWithoutUser } = page;
+		return {
+			...pageWithoutUser,
+			sourceText: page.sourceTexts[0],
+			sanitizedUser: sanitizeUser(user),
+		};
+	}) as PageWithRelations[];
 	return { pages: pagesWithRelations, totalCount: count };
 }
 

@@ -47,7 +47,7 @@ export function TranslationListItem({
 	translation,
 	currentUserName,
 }: TranslationItemProps) {
-	const isOwner = currentUserName === translation.user.userName;
+	const isOwner = currentUserName === translation.translateText.user.userName;
 	const fetcher = useFetcher();
 
 	const onDelete = () => {
@@ -81,11 +81,11 @@ export function TranslationListItem({
 			</div>
 			<div className="flex items-center justify-end">
 				<LocaleLink
-					to={`/user/${translation.user.userName}`}
+					to={`/user/${translation.translateText.user.userName}`}
 					className="!no-underline mr-2"
 				>
 					<p className="text-sm text-gray-500 text-right flex justify-end items-center  ">
-						by: {translation.user.displayName}
+						by: {translation.translateText.user.displayName}
 					</p>
 				</LocaleLink>
 				<VoteButtons translationWithVote={translation} />
