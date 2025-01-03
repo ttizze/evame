@@ -47,11 +47,11 @@ export function TranslationSection({
 				<>
 					<div className="flex items-center justify-end">
 						<LocaleLink
-							to={`/user/${bestTranslationWithVote?.user.userName}`}
+							to={`/user/${bestTranslationWithVote?.translateText.user.userName}`}
 							className="!no-underline mr-2"
 						>
 							<p className="text-sm text-gray-500 text-right flex justify-end items-center">
-								by: {bestTranslationWithVote?.user.displayName}
+								by: {bestTranslationWithVote?.translateText.user.displayName}
 							</p>
 						</LocaleLink>
 						<VoteButtons translationWithVote={bestTranslationWithVote} />

@@ -1,72 +1,124 @@
 // app/routes/search/functions/queries.server.ts
 
-import type { Page, SourceText, Tag, TagPage, User } from "@prisma/client";
+import type { Tag } from "@prisma/client";
+import {
+	type PageCardLocalizedType,
+	pageCardSelect,
+} from "~/routes/$locale+/functions/queries.server";
 import type { SanitizedUser } from "~/types";
 import { prisma } from "~/utils/prisma";
 import { sanitizeUser } from "~/utils/sanitizeUser";
 
-/** Page + リレーションを含む型 (title/content 用) */
-export type PageWithRelations = Page & {
-	sourceText: SourceText;
-	sanitizedUser: SanitizedUser;
-	tagPages: Array<TagPage & { tag: Tag }>;
-};
-
-/** タイトル検索 (sourceText.number=0) → PageWithRelations[] */
+/** タイトル検索 */
 export async function searchTitle(
 	query: string,
 	skip: number,
 	take: number,
+	locale: string,
 ): Promise<{
-	pages: PageWithRelations[];
+	pages: PageCardLocalizedType[];
 	totalCount: number;
 }> {
-	const [srcTexts, count] = await Promise.all([
-		prisma.sourceText.findMany({
+	const [pages, count] = await Promise.all([
+		prisma.page.findMany({
 			skip,
 			take,
 			where: {
-				text: { contains: query, mode: "insensitive" },
-				number: 0,
-			},
-			include: {
-				page: {
-					include: {
-						user: true,
-						tagPages: { include: { tag: true } },
-						// number=0 のソーステキストを1つだけ取りたい場合
-						sourceTexts: {
-							where: {
-								number: 0,
-							},
-						},
+				sourceTexts: {
+					some: {
+						text: { contains: query, mode: "insensitive" },
+						number: 0,
 					},
 				},
+				isArchived: false,
+				isPublished: true,
 			},
+			select: pageCardSelect,
 		}),
-		prisma.sourceText.count({
+		prisma.page.count({
 			where: {
-				text: { contains: query, mode: "insensitive" },
-				number: 0,
+				sourceTexts: {
+					some: {
+						text: { contains: query, mode: "insensitive" },
+						number: 0,
+					},
+				},
+				isArchived: false,
+				isPublished: true,
 			},
 		}),
 	]);
 
-	const pages = srcTexts.map((st) => ({
-		...st.page,
-		sourceText: st,
-		sanitizedUser: sanitizeUser(st.page.user),
-	})) as PageWithRelations[];
-	return { pages, totalCount: count };
+	const pagesWithInfo = pages.map((page) => ({
+		...page,
+		createdAt: new Date(page.createdAt).toLocaleDateString(locale),
+		likePages: [], // Initialize empty for search results
+		_count: { likePages: 0 }, // Initialize count for search results
+	})) as PageCardLocalizedType[];
+
+	return { pages: pagesWithInfo, totalCount: count };
 }
 
-/** コンテンツ検索 (Page.content) → PageWithRelations[] */
+/** タグ名でページを検索 */
+export async function searchByTag(
+	tagName: string,
+	skip: number,
+	take: number,
+	locale: string,
+): Promise<{
+	pages: PageCardLocalizedType[];
+	totalCount: number;
+}> {
+	const [pages, count] = await Promise.all([
+		prisma.page.findMany({
+			skip,
+			take,
+			where: {
+				tagPages: {
+					some: {
+						tag: {
+							name: tagName,
+						},
+					},
+				},
+				isArchived: false,
+				isPublished: true,
+			},
+			select: pageCardSelect,
+		}),
+		prisma.page.count({
+			where: {
+				tagPages: {
+					some: {
+						tag: {
+							name: tagName,
+						},
+					},
+				},
+				isArchived: false,
+				isPublished: true,
+			},
+		}),
+	]);
+
+	const pagesWithInfo = pages.map((page) => ({
+		...page,
+		createdAt: new Date(page.createdAt).toLocaleDateString(locale),
+		likePages: [], // Initialize empty for search results
+		_count: { likePages: 0 }, // Initialize count for search results
+	})) as PageCardLocalizedType[];
+
+	return { pages: pagesWithInfo, totalCount: count };
+}
+
+/** コンテンツ検索 */
 export async function searchContent(
 	query: string,
 	skip: number,
 	take: number,
+	locale = "en-US",
 ): Promise<{
-	pages: PageWithRelations[];
+	pages: PageCardLocalizedType[];
 	totalCount: number;
 }> {
 	const [pages, count] = await Promise.all([
@@ -75,29 +127,28 @@ export async function searchContent(
 			take,
 			where: {
 				content: { contains: query, mode: "insensitive" },
+				isArchived: false,
+				isPublished: true,
 			},
-			include: {
-				user: true,
-				tagPages: { include: { tag: true } },
-				sourceTexts: {
-					where: {
-						number: 0,
-					},
-				},
-			},
+			select: pageCardSelect,
 		}),
 		prisma.page.count({
 			where: {
 				content: { contains: query, mode: "insensitive" },
+				isArchived: false,
+				isPublished: true,
 			},
 		}),
 	]);
-	const pagesWithRelations = pages.map((page) => ({
+
+	const pagesWithInfo = pages.map((page) => ({
 		...page,
-		sourceText: page.sourceTexts[0],
-		sanitizedUser: sanitizeUser(page.user),
-	})) as PageWithRelations[];
-	return { pages: pagesWithRelations, totalCount: count };
+		createdAt: new Date(page.createdAt).toLocaleDateString(locale),
+		likePages: [], // Initialize empty for search results
+		_count: { likePages: 0 }, // Initialize count for search results
+	})) as PageCardLocalizedType[];
+
+	return { pages: pagesWithInfo, totalCount: count };
 }
 
 /** タグ検索 (Tag.name) → Tag[] */
@@ -126,13 +177,13 @@ export async function searchTags(
 	return { tags, totalCount: count };
 }
 
-/** ユーザー検索 (User.displayName) → User[] */
+/** ユーザー検索 */
 export async function searchUsers(
 	query: string,
 	skip: number,
 	take: number,
 ): Promise<{
-	users: User[];
+	users: SanitizedUser[];
 	totalCount: number;
 }> {
 	const [users, count] = await Promise.all([
@@ -149,9 +200,5 @@ export async function searchUsers(
 			},
 		}),
 	]);
-	const usersWithSanitized = users.map((user) => ({
-		...user,
-		sanitizedUser: sanitizeUser(user),
-	})) as User[];
-	return { users: usersWithSanitized, totalCount: count };
+	return { users: users.map(sanitizeUser), totalCount: count };
 }

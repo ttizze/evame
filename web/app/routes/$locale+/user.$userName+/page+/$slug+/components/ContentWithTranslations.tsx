@@ -1,7 +1,8 @@
 import type { UserAITranslationInfo } from "@prisma/client";
-import { Hash, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useHydrated } from "remix-utils/use-hydrated";
 import { LocaleLink } from "~/components/LocaleLink";
+import { TagList } from "~/components/TagList";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import type {
 	PageWithTranslations,
@@ -47,42 +48,36 @@ export function ContentWithTranslations({
 						showOriginal={showOriginal}
 						showTranslation={showTranslation}
 						currentUserName={currentUserName}
-						isOwner={pageWithTranslations.user.userName === currentUserName}
+						isOwner={
+							pageWithTranslations.sanitizedUser.userName === currentUserName
+						}
 						slug={pageWithTranslations.page.slug}
 					/>
 				)}
 			</h1>
-			<div className="flex flex-wrap gap-2 pt-2 pb-3">
-				{pageWithTranslations.tagPages.map((tagPage) => (
-					<div
-						key={tagPage.tag.id}
-						className="flex items-center gap-1 px-3 h-[32px] bg-secondary rounded-full text-sm text-secondary-foreground"
-					>
-						<button type="button" className="hover:text-destructive ml-1">
-							<Hash className="w-3 h-3" />
-						</button>
-						<span>{tagPage.tag.name}</span>
-					</div>
-				))}
-			</div>
+			<TagList
+				tag={pageWithTranslations.tagPages.map((tagPage) => tagPage.tag)}
+			/>
 
 			<div className="flex items-center not-prose">
 				<LocaleLink
-					to={`/user/${pageWithTranslations.user.userName}`}
+					to={`/user/${pageWithTranslations.sanitizedUser.userName}`}
 					className="flex items-center mr-2 !no-underline hover:text-gray-700"
 				>
 					<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
 						<AvatarImage
-							src={pageWithTranslations.user.icon}
-							alt={pageWithTranslations.user.displayName}
+							src={pageWithTranslations.sanitizedUser.icon}
+							alt={pageWithTranslations.sanitizedUser.displayName}
 						/>
 						<AvatarFallback>
-							{pageWithTranslations.user.displayName.charAt(0).toUpperCase()}
+							{pageWithTranslations.sanitizedUser.displayName
+								.charAt(0)
+								.toUpperCase()}
 						</AvatarFallback>
 					</Avatar>
 					<div className="flex flex-col">
 						<span className="text-sm">
-							{pageWithTranslations.user.displayName}
+							{pageWithTranslations.sanitizedUser.displayName}
 						</span>
 						<span className="text-xs text-gray-500">
 							{pageWithTranslations.page.createdAt}

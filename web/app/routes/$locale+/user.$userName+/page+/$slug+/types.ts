@@ -10,8 +10,9 @@ import { z } from "zod";
 import type { SanitizedUser } from "~/types";
 
 export type TranslationWithVote = {
-	translateText: TranslateText;
-	user: SanitizedUser;
+	translateText: TranslateText & {
+		user: SanitizedUser;
+	};
 	vote: Vote | null;
 };
 
@@ -28,7 +29,7 @@ export interface PageLocalizedDate extends Omit<Page, "createdAt"> {
 }
 export type PageWithTranslations = {
 	page: PageLocalizedDate;
-	user: SanitizedUser;
+	sanitizedUser: SanitizedUser;
 	tagPages: TagPageWithTag[];
 	sourceTextWithTranslations: SourceTextWithTranslations[];
 	existLocales: string[];

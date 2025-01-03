@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "~/utils/prisma";
 
-const pageCardSelect = {
+export const pageCardSelect = {
 	id: true,
 	slug: true,
 	isPublished: true,
@@ -24,6 +24,16 @@ const pageCardSelect = {
 	likePages: {
 		select: {
 			userId: true,
+		},
+	},
+	tagPages: {
+		select: {
+			tag: {
+				select: {
+					id: true,
+					name: true,
+				},
+			},
 		},
 	},
 	_count: {
