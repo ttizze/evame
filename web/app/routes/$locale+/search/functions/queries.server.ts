@@ -14,7 +14,7 @@ export async function searchTitle(
 	query: string,
 	skip: number,
 	take: number,
-	locale = "en-US",
+	locale: string,
 ): Promise<{
 	pages: PageCardLocalizedType[];
 	totalCount: number;
@@ -64,7 +64,7 @@ export async function searchByTag(
 	tagName: string,
 	skip: number,
 	take: number,
-	locale = "en-US",
+	locale: string,
 ): Promise<{
 	pages: PageCardLocalizedType[];
 	totalCount: number;
