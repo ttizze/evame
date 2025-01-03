@@ -2,17 +2,21 @@ import { parseWithZod } from "@conform-to/zod";
 import type { Tag } from "@prisma/client";
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { data } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
 import { Form, useLoaderData, useSearchParams } from "@remix-run/react";
 import { Edit3, FileText, HashIcon, UserIcon } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import { LocaleLink } from "~/components/LocaleLink";
+import { PageCard } from "~/components/PageCard";
 import { PaginationBar } from "~/components/PaginationBar";
 import { Input } from "~/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { supportedLocaleOptions } from "~/constants/languages";
+import i18nServer from "~/i18n.server";
+import type { SanitizedUser } from "~/types";
 import { authenticator } from "~/utils/auth.server";
 import {
-	type PageWithRelations,
 	searchByTag,
 	searchContent,
 	searchTags,
@@ -21,7 +25,6 @@ import {
 } from "./functions/queries.server";
 export const CATEGORIES = ["title", "user", "tags", "content"] as const;
 export type Category = (typeof CATEGORIES)[number];
-import type { SanitizedUser } from "~/types";
 
 // Zod スキーマ
 const schema = z.object({
@@ -31,14 +34,13 @@ const schema = z.object({
 });
 
 const PAGE_SIZE = 10;
-/** カテゴリー定義 */
 
 export const meta: MetaFunction = () => [
 	{ title: "Search" },
 	{ name: "robots", content: "noindex" },
 ];
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
 	const url = new URL(request.url);
 	const formData = Object.fromEntries(url.searchParams.entries());
@@ -64,9 +66,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const { query, category } = submission.value;
 	const skip = (page - 1) * PAGE_SIZE;
 	const take = PAGE_SIZE;
-
+	let locale = params.locale;
+	if (!locale || !supportedLocaleOptions.some((l) => l.code === locale)) {
+		locale = (await i18nServer.getLocale(request)) || "en";
+		const url = new URL(request.url);
+		url.pathname = `/${locale}${url.pathname}`;
+		return redirect(url.toString());
+	}
 	// カテゴリ別に検索
-	let pages: PageWithRelations[] | undefined = undefined;
+	let pages = undefined;
 	let tags: Tag[] | undefined = undefined;
 	let sanitizedUsers: SanitizedUser[] | undefined = undefined;
 	let totalCount = 0;
@@ -77,6 +85,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				query,
 				skip,
 				take,
+				locale,
 			);
 			pages = resultPages;
 			totalCount = cnt;
@@ -87,6 +96,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				query,
 				skip,
 				take,
+				locale,
 			);
 			pages = resultPages;
 			totalCount = cnt;
@@ -98,6 +108,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 					query,
 					skip,
 					take,
+					locale,
 				);
 				pages = resultPages;
 				totalCount = cnt;
@@ -146,7 +157,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	);
 }
 
-// UIコンポーネント (デザインは変更なし)
 export default function SearchPage() {
 	const { query, page, totalPages, pages, tags, sanitizedUsers, category } =
 		useLoaderData<typeof loader>();
@@ -253,32 +263,16 @@ export default function SearchPage() {
 				{currentCategory === "tags" && pages && pages.length > 0 && (
 					<div className="space-y-4">
 						{pages.map((pageItem) => (
-							<div
+							<PageCard
 								key={pageItem.id}
-								className="flex items-start p-4  rounded-lg transition"
-							>
-								<div className="flex-1">
-									<LocaleLink
-										to={`/user/${pageItem.sanitizedUser.userName}/page/${pageItem.slug}`}
-									>
-										<h3 className="">{pageItem.sourceText.text}</h3>
-									</LocaleLink>
-									<div className="text-sm text-gray-500 mt-1">
-										By:{" "}
-										{pageItem.sanitizedUser.displayName ||
-											pageItem.sanitizedUser.userName}
-									</div>
-									{pageItem.updatedAt && (
-										<div className="text-xs text-gray-400 mt-2">
-											Last updated:{" "}
-											{new Date(pageItem.updatedAt).toLocaleDateString()}
-										</div>
-									)}
-								</div>
-							</div>
+								pageCard={pageItem}
+								pageLink={`/user/${pageItem.user.userName}/page/${pageItem.slug}`}
+								userLink={`/user/${pageItem.user.userName}`}
+							/>
 						))}
 					</div>
 				)}
+
 				{/* ユーザーの表示 */}
 				{currentCategory === "user" &&
 					sanitizedUsers &&
@@ -308,29 +302,12 @@ export default function SearchPage() {
 					pages.length > 0 && (
 						<div className="space-y-4">
 							{pages.map((pageItem) => (
-								<div
+								<PageCard
 									key={pageItem.id}
-									className="flex items-start p-4  rounded-lg transition"
-								>
-									<div className="flex-1">
-										<LocaleLink
-											to={`/user/${pageItem.sanitizedUser.userName}/page/${pageItem.slug}`}
-										>
-											<h3 className="">{pageItem.sourceText.text}</h3>
-										</LocaleLink>
-										<div className="text-sm text-gray-500 mt-1">
-											By:{" "}
-											{pageItem.sanitizedUser.displayName ||
-												pageItem.sanitizedUser.userName}
-										</div>
-										{pageItem.updatedAt && (
-											<div className="text-xs text-gray-400 mt-2">
-												Last updated:{" "}
-												{new Date(pageItem.updatedAt).toLocaleDateString()}
-											</div>
-										)}
-									</div>
-								</div>
+									pageCard={pageItem}
+									pageLink={`/user/${pageItem.user.userName}/page/${pageItem.slug}`}
+									userLink={`/user/${pageItem.user.userName}`}
+								/>
 							))}
 						</div>
 					)}
