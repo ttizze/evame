@@ -55,7 +55,7 @@ export function ContentWithTranslations({
 					/>
 				)}
 			</h1>
-			<TagList tagPages={pageWithTranslations.tagPages} />
+			<TagList tag={pageWithTranslations.tagPages.map((tagPage) => tagPage.tag)} />
 
 			<div className="flex items-center not-prose">
 				<LocaleLink

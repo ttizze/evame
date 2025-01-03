@@ -23,6 +23,7 @@ import {
 	searchTitle,
 	searchUsers,
 } from "./functions/queries.server";
+import { TagList } from "~/components/TagList";
 export const CATEGORIES = ["title", "user", "tags", "content"] as const;
 export type Category = (typeof CATEGORIES)[number];
 
@@ -249,15 +250,7 @@ export default function SearchPage() {
 				{/* タグの表示 */}
 				{currentCategory === "tags" && tags && tags.length > 0 && (
 					<div className="space-y-4">
-						{tags.map((tag) => (
-							<LocaleLink
-								key={tag.id}
-								to={`/search?query=${encodeURIComponent(tag.name)}&category=tags&tagpage=true`}
-								className="flex items-start p-4 rounded-lg "
-							>
-								<p className=" ">{tag.name}</p>
-							</LocaleLink>
-						))}
+						<TagList tag={tags} />
 					</div>
 				)}
 				{currentCategory === "tags" && pages && pages.length > 0 && (

@@ -50,7 +50,7 @@ export function PageCard({
 					</CardTitle>
 					<CardDescription>{pageCard.createdAt}</CardDescription>
 				</LocaleLink>
-				<TagList tagPages={pageCard.tagPages} />
+				<TagList tag={pageCard.tagPages.map((tagPage) => tagPage.tag)} />
 			</CardHeader>
 			<CardContent>
 				<div className="flex justify-between items-center">
