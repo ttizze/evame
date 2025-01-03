@@ -10,6 +10,7 @@ import { z } from "zod";
 import { LocaleLink } from "~/components/LocaleLink";
 import { PageCard } from "~/components/PageCard";
 import { PaginationBar } from "~/components/PaginationBar";
+import { TagList } from "~/components/TagList";
 import { Input } from "~/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { supportedLocaleOptions } from "~/constants/languages";
@@ -23,7 +24,6 @@ import {
 	searchTitle,
 	searchUsers,
 } from "./functions/queries.server";
-import { TagList } from "~/components/TagList";
 export const CATEGORIES = ["title", "user", "tags", "content"] as const;
 export type Category = (typeof CATEGORIES)[number];
 

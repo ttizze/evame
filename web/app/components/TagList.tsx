@@ -1,5 +1,5 @@
-import { Hash } from "lucide-react";
 import type { Tag } from "@prisma/client";
+import { Hash } from "lucide-react";
 import { LocaleLink } from "./LocaleLink";
 
 type TagListProps = {
