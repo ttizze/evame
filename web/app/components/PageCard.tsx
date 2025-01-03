@@ -1,5 +1,6 @@
 import { Lock } from "lucide-react";
 import { LocaleLink } from "~/components/LocaleLink";
+import { TagList } from "~/components/TagList";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
 	Card,
@@ -11,6 +12,7 @@ import {
 import type { PageCardLocalizedType } from "~/routes/$locale+/functions/queries.server";
 import { PageActionsDropdown } from "~/routes/$locale+/user.$userName+/components/PageActionsDropdown";
 import { LikeButton } from "~/routes/resources+/like-button";
+
 type PageCardProps = {
 	pageCard: PageCardLocalizedType;
 	pageLink: string;
@@ -48,6 +50,7 @@ export function PageCard({
 					</CardTitle>
 					<CardDescription>{pageCard.createdAt}</CardDescription>
 				</LocaleLink>
+				<TagList tagPages={pageCard.tagPages} />
 			</CardHeader>
 			<CardContent>
 				<div className="flex justify-between items-center">

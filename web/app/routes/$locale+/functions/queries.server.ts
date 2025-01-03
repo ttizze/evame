@@ -26,6 +26,16 @@ const pageCardSelect = {
 			userId: true,
 		},
 	},
+	tagPages: {
+		select: {
+			tag: {
+				select: {
+					id: true,
+					name: true,
+				},
+			},
+		},
+	},
 	_count: {
 		select: {
 			likePages: true,
