@@ -22,6 +22,7 @@ describe("Encryption Utils", () => {
 
 		expect(decrypted).toBe(emptyText);
 	});
+
 	test("should generate different ciphertexts for different plaintext", () => {
 		const text1 = "test1";
 		const text2 = "test2";
@@ -41,13 +42,9 @@ describe("Encryption Utils", () => {
 		expect(encrypted1).not.toBe(encrypted2);
 	});
 
-	test("should throw error for invalid encrypted data format", () => {
-		expect(() => decrypt("invalid-data")).toThrow();
-		expect(() => decrypt("")).toThrow();
-	});
 
 	test("should properly handle API key-like strings", () => {
-		const apiKey = "AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY";
+		const apiKey = "testtest-testtest-testtest-testtest";
 
 		const encrypted = encrypt(apiKey);
 		const decrypted = decrypt(encrypted);
@@ -74,6 +71,25 @@ describe("Encryption Utils", () => {
 
 			expect(decrypted).toBe(cleanKey);
 			expect(decrypted.length).toBe(cleanKey.length);
+			expect(decrypted).not.toContain("\n");
+			expect(decrypted).not.toContain("\r");
+			expect(decrypted).not.toContain("\t");
+			expect(decrypted.trim()).toBe(decrypted);
+		}
+	});
+
+	test("should handle non-encrypted API keys gracefully", () => {
+		const plainApiKeys = [
+			"testtesttest", // Plain API key
+			"testtesttest ", // With space
+			" testtest test", // With space
+			"invalid-format-key", // Invalid format
+			"key:without-encryption", // Contains : but not encrypted
+		];
+
+		for (const key of plainApiKeys) {
+			const decrypted = decrypt(key);
+			expect(decrypted).toBe(key.trim());
 			expect(decrypted).not.toContain("\n");
 			expect(decrypted).not.toContain("\r");
 			expect(decrypted).not.toContain("\t");
