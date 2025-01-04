@@ -58,16 +58,16 @@ describe("Encryption Utils", () => {
 
 	test("should handle API keys with potential whitespace issues", () => {
 		const apiKeys = [
-			" AIzaSyD9tSrke72PouQMnMX-a7eZSW0jkFMBWY ", // spaces at ends
-			"AIzaSyD9tSrke72PouQMnMX-a7eZSW0jkFMBWY\n", // newline
-			"\tAIzaSyD9tSrke72PouQMnMX-a7eZSW0jkFMBWY\t", // tabs
-			"AIzaSyD9tSrke72PouQMnMX-a7eZSW0jkFMBWY\r\n", // CRLF
+			" FAKEKEY ", // spaces at ends
+			"FAKEKEY\n", // newline
+			"\tFAKEKEY\t", // tabs
+			"FAKEKEY\r\n", // CRLF
 		];
 
 		for (const key of apiKeys) {
 			const encrypted = encrypt(key);
 			const decrypted = decrypt(encrypted);
-			const cleanKey = "AIzaSyD9tSrke72PouQMnMX-a7eZSW0jkFMBWY";
+			const cleanKey = "FAKEKEY";
 
 			expect(decrypted).toBe(cleanKey);
 			expect(decrypted.length).toBe(cleanKey.length);
