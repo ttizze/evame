@@ -5,6 +5,7 @@ import {
 	SchemaType,
 } from "@google/generative-ai";
 import { generateSystemMessage } from "./generateGeminiMessage";
+import { decrypt } from '~/utils/encryption.server';
 const MAX_RETRIES = 3;
 
 export async function getGeminiModelResponse(
@@ -14,7 +15,8 @@ export async function getGeminiModelResponse(
 	source_text: string,
 	target_language: string,
 ) {
-	const genAI = new GoogleGenerativeAI(geminiApiKey);
+	const decryptedApiKey = decrypt(geminiApiKey);
+	const genAI = new GoogleGenerativeAI(decryptedApiKey);
 	const safetySetting = [
 		{
 			category: HarmCategory.HARM_CATEGORY_HARASSMENT,

@@ -1,29 +1,5 @@
 import { prisma } from "~/utils/prisma";
 
-export async function updateUserReadHistory(
-	userId: number,
-	pageId: number,
-	lastReadDataNumber: number,
-) {
-	await prisma.userReadHistory.upsert({
-		where: {
-			userId_pageId: {
-				userId: userId,
-				pageId: pageId,
-			},
-		},
-		update: {
-			lastReadDataNumber: lastReadDataNumber,
-			readAt: new Date(),
-		},
-		create: {
-			userId: userId,
-			pageId: pageId,
-			lastReadDataNumber: lastReadDataNumber,
-		},
-	});
-}
-
 export async function createUserAITranslationInfo(
 	userId: number,
 	pageId: number,

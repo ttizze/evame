@@ -1,5 +1,6 @@
 import { prisma } from "~/utils/prisma";
 import { isUserNameTaken } from "./queries.server";
+import { encrypt } from '~/utils/encryption.server';
 
 export async function updateUser(
 	userId: number,
@@ -24,11 +25,15 @@ export async function updateUser(
 				throw new Error("This name is already taken.");
 			}
 		}
+		const updatedData = {
+			...data,
+			geminiApiKey: data.geminiApiKey ? encrypt(data.geminiApiKey) : null,
+		};
 		return tx.user.update({
 			where: {
 				id: userId,
 			},
-			data,
+			data: updatedData,
 		});
 	});
 }
