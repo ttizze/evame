@@ -4,8 +4,8 @@ import {
 	HarmCategory,
 	SchemaType,
 } from "@google/generative-ai";
+import { decrypt } from "~/utils/encryption.server";
 import { generateSystemMessage } from "./generateGeminiMessage";
-import { decrypt } from '~/utils/encryption.server';
 const MAX_RETRIES = 3;
 
 export async function getGeminiModelResponse(

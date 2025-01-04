@@ -1,6 +1,6 @@
+import { encrypt } from "~/utils/encryption.server";
 import { prisma } from "~/utils/prisma";
 import { isUserNameTaken } from "./queries.server";
-import { encrypt } from '~/utils/encryption.server';
 
 export async function updateUser(
 	userId: number,
