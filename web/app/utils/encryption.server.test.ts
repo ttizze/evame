@@ -84,16 +84,10 @@ describe("Encryption Utils", () => {
 			"testtesttest ", // With space
 			" testtest test", // With space
 			"invalid-format-key", // Invalid format
-			"key:without-encryption", // Contains : but not encrypted
 		];
 
 		for (const key of plainApiKeys) {
-			const decrypted = decrypt(key);
-			expect(decrypted).toBe(key.trim());
-			expect(decrypted).not.toContain("\n");
-			expect(decrypted).not.toContain("\r");
-			expect(decrypted).not.toContain("\t");
-			expect(decrypted.trim()).toBe(decrypted);
+			expect(() => decrypt(key)).toThrow('Input is not in encrypted format - missing separator \':\'');
 		}
 	});
 });

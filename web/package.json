@@ -14,7 +14,8 @@
 		"sync-github": "tsx scripts/syncGIthub.ts",
 		"translate": "tsx scripts/translate.ts",
 		"test-process-markdown": "vitest run scripts/processMarkdownContent.test.ts",
-		"sync-db": "tsx scripts/syncDB.ts"
+		"sync-db": "tsx scripts/syncDB.ts",
+		"encrypt-gemini-keys": "tsx scripts/encrypt.ts"
 	},
 	"prisma": {
 		"seed": "tsx prisma/seed.ts"
