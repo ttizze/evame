@@ -42,7 +42,6 @@ describe("Encryption Utils", () => {
 		expect(encrypted1).not.toBe(encrypted2);
 	});
 
-
 	test("should properly handle API key-like strings", () => {
 		const apiKey = "testtest-testtest-testtest-testtest";
 
@@ -87,7 +86,9 @@ describe("Encryption Utils", () => {
 		];
 
 		for (const key of plainApiKeys) {
-			expect(() => decrypt(key)).toThrow('Input is not in encrypted format - missing separator \':\'');
+			expect(() => decrypt(key)).toThrow(
+				"Input is not in encrypted format - missing separator ':'",
+			);
 		}
 	});
 });

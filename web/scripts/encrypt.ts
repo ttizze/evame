@@ -9,8 +9,8 @@ async function encryptUnencryptedGeminiKeys() {
 			where: {
 				AND: [
 					{ geminiApiKey: { not: null } },
-					{ geminiApiKey: { not: { contains: ":" } } }
-				]
+					{ geminiApiKey: { not: { contains: ":" } } },
+				],
 			},
 			select: {
 				id: true,
@@ -33,7 +33,10 @@ async function encryptUnencryptedGeminiKeys() {
 				});
 				console.log(`✅ Encrypted key for user: ${user.userName}`);
 			} catch (error) {
-				console.error(`❌ Failed to encrypt key for user: ${user.userName}`, error);
+				console.error(
+					`❌ Failed to encrypt key for user: ${user.userName}`,
+					error,
+				);
 			}
 		}
 
