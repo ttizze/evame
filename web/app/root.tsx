@@ -23,7 +23,8 @@ import { Footer } from "~/routes/resources+/footer";
 import { Header } from "~/routes/resources+/header";
 import tailwind from "~/tailwind.css?url";
 import { authenticator } from "~/utils/auth.server";
-import { commitSession, getSession } from "~/utils/session.server";
+import { ensureGuestId } from "~/utils/ensureGuestId.server";
+import { commitSession } from "~/utils/session.server";
 export async function loader({ request }: LoaderFunctionArgs) {
 	const isDevelopment = process.env.NODE_ENV === "development";
 
@@ -31,14 +32,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		? ""
 		: (process.env.GOOGLE_ANALYTICS_ID ?? "");
 	const currentUser = await authenticator.isAuthenticated(request);
-	const session = await getSession(request.headers.get("Cookie"));
-	const guestId = session.get("guestId");
-	if (!currentUser && !guestId) {
-		session.set("guestId", crypto.randomUUID());
-		return redirect(request.url, {
-			headers: { "Set-Cookie": await commitSession(session) },
-		});
-	}
+	const { session, guestId } = await ensureGuestId(request);
 	const locale = (await i18nServer.getLocale(request)) || "en";
 	const url = new URL(request.url);
 	const pathSegments: string[] = url.pathname.split("/").filter(Boolean);
@@ -47,6 +41,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		return redirect(url.toString());
 	}
 	const currentLocale = pathSegments[0];
+	const headers = new Headers();
+	headers.set(
+		"Set-Cookie",
+		(await commitSession(session)) +
+			(await localeCookie.serialize(currentLocale)),
+	);
+
 	return data(
 		{
 			isDevelopment,
@@ -55,7 +56,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			gaTrackingId,
 		},
 		{
-			headers: { "Set-Cookie": await localeCookie.serialize(currentLocale) },
+			headers,
 		},
 	);
 }
