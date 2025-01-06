@@ -44,7 +44,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const headers = new Headers();
 	headers.set(
 		"Set-Cookie",
-		await commitSession(session) + await localeCookie.serialize(currentLocale),
+		(await commitSession(session)) +
+			(await localeCookie.serialize(currentLocale)),
 	);
 
 	return data(
