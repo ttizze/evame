@@ -1,5 +1,4 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
 import { Heart } from "lucide-react";
 import { Button } from "~/components/ui/button";
@@ -13,10 +12,9 @@ export async function action({ params, request }: ActionFunctionArgs) {
 	if (!currentUser && !guestId) {
 		guestId = crypto.randomUUID();
 		session.set("guestId", guestId);
-		return redirect(request.url, {
-			headers: { "Set-Cookie": await commitSession(session) },
-		});
 	}
+	const headers = new Headers();
+	headers.set("Set-Cookie", await commitSession(session));
 
 	const formData = await request.formData();
 	const slug = formData.get("slug") as string;

@@ -1,6 +1,5 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import type { ActionFunctionArgs } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { Link } from "@remix-run/react";
 import { useFetcher } from "@remix-run/react";
@@ -73,10 +72,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	if (!currentUser && !guestId) {
 		guestId = crypto.randomUUID();
 		session.set("guestId", guestId);
-		return redirect(request.url, {
-			headers: { "Set-Cookie": await commitSession(session) },
-		});
 	}
+	const headers = new Headers();
+	headers.set("Set-Cookie", await commitSession(session));
 	const isOwner = currentUser?.userName === userName;
 
 	const { pagesWithInfo, totalPages, currentPage } =

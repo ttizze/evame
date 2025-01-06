@@ -1,7 +1,6 @@
 import { useForm } from "@conform-to/react";
 import { parseWithZod } from "@conform-to/zod";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
 import type { MetaFunction } from "@remix-run/react";
 import { useActionData, useLoaderData } from "@remix-run/react";
 import { useState } from "react";
@@ -83,10 +82,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	if (!currentUser && !guestId) {
 		guestId = crypto.randomUUID();
 		session.set("guestId", guestId);
-		return redirect(request.url, {
-			headers: { "Set-Cookie": await commitSession(session) },
-		});
 	}
+	const headers = new Headers();
+	headers.set("Set-Cookie", await commitSession(session));
 	const nonSanitizedUser = await fetchUserByUserName(
 		currentUser?.userName ?? "",
 	);
