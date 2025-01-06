@@ -1,6 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import type { ActionFunctionArgs } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
+import { data } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { Link } from "@remix-run/react";
 import { useFetcher } from "@remix-run/react";
@@ -32,8 +32,8 @@ import {
 import i18nServer from "~/i18n.server";
 import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
+import { ensureGuestId } from "~/utils/ensureGuestId.server";
 import { sanitizeUser } from "~/utils/sanitizeUser";
-import { getSession } from "~/utils/session.server";
 import { commitSession } from "~/utils/session.server";
 import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
 import { DeletePageDialog } from "./components/DeletePageDialog";
@@ -42,7 +42,6 @@ import {
 	togglePagePublicStatus,
 } from "./functions/mutations.server";
 import { fetchPageById } from "./functions/queries.server";
-
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Profile" }];
@@ -68,15 +67,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const pageSize = 9;
 
 	const currentUser = await authenticator.isAuthenticated(request);
-	const session = await getSession(request.headers.get("Cookie"));
-	let guestId = session.get("guestId");
-	if (!currentUser && !guestId) {
-		guestId = crypto.randomUUID();
-		session.set("guestId", guestId);
-		return redirect(request.url, {
-			headers: { "Set-Cookie": await commitSession(session) },
-		});
-	}
+	const { session, guestId } = await ensureGuestId(request);
+
 	const isOwner = currentUser?.userName === userName;
 
 	const { pagesWithInfo, totalPages, currentPage } =
@@ -91,14 +83,20 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		});
 	if (!pagesWithInfo) throw new Response("Not Found", { status: 404 });
 	const sanitizedUser = await sanitizeUser(nonSanitizedUser);
-
-	return {
-		pagesWithInfo,
-		isOwner,
-		totalPages,
-		currentPage,
-		sanitizedUser,
-	};
+	const headers = new Headers();
+	headers.set("Set-Cookie", await commitSession(session));
+	return data(
+		{
+			pagesWithInfo,
+			isOwner,
+			totalPages,
+			currentPage,
+			sanitizedUser,
+		},
+		{
+			headers,
+		},
+	);
 }
 
 export async function action({ request }: ActionFunctionArgs) {

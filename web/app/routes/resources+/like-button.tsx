@@ -1,29 +1,28 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
+import { data } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
 import { Heart } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { authenticator } from "~/utils/auth.server";
-import { commitSession, getSession } from "~/utils/session.server";
+import { ensureGuestId } from "~/utils/ensureGuestId.server";
+import { commitSession } from "~/utils/session.server";
 import { toggleLike } from "./functions/mutations.server";
+
 export async function action({ params, request }: ActionFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
-	const session = await getSession(request.headers.get("Cookie"));
-	let guestId = session.get("guestId");
-	if (!currentUser && !guestId) {
-		guestId = crypto.randomUUID();
-		session.set("guestId", guestId);
-		return redirect(request.url, {
-			headers: { "Set-Cookie": await commitSession(session) },
-		});
-	}
+	const { session, guestId } = await ensureGuestId(request);
 
 	const formData = await request.formData();
 	const slug = formData.get("slug") as string;
 	const liked = await toggleLike(slug, currentUser?.id, guestId);
-	return new Response(JSON.stringify({ liked }), {
-		headers: { "Set-Cookie": await commitSession(session) },
-	});
+	const headers = new Headers();
+	headers.set("Set-Cookie", await commitSession(session));
+	return data(
+		{ liked },
+		{
+			headers,
+		},
+	);
 }
 
 type LikeButtonProps = {

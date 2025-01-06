@@ -109,7 +109,6 @@ export default function TermsPage() {
 					</h2>
 					<p>
 						The Service reserves the right to change these terms as necessary.
-						In case of significant changes, we will notify you on the Service.
 						If you continue to use the Service after changes are made, you are
 						deemed to have agreed to the updated terms.
 					</p>

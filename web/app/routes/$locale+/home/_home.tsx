@@ -1,6 +1,5 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { data } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
 import { useLoaderData, useSearchParams } from "@remix-run/react";
 import type { MetaFunction } from "@remix-run/react";
 import { PageCard } from "~/components/PageCard";
@@ -16,7 +15,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import i18nServer from "~/i18n.server";
 import { authenticator } from "~/utils/auth.server";
-import { commitSession, getSession } from "~/utils/session.server";
+import { ensureGuestId } from "~/utils/ensureGuestId.server";
+import { commitSession } from "~/utils/session.server";
 import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
 import type { PageCardLocalizedType } from "../functions/queries.server";
 export const meta: MetaFunction = () => {
@@ -41,15 +41,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
 	// ログインユーザー
 	const currentUser = await authenticator.isAuthenticated(request);
-	const session = await getSession(request.headers.get("Cookie"));
-	let guestId = session.get("guestId");
-	if (!currentUser && !guestId) {
-		guestId = crypto.randomUUID();
-		session.set("guestId", guestId);
-		return redirect(request.url, {
-			headers: { "Set-Cookie": await commitSession(session) },
-		});
-	}
+	const { session, guestId } = await ensureGuestId(request);
 
 	let pagesWithInfo: PageCardLocalizedType[];
 	let totalPages: number;
@@ -80,13 +72,20 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		totalPages = result.totalPages;
 		currentPage = result.currentPage;
 	}
+	const headers = new Headers();
+	headers.set("Set-Cookie", await commitSession(session));
 
-	return data({
-		tab,
-		pagesWithInfo,
-		totalPages,
-		currentPage,
-	});
+	return data(
+		{
+			tab,
+			pagesWithInfo,
+			totalPages,
+			currentPage,
+		},
+		{
+			headers,
+		},
+	);
 }
 
 export default function Home() {
