@@ -24,6 +24,8 @@ import {
 import { actionSchema } from "./types";
 import { getBestTranslation } from "./utils/getBestTranslation";
 import { stripHtmlTags } from "./utils/stripHtmlTags";
+import { data } from "@remix-run/node";
+
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Page Not Found" }];
@@ -83,8 +85,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		guestId = crypto.randomUUID();
 		session.set("guestId", guestId);
 	}
-	const headers = new Headers();
-	headers.set("Set-Cookie", await commitSession(session));
+
 	const nonSanitizedUser = await fetchUserByUserName(
 		currentUser?.userName ?? "",
 	);
@@ -127,19 +128,25 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		currentUser?.id,
 		guestId,
 	);
-
-	return {
-		locale,
-		pageWithTranslations,
-		currentUser,
-		hasGeminiApiKey,
-		userAITranslationInfo,
+	const headers = new Headers();
+	headers.set("Set-Cookie", await commitSession(session));
+	return data(
+		{
+			locale,
+			pageWithTranslations,
+			currentUser,
+			hasGeminiApiKey,
+			userAITranslationInfo,
 		sourceTitleWithTranslations,
 		sourceTitleWithBestTranslationTitle,
 		likeCount,
 		isLikedByUser,
-		existLocales: pageWithTranslations.existLocales,
-	};
+			existLocales: pageWithTranslations.existLocales,
+		},
+		{
+			headers,
+		},
+	);
 }
 
 export async function action({ request, params }: ActionFunctionArgs) {

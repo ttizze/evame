@@ -46,8 +46,6 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		guestId = crypto.randomUUID();
 		session.set("guestId", guestId);
 	}
-	const headers = new Headers();
-	headers.set("Set-Cookie", await commitSession(session));
 
 	let pagesWithInfo: PageCardLocalizedType[];
 	let totalPages: number;
@@ -78,12 +76,16 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		totalPages = result.totalPages;
 		currentPage = result.currentPage;
 	}
+	const headers = new Headers();
+	headers.set("Set-Cookie", await commitSession(session));
 
 	return data({
 		tab,
 		pagesWithInfo,
 		totalPages,
 		currentPage,
+	}, {
+		headers,
 	});
 }
 

@@ -5,6 +5,8 @@ import { Button } from "~/components/ui/button";
 import { authenticator } from "~/utils/auth.server";
 import { commitSession, getSession } from "~/utils/session.server";
 import { toggleLike } from "./functions/mutations.server";
+import { data } from "@remix-run/node";
+
 export async function action({ params, request }: ActionFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
 	const session = await getSession(request.headers.get("Cookie"));
@@ -13,15 +15,18 @@ export async function action({ params, request }: ActionFunctionArgs) {
 		guestId = crypto.randomUUID();
 		session.set("guestId", guestId);
 	}
-	const headers = new Headers();
-	headers.set("Set-Cookie", await commitSession(session));
 
 	const formData = await request.formData();
 	const slug = formData.get("slug") as string;
 	const liked = await toggleLike(slug, currentUser?.id, guestId);
-	return new Response(JSON.stringify({ liked }), {
-		headers: { "Set-Cookie": await commitSession(session) },
-	});
+	const headers = new Headers();
+	headers.set("Set-Cookie", await commitSession(session));
+	return data(
+		{ liked },
+		{
+			headers,
+		},
+	);
 }
 
 type LikeButtonProps = {

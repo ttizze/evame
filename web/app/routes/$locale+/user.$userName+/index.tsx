@@ -41,7 +41,7 @@ import {
 	togglePagePublicStatus,
 } from "./functions/mutations.server";
 import { fetchPageById } from "./functions/queries.server";
-
+import { data } from "@remix-run/node";
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Profile" }];
@@ -73,8 +73,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		guestId = crypto.randomUUID();
 		session.set("guestId", guestId);
 	}
-	const headers = new Headers();
-	headers.set("Set-Cookie", await commitSession(session));
+
 	const isOwner = currentUser?.userName === userName;
 
 	const { pagesWithInfo, totalPages, currentPage } =
@@ -89,14 +88,19 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		});
 	if (!pagesWithInfo) throw new Response("Not Found", { status: 404 });
 	const sanitizedUser = await sanitizeUser(nonSanitizedUser);
-
-	return {
-		pagesWithInfo,
-		isOwner,
-		totalPages,
-		currentPage,
-		sanitizedUser,
-	};
+	const headers = new Headers();
+	headers.set("Set-Cookie", await commitSession(session));
+	return data(
+		{
+			pagesWithInfo,
+			isOwner,
+			totalPages,
+			currentPage,
+			sanitizedUser,
+		},
+		{
+		headers,
+	});
 }
 
 export async function action({ request }: ActionFunctionArgs) {
