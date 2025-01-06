@@ -1,6 +1,7 @@
 import { useForm } from "@conform-to/react";
 import { parseWithZod } from "@conform-to/zod";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import { data } from "@remix-run/node";
 import type { MetaFunction } from "@remix-run/react";
 import { useActionData, useLoaderData } from "@remix-run/react";
 import { useState } from "react";
@@ -9,7 +10,7 @@ import i18nServer from "~/i18n.server";
 import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { LikeButton } from "~/routes/resources+/like-button";
 import { authenticator } from "~/utils/auth.server";
-import { getSession } from "~/utils/session.server";
+import { ensureGuestId } from "~/utils/ensureGuestId.server";
 import { commitSession } from "~/utils/session.server";
 import { ContentWithTranslations } from "./components/ContentWithTranslations";
 import { FloatingControls } from "./components/FloatingControls";
@@ -24,7 +25,6 @@ import {
 import { actionSchema } from "./types";
 import { getBestTranslation } from "./utils/getBestTranslation";
 import { stripHtmlTags } from "./utils/stripHtmlTags";
-import { data } from "@remix-run/node";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
@@ -79,12 +79,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	}
 
 	const currentUser = await authenticator.isAuthenticated(request);
-	const session = await getSession(request.headers.get("Cookie"));
-	let guestId = session.get("guestId");
-	if (!currentUser && !guestId) {
-		guestId = crypto.randomUUID();
-		session.set("guestId", guestId);
-	}
+	const { session, guestId } = await ensureGuestId(request);
+
 
 	const nonSanitizedUser = await fetchUserByUserName(
 		currentUser?.userName ?? "",
@@ -137,10 +133,10 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			currentUser,
 			hasGeminiApiKey,
 			userAITranslationInfo,
-		sourceTitleWithTranslations,
-		sourceTitleWithBestTranslationTitle,
-		likeCount,
-		isLikedByUser,
+			sourceTitleWithTranslations,
+			sourceTitleWithBestTranslationTitle,
+			likeCount,
+			isLikedByUser,
 			existLocales: pageWithTranslations.existLocales,
 		},
 		{

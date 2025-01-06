@@ -1,5 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import type { ActionFunctionArgs } from "@remix-run/node";
+import { data } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { Link } from "@remix-run/react";
 import { useFetcher } from "@remix-run/react";
@@ -32,7 +33,7 @@ import i18nServer from "~/i18n.server";
 import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
 import { sanitizeUser } from "~/utils/sanitizeUser";
-import { getSession } from "~/utils/session.server";
+import { ensureGuestId } from "~/utils/ensureGuestId.server";
 import { commitSession } from "~/utils/session.server";
 import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
 import { DeletePageDialog } from "./components/DeletePageDialog";
@@ -41,7 +42,6 @@ import {
 	togglePagePublicStatus,
 } from "./functions/mutations.server";
 import { fetchPageById } from "./functions/queries.server";
-import { data } from "@remix-run/node";
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Profile" }];
@@ -67,12 +67,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const pageSize = 9;
 
 	const currentUser = await authenticator.isAuthenticated(request);
-	const session = await getSession(request.headers.get("Cookie"));
-	let guestId = session.get("guestId");
-	if (!currentUser && !guestId) {
-		guestId = crypto.randomUUID();
-		session.set("guestId", guestId);
-	}
+  const { session, guestId } = await ensureGuestId(request);
 
 	const isOwner = currentUser?.userName === userName;
 
@@ -99,8 +94,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			sanitizedUser,
 		},
 		{
-		headers,
-	});
+			headers,
+		},
+	);
 }
 
 export async function action({ request }: ActionFunctionArgs) {
