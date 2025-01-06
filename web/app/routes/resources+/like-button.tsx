@@ -12,7 +12,6 @@ export async function action({ params, request }: ActionFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
 	const { session, guestId } = await ensureGuestId(request);
 
-
 	const formData = await request.formData();
 	const slug = formData.get("slug") as string;
 	const liked = await toggleLike(slug, currentUser?.id, guestId);

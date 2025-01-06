@@ -32,8 +32,8 @@ import {
 import i18nServer from "~/i18n.server";
 import { fetchUserByUserName } from "~/routes/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
-import { sanitizeUser } from "~/utils/sanitizeUser";
 import { ensureGuestId } from "~/utils/ensureGuestId.server";
+import { sanitizeUser } from "~/utils/sanitizeUser";
 import { commitSession } from "~/utils/session.server";
 import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
 import { DeletePageDialog } from "./components/DeletePageDialog";
@@ -67,7 +67,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const pageSize = 9;
 
 	const currentUser = await authenticator.isAuthenticated(request);
-  const { session, guestId } = await ensureGuestId(request);
+	const { session, guestId } = await ensureGuestId(request);
 
 	const isOwner = currentUser?.userName === userName;
 

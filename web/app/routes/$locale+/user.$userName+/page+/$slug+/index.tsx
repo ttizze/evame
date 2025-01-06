@@ -81,7 +81,6 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
 	const { session, guestId } = await ensureGuestId(request);
 
-
 	const nonSanitizedUser = await fetchUserByUserName(
 		currentUser?.userName ?? "",
 	);
