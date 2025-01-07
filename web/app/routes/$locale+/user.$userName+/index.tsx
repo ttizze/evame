@@ -42,7 +42,8 @@ import {
 	archivePage,
 	togglePagePublicStatus,
 } from "./functions/mutations.server";
-import { getFollowCounts, isFollowing } from "./functions/queries.server";
+import { getFollowCounts } from "./functions/queries.server";
+import { isFollowing } from "~/routes/resources+/follow-button/db/queries.server";
 import { fetchPageById } from "./functions/queries.server";
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {

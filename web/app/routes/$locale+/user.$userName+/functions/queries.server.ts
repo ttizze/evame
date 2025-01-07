@@ -6,17 +6,6 @@ export async function fetchPageById(pageId: number) {
 	});
 }
 
-export async function isFollowing(followerId: number, followingId: number) {
-	const follow = await prisma.follow.findUnique({
-		where: {
-			followerId_followingId: {
-				followerId,
-				followingId,
-			},
-		},
-	});
-	return !!follow;
-}
 
 export async function getFollowCounts(userId: number) {
 	const [followers, following] = await Promise.all([
