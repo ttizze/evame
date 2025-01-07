@@ -10,6 +10,8 @@ export default VitestConfig.defineConfig({
 				"postgresql://postgres:password@localhost:5433/testdb?schema=public",
 			ENCRYPTION_KEY:
 				"2f9a0a1b3c4d5e6f7890123456789012345678901234567890abcdef123456",
+			RESEND_API_KEY: "test",
+			MAGIC_LINK_SECRET: "test",
 		},
 		environment: "vprisma",
 		setupFiles: ["vitest-environment-vprisma/setup", "vitest.setup.ts"],

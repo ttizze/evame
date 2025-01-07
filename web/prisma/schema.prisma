@@ -31,11 +31,27 @@ model User {
   votes                 Vote[]
   userAITranslationInfo UserAITranslationInfo[]
   customAIModels        CustomAIModel[]
-  likePages             LikePage[]
+  likePages            LikePage[]
+  followers            Follow[]                @relation("following")
+  following            Follow[]                @relation("follower")
 
   @@map("users")
   @@index([userName])
   @@index([email])
+}
+
+model Follow {
+  id          Int      @id @default(autoincrement())
+  followerId  Int      @map("follower_id")
+  followingId Int      @map("following_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+  @@index([followerId])
+  @@index([followingId])
 }
 
 model UserAITranslationInfo {

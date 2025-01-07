@@ -31,6 +31,8 @@ import {
 } from "~/components/ui/pagination";
 import i18nServer from "~/i18n.server";
 import { fetchUserByUserName } from "~/routes/functions/queries.server";
+import { isFollowing } from "~/routes/resources+/follow-button/db/queries.server";
+import { FollowButton } from "~/routes/resources+/follow-button/route";
 import { authenticator } from "~/utils/auth.server";
 import { ensureGuestId } from "~/utils/ensureGuestId.server";
 import { sanitizeUser } from "~/utils/sanitizeUser";
@@ -41,12 +43,13 @@ import {
 	archivePage,
 	togglePagePublicStatus,
 } from "./functions/mutations.server";
+import { getFollowCounts } from "./functions/queries.server";
 import { fetchPageById } from "./functions/queries.server";
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Profile" }];
 	}
-	return [{ title: data.sanitizedUser.displayName }];
+	return [{ title: data.sanitizedPageOwner.displayName }];
 };
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
@@ -57,8 +60,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const { userName } = params;
 	if (!userName) throw new Error("Username is required");
 
-	const nonSanitizedUser = await fetchUserByUserName(userName);
-	if (!nonSanitizedUser) {
+	const nonSanitizedPageOwner = await fetchUserByUserName(userName);
+	if (!nonSanitizedPageOwner) {
 		throw new Response("Not Found", { status: 404 });
 	}
 
@@ -77,21 +80,28 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			pageSize,
 			currentUserId: currentUser?.id,
 			currentGuestId: guestId,
-			pageOwnerId: nonSanitizedUser.id,
+			pageOwnerId: nonSanitizedPageOwner.id,
 			onlyUserOwn: true,
 			locale,
 		});
 	if (!pagesWithInfo) throw new Response("Not Found", { status: 404 });
-	const sanitizedUser = await sanitizeUser(nonSanitizedUser);
+	const sanitizedPageOwner = await sanitizeUser(nonSanitizedPageOwner);
+	const followCounts = await getFollowCounts(nonSanitizedPageOwner.id);
+	const isCurrentUserFollowing = currentUser
+		? await isFollowing(currentUser.id, nonSanitizedPageOwner.id)
+		: false;
 	const headers = new Headers();
 	headers.set("Set-Cookie", await commitSession(session));
+
 	return data(
 		{
 			pagesWithInfo,
 			isOwner,
 			totalPages,
 			currentPage,
-			sanitizedUser,
+			sanitizedPageOwner,
+			followCounts,
+			isCurrentUserFollowing,
 		},
 		{
 			headers,
@@ -128,8 +138,15 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function UserPage() {
-	const { pagesWithInfo, isOwner, totalPages, currentPage, sanitizedUser } =
-		useLoaderData<typeof loader>();
+	const {
+		pagesWithInfo,
+		isOwner,
+		totalPages,
+		currentPage,
+		sanitizedPageOwner,
+		followCounts,
+		isCurrentUserFollowing,
+	} = useLoaderData<typeof loader>();
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [pageToDelete, setPageToDelete] = useState<number | null>(null);
 	const [searchParams, setSearchParams] = useSearchParams();
@@ -169,14 +186,14 @@ export default function UserPage() {
 				<CardHeader className="pb-4">
 					<div className="flex w-full flex-col md:flex-row">
 						<div>
-							<Link to={`${sanitizedUser.icon}`}>
+							<Link to={`${sanitizedPageOwner.icon}`}>
 								<Avatar className="w-20 h-20 md:w-24 md:h-24">
 									<AvatarImage
-										src={sanitizedUser.icon}
-										alt={sanitizedUser.displayName}
+										src={sanitizedPageOwner.icon}
+										alt={sanitizedPageOwner.displayName}
 									/>
 									<AvatarFallback>
-										{sanitizedUser.displayName.charAt(0).toUpperCase()}
+										{sanitizedPageOwner.displayName.charAt(0).toUpperCase()}
 									</AvatarFallback>
 								</Avatar>
 							</Link>
@@ -184,15 +201,21 @@ export default function UserPage() {
 						<div className="mt-2 md:mt-0 md:ml-4 flex items-center justify-between w-full">
 							<div>
 								<CardTitle className="text-xl md:text-2xl font-bold">
-									{sanitizedUser.displayName}
+									{sanitizedPageOwner.displayName}
 								</CardTitle>
-								<CardDescription className="text-sm text-gray-500">
-									@{sanitizedUser.userName}
-								</CardDescription>
+								<div>
+									<CardDescription className="text-sm text-gray-500">
+										@{sanitizedPageOwner.userName}
+									</CardDescription>
+									<div className="flex gap-4 mt-2 text-sm text-gray-500">
+										<span>{followCounts.following} following</span>
+										<span>{followCounts.followers} followers</span>
+									</div>
+								</div>
 							</div>
 
-							{isOwner && (
-								<LocaleLink to={`/user/${sanitizedUser.userName}/edit`}>
+							{isOwner ? (
+								<LocaleLink to={`/user/${sanitizedPageOwner.userName}/edit`}>
 									<Button
 										variant="secondary"
 										className="flex items-center rounded-full"
@@ -201,6 +224,12 @@ export default function UserPage() {
 										<span className="ml-2 text-sm">Edit Profile</span>
 									</Button>
 								</LocaleLink>
+							) : (
+								<FollowButton
+									targetUserId={sanitizedPageOwner.id}
+									isFollowing={isCurrentUserFollowing}
+									className="rounded-full"
+								/>
 							)}
 						</div>
 					</div>
@@ -208,7 +237,7 @@ export default function UserPage() {
 
 				<CardContent className="mt-4">
 					<Linkify options={{ className: "underline" }}>
-						{sanitizedUser.profile}
+						{sanitizedPageOwner.profile}
 					</Linkify>
 				</CardContent>
 			</Card>
@@ -218,8 +247,8 @@ export default function UserPage() {
 					<PageCard
 						key={page.id}
 						pageCard={page}
-						pageLink={`/user/${sanitizedUser.userName}/page/${page.slug}`}
-						userLink={`/user/${sanitizedUser.userName}`}
+						pageLink={`/user/${sanitizedPageOwner.userName}/page/${page.slug}`}
+						userLink={`/user/${sanitizedPageOwner.userName}`}
 						showOwnerActions={isOwner}
 						onTogglePublicStatus={togglePagePublicStatus}
 						onArchive={handleArchive}
