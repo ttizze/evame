@@ -31,6 +31,7 @@ import {
 } from "~/components/ui/pagination";
 import i18nServer from "~/i18n.server";
 import { fetchUserByUserName } from "~/routes/functions/queries.server";
+import { isFollowing } from "~/routes/resources+/follow-button/db/queries.server";
 import { FollowButton } from "~/routes/resources+/follow-button/route";
 import { authenticator } from "~/utils/auth.server";
 import { ensureGuestId } from "~/utils/ensureGuestId.server";
@@ -43,7 +44,6 @@ import {
 	togglePagePublicStatus,
 } from "./functions/mutations.server";
 import { getFollowCounts } from "./functions/queries.server";
-import { isFollowing } from "~/routes/resources+/follow-button/db/queries.server";
 import { fetchPageById } from "./functions/queries.server";
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {

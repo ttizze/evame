@@ -6,7 +6,6 @@ export async function fetchPageById(pageId: number) {
 	});
 }
 
-
 export async function getFollowCounts(userId: number) {
 	const [followers, following] = await Promise.all([
 		prisma.follow.count({
