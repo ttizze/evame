@@ -6,6 +6,26 @@ export async function fetchPageById(pageId: number) {
 	});
 }
 
+export async function getComments(pageId: number) {
+	return await prisma.comment.findMany({
+		where: {
+			pageId,
+		},
+		include: {
+			user: {
+				select: {
+					userName: true,
+					displayName: true,
+					icon: true,
+				},
+			},
+		},
+		orderBy: {
+			createdAt: "desc",
+		},
+	});
+}
+
 export async function getFollowCounts(userId: number) {
 	const [followers, following] = await Promise.all([
 		prisma.follow.count({

@@ -75,7 +75,7 @@ export async function fetchPageWithTranslations(
 		include: {
 			translateTexts: {
 				where: { isArchived: false },
-				select: { locale: true }, // 今回はロケールだけわかればOKなので select を絞る
+				select: { locale: true },
 			},
 		},
 	});
@@ -131,6 +131,7 @@ export async function fetchLikeCount(pageId: number) {
 	});
 	return likeCount;
 }
+
 export async function fetchIsLikedByUser(
 	pageId: number,
 	userId?: number,
@@ -149,4 +150,30 @@ export async function fetchIsLikedByUser(
 		return !!like;
 	}
 	return false;
+}
+
+export async function fetchComments(pageId: number) {
+	const comments = await prisma.comment.findMany({
+		where: {
+			pageId,
+		},
+		include: {
+			user: {
+				select: {
+					userName: true,
+					displayName: true,
+					icon: true,
+				},
+			},
+		},
+		orderBy: {
+			createdAt: "desc",
+		},
+	});
+
+	return comments.map(comment => ({
+		...comment,
+		createdAt: comment.createdAt.toISOString(),
+		updatedAt: comment.updatedAt.toISOString(),
+	}));
 }
