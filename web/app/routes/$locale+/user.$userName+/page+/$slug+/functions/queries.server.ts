@@ -171,7 +171,7 @@ export async function fetchComments(pageId: number) {
 		},
 	});
 
-	return comments.map(comment => ({
+	return comments.map((comment) => ({
 		...comment,
 		createdAt: comment.createdAt.toISOString(),
 		updatedAt: comment.updatedAt.toISOString(),

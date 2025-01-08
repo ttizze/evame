@@ -8,9 +8,9 @@ import { useState } from "react";
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
 import i18nServer from "~/i18n.server";
 import { fetchUserByUserName } from "~/routes/functions/queries.server";
-import { LikeButton } from "~/routes/resources+/like-button";
 import { CommentForm } from "~/routes/resources+/comment/components/CommentForm";
 import { CommentList } from "~/routes/resources+/comment/components/CommentList";
+import { LikeButton } from "~/routes/resources+/like-button";
 import { authenticator } from "~/utils/auth.server";
 import { ensureGuestId } from "~/utils/ensureGuestId.server";
 import { commitSession } from "~/utils/session.server";
@@ -18,12 +18,12 @@ import { ContentWithTranslations } from "./components/ContentWithTranslations";
 import { FloatingControls } from "./components/FloatingControls";
 import { createUserAITranslationInfo } from "./functions/mutations.server";
 import {
+	fetchComments,
 	fetchIsLikedByUser,
 	fetchLatestUserAITranslationInfo,
 	fetchLikeCount,
 	fetchPageWithSourceTexts,
 	fetchPageWithTranslations,
-	fetchComments,
 } from "./functions/queries.server";
 import { actionSchema } from "./types";
 import { getBestTranslation } from "./utils/getBestTranslation";
@@ -263,8 +263,8 @@ export default function Page() {
 						showCount
 					/>
 					<div className="mt-8">
-						<CommentForm 
-							pageId={pageWithTranslations.page.id} 
+						<CommentForm
+							pageId={pageWithTranslations.page.id}
 							onSuccess={() => {
 								window.location.reload();
 							}}

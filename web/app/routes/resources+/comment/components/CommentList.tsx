@@ -2,11 +2,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ja } from "date-fns/locale";
 import type { FC, MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
-import {
-	Avatar,
-	AvatarFallback,
-	AvatarImage,
-} from "~/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 
 interface User {

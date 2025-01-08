@@ -46,19 +46,19 @@ describe("comment resource route", () => {
 				},
 			]);
 
-      const mockComment = {
-        id: 1,
-        content: "test comment",
-        pageId: 1,
-        userId: 1,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        user: {
-          userName: "testuser",
-          displayName: "Test User",
-          icon: "test-icon.png",
-        },
-      };
+			const mockComment = {
+				id: 1,
+				content: "test comment",
+				pageId: 1,
+				userId: 1,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+				user: {
+					userName: "testuser",
+					displayName: "Test User",
+					icon: "test-icon.png",
+				},
+			};
 
 			vi.mocked(prisma.comment.create).mockResolvedValueOnce(mockComment);
 
@@ -97,14 +97,14 @@ describe("comment resource route", () => {
 			formData.append("content", "test");
 			formData.append("intent", "delete");
 
-      vi.mocked(prisma.comment.findUnique).mockResolvedValueOnce({
-        id: 1,
-        userId: 2, // 別のユーザーのコメント
-        pageId: 1,
-        content: "test comment",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+			vi.mocked(prisma.comment.findUnique).mockResolvedValueOnce({
+				id: 1,
+				userId: 2, // 別のユーザーのコメント
+				pageId: 1,
+				content: "test comment",
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			});
 
 			const request = new Request("http://test.com/resources/comment", {
 				method: "POST",
