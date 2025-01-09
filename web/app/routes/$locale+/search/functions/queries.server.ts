@@ -1,10 +1,8 @@
 // app/routes/search/functions/queries.server.ts
 
 import type { Tag } from "@prisma/client";
-import {
-	type PageCardLocalizedType,
-	pageCardSelect,
-} from "~/routes/$locale+/functions/queries.server";
+import type { PageCardLocalizedType } from "~/routes/$locale+/functions/queries.server";
+import { createPageCardSelect } from "~/routes/$locale+/functions/queries.server";
 import type { SanitizedUser } from "~/types";
 import { prisma } from "~/utils/prisma";
 import { sanitizeUser } from "~/utils/sanitizeUser";
@@ -19,6 +17,7 @@ export async function searchTitle(
 	pages: PageCardLocalizedType[];
 	totalCount: number;
 }> {
+	const pageCardSelect = createPageCardSelect(locale);
 	const [pages, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
@@ -69,6 +68,7 @@ export async function searchByTag(
 	pages: PageCardLocalizedType[];
 	totalCount: number;
 }> {
+	const pageCardSelect = createPageCardSelect(locale);
 	const [pages, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
@@ -121,6 +121,7 @@ export async function searchContent(
 	pages: PageCardLocalizedType[];
 	totalCount: number;
 }> {
+	const pageCardSelect = createPageCardSelect(locale);
 	const [pages, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
