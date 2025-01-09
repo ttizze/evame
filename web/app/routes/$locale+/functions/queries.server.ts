@@ -52,7 +52,6 @@ function createPageCardSelect(locale?: string) {
 	};
 }
 
-
 export type PageCardType = Prisma.PageGetPayload<{
 	select: ReturnType<typeof createPageCardSelect>;
 }>;
