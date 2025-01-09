@@ -18,7 +18,7 @@ import { ContentWithTranslations } from "./components/ContentWithTranslations";
 import { FloatingControls } from "./components/FloatingControls";
 import { createUserAITranslationInfo } from "./functions/mutations.server";
 import {
-	fetchComments,
+	fetchCommentsWithUser,
 	fetchIsLikedByUser,
 	fetchLatestUserAITranslationInfo,
 	fetchLikeCount,
@@ -121,10 +121,10 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		? `${sourceTitleWithTranslations.sourceText.text} - ${bestTranslationTitle.translateText.text}`
 		: sourceTitleWithTranslations.sourceText.text;
 
-	const [likeCount, isLikedByUser, comments] = await Promise.all([
+	const [likeCount, isLikedByUser, commentsWithUser] = await Promise.all([
 		fetchLikeCount(pageWithTranslations.page.id),
 		fetchIsLikedByUser(pageWithTranslations.page.id, currentUser?.id, guestId),
-		fetchComments(pageWithTranslations.page.id),
+		fetchCommentsWithUser(pageWithTranslations.page.id),
 	]);
 
 	const headers = new Headers();
@@ -140,7 +140,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			sourceTitleWithBestTranslationTitle,
 			likeCount,
 			isLikedByUser,
-			comments,
+			commentsWithUser,
 			existLocales: pageWithTranslations.existLocales,
 		},
 		{
@@ -229,7 +229,7 @@ export default function Page() {
 		locale,
 		likeCount,
 		isLikedByUser,
-		comments,
+		commentsWithUser,
 		existLocales,
 	} = useLoaderData<typeof loader>();
 	const actionData = useActionData<typeof action>();
@@ -263,21 +263,21 @@ export default function Page() {
 						showCount
 					/>
 					<div className="mt-8">
-						<CommentForm
-							pageId={pageWithTranslations.page.id}
-							onSuccess={() => {
-								window.location.reload();
-							}}
-						/>
 						<div className="mt-8">
 							<CommentList
-								comments={comments}
+								commentsWithUser={commentsWithUser}
 								currentUserId={currentUser?.id}
 								onDelete={() => {
 									window.location.reload();
 								}}
 							/>
 						</div>
+						<CommentForm
+							pageId={pageWithTranslations.page.id}
+							onSuccess={() => {
+								window.location.reload();
+							}}
+						/>
 					</div>
 				</div>
 			</article>

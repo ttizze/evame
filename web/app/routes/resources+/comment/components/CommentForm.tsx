@@ -1,5 +1,4 @@
 import { type FormEvent, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { Button } from "../../../../components/ui/button";
 import { Textarea } from "../../../../components/ui/textarea";
 
@@ -9,7 +8,6 @@ interface CommentFormProps {
 }
 
 export function CommentForm({ pageId, onSuccess }: CommentFormProps) {
-	const { t } = useTranslation();
 	const [content, setContent] = useState("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,7 +46,7 @@ export function CommentForm({ pageId, onSuccess }: CommentFormProps) {
 			<Textarea
 				value={content}
 				onChange={(e) => setContent(e.target.value)}
-				placeholder={t("comment.placeholder")}
+				placeholder="comment"
 				className="min-h-[100px]"
 			/>
 			<Button
@@ -56,7 +54,7 @@ export function CommentForm({ pageId, onSuccess }: CommentFormProps) {
 				disabled={isSubmitting || !content.trim()}
 				className="w-full"
 			>
-				{isSubmitting ? t("comment.posting") : t("comment.post")}
+				{isSubmitting ? "posting" : "post"}
 			</Button>
 		</form>
 	);

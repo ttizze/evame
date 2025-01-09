@@ -152,7 +152,7 @@ export async function fetchIsLikedByUser(
 	return false;
 }
 
-export async function fetchComments(pageId: number) {
+export async function fetchCommentsWithUser(pageId: number) {
 	const comments = await prisma.comment.findMany({
 		where: {
 			pageId,
@@ -177,3 +177,5 @@ export async function fetchComments(pageId: number) {
 		updatedAt: comment.updatedAt.toISOString(),
 	}));
 }
+
+export type CommentWithUser = Awaited<ReturnType<typeof fetchCommentsWithUser>>;
