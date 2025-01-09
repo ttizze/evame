@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "~/utils/prisma";
 
-function createPageCardSelect(locale?: string) {
+export function createPageCardSelect(locale?: string) {
 	return {
 		id: true,
 		slug: true,
