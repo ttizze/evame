@@ -1,7 +1,7 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
+import { describe, expect, test, vi } from "vitest";
 import { CommentList } from "./CommentList";
-import { vi, describe, test, expect } from "vitest";
 
 vi.mock("react-i18next", () => ({
 	useTranslation: () => ({
@@ -28,20 +28,26 @@ describe("CommentList", () => {
 	];
 
 	test("renders comments correctly", () => {
-		render(<CommentList commentsWithUser={mockCommentsWithUser} currentUserId={2} />);
+		render(
+			<CommentList commentsWithUser={mockCommentsWithUser} currentUserId={2} />,
+		);
 
 		expect(screen.getByText("Test comment")).toBeInTheDocument();
 		expect(screen.getByText("Test User")).toBeInTheDocument();
 	});
 
 	test("shows delete button for own comments", () => {
-		render(<CommentList commentsWithUser={mockCommentsWithUser} currentUserId={1} />);
+		render(
+			<CommentList commentsWithUser={mockCommentsWithUser} currentUserId={1} />,
+		);
 
 		expect(screen.getByText("comment.delete")).toBeInTheDocument();
 	});
 
 	test("hides delete button for other users' comments", () => {
-		render(<CommentList commentsWithUser={mockCommentsWithUser} currentUserId={2} />);
+		render(
+			<CommentList commentsWithUser={mockCommentsWithUser} currentUserId={2} />,
+		);
 
 		expect(screen.queryByText("comment.delete")).not.toBeInTheDocument();
 	});
@@ -59,7 +65,11 @@ describe("CommentList", () => {
 		vi.stubGlobal("fetch", mockFetch);
 
 		render(
-			<CommentList commentsWithUser={mockCommentsWithUser} currentUserId={1} onDelete={onDelete} />,
+			<CommentList
+				commentsWithUser={mockCommentsWithUser}
+				currentUserId={1}
+				onDelete={onDelete}
+			/>,
 		);
 
 		const deleteButton = screen.getByText("comment.delete");
@@ -86,7 +96,11 @@ describe("CommentList", () => {
 		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
 		render(
-			<CommentList commentsWithUser={mockCommentsWithUser} currentUserId={1} onDelete={onDelete} />,
+			<CommentList
+				commentsWithUser={mockCommentsWithUser}
+				currentUserId={1}
+				onDelete={onDelete}
+			/>,
 		);
 
 		const deleteButton = screen.getByText("comment.delete");
