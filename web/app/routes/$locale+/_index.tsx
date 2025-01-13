@@ -1,13 +1,13 @@
-import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/node";
+import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { useLoaderData, useSearchParams } from "@remix-run/react";
 
-import i18nServer from "~/i18n.server";
-import { supportedLocaleOptions } from "~/constants/languages";
-import { fetchPageWithTranslations } from "~/routes/$locale+/user.$userName+/page+/$slug+/functions/queries.server";
-import { SourceTextAndTranslationSection } from "~/routes/$locale+/user.$userName+/page+/$slug+/components/sourceTextAndTranslationSection/SourceTextAndTranslationSection";
-import { authenticator } from "~/utils/auth.server";
 import { StartButton } from "~/components/StartButton";
+import { supportedLocaleOptions } from "~/constants/languages";
+import i18nServer from "~/i18n.server";
+import { SourceTextAndTranslationSection } from "~/routes/$locale+/user.$userName+/page+/$slug+/components/sourceTextAndTranslationSection/SourceTextAndTranslationSection";
+import { fetchPageWithTranslations } from "~/routes/$locale+/user.$userName+/page+/$slug+/functions/queries.server";
+import { authenticator } from "~/utils/auth.server";
 
 import { data } from "@remix-run/node";
 import { PageCard } from "~/components/PageCard";
@@ -21,11 +21,10 @@ import {
 	PaginationPrevious,
 } from "~/components/ui/pagination";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { ensureGuestId } from "~/utils/ensureGuestId.server";
-import { commitSession } from "~/utils/session.server";
 import { fetchPaginatedPagesWithInfo } from "~/routes/$locale+/functions/queries.server";
 import type { PageCardLocalizedType } from "~/routes/$locale+/functions/queries.server";
-
+import { ensureGuestId } from "~/utils/ensureGuestId.server";
+import { commitSession } from "~/utils/session.server";
 
 export const meta: MetaFunction = () => {
 	return [
@@ -76,7 +75,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const url = new URL(request.url);
 	const tab = url.searchParams.get("tab") || "recommended";
 	const newPage = Number(url.searchParams.get("newPage") || "1");
-	const recommendedPage = Number(url.searchParams.get("recommendedPage") || "1");
+	const recommendedPage = Number(
+		url.searchParams.get("recommendedPage") || "1",
+	);
 
 	// ゲストID確保
 	const { session, guestId } = await ensureGuestId(request);
@@ -127,7 +128,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		},
 		{
 			headers,
-		}
+		},
 	);
 }
 
@@ -227,7 +228,9 @@ export default function Home() {
 										<PaginationPrevious
 											onClick={() => handlePageChange(currentPage - 1)}
 											className={
-												currentPage === 1 ? "pointer-events-none opacity-50" : ""
+												currentPage === 1
+													? "pointer-events-none opacity-50"
+													: ""
 											}
 										/>
 									</PaginationItem>
@@ -256,11 +259,13 @@ export default function Home() {
 													pageNumber === currentPage + 2
 												) {
 													return (
-														<PaginationEllipsis key={`ellipsis-${pageNumber}`} />
+														<PaginationEllipsis
+															key={`ellipsis-${pageNumber}`}
+														/>
 													);
 												}
 												return null;
-											}
+											},
 										)}
 									</div>
 									<PaginationItem>
@@ -298,7 +303,9 @@ export default function Home() {
 										<PaginationPrevious
 											onClick={() => handlePageChange(currentPage - 1)}
 											className={
-												currentPage === 1 ? "pointer-events-none opacity-50" : ""
+												currentPage === 1
+													? "pointer-events-none opacity-50"
+													: ""
 											}
 										/>
 									</PaginationItem>
@@ -327,11 +334,13 @@ export default function Home() {
 													pageNumber === currentPage + 2
 												) {
 													return (
-														<PaginationEllipsis key={`ellipsis-${pageNumber}`} />
+														<PaginationEllipsis
+															key={`ellipsis-${pageNumber}`}
+														/>
 													);
 												}
 												return null;
-											}
+											},
 										)}
 									</div>
 									<PaginationItem>
