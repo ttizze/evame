@@ -4,7 +4,7 @@ import { data } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { z } from "zod";
 import i18nServer from "~/i18n.server";
-import { fetchUserByUserName } from "~/routes/functions/queries.server";
+import { fetchGeminiApiKeyByUserName } from "~/routes/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
 import { PageManagementTab } from "./components/PageManagementTab";
 import {
@@ -27,8 +27,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		failureRedirect: "/auth/login",
 	});
 
-	const nonSanitizedUser = await fetchUserByUserName(currentUser.userName);
-	const hasGeminiApiKey = !!nonSanitizedUser?.geminiApiKey;
+	const geminiApiKey = await fetchGeminiApiKeyByUserName(currentUser.userName);
+	const hasGeminiApiKey = !!geminiApiKey?.apiKey;
 	let locale = params.locale;
 	if (!locale) {
 		locale = (await i18nServer.getLocale(request)) || "en";

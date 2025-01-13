@@ -7,7 +7,7 @@ import { useActionData, useLoaderData } from "@remix-run/react";
 import { useState } from "react";
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
 import i18nServer from "~/i18n.server";
-import { fetchUserByUserName } from "~/routes/functions/queries.server";
+import { fetchGeminiApiKeyByUserName } from "~/routes/functions/queries.server";
 import { LikeButton } from "~/routes/resources+/like-button";
 import { authenticator } from "~/utils/auth.server";
 import { ensureGuestId } from "~/utils/ensureGuestId.server";
@@ -42,7 +42,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	);
 	const imageUrl = firstImageMatch
 		? firstImageMatch[1]
-		: pageWithTranslations.sanitizedUser.icon;
+		: pageWithTranslations.user.icon;
 
 	const alternateLinks = data.existLocales
 		.filter((locale: string) => locale !== data.locale)
@@ -50,7 +50,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 			tagName: "link",
 			rel: "alternate",
 			hrefLang: locale,
-			href: `/${locale}/user/${data.pageWithTranslations.sanitizedUser.userName}/page/${data.pageWithTranslations.page.slug}`,
+			href: `/${locale}/user/${data.pageWithTranslations.user.userName}/page/${data.pageWithTranslations.page.slug}`,
 		}));
 
 	return [
@@ -81,10 +81,10 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
 	const { session, guestId } = await ensureGuestId(request);
 
-	const nonSanitizedUser = await fetchUserByUserName(
+	const geminiApiKey = await fetchGeminiApiKeyByUserName(
 		currentUser?.userName ?? "",
 	);
-	const hasGeminiApiKey = !!nonSanitizedUser?.geminiApiKey;
+	const hasGeminiApiKey = !!geminiApiKey;
 	const pageWithTranslations = await fetchPageWithTranslations(
 		slug,
 		locale,
@@ -94,8 +94,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	if (!pageWithTranslations) {
 		throw new Response("Failed to fetch article", { status: 500 });
 	}
-	const isOwner =
-		pageWithTranslations?.sanitizedUser.userName === currentUser?.userName;
+	const isOwner = pageWithTranslations?.user.userName === currentUser?.userName;
 	if (
 		pageWithTranslations.page.isArchived ||
 		(!isOwner && !pageWithTranslations.page.isPublished)
@@ -111,7 +110,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	);
 	const userAITranslationInfo = await fetchLatestUserAITranslationInfo(
 		pageWithTranslations.page.id,
-		nonSanitizedUser?.id ?? 0,
+		currentUser?.id ?? 0,
 		locale,
 	);
 	const sourceTitleWithBestTranslationTitle = bestTranslationTitle
@@ -152,9 +151,9 @@ export async function action({ request, params }: ActionFunctionArgs) {
 	const submission = parseWithZod(await request.formData(), {
 		schema: actionSchema,
 	});
-	const nonSanitizedUser = await fetchUserByUserName(currentUser.userName);
-	if (!nonSanitizedUser) {
-		throw new Response("User not found", { status: 404 });
+	const geminiApiKey = await fetchGeminiApiKeyByUserName(currentUser.userName);
+	if (!geminiApiKey) {
+		throw new Response("Gemini API key is not set", { status: 404 });
 	}
 
 	let locale = params.locale;
@@ -164,7 +163,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 	if (submission.status !== "success") {
 		return { intent: null, lastResult: submission.reply(), slug: null };
 	}
-	if (!nonSanitizedUser?.geminiApiKey) {
+	if (!geminiApiKey) {
 		return {
 			lastResult: submission.reply({
 				formErrors: ["Gemini API key is not set"],
@@ -190,18 +189,18 @@ export async function action({ request, params }: ActionFunctionArgs) {
 		text: item.text,
 	}));
 	const userAITranslationInfo = await createUserAITranslationInfo(
-		nonSanitizedUser.id,
+		currentUser.id,
 		pageWithSourceTexts.id,
 		submission.value.aiModel,
 		locale,
 	);
 
-	const queue = getTranslateUserQueue(nonSanitizedUser.id);
-	await queue.add(`translate-${nonSanitizedUser.id}`, {
+	const queue = getTranslateUserQueue(currentUser.id);
+	await queue.add(`translate-${currentUser.id}`, {
 		userAITranslationInfoId: userAITranslationInfo.id,
-		geminiApiKey: nonSanitizedUser.geminiApiKey,
+		geminiApiKey: geminiApiKey.apiKey,
 		aiModel: submission.value.aiModel,
-		userId: nonSanitizedUser.id,
+		userId: currentUser.id,
 		pageId: pageWithSourceTexts.id,
 		locale: locale,
 		title: pageWithSourceTexts.title,

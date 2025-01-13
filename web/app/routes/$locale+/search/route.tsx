@@ -1,5 +1,6 @@
 import { parseWithZod } from "@conform-to/zod";
 import type { Tag } from "@prisma/client";
+import type { User } from "@prisma/client";
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { data } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
@@ -15,7 +16,6 @@ import { Input } from "~/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { supportedLocaleOptions } from "~/constants/languages";
 import i18nServer from "~/i18n.server";
-import type { SanitizedUser } from "~/types";
 import { authenticator } from "~/utils/auth.server";
 import {
 	searchByTag,
@@ -60,7 +60,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			totalPages: 0,
 			pages: [],
 			tags: [],
-			sanitizedUsers: [],
+			users: [],
 		};
 	}
 
@@ -77,7 +77,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 	// カテゴリ別に検索
 	let pages = undefined;
 	let tags: Tag[] | undefined = undefined;
-	let sanitizedUsers: SanitizedUser[] | undefined = undefined;
+	let users: User[] | undefined = undefined;
 	let totalCount = 0;
 
 	switch (category) {
@@ -130,7 +130,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 				skip,
 				take,
 			);
-			sanitizedUsers = resultUsers;
+			users = resultUsers;
 			totalCount = cnt;
 			break;
 		}
@@ -146,7 +146,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 			page,
 			pages,
 			tags,
-			sanitizedUsers,
+			users,
 			totalCount,
 			totalPages,
 		},
@@ -159,7 +159,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 }
 
 export default function SearchPage() {
-	const { query, page, totalPages, pages, tags, sanitizedUsers, category } =
+	const { query, page, totalPages, pages, tags, users, category } =
 		useLoaderData<typeof loader>();
 	const [searchParams, setSearchParams] = useSearchParams();
 	const [currentCategory, setCurrentCategory] = useState<Category>(category);
@@ -239,7 +239,7 @@ export default function SearchPage() {
 				{currentCategory === "tags" && tags?.length === 0 && (
 					<p className="text-gray-500">No results found.</p>
 				)}
-				{currentCategory === "user" && sanitizedUsers?.length === 0 && (
+				{currentCategory === "user" && users?.length === 0 && (
 					<p className="text-gray-500">No results found.</p>
 				)}
 				{(currentCategory === "title" || currentCategory === "content") &&
@@ -267,27 +267,25 @@ export default function SearchPage() {
 				)}
 
 				{/* ユーザーの表示 */}
-				{currentCategory === "user" &&
-					sanitizedUsers &&
-					sanitizedUsers.length > 0 && (
-						<div className="space-y-4">
-							{sanitizedUsers.map((usr: SanitizedUser) => (
-								<div
-									key={usr.id}
-									className="flex items-start p-4  rounded-lg transition"
-								>
-									<div className="flex-1">
-										<LocaleLink to={`/user/${usr.userName}`}>
-											<h3 className="text-xl font-bold">{usr.displayName}</h3>
-											<span className="text-gray-500 text-sm">
-												@{usr.userName}
-											</span>
-										</LocaleLink>
-									</div>
+				{currentCategory === "user" && users && users.length > 0 && (
+					<div className="space-y-4">
+						{users.map((usr: User) => (
+							<div
+								key={usr.id}
+								className="flex items-start p-4  rounded-lg transition"
+							>
+								<div className="flex-1">
+									<LocaleLink to={`/user/${usr.userName}`}>
+										<h3 className="text-xl font-bold">{usr.displayName}</h3>
+										<span className="text-gray-500 text-sm">
+											@{usr.userName}
+										</span>
+									</LocaleLink>
 								</div>
-							))}
-						</div>
-					)}
+							</div>
+						))}
+					</div>
+				)}
 
 				{/* Page (title/content) の表示 */}
 				{(currentCategory === "title" || currentCategory === "content") &&

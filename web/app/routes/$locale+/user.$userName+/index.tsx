@@ -35,7 +35,6 @@ import { isFollowing } from "~/routes/resources+/follow-button/db/queries.server
 import { FollowButton } from "~/routes/resources+/follow-button/route";
 import { authenticator } from "~/utils/auth.server";
 import { ensureGuestId } from "~/utils/ensureGuestId.server";
-import { sanitizeUser } from "~/utils/sanitizeUser";
 import { commitSession } from "~/utils/session.server";
 import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
 import { DeletePageDialog } from "./components/DeletePageDialog";
@@ -49,7 +48,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Profile" }];
 	}
-	return [{ title: data.sanitizedPageOwner.displayName }];
+	return [{ title: data.pageOwner.displayName }];
 };
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
@@ -60,8 +59,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const { userName } = params;
 	if (!userName) throw new Error("Username is required");
 
-	const nonSanitizedPageOwner = await fetchUserByUserName(userName);
-	if (!nonSanitizedPageOwner) {
+	const pageOwner = await fetchUserByUserName(userName);
+	if (!pageOwner) {
 		throw new Response("Not Found", { status: 404 });
 	}
 
@@ -80,15 +79,14 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			pageSize,
 			currentUserId: currentUser?.id,
 			currentGuestId: guestId,
-			pageOwnerId: nonSanitizedPageOwner.id,
+			pageOwnerId: pageOwner.id,
 			onlyUserOwn: true,
 			locale,
 		});
 	if (!pagesWithInfo) throw new Response("Not Found", { status: 404 });
-	const sanitizedPageOwner = await sanitizeUser(nonSanitizedPageOwner);
-	const followCounts = await getFollowCounts(nonSanitizedPageOwner.id);
+	const followCounts = await getFollowCounts(pageOwner.id);
 	const isCurrentUserFollowing = currentUser
-		? await isFollowing(currentUser.id, nonSanitizedPageOwner.id)
+		? await isFollowing(currentUser.id, pageOwner.id)
 		: false;
 	const headers = new Headers();
 	headers.set("Set-Cookie", await commitSession(session));
@@ -99,7 +97,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			isOwner,
 			totalPages,
 			currentPage,
-			sanitizedPageOwner,
+			pageOwner,
 			followCounts,
 			isCurrentUserFollowing,
 		},
@@ -143,7 +141,7 @@ export default function UserPage() {
 		isOwner,
 		totalPages,
 		currentPage,
-		sanitizedPageOwner,
+		pageOwner,
 		followCounts,
 		isCurrentUserFollowing,
 	} = useLoaderData<typeof loader>();
@@ -186,14 +184,14 @@ export default function UserPage() {
 				<CardHeader className="pb-4">
 					<div className="flex w-full flex-col md:flex-row">
 						<div>
-							<Link to={`${sanitizedPageOwner.icon}`}>
+							<Link to={`${pageOwner.icon}`}>
 								<Avatar className="w-20 h-20 md:w-24 md:h-24">
 									<AvatarImage
-										src={sanitizedPageOwner.icon}
-										alt={sanitizedPageOwner.displayName}
+										src={pageOwner.icon}
+										alt={pageOwner.displayName}
 									/>
 									<AvatarFallback>
-										{sanitizedPageOwner.displayName.charAt(0).toUpperCase()}
+										{pageOwner.displayName.charAt(0).toUpperCase()}
 									</AvatarFallback>
 								</Avatar>
 							</Link>
@@ -201,11 +199,11 @@ export default function UserPage() {
 						<div className="mt-2 md:mt-0 md:ml-4 flex items-center justify-between w-full">
 							<div>
 								<CardTitle className="text-xl md:text-2xl font-bold">
-									{sanitizedPageOwner.displayName}
+									{pageOwner.displayName}
 								</CardTitle>
 								<div>
 									<CardDescription className="text-sm text-gray-500">
-										@{sanitizedPageOwner.userName}
+										@{pageOwner.userName}
 									</CardDescription>
 									<div className="flex gap-4 mt-2 text-sm text-gray-500">
 										<span>{followCounts.following} following</span>
@@ -215,7 +213,7 @@ export default function UserPage() {
 							</div>
 
 							{isOwner ? (
-								<LocaleLink to={`/user/${sanitizedPageOwner.userName}/edit`}>
+								<LocaleLink to={`/user/${pageOwner.userName}/edit`}>
 									<Button
 										variant="secondary"
 										className="flex items-center rounded-full"
@@ -226,7 +224,7 @@ export default function UserPage() {
 								</LocaleLink>
 							) : (
 								<FollowButton
-									targetUserId={sanitizedPageOwner.id}
+									targetUserId={pageOwner.id}
 									isFollowing={isCurrentUserFollowing}
 									className="rounded-full"
 								/>
@@ -237,7 +235,7 @@ export default function UserPage() {
 
 				<CardContent className="mt-4">
 					<Linkify options={{ className: "underline" }}>
-						{sanitizedPageOwner.profile}
+						{pageOwner.profile}
 					</Linkify>
 				</CardContent>
 			</Card>
@@ -247,8 +245,8 @@ export default function UserPage() {
 					<PageCard
 						key={page.id}
 						pageCard={page}
-						pageLink={`/user/${sanitizedPageOwner.userName}/page/${page.slug}`}
-						userLink={`/user/${sanitizedPageOwner.userName}`}
+						pageLink={`/user/${pageOwner.userName}/page/${page.slug}`}
+						userLink={`/user/${pageOwner.userName}`}
 						showOwnerActions={isOwner}
 						onTogglePublicStatus={togglePagePublicStatus}
 						onArchive={handleArchive}

@@ -17,11 +17,10 @@ import { z } from "zod";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { validateGeminiApiKey } from "~/features/translate/services/gemini";
 import { uploadImage } from "~/routes/$locale+/user.$userName+/utils/uploadImage";
+import { GeminiApiKeyDialog } from "~/routes/resources+/gemini-api-key-dialog";
 import { authenticator } from "~/utils/auth.server";
 import { cn } from "~/utils/cn";
-import { sanitizeUser } from "~/utils/sanitizeUser";
 import { commitSession, getSession } from "~/utils/session.server";
 import { updateUser } from "./functions/mutations.server";
 import { getUserByUserName } from "./functions/queries.server";
@@ -60,7 +59,6 @@ const schema = z.object({
 		.max(200, "Too Long. Must be 200 characters or less")
 		.optional(),
 	icon: z.string(),
-	geminiApiKey: z.string().optional(),
 });
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
@@ -86,28 +84,17 @@ export async function action({ request }: ActionFunctionArgs) {
 		return submission.reply();
 	}
 
-	const { displayName, userName, profile, icon, geminiApiKey } =
-		submission.value;
+	const { displayName, userName, profile, icon } = submission.value;
 
-	if (geminiApiKey && geminiApiKey.trim() !== "") {
-		const { isValid, errorMessage } = await validateGeminiApiKey(geminiApiKey);
-
-		if (!isValid) {
-			return submission.reply({
-				formErrors: [errorMessage || "Gemini API key validation failed"],
-			});
-		}
-	}
 	try {
 		const updatedUser = await updateUser(currentUser.id, {
 			displayName,
 			userName,
 			profile,
 			icon,
-			geminiApiKey,
 		});
 		const session = await getSession(request.headers.get("Cookie"));
-		session.set("user", sanitizeUser(updatedUser));
+		session.set("user", updatedUser);
 		const headers = new Headers({
 			"Set-Cookie": await commitSession(session),
 		});
@@ -124,6 +111,8 @@ export default function EditProfile() {
 	const lastResult = useActionData<typeof action>();
 	const navigation = useNavigation();
 	const [showUsernameInput, setShowUsernameInput] = useState(false);
+	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
+
 	const [form, fields] = useForm({
 		id: "edit-profile-form",
 		lastResult,
@@ -278,19 +267,19 @@ export default function EditProfile() {
 							<ExternalLink className="w-4 h-4" />
 						</Link>
 					</div>
+					<Button
+						type="button"
+						onClick={() => setIsApiKeyDialogOpen(true)}
+						className="w-full"
+					>
+						Set API Key
+					</Button>
 					<div>
-						<Input
-							{...getInputProps(fields.geminiApiKey, { type: "password" })}
-							className="w-full h-10 px-3 py-2 border rounded-lg  bg-white dark:bg-black/50 focus:outline-none"
+						<GeminiApiKeyDialog
+							isOpen={isApiKeyDialogOpen}
+							onOpenChange={setIsApiKeyDialogOpen}
 						/>
 					</div>
-					<div
-						id={fields.geminiApiKey.errorId}
-						className="text-red-500 text-sm mt-1"
-					>
-						{fields.geminiApiKey.errors}
-					</div>
-
 					<Button
 						type="submit"
 						className="w-full h-10"

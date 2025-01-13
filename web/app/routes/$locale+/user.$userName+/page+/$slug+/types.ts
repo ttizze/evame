@@ -6,12 +6,12 @@ import type {
 	TranslateText,
 	Vote,
 } from "@prisma/client";
+import type { User } from "@prisma/client";
 import { z } from "zod";
-import type { SanitizedUser } from "~/types";
 
 export type TranslationWithVote = {
 	translateText: TranslateText & {
-		user: SanitizedUser;
+		user: User;
 	};
 	vote: Vote | null;
 };
@@ -29,7 +29,7 @@ export interface PageLocalizedDate extends Omit<Page, "createdAt"> {
 }
 export type PageWithTranslations = {
 	page: PageLocalizedDate;
-	sanitizedUser: SanitizedUser;
+	user: User;
 	tagPages: TagPageWithTag[];
 	sourceTextWithTranslations: SourceTextWithTranslations[];
 	existLocales: string[];

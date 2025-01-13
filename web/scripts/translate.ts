@@ -24,20 +24,20 @@ async function getAllPagesByUserId(userId: number) {
 			process.exit(1);
 		}
 
-		const nonSanitizedUser = await fetchUserByUserName(USER_NAME);
-		if (!nonSanitizedUser) {
+		const user = await fetchUserByUserName(USER_NAME);
+		if (!user) {
 			console.error(`User ${USER_NAME} not found.`);
 			process.exit(1);
 		}
 
-		const pages = await getAllPagesByUserId(nonSanitizedUser.id);
+		const pages = await getAllPagesByUserId(user.id);
 		if (pages.length === 0) {
 			console.log("No pages found for user:", USER_NAME);
 			process.exit(0);
 		}
 
 		// 翻訳キュー
-		const queue = getTranslateUserQueue(nonSanitizedUser.id);
+		const queue = getTranslateUserQueue(user.id);
 
 		// 全ページに対してキュー追加
 		for (const page of pages) {
@@ -50,7 +50,7 @@ async function getAllPagesByUserId(userId: number) {
 
 			// UserAITranslationInfoを作成
 			const userAITranslationInfo = await createUserAITranslationInfo(
-				nonSanitizedUser.id,
+				user.id,
 				page.id,
 				AI_MODEL,
 				LOCALE,
@@ -58,11 +58,11 @@ async function getAllPagesByUserId(userId: number) {
 
 			// キューに追加
 			// ジョブのデータはaction関数と同様の形でよい
-			await queue.add(`translate-${nonSanitizedUser.id}-${page.slug}`, {
+			await queue.add(`translate-${user.id}-${page.slug}`, {
 				userAITranslationInfoId: userAITranslationInfo.id,
 				geminiApiKey: GEMINI_API_KEY,
 				aiModel: AI_MODEL,
-				userId: nonSanitizedUser.id,
+				userId: user.id,
 				pageId: page.id,
 				locale: LOCALE,
 				title: title,
