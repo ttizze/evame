@@ -39,14 +39,21 @@ async function addRequiredData() {
 			],
 		},
 		{
-			text: "Evame is an innovative open-source platform that enables everyone to read articles in their native language, regardless of the original language. Through user-contributed content and collaborative translations, we break down language barriers, fostering global understanding and knowledge sharing.",
+			text: `Evame is an open platform where anyone can read and write articles in their own language.
+			User-submitted posts are automatically translated into multiple languages,
+			allowing people around the globe to share and discover stories without linguistic barriers.
+			Community-driven corrections and voting continually improve translation quality, fostering
+			an environment where knowledge and ideas flow freely across borders.`,
 			number: 1,
 			textAndOccurrenceHash:
 				"evame-is-an-innovative-open-source-platform-that-enables-everyone-to-read-articles-in-their-native-language-regardless-of-the-original-language-through-user-contributed-content-and-collaborative-translations-we-break-down-language-barriers-fostering-global-understanding-and-knowledge-sharing",
 			pageId: evameEnPage.id,
 			translations: [
 				{
-					text: "Evameは、誰もが母国語で文章を読めるようにする革新的なオープンソースプラットフォームです。ユーザーによる投稿と翻訳を通じて、言語の障壁を取り除き、世界中の理解と知識の共有を促進します。",
+					text: `Evameは、あなたの記事を翻訳し、世界中の読者に届けるコミュニティです。
+					母国語で思いのまま書けば、翻訳を通じて世界の読者があなたの文章を楽しめます。
+					さらに、コミュニティの投票と修正で翻訳精度がどんどん良くなるから、海外の反応も得やすい。
+					Evameで、あらゆる知識や物語を互いに届け合いましょう。`,
 					locale: "ja",
 				},
 			],
@@ -64,7 +71,10 @@ async function addRequiredData() {
 			],
 		},
 		{
-			text: "Evameは、誰もが母国語で文章を読めるようにする革新的なオープンソースプラットフォームです。ユーザーによる投稿と翻訳を通じて、言語の障壁を取り除き、世界中の理解と知識の共有を促進します。",
+			text: `Evameは、あなたの記事を翻訳し、世界中の読者に届けるコミュニティです。
+					母国語で思いのまま書けば、翻訳を通じて世界の読者があなたの文章を楽しめます。
+					さらに、コミュニティの投票と修正で翻訳精度がどんどん良くなるから、海外の反応も得やすい。
+					Evameで、あらゆる知識や物語を互いに届け合いましょう。`,
 			number: 1,
 			pageId: evameJaPage.id,
 			textAndOccurrenceHash:
