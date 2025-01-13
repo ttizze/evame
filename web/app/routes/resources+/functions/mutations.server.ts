@@ -1,12 +1,24 @@
 import { json } from "@remix-run/node";
+import { encrypt } from "~/utils/encryption.server";
 import { prisma } from "~/utils/prisma";
+
 export const updateGeminiApiKey = async (
 	userId: number,
 	geminiApiKey: string,
 ) => {
-	await prisma.user.update({
-		where: { id: userId },
-		data: { geminiApiKey },
+	const encryptedKey = encrypt(geminiApiKey);
+
+	await prisma.geminiApiKey.upsert({
+		where: {
+			userId: userId,
+		},
+		create: {
+			userId: userId,
+			apiKey: encryptedKey,
+		},
+		update: {
+			apiKey: encryptedKey,
+		},
 	});
 };
 

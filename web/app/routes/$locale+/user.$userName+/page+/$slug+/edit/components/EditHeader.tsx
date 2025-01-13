@@ -1,3 +1,4 @@
+import type { User } from "@prisma/client";
 import { useFetcher, useLocation } from "@remix-run/react";
 import { Link } from "@remix-run/react";
 import { Check, Globe, LinkIcon, Loader2, Lock } from "lucide-react";
@@ -10,9 +11,8 @@ import {
 	PopoverTrigger,
 } from "~/components/ui/popover";
 import { Separator } from "~/components/ui/separator";
-import type { SanitizedUser } from "~/types";
 interface EditHeaderProps {
-	currentUser: SanitizedUser;
+	currentUser: User;
 	initialIsPublished: boolean | undefined;
 	hasUnsavedChanges: boolean;
 	onPublishChange: (isPublished: boolean) => void;
