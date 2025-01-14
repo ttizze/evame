@@ -185,8 +185,12 @@ async function addDevelopmentData() {
 			email,
 			userName: "dev",
 			displayName: "Dev User",
-			password: await bcrypt.hash("devpassword", 10),
 			icon: "",
+			credential: {
+				create: {
+					password: await bcrypt.hash("devpassword", 10),
+				},
+			},
 		},
 	});
 
