@@ -190,7 +190,7 @@ export default function EditPage() {
 				<fetcher.Form method="post" {...getFormProps(form)}>
 					<EditHeader
 						currentUser={currentUser}
-						initialStatus={page?.status}
+						initialStatus={page?.status || "DRAFT"}
 						hasUnsavedChanges={hasUnsavedChanges}
 						onPublishChange={(status) => {
 							setCurrentStatus(status);

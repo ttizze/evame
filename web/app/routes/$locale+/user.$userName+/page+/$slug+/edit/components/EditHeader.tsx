@@ -15,7 +15,7 @@ import { Separator } from "~/components/ui/separator";
 
 interface EditHeaderProps {
 	currentUser: User;
-	initialStatus: PageStatus | undefined;
+	initialStatus: PageStatus;
 	hasUnsavedChanges: boolean;
 	onPublishChange: (status: PageStatus) => void;
 	pageId: number | undefined;
@@ -57,7 +57,7 @@ export function EditHeader({
 			>
 				{renderButtonIcon()}
 			</Button>
-			<input type="hidden" name="status" value={status || "DRAFT"} />
+			<input type="hidden" name="status" value={status} />
 		</>
 	);
 	const rightExtra = (
