@@ -36,7 +36,7 @@ import { FollowButton } from "~/routes/resources+/follow-button/route";
 import { authenticator } from "~/utils/auth.server";
 import { ensureGuestId } from "~/utils/ensureGuestId.server";
 import { commitSession } from "~/utils/session.server";
-import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
+import { fetchPaginatedPublicPagesWithInfo } from "../functions/queries.server";
 import { DeletePageDialog } from "./components/DeletePageDialog";
 import {
 	archivePage,
@@ -74,7 +74,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const isOwner = currentUser?.userName === userName;
 
 	const { pagesWithInfo, totalPages, currentPage } =
-		await fetchPaginatedPagesWithInfo({
+		await fetchPaginatedPublicPagesWithInfo({
 			page,
 			pageSize,
 			currentUserId: currentUser?.id,

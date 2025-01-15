@@ -8,7 +8,7 @@ export async function togglePagePublicStatus(pageId: number) {
 	return prisma.page.update({
 		where: { id: pageId },
 		data: {
-			isPublished: !page.isPublished,
+			status: page.status === "PUBLIC" ? "DRAFT" : "PUBLIC",
 		},
 	});
 }
@@ -17,7 +17,7 @@ export async function archivePage(pageId: number) {
 	return prisma.page.update({
 		where: { id: pageId },
 		data: {
-			isArchived: true,
+			status: "ARCHIVE",
 		},
 	});
 }

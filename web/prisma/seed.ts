@@ -120,7 +120,7 @@ async function createUserAndPages() {
 				sourceLanguage: "en",
 				content:
 					"Evame is an innovative open-source platform that enables everyone to read articles in their native language, regardless of the original language. Through user-contributed content and collaborative translations, we break down language barriers, fostering global understanding and knowledge sharing.",
-				isPublished: false,
+				status: "DRAFT",
 				userId: evame.id,
 			},
 		}),
@@ -132,7 +132,7 @@ async function createUserAndPages() {
 				sourceLanguage: "ja",
 				content:
 					"Evameは、誰もが母国語で文章を読めるようにする革新的なオープンソースプラットフォームです。ユーザーによる投稿と翻訳を通じて、言語の障壁を取り除き、世界中の理解と知識の共有を促進します。",
-				isPublished: false,
+				status: "DRAFT",
 				userId: evame.id,
 			},
 		}),

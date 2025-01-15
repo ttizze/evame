@@ -9,12 +9,16 @@ export async function upsertPageWithHtml(
 ) {
 	return await prisma.page.upsert({
 		where: { slug: pageSlug },
-		update: { content: html, sourceLanguage, isPublished },
+		update: {
+			content: html,
+			sourceLanguage,
+			status: isPublished ? "PUBLIC" : "DRAFT",
+		},
 		create: {
 			slug: pageSlug,
 			content: html,
 			userId,
-			isPublished,
+			status: isPublished ? "PUBLIC" : "DRAFT",
 			sourceLanguage,
 		},
 	});

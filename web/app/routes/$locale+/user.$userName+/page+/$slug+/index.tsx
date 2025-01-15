@@ -96,8 +96,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	}
 	const isOwner = pageWithTranslations?.user.userName === currentUser?.userName;
 	if (
-		pageWithTranslations.page.isArchived ||
-		(!isOwner && !pageWithTranslations.page.isPublished)
+		pageWithTranslations.page.status === "ARCHIVE" ||
+		(!isOwner && pageWithTranslations.page.status !== "PUBLIC")
 	) {
 		throw new Response("Page not found", { status: 404 });
 	}

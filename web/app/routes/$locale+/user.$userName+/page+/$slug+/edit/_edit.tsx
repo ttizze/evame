@@ -106,7 +106,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 	if (tags) {
 		await upsertTags(tags, page.id);
 	}
-	if (page.isPublished) {
+	if (page.status === "PUBLIC") {
 		const geminiApiKey = process.env.GEMINI_API_KEY;
 		if (!geminiApiKey) {
 			throw new Error("Gemini API key is not set");
@@ -135,7 +135,7 @@ export default function EditPage() {
 		page?.tagPages.map((tagPage) => tagPage.tag.name) || [],
 	);
 	const [currentIsPublished, setCurrentIsPublished] = useState(
-		page?.isPublished,
+		page?.status === "PUBLIC",
 	);
 
 	const [form, fields] = useForm({
@@ -149,7 +149,7 @@ export default function EditPage() {
 		defaultValue: {
 			title: title,
 			pageContent: page?.content,
-			isPublished: page?.isPublished.toString(),
+			isPublished: page?.status === "PUBLIC" ? "true" : "false",
 			tags: page?.tagPages.map((tagPage) => tagPage.tag.name) || [],
 		},
 	});
@@ -193,7 +193,7 @@ export default function EditPage() {
 				<fetcher.Form method="post" {...getFormProps(form)}>
 					<EditHeader
 						currentUser={currentUser}
-						initialIsPublished={page?.isPublished}
+						initialIsPublished={page?.status === "PUBLIC"}
 						hasUnsavedChanges={hasUnsavedChanges}
 						onPublishChange={(isPublished) => {
 							setCurrentIsPublished(isPublished);

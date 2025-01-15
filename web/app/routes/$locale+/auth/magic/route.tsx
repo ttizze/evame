@@ -3,7 +3,7 @@ import { authenticator } from "~/utils/auth.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	await authenticator.authenticate("magicLink", request, {
-		successRedirect: "/home",
+		successRedirect: "/",
 		failureRedirect: "/auth/login",
 	});
 }

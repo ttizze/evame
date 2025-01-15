@@ -25,7 +25,7 @@ export async function fetchGeminiApiKeyByUserName(
 
 export async function fetchAllPublishedPages() {
 	return prisma.page.findMany({
-		where: { isPublished: true, isArchived: false },
+		where: { status: "PUBLIC" },
 		select: {
 			id: true,
 			slug: true,

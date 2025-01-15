@@ -6,11 +6,9 @@ import { z } from "zod";
 import i18nServer from "~/i18n.server";
 import { fetchGeminiApiKeyByUserName } from "~/routes/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
+import { togglePagePublicStatus } from "../functions/mutations.server";
 import { PageManagementTab } from "./components/PageManagementTab";
-import {
-	archivePages,
-	togglePagePublicStatus,
-} from "./functions/mutations.server";
+import { archivePages } from "./functions/mutations.server";
 import { fetchPaginatedOwnPages } from "./functions/queries.server";
 const archiveSchema = z.object({
 	pageIds: z.string().transform((val) => val.split(",").map(Number)),

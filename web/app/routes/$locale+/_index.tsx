@@ -21,7 +21,7 @@ import {
 	PaginationPrevious,
 } from "~/components/ui/pagination";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { fetchPaginatedPagesWithInfo } from "~/routes/$locale+/functions/queries.server";
+import { fetchPaginatedPublicPagesWithInfo } from "~/routes/$locale+/functions/queries.server";
 import type { PageCardLocalizedType } from "~/routes/$locale+/functions/queries.server";
 import { ensureGuestId } from "~/utils/ensureGuestId.server";
 import { commitSession } from "~/utils/session.server";
@@ -88,7 +88,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	let currentPage: number;
 
 	if (tab === "recommended") {
-		const result = await fetchPaginatedPagesWithInfo({
+		const result = await fetchPaginatedPublicPagesWithInfo({
 			page: recommendedPage,
 			pageSize: 9,
 			currentUserId: currentUser?.id,
@@ -100,7 +100,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		totalPages = result.totalPages;
 		currentPage = result.currentPage;
 	} else {
-		const result = await fetchPaginatedPagesWithInfo({
+		const result = await fetchPaginatedPublicPagesWithInfo({
 			page: newPage,
 			pageSize: 9,
 			currentUserId: currentUser?.id,

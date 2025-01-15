@@ -183,7 +183,7 @@ export function PageManagementTab({
 									</LocaleLink>
 								</TableCell>
 								<TableCell>
-									{getStatusBadge(pageWithTitle.isPublished)}
+									{getStatusBadge(pageWithTitle.status === "PUBLIC")}
 								</TableCell>
 								<TableCell>{pageWithTitle.updatedAt}</TableCell>
 								<TableCell>
@@ -194,7 +194,7 @@ export function PageManagementTab({
 											setSelectedPages([pageWithTitle.id]);
 											setDialogOpen(true);
 										}}
-										isPublished={pageWithTitle.isPublished}
+										isPublished={pageWithTitle.status === "PUBLIC"}
 									/>
 								</TableCell>
 							</TableRow>

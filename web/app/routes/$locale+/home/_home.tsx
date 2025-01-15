@@ -17,7 +17,7 @@ import i18nServer from "~/i18n.server";
 import { authenticator } from "~/utils/auth.server";
 import { ensureGuestId } from "~/utils/ensureGuestId.server";
 import { commitSession } from "~/utils/session.server";
-import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
+import { fetchPaginatedPublicPagesWithInfo } from "../functions/queries.server";
 import type { PageCardLocalizedType } from "../functions/queries.server";
 export const meta: MetaFunction = () => {
 	return [{ title: "Home - Latest Pages" }];
@@ -49,19 +49,18 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
 	if (tab === "recommended") {
 		// いいね数が多い順でページを取得
-		const result = await fetchPaginatedPagesWithInfo({
+		const result = await fetchPaginatedPublicPagesWithInfo({
 			page: recommendedPage,
 			pageSize: 9,
 			currentUserId: currentUser?.id,
 			currentGuestId: guestId,
-			isRecommended: true,
 			locale,
 		});
 		pagesWithInfo = result.pagesWithInfo;
 		totalPages = result.totalPages;
 		currentPage = result.currentPage;
 	} else {
-		const result = await fetchPaginatedPagesWithInfo({
+		const result = await fetchPaginatedPublicPagesWithInfo({
 			page: newPage,
 			pageSize: 9,
 			currentUserId: currentUser?.id,
