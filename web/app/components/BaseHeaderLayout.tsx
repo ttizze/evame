@@ -31,7 +31,7 @@ export function BaseHeaderLayout({
 		<header className="z-10 w-full">
 			<div className="max-w-7xl mx-auto py-2 md:py-4 px-2 md:px-6 lg:px-8 flex justify-between items-center">
 				<div className="flex items-center gap-4">
-					<LocaleLink to="/home" className="flex items-center">
+					<LocaleLink to="/" className="flex items-center">
 						<img
 							src="/logo.svg"
 							alt="Evame"

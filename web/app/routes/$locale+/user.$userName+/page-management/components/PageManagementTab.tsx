@@ -1,3 +1,4 @@
+import type { PageStatus } from "@prisma/client";
 import { useSearchParams } from "@remix-run/react";
 import { useFetcher } from "@remix-run/react";
 import { useEffect, useState } from "react";
@@ -18,6 +19,7 @@ import {
 import { DeletePageDialog } from "../../components/DeletePageDialog";
 import { PageActionsDropdown } from "../../components/PageActionsDropdown";
 import type { PageWithTitle } from "../types";
+
 interface PageManagementTabProps {
 	pagesWithTitle: PageWithTitle[];
 	totalPages: number;
@@ -108,8 +110,8 @@ export function PageManagementTab({
 		);
 	};
 
-	const getStatusBadge = (isPublished: boolean) => {
-		if (isPublished) {
+	const getStatusBadge = (status: PageStatus) => {
+		if (status === "PUBLIC") {
 			return <Badge variant="default">Published</Badge>;
 		}
 		return <Badge variant="outline">Private</Badge>;
@@ -182,9 +184,7 @@ export function PageManagementTab({
 										{pageWithTitle.title}
 									</LocaleLink>
 								</TableCell>
-								<TableCell>
-									{getStatusBadge(pageWithTitle.isPublished)}
-								</TableCell>
+								<TableCell>{getStatusBadge(pageWithTitle.status)}</TableCell>
 								<TableCell>{pageWithTitle.updatedAt}</TableCell>
 								<TableCell>
 									<PageActionsDropdown
@@ -194,7 +194,7 @@ export function PageManagementTab({
 											setSelectedPages([pageWithTitle.id]);
 											setDialogOpen(true);
 										}}
-										isPublished={pageWithTitle.isPublished}
+										status={pageWithTitle.status}
 									/>
 								</TableCell>
 							</TableRow>

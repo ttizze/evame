@@ -19,7 +19,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 					create: [
 						{
 							slug: "public-page",
-							isPublished: true,
+							status: "PUBLIC",
 							content: "This is a test content",
 							sourceTexts: {
 								create: {
@@ -31,7 +31,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 						},
 						{
 							slug: "private-page",
-							isPublished: false,
+							status: "DRAFT",
 							content: "This is a test content2",
 							sourceTexts: {
 								create: {
@@ -43,7 +43,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 						},
 						{
 							slug: "archived-page",
-							isArchived: true,
+							status: "ARCHIVE",
 							content: "This is a test content3",
 							sourceTexts: {
 								create: {

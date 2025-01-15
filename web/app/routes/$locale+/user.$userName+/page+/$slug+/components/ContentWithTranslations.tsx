@@ -43,7 +43,7 @@ export function ContentWithTranslations({
 				{sourceTitleWithTranslations && (
 					<SourceTextAndTranslationSection
 						sourceTextWithTranslations={sourceTitleWithTranslations}
-						isPublished={pageWithTranslations.page.isPublished}
+						showLockIcon={pageWithTranslations.page.status === "DRAFT"}
 						elements={sourceTitleWithTranslations.sourceText.text}
 						showOriginal={showOriginal}
 						showTranslation={showTranslation}

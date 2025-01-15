@@ -1,4 +1,5 @@
 import type { User } from "@prisma/client";
+import type { PageStatus } from "@prisma/client";
 import { useFetcher, useLocation } from "@remix-run/react";
 import { Link } from "@remix-run/react";
 import { Check, Globe, LinkIcon, Loader2, Lock } from "lucide-react";
@@ -11,17 +12,18 @@ import {
 	PopoverTrigger,
 } from "~/components/ui/popover";
 import { Separator } from "~/components/ui/separator";
+
 interface EditHeaderProps {
 	currentUser: User;
-	initialIsPublished: boolean | undefined;
+	initialStatus: PageStatus;
 	hasUnsavedChanges: boolean;
-	onPublishChange: (isPublished: boolean) => void;
+	onPublishChange: (status: PageStatus) => void;
 	pageId: number | undefined;
 }
 
 export function EditHeader({
 	currentUser,
-	initialIsPublished,
+	initialStatus,
 	hasUnsavedChanges,
 	onPublishChange,
 	pageId,
@@ -29,11 +31,11 @@ export function EditHeader({
 	const fetcher = useFetcher();
 	const location = useLocation();
 	const isSubmitting = fetcher.state === "submitting";
-	const [isPublished, setIsPublished] = useState(initialIsPublished);
+	const [status, setStatus] = useState(initialStatus);
 	const pagePath = location.pathname.replace(/\/edit$/, "");
-	const handlePublishChange = (newPublishState: boolean) => {
-		setIsPublished(newPublishState);
-		onPublishChange(newPublishState);
+	const handlePublishChange = (newStatus: PageStatus) => {
+		setStatus(newStatus);
+		onPublishChange(newStatus);
 	};
 
 	const renderButtonIcon = () => {
@@ -55,28 +57,24 @@ export function EditHeader({
 			>
 				{renderButtonIcon()}
 			</Button>
-			<input
-				type="hidden"
-				name="isPublished"
-				value={isPublished ? "true" : "false"}
-			/>
+			<input type="hidden" name="status" value={status} />
 		</>
 	);
 	const rightExtra = (
 		<Popover>
 			<PopoverTrigger asChild>
 				<Button
-					variant={isPublished ? "default" : "secondary"}
+					variant={status === "PUBLIC" ? "default" : "secondary"}
 					size="sm"
 					className="rounded-full flex items-center gap-2 px-4 py-2 transition-colors duration-400"
 					disabled={isSubmitting}
 				>
-					{isPublished ? (
+					{status === "PUBLIC" ? (
 						<Globe className="w-4 h-4" />
 					) : (
 						<Lock className="w-4 h-4" />
 					)}
-					<span>{isPublished ? "Public" : "Private"}</span>
+					<span>{status === "PUBLIC" ? "Public" : "Private"}</span>
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent className="w-32 rounded-xl p-1" align="end">
@@ -84,8 +82,8 @@ export function EditHeader({
 					<button
 						type="button"
 						className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors duration-200 hover:bg-secondary/80 disabled:opacity-50 disabled:pointer-events-none"
-						onClick={() => handlePublishChange(true)}
-						disabled={isPublished}
+						onClick={() => handlePublishChange("PUBLIC")}
+						disabled={status === "PUBLIC"}
 					>
 						<Globe className="w-4 h-4" />
 						<span>Public</span>
@@ -94,8 +92,8 @@ export function EditHeader({
 					<button
 						type="button"
 						className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors duration-200 hover:bg-secondary/80 disabled:opacity-50 disabled:pointer-events-none"
-						onClick={() => handlePublishChange(false)}
-						disabled={!isPublished}
+						onClick={() => handlePublishChange("DRAFT")}
+						disabled={status === "DRAFT"}
 					>
 						<Lock className="w-4 h-4" />
 						<span>Private</span>

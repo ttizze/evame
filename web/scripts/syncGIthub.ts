@@ -220,7 +220,7 @@ async function processMarkdownFile(
 					slug,
 					adminUser.id,
 					sourceLanguage,
-					true,
+					"PUBLIC",
 				);
 
 				// タグのアップサート
@@ -315,7 +315,7 @@ async function syncGithub() {
 			rankingPageSlug,
 			adminUser.id,
 			"ja",
-			true,
+			"PUBLIC",
 		);
 
 		console.log("ランキングページを作成または更新しました:", rankingPageSlug);

@@ -105,13 +105,18 @@ model UserReadHistory {
   @@index([pageId])
 }
 
+enum PageStatus {
+  DRAFT
+  PUBLIC
+  ARCHIVE
+}
+
 model Page {
   id                    Int                     @id @default(autoincrement())
   slug                  String                  @unique
   content               String
   sourceLanguage        String                  @default("unknown")
-  isPublished           Boolean                 @default(false) @map("is_published")
-  isArchived            Boolean                 @default(false) @map("is_archived")
+  status                PageStatus              @default(DRAFT)
   createdAt             DateTime                @default(now()) @map("created_at")
   updatedAt             DateTime                @updatedAt @map("updated_at")
   user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)

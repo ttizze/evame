@@ -31,7 +31,7 @@ This is another test.
 			pageSlug,
 			user.id,
 			"en",
-			true,
+			"PUBLIC",
 		);
 
 		// ページがDBに存在し、HTMLが変換されているか確認
@@ -108,7 +108,7 @@ This is another line.
 			pageSlug,
 			user.id,
 			"en",
-			true,
+			"PUBLIC",
 		);
 		const dbPage1 = await prisma.page.findUnique({
 			where: { slug: pageSlug },
@@ -143,7 +143,7 @@ new line
 			pageSlug,
 			user.id,
 			"en",
-			true,
+			"PUBLIC",
 		);
 		const dbPage2 = await prisma.page.findUnique({
 			where: { slug: pageSlug },
@@ -223,7 +223,7 @@ new line
 			pageSlug,
 			user.id,
 			"en",
-			true,
+			"PUBLIC",
 		);
 
 		const dbPage = await prisma.page.findUnique({
@@ -295,7 +295,7 @@ new line
 			pageSlug,
 			user.id,
 			"en",
-			true,
+			"PUBLIC",
 		);
 
 		const dbPage = await prisma.page.findUnique({

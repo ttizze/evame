@@ -28,7 +28,7 @@ describe("UserProfile", () => {
 					create: [
 						{
 							slug: "public-page",
-							isPublished: true,
+							status: "PUBLIC",
 							content: "This is a test content",
 							sourceTexts: {
 								create: {
@@ -40,7 +40,7 @@ describe("UserProfile", () => {
 						},
 						{
 							slug: "private-page",
-							isPublished: false,
+							status: "DRAFT",
 							content: "This is a test content2",
 							sourceTexts: {
 								create: {
@@ -52,7 +52,7 @@ describe("UserProfile", () => {
 						},
 						{
 							slug: "archived-page",
-							isArchived: true,
+							status: "ARCHIVE",
 							content: "This is a test content3",
 							sourceTexts: {
 								create: {

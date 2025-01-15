@@ -1,3 +1,4 @@
+import type { PageStatus } from "@prisma/client";
 import type { Element, Properties, Root, RootContent, Text } from "hast";
 import rehypeParse from "rehype-parse";
 import rehypeRaw from "rehype-raw";
@@ -16,7 +17,6 @@ import {
 	upsertPageWithHtml,
 } from "../functions/mutations.server";
 import { generateHashForText } from "./generateHashForText";
-
 const BLOCK_LEVEL_TAGS = new Set([
 	"p",
 	"h1",
@@ -138,7 +138,7 @@ export async function processHtmlContent(
 	pageSlug: string,
 	userId: number,
 	sourceLanguage: string,
-	isPublished: boolean,
+	status: PageStatus,
 ) {
 	// HTML 入力に対応する page レコードを作成/更新
 	const page = await upsertPageWithHtml(
@@ -146,7 +146,7 @@ export async function processHtmlContent(
 		htmlInput,
 		userId,
 		sourceLanguage,
-		isPublished,
+		status,
 	);
 
 	const file = await unified()
@@ -166,7 +166,7 @@ export async function processHtmlContent(
 		htmlContent,
 		userId,
 		sourceLanguage,
-		isPublished,
+		status,
 	);
 	return page;
 }

@@ -5,8 +5,8 @@ export function createPageCardSelect(locale?: string) {
 	return {
 		id: true,
 		slug: true,
-		isPublished: true,
 		createdAt: true,
+		status: true,
 		user: {
 			select: {
 				userName: true,
@@ -71,7 +71,7 @@ type FetchParams = {
 	locale?: string;
 };
 
-export async function fetchPaginatedPagesWithInfo({
+export async function fetchPaginatedPublicPagesWithInfo({
 	page = 1,
 	pageSize = 9,
 	currentUserId,
@@ -89,8 +89,7 @@ export async function fetchPaginatedPagesWithInfo({
 
 	// 共通フィルタ
 	const baseWhere: Prisma.PageWhereInput = {
-		isArchived: false,
-		isPublished: true,
+		status: "PUBLIC",
 		sourceTexts: { some: { number: 0 } },
 	};
 
