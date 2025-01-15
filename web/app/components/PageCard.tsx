@@ -37,7 +37,7 @@ export function PageCard({
 						editPath={`${pageLink}/edit`}
 						onTogglePublic={() => onTogglePublicStatus(pageCard.id)}
 						onDelete={() => onArchive(pageCard.id)}
-						isPublished={pageCard.status === "PUBLIC"}
+						status={pageCard.status}
 					/>
 				</div>
 			)}

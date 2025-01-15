@@ -1,24 +1,24 @@
+import type { PageStatus } from "@prisma/client";
 import { prisma } from "~/utils/prisma";
-
 export async function upsertPageWithHtml(
 	pageSlug: string,
 	html: string,
 	userId: number,
 	sourceLanguage: string,
-	isPublished: boolean,
+	status: PageStatus,
 ) {
 	return await prisma.page.upsert({
 		where: { slug: pageSlug },
 		update: {
 			content: html,
 			sourceLanguage,
-			status: isPublished ? "PUBLIC" : "DRAFT",
+			status,
 		},
 		create: {
 			slug: pageSlug,
 			content: html,
 			userId,
-			status: isPublished ? "PUBLIC" : "DRAFT",
+			status,
 			sourceLanguage,
 		},
 	});

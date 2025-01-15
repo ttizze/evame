@@ -37,7 +37,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 export const editPageSchema = z.object({
 	title: z.string().min(1, "Required"),
 	pageContent: z.string().min(1, "Required Change something"),
-	isPublished: z.enum(["true", "false"]),
+	status: z.enum(["DRAFT", "PUBLIC", "ARCHIVE"]),
 	tags: z
 		.array(
 			z
@@ -92,8 +92,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 		return { lastResult: submission.reply() };
 	}
 
-	const { title, pageContent, isPublished, tags } = submission.value;
-	const isPublishedBool = isPublished === "true";
+	const { title, pageContent, status, tags } = submission.value;
 	const sourceLanguage = await getPageSourceLanguage(pageContent, title);
 	const page = await processHtmlContent(
 		title,
@@ -101,7 +100,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 		slug,
 		currentUser.id,
 		sourceLanguage,
-		isPublishedBool,
+		status,
 	);
 	if (tags) {
 		await upsertTags(tags, page.id);
@@ -134,9 +133,7 @@ export default function EditPage() {
 	const [currentTags, setCurrentTags] = useState<string[]>(
 		page?.tagPages.map((tagPage) => tagPage.tag.name) || [],
 	);
-	const [currentIsPublished, setCurrentIsPublished] = useState(
-		page?.status === "PUBLIC",
-	);
+	const [currentStatus, setCurrentStatus] = useState(page?.status);
 
 	const [form, fields] = useForm({
 		onValidate({ formData }) {
@@ -149,7 +146,7 @@ export default function EditPage() {
 		defaultValue: {
 			title: title,
 			pageContent: page?.content,
-			isPublished: page?.status === "PUBLIC" ? "true" : "false",
+			status: page?.status,
 			tags: page?.tagPages.map((tagPage) => tagPage.tag.name) || [],
 		},
 	});
@@ -159,14 +156,14 @@ export default function EditPage() {
 		const formData = new FormData();
 		formData.set("title", fields.title.value ?? "");
 		formData.set("pageContent", fields.pageContent.value ?? "");
-		formData.set("isPublished", currentIsPublished?.toString() || "false");
+		formData.set("status", currentStatus || "DRAFT");
 		currentTags.forEach((tag, index) => {
 			formData.set(`${fields.tags.name}[${index}]`, tag);
 		});
 		if (fetcher.state !== "submitting") {
 			fetcher.submit(formData, { method: "post" });
 		}
-	}, [fetcher, fields, currentTags, currentIsPublished]);
+	}, [fetcher, fields, currentTags, currentStatus]);
 
 	const debouncedAutoSave = useDebouncedCallback(handleAutoSave, 1000);
 
@@ -193,10 +190,10 @@ export default function EditPage() {
 				<fetcher.Form method="post" {...getFormProps(form)}>
 					<EditHeader
 						currentUser={currentUser}
-						initialIsPublished={page?.status === "PUBLIC"}
+						initialStatus={page?.status}
 						hasUnsavedChanges={hasUnsavedChanges}
-						onPublishChange={(isPublished) => {
-							setCurrentIsPublished(isPublished);
+						onPublishChange={(status) => {
+							setCurrentStatus(status);
 							handleContentChange();
 						}}
 						pageId={page?.id}

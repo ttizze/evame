@@ -24,7 +24,14 @@ describe("processHtmlContent", () => {
 		});
 
 		// HTMLを処理
-		await processHtmlContent(title, htmlInput, pageSlug, user.id, "en", true);
+		await processHtmlContent(
+			title,
+			htmlInput,
+			pageSlug,
+			user.id,
+			"en",
+			"PUBLIC",
+		);
 
 		// ページがDBに存在し、HTMLが変換されているか確認
 		const dbPage = await prisma.page.findUnique({
@@ -93,7 +100,7 @@ describe("processHtmlContent", () => {
 			pageSlug,
 			user.id,
 			"en",
-			true,
+			"PUBLIC",
 		);
 
 		const dbPage1 = await prisma.page.findUnique({
@@ -128,7 +135,7 @@ describe("processHtmlContent", () => {
 			pageSlug,
 			user.id,
 			"en",
-			true,
+			"PUBLIC",
 		);
 
 		const dbPage2 = await prisma.page.findUnique({
@@ -183,7 +190,14 @@ describe("processHtmlContent", () => {
 		});
 
 		// HTMLを処理
-		await processHtmlContent(title, htmlInput, pageSlug, user.id, "en", true);
+		await processHtmlContent(
+			title,
+			htmlInput,
+			pageSlug,
+			user.id,
+			"en",
+			"PUBLIC",
+		);
 
 		// ページがDBに存在し、HTMLが変換されているか確認
 		const dbPage = await prisma.page.findUnique({
@@ -262,7 +276,14 @@ describe("processHtmlContent", () => {
 		});
 
 		// 初回処理
-		await processHtmlContent(title, htmlInput, pageSlug, user.id, "en", true);
+		await processHtmlContent(
+			title,
+			htmlInput,
+			pageSlug,
+			user.id,
+			"en",
+			"PUBLIC",
+		);
 
 		const dbPage1 = await prisma.page.findUnique({
 			where: { slug: pageSlug },
@@ -279,7 +300,14 @@ describe("processHtmlContent", () => {
 		expect(originalTextIdMap.size).toBeGreaterThanOrEqual(3);
 
 		// 変更なしで再度同一HTMLを処理
-		await processHtmlContent(title, htmlInput, pageSlug, user.id, "en", true);
+		await processHtmlContent(
+			title,
+			htmlInput,
+			pageSlug,
+			user.id,
+			"en",
+			"PUBLIC",
+		);
 
 		const dbPage2 = await prisma.page.findUnique({
 			where: { slug: pageSlug },
@@ -324,7 +352,14 @@ describe("processHtmlContent", () => {
 			update: {},
 		});
 
-		await processHtmlContent(title, htmlInput, pageSlug, user.id, "en", true);
+		await processHtmlContent(
+			title,
+			htmlInput,
+			pageSlug,
+			user.id,
+			"en",
+			"PUBLIC",
+		);
 
 		const dbPage = await prisma.page.findUnique({
 			where: { slug: pageSlug },
