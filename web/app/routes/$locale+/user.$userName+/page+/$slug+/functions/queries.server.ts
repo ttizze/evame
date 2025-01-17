@@ -95,7 +95,7 @@ export async function fetchPageWithTranslations(
 				(translateText) => ({
 					translateText: {
 						...translateText,
-						user,
+						user: translateText.user,
 					},
 					vote: translateText.votes[0] || null,
 				}),
