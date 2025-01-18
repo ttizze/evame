@@ -14,6 +14,7 @@ import { ensureGuestId } from "~/utils/ensureGuestId.server";
 import { commitSession } from "~/utils/session.server";
 import { ContentWithTranslations } from "./components/ContentWithTranslations";
 import { FloatingControls } from "./components/FloatingControls";
+import { convertHtmlToReact } from "./components/convertHtmlToReact";
 import { createUserAITranslationInfo } from "./functions/mutations.server";
 import {
 	fetchIsLikedByUser,
@@ -122,6 +123,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		currentUser?.id,
 		guestId,
 	);
+	const finalJsx = convertHtmlToReact(pageWithTranslations.page.content, sourceTitleWithTranslations, true, true, currentUser?.userName ?? "");
 	const headers = new Headers();
 	headers.set("Set-Cookie", await commitSession(session));
 	return data(
@@ -136,6 +138,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			likeCount,
 			isLikedByUser,
 			existLocales: pageWithTranslations.existLocales,
+			finalJsx,
 		},
 		{
 			headers,
@@ -224,7 +227,9 @@ export default function Page() {
 		likeCount,
 		isLikedByUser,
 		existLocales,
+		finalJsx,
 	} = useLoaderData<typeof loader>();
+
 	const actionData = useActionData<typeof action>();
 	const [form, fields] = useForm({
 		lastResult: actionData?.lastResult,
@@ -247,6 +252,7 @@ export default function Page() {
 					existLocales={existLocales}
 					showOriginal={showOriginal}
 					showTranslation={showTranslation}
+					finalJsx={finalJsx}
 				/>
 				<LikeButton
 					liked={isLikedByUser}

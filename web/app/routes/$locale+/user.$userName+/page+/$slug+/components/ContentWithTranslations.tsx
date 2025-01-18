@@ -1,5 +1,4 @@
 import type { UserAITranslationInfo } from "@prisma/client";
-import { Loader2 } from "lucide-react";
 import { useHydrated } from "remix-utils/use-hydrated";
 import { LocaleLink } from "~/components/LocaleLink";
 import { TagList } from "~/components/TagList";
@@ -8,7 +7,6 @@ import type {
 	PageWithTranslations,
 	SourceTextWithTranslations,
 } from "../types";
-import { MemoizedParsedContent } from "./ParsedContent";
 import { SourceTextAndTranslationSection } from "./sourceTextAndTranslationSection/SourceTextAndTranslationSection";
 import { TranslateActionSection } from "./translateButton/TranslateActionSection";
 
@@ -22,6 +20,7 @@ interface ContentWithTranslationsProps {
 	existLocales: string[];
 	showOriginal: boolean;
 	showTranslation: boolean;
+	finalJsx: React.ReactNode;
 }
 
 export function ContentWithTranslations({
@@ -34,6 +33,7 @@ export function ContentWithTranslations({
 	existLocales,
 	showOriginal = true,
 	showTranslation = true,
+	finalJsx,
 }: ContentWithTranslationsProps) {
 	const isHydrated = useHydrated();
 
@@ -89,19 +89,7 @@ export function ContentWithTranslations({
 				locale={locale}
 				existLocales={existLocales}
 			/>
-			{!isHydrated ? (
-				<div className="w-full h-full flex items-center justify-center">
-					<Loader2 className="w-10 h-10 animate-spin" />
-				</div>
-			) : (
-				<MemoizedParsedContent
-					pageWithTranslations={pageWithTranslations}
-					currentUserName={currentUserName}
-					showOriginal={showOriginal}
-					showTranslation={showTranslation}
-					locale={locale}
-				/>
-			)}
+			<article className="prose dark:prose-invert">{finalJsx}</article>
 		</>
 	);
 }

@@ -46,7 +46,6 @@ export function ParsedContent({
 				return (
 					<DynamicTag {...otherAttribs} className={className}>
 						<SourceTextAndTranslationSection
-							key={`translation-${sourceTextId}`}
 							sourceTextWithTranslations={sourceTextWithTranslation}
 							elements={domToReact(domNode.children as DOMNode[], options)}
 							showOriginal={showOriginal}
