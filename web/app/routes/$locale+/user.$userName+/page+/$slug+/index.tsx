@@ -123,7 +123,13 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		currentUser?.id,
 		guestId,
 	);
-	const finalJsx = convertHtmlToReact(pageWithTranslations.page.content, sourceTitleWithTranslations, true, true, currentUser?.userName ?? "");
+	const finalJsx = convertHtmlToReact(
+		pageWithTranslations.page.content,
+		sourceTitleWithTranslations,
+		true,
+		true,
+		currentUser?.userName ?? "",
+	);
 	const headers = new Headers();
 	headers.set("Set-Cookie", await commitSession(session));
 	return data(
@@ -252,7 +258,7 @@ export default function Page() {
 					existLocales={existLocales}
 					showOriginal={showOriginal}
 					showTranslation={showTranslation}
-					finalJsx={finalJsx}
+					// finalJsx={finalJsx}
 				/>
 				<LikeButton
 					liked={isLikedByUser}

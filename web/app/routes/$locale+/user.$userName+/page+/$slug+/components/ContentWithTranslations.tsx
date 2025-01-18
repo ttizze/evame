@@ -20,7 +20,7 @@ interface ContentWithTranslationsProps {
 	existLocales: string[];
 	showOriginal: boolean;
 	showTranslation: boolean;
-	finalJsx: React.ReactNode;
+	// finalJsx: React.ReactNode;
 }
 
 export function ContentWithTranslations({
@@ -33,7 +33,7 @@ export function ContentWithTranslations({
 	existLocales,
 	showOriginal = true,
 	showTranslation = true,
-	finalJsx,
+	// finalJsx,
 }: ContentWithTranslationsProps) {
 	const isHydrated = useHydrated();
 
@@ -89,7 +89,7 @@ export function ContentWithTranslations({
 				locale={locale}
 				existLocales={existLocales}
 			/>
-			<article className="prose dark:prose-invert">{finalJsx}</article>
+			{/* <article className="prose dark:prose-invert">{finalJsx}</article> */}
 		</>
 	);
 }
