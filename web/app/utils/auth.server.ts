@@ -31,10 +31,11 @@ const formStrategy = new FormStrategy(async ({ form }) => {
 		throw new AuthorizationError("Email and password are required");
 	}
 
-	const existingUser = await prisma.user.findUnique({
+	const existingUserEmail = await prisma.userEmail.findUnique({
 		where: { email: String(email) },
-		include: { credential: true },
+		include: { user: { include: { credential: true } } },
 	});
+	const existingUser = existingUserEmail?.user;
 	if (
 		!existingUser ||
 		!existingUser.credential?.password ||
@@ -62,16 +63,22 @@ const googleStrategy = new GoogleStrategy<User>(
 		callbackURL: `${process.env.CLIENT_URL}/api/auth/callback/google`,
 	},
 	async ({ profile }) => {
-		const user = await prisma.user.findUnique({
+		const userEmail = await prisma.userEmail.findUnique({
 			where: { email: profile.emails[0].value },
+			include: { user: true },
 		});
+		const user = userEmail?.user;
 		if (user) {
 			return user;
 		}
 
 		const newUser = await prisma.user.create({
 			data: {
-				email: profile.emails[0].value || "",
+				userEmail: {
+					create: {
+						email: profile.emails[0].value || "",
+					},
+				},
 				userName: generateTemporaryUserName(),
 				displayName: profile.displayName || "New User",
 				icon: profile.photos[0].value || "",
@@ -91,9 +98,11 @@ const magicLinkStrategy = new EmailLinkStrategy(
 		sessionMagicLinkKey: "auth:magicLink",
 	},
 	async ({ email, form, magicLinkVerify }) => {
-		const user = await prisma.user.findUnique({
+		const userEmail = await prisma.userEmail.findUnique({
 			where: { email: String(email) },
+			include: { user: true },
 		});
+		const user = userEmail?.user;
 
 		if (user) {
 			return user;
@@ -101,7 +110,11 @@ const magicLinkStrategy = new EmailLinkStrategy(
 
 		const newUser = await prisma.user.create({
 			data: {
-				email: String(email),
+				userEmail: {
+					create: {
+						email: String(email),
+					},
+				},
 				icon: `${process.env.CLIENT_URL}/avatar.png`,
 				userName: generateTemporaryUserName(),
 				displayName: String(email).split("@")[0],

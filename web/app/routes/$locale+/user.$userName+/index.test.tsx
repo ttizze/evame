@@ -21,7 +21,6 @@ describe("UserProfile", () => {
 			data: {
 				userName: "testuser",
 				displayName: "Test User",
-				email: "testuser@example.com",
 				icon: "https://example.com/icon.jpg",
 				profile: "This is a test profile",
 				pages: {
@@ -71,7 +70,6 @@ describe("UserProfile", () => {
 			data: {
 				userName: "testuser2",
 				displayName: "Test User2",
-				email: "testuser2@example.com",
 				icon: "https://example.com/icon2.jpg",
 				profile: "This is a test profile2",
 			},

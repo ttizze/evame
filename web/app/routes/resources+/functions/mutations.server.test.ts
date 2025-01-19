@@ -12,7 +12,6 @@ describe("toggleLike 実際のDB統合テスト", () => {
 			data: {
 				userName: "testuser",
 				displayName: "Test User",
-				email: "testuser@example.com",
 				icon: "https://example.com/icon.jpg",
 				profile: "This is a test profile",
 				pages: {

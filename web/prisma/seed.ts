@@ -105,9 +105,13 @@ async function createUserAndPages() {
 		create: {
 			userName: "evame",
 			displayName: "evame",
-			email: "evame@example.com",
 			provider: "Admin",
 			icon: "https://evame.tech/favicon.svg",
+			userEmail: {
+				create: {
+					email: "evame@example.com",
+				},
+			},
 		},
 	});
 
@@ -175,28 +179,40 @@ async function upsertSourceTextWithTranslations(
 	);
 }
 
-async function addDevelopmentData() {
+export async function addDevelopmentData() {
 	const email = "dev@example.com";
 
-	const devUser = await prisma.user.upsert({
+	const devEmail = await prisma.userEmail.upsert({
 		where: { email },
-		update: {},
+		update: {
+			user: {
+				update: {},
+			},
+		},
 		create: {
 			email,
-			userName: "dev",
-			displayName: "Dev User",
-			icon: "",
-			credential: {
+			user: {
 				create: {
-					password: await bcrypt.hash("devpassword", 10),
+					userName: "dev",
+					displayName: "Dev User",
+					icon: "",
+					credential: {
+						create: {
+							password: await bcrypt.hash("devpassword", 10),
+						},
+					},
 				},
 			},
 		},
+		include: {
+			user: true,
+		},
 	});
 
-	console.log(`Created/Updated dev user with email: ${devUser.email}`);
+	console.log(
+		`Created/Updated dev user with ID=${devEmail.userId}, email=${devEmail.email}`,
+	);
 }
-
 seed()
 	.catch((e) => {
 		console.error(e);

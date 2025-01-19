@@ -8,8 +8,7 @@ datasource db {
 }
 
 model User {
-  id                    Int                     @id @default(autoincrement())
-  email                 String                  @unique
+  id Int @id @default(autoincrement())
   userName              String                  @unique @map("user_name")
   displayName           String                  @map("display_name")
   icon                  String
@@ -20,7 +19,8 @@ model User {
   provider              String                  @default("Credentials")
   createdAt             DateTime                @default(now()) @map("created_at")
   updatedAt             DateTime                @updatedAt @map("updated_at")
-  credential           UserCredential?
+  credential            UserCredential?
+  userEmail             UserEmail?
   geminiApiKey          GeminiApiKey?
   pages                 Page[]
   userReadHistory       UserReadHistory[]
@@ -29,14 +29,23 @@ model User {
   votes                 Vote[]
   userAITranslationInfo UserAITranslationInfo[]
   customAIModels        CustomAIModel[]
-  likePages            LikePage[]
-  followers            Follow[]                @relation("following")
-  following            Follow[]                @relation("follower")
-  comments             Comment[]
+  likePages             LikePage[]
+  followers             Follow[]                @relation("following")
+  following             Follow[]                @relation("follower")
+  comments              Comment[]
 
-  @@map("users")
   @@index([userName])
-  @@index([email])
+  @@map("users")
+}
+
+model UserEmail {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  userId   Int    @unique @map("user_id")
+  user     User   @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("user_emails")
 }
 
 model UserCredential {
@@ -45,18 +54,18 @@ model UserCredential {
   userId   Int    @unique
   user     User   @relation(fields: [userId], references: [id])
 
-  @@map("user_credentials")
   @@index([userId])
+  @@map("user_credentials")
 }
 
 model GeminiApiKey {
-  id            Int    @id @default(autoincrement())
-  apiKey   String @default("") @map("api_key")
-  userId        Int    @unique
-  user          User   @relation(fields: [userId], references: [id])
+  id     Int    @id @default(autoincrement())
+  apiKey String @default("") @map("api_key")
+  userId Int    @unique
+  user   User   @relation(fields: [userId], references: [id])
 
-  @@map("gemini_api_keys")
   @@index([userId])
+  @@map("gemini_api_keys")
 }
 
 model Follow {
@@ -68,9 +77,9 @@ model Follow {
   following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@unique([followerId, followingId])
-  @@map("follows")
   @@index([followerId])
   @@index([followingId])
+  @@map("follows")
 }
 
 model UserAITranslationInfo {
@@ -101,9 +110,9 @@ model UserReadHistory {
   page               Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@unique([userId, pageId])
-  @@map("user_read_history")
   @@index([userId])
   @@index([pageId])
+  @@map("user_read_history")
 }
 
 enum PageStatus {
@@ -130,65 +139,64 @@ model Page {
   likePages             LikePage[]
   comments              Comment[]
 
-  @@map("pages")
   @@index([createdAt])
   @@index([userId])
   @@index([slug])
+  @@map("pages")
 }
 
 model SourceText {
-  id             Int             @id @default(autoincrement())
-  text           String
-  number         Int
-  textAndOccurrenceHash String @map("text_and_occurrence_hash")
-  translateTexts TranslateText[]
-  page           Page            @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  pageId         Int             @map("page_id")
-  createdAt      DateTime        @default(now()) @map("created_at")
-  updatedAt      DateTime        @updatedAt @map("updated_at")
+  id                    Int             @id @default(autoincrement())
+  text                  String
+  number                Int
+  textAndOccurrenceHash String          @map("text_and_occurrence_hash")
+  translateTexts        TranslateText[]
+  page                  Page            @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  pageId                Int             @map("page_id")
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
 
   @@unique([pageId, number])
   @@unique([pageId, textAndOccurrenceHash])
-  @@map("source_texts")
   @@index([pageId])
   @@index([number])
   @@index([textAndOccurrenceHash])
+  @@map("source_texts")
 }
 
 model TranslateText {
-  id             Int        @id @default(autoincrement())
-  locale String
-  text           String
-  sourceTextId   Int        @map("source_text_id")
-  userId         Int        @map("user_id")
-  point          Int        @default(0)
-  isArchived     Boolean    @default(false) @map("is_archived")
-  createdAt      DateTime   @default(now()) @map("created_at")
-  sourceText     SourceText @relation(fields: [sourceTextId], references: [id], onDelete: Cascade)
-  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  votes          Vote[]
+  id           Int        @id @default(autoincrement())
+  locale       String
+  text         String
+  sourceTextId Int        @map("source_text_id")
+  userId       Int        @map("user_id")
+  point        Int        @default(0)
+  isArchived   Boolean    @default(false) @map("is_archived")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  sourceText   SourceText @relation(fields: [sourceTextId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes        Vote[]
 
-  @@map("translate_texts")
   @@index([sourceTextId])
   @@index([userId])
   @@index([locale])
+  @@map("translate_texts")
 }
-
 
 model LikePage {
   id        Int      @id @default(autoincrement())
-  userId    Int?      @map("user_id")
-  guestId   String?   @map("guest_id")
+  userId    Int?     @map("user_id")
+  guestId   String?  @map("guest_id")
   pageId    Int      @map("page_id")
   createdAt DateTime @default(now()) @map("created_at")
-  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@unique([userId, pageId])
   @@unique([guestId, pageId])
-  @@map("like_pages")
   @@index([userId])
   @@index([pageId])
+  @@map("like_pages")
 }
 
 model Genre {
@@ -196,8 +204,8 @@ model Genre {
   name  String      @unique
   pages GenrePage[]
 
-  @@map("genres")
   @@index([name])
+  @@map("genres")
 }
 
 model GenrePage {
@@ -207,9 +215,9 @@ model GenrePage {
   page    Page  @relation(fields: [pageId], references: [id])
 
   @@id([genreId, pageId])
-  @@map("genre_pages")
   @@index([genreId])
   @@index([pageId])
+  @@map("genre_pages")
 }
 
 model Tag {
@@ -217,8 +225,8 @@ model Tag {
   name  String    @unique
   pages TagPage[]
 
-  @@map("tags")
   @@index([name])
+  @@map("tags")
 }
 
 model TagPage {
@@ -228,9 +236,9 @@ model TagPage {
   page   Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@id([tagId, pageId])
-  @@map("tag_pages")
   @@index([tagId])
   @@index([pageId])
+  @@map("tag_pages")
 }
 
 model Vote {
@@ -244,9 +252,9 @@ model Vote {
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([translateTextId, userId])
-  @@map("votes")
   @@index([translateTextId])
   @@index([userId])
+  @@map("votes")
 }
 
 model ApiUsage {
@@ -256,9 +264,9 @@ model ApiUsage {
   amountUsed Int      @map("amount_used")
   user       User     @relation(fields: [userId], references: [id])
 
-  @@map("api_usage")
   @@index([userId])
   @@index([dateTime])
+  @@map("api_usage")
 }
 
 model CustomAIModel {
@@ -278,16 +286,16 @@ model CustomAIModel {
 
 model Comment {
   id        Int      @id @default(autoincrement())
-  text   String
-  userId    Int     @map("user_id")
+  text      String
+  userId    Int      @map("user_id")
   pageId    Int      @map("page_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
-  @@map("comments")
   @@index([userId])
   @@index([pageId])
   @@index([createdAt])
+  @@map("comments")
 }

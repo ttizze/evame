@@ -19,7 +19,6 @@ This is another test.
 			create: {
 				id: 1,
 				userName: "test",
-				email: "test@example.com",
 				displayName: "test",
 				icon: "test",
 			},
@@ -94,7 +93,6 @@ This is another line.
 			create: {
 				id: 2,
 				userName: "editor",
-				email: "editor@example.com",
 				displayName: "editor",
 				icon: "editor",
 			},
@@ -210,7 +208,6 @@ new line
 			create: {
 				id: 3,
 				userName: "variety",
-				email: "variety@example.com",
 				displayName: "variety",
 				icon: "variety",
 			},
@@ -282,7 +279,6 @@ new line
 			create: {
 				id: 3,
 				userName: "variety",
-				email: "variety@example.com",
 				displayName: "variety",
 				icon: "variety",
 			},
