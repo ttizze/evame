@@ -8,6 +8,8 @@ import { useState } from "react";
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
 import i18nServer from "~/i18n.server";
 import { fetchGeminiApiKeyByUserName } from "~/routes/functions/queries.server";
+import { CommentForm } from "~/routes/resources+/comment/components/CommentForm";
+import { CommentList } from "~/routes/resources+/comment/components/CommentList";
 import { LikeButton } from "~/routes/resources+/like-button";
 import { authenticator } from "~/utils/auth.server";
 import { ensureGuestId } from "~/utils/ensureGuestId.server";
@@ -16,6 +18,7 @@ import { ContentWithTranslations } from "./components/ContentWithTranslations";
 import { FloatingControls } from "./components/FloatingControls";
 import { createUserAITranslationInfo } from "./functions/mutations.server";
 import {
+	fetchCommentsWithUser,
 	fetchIsLikedByUser,
 	fetchLatestUserAITranslationInfo,
 	fetchLikeCount,
@@ -116,12 +119,13 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const sourceTitleWithBestTranslationTitle = bestTranslationTitle
 		? `${sourceTitleWithTranslations.sourceText.text} - ${bestTranslationTitle.translateText.text}`
 		: sourceTitleWithTranslations.sourceText.text;
-	const likeCount = await fetchLikeCount(pageWithTranslations.page.id);
-	const isLikedByUser = await fetchIsLikedByUser(
-		pageWithTranslations.page.id,
-		currentUser?.id,
-		guestId,
-	);
+
+	const [likeCount, isLikedByUser, commentsWithUser] = await Promise.all([
+		fetchLikeCount(pageWithTranslations.page.id),
+		fetchIsLikedByUser(pageWithTranslations.page.id, currentUser?.id, guestId),
+		fetchCommentsWithUser(pageWithTranslations.page.id, locale),
+	]);
+
 	const headers = new Headers();
 	headers.set("Set-Cookie", await commitSession(session));
 	return data(
@@ -135,6 +139,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			sourceTitleWithBestTranslationTitle,
 			likeCount,
 			isLikedByUser,
+			commentsWithUser,
 			existLocales: pageWithTranslations.existLocales,
 		},
 		{
@@ -223,6 +228,7 @@ export default function Page() {
 		locale,
 		likeCount,
 		isLikedByUser,
+		commentsWithUser,
 		existLocales,
 	} = useLoaderData<typeof loader>();
 	const actionData = useActionData<typeof action>();
@@ -248,24 +254,38 @@ export default function Page() {
 					showOriginal={showOriginal}
 					showTranslation={showTranslation}
 				/>
+			</article>
+			<div className="space-y-8">
 				<LikeButton
 					liked={isLikedByUser}
 					likeCount={likeCount}
 					slug={pageWithTranslations.page.slug}
 					showCount
 				/>
-			</article>
-			<FloatingControls
-				showOriginal={showOriginal}
-				showTranslation={showTranslation}
-				onToggleOriginal={() => setShowOriginal(!showOriginal)}
-				onToggleTranslation={() => setShowTranslation(!showTranslation)}
-				liked={isLikedByUser}
-				likeCount={likeCount}
-				slug={pageWithTranslations.page.slug}
-				shareUrl={shareUrl}
-				shareTitle={sourceTitleWithBestTranslationTitle}
-			/>
+				<div className="mt-8">
+					<div className="mt-8">
+						<CommentList
+							commentsWithUser={commentsWithUser}
+							currentUserId={currentUser?.id}
+						/>
+					</div>
+					<CommentForm
+						pageId={pageWithTranslations.page.id}
+						currentUserName={currentUser?.userName}
+					/>
+				</div>
+				<FloatingControls
+					showOriginal={showOriginal}
+					showTranslation={showTranslation}
+					onToggleOriginal={() => setShowOriginal(!showOriginal)}
+					onToggleTranslation={() => setShowTranslation(!showTranslation)}
+					liked={isLikedByUser}
+					likeCount={likeCount}
+					slug={pageWithTranslations.page.slug}
+					shareUrl={shareUrl}
+					shareTitle={sourceTitleWithBestTranslationTitle}
+				/>
+			</div>
 		</div>
 	);
 }

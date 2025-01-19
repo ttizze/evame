@@ -1,4 +1,12 @@
 export default {
-	title: "remix-i18next (es)",
-	description: "Un ejemplo de Remix + Vite + remix-i18next",
+	title: "Escribir al mundo",
+	description: "hh",
+	comment: {
+		title: "Comentarios",
+		placeholder: "Escribe un comentario...",
+		post: "Publicar",
+		posting: "Publicando...",
+		delete: "Eliminar",
+		deleted_user: "Usuario eliminado",
+	},
 };

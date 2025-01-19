@@ -74,7 +74,7 @@ export async function fetchPageWithTranslations(
 		include: {
 			translateTexts: {
 				where: { isArchived: false },
-				select: { locale: true }, // 今回はロケールだけわかればOKなので select を絞る
+				select: { locale: true },
 			},
 		},
 	});
@@ -130,6 +130,7 @@ export async function fetchLikeCount(pageId: number) {
 	});
 	return likeCount;
 }
+
 export async function fetchIsLikedByUser(
 	pageId: number,
 	userId?: number,
@@ -149,3 +150,31 @@ export async function fetchIsLikedByUser(
 	}
 	return false;
 }
+
+export async function fetchCommentsWithUser(pageId: number, locale: string) {
+	const comments = await prisma.comment.findMany({
+		where: {
+			pageId,
+		},
+		include: {
+			user: {
+				select: {
+					userName: true,
+					displayName: true,
+					icon: true,
+				},
+			},
+		},
+		orderBy: {
+			createdAt: "asc",
+		},
+	});
+
+	return comments.map((comment) => ({
+		...comment,
+		createdAt: comment.createdAt.toLocaleString(locale),
+		updatedAt: comment.updatedAt.toLocaleString(locale),
+	}));
+}
+
+export type CommentWithUser = Awaited<ReturnType<typeof fetchCommentsWithUser>>;

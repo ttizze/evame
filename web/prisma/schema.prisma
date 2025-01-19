@@ -32,6 +32,7 @@ model User {
   likePages            LikePage[]
   followers            Follow[]                @relation("following")
   following            Follow[]                @relation("follower")
+  comments             Comment[]
 
   @@map("users")
   @@index([userName])
@@ -127,6 +128,7 @@ model Page {
   genrePages            GenrePage[]
   tagPages              TagPage[]
   likePages             LikePage[]
+  comments              Comment[]
 
   @@map("pages")
   @@index([createdAt])
@@ -272,4 +274,20 @@ model CustomAIModel {
   @@unique([userId, name])
   @@index([userId])
   @@index([name])
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  userId    Int     @map("user_id")
+  pageId    Int      @map("page_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+  @@index([userId])
+  @@index([pageId])
+  @@index([createdAt])
 }
