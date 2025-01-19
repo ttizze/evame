@@ -2,17 +2,20 @@ import { prisma } from "~/utils/prisma";
 
 export async function getOrCreateAIUser(name: string): Promise<number> {
 	const user = await prisma.user.upsert({
-		where: { email: `${name}@ai.com` },
+		where: { userName: name },
 		update: {},
 		create: {
-			email: `${name}@ai.com`,
-			isAI: true,
-			icon: "",
 			userName: name,
 			displayName: name,
+			isAI: true,
+			icon: "",
+			userEmail: {
+				create: {
+					email: `${name}@ai.com`,
+				},
+			},
 		},
 	});
-
 	return user.id;
 }
 

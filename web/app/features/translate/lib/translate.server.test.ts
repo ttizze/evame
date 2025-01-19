@@ -24,7 +24,6 @@ describe("translate関数テスト (geminiのみモック)", () => {
 		const user = await prisma.user.create({
 			data: {
 				userName: "testuser",
-				email: "testuser@example.com",
 				displayName: "testuser",
 				icon: "testuser",
 			},

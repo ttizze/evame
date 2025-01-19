@@ -16,7 +16,6 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 10,
 				userName: "htmltester",
-				email: "htmltester@example.com",
 				displayName: "htmltester",
 				icon: "htmltester",
 			},
@@ -86,7 +85,6 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 11,
 				userName: "htmleditor",
-				email: "htmleditor@example.com",
 				displayName: "htmleditor",
 				icon: "htmleditor",
 			},
@@ -182,7 +180,6 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 12,
 				userName: "titleduplicateuser",
-				email: "titleduplicateuser@example.com",
 				displayName: "titleduplicateuser",
 				icon: "titleduplicateuser",
 			},
@@ -268,7 +265,6 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 13,
 				userName: "noedit",
-				email: "noedit@example.com",
 				displayName: "noedit",
 				icon: "noedit",
 			},
@@ -345,7 +341,6 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 14,
 				userName: "imagetester",
-				email: "imagetester@example.com",
 				displayName: "imagetester",
 				icon: "imagetester",
 			},
