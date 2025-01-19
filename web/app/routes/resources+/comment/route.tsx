@@ -6,7 +6,7 @@ import { prisma } from "~/utils/prisma";
 
 export const createCommentSchema = z.object({
 	pageId: z.number(),
-	content: z.string().min(1, "Comment cannot be empty"),
+	text: z.string().min(1, "Comment cannot be empty"),
 	intent: z.literal("create"),
 });
 
@@ -38,7 +38,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		case "create": {
 			const comment = await prisma.comment.create({
 				data: {
-					content: submission.value.content,
+					text: submission.value.text,
 					pageId: submission.value.pageId,
 					userId: currentUser.id,
 				},

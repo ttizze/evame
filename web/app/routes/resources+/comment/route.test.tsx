@@ -36,7 +36,7 @@ describe("resource+/comment/route.ts action", () => {
 		// prisma.create の返り値モック
 		const mockComment = {
 			id: 1,
-			content: "Hello",
+			text: "Hello",
 			pageId: 1,
 			userId: 123,
 			createdAt: new Date(),
@@ -52,7 +52,7 @@ describe("resource+/comment/route.ts action", () => {
 		const formData = new FormData();
 		formData.append("intent", "create");
 		formData.append("pageId", "1");
-		formData.append("content", "Hello");
+		formData.append("text", "Hello");
 
 		const request = new Request("http://test.com/comment", {
 			method: "POST",
@@ -64,7 +64,7 @@ describe("resource+/comment/route.ts action", () => {
 		// 正しい引数で create が呼ばれたか
 		expect(prisma.comment.create).toHaveBeenCalledWith({
 			data: {
-				content: "Hello",
+				text: "Hello",
 				pageId: 1,
 				userId: 123,
 			},
@@ -129,7 +129,7 @@ describe("resource+/comment/route.ts action", () => {
 		vi.mocked(prisma.comment.findUnique).mockResolvedValueOnce({
 			id: 10,
 			userId: 999,
-			content: "Hello",
+			text: "Hello",
 			pageId: 1,
 			createdAt: new Date(),
 			updatedAt: new Date(),
@@ -171,7 +171,7 @@ describe("resource+/comment/route.ts action", () => {
 		vi.mocked(prisma.comment.findUnique).mockResolvedValueOnce({
 			id: 10,
 			userId: 123,
-			content: "Hello",
+			text: "Hello",
 			pageId: 1,
 			createdAt: new Date(),
 			updatedAt: new Date(),
