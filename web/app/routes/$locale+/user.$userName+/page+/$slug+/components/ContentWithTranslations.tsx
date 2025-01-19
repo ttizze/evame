@@ -43,14 +43,12 @@ export function ContentWithTranslations({
 				{sourceTitleWithTranslations && (
 					<SourceTextAndTranslationSection
 						sourceTextWithTranslations={sourceTitleWithTranslations}
-						isPublished={pageWithTranslations.page.isPublished}
+						showLockIcon={pageWithTranslations.page.status === "DRAFT"}
 						elements={sourceTitleWithTranslations.sourceText.text}
 						showOriginal={showOriginal}
 						showTranslation={showTranslation}
 						currentUserName={currentUserName}
-						isOwner={
-							pageWithTranslations.sanitizedUser.userName === currentUserName
-						}
+						isOwner={pageWithTranslations.user.userName === currentUserName}
 						slug={pageWithTranslations.page.slug}
 					/>
 				)}
@@ -61,23 +59,21 @@ export function ContentWithTranslations({
 
 			<div className="flex items-center not-prose">
 				<LocaleLink
-					to={`/user/${pageWithTranslations.sanitizedUser.userName}`}
+					to={`/user/${pageWithTranslations.user.userName}`}
 					className="flex items-center mr-2 !no-underline hover:text-gray-700"
 				>
 					<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
 						<AvatarImage
-							src={pageWithTranslations.sanitizedUser.icon}
-							alt={pageWithTranslations.sanitizedUser.displayName}
+							src={pageWithTranslations.user.icon}
+							alt={pageWithTranslations.user.displayName}
 						/>
 						<AvatarFallback>
-							{pageWithTranslations.sanitizedUser.displayName
-								.charAt(0)
-								.toUpperCase()}
+							{pageWithTranslations.user.displayName.charAt(0).toUpperCase()}
 						</AvatarFallback>
 					</Avatar>
 					<div className="flex flex-col">
 						<span className="text-sm">
-							{pageWithTranslations.sanitizedUser.displayName}
+							{pageWithTranslations.user.displayName}
 						</span>
 						<span className="text-xs text-gray-500">
 							{pageWithTranslations.page.createdAt}

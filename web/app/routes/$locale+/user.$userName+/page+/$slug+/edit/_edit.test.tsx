@@ -62,7 +62,7 @@ describe("EditPage", () => {
 					create: [
 						{
 							slug: "test-page",
-							isPublished: false,
+							status: "DRAFT",
 							content:
 								"<p data-number='1'>hello</p><p data-number='2'>world</p><p data-number='3'>This is a test content</p>",
 							sourceTexts: {

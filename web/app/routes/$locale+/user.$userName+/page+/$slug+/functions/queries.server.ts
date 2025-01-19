@@ -1,5 +1,4 @@
 import { prisma } from "~/utils/prisma";
-import { sanitizeUser } from "~/utils/sanitizeUser";
 import type { PageWithTranslations } from "../types";
 import { getBestTranslation } from "../utils/getBestTranslation";
 
@@ -89,14 +88,14 @@ export async function fetchPageWithTranslations(
 			...pageWithoutUser,
 			createdAt: page.createdAt.toLocaleString(locale),
 		},
-		sanitizedUser: sanitizeUser(user),
+		user,
 		tagPages: page.tagPages,
 		sourceTextWithTranslations: page.sourceTexts.map((sourceText) => {
 			const translationsWithVotes = sourceText.translateTexts.map(
 				(translateText) => ({
 					translateText: {
 						...translateText,
-						user: sanitizeUser(translateText.user),
+						user: translateText.user,
 					},
 					vote: translateText.votes[0] || null,
 				}),

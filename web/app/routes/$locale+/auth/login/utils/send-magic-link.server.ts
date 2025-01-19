@@ -1,10 +1,8 @@
+import type { User } from "@prisma/client";
 import type { SendEmailFunction } from "remix-auth-email-link";
-import type { SanitizedUser } from "~/types";
 import { resendSendEmail } from "~/utils/resend.server";
 
-export const sendMagicLink: SendEmailFunction<SanitizedUser> = async (
-	options,
-) => {
+export const sendMagicLink: SendEmailFunction<User> = async (options) => {
 	const emailHtml = `
 		<div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
 			<h1 style="color: #333; text-align: center;">Welcome to Evame</h1>

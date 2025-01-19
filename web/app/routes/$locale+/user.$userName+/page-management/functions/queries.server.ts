@@ -1,4 +1,6 @@
+import { PageStatus } from "@prisma/client";
 import { prisma } from "~/utils/prisma";
+
 export const getDbUser = async (userId: number) => {
 	return await prisma.user.findUnique({ where: { id: userId } });
 };
@@ -13,7 +15,9 @@ export async function fetchPaginatedOwnPages(
 	const skip = (page - 1) * pageSize;
 	const whereClause = {
 		userId,
-		isArchived: false,
+		status: {
+			in: [PageStatus.PUBLIC, PageStatus.DRAFT],
+		},
 		sourceTexts: {
 			some: {
 				number: 0,
@@ -38,7 +42,7 @@ export async function fetchPaginatedOwnPages(
 				slug: true,
 				updatedAt: true,
 				createdAt: true,
-				isPublished: true,
+				status: true,
 				sourceTexts: {
 					where: {
 						number: 0,

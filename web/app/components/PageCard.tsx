@@ -1,4 +1,3 @@
-import { Lock } from "lucide-react";
 import { LocaleLink } from "~/components/LocaleLink";
 import { TagList } from "~/components/TagList";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -38,15 +37,19 @@ export function PageCard({
 						editPath={`${pageLink}/edit`}
 						onTogglePublic={() => onTogglePublicStatus(pageCard.id)}
 						onDelete={() => onArchive(pageCard.id)}
-						isPublished={pageCard.isPublished}
+						status={pageCard.status}
 					/>
 				</div>
 			)}
 			<CardHeader>
 				<LocaleLink to={pageLink} className="block">
-					<CardTitle className="flex items-center pr-3 break-all overflow-wrap-anywhere">
-						{!pageCard.isPublished && <Lock className="h-4 w-4 mr-2" />}
+					<CardTitle className="flex flex-col pr-3 break-all overflow-wrap-anywhere">
 						{pageCard.sourceTexts[0].text}
+						{pageCard.sourceTexts[0].translateTexts.length > 0 && (
+							<span className="text-sm text-gray-600">
+								{pageCard.sourceTexts[0].translateTexts[0].text}
+							</span>
+						)}
 					</CardTitle>
 					<CardDescription>{pageCard.createdAt}</CardDescription>
 				</LocaleLink>

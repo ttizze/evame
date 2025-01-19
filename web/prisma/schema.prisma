@@ -12,18 +12,16 @@ model User {
   email                 String                  @unique
   userName              String                  @unique @map("user_name")
   displayName           String                  @map("display_name")
-  password              String?
   icon                  String
   profile               String                  @default("")
   plan                  String                  @default("free")
   totalPoints           Int                     @default(0) @map("total_points")
   isAI                  Boolean                 @default(false) @map("is_ai")
   provider              String                  @default("Credentials")
-  geminiApiKey          String?                 @map("gemini_api_key")
-  openAIApiKey          String?                 @map("openai_api_key")
-  claudeApiKey          String?                 @map("claude_api_key")
   createdAt             DateTime                @default(now()) @map("created_at")
   updatedAt             DateTime                @updatedAt @map("updated_at")
+  credential           UserCredential?
+  geminiApiKey          GeminiApiKey?
   pages                 Page[]
   userReadHistory       UserReadHistory[]
   apiUsages             ApiUsage[]
@@ -39,6 +37,26 @@ model User {
   @@map("users")
   @@index([userName])
   @@index([email])
+}
+
+model UserCredential {
+  id       Int    @id @default(autoincrement())
+  password String
+  userId   Int    @unique
+  user     User   @relation(fields: [userId], references: [id])
+
+  @@map("user_credentials")
+  @@index([userId])
+}
+
+model GeminiApiKey {
+  id            Int    @id @default(autoincrement())
+  apiKey   String @default("") @map("api_key")
+  userId        Int    @unique
+  user          User   @relation(fields: [userId], references: [id])
+
+  @@map("gemini_api_keys")
+  @@index([userId])
 }
 
 model Follow {
@@ -88,13 +106,18 @@ model UserReadHistory {
   @@index([pageId])
 }
 
+enum PageStatus {
+  DRAFT
+  PUBLIC
+  ARCHIVE
+}
+
 model Page {
   id                    Int                     @id @default(autoincrement())
   slug                  String                  @unique
   content               String
   sourceLanguage        String                  @default("unknown")
-  isPublished           Boolean                 @default(false) @map("is_published")
-  isArchived            Boolean                 @default(false) @map("is_archived")
+  status                PageStatus              @default(DRAFT)
   createdAt             DateTime                @default(now()) @map("created_at")
   updatedAt             DateTime                @updatedAt @map("updated_at")
   user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)

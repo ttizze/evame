@@ -1,13 +1,10 @@
 // app/routes/search/functions/queries.server.ts
 
 import type { Tag } from "@prisma/client";
-import {
-	type PageCardLocalizedType,
-	pageCardSelect,
-} from "~/routes/$locale+/functions/queries.server";
-import type { SanitizedUser } from "~/types";
+import type { User } from "@prisma/client";
+import type { PageCardLocalizedType } from "~/routes/$locale+/functions/queries.server";
+import { createPageCardSelect } from "~/routes/$locale+/functions/queries.server";
 import { prisma } from "~/utils/prisma";
-import { sanitizeUser } from "~/utils/sanitizeUser";
 
 /** タイトル検索 */
 export async function searchTitle(
@@ -19,6 +16,7 @@ export async function searchTitle(
 	pages: PageCardLocalizedType[];
 	totalCount: number;
 }> {
+	const pageCardSelect = createPageCardSelect(locale);
 	const [pages, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
@@ -30,8 +28,7 @@ export async function searchTitle(
 						number: 0,
 					},
 				},
-				isArchived: false,
-				isPublished: true,
+				status: "PUBLIC",
 			},
 			select: pageCardSelect,
 		}),
@@ -43,8 +40,7 @@ export async function searchTitle(
 						number: 0,
 					},
 				},
-				isArchived: false,
-				isPublished: true,
+				status: "PUBLIC",
 			},
 		}),
 	]);
@@ -69,6 +65,7 @@ export async function searchByTag(
 	pages: PageCardLocalizedType[];
 	totalCount: number;
 }> {
+	const pageCardSelect = createPageCardSelect(locale);
 	const [pages, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
@@ -81,8 +78,7 @@ export async function searchByTag(
 						},
 					},
 				},
-				isArchived: false,
-				isPublished: true,
+				status: "PUBLIC",
 			},
 			select: pageCardSelect,
 		}),
@@ -95,8 +91,7 @@ export async function searchByTag(
 						},
 					},
 				},
-				isArchived: false,
-				isPublished: true,
+				status: "PUBLIC",
 			},
 		}),
 	]);
@@ -121,22 +116,21 @@ export async function searchContent(
 	pages: PageCardLocalizedType[];
 	totalCount: number;
 }> {
+	const pageCardSelect = createPageCardSelect(locale);
 	const [pages, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
 			take,
 			where: {
 				content: { contains: query, mode: "insensitive" },
-				isArchived: false,
-				isPublished: true,
+				status: "PUBLIC",
 			},
 			select: pageCardSelect,
 		}),
 		prisma.page.count({
 			where: {
 				content: { contains: query, mode: "insensitive" },
-				isArchived: false,
-				isPublished: true,
+				status: "PUBLIC",
 			},
 		}),
 	]);
@@ -183,7 +177,7 @@ export async function searchUsers(
 	skip: number,
 	take: number,
 ): Promise<{
-	users: SanitizedUser[];
+	users: User[];
 	totalCount: number;
 }> {
 	const [users, count] = await Promise.all([
@@ -200,5 +194,5 @@ export async function searchUsers(
 			},
 		}),
 	]);
-	return { users: users.map(sanitizeUser), totalCount: count };
+	return { users, totalCount: count };
 }

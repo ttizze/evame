@@ -1,3 +1,4 @@
+import type { User } from "@prisma/client";
 import { data } from "@remix-run/node";
 import type { ActionFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
@@ -5,12 +6,11 @@ import { Search } from "lucide-react";
 import { BaseHeaderLayout } from "~/components/BaseHeaderLayout";
 import { NavLocaleLink } from "~/components/NavLocaleLink";
 import { StartButton } from "~/components/StartButton";
-import type { SanitizedUser } from "~/types";
 import { authenticator } from "~/utils/auth.server";
 import { NewPageButton } from "./components/NewPageButton";
 
 interface HeaderProps {
-	currentUser: SanitizedUser | null;
+	currentUser: User | null;
 	locale: string;
 }
 
