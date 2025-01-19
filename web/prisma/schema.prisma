@@ -278,7 +278,7 @@ model CustomAIModel {
 
 model Comment {
   id        Int      @id @default(autoincrement())
-  content   String
+  text   String
   userId    Int     @map("user_id")
   pageId    Int      @map("page_id")
   createdAt DateTime @default(now()) @map("created_at")
