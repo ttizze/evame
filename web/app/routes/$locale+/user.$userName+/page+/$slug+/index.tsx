@@ -123,7 +123,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const [likeCount, isLikedByUser, commentsWithUser] = await Promise.all([
 		fetchLikeCount(pageWithTranslations.page.id),
 		fetchIsLikedByUser(pageWithTranslations.page.id, currentUser?.id, guestId),
-		fetchCommentsWithUser(pageWithTranslations.page.id),
+		fetchCommentsWithUser(pageWithTranslations.page.id, locale),
 	]);
 
 	const headers = new Headers();
@@ -254,43 +254,38 @@ export default function Page() {
 					showOriginal={showOriginal}
 					showTranslation={showTranslation}
 				/>
-				<div className="space-y-8">
-					<LikeButton
-						liked={isLikedByUser}
-						likeCount={likeCount}
-						slug={pageWithTranslations.page.slug}
-						showCount
-					/>
+			</article>
+			<div className="space-y-8">
+				<LikeButton
+					liked={isLikedByUser}
+					likeCount={likeCount}
+					slug={pageWithTranslations.page.slug}
+					showCount
+				/>
+				<div className="mt-8">
 					<div className="mt-8">
-						<div className="mt-8">
-							<CommentList
-								commentsWithUser={commentsWithUser}
-								currentUserId={currentUser?.id}
-								onDelete={() => {
-									window.location.reload();
-								}}
-							/>
-						</div>
-						<CommentForm
-							pageId={pageWithTranslations.page.id}
-							onSuccess={() => {
-								window.location.reload();
-							}}
+						<CommentList
+							commentsWithUser={commentsWithUser}
+							currentUserId={currentUser?.id}
 						/>
 					</div>
+					<CommentForm
+						pageId={pageWithTranslations.page.id}
+						currentUserName={currentUser?.userName}
+					/>
 				</div>
-			</article>
-			<FloatingControls
-				showOriginal={showOriginal}
-				showTranslation={showTranslation}
-				onToggleOriginal={() => setShowOriginal(!showOriginal)}
-				onToggleTranslation={() => setShowTranslation(!showTranslation)}
-				liked={isLikedByUser}
-				likeCount={likeCount}
-				slug={pageWithTranslations.page.slug}
-				shareUrl={shareUrl}
-				shareTitle={sourceTitleWithBestTranslationTitle}
-			/>
+				<FloatingControls
+					showOriginal={showOriginal}
+					showTranslation={showTranslation}
+					onToggleOriginal={() => setShowOriginal(!showOriginal)}
+					onToggleTranslation={() => setShowTranslation(!showTranslation)}
+					liked={isLikedByUser}
+					likeCount={likeCount}
+					slug={pageWithTranslations.page.slug}
+					shareUrl={shareUrl}
+					shareTitle={sourceTitleWithBestTranslationTitle}
+				/>
+			</div>
 		</div>
 	);
 }

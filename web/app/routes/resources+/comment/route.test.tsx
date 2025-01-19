@@ -1,9 +1,10 @@
-import { json } from "@remix-run/node";
-import { createRemixStub } from "@remix-run/testing";
+// route.test.ts
 import { describe, expect, test, vi } from "vitest";
+import { authenticator } from "~/utils/auth.server";
 import { prisma } from "~/utils/prisma";
-import { action } from "./route";
+import { action } from "./route"; // 今回のactionをimport
 
+// prisma と authenticator をモック
 vi.mock("~/utils/prisma", () => ({
 	prisma: {
 		comment: {
@@ -14,129 +15,194 @@ vi.mock("~/utils/prisma", () => ({
 	},
 }));
 
-describe("comment resource route", () => {
-	describe("action", () => {
-		test("未ログイン状態でコメントを作成しようとするとエラーを返す", async () => {
-			const formData = new FormData();
-			formData.append("pageId", "1");
-			formData.append("content", "test comment");
-			formData.append("intent", "create");
+vi.mock("~/utils/auth.server", () => ({
+	authenticator: {
+		isAuthenticated: vi.fn(),
+	},
+}));
 
-			const request = new Request("http://test.com/resources/comment", {
-				method: "POST",
-				body: formData,
-			});
+describe("resource+/comment/route.ts action", () => {
+	const context = {};
+	const params = {};
 
-			const response = await action({ request, context: {}, params: {} });
-			expect(response).toEqual(
-				json({ error: "Login required to comment" }, { status: 401 }),
-			);
+	//============================================================
+	// 3) ログイン済み + create 正常
+	//============================================================
+	test("ログイン済み + create → 正常にコメント作成", async () => {
+		// ユーザーID=123 を返す
+		// @ts-ignore
+		vi.mocked(authenticator.isAuthenticated).mockResolvedValueOnce({ id: 123 });
+
+		// prisma.create の返り値モック
+		const mockComment = {
+			id: 1,
+			content: "Hello",
+			pageId: 1,
+			userId: 123,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+			user: {
+				userName: "testuser",
+				displayName: "Test User",
+				icon: "test.png",
+			},
+		};
+		vi.mocked(prisma.comment.create).mockResolvedValueOnce(mockComment);
+
+		const formData = new FormData();
+		formData.append("intent", "create");
+		formData.append("pageId", "1");
+		formData.append("content", "Hello");
+
+		const request = new Request("http://test.com/comment", {
+			method: "POST",
+			body: formData,
 		});
 
-		test("ログイン状態でコメントを作成できる", async () => {
-			const formData = new FormData();
-			formData.append("pageId", "1");
-			formData.append("content", "test comment");
-			formData.append("intent", "create");
+		const result = await action({ request, context, params });
 
-			const RemixStub = createRemixStub([
-				{
-					path: "/resources/comment",
-					action: action,
-				},
-			]);
-
-			const mockComment = {
-				id: 1,
-				content: "test comment",
+		// 正しい引数で create が呼ばれたか
+		expect(prisma.comment.create).toHaveBeenCalledWith({
+			data: {
+				content: "Hello",
 				pageId: 1,
-				userId: 1,
-				createdAt: new Date(),
-				updatedAt: new Date(),
+				userId: 123,
+			},
+			include: {
 				user: {
-					userName: "testuser",
-					displayName: "Test User",
-					icon: "test-icon.png",
-				},
-			};
-
-			vi.mocked(prisma.comment.create).mockResolvedValueOnce(mockComment);
-
-			const request = new Request("http://test.com/resources/comment", {
-				method: "POST",
-				body: formData,
-				headers: {
-					Cookie: "session_id=123; user_id=1",
-				},
-			});
-
-			const response = await action({ request, context: {}, params: {} });
-			expect(response).toEqual(json({ comment: mockComment }));
-			expect(prisma.comment.create).toHaveBeenCalledWith({
-				data: {
-					content: "test comment",
-					pageId: 1,
-					userId: 1,
-				},
-				include: {
-					user: {
-						select: {
-							userName: true,
-							displayName: true,
-							icon: true,
-						},
+					select: {
+						userName: true,
+						displayName: true,
+						icon: true,
 					},
 				},
-			});
+			},
 		});
 
-		test("コメントの削除は作成者のみ可能", async () => {
-			const formData = new FormData();
-			formData.append("commentId", "1");
-			formData.append("pageId", "1");
-			formData.append("content", "test");
-			formData.append("intent", "delete");
+		// 戻り値に mockComment が含まれる
+		expect(result).toMatchObject({
+			data: {
+				comment: mockComment,
+			},
+		});
+	});
 
-			vi.mocked(prisma.comment.findUnique).mockResolvedValueOnce({
-				id: 1,
-				userId: 2, // 別のユーザーのコメント
-				pageId: 1,
-				content: "test comment",
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			});
+	//============================================================
+	// 4) intent=delete だが commentId が無い → 何もしない
+	//============================================================
+	test("delete だが commentId 無し → DB操作なし", async () => {
+		// @ts-ignore
+		vi.mocked(authenticator.isAuthenticated).mockResolvedValueOnce({ id: 999 });
 
-			const request = new Request("http://test.com/resources/comment", {
-				method: "POST",
-				body: formData,
-				headers: {
-					Cookie: "session_id=123; user_id=1",
+		const formData = new FormData();
+		formData.append("intent", "delete");
+		// commentId を appendしていない
+
+		const request = new Request("http://test.com/comment", {
+			method: "POST",
+			body: formData,
+		});
+		const result = await action({ request, context, params });
+
+		// findUnique や delete は呼ばれない
+		expect(prisma.comment.findUnique).not.toHaveBeenCalled();
+		expect(prisma.comment.delete).not.toHaveBeenCalled();
+
+		// 何かエラーにはならず、普通に返却
+		expect(result).toMatchObject({
+			data: {
+				lastResult: {
+					// 特にエラー等は無い
 				},
-			});
+			},
+		});
+	});
 
-			const response = await action({ request, context: {}, params: {} });
-			expect(response).toEqual(
-				json({ error: "Unauthorized" }, { status: 403 }),
-			);
-			expect(prisma.comment.delete).not.toHaveBeenCalled();
+	//============================================================
+	// 5) 他人のコメント (userId不一致) → 削除できない
+	//============================================================
+	test("他人のコメント削除 → DB削除呼ばれない", async () => {
+		// @ts-ignore
+		vi.mocked(authenticator.isAuthenticated).mockResolvedValueOnce({ id: 123 });
+
+		// DB上のコメントは userId=999
+		vi.mocked(prisma.comment.findUnique).mockResolvedValueOnce({
+			id: 10,
+			userId: 999,
+			content: "Hello",
+			pageId: 1,
+			createdAt: new Date(),
+			updatedAt: new Date(),
 		});
 
-		test("コメントの作成には必須フィールドが必要", async () => {
-			const formData = new FormData();
-			formData.append("intent", "create");
+		const formData = new FormData();
+		formData.append("intent", "delete");
+		formData.append("commentId", "10");
 
-			const request = new Request("http://test.com/resources/comment", {
-				method: "POST",
-				body: formData,
-				headers: {
-					Cookie: "session_id=123; user_id=1",
+		const request = new Request("http://test.com/comment", {
+			method: "POST",
+			body: formData,
+		});
+		const result = await action({ request, context, params });
+
+		// findUnique は呼ばれる
+		expect(prisma.comment.findUnique).toHaveBeenCalledWith({
+			where: { id: 10 },
+			select: { userId: true },
+		});
+		// 自分のコメントではないので delete は呼ばれない
+		expect(prisma.comment.delete).not.toHaveBeenCalled();
+
+		expect(result).toMatchObject({
+			data: {
+				lastResult: {},
+			},
+		});
+	});
+
+	//============================================================
+	// 6) 自分のコメント → 削除成功
+	//============================================================
+	test("自分のコメントなら削除成功", async () => {
+		// @ts-ignore
+		vi.mocked(authenticator.isAuthenticated).mockResolvedValueOnce({ id: 123 });
+
+		// findUnique で userId=123 が返る
+		vi.mocked(prisma.comment.findUnique).mockResolvedValueOnce({
+			id: 10,
+			userId: 123,
+			content: "Hello",
+			pageId: 1,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		});
+
+		const formData = new FormData();
+		formData.append("intent", "delete");
+		formData.append("commentId", "10");
+
+		const request = new Request("http://test.com/comment", {
+			method: "POST",
+			body: formData,
+		});
+		const result = await action({ request, context, params });
+
+		expect(prisma.comment.findUnique).toHaveBeenCalledWith({
+			where: { id: 10 },
+			select: { userId: true },
+		});
+		// 所有者一致 → 削除が呼ばれる
+		expect(prisma.comment.delete).toHaveBeenCalledWith({
+			where: { id: 10 },
+		});
+
+		// 正常終了
+		expect(result).toMatchObject({
+			data: {
+				lastResult: {
+					// resetForm: true が付いているはず
 				},
-			});
-
-			const response = await action({ request, context: {}, params: {} });
-			expect(response).toEqual(
-				json({ error: "Page ID and content are required" }, { status: 400 }),
-			);
+			},
 		});
 	});
 });

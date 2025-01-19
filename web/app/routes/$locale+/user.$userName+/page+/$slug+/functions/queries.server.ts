@@ -151,7 +151,7 @@ export async function fetchIsLikedByUser(
 	return false;
 }
 
-export async function fetchCommentsWithUser(pageId: number) {
+export async function fetchCommentsWithUser(pageId: number, locale: string) {
 	const comments = await prisma.comment.findMany({
 		where: {
 			pageId,
@@ -166,14 +166,14 @@ export async function fetchCommentsWithUser(pageId: number) {
 			},
 		},
 		orderBy: {
-			createdAt: "desc",
+			createdAt: "asc",
 		},
 	});
 
 	return comments.map((comment) => ({
 		...comment,
-		createdAt: comment.createdAt.toISOString(),
-		updatedAt: comment.updatedAt.toISOString(),
+		createdAt: comment.createdAt.toLocaleString(locale),
+		updatedAt: comment.updatedAt.toLocaleString(locale),
 	}));
 }
 

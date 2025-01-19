@@ -1,31 +1,46 @@
+import { parseWithZod } from "@conform-to/zod";
 import { type ActionFunctionArgs, data } from "@remix-run/node";
+import { z } from "zod";
 import { authenticator } from "~/utils/auth.server";
 import { prisma } from "~/utils/prisma";
+
+export const createCommentSchema = z.object({
+	pageId: z.number(),
+	content: z.string().min(1, "Comment cannot be empty"),
+	intent: z.literal("create"),
+});
+
+export const deleteCommentSchema = z.object({
+	commentId: z.number(),
+	intent: z.literal("delete"),
+});
+
+export const schema = z.discriminatedUnion("intent", [
+	createCommentSchema,
+	deleteCommentSchema,
+]);
 
 export async function action({ request }: ActionFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
 
+	const submission = parseWithZod(await request.formData(), {
+		schema,
+	});
 	if (!currentUser) {
-		return data({ error: "Login required to comment" }, { status: 401 });
+		return data({
+			lastResult: submission.reply({ formErrors: ["Unauthorized"] }),
+		});
 	}
-
-	const formData = await request.formData();
-	const pageId = formData.get("pageId");
-	const content = formData.get("content");
-	const intent = formData.get("intent");
-	const commentId = formData.get("commentId");
-
-	if (!pageId || !content) {
-		return data({ error: "Page ID and content are required" }, { status: 400 });
+	if (submission.status !== "success") {
+		return data({ lastResult: submission.reply() });
 	}
-
-	switch (intent) {
+	switch (submission.value.intent) {
 		case "create": {
 			const comment = await prisma.comment.create({
 				data: {
-					content: content.toString(),
-					pageId: Number(pageId.toString()),
-					userId: Number(currentUser.id),
+					content: submission.value.content,
+					pageId: submission.value.pageId,
+					userId: currentUser.id,
 				},
 				include: {
 					user: {
@@ -38,35 +53,34 @@ export async function action({ request }: ActionFunctionArgs) {
 				},
 			});
 
-			return data({ comment });
+			return data({
+				comment,
+				lastResult: submission.reply({ resetForm: true }),
+			});
 		}
 
 		case "delete": {
-			if (!commentId) {
-				return data({ error: "Comment ID is required" }, { status: 400 });
+			if (!submission.value.commentId) {
+				return data({ lastResult: submission.reply() });
 			}
 
 			const comment = await prisma.comment.findUnique({
-				where: { id: Number(commentId.toString()) },
+				where: { id: submission.value.commentId },
 				select: { userId: true },
 			});
 
-			if (!comment) {
-				return data({ error: "Comment not found" }, { status: 404 });
-			}
-
-			if (comment.userId !== Number(currentUser.id)) {
-				return data({ error: "Unauthorized" }, { status: 403 });
+			if (!comment || comment.userId !== currentUser.id) {
+				return data({ lastResult: submission.reply() });
 			}
 
 			await prisma.comment.delete({
-				where: { id: Number(commentId.toString()) },
+				where: { id: submission.value.commentId },
 			});
 
-			return data({ success: true });
+			return data({ lastResult: submission.reply({ resetForm: true }) });
 		}
 
 		default:
-			return data({ error: "Invalid intent" }, { status: 400 });
+			return data({ lastResult: submission.reply() });
 	}
 }

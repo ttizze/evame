@@ -54,7 +54,7 @@ export function FloatingControls({
 	return (
 		<div
 			className={cn(
-				"fixed bottom-4 right-4 flex gap-3 transition-all duration-300 transform",
+				"fixed bottom-4 right-4 lg:right-8 xl:right-[15%] 2xl:right-[20%] flex gap-3 transition-all duration-300 transform",
 				isVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0",
 			)}
 		>
