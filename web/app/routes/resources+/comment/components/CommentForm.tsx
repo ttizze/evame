@@ -21,7 +21,7 @@ export function CommentForm({
 		shouldValidate: "onInput",
 		defaultValue: {
 			pageId: pageId,
-			content: "",
+			text: "",
 		},
 	});
 
@@ -36,7 +36,7 @@ export function CommentForm({
 				<input type="hidden" name="pageId" value={pageId} />
 				<input type="hidden" name="intent" value="create" />
 				<Textarea
-					{...getTextareaProps(fields.content)}
+					{...getTextareaProps(fields.text)}
 					placeholder="comment"
 					className={`min-h-[100px] ${!currentUserName && "bg-muted"}`}
 					disabled={!currentUserName}
@@ -52,10 +52,8 @@ export function CommentForm({
 					{fetcher.state !== "idle" ? "posting" : "post"}
 				</Button>
 			</fetcher.Form>
-			{fields.content.errors && (
-				<p className="text-sm text-red-500">
-					{fields.content.errors?.join(", ")}
-				</p>
+			{fields.text.errors && (
+				<p className="text-sm text-red-500">{fields.text.errors?.join(", ")}</p>
 			)}
 		</>
 	);

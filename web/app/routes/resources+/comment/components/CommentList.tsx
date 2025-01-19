@@ -72,7 +72,7 @@ export function CommentList({
 							</div>
 						</div>
 					</div>
-					<div className="mt-2 whitespace-pre-wrap">{comment.content}</div>
+					<div className="mt-2 whitespace-pre-wrap">{comment.text}</div>
 				</div>
 			))}
 		</div>
