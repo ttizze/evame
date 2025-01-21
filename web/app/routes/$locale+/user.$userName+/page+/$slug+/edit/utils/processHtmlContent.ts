@@ -1,3 +1,4 @@
+import type { PageStatus } from "@prisma/client";
 import type { Element, Properties, Root, RootContent, Text } from "hast";
 import rehypeParse from "rehype-parse";
 import rehypeRaw from "rehype-raw";
@@ -16,7 +17,6 @@ import {
 	upsertPageWithHtml,
 } from "../functions/mutations.server";
 import { generateHashForText } from "./generateHashForText";
-
 const BLOCK_LEVEL_TAGS = new Set([
 	"p",
 	"h1",
@@ -26,21 +26,39 @@ const BLOCK_LEVEL_TAGS = new Set([
 	"h5",
 	"h6",
 	"li",
+	"blockquote",
+	"div",
+	"section",
+	"article",
 	"td",
 	"th",
+	// 必要に応じて追加
 ]);
 
+/**
+ * 与えられたノード配下のテキストをすべて連結して返す。
+ */
 function extractTextFromHAST(node: Parent): string {
 	let result = "";
 	visit(node, "text", (textNode: RootContent) => {
 		if (textNode.type === "text") {
 			const trimmedText = (textNode as Text).value.trim();
 			if (trimmedText) {
+				// 空白で連結
 				result += result ? ` ${trimmedText}` : trimmedText;
 			}
 		}
 	});
 	return result;
+}
+
+/**
+ * ノードがブロックレベルの子要素を一つでも持つかどうかを判定する。
+ */
+function hasBlockLevelChild(node: Element): boolean {
+	return node.children.some((child) => {
+		return child.type === "element" && BLOCK_LEVEL_TAGS.has(child.tagName);
+	});
 }
 
 export function rehypeAddDataId(
@@ -59,9 +77,9 @@ export function rehypeAddDataId(
 
 			const blocks: BlockInfo[] = [];
 
-			// 全ての"element"ノードを訪問
+			// 全ての element ノードを訪問
 			visit(tree, "element", (node: Element) => {
-				if (BLOCK_LEVEL_TAGS.has(node.tagName)) {
+				if (BLOCK_LEVEL_TAGS.has(node.tagName) && !hasBlockLevelChild(node)) {
 					const blockText = extractTextFromHAST(node);
 					if (!blockText) return;
 
@@ -90,9 +108,10 @@ export function rehypeAddDataId(
 				number: 0,
 			});
 
+			// DB 側のテキスト一覧を同期して ID を取得
 			const hashToId = await synchronizePageSourceTexts(pageId, allTextsForDb);
 
-			// 各ブロック要素を<span data-id="...">で子要素全体を包む
+			// 各ブロック要素を <span data-source-text-id="..."> で子要素を包む
 			for (const block of blocks) {
 				const sourceTextId = hashToId.get(block.textAndOccurrenceHash);
 				if (!sourceTextId) continue;
@@ -112,28 +131,26 @@ export function rehypeAddDataId(
 	};
 }
 
-//編集後も翻訳との結びつきを維持するために､textAndOccurrenceHashをキーにしてsourceTextsを更新する
-//表示時はhtmlに埋め込まれたdata-source-text-idをkeyにしてsourceTextsを取得する
+// 例） HTML → HAST → MDAST → remark → HAST → HTML の流れで使う想定
 export async function processHtmlContent(
 	title: string,
 	htmlInput: string,
 	pageSlug: string,
 	userId: number,
 	sourceLanguage: string,
-	isPublished: boolean,
+	status: PageStatus,
 ) {
-	// HTML入力に対応するpageレコードを作成・更新
+	// HTML 入力に対応する page レコードを作成/更新
 	const page = await upsertPageWithHtml(
 		pageSlug,
 		htmlInput,
 		userId,
 		sourceLanguage,
-		isPublished,
+		status,
 	);
-	// HTML → HAST → MDAST → remarkAddDataId適用 → HTMLへの変換
 
 	const file = await unified()
-		.use(rehypeParse, { fragment: true }) // HTMLをHASTに
+		.use(rehypeParse, { fragment: true }) // HTML→HAST
 		.use(rehypeRemark) // HAST→MDAST
 		.use(remarkGfm) // GFM拡張
 		.use(remarkRehype, { allowDangerousHtml: true }) // MDAST→HAST
@@ -149,7 +166,7 @@ export async function processHtmlContent(
 		htmlContent,
 		userId,
 		sourceLanguage,
-		isPublished,
+		status,
 	);
 	return page;
 }

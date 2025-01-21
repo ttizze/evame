@@ -1,7 +1,8 @@
 import type { UserAITranslationInfo } from "@prisma/client";
-import { Hash, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useHydrated } from "remix-utils/use-hydrated";
 import { LocaleLink } from "~/components/LocaleLink";
+import { TagList } from "~/components/TagList";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import type {
 	PageWithTranslations,
@@ -18,6 +19,7 @@ interface ContentWithTranslationsProps {
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
 	locale: string;
+	existLocales: string[];
 	showOriginal: boolean;
 	showTranslation: boolean;
 }
@@ -29,6 +31,7 @@ export function ContentWithTranslations({
 	hasGeminiApiKey,
 	userAITranslationInfo,
 	locale,
+	existLocales,
 	showOriginal = true,
 	showTranslation = true,
 }: ContentWithTranslationsProps) {
@@ -40,7 +43,7 @@ export function ContentWithTranslations({
 				{sourceTitleWithTranslations && (
 					<SourceTextAndTranslationSection
 						sourceTextWithTranslations={sourceTitleWithTranslations}
-						isPublished={pageWithTranslations.page.isPublished}
+						showLockIcon={pageWithTranslations.page.status === "DRAFT"}
 						elements={sourceTitleWithTranslations.sourceText.text}
 						showOriginal={showOriginal}
 						showTranslation={showTranslation}
@@ -50,26 +53,16 @@ export function ContentWithTranslations({
 					/>
 				)}
 			</h1>
-			<div className="flex flex-wrap gap-2 pt-2 pb-3">
-				{pageWithTranslations.tagPages.map((tagPage) => (
-					<div
-						key={tagPage.tag.id}
-						className="flex items-center gap-1 px-3 h-[32px] bg-secondary rounded-full text-sm text-secondary-foreground"
-					>
-						<button type="button" className="hover:text-destructive ml-1">
-							<Hash className="w-3 h-3" />
-						</button>
-						<span>{tagPage.tag.name}</span>
-					</div>
-				))}
-			</div>
+			<TagList
+				tag={pageWithTranslations.tagPages.map((tagPage) => tagPage.tag)}
+			/>
 
 			<div className="flex items-center not-prose">
 				<LocaleLink
 					to={`/user/${pageWithTranslations.user.userName}`}
 					className="flex items-center mr-2 !no-underline hover:text-gray-700"
 				>
-					<Avatar className="w-12 h-12 flex-shrink-0 mr-3 ">
+					<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
 						<AvatarImage
 							src={pageWithTranslations.user.icon}
 							alt={pageWithTranslations.user.displayName}
@@ -92,7 +85,9 @@ export function ContentWithTranslations({
 				pageId={pageWithTranslations.page.id}
 				userAITranslationInfo={userAITranslationInfo}
 				hasGeminiApiKey={hasGeminiApiKey}
+				pageLocale={pageWithTranslations.page.sourceLanguage}
 				locale={locale}
+				existLocales={existLocales}
 			/>
 			{!isHydrated ? (
 				<div className="w-full h-full flex items-center justify-center">

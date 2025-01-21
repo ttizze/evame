@@ -32,7 +32,7 @@ export function TranslationSection({
 		: bestTranslationWithVote.translateText.text;
 
 	return (
-		<div className={"group relative"}>
+		<span className={"group relative"}>
 			<span
 				className="notranslate inline-block py-2 text-gray-700 dark:text-gray-200"
 				onMouseUp={(e) => {
@@ -47,11 +47,11 @@ export function TranslationSection({
 				<>
 					<div className="flex items-center justify-end">
 						<LocaleLink
-							to={`/user/${bestTranslationWithVote?.user.userName}`}
+							to={`/user/${bestTranslationWithVote?.translateText.user.userName}`}
 							className="!no-underline mr-2"
 						>
 							<p className="text-sm text-gray-500 text-right flex justify-end items-center">
-								by: {bestTranslationWithVote?.user.displayName}
+								by: {bestTranslationWithVote?.translateText.user.displayName}
 							</p>
 						</LocaleLink>
 						<VoteButtons translationWithVote={bestTranslationWithVote} />
@@ -63,6 +63,6 @@ export function TranslationSection({
 					/>
 				</>
 			)}
-		</div>
+		</span>
 	);
 }

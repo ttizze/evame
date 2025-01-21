@@ -1,5 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import type { ActionFunctionArgs } from "@remix-run/node";
+import { data } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { Link } from "@remix-run/react";
 import { useFetcher } from "@remix-run/react";
@@ -28,34 +29,44 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from "~/components/ui/pagination";
+import i18nServer from "~/i18n.server";
 import { fetchUserByUserName } from "~/routes/functions/queries.server";
+import { isFollowing } from "~/routes/resources+/follow-button/db/queries.server";
+import { FollowButton } from "~/routes/resources+/follow-button/route";
 import { authenticator } from "~/utils/auth.server";
-import { sanitizeUser } from "~/utils/sanitizeUser";
-import { fetchPaginatedPagesWithInfo } from "../functions/queries.server";
+import { ensureGuestId } from "~/utils/ensureGuestId.server";
+import { commitSession } from "~/utils/session.server";
+import { fetchPaginatedPublicPagesWithInfo } from "../functions/queries.server";
 import { DeletePageDialog } from "./components/DeletePageDialog";
+import { FollowListDialog } from "./components/FollowListDialog";
 import {
 	archivePage,
 	togglePagePublicStatus,
 } from "./functions/mutations.server";
+import {
+	fetchFollowerList,
+	fetchFollowingList,
+	getFollowCounts,
+} from "./functions/queries.server";
 import { fetchPageById } from "./functions/queries.server";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Profile" }];
 	}
-	return [{ title: data.sanitizedUser.displayName }];
+	return [{ title: data.pageOwner.displayName }];
 };
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
-	const locale = params.locale;
+	let locale = params.locale;
 	if (!locale) {
-		throw new Response("Missing locale", { status: 400 });
+		locale = (await i18nServer.getLocale(request)) || "en";
 	}
 	const { userName } = params;
 	if (!userName) throw new Error("Username is required");
 
-	const nonSanitizedUser = await fetchUserByUserName(userName);
-	if (!nonSanitizedUser) {
+	const pageOwner = await fetchUserByUserName(userName);
+	if (!pageOwner) {
 		throw new Response("Not Found", { status: 404 });
 	}
 
@@ -64,27 +75,46 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const pageSize = 9;
 
 	const currentUser = await authenticator.isAuthenticated(request);
+	const { session, guestId } = await ensureGuestId(request);
+
 	const isOwner = currentUser?.userName === userName;
 
 	const { pagesWithInfo, totalPages, currentPage } =
-		await fetchPaginatedPagesWithInfo({
+		await fetchPaginatedPublicPagesWithInfo({
 			page,
 			pageSize,
 			currentUserId: currentUser?.id,
-			pageOwnerId: nonSanitizedUser.id,
+			currentGuestId: guestId,
+			pageOwnerId: pageOwner.id,
 			onlyUserOwn: true,
 			locale,
 		});
 	if (!pagesWithInfo) throw new Response("Not Found", { status: 404 });
-	const sanitizedUser = await sanitizeUser(nonSanitizedUser);
+	const followCounts = await getFollowCounts(pageOwner.id);
+	const followerList = await fetchFollowerList(pageOwner.id);
+	const followingList = await fetchFollowingList(pageOwner.id);
+	const isCurrentUserFollowing = currentUser
+		? await isFollowing(currentUser.id, pageOwner.id)
+		: false;
+	const headers = new Headers();
+	headers.set("Set-Cookie", await commitSession(session));
 
-	return {
-		pagesWithInfo,
-		isOwner,
-		totalPages,
-		currentPage,
-		sanitizedUser,
-	};
+	return data(
+		{
+			pagesWithInfo,
+			isOwner,
+			totalPages,
+			currentPage,
+			pageOwner,
+			followCounts,
+			isCurrentUserFollowing,
+			followerList,
+			followingList,
+		},
+		{
+			headers,
+		},
+	);
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -116,11 +146,22 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function UserPage() {
-	const { pagesWithInfo, isOwner, totalPages, currentPage, sanitizedUser } =
-		useLoaderData<typeof loader>();
+	const {
+		pagesWithInfo,
+		isOwner,
+		totalPages,
+		currentPage,
+		pageOwner,
+		followCounts,
+		isCurrentUserFollowing,
+		followerList,
+		followingList,
+	} = useLoaderData<typeof loader>();
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [pageToDelete, setPageToDelete] = useState<number | null>(null);
 	const [searchParams, setSearchParams] = useSearchParams();
+	const [openFollowers, setOpenFollowers] = useState<boolean>(false);
+	const [openFollowing, setOpenFollowing] = useState<boolean>(false);
 
 	const fetcher = useFetcher();
 
@@ -157,14 +198,14 @@ export default function UserPage() {
 				<CardHeader className="pb-4">
 					<div className="flex w-full flex-col md:flex-row">
 						<div>
-							<Link to={`${sanitizedUser.icon}`}>
+							<Link to={`${pageOwner.icon}`}>
 								<Avatar className="w-20 h-20 md:w-24 md:h-24">
 									<AvatarImage
-										src={sanitizedUser.icon}
-										alt={sanitizedUser.displayName}
+										src={pageOwner.icon}
+										alt={pageOwner.displayName}
 									/>
 									<AvatarFallback>
-										{sanitizedUser.displayName.charAt(0).toUpperCase()}
+										{pageOwner.displayName.charAt(0).toUpperCase()}
 									</AvatarFallback>
 								</Avatar>
 							</Link>
@@ -172,15 +213,55 @@ export default function UserPage() {
 						<div className="mt-2 md:mt-0 md:ml-4 flex items-center justify-between w-full">
 							<div>
 								<CardTitle className="text-xl md:text-2xl font-bold">
-									{sanitizedUser.displayName}
+									{pageOwner.displayName}
 								</CardTitle>
-								<CardDescription className="text-sm text-gray-500">
-									@{sanitizedUser.userName}
-								</CardDescription>
+								<div>
+									<CardDescription className="text-sm text-gray-500">
+										@{pageOwner.userName}
+									</CardDescription>
+									<div className="flex gap-4 mt-2 text-sm text-gray-500">
+										<span
+											onClick={() => setOpenFollowing(true)}
+											onKeyDown={(e) => {
+												if (e.key === "Enter") {
+													setOpenFollowing(true);
+												}
+											}}
+											className="cursor-pointer"
+										>
+											{followCounts.following} following
+										</span>
+										<span
+											onClick={() => setOpenFollowers(true)}
+											onKeyDown={(e) => {
+												if (e.key === "Enter") {
+													setOpenFollowers(true);
+												}
+											}}
+											className="cursor-pointer"
+										>
+											{followCounts.followers} followers
+										</span>
+									</div>
+									<FollowListDialog
+										open={openFollowing}
+										onOpenChange={setOpenFollowing}
+										users={followingList.map((item) => item.following)}
+										type="following"
+									/>
+
+									{/* フォロワー一覧ダイアログ */}
+									<FollowListDialog
+										open={openFollowers}
+										onOpenChange={setOpenFollowers}
+										users={followerList.map((item) => item.follower)}
+										type="followers"
+									/>
+								</div>
 							</div>
 
-							{isOwner && (
-								<LocaleLink to={`/user/${sanitizedUser.userName}/edit`}>
+							{isOwner ? (
+								<LocaleLink to={`/user/${pageOwner.userName}/edit`}>
 									<Button
 										variant="secondary"
 										className="flex items-center rounded-full"
@@ -189,6 +270,12 @@ export default function UserPage() {
 										<span className="ml-2 text-sm">Edit Profile</span>
 									</Button>
 								</LocaleLink>
+							) : (
+								<FollowButton
+									targetUserId={pageOwner.id}
+									isFollowing={isCurrentUserFollowing}
+									className="rounded-full"
+								/>
 							)}
 						</div>
 					</div>
@@ -196,7 +283,7 @@ export default function UserPage() {
 
 				<CardContent className="mt-4">
 					<Linkify options={{ className: "underline" }}>
-						{sanitizedUser.profile}
+						{pageOwner.profile}
 					</Linkify>
 				</CardContent>
 			</Card>
@@ -206,8 +293,8 @@ export default function UserPage() {
 					<PageCard
 						key={page.id}
 						pageCard={page}
-						pageLink={`/user/${sanitizedUser.userName}/page/${page.slug}`}
-						userLink={`/user/${sanitizedUser.userName}`}
+						pageLink={`/user/${pageOwner.userName}/page/${page.slug}`}
+						userLink={`/user/${pageOwner.userName}`}
 						showOwnerActions={isOwner}
 						onTogglePublicStatus={togglePagePublicStatus}
 						onArchive={handleArchive}

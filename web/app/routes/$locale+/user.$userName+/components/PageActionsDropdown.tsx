@@ -1,3 +1,4 @@
+import type { PageStatus } from "@prisma/client";
 import { MoreVertical } from "lucide-react";
 import { NavLocaleLink } from "~/components/NavLocaleLink";
 import { Button } from "~/components/ui/button";
@@ -7,12 +8,11 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-
 interface PageActionsDropdownProps {
 	editPath: string;
 	onTogglePublic: () => void;
 	onDelete: () => void;
-	isPublished: boolean;
+	status: PageStatus;
 	className?: string;
 }
 
@@ -20,7 +20,7 @@ export function PageActionsDropdown({
 	editPath,
 	onTogglePublic,
 	onDelete,
-	isPublished,
+	status,
 	className = "",
 }: PageActionsDropdownProps) {
 	return (
@@ -39,7 +39,7 @@ export function PageActionsDropdown({
 					<NavLocaleLink to={editPath}>Edit</NavLocaleLink>
 				</DropdownMenuItem>
 				<DropdownMenuItem onSelect={onTogglePublic}>
-					{isPublished ? "Make Private" : "Make Public"}
+					{status === "PUBLIC" ? "Make Private" : "Make Public"}
 				</DropdownMenuItem>
 				<DropdownMenuItem onSelect={onDelete}>Delete</DropdownMenuItem>
 			</DropdownMenuContent>

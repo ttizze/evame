@@ -1,18 +1,28 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
+import { data } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
 import { Heart } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { authenticator } from "~/utils/auth.server";
+import { ensureGuestId } from "~/utils/ensureGuestId.server";
+import { commitSession } from "~/utils/session.server";
 import { toggleLike } from "./functions/mutations.server";
 
 export async function action({ params, request }: ActionFunctionArgs) {
-	const user = await authenticator.isAuthenticated(request, {
-		failureRedirect: "/auth/login",
-	});
+	const currentUser = await authenticator.isAuthenticated(request);
+	const { session, guestId } = await ensureGuestId(request);
+
 	const formData = await request.formData();
 	const slug = formData.get("slug") as string;
-	const liked = await toggleLike(user.id, slug);
-	return { liked };
+	const liked = await toggleLike(slug, currentUser?.id, guestId);
+	const headers = new Headers();
+	headers.set("Set-Cookie", await commitSession(session));
+	return data(
+		{ liked },
+		{
+			headers,
+		},
+	);
 }
 
 type LikeButtonProps = {

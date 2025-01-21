@@ -1,4 +1,4 @@
-import type { User } from "@prisma/client";
+import type { GeminiApiKey, User } from "@prisma/client";
 import { prisma } from "~/utils/prisma";
 
 export async function fetchUserByUserName(
@@ -9,9 +9,23 @@ export async function fetchUserByUserName(
 	});
 }
 
+export async function fetchGeminiApiKeyByUserName(
+	userName: string,
+): Promise<GeminiApiKey | null> {
+	const user = await prisma.user.findUnique({
+		where: { userName },
+	});
+	if (!user) {
+		return null;
+	}
+	return await prisma.geminiApiKey.findUnique({
+		where: { userId: user.id },
+	});
+}
+
 export async function fetchAllPublishedPages() {
 	return prisma.page.findMany({
-		where: { isPublished: true, isArchived: false },
+		where: { status: "PUBLIC" },
 		select: {
 			id: true,
 			slug: true,

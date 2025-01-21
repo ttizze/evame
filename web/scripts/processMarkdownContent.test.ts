@@ -19,7 +19,6 @@ This is another test.
 			create: {
 				id: 1,
 				userName: "test",
-				email: "test@example.com",
 				displayName: "test",
 				icon: "test",
 			},
@@ -31,7 +30,7 @@ This is another test.
 			pageSlug,
 			user.id,
 			"en",
-			true,
+			"PUBLIC",
 		);
 
 		// ページがDBに存在し、HTMLが変換されているか確認
@@ -94,7 +93,6 @@ This is another line.
 			create: {
 				id: 2,
 				userName: "editor",
-				email: "editor@example.com",
 				displayName: "editor",
 				icon: "editor",
 			},
@@ -108,7 +106,7 @@ This is another line.
 			pageSlug,
 			user.id,
 			"en",
-			true,
+			"PUBLIC",
 		);
 		const dbPage1 = await prisma.page.findUnique({
 			where: { slug: pageSlug },
@@ -143,7 +141,7 @@ new line
 			pageSlug,
 			user.id,
 			"en",
-			true,
+			"PUBLIC",
 		);
 		const dbPage2 = await prisma.page.findUnique({
 			where: { slug: pageSlug },
@@ -210,7 +208,6 @@ new line
 			create: {
 				id: 3,
 				userName: "variety",
-				email: "variety@example.com",
 				displayName: "variety",
 				icon: "variety",
 			},
@@ -223,7 +220,7 @@ new line
 			pageSlug,
 			user.id,
 			"en",
-			true,
+			"PUBLIC",
 		);
 
 		const dbPage = await prisma.page.findUnique({
@@ -282,7 +279,6 @@ new line
 			create: {
 				id: 3,
 				userName: "variety",
-				email: "variety@example.com",
 				displayName: "variety",
 				icon: "variety",
 			},
@@ -295,7 +291,7 @@ new line
 			pageSlug,
 			user.id,
 			"en",
-			true,
+			"PUBLIC",
 		);
 
 		const dbPage = await prisma.page.findUnique({

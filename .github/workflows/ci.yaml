@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  ci-check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        ports:
+          - 5433:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: testdb
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 'latest'
+
+      - name: Create .env
+        run: |
+          cd web
+          echo "TIPTAP_PRO_API_KEY=${{ secrets.TIPTAP_PRO_API_KEY }}" >> .env
+          echo "DATABASE_URL=postgresql://postgres:password@localhost:5433/testdb?schema=public" >> .env
+
+      - name: Install dependencies
+        run: |
+          cd web
+          bun install
+
+      - name: Run Biome
+        run: |
+          bun x biome ci .
+
+      - name: Run Tests
+        run: |
+          cd web
+          bunx prisma migrate dev && bunx prisma migrate deploy
+          bunx vitest
+

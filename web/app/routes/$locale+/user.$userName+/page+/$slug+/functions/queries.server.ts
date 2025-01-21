@@ -1,5 +1,4 @@
 import { prisma } from "~/utils/prisma";
-import { sanitizeUser } from "~/utils/sanitizeUser";
 import type { PageWithTranslations } from "../types";
 import { getBestTranslation } from "../utils/getBestTranslation";
 
@@ -34,8 +33,8 @@ export async function fetchPageWithSourceTexts(pageId: number) {
 
 export async function fetchPageWithTranslations(
 	slug: string,
-	currentUserId: number | null,
 	locale: string,
+	currentUserId?: number,
 ): Promise<PageWithTranslations | null> {
 	const page = await prisma.page.findFirst({
 		where: { slug },
@@ -48,9 +47,9 @@ export async function fetchPageWithTranslations(
 						include: {
 							user: true,
 							votes: {
-								where: currentUserId ? { userId: currentUserId } : undefined,
-								orderBy: { updatedAt: "desc" },
-								take: 1,
+								where: currentUserId
+									? { userId: currentUserId }
+									: { userId: -1 },
 							},
 						},
 						orderBy: [{ point: "desc" }, { createdAt: "desc" }],
@@ -67,18 +66,37 @@ export async function fetchPageWithTranslations(
 
 	if (!page) return null;
 
+	const titleText = await prisma.sourceText.findFirst({
+		where: {
+			pageId: page.id,
+			number: 0,
+		},
+		include: {
+			translateTexts: {
+				where: { isArchived: false },
+				select: { locale: true },
+			},
+		},
+	});
+
+	const existLocales = titleText
+		? Array.from(new Set(titleText.translateTexts.map((t) => t.locale)))
+		: [];
+	const { user, ...pageWithoutUser } = page;
 	return {
 		page: {
-			...page,
+			...pageWithoutUser,
 			createdAt: page.createdAt.toLocaleString(locale),
 		},
-		user: sanitizeUser(page.user),
+		user,
 		tagPages: page.tagPages,
 		sourceTextWithTranslations: page.sourceTexts.map((sourceText) => {
 			const translationsWithVotes = sourceText.translateTexts.map(
 				(translateText) => ({
-					translateText,
-					user: sanitizeUser(translateText.user),
+					translateText: {
+						...translateText,
+						user: translateText.user,
+					},
 					vote: translateText.votes[0] || null,
 				}),
 			);
@@ -91,23 +109,8 @@ export async function fetchPageWithTranslations(
 				bestTranslationWithVote,
 			};
 		}),
+		existLocales,
 	};
-}
-
-export async function getLastReadDataNumber(userId: number, pageId: number) {
-	const readHistory = await prisma.userReadHistory.findUnique({
-		where: {
-			userId_pageId: {
-				userId: userId,
-				pageId: pageId,
-			},
-		},
-		select: {
-			lastReadDataNumber: true,
-		},
-	});
-
-	return readHistory?.lastReadDataNumber ?? 0;
 }
 
 export async function fetchLatestUserAITranslationInfo(
@@ -127,9 +130,51 @@ export async function fetchLikeCount(pageId: number) {
 	});
 	return likeCount;
 }
-export async function fetchIsLikedByUser(pageId: number, userId: number) {
-	const like = await prisma.likePage.findFirst({
-		where: { pageId, userId },
-	});
-	return !!like;
+
+export async function fetchIsLikedByUser(
+	pageId: number,
+	userId?: number,
+	guestId?: string,
+) {
+	if (userId) {
+		const like = await prisma.likePage.findFirst({
+			where: { pageId, userId },
+		});
+		return !!like;
+	}
+	if (guestId) {
+		const like = await prisma.likePage.findFirst({
+			where: { pageId, guestId },
+		});
+		return !!like;
+	}
+	return false;
 }
+
+export async function fetchCommentsWithUser(pageId: number, locale: string) {
+	const comments = await prisma.comment.findMany({
+		where: {
+			pageId,
+		},
+		include: {
+			user: {
+				select: {
+					userName: true,
+					displayName: true,
+					icon: true,
+				},
+			},
+		},
+		orderBy: {
+			createdAt: "asc",
+		},
+	});
+
+	return comments.map((comment) => ({
+		...comment,
+		createdAt: comment.createdAt.toLocaleString(locale),
+		updatedAt: comment.updatedAt.toLocaleString(locale),
+	}));
+}
+
+export type CommentWithUser = Awaited<ReturnType<typeof fetchCommentsWithUser>>;

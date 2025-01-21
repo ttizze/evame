@@ -1,5 +1,5 @@
-import { Lock } from "lucide-react";
 import { LocaleLink } from "~/components/LocaleLink";
+import { TagList } from "~/components/TagList";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
 	Card,
@@ -11,6 +11,7 @@ import {
 import type { PageCardLocalizedType } from "~/routes/$locale+/functions/queries.server";
 import { PageActionsDropdown } from "~/routes/$locale+/user.$userName+/components/PageActionsDropdown";
 import { LikeButton } from "~/routes/resources+/like-button";
+
 type PageCardProps = {
 	pageCard: PageCardLocalizedType;
 	pageLink: string;
@@ -36,18 +37,23 @@ export function PageCard({
 						editPath={`${pageLink}/edit`}
 						onTogglePublic={() => onTogglePublicStatus(pageCard.id)}
 						onDelete={() => onArchive(pageCard.id)}
-						isPublished={pageCard.isPublished}
+						status={pageCard.status}
 					/>
 				</div>
 			)}
 			<CardHeader>
 				<LocaleLink to={pageLink} className="block">
-					<CardTitle className="flex items-center pr-3 break-all overflow-wrap-anywhere">
-						{!pageCard.isPublished && <Lock className="h-4 w-4 mr-2" />}
+					<CardTitle className="flex flex-col pr-3 break-all overflow-wrap-anywhere">
 						{pageCard.sourceTexts[0].text}
+						{pageCard.sourceTexts[0].translateTexts.length > 0 && (
+							<span className="text-sm text-gray-600">
+								{pageCard.sourceTexts[0].translateTexts[0].text}
+							</span>
+						)}
 					</CardTitle>
 					<CardDescription>{pageCard.createdAt}</CardDescription>
 				</LocaleLink>
+				<TagList tag={pageCard.tagPages.map((tagPage) => tagPage.tag)} />
 			</CardHeader>
 			<CardContent>
 				<div className="flex justify-between items-center">

@@ -3,15 +3,13 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { data } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { z } from "zod";
-import { fetchUserByUserName } from "~/routes/functions/queries.server";
+import i18nServer from "~/i18n.server";
+import { fetchGeminiApiKeyByUserName } from "~/routes/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
+import { togglePagePublicStatus } from "../functions/mutations.server";
 import { PageManagementTab } from "./components/PageManagementTab";
-import {
-	archivePages,
-	togglePagePublicStatus,
-} from "./functions/mutations.server";
+import { archivePages } from "./functions/mutations.server";
 import { fetchPaginatedOwnPages } from "./functions/queries.server";
-
 const archiveSchema = z.object({
 	pageIds: z.string().transform((val) => val.split(",").map(Number)),
 	intent: z.literal("archive"),
@@ -27,11 +25,11 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		failureRedirect: "/auth/login",
 	});
 
-	const nonSanitizedUser = await fetchUserByUserName(currentUser.userName);
-	const hasGeminiApiKey = !!nonSanitizedUser?.geminiApiKey;
-	const locale = params.locale;
+	const geminiApiKey = await fetchGeminiApiKeyByUserName(currentUser.userName);
+	const hasGeminiApiKey = !!geminiApiKey?.apiKey;
+	let locale = params.locale;
 	if (!locale) {
-		throw new Response("Missing locale", { status: 400 });
+		locale = (await i18nServer.getLocale(request)) || "en";
 	}
 	const url = new URL(request.url);
 	const page = Number(url.searchParams.get("page") || "1");

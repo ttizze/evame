@@ -8,7 +8,6 @@ export async function updateUser(
 		userName: string;
 		profile: string | undefined;
 		icon: string;
-		geminiApiKey: string | undefined;
 	},
 ) {
 	return prisma.$transaction(async (tx) => {

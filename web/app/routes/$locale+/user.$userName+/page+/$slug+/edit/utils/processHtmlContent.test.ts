@@ -16,7 +16,6 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 10,
 				userName: "htmltester",
-				email: "htmltester@example.com",
 				displayName: "htmltester",
 				icon: "htmltester",
 			},
@@ -24,7 +23,14 @@ describe("processHtmlContent", () => {
 		});
 
 		// HTMLを処理
-		await processHtmlContent(title, htmlInput, pageSlug, user.id, "en", true);
+		await processHtmlContent(
+			title,
+			htmlInput,
+			pageSlug,
+			user.id,
+			"en",
+			"PUBLIC",
+		);
 
 		// ページがDBに存在し、HTMLが変換されているか確認
 		const dbPage = await prisma.page.findUnique({
@@ -69,8 +75,8 @@ describe("processHtmlContent", () => {
       <p>This is a line.</p>
       <p>This is another line.</p>
       <ul>
-        <li>List item 1</li>
-        <li>List item 2</li>
+        <li><p>List item 1</p></li>
+        <li><p>List item 2</p></li>
       </ul>
     `;
 
@@ -79,7 +85,6 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 11,
 				userName: "htmleditor",
-				email: "htmleditor@example.com",
 				displayName: "htmleditor",
 				icon: "htmleditor",
 			},
@@ -93,7 +98,7 @@ describe("processHtmlContent", () => {
 			pageSlug,
 			user.id,
 			"en",
-			true,
+			"PUBLIC",
 		);
 
 		const dbPage1 = await prisma.page.findUnique({
@@ -116,8 +121,8 @@ describe("processHtmlContent", () => {
       <p>This is another line.</p>
       <p>new line</p>
       <ol>
-        <li>List item 1</li>
-        <li>List item 2</li>
+        <li><p>List item 1</p></li>
+        <li><p>List item 2</p></li>
       </ol>
     `;
 
@@ -128,7 +133,7 @@ describe("processHtmlContent", () => {
 			pageSlug,
 			user.id,
 			"en",
-			true,
+			"PUBLIC",
 		);
 
 		const dbPage2 = await prisma.page.findUnique({
@@ -175,7 +180,6 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 12,
 				userName: "titleduplicateuser",
-				email: "titleduplicateuser@example.com",
 				displayName: "titleduplicateuser",
 				icon: "titleduplicateuser",
 			},
@@ -183,7 +187,14 @@ describe("processHtmlContent", () => {
 		});
 
 		// HTMLを処理
-		await processHtmlContent(title, htmlInput, pageSlug, user.id, "en", true);
+		await processHtmlContent(
+			title,
+			htmlInput,
+			pageSlug,
+			user.id,
+			"en",
+			"PUBLIC",
+		);
 
 		// ページがDBに存在し、HTMLが変換されているか確認
 		const dbPage = await prisma.page.findUnique({
@@ -254,7 +265,6 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 13,
 				userName: "noedit",
-				email: "noedit@example.com",
 				displayName: "noedit",
 				icon: "noedit",
 			},
@@ -262,7 +272,14 @@ describe("processHtmlContent", () => {
 		});
 
 		// 初回処理
-		await processHtmlContent(title, htmlInput, pageSlug, user.id, "en", true);
+		await processHtmlContent(
+			title,
+			htmlInput,
+			pageSlug,
+			user.id,
+			"en",
+			"PUBLIC",
+		);
 
 		const dbPage1 = await prisma.page.findUnique({
 			where: { slug: pageSlug },
@@ -279,7 +296,14 @@ describe("processHtmlContent", () => {
 		expect(originalTextIdMap.size).toBeGreaterThanOrEqual(3);
 
 		// 変更なしで再度同一HTMLを処理
-		await processHtmlContent(title, htmlInput, pageSlug, user.id, "en", true);
+		await processHtmlContent(
+			title,
+			htmlInput,
+			pageSlug,
+			user.id,
+			"en",
+			"PUBLIC",
+		);
 
 		const dbPage2 = await prisma.page.findUnique({
 			where: { slug: pageSlug },
@@ -317,14 +341,20 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 14,
 				userName: "imagetester",
-				email: "imagetester@example.com",
 				displayName: "imagetester",
 				icon: "imagetester",
 			},
 			update: {},
 		});
 
-		await processHtmlContent(title, htmlInput, pageSlug, user.id, "en", true);
+		await processHtmlContent(
+			title,
+			htmlInput,
+			pageSlug,
+			user.id,
+			"en",
+			"PUBLIC",
+		);
 
 		const dbPage = await prisma.page.findUnique({
 			where: { slug: pageSlug },

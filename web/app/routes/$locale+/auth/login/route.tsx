@@ -50,7 +50,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		}
 		case "SignInWithGoogle":
 			return authenticator.authenticate("google", request, {
-				successRedirect: "/home",
+				successRedirect: "/",
 				failureRedirect: "/auth/login",
 			});
 		default:

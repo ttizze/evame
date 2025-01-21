@@ -3,7 +3,7 @@ export type LocaleInfo = {
 	name: string;
 };
 
-export const supportedLocales: LocaleInfo[] = [
+export const supportedLocaleOptions: LocaleInfo[] = [
 	{ code: "ab", name: "Аҧсуа" },
 	{ code: "aa", name: "Afaraf" },
 	{ code: "af", name: "Afrikaans" },

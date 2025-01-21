@@ -23,7 +23,8 @@ import { Footer } from "~/routes/resources+/footer";
 import { Header } from "~/routes/resources+/header";
 import tailwind from "~/tailwind.css?url";
 import { authenticator } from "~/utils/auth.server";
-
+import { ensureGuestId } from "~/utils/ensureGuestId.server";
+import { commitSession } from "~/utils/session.server";
 export async function loader({ request }: LoaderFunctionArgs) {
 	const isDevelopment = process.env.NODE_ENV === "development";
 
@@ -31,6 +32,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		? ""
 		: (process.env.GOOGLE_ANALYTICS_ID ?? "");
 	const currentUser = await authenticator.isAuthenticated(request);
+	const { session, guestId } = await ensureGuestId(request);
 	const locale = (await i18nServer.getLocale(request)) || "en";
 	const url = new URL(request.url);
 	const pathSegments: string[] = url.pathname.split("/").filter(Boolean);
@@ -39,6 +41,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		return redirect(url.toString());
 	}
 	const currentLocale = pathSegments[0];
+	const headers = new Headers();
+	headers.set(
+		"Set-Cookie",
+		(await commitSession(session)) +
+			(await localeCookie.serialize(currentLocale)),
+	);
+
 	return data(
 		{
 			isDevelopment,
@@ -47,7 +56,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			gaTrackingId,
 		},
 		{
-			headers: { "Set-Cookie": await localeCookie.serialize(currentLocale) },
+			headers,
 		},
 	);
 }
@@ -162,7 +171,7 @@ function CommonLayout({
 	children,
 	isSpecialLayout = true,
 }: { children: React.ReactNode; isSpecialLayout: boolean }) {
-	const { currentUser } = useLoaderData<typeof loader>();
+	const { currentUser, locale } = useLoaderData<typeof loader>();
 
 	if (isSpecialLayout) {
 		return <>{children}</>;
@@ -170,7 +179,7 @@ function CommonLayout({
 
 	return (
 		<>
-			<Header currentUser={currentUser} />
+			<Header currentUser={currentUser} locale={locale} />
 			<main className="mb-5 mt-3 md:mt-5 flex-grow tracking-wider">
 				<div className="mx-auto px-2 max-w-4xl">{children}</div>
 			</main>

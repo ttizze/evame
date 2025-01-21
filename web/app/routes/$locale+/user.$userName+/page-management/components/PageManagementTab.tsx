@@ -1,19 +1,13 @@
+import type { PageStatus } from "@prisma/client";
 import { useSearchParams } from "@remix-run/react";
 import { useFetcher } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { LocaleLink } from "~/components/LocaleLink";
+import { PaginationBar } from "~/components/PaginationBar";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Input } from "~/components/ui/input";
-import {
-	Pagination,
-	PaginationContent,
-	PaginationItem,
-	PaginationLink,
-	PaginationNext,
-	PaginationPrevious,
-} from "~/components/ui/pagination";
 import {
 	Table,
 	TableBody,
@@ -25,6 +19,7 @@ import {
 import { DeletePageDialog } from "../../components/DeletePageDialog";
 import { PageActionsDropdown } from "../../components/PageActionsDropdown";
 import type { PageWithTitle } from "../types";
+
 interface PageManagementTabProps {
 	pagesWithTitle: PageWithTitle[];
 	totalPages: number;
@@ -115,8 +110,8 @@ export function PageManagementTab({
 		);
 	};
 
-	const getStatusBadge = (isPublished: boolean) => {
-		if (isPublished) {
+	const getStatusBadge = (status: PageStatus) => {
+		if (status === "PUBLIC") {
 			return <Badge variant="default">Published</Badge>;
 		}
 		return <Badge variant="outline">Private</Badge>;
@@ -189,9 +184,7 @@ export function PageManagementTab({
 										{pageWithTitle.title}
 									</LocaleLink>
 								</TableCell>
-								<TableCell>
-									{getStatusBadge(pageWithTitle.isPublished)}
-								</TableCell>
+								<TableCell>{getStatusBadge(pageWithTitle.status)}</TableCell>
 								<TableCell>{pageWithTitle.updatedAt}</TableCell>
 								<TableCell>
 									<PageActionsDropdown
@@ -201,7 +194,7 @@ export function PageManagementTab({
 											setSelectedPages([pageWithTitle.id]);
 											setDialogOpen(true);
 										}}
-										isPublished={pageWithTitle.isPublished}
+										status={pageWithTitle.status}
 									/>
 								</TableCell>
 							</TableRow>
@@ -211,36 +204,11 @@ export function PageManagementTab({
 			</div>
 
 			<div className="flex justify-center mt-4">
-				<Pagination>
-					<PaginationContent>
-						{currentPage > 1 && (
-							<PaginationItem>
-								<PaginationPrevious
-									onClick={() => handlePageChange(currentPage - 1)}
-								/>
-							</PaginationItem>
-						)}
-						{Array.from({ length: totalPages }, (_, i) => i + 1).map(
-							(pageNum) => (
-								<PaginationItem key={pageNum}>
-									<PaginationLink
-										onClick={() => handlePageChange(pageNum)}
-										isActive={pageNum === currentPage}
-									>
-										{pageNum}
-									</PaginationLink>
-								</PaginationItem>
-							),
-						)}
-						{currentPage < totalPages && (
-							<PaginationItem>
-								<PaginationNext
-									onClick={() => handlePageChange(currentPage + 1)}
-								/>
-							</PaginationItem>
-						)}
-					</PaginationContent>
-				</Pagination>
+				<PaginationBar
+					totalPages={totalPages}
+					currentPage={currentPage}
+					onPageChange={handlePageChange}
+				/>
 			</div>
 
 			<DeletePageDialog

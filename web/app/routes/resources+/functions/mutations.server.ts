@@ -1,12 +1,24 @@
 import { json } from "@remix-run/node";
+import { encrypt } from "~/utils/encryption.server";
 import { prisma } from "~/utils/prisma";
+
 export const updateGeminiApiKey = async (
 	userId: number,
 	geminiApiKey: string,
 ) => {
-	await prisma.user.update({
-		where: { id: userId },
-		data: { geminiApiKey },
+	const encryptedKey = encrypt(geminiApiKey);
+
+	await prisma.geminiApiKey.upsert({
+		where: {
+			userId: userId,
+		},
+		create: {
+			userId: userId,
+			apiKey: encryptedKey,
+		},
+		update: {
+			apiKey: encryptedKey,
+		},
 	});
 };
 
@@ -97,32 +109,50 @@ export async function handleVote(
 	return json({ success: true });
 }
 
-export async function toggleLike(userId: number, slug: string) {
+export async function toggleLike(
+	slug: string,
+	userId?: number,
+	guestId?: string,
+) {
 	const page = await prisma.page.findUnique({ where: { slug } });
 	if (!page) {
 		throw new Error("Page not found");
 	}
-
-	const existingLike = await prisma.likePage.findUnique({
-		where: {
-			userId_pageId: {
-				userId,
+	if (userId) {
+		const existing = await prisma.likePage.findFirst({
+			where: {
 				pageId: page.id,
+				OR: [{ userId: userId }],
 			},
-		},
-	});
-
-	if (existingLike) {
-		await prisma.likePage.delete({
-			where: { id: existingLike.id },
 		});
-		return { liked: false };
+
+		if (existing) {
+			await prisma.likePage.delete({ where: { id: existing.id } });
+			return { liked: false };
+		}
+		const created = await prisma.likePage.create({
+			data: {
+				pageId: page.id,
+				userId,
+			},
+		});
+	} else if (guestId) {
+		const existing = await prisma.likePage.findFirst({
+			where: {
+				pageId: page.id,
+				OR: [{ guestId: guestId }],
+			},
+		});
+		if (existing) {
+			await prisma.likePage.delete({ where: { id: existing.id } });
+			return { liked: false };
+		}
+		await prisma.likePage.create({
+			data: {
+				pageId: page.id,
+				guestId,
+			},
+		});
 	}
-	await prisma.likePage.create({
-		data: {
-			userId,
-			pageId: page.id,
-		},
-	});
 	return { liked: true };
 }

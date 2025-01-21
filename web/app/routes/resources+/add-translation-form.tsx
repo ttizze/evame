@@ -8,9 +8,9 @@ import TextareaAutosize from "react-textarea-autosize";
 import { z } from "zod";
 import { StartButton } from "~/components/StartButton";
 import { Button } from "~/components/ui/button";
+import i18nServer from "~/i18n.server";
 import { authenticator } from "~/utils/auth.server";
 import { addUserTranslation } from "./functions/mutations.server";
-
 const schema = z.object({
 	sourceTextId: z.number(),
 	text: z
@@ -27,9 +27,9 @@ export async function action({ params, request }: ActionFunctionArgs) {
 	const submission = parseWithZod(await request.formData(), {
 		schema,
 	});
-	const locale = params.locale;
+	let locale = params.locale;
 	if (!locale) {
-		throw new Response("Missing locale", { status: 400 });
+		locale = (await i18nServer.getLocale(request)) || "en";
 	}
 
 	if (submission.status !== "success") {

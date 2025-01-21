@@ -1,12 +1,11 @@
+import type { User } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { Authenticator, AuthorizationError } from "remix-auth";
 import { EmailLinkStrategy } from "remix-auth-email-link";
 import { FormStrategy } from "remix-auth-form";
 import { GoogleStrategy } from "remix-auth-google";
 import { sendMagicLink } from "~/routes/$locale+/auth/login/utils/send-magic-link.server";
-import type { SanitizedUser } from "../types";
 import { prisma } from "./prisma";
-import { sanitizeUser } from "./sanitizeUser";
 import { sessionStorage } from "./session.server";
 
 const SESSION_SECRET = process.env.SESSION_SECRET;
@@ -19,7 +18,7 @@ if (!MAGIC_LINK_SECRET) {
 	throw new Error("MAGIC_LINK_SECRET is not defined");
 }
 
-const authenticator = new Authenticator<SanitizedUser>(sessionStorage);
+const authenticator = new Authenticator<User>(sessionStorage);
 
 function generateTemporaryUserName() {
 	return `new-${crypto.randomUUID().slice(0, 10)}-${new Date().toISOString().slice(0, 10)}`;
@@ -32,53 +31,61 @@ const formStrategy = new FormStrategy(async ({ form }) => {
 		throw new AuthorizationError("Email and password are required");
 	}
 
-	const existingUser = await prisma.user.findUnique({
+	const existingUserEmail = await prisma.userEmail.findUnique({
 		where: { email: String(email) },
+		include: { user: { include: { credential: true } } },
 	});
+	const existingUser = existingUserEmail?.user;
 	if (
 		!existingUser ||
-		!existingUser.password ||
+		!existingUser.credential?.password ||
 		existingUser.provider !== "Credentials"
 	) {
 		throw new AuthorizationError("Invalid login credentials");
 	}
 	const passwordsMatch = await bcrypt.compare(
 		String(password),
-		existingUser.password,
+		existingUser.credential.password,
 	);
 	if (!passwordsMatch) {
 		throw new AuthorizationError("Invalid login credentials");
 	}
 
-	return sanitizeUser(existingUser);
+	return existingUser;
 });
 
 authenticator.use(formStrategy, "user-pass");
 
-const googleStrategy = new GoogleStrategy<SanitizedUser>(
+const googleStrategy = new GoogleStrategy<User>(
 	{
 		clientID: process.env.GOOGLE_CLIENT_ID || "",
 		clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
 		callbackURL: `${process.env.CLIENT_URL}/api/auth/callback/google`,
 	},
 	async ({ profile }) => {
-		const user = await prisma.user.findUnique({
+		const userEmail = await prisma.userEmail.findUnique({
 			where: { email: profile.emails[0].value },
+			include: { user: true },
 		});
+		const user = userEmail?.user;
 		if (user) {
-			return sanitizeUser(user);
+			return user;
 		}
 
 		const newUser = await prisma.user.create({
 			data: {
-				email: profile.emails[0].value || "",
+				userEmail: {
+					create: {
+						email: profile.emails[0].value || "",
+					},
+				},
 				userName: generateTemporaryUserName(),
 				displayName: profile.displayName || "New User",
 				icon: profile.photos[0].value || "",
 				provider: "Google",
 			},
 		});
-		return sanitizeUser(newUser);
+		return newUser;
 	},
 );
 authenticator.use(googleStrategy);
@@ -91,17 +98,23 @@ const magicLinkStrategy = new EmailLinkStrategy(
 		sessionMagicLinkKey: "auth:magicLink",
 	},
 	async ({ email, form, magicLinkVerify }) => {
-		const user = await prisma.user.findUnique({
+		const userEmail = await prisma.userEmail.findUnique({
 			where: { email: String(email) },
+			include: { user: true },
 		});
+		const user = userEmail?.user;
 
 		if (user) {
-			return sanitizeUser(user);
+			return user;
 		}
 
 		const newUser = await prisma.user.create({
 			data: {
-				email: String(email),
+				userEmail: {
+					create: {
+						email: String(email),
+					},
+				},
 				icon: `${process.env.CLIENT_URL}/avatar.png`,
 				userName: generateTemporaryUserName(),
 				displayName: String(email).split("@")[0],
@@ -109,7 +122,7 @@ const magicLinkStrategy = new EmailLinkStrategy(
 			},
 		});
 
-		return sanitizeUser(newUser);
+		return newUser;
 	},
 );
 

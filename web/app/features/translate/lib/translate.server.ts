@@ -1,3 +1,4 @@
+import { supportedLocaleOptions } from "~/constants/languages";
 import { prisma } from "../../../utils/prisma";
 import { updateUserAITranslationInfo } from "../functions/mutations.server";
 import { getOrCreateAIUser } from "../functions/mutations.server";
@@ -7,7 +8,6 @@ import type { NumberedElement } from "../types";
 import type { TranslateJobParams } from "../types";
 import { extractTranslations } from "../utils/extractTranslations.server";
 import { splitNumberedElements } from "../utils/splitNumberedElements.server";
-
 export async function translate(params: TranslateJobParams) {
 	try {
 		await updateUserAITranslationInfo(
@@ -118,12 +118,14 @@ async function getTranslatedText(
 	const source_text = numberedElements
 		.map((el) => JSON.stringify(el))
 		.join("\n");
+	const localeName =
+		supportedLocaleOptions.find((sl) => sl.code === locale)?.name || locale;
 	return getGeminiModelResponse(
 		geminiApiKey,
 		aiModel,
 		title,
 		source_text,
-		locale,
+		localeName,
 	);
 }
 

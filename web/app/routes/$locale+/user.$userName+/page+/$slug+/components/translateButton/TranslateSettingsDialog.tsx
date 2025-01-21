@@ -18,9 +18,11 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "~/components/ui/select";
+import { supportedLocaleOptions } from "~/constants/languages";
 import { GeminiApiKeyDialog } from "~/routes/resources+/gemini-api-key-dialog";
 import LocaleSelector from "./LocaleSelector";
 import { UserAITranslationStatus } from "./UserAITranslationStatus";
+
 type TranslateSettingsDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
@@ -55,7 +57,11 @@ export function TranslateSettingsDialog({
 
 						<div className="space-y-2">
 							<Label htmlFor="language">Language</Label>
-							<LocaleSelector locale={locale} />
+							<LocaleSelector
+								className="w-full"
+								localeOptions={supportedLocaleOptions}
+								defaultLocaleCode={locale}
+							/>
 						</div>
 
 						<div className="space-y-2">
