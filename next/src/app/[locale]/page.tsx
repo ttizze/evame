@@ -28,12 +28,13 @@ export default async function HomePage() {
 				<Input type="text" name="email" placeholder="Email" />
 				<button type="submit">Signin with Resend</button>
 			</form>
-			{users.map((user) => (
-				<div key={user.id}>
-					{user.name}
-					{user.image}
-				</div>
-			))}
+			{users.length > 0 &&
+				users.map((user) => (
+					<div key={user.id}>
+						{user.name}
+						{user.image}
+					</div>
+				))}
 		</div>
 	);
 }
