@@ -38,3 +38,27 @@ export async function getFollowCounts(userId: number) {
 
 	return { followers, following };
 }
+
+export async function fetchFollowerList(userId: number) {
+	const followers = await prisma.follow.findMany({
+		where: {
+			followingId: userId,
+		},
+		include: {
+			follower: true,
+		},
+	});
+	return followers;
+}
+
+export async function fetchFollowingList(userId: number) {
+	const following = await prisma.follow.findMany({
+		where: {
+			followerId: userId,
+		},
+		include: {
+			following: true,
+		},
+	});
+	return following;
+}

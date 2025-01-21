@@ -38,12 +38,18 @@ import { ensureGuestId } from "~/utils/ensureGuestId.server";
 import { commitSession } from "~/utils/session.server";
 import { fetchPaginatedPublicPagesWithInfo } from "../functions/queries.server";
 import { DeletePageDialog } from "./components/DeletePageDialog";
+import { FollowListDialog } from "./components/FollowListDialog";
 import {
 	archivePage,
 	togglePagePublicStatus,
 } from "./functions/mutations.server";
-import { getFollowCounts } from "./functions/queries.server";
+import {
+	fetchFollowerList,
+	fetchFollowingList,
+	getFollowCounts,
+} from "./functions/queries.server";
 import { fetchPageById } from "./functions/queries.server";
+
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Profile" }];
@@ -85,6 +91,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		});
 	if (!pagesWithInfo) throw new Response("Not Found", { status: 404 });
 	const followCounts = await getFollowCounts(pageOwner.id);
+	const followerList = await fetchFollowerList(pageOwner.id);
+	const followingList = await fetchFollowingList(pageOwner.id);
 	const isCurrentUserFollowing = currentUser
 		? await isFollowing(currentUser.id, pageOwner.id)
 		: false;
@@ -100,6 +108,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			pageOwner,
 			followCounts,
 			isCurrentUserFollowing,
+			followerList,
+			followingList,
 		},
 		{
 			headers,
@@ -144,10 +154,14 @@ export default function UserPage() {
 		pageOwner,
 		followCounts,
 		isCurrentUserFollowing,
+		followerList,
+		followingList,
 	} = useLoaderData<typeof loader>();
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const [pageToDelete, setPageToDelete] = useState<number | null>(null);
 	const [searchParams, setSearchParams] = useSearchParams();
+	const [openFollowers, setOpenFollowers] = useState<boolean>(false);
+	const [openFollowing, setOpenFollowing] = useState<boolean>(false);
 
 	const fetcher = useFetcher();
 
@@ -206,9 +220,43 @@ export default function UserPage() {
 										@{pageOwner.userName}
 									</CardDescription>
 									<div className="flex gap-4 mt-2 text-sm text-gray-500">
-										<span>{followCounts.following} following</span>
-										<span>{followCounts.followers} followers</span>
+										<span
+											onClick={() => setOpenFollowing(true)}
+											onKeyDown={(e) => {
+												if (e.key === "Enter") {
+													setOpenFollowing(true);
+												}
+											}}
+											className="cursor-pointer"
+										>
+											{followCounts.following} following
+										</span>
+										<span
+											onClick={() => setOpenFollowers(true)}
+											onKeyDown={(e) => {
+												if (e.key === "Enter") {
+													setOpenFollowers(true);
+												}
+											}}
+											className="cursor-pointer"
+										>
+											{followCounts.followers} followers
+										</span>
 									</div>
+									<FollowListDialog
+										open={openFollowing}
+										onOpenChange={setOpenFollowing}
+										users={followingList.map((item) => item.following)}
+										type="following"
+									/>
+
+									{/* フォロワー一覧ダイアログ */}
+									<FollowListDialog
+										open={openFollowers}
+										onOpenChange={setOpenFollowers}
+										users={followerList.map((item) => item.follower)}
+										type="followers"
+									/>
 								</div>
 							</div>
 
