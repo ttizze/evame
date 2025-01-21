@@ -1,7 +1,10 @@
+import { auth } from "@/auth";
+import { routing } from "@/i18n/routing";
 import createMiddleware from "next-intl/middleware";
-import { routing } from "./i18n/routing";
-export default createMiddleware(routing);
-export { auth as middleware } from "@/auth";
+
+const handleI18nRouting = createMiddleware(routing);
+export default auth(handleI18nRouting);
+
 export const config = {
-	matcher: ["/((?!api|_next|_vercel|.*\\..*).*)", "/([\\w-]+)?/users/(.+)"],
+	matcher: ["/((?!api|_next|.*\\..*).*)", "/([\\w-]+)?/users/(.+)"],
 };

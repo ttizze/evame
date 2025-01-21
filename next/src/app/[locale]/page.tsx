@@ -1,6 +1,7 @@
 import { signIn } from "@/auth";
 import { Link } from "@/i18n/routing";
 import { prisma } from "@/lib/prisma";
+import { Input } from "@/components/ui/input";
 
 export default async function HomePage() {
 	const users = await prisma.user.findMany();
@@ -20,16 +21,16 @@ export default async function HomePage() {
 			<form
 				action={async (formData) => {
 					"use server";
+					console.log(formData);
 					await signIn("resend", formData);
 				}}
 			>
-				<input type="text" name="email" placeholder="Email" />
+				<Input type="text" name="email" placeholder="Email" />
 				<button type="submit">Signin with Resend</button>
 			</form>
 			{users.map((user) => (
 				<div key={user.id}>
 					{user.name}
-					{user.email}
 					{user.image}
 				</div>
 			))}
