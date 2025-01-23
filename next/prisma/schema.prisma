@@ -17,10 +17,10 @@ datasource db {
 
 model User {
   id            String    @id @default(cuid())
-  name          String?
+  name          String @default(cuid())
   email         String    @unique
   emailVerified DateTime?
-  image         String?
+  image         String   @default("https://gravatar.com/avatar/?d=identicon")
   accounts      Account[]
   sessions      Session[]
 }

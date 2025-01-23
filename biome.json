@@ -1,7 +1,7 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.8.3/schema.json",
 	"files": {
-		"ignore": ["bun.lockb", "build", ".vscode"]
+		"ignore": ["bun.lockb", "build", ".vscode", ".next"]
 	},
 	"linter": {
 		"enabled": true,
