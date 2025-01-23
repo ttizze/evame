@@ -23,12 +23,9 @@ model User {
   userEmail             UserEmail?
   geminiApiKey          GeminiApiKey?
   pages                 Page[]
-  userReadHistory       UserReadHistory[]
-  apiUsages             ApiUsage[]
   translations          TranslateText[]
   votes                 Vote[]
   userAITranslationInfo UserAITranslationInfo[]
-  customAIModels        CustomAIModel[]
   likePages             LikePage[]
   followers             Follow[]                @relation("following")
   following             Follow[]                @relation("follower")
@@ -100,20 +97,6 @@ model UserAITranslationInfo {
   @@map("user_ai_translation_info")
 }
 
-model UserReadHistory {
-  id                 Int      @id @default(autoincrement())
-  userId             Int      @map("user_id")
-  pageId             Int      @map("page_id")
-  readAt             DateTime @default(now()) @map("read_at")
-  lastReadDataNumber Int      @default(0) @map("last_read_data_number")
-  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  page               Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, pageId])
-  @@index([userId])
-  @@index([pageId])
-  @@map("user_read_history")
-}
 
 enum PageStatus {
   DRAFT
@@ -133,8 +116,6 @@ model Page {
   userId                Int                     @map("user_id")
   userAITranslationInfo UserAITranslationInfo[]
   sourceTexts           SourceText[]
-  userReadHistory       UserReadHistory[]
-  genrePages            GenrePage[]
   tagPages              TagPage[]
   likePages             LikePage[]
   comments              Comment[]
@@ -199,26 +180,7 @@ model LikePage {
   @@map("like_pages")
 }
 
-model Genre {
-  id    Int         @id @default(autoincrement())
-  name  String      @unique
-  pages GenrePage[]
 
-  @@index([name])
-  @@map("genres")
-}
-
-model GenrePage {
-  genreId Int
-  pageId  Int
-  genre   Genre @relation(fields: [genreId], references: [id])
-  page    Page  @relation(fields: [pageId], references: [id])
-
-  @@id([genreId, pageId])
-  @@index([genreId])
-  @@index([pageId])
-  @@map("genre_pages")
-}
 
 model Tag {
   id    Int       @id @default(autoincrement())
@@ -257,32 +219,6 @@ model Vote {
   @@map("votes")
 }
 
-model ApiUsage {
-  id         Int      @id @default(autoincrement())
-  userId     Int      @map("user_id")
-  dateTime   DateTime @map("date_time")
-  amountUsed Int      @map("amount_used")
-  user       User     @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@index([dateTime])
-  @@map("api_usage")
-}
-
-model CustomAIModel {
-  id        String   @id @default(cuid())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  name      String
-  apiKey    String
-  isActive  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, name])
-  @@index([userId])
-  @@index([name])
-}
 
 model Comment {
   id        Int      @id @default(autoincrement())
