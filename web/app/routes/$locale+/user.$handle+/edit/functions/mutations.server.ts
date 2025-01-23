@@ -4,7 +4,7 @@ import { isHandleTaken } from "./queries.server";
 export async function updateUser(
 	userId: number,
 	data: {
-		displayName: string;
+		name: string;
 		handle: string;
 		profile: string | undefined;
 		icon: string;

@@ -104,7 +104,7 @@ async function createUserAndPages() {
 		},
 		create: {
 			handle: "evame",
-			displayName: "evame",
+			name: "evame",
 			provider: "Admin",
 			icon: "https://evame.tech/favicon.svg",
 			userEmail: {
@@ -194,7 +194,7 @@ export async function addDevelopmentData() {
 			user: {
 				create: {
 					handle: "dev",
-					displayName: "Dev User",
+					name: "Dev User",
 					icon: "",
 					credential: {
 						create: {

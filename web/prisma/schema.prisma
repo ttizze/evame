@@ -10,7 +10,7 @@ datasource db {
 model User {
   id Int @id @default(autoincrement())
   handle              String                  @unique
-  displayName           String                  @map("display_name")
+  name           String               
   icon                  String
   profile               String                  @default("")
   plan                  String                  @default("free")

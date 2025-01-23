@@ -46,7 +46,7 @@ export async function action({ request }: ActionFunctionArgs) {
 					user: {
 						select: {
 							handle: true,
-							displayName: true,
+							name: true,
 							icon: true,
 						},
 					},

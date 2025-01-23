@@ -65,16 +65,14 @@ export function ContentWithTranslations({
 					<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
 						<AvatarImage
 							src={pageWithTranslations.user.icon}
-							alt={pageWithTranslations.user.displayName}
+							alt={pageWithTranslations.user.name}
 						/>
 						<AvatarFallback>
-							{pageWithTranslations.user.displayName.charAt(0).toUpperCase()}
+							{pageWithTranslations.user.name.charAt(0).toUpperCase()}
 						</AvatarFallback>
 					</Avatar>
 					<div className="flex flex-col">
-						<span className="text-sm">
-							{pageWithTranslations.user.displayName}
-						</span>
+						<span className="text-sm">{pageWithTranslations.user.name}</span>
 						<span className="text-xs text-gray-500">
 							{pageWithTranslations.page.createdAt}
 						</span>

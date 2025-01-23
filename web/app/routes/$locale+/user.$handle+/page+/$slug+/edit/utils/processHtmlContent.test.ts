@@ -16,7 +16,7 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 10,
 				handle: "htmltester",
-				displayName: "htmltester",
+				name: "htmltester",
 				icon: "htmltester",
 			},
 			update: {},
@@ -85,7 +85,7 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 11,
 				handle: "htmleditor",
-				displayName: "htmleditor",
+				name: "htmleditor",
 				icon: "htmleditor",
 			},
 			update: {},
@@ -180,7 +180,7 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 12,
 				handle: "titleduplicateuser",
-				displayName: "titleduplicateuser",
+				name: "titleduplicateuser",
 				icon: "titleduplicateuser",
 			},
 			update: {},
@@ -265,7 +265,7 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 13,
 				handle: "noedit",
-				displayName: "noedit",
+				name: "noedit",
 				icon: "noedit",
 			},
 			update: {},
@@ -341,7 +341,7 @@ describe("processHtmlContent", () => {
 			create: {
 				id: 14,
 				handle: "imagetester",
-				displayName: "imagetester",
+				name: "imagetester",
 				icon: "imagetester",
 			},
 			update: {},

@@ -26,19 +26,16 @@ export function CommentList({
 				<div key={comment.id} className="p-2 bg-card rounded-xl">
 					<div className="flex items-center">
 						<Avatar className="w-6 h-6 mr-3">
-							<AvatarImage
-								src={comment.user.icon}
-								alt={comment.user.displayName}
-							/>
+							<AvatarImage src={comment.user.icon} alt={comment.user.name} />
 							<AvatarFallback>
-								{comment.user?.displayName.charAt(0) || "?"}
+								{comment.user?.name.charAt(0) || "?"}
 							</AvatarFallback>
 						</Avatar>
 						<div className="flex-1">
 							<div className="flex items-center justify-between">
 								<div>
 									<span className="font-semibold text-sm">
-										{comment.user?.displayName || "deleted_user"}
+										{comment.user?.name || "deleted_user"}
 									</span>
 									<span className="text-sm text-muted-foreground ml-2">
 										{comment.createdAt}

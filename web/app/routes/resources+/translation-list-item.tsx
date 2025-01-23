@@ -85,7 +85,7 @@ export function TranslationListItem({
 					className="!no-underline mr-2"
 				>
 					<p className="text-sm text-gray-500 text-right flex justify-end items-center  ">
-						by: {translation.translateText.user.displayName}
+						by: {translation.translateText.user.name}
 					</p>
 				</LocaleLink>
 				<VoteButtons translationWithVote={translation} />

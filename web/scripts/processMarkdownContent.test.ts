@@ -19,7 +19,7 @@ This is another test.
 			create: {
 				id: 1,
 				handle: "test",
-				displayName: "test",
+				name: "test",
 				icon: "test",
 			},
 			update: {},
@@ -93,7 +93,7 @@ This is another line.
 			create: {
 				id: 2,
 				handle: "editor",
-				displayName: "editor",
+				name: "editor",
 				icon: "editor",
 			},
 			update: {},
@@ -208,7 +208,7 @@ new line
 			create: {
 				id: 3,
 				handle: "variety",
-				displayName: "variety",
+				name: "variety",
 				icon: "variety",
 			},
 			update: {},
@@ -279,7 +279,7 @@ new line
 			create: {
 				id: 3,
 				handle: "variety",
-				displayName: "variety",
+				name: "variety",
 				icon: "variety",
 			},
 			update: {},

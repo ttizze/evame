@@ -276,7 +276,7 @@ export default function SearchPage() {
 							>
 								<div className="flex-1">
 									<LocaleLink to={`/user/${usr.handle}`}>
-										<h3 className="text-xl font-bold">{usr.displayName}</h3>
+										<h3 className="text-xl font-bold">{usr.name}</h3>
 										<span className="text-gray-500 text-sm">@{usr.handle}</span>
 									</LocaleLink>
 								</div>
