@@ -20,7 +20,7 @@ export default function PrivacyPolicyPage() {
 					</h2>
 					<p className="mb-4">We collect the following types of information:</p>
 					<ul className="list-disc pl-6">
-						<li>Account information (e.g., username, email address)</li>
+						<li>Account information (e.g., handle, email address)</li>
 						<li>Content you post (articles and translations)</li>
 						<li>Usage data (e.g., pages visited, actions taken)</li>
 						<li>Device information (e.g., IP address, browser type)</li>

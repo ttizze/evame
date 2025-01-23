@@ -9,7 +9,7 @@ import { JSDOM } from "jsdom"; // HTMLパース用
 import pLimit from "p-limit";
 
 // プロジェクト固有のインポート
-import { upsertTags } from "~/routes/$locale+/user.$userName+/page+/$slug+/edit/functions/mutations.server";
+import { upsertTags } from "~/routes/$locale+/user.$handle+/page+/$slug+/edit/functions/mutations.server";
 import { prisma } from "~/utils/prisma";
 import { getMarkdownSourceLanguage } from "./getMarkdownSourceLanguage";
 import { processMarkdownContent } from "./processMarkdownContent";
@@ -202,7 +202,7 @@ async function processMarkdownFile(
 
 		// 管理者ユーザーの取得
 		const adminUser = await prisma.user.findUnique({
-			where: { userName: "evame" },
+			where: { handle: "evame" },
 		});
 		if (!adminUser) {
 			throw new Error("adminユーザーが見つかりません");
@@ -302,7 +302,7 @@ async function syncGithub() {
 
 		// 管理者ユーザーの取得（既に取得済みの場合はキャッシュすることも検討）
 		const adminUser = await prisma.user.findUnique({
-			where: { userName: "evame" },
+			where: { handle: "evame" },
 		});
 		if (!adminUser) {
 			throw new Error("adminユーザーが見つかりません(ランキングページ生成時)");

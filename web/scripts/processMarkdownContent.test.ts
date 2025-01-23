@@ -18,7 +18,7 @@ This is another test.
 			where: { id: 1 },
 			create: {
 				id: 1,
-				userName: "test",
+				handle: "test",
 				displayName: "test",
 				icon: "test",
 			},
@@ -92,7 +92,7 @@ This is another line.
 			where: { id: 2 },
 			create: {
 				id: 2,
-				userName: "editor",
+				handle: "editor",
 				displayName: "editor",
 				icon: "editor",
 			},
@@ -207,7 +207,7 @@ new line
 			where: { id: 3 },
 			create: {
 				id: 3,
-				userName: "variety",
+				handle: "variety",
 				displayName: "variety",
 				icon: "variety",
 			},
@@ -278,7 +278,7 @@ new line
 			where: { id: 3 },
 			create: {
 				id: 3,
-				userName: "variety",
+				handle: "variety",
 				displayName: "variety",
 				icon: "variety",
 			},

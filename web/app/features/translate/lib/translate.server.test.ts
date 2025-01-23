@@ -23,7 +23,7 @@ describe("translate関数テスト (geminiのみモック)", () => {
 		// テスト用ユーザー・ページ・翻訳ジョブ情報を作成
 		const user = await prisma.user.create({
 			data: {
-				userName: "testuser",
+				handle: "testuser",
 				displayName: "testuser",
 				icon: "testuser",
 			},

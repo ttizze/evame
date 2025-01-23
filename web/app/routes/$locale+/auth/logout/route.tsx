@@ -33,7 +33,7 @@ export default function Logout() {
 				</CardHeader>
 				<CardContent>
 					<p className="text-center mb-4">
-						<span className="font-semibold">{currentUser.userName}</span>
+						<span className="font-semibold">{currentUser.handle}</span>
 					</p>
 					<p className="text-center text-sm text-gray-60 mb-4">
 						Are you sure you want to logout?

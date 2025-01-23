@@ -10,7 +10,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	beforeEach(async () => {
 		const createdUser = await prisma.user.create({
 			data: {
-				userName: "testuser",
+				handle: "testuser",
 				displayName: "Test User",
 				icon: "https://example.com/icon.jpg",
 				profile: "This is a test profile",
