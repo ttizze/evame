@@ -20,7 +20,7 @@ This is another test.
 				id: 1,
 				handle: "test",
 				name: "test",
-				icon: "test",
+				image: "test",
 			},
 			update: {},
 		});
@@ -94,7 +94,7 @@ This is another line.
 				id: 2,
 				handle: "editor",
 				name: "editor",
-				icon: "editor",
+				image: "editor",
 			},
 			update: {},
 		});
@@ -209,7 +209,7 @@ new line
 				id: 3,
 				handle: "variety",
 				name: "variety",
-				icon: "variety",
+				image: "variety",
 			},
 			update: {},
 		});
@@ -280,7 +280,7 @@ new line
 				id: 3,
 				handle: "variety",
 				name: "variety",
-				icon: "variety",
+				image: "variety",
 			},
 			update: {},
 		});

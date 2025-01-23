@@ -11,7 +11,7 @@ model User {
   id Int @id @default(autoincrement())
   handle              String                  @unique
   name           String               
-  icon                  String
+  image                  String
   profile               String                  @default("")
   plan                  String                  @default("free")
   totalPoints           Int                     @default(0) @map("total_points")

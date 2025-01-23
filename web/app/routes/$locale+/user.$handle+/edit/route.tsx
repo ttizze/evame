@@ -58,7 +58,7 @@ const schema = z.object({
 		.string()
 		.max(200, "Too Long. Must be 200 characters or less")
 		.optional(),
-	icon: z.string(),
+	image: z.string(),
 });
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
@@ -84,14 +84,14 @@ export async function action({ request }: ActionFunctionArgs) {
 		return submission.reply();
 	}
 
-	const { name, handle, profile, icon } = submission.value;
+	const { name, handle, profile, image } = submission.value;
 
 	try {
 		const updatedUser = await updateUser(currentUser.id, {
 			name,
 			handle,
 			profile,
-			icon,
+			image,
 		});
 		const session = await getSession(request.headers.get("Cookie"));
 		session.set("user", updatedUser);
@@ -123,16 +123,16 @@ export default function EditProfile() {
 			name: currentUser.name,
 			handle: currentUser.handle,
 			profile: currentUser.profile,
-			icon: currentUser.icon,
+			image: currentUser.image,
 		},
 		onValidate({ formData }) {
 			return parseWithZod(formData, { schema });
 		},
 	});
 
-	const imageForm = useInputControl(fields.icon);
+	const imageForm = useInputControl(fields.image);
 	const [profileIconUrl, setProfileIconUrl] = useState<string>(
-		currentUser.icon,
+		currentUser.image,
 	);
 
 	const handleProfileImageUpload = async (
@@ -166,14 +166,17 @@ export default function EditProfile() {
 							<Label>Icon</Label>
 						</div>
 						<Input
-							id={fields.icon.id}
+							id={fields.image.id}
 							type="file"
 							accept="image/*"
 							onChange={handleProfileImageUpload}
 							className="mt-3 bg-white dark:bg-black/50 cursor-pointer"
 						/>
-						<div id={fields.icon.errorId} className="text-red-500 text-sm mt-1">
-							{fields.icon.errors}
+						<div
+							id={fields.image.errorId}
+							className="text-red-500 text-sm mt-1"
+						>
+							{fields.image.errors}
 						</div>
 					</div>
 					<div>

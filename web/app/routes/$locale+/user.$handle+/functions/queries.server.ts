@@ -16,7 +16,7 @@ export async function getComments(pageId: number) {
 				select: {
 					handle: true,
 					name: true,
-					icon: true,
+					image: true,
 				},
 			},
 		},

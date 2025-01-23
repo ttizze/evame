@@ -47,8 +47,10 @@ export function BaseHeaderLayout({
 						<DropdownMenu>
 							<DropdownMenuTrigger>
 								<Avatar className="w-6 h-6">
-									<AvatarImage src={currentUser.icon} alt={currentUser.name} />
-									<AvatarFallback>{currentUser.handle}</AvatarFallback>
+									<AvatarImage src={currentUser.image} alt={currentUser.name} />
+									<AvatarFallback>
+										{currentUser.handle.charAt(0).toUpperCase()}
+									</AvatarFallback>
 								</Avatar>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent className="m-2 p-0 rounded-xl min-w-40">

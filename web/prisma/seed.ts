@@ -100,13 +100,13 @@ async function createUserAndPages() {
 		where: { handle: "evame" },
 		update: {
 			provider: "Admin",
-			icon: "https://evame.tech/favicon.svg",
+			image: "https://evame.tech/favimage.svg",
 		},
 		create: {
 			handle: "evame",
 			name: "evame",
 			provider: "Admin",
-			icon: "https://evame.tech/favicon.svg",
+			image: "https://evame.tech/favimage.svg",
 			userEmail: {
 				create: {
 					email: "evame@example.com",
@@ -195,7 +195,7 @@ export async function addDevelopmentData() {
 				create: {
 					handle: "dev",
 					name: "Dev User",
-					icon: "",
+					image: "",
 					credential: {
 						create: {
 							password: await bcrypt.hash("devpassword", 10),

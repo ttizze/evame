@@ -59,7 +59,7 @@ export function PageCard({
 				<div className="flex justify-between items-center">
 					<LocaleLink to={userLink} className="flex items-center">
 						<Avatar className="w-6 h-6 mr-2">
-							<AvatarImage src={pageCard.user.icon} alt={pageCard.user.name} />
+							<AvatarImage src={pageCard.user.image} alt={pageCard.user.name} />
 							<AvatarFallback>
 								{pageCard.user.handle.charAt(0).toUpperCase()}
 							</AvatarFallback>

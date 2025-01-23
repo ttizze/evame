@@ -26,7 +26,7 @@ export function CommentList({
 				<div key={comment.id} className="p-2 bg-card rounded-xl">
 					<div className="flex items-center">
 						<Avatar className="w-6 h-6 mr-3">
-							<AvatarImage src={comment.user.icon} alt={comment.user.name} />
+							<AvatarImage src={comment.user.image} alt={comment.user.name} />
 							<AvatarFallback>
 								{comment.user?.name.charAt(0) || "?"}
 							</AvatarFallback>

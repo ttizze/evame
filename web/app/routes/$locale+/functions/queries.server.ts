@@ -11,7 +11,7 @@ export function createPageCardSelect(locale?: string) {
 			select: {
 				handle: true,
 				name: true,
-				icon: true,
+				image: true,
 				profile: true,
 			},
 		},

@@ -201,9 +201,9 @@ export default function UserPage() {
 				<CardHeader className="pb-4">
 					<div className="flex w-full flex-col md:flex-row">
 						<div>
-							<Link to={`${pageOwner.icon}`}>
+							<Link to={`${pageOwner.image}`}>
 								<Avatar className="w-20 h-20 md:w-24 md:h-24">
-									<AvatarImage src={pageOwner.icon} alt={pageOwner.name} />
+									<AvatarImage src={pageOwner.image} alt={pageOwner.name} />
 									<AvatarFallback>
 										{pageOwner.name.charAt(0).toUpperCase()}
 									</AvatarFallback>
