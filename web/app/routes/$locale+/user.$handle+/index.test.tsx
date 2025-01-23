@@ -21,7 +21,7 @@ describe("UserProfile", () => {
 			data: {
 				handle: "testuser",
 				name: "Test User",
-				icon: "https://example.com/icon.jpg",
+				image: "https://example.com/image.jpg",
 				profile: "This is a test profile",
 				pages: {
 					create: [
@@ -70,7 +70,7 @@ describe("UserProfile", () => {
 			data: {
 				handle: "testuser2",
 				name: "Test User2",
-				icon: "https://example.com/icon2.jpg",
+				image: "https://example.com/image2.jpg",
 				profile: "This is a test profile2",
 			},
 		});

@@ -8,7 +8,7 @@ export async function getOrCreateAIUser(name: string): Promise<number> {
 			handle: name,
 			name: name,
 			isAI: true,
-			icon: "",
+			image: "",
 			userEmail: {
 				create: {
 					email: `${name}@ai.com`,

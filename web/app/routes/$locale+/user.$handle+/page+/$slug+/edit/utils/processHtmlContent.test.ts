@@ -17,7 +17,7 @@ describe("processHtmlContent", () => {
 				id: 10,
 				handle: "htmltester",
 				name: "htmltester",
-				icon: "htmltester",
+				image: "htmltester",
 			},
 			update: {},
 		});
@@ -86,7 +86,7 @@ describe("processHtmlContent", () => {
 				id: 11,
 				handle: "htmleditor",
 				name: "htmleditor",
-				icon: "htmleditor",
+				image: "htmleditor",
 			},
 			update: {},
 		});
@@ -181,7 +181,7 @@ describe("processHtmlContent", () => {
 				id: 12,
 				handle: "titleduplicateuser",
 				name: "titleduplicateuser",
-				icon: "titleduplicateuser",
+				image: "titleduplicateuser",
 			},
 			update: {},
 		});
@@ -266,7 +266,7 @@ describe("processHtmlContent", () => {
 				id: 13,
 				handle: "noedit",
 				name: "noedit",
-				icon: "noedit",
+				image: "noedit",
 			},
 			update: {},
 		});
@@ -342,7 +342,7 @@ describe("processHtmlContent", () => {
 				id: 14,
 				handle: "imagetester",
 				name: "imagetester",
-				icon: "imagetester",
+				image: "imagetester",
 			},
 			update: {},
 		});

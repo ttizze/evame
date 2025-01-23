@@ -7,7 +7,7 @@ export async function updateUser(
 		name: string;
 		handle: string;
 		profile: string | undefined;
-		icon: string;
+		image: string;
 	},
 ) {
 	return prisma.$transaction(async (tx) => {

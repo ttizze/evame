@@ -25,7 +25,7 @@ describe("translate関数テスト (geminiのみモック)", () => {
 			data: {
 				handle: "testuser",
 				name: "testuser",
-				icon: "testuser",
+				image: "testuser",
 			},
 		});
 		userId = user.id;

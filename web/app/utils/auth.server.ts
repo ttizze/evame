@@ -81,7 +81,7 @@ const googleStrategy = new GoogleStrategy<User>(
 				},
 				handle: generateTemporaryHandle(),
 				name: profile.displayName || "New User",
-				icon: profile.photos[0].value || "",
+				image: profile.photos[0].value || "",
 				provider: "Google",
 			},
 		});
@@ -115,7 +115,7 @@ const magicLinkStrategy = new EmailLinkStrategy(
 						email: String(email),
 					},
 				},
-				icon: `${process.env.CLIENT_URL}/avatar.png`,
+				image: `${process.env.CLIENT_URL}/avatar.png`,
 				handle: generateTemporaryHandle(),
 				name: String(email).split("@")[0],
 				provider: "MagicLink",

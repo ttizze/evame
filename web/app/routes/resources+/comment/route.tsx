@@ -47,7 +47,7 @@ export async function action({ request }: ActionFunctionArgs) {
 						select: {
 							handle: true,
 							name: true,
-							icon: true,
+							image: true,
 						},
 					},
 				},

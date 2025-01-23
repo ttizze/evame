@@ -45,7 +45,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	);
 	const imageUrl = firstImageMatch
 		? firstImageMatch[1]
-		: pageWithTranslations.user.icon;
+		: pageWithTranslations.user.image;
 
 	const alternateLinks = data.existLocales
 		.filter((locale: string) => locale !== data.locale)

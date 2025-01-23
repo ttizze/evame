@@ -161,7 +161,7 @@ export async function fetchCommentsWithUser(pageId: number, locale: string) {
 				select: {
 					handle: true,
 					name: true,
-					icon: true,
+					image: true,
 				},
 			},
 		},

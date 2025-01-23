@@ -64,7 +64,7 @@ export function ContentWithTranslations({
 				>
 					<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
 						<AvatarImage
-							src={pageWithTranslations.user.icon}
+							src={pageWithTranslations.user.image}
 							alt={pageWithTranslations.user.name}
 						/>
 						<AvatarFallback>

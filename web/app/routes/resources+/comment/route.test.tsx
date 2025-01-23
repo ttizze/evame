@@ -44,7 +44,7 @@ describe("resource+/comment/route.ts action", () => {
 			user: {
 				handle: "testuser",
 				name: "Test User",
-				icon: "test.png",
+				image: "test.png",
 			},
 		};
 		vi.mocked(prisma.comment.create).mockResolvedValueOnce(mockComment);
@@ -73,7 +73,7 @@ describe("resource+/comment/route.ts action", () => {
 					select: {
 						handle: true,
 						name: true,
-						icon: true,
+						image: true,
 					},
 				},
 			},

@@ -12,7 +12,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 			data: {
 				handle: "testuser",
 				name: "Test User",
-				icon: "https://example.com/icon.jpg",
+				image: "https://example.com/image.jpg",
 				profile: "This is a test profile",
 				pages: {
 					create: [
