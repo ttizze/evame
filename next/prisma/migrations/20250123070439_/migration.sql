@@ -1,10 +1,10 @@
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
-    "name" TEXT,
+    "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "emailVerified" TIMESTAMP(3),
-    "image" TEXT,
+    "image" TEXT NOT NULL DEFAULT 'https://gravatar.com/avatar/?d=identicon',
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );

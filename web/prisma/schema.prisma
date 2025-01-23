@@ -8,7 +8,7 @@ datasource db {
 }
 
 model User {
-  id Int @id @default(autoincrement())
+  id                    String                  @id @default(cuid())
   userName              String                  @unique @map("user_name")
   displayName           String                  @map("display_name")
   icon                  String
@@ -41,7 +41,7 @@ model User {
 model UserEmail {
   id       Int    @id @default(autoincrement())
   email    String @unique
-  userId   Int    @unique @map("user_id")
+  userId   String    @unique @map("user_id")
   user     User   @relation(fields: [userId], references: [id])
 
   @@index([userId])
@@ -51,7 +51,7 @@ model UserEmail {
 model UserCredential {
   id       Int    @id @default(autoincrement())
   password String
-  userId   Int    @unique
+  userId   String    @unique
   user     User   @relation(fields: [userId], references: [id])
 
   @@index([userId])
@@ -61,7 +61,7 @@ model UserCredential {
 model GeminiApiKey {
   id     Int    @id @default(autoincrement())
   apiKey String @default("") @map("api_key")
-  userId Int    @unique
+  userId String    @unique
   user   User   @relation(fields: [userId], references: [id])
 
   @@index([userId])
@@ -70,8 +70,8 @@ model GeminiApiKey {
 
 model Follow {
   id          Int      @id @default(autoincrement())
-  followerId  Int      @map("follower_id")
-  followingId Int      @map("following_id")
+  followerId  String      @map("follower_id")
+  followingId String      @map("following_id")
   createdAt   DateTime @default(now()) @map("created_at")
   follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
   following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
@@ -84,7 +84,7 @@ model Follow {
 
 model UserAITranslationInfo {
   id                    Int      @id @default(autoincrement())
-  userId                Int      @map("user_id")
+  userId                String      @map("user_id")
   pageId                Int      @map("page_id")
   locale                String
   aiModel               String   @map("ai_model")
@@ -102,7 +102,7 @@ model UserAITranslationInfo {
 
 model UserReadHistory {
   id                 Int      @id @default(autoincrement())
-  userId             Int      @map("user_id")
+  userId             String      @map("user_id")
   pageId             Int      @map("page_id")
   readAt             DateTime @default(now()) @map("read_at")
   lastReadDataNumber Int      @default(0) @map("last_read_data_number")
@@ -130,7 +130,7 @@ model Page {
   createdAt             DateTime                @default(now()) @map("created_at")
   updatedAt             DateTime                @updatedAt @map("updated_at")
   user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId                Int                     @map("user_id")
+  userId                String                  @map("user_id")
   userAITranslationInfo UserAITranslationInfo[]
   sourceTexts           SourceText[]
   userReadHistory       UserReadHistory[]
@@ -169,7 +169,7 @@ model TranslateText {
   locale       String
   text         String
   sourceTextId Int        @map("source_text_id")
-  userId       Int        @map("user_id")
+  userId       String        @map("user_id")
   point        Int        @default(0)
   isArchived   Boolean    @default(false) @map("is_archived")
   createdAt    DateTime   @default(now()) @map("created_at")
@@ -185,7 +185,7 @@ model TranslateText {
 
 model LikePage {
   id        Int      @id @default(autoincrement())
-  userId    Int?     @map("user_id")
+  userId    String?     @map("user_id")
   guestId   String?  @map("guest_id")
   pageId    Int      @map("page_id")
   createdAt DateTime @default(now()) @map("created_at")
@@ -243,7 +243,7 @@ model TagPage {
 
 model Vote {
   id              Int           @id @default(autoincrement())
-  userId          Int           @map("user_id")
+  userId          String           @map("user_id")
   translateTextId Int           @map("translate_text_id")
   isUpvote        Boolean       @map("is_upvote")
   createdAt       DateTime      @default(now()) @map("created_at")
@@ -259,7 +259,7 @@ model Vote {
 
 model ApiUsage {
   id         Int      @id @default(autoincrement())
-  userId     Int      @map("user_id")
+  userId     String      @map("user_id")
   dateTime   DateTime @map("date_time")
   amountUsed Int      @map("amount_used")
   user       User     @relation(fields: [userId], references: [id])
@@ -271,7 +271,7 @@ model ApiUsage {
 
 model CustomAIModel {
   id        String   @id @default(cuid())
-  userId    Int
+  userId    String
   user      User     @relation(fields: [userId], references: [id])
   name      String
   apiKey    String
@@ -287,7 +287,7 @@ model CustomAIModel {
 model Comment {
   id        Int      @id @default(autoincrement())
   text      String
-  userId    Int      @map("user_id")
+  userId    String      @map("user_id")
   pageId    Int      @map("page_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

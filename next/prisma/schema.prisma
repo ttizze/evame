@@ -1,12 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
-  previewFeatures = ["driverAdapters"] 
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -14,13 +8,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
   id            String    @id @default(cuid())
   name          String @default(cuid())
   email         String    @unique
   emailVerified DateTime?
   image         String   @default("https://gravatar.com/avatar/?d=identicon")
+  oldUserId     Int?
   accounts      Account[]
   sessions      Session[]
 }
@@ -56,4 +50,299 @@ model VerificationToken {
   expires    DateTime
 
   @@id([identifier, token])
+}
+
+model LegacyUser {
+  id                    Int                     @id @default(autoincrement())
+  icon                  String
+  plan                  String                  @default("free")
+  totalPoints           Int                     @default(0) @map("total_points")
+  isAI                  Boolean                 @default(false) @map("is_ai")
+  provider              String                  @default("Credentials")
+  createdAt             DateTime                @default(now()) @map("created_at")
+  updatedAt             DateTime                @updatedAt @map("updated_at")
+  displayName           String                  @map("display_name")
+  userName              String                  @unique @map("user_name")
+  profile               String                  @default("")
+  customAIModels        CustomAIModel[]
+  apiUsages             ApiUsage[]
+  comments              Comment[]
+  following             Follow[]                @relation("follower")
+  followers             Follow[]                @relation("following")
+  geminiApiKey          GeminiApiKey?
+  likePages             LikePage[]
+  pages                 Page[]
+  translations          TranslateText[]
+  userAITranslationInfo UserAITranslationInfo[]
+  credential            UserCredential?
+  userEmail             UserEmail?
+  userReadHistory       UserReadHistory[]
+  votes                 Vote[]
+
+  @@index([userName])
+  @@map("users")
+}
+
+model UserEmail {
+  id     Int        @id @default(autoincrement())
+  email  String     @unique
+  userId Int        @unique @map("user_id")
+  user   LegacyUser @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("user_emails")
+}
+
+model UserCredential {
+  id       Int        @id @default(autoincrement())
+  password String
+  userId   Int        @unique
+  user     LegacyUser @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("user_credentials")
+}
+
+model GeminiApiKey {
+  id     Int        @id @default(autoincrement())
+  apiKey String     @default("") @map("api_key")
+  userId Int        @unique
+  userIdNew String?
+  user   LegacyUser @relation(fields: [userId], references: [id])
+  
+
+  @@index([userId])
+  @@map("gemini_api_keys")
+}
+
+model Follow {
+  id          Int        @id @default(autoincrement())
+  followerId  Int        @map("follower_id")
+  followingId Int        @map("following_id")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  follower    LegacyUser @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   LegacyUser @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+model UserAITranslationInfo {
+  id                    Int        @id @default(autoincrement())
+  userId                Int        @map("user_id")
+  locale                String
+  aiTranslationStatus   String     @default("pending") @map("ai_translation_status")
+  aiTranslationProgress Int        @default(0) @map("ai_translation_progress")
+  aiModel               String     @map("ai_model")
+  pageId                Int        @map("page_id")
+  createdAt             DateTime   @default(now()) @map("created_at")
+  page                  Page       @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  user                  LegacyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([pageId])
+  @@index([pageId, locale])
+  @@map("user_ai_translation_info")
+}
+
+model UserReadHistory {
+  id                 Int        @id @default(autoincrement())
+  userId             Int        @map("user_id")
+  pageId             Int        @map("page_id")
+  readAt             DateTime   @default(now()) @map("read_at")
+  lastReadDataNumber Int        @default(0) @map("last_read_data_number")
+  page               Page       @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  user               LegacyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pageId])
+  @@index([userId])
+  @@index([pageId])
+  @@map("user_read_history")
+}
+
+model Page {
+  id                    Int                     @id @default(autoincrement())
+  slug                  String                  @unique
+  content               String
+  createdAt             DateTime                @default(now()) @map("created_at")
+  userId                Int                     @map("user_id")
+  sourceLanguage        String                  @default("unknown")
+  updatedAt             DateTime                @updatedAt @map("updated_at")
+  status                PageStatus              @default(DRAFT)
+  comments              Comment[]
+  genrePages            GenrePage[]
+  likePages             LikePage[]
+  user                  LegacyUser              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceTexts           SourceText[]
+  tagPages              TagPage[]
+  userAITranslationInfo UserAITranslationInfo[]
+  userReadHistory       UserReadHistory[]
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([slug])
+  @@map("pages")
+}
+
+model SourceText {
+  id                    Int             @id @default(autoincrement())
+  text                  String
+  pageId                Int             @map("page_id")
+  number                Int
+  createdAt             DateTime        @default(now()) @map("created_at")
+  textAndOccurrenceHash String          @map("text_and_occurrence_hash")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
+  page                  Page            @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  translateTexts        TranslateText[]
+
+  @@unique([pageId, number])
+  @@unique([pageId, textAndOccurrenceHash])
+  @@index([pageId])
+  @@index([number])
+  @@index([textAndOccurrenceHash])
+  @@map("source_texts")
+}
+
+model TranslateText {
+  id           Int        @id @default(autoincrement())
+  locale       String
+  text         String
+  sourceTextId Int        @map("source_text_id")
+  userId       Int        @map("user_id")
+  point        Int        @default(0)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  isArchived   Boolean    @default(false) @map("is_archived")
+  sourceText   SourceText @relation(fields: [sourceTextId], references: [id], onDelete: Cascade)
+  user         LegacyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes        Vote[]
+
+  @@index([sourceTextId])
+  @@index([userId])
+  @@index([locale])
+  @@map("translate_texts")
+}
+
+model LikePage {
+  id        Int         @id @default(autoincrement())
+  userId    Int?        @map("user_id")
+  pageId    Int         @map("page_id")
+  createdAt DateTime    @default(now()) @map("created_at")
+  guestId   String?     @map("guest_id")
+  page      Page        @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  user      LegacyUser? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, pageId])
+  @@unique([guestId, pageId])
+  @@index([userId])
+  @@index([pageId])
+  @@map("like_pages")
+}
+
+model Genre {
+  id    Int         @id @default(autoincrement())
+  name  String      @unique
+  pages GenrePage[]
+
+  @@index([name])
+  @@map("genres")
+}
+
+model GenrePage {
+  genreId Int
+  pageId  Int
+  genre   Genre @relation(fields: [genreId], references: [id])
+  page    Page  @relation(fields: [pageId], references: [id])
+
+  @@id([genreId, pageId])
+  @@index([genreId])
+  @@index([pageId])
+  @@map("genre_pages")
+}
+
+model Tag {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  pages TagPage[]
+
+  @@index([name])
+  @@map("tags")
+}
+
+model TagPage {
+  tagId  Int
+  pageId Int
+  page   Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([tagId, pageId])
+  @@index([tagId])
+  @@index([pageId])
+  @@map("tag_pages")
+}
+
+model Vote {
+  id              Int           @id @default(autoincrement())
+  userId          Int           @map("user_id")
+  translateTextId Int           @map("translate_text_id")
+  isUpvote        Boolean       @map("is_upvote")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  translateText   TranslateText @relation(fields: [translateTextId], references: [id], onDelete: Cascade)
+  user            LegacyUser    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([translateTextId, userId])
+  @@index([translateTextId])
+  @@index([userId])
+  @@map("votes")
+}
+
+model ApiUsage {
+  id         Int        @id @default(autoincrement())
+  userId     Int        @map("user_id")
+  dateTime   DateTime   @map("date_time")
+  amountUsed Int        @map("amount_used")
+  user       LegacyUser @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([dateTime])
+  @@map("api_usage")
+}
+
+model CustomAIModel {
+  id        String     @id @default(cuid())
+  userId    Int
+  name      String
+  apiKey    String
+  isActive  Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      LegacyUser @relation(fields: [userId], references: [id])
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@index([name])
+}
+
+model Comment {
+  id        Int        @id @default(autoincrement())
+  userId    Int        @map("user_id")
+  pageId    Int        @map("page_id")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  text      String
+  page      Page       @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  user      LegacyUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([pageId])
+  @@index([createdAt])
+  @@map("comments")
+}
+
+enum PageStatus {
+  DRAFT
+  PUBLIC
+  ARCHIVE
 }
