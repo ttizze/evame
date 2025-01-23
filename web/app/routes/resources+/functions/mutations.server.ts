@@ -23,7 +23,7 @@ export const updateGeminiApiKey = async (
 };
 
 export const deleteOwnTranslation = async (
-	currentUserName: string,
+	currentHandle: string,
 	translationId: number,
 ) => {
 	const translation = await prisma.translateText.findUnique({
@@ -33,7 +33,7 @@ export const deleteOwnTranslation = async (
 	if (!translation) {
 		return json({ error: "Translation not found" }, { status: 404 });
 	}
-	if (translation.user.userName !== currentUserName) {
+	if (translation.user.handle !== currentHandle) {
 		return json({ error: "Unauthorized" }, { status: 403 });
 	}
 	await prisma.translateText.update({

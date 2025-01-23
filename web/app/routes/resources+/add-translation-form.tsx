@@ -49,12 +49,12 @@ export async function action({ params, request }: ActionFunctionArgs) {
 
 interface AddTranslationFormProps {
 	sourceTextId: number;
-	currentUserName: string | undefined;
+	currentHandle: string | undefined;
 }
 
 export function AddTranslationForm({
 	sourceTextId,
-	currentUserName,
+	currentHandle,
 }: AddTranslationFormProps) {
 	const fetcher = useFetcher<typeof action>();
 	const [form, fields] = useForm({
@@ -80,12 +80,12 @@ export function AddTranslationForm({
 				<div className="relative">
 					<TextareaAutosize
 						{...getTextareaProps(fields.text)}
-						className={`w-full mb-2 rounded-xl p-2 !text-base border border-gray-500 bg-background resize-none overflow-hidden ${!currentUserName && "bg-muted"}`}
+						className={`w-full mb-2 rounded-xl p-2 !text-base border border-gray-500 bg-background resize-none overflow-hidden ${!currentHandle && "bg-muted"}`}
 						placeholder="Or enter your translation..."
-						disabled={!currentUserName}
+						disabled={!currentHandle}
 						minRows={3}
 					/>
-					{!currentUserName && (
+					{!currentHandle && (
 						<StartButton className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
 					)}
 				</div>
@@ -100,7 +100,7 @@ export function AddTranslationForm({
 						className="rounded-xl"
 						disabled={
 							fetcher.state !== "idle" ||
-							!currentUserName ||
+							!currentHandle ||
 							!fields.text?.value?.trim()
 						}
 					>

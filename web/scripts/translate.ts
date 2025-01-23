@@ -1,6 +1,6 @@
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
-import { createUserAITranslationInfo } from "~/routes/$locale+/user.$userName+/page+/$slug+/functions/mutations.server";
-import { fetchUserByUserName } from "~/routes/functions/queries.server";
+import { createUserAITranslationInfo } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/mutations.server";
+import { fetchUserByHandle } from "~/routes/functions/queries.server";
 import { prisma } from "~/utils/prisma";
 
 // 実際にはgetAllPagesByUserIdを何らかの形で用意する必要がある
@@ -24,7 +24,7 @@ async function getAllPagesByUserId(userId: number) {
 			process.exit(1);
 		}
 
-		const user = await fetchUserByUserName(USER_NAME);
+		const user = await fetchUserByHandle(USER_NAME);
 		if (!user) {
 			console.error(`User ${USER_NAME} not found.`);
 			process.exit(1);

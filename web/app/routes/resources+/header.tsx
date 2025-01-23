@@ -26,7 +26,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		const user = await authenticator.authenticate("google", request);
 
 		if (user) {
-			return redirect(`/user/${user.userName}`);
+			return redirect(`/user/${user.handle}`);
 		}
 
 		return redirect("/auth/login");
@@ -49,7 +49,7 @@ export function Header({ currentUser, locale }: HeaderProps) {
 				<Search className="w-6 h-6 " />
 			</NavLocaleLink>
 			{currentUser ? (
-				<NewPageButton userName={currentUser.userName} locale={locale} />
+				<NewPageButton handle={currentUser.handle} locale={locale} />
 			) : (
 				<StartButton />
 			)}

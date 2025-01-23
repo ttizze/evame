@@ -5,8 +5,8 @@ import { useLoaderData, useSearchParams } from "@remix-run/react";
 import { StartButton } from "~/components/StartButton";
 import { supportedLocaleOptions } from "~/constants/languages";
 import i18nServer from "~/i18n.server";
-import { SourceTextAndTranslationSection } from "~/routes/$locale+/user.$userName+/page+/$slug+/components/sourceTextAndTranslationSection/SourceTextAndTranslationSection";
-import { fetchPageWithTranslations } from "~/routes/$locale+/user.$userName+/page+/$slug+/functions/queries.server";
+import { SourceTextAndTranslationSection } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/sourceTextAndTranslationSection/SourceTextAndTranslationSection";
+import { fetchPageWithTranslations } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
 
 import { data } from "@remix-run/node";
@@ -173,7 +173,7 @@ export default function Home() {
 								sourceTextWithTranslations={heroTitle}
 								sourceTextClassName="w-full bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text !text-transparent mb-2"
 								elements={heroTitle.sourceText.text}
-								currentUserName={undefined}
+								currentHandle={undefined}
 								showOriginal={true}
 								showTranslation={true}
 							/>
@@ -186,7 +186,7 @@ export default function Home() {
 								elements={heroText.sourceText.text}
 								showOriginal={true}
 								showTranslation={true}
-								currentUserName={undefined}
+								currentHandle={undefined}
 							/>
 						</span>
 						<div className="mb-12 flex justify-center mt-10">
@@ -215,8 +215,8 @@ export default function Home() {
 								<PageCard
 									key={page.id}
 									pageCard={page}
-									pageLink={`/user/${page.user.userName}/page/${page.slug}`}
-									userLink={`/user/${page.user.userName}`}
+									pageLink={`/user/${page.user.handle}/page/${page.slug}`}
+									userLink={`/user/${page.user.handle}`}
 								/>
 							))}
 						</div>
@@ -290,8 +290,8 @@ export default function Home() {
 								<PageCard
 									key={page.id}
 									pageCard={page}
-									pageLink={`/user/${page.user.userName}/page/${page.slug}`}
-									userLink={`/user/${page.user.userName}`}
+									pageLink={`/user/${page.user.handle}/page/${page.slug}`}
+									userLink={`/user/${page.user.handle}`}
 								/>
 							))}
 						</div>

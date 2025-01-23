@@ -42,7 +42,7 @@ describe("resource+/comment/route.ts action", () => {
 			createdAt: new Date(),
 			updatedAt: new Date(),
 			user: {
-				userName: "testuser",
+				handle: "testuser",
 				displayName: "Test User",
 				icon: "test.png",
 			},
@@ -71,7 +71,7 @@ describe("resource+/comment/route.ts action", () => {
 			include: {
 				user: {
 					select: {
-						userName: true,
+						handle: true,
 						displayName: true,
 						icon: true,
 					},

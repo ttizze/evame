@@ -45,7 +45,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				include: {
 					user: {
 						select: {
-							userName: true,
+							handle: true,
 							displayName: true,
 							icon: true,
 						},

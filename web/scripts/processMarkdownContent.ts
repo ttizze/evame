@@ -4,8 +4,8 @@ import rehypeStringify from "rehype-stringify";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
-import { upsertPageWithHtml } from "~/routes/$locale+/user.$userName+/page+/$slug+/edit/functions/mutations.server";
-import { rehypeAddDataId } from "~/routes/$locale+/user.$userName+/page+/$slug+/edit/utils/processHtmlContent";
+import { upsertPageWithHtml } from "~/routes/$locale+/user.$handle+/page+/$slug+/edit/functions/mutations.server";
+import { rehypeAddDataId } from "~/routes/$locale+/user.$handle+/page+/$slug+/edit/utils/processHtmlContent";
 export async function processMarkdownContent(
 	title: string,
 	body: string,

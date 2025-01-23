@@ -2,10 +2,10 @@ import { prisma } from "~/utils/prisma";
 
 export async function getOrCreateAIUser(name: string): Promise<number> {
 	const user = await prisma.user.upsert({
-		where: { userName: name },
+		where: { handle: name },
 		update: {},
 		create: {
-			userName: name,
+			handle: name,
 			displayName: name,
 			isAI: true,
 			icon: "",

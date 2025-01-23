@@ -9,7 +9,7 @@ import {
 	CardTitle,
 } from "~/components/ui/card";
 import type { PageCardLocalizedType } from "~/routes/$locale+/functions/queries.server";
-import { PageActionsDropdown } from "~/routes/$locale+/user.$userName+/components/PageActionsDropdown";
+import { PageActionsDropdown } from "~/routes/$locale+/user.$handle+/components/PageActionsDropdown";
 import { LikeButton } from "~/routes/resources+/like-button";
 
 type PageCardProps = {

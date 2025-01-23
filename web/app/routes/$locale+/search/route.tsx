@@ -259,8 +259,8 @@ export default function SearchPage() {
 							<PageCard
 								key={pageItem.id}
 								pageCard={pageItem}
-								pageLink={`/user/${pageItem.user.userName}/page/${pageItem.slug}`}
-								userLink={`/user/${pageItem.user.userName}`}
+								pageLink={`/user/${pageItem.user.handle}/page/${pageItem.slug}`}
+								userLink={`/user/${pageItem.user.handle}`}
 							/>
 						))}
 					</div>
@@ -275,11 +275,9 @@ export default function SearchPage() {
 								className="flex items-start p-4  rounded-lg transition"
 							>
 								<div className="flex-1">
-									<LocaleLink to={`/user/${usr.userName}`}>
+									<LocaleLink to={`/user/${usr.handle}`}>
 										<h3 className="text-xl font-bold">{usr.displayName}</h3>
-										<span className="text-gray-500 text-sm">
-											@{usr.userName}
-										</span>
+										<span className="text-gray-500 text-sm">@{usr.handle}</span>
 									</LocaleLink>
 								</div>
 							</div>
@@ -296,8 +294,8 @@ export default function SearchPage() {
 								<PageCard
 									key={pageItem.id}
 									pageCard={pageItem}
-									pageLink={`/user/${pageItem.user.userName}/page/${pageItem.slug}`}
-									userLink={`/user/${pageItem.user.userName}`}
+									pageLink={`/user/${pageItem.user.handle}/page/${pageItem.slug}`}
+									userLink={`/user/${pageItem.user.handle}`}
 								/>
 							))}
 						</div>

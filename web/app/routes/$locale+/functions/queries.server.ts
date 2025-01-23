@@ -9,7 +9,7 @@ export function createPageCardSelect(locale?: string) {
 		status: true,
 		user: {
 			select: {
-				userName: true,
+				handle: true,
 				displayName: true,
 				icon: true,
 				profile: true,

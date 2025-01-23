@@ -11,8 +11,8 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import type { TranslationWithVote } from "~/routes/$locale+/user.$userName+/page+/$slug+/types";
-import { sanitizeAndParseText } from "~/routes/$locale+/user.$userName+/page+/$slug+/utils/sanitize-and-parse-text.client";
+import type { TranslationWithVote } from "~/routes/$locale+/user.$handle+/page+/$slug+/types";
+import { sanitizeAndParseText } from "~/routes/$locale+/user.$handle+/page+/$slug+/utils/sanitize-and-parse-text.client";
 import { authenticator } from "~/utils/auth.server";
 import { deleteOwnTranslation } from "./functions/mutations.server";
 import { VoteButtons } from "./vote-buttons";
@@ -34,20 +34,20 @@ export async function action({ request }: ActionFunctionArgs) {
 	if (!currentUser) {
 		return data({ error: "Unauthorized" }, { status: 403 });
 	}
-	await deleteOwnTranslation(currentUser.userName, parsed.data.translationId);
+	await deleteOwnTranslation(currentUser.handle, parsed.data.translationId);
 	return data({ success: true });
 }
 
 interface TranslationItemProps {
 	translation: TranslationWithVote;
-	currentUserName: string | undefined;
+	currentHandle: string | undefined;
 }
 
 export function TranslationListItem({
 	translation,
-	currentUserName,
+	currentHandle,
 }: TranslationItemProps) {
-	const isOwner = currentUserName === translation.translateText.user.userName;
+	const isOwner = currentHandle === translation.translateText.user.handle;
 	const fetcher = useFetcher();
 
 	const onDelete = () => {
@@ -81,7 +81,7 @@ export function TranslationListItem({
 			</div>
 			<div className="flex items-center justify-end">
 				<LocaleLink
-					to={`/user/${translation.translateText.user.userName}`}
+					to={`/user/${translation.translateText.user.handle}`}
 					className="!no-underline mr-2"
 				>
 					<p className="text-sm text-gray-500 text-right flex justify-end items-center  ">

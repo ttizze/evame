@@ -9,8 +9,8 @@ import { schema } from "../route";
 import type { action } from "../route";
 export function CommentForm({
 	pageId,
-	currentUserName,
-}: { pageId: number; currentUserName: string | undefined }) {
+	currentHandle,
+}: { pageId: number; currentHandle: string | undefined }) {
 	const fetcher = useFetcher<typeof action>();
 	const [form, fields] = useForm({
 		lastResult: fetcher.data?.lastResult,
@@ -38,15 +38,15 @@ export function CommentForm({
 				<Textarea
 					{...getTextareaProps(fields.text)}
 					placeholder="comment"
-					className={`min-h-[100px] ${!currentUserName && "bg-muted"}`}
-					disabled={!currentUserName}
+					className={`min-h-[100px] ${!currentHandle && "bg-muted"}`}
+					disabled={!currentHandle}
 				/>
-				{!currentUserName && (
+				{!currentHandle && (
 					<StartButton className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
 				)}
 				<Button
 					type="submit"
-					disabled={fetcher.state !== "idle" || !currentUserName}
+					disabled={fetcher.state !== "idle" || !currentHandle}
 					className={"w-full "}
 				>
 					{fetcher.state !== "idle" ? "posting" : "post"}

@@ -8,7 +8,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import type { CommentWithUser } from "~/routes/$locale+/user.$userName+/page+/$slug+/functions/queries.server";
+import type { CommentWithUser } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
 interface CommentListProps {
 	commentsWithUser: CommentWithUser;
 	currentUserId?: number;

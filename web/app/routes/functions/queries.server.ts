@@ -1,19 +1,17 @@
 import type { GeminiApiKey, User } from "@prisma/client";
 import { prisma } from "~/utils/prisma";
 
-export async function fetchUserByUserName(
-	userName: string,
-): Promise<User | null> {
+export async function fetchUserByHandle(handle: string): Promise<User | null> {
 	return await prisma.user.findUnique({
-		where: { userName },
+		where: { handle },
 	});
 }
 
-export async function fetchGeminiApiKeyByUserName(
-	userName: string,
+export async function fetchGeminiApiKeyByHandle(
+	handle: string,
 ): Promise<GeminiApiKey | null> {
 	const user = await prisma.user.findUnique({
-		where: { userName },
+		where: { handle },
 	});
 	if (!user) {
 		return null;
@@ -31,7 +29,7 @@ export async function fetchAllPublishedPages() {
 			slug: true,
 			createdAt: true,
 			updatedAt: true,
-			user: { select: { userName: true } },
+			user: { select: { handle: true } },
 			sourceTexts: {
 				where: {
 					number: 0,
@@ -51,7 +49,7 @@ export async function fetchAllPublishedPages() {
 export async function fetchAllUsersName() {
 	return prisma.user.findMany({
 		select: {
-			userName: true,
+			handle: true,
 			updatedAt: true,
 		},
 	});

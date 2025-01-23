@@ -20,7 +20,7 @@ if (!MAGIC_LINK_SECRET) {
 
 const authenticator = new Authenticator<User>(sessionStorage);
 
-function generateTemporaryUserName() {
+function generateTemporaryHandle() {
 	return `new-${crypto.randomUUID().slice(0, 10)}-${new Date().toISOString().slice(0, 10)}`;
 }
 
@@ -79,7 +79,7 @@ const googleStrategy = new GoogleStrategy<User>(
 						email: profile.emails[0].value || "",
 					},
 				},
-				userName: generateTemporaryUserName(),
+				handle: generateTemporaryHandle(),
 				displayName: profile.displayName || "New User",
 				icon: profile.photos[0].value || "",
 				provider: "Google",
@@ -116,7 +116,7 @@ const magicLinkStrategy = new EmailLinkStrategy(
 					},
 				},
 				icon: `${process.env.CLIENT_URL}/avatar.png`,
-				userName: generateTemporaryUserName(),
+				handle: generateTemporaryHandle(),
 				displayName: String(email).split("@")[0],
 				provider: "MagicLink",
 			},
