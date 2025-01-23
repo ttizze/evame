@@ -20,7 +20,7 @@ describe("UserProfile", () => {
 		const createdUser = await prisma.user.create({
 			data: {
 				handle: "testuser",
-				displayName: "Test User",
+				name: "Test User",
 				icon: "https://example.com/icon.jpg",
 				profile: "This is a test profile",
 				pages: {
@@ -69,7 +69,7 @@ describe("UserProfile", () => {
 		const createdUser2 = await prisma.user.create({
 			data: {
 				handle: "testuser2",
-				displayName: "Test User2",
+				name: "Test User2",
 				icon: "https://example.com/icon2.jpg",
 				profile: "This is a test profile2",
 			},

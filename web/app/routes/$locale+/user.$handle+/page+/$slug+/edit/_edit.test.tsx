@@ -54,7 +54,7 @@ describe("EditPage", () => {
 		const user = await prisma.user.create({
 			data: {
 				handle: "testuser",
-				displayName: "Test User",
+				name: "Test User",
 				icon: "https://example.com/icon.jpg",
 				profile: "This is a test profile",
 				pages: {

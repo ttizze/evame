@@ -32,7 +32,7 @@ export const meta: MetaFunction = () => {
 
 const RESERVED_HANDLES = [...new Set([...reservedHandles])];
 const schema = z.object({
-	displayName: z
+	name: z
 		.string()
 		.min(1, "Display name is required")
 		.max(25, "Too Long. Must be 25 characters or less"),
@@ -84,11 +84,11 @@ export async function action({ request }: ActionFunctionArgs) {
 		return submission.reply();
 	}
 
-	const { displayName, handle, profile, icon } = submission.value;
+	const { name, handle, profile, icon } = submission.value;
 
 	try {
 		const updatedUser = await updateUser(currentUser.id, {
-			displayName,
+			name,
 			handle,
 			profile,
 			icon,
@@ -120,7 +120,7 @@ export default function EditProfile() {
 		shouldValidate: "onBlur",
 		shouldRevalidate: "onInput",
 		defaultValue: {
-			displayName: currentUser.displayName,
+			name: currentUser.name,
 			handle: currentUser.handle,
 			profile: currentUser.profile,
 			icon: currentUser.icon,
@@ -228,14 +228,14 @@ export default function EditProfile() {
 					</div>
 					<div>
 						<Input
-							{...getInputProps(fields.displayName, { type: "text" })}
+							{...getInputProps(fields.name, { type: "text" })}
 							className="w-full h-10 px-3 py-2 border rounded-lg  bg-white dark:bg-black/50 focus:outline-none"
 						/>
 						<div
-							id={fields.displayName.errorId}
+							id={fields.name.errorId}
 							className="text-red-500 text-sm mt-1"
 						>
-							{fields.displayName.errors}
+							{fields.name.errors}
 						</div>
 					</div>
 					<div>

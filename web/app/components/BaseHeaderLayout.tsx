@@ -47,10 +47,7 @@ export function BaseHeaderLayout({
 						<DropdownMenu>
 							<DropdownMenuTrigger>
 								<Avatar className="w-6 h-6">
-									<AvatarImage
-										src={currentUser.icon}
-										alt={currentUser.displayName}
-									/>
+									<AvatarImage src={currentUser.icon} alt={currentUser.name} />
 									<AvatarFallback>{currentUser.handle}</AvatarFallback>
 								</Avatar>
 							</DropdownMenuTrigger>
@@ -65,7 +62,7 @@ export function BaseHeaderLayout({
 										}
 									>
 										<div className="flex flex-col items-start">
-											{currentUser.displayName}
+											{currentUser.name}
 											<span className="text-xs text-gray-500">
 												@{currentUser.handle}
 											</span>

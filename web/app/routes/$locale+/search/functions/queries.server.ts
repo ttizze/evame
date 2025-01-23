@@ -185,12 +185,12 @@ export async function searchUsers(
 			skip,
 			take,
 			where: {
-				displayName: { contains: query, mode: "insensitive" },
+				name: { contains: query, mode: "insensitive" },
 			},
 		}),
 		prisma.user.count({
 			where: {
-				displayName: { contains: query, mode: "insensitive" },
+				name: { contains: query, mode: "insensitive" },
 			},
 		}),
 	]);

@@ -36,7 +36,7 @@ export function FollowListDialog({
 							{users.map((user) => (
 								<li key={user.id}>
 									<a href={`/user/${user.handle}`} className="underline">
-										{user.displayName} (@{user.handle})
+										{user.name} (@{user.handle})
 									</a>
 								</li>
 							))}

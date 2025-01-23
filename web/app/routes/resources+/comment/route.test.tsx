@@ -43,7 +43,7 @@ describe("resource+/comment/route.ts action", () => {
 			updatedAt: new Date(),
 			user: {
 				handle: "testuser",
-				displayName: "Test User",
+				name: "Test User",
 				icon: "test.png",
 			},
 		};
@@ -72,7 +72,7 @@ describe("resource+/comment/route.ts action", () => {
 				user: {
 					select: {
 						handle: true,
-						displayName: true,
+						name: true,
 						icon: true,
 					},
 				},

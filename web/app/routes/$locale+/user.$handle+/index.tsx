@@ -42,8 +42,8 @@ import { FollowListDialog } from "./components/FollowListDialog";
 import {
 	archivePage,
 	togglePagePublicStatus,
-} from "./functions/mutations.server";
-import {
+	} from "./functions/mutations.server";
+	import {
 	fetchFollowerList,
 	fetchFollowingList,
 	getFollowCounts,
@@ -54,7 +54,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Profile" }];
 	}
-	return [{ title: data.pageOwner.displayName }];
+	return [{ title: data.pageOwner.name }];
 };
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
@@ -205,10 +205,10 @@ export default function UserPage() {
 								<Avatar className="w-20 h-20 md:w-24 md:h-24">
 									<AvatarImage
 										src={pageOwner.icon}
-										alt={pageOwner.displayName}
+										alt={pageOwner.name}
 									/>
 									<AvatarFallback>
-										{pageOwner.displayName.charAt(0).toUpperCase()}
+										{pageOwner.name.charAt(0).toUpperCase()}
 									</AvatarFallback>
 								</Avatar>
 							</Link>
@@ -216,7 +216,7 @@ export default function UserPage() {
 						<div className="mt-2 md:mt-0 md:ml-4 flex items-center justify-between w-full">
 							<div>
 								<CardTitle className="text-xl md:text-2xl font-bold">
-									{pageOwner.displayName}
+									{pageOwner.name}
 								</CardTitle>
 								<div>
 									<CardDescription className="text-sm text-gray-500">

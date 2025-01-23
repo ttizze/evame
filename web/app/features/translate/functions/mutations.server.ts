@@ -6,7 +6,7 @@ export async function getOrCreateAIUser(name: string): Promise<number> {
 		update: {},
 		create: {
 			handle: name,
-			displayName: name,
+			name: name,
 			isAI: true,
 			icon: "",
 			userEmail: {
