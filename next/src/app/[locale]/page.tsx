@@ -1,32 +1,9 @@
 // app/page.tsx (or wherever your HomePage is located)
-import { auth, signIn, signOut } from "@/auth";
+import { auth } from "@/auth";
 import { Input } from "@/components/ui/input";
 import { Link } from "@/i18n/routing";
 import { prisma } from "@/lib/prisma";
-
-/**
- * Server action: sign in with Google
- */
-export async function signInWithGoogleAction() {
-	"use server";
-	await signIn("google");
-}
-
-/**
- * Server action: sign in with 'resend'
- */
-export async function signInWithResendAction(formData: FormData) {
-	"use server";
-	await signIn("resend", formData);
-}
-
-/**
- * Server action: sign out
- */
-export async function signOutAction() {
-	"use server";
-	await signOut();
-}
+import { signInWithGoogleAction, signInWithResendAction, signOutAction } from "./action/action";
 
 export default async function HomePage() {
 	const users = await prisma.user.findMany();
