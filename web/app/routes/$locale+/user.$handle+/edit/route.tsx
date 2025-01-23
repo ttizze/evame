@@ -231,10 +231,7 @@ export default function EditProfile() {
 							{...getInputProps(fields.name, { type: "text" })}
 							className="w-full h-10 px-3 py-2 border rounded-lg  bg-white dark:bg-black/50 focus:outline-none"
 						/>
-						<div
-							id={fields.name.errorId}
-							className="text-red-500 text-sm mt-1"
-						>
+						<div id={fields.name.errorId} className="text-red-500 text-sm mt-1">
 							{fields.name.errors}
 						</div>
 					</div>

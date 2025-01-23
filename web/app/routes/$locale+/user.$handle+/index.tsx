@@ -42,8 +42,8 @@ import { FollowListDialog } from "./components/FollowListDialog";
 import {
 	archivePage,
 	togglePagePublicStatus,
-	} from "./functions/mutations.server";
-	import {
+} from "./functions/mutations.server";
+import {
 	fetchFollowerList,
 	fetchFollowingList,
 	getFollowCounts,
@@ -203,10 +203,7 @@ export default function UserPage() {
 						<div>
 							<Link to={`${pageOwner.icon}`}>
 								<Avatar className="w-20 h-20 md:w-24 md:h-24">
-									<AvatarImage
-										src={pageOwner.icon}
-										alt={pageOwner.name}
-									/>
+									<AvatarImage src={pageOwner.icon} alt={pageOwner.name} />
 									<AvatarFallback>
 										{pageOwner.name.charAt(0).toUpperCase()}
 									</AvatarFallback>

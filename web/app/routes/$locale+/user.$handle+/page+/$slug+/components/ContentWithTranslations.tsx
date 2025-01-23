@@ -72,9 +72,7 @@ export function ContentWithTranslations({
 						</AvatarFallback>
 					</Avatar>
 					<div className="flex flex-col">
-						<span className="text-sm">
-							{pageWithTranslations.user.name}
-						</span>
+						<span className="text-sm">{pageWithTranslations.user.name}</span>
 						<span className="text-xs text-gray-500">
 							{pageWithTranslations.page.createdAt}
 						</span>
