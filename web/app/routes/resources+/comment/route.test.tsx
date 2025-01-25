@@ -7,7 +7,7 @@ import { action } from "./route"; // 今回のactionをimport
 // prisma と authenticator をモック
 vi.mock("~/utils/prisma", () => ({
 	prisma: {
-		comment: {
+		pageComment: {
 			create: vi.fn(),
 			findUnique: vi.fn(),
 			delete: vi.fn(),
@@ -34,7 +34,7 @@ describe("resource+/comment/route.ts action", () => {
 		vi.mocked(authenticator.isAuthenticated).mockResolvedValueOnce({ id: 123 });
 
 		// prisma.create の返り値モック
-		const mockComment = {
+		const mockPageComment = {
 			id: 1,
 			text: "Hello",
 			pageId: 1,
@@ -47,7 +47,7 @@ describe("resource+/comment/route.ts action", () => {
 				image: "test.png",
 			},
 		};
-		vi.mocked(prisma.comment.create).mockResolvedValueOnce(mockComment);
+		vi.mocked(prisma.pageComment.create).mockResolvedValueOnce(mockPageComment);
 
 		const formData = new FormData();
 		formData.append("intent", "create");
@@ -62,7 +62,7 @@ describe("resource+/comment/route.ts action", () => {
 		const result = await action({ request, context, params });
 
 		// 正しい引数で create が呼ばれたか
-		expect(prisma.comment.create).toHaveBeenCalledWith({
+		expect(prisma.pageComment.create).toHaveBeenCalledWith({
 			data: {
 				text: "Hello",
 				pageId: 1,
@@ -82,7 +82,7 @@ describe("resource+/comment/route.ts action", () => {
 		// 戻り値に mockComment が含まれる
 		expect(result).toMatchObject({
 			data: {
-				comment: mockComment,
+				pageComment: mockPageComment,
 			},
 		});
 	});
@@ -105,8 +105,8 @@ describe("resource+/comment/route.ts action", () => {
 		const result = await action({ request, context, params });
 
 		// findUnique や delete は呼ばれない
-		expect(prisma.comment.findUnique).not.toHaveBeenCalled();
-		expect(prisma.comment.delete).not.toHaveBeenCalled();
+		expect(prisma.pageComment.findUnique).not.toHaveBeenCalled();
+		expect(prisma.pageComment.delete).not.toHaveBeenCalled();
 
 		// 何かエラーにはならず、普通に返却
 		expect(result).toMatchObject({
@@ -126,7 +126,7 @@ describe("resource+/comment/route.ts action", () => {
 		vi.mocked(authenticator.isAuthenticated).mockResolvedValueOnce({ id: 123 });
 
 		// DB上のコメントは userId=999
-		vi.mocked(prisma.comment.findUnique).mockResolvedValueOnce({
+		vi.mocked(prisma.pageComment.findUnique).mockResolvedValueOnce({
 			id: 10,
 			userId: 999,
 			text: "Hello",
@@ -137,7 +137,7 @@ describe("resource+/comment/route.ts action", () => {
 
 		const formData = new FormData();
 		formData.append("intent", "delete");
-		formData.append("commentId", "10");
+		formData.append("pageCommentId", "10");
 
 		const request = new Request("http://test.com/comment", {
 			method: "POST",
@@ -146,12 +146,12 @@ describe("resource+/comment/route.ts action", () => {
 		const result = await action({ request, context, params });
 
 		// findUnique は呼ばれる
-		expect(prisma.comment.findUnique).toHaveBeenCalledWith({
+		expect(prisma.pageComment.findUnique).toHaveBeenCalledWith({
 			where: { id: 10 },
 			select: { userId: true },
 		});
 		// 自分のコメントではないので delete は呼ばれない
-		expect(prisma.comment.delete).not.toHaveBeenCalled();
+		expect(prisma.pageComment.delete).not.toHaveBeenCalled();
 
 		expect(result).toMatchObject({
 			data: {
@@ -168,7 +168,7 @@ describe("resource+/comment/route.ts action", () => {
 		vi.mocked(authenticator.isAuthenticated).mockResolvedValueOnce({ id: 123 });
 
 		// findUnique で userId=123 が返る
-		vi.mocked(prisma.comment.findUnique).mockResolvedValueOnce({
+		vi.mocked(prisma.pageComment.findUnique).mockResolvedValueOnce({
 			id: 10,
 			userId: 123,
 			text: "Hello",
@@ -179,7 +179,7 @@ describe("resource+/comment/route.ts action", () => {
 
 		const formData = new FormData();
 		formData.append("intent", "delete");
-		formData.append("commentId", "10");
+		formData.append("pageCommentId", "10");
 
 		const request = new Request("http://test.com/comment", {
 			method: "POST",
@@ -187,12 +187,12 @@ describe("resource+/comment/route.ts action", () => {
 		});
 		const result = await action({ request, context, params });
 
-		expect(prisma.comment.findUnique).toHaveBeenCalledWith({
+		expect(prisma.pageComment.findUnique).toHaveBeenCalledWith({
 			where: { id: 10 },
 			select: { userId: true },
 		});
 		// 所有者一致 → 削除が呼ばれる
-		expect(prisma.comment.delete).toHaveBeenCalledWith({
+		expect(prisma.pageComment.delete).toHaveBeenCalledWith({
 			where: { id: 10 },
 		});
 

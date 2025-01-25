@@ -7,7 +7,7 @@ import { useFetcher } from "@remix-run/react";
 import { StartButton } from "~/components/StartButton";
 import { schema } from "../route";
 import type { action } from "../route";
-export function CommentForm({
+export function PageCommentForm({
 	pageId,
 	currentHandle,
 }: { pageId: number; currentHandle: string | undefined }) {
@@ -31,14 +31,14 @@ export function CommentForm({
 				method="POST"
 				{...getFormProps(form)}
 				action="/resources/comment"
-				className="space-y-4 relative"
+				className="space-y-4 "
 			>
 				<input type="hidden" name="pageId" value={pageId} />
 				<input type="hidden" name="intent" value="create" />
 				<Textarea
 					{...getTextareaProps(fields.text)}
 					placeholder="comment"
-					className={`min-h-[100px] ${!currentHandle && "bg-muted"}`}
+					className={`min-h-[100px] w-full ${!currentHandle && "bg-muted"}`}
 					disabled={!currentHandle}
 				/>
 				{!currentHandle && (

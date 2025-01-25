@@ -244,6 +244,8 @@ export default function EditPage() {
 							initialContent={page?.content || ""}
 							onContentChange={handleContentChange}
 							onEditorCreate={setEditorInstance}
+							className="outline-none"
+							placeholder="Write to the world..."
 						/>
 						{fields.pageContent.errors?.map((error) => (
 							<p className="text-sm text-red-500" key={error}>
