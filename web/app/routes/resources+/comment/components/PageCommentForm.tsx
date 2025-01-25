@@ -31,7 +31,7 @@ export function PageCommentForm({
 				method="POST"
 				{...getFormProps(form)}
 				action="/resources/comment"
-				className="space-y-4 "
+				className="space-y-4 relative"
 			>
 				<input type="hidden" name="pageId" value={pageId} />
 				<input type="hidden" name="intent" value="create" />
