@@ -12,6 +12,9 @@ vi.mock("~/utils/prisma", () => ({
 			findUnique: vi.fn(),
 			delete: vi.fn(),
 		},
+		pageCommentSegment: {
+			createMany: vi.fn(),
+		},
 	},
 }));
 
@@ -21,7 +24,7 @@ vi.mock("~/utils/auth.server", () => ({
 	},
 }));
 
-describe("resource+/comment/route.ts action", () => {
+describe("app/routes/$locale+/user.$handle+/page+/$slug+/comment/route.test.tsx action", () => {
 	const context = {};
 	const params = {};
 
@@ -36,9 +39,10 @@ describe("resource+/comment/route.ts action", () => {
 		// prisma.create の返り値モック
 		const mockPageComment = {
 			id: 1,
-			text: "Hello",
+			content: "Hello world! This is a test comment. My name is John Doe.",
 			pageId: 1,
 			userId: 123,
+			locale: "en",
 			createdAt: new Date(),
 			updatedAt: new Date(),
 			user: {
@@ -49,11 +53,15 @@ describe("resource+/comment/route.ts action", () => {
 		};
 		vi.mocked(prisma.pageComment.create).mockResolvedValueOnce(mockPageComment);
 
+		// pageCommentSegment.createMany のモックを追加
+		vi.mocked(prisma.pageCommentSegment.createMany).mockResolvedValueOnce({
+			count: 1,
+		});
+
 		const formData = new FormData();
 		formData.append("intent", "create");
 		formData.append("pageId", "1");
-		formData.append("text", "Hello");
-
+		formData.append("content", "This is a long paragraph");
 		const request = new Request("http://test.com/comment", {
 			method: "POST",
 			body: formData,
@@ -61,11 +69,12 @@ describe("resource+/comment/route.ts action", () => {
 
 		const result = await action({ request, context, params });
 
-		// 正しい引数で create が呼ばれたか
+		// 正しい引数で create が呼ばれた
 		expect(prisma.pageComment.create).toHaveBeenCalledWith({
 			data: {
-				text: "Hello",
+				content: "This is a long paragraph",
 				pageId: 1,
+				locale: "und",
 				userId: 123,
 			},
 			include: {
@@ -129,7 +138,8 @@ describe("resource+/comment/route.ts action", () => {
 		vi.mocked(prisma.pageComment.findUnique).mockResolvedValueOnce({
 			id: 10,
 			userId: 999,
-			text: "Hello",
+			content: "Hello",
+			locale: "en",
 			pageId: 1,
 			createdAt: new Date(),
 			updatedAt: new Date(),
@@ -171,7 +181,8 @@ describe("resource+/comment/route.ts action", () => {
 		vi.mocked(prisma.pageComment.findUnique).mockResolvedValueOnce({
 			id: 10,
 			userId: 123,
-			text: "Hello",
+			content: "Hello",
+			locale: "en",
 			pageId: 1,
 			createdAt: new Date(),
 			updatedAt: new Date(),

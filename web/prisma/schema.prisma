@@ -30,7 +30,7 @@ model User {
   followers             Follow[]                @relation("following")
   following             Follow[]                @relation("follower")
   pageComments          PageComment[]
-
+  pageCommentSegmentTranslates PageCommentSegmentTranslate[]
   @@map("users")
 }
 
@@ -217,14 +217,15 @@ model Vote {
 
 model PageComment {
   id           Int           @id @default(autoincrement())
-  text         String
+  content         String
+  locale       String
   userId       Int           @map("user_id")
   pageId       Int           @map("page_id")
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   page         Page          @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  pageCommentSourceTexts PageCommentSourceText[]
+  pageCommentSegments PageCommentSegment[]
 
   @@index([userId])
   @@index([pageId])
@@ -232,12 +233,38 @@ model PageComment {
   @@map("page_comments")
 }
 
-model PageCommentSourceText {
+model PageCommentSegment {
   id        Int     @id @default(autoincrement())
   text      String
+  number                Int
+  textAndOccurrenceHash String          @map("text_and_occurrence_hash")
   pageCommentId Int     @map("page_comment_id")
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
   pageComment   PageComment @relation(fields: [pageCommentId], references: [id], onDelete: Cascade)
+  pageCommentSegmentTranslates PageCommentSegmentTranslate[]
 
   @@index([pageCommentId])
-  @@map("page_comment_source_texts")
+  @@unique([pageCommentId, number])
+  @@unique([pageCommentId, textAndOccurrenceHash])
+  @@index([textAndOccurrenceHash])
+  @@map("page_comment_segments")
+}
+
+model PageCommentSegmentTranslate {
+  id        Int     @id @default(autoincrement())
+  locale       String
+  text      String
+  userId       Int        @map("user_id")
+  point        Int        @default(0)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageCommentSegmentId Int     @map("page_comment_segment_id")
+  pageCommentSegment   PageCommentSegment @relation(fields: [pageCommentSegmentId], references: [id], onDelete: Cascade)
+
+  @@index([pageCommentSegmentId])
+  @@index([userId])
+  @@index([locale])
+  @@map("page_comment_segment_translates")
 }

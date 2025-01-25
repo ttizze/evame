@@ -15,7 +15,6 @@ Evameは、ユーザの投稿したテクストに対訳､脚注､解説を付
 - 翻訳結果の保存
 - 翻訳結果への投票
 - 翻訳の投稿
-- リーダーモード
 
 ## 開発中の機能
 
@@ -36,12 +35,12 @@ Evameは、ユーザの投稿したテクストに対訳､脚注､解説を付
 
 1. このリポジトリをクローンします：
    ```
-   git clone https://github.com/ttizze/eveeve.git
+   git clone https://github.com/ttizze/evame.git
    ```
 2. 必要な依存関係をインストールします：
 
    ```
-   cd eveeve
+   cd evame
    cd web
    bun i
    ```
@@ -78,7 +77,7 @@ Evameは、ユーザの投稿したテクストに対訳､脚注､解説を付
    ```
    bun run dev
    ```
-8. ブラウザで `http://localhost:5173` にアクセスして、eveeve を使用開始します:
+8. ブラウザで `http://localhost:5173` にアクセスして、evame を使用開始します:
 9. ローカル開発環境では、認証プロセスが簡略化されています：
 
    - `http://localhost:5173/auth/login` にアクセスして、dev@example.comと devpassword でログインしてください。
