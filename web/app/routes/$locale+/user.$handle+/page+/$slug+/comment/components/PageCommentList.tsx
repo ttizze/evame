@@ -1,4 +1,5 @@
 import { useFetcher } from "@remix-run/react";
+import parse from "html-react-parser";
 import { MoreVertical } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
@@ -9,6 +10,7 @@ import {
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import type { PageCommentWithUser } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
+
 interface CommentListProps {
 	pageCommentsWithUser: PageCommentWithUser;
 	currentUserId?: number;
@@ -60,7 +62,7 @@ export function PageCommentList({
 												onSelect={() => {
 													fetcher.submit(
 														{ pageCommentId: pageComment.id, intent: "delete" },
-														{ method: "POST", action: "/resources/comment" },
+														{ method: "POST", action: "./comment" },
 													);
 												}}
 											>
@@ -72,7 +74,9 @@ export function PageCommentList({
 							</div>
 						</div>
 					</div>
-					<div className="mt-2 whitespace-pre-wrap">{pageComment.text}</div>
+					<div className="mt-2 prose dark:prose-invert">
+						{parse(pageComment.content)}
+					</div>
 				</div>
 			))}
 		</div>

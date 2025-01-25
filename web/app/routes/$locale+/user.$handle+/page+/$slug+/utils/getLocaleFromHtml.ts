@@ -1,9 +1,9 @@
 import { loadModule } from "cld3-asm";
 import { JSDOM } from "jsdom";
 
-export async function getPageSourceLanguage(
+export async function getLocaleFromHtml(
 	htmlContent: string,
-	title: string,
+	title?: string,
 ): Promise<string> {
 	const doc = new JSDOM(htmlContent);
 
@@ -11,12 +11,15 @@ export async function getPageSourceLanguage(
 		el.remove();
 	}
 
-	const textElements = [
-		{
-			number: 0,
-			text: title,
-		},
-	];
+	let textElements: { number: number; text: string }[] = [];
+	if (title) {
+		textElements = [
+			{
+				number: 0,
+				text: title,
+			},
+		];
+	}
 
 	const elements = doc.window.document.querySelectorAll(
 		"p, h1, h2, h3, h4, h5, h6, li, td, th",

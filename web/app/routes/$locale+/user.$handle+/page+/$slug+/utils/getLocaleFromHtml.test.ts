@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { getPageSourceLanguage } from "./getPageSourceLanguage";
+import { getLocaleFromHtml } from "./getLocaleFromHtml";
 
 describe("getPageSourceLanguage - Other Languages", () => {
 	// 長めの英語テストケース
@@ -20,7 +20,7 @@ describe("getPageSourceLanguage - Other Languages", () => {
         stood as a testament to the progress of civilization.
       </p>
     `;
-		const language = await getPageSourceLanguage(numberedContent, title);
+		const language = await getLocaleFromHtml(numberedContent, title);
 		expect(language).toBe("en");
 	});
 
@@ -42,7 +42,7 @@ describe("getPageSourceLanguage - Other Languages", () => {
         calidez humana.
       </p>
     `;
-		const language = await getPageSourceLanguage(numberedContent, title);
+		const language = await getLocaleFromHtml(numberedContent, title);
 		expect(language).toBe("es");
 	});
 
@@ -70,7 +70,7 @@ describe("getPageSourceLanguage - Other Languages", () => {
         十分なテキスト量を確保し、言語判定の精度を上げることができます。
       </p>
     `;
-		const language = await getPageSourceLanguage(numberedContent, title);
+		const language = await getLocaleFromHtml(numberedContent, title);
 		expect(language).toBe("ja");
 	});
 
@@ -89,7 +89,7 @@ describe("getPageSourceLanguage - Other Languages", () => {
         al sistema o detectará el idioma predominante?
       </p>
     `;
-		const language = await getPageSourceLanguage(numberedContent, title);
+		const language = await getLocaleFromHtml(numberedContent, title);
 		// 主要言語が "en" または "es" と検出されることを想定
 		expect(["en", "es"]).toContain(language);
 	});

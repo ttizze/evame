@@ -1,38 +1,35 @@
-import { useInputControl } from "@conform-to/react";
+import type { useInputControl } from "@conform-to/react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { EditorBubbleMenu } from "./EditorBubbleMenu";
 import { EditorFloatingMenu } from "./EditorFloatingMenu";
 import { configureEditor } from "./editorConfig";
 
 interface EditorProps {
-	initialContent: string;
-	onContentChange: () => void;
+	defaultValue: string;
+	onEditorUpdate?: () => void;
 	onEditorCreate?: (editor: ReturnType<typeof useEditor>) => void;
 	className: string;
 	placeholder: string;
+	InputControl: ReturnType<typeof useInputControl>;
 }
 
 export function Editor({
-	initialContent,
-	onContentChange,
+	defaultValue,
+	onEditorUpdate,
 	onEditorCreate,
 	className,
 	placeholder,
+	InputControl,
 }: EditorProps) {
-	const pageContentControl = useInputControl({
-		name: "pageContent",
-		formId: "edit-page",
-	});
-
 	const editor = useEditor({
-		...configureEditor(initialContent, placeholder),
+		...configureEditor(defaultValue, placeholder),
 		onCreate: ({ editor }) => {
-			pageContentControl.change(editor.getHTML());
+			InputControl.change(editor.getHTML());
 			onEditorCreate?.(editor);
 		},
 		onUpdate: async ({ editor }) => {
-			pageContentControl.change(editor.getHTML());
-			onContentChange();
+			InputControl.change(editor.getHTML());
+			onEditorUpdate?.();
 		},
 		editorProps: {
 			attributes: {

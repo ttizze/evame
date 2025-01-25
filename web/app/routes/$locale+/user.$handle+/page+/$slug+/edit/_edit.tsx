@@ -3,19 +3,18 @@ import {
 	getFormProps,
 	getTextareaProps,
 	useForm,
+	useInputControl,
 } from "@conform-to/react";
 import { getZodConstraint, parseWithZod } from "@conform-to/zod";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { useFetcher } from "@remix-run/react";
-import type { MetaFunction } from "@remix-run/react";
-import { useLoaderData } from "@remix-run/react";
+import { type MetaFunction, useFetcher, useLoaderData } from "@remix-run/react";
 import type { Editor as TiptapEditor } from "@tiptap/react";
-import { useState } from "react";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
 import { authenticator } from "~/utils/auth.server";
+import { getLocaleFromHtml } from "../utils/getLocaleFromHtml";
 import { EditHeader } from "./components/EditHeader";
 import { TagInput } from "./components/TagInput";
 import { Editor } from "./components/editor/Editor";
@@ -23,9 +22,8 @@ import { EditorKeyboardMenu } from "./components/editor/EditorKeyboardMenu";
 import { upsertTags } from "./functions/mutations.server";
 import { getAllTags, getPageBySlug } from "./functions/queries.server";
 import { useKeyboardVisible } from "./hooks/useKeyboardVisible";
-import { getPageSourceLanguage } from "./utils/getPageSourceLanguage";
 import { handlePageTranslation } from "./utils/handlePageTranslation";
-import { processHtmlContent } from "./utils/processHtmlContent";
+import { processPageHtml } from "./utils/processHtmlContent";
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
@@ -93,8 +91,8 @@ export async function action({ request, params }: ActionFunctionArgs) {
 	}
 
 	const { title, pageContent, status, tags } = submission.value;
-	const sourceLanguage = await getPageSourceLanguage(pageContent, title);
-	const page = await processHtmlContent(
+	const sourceLanguage = await getLocaleFromHtml(pageContent, title);
+	const page = await processPageHtml(
 		title,
 		pageContent,
 		slug,
@@ -172,6 +170,11 @@ export default function EditPage() {
 		debouncedAutoSave();
 	}, [debouncedAutoSave]);
 
+	const pageContentControl = useInputControl({
+		name: "pageContent",
+		formId: "edit-page",
+	});
+
 	useEffect(() => {
 		if (fetcher.state === "loading") {
 			setHasUnsavedChanges(false);
@@ -241,11 +244,12 @@ export default function EditPage() {
 							/>
 						</div>
 						<Editor
-							initialContent={page?.content || ""}
-							onContentChange={handleContentChange}
+							defaultValue={page?.content || ""}
+							onEditorUpdate={() => handleContentChange()}
 							onEditorCreate={setEditorInstance}
 							className="outline-none"
 							placeholder="Write to the world..."
+							InputControl={pageContentControl}
 						/>
 						{fields.pageContent.errors?.map((error) => (
 							<p className="text-sm text-red-500" key={error}>

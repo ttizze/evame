@@ -1,12 +1,13 @@
 import { parseWithZod } from "@conform-to/zod";
 import { type ActionFunctionArgs, data } from "@remix-run/node";
 import { z } from "zod";
+import { getLocaleFromHtml } from "~/routes/$locale+/user.$handle+/page+/$slug+/utils/getLocaleFromHtml";
 import { authenticator } from "~/utils/auth.server";
 import { prisma } from "~/utils/prisma";
-
+import { processCommentHtml } from "./lib/process-comment-html";
 export const createPageCommentSchema = z.object({
 	pageId: z.number(),
-	text: z.string().min(1, "Comment cannot be empty"),
+	content: z.string().min(1, "Comment cannot be empty"),
 	intent: z.literal("create"),
 });
 
@@ -36,9 +37,11 @@ export async function action({ request }: ActionFunctionArgs) {
 	}
 	switch (submission.value.intent) {
 		case "create": {
+			const locale = await getLocaleFromHtml(submission.value.content);
 			const pageComment = await prisma.pageComment.create({
 				data: {
-					text: submission.value.text,
+					content: submission.value.content,
+					locale,
 					pageId: submission.value.pageId,
 					userId: currentUser.id,
 				},
@@ -52,6 +55,7 @@ export async function action({ request }: ActionFunctionArgs) {
 					},
 				},
 			});
+			await processCommentHtml(pageComment.id, submission.value.content);
 
 			return data({
 				pageComment,
