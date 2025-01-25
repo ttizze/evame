@@ -7,7 +7,7 @@ import { useFetcher } from "@remix-run/react";
 import { StartButton } from "~/components/StartButton";
 import { schema } from "../route";
 import type { action } from "../route";
-export function CommentForm({
+export function PageCommentForm({
 	pageId,
 	currentHandle,
 }: { pageId: number; currentHandle: string | undefined }) {
@@ -38,7 +38,7 @@ export function CommentForm({
 				<Textarea
 					{...getTextareaProps(fields.text)}
 					placeholder="comment"
-					className={`min-h-[100px] ${!currentHandle && "bg-muted"}`}
+					className={`min-h-[100px] w-full ${!currentHandle && "bg-muted"}`}
 					disabled={!currentHandle}
 				/>
 				{!currentHandle && (

@@ -8,10 +8,10 @@ datasource db {
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  handle              String                  @unique
-  name           String               
-  image                  String
+  id                    Int                     @id @default(autoincrement())
+  handle                String                  @unique
+  name                  String
+  image                 String
   profile               String                  @default("")
   plan                  String                  @default("free")
   totalPoints           Int                     @default(0) @map("total_points")
@@ -29,17 +29,16 @@ model User {
   likePages             LikePage[]
   followers             Follow[]                @relation("following")
   following             Follow[]                @relation("follower")
-  comments              Comment[]
+  pageComments          PageComment[]
 
-  @@index([handle])
   @@map("users")
 }
 
 model UserEmail {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  userId   Int    @unique @map("user_id")
-  user     User   @relation(fields: [userId], references: [id])
+  id     Int    @id @default(autoincrement())
+  email  String @unique
+  userId Int    @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@map("user_emails")
@@ -97,7 +96,6 @@ model UserAITranslationInfo {
   @@map("user_ai_translation_info")
 }
 
-
 enum PageStatus {
   DRAFT
   PUBLIC
@@ -118,7 +116,7 @@ model Page {
   sourceTexts           SourceText[]
   tagPages              TagPage[]
   likePages             LikePage[]
-  comments              Comment[]
+  pageComments          PageComment[]
 
   @@index([createdAt])
   @@index([userId])
@@ -180,8 +178,6 @@ model LikePage {
   @@map("like_pages")
 }
 
-
-
 model Tag {
   id    Int       @id @default(autoincrement())
   name  String    @unique
@@ -219,19 +215,29 @@ model Vote {
   @@map("votes")
 }
 
-
-model Comment {
-  id        Int      @id @default(autoincrement())
-  text      String
-  userId    Int      @map("user_id")
-  pageId    Int      @map("page_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+model PageComment {
+  id           Int           @id @default(autoincrement())
+  text         String
+  userId       Int           @map("user_id")
+  pageId       Int           @map("page_id")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  page         Page          @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  pageCommentSourceTexts PageCommentSourceText[]
 
   @@index([userId])
   @@index([pageId])
   @@index([createdAt])
-  @@map("comments")
+  @@map("page_comments")
+}
+
+model PageCommentSourceText {
+  id        Int     @id @default(autoincrement())
+  text      String
+  pageCommentId Int     @map("page_comment_id")
+  pageComment   PageComment @relation(fields: [pageCommentId], references: [id], onDelete: Cascade)
+
+  @@index([pageCommentId])
+  @@map("page_comment_source_texts")
 }

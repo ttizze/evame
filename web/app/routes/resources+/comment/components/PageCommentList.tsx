@@ -8,40 +8,43 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import type { CommentWithUser } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
+import type { PageCommentWithUser } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
 interface CommentListProps {
-	commentsWithUser: CommentWithUser;
+	pageCommentsWithUser: PageCommentWithUser;
 	currentUserId?: number;
 }
 
-export function CommentList({
-	commentsWithUser,
+export function PageCommentList({
+	pageCommentsWithUser,
 	currentUserId,
 }: CommentListProps) {
 	const fetcher = useFetcher();
 
 	return (
 		<div className="space-y-4">
-			{commentsWithUser.map((comment) => (
-				<div key={comment.id} className="p-2 bg-card rounded-xl">
+			{pageCommentsWithUser.map((pageComment) => (
+				<div key={pageComment.id} className="p-2 bg-card rounded-xl">
 					<div className="flex items-center">
 						<Avatar className="w-6 h-6 mr-3">
-							<AvatarImage src={comment.user.image} alt={comment.user.name} />
+							<AvatarImage
+								src={pageComment.user.image}
+								alt={pageComment.user.name}
+							/>
 							<AvatarFallback>
-								{comment.user?.name.charAt(0) || "?"}
+								{pageComment.user?.name.charAt(0) || "?"}
 							</AvatarFallback>
 						</Avatar>
 						<div className="flex-1">
 							<div className="flex items-center justify-between">
 								<div>
 									<span className="font-semibold text-sm">
-										{comment.user?.name || "deleted_user"}
+										{pageComment.user?.name || "deleted_user"}
 									</span>
 									<span className="text-sm text-muted-foreground ml-2">
-										{comment.createdAt}
+										{pageComment.createdAt}
 									</span>
 								</div>
-								{currentUserId === comment.userId && (
+								{currentUserId === pageComment.userId && (
 									<DropdownMenu modal={false}>
 										<DropdownMenuTrigger asChild>
 											<Button
@@ -56,7 +59,7 @@ export function CommentList({
 											<DropdownMenuItem
 												onSelect={() => {
 													fetcher.submit(
-														{ commentId: comment.id, intent: "delete" },
+														{ pageCommentId: pageComment.id, intent: "delete" },
 														{ method: "POST", action: "/resources/comment" },
 													);
 												}}
@@ -69,7 +72,7 @@ export function CommentList({
 							</div>
 						</div>
 					</div>
-					<div className="mt-2 whitespace-pre-wrap">{comment.text}</div>
+					<div className="mt-2 whitespace-pre-wrap">{pageComment.text}</div>
 				</div>
 			))}
 		</div>

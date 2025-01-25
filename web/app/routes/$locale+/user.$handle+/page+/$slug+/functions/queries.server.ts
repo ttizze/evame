@@ -151,8 +151,11 @@ export async function fetchIsLikedByUser(
 	return false;
 }
 
-export async function fetchCommentsWithUser(pageId: number, locale: string) {
-	const comments = await prisma.comment.findMany({
+export async function fetchPageCommentsWithUser(
+	pageId: number,
+	locale: string,
+) {
+	const pageComments = await prisma.pageComment.findMany({
 		where: {
 			pageId,
 		},
@@ -170,11 +173,13 @@ export async function fetchCommentsWithUser(pageId: number, locale: string) {
 		},
 	});
 
-	return comments.map((comment) => ({
-		...comment,
-		createdAt: comment.createdAt.toLocaleString(locale),
-		updatedAt: comment.updatedAt.toLocaleString(locale),
+	return pageComments.map((pageComment) => ({
+		...pageComment,
+		createdAt: pageComment.createdAt.toLocaleString(locale),
+		updatedAt: pageComment.updatedAt.toLocaleString(locale),
 	}));
 }
 
-export type CommentWithUser = Awaited<ReturnType<typeof fetchCommentsWithUser>>;
+export type PageCommentWithUser = Awaited<
+	ReturnType<typeof fetchPageCommentsWithUser>
+>;

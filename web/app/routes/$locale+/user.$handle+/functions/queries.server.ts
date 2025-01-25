@@ -6,8 +6,8 @@ export async function fetchPageById(pageId: number) {
 	});
 }
 
-export async function getComments(pageId: number) {
-	return await prisma.comment.findMany({
+export async function getPageComments(pageId: number) {
+	return await prisma.pageComment.findMany({
 		where: {
 			pageId,
 		},

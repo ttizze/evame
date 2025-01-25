@@ -8,8 +8,8 @@ import { useState } from "react";
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
 import i18nServer from "~/i18n.server";
 import { fetchGeminiApiKeyByHandle } from "~/routes/functions/queries.server";
-import { CommentForm } from "~/routes/resources+/comment/components/CommentForm";
-import { CommentList } from "~/routes/resources+/comment/components/CommentList";
+import { PageCommentForm } from "~/routes/resources+/comment/components/PageCommentForm";
+import { PageCommentList } from "~/routes/resources+/comment/components/PageCommentList";
 import { LikeButton } from "~/routes/resources+/like-button";
 import { authenticator } from "~/utils/auth.server";
 import { ensureGuestId } from "~/utils/ensureGuestId.server";
@@ -18,10 +18,10 @@ import { ContentWithTranslations } from "./components/ContentWithTranslations";
 import { FloatingControls } from "./components/FloatingControls";
 import { createUserAITranslationInfo } from "./functions/mutations.server";
 import {
-	fetchCommentsWithUser,
 	fetchIsLikedByUser,
 	fetchLatestUserAITranslationInfo,
 	fetchLikeCount,
+	fetchPageCommentsWithUser,
 	fetchPageWithSourceTexts,
 	fetchPageWithTranslations,
 } from "./functions/queries.server";
@@ -120,10 +120,10 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		? `${sourceTitleWithTranslations.sourceText.text} - ${bestTranslationTitle.translateText.text}`
 		: sourceTitleWithTranslations.sourceText.text;
 
-	const [likeCount, isLikedByUser, commentsWithUser] = await Promise.all([
+	const [likeCount, isLikedByUser, pageCommentsWithUser] = await Promise.all([
 		fetchLikeCount(pageWithTranslations.page.id),
 		fetchIsLikedByUser(pageWithTranslations.page.id, currentUser?.id, guestId),
-		fetchCommentsWithUser(pageWithTranslations.page.id, locale),
+		fetchPageCommentsWithUser(pageWithTranslations.page.id, locale),
 	]);
 
 	const headers = new Headers();
@@ -139,7 +139,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			sourceTitleWithBestTranslationTitle,
 			likeCount,
 			isLikedByUser,
-			commentsWithUser,
+			pageCommentsWithUser,
 			existLocales: pageWithTranslations.existLocales,
 		},
 		{
@@ -228,7 +228,7 @@ export default function Page() {
 		locale,
 		likeCount,
 		isLikedByUser,
-		commentsWithUser,
+		pageCommentsWithUser,
 		existLocales,
 	} = useLoaderData<typeof loader>();
 	const actionData = useActionData<typeof action>();
@@ -264,12 +264,12 @@ export default function Page() {
 				/>
 				<div className="mt-8">
 					<div className="mt-8">
-						<CommentList
-							commentsWithUser={commentsWithUser}
+						<PageCommentList
+							pageCommentsWithUser={pageCommentsWithUser}
 							currentUserId={currentUser?.id}
 						/>
 					</div>
-					<CommentForm
+					<PageCommentForm
 						pageId={pageWithTranslations.page.id}
 						currentHandle={currentUser?.handle}
 					/>

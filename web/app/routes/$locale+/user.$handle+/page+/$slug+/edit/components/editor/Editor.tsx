@@ -8,12 +8,16 @@ interface EditorProps {
 	initialContent: string;
 	onContentChange: () => void;
 	onEditorCreate?: (editor: ReturnType<typeof useEditor>) => void;
+	className: string;
+	placeholder: string;
 }
 
 export function Editor({
 	initialContent,
 	onContentChange,
 	onEditorCreate,
+	className,
+	placeholder,
 }: EditorProps) {
 	const pageContentControl = useInputControl({
 		name: "pageContent",
@@ -21,7 +25,7 @@ export function Editor({
 	});
 
 	const editor = useEditor({
-		...configureEditor(initialContent),
+		...configureEditor(initialContent, placeholder),
 		onCreate: ({ editor }) => {
 			pageContentControl.change(editor.getHTML());
 			onEditorCreate?.(editor);
@@ -33,7 +37,7 @@ export function Editor({
 		editorProps: {
 			attributes: {
 				"data-testid": "tiptap-editor",
-				class: "focus:outline-none",
+				class: className,
 			},
 		},
 	});

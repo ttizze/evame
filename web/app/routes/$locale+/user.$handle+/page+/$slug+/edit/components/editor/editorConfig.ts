@@ -4,7 +4,7 @@ import { Link } from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { StarterKit } from "@tiptap/starter-kit";
 import { handleFileUpload } from "./useFileUpload";
-export function configureEditor(initialContent: string) {
+export function configureEditor(initialContent: string, placeholder: string) {
 	return {
 		immediatelyRender: false,
 		extensions: [
@@ -20,7 +20,7 @@ export function configureEditor(initialContent: string) {
 				autolink: true,
 			}),
 			Placeholder.configure({
-				placeholder: "Write to the world...",
+				placeholder: placeholder,
 			}),
 			Image,
 			FileHandler.configure({
