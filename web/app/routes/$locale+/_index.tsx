@@ -5,7 +5,7 @@ import { useLoaderData, useSearchParams } from "@remix-run/react";
 import { StartButton } from "~/components/StartButton";
 import { supportedLocaleOptions } from "~/constants/languages";
 import i18nServer from "~/i18n.server";
-import { PageSegmentAndTranslationSection } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/sourceTextAndTranslationSection/PageSegmentAndTranslationSection";
+import { SegmentAndTranslationSection } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/sourceTextAndTranslationSection/SegmentAndTranslationSection";
 import { fetchPageWithTranslations } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
 import { authenticator } from "~/utils/auth.server";
 
@@ -60,11 +60,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			throw new Response("Not Found", { status: 404 });
 		}
 
-		const [title, text] = topPageWithTranslations.pageSegmentWithTranslations
-			.filter(
-				(st) => st.pageSegment.number === 0 || st.pageSegment.number === 1,
-			)
-			.sort((a, b) => a.pageSegment.number - b.pageSegment.number);
+		const [title, text] = topPageWithTranslations.segmentWithTranslations
+			.filter((st) => st.segment.number === 0 || st.segment.number === 1)
+			.sort((a, b) => a.segment.number - b.segment.number);
 
 		if (!title || !text) {
 			throw new Response("Not Found", { status: 404 });
@@ -171,10 +169,10 @@ export default function Home() {
 				<main className="prose dark:prose-invert sm:prose lg:prose-lg mx-auto px-2 py-10 flex flex-col items-center justify-center">
 					<div className="max-w-4xl w-full">
 						<h1 className="text-7xl font-bold mb-20 text-center">
-							<PageSegmentAndTranslationSection
-								pageSegmentWithTranslations={heroTitle}
+							<SegmentAndTranslationSection
+								segmentWithTranslations={heroTitle}
 								sourceTextClassName="w-full bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text !text-transparent mb-2"
-								elements={heroTitle.pageSegment.text}
+								elements={heroTitle.segment.text}
 								currentHandle={undefined}
 								showOriginal={true}
 								showTranslation={true}
@@ -182,10 +180,10 @@ export default function Home() {
 						</h1>
 
 						<span className="text-xl mb-12 w-full">
-							<PageSegmentAndTranslationSection
-								pageSegmentWithTranslations={heroText}
+							<SegmentAndTranslationSection
+								segmentWithTranslations={heroText}
 								sourceTextClassName="mb-2"
-								elements={heroText.pageSegment.text}
+								elements={heroText.segment.text}
 								showOriginal={true}
 								showTranslation={true}
 								currentHandle={undefined}

@@ -12,7 +12,7 @@ import i18nServer from "~/i18n.server";
 import { authenticator } from "~/utils/auth.server";
 import { addUserTranslation } from "./functions/mutations.server";
 const schema = z.object({
-	pageSegmentId: z.number(),
+	segmentId: z.number(),
 	text: z
 		.string()
 		.min(1, "Translation cannot be empty")
@@ -37,7 +37,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
 	}
 
 	await addUserTranslation(
-		submission.value.pageSegmentId,
+		submission.value.segmentId,
 		submission.value.text,
 		currentUser.id,
 		locale,
@@ -48,18 +48,18 @@ export async function action({ params, request }: ActionFunctionArgs) {
 }
 
 interface AddTranslationFormProps {
-	pageSegmentId: number;
+	segmentId: number;
 	currentHandle: string | undefined;
 }
 
 export function AddTranslationForm({
-	pageSegmentId,
+	segmentId,
 	currentHandle,
 }: AddTranslationFormProps) {
 	const fetcher = useFetcher<typeof action>();
 	const [form, fields] = useForm({
 		lastResult: fetcher.data?.lastResult,
-		id: `add-translation-form-${pageSegmentId}`,
+		id: `add-translation-form-${segmentId}`,
 		constraint: getZodConstraint(schema),
 		shouldValidate: "onBlur",
 		shouldRevalidate: "onInput",
@@ -76,7 +76,7 @@ export function AddTranslationForm({
 				action={"/resources/add-translation-form"}
 			>
 				{form.errors}
-				<input type="hidden" name="pageSegmentId" value={pageSegmentId} />
+				<input type="hidden" name="segmentId" value={segmentId} />
 				<div className="relative">
 					<TextareaAutosize
 						{...getTextareaProps(fields.text)}

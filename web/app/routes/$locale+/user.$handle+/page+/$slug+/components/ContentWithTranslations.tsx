@@ -4,17 +4,14 @@ import { useHydrated } from "remix-utils/use-hydrated";
 import { LocaleLink } from "~/components/LocaleLink";
 import { TagList } from "~/components/TagList";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import type {
-	PageSegmentWithTranslations,
-	PageWithTranslations,
-} from "../types";
+import type { PageWithTranslations, SegmentWithTranslations } from "../types";
 import { MemoizedParsedContent } from "./ParsedContent";
-import { PageSegmentAndTranslationSection } from "./sourceTextAndTranslationSection/PageSegmentAndTranslationSection";
+import { SegmentAndTranslationSection } from "./sourceTextAndTranslationSection/SegmentAndTranslationSection";
 import { TranslateActionSection } from "./translateButton/TranslateActionSection";
 
 interface ContentWithTranslationsProps {
 	pageWithTranslations: PageWithTranslations;
-	pageSegmentWithTranslations: PageSegmentWithTranslations | null;
+	pageSegmentWithTranslations: SegmentWithTranslations | null;
 	currentHandle: string | undefined;
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
@@ -41,10 +38,10 @@ export function ContentWithTranslations({
 		<>
 			<h1 className="!mb-0 ">
 				{pageSegmentWithTranslations && (
-					<PageSegmentAndTranslationSection
-						pageSegmentWithTranslations={pageSegmentWithTranslations}
+					<SegmentAndTranslationSection
+						segmentWithTranslations={pageSegmentWithTranslations}
 						showLockIcon={pageWithTranslations.page.status === "DRAFT"}
-						elements={pageSegmentWithTranslations.pageSegment.text}
+						elements={pageSegmentWithTranslations.segment.text}
 						showOriginal={showOriginal}
 						showTranslation={showTranslation}
 						currentHandle={currentHandle}
@@ -95,7 +92,8 @@ export function ContentWithTranslations({
 				</div>
 			) : (
 				<MemoizedParsedContent
-					pageWithTranslations={pageWithTranslations}
+					html={pageWithTranslations.page.content}
+					segmentWithTranslations={pageWithTranslations.segmentWithTranslations}
 					currentHandle={currentHandle}
 					showOriginal={showOriginal}
 					showTranslation={showTranslation}

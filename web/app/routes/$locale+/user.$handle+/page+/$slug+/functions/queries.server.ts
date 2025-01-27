@@ -1,5 +1,8 @@
 import { prisma } from "~/utils/prisma";
-import type { PageWithTranslations } from "../types";
+import type {
+	PageWithTranslations,
+	SegmentTranslationWithVote,
+} from "../types";
 import { getBestTranslation } from "../utils/getBestTranslation";
 
 export async function fetchPageWithPageSegments(pageId: number) {
@@ -92,24 +95,31 @@ export async function fetchPageWithTranslations(
 		},
 		user,
 		tagPages: page.tagPages,
-		pageSegmentWithTranslations: page.pageSegments.map((pageSegment) => {
-			const pageSegmentTranslationsWithVotes =
-				pageSegment.pageSegmentTranslations.map((pageSegmentTranslation) => ({
-					pageSegmentTranslation: {
-						...pageSegmentTranslation,
-						user: pageSegmentTranslation.user,
+		segmentWithTranslations: page.pageSegments.map((segment) => {
+			const segmentTranslationsWithVotes = segment.pageSegmentTranslations.map(
+				(segmentTranslation) => ({
+					segmentTranslation: {
+						...segmentTranslation,
+						user: segmentTranslation.user,
 					},
-					vote: pageSegmentTranslation.votes[0] || null,
-				}));
+					translationVote:
+						segmentTranslation.votes && segmentTranslation.votes.length > 0
+							? {
+									...segmentTranslation.votes[0],
+									translationId: segmentTranslation.id,
+								}
+							: null,
+				}),
+			);
 
-			const bestPageSegmentTranslationWithVote = getBestTranslation(
-				pageSegmentTranslationsWithVotes,
+			const bestSegmentTranslationWithVote = getBestTranslation(
+				segmentTranslationsWithVotes,
 			);
 
 			return {
-				pageSegment,
-				pageSegmentTranslationsWithVotes,
-				bestPageSegmentTranslationWithVote,
+				segment,
+				segmentTranslationsWithVotes,
+				bestSegmentTranslationWithVote,
 			};
 		}),
 		existLocales,
@@ -154,9 +164,10 @@ export async function fetchIsLikedByUser(
 	return false;
 }
 
-export async function fetchPageCommentsWithUser(
+export async function fetchPageCommentsWithUserAndTranslations(
 	pageId: number,
 	locale: string,
+	currentUserId?: number,
 ) {
 	const pageComments = await prisma.pageComment.findMany({
 		where: {
@@ -170,21 +181,78 @@ export async function fetchPageCommentsWithUser(
 					image: true,
 				},
 			},
+			pageCommentSegments: {
+				include: {
+					pageCommentSegmentTranslations: {
+						where: { locale },
+						include: {
+							user: true,
+							pageCommentVotes: {
+								where: currentUserId
+									? { userId: currentUserId }
+									: { userId: -1 },
+							},
+						},
+						orderBy: [{ point: "desc" }, { createdAt: "desc" }],
+					},
+				},
+			},
 		},
 		orderBy: {
 			createdAt: "asc",
 		},
 	});
 
-	return pageComments.map((pageComment) => ({
-		...pageComment,
-		createdAt: pageComment.createdAt.toLocaleString(locale),
-		updatedAt: pageComment.updatedAt.toLocaleString(locale),
-	}));
+	return pageComments.map((comment) => {
+		// コメント配下のセグメントごとに翻訳＋投票情報を作成
+		const pageCommentSegmentsWithTranslations = comment.pageCommentSegments.map(
+			(segment) => {
+				// SegmentTranslationWithVote[] を作る
+				const segmentTranslationsWithVotes: SegmentTranslationWithVote[] =
+					segment.pageCommentSegmentTranslations.map((translation) => {
+						return {
+							segmentTranslation: {
+								...translation,
+								user: translation.user,
+							},
+							// 投票は1ユーザーに付き1件想定なら先頭を取り出す
+							translationVote:
+								translation.pageCommentVotes &&
+								translation.pageCommentVotes.length > 0
+									? {
+											...translation.pageCommentVotes[0],
+											// もし translationId が異なる場合は上書き
+											translationId: translation.id,
+										}
+									: null,
+						};
+					});
+
+				// ベスト翻訳（point 順等で先頭にある翻訳と仮定）
+				const bestSegmentTranslationWithVote = getBestTranslation(
+					segmentTranslationsWithVotes,
+				);
+
+				return {
+					segment,
+					segmentTranslationsWithVotes,
+					bestSegmentTranslationWithVote,
+				};
+			},
+		);
+
+		return {
+			...comment,
+			createdAt: comment.createdAt.toLocaleString(locale),
+			updatedAt: comment.updatedAt.toLocaleString(locale),
+			// コメントの各セグメントに翻訳＋投票情報を付与
+			pageCommentSegmentsWithTranslations,
+		};
+	});
 }
 
 export type PageCommentWithUser = Awaited<
-	ReturnType<typeof fetchPageCommentsWithUser>
+	ReturnType<typeof fetchPageCommentsWithUserAndTranslations>
 >;
 
 export async function fetchPageCommentsCount(pageId: number) {

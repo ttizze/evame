@@ -5,11 +5,12 @@ import parse, {
 	type DOMNode,
 } from "html-react-parser";
 import { memo } from "react";
-import type { PageWithTranslations } from "../types";
-import { PageSegmentAndTranslationSection } from "./sourceTextAndTranslationSection/PageSegmentAndTranslationSection";
+import type { SegmentWithTranslations } from "../types";
+import { SegmentAndTranslationSection } from "./sourceTextAndTranslationSection/SegmentAndTranslationSection";
 
 interface ParsedContentProps {
-	pageWithTranslations: PageWithTranslations;
+	html: string;
+	segmentWithTranslations: SegmentWithTranslations[] | null;
 	currentHandle: string | undefined;
 	showOriginal: boolean;
 	showTranslation: boolean;
@@ -19,35 +20,33 @@ interface ParsedContentProps {
 export const MemoizedParsedContent = memo(ParsedContent);
 
 export function ParsedContent({
-	pageWithTranslations,
+	html,
+	segmentWithTranslations,
 	showOriginal = true,
 	showTranslation = true,
 	currentHandle,
 	locale,
 }: ParsedContentProps) {
-	const sanitizedContent = DOMPurify.sanitize(
-		pageWithTranslations.page.content,
-	);
+	const sanitizedContent = DOMPurify.sanitize(html);
 	const doc = new DOMParser().parseFromString(sanitizedContent, "text/html");
 
 	const options: HTMLReactParserOptions = {
 		replace: (domNode) => {
 			if (domNode.type === "tag" && domNode.attribs["data-number-id"]) {
 				const number = Number(domNode.attribs["data-number-id"]);
-				const pageSegmentWithTranslation =
-					pageWithTranslations.pageSegmentWithTranslations.find(
-						(info) => info.pageSegment.number === number,
-					);
-				if (!pageSegmentWithTranslation) {
+				const segmentWithTranslation = segmentWithTranslations?.find(
+					(info) => info.segment.number === number,
+				);
+				if (!segmentWithTranslation) {
 					return null;
 				}
 				const DynamicTag = domNode.name as keyof JSX.IntrinsicElements;
 				const { class: className, ...otherAttribs } = domNode.attribs;
 				return (
 					<DynamicTag {...otherAttribs} className={className}>
-						<PageSegmentAndTranslationSection
+						<SegmentAndTranslationSection
 							key={`translation-${number}`}
-							pageSegmentWithTranslations={pageSegmentWithTranslation}
+							segmentWithTranslations={segmentWithTranslation}
 							elements={domToReact(domNode.children as DOMNode[], options)}
 							showOriginal={showOriginal}
 							showTranslation={showTranslation}

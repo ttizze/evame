@@ -25,7 +25,7 @@ import {
 	fetchLatestUserAITranslationInfo,
 	fetchLikeCount,
 	fetchPageCommentsCount,
-	fetchPageCommentsWithUser,
+	fetchPageCommentsWithUserAndTranslations,
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
 	fetchPageWithTranslations,
@@ -108,11 +108,11 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		throw new Response("Page not found", { status: 404 });
 	}
 	const pageSegmentTitleWithTranslations =
-		pageWithTranslations.pageSegmentWithTranslations.filter(
-			(item) => item.pageSegment?.number === 0,
+		pageWithTranslations.segmentWithTranslations.filter(
+			(item) => item.segment?.number === 0,
 		)[0];
 	const bestTranslationTitle = getBestTranslation(
-		pageSegmentTitleWithTranslations.pageSegmentTranslationsWithVotes,
+		pageSegmentTitleWithTranslations.segmentTranslationsWithVotes,
 	);
 	const userAITranslationInfo = await fetchLatestUserAITranslationInfo(
 		pageWithTranslations.page.id,
@@ -120,8 +120,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		locale,
 	);
 	const sourceTitleWithBestTranslationTitle = bestTranslationTitle
-		? `${pageSegmentTitleWithTranslations.pageSegment.text} - ${bestTranslationTitle.pageSegmentTranslation.text}`
-		: pageSegmentTitleWithTranslations.pageSegment.text;
+		? `${pageSegmentTitleWithTranslations.segment.text} - ${bestTranslationTitle.segmentTranslation.text}`
+		: pageSegmentTitleWithTranslations.segment.text;
 
 	const [likeCount, isLikedByUser, pageCommentsWithUser, pageCommentsCount] =
 		await Promise.all([
@@ -131,7 +131,10 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 				currentUser?.id,
 				guestId,
 			),
-			fetchPageCommentsWithUser(pageWithTranslations.page.id, locale),
+			fetchPageCommentsWithUserAndTranslations(
+				pageWithTranslations.page.id,
+				locale,
+			),
 			fetchPageCommentsCount(pageWithTranslations.page.id),
 		]);
 
@@ -365,6 +368,10 @@ export default function Page() {
 						<PageCommentList
 							pageCommentsWithUser={pageCommentsWithUser}
 							currentUserId={currentUser?.id}
+							currentHandle={currentUser?.handle}
+							showOriginal={showOriginal}
+							showTranslation={showTranslation}
+							locale={locale}
 						/>
 					</div>
 					<PageCommentForm

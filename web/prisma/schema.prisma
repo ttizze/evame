@@ -31,7 +31,7 @@ model User {
   following                      Follow[]                        @relation("follower")
   pageComments                   PageComment[]
   pageCommentSegmentTranslations PageCommentSegmentTranslation[]
-
+  pageCommentVotes PageCommentVote[]
   @@map("users")
 }
 
@@ -270,9 +270,25 @@ model PageCommentSegmentTranslation {
   user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   pageCommentSegmentId Int                @map("page_comment_segment_id")
   pageCommentSegment   PageCommentSegment @relation(fields: [pageCommentSegmentId], references: [id], onDelete: Cascade)
-
+  pageCommentVotes PageCommentVote[]
   @@index([pageCommentSegmentId])
   @@index([userId])
   @@index([locale])
   @@map("page_comment_segment_translations")
+}
+
+model PageCommentVote {
+  id              Int           @id @default(autoincrement())
+  userId          Int           @map("user_id")
+  pageCommentSegmentTranslationId Int           @map("page_comment_segment_translation_id")
+  isUpvote        Boolean       @map("is_upvote")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  pageCommentSegmentTranslation PageCommentSegmentTranslation @relation(fields: [pageCommentSegmentTranslationId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pageCommentSegmentTranslationId, userId])
+  @@index([pageCommentSegmentTranslationId])
+  @@index([userId])
+  @@map("page_comment_votes")
 }

@@ -2,11 +2,11 @@ import { Lock } from "lucide-react";
 import { SquarePen } from "lucide-react";
 import type { ReactNode } from "react";
 import { NavLocaleLink } from "~/components/NavLocaleLink";
-import type { PageSegmentWithTranslations } from "../../types";
+import type { SegmentWithTranslations } from "../../types";
 import { TranslationSection } from "./TranslationSection";
 
-interface PageSegmentAndTranslationSectionProps {
-	pageSegmentWithTranslations: PageSegmentWithTranslations;
+interface SegmentAndTranslationSectionProps {
+	segmentWithTranslations: SegmentWithTranslations;
 	elements: string | ReactNode | ReactNode[];
 	showLockIcon?: boolean;
 	sourceTextClassName?: string;
@@ -17,8 +17,8 @@ interface PageSegmentAndTranslationSectionProps {
 	slug?: string;
 }
 
-export function PageSegmentAndTranslationSection({
-	pageSegmentWithTranslations,
+export function SegmentAndTranslationSection({
+	segmentWithTranslations,
 	elements,
 	showLockIcon = false,
 	sourceTextClassName,
@@ -27,15 +27,15 @@ export function PageSegmentAndTranslationSection({
 	currentHandle,
 	isOwner,
 	slug,
-}: PageSegmentAndTranslationSectionProps) {
+}: SegmentAndTranslationSectionProps) {
 	return (
 		<>
 			{showOriginal && (
 				<span className="flex items-center">
 					<span
 						className={`inline-block ${
-							pageSegmentWithTranslations.pageSegmentTranslationsWithVotes
-								.length === 0 || !showTranslation
+							segmentWithTranslations.segmentTranslationsWithVotes.length ===
+								0 || !showTranslation
 								? "text-gray-700 dark:text-gray-200 [&>a]:text-gray-700 dark:[&>a]:text-gray-200 [&>strong]:text-gray-700 dark:[&>strong]:text-gray-200"
 								: "text-gray-300 dark:text-gray-600 [&>a]:text-gray-300 dark:[&>a]:text-gray-600 [&>strong]:text-gray-300 dark:[&>strong]:text-gray-600"
 						} ${sourceTextClassName}`}
@@ -58,11 +58,10 @@ export function PageSegmentAndTranslationSection({
 				</span>
 			)}
 			{showTranslation &&
-				pageSegmentWithTranslations.pageSegmentTranslationsWithVotes.length >
-					0 && (
+				segmentWithTranslations.segmentTranslationsWithVotes.length > 0 && (
 					<TranslationSection
-						key={`translation-${pageSegmentWithTranslations.pageSegment.id}`}
-						pageSegmentWithTranslations={pageSegmentWithTranslations}
+						key={`translation-${segmentWithTranslations.segment.id}`}
+						segmentWithTranslations={segmentWithTranslations}
 						currentHandle={currentHandle}
 					/>
 				)}

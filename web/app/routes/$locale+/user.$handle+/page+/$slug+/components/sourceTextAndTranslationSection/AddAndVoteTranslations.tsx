@@ -3,30 +3,27 @@ import { useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { AddTranslationForm } from "~/routes/resources+/add-translation-form";
 import { TranslationListItem } from "~/routes/resources+/translation-list-item";
-import type { PageSegmentWithTranslations } from "../../types";
+import type { SegmentWithTranslations } from "../../types";
 
 const INITIAL_DISPLAY_COUNT = 3;
 
 export function AddAndVoteTranslations({
 	currentHandle,
-	pageSegmentWithTranslations,
+	segmentWithTranslations,
 	open,
 }: {
 	currentHandle: string | undefined;
-	pageSegmentWithTranslations: PageSegmentWithTranslations;
+	segmentWithTranslations: SegmentWithTranslations;
 	open: boolean;
 }) {
 	const [showAll, setShowAll] = useState(false);
-	const {
-		bestPageSegmentTranslationWithVote,
-		pageSegmentTranslationsWithVotes,
-	} = pageSegmentWithTranslations;
-	const alternativeTranslationsWithVotes =
-		pageSegmentTranslationsWithVotes.filter(
-			(t) =>
-				t.pageSegmentTranslation.id !==
-				bestPageSegmentTranslationWithVote?.pageSegmentTranslation.id,
-		);
+	const { bestSegmentTranslationWithVote, segmentTranslationsWithVotes } =
+		segmentWithTranslations;
+	const alternativeTranslationsWithVotes = segmentTranslationsWithVotes.filter(
+		(t) =>
+			t.segmentTranslation.id !==
+			bestSegmentTranslationWithVote?.segmentTranslation.id,
+	);
 
 	const displayedTranslations = useMemo(() => {
 		return showAll
@@ -50,7 +47,7 @@ export function AddAndVoteTranslations({
 				<div>
 					{displayedTranslations.map((displayedTranslation) => (
 						<TranslationListItem
-							key={displayedTranslation.pageSegmentTranslation.id}
+							key={displayedTranslation.segmentTranslation.id}
 							translation={displayedTranslation}
 							currentHandle={currentHandle}
 						/>
@@ -75,7 +72,7 @@ export function AddAndVoteTranslations({
 				</div>
 				<div className="mt-4">
 					<AddTranslationForm
-						pageSegmentId={pageSegmentWithTranslations.pageSegment.id}
+						segmentId={segmentWithTranslations.segment.id}
 						currentHandle={currentHandle}
 					/>
 				</div>

@@ -3,24 +3,24 @@ import { useState } from "react";
 import { useHydrated } from "remix-utils/use-hydrated";
 import { LocaleLink } from "~/components/LocaleLink";
 import { VoteButtons } from "~/routes/resources+/vote-buttons";
-import type { PageSegmentWithTranslations } from "../../types";
+import type { SegmentWithTranslations } from "../../types";
 import { sanitizeAndParseText } from "../../utils/sanitize-and-parse-text.client";
 import { AddAndVoteTranslations } from "./AddAndVoteTranslations";
 
 interface TranslationSectionProps {
-	pageSegmentWithTranslations: PageSegmentWithTranslations;
+	segmentWithTranslations: SegmentWithTranslations;
 	currentHandle: string | undefined;
 }
 
 export function TranslationSection({
-	pageSegmentWithTranslations,
+	segmentWithTranslations,
 	currentHandle,
 }: TranslationSectionProps) {
 	const isHydrated = useHydrated();
 	const [isSelected, setIsSelected] = useState(false);
 
-	const { bestPageSegmentTranslationWithVote } = pageSegmentWithTranslations;
-	if (!bestPageSegmentTranslationWithVote)
+	const { bestSegmentTranslationWithVote } = segmentWithTranslations;
+	if (!bestSegmentTranslationWithVote)
 		return (
 			<span className="flex items-center gap-2">
 				<Plus size={24} />
@@ -29,9 +29,9 @@ export function TranslationSection({
 		);
 	const sanitizedAndParsedText = isHydrated
 		? sanitizeAndParseText(
-				bestPageSegmentTranslationWithVote.pageSegmentTranslation.text,
+				bestSegmentTranslationWithVote.segmentTranslation.text,
 			)
-		: bestPageSegmentTranslationWithVote.pageSegmentTranslation.text;
+		: bestSegmentTranslationWithVote.segmentTranslation.text;
 
 	return (
 		<span className={"group relative"}>
@@ -49,24 +49,19 @@ export function TranslationSection({
 				<>
 					<div className="flex items-center justify-end">
 						<LocaleLink
-							to={`/user/${bestPageSegmentTranslationWithVote?.pageSegmentTranslation.user.handle}`}
+							to={`/user/${bestSegmentTranslationWithVote?.segmentTranslation.user.handle}`}
 							className="!no-underline mr-2"
 						>
 							<p className="text-sm text-gray-500 text-right flex justify-end items-center">
 								by:{" "}
-								{
-									bestPageSegmentTranslationWithVote?.pageSegmentTranslation
-										.user.name
-								}
+								{bestSegmentTranslationWithVote?.segmentTranslation.user.name}
 							</p>
 						</LocaleLink>
-						<VoteButtons
-							translationWithVote={bestPageSegmentTranslationWithVote}
-						/>
+						<VoteButtons translationWithVote={bestSegmentTranslationWithVote} />
 					</div>
 					<AddAndVoteTranslations
 						currentHandle={currentHandle}
-						pageSegmentWithTranslations={pageSegmentWithTranslations}
+						segmentWithTranslations={segmentWithTranslations}
 						open={isSelected}
 					/>
 				</>

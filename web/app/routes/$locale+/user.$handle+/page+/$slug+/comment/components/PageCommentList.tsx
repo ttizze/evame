@@ -1,6 +1,7 @@
 import { useFetcher } from "@remix-run/react";
-import parse from "html-react-parser";
 import { MoreVertical } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { useHydrated } from "remix-utils/use-hydrated";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import {
@@ -9,19 +10,27 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { MemoizedParsedContent } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/ParsedContent";
 import type { PageCommentWithUser } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
-
 interface CommentListProps {
 	pageCommentsWithUser: PageCommentWithUser;
 	currentUserId?: number;
+	currentHandle: string | undefined;
+	showOriginal: boolean;
+	showTranslation: boolean;
+	locale: string;
 }
 
 export function PageCommentList({
 	pageCommentsWithUser,
 	currentUserId,
+	currentHandle,
+	showOriginal,
+	showTranslation,
+	locale,
 }: CommentListProps) {
 	const fetcher = useFetcher();
-
+	const isHydrated = useHydrated();
 	return (
 		<div className="space-y-4">
 			{pageCommentsWithUser.map((pageComment) => (
@@ -75,7 +84,22 @@ export function PageCommentList({
 						</div>
 					</div>
 					<div className="mt-2 prose dark:prose-invert">
-						{parse(pageComment.content)}
+						{!isHydrated ? (
+							<div className="w-full h-full flex items-center justify-center">
+								<Loader2 className="w-10 h-10 animate-spin" />
+							</div>
+						) : (
+							<MemoizedParsedContent
+								html={pageComment.content}
+								segmentWithTranslations={
+									pageComment.pageCommentSegmentsWithTranslations
+								}
+								currentHandle={currentHandle}
+								showOriginal={showOriginal}
+								showTranslation={showTranslation}
+								locale={locale}
+							/>
+						)}
 					</div>
 				</div>
 			))}
