@@ -3,7 +3,7 @@ import type { PageWithTranslations } from "../types";
 import { getBestTranslation } from "../utils/getBestTranslation";
 
 export async function fetchPageWithPageSegments(pageId: number) {
-	const pageWithSourceTexts = await prisma.page.findFirst({
+	const pageWithSegments = await prisma.page.findFirst({
 		where: { id: pageId },
 		select: {
 			id: true,
@@ -20,13 +20,13 @@ export async function fetchPageWithPageSegments(pageId: number) {
 		},
 	});
 
-	if (!pageWithSourceTexts) return null;
-	const title = pageWithSourceTexts.pageSegments.filter(
+	if (!pageWithSegments) return null;
+	const title = pageWithSegments.pageSegments.filter(
 		(item) => item.number === 0,
 	)[0].text;
 
 	return {
-		...pageWithSourceTexts,
+		...pageWithSegments,
 		title,
 	};
 }

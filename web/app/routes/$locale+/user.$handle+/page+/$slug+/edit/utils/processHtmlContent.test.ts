@@ -44,10 +44,10 @@ describe("processHtmlContent", () => {
 		const htmlContent = updatedPage.content;
 
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">This is a test\.<\/span>/,
+			/<span data-number-id="\d+">This is a test\.<\/span>/,
 		);
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">This is another test\.<\/span>/,
+			/<span data-number-id="\d+">This is another test\.<\/span>/,
 		);
 
 		// source_textsのnumberが連番になっているか
@@ -204,20 +204,20 @@ describe("processHtmlContent", () => {
 
 		// タイトル部分のspanを確認
 		expect(htmlContent).toMatch(
-			new RegExp(`<h1><span data-source-text-id="\\d+">${title}</span></h1>`),
+			new RegExp(`<h1><span data-number-id="\\d+">${title}</span></h1>`),
 		);
 
 		// 本文中のタイトルのspanを確認
 		expect(htmlContent).toMatch(
-			new RegExp(`<span data-source-text-id="\\d+">${title}</span>`),
+			new RegExp(`<span data-number-id="\\d+">${title}</span>`),
 		);
 
 		// その他の本文のspanを確認
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">This is a paragraph with the Unique Title embedded\.<\/span>/,
+			/<span data-number-id="\d+">This is a paragraph with the Unique Title embedded\.<\/span>/,
 		);
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">Another paragraph\.<\/span>/,
+			/<span data-number-id="\d+">Another paragraph\.<\/span>/,
 		);
 
 		// page_segmentsのnumberが連番になっているか
@@ -345,8 +345,8 @@ describe("processHtmlContent", () => {
 			/<img [^>]*src="http:\/\/localhost:9000\/evame\/uploads\/sample-image\.png"[^>]*>/,
 		);
 
-		// また、<img>タグにもdata-source-text-id付きspanが適用されていないことを確認する
-		// 基本的に画像そのものにはdata-source-text-idは付与されないが、パース時に問題なければこのままで良い。
+		// また、<img>タグにもdata-number-id付きspanが適用されていないことを確認する
+		// 基本的に画像そのものにはdata-number-idは付与されないが、パース時に問題なければこのままで良い。
 		// もし画像をinline化している場合はここでspan内に<img>があることを確認する処理を書いてもよい。
 	});
 });

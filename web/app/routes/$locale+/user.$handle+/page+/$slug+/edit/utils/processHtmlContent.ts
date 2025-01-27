@@ -23,8 +23,8 @@ export function rehypeAddDataId(
 	return function attacher() {
 		return async (tree: Root) => {
 			const blocks = collectBlocksFromRoot(tree, title);
-			const hashToId = await synchronizePagePageSegments(pageId, blocks);
-			injectSpanNodes(blocks, hashToId);
+			await synchronizePagePageSegments(pageId, blocks);
+			injectSpanNodes(blocks);
 		};
 	};
 }

@@ -89,7 +89,7 @@ async function addRequiredData() {
 	];
 
 	await Promise.all(
-		seedTexts.map((text) => upsertSourceTextWithTranslations(text, evame.id)),
+		seedTexts.map((text) => upsertPageSegmentWithTranslations(text, evame.id)),
 	);
 
 	console.log("Required data added successfully");
@@ -145,28 +145,28 @@ async function createUserAndPages() {
 	return { evame, evameEnPage, evameJaPage };
 }
 
-async function upsertSourceTextWithTranslations(
-	sourceText: SeedText,
+async function upsertPageSegmentWithTranslations(
+	pageSegment: SeedText,
 	userId: number,
 ) {
 	const upsertedPageSegment = await prisma.pageSegment.upsert({
 		where: {
 			pageId_number: {
-				pageId: sourceText.pageId,
-				number: sourceText.number,
+				pageId: pageSegment.pageId,
+				number: pageSegment.number,
 			},
 		},
 		update: {},
 		create: {
-			text: sourceText.text,
-			number: sourceText.number,
-			pageId: sourceText.pageId,
-			textAndOccurrenceHash: sourceText.textAndOccurrenceHash,
+			text: pageSegment.text,
+			number: pageSegment.number,
+			pageId: pageSegment.pageId,
+			textAndOccurrenceHash: pageSegment.textAndOccurrenceHash,
 		},
 	});
 
 	await Promise.all(
-		sourceText.translations.map((translation) =>
+		pageSegment.translations.map((translation) =>
 			prisma.pageSegmentTranslation.create({
 				data: {
 					text: translation.text,

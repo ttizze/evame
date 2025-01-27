@@ -42,7 +42,7 @@ async function getAllPagesByUserId(userId: number) {
 		// 全ページに対してキュー追加
 		for (const page of pages) {
 			if (!page.pageSegments || page.pageSegments.length === 0) {
-				console.log(`Skip page ${page.slug} because no sourceTexts found.`);
+				console.log(`Skip page ${page.slug} because no pageSegments found.`);
 				continue;
 			}
 			const title = page.pageSegments.filter((item) => item.number === 0)[0]

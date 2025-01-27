@@ -1,7 +1,7 @@
 export type TextElementInfo = {
 	number: number;
 	text: string;
-	sourceTextId: number | undefined;
+	pageSegmentId: number | undefined;
 };
 
 export interface TranslateJobParams {

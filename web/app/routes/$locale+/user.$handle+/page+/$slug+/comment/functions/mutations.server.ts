@@ -1,5 +1,6 @@
 import { prisma } from "~/utils/prisma";
 import type { BlockWithNumber } from "../../utils/process-html";
+
 export async function createPageComment(
 	content: string,
 	locale: string,
@@ -41,16 +42,13 @@ export async function createPageCommentSegments(
 		number: block.number,
 		textAndOccurrenceHash: block.textAndOccurrenceHash,
 	}));
-	console.log("segments", segments);
-	const result = await prisma.pageCommentSegment.createMany({
+	await prisma.pageCommentSegment.createMany({
 		data: segments,
 	});
-	console.log("result", result);
 	const insertedSegments = await prisma.pageCommentSegment.findMany({
 		where: { pageCommentId },
 		select: { id: true, textAndOccurrenceHash: true },
 	});
-	console.log("insertedSegments", insertedSegments);
 	const hashToId = new Map<string, number>();
 	for (const seg of insertedSegments) {
 		// textAndOccurrenceHash が null の場合は無視

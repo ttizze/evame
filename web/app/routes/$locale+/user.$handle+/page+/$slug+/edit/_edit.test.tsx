@@ -49,7 +49,6 @@ describe("EditPage", () => {
 		new FakeDOMRectList();
 	Range.prototype.getBoundingClientRect = getBoundingClientRect;
 	Range.prototype.getClientRects = (): DOMRectList => new FakeDOMRectList();
-	let sourceTextIds: number[];
 	beforeEach(async () => {
 		const user = await prisma.user.create({
 			data: {
@@ -88,21 +87,6 @@ describe("EditPage", () => {
 		});
 
 		const page = user.pages[0];
-		sourceTextIds = page.pageSegments.map((st) => st.id);
-		const updatedContent = page.content.replace(
-			/<p data-number='(\d+)'>/g,
-			(match, number) => {
-				const pageSegment = page.pageSegments.find(
-					(st) => st.number === Number.parseInt(number),
-				);
-				return `<p data-number='${number}' data-source-text-id='${pageSegment?.id}'>`;
-			},
-		);
-
-		await prisma.page.update({
-			where: { id: page.id },
-			data: { content: updatedContent },
-		});
 	});
 
 	test("loader returns correct data for authenticated user", async () => {

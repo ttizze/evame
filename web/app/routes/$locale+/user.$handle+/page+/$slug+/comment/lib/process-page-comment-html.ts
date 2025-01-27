@@ -21,9 +21,8 @@ export function rehypeAddDataId(commentId: number): Plugin<[], Root> {
 		return async (tree: Root) => {
 			const blocks = collectBlocksFromRoot(tree);
 
-			const hashToId = await createPageCommentSegments(commentId, blocks);
-
-			injectSpanNodes(blocks, hashToId);
+			await createPageCommentSegments(commentId, blocks);
+			injectSpanNodes(blocks);
 		};
 	};
 }

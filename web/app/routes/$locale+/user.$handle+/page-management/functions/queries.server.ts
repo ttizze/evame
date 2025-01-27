@@ -18,7 +18,7 @@ export async function fetchPaginatedOwnPages(
 		status: {
 			in: [PageStatus.PUBLIC, PageStatus.DRAFT],
 		},
-		sourceTexts: {
+		pageSegments: {
 			some: {
 				number: 0,
 				text: {

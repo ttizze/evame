@@ -10,7 +10,7 @@ import { cn } from "~/utils/cn";
 import { handleVote } from "./functions/mutations.server";
 
 export const schema = z.object({
-	translateTextId: z.number(),
+	pageSegmentTranslationId: z.number(),
 	isUpvote: z.preprocess((val) => val === "true", z.boolean()),
 });
 
@@ -25,7 +25,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		return { lastResult: submission.reply() };
 	}
 	await handleVote(
-		submission.value.translateTextId,
+		submission.value.pageSegmentTranslationId,
 		submission.value.isUpvote,
 		currentUser.id,
 	);
