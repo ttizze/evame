@@ -2,25 +2,20 @@ import { TranslationStatus } from "@prisma/client";
 import { supportedLocaleOptions } from "~/constants/languages";
 import { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/index";
 import { updateUserAITranslationInfo } from "../functions/mutations.server";
+import { getLatestPageCommentSegments } from "../functions/query.server";
+import { getLatestPageSegments } from "../functions/query.server";
 import { getGeminiModelResponse } from "../services/gemini";
-import type {
-	CommentTranslationDependencies,
-	CommonTranslationDependencies,
-	NumberedElement,
-	PageTranslationDependencies,
-	TranslateJobParams,
-} from "../types";
+import type { NumberedElement, TranslateJobParams } from "../types";
 import { extractTranslations } from "../utils/extractTranslations.server";
+import {
+	saveTranslationsForComment,
+	saveTranslationsForPage,
+} from "../utils/ioDeps";
 import { splitNumberedElements } from "../utils/splitNumberedElements.server";
 
-export async function translate(
-	params: TranslateJobParams,
-	commonDeps: CommonTranslationDependencies,
-	pageDeps: PageTranslationDependencies,
-	commentDeps: CommentTranslationDependencies,
-) {
+export async function translate(params: TranslateJobParams) {
 	try {
-		await commonDeps.updateUserAITranslationInfo(
+		await updateUserAITranslationInfo(
 			params.userAITranslationInfoId,
 			TranslationStatus.IN_PROGRESS,
 			0,
@@ -35,15 +30,16 @@ export async function translate(
 			console.log(`Processing chunk ${i + 1} of ${totalChunks}`);
 			console.log(chunks[i]);
 
-			await translateChunk(pageDeps, commentDeps, {
-				geminiApiKey: params.geminiApiKey,
-				aiModel: params.aiModel,
-				numberedElements: chunks[i],
-				locale: params.locale,
-				pageId: params.pageId,
-				title: params.title,
-				translationIntent: params.translationIntent,
-			});
+			await translateChunk(
+				params.geminiApiKey,
+				params.aiModel,
+				chunks[i],
+				params.locale,
+				params.pageId,
+				params.title,
+				params.translationIntent,
+				params.commentId,
+			);
 			const progress = ((i + 1) / totalChunks) * 100;
 			await updateUserAITranslationInfo(
 				params.userAITranslationInfoId,
@@ -67,28 +63,15 @@ export async function translate(
 }
 
 async function translateChunk(
-	pageDeps: PageTranslationDependencies,
-	commentDeps: CommentTranslationDependencies,
-	params: {
-		geminiApiKey: string;
-		aiModel: string;
-		numberedElements: NumberedElement[];
-		locale: string;
-		pageId: number;
-		title: string;
-		translationIntent: TranslationIntent;
-	},
+	geminiApiKey: string,
+	aiModel: string,
+	numberedElements: NumberedElement[],
+	locale: string,
+	pageId: number,
+	title: string,
+	translationIntent: TranslationIntent,
+	commentId?: number,
 ) {
-	const {
-		geminiApiKey,
-		aiModel,
-		numberedElements,
-		locale,
-		pageId,
-		title,
-		translationIntent,
-	} = params;
-
 	// まだ翻訳が完了していない要素
 	let pendingElements = [...numberedElements];
 	const maxRetries = 3;
@@ -112,9 +95,9 @@ async function translateChunk(
 		if (partialTranslations.length > 0) {
 			// 部分的にでも取得できた翻訳結果を保存
 			if (translationIntent === TranslationIntent.TRANSLATE_PAGE) {
-				const pageSegments = await pageDeps.getLatestPageSegments(pageId);
+				const pageSegments = await getLatestPageSegments(pageId);
 
-				await pageDeps.saveTranslationsForPage(
+				await saveTranslationsForPage(
 					partialTranslations,
 					pageSegments,
 					locale,
@@ -122,9 +105,12 @@ async function translateChunk(
 				);
 			} else {
 				// コメント用の保存先テーブル or ロジック
+				if (!commentId) {
+					throw new Error("Comment ID is required");
+				}
 				const pageCommentSegments =
-					await commentDeps.getLatestPageCommentSegments(pageId);
-				await commentDeps.saveTranslationsForComment(
+					await getLatestPageCommentSegments(commentId);
+				await saveTranslationsForComment(
 					partialTranslations,
 					pageCommentSegments,
 					locale,

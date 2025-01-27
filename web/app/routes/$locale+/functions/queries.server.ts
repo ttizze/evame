@@ -122,7 +122,7 @@ export async function fetchPaginatedPublicPagesWithInfo({
 		throw new Error("User ID or Guest ID is required");
 	}
 
-	// 実際に使うselectを生成 (translateTexts.localeなどを含む)
+	// 実際に使うselectを生成 (localeなどを含む)
 	const pageCardSelect = createPageCardSelect(locale);
 
 	// findManyとcountを同時並列で呼び出し

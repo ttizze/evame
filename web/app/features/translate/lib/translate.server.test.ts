@@ -6,9 +6,6 @@ import { prisma } from "~/utils/prisma";
 // テスト対象
 import { translate } from "../lib/translate.server";
 
-// 依存注入用の本番実装(例) - 必要に応じてモックに差し替えてもOK
-import { commentDeps, commonDeps, pageDeps } from "../utils/ioDeps";
-
 // Gemini呼び出しをモック
 import { getGeminiModelResponse } from "../services/gemini";
 vi.mock("../services/gemini", () => ({
@@ -90,9 +87,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
     `);
 
 		// 依存注入：commonDeps, pageDeps, commentDeps とパラメータを渡す
-		await expect(
-			translate(params, commonDeps, pageDeps, commentDeps),
-		).resolves.toBeUndefined();
+		await expect(translate(params)).resolves.toBeUndefined();
 
 		// 最終的に completed となっているはず
 		const updatedInfo = await prisma.userAITranslationInfo.findUnique({
@@ -128,9 +123,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		// 何度呼んでも空配列を返す
 		vi.mocked(getGeminiModelResponse).mockResolvedValue("[]");
 
-		await expect(
-			translate(params, commonDeps, pageDeps, commentDeps),
-		).resolves.toBeUndefined();
+		await expect(translate(params)).resolves.toBeUndefined();
 
 		const updatedInfo = await prisma.userAITranslationInfo.findUnique({
 			where: { id: userAITranslationInfoId },
@@ -165,9 +158,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
         ]
       `);
 
-		await expect(
-			translate(params, commonDeps, pageDeps, commentDeps),
-		).resolves.toBeUndefined();
+		await expect(translate(params)).resolves.toBeUndefined();
 
 		const updatedInfo = await prisma.userAITranslationInfo.findUnique({
 			where: { id: userAITranslationInfoId },

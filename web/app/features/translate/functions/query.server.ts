@@ -41,17 +41,16 @@ export async function getLatestPageSegments(pageId: number) {
 	});
 }
 
-export async function getLatestPageCommentSegments(pageId: number) {
-	const pageComments = await prisma.pageComment.findMany({
+export async function getLatestPageCommentSegments(pageCommentId: number) {
+	const pageCommentSegments = await prisma.pageCommentSegment.findMany({
 		where: {
-			pageId,
+			pageCommentId,
 		},
-		include: {
-			pageCommentSegments: {
-				select: { id: true, number: true, text: true, createdAt: true },
-			},
+		orderBy: {
+			createdAt: "desc",
 		},
+		select: { id: true, number: true, text: true, createdAt: true },
 	});
 
-	return pageComments.flatMap((comment) => comment.pageCommentSegments);
+	return pageCommentSegments;
 }

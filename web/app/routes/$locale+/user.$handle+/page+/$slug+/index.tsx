@@ -212,18 +212,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 					slug: null,
 				};
 			}
-			const numberedElements: { number: number; text: string }[] = [
-				...pageWithComments.pageSegments.map((src) => ({
-					number: src.number,
-					text: src.text,
-				})),
-				...pageWithComments.pageComments.flatMap((comment) =>
-					comment.pageCommentSegments.map((segment) => ({
-						number: segment.number,
-						text: segment.text,
-					})),
-				),
-			];
+
 			const userAITranslationInfo = await createUserAITranslationInfo(
 				currentUser.id,
 				pageWithComments.id,
@@ -231,18 +220,32 @@ export async function action({ request, params }: ActionFunctionArgs) {
 				locale,
 			);
 
-			const queue = getTranslateUserQueue(currentUser.id);
-			await queue.add(`translate-${currentUser.id}`, {
-				userAITranslationInfoId: userAITranslationInfo.id,
-				geminiApiKey: geminiApiKey.apiKey,
-				aiModel: submission.value.aiModel,
-				userId: currentUser.id,
-				pageId: pageWithComments.id,
-				locale: locale,
-				title: pageWithComments.pageSegments[0].text,
-				numberedElements: numberedElements,
-				translationIntent: TranslationIntent.TRANSLATE_COMMENT,
-			});
+			const commentsSegmentsArray = pageWithComments.pageComments.map(
+				(comment) => {
+					return {
+						commentId: comment.id,
+						segments: comment.pageCommentSegments.map((segment) => ({
+							number: segment.number,
+							text: segment.text,
+						})),
+					};
+				},
+			);
+			for (const comment of commentsSegmentsArray) {
+				const queue = getTranslateUserQueue(currentUser.id);
+				await queue.add(`translate-${currentUser.id}`, {
+					userAITranslationInfoId: userAITranslationInfo.id,
+					geminiApiKey: geminiApiKey.apiKey,
+					aiModel: submission.value.aiModel,
+					userId: currentUser.id,
+					pageId: pageWithComments.id,
+					locale: locale,
+					title: pageWithComments.pageSegments[0].text,
+					numberedElements: comment.segments,
+					translationIntent: TranslationIntent.TRANSLATE_COMMENT,
+					commentId: comment.commentId,
+				});
+			}
 			return {
 				lastResult: submission.reply({ resetForm: true }),
 				slug: null,
