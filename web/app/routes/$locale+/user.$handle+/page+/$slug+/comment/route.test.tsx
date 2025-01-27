@@ -64,7 +64,8 @@ describe("app/routes/$locale+/user.$handle+/page+/$slug+/comment/route.test.tsx 
 				id: 100,
 				number: 1,
 				text: "This is a long paragraph",
-				textAndOccurrenceHash: "bd166934eff8a51318b0fc52a004a01094636559e6a7d68f73a7d7d89875c532",
+				textAndOccurrenceHash:
+					"bd166934eff8a51318b0fc52a004a01094636559e6a7d68f73a7d7d89875c532",
 				pageCommentId: 1,
 				createdAt: new Date(),
 				updatedAt: new Date(),
@@ -73,7 +74,8 @@ describe("app/routes/$locale+/user.$handle+/page+/$slug+/comment/route.test.tsx 
 				id: 101,
 				number: 2,
 				text: "This is a long paragraph",
-				textAndOccurrenceHash: "123d8c2b62ee372c81cbef64e71db8259ab4662426c410ff3d4d1dfd9eee7fa5",
+				textAndOccurrenceHash:
+					"123d8c2b62ee372c81cbef64e71db8259ab4662426c410ff3d4d1dfd9eee7fa5",
 				pageCommentId: 1,
 				createdAt: new Date(),
 				updatedAt: new Date(),
@@ -82,7 +84,10 @@ describe("app/routes/$locale+/user.$handle+/page+/$slug+/comment/route.test.tsx 
 		const formData = new FormData();
 		formData.append("intent", "create");
 		formData.append("pageId", "1");
-		formData.append("content", "<p>This is a long paragraph</p><p>This is a long paragraph</p>");
+		formData.append(
+			"content",
+			"<p>This is a long paragraph</p><p>This is a long paragraph</p>",
+		);
 		const request = new Request("http://test.com/comment", {
 			method: "POST",
 			body: formData,
@@ -93,7 +98,8 @@ describe("app/routes/$locale+/user.$handle+/page+/$slug+/comment/route.test.tsx 
 		// 正しい引数で create が呼ばれた
 		expect(prisma.pageComment.create).toHaveBeenCalledWith({
 			data: {
-				content: "<p>This is a long paragraph</p><p>This is a long paragraph</p>",
+				content:
+					"<p>This is a long paragraph</p><p>This is a long paragraph</p>",
 				pageId: 1,
 				locale: "und",
 				userId: 123,

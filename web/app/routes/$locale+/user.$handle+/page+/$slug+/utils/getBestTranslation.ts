@@ -17,8 +17,11 @@ export function getBestTranslation(
 		});
 	}
 	return translationsWithVotes.reduce((prev, current) => {
-		if (prev.pageSegmentTranslation.point !== current.pageSegmentTranslation.point) {
-			return prev.pageSegmentTranslation.point > current.pageSegmentTranslation.point
+		if (
+			prev.pageSegmentTranslation.point !== current.pageSegmentTranslation.point
+		) {
+			return prev.pageSegmentTranslation.point >
+				current.pageSegmentTranslation.point
 				? prev
 				: current;
 		}

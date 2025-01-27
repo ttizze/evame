@@ -353,8 +353,8 @@ describe("handlePageTranslation", () => {
 			text: "Title",
 			textAndOccurrenceHash: "hash",
 			createdAt: new Date(),
-				updatedAt: new Date(),
-				pageSegmentTranslations: [], // No active translations
+			updatedAt: new Date(),
+			pageSegmentTranslations: [], // No active translations
 		} as PageSegment & {
 			pageSegmentTranslations: Array<{
 				id: number;

@@ -47,7 +47,8 @@ export function TranslationListItem({
 	translation,
 	currentHandle,
 }: TranslationItemProps) {
-		const isOwner = currentHandle === translation.pageSegmentTranslation.user.handle;
+	const isOwner =
+		currentHandle === translation.pageSegmentTranslation.user.handle;
 	const fetcher = useFetcher();
 
 	const onDelete = () => {
@@ -62,7 +63,9 @@ export function TranslationListItem({
 			<div className="flex items-start justify-between">
 				<div className="flex">
 					<span className="flex-shrink-0 w-5 text-2xl">•</span>
-					<span>{sanitizeAndParseText(translation.pageSegmentTranslation.text)}</span>
+					<span>
+						{sanitizeAndParseText(translation.pageSegmentTranslation.text)}
+					</span>
 				</div>
 				{isOwner && (
 					<div className="">
