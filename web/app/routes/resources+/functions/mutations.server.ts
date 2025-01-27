@@ -42,30 +42,6 @@ export const deleteOwnTranslation = async (
 	});
 };
 
-export async function addUserTranslation(
-	pageSegmentId: number,
-	text: string,
-	userId: number,
-	locale: string,
-) {
-	const pageSegment = await prisma.pageSegment.findUnique({
-		where: { id: pageSegmentId },
-	});
-
-	if (pageSegment) {
-		await prisma.pageSegmentTranslation.create({
-			data: {
-				locale,
-				text,
-				pageSegmentId,
-				userId,
-			},
-		});
-	}
-
-	return data({ success: true });
-}
-
 export async function handleVote(
 	segmentTranslationId: number,
 	isUpvote: boolean,

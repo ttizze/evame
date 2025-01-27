@@ -5,9 +5,11 @@ import parse, {
 	type DOMNode,
 } from "html-react-parser";
 import { memo } from "react";
+import type { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
 import type { VoteIntent } from "~/routes/resources+/vote-buttons";
 import type { SegmentWithTranslations } from "../types";
 import { SegmentAndTranslationSection } from "./sourceTextAndTranslationSection/SegmentAndTranslationSection";
+
 interface ParsedContentProps {
 	html: string;
 	segmentWithTranslations: SegmentWithTranslations[] | null;
@@ -15,7 +17,8 @@ interface ParsedContentProps {
 	showOriginal: boolean;
 	showTranslation: boolean;
 	locale: string;
-	intent: VoteIntent;
+	voteIntent: VoteIntent;
+	addTranslationFormIntent: AddTranslationFormIntent;
 }
 
 export const MemoizedParsedContent = memo(ParsedContent);
@@ -27,7 +30,8 @@ export function ParsedContent({
 	showTranslation = true,
 	currentHandle,
 	locale,
-	intent,
+	voteIntent,
+	addTranslationFormIntent,
 }: ParsedContentProps) {
 	const sanitizedContent = DOMPurify.sanitize(html);
 	const doc = new DOMParser().parseFromString(sanitizedContent, "text/html");
@@ -53,7 +57,8 @@ export function ParsedContent({
 							showOriginal={showOriginal}
 							showTranslation={showTranslation}
 							currentHandle={currentHandle}
-							intent={intent}
+							voteIntent={voteIntent}
+							addTranslationFormIntent={addTranslationFormIntent}
 						/>
 					</DynamicTag>
 				);

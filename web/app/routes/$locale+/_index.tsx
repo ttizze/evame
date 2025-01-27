@@ -2,16 +2,9 @@ import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { useLoaderData, useSearchParams } from "@remix-run/react";
 
-import { StartButton } from "~/components/StartButton";
-import { supportedLocaleOptions } from "~/constants/languages";
-import i18nServer from "~/i18n.server";
-import { SegmentAndTranslationSection } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/sourceTextAndTranslationSection/SegmentAndTranslationSection";
-import { fetchPageWithTranslations } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
-import { VoteIntent } from "~/routes/resources+/vote-buttons";
-import { authenticator } from "~/utils/auth.server";
-
 import { data } from "@remix-run/node";
 import { PageCard } from "~/components/PageCard";
+import { StartButton } from "~/components/StartButton";
 import {
 	Pagination,
 	PaginationContent,
@@ -22,8 +15,15 @@ import {
 	PaginationPrevious,
 } from "~/components/ui/pagination";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { supportedLocaleOptions } from "~/constants/languages";
+import i18nServer from "~/i18n.server";
 import { fetchPaginatedPublicPagesWithInfo } from "~/routes/$locale+/functions/queries.server";
 import type { PageCardLocalizedType } from "~/routes/$locale+/functions/queries.server";
+import { SegmentAndTranslationSection } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/sourceTextAndTranslationSection/SegmentAndTranslationSection";
+import { fetchPageWithTranslations } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
+import { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
+import { VoteIntent } from "~/routes/resources+/vote-buttons";
+import { authenticator } from "~/utils/auth.server";
 import { ensureGuestId } from "~/utils/ensureGuestId.server";
 import { commitSession } from "~/utils/session.server";
 
@@ -177,7 +177,10 @@ export default function Home() {
 								currentHandle={undefined}
 								showOriginal={true}
 								showTranslation={true}
-								intent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
+								voteIntent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
+								addTranslationFormIntent={
+									AddTranslationFormIntent.PAGE_SEGMENT_TRANSLATION
+								}
 							/>
 						</h1>
 
@@ -189,7 +192,10 @@ export default function Home() {
 								showOriginal={true}
 								showTranslation={true}
 								currentHandle={undefined}
-								intent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
+								voteIntent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
+								addTranslationFormIntent={
+									AddTranslationFormIntent.PAGE_SEGMENT_TRANSLATION
+								}
 							/>
 						</span>
 						<div className="mb-12 flex justify-center mt-10">

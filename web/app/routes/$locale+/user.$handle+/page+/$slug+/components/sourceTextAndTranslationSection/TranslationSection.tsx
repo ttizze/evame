@@ -2,21 +2,25 @@ import { Languages, Plus } from "lucide-react";
 import { useState } from "react";
 import { useHydrated } from "remix-utils/use-hydrated";
 import { LocaleLink } from "~/components/LocaleLink";
+import type { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
 import { VoteButtons } from "~/routes/resources+/vote-buttons";
 import type { VoteIntent } from "~/routes/resources+/vote-buttons";
 import type { SegmentWithTranslations } from "../../types";
 import { sanitizeAndParseText } from "../../utils/sanitize-and-parse-text.client";
 import { AddAndVoteTranslations } from "./AddAndVoteTranslations";
+
 interface TranslationSectionProps {
 	segmentWithTranslations: SegmentWithTranslations;
 	currentHandle: string | undefined;
-	intent: VoteIntent;
+	voteIntent: VoteIntent;
+	addTranslationFormIntent: AddTranslationFormIntent;
 }
 
 export function TranslationSection({
 	segmentWithTranslations,
 	currentHandle,
-	intent,
+	voteIntent,
+	addTranslationFormIntent,
 }: TranslationSectionProps) {
 	const isHydrated = useHydrated();
 	const [isSelected, setIsSelected] = useState(false);
@@ -61,14 +65,15 @@ export function TranslationSection({
 						</LocaleLink>
 						<VoteButtons
 							translationWithVote={bestSegmentTranslationWithVote}
-							intent={intent}
+							voteIntent={voteIntent}
 						/>
 					</div>
 					<AddAndVoteTranslations
 						currentHandle={currentHandle}
 						segmentWithTranslations={segmentWithTranslations}
 						open={isSelected}
-						intent={intent}
+						voteIntent={voteIntent}
+						addTranslationFormIntent={addTranslationFormIntent}
 					/>
 				</>
 			)}

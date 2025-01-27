@@ -10,7 +10,13 @@ import { StartButton } from "~/components/StartButton";
 import { Button } from "~/components/ui/button";
 import i18nServer from "~/i18n.server";
 import { authenticator } from "~/utils/auth.server";
-import { addUserTranslation } from "./functions/mutations.server";
+import { addUserTranslation } from "./db/mutations.server";
+
+export enum AddTranslationFormIntent {
+	PAGE_SEGMENT_TRANSLATION = "PAGE_SEGMENT_TRANSLATION",
+	COMMENT_SEGMENT_TRANSLATION = "COMMENT_SEGMENT_TRANSLATION",
+}
+
 const schema = z.object({
 	segmentId: z.number(),
 	text: z
@@ -18,6 +24,7 @@ const schema = z.object({
 		.min(1, "Translation cannot be empty")
 		.max(30000, "Translation is too long")
 		.transform((val) => val.trim()),
+	intent: z.nativeEnum(AddTranslationFormIntent),
 });
 
 export async function action({ params, request }: ActionFunctionArgs) {
@@ -41,6 +48,7 @@ export async function action({ params, request }: ActionFunctionArgs) {
 		submission.value.text,
 		currentUser.id,
 		locale,
+		submission.value.intent,
 	);
 	return {
 		lastResult: submission.reply({ resetForm: true }),
@@ -50,11 +58,13 @@ export async function action({ params, request }: ActionFunctionArgs) {
 interface AddTranslationFormProps {
 	segmentId: number;
 	currentHandle: string | undefined;
+	intent: AddTranslationFormIntent;
 }
 
 export function AddTranslationForm({
 	segmentId,
 	currentHandle,
+	intent,
 }: AddTranslationFormProps) {
 	const fetcher = useFetcher<typeof action>();
 	const [form, fields] = useForm({
@@ -96,7 +106,7 @@ export function AddTranslationForm({
 					<Button
 						type="submit"
 						name="intent"
-						value="add"
+						value={intent}
 						className="rounded-xl"
 						disabled={
 							fetcher.state !== "idle" ||

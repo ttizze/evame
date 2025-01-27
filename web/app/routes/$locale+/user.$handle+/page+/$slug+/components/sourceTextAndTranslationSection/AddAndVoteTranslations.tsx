@@ -1,7 +1,8 @@
 import { ChevronDown, ChevronUp, Languages } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
-import { AddTranslationForm } from "~/routes/resources+/add-translation-form";
+import { AddTranslationForm } from "~/routes/resources+/add-translation-form/route";
+import type { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
 import { TranslationListItem } from "~/routes/resources+/translation-list-item";
 import type { VoteIntent } from "~/routes/resources+/vote-buttons";
 import type { SegmentWithTranslations } from "../../types";
@@ -11,12 +12,14 @@ export function AddAndVoteTranslations({
 	currentHandle,
 	segmentWithTranslations,
 	open,
-	intent,
+	voteIntent,
+	addTranslationFormIntent,
 }: {
 	currentHandle: string | undefined;
 	segmentWithTranslations: SegmentWithTranslations;
 	open: boolean;
-	intent: VoteIntent;
+	voteIntent: VoteIntent;
+	addTranslationFormIntent: AddTranslationFormIntent;
 }) {
 	const [showAll, setShowAll] = useState(false);
 	const { bestSegmentTranslationWithVote, segmentTranslationsWithVotes } =
@@ -52,7 +55,7 @@ export function AddAndVoteTranslations({
 							key={displayedTranslation.segmentTranslation.id}
 							translation={displayedTranslation}
 							currentHandle={currentHandle}
-							intent={intent}
+							voteIntent={voteIntent}
 						/>
 					))}
 					{hasMoreTranslations && (
@@ -77,6 +80,7 @@ export function AddAndVoteTranslations({
 					<AddTranslationForm
 						segmentId={segmentWithTranslations.segment.id}
 						currentHandle={currentHandle}
+						intent={addTranslationFormIntent}
 					/>
 				</div>
 			</div>

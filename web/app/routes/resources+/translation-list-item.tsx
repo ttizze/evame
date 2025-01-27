@@ -42,13 +42,13 @@ export async function action({ request }: ActionFunctionArgs) {
 interface TranslationItemProps {
 	translation: SegmentTranslationWithVote;
 	currentHandle: string | undefined;
-	intent: VoteIntent;
+	voteIntent: VoteIntent;
 }
 
 export function TranslationListItem({
 	translation,
 	currentHandle,
-	intent,
+	voteIntent,
 }: TranslationItemProps) {
 	const isOwner = currentHandle === translation.segmentTranslation.user.handle;
 	const fetcher = useFetcher();
@@ -93,7 +93,10 @@ export function TranslationListItem({
 						by: {translation.segmentTranslation.user.name}
 					</p>
 				</LocaleLink>
-				<VoteButtons translationWithVote={translation} intent={intent} />
+				<VoteButtons
+					translationWithVote={translation}
+					voteIntent={voteIntent}
+				/>
 			</div>
 		</div>
 	);

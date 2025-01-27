@@ -12,7 +12,9 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { MemoizedParsedContent } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/ParsedContent";
 import type { PageCommentWithUser } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
+import { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
 import { VoteIntent } from "~/routes/resources+/vote-buttons";
+
 interface CommentListProps {
 	pageCommentsWithUser: PageCommentWithUser;
 	currentUserId?: number;
@@ -35,7 +37,7 @@ export function PageCommentList({
 	return (
 		<div className="space-y-4">
 			{pageCommentsWithUser.map((pageComment) => (
-				<div key={pageComment.id} className="p-2 bg-card rounded-xl">
+				<div key={pageComment.id} className="p-2 border-t">
 					<div className="flex items-center">
 						<Avatar className="w-6 h-6 mr-3">
 							<AvatarImage
@@ -99,7 +101,10 @@ export function PageCommentList({
 								showOriginal={showOriginal}
 								showTranslation={showTranslation}
 								locale={locale}
-								intent={VoteIntent.COMMENT_SEGMENT_TRANSLATION}
+								voteIntent={VoteIntent.COMMENT_SEGMENT_TRANSLATION}
+								addTranslationFormIntent={
+									AddTranslationFormIntent.COMMENT_SEGMENT_TRANSLATION
+								}
 							/>
 						)}
 					</div>

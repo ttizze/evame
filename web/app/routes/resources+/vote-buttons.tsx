@@ -43,12 +43,12 @@ export async function action({ request }: ActionFunctionArgs) {
 
 interface VoteButtonsProps {
 	translationWithVote: SegmentTranslationWithVote;
-	intent: VoteIntent;
+	voteIntent: VoteIntent;
 }
 
 export const VoteButtons = memo(function VoteButtons({
 	translationWithVote,
-	intent,
+	voteIntent,
 }: VoteButtonsProps) {
 	const fetcher = useFetcher();
 	console.log(translationWithVote);
@@ -109,7 +109,7 @@ export const VoteButtons = memo(function VoteButtons({
 			"segmentTranslationId",
 			translationWithVote.segmentTranslation.id.toString(),
 		);
-		formData.append("intent", intent);
+		formData.append("intent", voteIntent);
 		formData.append("isUpvote", isUpvote.toString());
 		fetcher.submit(formData, {
 			method: "post",
