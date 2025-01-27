@@ -7,6 +7,7 @@ import { supportedLocaleOptions } from "~/constants/languages";
 import i18nServer from "~/i18n.server";
 import { SegmentAndTranslationSection } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/sourceTextAndTranslationSection/SegmentAndTranslationSection";
 import { fetchPageWithTranslations } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
+import { VoteIntent } from "~/routes/resources+/vote-buttons";
 import { authenticator } from "~/utils/auth.server";
 
 import { data } from "@remix-run/node";
@@ -176,6 +177,7 @@ export default function Home() {
 								currentHandle={undefined}
 								showOriginal={true}
 								showTranslation={true}
+								intent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
 							/>
 						</h1>
 
@@ -187,6 +189,7 @@ export default function Home() {
 								showOriginal={true}
 								showTranslation={true}
 								currentHandle={undefined}
+								intent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
 							/>
 						</span>
 						<div className="mb-12 flex justify-center mt-10">

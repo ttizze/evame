@@ -3,18 +3,20 @@ import { useState } from "react";
 import { useHydrated } from "remix-utils/use-hydrated";
 import { LocaleLink } from "~/components/LocaleLink";
 import { VoteButtons } from "~/routes/resources+/vote-buttons";
+import type { VoteIntent } from "~/routes/resources+/vote-buttons";
 import type { SegmentWithTranslations } from "../../types";
 import { sanitizeAndParseText } from "../../utils/sanitize-and-parse-text.client";
 import { AddAndVoteTranslations } from "./AddAndVoteTranslations";
-
 interface TranslationSectionProps {
 	segmentWithTranslations: SegmentWithTranslations;
 	currentHandle: string | undefined;
+	intent: VoteIntent;
 }
 
 export function TranslationSection({
 	segmentWithTranslations,
 	currentHandle,
+	intent,
 }: TranslationSectionProps) {
 	const isHydrated = useHydrated();
 	const [isSelected, setIsSelected] = useState(false);
@@ -57,12 +59,16 @@ export function TranslationSection({
 								{bestSegmentTranslationWithVote?.segmentTranslation.user.name}
 							</p>
 						</LocaleLink>
-						<VoteButtons translationWithVote={bestSegmentTranslationWithVote} />
+						<VoteButtons
+							translationWithVote={bestSegmentTranslationWithVote}
+							intent={intent}
+						/>
 					</div>
 					<AddAndVoteTranslations
 						currentHandle={currentHandle}
 						segmentWithTranslations={segmentWithTranslations}
 						open={isSelected}
+						intent={intent}
 					/>
 				</>
 			)}

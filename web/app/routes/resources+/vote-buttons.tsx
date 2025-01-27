@@ -9,9 +9,14 @@ import { authenticator } from "~/utils/auth.server";
 import { cn } from "~/utils/cn";
 import { handleVote } from "./functions/mutations.server";
 
+export enum VoteIntent {
+	PAGE_SEGMENT_TRANSLATION = "pageSegmentTranslation",
+	COMMENT_SEGMENT_TRANSLATION = "commentSegmentTranslation",
+}
 export const schema = z.object({
-	pageSegmentTranslationId: z.number(),
+	segmentTranslationId: z.number(),
 	isUpvote: z.preprocess((val) => val === "true", z.boolean()),
+	intent: z.nativeEnum(VoteIntent),
 });
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -21,13 +26,15 @@ export async function action({ request }: ActionFunctionArgs) {
 	const submission = parseWithZod(await request.formData(), {
 		schema,
 	});
+	console.log(submission);
 	if (submission.status !== "success") {
 		return { lastResult: submission.reply() };
 	}
 	await handleVote(
-		submission.value.pageSegmentTranslationId,
+		submission.value.segmentTranslationId,
 		submission.value.isUpvote,
 		currentUser.id,
+		submission.value.intent,
 	);
 	return {
 		lastResult: submission.reply({ resetForm: true }),
@@ -36,12 +43,15 @@ export async function action({ request }: ActionFunctionArgs) {
 
 interface VoteButtonsProps {
 	translationWithVote: SegmentTranslationWithVote;
+	intent: VoteIntent;
 }
 
 export const VoteButtons = memo(function VoteButtons({
 	translationWithVote,
+	intent,
 }: VoteButtonsProps) {
 	const fetcher = useFetcher();
+	console.log(translationWithVote);
 
 	const isVoting = fetcher.state !== "idle";
 
@@ -99,6 +109,7 @@ export const VoteButtons = memo(function VoteButtons({
 			"segmentTranslationId",
 			translationWithVote.segmentTranslation.id.toString(),
 		);
+		formData.append("intent", intent);
 		formData.append("isUpvote", isUpvote.toString());
 		fetcher.submit(formData, {
 			method: "post",

@@ -3,18 +3,20 @@ import { useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { AddTranslationForm } from "~/routes/resources+/add-translation-form";
 import { TranslationListItem } from "~/routes/resources+/translation-list-item";
+import type { VoteIntent } from "~/routes/resources+/vote-buttons";
 import type { SegmentWithTranslations } from "../../types";
-
 const INITIAL_DISPLAY_COUNT = 3;
 
 export function AddAndVoteTranslations({
 	currentHandle,
 	segmentWithTranslations,
 	open,
+	intent,
 }: {
 	currentHandle: string | undefined;
 	segmentWithTranslations: SegmentWithTranslations;
 	open: boolean;
+	intent: VoteIntent;
 }) {
 	const [showAll, setShowAll] = useState(false);
 	const { bestSegmentTranslationWithVote, segmentTranslationsWithVotes } =
@@ -50,6 +52,7 @@ export function AddAndVoteTranslations({
 							key={displayedTranslation.segmentTranslation.id}
 							translation={displayedTranslation}
 							currentHandle={currentHandle}
+							intent={intent}
 						/>
 					))}
 					{hasMoreTranslations && (

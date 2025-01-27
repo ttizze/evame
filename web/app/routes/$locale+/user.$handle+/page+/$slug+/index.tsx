@@ -134,6 +134,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			fetchPageCommentsWithUserAndTranslations(
 				pageWithTranslations.page.id,
 				locale,
+				currentUser?.id,
 			),
 			fetchPageCommentsCount(pageWithTranslations.page.id),
 		]);
@@ -164,6 +165,7 @@ export enum TranslationIntent {
 	TRANSLATE_PAGE = "translatePage",
 	TRANSLATE_COMMENT = "translateComment",
 }
+
 const translateSchema = z.object({
 	pageId: z.number(),
 	aiModel: z.string().min(1, "モデルを選択してください"),

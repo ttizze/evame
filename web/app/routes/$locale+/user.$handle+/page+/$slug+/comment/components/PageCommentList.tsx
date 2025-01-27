@@ -12,6 +12,7 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { MemoizedParsedContent } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/ParsedContent";
 import type { PageCommentWithUser } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
+import { VoteIntent } from "~/routes/resources+/vote-buttons";
 interface CommentListProps {
 	pageCommentsWithUser: PageCommentWithUser;
 	currentUserId?: number;
@@ -98,6 +99,7 @@ export function PageCommentList({
 								showOriginal={showOriginal}
 								showTranslation={showTranslation}
 								locale={locale}
+								intent={VoteIntent.COMMENT_SEGMENT_TRANSLATION}
 							/>
 						)}
 					</div>

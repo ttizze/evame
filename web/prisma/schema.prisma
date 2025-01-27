@@ -31,7 +31,7 @@ model User {
   following                      Follow[]                        @relation("follower")
   pageComments                   PageComment[]
   pageCommentSegmentTranslations PageCommentSegmentTranslation[]
-  pageCommentVotes PageCommentVote[]
+  pageCommentSegmentTranslationVotes PageCommentSegmentTranslationVote[]
   @@map("users")
 }
 
@@ -270,14 +270,14 @@ model PageCommentSegmentTranslation {
   user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   pageCommentSegmentId Int                @map("page_comment_segment_id")
   pageCommentSegment   PageCommentSegment @relation(fields: [pageCommentSegmentId], references: [id], onDelete: Cascade)
-  pageCommentVotes PageCommentVote[]
+  pageCommentSegmentTranslationVotes PageCommentSegmentTranslationVote[]
   @@index([pageCommentSegmentId])
   @@index([userId])
   @@index([locale])
   @@map("page_comment_segment_translations")
 }
 
-model PageCommentVote {
+model PageCommentSegmentTranslationVote {
   id              Int           @id @default(autoincrement())
   userId          Int           @map("user_id")
   pageCommentSegmentTranslationId Int           @map("page_comment_segment_translation_id")
@@ -290,5 +290,5 @@ model PageCommentVote {
   @@unique([pageCommentSegmentTranslationId, userId])
   @@index([pageCommentSegmentTranslationId])
   @@index([userId])
-  @@map("page_comment_votes")
+  @@map("page_comment_segment_translation_votes")
 }

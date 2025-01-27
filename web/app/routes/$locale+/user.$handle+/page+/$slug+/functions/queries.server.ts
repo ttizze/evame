@@ -187,7 +187,7 @@ export async function fetchPageCommentsWithUserAndTranslations(
 						where: { locale },
 						include: {
 							user: true,
-							pageCommentVotes: {
+							pageCommentSegmentTranslationVotes: {
 								where: currentUserId
 									? { userId: currentUserId }
 									: { userId: -1 },
@@ -202,9 +202,12 @@ export async function fetchPageCommentsWithUserAndTranslations(
 			createdAt: "asc",
 		},
 	});
+	console.log(
+		pageComments[0].pageCommentSegments[0].pageCommentSegmentTranslations[0]
+			.pageCommentSegmentTranslationVotes,
+	);
 
 	return pageComments.map((comment) => {
-		// コメント配下のセグメントごとに翻訳＋投票情報を作成
 		const pageCommentSegmentsWithTranslations = comment.pageCommentSegments.map(
 			(segment) => {
 				// SegmentTranslationWithVote[] を作る
@@ -215,13 +218,11 @@ export async function fetchPageCommentsWithUserAndTranslations(
 								...translation,
 								user: translation.user,
 							},
-							// 投票は1ユーザーに付き1件想定なら先頭を取り出す
 							translationVote:
-								translation.pageCommentVotes &&
-								translation.pageCommentVotes.length > 0
+								translation.pageCommentSegmentTranslationVotes &&
+								translation.pageCommentSegmentTranslationVotes.length > 0
 									? {
-											...translation.pageCommentVotes[0],
-											// もし translationId が異なる場合は上書き
+											...translation.pageCommentSegmentTranslationVotes[0],
 											translationId: translation.id,
 										}
 									: null,
@@ -245,7 +246,6 @@ export async function fetchPageCommentsWithUserAndTranslations(
 			...comment,
 			createdAt: comment.createdAt.toLocaleString(locale),
 			updatedAt: comment.updatedAt.toLocaleString(locale),
-			// コメントの各セグメントに翻訳＋投票情報を付与
 			pageCommentSegmentsWithTranslations,
 		};
 	});

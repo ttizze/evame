@@ -5,9 +5,9 @@ import parse, {
 	type DOMNode,
 } from "html-react-parser";
 import { memo } from "react";
+import type { VoteIntent } from "~/routes/resources+/vote-buttons";
 import type { SegmentWithTranslations } from "../types";
 import { SegmentAndTranslationSection } from "./sourceTextAndTranslationSection/SegmentAndTranslationSection";
-
 interface ParsedContentProps {
 	html: string;
 	segmentWithTranslations: SegmentWithTranslations[] | null;
@@ -15,6 +15,7 @@ interface ParsedContentProps {
 	showOriginal: boolean;
 	showTranslation: boolean;
 	locale: string;
+	intent: VoteIntent;
 }
 
 export const MemoizedParsedContent = memo(ParsedContent);
@@ -26,6 +27,7 @@ export function ParsedContent({
 	showTranslation = true,
 	currentHandle,
 	locale,
+	intent,
 }: ParsedContentProps) {
 	const sanitizedContent = DOMPurify.sanitize(html);
 	const doc = new DOMParser().parseFromString(sanitizedContent, "text/html");
@@ -51,6 +53,7 @@ export function ParsedContent({
 							showOriginal={showOriginal}
 							showTranslation={showTranslation}
 							currentHandle={currentHandle}
+							intent={intent}
 						/>
 					</DynamicTag>
 				);

@@ -4,11 +4,11 @@ import { useHydrated } from "remix-utils/use-hydrated";
 import { LocaleLink } from "~/components/LocaleLink";
 import { TagList } from "~/components/TagList";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { VoteIntent } from "~/routes/resources+/vote-buttons";
 import type { PageWithTranslations, SegmentWithTranslations } from "../types";
 import { MemoizedParsedContent } from "./ParsedContent";
 import { SegmentAndTranslationSection } from "./sourceTextAndTranslationSection/SegmentAndTranslationSection";
 import { TranslateActionSection } from "./translateButton/TranslateActionSection";
-
 interface ContentWithTranslationsProps {
 	pageWithTranslations: PageWithTranslations;
 	pageSegmentWithTranslations: SegmentWithTranslations | null;
@@ -47,6 +47,7 @@ export function ContentWithTranslations({
 						currentHandle={currentHandle}
 						isOwner={pageWithTranslations.user.handle === currentHandle}
 						slug={pageWithTranslations.page.slug}
+						intent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
 					/>
 				)}
 			</h1>
@@ -98,6 +99,7 @@ export function ContentWithTranslations({
 					showOriginal={showOriginal}
 					showTranslation={showTranslation}
 					locale={locale}
+					intent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
 				/>
 			)}
 		</>

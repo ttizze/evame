@@ -15,6 +15,7 @@ import type { SegmentTranslationWithVote } from "~/routes/$locale+/user.$handle+
 import { sanitizeAndParseText } from "~/routes/$locale+/user.$handle+/page+/$slug+/utils/sanitize-and-parse-text.client";
 import { authenticator } from "~/utils/auth.server";
 import { deleteOwnTranslation } from "./functions/mutations.server";
+import type { VoteIntent } from "./vote-buttons";
 import { VoteButtons } from "./vote-buttons";
 
 const schema = z.object({
@@ -41,11 +42,13 @@ export async function action({ request }: ActionFunctionArgs) {
 interface TranslationItemProps {
 	translation: SegmentTranslationWithVote;
 	currentHandle: string | undefined;
+	intent: VoteIntent;
 }
 
 export function TranslationListItem({
 	translation,
 	currentHandle,
+	intent,
 }: TranslationItemProps) {
 	const isOwner = currentHandle === translation.segmentTranslation.user.handle;
 	const fetcher = useFetcher();
@@ -90,7 +93,7 @@ export function TranslationListItem({
 						by: {translation.segmentTranslation.user.name}
 					</p>
 				</LocaleLink>
-				<VoteButtons translationWithVote={translation} />
+				<VoteButtons translationWithVote={translation} intent={intent} />
 			</div>
 		</div>
 	);

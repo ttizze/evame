@@ -2,9 +2,9 @@ import { Lock } from "lucide-react";
 import { SquarePen } from "lucide-react";
 import type { ReactNode } from "react";
 import { NavLocaleLink } from "~/components/NavLocaleLink";
+import type { VoteIntent } from "~/routes/resources+/vote-buttons";
 import type { SegmentWithTranslations } from "../../types";
 import { TranslationSection } from "./TranslationSection";
-
 interface SegmentAndTranslationSectionProps {
 	segmentWithTranslations: SegmentWithTranslations;
 	elements: string | ReactNode | ReactNode[];
@@ -15,6 +15,7 @@ interface SegmentAndTranslationSectionProps {
 	currentHandle: string | undefined;
 	isOwner?: boolean;
 	slug?: string;
+	intent: VoteIntent;
 }
 
 export function SegmentAndTranslationSection({
@@ -27,6 +28,7 @@ export function SegmentAndTranslationSection({
 	currentHandle,
 	isOwner,
 	slug,
+	intent,
 }: SegmentAndTranslationSectionProps) {
 	return (
 		<>
@@ -63,6 +65,7 @@ export function SegmentAndTranslationSection({
 						key={`translation-${segmentWithTranslations.segment.id}`}
 						segmentWithTranslations={segmentWithTranslations}
 						currentHandle={currentHandle}
+						intent={intent}
 					/>
 				)}
 		</>

@@ -1,7 +1,7 @@
-import { json } from "@remix-run/node";
+import { data } from "@remix-run/node";
+import { VoteIntent } from "~/routes/resources+/vote-buttons";
 import { encrypt } from "~/utils/encryption.server";
 import { prisma } from "~/utils/prisma";
-
 export const updateGeminiApiKey = async (
 	userId: number,
 	geminiApiKey: string,
@@ -31,10 +31,10 @@ export const deleteOwnTranslation = async (
 		select: { user: true },
 	});
 	if (!translation) {
-		return json({ error: "Translation not found" }, { status: 404 });
+		return data({ error: "Translation not found" }, { status: 404 });
 	}
 	if (translation.user.handle !== currentHandle) {
-		return json({ error: "Unauthorized" }, { status: 403 });
+		return data({ error: "Unauthorized" }, { status: 403 });
 	}
 	await prisma.pageSegmentTranslation.update({
 		where: { id: translationId },
@@ -63,50 +63,107 @@ export async function addUserTranslation(
 		});
 	}
 
-	return json({ success: true });
+	return data({ success: true });
 }
 
 export async function handleVote(
-	pageSegmentTranslationId: number,
+	segmentTranslationId: number,
 	isUpvote: boolean,
 	userId: number,
+	intent: VoteIntent,
 ) {
-	await prisma.$transaction(async (tx) => {
-		const existingVote = await tx.vote.findUnique({
-			where: {
-				pageSegmentTranslationId_userId: { pageSegmentTranslationId, userId },
-			},
-		});
+	if (intent === VoteIntent.PAGE_SEGMENT_TRANSLATION) {
+		console.log("PAGE_SEGMENT_TRANSLATION");
+		await prisma.$transaction(async (tx) => {
+			const existingVote = await tx.vote.findUnique({
+				where: {
+					pageSegmentTranslationId_userId: {
+						pageSegmentTranslationId: segmentTranslationId,
+						userId,
+					},
+				},
+			});
 
-		if (existingVote) {
-			if (existingVote.isUpvote === isUpvote) {
-				await tx.vote.delete({ where: { id: existingVote.id } });
-				await tx.pageSegmentTranslation.update({
-					where: { id: pageSegmentTranslationId },
-					data: { point: { increment: isUpvote ? -1 : 1 } },
-				});
+			if (existingVote) {
+				if (existingVote.isUpvote === isUpvote) {
+					await tx.vote.delete({ where: { id: existingVote.id } });
+					await tx.pageSegmentTranslation.update({
+						where: { id: segmentTranslationId },
+						data: { point: { increment: isUpvote ? -1 : 1 } },
+					});
+				} else {
+					await tx.vote.update({
+						where: { id: existingVote.id },
+						data: { isUpvote },
+					});
+					await tx.pageSegmentTranslation.update({
+						where: { id: segmentTranslationId },
+						data: { point: { increment: isUpvote ? 2 : -2 } },
+					});
+				}
 			} else {
-				await tx.vote.update({
-					where: { id: existingVote.id },
-					data: { isUpvote },
+				await tx.vote.create({
+					data: {
+						userId,
+						pageSegmentTranslationId: segmentTranslationId,
+						isUpvote,
+					},
 				});
 				await tx.pageSegmentTranslation.update({
-					where: { id: pageSegmentTranslationId },
-					data: { point: { increment: isUpvote ? 2 : -2 } },
+					where: { id: segmentTranslationId },
+					data: { point: { increment: isUpvote ? 1 : -1 } },
 				});
 			}
-		} else {
-			await tx.vote.create({
-				data: { userId, pageSegmentTranslationId, isUpvote },
-			});
-			await tx.pageSegmentTranslation.update({
-				where: { id: pageSegmentTranslationId },
-				data: { point: { increment: isUpvote ? 1 : -1 } },
-			});
-		}
-	});
+		});
+	} else if (intent === VoteIntent.COMMENT_SEGMENT_TRANSLATION) {
+		console.log("COMMENT_SEGMENT_TRANSLATION");
+		await prisma.$transaction(async (tx) => {
+			const existingVote =
+				await tx.pageCommentSegmentTranslationVote.findUnique({
+					where: {
+						pageCommentSegmentTranslationId_userId: {
+							pageCommentSegmentTranslationId: segmentTranslationId,
+							userId,
+						},
+					},
+				});
 
-	return json({ success: true });
+			if (existingVote) {
+				if (existingVote.isUpvote === isUpvote) {
+					await tx.pageCommentSegmentTranslationVote.delete({
+						where: { id: existingVote.id },
+					});
+					await tx.pageCommentSegmentTranslation.update({
+						where: { id: segmentTranslationId },
+						data: { point: { increment: isUpvote ? -1 : 1 } },
+					});
+				} else {
+					await tx.pageCommentSegmentTranslationVote.update({
+						where: { id: existingVote.id },
+						data: { isUpvote },
+					});
+					await tx.pageCommentSegmentTranslation.update({
+						where: { id: segmentTranslationId },
+						data: { point: { increment: isUpvote ? 2 : -2 } },
+					});
+				}
+			} else {
+				await tx.pageCommentSegmentTranslationVote.create({
+					data: {
+						userId,
+						pageCommentSegmentTranslationId: segmentTranslationId,
+						isUpvote,
+					},
+				});
+				await tx.pageCommentSegmentTranslation.update({
+					where: { id: segmentTranslationId },
+					data: { point: { increment: isUpvote ? 1 : -1 } },
+				});
+			}
+		});
+	}
+
+	return data({ success: true });
 }
 
 export async function toggleLike(
