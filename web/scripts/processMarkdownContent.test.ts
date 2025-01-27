@@ -58,10 +58,10 @@ This is another test.
 		const htmlContent = updatedPage.content;
 		// <span data-id="...">This is a test.</span> がHTML内に挿入されることを期待
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">This is a test\.<\/span>/,
+			/<span data-number-id="\d+">This is a test\.<\/span>/,
 		);
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">This is another test\.<\/span>/,
+			/<span data-number-id="\d+">This is another test\.<\/span>/,
 		);
 
 		// source_textsのnumberが連番になっているかチェック
@@ -237,17 +237,17 @@ new line
 		const htmlContent = dbPage.content;
 
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">\<strong>Bold text<\/strong> and <em>italic text<\/em><\/span>/,
+			/<span data-number-id="\d+">\<strong>Bold text<\/strong> and <em>italic text<\/em><\/span>/,
 		);
 
 		expect(htmlContent).not.toMatch(
-			/<span data-source-text-id="\d+">code block<\/span>/,
+			/<span data-number-id="\d+">code block<\/span>/,
 		);
 
 		// 新たに追加した要素についても確認
 		// 画像代替テキスト "Alt text"
 		expect(htmlContent).not.toMatch(
-			/<span data-source-text-id="\d+">Alt text<\/span>/,
+			/<span data-number-id="\d+">Alt text<\/span>/,
 		);
 	});
 	test("should handle various markdown syntaxes and verify numbering", async () => {

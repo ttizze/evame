@@ -1,4 +1,3 @@
-import type { PageStatus } from "@prisma/client";
 import type { Root } from "hast";
 import rehypeParse from "rehype-parse";
 import rehypeRaw from "rehype-raw";
@@ -11,40 +10,39 @@ import { unified } from "unified";
 import type { Plugin } from "unified";
 import { collectBlocksFromRoot } from "../../utils/process-html";
 import { injectSpanNodes } from "../../utils/process-html";
-import {
-	synchronizePageSourceTexts,
-	upsertPageWithHtml,
-} from "../functions/mutations.server";
+import { upsertPageComment } from "../functions/mutations.server";
+import { createPageCommentSegments } from "../functions/mutations.server";
+export function parseHtmlToAst(html: string): Root {
+	return unified().use(rehypeParse, { fragment: true }).parse(html) as Root;
+}
 
-export function rehypeAddDataId(
-	pageId: number,
-	title: string,
-): Plugin<[], Root> {
+export function rehypeAddDataId(commentId: number): Plugin<[], Root> {
 	return function attacher() {
 		return async (tree: Root) => {
-			const blocks = collectBlocksFromRoot(tree, title);
-			await synchronizePageSourceTexts(pageId, blocks);
+			const blocks = collectBlocksFromRoot(tree);
+
+			await createPageCommentSegments(commentId, blocks);
+
 			injectSpanNodes(blocks);
 		};
 	};
 }
 
 // 例） HTML → HAST → MDAST → remark → HAST → HTML の流れで使う想定
-export async function processPageHtml(
-	title: string,
-	html: string,
-	pageSlug: string,
+export async function processPageCommentHtml(
+	commentId: number,
+	commentHtml: string,
+	locale: string,
 	userId: number,
-	sourceLanguage: string,
-	status: PageStatus,
+	pageId: number,
 ) {
 	// HTML 入力に対応する page レコードを作成/更新
-	const page = await upsertPageWithHtml(
-		pageSlug,
-		html,
+	const pageComment = await upsertPageComment(
+		commentId,
+		commentHtml,
+		locale,
 		userId,
-		sourceLanguage,
-		status,
+		pageId,
 	);
 
 	const file = await unified()
@@ -52,19 +50,19 @@ export async function processPageHtml(
 		.use(rehypeRemark) // HAST→MDAST
 		.use(remarkGfm) // GFM拡張
 		.use(remarkRehype, { allowDangerousHtml: true }) // MDAST→HAST
-		.use(rehypeAddDataId(page.id, title))
+		.use(rehypeAddDataId(commentId))
 		.use(rehypeRaw)
 		.use(rehypeUnwrapImages)
 		.use(rehypeStringify, { allowDangerousHtml: true }) // HAST→HTML
-		.process(html);
+		.process(commentHtml);
 
-	const htmlContent = String(file);
-	await upsertPageWithHtml(
-		pageSlug,
-		htmlContent,
+	const injectedCommentHtml = String(file);
+	await upsertPageComment(
+		commentId,
+		injectedCommentHtml,
+		locale,
 		userId,
-		sourceLanguage,
-		status,
+		pageId,
 	);
-	return page;
+	return pageComment;
 }

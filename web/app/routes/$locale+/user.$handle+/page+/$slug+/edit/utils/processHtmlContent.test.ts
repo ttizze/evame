@@ -44,10 +44,10 @@ describe("processHtmlContent", () => {
 		const htmlContent = updatedPage.content;
 
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">This is a test\.<\/span>/,
+			/<span data-number-id="\d+">This is a test\.<\/span>/,
 		);
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">This is another test\.<\/span>/,
+			/<span data-number-id="\d+">This is another test\.<\/span>/,
 		);
 
 		// source_textsのnumberが連番になっているか
@@ -204,20 +204,20 @@ describe("processHtmlContent", () => {
 
 		// タイトル部分のspanを確認
 		expect(htmlContent).toMatch(
-			new RegExp(`<h1><span data-source-text-id="\\d+">${title}</span></h1>`),
+			new RegExp(`<h1><span data-number-id="\\d+">${title}</span></h1>`),
 		);
 
 		// 本文中のタイトルのspanを確認
 		expect(htmlContent).toMatch(
-			new RegExp(`<span data-source-text-id="\\d+">${title}</span>`),
+			new RegExp(`<span data-number-id="\\d+">${title}</span>`),
 		);
 
 		// その他の本文のspanを確認
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">This is a paragraph with the Unique Title embedded\.<\/span>/,
+			/<span data-number-id="\d+">This is a paragraph with the Unique Title embedded\.<\/span>/,
 		);
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">Another paragraph\.<\/span>/,
+			/<span data-number-id="\d+">Another paragraph\.<\/span>/,
 		);
 
 		// source_textsのnumberが連番になっているか

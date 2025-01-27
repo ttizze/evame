@@ -95,7 +95,7 @@ describe("EditPage", () => {
 				const sourceText = page.sourceTexts.find(
 					(st) => st.number === Number.parseInt(number),
 				);
-				return `<p data-number='${number}' data-source-text-id='${sourceText?.id}'>`;
+				return `<p data-number='${number}' data-number-id='${sourceText?.id}'>`;
 			},
 		);
 

@@ -32,11 +32,11 @@ export function ParsedContent({
 
 	const options: HTMLReactParserOptions = {
 		replace: (domNode) => {
-			if (domNode.type === "tag" && domNode.attribs["data-segment-id"]) {
-				const sourceTextId = Number(domNode.attribs["data-segment-id"]);
+			if (domNode.type === "tag" && domNode.attribs["data-number-id"]) {
+				const number = Number(domNode.attribs["data-number-id"]);
 				const sourceTextWithTranslation =
 					pageWithTranslations.sourceTextWithTranslations.find(
-						(info) => info.sourceText.id === sourceTextId,
+						(info) => info.sourceText.number === number,
 					);
 				if (!sourceTextWithTranslation) {
 					return null;
@@ -46,7 +46,7 @@ export function ParsedContent({
 				return (
 					<DynamicTag {...otherAttribs} className={className}>
 						<SourceTextAndTranslationSection
-							key={`translation-${sourceTextId}`}
+							key={`translation-${number}`}
 							sourceTextWithTranslations={sourceTextWithTranslation}
 							elements={domToReact(domNode.children as DOMNode[], options)}
 							showOriginal={showOriginal}

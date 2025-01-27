@@ -1,5 +1,6 @@
 import type { PageStatus } from "@prisma/client";
 import { prisma } from "~/utils/prisma";
+import type { BlockWithNumber } from "../../utils/process-html";
 export async function upsertPageWithHtml(
 	pageSlug: string,
 	html: string,
@@ -67,11 +68,7 @@ export async function upsertTags(tags: string[], pageId: number) {
 
 export async function synchronizePageSourceTexts(
 	pageId: number,
-	allTextsData: {
-		text: string;
-		textAndOccurrenceHash: string;
-		number: number;
-	}[],
+	blocks: BlockWithNumber[],
 ): Promise<Map<string, number>> {
 	const BATCH_SIZE = 1000;
 	const OFFSET = 1_000_000;
@@ -85,7 +82,7 @@ export async function synchronizePageSourceTexts(
 	const hashToId = new Map<string, number>(
 		existingSourceTexts.map((t) => [t.textAndOccurrenceHash as string, t.id]),
 	);
-	const newHashes = new Set(allTextsData.map((t) => t.textAndOccurrenceHash));
+	const newHashes = new Set(blocks.map((t) => t.textAndOccurrenceHash));
 
 	// 不要テキストID特定
 	const hashesToDelete = existingSourceTexts
@@ -126,9 +123,7 @@ export async function synchronizePageSourceTexts(
 
 	// 2. 既存テキストのnumberを更新
 	// 4. 既存テキストのnumberを直列で更新
-	const updates = allTextsData.filter((t) =>
-		hashToId.has(t.textAndOccurrenceHash),
-	);
+	const updates = blocks.filter((t) => hashToId.has(t.textAndOccurrenceHash));
 
 	// バッチサイズで分けて並列処理（トランザクションなし）
 	for (let i = 0; i < updates.length; i += BATCH_SIZE) {
@@ -149,7 +144,7 @@ export async function synchronizePageSourceTexts(
 	}
 
 	// 3. 新規テキスト挿入
-	const newInserts = allTextsData
+	const newInserts = blocks
 		.filter((t) => !hashToId.has(t.textAndOccurrenceHash))
 		.map((t) => ({
 			pageId,

@@ -15,6 +15,10 @@ export type TranslationWithVote = {
 	vote: Vote | null;
 };
 
+type segment = {
+	number: number;
+	text: string;
+};
 export type SourceTextWithTranslations = {
 	sourceText: SourceText;
 	translationsWithVotes: TranslationWithVote[];
