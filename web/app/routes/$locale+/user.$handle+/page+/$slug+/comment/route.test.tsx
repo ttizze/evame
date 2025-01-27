@@ -11,6 +11,7 @@ vi.mock("~/utils/prisma", () => ({
 			create: vi.fn(),
 			findUnique: vi.fn(),
 			delete: vi.fn(),
+			upsert: vi.fn(),
 		},
 		pageCommentSegment: {
 			createMany: vi.fn(),
