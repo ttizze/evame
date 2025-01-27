@@ -23,7 +23,7 @@ model User {
   userEmail                      UserEmail?
   geminiApiKey                   GeminiApiKey?
   pages                          Page[]
-  translations                   TranslateText[]
+  pageSegmentsTranslations       PageSegmentTranslation[]
   votes                          Vote[]
   userAITranslationInfo          UserAITranslationInfo[]
   likePages                      LikePage[]
@@ -121,7 +121,7 @@ model Page {
   user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId                Int                     @map("user_id")
   userAITranslationInfo UserAITranslationInfo[]
-  sourceTexts           SourceText[]
+  pageSegments          PageSegment[]
   tagPages              TagPage[]
   likePages             LikePage[]
   pageComments          PageComment[]
@@ -132,12 +132,12 @@ model Page {
   @@map("pages")
 }
 
-model SourceText {
+model PageSegment {
   id                    Int             @id @default(autoincrement())
   text                  String
   number                Int
   textAndOccurrenceHash String          @map("text_and_occurrence_hash")
-  translateTexts        TranslateText[]
+  pageSegmentTranslations PageSegmentTranslation[]
   page                  Page            @relation(fields: [pageId], references: [id], onDelete: Cascade)
   pageId                Int             @map("page_id")
   createdAt             DateTime        @default(now()) @map("created_at")
@@ -148,26 +148,26 @@ model SourceText {
   @@index([pageId])
   @@index([number])
   @@index([textAndOccurrenceHash])
-  @@map("source_texts")
+  @@map("page_segments")
 }
 
-model TranslateText {
+model PageSegmentTranslation {
   id           Int        @id @default(autoincrement())
   locale       String
   text         String
-  sourceTextId Int        @map("source_text_id")
+  pageSegmentId Int        @map("page_segment_id")
   userId       Int        @map("user_id")
   point        Int        @default(0)
   isArchived   Boolean    @default(false) @map("is_archived")
   createdAt    DateTime   @default(now()) @map("created_at")
-  sourceText   SourceText @relation(fields: [sourceTextId], references: [id], onDelete: Cascade)
+  pageSegment  PageSegment @relation(fields: [pageSegmentId], references: [id], onDelete: Cascade)
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   votes        Vote[]
 
-  @@index([sourceTextId])
+  @@index([pageSegmentId])
   @@index([userId])
   @@index([locale])
-  @@map("translate_texts")
+  @@map("page_segment_translations")
 }
 
 model LikePage {
@@ -210,15 +210,15 @@ model TagPage {
 model Vote {
   id              Int           @id @default(autoincrement())
   userId          Int           @map("user_id")
-  translateTextId Int           @map("translate_text_id")
+  pageSegmentTranslationId Int           @map("page_segment_translation_id")
   isUpvote        Boolean       @map("is_upvote")
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
-  translateText   TranslateText @relation(fields: [translateTextId], references: [id], onDelete: Cascade)
+  pageSegmentTranslation PageSegmentTranslation @relation(fields: [pageSegmentTranslationId], references: [id], onDelete: Cascade)
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([translateTextId, userId])
-  @@index([translateTextId])
+  @@unique([pageSegmentTranslationId, userId])
+  @@index([pageSegmentTranslationId])
   @@index([userId])
   @@map("votes")
 }

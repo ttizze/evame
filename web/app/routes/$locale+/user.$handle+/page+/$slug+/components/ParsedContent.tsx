@@ -6,7 +6,7 @@ import parse, {
 } from "html-react-parser";
 import { memo } from "react";
 import type { PageWithTranslations } from "../types";
-import { SourceTextAndTranslationSection } from "./sourceTextAndTranslationSection/SourceTextAndTranslationSection";
+import { PageSegmentAndTranslationSection } from "./sourceTextAndTranslationSection/PageSegmentAndTranslationSection";
 
 interface ParsedContentProps {
 	pageWithTranslations: PageWithTranslations;
@@ -32,22 +32,22 @@ export function ParsedContent({
 
 	const options: HTMLReactParserOptions = {
 		replace: (domNode) => {
-			if (domNode.type === "tag" && domNode.attribs["data-number-id"]) {
-				const number = Number(domNode.attribs["data-number-id"]);
-				const sourceTextWithTranslation =
-					pageWithTranslations.sourceTextWithTranslations.find(
-						(info) => info.sourceText.number === number,
+			if (domNode.type === "tag" && domNode.attribs["data-source-text-id"]) {
+				const number = Number(domNode.attribs["data-source-text-id"]);
+				const pageSegmentWithTranslation =
+					pageWithTranslations.pageSegmentWithTranslations.find(
+						(info) => info.pageSegment.number === number,
 					);
-				if (!sourceTextWithTranslation) {
+				if (!pageSegmentWithTranslation) {
 					return null;
 				}
 				const DynamicTag = domNode.name as keyof JSX.IntrinsicElements;
 				const { class: className, ...otherAttribs } = domNode.attribs;
 				return (
 					<DynamicTag {...otherAttribs} className={className}>
-						<SourceTextAndTranslationSection
+						<PageSegmentAndTranslationSection
 							key={`translation-${number}`}
-							sourceTextWithTranslations={sourceTextWithTranslation}
+							pageSegmentWithTranslations={pageSegmentWithTranslation}
 							elements={domToReact(domNode.children as DOMNode[], options)}
 							showOriginal={showOriginal}
 							showTranslation={showTranslation}

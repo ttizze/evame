@@ -4,7 +4,7 @@ export async function getPageBySlug(slug: string) {
 	return await prisma.page.findUnique({
 		where: { slug },
 		include: {
-			sourceTexts: {
+			pageSegments: {
 				where: {
 					number: 0,
 				},
@@ -18,11 +18,11 @@ export async function getPageBySlug(slug: string) {
 	});
 }
 
-export async function getTitleSourceTextId(slug: string) {
-	const titleSourceText = await prisma.page.findFirst({
+export async function getTitlePageSegmentId(slug: string) {
+	const titlePageSegment = await prisma.page.findFirst({
 		where: { slug },
 		select: {
-			sourceTexts: {
+			pageSegments: {
 				where: {
 					number: 0,
 				},
@@ -33,7 +33,7 @@ export async function getTitleSourceTextId(slug: string) {
 			},
 		},
 	});
-	return titleSourceText?.sourceTexts[0]?.id;
+	return titlePageSegment?.pageSegments[0]?.id;
 }
 
 export async function getAllTags() {

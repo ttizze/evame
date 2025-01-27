@@ -4,13 +4,13 @@ export async function hasExistingTranslation(
 	pageId: number,
 	locale: string,
 ): Promise<boolean> {
-	const titleSourceText = await prisma.sourceText.findFirst({
+	const titlePageSegment = await prisma.pageSegment.findFirst({
 		where: {
 			pageId,
 			number: 0,
 		},
 		include: {
-			translateTexts: {
+			pageSegmentTranslations: {
 				where: {
 					locale,
 					isArchived: false,
@@ -19,13 +19,13 @@ export async function hasExistingTranslation(
 		},
 	});
 
-	return titleSourceText?.translateTexts.length
-		? titleSourceText.translateTexts.length > 0
+	return titlePageSegment?.pageSegmentTranslations.length
+		? titlePageSegment.pageSegmentTranslations.length > 0
 		: false;
 }
 
-export async function getLatestSourceTexts(pageId: number) {
-	return await prisma.sourceText.findMany({
+export async function getLatestPageSegments(pageId: number) {
+	return await prisma.pageSegment.findMany({
 		where: {
 			pageId,
 		},

@@ -5,16 +5,16 @@ import { LocaleLink } from "~/components/LocaleLink";
 import { TagList } from "~/components/TagList";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import type {
+	PageSegmentWithTranslations,
 	PageWithTranslations,
-	SourceTextWithTranslations,
 } from "../types";
 import { MemoizedParsedContent } from "./ParsedContent";
-import { SourceTextAndTranslationSection } from "./sourceTextAndTranslationSection/SourceTextAndTranslationSection";
+import { PageSegmentAndTranslationSection } from "./sourceTextAndTranslationSection/PageSegmentAndTranslationSection";
 import { TranslateActionSection } from "./translateButton/TranslateActionSection";
 
 interface ContentWithTranslationsProps {
 	pageWithTranslations: PageWithTranslations;
-	sourceTitleWithTranslations: SourceTextWithTranslations | null;
+	pageSegmentWithTranslations: PageSegmentWithTranslations | null;
 	currentHandle: string | undefined;
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
@@ -26,7 +26,7 @@ interface ContentWithTranslationsProps {
 
 export function ContentWithTranslations({
 	pageWithTranslations,
-	sourceTitleWithTranslations,
+	pageSegmentWithTranslations,
 	currentHandle,
 	hasGeminiApiKey,
 	userAITranslationInfo,
@@ -40,11 +40,11 @@ export function ContentWithTranslations({
 	return (
 		<>
 			<h1 className="!mb-0 ">
-				{sourceTitleWithTranslations && (
-					<SourceTextAndTranslationSection
-						sourceTextWithTranslations={sourceTitleWithTranslations}
+				{pageSegmentWithTranslations && (
+					<PageSegmentAndTranslationSection
+						pageSegmentWithTranslations={pageSegmentWithTranslations}
 						showLockIcon={pageWithTranslations.page.status === "DRAFT"}
-						elements={sourceTitleWithTranslations.sourceText.text}
+						elements={pageSegmentWithTranslations.pageSegment.text}
 						showOriginal={showOriginal}
 						showTranslation={showTranslation}
 						currentHandle={currentHandle}

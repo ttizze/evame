@@ -30,14 +30,14 @@ export async function fetchAllPublishedPages() {
 			createdAt: true,
 			updatedAt: true,
 			user: { select: { handle: true } },
-			sourceTexts: {
+			pageSegments: {
 				where: {
 					number: 0,
 				},
 				select: {
 					number: true,
 					text: true,
-					translateTexts: {
+					pageSegmentTranslations: {
 						select: { id: true, text: true },
 					},
 				},

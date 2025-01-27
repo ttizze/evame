@@ -2,7 +2,7 @@ import { prisma } from "~/utils/prisma";
 import type { PageWithTranslations } from "../types";
 import { getBestTranslation } from "../utils/getBestTranslation";
 
-export async function fetchPageWithSourceTexts(pageId: number) {
+export async function fetchPageWithPageSegments(pageId: number) {
 	const pageWithSourceTexts = await prisma.page.findFirst({
 		where: { id: pageId },
 		select: {
@@ -10,7 +10,7 @@ export async function fetchPageWithSourceTexts(pageId: number) {
 			slug: true,
 			content: true,
 			createdAt: true,
-			sourceTexts: {
+			pageSegments: {
 				select: {
 					id: true,
 					number: true,
@@ -21,7 +21,7 @@ export async function fetchPageWithSourceTexts(pageId: number) {
 	});
 
 	if (!pageWithSourceTexts) return null;
-	const title = pageWithSourceTexts.sourceTexts.filter(
+	const title = pageWithSourceTexts.pageSegments.filter(
 		(item) => item.number === 0,
 	)[0].text;
 
@@ -40,9 +40,9 @@ export async function fetchPageWithTranslations(
 		where: { slug },
 		include: {
 			user: true,
-			sourceTexts: {
+			pageSegments: {
 				include: {
-					translateTexts: {
+					pageSegmentTranslations: {
 						where: { locale, isArchived: false },
 						include: {
 							user: true,
@@ -66,13 +66,13 @@ export async function fetchPageWithTranslations(
 
 	if (!page) return null;
 
-	const titleText = await prisma.sourceText.findFirst({
+	const titleText = await prisma.pageSegment.findFirst({
 		where: {
 			pageId: page.id,
 			number: 0,
 		},
 		include: {
-			translateTexts: {
+			pageSegmentTranslations: {
 				where: { isArchived: false },
 				select: { locale: true },
 			},
@@ -80,7 +80,9 @@ export async function fetchPageWithTranslations(
 	});
 
 	const existLocales = titleText
-		? Array.from(new Set(titleText.translateTexts.map((t) => t.locale)))
+		? Array.from(
+				new Set(titleText.pageSegmentTranslations.map((t) => t.locale)),
+			)
 		: [];
 	const { user, ...pageWithoutUser } = page;
 	return {
@@ -90,23 +92,24 @@ export async function fetchPageWithTranslations(
 		},
 		user,
 		tagPages: page.tagPages,
-		sourceTextWithTranslations: page.sourceTexts.map((sourceText) => {
-			const translationsWithVotes = sourceText.translateTexts.map(
-				(translateText) => ({
-					translateText: {
-						...translateText,
-						user: translateText.user,
+		pageSegmentWithTranslations: page.pageSegments.map((pageSegment) => {
+			const pageSegmentTranslationsWithVotes =
+				pageSegment.pageSegmentTranslations.map((pageSegmentTranslation) => ({
+					pageSegmentTranslation: {
+						...pageSegmentTranslation,
+						user: pageSegmentTranslation.user,
 					},
-					vote: translateText.votes[0] || null,
-				}),
+					vote: pageSegmentTranslation.votes[0] || null,
+				}));
+
+			const bestPageSegmentTranslationWithVote = getBestTranslation(
+				pageSegmentTranslationsWithVotes,
 			);
 
-			const bestTranslationWithVote = getBestTranslation(translationsWithVotes);
-
 			return {
-				sourceText,
-				translationsWithVotes,
-				bestTranslationWithVote,
+				pageSegment,
+				pageSegmentTranslationsWithVotes,
+				bestPageSegmentTranslationWithVote,
 			};
 		}),
 		existLocales,
@@ -195,7 +198,7 @@ export async function fetchPageWithTitleAndComments(pageId: number) {
 	const pageWithComments = await prisma.page.findFirst({
 		where: { id: pageId },
 		include: {
-			sourceTexts: { where: { number: 0 } },
+			pageSegments: { where: { number: 0 } },
 			pageComments: {
 				include: {
 					pageCommentSegments: true,

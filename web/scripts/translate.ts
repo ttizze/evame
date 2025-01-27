@@ -8,7 +8,7 @@ import { prisma } from "~/utils/prisma";
 async function getAllPagesByUserId(userId: number) {
 	return prisma.page.findMany({
 		where: { userId },
-		include: { sourceTexts: true },
+		include: { pageSegments: true },
 	});
 }
 
@@ -41,11 +41,11 @@ async function getAllPagesByUserId(userId: number) {
 
 		// 全ページに対してキュー追加
 		for (const page of pages) {
-			if (!page.sourceTexts || page.sourceTexts.length === 0) {
+			if (!page.pageSegments || page.pageSegments.length === 0) {
 				console.log(`Skip page ${page.slug} because no sourceTexts found.`);
 				continue;
 			}
-			const title = page.sourceTexts.filter((item) => item.number === 0)[0]
+			const title = page.pageSegments.filter((item) => item.number === 0)[0]
 				.text;
 
 			// UserAITranslationInfoを作成
@@ -66,7 +66,7 @@ async function getAllPagesByUserId(userId: number) {
 				pageId: page.id,
 				locale: LOCALE,
 				title: title,
-				numberedElements: page.sourceTexts,
+				numberedElements: page.pageSegments,
 				translationIntent: TranslationIntent.TRANSLATE_PAGE,
 			});
 

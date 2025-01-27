@@ -112,11 +112,11 @@ async function translateChunk(
 		if (partialTranslations.length > 0) {
 			// 部分的にでも取得できた翻訳結果を保存
 			if (translationIntent === TranslationIntent.TRANSLATE_PAGE) {
-				const sourceTexts = await pageDeps.getLatestSourceTexts(pageId);
+				const pageSegments = await pageDeps.getLatestPageSegments(pageId);
 
 				await pageDeps.saveTranslationsForPage(
 					partialTranslations,
-					sourceTexts,
+					pageSegments,
 					locale,
 					aiModel,
 				);

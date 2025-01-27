@@ -12,7 +12,7 @@ import type { Plugin } from "unified";
 import { collectBlocksFromRoot } from "../../utils/process-html";
 import { injectSpanNodes } from "../../utils/process-html";
 import {
-	synchronizePageSourceTexts,
+	synchronizePagePageSegments,
 	upsertPageWithHtml,
 } from "../functions/mutations.server";
 
@@ -23,8 +23,8 @@ export function rehypeAddDataId(
 	return function attacher() {
 		return async (tree: Root) => {
 			const blocks = collectBlocksFromRoot(tree, title);
-			await synchronizePageSourceTexts(pageId, blocks);
-			injectSpanNodes(blocks);
+			const hashToId = await synchronizePagePageSegments(pageId, blocks);
+			injectSpanNodes(blocks, hashToId);
 		};
 	};
 }

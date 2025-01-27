@@ -149,7 +149,7 @@ async function upsertSourceTextWithTranslations(
 	sourceText: SeedText,
 	userId: number,
 ) {
-	const upsertedSourceText = await prisma.sourceText.upsert({
+	const upsertedPageSegment = await prisma.pageSegment.upsert({
 		where: {
 			pageId_number: {
 				pageId: sourceText.pageId,
@@ -167,10 +167,10 @@ async function upsertSourceTextWithTranslations(
 
 	await Promise.all(
 		sourceText.translations.map((translation) =>
-			prisma.translateText.create({
+			prisma.pageSegmentTranslation.create({
 				data: {
 					text: translation.text,
-					sourceTextId: upsertedSourceText.id,
+					pageSegmentId: upsertedPageSegment.id,
 					userId,
 					locale: translation.locale,
 				},

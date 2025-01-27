@@ -26,7 +26,7 @@ export const deleteOwnTranslation = async (
 	currentHandle: string,
 	translationId: number,
 ) => {
-	const translation = await prisma.translateText.findUnique({
+	const translation = await prisma.pageSegmentTranslation.findUnique({
 		where: { id: translationId },
 		select: { user: true },
 	});
@@ -36,28 +36,28 @@ export const deleteOwnTranslation = async (
 	if (translation.user.handle !== currentHandle) {
 		return json({ error: "Unauthorized" }, { status: 403 });
 	}
-	await prisma.translateText.update({
+	await prisma.pageSegmentTranslation.update({
 		where: { id: translationId },
 		data: { isArchived: true },
 	});
 };
 
 export async function addUserTranslation(
-	sourceTextId: number,
+	pageSegmentId: number,
 	text: string,
 	userId: number,
 	locale: string,
 ) {
-	const sourceText = await prisma.sourceText.findUnique({
-		where: { id: sourceTextId },
+	const pageSegment = await prisma.pageSegment.findUnique({
+		where: { id: pageSegmentId },
 	});
 
-	if (sourceText) {
-		await prisma.translateText.create({
+	if (pageSegment) {
+		await prisma.pageSegmentTranslation.create({
 			data: {
 				locale,
 				text,
-				sourceTextId,
+				pageSegmentId,
 				userId,
 			},
 		});
@@ -67,22 +67,22 @@ export async function addUserTranslation(
 }
 
 export async function handleVote(
-	translateTextId: number,
+	pageSegmentTranslationId: number,
 	isUpvote: boolean,
 	userId: number,
 ) {
 	await prisma.$transaction(async (tx) => {
 		const existingVote = await tx.vote.findUnique({
 			where: {
-				translateTextId_userId: { translateTextId, userId },
+				pageSegmentTranslationId_userId: { pageSegmentTranslationId, userId },
 			},
 		});
 
 		if (existingVote) {
 			if (existingVote.isUpvote === isUpvote) {
 				await tx.vote.delete({ where: { id: existingVote.id } });
-				await tx.translateText.update({
-					where: { id: translateTextId },
+				await tx.pageSegmentTranslation.update({
+					where: { id: pageSegmentTranslationId },
 					data: { point: { increment: isUpvote ? -1 : 1 } },
 				});
 			} else {
@@ -90,17 +90,17 @@ export async function handleVote(
 					where: { id: existingVote.id },
 					data: { isUpvote },
 				});
-				await tx.translateText.update({
-					where: { id: translateTextId },
+				await tx.pageSegmentTranslation.update({
+					where: { id: pageSegmentTranslationId },
 					data: { point: { increment: isUpvote ? 2 : -2 } },
 				});
 			}
 		} else {
 			await tx.vote.create({
-				data: { userId, translateTextId, isUpvote },
+				data: { userId, pageSegmentTranslationId, isUpvote },
 			});
-			await tx.translateText.update({
-				where: { id: translateTextId },
+			await tx.pageSegmentTranslation.update({
+				where: { id: pageSegmentTranslationId },
 				data: { point: { increment: isUpvote ? 1 : -1 } },
 			});
 		}

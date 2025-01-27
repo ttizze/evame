@@ -7,19 +7,19 @@ import {
 } from "../functions/mutations.server";
 import {
 	getLatestPageCommentSegments,
-	getLatestSourceTexts,
+	getLatestPageSegments,
 } from "../functions/query.server";
 import { getGeminiModelResponse } from "../services/gemini";
 import type { NumberedElement } from "../types";
 
 export const pageDeps = {
-	async getLatestSourceTexts(pageId: number) {
-		return getLatestSourceTexts(pageId);
+	async getLatestPageSegments(pageId: number) {
+		return getLatestPageSegments(pageId);
 	},
 
 	async saveTranslationsForPage(
 		extractedTranslations: NumberedElement[],
-		sourceTexts: { id: number; number: number }[],
+		pageSegments: { id: number; number: number }[],
 		locale: string,
 		aiModel: string,
 	) {
@@ -27,10 +27,10 @@ export const pageDeps = {
 
 		const translationData = extractedTranslations
 			.map((translation) => {
-				const sourceTextId = sourceTexts.find(
-					(sourceText) => sourceText.number === translation.number,
+				const pageSegmentId = pageSegments.find(
+					(pageSegment) => pageSegment.number === translation.number,
 				)?.id;
-				if (!sourceTextId) {
+				if (!pageSegmentId) {
 					console.error(
 						`Source text ID not found for translation number ${translation.number} ${translation.text}`,
 					);
@@ -39,14 +39,16 @@ export const pageDeps = {
 				return {
 					locale,
 					text: translation.text,
-					sourceTextId,
+					pageSegmentId,
 					userId: systemUserId,
 				};
 			})
 			.filter((item): item is NonNullable<typeof item> => item !== null);
 
 		if (translationData.length > 0) {
-			await prisma.translateText.createMany({ data: translationData });
+			await prisma.pageSegmentTranslation.createMany({
+				data: translationData,
+			});
 		}
 	},
 };

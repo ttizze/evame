@@ -99,13 +99,19 @@ export function collectBlocksFromRoot(
 	return numberedBlocks;
 }
 
-export function injectSpanNodes(blocks: BlockWithNumber[]) {
+export function injectSpanNodes(
+	blocks: BlockInfo[],
+	hashToId: Map<string, number>,
+) {
 	for (const block of blocks) {
+		const sourceTextId = hashToId.get(block.textAndOccurrenceHash);
+		if (!sourceTextId) continue;
+
 		const spanNode: Element = {
 			type: "element",
 			tagName: "span",
 			properties: {
-				"data-number-id": block.number.toString(),
+				"data-source-text-id": sourceTextId.toString(),
 			},
 			children: block.element.children,
 		};

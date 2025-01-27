@@ -26,7 +26,7 @@ import {
 	fetchLikeCount,
 	fetchPageCommentsCount,
 	fetchPageCommentsWithUser,
-	fetchPageWithSourceTexts,
+	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
 	fetchPageWithTranslations,
 } from "./functions/queries.server";
@@ -107,12 +107,12 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	) {
 		throw new Response("Page not found", { status: 404 });
 	}
-	const sourceTitleWithTranslations =
-		pageWithTranslations.sourceTextWithTranslations.filter(
-			(item) => item.sourceText?.number === 0,
+	const pageSegmentTitleWithTranslations =
+		pageWithTranslations.pageSegmentWithTranslations.filter(
+			(item) => item.pageSegment?.number === 0,
 		)[0];
 	const bestTranslationTitle = getBestTranslation(
-		sourceTitleWithTranslations.translationsWithVotes,
+		pageSegmentTitleWithTranslations.pageSegmentTranslationsWithVotes,
 	);
 	const userAITranslationInfo = await fetchLatestUserAITranslationInfo(
 		pageWithTranslations.page.id,
@@ -120,8 +120,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		locale,
 	);
 	const sourceTitleWithBestTranslationTitle = bestTranslationTitle
-		? `${sourceTitleWithTranslations.sourceText.text} - ${bestTranslationTitle.translateText.text}`
-		: sourceTitleWithTranslations.sourceText.text;
+		? `${pageSegmentTitleWithTranslations.pageSegment.text} - ${bestTranslationTitle.pageSegmentTranslation.text}`
+		: pageSegmentTitleWithTranslations.pageSegment.text;
 
 	const [likeCount, isLikedByUser, pageCommentsWithUser, pageCommentsCount] =
 		await Promise.all([
@@ -144,7 +144,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			currentUser,
 			hasGeminiApiKey,
 			userAITranslationInfo,
-			sourceTitleWithTranslations,
+			pageSegmentTitleWithTranslations,
 			sourceTitleWithBestTranslationTitle,
 			likeCount,
 			isLikedByUser,
@@ -213,7 +213,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 				};
 			}
 			const numberedElements: { number: number; text: string }[] = [
-				...pageWithComments.sourceTexts.map((src) => ({
+				...pageWithComments.pageSegments.map((src) => ({
 					number: src.number,
 					text: src.text,
 				})),
@@ -239,7 +239,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 				userId: currentUser.id,
 				pageId: pageWithComments.id,
 				locale: locale,
-				title: pageWithComments.sourceTexts[0].text,
+				title: pageWithComments.pageSegments[0].text,
 				numberedElements: numberedElements,
 				translationIntent: TranslationIntent.TRANSLATE_COMMENT,
 			});
@@ -249,10 +249,10 @@ export async function action({ request, params }: ActionFunctionArgs) {
 			};
 		}
 		case TranslationIntent.TRANSLATE_PAGE: {
-			const pageWithSourceTexts = await fetchPageWithSourceTexts(
+			const pageWithPageSegments = await fetchPageWithPageSegments(
 				submission.value.pageId,
 			);
-			if (!pageWithSourceTexts) {
+			if (!pageWithPageSegments) {
 				return {
 					lastResult: submission.reply({
 						formErrors: ["Page not found"],
@@ -261,13 +261,15 @@ export async function action({ request, params }: ActionFunctionArgs) {
 				};
 			}
 
-			const numberedElements = pageWithSourceTexts.sourceTexts.map((item) => ({
-				number: item.number,
-				text: item.text,
-			}));
+			const numberedElements = pageWithPageSegments.pageSegments.map(
+				(item) => ({
+					number: item.number,
+					text: item.text,
+				}),
+			);
 			const userAITranslationInfo = await createUserAITranslationInfo(
 				currentUser.id,
-				pageWithSourceTexts.id,
+				pageWithPageSegments.id,
 				submission.value.aiModel,
 				locale,
 			);
@@ -278,15 +280,15 @@ export async function action({ request, params }: ActionFunctionArgs) {
 				geminiApiKey: geminiApiKey.apiKey,
 				aiModel: submission.value.aiModel,
 				userId: currentUser.id,
-				pageId: pageWithSourceTexts.id,
+				pageId: pageWithPageSegments.id,
 				locale: locale,
-				title: pageWithSourceTexts.title,
+				title: pageWithPageSegments.title,
 				numberedElements: numberedElements,
 				translationIntent: TranslationIntent.TRANSLATE_PAGE,
 			});
 			return {
 				lastResult: submission.reply({ resetForm: true }),
-				slug: pageWithSourceTexts.slug,
+				slug: pageWithPageSegments.slug,
 			};
 		}
 	}
@@ -298,7 +300,7 @@ export default function Page() {
 		currentUser,
 		hasGeminiApiKey,
 		userAITranslationInfo,
-		sourceTitleWithTranslations,
+		pageSegmentTitleWithTranslations,
 		sourceTitleWithBestTranslationTitle,
 		locale,
 		likeCount,
@@ -321,7 +323,7 @@ export default function Page() {
 			<article className="w-full prose dark:prose-invert prose-a:underline prose-a:decoration-dotted sm:prose lg:prose-lg mx-auto px-4 mb-20">
 				<ContentWithTranslations
 					pageWithTranslations={pageWithTranslations}
-					sourceTitleWithTranslations={sourceTitleWithTranslations}
+					pageSegmentWithTranslations={pageSegmentTitleWithTranslations}
 					currentHandle={currentUser?.handle}
 					hasGeminiApiKey={hasGeminiApiKey}
 					userAITranslationInfo={userAITranslationInfo}

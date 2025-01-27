@@ -24,13 +24,13 @@ interface TranslateDependenciesSegment {
 }
 
 export interface PageTranslationDependencies {
-	getLatestSourceTexts: (
+	getLatestPageSegments: (
 		pageId: number,
 	) => Promise<TranslateDependenciesSegment[]>;
 
 	saveTranslationsForPage: (
 		extractedTranslations: NumberedElement[],
-		sourceTexts: TranslateDependenciesSegment[],
+		pageSegments: TranslateDependenciesSegment[],
 		locale: string,
 		aiModel: string,
 	) => Promise<void>;

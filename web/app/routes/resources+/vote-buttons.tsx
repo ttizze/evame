@@ -4,7 +4,7 @@ import { useFetcher } from "@remix-run/react";
 import { memo, useMemo } from "react";
 import { z } from "zod";
 import { VoteButton } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/sourceTextAndTranslationSection/VoteButton";
-import type { TranslationWithVote } from "~/routes/$locale+/user.$handle+/page+/$slug+/types";
+import type { PageSegmentTranslationWithVote } from "~/routes/$locale+/user.$handle+/page+/$slug+/types";
 import { authenticator } from "~/utils/auth.server";
 import { cn } from "~/utils/cn";
 import { handleVote } from "./functions/mutations.server";
@@ -35,7 +35,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 interface VoteButtonsProps {
-	translationWithVote: TranslationWithVote;
+	translationWithVote: PageSegmentTranslationWithVote;
 }
 
 export const VoteButtons = memo(function VoteButtons({
@@ -59,7 +59,7 @@ export const VoteButtons = memo(function VoteButtons({
 	const optimisticPoint = useMemo(() => {
 		if (fetcher.formData) {
 			const newVote = fetcher.formData.get("isUpvote") === "true";
-			const currentPoint = translationWithVote.translateText.point;
+			const currentPoint = translationWithVote.pageSegmentTranslation.point;
 			const currentVote = translationWithVote.vote;
 
 			if (currentVote) {
@@ -70,10 +70,10 @@ export const VoteButtons = memo(function VoteButtons({
 			}
 			return newVote ? currentPoint + 1 : currentPoint - 1;
 		}
-		return translationWithVote.translateText.point;
+		return translationWithVote.pageSegmentTranslation.point;
 	}, [
 		fetcher.formData,
-		translationWithVote.translateText.point,
+		translationWithVote.pageSegmentTranslation.point,
 		translationWithVote.vote,
 	]);
 
@@ -96,8 +96,8 @@ export const VoteButtons = memo(function VoteButtons({
 	const handleVoteClick = (e: React.MouseEvent, isUpvote: boolean) => {
 		const formData = new FormData();
 		formData.append(
-			"translateTextId",
-			translationWithVote.translateText.id.toString(),
+			"pageSegmentTranslationId",
+			translationWithVote.pageSegmentTranslation.id.toString(),
 		);
 		formData.append("isUpvote", isUpvote.toString());
 		fetcher.submit(formData, {

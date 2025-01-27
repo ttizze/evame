@@ -45,8 +45,8 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		});
 		pageId = page.id;
 
-		// ソーステキスト（翻訳対象）
-		await prisma.sourceText.createMany({
+		// ページセグメント（翻訳対象）
+		await prisma.pageSegment.createMany({
 			data: [
 				{ pageId, number: 0, text: "Hello", textAndOccurrenceHash: "hash0" },
 				{ pageId, number: 1, text: "World", textAndOccurrenceHash: "hash1" },
@@ -101,7 +101,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		expect(updatedInfo?.aiTranslationStatus).toBe("COMPLETED");
 
 		// 翻訳結果が保存されているか
-		const translatedTexts = await prisma.translateText.findMany({
+		const translatedTexts = await prisma.pageSegmentTranslation.findMany({
 			where: { locale: "ja" },
 		});
 		expect(translatedTexts.length).toBeGreaterThanOrEqual(2);
@@ -176,7 +176,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		expect(updatedInfo?.aiTranslationStatus).toBe("COMPLETED");
 
 		// 翻訳結果
-		const translatedTexts = await prisma.translateText.findMany({
+		const translatedTexts = await prisma.pageSegmentTranslation.findMany({
 			where: { locale: "ja" },
 		});
 		expect(translatedTexts.length).toBeGreaterThanOrEqual(2);

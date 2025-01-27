@@ -66,7 +66,7 @@ export async function upsertTags(tags: string[], pageId: number) {
 	return updatedTags;
 }
 
-export async function synchronizePageSourceTexts(
+export async function synchronizePagePageSegments(
 	pageId: number,
 	blocks: BlockWithNumber[],
 ): Promise<Map<string, number>> {
@@ -74,18 +74,18 @@ export async function synchronizePageSourceTexts(
 	const OFFSET = 1_000_000;
 
 	// 1. 既存のテキスト取得
-	const existingSourceTexts = await prisma.sourceText.findMany({
+	const existingPageSegments = await prisma.pageSegment.findMany({
 		where: { pageId },
 		select: { id: true, textAndOccurrenceHash: true, number: true },
 	});
 
 	const hashToId = new Map<string, number>(
-		existingSourceTexts.map((t) => [t.textAndOccurrenceHash as string, t.id]),
+		existingPageSegments.map((t) => [t.textAndOccurrenceHash as string, t.id]),
 	);
 	const newHashes = new Set(blocks.map((t) => t.textAndOccurrenceHash));
 
 	// 不要テキストID特定
-	const hashesToDelete = existingSourceTexts
+	const hashesToDelete = existingPageSegments
 		.filter((t) => !newHashes.has(t.textAndOccurrenceHash as string))
 		.map((t) => t.id);
 
@@ -94,7 +94,7 @@ export async function synchronizePageSourceTexts(
 		async (tx) => {
 			// 不要テキスト削除
 			if (hashesToDelete.length > 0) {
-				await tx.sourceText.deleteMany({
+				await tx.pageSegment.deleteMany({
 					where: {
 						pageId,
 						id: { in: hashesToDelete },
@@ -103,9 +103,9 @@ export async function synchronizePageSourceTexts(
 			}
 
 			// 既存テキストオフセット
-			const existingIds = existingSourceTexts.map((t) => t.id);
+			const existingIds = existingPageSegments.map((t) => t.id);
 			if (existingIds.length > 0) {
-				await tx.sourceText.updateMany({
+				await tx.pageSegment.updateMany({
 					where: {
 						pageId,
 						id: { in: existingIds },
@@ -135,7 +135,7 @@ export async function synchronizePageSourceTexts(
 				if (id === undefined) {
 					throw new Error(`No ID found for hash: ${t.textAndOccurrenceHash}`);
 				}
-				return prisma.sourceText.update({
+				return prisma.pageSegment.update({
 					where: { pageId, id },
 					data: { number: t.number },
 				});
@@ -159,7 +159,7 @@ export async function synchronizePageSourceTexts(
 			async (tx) => {
 				for (let i = 0; i < newInserts.length; i += BATCH_SIZE) {
 					const batch = newInserts.slice(i, i + BATCH_SIZE);
-					await tx.sourceText.createMany({
+					await tx.pageSegment.createMany({
 						data: batch,
 						skipDuplicates: true,
 					});
@@ -173,7 +173,7 @@ export async function synchronizePageSourceTexts(
 		// トランザクション3終了
 
 		// 挿入後のID再取得 (トランザクション外でも可)
-		const insertedSourceTexts = await prisma.sourceText.findMany({
+		const insertedPageSegments = await prisma.pageSegment.findMany({
 			where: {
 				pageId,
 				textAndOccurrenceHash: {
@@ -183,9 +183,9 @@ export async function synchronizePageSourceTexts(
 			select: { textAndOccurrenceHash: true, id: true },
 		});
 
-		for (const sourceText of insertedSourceTexts) {
-			if (sourceText.textAndOccurrenceHash) {
-				hashToId.set(sourceText.textAndOccurrenceHash, sourceText.id);
+		for (const pageSegment of insertedPageSegments) {
+			if (pageSegment.textAndOccurrenceHash) {
+				hashToId.set(pageSegment.textAndOccurrenceHash, pageSegment.id);
 			}
 		}
 	}

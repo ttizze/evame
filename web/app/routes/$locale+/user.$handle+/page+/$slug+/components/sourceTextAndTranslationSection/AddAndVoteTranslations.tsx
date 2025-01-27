@@ -3,25 +3,30 @@ import { useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { AddTranslationForm } from "~/routes/resources+/add-translation-form";
 import { TranslationListItem } from "~/routes/resources+/translation-list-item";
-import type { SourceTextWithTranslations } from "../../types";
+import type { PageSegmentWithTranslations } from "../../types";
 
 const INITIAL_DISPLAY_COUNT = 3;
 
 export function AddAndVoteTranslations({
 	currentHandle,
-	sourceTextWithTranslations,
+	pageSegmentWithTranslations,
 	open,
 }: {
 	currentHandle: string | undefined;
-	sourceTextWithTranslations: SourceTextWithTranslations;
+	pageSegmentWithTranslations: PageSegmentWithTranslations;
 	open: boolean;
 }) {
 	const [showAll, setShowAll] = useState(false);
-	const { bestTranslationWithVote, translationsWithVotes } =
-		sourceTextWithTranslations;
-	const alternativeTranslationsWithVotes = translationsWithVotes.filter(
-		(t) => t.translateText.id !== bestTranslationWithVote?.translateText.id,
-	);
+	const {
+		bestPageSegmentTranslationWithVote,
+		pageSegmentTranslationsWithVotes,
+	} = pageSegmentWithTranslations;
+	const alternativeTranslationsWithVotes =
+		pageSegmentTranslationsWithVotes.filter(
+			(t) =>
+				t.pageSegmentTranslation.id !==
+				bestPageSegmentTranslationWithVote?.pageSegmentTranslation.id,
+		);
 
 	const displayedTranslations = useMemo(() => {
 		return showAll
@@ -45,7 +50,7 @@ export function AddAndVoteTranslations({
 				<div>
 					{displayedTranslations.map((displayedTranslation) => (
 						<TranslationListItem
-							key={displayedTranslation.translateText.id}
+							key={displayedTranslation.pageSegmentTranslation.id}
 							translation={displayedTranslation}
 							currentHandle={currentHandle}
 						/>
@@ -70,7 +75,7 @@ export function AddAndVoteTranslations({
 				</div>
 				<div className="mt-4">
 					<AddTranslationForm
-						sourceTextId={sourceTextWithTranslations.sourceText.id}
+						pageSegmentId={pageSegmentWithTranslations.pageSegment.id}
 						currentHandle={currentHandle}
 					/>
 				</div>

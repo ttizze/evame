@@ -1,8 +1,8 @@
-import type { TranslationWithVote } from "../types";
+import type { PageSegmentTranslationWithVote } from "../types";
 
 export function getBestTranslation(
-	translationsWithVotes: TranslationWithVote[],
-): TranslationWithVote | null {
+	translationsWithVotes: PageSegmentTranslationWithVote[],
+): PageSegmentTranslationWithVote | null {
 	if (translationsWithVotes.length === 0) {
 		return null;
 	}
@@ -17,13 +17,13 @@ export function getBestTranslation(
 		});
 	}
 	return translationsWithVotes.reduce((prev, current) => {
-		if (prev.translateText.point !== current.translateText.point) {
-			return prev.translateText.point > current.translateText.point
+		if (prev.pageSegmentTranslation.point !== current.pageSegmentTranslation.point) {
+			return prev.pageSegmentTranslation.point > current.pageSegmentTranslation.point
 				? prev
 				: current;
 		}
-		return new Date(current.translateText.createdAt) >
-			new Date(prev.translateText.createdAt)
+		return new Date(current.pageSegmentTranslation.createdAt) >
+			new Date(prev.pageSegmentTranslation.createdAt)
 			? current
 			: prev;
 	});

@@ -64,7 +64,7 @@ describe("EditPage", () => {
 							status: "DRAFT",
 							content:
 								"<p data-number='1'>hello</p><p data-number='2'>world</p><p data-number='3'>This is a test content</p>",
-							sourceTexts: {
+							pageSegments: {
 								create: [
 									{
 										number: 0,
@@ -84,18 +84,18 @@ describe("EditPage", () => {
 					],
 				},
 			},
-			include: { pages: { include: { sourceTexts: true } } },
+			include: { pages: { include: { pageSegments: true } } },
 		});
 
 		const page = user.pages[0];
-		sourceTextIds = page.sourceTexts.map((st) => st.id);
+		sourceTextIds = page.pageSegments.map((st) => st.id);
 		const updatedContent = page.content.replace(
 			/<p data-number='(\d+)'>/g,
 			(match, number) => {
-				const sourceText = page.sourceTexts.find(
+				const pageSegment = page.pageSegments.find(
 					(st) => st.number === Number.parseInt(number),
 				);
-				return `<p data-number='${number}' data-number-id='${sourceText?.id}'>`;
+				return `<p data-number='${number}' data-source-text-id='${pageSegment?.id}'>`;
 			},
 		);
 

@@ -64,8 +64,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	}
 
 	const page = await getPageBySlug(slug);
-	const title = page?.sourceTexts.find(
-		(sourceText) => sourceText.number === 0,
+	const title = page?.pageSegments.find(
+		(pageSegment) => pageSegment.number === 0,
 	)?.text;
 	const allTags = await getAllTags();
 

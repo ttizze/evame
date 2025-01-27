@@ -15,12 +15,12 @@ export function createPageCardSelect(locale?: string) {
 				profile: true,
 			},
 		},
-		sourceTexts: {
+		pageSegments: {
 			where: { number: 0 },
 			select: {
 				number: true,
 				text: true,
-				translateTexts: {
+				pageSegmentTranslations: {
 					where: locale ? { locale } : {},
 					select: {
 						text: true,
@@ -90,7 +90,7 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	// 共通フィルタ
 	const baseWhere: Prisma.PageWhereInput = {
 		status: "PUBLIC",
-		sourceTexts: { some: { number: 0 } },
+		pageSegments: { some: { number: 0 } },
 	};
 
 	// 所有者のみ表示したい場合

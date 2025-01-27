@@ -1,28 +1,24 @@
 import type {
 	Page,
-	SourceText,
+	PageSegment,
+	PageSegmentTranslation,
 	Tag,
 	TagPage,
-	TranslateText,
 	Vote,
 } from "@prisma/client";
 import type { User } from "@prisma/client";
 
-export type TranslationWithVote = {
-	translateText: TranslateText & {
+export type PageSegmentTranslationWithVote = {
+	pageSegmentTranslation: PageSegmentTranslation & {
 		user: User;
 	};
 	vote: Vote | null;
 };
 
-type segment = {
-	number: number;
-	text: string;
-};
-export type SourceTextWithTranslations = {
-	sourceText: SourceText;
-	translationsWithVotes: TranslationWithVote[];
-	bestTranslationWithVote: TranslationWithVote | null;
+export type PageSegmentWithTranslations = {
+	pageSegment: PageSegment;
+	pageSegmentTranslationsWithVotes: PageSegmentTranslationWithVote[];
+	bestPageSegmentTranslationWithVote: PageSegmentTranslationWithVote | null;
 };
 export type TagPageWithTag = TagPage & {
 	tag: Tag;
@@ -34,6 +30,6 @@ export type PageWithTranslations = {
 	page: PageLocalizedDate;
 	user: User;
 	tagPages: TagPageWithTag[];
-	sourceTextWithTranslations: SourceTextWithTranslations[];
+	pageSegmentWithTranslations: PageSegmentWithTranslations[];
 	existLocales: string[];
 };
