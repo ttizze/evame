@@ -8,29 +8,30 @@ datasource db {
 }
 
 model User {
-  id                    Int                     @id @default(autoincrement())
-  handle                String                  @unique
-  name                  String
-  image                 String
-  profile               String                  @default("")
-  plan                  String                  @default("free")
-  totalPoints           Int                     @default(0) @map("total_points")
-  isAI                  Boolean                 @default(false) @map("is_ai")
-  provider              String                  @default("Credentials")
-  createdAt             DateTime                @default(now()) @map("created_at")
-  updatedAt             DateTime                @updatedAt @map("updated_at")
-  credential            UserCredential?
-  userEmail             UserEmail?
-  geminiApiKey          GeminiApiKey?
-  pages                 Page[]
-  translations          TranslateText[]
-  votes                 Vote[]
-  userAITranslationInfo UserAITranslationInfo[]
-  likePages             LikePage[]
-  followers             Follow[]                @relation("following")
-  following             Follow[]                @relation("follower")
-  pageComments          PageComment[]
-  pageCommentSegmentTranslates PageCommentSegmentTranslate[]
+  id                             Int                             @id @default(autoincrement())
+  handle                         String                          @unique
+  name                           String
+  image                          String
+  profile                        String                          @default("")
+  plan                           String                          @default("free")
+  totalPoints                    Int                             @default(0) @map("total_points")
+  isAI                           Boolean                         @default(false) @map("is_ai")
+  provider                       String                          @default("Credentials")
+  createdAt                      DateTime                        @default(now()) @map("created_at")
+  updatedAt                      DateTime                        @updatedAt @map("updated_at")
+  credential                     UserCredential?
+  userEmail                      UserEmail?
+  geminiApiKey                   GeminiApiKey?
+  pages                          Page[]
+  translations                   TranslateText[]
+  votes                          Vote[]
+  userAITranslationInfo          UserAITranslationInfo[]
+  likePages                      LikePage[]
+  followers                      Follow[]                        @relation("following")
+  following                      Follow[]                        @relation("follower")
+  pageComments                   PageComment[]
+  pageCommentSegmentTranslations PageCommentSegmentTranslation[]
+
   @@map("users")
 }
 
@@ -78,17 +79,24 @@ model Follow {
   @@map("follows")
 }
 
+enum TranslationStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
 model UserAITranslationInfo {
-  id                    Int      @id @default(autoincrement())
-  userId                Int      @map("user_id")
-  pageId                Int      @map("page_id")
+  id                    Int               @id @default(autoincrement())
+  userId                Int               @map("user_id")
+  pageId                Int               @map("page_id")
   locale                String
-  aiModel               String   @map("ai_model")
-  aiTranslationStatus   String   @default("pending") @map("ai_translation_status")
-  aiTranslationProgress Int      @default(0) @map("ai_translation_progress")
-  createdAt             DateTime @default(now()) @map("created_at")
-  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  page                  Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  aiModel               String            @map("ai_model")
+  aiTranslationStatus   TranslationStatus @default(PENDING) @map("ai_translation_status")
+  aiTranslationProgress Int               @default(0) @map("ai_translation_progress")
+  createdAt             DateTime          @default(now()) @map("created_at")
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  page                  Page              @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([pageId])
@@ -216,15 +224,15 @@ model Vote {
 }
 
 model PageComment {
-  id           Int           @id @default(autoincrement())
-  content         String
-  locale       String
-  userId       Int           @map("user_id")
-  pageId       Int           @map("page_id")
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  page         Page          @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  id                  Int                  @id @default(autoincrement())
+  content             String
+  locale              String
+  userId              Int                  @map("user_id")
+  pageId              Int                  @map("page_id")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  page                Page                 @relation(fields: [pageId], references: [id], onDelete: Cascade)
   pageCommentSegments PageCommentSegment[]
 
   @@index([userId])
@@ -234,37 +242,37 @@ model PageComment {
 }
 
 model PageCommentSegment {
-  id        Int     @id @default(autoincrement())
-  text      String
-  number                Int
-  textAndOccurrenceHash String          @map("text_and_occurrence_hash")
-  pageCommentId Int     @map("page_comment_id")
-  createdAt             DateTime        @default(now()) @map("created_at")
-  updatedAt             DateTime        @updatedAt @map("updated_at")
-  pageComment   PageComment @relation(fields: [pageCommentId], references: [id], onDelete: Cascade)
-  pageCommentSegmentTranslates PageCommentSegmentTranslate[]
+  id                             Int                             @id @default(autoincrement())
+  text                           String
+  number                         Int
+  textAndOccurrenceHash          String                          @map("text_and_occurrence_hash")
+  pageCommentId                  Int                             @map("page_comment_id")
+  createdAt                      DateTime                        @default(now()) @map("created_at")
+  updatedAt                      DateTime                        @updatedAt @map("updated_at")
+  pageComment                    PageComment                     @relation(fields: [pageCommentId], references: [id], onDelete: Cascade)
+  pageCommentSegmentTranslations PageCommentSegmentTranslation[]
 
-  @@index([pageCommentId])
   @@unique([pageCommentId, number])
   @@unique([pageCommentId, textAndOccurrenceHash])
+  @@index([pageCommentId])
   @@index([textAndOccurrenceHash])
   @@map("page_comment_segments")
 }
 
-model PageCommentSegmentTranslate {
-  id        Int     @id @default(autoincrement())
-  locale       String
-  text      String
-  userId       Int        @map("user_id")
-  point        Int        @default(0)
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pageCommentSegmentId Int     @map("page_comment_segment_id")
+model PageCommentSegmentTranslation {
+  id                   Int                @id @default(autoincrement())
+  locale               String
+  text                 String
+  userId               Int                @map("user_id")
+  point                Int                @default(0)
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageCommentSegmentId Int                @map("page_comment_segment_id")
   pageCommentSegment   PageCommentSegment @relation(fields: [pageCommentSegmentId], references: [id], onDelete: Cascade)
 
   @@index([pageCommentSegmentId])
   @@index([userId])
   @@index([locale])
-  @@map("page_comment_segment_translates")
+  @@map("page_comment_segment_translations")
 }

@@ -11,6 +11,8 @@ type TranslateActionSectionProps = {
 	pageLocale: string;
 	locale: string;
 	existLocales: string[];
+	className?: string;
+	intent: "translatePage" | "translateComment";
 };
 
 export function TranslateActionSection({
@@ -20,6 +22,8 @@ export function TranslateActionSection({
 	pageLocale,
 	locale,
 	existLocales,
+	className,
+	intent,
 }: TranslateActionSectionProps) {
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 	let pageLocaleOptions = supportedLocaleOptions.find(
@@ -44,7 +48,7 @@ export function TranslateActionSection({
 		supportedLocaleOptions.find((sl) => sl.code === locale)?.code || locale;
 
 	return (
-		<div className="pt-3">
+		<div className={className}>
 			<div className="flex items-center gap-2">
 				<Languages className="w-4 h-4" />
 				<LocaleSelector
@@ -62,6 +66,7 @@ export function TranslateActionSection({
 				locale={locale}
 				hasGeminiApiKey={hasGeminiApiKey}
 				userAITranslationInfo={userAITranslationInfo}
+				intent={intent}
 			/>
 		</div>
 	);

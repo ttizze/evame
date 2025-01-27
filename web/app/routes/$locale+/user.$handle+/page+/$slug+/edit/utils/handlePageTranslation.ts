@@ -3,7 +3,7 @@ import { getTranslateUserQueue } from "~/features/translate/translate-user-queue
 import type { TranslateJobParams } from "~/features/translate/types";
 import { createUserAITranslationInfo } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/mutations.server";
 import { fetchPageWithSourceTexts } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
-
+import { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/index";
 export async function handlePageTranslation({
 	currentUserId,
 	pageId,
@@ -49,6 +49,7 @@ export async function handlePageTranslation({
 			number: st.number,
 			text: st.text,
 		})),
+		translationIntent: TranslationIntent.TRANSLATE_PAGE,
 	};
 
 	await queue.add(`translate-${currentUserId}`, jobParams);

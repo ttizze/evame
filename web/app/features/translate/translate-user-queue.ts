@@ -1,8 +1,8 @@
 import { Queue } from "~/utils/queue.server";
 import { translate } from "./lib/translate.server";
 import type { TranslateJobParams } from "./types";
-
-const QUEUE_VERSION = 102;
+import { commentDeps, commonDeps, pageDeps } from "./utils/ioDeps";
+const QUEUE_VERSION = 12;
 
 export const getTranslateUserQueue = (userId: number) => {
 	return Queue<TranslateJobParams>(
@@ -12,7 +12,7 @@ export const getTranslateUserQueue = (userId: number) => {
 			processor: async (job) => {
 				console.log(`Starting job ${job.id} for user ${userId}`);
 				try {
-					await translate(job.data);
+					await translate(job.data, commonDeps, pageDeps, commentDeps);
 					console.log(
 						`Job ${job.id} completed successfully for user ${userId}`,
 					);

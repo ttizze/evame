@@ -9,7 +9,6 @@ import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import type { Plugin } from "unified";
-import type { VFile } from "vfile";
 import { collectBlocksAndSegmentsFromRoot } from "../../utils/process-html";
 import type { BlockInfo } from "../../utils/process-html";
 import {
@@ -26,7 +25,7 @@ function injectSpanNodes(blocks: BlockInfo[], hashToId: Map<string, number>) {
 			type: "element",
 			tagName: "span",
 			properties: {
-				"data-source-text-id": sourceTextId.toString(),
+				"data-segment-id": sourceTextId.toString(),
 			},
 			children: block.element.children,
 		};
@@ -39,7 +38,7 @@ export function rehypeAddDataId(
 	title: string,
 ): Plugin<[], Root> {
 	return function attacher() {
-		return async (tree: Root, file: VFile) => {
+		return async (tree: Root) => {
 			const { blocks, segments } = collectBlocksAndSegmentsFromRoot(
 				tree,
 				title,

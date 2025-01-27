@@ -183,3 +183,25 @@ export async function fetchPageCommentsWithUser(
 export type PageCommentWithUser = Awaited<
 	ReturnType<typeof fetchPageCommentsWithUser>
 >;
+
+export async function fetchPageCommentsCount(pageId: number) {
+	const pageCommentsCount = await prisma.pageComment.count({
+		where: { pageId },
+	});
+	return pageCommentsCount;
+}
+
+export async function fetchPageWithTitleAndComments(pageId: number) {
+	const pageWithComments = await prisma.page.findFirst({
+		where: { id: pageId },
+		include: {
+			sourceTexts: { where: { number: 0 } },
+			pageComments: {
+				include: {
+					pageCommentSegments: true,
+				},
+			},
+		},
+	});
+	return pageWithComments;
+}

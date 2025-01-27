@@ -46,6 +46,7 @@ export interface BlockInfo {
 	text: string;
 	textAndOccurrenceHash: string;
 }
+
 export function collectBlocksAndSegmentsFromRoot(root: Root, title?: string) {
 	const textOccurrenceMap = new Map<string, number>();
 

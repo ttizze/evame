@@ -1,12 +1,13 @@
+import { TranslationStatus } from "@prisma/client";
 import type { Queue } from "bullmq";
 import { describe, expect, test, vi } from "vitest";
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
 import type { TranslateJobParams } from "~/features/translate/types";
 import { createUserAITranslationInfo } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/mutations.server";
 import { fetchPageWithSourceTexts } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
+import { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/index";
 import { prisma } from "~/utils/prisma";
 import { handlePageTranslation } from "./handlePageTranslation";
-
 interface SourceText {
 	id: number;
 	pageId: number;
@@ -63,7 +64,7 @@ describe("handlePageTranslation", () => {
 			pageId: 1,
 			locale: "ja",
 			aiModel: "gemini-1.5-flash",
-			aiTranslationStatus: "pending",
+			aiTranslationStatus: TranslationStatus.PENDING,
 			aiTranslationProgress: 0,
 			createdAt: new Date(),
 		};
@@ -124,6 +125,7 @@ describe("handlePageTranslation", () => {
 				{ number: 0, text: "Title" },
 				{ number: 1, text: "Content" },
 			],
+			translationIntent: TranslationIntent.TRANSLATE_PAGE,
 		});
 	});
 
@@ -135,7 +137,7 @@ describe("handlePageTranslation", () => {
 			pageId: 1,
 			locale: "en",
 			aiModel: "gemini-1.5-flash",
-			aiTranslationStatus: "pending",
+			aiTranslationStatus: TranslationStatus.PENDING,
 			aiTranslationProgress: 0,
 			createdAt: new Date(),
 		};
@@ -198,7 +200,7 @@ describe("handlePageTranslation", () => {
 			pageId: 1,
 			locale: "ja",
 			aiModel: "gemini-1.5-flash",
-			aiTranslationStatus: "pending",
+			aiTranslationStatus: TranslationStatus.PENDING,
 			aiTranslationProgress: 0,
 			createdAt: new Date(),
 		});
@@ -368,7 +370,7 @@ describe("handlePageTranslation", () => {
 			pageId: 1,
 			locale: "ja",
 			aiModel: "gemini-1.5-flash",
-			aiTranslationStatus: "pending",
+			aiTranslationStatus: TranslationStatus.PENDING,
 			aiTranslationProgress: 0,
 			createdAt: new Date(),
 		};

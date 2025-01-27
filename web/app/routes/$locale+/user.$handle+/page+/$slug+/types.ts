@@ -7,7 +7,6 @@ import type {
 	Vote,
 } from "@prisma/client";
 import type { User } from "@prisma/client";
-import { z } from "zod";
 
 export type TranslationWithVote = {
 	translateText: TranslateText & {
@@ -34,11 +33,3 @@ export type PageWithTranslations = {
 	sourceTextWithTranslations: SourceTextWithTranslations[];
 	existLocales: string[];
 };
-
-export const translateSchema = z.object({
-	intent: z.literal("translate"),
-	pageId: z.number(),
-	aiModel: z.string().min(1, "モデルを選択してください"),
-});
-
-export const actionSchema = z.discriminatedUnion("intent", [translateSchema]);

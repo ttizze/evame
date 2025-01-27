@@ -32,8 +32,8 @@ export function ParsedContent({
 
 	const options: HTMLReactParserOptions = {
 		replace: (domNode) => {
-			if (domNode.type === "tag" && domNode.attribs["data-source-text-id"]) {
-				const sourceTextId = Number(domNode.attribs["data-source-text-id"]);
+			if (domNode.type === "tag" && domNode.attribs["data-segment-id"]) {
+				const sourceTextId = Number(domNode.attribs["data-segment-id"]);
 				const sourceTextWithTranslation =
 					pageWithTranslations.sourceTextWithTranslations.find(
 						(info) => info.sourceText.id === sourceTextId,

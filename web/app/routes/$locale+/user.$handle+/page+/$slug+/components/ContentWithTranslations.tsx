@@ -86,6 +86,8 @@ export function ContentWithTranslations({
 				pageLocale={pageWithTranslations.page.sourceLanguage}
 				locale={locale}
 				existLocales={existLocales}
+				className="pt-3"
+				intent="translatePage"
 			/>
 			{!isHydrated ? (
 				<div className="w-full h-full flex items-center justify-center">
