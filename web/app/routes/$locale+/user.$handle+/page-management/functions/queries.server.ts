@@ -18,7 +18,7 @@ export async function fetchPaginatedOwnPages(
 		status: {
 			in: [PageStatus.PUBLIC, PageStatus.DRAFT],
 		},
-		sourceTexts: {
+		pageSegments: {
 			some: {
 				number: 0,
 				text: {
@@ -43,7 +43,7 @@ export async function fetchPaginatedOwnPages(
 				updatedAt: true,
 				createdAt: true,
 				status: true,
-				sourceTexts: {
+				pageSegments: {
 					where: {
 						number: 0,
 					},
@@ -63,7 +63,7 @@ export async function fetchPaginatedOwnPages(
 		...page,
 		createdAt: page.createdAt.toLocaleString(locale),
 		updatedAt: page.updatedAt.toLocaleString(locale),
-		title: page.sourceTexts.filter((item) => item.number === 0)[0].text,
+		title: page.pageSegments.filter((item) => item.number === 0)[0].text,
 	}));
 	return {
 		pagesWithTitle,

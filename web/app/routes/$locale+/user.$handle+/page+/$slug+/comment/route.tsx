@@ -3,8 +3,13 @@ import { type ActionFunctionArgs, data } from "@remix-run/node";
 import { z } from "zod";
 import { getLocaleFromHtml } from "~/routes/$locale+/user.$handle+/page+/$slug+/utils/getLocaleFromHtml";
 import { authenticator } from "~/utils/auth.server";
-import { prisma } from "~/utils/prisma";
-import { processCommentHtml } from "./lib/process-comment-html";
+import {
+	createPageComment,
+	deletePageComment,
+} from "./functions/mutations.server";
+import { getPageComment } from "./functions/queries.server";
+import { processPageCommentHtml } from "./lib/process-page-comment-html";
+
 export const createPageCommentSchema = z.object({
 	pageId: z.number(),
 	content: z.string().min(1, "Comment cannot be empty"),
@@ -38,24 +43,19 @@ export async function action({ request }: ActionFunctionArgs) {
 	switch (submission.value.intent) {
 		case "create": {
 			const locale = await getLocaleFromHtml(submission.value.content);
-			const pageComment = await prisma.pageComment.create({
-				data: {
-					content: submission.value.content,
-					locale,
-					pageId: submission.value.pageId,
-					userId: currentUser.id,
-				},
-				include: {
-					user: {
-						select: {
-							handle: true,
-							name: true,
-							image: true,
-						},
-					},
-				},
-			});
-			await processCommentHtml(pageComment.id, submission.value.content);
+			const pageComment = await createPageComment(
+				submission.value.content,
+				locale,
+				currentUser.id,
+				submission.value.pageId,
+			);
+			await processPageCommentHtml(
+				pageComment.id,
+				submission.value.content,
+				locale,
+				currentUser.id,
+				submission.value.pageId,
+			);
 
 			return data({
 				pageComment,
@@ -68,18 +68,13 @@ export async function action({ request }: ActionFunctionArgs) {
 				return data({ lastResult: submission.reply() });
 			}
 
-			const pageComment = await prisma.pageComment.findUnique({
-				where: { id: submission.value.pageCommentId },
-				select: { userId: true },
-			});
+			const pageComment = await getPageComment(submission.value.pageCommentId);
 
 			if (!pageComment || pageComment.userId !== currentUser.id) {
 				return data({ lastResult: submission.reply() });
 			}
 
-			await prisma.pageComment.delete({
-				where: { id: submission.value.pageCommentId },
-			});
+			await deletePageComment(submission.value.pageCommentId);
 
 			return data({ lastResult: submission.reply({ resetForm: true }) });
 		}

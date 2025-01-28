@@ -29,7 +29,7 @@ describe("UserProfile", () => {
 							slug: "public-page",
 							status: "PUBLIC",
 							content: "This is a test content",
-							sourceTexts: {
+							pageSegments: {
 								create: {
 									number: 0,
 									text: "Public Page",
@@ -41,7 +41,7 @@ describe("UserProfile", () => {
 							slug: "private-page",
 							status: "DRAFT",
 							content: "This is a test content2",
-							sourceTexts: {
+							pageSegments: {
 								create: {
 									number: 0,
 									text: "Private Page",
@@ -53,7 +53,7 @@ describe("UserProfile", () => {
 							slug: "archived-page",
 							status: "ARCHIVE",
 							content: "This is a test content3",
-							sourceTexts: {
+							pageSegments: {
 								create: {
 									number: 0,
 									text: "Archived Page",

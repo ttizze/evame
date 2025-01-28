@@ -11,10 +11,11 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import type { TranslationWithVote } from "~/routes/$locale+/user.$handle+/page+/$slug+/types";
+import type { SegmentTranslationWithVote } from "~/routes/$locale+/user.$handle+/page+/$slug+/types";
 import { sanitizeAndParseText } from "~/routes/$locale+/user.$handle+/page+/$slug+/utils/sanitize-and-parse-text.client";
 import { authenticator } from "~/utils/auth.server";
 import { deleteOwnTranslation } from "./functions/mutations.server";
+import type { VoteIntent } from "./vote-buttons";
 import { VoteButtons } from "./vote-buttons";
 
 const schema = z.object({
@@ -39,20 +40,22 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 interface TranslationItemProps {
-	translation: TranslationWithVote;
+	translation: SegmentTranslationWithVote;
 	currentHandle: string | undefined;
+	voteIntent: VoteIntent;
 }
 
 export function TranslationListItem({
 	translation,
 	currentHandle,
+	voteIntent,
 }: TranslationItemProps) {
-	const isOwner = currentHandle === translation.translateText.user.handle;
+	const isOwner = currentHandle === translation.segmentTranslation.user.handle;
 	const fetcher = useFetcher();
 
 	const onDelete = () => {
 		fetcher.submit(
-			{ translationId: translation.translateText.id },
+			{ translationId: translation.segmentTranslation.id },
 			{ method: "post", action: "/resources/translation-list-item" },
 		);
 	};
@@ -62,7 +65,9 @@ export function TranslationListItem({
 			<div className="flex items-start justify-between">
 				<div className="flex">
 					<span className="flex-shrink-0 w-5 text-2xl">•</span>
-					<span>{sanitizeAndParseText(translation.translateText.text)}</span>
+					<span>
+						{sanitizeAndParseText(translation.segmentTranslation.text)}
+					</span>
 				</div>
 				{isOwner && (
 					<div className="">
@@ -81,14 +86,17 @@ export function TranslationListItem({
 			</div>
 			<div className="flex items-center justify-end">
 				<LocaleLink
-					to={`/user/${translation.translateText.user.handle}`}
+					to={`/user/${translation.segmentTranslation.user.handle}`}
 					className="!no-underline mr-2"
 				>
 					<p className="text-sm text-gray-500 text-right flex justify-end items-center  ">
-						by: {translation.translateText.user.name}
+						by: {translation.segmentTranslation.user.name}
 					</p>
 				</LocaleLink>
-				<VoteButtons translationWithVote={translation} />
+				<VoteButtons
+					translationWithVote={translation}
+					voteIntent={voteIntent}
+				/>
 			</div>
 		</div>
 	);

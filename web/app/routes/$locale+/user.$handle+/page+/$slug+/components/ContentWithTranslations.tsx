@@ -4,17 +4,16 @@ import { useHydrated } from "remix-utils/use-hydrated";
 import { LocaleLink } from "~/components/LocaleLink";
 import { TagList } from "~/components/TagList";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import type {
-	PageWithTranslations,
-	SourceTextWithTranslations,
-} from "../types";
+import { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
+import { VoteIntent } from "~/routes/resources+/vote-buttons";
+import type { PageWithTranslations, SegmentWithTranslations } from "../types";
 import { MemoizedParsedContent } from "./ParsedContent";
-import { SourceTextAndTranslationSection } from "./sourceTextAndTranslationSection/SourceTextAndTranslationSection";
+import { SegmentAndTranslationSection } from "./sourceTextAndTranslationSection/SegmentAndTranslationSection";
 import { TranslateActionSection } from "./translateButton/TranslateActionSection";
 
 interface ContentWithTranslationsProps {
 	pageWithTranslations: PageWithTranslations;
-	sourceTitleWithTranslations: SourceTextWithTranslations | null;
+	pageSegmentWithTranslations: SegmentWithTranslations | null;
 	currentHandle: string | undefined;
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
@@ -26,7 +25,7 @@ interface ContentWithTranslationsProps {
 
 export function ContentWithTranslations({
 	pageWithTranslations,
-	sourceTitleWithTranslations,
+	pageSegmentWithTranslations,
 	currentHandle,
 	hasGeminiApiKey,
 	userAITranslationInfo,
@@ -40,16 +39,20 @@ export function ContentWithTranslations({
 	return (
 		<>
 			<h1 className="!mb-0 ">
-				{sourceTitleWithTranslations && (
-					<SourceTextAndTranslationSection
-						sourceTextWithTranslations={sourceTitleWithTranslations}
+				{pageSegmentWithTranslations && (
+					<SegmentAndTranslationSection
+						segmentWithTranslations={pageSegmentWithTranslations}
 						showLockIcon={pageWithTranslations.page.status === "DRAFT"}
-						elements={sourceTitleWithTranslations.sourceText.text}
+						elements={pageSegmentWithTranslations.segment.text}
 						showOriginal={showOriginal}
 						showTranslation={showTranslation}
 						currentHandle={currentHandle}
 						isOwner={pageWithTranslations.user.handle === currentHandle}
 						slug={pageWithTranslations.page.slug}
+						voteIntent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
+						addTranslationFormIntent={
+							AddTranslationFormIntent.PAGE_SEGMENT_TRANSLATION
+						}
 					/>
 				)}
 			</h1>
@@ -86,6 +89,8 @@ export function ContentWithTranslations({
 				pageLocale={pageWithTranslations.page.sourceLanguage}
 				locale={locale}
 				existLocales={existLocales}
+				className="pt-3"
+				intent="translatePage"
 			/>
 			{!isHydrated ? (
 				<div className="w-full h-full flex items-center justify-center">
@@ -93,11 +98,16 @@ export function ContentWithTranslations({
 				</div>
 			) : (
 				<MemoizedParsedContent
-					pageWithTranslations={pageWithTranslations}
+					html={pageWithTranslations.page.content}
+					segmentWithTranslations={pageWithTranslations.segmentWithTranslations}
 					currentHandle={currentHandle}
 					showOriginal={showOriginal}
 					showTranslation={showTranslation}
 					locale={locale}
+					voteIntent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
+					addTranslationFormIntent={
+						AddTranslationFormIntent.PAGE_SEGMENT_TRANSLATION
+					}
 				/>
 			)}
 		</>

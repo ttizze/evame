@@ -15,7 +15,7 @@ export const translationInputSchema = z
 export type PageWithTitle = Omit<
 	Page,
 	| "content"
-	| "sourceTexts"
+	| "pageSegments"
 	| "translations"
 	| "userId"
 	| "sourceLanguage"

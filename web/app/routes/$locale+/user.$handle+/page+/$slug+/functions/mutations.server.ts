@@ -1,5 +1,5 @@
+import { TranslationStatus } from "@prisma/client";
 import { prisma } from "~/utils/prisma";
-
 export async function createUserAITranslationInfo(
 	userId: number,
 	pageId: number,
@@ -13,7 +13,7 @@ export async function createUserAITranslationInfo(
 				pageId,
 				locale,
 				aiModel,
-				aiTranslationStatus: "pending",
+				aiTranslationStatus: TranslationStatus.PENDING,
 				aiTranslationProgress: 0,
 			},
 		});

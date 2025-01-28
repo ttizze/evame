@@ -44,10 +44,10 @@ export function PageCard({
 			<CardHeader>
 				<LocaleLink to={pageLink} className="block">
 					<CardTitle className="flex flex-col pr-3 break-all overflow-wrap-anywhere">
-						{pageCard.sourceTexts[0].text}
-						{pageCard.sourceTexts[0].translateTexts.length > 0 && (
+						{pageCard.pageSegments[0].text}
+						{pageCard.pageSegments[0].pageSegmentTranslations.length > 0 && (
 							<span className="text-sm text-gray-600">
-								{pageCard.sourceTexts[0].translateTexts[0].text}
+								{pageCard.pageSegments[0].pageSegmentTranslations[0].text}
 							</span>
 						)}
 					</CardTitle>

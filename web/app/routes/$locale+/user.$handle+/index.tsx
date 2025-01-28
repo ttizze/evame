@@ -66,7 +66,6 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	if (!handle) throw new Error("handle is required");
 
 	const pageOwner = await fetchUserByHandle(handle);
-	console.log(pageOwner?.handle);
 	if (!pageOwner) {
 		throw new Response("Not Found", { status: 404 });
 	}
@@ -76,11 +75,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	const pageSize = 9;
 
 	const currentUser = await authenticator.isAuthenticated(request);
-	console.log(currentUser?.handle);
 	const { session, guestId } = await ensureGuestId(request);
 
 	const isOwner = currentUser?.handle === handle;
-	console.log(isOwner);
 
 	const { pagesWithInfo, totalPages, currentPage } =
 		await fetchPaginatedPublicPagesWithInfo({

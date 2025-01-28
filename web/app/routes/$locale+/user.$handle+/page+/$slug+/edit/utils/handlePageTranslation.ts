@@ -2,8 +2,8 @@ import { hasExistingTranslation } from "~/features/translate/functions/query.ser
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
 import type { TranslateJobParams } from "~/features/translate/types";
 import { createUserAITranslationInfo } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/mutations.server";
-import { fetchPageWithSourceTexts } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
-
+import { fetchPageWithPageSegments } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
+import { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/index";
 export async function handlePageTranslation({
 	currentUserId,
 	pageId,
@@ -31,9 +31,9 @@ export async function handlePageTranslation({
 		"gemini-1.5-flash",
 	);
 
-	const pageWithSourceTexts = await fetchPageWithSourceTexts(pageId);
-	if (!pageWithSourceTexts) {
-		throw new Error("Page with source texts not found");
+	const pageWithPageSegments = await fetchPageWithPageSegments(pageId);
+	if (!pageWithPageSegments) {
+		throw new Error("Page with page segments not found");
 	}
 
 	const queue = getTranslateUserQueue(currentUserId);
@@ -45,10 +45,11 @@ export async function handlePageTranslation({
 		pageId: pageId,
 		locale: locale,
 		title: title,
-		numberedElements: pageWithSourceTexts.sourceTexts.map((st) => ({
+		numberedElements: pageWithPageSegments.pageSegments.map((st) => ({
 			number: st.number,
 			text: st.text,
 		})),
+		translationIntent: TranslationIntent.TRANSLATE_PAGE,
 	};
 
 	await queue.add(`translate-${currentUserId}`, jobParams);

@@ -41,14 +41,24 @@ function hasBlockLevelChild(node: Element): boolean {
 	});
 }
 
-export interface BlockInfo {
+interface BlockInfo {
 	element: Element;
 	text: string;
 	textAndOccurrenceHash: string;
 }
-export function collectBlocksAndSegmentsFromRoot(root: Root, title?: string) {
-	const textOccurrenceMap = new Map<string, number>();
 
+export interface BlockWithNumber {
+	element: Element;
+	text: string;
+	textAndOccurrenceHash: string;
+	number: number;
+}
+
+export function collectBlocksFromRoot(
+	root: Root,
+	title?: string,
+): BlockWithNumber[] {
+	const textOccurrenceMap: Map<string, number> = new Map();
 	const blocks: BlockInfo[] = [];
 
 	visit(root, "element", (node: Element) => {
@@ -69,20 +79,38 @@ export function collectBlocksAndSegmentsFromRoot(root: Root, title?: string) {
 		}
 	});
 
-	const segments = blocks.map((block, index) => ({
-		text: block.text,
-		textAndOccurrenceHash: block.textAndOccurrenceHash,
+	// 上から順に連番を振る
+	const numberedBlocks = blocks.map((block, index) => ({
+		...block,
 		number: index + 1,
 	}));
 
-	// タイトルを0番に追加
+	// タイトルがあれば 0 番で先頭に追加
+	// 同じ文字列がテクスト中に出現する場合を考慮し、countは0にしておく
 	if (title) {
-		segments.unshift({
+		numberedBlocks.unshift({
+			element: {} as Element, // ダミー
 			text: title,
 			textAndOccurrenceHash: generateHashForText(title, 0),
 			number: 0,
 		});
 	}
 
-	return { blocks, segments };
+	return numberedBlocks;
+}
+
+export function injectSpanNodes(blocks: BlockWithNumber[]) {
+	for (const block of blocks) {
+		const number = block.number;
+		const spanNode: Element = {
+			type: "element",
+			tagName: "span",
+			properties: {
+				"data-number-id": number.toString(),
+			},
+			children: block.element.children,
+		};
+
+		block.element.children = [spanNode];
+	}
 }

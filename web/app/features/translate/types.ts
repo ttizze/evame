@@ -1,3 +1,4 @@
+import type { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/index";
 export type NumberedElement = {
 	number: number;
 	text: string;
@@ -12,4 +13,6 @@ export interface TranslateJobParams {
 	locale: string;
 	title: string;
 	numberedElements: NumberedElement[];
+	translationIntent: TranslationIntent;
+	commentId?: number;
 }

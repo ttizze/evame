@@ -49,7 +49,6 @@ describe("EditPage", () => {
 		new FakeDOMRectList();
 	Range.prototype.getBoundingClientRect = getBoundingClientRect;
 	Range.prototype.getClientRects = (): DOMRectList => new FakeDOMRectList();
-	let sourceTextIds: number[];
 	beforeEach(async () => {
 		const user = await prisma.user.create({
 			data: {
@@ -64,7 +63,7 @@ describe("EditPage", () => {
 							status: "DRAFT",
 							content:
 								"<p data-number='1'>hello</p><p data-number='2'>world</p><p data-number='3'>This is a test content</p>",
-							sourceTexts: {
+							pageSegments: {
 								create: [
 									{
 										number: 0,
@@ -84,25 +83,10 @@ describe("EditPage", () => {
 					],
 				},
 			},
-			include: { pages: { include: { sourceTexts: true } } },
+			include: { pages: { include: { pageSegments: true } } },
 		});
 
 		const page = user.pages[0];
-		sourceTextIds = page.sourceTexts.map((st) => st.id);
-		const updatedContent = page.content.replace(
-			/<p data-number='(\d+)'>/g,
-			(match, number) => {
-				const sourceText = page.sourceTexts.find(
-					(st) => st.number === Number.parseInt(number),
-				);
-				return `<p data-number='${number}' data-source-text-id='${sourceText?.id}'>`;
-			},
-		);
-
-		await prisma.page.update({
-			where: { id: page.id },
-			data: { content: updatedContent },
-		});
 	});
 
 	test("loader returns correct data for authenticated user", async () => {

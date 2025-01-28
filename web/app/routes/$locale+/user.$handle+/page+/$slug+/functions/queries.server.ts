@@ -1,16 +1,19 @@
 import { prisma } from "~/utils/prisma";
-import type { PageWithTranslations } from "../types";
+import type {
+	PageWithTranslations,
+	SegmentTranslationWithVote,
+} from "../types";
 import { getBestTranslation } from "../utils/getBestTranslation";
 
-export async function fetchPageWithSourceTexts(pageId: number) {
-	const pageWithSourceTexts = await prisma.page.findFirst({
+export async function fetchPageWithPageSegments(pageId: number) {
+	const pageWithSegments = await prisma.page.findFirst({
 		where: { id: pageId },
 		select: {
 			id: true,
 			slug: true,
 			content: true,
 			createdAt: true,
-			sourceTexts: {
+			pageSegments: {
 				select: {
 					id: true,
 					number: true,
@@ -20,13 +23,13 @@ export async function fetchPageWithSourceTexts(pageId: number) {
 		},
 	});
 
-	if (!pageWithSourceTexts) return null;
-	const title = pageWithSourceTexts.sourceTexts.filter(
+	if (!pageWithSegments) return null;
+	const title = pageWithSegments.pageSegments.filter(
 		(item) => item.number === 0,
 	)[0].text;
 
 	return {
-		...pageWithSourceTexts,
+		...pageWithSegments,
 		title,
 	};
 }
@@ -40,9 +43,9 @@ export async function fetchPageWithTranslations(
 		where: { slug },
 		include: {
 			user: true,
-			sourceTexts: {
+			pageSegments: {
 				include: {
-					translateTexts: {
+					pageSegmentTranslations: {
 						where: { locale, isArchived: false },
 						include: {
 							user: true,
@@ -66,13 +69,13 @@ export async function fetchPageWithTranslations(
 
 	if (!page) return null;
 
-	const titleText = await prisma.sourceText.findFirst({
+	const titleText = await prisma.pageSegment.findFirst({
 		where: {
 			pageId: page.id,
 			number: 0,
 		},
 		include: {
-			translateTexts: {
+			pageSegmentTranslations: {
 				where: { isArchived: false },
 				select: { locale: true },
 			},
@@ -80,7 +83,9 @@ export async function fetchPageWithTranslations(
 	});
 
 	const existLocales = titleText
-		? Array.from(new Set(titleText.translateTexts.map((t) => t.locale)))
+		? Array.from(
+				new Set(titleText.pageSegmentTranslations.map((t) => t.locale)),
+			)
 		: [];
 	const { user, ...pageWithoutUser } = page;
 	return {
@@ -90,23 +95,31 @@ export async function fetchPageWithTranslations(
 		},
 		user,
 		tagPages: page.tagPages,
-		sourceTextWithTranslations: page.sourceTexts.map((sourceText) => {
-			const translationsWithVotes = sourceText.translateTexts.map(
-				(translateText) => ({
-					translateText: {
-						...translateText,
-						user: translateText.user,
+		segmentWithTranslations: page.pageSegments.map((segment) => {
+			const segmentTranslationsWithVotes = segment.pageSegmentTranslations.map(
+				(segmentTranslation) => ({
+					segmentTranslation: {
+						...segmentTranslation,
+						user: segmentTranslation.user,
 					},
-					vote: translateText.votes[0] || null,
+					translationVote:
+						segmentTranslation.votes && segmentTranslation.votes.length > 0
+							? {
+									...segmentTranslation.votes[0],
+									translationId: segmentTranslation.id,
+								}
+							: null,
 				}),
 			);
 
-			const bestTranslationWithVote = getBestTranslation(translationsWithVotes);
+			const bestSegmentTranslationWithVote = getBestTranslation(
+				segmentTranslationsWithVotes,
+			);
 
 			return {
-				sourceText,
-				translationsWithVotes,
-				bestTranslationWithVote,
+				segment,
+				segmentTranslationsWithVotes,
+				bestSegmentTranslationWithVote,
 			};
 		}),
 		existLocales,
@@ -151,9 +164,10 @@ export async function fetchIsLikedByUser(
 	return false;
 }
 
-export async function fetchPageCommentsWithUser(
+export async function fetchPageCommentsWithUserAndTranslations(
 	pageId: number,
 	locale: string,
+	currentUserId?: number,
 ) {
 	const pageComments = await prisma.pageComment.findMany({
 		where: {
@@ -167,19 +181,94 @@ export async function fetchPageCommentsWithUser(
 					image: true,
 				},
 			},
+			pageCommentSegments: {
+				include: {
+					pageCommentSegmentTranslations: {
+						where: { locale },
+						include: {
+							user: true,
+							pageCommentSegmentTranslationVotes: {
+								where: currentUserId
+									? { userId: currentUserId }
+									: { userId: -1 },
+							},
+						},
+						orderBy: [{ point: "desc" }, { createdAt: "desc" }],
+					},
+				},
+			},
 		},
 		orderBy: {
 			createdAt: "asc",
 		},
 	});
 
-	return pageComments.map((pageComment) => ({
-		...pageComment,
-		createdAt: pageComment.createdAt.toLocaleString(locale),
-		updatedAt: pageComment.updatedAt.toLocaleString(locale),
-	}));
+	return pageComments.map((comment) => {
+		const pageCommentSegmentsWithTranslations = comment.pageCommentSegments.map(
+			(segment) => {
+				// SegmentTranslationWithVote[] を作る
+				const segmentTranslationsWithVotes: SegmentTranslationWithVote[] =
+					segment.pageCommentSegmentTranslations.map((translation) => {
+						return {
+							segmentTranslation: {
+								...translation,
+								user: translation.user,
+							},
+							translationVote:
+								translation.pageCommentSegmentTranslationVotes &&
+								translation.pageCommentSegmentTranslationVotes.length > 0
+									? {
+											...translation.pageCommentSegmentTranslationVotes[0],
+											translationId: translation.id,
+										}
+									: null,
+						};
+					});
+
+				// ベスト翻訳（point 順等で先頭にある翻訳と仮定）
+				const bestSegmentTranslationWithVote = getBestTranslation(
+					segmentTranslationsWithVotes,
+				);
+
+				return {
+					segment,
+					segmentTranslationsWithVotes,
+					bestSegmentTranslationWithVote,
+				};
+			},
+		);
+
+		return {
+			...comment,
+			createdAt: comment.createdAt.toLocaleString(locale),
+			updatedAt: comment.updatedAt.toLocaleString(locale),
+			pageCommentSegmentsWithTranslations,
+		};
+	});
 }
 
 export type PageCommentWithUser = Awaited<
-	ReturnType<typeof fetchPageCommentsWithUser>
+	ReturnType<typeof fetchPageCommentsWithUserAndTranslations>
 >;
+
+export async function fetchPageCommentsCount(pageId: number) {
+	const pageCommentsCount = await prisma.pageComment.count({
+		where: { pageId },
+	});
+	return pageCommentsCount;
+}
+
+export async function fetchPageWithTitleAndComments(pageId: number) {
+	const pageWithComments = await prisma.page.findFirst({
+		where: { id: pageId },
+		include: {
+			pageSegments: { where: { number: 0 } },
+			pageComments: {
+				include: {
+					pageCommentSegments: true,
+				},
+			},
+		},
+	});
+	return pageWithComments;
+}

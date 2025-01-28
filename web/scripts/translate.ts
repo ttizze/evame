@@ -1,14 +1,14 @@
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
 import { createUserAITranslationInfo } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/mutations.server";
+import { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/index";
 import { fetchUserByHandle } from "~/routes/functions/queries.server";
 import { prisma } from "~/utils/prisma";
-
 // 実際にはgetAllPagesByUserIdを何らかの形で用意する必要がある
 // ここでは例としてprismaでpagesを取得する処理を記述
 async function getAllPagesByUserId(userId: number) {
 	return prisma.page.findMany({
 		where: { userId },
-		include: { sourceTexts: true },
+		include: { pageSegments: true },
 	});
 }
 
@@ -41,11 +41,11 @@ async function getAllPagesByUserId(userId: number) {
 
 		// 全ページに対してキュー追加
 		for (const page of pages) {
-			if (!page.sourceTexts || page.sourceTexts.length === 0) {
-				console.log(`Skip page ${page.slug} because no sourceTexts found.`);
+			if (!page.pageSegments || page.pageSegments.length === 0) {
+				console.log(`Skip page ${page.slug} because no pageSegments found.`);
 				continue;
 			}
-			const title = page.sourceTexts.filter((item) => item.number === 0)[0]
+			const title = page.pageSegments.filter((item) => item.number === 0)[0]
 				.text;
 
 			// UserAITranslationInfoを作成
@@ -66,7 +66,8 @@ async function getAllPagesByUserId(userId: number) {
 				pageId: page.id,
 				locale: LOCALE,
 				title: title,
-				numberedElements: page.sourceTexts,
+				numberedElements: page.pageSegments,
+				translationIntent: TranslationIntent.TRANSLATE_PAGE,
 			});
 
 			console.log(`Added page ${page.slug} to translation queue.`);

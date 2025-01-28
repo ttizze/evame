@@ -2,15 +2,9 @@ import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { useLoaderData, useSearchParams } from "@remix-run/react";
 
-import { StartButton } from "~/components/StartButton";
-import { supportedLocaleOptions } from "~/constants/languages";
-import i18nServer from "~/i18n.server";
-import { SourceTextAndTranslationSection } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/sourceTextAndTranslationSection/SourceTextAndTranslationSection";
-import { fetchPageWithTranslations } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
-import { authenticator } from "~/utils/auth.server";
-
 import { data } from "@remix-run/node";
 import { PageCard } from "~/components/PageCard";
+import { StartButton } from "~/components/StartButton";
 import {
 	Pagination,
 	PaginationContent,
@@ -21,8 +15,15 @@ import {
 	PaginationPrevious,
 } from "~/components/ui/pagination";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { supportedLocaleOptions } from "~/constants/languages";
+import i18nServer from "~/i18n.server";
 import { fetchPaginatedPublicPagesWithInfo } from "~/routes/$locale+/functions/queries.server";
 import type { PageCardLocalizedType } from "~/routes/$locale+/functions/queries.server";
+import { SegmentAndTranslationSection } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/sourceTextAndTranslationSection/SegmentAndTranslationSection";
+import { fetchPageWithTranslations } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
+import { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
+import { VoteIntent } from "~/routes/resources+/vote-buttons";
+import { authenticator } from "~/utils/auth.server";
 import { ensureGuestId } from "~/utils/ensureGuestId.server";
 import { commitSession } from "~/utils/session.server";
 
@@ -60,9 +61,9 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			throw new Response("Not Found", { status: 404 });
 		}
 
-		const [title, text] = topPageWithTranslations.sourceTextWithTranslations
-			.filter((st) => st.sourceText.number === 0 || st.sourceText.number === 1)
-			.sort((a, b) => a.sourceText.number - b.sourceText.number);
+		const [title, text] = topPageWithTranslations.segmentWithTranslations
+			.filter((st) => st.segment.number === 0 || st.segment.number === 1)
+			.sort((a, b) => a.segment.number - b.segment.number);
 
 		if (!title || !text) {
 			throw new Response("Not Found", { status: 404 });
@@ -169,24 +170,32 @@ export default function Home() {
 				<main className="prose dark:prose-invert sm:prose lg:prose-lg mx-auto px-2 py-10 flex flex-col items-center justify-center">
 					<div className="max-w-4xl w-full">
 						<h1 className="text-7xl font-bold mb-20 text-center">
-							<SourceTextAndTranslationSection
-								sourceTextWithTranslations={heroTitle}
+							<SegmentAndTranslationSection
+								segmentWithTranslations={heroTitle}
 								sourceTextClassName="w-full bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text !text-transparent mb-2"
-								elements={heroTitle.sourceText.text}
+								elements={heroTitle.segment.text}
 								currentHandle={undefined}
 								showOriginal={true}
 								showTranslation={true}
+								voteIntent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
+								addTranslationFormIntent={
+									AddTranslationFormIntent.PAGE_SEGMENT_TRANSLATION
+								}
 							/>
 						</h1>
 
 						<span className="text-xl mb-12 w-full">
-							<SourceTextAndTranslationSection
-								sourceTextWithTranslations={heroText}
+							<SegmentAndTranslationSection
+								segmentWithTranslations={heroText}
 								sourceTextClassName="mb-2"
-								elements={heroText.sourceText.text}
+								elements={heroText.segment.text}
 								showOriginal={true}
 								showTranslation={true}
 								currentHandle={undefined}
+								voteIntent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
+								addTranslationFormIntent={
+									AddTranslationFormIntent.PAGE_SEGMENT_TRANSLATION
+								}
 							/>
 						</span>
 						<div className="mb-12 flex justify-center mt-10">

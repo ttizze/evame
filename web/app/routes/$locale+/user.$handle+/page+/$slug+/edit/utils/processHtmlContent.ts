@@ -1,5 +1,5 @@
 import type { PageStatus } from "@prisma/client";
-import type { Element, Root } from "hast";
+import type { Root } from "hast";
 import rehypeParse from "rehype-parse";
 import rehypeRaw from "rehype-raw";
 import rehypeRemark from "rehype-remark";
@@ -9,45 +9,22 @@ import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import type { Plugin } from "unified";
-import type { VFile } from "vfile";
-import { collectBlocksAndSegmentsFromRoot } from "../../utils/process-html";
-import type { BlockInfo } from "../../utils/process-html";
+import { collectBlocksFromRoot } from "../../utils/process-html";
+import { injectSpanNodes } from "../../utils/process-html";
 import {
-	synchronizePageSourceTexts,
+	synchronizePagePageSegments,
 	upsertPageWithHtml,
 } from "../functions/mutations.server";
 
-function injectSpanNodes(blocks: BlockInfo[], hashToId: Map<string, number>) {
-	for (const block of blocks) {
-		const sourceTextId = hashToId.get(block.textAndOccurrenceHash);
-		if (!sourceTextId) continue;
-
-		const spanNode: Element = {
-			type: "element",
-			tagName: "span",
-			properties: {
-				"data-source-text-id": sourceTextId.toString(),
-			},
-			children: block.element.children,
-		};
-
-		block.element.children = [spanNode];
-	}
-}
 export function rehypeAddDataId(
 	pageId: number,
 	title: string,
 ): Plugin<[], Root> {
 	return function attacher() {
-		return async (tree: Root, file: VFile) => {
-			const { blocks, segments } = collectBlocksAndSegmentsFromRoot(
-				tree,
-				title,
-			);
-
-			const hashToId = await synchronizePageSourceTexts(pageId, segments);
-
-			injectSpanNodes(blocks, hashToId);
+		return async (tree: Root) => {
+			const blocks = collectBlocksFromRoot(tree, title);
+			await synchronizePagePageSegments(pageId, blocks);
+			injectSpanNodes(blocks);
 		};
 	};
 }

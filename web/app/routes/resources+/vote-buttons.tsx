@@ -4,14 +4,19 @@ import { useFetcher } from "@remix-run/react";
 import { memo, useMemo } from "react";
 import { z } from "zod";
 import { VoteButton } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/sourceTextAndTranslationSection/VoteButton";
-import type { TranslationWithVote } from "~/routes/$locale+/user.$handle+/page+/$slug+/types";
+import type { SegmentTranslationWithVote } from "~/routes/$locale+/user.$handle+/page+/$slug+/types";
 import { authenticator } from "~/utils/auth.server";
 import { cn } from "~/utils/cn";
 import { handleVote } from "./functions/mutations.server";
 
+export enum VoteIntent {
+	PAGE_SEGMENT_TRANSLATION = "pageSegmentTranslation",
+	COMMENT_SEGMENT_TRANSLATION = "commentSegmentTranslation",
+}
 export const schema = z.object({
-	translateTextId: z.number(),
+	segmentTranslationId: z.number(),
 	isUpvote: z.preprocess((val) => val === "true", z.boolean()),
+	intent: z.nativeEnum(VoteIntent),
 });
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -25,9 +30,10 @@ export async function action({ request }: ActionFunctionArgs) {
 		return { lastResult: submission.reply() };
 	}
 	await handleVote(
-		submission.value.translateTextId,
+		submission.value.segmentTranslationId,
 		submission.value.isUpvote,
 		currentUser.id,
+		submission.value.intent,
 	);
 	return {
 		lastResult: submission.reply({ resetForm: true }),
@@ -35,11 +41,13 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 interface VoteButtonsProps {
-	translationWithVote: TranslationWithVote;
+	translationWithVote: SegmentTranslationWithVote;
+	voteIntent: VoteIntent;
 }
 
 export const VoteButtons = memo(function VoteButtons({
 	translationWithVote,
+	voteIntent,
 }: VoteButtonsProps) {
 	const fetcher = useFetcher();
 
@@ -48,19 +56,19 @@ export const VoteButtons = memo(function VoteButtons({
 	const optimisticVote = useMemo(() => {
 		if (fetcher.formData) {
 			const newVote = fetcher.formData.get("isUpvote") === "true";
-			if (translationWithVote.vote?.isUpvote === newVote) {
+			if (translationWithVote.translationVote?.isUpvote === newVote) {
 				return null;
 			}
 			return { isUpvote: newVote };
 		}
-		return translationWithVote.vote;
-	}, [fetcher.formData, translationWithVote.vote]);
+		return translationWithVote.translationVote;
+	}, [fetcher.formData, translationWithVote.translationVote]);
 
 	const optimisticPoint = useMemo(() => {
 		if (fetcher.formData) {
 			const newVote = fetcher.formData.get("isUpvote") === "true";
-			const currentPoint = translationWithVote.translateText.point;
-			const currentVote = translationWithVote.vote;
+			const currentPoint = translationWithVote.segmentTranslation.point;
+			const currentVote = translationWithVote.translationVote;
 
 			if (currentVote) {
 				if (currentVote.isUpvote === newVote) {
@@ -70,11 +78,11 @@ export const VoteButtons = memo(function VoteButtons({
 			}
 			return newVote ? currentPoint + 1 : currentPoint - 1;
 		}
-		return translationWithVote.translateText.point;
+		return translationWithVote.segmentTranslation.point;
 	}, [
 		fetcher.formData,
-		translationWithVote.translateText.point,
-		translationWithVote.vote,
+		translationWithVote.segmentTranslation.point,
+		translationWithVote.translationVote,
 	]);
 
 	const buttonClasses = useMemo(
@@ -96,9 +104,10 @@ export const VoteButtons = memo(function VoteButtons({
 	const handleVoteClick = (e: React.MouseEvent, isUpvote: boolean) => {
 		const formData = new FormData();
 		formData.append(
-			"translateTextId",
-			translationWithVote.translateText.id.toString(),
+			"segmentTranslationId",
+			translationWithVote.segmentTranslation.id.toString(),
 		);
+		formData.append("intent", voteIntent);
 		formData.append("isUpvote", isUpvote.toString());
 		fetcher.submit(formData, {
 			method: "post",

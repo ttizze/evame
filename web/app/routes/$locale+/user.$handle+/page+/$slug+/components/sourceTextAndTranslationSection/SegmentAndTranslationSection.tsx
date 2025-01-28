@@ -2,11 +2,13 @@ import { Lock } from "lucide-react";
 import { SquarePen } from "lucide-react";
 import type { ReactNode } from "react";
 import { NavLocaleLink } from "~/components/NavLocaleLink";
-import type { SourceTextWithTranslations } from "../../types";
+import type { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
+import type { VoteIntent } from "~/routes/resources+/vote-buttons";
+import type { SegmentWithTranslations } from "../../types";
 import { TranslationSection } from "./TranslationSection";
 
-interface SourceTextAndTranslationSectionProps {
-	sourceTextWithTranslations: SourceTextWithTranslations;
+interface SegmentAndTranslationSectionProps {
+	segmentWithTranslations: SegmentWithTranslations;
 	elements: string | ReactNode | ReactNode[];
 	showLockIcon?: boolean;
 	sourceTextClassName?: string;
@@ -15,10 +17,12 @@ interface SourceTextAndTranslationSectionProps {
 	currentHandle: string | undefined;
 	isOwner?: boolean;
 	slug?: string;
+	voteIntent: VoteIntent;
+	addTranslationFormIntent: AddTranslationFormIntent;
 }
 
-export function SourceTextAndTranslationSection({
-	sourceTextWithTranslations,
+export function SegmentAndTranslationSection({
+	segmentWithTranslations,
 	elements,
 	showLockIcon = false,
 	sourceTextClassName,
@@ -27,15 +31,17 @@ export function SourceTextAndTranslationSection({
 	currentHandle,
 	isOwner,
 	slug,
-}: SourceTextAndTranslationSectionProps) {
+	voteIntent,
+	addTranslationFormIntent,
+}: SegmentAndTranslationSectionProps) {
 	return (
 		<>
 			{showOriginal && (
 				<span className="flex items-center">
 					<span
 						className={`inline-block ${
-							sourceTextWithTranslations.translationsWithVotes.length === 0 ||
-							!showTranslation
+							segmentWithTranslations.segmentTranslationsWithVotes.length ===
+								0 || !showTranslation
 								? "text-gray-700 dark:text-gray-200 [&>a]:text-gray-700 dark:[&>a]:text-gray-200 [&>strong]:text-gray-700 dark:[&>strong]:text-gray-200"
 								: "text-gray-300 dark:text-gray-600 [&>a]:text-gray-300 dark:[&>a]:text-gray-600 [&>strong]:text-gray-300 dark:[&>strong]:text-gray-600"
 						} ${sourceTextClassName}`}
@@ -58,11 +64,13 @@ export function SourceTextAndTranslationSection({
 				</span>
 			)}
 			{showTranslation &&
-				sourceTextWithTranslations.translationsWithVotes.length > 0 && (
+				segmentWithTranslations.segmentTranslationsWithVotes.length > 0 && (
 					<TranslationSection
-						key={`translation-${sourceTextWithTranslations.sourceText.id}`}
-						sourceTextWithTranslations={sourceTextWithTranslations}
+						key={`translation-${segmentWithTranslations.segment.id}`}
+						segmentWithTranslations={segmentWithTranslations}
 						currentHandle={currentHandle}
+						voteIntent={voteIntent}
+						addTranslationFormIntent={addTranslationFormIntent}
 					/>
 				)}
 		</>

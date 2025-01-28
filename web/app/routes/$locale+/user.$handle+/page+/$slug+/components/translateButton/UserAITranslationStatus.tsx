@@ -15,7 +15,7 @@ export function UserAITranslationStatus({
 	useEffect(() => {
 		if (
 			!userAITranslationInfo ||
-			userAITranslationInfo?.aiTranslationStatus === "completed"
+			userAITranslationInfo?.aiTranslationStatus === "COMPLETED"
 		) {
 			return;
 		}
@@ -31,9 +31,9 @@ export function UserAITranslationStatus({
 						value={userAITranslationInfo.aiTranslationProgress}
 						className={cn(
 							"flex-grow",
-							userAITranslationInfo.aiTranslationStatus === "in_progress" &&
+							userAITranslationInfo.aiTranslationStatus === "IN_PROGRESS" &&
 								"bg-blue-400 animate-pulse",
-							userAITranslationInfo.aiTranslationStatus === "failed" &&
+							userAITranslationInfo.aiTranslationStatus === "FAILED" &&
 								"bg-red-400",
 						)}
 						indicatorClassName="bg-gray-400"

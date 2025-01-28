@@ -4,7 +4,9 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { data } from "@remix-run/node";
 import type { MetaFunction } from "@remix-run/react";
 import { useActionData, useLoaderData } from "@remix-run/react";
+import { MessageCircle } from "lucide-react";
 import { useState } from "react";
+import { z } from "zod";
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
 import i18nServer from "~/i18n.server";
 import { PageCommentForm } from "~/routes/$locale+/user.$handle+/page+/$slug+/comment/components/PageCommentForm";
@@ -16,19 +18,20 @@ import { ensureGuestId } from "~/utils/ensureGuestId.server";
 import { commitSession } from "~/utils/session.server";
 import { ContentWithTranslations } from "./components/ContentWithTranslations";
 import { FloatingControls } from "./components/FloatingControls";
+import { TranslateActionSection } from "./components/translateButton/TranslateActionSection";
 import { createUserAITranslationInfo } from "./functions/mutations.server";
 import {
 	fetchIsLikedByUser,
 	fetchLatestUserAITranslationInfo,
 	fetchLikeCount,
-	fetchPageCommentsWithUser,
-	fetchPageWithSourceTexts,
+	fetchPageCommentsCount,
+	fetchPageCommentsWithUserAndTranslations,
+	fetchPageWithPageSegments,
+	fetchPageWithTitleAndComments,
 	fetchPageWithTranslations,
 } from "./functions/queries.server";
-import { actionSchema } from "./types";
 import { getBestTranslation } from "./utils/getBestTranslation";
 import { stripHtmlTags } from "./utils/stripHtmlTags";
-
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
 	if (!data) {
 		return [{ title: "Page Not Found" }];
@@ -104,12 +107,12 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	) {
 		throw new Response("Page not found", { status: 404 });
 	}
-	const sourceTitleWithTranslations =
-		pageWithTranslations.sourceTextWithTranslations.filter(
-			(item) => item.sourceText?.number === 0,
+	const pageSegmentTitleWithTranslations =
+		pageWithTranslations.segmentWithTranslations.filter(
+			(item) => item.segment?.number === 0,
 		)[0];
 	const bestTranslationTitle = getBestTranslation(
-		sourceTitleWithTranslations.translationsWithVotes,
+		pageSegmentTitleWithTranslations.segmentTranslationsWithVotes,
 	);
 	const userAITranslationInfo = await fetchLatestUserAITranslationInfo(
 		pageWithTranslations.page.id,
@@ -117,14 +120,24 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		locale,
 	);
 	const sourceTitleWithBestTranslationTitle = bestTranslationTitle
-		? `${sourceTitleWithTranslations.sourceText.text} - ${bestTranslationTitle.translateText.text}`
-		: sourceTitleWithTranslations.sourceText.text;
+		? `${pageSegmentTitleWithTranslations.segment.text} - ${bestTranslationTitle.segmentTranslation.text}`
+		: pageSegmentTitleWithTranslations.segment.text;
 
-	const [likeCount, isLikedByUser, pageCommentsWithUser] = await Promise.all([
-		fetchLikeCount(pageWithTranslations.page.id),
-		fetchIsLikedByUser(pageWithTranslations.page.id, currentUser?.id, guestId),
-		fetchPageCommentsWithUser(pageWithTranslations.page.id, locale),
-	]);
+	const [likeCount, isLikedByUser, pageCommentsWithUser, pageCommentsCount] =
+		await Promise.all([
+			fetchLikeCount(pageWithTranslations.page.id),
+			fetchIsLikedByUser(
+				pageWithTranslations.page.id,
+				currentUser?.id,
+				guestId,
+			),
+			fetchPageCommentsWithUserAndTranslations(
+				pageWithTranslations.page.id,
+				locale,
+				currentUser?.id,
+			),
+			fetchPageCommentsCount(pageWithTranslations.page.id),
+		]);
 
 	const headers = new Headers();
 	headers.set("Set-Cookie", await commitSession(session));
@@ -135,11 +148,12 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			currentUser,
 			hasGeminiApiKey,
 			userAITranslationInfo,
-			sourceTitleWithTranslations,
+			pageSegmentTitleWithTranslations,
 			sourceTitleWithBestTranslationTitle,
 			likeCount,
 			isLikedByUser,
 			pageCommentsWithUser,
+			pageCommentsCount,
 			existLocales: pageWithTranslations.existLocales,
 		},
 		{
@@ -147,6 +161,19 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		},
 	);
 }
+export enum TranslationIntent {
+	TRANSLATE_PAGE = "translatePage",
+	TRANSLATE_COMMENT = "translateComment",
+}
+
+const translateSchema = z.object({
+	pageId: z.number(),
+	aiModel: z.string().min(1, "モデルを選択してください"),
+	intent: z.enum([
+		TranslationIntent.TRANSLATE_PAGE,
+		TranslationIntent.TRANSLATE_COMMENT,
+	]),
+});
 
 export async function action({ request, params }: ActionFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request, {
@@ -154,7 +181,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 	});
 
 	const submission = parseWithZod(await request.formData(), {
-		schema: actionSchema,
+		schema: translateSchema,
 	});
 	const geminiApiKey = await fetchGeminiApiKeyByHandle(currentUser.handle);
 	if (!geminiApiKey) {
@@ -166,55 +193,112 @@ export async function action({ request, params }: ActionFunctionArgs) {
 		locale = (await i18nServer.getLocale(request)) || "en";
 	}
 	if (submission.status !== "success") {
-		return { intent: null, lastResult: submission.reply(), slug: null };
+		return { lastResult: submission.reply(), slug: null };
 	}
 	if (!geminiApiKey) {
 		return {
 			lastResult: submission.reply({
 				formErrors: ["Gemini API key is not set"],
 			}),
-			intent: null,
 			slug: null,
 		};
 	}
-	const pageWithSourceTexts = await fetchPageWithSourceTexts(
-		submission.value.pageId,
-	);
-	if (!pageWithSourceTexts) {
-		return {
-			lastResult: submission.reply({
-				formErrors: ["Page not found"],
-			}),
-			intent: null,
-			slug: null,
-		};
-	}
-	const numberedElements = pageWithSourceTexts.sourceTexts.map((item) => ({
-		number: item.number,
-		text: item.text,
-	}));
-	const userAITranslationInfo = await createUserAITranslationInfo(
-		currentUser.id,
-		pageWithSourceTexts.id,
-		submission.value.aiModel,
-		locale,
-	);
+	switch (submission.value.intent) {
+		case TranslationIntent.TRANSLATE_COMMENT: {
+			const pageWithComments = await fetchPageWithTitleAndComments(
+				submission.value.pageId,
+			);
+			if (!pageWithComments) {
+				return {
+					lastResult: submission.reply({
+						formErrors: ["Page not found"],
+					}),
+					slug: null,
+				};
+			}
 
-	const queue = getTranslateUserQueue(currentUser.id);
-	await queue.add(`translate-${currentUser.id}`, {
-		userAITranslationInfoId: userAITranslationInfo.id,
-		geminiApiKey: geminiApiKey.apiKey,
-		aiModel: submission.value.aiModel,
-		userId: currentUser.id,
-		pageId: pageWithSourceTexts.id,
-		locale: locale,
-		title: pageWithSourceTexts.title,
-		numberedElements: numberedElements,
-	});
-	return {
-		lastResult: submission.reply({ resetForm: true }),
-		slug: pageWithSourceTexts.slug,
-	};
+			const userAITranslationInfo = await createUserAITranslationInfo(
+				currentUser.id,
+				pageWithComments.id,
+				submission.value.aiModel,
+				locale,
+			);
+
+			const commentsSegmentsArray = pageWithComments.pageComments.map(
+				(comment) => {
+					return {
+						commentId: comment.id,
+						segments: comment.pageCommentSegments.map((segment) => ({
+							number: segment.number,
+							text: segment.text,
+						})),
+					};
+				},
+			);
+			for (const comment of commentsSegmentsArray) {
+				const queue = getTranslateUserQueue(currentUser.id);
+				await queue.add(`translate-${currentUser.id}`, {
+					userAITranslationInfoId: userAITranslationInfo.id,
+					geminiApiKey: geminiApiKey.apiKey,
+					aiModel: submission.value.aiModel,
+					userId: currentUser.id,
+					pageId: pageWithComments.id,
+					locale: locale,
+					title: pageWithComments.pageSegments[0].text,
+					numberedElements: comment.segments,
+					translationIntent: TranslationIntent.TRANSLATE_COMMENT,
+					commentId: comment.commentId,
+				});
+			}
+			return {
+				lastResult: submission.reply({ resetForm: true }),
+				slug: null,
+			};
+		}
+		case TranslationIntent.TRANSLATE_PAGE: {
+			const pageWithPageSegments = await fetchPageWithPageSegments(
+				submission.value.pageId,
+			);
+			if (!pageWithPageSegments) {
+				return {
+					lastResult: submission.reply({
+						formErrors: ["Page not found"],
+					}),
+					slug: null,
+				};
+			}
+
+			const numberedElements = pageWithPageSegments.pageSegments.map(
+				(item) => ({
+					number: item.number,
+					text: item.text,
+				}),
+			);
+			const userAITranslationInfo = await createUserAITranslationInfo(
+				currentUser.id,
+				pageWithPageSegments.id,
+				submission.value.aiModel,
+				locale,
+			);
+
+			const queue = getTranslateUserQueue(currentUser.id);
+			await queue.add(`translate-${currentUser.id}`, {
+				userAITranslationInfoId: userAITranslationInfo.id,
+				geminiApiKey: geminiApiKey.apiKey,
+				aiModel: submission.value.aiModel,
+				userId: currentUser.id,
+				pageId: pageWithPageSegments.id,
+				locale: locale,
+				title: pageWithPageSegments.title,
+				numberedElements: numberedElements,
+				translationIntent: TranslationIntent.TRANSLATE_PAGE,
+			});
+			return {
+				lastResult: submission.reply({ resetForm: true }),
+				slug: pageWithPageSegments.slug,
+			};
+		}
+	}
 }
 
 export default function Page() {
@@ -223,13 +307,14 @@ export default function Page() {
 		currentUser,
 		hasGeminiApiKey,
 		userAITranslationInfo,
-		sourceTitleWithTranslations,
+		pageSegmentTitleWithTranslations,
 		sourceTitleWithBestTranslationTitle,
 		locale,
 		likeCount,
 		isLikedByUser,
 		pageCommentsWithUser,
 		existLocales,
+		pageCommentsCount,
 	} = useLoaderData<typeof loader>();
 	const actionData = useActionData<typeof action>();
 	const [form, fields] = useForm({
@@ -245,7 +330,7 @@ export default function Page() {
 			<article className="w-full prose dark:prose-invert prose-a:underline prose-a:decoration-dotted sm:prose lg:prose-lg mx-auto px-4 mb-20">
 				<ContentWithTranslations
 					pageWithTranslations={pageWithTranslations}
-					sourceTitleWithTranslations={sourceTitleWithTranslations}
+					pageSegmentWithTranslations={pageSegmentTitleWithTranslations}
 					currentHandle={currentUser?.handle}
 					hasGeminiApiKey={hasGeminiApiKey}
 					userAITranslationInfo={userAITranslationInfo}
@@ -256,17 +341,38 @@ export default function Page() {
 				/>
 			</article>
 			<div className="space-y-8">
-				<LikeButton
-					liked={isLikedByUser}
-					likeCount={likeCount}
-					slug={pageWithTranslations.page.slug}
-					showCount
-				/>
+				<div className="flex items-center gap-4">
+					<LikeButton
+						liked={isLikedByUser}
+						likeCount={likeCount}
+						slug={pageWithTranslations.page.slug}
+						showCount
+					/>
+					<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
+					<span>{pageCommentsCount}</span>
+				</div>
+
 				<div className="mt-8">
 					<div className="mt-8">
+						<div className="flex items-center gap-2 py-2">
+							<h2 className="text-2xl font-bold">Comments</h2>
+							<TranslateActionSection
+								pageId={pageWithTranslations.page.id}
+								userAITranslationInfo={userAITranslationInfo}
+								hasGeminiApiKey={hasGeminiApiKey}
+								pageLocale={pageWithTranslations.page.sourceLanguage}
+								locale={locale}
+								existLocales={existLocales}
+								intent="translateComment"
+							/>
+						</div>
 						<PageCommentList
 							pageCommentsWithUser={pageCommentsWithUser}
 							currentUserId={currentUser?.id}
+							currentHandle={currentUser?.handle}
+							showOriginal={showOriginal}
+							showTranslation={showTranslation}
+							locale={locale}
 						/>
 					</div>
 					<PageCommentForm

@@ -30,6 +30,7 @@ type TranslateSettingsDialogProps = {
 	locale: string;
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
+	intent: "translatePage" | "translateComment";
 };
 
 export function TranslateSettingsDialog({
@@ -39,6 +40,7 @@ export function TranslateSettingsDialog({
 	locale,
 	hasGeminiApiKey,
 	userAITranslationInfo,
+	intent,
 }: TranslateSettingsDialogProps) {
 	const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
 	const navigation = useNavigation();
@@ -54,7 +56,6 @@ export function TranslateSettingsDialog({
 					<Form method="post" className="space-y-4">
 						<input type="hidden" name="pageId" value={pageId} />
 						<input type="hidden" name="aiModel" value={selectedModel} />
-
 						<div className="space-y-2">
 							<Label htmlFor="language">Language</Label>
 							<LocaleSelector
@@ -89,7 +90,7 @@ export function TranslateSettingsDialog({
 							<Button
 								type="submit"
 								name="intent"
-								value="translate"
+								value={intent}
 								className="w-full"
 								disabled={navigation.state === "submitting"}
 							>

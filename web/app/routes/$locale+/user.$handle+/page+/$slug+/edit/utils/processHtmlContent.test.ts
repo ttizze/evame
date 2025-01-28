@@ -28,11 +28,11 @@ describe("processHtmlContent", () => {
 		// ページがDBに存在し、HTMLが変換されているか確認
 		const dbPage = await prisma.page.findUnique({
 			where: { slug: pageSlug },
-			include: { sourceTexts: true },
+			include: { pageSegments: true },
 		});
 		expect(dbPage).not.toBeNull();
 		if (!dbPage) return;
-		expect(dbPage.sourceTexts.length).toBeGreaterThanOrEqual(2);
+		expect(dbPage.pageSegments.length).toBeGreaterThanOrEqual(2);
 
 		// ページHTMLがdata-id付きspanを含むか確認
 		const updatedPage = await prisma.page.findUnique({
@@ -44,14 +44,14 @@ describe("processHtmlContent", () => {
 		const htmlContent = updatedPage.content;
 
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">This is a test\.<\/span>/,
+			/<span data-number-id="\d+">This is a test\.<\/span>/,
 		);
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">This is another test\.<\/span>/,
+			/<span data-number-id="\d+">This is another test\.<\/span>/,
 		);
 
 		// source_textsのnumberが連番になっているか
-		const sortedTexts = dbPage.sourceTexts.sort((a, b) => a.number - b.number);
+		const sortedTexts = dbPage.pageSegments.sort((a, b) => a.number - b.number);
 		expect(sortedTexts[0].number).toBe(0);
 		expect(sortedTexts[1].number).toBe(1);
 
@@ -96,14 +96,14 @@ describe("processHtmlContent", () => {
 
 		const dbPage1 = await prisma.page.findUnique({
 			where: { slug: pageSlug },
-			include: { sourceTexts: true },
+			include: { pageSegments: true },
 		});
 		expect(dbPage1).not.toBeNull();
 		if (!dbPage1) return;
 
-		expect(dbPage1.sourceTexts.length).toBeGreaterThanOrEqual(4);
+		expect(dbPage1.pageSegments.length).toBeGreaterThanOrEqual(4);
 		const originalMap = new Map<string, number>();
-		for (const st of dbPage1.sourceTexts) {
+		for (const st of dbPage1.pageSegments) {
 			originalMap.set(st.text, st.id);
 		}
 
@@ -131,14 +131,14 @@ describe("processHtmlContent", () => {
 
 		const dbPage2 = await prisma.page.findUnique({
 			where: { slug: pageSlug },
-			include: { sourceTexts: true },
+			include: { pageSegments: true },
 		});
 		expect(dbPage2).not.toBeNull();
 		if (!dbPage2) return;
 
-		expect(dbPage2.sourceTexts.length).toBeGreaterThanOrEqual(5);
+		expect(dbPage2.pageSegments.length).toBeGreaterThanOrEqual(5);
 		const editedMap = new Map<string, number>();
-		for (const st of dbPage2.sourceTexts) {
+		for (const st of dbPage2.pageSegments) {
 			editedMap.set(st.text, st.id);
 		}
 
@@ -185,13 +185,13 @@ describe("processHtmlContent", () => {
 		// ページがDBに存在し、HTMLが変換されているか確認
 		const dbPage = await prisma.page.findUnique({
 			where: { slug: pageSlug },
-			include: { sourceTexts: true },
+			include: { pageSegments: true },
 		});
 		expect(dbPage).not.toBeNull();
 		if (!dbPage) return;
 
 		// source_textsが適切に挿入されているか確認
-		expect(dbPage.sourceTexts.length).toBeGreaterThanOrEqual(3); // title + 2 paragraphs
+		expect(dbPage.pageSegments.length).toBeGreaterThanOrEqual(3); // title + 2 paragraphs
 
 		// ページHTMLがdata-id付きspanを含むか確認
 		const updatedPage = await prisma.page.findUnique({
@@ -204,31 +204,31 @@ describe("processHtmlContent", () => {
 
 		// タイトル部分のspanを確認
 		expect(htmlContent).toMatch(
-			new RegExp(`<h1><span data-source-text-id="\\d+">${title}</span></h1>`),
+			new RegExp(`<h1><span data-number-id="\\d+">${title}</span></h1>`),
 		);
 
 		// 本文中のタイトルのspanを確認
 		expect(htmlContent).toMatch(
-			new RegExp(`<span data-source-text-id="\\d+">${title}</span>`),
+			new RegExp(`<span data-number-id="\\d+">${title}</span>`),
 		);
 
 		// その他の本文のspanを確認
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">This is a paragraph with the Unique Title embedded\.<\/span>/,
+			/<span data-number-id="\d+">This is a paragraph with the Unique Title embedded\.<\/span>/,
 		);
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">Another paragraph\.<\/span>/,
+			/<span data-number-id="\d+">Another paragraph\.<\/span>/,
 		);
 
-		// source_textsのnumberが連番になっているか
-		const sortedTexts = dbPage.sourceTexts.sort((a, b) => a.number - b.number);
+		// page_segmentsのnumberが連番になっているか
+		const sortedTexts = dbPage.pageSegments.sort((a, b) => a.number - b.number);
 		sortedTexts.forEach((st, index) => {
 			expect(st.number).toBe(index);
 			expect(st.textAndOccurrenceHash).not.toBeNull();
 		});
 
 		// タイトルと本文で同じテキストが異なるsource_textsとして扱われているか
-		const titleOccurrences = dbPage.sourceTexts.filter(
+		const titleOccurrences = dbPage.pageSegments.filter(
 			(st) => st.text === title,
 		);
 		expect(titleOccurrences.length).toBe(2); // One in title, one in content
@@ -262,14 +262,14 @@ describe("processHtmlContent", () => {
 
 		const dbPage1 = await prisma.page.findUnique({
 			where: { slug: pageSlug },
-			include: { sourceTexts: true },
+			include: { pageSegments: true },
 		});
 		expect(dbPage1).not.toBeNull();
 		if (!dbPage1) return;
 
 		// 初回処理時のIDを記憶
 		const originalTextIdMap = new Map<string, number>();
-		for (const st of dbPage1.sourceTexts) {
+		for (const st of dbPage1.pageSegments) {
 			originalTextIdMap.set(st.text, st.id);
 		}
 		expect(originalTextIdMap.size).toBeGreaterThanOrEqual(3);
@@ -279,14 +279,14 @@ describe("processHtmlContent", () => {
 
 		const dbPage2 = await prisma.page.findUnique({
 			where: { slug: pageSlug },
-			include: { sourceTexts: true },
+			include: { pageSegments: true },
 		});
 		expect(dbPage2).not.toBeNull();
 		if (!dbPage2) return;
 
 		// 再処理後のIDマッピングを取得
 		const afterTextIdMap = new Map<string, number>();
-		for (const st of dbPage2.sourceTexts) {
+		for (const st of dbPage2.pageSegments) {
 			afterTextIdMap.set(st.text, st.id);
 		}
 
@@ -296,7 +296,7 @@ describe("processHtmlContent", () => {
 		}
 
 		// source_textsの数が増減していないこと（無駄な消去がないこと）
-		expect(dbPage2.sourceTexts.length).toBe(dbPage1.sourceTexts.length);
+		expect(dbPage2.pageSegments.length).toBe(dbPage1.pageSegments.length);
 	});
 	test("画像が<p>タグで囲まれずに出力されるか確認", async () => {
 		const pageSlug = "html-image-test-page";
@@ -323,7 +323,7 @@ describe("processHtmlContent", () => {
 
 		const dbPage = await prisma.page.findUnique({
 			where: { slug: pageSlug },
-			include: { sourceTexts: true },
+			include: { pageSegments: true },
 		});
 		expect(dbPage).not.toBeNull();
 		if (!dbPage) return;
@@ -345,8 +345,8 @@ describe("processHtmlContent", () => {
 			/<img [^>]*src="http:\/\/localhost:9000\/evame\/uploads\/sample-image\.png"[^>]*>/,
 		);
 
-		// また、<img>タグにもdata-source-text-id付きspanが適用されていないことを確認する
-		// 基本的に画像そのものにはdata-source-text-idは付与されないが、パース時に問題なければこのままで良い。
+		// また、<img>タグにもdata-number-id付きspanが適用されていないことを確認する
+		// 基本的に画像そのものにはdata-number-idは付与されないが、パース時に問題なければこのままで良い。
 		// もし画像をinline化している場合はここでspan内に<img>があることを確認する処理を書いてもよい。
 	});
 });

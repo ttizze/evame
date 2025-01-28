@@ -1,26 +1,33 @@
 import { ChevronDown, ChevronUp, Languages } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
-import { AddTranslationForm } from "~/routes/resources+/add-translation-form";
+import { AddTranslationForm } from "~/routes/resources+/add-translation-form/route";
+import type { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
 import { TranslationListItem } from "~/routes/resources+/translation-list-item";
-import type { SourceTextWithTranslations } from "../../types";
-
+import type { VoteIntent } from "~/routes/resources+/vote-buttons";
+import type { SegmentWithTranslations } from "../../types";
 const INITIAL_DISPLAY_COUNT = 3;
 
 export function AddAndVoteTranslations({
 	currentHandle,
-	sourceTextWithTranslations,
+	segmentWithTranslations,
 	open,
+	voteIntent,
+	addTranslationFormIntent,
 }: {
 	currentHandle: string | undefined;
-	sourceTextWithTranslations: SourceTextWithTranslations;
+	segmentWithTranslations: SegmentWithTranslations;
 	open: boolean;
+	voteIntent: VoteIntent;
+	addTranslationFormIntent: AddTranslationFormIntent;
 }) {
 	const [showAll, setShowAll] = useState(false);
-	const { bestTranslationWithVote, translationsWithVotes } =
-		sourceTextWithTranslations;
-	const alternativeTranslationsWithVotes = translationsWithVotes.filter(
-		(t) => t.translateText.id !== bestTranslationWithVote?.translateText.id,
+	const { bestSegmentTranslationWithVote, segmentTranslationsWithVotes } =
+		segmentWithTranslations;
+	const alternativeTranslationsWithVotes = segmentTranslationsWithVotes.filter(
+		(t) =>
+			t.segmentTranslation.id !==
+			bestSegmentTranslationWithVote?.segmentTranslation.id,
 	);
 
 	const displayedTranslations = useMemo(() => {
@@ -45,9 +52,10 @@ export function AddAndVoteTranslations({
 				<div>
 					{displayedTranslations.map((displayedTranslation) => (
 						<TranslationListItem
-							key={displayedTranslation.translateText.id}
+							key={displayedTranslation.segmentTranslation.id}
 							translation={displayedTranslation}
 							currentHandle={currentHandle}
+							voteIntent={voteIntent}
 						/>
 					))}
 					{hasMoreTranslations && (
@@ -70,8 +78,9 @@ export function AddAndVoteTranslations({
 				</div>
 				<div className="mt-4">
 					<AddTranslationForm
-						sourceTextId={sourceTextWithTranslations.sourceText.id}
+						segmentId={segmentWithTranslations.segment.id}
 						currentHandle={currentHandle}
+						intent={addTranslationFormIntent}
 					/>
 				</div>
 			</div>

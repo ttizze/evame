@@ -1,8 +1,7 @@
 import { Queue } from "~/utils/queue.server";
 import { translate } from "./lib/translate.server";
 import type { TranslateJobParams } from "./types";
-
-const QUEUE_VERSION = 102;
+const QUEUE_VERSION = 12;
 
 export const getTranslateUserQueue = (userId: number) => {
 	return Queue<TranslateJobParams>(
