@@ -8,7 +8,7 @@ type TranslateActionSectionProps = {
 	pageId: number;
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
-	pageLocale: string;
+	sourceLocale: string;
 	locale: string;
 	existLocales: string[];
 	className?: string;
@@ -19,21 +19,21 @@ export function TranslateActionSection({
 	pageId,
 	hasGeminiApiKey,
 	userAITranslationInfo,
-	pageLocale,
+	sourceLocale,
 	locale,
 	existLocales,
 	className,
 	intent,
 }: TranslateActionSectionProps) {
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-	let pageLocaleOptions = supportedLocaleOptions.find(
-		(sl) => sl.code === pageLocale,
+	let sourceLocaleOptions = supportedLocaleOptions.find(
+		(sl) => sl.code === sourceLocale,
 	);
-	if (!pageLocaleOptions) {
-		pageLocaleOptions = { code: "und", name: "Unknown" };
+	if (!sourceLocaleOptions) {
+		sourceLocaleOptions = { code: "und", name: "Unknown" };
 	}
 	const merged = [
-		pageLocaleOptions,
+		sourceLocaleOptions,
 		...existLocales.map((lc) => {
 			const localeName =
 				supportedLocaleOptions.find((sl) => sl.code === lc)?.name || lc;

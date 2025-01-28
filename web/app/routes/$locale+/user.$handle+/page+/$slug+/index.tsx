@@ -360,7 +360,7 @@ export default function Page() {
 								pageId={pageWithTranslations.page.id}
 								userAITranslationInfo={userAITranslationInfo}
 								hasGeminiApiKey={hasGeminiApiKey}
-								pageLocale={pageWithTranslations.page.sourceLanguage}
+								sourceLocale={pageWithTranslations.page.sourceLocale}
 								locale={locale}
 								existLocales={existLocales}
 								intent="translateComment"

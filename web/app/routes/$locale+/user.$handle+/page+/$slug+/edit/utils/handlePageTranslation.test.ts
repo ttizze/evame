@@ -99,7 +99,7 @@ describe("handlePageTranslation", () => {
 		await handlePageTranslation({
 			currentUserId: 1,
 			pageId: 1,
-			sourceLanguage: "en",
+			sourceLocale: "en",
 			geminiApiKey: "test-key",
 			title: "Test Title",
 		});
@@ -172,7 +172,7 @@ describe("handlePageTranslation", () => {
 		await handlePageTranslation({
 			currentUserId: 1,
 			pageId: 1,
-			sourceLanguage: "ja",
+			sourceLocale: "ja",
 			geminiApiKey: "test-key",
 			title: "テストタイトル",
 		});
@@ -211,7 +211,7 @@ describe("handlePageTranslation", () => {
 			handlePageTranslation({
 				currentUserId: 1,
 				pageId: 1,
-				sourceLanguage: "en",
+				sourceLocale: "en",
 				geminiApiKey: "test-key",
 				title: "Test Title",
 			}),
@@ -249,7 +249,7 @@ describe("handlePageTranslation", () => {
 		await handlePageTranslation({
 			currentUserId: 1,
 			pageId: 1,
-			sourceLanguage: "en",
+			sourceLocale: "en",
 			geminiApiKey: "test-key",
 			title: "Test Title",
 		});
@@ -291,7 +291,7 @@ describe("handlePageTranslation", () => {
 		await handlePageTranslation({
 			currentUserId: 1,
 			pageId: 1,
-			sourceLanguage: "en",
+			sourceLocale: "en",
 			geminiApiKey: "test-key",
 			title: "Test Title",
 		});
@@ -333,7 +333,7 @@ describe("handlePageTranslation", () => {
 		await handlePageTranslation({
 			currentUserId: 1,
 			pageId: 1,
-			sourceLanguage: "ja",
+			sourceLocale: "ja",
 			geminiApiKey: "test-key",
 			title: "タイトル",
 		});
@@ -402,7 +402,7 @@ describe("handlePageTranslation", () => {
 		await handlePageTranslation({
 			currentUserId: 1,
 			pageId: 1,
-			sourceLanguage: "en",
+			sourceLocale: "en",
 			geminiApiKey: "test-key",
 			title: "Test Title",
 		});

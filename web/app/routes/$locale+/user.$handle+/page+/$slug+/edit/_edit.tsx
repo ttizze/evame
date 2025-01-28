@@ -91,13 +91,13 @@ export async function action({ request, params }: ActionFunctionArgs) {
 	}
 
 	const { title, pageContent, status, tags } = submission.value;
-	const sourceLanguage = await getLocaleFromHtml(pageContent, title);
+	const sourceLocale = await getLocaleFromHtml(pageContent, title);
 	const page = await processPageHtml(
 		title,
 		pageContent,
 		slug,
 		currentUser.id,
-		sourceLanguage,
+		sourceLocale,
 		status,
 	);
 	if (tags) {
@@ -112,7 +112,7 @@ export async function action({ request, params }: ActionFunctionArgs) {
 		await handlePageTranslation({
 			currentUserId: currentUser.id,
 			pageId: page.id,
-			sourceLanguage,
+			sourceLocale,
 			geminiApiKey,
 			title,
 		});

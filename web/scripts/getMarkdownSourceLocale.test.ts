@@ -1,6 +1,6 @@
-import { getMarkdownSourceLanguage } from "./getMarkdownSourceLanguage";
+import { getMarkdownSourceLocale } from "./getMarkdownSourceLocale";
 
-describe("getMarkdownSourceLanguage", () => {
+describe("getMarkdownSourceLocale", () => {
 	it("英語のMarkdownコンテンツを与えると 'en' が返る", async () => {
 		const markdownContent = `
 # Hello World
@@ -16,7 +16,7 @@ console.log("this is code block");
     `;
 		const title = "My Page Title in English";
 
-		const detectedLanguage = await getMarkdownSourceLanguage(
+		const detectedLanguage = await getMarkdownSourceLocale(
 			markdownContent,
 			title,
 		);
@@ -28,7 +28,7 @@ console.log("this is code block");
 		const markdownContent = "";
 		const title = "";
 
-		const detectedLanguage = await getMarkdownSourceLanguage(
+		const detectedLanguage = await getMarkdownSourceLocale(
 			markdownContent,
 			title,
 		);
@@ -48,7 +48,7 @@ console.log("this is code block");
     `;
 		const title = "テストページのタイトル";
 
-		const detectedLanguage = await getMarkdownSourceLanguage(
+		const detectedLanguage = await getMarkdownSourceLocale(
 			markdownContent,
 			title,
 		);

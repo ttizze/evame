@@ -18,7 +18,7 @@ export type PageWithTitle = Omit<
 	| "pageSegments"
 	| "translations"
 	| "userId"
-	| "sourceLanguage"
+	| "sourceLocale"
 	| "isArchived"
 	| "createdAt"
 	| "updatedAt"

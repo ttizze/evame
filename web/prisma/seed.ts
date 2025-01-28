@@ -121,7 +121,7 @@ async function createUserAndPages() {
 			update: {},
 			create: {
 				slug: "evame",
-				sourceLanguage: "en",
+				sourceLocale: "en",
 				content:
 					"Evame is an innovative open-source platform that enables everyone to read articles in their native language, regardless of the original language. Through user-contributed content and collaborative translations, we break down language barriers, fostering global understanding and knowledge sharing.",
 				status: "DRAFT",
@@ -133,7 +133,7 @@ async function createUserAndPages() {
 			update: {},
 			create: {
 				slug: "evame-ja",
-				sourceLanguage: "ja",
+				sourceLocale: "ja",
 				content:
 					"Evameは、誰もが母国語で文章を読めるようにする革新的なオープンソースプラットフォームです。ユーザーによる投稿と翻訳を通じて、言語の障壁を取り除き、世界中の理解と知識の共有を促進します。",
 				status: "DRAFT",

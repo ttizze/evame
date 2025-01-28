@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { getLocaleFromHtml } from "./getLocaleFromHtml";
 
-describe("getPageSourceLanguage - Other Languages", () => {
+describe("getPagesourceLocale - Other Languages", () => {
 	// 長めの英語テストケース
 	test("英語（長文）のコンテンツを正しく検出できるか", async () => {
 		const title = "Long English Title";
