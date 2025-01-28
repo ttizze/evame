@@ -26,7 +26,6 @@ export async function action({ request }: ActionFunctionArgs) {
 	const submission = parseWithZod(await request.formData(), {
 		schema,
 	});
-	console.log(submission);
 	if (submission.status !== "success") {
 		return { lastResult: submission.reply() };
 	}
@@ -51,7 +50,6 @@ export const VoteButtons = memo(function VoteButtons({
 	voteIntent,
 }: VoteButtonsProps) {
 	const fetcher = useFetcher();
-	console.log(translationWithVote);
 
 	const isVoting = fetcher.state !== "idle";
 

@@ -202,10 +202,6 @@ export async function fetchPageCommentsWithUserAndTranslations(
 			createdAt: "asc",
 		},
 	});
-	console.log(
-		pageComments[0].pageCommentSegments[0].pageCommentSegmentTranslations[0]
-			.pageCommentSegmentTranslationVotes,
-	);
 
 	return pageComments.map((comment) => {
 		const pageCommentSegmentsWithTranslations = comment.pageCommentSegments.map(

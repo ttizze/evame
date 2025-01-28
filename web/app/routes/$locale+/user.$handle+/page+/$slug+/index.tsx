@@ -183,7 +183,6 @@ export async function action({ request, params }: ActionFunctionArgs) {
 	const submission = parseWithZod(await request.formData(), {
 		schema: translateSchema,
 	});
-	console.log(submission);
 	const geminiApiKey = await fetchGeminiApiKeyByHandle(currentUser.handle);
 	if (!geminiApiKey) {
 		throw new Response("Gemini API key is not set", { status: 404 });

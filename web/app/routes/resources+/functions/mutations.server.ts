@@ -49,7 +49,6 @@ export async function handleVote(
 	intent: VoteIntent,
 ) {
 	if (intent === VoteIntent.PAGE_SEGMENT_TRANSLATION) {
-		console.log("PAGE_SEGMENT_TRANSLATION");
 		await prisma.$transaction(async (tx) => {
 			const existingVote = await tx.vote.findUnique({
 				where: {
@@ -92,7 +91,6 @@ export async function handleVote(
 			}
 		});
 	} else if (intent === VoteIntent.COMMENT_SEGMENT_TRANSLATION) {
-		console.log("COMMENT_SEGMENT_TRANSLATION");
 		await prisma.$transaction(async (tx) => {
 			const existingVote =
 				await tx.pageCommentSegmentTranslationVote.findUnique({
