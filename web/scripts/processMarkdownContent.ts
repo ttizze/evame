@@ -11,14 +11,14 @@ export async function processMarkdownContent(
 	body: string,
 	pageSlug: string,
 	userId: number,
-	sourceLanguage: string,
+	sourceLocale: string,
 	status: PageStatus,
 ) {
 	const page = await upsertPageWithHtml(
 		pageSlug,
 		body,
 		userId,
-		sourceLanguage,
+		sourceLocale,
 		status,
 	);
 
@@ -32,12 +32,6 @@ export async function processMarkdownContent(
 
 	const htmlContent = String(file);
 
-	await upsertPageWithHtml(
-		pageSlug,
-		htmlContent,
-		userId,
-		sourceLanguage,
-		status,
-	);
+	await upsertPageWithHtml(pageSlug, htmlContent, userId, sourceLocale, status);
 	return page;
 }

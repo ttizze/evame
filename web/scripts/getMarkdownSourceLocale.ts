@@ -1,7 +1,7 @@
 import { loadModule } from "cld3-asm";
 
 // Markdown版
-export async function getMarkdownSourceLanguage(
+export async function getMarkdownSourceLocale(
 	markdownContent: string,
 	title: string,
 ): Promise<string> {

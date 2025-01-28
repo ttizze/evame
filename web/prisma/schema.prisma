@@ -114,7 +114,7 @@ model Page {
   id                    Int                     @id @default(autoincrement())
   slug                  String                  @unique
   content               String
-  sourceLanguage        String                  @default("unknown")
+  sourceLocale          String                  @default("unknown") @map("source_locale")
   status                PageStatus              @default(DRAFT)
   createdAt             DateTime                @default(now()) @map("created_at")
   updatedAt             DateTime                @updatedAt @map("updated_at")

@@ -7,17 +7,17 @@ import { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/
 export async function handlePageTranslation({
 	currentUserId,
 	pageId,
-	sourceLanguage,
+	sourceLocale,
 	geminiApiKey,
 	title,
 }: {
 	currentUserId: number;
 	pageId: number;
-	sourceLanguage: string;
+	sourceLocale: string;
 	geminiApiKey: string;
 	title: string;
 }): Promise<void> {
-	const locale = sourceLanguage === "en" ? "ja" : "en";
+	const locale = sourceLocale === "en" ? "ja" : "en";
 
 	const hasTranslation = await hasExistingTranslation(pageId, locale);
 	if (hasTranslation) {

@@ -35,7 +35,7 @@ export async function processPageHtml(
 	html: string,
 	pageSlug: string,
 	userId: number,
-	sourceLanguage: string,
+	sourceLocale: string,
 	status: PageStatus,
 ) {
 	// HTML 入力に対応する page レコードを作成/更新
@@ -43,7 +43,7 @@ export async function processPageHtml(
 		pageSlug,
 		html,
 		userId,
-		sourceLanguage,
+		sourceLocale,
 		status,
 	);
 
@@ -59,12 +59,6 @@ export async function processPageHtml(
 		.process(html);
 
 	const htmlContent = String(file);
-	await upsertPageWithHtml(
-		pageSlug,
-		htmlContent,
-		userId,
-		sourceLanguage,
-		status,
-	);
+	await upsertPageWithHtml(pageSlug, htmlContent, userId, sourceLocale, status);
 	return page;
 }

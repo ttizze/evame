@@ -5,14 +5,14 @@ export async function upsertPageWithHtml(
 	pageSlug: string,
 	html: string,
 	userId: number,
-	sourceLanguage: string,
+	sourceLocale: string,
 	status: PageStatus,
 ) {
 	return await prisma.page.upsert({
 		where: { slug: pageSlug },
 		update: {
 			content: html,
-			sourceLanguage,
+			sourceLocale,
 			status,
 		},
 		create: {
@@ -20,7 +20,7 @@ export async function upsertPageWithHtml(
 			content: html,
 			userId,
 			status,
-			sourceLanguage,
+			sourceLocale,
 		},
 	});
 }
