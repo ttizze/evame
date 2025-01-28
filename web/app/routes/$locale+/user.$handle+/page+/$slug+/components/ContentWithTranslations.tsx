@@ -8,7 +8,7 @@ import { AddTranslationFormIntent } from "~/routes/resources+/add-translation-fo
 import { VoteIntent } from "~/routes/resources+/vote-buttons";
 import type { PageWithTranslations, SegmentWithTranslations } from "../types";
 import { MemoizedParsedContent } from "./ParsedContent";
-import { SegmentAndTranslationSection } from "./sourceTextAndTranslationSection/SegmentAndTranslationSection";
+import { SegmentAndTranslationSection } from "./segmentAndTranslationSection/SegmentAndTranslationSection";
 import { TranslateActionSection } from "./translateButton/TranslateActionSection";
 
 interface ContentWithTranslationsProps {

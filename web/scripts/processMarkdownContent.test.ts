@@ -74,7 +74,7 @@ This is another test.
 		expect(sortedTexts[1].textAndOccurrenceHash).not.toBeNull();
 	});
 
-	test("should retain sourceTextId after minor edit", async () => {
+	test("should retain segmentId after minor edit", async () => {
 		const pageSlug = "test-page-edit";
 		const title = "Title";
 		const originalMarkdown = `# Title

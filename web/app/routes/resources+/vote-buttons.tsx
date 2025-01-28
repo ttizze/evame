@@ -3,7 +3,7 @@ import type { ActionFunctionArgs } from "@remix-run/node";
 import { useFetcher } from "@remix-run/react";
 import { memo, useMemo } from "react";
 import { z } from "zod";
-import { VoteButton } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/sourceTextAndTranslationSection/VoteButton";
+import { VoteButton } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/segmentAndTranslationSection/VoteButton";
 import type { SegmentTranslationWithVote } from "~/routes/$locale+/user.$handle+/page+/$slug+/types";
 import { authenticator } from "~/utils/auth.server";
 import { cn } from "~/utils/cn";

@@ -8,7 +8,7 @@ import { memo } from "react";
 import type { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
 import type { VoteIntent } from "~/routes/resources+/vote-buttons";
 import type { SegmentWithTranslations } from "../types";
-import { SegmentAndTranslationSection } from "./sourceTextAndTranslationSection/SegmentAndTranslationSection";
+import { SegmentAndTranslationSection } from "./segmentAndTranslationSection/SegmentAndTranslationSection";
 
 interface ParsedContentProps {
 	html: string;
