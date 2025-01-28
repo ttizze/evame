@@ -5,6 +5,8 @@ import parse, {
 	type DOMNode,
 } from "html-react-parser";
 import { memo } from "react";
+import { useHydrated } from "remix-utils/use-hydrated";
+import { Skeleton } from "~/components/ui/skeleton";
 import type { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
 import type { VoteIntent } from "~/routes/resources+/vote-buttons";
 import type { SegmentWithTranslations } from "../types";
@@ -33,6 +35,20 @@ export function ParsedContent({
 	voteIntent,
 	addTranslationFormIntent,
 }: ParsedContentProps) {
+	const isHydrated = useHydrated();
+	if (!isHydrated) {
+		return (
+			// Start of Selection
+			<div className="flex flex-col space-y-3 mt-5">
+				{Array.from({ length: 5 }).map(() => (
+					<Skeleton
+						key={Math.random().toString(36).substring(2, 9)}
+						className="w-full h-5"
+					/>
+				))}
+			</div>
+		);
+	}
 	const sanitizedContent = DOMPurify.sanitize(html);
 	const doc = new DOMParser().parseFromString(sanitizedContent, "text/html");
 

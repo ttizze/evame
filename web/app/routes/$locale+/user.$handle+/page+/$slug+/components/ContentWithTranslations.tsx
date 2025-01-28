@@ -1,6 +1,4 @@
 import type { UserAITranslationInfo } from "@prisma/client";
-import { Loader2 } from "lucide-react";
-import { useHydrated } from "remix-utils/use-hydrated";
 import { LocaleLink } from "~/components/LocaleLink";
 import { TagList } from "~/components/TagList";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -34,8 +32,6 @@ export function ContentWithTranslations({
 	showOriginal = true,
 	showTranslation = true,
 }: ContentWithTranslationsProps) {
-	const isHydrated = useHydrated();
-
 	return (
 		<>
 			<h1 className="!mb-0 ">
@@ -92,24 +88,18 @@ export function ContentWithTranslations({
 				className="pt-3"
 				intent="translatePage"
 			/>
-			{!isHydrated ? (
-				<div className="w-full h-full flex items-center justify-center">
-					<Loader2 className="w-10 h-10 animate-spin" />
-				</div>
-			) : (
-				<MemoizedParsedContent
-					html={pageWithTranslations.page.content}
-					segmentWithTranslations={pageWithTranslations.segmentWithTranslations}
-					currentHandle={currentHandle}
-					showOriginal={showOriginal}
-					showTranslation={showTranslation}
-					locale={locale}
-					voteIntent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
-					addTranslationFormIntent={
-						AddTranslationFormIntent.PAGE_SEGMENT_TRANSLATION
-					}
-				/>
-			)}
+			<MemoizedParsedContent
+				html={pageWithTranslations.page.content}
+				segmentWithTranslations={pageWithTranslations.segmentWithTranslations}
+				currentHandle={currentHandle}
+				showOriginal={showOriginal}
+				showTranslation={showTranslation}
+				locale={locale}
+				voteIntent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
+				addTranslationFormIntent={
+					AddTranslationFormIntent.PAGE_SEGMENT_TRANSLATION
+				}
+			/>
 		</>
 	);
 }
