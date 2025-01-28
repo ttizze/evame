@@ -19,7 +19,7 @@ import { supportedLocaleOptions } from "~/constants/languages";
 import i18nServer from "~/i18n.server";
 import { fetchPaginatedPublicPagesWithInfo } from "~/routes/$locale+/functions/queries.server";
 import type { PageCardLocalizedType } from "~/routes/$locale+/functions/queries.server";
-import { SegmentAndTranslationSection } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/sourceTextAndTranslationSection/SegmentAndTranslationSection";
+import { SegmentAndTranslationSection } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/segmentAndTranslationSection/SegmentAndTranslationSection";
 import { fetchPageWithTranslations } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
 import { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
 import { VoteIntent } from "~/routes/resources+/vote-buttons";
