@@ -51,6 +51,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	let heroTitle = null;
 	let heroText = null;
 	let existLocales: string[] = [];
+	let sourceLocale = "en";
 	if (!currentUser) {
 		//localeがjaならevameを取得｡日本人に原文英語､訳文日本語のページを表示するため｡
 		const pageName = locale === "ja" ? "evame" : "evame-ja";
@@ -73,6 +74,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		heroTitle = title;
 		heroText = text;
 		existLocales = topPageWithTranslations.existLocales;
+		sourceLocale = topPageWithTranslations.page.sourceLocale;
 	}
 
 	// タブ状態判定
@@ -130,6 +132,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			totalPages,
 			currentPage,
 			existLocales,
+			locale,
+			sourceLocale,
 		},
 		{
 			headers,
@@ -147,6 +151,8 @@ export default function Home() {
 		totalPages,
 		currentPage,
 		existLocales,
+		locale,
+		sourceLocale,
 	} = useLoaderData<typeof loader>();
 	const [searchParams, setSearchParams] = useSearchParams();
 
@@ -194,8 +200,8 @@ export default function Home() {
 								currentHandle={undefined}
 								hasGeminiApiKey={false}
 								userAITranslationInfo={null}
-								sourceLocale="en"
-								locale="en"
+								sourceLocale={sourceLocale}
+								locale={locale}
 								existLocales={existLocales}
 								intent="translatePage"
 							/>
