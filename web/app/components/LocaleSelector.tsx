@@ -15,7 +15,7 @@ import {
 	PopoverTrigger,
 } from "~/components/ui/popover";
 import { cn } from "~/utils/cn";
-import { useMoveLocale } from "./hooks/useMoveLocale";
+import { useMoveLocale } from "../routes/$locale+/user.$handle+/page+/$slug+/components/translateButton/hooks/useMoveLocale";
 
 interface LocaleOption {
 	code: string;

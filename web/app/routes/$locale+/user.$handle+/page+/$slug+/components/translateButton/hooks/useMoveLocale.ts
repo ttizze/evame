@@ -1,15 +1,16 @@
-import { useParams, useSubmit } from "@remix-run/react";
+import { useLocation, useSubmit } from "@remix-run/react";
 
 export function useMoveLocale() {
-	const params = useParams();
+	const location = useLocation();
 	const submit = useSubmit();
 
-	return (value: string) => {
-		const { handle, slug } = params;
+	return (newLocale: string) => {
+		const currentUrl = location.pathname + location.search + location.hash;
+
 		const formData = new FormData();
-		formData.set("locale", value);
-		formData.set("handle", handle ?? "");
-		formData.set("slug", slug ?? "");
+		formData.set("locale", newLocale);
+		formData.set("currentUrl", currentUrl);
+
 		submit(formData, {
 			method: "post",
 			action: "/resources/locale-selector",

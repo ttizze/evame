@@ -80,6 +80,7 @@ export function ContentWithTranslations({
 			</div>
 			<TranslateActionSection
 				pageId={pageWithTranslations.page.id}
+				currentHandle={currentHandle}
 				userAITranslationInfo={userAITranslationInfo}
 				hasGeminiApiKey={hasGeminiApiKey}
 				sourceLocale={pageWithTranslations.page.sourceLocale}

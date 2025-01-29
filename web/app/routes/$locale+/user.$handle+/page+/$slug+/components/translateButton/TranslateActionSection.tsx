@@ -2,10 +2,12 @@ import type { UserAITranslationInfo } from "@prisma/client";
 import { Languages } from "lucide-react";
 import { useState } from "react";
 import { supportedLocaleOptions } from "~/constants/languages";
-import LocaleSelector from "./LocaleSelector";
+import LocaleSelector from "../../../../../../../components/LocaleSelector";
 import { TranslateSettingsDialog } from "./TranslateSettingsDialog";
+
 type TranslateActionSectionProps = {
 	pageId: number;
+	currentHandle: string | undefined;
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
 	sourceLocale: string;
@@ -17,6 +19,7 @@ type TranslateActionSectionProps = {
 
 export function TranslateActionSection({
 	pageId,
+	currentHandle,
 	hasGeminiApiKey,
 	userAITranslationInfo,
 	sourceLocale,
@@ -62,6 +65,7 @@ export function TranslateActionSection({
 			<TranslateSettingsDialog
 				open={isSettingsOpen}
 				onOpenChange={setIsSettingsOpen}
+				currentHandle={currentHandle}
 				pageId={pageId}
 				locale={locale}
 				hasGeminiApiKey={hasGeminiApiKey}
