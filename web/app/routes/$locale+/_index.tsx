@@ -20,6 +20,7 @@ import i18nServer from "~/i18n.server";
 import { fetchPaginatedPublicPagesWithInfo } from "~/routes/$locale+/functions/queries.server";
 import type { PageCardLocalizedType } from "~/routes/$locale+/functions/queries.server";
 import { SegmentAndTranslationSection } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/segmentAndTranslationSection/SegmentAndTranslationSection";
+import { TranslateActionSection } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/translateButton/TranslateActionSection";
 import { fetchPageWithTranslations } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
 import { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
 import { VoteIntent } from "~/routes/resources+/vote-buttons";
@@ -47,11 +48,12 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		url.pathname = `/${locale}${url.pathname}`;
 		return redirect(url.toString());
 	}
-
 	let heroTitle = null;
 	let heroText = null;
+	let existLocales: string[] = [];
 	if (!currentUser) {
-		const pageName = locale === "en" ? "evame-ja" : "evame";
+		//localeがjaならevameを取得｡日本人に原文英語､訳文日本語のページを表示するため｡
+		const pageName = locale === "ja" ? "evame" : "evame-ja";
 		const topPageWithTranslations = await fetchPageWithTranslations(
 			pageName,
 			locale,
@@ -70,6 +72,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 		}
 		heroTitle = title;
 		heroText = text;
+		existLocales = topPageWithTranslations.existLocales;
 	}
 
 	// タブ状態判定
@@ -126,6 +129,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 			pagesWithInfo,
 			totalPages,
 			currentPage,
+			existLocales,
 		},
 		{
 			headers,
@@ -142,6 +146,7 @@ export default function Home() {
 		pagesWithInfo,
 		totalPages,
 		currentPage,
+		existLocales,
 	} = useLoaderData<typeof loader>();
 	const [searchParams, setSearchParams] = useSearchParams();
 
@@ -169,7 +174,7 @@ export default function Home() {
 			{!currentUser && heroTitle && heroText && (
 				<main className="prose dark:prose-invert sm:prose lg:prose-lg mx-auto px-2 py-10 flex flex-col items-center justify-center">
 					<div className="max-w-4xl w-full">
-						<h1 className="text-7xl font-bold mb-20 text-center">
+						<h1 className="text-7xl font-bold mb-10 text-center">
 							<SegmentAndTranslationSection
 								segmentWithTranslations={heroTitle}
 								sourceTextClassName="w-full bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text !text-transparent mb-2"
@@ -183,7 +188,18 @@ export default function Home() {
 								}
 							/>
 						</h1>
-
+						<div className="flex justify-center mb-10">
+							<TranslateActionSection
+								pageId={0}
+								currentHandle={undefined}
+								hasGeminiApiKey={false}
+								userAITranslationInfo={null}
+								sourceLocale="en"
+								locale="en"
+								existLocales={existLocales}
+								intent="translatePage"
+							/>
+						</div>
 						<span className="text-xl mb-12 w-full">
 							<SegmentAndTranslationSection
 								segmentWithTranslations={heroText}
@@ -198,6 +214,7 @@ export default function Home() {
 								}
 							/>
 						</span>
+
 						<div className="mb-12 flex justify-center mt-10">
 							<StartButton className="w-60 h-12 text-xl" />
 						</div>

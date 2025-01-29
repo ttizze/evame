@@ -224,17 +224,23 @@ export async function action({ request, params }: ActionFunctionArgs) {
 				locale,
 			);
 
-			const commentsSegmentsArray = pageWithComments.pageComments.map(
-				(comment) => {
-					return {
-						commentId: comment.id,
-						segments: comment.pageCommentSegments.map((segment) => ({
-							number: segment.number,
-							text: segment.text,
-						})),
-					};
-				},
-			);
+			const commentsSegmentsArray = pageWithComments.pageComments.map((comment) => {
+				const segments = comment.pageCommentSegments.map((segment) => ({
+					number: segment.number,
+					text: segment.text,
+				}));
+				//titleを追加しておく
+				segments.push({
+					number: 0,
+					text: pageWithComments.pageSegments[0].text,
+				});
+
+				return {
+					commentId: comment.id,
+					segments,
+				};
+			});
+			console.log(commentsSegmentsArray);
 			for (const comment of commentsSegmentsArray) {
 				const queue = getTranslateUserQueue(currentUser.id);
 				await queue.add(`translate-${currentUser.id}`, {
@@ -358,6 +364,7 @@ export default function Page() {
 							<h2 className="text-2xl font-bold">Comments</h2>
 							<TranslateActionSection
 								pageId={pageWithTranslations.page.id}
+								currentHandle={currentUser?.handle}
 								userAITranslationInfo={userAITranslationInfo}
 								hasGeminiApiKey={hasGeminiApiKey}
 								sourceLocale={pageWithTranslations.page.sourceLocale}
