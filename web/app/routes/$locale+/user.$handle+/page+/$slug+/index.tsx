@@ -224,22 +224,24 @@ export async function action({ request, params }: ActionFunctionArgs) {
 				locale,
 			);
 
-			const commentsSegmentsArray = pageWithComments.pageComments.map((comment) => {
-				const segments = comment.pageCommentSegments.map((segment) => ({
-					number: segment.number,
-					text: segment.text,
-				}));
-				//titleを追加しておく
-				segments.push({
-					number: 0,
-					text: pageWithComments.pageSegments[0].text,
-				});
+			const commentsSegmentsArray = pageWithComments.pageComments.map(
+				(comment) => {
+					const segments = comment.pageCommentSegments.map((segment) => ({
+						number: segment.number,
+						text: segment.text,
+					}));
+					//titleを追加しておく
+					segments.push({
+						number: 0,
+						text: pageWithComments.pageSegments[0].text,
+					});
 
-				return {
-					commentId: comment.id,
-					segments,
-				};
-			});
+					return {
+						commentId: comment.id,
+						segments,
+					};
+				},
+			);
 			console.log(commentsSegmentsArray);
 			for (const comment of commentsSegmentsArray) {
 				const queue = getTranslateUserQueue(currentUser.id);
