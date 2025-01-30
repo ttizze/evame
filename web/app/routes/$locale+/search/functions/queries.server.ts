@@ -22,7 +22,7 @@ export async function searchTitle(
 			skip,
 			take,
 			where: {
-				sourceTexts: {
+				pageSegments: {
 					some: {
 						text: { contains: query, mode: "insensitive" },
 						number: 0,
@@ -34,7 +34,7 @@ export async function searchTitle(
 		}),
 		prisma.page.count({
 			where: {
-				sourceTexts: {
+				pageSegments: {
 					some: {
 						text: { contains: query, mode: "insensitive" },
 						number: 0,
@@ -185,12 +185,12 @@ export async function searchUsers(
 			skip,
 			take,
 			where: {
-				displayName: { contains: query, mode: "insensitive" },
+				name: { contains: query, mode: "insensitive" },
 			},
 		}),
 		prisma.user.count({
 			where: {
-				displayName: { contains: query, mode: "insensitive" },
+				name: { contains: query, mode: "insensitive" },
 			},
 		}),
 	]);

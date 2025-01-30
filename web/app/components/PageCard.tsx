@@ -9,7 +9,7 @@ import {
 	CardTitle,
 } from "~/components/ui/card";
 import type { PageCardLocalizedType } from "~/routes/$locale+/functions/queries.server";
-import { PageActionsDropdown } from "~/routes/$locale+/user.$userName+/components/PageActionsDropdown";
+import { PageActionsDropdown } from "~/routes/$locale+/user.$handle+/components/PageActionsDropdown";
 import { LikeButton } from "~/routes/resources+/like-button";
 
 type PageCardProps = {
@@ -44,10 +44,10 @@ export function PageCard({
 			<CardHeader>
 				<LocaleLink to={pageLink} className="block">
 					<CardTitle className="flex flex-col pr-3 break-all overflow-wrap-anywhere">
-						{pageCard.sourceTexts[0].text}
-						{pageCard.sourceTexts[0].translateTexts.length > 0 && (
+						{pageCard.pageSegments[0].text}
+						{pageCard.pageSegments[0].pageSegmentTranslations.length > 0 && (
 							<span className="text-sm text-gray-600">
-								{pageCard.sourceTexts[0].translateTexts[0].text}
+								{pageCard.pageSegments[0].pageSegmentTranslations[0].text}
 							</span>
 						)}
 					</CardTitle>
@@ -59,17 +59,12 @@ export function PageCard({
 				<div className="flex justify-between items-center">
 					<LocaleLink to={userLink} className="flex items-center">
 						<Avatar className="w-6 h-6 mr-2">
-							<AvatarImage
-								src={pageCard.user.icon}
-								alt={pageCard.user.displayName}
-							/>
+							<AvatarImage src={pageCard.user.image} alt={pageCard.user.name} />
 							<AvatarFallback>
-								{pageCard.user.displayName.charAt(0).toUpperCase()}
+								{pageCard.user.handle.charAt(0).toUpperCase()}
 							</AvatarFallback>
 						</Avatar>
-						<span className="text-sm text-gray-600">
-							{pageCard.user.displayName}
-						</span>
+						<span className="text-sm text-gray-600">{pageCard.user.name}</span>
 					</LocaleLink>
 
 					<LikeButton

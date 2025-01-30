@@ -18,9 +18,9 @@ This is another test.
 			where: { id: 1 },
 			create: {
 				id: 1,
-				userName: "test",
-				displayName: "test",
-				icon: "test",
+				handle: "test",
+				name: "test",
+				image: "test",
 			},
 			update: {},
 		});
@@ -36,7 +36,7 @@ This is another test.
 		// ページがDBに存在し、HTMLが変換されているか確認
 		const dbPage = await prisma.page.findUnique({
 			where: { slug: pageSlug },
-			include: { sourceTexts: true },
+			include: { pageSegments: true },
 		});
 
 		expect(dbPage).not.toBeNull();
@@ -44,7 +44,7 @@ This is another test.
 
 		// source_textsが挿入されているか確認
 		// このMarkdownには `This is a test.` と `This is another test.` の2つの本文テキストノードがある
-		expect(dbPage.sourceTexts.length).toBeGreaterThanOrEqual(2);
+		expect(dbPage.pageSegments.length).toBeGreaterThanOrEqual(2);
 
 		// ページHTMLがdata-id付きspanを含むか確認
 		// processMarkdownContent後にはHTMLが更新されているはず
@@ -58,14 +58,14 @@ This is another test.
 		const htmlContent = updatedPage.content;
 		// <span data-id="...">This is a test.</span> がHTML内に挿入されることを期待
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">This is a test\.<\/span>/,
+			/<span data-number-id="\d+">This is a test\.<\/span>/,
 		);
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">This is another test\.<\/span>/,
+			/<span data-number-id="\d+">This is another test\.<\/span>/,
 		);
 
 		// source_textsのnumberが連番になっているかチェック
-		const sortedTexts = dbPage.sourceTexts.sort((a, b) => a.number - b.number);
+		const sortedTexts = dbPage.pageSegments.sort((a, b) => a.number - b.number);
 		expect(sortedTexts[0].number).toBe(0);
 		expect(sortedTexts[1].number).toBe(1);
 
@@ -74,7 +74,7 @@ This is another test.
 		expect(sortedTexts[1].textAndOccurrenceHash).not.toBeNull();
 	});
 
-	test("should retain sourceTextId after minor edit", async () => {
+	test("should retain segmentId after minor edit", async () => {
 		const pageSlug = "test-page-edit";
 		const title = "Title";
 		const originalMarkdown = `# Title
@@ -92,9 +92,9 @@ This is another line.
 			where: { id: 2 },
 			create: {
 				id: 2,
-				userName: "editor",
-				displayName: "editor",
-				icon: "editor",
+				handle: "editor",
+				name: "editor",
+				image: "editor",
 			},
 			update: {},
 		});
@@ -110,14 +110,14 @@ This is another line.
 		);
 		const dbPage1 = await prisma.page.findUnique({
 			where: { slug: pageSlug },
-			include: { sourceTexts: true },
+			include: { pageSegments: true },
 		});
 		expect(dbPage1).not.toBeNull();
 		if (!dbPage1) return;
 
-		expect(dbPage1.sourceTexts.length).toBeGreaterThanOrEqual(4);
+		expect(dbPage1.pageSegments.length).toBeGreaterThanOrEqual(4);
 		const originalMap = new Map<string, number>();
-		for (const st of dbPage1.sourceTexts) {
+		for (const st of dbPage1.pageSegments) {
 			originalMap.set(st.text, st.id);
 		}
 		// Markdown変更
@@ -145,14 +145,14 @@ new line
 		);
 		const dbPage2 = await prisma.page.findUnique({
 			where: { slug: pageSlug },
-			include: { sourceTexts: true },
+			include: { pageSegments: true },
 		});
 		expect(dbPage2).not.toBeNull();
 		if (!dbPage2) return;
 
-		expect(dbPage2.sourceTexts.length).toBeGreaterThanOrEqual(5);
+		expect(dbPage2.pageSegments.length).toBeGreaterThanOrEqual(5);
 		const editedMap = new Map<string, number>();
-		for (const st of dbPage2.sourceTexts) {
+		for (const st of dbPage2.pageSegments) {
 			editedMap.set(st.text, st.id);
 		}
 		expect(editedMap.get("This is another line.")).toBe(
@@ -207,9 +207,9 @@ new line
 			where: { id: 3 },
 			create: {
 				id: 3,
-				userName: "variety",
-				displayName: "variety",
-				icon: "variety",
+				handle: "variety",
+				name: "variety",
+				image: "variety",
 			},
 			update: {},
 		});
@@ -225,29 +225,29 @@ new line
 
 		const dbPage = await prisma.page.findUnique({
 			where: { slug: pageSlug },
-			include: { sourceTexts: true },
+			include: { pageSegments: true },
 		});
 		expect(dbPage).not.toBeNull();
 		if (!dbPage) return;
 
 		// 複数のテキストブロックが想定される
 		// Heading, List items, Bold text, italic text, Link, Blockquote, inline code, footnote, table cells, task listなど多数
-		expect(dbPage.sourceTexts.length).toBeGreaterThanOrEqual(10);
+		expect(dbPage.pageSegments.length).toBeGreaterThanOrEqual(10);
 
 		const htmlContent = dbPage.content;
 
 		expect(htmlContent).toMatch(
-			/<span data-source-text-id="\d+">\<strong>Bold text<\/strong> and <em>italic text<\/em><\/span>/,
+			/<span data-number-id="\d+">\<strong>Bold text<\/strong> and <em>italic text<\/em><\/span>/,
 		);
 
 		expect(htmlContent).not.toMatch(
-			/<span data-source-text-id="\d+">code block<\/span>/,
+			/<span data-number-id="\d+">code block<\/span>/,
 		);
 
 		// 新たに追加した要素についても確認
 		// 画像代替テキスト "Alt text"
 		expect(htmlContent).not.toMatch(
-			/<span data-source-text-id="\d+">Alt text<\/span>/,
+			/<span data-number-id="\d+">Alt text<\/span>/,
 		);
 	});
 	test("should handle various markdown syntaxes and verify numbering", async () => {
@@ -278,9 +278,9 @@ new line
 			where: { id: 3 },
 			create: {
 				id: 3,
-				userName: "variety",
-				displayName: "variety",
-				icon: "variety",
+				handle: "variety",
+				name: "variety",
+				image: "variety",
 			},
 			update: {},
 		});
@@ -296,15 +296,15 @@ new line
 
 		const dbPage = await prisma.page.findUnique({
 			where: { slug: pageSlug },
-			include: { sourceTexts: true },
+			include: { pageSegments: true },
 		});
 		expect(dbPage).not.toBeNull();
 		if (!dbPage) return;
 
-		const { sourceTexts } = dbPage;
-		expect(sourceTexts.length).toBeGreaterThanOrEqual(7);
+		const { pageSegments } = dbPage;
+		expect(pageSegments.length).toBeGreaterThanOrEqual(7);
 
-		const textsByNumber = [...sourceTexts].sort((a, b) => a.number - b.number);
+		const textsByNumber = [...pageSegments].sort((a, b) => a.number - b.number);
 
 		expect(textsByNumber[0].text).toBe("Heading");
 

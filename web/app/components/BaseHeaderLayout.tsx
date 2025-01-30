@@ -47,19 +47,16 @@ export function BaseHeaderLayout({
 						<DropdownMenu>
 							<DropdownMenuTrigger>
 								<Avatar className="w-6 h-6">
-									<AvatarImage
-										src={currentUser.icon}
-										alt={currentUser.displayName}
-									/>
+									<AvatarImage src={currentUser.image} alt={currentUser.name} />
 									<AvatarFallback>
-										{currentUser.userName.charAt(0).toUpperCase()}
+										{currentUser.handle.charAt(0).toUpperCase()}
 									</AvatarFallback>
 								</Avatar>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent className="m-2 p-0 rounded-xl min-w-40">
 								<DropdownMenuItem asChild>
 									<NavLocaleLink
-										to={`/user/${currentUser.userName}`}
+										to={`/user/${currentUser.handle}`}
 										className={({ isPending }) =>
 											isPending
 												? "opacity-50"
@@ -67,9 +64,9 @@ export function BaseHeaderLayout({
 										}
 									>
 										<div className="flex flex-col items-start">
-											{currentUser.displayName}
+											{currentUser.name}
 											<span className="text-xs text-gray-500">
-												@{currentUser.userName}
+												@{currentUser.handle}
 											</span>
 										</div>
 									</NavLocaleLink>
@@ -77,7 +74,7 @@ export function BaseHeaderLayout({
 								<DropdownMenuSeparator className="my-0" />
 								<DropdownMenuItem asChild>
 									<NavLocaleLink
-										to={`/user/${currentUser.userName}/page-management`}
+										to={`/user/${currentUser.handle}/page-management`}
 										className={({ isPending }) =>
 											isPending
 												? "opacity-50"

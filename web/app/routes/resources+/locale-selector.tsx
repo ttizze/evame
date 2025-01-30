@@ -6,18 +6,29 @@ import { localeCookie } from "~/i18n.server";
 export async function action({ request }: ActionFunctionArgs) {
 	const formData = await request.formData();
 	const newLocale = formData.get("locale")?.toString() || "en";
-	const userName = formData.get("userName")?.toString() || "";
-	const slug = formData.get("slug")?.toString() || "";
+	const currentUrlString = formData.get("currentUrl")?.toString() || "";
+
+	// ここで request.url は完全な絶対URL (例: https://example.com/current-path)
+	// 相対パス currentUrlString を解決するため第二引数に指定
+	const requestUrl = new URL(request.url);
+	const currentUrl = new URL(currentUrlString, requestUrl);
 
 	const headers = new Headers();
 	headers.append("Set-Cookie", await localeCookie.serialize(newLocale));
 
-	let redirectPath = `/${newLocale}`;
-	if (userName && slug) {
-		redirectPath += `/user/${userName}/page/${slug}`;
-	} else if (userName) {
-		redirectPath += `/user/${userName}`;
-	}
+	const pathSegments = currentUrl.pathname.split("/").filter(Boolean);
 
-	return redirect(redirectPath, { headers });
+	pathSegments.shift();
+
+	pathSegments.unshift(newLocale);
+
+	// 新しいパスを組み立て
+	const newPath = `/${pathSegments.join("/")}`;
+	// 検索パラメータやハッシュは元のまま付与
+	const finalUrl = new URL(
+		newPath + currentUrl.search + currentUrl.hash,
+		currentUrl.origin,
+	);
+
+	return redirect(finalUrl.toString(), { headers });
 }

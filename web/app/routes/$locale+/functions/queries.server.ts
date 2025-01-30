@@ -9,18 +9,18 @@ export function createPageCardSelect(locale?: string) {
 		status: true,
 		user: {
 			select: {
-				userName: true,
-				displayName: true,
-				icon: true,
+				handle: true,
+				name: true,
+				image: true,
 				profile: true,
 			},
 		},
-		sourceTexts: {
+		pageSegments: {
 			where: { number: 0 },
 			select: {
 				number: true,
 				text: true,
-				translateTexts: {
+				pageSegmentTranslations: {
 					where: locale ? { locale } : {},
 					select: {
 						text: true,
@@ -90,7 +90,7 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	// 共通フィルタ
 	const baseWhere: Prisma.PageWhereInput = {
 		status: "PUBLIC",
-		sourceTexts: { some: { number: 0 } },
+		pageSegments: { some: { number: 0 } },
 	};
 
 	// 所有者のみ表示したい場合
@@ -122,7 +122,7 @@ export async function fetchPaginatedPublicPagesWithInfo({
 		throw new Error("User ID or Guest ID is required");
 	}
 
-	// 実際に使うselectを生成 (translateTexts.localeなどを含む)
+	// 実際に使うselectを生成 (localeなどを含む)
 	const pageCardSelect = createPageCardSelect(locale);
 
 	// findManyとcountを同時並列で呼び出し

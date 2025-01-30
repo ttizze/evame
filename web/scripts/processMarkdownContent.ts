@@ -4,21 +4,21 @@ import rehypeStringify from "rehype-stringify";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
-import { upsertPageWithHtml } from "~/routes/$locale+/user.$userName+/page+/$slug+/edit/functions/mutations.server";
-import { rehypeAddDataId } from "~/routes/$locale+/user.$userName+/page+/$slug+/edit/utils/processHtmlContent";
+import { upsertPageWithHtml } from "~/routes/$locale+/user.$handle+/page+/$slug+/edit/functions/mutations.server";
+import { rehypeAddDataId } from "~/routes/$locale+/user.$handle+/page+/$slug+/edit/utils/processHtmlContent";
 export async function processMarkdownContent(
 	title: string,
 	body: string,
 	pageSlug: string,
 	userId: number,
-	sourceLanguage: string,
+	sourceLocale: string,
 	status: PageStatus,
 ) {
 	const page = await upsertPageWithHtml(
 		pageSlug,
 		body,
 		userId,
-		sourceLanguage,
+		sourceLocale,
 		status,
 	);
 
@@ -32,12 +32,6 @@ export async function processMarkdownContent(
 
 	const htmlContent = String(file);
 
-	await upsertPageWithHtml(
-		pageSlug,
-		htmlContent,
-		userId,
-		sourceLanguage,
-		status,
-	);
+	await upsertPageWithHtml(pageSlug, htmlContent, userId, sourceLocale, status);
 	return page;
 }

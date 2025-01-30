@@ -3,16 +3,38 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-interface SeedText {
-	text: string;
-	number: number;
-	pageId: number;
-	textAndOccurrenceHash: string;
-	translations: {
-		text: string;
-		locale: string;
-	}[];
-}
+const JA_NUMBER_0 = "世界とつながる";
+const JA_NUMBER_1 = `Evameは、あなたが書いた記事を多言語に翻訳し、世界中の読者へ届けるコミュニティです。
+メニューから好きな言語を選ぶだけで、記事やコメントを思いのままに楽しめます。
+海外の読者とも手軽に交流でき、新たな出会いが生まれるかもしれません。
+さあ、Evameであなたのアイデアや物語を世界に向けて発信してみましょう。`;
+
+const EN_NUMBER_0: string = "Connect with the world";
+const EN_NUMBER_1 = `Evame is a community that translates the articles you write into multiple languages and delivers them to readers around the world.
+By simply selecting your preferred language from the menu, you can enjoy articles and comments however you like.
+You can also easily interact with readers overseas, potentially creating new connections.
+Now, let's share your ideas and stories with the world through Evame!`;
+
+// 中国語（簡体字）版
+const ZH_NUMBER_0: string = "与世界相连";
+const ZH_NUMBER_1 = `Evame 是一个将您所写的文章翻译成多种语言并传播给全世界读者的社区。
+只需从菜单中选择您喜欢的语言，就能随心所欲地阅读文章和评论。
+您也可以轻松地与海外读者互动，或许会结识新的朋友。
+现在，就让我们通过 Evame 向全世界分享您的想法和故事吧！`;
+
+// 韓国語版
+const KO_NUMBER_0: string = "세상과 연결되다";
+const KO_NUMBER_1 = `Evame는 당신이 작성한 기사를 여러 언어로 번역하여 전 세계 독자들에게 전달하는 커뮤니ティ입니다.
+메뉴에서 원하는 언어를 선택하기만 하면 기사와 댓글을 원하는 대로 즐길 수 있습니다.
+해외 독자들과도 쉽게 교류할 수 있어 새로운 만남이 생길지도 모릅니다.
+이제 Evame를 통해 당신의 아이디어와 이야기를 전 세계에 전해보세요!`;
+
+// スペイン語版
+const ES_NUMBER_0: string = "Conéctate con el mundo";
+const ES_NUMBER_1 = `Evame es una comunidad que traduce los artículos que escribes a varios idiomas y los lleva a lectores de todo el mundo.
+Con solo elegir tu idioma preferido en el menú, puedes disfrutar de artículos y comentarios de la manera que más te guste.
+También puedes interactuar fácilmente con lectores de otros países, lo que podría dar lugar a nuevos encuentros.
+¡Ahora, comparte tus ideas e historias con el mundo a través de Evame!`;
 
 async function seed() {
 	await addRequiredData();
@@ -22,91 +44,184 @@ async function seed() {
 	}
 }
 
+interface TranslationInput {
+	locale: string;
+	text: string;
+	userId: number;
+}
+
+interface UpsertSegmentParams {
+	pageId: number;
+	number: number;
+	text: string;
+	textAndOccurrenceHash: string;
+	translations: TranslationInput[];
+}
+async function upsertSegment(params: UpsertSegmentParams) {
+	await prisma.pageSegment.upsert({
+		where: {
+			pageId_number: { pageId: params.pageId, number: params.number },
+		},
+		update: {
+			text: params.text,
+			number: params.number,
+			pageId: params.pageId,
+			textAndOccurrenceHash: params.textAndOccurrenceHash,
+			pageSegmentTranslations: {
+				create: params.translations.map((t) => ({
+					locale: t.locale,
+					text: t.text,
+					userId: t.userId,
+				})),
+			},
+		},
+		create: {
+			text: params.text,
+			number: params.number,
+			pageId: params.pageId,
+			textAndOccurrenceHash: params.textAndOccurrenceHash,
+			pageSegmentTranslations: {
+				create: params.translations.map((t) => ({
+					locale: t.locale,
+					text: t.text,
+					userId: t.userId,
+				})),
+			},
+		},
+	});
+}
 async function addRequiredData() {
 	const { evame, evameEnPage, evameJaPage } = await createUserAndPages();
 
-	const seedTexts: SeedText[] = [
-		{
-			text: "Write to the World",
-			number: 0,
+	await Promise.all([
+		upsertSegment({
 			pageId: evameEnPage.id,
-			textAndOccurrenceHash: "write-to-the-world",
-			translations: [
-				{
-					text: "世界に向けて書く",
-					locale: "ja",
-				},
-			],
-		},
-		{
-			text: `Evame is an open platform where anyone can read and write articles in their own language.
-			User-submitted posts are automatically translated into multiple languages,
-			allowing people around the globe to share and discover stories without linguistic barriers.
-			Community-driven corrections and voting continually improve translation quality, fostering
-			an environment where knowledge and ideas flow freely across borders.`,
-			number: 1,
-			textAndOccurrenceHash:
-				"evame-is-an-innovative-open-source-platform-that-enables-everyone-to-read-articles-in-their-native-language-regardless-of-the-original-language-through-user-contributed-content-and-collaborative-translations-we-break-down-language-barriers-fostering-global-understanding-and-knowledge-sharing",
-			pageId: evameEnPage.id,
-			translations: [
-				{
-					text: `Evameは、あなたの記事を翻訳し、世界中の読者に届けるコミュニティです。
-					母国語で思いのまま書けば、翻訳を通じて世界の読者があなたの文章を楽しめます。
-					さらに、コミュニティの投票と修正で翻訳精度がどんどん良くなるから、海外の反応も得やすい。
-					Evameで、あらゆる知識や物語を互いに届け合いましょう。`,
-					locale: "ja",
-				},
-			],
-		},
-		{
-			text: "世界に向けて書く",
 			number: 0,
-			pageId: evameJaPage.id,
-			textAndOccurrenceHash: "世界に向けて書く",
+			text: EN_NUMBER_0,
+			textAndOccurrenceHash: "evame-en-segment-0",
 			translations: [
 				{
-					text: "Write to the World",
-					locale: "en",
+					locale: "ja",
+					text: JA_NUMBER_0,
+					userId: evame.id,
+				},
+				{
+					locale: "zh",
+					text: ZH_NUMBER_0,
+					userId: evame.id,
+				},
+				{
+					locale: "ko",
+					text: KO_NUMBER_0,
+					userId: evame.id,
+				},
+				{
+					locale: "es",
+					text: ES_NUMBER_0,
+					userId: evame.id,
 				},
 			],
-		},
-		{
-			text: `Evameは、あなたの記事を翻訳し、世界中の読者に届けるコミュニティです。
-					母国語で思いのまま書けば、翻訳を通じて世界の読者があなたの文章を楽しめます。
-					さらに、コミュニティの投票と修正で翻訳精度がどんどん良くなるから、海外の反応も得やすい。
-					Evameで、あらゆる知識や物語を互いに届け合いましょう。`,
+		}),
+		upsertSegment({
+			pageId: evameEnPage.id,
 			number: 1,
-			pageId: evameJaPage.id,
-			textAndOccurrenceHash:
-				"evame-is-an-innovative-open-source-platform-that-enables-everyone-to-read-articles-in-their-native-language-regardless-of-the-original-language-through-user-contributed-content-and-collaborative-translations-we-break-down-language-barriers-fostering-global-understanding-and-knowledge-sharing",
+			text: EN_NUMBER_1,
+			textAndOccurrenceHash: "evame-en-segment-1",
 			translations: [
 				{
-					text: "Evame is an innovative open-source platform that enables everyone to read articles in their native language, regardless of the original language. Through user-contributed content and collaborative translations, we break down language barriers, fostering global understanding and knowledge sharing.",
-					locale: "en",
+					locale: "ja",
+					text: JA_NUMBER_1,
+					userId: evame.id,
+				},
+				{
+					locale: "zh",
+					text: ZH_NUMBER_1,
+					userId: evame.id,
+				},
+				{
+					locale: "ko",
+					text: KO_NUMBER_1,
+					userId: evame.id,
+				},
+				{
+					locale: "es",
+					text: ES_NUMBER_1,
+					userId: evame.id,
 				},
 			],
-		},
-	];
-
-	await Promise.all(
-		seedTexts.map((text) => upsertSourceTextWithTranslations(text, evame.id)),
-	);
+		}),
+		upsertSegment({
+			pageId: evameJaPage.id,
+			number: 0,
+			text: JA_NUMBER_0,
+			textAndOccurrenceHash: "evame-ja-segment-0",
+			translations: [
+				{
+					locale: "en",
+					text: EN_NUMBER_0,
+					userId: evame.id,
+				},
+				{
+					locale: "zh",
+					text: ZH_NUMBER_0,
+					userId: evame.id,
+				},
+				{
+					locale: "ko",
+					text: KO_NUMBER_0,
+					userId: evame.id,
+				},
+				{
+					locale: "es",
+					text: ES_NUMBER_0,
+					userId: evame.id,
+				},
+			],
+		}),
+		upsertSegment({
+			pageId: evameJaPage.id,
+			number: 1,
+			text: JA_NUMBER_1,
+			textAndOccurrenceHash: "evame-ja-segment-1",
+			translations: [
+				{
+					locale: "en",
+					text: EN_NUMBER_1,
+					userId: evame.id,
+				},
+				{
+					locale: "zh",
+					text: ZH_NUMBER_1,
+					userId: evame.id,
+				},
+				{
+					locale: "ko",
+					text: KO_NUMBER_1,
+					userId: evame.id,
+				},
+				{
+					locale: "es",
+					text: ES_NUMBER_1,
+					userId: evame.id,
+				},
+			],
+		}),
+	]);
 
 	console.log("Required data added successfully");
 }
-
 async function createUserAndPages() {
 	const evame = await prisma.user.upsert({
-		where: { userName: "evame" },
+		where: { handle: "evame" },
 		update: {
 			provider: "Admin",
-			icon: "https://evame.tech/favicon.svg",
+			image: "https://evame.tech/favimage.svg",
 		},
 		create: {
-			userName: "evame",
-			displayName: "evame",
+			handle: "evame",
+			name: "evame",
 			provider: "Admin",
-			icon: "https://evame.tech/favicon.svg",
+			image: "https://evame.tech/favimage.svg",
 			userEmail: {
 				create: {
 					email: "evame@example.com",
@@ -115,68 +230,32 @@ async function createUserAndPages() {
 		},
 	});
 
-	const [evameEnPage, evameJaPage] = await Promise.all([
-		prisma.page.upsert({
-			where: { slug: "evame" },
-			update: {},
-			create: {
-				slug: "evame",
-				sourceLanguage: "en",
-				content:
-					"Evame is an innovative open-source platform that enables everyone to read articles in their native language, regardless of the original language. Through user-contributed content and collaborative translations, we break down language barriers, fostering global understanding and knowledge sharing.",
-				status: "DRAFT",
-				userId: evame.id,
-			},
-		}),
-		prisma.page.upsert({
-			where: { slug: "evame-ja" },
-			update: {},
-			create: {
-				slug: "evame-ja",
-				sourceLanguage: "ja",
-				content:
-					"Evameは、誰もが母国語で文章を読めるようにする革新的なオープンソースプラットフォームです。ユーザーによる投稿と翻訳を通じて、言語の障壁を取り除き、世界中の理解と知識の共有を促進します。",
-				status: "DRAFT",
-				userId: evame.id,
-			},
-		}),
-	]);
-
-	return { evame, evameEnPage, evameJaPage };
-}
-
-async function upsertSourceTextWithTranslations(
-	sourceText: SeedText,
-	userId: number,
-) {
-	const upsertedSourceText = await prisma.sourceText.upsert({
-		where: {
-			pageId_number: {
-				pageId: sourceText.pageId,
-				number: sourceText.number,
-			},
-		},
+	const evameEnPage = await prisma.page.upsert({
+		where: { slug: "evame" },
 		update: {},
 		create: {
-			text: sourceText.text,
-			number: sourceText.number,
-			pageId: sourceText.pageId,
-			textAndOccurrenceHash: sourceText.textAndOccurrenceHash,
+			slug: "evame",
+			sourceLocale: "en",
+			content: EN_NUMBER_0,
+			status: "DRAFT",
+			userId: evame.id,
 		},
 	});
 
-	await Promise.all(
-		sourceText.translations.map((translation) =>
-			prisma.translateText.create({
-				data: {
-					text: translation.text,
-					sourceTextId: upsertedSourceText.id,
-					userId,
-					locale: translation.locale,
-				},
-			}),
-		),
-	);
+	// 日本語ページを upsert
+	const evameJaPage = await prisma.page.upsert({
+		where: { slug: "evame-ja" },
+		update: {},
+		create: {
+			slug: "evame-ja",
+			sourceLocale: "ja",
+			content: JA_NUMBER_0,
+			status: "DRAFT",
+			userId: evame.id,
+		},
+	});
+
+	return { evame, evameEnPage, evameJaPage };
 }
 
 export async function addDevelopmentData() {
@@ -193,9 +272,9 @@ export async function addDevelopmentData() {
 			email,
 			user: {
 				create: {
-					userName: "dev",
-					displayName: "Dev User",
-					icon: "",
+					handle: "dev",
+					name: "Dev User",
+					image: "",
 					credential: {
 						create: {
 							password: await bcrypt.hash("devpassword", 10),

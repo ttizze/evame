@@ -10,9 +10,9 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	beforeEach(async () => {
 		const createdUser = await prisma.user.create({
 			data: {
-				userName: "testuser",
-				displayName: "Test User",
-				icon: "https://example.com/icon.jpg",
+				handle: "testuser",
+				name: "Test User",
+				image: "https://example.com/image.jpg",
 				profile: "This is a test profile",
 				pages: {
 					create: [
@@ -20,7 +20,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 							slug: "public-page",
 							status: "PUBLIC",
 							content: "This is a test content",
-							sourceTexts: {
+							pageSegments: {
 								create: {
 									number: 0,
 									text: "Public Page",
@@ -32,7 +32,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 							slug: "private-page",
 							status: "DRAFT",
 							content: "This is a test content2",
-							sourceTexts: {
+							pageSegments: {
 								create: {
 									number: 0,
 									text: "Private Page",
@@ -44,7 +44,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 							slug: "archived-page",
 							status: "ARCHIVE",
 							content: "This is a test content3",
-							sourceTexts: {
+							pageSegments: {
 								create: {
 									number: 0,
 									text: "Archived Page",

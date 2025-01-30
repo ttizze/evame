@@ -1,26 +1,31 @@
+import { TranslationStatus } from "@prisma/client";
 import { supportedLocaleOptions } from "~/constants/languages";
-import { prisma } from "../../../utils/prisma";
+import { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/index";
 import { updateUserAITranslationInfo } from "../functions/mutations.server";
-import { getOrCreateAIUser } from "../functions/mutations.server";
-import { getLatestSourceTexts } from "../functions/mutations.server";
+import { getLatestPageCommentSegments } from "../functions/query.server";
+import { getLatestPageSegments } from "../functions/query.server";
 import { getGeminiModelResponse } from "../services/gemini";
-import type { NumberedElement } from "../types";
-import type { TranslateJobParams } from "../types";
+import type { NumberedElement, TranslateJobParams } from "../types";
 import { extractTranslations } from "../utils/extractTranslations.server";
+import {
+	saveTranslationsForComment,
+	saveTranslationsForPage,
+} from "../utils/ioDeps";
 import { splitNumberedElements } from "../utils/splitNumberedElements.server";
+
 export async function translate(params: TranslateJobParams) {
 	try {
 		await updateUserAITranslationInfo(
 			params.userAITranslationInfoId,
-			"in_progress",
+			TranslationStatus.IN_PROGRESS,
 			0,
 		);
 		const sortedNumberedElements = params.numberedElements.sort(
 			(a, b) => a.number - b.number,
 		);
-
 		const chunks = splitNumberedElements(sortedNumberedElements);
 		const totalChunks = chunks.length;
+
 		for (let i = 0; i < chunks.length; i++) {
 			console.log(`Processing chunk ${i + 1} of ${totalChunks}`);
 			console.log(chunks[i]);
@@ -32,24 +37,26 @@ export async function translate(params: TranslateJobParams) {
 				params.locale,
 				params.pageId,
 				params.title,
+				params.translationIntent,
+				params.commentId,
 			);
 			const progress = ((i + 1) / totalChunks) * 100;
 			await updateUserAITranslationInfo(
 				params.userAITranslationInfoId,
-				"in_progress",
+				TranslationStatus.IN_PROGRESS,
 				progress,
 			);
 		}
 		await updateUserAITranslationInfo(
 			params.userAITranslationInfoId,
-			"completed",
+			TranslationStatus.COMPLETED,
 			100,
 		);
 	} catch (error) {
 		console.error("Background translation job failed:", error);
 		await updateUserAITranslationInfo(
 			params.userAITranslationInfoId,
-			"failed",
+			TranslationStatus.FAILED,
 			0,
 		);
 	}
@@ -62,9 +69,9 @@ async function translateChunk(
 	locale: string,
 	pageId: number,
 	title: string,
+	translationIntent: TranslationIntent,
+	commentId?: number,
 ) {
-	const sourceTexts = await getLatestSourceTexts(pageId);
-
 	// まだ翻訳が完了していない要素
 	let pendingElements = [...numberedElements];
 	const maxRetries = 3;
@@ -87,7 +94,29 @@ async function translateChunk(
 
 		if (partialTranslations.length > 0) {
 			// 部分的にでも取得できた翻訳結果を保存
-			await saveTranslations(partialTranslations, sourceTexts, locale, aiModel);
+			if (translationIntent === TranslationIntent.TRANSLATE_PAGE) {
+				const pageSegments = await getLatestPageSegments(pageId);
+
+				await saveTranslationsForPage(
+					partialTranslations,
+					pageSegments,
+					locale,
+					aiModel,
+				);
+			} else {
+				// コメント用の保存先テーブル or ロジック
+				if (!commentId) {
+					throw new Error("Comment ID is required");
+				}
+				const pageCommentSegments =
+					await getLatestPageCommentSegments(commentId);
+				await saveTranslationsForComment(
+					partialTranslations,
+					pageCommentSegments,
+					locale,
+					aiModel,
+				);
+			}
 			// 成功した要素をpendingElementsから除去
 			const translatedNumbers = new Set(
 				partialTranslations.map((e) => e.number),
@@ -127,37 +156,4 @@ async function getTranslatedText(
 		source_text,
 		localeName,
 	);
-}
-
-async function saveTranslations(
-	extractedTranslations: NumberedElement[],
-	sourceTexts: { id: number; number: number }[],
-	locale: string,
-	aiModel: string,
-) {
-	const systemUserId = await getOrCreateAIUser(aiModel);
-
-	const translationData = extractedTranslations
-		.map((translation) => {
-			const sourceTextId = sourceTexts.find(
-				(sourceText) => sourceText.number === translation.number,
-			)?.id;
-			if (!sourceTextId) {
-				console.error(
-					`Source text ID not found for translation number ${translation.number} ${translation.text}`,
-				);
-				return null;
-			}
-			return {
-				locale,
-				text: translation.text,
-				sourceTextId,
-				userId: systemUserId,
-			};
-		})
-		.filter((item): item is NonNullable<typeof item> => item !== null);
-
-	if (translationData.length > 0) {
-		await prisma.translateText.createMany({ data: translationData });
-	}
 }
