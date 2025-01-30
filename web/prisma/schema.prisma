@@ -48,7 +48,7 @@ model UserEmail {
 model UserCredential {
   id       Int    @id @default(autoincrement())
   password String
-  userId   String    @unique
+  userId   Int    @unique
   user     User   @relation(fields: [userId], references: [id])
 
   @@index([userId])
@@ -58,7 +58,7 @@ model UserCredential {
 model GeminiApiKey {
   id     Int    @id @default(autoincrement())
   apiKey String @default("") @map("api_key")
-  userId String    @unique
+  userId Int    @unique
   user   User   @relation(fields: [userId], references: [id])
 
   @@index([userId])
@@ -67,8 +67,8 @@ model GeminiApiKey {
 
 model Follow {
   id          Int      @id @default(autoincrement())
-  followerId  String      @map("follower_id")
-  followingId String      @map("following_id")
+  followerId  Int      @map("follower_id")
+  followingId Int      @map("following_id")
   createdAt   DateTime @default(now()) @map("created_at")
   follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
   following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
@@ -119,7 +119,7 @@ model Page {
   createdAt             DateTime                @default(now()) @map("created_at")
   updatedAt             DateTime                @updatedAt @map("updated_at")
   user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId                String                  @map("user_id")
+  userId                Int                     @map("user_id")
   userAITranslationInfo UserAITranslationInfo[]
   pageSegments          PageSegment[]
   tagPages              TagPage[]
@@ -172,7 +172,7 @@ model PageSegmentTranslation {
 
 model LikePage {
   id        Int      @id @default(autoincrement())
-  userId    String?     @map("user_id")
+  userId    Int?     @map("user_id")
   guestId   String?  @map("guest_id")
   pageId    Int      @map("page_id")
   createdAt DateTime @default(now()) @map("created_at")
