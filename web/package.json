@@ -14,7 +14,8 @@
 		"sync-github": "tsx scripts/syncGIthub.ts",
 		"translate": "tsx scripts/translate.ts",
 		"test-process-markdown": "vitest run scripts/processMarkdownContent.test.ts",
-		"sync-db": "tsx scripts/syncDB.ts"
+		"sync-db": "tsx scripts/syncDB.ts",
+		"migrate-cuid": "tsx scripts/cuid.ts"
 	},
 	"prisma": {
 		"seed": "tsx prisma/seed.ts"
@@ -28,6 +29,7 @@
 		"@google-cloud/vertexai": "1.9.2",
 		"@google/generative-ai": "0.21.0",
 		"@nasa-gcn/remix-seo": "2.0.1",
+		"@paralleldrive/cuid2": "^2.2.2",
 		"@prisma/client": "6.1.0",
 		"@radix-ui/react-avatar": "1.1.2",
 		"@radix-ui/react-checkbox": "1.1.3",
