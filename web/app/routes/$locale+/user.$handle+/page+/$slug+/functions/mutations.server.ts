@@ -1,7 +1,7 @@
 import { TranslationStatus } from "@prisma/client";
 import { prisma } from "~/utils/prisma";
 export async function createUserAITranslationInfo(
-	userId: number,
+	userId: string,
 	pageId: number,
 	aiModel: string,
 	locale: string,

@@ -17,7 +17,7 @@ import { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/
 import type { TranslateJobParams } from "../types";
 
 describe("translate関数の単体テスト (Gemini呼び出しのみモック)", () => {
-	let userId: number;
+	let userId: string;
 	let pageId: number;
 	let userAITranslationInfoId: number;
 

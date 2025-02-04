@@ -5,14 +5,14 @@ type SegmentTranslation = {
 	id: number;
 	locale: string;
 	text: string;
-	userId: number;
+	userId: string;
 	point: number;
 	createdAt: Date;
 };
 
 type TranslationVote = {
 	id: number;
-	userId: number;
+	userId: string;
 	translationId: number;
 	isUpvote: boolean;
 	createdAt: Date;

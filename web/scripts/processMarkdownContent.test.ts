@@ -15,9 +15,9 @@ This is another test.
 
 		// Markdownを処理
 		const user = await prisma.user.upsert({
-			where: { id: 1 },
+			where: { id: "1" },
 			create: {
-				id: 1,
+				id: "1",
 				handle: "test",
 				name: "test",
 				image: "test",
@@ -89,9 +89,9 @@ This is another line.
 `;
 
 		const user = await prisma.user.upsert({
-			where: { id: 2 },
+			where: { id: "2" },
 			create: {
-				id: 2,
+				id: "2",
 				handle: "editor",
 				name: "editor",
 				image: "editor",
@@ -204,9 +204,9 @@ new line
   `;
 
 		const user = await prisma.user.upsert({
-			where: { id: 3 },
+			where: { id: "3" },
 			create: {
-				id: 3,
+				id: "3",
 				handle: "variety",
 				name: "variety",
 				image: "variety",
@@ -275,9 +275,9 @@ new line
   `;
 
 		const user = await prisma.user.upsert({
-			where: { id: 3 },
+			where: { id: "3" },
 			create: {
-				id: 3,
+				id: "3",
 				handle: "variety",
 				name: "variety",
 				image: "variety",

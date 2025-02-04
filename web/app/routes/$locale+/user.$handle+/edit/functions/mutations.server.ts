@@ -2,7 +2,7 @@ import { prisma } from "~/utils/prisma";
 import { isHandleTaken } from "./queries.server";
 
 export async function updateUser(
-	userId: number,
+	userId: string,
 	data: {
 		name: string;
 		handle: string;

@@ -63,9 +63,9 @@ export type PageCardLocalizedType = Omit<PageCardType, "createdAt"> & {
 type FetchParams = {
 	page?: number;
 	pageSize?: number;
-	currentUserId?: number;
+	currentUserId?: string;
 	currentGuestId?: string;
-	pageOwnerId?: number;
+	pageOwnerId?: string;
 	isRecommended?: boolean;
 	onlyUserOwn?: boolean;
 	locale?: string;

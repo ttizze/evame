@@ -32,7 +32,7 @@ export async function processPageCommentHtml(
 	commentId: number,
 	commentHtml: string,
 	locale: string,
-	userId: number,
+	userId: string,
 	pageId: number,
 ) {
 	// HTML 入力に対応する page レコードを作成/更新
