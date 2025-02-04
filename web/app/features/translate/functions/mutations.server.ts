@@ -1,6 +1,6 @@
 import type { TranslationStatus } from "@prisma/client";
 import { prisma } from "~/utils/prisma";
-export async function getOrCreateAIUser(name: string): Promise<number> {
+export async function getOrCreateAIUser(name: string): Promise<string> {
 	const user = await prisma.user.upsert({
 		where: { handle: name },
 		update: {},

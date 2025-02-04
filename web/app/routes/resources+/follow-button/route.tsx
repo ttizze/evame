@@ -17,15 +17,15 @@ export async function action({ request }: ActionFunctionArgs) {
 		return data({ error: "Invalid request" }, { status: 400 });
 	}
 
-	if (user.id === Number.parseInt(targetUserId, 10)) {
+	if (user.id === targetUserId) {
 		return data({ error: "Cannot follow yourself" }, { status: 400 });
 	}
 
 	try {
 		if (action === "follow") {
-			await createFollow(user.id, Number.parseInt(targetUserId, 10));
+			await createFollow(user.id, targetUserId);
 		} else if (action === "unfollow") {
-			await deleteFollow(user.id, Number.parseInt(targetUserId, 10));
+			await deleteFollow(user.id, targetUserId);
 		}
 
 		return data({ success: true });
@@ -36,7 +36,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 interface FollowButtonProps {
-	targetUserId: number;
+	targetUserId: string;
 	isFollowing: boolean;
 	className?: string;
 }

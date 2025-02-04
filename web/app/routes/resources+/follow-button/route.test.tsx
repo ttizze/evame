@@ -23,12 +23,12 @@ describe("FollowButton", () => {
 	});
 
 	it("displays 'Follow' when isFollowing is false", () => {
-		render(<FollowButton targetUserId={2} isFollowing={false} />);
+		render(<FollowButton targetUserId={"2"} isFollowing={false} />);
 		expect(screen.getByRole("button", { name: "Follow" })).toBeInTheDocument();
 	});
 
 	it("displays 'Following' when isFollowing is true", () => {
-		render(<FollowButton targetUserId={2} isFollowing={true} />);
+		render(<FollowButton targetUserId={"2"} isFollowing={true} />);
 		expect(
 			screen.getByRole("button", { name: "Following" }),
 		).toBeInTheDocument();

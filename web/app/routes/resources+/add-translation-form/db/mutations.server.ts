@@ -5,7 +5,7 @@ import { AddTranslationFormIntent } from "../route";
 export async function addUserTranslation(
 	segmentId: number,
 	text: string,
-	userId: number,
+	userId: string,
 	locale: string,
 	intent: AddTranslationFormIntent,
 ) {

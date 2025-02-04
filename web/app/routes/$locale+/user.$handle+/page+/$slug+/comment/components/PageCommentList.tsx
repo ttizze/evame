@@ -15,7 +15,7 @@ import { VoteIntent } from "~/routes/resources+/vote-buttons";
 
 interface CommentListProps {
 	pageCommentsWithUser: PageCommentWithUser;
-	currentUserId?: number;
+	currentUserId?: string;
 	currentHandle: string | undefined;
 	showOriginal: boolean;
 	showTranslation: boolean;

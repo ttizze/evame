@@ -116,7 +116,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 	);
 	const userAITranslationInfo = await fetchLatestUserAITranslationInfo(
 		pageWithTranslations.page.id,
-		currentUser?.id ?? 0,
+		currentUser?.id ?? "0",
 		locale,
 	);
 	const sourceTitleWithBestTranslationTitle = bestTranslationTitle

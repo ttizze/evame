@@ -60,7 +60,7 @@ describe("handlePageTranslation", () => {
 		// Setup mocks
 		const mockUserAITranslationInfo = {
 			id: 1,
-			userId: 1,
+			userId: "1",
 			pageId: 1,
 			locale: "ja",
 			aiModel: "gemini-1.5-flash",
@@ -97,7 +97,7 @@ describe("handlePageTranslation", () => {
 
 		// Execute
 		await handlePageTranslation({
-			currentUserId: 1,
+			currentUserId: "1",
 			pageId: 1,
 			sourceLocale: "en",
 			geminiApiKey: "test-key",
@@ -106,18 +106,18 @@ describe("handlePageTranslation", () => {
 
 		// Verify
 		expect(createUserAITranslationInfo).toHaveBeenCalledWith(
-			1,
+			"1",
 			1,
 			"ja",
 			"gemini-1.5-flash",
 		);
 		expect(fetchPageWithPageSegments).toHaveBeenCalledWith(1);
-		expect(getTranslateUserQueue).toHaveBeenCalledWith(1);
+		expect(getTranslateUserQueue).toHaveBeenCalledWith("1");
 		expect(mockQueue.add).toHaveBeenCalledWith("translate-1", {
 			userAITranslationInfoId: 1,
 			geminiApiKey: "test-key",
 			aiModel: "gemini-1.5-flash",
-			userId: 1,
+			userId: "1",
 			pageId: 1,
 			locale: "ja",
 			title: "Test Title",
@@ -133,7 +133,7 @@ describe("handlePageTranslation", () => {
 		// Setup mocks
 		const mockUserAITranslationInfo = {
 			id: 1,
-			userId: 1,
+			userId: "1",
 			pageId: 1,
 			locale: "en",
 			aiModel: "gemini-1.5-flash",
@@ -170,7 +170,7 @@ describe("handlePageTranslation", () => {
 
 		// Execute
 		await handlePageTranslation({
-			currentUserId: 1,
+			currentUserId: "1",
 			pageId: 1,
 			sourceLocale: "ja",
 			geminiApiKey: "test-key",
@@ -179,7 +179,7 @@ describe("handlePageTranslation", () => {
 
 		// Verify
 		expect(createUserAITranslationInfo).toHaveBeenCalledWith(
-			1,
+			"1",
 			1,
 			"en",
 			"gemini-1.5-flash",
@@ -196,7 +196,7 @@ describe("handlePageTranslation", () => {
 		// Setup mocks
 		vi.mocked(createUserAITranslationInfo).mockResolvedValue({
 			id: 1,
-			userId: 1,
+			userId: "1",
 			pageId: 1,
 			locale: "ja",
 			aiModel: "gemini-1.5-flash",
@@ -209,7 +209,7 @@ describe("handlePageTranslation", () => {
 		// Execute & Verify
 		await expect(
 			handlePageTranslation({
-				currentUserId: 1,
+				currentUserId: "1",
 				pageId: 1,
 				sourceLocale: "en",
 				geminiApiKey: "test-key",
@@ -247,7 +247,7 @@ describe("handlePageTranslation", () => {
 
 		// Execute
 		await handlePageTranslation({
-			currentUserId: 1,
+			currentUserId: "1",
 			pageId: 1,
 			sourceLocale: "en",
 			geminiApiKey: "test-key",
@@ -289,7 +289,7 @@ describe("handlePageTranslation", () => {
 
 		// Execute
 		await handlePageTranslation({
-			currentUserId: 1,
+			currentUserId: "1",
 			pageId: 1,
 			sourceLocale: "en",
 			geminiApiKey: "test-key",
@@ -331,7 +331,7 @@ describe("handlePageTranslation", () => {
 
 		// Execute
 		await handlePageTranslation({
-			currentUserId: 1,
+			currentUserId: "1",
 			pageId: 1,
 			sourceLocale: "ja",
 			geminiApiKey: "test-key",
@@ -366,7 +366,7 @@ describe("handlePageTranslation", () => {
 
 		const mockUserAITranslationInfo = {
 			id: 1,
-			userId: 1,
+			userId: "1",
 			pageId: 1,
 			locale: "ja",
 			aiModel: "gemini-1.5-flash",
@@ -400,7 +400,7 @@ describe("handlePageTranslation", () => {
 
 		// Execute
 		await handlePageTranslation({
-			currentUserId: 1,
+			currentUserId: "1",
 			pageId: 1,
 			sourceLocale: "en",
 			geminiApiKey: "test-key",

@@ -26,7 +26,7 @@ export async function getPageComments(pageId: number) {
 	});
 }
 
-export async function getFollowCounts(userId: number) {
+export async function getFollowCounts(userId: string) {
 	const [followers, following] = await Promise.all([
 		prisma.follow.count({
 			where: { followingId: userId },
@@ -39,7 +39,7 @@ export async function getFollowCounts(userId: number) {
 	return { followers, following };
 }
 
-export async function fetchFollowerList(userId: number) {
+export async function fetchFollowerList(userId: string) {
 	const followers = await prisma.follow.findMany({
 		where: {
 			followingId: userId,
@@ -51,7 +51,7 @@ export async function fetchFollowerList(userId: number) {
 	return followers;
 }
 
-export async function fetchFollowingList(userId: number) {
+export async function fetchFollowingList(userId: string) {
 	const following = await prisma.follow.findMany({
 		where: {
 			followerId: userId,

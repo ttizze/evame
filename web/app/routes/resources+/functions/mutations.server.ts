@@ -3,7 +3,7 @@ import { VoteIntent } from "~/routes/resources+/vote-buttons";
 import { encrypt } from "~/utils/encryption.server";
 import { prisma } from "~/utils/prisma";
 export const updateGeminiApiKey = async (
-	userId: number,
+	userId: string,
 	geminiApiKey: string,
 ) => {
 	const encryptedKey = encrypt(geminiApiKey);
@@ -45,7 +45,7 @@ export const deleteOwnTranslation = async (
 export async function handleVote(
 	segmentTranslationId: number,
 	isUpvote: boolean,
-	userId: number,
+	userId: string,
 	intent: VoteIntent,
 ) {
 	if (intent === VoteIntent.PAGE_SEGMENT_TRANSLATION) {
@@ -142,7 +142,7 @@ export async function handleVote(
 
 export async function toggleLike(
 	slug: string,
-	userId?: number,
+	userId?: string,
 	guestId?: string,
 ) {
 	const page = await prisma.page.findUnique({ where: { slug } });

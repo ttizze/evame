@@ -131,8 +131,8 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	});
 
 	it("Pageが存在しない場合はエラーを投げる", async () => {
-		await expect(toggleLike("non-existing-slug", 1, undefined)).rejects.toThrow(
-			"Page not found",
-		);
+		await expect(
+			toggleLike("non-existing-slug", "1", undefined),
+		).rejects.toThrow("Page not found");
 	});
 });
