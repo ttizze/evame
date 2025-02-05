@@ -1,6 +1,6 @@
 import { prisma } from "~/utils/prisma";
+import { sanitizeUser } from "~/utils/sanitizeUser";
 import { isHandleTaken } from "./queries.server";
-
 export async function updateUser(
 	userId: string,
 	data: {
@@ -22,11 +22,12 @@ export async function updateUser(
 				throw new Error("This handle is already taken.");
 			}
 		}
-		return tx.user.update({
+		const updatedUser = await tx.user.update({
 			where: {
 				id: userId,
 			},
 			data,
 		});
+		return sanitizeUser(updatedUser);
 	});
 }

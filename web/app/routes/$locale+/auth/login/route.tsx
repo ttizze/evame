@@ -27,6 +27,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await sessionStorage.getSession(
 		request.headers.get("Cookie"),
 	);
+	console.log("session", session.get("user"));
 	//@ts-ignore
 	return { magicLinkSent: session.has("auth:magicLink") };
 }

@@ -1,5 +1,5 @@
 import { prisma } from "~/utils/prisma";
-
+import { sanitizeUser } from "~/utils/sanitizeUser";
 export async function fetchPageById(pageId: number) {
 	return await prisma.page.findUnique({
 		where: { id: pageId },
@@ -48,7 +48,10 @@ export async function fetchFollowerList(userId: string) {
 			follower: true,
 		},
 	});
-	return followers;
+	return followers.map((record) => ({
+		...record,
+		follower: sanitizeUser(record.follower),
+	}));
 }
 
 export async function fetchFollowingList(userId: string) {
@@ -60,5 +63,8 @@ export async function fetchFollowingList(userId: string) {
 			following: true,
 		},
 	});
-	return following;
+	return following.map((record) => ({
+		...record,
+		following: sanitizeUser(record.following),
+	}));
 }

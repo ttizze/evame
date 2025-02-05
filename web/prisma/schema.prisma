@@ -10,6 +10,7 @@ datasource db {
 model User {
   id                             String                             @id @default(cuid())
   handle                         String                          @unique
+  email                          String?                          @unique
   name                           String
   image                          String
   profile                        String                          @default("")
@@ -20,7 +21,6 @@ model User {
   createdAt                      DateTime                        @default(now()) @map("created_at")
   updatedAt                      DateTime                        @updatedAt @map("updated_at")
   credential                     UserCredential?
-  userEmail                      UserEmail?
   geminiApiKey                   GeminiApiKey?
   pages                          Page[]
   pageSegmentsTranslations       PageSegmentTranslation[]
@@ -33,16 +33,6 @@ model User {
   pageCommentSegmentTranslations PageCommentSegmentTranslation[]
   pageCommentSegmentTranslationVotes PageCommentSegmentTranslationVote[]
   @@map("users")
-}
-
-model UserEmail {
-  id     Int    @id @default(autoincrement())
-  email  String @unique
-  userId String    @unique @map("user_id")
-  user   User   @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@map("user_emails")
 }
 
 model UserCredential {

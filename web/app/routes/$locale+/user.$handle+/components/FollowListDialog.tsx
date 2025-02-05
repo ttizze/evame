@@ -1,18 +1,18 @@
 // app/components/FollowListDialog.tsx
 
-import type { User } from "@prisma/client";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 } from "~/components/ui/dialog";
+import type { SanitizedUser } from "~/types";
 
 interface FollowListDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	type: "followers" | "following";
-	users: User[];
+	users: SanitizedUser[];
 }
 
 export function FollowListDialog({

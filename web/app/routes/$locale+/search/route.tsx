@@ -1,6 +1,5 @@
 import { parseWithZod } from "@conform-to/zod";
 import type { Tag } from "@prisma/client";
-import type { User } from "@prisma/client";
 import type { LoaderFunctionArgs, MetaFunction } from "@remix-run/node";
 import { data } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
@@ -16,6 +15,7 @@ import { Input } from "~/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { supportedLocaleOptions } from "~/constants/languages";
 import i18nServer from "~/i18n.server";
+import type { SanitizedUser } from "~/types";
 import { authenticator } from "~/utils/auth.server";
 import {
 	searchByTag,
@@ -24,6 +24,7 @@ import {
 	searchTitle,
 	searchUsers,
 } from "./functions/queries.server";
+
 export const CATEGORIES = ["title", "user", "tags", "content"] as const;
 export type Category = (typeof CATEGORIES)[number];
 
@@ -77,7 +78,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 	// カテゴリ別に検索
 	let pages = undefined;
 	let tags: Tag[] | undefined = undefined;
-	let users: User[] | undefined = undefined;
+	let users: SanitizedUser[] | undefined = undefined;
 	let totalCount = 0;
 
 	switch (category) {
@@ -269,7 +270,7 @@ export default function SearchPage() {
 				{/* ユーザーの表示 */}
 				{currentCategory === "user" && users && users.length > 0 && (
 					<div className="space-y-4">
-						{users.map((usr: User) => (
+						{users.map((usr: SanitizedUser) => (
 							<div
 								key={usr.id}
 								className="flex items-start p-4  rounded-lg transition"
