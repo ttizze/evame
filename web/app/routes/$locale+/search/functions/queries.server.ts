@@ -1,11 +1,11 @@
 // app/routes/search/functions/queries.server.ts
 
 import type { Tag } from "@prisma/client";
-import type { User } from "@prisma/client";
 import type { PageCardLocalizedType } from "~/routes/$locale+/functions/queries.server";
 import { createPageCardSelect } from "~/routes/$locale+/functions/queries.server";
+import type { SanitizedUser } from "~/types";
 import { prisma } from "~/utils/prisma";
-
+import { sanitizeUser } from "~/utils/sanitizeUser";
 /** タイトル検索 */
 export async function searchTitle(
 	query: string,
@@ -177,7 +177,7 @@ export async function searchUsers(
 	skip: number,
 	take: number,
 ): Promise<{
-	users: User[];
+	users: SanitizedUser[];
 	totalCount: number;
 }> {
 	const [users, count] = await Promise.all([
@@ -194,5 +194,6 @@ export async function searchUsers(
 			},
 		}),
 	]);
-	return { users, totalCount: count };
+	const sanitizedUsers = users.map((user) => sanitizeUser(user));
+	return { users: sanitizedUsers, totalCount: count };
 }

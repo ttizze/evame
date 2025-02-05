@@ -1,5 +1,5 @@
 import type { Page, Tag, TagPage } from "@prisma/client";
-import type { User } from "@prisma/client";
+import type { SanitizedUser } from "~/types";
 
 type SegmentTranslation = {
 	id: number;
@@ -21,7 +21,7 @@ type TranslationVote = {
 
 export type SegmentTranslationWithVote = {
 	segmentTranslation: SegmentTranslation & {
-		user: User;
+		user: SanitizedUser;
 	};
 	translationVote: TranslationVote | null;
 };
@@ -46,7 +46,7 @@ export interface PageLocalizedDate extends Omit<Page, "createdAt"> {
 }
 export type PageWithTranslations = {
 	page: PageLocalizedDate;
-	user: User;
+	user: SanitizedUser;
 	tagPages: TagPageWithTag[];
 	segmentWithTranslations: SegmentWithTranslations[];
 	existLocales: string[];

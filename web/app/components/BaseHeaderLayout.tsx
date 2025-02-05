@@ -1,4 +1,3 @@
-import type { User } from "@prisma/client";
 import { Form } from "@remix-run/react";
 import { LogOutIcon, SettingsIcon } from "lucide-react";
 import type { ReactNode } from "react";
@@ -13,9 +12,10 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import type { SanitizedUser } from "~/types";
 
 interface BaseHeaderLayoutProps {
-	currentUser: User | null;
+	currentUser: SanitizedUser | null;
 	leftExtra?: ReactNode;
 	rightExtra?: ReactNode;
 	showUserMenu?: boolean;

@@ -222,11 +222,7 @@ async function createUserAndPages() {
 			name: "evame",
 			provider: "Admin",
 			image: "https://evame.tech/favimage.svg",
-			userEmail: {
-				create: {
-					email: "evame@example.com",
-				},
-			},
+			email: "evame@evame.tech",
 		},
 	});
 
@@ -261,35 +257,26 @@ async function createUserAndPages() {
 export async function addDevelopmentData() {
 	const email = "dev@example.com";
 
-	const devEmail = await prisma.userEmail.upsert({
+	const devEmail = await prisma.user.upsert({
 		where: { email },
 		update: {
-			user: {
-				update: {},
-			},
+			email,
 		},
 		create: {
 			email,
-			user: {
+			handle: "dev",
+			name: "Dev User",
+			image: "",
+			credential: {
 				create: {
-					handle: "dev",
-					name: "Dev User",
-					image: "",
-					credential: {
-						create: {
-							password: await bcrypt.hash("devpassword", 10),
-						},
-					},
+					password: await bcrypt.hash("devpassword", 10),
 				},
 			},
-		},
-		include: {
-			user: true,
 		},
 	});
 
 	console.log(
-		`Created/Updated dev user with ID=${devEmail.userId}, email=${devEmail.email}`,
+		`Created/Updated dev user with ID=${devEmail.id}, email=${devEmail.email}`,
 	);
 }
 seed()

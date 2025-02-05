@@ -1,4 +1,3 @@
-import type { User } from "@prisma/client";
 import type { PageStatus } from "@prisma/client";
 import { useFetcher, useLocation } from "@remix-run/react";
 import { Link } from "@remix-run/react";
@@ -12,9 +11,9 @@ import {
 	PopoverTrigger,
 } from "~/components/ui/popover";
 import { Separator } from "~/components/ui/separator";
-
+import type { SanitizedUser } from "~/types";
 interface EditHeaderProps {
-	currentUser: User;
+	currentUser: SanitizedUser;
 	initialStatus: PageStatus;
 	hasUnsavedChanges: boolean;
 	onPublishChange: (status: PageStatus) => void;

@@ -242,7 +242,6 @@ export async function action({ request, params }: ActionFunctionArgs) {
 					};
 				},
 			);
-			console.log(commentsSegmentsArray);
 			for (const comment of commentsSegmentsArray) {
 				const queue = getTranslateUserQueue(currentUser.id);
 				await queue.add(`translate-${currentUser.id}`, {

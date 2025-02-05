@@ -9,11 +9,7 @@ export async function getOrCreateAIUser(name: string): Promise<string> {
 			name: name,
 			isAI: true,
 			image: "",
-			userEmail: {
-				create: {
-					email: `${name}@ai.com`,
-				},
-			},
+			email: `${name}@ai.com`,
 		},
 	});
 	return user.id;

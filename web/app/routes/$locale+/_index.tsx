@@ -41,6 +41,7 @@ export const meta: MetaFunction = () => {
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
 	const currentUser = await authenticator.isAuthenticated(request);
+	console.log("currentUser", currentUser);
 	let locale = params.locale;
 	if (!locale || !supportedLocaleOptions.some((l) => l.code === locale)) {
 		locale = (await i18nServer.getLocale(request)) || "en";
