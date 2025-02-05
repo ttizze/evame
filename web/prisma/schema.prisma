@@ -10,7 +10,7 @@ datasource db {
 model User {
   id                             String                             @id @default(cuid())
   handle                         String                          @unique
-  email                          String?                          @unique
+  email                          String                          @unique
   name                           String
   image                          String
   profile                        String                          @default("")

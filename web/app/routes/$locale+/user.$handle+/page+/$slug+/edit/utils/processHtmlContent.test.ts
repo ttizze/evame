@@ -18,6 +18,7 @@ describe("processHtmlContent", () => {
 				handle: "htmltester",
 				name: "htmltester",
 				image: "htmltester",
+				email: "htmltester@example.com",
 			},
 			update: {},
 		});
@@ -80,6 +81,7 @@ describe("processHtmlContent", () => {
 				handle: "htmleditor",
 				name: "htmleditor",
 				image: "htmleditor",
+				email: "htmleditor@example.com",
 			},
 			update: {},
 		});
@@ -175,6 +177,7 @@ describe("processHtmlContent", () => {
 				handle: "titleduplicateuser",
 				name: "titleduplicateuser",
 				image: "titleduplicateuser",
+				email: "titleduplicateuser@example.com",
 			},
 			update: {},
 		});
@@ -253,6 +256,7 @@ describe("processHtmlContent", () => {
 				handle: "noedit",
 				name: "noedit",
 				image: "noedit",
+				email: "noedit@example.com",
 			},
 			update: {},
 		});
@@ -315,6 +319,7 @@ describe("processHtmlContent", () => {
 				handle: "imagetester",
 				name: "imagetester",
 				image: "imagetester",
+				email: "imagetester@example.com",
 			},
 			update: {},
 		});
