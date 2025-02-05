@@ -21,6 +21,7 @@ This is another test.
 				handle: "test",
 				name: "test",
 				image: "test",
+				email: "testuser@example.com",
 			},
 			update: {},
 		});
@@ -95,6 +96,7 @@ This is another line.
 				handle: "editor",
 				name: "editor",
 				image: "editor",
+				email: "editor@example.com",
 			},
 			update: {},
 		});
@@ -210,6 +212,7 @@ new line
 				handle: "variety",
 				name: "variety",
 				image: "variety",
+				email: "variety@example.com",
 			},
 			update: {},
 		});
@@ -281,6 +284,7 @@ new line
 				handle: "variety",
 				name: "variety",
 				image: "variety",
+				email: "variety@example.com",
 			},
 			update: {},
 		});

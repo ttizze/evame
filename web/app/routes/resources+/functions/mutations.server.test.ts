@@ -14,6 +14,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 				name: "Test User",
 				image: "https://example.com/image.jpg",
 				profile: "This is a test profile",
+				email: "testuser@example.com",
 				pages: {
 					create: [
 						{
