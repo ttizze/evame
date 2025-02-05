@@ -23,6 +23,7 @@ describe("UserProfile", () => {
 				name: "Test User",
 				image: "https://example.com/image.jpg",
 				profile: "This is a test profile",
+				email: "testuser@example.com",
 				pages: {
 					create: [
 						{
@@ -72,6 +73,7 @@ describe("UserProfile", () => {
 				name: "Test User2",
 				image: "https://example.com/image2.jpg",
 				profile: "This is a test profile2",
+				email: "testuser2@example.com",
 			},
 		});
 		testUser = createdUser;

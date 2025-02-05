@@ -1,8 +1,8 @@
-import type { User } from "@prisma/client";
 import { createCookieSessionStorage } from "@remix-run/node";
+import type { SanitizedUser } from "~/types";
 
 type Session = {
-	user?: User;
+	user?: SanitizedUser;
 	guestId?: string;
 };
 

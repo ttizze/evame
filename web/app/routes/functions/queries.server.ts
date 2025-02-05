@@ -1,10 +1,18 @@
-import type { GeminiApiKey, User } from "@prisma/client";
+import type { GeminiApiKey } from "@prisma/client";
+import type { SanitizedUser } from "~/types";
 import { prisma } from "~/utils/prisma";
+import { sanitizeUser } from "~/utils/sanitizeUser";
 
-export async function fetchUserByHandle(handle: string): Promise<User | null> {
-	return await prisma.user.findUnique({
+export async function fetchUserByHandle(
+	handle: string,
+): Promise<SanitizedUser | null> {
+	const user = await prisma.user.findUnique({
 		where: { handle },
 	});
+	if (!user) {
+		return null;
+	}
+	return sanitizeUser(user);
 }
 
 export async function fetchGeminiApiKeyByHandle(

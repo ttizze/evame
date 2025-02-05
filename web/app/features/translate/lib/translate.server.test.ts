@@ -28,6 +28,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 				handle: "testuser",
 				name: "testuser",
 				image: "testuser",
+				email: "testuser@example.com",
 			},
 		});
 		userId = user.id;

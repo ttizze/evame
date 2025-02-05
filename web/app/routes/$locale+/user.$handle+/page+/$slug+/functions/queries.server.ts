@@ -42,13 +42,37 @@ export async function fetchPageWithTranslations(
 	const page = await prisma.page.findFirst({
 		where: { slug },
 		include: {
-			user: true,
+			user: {
+				select: {
+					id: true,
+					name: true,
+					handle: true,
+					image: true,
+					createdAt: true,
+					updatedAt: true,
+					profile: true,
+					totalPoints: true,
+					isAI: true,
+				},
+			},
 			pageSegments: {
 				include: {
 					pageSegmentTranslations: {
 						where: { locale, isArchived: false },
 						include: {
-							user: true,
+							user: {
+								select: {
+									id: true,
+									name: true,
+									handle: true,
+									image: true,
+									createdAt: true,
+									updatedAt: true,
+									profile: true,
+									totalPoints: true,
+									isAI: true,
+								},
+							},
 							votes: {
 								where: currentUserId
 									? { userId: currentUserId }
@@ -186,7 +210,19 @@ export async function fetchPageCommentsWithUserAndTranslations(
 					pageCommentSegmentTranslations: {
 						where: { locale },
 						include: {
-							user: true,
+							user: {
+								select: {
+									id: true,
+									name: true,
+									handle: true,
+									image: true,
+									createdAt: true,
+									updatedAt: true,
+									profile: true,
+									totalPoints: true,
+									isAI: true,
+								},
+							},
 							pageCommentSegmentTranslationVotes: {
 								where: currentUserId
 									? { userId: currentUserId }
