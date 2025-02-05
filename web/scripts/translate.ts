@@ -5,7 +5,7 @@ import { fetchUserByHandle } from "~/routes/functions/queries.server";
 import { prisma } from "~/utils/prisma";
 // 実際にはgetAllPagesByUserIdを何らかの形で用意する必要がある
 // ここでは例としてprismaでpagesを取得する処理を記述
-async function getAllPagesByUserId(userId: number) {
+async function getAllPagesByUserId(userId: string) {
 	return prisma.page.findMany({
 		where: { userId },
 		include: { pageSegments: true },

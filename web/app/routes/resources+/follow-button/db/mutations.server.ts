@@ -1,6 +1,6 @@
 import { prisma } from "~/utils/prisma";
 
-export async function createFollow(followerId: number, followingId: number) {
+export async function createFollow(followerId: string, followingId: string) {
 	if (followerId === followingId) {
 		throw new Error("Follower and following cannot be the same");
 	}
@@ -12,7 +12,7 @@ export async function createFollow(followerId: number, followingId: number) {
 	});
 }
 
-export async function deleteFollow(followerId: number, followingId: number) {
+export async function deleteFollow(followerId: string, followingId: string) {
 	return await prisma.follow.delete({
 		where: {
 			followerId_followingId: {

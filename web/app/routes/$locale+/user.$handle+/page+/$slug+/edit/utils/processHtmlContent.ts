@@ -34,7 +34,7 @@ export async function processPageHtml(
 	title: string,
 	html: string,
 	pageSlug: string,
-	userId: number,
+	userId: string,
 	sourceLocale: string,
 	status: PageStatus,
 ) {

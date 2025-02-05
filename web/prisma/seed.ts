@@ -47,7 +47,7 @@ async function seed() {
 interface TranslationInput {
 	locale: string;
 	text: string;
-	userId: number;
+	userId: string;
 }
 
 interface UpsertSegmentParams {

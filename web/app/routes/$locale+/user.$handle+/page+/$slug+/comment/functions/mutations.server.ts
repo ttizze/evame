@@ -4,7 +4,7 @@ import type { BlockWithNumber } from "../../utils/process-html";
 export async function createPageComment(
 	content: string,
 	locale: string,
-	userId: number,
+	userId: string,
 	pageId: number,
 ) {
 	return await prisma.pageComment.create({
@@ -65,7 +65,7 @@ export async function upsertPageComment(
 	id: number,
 	content: string,
 	locale: string,
-	userId: number,
+	userId: string,
 	pageId: number,
 ) {
 	await prisma.pageComment.upsert({

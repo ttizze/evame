@@ -90,7 +90,7 @@ describe("UserProfile", () => {
 	test("loader returns correct data and menu is displayed for authenticated owner", async () => {
 		// @ts-ignore
 		vi.mocked(authenticator.isAuthenticated).mockResolvedValue({
-			id: 1,
+			id: "1",
 			handle: "testuser",
 		});
 		const RemixStub = createRemixStub([
@@ -120,7 +120,7 @@ describe("UserProfile", () => {
 	test("loader returns correct data and no pages message is displayed when user has no pages", async () => {
 		// @ts-ignore
 		vi.mocked(authenticator.isAuthenticated).mockResolvedValue({
-			id: 1,
+			id: "1",
 			handle: "testuser2",
 		});
 		const RemixStub = createRemixStub([
@@ -167,7 +167,7 @@ describe("UserProfile", () => {
 	test("action handles togglePublish correctly", async () => {
 		// @ts-ignore
 		vi.mocked(authenticator.isAuthenticated).mockResolvedValue({
-			id: 1,
+			id: "1",
 			handle: "testuser",
 		});
 		const RemixStub = createRemixStub([
@@ -197,7 +197,7 @@ describe("UserProfile", () => {
 	test("action handles archive correctly", async () => {
 		// @ts-ignore
 		vi.mocked(authenticator.isAuthenticated).mockResolvedValue({
-			id: 1,
+			id: "1",
 			handle: "testuser",
 		});
 		const RemixStub = createRemixStub([

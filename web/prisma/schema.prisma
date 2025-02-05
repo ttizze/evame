@@ -8,7 +8,7 @@ datasource db {
 }
 
 model User {
-  id                             Int                             @id @default(autoincrement())
+  id                             String                             @id @default(cuid())
   handle                         String                          @unique
   name                           String
   image                          String
@@ -38,7 +38,7 @@ model User {
 model UserEmail {
   id     Int    @id @default(autoincrement())
   email  String @unique
-  userId Int    @unique @map("user_id")
+  userId String    @unique @map("user_id")
   user   User   @relation(fields: [userId], references: [id])
 
   @@index([userId])
@@ -48,7 +48,7 @@ model UserEmail {
 model UserCredential {
   id       Int    @id @default(autoincrement())
   password String
-  userId   Int    @unique
+  userId   String    @unique @map("user_id")
   user     User   @relation(fields: [userId], references: [id])
 
   @@index([userId])
@@ -58,7 +58,7 @@ model UserCredential {
 model GeminiApiKey {
   id     Int    @id @default(autoincrement())
   apiKey String @default("") @map("api_key")
-  userId Int    @unique
+  userId String    @unique @map("user_id")
   user   User   @relation(fields: [userId], references: [id])
 
   @@index([userId])
@@ -67,8 +67,8 @@ model GeminiApiKey {
 
 model Follow {
   id          Int      @id @default(autoincrement())
-  followerId  Int      @map("follower_id")
-  followingId Int      @map("following_id")
+  followerId  String      @map("follower_id")
+  followingId String      @map("following_id")
   createdAt   DateTime @default(now()) @map("created_at")
   follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
   following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
@@ -88,7 +88,7 @@ enum TranslationStatus {
 
 model UserAITranslationInfo {
   id                    Int               @id @default(autoincrement())
-  userId                Int               @map("user_id")
+  userId                String               @map("user_id")
   pageId                Int               @map("page_id")
   locale                String
   aiModel               String            @map("ai_model")
@@ -119,7 +119,7 @@ model Page {
   createdAt             DateTime                @default(now()) @map("created_at")
   updatedAt             DateTime                @updatedAt @map("updated_at")
   user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId                Int                     @map("user_id")
+  userId                String                  @map("user_id")
   userAITranslationInfo UserAITranslationInfo[]
   pageSegments          PageSegment[]
   tagPages              TagPage[]
@@ -156,7 +156,7 @@ model PageSegmentTranslation {
   locale       String
   text         String
   pageSegmentId Int        @map("page_segment_id")
-  userId       Int        @map("user_id")
+  userId       String        @map("user_id")
   point        Int        @default(0)
   isArchived   Boolean    @default(false) @map("is_archived")
   createdAt    DateTime   @default(now()) @map("created_at")
@@ -172,7 +172,7 @@ model PageSegmentTranslation {
 
 model LikePage {
   id        Int      @id @default(autoincrement())
-  userId    Int?     @map("user_id")
+  userId    String?     @map("user_id")
   guestId   String?  @map("guest_id")
   pageId    Int      @map("page_id")
   createdAt DateTime @default(now()) @map("created_at")
@@ -209,7 +209,7 @@ model TagPage {
 
 model Vote {
   id              Int           @id @default(autoincrement())
-  userId          Int           @map("user_id")
+  userId          String           @map("user_id")
   pageSegmentTranslationId Int           @map("page_segment_translation_id")
   isUpvote        Boolean       @map("is_upvote")
   createdAt       DateTime      @default(now()) @map("created_at")
@@ -227,7 +227,7 @@ model PageComment {
   id                  Int                  @id @default(autoincrement())
   content             String
   locale              String
-  userId              Int                  @map("user_id")
+  userId              String                  @map("user_id")
   pageId              Int                  @map("page_id")
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
@@ -263,7 +263,7 @@ model PageCommentSegmentTranslation {
   id                   Int                @id @default(autoincrement())
   locale               String
   text                 String
-  userId               Int                @map("user_id")
+  userId               String                @map("user_id")
   point                Int                @default(0)
   createdAt            DateTime           @default(now()) @map("created_at")
   updatedAt            DateTime           @updatedAt @map("updated_at")
@@ -279,7 +279,7 @@ model PageCommentSegmentTranslation {
 
 model PageCommentSegmentTranslationVote {
   id              Int           @id @default(autoincrement())
-  userId          Int           @map("user_id")
+  userId          String           @map("user_id")
   pageCommentSegmentTranslationId Int           @map("page_comment_segment_translation_id")
   isUpvote        Boolean       @map("is_upvote")
   createdAt       DateTime      @default(now()) @map("created_at")

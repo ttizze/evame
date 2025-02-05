@@ -10,7 +10,7 @@ export async function processMarkdownContent(
 	title: string,
 	body: string,
 	pageSlug: string,
-	userId: number,
+	userId: string,
 	sourceLocale: string,
 	status: PageStatus,
 ) {

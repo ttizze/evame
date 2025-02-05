@@ -12,9 +12,9 @@ describe("processHtmlContent", () => {
     `;
 
 		const user = await prisma.user.upsert({
-			where: { id: 10 },
+			where: { id: "10" },
 			create: {
-				id: 10,
+				id: "10",
 				handle: "htmltester",
 				name: "htmltester",
 				image: "htmltester",
@@ -74,9 +74,9 @@ describe("processHtmlContent", () => {
     `;
 
 		const user = await prisma.user.upsert({
-			where: { id: 11 },
+			where: { id: "11" },
 			create: {
-				id: 11,
+				id: "11",
 				handle: "htmleditor",
 				name: "htmleditor",
 				image: "htmleditor",
@@ -169,9 +169,9 @@ describe("processHtmlContent", () => {
     `;
 
 		const user = await prisma.user.upsert({
-			where: { id: 12 },
+			where: { id: "12" },
 			create: {
-				id: 12,
+				id: "12",
 				handle: "titleduplicateuser",
 				name: "titleduplicateuser",
 				image: "titleduplicateuser",
@@ -247,9 +247,9 @@ describe("processHtmlContent", () => {
 		`;
 
 		const user = await prisma.user.upsert({
-			where: { id: 13 },
+			where: { id: "13" },
 			create: {
-				id: 13,
+				id: "13",
 				handle: "noedit",
 				name: "noedit",
 				image: "noedit",
@@ -309,9 +309,9 @@ describe("processHtmlContent", () => {
     `;
 
 		const user = await prisma.user.upsert({
-			where: { id: 14 },
+			where: { id: "14" },
 			create: {
-				id: 14,
+				id: "14",
 				handle: "imagetester",
 				name: "imagetester",
 				image: "imagetester",

@@ -4,7 +4,7 @@ import type { BlockWithNumber } from "../../utils/process-html";
 export async function upsertPageWithHtml(
 	pageSlug: string,
 	html: string,
-	userId: number,
+	userId: string,
 	sourceLocale: string,
 	status: PageStatus,
 ) {

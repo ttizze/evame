@@ -37,7 +37,7 @@ export async function fetchPageWithPageSegments(pageId: number) {
 export async function fetchPageWithTranslations(
 	slug: string,
 	locale: string,
-	currentUserId?: number,
+	currentUserId?: string,
 ): Promise<PageWithTranslations | null> {
 	const page = await prisma.page.findFirst({
 		where: { slug },
@@ -52,7 +52,7 @@ export async function fetchPageWithTranslations(
 							votes: {
 								where: currentUserId
 									? { userId: currentUserId }
-									: { userId: -1 },
+									: { userId: "0" },
 							},
 						},
 						orderBy: [{ point: "desc" }, { createdAt: "desc" }],
@@ -128,7 +128,7 @@ export async function fetchPageWithTranslations(
 
 export async function fetchLatestUserAITranslationInfo(
 	pageId: number,
-	userId: number,
+	userId: string,
 	locale: string,
 ) {
 	return await prisma.userAITranslationInfo.findFirst({
@@ -146,7 +146,7 @@ export async function fetchLikeCount(pageId: number) {
 
 export async function fetchIsLikedByUser(
 	pageId: number,
-	userId?: number,
+	userId?: string,
 	guestId?: string,
 ) {
 	if (userId) {
@@ -167,7 +167,7 @@ export async function fetchIsLikedByUser(
 export async function fetchPageCommentsWithUserAndTranslations(
 	pageId: number,
 	locale: string,
-	currentUserId?: number,
+	currentUserId?: string,
 ) {
 	const pageComments = await prisma.pageComment.findMany({
 		where: {
@@ -190,7 +190,7 @@ export async function fetchPageCommentsWithUserAndTranslations(
 							pageCommentSegmentTranslationVotes: {
 								where: currentUserId
 									? { userId: currentUserId }
-									: { userId: -1 },
+									: { userId: "0" },
 							},
 						},
 						orderBy: [{ point: "desc" }, { createdAt: "desc" }],

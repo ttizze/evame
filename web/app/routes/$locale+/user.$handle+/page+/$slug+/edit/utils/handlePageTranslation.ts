@@ -11,7 +11,7 @@ export async function handlePageTranslation({
 	geminiApiKey,
 	title,
 }: {
-	currentUserId: number;
+	currentUserId: string;
 	pageId: number;
 	sourceLocale: string;
 	geminiApiKey: string;
