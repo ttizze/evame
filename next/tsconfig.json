@@ -22,6 +22,14 @@
 			"@/*": ["./src/*"]
 		}
 	},
-	"include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+	"include": [
+		"next-env.d.ts",
+		"next-auth.d.ts",
+		"**/*.ts",
+		"**/*.tsx",
+		".next/types/**/*.ts",
+		"../localecomponents/page.tsx",
+		"src/app/[locale]/auth/login/components/google-form.tsx"
+	],
 	"exclude": ["node_modules"]
 }

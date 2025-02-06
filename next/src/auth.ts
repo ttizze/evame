@@ -21,4 +21,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		Resend({ from: "noreply@mail.reimei.dev" }),
 	],
 	adapter: PrismaAdapter(prisma),
+	callbacks: {
+		async session({ session, user }) {
+			session.user.handle = user.handle;
+			session.user.profile = user.profile;
+			session.user.createdAt = user.createdAt;
+			session.user.updatedAt = user.updatedAt;
+			session.user.totalPoints = user.totalPoints;
+			session.user.isAI = user.isAI;
+			session.user.name = user.name ?? "";
+			session.user.image = user.image ?? "";
+			return session;
+		},
+	},
 });

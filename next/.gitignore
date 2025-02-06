@@ -47,3 +47,5 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 database.bak
+
+.next
