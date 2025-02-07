@@ -19,7 +19,6 @@ export async function toggleLike(
 			...identifier,
 		},
 	});
-	console.log("existing", existing);
 	if (existing) {
 		await prisma.likePage.delete({ where: { id: existing.id } });
 		return false;
@@ -30,6 +29,5 @@ export async function toggleLike(
 			...identifier,
 		},
 	});
-	console.log("created");
 	return true;
 }

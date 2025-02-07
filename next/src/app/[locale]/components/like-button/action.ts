@@ -3,7 +3,7 @@
 import type { ActionState } from "@/app/types";
 import { auth } from "@/auth";
 import { ensureGuestId } from "@/lib/ensureGuestId.server";
-import { parseWithZod } from "@conform-to/zod";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { toggleLike } from "./db/mutations.server";
 // フォームデータ用のスキーマ
@@ -11,24 +11,29 @@ const schema = z.object({
 	slug: z.string(),
 });
 
+export type LikeButtonState = ActionState & {
+	liked?: boolean;
+	fieldErrors?: {
+		slug: string;
+	};
+};
+
 export async function toggleLikeAction(
-	previousState: ActionState,
+	previousState: LikeButtonState,
 	formData: FormData,
 ) {
+	const validation = schema.safeParse({ slug: formData.get("slug") });
+	if (!validation.success) {
+		return { fieldErrors: { slug: "Invalid slug parameter provided" } };
+	}
+	const slug = validation.data.slug;
 	const session = await auth();
 	const currentUser = session?.user;
-	console.log("currentUser", currentUser);
-	const guestId = await ensureGuestId();
-
-	const submission = parseWithZod(formData, { schema });
-	if (submission.status !== "success") {
-		throw new Error("error");
-	}
-	const slug = submission.value.slug;
+	const guestId = !currentUser ? await ensureGuestId() : undefined;
 	const liked = await toggleLike(slug, currentUser?.id, guestId);
-
+	revalidatePath("/");
 	return {
-		success: "いいねしました",
+		success: "mutation liked",
 		liked,
 	};
 }

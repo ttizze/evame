@@ -7,27 +7,20 @@ import type { Tag } from "@prisma/client";
 import { Edit3, FileText, Hash, User } from "lucide-react";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { useTransition } from "react";
-import { PaginationBar } from "../components/PaginationBar";
 import { PageCard } from "../components/page-card";
+import { PaginationBar } from "../components/pagination-bar";
 import { TagList } from "../components/tag-list";
 import type { PageCardLocalizedType } from "../db/queries.server";
 import { CATEGORIES, type Category } from "./page";
 
 interface Props {
-	locale: string;
 	pages: PageCardLocalizedType[] | undefined;
 	tags: Tag[] | undefined;
 	users: SanitizedUser[] | undefined;
 	totalPages: number;
 }
 
-export function SearchPageClient({
-	locale,
-	pages,
-	tags,
-	users,
-	totalPages,
-}: Props) {
+export function SearchPageClient({ pages, tags, users, totalPages }: Props) {
 	const [isPending, startTransition] = useTransition();
 	const [query, setQuery] = useQueryState(
 		"query",
@@ -149,8 +142,8 @@ export function SearchPageClient({
 								<PageCard
 									key={p.id}
 									pageCard={p}
-									pageLink={`/${locale}/user/${p.user.handle}/page/${p.slug}`}
-									userLink={`/${locale}/user/${p.user.handle}`}
+									pageLink={`/user/${p.user.handle}/page/${p.slug}`}
+									userLink={`/user/${p.user.handle}`}
 								/>
 							))}
 						</div>
@@ -164,7 +157,7 @@ export function SearchPageClient({
 									className="flex items-start p-4 rounded-lg"
 								>
 									<div className="flex-1">
-										<a href={`/${locale}/user/${usr.handle}`}>
+										<a href={`/user/${usr.handle}`}>
 											<h3 className="text-xl font-bold">{usr.name}</h3>
 											<span className="text-gray-500 text-sm">
 												@{usr.handle}
@@ -184,8 +177,8 @@ export function SearchPageClient({
 									<PageCard
 										key={p.id}
 										pageCard={p}
-										pageLink={`/${locale}/user/${p.user.handle}/page/${p.slug}`}
-										userLink={`/${locale}/user/${p.user.handle}`}
+										pageLink={`/user/${p.user.handle}/page/${p.slug}`}
+										userLink={`/user/${p.user.handle}`}
 									/>
 								))}
 							</div>

@@ -1,27 +1,7 @@
+"use server";
+
+import type { ActionState } from "@/app/types";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { json } from "@remix-run/node";
-import {
-	unstable_createMemoryUploadHandler,
-	unstable_parseMultipartFormData,
-} from "@remix-run/node";
-import type { ActionFunctionArgs } from "@remix-run/node";
-
-export async function action({ request }: ActionFunctionArgs) {
-	const uploadHandler = unstable_createMemoryUploadHandler({
-		maxPartSize: 1024 * 1024 * 10,
-	});
-	const formData = await unstable_parseMultipartFormData(
-		request,
-		uploadHandler,
-	);
-	const file = formData.get("file") as File;
-	if (!file) {
-		return json({ error: "file not found" }, { status: 400 });
-	}
-
-	const url = await uploadToR2(file);
-	return json({ url });
-}
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -51,9 +31,12 @@ const s3Client = new S3Client(
 			},
 );
 
-export async function uploadToR2(file: File): Promise<string> {
-	const key = `uploads/${Date.now()}-${file.name}`;
+export interface imgActionState extends ActionState {
+	imageUrl?: string;
+}
 
+async function uploadToR2(file: File): Promise<string> {
+	const key = `uploads/${Date.now()}-${file.name}`;
 	const arrayBuffer = await file.arrayBuffer();
 
 	const command = new PutObjectCommand({
@@ -67,4 +50,30 @@ export async function uploadToR2(file: File): Promise<string> {
 	return isProduction
 		? `https://images.eveeve.org/${key}`
 		: `http://localhost:9000/${R2_BUCKET_NAME}/${key}`;
+}
+export interface UploadImageResult {
+	error?: string;
+	imageUrl?: string;
+}
+
+export async function uploadImage(file: File): Promise<UploadImageResult> {
+	try {
+		if (!file.type.startsWith("image/")) {
+			return { error: "Please select a valid image file" };
+		}
+
+		const maxSize = 5 * 1024 * 1024;
+		if (file.size > maxSize) {
+			return { error: "Image file size must be less than 5MB" };
+		}
+
+		const imageUrl = await uploadToR2(file);
+
+		return {
+			imageUrl,
+		};
+	} catch (error) {
+		console.error("Upload error:", error);
+		return { error: "Failed to upload image" };
+	}
 }

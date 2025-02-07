@@ -5,8 +5,7 @@ export type SanitizedUser = Omit<
 	"email" | "provider" | "plan" | "emailVerified" | "id"
 >;
 
-export type ActionState = {
-	error?: string;
+export interface ActionState {
+	generalError?: string;
 	success?: string;
-	[key: string]: string | boolean | undefined;
-};
+}

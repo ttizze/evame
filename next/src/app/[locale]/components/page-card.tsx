@@ -9,7 +9,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { LikeButton } from "./like-button/like-button";
-import { PageActionsDropdown } from "./page-actions-dropdown";
+import { PageActionsDropdown } from "./page-actions-dropdown/page-actions-dropdown";
 import { TagList } from "./tag-list";
 
 type PageCardProps = {
@@ -17,8 +17,6 @@ type PageCardProps = {
 	pageLink: string;
 	userLink: string;
 	showOwnerActions?: boolean;
-	onTogglePublicStatus?: (pageId: number) => void;
-	onArchive?: (pageId: number) => void;
 };
 
 export function PageCard({
@@ -26,18 +24,14 @@ export function PageCard({
 	pageLink,
 	userLink,
 	showOwnerActions = false,
-	onTogglePublicStatus,
-	onArchive,
 }: PageCardProps) {
-	console.log("pageCard", pageCard);
 	return (
 		<Card className="h-full relative w-full overflow-hidden">
-			{showOwnerActions && onTogglePublicStatus && onArchive && (
+			{showOwnerActions && (
 				<div className="absolute top-2 right-2">
 					<PageActionsDropdown
 						editPath={`${pageLink}/edit`}
-						onTogglePublic={() => onTogglePublicStatus(pageCard.id)}
-						onDelete={() => onArchive(pageCard.id)}
+						pageId={pageCard.id}
 						status={pageCard.status}
 					/>
 				</div>

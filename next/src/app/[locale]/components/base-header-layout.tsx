@@ -1,5 +1,6 @@
-import { signOutAction } from "@/app/[locale]/action";
+import { signOutAction } from "@/app/[locale]/auth-action";
 import type { SanitizedUser } from "@/app/types";
+import { NavigationLink } from "@/components/navigation-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -8,7 +9,6 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from "@/i18n/routing";
 import { LogOutIcon, SettingsIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { ModeToggle } from "./mode-toggle";
@@ -30,14 +30,14 @@ export function BaseHeaderLayout({
 		<header className="z-10 w-full">
 			<div className="max-w-7xl mx-auto py-2 md:py-4 px-2 md:px-6 lg:px-8 flex justify-between items-center">
 				<div className="flex items-center gap-4">
-					<Link href="/" className="flex items-center">
+					<NavigationLink href="/" className="flex items-center">
 						<img
 							src="/logo.svg"
 							alt="Evame"
 							className="h-8 w-20 dark:invert"
 							aria-label="Evame Logo"
 						/>
-					</Link>
+					</NavigationLink>
 					{leftExtra}
 				</div>
 				<div className="flex items-center gap-4">
@@ -54,9 +54,9 @@ export function BaseHeaderLayout({
 							</DropdownMenuTrigger>
 							<DropdownMenuContent className="m-2 p-0 rounded-xl min-w-40">
 								<DropdownMenuItem asChild>
-									<Link
+									<NavigationLink
 										href={`/user/${currentUser.handle}`}
-										className="opacity-100 w-full  px-4 py-3 cursor-pointer hover:bg-accent hover:text-accent-foreground"
+										className="opacity-100 w-full rounded-none px-4 py-3  cursor-pointer hover:bg-accent hover:text-accent-foreground"
 									>
 										<div className="flex flex-col items-start">
 											{currentUser.name}
@@ -64,17 +64,17 @@ export function BaseHeaderLayout({
 												@{currentUser.handle}
 											</span>
 										</div>
-									</Link>
+									</NavigationLink>
 								</DropdownMenuItem>
 								<DropdownMenuSeparator className="my-0" />
 								<DropdownMenuItem asChild>
-									<Link
+									<NavigationLink
 										href={`/user/${currentUser.handle}/page-management`}
-										className="opacity-100 w-full  px-4 py-3 cursor-pointer hover:bg-accent hover:text-accent-foreground"
+										className="opacity-100 w-full rounded-none gap-2 px-4 py-3 cursor-pointer hover:bg-accent hover:text-accent-foreground"
 									>
 										<SettingsIcon className="w-4 h-4" />
 										Page Management
-									</Link>
+									</NavigationLink>
 								</DropdownMenuItem>
 								<DropdownMenuItem asChild>
 									<ModeToggle />
@@ -85,7 +85,7 @@ export function BaseHeaderLayout({
 										name="intent"
 										value="logout"
 										onClick={signOutAction}
-										className="w-full gap-2 flex cursor-pointer items-center px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground text-red-500"
+										className="w-full gap-2 flex rounded-none cursor-pointer items-center px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground text-red-500"
 									>
 										<LogOutIcon className="w-4 h-4" />
 										Log out

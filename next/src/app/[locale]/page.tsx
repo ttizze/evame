@@ -1,6 +1,6 @@
 // app/page.tsx (or wherever your HomePage is located)
 import { auth } from "@/auth";
-import { signOutAction } from "./action";
+import { signOutAction } from "./auth-action";
 
 export default async function HomePage() {
 	const session = await auth();

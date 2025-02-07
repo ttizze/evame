@@ -1,6 +1,8 @@
 "use client";
-import { signInWithResendAction } from "@/app/[locale]/action";
-import type { ActionState } from "@/app/types";
+import {
+	type SignInWithResendState,
+	signInWithResendAction,
+} from "@/app/[locale]/auth-action";
 import { NavigationLink } from "@/components/navigation-link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,10 +16,10 @@ import { GoogleForm } from "./components/google-form";
 
 export function Login() {
 	const pathname = usePathname();
-	const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-		signInWithResendAction,
-		{ error: "" },
-	);
+	const [state, formAction, isPending] = useActionState<
+		SignInWithResendState,
+		FormData
+	>(signInWithResendAction, {});
 
 	return (
 		<div className="container mx-auto max-w-md py-8">
@@ -43,8 +45,10 @@ export function Login() {
 									autoComplete="email"
 									className="rounded-lg"
 								/>
-								{state.error && (
-									<p className="text-sm text-red-500">{state.error}</p>
+								{state.fieldErrors?.email && (
+									<p className="text-sm text-red-500">
+										{state.fieldErrors.email}
+									</p>
 								)}
 							</div>
 							<Button disabled={isPending} className="w-full rounded-full">

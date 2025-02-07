@@ -1,10 +1,9 @@
 "use client";
 
-import type { ActionState } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
-import { useActionState } from "react";
-import { toggleLikeAction } from "./action";
+import { useActionState, useOptimistic } from "react";
+import { type LikeButtonState, toggleLikeAction } from "./action";
 type LikeButtonProps = {
 	liked: boolean;
 	likeCount: number;
@@ -20,14 +19,27 @@ export function LikeButton({
 	showCount,
 	className = "",
 }: LikeButtonProps) {
-	const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-		toggleLikeAction,
-		{ error: "" },
+	const [state, formAction, isPending] = useActionState<
+		LikeButtonState,
+		FormData
+	>(toggleLikeAction, {});
+	const [optimisticLiked, setOptimisticLiked] = useOptimistic(
+		liked,
+		(state, liked: boolean) => liked,
 	);
-	console.log("state", state);
+
+	const [optimisticCount, setOptimisticCount] = useOptimistic(
+		likeCount,
+		(state, increment: boolean) => (increment ? state + 1 : state - 1),
+	);
+	const handleSubmit = async (formData: FormData) => {
+		setOptimisticLiked(!optimisticLiked);
+		setOptimisticCount(!optimisticLiked);
+		formAction(formData);
+	};
 	return (
 		<div className="flex items-center gap-2">
-			<form action={formAction}>
+			<form action={handleSubmit}>
 				<input type="hidden" name="slug" value={slug} />
 				<Button
 					type="submit"
@@ -38,12 +50,14 @@ export function LikeButton({
 					disabled={isPending}
 				>
 					<Heart
-						className={`h-5 w-5 ${liked ? "text-red-500" : ""}`}
-						fill={liked ? "currentColor" : "none"}
+						className={`h-5 w-5 ${optimisticLiked ? "text-red-500" : ""}`}
+						fill={optimisticLiked ? "currentColor" : "none"}
 					/>
 				</Button>
 			</form>
-			{showCount && <span className="text-muted-foreground">{likeCount}</span>}
+			{showCount && (
+				<span className="text-muted-foreground">{optimisticCount}</span>
+			)}
 		</div>
 	);
 }

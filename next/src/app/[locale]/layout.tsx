@@ -3,11 +3,22 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import "../globals.css";
+import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Footer } from "./components/footer";
 import { Header } from "./components/header";
+import { Inter, BIZ_UDPGothic } from "next/font/google";
 
+
+const inter = Inter({ subsets: ["latin"] });
+const bizUDPGothic = BIZ_UDPGothic({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+	preload: true,
+  display: 'swap',
+  variable: '--font-biz-udp-gothic',
+});
 export default async function LocaleLayout({
 	children,
 	params,
@@ -25,7 +36,7 @@ export default async function LocaleLayout({
 	// side is the easiest way to get started
 	const messages = await getMessages();
 	return (
-		<html lang={resolvedParams.locale} suppressHydrationWarning>
+		<html lang={resolvedParams.locale} suppressHydrationWarning   className={`${inter.className} ${bizUDPGothic.variable}`}>
 			<body>
 				<NuqsAdapter>
 					<ThemeProvider
@@ -39,6 +50,7 @@ export default async function LocaleLayout({
 							<main className="mb-5 mt-3 md:mt-5 flex-grow tracking-wider">
 								<div className="mx-auto px-2 max-w-4xl">{children}</div>
 							</main>
+							<Toaster richColors />
 							<Footer />
 						</NextIntlClientProvider>
 					</ThemeProvider>

@@ -2,7 +2,6 @@
 
 import type { ActionState } from "@/app/types";
 import { signIn, signOut } from "@/auth";
-import { parseWithZod } from "@conform-to/zod";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -19,14 +18,22 @@ export async function signInWithGoogleAction(
 	};
 }
 
+export type SignInWithResendState = ActionState & {
+	fieldErrors?: {
+		email?: string;
+	};
+};
+
 export async function signInWithResendAction(
-	previousState: ActionState,
+	previousState: SignInWithResendState,
 	formData: FormData,
 ) {
-	const submission = parseWithZod(formData, { schema: loginSchema });
+	const validation = loginSchema.safeParse({
+		email: formData.get("email"),
+	});
 
-	if (submission.status !== "success") {
-		return { error: "Invalid email address" };
+	if (!validation.success) {
+		return { fieldErrors: { email: "Invalid email address" } };
 	}
 
 	await signIn("resend", formData);

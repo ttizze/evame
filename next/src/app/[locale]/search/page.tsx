@@ -33,15 +33,7 @@ export default async function Page(props: Props) {
 	const resolvedSearchParams = await searchParams;
 	const result = schema.safeParse(resolvedSearchParams);
 	if (!result.success) {
-		return (
-			<SearchPageClient
-				locale={locale}
-				pages={[]}
-				tags={[]}
-				users={[]}
-				totalPages={0}
-			/>
-		);
+		return <SearchPageClient pages={[]} tags={[]} users={[]} totalPages={0} />;
 	}
 
 	const { query, category = "title", page = "1", tagPage } = result.data;
@@ -115,7 +107,6 @@ export default async function Page(props: Props) {
 
 	return (
 		<SearchPageClient
-			locale={locale}
 			pages={pages}
 			tags={tags}
 			users={users}

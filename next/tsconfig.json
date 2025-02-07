@@ -2,6 +2,7 @@
 	"compilerOptions": {
 		"target": "ES2017",
 		"lib": ["dom", "dom.iterable", "esnext"],
+		"types": ["vite/client", "vitest/globals", "vitest-environment-vprisma"],
 		"allowJs": true,
 		"skipLibCheck": true,
 		"strict": true,
