@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 /**
  * キャメルケースのファイル名をケバブケースに変換する関数
@@ -19,7 +19,7 @@ function camelToKebab(filename: string): string {
     return filename;
   }
 
-  // キャメルケースからケバブケースへ変換する処理
+  // キャメルケースからケバブケースへの変換処理
   // ① 「小文字or記号 + 大文字＋小文字」の部分でハイフンを挿入
   const s1 = base.replace(/(.)([A-Z][a-z]+)/g, '$1-$2');
   // ② 「小文字or数字 + 大文字」のパターンにもハイフンを挿入し、全体を小文字に変換
@@ -29,18 +29,29 @@ function camelToKebab(filename: string): string {
   return kebabBase + ext.toLowerCase();
 }
 
-// カレントディレクトリ内の全ファイルを対象に処理
-const currentDir = './src/app/[locale]/user/[handle]/page/[slug]/comment/components';
-const files = fs.readdirSync(currentDir);
+/**
+ * 指定したディレクトリ内のファイルを再帰的に処理する関数
+ *
+ * @param dir 処理対象のディレクトリパス
+ */
+function processDirectory(dir: string): void {
+  const items = fs.readdirSync(dir);
 
-files.forEach(file => {
-  const filePath = path.join(currentDir, file);
-  const stats = fs.statSync(filePath);
-  if (stats.isFile()) {
-    const newName = camelToKebab(file);
-    if (newName !== file) {
-      console.log(`Renaming: ${file} -> ${newName}`);
-      fs.renameSync(filePath, path.join(currentDir, newName));
+  for (const item of items) {
+    const fullPath = path.join(dir, item);
+    const stats = fs.statSync(fullPath);
+
+    if (stats.isDirectory()) {
+      processDirectory(fullPath);
+    } else if (stats.isFile()) {
+      const newName = camelToKebab(item);
+      if (newName !== item) {
+        const newPath = path.join(dir, newName);
+        console.log(`Renaming: ${fullPath} -> ${newPath}`);
+        fs.renameSync(fullPath, newPath);
+      }
     }
   }
-});
+}
+
+processDirectory('./src');
