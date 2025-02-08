@@ -89,6 +89,7 @@
 		"tsx": "4.19.2",
 		"unified": "11.0.5",
 		"unist-util-visit": "5.0.0",
+		"use-debounce": "^10.0.4",
 		"ws": "8.18.0",
 		"zod": "3.24.1",
 		"zod-form-data": "^2.0.5"

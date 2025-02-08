@@ -162,7 +162,6 @@ export default async function Page({ params, searchParams }: Props) {
 
 	const showOriginal = resolvedSearchParams.showOriginal !== "false";
 	const showTranslation = resolvedSearchParams.showTranslation !== "false";
-	console.log(showOriginal, showTranslation);
 
 	return (
 		<div className="w-full max-w-3xl mx-auto">

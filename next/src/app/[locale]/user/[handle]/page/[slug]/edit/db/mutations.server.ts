@@ -1,27 +1,32 @@
 import { prisma } from "@/lib/prisma";
 import type { PageStatus } from "@prisma/client";
 import type { BlockWithNumber } from "../../lib/process-html";
+
 export async function upsertPageWithHtml(
 	pageSlug: string,
 	html: string,
 	userId: string,
 	sourceLocale: string,
-	status: PageStatus,
 ) {
 	return await prisma.page.upsert({
 		where: { slug: pageSlug },
 		update: {
 			content: html,
 			sourceLocale,
-			status,
 		},
 		create: {
 			slug: pageSlug,
 			content: html,
 			userId,
-			status,
 			sourceLocale,
 		},
+	});
+}
+
+export async function updatePageStatus(pageId: number, status: PageStatus) {
+	return await prisma.page.update({
+		where: { id: pageId },
+		data: { status },
 	});
 }
 

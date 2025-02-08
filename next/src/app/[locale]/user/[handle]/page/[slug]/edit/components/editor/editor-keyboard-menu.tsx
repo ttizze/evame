@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import type { Editor as TiptapEditor } from "@tiptap/react";
 import {
 	Code,
@@ -11,8 +12,7 @@ import {
 	ListOrdered,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { cn } from "~/utils/cn";
-import { handleFileUpload } from "./useFileUpload";
+import { handleFileUpload } from "./use-file-upload";
 
 interface EditorKeyboardMenuProps {
 	editor: TiptapEditor;

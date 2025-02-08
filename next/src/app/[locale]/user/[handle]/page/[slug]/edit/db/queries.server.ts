@@ -17,7 +17,7 @@ export async function getPageBySlug(slug: string) {
 		},
 	});
 }
-
+export type PageWithTitleAndTags = Awaited<ReturnType<typeof getPageBySlug>>;
 export async function getTitlePageSegmentId(slug: string) {
 	const titlePageSegment = await prisma.page.findFirst({
 		where: { slug },
