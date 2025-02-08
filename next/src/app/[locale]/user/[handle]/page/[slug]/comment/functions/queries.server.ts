@@ -1,4 +1,4 @@
-import { prisma } from "~/utils/prisma";
+import { prisma } from "@/lib/prisma";
 
 export async function getPageComment(pageCommentId: number) {
 	return await prisma.pageComment.findUnique({

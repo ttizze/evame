@@ -1,7 +1,10 @@
 import * as path from "node:path";
-import * as VitestConfig from "vitest/config";
+import react from "@vitejs/plugin-react";
+import tsconfigPaths from "vite-tsconfig-paths";
+import { defineConfig } from "vitest/config";
 
-export default VitestConfig.defineConfig({
+export default defineConfig({
+	plugins: [react(), tsconfigPaths()],
 	test: {
 		globals: true,
 		env: {
@@ -13,17 +16,15 @@ export default VitestConfig.defineConfig({
 			RESEND_API_KEY: "test",
 			MAGIC_LINK_SECRET: "test",
 		},
-		environment: "vprisma",
-		setupFiles: ["vitest-environment-vprisma/setup", "vitest.setup.ts"],
-		environmentOptions: {
-			vprisma: {
-				baseEnv: "jsdom",
-			},
+		environment: "jsdom",
+		deps: {
+			inline: ["next-auth"],
 		},
 	},
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "src"),
+			"next/server": path.resolve(__dirname, "node_modules/next/server.js"),
 		},
 	},
 });

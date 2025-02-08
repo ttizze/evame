@@ -8,9 +8,9 @@ import fm from "front-matter";
 import { JSDOM } from "jsdom"; // HTMLパース用
 import pLimit from "p-limit";
 
+import { prisma } from "@/lib/prisma";
 // プロジェクト固有のインポート
 import { upsertTags } from "~/routes/$locale+/user.$handle+/page+/$slug+/edit/functions/mutations.server";
-import { prisma } from "~/utils/prisma";
 import { getMarkdownSourceLocale } from "./getMarkdownSourceLocale";
 import { processMarkdownContent } from "./processMarkdownContent";
 // 定数の定義

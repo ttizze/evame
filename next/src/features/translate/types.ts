@@ -1,4 +1,4 @@
-import type { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/index";
+import type { TranslationIntent } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
 export type NumberedElement = {
 	number: number;
 	text: string;

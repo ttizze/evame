@@ -1,36 +1,41 @@
-import { useFetcher } from "@remix-run/react";
-import { MoreVertical } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import { Button } from "~/components/ui/button";
+"use client";
+
+import { MemoizedParsedContent } from "@/app/[locale]/user/[handle]/page/[slug]/components/parsed-content";
+import { VOTE_TARGET } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
+import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
+import type { ActionState } from "@/app/types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
-import { MemoizedParsedContent } from "~/routes/$locale+/user.$handle+/page+/$slug+/components/ParsedContent";
-import type { PageCommentWithUser } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
-import { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
-import { VoteIntent } from "~/routes/resources+/vote-buttons";
+} from "@/components/ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
+import { useActionState } from "react";
+import { commentDeleteAction } from "./action";
+import type { PageCommentWithUser } from "./db/query.server";
 
-interface CommentListProps {
+interface CommentListClientProps {
 	pageCommentsWithUser: PageCommentWithUser;
-	currentUserId?: string;
 	currentHandle: string | undefined;
 	showOriginal: boolean;
 	showTranslation: boolean;
 	locale: string;
 }
 
-export function PageCommentList({
+export function PageCommentListClient({
 	pageCommentsWithUser,
-	currentUserId,
 	currentHandle,
 	showOriginal,
 	showTranslation,
 	locale,
-}: CommentListProps) {
-	const fetcher = useFetcher();
+}: CommentListClientProps) {
+	const [state, action, isPending] = useActionState<ActionState, FormData>(
+		commentDeleteAction,
+		{},
+	);
 	return (
 		<div className="space-y-4">
 			{pageCommentsWithUser.map((pageComment) => (
@@ -55,7 +60,7 @@ export function PageCommentList({
 										{pageComment.createdAt}
 									</span>
 								</div>
-								{currentUserId === pageComment.userId && (
+								{currentHandle === pageComment.user.handle && (
 									<DropdownMenu modal={false}>
 										<DropdownMenuTrigger asChild>
 											<Button
@@ -67,15 +72,22 @@ export function PageCommentList({
 											</Button>
 										</DropdownMenuTrigger>
 										<DropdownMenuContent align="end">
-											<DropdownMenuItem
-												onSelect={() => {
-													fetcher.submit(
-														{ pageCommentId: pageComment.id, intent: "delete" },
-														{ method: "POST", action: "./comment" },
-													);
-												}}
-											>
-												Delete
+											<DropdownMenuItem>
+												<form action={action}>
+													<input
+														type="hidden"
+														name="pageCommentId"
+														value={pageComment.id}
+													/>
+													<input
+														type="hidden"
+														name="pageId"
+														value={pageComment.pageId}
+													/>
+													<Button type="submit" variant="ghost">
+														Delete
+													</Button>
+												</form>
 											</DropdownMenuItem>
 										</DropdownMenuContent>
 									</DropdownMenu>
@@ -93,9 +105,9 @@ export function PageCommentList({
 							showOriginal={showOriginal}
 							showTranslation={showTranslation}
 							locale={locale}
-							voteIntent={VoteIntent.COMMENT_SEGMENT_TRANSLATION}
-							addTranslationFormIntent={
-								AddTranslationFormIntent.COMMENT_SEGMENT_TRANSLATION
+							voteTarget={VOTE_TARGET.COMMENT_SEGMENT_TRANSLATION}
+							addTranslationFormTarget={
+								ADD_TRANSLATION_FORM_TARGET.COMMENT_SEGMENT_TRANSLATION
 							}
 						/>
 					</div>

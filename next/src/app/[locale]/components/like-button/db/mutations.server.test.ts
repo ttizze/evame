@@ -83,6 +83,13 @@ describe("toggleLike 実際のDB統合テスト", () => {
 		}
 		archivedPage = foundArchivedPage;
 	});
+	afterEach(async () => {
+		if (testUser?.id) {
+			await prisma.user.delete({
+				where: { id: testUser.id },
+			});
+		}
+	});
 
 	it("userIdを指定した場合にlikeが新規作成される", async () => {
 		const result = await toggleLike(publicPage.slug, testUser.id, undefined);

@@ -1,25 +1,28 @@
 "use client";
+import { sanitizeAndParseText } from "@/app/[locale]/lib/sanitize-and-parse-text.client";
+import type { SegmentWithTranslations } from "@/app/[locale]/types";
+import type {
+	AddTranslationFormTarget,
+	VoteTarget,
+} from "@/app/[locale]/user/[handle]/page/[slug]/constants";
+import { NavigationLink } from "@/components/navigation-link";
 import { Languages, Plus } from "lucide-react";
 import { useState } from "react";
-import type { AddTranslationFormIntent } from "./add-translation-form/route";
-import type { SegmentWithTranslations } from "../../../types";
-import { sanitizeAndParseText } from "../../../utils/sanitize-and-parse-text.client";
 import { AddAndVoteTranslations } from "./add-and-vote-translations";
-import { VoteButtons } from "./vote-button/vote-buttons";
-import type { VoteIntent } from "./vote-button/vote-buttons";
+import { VoteButtons } from "./vote-buttons";
 
 interface TranslationSectionProps {
 	segmentWithTranslations: SegmentWithTranslations;
 	currentHandle: string | undefined;
-	voteIntent: VoteIntent;
-	addTranslationFormIntent: AddTranslationFormIntent;
+	voteTarget: VoteTarget;
+	addTranslationFormTarget: AddTranslationFormTarget;
 }
 
 export function TranslationSection({
 	segmentWithTranslations,
 	currentHandle,
-	voteIntent,
-	addTranslationFormIntent,
+	voteTarget,
+	addTranslationFormTarget,
 }: TranslationSectionProps) {
 	const [isSelected, setIsSelected] = useState(false);
 
@@ -31,12 +34,9 @@ export function TranslationSection({
 				<Languages size={24} />
 			</span>
 		);
-	const sanitizedAndParsedText = isHydrated
-		? sanitizeAndParseText(
-			bestSegmentTranslationWithVote.segmentTranslation.text,
-		)
-		: bestSegmentTranslationWithVote.segmentTranslation.text;
-
+	const sanitizedAndParsedText = sanitizeAndParseText(
+		bestSegmentTranslationWithVote.segmentTranslation.text,
+	);
 	return (
 		<span className={"group relative"}>
 			<span
@@ -52,26 +52,26 @@ export function TranslationSection({
 			{isSelected && (
 				<>
 					<div className="flex items-center justify-end">
-						<LocaleLink
-							to={`/user/${bestSegmentTranslationWithVote?.segmentTranslation.user.handle}`}
+						<NavigationLink
+							href={`/user/${bestSegmentTranslationWithVote?.segmentTranslation.user.handle}`}
 							className="!no-underline mr-2"
 						>
 							<p className="text-sm text-gray-500 text-right flex justify-end items-center">
 								by:{" "}
 								{bestSegmentTranslationWithVote?.segmentTranslation.user.name}
 							</p>
-						</LocaleLink>
+						</NavigationLink>
 						<VoteButtons
 							translationWithVote={bestSegmentTranslationWithVote}
-							voteIntent={voteIntent}
+							voteTarget={voteTarget}
 						/>
 					</div>
 					<AddAndVoteTranslations
 						currentHandle={currentHandle}
 						segmentWithTranslations={segmentWithTranslations}
 						open={isSelected}
-						voteIntent={voteIntent}
-						addTranslationFormIntent={addTranslationFormIntent}
+						voteTarget={voteTarget}
+						addTranslationFormTarget={addTranslationFormTarget}
 					/>
 				</>
 			)}

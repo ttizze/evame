@@ -1,7 +1,4 @@
 "use client";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { useState,useTransition } from "react";
-import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
 	Command,
@@ -16,8 +13,11 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { usePathname, useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
-import { usePathname, useRouter} from '@/i18n/routing';
+import { Check, ChevronsUpDown } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useState, useTransition } from "react";
 
 interface LocaleOption {
 	code: string;
@@ -43,17 +43,17 @@ export default function LocaleSelector({
 	const [isPending, startTransition] = useTransition();
 	const router = useRouter();
 	const pathname = usePathname();
-  const params = useParams();
+	const params = useParams();
 	const handleLocaleChange = (value: string) => {
 		setCurrentLocaleCode(value);
 		setOpen(false);
 		startTransition(() => {
 			router.replace(
-        // @ts-expect-error -- TypeScript will validate that only known `params`
-        // are used in combination with a given `pathname`. Since the two will
-        // always match for the current route, we can skip runtime checks.
-        {pathname, params},
-        {locale: value}
+				// @ts-expect-error -- TypeScript will validate that only known `params`
+				// are used in combination with a given `pathname`. Since the two will
+				// always match for the current route, we can skip runtime checks.
+				{ pathname, params },
+				{ locale: value },
 			);
 		});
 	};

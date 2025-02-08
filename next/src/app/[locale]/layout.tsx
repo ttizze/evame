@@ -5,19 +5,18 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
+import { BIZ_UDPGothic, Inter } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Footer } from "./components/footer";
 import { Header } from "./components/header";
-import { Inter, BIZ_UDPGothic } from "next/font/google";
-
 
 const inter = Inter({ subsets: ["latin"] });
 const bizUDPGothic = BIZ_UDPGothic({
-  weight: ['400', '700'],
-  subsets: ['latin'],
+	weight: ["400", "700"],
+	subsets: ["latin"],
 	preload: true,
-  display: 'swap',
-  variable: '--font-biz-udp-gothic',
+	display: "swap",
+	variable: "--font-biz-udp-gothic",
 });
 export default async function LocaleLayout({
 	children,
@@ -36,7 +35,11 @@ export default async function LocaleLayout({
 	// side is the easiest way to get started
 	const messages = await getMessages();
 	return (
-		<html lang={resolvedParams.locale} suppressHydrationWarning   className={`${inter.className} ${bizUDPGothic.variable}`}>
+		<html
+			lang={resolvedParams.locale}
+			suppressHydrationWarning
+			className={`${inter.className} ${bizUDPGothic.variable}`}
+		>
 			<body>
 				<NuqsAdapter>
 					<ThemeProvider

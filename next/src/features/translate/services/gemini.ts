@@ -5,7 +5,7 @@ import {
 	HarmCategory,
 	SchemaType,
 } from "@google/generative-ai";
-import { generateSystemMessage } from "./generateGeminiMessage";
+import { generateSystemMessage } from "./generate-gemini-message";
 const MAX_RETRIES = 3;
 
 export async function getGeminiModelResponse(

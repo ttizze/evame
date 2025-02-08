@@ -12,7 +12,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Card } from "@/components/ui/card";
-import { ensureGuestId } from "@/lib/ensureGuestId.server";
+import { ensureGuestId } from "@/lib/ensure-guest-id.server";
 import Linkify from "linkify-react";
 import { Settings } from "lucide-react";
 import type { Metadata } from "next";

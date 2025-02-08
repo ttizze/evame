@@ -1,33 +1,30 @@
-import { LikeButton } from "@/app/[locale]/components/like-button/like-button";
-import { PageCommentList } from "@/app/[locale]/user/[handle]/page/[slug]/comment/components/PageCommentList";
 import { PageCommentForm } from "@/app/[locale]/user/[handle]/page/[slug]/comment/components/page-comment-form";
+import { PageCommentList } from "@/app/[locale]/user/[handle]/page/[slug]/comment/components/page-comment-list";
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
 import { auth } from "@/auth";
-import { ensureGuestId } from "@/lib/ensureGuestId.server";
-import { MessageCircle } from "lucide-react";
+import { ensureGuestId } from "@/lib/ensure-guest-id.server";
 import type { Metadata, ResolvingMetadata } from "next";
 import { notFound } from "next/navigation";
-import { cache } from 'react'
-import { ContentWithTranslations } from "./components/ContentWithTranslations";
-import { FloatingControls } from "./components/floating-controls";
+import { cache } from "react";
+import { ContentWithTranslations } from "./components/content-with-translations";
+import { PageControl } from "./components/page-control.client";
 import { TranslateActionSection } from "./components/translate-button/translate-action-section";
 import {
 	fetchIsLikedByUser,
 	fetchLatestUserAITranslationInfo,
 	fetchLikeCount,
 	fetchPageCommentsCount,
-	fetchPageCommentsWithUserAndTranslations,
 	fetchPageWithTranslations,
 } from "./db/queries.server";
-import { getBestTranslation } from "./utils/getBestTranslation";
-import { stripHtmlTags } from "./utils/stripHtmlTags";
+import { getBestTranslation } from "./lib/get-best-translation";
+import { stripHtmlTags } from "./lib/strip-html-tags";
 
 type Props = {
 	params: Promise<{ locale: string; handle: string; slug: string }>;
 	searchParams: Promise<{ showOriginal?: string; showTranslation?: string }>;
 };
 
-const getPageData = cache(async (slug: string, locale: string) => {
+export const getPageData = cache(async (slug: string, locale: string) => {
 	const session = await auth();
 	const currentUser = session?.user;
 
@@ -60,13 +57,13 @@ const getPageData = cache(async (slug: string, locale: string) => {
 		currentUser,
 		pageSegmentTitleWithTranslations,
 		sourceTitleWithBestTranslationTitle,
-		bestTranslationTitle
+		bestTranslationTitle,
 	};
 });
 
 export async function generateMetadata(
 	{ params }: Props,
-	parent: ResolvingMetadata
+	parent: ResolvingMetadata,
 ): Promise<Metadata> {
 	const { slug, locale } = await params;
 	const data = await getPageData(slug, locale);
@@ -89,7 +86,9 @@ export async function generateMetadata(
 		: pageWithTranslations.user.image;
 
 	const alternateLinks = pageWithTranslations.existLocales
-		.filter((locale: string) => pageWithTranslations.page.sourceLocale !== locale)
+		.filter(
+			(locale: string) => pageWithTranslations.page.sourceLocale !== locale,
+		)
 		.map((locale: string) => ({
 			tagName: "link",
 			rel: "alternate",
@@ -115,13 +114,8 @@ export async function generateMetadata(
 		...alternateLinks,
 	};
 }
-export enum TranslationIntent {
-	TRANSLATE_PAGE = "translatePage",
-	TRANSLATE_COMMENT = "translateComment",
-}
 
-
-export default async function Page({ params, searchParams }: Props,) {
+export default async function Page({ params, searchParams }: Props) {
 	const { slug, locale } = await params;
 	const resolvedSearchParams = await searchParams;
 	const data = await getPageData(slug, locale);
@@ -158,25 +152,14 @@ export default async function Page({ params, searchParams }: Props,) {
 		locale,
 	);
 
-	const [likeCount, isLikedByUser, pageCommentsWithUser, pageCommentsCount] =
-		await Promise.all([
-			fetchLikeCount(pageWithTranslations.page.id),
-			fetchIsLikedByUser(
-				pageWithTranslations.page.id,
-				currentUser?.id,
-				guestId,
-			),
-			fetchPageCommentsWithUserAndTranslations(
-				pageWithTranslations.page.id,
-				locale,
-				currentUser?.id,
-			),
-			fetchPageCommentsCount(pageWithTranslations.page.id),
-		]);
+	const [likeCount, isLikedByUser, pageCommentsCount] = await Promise.all([
+		fetchLikeCount(pageWithTranslations.page.id),
+		fetchIsLikedByUser(pageWithTranslations.page.id, currentUser?.id, guestId),
+		fetchPageCommentsCount(pageWithTranslations.page.id),
+	]);
 
-
-	const showOriginal = resolvedSearchParams.showOriginal !== 'false';
-	const showTranslation = resolvedSearchParams.showTranslation !== 'false';
+	const showOriginal = resolvedSearchParams.showOriginal !== "false";
+	const showTranslation = resolvedSearchParams.showTranslation !== "false";
 
 	const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
@@ -195,57 +178,42 @@ export default async function Page({ params, searchParams }: Props,) {
 					showTranslation={showTranslation}
 				/>
 			</article>
-			<div className="space-y-8">
-				<div className="flex items-center gap-4">
-					<LikeButton
-						liked={isLikedByUser}
-						likeCount={likeCount}
-						slug={pageWithTranslations.page.slug}
-						showCount
-					/>
-					<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
-					<span>{pageCommentsCount}</span>
-				</div>
+			<PageControl
+				likeCount={likeCount}
+				isLikedByUser={isLikedByUser}
+				pageCommentsCount={pageCommentsCount}
+				slug={pageWithTranslations.page.slug}
+				sourceTitleWithBestTranslationTitle={
+					sourceTitleWithBestTranslationTitle
+				}
+			/>
 
+			<div className="mt-8">
 				<div className="mt-8">
-					<div className="mt-8">
-						<div className="flex items-center gap-2 py-2">
-							<h2 className="text-2xl font-bold">Comments</h2>
-							<TranslateActionSection
-								pageId={pageWithTranslations.page.id}
-								currentHandle={currentUser?.handle}
-								userAITranslationInfo={userAITranslationInfo}
-								hasGeminiApiKey={hasGeminiApiKey}
-								sourceLocale={pageWithTranslations.page.sourceLocale}
-								locale={locale}
-								existLocales={pageWithTranslations.existLocales}
-								intent="translateComment"
-							/>
-						</div>
-						<PageCommentList
-							pageCommentsWithUser={pageCommentsWithUser}
-							currentUserId={currentUser?.id}
+					<div className="flex items-center gap-2 py-2">
+						<h2 className="text-2xl font-bold">Comments</h2>
+						<TranslateActionSection
+							pageId={pageWithTranslations.page.id}
 							currentHandle={currentUser?.handle}
-							showOriginal={showOriginal}
-							showTranslation={showTranslation}
+							userAITranslationInfo={userAITranslationInfo}
+							hasGeminiApiKey={hasGeminiApiKey}
+							sourceLocale={pageWithTranslations.page.sourceLocale}
 							locale={locale}
+							existLocales={pageWithTranslations.existLocales}
+							intent="translateComment"
 						/>
 					</div>
-					<PageCommentForm
+					<PageCommentList
 						pageId={pageWithTranslations.page.id}
 						currentHandle={currentUser?.handle}
+						showOriginal={showOriginal}
+						showTranslation={showTranslation}
+						locale={locale}
 					/>
 				</div>
-				<FloatingControls
-					showOriginal={showOriginal}
-					showTranslation={showTranslation}
-					onToggleOriginal={() => { }}
-					onToggleTranslation={() => { }}
-					liked={isLikedByUser}
-					likeCount={likeCount}
-					slug={pageWithTranslations.page.slug}
-					shareUrl={shareUrl}
-					shareTitle={sourceTitleWithBestTranslationTitle}
+				<PageCommentForm
+					pageId={pageWithTranslations.page.id}
+					currentHandle={currentUser?.handle}
 				/>
 			</div>
 		</div>

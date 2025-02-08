@@ -1,4 +1,12 @@
 "use client";
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
 import { Share } from "lucide-react";
 import { CopyIcon } from "lucide-react";
 import { useState } from "react";
@@ -10,14 +18,6 @@ import {
 	TwitterShareButton,
 	XIcon,
 } from "react-share";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
 
 interface ShareDialogProps {
 	url: string;

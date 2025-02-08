@@ -8,8 +8,8 @@ import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import type { Plugin } from "unified";
-import { collectBlocksFromRoot } from "../../utils/process-html";
-import { injectSpanNodes } from "../../utils/process-html";
+import { collectBlocksFromRoot } from "../../lib/process-html";
+import { injectSpanNodes } from "../../lib/process-html";
 import { upsertPageComment } from "../functions/mutations.server";
 import { createPageCommentSegments } from "../functions/mutations.server";
 export function parseHtmlToAst(html: string): Root {

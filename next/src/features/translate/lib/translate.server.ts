@@ -1,17 +1,14 @@
+import { TranslationIntent } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
+import { supportedLocaleOptions } from "@/app/constants/locale";
 import { TranslationStatus } from "@prisma/client";
-import { supportedLocaleOptions } from "~/constants/languages";
-import { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/index";
-import { updateUserAITranslationInfo } from "../functions/mutations.server";
-import { getLatestPageCommentSegments } from "../functions/query.server";
-import { getLatestPageSegments } from "../functions/query.server";
+import { updateUserAITranslationInfo } from "../db/mutations.server";
+import { getLatestPageCommentSegments } from "../db/query.server";
+import { getLatestPageSegments } from "../db/query.server";
 import { getGeminiModelResponse } from "../services/gemini";
 import type { NumberedElement, TranslateJobParams } from "../types";
-import { extractTranslations } from "../utils/extractTranslations.server";
-import {
-	saveTranslationsForComment,
-	saveTranslationsForPage,
-} from "../utils/ioDeps";
-import { splitNumberedElements } from "../utils/splitNumberedElements.server";
+import { extractTranslations } from "./extract-translations.server";
+import { saveTranslationsForComment, saveTranslationsForPage } from "./io-deps";
+import { splitNumberedElements } from "./split-numbered-elements.server";
 
 export async function translate(params: TranslateJobParams) {
 	try {

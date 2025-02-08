@@ -1,4 +1,5 @@
-import { Queue } from "~/utils/queue.server";
+import { Queue } from "@/lib/queue.server";
+import type { Job } from "bullmq";
 import { translate } from "./lib/translate.server";
 import type { TranslateJobParams } from "./types";
 const QUEUE_VERSION = 143;
@@ -8,7 +9,7 @@ export const getTranslateUserQueue = (userId: string) => {
 		`translation-user-${userId}`,
 		QUEUE_VERSION,
 		{
-			processor: async (job) => {
+			processor: async (job: Job<TranslateJobParams>) => {
 				console.log(`Starting job ${job.id} for user ${userId}`);
 				try {
 					await translate(job.data);

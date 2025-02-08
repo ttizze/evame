@@ -1,7 +1,6 @@
 import { encrypt } from "@/lib/encryption.server";
 import { prisma } from "@/lib/prisma";
 import { data } from "@remix-run/node";
-import { VoteIntent } from "../../[locale]/localecomponents/segment-and-translation-section/vote-button/vote-buttons";
 export const updateGeminiApiKey = async (
 	userId: string,
 	geminiApiKey: string,
@@ -41,104 +40,6 @@ export const deleteOwnTranslation = async (
 		data: { isArchived: true },
 	});
 };
-
-export async function handleVote(
-	segmentTranslationId: number,
-	isUpvote: boolean,
-	userId: string,
-	intent: VoteIntent,
-) {
-	if (intent === VoteIntent.PAGE_SEGMENT_TRANSLATION) {
-		await prisma.$transaction(async (tx) => {
-			const existingVote = await tx.vote.findUnique({
-				where: {
-					pageSegmentTranslationId_userId: {
-						pageSegmentTranslationId: segmentTranslationId,
-						userId,
-					},
-				},
-			});
-
-			if (existingVote) {
-				if (existingVote.isUpvote === isUpvote) {
-					await tx.vote.delete({ where: { id: existingVote.id } });
-					await tx.pageSegmentTranslation.update({
-						where: { id: segmentTranslationId },
-						data: { point: { increment: isUpvote ? -1 : 1 } },
-					});
-				} else {
-					await tx.vote.update({
-						where: { id: existingVote.id },
-						data: { isUpvote },
-					});
-					await tx.pageSegmentTranslation.update({
-						where: { id: segmentTranslationId },
-						data: { point: { increment: isUpvote ? 2 : -2 } },
-					});
-				}
-			} else {
-				await tx.vote.create({
-					data: {
-						userId,
-						pageSegmentTranslationId: segmentTranslationId,
-						isUpvote,
-					},
-				});
-				await tx.pageSegmentTranslation.update({
-					where: { id: segmentTranslationId },
-					data: { point: { increment: isUpvote ? 1 : -1 } },
-				});
-			}
-		});
-	} else if (intent === VoteIntent.COMMENT_SEGMENT_TRANSLATION) {
-		await prisma.$transaction(async (tx) => {
-			const existingVote =
-				await tx.pageCommentSegmentTranslationVote.findUnique({
-					where: {
-						pageCommentSegmentTranslationId_userId: {
-							pageCommentSegmentTranslationId: segmentTranslationId,
-							userId,
-						},
-					},
-				});
-
-			if (existingVote) {
-				if (existingVote.isUpvote === isUpvote) {
-					await tx.pageCommentSegmentTranslationVote.delete({
-						where: { id: existingVote.id },
-					});
-					await tx.pageCommentSegmentTranslation.update({
-						where: { id: segmentTranslationId },
-						data: { point: { increment: isUpvote ? -1 : 1 } },
-					});
-				} else {
-					await tx.pageCommentSegmentTranslationVote.update({
-						where: { id: existingVote.id },
-						data: { isUpvote },
-					});
-					await tx.pageCommentSegmentTranslation.update({
-						where: { id: segmentTranslationId },
-						data: { point: { increment: isUpvote ? 2 : -2 } },
-					});
-				}
-			} else {
-				await tx.pageCommentSegmentTranslationVote.create({
-					data: {
-						userId,
-						pageCommentSegmentTranslationId: segmentTranslationId,
-						isUpvote,
-					},
-				});
-				await tx.pageCommentSegmentTranslation.update({
-					where: { id: segmentTranslationId },
-					data: { point: { increment: isUpvote ? 1 : -1 } },
-				});
-			}
-		});
-	}
-
-	return data({ success: true });
-}
 
 export async function toggleLike(
 	slug: string,

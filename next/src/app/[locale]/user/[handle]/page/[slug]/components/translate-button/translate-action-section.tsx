@@ -1,9 +1,9 @@
 "use client";
+import LocaleSelector from "@/app/[locale]/components/locale-selector";
+import { supportedLocaleOptions } from "@/app/constants/locale";
 import type { UserAITranslationInfo } from "@prisma/client";
 import { Languages } from "lucide-react";
 import { useState } from "react";
-import { supportedLocaleOptions } from "@/app/constants/locale";
-import LocaleSelector from "@/app/[locale]/components/locale-selector";
 import { TranslateSettingsDialog } from "./translate-settings-dialog";
 
 type TranslateActionSectionProps = {

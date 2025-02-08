@@ -1,13 +1,14 @@
+import { createUserAITranslationInfo } from "@/app/[locale]/user/[handle]/page/[slug]/db/mutations.server";
+import { fetchPageWithPageSegments } from "@/app/[locale]/user/[handle]/page/[slug]/db/queries.server";
+import { TranslationIntent } from "@/app/[locale]/user/[handle]/page/[slug]/page";
+import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
+import type { TranslateJobParams } from "@/features/translate/types";
+import { prisma } from "@/lib/prisma";
 import { TranslationStatus } from "@prisma/client";
 import type { Queue } from "bullmq";
 import { describe, expect, test, vi } from "vitest";
-import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
-import type { TranslateJobParams } from "~/features/translate/types";
-import { createUserAITranslationInfo } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/mutations.server";
-import { fetchPageWithPageSegments } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
-import { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/index";
-import { prisma } from "~/utils/prisma";
-import { handlePageTranslation } from "./handlePageTranslation";
+import { handlePageTranslation } from "./handle-page-translation";
+
 interface PageSegment {
 	id: number;
 	pageId: number;
@@ -24,7 +25,7 @@ interface PageSegment {
 	}>;
 }
 
-vi.mock("~/utils/prisma", () => ({
+vi.mock("@/lib/prisma", () => ({
 	prisma: {
 		pageSegment: {
 			findFirst: vi.fn(),

@@ -1,5 +1,5 @@
+import type { SanitizedUser } from "@/app/types";
 import type { Page, Tag, TagPage } from "@prisma/client";
-import type { SanitizedUser } from "~/types";
 
 type SegmentTranslation = {
 	id: number;

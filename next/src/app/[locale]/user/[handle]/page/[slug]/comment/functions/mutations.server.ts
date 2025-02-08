@@ -1,5 +1,5 @@
-import { prisma } from "~/utils/prisma";
-import type { BlockWithNumber } from "../../utils/process-html";
+import { prisma } from "@/lib/prisma";
+import type { BlockWithNumber } from "../../lib/process-html";
 
 export async function createPageComment(
 	content: string,
@@ -23,12 +23,6 @@ export async function createPageComment(
 				},
 			},
 		},
-	});
-}
-
-export async function deletePageComment(pageCommentId: number) {
-	return await prisma.pageComment.delete({
-		where: { id: pageCommentId },
 	});
 }
 

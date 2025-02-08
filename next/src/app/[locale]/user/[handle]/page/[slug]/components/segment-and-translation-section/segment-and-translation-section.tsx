@@ -1,10 +1,13 @@
+import type {
+	AddTranslationFormTarget,
+	VoteTarget,
+} from "@/app/[locale]/user/[handle]/page/[slug]/constants";
+import { NavigationLink } from "@/components/navigation-link";
 import { Lock } from "lucide-react";
 import { SquarePen } from "lucide-react";
 import type { ReactNode } from "react";
-import type { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
-import type { VoteIntent } from "~/routes/resources+/vote-buttons";
 import type { SegmentWithTranslations } from "../../types";
-import { TranslationSection } from "./TranslationSection";
+import { TranslationSection } from "./translation-section";
 
 interface SegmentAndTranslationSectionProps {
 	segmentWithTranslations: SegmentWithTranslations;
@@ -16,8 +19,8 @@ interface SegmentAndTranslationSectionProps {
 	currentHandle: string | undefined;
 	isOwner?: boolean;
 	slug?: string;
-	voteIntent: VoteIntent;
-	addTranslationFormIntent: AddTranslationFormIntent;
+	voteTarget: VoteTarget;
+	addTranslationFormTarget: AddTranslationFormTarget;
 }
 
 export function SegmentAndTranslationSection({
@@ -30,8 +33,8 @@ export function SegmentAndTranslationSection({
 	currentHandle,
 	isOwner,
 	slug,
-	voteIntent,
-	addTranslationFormIntent,
+	voteTarget,
+	addTranslationFormTarget,
 }: SegmentAndTranslationSectionProps) {
 	return (
 		<>
@@ -50,14 +53,9 @@ export function SegmentAndTranslationSection({
 					</span>
 					{isOwner && slug && (
 						<div className="ml-auto">
-							<NavLocaleLink
-								to={`/user/${currentHandle}/page/${slug}/edit`}
-								className={({ isPending }) =>
-									isPending ? "opacity-50" : "opacity-100"
-								}
-							>
+							<NavigationLink href={`/user/${currentHandle}/page/${slug}/edit`}>
 								<SquarePen className="w-5 h-5" />
-							</NavLocaleLink>
+							</NavigationLink>
 						</div>
 					)}
 				</span>
@@ -68,8 +66,8 @@ export function SegmentAndTranslationSection({
 						key={`translation-${segmentWithTranslations.segment.id}`}
 						segmentWithTranslations={segmentWithTranslations}
 						currentHandle={currentHandle}
-						voteIntent={voteIntent}
-						addTranslationFormIntent={addTranslationFormIntent}
+						voteTarget={voteTarget}
+						addTranslationFormTarget={addTranslationFormTarget}
 					/>
 				)}
 		</>

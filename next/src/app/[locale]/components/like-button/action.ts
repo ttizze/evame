@@ -2,7 +2,7 @@
 
 import type { ActionState } from "@/app/types";
 import { auth } from "@/auth";
-import { ensureGuestId } from "@/lib/ensureGuestId.server";
+import { ensureGuestId } from "@/lib/ensure-guest-id.server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { toggleLike } from "./db/mutations.server";

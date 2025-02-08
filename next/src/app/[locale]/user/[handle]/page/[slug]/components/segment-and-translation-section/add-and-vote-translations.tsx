@@ -1,25 +1,25 @@
+import type { SegmentWithTranslations } from "@/app/[locale]/types";
+import type { AddTranslationFormTarget } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
+import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, Languages } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { AddTranslationForm } from "@/routes/resources+/add-translation-form/route";
-import type { AddTranslationFormIntent } from "@/routes/resources+/add-translation-form/route";
-import { TranslationListItem } from "@/routes/resources+/translation-list-item";
-import type { VoteIntent } from "@/routes/resources+/vote-buttons";
-import type { SegmentWithTranslations } from "../../types";
+import { AddTranslationForm } from "./add-translation-form";
+import { TranslationListItem } from "./translation-list-item";
+import type { VoteTarget } from "./vote-buttons/constants";
 const INITIAL_DISPLAY_COUNT = 3;
 
 export function AddAndVoteTranslations({
 	currentHandle,
 	segmentWithTranslations,
 	open,
-	voteIntent,
-	addTranslationFormIntent,
+	voteTarget,
+	addTranslationFormTarget,
 }: {
 	currentHandle: string | undefined;
 	segmentWithTranslations: SegmentWithTranslations;
 	open: boolean;
-	voteIntent: VoteIntent;
-	addTranslationFormIntent: AddTranslationFormIntent;
+	voteTarget: VoteTarget;
+	addTranslationFormTarget: AddTranslationFormTarget;
 }) {
 	const [showAll, setShowAll] = useState(false);
 	const { bestSegmentTranslationWithVote, segmentTranslationsWithVotes } =
@@ -55,7 +55,7 @@ export function AddAndVoteTranslations({
 							key={displayedTranslation.segmentTranslation.id}
 							translation={displayedTranslation}
 							currentHandle={currentHandle}
-							voteIntent={voteIntent}
+							voteTarget={voteTarget}
 						/>
 					))}
 					{hasMoreTranslations && (
@@ -80,7 +80,7 @@ export function AddAndVoteTranslations({
 					<AddTranslationForm
 						segmentId={segmentWithTranslations.segment.id}
 						currentHandle={currentHandle}
-						intent={addTranslationFormIntent}
+						addTranslationFormTarget={addTranslationFormTarget}
 					/>
 				</div>
 			</div>

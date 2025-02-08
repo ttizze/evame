@@ -2,8 +2,8 @@ import { createRemixStub } from "@remix-run/testing";
 import { render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 import "@testing-library/jest-dom";
+import { prisma } from "@/lib/prisma";
 import { authenticator } from "~/utils/auth.server";
-import { prisma } from "~/utils/prisma";
 import EditPage, { loader } from "./_edit";
 vi.mock("~/utils/auth.server", () => ({
 	authenticator: {

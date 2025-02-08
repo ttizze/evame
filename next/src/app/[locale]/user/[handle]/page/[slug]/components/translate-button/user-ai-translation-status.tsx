@@ -1,9 +1,9 @@
-import type { UserAITranslationInfo } from "@prisma/client";
-import { useRevalidator } from "@remix-run/react";
-import { useEffect } from "react";
+"use client";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-
+import type { UserAITranslationInfo } from "@prisma/client";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 type UserAITranslationStatusProps = {
 	userAITranslationInfo: UserAITranslationInfo | null;
 };
@@ -11,7 +11,7 @@ type UserAITranslationStatusProps = {
 export function UserAITranslationStatus({
 	userAITranslationInfo,
 }: UserAITranslationStatusProps) {
-	const revalidator = useRevalidator();
+	const router = useRouter();
 	useEffect(() => {
 		if (
 			!userAITranslationInfo ||
@@ -19,9 +19,11 @@ export function UserAITranslationStatus({
 		) {
 			return;
 		}
-		const intervalId = setInterval(revalidator.revalidate, 3000);
+		const intervalId = setInterval(() => {
+			router.refresh();
+		}, 3000);
 		return () => clearInterval(intervalId);
-	}, [userAITranslationInfo, revalidator]);
+	}, [userAITranslationInfo, router]);
 
 	return (
 		<div className="h-[15px] flex mt-1 items-center space-y-1">

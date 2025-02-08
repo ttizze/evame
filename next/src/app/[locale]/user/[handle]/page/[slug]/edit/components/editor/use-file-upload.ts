@@ -1,6 +1,5 @@
+import { uploadImage } from "@/app/[locale]/lib/upload";
 import type { Editor as TiptapEditor } from "@tiptap/core";
-import { UPLOAD_MESSAGES } from "~/routes/$locale+/user.$handle+/constants";
-import { uploadImage } from "~/routes/$locale+/user.$handle+/utils/uploadImage";
 
 export async function handleFileUpload(
 	file: File,
@@ -29,6 +28,6 @@ export async function handleFileUpload(
 			.run();
 	} catch (error) {
 		console.error(error);
-		window.alert(UPLOAD_MESSAGES.UPLOAD_ERROR);
+		window.alert("upload error");
 	}
 }

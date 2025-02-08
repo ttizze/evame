@@ -1,3 +1,10 @@
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { BubbleMenu, type Editor as TiptapEditor } from "@tiptap/react";
 import {
@@ -16,13 +23,6 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useRef } from "react";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "~/components/ui/tooltip";
-import { cn } from "~/utils/cn";
 
 interface EditorBubbleMenuProps {
 	editor: TiptapEditor;
@@ -168,7 +168,7 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 						</DropdownMenuPrimitive.Root>
 						{items.map(({ value, icon: Icon, isActive, label }) => (
 							<Tooltip key={value}>
-								<TooltipTrigger>
+								<TooltipTrigger asChild>
 									<button
 										type="button"
 										onClick={() => editorCommands[value](editor)}

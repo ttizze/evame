@@ -1,34 +1,40 @@
-import type { useInputControl } from "@conform-to/react";
+"use client";
 import { EditorContent, useEditor } from "@tiptap/react";
-import { EditorBubbleMenu } from "./EditorBubbleMenu";
-import { EditorFloatingMenu } from "./EditorFloatingMenu";
-import { configureEditor } from "./editorConfig";
+import { useRef } from "react";
+import { EditorBubbleMenu } from "./editor-bubble-menu";
+import { configureEditor } from "./editor-config";
+import { EditorFloatingMenu } from "./editor-floating-menu";
 
 interface EditorProps {
 	defaultValue: string;
+	name: string;
 	onEditorUpdate?: () => void;
 	onEditorCreate?: (editor: ReturnType<typeof useEditor>) => void;
 	className: string;
 	placeholder: string;
-	InputControl: ReturnType<typeof useInputControl>;
 }
 
 export function Editor({
 	defaultValue,
+	name,
 	onEditorUpdate,
 	onEditorCreate,
 	className,
 	placeholder,
-	InputControl,
 }: EditorProps) {
+	const editorRef = useRef<HTMLInputElement>(null);
 	const editor = useEditor({
 		...configureEditor(defaultValue, placeholder),
 		onCreate: ({ editor }) => {
-			InputControl.change(editor.getHTML());
+			if (editorRef.current) {
+				editorRef.current.value = editor.getHTML();
+			}
 			onEditorCreate?.(editor);
 		},
 		onUpdate: async ({ editor }) => {
-			InputControl.change(editor.getHTML());
+			if (editorRef.current) {
+				editorRef.current.value = editor.getHTML();
+			}
 			onEditorUpdate?.();
 		},
 		editorProps: {
@@ -44,6 +50,12 @@ export function Editor({
 			{editor && <EditorBubbleMenu editor={editor} />}
 			{editor && <EditorFloatingMenu editor={editor} />}
 			<EditorContent editor={editor} />
+			<input
+				type="hidden"
+				name={name}
+				ref={editorRef}
+				defaultValue={defaultValue}
+			/>
 		</div>
 	);
 }

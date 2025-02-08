@@ -1,5 +1,5 @@
-import { prisma } from "../../../utils/prisma";
-import { getOrCreateAIUser } from "../functions/mutations.server";
+import { prisma } from "@/lib/prisma";
+import { getOrCreateAIUser } from "../db/mutations.server";
 import { getGeminiModelResponse } from "../services/gemini";
 import type { NumberedElement } from "../types";
 

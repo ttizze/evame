@@ -1,5 +1,5 @@
+import { prisma } from "@/lib/prisma";
 import { processPageHtml } from "~/routes/$locale+/user.$handle+/page+/$slug+/edit/utils/processHtmlContent";
-import { prisma } from "~/utils/prisma";
 
 // 全ページに対して処理を実行するメイン関数
 async function main(): Promise<void> {

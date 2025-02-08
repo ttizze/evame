@@ -1,25 +1,40 @@
+"use client";
 import { StartButton } from "@/app/[locale]/components/start-button";
-import { Editor } from "@/app/[locale]/user/[handle]/page/[slug]/edit/components/editor/Editor";
+import type { ActionState } from "@/app/types";
 import { Button } from "@/components/ui/button";
+import { useActionState } from "react";
+import { z } from "zod";
+import { Editor } from "../../../edit/components/editor/editor";
 import { commentAction } from "./action";
+
+export const createPageCommentSchema = z.object({
+	pageId: z.number(),
+	content: z.string().min(1, "Comment cannot be empty"),
+});
 
 export function PageCommentForm({
 	pageId,
 	currentHandle,
-}: { pageId: number; currentHandle: string | undefined }) {
-
+}: {
+	pageId: number;
+	currentHandle: string | undefined;
+}) {
+	const [state, action, isPending] = useActionState<ActionState, FormData>(
+		commentAction,
+		{},
+	);
 
 	return (
 		<>
 			<form
-				action={commentAction}
+				action={action}
 				className="space-y-4 relative prose dark:prose-invert"
 			>
 				<input type="hidden" name="pageId" value={pageId} />
 				<input type="hidden" name="intent" value="create" />
 				<Editor
 					defaultValue={""}
-					InputControl={commentControl}
+					name="content"
 					className="border border-input rounded-md px-2"
 					placeholder="Say Hello!"
 				/>
@@ -28,16 +43,14 @@ export function PageCommentForm({
 				)}
 				<Button
 					type="submit"
-					disabled={fetcher.state !== "idle" || !currentHandle}
+					disabled={isPending || !currentHandle}
 					className={"w-full"}
 				>
-					{fetcher.state !== "idle" ? "posting" : "post"}
+					{isPending ? "posting" : "post"}
 				</Button>
 			</form>
-			{fields.content.errors && (
-				<p className="text-sm text-red-500">
-					{fields.content.errors?.join(", ")}
-				</p>
+			{state.generalError && (
+				<p className="text-sm text-red-500">{state.generalError}</p>
 			)}
 		</>
 	);

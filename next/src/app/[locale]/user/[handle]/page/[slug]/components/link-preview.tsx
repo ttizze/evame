@@ -1,5 +1,5 @@
+import type { PreviewData } from "@/app/[locale]/user/[handle]/page/[slug]/types";
 import { useEffect, useState } from "react";
-import type { PreviewData } from "~/routes/resources+/types";
 
 interface LinkPreviewProps {
 	url: string;

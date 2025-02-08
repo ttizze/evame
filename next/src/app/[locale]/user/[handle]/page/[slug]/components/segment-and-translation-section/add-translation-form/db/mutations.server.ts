@@ -1,15 +1,20 @@
-import { data } from "@remix-run/node";
+import {
+	ADD_TRANSLATION_FORM_TARGET,
+	type AddTranslationFormTarget,
+} from "@/app/[locale]/user/[handle]/page/[slug]/constants";
 import { prisma } from "@/lib/prisma";
-import { AddTranslationFormIntent } from "../route";
 
 export async function addUserTranslation(
 	segmentId: number,
 	text: string,
 	userId: string,
 	locale: string,
-	intent: AddTranslationFormIntent,
+	addTranslationFormTarget: AddTranslationFormTarget,
 ) {
-	if (intent === AddTranslationFormIntent.PAGE_SEGMENT_TRANSLATION) {
+	if (
+		addTranslationFormTarget ===
+		ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
+	) {
 		const pageSegment = await prisma.pageSegment.findUnique({
 			where: { id: segmentId },
 		});
@@ -24,7 +29,10 @@ export async function addUserTranslation(
 				},
 			});
 		}
-	} else if (intent === AddTranslationFormIntent.COMMENT_SEGMENT_TRANSLATION) {
+	} else if (
+		addTranslationFormTarget ===
+		ADD_TRANSLATION_FORM_TARGET.COMMENT_SEGMENT_TRANSLATION
+	) {
 		const pageCommentSegment = await prisma.pageCommentSegment.findUnique({
 			where: { id: segmentId },
 		});
@@ -41,5 +49,5 @@ export async function addUserTranslation(
 		}
 	}
 
-	return data({ success: true });
+	return { success: true };
 }

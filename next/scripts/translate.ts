@@ -1,8 +1,8 @@
+import { prisma } from "@/lib/prisma";
 import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
 import { createUserAITranslationInfo } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/mutations.server";
 import { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/index";
 import { fetchUserByHandle } from "~/routes/functions/queries.server";
-import { prisma } from "~/utils/prisma";
 // 実際にはgetAllPagesByUserIdを何らかの形で用意する必要がある
 // ここでは例としてprismaでpagesを取得する処理を記述
 async function getAllPagesByUserId(userId: string) {

@@ -1,5 +1,5 @@
+import { prisma } from "@/lib/prisma";
 import { TranslationStatus } from "@prisma/client";
-import { prisma } from "~/utils/prisma";
 export async function createUserAITranslationInfo(
 	userId: string,
 	pageId: number,

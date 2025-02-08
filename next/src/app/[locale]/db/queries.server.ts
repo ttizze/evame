@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
-import { getBestTranslation } from "../lib/getBestTranslation";
+import { getBestTranslation } from "../lib/get-best-translation";
 import type { PageWithTranslations } from "../types";
+
 export function createPageCardSelect(locale?: string) {
 	return {
 		id: true,

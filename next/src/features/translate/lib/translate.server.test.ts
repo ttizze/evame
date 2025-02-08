@@ -1,7 +1,7 @@
 // translate.server.test.ts
 
+import { prisma } from "@/lib/prisma";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { prisma } from "~/utils/prisma";
 
 // テスト対象
 import { translate } from "../lib/translate.server";

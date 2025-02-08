@@ -1,10 +1,10 @@
 "use client";
+import { LikeButton } from "@/app/[locale]/components/like-button/like-button";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Languages, Text } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { LikeButton } from "@/app/[locale]/components/like-button/like-button";
-import { cn } from "@/lib/utils";
-import { ShareDialog } from "./ShareDialog";
+import { ShareDialog } from "./share-dialog";
 
 interface FloatingControlsProps {
 	showOriginal: boolean;

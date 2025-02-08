@@ -1,13 +1,16 @@
+"use client";
+import { TagList } from "@/app/[locale]/components/tag-list";
+import {
+	ADD_TRANSLATION_FORM_TARGET,
+	VOTE_TARGET,
+} from "@/app/[locale]/user/[handle]/page/[slug]/constants";
+import { NavigationLink } from "@/components/navigation-link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { UserAITranslationInfo } from "@prisma/client";
-import { LocaleLink } from "~/components/LocaleLink";
-import { TagList } from "~/components/TagList";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import { AddTranslationFormIntent } from "~/routes/resources+/add-translation-form/route";
-import { VoteIntent } from "~/routes/resources+/vote-buttons";
 import type { PageWithTranslations, SegmentWithTranslations } from "../types";
-import { MemoizedParsedContent } from "./ParsedContent";
-import { SegmentAndTranslationSection } from "./segmentAndTranslationSection/SegmentAndTranslationSection";
-import { TranslateActionSection } from "./translateButton/TranslateActionSection";
+import { MemoizedParsedContent } from "./parsed-content";
+import { SegmentAndTranslationSection } from "./segment-and-translation-section/segment-and-translation-section";
+import { TranslateActionSection } from "./translate-button/translate-action-section";
 
 interface ContentWithTranslationsProps {
 	pageWithTranslations: PageWithTranslations;
@@ -45,9 +48,9 @@ export function ContentWithTranslations({
 						currentHandle={currentHandle}
 						isOwner={pageWithTranslations.user.handle === currentHandle}
 						slug={pageWithTranslations.page.slug}
-						voteIntent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
-						addTranslationFormIntent={
-							AddTranslationFormIntent.PAGE_SEGMENT_TRANSLATION
+						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
+						addTranslationFormTarget={
+							ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
 						}
 					/>
 				)}
@@ -57,8 +60,8 @@ export function ContentWithTranslations({
 			/>
 
 			<div className="flex items-center not-prose">
-				<LocaleLink
-					to={`/user/${pageWithTranslations.user.handle}`}
+				<NavigationLink
+					href={`/user/${pageWithTranslations.user.handle}`}
 					className="flex items-center mr-2 !no-underline hover:text-gray-700"
 				>
 					<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
@@ -76,7 +79,7 @@ export function ContentWithTranslations({
 							{pageWithTranslations.page.createdAt}
 						</span>
 					</div>
-				</LocaleLink>
+				</NavigationLink>
 			</div>
 			<TranslateActionSection
 				pageId={pageWithTranslations.page.id}
@@ -96,9 +99,9 @@ export function ContentWithTranslations({
 				showOriginal={showOriginal}
 				showTranslation={showTranslation}
 				locale={locale}
-				voteIntent={VoteIntent.PAGE_SEGMENT_TRANSLATION}
-				addTranslationFormIntent={
-					AddTranslationFormIntent.PAGE_SEGMENT_TRANSLATION
+				voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
+				addTranslationFormTarget={
+					ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
 				}
 			/>
 		</>

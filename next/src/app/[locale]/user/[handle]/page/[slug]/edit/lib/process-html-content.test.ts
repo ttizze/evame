@@ -1,6 +1,6 @@
+import { prisma } from "@/lib/prisma";
 import { describe, expect, test } from "vitest";
-import { prisma } from "~/utils/prisma";
-import { processPageHtml } from "./processHtmlContent";
+import { processPageHtml } from "./process-html-content";
 
 describe("processHtmlContent", () => {
 	test("HTML入力を処理し、source_texts挿入とdata-id付きspanが生成されるかテスト", async () => {
