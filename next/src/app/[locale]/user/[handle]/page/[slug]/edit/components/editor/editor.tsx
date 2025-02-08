@@ -8,7 +8,7 @@ import { EditorFloatingMenu } from "./editor-floating-menu";
 interface EditorProps {
 	defaultValue: string;
 	name: string;
-	onEditorUpdate?: () => void;
+	onEditorUpdate?: (editor: ReturnType<typeof useEditor>) => void;
 	onEditorCreate?: (editor: ReturnType<typeof useEditor>) => void;
 	className: string;
 	placeholder: string;
@@ -32,10 +32,7 @@ export function Editor({
 			onEditorCreate?.(editor);
 		},
 		onUpdate: async ({ editor }) => {
-			if (editorRef.current) {
-				editorRef.current.value = editor.getHTML();
-			}
-			onEditorUpdate?.();
+			onEditorUpdate?.(editor);
 		},
 		editorProps: {
 			attributes: {
@@ -54,7 +51,7 @@ export function Editor({
 				type="hidden"
 				name={name}
 				ref={editorRef}
-				defaultValue={defaultValue}
+				value={editor?.getHTML() ?? defaultValue}
 			/>
 		</div>
 	);

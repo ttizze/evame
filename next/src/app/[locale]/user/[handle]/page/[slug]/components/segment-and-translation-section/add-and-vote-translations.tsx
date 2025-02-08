@@ -45,7 +45,7 @@ export function AddAndVoteTranslations({
 
 	return (
 		<span className="w-full ">
-			<span className="flex items-center justify-end text-gray-500 text-sm">
+			<span className="flex mt-2 items-center justify-end text-gray-500 text-sm">
 				<Languages className="w-4 h-4 mr-1" /> Other translations
 			</span>
 			<>

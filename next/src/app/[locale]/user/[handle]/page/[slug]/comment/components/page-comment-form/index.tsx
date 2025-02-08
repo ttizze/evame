@@ -2,15 +2,9 @@
 import { StartButton } from "@/app/[locale]/components/start-button";
 import type { ActionState } from "@/app/types";
 import { Button } from "@/components/ui/button";
-import { useActionState } from "react";
-import { z } from "zod";
+import { useActionState, useState } from "react";
 import { Editor } from "../../../edit/components/editor/editor";
 import { commentAction } from "./action";
-
-export const createPageCommentSchema = z.object({
-	pageId: z.number(),
-	content: z.string().min(1, "Comment cannot be empty"),
-});
 
 export function PageCommentForm({
 	pageId,
@@ -19,6 +13,7 @@ export function PageCommentForm({
 	pageId: number;
 	currentHandle: string | undefined;
 }) {
+	const [content, setContent] = useState("");
 	const [state, action, isPending] = useActionState<ActionState, FormData>(
 		commentAction,
 		{},
@@ -36,13 +31,14 @@ export function PageCommentForm({
 					name="content"
 					className="border border-input rounded-md px-2"
 					placeholder="Say Hello!"
+					onEditorUpdate={(editor) => setContent(editor?.getHTML() ?? "")}
 				/>
 				{!currentHandle && (
 					<StartButton className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
 				)}
 				<Button
 					type="submit"
-					disabled={isPending || !currentHandle}
+					disabled={isPending || !currentHandle || !content}
 					className={"w-full"}
 				>
 					{isPending ? "posting" : "post"}

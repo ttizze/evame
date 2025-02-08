@@ -1,13 +1,15 @@
+import { LikeButton } from "@/app/[locale]/components/like-button/like-button";
 import { PageCommentForm } from "@/app/[locale]/user/[handle]/page/[slug]/comment/components/page-comment-form";
 import { PageCommentList } from "@/app/[locale]/user/[handle]/page/[slug]/comment/components/page-comment-list";
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
 import { auth } from "@/auth";
 import { ensureGuestId } from "@/lib/ensure-guest-id.server";
+import { MessageCircle } from "lucide-react";
 import type { Metadata, ResolvingMetadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { ContentWithTranslations } from "./components/content-with-translations";
-import { PageControl } from "./components/page-control.client";
+import { FloatingControls } from "./components/floating-controls";
 import { TranslateActionSection } from "./components/translate-button/translate-action-section";
 import { TranslateTarget } from "./constants";
 import {
@@ -160,8 +162,7 @@ export default async function Page({ params, searchParams }: Props) {
 
 	const showOriginal = resolvedSearchParams.showOriginal !== "false";
 	const showTranslation = resolvedSearchParams.showTranslation !== "false";
-
-	const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+	console.log(showOriginal, showTranslation);
 
 	return (
 		<div className="w-full max-w-3xl mx-auto">
@@ -178,14 +179,24 @@ export default async function Page({ params, searchParams }: Props) {
 					showTranslation={showTranslation}
 				/>
 			</article>
-			<PageControl
+			<div className="flex items-center gap-4">
+				<LikeButton
+					liked={isLikedByUser}
+					likeCount={likeCount}
+					slug={slug}
+					showCount
+				/>
+				<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
+				<span>{pageCommentsCount}</span>
+			</div>
+
+			<FloatingControls
+				liked={isLikedByUser}
 				likeCount={likeCount}
-				isLikedByUser={isLikedByUser}
-				pageCommentsCount={pageCommentsCount}
-				slug={pageWithTranslations.page.slug}
-				sourceTitleWithBestTranslationTitle={
-					sourceTitleWithBestTranslationTitle
-				}
+				slug={slug}
+				shareTitle={sourceTitleWithBestTranslationTitle}
+				initialShowOriginal={showOriginal}
+				initialShowTranslation={showTranslation}
 			/>
 
 			<div className="mt-8">

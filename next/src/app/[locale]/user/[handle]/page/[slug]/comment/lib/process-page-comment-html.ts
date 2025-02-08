@@ -10,8 +10,8 @@ import { unified } from "unified";
 import type { Plugin } from "unified";
 import { collectBlocksFromRoot } from "../../lib/process-html";
 import { injectSpanNodes } from "../../lib/process-html";
-import { upsertPageComment } from "../functions/mutations.server";
-import { createPageCommentSegments } from "../functions/mutations.server";
+import { upsertPageComment } from "../db/mutations.server";
+import { createPageCommentSegments } from "../db/mutations.server";
 export function parseHtmlToAst(html: string): Root {
 	return unified().use(rehypeParse, { fragment: true }).parse(html) as Root;
 }

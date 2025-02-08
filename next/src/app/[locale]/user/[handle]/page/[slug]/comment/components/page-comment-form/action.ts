@@ -1,18 +1,22 @@
 "use server";
 import type { ActionState } from "@/app/types";
-import { auth } from "@/auth";
+import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { getLocaleFromHtml } from "../../../lib/get-locale-from-html";
-import { createPageComment } from "../../functions/mutations.server";
+import { createPageComment } from "../../db/mutations.server";
 import { processPageCommentHtml } from "../../lib/process-page-comment-html";
-import { createPageCommentSchema } from "./index";
+
+const createPageCommentSchema = z.object({
+	pageId: z.coerce.number(),
+	content: z.string().min(1, "Comment cannot be empty"),
+});
 
 export async function commentAction(
 	previousState: ActionState,
 	formData: FormData,
 ) {
-	const session = await auth();
-	const currentUser = session?.user;
+	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
 		return { error: "Unauthorized" };
 	}
@@ -21,7 +25,7 @@ export async function commentAction(
 		content: formData.get("content"),
 	});
 	if (!validate.success) {
-		return { generalError: "Invalid form data" };
+		return { generalError: validate.error.message };
 	}
 
 	const locale = await getLocaleFromHtml(validate.data.content);

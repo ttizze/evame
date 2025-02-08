@@ -24,7 +24,7 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useActionState } from "react";
 import type { TranslateTarget } from "../../constants";
-import { type PageTranslateActionState, pageTranslateAction } from "./action";
+import { TranslateAction, type TranslateActionState } from "./action";
 import { UserAITranslationStatus } from "./user-ai-translation-status";
 
 type TranslateSettingsDialogProps = {
@@ -49,9 +49,9 @@ export function TranslateSettingsDialog({
 	translateTarget,
 }: TranslateSettingsDialogProps) {
 	const [translateState, translateAction, isTranslating] = useActionState<
-		PageTranslateActionState,
+		TranslateActionState,
 		FormData
-	>(pageTranslateAction, {});
+	>(TranslateAction, {});
 
 	const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
@@ -103,23 +103,7 @@ export function TranslateSettingsDialog({
 							</div>
 
 							{hasGeminiApiKey ? (
-								<form
-									action={translateAction}
-									onSubmit={(e) => {
-										// デバッグ用
-										const formData = new FormData(e.currentTarget);
-										console.log("Form submission:", {
-											defaultLocale: locale,
-											defaultPageId: pageId,
-											defaultAiModel: selectedModel,
-											defaultTranslateTarget: translateTarget,
-											locale: formData.get("locale"),
-											pageId: formData.get("pageId"),
-											aiModel: formData.get("aiModel"),
-											translateTarget: formData.get("translateTarget"),
-										});
-									}}
-								>
+								<form action={translateAction}>
 									<input type="hidden" name="locale" value={locale} />
 									<input type="hidden" name="pageId" value={pageId} />
 									<input type="hidden" name="aiModel" value={selectedModel} />
