@@ -11,7 +11,7 @@ import { PageCard } from "../components/page-card";
 import { PaginationBar } from "../components/pagination-bar";
 import { TagList } from "../components/tag-list";
 import type { PageCardLocalizedType } from "../db/queries.server";
-import { CATEGORIES, type Category } from "./page";
+import { CATEGORIES, type Category } from "./constants";
 
 interface Props {
 	pages: PageCardLocalizedType[] | undefined;

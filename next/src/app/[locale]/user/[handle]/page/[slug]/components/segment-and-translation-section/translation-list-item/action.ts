@@ -1,5 +1,7 @@
+"use server";
 import type { ActionState } from "@/app/types";
-import { auth } from "@/auth";
+import { getCurrentUser } from "@/auth";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { deleteOwnTranslation } from "./db/mutations.server";
 const schema = z.object({
@@ -10,8 +12,7 @@ export async function deleteTranslationAction(
 	previousState: ActionState,
 	formData: FormData,
 ) {
-	const session = await auth();
-	const currentUser = session?.user;
+	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
 		return { error: "Unauthorized" };
 	}
@@ -23,5 +24,6 @@ export async function deleteTranslationAction(
 		return { error: "Invalid translationId" };
 	}
 	await deleteOwnTranslation(currentUser.handle, validation.data.translationId);
+	revalidatePath(`/user/${currentUser.handle}/page/`);
 	return { success: "Translation deleted successfully" };
 }

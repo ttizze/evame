@@ -25,7 +25,6 @@ export async function voteTranslationAction(
 		throw new Error("Unauthorized");
 	}
 	const parsedFormData = await parseVoteForm(formData);
-	console.log(parsedFormData);
 	await handleVote(
 		parsedFormData.segmentTranslationId,
 		parsedFormData.isUpvote,

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import type { SanitizedUser } from "@/app/types";
 import type { Tag } from "@prisma/client";
+import { CATEGORIES } from "./constants";
 import {
 	searchByTag,
 	searchContent,
@@ -10,9 +11,6 @@ import {
 	searchUsers,
 } from "./db/queries.server";
 import { SearchPageClient } from "./search.client";
-export const CATEGORIES = ["title", "user", "tags", "content"] as const;
-export type Category = (typeof CATEGORIES)[number];
-
 const schema = z.object({
 	query: z.string().min(1, "Search query is required"),
 	category: z.enum(CATEGORIES).default("title"),

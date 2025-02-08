@@ -36,6 +36,7 @@ export function AddTranslationForm({
 				<div className="relative">
 					<TextareaAutosize
 						name="text"
+						required
 						className={`w-full mb-2 rounded-xl p-2 !text-base border border-gray-500 bg-background resize-none overflow-hidden ${!currentHandle && "bg-muted"}`}
 						placeholder="Or enter your translation..."
 						disabled={!currentHandle}
