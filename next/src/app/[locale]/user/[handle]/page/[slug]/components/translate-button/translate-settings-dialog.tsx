@@ -23,6 +23,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useActionState } from "react";
+import type { TranslateTarget } from "../../constants";
 import { type PageTranslateActionState, pageTranslateAction } from "./action";
 import { UserAITranslationStatus } from "./user-ai-translation-status";
 
@@ -34,7 +35,7 @@ type TranslateSettingsDialogProps = {
 	locale: string;
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
-	intent: "translatePage" | "translateComment";
+	translateTarget: TranslateTarget;
 };
 
 export function TranslateSettingsDialog({
@@ -45,7 +46,7 @@ export function TranslateSettingsDialog({
 	locale,
 	hasGeminiApiKey,
 	userAITranslationInfo,
-	intent,
+	translateTarget,
 }: TranslateSettingsDialogProps) {
 	const [translateState, translateAction, isTranslating] = useActionState<
 		PageTranslateActionState,
@@ -102,15 +103,32 @@ export function TranslateSettingsDialog({
 							</div>
 
 							{hasGeminiApiKey ? (
-								<form action={translateAction}>
+								<form
+									action={translateAction}
+									onSubmit={(e) => {
+										// デバッグ用
+										const formData = new FormData(e.currentTarget);
+										console.log("Form submission:", {
+											defaultLocale: locale,
+											defaultPageId: pageId,
+											defaultAiModel: selectedModel,
+											defaultTranslateTarget: translateTarget,
+											locale: formData.get("locale"),
+											pageId: formData.get("pageId"),
+											aiModel: formData.get("aiModel"),
+											translateTarget: formData.get("translateTarget"),
+										});
+									}}
+								>
 									<input type="hidden" name="locale" value={locale} />
+									<input type="hidden" name="pageId" value={pageId} />
 									<input type="hidden" name="aiModel" value={selectedModel} />
-									<Button
-										type="submit"
-										name="intent"
-										value={intent}
-										className="w-full"
-									>
+									<input
+										type="hidden"
+										name="translateTarget"
+										value={translateTarget}
+									/>
+									<Button type="submit" className="w-full">
 										{isTranslating ? (
 											<Loader2 className="w-4 h-4 animate-spin" />
 										) : (
@@ -126,6 +144,26 @@ export function TranslateSettingsDialog({
 								>
 									Set API Key
 								</Button>
+							)}
+							{translateState.fieldErrors?.pageId && (
+								<p className="text-red-500">
+									{translateState.fieldErrors.pageId[0]}
+								</p>
+							)}
+							{translateState.fieldErrors?.aiModel && (
+								<p className="text-red-500">
+									{translateState.fieldErrors.aiModel[0]}
+								</p>
+							)}
+							{translateState.fieldErrors?.locale && (
+								<p className="text-red-500">
+									{translateState.fieldErrors.locale[0]}
+								</p>
+							)}
+							{translateState.fieldErrors?.translateTarget && (
+								<p className="text-red-500">
+									{translateState.fieldErrors.translateTarget[0]}
+								</p>
 							)}
 							<UserAITranslationStatus
 								userAITranslationInfo={userAITranslationInfo}

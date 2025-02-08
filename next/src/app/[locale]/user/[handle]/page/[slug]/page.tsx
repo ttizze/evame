@@ -9,6 +9,7 @@ import { cache } from "react";
 import { ContentWithTranslations } from "./components/content-with-translations";
 import { PageControl } from "./components/page-control.client";
 import { TranslateActionSection } from "./components/translate-button/translate-action-section";
+import { TranslateTarget } from "./constants";
 import {
 	fetchIsLikedByUser,
 	fetchLatestUserAITranslationInfo,
@@ -18,7 +19,6 @@ import {
 } from "./db/queries.server";
 import { getBestTranslation } from "./lib/get-best-translation";
 import { stripHtmlTags } from "./lib/strip-html-tags";
-
 type Props = {
 	params: Promise<{ locale: string; handle: string; slug: string }>;
 	searchParams: Promise<{ showOriginal?: string; showTranslation?: string }>;
@@ -200,7 +200,7 @@ export default async function Page({ params, searchParams }: Props) {
 							sourceLocale={pageWithTranslations.page.sourceLocale}
 							locale={locale}
 							existLocales={pageWithTranslations.existLocales}
-							intent="translateComment"
+							translateTarget={TranslateTarget.TRANSLATE_COMMENT}
 						/>
 					</div>
 					<PageCommentList

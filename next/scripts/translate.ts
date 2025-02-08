@@ -1,8 +1,8 @@
+import { TranslateTarget } from "@/app/[locale]/user/[handle]/page/[slug]/components/translate-button/constants";
+import { createUserAITranslationInfo } from "@/app/[locale]/user/[handle]/page/[slug]/functions/mutations.server";
+import { fetchUserByHandle } from "@/app/db/queries.server";
+import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
 import { prisma } from "@/lib/prisma";
-import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
-import { createUserAITranslationInfo } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/mutations.server";
-import { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/index";
-import { fetchUserByHandle } from "~/routes/functions/queries.server";
 // 実際にはgetAllPagesByUserIdを何らかの形で用意する必要がある
 // ここでは例としてprismaでpagesを取得する処理を記述
 async function getAllPagesByUserId(userId: string) {
@@ -67,7 +67,7 @@ async function getAllPagesByUserId(userId: string) {
 				locale: LOCALE,
 				title: title,
 				numberedElements: page.pageSegments,
-				translationIntent: TranslationIntent.TRANSLATE_PAGE,
+				translateTarget: TranslateTarget.TRANSLATE_PAGE,
 			});
 
 			console.log(`Added page ${page.slug} to translation queue.`);

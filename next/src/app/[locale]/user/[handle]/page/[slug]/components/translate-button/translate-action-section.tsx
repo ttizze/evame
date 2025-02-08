@@ -4,6 +4,7 @@ import { supportedLocaleOptions } from "@/app/constants/locale";
 import type { UserAITranslationInfo } from "@prisma/client";
 import { Languages } from "lucide-react";
 import { useState } from "react";
+import type { TranslateTarget } from "../../constants";
 import { TranslateSettingsDialog } from "./translate-settings-dialog";
 
 type TranslateActionSectionProps = {
@@ -15,7 +16,7 @@ type TranslateActionSectionProps = {
 	locale: string;
 	existLocales: string[];
 	className?: string;
-	intent: "translatePage" | "translateComment";
+	translateTarget: TranslateTarget;
 };
 
 export function TranslateActionSection({
@@ -27,7 +28,7 @@ export function TranslateActionSection({
 	locale,
 	existLocales,
 	className,
-	intent,
+	translateTarget,
 }: TranslateActionSectionProps) {
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 	let sourceLocaleOptions = supportedLocaleOptions.find(
@@ -71,7 +72,7 @@ export function TranslateActionSection({
 				locale={locale}
 				hasGeminiApiKey={hasGeminiApiKey}
 				userAITranslationInfo={userAITranslationInfo}
-				intent={intent}
+				translateTarget={translateTarget}
 			/>
 		</div>
 	);

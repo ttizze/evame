@@ -1,9 +1,9 @@
-import { hasExistingTranslation } from "~/features/translate/functions/query.server";
-import { getTranslateUserQueue } from "~/features/translate/translate-user-queue";
-import type { TranslateJobParams } from "~/features/translate/types";
-import { createUserAITranslationInfo } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/mutations.server";
-import { fetchPageWithPageSegments } from "~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server";
-import { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/index";
+import { TranslateTarget } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
+import { createUserAITranslationInfo } from "@/app/[locale]/user/[handle]/page/[slug]/db/mutations.server";
+import { fetchPageWithPageSegments } from "@/app/[locale]/user/[handle]/page/[slug]/db/queries.server";
+import { hasExistingTranslation } from "@/features/translate/db/query.server";
+import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
+import type { TranslateJobParams } from "@/features/translate/types";
 export async function handlePageTranslation({
 	currentUserId,
 	pageId,
@@ -49,7 +49,7 @@ export async function handlePageTranslation({
 			number: st.number,
 			text: st.text,
 		})),
-		translationIntent: TranslationIntent.TRANSLATE_PAGE,
+		translateTarget: TranslateTarget.TRANSLATE_PAGE,
 	};
 
 	await queue.add(`translate-${currentUserId}`, jobParams);

@@ -51,21 +51,21 @@ export function TranslationSection({
 			</span>
 			{isSelected && (
 				<>
-					<div className="flex items-center justify-end">
+					<span className="flex items-center justify-end">
 						<NavigationLink
 							href={`/user/${bestSegmentTranslationWithVote?.segmentTranslation.user.handle}`}
 							className="!no-underline mr-2"
 						>
-							<p className="text-sm text-gray-500 text-right flex justify-end items-center">
+							<span className="text-sm text-gray-500 text-right flex justify-end items-center">
 								by:{" "}
 								{bestSegmentTranslationWithVote?.segmentTranslation.user.name}
-							</p>
+							</span>
 						</NavigationLink>
 						<VoteButtons
 							translationWithVote={bestSegmentTranslationWithVote}
 							voteTarget={voteTarget}
 						/>
-					</div>
+					</span>
 					<AddAndVoteTranslations
 						currentHandle={currentHandle}
 						segmentWithTranslations={segmentWithTranslations}

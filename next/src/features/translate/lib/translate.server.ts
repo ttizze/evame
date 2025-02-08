@@ -1,4 +1,4 @@
-import { TranslationIntent } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
+import { TranslateTarget } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
 import { supportedLocaleOptions } from "@/app/constants/locale";
 import { TranslationStatus } from "@prisma/client";
 import { updateUserAITranslationInfo } from "../db/mutations.server";
@@ -34,7 +34,7 @@ export async function translate(params: TranslateJobParams) {
 				params.locale,
 				params.pageId,
 				params.title,
-				params.translationIntent,
+				params.translateTarget,
 				params.commentId,
 			);
 			const progress = ((i + 1) / totalChunks) * 100;
@@ -66,7 +66,7 @@ async function translateChunk(
 	locale: string,
 	pageId: number,
 	title: string,
-	translationIntent: TranslationIntent,
+	translateTarget: TranslateTarget,
 	commentId?: number,
 ) {
 	// まだ翻訳が完了していない要素
@@ -91,7 +91,7 @@ async function translateChunk(
 
 		if (partialTranslations.length > 0) {
 			// 部分的にでも取得できた翻訳結果を保存
-			if (translationIntent === TranslationIntent.TRANSLATE_PAGE) {
+			if (translateTarget === TranslateTarget.TRANSLATE_PAGE) {
 				const pageSegments = await getLatestPageSegments(pageId);
 
 				await saveTranslationsForPage(

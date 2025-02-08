@@ -2,6 +2,7 @@
 import { TagList } from "@/app/[locale]/components/tag-list";
 import {
 	ADD_TRANSLATION_FORM_TARGET,
+	TranslateTarget,
 	VOTE_TARGET,
 } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
 import { NavigationLink } from "@/components/navigation-link";
@@ -90,7 +91,7 @@ export function ContentWithTranslations({
 				locale={locale}
 				existLocales={existLocales}
 				className="pt-3"
-				intent="translatePage"
+				translateTarget={TranslateTarget.TRANSLATE_PAGE}
 			/>
 			<MemoizedParsedContent
 				html={pageWithTranslations.page.content}

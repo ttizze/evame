@@ -1,6 +1,6 @@
+import { TranslateTarget } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
 import { createUserAITranslationInfo } from "@/app/[locale]/user/[handle]/page/[slug]/db/mutations.server";
 import { fetchPageWithPageSegments } from "@/app/[locale]/user/[handle]/page/[slug]/db/queries.server";
-import { TranslationIntent } from "@/app/[locale]/user/[handle]/page/[slug]/page";
 import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
 import type { TranslateJobParams } from "@/features/translate/types";
 import { prisma } from "@/lib/prisma";
@@ -126,7 +126,7 @@ describe("handlePageTranslation", () => {
 				{ number: 0, text: "Title" },
 				{ number: 1, text: "Content" },
 			],
-			translationIntent: TranslationIntent.TRANSLATE_PAGE,
+			translateTarget: TranslateTarget.TRANSLATE_PAGE,
 		});
 	});
 

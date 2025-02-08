@@ -82,8 +82,6 @@ export function BaseHeaderLayout({
 								<DropdownMenuItem asChild>
 									<button
 										type="submit"
-										name="intent"
-										value="logout"
 										onClick={signOutAction}
 										className="w-full gap-2 flex rounded-none cursor-pointer items-center px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground text-red-500"
 									>

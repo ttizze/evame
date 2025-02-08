@@ -31,7 +31,6 @@ export function PageCommentForm({
 				className="space-y-4 relative prose dark:prose-invert"
 			>
 				<input type="hidden" name="pageId" value={pageId} />
-				<input type="hidden" name="intent" value="create" />
 				<Editor
 					defaultValue={""}
 					name="content"

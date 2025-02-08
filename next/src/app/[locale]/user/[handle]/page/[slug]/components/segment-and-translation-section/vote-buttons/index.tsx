@@ -31,8 +31,8 @@ export const VoteButtons = memo(function VoteButtons({
 	);
 
 	return (
-		<div className="flex justify-end items-center">
-			<div className="space-x-2 flex">
+		<span className="flex justify-end items-center">
+			<span className="space-x-2 flex">
 				<VoteButton
 					isUpvote={true}
 					segmentTranslationId={translationWithVote.segmentTranslation.id}
@@ -47,7 +47,7 @@ export const VoteButtons = memo(function VoteButtons({
 					iconClass={buttonClasses.downVote}
 					voteTarget={voteTarget}
 				/>
-			</div>
-		</div>
+			</span>
+		</span>
 	);
 });

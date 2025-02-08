@@ -3,18 +3,18 @@ import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
 import type { ActionState } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { TranslationIntent } from "../../constants";
+import { TranslateTarget } from "../../constants";
 import { createUserAITranslationInfo } from "../../db/mutations.server";
 import { fetchPageWithPageSegments } from "../../db/queries.server";
-
 const translateSchema = z.object({
-	pageId: z.number(),
+	pageId: z.coerce.number(),
 	aiModel: z.string().min(1, "モデルを選択してください"),
 	locale: z.string().min(1, "localeを選択してください"),
-	intent: z.enum([
-		TranslationIntent.TRANSLATE_PAGE,
-		TranslationIntent.TRANSLATE_COMMENT,
+	translateTarget: z.enum([
+		TranslateTarget.TRANSLATE_PAGE,
+		TranslateTarget.TRANSLATE_COMMENT,
 	]),
 });
 
@@ -23,7 +23,7 @@ export type PageTranslateActionState = ActionState & {
 		pageId?: string[];
 		aiModel?: string[];
 		locale?: string[];
-		intent?: string[];
+		translateTarget?: string[];
 	};
 };
 
@@ -39,6 +39,8 @@ export async function pageTranslateAction(
 	const validate = translateSchema.safeParse({
 		pageId: formData.get("pageId"),
 		aiModel: formData.get("aiModel"),
+		locale: formData.get("locale"),
+		translateTarget: formData.get("translateTarget"),
 	});
 	if (!validate.success) {
 		return { fieldErrors: validate.error.flatten().fieldErrors };
@@ -78,8 +80,11 @@ export async function pageTranslateAction(
 		locale: validate.data.locale,
 		title: pageWithPageSegments.title,
 		numberedElements: numberedElements,
-		translationIntent: validate.data.intent,
+		translateTarget: validate.data.translateTarget,
 	});
+	revalidatePath(
+		`/user/${currentUser.handle}/page/${pageWithPageSegments.slug}`,
+	);
 	return {
 		success: "Translation started",
 	};

@@ -13,7 +13,7 @@ export const ADD_TRANSLATION_FORM_TARGET = {
 export type AddTranslationFormTarget =
 	(typeof ADD_TRANSLATION_FORM_TARGET)[keyof typeof ADD_TRANSLATION_FORM_TARGET];
 
-export enum TranslationIntent {
+export enum TranslateTarget {
 	TRANSLATE_PAGE = "translatePage",
 	TRANSLATE_COMMENT = "translateComment",
 }

@@ -12,7 +12,7 @@ vi.mock("../services/gemini", () => ({
 	getGeminiModelResponse: vi.fn(),
 }));
 
-import { TranslationIntent } from "~/routes/$locale+/user.$handle+/page+/$slug+/index";
+import { TranslateTarget } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
 // 型定義
 import type { TranslateJobParams } from "../types";
 
@@ -76,7 +76,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 				{ number: 0, text: "Hello" },
 				{ number: 1, text: "World" },
 			],
-			translationIntent: TranslationIntent.TRANSLATE_PAGE,
+			translateTarget: TranslateTarget.TRANSLATE_PAGE,
 		};
 
 		// モックの戻り値（正常レスポンス）
@@ -118,7 +118,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 				{ number: 0, text: "test" },
 				{ number: 1, text: "failed" },
 			],
-			translationIntent: TranslationIntent.TRANSLATE_PAGE,
+			translateTarget: TranslateTarget.TRANSLATE_PAGE,
 		};
 
 		// 何度呼んでも空配列を返す
@@ -146,7 +146,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 				{ number: 0, text: "Hello" },
 				{ number: 1, text: "World" },
 			],
-			translationIntent: TranslationIntent.TRANSLATE_PAGE,
+			translateTarget: TranslateTarget.TRANSLATE_PAGE,
 		};
 
 		// 1回目: 空レスポンス, 2回目: 正常レスポンス

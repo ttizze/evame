@@ -24,7 +24,7 @@ export function AddTranslationForm({
 		useActionState<ActionState, FormData>(addTranslationFormAction, {});
 
 	return (
-		<div className="mt-4 px-4">
+		<span className="mt-4 px-4 block">
 			<form action={addTranslationAction}>
 				<input
 					type="hidden"
@@ -33,7 +33,7 @@ export function AddTranslationForm({
 				/>
 				<input type="hidden" name="segmentId" value={segmentId} />
 				<input type="hidden" name="locale" value={locale} />
-				<div className="relative">
+				<span className="relative">
 					<TextareaAutosize
 						name="text"
 						required
@@ -45,8 +45,8 @@ export function AddTranslationForm({
 					{!currentHandle && (
 						<StartButton className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
 					)}
-				</div>
-				<div className="space-x-2 flex justify-end items-center">
+				</span>
+				<span className="space-x-2 flex justify-end items-center">
 					{addTranslationState.generalError && (
 						<p className="text-red-500 text-sm">
 							{addTranslationState.generalError}
@@ -60,8 +60,8 @@ export function AddTranslationForm({
 						<ArrowUpFromLine className="h-4 w-4" />
 						Submit
 					</Button>
-				</div>
+				</span>
 			</form>
-		</div>
+		</span>
 	);
 }

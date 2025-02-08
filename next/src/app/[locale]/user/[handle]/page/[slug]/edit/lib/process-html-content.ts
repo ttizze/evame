@@ -14,7 +14,7 @@ import { injectSpanNodes } from "../../lib/process-html";
 import {
 	synchronizePagePageSegments,
 	upsertPageWithHtml,
-} from "../functions/mutations.server";
+} from "../db/mutations.server";
 
 export function rehypeAddDataId(
 	pageId: number,

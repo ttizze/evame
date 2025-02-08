@@ -44,46 +44,44 @@ export function AddAndVoteTranslations({
 	if (!open) return null;
 
 	return (
-		<div className="w-full bg-background ">
-			<div className="flex items-center justify-end text-gray-500 text-sm">
+		<span className="w-full ">
+			<span className="flex items-center justify-end text-gray-500 text-sm">
 				<Languages className="w-4 h-4 mr-1" /> Other translations
-			</div>
-			<div>
-				<div>
-					{displayedTranslations.map((displayedTranslation) => (
-						<TranslationListItem
-							key={displayedTranslation.segmentTranslation.id}
-							translation={displayedTranslation}
-							currentHandle={currentHandle}
-							voteTarget={voteTarget}
-						/>
-					))}
-					{hasMoreTranslations && (
-						<Button
-							variant="link"
-							className="mt-2 w-full text-sm"
-							onClick={toggleShowAll}
-						>
-							{showAll ? (
-								<>
-									<ChevronUp size={16} className="mr-1" />
-								</>
-							) : (
-								<>
-									<ChevronDown size={16} className="mr-1" />
-								</>
-							)}
-						</Button>
-					)}
-				</div>
-				<div className="mt-4">
-					<AddTranslationForm
-						segmentId={segmentWithTranslations.segment.id}
+			</span>
+			<>
+				{displayedTranslations.map((displayedTranslation) => (
+					<TranslationListItem
+						key={displayedTranslation.segmentTranslation.id}
+						translation={displayedTranslation}
 						currentHandle={currentHandle}
-						addTranslationFormTarget={addTranslationFormTarget}
+						voteTarget={voteTarget}
 					/>
-				</div>
-			</div>
-		</div>
+				))}
+				{hasMoreTranslations && (
+					<Button
+						variant="link"
+						className="mt-2 w-full text-sm"
+						onClick={toggleShowAll}
+					>
+						{showAll ? (
+							<>
+								<ChevronUp size={16} className="mr-1" />
+							</>
+						) : (
+							<>
+								<ChevronDown size={16} className="mr-1" />
+							</>
+						)}
+					</Button>
+				)}
+			</>
+			<span className="mt-4">
+				<AddTranslationForm
+					segmentId={segmentWithTranslations.segment.id}
+					currentHandle={currentHandle}
+					addTranslationFormTarget={addTranslationFormTarget}
+				/>
+			</span>
+		</span>
 	);
 }
