@@ -46,7 +46,12 @@ export function DeletePageDialog({
 					</Button>
 					<form action={archiveAction}>
 						<input type="hidden" name="pageIds" value={pageIds.join(",")} />
-						<Button variant="destructive" type="submit" disabled={isArchiving}>
+						<Button
+							variant="destructive"
+							type="submit"
+							disabled={isArchiving}
+							onClick={() => onOpenChange(false)}
+						>
 							<Trash className="w-4 h-4 mr-2" />
 							Delete
 						</Button>

@@ -36,7 +36,6 @@ export function SegmentAndTranslationSection({
 	voteTarget,
 	addTranslationFormTarget,
 }: SegmentAndTranslationSectionProps) {
-	console.log(showOriginal, showTranslation);
 	return (
 		<>
 			{showOriginal && (

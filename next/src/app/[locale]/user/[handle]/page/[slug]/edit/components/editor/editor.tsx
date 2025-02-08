@@ -51,7 +51,7 @@ export function Editor({
 				type="hidden"
 				name={name}
 				ref={editorRef}
-				value={editor?.getHTML() ?? defaultValue}
+				value={editor?.getHTML() ?? defaultValue ?? ""}
 			/>
 		</div>
 	);

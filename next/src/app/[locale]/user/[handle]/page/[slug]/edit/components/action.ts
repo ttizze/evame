@@ -34,9 +34,6 @@ export async function editPageContentAction(
 		title: formData.get("title"),
 		pageContent: formData.get("pageContent"),
 	});
-	console.log(parsedFormData);
-	console.log(formData);
-	console.log(parsedFormData.error?.flatten().fieldErrors);
 	if (!parsedFormData.success) {
 		return { fieldErrors: parsedFormData.error.flatten().fieldErrors };
 	}

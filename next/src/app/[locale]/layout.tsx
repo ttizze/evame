@@ -2,7 +2,6 @@
 import { useSelectedLayoutSegments } from "next/navigation";
 import { Footer } from "./components/footer";
 import { Header } from "./components/header";
-
 export default function LocaleLayout({
 	children,
 }: {
@@ -10,10 +9,8 @@ export default function LocaleLayout({
 }) {
 	const segments = useSelectedLayoutSegments();
 	const isEditorPage = segments.includes("edit");
-
 	return (
 		<>
-			{" "}
 			{isEditorPage ? (
 				children
 			) : (

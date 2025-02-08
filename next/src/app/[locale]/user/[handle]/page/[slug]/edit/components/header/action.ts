@@ -29,9 +29,6 @@ export async function editPageStatusAction(
 		pageId: formData.get("pageId"),
 		status: formData.get("status"),
 	});
-	console.log(parsedFormData);
-	console.log(formData);
-	console.log(parsedFormData.error?.flatten().fieldErrors);
 	if (!parsedFormData.success) {
 		return { fieldErrors: parsedFormData.error.flatten().fieldErrors };
 	}

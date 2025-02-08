@@ -18,7 +18,6 @@ export async function togglePublishAction(
 	const session = await auth();
 	const currentUser = session?.user;
 	const pageId = Number(formData.get("pageId"));
-	console.log("pageId", pageId);
 	if (!pageId) {
 		return { fieldErrors: { pageId: ["Page ID is required"] } };
 	}
