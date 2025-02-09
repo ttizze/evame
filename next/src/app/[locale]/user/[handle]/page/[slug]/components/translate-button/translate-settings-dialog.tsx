@@ -75,7 +75,6 @@ export function TranslateSettingsDialog({
 								<LocaleSelector
 									className="w-full"
 									localeOptions={supportedLocaleOptions}
-									defaultLocaleCode={locale}
 								/>
 							</div>
 

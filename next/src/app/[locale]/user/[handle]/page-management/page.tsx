@@ -2,29 +2,31 @@ import { auth } from "@/auth";
 import { PageManagementTab } from "./components/page-management-tab";
 import { fetchPaginatedOwnPages } from "./db/queries.server";
 
-type Props = {
-	params: {
-		locale: string;
-	};
-	searchParams: {
-		page: string;
-		query: string;
-	};
-};
-
-export default async function PageManagementPage(props: Props) {
+export default async function PageManagementPage({
+	params,
+	searchParams,
+}: {
+	params: Promise<{ locale: string }>;
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
 	const session = await auth();
 	const currentUser = session?.user;
 	if (!currentUser || !currentUser.id) {
 		throw new Error("Unauthorized");
 	}
-	const { params, searchParams } = await props;
 	const { locale } = await params;
-	const resolvedSearchParams = await searchParams;
-	const page = Number(resolvedSearchParams.page || "1");
-	const query = resolvedSearchParams.query || "";
+	const { page = "1", query = "" } = await searchParams;
+	if (typeof page !== "string" || typeof query !== "string") {
+		throw new Error("Invalid page or query");
+	}
 	const { pagesWithTitle, totalPages, currentPage } =
-		await fetchPaginatedOwnPages(currentUser.id, locale, page, 10, query);
+		await fetchPaginatedOwnPages(
+			currentUser.id,
+			locale,
+			Number(page),
+			10,
+			query,
+		);
 
 	return (
 		<div className="mx-auto max-w-4xl py-10">

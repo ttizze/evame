@@ -59,7 +59,6 @@ export function TranslateActionSection({
 				<LocaleSelector
 					className="w-[200px]"
 					localeOptions={existingOptions}
-					defaultLocaleCode={currentLocaleCode}
 					setIsSettingsOpen={setIsSettingsOpen}
 				/>
 			</div>

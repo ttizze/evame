@@ -1,8 +1,5 @@
-import { z } from "zod";
-
 import type { SanitizedUser } from "@/app/types";
 import type { Tag } from "@prisma/client";
-import { CATEGORIES } from "./constants";
 import {
 	searchByTag,
 	searchContent,
@@ -11,33 +8,28 @@ import {
 	searchUsers,
 } from "./db/queries.server";
 import { SearchPageClient } from "./search.client";
-const schema = z.object({
-	query: z.string().min(1, "Search query is required"),
-	category: z.enum(CATEGORIES).default("title"),
-	page: z.string().optional(),
-	tagPage: z.string().optional(),
-});
 
 const PAGE_SIZE = 10;
 
-type Props = {
-	params: { locale: string };
-	searchParams: URLSearchParams;
-};
-
-export default async function Page(props: Props) {
-	const { params, searchParams } = await props;
+export default async function Page({
+	params,
+	searchParams,
+}: {
+	params: Promise<{ locale: string }>;
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
 	const { locale } = await params;
-	const resolvedSearchParams = await searchParams;
-	const result = schema.safeParse(resolvedSearchParams);
-	if (!result.success) {
+	const { query, category = "title", page = "1", tagPage } = await searchParams;
+	if (
+		typeof query !== "string" ||
+		typeof category !== "string" ||
+		typeof page !== "string" ||
+		typeof tagPage !== "string"
+	) {
 		return <SearchPageClient pages={[]} tags={[]} users={[]} totalPages={0} />;
 	}
 
-	const { query, category = "title", page = "1", tagPage } = result.data;
-	const currentPage = Number.parseInt(page, 10) || 1;
-
-	const skip = (currentPage - 1) * PAGE_SIZE;
+	const skip = (Number(page) - 1) * PAGE_SIZE;
 	const take = PAGE_SIZE;
 
 	let pages = undefined;
@@ -98,6 +90,9 @@ export default async function Page(props: Props) {
 			users = resultUsers;
 			totalCount = cnt;
 			break;
+		}
+		default: {
+			throw new Error("Invalid category");
 		}
 	}
 

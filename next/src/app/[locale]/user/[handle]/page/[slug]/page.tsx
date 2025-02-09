@@ -21,12 +21,8 @@ import {
 } from "./db/queries.server";
 import { getBestTranslation } from "./lib/get-best-translation";
 import { stripHtmlTags } from "./lib/strip-html-tags";
-type Props = {
-	params: Promise<{ locale: string; handle: string; slug: string }>;
-	searchParams: Promise<{ showOriginal?: string; showTranslation?: string }>;
-};
 
-export const getPageData = cache(async (slug: string, locale: string) => {
+const getPageData = cache(async (slug: string, locale: string) => {
 	const session = await auth();
 	const currentUser = session?.user;
 
@@ -62,9 +58,11 @@ export const getPageData = cache(async (slug: string, locale: string) => {
 		bestTranslationTitle,
 	};
 });
+type Params = Promise<{ locale: string; handle: string; slug: string }>;
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
 export async function generateMetadata(
-	{ params }: Props,
+	{ params }: { params: Params },
 	parent: ResolvingMetadata,
 ): Promise<Metadata> {
 	const { slug, locale } = await params;
@@ -117,9 +115,13 @@ export async function generateMetadata(
 	};
 }
 
-export default async function Page({ params, searchParams }: Props) {
+export default async function Page({
+	params,
+	searchParams,
+}: { params: Params; searchParams: SearchParams }) {
 	const { slug, locale } = await params;
-	const resolvedSearchParams = await searchParams;
+	const { showOriginal = "true", showTranslation = "true" } =
+		await searchParams;
 	const data = await getPageData(slug, locale);
 	if (!data) {
 		return notFound();
@@ -160,9 +162,6 @@ export default async function Page({ params, searchParams }: Props) {
 		fetchPageCommentsCount(pageWithTranslations.page.id),
 	]);
 
-	const showOriginal = resolvedSearchParams.showOriginal !== "false";
-	const showTranslation = resolvedSearchParams.showTranslation !== "false";
-
 	return (
 		<div className="w-full max-w-3xl mx-auto">
 			<article className="w-full prose dark:prose-invert prose-a:underline prose-a:decoration-dotted sm:prose lg:prose-lg mx-auto px-4 mb-20">
@@ -174,8 +173,8 @@ export default async function Page({ params, searchParams }: Props) {
 					userAITranslationInfo={userAITranslationInfo}
 					locale={locale}
 					existLocales={pageWithTranslations.existLocales}
-					showOriginal={showOriginal}
-					showTranslation={showTranslation}
+					showOriginal={showOriginal === "true"}
+					showTranslation={showTranslation === "true"}
 				/>
 			</article>
 			<div className="flex items-center gap-4">
@@ -194,8 +193,8 @@ export default async function Page({ params, searchParams }: Props) {
 				likeCount={likeCount}
 				slug={slug}
 				shareTitle={sourceTitleWithBestTranslationTitle}
-				initialShowOriginal={showOriginal}
-				initialShowTranslation={showTranslation}
+				initialShowOriginal={showOriginal === "true"}
+				initialShowTranslation={showTranslation === "true"}
 			/>
 
 			<div className="mt-8">
@@ -216,8 +215,8 @@ export default async function Page({ params, searchParams }: Props) {
 					<PageCommentList
 						pageId={pageWithTranslations.page.id}
 						currentHandle={currentUser?.handle}
-						showOriginal={showOriginal}
-						showTranslation={showTranslation}
+						showOriginal={showOriginal === "true"}
+						showTranslation={showTranslation === "true"}
 						locale={locale}
 					/>
 				</div>

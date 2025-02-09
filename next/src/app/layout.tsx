@@ -3,11 +3,10 @@ import { getMessages } from "next-intl/server";
 import "./globals.css";
 import { getCurrentUser } from "@/auth";
 import { Toaster } from "@/components/ui/sonner";
-import { UserProvider } from "@/contexts/user-context";
+import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { BIZ_UDPGothic, Inter } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-
 const inter = Inter({ subsets: ["latin"] });
 const bizUDPGothic = BIZ_UDPGothic({
 	weight: ["400", "700"],
@@ -41,7 +40,7 @@ export default async function Layout({
 						disableTransitionOnChange
 					>
 						<NextIntlClientProvider messages={messages}>
-							<UserProvider currentUser={currentUser}>{children}</UserProvider>
+							<SessionProvider>{children}</SessionProvider>
 							<Toaster richColors />
 						</NextIntlClientProvider>
 					</ThemeProvider>

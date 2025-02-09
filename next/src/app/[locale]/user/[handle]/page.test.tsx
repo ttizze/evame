@@ -93,8 +93,8 @@ describe("UserProfile", () => {
 
 		render(
 			<UserProfile
-				params={{ handle: "testuser", locale: "en" }}
-				searchParams={{ page: "1" }}
+				params={Promise.resolve({ handle: "testuser", locale: "en" })}
+				searchParams={Promise.resolve({ page: "1" })}
 			/>,
 		);
 
@@ -122,8 +122,8 @@ describe("UserProfile", () => {
 
 		render(
 			<UserProfile
-				params={{ handle: "testuser2", locale: "en" }}
-				searchParams={{ page: "1" }}
+				params={Promise.resolve({ handle: "testuser2", locale: "en" })}
+				searchParams={Promise.resolve({ page: "1" })}
 			/>,
 		);
 
@@ -163,8 +163,8 @@ describe("UserProfile", () => {
 		vi.mocked(session.user).id = testUser.id;
 		render(
 			<UserProfile
-				params={{ handle: "testuser", locale: "en" }}
-				searchParams={{ page: "1" }}
+				params={Promise.resolve({ handle: "testuser", locale: "en" })}
+				searchParams={Promise.resolve({ page: "1" })}
 			/>,
 		);
 
@@ -188,8 +188,8 @@ describe("UserProfile", () => {
 
 		render(
 			<UserProfile
-				params={{ handle: "testuser", locale: "en" }}
-				searchParams={{ page: "1" }}
+				params={Promise.resolve({ handle: "testuser", locale: "en" })}
+				searchParams={Promise.resolve({ page: "1" })}
 			/>,
 		);
 

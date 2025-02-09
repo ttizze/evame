@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { parseHtmlToAst } from "../comment/lib/process-page-comment-html";
-import { collectBlocksFromRoot } from "./process-html";
+import { collectBlocksFromRoot } from "../../../../../../lib/process-html";
+import { parseHtmlToAst } from "./process-page-comment-html";
 
 describe("collectBlocksAndSegmentsFromRoot", () => {
 	test("段落やブロック要素を解析し、pageCommentSegmentに正しく保存される", async () => {

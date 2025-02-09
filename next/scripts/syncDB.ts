@@ -1,5 +1,5 @@
+import { processPageHtml } from "@/app/[locale]/user/[handle]/page/[slug]/edit/lib/process-page-html";
 import { prisma } from "@/lib/prisma";
-import { processPageHtml } from "~/routes/$locale+/user.$handle+/page+/$slug+/edit/utils/processHtmlContent";
 
 // 全ページに対して処理を実行するメイン関数
 async function main(): Promise<void> {
@@ -26,7 +26,6 @@ async function main(): Promise<void> {
 			page.slug,
 			page.userId,
 			page.sourceLocale,
-			page.status,
 		);
 	}
 

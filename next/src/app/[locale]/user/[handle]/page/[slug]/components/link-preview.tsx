@@ -1,6 +1,13 @@
-import type { PreviewData } from "@/app/[locale]/user/[handle]/page/[slug]/types";
 import { useEffect, useState } from "react";
 
+export type PreviewData = {
+	title: string;
+	favicon: string;
+	image: string;
+	description: string;
+	url: string;
+	domain: string;
+};
 interface LinkPreviewProps {
 	url: string;
 }

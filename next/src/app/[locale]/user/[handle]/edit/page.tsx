@@ -8,13 +8,11 @@ export const metadata: Metadata = {
 	title: "Edit Profile",
 };
 
-interface Props {
-	params: {
-		handle: string;
-	};
-}
-
-export default async function UserEditPage({ params }: Props) {
+export default async function UserEditPage({
+	params,
+}: {
+	params: Promise<{ handle: string }>;
+}) {
 	const session = await auth();
 	const currentUser = session?.user;
 	const { handle } = await params;

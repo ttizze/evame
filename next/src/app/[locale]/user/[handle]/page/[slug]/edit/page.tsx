@@ -5,15 +5,9 @@ import { cache } from "react";
 import { EditPageClient } from "./components/edit-page-client";
 import { getAllTags, getPageBySlug } from "./db/queries.server";
 
-type Props = {
-	params: {
-		handle: string;
-		slug: string;
-		locale: string;
-	};
-};
+type Params = Promise<{ handle: string; slug: string }>;
 
-export const getPageData = cache(async (handle: string, slug: string) => {
+const getPageData = cache(async (handle: string, slug: string) => {
 	if (!handle || !slug) notFound();
 
 	const currentUser = await getCurrentUser();
@@ -36,14 +30,11 @@ export const getPageData = cache(async (handle: string, slug: string) => {
 });
 
 export async function generateMetadata(
-	{ params }: Props,
+	{ params }: { params: Params },
 	parent: ResolvingMetadata,
 ): Promise<Metadata> {
-	const resolvedParams = await params;
-	const { title } = await getPageData(
-		resolvedParams.handle,
-		resolvedParams.slug,
-	);
+	const { handle, slug } = await params;
+	const { title } = await getPageData(handle, slug);
 
 	return {
 		title: title ? `Edit ${title}` : "Edit Page",
@@ -54,10 +45,14 @@ export async function generateMetadata(
 	};
 }
 
-export default async function EditPage({ params }: Props) {
-	const resolvedParams = await params;
+export default async function EditPage({
+	params,
+}: {
+	params: Params;
+}) {
+	const { handle, slug } = await params;
 	const { currentUser, pageWithTitleAndTags, allTags, title } =
-		await getPageData(resolvedParams.handle, resolvedParams.slug);
+		await getPageData(handle, slug);
 
 	return (
 		<EditPageClient
@@ -65,7 +60,7 @@ export default async function EditPage({ params }: Props) {
 			pageWithTitleAndTags={pageWithTitleAndTags}
 			allTags={allTags}
 			initialTitle={title}
-			slug={resolvedParams.slug}
+			slug={slug}
 		/>
 	);
 }

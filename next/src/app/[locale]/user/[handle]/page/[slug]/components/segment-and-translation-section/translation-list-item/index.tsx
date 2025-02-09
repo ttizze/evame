@@ -67,7 +67,7 @@ export function TranslationListItem({
 			<span className="flex items-center justify-end">
 				<NavigationLink
 					href={`/user/${translation.segmentTranslation.user.handle}`}
-					className="!no-underline mr-2"
+					className="!no-underline mr-2 flex  items-center"
 				>
 					<span className="text-sm text-gray-500 text-right flex justify-end items-center  ">
 						by: {translation.segmentTranslation.user.name}

@@ -11,7 +11,7 @@ import parse, {
 import DOMPurify from "isomorphic-dompurify";
 import { memo } from "react";
 import type { SegmentWithTranslations } from "../types";
-import { SegmentAndTranslationSection } from "./segment-and-translation-section/segment-and-translation-section";
+import { SegmentAndTranslationSection } from "./segment-and-translation-section";
 
 interface ParsedContentProps {
 	html: string;

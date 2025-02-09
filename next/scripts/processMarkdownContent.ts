@@ -1,11 +1,11 @@
+import { upsertPageWithHtml } from "@/app/[locale]/user/[handle]/page/[slug]/edit/db/mutations.server";
+import { rehypeAddDataId } from "@/app/[locale]/user/[handle]/page/[slug]/edit/lib/process-page-html";
 import type { PageStatus } from "@prisma/client";
 import rehypeRaw from "rehype-raw";
 import rehypeStringify from "rehype-stringify";
 import { remark } from "remark";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
-import { upsertPageWithHtml } from "~/routes/$locale+/user.$handle+/page+/$slug+/edit/functions/mutations.server";
-import { rehypeAddDataId } from "~/routes/$locale+/user.$handle+/page+/$slug+/edit/utils/processHtmlContent";
 export async function processMarkdownContent(
 	title: string,
 	body: string,
@@ -14,13 +14,7 @@ export async function processMarkdownContent(
 	sourceLocale: string,
 	status: PageStatus,
 ) {
-	const page = await upsertPageWithHtml(
-		pageSlug,
-		body,
-		userId,
-		sourceLocale,
-		status,
-	);
+	const page = await upsertPageWithHtml(pageSlug, body, userId, sourceLocale);
 
 	const file = await remark()
 		.use(remarkGfm)
@@ -32,6 +26,6 @@ export async function processMarkdownContent(
 
 	const htmlContent = String(file);
 
-	await upsertPageWithHtml(pageSlug, htmlContent, userId, sourceLocale, status);
+	await upsertPageWithHtml(pageSlug, htmlContent, userId, sourceLocale);
 	return page;
 }

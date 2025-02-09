@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { getLocaleFromHtml } from "./getLocaleFromHtml";
+import { getLocaleFromHtml } from "./get-locale-from-html";
 
 describe("getPagesourceLocale - Other Languages", () => {
 	// 長めの英語テストケース

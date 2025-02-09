@@ -1,5 +1,5 @@
-import { TranslateTarget } from "@/app/[locale]/user/[handle]/page/[slug]/components/translate-button/constants";
-import { createUserAITranslationInfo } from "@/app/[locale]/user/[handle]/page/[slug]/functions/mutations.server";
+import { TranslateTarget } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
+import { createUserAITranslationInfo } from "@/app/[locale]/user/[handle]/page/[slug]/db/mutations.server";
 import { fetchUserByHandle } from "@/app/db/queries.server";
 import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
 import { prisma } from "@/lib/prisma";

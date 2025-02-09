@@ -1,13 +1,14 @@
 "use client";
-import { useUser } from "@/contexts/user-context";
 import { Link } from "@/i18n/routing";
 import { Search } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { BaseHeaderLayout } from "./base-header-layout";
 import { NewPageButton } from "./new-page-button";
 import { StartButton } from "./start-button";
 
 export function Header() {
-	const { currentUser } = useUser();
+	const { data: session } = useSession();
+	const currentUser = session?.user;
 	const rightExtra = (
 		<>
 			<Link href="/search">
@@ -26,7 +27,7 @@ export function Header() {
 			currentUser={currentUser}
 			leftExtra={null}
 			rightExtra={rightExtra}
-			showUserMenu={!!currentUser} // ユーザーメニューはログイン時のみ表示
+			showUserMenu={!!currentUser}
 		/>
 	);
 }

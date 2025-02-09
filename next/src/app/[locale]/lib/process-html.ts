@@ -1,7 +1,7 @@
 import type { Element, Root, RootContent, Text } from "hast";
 import type { Parent } from "unist";
 import { visit } from "unist-util-visit";
-import { generateHashForText } from "./generateHashForText";
+import { generateHashForText } from "./generate-hash-for-text";
 
 const BLOCK_LEVEL_TAGS = new Set([
 	"p",

@@ -28,7 +28,7 @@ import {
 export async function generateMetadata({
 	params,
 }: {
-	params: { locale: string; handle: string };
+	params: Promise<{ locale: string; handle: string }>;
 }): Promise<Metadata> {
 	const { handle } = await params;
 	if (!handle) {
@@ -41,16 +41,18 @@ export async function generateMetadata({
 	return { title: pageOwner.name };
 }
 
-type Props = {
-	params: { locale: string; handle: string };
-	searchParams: { page: string };
-};
-
-export default async function UserPage(props: Props) {
-	const { params, searchParams } = await props;
+export default async function UserPage({
+	params,
+	searchParams,
+}: {
+	params: Promise<{ locale: string; handle: string }>;
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
 	const { locale, handle } = await params;
 	const { page = "1" } = await searchParams;
-	if (!handle) throw new Error("handle is required");
+	if (typeof handle !== "string" || typeof page !== "string") {
+		throw new Error("Invalid handle or page");
+	}
 
 	const pageOwner = await fetchUserByHandle(handle);
 	if (!pageOwner) {
