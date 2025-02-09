@@ -44,7 +44,6 @@ export default function LocaleSelector({
 	const pathname = usePathname();
 	console.log("pathname", pathname);
 	const handleLocaleChange = (value: string) => {
-		console.log("value", value);
 		setOpen(false);
 		startTransition(() => {
 			router.replace(
