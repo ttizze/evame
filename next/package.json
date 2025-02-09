@@ -106,8 +106,6 @@
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"@vitejs/plugin-react": "^4.3.4",
-		"eslint": "^8",
-		"eslint-config-next": "15.0.4",
 		"jsdom": "^26.0.0",
 		"postcss": "^8",
 		"prisma": "6.2.1",
