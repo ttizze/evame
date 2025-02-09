@@ -1,4 +1,4 @@
-import { TabsClient } from "@/app/[locale]/components/TabsClient";
+import { TabsClient } from "@/app/[locale]/components/tabs-client";
 import { StartButton } from "@/app/[locale]/components/start-button";
 import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/db/queries.server";
 import type { PageCardLocalizedType } from "@/app/[locale]/db/queries.server";

@@ -38,6 +38,7 @@ export default function LocaleSelector({
 	setIsSettingsOpen,
 }: LocaleSelectorProps) {
 	const locale = useLocale();
+	console.log("locale", locale);
 	const [open, setOpen] = useState(false);
 	const params = useParams();
 	const router = useRouter();
@@ -46,13 +47,7 @@ export default function LocaleSelector({
 	const handleLocaleChange = (value: string) => {
 		setOpen(false);
 		startTransition(() => {
-			router.replace(
-				// @ts-expect-error -- TypeScript will validate that only known `params`
-				// are used in combination with a given `pathname`. Since the two will
-				// always match for the current route, we can skip runtime checks.
-				{ pathname, params },
-				{ locale: value },
-			);
+			router.replace(pathname, { locale: value });
 		});
 	};
 
