@@ -3,7 +3,7 @@ import { PageCommentForm } from "@/app/[locale]/user/[handle]/page/[slug]/commen
 import { PageCommentList } from "@/app/[locale]/user/[handle]/page/[slug]/comment/components/page-comment-list";
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
 import { auth } from "@/auth";
-import { ensureGuestId } from "@/lib/ensure-guest-id.server";
+import { getGuestId } from "@/lib/get-guest-id";
 import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -61,9 +61,9 @@ const getPageData = cache(async (slug: string, locale: string) => {
 type Params = Promise<{ locale: string; handle: string; slug: string }>;
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
-export async function generateMetadata({
-	params,
-}: { params: Params }): Promise<Metadata> {
+export async function generateMetadata(
+	{ params }: { params: Params },
+): Promise<Metadata> {
 	const { slug, locale } = await params;
 	const data = await getPageData(slug, locale);
 	if (!data) {
@@ -129,7 +129,7 @@ export default async function Page({
 	const session = await auth();
 	const currentUser = session?.user;
 
-	const guestId = await ensureGuestId();
+	const guestId = await getGuestId();
 
 	const geminiApiKey = await fetchGeminiApiKeyByHandle(
 		currentUser?.handle ?? "",

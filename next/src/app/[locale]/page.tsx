@@ -9,7 +9,7 @@ import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/user/[handle]/page/[
 import { VOTE_TARGET } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
 import { TranslateTarget } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
 import { getCurrentUser } from "@/auth";
-import { ensureGuestId } from "@/lib/ensure-guest-id.server";
+import { getGuestId } from "@/lib/get-guest-id";
 import type { Metadata } from "next";
 export const metadata: Metadata = {
 	title: "Evame - Home - Latest Pages",
@@ -69,7 +69,7 @@ export default async function HomePage({
 	}
 
 	// ゲストID確保
-	const guestId = await ensureGuestId();
+	const guestId = await getGuestId();
 
 	// ページング情報取得
 	let pagesWithInfo: PageCardLocalizedType[];

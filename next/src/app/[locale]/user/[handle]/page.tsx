@@ -12,7 +12,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Card } from "@/components/ui/card";
-import { ensureGuestId } from "@/lib/ensure-guest-id.server";
+import { getGuestId } from "@/lib/get-guest-id";
 import Linkify from "linkify-react";
 import { Settings } from "lucide-react";
 import type { Metadata } from "next";
@@ -63,7 +63,7 @@ export default async function UserPage({
 
 	const session = await auth();
 	const currentUser = session?.user;
-	const guestId = !currentUser ? await ensureGuestId() : undefined;
+	const guestId = !currentUser ? await getGuestId() : undefined;
 
 	const isOwner = currentUser?.handle === handle;
 
