@@ -61,9 +61,9 @@ const getPageData = cache(async (slug: string, locale: string) => {
 type Params = Promise<{ locale: string; handle: string; slug: string }>;
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
-export async function generateMetadata(
-	{ params }: { params: Params },
-): Promise<Metadata> {
+export async function generateMetadata({
+	params,
+}: { params: Params }): Promise<Metadata> {
 	const { slug, locale } = await params;
 	const data = await getPageData(slug, locale);
 	if (!data) {

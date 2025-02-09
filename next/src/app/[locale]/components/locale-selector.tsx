@@ -17,9 +17,9 @@ import { usePathname, useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useLocale } from "next-intl";
+import { useParams } from "next/navigation";
 import { useState } from "react";
 import { startTransition } from "react";
-import { useParams } from "next/navigation";
 interface LocaleOption {
 	code: string;
 	name: string;
@@ -46,8 +46,8 @@ export default function LocaleSelector({
 	const handleLocaleChange = (value: string) => {
 		console.log("value", value);
 		setOpen(false);
-    startTransition(() => {
-      router.replace(
+		startTransition(() => {
+			router.replace(
 				// @ts-expect-error -- TypeScript will validate that only known `params`
 				// are used in combination with a given `pathname`. Since the two will
 				// always match for the current route, we can skip runtime checks.
@@ -87,9 +87,7 @@ export default function LocaleSelector({
 										<Check
 											className={cn(
 												"mr-2 h-4 w-4",
-												locale === item.code
-													? "opacity-100"
-													: "opacity-0",
+												locale === item.code ? "opacity-100" : "opacity-0",
 											)}
 										/>
 										<span className="truncate">{item.name}</span>

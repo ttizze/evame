@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 export type PreviewData = {
 	title: string;
 	favicon: string;

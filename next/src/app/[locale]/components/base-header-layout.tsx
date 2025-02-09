@@ -10,9 +10,9 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOutIcon, SettingsIcon } from "lucide-react";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { ModeToggle } from "./mode-toggle";
-import Image from "next/image";
 interface BaseHeaderLayoutProps {
 	currentUser: SanitizedUser | undefined;
 	leftExtra?: ReactNode;

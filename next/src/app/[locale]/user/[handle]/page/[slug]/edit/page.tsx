@@ -29,9 +29,9 @@ const getPageData = cache(async (handle: string, slug: string) => {
 	};
 });
 
-export async function generateMetadata(
-	{ params }: { params: Params },
-): Promise<Metadata> {
+export async function generateMetadata({
+	params,
+}: { params: Params }): Promise<Metadata> {
 	const { handle, slug } = await params;
 	const { title } = await getPageData(handle, slug);
 

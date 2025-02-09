@@ -9,10 +9,10 @@ import parse, {
 	type DOMNode,
 } from "html-react-parser";
 import DOMPurify from "isomorphic-dompurify";
+import Image from "next/image";
 import { memo } from "react";
 import type { SegmentWithTranslations } from "../types";
 import { SegmentAndTranslationSection } from "./segment-and-translation-section";
-import Image from "next/image";
 interface ParsedContentProps {
 	html: string;
 	segmentWithTranslations: SegmentWithTranslations[] | null;

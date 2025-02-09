@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { ExternalLink, Loader2, SaveIcon } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useActionState } from "react";
@@ -18,7 +19,6 @@ import {
 	userEditAction,
 	userImageEditAction,
 } from "./action";
-import Image from "next/image";
 interface EditProfileFormProps {
 	currentUser: SanitizedUser;
 }
