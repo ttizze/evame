@@ -12,7 +12,7 @@ import DOMPurify from "isomorphic-dompurify";
 import { memo } from "react";
 import type { SegmentWithTranslations } from "../types";
 import { SegmentAndTranslationSection } from "./segment-and-translation-section";
-
+import Image from "next/image";
 interface ParsedContentProps {
 	html: string;
 	segmentWithTranslations: SegmentWithTranslations[] | null;
@@ -92,11 +92,11 @@ export function ParsedContent({
 				const { src, alt, width, height, ...otherAttribs } = domNode.attribs;
 				return (
 					//otherAttribs がbiomeのlintに引っかかる
-					// biome-ignore lint/a11y/useAltText: <explanation>
-					<img
+					<Image
 						src={src}
 						alt={alt || ""}
-						height={height || "auto"}
+						height={height ? Number(height) : undefined}
+						width={width ? Number(width) : undefined}
 						className="aspect-ratio-img max-w-full"
 						{...otherAttribs}
 					/>

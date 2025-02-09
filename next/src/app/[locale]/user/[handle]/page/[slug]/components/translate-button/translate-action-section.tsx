@@ -49,9 +49,6 @@ export function TranslateActionSection({
 	const existingOptions = merged.filter((option, index, self) => {
 		return self.findIndex((o) => o.code === option.code) === index;
 	});
-	const currentLocaleCode =
-		supportedLocaleOptions.find((sl) => sl.code === locale)?.code || locale;
-
 	return (
 		<div className={className}>
 			<div className="flex items-center gap-2">

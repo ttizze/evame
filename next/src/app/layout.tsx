@@ -1,7 +1,6 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import "./globals.css";
-import { getCurrentUser } from "@/auth";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
@@ -23,7 +22,6 @@ export default async function Layout({
 	params: Promise<{ locale: "en" }>;
 }) {
 	const resolvedParams = await params;
-	const currentUser = await getCurrentUser();
 	const messages = await getMessages();
 	return (
 		<html

@@ -5,7 +5,7 @@ import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
 import { auth } from "@/auth";
 import { ensureGuestId } from "@/lib/ensure-guest-id.server";
 import { MessageCircle } from "lucide-react";
-import type { Metadata, ResolvingMetadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { ContentWithTranslations } from "./components/content-with-translations";
@@ -63,7 +63,6 @@ type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
 export async function generateMetadata(
 	{ params }: { params: Params },
-	parent: ResolvingMetadata,
 ): Promise<Metadata> {
 	const { slug, locale } = await params;
 	const data = await getPageData(slug, locale);

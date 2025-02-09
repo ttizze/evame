@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/auth";
-import type { Metadata, ResolvingMetadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { EditPageClient } from "./components/edit-page-client";
@@ -31,7 +31,6 @@ const getPageData = cache(async (handle: string, slug: string) => {
 
 export async function generateMetadata(
 	{ params }: { params: Params },
-	parent: ResolvingMetadata,
 ): Promise<Metadata> {
 	const { handle, slug } = await params;
 	const { title } = await getPageData(handle, slug);

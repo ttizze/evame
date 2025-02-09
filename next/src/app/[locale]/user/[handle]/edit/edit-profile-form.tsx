@@ -18,6 +18,7 @@ import {
 	userEditAction,
 	userImageEditAction,
 } from "./action";
+import Image from "next/image";
 interface EditProfileFormProps {
 	currentUser: SanitizedUser;
 }
@@ -88,7 +89,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 							disabled={isImageUploading}
 							className="w-40 h-40 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500"
 						>
-							<img
+							<Image
 								src={profileIconUrl}
 								alt="Profile"
 								className="w-full h-full object-cover transition-opacity group-hover:opacity-75"

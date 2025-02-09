@@ -94,12 +94,12 @@ export function TagInput({ initialTags, allTags, pageId }: TagInputProps) {
 							IndicatorSeparator: () => null,
 						}}
 						styles={{
-							control: (baseStyles) => ({
+							control: () => ({
 								height: "32px",
 							}),
 						}}
 						classNames={{
-							control: (state) =>
+							control: () =>
 								cn(
 									"border border-border px-4 w-30  rounded-full  bg-transparent cursor-pointer text-sm",
 									isPending && "opacity-50 cursor-not-allowed",

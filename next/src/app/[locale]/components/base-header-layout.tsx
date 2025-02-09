@@ -12,7 +12,7 @@ import {
 import { LogOutIcon, SettingsIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { ModeToggle } from "./mode-toggle";
-
+import Image from "next/image";
 interface BaseHeaderLayoutProps {
 	currentUser: SanitizedUser | undefined;
 	leftExtra?: ReactNode;
@@ -31,9 +31,11 @@ export function BaseHeaderLayout({
 			<div className="max-w-7xl mx-auto py-2 md:py-4 px-2 md:px-6 lg:px-8 flex justify-between items-center">
 				<div className="flex items-center gap-4">
 					<NavigationLink href="/" className="flex items-center">
-						<img
+						<Image
 							src="/logo.svg"
 							alt="Evame"
+							width={80}
+							height={32}
 							className="h-8 w-20 dark:invert"
 							aria-label="Evame Logo"
 						/>

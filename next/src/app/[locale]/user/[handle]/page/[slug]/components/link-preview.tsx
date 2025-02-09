@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-
+import Image from "next/image";
 export type PreviewData = {
 	title: string;
 	favicon: string;
@@ -44,7 +44,7 @@ export function LinkPreview({ url }: LinkPreviewProps) {
 					<span className="text-lg font-bold">{previewData.title}</span>
 					<span className="text-md">{previewData.description}</span>
 					<span className="flex items-center">
-						<img
+						<Image
 							src={previewData.favicon}
 							alt="favicon"
 							className="w-4 h-4 mr-2"
@@ -54,7 +54,7 @@ export function LinkPreview({ url }: LinkPreviewProps) {
 						</span>
 					</span>
 				</span>
-				<img
+				<Image
 					src={previewData.image}
 					alt={previewData.title}
 					className="grid-cols-2"

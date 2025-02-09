@@ -17,9 +17,9 @@ import { usePathname, useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useLocale } from "next-intl";
+import { useState } from "react";
+import { startTransition } from "react";
 import { useParams } from "next/navigation";
-import { useState, useTransition } from "react";
-
 interface LocaleOption {
 	code: string;
 	name: string;
@@ -39,23 +39,22 @@ export default function LocaleSelector({
 }: LocaleSelectorProps) {
 	const locale = useLocale();
 	const [open, setOpen] = useState(false);
-
-	const [currentLocale, setCurrentLocale] = useState(locale);
-	const [isPending, startTransition] = useTransition();
+	const params = useParams();
 	const router = useRouter();
 	const pathname = usePathname();
-	const params = useParams();
+	console.log("pathname", pathname);
 	const handleLocaleChange = (value: string) => {
-		setCurrentLocale(value);
+		console.log("value", value);
 		setOpen(false);
-		const segments = pathname.split("/");
-		if (segments.length > 1) {
-			segments.splice(1, 1);
-		}
-		const newPath = segments.join("/") || "/";
-
-		// 新しいロケールを先頭に付与してルーティング
-		router.push(`/${value}${newPath}`);
+    startTransition(() => {
+      router.replace(
+				// @ts-expect-error -- TypeScript will validate that only known `params`
+				// are used in combination with a given `pathname`. Since the two will
+				// always match for the current route, we can skip runtime checks.
+				{ pathname, params },
+				{ locale: value },
+			);
+		});
 	};
 
 	return (
@@ -66,7 +65,7 @@ export default function LocaleSelector({
 					className={cn("justify-between rounded-xl", className)}
 				>
 					<span className="truncate">
-						{localeOptions.find((item) => item.code === currentLocale)?.name ??
+						{localeOptions.find((item) => item.code === locale)?.name ??
 							"Select"}
 					</span>
 					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -78,7 +77,7 @@ export default function LocaleSelector({
 					<CommandList>
 						<CommandEmpty>No locales found.</CommandEmpty>
 						<CommandGroup>
-							{localeOptions.map((item, index) => {
+							{localeOptions.map((item) => {
 								return (
 									<CommandItem
 										key={item.code}
@@ -88,7 +87,7 @@ export default function LocaleSelector({
 										<Check
 											className={cn(
 												"mr-2 h-4 w-4",
-												currentLocale === item.code
+												locale === item.code
 													? "opacity-100"
 													: "opacity-0",
 											)}
