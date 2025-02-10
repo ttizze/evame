@@ -1,9 +1,9 @@
 "use client";
 import { StartButton } from "@/app/[locale]/components/start-button";
+import { Editor } from "@/app/[locale]/user/[handle]/page/[slug]/edit/components/editor/editor";
 import type { ActionState } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { useActionState, useState } from "react";
-import { Editor } from "@/app/[locale]/user/[handle]/page/[slug]/edit/components/editor/editor";
 import { commentAction } from "./action";
 
 export function PageCommentForm({

@@ -5,8 +5,6 @@ export default function LocaleLayout({
 }: {
 	children: React.ReactNode;
 }) {
-
-
 	return (
 		<>
 			<Header />

@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import type { BlockWithNumber } from "@/app/[locale]/lib/process-html";
+import { prisma } from "@/lib/prisma";
 
 export async function createPageComment(
 	content: string,

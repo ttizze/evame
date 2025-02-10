@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import { getBestTranslation } from "@/app/[locale]/lib/get-best-translation";
+import { prisma } from "@/lib/prisma";
 import type { SegmentTranslationWithVote } from "../../../../types";
 
 export async function fetchPageCommentsWithUserAndTranslations(

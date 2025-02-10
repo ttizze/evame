@@ -1,9 +1,9 @@
 "use server";
+import { getLocaleFromHtml } from "@/app/[locale]/lib/get-locale-from-html";
 import type { ActionState } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getLocaleFromHtml } from "@/app/[locale]/lib/get-locale-from-html";
 import { createPageComment } from "../../db/mutations.server";
 import { processPageCommentHtml } from "../../lib/process-page-comment-html";
 

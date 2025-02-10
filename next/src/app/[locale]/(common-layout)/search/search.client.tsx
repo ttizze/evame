@@ -1,5 +1,13 @@
 "use client";
 
+import {
+	CATEGORIES,
+	type Category,
+} from "@/app/[locale]/(common-layout)/search/constants";
+import { PageCard } from "@/app/[locale]/components/page-card";
+import { PaginationBar } from "@/app/[locale]/components/pagination-bar";
+import { TagList } from "@/app/[locale]/components/tag-list";
+import type { PageCardLocalizedType } from "@/app/[locale]/db/queries.server";
 import type { SanitizedUser } from "@/app/types";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,11 +15,6 @@ import type { Tag } from "@prisma/client";
 import { Edit3, FileText, Hash, User } from "lucide-react";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { useTransition } from "react";
-import { PageCard } from "@/app/[locale]/components/page-card";
-import { PaginationBar } from "@/app/[locale]/components/pagination-bar";
-import { TagList } from "@/app/[locale]/components/tag-list";
-import type { PageCardLocalizedType } from "@/app/[locale]/db/queries.server";
-import { CATEGORIES, type Category } from "@/app/[locale]/(common-layout)/search/constants";
 
 interface Props {
 	pages: PageCardLocalizedType[] | undefined;

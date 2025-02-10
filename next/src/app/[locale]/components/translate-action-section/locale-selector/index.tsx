@@ -13,12 +13,12 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import {  useRouter, usePathname } from "@/i18n/routing";
+import { usePathname, useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
+import { useParams } from "next/navigation";
 import { useState } from "react";
 import { startTransition } from "react";
-import { useParams } from "next/navigation";
 interface LocaleOption {
 	code: string;
 	name: string;
@@ -48,12 +48,12 @@ export function LocaleSelector({
 		setOpen(false);
 		startTransition(() => {
 			router.replace(
-        // @ts-expect-error -- TypeScript will validate that only known `params`
-        // are used in combination with a given `pathname`. Since the two will
-        // always match for the current route, we can skip runtime checks.
-        {pathname, params},
-        {locale: value}
-		);
+				// @ts-expect-error -- TypeScript will validate that only known `params`
+				// are used in combination with a given `pathname`. Since the two will
+				// always match for the current route, we can skip runtime checks.
+				{ pathname, params },
+				{ locale: value },
+			);
 		});
 	};
 

@@ -1,3 +1,5 @@
+import { collectBlocksFromRoot } from "@/app/[locale]/lib/process-html";
+import { injectSpanNodes } from "@/app/[locale]/lib/process-html";
 import type { Root } from "hast";
 import rehypeParse from "rehype-parse";
 import rehypeRaw from "rehype-raw";
@@ -8,8 +10,6 @@ import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import type { Plugin } from "unified";
-import { collectBlocksFromRoot } from "@/app/[locale]/lib/process-html";
-import { injectSpanNodes } from "@/app/[locale]/lib/process-html";
 import {
 	synchronizePagePageSegments,
 	upsertPageWithHtml,

@@ -1,4 +1,5 @@
 import type { SegmentTranslationWithVote } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/types";
+import { sanitizeAndParseText } from "@/app/[locale]/lib/sanitize-and-parse-text.client";
 import type { ActionState } from "@/app/types";
 import { NavigationLink } from "@/components/navigation-link";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EllipsisVertical } from "lucide-react";
 import { useActionState } from "react";
-import { sanitizeAndParseText } from "@/app/[locale]/lib/sanitize-and-parse-text.client";
 import { VoteButtons } from "../vote-buttons";
 import type { VoteTarget } from "../vote-buttons/constants";
 import { deleteTranslationAction } from "./action";

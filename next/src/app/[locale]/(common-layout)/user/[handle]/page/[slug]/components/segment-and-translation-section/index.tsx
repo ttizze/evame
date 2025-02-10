@@ -41,11 +41,12 @@ export function SegmentAndTranslationSection({
 			{showOriginal && (
 				<span className="flex items-center">
 					<span
-						className={`inline-block ${segmentWithTranslations.segmentTranslationsWithVotes.length ===
-							0 || !showTranslation
-							? "text-gray-700 dark:text-gray-200 [&>a]:text-gray-700 dark:[&>a]:text-gray-200 [&>strong]:text-gray-700 dark:[&>strong]:text-gray-200"
-							: "text-gray-300 dark:text-gray-600 [&>a]:text-gray-300 dark:[&>a]:text-gray-600 [&>strong]:text-gray-300 dark:[&>strong]:text-gray-600"
-							} ${segmentTextClassName}`}
+						className={`inline-block ${
+							segmentWithTranslations.segmentTranslationsWithVotes.length ===
+								0 || !showTranslation
+								? "text-gray-700 dark:text-gray-200 [&>a]:text-gray-700 dark:[&>a]:text-gray-200 [&>strong]:text-gray-700 dark:[&>strong]:text-gray-200"
+								: "text-gray-300 dark:text-gray-600 [&>a]:text-gray-300 dark:[&>a]:text-gray-600 [&>strong]:text-gray-300 dark:[&>strong]:text-gray-600"
+						} ${segmentTextClassName}`}
 					>
 						{showLockIcon && <Lock className="h-6 w-6 mr-1 inline" />}
 						{elements}

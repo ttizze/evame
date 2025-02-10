@@ -1,10 +1,10 @@
 "use server";
-import { updatePageStatus } from "../../db/mutations.server";
 import type { ActionState } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import type { PageStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { updatePageStatus } from "../../db/mutations.server";
 const editPageStatusSchema = z.object({
 	pageId: z.coerce.number().min(1),
 	status: z.enum(["DRAFT", "PUBLIC", "ARCHIVE"]),
