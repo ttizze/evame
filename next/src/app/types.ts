@@ -8,4 +8,5 @@ export type SanitizedUser = Omit<
 export interface ActionState {
 	error?: string;
 	success?: boolean;
+	message?: string;
 }

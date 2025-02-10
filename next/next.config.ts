@@ -10,6 +10,23 @@ const config: NextConfig = {
 			bodySizeLimit: "5mb",
 		},
 	},
+	images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.eveeve.org',
+        port: '',
+        pathname: '/uploads/**',
+        search: '',
+      },
+			{
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '9000',
+        pathname: '/evame/uploads/**',
+      },
+    ],
+  },
 };
 
 export default withNextIntl(config);

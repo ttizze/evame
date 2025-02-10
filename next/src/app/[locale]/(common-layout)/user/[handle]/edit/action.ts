@@ -78,7 +78,7 @@ export async function userEditAction(
 	if (handle !== currentUser.handle) {
 		redirect(`/user/${handle}/edit`);
 	}
-	return { success: true };
+	return { success: true, message: "Profile updated successfully" };
 }
 
 export interface UserImageEditState extends ActionState {
@@ -128,5 +128,6 @@ export async function userImageEditAction(
 	return {
 		success: true,
 		imageUrl: result.imageUrl,
+		message: "Profile image updated successfully",
 	};
 }

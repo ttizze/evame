@@ -7,7 +7,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { ArrowDownToLine } from "lucide-react";
+import { ArrowUpFromLine } from "lucide-react";
 import { ExternalLink, Key, Loader2 } from "lucide-react";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
@@ -32,10 +32,10 @@ export function GeminiApiKeyDialog({
 
 	useEffect(() => {
 		if (state.success) {
-			toast.success(state.success);
+			toast.success(state.message);
 			onOpenChange(false);
 		}
-	}, [state.success, onOpenChange]);
+	}, [state.success, state.message, onOpenChange]);
 	return (
 		<Dialog open={isOpen} onOpenChange={onOpenChange}>
 			<DialogContent>
@@ -73,7 +73,7 @@ export function GeminiApiKeyDialog({
 							{isPending ? (
 								<Loader2 className="w-4 h-4 animate-spin" />
 							) : (
-								<ArrowDownToLine className="w-4 h-4" />
+								<ArrowUpFromLine className="w-4 h-4" />
 							)}
 						</Button>
 					</div>

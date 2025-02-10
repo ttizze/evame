@@ -35,9 +35,9 @@ export function PageActionsDropdown({
 
 	useEffect(() => {
 		if (publishState.success) {
-			toast.success(publishState.success);
+			toast.success(publishState.message);
 		}
-	}, [publishState.success]);
+	}, [publishState.success, publishState.message]);
 	return (
 		<DropdownMenu modal={false}>
 			<DropdownMenuTrigger asChild>

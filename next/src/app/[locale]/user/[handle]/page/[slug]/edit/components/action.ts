@@ -61,5 +61,5 @@ export async function editPageContentAction(
 		});
 	}
 	revalidatePath(`/user/${currentUser.handle}/page/${slug}`);
-	return { success: true };
+	return { success: true, message: "Page updated successfully" };
 }

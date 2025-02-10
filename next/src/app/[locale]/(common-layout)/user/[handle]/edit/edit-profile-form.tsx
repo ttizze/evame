@@ -43,14 +43,14 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 	useEffect(() => {
 		if (imageState.success && imageState.imageUrl) {
 			setProfileIconUrl(imageState.imageUrl);
-			toast.success(imageState.success);
+			toast.success(imageState.message);
 			router.push(`/user/${currentUser.handle}/edit`);
 		}
 	}, [imageState, currentUser.handle, router]);
 
 	useEffect(() => {
 		if (editState.success) {
-			toast.success(editState.success);
+			toast.success(editState.message);
 			router.push(`/user/${currentUser.handle}/edit`);
 		}
 	}, [editState, currentUser.handle, router]);
@@ -92,7 +92,9 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 							<Image
 								src={profileIconUrl}
 								alt="Profile"
-								className="w-full h-full object-cover transition-opacity group-hover:opacity-75"
+								width={160}
+								height={160}
+								className="transition-opacity group-hover:opacity-75"
 							/>
 							<div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all">
 								<span className="text-white opacity-0 group-hover:opacity-100">

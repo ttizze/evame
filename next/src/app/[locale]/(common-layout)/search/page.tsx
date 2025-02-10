@@ -19,7 +19,8 @@ export default async function Page({
 	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
 	const { locale } = await params;
-	const { query, category = "title", page = "1", tagPage } = await searchParams;
+	const { query, category = "title", page = "1", tagPage = "false" } =
+		await searchParams;
 	if (
 		typeof query !== "string" ||
 		typeof category !== "string" ||

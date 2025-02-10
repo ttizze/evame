@@ -15,6 +15,7 @@ import type { Tag } from "@prisma/client";
 import { Edit3, FileText, Hash, User } from "lucide-react";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { useTransition } from "react";
+import Form from "next/form";
 
 interface Props {
 	pages: PageCardLocalizedType[] | undefined;
@@ -48,17 +49,6 @@ export function SearchPageClient({ pages, tags, users, totalPages }: Props) {
 		}),
 	);
 
-	function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-		e.preventDefault();
-		const formData = new FormData(e.currentTarget);
-		const newQuery = formData.get("query")?.toString() ?? "";
-		const category = formData.get("category")?.toString() ?? "title";
-
-		setQuery(newQuery);
-		setCurrentCategory(category);
-		setPageNumber(1);
-	}
-
 	function handleTabChange(newCat: Category) {
 		setCurrentCategory(newCat);
 		setPageNumber(1);
@@ -85,19 +75,20 @@ export function SearchPageClient({ pages, tags, users, totalPages }: Props) {
 
 	return (
 		<div className="container mx-auto p-4">
-			<form method="get" className="mb-6" onSubmit={handleSubmit}>
+			<Form action="/search" className="mb-6">
 				<input type="hidden" name="category" value={currentCategory ?? ""} />
 				<div className="relative">
 					<Input
 						type="search"
 						name="query"
 						required
-						defaultValue={query ?? ""}
+						value={query ?? ""}
+						onChange={(e) => setQuery(e.target.value)}
 						placeholder="Search..."
 						className="w-full px-4 py-3 rounded-full border"
 					/>
 				</div>
-			</form>
+			</Form>
 
 			<Tabs
 				value={currentCategory ?? ""}
