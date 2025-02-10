@@ -45,7 +45,7 @@ export function TagInput({ initialTags, allTags, pageId }: TagInputProps) {
 
 	return (
 		<form ref={formRef} action={editAction}>
-			<input type="hidden" name="pageId" value={pageId} />
+			<input type="hidden" name="pageId" value={pageId ?? ""} />
 			<input
 				type="hidden"
 				name="tags"
@@ -57,7 +57,10 @@ export function TagInput({ initialTags, allTags, pageId }: TagInputProps) {
 				{tags.map((tag) => (
 					<div
 						key={tag}
-						className="flex items-center gap-1 px-3 h-[32px] bg-primary rounded-full text-sm text-primary-foreground"
+						className={cn(
+							"flex items-center gap-1 px-3 h-[32px] bg-primary rounded-full text-sm text-primary-foreground",
+							isPending && "opacity-50 cursor-not-allowed",
+						)}
 					>
 						<button
 							type="button"

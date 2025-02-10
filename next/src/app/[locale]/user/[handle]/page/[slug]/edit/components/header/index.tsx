@@ -66,7 +66,7 @@ export function EditHeader({
 					className="rounded-full flex items-center gap-2 px-4 py-2 transition-colors duration-400"
 					disabled={isPending}
 				>
-					{status === "PUBLIC" ? (
+					{initialStatus === "PUBLIC" ? (
 						<Globe className="w-4 h-4" />
 					) : (
 						<Lock className="w-4 h-4" />

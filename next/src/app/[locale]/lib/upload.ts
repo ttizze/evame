@@ -52,6 +52,7 @@ async function uploadToR2(file: File): Promise<string> {
 		: `http://localhost:9000/${R2_BUCKET_NAME}/${key}`;
 }
 export interface UploadImageResult {
+	success: boolean;
 	error?: string;
 	imageUrl?: string;
 }
@@ -59,21 +60,22 @@ export interface UploadImageResult {
 export async function uploadImage(file: File): Promise<UploadImageResult> {
 	try {
 		if (!file.type.startsWith("image/")) {
-			return { error: "Please select a valid image file" };
+			return { success: false, error: "Please select a valid image file" };
 		}
 
 		const maxSize = 5 * 1024 * 1024;
 		if (file.size > maxSize) {
-			return { error: "Image file size must be less than 5MB" };
+			return { success: false, error: "Image file size must be less than 5MB" };
 		}
 
 		const imageUrl = await uploadToR2(file);
 
 		return {
+			success: true,
 			imageUrl,
 		};
 	} catch (error) {
 		console.error("Upload error:", error);
-		return { error: "Failed to upload image" };
+		return { success: false, error: "Failed to upload image" };
 	}
 }

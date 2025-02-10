@@ -18,16 +18,15 @@ export async function handleFileUpload(
 		})
 		.run();
 
-	try {
 		const url = await uploadImage(file);
+		if (!url.success) {
+			window.alert(url.error);
+			return;
+		}
 		editor
 			.chain()
-			.updateAttributes("image", { src: url })
+			.updateAttributes("image", { src: url.imageUrl })
 			.createParagraphNear()
 			.focus()
 			.run();
-	} catch (error) {
-		console.error(error);
-		window.alert("upload error");
-	}
 }

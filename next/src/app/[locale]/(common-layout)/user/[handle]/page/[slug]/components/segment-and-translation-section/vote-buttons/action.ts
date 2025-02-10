@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { VOTE_TARGET } from "./constants";
 import { handleVote } from "./db/mutation.server";
+import { redirect } from "next/navigation";
 const schema = z.object({
 	segmentTranslationId: z.coerce.number().int(),
 	isUpvote: z.string().transform((val) => val === "true"),
@@ -22,7 +23,7 @@ export async function voteTranslationAction(
 ): Promise<ActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { error: "Unauthorized" };
+		redirect("/auth/login");
 	}
 	const parsedFormData = await parseVoteForm(formData);
 	await handleVote(
