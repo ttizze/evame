@@ -18,6 +18,7 @@
 		"@auth/prisma-adapter": "^2.7.4",
 		"@aws-sdk/client-s3": "^3.743.0",
 		"@biomejs/biome": "1.9.4",
+		"@google-cloud/vertexai": "^1.9.3",
 		"@google/generative-ai": "0.21.0",
 		"@neondatabase/serverless": "0.10.4",
 		"@prisma/adapter-neon": "6.2.1",
