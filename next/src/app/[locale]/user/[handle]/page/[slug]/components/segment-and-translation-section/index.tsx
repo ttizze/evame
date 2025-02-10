@@ -13,7 +13,7 @@ interface SegmentAndTranslationSectionProps {
 	segmentWithTranslations: SegmentWithTranslations;
 	elements: string | ReactNode | ReactNode[];
 	showLockIcon?: boolean;
-	sourceTextClassName?: string;
+	segmentTextClassName?: string;
 	showOriginal: boolean;
 	showTranslation: boolean;
 	currentHandle: string | undefined;
@@ -27,7 +27,7 @@ export function SegmentAndTranslationSection({
 	segmentWithTranslations,
 	elements,
 	showLockIcon = false,
-	sourceTextClassName,
+	segmentTextClassName,
 	showOriginal = true,
 	showTranslation = true,
 	currentHandle,
@@ -46,7 +46,7 @@ export function SegmentAndTranslationSection({
 								0 || !showTranslation
 								? "text-gray-700 dark:text-gray-200 [&>a]:text-gray-700 dark:[&>a]:text-gray-200 [&>strong]:text-gray-700 dark:[&>strong]:text-gray-200"
 								: "text-gray-300 dark:text-gray-600 [&>a]:text-gray-300 dark:[&>a]:text-gray-600 [&>strong]:text-gray-300 dark:[&>strong]:text-gray-600"
-						} ${sourceTextClassName}`}
+						} ${segmentTextClassName}`}
 					>
 						{showLockIcon && <Lock className="h-6 w-6 mr-1 inline" />}
 						{elements}
