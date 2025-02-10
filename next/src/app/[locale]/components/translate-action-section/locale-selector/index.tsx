@@ -32,7 +32,7 @@ interface LocaleSelectorProps {
 }
 
 //TODO: radix uiのせいで開発環境のモバイルで文字がぼける iphoneではボケてない､その他実機でもボケてたら対応する
-export  function LocaleSelector({
+export function LocaleSelector({
 	locale,
 	className,
 	localeOptions,

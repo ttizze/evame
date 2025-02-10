@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers'
+import { cookies } from "next/headers";
 
 export async function getGuestId() {
 	const cookieStore = await cookies();

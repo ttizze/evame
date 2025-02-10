@@ -6,9 +6,9 @@ export async function setGuestId(): Promise<string> {
 	const cookieStore = await cookies();
 	const guestId = cookieStore.get("guestId");
 
-  if (!guestId) {
-    const newGuestId = randomUUID();
-    cookieStore.set("guestId", newGuestId, {
+	if (!guestId) {
+		const newGuestId = randomUUID();
+		cookieStore.set("guestId", newGuestId, {
 			secure: true,
 			httpOnly: true,
 			sameSite: "strict",
