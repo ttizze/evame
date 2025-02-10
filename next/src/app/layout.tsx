@@ -38,10 +38,7 @@ export default async function Layout({
 						enableSystem
 						disableTransitionOnChange
 					>
-						<NextIntlClientProvider
-							key={resolvedParams.locale}
-							messages={messages}
-						>
+						<NextIntlClientProvider messages={messages}>
 							<SessionProvider>{children}</SessionProvider>
 							<Toaster richColors />
 						</NextIntlClientProvider>
