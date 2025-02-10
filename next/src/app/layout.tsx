@@ -1,5 +1,3 @@
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { SessionProvider } from "next-auth/react";
@@ -22,7 +20,6 @@ export default async function Layout({
 	params: Promise<{ locale: "en" }>;
 }) {
 	const resolvedParams = await params;
-	const messages = await getMessages();
 
 	return (
 		<html
@@ -38,10 +35,8 @@ export default async function Layout({
 						enableSystem
 						disableTransitionOnChange
 					>
-						<NextIntlClientProvider messages={messages}>
 							<SessionProvider>{children}</SessionProvider>
 							<Toaster richColors />
-						</NextIntlClientProvider>
 					</ThemeProvider>
 				</NuqsAdapter>
 			</body>
