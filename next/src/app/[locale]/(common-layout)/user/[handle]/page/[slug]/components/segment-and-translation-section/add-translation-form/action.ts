@@ -22,7 +22,7 @@ const schema = z.object({
 export async function addTranslationFormAction(
 	previousState: ActionState,
 	formData: FormData,
-) {
+): Promise<ActionState> {
 	const session = await auth();
 	const currentUser = session?.user;
 	if (!currentUser || !currentUser.id) {

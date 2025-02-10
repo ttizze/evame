@@ -31,7 +31,7 @@ export type TranslateActionState = ActionState & {
 export async function TranslateAction(
 	previousState: TranslateActionState,
 	formData: FormData,
-) {
+): Promise<TranslateActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
 		return { error: "Unauthorized" };

@@ -40,10 +40,10 @@ const editPageTagsSchema = z.object({
 export async function editPageTagsAction(
 	previousState: EditPageTagsActionState,
 	formData: FormData,
-) {
+): Promise<EditPageTagsActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { generalError: "Unauthorized" };
+		return { error: "Unauthorized" };
 	}
 	const parsedFormData = editPageTagsSchema.safeParse({
 		pageId: formData.get("pageId"),

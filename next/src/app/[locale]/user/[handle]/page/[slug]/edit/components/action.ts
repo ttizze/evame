@@ -24,10 +24,10 @@ const editPageContentSchema = z.object({
 export async function editPageContentAction(
 	previousState: EditPageContentActionState,
 	formData: FormData,
-) {
+): Promise<EditPageContentActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { generalError: "Unauthorized" };
+		return { error: "Unauthorized" };
 	}
 	const parsedFormData = editPageContentSchema.safeParse({
 		slug: formData.get("slug"),

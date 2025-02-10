@@ -14,7 +14,7 @@ const commentDeleteSchema = z.object({
 export async function commentDeleteAction(
 	previousState: ActionState,
 	formData: FormData,
-) {
+): Promise<ActionState> {
 	const session = await auth();
 	const currentUser = session?.user;
 
@@ -28,7 +28,7 @@ export async function commentDeleteAction(
 	});
 
 	if (!validate.success) {
-		return { generalError: "Invalid form data" };
+		return { error: "Invalid form data" };
 	}
 
 	await deletePageComment(validate.data.pageCommentId);

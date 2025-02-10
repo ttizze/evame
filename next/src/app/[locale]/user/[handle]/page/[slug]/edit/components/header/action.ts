@@ -20,7 +20,7 @@ export type EditPageStatusActionState = ActionState & {
 export async function editPageStatusAction(
 	previousState: EditPageStatusActionState,
 	formData: FormData,
-) {
+): Promise<EditPageStatusActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
 		return { error: "Unauthorized" };

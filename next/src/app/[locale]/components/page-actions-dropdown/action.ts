@@ -14,7 +14,7 @@ export type TogglePublishState = ActionState & {
 export async function togglePublishAction(
 	previousState: TogglePublishState,
 	formData: FormData,
-) {
+): Promise<TogglePublishState> {
 	const session = await auth();
 	const currentUser = session?.user;
 	const pageId = Number(formData.get("pageId"));

@@ -11,7 +11,7 @@ const schema = z.object({
 export async function deleteTranslationAction(
 	previousState: ActionState,
 	formData: FormData,
-) {
+): Promise<ActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
 		return { error: "Unauthorized" };

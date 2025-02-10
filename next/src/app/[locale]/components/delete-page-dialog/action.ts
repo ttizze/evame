@@ -15,7 +15,7 @@ export type ArchivePageState = ActionState & {
 export async function archivePageAction(
 	previousState: ArchivePageState,
 	formData: FormData,
-) {
+): Promise<ArchivePageState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
 		return { fieldErrors: { auth: ["Authentication required"] } };

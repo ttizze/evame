@@ -19,10 +19,10 @@ const schema = z.object({
 export async function voteTranslationAction(
 	previousState: ActionState,
 	formData: FormData,
-) {
+): Promise<ActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		throw new Error("Unauthorized");
+		return { error: "Unauthorized" };
 	}
 	const parsedFormData = await parseVoteForm(formData);
 	await handleVote(
