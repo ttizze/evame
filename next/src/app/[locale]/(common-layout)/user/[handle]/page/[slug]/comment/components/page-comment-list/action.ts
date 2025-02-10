@@ -34,5 +34,5 @@ export async function commentDeleteAction(
 	await deletePageComment(validate.data.pageCommentId);
 
 	revalidatePath(`/user/${currentUser.handle}/page/${validate.data.pageId}`);
-	return { success: "Comment deleted successfully" };
+	return { success: true };
 }

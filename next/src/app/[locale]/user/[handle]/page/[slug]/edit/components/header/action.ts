@@ -23,7 +23,7 @@ export async function editPageStatusAction(
 ) {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { generalError: "Unauthorized" };
+		return { error: "Unauthorized" };
 	}
 	const parsedFormData = editPageStatusSchema.safeParse({
 		pageId: formData.get("pageId"),
@@ -35,5 +35,5 @@ export async function editPageStatusAction(
 	const { pageId, status } = parsedFormData.data;
 	await updatePageStatus(pageId, status as PageStatus);
 	revalidatePath("/user");
-	return { success: "true" };
+	return { success: true };
 }

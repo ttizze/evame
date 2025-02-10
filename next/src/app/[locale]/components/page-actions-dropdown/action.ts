@@ -24,5 +24,5 @@ export async function togglePublishAction(
 
 	await togglePagePublicStatus(pageId);
 	revalidatePath(`/user/${currentUser?.handle}/page/${pageId}`);
-	return { success: "Page status updated successfully" };
+	return { success: true };
 }

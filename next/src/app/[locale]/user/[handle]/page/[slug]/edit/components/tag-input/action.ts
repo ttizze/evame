@@ -55,5 +55,5 @@ export async function editPageTagsAction(
 	const { pageId, tags } = parsedFormData.data;
 	await upsertTags(tags, pageId);
 	revalidatePath("/user");
-	return { success: "true" };
+	return { success: true };
 }

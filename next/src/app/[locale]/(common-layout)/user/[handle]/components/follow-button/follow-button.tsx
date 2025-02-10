@@ -17,7 +17,7 @@ function FollowButton({
 }: FollowButtonProps) {
 	const [state, formAction, isPending] = useActionState<ActionState, FormData>(
 		followAction,
-		{ generalError: "" },
+		{ error: "" },
 	);
 
 	return (

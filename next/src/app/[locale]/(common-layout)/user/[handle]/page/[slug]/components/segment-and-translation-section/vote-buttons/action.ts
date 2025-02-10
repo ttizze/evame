@@ -32,7 +32,7 @@ export async function voteTranslationAction(
 		parsedFormData.voteTarget,
 	);
 	revalidatePath(`/user/${currentUser.handle}/page`);
-	return { success: "true" };
+	return { success: true };
 }
 
 export async function parseVoteForm(formData: FormData) {

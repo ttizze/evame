@@ -11,10 +11,10 @@ const loginSchema = z.object({
 export async function signInWithGoogleAction(
 	previousState: ActionState,
 	formData: FormData,
-) {
+): Promise<ActionState> {
 	await signIn("google");
 	return {
-		success: "Logged in successfully",
+		success: true,
 	};
 }
 
@@ -27,7 +27,7 @@ export type SignInWithResendState = ActionState & {
 export async function signInWithResendAction(
 	previousState: SignInWithResendState,
 	formData: FormData,
-) {
+): Promise<SignInWithResendState>		 {
 	const validation = loginSchema.safeParse({
 		email: formData.get("email"),
 	});
@@ -39,7 +39,7 @@ export async function signInWithResendAction(
 	await signIn("resend", formData);
 
 	return {
-		success: "Logged in successfully",
+		success: true,
 	};
 }
 

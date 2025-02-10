@@ -15,7 +15,7 @@ const createPageCommentSchema = z.object({
 export async function commentAction(
 	previousState: ActionState,
 	formData: FormData,
-) {
+): Promise<ActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
 		return { error: "Unauthorized" };
@@ -25,7 +25,7 @@ export async function commentAction(
 		content: formData.get("content"),
 	});
 	if (!validate.success) {
-		return { generalError: validate.error.message };
+		return { error: validate.error.message };
 	}
 
 	const locale = await getLocaleFromHtml(validate.data.content);
@@ -43,5 +43,5 @@ export async function commentAction(
 		validate.data.pageId,
 	);
 	revalidatePath(`/user/${currentUser.handle}/page/${validate.data.pageId}`);
-	return { success: "Comment created successfully" };
+	return { success: true };
 }

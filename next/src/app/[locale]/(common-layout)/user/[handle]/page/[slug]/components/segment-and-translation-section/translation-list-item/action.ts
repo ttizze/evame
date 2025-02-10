@@ -25,5 +25,5 @@ export async function deleteTranslationAction(
 	}
 	await deleteOwnTranslation(currentUser.handle, validation.data.translationId);
 	revalidatePath(`/user/${currentUser.handle}/page/`);
-	return { success: "Translation deleted successfully" };
+	return { success: true };
 }

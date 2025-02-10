@@ -26,7 +26,7 @@ export async function addTranslationFormAction(
 	const session = await auth();
 	const currentUser = session?.user;
 	if (!currentUser || !currentUser.id) {
-		throw new Error("Unauthorized");
+		return { error: "Unauthorized" };
 	}
 	const parsedFormData = await parseAddTranslationForm(formData);
 
@@ -39,7 +39,7 @@ export async function addTranslationFormAction(
 	);
 	revalidatePath(`/user/${currentUser.handle}/page/`);
 	return {
-		success: "Translation added successfully",
+		success: true,
 	};
 }
 

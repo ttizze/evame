@@ -44,8 +44,8 @@ export function PageCommentForm({
 					{isPending ? "posting" : "post"}
 				</Button>
 			</form>
-			{state.generalError && (
-				<p className="text-sm text-red-500">{state.generalError}</p>
+			{state.error && (
+				<p className="text-sm text-red-500">{state.error}</p>
 			)}
 		</>
 	);

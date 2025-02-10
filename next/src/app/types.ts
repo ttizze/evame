@@ -6,6 +6,6 @@ export type SanitizedUser = Omit<
 >;
 
 export interface ActionState {
-	generalError?: string;
-	success?: string;
+	error?: string;
+	success?: boolean;
 }

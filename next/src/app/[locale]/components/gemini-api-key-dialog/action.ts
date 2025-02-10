@@ -51,5 +51,5 @@ export async function updateGeminiApiKeyAction(
 		}
 	}
 	await updateGeminiApiKey(currentUser.id, geminiApiKey);
-	return { success: "success updating gemini api key" };
+	return { success: true };
 }

@@ -49,7 +49,7 @@ export async function editPageContentAction(
 	if (page.status === "PUBLIC") {
 		const geminiApiKey = process.env.GEMINI_API_KEY;
 		if (!geminiApiKey) {
-			throw new Error("Gemini API key is not set");
+			return { error: "Gemini API key is not set" };
 		}
 
 		await handlePageTranslation({
@@ -61,5 +61,5 @@ export async function editPageContentAction(
 		});
 	}
 	revalidatePath(`/user/${currentUser.handle}/page/${slug}`);
-	return { success: "true" };
+	return { success: true };
 }

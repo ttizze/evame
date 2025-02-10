@@ -7,22 +7,22 @@ import { createFollow, deleteFollow } from "./db/mutations.server";
 export async function followAction(
 	previousState: ActionState,
 	formData: FormData,
-) {
+): Promise<ActionState> {
 	const session = await auth();
 	const currentUser = session?.user;
 	if (!currentUser || !currentUser.id) {
-		throw new Error("Unauthorized");
+		return { error: "Unauthorized" };
 	}
 
 	const targetUserId = formData.get("targetUserId");
 	const action = formData.get("action");
 
 	if (!targetUserId || typeof targetUserId !== "string") {
-		throw new Error("Invalid request");
+		return { error: "Invalid request" };
 	}
 
 	if (currentUser?.id === targetUserId) {
-		throw new Error("Cannot follow yourself");
+		return { error: "Cannot follow yourself" };
 	}
 
 	try {
@@ -32,7 +32,7 @@ export async function followAction(
 			await deleteFollow(currentUser.id, targetUserId);
 		}
 		revalidatePath("/");
-		return { success: "true" };
+		return { success: true };
 	} catch (error) {
 		console.error("Follow action error:", error);
 		return { error: "Failed to process follow action" };

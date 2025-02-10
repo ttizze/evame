@@ -31,5 +31,5 @@ export async function archivePageAction(
 	}
 
 	revalidatePath(`/user/${currentUser.handle}/`);
-	return { success: "Pages archived successfully" };
+	return { success: true };
 }

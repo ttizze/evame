@@ -34,7 +34,7 @@ export async function TranslateAction(
 ) {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { generalError: "Unauthorized" };
+		return { error: "Unauthorized" };
 	}
 
 	const validate = translateSchema.safeParse({
@@ -56,7 +56,7 @@ export async function TranslateAction(
 			validate.data.pageId,
 		);
 		if (!pageWithComments) {
-			return { generalError: "Page not found" };
+			return { error: "Page not found" };
 		}
 		const comments = pageWithComments.pageComments.map((comment) => {
 			const segments = comment.pageCommentSegments.map((segment) => ({
@@ -102,7 +102,7 @@ export async function TranslateAction(
 		);
 		if (!pageWithPageSegments) {
 			return {
-				generalError: "Page not found",
+				error: "Page not found",
 			};
 		}
 
@@ -132,6 +132,6 @@ export async function TranslateAction(
 	}
 	revalidatePath(`/user/${currentUser.handle}/page`);
 	return {
-		success: "Translation started",
+		success: true,
 	};
 }

@@ -49,11 +49,11 @@ export type UserEditState = ActionState & {
 export async function userEditAction(
 	previousState: UserEditState,
 	formData: FormData,
-) {
+): Promise<UserEditState> {
 	const session = await auth();
 	const currentUser = session?.user;
 	if (!currentUser || !currentUser.id) {
-		return { generalError: "Unauthorized" };
+		return { error: "Unauthorized" };
 	}
 	const validation = schema.safeParse({
 		name: formData.get("name"),
@@ -78,7 +78,7 @@ export async function userEditAction(
 	if (handle !== currentUser.handle) {
 		redirect(`/user/${handle}/edit`);
 	}
-	return { success: "Profile updated successfully" };
+	return { success: true };
 }
 
 export interface UserImageEditState extends ActionState {
@@ -91,15 +91,15 @@ export interface UserImageEditState extends ActionState {
 export async function userImageEditAction(
 	previousState: UserImageEditState,
 	formData: FormData,
-) {
+): Promise<UserImageEditState> {
 	const session = await auth();
 	const currentUser = session?.user;
 	if (!currentUser || !currentUser.id) {
-		return { generalError: "Unauthorized" };
+		return { error: "Unauthorized" };
 	}
 	const file = formData.get("image") as File;
 	if (!file) {
-		return { generalError: "No image provided" };
+		return { error: "No image provided" };
 	}
 	if (file) {
 		const MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -113,7 +113,7 @@ export async function userImageEditAction(
 	}
 	const imageUrl = await uploadImage(file);
 	if (imageUrl.error) {
-		return { generalError: imageUrl.error };
+		return { error: imageUrl.error };
 	}
 	const result = await uploadImage(file);
 	if (result.error || !result.imageUrl) {
@@ -126,7 +126,7 @@ export async function userImageEditAction(
 	await updateUserImage(currentUser.id, result.imageUrl);
 	revalidatePath(`/user/${currentUser.handle}/edit`);
 	return {
-		success: "Profile icon updated successfully",
+		success: true,
 		imageUrl: result.imageUrl,
 	};
 }

@@ -34,7 +34,7 @@ export async function toggleLikeAction(
 	const liked = await toggleLike(slug, currentUser?.id, guestId);
 	revalidatePath("/");
 	return {
-		success: "mutation liked",
+		success: true,
 		liked,
 	};
 }
