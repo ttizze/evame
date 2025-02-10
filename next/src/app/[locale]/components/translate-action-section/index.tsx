@@ -16,6 +16,7 @@ type TranslateActionSectionProps = {
 	existLocales: string[];
 	className?: string;
 	translateTarget: TranslateTarget;
+	showAddNew?: boolean;
 };
 
 export function TranslateActionSection({
@@ -28,6 +29,7 @@ export function TranslateActionSection({
 	existLocales,
 	className,
 	translateTarget,
+	showAddNew,
 }: TranslateActionSectionProps) {
 	let sourceLocaleOptions = supportedLocaleOptions.find(
 		(sl) => sl.code === sourceLocale,
@@ -56,6 +58,8 @@ export function TranslateActionSection({
 					locale={locale}
 					className="w-[200px]"
 					localeOptions={existingOptions}
+					showAddNew={showAddNew}
+					onAddNew={() => setAddTranslateDialogOpen(true)}
 				/>
 			</div>
 			<AddTranslateDialog

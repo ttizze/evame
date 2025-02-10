@@ -92,6 +92,7 @@ export function ContentWithTranslations({
 				existLocales={existLocales}
 				className="pt-3"
 				translateTarget={TranslateTarget.TRANSLATE_PAGE}
+				showAddNew={true}
 			/>
 			<MemoizedParsedContent
 				html={pageWithTranslations.page.content}

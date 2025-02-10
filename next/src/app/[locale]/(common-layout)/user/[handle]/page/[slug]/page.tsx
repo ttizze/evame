@@ -209,6 +209,7 @@ export default async function Page({
 							locale={locale}
 							existLocales={pageWithTranslations.existLocales}
 							translateTarget={TranslateTarget.TRANSLATE_COMMENT}
+							showAddNew={true}
 						/>
 					</div>
 					<PageCommentList
