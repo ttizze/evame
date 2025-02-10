@@ -3,11 +3,8 @@ import { injectSpanNodes } from "@/app/[locale]/lib/process-html";
 import type { Root } from "hast";
 import rehypeParse from "rehype-parse";
 import rehypeRaw from "rehype-raw";
-import rehypeRemark from "rehype-remark";
 import rehypeStringify from "rehype-stringify";
 import rehypeUnwrapImages from "rehype-unwrap-images";
-import remarkGfm from "remark-gfm";
-import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import type { Plugin } from "unified";
 import {
@@ -40,10 +37,7 @@ export async function processPageHtml(
 	const page = await upsertPageWithHtml(pageSlug, html, userId, sourceLocale);
 
 	const file = await unified()
-		.use(rehypeParse, { fragment: true }) // HTML→HAST
-		.use(rehypeRemark) // HAST→MDAST
-		.use(remarkGfm) // GFM拡張
-		.use(remarkRehype, { allowDangerousHtml: true }) // MDAST→HAST
+		.use(rehypeParse, { fragment: true })
 		.use(rehypeAddDataId(page.id, title))
 		.use(rehypeRaw)
 		.use(rehypeUnwrapImages)
@@ -51,6 +45,11 @@ export async function processPageHtml(
 		.process(html);
 
 	const htmlContent = String(file);
-	await upsertPageWithHtml(pageSlug, htmlContent, userId, sourceLocale);
-	return page;
+	const updatedPage = await upsertPageWithHtml(
+		pageSlug,
+		htmlContent,
+		userId,
+		sourceLocale,
+	);
+	return updatedPage;
 }
