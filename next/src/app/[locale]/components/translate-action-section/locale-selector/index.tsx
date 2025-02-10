@@ -13,11 +13,13 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import { usePathname, useRouter } from "@/i18n/routing";
+import {  useRouter,  } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
 import { startTransition } from "react";
+import { useParams } from "next/navigation";
+import { useSelectedLayoutSegment } from "next/navigation";
 interface LocaleOption {
 	code: string;
 	name: string;
@@ -41,13 +43,19 @@ export function LocaleSelector({
 }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
 	const router = useRouter();
-	const pathname = usePathname();
-	console.log(pathname);
-	console.log(locale);
+	const selectedLayoutSegment = useSelectedLayoutSegment();
+	const pathname = selectedLayoutSegment ? `/${selectedLayoutSegment}` : "/";
+	const params = useParams();
 	const handleLocaleChange = (value: string) => {
 		setOpen(false);
 		startTransition(() => {
-			router.push(pathname, { locale: value });
+			router.replace(
+        // @ts-expect-error -- TypeScript will validate that only known `params`
+        // are used in combination with a given `pathname`. Since the two will
+        // always match for the current route, we can skip runtime checks.
+        {pathname, params},
+        {locale: value}
+		);
 		});
 	};
 

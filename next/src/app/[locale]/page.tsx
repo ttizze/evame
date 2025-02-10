@@ -110,7 +110,7 @@ export default async function HomePage({
 						<h1 className="text-7xl font-bold mb-10 text-center">
 							<SegmentAndTranslationSection
 								segmentWithTranslations={heroTitle}
-								sourceTextClassName="w-full bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text !text-transparent mb-2"
+								segmentTextClassName="w-full bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text !text-transparent mb-2"
 								elements={heroTitle.segment.text}
 								currentHandle={undefined}
 								showOriginal={true}
@@ -136,7 +136,7 @@ export default async function HomePage({
 						<span className="text-xl mb-12 w-full">
 							<SegmentAndTranslationSection
 								segmentWithTranslations={heroText}
-								sourceTextClassName="mb-2"
+								segmentTextClassName="mb-2"
 								elements={heroText.segment.text}
 								showOriginal={true}
 								showTranslation={true}
