@@ -91,13 +91,14 @@ export function ParsedContent({
 			if (domNode.type === "tag" && domNode.name === "img") {
 				const { src, alt, width, height, ...otherAttribs } = domNode.attribs;
 				return (
-					//otherAttribs がbiomeのlintに引っかかる
 					<Image
 						src={src}
 						alt={alt || ""}
-						height={height ? Number(height) : undefined}
-						width={width ? Number(width) : undefined}
-						className="aspect-ratio-img max-w-full"
+						height={height ? Number(height) : 300}
+						width={width ? Number(width) : 300}
+						sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
+						className="w-auto h-auto max-w-full"
+						priority={false}
 						{...otherAttribs}
 					/>
 				);

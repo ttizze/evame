@@ -18,6 +18,8 @@ export async function handleFileUpload(
 		})
 		.run();
 
+	const dimensions = await getImageDimensions(file);
+
 	const url = await uploadImage(file);
 	if (!url.success) {
 		window.alert(url.error);
@@ -25,8 +27,30 @@ export async function handleFileUpload(
 	}
 	editor
 		.chain()
-		.updateAttributes("image", { src: url.imageUrl })
+		.updateAttributes("image", {
+			src: url.imageUrl,
+			width: dimensions.width,
+			height: dimensions.height,
+		})
 		.createParagraphNear()
 		.focus()
 		.run();
+}
+
+async function getImageDimensions(
+	file: File,
+): Promise<{ width: number; height: number }> {
+	return new Promise((resolve, reject) => {
+		const blobUrl = URL.createObjectURL(file);
+		const img = new Image();
+		img.onload = () => {
+			resolve({ width: img.naturalWidth, height: img.naturalHeight });
+			URL.revokeObjectURL(blobUrl);
+		};
+		img.onerror = (err) => {
+			URL.revokeObjectURL(blobUrl);
+			reject(err);
+		};
+		img.src = blobUrl;
+	});
 }

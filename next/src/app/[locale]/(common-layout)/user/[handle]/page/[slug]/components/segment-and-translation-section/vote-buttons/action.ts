@@ -25,25 +25,20 @@ export async function voteTranslationAction(
 	if (!currentUser || !currentUser.id) {
 		redirect("/auth/login");
 	}
-	const parsedFormData = await parseVoteForm(formData);
-	await handleVote(
-		parsedFormData.segmentTranslationId,
-		parsedFormData.isUpvote,
-		currentUser.id,
-		parsedFormData.voteTarget,
-	);
-	revalidatePath(`/user/${currentUser.handle}/page`);
-	return { success: true };
-}
-
-export async function parseVoteForm(formData: FormData) {
-	const result = schema.safeParse({
+	const parsedFormData = schema.safeParse({
 		segmentTranslationId: formData.get("segmentTranslationId"),
 		isUpvote: formData.get("isUpvote"),
 		voteTarget: formData.get("voteTarget"),
 	});
-	if (!result.success) {
-		throw new Error(result.error.message);
+	if (!parsedFormData.success) {
+		return { error: parsedFormData.error.message };
 	}
-	return result.data;
+	await handleVote(
+		parsedFormData.data.segmentTranslationId,
+		parsedFormData.data.isUpvote,
+		currentUser.id,
+		parsedFormData.data.voteTarget,
+	);
+	revalidatePath(`/user/${currentUser.handle}/page`);
+	return { success: true };
 }

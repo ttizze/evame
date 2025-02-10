@@ -5,7 +5,6 @@ import { updateUserAITranslationInfo } from "../db/mutations.server";
 import { getLatestPageCommentSegments } from "../db/query.server";
 import { getLatestPageSegments } from "../db/query.server";
 import { getGeminiModelResponse } from "../services/gemini";
-import { getVertexAIModelResponse } from "../services/vertexai";
 import type { NumberedElement, TranslateJobParams } from "../types";
 import { extractTranslations } from "./extract-translations.server";
 import { saveTranslationsForComment, saveTranslationsForPage } from "./io-deps";
@@ -147,7 +146,6 @@ async function getTranslatedText(
 		.join("\n");
 	const localeName =
 		supportedLocaleOptions.find((sl) => sl.code === locale)?.name || locale;
-	try {
 		const result = await getGeminiModelResponse(
 			geminiApiKey,
 			aiModel,
@@ -156,13 +154,4 @@ async function getTranslatedText(
 			localeName,
 		);
 		return result;
-	} catch (error) {
-		const result = await getVertexAIModelResponse(
-			aiModel,
-			title,
-			source_text,
-			localeName,
-		);
-		return result;
-	}
 }

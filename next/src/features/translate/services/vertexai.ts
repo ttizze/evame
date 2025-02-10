@@ -1,7 +1,9 @@
-import { VertexAI,	
+import {
 	HarmBlockThreshold,
 	HarmCategory,
-	SchemaType, } from "@google-cloud/vertexai";
+	SchemaType,
+	VertexAI,
+} from "@google-cloud/vertexai";
 import { generateSystemMessage } from "./generate-gemini-message";
 
 const MAX_RETRIES = 3;
@@ -82,4 +84,3 @@ export async function getVertexAIModelResponse(
 	console.error("Max retries reached. Translation failed.");
 	throw lastError || new Error("Translation failed after max retries");
 }
-

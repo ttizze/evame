@@ -9,8 +9,8 @@ import {
 } from "@/components/ui/dialog";
 import { Trash } from "lucide-react";
 import { useActionState } from "react";
-import { type ArchivePageState, archivePageAction } from "./action";
-
+import { archivePageAction } from "./action";
+import type { ActionState } from "@/app/types";
 interface DeletePageDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
@@ -23,7 +23,7 @@ export function DeletePageDialog({
 	pageIds = [],
 }: DeletePageDialogProps) {
 	const [archiveState, archiveAction, isArchiving] = useActionState<
-		ArchivePageState,
+		ActionState,
 		FormData
 	>(archivePageAction, {});
 
