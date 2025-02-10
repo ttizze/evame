@@ -242,9 +242,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 				</Button>
 
 				{editState.error && (
-					<p className="text-red-500 text-center mt-2">
-						{editState.error}
-					</p>
+					<p className="text-red-500 text-center mt-2">{editState.error}</p>
 				)}
 			</form>
 		</div>

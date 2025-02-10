@@ -11,22 +11,22 @@ const config: NextConfig = {
 		},
 	},
 	images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.eveeve.org',
-        port: '',
-        pathname: '/uploads/**',
-        search: '',
-      },
+		remotePatterns: [
 			{
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '9000',
-        pathname: '/evame/uploads/**',
-      },
-    ],
-  },
+				protocol: "https",
+				hostname: "images.eveeve.org",
+				port: "",
+				pathname: "/uploads/**",
+				search: "",
+			},
+			{
+				protocol: "http",
+				hostname: "localhost",
+				port: "9000",
+				pathname: "/evame/uploads/**",
+			},
+		],
+	},
 };
 
 export default withNextIntl(config);

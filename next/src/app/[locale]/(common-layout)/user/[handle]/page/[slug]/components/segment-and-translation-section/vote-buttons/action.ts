@@ -4,10 +4,10 @@
 import type { ActionState } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { VOTE_TARGET } from "./constants";
 import { handleVote } from "./db/mutation.server";
-import { redirect } from "next/navigation";
 const schema = z.object({
 	segmentTranslationId: z.coerce.number().int(),
 	isUpvote: z.string().transform((val) => val === "true"),

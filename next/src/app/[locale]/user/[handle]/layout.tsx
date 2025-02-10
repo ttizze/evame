@@ -7,7 +7,7 @@ export default async function CommonLayout({
 }) {
 	return (
 		<>
-			<NextIntlClientProvider >{children}</NextIntlClientProvider>
+			<NextIntlClientProvider>{children}</NextIntlClientProvider>
 		</>
 	);
 }

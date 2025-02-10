@@ -48,9 +48,7 @@ export function AddTranslationForm({
 				</span>
 				<span className="space-x-2 flex justify-end items-center">
 					{addTranslationState.error && (
-						<p className="text-red-500 text-sm">
-							{addTranslationState.error}
-						</p>
+						<p className="text-red-500 text-sm">{addTranslationState.error}</p>
 					)}
 					<Button
 						type="submit"

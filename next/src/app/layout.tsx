@@ -35,8 +35,8 @@ export default async function Layout({
 						enableSystem
 						disableTransitionOnChange
 					>
-							<SessionProvider>{children}</SessionProvider>
-							<Toaster richColors />
+						<SessionProvider>{children}</SessionProvider>
+						<Toaster richColors />
 					</ThemeProvider>
 				</NuqsAdapter>
 			</body>

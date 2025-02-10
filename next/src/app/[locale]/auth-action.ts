@@ -27,7 +27,7 @@ export type SignInWithResendState = ActionState & {
 export async function signInWithResendAction(
 	previousState: SignInWithResendState,
 	formData: FormData,
-): Promise<SignInWithResendState>		 {
+): Promise<SignInWithResendState> {
 	const validation = loginSchema.safeParse({
 		email: formData.get("email"),
 	});

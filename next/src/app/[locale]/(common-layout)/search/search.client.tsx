@@ -13,9 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Tag } from "@prisma/client";
 import { Edit3, FileText, Hash, User } from "lucide-react";
+import Form from "next/form";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { useTransition } from "react";
-import Form from "next/form";
 
 interface Props {
 	pages: PageCardLocalizedType[] | undefined;
