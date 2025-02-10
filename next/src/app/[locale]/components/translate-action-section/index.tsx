@@ -1,12 +1,11 @@
 "use client";
-import LocaleSelector from "@/app/[locale]/components/locale-selector";
 import { supportedLocaleOptions } from "@/app/constants/locale";
 import type { UserAITranslationInfo } from "@prisma/client";
 import { Languages } from "lucide-react";
 import { useState } from "react";
-import type { TranslateTarget } from "../../constants";
-import { TranslateSettingsDialog } from "./translate-settings-dialog";
-
+import type { TranslateTarget } from "../../user/[handle]/page/[slug]/constants";
+import { AddTranslateDialog } from "./add-translate-dialog";
+import { LocaleSelector } from "./locale-selector";
 type TranslateActionSectionProps = {
 	pageId: number;
 	currentHandle: string | undefined;
@@ -30,7 +29,6 @@ export function TranslateActionSection({
 	className,
 	translateTarget,
 }: TranslateActionSectionProps) {
-	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 	let sourceLocaleOptions = supportedLocaleOptions.find(
 		(sl) => sl.code === sourceLocale,
 	);
@@ -49,20 +47,20 @@ export function TranslateActionSection({
 	const existingOptions = merged.filter((option, index, self) => {
 		return self.findIndex((o) => o.code === option.code) === index;
 	});
+	const [addTranslateDialogOpen, setAddTranslateDialogOpen] = useState(false);
 	return (
 		<div className={className}>
 			<div className="flex items-center gap-2">
 				<Languages className="w-4 h-4" />
 				<LocaleSelector
+					locale={locale}
 					className="w-[200px]"
 					localeOptions={existingOptions}
-					setIsSettingsOpen={setIsSettingsOpen}
 				/>
 			</div>
-
-			<TranslateSettingsDialog
-				open={isSettingsOpen}
-				onOpenChange={setIsSettingsOpen}
+			<AddTranslateDialog
+				open={addTranslateDialogOpen}
+				onOpenChange={setAddTranslateDialogOpen}
 				currentHandle={currentHandle}
 				pageId={pageId}
 				locale={locale}

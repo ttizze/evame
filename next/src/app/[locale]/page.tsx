@@ -1,10 +1,10 @@
-import { TabsClient } from "@/app/[locale]/components/tabs-client";
 import { StartButton } from "@/app/[locale]/components/start-button";
+import { TabsClient } from "@/app/[locale]/components/tabs-client";
+import { TranslateActionSection } from "@/app/[locale]/components/translate-action-section";
 import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/db/queries.server";
 import type { PageCardLocalizedType } from "@/app/[locale]/db/queries.server";
 import { fetchPageWithTranslations } from "@/app/[locale]/db/queries.server";
 import { SegmentAndTranslationSection } from "@/app/[locale]/user/[handle]/page/[slug]/components/segment-and-translation-section";
-import { TranslateActionSection } from "@/app/[locale]/user/[handle]/page/[slug]/components/translate-button/translate-action-section";
 import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
 import { VOTE_TARGET } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
 import { TranslateTarget } from "@/app/[locale]/user/[handle]/page/[slug]/constants";

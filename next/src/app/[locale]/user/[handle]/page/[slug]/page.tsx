@@ -8,9 +8,9 @@ import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { TranslateActionSection } from "../../../../components/translate-action-section";
 import { ContentWithTranslations } from "./components/content-with-translations";
 import { FloatingControls } from "./components/floating-controls";
-import { TranslateActionSection } from "./components/translate-button/translate-action-section";
 import { TranslateTarget } from "./constants";
 import {
 	fetchIsLikedByUser,

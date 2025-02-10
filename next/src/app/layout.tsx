@@ -1,3 +1,4 @@
+import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -37,8 +38,10 @@ export default async function Layout({
 						enableSystem
 						disableTransitionOnChange
 					>
+						<NextIntlClientProvider key={resolvedParams.locale} messages={messages}>
 							<SessionProvider>{children}</SessionProvider>
 							<Toaster richColors />
+						</NextIntlClientProvider>
 					</ThemeProvider>
 				</NuqsAdapter>
 			</body>

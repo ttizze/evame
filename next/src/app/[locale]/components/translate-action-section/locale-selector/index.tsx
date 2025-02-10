@@ -16,8 +16,6 @@ import {
 import { usePathname, useRouter } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { useLocale } from "next-intl";
-import { useParams } from "next/navigation";
 import { useState } from "react";
 import { startTransition } from "react";
 interface LocaleOption {
@@ -26,28 +24,30 @@ interface LocaleOption {
 }
 
 interface LocaleSelectorProps {
+	locale: string;
 	className?: string;
 	localeOptions: LocaleOption[];
-	setIsSettingsOpen?: (value: boolean) => void;
+	showAddNew?: boolean;
+	onAddNew?: () => void;
 }
 
 //TODO: radix uiのせいで開発環境のモバイルで文字がぼける iphoneではボケてない､その他実機でもボケてたら対応する
-export default function LocaleSelector({
+export  function LocaleSelector({
+	locale,
 	className,
 	localeOptions,
-	setIsSettingsOpen,
+	showAddNew,
+	onAddNew,
 }: LocaleSelectorProps) {
-	const locale = useLocale();
-	console.log("locale", locale);
 	const [open, setOpen] = useState(false);
-	const params = useParams();
 	const router = useRouter();
 	const pathname = usePathname();
-	console.log("pathname", pathname);
+	console.log(pathname);
+	console.log(locale);
 	const handleLocaleChange = (value: string) => {
 		setOpen(false);
 		startTransition(() => {
-			router.replace(pathname, { locale: value });
+			router.push(pathname, { locale: value });
 		});
 	};
 
@@ -90,14 +90,12 @@ export default function LocaleSelector({
 							})}
 						</CommandGroup>
 					</CommandList>
-					{setIsSettingsOpen && (
+					{showAddNew && (
 						<div className="flex justify-center m-2">
 							<Button
 								variant="default"
 								className="rounded-full"
-								onClick={() => {
-									setIsSettingsOpen(true);
-								}}
+								onClick={onAddNew}
 							>
 								+ Add New
 							</Button>

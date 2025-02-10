@@ -8,10 +8,10 @@ import {
 import { NavigationLink } from "@/components/navigation-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { UserAITranslationInfo } from "@prisma/client";
+import { TranslateActionSection } from "../../../../../components/translate-action-section";
 import type { PageWithTranslations, SegmentWithTranslations } from "../types";
 import { MemoizedParsedContent } from "./parsed-content";
 import { SegmentAndTranslationSection } from "./segment-and-translation-section";
-import { TranslateActionSection } from "./translate-button/translate-action-section";
 
 interface ContentWithTranslationsProps {
 	pageWithTranslations: PageWithTranslations;

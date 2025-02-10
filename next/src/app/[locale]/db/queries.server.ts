@@ -121,7 +121,7 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	} else if (currentGuestId) {
 		likeWhere = { guestId: currentGuestId };
 	} else {
-		throw new Error("User ID or Guest ID is required");
+		likeWhere = {};
 	}
 
 	// 実際に使うselectを生成 (localeなどを含む)

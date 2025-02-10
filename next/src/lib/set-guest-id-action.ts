@@ -2,7 +2,7 @@
 import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 
-export async function setGuestId(): Promise<{ success: boolean; guestId: string }> {
+export async function setGuestId(): Promise<string> {
 	const cookieStore = await cookies();
 	const guestId = cookieStore.get("guestId");
 
@@ -14,8 +14,8 @@ export async function setGuestId(): Promise<{ success: boolean; guestId: string 
 			sameSite: "strict",
 			path: "/",
 		});
-		return { success: true, guestId: newGuestId };
+		return newGuestId;
 	}
 
-	return { success: true, guestId: guestId.value };
+	return guestId.value;
 }

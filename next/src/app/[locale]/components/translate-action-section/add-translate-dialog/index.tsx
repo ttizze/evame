@@ -2,7 +2,6 @@
 import type { UserAITranslationInfo } from "@prisma/client";
 
 import { GeminiApiKeyDialog } from "@/app/[locale]/components/gemini-api-key-dialog/gemini-api-key-dialog";
-import LocaleSelector from "@/app/[locale]/components/locale-selector";
 import { StartButton } from "@/app/[locale]/components/start-button";
 import { supportedLocaleOptions } from "@/app/constants/locale";
 import { Button } from "@/components/ui/button";
@@ -23,11 +22,12 @@ import {
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useActionState } from "react";
-import type { TranslateTarget } from "../../constants";
-import { TranslateAction, type TranslateActionState } from "./action";
-import { UserAITranslationStatus } from "./user-ai-translation-status";
+import type { TranslateTarget } from "../../../user/[handle]/page/[slug]/constants";
+import { TranslateAction, type TranslateActionState } from "../action";
+import { LocaleSelector } from "../locale-selector/index";
+import { UserAITranslationStatus } from "../user-ai-translation-status";
 
-type TranslateSettingsDialogProps = {
+type AddTranslateDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	currentHandle: string | undefined;
@@ -38,7 +38,7 @@ type TranslateSettingsDialogProps = {
 	translateTarget: TranslateTarget;
 };
 
-export function TranslateSettingsDialog({
+export function AddTranslateDialog({
 	open,
 	onOpenChange,
 	currentHandle,
@@ -47,7 +47,7 @@ export function TranslateSettingsDialog({
 	hasGeminiApiKey,
 	userAITranslationInfo,
 	translateTarget,
-}: TranslateSettingsDialogProps) {
+}: AddTranslateDialogProps) {
 	const [translateState, translateAction, isTranslating] = useActionState<
 		TranslateActionState,
 		FormData
@@ -73,8 +73,9 @@ export function TranslateSettingsDialog({
 							<div className="space-y-2">
 								<Label htmlFor="language">Language</Label>
 								<LocaleSelector
-									className="w-full"
+									className="w-full	"
 									localeOptions={supportedLocaleOptions}
+									locale={locale}
 								/>
 							</div>
 

@@ -3,6 +3,7 @@
 import type { ActionState } from "@/app/types";
 import { auth } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
+import { setGuestId } from "@/lib/set-guest-id-action";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { toggleLike } from "./db/mutations.server";
@@ -29,7 +30,7 @@ export async function toggleLikeAction(
 	const slug = validation.data.slug;
 	const session = await auth();
 	const currentUser = session?.user;
-	const guestId = !currentUser ? await getGuestId() : undefined;
+	const guestId = !currentUser ? await getGuestId() : await setGuestId();
 	const liked = await toggleLike(slug, currentUser?.id, guestId);
 	revalidatePath("/");
 	return {
