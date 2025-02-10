@@ -54,7 +54,7 @@ export function EditHeader({
 			>
 				{renderButtonIcon()}
 			</Button>
-			<input type="hidden" name="status" value={status} />
+			<input type="hidden" name="status" value={initialStatus} />
 		</>
 	);
 	const rightExtra = (

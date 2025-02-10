@@ -10,47 +10,58 @@ import { unified } from "unified";
 import type { Plugin } from "unified";
 import { collectBlocksFromRoot } from "@/app/[locale]/lib/process-html";
 import { injectSpanNodes } from "@/app/[locale]/lib/process-html";
-import {
-	synchronizePagePageSegments,
-	upsertPageWithHtml,
-} from "../db/mutations.server";
+import { upsertPageComment } from "../db/mutations.server";
+import { createPageCommentSegments } from "../db/mutations.server";
+export function parseHtmlToAst(html: string): Root {
+	return unified().use(rehypeParse, { fragment: true }).parse(html) as Root;
+}
 
-export function rehypeAddDataId(
-	pageId: number,
-	title: string,
-): Plugin<[], Root> {
+export function rehypeAddDataId(commentId: number): Plugin<[], Root> {
 	return function attacher() {
 		return async (tree: Root) => {
-			const blocks = collectBlocksFromRoot(tree, title);
-			await synchronizePagePageSegments(pageId, blocks);
+			const blocks = collectBlocksFromRoot(tree);
+
+			await createPageCommentSegments(commentId, blocks);
 			injectSpanNodes(blocks);
 		};
 	};
 }
 
 // 例） HTML → HAST → MDAST → remark → HAST → HTML の流れで使う想定
-export async function processPageHtml(
-	title: string,
-	html: string,
-	pageSlug: string,
+export async function processPageCommentHtml(
+	commentId: number,
+	commentHtml: string,
+	locale: string,
 	userId: string,
-	sourceLocale: string,
+	pageId: number,
 ) {
 	// HTML 入力に対応する page レコードを作成/更新
-	const page = await upsertPageWithHtml(pageSlug, html, userId, sourceLocale);
+	const pageComment = await upsertPageComment(
+		commentId,
+		commentHtml,
+		locale,
+		userId,
+		pageId,
+	);
 
 	const file = await unified()
 		.use(rehypeParse, { fragment: true }) // HTML→HAST
 		.use(rehypeRemark) // HAST→MDAST
 		.use(remarkGfm) // GFM拡張
 		.use(remarkRehype, { allowDangerousHtml: true }) // MDAST→HAST
-		.use(rehypeAddDataId(page.id, title))
+		.use(rehypeAddDataId(commentId))
 		.use(rehypeRaw)
 		.use(rehypeUnwrapImages)
 		.use(rehypeStringify, { allowDangerousHtml: true }) // HAST→HTML
-		.process(html);
+		.process(commentHtml);
 
-	const htmlContent = String(file);
-	await upsertPageWithHtml(pageSlug, htmlContent, userId, sourceLocale);
-	return page;
+	const injectedCommentHtml = String(file);
+	await upsertPageComment(
+		commentId,
+		injectedCommentHtml,
+		locale,
+		userId,
+		pageId,
+	);
+	return pageComment;
 }

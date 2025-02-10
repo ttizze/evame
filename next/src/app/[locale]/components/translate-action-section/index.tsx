@@ -3,7 +3,7 @@ import { supportedLocaleOptions } from "@/app/constants/locale";
 import type { UserAITranslationInfo } from "@prisma/client";
 import { Languages } from "lucide-react";
 import { useState } from "react";
-import type { TranslateTarget } from "../../user/[handle]/page/[slug]/constants";
+import type { TranslateTarget } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
 import { AddTranslateDialog } from "./add-translate-dialog";
 import { LocaleSelector } from "./locale-selector";
 type TranslateActionSectionProps = {

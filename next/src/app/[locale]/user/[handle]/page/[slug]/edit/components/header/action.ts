@@ -1,5 +1,5 @@
 "use server";
-import { updatePageStatus } from "@/app/[locale]/user/[handle]/page/[slug]/edit/db/mutations.server";
+import { updatePageStatus } from "../../db/mutations.server";
 import type { ActionState } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import type { PageStatus } from "@prisma/client";

@@ -1,4 +1,4 @@
-import { TranslateTarget } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
+import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { supportedLocaleOptions } from "@/app/constants/locale";
 import { TranslationStatus } from "@prisma/client";
 import { updateUserAITranslationInfo } from "../db/mutations.server";

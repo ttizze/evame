@@ -3,7 +3,7 @@ import type { ActionState } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { getLocaleFromHtml } from "../../lib/get-locale-from-html";
+import { getLocaleFromHtml } from "@/app/[locale]/lib/get-locale-from-html";
 import { handlePageTranslation } from "../lib/handle-page-translation";
 import { processPageHtml } from "../lib/process-page-html";
 

@@ -3,12 +3,12 @@ import { getCurrentUser } from "@/auth";
 import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
 import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TranslateTarget } from "../../user/[handle]/page/[slug]/constants";
-import { createUserAITranslationInfo } from "../../user/[handle]/page/[slug]/db/mutations.server";
+import { TranslateTarget } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
+import { createUserAITranslationInfo } from "../../(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
 import {
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
-} from "../../user/[handle]/page/[slug]/db/queries.server";
+} from "../../(common-layout)/user/[handle]/page/[slug]/db/queries.server";
 import { TranslateAction } from "./action";
 
 vi.mock("@/auth", () => ({

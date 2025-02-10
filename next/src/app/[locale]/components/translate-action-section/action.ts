@@ -5,10 +5,10 @@ import { getCurrentUser } from "@/auth";
 import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { TranslateTarget } from "../../user/[handle]/page/[slug]/constants";
-import { createUserAITranslationInfo } from "../../user/[handle]/page/[slug]/db/mutations.server";
-import { fetchPageWithPageSegments } from "../../user/[handle]/page/[slug]/db/queries.server";
-import { fetchPageWithTitleAndComments } from "../../user/[handle]/page/[slug]/db/queries.server";
+import { TranslateTarget } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
+import { createUserAITranslationInfo } from "../../(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
+import { fetchPageWithPageSegments } from "../../(common-layout)/user/[handle]/page/[slug]/db/queries.server";
+import { fetchPageWithTitleAndComments } from "../../(common-layout)/user/[handle]/page/[slug]/db/queries.server";
 const translateSchema = z.object({
 	pageId: z.coerce.number(),
 	aiModel: z.string().min(1, "モデルを選択してください"),

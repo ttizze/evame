@@ -1,6 +1,6 @@
-import { TranslateTarget } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
-import { createUserAITranslationInfo } from "@/app/[locale]/user/[handle]/page/[slug]/db/mutations.server";
-import { fetchPageWithPageSegments } from "@/app/[locale]/user/[handle]/page/[slug]/db/queries.server";
+import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import { createUserAITranslationInfo } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
+import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/queries.server";
 import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
 import type { TranslateJobParams } from "@/features/translate/types";
 import { prisma } from "@/lib/prisma";

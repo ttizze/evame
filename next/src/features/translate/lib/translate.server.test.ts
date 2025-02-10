@@ -12,7 +12,7 @@ vi.mock("../services/gemini", () => ({
 	getGeminiModelResponse: vi.fn(),
 }));
 
-import { TranslateTarget } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
+import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 // 型定義
 import type { TranslateJobParams } from "../types";
 

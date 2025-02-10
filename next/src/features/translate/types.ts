@@ -1,4 +1,4 @@
-import type { TranslateTarget } from "@/app/[locale]/user/[handle]/page/[slug]/constants";
+import type { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 export type NumberedElement = {
 	number: number;
 	text: string;

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { PageStatus } from "@prisma/client";
-import type { BlockWithNumber } from "../../lib/process-html";
+import type { BlockWithNumber } from "@/app/[locale]/lib/process-html";
 
 export async function upsertPageWithHtml(
 	pageSlug: string,

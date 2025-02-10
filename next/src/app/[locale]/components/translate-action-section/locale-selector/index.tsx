@@ -13,13 +13,12 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import {  useRouter,  } from "@/i18n/routing";
+import {  useRouter, usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
 import { startTransition } from "react";
 import { useParams } from "next/navigation";
-import { useSelectedLayoutSegment } from "next/navigation";
 interface LocaleOption {
 	code: string;
 	name: string;
@@ -43,9 +42,8 @@ export function LocaleSelector({
 }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
 	const router = useRouter();
-	const selectedLayoutSegment = useSelectedLayoutSegment();
-	const pathname = selectedLayoutSegment ? `/${selectedLayoutSegment}` : "/";
 	const params = useParams();
+	const pathname = usePathname();
 	const handleLocaleChange = (value: string) => {
 		setOpen(false);
 		startTransition(() => {
