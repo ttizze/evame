@@ -1,8 +1,9 @@
 "use server";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import type { PageStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { updatePageStatus } from "../../db/mutations.server";
 const editPageStatusSchema = z.object({
@@ -10,12 +11,10 @@ const editPageStatusSchema = z.object({
 	status: z.enum(["DRAFT", "PUBLIC", "ARCHIVE"]),
 });
 
-export type EditPageStatusActionState = ActionState & {
-	fieldErrors?: {
-		pageId?: string[];
-		status?: string[];
-	};
-};
+export type EditPageStatusActionState = ActionResponse<void, {
+	pageId: number;
+	status: string;
+}>;
 
 export async function editPageStatusAction(
 	previousState: EditPageStatusActionState,
@@ -23,7 +22,7 @@ export async function editPageStatusAction(
 ): Promise<EditPageStatusActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { success: false, error: "Unauthorized" };
+		redirect("/auth/login");
 	}
 	const parsedFormData = editPageStatusSchema.safeParse({
 		pageId: formData.get("pageId"),
@@ -32,7 +31,7 @@ export async function editPageStatusAction(
 	if (!parsedFormData.success) {
 		return {
 			success: false,
-			fieldErrors: parsedFormData.error.flatten().fieldErrors,
+			zodErrors: parsedFormData.error.flatten().fieldErrors,
 		};
 	}
 	const { pageId, status } = parsedFormData.data;

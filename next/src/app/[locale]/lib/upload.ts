@@ -1,6 +1,6 @@
 "use server";
 
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -31,9 +31,11 @@ const s3Client = new S3Client(
 			},
 );
 
-export interface imgActionState extends ActionState {
-	imageUrl?: string;
-}
+export type imgActionState = ActionResponse<{
+	imageUrl: string;
+}, {
+	image: File;
+}>;
 
 async function uploadToR2(file: File): Promise<string> {
 	const key = `uploads/${Date.now()}-${file.name}`;
@@ -51,31 +53,33 @@ async function uploadToR2(file: File): Promise<string> {
 		? `https://images.eveeve.org/${key}`
 		: `http://localhost:9000/${R2_BUCKET_NAME}/${key}`;
 }
-export interface UploadImageResult {
-	success: boolean;
-	error?: string;
-	imageUrl?: string;
-}
+export type UploadImageResult = ActionResponse<{
+	imageUrl: string;
+}, {
+	image: File;
+}>;
 
 export async function uploadImage(file: File): Promise<UploadImageResult> {
 	try {
 		if (!file.type.startsWith("image/")) {
-			return { success: false, error: "Please select a valid image file" };
+			return { success: false, message: "Please select a valid image file" };
 		}
 
 		const maxSize = 5 * 1024 * 1024;
 		if (file.size > maxSize) {
-			return { success: false, error: "Image file size must be less than 5MB" };
+			return { success: false, message: "Image file size must be less than 5MB" };
 		}
 
 		const imageUrl = await uploadToR2(file);
 
 		return {
 			success: true,
-			imageUrl,
+			data: {
+				imageUrl,
+			},
 		};
 	} catch (error) {
 		console.error("Upload error:", error);
-		return { success: false, error: "Failed to upload image" };
+		return { success: false, message: "Failed to upload image" };
 	}
 }

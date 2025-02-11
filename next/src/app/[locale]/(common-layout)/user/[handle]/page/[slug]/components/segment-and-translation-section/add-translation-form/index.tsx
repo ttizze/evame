@@ -1,6 +1,6 @@
 import type { AddTranslationFormTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { StartButton } from "@/app/[locale]/components/start-button";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { ArrowUpFromLine } from "lucide-react";
 import { useLocale } from "next-intl";
@@ -21,7 +21,7 @@ export function AddTranslationForm({
 }: AddTranslationFormProps) {
 	const locale = useLocale();
 	const [addTranslationState, addTranslationAction, isAddingTranslation] =
-		useActionState<ActionState, FormData>(addTranslationFormAction, {
+		useActionState<ActionResponse, FormData>(addTranslationFormAction, {
 			success: false,
 		});
 
@@ -49,8 +49,10 @@ export function AddTranslationForm({
 					)}
 				</span>
 				<span className="space-x-2 flex justify-end items-center">
-					{addTranslationState.error && (
-						<p className="text-red-500 text-sm">{addTranslationState.error}</p>
+					{addTranslationState.zodErrors?.text && (
+						<p className="text-red-500 text-sm">
+							{addTranslationState.zodErrors.text}
+						</p>
 					)}
 					<Button
 						type="submit"

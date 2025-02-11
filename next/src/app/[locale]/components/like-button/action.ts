@@ -1,7 +1,7 @@
 "use server";
 
-import type { ActionState } from "@/app/types";
-import { auth } from "@/auth";
+import type { ActionResponse } from "@/app/types";
+import { getCurrentUser } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
 import { setGuestId } from "@/lib/set-guest-id-action";
 import { revalidatePath } from "next/cache";
@@ -12,12 +12,15 @@ const schema = z.object({
 	slug: z.string(),
 });
 
-export type LikeButtonState = ActionState & {
-	liked?: boolean;
-	fieldErrors?: {
+export type LikeButtonState = ActionResponse<
+	{
+		liked: boolean;
+		likeCount: number;
+	},
+	{
 		slug: string;
-	};
-};
+	}
+>;
 
 export async function toggleLikeAction(
 	previousState: LikeButtonState,
@@ -27,17 +30,37 @@ export async function toggleLikeAction(
 	if (!validation.success) {
 		return {
 			success: false,
-			fieldErrors: { slug: "Invalid slug parameter provided" },
+			zodErrors: validation.error.flatten().fieldErrors,
 		};
 	}
 	const slug = validation.data.slug;
-	const session = await auth();
-	const currentUser = session?.user;
-	const guestId = !currentUser ? await getGuestId() : await setGuestId();
-	const liked = await toggleLike(slug, currentUser?.id, guestId);
+	const currentUser = await getCurrentUser();
+	if (!currentUser || !currentUser.id) {
+		const guestId = (await getGuestId()) ?? (await setGuestId());
+		const { liked, likeCount } = await toggleLike(slug, {
+			type: "guest",
+			id: guestId,
+		});
+		revalidatePath("/");
+		return {
+			success: true,
+			data: {
+				liked,
+				likeCount,
+			},
+		};
+	}
+
+	const { liked, likeCount } = await toggleLike(slug, {
+		type: "user",
+		id: currentUser.id,
+	});
 	revalidatePath("/");
 	return {
 		success: true,
-		liked,
+		data: {
+			liked,
+			likeCount,
+		},
 	};
 }

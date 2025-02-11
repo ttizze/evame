@@ -1,18 +1,19 @@
 "use server";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { auth } from "@/auth";
 import { validateGeminiApiKey } from "@/features/translate/services/gemini";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { updateGeminiApiKey } from "./db/mutations.server";
-
 const geminiApiKeySchema = z.object({
 	geminiApiKey: z.string(),
 });
-export type GeminiApiKeyDialogState = ActionState & {
-	fieldErrors?: {
+export type GeminiApiKeyDialogState = ActionResponse<
+	void,
+	{
 		geminiApiKey: string;
-	};
-};
+	}
+>;
 export async function updateGeminiApiKeyAction(
 	previousState: GeminiApiKeyDialogState,
 	formData: FormData,
@@ -20,10 +21,7 @@ export async function updateGeminiApiKeyAction(
 	const session = await auth();
 	const currentUser = session?.user;
 	if (!currentUser || !currentUser.id) {
-		return {
-			success: false,
-			error: "Unauthorized",
-		};
+		redirect("/auth/signin");
 	}
 	const validation = geminiApiKeySchema.safeParse({
 		geminiApiKey: formData.get("geminiApiKey"),
@@ -32,7 +30,7 @@ export async function updateGeminiApiKeyAction(
 	if (!validation.success) {
 		return {
 			success: false,
-			error: "Invalid input",
+			zodErrors: validation.error.flatten().fieldErrors,
 		};
 	}
 
@@ -43,9 +41,7 @@ export async function updateGeminiApiKeyAction(
 		if (!isValid) {
 			return {
 				success: false,
-				fieldErrors: {
-					geminiApiKey: errorMessage || "Gemini API key validation failed",
-				},
+				message: errorMessage || "Gemini API key validation failed",
 			};
 		}
 	}

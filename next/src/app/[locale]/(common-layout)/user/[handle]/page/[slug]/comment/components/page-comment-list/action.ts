@@ -1,6 +1,6 @@
 "use server";
 
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -11,10 +11,15 @@ const commentDeleteSchema = z.object({
 	pageId: z.number(),
 });
 
+export type CommentDeleteActionResponse = ActionResponse<void, {
+	pageCommentId: number;
+	pageId: number;
+}>;
+
 export async function commentDeleteAction(
-	previousState: ActionState,
+	previousState: CommentDeleteActionResponse,
 	formData: FormData,
-): Promise<ActionState> {
+): Promise<CommentDeleteActionResponse> {
 	const session = await auth();
 	const currentUser = session?.user;
 
@@ -28,7 +33,10 @@ export async function commentDeleteAction(
 	});
 
 	if (!validate.success) {
-		return { success: false, error: "Invalid form data" };
+		return {
+			success: false,
+			zodErrors: validate.error.flatten().fieldErrors,
+		};
 	}
 
 	await deletePageComment(validate.data.pageCommentId);

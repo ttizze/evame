@@ -69,9 +69,9 @@ describe("archivePageAction", () => {
 		const formData = new FormData();
 		formData.append("pageIds", "1,2");
 
-		const result = await archivePageAction({ success: false }, formData);
-
-		expect(result.success).toBe(false);
+		await expect(
+			archivePageAction({ success: false }, formData),
+		).rejects.toThrow("NEXT_REDIRECT");
 	});
 
 	it("should return error when pageIds are missing", async () => {
@@ -87,8 +87,8 @@ describe("archivePageAction", () => {
 		const formData = new FormData();
 		formData.append("pageIds", "2");
 
-		const result = await archivePageAction({ success: false }, formData);
-
-		expect(result.success).toBe(false);
+		await expect(
+			archivePageAction({ success: false }, formData),
+		).rejects.toThrow("NEXT_REDIRECT");
 	});
 });

@@ -23,18 +23,19 @@ export function LikeButton({
 		LikeButtonState,
 		FormData
 	>(toggleLikeAction, { success: false });
-	const [optimisticLiked, setOptimisticLiked] = useOptimistic(
+
+	const [optimisticLiked, updateOptimisticLiked] = useOptimistic(
 		liked,
 		(state, liked: boolean) => liked,
 	);
 
-	const [optimisticCount, setOptimisticCount] = useOptimistic(
+	const [optimisticCount, updateOptimisticCount] = useOptimistic(
 		likeCount,
 		(state, increment: boolean) => (increment ? state + 1 : state - 1),
 	);
 	const handleSubmit = async (formData: FormData) => {
-		setOptimisticLiked(!optimisticLiked);
-		setOptimisticCount(!optimisticLiked);
+		updateOptimisticLiked(!optimisticLiked);
+		updateOptimisticCount(!optimisticLiked);
 		formAction(formData);
 	};
 	return (
@@ -47,7 +48,6 @@ export function LikeButton({
 					variant="ghost"
 					size="icon"
 					className={`h-12 w-12 rounded-full border bg-background ${className}`}
-					disabled={isPending}
 				>
 					<Heart
 						className={`h-5 w-5 ${optimisticLiked ? "text-red-500" : ""}`}

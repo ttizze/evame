@@ -1,5 +1,5 @@
 "use server";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -10,9 +10,9 @@ const schema = z.object({
 });
 
 export async function deleteTranslationAction(
-	previousState: ActionState,
+	previousState: ActionResponse,
 	formData: FormData,
-): Promise<ActionState> {
+): Promise<ActionResponse> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
 		redirect("/auth/login");
@@ -22,7 +22,10 @@ export async function deleteTranslationAction(
 	);
 	const validation = schema.safeParse({ translationId });
 	if (!validation.success) {
-		return { success: false, error: "Invalid translationId" };
+		return {
+			success: false,
+			zodErrors: validation.error.flatten().fieldErrors,
+		};
 	}
 	await deleteOwnTranslation(currentUser.handle, validation.data.translationId);
 	revalidatePath(`/user/${currentUser.handle}/page/`);

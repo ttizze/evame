@@ -1,6 +1,6 @@
 "use server";
 
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { signIn, signOut } from "@/auth";
 import { z } from "zod";
 
@@ -9,20 +9,18 @@ const loginSchema = z.object({
 });
 
 export async function signInWithGoogleAction(
-	previousState: ActionState,
+	previousState: ActionResponse,
 	formData: FormData,
-): Promise<ActionState> {
+): Promise<ActionResponse> {
 	await signIn("google");
 	return {
 		success: true,
 	};
 }
 
-export type SignInWithResendState = ActionState & {
-	fieldErrors?: {
-		email?: string;
-	};
-};
+export type SignInWithResendState = ActionResponse<void, {
+	email: string;
+}>;
 
 export async function signInWithResendAction(
 	previousState: SignInWithResendState,
@@ -33,7 +31,10 @@ export async function signInWithResendAction(
 	});
 
 	if (!validation.success) {
-		return { success: false, fieldErrors: { email: "Invalid email address" } };
+		return {
+			success: false,
+			zodErrors: validation.error.flatten().fieldErrors,
+		};
 	}
 
 	await signIn("resend", formData);

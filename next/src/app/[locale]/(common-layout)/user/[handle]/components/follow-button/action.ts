@@ -1,28 +1,28 @@
 "use server";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { createFollow, deleteFollow } from "./db/mutations.server";
-
+import { redirect } from "next/navigation";
 export async function followAction(
-	previousState: ActionState,
+	previousState: ActionResponse,
 	formData: FormData,
-): Promise<ActionState> {
+): Promise<ActionResponse> {
 	const session = await auth();
 	const currentUser = session?.user;
 	if (!currentUser || !currentUser.id) {
-		return { success: false, error: "Unauthorized" };
+		redirect("/auth/login");
 	}
 
 	const targetUserId = formData.get("targetUserId");
 	const action = formData.get("action");
 
 	if (!targetUserId || typeof targetUserId !== "string") {
-		return { success: false, error: "Invalid request" };
+		return { success: false, message: "Invalid request" };
 	}
 
 	if (currentUser?.id === targetUserId) {
-		return { success: false, error: "Cannot follow yourself" };
+		return { success: false, message: "Cannot follow yourself" };
 	}
 
 	try {
@@ -35,6 +35,6 @@ export async function followAction(
 		return { success: true };
 	} catch (error) {
 		console.error("Follow action error:", error);
-		return { success: false, error: "Failed to process follow action" };
+		return { success: false, message: "Failed to process follow action" };
 	}
 }

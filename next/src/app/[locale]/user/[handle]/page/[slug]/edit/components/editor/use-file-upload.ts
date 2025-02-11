@@ -22,13 +22,13 @@ export async function handleFileUpload(
 
 	const url = await uploadImage(file);
 	if (!url.success) {
-		window.alert(url.error);
+		window.alert(url.message);
 		return;
 	}
 	editor
 		.chain()
 		.updateAttributes("image", {
-			src: url.imageUrl,
+			src: url.data?.imageUrl,
 			width: dimensions.width,
 			height: dimensions.height,
 		})

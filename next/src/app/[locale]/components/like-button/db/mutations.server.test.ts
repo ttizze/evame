@@ -91,8 +91,11 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	});
 
 	it("userIdを指定した場合にlikeが新規作成される", async () => {
-		const result = await toggleLike(publicPage.slug, testUser.id, undefined);
-		expect(result).toBe(true);
+		const result = await toggleLike(publicPage.slug, {
+			type: "user",
+			id: testUser.id,
+		});
+		expect(result).toStrictEqual({ liked: true, likeCount: 1 });
 		// DB側を確認
 		const page = await prisma.page.findUnique({
 			where: { slug: publicPage.slug },
@@ -106,9 +109,12 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	});
 
 	it("userIdが既にlike済なら削除→liked:falseを返す", async () => {
-		await toggleLike(publicPage.slug, testUser.id, undefined);
-		const result = await toggleLike(publicPage.slug, testUser.id, undefined);
-		expect(result).toBe(false);
+		await toggleLike(publicPage.slug, { type: "user", id: testUser.id });
+		const result = await toggleLike(publicPage.slug, {
+			type: "user",
+			id: testUser.id,
+		});
+		expect(result).toStrictEqual({ liked: false, likeCount: 0 });
 
 		const remaining = await prisma.likePage.findMany({
 			where: { pageId: publicPage.id },
@@ -117,8 +123,11 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	});
 
 	it("guestIdでも同様に動作する (新規作成→liked:true)", async () => {
-		const result = await toggleLike(publicPage.slug, undefined, "guest-123");
-		expect(result).toBe(true);
+		const result = await toggleLike(publicPage.slug, {
+			type: "guest",
+			id: "guest-123",
+		});
+		expect(result).toStrictEqual({ liked: true, likeCount: 1 });
 
 		const likeEntries = await prisma.likePage.findMany({
 			where: { pageId: publicPage.id },
@@ -128,9 +137,12 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	});
 
 	it("guestIdが既にlike済なら削除→liked:falseを返す", async () => {
-		await toggleLike(publicPage.slug, undefined, "guest-123");
-		const result = await toggleLike(publicPage.slug, undefined, "guest-123");
-		expect(result).toBe(false);
+		await toggleLike(publicPage.slug, { type: "guest", id: "guest-123" });
+		const result = await toggleLike(publicPage.slug, {
+			type: "guest",
+			id: "guest-123",
+		});
+		expect(result).toStrictEqual({ liked: false, likeCount: 0 }); // toBe から toStrictEqual に変更
 
 		const remaining = await prisma.likePage.findMany({
 			where: { pageId: publicPage.id },
@@ -140,7 +152,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 
 	it("Pageが存在しない場合はエラーを投げる", async () => {
 		await expect(
-			toggleLike("non-existing-slug", "1", undefined),
+			toggleLike("non-existing-slug", { type: "user", id: "1" }),
 		).rejects.toThrow("Page not found");
 	});
 });

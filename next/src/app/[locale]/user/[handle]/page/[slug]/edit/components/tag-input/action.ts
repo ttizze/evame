@@ -1,16 +1,14 @@
 "use server";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { upsertTags } from "../../db/mutations.server";
 
-export type EditPageTagsActionState = ActionState & {
-	fieldErrors?: {
-		pageId?: string[];
-		tags?: string[];
-	};
-};
+export type EditPageTagsActionState = ActionResponse<void, {
+	pageId: number;
+	tags: string[];
+}>;
 
 const editPageTagsSchema = z.object({
 	pageId: z.coerce.number().min(1),
@@ -43,7 +41,7 @@ export async function editPageTagsAction(
 ): Promise<EditPageTagsActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { success: false, error: "Unauthorized" };
+		return { success: false, message: "Unauthorized" };
 	}
 	const parsedFormData = editPageTagsSchema.safeParse({
 		pageId: formData.get("pageId"),
@@ -52,7 +50,7 @@ export async function editPageTagsAction(
 	if (!parsedFormData.success) {
 		return {
 			success: false,
-			fieldErrors: parsedFormData.error.flatten().fieldErrors,
+			zodErrors: parsedFormData.error.flatten().fieldErrors,
 		};
 	}
 	const { pageId, tags } = parsedFormData.data;

@@ -1,9 +1,10 @@
 "use server";
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { TranslateTarget } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
 import { createUserAITranslationInfo } from "../../../(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
@@ -19,14 +20,15 @@ const translateSchema = z.object({
 	]),
 });
 
-export type TranslateActionState = ActionState & {
-	fieldErrors?: {
-		pageId?: string[];
-		aiModel?: string[];
-		locale?: string[];
-		translateTarget?: string[];
-	};
-};
+export type TranslateActionState = ActionResponse<
+	void,
+	{
+		pageId: number;
+		aiModel: string;
+		locale: string;
+		translateTarget: string;
+	}
+>;
 
 export async function TranslateAction(
 	previousState: TranslateActionState,
@@ -34,7 +36,7 @@ export async function TranslateAction(
 ): Promise<TranslateActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { success: false, error: "Unauthorized" };
+		redirect("/auth/login");
 	}
 
 	const validate = translateSchema.safeParse({
@@ -46,14 +48,14 @@ export async function TranslateAction(
 	if (!validate.success) {
 		return {
 			success: false,
-			fieldErrors: validate.error.flatten().fieldErrors,
+			zodErrors: validate.error.flatten().fieldErrors,
 		};
 	}
 	const geminiApiKey = await fetchGeminiApiKeyByHandle(currentUser.handle);
 	if (!geminiApiKey) {
 		return {
 			success: false,
-			error: "Gemini API key not found",
+			message: "Gemini API key not found",
 		};
 	}
 
@@ -62,7 +64,7 @@ export async function TranslateAction(
 			validate.data.pageId,
 		);
 		if (!pageWithComments) {
-			return { success: false, error: "Page not found" };
+			return { success: false, message: "Page not found" };
 		}
 		const comments = pageWithComments.pageComments.map((comment) => {
 			const segments = comment.pageCommentSegments.map((segment) => ({
@@ -109,7 +111,7 @@ export async function TranslateAction(
 		if (!pageWithPageSegments) {
 			return {
 				success: false,
-				error: "Page not found",
+				message: "Page not found",
 			};
 		}
 

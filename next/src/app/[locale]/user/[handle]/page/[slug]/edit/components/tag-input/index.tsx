@@ -121,8 +121,8 @@ export function TagInput({ initialTags, allTags, pageId }: TagInputProps) {
 					/>
 				)}
 			</div>
-			{editState.fieldErrors?.tags && (
-				<p className="text-sm text-red-500">{editState.fieldErrors.tags}</p>
+			{editState.zodErrors?.tags && (
+				<p className="text-sm text-red-500">{editState.zodErrors.tags}</p>
 			)}
 		</form>
 	);

@@ -30,7 +30,7 @@ describe('handlePageTranslation', () => {
 		await prisma.pageSegment.deleteMany();
 		await prisma.userAITranslationInfo.deleteMany();
     vi.clearAllMocks();
-    (getTranslateUserQueue as any).mockReturnValue(mockQueue);
+    (getTranslateUserQueue as unknown as ReturnType<typeof vi.fn>).mockReturnValue(mockQueue );
   });
 	afterEach(async () => {
 		await prisma.user.deleteMany();
@@ -40,7 +40,7 @@ describe('handlePageTranslation', () => {
 	});
 
   it('should not proceed if translation already exists', async () => {
-    (hasExistingTranslation as any).mockResolvedValue(true);
+    (hasExistingTranslation as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(true);
 
     await handlePageTranslation(mockParams);
 
@@ -59,9 +59,9 @@ describe('handlePageTranslation', () => {
       ]
     };
 
-    (hasExistingTranslation as any).mockResolvedValue(false);
-    (createUserAITranslationInfo as any).mockResolvedValue(mockTranslationInfo);
-    (fetchPageWithPageSegments as any).mockResolvedValue(mockPageData);
+    (hasExistingTranslation as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+    (createUserAITranslationInfo as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockTranslationInfo);
+    (fetchPageWithPageSegments as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockPageData);
 
     await handlePageTranslation(mockParams);
 
@@ -108,9 +108,9 @@ describe('handlePageTranslation', () => {
       ]
     };
 
-    (hasExistingTranslation as any).mockResolvedValue(false);
-    (createUserAITranslationInfo as any).mockResolvedValue(mockTranslationInfo);
-    (fetchPageWithPageSegments as any).mockResolvedValue(mockPageData);
+    (hasExistingTranslation as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+    (createUserAITranslationInfo as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockTranslationInfo);
+    (fetchPageWithPageSegments as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockPageData);
 
     await handlePageTranslation(mockParams);
 
@@ -124,9 +124,9 @@ describe('handlePageTranslation', () => {
   });
 
   it('should throw error if page segments not found', async () => {
-    (hasExistingTranslation as any).mockResolvedValue(false);
-    (createUserAITranslationInfo as any).mockResolvedValue({ id: 'translation123' });
-    (fetchPageWithPageSegments as any).mockResolvedValue(null);
+    (hasExistingTranslation as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+    (createUserAITranslationInfo as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 'translation123' });
+    (fetchPageWithPageSegments as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
     await expect(handlePageTranslation(mockParams)).rejects.toThrow(
       'Page with page segments not found'

@@ -1,5 +1,5 @@
 "use client";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { memo } from "react";
@@ -22,7 +22,7 @@ export const VoteButton = memo(function VoteButton({
 }) {
 	const Icon = isUpvote ? ThumbsUp : ThumbsDown;
 	const [voteState, voteAction, isVoting] = useActionState<
-		ActionState,
+		ActionResponse,
 		FormData
 	>(voteTranslationAction, { success: false });
 	return (

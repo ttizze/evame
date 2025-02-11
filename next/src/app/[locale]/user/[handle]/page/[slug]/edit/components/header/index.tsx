@@ -101,8 +101,8 @@ export function EditHeader({
 							<span>Private</span>
 						</button>
 					</form>
-					{state.fieldErrors?.status && (
-						<p className="text-sm text-red-500">{state.fieldErrors.status}</p>
+					{state.zodErrors?.status && (
+						<p className="text-sm text-red-500">{state.zodErrors.status}</p>
 					)}
 					{pageId && (
 						<>

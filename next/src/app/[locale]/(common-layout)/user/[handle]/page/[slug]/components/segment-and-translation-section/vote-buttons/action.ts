@@ -1,7 +1,7 @@
 // app/serverActions/voteAction.ts
 "use server";
 
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -18,9 +18,9 @@ const schema = z.object({
 });
 
 export async function voteTranslationAction(
-	previousState: ActionState,
+	previousState: ActionResponse,
 	formData: FormData,
-): Promise<ActionState> {
+): Promise<ActionResponse> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
 		redirect("/auth/login");
@@ -31,7 +31,10 @@ export async function voteTranslationAction(
 		voteTarget: formData.get("voteTarget"),
 	});
 	if (!parsedFormData.success) {
-		return { success: false, error: parsedFormData.error.message };
+		return {
+			success: false,
+			zodErrors: parsedFormData.error.flatten().fieldErrors,
+		};
 	}
 	await handleVote(
 		parsedFormData.data.segmentTranslationId,

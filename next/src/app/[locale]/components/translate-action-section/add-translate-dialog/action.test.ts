@@ -71,9 +71,9 @@ describe("TranslateAction", () => {
 			null,
 		);
 
-		const result = await TranslateAction({ success: false }, new FormData());
-
-		expect(result.success).toBe(false);
+		await expect(
+			TranslateAction({ success: false }, new FormData()),
+		).rejects.toThrow("NEXT_REDIRECT");
 	});
 
 	it("should validate input data", async () => {
@@ -159,7 +159,7 @@ describe("TranslateAction", () => {
 
 		expect(result).toEqual({
 			success: false,
-			error: "Gemini API key not found",
+			message: "Gemini API key not found",
 		});
 	});
 
@@ -176,7 +176,7 @@ describe("TranslateAction", () => {
 
 		const result = await TranslateAction({ success: false }, formData);
 
-		expect(result).toEqual({ success: false, error: "Page not found" });
+		expect(result).toEqual({ success: false, message: "Page not found" });
 	});
 
 	it("should handle page not found for page translation", async () => {
@@ -192,6 +192,6 @@ describe("TranslateAction", () => {
 
 		const result = await TranslateAction({ success: false }, formData);
 
-		expect(result).toEqual({ success: false, error: "Page not found" });
+		expect(result).toEqual({ success: false, message: "Page not found" });
 	});
 });

@@ -1,10 +1,9 @@
 "use client";
 import { StartButton } from "@/app/[locale]/components/start-button";
 import { Editor } from "@/app/[locale]/user/[handle]/page/[slug]/edit/components/editor/editor";
-import type { ActionState } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { useActionState, useState } from "react";
-import { commentAction } from "./action";
+import { commentAction, type CommentActionResponse } from "./action";
 
 export function PageCommentForm({
 	pageId,
@@ -14,10 +13,10 @@ export function PageCommentForm({
 	currentHandle: string | undefined;
 }) {
 	const [content, setContent] = useState("");
-	const [state, action, isPending] = useActionState<ActionState, FormData>(
-		commentAction,
-		{ success: false },
-	);
+	const [state, action, isPending] = useActionState<
+		CommentActionResponse,
+		FormData
+	>(commentAction, { success: false });
 
 	return (
 		<>
@@ -44,7 +43,11 @@ export function PageCommentForm({
 					{isPending ? "posting" : "post"}
 				</Button>
 			</form>
-			{state.error && <p className="text-sm text-red-500">{state.error}</p>}
+			{state.zodErrors?.content && (
+				<p className="text-sm text-red-500">
+					{state.zodErrors.content}
+				</p>
+			)}
 		</>
 	);
 }

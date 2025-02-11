@@ -93,9 +93,9 @@ export function EditPageClient({
 							data-testid="title-input"
 						/>
 					</h1>
-					{editState.fieldErrors?.title && (
+					{editState.zodErrors?.title && (
 						<p className="text-sm text-red-500">
-							{editState.fieldErrors.title}
+							{editState.zodErrors.title}
 						</p>
 					)}
 					<TagInput
@@ -121,9 +121,9 @@ export function EditPageClient({
 						placeholder="Write to the world..."
 					/>
 				</form>
-				{editState.fieldErrors?.pageContent && (
+				{editState.zodErrors?.pageContent && (
 					<p className="text-sm text-red-500">
-						{editState.fieldErrors.pageContent}
+						{editState.zodErrors.pageContent}
 					</p>
 				)}
 			</main>

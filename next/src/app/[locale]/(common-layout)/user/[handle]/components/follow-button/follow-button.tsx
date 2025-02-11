@@ -1,5 +1,5 @@
 "use client";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { useActionState } from "react";
 import { followAction } from "./action";
@@ -15,10 +15,10 @@ function FollowButton({
 	isFollowing,
 	className,
 }: FollowButtonProps) {
-	const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-		followAction,
-		{ success: false },
-	);
+	const [state, formAction, isPending] = useActionState<
+		ActionResponse,
+		FormData
+	>(followAction, { success: false });
 
 	return (
 		<form action={formAction}>

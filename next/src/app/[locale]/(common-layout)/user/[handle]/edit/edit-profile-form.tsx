@@ -43,8 +43,8 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 	);
 
 	useEffect(() => {
-		if (imageState.success && imageState.imageUrl) {
-			setProfileIconUrl(imageState.imageUrl);
+		if (imageState.success && imageState.data?.imageUrl) {
+			setProfileIconUrl(imageState.data.imageUrl);
 			toast.success(imageState.message);
 			router.push(`/user/${currentUser.handle}/edit`);
 		}
@@ -118,9 +118,9 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 						}}
 						className="hidden"
 					/>
-					{imageState.fieldErrors?.image && (
+					{imageState.zodErrors?.image && (
 						<div className="text-red-500 text-sm mt-1">
-							{imageState.fieldErrors.image}
+							{imageState.zodErrors.image}
 						</div>
 					)}
 				</form>
@@ -168,9 +168,9 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 							className="border rounded-lg bg-white dark:bg-black/50 focus:outline-none"
 						/>
 					</code>
-					{editState.fieldErrors?.handle && (
+					{editState.zodErrors?.handle && (
 						<div className="text-red-500 text-sm mt-1">
-							{editState.fieldErrors.handle}
+							{editState.zodErrors.handle}
 						</div>
 					)}
 				</div>
@@ -185,9 +185,9 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 						required
 						className="w-full h-10 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-none"
 					/>
-					{editState.fieldErrors?.name && (
+					{editState.zodErrors?.name && (
 						<div className="text-red-500 text-sm mt-1">
-							{editState.fieldErrors.name}
+							{editState.zodErrors.name}
 						</div>
 					)}
 				</div>
@@ -199,9 +199,9 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 						name="profile"
 						className="w-full h-32 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-none"
 					/>
-					{editState.fieldErrors?.profile && (
+					{editState.zodErrors?.profile && (
 						<div className="text-red-500 text-sm mt-1">
-							{editState.fieldErrors.profile}
+							{editState.zodErrors.profile}
 						</div>
 					)}
 				</div>
@@ -243,9 +243,6 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 					)}
 				</Button>
 
-				{editState.error && (
-					<p className="text-red-500 text-center mt-2">{editState.error}</p>
-				)}
 			</form>
 		</div>
 	);

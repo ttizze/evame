@@ -1,6 +1,6 @@
 "use server";
 import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -21,9 +21,9 @@ const schema = z.object({
 });
 
 export async function addTranslationFormAction(
-	previousState: ActionState,
+	previousState: ActionResponse,
 	formData: FormData,
-): Promise<ActionState> {
+): Promise<ActionResponse> {
 	const session = await auth();
 	const currentUser = session?.user;
 	if (!currentUser || !currentUser.id) {
@@ -38,7 +38,7 @@ export async function addTranslationFormAction(
 	if (!parsedFormData.success) {
 		return {
 			success: false,
-			error: parsedFormData.error.message,
+			zodErrors: parsedFormData.error.flatten().fieldErrors,
 		};
 	}
 

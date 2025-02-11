@@ -3,7 +3,6 @@
 import { MemoizedParsedContent } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/components/parsed-content";
 import { VOTE_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
-import type { ActionState } from "@/app/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
 import { useActionState } from "react";
-import { commentDeleteAction } from "./action";
+import { commentDeleteAction, type CommentDeleteActionResponse } from "./action";
 import type { PageCommentWithUser } from "./db/query.server";
 
 interface CommentListClientProps {
@@ -32,10 +31,10 @@ export function PageCommentListClient({
 	showTranslation,
 	locale,
 }: CommentListClientProps) {
-	const [state, action, isPending] = useActionState<ActionState, FormData>(
-		commentDeleteAction,
-		{ success: false },
-	);
+	const [state, action, isPending] = useActionState<
+		CommentDeleteActionResponse,
+		FormData
+	>(commentDeleteAction, { success: false });
 	return (
 		<div className="space-y-4">
 			{pageCommentsWithUser.map((pageComment) => (

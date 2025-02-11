@@ -1,15 +1,15 @@
 import { signInWithGoogleAction } from "@/app/[locale]/auth-action";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import Form from "next/form";
 import { useActionState } from "react";
 import { FcGoogle } from "react-icons/fc";
 
 export function GoogleForm({ redirectTo }: { redirectTo: string }) {
-	const [state, formAction, isPending] = useActionState<ActionState, FormData>(
-		signInWithGoogleAction,
-		{ success: false },
-	);
+	const [state, formAction, isPending] = useActionState<
+		ActionResponse,
+		FormData
+	>(signInWithGoogleAction, { success: false });
 	return (
 		<Form action={formAction} className="w-full ">
 			<input type="hidden" name="redirectTo" value={redirectTo} />

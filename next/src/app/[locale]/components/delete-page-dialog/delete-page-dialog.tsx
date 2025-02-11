@@ -1,4 +1,4 @@
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -23,7 +23,7 @@ export function DeletePageDialog({
 	pageIds = [],
 }: DeletePageDialogProps) {
 	const [archiveState, archiveAction, isArchiving] = useActionState<
-		ActionState,
+		ActionResponse,
 		FormData
 	>(archivePageAction, { success: false });
 

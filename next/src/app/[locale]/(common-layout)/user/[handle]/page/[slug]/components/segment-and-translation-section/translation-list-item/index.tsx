@@ -1,6 +1,6 @@
 import type { SegmentTranslationWithVote } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/types";
 import { sanitizeAndParseText } from "@/app/[locale]/lib/sanitize-and-parse-text.client";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { NavigationLink } from "@/components/navigation-link";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +26,7 @@ export function TranslationListItem({
 	voteTarget,
 }: TranslationItemProps) {
 	const [deleteTranslationState, action, isDeletingTranslation] =
-		useActionState<ActionState, FormData>(deleteTranslationAction, {
+		useActionState<ActionResponse, FormData>(deleteTranslationAction, {
 			success: false,
 		});
 	const isOwner = currentHandle === translation.segmentTranslation.user.handle;

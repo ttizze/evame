@@ -1,5 +1,5 @@
 "use server";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -36,14 +36,11 @@ const schema = z.object({
 		.optional(),
 });
 
-export type UserEditState = ActionState & {
-	fieldErrors?: {
-		name?: string[];
-		handle?: string[];
-		profile?: string[];
-	};
-	redirect?: string;
-};
+export type UserEditState = ActionResponse<void, {
+	name: string;
+	handle: string;
+	profile: string;
+}>;
 export async function userEditAction(
 	previousState: UserEditState,
 	formData: FormData,
@@ -53,29 +50,28 @@ export async function userEditAction(
 	if (!currentUser || !currentUser.id) {
 		redirect("/auth/login");
 	}
-	const validation = schema.safeParse({
+	const parsed = schema.safeParse({
 		name: formData.get("name"),
 		handle: formData.get("handle"),
 		profile: formData.get("profile"),
 	});
-	if (!validation.success) {
+	if (!parsed.success) {
 		return {
 			success: false,
-			fieldErrors: validation.error.flatten()
-				.fieldErrors as UserEditState["fieldErrors"],
+			zodErrors: parsed.error.flatten().fieldErrors,
 		};
 	}
 
-	const { name, handle, profile } = validation.data;
+	const { name, handle, profile } = parsed.data;
 
+	if (handle !== currentUser.handle) {
+		redirect(`/user/${handle}/edit`);
+	}
 	await updateUser(currentUser.id, {
 		name,
 		handle,
 		profile,
 	});
 	revalidatePath(`/user/${handle}/edit`);
-	if (handle !== currentUser.handle) {
-		redirect(`/user/${handle}/edit`);
-	}
 	return { success: true, message: "Profile updated successfully" };
 }

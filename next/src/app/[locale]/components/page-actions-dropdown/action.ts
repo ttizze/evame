@@ -1,14 +1,16 @@
 "use server";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { togglePagePublicStatus } from "./db/mutations.server";
 
-export type TogglePublishState = ActionState & {
-	fieldErrors?: {
-		pageId?: string[];
-	};
-};
+export type TogglePublishState = ActionResponse<
+	void,
+	{
+		pageId: number;
+	}
+>;
 
 // アクションハンドラー
 export async function togglePublishAction(
@@ -17,11 +19,14 @@ export async function togglePublishAction(
 ): Promise<TogglePublishState> {
 	const session = await auth();
 	const currentUser = session?.user;
+	if (!currentUser || !currentUser.id) {
+		redirect("/auth/login");
+	}
 	const pageId = Number(formData.get("pageId"));
 	if (!pageId) {
 		return {
 			success: false,
-			fieldErrors: { pageId: ["Page ID is required"] },
+			zodErrors: { pageId: ["Page ID is required"] },
 		};
 	}
 

@@ -1,19 +1,18 @@
 "use server";
 import { getLocaleFromHtml } from "@/app/[locale]/lib/get-locale-from-html";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { handlePageTranslation } from "../lib/handle-page-translation";
 import { processPageHtml } from "../lib/process-page-html";
 
-export type EditPageContentActionState = ActionState & {
-	fieldErrors?: {
-		slug?: string[];
-		title?: string[];
-		pageContent?: string[];
-	};
-};
+export type EditPageContentActionState = ActionResponse<void, {
+	slug: string;
+	title: string;
+	pageContent: string;
+}>;
 
 const editPageContentSchema = z.object({
 	slug: z.string().min(1),
@@ -27,7 +26,7 @@ export async function editPageContentAction(
 ): Promise<EditPageContentActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { success: false, error: "Unauthorized" };
+		redirect("/auth/login");
 	}
 	const parsedFormData = editPageContentSchema.safeParse({
 		slug: formData.get("slug"),
@@ -37,7 +36,7 @@ export async function editPageContentAction(
 	if (!parsedFormData.success) {
 		return {
 			success: false,
-			fieldErrors: parsedFormData.error.flatten().fieldErrors,
+			zodErrors: parsedFormData.error.flatten().fieldErrors,
 		};
 	}
 	const { slug, title, pageContent } = parsedFormData.data;
@@ -52,7 +51,7 @@ export async function editPageContentAction(
 	if (page.status === "PUBLIC") {
 		const geminiApiKey = process.env.GEMINI_API_KEY;
 		if (!geminiApiKey) {
-			return { success: false, error: "Gemini API key is not set" };
+			return { success: false, message: "Gemini API key is not set" };
 		}
 
 		await handlePageTranslation({

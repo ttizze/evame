@@ -129,24 +129,24 @@ export function AddTranslateDialog({
 									Set API Key
 								</Button>
 							)}
-							{translateState.fieldErrors?.pageId && (
+							{translateState.zodErrors?.pageId && (
 								<p className="text-red-500">
-									{translateState.fieldErrors.pageId[0]}
+									{translateState.zodErrors.pageId[0]}
 								</p>
 							)}
-							{translateState.fieldErrors?.aiModel && (
+							{translateState.zodErrors?.aiModel && (
 								<p className="text-red-500">
-									{translateState.fieldErrors.aiModel[0]}
+									{translateState.zodErrors.aiModel[0]}
 								</p>
 							)}
-							{translateState.fieldErrors?.locale && (
+							{translateState.zodErrors?.locale && (
 								<p className="text-red-500">
-									{translateState.fieldErrors.locale[0]}
+									{translateState.zodErrors.locale[0]}
 								</p>
 							)}
-							{translateState.fieldErrors?.translateTarget && (
+							{translateState.zodErrors?.translateTarget && (
 								<p className="text-red-500">
-									{translateState.fieldErrors.translateTarget[0]}
+									{translateState.zodErrors.translateTarget[0]}
 								</p>
 							)}
 							<UserAITranslationStatus

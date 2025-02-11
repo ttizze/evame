@@ -5,14 +5,13 @@ import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { updateUserImage } from "./db/mutations.server";
-import type { ActionState } from "@/app/types";
+import type { ActionResponse } from "@/app/types";
 
-export interface UserImageEditState extends ActionState {
+export type UserImageEditState = ActionResponse<{
 	imageUrl?: string;
-	fieldErrors?: {
-		image: string;
-	};
-}
+}, {
+	image: File;
+}>;
 
 export async function userImageEditAction(
 	previousState: UserImageEditState,
@@ -25,37 +24,31 @@ export async function userImageEditAction(
 	}
 	const file = formData.get("image") as File;
 	if (!file) {
-		return { success: false, error: "No image provided" };
+		return { success: false, message: "No image provided" };
 	}
 	if (file) {
 		const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 		if (file.size > MAX_SIZE) {
 			return {
 				success: false,
-				fieldErrors: {
-					image: "Image size exceeds 5MB limit. Please choose a smaller file.",
-				},
+				message: "Image size exceeds 5MB limit. Please choose a smaller file.",
 			};
 		}
 	}
-	const imageUrl = await uploadImage(file);
-	if (imageUrl.error) {
-		return { success: false, error: imageUrl.error };
-	}
 	const result = await uploadImage(file);
-	if (result.error || !result.imageUrl) {
+	if (!result.success || !result.data?.imageUrl) {
 		return {
 			success: false,
-			fieldErrors: {
-				image: "Failed to upload image",
-			},
+			message: "Failed to upload image",
 		};
 	}
-	await updateUserImage(currentUser.id, result.imageUrl);
+	await updateUserImage(currentUser.id, result.data?.imageUrl);
 	revalidatePath(`/user/${currentUser.handle}/edit`);
 	return {
 		success: true,
-		imageUrl: result.imageUrl,
+		data: {
+			imageUrl: result.data?.imageUrl,
+		},
 		message: "Profile image updated successfully",
 	};
 }

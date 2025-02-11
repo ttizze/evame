@@ -45,9 +45,9 @@ export function Login() {
 									autoComplete="email"
 									className="rounded-lg"
 								/>
-								{state.fieldErrors?.email && (
+								{state.zodErrors?.email && (
 									<p className="text-sm text-red-500">
-										{state.fieldErrors.email}
+										{state.zodErrors.email}
 									</p>
 								)}
 							</div>
