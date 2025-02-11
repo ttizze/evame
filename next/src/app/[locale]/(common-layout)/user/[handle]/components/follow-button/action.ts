@@ -11,18 +11,18 @@ export async function followAction(
 	const session = await auth();
 	const currentUser = session?.user;
 	if (!currentUser || !currentUser.id) {
-		return { error: "Unauthorized" };
+		return { success: false, error: "Unauthorized" };
 	}
 
 	const targetUserId = formData.get("targetUserId");
 	const action = formData.get("action");
 
 	if (!targetUserId || typeof targetUserId !== "string") {
-		return { error: "Invalid request" };
+		return { success: false, error: "Invalid request" };
 	}
 
 	if (currentUser?.id === targetUserId) {
-		return { error: "Cannot follow yourself" };
+		return { success: false, error: "Cannot follow yourself" };
 	}
 
 	try {
@@ -35,6 +35,6 @@ export async function followAction(
 		return { success: true };
 	} catch (error) {
 		console.error("Follow action error:", error);
-		return { error: "Failed to process follow action" };
+		return { success: false, error: "Failed to process follow action" };
 	}
 }

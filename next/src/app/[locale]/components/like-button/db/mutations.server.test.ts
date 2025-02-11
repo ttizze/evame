@@ -9,6 +9,8 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	let privatePage: Page;
 	let archivedPage: Page;
 	beforeEach(async () => {
+		await prisma.user.deleteMany();
+		await prisma.page.deleteMany();
 		const createdUser = await prisma.user.create({
 			data: {
 				handle: "testuser",
@@ -84,11 +86,8 @@ describe("toggleLike 実際のDB統合テスト", () => {
 		archivedPage = foundArchivedPage;
 	});
 	afterEach(async () => {
-		if (testUser?.id) {
-			await prisma.user.delete({
-				where: { id: testUser.id },
-			});
-		}
+		await prisma.user.deleteMany();
+		await prisma.page.deleteMany();
 	});
 
 	it("userIdを指定した場合にlikeが新規作成される", async () => {

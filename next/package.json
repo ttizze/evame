@@ -9,7 +9,7 @@
 		"start": "next start",
 		"lint": "next lint",
 		"test": "vitest",
-		"test-migrate": "DATABASE_URL=postgresql://postgres:password@localhost:5433/testdb?schema=public bunx prisma migrate dev && bunx prisma migrate deploy",
+		"test-migrate": "DATABASE_URL=postgres://postgres:postgres@db.localtest.me:5435/main bunx prisma migrate dev && bunx prisma migrate deploy",
 		"vercel-build": "prisma generate && prisma migrate deploy && next build",
 		"check": "bunx @biomejs/biome check --write .",
 		"typecheck": "tsc --noEmit"

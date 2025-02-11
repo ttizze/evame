@@ -11,18 +11,22 @@ export async function archivePageAction(
 ): Promise<ActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { error: "Authentication required" };
+		return { success: false, error: "Authentication required" };
 	}
 
 	const pageIds = formData.get("pageIds")?.toString().split(",").map(Number);
 	if (!pageIds?.length) {
-		return { error: "Page ID is required" };
+		return { success: false, error: "Page ID is required" };
 	}
 
 	for (const pageId of pageIds) {
-		await archivePage(pageId, currentUser.id);
+		try {
+			await archivePage(pageId, currentUser.id);
+		} catch (error) {
+			console.error("Error archiving page", error);
+			return { success: false, error: "Failed to archive page" };
+		}
 	}
-
 	revalidatePath(`/user/${currentUser.handle}/`);
 	return { success: true };
 }

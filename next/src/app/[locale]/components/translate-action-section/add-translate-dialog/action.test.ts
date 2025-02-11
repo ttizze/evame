@@ -1,22 +1,24 @@
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
+import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { TranslateTarget } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
-import { createUserAITranslationInfo } from "../../(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
+import { TranslateTarget } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
+import { createUserAITranslationInfo } from "../../../(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
 import {
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
-} from "../../(common-layout)/user/[handle]/page/[slug]/db/queries.server";
+} from "../../../(common-layout)/user/[handle]/page/[slug]/db/queries.server";
 import { TranslateAction } from "./action";
-
 vi.mock("@/auth", () => ({
 	getCurrentUser: vi.fn(),
 }));
 vi.mock("@/app/db/queries.server");
-vi.mock("../../db/queries.server");
-vi.mock("../../db/mutations.server");
+vi.mock(
+	"../../../(common-layout)/user/[handle]/page/[slug]/db/mutations.server",
+);
+vi.mock("../../../(common-layout)/user/[handle]/page/[slug]/db/queries.server");
 vi.mock("@/features/translate/translate-user-queue");
 vi.mock("next/cache");
 
@@ -34,7 +36,13 @@ describe("TranslateAction", () => {
 		add: vi.fn(),
 	};
 
-	beforeEach(() => {
+	beforeEach(async () => {
+		await prisma.user.deleteMany();
+		await prisma.userAITranslationInfo.deleteMany();
+		await prisma.page.deleteMany();
+		await prisma.pageSegment.deleteMany();
+		await prisma.pageComment.deleteMany();
+		await prisma.pageCommentSegment.deleteMany();
 		vi.clearAllMocks();
 		(getCurrentUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
 			id: 1,
@@ -50,23 +58,30 @@ describe("TranslateAction", () => {
 			() => {},
 		);
 	});
-
+	afterEach(async () => {
+		await prisma.user.deleteMany();
+		await prisma.userAITranslationInfo.deleteMany();
+		await prisma.page.deleteMany();
+		await prisma.pageSegment.deleteMany();
+		await prisma.pageComment.deleteMany();
+		await prisma.pageCommentSegment.deleteMany();
+	});
 	it("should return unauthorized error if no user", async () => {
 		(getCurrentUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
 			null,
 		);
 
-		const result = await TranslateAction({}, new FormData());
+		const result = await TranslateAction({ success: false }, new FormData());
 
-		expect(result).toEqual({ generalError: "Unauthorized" });
+		expect(result.success).toBe(false);
 	});
 
 	it("should validate input data", async () => {
 		const formData = new FormData();
 
-		const result = await TranslateAction({}, formData);
+		const result = await TranslateAction({ success: false }, formData);
 
-		expect(result.fieldErrors).toBeDefined();
+		expect(result.success).toBe(false);
 	});
 
 	it("should handle comment translation successfully", async () => {
@@ -95,9 +110,9 @@ describe("TranslateAction", () => {
 		formData.append("locale", "en");
 		formData.append("translateTarget", TranslateTarget.TRANSLATE_COMMENT);
 
-		const result = await TranslateAction({}, formData);
+		const result = await TranslateAction({ success: false }, formData);
 
-		expect(result).toEqual({ success: "Translation started" });
+		expect(result).toEqual({ success: true });
 		expect(mockQueue.add).toHaveBeenCalled();
 	});
 
@@ -122,9 +137,9 @@ describe("TranslateAction", () => {
 		formData.append("locale", "en");
 		formData.append("translateTarget", TranslateTarget.TRANSLATE_PAGE);
 
-		const result = await TranslateAction({}, formData);
+		const result = await TranslateAction({ success: false }, formData);
 
-		expect(result).toEqual({ success: "Translation started" });
+		expect(result).toEqual({ success: true });
 		expect(mockQueue.add).toHaveBeenCalled();
 		expect(revalidatePath).toHaveBeenCalled();
 	});
@@ -140,7 +155,12 @@ describe("TranslateAction", () => {
 		formData.append("locale", "en");
 		formData.append("translateTarget", TranslateTarget.TRANSLATE_PAGE);
 
-		await expect(TranslateAction({}, formData)).rejects.toThrow();
+		const result = await TranslateAction({ success: false }, formData);
+
+		expect(result).toEqual({
+			success: false,
+			error: "Gemini API key not found",
+		});
 	});
 
 	it("should handle page not found for comment translation", async () => {
@@ -154,9 +174,9 @@ describe("TranslateAction", () => {
 		formData.append("locale", "en");
 		formData.append("translateTarget", TranslateTarget.TRANSLATE_COMMENT);
 
-		const result = await TranslateAction({}, formData);
+		const result = await TranslateAction({ success: false }, formData);
 
-		expect(result).toEqual({ generalError: "Page not found" });
+		expect(result).toEqual({ success: false, error: "Page not found" });
 	});
 
 	it("should handle page not found for page translation", async () => {
@@ -170,8 +190,8 @@ describe("TranslateAction", () => {
 		formData.append("locale", "en");
 		formData.append("translateTarget", TranslateTarget.TRANSLATE_PAGE);
 
-		const result = await TranslateAction({}, formData);
+		const result = await TranslateAction({ success: false }, formData);
 
-		expect(result).toEqual({ generalError: "Page not found" });
+		expect(result).toEqual({ success: false, error: "Page not found" });
 	});
 });

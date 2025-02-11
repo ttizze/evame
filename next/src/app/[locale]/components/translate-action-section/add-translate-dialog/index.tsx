@@ -23,9 +23,9 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useActionState } from "react";
 import type { TranslateTarget } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
-import { TranslateAction, type TranslateActionState } from "../action";
 import { LocaleSelector } from "../locale-selector/index";
 import { UserAITranslationStatus } from "../user-ai-translation-status";
+import { TranslateAction, type TranslateActionState } from "./action";
 
 type AddTranslateDialogProps = {
 	open: boolean;
@@ -51,7 +51,7 @@ export function AddTranslateDialog({
 	const [translateState, translateAction, isTranslating] = useActionState<
 		TranslateActionState,
 		FormData
-	>(TranslateAction, {});
+	>(TranslateAction, { success: false });
 
 	const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);

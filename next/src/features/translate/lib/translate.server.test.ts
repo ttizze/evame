@@ -2,12 +2,9 @@
 
 import { prisma } from "@/lib/prisma";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-
-// テスト対象
 import { translate } from "../lib/translate.server";
-
-// Gemini呼び出しをモック
 import { getGeminiModelResponse } from "../services/gemini";
+
 vi.mock("../services/gemini", () => ({
 	getGeminiModelResponse: vi.fn(),
 }));
@@ -22,6 +19,10 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 	let userAITranslationInfoId: number;
 
 	beforeEach(async () => {
+		await prisma.user.deleteMany();
+		await prisma.page.deleteMany();
+		await prisma.pageSegment.deleteMany();
+		await prisma.userAITranslationInfo.deleteMany();
 		// テスト用ユーザー
 		const user = await prisma.user.create({
 			data: {
@@ -61,6 +62,12 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 			},
 		});
 		userAITranslationInfoId = userAITranslationInfo.id;
+	});
+	afterEach(async () => {
+		await prisma.user.deleteMany();
+		await prisma.page.deleteMany();
+		await prisma.pageSegment.deleteMany();
+		await prisma.userAITranslationInfo.deleteMany();
 	});
 
 	test("正常ケース：Geminiから正常レスポンスが返った場合、最終的にステータスがcompletedとなり翻訳がDBに保存される", async () => {

@@ -33,7 +33,7 @@ export async function signInWithResendAction(
 	});
 
 	if (!validation.success) {
-		return { fieldErrors: { email: "Invalid email address" } };
+		return { success: false, fieldErrors: { email: "Invalid email address" } };
 	}
 
 	await signIn("resend", formData);

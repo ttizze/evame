@@ -1,29 +1,38 @@
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
-let connectionString = process.env.DATABASE_URL || "";
+const connectionString = process.env.DATABASE_URL || "";
 
 // ローカル開発環境用の設定
-if (process.env.NODE_ENV === "development") {
-	// ローカル用の接続文字列（例: db.localtest.me を使って Neon に近い環境をエミュレート）
-	connectionString = "postgres://postgres:postgres@db.localtest.me:5434/main";
+const isDevelopment = process.env.NODE_ENV === "development";
+const isTest = process.env.NODE_ENV === "test";
+if (isDevelopment || isTest) {
+	const LOCAL_HOST = "db.localtest.me";
 
-	// fetchEndpoint の設定（db.localtest.me の場合は http://host:4444/sql を使う）
-	neonConfig.fetchEndpoint = (host) => {
-		const [protocol, port] =
-			host === "db.localtest.me" ? ["http", 4444] : ["https", 443];
-		return `${protocol}://${host}:${port}/sql`;
-	};
+	const getLocalPort = () => (isTest ? 4445 : 4444);
 
-	// WebSocket のセキュリティ設定をローカル用に調整
-	const connectionStringUrl = new URL(connectionString);
-	neonConfig.useSecureWebSocket =
-		connectionStringUrl.hostname !== "db.localtest.me";
+  // テスト環境の場合は、ホストが db.localtest.me のときのポートをテスト用に変更
+  neonConfig.fetchEndpoint = (host) => {
+    if (host === LOCAL_HOST) {
+      // テストなら 4445、本番開発なら 4444
+      return `http://${host}:${getLocalPort()}/sql`;
+    }
+    return `https://${host}:${443}/sql`;
+  };
 
-	// wsProxy の設定（ローカル用）
-	neonConfig.wsProxy = (host) =>
-		host === "db.localtest.me" ? `${host}:4444/v2` : `${host}/v2`;
+  // WebSocket のセキュリティ設定
+  const connectionStringUrl = new URL(connectionString);
+  neonConfig.useSecureWebSocket = connectionStringUrl.hostname !== LOCAL_HOST;
+
+  // wsProxy の設定
+  neonConfig.wsProxy = (host) => {
+    if (host === LOCAL_HOST) {
+      return `${host}:${getLocalPort()}/v2`;
+    }
+    return `${host}/v2`;
+  };
 }
+
 
 const pool = new Pool({ connectionString });
 const adapter = new PrismaNeon(pool);

@@ -5,10 +5,10 @@ import { getCurrentUser } from "@/auth";
 import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { TranslateTarget } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
-import { createUserAITranslationInfo } from "../../(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
-import { fetchPageWithPageSegments } from "../../(common-layout)/user/[handle]/page/[slug]/db/queries.server";
-import { fetchPageWithTitleAndComments } from "../../(common-layout)/user/[handle]/page/[slug]/db/queries.server";
+import { TranslateTarget } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
+import { createUserAITranslationInfo } from "../../../(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
+import { fetchPageWithPageSegments } from "../../../(common-layout)/user/[handle]/page/[slug]/db/queries.server";
+import { fetchPageWithTitleAndComments } from "../../../(common-layout)/user/[handle]/page/[slug]/db/queries.server";
 const translateSchema = z.object({
 	pageId: z.coerce.number(),
 	aiModel: z.string().min(1, "モデルを選択してください"),
@@ -34,7 +34,7 @@ export async function TranslateAction(
 ): Promise<TranslateActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { error: "Unauthorized" };
+		return { success: false, error: "Unauthorized" };
 	}
 
 	const validate = translateSchema.safeParse({
@@ -44,11 +44,17 @@ export async function TranslateAction(
 		translateTarget: formData.get("translateTarget"),
 	});
 	if (!validate.success) {
-		return { fieldErrors: validate.error.flatten().fieldErrors };
+		return {
+			success: false,
+			fieldErrors: validate.error.flatten().fieldErrors,
+		};
 	}
 	const geminiApiKey = await fetchGeminiApiKeyByHandle(currentUser.handle);
 	if (!geminiApiKey) {
-		throw new Response("Gemini API key is not set", { status: 404 });
+		return {
+			success: false,
+			error: "Gemini API key not found",
+		};
 	}
 
 	if (validate.data.translateTarget === TranslateTarget.TRANSLATE_COMMENT) {
@@ -56,7 +62,7 @@ export async function TranslateAction(
 			validate.data.pageId,
 		);
 		if (!pageWithComments) {
-			return { error: "Page not found" };
+			return { success: false, error: "Page not found" };
 		}
 		const comments = pageWithComments.pageComments.map((comment) => {
 			const segments = comment.pageCommentSegments.map((segment) => ({
@@ -102,6 +108,7 @@ export async function TranslateAction(
 		);
 		if (!pageWithPageSegments) {
 			return {
+				success: false,
 				error: "Page not found",
 			};
 		}

@@ -1,416 +1,135 @@
-import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
-import { createUserAITranslationInfo } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
-import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/queries.server";
-import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
-import type { TranslateJobParams } from "@/features/translate/types";
-import { prisma } from "@/lib/prisma";
-import { TranslationStatus } from "@prisma/client";
-import type { Queue } from "bullmq";
-import { describe, expect, test, vi } from "vitest";
-import { handlePageTranslation } from "./handle-page-translation";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { handlePageTranslation } from './handle-page-translation';
+import { hasExistingTranslation } from '@/features/translate/db/query.server';
+import { createUserAITranslationInfo } from '@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/mutations.server';
+import { fetchPageWithPageSegments } from '@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/queries.server';
+import { getTranslateUserQueue } from '@/features/translate/translate-user-queue';
+import { prisma } from '@/lib/prisma';
+// Mock all dependencies
+vi.mock('@/features/translate/db/query.server');
+vi.mock('@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/mutations.server');
+vi.mock('@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/queries.server');
+vi.mock('@/features/translate/translate-user-queue');
 
-interface PageSegment {
-	id: number;
-	pageId: number;
-	number: number;
-	text: string;
-	textAndOccurrenceHash: string;
-	createdAt: Date;
-	updatedAt: Date;
-	pageSegmentTranslations: Array<{
-		id: number;
-		locale: string;
-		text: string;
-		isArchived: boolean;
-	}>;
-}
+describe('handlePageTranslation', () => {
+  const mockParams = {
+    currentUserId: 'user123',
+    pageId: 1,
+    sourceLocale: 'en',
+    geminiApiKey: 'test-api-key',
+    title: 'Test Title'
+  };
 
-vi.mock("@/lib/prisma", () => ({
-	prisma: {
-		pageSegment: {
-			findFirst: vi.fn(),
-		},
-	},
-}));
+  const mockQueue = {
+    add: vi.fn().mockResolvedValue(undefined)
+  };
 
-// Mock dependencies
-vi.mock(
-	"~/routes/$locale+/user.$handle+/page+/$slug+/functions/mutations.server",
-	() => ({
-		createUserAITranslationInfo: vi.fn(),
-	}),
-);
-
-vi.mock(
-	"~/routes/$locale+/user.$handle+/page+/$slug+/functions/queries.server",
-	() => ({
-		fetchPageWithPageSegments: vi.fn(),
-	}),
-);
-
-vi.mock("~/features/translate/translate-user-queue", () => ({
-	getTranslateUserQueue: vi.fn(),
-}));
-
-describe("handlePageTranslation", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
+  beforeEach(async () => {	
+		await prisma.user.deleteMany();
+		await prisma.page.deleteMany();
+		await prisma.pageSegment.deleteMany();
+		await prisma.userAITranslationInfo.deleteMany();
+    vi.clearAllMocks();
+    (getTranslateUserQueue as any).mockReturnValue(mockQueue);
+  });
+	afterEach(async () => {
+		await prisma.user.deleteMany();
+		await prisma.page.deleteMany();
+		await prisma.pageSegment.deleteMany();
+		await prisma.userAITranslationInfo.deleteMany();
 	});
 
-	test("should handle English to Japanese translation correctly", async () => {
-		// Setup mocks
-		const mockUserAITranslationInfo = {
-			id: 1,
-			userId: "1",
-			pageId: 1,
-			locale: "ja",
-			aiModel: "gemini-1.5-flash",
-			aiTranslationStatus: TranslationStatus.PENDING,
-			aiTranslationProgress: 0,
-			createdAt: new Date(),
-		};
-		const mockPageWithPageSegments = {
-			id: 1,
-			title: "Test Title",
-			slug: "test-title",
-			content: "Test content",
-			createdAt: new Date(),
-			pageSegments: [
-				{ id: 1, number: 0, text: "Title" },
-				{ id: 2, number: 1, text: "Content" },
-			],
-		};
-		const mockQueue = {
-			add: vi.fn(),
-			token: "",
-			jobsOpts: {},
-			opts: {},
-			libName: "bull",
-		} as unknown as Queue<TranslateJobParams>;
+  it('should not proceed if translation already exists', async () => {
+    (hasExistingTranslation as any).mockResolvedValue(true);
 
-		vi.mocked(createUserAITranslationInfo).mockResolvedValue(
-			mockUserAITranslationInfo,
-		);
-		vi.mocked(fetchPageWithPageSegments).mockResolvedValue(
-			mockPageWithPageSegments,
-		);
-		vi.mocked(getTranslateUserQueue).mockReturnValue(mockQueue);
+    await handlePageTranslation(mockParams);
 
-		// Execute
-		await handlePageTranslation({
-			currentUserId: "1",
-			pageId: 1,
-			sourceLocale: "en",
-			geminiApiKey: "test-key",
-			title: "Test Title",
-		});
+    expect(hasExistingTranslation).toHaveBeenCalledWith(mockParams.pageId, 'ja');
+    expect(createUserAITranslationInfo).not.toHaveBeenCalled();
+    expect(fetchPageWithPageSegments).not.toHaveBeenCalled();
+    expect(mockQueue.add).not.toHaveBeenCalled();
+  });
 
-		// Verify
-		expect(createUserAITranslationInfo).toHaveBeenCalledWith(
-			"1",
-			1,
-			"ja",
-			"gemini-1.5-flash",
-		);
-		expect(fetchPageWithPageSegments).toHaveBeenCalledWith(1);
-		expect(getTranslateUserQueue).toHaveBeenCalledWith("1");
-		expect(mockQueue.add).toHaveBeenCalledWith("translate-1", {
-			userAITranslationInfoId: 1,
-			geminiApiKey: "test-key",
-			aiModel: "gemini-1.5-flash",
-			userId: "1",
-			pageId: 1,
-			locale: "ja",
-			title: "Test Title",
-			numberedElements: [
-				{ number: 0, text: "Title" },
-				{ number: 1, text: "Content" },
-			],
-			translateTarget: TranslateTarget.TRANSLATE_PAGE,
-		});
-	});
+  it('should process translation from English to Japanese', async () => {
+    const mockTranslationInfo = { id: 'translation123' };
+    const mockPageData = {
+      pageSegments: [
+        { number: 1, text: 'Hello' },
+        { number: 2, text: 'World' }
+      ]
+    };
 
-	test("should handle Japanese to English translation correctly", async () => {
-		// Setup mocks
-		const mockUserAITranslationInfo = {
-			id: 1,
-			userId: "1",
-			pageId: 1,
-			locale: "en",
-			aiModel: "gemini-1.5-flash",
-			aiTranslationStatus: TranslationStatus.PENDING,
-			aiTranslationProgress: 0,
-			createdAt: new Date(),
-		};
-		const mockPageWithPageSegments = {
-			id: 1,
-			title: "テストタイトル",
-			slug: "test-title",
-			content: "テスト内容",
-			createdAt: new Date(),
-			pageSegments: [
-				{ id: 1, number: 0, text: "タイトル" },
-				{ id: 2, number: 1, text: "内容" },
-			],
-		};
-		const mockQueue = {
-			add: vi.fn(),
-			token: "",
-			jobsOpts: {},
-			opts: {},
-			libName: "bull",
-		} as unknown as Queue<TranslateJobParams>;
+    (hasExistingTranslation as any).mockResolvedValue(false);
+    (createUserAITranslationInfo as any).mockResolvedValue(mockTranslationInfo);
+    (fetchPageWithPageSegments as any).mockResolvedValue(mockPageData);
 
-		vi.mocked(createUserAITranslationInfo).mockResolvedValue(
-			mockUserAITranslationInfo,
-		);
-		vi.mocked(fetchPageWithPageSegments).mockResolvedValue(
-			mockPageWithPageSegments,
-		);
-		vi.mocked(getTranslateUserQueue).mockReturnValue(mockQueue);
+    await handlePageTranslation(mockParams);
 
-		// Execute
-		await handlePageTranslation({
-			currentUserId: "1",
-			pageId: 1,
-			sourceLocale: "ja",
-			geminiApiKey: "test-key",
-			title: "テストタイトル",
-		});
+    expect(hasExistingTranslation).toHaveBeenCalledWith(mockParams.pageId, 'ja');
+    expect(createUserAITranslationInfo).toHaveBeenCalledWith(
+      mockParams.currentUserId,
+      mockParams.pageId,
+      'ja',
+      'gemini-1.5-flash'
+    );
+    expect(fetchPageWithPageSegments).toHaveBeenCalledWith(mockParams.pageId);
+    expect(mockQueue.add).toHaveBeenCalledWith(
+      `translate-${mockParams.currentUserId}`,
+      expect.objectContaining({
+        userAITranslationInfoId: mockTranslationInfo.id,
+        geminiApiKey: mockParams.geminiApiKey,
+        aiModel: 'gemini-1.5-flash',
+        userId: mockParams.currentUserId,
+        pageId: mockParams.pageId,
+        locale: 'ja',
+        title: mockParams.title,
+        numberedElements: [
+          { number: 1, text: 'Hello' },
+          { number: 2, text: 'World' }
+        ]
+      })
+    );
+  });
 
-		// Verify
-		expect(createUserAITranslationInfo).toHaveBeenCalledWith(
-			"1",
-			1,
-			"en",
-			"gemini-1.5-flash",
-		);
-		expect(mockQueue.add).toHaveBeenCalledWith(
-			"translate-1",
-			expect.objectContaining({
-				locale: "en",
-			}),
-		);
-	});
+  it('should process translation from Japanese to English', async () => {
+    const mockParams = {
+      currentUserId: 'user123',
+      pageId: 1,
+      sourceLocale: 'ja',
+      geminiApiKey: 'test-api-key',
+      title: 'テストタイトル'
+    };
 
-	test("should throw error when page is not found", async () => {
-		// Setup mocks
-		vi.mocked(createUserAITranslationInfo).mockResolvedValue({
-			id: 1,
-			userId: "1",
-			pageId: 1,
-			locale: "ja",
-			aiModel: "gemini-1.5-flash",
-			aiTranslationStatus: TranslationStatus.PENDING,
-			aiTranslationProgress: 0,
-			createdAt: new Date(),
-		});
-		vi.mocked(fetchPageWithPageSegments).mockResolvedValue(null);
+    const mockTranslationInfo = { id: 'translation123' };
+    const mockPageData = {
+      pageSegments: [
+        { number: 1, text: 'こんにちは' },
+        { number: 2, text: '世界' }
+      ]
+    };
 
-		// Execute & Verify
-		await expect(
-			handlePageTranslation({
-				currentUserId: "1",
-				pageId: 1,
-				sourceLocale: "en",
-				geminiApiKey: "test-key",
-				title: "Test Title",
-			}),
-		).rejects.toThrow("Page with page segments not found");
-	});
+    (hasExistingTranslation as any).mockResolvedValue(false);
+    (createUserAITranslationInfo as any).mockResolvedValue(mockTranslationInfo);
+    (fetchPageWithPageSegments as any).mockResolvedValue(mockPageData);
 
-	test("should not translate when translation already exists", async () => {
-		// Setup mocks
-		vi.mocked(prisma.pageSegment.findFirst).mockResolvedValue({
-			id: 1,
-			pageId: 1,
-			number: 0,
-			text: "Title",
-			textAndOccurrenceHash: "hash",
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			pageSegmentTranslations: [
-				{
-					id: 1,
-					locale: "ja",
-					text: "タイトル",
-					isArchived: false,
-				},
-			],
-		} as PageSegment & {
-			pageSegmentTranslations: Array<{
-				id: number;
-				locale: string;
-				text: string;
-				isArchived: boolean;
-			}>;
-		});
+    await handlePageTranslation(mockParams);
 
-		// Execute
-		await handlePageTranslation({
-			currentUserId: "1",
-			pageId: 1,
-			sourceLocale: "en",
-			geminiApiKey: "test-key",
-			title: "Test Title",
-		});
+    expect(hasExistingTranslation).toHaveBeenCalledWith(mockParams.pageId, 'en');
+    expect(createUserAITranslationInfo).toHaveBeenCalledWith(
+      mockParams.currentUserId,
+      mockParams.pageId,
+      'en',
+      'gemini-1.5-flash'
+    );
+  });
 
-		// Verify that no translation was attempted
-		expect(createUserAITranslationInfo).not.toHaveBeenCalled();
-		expect(fetchPageWithPageSegments).not.toHaveBeenCalled();
-		expect(getTranslateUserQueue).not.toHaveBeenCalled();
-	});
+  it('should throw error if page segments not found', async () => {
+    (hasExistingTranslation as any).mockResolvedValue(false);
+    (createUserAITranslationInfo as any).mockResolvedValue({ id: 'translation123' });
+    (fetchPageWithPageSegments as any).mockResolvedValue(null);
 
-	test("should not translate when Japanese translation already exists", async () => {
-		// Setup mocks
-		vi.mocked(prisma.pageSegment.findFirst).mockResolvedValue({
-			id: 1,
-			pageId: 1,
-			number: 0,
-			text: "Title",
-			textAndOccurrenceHash: "hash",
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			pageSegmentTranslations: [
-				{
-					id: 1,
-					locale: "ja",
-					text: "タイトル",
-					isArchived: false,
-				},
-			],
-		} as PageSegment & {
-			pageSegmentTranslations: Array<{
-				id: number;
-				locale: string;
-				text: string;
-				isArchived: boolean;
-			}>;
-		});
-
-		// Execute
-		await handlePageTranslation({
-			currentUserId: "1",
-			pageId: 1,
-			sourceLocale: "en",
-			geminiApiKey: "test-key",
-			title: "Test Title",
-		});
-
-		// Verify that no translation was attempted
-		expect(createUserAITranslationInfo).not.toHaveBeenCalled();
-		expect(fetchPageWithPageSegments).not.toHaveBeenCalled();
-		expect(getTranslateUserQueue).not.toHaveBeenCalled();
-	});
-
-	test("should not translate when English translation already exists", async () => {
-		// Setup mocks
-		vi.mocked(prisma.pageSegment.findFirst).mockResolvedValue({
-			id: 1,
-			pageId: 1,
-			number: 0,
-			text: "タイトル",
-			textAndOccurrenceHash: "hash",
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			pageSegmentTranslations: [
-				{
-					id: 1,
-					locale: "en",
-					text: "Title",
-					isArchived: false,
-				},
-			],
-		} as PageSegment & {
-			pageSegmentTranslations: Array<{
-				id: number;
-				locale: string;
-				text: string;
-				isArchived: boolean;
-			}>;
-		});
-
-		// Execute
-		await handlePageTranslation({
-			currentUserId: "1",
-			pageId: 1,
-			sourceLocale: "ja",
-			geminiApiKey: "test-key",
-			title: "タイトル",
-		});
-
-		// Verify that no translation was attempted
-		expect(createUserAITranslationInfo).not.toHaveBeenCalled();
-		expect(fetchPageWithPageSegments).not.toHaveBeenCalled();
-		expect(getTranslateUserQueue).not.toHaveBeenCalled();
-	});
-
-	test("should translate when translation is archived", async () => {
-		// Setup mocks for initial translation check
-		vi.mocked(prisma.pageSegment.findFirst).mockResolvedValueOnce({
-			id: 1,
-			pageId: 1,
-			number: 0,
-			text: "Title",
-			textAndOccurrenceHash: "hash",
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			pageSegmentTranslations: [], // No active translations
-		} as PageSegment & {
-			pageSegmentTranslations: Array<{
-				id: number;
-				locale: string;
-				text: string;
-				isArchived: boolean;
-			}>;
-		});
-
-		const mockUserAITranslationInfo = {
-			id: 1,
-			userId: "1",
-			pageId: 1,
-			locale: "ja",
-			aiModel: "gemini-1.5-flash",
-			aiTranslationStatus: TranslationStatus.PENDING,
-			aiTranslationProgress: 0,
-			createdAt: new Date(),
-		};
-		const mockPageWithPageSegments = {
-			id: 1,
-			title: "Test Title",
-			slug: "test-title",
-			content: "Test content",
-			createdAt: new Date(),
-			pageSegments: [{ id: 1, number: 0, text: "Title" }],
-		};
-		const mockQueue = {
-			add: vi.fn(),
-			token: "",
-			jobsOpts: {},
-			opts: {},
-			libName: "bull",
-		} as unknown as Queue<TranslateJobParams>;
-
-		vi.mocked(createUserAITranslationInfo).mockResolvedValue(
-			mockUserAITranslationInfo,
-		);
-		vi.mocked(fetchPageWithPageSegments).mockResolvedValue(
-			mockPageWithPageSegments,
-		);
-		vi.mocked(getTranslateUserQueue).mockReturnValue(mockQueue);
-
-		// Execute
-		await handlePageTranslation({
-			currentUserId: "1",
-			pageId: 1,
-			sourceLocale: "en",
-			geminiApiKey: "test-key",
-			title: "Test Title",
-		});
-
-		// Verify that translation was attempted
-		expect(createUserAITranslationInfo).toHaveBeenCalled();
-		expect(fetchPageWithPageSegments).toHaveBeenCalled();
-		expect(getTranslateUserQueue).toHaveBeenCalled();
-	});
+    await expect(handlePageTranslation(mockParams)).rejects.toThrow(
+      'Page with page segments not found'
+    );
+  });
 });

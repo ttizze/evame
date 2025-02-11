@@ -12,6 +12,7 @@ describe("TagInput", () => {
 	];
 	const mockPageId = 1;
 
+	const user = userEvent.setup();
 	// モックの設定
 	const mockRequestSubmit = vi.fn();
 	global.HTMLFormElement.prototype.requestSubmit = mockRequestSubmit;
@@ -21,7 +22,6 @@ describe("TagInput", () => {
 	});
 
 	it("should update tags immediately when creating a new tag", async () => {
-		const user = userEvent.setup();
 
 		render(
 			<TagInput
@@ -50,7 +50,6 @@ describe("TagInput", () => {
 	});
 
 	it("should not allow more than 5 tags", async () => {
-		const user = userEvent.setup();
 
 		render(
 			<TagInput
@@ -72,7 +71,6 @@ describe("TagInput", () => {
 	});
 
 	it("should remove tag when clicking remove button", async () => {
-		const user = userEvent.setup();
 
 		render(
 			<TagInput
@@ -93,7 +91,6 @@ describe("TagInput", () => {
 		expect(mockRequestSubmit).toHaveBeenCalledTimes(1);
 	});
 	it("should send correct tags to action when creating a new tag", async () => {
-		const user = userEvent.setup();
 
 		render(
 			<TagInput

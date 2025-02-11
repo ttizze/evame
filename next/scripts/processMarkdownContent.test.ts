@@ -3,6 +3,16 @@ import { describe, expect, test } from "vitest";
 import { processMarkdownContent } from "./processMarkdownContent";
 
 describe("processMarkdownContent", () => {
+	beforeEach(async () => {
+		await prisma.user.deleteMany();
+		await prisma.page.deleteMany();
+		await prisma.pageSegment.deleteMany();
+	});
+	afterEach(async () => {
+		await prisma.user.deleteMany();
+		await prisma.page.deleteMany();
+		await prisma.pageSegment.deleteMany();
+	});
 	test("should parse markdown, insert source_texts, and return a page with data-id spans", async () => {
 		const pageSlug = "test-page";
 		const title = "Title";

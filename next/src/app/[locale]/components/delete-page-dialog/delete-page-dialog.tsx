@@ -1,3 +1,4 @@
+import type { ActionState } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -10,7 +11,6 @@ import {
 import { Trash } from "lucide-react";
 import { useActionState } from "react";
 import { archivePageAction } from "./action";
-import type { ActionState } from "@/app/types";
 interface DeletePageDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
@@ -25,7 +25,7 @@ export function DeletePageDialog({
 	const [archiveState, archiveAction, isArchiving] = useActionState<
 		ActionState,
 		FormData
-	>(archivePageAction, {});
+	>(archivePageAction, { success: false });
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>

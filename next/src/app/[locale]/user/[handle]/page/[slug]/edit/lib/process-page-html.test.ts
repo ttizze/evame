@@ -1,8 +1,24 @@
 import { prisma } from "@/lib/prisma";
 import { describe, expect, test } from "vitest";
 import { processPageHtml } from "./process-page-html";
-
+import type { User } from "@prisma/client";
 describe("processHtmlContent", () => {
+	let user: User;
+	beforeEach(async () => {
+		await prisma.user.deleteMany();
+		user = await prisma.user.create({
+			data: {
+				handle: "noedit",
+				name: "noedit",
+				image: "noedit",
+				email: "noedit@example.com",
+			}
+		});
+	});
+	afterEach(async () => {
+		await prisma.user.deleteMany();
+	});
+
 	test("HTML入力を処理し、source_texts挿入とdata-id付きspanが生成されるかテスト", async () => {
 		const pageSlug = "html-test-page";
 		const title = "Title";
@@ -11,17 +27,6 @@ describe("processHtmlContent", () => {
       <p>This is another test.</p>
     `;
 
-		const user = await prisma.user.upsert({
-			where: { id: "10" },
-			create: {
-				id: "10",
-				handle: "htmltester",
-				name: "htmltester",
-				image: "htmltester",
-				email: "htmltester@example.com",
-			},
-			update: {},
-		});
 
 		// HTMLを処理
 		await processPageHtml(title, htmlInput, pageSlug, user.id, "en");
@@ -74,17 +79,6 @@ describe("processHtmlContent", () => {
       </ul>
     `;
 
-		const user = await prisma.user.upsert({
-			where: { id: "11" },
-			create: {
-				id: "11",
-				handle: "htmleditor",
-				name: "htmleditor",
-				image: "htmleditor",
-				email: "htmleditor@example.com",
-			},
-			update: {},
-		});
 
 		// 初回処理
 		await processPageHtml(originalTitle, originalHtml, pageSlug, user.id, "en");
@@ -156,17 +150,6 @@ describe("processHtmlContent", () => {
       <p>Another paragraph.</p>
     `;
 
-		const user = await prisma.user.upsert({
-			where: { id: "12" },
-			create: {
-				id: "12",
-				handle: "titleduplicateuser",
-				name: "titleduplicateuser",
-				image: "titleduplicateuser",
-				email: "titleduplicateuser@example.com",
-			},
-			update: {},
-		});
 
 		// HTMLを処理
 		await processPageHtml(title, htmlInput, pageSlug, user.id, "en");
@@ -235,18 +218,6 @@ describe("processHtmlContent", () => {
 			<p>Line C</p>
 		`;
 
-		const user = await prisma.user.upsert({
-			where: { id: "13" },
-			create: {
-				id: "13",
-				handle: "noedit",
-				name: "noedit",
-				image: "noedit",
-				email: "noedit@example.com",
-			},
-			update: {},
-		});
-
 		// 初回処理
 		await processPageHtml(title, htmlInput, pageSlug, user.id, "en");
 
@@ -298,17 +269,6 @@ describe("processHtmlContent", () => {
       <p>Another text line.</p>
     `;
 
-		const user = await prisma.user.upsert({
-			where: { id: "14" },
-			create: {
-				id: "14",
-				handle: "imagetester",
-				name: "imagetester",
-				image: "imagetester",
-				email: "imagetester@example.com",
-			},
-			update: {},
-		});
 
 		await processPageHtml(title, htmlInput, pageSlug, user.id, "en");
 
