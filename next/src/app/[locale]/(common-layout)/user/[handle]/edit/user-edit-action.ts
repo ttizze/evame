@@ -1,13 +1,11 @@
 "use server";
-import { uploadImage } from "@/app/[locale]/lib/upload";
 import type { ActionState } from "@/app/types";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { updateUser, updateUserImage } from "./db/mutations.server";
 import reservedHandles from "./reserved-handles.json";
-
+import { updateUser } from "./db/mutations.server";
 const RESERVED_HANDLES = [...new Set([...reservedHandles])];
 const schema = z.object({
 	name: z
@@ -53,7 +51,7 @@ export async function userEditAction(
 	const session = await auth();
 	const currentUser = session?.user;
 	if (!currentUser || !currentUser.id) {
-		return { error: "Unauthorized" };
+		redirect("/auth/login");
 	}
 	const validation = schema.safeParse({
 		name: formData.get("name"),
@@ -62,6 +60,7 @@ export async function userEditAction(
 	});
 	if (!validation.success) {
 		return {
+			success: false,
 			fieldErrors: validation.error.flatten()
 				.fieldErrors as UserEditState["fieldErrors"],
 		};
@@ -79,55 +78,4 @@ export async function userEditAction(
 		redirect(`/user/${handle}/edit`);
 	}
 	return { success: true, message: "Profile updated successfully" };
-}
-
-export interface UserImageEditState extends ActionState {
-	imageUrl?: string;
-	fieldErrors?: {
-		image: string;
-	};
-}
-
-export async function userImageEditAction(
-	previousState: UserImageEditState,
-	formData: FormData,
-): Promise<UserImageEditState> {
-	const session = await auth();
-	const currentUser = session?.user;
-	if (!currentUser || !currentUser.id) {
-		return { error: "Unauthorized" };
-	}
-	const file = formData.get("image") as File;
-	if (!file) {
-		return { error: "No image provided" };
-	}
-	if (file) {
-		const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-		if (file.size > MAX_SIZE) {
-			return {
-				fieldErrors: {
-					image: "Image size exceeds 5MB limit. Please choose a smaller file.",
-				},
-			};
-		}
-	}
-	const imageUrl = await uploadImage(file);
-	if (imageUrl.error) {
-		return { error: imageUrl.error };
-	}
-	const result = await uploadImage(file);
-	if (result.error || !result.imageUrl) {
-		return {
-			fieldErrors: {
-				image: "Failed to upload image",
-			},
-		};
-	}
-	await updateUserImage(currentUser.id, result.imageUrl);
-	revalidatePath(`/user/${currentUser.handle}/edit`);
-	return {
-		success: true,
-		imageUrl: result.imageUrl,
-		message: "Profile image updated successfully",
-	};
 }

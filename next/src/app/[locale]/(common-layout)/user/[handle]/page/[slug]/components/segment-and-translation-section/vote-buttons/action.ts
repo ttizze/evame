@@ -31,7 +31,7 @@ export async function voteTranslationAction(
 		voteTarget: formData.get("voteTarget"),
 	});
 	if (!parsedFormData.success) {
-		return { error: parsedFormData.error.message };
+		return { success: false, error: parsedFormData.error.message };
 	}
 	await handleVote(
 		parsedFormData.data.segmentTranslationId,

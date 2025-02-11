@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { addUserTranslation } from "./db/mutations.server";
+import { redirect } from "next/navigation";
 const schema = z.object({
 	locale: z.string(),
 	segmentId: z.coerce.number(),
@@ -26,32 +27,30 @@ export async function addTranslationFormAction(
 	const session = await auth();
 	const currentUser = session?.user;
 	if (!currentUser || !currentUser.id) {
-		return { error: "Unauthorized" };
+		redirect("/auth/login");
 	}
-	const parsedFormData = await parseAddTranslationForm(formData);
-
-	await addUserTranslation(
-		parsedFormData.segmentId,
-		parsedFormData.text,
-		currentUser.id,
-		parsedFormData.locale,
-		parsedFormData.addTranslationFormTarget,
-	);
-	revalidatePath(`/user/${currentUser.handle}/page/`);
-	return {
-		success: true,
-	};
-}
-
-export async function parseAddTranslationForm(formData: FormData) {
-	const result = schema.safeParse({
+	const parsedFormData = schema.safeParse({
 		segmentId: formData.get("segmentId"),
 		text: formData.get("text"),
 		locale: formData.get("locale"),
 		addTranslationFormTarget: formData.get("addTranslationFormTarget"),
 	});
-	if (!result.success) {
-		throw new Error(result.error.message);
+	if (!parsedFormData.success) {
+		return {
+			success: false,
+			error: parsedFormData.error.message,
+		};
 	}
-	return result.data;
+
+	await addUserTranslation(
+		parsedFormData.data.segmentId,
+		parsedFormData.data.text,
+		currentUser.id,
+		parsedFormData.data.locale,
+		parsedFormData.data.addTranslationFormTarget,
+	);
+	revalidatePath(`/user/${currentUser.handle}/page/`);
+	return {
+		success: true,
+	};
 }

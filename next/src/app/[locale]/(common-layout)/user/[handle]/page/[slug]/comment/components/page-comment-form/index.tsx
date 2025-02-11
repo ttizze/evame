@@ -16,7 +16,7 @@ export function PageCommentForm({
 	const [content, setContent] = useState("");
 	const [state, action, isPending] = useActionState<ActionState, FormData>(
 		commentAction,
-		{},
+		{ success: false },
 	);
 
 	return (

@@ -30,7 +30,7 @@ export function PageActionsDropdown({
 	const [publishState, publishAction, isPublishing] = useActionState<
 		TogglePublishState,
 		FormData
-	>(togglePublishAction, {});
+	>(togglePublishAction, { success: false });
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
 	useEffect(() => {

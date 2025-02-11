@@ -15,10 +15,12 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import {
 	type UserEditState,
-	type UserImageEditState,
 	userEditAction,
+} from "./user-edit-action";
+import {
+	type UserImageEditState,
 	userImageEditAction,
-} from "./action";
+} from "./user-image-edit-action";
 interface EditProfileFormProps {
 	currentUser: SanitizedUser;
 }
@@ -29,11 +31,11 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 	const [editState, editAction, isEditPending] = useActionState<
 		UserEditState,
 		FormData
-	>(userEditAction, {});
+	>(userEditAction, { success: false });
 	const [imageState, imageAction, isImageUploading] = useActionState<
 		UserImageEditState,
 		FormData
-	>(userImageEditAction, {});
+	>(userImageEditAction, { success: false });
 	const [showHandleInput, setShowHandleInput] = useState(false);
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
 	const [profileIconUrl, setProfileIconUrl] = useState<string>(

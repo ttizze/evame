@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { deletePageComment } from "./db/mutations.server";
-
+import { redirect } from "next/navigation";
 const commentDeleteSchema = z.object({
 	pageCommentId: z.number(),
 	pageId: z.number(),
@@ -19,7 +19,7 @@ export async function commentDeleteAction(
 	const currentUser = session?.user;
 
 	if (!currentUser || !currentUser.id) {
-		return { error: "Unauthorized" };
+		redirect("/auth/login");
 	}
 
 	const validate = commentDeleteSchema.safeParse({
@@ -28,7 +28,7 @@ export async function commentDeleteAction(
 	});
 
 	if (!validate.success) {
-		return { error: "Invalid form data" };
+		return { success: false, error: "Invalid form data" };
 	}
 
 	await deletePageComment(validate.data.pageCommentId);

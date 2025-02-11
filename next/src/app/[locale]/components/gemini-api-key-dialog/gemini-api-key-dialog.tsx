@@ -28,7 +28,7 @@ export function GeminiApiKeyDialog({
 	const [state, formAction, isPending] = useActionState<
 		GeminiApiKeyDialogState,
 		FormData
-	>(updateGeminiApiKeyAction, {});
+	>(updateGeminiApiKeyAction, { success: false });
 
 	useEffect(() => {
 		if (state.success) {

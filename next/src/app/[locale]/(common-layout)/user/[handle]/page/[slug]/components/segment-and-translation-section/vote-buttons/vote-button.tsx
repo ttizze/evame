@@ -24,7 +24,7 @@ export const VoteButton = memo(function VoteButton({
 	const [voteState, voteAction, isVoting] = useActionState<
 		ActionState,
 		FormData
-	>(voteTranslationAction, {});
+	>(voteTranslationAction, { success: false });
 	return (
 		<form action={voteAction} className="inline">
 			<input type="hidden" name="voteTarget" value={voteTarget} />

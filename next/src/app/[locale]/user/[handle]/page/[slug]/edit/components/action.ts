@@ -27,7 +27,7 @@ export async function editPageContentAction(
 ): Promise<EditPageContentActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { error: "Unauthorized" };
+		return { success: false, error: "Unauthorized" };
 	}
 	const parsedFormData = editPageContentSchema.safeParse({
 		slug: formData.get("slug"),
@@ -35,7 +35,10 @@ export async function editPageContentAction(
 		pageContent: formData.get("pageContent"),
 	});
 	if (!parsedFormData.success) {
-		return { fieldErrors: parsedFormData.error.flatten().fieldErrors };
+		return {
+			success: false,
+			fieldErrors: parsedFormData.error.flatten().fieldErrors,
+		};
 	}
 	const { slug, title, pageContent } = parsedFormData.data;
 	const sourceLocale = await getLocaleFromHtml(pageContent, title);
@@ -49,7 +52,7 @@ export async function editPageContentAction(
 	if (page.status === "PUBLIC") {
 		const geminiApiKey = process.env.GEMINI_API_KEY;
 		if (!geminiApiKey) {
-			return { error: "Gemini API key is not set" };
+			return { success: false, error: "Gemini API key is not set" };
 		}
 
 		await handlePageTranslation({

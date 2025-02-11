@@ -31,7 +31,7 @@ export function EditHeader({
 	const [state, action, isPending] = useActionState<
 		EditPageStatusActionState,
 		FormData
-	>(editPageStatusAction, {});
+	>(editPageStatusAction, { success: false });
 	const currentPagePath = usePathname();
 	const pagePath = `/${currentPagePath.split("/").slice(2, -1).join("/")}`;
 

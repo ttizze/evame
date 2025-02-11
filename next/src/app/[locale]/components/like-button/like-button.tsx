@@ -22,7 +22,7 @@ export function LikeButton({
 	const [state, formAction, isPending] = useActionState<
 		LikeButtonState,
 		FormData
-	>(toggleLikeAction, {});
+	>(toggleLikeAction, { success: false });
 	const [optimisticLiked, setOptimisticLiked] = useOptimistic(
 		liked,
 		(state, liked: boolean) => liked,

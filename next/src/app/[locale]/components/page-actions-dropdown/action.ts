@@ -19,7 +19,10 @@ export async function togglePublishAction(
 	const currentUser = session?.user;
 	const pageId = Number(formData.get("pageId"));
 	if (!pageId) {
-		return { fieldErrors: { pageId: ["Page ID is required"] } };
+		return {
+			success: false,
+			fieldErrors: { pageId: ["Page ID is required"] },
+		};
 	}
 
 	await togglePagePublicStatus(pageId);

@@ -21,9 +21,8 @@ export async function updateGeminiApiKeyAction(
 	const currentUser = session?.user;
 	if (!currentUser || !currentUser.id) {
 		return {
-			fieldErrors: {
-				geminiApiKey: "Unauthorized",
-			},
+			success: false,
+			error: "Unauthorized",
 		};
 	}
 	const validation = geminiApiKeySchema.safeParse({
@@ -32,9 +31,8 @@ export async function updateGeminiApiKeyAction(
 
 	if (!validation.success) {
 		return {
-			fieldErrors: {
-				geminiApiKey: "Invalid input",
-			},
+			success: false,
+			error: "Invalid input",
 		};
 	}
 
@@ -44,6 +42,7 @@ export async function updateGeminiApiKeyAction(
 		const { isValid, errorMessage } = await validateGeminiApiKey(geminiApiKey);
 		if (!isValid) {
 			return {
+				success: false,
 				fieldErrors: {
 					geminiApiKey: errorMessage || "Gemini API key validation failed",
 				},

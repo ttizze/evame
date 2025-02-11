@@ -21,7 +21,9 @@ export function AddTranslationForm({
 }: AddTranslationFormProps) {
 	const locale = useLocale();
 	const [addTranslationState, addTranslationAction, isAddingTranslation] =
-		useActionState<ActionState, FormData>(addTranslationFormAction, {});
+		useActionState<ActionState, FormData>(addTranslationFormAction, {
+			success: false,
+		});
 
 	return (
 		<span className="mt-4 px-4 block">

@@ -34,7 +34,7 @@ export function PageCommentListClient({
 }: CommentListClientProps) {
 	const [state, action, isPending] = useActionState<ActionState, FormData>(
 		commentDeleteAction,
-		{},
+		{ success: false },
 	);
 	return (
 		<div className="space-y-4">

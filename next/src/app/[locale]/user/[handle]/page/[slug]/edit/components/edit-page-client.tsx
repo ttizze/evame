@@ -41,7 +41,7 @@ export function EditPageClient({
 	const [editState, editAction, isEditing] = useActionState<
 		EditPageContentActionState,
 		FormData
-	>(editPageContentAction, {});
+	>(editPageContentAction, { success: false });
 	const [title, setTitle] = useState(initialTitle ?? "");
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 	const debouncedSubmit = useDebouncedCallback(() => {

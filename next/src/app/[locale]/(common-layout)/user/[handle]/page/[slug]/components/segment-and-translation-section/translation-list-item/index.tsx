@@ -26,7 +26,9 @@ export function TranslationListItem({
 	voteTarget,
 }: TranslationItemProps) {
 	const [deleteTranslationState, action, isDeletingTranslation] =
-		useActionState<ActionState, FormData>(deleteTranslationAction, {});
+		useActionState<ActionState, FormData>(deleteTranslationAction, {
+			success: false,
+		});
 	const isOwner = currentHandle === translation.segmentTranslation.user.handle;
 
 	return (

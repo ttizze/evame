@@ -43,14 +43,17 @@ export async function editPageTagsAction(
 ): Promise<EditPageTagsActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { error: "Unauthorized" };
+		return { success: false, error: "Unauthorized" };
 	}
 	const parsedFormData = editPageTagsSchema.safeParse({
 		pageId: formData.get("pageId"),
 		tags: formData.get("tags"),
 	});
 	if (!parsedFormData.success) {
-		return { fieldErrors: parsedFormData.error.flatten().fieldErrors };
+		return {
+			success: false,
+			fieldErrors: parsedFormData.error.flatten().fieldErrors,
+		};
 	}
 	const { pageId, tags } = parsedFormData.data;
 	await upsertTags(tags, pageId);

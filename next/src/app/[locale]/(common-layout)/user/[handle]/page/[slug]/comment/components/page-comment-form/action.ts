@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createPageComment } from "../../db/mutations.server";
 import { processPageCommentHtml } from "../../lib/process-page-comment-html";
-
+import { redirect } from "next/navigation";
 const createPageCommentSchema = z.object({
 	pageId: z.coerce.number(),
 	content: z.string().min(1, "Comment cannot be empty"),
@@ -18,14 +18,14 @@ export async function commentAction(
 ): Promise<ActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { error: "Unauthorized" };
+		redirect("/auth/login");
 	}
 	const validate = createPageCommentSchema.safeParse({
 		pageId: formData.get("pageId"),
 		content: formData.get("content"),
 	});
 	if (!validate.success) {
-		return { error: validate.error.message };
+		return { success: false, error: validate.error.message };
 	}
 
 	const locale = await getLocaleFromHtml(validate.data.content);

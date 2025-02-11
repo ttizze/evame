@@ -8,7 +8,7 @@ import { FcGoogle } from "react-icons/fc";
 export function GoogleForm({ redirectTo }: { redirectTo: string }) {
 	const [state, formAction, isPending] = useActionState<ActionState, FormData>(
 		signInWithGoogleAction,
-		{},
+		{ success: false },
 	);
 	return (
 		<Form action={formAction} className="w-full ">

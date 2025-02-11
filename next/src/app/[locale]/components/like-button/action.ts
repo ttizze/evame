@@ -25,7 +25,10 @@ export async function toggleLikeAction(
 ): Promise<LikeButtonState> {
 	const validation = schema.safeParse({ slug: formData.get("slug") });
 	if (!validation.success) {
-		return { fieldErrors: { slug: "Invalid slug parameter provided" } };
+		return {
+			success: false,
+			fieldErrors: { slug: "Invalid slug parameter provided" },
+		};
 	}
 	const slug = validation.data.slug;
 	const session = await auth();

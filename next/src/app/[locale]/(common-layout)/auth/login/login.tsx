@@ -19,7 +19,7 @@ export function Login() {
 	const [state, formAction, isPending] = useActionState<
 		SignInWithResendState,
 		FormData
-	>(signInWithResendAction, {});
+	>(signInWithResendAction, { success: false });
 
 	return (
 		<div className="container mx-auto max-w-md py-8">

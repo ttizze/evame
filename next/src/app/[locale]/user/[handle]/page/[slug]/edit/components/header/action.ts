@@ -23,14 +23,17 @@ export async function editPageStatusAction(
 ): Promise<EditPageStatusActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return { error: "Unauthorized" };
+		return { success: false, error: "Unauthorized" };
 	}
 	const parsedFormData = editPageStatusSchema.safeParse({
 		pageId: formData.get("pageId"),
 		status: formData.get("status"),
 	});
 	if (!parsedFormData.success) {
-		return { fieldErrors: parsedFormData.error.flatten().fieldErrors };
+		return {
+			success: false,
+			fieldErrors: parsedFormData.error.flatten().fieldErrors,
+		};
 	}
 	const { pageId, status } = parsedFormData.data;
 	await updatePageStatus(pageId, status as PageStatus);

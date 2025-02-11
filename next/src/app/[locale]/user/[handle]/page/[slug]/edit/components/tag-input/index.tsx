@@ -23,7 +23,7 @@ export function TagInput({ initialTags, allTags, pageId }: TagInputProps) {
 	const [editState, editAction, isPending] = useActionState<
 		EditPageTagsActionState,
 		FormData
-	>(editPageTagsAction, {});
+	>(editPageTagsAction, { success: false });
 
 	const handleCreateTag = (inputValue: string) => {
 		if (tags.length < 5) {
