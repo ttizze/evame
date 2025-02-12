@@ -1,4 +1,4 @@
 export const RedisConfig = {
-	host: process.env.REDIS_HOST,
-	port: process.env.REDIS_PORT ? Number(process.env.REDIS_PORT) : 6379,
+  url: process.env.REDIS_URL || "redis://localhost:6379",
+
 };

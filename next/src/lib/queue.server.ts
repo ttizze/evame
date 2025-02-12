@@ -31,7 +31,6 @@ export function Queue<Payload extends object>(
 	if (registeredQueues[name]) {
 		registeredQueues[name].worker.close();
 	}
-
 	const queue = new BullQueue<Payload, Payload, string>(name, {
 		connection: RedisConfig,
 	});
