@@ -3,10 +3,9 @@
 
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { VOTE_TARGET } from "./constants";
+import { VOTE_TARGET, type VoteTarget } from "./constants";
 import { handleVote } from "./db/mutation.server";
 const schema = z.object({
 	segmentTranslationId: z.coerce.number().int(),
@@ -17,13 +16,21 @@ const schema = z.object({
 	]),
 });
 
+export type VoteTranslationActionResponse = ActionResponse<
+	{ isUpvote?: boolean; point: number },
+	{
+		segmentTranslationId: number;
+		isUpvote: boolean;
+		voteTarget: VoteTarget;
+	}
+>;
 export async function voteTranslationAction(
-	previousState: ActionResponse,
+	previousState: VoteTranslationActionResponse,
 	formData: FormData,
-): Promise<ActionResponse> {
+): Promise<VoteTranslationActionResponse> {
 	const currentUser = await getCurrentUser();
-	if (!currentUser || !currentUser.id) {
-		redirect("/auth/login");
+	if (!currentUser?.id) {
+		return redirect("/auth/login");
 	}
 	const parsedFormData = schema.safeParse({
 		segmentTranslationId: formData.get("segmentTranslationId"),
@@ -36,12 +43,13 @@ export async function voteTranslationAction(
 			zodErrors: parsedFormData.error.flatten().fieldErrors,
 		};
 	}
-	await handleVote(
+	const {
+		data: { isUpvote, point },
+	} = await handleVote(
 		parsedFormData.data.segmentTranslationId,
 		parsedFormData.data.isUpvote,
 		currentUser.id,
 		parsedFormData.data.voteTarget,
 	);
-	revalidatePath(`/user/${currentUser.handle}/page`);
-	return { success: true };
+	return { success: true, data: { isUpvote, point } };
 }

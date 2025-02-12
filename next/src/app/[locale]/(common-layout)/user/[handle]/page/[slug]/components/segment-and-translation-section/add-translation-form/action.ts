@@ -1,11 +1,12 @@
 "use server";
 import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import type { ActionResponse } from "@/app/types";
-import { auth } from "@/auth";
+import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { addUserTranslation } from "./db/mutations.server";
+import { getCommentSegmentById, getPageSegmentById } from "./db/queries.server";
 const schema = z.object({
 	locale: z.string(),
 	segmentId: z.coerce.number(),
@@ -24,10 +25,9 @@ export async function addTranslationFormAction(
 	previousState: ActionResponse,
 	formData: FormData,
 ): Promise<ActionResponse> {
-	const session = await auth();
-	const currentUser = session?.user;
-	if (!currentUser || !currentUser.id) {
-		redirect("/auth/login");
+	const currentUser = await getCurrentUser();
+	if (!currentUser?.id) {
+		return redirect("/auth/login");
 	}
 	const parsedFormData = schema.safeParse({
 		segmentId: formData.get("segmentId"),
@@ -41,15 +41,50 @@ export async function addTranslationFormAction(
 			zodErrors: parsedFormData.error.flatten().fieldErrors,
 		};
 	}
+	const { segmentId, text, locale, addTranslationFormTarget } =
+		parsedFormData.data;
 
+	let pageSlug = "";
+	if (
+		addTranslationFormTarget ===
+		ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
+	) {
+		const pageSegment = await getPageSegmentById(segmentId);
+		if (!pageSegment) {
+			return {
+				success: false,
+				message: "Page segment not found",
+			};
+		}
+		pageSlug = pageSegment.page.slug;
+	}
+	if (
+		addTranslationFormTarget ===
+		ADD_TRANSLATION_FORM_TARGET.COMMENT_SEGMENT_TRANSLATION
+	) {
+		const commentSegment = await getCommentSegmentById(segmentId);
+		if (!commentSegment) {
+			return {
+				success: false,
+				message: "Comment segment not found",
+			};
+		}
+		pageSlug = commentSegment.pageComment.page.slug;
+	}
+	if (!pageSlug) {
+		return {
+			success: false,
+			message: "pageSlug is not defined",
+		};
+	}
 	await addUserTranslation(
-		parsedFormData.data.segmentId,
-		parsedFormData.data.text,
+		segmentId,
+		text,
 		currentUser.id,
-		parsedFormData.data.locale,
-		parsedFormData.data.addTranslationFormTarget,
+		locale,
+		addTranslationFormTarget,
 	);
-	revalidatePath(`/user/${currentUser.handle}/page/`);
+	revalidatePath(`/user/${currentUser.handle}/page/${pageSlug}`);
 	return {
 		success: true,
 	};

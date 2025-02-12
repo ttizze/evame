@@ -36,6 +36,6 @@ export async function togglePublishAction(
 		};
 	}
 	await togglePagePublicStatus(pageId);
-	revalidatePath(`/user/${currentUser?.handle}/page/${pageId}`);
+	revalidatePath(`/user/${currentUser?.handle}`);
 	return { success: true, message: "Page updated successfully" };
 }

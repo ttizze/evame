@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { getCurrentUser } from "@/auth";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
@@ -13,12 +13,11 @@ export default async function UserEditPage({
 }: {
 	params: Promise<{ handle: string }>;
 }) {
-	const session = await auth();
-	const currentUser = session?.user;
+	const currentUser = await getCurrentUser();
 	const { handle } = await params;
 
 	if (!currentUser || currentUser.handle !== handle) {
-		redirect("/auth/login");
+		return redirect("/auth/login");
 	}
 
 	if (!(await getUserByHandle(currentUser.handle))) {
