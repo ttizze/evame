@@ -215,13 +215,13 @@ async function createUserAndPages() {
 		where: { handle: "evame" },
 		update: {
 			provider: "Admin",
-			image: "https://evame.tech/favimage.svg",
+			image: "https://evame.tech/favicon.svg",
 		},
 		create: {
 			handle: "evame",
 			name: "evame",
 			provider: "Admin",
-			image: "https://evame.tech/favimage.svg",
+			image: "https://evame.tech/favicon.svg",
 			email: "evame@evame.tech",
 		},
 	});
