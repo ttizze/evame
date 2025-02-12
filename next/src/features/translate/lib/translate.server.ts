@@ -146,12 +146,12 @@ async function getTranslatedText(
 		.join("\n");
 	const localeName =
 		supportedLocaleOptions.find((sl) => sl.code === locale)?.name || locale;
-		const result = await getGeminiModelResponse(
-			geminiApiKey,
-			aiModel,
-			title,
-			source_text,
-			localeName,
-		);
-		return result;
+	const result = await getGeminiModelResponse(
+		geminiApiKey,
+		aiModel,
+		title,
+		source_text,
+		localeName,
+	);
+	return result;
 }

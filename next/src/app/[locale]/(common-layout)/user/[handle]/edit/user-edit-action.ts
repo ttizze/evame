@@ -1,11 +1,10 @@
 "use server";
 import type { ActionResponse } from "@/app/types";
-import { auth } from "@/auth";
-import { revalidatePath } from "next/cache";
+import { getCurrentUser } from "@/auth";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import reservedHandles from "./reserved-handles.json";
 import { updateUser } from "./db/mutations.server";
+import reservedHandles from "./reserved-handles.json";
 const RESERVED_HANDLES = [...new Set([...reservedHandles])];
 const schema = z.object({
 	name: z
@@ -36,19 +35,24 @@ const schema = z.object({
 		.optional(),
 });
 
-export type UserEditState = ActionResponse<void, {
-	name: string;
-	handle: string;
-	profile: string;
-}>;
+export type UserEditState = ActionResponse<
+	{
+		name: string;
+		profile?: string;
+	},
+	{
+		name: string;
+		handle: string;
+		profile: string;
+	}
+>;
 export async function userEditAction(
 	previousState: UserEditState,
 	formData: FormData,
 ): Promise<UserEditState> {
-	const session = await auth();
-	const currentUser = session?.user;
-	if (!currentUser || !currentUser.id) {
-		redirect("/auth/login");
+	const currentUser = await getCurrentUser();
+	if (!currentUser?.id) {
+		return redirect("/auth/login");
 	}
 	const parsed = schema.safeParse({
 		name: formData.get("name"),
@@ -64,14 +68,21 @@ export async function userEditAction(
 
 	const { name, handle, profile } = parsed.data;
 
-	if (handle !== currentUser.handle) {
-		redirect(`/user/${handle}/edit`);
-	}
 	await updateUser(currentUser.id, {
 		name,
 		handle,
 		profile,
 	});
-	revalidatePath(`/user/${handle}/edit`);
-	return { success: true, message: "Profile updated successfully" };
+
+	if (handle !== currentUser.handle) {
+		return redirect(`/user/${handle}/edit`);
+	}
+	return {
+		success: true,
+		message: "Profile updated successfully",
+		data: {
+			name,
+			profile,
+		},
+	};
 }

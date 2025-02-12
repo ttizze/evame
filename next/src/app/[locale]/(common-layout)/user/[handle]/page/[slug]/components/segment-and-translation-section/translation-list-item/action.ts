@@ -2,9 +2,9 @@
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { deleteOwnTranslation } from "./db/mutations.server";
-import { redirect } from "next/navigation";
 const schema = z.object({
 	translationId: z.number(),
 });

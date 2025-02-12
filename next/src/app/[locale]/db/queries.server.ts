@@ -278,7 +278,6 @@ export async function fetchPageWithTranslations(
 	};
 }
 
-
 export async function getPageById(pageId: number) {
 	const page = await prisma.page.findUnique({
 		where: { id: pageId },

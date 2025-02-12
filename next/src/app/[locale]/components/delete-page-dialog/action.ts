@@ -1,11 +1,11 @@
 "use server";
 
+import { getPageById } from "@/app/[locale]/db/queries.server";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { archivePage } from "./db/mutations.server";
-import { getPageById } from "@/app/[locale]/db/queries.server";
 export async function archivePageAction(
 	previousState: ActionResponse,
 	formData: FormData,

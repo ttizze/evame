@@ -214,7 +214,6 @@ export default async function Page({
 					</div>
 					<PageCommentList
 						pageId={pageWithTranslations.page.id}
-						currentHandle={currentUser?.handle}
 						showOriginal={showOriginal === "true"}
 						showTranslation={showTranslation === "true"}
 						locale={locale}

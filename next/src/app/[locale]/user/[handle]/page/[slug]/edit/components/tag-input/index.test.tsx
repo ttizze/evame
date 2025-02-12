@@ -22,7 +22,6 @@ describe("TagInput", () => {
 	});
 
 	it("should update tags immediately when creating a new tag", async () => {
-
 		render(
 			<TagInput
 				initialTags={mockInitialTags}
@@ -50,7 +49,6 @@ describe("TagInput", () => {
 	});
 
 	it("should not allow more than 5 tags", async () => {
-
 		render(
 			<TagInput
 				initialTags={[
@@ -71,7 +69,6 @@ describe("TagInput", () => {
 	});
 
 	it("should remove tag when clicking remove button", async () => {
-
 		render(
 			<TagInput
 				initialTags={mockInitialTags}
@@ -91,7 +88,6 @@ describe("TagInput", () => {
 		expect(mockRequestSubmit).toHaveBeenCalledTimes(1);
 	});
 	it("should send correct tags to action when creating a new tag", async () => {
-
 		render(
 			<TagInput
 				initialTags={mockInitialTags}

@@ -1,56 +1,68 @@
 "use server";
+import { getPageById } from "@/app/[locale]/db/queries.server";
 import { getLocaleFromHtml } from "@/app/[locale]/lib/get-locale-from-html";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createPageComment } from "../../db/mutations.server";
 import { processPageCommentHtml } from "../../lib/process-page-comment-html";
-import { redirect } from "next/navigation";
-
 const createPageCommentSchema = z.object({
 	pageId: z.coerce.number(),
 	content: z.string().min(1, "Comment cannot be empty"),
 });
 
-export type CommentActionResponse = ActionResponse<void, {
-	pageId: number;
-	content: string;
-}>;
+export type CommentActionResponse = ActionResponse<
+	void,
+	{
+		pageId: number;
+		content: string;
+	}
+>;
 
 export async function commentAction(
 	previousState: CommentActionResponse,
 	formData: FormData,
 ): Promise<CommentActionResponse> {
 	const currentUser = await getCurrentUser();
-	if (!currentUser || !currentUser.id) {
-		redirect("/auth/login");
+	if (!currentUser?.id) {
+		return redirect("/auth/login");
 	}
-	const validate = createPageCommentSchema.safeParse({
+	const parsed = createPageCommentSchema.safeParse({
 		pageId: formData.get("pageId"),
 		content: formData.get("content"),
 	});
-	if (!validate.success) {
+	if (!parsed.success) {
 		return {
 			success: false,
-			zodErrors: validate.error.flatten().fieldErrors,
+			zodErrors: parsed.error.flatten().fieldErrors,
+		};
+	}
+	const { content, pageId } = parsed.data;
+
+	const page = await getPageById(pageId);
+	if (!page) {
+		return {
+			success: false,
+			message: "Page not found",
 		};
 	}
 
-	const locale = await getLocaleFromHtml(validate.data.content);
+	const locale = await getLocaleFromHtml(content);
 	const pageComment = await createPageComment(
-		validate.data.content,
+		content,
 		locale,
 		currentUser.id,
-		validate.data.pageId,
+		pageId,
 	);
 	await processPageCommentHtml(
 		pageComment.id,
-		validate.data.content,
+		content,
 		locale,
 		currentUser.id,
-		validate.data.pageId,
+		pageId,
 	);
-	revalidatePath(`/user/${currentUser.handle}/page/${validate.data.pageId}`);
+	revalidatePath(`/user/${currentUser.handle}/page/${page.slug}`);
 	return { success: true };
 }

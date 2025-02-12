@@ -94,9 +94,7 @@ export function EditPageClient({
 						/>
 					</h1>
 					{editState.zodErrors?.title && (
-						<p className="text-sm text-red-500">
-							{editState.zodErrors.title}
-						</p>
+						<p className="text-sm text-red-500">{editState.zodErrors.title}</p>
 					)}
 					<TagInput
 						initialTags={

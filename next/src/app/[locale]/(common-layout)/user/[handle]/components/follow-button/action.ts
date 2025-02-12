@@ -1,38 +1,58 @@
 "use server";
 import type { ActionResponse } from "@/app/types";
-import { auth } from "@/auth";
-import { revalidatePath } from "next/cache";
-import { createFollow, deleteFollow } from "./db/mutations.server";
+import { getCurrentUser } from "@/auth";
 import { redirect } from "next/navigation";
+import { z } from "zod";
+import { createFollow, deleteFollow } from "./db/mutations.server";
+
+const followActionSchema = z.object({
+	targetUserHandle: z.string(),
+	action: z.string(),
+});
+
+export type FollowActionResponse = ActionResponse<
+	{ isFollowing: boolean },
+	{
+		targetUserHandle: string;
+		action: string;
+	}
+>;
 export async function followAction(
-	previousState: ActionResponse,
+	previousState: FollowActionResponse,
 	formData: FormData,
-): Promise<ActionResponse> {
-	const session = await auth();
-	const currentUser = session?.user;
-	if (!currentUser || !currentUser.id) {
-		redirect("/auth/login");
+): Promise<FollowActionResponse> {
+	const currentUser = await getCurrentUser();
+	if (!currentUser?.id) {
+		return redirect("/auth/login");
 	}
 
-	const targetUserId = formData.get("targetUserId");
-	const action = formData.get("action");
+	const parsedFormData = followActionSchema.safeParse({
+		targetUserHandle: formData.get("targetUserHandle"),
+		action: formData.get("action"),
+	});
 
-	if (!targetUserId || typeof targetUserId !== "string") {
-		return { success: false, message: "Invalid request" };
+	if (!parsedFormData.success) {
+		return {
+			success: false,
+			zodErrors: parsedFormData.error.flatten().fieldErrors,
+		};
 	}
+	const { targetUserHandle, action } = parsedFormData.data;
 
-	if (currentUser?.id === targetUserId) {
+	if (currentUser?.handle === targetUserHandle) {
 		return { success: false, message: "Cannot follow yourself" };
 	}
 
 	try {
+		let isFollowing = false;
 		if (action === "follow") {
-			await createFollow(currentUser.id, targetUserId);
-		} else if (action === "unfollow") {
-			await deleteFollow(currentUser.id, targetUserId);
+			await createFollow(currentUser.handle, targetUserHandle);
+			isFollowing = true;
+		} else if (action === "unFollow") {
+			await deleteFollow(currentUser.handle, targetUserHandle);
+			isFollowing = false;
 		}
-		revalidatePath("/");
-		return { success: true };
+		return { success: true, data: { isFollowing } };
 	} catch (error) {
 		console.error("Follow action error:", error);
 		return { success: false, message: "Failed to process follow action" };

@@ -18,9 +18,12 @@ export async function signInWithGoogleAction(
 	};
 }
 
-export type SignInWithResendState = ActionResponse<void, {
-	email: string;
-}>;
+export type SignInWithResendState = ActionResponse<
+	void,
+	{
+		email: string;
+	}
+>;
 
 export async function signInWithResendAction(
 	previousState: SignInWithResendState,

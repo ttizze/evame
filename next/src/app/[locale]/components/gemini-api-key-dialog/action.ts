@@ -1,6 +1,6 @@
 "use server";
 import type { ActionResponse } from "@/app/types";
-import { auth } from "@/auth";
+import { getCurrentUser } from "@/auth";
 import { validateGeminiApiKey } from "@/features/translate/services/gemini";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -18,10 +18,9 @@ export async function updateGeminiApiKeyAction(
 	previousState: GeminiApiKeyDialogState,
 	formData: FormData,
 ): Promise<GeminiApiKeyDialogState> {
-	const session = await auth();
-	const currentUser = session?.user;
+	const currentUser = await getCurrentUser();
 	if (!currentUser?.id) {
-		return redirect("/auth/signin");
+		return redirect("/auth/login");
 	}
 	const parsedFormData = geminiApiKeySchema.safeParse({
 		geminiApiKey: formData.get("geminiApiKey"),

@@ -31,11 +31,14 @@ const s3Client = new S3Client(
 			},
 );
 
-export type imgActionState = ActionResponse<{
-	imageUrl: string;
-}, {
-	image: File;
-}>;
+export type imgActionState = ActionResponse<
+	{
+		imageUrl: string;
+	},
+	{
+		image: File;
+	}
+>;
 
 async function uploadToR2(file: File): Promise<string> {
 	const key = `uploads/${Date.now()}-${file.name}`;
@@ -53,11 +56,14 @@ async function uploadToR2(file: File): Promise<string> {
 		? `https://images.eveeve.org/${key}`
 		: `http://localhost:9000/${R2_BUCKET_NAME}/${key}`;
 }
-export type UploadImageResult = ActionResponse<{
-	imageUrl: string;
-}, {
-	image: File;
-}>;
+export type UploadImageResult = ActionResponse<
+	{
+		imageUrl: string;
+	},
+	{
+		image: File;
+	}
+>;
 
 export async function uploadImage(file: File): Promise<UploadImageResult> {
 	try {
@@ -67,7 +73,10 @@ export async function uploadImage(file: File): Promise<UploadImageResult> {
 
 		const maxSize = 5 * 1024 * 1024;
 		if (file.size > maxSize) {
-			return { success: false, message: "Image file size must be less than 5MB" };
+			return {
+				success: false,
+				message: "Image file size must be less than 5MB",
+			};
 		}
 
 		const imageUrl = await uploadToR2(file);

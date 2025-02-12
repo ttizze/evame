@@ -39,7 +39,7 @@ export async function TranslateAction(
 		return redirect("/auth/login");
 	}
 
-		const parsedFormData = translateSchema.safeParse({
+	const parsedFormData = translateSchema.safeParse({
 		pageId: formData.get("pageId"),
 		aiModel: formData.get("aiModel"),
 		locale: formData.get("locale"),

@@ -105,7 +105,7 @@ export function TagInput({ initialTags, allTags, pageId }: TagInputProps) {
 							control: () =>
 								cn(
 									"border border-border px-4 w-30  rounded-full  bg-transparent cursor-pointer text-sm",
-									isPending || !pageId && "opacity-50 cursor-not-allowed",
+									isPending || (!pageId && "opacity-50 cursor-not-allowed"),
 								),
 							valueContainer: () => "w-full",
 							placeholder: () => " text-center flex items-center h-[32px]",

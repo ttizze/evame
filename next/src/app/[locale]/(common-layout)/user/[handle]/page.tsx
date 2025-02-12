@@ -1,7 +1,7 @@
 import { PageCard } from "@/app/[locale]/components/page-card";
 import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/db/queries.server";
 import { fetchUserByHandle } from "@/app/db/queries.server";
-import { auth } from "@/auth";
+import { getCurrentUser } from "@/auth";
 import { NavigationLink } from "@/components/navigation-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,8 +16,7 @@ import { getGuestId } from "@/lib/get-guest-id";
 import Linkify from "linkify-react";
 import { Settings } from "lucide-react";
 import type { Metadata } from "next";
-import { isFollowing } from "./components/follow-button/db/queries.server";
-import { FollowButton } from "./components/follow-button/follow-button";
+import { FollowButton } from "./components/follow-button";
 import { FollowStats } from "./components/follow-stats";
 import { PaginationControls } from "./components/pagination-controls";
 import {
@@ -61,8 +60,7 @@ export default async function UserPage({
 
 	const pageSize = 9;
 
-	const session = await auth();
-	const currentUser = session?.user;
+	const currentUser = await getCurrentUser();
 	const guestId = !currentUser ? await getGuestId() : undefined;
 
 	const isOwner = currentUser?.handle === handle;
@@ -81,9 +79,6 @@ export default async function UserPage({
 	const followCounts = await getFollowCounts(pageOwner.id);
 	const followerList = await fetchFollowerList(pageOwner.id);
 	const followingList = await fetchFollowingList(pageOwner.id);
-	const isCurrentUserFollowing = currentUser?.id
-		? await isFollowing(currentUser.id, pageOwner.id)
-		: false;
 
 	return (
 		<div>
@@ -137,11 +132,7 @@ export default async function UserPage({
 									</Button>
 								</NavigationLink>
 							) : (
-								<FollowButton
-									targetUserId={pageOwner.id}
-									isFollowing={isCurrentUserFollowing}
-									className="rounded-full"
-								/>
+								<FollowButton targetUserHandle={pageOwner.handle} />
 							)}
 						</div>
 					</div>

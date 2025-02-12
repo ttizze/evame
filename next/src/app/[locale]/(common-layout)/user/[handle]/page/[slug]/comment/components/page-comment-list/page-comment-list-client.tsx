@@ -13,7 +13,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
 import { useActionState } from "react";
-import { commentDeleteAction, type CommentDeleteActionResponse } from "./action";
+import {
+	type CommentDeleteActionResponse,
+	commentDeleteAction,
+} from "./action";
 import type { PageCommentWithUser } from "./db/query.server";
 
 interface CommentListClientProps {

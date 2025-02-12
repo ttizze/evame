@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
+import type { User } from "@prisma/client";
 import { describe, expect, test } from "vitest";
 import { processPageHtml } from "./process-page-html";
-import type { User } from "@prisma/client";
 describe("processHtmlContent", () => {
 	let user: User;
 	beforeEach(async () => {
@@ -12,7 +12,7 @@ describe("processHtmlContent", () => {
 				name: "noedit",
 				image: "noedit",
 				email: "noedit@example.com",
-			}
+			},
 		});
 	});
 	afterEach(async () => {
@@ -26,7 +26,6 @@ describe("processHtmlContent", () => {
       <p>This is a test.</p>
       <p>This is another test.</p>
     `;
-
 
 		// HTMLを処理
 		await processPageHtml(title, htmlInput, pageSlug, user.id, "en");
@@ -78,7 +77,6 @@ describe("processHtmlContent", () => {
         <li><p>List item 2</p></li>
       </ul>
     `;
-
 
 		// 初回処理
 		await processPageHtml(originalTitle, originalHtml, pageSlug, user.id, "en");
@@ -149,7 +147,6 @@ describe("processHtmlContent", () => {
       <p>This is a paragraph with the Unique Title embedded.</p>
       <p>Another paragraph.</p>
     `;
-
 
 		// HTMLを処理
 		await processPageHtml(title, htmlInput, pageSlug, user.id, "en");
@@ -268,7 +265,6 @@ describe("processHtmlContent", () => {
       <p><img src="http://localhost:9000/evame/uploads/sample-image.png" alt=""></p>
       <p>Another text line.</p>
     `;
-
 
 		await processPageHtml(title, htmlInput, pageSlug, user.id, "en");
 

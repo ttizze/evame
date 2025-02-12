@@ -23,7 +23,6 @@ vi.mock("@/features/translate/translate-user-queue");
 vi.mock("next/cache");
 
 describe("TranslateAction", () => {
-
 	const mockGeminiApiKey = {
 		apiKey: "test-api-key",
 	};

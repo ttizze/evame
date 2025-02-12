@@ -31,16 +31,18 @@ const editPageTagsSchema = z.object({
 			.max(5, "tags can be max 5"),
 	),
 });
-export type EditPageTagsActionState = ActionResponse<void, {
-	pageId: number;
-	tags: string[];
-}>;
+export type EditPageTagsActionState = ActionResponse<
+	void,
+	{
+		pageId: number;
+		tags: string[];
+	}
+>;
 
 export async function editPageTagsAction(
 	previousState: EditPageTagsActionState,
 	formData: FormData,
 ): Promise<EditPageTagsActionState> {
-
 	const parsedFormData = editPageTagsSchema.safeParse({
 		pageId: formData.get("pageId"),
 		tags: formData.get("tags"),
@@ -54,7 +56,7 @@ export async function editPageTagsAction(
 	const { pageId, tags } = parsedFormData.data;
 	const page = await getPageById(pageId);
 	const currentUser = await getCurrentUser();
-	if (!currentUser?.id ||  page?.userId !== currentUser.id) {
+	if (!currentUser?.id || page?.userId !== currentUser.id) {
 		return redirect("/auth/login");
 	}
 	await upsertTags(tags, pageId);

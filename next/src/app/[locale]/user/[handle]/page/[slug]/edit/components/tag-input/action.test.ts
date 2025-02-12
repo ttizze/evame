@@ -1,11 +1,11 @@
 import { getPageById } from "@/app/[locale]/db/queries.server";
 import { getCurrentUser } from "@/auth";
+import { mockPages, mockUsers } from "@/tests/mock";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { upsertTags } from "../../db/mutations.server";
 import { editPageTagsAction } from "./action";
-import { mockUsers, mockPages } from "@/tests/mock";
 
 // Mocking dependencies
 vi.mock("@/auth");

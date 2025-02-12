@@ -8,15 +8,11 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { ExternalLink, Loader2, SaveIcon } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useActionState } from "react";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import {
-	type UserEditState,
-	userEditAction,
-} from "./user-edit-action";
+import { type UserEditState, userEditAction } from "./user-edit-action";
 import {
 	type UserImageEditState,
 	userImageEditAction,
@@ -27,15 +23,25 @@ interface EditProfileFormProps {
 
 export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 	const fileInputRef = useRef<HTMLInputElement>(null);
-	const router = useRouter();
 	const [editState, editAction, isEditPending] = useActionState<
 		UserEditState,
 		FormData
-	>(userEditAction, { success: false });
+	>(userEditAction, {
+		success: false,
+		data: {
+			name: currentUser.name,
+			profile: currentUser.profile,
+		},
+	});
 	const [imageState, imageAction, isImageUploading] = useActionState<
 		UserImageEditState,
 		FormData
-	>(userImageEditAction, { success: false });
+	>(userImageEditAction, {
+		success: false,
+		data: {
+			imageUrl: currentUser.image,
+		},
+	});
 	const [showHandleInput, setShowHandleInput] = useState(false);
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
 	const [profileIconUrl, setProfileIconUrl] = useState<string>(
@@ -46,16 +52,14 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 		if (imageState.success && imageState.data?.imageUrl) {
 			setProfileIconUrl(imageState.data.imageUrl);
 			toast.success(imageState.message);
-			router.push(`/user/${currentUser.handle}/edit`);
 		}
-	}, [imageState, currentUser.handle, router]);
+	}, [imageState]);
 
 	useEffect(() => {
 		if (editState.success) {
 			toast.success(editState.message);
-			router.push(`/user/${currentUser.handle}/edit`);
 		}
-	}, [editState, currentUser.handle, router]);
+	}, [editState]);
 
 	const handleImageClick = () => {
 		fileInputRef.current?.click();
@@ -92,7 +96,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 							className="w-40 h-40 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500"
 						>
 							<Image
-								src={profileIconUrl}
+								src={imageState.data?.imageUrl ?? ""}
 								alt="Profile"
 								width={160}
 								height={160}
@@ -118,9 +122,9 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 						}}
 						className="hidden"
 					/>
-					{imageState.zodErrors?.image && (
+					{imageState.success === false && (
 						<div className="text-red-500 text-sm mt-1">
-							{imageState.zodErrors.image}
+							{imageState.message}
 						</div>
 					)}
 				</form>
@@ -178,7 +182,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 				<div>
 					<Label>Display Name</Label>
 					<Input
-						defaultValue={currentUser.name}
+						defaultValue={editState.data?.name}
 						name="name"
 						minLength={3}
 						maxLength={25}
@@ -195,7 +199,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 				<div>
 					<Label>Profile</Label>
 					<textarea
-						defaultValue={currentUser.profile}
+						defaultValue={editState.data?.profile}
 						name="profile"
 						className="w-full h-32 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-none"
 					/>
@@ -242,7 +246,6 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 						</span>
 					)}
 				</Button>
-
 			</form>
 		</div>
 	);

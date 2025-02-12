@@ -100,3 +100,9 @@ export async function fetchPageCommentsWithUserAndTranslations(
 export type PageCommentWithUser = Awaited<
 	ReturnType<typeof fetchPageCommentsWithUserAndTranslations>
 >;
+
+export async function getPageCommentById(pageCommentId: number) {
+	return await prisma.pageComment.findUnique({
+		where: { id: pageCommentId },
+	});
+}

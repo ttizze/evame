@@ -3,7 +3,7 @@ import { StartButton } from "@/app/[locale]/components/start-button";
 import { Editor } from "@/app/[locale]/user/[handle]/page/[slug]/edit/components/editor/editor";
 import { Button } from "@/components/ui/button";
 import { useActionState, useState } from "react";
-import { commentAction, type CommentActionResponse } from "./action";
+import { type CommentActionResponse, commentAction } from "./action";
 
 export function PageCommentForm({
 	pageId,
@@ -28,7 +28,7 @@ export function PageCommentForm({
 				<Editor
 					defaultValue={""}
 					name="content"
-					className="border border-input rounded-md px-2"
+					className={`border border-input rounded-md px-2 ${!currentHandle ? "opacity-50 bg-muted" : ""}`}
 					placeholder="Say Hello!"
 					onEditorUpdate={(editor) => setContent(editor?.getHTML() ?? "")}
 				/>
@@ -37,16 +37,14 @@ export function PageCommentForm({
 				)}
 				<Button
 					type="submit"
-					disabled={isPending || !currentHandle || !content}
-					className={"w-full"}
+					disabled={isPending || !currentHandle}
+					className={`w-full ${!currentHandle ? "opacity-50 bg-muted" : ""}`}
 				>
 					{isPending ? "posting" : "post"}
 				</Button>
 			</form>
 			{state.zodErrors?.content && (
-				<p className="text-sm text-red-500">
-					{state.zodErrors.content}
-				</p>
+				<p className="text-sm text-red-500">{state.zodErrors.content}</p>
 			)}
 		</>
 	);

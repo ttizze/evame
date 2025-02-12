@@ -3,9 +3,9 @@ import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/(common-layout)/user
 import type { ActionResponse } from "@/app/types";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { addUserTranslation } from "./db/mutations.server";
-import { redirect } from "next/navigation";
 const schema = z.object({
 	locale: z.string(),
 	segmentId: z.coerce.number(),

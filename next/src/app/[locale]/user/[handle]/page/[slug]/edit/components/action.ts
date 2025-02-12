@@ -8,11 +8,14 @@ import { z } from "zod";
 import { handlePageTranslation } from "../lib/handle-page-translation";
 import { processPageHtml } from "../lib/process-page-html";
 
-export type EditPageContentActionState = ActionResponse<void, {
-	slug: string;
-	title: string;
-	pageContent: string;
-}>;
+export type EditPageContentActionState = ActionResponse<
+	void,
+	{
+		slug: string;
+		title: string;
+		pageContent: string;
+	}
+>;
 
 const editPageContentSchema = z.object({
 	slug: z.string().min(1),
@@ -51,7 +54,10 @@ export async function editPageContentAction(
 	if (page.status === "PUBLIC") {
 		const geminiApiKey = process.env.GEMINI_API_KEY;
 		if (!geminiApiKey || geminiApiKey === "undefined") {
-			return { success: true, message: "Gemini API key is not set. Page will not be translated." };
+			return {
+				success: true,
+				message: "Gemini API key is not set. Page will not be translated.",
+			};
 		}
 
 		await handlePageTranslation({

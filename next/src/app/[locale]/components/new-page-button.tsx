@@ -1,17 +1,20 @@
 "use client";
 
-import { customAlphabet } from 'nanoid';
 import { Loader2, PencilIcon } from "lucide-react";
+import { customAlphabet } from "nanoid";
 import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
-import {  useState } from "react";
+import { useState } from "react";
 
 interface NewPageButtonProps {
 	handle: string;
 }
 
-const generateSlug = () => customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 8)();
-
+const generateSlug = () =>
+	customAlphabet(
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+		8,
+	)();
 
 export const NewPageButton = ({ handle }: NewPageButtonProps) => {
 	const router = useRouter();
@@ -20,8 +23,8 @@ export const NewPageButton = ({ handle }: NewPageButtonProps) => {
 
 	const handleNewPage = () => {
 		setIsLoading(true);
-    router.push(`/${locale}/user/${handle}/page/${generateSlug()}/edit`);
-  };
+		router.push(`/${locale}/user/${handle}/page/${generateSlug()}/edit`);
+	};
 
 	return (
 		<button
@@ -33,7 +36,7 @@ export const NewPageButton = ({ handle }: NewPageButtonProps) => {
 			{isLoading ? (
 				<Loader2 className="h-6 w-6 animate-spin" />
 			) : (
-					<PencilIcon className="h-6 w-6" />
+				<PencilIcon className="h-6 w-6" />
 			)}
 		</button>
 	);
