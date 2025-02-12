@@ -1,18 +1,15 @@
 import { PageCommentForm } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-form";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-list";
-import { LikeButton } from "@/app/[locale]/components/like-button/like-button";
 import { getBestTranslation } from "@/app/[locale]/lib/get-best-translation";
 import { stripHtmlTags } from "@/app/[locale]/lib/strip-html-tags";
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
 import { auth } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
-import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { TranslateActionSection } from "../../../../../components/translate-action-section";
-import { ContentWithTranslations } from "./components/content-with-translations";
-import { FloatingControls } from "./components/floating-controls";
+import { ContentControlContainer } from "./components/content-control-container";
 import { TranslateTarget } from "./constants";
 import {
 	fetchIsLikedByUser,
@@ -163,37 +160,17 @@ export default async function Page({
 
 	return (
 		<div className="w-full max-w-3xl mx-auto">
-			<article className="w-full prose dark:prose-invert prose-a:underline prose-a:decoration-dotted sm:prose lg:prose-lg mx-auto px-4 mb-20">
-				<ContentWithTranslations
-					pageWithTranslations={pageWithTranslations}
-					pageSegmentWithTranslations={pageSegmentTitleWithTranslations}
-					currentHandle={currentUser?.handle}
-					hasGeminiApiKey={hasGeminiApiKey}
-					userAITranslationInfo={userAITranslationInfo}
-					locale={locale}
-					existLocales={pageWithTranslations.existLocales}
-					showOriginal={showOriginal === "true"}
-					showTranslation={showTranslation === "true"}
-				/>
-			</article>
-			<div className="flex items-center gap-4">
-				<LikeButton
-					liked={isLikedByUser}
-					likeCount={likeCount}
-					slug={slug}
-					showCount
-				/>
-				<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
-				<span>{pageCommentsCount}</span>
-			</div>
-
-			<FloatingControls
+			<ContentControlContainer
+				pageWithTranslations={pageWithTranslations}
+				pageSegmentTitleWithTranslations={pageSegmentTitleWithTranslations}
+				shareTitle={sourceTitleWithBestTranslationTitle}
+				currentHandle={currentUser?.handle}
+				hasGeminiApiKey={hasGeminiApiKey}
+				userAITranslationInfo={userAITranslationInfo}
+				locale={locale}
 				liked={isLikedByUser}
 				likeCount={likeCount}
-				slug={slug}
-				shareTitle={sourceTitleWithBestTranslationTitle}
-				initialShowOriginal={showOriginal === "true"}
-				initialShowTranslation={showTranslation === "true"}
+				pageCommentsCount={pageCommentsCount}
 			/>
 
 			<div className="mt-8">

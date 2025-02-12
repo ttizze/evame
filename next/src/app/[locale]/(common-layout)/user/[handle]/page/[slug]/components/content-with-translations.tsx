@@ -15,35 +15,33 @@ import { SegmentAndTranslationSection } from "./segment-and-translation-section"
 
 interface ContentWithTranslationsProps {
 	pageWithTranslations: PageWithTranslations;
-	pageSegmentWithTranslations: SegmentWithTranslations | null;
+	pageSegmentTitleWithTranslations: SegmentWithTranslations | null;
 	currentHandle: string | undefined;
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
 	locale: string;
-	existLocales: string[];
 	showOriginal: boolean;
 	showTranslation: boolean;
 }
 
 export function ContentWithTranslations({
 	pageWithTranslations,
-	pageSegmentWithTranslations,
+	pageSegmentTitleWithTranslations,
 	currentHandle,
 	hasGeminiApiKey,
 	userAITranslationInfo,
 	locale,
-	existLocales,
 	showOriginal = true,
 	showTranslation = true,
 }: ContentWithTranslationsProps) {
 	return (
 		<>
 			<h1 className="!mb-0 ">
-				{pageSegmentWithTranslations && (
+				{pageSegmentTitleWithTranslations && (
 					<SegmentAndTranslationSection
-						segmentWithTranslations={pageSegmentWithTranslations}
+						segmentWithTranslations={pageSegmentTitleWithTranslations}
 						showLockIcon={pageWithTranslations.page.status === "DRAFT"}
-						elements={pageSegmentWithTranslations.segment.text}
+						elements={pageSegmentTitleWithTranslations?.segment.text}
 						showOriginal={showOriginal}
 						showTranslation={showTranslation}
 						currentHandle={currentHandle}
@@ -89,7 +87,7 @@ export function ContentWithTranslations({
 				hasGeminiApiKey={hasGeminiApiKey}
 				sourceLocale={pageWithTranslations.page.sourceLocale}
 				locale={locale}
-				existLocales={existLocales}
+				existLocales={pageWithTranslations.existLocales}
 				className="pt-3"
 				translateTarget={TranslateTarget.TRANSLATE_PAGE}
 				showAddNew={true}

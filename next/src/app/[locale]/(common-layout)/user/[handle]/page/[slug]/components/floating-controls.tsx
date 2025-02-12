@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Languages, Text } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useState } from "react";
 import { ShareDialog } from "./share-dialog";
 
@@ -13,8 +12,10 @@ interface FloatingControlsProps {
 	likeCount: number;
 	slug: string;
 	shareTitle: string;
-	initialShowOriginal: boolean;
-	initialShowTranslation: boolean;
+	showOriginal: boolean;
+	setShowOriginal: (showOriginal: boolean) => void;
+	showTranslation: boolean;
+	setShowTranslation: (showTranslation: boolean) => void;
 }
 
 export function FloatingControls({
@@ -22,8 +23,10 @@ export function FloatingControls({
 	likeCount,
 	slug,
 	shareTitle,
-	initialShowOriginal,
-	initialShowTranslation,
+	showOriginal,
+	setShowOriginal,
+	showTranslation,
+	setShowTranslation,
 }: FloatingControlsProps) {
 	const [isVisible, setIsVisible] = useState(true);
 	const [lastScrollY, setLastScrollY] = useState(0);
@@ -35,26 +38,6 @@ export function FloatingControls({
 					searchParams.toString() ? `?${searchParams.toString()}` : ""
 				}`
 			: "";
-
-	const [showOriginal, setShowOriginal] = useQueryState("showOriginal", {
-		parse: (value): boolean => value === "true",
-		shallow: false,
-	});
-
-	const [showTranslation, setShowTranslation] = useQueryState(
-		"showTranslation",
-		{
-			parse: (value): boolean => value === "true",
-			shallow: false,
-		},
-	);
-	const handleToggleOriginal = () => {
-		setShowOriginal(!(showOriginal ?? initialShowOriginal));
-	};
-
-	const handleToggleTranslation = () => {
-		setShowTranslation(!(showTranslation ?? initialShowTranslation));
-	};
 
 	const handleScroll = useCallback(() => {
 		const currentScrollY = window.scrollY;
@@ -88,42 +71,24 @@ export function FloatingControls({
 				size="icon"
 				className={cn(
 					"drop-shadow-xl dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)] h-12 w-12 rounded-full border bg-background relative after:absolute after:w-full after:h-[1px] after:bg-current after:top-1/2 after:left-0 after:origin-center after:-rotate-45",
-					(showOriginal ?? initialShowOriginal) && "after:opacity-50",
+					showOriginal && "after:opacity-50",
 				)}
-				onClick={handleToggleOriginal}
-				title={
-					(showOriginal ?? initialShowOriginal)
-						? "Hide original text"
-						: "Show original text"
-				}
+				onClick={() => setShowOriginal(!showOriginal)}
+				title={showOriginal ? "Hide original text" : "Show original text"}
 			>
-				<Text
-					className={cn(
-						"h-5 w-5",
-						(showOriginal ?? initialShowOriginal) && "opacity-50",
-					)}
-				/>
+				<Text className={cn("h-5 w-5", showOriginal && "opacity-50")} />
 			</Button>
 			<Button
 				variant="ghost"
 				size="icon"
 				className={cn(
 					"drop-shadow-xl dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)] h-12 w-12 rounded-full border bg-background relative after:absolute after:w-full after:h-[1px] after:bg-current after:top-1/2 after:left-0 after:origin-center after:-rotate-45",
-					(showTranslation ?? initialShowTranslation) && "after:opacity-50",
+					showTranslation && "after:opacity-50",
 				)}
-				onClick={handleToggleTranslation}
-				title={
-					(showTranslation ?? initialShowTranslation)
-						? "Hide translation"
-						: "Show translation"
-				}
+				onClick={() => setShowTranslation(!showTranslation)}
+				title={showTranslation ? "Hide translation" : "Show translation"}
 			>
-				<Languages
-					className={cn(
-						"h-5 w-5",
-						(showTranslation ?? initialShowTranslation) && "opacity-50",
-					)}
-				/>
+				<Languages className={cn("h-5 w-5", showTranslation && "opacity-50")} />
 			</Button>
 			<div className="drop-shadow-xl  dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)]  h-12 w-12">
 				<LikeButton liked={liked} likeCount={likeCount} slug={slug} />
