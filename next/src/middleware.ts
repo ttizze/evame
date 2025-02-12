@@ -6,5 +6,7 @@ const handleI18nRouting = createMiddleware(routing);
 export default auth(handleI18nRouting);
 
 export const config = {
-	matcher: ["/((?!api|_next|.*\\..*).*)", "/([\\w-]+)?/users/(.+)"],
+	matcher: [
+		"/((?!api|_next|.*\\.(svg|png|jpg|jpeg|gif|ico|webp)$|favicon\\.ico).*)",
+	],
 };
