@@ -49,3 +49,5 @@ node_modules/
 database.bak
 
 .next
+# Sentry Config File
+.env.sentry-build-plugin

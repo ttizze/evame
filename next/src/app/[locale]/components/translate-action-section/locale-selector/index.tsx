@@ -49,17 +49,17 @@ export function LocaleSelector({
 	const handleLocaleChange = (value: string) => {
 		setOpen(false);
 		if (onChange) {
-      onChange(value);
-    } else {
-      // デフォルトはルーティングを実行
-      startTransition(() => {
-        router.push(
-          // @ts-expect-error
-          { pathname, params },
-          { locale: value },
-        );
-      });
-    }
+			onChange(value);
+		} else {
+			// デフォルトはルーティングを実行
+			startTransition(() => {
+				router.push(
+					// @ts-expect-error
+					{ pathname, params },
+					{ locale: value },
+				);
+			});
+		}
 	};
 
 	return (

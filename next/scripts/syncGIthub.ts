@@ -48,7 +48,9 @@ async function getRankingEntries(
 	const htmlContent = await fs.readFile(htmlFilePath, "utf-8");
 	const dom = new JSDOM(htmlContent);
 	const document = dom.window.document;
-	const rows = Array.from(document.querySelectorAll("table.list tr")).slice(1) as HTMLElement[];
+	const rows = Array.from(document.querySelectorAll("table.list tr")).slice(
+		1,
+	) as HTMLElement[];
 	const entries: RankingEntry[] = [];
 	for (const row of rows) {
 		const tds = Array.from(row.querySelectorAll("td.normal"));
