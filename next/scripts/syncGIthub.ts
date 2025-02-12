@@ -5,7 +5,7 @@ import path from "node:path";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import fm from "front-matter";
-import { JSDOM } from "jsdom"; // HTMLパース用
+import { JSDOM } from "jsdom";
 import pLimit from "p-limit";
 
 // プロジェクト固有のインポート
@@ -48,7 +48,7 @@ async function getRankingEntries(
 	const htmlContent = await fs.readFile(htmlFilePath, "utf-8");
 	const dom = new JSDOM(htmlContent);
 	const document = dom.window.document;
-	const rows = Array.from(document.querySelectorAll("table.list tr")).slice(1);
+	const rows = Array.from(document.querySelectorAll("table.list tr")).slice(1) as HTMLElement[];
 	const entries: RankingEntry[] = [];
 	for (const row of rows) {
 		const tds = Array.from(row.querySelectorAll("td.normal"));
