@@ -7,6 +7,6 @@ export default auth(handleI18nRouting);
 
 export const config = {
 	matcher: [
-		"/((?!api|_next|.*\\.(svg|png|jpg|jpeg|gif|ico|webp)|favicon\\.ico).*)",
+    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
 	],
 };
