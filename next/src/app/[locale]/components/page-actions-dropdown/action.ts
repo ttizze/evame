@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { togglePagePublicStatus } from "./db/mutations.server";
-
+import { getPageById } from "@/app/[locale]/db/queries.server";
 export type TogglePublishState = ActionResponse<
 	void,
 	{
@@ -12,7 +12,6 @@ export type TogglePublishState = ActionResponse<
 	}
 >;
 
-// アクションハンドラー
 export async function togglePublishAction(
 	previousState: TogglePublishState,
 	formData: FormData,
@@ -20,7 +19,7 @@ export async function togglePublishAction(
 	const session = await auth();
 	const currentUser = session?.user;
 	if (!currentUser || !currentUser.id) {
-		redirect("/auth/login");
+		return redirect("/auth/login");
 	}
 	const pageId = Number(formData.get("pageId"));
 	if (!pageId) {
@@ -29,8 +28,14 @@ export async function togglePublishAction(
 			zodErrors: { pageId: ["Page ID is required"] },
 		};
 	}
-
+	const page = await getPageById(pageId);
+	if (!page || page.userId !== currentUser.id) {
+		return {
+			success: false,
+			zodErrors: { pageId: ["Page not found"] },
+		};
+	}
 	await togglePagePublicStatus(pageId);
 	revalidatePath(`/user/${currentUser?.handle}/page/${pageId}`);
-	return { success: true, message: "Page published successfully" };
+	return { success: true, message: "Page updated successfully" };
 }

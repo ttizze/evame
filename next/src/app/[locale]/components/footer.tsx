@@ -1,4 +1,3 @@
-"use client";
 import { Link } from "@/i18n/routing";
 import { FaDiscord, FaGithub } from "react-icons/fa";
 

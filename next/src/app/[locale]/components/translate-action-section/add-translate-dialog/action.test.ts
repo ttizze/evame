@@ -23,10 +23,6 @@ vi.mock("@/features/translate/translate-user-queue");
 vi.mock("next/cache");
 
 describe("TranslateAction", () => {
-	const mockUser = {
-		id: 1,
-		handle: "testuser",
-	};
 
 	const mockGeminiApiKey = {
 		apiKey: "test-api-key",

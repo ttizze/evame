@@ -1,14 +1,11 @@
 "use server";
+import { getPageById } from "@/app/[locale]/db/queries.server";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { upsertTags } from "../../db/mutations.server";
-
-export type EditPageTagsActionState = ActionResponse<void, {
-	pageId: number;
-	tags: string[];
-}>;
 
 const editPageTagsSchema = z.object({
 	pageId: z.coerce.number().min(1),
@@ -34,15 +31,16 @@ const editPageTagsSchema = z.object({
 			.max(5, "tags can be max 5"),
 	),
 });
+export type EditPageTagsActionState = ActionResponse<void, {
+	pageId: number;
+	tags: string[];
+}>;
 
 export async function editPageTagsAction(
 	previousState: EditPageTagsActionState,
 	formData: FormData,
 ): Promise<EditPageTagsActionState> {
-	const currentUser = await getCurrentUser();
-	if (!currentUser || !currentUser.id) {
-		return { success: false, message: "Unauthorized" };
-	}
+
 	const parsedFormData = editPageTagsSchema.safeParse({
 		pageId: formData.get("pageId"),
 		tags: formData.get("tags"),
@@ -54,7 +52,12 @@ export async function editPageTagsAction(
 		};
 	}
 	const { pageId, tags } = parsedFormData.data;
+	const page = await getPageById(pageId);
+	const currentUser = await getCurrentUser();
+	if (!currentUser?.id ||  page?.userId !== currentUser.id) {
+		return redirect("/auth/login");
+	}
 	await upsertTags(tags, pageId);
-	revalidatePath("/user");
+	revalidatePath(`/user/${currentUser.handle}/page/${page.slug}/edit`);
 	return { success: true };
 }

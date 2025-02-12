@@ -35,22 +35,23 @@ export async function TranslateAction(
 	formData: FormData,
 ): Promise<TranslateActionState> {
 	const currentUser = await getCurrentUser();
-	if (!currentUser || !currentUser.id) {
-		redirect("/auth/login");
+	if (!currentUser?.id) {
+		return redirect("/auth/login");
 	}
 
-	const validate = translateSchema.safeParse({
+		const parsedFormData = translateSchema.safeParse({
 		pageId: formData.get("pageId"),
 		aiModel: formData.get("aiModel"),
 		locale: formData.get("locale"),
 		translateTarget: formData.get("translateTarget"),
 	});
-	if (!validate.success) {
+	if (!parsedFormData.success) {
 		return {
 			success: false,
-			zodErrors: validate.error.flatten().fieldErrors,
+			zodErrors: parsedFormData.error.flatten().fieldErrors,
 		};
 	}
+	const { pageId, aiModel, locale, translateTarget } = parsedFormData.data;
 	const geminiApiKey = await fetchGeminiApiKeyByHandle(currentUser.handle);
 	if (!geminiApiKey) {
 		return {
@@ -59,10 +60,8 @@ export async function TranslateAction(
 		};
 	}
 
-	if (validate.data.translateTarget === TranslateTarget.TRANSLATE_COMMENT) {
-		const pageWithComments = await fetchPageWithTitleAndComments(
-			validate.data.pageId,
-		);
+	if (translateTarget === TranslateTarget.TRANSLATE_COMMENT) {
+		const pageWithComments = await fetchPageWithTitleAndComments(pageId);
 		if (!pageWithComments) {
 			return { success: false, message: "Page not found" };
 		}
@@ -85,8 +84,8 @@ export async function TranslateAction(
 		const userAITranslationInfo = await createUserAITranslationInfo(
 			currentUser.id,
 			pageWithComments.id,
-			validate.data.aiModel,
-			validate.data.locale,
+			aiModel,
+			locale,
 		);
 
 		for (const comment of comments) {
@@ -94,20 +93,18 @@ export async function TranslateAction(
 			await queue.add(`translate-${currentUser.id}`, {
 				userAITranslationInfoId: userAITranslationInfo.id,
 				geminiApiKey: geminiApiKey.apiKey,
-				aiModel: validate.data.aiModel,
+				aiModel,
 				userId: currentUser.id,
 				pageId: pageWithComments.id,
-				locale: validate.data.locale,
+				locale,
 				title: pageWithComments.pageSegments[0].text,
 				numberedElements: comment.segments,
-				translateTarget: validate.data.translateTarget,
+				translateTarget,
 				commentId: comment.commentId,
 			});
 		}
 	} else {
-		const pageWithPageSegments = await fetchPageWithPageSegments(
-			validate.data.pageId,
-		);
+		const pageWithPageSegments = await fetchPageWithPageSegments(pageId);
 		if (!pageWithPageSegments) {
 			return {
 				success: false,
@@ -122,21 +119,21 @@ export async function TranslateAction(
 		const userAITranslationInfo = await createUserAITranslationInfo(
 			currentUser.id,
 			pageWithPageSegments.id,
-			validate.data.aiModel,
-			validate.data.locale,
+			aiModel,
+			locale,
 		);
 
 		const queue = getTranslateUserQueue(currentUser.id);
 		await queue.add(`translate-${currentUser.id}`, {
 			userAITranslationInfoId: userAITranslationInfo.id,
 			geminiApiKey: geminiApiKey.apiKey,
-			aiModel: validate.data.aiModel,
+			aiModel,
 			userId: currentUser.id,
 			pageId: pageWithPageSegments.id,
-			locale: validate.data.locale,
+			locale,
 			title: pageWithPageSegments.title,
 			numberedElements: numberedElements,
-			translateTarget: validate.data.translateTarget,
+			translateTarget,
 		});
 	}
 	revalidatePath(`/user/${currentUser.handle}/page`);

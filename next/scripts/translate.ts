@@ -19,7 +19,7 @@ async function getAllPagesByUserId(userId: string) {
 		const LOCALE = "en";
 		const AI_MODEL = "gemini-1.5-flash";
 		const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-		if (!GEMINI_API_KEY) {
+		if (!GEMINI_API_KEY || GEMINI_API_KEY === "undefined") {
 			console.error("GEMINI_API_KEY is not set.");
 			process.exit(1);
 		}

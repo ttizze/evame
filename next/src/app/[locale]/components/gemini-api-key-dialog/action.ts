@@ -20,21 +20,21 @@ export async function updateGeminiApiKeyAction(
 ): Promise<GeminiApiKeyDialogState> {
 	const session = await auth();
 	const currentUser = session?.user;
-	if (!currentUser || !currentUser.id) {
-		redirect("/auth/signin");
+	if (!currentUser?.id) {
+		return redirect("/auth/signin");
 	}
-	const validation = geminiApiKeySchema.safeParse({
+	const parsedFormData = geminiApiKeySchema.safeParse({
 		geminiApiKey: formData.get("geminiApiKey"),
 	});
 
-	if (!validation.success) {
+	if (!parsedFormData.success) {
 		return {
 			success: false,
-			zodErrors: validation.error.flatten().fieldErrors,
+			zodErrors: parsedFormData.error.flatten().fieldErrors,
 		};
 	}
 
-	const { geminiApiKey } = validation.data;
+	const { geminiApiKey } = parsedFormData.data;
 
 	if (geminiApiKey && geminiApiKey.trim() !== "") {
 		const { isValid, errorMessage } = await validateGeminiApiKey(geminiApiKey);

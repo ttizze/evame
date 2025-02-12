@@ -277,3 +277,11 @@ export async function fetchPageWithTranslations(
 		existLocales,
 	};
 }
+
+
+export async function getPageById(pageId: number) {
+	const page = await prisma.page.findUnique({
+		where: { id: pageId },
+	});
+	return page;
+}

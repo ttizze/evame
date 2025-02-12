@@ -77,7 +77,7 @@ export function TagInput({ initialTags, allTags, pageId }: TagInputProps) {
 					<CreatableSelect
 						instanceId="tags-input"
 						unstyled
-						isDisabled={isPending}
+						isDisabled={isPending || !pageId}
 						placeholder="# Add tags"
 						isClearable
 						onChange={(newValue) => {
@@ -105,7 +105,7 @@ export function TagInput({ initialTags, allTags, pageId }: TagInputProps) {
 							control: () =>
 								cn(
 									"border border-border px-4 w-30  rounded-full  bg-transparent cursor-pointer text-sm",
-									isPending && "opacity-50 cursor-not-allowed",
+									isPending || !pageId && "opacity-50 cursor-not-allowed",
 								),
 							valueContainer: () => "w-full",
 							placeholder: () => " text-center flex items-center h-[32px]",
@@ -123,6 +123,9 @@ export function TagInput({ initialTags, allTags, pageId }: TagInputProps) {
 			</div>
 			{editState.zodErrors?.tags && (
 				<p className="text-sm text-red-500">{editState.zodErrors.tags}</p>
+			)}
+			{editState.zodErrors?.pageId && (
+				<p className="text-sm text-red-500">Page not found</p>
 			)}
 		</form>
 	);

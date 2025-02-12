@@ -1,14 +1,12 @@
-"use client";
 import { Link } from "@/i18n/routing";
 import { Search } from "lucide-react";
-import { useSession } from "next-auth/react";
 import { BaseHeaderLayout } from "./base-header-layout";
 import { NewPageButton } from "./new-page-button";
 import { StartButton } from "./start-button";
-
-export function Header() {
-	const { data: session } = useSession();
-	const currentUser = session?.user;
+import { getCurrentUser } from "@/auth";
+export async function Header() {
+	const currentUser = await getCurrentUser();
+	
 	const rightExtra = (
 		<>
 			<Link href="/search">

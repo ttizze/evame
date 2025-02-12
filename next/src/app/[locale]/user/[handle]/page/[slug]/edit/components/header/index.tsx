@@ -34,7 +34,6 @@ export function EditHeader({
 	>(editPageStatusAction, { success: false });
 	const currentPagePath = usePathname();
 	const pagePath = `/${currentPagePath.split("/").slice(2, -1).join("/")}`;
-
 	const renderButtonIcon = () => {
 		if (hasUnsavedChanges) {
 			return <Loader2 className="w-4 h-4 animate-spin" />;
@@ -82,7 +81,7 @@ export function EditHeader({
 							name="status"
 							value={initialStatus === "PUBLIC" ? "DRAFT" : "PUBLIC"}
 						/>
-						<input type="hidden" name="pageId" value={pageId} />
+						<input type="hidden" name="pageId" value={pageId ?? ""} />
 						<button
 							type="submit"
 							className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors duration-200 hover:bg-secondary/80 disabled:opacity-50 disabled:pointer-events-none"

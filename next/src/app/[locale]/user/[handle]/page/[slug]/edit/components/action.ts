@@ -26,7 +26,7 @@ export async function editPageContentAction(
 ): Promise<EditPageContentActionState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		redirect("/auth/login");
+		return redirect("/auth/login");
 	}
 	const parsedFormData = editPageContentSchema.safeParse({
 		slug: formData.get("slug"),
@@ -50,8 +50,8 @@ export async function editPageContentAction(
 	);
 	if (page.status === "PUBLIC") {
 		const geminiApiKey = process.env.GEMINI_API_KEY;
-		if (!geminiApiKey) {
-			return { success: false, message: "Gemini API key is not set" };
+		if (!geminiApiKey || geminiApiKey === "undefined") {
+			return { success: true, message: "Gemini API key is not set. Page will not be translated." };
 		}
 
 		await handlePageTranslation({
@@ -62,6 +62,6 @@ export async function editPageContentAction(
 			title,
 		});
 	}
-	revalidatePath(`/user/${currentUser.handle}/page/${slug}`);
+	revalidatePath(`/user/${currentUser.handle}/page/${slug}/edit`);
 	return { success: true, message: "Page updated successfully" };
 }

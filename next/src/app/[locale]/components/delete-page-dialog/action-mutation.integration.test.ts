@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { mockUser } from "@/tests/mock";
+import { mockUsers } from "@/tests/mock";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { archivePageAction } from "./action";
 // Mock the dependencies
@@ -13,17 +13,17 @@ describe("archivePageAction", () => {
 		await prisma.page.deleteMany();
 		await prisma.user.create({
 			data: {
-				id: mockUser.id,
-				handle: mockUser.handle,
+				id: mockUsers[0].id,
+				handle: mockUsers[0].handle,
 				email: "",
-				name: mockUser.name,
-				image: mockUser.image,
+				name: mockUsers[0].name,
+				image: mockUsers[0].image,
 			},
 		});
 		await prisma.page.create({
 			data: {
 				id: 1,
-				userId: mockUser.id,
+				userId: mockUsers[0].id,
 				slug: "test",
 				content: "test",
 			},
@@ -31,13 +31,13 @@ describe("archivePageAction", () => {
 		await prisma.page.create({
 			data: {
 				id: 2,
-				userId: mockUser.id,
+				userId: mockUsers[0].id,
 				slug: "test2",
 				content: "test2",
 			},
 		});
 
-		vi.mocked(getCurrentUser).mockResolvedValue(mockUser);
+		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
 	});
 
 	afterEach(async () => {
