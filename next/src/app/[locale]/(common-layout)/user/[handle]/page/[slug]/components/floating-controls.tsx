@@ -73,7 +73,10 @@ export function FloatingControls({
 					"drop-shadow-xl dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)] h-12 w-12 rounded-full border bg-background relative after:absolute after:w-full after:h-[1px] after:bg-current after:top-1/2 after:left-0 after:origin-center after:-rotate-45",
 					showOriginal && "after:opacity-50",
 				)}
-				onClick={() => setShowOriginal(!showOriginal)}
+				onClick={() => {
+					setShowOriginal(!showOriginal);
+					setLastScrollY(window.scrollY); 
+				}}
 				title={showOriginal ? "Hide original text" : "Show original text"}
 			>
 				<Text className={cn("h-5 w-5", showOriginal && "opacity-50")} />
@@ -85,7 +88,10 @@ export function FloatingControls({
 					"drop-shadow-xl dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)] h-12 w-12 rounded-full border bg-background relative after:absolute after:w-full after:h-[1px] after:bg-current after:top-1/2 after:left-0 after:origin-center after:-rotate-45",
 					showTranslation && "after:opacity-50",
 				)}
-				onClick={() => setShowTranslation(!showTranslation)}
+				onClick={() => {
+					setShowTranslation(!showTranslation);
+					setLastScrollY(window.scrollY);
+				}}
 				title={showTranslation ? "Hide translation" : "Show translation"}
 			>
 				<Languages className={cn("h-5 w-5", showTranslation && "opacity-50")} />
