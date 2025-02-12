@@ -30,6 +30,7 @@ interface LocaleSelectorProps {
 	localeOptions: LocaleOption[];
 	showAddNew?: boolean;
 	onAddNew?: () => void;
+	onChange?: (value: string) => void;
 }
 
 //TODO: radix uiのせいで開発環境のモバイルで文字がぼける iphoneではボケてない､その他実機でもボケてたら対応する
@@ -39,6 +40,7 @@ export function LocaleSelector({
 	localeOptions,
 	showAddNew,
 	onAddNew,
+	onChange,
 }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
 	const router = useRouter();
@@ -46,15 +48,18 @@ export function LocaleSelector({
 	const pathname = usePathname();
 	const handleLocaleChange = (value: string) => {
 		setOpen(false);
-		startTransition(() => {
-			router.replace(
-				// @ts-expect-error -- TypeScript will validate that only known `params`
-				// are used in combination with a given `pathname`. Since the two will
-				// always match for the current route, we can skip runtime checks.
-				{ pathname, params },
-				{ locale: value },
-			);
-		});
+		if (onChange) {
+      onChange(value);
+    } else {
+      // デフォルトはルーティングを実行
+      startTransition(() => {
+        router.push(
+          // @ts-expect-error
+          { pathname, params },
+          { locale: value },
+        );
+      });
+    }
 	};
 
 	return (

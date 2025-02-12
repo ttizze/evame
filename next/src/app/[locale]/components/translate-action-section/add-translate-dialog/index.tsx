@@ -52,6 +52,7 @@ export function AddTranslateDialog({
 		TranslateActionState,
 		FormData
 	>(TranslateAction, { success: false });
+	const [dialogLocale, setDialogLocale] = useState(locale);
 
 	const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
@@ -75,7 +76,8 @@ export function AddTranslateDialog({
 								<LocaleSelector
 									className="w-full	"
 									localeOptions={supportedLocaleOptions}
-									locale={locale}
+									locale={dialogLocale}
+									onChange={(value) => setDialogLocale(value)}
 								/>
 							</div>
 
