@@ -3,6 +3,7 @@
 
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { VOTE_TARGET, type VoteTarget } from "./constants";
@@ -51,5 +52,6 @@ export async function voteTranslationAction(
 		currentUser.id,
 		parsedFormData.data.voteTarget,
 	);
+	revalidatePath("/");
 	return { success: true, data: { isUpvote, point } };
 }
