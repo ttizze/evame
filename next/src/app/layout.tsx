@@ -4,6 +4,8 @@ import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { BIZ_UDPGothic, Inter } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { GoogleAnalytics } from "@next/third-parties/google";
+
 const inter = Inter({ subsets: ["latin"] });
 const bizUDPGothic = BIZ_UDPGothic({
 	weight: ["400", "700"],
@@ -21,6 +23,9 @@ export default async function Layout({
 }) {
 	const resolvedParams = await params;
 
+	const gaTrackingId = process.env.NODE_ENV === "production"
+		? (process.env.GOOGLE_ANALYTICS_ID ?? "")
+		: "";
 	return (
 		<html
 			lang={resolvedParams.locale}
@@ -28,6 +33,7 @@ export default async function Layout({
 			className={`${inter.className} ${bizUDPGothic.variable}`}
 		>
 			<body>
+				{gaTrackingId && <GoogleAnalytics gaId={gaTrackingId} />}
 				<NuqsAdapter>
 					<ThemeProvider
 						attribute="class"
