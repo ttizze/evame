@@ -107,6 +107,7 @@
 		"@types/react": "19.0.8",
 		"@types/react-dom": "19.0.3",
 		"@vitejs/plugin-react": "4.3.4",
+		"jest-mock-extended": "^4.0.0-beta1",
 		"jsdom": "26.0.0",
 		"postcss": "8.5.2",
 		"prisma": "6.3.1",

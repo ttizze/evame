@@ -75,7 +75,7 @@ export function FloatingControls({
 				)}
 				onClick={() => {
 					setShowOriginal(!showOriginal);
-					setLastScrollY(window.scrollY); 
+					setLastScrollY(window.scrollY);
 				}}
 				title={showOriginal ? "Hide original text" : "Show original text"}
 			>

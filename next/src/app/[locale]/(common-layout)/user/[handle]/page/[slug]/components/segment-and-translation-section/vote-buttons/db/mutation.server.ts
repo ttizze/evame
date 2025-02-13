@@ -5,7 +5,7 @@ import type { VoteTarget } from "../constants";
 export async function handleVote(
 	segmentTranslationId: number,
 	isUpvote: boolean,
-	userId: string,
+	currentUserId: string,
 	voteTarget: VoteTarget,
 ) {
 	let updatedPoint = 0;
@@ -15,7 +15,7 @@ export async function handleVote(
 				where: {
 					pageSegmentTranslationId_userId: {
 						pageSegmentTranslationId: segmentTranslationId,
-						userId,
+						userId: currentUserId,
 					},
 				},
 			});
@@ -43,7 +43,7 @@ export async function handleVote(
 				// 新規投票なら作成して point を調整
 				await tx.vote.create({
 					data: {
-						userId,
+						userId: currentUserId,
 						pageSegmentTranslationId: segmentTranslationId,
 						isUpvote,
 					},
@@ -60,13 +60,13 @@ export async function handleVote(
 			return updatedTranslation?.point ?? 0;
 		});
 	} else if (voteTarget === VOTE_TARGET.COMMENT_SEGMENT_TRANSLATION) {
-		await prisma.$transaction(async (tx) => {
+		updatedPoint = await prisma.$transaction(async (tx) => {
 			const existingVote =
 				await tx.pageCommentSegmentTranslationVote.findUnique({
 					where: {
 						pageCommentSegmentTranslationId_userId: {
 							pageCommentSegmentTranslationId: segmentTranslationId,
-							userId,
+							userId: currentUserId,
 						},
 					},
 				});
@@ -93,7 +93,7 @@ export async function handleVote(
 			} else {
 				await tx.pageCommentSegmentTranslationVote.create({
 					data: {
-						userId,
+						userId: currentUserId,
 						pageCommentSegmentTranslationId: segmentTranslationId,
 						isUpvote,
 					},
@@ -113,4 +113,29 @@ export async function handleVote(
 	}
 
 	return { success: true, data: { isUpvote, point: updatedPoint } };
+}
+
+export async function createNotificationPageSegmentTranslationVote(
+	pageSegmentTranslationId: number,
+	actorId: string,
+) {
+	const pageSegmentTranslation = await prisma.pageSegmentTranslation.findUnique(
+		{
+			where: { id: pageSegmentTranslationId },
+			select: {
+				user: { select: { id: true } },
+			},
+		},
+	);
+	if (!pageSegmentTranslation) {
+		return;
+	}
+	await prisma.notification.create({
+		data: {
+			pageSegmentTranslationId: pageSegmentTranslationId,
+			userId: pageSegmentTranslation.user.id,
+			actorId: actorId,
+			type: "PAGE_SEGMENT_TRANSLATION_VOTE",
+		},
+	});
 }

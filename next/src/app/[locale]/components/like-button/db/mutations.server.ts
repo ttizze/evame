@@ -40,6 +40,9 @@ export async function toggleLike(
 					: { guestId: identifier.id }),
 			},
 		});
+		if (identifier.type === "user") {
+			await createNotificationLike(page.id, page.userId, identifier.id);
+		}
 		liked = true;
 	}
 
@@ -49,4 +52,19 @@ export async function toggleLike(
 	});
 
 	return { liked, likeCount };
+}
+
+export async function createNotificationLike(
+	pageId: number,
+	targetUserId: string,
+	actorId: string,
+) {
+	await prisma.notification.create({
+		data: {
+			pageId: pageId,
+			userId: targetUserId,
+			actorId: actorId,
+			type: "PAGE_LIKE",
+		},
+	});
 }

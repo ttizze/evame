@@ -2,18 +2,18 @@ import { getCurrentUser } from "@/auth";
 import { FollowButtonClient } from "./client";
 import { isFollowing } from "./db/queries.server";
 interface FollowButtonProps {
-	targetUserHandle: string;
+	targetUserId: string;
 }
 
-export async function FollowButton({ targetUserHandle }: FollowButtonProps) {
+export async function FollowButton({ targetUserId }: FollowButtonProps) {
 	const currentUser = await getCurrentUser();
-	const isCurrentUserFollowing = currentUser?.handle
-		? await isFollowing(currentUser.handle, targetUserHandle)
+	const isCurrentUserFollowing = currentUser?.id
+		? await isFollowing(currentUser.id, targetUserId)
 		: false;
 	return (
 		<div>
 			<FollowButtonClient
-				targetUserHandle={targetUserHandle}
+				targetUserId={targetUserId}
 				isFollowing={isCurrentUserFollowing}
 			/>
 		</div>

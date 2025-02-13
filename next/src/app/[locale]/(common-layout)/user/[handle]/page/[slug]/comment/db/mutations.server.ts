@@ -77,3 +77,24 @@ export async function upsertPageComment(
 		},
 	});
 }
+
+export async function createNotificationPageComment(
+	actorId: string,
+	userId: string,
+	pageCommentId: number,
+) {
+	try {
+		const notification = await prisma.notification.create({
+			data: {
+				userId: userId,
+				type: "PAGE_COMMENT",
+				pageCommentId,
+				actorId: actorId,
+			},
+		});
+		return notification;
+	} catch (error) {
+		console.error("Error in createNotificationPageComment:", error);
+		throw error;
+	}
+}

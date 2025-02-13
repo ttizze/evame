@@ -1,10 +1,11 @@
 "use server";
 import { getPageById } from "@/app/[locale]/db/queries.server";
 import type { ActionResponse } from "@/app/types";
-import { auth } from "@/auth";
+import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { togglePagePublicStatus } from "./db/mutations.server";
+
 export type TogglePublishState = ActionResponse<
 	void,
 	{
@@ -16,8 +17,7 @@ export async function togglePublishAction(
 	previousState: TogglePublishState,
 	formData: FormData,
 ): Promise<TogglePublishState> {
-	const session = await auth();
-	const currentUser = session?.user;
+	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
 		return redirect("/auth/login");
 	}

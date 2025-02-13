@@ -3,17 +3,21 @@ import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { createFollow, deleteFollow } from "./db/mutations.server";
+import {
+	createFollow,
+	createNotificationFollow,
+	deleteFollow,
+} from "./db/mutations.server";
 
 const followActionSchema = z.object({
-	targetUserHandle: z.string(),
+	targetUserId: z.string(),
 	action: z.string(),
 });
 
 export type FollowActionResponse = ActionResponse<
 	{ isFollowing: boolean },
 	{
-		targetUserHandle: string;
+		targetUserId: string;
 		action: string;
 	}
 >;
@@ -27,7 +31,7 @@ export async function followAction(
 	}
 
 	const parsedFormData = followActionSchema.safeParse({
-		targetUserHandle: formData.get("targetUserHandle"),
+		targetUserId: formData.get("targetUserId"),
 		action: formData.get("action"),
 	});
 
@@ -37,19 +41,20 @@ export async function followAction(
 			zodErrors: parsedFormData.error.flatten().fieldErrors,
 		};
 	}
-	const { targetUserHandle, action } = parsedFormData.data;
+	const { targetUserId, action } = parsedFormData.data;
 
-	if (currentUser?.handle === targetUserHandle) {
+	if (currentUser?.id === targetUserId) {
 		return { success: false, message: "Cannot follow yourself" };
 	}
 
 	try {
 		let isFollowing = false;
 		if (action === "follow") {
-			await createFollow(currentUser.handle, targetUserHandle);
+			await createFollow(currentUser.id, targetUserId);
+			await createNotificationFollow(currentUser.id, targetUserId);
 			isFollowing = true;
 		} else if (action === "unFollow") {
-			await deleteFollow(currentUser.handle, targetUserHandle);
+			await deleteFollow(currentUser.id, targetUserId);
 			isFollowing = false;
 		}
 		return { success: true, data: { isFollowing } };

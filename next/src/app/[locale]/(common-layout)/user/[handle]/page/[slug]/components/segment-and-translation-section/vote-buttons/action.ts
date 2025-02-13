@@ -7,7 +7,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { VOTE_TARGET, type VoteTarget } from "./constants";
-import { handleVote } from "./db/mutation.server";
+import {
+	createNotificationPageSegmentTranslationVote,
+	handleVote,
+} from "./db/mutation.server";
 const schema = z.object({
 	segmentTranslationId: z.coerce.number().int(),
 	isUpvote: z.string().transform((val) => val === "true"),
@@ -52,6 +55,16 @@ export async function voteTranslationAction(
 		currentUser.id,
 		parsedFormData.data.voteTarget,
 	);
+	if (
+		parsedFormData.data.voteTarget === VOTE_TARGET.PAGE_SEGMENT_TRANSLATION &&
+		isUpvote
+	) {
+		console.log("createNotificationPageSegmentTranslationVote");
+		await createNotificationPageSegmentTranslationVote(
+			parsedFormData.data.segmentTranslationId,
+			currentUser.id,
+		);
+	}
 	revalidatePath("/");
 	return { success: true, data: { isUpvote, point } };
 }

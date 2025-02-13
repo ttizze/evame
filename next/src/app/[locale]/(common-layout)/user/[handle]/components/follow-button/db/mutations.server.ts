@@ -1,20 +1,17 @@
 import { prisma } from "@/lib/prisma";
 
-export async function createFollow(
-	followerHandle: string,
-	followingHandle: string,
-) {
-	if (followerHandle === followingHandle) {
+export async function createFollow(followerId: string, followingId: string) {
+	if (followerId === followingId) {
 		throw new Error("Follower and following cannot be the same");
 	}
 	const followingUser = await prisma.user.findUnique({
 		where: {
-			handle: followingHandle,
+			id: followingId,
 		},
 	});
 	const followerUser = await prisma.user.findUnique({
 		where: {
-			handle: followerHandle,
+			id: followerId,
 		},
 	});
 	if (!followerUser || !followingUser) {
@@ -28,18 +25,15 @@ export async function createFollow(
 	});
 }
 
-export async function deleteFollow(
-	followerHandle: string,
-	followingHandle: string,
-) {
+export async function deleteFollow(followerId: string, followingId: string) {
 	const followerUser = await prisma.user.findUnique({
 		where: {
-			handle: followerHandle,
+			id: followerId,
 		},
 	});
 	const followingUser = await prisma.user.findUnique({
 		where: {
-			handle: followingHandle,
+			id: followingId,
 		},
 	});
 	if (!followerUser || !followingUser) {
@@ -53,4 +47,23 @@ export async function deleteFollow(
 			},
 		},
 	});
+}
+
+export async function createNotificationFollow(
+	actorId: string,
+	userId: string,
+) {
+	try {
+		const notification = await prisma.notification.create({
+			data: {
+				userId: userId,
+				type: "FOLLOW",
+				actorId: actorId,
+			},
+		});
+		return notification;
+	} catch (error) {
+		console.error("Error in createNotificationFollow:", error);
+		throw error;
+	}
 }

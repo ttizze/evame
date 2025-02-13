@@ -132,7 +132,7 @@ export default async function UserPage({
 									</Button>
 								</NavigationLink>
 							) : (
-								<FollowButton targetUserHandle={pageOwner.handle} />
+								<FollowButton targetUserId={pageOwner.id} />
 							)}
 						</div>
 					</div>

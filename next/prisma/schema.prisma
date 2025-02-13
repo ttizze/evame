@@ -9,33 +9,35 @@ datasource db {
 }
 
 model User {
-  id                             String                             @id @default(cuid())
-  handle                         String                          @unique @default(cuid())
-  email                          String                          @unique
-  name                           String
-  image                          String
-  profile                        String                          @default("")
-  plan                           String                          @default("free")
-  totalPoints                    Int                             @default(0) @map("total_points")
-  isAI                           Boolean                         @default(false) @map("is_ai")
-  provider                       String                          @default("Credentials")
-  createdAt                      DateTime                        @default(now()) @map("created_at")
-  updatedAt                      DateTime                        @updatedAt @map("updated_at")
-  emailVerified                           DateTime?
-  credential                     UserCredential?
-  geminiApiKey                   GeminiApiKey?
-  pages                          Page[]
-  pageSegmentsTranslations       PageSegmentTranslation[]
-  votes                          Vote[]
-  userAITranslationInfo          UserAITranslationInfo[]
-  likePages                      LikePage[]
-  followers                      Follow[]                        @relation("following")
-  following                      Follow[]                        @relation("follower")
-  pageComments                   PageComment[]
-  pageCommentSegmentTranslations PageCommentSegmentTranslation[]
+  id                                 String                              @id @default(cuid())
+  handle                             String                              @unique @default(cuid())
+  email                              String                              @unique
+  name                               String
+  image                              String
+  profile                            String                              @default("")
+  plan                               String                              @default("free")
+  totalPoints                        Int                                 @default(0) @map("total_points")
+  isAI                               Boolean                             @default(false) @map("is_ai")
+  provider                           String                              @default("Credentials")
+  createdAt                          DateTime                            @default(now()) @map("created_at")
+  updatedAt                          DateTime                            @updatedAt @map("updated_at")
+  emailVerified                      DateTime?
+  credential                         UserCredential?
+  geminiApiKey                       GeminiApiKey?
+  pages                              Page[]
+  pageSegmentsTranslations           PageSegmentTranslation[]
+  votes                              Vote[]
+  userAITranslationInfo              UserAITranslationInfo[]
+  likePages                          LikePage[]
+  followers                          Follow[]                            @relation("following")
+  following                          Follow[]                            @relation("follower")
+  pageComments                       PageComment[]
+  pageCommentSegmentTranslations     PageCommentSegmentTranslation[]
   pageCommentSegmentTranslationVotes PageCommentSegmentTranslationVote[]
-  accounts                               Account[]
-  sessions                               Session[]
+  accounts                           Account[]
+  sessions                           Session[]
+  notifications                      Notification[]                      @relation("UserNotifications")
+  actedNotifications                 Notification[]                      @relation("NotificationActor")
 
   @@map("users")
 }
@@ -43,7 +45,7 @@ model User {
 model UserCredential {
   id       Int    @id @default(autoincrement())
   password String
-  userId   String    @unique @map("user_id")
+  userId   String @unique @map("user_id")
   user     User   @relation(fields: [userId], references: [id])
 
   @@index([userId])
@@ -53,8 +55,8 @@ model UserCredential {
 model GeminiApiKey {
   id     Int    @id @default(autoincrement())
   apiKey String @default("") @map("api_key")
-  userId String    @unique @map("user_id")
-  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("gemini_api_keys")
@@ -62,8 +64,8 @@ model GeminiApiKey {
 
 model Follow {
   id          Int      @id @default(autoincrement())
-  followerId  String      @map("follower_id")
-  followingId String      @map("following_id")
+  followerId  String   @map("follower_id")
+  followingId String   @map("following_id")
   createdAt   DateTime @default(now()) @map("created_at")
   follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
   following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
@@ -83,7 +85,7 @@ enum TranslationStatus {
 
 model UserAITranslationInfo {
   id                    Int               @id @default(autoincrement())
-  userId                String               @map("user_id")
+  userId                String            @map("user_id")
   pageId                Int               @map("page_id")
   locale                String
   aiModel               String            @map("ai_model")
@@ -120,6 +122,7 @@ model Page {
   tagPages              TagPage[]
   likePages             LikePage[]
   pageComments          PageComment[]
+  notifications         Notification[]
 
   @@index([createdAt])
   @@index([userId])
@@ -128,15 +131,15 @@ model Page {
 }
 
 model PageSegment {
-  id                    Int             @id @default(autoincrement())
-  text                  String
-  number                Int
-  textAndOccurrenceHash String          @map("text_and_occurrence_hash")
+  id                      Int                      @id @default(autoincrement())
+  text                    String
+  number                  Int
+  textAndOccurrenceHash   String                   @map("text_and_occurrence_hash")
   pageSegmentTranslations PageSegmentTranslation[]
-  page                  Page            @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  pageId                Int             @map("page_id")
-  createdAt             DateTime        @default(now()) @map("created_at")
-  updatedAt             DateTime        @updatedAt @map("updated_at")
+  page                    Page                     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  pageId                  Int                      @map("page_id")
+  createdAt               DateTime                 @default(now()) @map("created_at")
+  updatedAt               DateTime                 @updatedAt @map("updated_at")
 
   @@unique([pageId, number])
   @@unique([pageId, textAndOccurrenceHash])
@@ -147,17 +150,18 @@ model PageSegment {
 }
 
 model PageSegmentTranslation {
-  id           Int        @id @default(autoincrement())
-  locale       String
-  text         String
-  pageSegmentId Int        @map("page_segment_id")
-  userId       String        @map("user_id")
-  point        Int        @default(0)
-  isArchived   Boolean    @default(false) @map("is_archived")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  pageSegment  PageSegment @relation(fields: [pageSegmentId], references: [id], onDelete: Cascade)
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  votes        Vote[]
+  id            Int            @id @default(autoincrement())
+  locale        String
+  text          String
+  pageSegmentId Int            @map("page_segment_id")
+  userId        String         @map("user_id")
+  point         Int            @default(0)
+  isArchived    Boolean        @default(false) @map("is_archived")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  pageSegment   PageSegment    @relation(fields: [pageSegmentId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes         Vote[]
+  notifications Notification[]
 
   @@index([pageSegmentId])
   @@index([userId])
@@ -167,7 +171,7 @@ model PageSegmentTranslation {
 
 model LikePage {
   id        Int      @id @default(autoincrement())
-  userId    String?     @map("user_id")
+  userId    String?  @map("user_id")
   guestId   String?  @map("guest_id")
   pageId    Int      @map("page_id")
   createdAt DateTime @default(now()) @map("created_at")
@@ -203,14 +207,14 @@ model TagPage {
 }
 
 model Vote {
-  id              Int           @id @default(autoincrement())
-  userId          String           @map("user_id")
-  pageSegmentTranslationId Int           @map("page_segment_translation_id")
-  isUpvote        Boolean       @map("is_upvote")
-  createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
-  pageSegmentTranslation PageSegmentTranslation @relation(fields: [pageSegmentTranslationId], references: [id], onDelete: Cascade)
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                       Int                    @id @default(autoincrement())
+  userId                   String                 @map("user_id")
+  pageSegmentTranslationId Int                    @map("page_segment_translation_id")
+  isUpvote                 Boolean                @map("is_upvote")
+  createdAt                DateTime               @default(now()) @map("created_at")
+  updatedAt                DateTime               @updatedAt @map("updated_at")
+  pageSegmentTranslation   PageSegmentTranslation @relation(fields: [pageSegmentTranslationId], references: [id], onDelete: Cascade)
+  user                     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([pageSegmentTranslationId, userId])
   @@index([pageSegmentTranslationId])
@@ -222,13 +226,14 @@ model PageComment {
   id                  Int                  @id @default(autoincrement())
   content             String
   locale              String
-  userId              String                  @map("user_id")
+  userId              String               @map("user_id")
   pageId              Int                  @map("page_id")
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
   user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   page                Page                 @relation(fields: [pageId], references: [id], onDelete: Cascade)
   pageCommentSegments PageCommentSegment[]
+  notifications       Notification[]
 
   @@index([userId])
   @@index([pageId])
@@ -255,17 +260,19 @@ model PageCommentSegment {
 }
 
 model PageCommentSegmentTranslation {
-  id                   Int                @id @default(autoincrement())
-  locale               String
-  text                 String
-  userId               String                @map("user_id")
-  point                Int                @default(0)
-  createdAt            DateTime           @default(now()) @map("created_at")
-  updatedAt            DateTime           @updatedAt @map("updated_at")
-  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pageCommentSegmentId Int                @map("page_comment_segment_id")
-  pageCommentSegment   PageCommentSegment @relation(fields: [pageCommentSegmentId], references: [id], onDelete: Cascade)
+  id                                 Int                                 @id @default(autoincrement())
+  locale                             String
+  text                               String
+  userId                             String                              @map("user_id")
+  point                              Int                                 @default(0)
+  createdAt                          DateTime                            @default(now()) @map("created_at")
+  updatedAt                          DateTime                            @updatedAt @map("updated_at")
+  user                               User                                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pageCommentSegmentId               Int                                 @map("page_comment_segment_id")
+  pageCommentSegment                 PageCommentSegment                  @relation(fields: [pageCommentSegmentId], references: [id], onDelete: Cascade)
   pageCommentSegmentTranslationVotes PageCommentSegmentTranslationVote[]
+  notifications                      Notification[]
+
   @@index([pageCommentSegmentId])
   @@index([userId])
   @@index([locale])
@@ -273,21 +280,20 @@ model PageCommentSegmentTranslation {
 }
 
 model PageCommentSegmentTranslationVote {
-  id              Int           @id @default(autoincrement())
-  userId          String           @map("user_id")
-  pageCommentSegmentTranslationId Int           @map("page_comment_segment_translation_id")
-  isUpvote        Boolean       @map("is_upvote")
-  createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
-  pageCommentSegmentTranslation PageCommentSegmentTranslation @relation(fields: [pageCommentSegmentTranslationId], references: [id], onDelete: Cascade)
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                              Int                           @id @default(autoincrement())
+  userId                          String                        @map("user_id")
+  pageCommentSegmentTranslationId Int                           @map("page_comment_segment_translation_id")
+  isUpvote                        Boolean                       @map("is_upvote")
+  createdAt                       DateTime                      @default(now()) @map("created_at")
+  updatedAt                       DateTime                      @updatedAt @map("updated_at")
+  pageCommentSegmentTranslation   PageCommentSegmentTranslation @relation(fields: [pageCommentSegmentTranslationId], references: [id], onDelete: Cascade)
+  user                            User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([pageCommentSegmentTranslationId, userId])
   @@index([pageCommentSegmentTranslationId])
   @@index([userId])
   @@map("page_comment_segment_translation_votes")
 }
-
 
 model Account {
   userId            String
@@ -324,4 +330,38 @@ model VerificationToken {
 
   @@id([identifier, token])
   @@map("verification_tokens")
+}
+
+enum NotificationType {
+  FOLLOW
+  PAGE_COMMENT
+  PAGE_LIKE
+  PAGE_SEGMENT_TRANSLATION_VOTE
+  PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE
+}
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  userId    String           @map("user_id")
+  actorId   String           @map("actor_id")
+  type      NotificationType
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  pageId                          Int? @map("page_id")
+  pageCommentId                   Int? @map("page_comment_id")
+  pageSegmentTranslationId        Int? @map("page_segment_translation_id")
+  pageCommentSegmentTranslationId Int? @map("page_comment_segment_translation_id")
+
+  user  User @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  actor User @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+
+  page                          Page?                          @relation(fields: [pageId], references: [id])
+  pageComment                   PageComment?                   @relation(fields: [pageCommentId], references: [id])
+  pageSegmentTranslation        PageSegmentTranslation?        @relation(fields: [pageSegmentTranslationId], references: [id])
+  pageCommentSegmentTranslation PageCommentSegmentTranslation? @relation(fields: [pageCommentSegmentTranslationId], references: [id])
+
+  @@index([userId])
+  @@index([actorId])
+  @@map("notifications")
 }

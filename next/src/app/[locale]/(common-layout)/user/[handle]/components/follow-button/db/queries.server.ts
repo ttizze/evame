@@ -1,17 +1,14 @@
 import { prisma } from "@/lib/prisma";
 
-export async function isFollowing(
-	followerHandle: string,
-	followingHandle: string,
-) {
+export async function isFollowing(followerId: string, followingId: string) {
 	const followingUser = await prisma.user.findUnique({
 		where: {
-			handle: followingHandle,
+			id: followingId,
 		},
 	});
 	const followerUser = await prisma.user.findUnique({
 		where: {
-			handle: followerHandle,
+			id: followerId,
 		},
 	});
 	if (!followingUser || !followerUser) {

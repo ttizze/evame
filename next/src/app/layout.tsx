@@ -4,8 +4,8 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { BIZ_UDPGothic, Inter } from "next/font/google";
+import NextTopLoader from "nextjs-toploader";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import NextTopLoader from 'nextjs-toploader';
 const inter = Inter({ subsets: ["latin"] });
 const bizUDPGothic = BIZ_UDPGothic({
 	weight: ["400", "700"],

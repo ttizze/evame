@@ -12,7 +12,7 @@ import {
 import { LogOutIcon, SettingsIcon } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { ModeToggle } from "./mode-toggle";
+import { ModeToggle } from "../mode-toggle";
 interface BaseHeaderLayoutProps {
 	currentUser: SanitizedUser | undefined;
 	leftExtra?: ReactNode;

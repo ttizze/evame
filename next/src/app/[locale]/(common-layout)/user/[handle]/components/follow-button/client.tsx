@@ -4,12 +4,12 @@ import { useActionState } from "react";
 import { type FollowActionResponse, followAction } from "./action";
 
 interface FollowButtonProps {
-	targetUserHandle: string;
+	targetUserId: string;
 	isFollowing: boolean;
 }
 
 export function FollowButtonClient({
-	targetUserHandle,
+	targetUserId,
 	isFollowing,
 }: FollowButtonProps) {
 	const [state, formAction, isPending] = useActionState<
@@ -19,7 +19,7 @@ export function FollowButtonClient({
 
 	return (
 		<form action={formAction}>
-			<input type="hidden" name="targetUserHandle" value={targetUserHandle} />
+			<input type="hidden" name="targetUserId" value={targetUserId} />
 			<input
 				type="hidden"
 				name="action"

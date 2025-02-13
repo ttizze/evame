@@ -6,7 +6,10 @@ import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { createPageComment } from "../../db/mutations.server";
+import {
+	createNotificationPageComment,
+	createPageComment,
+} from "../../db/mutations.server";
 import { processPageCommentHtml } from "../../lib/process-page-comment-html";
 const createPageCommentSchema = z.object({
 	pageId: z.coerce.number(),
@@ -55,6 +58,11 @@ export async function commentAction(
 		locale,
 		currentUser.id,
 		pageId,
+	);
+	await createNotificationPageComment(
+		currentUser.id,
+		page.userId,
+		pageComment.id,
 	);
 	await processPageCommentHtml(
 		pageComment.id,

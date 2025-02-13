@@ -1,9 +1,10 @@
 import { getCurrentUser } from "@/auth";
 import { Link } from "@/i18n/routing";
 import { Search } from "lucide-react";
+import { StartButton } from "../start-button";
 import { BaseHeaderLayout } from "./base-header-layout";
 import { NewPageButton } from "./new-page-button";
-import { StartButton } from "./start-button";
+import NotificationsDropdown from "./notifications-dropdown";
 export async function Header() {
 	const currentUser = await getCurrentUser();
 
@@ -13,7 +14,10 @@ export async function Header() {
 				<Search className="w-6 h-6 " />
 			</Link>
 			{currentUser ? (
-				<NewPageButton handle={currentUser.handle} />
+				<>
+					<NotificationsDropdown currentUserHandle={currentUser.handle} />
+					<NewPageButton handle={currentUser.handle} />
+				</>
 			) : (
 				<StartButton />
 			)}

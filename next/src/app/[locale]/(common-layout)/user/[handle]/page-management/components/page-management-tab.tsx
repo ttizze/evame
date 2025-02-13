@@ -1,7 +1,7 @@
 "use client";
 
 import { DeletePageDialog } from "@/app/[locale]/components/delete-page-dialog/delete-page-dialog";
-import { PageActionsDropdown } from "@/app/[locale]/components/page-actions-dropdown/page-actions-dropdown";
+import { PageActionsDropdown } from "@/app/[locale]/components/page-actions-dropdown";
 import { PaginationBar } from "@/app/[locale]/components/pagination-bar";
 import { NavigationLink } from "@/components/navigation-link";
 import { Badge } from "@/components/ui/badge";
