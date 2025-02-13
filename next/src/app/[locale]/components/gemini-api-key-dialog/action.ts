@@ -5,6 +5,7 @@ import { validateGeminiApiKey } from "@/features/translate/services/gemini";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { updateGeminiApiKey } from "./db/mutations.server";
+import { revalidatePath } from "next/cache";
 const geminiApiKeySchema = z.object({
 	geminiApiKey: z.string(),
 });
@@ -45,5 +46,6 @@ export async function updateGeminiApiKeyAction(
 		}
 	}
 	await updateGeminiApiKey(currentUser.id, geminiApiKey);
+	revalidatePath("/");
 	return { success: true, message: "Gemini API key updated successfully" };
 }
