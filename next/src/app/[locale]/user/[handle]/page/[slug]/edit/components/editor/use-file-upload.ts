@@ -7,9 +7,7 @@ export async function handleFileUpload(
 	pos?: number,
 ) {
 	const insertPos = pos ?? editor.state.selection.anchor;
-	const placeholderSrc =
-		"https://via.placeholder.com/300x200?text=Uploading...";
-
+	const placeholderSrc = "/uploading.png";
 	editor
 		.chain()
 		.insertContentAt(insertPos, {
