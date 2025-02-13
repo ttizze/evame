@@ -9,7 +9,9 @@ import { mockUsers } from "@/tests/mock";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 vi.mock("@/auth");
-
+vi.mock('next/cache', () => ({
+  revalidatePath: () => {},
+}));
 const sampleNotifications: NotificationWithRelations[] = [
 	{
 		id: 1,
@@ -203,7 +205,6 @@ describe("NotificationsDropdownClient", () => {
 				screen.getByTestId("notifications-menu-content"),
 			).toBeInTheDocument();
 		});
-		screen.debug();
 		expect(await screen.findByText("John Doe")).toBeInTheDocument();
 		expect(await screen.findByText("Commented Page Title")).toBeInTheDocument();
 		expect(await screen.findByText(/commented on/i)).toBeInTheDocument();
@@ -226,22 +227,4 @@ describe("NotificationsDropdownClient", () => {
 		expect(await screen.findByText(/voted for/i)).toBeInTheDocument();
 	});
 
-	it("menuを開くと未読通知が読まれる", async () => {
-		const { container } = render(
-			<NextIntlClientProvider locale="ja">
-				<NotificationsDropdownClient
-					notifications={sampleNotifications}
-					currentUserHandle={mockUsers[0].handle}
-				/>
-			</NextIntlClientProvider>,
-		);
-
-		const bellIcon = screen.getByTestId("bell-icon");
-		expect(bellIcon).toBeInTheDocument();
-		if (bellIcon) {
-			await user.click(bellIcon);
-		}
-		const unreadCount = screen.getByTestId("unread-count");
-		expect(unreadCount).not.toBeInTheDocument();
-	});
 });

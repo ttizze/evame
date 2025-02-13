@@ -59,7 +59,6 @@ export async function voteTranslationAction(
 		parsedFormData.data.voteTarget === VOTE_TARGET.PAGE_SEGMENT_TRANSLATION &&
 		isUpvote
 	) {
-		console.log("createNotificationPageSegmentTranslationVote");
 		await createNotificationPageSegmentTranslationVote(
 			parsedFormData.data.segmentTranslationId,
 			currentUser.id,

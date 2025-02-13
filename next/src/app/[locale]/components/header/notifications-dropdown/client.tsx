@@ -39,8 +39,8 @@ export function NotificationsDropdownClient({
 			<DropdownMenuTrigger asChild>
 				<div className="relative">
 					<Bell
-						className="w-6 h-6 cursor-pointer"
 						data-testid="bell-icon"
+						className="w-6 h-6 cursor-pointer"
 					/>
 					{unreadCount > 0 && (
 						<span
