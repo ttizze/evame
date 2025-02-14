@@ -1,25 +1,34 @@
 name: CI
 
 on:
+  pull_request:
   workflow_dispatch:
 
 jobs:
   ci-check:
     runs-on: ubuntu-latest
     services:
-      postgres:
-        image: postgres:latest
+      neon:
+        image: postgres:17
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          -d 1
         ports:
-          - 5433:5432
+          - '5433:5432'
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
           POSTGRES_DB: testdb
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    
+      neon-proxy:
+        image: ghcr.io/timowilhelm/local-neon-http-proxy:main
+        ports:
+          - '4444:4444'
+        env:
+          PG_CONNECTION_STRING: postgres://postgres:password@neon:5432/testdb
 
     steps:
       - name: Checkout
@@ -32,22 +41,22 @@ jobs:
 
       - name: Create .env
         run: |
-          cd web
+          cd next
           echo "TIPTAP_PRO_API_KEY=${{ secrets.TIPTAP_PRO_API_KEY }}" >> .env
           echo "DATABASE_URL=postgresql://postgres:password@localhost:5433/testdb?schema=public" >> .env
 
       - name: Install dependencies
         run: |
-          cd web
+          cd next
           bun install
 
       - name: Run Biome
         run: |
+          cd next
           bun x biome ci .
 
       - name: Run Tests
         run: |
-          cd web
+          cd next
           bunx prisma migrate dev && bunx prisma migrate deploy
           bunx vitest
-
