@@ -1,4 +1,3 @@
-import { stringify } from "node:querystring";
 import { useRouter } from "@/i18n/routing";
 import { useRouter as useTopLoaderRouter } from "nextjs-toploader/app";
 
@@ -19,8 +18,16 @@ export function useCombinedRouter() {
 
 	const push = async (href: Href, options?: NavigateOptions) => {
 		if (typeof href === "object") {
-			const queryString = href.query ? `?${stringify(href.query)}` : "";
-			const hrefString = `${href.pathname}${queryString}`;
+			const searchParams = new URLSearchParams();
+			if (href.query) {
+				for (const [key, value] of Object.entries(href.query)) {
+					if (value !== undefined) {
+						searchParams.append(key, String(value));
+					}
+				}
+			}
+			const queryString = searchParams.toString();
+			const hrefString = `${href.pathname}${queryString ? `?${queryString}` : ""}`;
 			topLoader.push(hrefString, options);
 			await intlRouter.push(href, options);
 		} else {
