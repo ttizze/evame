@@ -7,10 +7,7 @@ interface CommentListProps {
 	pageId: number;
 }
 
-export async function PageCommentList({
-	locale,
-	pageId,
-}: CommentListProps) {
+export async function PageCommentList({ locale, pageId }: CommentListProps) {
 	const currentUser = await getCurrentUser();
 	const pageCommentsWithUser = await fetchPageCommentsWithUserAndTranslations(
 		pageId,

@@ -4,6 +4,7 @@ import { LikeButton } from "@/app/[locale]/components/like-button/like-button";
 import { getBestTranslation } from "@/app/[locale]/lib/get-best-translation";
 import { stripHtmlTags } from "@/app/[locale]/lib/strip-html-tags";
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
+import { getCurrentUser } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
 import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
@@ -20,7 +21,6 @@ import {
 	fetchPageCommentsCount,
 	fetchPageWithTranslations,
 } from "./db/queries.server";
-import { getCurrentUser } from "@/auth";
 
 const getPageData = cache(async (slug: string, locale: string) => {
 	const currentUser = await getCurrentUser();
@@ -112,15 +112,17 @@ export async function generateMetadata({
 	};
 }
 
-export default async function Page({
-	params,
-}: { params: Params }) {
+export default async function Page({ params }: { params: Params }) {
 	const { slug, locale } = await params;
 	const data = await getPageData(slug, locale);
 	if (!data) {
 		return notFound();
 	}
-	const { pageWithTranslations, sourceTitleWithBestTranslationTitle,currentUser } = data;
+	const {
+		pageWithTranslations,
+		sourceTitleWithBestTranslationTitle,
+		currentUser,
+	} = data;
 
 	const guestId = await getGuestId();
 	const geminiApiKey = await fetchGeminiApiKeyByHandle(
