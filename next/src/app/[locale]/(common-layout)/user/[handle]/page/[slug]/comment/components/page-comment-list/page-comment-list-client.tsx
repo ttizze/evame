@@ -104,8 +104,6 @@ export function PageCommentListClient({
 								pageComment.pageCommentSegmentsWithTranslations
 							}
 							currentHandle={currentHandle}
-							showOriginal={showOriginal}
-							showTranslation={showTranslation}
 							locale={locale}
 							voteTarget={VOTE_TARGET.COMMENT_SEGMENT_TRANSLATION}
 							addTranslationFormTarget={

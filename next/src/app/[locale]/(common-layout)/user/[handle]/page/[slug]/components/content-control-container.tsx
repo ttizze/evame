@@ -51,7 +51,7 @@ export function ContentControlContainer({
 
 	return (
 		<>
-			<article className="w-full prose dark:prose-invert prose-a:underline prose-a:decoration-dotted sm:prose lg:prose-lg mx-auto px-4 mb-20">
+			<article className="w-full prose dark:prose-invert prose-a:underline sm:prose lg:prose-lg mx-auto px-4 mb-20">
 				<ContentWithTranslations
 					pageWithTranslations={pageWithTranslations}
 					pageSegmentTitleWithTranslations={pageSegmentTitleWithTranslations}
@@ -59,8 +59,6 @@ export function ContentControlContainer({
 					hasGeminiApiKey={hasGeminiApiKey}
 					userAITranslationInfo={userAITranslationInfo}
 					locale={locale}
-					showOriginal={queryShowOriginal ?? true}
-					showTranslation={queryShowTranslation ?? true}
 				/>
 			</article>
 			<div className="flex items-center gap-4">

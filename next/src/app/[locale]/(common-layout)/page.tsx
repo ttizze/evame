@@ -113,8 +113,6 @@ export default async function HomePage({
 								segmentTextClassName="w-full bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text !text-transparent mb-2"
 								elements={heroTitle.segment.text}
 								currentHandle={undefined}
-								showOriginal={true}
-								showTranslation={true}
 								voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 								addTranslationFormTarget={
 									ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
@@ -138,8 +136,6 @@ export default async function HomePage({
 								segmentWithTranslations={heroText}
 								segmentTextClassName="mb-2"
 								elements={heroText.segment.text}
-								showOriginal={true}
-								showTranslation={true}
 								currentHandle={undefined}
 								voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 								addTranslationFormTarget={
