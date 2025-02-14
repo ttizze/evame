@@ -33,17 +33,14 @@ export function SegmentAndTranslationSection({
 	voteTarget,
 	addTranslationFormTarget,
 }: SegmentAndTranslationSectionProps) {
-	const [showOriginal, ] = useQueryState("showOriginal", {
+	const [showOriginal] = useQueryState("showOriginal", {
 		parse: (val) => val === "true",
 		serialize: (val) => (val ? "true" : "false"),
 	});
-	const [showTranslation, ] = useQueryState(
-		"showTranslation",
-		{
-			parse: (val) => val === "true",
-			serialize: (val) => (val ? "true" : "false"),
-		},
-	);
+	const [showTranslation] = useQueryState("showTranslation", {
+		parse: (val) => val === "true",
+		serialize: (val) => (val ? "true" : "false"),
+	});
 	return (
 		<>
 			{showOriginal && (
