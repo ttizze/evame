@@ -1,14 +1,14 @@
 import { uploadImage } from "@/app/[locale]/lib/upload";
 import type { Editor as TiptapEditor } from "@tiptap/core";
-
+import { nanoid } from "nanoid";
 export async function handleFileUpload(
 	file: File,
 	editor: TiptapEditor,
 	pos?: number,
 ) {
 	const insertPos = pos ?? editor.state.selection.anchor;
-	const placeholderSrc = "/uploading.png";
-	const placeholderId = `uploading-${Date.now()}`;
+	const placeholderSrc = "/loading.gif";
+	const placeholderId = `uploading-${nanoid()}`;
 
 	editor
 		.chain()
