@@ -18,11 +18,12 @@ export async function handleFileUpload(
 		})
 		.run();
 
-	const dimensions = await getImageDimensions(file);
-
-	const url = await uploadImage(file);
-	if (!url.success) {
-		window.alert(url.message);
+	const [dimensions, uploadResult] = await Promise.all([
+		getImageDimensions(file),
+		uploadImage(file),
+	]);
+	if (!uploadResult.success) {
+		window.alert(uploadResult.message);
 		return;
 	}
 
@@ -41,7 +42,7 @@ export async function handleFileUpload(
 			.chain()
 			.setNodeSelection(posToUpdate)
 			.updateAttributes("image", {
-				src: url.data?.imageUrl,
+				src: uploadResult.data?.imageUrl,
 				width: dimensions.width,
 				height: dimensions.height,
 				"data-uploading-id": null, // 一意属性は不要なので削除

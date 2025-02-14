@@ -64,7 +64,6 @@ export function ParsedContent({
 						alt={alt || ""}
 						height={height ? Number(height) : 300}
 						width={width ? Number(width) : 300}
-						sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 70vw"
 						className="w-auto h-auto max-w-full"
 						priority={false}
 						{...otherAttribs}
