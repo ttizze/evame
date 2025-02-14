@@ -27,28 +27,31 @@ export async function handleFileUpload(
 	}
 
 	let posToUpdate: number | null = null;
-  editor.state.doc.descendants((node, pos) => {
-    if (node.type.name === "image" && node.attrs["data-uploading-id"] === placeholderId) {
-      posToUpdate = pos;
-      return false; // 見つかったので探索終了
-    }
-  });
+	editor.state.doc.descendants((node, pos) => {
+		if (
+			node.type.name === "image" &&
+			node.attrs["data-uploading-id"] === placeholderId
+		) {
+			posToUpdate = pos;
+			return false; // 見つかったので探索終了
+		}
+	});
 	if (posToUpdate !== null) {
-    editor
-      .chain()
-      .setNodeSelection(posToUpdate)
-      .updateAttributes("image", {
-        src: url.data?.imageUrl,
-        width: dimensions.width,
-        height: dimensions.height,
-        "data-uploading-id": null, // 一意属性は不要なので削除
-      })
-      .createParagraphNear()
-      .focus()
-      .run();
-  } else {
-    console.error("アップロード用プレースホルダー画像が見つかりませんでした");
-  }
+		editor
+			.chain()
+			.setNodeSelection(posToUpdate)
+			.updateAttributes("image", {
+				src: url.data?.imageUrl,
+				width: dimensions.width,
+				height: dimensions.height,
+				"data-uploading-id": null, // 一意属性は不要なので削除
+			})
+			.createParagraphNear()
+			.focus()
+			.run();
+	} else {
+		console.error("アップロード用プレースホルダー画像が見つかりませんでした");
+	}
 }
 
 async function getImageDimensions(

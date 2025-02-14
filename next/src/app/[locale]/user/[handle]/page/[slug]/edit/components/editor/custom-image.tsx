@@ -8,7 +8,9 @@ export const CustomImage = Image.extend({
 				default: null,
 				parseHTML: (element) => element.getAttribute("data-uploading-id"),
 				renderHTML: (attributes) => {
-					return attributes["data-uploading-id"] ? { "data-uploading-id": attributes["data-uploading-id"] } : {};
+					return attributes["data-uploading-id"]
+						? { "data-uploading-id": attributes["data-uploading-id"] }
+						: {};
 				},
 			},
 			width: {
