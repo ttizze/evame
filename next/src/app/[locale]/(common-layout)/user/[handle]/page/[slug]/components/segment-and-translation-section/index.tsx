@@ -36,10 +36,12 @@ export function SegmentAndTranslationSection({
 	const [showOriginal] = useQueryState("showOriginal", {
 		parse: (val) => val === "true",
 		serialize: (val) => (val ? "true" : "false"),
+		defaultValue: true,
 	});
 	const [showTranslation] = useQueryState("showTranslation", {
 		parse: (val) => val === "true",
 		serialize: (val) => (val ? "true" : "false"),
+		defaultValue: true,
 	});
 	return (
 		<>
