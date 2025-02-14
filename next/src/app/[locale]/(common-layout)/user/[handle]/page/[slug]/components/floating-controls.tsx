@@ -21,6 +21,7 @@ export function FloatingControls({
 	shareTitle,
 }: FloatingControlsProps) {
 	const [showOriginal, setShowOriginal] = useQueryState("showOriginal", {
+		defaultValue: true,
 		parse: (val) => val === "true",
 		serialize: (val) => (val ? "true" : "false"),
 		shallow: true,
@@ -28,6 +29,7 @@ export function FloatingControls({
 	const [showTranslation, setShowTranslation] = useQueryState(
 		"showTranslation",
 		{
+			defaultValue: true,
 			parse: (val) => val === "true",
 			serialize: (val) => (val ? "true" : "false"),
 			shallow: true,
@@ -43,9 +45,8 @@ export function FloatingControls({
 	const searchParams = useSearchParams();
 	const shareUrl =
 		typeof window !== "undefined"
-			? `${window.location.origin}${pathname}${
-					searchParams.toString() ? `?${searchParams.toString()}` : ""
-				}`
+			? `${window.location.origin}${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""
+			}`
 			: "";
 
 	const handleScroll = useCallback(() => {
@@ -70,6 +71,16 @@ export function FloatingControls({
 		};
 	}, [handleScroll]);
 
+	const baseClasses =
+		"drop-shadow-xl dark:shadow-[0_3px_3px_rgba(255,255,255,0.15)] h-12 w-12 rounded-full";
+	const baseButtonClasses =
+		`${baseClasses} border relative bg-background`;
+	/** 非選択状態（トグルOFF）時の追加クラス */
+	const toggledOffClasses =
+		`bg-muted after:absolute after:w-full after:h-[1px] after:bg-current after:top-1/2 
+		after:left-0 after:origin-center after:-rotate-45`;
+	/** アイコンラッパーのクラス */
+
 	return (
 		<div
 			className={cn(
@@ -81,12 +92,8 @@ export function FloatingControls({
 				variant="ghost"
 				size="icon"
 				className={cn(
-					`drop-shadow-xl dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)] h-12 w-12 rounded-full 
-					border relative after:opacity-50 bg-background`,
-					!showOriginal &&
-						` bg-muted 
-					after:absolute after:w-full after:h-[1px] after:bg-current 
-					after:top-1/2 after:left-0 after:origin-center after:-rotate-45`,
+					baseButtonClasses,
+					!showOriginal && toggledOffClasses,
 				)}
 				onClick={() => {
 					setShowOriginal(!showOriginal);
@@ -105,12 +112,8 @@ export function FloatingControls({
 				variant="ghost"
 				size="icon"
 				className={cn(
-					`drop-shadow-xl dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)] h-12 w-12 rounded-full 
-					border after:opacity-50 bg-background `,
-					!showTranslation &&
-						`bg-muted
-					relative after:absolute after:w-full after:h-[1px] after:bg-current 
-					after:top-1/2 after:left-0 after:origin-center after:-rotate-45`,
+					baseButtonClasses,
+					!showTranslation && toggledOffClasses,
 				)}
 				onClick={() => {
 					setShowTranslation(!showTranslation);
@@ -128,10 +131,10 @@ export function FloatingControls({
 					)}
 				/>
 			</Button>
-			<div className="drop-shadow-xl  dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)]  h-12 w-12">
+			<div className={baseClasses}>
 				<LikeButton liked={liked} likeCount={likeCount} slug={slug} />
 			</div>
-			<div className="drop-shadow-xl  dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)] h-12 w-12">
+			<div className={baseClasses}>
 				<ShareDialog url={shareUrl} title={shareTitle} />
 			</div>
 		</div>

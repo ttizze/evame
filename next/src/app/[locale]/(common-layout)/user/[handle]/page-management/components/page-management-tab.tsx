@@ -114,7 +114,7 @@ export function PageManagementTab({
 							<TableHead>Title</TableHead>
 							<TableHead>Status</TableHead>
 							<TableHead>Last Modified</TableHead>
-							<TableHead className="w-10">f</TableHead>
+							<TableHead className="w-10">Actions</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
