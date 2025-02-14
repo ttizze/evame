@@ -6,10 +6,10 @@ import type {
 import { NavigationLink } from "@/components/navigation-link";
 import { Lock } from "lucide-react";
 import { SquarePen } from "lucide-react";
+import { useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 import type { SegmentWithTranslations } from "../../types";
 import { TranslationSection } from "./translation-section";
-import { useQueryState } from "nuqs";
 interface SegmentAndTranslationSectionProps {
 	segmentWithTranslations: SegmentWithTranslations;
 	elements: string | ReactNode | ReactNode[];
@@ -33,13 +33,10 @@ export function SegmentAndTranslationSection({
 	voteTarget,
 	addTranslationFormTarget,
 }: SegmentAndTranslationSectionProps) {
-	const [showOriginal, setShowOriginal] = useQueryState(
-		"showOriginal",
-		{
-			parse: (val) => val === "true",
-			serialize: (val) => (val ? "true" : "false"),
-		},
-	);
+	const [showOriginal, setShowOriginal] = useQueryState("showOriginal", {
+		parse: (val) => val === "true",
+		serialize: (val) => (val ? "true" : "false"),
+	});
 	const [showTranslation, setShowTranslation] = useQueryState(
 		"showTranslation",
 		{

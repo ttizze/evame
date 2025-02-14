@@ -4,9 +4,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Languages, Text } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useState } from "react";
 import { ShareDialog } from "./share-dialog";
-import { useQueryState } from "nuqs";
 interface FloatingControlsProps {
 	liked: boolean;
 	likeCount: number;
@@ -20,14 +20,11 @@ export function FloatingControls({
 	slug,
 	shareTitle,
 }: FloatingControlsProps) {
-	const [showOriginal, setShowOriginal] = useQueryState(
-		"showOriginal",
-		{
-			parse: (val) => val === "true",
-			serialize: (val) => (val ? "true" : "false"),
-			shallow: true,
-		},
-	);
+	const [showOriginal, setShowOriginal] = useQueryState("showOriginal", {
+		parse: (val) => val === "true",
+		serialize: (val) => (val ? "true" : "false"),
+		shallow: true,
+	});
 	const [showTranslation, setShowTranslation] = useQueryState(
 		"showTranslation",
 		{

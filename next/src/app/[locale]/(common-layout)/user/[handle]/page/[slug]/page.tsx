@@ -1,17 +1,17 @@
 import { PageCommentForm } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-form";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-list";
+import { LikeButton } from "@/app/[locale]/components/like-button/like-button";
 import { getBestTranslation } from "@/app/[locale]/lib/get-best-translation";
 import { stripHtmlTags } from "@/app/[locale]/lib/strip-html-tags";
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
 import { auth } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
+import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { TranslateActionSection } from "../../../../../components/translate-action-section";
 import { ContentWithTranslations } from "./components/content-with-translations";
-import { LikeButton } from "@/app/[locale]/components/like-button/like-button";
-import { MessageCircle } from "lucide-react";
 import { FloatingControls } from "./components/floating-controls";
 import { TranslateTarget } from "./constants";
 import {
