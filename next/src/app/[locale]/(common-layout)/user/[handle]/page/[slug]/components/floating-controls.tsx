@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Languages, Text } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useQueryState } from "nuqs";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ShareDialog } from "./share-dialog";
 interface FloatingControlsProps {
 	liked: boolean;
@@ -36,16 +36,21 @@ export function FloatingControls({
 
 	const [isVisible, setIsVisible] = useState(true);
 	const [lastScrollY, setLastScrollY] = useState(0);
+
+	const ignoreScrollRef = useRef(false);
+
+
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
 	const shareUrl =
 		typeof window !== "undefined"
-			? `${window.location.origin}${pathname}${
-					searchParams.toString() ? `?${searchParams.toString()}` : ""
-				}`
+			? `${window.location.origin}${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""
+			}`
 			: "";
 
 	const handleScroll = useCallback(() => {
+		if (ignoreScrollRef.current) return;
+
 		const currentScrollY = window.scrollY;
 		const scrollDelta = currentScrollY - lastScrollY;
 
@@ -76,31 +81,43 @@ export function FloatingControls({
 				variant="ghost"
 				size="icon"
 				className={cn(
-					"drop-shadow-xl dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)] h-12 w-12 rounded-full border bg-background relative after:absolute after:w-full after:h-[1px] after:bg-current after:top-1/2 after:left-0 after:origin-center after:-rotate-45",
-					showOriginal && "after:opacity-50",
+					`drop-shadow-xl dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)] h-12 w-12 rounded-full 
+					border relative after:opacity-50 bg-background`,
+					!showOriginal && ` bg-muted 
+					after:absolute after:w-full after:h-[1px] after:bg-current 
+					after:top-1/2 after:left-0 after:origin-center after:-rotate-45`,
 				)}
 				onClick={() => {
 					setShowOriginal(!showOriginal);
-					setLastScrollY(window.scrollY);
+					ignoreScrollRef.current = true;
+					setTimeout(() => {
+						ignoreScrollRef.current = false;
+					}, 100);
 				}}
 				title={showOriginal ? "Hide original text" : "Show original text"}
 			>
-				<Text className={cn("h-5 w-5", showOriginal && "opacity-50")} />
+				<Text className={cn("h-5 w-5 opacity-100", !showOriginal && "opacity-50")} />
 			</Button>
 			<Button
 				variant="ghost"
 				size="icon"
 				className={cn(
-					"drop-shadow-xl dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)] h-12 w-12 rounded-full border bg-background relative after:absolute after:w-full after:h-[1px] after:bg-current after:top-1/2 after:left-0 after:origin-center after:-rotate-45",
-					showTranslation && "after:opacity-50",
+					`drop-shadow-xl dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)] h-12 w-12 rounded-full 
+					border after:opacity-50 bg-background `,
+					!showTranslation && `bg-muted
+					relative after:absolute after:w-full after:h-[1px] after:bg-current 
+					after:top-1/2 after:left-0 after:origin-center after:-rotate-45`,
 				)}
 				onClick={() => {
 					setShowTranslation(!showTranslation);
-					setLastScrollY(window.scrollY);
+					ignoreScrollRef.current = true;
+					setTimeout(() => {
+						ignoreScrollRef.current = false;
+					}, 100);
 				}}
 				title={showTranslation ? "Hide translation" : "Show translation"}
 			>
-				<Languages className={cn("h-5 w-5", showTranslation && "opacity-50")} />
+				<Languages className={cn("h-5 w-5 opacity-100", !showTranslation && "opacity-50")} />
 			</Button>
 			<div className="drop-shadow-xl  dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)]  h-12 w-12">
 				<LikeButton liked={liked} likeCount={likeCount} slug={slug} />

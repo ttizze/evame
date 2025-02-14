@@ -22,7 +22,7 @@ export function PageCommentForm({
 		<>
 			<form
 				action={action}
-				className="space-y-4 relative prose dark:prose-invert"
+				className="space-y-4 relative"
 			>
 				<input type="hidden" name="pageId" value={pageId} />
 				<Editor

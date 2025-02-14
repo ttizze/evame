@@ -37,7 +37,7 @@ export function PageCommentListClient({
 			{pageCommentsWithUser.map((pageComment) => (
 				<div key={pageComment.id} className="p-2 border-t">
 					<div className="flex items-center">
-						<Avatar className="w-6 h-6 mr-3">
+						<Avatar className="w-6 h-6 mr-3 not-prose">
 							<AvatarImage
 								src={pageComment.user.image}
 								alt={pageComment.user.name}

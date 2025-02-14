@@ -166,51 +166,51 @@ export default async function Page({ params }: { params: Params }) {
 					userAITranslationInfo={userAITranslationInfo}
 					locale={locale}
 				/>
-			</article>
-			<div className="flex items-center gap-4">
-				<LikeButton
+				<div className="flex items-center gap-4">
+					<LikeButton
+						liked={isLikedByUser}
+						likeCount={likeCount}
+						slug={slug}
+						showCount
+					/>
+					<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
+					<span>{pageCommentsCount}</span>
+				</div>
+
+				<FloatingControls
 					liked={isLikedByUser}
 					likeCount={likeCount}
 					slug={slug}
-					showCount
+					shareTitle={sourceTitleWithBestTranslationTitle}
 				/>
-				<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
-				<span>{pageCommentsCount}</span>
-			</div>
 
-			<FloatingControls
-				liked={isLikedByUser}
-				likeCount={likeCount}
-				slug={slug}
-				shareTitle={sourceTitleWithBestTranslationTitle}
-			/>
-
-			<div className="mt-8">
 				<div className="mt-8">
-					<div className="flex items-center gap-2 py-2">
-						<h2 className="text-2xl font-bold">Comments</h2>
-						<TranslateActionSection
+					<div className="mt-8">
+						<div className="flex items-center gap-2 py-2">
+							<h2 className="text-2xl not-prose font-bold">Comments</h2>
+							<TranslateActionSection
+								pageId={pageWithTranslations.page.id}
+								currentHandle={currentUser?.handle}
+								userAITranslationInfo={userAITranslationInfo}
+								hasGeminiApiKey={hasGeminiApiKey}
+								sourceLocale={pageWithTranslations.page.sourceLocale}
+								locale={locale}
+								existLocales={pageWithTranslations.existLocales}
+								translateTarget={TranslateTarget.TRANSLATE_COMMENT}
+								showAddNew={true}
+							/>
+						</div>
+						<PageCommentList
 							pageId={pageWithTranslations.page.id}
-							currentHandle={currentUser?.handle}
-							userAITranslationInfo={userAITranslationInfo}
-							hasGeminiApiKey={hasGeminiApiKey}
-							sourceLocale={pageWithTranslations.page.sourceLocale}
 							locale={locale}
-							existLocales={pageWithTranslations.existLocales}
-							translateTarget={TranslateTarget.TRANSLATE_COMMENT}
-							showAddNew={true}
 						/>
 					</div>
-					<PageCommentList
+					<PageCommentForm
 						pageId={pageWithTranslations.page.id}
-						locale={locale}
+						currentHandle={currentUser?.handle}
 					/>
 				</div>
-				<PageCommentForm
-					pageId={pageWithTranslations.page.id}
-					currentHandle={currentUser?.handle}
-				/>
-			</div>
+			</article>
 		</div>
 	);
 }
