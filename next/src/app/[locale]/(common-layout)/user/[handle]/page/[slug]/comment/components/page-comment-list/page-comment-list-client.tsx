@@ -22,17 +22,11 @@ import type { PageCommentWithUser } from "./db/query.server";
 interface CommentListClientProps {
 	pageCommentsWithUser: PageCommentWithUser;
 	currentHandle: string | undefined;
-	showOriginal: boolean;
-	showTranslation: boolean;
-	locale: string;
 }
 
 export function PageCommentListClient({
 	pageCommentsWithUser,
 	currentHandle,
-	showOriginal,
-	showTranslation,
-	locale,
 }: CommentListClientProps) {
 	const [state, action, isPending] = useActionState<
 		CommentDeleteActionResponse,

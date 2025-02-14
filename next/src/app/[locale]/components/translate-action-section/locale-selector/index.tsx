@@ -13,12 +13,14 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import { usePathname, useRouter } from "@/i18n/routing";
+import { usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { startTransition } from "react";
+import { useCombinedRouter } from "../hooks/use-combined-router";
+
 interface LocaleOption {
 	code: string;
 	name: string;
@@ -43,7 +45,7 @@ export function LocaleSelector({
 	onChange,
 }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
-	const router = useRouter();
+	const router = useCombinedRouter();
 	const params = useParams();
 	const pathname = usePathname();
 	const handleLocaleChange = (value: string) => {

@@ -4,7 +4,6 @@ import { LikeButton } from "@/app/[locale]/components/like-button/like-button";
 import { getBestTranslation } from "@/app/[locale]/lib/get-best-translation";
 import { stripHtmlTags } from "@/app/[locale]/lib/strip-html-tags";
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
-import { auth } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
 import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
@@ -21,10 +20,10 @@ import {
 	fetchPageCommentsCount,
 	fetchPageWithTranslations,
 } from "./db/queries.server";
+import { getCurrentUser } from "@/auth";
 
 const getPageData = cache(async (slug: string, locale: string) => {
-	const session = await auth();
-	const currentUser = session?.user;
+	const currentUser = await getCurrentUser();
 
 	const pageWithTranslations = await fetchPageWithTranslations(
 		slug,
@@ -59,7 +58,6 @@ const getPageData = cache(async (slug: string, locale: string) => {
 	};
 });
 type Params = Promise<{ locale: string; handle: string; slug: string }>;
-type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
 export async function generateMetadata({
 	params,
@@ -116,21 +114,15 @@ export async function generateMetadata({
 
 export default async function Page({
 	params,
-	searchParams,
-}: { params: Params; searchParams: SearchParams }) {
+}: { params: Params }) {
 	const { slug, locale } = await params;
-	const { showOriginal = "true", showTranslation = "true" } =
-		await searchParams;
 	const data = await getPageData(slug, locale);
 	if (!data) {
 		return notFound();
 	}
-	const { pageWithTranslations, sourceTitleWithBestTranslationTitle } = data;
-	const session = await auth();
-	const currentUser = session?.user;
+	const { pageWithTranslations, sourceTitleWithBestTranslationTitle,currentUser } = data;
 
 	const guestId = await getGuestId();
-
 	const geminiApiKey = await fetchGeminiApiKeyByHandle(
 		currentUser?.handle ?? "",
 	);
@@ -209,8 +201,6 @@ export default async function Page({
 					</div>
 					<PageCommentList
 						pageId={pageWithTranslations.page.id}
-						showOriginal={showOriginal === "true"}
-						showTranslation={showTranslation === "true"}
 						locale={locale}
 					/>
 				</div>
