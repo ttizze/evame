@@ -11,9 +11,8 @@ import { getCurrentUser } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
-const TabsClient = dynamic(
-  () =>
-    import("@/app/[locale]/components/tabs-client").then((mod) => mod.TabsClient),
+const TabsClient = dynamic(() =>
+	import("@/app/[locale]/components/tabs-client").then((mod) => mod.TabsClient),
 );
 export const metadata: Metadata = {
 	title: "Evame - Home - Latest Pages",
@@ -156,7 +155,7 @@ export default async function HomePage({
 			)}
 
 			{/* ページ一覧 */}
-			
+
 			<TabsClient
 				initialTab={tab}
 				pagesWithInfo={pagesWithInfo}
