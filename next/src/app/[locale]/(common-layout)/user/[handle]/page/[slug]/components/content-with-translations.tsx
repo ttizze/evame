@@ -89,7 +89,6 @@ export function ContentWithTranslations({
 				html={pageWithTranslations.page.content}
 				segmentWithTranslations={pageWithTranslations.segmentWithTranslations}
 				currentHandle={currentHandle}
-				locale={locale}
 				voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 				addTranslationFormTarget={
 					ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION

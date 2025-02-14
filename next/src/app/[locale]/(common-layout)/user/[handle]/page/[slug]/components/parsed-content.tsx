@@ -16,7 +16,6 @@ interface ParsedContentProps {
 	html: string;
 	segmentWithTranslations: SegmentWithTranslations[] | null;
 	currentHandle: string | undefined;
-	locale: string;
 	voteTarget: VoteTarget;
 	addTranslationFormTarget: AddTranslationFormTarget;
 }
@@ -27,7 +26,6 @@ export function ParsedContent({
 	html,
 	segmentWithTranslations,
 	currentHandle,
-	locale,
 	voteTarget,
 	addTranslationFormTarget,
 }: ParsedContentProps) {

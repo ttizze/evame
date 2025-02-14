@@ -1,8 +1,6 @@
 name: Auto Comment on Unlabeled Issue
 
 on:
-  issues:
-    types: [opened, edited]
   workflow_dispatch:
     inputs:
       issue_number:
