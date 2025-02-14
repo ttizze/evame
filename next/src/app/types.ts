@@ -5,7 +5,6 @@ export type SanitizedUser = Omit<
 	"email" | "provider" | "plan" | "emailVerified" | "id"
 >;
 
-// 両者を合わせた型
 export type ActionResponse<T = void, U = Record<string, unknown>> = {
 	success: boolean;
 	message?: string;

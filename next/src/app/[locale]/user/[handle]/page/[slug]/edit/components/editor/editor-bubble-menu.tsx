@@ -20,24 +20,30 @@ import {
 	Quote,
 	Strikethrough,
 	Type,
+	Link as LinkIcon,
+	ArrowUpFromLineIcon,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
 
 interface EditorBubbleMenuProps {
 	editor: TiptapEditor;
 }
 
 const editorCommands: Record<string, (editor: TiptapEditor) => boolean> = {
+	regularText: (editor) => editor.chain().focus().setParagraph().run(),
+	h2: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+	h3: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+	h4: (editor) => editor.chain().focus().toggleHeading({ level: 4 }).run(),
 	bold: (editor) => editor.chain().focus().toggleBold().run(),
 	italic: (editor) => editor.chain().focus().toggleItalic().run(),
 	strike: (editor) => editor.chain().focus().toggleStrike().run(),
 	code: (editor) => editor.chain().focus().toggleCode().run(),
 	codeBlock: (editor) => editor.chain().focus().toggleCodeBlock().run(),
-	regularText: (editor) => editor.chain().focus().setParagraph().run(),
-	h2: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
-	h3: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
-	h4: (editor) => editor.chain().focus().toggleHeading({ level: 4 }).run(),
 	bulletList: (editor) => editor.chain().focus().toggleBulletList().run(),
 	orderedList: (editor) => editor.chain().focus().toggleOrderedList().run(),
 	blockquote: (editor) => editor.chain().focus().toggleBlockquote().run(),
@@ -120,13 +126,13 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 						<DropdownMenuPrimitive.Root modal={false}>
 							<DropdownMenuPrimitive.Trigger
 								className={cn(
-									"flex h-9 w-9 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground items-start rounded-md",
+									"flex h-[32px] w-[38px] text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground items-start rounded-md",
 									editor.isActive("heading") && "bg-secondary text-foreground",
 								)}
 							>
 								<div className="rounded-md flex h-8 w-8 mx-0.5 items-center">
 									<HeadingIcon className="h-5 w-5 mr-0.5" />
-									<ChevronDown className="h-3 w-3" />
+									<ChevronDown className="h-3 w-3 mr-0.5" />
 								</div>
 							</DropdownMenuPrimitive.Trigger>
 							<DropdownMenuPrimitive.Portal container={containerRef.current}>
@@ -155,7 +161,7 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 												className={cn(
 													"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
 													editor.isActive("heading", { level }) &&
-														"bg-secondary",
+													"bg-secondary",
 												)}
 											>
 												<Icon className="h-5 w-5 mr-2" />
@@ -185,9 +191,67 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 								</TooltipContent>
 							</Tooltip>
 						))}
+						<LinkPopover editor={editor} />
 					</div>
 				</TooltipProvider>
 			</div>
 		</BubbleMenu>
+	);
+}
+
+function LinkPopover({ editor }: { editor: TiptapEditor }) {
+	const [url, setUrl] = useState("");
+	const [isOpen, setIsOpen] = useState(false);
+
+	const currentUrl = editor.getAttributes("link").href || "";
+
+	const applyLink = () => {
+		if (!url) {
+			editor.chain().focus().unsetLink().run();
+		} else {
+			editor.chain().focus().setLink({ href: url }).run();
+		}
+		setIsOpen(false);
+	};
+
+	const onOpenChange = (open: boolean) => {
+		setIsOpen(open);
+		if (open) {
+			setUrl(currentUrl);
+		}
+	};
+
+	return (
+		<Popover open={isOpen} onOpenChange={onOpenChange}>
+			<PopoverTrigger asChild>
+				<button
+					type="button"
+					className={cn(
+						"rounded-md inline-flex h-8 w-8 mx-0.5 items-center justify-center text-sm text-muted-foreground  transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+						editor.isActive("link") && "bg-secondary text-foreground"
+					)}
+				>
+					<LinkIcon className="h-5 w-5" />
+				</button>
+			</PopoverTrigger>
+			<PopoverContent className="p-4 bg-background border rounded-xl shadow-lg">
+				<div className="flex space-x-2">
+					<Input
+						type="text"
+						placeholder="URL"
+						className="px-2 py-1 border rounded-md "
+						value={url}
+						onChange={(e) => setUrl(e.target.value)}
+					/>
+					<Button
+						type="button"
+						onClick={applyLink}
+						className="px-3 py-1rounded-md hover:bg-primary-dark"
+					>
+						<ArrowUpFromLineIcon className="h-5 w-5" />
+					</Button>
+				</div>
+			</PopoverContent>
+		</Popover>
 	);
 }

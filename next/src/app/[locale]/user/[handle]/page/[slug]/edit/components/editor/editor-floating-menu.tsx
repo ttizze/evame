@@ -6,6 +6,7 @@ import {
 	Code,
 	Heading2,
 	Heading3,
+	Heading4,
 	ImageIcon,
 	List,
 	ListOrdered,
@@ -23,10 +24,10 @@ const editorCommands: Record<string, (editor: Editor) => boolean> = {
 	regularText: (editor) => editor.chain().focus().setParagraph().run(),
 	h2: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
 	h3: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+	h4: (editor) => editor.chain().focus().toggleHeading({ level: 4 }).run(),
 	bulletList: (editor) => editor.chain().focus().toggleBulletList().run(),
 	orderedList: (editor) => editor.chain().focus().toggleOrderedList().run(),
 	blockquote: (editor) => editor.chain().focus().toggleBlockquote().run(),
-	code: (editor) => editor.chain().focus().toggleCode().run(),
 	codeBlock: (editor) => editor.chain().focus().toggleCodeBlock().run(),
 };
 
@@ -42,6 +43,12 @@ const menuItems = [
 		label: "Heading 3",
 		icon: Heading3,
 		isActive: (editor: Editor) => editor.isActive("heading", { level: 3 }),
+	},
+	{
+		value: "h4",
+		label: "Heading 4",
+		icon: Heading4,
+		isActive: (editor: Editor) => editor.isActive("heading", { level: 4 }),
 	},
 	{
 		value: "bulletList",
