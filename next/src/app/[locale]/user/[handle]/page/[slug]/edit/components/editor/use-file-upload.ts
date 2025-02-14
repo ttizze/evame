@@ -8,11 +8,13 @@ export async function handleFileUpload(
 ) {
 	const insertPos = pos ?? editor.state.selection.anchor;
 	const placeholderSrc = "/uploading.png";
+	const placeholderId = `uploading-${Date.now()}`;
+
 	editor
 		.chain()
 		.insertContentAt(insertPos, {
 			type: "image",
-			attrs: { src: placeholderSrc },
+			attrs: { src: placeholderSrc, "data-uploading-id": placeholderId },
 		})
 		.run();
 
@@ -23,16 +25,30 @@ export async function handleFileUpload(
 		window.alert(url.message);
 		return;
 	}
-	editor
-		.chain()
-		.updateAttributes("image", {
-			src: url.data?.imageUrl,
-			width: dimensions.width,
-			height: dimensions.height,
-		})
-		.createParagraphNear()
-		.focus()
-		.run();
+
+	let posToUpdate: number | null = null;
+  editor.state.doc.descendants((node, pos) => {
+    if (node.type.name === "image" && node.attrs["data-uploading-id"] === placeholderId) {
+      posToUpdate = pos;
+      return false; // 見つかったので探索終了
+    }
+  });
+	if (posToUpdate !== null) {
+    editor
+      .chain()
+      .setNodeSelection(posToUpdate)
+      .updateAttributes("image", {
+        src: url.data?.imageUrl,
+        width: dimensions.width,
+        height: dimensions.height,
+        "data-uploading-id": null, // 一意属性は不要なので削除
+      })
+      .createParagraphNear()
+      .focus()
+      .run();
+  } else {
+    console.error("アップロード用プレースホルダー画像が見つかりませんでした");
+  }
 }
 
 async function getImageDimensions(
