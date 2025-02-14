@@ -45,8 +45,9 @@ export function FloatingControls({
 	const searchParams = useSearchParams();
 	const shareUrl =
 		typeof window !== "undefined"
-			? `${window.location.origin}${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""
-			}`
+			? `${window.location.origin}${pathname}${
+					searchParams.toString() ? `?${searchParams.toString()}` : ""
+				}`
 			: "";
 
 	const handleScroll = useCallback(() => {
@@ -73,11 +74,9 @@ export function FloatingControls({
 
 	const baseClasses =
 		"drop-shadow-xl dark:shadow-[0_3px_3px_rgba(255,255,255,0.15)] h-12 w-12 rounded-full";
-	const baseButtonClasses =
-		`${baseClasses} border relative bg-background`;
+	const baseButtonClasses = `${baseClasses} border relative bg-background`;
 	/** 非選択状態（トグルOFF）時の追加クラス */
-	const toggledOffClasses =
-		`bg-muted after:absolute after:w-full after:h-[1px] after:bg-current after:top-1/2 
+	const toggledOffClasses = `bg-muted after:absolute after:w-full after:h-[1px] after:bg-current after:top-1/2 
 		after:left-0 after:origin-center after:-rotate-45`;
 	/** アイコンラッパーのクラス */
 
@@ -91,10 +90,7 @@ export function FloatingControls({
 			<Button
 				variant="ghost"
 				size="icon"
-				className={cn(
-					baseButtonClasses,
-					!showOriginal && toggledOffClasses,
-				)}
+				className={cn(baseButtonClasses, !showOriginal && toggledOffClasses)}
 				onClick={() => {
 					setShowOriginal(!showOriginal);
 					ignoreScrollRef.current = true;
@@ -111,10 +107,7 @@ export function FloatingControls({
 			<Button
 				variant="ghost"
 				size="icon"
-				className={cn(
-					baseButtonClasses,
-					!showTranslation && toggledOffClasses,
-				)}
+				className={cn(baseButtonClasses, !showTranslation && toggledOffClasses)}
 				onClick={() => {
 					setShowTranslation(!showTranslation);
 					ignoreScrollRef.current = true;
