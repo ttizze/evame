@@ -39,13 +39,13 @@ export function FloatingControls({
 
 	const ignoreScrollRef = useRef(false);
 
-
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
 	const shareUrl =
 		typeof window !== "undefined"
-			? `${window.location.origin}${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""
-			}`
+			? `${window.location.origin}${pathname}${
+					searchParams.toString() ? `?${searchParams.toString()}` : ""
+				}`
 			: "";
 
 	const handleScroll = useCallback(() => {
@@ -83,7 +83,8 @@ export function FloatingControls({
 				className={cn(
 					`drop-shadow-xl dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)] h-12 w-12 rounded-full 
 					border relative after:opacity-50 bg-background`,
-					!showOriginal && ` bg-muted 
+					!showOriginal &&
+						` bg-muted 
 					after:absolute after:w-full after:h-[1px] after:bg-current 
 					after:top-1/2 after:left-0 after:origin-center after:-rotate-45`,
 				)}
@@ -96,7 +97,9 @@ export function FloatingControls({
 				}}
 				title={showOriginal ? "Hide original text" : "Show original text"}
 			>
-				<Text className={cn("h-5 w-5 opacity-100", !showOriginal && "opacity-50")} />
+				<Text
+					className={cn("h-5 w-5 opacity-100", !showOriginal && "opacity-50")}
+				/>
 			</Button>
 			<Button
 				variant="ghost"
@@ -104,7 +107,8 @@ export function FloatingControls({
 				className={cn(
 					`drop-shadow-xl dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)] h-12 w-12 rounded-full 
 					border after:opacity-50 bg-background `,
-					!showTranslation && `bg-muted
+					!showTranslation &&
+						`bg-muted
 					relative after:absolute after:w-full after:h-[1px] after:bg-current 
 					after:top-1/2 after:left-0 after:origin-center after:-rotate-45`,
 				)}
@@ -117,7 +121,12 @@ export function FloatingControls({
 				}}
 				title={showTranslation ? "Hide translation" : "Show translation"}
 			>
-				<Languages className={cn("h-5 w-5 opacity-100", !showTranslation && "opacity-50")} />
+				<Languages
+					className={cn(
+						"h-5 w-5 opacity-100",
+						!showTranslation && "opacity-50",
+					)}
+				/>
 			</Button>
 			<div className="drop-shadow-xl  dark:drop-shadow-[0_20px_13px_rgba(255,255,255,0.08)]  h-12 w-12">
 				<LikeButton liked={liked} likeCount={likeCount} slug={slug} />

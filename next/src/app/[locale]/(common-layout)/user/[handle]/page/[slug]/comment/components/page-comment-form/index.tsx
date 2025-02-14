@@ -20,10 +20,7 @@ export function PageCommentForm({
 
 	return (
 		<>
-			<form
-				action={action}
-				className="space-y-4 relative"
-			>
+			<form action={action} className="space-y-4 relative">
 				<input type="hidden" name="pageId" value={pageId} />
 				<Editor
 					defaultValue={""}
