@@ -1,4 +1,3 @@
-"use client";
 import type {
 	AddTranslationFormTarget,
 	VoteTarget,
@@ -17,8 +16,6 @@ interface ParsedContentProps {
 	html: string;
 	segmentWithTranslations: SegmentWithTranslations[] | null;
 	currentHandle: string | undefined;
-	showOriginal: boolean;
-	showTranslation: boolean;
 	locale: string;
 	voteTarget: VoteTarget;
 	addTranslationFormTarget: AddTranslationFormTarget;
@@ -29,8 +26,6 @@ export const MemoizedParsedContent = memo(ParsedContent);
 export function ParsedContent({
 	html,
 	segmentWithTranslations,
-	showOriginal = true,
-	showTranslation = true,
 	currentHandle,
 	locale,
 	voteTarget,
@@ -56,36 +51,11 @@ export function ParsedContent({
 							key={`translation-${number}`}
 							segmentWithTranslations={segmentWithTranslation}
 							elements={domToReact(domNode.children as DOMNode[], options)}
-							showOriginal={showOriginal}
-							showTranslation={showTranslation}
 							currentHandle={currentHandle}
 							voteTarget={voteTarget}
 							addTranslationFormTarget={addTranslationFormTarget}
 						/>
 					</DynamicTag>
-				);
-			}
-			if (domNode.type === "tag" && domNode.name === "a") {
-				const originalHref = domNode.attribs.href ?? "";
-
-				// http:// or https:// で始まっていれば外部リンクとみなす
-				const isExternalLink = /^https?:\/\//.test(originalHref);
-
-				// ロケールを付けるかどうかを分岐
-				let localizedHref: string;
-				if (!isExternalLink) {
-					// 外部リンクでなければ /{locale} を先頭に付ける
-					// 例) /foo/bar → /ja/foo/bar
-					localizedHref = `/${locale}${originalHref.startsWith("/") ? "" : "/"}${originalHref}`;
-				} else {
-					// 外部リンクの場合はそのまま
-					localizedHref = originalHref;
-				}
-
-				return (
-					<a href={localizedHref} className="underline underline-offset-4 ">
-						{domToReact(domNode.children as DOMNode[], options)}
-					</a>
 				);
 			}
 			if (domNode.type === "tag" && domNode.name === "img") {

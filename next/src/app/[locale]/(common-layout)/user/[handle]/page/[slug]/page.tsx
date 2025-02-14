@@ -9,7 +9,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { TranslateActionSection } from "../../../../../components/translate-action-section";
-import { ContentControlContainer } from "./components/content-control-container";
+import { ContentWithTranslations } from "./components/content-with-translations";
+import { LikeButton } from "@/app/[locale]/components/like-button/like-button";
+import { MessageCircle } from "lucide-react";
+import { FloatingControls } from "./components/floating-controls";
 import { TranslateTarget } from "./constants";
 import {
 	fetchIsLikedByUser,
@@ -160,17 +163,32 @@ export default async function Page({
 
 	return (
 		<div className="w-full max-w-3xl mx-auto">
-			<ContentControlContainer
-				pageWithTranslations={pageWithTranslations}
-				pageSegmentTitleWithTranslations={pageSegmentTitleWithTranslations}
-				shareTitle={sourceTitleWithBestTranslationTitle}
-				currentHandle={currentUser?.handle}
-				hasGeminiApiKey={hasGeminiApiKey}
-				userAITranslationInfo={userAITranslationInfo}
-				locale={locale}
+			<article className="w-full prose dark:prose-invert prose-a:underline  sm:prose lg:prose-lg mx-auto px-4 mb-20">
+				<ContentWithTranslations
+					pageWithTranslations={pageWithTranslations}
+					pageSegmentTitleWithTranslations={pageSegmentTitleWithTranslations}
+					currentHandle={currentUser?.handle}
+					hasGeminiApiKey={hasGeminiApiKey}
+					userAITranslationInfo={userAITranslationInfo}
+					locale={locale}
+				/>
+			</article>
+			<div className="flex items-center gap-4">
+				<LikeButton
+					liked={isLikedByUser}
+					likeCount={likeCount}
+					slug={slug}
+					showCount
+				/>
+				<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
+				<span>{pageCommentsCount}</span>
+			</div>
+
+			<FloatingControls
 				liked={isLikedByUser}
 				likeCount={likeCount}
-				pageCommentsCount={pageCommentsCount}
+				slug={slug}
+				shareTitle={sourceTitleWithBestTranslationTitle}
 			/>
 
 			<div className="mt-8">

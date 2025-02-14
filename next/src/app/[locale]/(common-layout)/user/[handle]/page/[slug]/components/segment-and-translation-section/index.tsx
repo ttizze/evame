@@ -1,3 +1,4 @@
+"use client";
 import type {
 	AddTranslationFormTarget,
 	VoteTarget,
@@ -8,14 +9,12 @@ import { SquarePen } from "lucide-react";
 import type { ReactNode } from "react";
 import type { SegmentWithTranslations } from "../../types";
 import { TranslationSection } from "./translation-section";
-
+import { useQueryState } from "nuqs";
 interface SegmentAndTranslationSectionProps {
 	segmentWithTranslations: SegmentWithTranslations;
 	elements: string | ReactNode | ReactNode[];
 	showLockIcon?: boolean;
 	segmentTextClassName?: string;
-	showOriginal: boolean;
-	showTranslation: boolean;
 	currentHandle: string | undefined;
 	isOwner?: boolean;
 	slug?: string;
@@ -28,14 +27,26 @@ export function SegmentAndTranslationSection({
 	elements,
 	showLockIcon = false,
 	segmentTextClassName,
-	showOriginal = true,
-	showTranslation = true,
 	currentHandle,
 	isOwner,
 	slug,
 	voteTarget,
 	addTranslationFormTarget,
 }: SegmentAndTranslationSectionProps) {
+	const [showOriginal, setShowOriginal] = useQueryState(
+		"showOriginal",
+		{
+			parse: (val) => val === "true",
+			serialize: (val) => (val ? "true" : "false"),
+		},
+	);
+	const [showTranslation, setShowTranslation] = useQueryState(
+		"showTranslation",
+		{
+			parse: (val) => val === "true",
+			serialize: (val) => (val ? "true" : "false"),
+		},
+	);
 	return (
 		<>
 			{showOriginal && (

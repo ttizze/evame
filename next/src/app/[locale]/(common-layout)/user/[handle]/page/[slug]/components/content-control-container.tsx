@@ -79,10 +79,6 @@ export function ContentControlContainer({
 				likeCount={likeCount}
 				slug={pageWithTranslations.page.slug}
 				shareTitle={shareTitle}
-				showOriginal={queryShowOriginal ?? true}
-				setShowOriginal={setQueryShowOriginal}
-				showTranslation={queryShowTranslation ?? true}
-				setShowTranslation={setQueryShowTranslation}
 			/>
 		</>
 	);

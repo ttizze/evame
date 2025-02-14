@@ -1,4 +1,3 @@
-"use client";
 import {
 	ADD_TRANSLATION_FORM_TARGET,
 	TranslateTarget,
@@ -20,8 +19,6 @@ interface ContentWithTranslationsProps {
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
 	locale: string;
-	showOriginal: boolean;
-	showTranslation: boolean;
 }
 
 export function ContentWithTranslations({
@@ -31,8 +28,6 @@ export function ContentWithTranslations({
 	hasGeminiApiKey,
 	userAITranslationInfo,
 	locale,
-	showOriginal = true,
-	showTranslation = true,
 }: ContentWithTranslationsProps) {
 	return (
 		<>
@@ -42,8 +37,6 @@ export function ContentWithTranslations({
 						segmentWithTranslations={pageSegmentTitleWithTranslations}
 						showLockIcon={pageWithTranslations.page.status === "DRAFT"}
 						elements={pageSegmentTitleWithTranslations?.segment.text}
-						showOriginal={showOriginal}
-						showTranslation={showTranslation}
 						currentHandle={currentHandle}
 						isOwner={pageWithTranslations.user.handle === currentHandle}
 						slug={pageWithTranslations.page.slug}
@@ -96,8 +89,6 @@ export function ContentWithTranslations({
 				html={pageWithTranslations.page.content}
 				segmentWithTranslations={pageWithTranslations.segmentWithTranslations}
 				currentHandle={currentHandle}
-				showOriginal={showOriginal}
-				showTranslation={showTranslation}
 				locale={locale}
 				voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 				addTranslationFormTarget={

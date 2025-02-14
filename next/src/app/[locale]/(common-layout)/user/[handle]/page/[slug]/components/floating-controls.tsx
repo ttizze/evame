@@ -6,16 +6,12 @@ import { Languages, Text } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ShareDialog } from "./share-dialog";
-
+import { useQueryState } from "nuqs";
 interface FloatingControlsProps {
 	liked: boolean;
 	likeCount: number;
 	slug: string;
 	shareTitle: string;
-	showOriginal: boolean;
-	setShowOriginal: (showOriginal: boolean) => void;
-	showTranslation: boolean;
-	setShowTranslation: (showTranslation: boolean) => void;
 }
 
 export function FloatingControls({
@@ -23,11 +19,24 @@ export function FloatingControls({
 	likeCount,
 	slug,
 	shareTitle,
-	showOriginal,
-	setShowOriginal,
-	showTranslation,
-	setShowTranslation,
 }: FloatingControlsProps) {
+	const [showOriginal, setShowOriginal] = useQueryState(
+		"showOriginal",
+		{
+			parse: (val) => val === "true",
+			serialize: (val) => (val ? "true" : "false"),
+			shallow: true,
+		},
+	);
+	const [showTranslation, setShowTranslation] = useQueryState(
+		"showTranslation",
+		{
+			parse: (val) => val === "true",
+			serialize: (val) => (val ? "true" : "false"),
+			shallow: true,
+		},
+	);
+
 	const [isVisible, setIsVisible] = useState(true);
 	const [lastScrollY, setLastScrollY] = useState(0);
 	const pathname = usePathname();
