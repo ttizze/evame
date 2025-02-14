@@ -1,3 +1,10 @@
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 import {
 	Tooltip,
 	TooltipContent,
@@ -8,6 +15,7 @@ import { cn } from "@/lib/utils";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { BubbleMenu, type Editor as TiptapEditor } from "@tiptap/react";
 import {
+	ArrowUpFromLineIcon,
 	Bold,
 	ChevronDown,
 	Code,
@@ -15,20 +23,15 @@ import {
 	Heading3,
 	Heading4,
 	Italic,
+	Link as LinkIcon,
 	List,
 	ListOrdered,
 	Quote,
 	Strikethrough,
 	Type,
-	Link as LinkIcon,
-	ArrowUpFromLineIcon,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useRef, useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-
 
 interface EditorBubbleMenuProps {
 	editor: TiptapEditor;
@@ -161,7 +164,7 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 												className={cn(
 													"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
 													editor.isActive("heading", { level }) &&
-													"bg-secondary",
+														"bg-secondary",
 												)}
 											>
 												<Icon className="h-5 w-5 mr-2" />
@@ -228,7 +231,7 @@ function LinkPopover({ editor }: { editor: TiptapEditor }) {
 					type="button"
 					className={cn(
 						"rounded-md inline-flex h-8 w-8 mx-0.5 items-center justify-center text-sm text-muted-foreground  transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-						editor.isActive("link") && "bg-secondary text-foreground"
+						editor.isActive("link") && "bg-secondary text-foreground",
 					)}
 				>
 					<LinkIcon className="h-5 w-5" />

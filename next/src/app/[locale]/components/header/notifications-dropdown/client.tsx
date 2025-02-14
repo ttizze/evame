@@ -10,7 +10,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Bell } from "lucide-react";
-import { useActionState, startTransition } from "react";
+import { startTransition, useActionState } from "react";
 import { markNotificationAsReadAction } from "./action";
 import type { NotificationWithRelations } from "./db/queries.server";
 export function NotificationsDropdownClient({
@@ -35,13 +35,10 @@ export function NotificationsDropdownClient({
 		(notification) => !notification.read,
 	).length;
 	return (
-		<DropdownMenu data-testid="notifications-menu"  onOpenChange={handleClick}>
+		<DropdownMenu data-testid="notifications-menu" onOpenChange={handleClick}>
 			<DropdownMenuTrigger asChild>
 				<div className="relative">
-					<Bell
-						data-testid="bell-icon"
-						className="w-6 h-6 cursor-pointer"
-					/>
+					<Bell data-testid="bell-icon" className="w-6 h-6 cursor-pointer" />
 					{unreadCount > 0 && (
 						<span
 							data-testid="unread-count"

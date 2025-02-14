@@ -49,7 +49,8 @@ export const VoteButtons = memo(function VoteButtons({
 					>
 						<ThumbsUp
 							className={`mr-2 h-4 w-4 transition-all duration-300 ${
-								translationWithVote.translationVote?.isUpvote === true && "[&>path]:fill-primary"
+								translationWithVote.translationVote?.isUpvote === true &&
+								"[&>path]:fill-primary"
 							} ${isVoting && "animate-bounce"}`}
 						/>
 						{voteState.data?.point}
@@ -64,7 +65,8 @@ export const VoteButtons = memo(function VoteButtons({
 					>
 						<ThumbsDown
 							className={`mr-2 h-4 w-4 transition-all duration-300 ${
-								translationWithVote.translationVote?.isUpvote === false && "[&>path]:fill-primary"
+								translationWithVote.translationVote?.isUpvote === false &&
+								"[&>path]:fill-primary"
 							} ${isVoting && "animate-bounce"}`}
 						/>
 					</Button>

@@ -2,10 +2,10 @@
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { validateGeminiApiKey } from "@/features/translate/services/gemini";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { updateGeminiApiKey } from "./db/mutations.server";
-import { revalidatePath } from "next/cache";
 const geminiApiKeySchema = z.object({
 	geminiApiKey: z.string(),
 });

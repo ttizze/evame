@@ -9,8 +9,8 @@ import { mockUsers } from "@/tests/mock";
 import userEvent from "@testing-library/user-event";
 import { NextIntlClientProvider } from "next-intl";
 vi.mock("@/auth");
-vi.mock('next/cache', () => ({
-  revalidatePath: () => {},
+vi.mock("next/cache", () => ({
+	revalidatePath: () => {},
 }));
 const sampleNotifications: NotificationWithRelations[] = [
 	{
@@ -226,5 +226,4 @@ describe("NotificationsDropdownClient", () => {
 		).toBeInTheDocument();
 		expect(await screen.findByText(/voted for/i)).toBeInTheDocument();
 	});
-
 });

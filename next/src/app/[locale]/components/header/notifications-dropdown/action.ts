@@ -1,9 +1,9 @@
 "use server";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { markAllNotificationAsRead } from "./db/mutations.server";
-import { revalidatePath } from "next/cache";
 export async function markNotificationAsReadAction(
 	previousState: ActionResponse,
 	formData: FormData,
