@@ -3,7 +3,6 @@ import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/(common-layout)/user
 import { VOTE_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { StartButton } from "@/app/[locale]/components/start-button";
-import { TabsClient } from "@/app/[locale]/components/tabs-client";
 import { TranslateActionSection } from "@/app/[locale]/components/translate-action-section";
 import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/db/queries.server";
 import type { PageCardLocalizedType } from "@/app/[locale]/db/queries.server";
@@ -11,6 +10,11 @@ import { fetchPageWithTranslations } from "@/app/[locale]/db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
+const TabsClient = dynamic(
+  () =>
+    import("@/app/[locale]/components/tabs-client").then((mod) => mod.TabsClient),
+);
 export const metadata: Metadata = {
 	title: "Evame - Home - Latest Pages",
 	description:
@@ -152,6 +156,7 @@ export default async function HomePage({
 			)}
 
 			{/* ページ一覧 */}
+			
 			<TabsClient
 				initialTab={tab}
 				pagesWithInfo={pagesWithInfo}
