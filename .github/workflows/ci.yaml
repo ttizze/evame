@@ -16,7 +16,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
-          - '5433:5432'
+          - '5435:5432'
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
@@ -27,7 +27,7 @@ jobs:
         ports:
           - '4444:4444'
         env:
-          PG_CONNECTION_STRING: postgres://postgres:password@neon:5432/testdb
+          PG_CONNECTION_STRING: postgres://postgres:password@neon:5435/testdb
 
     steps:
       - name: Checkout
