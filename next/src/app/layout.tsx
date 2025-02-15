@@ -1,12 +1,12 @@
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import type { Viewport } from "next";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import { BIZ_UDPGothic, Inter } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
-import type { Viewport } from 'next'
 
 const inter = Inter({ subsets: ["latin"] });
 const bizUDPGothic = BIZ_UDPGothic({
@@ -18,11 +18,11 @@ const bizUDPGothic = BIZ_UDPGothic({
 });
 
 export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-	interactiveWidget: 'resizes-content',
-}
+	width: "device-width",
+	initialScale: 1,
+	maximumScale: 1,
+	interactiveWidget: "resizes-content",
+};
 
 export default async function Layout({
 	children,
@@ -47,11 +47,7 @@ export default async function Layout({
 				{gaTrackingId && <GoogleAnalytics gaId={gaTrackingId} />}
 				<NextTopLoader showSpinner={false} />
 				<NuqsAdapter>
-					<ThemeProvider
-						attribute="class"
-						defaultTheme="system"
-						enableSystem
-					>
+					<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 						<SessionProvider>{children}</SessionProvider>
 						<Toaster richColors />
 					</ThemeProvider>
