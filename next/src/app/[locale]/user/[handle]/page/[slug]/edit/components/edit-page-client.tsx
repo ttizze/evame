@@ -71,11 +71,6 @@ export function EditPageClient({
 			<main
 				className="w-full max-w-3xl prose dark:prose-invert sm:prose lg:prose-lg 
           mx-auto px-4  prose-headings:text-gray-700 prose-headings:dark:text-gray-200 text-gray-700 dark:text-gray-200 mb-5 mt-3 md:mt-5 flex-grow tracking-wider"
-				style={{
-					minHeight: isKeyboardVisible
-						? "calc(100 * var(--svh, 1svh) - 47px)"
-						: "calc(100 * var(--svh, 1svh) - 48px)",
-				}}
 			>
 				<div className="">
 					<h1 className="!m-0 ">

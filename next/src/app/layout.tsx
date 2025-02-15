@@ -6,6 +6,8 @@ import { ThemeProvider } from "next-themes";
 import { BIZ_UDPGothic, Inter } from "next/font/google";
 import NextTopLoader from "nextjs-toploader";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import type { Viewport } from 'next'
+
 const inter = Inter({ subsets: ["latin"] });
 const bizUDPGothic = BIZ_UDPGothic({
 	weight: ["400", "700"],
@@ -14,6 +16,14 @@ const bizUDPGothic = BIZ_UDPGothic({
 	display: "swap",
 	variable: "--font-biz-udp-gothic",
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+	interactiveWidget: 'resizes-content',
+}
+
 export default async function Layout({
 	children,
 	params,
@@ -33,7 +43,7 @@ export default async function Layout({
 			suppressHydrationWarning
 			className={`${inter.className} ${bizUDPGothic.variable}`}
 		>
-			<body>
+			<body className="transition-colors duration-300">
 				{gaTrackingId && <GoogleAnalytics gaId={gaTrackingId} />}
 				<NextTopLoader showSpinner={false} />
 				<NuqsAdapter>
@@ -41,7 +51,6 @@ export default async function Layout({
 						attribute="class"
 						defaultTheme="system"
 						enableSystem
-						disableTransitionOnChange
 					>
 						<SessionProvider>{children}</SessionProvider>
 						<Toaster richColors />
