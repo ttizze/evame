@@ -22,7 +22,7 @@ import {
 	fetchPageWithTranslations,
 } from "./db/queries.server";
 
-const getPageData = cache(async (slug: string, locale: string) => {
+export const getPageData = cache(async (slug: string, locale: string) => {
 	const currentUser = await getCurrentUser();
 
 	const pageWithTranslations = await fetchPageWithTranslations(
@@ -78,10 +78,6 @@ export async function generateMetadata({
 		/<img[^>]+src="([^">]+)"/,
 	);
 
-	const imageUrl = firstImageMatch
-		? firstImageMatch[1]
-		: pageWithTranslations.user.image;
-
 	const alternateLinks = pageWithTranslations.existLocales
 		.filter(
 			(locale: string) => pageWithTranslations.page.sourceLocale !== locale,
@@ -100,13 +96,11 @@ export async function generateMetadata({
 			type: "article",
 			title: sourceTitleWithBestTranslationTitle,
 			description,
-			images: imageUrl,
 		},
 		twitter: {
 			card: "summary_large_image",
 			title: sourceTitleWithBestTranslationTitle,
 			description,
-			images: imageUrl,
 		},
 		...alternateLinks,
 	};
