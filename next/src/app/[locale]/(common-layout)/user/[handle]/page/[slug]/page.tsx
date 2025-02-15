@@ -100,9 +100,9 @@ export async function generateMetadata({
 			title: sourceTitleWithBestTranslationTitle,
 			description,
 			url: `${baseUrl}/user/${pageWithTranslations.user.handle}/page/${pageWithTranslations.page.slug}`,
-      siteName: "Evame",
-      images: [
-        {
+			siteName: "Evame",
+			images: [
+				{
 					url: ogImageUrl,
 					width: 1200,
 					height: 630,
