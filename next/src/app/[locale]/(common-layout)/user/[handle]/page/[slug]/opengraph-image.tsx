@@ -2,8 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { getPageData } from "./page";
-// Image metadata
-export const alt = "Open Graph Image";
+
 export const size = {
 	width: 1200,
 	height: 630,
