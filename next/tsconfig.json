@@ -1,0 +1,37 @@
+{
+	"compilerOptions": {
+		"target": "ES2017",
+		"lib": ["dom", "dom.iterable", "esnext"],
+		"types": ["vite/client", "vitest/globals"],
+		"allowJs": true,
+		"skipLibCheck": true,
+		"strict": true,
+		"noEmit": true,
+		"esModuleInterop": true,
+		"module": "esnext",
+		"moduleResolution": "bundler",
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"jsx": "preserve",
+		"incremental": true,
+		"plugins": [
+			{
+				"name": "next"
+			}
+		],
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	},
+	"include": [
+		"next-env.d.ts",
+		"next-auth.d.ts",
+		"**/*.ts",
+		"**/*.tsx",
+		".next/types/**/*.ts",
+		"../localecomponents/page.tsx",
+		"src/app/[locale]/(common-layout)/auth/login/components/google-form.tsx",
+		"src/app/[locale]/(common-layout)/user/[handle]/page/[slug]/components/page-control.client.tsx"
+	],
+	"exclude": ["node_modules"]
+}
