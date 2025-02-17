@@ -114,7 +114,7 @@ export async function generateMetadata({
 	// 	/<img[^>]+src="([^">]+)"/,
 	// );
 	const baseUrl = process.env.NEXT_PUBLIC_DOMAIN ?? "http://localhost:3000";
-	
+
 	const ogImageUrl = `${baseUrl}/api/og?locale=${locale}&slug=${slug}`;
 	const alternateLinks = pageWithTranslations.existLocales
 		.filter(
@@ -134,13 +134,13 @@ export async function generateMetadata({
 			type: "article",
 			title: sourceTitleWithBestTranslationTitle,
 			description,
-			images: [{ url: ogImageUrl , width: 1200, height: 630,}],
+			images: [{ url: ogImageUrl, width: 1200, height: 630 }],
 		},
 		twitter: {
 			card: "summary_large_image",
 			title: sourceTitleWithBestTranslationTitle,
 			description,
-			images: [{ url: ogImageUrl , width: 1200, height: 630,}],
+			images: [{ url: ogImageUrl, width: 1200, height: 630 }],
 		},
 		...alternateLinks,
 	};
