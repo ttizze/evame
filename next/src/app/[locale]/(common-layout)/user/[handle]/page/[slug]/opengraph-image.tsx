@@ -22,6 +22,9 @@ export default async function Image({ params }: { params: Params }) {
 	);
 	const logoData = await readFile(join(process.cwd(), "public", "logo.png"));
 	const logoSrc = Uint8Array.from(logoData).buffer;
+	const faviconData = await readFile(join(process.cwd(), "public", "bg-f.png"));
+	const faviconSrc = Uint8Array.from(faviconData).buffer;
+	const faviconSrcUrl = `data:image/png;base64,${Buffer.from(faviconSrc).toString("base64")}`;
 
 	// ページデータを取得
 	const data = await getPageData(slug, locale);
@@ -37,10 +40,11 @@ export default async function Image({ params }: { params: Params }) {
 				width: "100%",
 				height: "100%",
 				padding: "20px",
+				backgroundSize: "100% 100%",
 				fontFamily: "Inter,BIZ UDPGothic",
-				backgroundSize: "cover",
+				backgroundImage: `url(${faviconSrcUrl})`,
 			}}
-			tw="bg-black flex items-center justify-center"
+			tw="flex items-center justify-center"
 		>
 			<div
 				tw="bg-slate-100 flex flex-col items-center justify-start shadow-xl"
