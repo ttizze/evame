@@ -15,14 +15,14 @@ export default async function Image({ params }: { params: Params }) {
 	// params を展開
 	const { locale, slug } = await params;
 	const interFontSemiBold = await readFile(
-		join(process.cwd(), "public", "fonts", "inter-semi-bold.ttf"),
+		join(process.cwd(), "assets/inter-semi-bold.ttf"),
 	);
 	const bizUDPGothicFontBold = await readFile(
-		join(process.cwd(), "public", "fonts", "BIZUDPGothic-Bold.ttf"),
+		join(process.cwd(), "assets/BIZUDPGothic-Bold.ttf"),
 	);
-	const logoData = await readFile(join(process.cwd(), "public", "logo.png"));
+	const logoData = await readFile(join(process.cwd(), "assets/logo.png"));
 	const logoSrc = Uint8Array.from(logoData).buffer;
-	const faviconData = await readFile(join(process.cwd(), "public", "bg-f.png"));
+	const faviconData = await readFile(join(process.cwd(), "assets/bg-f.png"));
 	const faviconSrc = Uint8Array.from(faviconData).buffer;
 	const faviconSrcUrl = `data:image/png;base64,${Buffer.from(faviconSrc).toString("base64")}`;
 
