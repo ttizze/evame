@@ -89,37 +89,18 @@ export async function generateMetadata({
 			href: `/${locale}/user/${pageWithTranslations.user.handle}/page/${pageWithTranslations.page.slug}`,
 		}));
 
-	const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://localhost:3000";
-	const ogImageUrl = `${baseUrl}/api/og?slug=${slug}`;
-
 	return {
 		title: sourceTitleWithBestTranslationTitle,
 		description,
 		openGraph: {
-			type: "website",
+			type: "article",
 			title: sourceTitleWithBestTranslationTitle,
 			description,
-			url: `${baseUrl}/user/${pageWithTranslations.user.handle}/page/${pageWithTranslations.page.slug}`,
-			siteName: "Evame",
-			images: [
-				{
-					url: ogImageUrl,
-					width: 1200,
-					height: 630,
-					alt: sourceTitleWithBestTranslationTitle,
-				},
-			],
 		},
 		twitter: {
 			card: "summary_large_image",
 			title: sourceTitleWithBestTranslationTitle,
 			description,
-			images: [
-				{
-					url: ogImageUrl,
-					alt: sourceTitleWithBestTranslationTitle,
-				},
-			],
 		},
 		...alternateLinks,
 	};
