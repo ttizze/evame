@@ -64,7 +64,7 @@ describe("editPageContentAction", () => {
 		expect(result.message).toBe("Page updated successfully");
 		expect(handlePageTranslation).toHaveBeenCalled();
 		expect(revalidatePath).toHaveBeenCalledWith(
-			"/user/mockUserId1/page/mockUserId1-page1/edit",
+			"/user/mockUserId1/page/mockUserId1-page1",
 		);
 	});
 
