@@ -113,7 +113,9 @@ export async function generateMetadata({
 	// const firstImageMatch = pageWithTranslations.page.content.match(
 	// 	/<img[^>]+src="([^">]+)"/,
 	// );
-
+	const baseUrl = process.env.NEXT_PUBLIC_DOMAIN ?? "http://localhost:3000";
+	
+	const ogImageUrl = `${baseUrl}/api/og?locale=${locale}&slug=${slug}`;
 	const alternateLinks = pageWithTranslations.existLocales
 		.filter(
 			(locale: string) => pageWithTranslations.page.sourceLocale !== locale,
@@ -132,11 +134,13 @@ export async function generateMetadata({
 			type: "article",
 			title: sourceTitleWithBestTranslationTitle,
 			description,
+			images: [{ url: ogImageUrl , width: 1200, height: 630,}],
 		},
 		twitter: {
 			card: "summary_large_image",
 			title: sourceTitleWithBestTranslationTitle,
 			description,
+			images: [{ url: ogImageUrl , width: 1200, height: 630,}],
 		},
 		...alternateLinks,
 	};
