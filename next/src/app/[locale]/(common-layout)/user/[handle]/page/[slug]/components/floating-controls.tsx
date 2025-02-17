@@ -1,5 +1,5 @@
 "use client";
-import { LikeButton } from "@/app/[locale]/components/like-button/like-button";
+import { LikeButton } from "@/app/[locale]/components/like-button/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Languages, Text } from "lucide-react";
@@ -73,7 +73,7 @@ export function FloatingControls({
 	}, [handleScroll]);
 
 	const baseClasses =
-		"drop-shadow-xl dark:shadow-[0_3px_3px_rgba(255,255,255,0.15)] h-12 w-12 rounded-full";
+		"drop-shadow-xl dark:drop-shadow-[0_9px_7px_rgba(255,255,255,0.1)] h-12 w-12 rounded-full";
 	const baseButtonClasses = `${baseClasses} border relative bg-background`;
 	/** 非選択状態（トグルOFF）時の追加クラス */
 	const toggledOffClasses = `bg-muted after:absolute after:w-full after:h-[1px] after:bg-current after:top-1/2 

@@ -8,7 +8,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { LikeButton } from "./like-button/like-button";
+import { LikeButton } from "./like-button/client";
 import { PageActionsDropdown } from "./page-actions-dropdown";
 import { TagList } from "./tag-list";
 
