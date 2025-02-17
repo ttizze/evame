@@ -45,8 +45,9 @@ export function FloatingControls({
 	const searchParams = useSearchParams();
 	const shareUrl =
 		typeof window !== "undefined"
-			? `${window.location.origin}${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""
-			}`
+			? `${window.location.origin}${pathname}${
+					searchParams.toString() ? `?${searchParams.toString()}` : ""
+				}`
 			: "";
 
 	const handleScroll = useCallback(() => {

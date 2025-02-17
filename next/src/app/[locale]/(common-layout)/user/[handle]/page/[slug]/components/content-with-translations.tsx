@@ -27,11 +27,10 @@ export function ContentWithTranslations({
 	userAITranslationInfo,
 	locale,
 }: ContentWithTranslationsProps) {
-	
 	const pageSegmentTitleWithTranslations =
-	pageWithTranslations.segmentWithTranslations.filter(
-		(item) => item.segment?.number === 0,
-	)[0];
+		pageWithTranslations.segmentWithTranslations.filter(
+			(item) => item.segment?.number === 0,
+		)[0];
 
 	return (
 		<>

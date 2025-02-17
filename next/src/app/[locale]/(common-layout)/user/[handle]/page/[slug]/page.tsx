@@ -20,40 +20,42 @@ import {
 } from "./db/queries.server";
 
 const DynamicLikeButton = dynamic(
-  () =>
-    import("@/app/[locale]/components/like-button/client").then(
-      (mod) => mod.LikeButton
-    ),
-  {
-    loading: () => <span>Loading LikeButton...</span>,
-  }
+	() =>
+		import("@/app/[locale]/components/like-button/client").then(
+			(mod) => mod.LikeButton,
+		),
+	{
+		loading: () => <span>Loading LikeButton...</span>,
+	},
 );
 
 const DynamicFloatingControls = dynamic(
-  () => import("./components/floating-controls").then((mod) => mod.FloatingControls),
-  {
-    loading: () => <span>Loading Controls...</span>,
-  }
+	() =>
+		import("./components/floating-controls").then(
+			(mod) => mod.FloatingControls,
+		),
+	{
+		loading: () => <span>Loading Controls...</span>,
+	},
 );
 const DynamicTranslateActionSection = dynamic(
-  () =>
-    import("../../../../../components/translate-action-section").then(
-      (mod) => mod.TranslateActionSection
-    ),
-  {
-    loading: () => <span>Loading Translate Section...</span>,
-  }
+	() =>
+		import("../../../../../components/translate-action-section").then(
+			(mod) => mod.TranslateActionSection,
+		),
+	{
+		loading: () => <span>Loading Translate Section...</span>,
+	},
 );
 
-
 const DynamicPageCommentForm = dynamic(
-  () =>
-    import(
-      "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-form"
-    ).then((mod) => mod.PageCommentForm),
-  {
-    loading: () => <p>Loading Comment Form...</p>,
-  }
+	() =>
+		import(
+			"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-form"
+		).then((mod) => mod.PageCommentForm),
+	{
+		loading: () => <p>Loading Comment Form...</p>,
+	},
 );
 
 export const getPageData = cache(async (slug: string, locale: string) => {
@@ -166,32 +168,28 @@ export default async function Page({ params }: { params: Params }) {
 		throw new Response("Page not found", { status: 404 });
 	}
 
-  const userAITranslationInfoPromise = fetchLatestUserAITranslationInfo(
-    pageWithTranslations.page.id,
-    currentUser?.id ?? "0",
-    locale
-  );
-  const likeCountPromise = fetchLikeCount(pageWithTranslations.page.id);
-  const isLikedByUserPromise = fetchIsLikedByUser(
-    pageWithTranslations.page.id,
-    currentUser?.id,
-    guestId
-  );
-  const pageCommentsCountPromise = fetchPageCommentsCount(
-    pageWithTranslations.page.id
-  );
+	const userAITranslationInfoPromise = fetchLatestUserAITranslationInfo(
+		pageWithTranslations.page.id,
+		currentUser?.id ?? "0",
+		locale,
+	);
+	const likeCountPromise = fetchLikeCount(pageWithTranslations.page.id);
+	const isLikedByUserPromise = fetchIsLikedByUser(
+		pageWithTranslations.page.id,
+		currentUser?.id,
+		guestId,
+	);
+	const pageCommentsCountPromise = fetchPageCommentsCount(
+		pageWithTranslations.page.id,
+	);
 
-  const [
-    userAITranslationInfo,
-    likeCount,
-    isLikedByUser,
-    pageCommentsCount,
-  ] = await Promise.all([
-    userAITranslationInfoPromise,
-    likeCountPromise,
-    isLikedByUserPromise,
-    pageCommentsCountPromise,
-  ]);
+	const [userAITranslationInfo, likeCount, isLikedByUser, pageCommentsCount] =
+		await Promise.all([
+			userAITranslationInfoPromise,
+			likeCountPromise,
+			isLikedByUserPromise,
+			pageCommentsCountPromise,
+		]);
 
 	return (
 		<div className="w-full max-w-3xl mx-auto">
