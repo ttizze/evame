@@ -2,11 +2,11 @@ import { getCurrentUser } from "@/auth";
 
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
-const PagesListTab = dynamic(() =>
-	import("@/app/[locale]/components/pages-list-tab/index"),
+const PagesListTab = dynamic(
+	() => import("@/app/[locale]/components/pages-list-tab/index"),
 );
-const HeroSection = dynamic(() =>
-	import("@/app/[locale]/components/hero-section/index"),
+const HeroSection = dynamic(
+	() => import("@/app/[locale]/components/hero-section/index"),
 );
 export const metadata: Metadata = {
 	title: "Evame - Home - Latest Pages",

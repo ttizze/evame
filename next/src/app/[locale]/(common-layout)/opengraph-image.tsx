@@ -2,7 +2,6 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
 
-
 export const size = {
 	width: 1200,
 	height: 630,
@@ -10,7 +9,6 @@ export const size = {
 export const contentType = "image/png";
 
 export default async function Image() {
-
 	const logoData = await readFile(join(process.cwd(), "public", "logo.png"));
 	const logoSrc = Uint8Array.from(logoData).buffer;
 
