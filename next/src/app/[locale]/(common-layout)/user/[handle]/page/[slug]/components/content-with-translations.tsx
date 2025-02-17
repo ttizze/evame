@@ -8,13 +8,12 @@ import { NavigationLink } from "@/components/navigation-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { UserAITranslationInfo } from "@prisma/client";
 import { TranslateActionSection } from "../../../../../../components/translate-action-section";
-import type { PageWithTranslations, SegmentWithTranslations } from "../types";
+import type { PageWithTranslations } from "../types";
 import { MemoizedParsedContent } from "./parsed-content";
 import { SegmentAndTranslationSection } from "./segment-and-translation-section";
 
 interface ContentWithTranslationsProps {
 	pageWithTranslations: PageWithTranslations;
-	pageSegmentTitleWithTranslations: SegmentWithTranslations | null;
 	currentHandle: string | undefined;
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
@@ -23,12 +22,17 @@ interface ContentWithTranslationsProps {
 
 export function ContentWithTranslations({
 	pageWithTranslations,
-	pageSegmentTitleWithTranslations,
 	currentHandle,
 	hasGeminiApiKey,
 	userAITranslationInfo,
 	locale,
 }: ContentWithTranslationsProps) {
+	
+	const pageSegmentTitleWithTranslations =
+	pageWithTranslations.segmentWithTranslations.filter(
+		(item) => item.segment?.number === 0,
+	)[0];
+
 	return (
 		<>
 			<h1 className="!mb-0 ">

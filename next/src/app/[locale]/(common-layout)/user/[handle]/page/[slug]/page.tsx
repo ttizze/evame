@@ -1,6 +1,4 @@
-import { PageCommentForm } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-form";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-list";
-import { LikeButton } from "@/app/[locale]/components/like-button/like-button";
 import { getBestTranslation } from "@/app/[locale]/lib/get-best-translation";
 import { stripHtmlTags } from "@/app/[locale]/lib/strip-html-tags";
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
@@ -8,11 +6,10 @@ import { getCurrentUser } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
 import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { TranslateActionSection } from "../../../../../components/translate-action-section";
 import { ContentWithTranslations } from "./components/content-with-translations";
-import { FloatingControls } from "./components/floating-controls";
 import { TranslateTarget } from "./constants";
 import {
 	fetchIsLikedByUser,
@@ -21,6 +18,43 @@ import {
 	fetchPageCommentsCount,
 	fetchPageWithTranslations,
 } from "./db/queries.server";
+
+const DynamicLikeButton = dynamic(
+  () =>
+    import("@/app/[locale]/components/like-button/client").then(
+      (mod) => mod.LikeButton
+    ),
+  {
+    loading: () => <span>Loading LikeButton...</span>,
+  }
+);
+
+const DynamicFloatingControls = dynamic(
+  () => import("./components/floating-controls").then((mod) => mod.FloatingControls),
+  {
+    loading: () => <span>Loading Controls...</span>,
+  }
+);
+const DynamicTranslateActionSection = dynamic(
+  () =>
+    import("../../../../../components/translate-action-section").then(
+      (mod) => mod.TranslateActionSection
+    ),
+  {
+    loading: () => <span>Loading Translate Section...</span>,
+  }
+);
+
+
+const DynamicPageCommentForm = dynamic(
+  () =>
+    import(
+      "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-form"
+    ).then((mod) => mod.PageCommentForm),
+  {
+    loading: () => <p>Loading Comment Form...</p>,
+  }
+);
 
 export const getPageData = cache(async (slug: string, locale: string) => {
 	const currentUser = await getCurrentUser();
@@ -132,36 +166,45 @@ export default async function Page({ params }: { params: Params }) {
 		throw new Response("Page not found", { status: 404 });
 	}
 
-	const pageSegmentTitleWithTranslations =
-		pageWithTranslations.segmentWithTranslations.filter(
-			(item) => item.segment?.number === 0,
-		)[0];
+  const userAITranslationInfoPromise = fetchLatestUserAITranslationInfo(
+    pageWithTranslations.page.id,
+    currentUser?.id ?? "0",
+    locale
+  );
+  const likeCountPromise = fetchLikeCount(pageWithTranslations.page.id);
+  const isLikedByUserPromise = fetchIsLikedByUser(
+    pageWithTranslations.page.id,
+    currentUser?.id,
+    guestId
+  );
+  const pageCommentsCountPromise = fetchPageCommentsCount(
+    pageWithTranslations.page.id
+  );
 
-	const userAITranslationInfo = await fetchLatestUserAITranslationInfo(
-		pageWithTranslations.page.id,
-		currentUser?.id ?? "0",
-		locale,
-	);
-
-	const [likeCount, isLikedByUser, pageCommentsCount] = await Promise.all([
-		fetchLikeCount(pageWithTranslations.page.id),
-		fetchIsLikedByUser(pageWithTranslations.page.id, currentUser?.id, guestId),
-		fetchPageCommentsCount(pageWithTranslations.page.id),
-	]);
+  const [
+    userAITranslationInfo,
+    likeCount,
+    isLikedByUser,
+    pageCommentsCount,
+  ] = await Promise.all([
+    userAITranslationInfoPromise,
+    likeCountPromise,
+    isLikedByUserPromise,
+    pageCommentsCountPromise,
+  ]);
 
 	return (
 		<div className="w-full max-w-3xl mx-auto">
 			<article className="w-full prose dark:prose-invert prose-a:underline  sm:prose lg:prose-lg mx-auto px-4 mb-20">
 				<ContentWithTranslations
 					pageWithTranslations={pageWithTranslations}
-					pageSegmentTitleWithTranslations={pageSegmentTitleWithTranslations}
 					currentHandle={currentUser?.handle}
 					hasGeminiApiKey={hasGeminiApiKey}
 					userAITranslationInfo={userAITranslationInfo}
 					locale={locale}
 				/>
 				<div className="flex items-center gap-4">
-					<LikeButton
+					<DynamicLikeButton
 						liked={isLikedByUser}
 						likeCount={likeCount}
 						slug={slug}
@@ -171,7 +214,7 @@ export default async function Page({ params }: { params: Params }) {
 					<span>{pageCommentsCount}</span>
 				</div>
 
-				<FloatingControls
+				<DynamicFloatingControls
 					liked={isLikedByUser}
 					likeCount={likeCount}
 					slug={slug}
@@ -182,7 +225,7 @@ export default async function Page({ params }: { params: Params }) {
 					<div className="mt-8">
 						<div className="flex items-center gap-2 py-2">
 							<h2 className="text-2xl not-prose font-bold">Comments</h2>
-							<TranslateActionSection
+							<DynamicTranslateActionSection
 								pageId={pageWithTranslations.page.id}
 								currentHandle={currentUser?.handle}
 								userAITranslationInfo={userAITranslationInfo}
@@ -199,7 +242,7 @@ export default async function Page({ params }: { params: Params }) {
 							locale={locale}
 						/>
 					</div>
-					<PageCommentForm
+					<DynamicPageCommentForm
 						pageId={pageWithTranslations.page.id}
 						currentHandle={currentUser?.handle}
 					/>

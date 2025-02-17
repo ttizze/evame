@@ -1,5 +1,5 @@
 "use client";
-import { LikeButton } from "@/app/[locale]/components/like-button/like-button";
+import { LikeButton } from "@/app/[locale]/components/like-button/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Languages, Text } from "lucide-react";
@@ -45,9 +45,8 @@ export function FloatingControls({
 	const searchParams = useSearchParams();
 	const shareUrl =
 		typeof window !== "undefined"
-			? `${window.location.origin}${pathname}${
-					searchParams.toString() ? `?${searchParams.toString()}` : ""
-				}`
+			? `${window.location.origin}${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""
+			}`
 			: "";
 
 	const handleScroll = useCallback(() => {
