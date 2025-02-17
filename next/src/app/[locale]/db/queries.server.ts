@@ -101,16 +101,13 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	}
 
 	// ソート条件
-	let orderBy: Prisma.PageOrderByWithRelationInput;
+	let orderBy:
+		| Prisma.PageOrderByWithRelationInput
+		| Prisma.PageOrderByWithRelationInput[];
 	if (isRecommended) {
-		// いいね数が多い順
-		orderBy = {
-			likePages: {
-				_count: "desc",
-			},
-		};
+		orderBy = [{ createdAt: "desc" }, { likePages: { _count: "desc" } }];
 	} else {
-		// 新着順
+		// 新着順（全体）
 		orderBy = { createdAt: "desc" };
 	}
 
