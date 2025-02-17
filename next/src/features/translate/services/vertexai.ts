@@ -8,13 +8,13 @@ import { generateSystemMessage } from "./generate-gemini-message";
 
 const MAX_RETRIES = 3;
 interface VertexAIResponse {
-  candidates: Array<{
-    content: {
-      parts: Array<{
-        text: string;
-      }>;
-    };
-  }>;
+	candidates: Array<{
+		content: {
+			parts: Array<{
+				text: string;
+			}>;
+		};
+	}>;
 }
 export async function getVertexAIModelResponse(
 	model: string,

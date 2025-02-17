@@ -1,8 +1,6 @@
 // import { describe, expect, it } from "vitest";
 // import { getVertexAIModelResponse } from "./vertexai";
 
-
-
 // describe("getVertexAIModelResponse Integration Test", () => {
 // 	it("should translate text from English to Japanese", async () => {
 // 		const result = await getVertexAIModelResponse(
