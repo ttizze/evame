@@ -32,7 +32,7 @@ export default async function Image({ params }: { params: Params }) {
 	const { locale, slug } = await params;
 	const logoData = await readFile(join(process.cwd(), "public", "logo.png"));
 	const logoSrc = Uint8Array.from(logoData).buffer;
-	const faviconData = await readFile(join(process.cwd(), "public", "bg-f.png"));
+	const faviconData = await readFile(join(process.cwd(), "public", "logo.png"));
 	const faviconSrc = Uint8Array.from(faviconData).buffer;
 	const faviconSrcUrl = `data:image/png;base64,${Buffer.from(faviconSrc).toString("base64")}`;
 
