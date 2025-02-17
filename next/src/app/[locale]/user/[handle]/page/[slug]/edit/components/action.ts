@@ -51,7 +51,10 @@ export async function editPageContentAction(
 		currentUser.id,
 		sourceLocale,
 	);
-	if (page.status === "PUBLIC" && page.createdAt > new Date(Date.now() - 1000 * 60 * 60 * 24)) {
+	if (
+		page.status === "PUBLIC" &&
+		page.createdAt > new Date(Date.now() - 1000 * 60 * 60 * 24)
+	) {
 		const geminiApiKey = process.env.GEMINI_API_KEY;
 		if (!geminiApiKey || geminiApiKey === "undefined") {
 			return {
