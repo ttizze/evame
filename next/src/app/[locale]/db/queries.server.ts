@@ -101,17 +101,15 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	}
 
 	// ソート条件
-	let orderBy: Prisma.PageOrderByWithRelationInput | Prisma.PageOrderByWithRelationInput[];
-  if (isRecommended) {
-    orderBy = [
-      { createdAt: "desc" },
-      { likePages: { _count: "desc" } },
-    ];
-  } else {
-    // 新着順（全体）
-    orderBy = { createdAt: "desc" };
-  }
-
+	let orderBy:
+		| Prisma.PageOrderByWithRelationInput
+		| Prisma.PageOrderByWithRelationInput[];
+	if (isRecommended) {
+		orderBy = [{ createdAt: "desc" }, { likePages: { _count: "desc" } }];
+	} else {
+		// 新着順（全体）
+		orderBy = { createdAt: "desc" };
+	}
 
 	// いいね判定用where句 (ログインユーザ or ゲストID)
 	let likeWhere: Prisma.LikePageWhereInput;
