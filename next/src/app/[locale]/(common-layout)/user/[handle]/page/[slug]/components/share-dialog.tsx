@@ -53,7 +53,7 @@ export function ShareDialog({ title, firstImageUrl }: ShareDialogProps) {
 	const getShareUrl = () => {
 		if (typeof window !== "undefined") {
 			const currentUrl = `${window.location.origin}${pathname}`;
-			return `${currentUrl}&ogp=${selectedOgp}`;
+			return `${currentUrl}?ogp=${selectedOgp}`;
 		}
 		return "";
 	};
