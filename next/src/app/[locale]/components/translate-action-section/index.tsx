@@ -1,7 +1,6 @@
 "use client";
 import { supportedLocaleOptions } from "@/app/constants/locale";
 import type { UserAITranslationInfo } from "@prisma/client";
-import { Languages } from "lucide-react";
 import { useState } from "react";
 import type { TranslateTarget } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
 import { AddTranslateDialog } from "./add-translate-dialog";
@@ -53,9 +52,9 @@ export function TranslateActionSection({
 	return (
 		<div className={className}>
 			<div className="flex items-center gap-2">
-				<Languages className="w-4 h-4" />
 				<LocaleSelector
 					locale={locale}
+					sourceLocale={sourceLocale}
 					className="w-[200px]"
 					localeOptions={existingOptions}
 					showAddNew={showAddNew}
