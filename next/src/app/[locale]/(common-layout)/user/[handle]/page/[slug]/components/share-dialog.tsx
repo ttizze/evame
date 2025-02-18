@@ -94,6 +94,7 @@ export function ShareDialog({ title, firstImageUrl }: ShareDialogProps) {
 								<p className="text-sm mb-2 text-center">Generated</p>
 								<div className="relative w-full aspect-[1.91/1]">
 									<Image
+										unoptimized
 										src={apiOgpUrl}
 										alt="API OGP Preview"
 										fill
@@ -124,7 +125,6 @@ export function ShareDialog({ title, firstImageUrl }: ShareDialogProps) {
 								<p className="text-sm mb-2 text-center">First Image</p>
 								<div className="relative w-full aspect-[1.91/1]">
 									<Image
-										unoptimized
 										src={firstImageUrl}
 										alt="Image OGP Preview"
 										fill
