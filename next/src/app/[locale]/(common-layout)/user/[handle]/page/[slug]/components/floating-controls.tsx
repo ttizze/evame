@@ -3,7 +3,6 @@ import { LikeButton } from "@/app/[locale]/components/like-button/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Languages, Text } from "lucide-react";
-import { usePathname, useSearchParams } from "next/navigation";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ShareDialog } from "./share-dialog";
@@ -12,6 +11,7 @@ interface FloatingControlsProps {
 	likeCount: number;
 	slug: string;
 	shareTitle: string;
+	firstImageUrl: string | undefined;
 }
 
 export function FloatingControls({
@@ -19,6 +19,7 @@ export function FloatingControls({
 	likeCount,
 	slug,
 	shareTitle,
+	firstImageUrl,
 }: FloatingControlsProps) {
 	const [showOriginal, setShowOriginal] = useQueryState("showOriginal", {
 		defaultValue: true,
@@ -40,15 +41,6 @@ export function FloatingControls({
 	const [lastScrollY, setLastScrollY] = useState(0);
 
 	const ignoreScrollRef = useRef(false);
-
-	const pathname = usePathname();
-	const searchParams = useSearchParams();
-	const shareUrl =
-		typeof window !== "undefined"
-			? `${window.location.origin}${pathname}${
-					searchParams.toString() ? `?${searchParams.toString()}` : ""
-				}`
-			: "";
 
 	const handleScroll = useCallback(() => {
 		if (ignoreScrollRef.current) return;
@@ -128,7 +120,7 @@ export function FloatingControls({
 				<LikeButton liked={liked} likeCount={likeCount} slug={slug} />
 			</div>
 			<div className={baseClasses}>
-				<ShareDialog url={shareUrl} title={shareTitle} />
+				<ShareDialog title={shareTitle} firstImageUrl={firstImageUrl} />
 			</div>
 		</div>
 	);
