@@ -8,6 +8,7 @@ import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
+import type { SearchParams } from "nuqs/server";
 import { cache } from "react";
 import { ContentWithTranslations } from "./components/content-with-translations";
 import { TranslateTarget } from "./constants";
@@ -18,7 +19,6 @@ import {
 	fetchPageCommentsCount,
 	fetchPageWithTranslations,
 } from "./db/queries.server";
-
 const DynamicLikeButton = dynamic(
 	() =>
 		import("@/app/[locale]/components/like-button/client").then(
@@ -84,21 +84,25 @@ export const getPageData = cache(async (slug: string, locale: string) => {
 	const sourceTitleWithBestTranslationTitle = bestTranslationTitle
 		? `${pageSegmentTitleWithTranslations.segment.text} - ${bestTranslationTitle.segmentTranslation.text}`
 		: pageSegmentTitleWithTranslations.segment.text;
-
+	const firstImageUrl = pageWithTranslations.page.content.match(
+		/<img[^>]+src="([^">]+)"/,
+	)?.[1];
 	return {
 		pageWithTranslations,
 		currentUser,
 		pageSegmentTitleWithTranslations,
 		sourceTitleWithBestTranslationTitle,
 		bestTranslationTitle,
+		firstImageUrl,
 	};
 });
 type Params = Promise<{ locale: string; handle: string; slug: string }>;
-
 export async function generateMetadata({
 	params,
-}: { params: Params }): Promise<Metadata> {
+	searchParams,
+}: { params: Params; searchParams: Promise<SearchParams> }): Promise<Metadata> {
 	const { slug, locale } = await params;
+	const { ogp } = await searchParams;
 	const data = await getPageData(slug, locale);
 	if (!data) {
 		return {
@@ -110,22 +114,13 @@ export async function generateMetadata({
 		0,
 		200,
 	);
-	// const firstImageMatch = pageWithTranslations.page.content.match(
-	// 	/<img[^>]+src="([^">]+)"/,
-	// );
-	const baseUrl = process.env.NEXT_PUBLIC_DOMAIN ?? "http://localhost:3000";
-
-	const ogImageUrl = `${baseUrl}/api/og?locale=${locale}&slug=${slug}`;
-	const alternateLinks = pageWithTranslations.existLocales
-		.filter(
-			(locale: string) => pageWithTranslations.page.sourceLocale !== locale,
-		)
-		.map((locale: string) => ({
-			tagName: "link",
-			rel: "alternate",
-			hrefLang: locale,
-			href: `/${locale}/user/${pageWithTranslations.user.handle}/page/${pageWithTranslations.page.slug}`,
-		}));
+	let ogImageUrl: string;
+	if (ogp === "img" && data.firstImageUrl) {
+		ogImageUrl = data.firstImageUrl;
+	} else {
+		const baseUrl = process.env.NEXT_PUBLIC_DOMAIN ?? "http://localhost:3000";
+		ogImageUrl = `${baseUrl}/api/og?locale=${locale}&slug=${slug}`;
+	}
 
 	return {
 		title: sourceTitleWithBestTranslationTitle,
@@ -142,7 +137,19 @@ export async function generateMetadata({
 			description,
 			images: [{ url: ogImageUrl, width: 1200, height: 630 }],
 		},
-		...alternateLinks,
+		alternates: {
+			languages: Object.fromEntries(
+				pageWithTranslations.existLocales
+					.filter(
+						(locale: string) =>
+							pageWithTranslations.page.sourceLocale !== locale,
+					)
+					.map((locale: string) => [
+						locale,
+						`/${locale}/user/${pageWithTranslations.user.handle}/page/${pageWithTranslations.page.slug}`,
+					]),
+			),
+		},
 	};
 }
 
@@ -221,6 +228,7 @@ export default async function Page({ params }: { params: Params }) {
 					likeCount={likeCount}
 					slug={slug}
 					shareTitle={sourceTitleWithBestTranslationTitle}
+					firstImageUrl={data.firstImageUrl}
 				/>
 
 				<div className="mt-8">

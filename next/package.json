@@ -20,6 +20,7 @@
 		"@google-cloud/vertexai": "^1.9.3",
 		"@google/generative-ai": "0.21.0",
 		"@neondatabase/serverless": "0.10.4",
+		"@next/bundle-analyzer": "^15.1.7",
 		"@next/third-parties": "^15.1.7",
 		"@prisma/adapter-neon": "6.3.1",
 		"@prisma/client": "6.3.1",
