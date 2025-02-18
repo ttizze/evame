@@ -53,9 +53,7 @@ export function ShareDialog({ title, firstImageUrl }: ShareDialogProps) {
 	const getShareUrl = () => {
 		if (typeof window !== "undefined") {
 			const currentUrl = `${window.location.origin}${pathname}`;
-			return `${currentUrl}?locale=${encodeURIComponent(
-				locale,
-			)}&slug=${encodeURIComponent(slug)}&ogp=${selectedOgp}`;
+			return `${currentUrl}&ogp=${selectedOgp}`;
 		}
 		return "";
 	};
@@ -126,6 +124,7 @@ export function ShareDialog({ title, firstImageUrl }: ShareDialogProps) {
 								<p className="text-sm mb-2 text-center">First Image</p>
 								<div className="relative w-full aspect-[1.91/1]">
 									<Image
+										unoptimized
 										src={firstImageUrl}
 										alt="Image OGP Preview"
 										fill
