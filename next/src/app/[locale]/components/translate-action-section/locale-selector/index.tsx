@@ -16,11 +16,11 @@ import {
 import { usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
+import { Languages, Text } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { startTransition } from "react";
 import { useCombinedRouter } from "../hooks/use-combined-router";
-import { Languages, Text } from "lucide-react";
 interface LocaleOption {
 	code: string;
 	name: string;
@@ -88,10 +88,11 @@ export function LocaleSelector({
 					className={cn("justify-between rounded-xl", className)}
 				>
 					<div className="flex items-center">
-						<TypeIcon code={selectedOption?.code || ""} sourceLocale={sourceLocale} />
-						<span className="truncate">
-							{selectedOption?.name ?? "Select"}
-						</span>
+						<TypeIcon
+							code={selectedOption?.code || ""}
+							sourceLocale={sourceLocale}
+						/>
+						<span className="truncate">{selectedOption?.name ?? "Select"}</span>
 					</div>
 					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 				</Button>
@@ -110,9 +111,7 @@ export function LocaleSelector({
 								>
 									<TypeIcon code={item.code} sourceLocale={sourceLocale} />
 									<span className="truncate flex-grow">{item.name}</span>
-									{locale === item.code && (
-										<Check className="ml-2 h-4 w-4" />
-									)}
+									{locale === item.code && <Check className="ml-2 h-4 w-4" />}
 								</CommandItem>
 							))}
 						</CommandGroup>
