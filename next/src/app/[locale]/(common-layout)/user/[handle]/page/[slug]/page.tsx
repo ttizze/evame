@@ -19,6 +19,8 @@ import {
 	fetchPageCommentsCount,
 	fetchPageWithTranslations,
 } from "./db/queries.server";
+import { BASE_URL } from "@/app/constants/base-url";
+
 const DynamicLikeButton = dynamic(
 	() =>
 		import("@/app/[locale]/components/like-button/client").then(
@@ -114,8 +116,7 @@ export async function generateMetadata({
 		200,
 	);
 
-	const baseUrl = process.env.NEXT_PUBLIC_DOMAIN ?? "http://localhost:3000";
-	const ogImageUrl = `${baseUrl}/api/og?locale=${locale}&slug=${slug}`;
+	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${slug}`;
 
 	return {
 		title: sourceTitleWithBestTranslationTitle,
