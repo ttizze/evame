@@ -1,6 +1,7 @@
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-list";
 import { getBestTranslation } from "@/app/[locale]/lib/get-best-translation";
 import { stripHtmlTags } from "@/app/[locale]/lib/strip-html-tags";
+import { BASE_URL } from "@/app/constants/base-url";
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
@@ -19,7 +20,6 @@ import {
 	fetchPageCommentsCount,
 	fetchPageWithTranslations,
 } from "./db/queries.server";
-import { BASE_URL } from "@/app/constants/base-url";
 
 const DynamicLikeButton = dynamic(
 	() =>
