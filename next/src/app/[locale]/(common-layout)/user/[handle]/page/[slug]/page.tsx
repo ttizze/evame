@@ -102,7 +102,6 @@ export async function generateMetadata({
 	searchParams,
 }: { params: Params; searchParams: Promise<SearchParams> }): Promise<Metadata> {
 	const { slug, locale } = await params;
-	const { ogp } = await searchParams;
 	const data = await getPageData(slug, locale);
 	if (!data) {
 		return {
@@ -114,13 +113,9 @@ export async function generateMetadata({
 		0,
 		200,
 	);
-	let ogImageUrl: string;
-	if (ogp === "img" && data.firstImageUrl) {
-		ogImageUrl = data.firstImageUrl;
-	} else {
-		const baseUrl = process.env.NEXT_PUBLIC_DOMAIN ?? "http://localhost:3000";
-		ogImageUrl = `${baseUrl}/api/og?locale=${locale}&slug=${slug}`;
-	}
+
+	const baseUrl = process.env.NEXT_PUBLIC_DOMAIN ?? "http://localhost:3000";
+	const ogImageUrl = `${baseUrl}/api/og?locale=${locale}&slug=${slug}`;
 
 	return {
 		title: sourceTitleWithBestTranslationTitle,

@@ -8,10 +8,8 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import { CheckCircle2, CopyIcon, Share, XIcon } from "lucide-react";
-import Image from "next/image";
-import { useParams, usePathname } from "next/navigation";
+import { CopyIcon, Share, XIcon } from "lucide-react";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import {
 	FacebookIcon,
@@ -28,32 +26,29 @@ interface ShareDialogProps {
 }
 
 export function ShareDialog({ title, firstImageUrl }: ShareDialogProps) {
-	// 選択状態の OGP 種類 ("api" or "img")
-	const [selectedOgp, setSelectedOgp] = useState<"api" | "img">("api");
 	const [isOpen, setIsOpen] = useState(false);
 	const pathname = usePathname();
-
+	const searchParams = useSearchParams();
+	const { showOriginal, showTranslation } = Object.fromEntries(searchParams);
 	// useParams で現在の locale と slug を取得
 	const { locale, slug } = useParams();
-	if (
-		!locale ||
-		typeof locale !== "string" ||
-		!slug ||
-		typeof slug !== "string"
-	) {
+	if (typeof locale !== "string" || typeof slug !== "string") {
 		return null;
 	}
 
-	const baseUrl = process.env.NEXT_PUBLIC_DOMAIN ?? "http://localhost:3000";
-
-	const apiOgpUrl = `${baseUrl}/api/og?locale=${encodeURIComponent(
-		locale,
-	)}&slug=${encodeURIComponent(slug)}`;
-
 	const getShareUrl = () => {
 		if (typeof window !== "undefined") {
-			const currentUrl = `${window.location.origin}${pathname}`;
-			return `${currentUrl}?ogp=${selectedOgp}`;
+			let currentUrl = `${window.location.origin}${pathname}`;
+			const params = [];
+
+			if (showOriginal) params.push(`showOriginal=${showOriginal}`);
+			if (showTranslation) params.push(`showTranslation=${showTranslation}`);
+
+			if (params.length > 0) {
+				currentUrl += `?${params.join("&")}`;
+			}
+
+			return currentUrl;
 		}
 		return "";
 	};
@@ -74,71 +69,6 @@ export function ShareDialog({ title, firstImageUrl }: ShareDialogProps) {
 					<DialogTitle className="text-center">Share</DialogTitle>
 				</DialogHeader>
 				<div className="flex flex-col gap-6 mt-4">
-					{firstImageUrl && (
-						<div className="flex gap-4 w-full justify-between">
-							<div
-								className={cn(
-									"cursor-pointer border rounded-lg p-2 transition-all relative w-1/2",
-									selectedOgp === "api"
-										? "border-primary shadow-lg"
-										: "border-muted hover:shadow-md",
-								)}
-								onClick={() => setSelectedOgp("api")}
-								onKeyDown={(e) => {
-									if (e.key === "Enter" || e.key === " ") {
-										e.preventDefault();
-										setSelectedOgp("api");
-									}
-								}}
-							>
-								<p className="text-sm mb-2 text-center">Generated</p>
-								<div className="relative w-full aspect-[1.91/1]">
-									<Image
-										unoptimized
-										src={apiOgpUrl}
-										alt="API OGP Preview"
-										fill
-										className="object-cover rounded"
-									/>
-								</div>
-								{selectedOgp === "api" && (
-									<div className="absolute top-2 right-2">
-										<CheckCircle2 className="w-5 h-5 text-primary" />
-									</div>
-								)}
-							</div>
-							<div
-								className={cn(
-									"cursor-pointer border rounded-lg p-2 transition-all relative w-1/2",
-									selectedOgp === "img"
-										? "border-primary shadow-lg"
-										: "border-muted hover:shadow-md",
-								)}
-								onClick={() => setSelectedOgp("img")}
-								onKeyDown={(e) => {
-									if (e.key === "Enter" || e.key === " ") {
-										e.preventDefault();
-										setSelectedOgp("img");
-									}
-								}}
-							>
-								<p className="text-sm mb-2 text-center">First Image</p>
-								<div className="relative w-full aspect-[1.91/1]">
-									<Image
-										src={firstImageUrl}
-										alt="Image OGP Preview"
-										fill
-										className="object-cover rounded"
-									/>
-								</div>
-								{selectedOgp === "img" && (
-									<div className="absolute top-2 right-2">
-										<CheckCircle2 className="w-5 h-5 text-primary" />
-									</div>
-								)}
-							</div>
-						</div>
-					)}
 					{/* シェア用ボタン群 */}
 					<div className="flex justify-center space-x-4">
 						<Button
