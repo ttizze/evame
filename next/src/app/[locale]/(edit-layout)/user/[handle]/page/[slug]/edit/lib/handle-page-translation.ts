@@ -1,9 +1,9 @@
 import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { createUserAITranslationInfo } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
 import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/queries.server";
-import { hasExistingTranslation } from "@/features/translate/db/query.server";
 import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
 import type { TranslateJobParams } from "@/features/translate/types";
+import { hasExistingTranslation } from "../db/queries.server";
 export async function handlePageTranslation({
 	currentUserId,
 	pageId,
@@ -17,9 +17,9 @@ export async function handlePageTranslation({
 	geminiApiKey: string;
 	title: string;
 }): Promise<void> {
-	const locale = sourceLocale === "en" ? "ja" : "en";
+	const targetLocale = sourceLocale === "en" ? "ja" : "en";
 
-	const hasTranslation = await hasExistingTranslation(pageId, locale);
+	const hasTranslation = await hasExistingTranslation(pageId, targetLocale);
 	if (hasTranslation) {
 		return;
 	}
@@ -27,7 +27,7 @@ export async function handlePageTranslation({
 	const userAITranslationInfo = await createUserAITranslationInfo(
 		currentUserId,
 		pageId,
-		locale,
+		targetLocale,
 		"gemini-1.5-flash",
 	);
 
@@ -43,7 +43,7 @@ export async function handlePageTranslation({
 		aiModel: "gemini-1.5-flash",
 		userId: currentUserId,
 		pageId: pageId,
-		locale: locale,
+		targetLocale,
 		title: title,
 		numberedElements: pageWithPageSegments.pageSegments.map((st) => ({
 			number: st.number,

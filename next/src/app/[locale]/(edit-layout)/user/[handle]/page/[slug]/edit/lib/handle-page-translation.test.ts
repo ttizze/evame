@@ -1,12 +1,12 @@
 import { createUserAITranslationInfo } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
 import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/queries.server";
-import { hasExistingTranslation } from "@/features/translate/db/query.server";
 import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
 import { prisma } from "@/lib/prisma";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { hasExistingTranslation } from "../db/queries.server";
 import { handlePageTranslation } from "./handle-page-translation";
 // Mock all dependencies
-vi.mock("@/features/translate/db/query.server");
+vi.mock("../db/queries.server");
 vi.mock(
 	"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/mutations.server",
 );
@@ -101,7 +101,7 @@ describe("handlePageTranslation", () => {
 				aiModel: "gemini-1.5-flash",
 				userId: mockParams.currentUserId,
 				pageId: mockParams.pageId,
-				locale: "ja",
+				targetLocale: "ja",
 				title: mockParams.title,
 				numberedElements: [
 					{ number: 1, text: "Hello" },

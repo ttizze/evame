@@ -14,8 +14,8 @@ type TranslateActionSectionProps = {
 	sourceLocale: string;
 	targetLocale: string;
 	existLocales: string[];
-	className?: string;
 	translateTarget: TranslateTarget;
+	className?: string;
 	showAddNew?: boolean;
 };
 
@@ -27,8 +27,8 @@ export function TranslateActionSection({
 	sourceLocale,
 	targetLocale,
 	existLocales,
-	className,
 	translateTarget,
+	className,
 	showAddNew,
 }: TranslateActionSectionProps) {
 	const localeOptions = buildLocaleOptions(
