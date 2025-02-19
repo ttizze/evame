@@ -23,16 +23,16 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useActionState } from "react";
 import type { TranslateTarget } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
-import { LocaleSelector } from "../locale-selector/index";
+import { LocaleSelector } from "../locale-selector";
 import { UserAITranslationStatus } from "../user-ai-translation-status";
-import { TranslateAction, type TranslateActionState } from "./action";
+import { type TranslateActionState, translateAction } from "./action";
 
 type AddTranslateDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	currentHandle: string | undefined;
 	pageId: number;
-	locale: string;
+	sourceLocale: string;
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
 	translateTarget: TranslateTarget;
@@ -43,16 +43,16 @@ export function AddTranslateDialog({
 	onOpenChange,
 	currentHandle,
 	pageId,
-	locale,
+	sourceLocale,
 	hasGeminiApiKey,
 	userAITranslationInfo,
 	translateTarget,
 }: AddTranslateDialogProps) {
-	const [translateState, translateAction, isTranslating] = useActionState<
+	const [translateState, action, isTranslating] = useActionState<
 		TranslateActionState,
 		FormData
-	>(TranslateAction, { success: false });
-	const [dialogLocale, setDialogLocale] = useState(locale);
+	>(translateAction, { success: false });
+	const [targetLocale, setTargetLocale] = useState("");
 
 	const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
@@ -76,8 +76,10 @@ export function AddTranslateDialog({
 								<LocaleSelector
 									className="w-full	"
 									localeOptions={supportedLocaleOptions}
-									locale={dialogLocale}
-									onChange={(value) => setDialogLocale(value)}
+									targetLocale={targetLocale}
+									sourceLocale={sourceLocale}
+									onChange={(value) => setTargetLocale(value)}
+									showIcons={false}
 								/>
 							</div>
 
@@ -105,8 +107,12 @@ export function AddTranslateDialog({
 							</div>
 
 							{hasGeminiApiKey ? (
-								<form action={translateAction}>
-									<input type="hidden" name="locale" value={locale} />
+								<form action={action}>
+									<input
+										type="hidden"
+										name="targetLocale"
+										value={targetLocale}
+									/>
 									<input type="hidden" name="pageId" value={pageId} />
 									<input type="hidden" name="aiModel" value={selectedModel} />
 									<input
@@ -141,9 +147,9 @@ export function AddTranslateDialog({
 									{translateState.zodErrors.aiModel[0]}
 								</p>
 							)}
-							{translateState.zodErrors?.locale && (
+							{translateState.zodErrors?.targetLocale && (
 								<p className="text-red-500">
-									{translateState.zodErrors.locale[0]}
+									{translateState.zodErrors.targetLocale[0]}
 								</p>
 							)}
 							{translateState.zodErrors?.translateTarget && (

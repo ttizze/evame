@@ -241,7 +241,7 @@ export default async function Page({ params }: { params: Params }) {
 								userAITranslationInfo={userAITranslationInfo}
 								hasGeminiApiKey={hasGeminiApiKey}
 								sourceLocale={pageWithTranslations.page.sourceLocale}
-								locale={locale}
+								targetLocale={locale}
 								existLocales={pageWithTranslations.existLocales}
 								translateTarget={TranslateTarget.TRANSLATE_COMMENT}
 								showAddNew={true}

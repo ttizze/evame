@@ -10,7 +10,7 @@ import {
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
 } from "../../../(common-layout)/user/[handle]/page/[slug]/db/queries.server";
-import { TranslateAction } from "./action";
+import { translateAction } from "./action";
 vi.mock("@/auth", () => ({
 	getCurrentUser: vi.fn(),
 }));
@@ -66,15 +66,21 @@ describe("TranslateAction", () => {
 			null,
 		);
 
-		await expect(
-			TranslateAction({ success: false }, new FormData()),
-		).rejects.toThrow("NEXT_REDIRECT");
+		const formData = new FormData();
+		formData.append("pageId", "1");
+		formData.append("aiModel", "gemini-pro");
+		formData.append("targetLocale", "en");
+		formData.append("translateTarget", TranslateTarget.TRANSLATE_COMMENT);
+
+		await expect(translateAction({ success: false }, formData)).rejects.toThrow(
+			"NEXT_REDIRECT",
+		);
 	});
 
 	it("should validate input data", async () => {
 		const formData = new FormData();
 
-		const result = await TranslateAction({ success: false }, formData);
+		const result = await translateAction({ success: false }, formData);
 
 		expect(result.success).toBe(false);
 	});
@@ -102,10 +108,10 @@ describe("TranslateAction", () => {
 		const formData = new FormData();
 		formData.append("pageId", "1");
 		formData.append("aiModel", "gemini-pro");
-		formData.append("locale", "en");
+		formData.append("targetLocale", "en");
 		formData.append("translateTarget", TranslateTarget.TRANSLATE_COMMENT);
 
-		const result = await TranslateAction({ success: false }, formData);
+		const result = await translateAction({ success: false }, formData);
 
 		expect(result).toEqual({ success: true });
 		expect(mockQueue.add).toHaveBeenCalled();
@@ -129,10 +135,10 @@ describe("TranslateAction", () => {
 		const formData = new FormData();
 		formData.append("pageId", "1");
 		formData.append("aiModel", "gemini-pro");
-		formData.append("locale", "en");
+		formData.append("targetLocale", "en");
 		formData.append("translateTarget", TranslateTarget.TRANSLATE_PAGE);
 
-		const result = await TranslateAction({ success: false }, formData);
+		const result = await translateAction({ success: false }, formData);
 
 		expect(result).toEqual({ success: true });
 		expect(mockQueue.add).toHaveBeenCalled();
@@ -147,10 +153,10 @@ describe("TranslateAction", () => {
 		const formData = new FormData();
 		formData.append("pageId", "1");
 		formData.append("aiModel", "gemini-pro");
-		formData.append("locale", "en");
+		formData.append("targetLocale", "en");
 		formData.append("translateTarget", TranslateTarget.TRANSLATE_PAGE);
 
-		const result = await TranslateAction({ success: false }, formData);
+		const result = await translateAction({ success: false }, formData);
 
 		expect(result).toEqual({
 			success: false,
@@ -166,10 +172,10 @@ describe("TranslateAction", () => {
 		const formData = new FormData();
 		formData.append("pageId", "1");
 		formData.append("aiModel", "gemini-pro");
-		formData.append("locale", "en");
+		formData.append("targetLocale", "en");
 		formData.append("translateTarget", TranslateTarget.TRANSLATE_COMMENT);
 
-		const result = await TranslateAction({ success: false }, formData);
+		const result = await translateAction({ success: false }, formData);
 
 		expect(result).toEqual({ success: false, message: "Page not found" });
 	});
@@ -182,10 +188,10 @@ describe("TranslateAction", () => {
 		const formData = new FormData();
 		formData.append("pageId", "1");
 		formData.append("aiModel", "gemini-pro");
-		formData.append("locale", "en");
+		formData.append("targetLocale", "en");
 		formData.append("translateTarget", TranslateTarget.TRANSLATE_PAGE);
 
-		const result = await TranslateAction({ success: false }, formData);
+		const result = await translateAction({ success: false }, formData);
 
 		expect(result).toEqual({ success: false, message: "Page not found" });
 	});

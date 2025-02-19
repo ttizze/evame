@@ -1,5 +1,6 @@
 "use client";
 import { supportedLocaleOptions } from "@/app/constants/locale";
+import type { LocaleOption } from "@/app/constants/locale";
 import type { UserAITranslationInfo } from "@prisma/client";
 import { useState } from "react";
 import type { TranslateTarget } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
@@ -11,7 +12,7 @@ type TranslateActionSectionProps = {
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
 	sourceLocale: string;
-	locale: string;
+	targetLocale: string;
 	existLocales: string[];
 	className?: string;
 	translateTarget: TranslateTarget;
@@ -24,20 +25,57 @@ export function TranslateActionSection({
 	hasGeminiApiKey,
 	userAITranslationInfo,
 	sourceLocale,
-	locale,
+	targetLocale,
 	existLocales,
 	className,
 	translateTarget,
 	showAddNew,
 }: TranslateActionSectionProps) {
-	let sourceLocaleOptions = supportedLocaleOptions.find(
-		(sl) => sl.code === sourceLocale,
+	const localeOptions = buildLocaleOptions(
+		sourceLocale,
+		existLocales,
+		supportedLocaleOptions,
 	);
-	if (!sourceLocaleOptions) {
-		sourceLocaleOptions = { code: "und", name: "Unknown" };
-	}
+
+	const [addTranslateDialogOpen, setAddTranslateDialogOpen] = useState(false);
+	return (
+		<div className={className}>
+			<div className="flex items-center gap-2">
+				<LocaleSelector
+					targetLocale={targetLocale}
+					sourceLocale={sourceLocale}
+					className="w-[200px]"
+					localeOptions={localeOptions}
+					showAddNew={showAddNew}
+					onAddNew={() => setAddTranslateDialogOpen(true)}
+				/>
+			</div>
+			<AddTranslateDialog
+				open={addTranslateDialogOpen}
+				onOpenChange={setAddTranslateDialogOpen}
+				currentHandle={currentHandle}
+				pageId={pageId}
+				sourceLocale={sourceLocale}
+				hasGeminiApiKey={hasGeminiApiKey}
+				userAITranslationInfo={userAITranslationInfo}
+				translateTarget={translateTarget}
+			/>
+		</div>
+	);
+}
+
+function buildLocaleOptions(
+	sourceLocale: string,
+	existLocales: string[],
+	supportedLocaleOptions: LocaleOption[],
+): LocaleOption[] {
+	// Get info for the source locale.
+	const sourceLocaleOption = supportedLocaleOptions.find(
+		(sl) => sl.code === sourceLocale,
+	) ?? { code: "und", name: "Unknown" };
+	// For each existing locale, make an option
 	const merged = [
-		sourceLocaleOptions,
+		sourceLocaleOption,
 		...existLocales.map((lc) => {
 			const localeName =
 				supportedLocaleOptions.find((sl) => sl.code === lc)?.name || lc;
@@ -48,29 +86,5 @@ export function TranslateActionSection({
 	const existingOptions = merged.filter((option, index, self) => {
 		return self.findIndex((o) => o.code === option.code) === index;
 	});
-	const [addTranslateDialogOpen, setAddTranslateDialogOpen] = useState(false);
-	return (
-		<div className={className}>
-			<div className="flex items-center gap-2">
-				<LocaleSelector
-					locale={locale}
-					sourceLocale={sourceLocale}
-					className="w-[200px]"
-					localeOptions={existingOptions}
-					showAddNew={showAddNew}
-					onAddNew={() => setAddTranslateDialogOpen(true)}
-				/>
-			</div>
-			<AddTranslateDialog
-				open={addTranslateDialogOpen}
-				onOpenChange={setAddTranslateDialogOpen}
-				currentHandle={currentHandle}
-				pageId={pageId}
-				locale={locale}
-				hasGeminiApiKey={hasGeminiApiKey}
-				userAITranslationInfo={userAITranslationInfo}
-				translateTarget={translateTarget}
-			/>
-		</div>
-	);
+	return existingOptions;
 }

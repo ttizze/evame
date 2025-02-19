@@ -50,7 +50,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 						hasGeminiApiKey={false}
 						userAITranslationInfo={null}
 						sourceLocale={sourceLocale}
-						locale={locale}
+						targetLocale={locale}
 						existLocales={existLocales}
 						translateTarget={TranslateTarget.TRANSLATE_PAGE}
 					/>

@@ -82,7 +82,7 @@ export function ContentWithTranslations({
 				userAITranslationInfo={userAITranslationInfo}
 				hasGeminiApiKey={hasGeminiApiKey}
 				sourceLocale={pageWithTranslations.page.sourceLocale}
-				locale={locale}
+				targetLocale={locale}
 				existLocales={pageWithTranslations.existLocales}
 				className="pt-3"
 				translateTarget={TranslateTarget.TRANSLATE_PAGE}
