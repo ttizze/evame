@@ -6,7 +6,7 @@ import type { NumberedElement } from "../types";
 export async function saveTranslationsForPage(
 	extractedTranslations: NumberedElement[],
 	pageSegments: { id: number; number: number }[],
-	locale: string,
+	targetLocale: string,
 	aiModel: string,
 ) {
 	const systemUserId = await getOrCreateAIUser(aiModel);
@@ -23,7 +23,7 @@ export async function saveTranslationsForPage(
 				return null;
 			}
 			return {
-				locale,
+				locale: targetLocale,
 				text: translation.text,
 				pageSegmentId,
 				userId: systemUserId,
@@ -41,7 +41,7 @@ export async function saveTranslationsForPage(
 export async function saveTranslationsForComment(
 	extractedTranslations: NumberedElement[],
 	pageCommentSegments: { id: number; number: number }[],
-	locale: string,
+	targetLocale: string,
 	aiModel: string,
 ) {
 	const systemUserId = await getOrCreateAIUser(aiModel);
@@ -59,7 +59,7 @@ export async function saveTranslationsForComment(
 				return null;
 			}
 			return {
-				locale,
+				locale: targetLocale,
 				text: translation.text,
 				pageCommentSegmentId,
 				userId: systemUserId,
@@ -78,7 +78,7 @@ export async function getTranslatedText(
 	geminiApiKey: string,
 	aiModel: string,
 	numberedElements: NumberedElement[],
-	locale: string,
+	targetLocale: string,
 	title: string,
 ) {
 	const source_text = numberedElements
@@ -89,6 +89,6 @@ export async function getTranslatedText(
 		aiModel,
 		title,
 		source_text,
-		locale,
+		targetLocale,
 	);
 }

@@ -1,7 +1,7 @@
 export function generateSystemMessage(
 	title: string,
 	source_text: string,
-	target_language: string,
+	target_locale: string,
 ): string {
 	return `
   You are a skilled translator. Your task is to accurately translate the given text into beautiful and natural sentences in the target language. Please follow these guidelines:
@@ -13,7 +13,7 @@ export function generateSystemMessage(
   
   Document title: ${title}
   
-  Translate the following array of English texts into ${target_language}.
+  Translate the following array of English texts into ${target_locale}.
   
   Important instructions:
   - Do not explain your process or self-reference.
@@ -47,7 +47,7 @@ export function generateSystemMessage(
   Input text:
   ${source_text}
   
-  Translate to ${target_language} and output in the following format:
+  Translate to ${target_locale} and output in the following format:
   [
     {
       "number": 1,

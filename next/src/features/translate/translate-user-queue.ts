@@ -2,7 +2,7 @@ import { Queue } from "@/lib/queue.server";
 import type { Job } from "bullmq";
 import { translate } from "./lib/translate.server";
 import type { TranslateJobParams } from "./types";
-const QUEUE_VERSION = 13;
+const QUEUE_VERSION = 14;
 
 export const getTranslateUserQueue = (userId: string) => {
 	return Queue<TranslateJobParams>(

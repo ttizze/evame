@@ -63,7 +63,7 @@ async function translateChunk(
 	geminiApiKey: string,
 	aiModel: string,
 	numberedElements: NumberedElement[],
-	locale: string,
+	targetLocale: string,
 	pageId: number,
 	title: string,
 	translateTarget: TranslateTarget,
@@ -82,7 +82,7 @@ async function translateChunk(
 			geminiApiKey,
 			aiModel,
 			pendingElements,
-			locale,
+			targetLocale,
 			title,
 		);
 
@@ -97,7 +97,7 @@ async function translateChunk(
 				await saveTranslationsForPage(
 					partialTranslations,
 					pageSegments,
-					locale,
+					targetLocale,
 					aiModel,
 				);
 			} else {
@@ -110,7 +110,7 @@ async function translateChunk(
 				await saveTranslationsForComment(
 					partialTranslations,
 					pageCommentSegments,
-					locale,
+					targetLocale,
 					aiModel,
 				);
 			}
@@ -138,20 +138,21 @@ async function getTranslatedText(
 	geminiApiKey: string,
 	aiModel: string,
 	numberedElements: NumberedElement[],
-	locale: string,
+	targetLocale: string,
 	title: string,
 ) {
 	const source_text = numberedElements
 		.map((el) => JSON.stringify(el))
 		.join("\n");
-	const localeName =
-		supportedLocaleOptions.find((sl) => sl.code === locale)?.name || locale;
+	const targetLocaleName =
+		supportedLocaleOptions.find((sl) => sl.code === targetLocale)?.name ||
+		targetLocale;
 	const result = await getGeminiModelResponse(
 		geminiApiKey,
 		aiModel,
 		title,
 		source_text,
-		localeName,
+		targetLocaleName,
 	);
 	return result;
 }
