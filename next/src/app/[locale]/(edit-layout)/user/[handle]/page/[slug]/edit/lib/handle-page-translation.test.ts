@@ -1,9 +1,9 @@
 import { createUserAITranslationInfo } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
 import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/queries.server";
-import { hasExistingTranslation } from "../db/queries.server";
 import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
 import { prisma } from "@/lib/prisma";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { hasExistingTranslation } from "../db/queries.server";
 import { handlePageTranslation } from "./handle-page-translation";
 // Mock all dependencies
 vi.mock("../db/queries.server");
