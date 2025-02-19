@@ -1,6 +1,6 @@
 "use client";
+import { Editor } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[slug]/edit/components/editor/editor";
 import { StartButton } from "@/app/[locale]/components/start-button";
-import { Editor } from "@/app/[locale]/user/[handle]/page/[slug]/edit/components/editor/editor";
 import { Button } from "@/components/ui/button";
 import { useActionState, useState } from "react";
 import { type CommentActionResponse, commentAction } from "./action";
