@@ -1,4 +1,5 @@
 "use client";
+import type { LocaleOption } from "@/app/constants/locale";
 import { Button } from "@/components/ui/button";
 import {
 	Command,
@@ -21,42 +22,36 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { startTransition } from "react";
 import { useCombinedRouter } from "../hooks/use-combined-router";
-interface LocaleOption {
-	code: string;
-	name: string;
-}
-
 interface LocaleSelectorProps {
-	locale: string;
+	targetLocale: string;
 	sourceLocale: string;
 	className?: string;
 	localeOptions: LocaleOption[];
+	/** If true, show an “Add New” button at the bottom of the list. */
 	showAddNew?: boolean;
+
+	/** Called if the user clicks the “Add New” button. */
 	onAddNew?: () => void;
-	onChange?: (value: string) => void;
+
+	/** Called when a user picks a locale from the dropdown. */
+	onChange?: (newValue: string) => void;
+	/**
+	 * If `true`, show the icon for source vs other translation.
+	 * If `false`, omit icons entirely.
+	 */
+	showIcons?: boolean;
 }
-function TypeIcon({
-	code,
-	sourceLocale,
-}: {
-	code: string;
-	sourceLocale: string;
-}) {
-	return code === sourceLocale ? (
-		<Text className="w-4 h-4 mr-2" />
-	) : (
-		<Languages className="w-4 h-4 mr-2" />
-	);
-}
+
 //TODO: radix uiのせいで開発環境のモバイルで文字がぼける iphoneではボケてない､その他実機でもボケてたら対応する
 export function LocaleSelector({
-	locale,
+	targetLocale,
 	sourceLocale,
 	className,
 	localeOptions,
 	showAddNew,
 	onAddNew,
 	onChange,
+	showIcons = true,
 }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
 	const router = useCombinedRouter();
@@ -78,7 +73,9 @@ export function LocaleSelector({
 		}
 	};
 
-	const selectedOption = localeOptions.find((item) => item.code === locale);
+	const selectedOption = localeOptions.find(
+		(item) => item.code === targetLocale,
+	);
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
@@ -88,10 +85,12 @@ export function LocaleSelector({
 					className={cn("justify-between rounded-xl", className)}
 				>
 					<div className="flex items-center">
-						<TypeIcon
-							code={selectedOption?.code || ""}
-							sourceLocale={sourceLocale}
-						/>
+						{showIcons && (
+							<TypeIcon
+								code={selectedOption?.code ?? ""}
+								sourceLocale={sourceLocale}
+							/>
+						)}
 						<span className="truncate">{selectedOption?.name ?? "Select"}</span>
 					</div>
 					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -109,9 +108,13 @@ export function LocaleSelector({
 									value={item.code}
 									onSelect={handleLocaleChange}
 								>
-									<TypeIcon code={item.code} sourceLocale={sourceLocale} />
+									{showIcons && (
+										<TypeIcon code={item.code} sourceLocale={sourceLocale} />
+									)}
 									<span className="truncate flex-grow">{item.name}</span>
-									{locale === item.code && <Check className="ml-2 h-4 w-4" />}
+									{targetLocale === item.code && (
+										<Check className="ml-2 h-4 w-4" />
+									)}
 								</CommandItem>
 							))}
 						</CommandGroup>
@@ -130,5 +133,19 @@ export function LocaleSelector({
 				</Command>
 			</PopoverContent>
 		</Popover>
+	);
+}
+
+function TypeIcon({
+	code,
+	sourceLocale,
+}: {
+	code: string;
+	sourceLocale: string;
+}) {
+	return code === sourceLocale ? (
+		<Text className="w-4 h-4 mr-2" />
+	) : (
+		<Languages className="w-4 h-4 mr-2" />
 	);
 }
