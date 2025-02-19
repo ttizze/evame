@@ -64,7 +64,7 @@ async function getAllPagesByUserId(userId: string) {
 				aiModel: AI_MODEL,
 				userId: user.id,
 				pageId: page.id,
-				locale: LOCALE,
+				targetLocale: LOCALE,
 				title: title,
 				numberedElements: page.pageSegments,
 				translateTarget: TranslateTarget.TRANSLATE_PAGE,

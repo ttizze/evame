@@ -31,7 +31,7 @@ export async function translate(params: TranslateJobParams) {
 				params.geminiApiKey,
 				params.aiModel,
 				chunks[i],
-				params.locale,
+				params.targetLocale,
 				params.pageId,
 				params.title,
 				params.translateTarget,

@@ -101,7 +101,7 @@ describe("handlePageTranslation", () => {
 				aiModel: "gemini-1.5-flash",
 				userId: mockParams.currentUserId,
 				pageId: mockParams.pageId,
-				locale: "ja",
+				targetLocale: "ja",
 				title: mockParams.title,
 				numberedElements: [
 					{ number: 1, text: "Hello" },

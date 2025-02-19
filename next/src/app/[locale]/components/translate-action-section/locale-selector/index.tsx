@@ -14,6 +14,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import { usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { Check, ChevronsUpDown } from "lucide-react";
@@ -120,15 +121,18 @@ export function LocaleSelector({
 						</CommandGroup>
 					</CommandList>
 					{showAddNew && (
-						<div className="flex justify-center m-2">
-							<Button
-								variant="default"
-								className="rounded-full"
-								onClick={onAddNew}
-							>
-								+ Add New
-							</Button>
-						</div>
+						<>
+							<Separator />
+							<div className="flex justify-center m-2">
+								<Button
+									variant="default"
+									className="rounded-full"
+									onClick={onAddNew}
+								>
+									+ Add New
+								</Button>
+							</div>
+						</>
 					)}
 				</Command>
 			</PopoverContent>

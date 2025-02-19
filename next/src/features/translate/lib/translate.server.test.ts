@@ -76,7 +76,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 			geminiApiKey: "dummy-key",
 			aiModel: "test-model",
 			userId,
-			locale: "ja",
+			targetLocale: "ja",
 			pageId,
 			title: "Test Page",
 			numberedElements: [
@@ -118,7 +118,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 			geminiApiKey: "dummy-key",
 			aiModel: "test-model",
 			userId,
-			locale: "ja",
+			targetLocale: "ja",
 			pageId,
 			title: "Test Page",
 			numberedElements: [
@@ -146,7 +146,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 			geminiApiKey: "dummy-key",
 			aiModel: "test-model",
 			userId,
-			locale: "ja",
+			targetLocale: "ja",
 			pageId,
 			title: "Test Page",
 			numberedElements: [

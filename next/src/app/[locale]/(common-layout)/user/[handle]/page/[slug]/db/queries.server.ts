@@ -150,10 +150,9 @@ export async function fetchPageWithTranslations(
 export async function fetchLatestUserAITranslationInfo(
 	pageId: number,
 	userId: string,
-	locale: string,
 ) {
 	return await prisma.userAITranslationInfo.findFirst({
-		where: { pageId, userId, locale },
+		where: { pageId, userId },
 		orderBy: { createdAt: "desc" },
 	});
 }
