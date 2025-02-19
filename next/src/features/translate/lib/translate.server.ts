@@ -2,8 +2,8 @@ import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/pa
 import { supportedLocaleOptions } from "@/app/constants/locale";
 import { TranslationStatus } from "@prisma/client";
 import { updateUserAITranslationInfo } from "../db/mutations.server";
-import { getLatestPageCommentSegments } from "../db/query.server";
-import { getLatestPageSegments } from "../db/query.server";
+import { getLatestPageCommentSegments } from "../db/queries.server";
+import { getLatestPageSegments } from "../db/queries.server";
 import { getGeminiModelResponse } from "../services/gemini";
 import type { NumberedElement, TranslateJobParams } from "../types";
 import { extractTranslations } from "./extract-translations.server";

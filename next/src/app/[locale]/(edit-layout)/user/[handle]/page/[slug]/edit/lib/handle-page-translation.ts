@@ -1,9 +1,9 @@
 import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { createUserAITranslationInfo } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
 import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/queries.server";
-import { hasExistingTranslation } from "@/features/translate/db/query.server";
 import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
 import type { TranslateJobParams } from "@/features/translate/types";
+import { hasExistingTranslation } from "../db/queries.server";
 export async function handlePageTranslation({
 	currentUserId,
 	pageId,
