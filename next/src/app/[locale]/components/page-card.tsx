@@ -27,7 +27,7 @@ export function PageCard({
 }: PageCardProps) {
 	const title = pageCard.pageSegments[0].text;
 	const bestTranslationTitle =
-		pageCard.pageSegments[0].pageSegmentTranslations[0].text;
+		pageCard.pageSegments[0].pageSegmentTranslations[0]?.text;
 	return (
 		<Card className="h-full relative w-full overflow-hidden">
 			{showOwnerActions && (
