@@ -1,9 +1,9 @@
 import { createUserAITranslationInfo } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
 import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/queries.server";
-import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
 import { prisma } from "@/lib/prisma";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { hasExistingTranslation } from "../db/queries.server";
+
 import { handlePageTranslation } from "./handle-page-translation";
 // Mock all dependencies
 vi.mock("../db/queries.server");
@@ -13,7 +13,6 @@ vi.mock(
 vi.mock(
 	"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/queries.server",
 );
-vi.mock("@/features/translate/translate-user-queue");
 
 describe("handlePageTranslation", () => {
 	const mockParams = {
@@ -24,20 +23,18 @@ describe("handlePageTranslation", () => {
 		title: "Test Title",
 	};
 
-	const mockQueue = {
-		add: vi.fn().mockResolvedValue(undefined),
-	};
-
 	beforeEach(async () => {
 		await prisma.user.deleteMany();
 		await prisma.page.deleteMany();
 		await prisma.pageSegment.deleteMany();
 		await prisma.userAITranslationInfo.deleteMany();
+		vi.spyOn(global, "fetch").mockResolvedValue({
+			json: async () => ({}),
+			ok: true,
+		} as Response);
 		vi.clearAllMocks();
-		(
-			getTranslateUserQueue as unknown as ReturnType<typeof vi.fn>
-		).mockReturnValue(mockQueue);
 	});
+
 	afterEach(async () => {
 		await prisma.user.deleteMany();
 		await prisma.page.deleteMany();
@@ -58,11 +55,11 @@ describe("handlePageTranslation", () => {
 		);
 		expect(createUserAITranslationInfo).not.toHaveBeenCalled();
 		expect(fetchPageWithPageSegments).not.toHaveBeenCalled();
-		expect(mockQueue.add).not.toHaveBeenCalled();
+		expect(fetch).not.toHaveBeenCalled();
 	});
 
 	it("should process translation from English to Japanese", async () => {
-		const mockTranslationInfo = { id: "translation123" };
+		const mockTranslationInfo = { id: 123 };
 		const mockPageData = {
 			pageSegments: [
 				{ number: 1, text: "Hello" },
@@ -93,21 +90,26 @@ describe("handlePageTranslation", () => {
 			"gemini-1.5-flash",
 		);
 		expect(fetchPageWithPageSegments).toHaveBeenCalledWith(mockParams.pageId);
-		expect(mockQueue.add).toHaveBeenCalledWith(
-			`translate-${mockParams.currentUserId}`,
-			expect.objectContaining({
-				userAITranslationInfoId: mockTranslationInfo.id,
-				geminiApiKey: mockParams.geminiApiKey,
-				aiModel: "gemini-1.5-flash",
-				userId: mockParams.currentUserId,
-				pageId: mockParams.pageId,
-				targetLocale: "ja",
-				title: mockParams.title,
-				numberedElements: [
-					{ number: 1, text: "Hello" },
-					{ number: 2, text: "World" },
-				],
-			}),
+
+		expect(global.fetch).toHaveBeenCalledTimes(1);
+		expect(global.fetch).toHaveBeenCalledWith(
+			"http://localhost:3000/api/translate",
+			{
+				method: "POST",
+				body: JSON.stringify({
+					userAITranslationInfoId: mockTranslationInfo.id,
+					geminiApiKey: mockParams.geminiApiKey,
+					aiModel: "gemini-1.5-flash",
+					userId: mockParams.currentUserId,
+					pageId: mockParams.pageId,
+					targetLocale: "ja",
+					numberedElements: [
+						{ number: 1, text: "Hello" },
+						{ number: 2, text: "World" },
+					],
+					translateTarget: "translatePage",
+				}),
+			},
 		);
 	});
 
@@ -120,7 +122,7 @@ describe("handlePageTranslation", () => {
 			title: "テストタイトル",
 		};
 
-		const mockTranslationInfo = { id: "translation123" };
+		const mockTranslationInfo = { id: 123 };
 		const mockPageData = {
 			pageSegments: [
 				{ number: 1, text: "こんにちは" },

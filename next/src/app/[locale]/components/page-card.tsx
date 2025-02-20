@@ -25,6 +25,9 @@ export function PageCard({
 	userLink,
 	showOwnerActions = false,
 }: PageCardProps) {
+	const title = pageCard.pageSegments[0].text;
+	const bestTranslationTitle =
+		pageCard.pageSegments[0].pageSegmentTranslations[0].text;
 	return (
 		<Card className="h-full relative w-full overflow-hidden">
 			{showOwnerActions && (
@@ -39,10 +42,10 @@ export function PageCard({
 			<CardHeader>
 				<NavigationLink href={pageLink} className="block">
 					<CardTitle className="flex flex-col pr-3 break-all overflow-wrap-anywhere">
-						{pageCard.pageSegments[0].text}
-						{pageCard.pageSegments[0].pageSegmentTranslations.length > 0 && (
+						{title}
+						{bestTranslationTitle && (
 							<span className="text-sm text-gray-600">
-								{pageCard.pageSegments[0].pageSegmentTranslations[0].text}
+								{bestTranslationTitle}
 							</span>
 						)}
 					</CardTitle>

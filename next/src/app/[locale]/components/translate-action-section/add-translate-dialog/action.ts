@@ -1,9 +1,10 @@
 "use server";
+import { BASE_URL } from "@/app/constants/base-url";
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
 import type { ActionResponse } from "@/app/types";
 import { validatedAction } from "@/app/types";
 import { getCurrentUser } from "@/auth";
-import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
+import type { TranslateJobParams } from "@/features/translate/types";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -51,11 +52,12 @@ export const translateAction = validatedAction(
 		}
 
 		if (translateTarget === TranslateTarget.TRANSLATE_COMMENT) {
-			const pageWithComments = await fetchPageWithTitleAndComments(pageId);
-			if (!pageWithComments) {
+			const pageWithTitleAndComments =
+				await fetchPageWithTitleAndComments(pageId);
+			if (!pageWithTitleAndComments) {
 				return { success: false, message: "Page not found" };
 			}
-			const comments = pageWithComments.pageComments.map((comment) => {
+			const comments = pageWithTitleAndComments.pageComments.map((comment) => {
 				const segments = comment.pageCommentSegments.map((segment) => ({
 					number: segment.number,
 					text: segment.text,
@@ -63,7 +65,7 @@ export const translateAction = validatedAction(
 				// title を追加
 				segments.push({
 					number: 0,
-					text: pageWithComments.pageSegments[0].text,
+					text: pageWithTitleAndComments.title,
 				});
 
 				return {
@@ -73,24 +75,27 @@ export const translateAction = validatedAction(
 			});
 			const userAITranslationInfo = await createUserAITranslationInfo(
 				currentUser.id,
-				pageWithComments.id,
+				pageWithTitleAndComments.id,
 				aiModel,
 				targetLocale,
 			);
 
 			for (const comment of comments) {
-				const queue = getTranslateUserQueue(currentUser.id);
-				await queue.add(`translate-${currentUser.id}`, {
+				const jobParams: TranslateJobParams = {
 					userAITranslationInfoId: userAITranslationInfo.id,
 					geminiApiKey: geminiApiKey.apiKey,
 					aiModel,
 					userId: currentUser.id,
-					pageId: pageWithComments.id,
+					pageId: pageWithTitleAndComments.id,
 					targetLocale,
-					title: pageWithComments.pageSegments[0].text,
+					title: pageWithTitleAndComments.title,
 					numberedElements: comment.segments,
 					translateTarget,
 					commentId: comment.commentId,
+				};
+				await fetch(`${BASE_URL}/api/translate`, {
+					method: "POST",
+					body: JSON.stringify(jobParams),
 				});
 			}
 		} else {
@@ -115,8 +120,7 @@ export const translateAction = validatedAction(
 				targetLocale,
 			);
 
-			const queue = getTranslateUserQueue(currentUser.id);
-			await queue.add(`translate-${currentUser.id}`, {
+			const jobParams: TranslateJobParams = {
 				userAITranslationInfoId: userAITranslationInfo.id,
 				geminiApiKey: geminiApiKey.apiKey,
 				aiModel,
@@ -124,8 +128,12 @@ export const translateAction = validatedAction(
 				pageId: pageWithPageSegments.id,
 				targetLocale,
 				title: pageWithPageSegments.title,
-				numberedElements: numberedElements,
+				numberedElements,
 				translateTarget,
+			};
+			await fetch(`${BASE_URL}/api/translate`, {
+				method: "POST",
+				body: JSON.stringify(jobParams),
 			});
 		}
 

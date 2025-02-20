@@ -203,5 +203,11 @@ export async function fetchPageWithTitleAndComments(pageId: number) {
 			},
 		},
 	});
-	return pageWithComments;
+	if (!pageWithComments) return null;
+	const title = pageWithComments?.pageSegments[0].text;
+	if (!title) return null;
+	return {
+		...pageWithComments,
+		title,
+	};
 }
