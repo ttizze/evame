@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { handlePageTranslation } from "../lib/handle-page-translation";
+
 import { processPageHtml } from "../lib/process-page-html";
 
 export type EditPageContentActionState = ActionResponse<
@@ -44,30 +44,14 @@ export async function editPageContentAction(
 	}
 	const { slug, title, pageContent } = parsedFormData.data;
 	const sourceLocale = await getLocaleFromHtml(pageContent, title);
-	const page = await processPageHtml(
+	await processPageHtml(
 		title,
 		pageContent,
 		slug,
 		currentUser.id,
 		sourceLocale,
 	);
-	if (page.status === "PUBLIC") {
-		const geminiApiKey = process.env.GEMINI_API_KEY;
-		if (!geminiApiKey || geminiApiKey === "undefined") {
-			return {
-				success: true,
-				message: "Gemini API key is not set. Page will not be translated.",
-			};
-		}
 
-		await handlePageTranslation({
-			currentUserId: currentUser.id,
-			pageId: page.id,
-			sourceLocale,
-			geminiApiKey,
-			title,
-		});
-	}
 	revalidatePath(`/user/${currentUser.handle}/page/${slug}`);
 	return { success: true, message: "Page updated successfully" };
 }

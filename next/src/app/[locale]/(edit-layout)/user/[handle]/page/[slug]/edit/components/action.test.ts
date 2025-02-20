@@ -4,14 +4,12 @@ import { mockPages, mockUsers } from "@/tests/mock";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { handlePageTranslation } from "../lib/handle-page-translation";
 import { processPageHtml } from "../lib/process-page-html";
 import { editPageContentAction } from "./action";
 // Mocks
 vi.mock("@/auth");
 vi.mock("@/app/[locale]/lib/get-locale-from-html");
 vi.mock("../lib/process-page-html");
-vi.mock("../lib/handle-page-translation");
 vi.mock("next/cache");
 vi.mock("next/navigation");
 
@@ -53,7 +51,6 @@ describe("editPageContentAction", () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
 		vi.mocked(getLocaleFromHtml).mockResolvedValue("en");
 		vi.mocked(processPageHtml).mockResolvedValue(mockPages[0]);
-		vi.mocked(handlePageTranslation).mockResolvedValue();
 
 		const result = await editPageContentAction(
 			{ success: false },
@@ -62,42 +59,8 @@ describe("editPageContentAction", () => {
 
 		expect(result.success).toBe(true);
 		expect(result.message).toBe("Page updated successfully");
-		expect(handlePageTranslation).toHaveBeenCalled();
 		expect(revalidatePath).toHaveBeenCalledWith(
 			"/user/mockUserId1/page/mockUserId1-page1",
 		);
-	});
-
-	it("should handle missing GEMINI_API_KEY for public pages", async () => {
-		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
-		vi.mocked(getLocaleFromHtml).mockResolvedValue("en");
-		vi.mocked(processPageHtml).mockResolvedValue(mockPages[0]);
-
-		// biome-ignore lint/performance/noDelete: <explanation>
-		delete process.env.GEMINI_API_KEY;
-
-		const result = await editPageContentAction(
-			{ success: false },
-			mockFormData,
-		);
-
-		expect(result.success).toBe(true);
-		expect(result.message).toBe(
-			"Gemini API key is not set. Page will not be translated.",
-		);
-	});
-
-	it("should skip translation for non-public pages", async () => {
-		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
-		vi.mocked(getLocaleFromHtml).mockResolvedValue("en");
-		vi.mocked(processPageHtml).mockResolvedValue(mockPages[2]);
-
-		const result = await editPageContentAction(
-			{ success: false },
-			mockFormData,
-		);
-
-		expect(result.success).toBe(true);
-		expect(handlePageTranslation).not.toHaveBeenCalled();
 	});
 });

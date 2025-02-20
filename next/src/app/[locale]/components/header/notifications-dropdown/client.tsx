@@ -118,26 +118,30 @@ function NotificationContent({
 	switch (type) {
 		case "PAGE_COMMENT": {
 			const { pageComment } = notificationWithRelations;
+			const title = pageComment?.page.pageSegments[0].text;
+			if (!title) return null;
 			actionText = <span className="text-gray-500"> commented on </span>;
 			extraContent = (
 				<NavigationLink
 					href={`/user/${currentUserHandle}/page/${pageComment?.page.slug}`}
 					className="hover:underline font-bold"
 				>
-					{pageComment?.page.pageSegments[0].text}
+					{title}
 				</NavigationLink>
 			);
 			break;
 		}
 		case "PAGE_LIKE": {
 			const { page } = notificationWithRelations;
+			const title = page?.pageSegments[0].text;
+			if (!title) return null;
 			actionText = <span className="text-gray-500"> liked your page </span>;
 			extraContent = (
 				<NavigationLink
 					href={`/user/${currentUserHandle}/page/${page?.slug}`}
 					className="hover:underline font-bold"
 				>
-					{page?.pageSegments[0].text}
+					{title}
 				</NavigationLink>
 			);
 			break;

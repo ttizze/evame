@@ -6,7 +6,9 @@ import type { PageStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { updatePageStatus } from "../../db/mutations.server";
+import { updatePageStatus } from "./db/mutations.server";
+import { handlePageTranslation } from "./lib/handle-page-translation";
+
 const editPageStatusSchema = z.object({
 	pageId: z.coerce.number().min(1),
 	status: z.enum(["DRAFT", "PUBLIC", "ARCHIVE"]),
@@ -38,9 +40,26 @@ export async function editPageStatusAction(
 	const page = await getPageById(pageId);
 	const currentUser = await getCurrentUser();
 	if (!currentUser?.id || page?.userId !== currentUser.id) {
-		redirect("/auth/login");
+		return redirect("/auth/login");
 	}
 	await updatePageStatus(pageId, status as PageStatus);
+	if (status === "PUBLIC") {
+		console.log("pageStatus", status);
+		const geminiApiKey = process.env.GEMINI_API_KEY;
+		if (!geminiApiKey || geminiApiKey === "undefined") {
+			console.error("geminiApiKey is not set. Page will not be translated.");
+			return {
+				success: true,
+				message: "Gemini API key is not set. Page will not be translated.",
+			};
+		}
+		await handlePageTranslation({
+			currentUserId: currentUser.id,
+			pageId: page.id,
+			sourceLocale: page.sourceLocale,
+			geminiApiKey,
+		});
+	}
 	revalidatePath(`/user/${currentUser.handle}/page/${page.slug}/edit`);
-	return { success: true };
+	return { success: true, message: "Page status updated successfully" };
 }

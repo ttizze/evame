@@ -1,17 +1,5 @@
 version: '3.8'
 services:
-  db:
-    image: postgres:16
-    restart: always
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=postgres
-    ports:
-      - '5432:5432'
-    volumes:
-      - db:/var/lib/postgresql/data
-
   neon:
     image: postgres:17
     command: '-d 1'
@@ -65,27 +53,6 @@ services:
       test_neon:
         condition: service_healthy
 
-  test_db:
-    image: postgres:16
-    restart: always
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=testdb
-    ports:
-      - '5433:5432'
-    volumes:
-      - test_db:/var/lib/postgresql/data
-
-  redis:
-    image: redis:6.2-alpine
-    restart: always
-    ports:
-      - '6379:6379'
-    command: redis-server --save 20 1 --loglevel warning
-    volumes:
-      - redis:/data
-
   minio:
     image: minio/minio:latest
     ports:
@@ -112,10 +79,6 @@ services:
       "
 
 volumes:
-  db:
-    driver: local
-  test_db:
-    driver: local
   redis:
     driver: local
   minio_data:
