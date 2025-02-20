@@ -17,7 +17,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 	let userId: string;
 	let pageId: number;
 	let userAITranslationInfoId: number;
-
+	let pageAITranslationInfoId: number;
 	beforeEach(async () => {
 		await prisma.user.deleteMany();
 		await prisma.page.deleteMany();
@@ -62,17 +62,26 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 			},
 		});
 		userAITranslationInfoId = userAITranslationInfo.id;
+		const pageAITranslationInfo = await prisma.pageAITranslationInfo.create({
+			data: {
+				pageId: page.id,
+				locale: "ja",
+			},
+		});
+		pageAITranslationInfoId = pageAITranslationInfo.id;
 	});
 	afterEach(async () => {
 		await prisma.user.deleteMany();
 		await prisma.page.deleteMany();
 		await prisma.pageSegment.deleteMany();
 		await prisma.userAITranslationInfo.deleteMany();
+		await prisma.pageAITranslationInfo.deleteMany();
 	});
 
 	test("正常ケース：Geminiから正常レスポンスが返った場合、最終的にステータスがcompletedとなり翻訳がDBに保存される", async () => {
 		const params: TranslateJobParams = {
 			userAITranslationInfoId,
+			pageAITranslationInfoId,
 			geminiApiKey: "dummy-key",
 			aiModel: "test-model",
 			userId,
@@ -115,6 +124,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 	test("失敗ケース：Geminiが空レスポンス([])しか返さず翻訳抽出不可→リトライ上限に達してfailedになる", async () => {
 		const params: TranslateJobParams = {
 			userAITranslationInfoId,
+			pageAITranslationInfoId,
 			geminiApiKey: "dummy-key",
 			aiModel: "test-model",
 			userId,
@@ -143,6 +153,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 	test("部分的失敗ケース：1回目は空レスポンス→2回目で正常レスポンス", async () => {
 		const params: TranslateJobParams = {
 			userAITranslationInfoId,
+			pageAITranslationInfoId,
 			geminiApiKey: "dummy-key",
 			aiModel: "test-model",
 			userId,

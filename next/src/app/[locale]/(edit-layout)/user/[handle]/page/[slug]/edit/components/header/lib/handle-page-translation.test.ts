@@ -1,5 +1,8 @@
-import { createUserAITranslationInfo } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
 import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/queries.server";
+import {
+	createPageAITranslationInfo,
+	createUserAITranslationInfo,
+} from "@/app/[locale]/db/mutations.server";
 import { prisma } from "@/lib/prisma";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { hasExistingTranslation } from "../db/queries.server";
@@ -13,7 +16,7 @@ vi.mock(
 vi.mock(
 	"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/queries.server",
 );
-
+vi.mock("@/app/[locale]/db/mutations.server");
 describe("handlePageTranslation", () => {
 	const mockParams = {
 		currentUserId: "user123",
@@ -28,6 +31,7 @@ describe("handlePageTranslation", () => {
 		await prisma.page.deleteMany();
 		await prisma.pageSegment.deleteMany();
 		await prisma.userAITranslationInfo.deleteMany();
+		await prisma.pageAITranslationInfo.deleteMany();
 		vi.spyOn(global, "fetch").mockResolvedValue({
 			json: async () => ({}),
 			ok: true,
@@ -40,6 +44,7 @@ describe("handlePageTranslation", () => {
 		await prisma.page.deleteMany();
 		await prisma.pageSegment.deleteMany();
 		await prisma.userAITranslationInfo.deleteMany();
+		await prisma.pageAITranslationInfo.deleteMany();
 	});
 
 	it("should not proceed if translation already exists", async () => {
@@ -74,6 +79,9 @@ describe("handlePageTranslation", () => {
 			createUserAITranslationInfo as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue(mockTranslationInfo);
 		(
+			createPageAITranslationInfo as unknown as ReturnType<typeof vi.fn>
+		).mockResolvedValue({ id: 1 });
+		(
 			fetchPageWithPageSegments as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue(mockPageData);
 
@@ -98,6 +106,7 @@ describe("handlePageTranslation", () => {
 				method: "POST",
 				body: JSON.stringify({
 					userAITranslationInfoId: mockTranslationInfo.id,
+					pageAITranslationInfoId: 1,
 					geminiApiKey: mockParams.geminiApiKey,
 					aiModel: "gemini-1.5-flash",
 					userId: mockParams.currentUserId,

@@ -1,10 +1,13 @@
+import {
+	createPageAITranslationInfo,
+	createUserAITranslationInfo,
+} from "@/app/[locale]/db/mutations.server";
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TranslateTarget } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
-import { createUserAITranslationInfo } from "../../../(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
 import {
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
@@ -14,9 +17,7 @@ vi.mock("@/auth", () => ({
 	getCurrentUser: vi.fn(),
 }));
 vi.mock("@/app/db/queries.server");
-vi.mock(
-	"../../../(common-layout)/user/[handle]/page/[slug]/db/mutations.server",
-);
+vi.mock("@/app/[locale]/db/mutations.server");
 vi.mock("../../../(common-layout)/user/[handle]/page/[slug]/db/queries.server");
 vi.mock("next/cache");
 
@@ -99,6 +100,9 @@ describe("TranslateAction", () => {
 		(
 			createUserAITranslationInfo as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue({ id: 1 });
+		(
+			createPageAITranslationInfo as unknown as ReturnType<typeof vi.fn>
+		).mockResolvedValue({ id: 1 });
 
 		const formData = new FormData();
 		formData.append("pageId", "1");
@@ -125,6 +129,9 @@ describe("TranslateAction", () => {
 		).mockResolvedValue(mockPage);
 		(
 			createUserAITranslationInfo as unknown as ReturnType<typeof vi.fn>
+		).mockResolvedValue({ id: 1 });
+		(
+			createPageAITranslationInfo as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue({ id: 1 });
 
 		const formData = new FormData();

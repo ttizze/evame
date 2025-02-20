@@ -101,6 +101,19 @@ model UserAITranslationInfo {
   @@map("user_ai_translation_info")
 }
 
+model PageAITranslationInfo {
+  id Int @id @default(autoincrement())
+  pageId Int @map("page_id")
+  locale String
+  aiTranslationStatus TranslationStatus @default(PENDING) @map("ai_translation_status")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId])
+  @@map("page_ai_translation_info")
+}
+
 enum PageStatus {
   DRAFT
   PUBLIC
@@ -118,6 +131,7 @@ model Page {
   user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId                String                  @map("user_id")
   userAITranslationInfo UserAITranslationInfo[]
+  pageAITranslationInfo PageAITranslationInfo[]
   pageSegments          PageSegment[]
   tagPages              TagPage[]
   likePages             LikePage[]

@@ -12,7 +12,11 @@
 		"test-migrate": "DATABASE_URL=postgres://postgres:postgres@db.localtest.me:5435/main bunx prisma migrate dev && bunx prisma migrate deploy",
 		"vercel-build": "prisma generate && prisma migrate deploy && next build",
 		"check": "bunx @biomejs/biome check --write .",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit",
+		"seed": "prisma db seed"
+	},
+	"prisma": {
+		"seed": "tsx prisma/seed.ts"
 	},
 	"dependencies": {
 		"@auth/prisma-adapter": "2.7.4",

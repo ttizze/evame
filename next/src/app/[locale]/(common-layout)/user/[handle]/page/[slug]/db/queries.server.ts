@@ -103,11 +103,6 @@ export async function fetchPageWithTranslations(
 		},
 	});
 
-	const existLocales = titleText
-		? Array.from(
-				new Set(titleText.pageSegmentTranslations.map((t) => t.locale)),
-			)
-		: [];
 	const { user, ...pageWithoutUser } = page;
 	return {
 		page: {
@@ -143,7 +138,6 @@ export async function fetchPageWithTranslations(
 				bestSegmentTranslationWithVote,
 			};
 		}),
-		existLocales,
 	};
 }
 
