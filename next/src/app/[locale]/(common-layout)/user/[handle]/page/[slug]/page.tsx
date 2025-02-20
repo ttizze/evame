@@ -2,7 +2,8 @@ import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/pa
 import { getBestTranslation } from "@/app/[locale]/lib/get-best-translation";
 import { stripHtmlTags } from "@/app/[locale]/lib/strip-html-tags";
 import { BASE_URL } from "@/app/constants/base-url";
-import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
+
+import { fetchPageAITranslationInfo } from "@/app/[locale]/db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
 import { MessageCircle } from "lucide-react";
@@ -20,7 +21,6 @@ import {
 	fetchPageCommentsCount,
 	fetchPageWithTranslations,
 } from "./db/queries.server";
-
 const DynamicLikeButton = dynamic(
 	() =>
 		import("@/app/[locale]/components/like-button/client").then(
@@ -72,7 +72,9 @@ export const getPageData = cache(async (slug: string, locale: string) => {
 	if (!pageWithTranslations) {
 		return null;
 	}
-
+	const pageAITranslationInfo = await fetchPageAITranslationInfo(
+		pageWithTranslations.page.id,
+	);
 	const pageSegmentTitleWithTranslations =
 		pageWithTranslations.segmentWithTranslations.find(
 			(item) => item.segment?.number === 0,
@@ -96,6 +98,7 @@ export const getPageData = cache(async (slug: string, locale: string) => {
 		sourceTitleWithBestTranslationTitle,
 		bestTranslationTitle,
 		firstImageUrl,
+		pageAITranslationInfo,
 	};
 });
 type Params = Promise<{ locale: string; handle: string; slug: string }>;
@@ -110,13 +113,41 @@ export async function generateMetadata({
 			title: "Page Not Found",
 		};
 	}
-	const { pageWithTranslations, sourceTitleWithBestTranslationTitle } = data;
+	const {
+		pageWithTranslations,
+		sourceTitleWithBestTranslationTitle,
+		pageAITranslationInfo,
+	} = data;
 	const description = stripHtmlTags(pageWithTranslations.page.content).slice(
 		0,
 		200,
 	);
 
 	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${slug}`;
+	const hasSourceLocale = pageAITranslationInfo.some(
+		(info) => info.locale === pageWithTranslations.page.sourceLocale,
+	);
+
+	// エントリー配列を作成
+	const alternateLocales = [];
+
+	// 含まれていなければ、sourceLocale として先頭に追加
+	if (!hasSourceLocale) {
+		alternateLocales.push([
+			pageWithTranslations.page.sourceLocale,
+			`/${pageWithTranslations.page.sourceLocale}/user/${pageWithTranslations.user.handle}/page/${pageWithTranslations.page.slug}`,
+		]);
+	}
+
+	// 他の翻訳情報を追加（現在の locale は除外）
+	alternateLocales.push(
+		...pageAITranslationInfo
+			.filter((info) => info.locale !== locale)
+			.map((info) => [
+				info.locale,
+				`/${info.locale}/user/${pageWithTranslations.user.handle}/page/${pageWithTranslations.page.slug}`,
+			]),
+	);
 
 	return {
 		title: sourceTitleWithBestTranslationTitle,
@@ -134,17 +165,7 @@ export async function generateMetadata({
 			images: [{ url: ogImageUrl, width: 1200, height: 630 }],
 		},
 		alternates: {
-			languages: Object.fromEntries(
-				pageWithTranslations.existLocales
-					.filter(
-						(locale: string) =>
-							pageWithTranslations.page.sourceLocale !== locale,
-					)
-					.map((locale: string) => [
-						locale,
-						`/${locale}/user/${pageWithTranslations.user.handle}/page/${pageWithTranslations.page.slug}`,
-					]),
-			),
+			languages: Object.fromEntries(alternateLocales),
 		},
 	};
 }
@@ -159,13 +180,10 @@ export default async function Page({ params }: { params: Params }) {
 		pageWithTranslations,
 		sourceTitleWithBestTranslationTitle,
 		currentUser,
+		pageAITranslationInfo,
 	} = data;
 
 	const guestId = await getGuestId();
-	const geminiApiKey = await fetchGeminiApiKeyByHandle(
-		currentUser?.handle ?? "",
-	);
-	const hasGeminiApiKey = !!geminiApiKey;
 
 	const isOwner = pageWithTranslations?.user.handle === currentUser?.handle;
 	if (
@@ -179,6 +197,7 @@ export default async function Page({ params }: { params: Params }) {
 		pageWithTranslations.page.id,
 		currentUser?.id ?? "0",
 	);
+
 	const likeCountPromise = fetchLikeCount(pageWithTranslations.page.id);
 	const isLikedByUserPromise = fetchIsLikedByUser(
 		pageWithTranslations.page.id,
@@ -203,9 +222,8 @@ export default async function Page({ params }: { params: Params }) {
 				<ContentWithTranslations
 					pageWithTranslations={pageWithTranslations}
 					currentHandle={currentUser?.handle}
-					hasGeminiApiKey={hasGeminiApiKey}
 					userAITranslationInfo={userAITranslationInfo}
-					locale={locale}
+					pageAITranslationInfo={pageAITranslationInfo}
 				/>
 				<div className="flex items-center gap-4">
 					<DynamicLikeButton
@@ -234,12 +252,10 @@ export default async function Page({ params }: { params: Params }) {
 								pageId={pageWithTranslations.page.id}
 								currentHandle={currentUser?.handle}
 								userAITranslationInfo={userAITranslationInfo}
-								hasGeminiApiKey={hasGeminiApiKey}
+								pageAITranslationInfo={pageAITranslationInfo}
 								sourceLocale={pageWithTranslations.page.sourceLocale}
-								targetLocale={locale}
-								existLocales={pageWithTranslations.existLocales}
 								translateTarget={TranslateTarget.TRANSLATE_COMMENT}
-								showAddNew={true}
+								showIcons={false}
 							/>
 						</div>
 						<PageCommentList

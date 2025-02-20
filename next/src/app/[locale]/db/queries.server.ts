@@ -281,3 +281,10 @@ export async function getPageById(pageId: number) {
 	});
 	return page;
 }
+
+export async function fetchPageAITranslationInfo(pageId: number) {
+	return await prisma.pageAITranslationInfo.findMany({
+		where: { pageId },
+		orderBy: { createdAt: "desc" },
+	});
+}

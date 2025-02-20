@@ -1,4 +1,8 @@
 "use server";
+import {
+	createPageAITranslationInfo,
+	createUserAITranslationInfo,
+} from "@/app/[locale]/db/mutations.server";
 import { BASE_URL } from "@/app/constants/base-url";
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
 import type { ActionResponse } from "@/app/types";
@@ -9,7 +13,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { TranslateTarget } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
-import { createUserAITranslationInfo } from "../../../(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
 import { fetchPageWithPageSegments } from "../../../(common-layout)/user/[handle]/page/[slug]/db/queries.server";
 import { fetchPageWithTitleAndComments } from "../../../(common-layout)/user/[handle]/page/[slug]/db/queries.server";
 
@@ -79,10 +82,15 @@ export const translateAction = validatedAction(
 				aiModel,
 				targetLocale,
 			);
+			const pageAITranslationInfo = await createPageAITranslationInfo(
+				pageWithTitleAndComments.id,
+				targetLocale,
+			);
 
 			for (const comment of comments) {
 				const jobParams: TranslateJobParams = {
 					userAITranslationInfoId: userAITranslationInfo.id,
+					pageAITranslationInfoId: pageAITranslationInfo.id,
 					geminiApiKey: geminiApiKey.apiKey,
 					aiModel,
 					userId: currentUser.id,
@@ -119,9 +127,14 @@ export const translateAction = validatedAction(
 				aiModel,
 				targetLocale,
 			);
+			const pageAITranslationInfo = await createPageAITranslationInfo(
+				pageWithPageSegments.id,
+				targetLocale,
+			);
 
 			const jobParams: TranslateJobParams = {
 				userAITranslationInfoId: userAITranslationInfo.id,
+				pageAITranslationInfoId: pageAITranslationInfo.id,
 				geminiApiKey: geminiApiKey.apiKey,
 				aiModel,
 				userId: currentUser.id,

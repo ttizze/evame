@@ -1,6 +1,9 @@
 import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
-import { createUserAITranslationInfo } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
 import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/queries.server";
+import {
+	createPageAITranslationInfo,
+	createUserAITranslationInfo,
+} from "@/app/[locale]/db/mutations.server";
 import { BASE_URL } from "@/app/constants/base-url";
 import type { TranslateJobParams } from "@/features/translate/types";
 import { hasExistingTranslation } from "../db/queries.server";
@@ -28,6 +31,10 @@ export async function handlePageTranslation({
 		targetLocale,
 		"gemini-1.5-flash",
 	);
+	const pageAITranslationInfo = await createPageAITranslationInfo(
+		pageId,
+		targetLocale,
+	);
 
 	const pageWithPageSegments = await fetchPageWithPageSegments(pageId);
 	if (!pageWithPageSegments) {
@@ -36,6 +43,7 @@ export async function handlePageTranslation({
 
 	const jobParams: TranslateJobParams = {
 		userAITranslationInfoId: userAITranslationInfo.id,
+		pageAITranslationInfoId: pageAITranslationInfo.id,
 		geminiApiKey: geminiApiKey,
 		aiModel: "gemini-1.5-flash",
 		userId: currentUserId,

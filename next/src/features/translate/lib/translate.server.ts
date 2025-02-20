@@ -1,7 +1,10 @@
 import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { supportedLocaleOptions } from "@/app/constants/locale";
 import { TranslationStatus } from "@prisma/client";
-import { updateUserAITranslationInfo } from "../db/mutations.server";
+import {
+	updatePageAITranslationInfo,
+	updateUserAITranslationInfo,
+} from "../db/mutations.server";
 import { getLatestPageCommentSegments } from "../db/queries.server";
 import { getLatestPageSegments } from "../db/queries.server";
 import { getGeminiModelResponse } from "../services/gemini";
@@ -17,6 +20,7 @@ export async function translate(params: TranslateJobParams) {
 			TranslationStatus.IN_PROGRESS,
 			0,
 		);
+
 		const sortedNumberedElements = params.numberedElements.sort(
 			(a, b) => a.number - b.number,
 		);
@@ -48,6 +52,10 @@ export async function translate(params: TranslateJobParams) {
 			params.userAITranslationInfoId,
 			TranslationStatus.COMPLETED,
 			100,
+		);
+		await updatePageAITranslationInfo(
+			params.pageAITranslationInfoId,
+			TranslationStatus.COMPLETED,
 		);
 	} catch (error) {
 		console.error("Background translation job failed:", error);

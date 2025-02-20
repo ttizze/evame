@@ -1,5 +1,6 @@
 "use client";
 import type { LocaleOption } from "@/app/constants/locale";
+import { supportedLocaleOptions } from "@/app/constants/locale";
 import { Button } from "@/components/ui/button";
 import {
 	Command,
@@ -17,62 +18,70 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
+import type { PageAITranslationInfo } from "@prisma/client";
+import { TranslationStatus } from "@prisma/client";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { Languages, Text } from "lucide-react";
+import { Languages, Loader2, Text } from "lucide-react";
+import { useLocale } from "next-intl";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { startTransition } from "react";
 import { useCombinedRouter } from "../hooks/use-combined-router";
 interface LocaleSelectorProps {
-	targetLocale: string;
 	sourceLocale: string;
 	className?: string;
-	localeOptions: LocaleOption[];
-	/** If true, show an “Add New” button at the bottom of the list. */
-	showAddNew?: boolean;
 
 	/** Called if the user clicks the “Add New” button. */
-	onAddNew?: () => void;
-
-	/** Called when a user picks a locale from the dropdown. */
-	onChange?: (newValue: string) => void;
-	/**
-	 * If `true`, show the icon for source vs other translation.
-	 * If `false`, omit icons entirely.
-	 */
-	showIcons?: boolean;
+	onAddNew: () => void;
+	showIcons: boolean;
+	pageAITranslationInfo?: PageAITranslationInfo[];
 }
 
 //TODO: radix uiのせいで開発環境のモバイルで文字がぼける iphoneではボケてない､その他実機でもボケてたら対応する
 export function LocaleSelector({
-	targetLocale,
 	sourceLocale,
 	className,
-	localeOptions,
-	showAddNew,
 	onAddNew,
-	onChange,
-	showIcons = true,
+	showIcons = false,
+	pageAITranslationInfo,
 }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
 	const router = useCombinedRouter();
 	const params = useParams();
 	const pathname = usePathname();
+	const targetLocale = useLocale();
 	const handleLocaleChange = (value: string) => {
 		setOpen(false);
-		if (onChange) {
-			onChange(value);
-		} else {
-			// デフォルトはルーティングを実行
-			startTransition(() => {
-				router.push(
-					// @ts-expect-error
-					{ pathname, params },
-					{ locale: value },
-				);
-			});
-		}
+		startTransition(() => {
+			router.push(
+				// @ts-expect-error
+				{ pathname, params },
+				{ locale: value },
+			);
+		});
 	};
+
+	useEffect(() => {
+		if (
+			pageAITranslationInfo?.length === 0 ||
+			// 進行中の翻訳がある場合（COMPLETEDでないものが1つでもある場合）は自動更新を続ける
+			!pageAITranslationInfo?.some(
+				(info) => info.aiTranslationStatus !== TranslationStatus.COMPLETED,
+			)
+		) {
+			return;
+		}
+		const intervalId = setInterval(() => {
+			router.refresh();
+		}, 5000);
+		return () => clearInterval(intervalId);
+	}, [pageAITranslationInfo, router]);
+
+	const localeOptions = buildLocaleOptions(
+		sourceLocale,
+		pageAITranslationInfo?.map((info) => info.locale) ?? [],
+		supportedLocaleOptions,
+	);
 
 	const selectedOption = localeOptions.find(
 		(item) => item.code === targetLocale,
@@ -84,6 +93,7 @@ export function LocaleSelector({
 				<Button
 					variant="outline"
 					className={cn("justify-between rounded-xl", className)}
+					data-testid="locale-selector-button"
 				>
 					<div className="flex items-center">
 						{showIcons && (
@@ -110,7 +120,11 @@ export function LocaleSelector({
 									onSelect={handleLocaleChange}
 								>
 									{showIcons && (
-										<TypeIcon code={item.code} sourceLocale={sourceLocale} />
+										<TypeIcon
+											code={item.code}
+											sourceLocale={sourceLocale}
+											pageAITranslationInfo={pageAITranslationInfo}
+										/>
 									)}
 									<span className="truncate flex-grow">{item.name}</span>
 									{targetLocale === item.code && (
@@ -120,20 +134,16 @@ export function LocaleSelector({
 							))}
 						</CommandGroup>
 					</CommandList>
-					{showAddNew && (
-						<>
-							<Separator />
-							<div className="flex justify-center m-2">
-								<Button
-									variant="default"
-									className="rounded-full"
-									onClick={onAddNew}
-								>
-									+ Add New
-								</Button>
-							</div>
-						</>
-					)}
+					<Separator />
+					<div className="flex justify-center m-2">
+						<Button
+							variant="default"
+							className="rounded-full"
+							onClick={onAddNew}
+						>
+							+ Add New
+						</Button>
+					</div>
 				</Command>
 			</PopoverContent>
 		</Popover>
@@ -143,13 +153,50 @@ export function LocaleSelector({
 function TypeIcon({
 	code,
 	sourceLocale,
+	pageAITranslationInfo,
 }: {
 	code: string;
 	sourceLocale: string;
+	pageAITranslationInfo?: PageAITranslationInfo[];
 }) {
-	return code === sourceLocale ? (
-		<Text className="w-4 h-4 mr-2" />
-	) : (
-		<Languages className="w-4 h-4 mr-2" />
+	const translationInfo = pageAITranslationInfo?.find(
+		(info) => info.locale === code,
 	);
+
+	if (code === sourceLocale) {
+		return <Text className="w-4 h-4 mr-2" />;
+	}
+	if (
+		translationInfo &&
+		translationInfo.aiTranslationStatus !== TranslationStatus.COMPLETED
+	) {
+		return <Loader2 className="w-4 h-4 mr-2 animate-spin" />;
+	}
+
+	return <Languages className="w-4 h-4 mr-2" />;
+}
+
+function buildLocaleOptions(
+	sourceLocale: string,
+	existLocales: string[],
+	supportedLocaleOptions: LocaleOption[],
+): LocaleOption[] {
+	// Get info for the source locale.
+	const sourceLocaleOption = supportedLocaleOptions.find(
+		(sl) => sl.code === sourceLocale,
+	) ?? { code: "und", name: "Unknown" };
+	// For each existing locale, make an option
+	const merged = [
+		sourceLocaleOption,
+		...existLocales.map((lc) => {
+			const localeName =
+				supportedLocaleOptions.find((sl) => sl.code === lc)?.name || lc;
+			return { code: lc, name: localeName };
+		}),
+	];
+
+	const existingOptions = merged.filter((option, index, self) => {
+		return self.findIndex((o) => o.code === option.code) === index;
+	});
+	return existingOptions;
 }

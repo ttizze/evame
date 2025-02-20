@@ -3,7 +3,6 @@ import type { UserAITranslationInfo } from "@prisma/client";
 
 import { GeminiApiKeyDialog } from "@/app/[locale]/components/gemini-api-key-dialog/gemini-api-key-dialog";
 import { StartButton } from "@/app/[locale]/components/start-button";
-import { supportedLocaleOptions } from "@/app/constants/locale";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -23,16 +22,15 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useActionState } from "react";
 import type { TranslateTarget } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
-import { LocaleSelector } from "../locale-selector";
-import { UserAITranslationStatus } from "../user-ai-translation-status";
 import { type TranslateActionState, translateAction } from "./action";
+import { DialogLocaleSelector } from "./dialog-locale-selector";
+import { UserAITranslationStatus } from "./user-ai-translation-status";
 
 type AddTranslateDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	currentHandle: string | undefined;
 	pageId: number;
-	sourceLocale: string;
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
 	translateTarget: TranslateTarget;
@@ -43,7 +41,6 @@ export function AddTranslateDialog({
 	onOpenChange,
 	currentHandle,
 	pageId,
-	sourceLocale,
 	hasGeminiApiKey,
 	userAITranslationInfo,
 	translateTarget,
@@ -53,7 +50,6 @@ export function AddTranslateDialog({
 		FormData
 	>(translateAction, { success: false });
 	const [targetLocale, setTargetLocale] = useState("");
-
 	const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
 
@@ -63,7 +59,11 @@ export function AddTranslateDialog({
 				<DialogContent className="rounded-xl">
 					{!currentHandle ? (
 						<div className="text-center">
-							<p className="text-lg mb-3">Please log in to Add Translation</p>
+							<DialogHeader>
+								<DialogTitle className="text-lg text-center mb-4">
+									Please log in to Add Translation
+								</DialogTitle>
+							</DialogHeader>
 							<StartButton />
 						</div>
 					) : (
@@ -73,16 +73,11 @@ export function AddTranslateDialog({
 							</DialogHeader>
 							<div className="space-y-2">
 								<Label htmlFor="language">Language</Label>
-								<LocaleSelector
-									className="w-full	"
-									localeOptions={supportedLocaleOptions}
+								<DialogLocaleSelector
 									targetLocale={targetLocale}
-									sourceLocale={sourceLocale}
 									onChange={(value) => setTargetLocale(value)}
-									showIcons={false}
 								/>
 							</div>
-
 							<div className="space-y-2">
 								<Label htmlFor="ai-model">AI Model</Label>
 								<Select

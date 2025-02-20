@@ -6,26 +6,50 @@ import {
 import { TagList } from "@/app/[locale]/components/tag-list";
 import { NavigationLink } from "@/components/navigation-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { UserAITranslationInfo } from "@prisma/client";
-import { TranslateActionSection } from "../../../../../../components/translate-action-section";
+import type {
+	PageAITranslationInfo,
+	UserAITranslationInfo,
+} from "@prisma/client";
+import dynamic from "next/dynamic";
 import type { PageWithTranslations } from "../types";
-import { MemoizedParsedContent } from "./parsed-content";
-import { SegmentAndTranslationSection } from "./segment-and-translation-section";
+const DynamicTranslateActionSection = dynamic(
+	() =>
+		import("@/app/[locale]/components/translate-action-section").then(
+			(mod) => mod.TranslateActionSection,
+		),
+	{
+		loading: () => <span>Loading Translate Section...</span>,
+	},
+);
+
+const DynamicMemoizedParsedContent = dynamic(
+	() => import("./parsed-content").then((mod) => mod.MemoizedParsedContent),
+	{
+		loading: () => <span>Loading Parsed Content...</span>,
+	},
+);
+const DynamicSegmentAndTranslationSection = dynamic(
+	() =>
+		import("./segment-and-translation-section").then(
+			(mod) => mod.SegmentAndTranslationSection,
+		),
+	{
+		loading: () => <span>Loading Segment And Translation Section...</span>,
+	},
+);
 
 interface ContentWithTranslationsProps {
 	pageWithTranslations: PageWithTranslations;
 	currentHandle: string | undefined;
-	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
-	locale: string;
+	pageAITranslationInfo: PageAITranslationInfo[];
 }
 
 export function ContentWithTranslations({
 	pageWithTranslations,
 	currentHandle,
-	hasGeminiApiKey,
 	userAITranslationInfo,
-	locale,
+	pageAITranslationInfo,
 }: ContentWithTranslationsProps) {
 	const pageSegmentTitleWithTranslations =
 		pageWithTranslations.segmentWithTranslations.filter(
@@ -36,7 +60,7 @@ export function ContentWithTranslations({
 		<>
 			<h1 className="!mb-0 ">
 				{pageSegmentTitleWithTranslations && (
-					<SegmentAndTranslationSection
+					<DynamicSegmentAndTranslationSection
 						segmentWithTranslations={pageSegmentTitleWithTranslations}
 						showLockIcon={pageWithTranslations.page.status === "DRAFT"}
 						elements={pageSegmentTitleWithTranslations?.segment.text}
@@ -76,19 +100,17 @@ export function ContentWithTranslations({
 					</div>
 				</NavigationLink>
 			</div>
-			<TranslateActionSection
+			<DynamicTranslateActionSection
 				pageId={pageWithTranslations.page.id}
 				currentHandle={currentHandle}
 				userAITranslationInfo={userAITranslationInfo}
-				hasGeminiApiKey={hasGeminiApiKey}
 				sourceLocale={pageWithTranslations.page.sourceLocale}
-				targetLocale={locale}
-				existLocales={pageWithTranslations.existLocales}
+				pageAITranslationInfo={pageAITranslationInfo}
 				className="pt-3"
 				translateTarget={TranslateTarget.TRANSLATE_PAGE}
-				showAddNew={true}
+				showIcons={true}
 			/>
-			<MemoizedParsedContent
+			<DynamicMemoizedParsedContent
 				html={pageWithTranslations.page.content}
 				segmentWithTranslations={pageWithTranslations.segmentWithTranslations}
 				currentHandle={currentHandle}
