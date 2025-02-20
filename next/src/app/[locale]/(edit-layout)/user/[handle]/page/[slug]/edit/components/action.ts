@@ -44,13 +44,7 @@ export async function editPageContentAction(
 	}
 	const { slug, title, pageContent } = parsedFormData.data;
 	const sourceLocale = await getLocaleFromHtml(pageContent, title);
-	await processPageHtml(
-		title,
-		pageContent,
-		slug,
-		currentUser.id,
-		sourceLocale,
-	);
+	await processPageHtml(title, pageContent, slug, currentUser.id, sourceLocale);
 
 	revalidatePath(`/user/${currentUser.handle}/page/${slug}`);
 	return { success: true, message: "Page updated successfully" };
