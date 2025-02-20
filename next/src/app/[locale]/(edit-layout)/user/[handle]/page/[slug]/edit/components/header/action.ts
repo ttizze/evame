@@ -48,6 +48,7 @@ export async function editPageStatusAction(
 		const geminiApiKey = process.env.GEMINI_API_KEY;
 		if (!geminiApiKey || geminiApiKey === "undefined") {
 			console.error("geminiApiKey is not set. Page will not be translated.");
+			revalidatePath(`/user/${currentUser.handle}/page/${page.slug}/edit`);
 			return {
 				success: true,
 				message: "Gemini API key is not set. Page will not be translated.",
