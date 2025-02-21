@@ -3,6 +3,7 @@
 
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
+import { parseFormData } from "@/lib/parse-formdata";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -36,11 +37,7 @@ export async function voteTranslationAction(
 	if (!currentUser?.id) {
 		return redirect("/auth/login");
 	}
-	const parsedFormData = schema.safeParse({
-		segmentTranslationId: formData.get("segmentTranslationId"),
-		isUpvote: formData.get("isUpvote"),
-		voteTarget: formData.get("voteTarget"),
-	});
+	const parsedFormData = await parseFormData(schema, formData);
 	if (!parsedFormData.success) {
 		return {
 			success: false,
