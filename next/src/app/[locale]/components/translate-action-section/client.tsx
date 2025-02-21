@@ -6,7 +6,7 @@ import type {
 import { useState } from "react";
 import type { TranslateTarget } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
 import { AddTranslateDialog } from "./add-translate-dialog";
-import { LocaleSelector } from "./locale-selector";
+import { LocaleSelector } from "./locale-selector/client";
 type TranslateActionSectionClientProps = {
 	pageId: number;
 	currentHandle: string | undefined;

@@ -71,6 +71,9 @@ describe("editPageStatusAction", () => {
 		expect(result.message).toBe(
 			"Gemini API key is not set. Page will not be translated.",
 		);
+		expect(revalidatePath).toHaveBeenCalledWith(
+			"/user/mockUserId1/page/mockUserId1-page1/edit",
+		);
 	});
 
 	it("should skip translation for non-public pages", async () => {
