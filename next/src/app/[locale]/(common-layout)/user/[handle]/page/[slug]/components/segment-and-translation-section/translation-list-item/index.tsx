@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { EllipsisVertical } from "lucide-react";
 import { useActionState } from "react";
-import { VoteButtons } from "../vote-buttons";
+import { VoteButtons } from "../vote-buttons/client";
 import type { VoteTarget } from "../vote-buttons/constants";
 import { deleteTranslationAction } from "./action";
 
