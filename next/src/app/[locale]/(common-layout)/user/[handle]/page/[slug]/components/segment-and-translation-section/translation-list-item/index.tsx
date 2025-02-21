@@ -1,5 +1,5 @@
-import type { SegmentTranslationWithVote } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/types";
 import { sanitizeAndParseText } from "@/app/[locale]/lib/sanitize-and-parse-text.client";
+import type { SegmentTranslationWithVote } from "@/app/[locale]/types";
 import type { ActionResponse } from "@/app/types";
 import { NavigationLink } from "@/components/navigation-link";
 import { Button } from "@/components/ui/button";

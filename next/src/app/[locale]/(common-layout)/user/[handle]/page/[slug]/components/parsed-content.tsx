@@ -2,6 +2,7 @@ import type {
 	AddTranslationFormTarget,
 	VoteTarget,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import type { SegmentWithTranslations } from "@/app/[locale]/types";
 import parse, {
 	type HTMLReactParserOptions,
 	domToReact,
@@ -10,7 +11,6 @@ import parse, {
 import DOMPurify from "isomorphic-dompurify";
 import Image from "next/image";
 import { memo } from "react";
-import type { SegmentWithTranslations } from "../types";
 import { SegmentAndTranslationSection } from "./segment-and-translation-section";
 interface ParsedContentProps {
 	html: string;

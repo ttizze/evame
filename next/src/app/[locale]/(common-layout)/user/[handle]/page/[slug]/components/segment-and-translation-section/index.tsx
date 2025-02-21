@@ -3,12 +3,12 @@ import type {
 	AddTranslationFormTarget,
 	VoteTarget,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import type { SegmentWithTranslations } from "@/app/[locale]/types";
 import { NavigationLink } from "@/components/navigation-link";
 import { Lock } from "lucide-react";
 import { SquarePen } from "lucide-react";
 import { useQueryState } from "nuqs";
 import type { ReactNode } from "react";
-import type { SegmentWithTranslations } from "../../types";
 import { TranslationSection } from "./translation-section";
 interface SegmentAndTranslationSectionProps {
 	segmentWithTranslations: SegmentWithTranslations;

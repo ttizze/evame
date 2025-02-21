@@ -49,5 +49,4 @@ export type PageWithTranslations = {
 	user: SanitizedUser;
 	tagPages: TagPageWithTag[];
 	segmentWithTranslations: SegmentWithTranslations[];
-	existLocales: string[];
 };

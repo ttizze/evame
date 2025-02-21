@@ -9,7 +9,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { LikeButton } from "./like-button/client";
-import { PageActionsDropdown } from "./page-actions-dropdown";
+import { PageActionsDropdown } from "./page-actions-dropdown/client";
 import { TagList } from "./tag-list";
 
 type PageCardProps = {

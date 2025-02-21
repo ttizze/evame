@@ -218,24 +218,6 @@ export async function fetchPageWithTranslations(
 
 	if (!page) return null;
 
-	const titleText = await prisma.pageSegment.findFirst({
-		where: {
-			pageId: page.id,
-			number: 0,
-		},
-		include: {
-			pageSegmentTranslations: {
-				where: { isArchived: false },
-				select: { locale: true },
-			},
-		},
-	});
-
-	const existLocales = titleText
-		? Array.from(
-				new Set(titleText.pageSegmentTranslations.map((t) => t.locale)),
-			)
-		: [];
 	const { user, ...pageWithoutUser } = page;
 	return {
 		page: {
@@ -271,7 +253,6 @@ export async function fetchPageWithTranslations(
 				bestSegmentTranslationWithVote,
 			};
 		}),
-		existLocales,
 	};
 }
 
@@ -282,9 +263,10 @@ export async function getPageById(pageId: number) {
 	return page;
 }
 
-export async function fetchPageAITranslationInfo(pageId: number) {
+export async function fetchLatestPageAITranslationInfo(pageId: number) {
 	return await prisma.pageAITranslationInfo.findMany({
 		where: { pageId },
 		orderBy: { createdAt: "desc" },
+		distinct: ["locale"],
 	});
 }
