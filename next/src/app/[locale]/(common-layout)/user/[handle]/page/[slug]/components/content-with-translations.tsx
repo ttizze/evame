@@ -45,7 +45,7 @@ interface ContentWithTranslationsProps {
 	pageAITranslationInfo: PageAITranslationInfo[];
 }
 
-export function ContentWithTranslations({
+export async function ContentWithTranslations({
 	pageWithTranslations,
 	currentHandle,
 	userAITranslationInfo,

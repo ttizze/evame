@@ -4,13 +4,13 @@ import { fetchPageWithTranslations } from "@/app/[locale]/db/queries.server";
 import { stripHtmlTags } from "@/app/[locale]/lib/strip-html-tags";
 import { BASE_URL } from "@/app/constants/base-url";
 import { getCurrentUser } from "@/auth";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getGuestId } from "@/lib/get-guest-id";
 import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { ContentWithTranslations } from "./components/content-with-translations";
 import { TranslateTarget } from "./constants";
 import {
 	fetchIsLikedByUser,
@@ -19,6 +19,15 @@ import {
 	fetchPageCommentsCount,
 } from "./db/queries.server";
 import { buildAlternateLocales } from "./lib/build-alternate-locales";
+const DynamicContentWithTranslations = dynamic(
+	() =>
+		import("./components/content-with-translations").then(
+			(mod) => mod.ContentWithTranslations,
+		),
+	{
+		loading: () => <Skeleton className="h-[500px] w-full" />,
+	},
+);
 const DynamicLikeButton = dynamic(
 	() =>
 		import("@/app/[locale]/components/like-button/client").then(
@@ -188,7 +197,7 @@ export default async function Page({ params }: { params: Params }) {
 	return (
 		<div className="w-full max-w-3xl mx-auto">
 			<article className="w-full prose dark:prose-invert prose-a:underline  sm:prose lg:prose-lg mx-auto px-4 mb-20">
-				<ContentWithTranslations
+				<DynamicContentWithTranslations
 					pageWithTranslations={pageWithTranslations}
 					currentHandle={currentUser?.handle}
 					userAITranslationInfo={userAITranslationInfo}
