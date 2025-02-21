@@ -1,13 +1,21 @@
 import { getCurrentUser } from "@/auth";
 
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 const PagesListTab = dynamic(
 	() => import("@/app/[locale]/components/pages-list-tab/index"),
+	{
+		loading: () => <Skeleton className="h-[200px] w-full" />,
+	},
 );
 const HeroSection = dynamic(
 	() => import("@/app/[locale]/components/hero-section/index"),
+	{
+		loading: () => <Skeleton className="h-[400px] w-full" />,
+	},
 );
+
 export const metadata: Metadata = {
 	title: "Evame - Home - Latest Pages",
 	description:
