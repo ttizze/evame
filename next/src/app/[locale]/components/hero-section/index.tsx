@@ -5,7 +5,7 @@ import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/pa
 import { StartButton } from "@/app/[locale]/components/start-button";
 import { TranslateActionSection } from "@/app/[locale]/components/translate-action-section";
 import { fetchPageWithTranslations } from "@/app/[locale]/db/queries.server";
-import { fetchPageAITranslationInfo } from "@/app/[locale]/db/queries.server";
+import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/db/queries.server";
 
 export default async function HeroSection({ locale }: { locale: string }) {
 	const pageSlug = locale === "ja" ? "evame" : "evame-ja";
@@ -14,12 +14,12 @@ export default async function HeroSection({ locale }: { locale: string }) {
 		locale,
 		undefined,
 	);
-	const pageAITranslationInfo = await fetchPageAITranslationInfo(
-		topPageWithTranslations?.page.id ?? 0,
-	);
 	if (!topPageWithTranslations) {
 		throw new Response("Not Found", { status: 404 });
 	}
+	const pageAITranslationInfo = await fetchLatestPageAITranslationInfo(
+		topPageWithTranslations.page.id,
+	);
 
 	const [title, text] = topPageWithTranslations.segmentWithTranslations
 		.filter((st) => st.segment.number === 0 || st.segment.number === 1)

@@ -4,6 +4,7 @@ import {
 	VOTE_TARGET,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { TagList } from "@/app/[locale]/components/tag-list";
+import type { PageWithTranslations } from "@/app/[locale]/types";
 import { NavigationLink } from "@/components/navigation-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type {
@@ -11,7 +12,6 @@ import type {
 	UserAITranslationInfo,
 } from "@prisma/client";
 import dynamic from "next/dynamic";
-import type { PageWithTranslations } from "../types";
 const DynamicTranslateActionSection = dynamic(
 	() =>
 		import("@/app/[locale]/components/translate-action-section").then(

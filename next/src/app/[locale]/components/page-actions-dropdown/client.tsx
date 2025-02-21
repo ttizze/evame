@@ -50,13 +50,19 @@ export function PageActionsDropdown({
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
-				<DropdownMenuItem asChild>
-					<NavigationLink href={editPath}>Edit</NavigationLink>
+				<DropdownMenuItem asChild className="w-full text-left cursor-pointer">
+					<NavigationLink href={editPath} className="w-full text-left">
+						Edit
+					</NavigationLink>
 				</DropdownMenuItem>
-				<DropdownMenuItem>
+				<DropdownMenuItem className="w-full text-left cursor-pointer">
 					<form action={publishAction}>
 						<input type="hidden" name="pageId" value={pageId} />
-						<button type="submit" disabled={isPublishing}>
+						<button
+							type="submit"
+							disabled={isPublishing}
+							className="w-full text-left"
+						>
 							{status === "PUBLIC" ? "Make Private" : "Make Public"}
 						</button>
 					</form>
@@ -64,6 +70,7 @@ export function PageActionsDropdown({
 				<DropdownMenuItem>
 					<button
 						type="button"
+						className="text-red-500 w-full text-left"
 						onClick={() => {
 							setDeleteDialogOpen(true);
 						}}

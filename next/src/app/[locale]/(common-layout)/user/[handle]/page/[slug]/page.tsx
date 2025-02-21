@@ -1,16 +1,14 @@
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-list";
-import { getBestTranslation } from "@/app/[locale]/lib/get-best-translation";
+import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/db/queries.server";
+import { fetchPageWithTranslations } from "@/app/[locale]/db/queries.server";
 import { stripHtmlTags } from "@/app/[locale]/lib/strip-html-tags";
 import { BASE_URL } from "@/app/constants/base-url";
-
-import { fetchPageAITranslationInfo } from "@/app/[locale]/db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
 import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
-import type { SearchParams } from "nuqs/server";
 import { cache } from "react";
 import { ContentWithTranslations } from "./components/content-with-translations";
 import { TranslateTarget } from "./constants";
@@ -19,8 +17,8 @@ import {
 	fetchLatestUserAITranslationInfo,
 	fetchLikeCount,
 	fetchPageCommentsCount,
-	fetchPageWithTranslations,
 } from "./db/queries.server";
+import { buildAlternateLocales } from "./lib/build-alternate-locales";
 const DynamicLikeButton = dynamic(
 	() =>
 		import("@/app/[locale]/components/like-button/client").then(
@@ -60,7 +58,7 @@ const DynamicPageCommentForm = dynamic(
 	},
 );
 
-export const getPageData = cache(async (slug: string, locale: string) => {
+export const fetchPageContext = cache(async (slug: string, locale: string) => {
 	const currentUser = await getCurrentUser();
 
 	const pageWithTranslations = await fetchPageWithTranslations(
@@ -72,42 +70,41 @@ export const getPageData = cache(async (slug: string, locale: string) => {
 	if (!pageWithTranslations) {
 		return null;
 	}
-	const pageAITranslationInfo = await fetchPageAITranslationInfo(
+	const pageAITranslationInfo = await fetchLatestPageAITranslationInfo(
 		pageWithTranslations.page.id,
 	);
-	const pageSegmentTitleWithTranslations =
+	const pageTitleWithTranslations =
 		pageWithTranslations.segmentWithTranslations.find(
 			(item) => item.segment?.number === 0,
 		);
-	if (!pageSegmentTitleWithTranslations) {
+	if (!pageTitleWithTranslations) {
 		return null;
 	}
-	const bestTranslationTitle = getBestTranslation(
-		pageSegmentTitleWithTranslations.segmentTranslationsWithVotes,
-	);
+	const bestTranslationTitle =
+		pageTitleWithTranslations.bestSegmentTranslationWithVote;
 	const sourceTitleWithBestTranslationTitle = bestTranslationTitle
-		? `${pageSegmentTitleWithTranslations.segment.text} - ${bestTranslationTitle.segmentTranslation.text}`
-		: pageSegmentTitleWithTranslations.segment.text;
+		? `${pageTitleWithTranslations.segment.text} - ${bestTranslationTitle.segmentTranslation.text}`
+		: pageTitleWithTranslations.segment.text;
 	const firstImageUrl = pageWithTranslations.page.content.match(
 		/<img[^>]+src="([^">]+)"/,
 	)?.[1];
+
 	return {
 		pageWithTranslations,
 		currentUser,
-		pageSegmentTitleWithTranslations,
 		sourceTitleWithBestTranslationTitle,
-		bestTranslationTitle,
 		firstImageUrl,
 		pageAITranslationInfo,
 	};
 });
+
 type Params = Promise<{ locale: string; handle: string; slug: string }>;
+
 export async function generateMetadata({
 	params,
-	searchParams,
-}: { params: Params; searchParams: Promise<SearchParams> }): Promise<Metadata> {
+}: { params: Params }): Promise<Metadata> {
 	const { slug, locale } = await params;
-	const data = await getPageData(slug, locale);
+	const data = await fetchPageContext(slug, locale);
 	if (!data) {
 		return {
 			title: "Page Not Found",
@@ -124,30 +121,6 @@ export async function generateMetadata({
 	);
 
 	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${slug}`;
-	const hasSourceLocale = pageAITranslationInfo.some(
-		(info) => info.locale === pageWithTranslations.page.sourceLocale,
-	);
-
-	// エントリー配列を作成
-	const alternateLocales = [];
-
-	// 含まれていなければ、sourceLocale として先頭に追加
-	if (!hasSourceLocale) {
-		alternateLocales.push([
-			pageWithTranslations.page.sourceLocale,
-			`/${pageWithTranslations.page.sourceLocale}/user/${pageWithTranslations.user.handle}/page/${pageWithTranslations.page.slug}`,
-		]);
-	}
-
-	// 他の翻訳情報を追加（現在の locale は除外）
-	alternateLocales.push(
-		...pageAITranslationInfo
-			.filter((info) => info.locale !== locale)
-			.map((info) => [
-				info.locale,
-				`/${info.locale}/user/${pageWithTranslations.user.handle}/page/${pageWithTranslations.page.slug}`,
-			]),
-	);
 
 	return {
 		title: sourceTitleWithBestTranslationTitle,
@@ -165,14 +138,19 @@ export async function generateMetadata({
 			images: [{ url: ogImageUrl, width: 1200, height: 630 }],
 		},
 		alternates: {
-			languages: Object.fromEntries(alternateLocales),
+			languages: buildAlternateLocales(
+				pageWithTranslations.page,
+				pageAITranslationInfo,
+				pageWithTranslations.user.handle,
+				locale,
+			),
 		},
 	};
 }
 
 export default async function Page({ params }: { params: Params }) {
 	const { slug, locale } = await params;
-	const data = await getPageData(slug, locale);
+	const data = await fetchPageContext(slug, locale);
 	if (!data) {
 		return notFound();
 	}
@@ -183,8 +161,6 @@ export default async function Page({ params }: { params: Params }) {
 		pageAITranslationInfo,
 	} = data;
 
-	const guestId = await getGuestId();
-
 	const isOwner = pageWithTranslations?.user.handle === currentUser?.handle;
 	if (
 		pageWithTranslations.page.status === "ARCHIVE" ||
@@ -193,27 +169,20 @@ export default async function Page({ params }: { params: Params }) {
 		throw new Response("Page not found", { status: 404 });
 	}
 
-	const userAITranslationInfoPromise = fetchLatestUserAITranslationInfo(
-		pageWithTranslations.page.id,
-		currentUser?.id ?? "0",
-	);
-
-	const likeCountPromise = fetchLikeCount(pageWithTranslations.page.id);
-	const isLikedByUserPromise = fetchIsLikedByUser(
-		pageWithTranslations.page.id,
-		currentUser?.id,
-		guestId,
-	);
-	const pageCommentsCountPromise = fetchPageCommentsCount(
-		pageWithTranslations.page.id,
-	);
-
+	const guestId = await getGuestId();
 	const [userAITranslationInfo, likeCount, isLikedByUser, pageCommentsCount] =
 		await Promise.all([
-			userAITranslationInfoPromise,
-			likeCountPromise,
-			isLikedByUserPromise,
-			pageCommentsCountPromise,
+			fetchLatestUserAITranslationInfo(
+				pageWithTranslations.page.id,
+				currentUser?.id ?? "0",
+			),
+			fetchLikeCount(pageWithTranslations.page.id),
+			fetchIsLikedByUser(
+				pageWithTranslations.page.id,
+				currentUser?.id,
+				guestId,
+			),
+			fetchPageCommentsCount(pageWithTranslations.page.id),
 		]);
 
 	return (

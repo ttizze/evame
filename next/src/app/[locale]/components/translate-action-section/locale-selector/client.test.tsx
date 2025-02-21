@@ -1,7 +1,6 @@
 import { type PageAITranslationInfo, TranslationStatus } from "@prisma/client";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LocaleSelector } from "./client";
 if (typeof global.ResizeObserver === "undefined") {
@@ -72,19 +71,17 @@ describe("LocaleSelector", () => {
 	it("opens popover and displays locale options", async () => {
 		const user = await userEvent.setup();
 		render(
-			<NextIntlClientProvider locale="ja">
-				<LocaleSelector
-					sourceLocale="en"
-					onAddNew={vi.fn()}
-					showIcons={false}
-					pageAITranslationInfo={[
-						{
-							locale: "ja",
-							aiTranslationStatus: TranslationStatus.COMPLETED,
-						} as PageAITranslationInfo,
-					]}
-				/>
-			</NextIntlClientProvider>,
+			<LocaleSelector
+				sourceLocale="en"
+				onAddNew={vi.fn()}
+				showIcons={false}
+				pageAITranslationInfo={[
+					{
+						locale: "ja",
+						aiTranslationStatus: TranslationStatus.COMPLETED,
+					} as PageAITranslationInfo,
+				]}
+			/>,
 		);
 		const button = await screen.findByTestId("locale-selector-button");
 		await user.click(button);

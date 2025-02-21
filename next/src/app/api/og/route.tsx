@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { getPageData } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/page";
+import { fetchPageContext } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/page";
 import { ImageResponse } from "next/og";
 
 export async function GET(req: Request): Promise<Response> {
@@ -13,17 +13,17 @@ export async function GET(req: Request): Promise<Response> {
 	);
 	const locale: string = searchParams.get("locale") || "en";
 	const slug: string = searchParams.get("slug") || "";
-	const [logoData, faviconData, pageData] = await Promise.all([
+	const [logoData, faviconData, pageContext] = await Promise.all([
 		readFile(join(process.cwd(), "public", "logo.png")),
 		readFile(join(process.cwd(), "public", "bg-ogp.png")),
-		getPageData(slug, locale),
+		fetchPageContext(slug, locale),
 	]);
 
 	const logoSrc = Uint8Array.from(logoData).buffer;
 	const faviconSrc = Uint8Array.from(faviconData).buffer;
 	const faviconSrcUrl = `data:image/png;base64,${Buffer.from(faviconSrc).toString("base64")}`;
 
-	if (!pageData) {
+	if (!pageContext) {
 		return new ImageResponse(
 			<div tw="flex items-center justify-center w-full h-full bg-slate-100">
 				<p tw="text-6xl">Page Not Found</p>
@@ -35,7 +35,7 @@ export async function GET(req: Request): Promise<Response> {
 		);
 	}
 	const { pageWithTranslations, sourceTitleWithBestTranslationTitle } =
-		pageData;
+		pageContext;
 	const pageOwner = pageWithTranslations.user;
 	const title = sourceTitleWithBestTranslationTitle;
 
