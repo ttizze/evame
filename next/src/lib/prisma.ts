@@ -1,23 +1,34 @@
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
-const connectionString = `${process.env.DATABASE_URL || ""}?connect_timeout=15&pool_timeout=15`;
+import { WebSocket } from "ws";
 
-// ローカル開発環境用の設定
+declare global {
+	var prisma: PrismaClient | undefined;
+}
+
+const connectionString = process.env.DATABASE_URL || "";
+if (!connectionString) {
+	throw new Error("DATABASE_URL is not defined");
+}
+
+neonConfig.webSocketConstructor = WebSocket;
+neonConfig.poolQueryViaFetch = true;
+
 const isDevelopment = process.env.NODE_ENV === "development";
 const isTest = process.env.NODE_ENV === "test";
+
 if (isDevelopment || isTest) {
 	const LOCAL_HOST = "db.localtest.me";
-
 	const getLocalPort = () => (isTest ? 4445 : 4444);
 
-	// テスト環境の場合は、ホストが db.localtest.me のときのポートをテスト用に変更
+	// テスト環境の場合は、ホストが db.localtest.me のときのポートを変更
 	neonConfig.fetchEndpoint = (host) => {
 		if (host === LOCAL_HOST) {
 			// テストなら 4445、本番開発なら 4444
 			return `http://${host}:${getLocalPort()}/sql`;
 		}
-		return `https://${host}:${443}/sql`;
+		return `https://${host}:443/sql`;
 	};
 
 	// WebSocket のセキュリティ設定
@@ -33,8 +44,17 @@ if (isDevelopment || isTest) {
 	};
 }
 
-const pool = new Pool({ connectionString });
+const pool = new Pool({ connectionString, max: 0 });
 const adapter = new PrismaNeon(pool);
-const prisma = new PrismaClient({ adapter });
 
-export { prisma };
+// prismaClient というローカル変数で PrismaClient インスタンスを管理
+let prismaClient: PrismaClient;
+
+if (isDevelopment) {
+	prismaClient = globalThis.prisma || new PrismaClient({ adapter });
+	globalThis.prisma = prismaClient;
+} else {
+	prismaClient = new PrismaClient({ adapter });
+}
+
+export { prismaClient as prisma };
