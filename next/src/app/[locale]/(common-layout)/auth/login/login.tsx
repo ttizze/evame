@@ -3,12 +3,12 @@ import {
 	type SignInWithResendState,
 	signInWithResendAction,
 } from "@/app/[locale]/auth-action";
-import { NavigationLink } from "@/components/navigation-link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Link } from "@/i18n/routing";
 import { CheckCircle } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useActionState } from "react";
@@ -69,13 +69,13 @@ export function Login() {
 					</form>
 					<div className="text-center text-sm text-gray-500 my-2">
 						Login means you agree to our{" "}
-						<NavigationLink href="/terms" className="underline">
+						<Link href="/terms" className="underline">
 							Terms of Service
-						</NavigationLink>{" "}
+						</Link>{" "}
 						and{" "}
-						<NavigationLink href="/privacy" className="underline">
+						<Link href="/privacy" className="underline">
 							Privacy Policy
-						</NavigationLink>
+						</Link>
 					</div>
 				</CardContent>
 			</Card>

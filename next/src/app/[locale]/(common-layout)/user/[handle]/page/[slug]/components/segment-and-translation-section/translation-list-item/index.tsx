@@ -1,13 +1,13 @@
 import { sanitizeAndParseText } from "@/app/[locale]/lib/sanitize-and-parse-text.client";
 import type { SegmentTranslationWithVote } from "@/app/[locale]/types";
 import type { ActionResponse } from "@/app/types";
-import { NavigationLink } from "@/components/navigation-link";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Link } from "@/i18n/routing";
 import { EllipsisVertical } from "lucide-react";
 import { useActionState } from "react";
 import { VoteButtons } from "../vote-buttons/client";
@@ -67,14 +67,14 @@ export function TranslationListItem({
 				)}
 			</span>
 			<span className="flex items-center justify-end">
-				<NavigationLink
+				<Link
 					href={`/user/${translation.segmentTranslation.user.handle}`}
 					className="!no-underline mr-2 flex  items-center"
 				>
 					<span className="text-sm text-gray-500 text-right flex justify-end items-center  ">
 						by: {translation.segmentTranslation.user.name}
 					</span>
-				</NavigationLink>
+				</Link>
 				<VoteButtons
 					translationWithVote={translation}
 					voteTarget={voteTarget}

@@ -1,5 +1,4 @@
 "use client";
-import { NavigationLink } from "@/components/navigation-link";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -7,6 +6,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Link } from "@/i18n/routing";
 import type { PageStatus } from "@prisma/client";
 import { MoreVertical } from "lucide-react";
 import { useActionState } from "react";
@@ -51,9 +51,9 @@ export function PageActionsDropdown({
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				<DropdownMenuItem asChild className="w-full text-left cursor-pointer">
-					<NavigationLink href={editPath} className="w-full text-left">
+					<Link href={editPath} className="w-full text-left">
 						Edit
-					</NavigationLink>
+					</Link>
 				</DropdownMenuItem>
 				<DropdownMenuItem className="w-full text-left cursor-pointer">
 					<form action={publishAction}>

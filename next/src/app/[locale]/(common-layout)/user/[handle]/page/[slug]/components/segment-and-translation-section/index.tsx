@@ -4,7 +4,7 @@ import type {
 	VoteTarget,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import type { SegmentWithTranslations } from "@/app/[locale]/types";
-import { NavigationLink } from "@/components/navigation-link";
+import { Link } from "@/i18n/routing";
 import { Lock } from "lucide-react";
 import { SquarePen } from "lucide-react";
 import { useQueryState } from "nuqs";
@@ -60,9 +60,9 @@ export function SegmentAndTranslationSection({
 					</span>
 					{isOwner && slug && (
 						<div className="ml-auto">
-							<NavigationLink href={`/user/${currentHandle}/page/${slug}/edit`}>
+							<Link href={`/user/${currentHandle}/page/${slug}/edit`}>
 								<SquarePen className="w-5 h-5" />
-							</NavigationLink>
+							</Link>
 						</div>
 					)}
 				</span>

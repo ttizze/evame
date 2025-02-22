@@ -2,7 +2,8 @@ import { PageCard } from "@/app/[locale]/components/page-card";
 import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/db/queries.server";
 import { fetchUserByHandle } from "@/app/db/queries.server";
 import { getCurrentUser } from "@/auth";
-import { NavigationLink } from "@/components/navigation-link";
+import { Link } from "@/i18n/routing";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -86,14 +87,14 @@ export default async function UserPage({
 				<CardHeader className="pb-4">
 					<div className="flex w-full flex-col md:flex-row">
 						<div>
-							<NavigationLink href={`${pageOwner.image}`}>
+							<Link href={`${pageOwner.image}`}>
 								<Avatar className="w-20 h-20 md:w-24 md:h-24">
 									<AvatarImage src={pageOwner.image} alt={pageOwner.name} />
 									<AvatarFallback>
 										{pageOwner.name.charAt(0).toUpperCase()}
 									</AvatarFallback>
 								</Avatar>
-							</NavigationLink>
+							</Link>
 						</div>
 						<div className="mt-2 md:mt-0 md:ml-4 flex items-center justify-between w-full">
 							<div>
@@ -122,7 +123,7 @@ export default async function UserPage({
 							</div>
 
 							{isOwner ? (
-								<NavigationLink href={`/user/${pageOwner.handle}/edit`}>
+								<Link href={`/user/${pageOwner.handle}/edit`}>
 									<Button
 										variant="secondary"
 										className="flex items-center rounded-full"
@@ -130,7 +131,7 @@ export default async function UserPage({
 										<Settings className="w-4 h-4" />
 										<span className="ml-2 text-sm">Edit Profile</span>
 									</Button>
-								</NavigationLink>
+								</Link>
 							) : (
 								<FollowButton targetUserId={pageOwner.id} />
 							)}

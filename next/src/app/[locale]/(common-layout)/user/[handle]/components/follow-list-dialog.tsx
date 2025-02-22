@@ -1,6 +1,7 @@
 // app/components/FollowListDialog.tsx
 
-import { NavigationLink } from "@/components/navigation-link";
+import { Link } from "@/i18n/routing";
+
 import {
 	Dialog,
 	DialogContent,
@@ -40,12 +41,9 @@ export function FollowListDialog({
 						<ul className="space-y-2">
 							{users.map((user) => (
 								<li key={user.handle}>
-									<NavigationLink
-										href={`/user/${user.handle}`}
-										className="underline"
-									>
+									<Link href={`/user/${user.handle}`} className="underline">
 										{user.name} (@{user.handle})
-									</NavigationLink>
+									</Link>
 								</li>
 							))}
 						</ul>

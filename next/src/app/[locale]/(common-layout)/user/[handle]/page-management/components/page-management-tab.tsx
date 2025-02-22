@@ -3,7 +3,6 @@
 import { DeletePageDialog } from "@/app/[locale]/components/delete-page-dialog/delete-page-dialog";
 import { PageActionsDropdown } from "@/app/[locale]/components/page-actions-dropdown/client";
 import { PaginationBar } from "@/app/[locale]/components/pagination-bar";
-import { NavigationLink } from "@/components/navigation-link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -16,6 +15,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { Link } from "@/i18n/routing";
 import type { PageStatus } from "@prisma/client";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { useState } from "react";
@@ -130,11 +130,9 @@ export function PageManagementTab({
 									/>
 								</TableCell>
 								<TableCell className="font-medium">
-									<NavigationLink
-										href={`/user/${handle}/page/${pageWithTitle.slug}`}
-									>
+									<Link href={`/user/${handle}/page/${pageWithTitle.slug}`}>
 										{pageWithTitle.title}
-									</NavigationLink>
+									</Link>
 								</TableCell>
 								<TableCell>{getStatusBadge(pageWithTitle.status)}</TableCell>
 								<TableCell>{pageWithTitle.updatedAt}</TableCell>

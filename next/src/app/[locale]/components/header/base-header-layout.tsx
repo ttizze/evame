@@ -1,6 +1,5 @@
 import { signOutAction } from "@/app/[locale]/auth-action";
 import type { SanitizedUser } from "@/app/types";
-import { NavigationLink } from "@/components/navigation-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -9,6 +8,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Link } from "@/i18n/routing";
 import { LogOutIcon, SettingsIcon } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
@@ -30,7 +30,7 @@ export function BaseHeaderLayout({
 		<header className="z-10 w-full">
 			<div className="max-w-7xl mx-auto py-2 md:py-4 px-2 md:px-6 lg:px-8 flex justify-between items-center">
 				<div className="flex items-center gap-4">
-					<NavigationLink href="/" className="flex items-center">
+					<Link href="/" className="flex items-center">
 						<Image
 							src="/logo.svg"
 							alt="Evame"
@@ -39,7 +39,7 @@ export function BaseHeaderLayout({
 							className="h-8 w-20 dark:invert"
 							aria-label="Evame Logo"
 						/>
-					</NavigationLink>
+					</Link>
 					{leftExtra}
 				</div>
 				<div className="flex items-center gap-4">
@@ -56,7 +56,7 @@ export function BaseHeaderLayout({
 							</DropdownMenuTrigger>
 							<DropdownMenuContent className="m-2 p-0 rounded-xl min-w-40">
 								<DropdownMenuItem asChild>
-									<NavigationLink
+									<Link
 										href={`/user/${currentUser.handle}`}
 										className="opacity-100 w-full rounded-none px-4 py-3  cursor-pointer hover:bg-accent hover:text-accent-foreground"
 									>
@@ -66,17 +66,17 @@ export function BaseHeaderLayout({
 												@{currentUser.handle}
 											</span>
 										</div>
-									</NavigationLink>
+									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuSeparator className="my-0" />
 								<DropdownMenuItem asChild>
-									<NavigationLink
+									<Link
 										href={`/user/${currentUser.handle}/page-management`}
 										className="opacity-100 w-full rounded-none gap-2 px-4 py-3 cursor-pointer hover:bg-accent hover:text-accent-foreground"
 									>
 										<SettingsIcon className="w-4 h-4" />
 										Page Management
-									</NavigationLink>
+									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuItem asChild>
 									<ModeToggle />
