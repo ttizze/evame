@@ -55,7 +55,7 @@ export function BaseHeaderLayout({
 								</Avatar>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent className="m-2 p-0 rounded-xl min-w-40">
-								<DropdownMenuItem asChild>
+								<DropdownMenuItem className="p-0">
 									<Link
 										href={`/user/${currentUser.handle}`}
 										className="opacity-100 w-full rounded-none px-4 py-3  cursor-pointer hover:bg-accent hover:text-accent-foreground"
@@ -69,10 +69,10 @@ export function BaseHeaderLayout({
 									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuSeparator className="my-0" />
-								<DropdownMenuItem asChild>
+								<DropdownMenuItem className="p-0 ">
 									<Link
 										href={`/user/${currentUser.handle}/page-management`}
-										className="opacity-100 w-full rounded-none gap-2 px-4 py-3 cursor-pointer hover:bg-accent hover:text-accent-foreground"
+										className="flex items-center opacity-100 w-full rounded-none gap-2 px-4 py-3 cursor-pointer hover:bg-accent hover:text-accent-foreground"
 									>
 										<SettingsIcon className="w-4 h-4" />
 										Page Management

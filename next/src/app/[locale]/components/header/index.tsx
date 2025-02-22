@@ -4,7 +4,14 @@ import { Search } from "lucide-react";
 import { StartButton } from "../start-button";
 import { BaseHeaderLayout } from "./base-header-layout";
 import { NewPageButton } from "./new-page-button";
-import NotificationsDropdown from "./notifications-dropdown";
+import dynamic from "next/dynamic";
+
+const NotificationsDropdown = dynamic(
+	() => import("./notifications-dropdown").then((mod) => mod.default),
+	{
+		loading: () => <div>Loading...</div>,
+	},
+);
 export async function Header() {
 	const currentUser = await getCurrentUser();
 
