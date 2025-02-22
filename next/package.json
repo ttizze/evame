@@ -101,8 +101,8 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
-		"@playwright/test": "1.50.1",
 		"@next/bundle-analyzer": "^15.1.7",
+		"@playwright/test": "1.50.1",
 		"@testing-library/dom": "10.4.0",
 		"@testing-library/jest-dom": "6.6.3",
 		"@testing-library/react": "16.2.0",
@@ -112,6 +112,7 @@
 		"@types/react": "19.0.10",
 		"@types/react-dom": "19.0.4",
 		"@vitejs/plugin-react": "4.3.4",
+		"bufferutil": "^4.0.9",
 		"jest-mock-extended": "^4.0.0-beta1",
 		"jsdom": "26.0.0",
 		"postcss": "8.5.3",
