@@ -5,8 +5,8 @@ import {
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { TagList } from "@/app/[locale]/components/tag-list";
 import type { PageWithTranslations } from "@/app/[locale]/types";
-import { NavigationLink } from "@/components/navigation-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Link } from "@/i18n/routing";
 import type {
 	PageAITranslationInfo,
 	UserAITranslationInfo,
@@ -79,7 +79,7 @@ export async function ContentWithTranslations({
 			/>
 
 			<div className="flex items-center not-prose">
-				<NavigationLink
+				<Link
 					href={`/user/${pageWithTranslations.user.handle}`}
 					className="flex items-center mr-2 !no-underline hover:text-gray-700"
 				>
@@ -98,7 +98,7 @@ export async function ContentWithTranslations({
 							{pageWithTranslations.page.createdAt}
 						</span>
 					</div>
-				</NavigationLink>
+				</Link>
 			</div>
 			<DynamicTranslateActionSection
 				pageId={pageWithTranslations.page.id}

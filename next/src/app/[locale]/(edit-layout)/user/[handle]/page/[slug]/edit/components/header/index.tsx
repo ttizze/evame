@@ -1,7 +1,6 @@
 "use client";
 import { BaseHeaderLayout } from "@/app/[locale]/components/header/base-header-layout";
 import type { SanitizedUser } from "@/app/types";
-import { NavigationLink } from "@/components/navigation-link";
 import { Button } from "@/components/ui/button";
 import {
 	Popover,
@@ -9,6 +8,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { Link } from "@/i18n/routing";
 import type { PageStatus } from "@prisma/client";
 import { Check, Globe, LinkIcon, Loader2, Lock } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -106,13 +106,13 @@ export function EditHeader({
 					{pageId && (
 						<>
 							<Separator />
-							<NavigationLink
+							<Link
 								href={pagePath}
 								className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors duration-200 hover:bg-secondary/80 disabled:opacity-50 disabled:pointer-events-none"
 							>
 								<LinkIcon className="w-4 h-4" />
 								<span>Preview</span>
-							</NavigationLink>
+							</Link>
 						</>
 					)}
 				</div>

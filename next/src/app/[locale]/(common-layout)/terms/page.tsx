@@ -1,4 +1,4 @@
-import { NavigationLink } from "@/components/navigation-link";
+import { Link } from "@/i18n/routing";
 
 export default function TermsPage() {
 	return (
@@ -126,9 +126,9 @@ export default function TermsPage() {
 				</section>
 
 				<div className="mt-8">
-					<NavigationLink href="/" className="text-blue-600 hover:underline">
+					<Link href="/" className="text-blue-600 hover:underline">
 						Return to Home
-					</NavigationLink>
+					</Link>
 				</div>
 			</main>
 		</div>

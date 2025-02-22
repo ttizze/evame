@@ -1,5 +1,4 @@
 import type { PageCardLocalizedType } from "@/app/[locale]/db/queries.server";
-import { NavigationLink } from "@/components/navigation-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	Card,
@@ -8,6 +7,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { Link } from "@/i18n/routing";
 import { LikeButton } from "./like-button/client";
 import { PageActionsDropdown } from "./page-actions-dropdown/client";
 import { TagList } from "./tag-list";
@@ -40,7 +40,7 @@ export function PageCard({
 				</div>
 			)}
 			<CardHeader>
-				<NavigationLink href={pageLink} className="block">
+				<Link href={pageLink} className="block">
 					<CardTitle className="flex flex-col pr-3 break-all overflow-wrap-anywhere">
 						{title}
 						{bestTranslationTitle && (
@@ -50,12 +50,12 @@ export function PageCard({
 						)}
 					</CardTitle>
 					<CardDescription>{pageCard.createdAt}</CardDescription>
-				</NavigationLink>
+				</Link>
 				<TagList tag={pageCard.tagPages.map((tagPage) => tagPage.tag)} />
 			</CardHeader>
 			<CardContent>
 				<div className="flex justify-between items-center">
-					<NavigationLink href={userLink} className="flex items-center">
+					<Link href={userLink} className="flex items-center">
 						<Avatar className="w-6 h-6 mr-2">
 							<AvatarImage src={pageCard.user.image} alt={pageCard.user.name} />
 							<AvatarFallback>
@@ -63,7 +63,7 @@ export function PageCard({
 							</AvatarFallback>
 						</Avatar>
 						<span className="text-sm text-gray-600">{pageCard.user.name}</span>
-					</NavigationLink>
+					</Link>
 
 					<LikeButton
 						liked={pageCard.likePages.length > 0}

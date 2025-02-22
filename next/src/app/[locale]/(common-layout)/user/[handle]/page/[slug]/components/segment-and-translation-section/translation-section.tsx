@@ -5,7 +5,7 @@ import type {
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { sanitizeAndParseText } from "@/app/[locale]/lib/sanitize-and-parse-text.client";
 import type { SegmentWithTranslations } from "@/app/[locale]/types";
-import { NavigationLink } from "@/components/navigation-link";
+import { Link } from "@/i18n/routing";
 import { Languages, Plus } from "lucide-react";
 import { useState } from "react";
 import { AddAndVoteTranslations } from "./add-and-vote-translations";
@@ -52,7 +52,7 @@ export function TranslationSection({
 			{isSelected && (
 				<>
 					<span className="flex items-center justify-end gap-2">
-						<NavigationLink
+						<Link
 							href={`/user/${bestSegmentTranslationWithVote?.segmentTranslation.user.handle}`}
 							className="!no-underline"
 						>
@@ -60,7 +60,7 @@ export function TranslationSection({
 								by:{" "}
 								{bestSegmentTranslationWithVote?.segmentTranslation.user.name}
 							</span>
-						</NavigationLink>
+						</Link>
 						<VoteButtons
 							key={bestSegmentTranslationWithVote.segmentTranslation.id}
 							translationWithVote={bestSegmentTranslationWithVote}
