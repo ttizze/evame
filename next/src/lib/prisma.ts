@@ -1,7 +1,7 @@
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
-const connectionString = `${process.env.DATABASE_URL || ""}?connect_timeout=15&connection_limit=20`;
+const connectionString = `${process.env.DATABASE_URL || ""}?connect_timeout=15&pool_timeout=15`;
 
 // ローカル開発環境用の設定
 const isDevelopment = process.env.NODE_ENV === "development";
