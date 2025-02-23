@@ -11,16 +11,32 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		Resend({ from: "noreply@mail.reimei.dev" }),
 	],
 	adapter: PrismaAdapter(prisma),
+	session: {
+		strategy: "jwt",
+	},
 	callbacks: {
-		async session({ session, user }) {
-			session.user.handle = user.handle;
-			session.user.profile = user.profile;
-			session.user.createdAt = user.createdAt;
-			session.user.updatedAt = user.updatedAt;
-			session.user.totalPoints = user.totalPoints;
-			session.user.isAI = user.isAI;
-			session.user.name = user.name ?? "";
-			session.user.image = user.image ?? "";
+		async jwt({ token, user }) {
+			if (user) {
+				token.handle = user.handle;
+				token.profile = user.profile;
+				token.createdAt = user.createdAt;
+				token.updatedAt = user.updatedAt;
+				token.totalPoints = user.totalPoints;
+				token.isAI = user.isAI;
+				token.name = user.name;
+				token.image = user.image;
+			}
+			return token;
+		},
+		async session({ session, token }) {
+			session.user.handle = token.handle as string;
+			session.user.profile = token.profile as string;
+			session.user.createdAt = token.createdAt as Date;
+			session.user.updatedAt = token.updatedAt as Date;
+			session.user.totalPoints = token.totalPoints as number;
+			session.user.isAI = token.isAI as boolean;
+			session.user.name = token.name as string;
+			session.user.image = token.image as string;
 			return session;
 		},
 	},
