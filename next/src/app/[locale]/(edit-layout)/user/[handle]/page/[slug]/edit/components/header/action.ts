@@ -2,13 +2,13 @@
 import { getPageById } from "@/app/[locale]/db/queries.server";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
+import { parseFormData } from "@/lib/parse-formdata";
 import type { PageStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { updatePageStatus } from "./db/mutations.server";
 import { handlePageTranslation } from "./lib/handle-page-translation";
-
 const editPageStatusSchema = z.object({
 	pageId: z.coerce.number().min(1),
 	status: z.enum(["DRAFT", "PUBLIC", "ARCHIVE"]),
@@ -26,10 +26,7 @@ export async function editPageStatusAction(
 	previousState: EditPageStatusActionState,
 	formData: FormData,
 ): Promise<EditPageStatusActionState> {
-	const parsedFormData = editPageStatusSchema.safeParse({
-		pageId: formData.get("pageId"),
-		status: formData.get("status"),
-	});
+	const parsedFormData = await parseFormData(editPageStatusSchema, formData);
 	if (!parsedFormData.success) {
 		return {
 			success: false,
@@ -54,7 +51,7 @@ export async function editPageStatusAction(
 				message: "Gemini API key is not set. Page will not be translated.",
 			};
 		}
-		await handlePageTranslation({
+		handlePageTranslation({
 			currentUserId: currentUser.id,
 			pageId: page.id,
 			sourceLocale: page.sourceLocale,
