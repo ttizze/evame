@@ -6,13 +6,13 @@ import dynamic from "next/dynamic";
 const PagesListTab = dynamic(
 	() => import("@/app/[locale]/components/pages-list-tab/index"),
 	{
-		loading: () => <Skeleton className="h-[200px] w-full" />,
+		loading: () => <Skeleton className="h-[640px] w-full" />,
 	},
 );
 const HeroSection = dynamic(
 	() => import("@/app/[locale]/components/hero-section/index"),
 	{
-		loading: () => <Skeleton className="h-[400px] w-full" />,
+		loading: () => <Skeleton className="h-[845px] w-full" />,
 	},
 );
 
