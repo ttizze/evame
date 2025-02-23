@@ -12,9 +12,12 @@ if (!connectionString) {
 	throw new Error("DATABASE_URL is not defined");
 }
 
-neonConfig.webSocketConstructor = WebSocket;
-neonConfig.poolQueryViaFetch = true;
+if (process.env.NODE_ENV !== "test") {
+	neonConfig.webSocketConstructor = WebSocket;
+	neonConfig.poolQueryViaFetch = true;
+}
 
+// ローカル開発環境用の設定
 const isDevelopment = process.env.NODE_ENV === "development";
 const isTest = process.env.NODE_ENV === "test";
 

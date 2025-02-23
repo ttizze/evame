@@ -63,7 +63,7 @@ export function EditHeader({
 					variant={initialStatus === "PUBLIC" ? "default" : "secondary"}
 					size="sm"
 					className="rounded-full flex items-center gap-2 px-4 py-2 transition-colors duration-400"
-					disabled={isPending}
+					disabled={isPending || !pageId}
 				>
 					{initialStatus === "PUBLIC" ? (
 						<Globe className="w-4 h-4" />
@@ -102,6 +102,9 @@ export function EditHeader({
 					</form>
 					{state.zodErrors?.status && (
 						<p className="text-sm text-red-500">{state.zodErrors.status}</p>
+					)}
+					{state.zodErrors?.pageId && (
+						<p className="text-sm text-red-500">{state.zodErrors.pageId}</p>
 					)}
 					{pageId && (
 						<>
