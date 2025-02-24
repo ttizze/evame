@@ -1,10 +1,13 @@
 "use server";
-import { getPageById } from "@/app/[locale]/db/queries.server";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
-import { revalidatePath } from "next/cache";
+import { parseFormData } from "@/lib/parse-form-data";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { togglePagePublicStatus } from "./db/mutations.server";
+const togglePublishSchema = z.object({
+	pageId: z.coerce.number(),
+});
 
 export type TogglePublishState = ActionResponse<
 	void,
@@ -21,21 +24,15 @@ export async function togglePublishAction(
 	if (!currentUser || !currentUser.id) {
 		return redirect("/auth/login");
 	}
-	const pageId = Number(formData.get("pageId"));
-	if (!pageId) {
+	const parsedFormData = await parseFormData(togglePublishSchema, formData);;
+	if (!parsedFormData.success) {
 		return {
 			success: false,
-			zodErrors: { pageId: ["Page ID is required"] },
+			message: "Invalid form data",
+			zodErrors: parsedFormData.error.flatten().fieldErrors,
 		};
 	}
-	const page = await getPageById(pageId);
-	if (!page || page.userId !== currentUser.id) {
-		return {
-			success: false,
-			zodErrors: { pageId: ["Page not found"] },
-		};
-	}
-	await togglePagePublicStatus(pageId);
-	revalidatePath(`/user/${currentUser?.handle}`);
-	return { success: true, message: "Page updated successfully" };
+	const { pageId } = parsedFormData.data;
+	await togglePagePublicStatus(pageId, currentUser.id);
+	return { success: true, message: "Page status updated successfully" };
 }

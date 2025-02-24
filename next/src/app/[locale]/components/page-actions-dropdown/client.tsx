@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { DeletePageDialog } from "../delete-page-dialog/delete-page-dialog";
 import { type TogglePublishState, togglePublishAction } from "./action";
+import { useRouter } from "next/navigation";
 interface PageActionsDropdownProps {
 	editPath: string;
 	pageId: number;
@@ -32,12 +33,13 @@ export function PageActionsDropdown({
 		FormData
 	>(togglePublishAction, { success: false });
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
+	const router = useRouter();
 	useEffect(() => {
 		if (publishState.success) {
 			toast.success(publishState.message);
+			router.refresh();
 		}
-	}, [publishState.success, publishState.message]);
+	}, [publishState, router]);
 	return (
 		<DropdownMenu modal={false}>
 			<DropdownMenuTrigger asChild>

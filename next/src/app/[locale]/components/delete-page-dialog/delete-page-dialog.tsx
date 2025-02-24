@@ -8,9 +8,12 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Trash } from "lucide-react";
+import { Loader2, Trash } from "lucide-react";
 import { useActionState } from "react";
 import { archivePageAction } from "./action";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 interface DeletePageDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
@@ -26,7 +29,14 @@ export function DeletePageDialog({
 		ActionResponse,
 		FormData
 	>(archivePageAction, { success: false });
-
+	const router = useRouter();
+	useEffect(() => {
+		if (archiveState.success) {
+			toast.success(archiveState.message);
+			onOpenChange(false);
+			router.refresh();
+		}
+	}, [archiveState, onOpenChange, router]);
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent>
@@ -50,9 +60,12 @@ export function DeletePageDialog({
 							variant="destructive"
 							type="submit"
 							disabled={isArchiving}
-							onClick={() => onOpenChange(false)}
 						>
-							<Trash className="w-4 h-4 mr-2" />
+							{isArchiving ? (
+								<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+							) : (
+								<Trash className="w-4 h-4 mr-2" />
+							)}
 							Delete
 						</Button>
 					</form>
