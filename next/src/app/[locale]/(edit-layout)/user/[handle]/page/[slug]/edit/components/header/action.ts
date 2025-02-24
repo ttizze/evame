@@ -2,7 +2,7 @@
 import { getPageById } from "@/app/[locale]/db/queries.server";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
-import { parseFormData } from "@/lib/parse-formdata";
+import { parseFormData } from "@/lib/parse-form-data";
 import type { PageStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";

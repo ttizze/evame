@@ -9,6 +9,7 @@ import {
 import { Link } from "@/i18n/routing";
 import type { PageStatus } from "@prisma/client";
 import { MoreVertical } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -32,12 +33,13 @@ export function PageActionsDropdown({
 		FormData
 	>(togglePublishAction, { success: false });
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
+	const router = useRouter();
 	useEffect(() => {
 		if (publishState.success) {
 			toast.success(publishState.message);
+			router.refresh();
 		}
-	}, [publishState.success, publishState.message]);
+	}, [publishState, router]);
 	return (
 		<DropdownMenu modal={false}>
 			<DropdownMenuTrigger asChild>

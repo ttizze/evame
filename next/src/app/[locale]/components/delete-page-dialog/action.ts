@@ -3,7 +3,6 @@
 import { getPageById } from "@/app/[locale]/db/queries.server";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { archivePage } from "./db/mutations.server";
 export async function archivePageAction(
@@ -26,6 +25,5 @@ export async function archivePageAction(
 		}
 		await archivePage(pageId, currentUser.id);
 	}
-	revalidatePath(`/user/${currentUser.handle}/`);
-	return { success: true };
+	return { success: true, message: "Pages archived successfully" };
 }
