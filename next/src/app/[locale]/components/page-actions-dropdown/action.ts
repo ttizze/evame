@@ -24,7 +24,7 @@ export async function togglePublishAction(
 	if (!currentUser || !currentUser.id) {
 		return redirect("/auth/login");
 	}
-	const parsedFormData = await parseFormData(togglePublishSchema, formData);;
+	const parsedFormData = await parseFormData(togglePublishSchema, formData);
 	if (!parsedFormData.success) {
 		return {
 			success: false,

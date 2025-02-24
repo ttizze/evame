@@ -9,12 +9,12 @@ import {
 import { Link } from "@/i18n/routing";
 import type { PageStatus } from "@prisma/client";
 import { MoreVertical } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { DeletePageDialog } from "../delete-page-dialog/delete-page-dialog";
 import { type TogglePublishState, togglePublishAction } from "./action";
-import { useRouter } from "next/navigation";
 interface PageActionsDropdownProps {
 	editPath: string;
 	pageId: number;

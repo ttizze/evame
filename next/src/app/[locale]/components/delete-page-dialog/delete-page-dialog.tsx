@@ -9,11 +9,11 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Loader2, Trash } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useActionState } from "react";
-import { archivePageAction } from "./action";
 import { useEffect } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { archivePageAction } from "./action";
 interface DeletePageDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
@@ -56,11 +56,7 @@ export function DeletePageDialog({
 					</Button>
 					<form action={archiveAction}>
 						<input type="hidden" name="pageIds" value={pageIds.join(",")} />
-						<Button
-							variant="destructive"
-							type="submit"
-							disabled={isArchiving}
-						>
+						<Button variant="destructive" type="submit" disabled={isArchiving}>
 							{isArchiving ? (
 								<Loader2 className="w-4 h-4 mr-2 animate-spin" />
 							) : (
