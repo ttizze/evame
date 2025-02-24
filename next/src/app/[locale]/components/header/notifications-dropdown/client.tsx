@@ -35,7 +35,11 @@ export function NotificationsDropdownClient({
 		(notification) => !notification.read,
 	).length;
 	return (
-		<DropdownMenu data-testid="notifications-menu" onOpenChange={handleClick}>
+		<DropdownMenu
+			data-testid="notifications-menu"
+			onOpenChange={handleClick}
+			modal={false}
+		>
 			<DropdownMenuTrigger asChild>
 				<div className="relative">
 					<Bell data-testid="bell-icon" className="w-6 h-6 cursor-pointer" />
