@@ -49,7 +49,7 @@ export function BaseHeaderLayout({
 					<div className="flex items-center gap-4">
 						{rightExtra}
 						{showUserMenu && currentUser && (
-							<DropdownMenu>
+							<DropdownMenu modal={false}>
 								<DropdownMenuTrigger>
 									<Avatar className="w-6 h-6">
 										<AvatarImage

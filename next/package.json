@@ -93,6 +93,7 @@
 		"sonner": "2.0.1",
 		"tailwind-merge": "3.0.1",
 		"tailwindcss-animate": "1.0.7",
+		"tocbot": "4.35.0",
 		"tsx": "4.19.3",
 		"unified": "11.0.5",
 		"unist-util-visit": "5.0.0",

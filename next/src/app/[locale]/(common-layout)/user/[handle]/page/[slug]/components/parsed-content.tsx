@@ -9,6 +9,7 @@ import parse, {
 	type DOMNode,
 } from "html-react-parser";
 import DOMPurify from "isomorphic-dompurify";
+import { customAlphabet } from "nanoid";
 import Image from "next/image";
 import { memo } from "react";
 import { SegmentAndTranslationSection } from "./segment-and-translation-section";
@@ -33,6 +34,15 @@ export function ParsedContent({
 
 	const options: HTMLReactParserOptions = {
 		replace: (domNode) => {
+			if (domNode.type === "tag" && /^h[1-6]$/.test(domNode.name)) {
+				// 既に id が存在するかチェック
+				if (!domNode.attribs.id) {
+					const ALPHABET =
+						"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+					const uuid = customAlphabet(ALPHABET, 8)();
+					domNode.attribs.id = uuid;
+				}
+			}
 			if (domNode.type === "tag" && domNode.attribs["data-number-id"]) {
 				const number = Number(domNode.attribs["data-number-id"]);
 				const segmentWithTranslation = segmentWithTranslations?.find(
@@ -73,6 +83,5 @@ export function ParsedContent({
 			return domNode;
 		},
 	};
-
-	return parse(sanitizedContent, options);
+	return <span className="js-content">{parse(sanitizedContent, options)}</span>;
 }
