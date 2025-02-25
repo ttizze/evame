@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import * as tocbot from "tocbot";
 import "tocbot/dist/tocbot.css";
 
-export default function PostContent() {
+export default function TableOfContents() {
 	useEffect(() => {
 		// tocbotの初期化
 		tocbot.init({
