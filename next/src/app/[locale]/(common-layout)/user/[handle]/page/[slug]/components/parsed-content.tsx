@@ -34,6 +34,7 @@ export function ParsedContent({
 
 	const options: HTMLReactParserOptions = {
 		replace: (domNode) => {
+			//TOCのためのidを生成
 			if (domNode.type === "tag" && /^h[1-6]$/.test(domNode.name)) {
 				// 既に id が存在するかチェック
 				if (!domNode.attribs.id) {
