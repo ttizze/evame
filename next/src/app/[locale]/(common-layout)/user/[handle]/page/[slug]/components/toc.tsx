@@ -12,7 +12,7 @@ export default function TableOfContents({
 		// Wait for content to be fully rendered
 		const initTocbot = () => {
 			// Check if content exists before initializing
-			if (document.querySelector('.js-content') && !tocInitialized.current) {
+			if (document.querySelector(".js-content") && !tocInitialized.current) {
 				tocbot.init({
 					tocSelector: ".js-toc",
 					contentSelector: ".js-content",
