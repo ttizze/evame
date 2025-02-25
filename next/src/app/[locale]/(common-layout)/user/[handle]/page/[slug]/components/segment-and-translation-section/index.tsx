@@ -46,7 +46,7 @@ export function SegmentAndTranslationSection({
 	return (
 		<>
 			{showOriginal && (
-				<span className="flex items-center">
+				<span className="flex justify-between">
 					<span
 						className={`inline-block ${
 							segmentWithTranslations.segmentTranslationsWithVotes.length ===
@@ -59,7 +59,7 @@ export function SegmentAndTranslationSection({
 						{elements}
 					</span>
 					{isOwner && slug && (
-						<div className="ml-auto">
+						<div className="ml-2">
 							<Link href={`/user/${currentHandle}/page/${slug}/edit`}>
 								<SquarePen className="w-5 h-5" />
 							</Link>
