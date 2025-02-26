@@ -6,7 +6,7 @@ import { StartButton } from "@/app/[locale]/components/start-button";
 import { TranslateActionSection } from "@/app/[locale]/components/translate-action-section";
 import { fetchPageWithTranslations } from "@/app/[locale]/db/queries.server";
 import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/db/queries.server";
-
+import { notFound } from "next/navigation";
 export default async function HeroSection({ locale }: { locale: string }) {
 	const pageSlug = locale === "ja" ? "evame" : "evame-ja";
 	const topPageWithTranslations = await fetchPageWithTranslations(
@@ -15,7 +15,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 		undefined,
 	);
 	if (!topPageWithTranslations) {
-		throw new Response("Not Found", { status: 404 });
+		return notFound();
 	}
 	const pageAITranslationInfo = await fetchLatestPageAITranslationInfo(
 		topPageWithTranslations.page.id,
@@ -26,7 +26,9 @@ export default async function HeroSection({ locale }: { locale: string }) {
 		.sort((a, b) => a.segment.number - b.segment.number);
 
 	if (!title || !text) {
-		throw new Response("Not Found", { status: 404 });
+		const error = new Error("Invalid hero section");
+		error.message = "Invalid hero section";
+		throw error;
 	}
 	const heroTitle = title;
 	const heroText = text;

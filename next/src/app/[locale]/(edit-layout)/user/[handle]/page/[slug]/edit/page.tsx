@@ -12,7 +12,9 @@ const getPageData = cache(async (handle: string, slug: string) => {
 
 	const currentUser = await getCurrentUser();
 	if (currentUser?.handle !== handle) {
-		throw new Response("Unauthorized", { status: 403 });
+		const error = new Error("Unauthorized");
+		error.message = "Unauthorized";
+		throw error;
 	}
 	const [pageWithTitleAndTags, allTags] = await Promise.all([
 		getPageBySlug(slug),
