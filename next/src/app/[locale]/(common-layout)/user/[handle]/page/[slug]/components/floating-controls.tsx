@@ -46,8 +46,7 @@ export function FloatingControls({
 			"drop-shadow-xl dark:drop-shadow-[0_9px_7px_rgba(255,255,255,0.1)] h-12 w-12 rounded-full",
 		toggledOffClasses: `bg-muted after:absolute after:w-full after:h-[1px] after:bg-current after:top-1/2 
 		after:left-0 after:origin-center after:-rotate-45`,
-		containerClasses:
-			`fixed bottom-4 right-4 md:right-auto md:left-1/2 
+		containerClasses: `fixed bottom-4 right-4 md:right-auto md:left-1/2 
 			md:-translate-x-1/2 max-w-prose w-full px-4 md:px-0 
 			duration-300`,
 		tocContainerClasses:
