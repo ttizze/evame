@@ -12,7 +12,7 @@ import { Link } from "@/i18n/routing";
 import type { PageStatus } from "@prisma/client";
 import { Check, Globe, LinkIcon, Loader2, Lock } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 
 interface EditHeaderProps {
@@ -34,6 +34,32 @@ export function EditHeader({
 	>(editPageStatusAction, { success: false });
 	const currentPagePath = usePathname();
 	const pagePath = `/${currentPagePath.split("/").slice(2, -1).join("/")}`;
+	const [isVisible, setIsVisible] = useState(true);
+	const [lastScrollY, setLastScrollY] = useState(0);
+
+	useEffect(() => {
+		const container = document.getElementById("root");
+		if (!container) return;
+
+		const handleScroll = () => {
+			const currentScrollY = container.scrollTop;
+
+			if (currentScrollY < 10) {
+				setIsVisible(true);
+			} else if (currentScrollY < lastScrollY) {
+				// スクロールアップ
+				setIsVisible(true);
+			} else if (currentScrollY > lastScrollY) {
+				// スクロールダウン
+				setIsVisible(false);
+			}
+
+			setLastScrollY(currentScrollY);
+		};
+
+		container.addEventListener("scroll", handleScroll, { passive: true });
+		return () => container.removeEventListener("scroll", handleScroll);
+	}, [lastScrollY]);
 	const renderButtonIcon = () => {
 		if (hasUnsavedChanges) {
 			return <Loader2 className="w-4 h-4 animate-spin" />;
@@ -124,11 +150,15 @@ export function EditHeader({
 	);
 
 	return (
-		<BaseHeaderLayout
-			currentUser={currentUser}
-			leftExtra={leftExtra}
-			rightExtra={rightExtra}
-			showUserMenu={true}
-		/>
+		<div
+			className={`sticky top-0 z-50  ${isVisible ? "translate-y-0" : "-translate-y-full"}`}
+		>
+			<BaseHeaderLayout
+				currentUser={currentUser}
+				leftExtra={leftExtra}
+				rightExtra={rightExtra}
+				showUserMenu={true}
+			/>
+		</div>
 	);
 }
