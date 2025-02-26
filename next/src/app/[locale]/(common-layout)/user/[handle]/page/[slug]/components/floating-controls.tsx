@@ -2,12 +2,10 @@
 import { LikeButton } from "@/app/[locale]/components/like-button/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Languages, List, Text } from "lucide-react"; // List アイコンをインポート
+import { Languages, Text } from "lucide-react";
 import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ShareDialog } from "./share-dialog";
-import Toc from "./toc";
-
 interface FloatingControlsProps {
 	liked: boolean;
 	likeCount: number;
@@ -25,7 +23,6 @@ export function FloatingControls({
 }: FloatingControlsProps) {
 	const [isVisible, setIsVisible] = useState(true);
 	const [lastScrollY, setLastScrollY] = useState(0);
-	const [isTocOpen, setIsTocOpen] = useState(false);
 	const ignoreScrollRef = useRef(false);
 
 	const [showOriginal, setShowOriginal] = useQueryState("showOriginal", {
@@ -77,7 +74,6 @@ export function FloatingControls({
 		} else {
 			// 上方向へのスクロール - コントロールを表示
 			setIsVisible(true);
-			setIsTocOpen(false);
 		}
 
 		// ページ最上部付近（ビューポートの3%以内）では常に表示
@@ -87,20 +83,6 @@ export function FloatingControls({
 
 		setLastScrollY(currentScrollY);
 	}, [lastScrollY]);
-
-	const handleTocItemClick = useCallback(() => {
-		// 一時的にスクロールイベントを無視して、
-		// スクロールによる表示/非表示の切り替えが起きないようにする
-		ignoreScrollRef.current = true;
-
-		// コントロールを非表示にする
-		setIsVisible(false);
-		setIsTocOpen(false);
-		// 少し遅延してからスクロールイベントの監視を再開
-		setTimeout(() => {
-			ignoreScrollRef.current = false;
-		}, 500); // ユーザーがスクロール位置に到達するのに十分な時間
-	}, []);
 
 	useEffect(() => {
 		window.addEventListener("scroll", handleShowFloatingControls, {
@@ -170,27 +152,6 @@ export function FloatingControls({
 			</div>
 		);
 	};
-	const renderToc = () => {
-		if (!isTocOpen) {
-			return (
-				<Button
-					variant="ghost"
-					size="icon"
-					className={`${STYLE.baseClasses} border relative bg-background self-end`}
-					onClick={() => setIsTocOpen(true)}
-					title="Table of Contents"
-				>
-					<List className="h-5 w-5" />
-				</Button>
-			);
-		}
-
-		return (
-			<div className={STYLE.tocContainerClasses}>
-				<Toc onItemClick={handleTocItemClick} />
-			</div>
-		);
-	};
 
 	return (
 		<div
@@ -199,13 +160,7 @@ export function FloatingControls({
 				isVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0",
 			)}
 		>
-			<div className="flex flex-col gap-3">
-				<div className="flex justify-end">
-					{/* 右端に目次ボタンを配置 */}
-					{renderToc()}
-				</div>
-				{renderControlButtons()}
-			</div>
+			{renderControlButtons()}
 		</div>
 	);
 }

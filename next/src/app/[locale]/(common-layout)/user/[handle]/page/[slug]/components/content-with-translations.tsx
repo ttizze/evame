@@ -5,13 +5,13 @@ import {
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { TagList } from "@/app/[locale]/components/tag-list";
 import type { PageWithTranslations } from "@/app/[locale]/types";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from "@/i18n/routing";
 import type {
 	PageAITranslationInfo,
 	UserAITranslationInfo,
 } from "@prisma/client";
+
 import dynamic from "next/dynamic";
+import { SubHeader } from "./sub-header";
 const DynamicTranslateActionSection = dynamic(
 	() =>
 		import("@/app/[locale]/components/translate-action-section").then(
@@ -77,29 +77,7 @@ export async function ContentWithTranslations({
 			<TagList
 				tag={pageWithTranslations.tagPages.map((tagPage) => tagPage.tag)}
 			/>
-
-			<div className="flex items-center not-prose">
-				<Link
-					href={`/user/${pageWithTranslations.user.handle}`}
-					className="flex items-center mr-2 !no-underline hover:text-gray-700"
-				>
-					<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
-						<AvatarImage
-							src={pageWithTranslations.user.image}
-							alt={pageWithTranslations.user.name}
-						/>
-						<AvatarFallback>
-							{pageWithTranslations.user.name.charAt(0).toUpperCase()}
-						</AvatarFallback>
-					</Avatar>
-					<div className="flex flex-col">
-						<span className="text-sm">{pageWithTranslations.user.name}</span>
-						<span className="text-xs text-gray-500">
-							{pageWithTranslations.page.createdAt}
-						</span>
-					</div>
-				</Link>
-			</div>
+			<SubHeader pageWithTranslations={pageWithTranslations} />
 			<DynamicTranslateActionSection
 				pageId={pageWithTranslations.page.id}
 				currentHandle={currentHandle}
