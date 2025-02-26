@@ -60,7 +60,7 @@ export function SubHeader({
 		>
 			<div className="bg-background py-4">
 				<div
-					className={`w-full prose dark:prose-invert sm:prose lg:prose-lg mx-auto 
+					className={`prose dark:prose-invert sm:prose lg:prose-lg mx-auto 
           flex items-center not-prose justify-between relative ${isPinned ? "px-4" : ""}`}
 				>
 					<Link
