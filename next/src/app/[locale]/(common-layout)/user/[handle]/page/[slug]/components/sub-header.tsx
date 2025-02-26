@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { ChevronDown, List } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Headroom from "react-headroom";
 import Toc, { useHasTableOfContents } from "./toc";
 
@@ -16,6 +16,17 @@ export function SubHeader({
 	const [isTocOpen, setIsTocOpen] = useState(false);
 	const [isPinned, setIsPinned] = useState(false);
 	const hasTocContent = useHasTableOfContents();
+	const headerRef = useRef<HTMLDivElement>(null);
+	const [headerOffset, setHeaderOffset] = useState(0);
+
+	useEffect(() => {
+		// コンポーネントがマウントされた後、その位置を取得
+		if (headerRef.current) {
+			const offsetTop =
+				headerRef.current.getBoundingClientRect().top + window.scrollY;
+			setHeaderOffset(offsetTop);
+		}
+	}, []);
 
 	const renderToc = () => {
 		if (!hasTocContent) return null;
@@ -53,41 +64,47 @@ export function SubHeader({
 	};
 
 	return (
-		<Headroom
-			onPin={() => setIsPinned(true)}
-			onUnpin={() => setIsPinned(false)}
-			onUnfix={() => setIsPinned(false)}
-		>
-			<div className="bg-background py-4">
-				<div
-					className={`prose dark:prose-invert sm:prose lg:prose-lg mx-auto 
+		<div ref={headerRef}>
+			<Headroom
+				onPin={() => setIsPinned(true)}
+				onUnpin={() => setIsPinned(false)}
+				onUnfix={() => setIsPinned(false)}
+				pinStart={headerOffset}
+				disable={headerOffset === 0}
+			>
+				<div className="bg-background py-4">
+					<div
+						className={`prose dark:prose-invert sm:prose lg:prose-lg mx-auto 
           flex items-center not-prose justify-between relative ${isPinned ? "px-4" : ""}`}
-				>
-					<Link
-						href={`/user/${pageWithTranslations.user.handle}`}
-						className="flex items-center mr-2 !no-underline hover:text-gray-700"
 					>
-						<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
-							<AvatarImage
-								src={pageWithTranslations.user.image}
-								alt={pageWithTranslations.user.name}
-							/>
-							<AvatarFallback>
-								{pageWithTranslations.user.name.charAt(0).toUpperCase()}
-							</AvatarFallback>
-						</Avatar>
-						<div className="flex flex-col">
-							<span className="text-sm">{pageWithTranslations.user.name}</span>
-							{!isPinned && (
-								<span className="text-xs text-gray-500">
-									{pageWithTranslations.page.createdAt}
+						<Link
+							href={`/user/${pageWithTranslations.user.handle}`}
+							className="flex items-center mr-2 !no-underline hover:text-gray-700"
+						>
+							<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
+								<AvatarImage
+									src={pageWithTranslations.user.image}
+									alt={pageWithTranslations.user.name}
+								/>
+								<AvatarFallback>
+									{pageWithTranslations.user.name.charAt(0).toUpperCase()}
+								</AvatarFallback>
+							</Avatar>
+							<div className="flex flex-col">
+								<span className="text-sm">
+									{pageWithTranslations.user.name}
 								</span>
-							)}
-						</div>
-					</Link>
-					{renderToc()}
+								{!isPinned && (
+									<span className="text-xs text-gray-500">
+										{pageWithTranslations.page.createdAt}
+									</span>
+								)}
+							</div>
+						</Link>
+						{renderToc()}
+					</div>
 				</div>
-			</div>
-		</Headroom>
+			</Headroom>
+		</div>
 	);
 }
