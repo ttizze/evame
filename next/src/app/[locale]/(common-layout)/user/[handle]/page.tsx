@@ -17,6 +17,7 @@ import { getGuestId } from "@/lib/get-guest-id";
 import Linkify from "linkify-react";
 import { Settings } from "lucide-react";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { FollowButton } from "./components/follow-button";
 import { FollowStats } from "./components/follow-stats";
 import { PaginationControls } from "./components/pagination-controls";
@@ -50,13 +51,17 @@ export default async function UserPage({
 }) {
 	const { locale, handle } = await params;
 	const { page = "1" } = await searchParams;
-	if (typeof handle !== "string" || typeof page !== "string") {
-		throw new Error("Invalid handle or page");
+	if (typeof page !== "string") {
+		const error = new Error("Invalid page number");
+		error.message = "Invalid page number";
+		throw error;
 	}
 
 	const pageOwner = await fetchUserByHandle(handle);
 	if (!pageOwner) {
-		throw new Response("Not Found", { status: 404 });
+		const error = new Error("Unauthorized");
+		error.message = "Unauthorized";
+		throw error;
 	}
 
 	const pageSize = 9;
@@ -76,7 +81,7 @@ export default async function UserPage({
 			onlyUserOwn: true,
 			locale,
 		});
-	if (!pagesWithInfo) throw new Response("Not Found", { status: 404 });
+	if (!pagesWithInfo) return notFound();
 	const followCounts = await getFollowCounts(pageOwner.id);
 	const followerList = await fetchFollowerList(pageOwner.id);
 	const followingList = await fetchFollowingList(pageOwner.id);

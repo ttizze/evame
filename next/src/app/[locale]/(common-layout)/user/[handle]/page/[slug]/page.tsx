@@ -76,8 +76,8 @@ export const fetchPageContext = cache(async (slug: string, locale: string) => {
 		currentUser?.id,
 	);
 
-	if (!pageWithTranslations) {
-		return null;
+	if (!pageWithTranslations || pageWithTranslations.page.status === "ARCHIVE") {
+		return notFound();
 	}
 	const pageAITranslationInfo = await fetchLatestPageAITranslationInfo(
 		pageWithTranslations.page.id,
@@ -171,11 +171,10 @@ export default async function Page({ params }: { params: Params }) {
 	} = data;
 
 	const isOwner = pageWithTranslations?.user.handle === currentUser?.handle;
-	if (
-		pageWithTranslations.page.status === "ARCHIVE" ||
-		(!isOwner && pageWithTranslations.page.status !== "PUBLIC")
-	) {
-		throw new Response("Page not found", { status: 404 });
+	if (!isOwner && pageWithTranslations.page.status !== "PUBLIC") {
+		const error = new Error("Unauthorized");
+		error.message = "Unauthorized";
+		throw error;
 	}
 
 	const guestId = await getGuestId();
