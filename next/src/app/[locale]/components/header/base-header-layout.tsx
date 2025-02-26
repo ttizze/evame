@@ -51,10 +51,7 @@ export function BaseHeaderLayout({
 						<DropdownMenu modal={false}>
 							<DropdownMenuTrigger>
 								<Avatar className="w-6 h-6">
-									<AvatarImage
-										src={currentUser.image}
-										alt={currentUser.name}
-									/>
+									<AvatarImage src={currentUser.image} alt={currentUser.name} />
 									<AvatarFallback>
 										{currentUser.handle.charAt(0).toUpperCase()}
 									</AvatarFallback>
