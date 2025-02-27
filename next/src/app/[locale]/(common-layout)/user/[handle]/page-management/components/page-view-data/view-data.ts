@@ -24,10 +24,11 @@ function getCredentialsFromBase64() {
 }
 
 // Google Analytics データ取得関数
-export const getGeoViewData = unstable_cache(
-	async (path: string): Promise<GeoViewData[]> => {
-		try {
-			// サービスアカウント認証と Analytics Data クライアントの初期化
+export const getGeoViewData = (path: string) =>
+	unstable_cache(
+		async (): Promise<GeoViewData[]> => {
+			try {
+				// サービスアカウント認証と Analytics Data クライアントの初期化
 			const analyticsDataClient = new BetaAnalyticsDataClient({
 				credentials: getCredentialsFromBase64(),
 			});
@@ -74,7 +75,7 @@ export const getGeoViewData = unstable_cache(
 			return [];
 		}
 	},
-	["geo-view-data"],
+	["geo-view-data", path],
 	{
 		revalidate: 3600, // 1時間でキャッシュを再検証
 		tags: ["analytics-data"],
