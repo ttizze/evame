@@ -30,14 +30,23 @@ export default async function PageManagementPage({
 	const pagesWithTitleAndViewData = await Promise.all(
 		pagesWithTitle.map(async (pageData) => {
 			const path = `/user/${currentUser.handle}/page/${pageData.slug}`;
-			const geoViewData = await getGeoViewData(path);
-			const totalViews = geoViewData.reduce((sum, item) => sum + item.views, 0);
-
-			return {
-				...pageData,
-				viewCount: totalViews,
-				geoViewData,
-			};
+			try {
+				const geoViewData = await getGeoViewData(path);
+				const totalViews = geoViewData.reduce((sum, item) => sum + item.views, 0);
+				
+				return {
+					...pageData,
+					viewCount: totalViews,
+					geoViewData,
+				};
+			} catch (error) {
+				console.error(`Failed to fetch view data for ${path}:`, error);
+				return {
+					...pageData,
+					viewCount: 0,
+					geoViewData: [],
+				};
+			}
 		}),
 	);
 
