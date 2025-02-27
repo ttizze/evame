@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { PageManagementTab } from "./components/page-management-tab";
+import { getGeoViewData } from "./components/page-view-data/view-data";
 import { fetchPaginatedOwnPages } from "./db/queries.server";
-
 export default async function PageManagementPage({
 	params,
 	searchParams,
@@ -27,6 +27,31 @@ export default async function PageManagementPage({
 			10,
 			query,
 		);
+	const pagesWithTitleAndViewData = await Promise.all(
+		pagesWithTitle.map(async (pageData) => {
+			const path = `/user/${currentUser.handle}/page/${pageData.slug}`;
+			try {
+				const geoViewData = await getGeoViewData(path);
+				const totalViews = geoViewData.reduce(
+					(sum, item) => sum + item.views,
+					0,
+				);
+
+				return {
+					...pageData,
+					viewCount: totalViews,
+					geoViewData,
+				};
+			} catch (error) {
+				console.error(`Failed to fetch view data for ${path}:`, error);
+				return {
+					...pageData,
+					viewCount: 0,
+					geoViewData: [],
+				};
+			}
+		}),
+	);
 
 	return (
 		<div className="mx-auto max-w-4xl py-10">
@@ -39,26 +64,12 @@ export default async function PageManagementPage({
 
 			{/* <TabsContent value="page-management"> */}
 			<PageManagementTab
-				pagesWithTitle={pagesWithTitle}
+				pagesWithTitleAndViewData={pagesWithTitleAndViewData}
 				totalPages={totalPages}
 				currentPage={currentPage}
 				handle={currentUser.handle}
 			/>
 			{/* </TabsContent> */}
-
-			{/* <TabsContent value="folder-upload">
-					{hasGeminiApiKey ? (
-						<FolderUploadTab />
-					) : (
-						<div className="p-4 text-center text-red-500">
-							Gemini API key is not set
-						</div>
-					)}
-				</TabsContent>
-
-				<TabsContent value="github-integration">
-					<GitHubIntegrationTab />
-				</TabsContent> */}
 			{/* </Tabs> */}
 		</div>
 	);
