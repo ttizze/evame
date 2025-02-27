@@ -11,7 +11,6 @@ import { Separator } from "@/components/ui/separator";
 import { Link } from "@/i18n/routing";
 import type { PageStatus } from "@prisma/client";
 import {
-	ArrowRight,
 	Check,
 	Globe,
 	InfoIcon,
@@ -113,8 +112,8 @@ export function EditHeader({
 					<span>{initialStatus === "PUBLIC" ? "Public" : "Private"}</span>
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="w-34 rounded-xl p-1" align="end">
-				<div className="space-y-1 p-1">
+			<PopoverContent className="w-38 rounded-xl py-1 px-3" align="end">
+				<div className="space-y-1">
 					<form action={action}>
 						<input
 							type="hidden"
@@ -136,9 +135,9 @@ export function EditHeader({
 								<PopoverTrigger asChild>
 									<button
 										type="button"
-										className="text-xs text-muted-foreground hover:text-foreground flex items-center"
+										className="ml-3 text-muted-foreground hover:text-foreground flex items-center"
 									>
-										<InfoIcon className="h-3.5 w-3.5" />
+										<InfoIcon className="h-4 w-4" />
 									</button>
 								</PopoverTrigger>
 								<PopoverContent
@@ -151,12 +150,10 @@ export function EditHeader({
 									</div>
 
 									<div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-										<span>Public</span>
-										<ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
 										<span>Translates to:</span>
 									</div>
 
-									<div className="bg-secondary/40 rounded-lg p-2">
+									<div className="bg-secondary/80 rounded-lg p-2">
 										<div className="grid grid-cols-4 gap-2 text-center">
 											<div className="text-xs font-medium">EN</div>
 											<div className="text-xs font-medium">JP</div>

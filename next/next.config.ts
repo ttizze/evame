@@ -8,6 +8,11 @@ const analyzeBundles = withBundleAnalyzer({
 });
 /** @type {import('next').NextConfig} */
 const config: NextConfig = {
+	logging: {
+		fetches: {
+			fullUrl: true,
+		},
+	},
 	experimental: {
 		serverActions: {
 			bodySizeLimit: "5mb",

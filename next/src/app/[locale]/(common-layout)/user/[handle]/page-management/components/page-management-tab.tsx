@@ -34,9 +34,6 @@ export function PageManagementTab({
 			shallow: false,
 		}),
 	);
-	const handlePageChange = (newPage: number) => {
-		setPage(newPage);
-	};
 
 	const getStatusBadge = (status: PageStatus) => {
 		if (status === "PUBLIC") {
@@ -100,7 +97,7 @@ export function PageManagementTab({
 				<PaginationBar
 					totalPages={totalPages}
 					currentPage={currentPage}
-					onPageChange={handlePageChange}
+					onPageChange={setPage}
 				/>
 			</div>
 		</div>
