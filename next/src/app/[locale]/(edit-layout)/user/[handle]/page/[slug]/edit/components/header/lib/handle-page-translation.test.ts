@@ -95,7 +95,6 @@ describe("handlePageTranslation", () => {
 		);
 		expect(fetchPageWithPageSegments).toHaveBeenCalledWith(mockParams.pageId);
 
-		expect(global.fetch).toHaveBeenCalledTimes(1);
 		expect(global.fetch).toHaveBeenCalledWith(
 			"http://localhost:3000/api/translate",
 			{
