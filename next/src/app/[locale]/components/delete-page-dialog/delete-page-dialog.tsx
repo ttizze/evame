@@ -51,20 +51,31 @@ export function DeletePageDialog({
 					</DialogDescription>
 				</DialogHeader>
 				<DialogFooter>
-					<Button variant="outline" onClick={() => onOpenChange(false)}>
-						Cancel
-					</Button>
-					<form action={archiveAction}>
-						<input type="hidden" name="pageIds" value={pageIds.join(",")} />
-						<Button variant="destructive" type="submit" disabled={isArchiving}>
-							{isArchiving ? (
-								<Loader2 className="w-4 h-4 mr-2 animate-spin" />
-							) : (
-								<Trash className="w-4 h-4 mr-2" />
-							)}
-							Delete
+					<div className="flex items-center justify-between gap-2 w-full">
+						<Button
+							variant="outline"
+							className="w-1/2"
+							onClick={() => onOpenChange(false)}
+						>
+							Cancel
 						</Button>
-					</form>
+						<form action={archiveAction} className="w-1/2">
+							<input type="hidden" name="pageIds" value={pageIds.join(",")} />
+							<Button
+								variant="destructive"
+								type="submit"
+								className="w-full"
+								disabled={isArchiving}
+							>
+								{isArchiving ? (
+									<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+								) : (
+									<Trash className="w-4 h-4 mr-2" />
+								)}
+								Delete
+							</Button>
+						</form>
+					</div>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>
