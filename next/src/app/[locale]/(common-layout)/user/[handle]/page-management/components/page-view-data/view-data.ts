@@ -5,19 +5,22 @@ export interface GeoViewData {
 	views: number;
 }
 function getCredentialsFromBase64() {
-  try {
-    const base64Credentials = process.env.GOOGLE_ANALYTICS_CREDENTIALS_BASE64;
-    if (!base64Credentials) {
-      throw new Error("GOOGLE_ANALYTICS_CREDENTIALS_BASE64 is not defined");
-    }
-    
-    // Base64をデコードしてJSONに変換
-    const decodedCredentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
-    return JSON.parse(decodedCredentials);
-  } catch (error) {
-    console.error("Failed to parse Google credentials:", error);
-    throw new Error("Invalid Google credentials format");
-  }
+	try {
+		const base64Credentials = process.env.GOOGLE_ANALYTICS_CREDENTIALS_BASE64;
+		if (!base64Credentials) {
+			throw new Error("GOOGLE_ANALYTICS_CREDENTIALS_BASE64 is not defined");
+		}
+
+		// Base64をデコードしてJSONに変換
+		const decodedCredentials = Buffer.from(
+			base64Credentials,
+			"base64",
+		).toString("utf-8");
+		return JSON.parse(decodedCredentials);
+	} catch (error) {
+		console.error("Failed to parse Google credentials:", error);
+		throw new Error("Invalid Google credentials format");
+	}
 }
 
 // Google Analytics データ取得関数
