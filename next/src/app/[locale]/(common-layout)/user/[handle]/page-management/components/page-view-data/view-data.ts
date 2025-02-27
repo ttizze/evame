@@ -1,5 +1,5 @@
 import { BetaAnalyticsDataClient } from "@google-analytics/data";
-
+import { unstable_cache } from "next/cache";
 export interface GeoViewData {
 	country: string;
 	views: number;
@@ -24,10 +24,11 @@ function getCredentialsFromBase64() {
 }
 
 // Google Analytics データ取得関数
-export async function getGeoViewData(path: string): Promise<GeoViewData[]> {
-	try {
-		// サービスアカウント認証と Analytics Data クライアントの初期化
-		const analyticsDataClient = new BetaAnalyticsDataClient({
+export const getGeoViewData = unstable_cache(
+	async (path: string): Promise<GeoViewData[]> => {
+		try {
+			// サービスアカウント認証と Analytics Data クライアントの初期化
+			const analyticsDataClient = new BetaAnalyticsDataClient({
 			credentials: getCredentialsFromBase64(),
 		});
 
@@ -72,4 +73,10 @@ export async function getGeoViewData(path: string): Promise<GeoViewData[]> {
 		console.error("Analytics API error:", error);
 		return [];
 	}
-}
+	},
+	['geo-view-data'],
+  {
+		revalidate: 3600, // 1時間でキャッシュを再検証
+		tags: ["analytics-data"],
+	},
+);
