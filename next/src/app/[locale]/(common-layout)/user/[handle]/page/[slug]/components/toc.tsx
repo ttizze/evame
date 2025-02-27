@@ -19,7 +19,7 @@ export default function TableOfContents({
 			orderedList: false,
 			hasInnerContainers: true,
 			headingLabelCallback: (text) => {
-				return text.length > 20 ? `${text.substring(0, 20)}...` : text;
+				return text.length > 40 ? `${text.substring(0, 40)}...` : text;
 			},
 			onClick: (e) => {
 				if (onItemClick) {
@@ -29,6 +29,16 @@ export default function TableOfContents({
 			scrollSmoothOffset: -70,
 		});
 
+		// Add custom styling for the TOC with a unique ID
+		const style = document.createElement("style");
+		style.id = "toc-custom-style";
+		style.innerHTML = `
+			.toc-link {
+				white-space: pre-wrap;
+			}
+		`;
+		document.head.appendChild(style);
+
 		// Clean up on unmount
 		return () => {
 			tocbot.destroy();
@@ -37,6 +47,7 @@ export default function TableOfContents({
 
 	return <nav className="js-toc" />;
 }
+
 export function useHasTableOfContents(): boolean {
 	const [hasHeadings, setHasHeadings] = useState(false);
 

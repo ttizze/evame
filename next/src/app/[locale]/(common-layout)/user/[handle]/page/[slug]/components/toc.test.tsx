@@ -93,7 +93,9 @@ describe("TableOfContents", () => {
 			// 長いテキストは切り詰められる
 			const longText =
 				"This is a very long heading text that should be truncated";
-			expect(headingLabelCallback(longText)).toBe("This is a very long ...");
+			expect(headingLabelCallback(longText)).toBe(
+				"This is a very long heading text that sh...",
+			);
 		} else {
 			throw new Error("headingLabelCallback is undefined");
 		}
