@@ -32,8 +32,11 @@ export default async function PageManagementPage({
 			const path = `/user/${currentUser.handle}/page/${pageData.slug}`;
 			try {
 				const geoViewData = await getGeoViewData(path);
-				const totalViews = geoViewData.reduce((sum, item) => sum + item.views, 0);
-				
+				const totalViews = geoViewData.reduce(
+					(sum, item) => sum + item.views,
+					0,
+				);
+
 				return {
 					...pageData,
 					viewCount: totalViews,
