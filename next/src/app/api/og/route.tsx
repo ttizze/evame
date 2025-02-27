@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { fetchPageContext } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/page";
 import { ImageResponse } from "next/og";
 
+export const revalidate = 3600;
 export async function GET(req: Request): Promise<Response> {
 	const { searchParams } = new URL(req.url);
 	const interFontSemiBold = await readFile(

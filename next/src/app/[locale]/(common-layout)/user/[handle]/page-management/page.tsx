@@ -1,4 +1,5 @@
-import { auth } from "@/auth";
+import { getCurrentUser } from "@/auth";
+import { redirect } from "next/navigation";
 import { PageManagementTab } from "./components/page-management-tab";
 import { getGeoViewData } from "./components/page-view-data/view-data";
 import { fetchPaginatedOwnPages } from "./db/queries.server";
@@ -9,10 +10,9 @@ export default async function PageManagementPage({
 	params: Promise<{ locale: string }>;
 	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-	const session = await auth();
-	const currentUser = session?.user;
+	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		throw new Error("Unauthorized");
+		return redirect("/auth/login");
 	}
 	const { locale } = await params;
 	const { page = "1", query = "" } = await searchParams;

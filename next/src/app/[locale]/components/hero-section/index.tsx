@@ -7,6 +7,8 @@ import { TranslateActionSection } from "@/app/[locale]/components/translate-acti
 import { fetchPageWithTranslations } from "@/app/[locale]/db/queries.server";
 import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/db/queries.server";
 import { notFound } from "next/navigation";
+
+export const revalidate = 3600;
 export default async function HeroSection({ locale }: { locale: string }) {
 	const pageSlug = locale === "ja" ? "evame" : "evame-ja";
 	const topPageWithTranslations = await fetchPageWithTranslations(
