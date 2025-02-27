@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { PageStatus } from "@prisma/client";
-
+import type { GeoViewData } from "../components/page-view-data/view-data";
 export const getDbUser = async (userId: string) => {
 	return await prisma.user.findUnique({ where: { id: userId } });
 };
@@ -71,3 +71,10 @@ export async function fetchPaginatedOwnPages(
 		currentPage: page,
 	};
 }
+
+export type PageWithTitleAndViewData = Awaited<
+	ReturnType<typeof fetchPaginatedOwnPages>
+>["pagesWithTitle"][number] & {
+	viewCount: number;
+	geoViewData: GeoViewData[];
+};
