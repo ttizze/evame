@@ -9,9 +9,8 @@ beforeAll(() => {
 
 	// 必要な環境変数が設定されているか確認
 	const requiredEnvVars = [
-		"GOOGLE_CLIENT_EMAIL",
-		"GOOGLE_PRIVATE_KEY",
-		"GA4_PROPERTY_ID",
+		"GOOGLE_ANALYTICS_CREDENTIALS_BASE64",
+		"GOOGLE_ANALYTICS_PROPERTY_ID",
 	];
 
 	const missingVars = requiredEnvVars.filter(

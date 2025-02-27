@@ -4,20 +4,32 @@ export interface GeoViewData {
 	country: string;
 	views: number;
 }
+function getCredentialsFromBase64() {
+  try {
+    const base64Credentials = process.env.GOOGLE_ANALYTICS_CREDENTIALS_BASE64;
+    if (!base64Credentials) {
+      throw new Error("GOOGLE_ANALYTICS_CREDENTIALS_BASE64 is not defined");
+    }
+    
+    // Base64をデコードしてJSONに変換
+    const decodedCredentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
+    return JSON.parse(decodedCredentials);
+  } catch (error) {
+    console.error("Failed to parse Google credentials:", error);
+    throw new Error("Invalid Google credentials format");
+  }
+}
 
 // Google Analytics データ取得関数
 export async function getGeoViewData(path: string): Promise<GeoViewData[]> {
 	try {
 		// サービスアカウント認証と Analytics Data クライアントの初期化
 		const analyticsDataClient = new BetaAnalyticsDataClient({
-			credentials: {
-				client_email: process.env.GOOGLE_CLIENT_EMAIL,
-				private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-			},
+			credentials: getCredentialsFromBase64(),
 		});
 
 		// 地域別ページビューデータを取得
-		const propertyId = process.env.GA4_PROPERTY_ID;
+		const propertyId = process.env.GOOGLE_ANALYTICS_PROPERTY_ID;
 
 		if (!propertyId) {
 			throw new Error("GA4_PROPERTY_ID is not defined");
