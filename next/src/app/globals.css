@@ -104,6 +104,9 @@ body.virtual-keyboard-shown {
 .toc-link {
 	@apply !no-underline;
 	@apply whitespace-pre-wrap;
+	@apply block;
+	@apply mb-3;
+	@apply leading-tight;
 }
 .toc-link:before {
 	@apply !hidden;
