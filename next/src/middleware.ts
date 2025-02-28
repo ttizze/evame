@@ -6,5 +6,5 @@ const handleI18nRouting = createMiddleware(routing);
 export default auth(handleI18nRouting);
 
 export const config = {
-	matcher: ["/((?!api|_next|_vercel|monitoring|.*\\..*).*)"],
+	matcher: ["/((?!api|_next|_vercel|privacy|terms|monitoring|.*\\..*).*)"],
 };
