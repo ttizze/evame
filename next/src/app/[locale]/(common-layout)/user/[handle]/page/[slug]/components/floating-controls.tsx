@@ -11,7 +11,6 @@ interface FloatingControlsProps {
 	likeCount: number;
 	slug: string;
 	shareTitle: string;
-	firstImageUrl: string | undefined;
 }
 
 export function FloatingControls({
@@ -19,7 +18,6 @@ export function FloatingControls({
 	likeCount,
 	slug,
 	shareTitle,
-	firstImageUrl,
 }: FloatingControlsProps) {
 	const [isVisible, setIsVisible] = useState(true);
 	const [lastScrollY, setLastScrollY] = useState(0);
@@ -148,7 +146,7 @@ export function FloatingControls({
 
 				{/* シェアボタン */}
 				<div className={STYLE.baseClasses}>
-					<ShareDialog title={shareTitle} firstImageUrl={firstImageUrl} />
+					<ShareDialog title={shareTitle} />
 				</div>
 			</div>
 		);
