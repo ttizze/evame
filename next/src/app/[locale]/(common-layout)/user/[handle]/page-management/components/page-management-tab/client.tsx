@@ -8,20 +8,21 @@ import { Link } from "@/i18n/routing";
 import type { PageStatus } from "@prisma/client";
 import { EyeIcon } from "lucide-react";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
-import type { PageWithTitleAndViewData } from "../db/queries.server";
-interface PageManagementTabProps {
+import type { PageWithTitleAndViewData } from "../../db/queries.server";
+
+interface PageManagementTabClientProps {
 	pagesWithTitleAndViewData: PageWithTitleAndViewData[];
 	totalPages: number;
 	currentPage: number;
 	handle: string;
 }
 
-export function PageManagementTab({
+export function PageManagementTabClient({
 	pagesWithTitleAndViewData,
 	totalPages,
 	currentPage,
 	handle,
-}: PageManagementTabProps) {
+}: PageManagementTabClientProps) {
 	const [query, setQuery] = useQueryState(
 		"query",
 		parseAsString.withOptions({
