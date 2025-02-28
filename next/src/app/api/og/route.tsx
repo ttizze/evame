@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { fetchPageContext } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/page";
+import { fetchPageContext } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/lib/fetch-page-context";
 import { ImageResponse } from "next/og";
 
 export const revalidate = 3600;
@@ -14,10 +14,13 @@ export async function GET(req: Request): Promise<Response> {
 	);
 	const locale: string = searchParams.get("locale") || "en";
 	const slug: string = searchParams.get("slug") || "";
+	const showTranslation: boolean =
+		searchParams.get("showTranslation") === "true";
+	const showOriginal: boolean = searchParams.get("showOriginal") === "true";
 	const [logoData, faviconData, pageContext] = await Promise.all([
 		readFile(join(process.cwd(), "public", "logo.png")),
 		readFile(join(process.cwd(), "public", "bg-ogp.png")),
-		fetchPageContext(slug, locale),
+		fetchPageContext(slug, locale, showOriginal, showTranslation),
 	]);
 
 	const logoSrc = Uint8Array.from(logoData).buffer;
@@ -35,10 +38,8 @@ export async function GET(req: Request): Promise<Response> {
 			},
 		);
 	}
-	const { pageWithTranslations, sourceTitleWithBestTranslationTitle } =
-		pageContext;
+	const { pageWithTranslations, title } = pageContext;
 	const pageOwner = pageWithTranslations.user;
-	const title = sourceTitleWithBestTranslationTitle;
 
 	return new ImageResponse(
 		<div

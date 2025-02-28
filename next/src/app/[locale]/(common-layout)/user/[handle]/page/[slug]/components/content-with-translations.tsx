@@ -4,13 +4,9 @@ import {
 	VOTE_TARGET,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { TagList } from "@/app/[locale]/components/tag-list";
-import type { PageWithTranslations } from "@/app/[locale]/types";
-import type {
-	PageAITranslationInfo,
-	UserAITranslationInfo,
-} from "@prisma/client";
-
 import dynamic from "next/dynamic";
+import { notFound } from "next/navigation";
+import { fetchPageContext } from "../lib/fetch-page-context";
 import { SubHeader } from "./sub-header";
 const DynamicTranslateActionSection = dynamic(
 	() =>
@@ -39,18 +35,34 @@ const DynamicSegmentAndTranslationSection = dynamic(
 );
 
 interface ContentWithTranslationsProps {
-	pageWithTranslations: PageWithTranslations;
-	currentHandle: string | undefined;
-	userAITranslationInfo: UserAITranslationInfo | null;
-	pageAITranslationInfo: PageAITranslationInfo[];
+	slug: string;
+	locale: string;
+	showOriginal: boolean;
+	showTranslation: boolean;
 }
 
 export async function ContentWithTranslations({
-	pageWithTranslations,
-	currentHandle,
-	userAITranslationInfo,
-	pageAITranslationInfo,
+	slug,
+	locale,
+	showOriginal,
+	showTranslation,
 }: ContentWithTranslationsProps) {
+	const data = await fetchPageContext(
+		slug,
+		locale,
+		showOriginal,
+		showTranslation,
+	);
+	if (!data) {
+		return notFound();
+	}
+	const {
+		pageWithTranslations,
+		currentUser,
+		pageAITranslationInfo,
+		userAITranslationInfo,
+	} = data;
+
 	const pageSegmentTitleWithTranslations =
 		pageWithTranslations.segmentWithTranslations.filter(
 			(item) => item.segment?.number === 0,
@@ -64,8 +76,8 @@ export async function ContentWithTranslations({
 						segmentWithTranslations={pageSegmentTitleWithTranslations}
 						showLockIcon={pageWithTranslations.page.status === "DRAFT"}
 						elements={pageSegmentTitleWithTranslations?.segment.text}
-						currentHandle={currentHandle}
-						isOwner={pageWithTranslations.user.handle === currentHandle}
+						currentHandle={currentUser?.handle}
+						isOwner={pageWithTranslations.user.handle === currentUser?.handle}
 						slug={pageWithTranslations.page.slug}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 						addTranslationFormTarget={
@@ -80,7 +92,7 @@ export async function ContentWithTranslations({
 			<SubHeader pageWithTranslations={pageWithTranslations} />
 			<DynamicTranslateActionSection
 				pageId={pageWithTranslations.page.id}
-				currentHandle={currentHandle}
+				currentHandle={currentUser?.handle}
 				userAITranslationInfo={userAITranslationInfo}
 				sourceLocale={pageWithTranslations.page.sourceLocale}
 				pageAITranslationInfo={pageAITranslationInfo}
@@ -91,7 +103,7 @@ export async function ContentWithTranslations({
 			<DynamicMemoizedParsedContent
 				html={pageWithTranslations.page.content}
 				segmentWithTranslations={pageWithTranslations.segmentWithTranslations}
-				currentHandle={currentHandle}
+				currentHandle={currentUser?.handle}
 				voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 				addTranslationFormTarget={
 					ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION

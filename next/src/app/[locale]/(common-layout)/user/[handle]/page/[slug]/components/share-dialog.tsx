@@ -22,10 +22,9 @@ import { toast } from "sonner";
 
 interface ShareDialogProps {
 	title: string;
-	firstImageUrl?: string;
 }
 
-export function ShareDialog({ title, firstImageUrl }: ShareDialogProps) {
+export function ShareDialog({ title }: ShareDialogProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
