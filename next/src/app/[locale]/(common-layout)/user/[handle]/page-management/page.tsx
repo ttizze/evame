@@ -1,8 +1,27 @@
 import { getCurrentUser } from "@/auth";
+import { Skeleton } from "@/components/ui/skeleton";
+import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
-import { PageManagementTab } from "./components/page-management-tab";
-import { getGeoViewData } from "./components/page-view-data/view-data";
-import { fetchPaginatedOwnPages } from "./db/queries.server";
+
+const PageManagementTab = dynamic(
+	() =>
+		import("./components/page-management-tab/server").then(
+			(mod) => mod.PageManagementTab,
+		),
+	{
+		loading: () => (
+			<div className="flex flex-col gap-4">
+				<Skeleton className="h-[100px] w-full" />
+				<Skeleton className="h-[100px] w-full" />
+				<Skeleton className="h-[100px] w-full" />
+				<Skeleton className="h-[100px] w-full" />
+				<Skeleton className="h-[100px] w-full" />
+				<Skeleton className="h-[100px] w-full" />
+				<Skeleton className="h-[100px] w-full" />
+			</div>
+		),
+	},
+);
 export default async function PageManagementPage({
 	params,
 	searchParams,
@@ -19,39 +38,6 @@ export default async function PageManagementPage({
 	if (typeof page !== "string" || typeof query !== "string") {
 		throw new Error("Invalid page or query");
 	}
-	const { pagesWithTitle, totalPages, currentPage } =
-		await fetchPaginatedOwnPages(
-			currentUser.id,
-			locale,
-			Number(page),
-			10,
-			query,
-		);
-	const pagesWithTitleAndViewData = await Promise.all(
-		pagesWithTitle.map(async (pageData) => {
-			const path = `/user/${currentUser.handle}/page/${pageData.slug}`;
-			try {
-				const geoViewData = await getGeoViewData(path);
-				const totalViews = geoViewData.reduce(
-					(sum, item) => sum + item.views,
-					0,
-				);
-
-				return {
-					...pageData,
-					viewCount: totalViews,
-					geoViewData,
-				};
-			} catch (error) {
-				console.error(`Failed to fetch view data for ${path}:`, error);
-				return {
-					...pageData,
-					viewCount: 0,
-					geoViewData: [],
-				};
-			}
-		}),
-	);
 
 	return (
 		<div className="mx-auto max-w-4xl py-10">
@@ -64,9 +50,10 @@ export default async function PageManagementPage({
 
 			{/* <TabsContent value="page-management"> */}
 			<PageManagementTab
-				pagesWithTitleAndViewData={pagesWithTitleAndViewData}
-				totalPages={totalPages}
-				currentPage={currentPage}
+				currentUserId={currentUser.id}
+				locale={locale}
+				page={page}
+				query={query}
 				handle={currentUser.handle}
 			/>
 			{/* </TabsContent> */}
