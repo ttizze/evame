@@ -57,9 +57,9 @@ export function SubHeader({
 	return (
 		<div ref={headerRef}>
 			<div
-				className={`transition-all duration-300 ${
-					!isVisible ? "-translate-y-full" : "translate-y-0"
-				} ${isPinned ? "fixed top-0 left-0 right-0 z-50 shadow-md" : ""} bg-background py-4`}
+				className={`transition-all duration-300 z-[999] ${
+					!isVisible ? "-translate-y-full" : ""
+				}	${isPinned ? "fixed top-0 left-0 right-0  shadow-md" : ""} bg-background py-4`}
 			>
 				<div
 					className={`prose dark:prose-invert sm:prose lg:prose-lg mx-auto 

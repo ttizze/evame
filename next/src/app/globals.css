@@ -101,19 +101,22 @@ body.virtual-keyboard-shown {
 	margin-top: var(--visual-viewport-offset-top, 0px);
 }
 
+.toc-link {
+	@apply !no-underline;
+	@apply whitespace-pre-wrap;
+}
 .toc-link:before {
 	@apply !hidden;
 }
 
-.toc-list {
-	@apply text-slate-400 !list-none;
-}
-.toc-link {
-	@apply !no-underline;
-}
 .toc-link:hover {
 	@apply !underline;
 }
+
+.toc-list {
+	@apply text-slate-400;
+}
+
 .is-active-link {
 	@apply !text-primary;
 }

@@ -29,16 +29,6 @@ export default function TableOfContents({
 			scrollSmoothOffset: -70,
 		});
 
-		// Add custom styling for the TOC with a unique ID
-		const style = document.createElement("style");
-		style.id = "toc-custom-style";
-		style.innerHTML = `
-			.toc-link {
-				white-space: pre-wrap;
-			}
-		`;
-		document.head.appendChild(style);
-
 		// Clean up on unmount
 		return () => {
 			tocbot.destroy();
