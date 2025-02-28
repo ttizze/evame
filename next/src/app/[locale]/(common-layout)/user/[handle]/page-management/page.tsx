@@ -2,7 +2,8 @@ import { getCurrentUser } from "@/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
-
+import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
+import type { SearchParams } from "nuqs/server";
 const PageManagementTab = dynamic(
 	() =>
 		import("./components/page-management-tab/server").then(
@@ -22,22 +23,26 @@ const PageManagementTab = dynamic(
 		),
 	},
 );
+
+const searchParamsSchema = {
+	page: parseAsInteger.withDefault(1),
+	query: parseAsString.withDefault(""),
+};
+const loadSearchParams = createLoader(searchParamsSchema);
+
 export default async function PageManagementPage({
 	params,
 	searchParams,
 }: {
 	params: Promise<{ locale: string }>;
-	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+	searchParams: Promise<SearchParams>;
 }) {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
 		return redirect("/auth/login");
 	}
 	const { locale } = await params;
-	const { page = "1", query = "" } = await searchParams;
-	if (typeof page !== "string" || typeof query !== "string") {
-		throw new Error("Invalid page or query");
-	}
+	const { page, query } = await loadSearchParams(searchParams);
 
 	return (
 		<div className="mx-auto max-w-4xl py-10">

@@ -1,31 +1,30 @@
-import { PageCard } from "@/app/[locale]/components/page-card";
-import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/db/queries.server";
 import { fetchUserByHandle } from "@/app/db/queries.server";
-import { getCurrentUser } from "@/auth";
-import { Link } from "@/i18n/routing";
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Card } from "@/components/ui/card";
-import { getGuestId } from "@/lib/get-guest-id";
-import Linkify from "linkify-react";
-import { Settings } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
-import { FollowButton } from "./components/follow-button";
-import { FollowStats } from "./components/follow-stats";
-import { PaginationControls } from "./components/pagination-controls";
-import {
-	fetchFollowerList,
-	fetchFollowingList,
-	getFollowCounts,
-} from "./db/queries.server";
+import { createLoader, parseAsInteger } from "nuqs/server";
+import type { SearchParams } from "nuqs/server";
+const PageList = dynamic(
+	() =>
+		import("./components/page-list.server").then((mod) => mod.PageListServer),
+	{
+		loading: () => (
+			<div className="flex flex-col gap-4">
+				<Skeleton className="h-[100px] w-full" />
+				<Skeleton className="h-[100px] w-full" />
+				<Skeleton className="h-[100px] w-full" />
+			</div>
+		),
+	},
+);
+const UserInfo = dynamic(
+	() => import("./components/user-info.server").then((mod) => mod.UserInfo),
+	{
+		loading: () => <Skeleton className="h-[200px] w-full mb-4" />,
+	},
+);
+
 export async function generateMetadata({
 	params,
 }: {
@@ -33,150 +32,34 @@ export async function generateMetadata({
 }): Promise<Metadata> {
 	const { handle } = await params;
 	if (!handle) {
-		return { title: "Profile" };
+		return notFound();
 	}
 	const pageOwner = await fetchUserByHandle(handle);
 	if (!pageOwner) {
-		return { title: "Not Found" };
+		return notFound();
 	}
 	return { title: pageOwner.name };
 }
+
+const searchParamsSchema = {
+	page: parseAsInteger.withDefault(1),
+};
+const loadSearchParams = createLoader(searchParamsSchema);
 
 export default async function UserPage({
 	params,
 	searchParams,
 }: {
 	params: Promise<{ locale: string; handle: string }>;
-	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+	searchParams: Promise<SearchParams>;
 }) {
 	const { locale, handle } = await params;
-	const { page = "1" } = await searchParams;
-	if (typeof page !== "string") {
-		const error = new Error("Invalid page number");
-		error.message = "Invalid page number";
-		throw error;
-	}
-
-	const pageOwner = await fetchUserByHandle(handle);
-	if (!pageOwner) {
-		const error = new Error("Unauthorized");
-		error.message = "Unauthorized";
-		throw error;
-	}
-
-	const pageSize = 9;
-
-	const currentUser = await getCurrentUser();
-	const guestId = !currentUser ? await getGuestId() : undefined;
-
-	const isOwner = currentUser?.handle === handle;
-
-	const { pagesWithInfo, totalPages, currentPage } =
-		await fetchPaginatedPublicPagesWithInfo({
-			page: Number(page),
-			pageSize,
-			currentUserId: currentUser?.id,
-			currentGuestId: guestId,
-			pageOwnerId: pageOwner.id,
-			onlyUserOwn: true,
-			locale,
-		});
-	if (!pagesWithInfo) return notFound();
-	const followCounts = await getFollowCounts(pageOwner.id);
-	const followerList = await fetchFollowerList(pageOwner.id);
-	const followingList = await fetchFollowingList(pageOwner.id);
+	const { page } = await loadSearchParams(searchParams);
 
 	return (
-		<div>
-			<Card className="mb-8">
-				<CardHeader className="pb-4">
-					<div className="flex w-full flex-col md:flex-row">
-						<div>
-							<Link href={`${pageOwner.image}`}>
-								<Avatar className="w-20 h-20 md:w-24 md:h-24">
-									<AvatarImage src={pageOwner.image} alt={pageOwner.name} />
-									<AvatarFallback>
-										{pageOwner.name.charAt(0).toUpperCase()}
-									</AvatarFallback>
-								</Avatar>
-							</Link>
-						</div>
-						<div className="mt-2 md:mt-0 md:ml-4 flex items-center justify-between w-full">
-							<div>
-								<CardTitle className="text-xl md:text-2xl font-bold">
-									{pageOwner.name}
-								</CardTitle>
-								<div>
-									<CardDescription className="text-sm text-gray-500">
-										@{pageOwner.handle}
-									</CardDescription>
-									<FollowStats
-										followingCount={followCounts.following}
-										followersCount={followCounts.followers}
-										followingList={followingList.map((item) => ({
-											handle: item.following.handle,
-											name: item.following.name,
-											image: item.following.image,
-										}))}
-										followerList={followerList.map((item) => ({
-											handle: item.follower.handle,
-											name: item.follower.name,
-											image: item.follower.image,
-										}))}
-									/>
-								</div>
-							</div>
-
-							{isOwner ? (
-								<Link href={`/user/${pageOwner.handle}/edit`}>
-									<Button
-										variant="secondary"
-										className="flex items-center rounded-full"
-									>
-										<Settings className="w-4 h-4" />
-										<span className="ml-2 text-sm">Edit Profile</span>
-									</Button>
-								</Link>
-							) : (
-								<FollowButton targetUserId={pageOwner.id} />
-							)}
-						</div>
-					</div>
-				</CardHeader>
-
-				<CardContent className="mt-4">
-					<Linkify options={{ className: "underline" }}>
-						{pageOwner.profile}
-					</Linkify>
-				</CardContent>
-			</Card>
-
-			<div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-				{pagesWithInfo.map((page) => (
-					<PageCard
-						key={page.id}
-						pageCard={page}
-						pageLink={`/user/${pageOwner.handle}/page/${page.slug}`}
-						userLink={`/user/${pageOwner.handle}`}
-						showOwnerActions={isOwner}
-					/>
-				))}
-			</div>
-
-			{pagesWithInfo.length > 0 && (
-				<div className="mt-8 flex justify-center">
-					<PaginationControls
-						currentPage={currentPage}
-						totalPages={totalPages}
-					/>
-				</div>
-			)}
-
-			{pagesWithInfo.length === 0 && (
-				<p className="text-center text-gray-500 mt-10">
-					{isOwner ? "You haven't created any pages yet." : "No pages yet."}
-				</p>
-			)}
-		</div>
+		<>
+			<UserInfo handle={handle} />
+			<PageList handle={handle} page={page} locale={locale} />
+		</>
 	);
 }

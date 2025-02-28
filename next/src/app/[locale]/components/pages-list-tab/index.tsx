@@ -4,13 +4,13 @@ import { getGuestId } from "@/lib/get-guest-id";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import type { SearchParams } from "nuqs/server";
 import { PagesListTabClient } from "./client";
-export const coordinatesSearchParams = {
+const searchParamsSchema = {
 	activeTab: parseAsString.withDefault("recommended"),
 	recommendedPage: parseAsInteger.withDefault(1),
 	newPage: parseAsInteger.withDefault(1),
 };
 
-export const loadSearchParams = createLoader(coordinatesSearchParams);
+const loadSearchParams = createLoader(searchParamsSchema);
 
 interface PageListTabProps {
 	locale: string;

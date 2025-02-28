@@ -5,7 +5,7 @@ import { PageManagementTabClient } from "./client";
 interface PageManagementTabProps {
 	currentUserId: string;
 	locale: string;
-	page: string;
+	page: number;
 	query: string;
 	handle: string;
 }
@@ -18,13 +18,7 @@ export async function PageManagementTab({
 	handle,
 }: PageManagementTabProps) {
 	const { pagesWithTitle, totalPages, currentPage } =
-		await fetchPaginatedOwnPages(
-			currentUserId,
-			locale,
-			Number(page),
-			10,
-			query,
-		);
+		await fetchPaginatedOwnPages(currentUserId, locale, page, 10, query);
 	const pagesWithTitleAndViewData = await Promise.all(
 		pagesWithTitle.map(async (pageData) => {
 			const path = `/user/${handle}/page/${pageData.slug}`;
