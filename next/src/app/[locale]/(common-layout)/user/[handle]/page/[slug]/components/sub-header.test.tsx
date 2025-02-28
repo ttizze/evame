@@ -15,38 +15,6 @@ vi.mock("@/i18n/routing", () => ({
 	),
 }));
 
-interface HeadroomProps {
-	children: ReactNode;
-	onPin: () => void;
-	onUnpin: () => void;
-	onUnfix: () => void;
-}
-
-vi.mock("react-headroom", () => ({
-	default: ({ children, onPin, onUnpin, onUnfix }: HeadroomProps) => (
-		<div
-			data-testid="headroom"
-			onClick={() => {
-				onPin();
-				onUnpin();
-				onUnfix();
-			}}
-			onKeyUp={() => {
-				onPin();
-				onUnpin();
-				onUnfix();
-			}}
-			onKeyDown={() => {
-				onPin();
-				onUnpin();
-				onUnfix();
-			}}
-		>
-			{children}
-		</div>
-	),
-}));
-
 interface TocProps {
 	onItemClick: () => void;
 }
@@ -147,26 +115,5 @@ describe("SubHeader", () => {
 
 		// TOC should be hidden
 		expect(screen.queryByTestId("toc")).not.toBeInTheDocument();
-	});
-
-	test("updates isPinned state when Headroom events are triggered", () => {
-		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(false);
-
-		render(<SubHeader pageWithTranslations={mockPageWithTranslations} />);
-
-		const headroom = screen.getByTestId("headroom");
-
-		// Initially, the component should not have the px-4 class
-		const container = screen
-			.getByText("Test User")
-			.closest(".flex.items-center");
-		expect(container).not.toHaveClass("px-4");
-
-		// Trigger Headroom events
-		fireEvent.click(headroom);
-
-		// The class should be applied and then removed due to the sequence of events in our mock
-		// This is a simplified test since we can't easily test the actual pinning behavior
-		expect(container).not.toHaveClass("px-4");
 	});
 });

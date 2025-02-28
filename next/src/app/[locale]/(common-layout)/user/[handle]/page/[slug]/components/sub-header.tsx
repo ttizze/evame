@@ -1,11 +1,11 @@
 "use client";
+import { useHeaderScroll } from "@/app/[locale]/components/header/hooks/use-header-scroll";
 import type { PageWithTranslations } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { ChevronDown, List } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import Headroom from "react-headroom";
+import { useState } from "react";
 import Toc, { useHasTableOfContents } from "./toc";
 
 export function SubHeader({
@@ -14,19 +14,10 @@ export function SubHeader({
 	pageWithTranslations: PageWithTranslations;
 }) {
 	const [isTocOpen, setIsTocOpen] = useState(false);
-	const [isPinned, setIsPinned] = useState(false);
 	const hasTocContent = useHasTableOfContents();
-	const headerRef = useRef<HTMLDivElement>(null);
-	const [headerOffset, setHeaderOffset] = useState(0);
 
-	useEffect(() => {
-		// コンポーネントがマウントされた後、その位置を取得
-		if (headerRef.current) {
-			const offsetTop =
-				headerRef.current.getBoundingClientRect().top + window.scrollY;
-			setHeaderOffset(offsetTop);
-		}
-	}, []);
+	// カスタムフックを使用 - SubHeaderの特殊な動作のため初期オフセットを考慮
+	const { headerRef, isPinned, isVisible, headerHeight } = useHeaderScroll();
 
 	const renderToc = () => {
 		if (!hasTocContent) return null;
@@ -65,46 +56,41 @@ export function SubHeader({
 
 	return (
 		<div ref={headerRef}>
-			<Headroom
-				onPin={() => setIsPinned(true)}
-				onUnpin={() => setIsPinned(false)}
-				onUnfix={() => setIsPinned(false)}
-				pinStart={headerOffset}
-				disable={headerOffset === 0}
+			<div
+				className={`transition-all duration-300 ${
+					!isVisible ? "-translate-y-full" : "translate-y-0"
+				} ${isPinned ? "fixed top-0 left-0 right-0 z-50 shadow-md" : ""} bg-background py-4`}
 			>
-				<div className="bg-background py-4">
-					<div
-						className={`prose dark:prose-invert sm:prose lg:prose-lg mx-auto 
-          flex items-center not-prose justify-between relative ${isPinned ? "px-4" : ""}`}
+				<div
+					className={`prose dark:prose-invert sm:prose lg:prose-lg mx-auto 
+					flex items-center not-prose justify-between relative ${isPinned ? "px-4" : ""}`}
+				>
+					<Link
+						href={`/user/${pageWithTranslations.user.handle}`}
+						className="flex items-center mr-2 !no-underline hover:text-gray-700"
 					>
-						<Link
-							href={`/user/${pageWithTranslations.user.handle}`}
-							className="flex items-center mr-2 !no-underline hover:text-gray-700"
-						>
-							<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
-								<AvatarImage
-									src={pageWithTranslations.user.image}
-									alt={pageWithTranslations.user.name}
-								/>
-								<AvatarFallback>
-									{pageWithTranslations.user.name.charAt(0).toUpperCase()}
-								</AvatarFallback>
-							</Avatar>
-							<div className="flex flex-col">
-								<span className="text-sm">
-									{pageWithTranslations.user.name}
+						<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
+							<AvatarImage
+								src={pageWithTranslations.user.image}
+								alt={pageWithTranslations.user.name}
+							/>
+							<AvatarFallback>
+								{pageWithTranslations.user.name.charAt(0).toUpperCase()}
+							</AvatarFallback>
+						</Avatar>
+						<div className="flex flex-col">
+							<span className="text-sm">{pageWithTranslations.user.name}</span>
+							{!isPinned && (
+								<span className="text-xs text-gray-500">
+									{pageWithTranslations.page.createdAt}
 								</span>
-								{!isPinned && (
-									<span className="text-xs text-gray-500">
-										{pageWithTranslations.page.createdAt}
-									</span>
-								)}
-							</div>
-						</Link>
-						{renderToc()}
-					</div>
+							)}
+						</div>
+					</Link>
+					{renderToc()}
 				</div>
-			</Headroom>
+			</div>
+			{isPinned && <div style={{ height: `${headerHeight}px` }} />}
 		</div>
 	);
 }

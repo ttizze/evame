@@ -13,8 +13,8 @@ import { Link } from "@/i18n/routing";
 import { LogOutIcon, SettingsIcon } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
-import Headroom from "react-headroom";
 import { ModeToggle } from "../mode-toggle";
+import { useHeaderScroll } from "./hooks/use-header-scroll";
 
 interface BaseHeaderLayoutProps {
 	currentUser: SanitizedUser | undefined;
@@ -29,9 +29,18 @@ export function BaseHeaderLayout({
 	rightExtra,
 	showUserMenu = true,
 }: BaseHeaderLayoutProps) {
+	// カスタムフックを使用
+	const { headerRef, isPinned, isVisible, headerHeight } = useHeaderScroll();
+
 	return (
-		<Headroom>
-			<header className="z-10  bg-background max-w-3xl mx-auto py-2 md:py-4 px-2 md:px-6 lg:px-8 flex justify-between items-center">
+		<div ref={headerRef}>
+			<header
+				className={`z-50 bg-background transition-all duration-300 ${
+					!isVisible ? "-translate-y-full" : "translate-y-0"
+				} ${
+					isPinned ? "fixed top-0 left-0 right-0 shadow-md" : ""
+				} max-w-3xl mx-auto py-2 md:py-4 px-2 md:px-6 lg:px-8 flex justify-between items-center`}
+			>
 				<div className="flex items-center gap-4">
 					<Link href="/" className="flex items-center">
 						<Image
@@ -99,6 +108,7 @@ export function BaseHeaderLayout({
 					)}
 				</div>
 			</header>
-		</Headroom>
+			{isPinned && <div style={{ height: `${headerHeight}px` }} />}
+		</div>
 	);
 }
