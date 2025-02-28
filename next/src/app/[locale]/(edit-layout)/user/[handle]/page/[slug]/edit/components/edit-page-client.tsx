@@ -3,7 +3,7 @@
 import type { SanitizedUser } from "@/app/types";
 import type { Tag } from "@prisma/client";
 import type { Editor as TiptapEditor } from "@tiptap/react";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useActionState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { useDebouncedCallback } from "use-debounce";
@@ -44,15 +44,42 @@ export function EditPageClient({
 	>(editPageContentAction, { success: false });
 	const [title, setTitle] = useState(initialTitle ?? "");
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
 	const debouncedSubmit = useDebouncedCallback(() => {
 		formRef.current?.requestSubmit();
 		setHasUnsavedChanges(false);
-	}, 1000);
+	}, 3000);
 
-	const handleChange = () => {
+	// Debounced change handler to prevent excessive state updates
+	const handleChange = useCallback(() => {
 		setHasUnsavedChanges(true);
 		debouncedSubmit();
-	};
+	}, [debouncedSubmit]);
+
+	const handleTitleChange = useCallback(
+		(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+			setTitle(e.target.value);
+			setHasUnsavedChanges(true);
+			debouncedSubmit();
+		},
+		[debouncedSubmit],
+	);
+	// Handle Enter key in title textarea
+	const handleTitleKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+			// Move to editor when Enter is pressed without Shift key
+			if (e.key === "Enter") {
+				e.preventDefault(); // Prevent newline in title
+
+				// Focus the editor
+				if (editorInstance) {
+					// Set focus to the editor
+					editorInstance.commands.focus("start");
+				}
+			}
+		},
+		[editorInstance],
+	);
 
 	return (
 		<div
@@ -76,10 +103,8 @@ export function EditPageClient({
 					<h1 className="!m-0 ">
 						<TextareaAutosize
 							value={title}
-							onChange={(e) => {
-								setTitle(e.target.value);
-								handleChange();
-							}}
+							onChange={handleTitleChange}
+							onKeyDown={handleTitleKeyDown}
 							name="title"
 							placeholder="Title"
 							className="w-full outline-none bg-transparent resize-none overflow-hidden"
