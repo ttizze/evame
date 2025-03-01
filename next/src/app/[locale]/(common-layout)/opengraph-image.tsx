@@ -22,7 +22,7 @@ export default async function Image() {
 			}}
 			tw="flex items-center justify-center"
 		>
-			{/* @ts-ignore */}
+			{/* @ts-expect-error srcの型がおかしいが､これはバグではない */}
 			<img src={logoSrc} alt="logo" />
 		</div>,
 		{

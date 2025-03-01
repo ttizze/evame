@@ -111,6 +111,7 @@ model PageAITranslationInfo {
   page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@index([pageId])
+  @@index([pageId, locale, createdAt])
   @@map("page_ai_translation_info")
 }
 
@@ -180,6 +181,11 @@ model PageSegmentTranslation {
   @@index([pageSegmentId])
   @@index([userId])
   @@index([locale])
+
+  @@index([locale, isArchived])
+  @@index([pageSegmentId, locale, isArchived])
+  @@index([point, createdAt])
+
   @@map("page_segment_translations")
 }
 

@@ -93,7 +93,6 @@ describe("TranslateAction", () => {
 				},
 			],
 		};
-		//@ts-ignore
 		(
 			fetchPageWithTitleAndComments as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue(mockPage);

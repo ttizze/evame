@@ -75,7 +75,7 @@ export async function GET(req: Request): Promise<Response> {
 					</div>
 					{/* 右端にロゴ */}
 					<img
-						//@ts-ignore
+						//@ts-expect-error srcの型がおかしいが､これはバグではない
 						src={logoSrc}
 						alt="logo"
 						style={{

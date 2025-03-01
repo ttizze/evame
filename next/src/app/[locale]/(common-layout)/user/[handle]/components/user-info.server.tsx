@@ -12,6 +12,7 @@ import {
 import { Link } from "@/i18n/routing";
 import Linkify from "linkify-react";
 import { Settings } from "lucide-react";
+import { getImageProps } from "next/image";
 import {
 	fetchFollowerList,
 	fetchFollowingList,
@@ -31,6 +32,12 @@ export async function UserInfo({
 		error.message = "Unauthorized";
 		throw error;
 	}
+	const { props } = getImageProps({
+		src: pageOwner.image,
+		alt: pageOwner.name,
+		width: 100,
+		height: 100,
+	});
 
 	const currentUser = await getCurrentUser();
 
@@ -47,7 +54,7 @@ export async function UserInfo({
 					<div>
 						<Link href={`${pageOwner.image}`}>
 							<Avatar className="w-20 h-20 md:w-24 md:h-24">
-								<AvatarImage src={pageOwner.image} alt={pageOwner.name} />
+								<AvatarImage {...props} />
 								<AvatarFallback>
 									{pageOwner.name.charAt(0).toUpperCase()}
 								</AvatarFallback>

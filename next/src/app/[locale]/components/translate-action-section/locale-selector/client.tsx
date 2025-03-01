@@ -54,7 +54,7 @@ export function LocaleSelector({
 		setOpen(false);
 		startTransition(() => {
 			router.push(
-				// @ts-expect-error
+				// @ts-expect-error next-intlの型がおかしい
 				{ pathname, params },
 				{ locale: value },
 			);

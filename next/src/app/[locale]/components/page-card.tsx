@@ -8,6 +8,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Link } from "@/i18n/routing";
+import { getImageProps } from "next/image";
 import { LikeButton } from "./like-button/client";
 import { PageActionsDropdown } from "./page-actions-dropdown/client";
 import { TagList } from "./tag-list";
@@ -25,6 +26,12 @@ export function PageCard({
 	userLink,
 	showOwnerActions = false,
 }: PageCardProps) {
+	const { props } = getImageProps({
+		src: pageCard.user.image,
+		alt: pageCard.user.name,
+		width: 40,
+		height: 40,
+	});
 	const title = pageCard.pageSegments[0].text;
 	const bestTranslationTitle =
 		pageCard.pageSegments[0].pageSegmentTranslations[0]?.text;
@@ -57,7 +64,7 @@ export function PageCard({
 				<div className="flex justify-between items-center">
 					<Link href={userLink} className="flex items-center">
 						<Avatar className="w-6 h-6 mr-2">
-							<AvatarImage src={pageCard.user.image} alt={pageCard.user.name} />
+							<AvatarImage {...props} />
 							<AvatarFallback>
 								{pageCard.user.handle.charAt(0).toUpperCase()}
 							</AvatarFallback>

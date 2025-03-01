@@ -30,7 +30,6 @@ type Segment = {
 	id: number;
 	number: number;
 	text: string;
-	textAndOccurrenceHash: string;
 	createdAt: Date;
 };
 export type SegmentWithTranslations = {
