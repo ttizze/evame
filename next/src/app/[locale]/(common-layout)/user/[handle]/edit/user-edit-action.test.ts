@@ -46,7 +46,7 @@ describe("userEditAction", () => {
 		});
 		expect(result).toEqual({
 			success: true,
-			message: "Profile updated successfully",
+			message: "User updated successfully",
 			data: {
 				name: "Test User",
 				profile: "My profile",

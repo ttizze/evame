@@ -3,7 +3,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
 	providers: [
 		Google({
 			allowDangerousEmailAccountLinking: true,
@@ -15,11 +15,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 		strategy: "jwt",
 	},
 	callbacks: {
-		async jwt({ token, user }) {
+		async jwt({ token, user, trigger, session }) {
+			if (trigger === "update") {
+				token.handle = session.user.handle;
+				token.name = session.user.name;
+				token.profile = session.user.profile;
+				token.twitterHandle = session.user.twitterHandle;
+			}
 			if (user) {
 				token.id = user.id;
 				token.handle = user.handle;
 				token.profile = user.profile;
+				token.twitterHandle = user.twitterHandle;
 				token.createdAt = user.createdAt;
 				token.updatedAt = user.updatedAt;
 				token.totalPoints = user.totalPoints;
@@ -33,6 +40,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 			session.user.id = token.id as string;
 			session.user.handle = token.handle as string;
 			session.user.profile = token.profile as string;
+			session.user.twitterHandle = token.twitterHandle as string;
 			session.user.createdAt = token.createdAt as Date;
 			session.user.updatedAt = token.updatedAt as Date;
 			session.user.totalPoints = token.totalPoints as number;

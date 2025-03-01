@@ -15,6 +15,7 @@ model User {
   name                               String
   image                              String
   profile                            String                              @default("")
+  twitterHandle                      String                              @default("")
   plan                               String                              @default("free")
   totalPoints                        Int                                 @default(0) @map("total_points")
   isAI                               Boolean                             @default(false) @map("is_ai")

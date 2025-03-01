@@ -33,6 +33,7 @@ export async function fetchPageCommentsWithUserAndTranslations(
 									createdAt: true,
 									updatedAt: true,
 									profile: true,
+									twitterHandle: true,
 									totalPoints: true,
 									isAI: true,
 								},

@@ -1,9 +1,15 @@
 import { getCurrentUser } from "@/auth";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { notFound, redirect } from "next/navigation";
-import { Suspense } from "react";
 import { getUserByHandle } from "./db/queries.server";
-import { EditProfileForm } from "./edit-profile-form";
+const EditProfileForm = dynamic(
+	() => import("./edit-profile-form").then((mod) => mod.EditProfileForm),
+	{
+		loading: () => <Skeleton className="h-[500px] w-full" />,
+	},
+);
 export const metadata: Metadata = {
 	title: "Edit Profile",
 };
@@ -27,9 +33,7 @@ export default async function UserEditPage({
 	return (
 		<div className="container mx-auto">
 			<div className="rounded-xl border p-4">
-				<Suspense fallback={<div>Loading...</div>}>
-					<EditProfileForm currentUser={currentUser} />
-				</Suspense>
+				<EditProfileForm currentUser={currentUser} />
 			</div>
 		</div>
 	);

@@ -2,11 +2,12 @@ import { Footer } from "@/app/[locale]/components/footer";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Header = dynamic(
 	() => import("@/app/[locale]/components/header").then((mod) => mod.Header),
 	{
-		loading: () => <div>Loading...</div>,
+		loading: () => <Skeleton className="h-10 w-full" />,
 	},
 );
 
