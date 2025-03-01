@@ -216,8 +216,14 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 						defaultValue={editState.data?.twitterHandle}
 						name="twitterHandle"
 						placeholder="e.g. @evame_tech"
+						pattern="@[A-Za-z0-9_]+"
 						className="w-full h-10 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-none"
 					/>
+					{editState.zodErrors?.twitterHandle && (
+						<div className="text-red-500 text-sm mt-1">
+							{editState.zodErrors.twitterHandle}
+						</div>
+					)}
 				</div>
 				<Label>Gemini API Key</Label>
 				<Button
