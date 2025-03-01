@@ -1,8 +1,8 @@
 import { Footer } from "@/app/[locale]/components/footer";
+import { Skeleton } from "@/components/ui/skeleton";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import dynamic from "next/dynamic";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const Header = dynamic(
 	() => import("@/app/[locale]/components/header").then((mod) => mod.Header),
