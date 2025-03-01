@@ -45,6 +45,6 @@ export function decrypt(text: string): string {
 		decrypted = Buffer.concat([decrypted, decipher.final()]);
 		return decrypted.toString("utf8").trim().replace(/\s+/g, " ");
 	} catch (error) {
-		throw new Error("Failed to decrypt input");
+		throw new Error("Failed to decrypt input", { cause: error });
 	}
 }

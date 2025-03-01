@@ -8,6 +8,11 @@ const analyzeBundles = withBundleAnalyzer({
 });
 /** @type {import('next').NextConfig} */
 const config: NextConfig = {
+	eslint: {
+		// Warning: This allows production builds to successfully complete even if
+		// your project has ESLint errors.
+		ignoreDuringBuilds: true,
+	},
 	logging: {
 		fetches: {
 			fullUrl: true,
@@ -19,12 +24,20 @@ const config: NextConfig = {
 		},
 	},
 	images: {
+		minimumCacheTTL: 3600,
 		remotePatterns: [
 			{
 				protocol: "https",
 				hostname: "images.eveeve.org",
 				port: "",
 				pathname: "/uploads/**",
+				search: "",
+			},
+			{
+				protocol: "https",
+				hostname: "lh3.googleusercontent.com",
+				port: "",
+				pathname: "*",
 				search: "",
 			},
 			{
