@@ -12,7 +12,7 @@ import {
 import { Link } from "@/i18n/routing";
 import Linkify from "linkify-react";
 import { Settings } from "lucide-react";
-import { getImageProps } from "next/image";
+import Image, { getImageProps } from "next/image";
 import {
 	fetchFollowerList,
 	fetchFollowingList,
@@ -20,7 +20,6 @@ import {
 } from "../db/queries.server";
 import { FollowButton } from "./follow-button";
 import { FollowStats } from "./follow-stats";
-
 export async function UserInfo({
 	handle,
 }: {
@@ -108,6 +107,19 @@ export async function UserInfo({
 				<Linkify options={{ className: "underline" }}>
 					{pageOwner.profile}
 				</Linkify>
+				<div className="flex items-center gap-2 mt-2">
+					{pageOwner.twitterHandle && (
+						<Link href={`https://x.com/${pageOwner.twitterHandle}`}>
+							<Image
+								src="/x.svg"
+								alt="X"
+								width={20}
+								height={20}
+								className="dark:invert"
+							/>
+						</Link>
+					)}
+				</div>
 			</CardContent>
 		</Card>
 	);

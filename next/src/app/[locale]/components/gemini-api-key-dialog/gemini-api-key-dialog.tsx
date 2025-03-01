@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { ArrowUpFromLine } from "lucide-react";
-import { ExternalLink, Key, Loader2 } from "lucide-react";
+import { ExternalLink, Loader2 } from "lucide-react";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import {
@@ -55,7 +55,6 @@ export function GeminiApiKeyDialog({
 							className="gap-2 shadow-md hover:shadow-lg transition-shadow"
 						>
 							<span className="">Get API Key at Google AI Studio</span>
-							<Key className="w-4 h-4" />
 							<ExternalLink className="w-4 h-4" />
 						</Button>
 					</a>

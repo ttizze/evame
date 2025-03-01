@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { ExternalLink, Loader2, SaveIcon } from "lucide-react";
+import { Loader2, SaveIcon } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { useActionState } from "react";
@@ -31,6 +31,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 		data: {
 			name: currentUser.name,
 			profile: currentUser.profile,
+			twitterHandle: currentUser.twitterHandle,
 		},
 	});
 	const [imageState, imageAction, isImageUploading] = useActionState<
@@ -209,20 +210,22 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 						</div>
 					)}
 				</div>
-
 				<div>
-					<Label>Gemini API Key</Label>
-					<a
-						href="https://aistudio.google.com/app/apikey"
-						target="_blank"
-						rel="noopener noreferrer"
-						className="flex items-center gap-2 transition-colors underline hover:text-blue-500"
-					>
-						<span>Get API Key at Google AI Studio</span>
-						<ExternalLink className="w-4 h-4" />
-					</a>
+					<Label>Twitter Handle</Label>
+					<Input
+						defaultValue={editState.data?.twitterHandle}
+						name="twitterHandle"
+						placeholder="e.g. @evame_tech"
+						pattern="@[A-Za-z0-9_]+"
+						className="w-full h-10 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-none"
+					/>
+					{editState.zodErrors?.twitterHandle && (
+						<div className="text-red-500 text-sm mt-1">
+							{editState.zodErrors.twitterHandle}
+						</div>
+					)}
 				</div>
-
+				<Label>Gemini API Key</Label>
 				<Button
 					type="button"
 					onClick={() => setIsApiKeyDialogOpen(true)}
@@ -230,12 +233,10 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 				>
 					Set API Key
 				</Button>
-
 				<GeminiApiKeyDialog
 					isOpen={isApiKeyDialogOpen}
 					onOpenChange={setIsApiKeyDialogOpen}
 				/>
-
 				<Button type="submit" className="w-full h-10" disabled={isEditPending}>
 					{isEditPending ? (
 						<Loader2 className="w-6 h-6 animate-spin" />
