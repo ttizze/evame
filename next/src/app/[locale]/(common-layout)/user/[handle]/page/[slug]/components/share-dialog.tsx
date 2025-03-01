@@ -9,6 +9,7 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { CopyIcon, Share } from "lucide-react";
+import Image from "next/image";
 import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import {
@@ -19,7 +20,6 @@ import {
 	TwitterShareButton,
 } from "react-share";
 import { toast } from "sonner";
-import Image from "next/image";
 interface ShareDialogProps {
 	title: string;
 }
