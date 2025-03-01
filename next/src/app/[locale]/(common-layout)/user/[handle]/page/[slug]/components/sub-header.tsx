@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { ChevronDown, List } from "lucide-react";
+import { getImageProps } from "next/image";
 import { useState } from "react";
 import Toc, { useHasTableOfContents } from "./toc";
 
@@ -53,7 +54,12 @@ export function SubHeader({
 			</>
 		);
 	};
-
+	const { props } = getImageProps({
+		src: pageWithTranslations.user.image,
+		alt: pageWithTranslations.user.name,
+		width: 40,
+		height: 40,
+	});
 	return (
 		<div ref={headerRef}>
 			<div
@@ -70,10 +76,7 @@ export function SubHeader({
 						className="flex items-center mr-2 !no-underline hover:text-gray-700"
 					>
 						<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
-							<AvatarImage
-								src={pageWithTranslations.user.image}
-								alt={pageWithTranslations.user.name}
-							/>
+							<AvatarImage {...props} />
 							<AvatarFallback>
 								{pageWithTranslations.user.name.charAt(0).toUpperCase()}
 							</AvatarFallback>

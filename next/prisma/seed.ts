@@ -3,37 +3,37 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const JA_NUMBER_0 = "世界とつながる";
-const JA_NUMBER_1 = `Evameは、あなたが書いた記事を多言語に翻訳し、世界中の読者へ届けるコミュニティです。
+const JA_NUMBER_1 = `Evameは、あなたが書いた記事もコメントも自動で翻訳される多言語コミュニティです。
 メニューから好きな言語を選ぶだけで、記事やコメントを思いのままに楽しめます。
 海外の読者とも手軽に交流でき、新たな出会いが生まれるかもしれません。
 さあ、Evameであなたのアイデアや物語を世界に向けて発信してみましょう。`;
 
 const EN_NUMBER_0: string = "Connect with the world";
-const EN_NUMBER_1 = `Evame is a community that translates the articles you write into multiple languages and delivers them to readers around the world.
-By simply selecting your preferred language from the menu, you can enjoy articles and comments however you like.
-You can also easily interact with readers overseas, potentially creating new connections.
-Now, let's share your ideas and stories with the world through Evame!`;
+const EN_NUMBER_1 = `Evame is a multilingual community where your articles and comments are automatically translated.
+Just select your preferred language from the menu, and enjoy articles and comments freely.
+You can easily interact with international readers, which might lead to new encounters. 
+Come on, let's share your ideas and stories with the world through Evame.`;
 
 // 中国語（簡体字）版
 const ZH_NUMBER_0: string = "与世界相连";
-const ZH_NUMBER_1 = `Evame 是一个将您所写的文章翻译成多种语言并传播给全世界读者的社区。
-只需从菜单中选择您喜欢的语言，就能随心所欲地阅读文章和评论。
-您也可以轻松地与海外读者互动，或许会结识新的朋友。
-现在，就让我们通过 Evame 向全世界分享您的想法和故事吧！`;
+const ZH_NUMBER_1 = `Evame是一个多语言社区，您撰写的文章和评论都会被自动翻译。
+只需从菜单中选择您喜欢的语言，您就可以随心所欲地享受文章和评论。
+您可以轻松地与海外读者交流，这可能会带来新的相遇。
+来吧，让我们通过Evame向世界分享您的想法和故事。`;
 
 // 韓国語版
 const KO_NUMBER_0: string = "세상과 연결되다";
-const KO_NUMBER_1 = `Evame는 당신이 작성한 기사를 여러 언어로 번역하여 전 세계 독자들에게 전달하는 커뮤니ティ입니다.
-메뉴에서 원하는 언어를 선택하기만 하면 기사와 댓글을 원하는 대로 즐길 수 있습니다.
+const KO_NUMBER_1 = `Evame는 당신이 작성한 글과 댓글이 자동으로 번역되는 다국어 커뮤니티입니다.
+메뉴에서 원하는 언어를 선택하기만 하면 글과 댓글을 마음껏 즐길 수 있습니다.
 해외 독자들과도 쉽게 교류할 수 있어 새로운 만남이 생길지도 모릅니다.
-이제 Evame를 통해 당신의 아이디어와 이야기를 전 세계에 전해보세요!`;
+자, Evame에서 당신의 아이디어와 이야기를 세계로 발신해 보세요.`;
 
 // スペイン語版
 const ES_NUMBER_0: string = "Conéctate con el mundo";
-const ES_NUMBER_1 = `Evame es una comunidad que traduce los artículos que escribes a varios idiomas y los lleva a lectores de todo el mundo.
-Con solo elegir tu idioma preferido en el menú, puedes disfrutar de artículos y comentarios de la manera que más te guste.
-También puedes interactuar fácilmente con lectores de otros países, lo que podría dar lugar a nuevos encuentros.
-¡Ahora, comparte tus ideas e historias con el mundo a través de Evame!`;
+const ES_NUMBER_1 = `Evame es una comunidad multilingüe donde tus artículos y comentarios se traducen automáticamente.
+Solo selecciona el idioma que prefieras del menú y disfruta de los artículos y comentarios libremente.
+Puedes interactuar fácilmente con lectores internacionales, lo que podría conducir a nuevos encuentros.
+Vamos, compartamos tus ideas e historias con el mundo a través de Evame.`;
 
 async function seed() {
 	await addRequiredData();

@@ -10,9 +10,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
 import { Bell } from "lucide-react";
+import { getImageProps } from "next/image";
 import { startTransition, useActionState } from "react";
 import { markNotificationAsReadAction } from "./action";
 import type { NotificationWithRelations } from "./db/queries.server";
+
 export function NotificationsDropdownClient({
 	notifications,
 	currentUserHandle,
@@ -196,13 +198,19 @@ function NotificationAvatar({
 }: {
 	actor: { handle: string; image: string; name: string };
 }) {
+	const { props } = getImageProps({
+		src: actor.image,
+		alt: actor.name,
+		width: 40,
+		height: 40,
+	});
 	return (
 		<Link
 			href={`/user/${actor.handle}`}
 			className="flex items-center mr-2 !no-underline hover:text-gray-700"
 		>
 			<Avatar className="w-10 h-10 flex-shrink-0 mr-3">
-				<AvatarImage src={actor.image} alt={actor.name} />
+				<AvatarImage {...props} />
 				<AvatarFallback>{actor.name.charAt(0).toUpperCase()}</AvatarFallback>
 			</Avatar>
 		</Link>

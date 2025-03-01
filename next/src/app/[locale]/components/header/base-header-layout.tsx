@@ -12,6 +12,7 @@ import {
 import { Link } from "@/i18n/routing";
 import { LogOutIcon, SettingsIcon } from "lucide-react";
 import Image from "next/image";
+import { getImageProps } from "next/image";
 import type { ReactNode } from "react";
 import { ModeToggle } from "../mode-toggle";
 import { useHeaderScroll } from "./hooks/use-header-scroll";
@@ -31,7 +32,12 @@ export function BaseHeaderLayout({
 }: BaseHeaderLayoutProps) {
 	// カスタムフックを使用
 	const { headerRef, isPinned, isVisible, headerHeight } = useHeaderScroll();
-
+	const { props } = getImageProps({
+		src: currentUser?.image || "",
+		alt: currentUser?.name || "",
+		width: 40,
+		height: 40,
+	});
 	return (
 		<div ref={headerRef}>
 			<header
@@ -60,7 +66,7 @@ export function BaseHeaderLayout({
 						<DropdownMenu modal={false}>
 							<DropdownMenuTrigger>
 								<Avatar className="w-6 h-6">
-									<AvatarImage src={currentUser.image} alt={currentUser.name} />
+									<AvatarImage {...props} />
 									<AvatarFallback>
 										{currentUser.handle.charAt(0).toUpperCase()}
 									</AvatarFallback>
