@@ -1,7 +1,7 @@
 "use server";
 import { uploadImage } from "@/app/[locale]/lib/upload";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser, unstable_update } from "@/auth";
 import { redirect } from "next/navigation";
 import { updateUserImage } from "./db/mutations.server";
 
@@ -41,6 +41,15 @@ export async function userImageEditAction(
 		};
 	}
 	await updateUserImage(currentUser.id, result.data?.imageUrl);
+	await unstable_update({
+		user: {
+			name: currentUser.name,
+			handle: currentUser.handle,
+			profile: currentUser.profile,
+			twitterHandle: currentUser.twitterHandle,
+			image: result.data?.imageUrl,
+		},
+	});
 	return {
 		success: true,
 		data: { imageUrl: result.data?.imageUrl },

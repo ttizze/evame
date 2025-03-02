@@ -84,6 +84,7 @@ export async function userEditAction(
 			name,
 			profile,
 			twitterHandle,
+			image: currentUser.image,
 		},
 	});
 	if (handle !== currentUser.handle) {

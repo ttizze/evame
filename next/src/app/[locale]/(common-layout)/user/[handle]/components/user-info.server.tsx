@@ -109,7 +109,10 @@ export async function UserInfo({
 				</Linkify>
 				<div className="flex items-center gap-2 mt-2">
 					{pageOwner.twitterHandle && (
-						<Link href={`https://x.com/${pageOwner.twitterHandle}`}>
+						<Link
+							href={`https://x.com/${pageOwner.twitterHandle}`}
+							target="_blank"
+						>
 							<Image
 								src="/x.svg"
 								alt="X"

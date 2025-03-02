@@ -215,7 +215,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 					<Input
 						defaultValue={editState.data?.twitterHandle}
 						name="twitterHandle"
-						placeholder="e.g. @evame_tech"
+						placeholder="start with @. e.g. @evame"
 						pattern="@[A-Za-z0-9_]+"
 						className="w-full h-10 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-none"
 					/>
