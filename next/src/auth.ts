@@ -16,11 +16,13 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
 	},
 	callbacks: {
 		async jwt({ token, user, trigger, session }) {
+			// unstable_updateが呼ばれた場合、sessionのデータをtokenにコピーする
 			if (trigger === "update") {
 				token.handle = session.user.handle;
 				token.name = session.user.name;
 				token.profile = session.user.profile;
 				token.twitterHandle = session.user.twitterHandle;
+				token.image = session.user.image;
 			}
 			if (user) {
 				token.id = user.id;
