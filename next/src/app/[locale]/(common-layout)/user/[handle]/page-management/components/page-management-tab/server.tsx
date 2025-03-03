@@ -1,7 +1,14 @@
-import { getGeoViewData } from "../../components/page-view-data/view-data";
+import dynamic from "next/dynamic";
 import { fetchPaginatedOwnPages } from "../../db/queries.server";
 import { PageManagementTabClient } from "./client";
 
+const DynamicPageViewCounter = dynamic(
+	() =>
+		import("../page-view-data/view-data").then((mod) => mod.PageViewCounter),
+	{
+		loading: () => <span>Loading...</span>,
+	},
+);
 interface PageManagementTabProps {
 	currentUserId: string;
 	locale: string;
@@ -19,38 +26,23 @@ export async function PageManagementTab({
 }: PageManagementTabProps) {
 	const { pagesWithTitle, totalPages, currentPage } =
 		await fetchPaginatedOwnPages(currentUserId, locale, page, 10, query);
-	const pagesWithTitleAndViewData = await Promise.all(
-		pagesWithTitle.map(async (pageData) => {
+	const pageViewCounters = pagesWithTitle.reduce(
+		(acc, pageData) => {
 			const path = `/user/${handle}/page/${pageData.slug}`;
-			try {
-				const geoViewData = await getGeoViewData(path);
-				const totalViews = geoViewData.reduce(
-					(sum, item) => sum + item.views,
-					0,
-				);
-
-				return {
-					...pageData,
-					viewCount: totalViews,
-					geoViewData,
-				};
-			} catch (error) {
-				console.error(`Failed to fetch view data for ${path}:`, error);
-				return {
-					...pageData,
-					viewCount: 0,
-					geoViewData: [],
-				};
-			}
-		}),
+			acc[pageData.id] = (
+				<DynamicPageViewCounter key={pageData.id} path={path} />
+			);
+			return acc;
+		},
+		{} as Record<string, React.ReactNode>,
 	);
-
 	return (
 		<PageManagementTabClient
-			pagesWithTitleAndViewData={pagesWithTitleAndViewData}
+			pagesWithTitle={pagesWithTitle}
 			totalPages={totalPages}
 			currentPage={currentPage}
 			handle={handle}
+			pageViewCounters={pageViewCounters}
 		/>
 	);
 }

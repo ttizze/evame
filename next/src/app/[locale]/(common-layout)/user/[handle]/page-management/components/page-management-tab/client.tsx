@@ -8,20 +8,23 @@ import { Link } from "@/i18n/routing";
 import type { PageStatus } from "@prisma/client";
 import { EyeIcon } from "lucide-react";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
-import type { PageWithTitleAndViewData } from "../../db/queries.server";
+import type { ReactNode } from "react";
+import type { PageWithTitle } from "../../db/queries.server";
 
 interface PageManagementTabClientProps {
-	pagesWithTitleAndViewData: PageWithTitleAndViewData[];
+	pagesWithTitle: PageWithTitle[];
 	totalPages: number;
 	currentPage: number;
 	handle: string;
+	pageViewCounters: Record<string, ReactNode>;
 }
 
 export function PageManagementTabClient({
-	pagesWithTitleAndViewData,
+	pagesWithTitle,
 	totalPages,
 	currentPage,
 	handle,
+	pageViewCounters,
 }: PageManagementTabClientProps) {
 	const [query, setQuery] = useQueryState(
 		"query",
@@ -62,33 +65,28 @@ export function PageManagementTabClient({
 				/>
 			</div>
 
-			<div className="rounded-md ">
-				{pagesWithTitleAndViewData.map((pageWithTitleAndViewData) => (
-					<div
-						key={pageWithTitleAndViewData.id}
-						className="flex border-b py-2 justify-between"
-					>
+			<div className="rounded-md">
+				{pagesWithTitle.map((page) => (
+					<div key={page.id} className="flex border-b py-2 justify-between">
 						<div>
-							<Link
-								href={`/user/${handle}/page/${pageWithTitleAndViewData.slug}`}
-							>
-								{pageWithTitleAndViewData.title}
+							<Link href={`/user/${handle}/page/${page.slug}`}>
+								{page.title}
 							</Link>
 							<div className="flex gap-2 mt-2">
-								{getStatusBadge(pageWithTitleAndViewData.status)}
-								{pageWithTitleAndViewData.updatedAt}
+								{getStatusBadge(page.status)}
+								{page.updatedAt}
 								<div className="flex gap-2">
 									<div className="flex items-center gap-1">
 										<EyeIcon className="w-4 h-4" />
-										{pageWithTitleAndViewData.viewCount}
+										{pageViewCounters[page.id]}
 									</div>
 								</div>
 							</div>
 						</div>
 						<PageActionsDropdown
-							editPath={`/user/${handle}/page/${pageWithTitleAndViewData.slug}/edit`}
-							pageId={pageWithTitleAndViewData.id}
-							status={pageWithTitleAndViewData.status}
+							editPath={`/user/${handle}/page/${page.slug}/edit`}
+							pageId={page.id}
+							status={page.status}
 						/>
 					</div>
 				))}
