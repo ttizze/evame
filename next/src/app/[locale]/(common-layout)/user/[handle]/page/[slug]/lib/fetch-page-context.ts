@@ -32,9 +32,6 @@ export const fetchPageContext = cache(
 		) {
 			return notFound();
 		}
-		const pageAITranslationInfo = await fetchLatestPageAITranslationInfo(
-			pageWithTranslations.page.id,
-		);
 		const pageTitleWithTranslations =
 			pageWithTranslations.segmentWithTranslations.find(
 				(item) => item.segment?.number === 0,
@@ -53,20 +50,26 @@ export const fetchPageContext = cache(
 			title = pageTitleWithTranslations.segment.text;
 		}
 		const guestId = await getGuestId();
-		const [userAITranslationInfo, likeCount, isLikedByUser, pageCommentsCount] =
-			await Promise.all([
-				fetchLatestUserAITranslationInfo(
-					pageWithTranslations.page.id,
-					currentUser?.id ?? "0",
-				),
-				fetchLikeCount(pageWithTranslations.page.id),
-				fetchIsLikedByUser(
-					pageWithTranslations.page.id,
-					currentUser?.id,
-					guestId,
-				),
-				fetchPageCommentsCount(pageWithTranslations.page.id),
-			]);
+		const [
+			pageAITranslationInfo,
+			userAITranslationInfo,
+			likeCount,
+			isLikedByUser,
+			pageCommentsCount,
+		] = await Promise.all([
+			fetchLatestPageAITranslationInfo(pageWithTranslations.page.id),
+			fetchLatestUserAITranslationInfo(
+				pageWithTranslations.page.id,
+				currentUser?.id ?? "0",
+			),
+			fetchLikeCount(pageWithTranslations.page.id),
+			fetchIsLikedByUser(
+				pageWithTranslations.page.id,
+				currentUser?.id,
+				guestId,
+			),
+			fetchPageCommentsCount(pageWithTranslations.page.id),
+		]);
 		return {
 			pageWithTranslations,
 			currentUser,
