@@ -30,7 +30,6 @@ type Segment = {
 	id: number;
 	number: number;
 	text: string;
-	textAndOccurrenceHash: string;
 	createdAt: Date;
 };
 export type SegmentWithTranslations = {
@@ -49,5 +48,4 @@ export type PageWithTranslations = {
 	user: SanitizedUser;
 	tagPages: TagPageWithTag[];
 	segmentWithTranslations: SegmentWithTranslations[];
-	existLocales: string[];
 };

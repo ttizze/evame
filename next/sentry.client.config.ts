@@ -9,10 +9,14 @@ if (process.env.NODE_ENV === "production") {
 		dsn: "https://0cda4c09dab97bb05116614428effb0c@o4507906314207232.ingest.us.sentry.io/4508805630263296",
 
 		// Add optional integrations for additional features
-		integrations: [Sentry.replayIntegration()],
+		integrations: [
+			Sentry.replayIntegration(),
+			Sentry.browserProfilingIntegration(),
+			Sentry.browserTracingIntegration(),
+		],
 
 		// Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-		tracesSampleRate: 1,
+		tracesSampleRate: 0.2,
 
 		// Define how likely Replay events are sampled.
 		// This sets the sample rate to be 10%. You may want this to be 100% while

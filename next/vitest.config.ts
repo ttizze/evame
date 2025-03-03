@@ -17,8 +17,11 @@ export default defineConfig({
 			MAGIC_LINK_SECRET: "test",
 		},
 		environment: "jsdom",
-		deps: {
-			inline: ["next-auth"],
+		setupFiles: "./vitest.setup.ts",
+		server: {
+			deps: {
+				inline: ["next-auth"],
+			},
 		},
 	},
 	resolve: {

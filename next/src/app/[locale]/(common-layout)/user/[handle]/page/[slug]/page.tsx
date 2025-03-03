@@ -1,26 +1,25 @@
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-list";
-import { getBestTranslation } from "@/app/[locale]/lib/get-best-translation";
 import { stripHtmlTags } from "@/app/[locale]/lib/strip-html-tags";
 import { BASE_URL } from "@/app/constants/base-url";
-import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
-import { getCurrentUser } from "@/auth";
-import { getGuestId } from "@/lib/get-guest-id";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import type { SearchParams } from "nuqs/server";
-import { cache } from "react";
-import { ContentWithTranslations } from "./components/content-with-translations";
+import { createLoader, parseAsBoolean } from "nuqs/server";
 import { TranslateTarget } from "./constants";
-import {
-	fetchIsLikedByUser,
-	fetchLatestUserAITranslationInfo,
-	fetchLikeCount,
-	fetchPageCommentsCount,
-	fetchPageWithTranslations,
-} from "./db/queries.server";
-
+import { buildAlternateLocales } from "./lib/build-alternate-locales";
+import { fetchPageContext } from "./lib/fetch-page-context";
+const DynamicContentWithTranslations = dynamic(
+	() =>
+		import("./components/content-with-translations").then(
+			(mod) => mod.ContentWithTranslations,
+		),
+	{
+		loading: () => <Skeleton className="h-[500px] w-full" />,
+	},
+);
 const DynamicLikeButton = dynamic(
 	() =>
 		import("@/app/[locale]/components/like-button/client").then(
@@ -60,153 +59,103 @@ const DynamicPageCommentForm = dynamic(
 	},
 );
 
-export const getPageData = cache(async (slug: string, locale: string) => {
-	const currentUser = await getCurrentUser();
-
-	const pageWithTranslations = await fetchPageWithTranslations(
-		slug,
-		locale,
-		currentUser?.id,
-	);
-
-	if (!pageWithTranslations) {
-		return null;
-	}
-
-	const pageSegmentTitleWithTranslations =
-		pageWithTranslations.segmentWithTranslations.find(
-			(item) => item.segment?.number === 0,
-		);
-	if (!pageSegmentTitleWithTranslations) {
-		return null;
-	}
-	const bestTranslationTitle = getBestTranslation(
-		pageSegmentTitleWithTranslations.segmentTranslationsWithVotes,
-	);
-	const sourceTitleWithBestTranslationTitle = bestTranslationTitle
-		? `${pageSegmentTitleWithTranslations.segment.text} - ${bestTranslationTitle.segmentTranslation.text}`
-		: pageSegmentTitleWithTranslations.segment.text;
-	const firstImageUrl = pageWithTranslations.page.content.match(
-		/<img[^>]+src="([^">]+)"/,
-	)?.[1];
-	return {
-		pageWithTranslations,
-		currentUser,
-		pageSegmentTitleWithTranslations,
-		sourceTitleWithBestTranslationTitle,
-		bestTranslationTitle,
-		firstImageUrl,
-	};
-});
 type Params = Promise<{ locale: string; handle: string; slug: string }>;
+const searchParamsSchema = {
+	showOriginal: parseAsBoolean.withDefault(true),
+	showTranslation: parseAsBoolean.withDefault(true),
+};
+const loadSearchParams = createLoader(searchParamsSchema);
+
 export async function generateMetadata({
 	params,
 	searchParams,
 }: { params: Params; searchParams: Promise<SearchParams> }): Promise<Metadata> {
 	const { slug, locale } = await params;
-	const data = await getPageData(slug, locale);
+	const { showOriginal, showTranslation } =
+		await loadSearchParams(searchParams);
+	const data = await fetchPageContext(
+		slug,
+		locale,
+		showOriginal,
+		showTranslation,
+	);
 	if (!data) {
 		return {
 			title: "Page Not Found",
 		};
 	}
-	const { pageWithTranslations, sourceTitleWithBestTranslationTitle } = data;
+	const { pageWithTranslations, title, pageAITranslationInfo } = data;
 	const description = stripHtmlTags(pageWithTranslations.page.content).slice(
 		0,
 		200,
 	);
-
-	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${slug}`;
-
+	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${slug}&showOriginal=${showOriginal}&showTranslation=${showTranslation}`;
 	return {
-		title: sourceTitleWithBestTranslationTitle,
+		title,
 		description,
 		openGraph: {
 			type: "article",
-			title: sourceTitleWithBestTranslationTitle,
+			title,
 			description,
 			images: [{ url: ogImageUrl, width: 1200, height: 630 }],
 		},
 		twitter: {
 			card: "summary_large_image",
-			title: sourceTitleWithBestTranslationTitle,
+			title,
 			description,
 			images: [{ url: ogImageUrl, width: 1200, height: 630 }],
 		},
 		alternates: {
-			languages: Object.fromEntries(
-				pageWithTranslations.existLocales
-					.filter(
-						(locale: string) =>
-							pageWithTranslations.page.sourceLocale !== locale,
-					)
-					.map((locale: string) => [
-						locale,
-						`/${locale}/user/${pageWithTranslations.user.handle}/page/${pageWithTranslations.page.slug}`,
-					]),
+			languages: buildAlternateLocales(
+				pageWithTranslations.page,
+				pageAITranslationInfo,
+				pageWithTranslations.user.handle,
+				locale,
 			),
 		},
 	};
 }
 
-export default async function Page({ params }: { params: Params }) {
+export default async function Page({
+	params,
+	searchParams,
+}: { params: Params; searchParams: Promise<SearchParams> }) {
 	const { slug, locale } = await params;
-	const data = await getPageData(slug, locale);
+	const { showOriginal, showTranslation } =
+		await loadSearchParams(searchParams);
+	const data = await fetchPageContext(
+		slug,
+		locale,
+		showOriginal,
+		showTranslation,
+	);
 	if (!data) {
 		return notFound();
 	}
 	const {
 		pageWithTranslations,
-		sourceTitleWithBestTranslationTitle,
+		title,
 		currentUser,
+		pageAITranslationInfo,
+		userAITranslationInfo,
+		likeCount,
+		isLikedByUser,
+		pageCommentsCount,
 	} = data;
 
-	const guestId = await getGuestId();
-	const geminiApiKey = await fetchGeminiApiKeyByHandle(
-		currentUser?.handle ?? "",
-	);
-	const hasGeminiApiKey = !!geminiApiKey;
-
 	const isOwner = pageWithTranslations?.user.handle === currentUser?.handle;
-	if (
-		pageWithTranslations.page.status === "ARCHIVE" ||
-		(!isOwner && pageWithTranslations.page.status !== "PUBLIC")
-	) {
-		throw new Response("Page not found", { status: 404 });
+	if (!isOwner && pageWithTranslations.page.status !== "PUBLIC") {
+		return notFound();
 	}
-
-	const userAITranslationInfoPromise = fetchLatestUserAITranslationInfo(
-		pageWithTranslations.page.id,
-		currentUser?.id ?? "0",
-		locale,
-	);
-	const likeCountPromise = fetchLikeCount(pageWithTranslations.page.id);
-	const isLikedByUserPromise = fetchIsLikedByUser(
-		pageWithTranslations.page.id,
-		currentUser?.id,
-		guestId,
-	);
-	const pageCommentsCountPromise = fetchPageCommentsCount(
-		pageWithTranslations.page.id,
-	);
-
-	const [userAITranslationInfo, likeCount, isLikedByUser, pageCommentsCount] =
-		await Promise.all([
-			userAITranslationInfoPromise,
-			likeCountPromise,
-			isLikedByUserPromise,
-			pageCommentsCountPromise,
-		]);
 
 	return (
 		<div className="w-full max-w-3xl mx-auto">
 			<article className="w-full prose dark:prose-invert prose-a:underline  sm:prose lg:prose-lg mx-auto px-4 mb-20">
-				<ContentWithTranslations
-					pageWithTranslations={pageWithTranslations}
-					currentHandle={currentUser?.handle}
-					hasGeminiApiKey={hasGeminiApiKey}
-					userAITranslationInfo={userAITranslationInfo}
+				<DynamicContentWithTranslations
+					slug={slug}
 					locale={locale}
+					showOriginal={showOriginal}
+					showTranslation={showTranslation}
 				/>
 				<div className="flex items-center gap-4">
 					<DynamicLikeButton
@@ -223,8 +172,7 @@ export default async function Page({ params }: { params: Params }) {
 					liked={isLikedByUser}
 					likeCount={likeCount}
 					slug={slug}
-					shareTitle={sourceTitleWithBestTranslationTitle}
-					firstImageUrl={data.firstImageUrl}
+					shareTitle={title}
 				/>
 
 				<div className="mt-8">
@@ -235,12 +183,10 @@ export default async function Page({ params }: { params: Params }) {
 								pageId={pageWithTranslations.page.id}
 								currentHandle={currentUser?.handle}
 								userAITranslationInfo={userAITranslationInfo}
-								hasGeminiApiKey={hasGeminiApiKey}
+								pageAITranslationInfo={pageAITranslationInfo}
 								sourceLocale={pageWithTranslations.page.sourceLocale}
-								targetLocale={locale}
-								existLocales={pageWithTranslations.existLocales}
 								translateTarget={TranslateTarget.TRANSLATE_COMMENT}
-								showAddNew={true}
+								showIcons={false}
 							/>
 						</div>
 						<PageCommentList

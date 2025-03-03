@@ -1,6 +1,4 @@
-import { getBestTranslation } from "@/app/[locale]/lib/get-best-translation";
 import { prisma } from "@/lib/prisma";
-import type { PageWithTranslations } from "../types";
 
 export async function fetchPageWithPageSegments(pageId: number) {
 	const pageWithSegments = await prisma.page.findFirst({
@@ -31,129 +29,12 @@ export async function fetchPageWithPageSegments(pageId: number) {
 	};
 }
 
-export async function fetchPageWithTranslations(
-	slug: string,
-	locale: string,
-	currentUserId?: string,
-): Promise<PageWithTranslations | null> {
-	const page = await prisma.page.findFirst({
-		where: { slug },
-		include: {
-			user: {
-				select: {
-					id: true,
-					name: true,
-					handle: true,
-					image: true,
-					createdAt: true,
-					updatedAt: true,
-					profile: true,
-					totalPoints: true,
-					isAI: true,
-				},
-			},
-			pageSegments: {
-				include: {
-					pageSegmentTranslations: {
-						where: { locale, isArchived: false },
-						include: {
-							user: {
-								select: {
-									id: true,
-									name: true,
-									handle: true,
-									image: true,
-									createdAt: true,
-									updatedAt: true,
-									profile: true,
-									totalPoints: true,
-									isAI: true,
-								},
-							},
-							votes: {
-								where: currentUserId
-									? { userId: currentUserId }
-									: { userId: "0" },
-							},
-						},
-						orderBy: [{ point: "desc" }, { createdAt: "desc" }],
-					},
-				},
-			},
-			tagPages: {
-				include: {
-					tag: true,
-				},
-			},
-		},
-	});
-
-	if (!page) return null;
-
-	const titleText = await prisma.pageSegment.findFirst({
-		where: {
-			pageId: page.id,
-			number: 0,
-		},
-		include: {
-			pageSegmentTranslations: {
-				where: { isArchived: false },
-				select: { locale: true },
-			},
-		},
-	});
-
-	const existLocales = titleText
-		? Array.from(
-				new Set(titleText.pageSegmentTranslations.map((t) => t.locale)),
-			)
-		: [];
-	const { user, ...pageWithoutUser } = page;
-	return {
-		page: {
-			...pageWithoutUser,
-			createdAt: page.createdAt.toLocaleString(locale),
-		},
-		user,
-		tagPages: page.tagPages,
-		segmentWithTranslations: page.pageSegments.map((segment) => {
-			const segmentTranslationsWithVotes = segment.pageSegmentTranslations.map(
-				(segmentTranslation) => ({
-					segmentTranslation: {
-						...segmentTranslation,
-						user: segmentTranslation.user,
-					},
-					translationVote:
-						segmentTranslation.votes && segmentTranslation.votes.length > 0
-							? {
-									...segmentTranslation.votes[0],
-									translationId: segmentTranslation.id,
-								}
-							: null,
-				}),
-			);
-
-			const bestSegmentTranslationWithVote = getBestTranslation(
-				segmentTranslationsWithVotes,
-			);
-
-			return {
-				segment,
-				segmentTranslationsWithVotes,
-				bestSegmentTranslationWithVote,
-			};
-		}),
-		existLocales,
-	};
-}
-
 export async function fetchLatestUserAITranslationInfo(
 	pageId: number,
 	userId: string,
-	locale: string,
 ) {
 	return await prisma.userAITranslationInfo.findFirst({
-		where: { pageId, userId, locale },
+		where: { pageId, userId },
 		orderBy: { createdAt: "desc" },
 	});
 }
@@ -204,5 +85,11 @@ export async function fetchPageWithTitleAndComments(pageId: number) {
 			},
 		},
 	});
-	return pageWithComments;
+	if (!pageWithComments) return null;
+	const title = pageWithComments?.pageSegments[0].text;
+	if (!title) return null;
+	return {
+		...pageWithComments,
+		title,
+	};
 }

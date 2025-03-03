@@ -1,7 +1,6 @@
 "use client";
 
 import type { ActionResponse } from "@/app/types";
-import { NavigationLink } from "@/components/navigation-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -9,10 +8,13 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Link } from "@/i18n/routing";
 import { Bell } from "lucide-react";
+import { getImageProps } from "next/image";
 import { startTransition, useActionState } from "react";
 import { markNotificationAsReadAction } from "./action";
 import type { NotificationWithRelations } from "./db/queries.server";
+
 export function NotificationsDropdownClient({
 	notifications,
 	currentUserHandle,
@@ -35,7 +37,11 @@ export function NotificationsDropdownClient({
 		(notification) => !notification.read,
 	).length;
 	return (
-		<DropdownMenu data-testid="notifications-menu" onOpenChange={handleClick}>
+		<DropdownMenu
+			data-testid="notifications-menu"
+			onOpenChange={handleClick}
+			modal={false}
+		>
 			<DropdownMenuTrigger asChild>
 				<div className="relative">
 					<Bell data-testid="bell-icon" className="w-6 h-6 cursor-pointer" />
@@ -103,12 +109,9 @@ function NotificationContent({
 }) {
 	const { actor, type } = notificationWithRelations;
 	const commonLink = (
-		<NavigationLink
-			href={`/user/${actor.handle}`}
-			className="hover:underline font-bold"
-		>
+		<Link href={`/user/${actor.handle}`} className="hover:underline font-bold">
 			{actor.name}
-		</NavigationLink>
+		</Link>
 	);
 	const commonDate = notificationWithRelations.createdAt.toLocaleString();
 
@@ -118,27 +121,31 @@ function NotificationContent({
 	switch (type) {
 		case "PAGE_COMMENT": {
 			const { pageComment } = notificationWithRelations;
+			const title = pageComment?.page.pageSegments[0].text;
+			if (!title) return null;
 			actionText = <span className="text-gray-500"> commented on </span>;
 			extraContent = (
-				<NavigationLink
+				<Link
 					href={`/user/${currentUserHandle}/page/${pageComment?.page.slug}`}
 					className="hover:underline font-bold"
 				>
-					{pageComment?.page.pageSegments[0].text}
-				</NavigationLink>
+					{title}
+				</Link>
 			);
 			break;
 		}
 		case "PAGE_LIKE": {
 			const { page } = notificationWithRelations;
+			const title = page?.pageSegments[0].text;
+			if (!title) return null;
 			actionText = <span className="text-gray-500"> liked your page </span>;
 			extraContent = (
-				<NavigationLink
+				<Link
 					href={`/user/${currentUserHandle}/page/${page?.slug}`}
 					className="hover:underline font-bold"
 				>
-					{page?.pageSegments[0].text}
-				</NavigationLink>
+					{title}
+				</Link>
 			);
 			break;
 		}
@@ -157,12 +164,12 @@ function NotificationContent({
 				<>
 					<span className="">{votedText}</span>
 					<span className="text-gray-500"> on </span>
-					<NavigationLink
+					<Link
 						href={`/user/${votedPageUser?.handle}/page/${votedPage?.slug}`}
 						className="hover:underline font-bold"
 					>
 						{votedPageTitle}
-					</NavigationLink>
+					</Link>
 				</>
 			);
 			break;
@@ -191,15 +198,21 @@ function NotificationAvatar({
 }: {
 	actor: { handle: string; image: string; name: string };
 }) {
+	const { props } = getImageProps({
+		src: actor.image,
+		alt: actor.name,
+		width: 40,
+		height: 40,
+	});
 	return (
-		<NavigationLink
+		<Link
 			href={`/user/${actor.handle}`}
 			className="flex items-center mr-2 !no-underline hover:text-gray-700"
 		>
 			<Avatar className="w-10 h-10 flex-shrink-0 mr-3">
-				<AvatarImage src={actor.image} alt={actor.name} />
+				<AvatarImage {...props} />
 				<AvatarFallback>{actor.name.charAt(0).toUpperCase()}</AvatarFallback>
 			</Avatar>
-		</NavigationLink>
+		</Link>
 	);
 }

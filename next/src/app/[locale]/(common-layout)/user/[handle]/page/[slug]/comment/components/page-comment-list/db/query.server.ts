@@ -1,6 +1,6 @@
 import { getBestTranslation } from "@/app/[locale]/lib/get-best-translation";
+import type { SegmentTranslationWithVote } from "@/app/[locale]/types";
 import { prisma } from "@/lib/prisma";
-import type { SegmentTranslationWithVote } from "../../../../types";
 
 export async function fetchPageCommentsWithUserAndTranslations(
 	pageId: number,
@@ -33,6 +33,7 @@ export async function fetchPageCommentsWithUserAndTranslations(
 									createdAt: true,
 									updatedAt: true,
 									profile: true,
+									twitterHandle: true,
 									totalPoints: true,
 									isAI: true,
 								},

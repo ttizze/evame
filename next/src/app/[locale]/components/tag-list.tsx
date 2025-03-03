@@ -1,4 +1,4 @@
-import { NavigationLink } from "@/components/navigation-link";
+import { Link } from "@/i18n/routing";
 import type { Tag } from "@prisma/client";
 import { Hash } from "lucide-react";
 
@@ -10,7 +10,7 @@ export function TagList({ tag }: TagListProps) {
 	return (
 		<div className="flex flex-wrap gap-2 pt-2 pb-3">
 			{tag.map((tag) => (
-				<NavigationLink
+				<Link
 					href={`/search?query=${encodeURIComponent(tag.name)}&category=tags&tagPage=true`}
 					key={tag.id}
 					className="flex items-center gap-1 px-3 h-[32px] !no-underline bg-secondary rounded-full text-sm text-secondary-foreground"
@@ -19,7 +19,7 @@ export function TagList({ tag }: TagListProps) {
 						<Hash className="w-3 h-3" />
 					</button>
 					<span>{tag.name}</span>
-				</NavigationLink>
+				</Link>
 			))}
 		</div>
 	);

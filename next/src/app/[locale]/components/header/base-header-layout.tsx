@@ -1,6 +1,6 @@
+"use client";
 import { signOutAction } from "@/app/[locale]/auth-action";
 import type { SanitizedUser } from "@/app/types";
-import { NavigationLink } from "@/components/navigation-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -9,10 +9,14 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Link } from "@/i18n/routing";
 import { LogOutIcon, SettingsIcon } from "lucide-react";
 import Image from "next/image";
+import { getImageProps } from "next/image";
 import type { ReactNode } from "react";
 import { ModeToggle } from "../mode-toggle";
+import { useHeaderScroll } from "./hooks/use-header-scroll";
+
 interface BaseHeaderLayoutProps {
 	currentUser: SanitizedUser | undefined;
 	leftExtra?: ReactNode;
@@ -26,11 +30,25 @@ export function BaseHeaderLayout({
 	rightExtra,
 	showUserMenu = true,
 }: BaseHeaderLayoutProps) {
+	// カスタムフックを使用
+	const { headerRef, isPinned, isVisible, headerHeight } = useHeaderScroll();
+	const { props } = getImageProps({
+		src: currentUser?.image || "",
+		alt: currentUser?.name || "",
+		width: 40,
+		height: 40,
+	});
 	return (
-		<header className="z-10 w-full">
-			<div className="max-w-7xl mx-auto py-2 md:py-4 px-2 md:px-6 lg:px-8 flex justify-between items-center">
+		<div ref={headerRef}>
+			<header
+				className={`z-50 bg-background transition-all duration-300 ${
+					!isVisible ? "-translate-y-full" : "translate-y-0"
+				} ${
+					isPinned ? "fixed top-0 left-0 right-0 shadow-md" : ""
+				} max-w-3xl mx-auto py-2 md:py-4 px-2 md:px-6 lg:px-8 flex justify-between items-center`}
+			>
 				<div className="flex items-center gap-4">
-					<NavigationLink href="/" className="flex items-center">
+					<Link href="/" className="flex items-center">
 						<Image
 							src="/logo.svg"
 							alt="Evame"
@@ -39,24 +57,24 @@ export function BaseHeaderLayout({
 							className="h-8 w-20 dark:invert"
 							aria-label="Evame Logo"
 						/>
-					</NavigationLink>
+					</Link>
 					{leftExtra}
 				</div>
 				<div className="flex items-center gap-4">
 					{rightExtra}
 					{showUserMenu && currentUser && (
-						<DropdownMenu>
+						<DropdownMenu modal={false}>
 							<DropdownMenuTrigger>
 								<Avatar className="w-6 h-6">
-									<AvatarImage src={currentUser.image} alt={currentUser.name} />
+									<AvatarImage {...props} />
 									<AvatarFallback>
 										{currentUser.handle.charAt(0).toUpperCase()}
 									</AvatarFallback>
 								</Avatar>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent className="m-2 p-0 rounded-xl min-w-40">
-								<DropdownMenuItem asChild>
-									<NavigationLink
+								<DropdownMenuItem className="p-0">
+									<Link
 										href={`/user/${currentUser.handle}`}
 										className="opacity-100 w-full rounded-none px-4 py-3  cursor-pointer hover:bg-accent hover:text-accent-foreground"
 									>
@@ -66,17 +84,17 @@ export function BaseHeaderLayout({
 												@{currentUser.handle}
 											</span>
 										</div>
-									</NavigationLink>
+									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuSeparator className="my-0" />
-								<DropdownMenuItem asChild>
-									<NavigationLink
+								<DropdownMenuItem className="p-0 ">
+									<Link
 										href={`/user/${currentUser.handle}/page-management`}
-										className="opacity-100 w-full rounded-none gap-2 px-4 py-3 cursor-pointer hover:bg-accent hover:text-accent-foreground"
+										className="flex items-center opacity-100 w-full rounded-none gap-2 px-4 py-3 cursor-pointer hover:bg-accent hover:text-accent-foreground"
 									>
 										<SettingsIcon className="w-4 h-4" />
 										Page Management
-									</NavigationLink>
+									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuItem asChild>
 									<ModeToggle />
@@ -95,7 +113,8 @@ export function BaseHeaderLayout({
 						</DropdownMenu>
 					)}
 				</div>
-			</div>
-		</header>
+			</header>
+			{isPinned && <div style={{ height: `${headerHeight}px` }} />}
+		</div>
 	);
 }

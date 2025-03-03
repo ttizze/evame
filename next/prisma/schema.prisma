@@ -15,6 +15,7 @@ model User {
   name                               String
   image                              String
   profile                            String                              @default("")
+  twitterHandle                      String                              @default("")
   plan                               String                              @default("free")
   totalPoints                        Int                                 @default(0) @map("total_points")
   isAI                               Boolean                             @default(false) @map("is_ai")
@@ -101,6 +102,20 @@ model UserAITranslationInfo {
   @@map("user_ai_translation_info")
 }
 
+model PageAITranslationInfo {
+  id Int @id @default(autoincrement())
+  pageId Int @map("page_id")
+  locale String
+  aiTranslationStatus TranslationStatus @default(PENDING) @map("ai_translation_status")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId])
+  @@index([pageId, locale, createdAt])
+  @@map("page_ai_translation_info")
+}
+
 enum PageStatus {
   DRAFT
   PUBLIC
@@ -118,6 +133,7 @@ model Page {
   user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId                String                  @map("user_id")
   userAITranslationInfo UserAITranslationInfo[]
+  pageAITranslationInfo PageAITranslationInfo[]
   pageSegments          PageSegment[]
   tagPages              TagPage[]
   likePages             LikePage[]
@@ -166,6 +182,11 @@ model PageSegmentTranslation {
   @@index([pageSegmentId])
   @@index([userId])
   @@index([locale])
+
+  @@index([locale, isArchived])
+  @@index([pageSegmentId, locale, isArchived])
+  @@index([point, createdAt])
+
   @@map("page_segment_translations")
 }
 

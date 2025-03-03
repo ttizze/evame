@@ -1,32 +1,48 @@
-import { auth } from "@/auth";
-import { PageManagementTab } from "./components/page-management-tab";
-import { fetchPaginatedOwnPages } from "./db/queries.server";
+import { getCurrentUser } from "@/auth";
+import { Skeleton } from "@/components/ui/skeleton";
+import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
+import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
+import type { SearchParams } from "nuqs/server";
+const PageManagementTab = dynamic(
+	() =>
+		import("./components/page-management-tab/server").then(
+			(mod) => mod.PageManagementTab,
+		),
+	{
+		loading: () => (
+			<div className="flex flex-col gap-4">
+				<Skeleton className="h-[100px] w-full" />
+				<Skeleton className="h-[100px] w-full" />
+				<Skeleton className="h-[100px] w-full" />
+				<Skeleton className="h-[100px] w-full" />
+				<Skeleton className="h-[100px] w-full" />
+				<Skeleton className="h-[100px] w-full" />
+				<Skeleton className="h-[100px] w-full" />
+			</div>
+		),
+	},
+);
+
+const searchParamsSchema = {
+	page: parseAsInteger.withDefault(1),
+	query: parseAsString.withDefault(""),
+};
+const loadSearchParams = createLoader(searchParamsSchema);
 
 export default async function PageManagementPage({
 	params,
 	searchParams,
 }: {
 	params: Promise<{ locale: string }>;
-	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+	searchParams: Promise<SearchParams>;
 }) {
-	const session = await auth();
-	const currentUser = session?.user;
+	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		throw new Error("Unauthorized");
+		return redirect("/auth/login");
 	}
 	const { locale } = await params;
-	const { page = "1", query = "" } = await searchParams;
-	if (typeof page !== "string" || typeof query !== "string") {
-		throw new Error("Invalid page or query");
-	}
-	const { pagesWithTitle, totalPages, currentPage } =
-		await fetchPaginatedOwnPages(
-			currentUser.id,
-			locale,
-			Number(page),
-			10,
-			query,
-		);
+	const { page, query } = await loadSearchParams(searchParams);
 
 	return (
 		<div className="mx-auto max-w-4xl py-10">
@@ -39,26 +55,13 @@ export default async function PageManagementPage({
 
 			{/* <TabsContent value="page-management"> */}
 			<PageManagementTab
-				pagesWithTitle={pagesWithTitle}
-				totalPages={totalPages}
-				currentPage={currentPage}
+				currentUserId={currentUser.id}
+				locale={locale}
+				page={page}
+				query={query}
 				handle={currentUser.handle}
 			/>
 			{/* </TabsContent> */}
-
-			{/* <TabsContent value="folder-upload">
-					{hasGeminiApiKey ? (
-						<FolderUploadTab />
-					) : (
-						<div className="p-4 text-center text-red-500">
-							Gemini API key is not set
-						</div>
-					)}
-				</TabsContent>
-
-				<TabsContent value="github-integration">
-					<GitHubIntegrationTab />
-				</TabsContent> */}
 			{/* </Tabs> */}
 		</div>
 	);

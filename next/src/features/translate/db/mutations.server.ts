@@ -27,7 +27,20 @@ export async function updateUserAITranslationInfo(
 		data: {
 			aiTranslationStatus: status,
 			aiTranslationProgress: progress,
-			createdAt: new Date(),
+		},
+	});
+}
+
+export async function updatePageAITranslationInfo(
+	id: number,
+	status: TranslationStatus,
+) {
+	return await prisma.pageAITranslationInfo.update({
+		where: {
+			id: id,
+		},
+		data: {
+			aiTranslationStatus: status,
 		},
 	});
 }

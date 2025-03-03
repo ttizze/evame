@@ -8,8 +8,11 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Trash } from "lucide-react";
+import { Loader2, Trash } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useActionState } from "react";
+import { useEffect } from "react";
+import { toast } from "sonner";
 import { archivePageAction } from "./action";
 interface DeletePageDialogProps {
 	open: boolean;
@@ -26,7 +29,14 @@ export function DeletePageDialog({
 		ActionResponse,
 		FormData
 	>(archivePageAction, { success: false });
-
+	const router = useRouter();
+	useEffect(() => {
+		if (archiveState.success) {
+			toast.success(archiveState.message);
+			onOpenChange(false);
+			router.refresh();
+		}
+	}, [archiveState, onOpenChange, router]);
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent>
@@ -41,21 +51,31 @@ export function DeletePageDialog({
 					</DialogDescription>
 				</DialogHeader>
 				<DialogFooter>
-					<Button variant="outline" onClick={() => onOpenChange(false)}>
-						Cancel
-					</Button>
-					<form action={archiveAction}>
-						<input type="hidden" name="pageIds" value={pageIds.join(",")} />
+					<div className="flex items-center justify-between gap-2 w-full">
 						<Button
-							variant="destructive"
-							type="submit"
-							disabled={isArchiving}
+							variant="outline"
+							className="w-1/2"
 							onClick={() => onOpenChange(false)}
 						>
-							<Trash className="w-4 h-4 mr-2" />
-							Delete
+							Cancel
 						</Button>
-					</form>
+						<form action={archiveAction} className="w-1/2">
+							<input type="hidden" name="pageIds" value={pageIds.join(",")} />
+							<Button
+								variant="destructive"
+								type="submit"
+								className="w-full"
+								disabled={isArchiving}
+							>
+								{isArchiving ? (
+									<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+								) : (
+									<Trash className="w-4 h-4 mr-2" />
+								)}
+								Delete
+							</Button>
+						</form>
+					</div>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>

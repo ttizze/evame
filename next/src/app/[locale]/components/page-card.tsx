@@ -1,5 +1,4 @@
 import type { PageCardLocalizedType } from "@/app/[locale]/db/queries.server";
-import { NavigationLink } from "@/components/navigation-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	Card,
@@ -8,8 +7,10 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import { Link } from "@/i18n/routing";
+import { getImageProps } from "next/image";
 import { LikeButton } from "./like-button/client";
-import { PageActionsDropdown } from "./page-actions-dropdown";
+import { PageActionsDropdown } from "./page-actions-dropdown/client";
 import { TagList } from "./tag-list";
 
 type PageCardProps = {
@@ -25,6 +26,15 @@ export function PageCard({
 	userLink,
 	showOwnerActions = false,
 }: PageCardProps) {
+	const { props } = getImageProps({
+		src: pageCard.user.image,
+		alt: pageCard.user.name,
+		width: 40,
+		height: 40,
+	});
+	const title = pageCard.pageSegments[0].text;
+	const bestTranslationTitle =
+		pageCard.pageSegments[0].pageSegmentTranslations[0]?.text;
 	return (
 		<Card className="h-full relative w-full overflow-hidden">
 			{showOwnerActions && (
@@ -37,30 +47,30 @@ export function PageCard({
 				</div>
 			)}
 			<CardHeader>
-				<NavigationLink href={pageLink} className="block">
+				<Link href={pageLink} className="block">
 					<CardTitle className="flex flex-col pr-3 break-all overflow-wrap-anywhere">
-						{pageCard.pageSegments[0].text}
-						{pageCard.pageSegments[0].pageSegmentTranslations.length > 0 && (
+						{title}
+						{bestTranslationTitle && (
 							<span className="text-sm text-gray-600">
-								{pageCard.pageSegments[0].pageSegmentTranslations[0].text}
+								{bestTranslationTitle}
 							</span>
 						)}
 					</CardTitle>
 					<CardDescription>{pageCard.createdAt}</CardDescription>
-				</NavigationLink>
+				</Link>
 				<TagList tag={pageCard.tagPages.map((tagPage) => tagPage.tag)} />
 			</CardHeader>
 			<CardContent>
 				<div className="flex justify-between items-center">
-					<NavigationLink href={userLink} className="flex items-center">
+					<Link href={userLink} className="flex items-center">
 						<Avatar className="w-6 h-6 mr-2">
-							<AvatarImage src={pageCard.user.image} alt={pageCard.user.name} />
+							<AvatarImage {...props} />
 							<AvatarFallback>
 								{pageCard.user.handle.charAt(0).toUpperCase()}
 							</AvatarFallback>
 						</Avatar>
 						<span className="text-sm text-gray-600">{pageCard.user.name}</span>
-					</NavigationLink>
+					</Link>
 
 					<LikeButton
 						liked={pageCard.likePages.length > 0}

@@ -8,7 +8,8 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import { CopyIcon, Share, XIcon } from "lucide-react";
+import { CopyIcon, Share } from "lucide-react";
+import Image from "next/image";
 import { useParams, usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import {
@@ -19,13 +20,11 @@ import {
 	TwitterShareButton,
 } from "react-share";
 import { toast } from "sonner";
-
 interface ShareDialogProps {
 	title: string;
-	firstImageUrl?: string;
 }
 
-export function ShareDialog({ title, firstImageUrl }: ShareDialogProps) {
+export function ShareDialog({ title }: ShareDialogProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
@@ -86,7 +85,13 @@ export function ShareDialog({ title, firstImageUrl }: ShareDialogProps) {
 							<FacebookIcon size={32} round />
 						</FacebookShareButton>
 						<TwitterShareButton url={getShareUrl()} title={title}>
-							<XIcon size={32} />
+							<Image
+								src="/x.svg"
+								alt="X"
+								width={32}
+								height={32}
+								className="dark:invert"
+							/>
 						</TwitterShareButton>
 						<RedditShareButton url={getShareUrl()} title={title}>
 							<RedditIcon size={32} round />

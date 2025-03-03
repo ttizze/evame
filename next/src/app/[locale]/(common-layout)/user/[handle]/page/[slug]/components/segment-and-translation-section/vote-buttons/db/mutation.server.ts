@@ -9,6 +9,7 @@ export async function handleVote(
 	voteTarget: VoteTarget,
 ) {
 	let updatedPoint = 0;
+	let finalIsUpvote: boolean | null = isUpvote;
 	if (voteTarget === VOTE_TARGET.PAGE_SEGMENT_TRANSLATION) {
 		updatedPoint = await prisma.$transaction(async (tx) => {
 			const existingVote = await tx.vote.findUnique({
@@ -28,6 +29,7 @@ export async function handleVote(
 						where: { id: segmentTranslationId },
 						data: { point: { increment: isUpvote ? -1 : 1 } },
 					});
+					finalIsUpvote = null;
 				} else {
 					// 投票内容が異なる場合は更新して point を調整
 					await tx.vote.update({
@@ -80,6 +82,7 @@ export async function handleVote(
 						where: { id: segmentTranslationId },
 						data: { point: { increment: isUpvote ? -1 : 1 } },
 					});
+					finalIsUpvote = null;
 				} else {
 					await tx.pageCommentSegmentTranslationVote.update({
 						where: { id: existingVote.id },
@@ -112,7 +115,10 @@ export async function handleVote(
 		});
 	}
 
-	return { success: true, data: { isUpvote, point: updatedPoint } };
+	return {
+		success: true,
+		data: { isUpvote: finalIsUpvote, point: updatedPoint },
+	};
 }
 
 export async function createNotificationPageSegmentTranslationVote(

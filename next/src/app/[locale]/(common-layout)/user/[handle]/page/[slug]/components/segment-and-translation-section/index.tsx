@@ -3,12 +3,12 @@ import type {
 	AddTranslationFormTarget,
 	VoteTarget,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
-import { NavigationLink } from "@/components/navigation-link";
+import type { SegmentWithTranslations } from "@/app/[locale]/types";
+import { Link } from "@/i18n/routing";
 import { Lock } from "lucide-react";
 import { SquarePen } from "lucide-react";
 import { useQueryState } from "nuqs";
 import type { ReactNode } from "react";
-import type { SegmentWithTranslations } from "../../types";
 import { TranslationSection } from "./translation-section";
 interface SegmentAndTranslationSectionProps {
 	segmentWithTranslations: SegmentWithTranslations;
@@ -46,7 +46,7 @@ export function SegmentAndTranslationSection({
 	return (
 		<>
 			{showOriginal && (
-				<span className="flex items-center">
+				<span className="flex justify-between">
 					<span
 						className={`inline-block ${
 							segmentWithTranslations.segmentTranslationsWithVotes.length ===
@@ -59,10 +59,10 @@ export function SegmentAndTranslationSection({
 						{elements}
 					</span>
 					{isOwner && slug && (
-						<div className="ml-auto">
-							<NavigationLink href={`/user/${currentHandle}/page/${slug}/edit`}>
+						<div className="ml-2">
+							<Link href={`/user/${currentHandle}/page/${slug}/edit`}>
 								<SquarePen className="w-5 h-5" />
-							</NavigationLink>
+							</Link>
 						</div>
 					)}
 				</span>

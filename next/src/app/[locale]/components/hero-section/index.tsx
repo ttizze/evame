@@ -5,28 +5,34 @@ import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/pa
 import { StartButton } from "@/app/[locale]/components/start-button";
 import { TranslateActionSection } from "@/app/[locale]/components/translate-action-section";
 import { fetchPageWithTranslations } from "@/app/[locale]/db/queries.server";
+import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/db/queries.server";
+import { notFound } from "next/navigation";
 
 export default async function HeroSection({ locale }: { locale: string }) {
-	const pageName = locale === "ja" ? "evame" : "evame-ja";
+	const pageSlug = locale === "ja" ? "evame" : "evame-ja";
 	const topPageWithTranslations = await fetchPageWithTranslations(
-		pageName,
+		pageSlug,
 		locale,
 		undefined,
 	);
 	if (!topPageWithTranslations) {
-		throw new Response("Not Found", { status: 404 });
+		return notFound();
 	}
+	const pageAITranslationInfo = await fetchLatestPageAITranslationInfo(
+		topPageWithTranslations.page.id,
+	);
 
 	const [title, text] = topPageWithTranslations.segmentWithTranslations
 		.filter((st) => st.segment.number === 0 || st.segment.number === 1)
 		.sort((a, b) => a.segment.number - b.segment.number);
 
 	if (!title || !text) {
-		throw new Response("Not Found", { status: 404 });
+		const error = new Error("Invalid hero section");
+		error.message = "Invalid hero section";
+		throw error;
 	}
 	const heroTitle = title;
 	const heroText = text;
-	const existLocales = topPageWithTranslations.existLocales;
 	const sourceLocale = topPageWithTranslations.page.sourceLocale;
 	return (
 		<div className="prose dark:prose-invert sm:prose lg:prose-lg mx-auto px-2 py-10 flex flex-col items-center justify-center">
@@ -47,12 +53,11 @@ export default async function HeroSection({ locale }: { locale: string }) {
 					<TranslateActionSection
 						pageId={0}
 						currentHandle={undefined}
-						hasGeminiApiKey={false}
 						userAITranslationInfo={null}
 						sourceLocale={sourceLocale}
-						targetLocale={locale}
-						existLocales={existLocales}
+						pageAITranslationInfo={pageAITranslationInfo}
 						translateTarget={TranslateTarget.TRANSLATE_PAGE}
+						showIcons={false}
 					/>
 				</div>
 				<span className="text-xl mb-12 w-full">

@@ -1,7 +1,15 @@
 import { Footer } from "@/app/[locale]/components/footer";
-import { Header } from "@/app/[locale]/components/header";
+import { Skeleton } from "@/components/ui/skeleton";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
+import dynamic from "next/dynamic";
+
+const Header = dynamic(
+	() => import("@/app/[locale]/components/header").then((mod) => mod.Header),
+	{
+		loading: () => <Skeleton className="h-10 w-full" />,
+	},
+);
 
 export default async function CommonLayout({
 	children,

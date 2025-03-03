@@ -1,9 +1,12 @@
 import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { supportedLocaleOptions } from "@/app/constants/locale";
 import { TranslationStatus } from "@prisma/client";
-import { updateUserAITranslationInfo } from "../db/mutations.server";
-import { getLatestPageCommentSegments } from "../db/query.server";
-import { getLatestPageSegments } from "../db/query.server";
+import {
+	updatePageAITranslationInfo,
+	updateUserAITranslationInfo,
+} from "../db/mutations.server";
+import { getLatestPageCommentSegments } from "../db/queries.server";
+import { getLatestPageSegments } from "../db/queries.server";
 import { getGeminiModelResponse } from "../services/gemini";
 import type { NumberedElement, TranslateJobParams } from "../types";
 import { extractTranslations } from "./extract-translations.server";
@@ -17,6 +20,7 @@ export async function translate(params: TranslateJobParams) {
 			TranslationStatus.IN_PROGRESS,
 			0,
 		);
+
 		const sortedNumberedElements = params.numberedElements.sort(
 			(a, b) => a.number - b.number,
 		);
@@ -31,7 +35,7 @@ export async function translate(params: TranslateJobParams) {
 				params.geminiApiKey,
 				params.aiModel,
 				chunks[i],
-				params.locale,
+				params.targetLocale,
 				params.pageId,
 				params.title,
 				params.translateTarget,
@@ -49,6 +53,10 @@ export async function translate(params: TranslateJobParams) {
 			TranslationStatus.COMPLETED,
 			100,
 		);
+		await updatePageAITranslationInfo(
+			params.pageAITranslationInfoId,
+			TranslationStatus.COMPLETED,
+		);
 	} catch (error) {
 		console.error("Background translation job failed:", error);
 		await updateUserAITranslationInfo(
@@ -63,7 +71,7 @@ async function translateChunk(
 	geminiApiKey: string,
 	aiModel: string,
 	numberedElements: NumberedElement[],
-	locale: string,
+	targetLocale: string,
 	pageId: number,
 	title: string,
 	translateTarget: TranslateTarget,
@@ -82,7 +90,7 @@ async function translateChunk(
 			geminiApiKey,
 			aiModel,
 			pendingElements,
-			locale,
+			targetLocale,
 			title,
 		);
 
@@ -97,7 +105,7 @@ async function translateChunk(
 				await saveTranslationsForPage(
 					partialTranslations,
 					pageSegments,
-					locale,
+					targetLocale,
 					aiModel,
 				);
 			} else {
@@ -110,7 +118,7 @@ async function translateChunk(
 				await saveTranslationsForComment(
 					partialTranslations,
 					pageCommentSegments,
-					locale,
+					targetLocale,
 					aiModel,
 				);
 			}
@@ -138,20 +146,21 @@ async function getTranslatedText(
 	geminiApiKey: string,
 	aiModel: string,
 	numberedElements: NumberedElement[],
-	locale: string,
+	targetLocale: string,
 	title: string,
 ) {
 	const source_text = numberedElements
 		.map((el) => JSON.stringify(el))
 		.join("\n");
-	const localeName =
-		supportedLocaleOptions.find((sl) => sl.code === locale)?.name || locale;
+	const targetLocaleName =
+		supportedLocaleOptions.find((sl) => sl.code === targetLocale)?.name ||
+		targetLocale;
 	const result = await getGeminiModelResponse(
 		geminiApiKey,
 		aiModel,
 		title,
 		source_text,
-		localeName,
+		targetLocaleName,
 	);
 	return result;
 }

@@ -6,6 +6,7 @@ declare module "@auth/core/adapters" {
 	interface AdapterUser extends CoreAdapterUser {
 		handle: string;
 		profile: string;
+		twitterHandle: string;
 		createdAt: Date;
 		updatedAt: Date;
 		totalPoints: number;
@@ -19,6 +20,7 @@ declare module "next-auth" {
 	interface User extends DefaultUser {
 		handle: string;
 		profile: string;
+		twitterHandle: string;
 		createdAt: Date;
 		updatedAt: Date;
 		totalPoints: number;
@@ -30,6 +32,7 @@ declare module "next-auth" {
 		user: DefaultSession["user"] & {
 			handle: string;
 			profile: string;
+			twitterHandle: string;
 			createdAt: Date;
 			updatedAt: Date;
 			totalPoints: number;

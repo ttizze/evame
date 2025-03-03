@@ -1,11 +1,13 @@
+import {
+	createPageAITranslationInfo,
+	createUserAITranslationInfo,
+} from "@/app/[locale]/db/mutations.server";
 import { fetchGeminiApiKeyByHandle } from "@/app/db/queries.server";
 import { getCurrentUser } from "@/auth";
-import { getTranslateUserQueue } from "@/features/translate/translate-user-queue";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TranslateTarget } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
-import { createUserAITranslationInfo } from "../../../(common-layout)/user/[handle]/page/[slug]/db/mutations.server";
 import {
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
@@ -15,20 +17,13 @@ vi.mock("@/auth", () => ({
 	getCurrentUser: vi.fn(),
 }));
 vi.mock("@/app/db/queries.server");
-vi.mock(
-	"../../../(common-layout)/user/[handle]/page/[slug]/db/mutations.server",
-);
+vi.mock("@/app/[locale]/db/mutations.server");
 vi.mock("../../../(common-layout)/user/[handle]/page/[slug]/db/queries.server");
-vi.mock("@/features/translate/translate-user-queue");
 vi.mock("next/cache");
 
 describe("TranslateAction", () => {
 	const mockGeminiApiKey = {
 		apiKey: "test-api-key",
-	};
-
-	const mockQueue = {
-		add: vi.fn(),
 	};
 
 	beforeEach(async () => {
@@ -46,9 +41,10 @@ describe("TranslateAction", () => {
 		(
 			fetchGeminiApiKeyByHandle as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue(mockGeminiApiKey);
-		(
-			getTranslateUserQueue as unknown as ReturnType<typeof vi.fn>
-		).mockReturnValue(mockQueue);
+		vi.spyOn(global, "fetch").mockResolvedValue({
+			json: async () => ({}),
+			ok: true,
+		} as Response);
 		(revalidatePath as unknown as ReturnType<typeof vi.fn>).mockImplementation(
 			() => {},
 		);
@@ -97,12 +93,14 @@ describe("TranslateAction", () => {
 				},
 			],
 		};
-		//@ts-ignore
 		(
 			fetchPageWithTitleAndComments as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue(mockPage);
 		(
 			createUserAITranslationInfo as unknown as ReturnType<typeof vi.fn>
+		).mockResolvedValue({ id: 1 });
+		(
+			createPageAITranslationInfo as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue({ id: 1 });
 
 		const formData = new FormData();
@@ -114,7 +112,7 @@ describe("TranslateAction", () => {
 		const result = await translateAction({ success: false }, formData);
 
 		expect(result).toEqual({ success: true });
-		expect(mockQueue.add).toHaveBeenCalled();
+		expect(global.fetch).toHaveBeenCalled();
 	});
 
 	it("should handle page translation successfully", async () => {
@@ -131,6 +129,9 @@ describe("TranslateAction", () => {
 		(
 			createUserAITranslationInfo as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue({ id: 1 });
+		(
+			createPageAITranslationInfo as unknown as ReturnType<typeof vi.fn>
+		).mockResolvedValue({ id: 1 });
 
 		const formData = new FormData();
 		formData.append("pageId", "1");
@@ -141,7 +142,6 @@ describe("TranslateAction", () => {
 		const result = await translateAction({ success: false }, formData);
 
 		expect(result).toEqual({ success: true });
-		expect(mockQueue.add).toHaveBeenCalled();
 		expect(revalidatePath).toHaveBeenCalled();
 	});
 

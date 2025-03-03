@@ -12,7 +12,8 @@ async function main(): Promise<void> {
 
 	// 2. 取得したページを順番に処理
 	for (const page of pages) {
-		if (!page.pageSegments[0]) {
+		const title = page.pageSegments[0].text;
+		if (!title) {
 			console.log(
 				`pageSegments[0] が存在しません。userId=${page.userId}, sourceLocale=${page.sourceLocale}, status=${page.status}`,
 			);
@@ -21,7 +22,7 @@ async function main(): Promise<void> {
 		}
 		// 例: pageSlug プロパティ名が異なる場合は適宜修正
 		await processPageHtml(
-			page.pageSegments[0].text,
+			title,
 			page.content,
 			page.slug,
 			page.userId,

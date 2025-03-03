@@ -5,11 +5,11 @@ import type {
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { sanitizeAndParseText } from "@/app/[locale]/lib/sanitize-and-parse-text.client";
 import type { SegmentWithTranslations } from "@/app/[locale]/types";
-import { NavigationLink } from "@/components/navigation-link";
+import { Link } from "@/i18n/routing";
 import { Languages, Plus } from "lucide-react";
 import { useState } from "react";
 import { AddAndVoteTranslations } from "./add-and-vote-translations";
-import { VoteButtons } from "./vote-buttons";
+import { VoteButtons } from "./vote-buttons/client";
 
 interface TranslationSectionProps {
 	segmentWithTranslations: SegmentWithTranslations;
@@ -51,17 +51,18 @@ export function TranslationSection({
 			</span>
 			{isSelected && (
 				<>
-					<span className="flex items-center justify-end">
-						<NavigationLink
+					<span className="flex items-center justify-end gap-2">
+						<Link
 							href={`/user/${bestSegmentTranslationWithVote?.segmentTranslation.user.handle}`}
-							className="!no-underline mr-2"
+							className="!no-underline"
 						>
-							<span className="text-sm text-gray-500 text-right flex justify-end items-center">
+							<span className="text-sm text-gray-500 text-right flex  items-center">
 								by:{" "}
 								{bestSegmentTranslationWithVote?.segmentTranslation.user.name}
 							</span>
-						</NavigationLink>
+						</Link>
 						<VoteButtons
+							key={bestSegmentTranslationWithVote.segmentTranslation.id}
 							translationWithVote={bestSegmentTranslationWithVote}
 							voteTarget={voteTarget}
 						/>

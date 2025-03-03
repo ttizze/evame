@@ -176,6 +176,7 @@ export async function fetchPageWithTranslations(
 					createdAt: true,
 					updatedAt: true,
 					profile: true,
+					twitterHandle: true,
 					totalPoints: true,
 					isAI: true,
 				},
@@ -194,6 +195,7 @@ export async function fetchPageWithTranslations(
 									createdAt: true,
 									updatedAt: true,
 									profile: true,
+									twitterHandle: true,
 									totalPoints: true,
 									isAI: true,
 								},
@@ -218,24 +220,6 @@ export async function fetchPageWithTranslations(
 
 	if (!page) return null;
 
-	const titleText = await prisma.pageSegment.findFirst({
-		where: {
-			pageId: page.id,
-			number: 0,
-		},
-		include: {
-			pageSegmentTranslations: {
-				where: { isArchived: false },
-				select: { locale: true },
-			},
-		},
-	});
-
-	const existLocales = titleText
-		? Array.from(
-				new Set(titleText.pageSegmentTranslations.map((t) => t.locale)),
-			)
-		: [];
 	const { user, ...pageWithoutUser } = page;
 	return {
 		page: {
@@ -271,7 +255,6 @@ export async function fetchPageWithTranslations(
 				bestSegmentTranslationWithVote,
 			};
 		}),
-		existLocales,
 	};
 }
 
@@ -280,4 +263,28 @@ export async function getPageById(pageId: number) {
 		where: { id: pageId },
 	});
 	return page;
+}
+
+export async function fetchLatestPageAITranslationInfo(pageId: number) {
+	const locales = await prisma.pageAITranslationInfo.findMany({
+		where: { pageId },
+		select: { locale: true },
+		distinct: ["locale"],
+	});
+
+	// 2. 各localeについて最新のレコードを取得
+	const results = await Promise.all(
+		locales.map(({ locale }) =>
+			prisma.pageAITranslationInfo.findFirst({
+				where: {
+					pageId,
+					locale,
+				},
+				orderBy: { createdAt: "desc" },
+			}),
+		),
+	);
+
+	// nullでないレコードのみを返す
+	return results.filter((record) => record !== null);
 }

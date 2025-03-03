@@ -1,5 +1,7 @@
 import type { SanitizedUser } from "@/app/types";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Tag } from "@prisma/client";
+import dynamic from "next/dynamic";
 import {
 	searchByTag,
 	searchContent,
@@ -7,8 +9,12 @@ import {
 	searchTitle,
 	searchUsers,
 } from "./db/queries.server";
-import { SearchPageClient } from "./search.client";
-
+const DynamicSearchPageClient = dynamic(
+	() => import("./search.client").then((mod) => mod.SearchPageClient),
+	{
+		loading: () => <Skeleton className="h-[500px] w-full" />,
+	},
+);
 const PAGE_SIZE = 10;
 
 export default async function Page({
@@ -31,7 +37,9 @@ export default async function Page({
 		typeof page !== "string" ||
 		typeof tagPage !== "string"
 	) {
-		return <SearchPageClient pages={[]} tags={[]} users={[]} totalPages={0} />;
+		return (
+			<DynamicSearchPageClient pages={[]} tags={[]} users={[]} totalPages={0} />
+		);
 	}
 
 	const skip = (Number(page) - 1) * PAGE_SIZE;
@@ -104,7 +112,7 @@ export default async function Page({
 	const totalPages = Math.ceil(totalCount / take);
 
 	return (
-		<SearchPageClient
+		<DynamicSearchPageClient
 			pages={pages}
 			tags={tags}
 			users={users}

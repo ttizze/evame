@@ -8,18 +8,36 @@ const analyzeBundles = withBundleAnalyzer({
 });
 /** @type {import('next').NextConfig} */
 const config: NextConfig = {
+	eslint: {
+		// Warning: This allows production builds to successfully complete even if
+		// your project has ESLint errors.
+		ignoreDuringBuilds: true,
+	},
+	logging: {
+		fetches: {
+			fullUrl: true,
+		},
+	},
 	experimental: {
 		serverActions: {
 			bodySizeLimit: "5mb",
 		},
 	},
 	images: {
+		minimumCacheTTL: 86400,
 		remotePatterns: [
 			{
 				protocol: "https",
 				hostname: "images.eveeve.org",
 				port: "",
 				pathname: "/uploads/**",
+				search: "",
+			},
+			{
+				protocol: "https",
+				hostname: "lh3.googleusercontent.com",
+				port: "",
+				pathname: "/a/**",
 				search: "",
 			},
 			{
@@ -35,6 +53,19 @@ const config: NextConfig = {
 				pathname: "/api/og",
 			},
 		],
+	},
+	async headers() {
+		return [
+			{
+				source: "/:path*",
+				headers: [
+					{
+						key: "X-Frame-Options",
+						value: "DENY",
+					},
+				],
+			},
+		];
 	},
 };
 
@@ -65,9 +96,6 @@ export default analyzeBundles(
 		// Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
 		// side errors will fail.
 		tunnelRoute: "/monitoring",
-
-		// Hides source maps from generated client bundles
-		hideSourceMaps: true,
 
 		// Automatically tree-shake Sentry logger statements to reduce bundle size
 		disableLogger: true,
