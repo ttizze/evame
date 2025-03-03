@@ -13,6 +13,7 @@ import { Link } from "@/i18n/routing";
 import Linkify from "linkify-react";
 import { Settings } from "lucide-react";
 import Image, { getImageProps } from "next/image";
+import { notFound } from "next/navigation";
 import {
 	fetchFollowerList,
 	fetchFollowingList,
@@ -27,9 +28,7 @@ export async function UserInfo({
 }) {
 	const pageOwner = await fetchUserByHandle(handle);
 	if (!pageOwner) {
-		const error = new Error("Unauthorized");
-		error.message = "Unauthorized";
-		throw error;
+		return notFound();
 	}
 	const { props } = getImageProps({
 		src: pageOwner.image,
