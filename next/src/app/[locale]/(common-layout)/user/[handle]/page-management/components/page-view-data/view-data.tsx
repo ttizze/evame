@@ -80,3 +80,16 @@ export const getGeoViewData = unstable_cache(
 		tags: ["analytics-data"],
 	},
 );
+
+export async function PageViewCounter({ path }: { path: string }) {
+	// 分離された非同期リクエスト
+	const geoViewData = await getGeoViewData(path).catch(() => []);
+	const totalViews = geoViewData.reduce((sum, item) => sum + item.views, 0);
+
+	return (
+		<span
+		>
+			{totalViews}
+		</span>
+	);
+}
