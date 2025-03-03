@@ -17,15 +17,12 @@ export async function GET(req: Request): Promise<Response> {
 	const showTranslation: boolean =
 		searchParams.get("showTranslation") === "true";
 	const showOriginal: boolean = searchParams.get("showOriginal") === "true";
-	const [logoData, faviconData, pageContext] = await Promise.all([
+	const [logoData, pageContext] = await Promise.all([
 		readFile(join(process.cwd(), "public", "logo.png")),
-		readFile(join(process.cwd(), "public", "bg-ogp.png")),
 		fetchPageContext(slug, locale, showOriginal, showTranslation),
 	]);
 
 	const logoSrc = Uint8Array.from(logoData).buffer;
-	const faviconSrc = Uint8Array.from(faviconData).buffer;
-	const faviconSrcUrl = `data:image/png;base64,${Buffer.from(faviconSrc).toString("base64")}`;
 
 	if (!pageContext) {
 		return new ImageResponse(
@@ -44,24 +41,11 @@ export async function GET(req: Request): Promise<Response> {
 	return new ImageResponse(
 		<div
 			style={{
-				width: "100%",
-				height: "100%",
-				padding: "20px",
-				backgroundSize: "100% 100%",
 				fontFamily: "Inter,BIZ UDPGothic",
-				backgroundImage: `url(${faviconSrcUrl})`,
 			}}
-			tw="flex items-center justify-center"
+			tw="flex items-center justify-center bg-black w-full h-full p-6"
 		>
-			<div
-				tw="bg-slate-100 flex flex-col items-center justify-start shadow-xl"
-				style={{
-					width: "95%",
-					height: "95%",
-					borderRadius: "15px",
-					padding: "40px",
-				}}
-			>
+			<div tw="bg-slate-100 flex flex-col items-center justify-start w-[95%] h-[95%] rounded-xl p-10">
 				{/* ヘッダー部分 */}
 				<div tw="flex items-center justify-between w-full ">
 					{/* 左側のアバターと名前 */}
