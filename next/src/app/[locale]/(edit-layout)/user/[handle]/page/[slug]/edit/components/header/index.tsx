@@ -137,7 +137,7 @@ export function EditHeader({
 										type="button"
 										className="ml-3 text-muted-foreground hover:text-foreground flex items-center"
 									>
-										<InfoIcon className="h-4 w-4" />
+										<InfoIcon className={ICON_CLASSES} />
 									</button>
 								</PopoverTrigger>
 								<PopoverContent

@@ -181,20 +181,38 @@ export async function fetchPageWithTranslations(
 					isAI: true,
 				},
 			},
+			pageSegments: {
+				include: {
+					pageSegmentTranslations: {
+						where: { locale, isArchived: false },
+						include: {
+							user: {
+								select: {
+									id: true,
+									name: true,
+									handle: true,
+									image: true,
+									createdAt: true,
+									updatedAt: true,
+									profile: true,
+									twitterHandle: true,
+									totalPoints: true,
+									isAI: true,
+								},
+							},
+							votes: {
+								where: currentUserId
+									? { userId: currentUserId }
+									: { userId: "0" },
+							},
+						},
+						orderBy: [{ point: "desc" }, { createdAt: "desc" }],
+					},
+				},
+			},
 			tagPages: {
 				include: {
 					tag: true,
-				},
-			},
-			// pageSegmentsの基本情報のみを取得（翻訳は含めない）
-			pageSegments: {
-				select: {
-					id: true,
-					text: true,
-					number: true,
-					createdAt: true,
-					updatedAt: true,
-					pageId: true,
 				},
 			},
 		},
@@ -202,85 +220,7 @@ export async function fetchPageWithTranslations(
 
 	if (!page) return null;
 
-	// セグメントIDのリストを取得
-	const segmentIds = page.pageSegments.map((segment) => segment.id);
-
-	// 必要な翻訳データを別クエリで効率的に取得
-	const translations = await prisma.pageSegmentTranslation.findMany({
-		where: {
-			pageSegmentId: { in: segmentIds },
-			locale: locale,
-			isArchived: false,
-		},
-		include: {
-			user: {
-				select: {
-					id: true,
-					name: true,
-					handle: true,
-					image: true,
-					createdAt: true,
-					updatedAt: true,
-					profile: true,
-					twitterHandle: true,
-					totalPoints: true,
-					isAI: true,
-				},
-			},
-			votes: currentUserId
-				? {
-						where: { userId: currentUserId },
-					}
-				: undefined,
-		},
-		orderBy: [{ point: "desc" }, { createdAt: "desc" }],
-	});
-
-	// 翻訳データをセグメントIDごとにグループ化
-	const translationsBySegmentId = translations.reduce(
-		(acc, translation) => {
-			if (!acc[translation.pageSegmentId]) {
-				acc[translation.pageSegmentId] = [];
-			}
-			acc[translation.pageSegmentId].push(translation);
-			return acc;
-		},
-		{} as Record<string, typeof translations>,
-	);
-
 	const { user, ...pageWithoutUser } = page;
-
-	// 結果の構築
-	const segmentWithTranslations = page.pageSegments.map((segment) => {
-		const segmentTranslations = translationsBySegmentId[segment.id] || [];
-
-		const segmentTranslationsWithVotes = segmentTranslations.map(
-			(segmentTranslation) => ({
-				segmentTranslation: {
-					...segmentTranslation,
-					user: segmentTranslation.user,
-				},
-				translationVote:
-					segmentTranslation.votes && segmentTranslation.votes.length > 0
-						? {
-								...segmentTranslation.votes[0],
-								translationId: segmentTranslation.id,
-							}
-						: null,
-			}),
-		);
-
-		const bestSegmentTranslationWithVote = getBestTranslation(
-			segmentTranslationsWithVotes,
-		);
-
-		return {
-			segment,
-			segmentTranslationsWithVotes,
-			bestSegmentTranslationWithVote,
-		};
-	});
-
 	return {
 		page: {
 			...pageWithoutUser,
@@ -288,7 +228,33 @@ export async function fetchPageWithTranslations(
 		},
 		user,
 		tagPages: page.tagPages,
-		segmentWithTranslations,
+		segmentWithTranslations: page.pageSegments.map((segment) => {
+			const segmentTranslationsWithVotes = segment.pageSegmentTranslations.map(
+				(segmentTranslation) => ({
+					segmentTranslation: {
+						...segmentTranslation,
+						user: segmentTranslation.user,
+					},
+					translationVote:
+						segmentTranslation.votes && segmentTranslation.votes.length > 0
+							? {
+									...segmentTranslation.votes[0],
+									translationId: segmentTranslation.id,
+								}
+							: null,
+				}),
+			);
+
+			const bestSegmentTranslationWithVote = getBestTranslation(
+				segmentTranslationsWithVotes,
+			);
+
+			return {
+				segment,
+				segmentTranslationsWithVotes,
+				bestSegmentTranslationWithVote,
+			};
+		}),
 	};
 }
 
