@@ -145,9 +145,7 @@ export default async function Page({
 
 	const isOwner = pageWithTranslations?.user.handle === currentUser?.handle;
 	if (!isOwner && pageWithTranslations.page.status !== "PUBLIC") {
-		const error = new Error("Unauthorized");
-		error.message = "Unauthorized";
-		throw error;
+		return notFound();
 	}
 
 	return (
