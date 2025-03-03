@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/db/queries.server";
+import { prisma } from "@/lib/prisma";
 export const fetchPagesWithUser = async () => {
 	const pages = await prisma.page.findMany({
 		select: {
@@ -18,14 +18,14 @@ export type PageWithUser = Awaited<
 >[number];
 
 export async function fetchPagesWithUserAndTranslation() {
-  const pagesWithUser = await fetchPagesWithUser();
-  const pagesWithTranslation = await Promise.all(
-    pagesWithUser.map(async (page) => {
-      const translationInfo = await fetchLatestPageAITranslationInfo(page.id);
-      return { ...page, translationInfo };
-    })
-  );
-  return pagesWithTranslation;
+	const pagesWithUser = await fetchPagesWithUser();
+	const pagesWithTranslation = await Promise.all(
+		pagesWithUser.map(async (page) => {
+			const translationInfo = await fetchLatestPageAITranslationInfo(page.id);
+			return { ...page, translationInfo };
+		}),
+	);
+	return pagesWithTranslation;
 }
 export type PageWithUserAndTranslation = Awaited<
 	ReturnType<typeof fetchPagesWithUserAndTranslation>

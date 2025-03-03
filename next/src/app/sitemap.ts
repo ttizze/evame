@@ -35,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 				lastModified: new Date(page.updatedAt),
 				changeFrequency: "daily" as const,
 				priority: 0.7,
-			}))
+			})),
 		);
 
 		return [...staticRoutes, ...pageRoutes];
