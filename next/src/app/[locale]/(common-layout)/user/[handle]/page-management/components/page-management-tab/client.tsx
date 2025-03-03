@@ -67,10 +67,7 @@ export function PageManagementTabClient({
 
 			<div className="rounded-md">
 				{pagesWithTitle.map((page) => (
-					<div
-						key={page.id}
-						className="flex border-b py-2 justify-between"
-					>
+					<div key={page.id} className="flex border-b py-2 justify-between">
 						<div>
 							<Link href={`/user/${handle}/page/${page.slug}`}>
 								{page.title}

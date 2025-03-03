@@ -86,10 +86,5 @@ export async function PageViewCounter({ path }: { path: string }) {
 	const geoViewData = await getGeoViewData(path).catch(() => []);
 	const totalViews = geoViewData.reduce((sum, item) => sum + item.views, 0);
 
-	return (
-		<span
-		>
-			{totalViews}
-		</span>
-	);
+	return <span>{totalViews}</span>;
 }

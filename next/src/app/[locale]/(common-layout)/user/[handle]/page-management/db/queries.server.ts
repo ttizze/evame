@@ -71,4 +71,6 @@ export async function fetchPaginatedOwnPages(
 	};
 }
 
-export type PageWithTitle = Awaited<ReturnType<typeof fetchPaginatedOwnPages>>["pagesWithTitle"][number];
+export type PageWithTitle = Awaited<
+	ReturnType<typeof fetchPaginatedOwnPages>
+>["pagesWithTitle"][number];
