@@ -11,6 +11,7 @@ if (process.env.NODE_ENV === "production") {
 		// Add optional integrations for additional features
 		integrations: [
 			Sentry.replayIntegration(),
+			Sentry.browserProfilingIntegration(),
 			Sentry.browserTracingIntegration(),
 		],
 
