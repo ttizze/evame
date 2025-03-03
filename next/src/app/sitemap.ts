@@ -1,4 +1,4 @@
-import type { PageWithUser } from "@/app/api/pages/db/queries.server";
+import type { PageWithUserAndTranslation } from "@/app/api/pages/db/queries.server";
 import { BASE_URL } from "@/app/constants/base-url";
 import type { MetadataRoute } from "next";
 
@@ -16,26 +16,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 	);
 
 	try {
-		// product page
+		// page list
 		const response = await fetch(`${BASE_URL}/api/pages`, {
 			next: { revalidate: 86400 },
 			headers: { "Cache-Control": "public, max-age=86400" },
 		});
 
 		if (!response.ok) {
-			throw new Error(`Failed to fetch products: ${response.statusText}`);
+			throw new Error(`Failed to fetch pages: ${response.statusText}`);
 		}
 
 		const pages = await response.json();
 
-		// generate product page url
-		const pageRoutes = pages.flatMap((page: PageWithUser) =>
-			locales.map((locale) => ({
+		// generate  page url
+		const pageRoutes = pages.flatMap((page: PageWithUserAndTranslation) =>
+			page.translationInfo.map(({ locale }) => ({
 				url: `${BASE_URL}/${locale}/user/${page.user.handle}/page/${page.slug}`,
 				lastModified: new Date(page.updatedAt),
 				changeFrequency: "daily" as const,
 				priority: 0.7,
-			})),
+			}))
 		);
 
 		return [...staticRoutes, ...pageRoutes];
