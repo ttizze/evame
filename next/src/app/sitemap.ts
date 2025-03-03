@@ -29,15 +29,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		const pages = await response.json();
 
 		// generate  page url
-		const pageRoutes = pages.flatMap((page: PageWithUserAndTranslation) =>
-			page.translationInfo.map(({ locale }) => ({
+		const pageRoutes = pages.flatMap((page: PageWithUserAndTranslation) => {
+			// translationInfo に値がある場合はその locale を使用、なければ 'en' を使用する
+			const locales =
+				page.translationInfo.length > 0
+					? page.translationInfo.map(({ locale }) => locale)
+					: ["en"];
+
+			return locales.map((locale) => ({
 				url: `${BASE_URL}/${locale}/user/${page.user.handle}/page/${page.slug}`,
 				lastModified: new Date(page.updatedAt),
 				changeFrequency: "daily" as const,
 				priority: 0.7,
-			})),
-		);
-
+			}));
+		});
 		return [...staticRoutes, ...pageRoutes];
 	} catch (error) {
 		console.error("Error generating sitemap:", error);
