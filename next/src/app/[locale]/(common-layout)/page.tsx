@@ -3,16 +3,16 @@ import { getCurrentUser } from "@/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
+const HeroSection = dynamic(
+	() => import("@/app/[locale]/components/hero-section/index"),
+	{
+		loading: () => <Skeleton className="h-[770px] w-full mb-10" />,
+	},
+);
 const PagesListTab = dynamic(
 	() => import("@/app/[locale]/components/pages-list-tab/index"),
 	{
 		loading: () => <Skeleton className="h-[640px] w-full" />,
-	},
-);
-const HeroSection = dynamic(
-	() => import("@/app/[locale]/components/hero-section/index"),
-	{
-		loading: () => <Skeleton className="h-[845px] w-full" />,
 	},
 );
 
