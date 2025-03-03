@@ -4,9 +4,9 @@ import {
 	createPageAITranslationInfo,
 	createUserAITranslationInfo,
 } from "@/app/[locale]/_db/mutations.server";
-import { BASE_URL } from "@/app/constants/base-url";
+import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslateJobParams } from "@/features/translate/types";
-import { hasExistingTranslation } from "../db/queries.server";
+import { hasExistingTranslation } from "../_db/queries.server";
 
 const TARGET_LOCALES = ["en", "ja", "zh", "ko"];
 

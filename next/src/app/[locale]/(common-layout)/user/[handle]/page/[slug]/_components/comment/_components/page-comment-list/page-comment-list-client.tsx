@@ -14,11 +14,11 @@ import {
 import { MoreVertical } from "lucide-react";
 import { getImageProps } from "next/image";
 import { useActionState } from "react";
+import type { PageCommentWithUser } from "./_db/query.server";
 import {
 	type CommentDeleteActionResponse,
 	commentDeleteAction,
 } from "./action";
-import type { PageCommentWithUser } from "./db/query.server";
 
 interface CommentListClientProps {
 	pageCommentsWithUser: PageCommentWithUser;

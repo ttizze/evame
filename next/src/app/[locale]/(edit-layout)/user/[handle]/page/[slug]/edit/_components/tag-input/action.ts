@@ -5,7 +5,7 @@ import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { upsertTags } from "../../db/mutations.server";
+import { upsertTags } from "../../_db/mutations.server";
 
 const editPageTagsSchema = z.object({
 	pageId: z.coerce.number().min(1),

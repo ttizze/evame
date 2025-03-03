@@ -7,8 +7,8 @@ import { useCallback, useRef, useState } from "react";
 import { useActionState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { useDebouncedCallback } from "use-debounce";
-import type { PageWithTitleAndTags } from "../db/queries.server";
-import { useKeyboardVisible } from "../hooks/use-keyboard-visible";
+import type { PageWithTitleAndTags } from "../_db/queries.server";
+import { useKeyboardVisible } from "../_hooks/use-keyboard-visible";
 import {
 	type EditPageContentActionState,
 	editPageContentAction,

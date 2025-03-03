@@ -5,8 +5,8 @@ import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { deletePageComment } from "./db/mutations.server";
-import { getPageCommentById } from "./db/query.server";
+import { deletePageComment } from "./_db/mutations.server";
+import { getPageCommentById } from "./_db/query.server";
 const commentDeleteSchema = z.object({
 	pageCommentId: z.number(),
 	pageId: z.number(),

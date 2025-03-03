@@ -1,6 +1,6 @@
-import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-list";
+import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-list";
 import { stripHtmlTags } from "@/app/[locale]/_lib/strip-html-tags";
-import { BASE_URL } from "@/app/constants/base-url";
+import { BASE_URL } from "@/app/_constants/base-url";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
@@ -52,7 +52,7 @@ const DynamicTranslateActionSection = dynamic(
 const DynamicPageCommentForm = dynamic(
 	() =>
 		import(
-			"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-form"
+			"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-form"
 		).then((mod) => mod.PageCommentForm),
 	{
 		loading: () => <p>Loading Comment Form...</p>,

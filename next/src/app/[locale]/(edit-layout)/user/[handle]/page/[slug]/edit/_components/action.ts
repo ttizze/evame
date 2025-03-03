@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { processPageHtml } from "../lib/process-page-html";
+import { processPageHtml } from "../_lib/process-page-html";
 
 export type EditPageContentActionState = ActionResponse<
 	void,

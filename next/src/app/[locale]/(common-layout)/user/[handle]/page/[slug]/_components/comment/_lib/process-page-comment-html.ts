@@ -10,8 +10,8 @@ import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import type { Plugin } from "unified";
-import { upsertPageComment } from "../db/mutations.server";
-import { createPageCommentSegments } from "../db/mutations.server";
+import { upsertPageComment } from "../_db/mutations.server";
+import { createPageCommentSegments } from "../_db/mutations.server";
 export function parseHtmlToAst(html: string): Root {
 	return unified().use(rehypeParse, { fragment: true }).parse(html) as Root;
 }

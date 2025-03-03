@@ -1,4 +1,4 @@
-import type { LocaleOption } from "@/app/constants/locale";
+import type { LocaleOption } from "@/app/_constants/locale";
 
 export function buildLocaleOptions(
 	sourceLocale: string,

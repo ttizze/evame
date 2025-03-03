@@ -1,5 +1,5 @@
 // buildAlternateLocales.test.ts
-import { BASE_URL } from "@/app/constants/base-url";
+import { BASE_URL } from "@/app/_constants/base-url";
 import type { PageAITranslationInfo } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 import { buildAlternateLocales } from "./build-alternate-locales";

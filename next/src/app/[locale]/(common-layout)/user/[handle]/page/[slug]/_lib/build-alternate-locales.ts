@@ -1,4 +1,4 @@
-import { BASE_URL } from "@/app/constants/base-url";
+import { BASE_URL } from "@/app/_constants/base-url";
 import type { PageAITranslationInfo } from "@prisma/client";
 
 export function buildAlternateLocales(

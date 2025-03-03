@@ -4,12 +4,12 @@ import { mockPages, mockUsers } from "@/tests/mock";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { processPageHtml } from "../lib/process-page-html";
+import { processPageHtml } from "../_lib/process-page-html";
 import { editPageContentAction } from "./action";
 // Mocks
 vi.mock("@/auth");
 vi.mock("@/app/[locale]/_lib/get-locale-from-html");
-vi.mock("../lib/process-page-html");
+vi.mock("../_lib/process-page-html");
 vi.mock("next/cache");
 vi.mock("next/navigation");
 

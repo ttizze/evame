@@ -9,8 +9,8 @@ vi.mock("@/auth");
 vi.mock("@/app/[locale]/lib/get-locale-from-html");
 vi.mock("next/cache");
 vi.mock("next/navigation");
-vi.mock("./db/mutations.server");
-vi.mock("./lib/handle-page-translation");
+vi.mock("./_db/mutations.server");
+vi.mock("./_lib/handle-page-translation");
 vi.mock("@/app/[locale]/_db/queries.server");
 describe("editPageStatusAction", () => {
 	const mockFormData = new FormData();

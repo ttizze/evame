@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/auth";
-import { fetchPageCommentsWithUserAndTranslations } from "./db/query.server";
+import { fetchPageCommentsWithUserAndTranslations } from "./_db/query.server";
 import { PageCommentListClient } from "./page-comment-list-client";
 
 interface CommentListProps {

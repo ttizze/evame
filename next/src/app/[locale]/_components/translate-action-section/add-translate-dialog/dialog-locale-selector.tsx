@@ -1,5 +1,5 @@
 "use client";
-import { supportedLocaleOptions } from "@/app/constants/locale";
+import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { Button } from "@/components/ui/button";
 import {
 	Command,

@@ -9,8 +9,8 @@ import { z } from "zod";
 import {
 	createNotificationPageComment,
 	createPageComment,
-} from "../../db/mutations.server";
-import { processPageCommentHtml } from "../../lib/process-page-comment-html";
+} from "../../_db/mutations.server";
+import { processPageCommentHtml } from "../../_lib/process-page-comment-html";
 const createPageCommentSchema = z.object({
 	pageId: z.coerce.number(),
 	content: z.string().min(1, "Comment cannot be empty"),

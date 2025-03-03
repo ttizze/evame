@@ -1,4 +1,4 @@
-import { processPageHtml } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[slug]/edit/lib/process-page-html";
+import { processPageHtml } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[slug]/edit/_lib/process-page-html";
 import { prisma } from "@/lib/prisma";
 
 // 全ページに対して処理を実行するメイン関数

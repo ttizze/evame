@@ -1,5 +1,5 @@
-import { upsertPageWithHtml } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[slug]/edit/db/mutations.server";
-import { rehypeAddDataId } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[slug]/edit/lib/process-page-html";
+import { upsertPageWithHtml } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[slug]/edit/_db/mutations.server";
+import { rehypeAddDataId } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[slug]/edit/_lib/process-page-html";
 import type { PageStatus } from "@prisma/client";
 import rehypeRaw from "rehype-raw";
 import rehypeStringify from "rehype-stringify";

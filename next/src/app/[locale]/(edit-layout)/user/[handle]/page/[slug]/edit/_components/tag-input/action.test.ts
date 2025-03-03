@@ -4,13 +4,13 @@ import { mockPages, mockUsers } from "@/tests/mock";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { upsertTags } from "../../db/mutations.server";
+import { upsertTags } from "../../_db/mutations.server";
 import { editPageTagsAction } from "./action";
 
 // Mocking dependencies
 vi.mock("@/auth");
 vi.mock("@/app/[locale]/_db/queries.server");
-vi.mock("../../db/mutations.server");
+vi.mock("../../_db/mutations.server");
 vi.mock("next/navigation");
 vi.mock("next/cache");
 

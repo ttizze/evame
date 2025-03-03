@@ -10,7 +10,7 @@ import type { Plugin } from "unified";
 import {
 	synchronizePagePageSegments,
 	upsertPageWithHtml,
-} from "../db/mutations.server";
+} from "../_db/mutations.server";
 
 export function rehypeAddDataId(
 	pageId: number,

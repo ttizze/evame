@@ -3,19 +3,19 @@ import { mockUsers } from "@/tests/mock";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { deletePageComment } from "./_db/mutations.server";
+import { getPageCommentById } from "./_db/query.server";
 import { commentDeleteAction } from "./action";
-import { deletePageComment } from "./db/mutations.server";
-import { getPageCommentById } from "./db/query.server";
 // Mock dependencies
 vi.mock("@/auth", () => ({
 	getCurrentUser: vi.fn(),
 }));
 
-vi.mock("./db/query.server", () => ({
+vi.mock("./_db/query.server", () => ({
 	getPageCommentById: vi.fn(),
 }));
 
-vi.mock("./db/mutations.server", () => ({
+vi.mock("./_db/mutations.server", () => ({
 	deletePageComment: vi.fn(),
 }));
 

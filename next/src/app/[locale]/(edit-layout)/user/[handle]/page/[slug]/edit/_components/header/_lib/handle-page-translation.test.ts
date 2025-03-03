@@ -5,14 +5,14 @@ import {
 } from "@/app/[locale]/_db/mutations.server";
 import { prisma } from "@/lib/prisma";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { hasExistingTranslation } from "../db/queries.server";
+import { hasExistingTranslation } from "../_db/queries.server";
 import { handlePageTranslation } from "./handle-page-translation";
 // Mock all dependencies
 vi.mock(
 	"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_db/queries.server",
 );
 vi.mock("@/app/[locale]/_db/mutations.server");
-vi.mock("../db/queries.server");
+vi.mock("../_db/queries.server");
 describe("handlePageTranslation", () => {
 	const mockParams = {
 		currentUserId: "user123",

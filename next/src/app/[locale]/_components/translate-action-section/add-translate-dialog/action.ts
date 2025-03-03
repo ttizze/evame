@@ -3,8 +3,8 @@ import {
 	createPageAITranslationInfo,
 	createUserAITranslationInfo,
 } from "@/app/[locale]/_db/mutations.server";
+import { BASE_URL } from "@/app/_constants/base-url";
 import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
-import { BASE_URL } from "@/app/constants/base-url";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import type { TranslateJobParams } from "@/features/translate/types";
