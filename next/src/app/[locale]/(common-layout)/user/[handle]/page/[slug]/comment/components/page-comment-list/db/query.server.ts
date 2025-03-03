@@ -1,4 +1,4 @@
-import { getBestTranslation } from "@/app/[locale]/lib/get-best-translation";
+import { getBestTranslation } from "@/app/[locale]/_lib/get-best-translation";
 import type { SegmentTranslationWithVote } from "@/app/[locale]/types";
 import { prisma } from "@/lib/prisma";
 

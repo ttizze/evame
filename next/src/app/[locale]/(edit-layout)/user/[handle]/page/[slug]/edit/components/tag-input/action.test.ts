@@ -1,4 +1,4 @@
-import { getPageById } from "@/app/[locale]/db/queries.server";
+import { getPageById } from "@/app/[locale]/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { mockPages, mockUsers } from "@/tests/mock";
 import { revalidatePath } from "next/cache";
@@ -9,7 +9,7 @@ import { editPageTagsAction } from "./action";
 
 // Mocking dependencies
 vi.mock("@/auth");
-vi.mock("@/app/[locale]/db/queries.server");
+vi.mock("@/app/[locale]/_db/queries.server");
 vi.mock("../../db/mutations.server");
 vi.mock("next/navigation");
 vi.mock("next/cache");

@@ -1,9 +1,9 @@
 "use server";
-import { uploadImage } from "@/app/[locale]/lib/upload";
+import { uploadImage } from "@/app/[locale]/_lib/upload";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser, unstable_update } from "@/auth";
 import { redirect } from "next/navigation";
-import { updateUserImage } from "./db/mutations.server";
+import { updateUserImage } from "./_db/mutations.server";
 
 export type UserImageEditState = ActionResponse<
 	{

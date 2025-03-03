@@ -8,7 +8,7 @@ import {
 	searchTags,
 	searchTitle,
 	searchUsers,
-} from "./db/queries.server";
+} from "./_db/queries.server";
 const DynamicSearchPageClient = dynamic(
 	() => import("./search.client").then((mod) => mod.SearchPageClient),
 	{

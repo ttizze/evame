@@ -1,4 +1,4 @@
-import { getLocaleFromHtml } from "@/app/[locale]/lib/get-locale-from-html";
+import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
 import { getCurrentUser } from "@/auth";
 import { mockPages, mockUsers } from "@/tests/mock";
 import { revalidatePath } from "next/cache";
@@ -8,7 +8,7 @@ import { processPageHtml } from "../lib/process-page-html";
 import { editPageContentAction } from "./action";
 // Mocks
 vi.mock("@/auth");
-vi.mock("@/app/[locale]/lib/get-locale-from-html");
+vi.mock("@/app/[locale]/_lib/get-locale-from-html");
 vi.mock("../lib/process-page-html");
 vi.mock("next/cache");
 vi.mock("next/navigation");

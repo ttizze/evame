@@ -1,9 +1,9 @@
+import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
 import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
-import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/db/queries.server";
 import {
 	createPageAITranslationInfo,
 	createUserAITranslationInfo,
-} from "@/app/[locale]/db/mutations.server";
+} from "@/app/[locale]/_db/mutations.server";
 import { BASE_URL } from "@/app/constants/base-url";
 import type { TranslateJobParams } from "@/features/translate/types";
 import { hasExistingTranslation } from "../db/queries.server";

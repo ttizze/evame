@@ -4,13 +4,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 const HeroSection = dynamic(
-	() => import("@/app/[locale]/components/hero-section/index"),
+	() => import("@/app/[locale]/_components/hero-section/index"),
 	{
 		loading: () => <Skeleton className="h-[770px] w-full mb-10" />,
 	},
 );
 const PagesListTab = dynamic(
-	() => import("@/app/[locale]/components/pages-list-tab/index"),
+	() => import("@/app/[locale]/_components/pages-list-tab/index"),
 	{
 		loading: () => <Skeleton className="h-[640px] w-full" />,
 	},

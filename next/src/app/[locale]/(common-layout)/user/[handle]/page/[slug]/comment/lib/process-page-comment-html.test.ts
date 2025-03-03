@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { collectBlocksFromRoot } from "../../../../../../../lib/process-html";
+import { collectBlocksFromRoot } from "../../../../../../../_lib/process-html";
 import { parseHtmlToAst } from "./process-page-comment-html";
 
 describe("collectBlocksAndSegmentsFromRoot", () => {

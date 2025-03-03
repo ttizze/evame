@@ -4,10 +4,10 @@ import {
 	CATEGORIES,
 	type Category,
 } from "@/app/[locale]/(common-layout)/search/constants";
-import { PageCard } from "@/app/[locale]/components/page-card";
-import { PaginationBar } from "@/app/[locale]/components/pagination-bar";
-import { TagList } from "@/app/[locale]/components/tag-list";
-import type { PageCardLocalizedType } from "@/app/[locale]/db/queries.server";
+import { PageCard } from "@/app/[locale]/_components/page-card";
+import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
+import { TagList } from "@/app/[locale]/_components/tag-list";
+import type { PageCardLocalizedType } from "@/app/[locale]/_db/queries.server";
 import type { SanitizedUser } from "@/app/types";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

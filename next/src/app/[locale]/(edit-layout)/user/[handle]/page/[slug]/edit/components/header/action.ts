@@ -1,5 +1,5 @@
 "use server";
-import { getPageById } from "@/app/[locale]/db/queries.server";
+import { getPageById } from "@/app/[locale]/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { parseFormData } from "@/lib/parse-form-data";

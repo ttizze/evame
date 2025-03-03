@@ -6,7 +6,7 @@ import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import type { SearchParams } from "nuqs/server";
 const PageManagementTab = dynamic(
 	() =>
-		import("./components/page-management-tab/server").then(
+		import("./_components/page-management-tab/server").then(
 			(mod) => mod.PageManagementTab,
 		),
 	{

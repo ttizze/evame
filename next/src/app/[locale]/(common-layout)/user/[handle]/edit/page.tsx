@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound, redirect } from "next/navigation";
-import { getUserByHandle } from "./db/queries.server";
+import { getUserByHandle } from "./_db/queries.server";
 const EditProfileForm = dynamic(
 	() => import("./edit-profile-form").then((mod) => mod.EditProfileForm),
 	{

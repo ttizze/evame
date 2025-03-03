@@ -1,6 +1,6 @@
 "use server";
-import { getPageById } from "@/app/[locale]/db/queries.server";
-import { getLocaleFromHtml } from "@/app/[locale]/lib/get-locale-from-html";
+import { getPageById } from "@/app/[locale]/_db/queries.server";
+import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";

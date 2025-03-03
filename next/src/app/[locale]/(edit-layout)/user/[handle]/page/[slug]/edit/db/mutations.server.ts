@@ -1,4 +1,4 @@
-import type { BlockWithNumber } from "@/app/[locale]/lib/process-html";
+import type { BlockWithNumber } from "@/app/[locale]/_lib/process-html";
 import { prisma } from "@/lib/prisma";
 
 export async function upsertPageWithHtml(

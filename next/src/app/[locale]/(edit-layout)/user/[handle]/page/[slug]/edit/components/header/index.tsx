@@ -1,5 +1,5 @@
 "use client";
-import { BaseHeaderLayout } from "@/app/[locale]/components/header/base-header-layout";
+import { BaseHeaderLayout } from "@/app/[locale]/_components/header/base-header-layout";
 import type { SanitizedUser } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import {

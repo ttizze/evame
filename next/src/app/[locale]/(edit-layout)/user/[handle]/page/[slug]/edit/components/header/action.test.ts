@@ -1,4 +1,4 @@
-import { getPageById } from "@/app/[locale]/db/queries.server";
+import { getPageById } from "@/app/[locale]/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { mockPages, mockUsers } from "@/tests/mock";
 import { revalidatePath } from "next/cache";
@@ -11,7 +11,7 @@ vi.mock("next/cache");
 vi.mock("next/navigation");
 vi.mock("./db/mutations.server");
 vi.mock("./lib/handle-page-translation");
-vi.mock("@/app/[locale]/db/queries.server");
+vi.mock("@/app/[locale]/_db/queries.server");
 describe("editPageStatusAction", () => {
 	const mockFormData = new FormData();
 	mockFormData.append("pageId", "1");

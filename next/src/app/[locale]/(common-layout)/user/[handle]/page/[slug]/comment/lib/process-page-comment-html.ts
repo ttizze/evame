@@ -1,5 +1,5 @@
-import { collectBlocksFromRoot } from "@/app/[locale]/lib/process-html";
-import { injectSpanNodes } from "@/app/[locale]/lib/process-html";
+import { collectBlocksFromRoot } from "@/app/[locale]/_lib/process-html";
+import { injectSpanNodes } from "@/app/[locale]/_lib/process-html";
 import type { Root } from "hast";
 import rehypeParse from "rehype-parse";
 import rehypeRaw from "rehype-raw";

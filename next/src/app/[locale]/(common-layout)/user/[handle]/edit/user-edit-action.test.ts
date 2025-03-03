@@ -2,7 +2,7 @@ import { getCurrentUser, unstable_update } from "@/auth";
 import { mockUsers } from "@/tests/mock";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { updateUser } from "./db/mutations.server";
+import { updateUser } from "./_db/mutations.server";
 import { userEditAction } from "./user-edit-action";
 
 vi.mock("@/auth", () => ({
@@ -11,7 +11,7 @@ vi.mock("@/auth", () => ({
 }));
 
 // DB mutation のモック
-vi.mock("./db/mutations.server", () => ({
+vi.mock("./_db/mutations.server", () => ({
 	updateUser: vi.fn(),
 }));
 
