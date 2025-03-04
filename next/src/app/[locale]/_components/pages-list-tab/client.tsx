@@ -11,7 +11,6 @@ interface PagesListTabClientProps {
 	initialTab: string;
 	pagesWithInfo: PageCardLocalizedType[];
 	totalPages: number;
-	currentPage: number;
 	locale: string;
 }
 
@@ -19,31 +18,19 @@ export function PagesListTabClient({
 	initialTab,
 	pagesWithInfo,
 	totalPages,
-	currentPage,
 }: PagesListTabClientProps) {
 	const [activeTab, setActiveTab] = useQueryState(
 		"activeTab",
 		parseAsString.withOptions({ shallow: false }),
 	);
-	const [recommendedPage, setRecommendedPage] = useQueryState(
-		"recommendedPage",
-		parseAsInteger.withOptions({ shallow: false }),
-	);
-	const [newPage, setNewPage] = useQueryState(
-		"newPage",
-		parseAsInteger.withOptions({ shallow: false }),
+	const [page, setPage] = useQueryState(
+		"page",
+		parseAsInteger.withDefault(1).withOptions({ shallow: false }),
 	);
 
 	const handleTabChange = (value: string) => {
 		setActiveTab(value);
-	};
-
-	const handlePageChange = (pageNumber: number) => {
-		if (initialTab === "recommended") {
-			setRecommendedPage(pageNumber);
-		} else {
-			setNewPage(pageNumber);
-		}
+		setPage(1);
 	};
 
 	return (
@@ -72,11 +59,7 @@ export function PagesListTabClient({
 					</div>
 					{/* ページネーション */}
 					<div className="mt-8 flex justify-center">
-						<PaginationBar
-							totalPages={totalPages}
-							currentPage={currentPage}
-							onPageChange={handlePageChange}
-						/>
+						<PaginationBar totalPages={totalPages} currentPage={page} />
 					</div>
 				</TabsContent>
 
@@ -94,11 +77,7 @@ export function PagesListTabClient({
 					</div>
 					{/* ページネーション */}
 					<div className="mt-8 flex justify-center">
-						<PaginationBar
-							totalPages={totalPages}
-							currentPage={currentPage}
-							onPageChange={handlePageChange}
-						/>
+						<PaginationBar totalPages={totalPages} currentPage={page} />
 					</div>
 				</TabsContent>
 			</Tabs>

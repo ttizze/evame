@@ -1,4 +1,4 @@
-// app/components/PaginationBar.tsx
+"use client";
 import {
 	Pagination,
 	PaginationContent,
@@ -8,27 +8,34 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from "@/components/ui/pagination";
+import { usePathname, useSearchParams } from "next/navigation";
+
 interface PaginationBarProps {
 	totalPages: number;
 	currentPage: number;
-	onPageChange: (page: number) => void;
 }
 
-export function PaginationBar({
-	totalPages,
-	currentPage,
-	onPageChange,
-}: PaginationBarProps) {
+export function PaginationBar({ totalPages, currentPage }: PaginationBarProps) {
 	if (totalPages <= 1) {
-		return null; // 総ページ数が1以下ならページング不要
+		return null;
 	}
 
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+	const currentParams = Object.fromEntries(searchParams.entries());
+
+	// 現在の URL の pathname と既存の searchParams をベースに、
+	// page パラメータだけを上書きするリンク用 URL オブジェクトを生成
+	const getPageUrl = (page: number) => ({
+		pathname,
+		query: { ...currentParams, page: page.toString() },
+	});
 	return (
 		<Pagination className="mt-4">
 			<PaginationContent className="w-full justify-between">
 				<PaginationItem>
 					<PaginationPrevious
-						onClick={() => onPageChange(currentPage - 1)}
+						href={getPageUrl(currentPage - 1)}
 						className={
 							currentPage === 1 ? "pointer-events-none opacity-50" : ""
 						}
@@ -45,7 +52,7 @@ export function PaginationBar({
 								return (
 									<PaginationItem key={`page-${pageNumber}`}>
 										<PaginationLink
-											onClick={() => onPageChange(pageNumber)}
+											href={getPageUrl(pageNumber)}
 											isActive={currentPage === pageNumber}
 										>
 											{pageNumber}
@@ -65,7 +72,7 @@ export function PaginationBar({
 				</div>
 				<PaginationItem>
 					<PaginationNext
-						onClick={() => onPageChange(currentPage + 1)}
+						href={getPageUrl(currentPage + 1)}
 						className={
 							currentPage === totalPages ? "pointer-events-none opacity-50" : ""
 						}

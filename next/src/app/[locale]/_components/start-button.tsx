@@ -6,7 +6,10 @@ interface StartButtonProps {
 
 export function StartButton({ className }: StartButtonProps) {
 	return (
-		<Link href="/auth/login">
+		<Link
+			href="/auth/login"
+			aria-label="Get started by logging in to your account"
+		>
 			<Button
 				variant="outline"
 				className={`${className} rounded-full`}

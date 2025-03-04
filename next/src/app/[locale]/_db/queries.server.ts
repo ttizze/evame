@@ -85,7 +85,6 @@ export async function fetchPaginatedPublicPagesWithInfo({
 }: FetchParams): Promise<{
 	pagesWithInfo: PageCardLocalizedType[];
 	totalPages: number;
-	currentPage: number;
 }> {
 	const skip = (page - 1) * pageSize;
 
@@ -155,7 +154,6 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	return {
 		pagesWithInfo,
 		totalPages: Math.ceil(totalCount / pageSize),
-		currentPage: page,
 	};
 }
 

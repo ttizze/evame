@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Link } from "@/i18n/routing";
 import type { PageStatus } from "@prisma/client";
 import { EyeIcon } from "lucide-react";
-import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
+import { parseAsString, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 import type { PageWithTitle } from "../../_db/queries.server";
 
@@ -29,12 +29,6 @@ export function PageManagementTabClient({
 	const [query, setQuery] = useQueryState(
 		"query",
 		parseAsString.withOptions({
-			shallow: false,
-		}),
-	);
-	const [page, setPage] = useQueryState(
-		"page",
-		parseAsInteger.withOptions({
 			shallow: false,
 		}),
 	);
@@ -93,11 +87,7 @@ export function PageManagementTabClient({
 			</div>
 
 			<div className="flex justify-center mt-4">
-				<PaginationBar
-					totalPages={totalPages}
-					currentPage={currentPage}
-					onPageChange={setPage}
-				/>
+				<PaginationBar totalPages={totalPages} currentPage={currentPage} />
 			</div>
 		</div>
 	);
