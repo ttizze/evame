@@ -59,16 +59,31 @@ async function getImageDimensions(
 	file: File,
 ): Promise<{ width: number; height: number }> {
 	return new Promise((resolve, reject) => {
+		if (!file.type.startsWith("image/")) {
+			reject(new Error("無効なファイルタイプです。画像のみ許可されています。"));
+			return;
+		}
+
 		const blobUrl = URL.createObjectURL(file);
 		const img = new Image();
+
 		img.onload = () => {
-			resolve({ width: img.naturalWidth, height: img.naturalHeight });
+			const dimensions = {
+				width: img.naturalWidth,
+				height: img.naturalHeight,
+			};
+
 			URL.revokeObjectURL(blobUrl);
+			resolve(dimensions);
 		};
+
 		img.onerror = (err) => {
 			URL.revokeObjectURL(blobUrl);
 			reject(err);
 		};
+
+		img.crossOrigin = "anonymous";
+
 		img.src = blobUrl;
 	});
 }
