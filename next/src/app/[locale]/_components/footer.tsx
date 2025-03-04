@@ -18,22 +18,24 @@ export function Footer() {
 					>
 						Terms of Service
 					</Link>
-					<a
+					<Link
 						href="https://github.com/ttizze/eveeve"
 						target="_blank"
 						rel="noopener noreferrer"
 						className="transition-colors"
+						aria-label="GitHub"
 					>
 						<FaGithub size={24} />
-					</a>
-					<a
+					</Link>
+					<Link
 						href="https://discord.gg/2JfhZdu9zW"
 						target="_blank"
 						rel="noopener noreferrer"
 						className="transition-colors"
+						aria-label="Discord"
 					>
 						<FaDiscord size={24} />
-					</a>
+					</Link>
 				</div>
 			</div>
 		</footer>

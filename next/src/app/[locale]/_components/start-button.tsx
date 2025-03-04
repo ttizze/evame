@@ -15,6 +15,7 @@ export function StartButton({ className }: StartButtonProps) {
 				className={`${className} rounded-full`}
 				size="lg"
 			>
+				<span className="sr-only">login and start</span>
 				Start
 			</Button>
 		</Link>

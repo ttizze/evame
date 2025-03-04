@@ -15,9 +15,7 @@ export function TagList({ tag }: TagListProps) {
 					key={tag.id}
 					className="flex items-center gap-1 px-3 h-[32px] !no-underline bg-secondary rounded-full text-sm text-secondary-foreground"
 				>
-					<button type="button" className="hover:text-destructive ml-1">
-						<Hash className="w-3 h-3" />
-					</button>
+					<Hash className="w-3 h-3" />
 					<span>{tag.name}</span>
 				</Link>
 			))}

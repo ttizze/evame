@@ -28,7 +28,7 @@ export function PageCard({
 }: PageCardProps) {
 	const { props } = getImageProps({
 		src: pageCard.user.image,
-		alt: pageCard.user.name,
+		alt: "",
 		width: 40,
 		height: 40,
 	});

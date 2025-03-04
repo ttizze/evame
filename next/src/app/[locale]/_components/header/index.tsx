@@ -18,7 +18,7 @@ export async function Header() {
 
 	const rightExtra = (
 		<>
-			<Link href="/search">
+			<Link href="/search" aria-label="Search for pages">
 				<Search className="w-6 h-6 " />
 			</Link>
 			{currentUser ? (
