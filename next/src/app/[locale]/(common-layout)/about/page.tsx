@@ -13,7 +13,7 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 
 const HeroSection = dynamic(
-	() => import("@/app/[locale]/components/hero-section/index"),
+	() => import("@/app/[locale]/_components/hero-section/index"),
 	{
 		loading: () => <Skeleton className="h-[845px] w-full" />,
 	},

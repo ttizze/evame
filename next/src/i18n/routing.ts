@@ -1,4 +1,4 @@
-import { supportedLocaleOptions } from "@/app/constants/locale";
+import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { createNavigation } from "next-intl/navigation";
 import { defineRouting } from "next-intl/routing";
 export const routing = defineRouting({

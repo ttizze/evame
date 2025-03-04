@@ -1,5 +1,5 @@
+import { BASE_URL } from "@/app/_constants/base-url";
 import type { PageWithUserAndTranslation } from "@/app/api/pages/db/queries.server";
-import { BASE_URL } from "@/app/constants/base-url";
 import type { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

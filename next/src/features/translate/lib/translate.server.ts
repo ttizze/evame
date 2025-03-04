@@ -1,5 +1,5 @@
 import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
-import { supportedLocaleOptions } from "@/app/constants/locale";
+import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { TranslationStatus } from "@prisma/client";
 import {
 	updatePageAITranslationInfo,

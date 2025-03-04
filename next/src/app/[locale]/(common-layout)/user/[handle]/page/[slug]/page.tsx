@@ -1,6 +1,6 @@
-import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-list";
-import { stripHtmlTags } from "@/app/[locale]/lib/strip-html-tags";
-import { BASE_URL } from "@/app/constants/base-url";
+import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-list";
+import { stripHtmlTags } from "@/app/[locale]/_lib/strip-html-tags";
+import { BASE_URL } from "@/app/_constants/base-url";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
@@ -8,12 +8,12 @@ import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsBoolean } from "nuqs/server";
+import { buildAlternateLocales } from "./_lib/build-alternate-locales";
+import { fetchPageContext } from "./_lib/fetch-page-context";
 import { TranslateTarget } from "./constants";
-import { buildAlternateLocales } from "./lib/build-alternate-locales";
-import { fetchPageContext } from "./lib/fetch-page-context";
 const DynamicContentWithTranslations = dynamic(
 	() =>
-		import("./components/content-with-translations").then(
+		import("./_components/content-with-translations").then(
 			(mod) => mod.ContentWithTranslations,
 		),
 	{
@@ -22,7 +22,7 @@ const DynamicContentWithTranslations = dynamic(
 );
 const DynamicLikeButton = dynamic(
 	() =>
-		import("@/app/[locale]/components/like-button/client").then(
+		import("@/app/[locale]/_components/like-button/client").then(
 			(mod) => mod.LikeButton,
 		),
 	{
@@ -32,7 +32,7 @@ const DynamicLikeButton = dynamic(
 
 const DynamicFloatingControls = dynamic(
 	() =>
-		import("./components/floating-controls").then(
+		import("./_components/floating-controls").then(
 			(mod) => mod.FloatingControls,
 		),
 	{
@@ -41,7 +41,7 @@ const DynamicFloatingControls = dynamic(
 );
 const DynamicTranslateActionSection = dynamic(
 	() =>
-		import("../../../../../components/translate-action-section").then(
+		import("@/app/[locale]/_components/translate-action-section").then(
 			(mod) => mod.TranslateActionSection,
 		),
 	{
@@ -52,7 +52,7 @@ const DynamicTranslateActionSection = dynamic(
 const DynamicPageCommentForm = dynamic(
 	() =>
 		import(
-			"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/comment/components/page-comment-form"
+			"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-form"
 		).then((mod) => mod.PageCommentForm),
 	{
 		loading: () => <p>Loading Comment Form...</p>,

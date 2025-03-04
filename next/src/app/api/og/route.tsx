@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { fetchPageContext } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/lib/fetch-page-context";
+import { fetchPageContext } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_lib/fetch-page-context";
 import { ImageResponse } from "next/og";
 
 export const revalidate = 3600;

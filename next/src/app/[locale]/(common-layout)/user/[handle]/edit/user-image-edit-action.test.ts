@@ -1,8 +1,8 @@
-import { uploadImage } from "@/app/[locale]/lib/upload";
+import { uploadImage } from "@/app/[locale]/_lib/upload";
 import { getCurrentUser, unstable_update } from "@/auth";
 import { mockUsers } from "@/tests/mock";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { updateUserImage } from "./db/mutations.server";
+import { updateUserImage } from "./_db/mutations.server";
 import { userImageEditAction } from "./user-image-edit-action";
 
 vi.mock("@/auth", () => ({
@@ -10,11 +10,11 @@ vi.mock("@/auth", () => ({
 	unstable_update: vi.fn(),
 }));
 
-vi.mock("@/app/[locale]/lib/upload", () => ({
+vi.mock("@/app/[locale]/_lib/upload", () => ({
 	uploadImage: vi.fn(),
 }));
 
-vi.mock("./db/mutations.server", () => ({
+vi.mock("./_db/mutations.server", () => ({
 	updateUserImage: vi.fn(),
 }));
 

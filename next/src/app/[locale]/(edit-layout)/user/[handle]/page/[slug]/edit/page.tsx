@@ -2,8 +2,8 @@ import { getCurrentUser } from "@/auth";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { EditPageClient } from "./components/edit-page-client";
-import { getAllTags, getPageBySlug } from "./db/queries.server";
+import { EditPageClient } from "./_components/edit-page-client";
+import { getAllTags, getPageBySlug } from "./_db/queries.server";
 
 type Params = Promise<{ handle: string; slug: string }>;
 
