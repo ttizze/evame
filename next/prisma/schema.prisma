@@ -249,10 +249,13 @@ model PageComment {
   locale              String
   userId              String               @map("user_id")
   pageId              Int                  @map("page_id")
+  parentId            Int?                 @map("parent_id")
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
   user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   page                Page                 @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  parent              PageComment?         @relation("CommentReplies", fields: [parentId], references: [id])
+  replies             PageComment[]        @relation("CommentReplies")
   pageCommentSegments PageCommentSegment[]
   notifications       Notification[]
 

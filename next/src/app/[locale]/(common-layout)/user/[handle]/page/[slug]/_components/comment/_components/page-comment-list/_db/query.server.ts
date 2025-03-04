@@ -1,16 +1,15 @@
 import { getBestTranslation } from "@/app/[locale]/_lib/get-best-translation";
-import type { SegmentTranslationWithVote } from "@/app/[locale]/types";
 import { prisma } from "@/lib/prisma";
+import type { SegmentTranslationWithVote } from "@/app/[locale]/types";
 
 export async function fetchPageCommentsWithUserAndTranslations(
 	pageId: number,
 	locale: string,
 	currentUserId?: string,
 ) {
-	const pageComments = await prisma.pageComment.findMany({
-		where: {
-			pageId,
-		},
+	// まず flat なコメントをすべて取得
+	const flatComments = await prisma.pageComment.findMany({
+		where: { pageId },
 		include: {
 			user: {
 				select: {
@@ -49,38 +48,61 @@ export async function fetchPageCommentsWithUserAndTranslations(
 				},
 			},
 		},
-		orderBy: {
-			createdAt: "asc",
-		},
+		orderBy: { createdAt: "asc" },
 	});
 
-	return pageComments.map((comment) => {
+	// flatComments の各コメントに、空の replies プロパティを追加してマップを作成
+	type CommentWithReplies = (typeof flatComments)[number] & {
+		replies: CommentWithReplies[];
+	};
+	const commentMap = new Map<number, CommentWithReplies>(
+		flatComments.map((comment) => [comment.id, { ...comment, replies: [] }]),
+	);
+
+	// flat なコメントからツリーを構築（親コメントの下に子コメントを挿入）
+	const tree: CommentWithReplies[] = [];
+	for (const comment of commentMap.values()) {
+		if (comment.parentId) {
+			const parent = commentMap.get(comment.parentId);
+			if (parent) {
+				parent.replies.push(comment);
+			}
+		} else {
+			tree.push(comment);
+		}
+	}
+
+	// 取得したコメントツリーに対して、ページセグメントの翻訳情報をマッピングする再帰関数
+	function mapComment(comment: CommentWithReplies): typeof comment & {
+		createdAt: string;
+		updatedAt: string;
+		pageCommentSegmentsWithTranslations: {
+			segment: (typeof comment.pageCommentSegments)[number];
+			segmentTranslationsWithVotes: SegmentTranslationWithVote[];
+			bestSegmentTranslationWithVote: SegmentTranslationWithVote | null;
+		}[];
+		replies: ReturnType<typeof mapComment>[];
+	} {
 		const pageCommentSegmentsWithTranslations = comment.pageCommentSegments.map(
 			(segment) => {
-				// SegmentTranslationWithVote[] を作る
 				const segmentTranslationsWithVotes: SegmentTranslationWithVote[] =
-					segment.pageCommentSegmentTranslations.map((translation) => {
-						return {
-							segmentTranslation: {
-								...translation,
-								user: translation.user,
-							},
-							translationVote:
-								translation.pageCommentSegmentTranslationVotes &&
-								translation.pageCommentSegmentTranslationVotes.length > 0
-									? {
-											...translation.pageCommentSegmentTranslationVotes[0],
-											translationId: translation.id,
-										}
-									: null,
-						};
-					});
-
-				// ベスト翻訳（point 順等で先頭にある翻訳と仮定）
+					segment.pageCommentSegmentTranslations.map((translation) => ({
+						segmentTranslation: {
+							...translation,
+							user: translation.user,
+						},
+						translationVote:
+							translation.pageCommentSegmentTranslationVotes &&
+							translation.pageCommentSegmentTranslationVotes.length > 0
+								? {
+										...translation.pageCommentSegmentTranslationVotes[0],
+										translationId: translation.id,
+									}
+								: null,
+					}));
 				const bestSegmentTranslationWithVote = getBestTranslation(
 					segmentTranslationsWithVotes,
 				);
-
 				return {
 					segment,
 					segmentTranslationsWithVotes,
@@ -94,10 +116,13 @@ export async function fetchPageCommentsWithUserAndTranslations(
 			createdAt: comment.createdAt.toLocaleString(locale),
 			updatedAt: comment.updatedAt.toLocaleString(locale),
 			pageCommentSegmentsWithTranslations,
+			replies: comment.replies.map(mapComment),
 		};
-	});
-}
+	}
 
+	// ツリー構造のコメントそれぞれに対してマッピング処理を実施
+	return tree.map(mapComment);
+}
 export type PageCommentWithUser = Awaited<
 	ReturnType<typeof fetchPageCommentsWithUserAndTranslations>
 >;
