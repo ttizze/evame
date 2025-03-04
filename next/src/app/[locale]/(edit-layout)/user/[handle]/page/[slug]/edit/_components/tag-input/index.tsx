@@ -1,20 +1,24 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { Tag } from "@prisma/client";
 import { X } from "lucide-react";
 import { useState } from "react";
 import { useActionState } from "react";
 import { useRef } from "react";
 import CreatableSelect from "react-select/creatable";
+import type { TagWithCount } from "../../_db/queries.server";
 import { type EditPageTagsActionState, editPageTagsAction } from "./action";
 interface TagInputProps {
 	initialTags: { id: number; name: string }[];
-	allTags: Tag[];
+	allTagsWithCount: TagWithCount[];
 	pageId: number | undefined;
 }
 
-export function TagInput({ initialTags, allTags, pageId }: TagInputProps) {
+export function TagInput({
+	initialTags,
+	allTagsWithCount,
+	pageId,
+}: TagInputProps) {
 	const [tags, setTags] = useState<string[]>(
 		initialTags.map((tag) => tag.name),
 	);
@@ -85,11 +89,11 @@ export function TagInput({ initialTags, allTags, pageId }: TagInputProps) {
 								handleCreateTag(newValue.value);
 							}
 						}}
-						options={allTags
+						options={allTagsWithCount
 							.filter((tag) => !tags.includes(tag.name))
 							.map((tag) => ({
 								value: tag.name,
-								label: tag.name,
+								label: `${tag.name} (${tag._count.pages})`,
 							}))}
 						value={null}
 						components={{

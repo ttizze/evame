@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { EditPageClient } from "./_components/edit-page-client";
-import { getAllTags, getPageBySlug } from "./_db/queries.server";
+import { getAllTagsWithCount, getPageBySlug } from "./_db/queries.server";
 
 type Params = Promise<{ handle: string; slug: string }>;
 
@@ -14,9 +14,9 @@ const getPageData = cache(async (handle: string, slug: string) => {
 	if (currentUser?.handle !== handle) {
 		return notFound();
 	}
-	const [pageWithTitleAndTags, allTags] = await Promise.all([
+	const [pageWithTitleAndTags, allTagsWithCount] = await Promise.all([
 		getPageBySlug(slug),
-		getAllTags(),
+		getAllTagsWithCount(),
 	]);
 	const title = pageWithTitleAndTags?.pageSegments.find(
 		(pageSegment) => pageSegment.number === 0,
@@ -24,7 +24,7 @@ const getPageData = cache(async (handle: string, slug: string) => {
 	return {
 		currentUser,
 		pageWithTitleAndTags,
-		allTags,
+		allTagsWithCount,
 		title,
 	};
 });
@@ -50,14 +50,14 @@ export default async function EditPage({
 	params: Params;
 }) {
 	const { handle, slug } = await params;
-	const { currentUser, pageWithTitleAndTags, allTags, title } =
+	const { currentUser, pageWithTitleAndTags, allTagsWithCount, title } =
 		await getPageData(handle, slug);
 
 	return (
 		<EditPageClient
 			currentUser={currentUser}
 			pageWithTitleAndTags={pageWithTitleAndTags}
-			allTags={allTags}
+			allTagsWithCount={allTagsWithCount}
 			initialTitle={title}
 			slug={slug}
 		/>
