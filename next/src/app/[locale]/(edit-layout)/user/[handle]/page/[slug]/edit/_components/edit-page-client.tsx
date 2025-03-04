@@ -1,12 +1,12 @@
 "use client";
 
 import type { SanitizedUser } from "@/app/types";
-import type { Tag } from "@prisma/client";
 import type { Editor as TiptapEditor } from "@tiptap/react";
 import { useCallback, useRef, useState } from "react";
 import { useActionState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { useDebouncedCallback } from "use-debounce";
+import type { TagWithCount } from "../_db/queries.server";
 import type { PageWithTitleAndTags } from "../_db/queries.server";
 import { useKeyboardVisible } from "../_hooks/use-keyboard-visible";
 import {
@@ -21,7 +21,7 @@ import { TagInput } from "./tag-input";
 interface EditPageClientProps {
 	currentUser: SanitizedUser;
 	pageWithTitleAndTags: PageWithTitleAndTags;
-	allTags: Tag[];
+	allTagsWithCount: TagWithCount[];
 	initialTitle: string | undefined;
 	slug: string;
 }
@@ -29,7 +29,7 @@ interface EditPageClientProps {
 export function EditPageClient({
 	currentUser,
 	pageWithTitleAndTags,
-	allTags,
+	allTagsWithCount,
 	initialTitle,
 	slug,
 }: EditPageClientProps) {
@@ -123,7 +123,7 @@ export function EditPageClient({
 								name: tagPage.tag.name,
 							})) || []
 						}
-						allTags={allTags}
+						allTagsWithCount={allTagsWithCount}
 						pageId={pageWithTitleAndTags?.id}
 					/>
 				</div>

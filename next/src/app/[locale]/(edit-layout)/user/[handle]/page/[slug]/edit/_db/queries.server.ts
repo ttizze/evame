@@ -19,6 +19,22 @@ export async function getPageBySlug(slug: string) {
 }
 export type PageWithTitleAndTags = Awaited<ReturnType<typeof getPageBySlug>>;
 
-export async function getAllTags() {
-	return await prisma.tag.findMany();
+export async function getAllTagsWithCount() {
+	return await prisma.tag.findMany({
+		select: {
+			id: true,
+			name: true,
+			_count: {
+				select: { pages: true },
+			},
+		},
+		orderBy: {
+			pages: {
+				_count: "desc",
+			},
+		},
+	});
 }
+export type TagWithCount = Awaited<
+	ReturnType<typeof getAllTagsWithCount>
+>[number];

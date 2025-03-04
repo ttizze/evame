@@ -6,9 +6,9 @@ import "@testing-library/jest-dom";
 
 describe("TagInput", () => {
 	const mockInitialTags = [{ id: 1, name: "initial" }];
-	const mockAllTags = [
-		{ id: 1, name: "initial" },
-		{ id: 2, name: "test" },
+	const mockAllTagsWithCount = [
+		{ id: 1, name: "initial", _count: { pages: 1 } },
+		{ id: 2, name: "test", _count: { pages: 2 } },
 	];
 	const mockPageId = 1;
 
@@ -25,7 +25,7 @@ describe("TagInput", () => {
 		render(
 			<TagInput
 				initialTags={mockInitialTags}
-				allTags={mockAllTags}
+				allTagsWithCount={mockAllTagsWithCount}
 				pageId={mockPageId}
 			/>,
 		);
@@ -58,7 +58,7 @@ describe("TagInput", () => {
 					{ id: 4, name: "tag4" },
 					{ id: 5, name: "tag5" },
 				]}
-				allTags={mockAllTags}
+				allTagsWithCount={mockAllTagsWithCount}
 				pageId={mockPageId}
 			/>,
 		);
@@ -72,7 +72,7 @@ describe("TagInput", () => {
 		render(
 			<TagInput
 				initialTags={mockInitialTags}
-				allTags={mockAllTags}
+				allTagsWithCount={mockAllTagsWithCount}
 				pageId={mockPageId}
 			/>,
 		);
@@ -91,7 +91,7 @@ describe("TagInput", () => {
 		render(
 			<TagInput
 				initialTags={mockInitialTags}
-				allTags={mockAllTags}
+				allTagsWithCount={mockAllTagsWithCount}
 				pageId={mockPageId}
 			/>,
 		);
