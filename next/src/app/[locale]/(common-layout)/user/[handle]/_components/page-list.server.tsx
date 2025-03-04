@@ -1,10 +1,10 @@
 import { PageCard } from "@/app/[locale]/_components/page-card";
+import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/_db/queries.server";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
 import { notFound } from "next/navigation";
-import { PaginationControls } from "./pagination-controls";
 interface PageListServerProps {
 	handle: string;
 	page: number;
@@ -24,8 +24,8 @@ export async function PageListServer({
 	if (!pageOwner) {
 		return notFound();
 	}
-	const { pagesWithInfo, totalPages, currentPage } =
-		await fetchPaginatedPublicPagesWithInfo({
+	const { pagesWithInfo, totalPages } = await fetchPaginatedPublicPagesWithInfo(
+		{
 			page: page,
 			pageSize: 9,
 			currentUserId: currentUser?.id,
@@ -33,7 +33,8 @@ export async function PageListServer({
 			pageOwnerId: pageOwner.id,
 			onlyUserOwn: true,
 			locale,
-		});
+		},
+	);
 
 	if (pagesWithInfo.length === 0) {
 		return (
@@ -58,7 +59,7 @@ export async function PageListServer({
 			</div>
 
 			<div className="mt-8 flex justify-center">
-				<PaginationControls currentPage={currentPage} totalPages={totalPages} />
+				<PaginationBar totalPages={totalPages} currentPage={page} />
 			</div>
 		</>
 	);

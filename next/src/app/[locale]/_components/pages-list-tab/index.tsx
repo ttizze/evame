@@ -6,8 +6,7 @@ import type { SearchParams } from "nuqs/server";
 import { PagesListTabClient } from "./client";
 const searchParamsSchema = {
 	activeTab: parseAsString.withDefault("recommended"),
-	recommendedPage: parseAsInteger.withDefault(1),
-	newPage: parseAsInteger.withDefault(1),
+	page: parseAsInteger.withDefault(1),
 };
 
 const loadSearchParams = createLoader(searchParamsSchema);
@@ -23,16 +22,14 @@ export default async function PageListTab({
 	currentUserId,
 	searchParams,
 }: PageListTabProps) {
-	const { activeTab, recommendedPage, newPage } =
-		await loadSearchParams(searchParams);
+	const { activeTab, page } = await loadSearchParams(searchParams);
 	const guestId = await getGuestId();
 
 	let pagesWithInfo: PageCardLocalizedType[] = [];
 	let totalPages = 0;
-	let currentPage = 1;
 	if (activeTab === "recommended") {
 		const result = await fetchPaginatedPublicPagesWithInfo({
-			page: Number(recommendedPage),
+			page,
 			pageSize: 9,
 			currentUserId: currentUserId,
 			currentGuestId: guestId,
@@ -41,10 +38,9 @@ export default async function PageListTab({
 		});
 		pagesWithInfo = result.pagesWithInfo;
 		totalPages = result.totalPages;
-		currentPage = result.currentPage;
 	} else {
 		const result = await fetchPaginatedPublicPagesWithInfo({
-			page: Number(newPage),
+			page,
 			pageSize: 9,
 			currentUserId: currentUserId,
 			currentGuestId: guestId,
@@ -52,14 +48,12 @@ export default async function PageListTab({
 		});
 		pagesWithInfo = result.pagesWithInfo;
 		totalPages = result.totalPages;
-		currentPage = result.currentPage;
 	}
 	return (
 		<PagesListTabClient
 			initialTab={activeTab}
 			pagesWithInfo={pagesWithInfo}
 			totalPages={totalPages}
-			currentPage={currentPage}
 			locale={locale}
 		/>
 	);

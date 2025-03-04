@@ -43,7 +43,7 @@ export function SearchPageClient({ pages, tags, users, totalPages }: Props) {
 
 	const [pageNumber, setPageNumber] = useQueryState(
 		"page",
-		parseAsInteger.withOptions({
+		parseAsInteger.withDefault(1).withOptions({
 			shallow: false,
 			startTransition,
 		}),
@@ -52,10 +52,6 @@ export function SearchPageClient({ pages, tags, users, totalPages }: Props) {
 	function handleTabChange(newCat: Category) {
 		setCurrentCategory(newCat);
 		setPageNumber(1);
-	}
-
-	function handlePageChange(newPage: number) {
-		setPageNumber(newPage);
 	}
 
 	function renderIcon(cat: Category) {
@@ -181,11 +177,7 @@ export function SearchPageClient({ pages, tags, users, totalPages }: Props) {
 			)}
 			{totalPages > 1 && (
 				<div className="mt-4 flex items-center gap-4">
-					<PaginationBar
-						totalPages={totalPages}
-						currentPage={pageNumber ?? 1}
-						onPageChange={handlePageChange}
-					/>
+					<PaginationBar totalPages={totalPages} currentPage={pageNumber} />
 				</div>
 			)}
 		</div>
