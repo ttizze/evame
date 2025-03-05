@@ -9,42 +9,41 @@ import {
 	searchTitle,
 	searchUsers,
 } from "./_db/queries.server";
+import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
+import type { SearchParams } from "nuqs/server";
 const DynamicSearchPageClient = dynamic(
 	() => import("./search.client").then((mod) => mod.SearchPageClient),
 	{
 		loading: () => <Skeleton className="h-[500px] w-full" />,
 	},
 );
-const PAGE_SIZE = 10;
 
+const searchParamsSchema = {
+	page: parseAsInteger.withDefault(1),
+	query: parseAsString.withDefault(""),
+	category: parseAsString.withDefault("title"),
+	tagPage: parseAsString.withDefault("false"),
+};
+const loadSearchParams = createLoader(searchParamsSchema);
 export default async function Page({
 	params,
 	searchParams,
 }: {
 	params: Promise<{ locale: string }>;
-	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+	searchParams: Promise<SearchParams>;
 }) {
 	const { locale } = await params;
-	const {
-		query,
-		category = "title",
-		page = "1",
-		tagPage = "false",
-	} = await searchParams;
-	if (
-		typeof query !== "string" ||
-		typeof category !== "string" ||
-		typeof page !== "string" ||
-		typeof tagPage !== "string"
-	) {
+	const { page, query, category, tagPage } = await loadSearchParams(searchParams);
+	if (!query || page < 1) {
 		return (
 			<DynamicSearchPageClient pages={[]} tags={[]} users={[]} totalPages={0} />
 		);
 	}
-
-	const skip = (Number(page) - 1) * PAGE_SIZE;
+	
+	const PAGE_SIZE = 10;
+	const skip = (page - 1) * PAGE_SIZE; 
 	const take = PAGE_SIZE;
-
+	
 	let pages = undefined;
 	let tags: Tag[] | undefined = undefined;
 	let users: SanitizedUser[] | undefined = undefined;
