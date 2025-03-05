@@ -65,10 +65,8 @@ const features = [
 
 export default async function AboutPage({
 	params,
-	searchParams,
 }: {
 	params: Promise<{ locale: string }>;
-	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
 	const { locale } = await params;
 
