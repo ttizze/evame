@@ -2,6 +2,8 @@ import type { SanitizedUser } from "@/app/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Tag } from "@prisma/client";
 import dynamic from "next/dynamic";
+import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
+import type { SearchParams } from "nuqs/server";
 import {
 	searchByTag,
 	searchContent,
@@ -9,8 +11,6 @@ import {
 	searchTitle,
 	searchUsers,
 } from "./_db/queries.server";
-import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
-import type { SearchParams } from "nuqs/server";
 const DynamicSearchPageClient = dynamic(
 	() => import("./search.client").then((mod) => mod.SearchPageClient),
 	{
@@ -33,17 +33,18 @@ export default async function Page({
 	searchParams: Promise<SearchParams>;
 }) {
 	const { locale } = await params;
-	const { page, query, category, tagPage } = await loadSearchParams(searchParams);
+	const { page, query, category, tagPage } =
+		await loadSearchParams(searchParams);
 	if (!query || page < 1) {
 		return (
 			<DynamicSearchPageClient pages={[]} tags={[]} users={[]} totalPages={0} />
 		);
 	}
-	
+
 	const PAGE_SIZE = 10;
-	const skip = (page - 1) * PAGE_SIZE; 
+	const skip = (page - 1) * PAGE_SIZE;
 	const take = PAGE_SIZE;
-	
+
 	let pages = undefined;
 	let tags: Tag[] | undefined = undefined;
 	let users: SanitizedUser[] | undefined = undefined;
