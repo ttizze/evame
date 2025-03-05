@@ -1,8 +1,10 @@
 import { getCurrentUser } from "@/auth";
+import type { SearchParams } from "nuqs/server";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
+
 const HeroSection = dynamic(
 	() => import("@/app/[locale]/_components/hero-section/index"),
 	{
@@ -27,7 +29,7 @@ export default async function HomePage({
 	searchParams,
 }: {
 	params: Promise<{ locale: string }>;
-	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+	searchParams: Promise<SearchParams>;
 }) {
 	const currentUser = await getCurrentUser();
 	const { locale } = await params;
