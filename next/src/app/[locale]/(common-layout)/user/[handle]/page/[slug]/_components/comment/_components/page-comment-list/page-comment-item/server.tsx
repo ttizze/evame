@@ -5,7 +5,7 @@ import {
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getImageProps } from "next/image";
-import type { PageCommentWithUserAndTranslations } from "../lib/fetch-page-comments-with-user-and-translations";
+import type { PageCommentWithUserAndTranslations } from "../_lib/fetch-page-comments-with-user-and-translations";
 import { PageCommentItemClient } from "./client";
 
 interface PageCommentItemProps {
