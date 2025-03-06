@@ -1,5 +1,5 @@
 import { getCurrentUser } from "@/auth";
-import { fetchPageCommentsWithUserAndTranslations } from "./_db/query.server";
+import { fetchPageCommentsWithUserAndTranslations } from "./lib/fetch-page-comments-with-user-and-translations";
 import { PageCommentListClient } from "./page-comment-list-client";
 
 interface CommentListProps {
@@ -9,14 +9,15 @@ interface CommentListProps {
 
 export async function PageCommentList({ locale, pageId }: CommentListProps) {
 	const currentUser = await getCurrentUser();
-	const pageCommentsWithUser = await fetchPageCommentsWithUserAndTranslations(
-		pageId,
-		locale,
-		currentUser?.id,
-	);
+	const pageCommentsWithUserAndTranslations =
+		await fetchPageCommentsWithUserAndTranslations(
+			pageId,
+			locale,
+			currentUser?.id,
+		);
 	return (
 		<PageCommentListClient
-			pageCommentsWithUser={pageCommentsWithUser}
+			pageCommentsWithUserAndTranslations={pageCommentsWithUserAndTranslations}
 			currentHandle={currentUser?.handle}
 		/>
 	);

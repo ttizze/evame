@@ -30,7 +30,6 @@ type Segment = {
 	id: number;
 	number: number;
 	text: string;
-	createdAt: Date;
 };
 export type SegmentWithTranslations = {
 	segment: Segment;

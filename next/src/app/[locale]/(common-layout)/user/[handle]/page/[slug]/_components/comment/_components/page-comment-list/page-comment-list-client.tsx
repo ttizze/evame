@@ -7,35 +7,23 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
 import { getImageProps } from "next/image";
-import { useActionState } from "react";
-import type { PageCommentWithUser } from "./_db/query.server";
-import {
-	type CommentDeleteActionResponse,
-	commentDeleteAction,
-} from "./action";
-
+import type { PageCommentWithUserAndTranslations } from "./lib/fetch-page-comments-with-user-and-translations";
 interface CommentListClientProps {
-	pageCommentsWithUser: PageCommentWithUser;
+	pageCommentsWithUserAndTranslations: PageCommentWithUserAndTranslations;
 	currentHandle: string | undefined;
 }
 
 export function PageCommentListClient({
-	pageCommentsWithUser,
+	pageCommentsWithUserAndTranslations,
 	currentHandle,
 }: CommentListClientProps) {
-	const [state, action, isPending] = useActionState<
-		CommentDeleteActionResponse,
-		FormData
-	>(commentDeleteAction, { success: false });
 	return (
 		<div className="space-y-4">
-			{pageCommentsWithUser.map((pageComment) => {
+			{pageCommentsWithUserAndTranslations.map((pageComment) => {
 				const { props } = getImageProps({
 					src: pageComment.user.image,
 					alt: pageComment.user.name,
@@ -72,25 +60,6 @@ export function PageCommentListClient({
 													<MoreVertical className="h-4 w-4" />
 												</Button>
 											</DropdownMenuTrigger>
-											<DropdownMenuContent align="end">
-												<DropdownMenuItem>
-													<form action={action}>
-														<input
-															type="hidden"
-															name="pageCommentId"
-															value={pageComment.id}
-														/>
-														<input
-															type="hidden"
-															name="pageId"
-															value={pageComment.pageId}
-														/>
-														<Button type="submit" variant="ghost">
-															Delete
-														</Button>
-													</form>
-												</DropdownMenuItem>
-											</DropdownMenuContent>
 										</DropdownMenu>
 									)}
 								</div>

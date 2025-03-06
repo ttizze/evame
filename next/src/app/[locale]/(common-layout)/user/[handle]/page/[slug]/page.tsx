@@ -1,4 +1,4 @@
-import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-list";
+import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-list/server";
 import { stripHtmlTags } from "@/app/[locale]/_lib/strip-html-tags";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { Skeleton } from "@/components/ui/skeleton";

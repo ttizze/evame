@@ -4,14 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deletePageComment } from "./_db/mutations.server";
-import { getPageCommentById } from "./_db/query.server";
+import { getPageCommentById } from "./_db/queries.server";
 import { commentDeleteAction } from "./action";
 // Mock dependencies
 vi.mock("@/auth", () => ({
 	getCurrentUser: vi.fn(),
 }));
 
-vi.mock("./_db/query.server", () => ({
+vi.mock("./_db/queries.server", () => ({
 	getPageCommentById: vi.fn(),
 }));
 
@@ -30,6 +30,7 @@ vi.mock("next/navigation", () => ({
 describe("commentDeleteAction", () => {
 	const mockPageComment = {
 		id: 1,
+		parentId: null,
 		userId: mockUsers[0].id,
 		content: "test comment",
 		pageId: 100,
