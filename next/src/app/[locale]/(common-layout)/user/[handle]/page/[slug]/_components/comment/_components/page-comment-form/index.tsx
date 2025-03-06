@@ -2,26 +2,35 @@
 import { Editor } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[slug]/edit/_components/editor/editor";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { Button } from "@/components/ui/button";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { type CommentActionResponse, commentAction } from "./action";
 
 export function PageCommentForm({
 	pageId,
 	currentHandle,
+	parentId,
+	onReplySuccess,
 }: {
 	pageId: number;
 	currentHandle: string | undefined;
+	parentId?: number;
+	onReplySuccess?: () => void;
 }) {
 	const [content, setContent] = useState("");
 	const [state, action, isPending] = useActionState<
 		CommentActionResponse,
 		FormData
 	>(commentAction, { success: false });
-
+	useEffect(() => {
+		if (state.success) {
+			onReplySuccess?.();
+		}
+	}, [state.success, onReplySuccess]);
 	return (
 		<>
 			<form action={action} className="space-y-4 relative">
 				<input type="hidden" name="pageId" value={pageId} />
+				{parentId && <input type="hidden" name="parentId" value={parentId} />}
 				<Editor
 					defaultValue={""}
 					name="content"

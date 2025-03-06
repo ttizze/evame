@@ -1,31 +1,6 @@
 import type { BlockWithNumber } from "@/app/[locale]/_lib/process-html";
 import { prisma } from "@/lib/prisma";
 
-export async function createPageComment(
-	content: string,
-	locale: string,
-	userId: string,
-	pageId: number,
-) {
-	return await prisma.pageComment.create({
-		data: {
-			content,
-			locale,
-			pageId,
-			userId,
-		},
-		include: {
-			user: {
-				select: {
-					handle: true,
-					name: true,
-					image: true,
-				},
-			},
-		},
-	});
-}
-
 export async function createPageCommentSegments(
 	pageCommentId: number,
 	blocks: BlockWithNumber[],

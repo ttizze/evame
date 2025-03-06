@@ -1,4 +1,3 @@
-// CommentItem.tsx
 "use client";
 
 import { MemoizedParsedContent } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/parsed-content";
@@ -14,14 +13,17 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Reply } from "lucide-react";
 import { getImageProps } from "next/image";
+import { useState } from "react";
 import { useActionState } from "react";
+import { PageCommentForm } from "../page-comment-form";
 import {
 	type CommentDeleteActionResponse,
 	commentDeleteAction,
 } from "./action";
 import type { PageCommentWithUserAndTranslations } from "./lib/fetch-page-comments-with-user-and-translations";
+
 interface CommentItemProps {
 	pageComment: PageCommentWithUserAndTranslations[number];
 	currentHandle: string | undefined;
@@ -38,9 +40,10 @@ export function CommentItem({ pageComment, currentHandle }: CommentItemProps) {
 		width: 40,
 		height: 40,
 	});
+	const [isReplying, setIsReplying] = useState(false);
 
 	return (
-		<div className="ml-4 border-l pl-4 pt-2">
+		<div className="">
 			<div className="flex items-center">
 				<Avatar className="w-6 h-6 mr-3 not-prose">
 					<AvatarImage {...props} />
@@ -58,38 +61,50 @@ export function CommentItem({ pageComment, currentHandle }: CommentItemProps) {
 								{pageComment.createdAt}
 							</span>
 						</div>
-						{currentHandle === pageComment.user.handle && (
-							<DropdownMenu modal={false}>
-								<DropdownMenuTrigger asChild>
-									<Button
-										variant="ghost"
-										className={"h-8 w-8 p-0"}
-										aria-label="More options"
-									>
-										<MoreVertical className="h-4 w-4" />
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end">
-									<DropdownMenuItem>
-										<form action={action}>
-											<input
-												type="hidden"
-												name="pageCommentId"
-												value={pageComment.id}
-											/>
-											<input
-												type="hidden"
-												name="pageId"
-												value={pageComment.pageId}
-											/>
-											<Button type="submit" variant="ghost">
-												Delete
-											</Button>
-										</form>
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
-						)}
+						<div className="flex items-center space-x-2">
+							{/* 返信アイコンボタン */}
+							<Button
+								variant="ghost"
+								className="h-8 w-8 p-0"
+								onClick={() => setIsReplying(!isReplying)}
+								disabled={!currentHandle}
+								aria-label="Reply"
+							>
+								<Reply className="h-4 w-4" />
+							</Button>
+							{currentHandle === pageComment.user.handle && (
+								<DropdownMenu modal={false}>
+									<DropdownMenuTrigger asChild>
+										<Button
+											variant="ghost"
+											className="h-8 w-8 p-0"
+											aria-label="More options"
+										>
+											<MoreVertical className="h-4 w-4" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent align="end">
+										<DropdownMenuItem>
+											<form action={action}>
+												<input
+													type="hidden"
+													name="pageCommentId"
+													value={pageComment.id}
+												/>
+												<input
+													type="hidden"
+													name="pageId"
+													value={pageComment.pageId}
+												/>
+												<Button type="submit" variant="ghost">
+													Delete
+												</Button>
+											</form>
+										</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							)}
+						</div>
 					</div>
 				</div>
 			</div>
@@ -106,9 +121,18 @@ export function CommentItem({ pageComment, currentHandle }: CommentItemProps) {
 					}
 				/>
 			</div>
-			{/* 子コメントがあれば再帰的にレンダリング */}
+			{isReplying && (
+				<div className="mt-2 ml-8">
+					<PageCommentForm
+						pageId={pageComment.pageId}
+						currentHandle={currentHandle}
+						parentId={pageComment.id}
+						onReplySuccess={() => setIsReplying(false)}
+					/>
+				</div>
+			)}
 			{pageComment.replies && pageComment.replies.length > 0 && (
-				<div className="mt-4">
+				<div className="border-l pl-4 pt-2">
 					{pageComment.replies.map((reply) => (
 						<CommentItem
 							key={reply.id}
