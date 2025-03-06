@@ -2,14 +2,16 @@
 
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
+import { parseFormData } from "@/lib/parse-form-data";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { getPageCommentById } from "../_db/queries.server";
 import { deletePageComment } from "./_db/mutations.server";
-import { getPageCommentById } from "./_db/queries.server";
+
 const commentDeleteSchema = z.object({
-	pageCommentId: z.number(),
-	pageId: z.number(),
+	pageCommentId: z.coerce.number(),
+	pageId: z.coerce.number(),
 });
 
 export type CommentDeleteActionResponse = ActionResponse<
@@ -30,11 +32,7 @@ export async function commentDeleteAction(
 		return redirect("/auth/login");
 	}
 
-	const parsedFormData = commentDeleteSchema.safeParse({
-		pageCommentId: Number(formData.get("pageCommentId")),
-		pageId: Number(formData.get("pageId")),
-	});
-
+	const parsedFormData = await parseFormData(commentDeleteSchema, formData);
 	if (!parsedFormData.success) {
 		return {
 			success: false,

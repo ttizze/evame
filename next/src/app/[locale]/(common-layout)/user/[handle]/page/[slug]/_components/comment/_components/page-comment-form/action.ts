@@ -59,18 +59,16 @@ export async function commentAction(
 		pageId,
 		parentId,
 	);
-	await createNotificationPageComment(
-		currentUser.id,
-		page.userId,
-		pageComment.id,
-	);
-	await processPageCommentHtml(
-		pageComment.id,
-		content,
-		locale,
-		currentUser.id,
-		pageId,
-	);
+	await Promise.all([
+		createNotificationPageComment(currentUser.id, page.userId, pageComment.id),
+		processPageCommentHtml(
+			pageComment.id,
+			content,
+			locale,
+			currentUser.id,
+			pageId,
+		),
+	]);
 	revalidatePath(`/user/${currentUser.handle}/page/${page.slug}`);
 	return { success: true };
 }

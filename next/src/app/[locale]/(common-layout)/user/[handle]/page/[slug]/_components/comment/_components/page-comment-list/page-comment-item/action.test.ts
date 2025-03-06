@@ -3,8 +3,8 @@ import { mockUsers } from "@/tests/mock";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { deletePageComment } from "./_db/mutations.server";
-import { getPageCommentById } from "./_db/queries.server";
+import { deletePageComment } from "../_db/mutations.server";
+import { getPageCommentById } from "../_db/queries.server";
 import { commentDeleteAction } from "./action";
 // Mock dependencies
 vi.mock("@/auth", () => ({

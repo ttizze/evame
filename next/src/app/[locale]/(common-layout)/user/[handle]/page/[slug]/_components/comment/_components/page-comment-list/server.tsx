@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/auth";
 import { fetchPageCommentsWithUserAndTranslations } from "./lib/fetch-page-comments-with-user-and-translations";
-import { PageCommentListClient } from "./page-comment-list-client";
+import PageCommentItem from "./page-comment-item/server";
 
 interface CommentListProps {
 	locale: string;
@@ -16,9 +16,16 @@ export async function PageCommentList({ locale, pageId }: CommentListProps) {
 			currentUser?.id,
 		);
 	return (
-		<PageCommentListClient
-			pageCommentsWithUserAndTranslations={pageCommentsWithUserAndTranslations}
-			currentHandle={currentUser?.handle}
-		/>
+		<div className="space-y-4">
+			{pageCommentsWithUserAndTranslations.map((pageComment) => {
+				return (
+					<PageCommentItem
+						key={pageComment.id}
+						pageComment={pageComment}
+						currentHandle={currentUser?.handle}
+					/>
+				);
+			})}
+		</div>
 	);
 }
