@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getImageProps } from "next/image";
 import type { PageCommentWithUserAndTranslations } from "../_lib/fetch-page-comments-with-user-and-translations";
 import { PageCommentItemClient } from "./client";
-
+import { ReplyForm } from "./reply-form.client";
 interface PageCommentItemProps {
 	pageComment: PageCommentWithUserAndTranslations[number];
 	currentHandle: string | undefined;
@@ -63,6 +63,11 @@ export default function PageCommentItem({
 					}
 				/>
 			</div>
+			<ReplyForm
+				pageId={pageComment.pageId}
+				currentHandle={currentHandle}
+				parentId={pageComment.id}
+			/>
 			{pageComment.replies && pageComment.replies.length > 0 && (
 				<div className="border-l pl-4 pt-2">
 					{pageComment.replies.map((reply) => (
