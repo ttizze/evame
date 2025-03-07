@@ -6,8 +6,8 @@ import { parseFormData } from "@/lib/parse-form-data";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { getPageCommentById } from "../_db/queries.server";
 import { deletePageComment } from "./_db/mutations.server";
+import { getPageCommentById } from "./_db/queries.server";
 
 const commentDeleteSchema = z.object({
 	pageCommentId: z.coerce.number(),

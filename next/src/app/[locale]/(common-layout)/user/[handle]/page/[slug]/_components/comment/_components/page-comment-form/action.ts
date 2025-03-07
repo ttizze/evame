@@ -8,8 +8,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createNotificationPageComment } from "../../_db/mutations.server";
-import { processPageCommentHtml } from "../../_lib/process-page-comment-html";
-import { createPageComment } from "./db/mutations.server";
+import { createPageComment } from "./_db/mutations.server";
+import { processPageCommentHtml } from "./_lib/process-page-comment-html";
 
 const createPageCommentSchema = z.object({
 	pageId: z.coerce.number(),
