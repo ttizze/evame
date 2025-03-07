@@ -36,9 +36,7 @@ export async function fetchPageCommentsWithPageCommentSegments(
 								},
 							},
 							pageCommentSegmentTranslationVotes: {
-								where: currentUserId
-									? { userId: currentUserId }
-									: {},
+								where: currentUserId ? { userId: currentUserId } : {},
 							},
 						},
 						orderBy: [{ point: "desc" }, { createdAt: "desc" }],
