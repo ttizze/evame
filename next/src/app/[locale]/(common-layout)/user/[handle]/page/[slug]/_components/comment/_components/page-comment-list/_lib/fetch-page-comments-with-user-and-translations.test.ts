@@ -1,7 +1,7 @@
 import {
-	pageCommentFactory,
 	pageCommentSegmentFactory,
 	pageCommentSegmentTranslationFactory,
+	pageCommentWithPageCommentSegmentsFactory,
 } from "@/tests/factory";
 // fetch-page-comments-with-user-and-translations.test.ts
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -23,9 +23,15 @@ describe("buildCommentTree", () => {
 
 	it("should build a tree from flat comments", async () => {
 		const flatComments = [
-			pageCommentFactory.build({ id: 1, parentId: null }),
-			pageCommentFactory.build({ id: 2, parentId: 1 }),
-			pageCommentFactory.build({ id: 3, parentId: null }),
+			pageCommentWithPageCommentSegmentsFactory.build({
+				id: 1,
+				parentId: null,
+			}),
+			pageCommentWithPageCommentSegmentsFactory.build({ id: 2, parentId: 1 }),
+			pageCommentWithPageCommentSegmentsFactory.build({
+				id: 3,
+				parentId: null,
+			}),
 		];
 		const tree = await buildCommentTree(flatComments);
 
@@ -56,7 +62,7 @@ describe("mapCommentTranslations", () => {
 			{},
 			{ transient: { customTranslations: translations } },
 		);
-		const comment = pageCommentFactory.build(
+		const comment = pageCommentWithPageCommentSegmentsFactory.build(
 			{}, // フィールドの直接オーバーライドがある場合はここ
 			{ transient: { customSegments: segments } }, // transientParams
 		);
@@ -76,7 +82,8 @@ describe("fetchPageCommentsWithUserAndTranslations", () => {
 	});
 
 	it("should fetch flat comments, build tree, and map translations", async () => {
-		const mockPageComments = pageCommentFactory.buildList(1);
+		const mockPageComments =
+			pageCommentWithPageCommentSegmentsFactory.buildList(1);
 		vi.mocked(fetchPageCommentsWithPageCommentSegments).mockResolvedValue(
 			mockPageComments,
 		);
