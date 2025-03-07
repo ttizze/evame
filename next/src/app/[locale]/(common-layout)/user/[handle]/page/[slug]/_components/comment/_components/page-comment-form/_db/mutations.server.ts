@@ -6,6 +6,7 @@ export async function createPageComment(
 	locale: string,
 	userId: string,
 	pageId: number,
+	parentId?: number,
 ) {
 	return await prisma.pageComment.create({
 		data: {
@@ -13,6 +14,7 @@ export async function createPageComment(
 			locale,
 			pageId,
 			userId,
+			parentId,
 		},
 		include: {
 			user: {

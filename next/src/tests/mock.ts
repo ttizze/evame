@@ -1,5 +1,4 @@
 import { PageStatus } from "@prisma/client";
-
 export const mockUsers = [
 	{
 		id: "mockUserId1",

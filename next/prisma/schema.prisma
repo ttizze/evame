@@ -103,13 +103,13 @@ model UserAITranslationInfo {
 }
 
 model PageAITranslationInfo {
-  id Int @id @default(autoincrement())
-  pageId Int @map("page_id")
-  locale String
+  id                  Int               @id @default(autoincrement())
+  pageId              Int               @map("page_id")
+  locale              String
   aiTranslationStatus TranslationStatus @default(PENDING) @map("ai_translation_status")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+  page                Page              @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@index([pageId])
   @@index([pageId, locale, createdAt])
@@ -182,11 +182,9 @@ model PageSegmentTranslation {
   @@index([pageSegmentId])
   @@index([userId])
   @@index([locale])
-
   @@index([locale, isArchived])
   @@index([pageSegmentId, locale, isArchived])
   @@index([point, createdAt])
-
   @@map("page_segment_translations")
 }
 
@@ -249,10 +247,13 @@ model PageComment {
   locale              String
   userId              String               @map("user_id")
   pageId              Int                  @map("page_id")
+  parentId            Int?                 @map("parent_id")
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
   user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   page                Page                 @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  parent              PageComment?         @relation("CommentReplies", fields: [parentId], references: [id], onDelete: SetNull)
+  replies             PageComment[]        @relation("CommentReplies")
   pageCommentSegments PageCommentSegment[]
   notifications       Notification[]
 

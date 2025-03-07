@@ -2,14 +2,16 @@
 
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
+import { parseFormData } from "@/lib/parse-form-data";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { deletePageComment } from "./_db/mutations.server";
-import { getPageCommentById } from "./_db/query.server";
+import { getPageCommentById } from "./_db/queries.server";
+
 const commentDeleteSchema = z.object({
-	pageCommentId: z.number(),
-	pageId: z.number(),
+	pageCommentId: z.coerce.number(),
+	pageId: z.coerce.number(),
 });
 
 export type CommentDeleteActionResponse = ActionResponse<
@@ -20,21 +22,37 @@ export type CommentDeleteActionResponse = ActionResponse<
 	}
 >;
 
+type Dependencies = {
+	getCurrentUser: typeof getCurrentUser;
+	parseFormData: typeof parseFormData;
+	getPageCommentById: typeof getPageCommentById;
+	deletePageComment: typeof deletePageComment;
+	revalidatePath: typeof revalidatePath;
+	redirect: typeof redirect;
+};
+
 export async function commentDeleteAction(
 	previousState: CommentDeleteActionResponse,
 	formData: FormData,
+	deps: Dependencies = {
+		getCurrentUser,
+		parseFormData,
+		getPageCommentById,
+		deletePageComment,
+		revalidatePath,
+		redirect,
+	},
 ): Promise<CommentDeleteActionResponse> {
-	const currentUser = await getCurrentUser();
+	const currentUser = await deps.getCurrentUser();
 
 	if (!currentUser?.id) {
-		return redirect("/auth/login");
+		return deps.redirect("/auth/login");
 	}
 
-	const parsedFormData = commentDeleteSchema.safeParse({
-		pageCommentId: Number(formData.get("pageCommentId")),
-		pageId: Number(formData.get("pageId")),
-	});
-
+	const parsedFormData = await deps.parseFormData(
+		commentDeleteSchema,
+		formData,
+	);
 	if (!parsedFormData.success) {
 		return {
 			success: false,
@@ -43,7 +61,7 @@ export async function commentDeleteAction(
 	}
 
 	const { pageCommentId, pageId } = parsedFormData.data;
-	const pageComment = await getPageCommentById(pageCommentId);
+	const pageComment = await deps.getPageCommentById(pageCommentId);
 	if (!pageComment || pageComment.userId !== currentUser.id) {
 		return {
 			success: false,
@@ -51,8 +69,8 @@ export async function commentDeleteAction(
 		};
 	}
 
-	await deletePageComment(pageCommentId);
+	await deps.deletePageComment(pageCommentId);
 
-	revalidatePath(`/user/${currentUser.handle}/page/${pageId}`);
+	deps.revalidatePath(`/user/${currentUser.handle}/page/${pageId}`);
 	return { success: true };
 }

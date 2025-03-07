@@ -84,5 +84,5 @@ export function ParsedContent({
 			return domNode;
 		},
 	};
-	return <span className="js-content">{parse(sanitizedContent, options)}</span>;
+	return parse(sanitizedContent, options);
 }

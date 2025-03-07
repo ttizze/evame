@@ -100,15 +100,17 @@ export async function ContentWithTranslations({
 				translateTarget={TranslateTarget.TRANSLATE_PAGE}
 				showIcons={true}
 			/>
-			<DynamicMemoizedParsedContent
-				html={pageWithTranslations.page.content}
-				segmentWithTranslations={pageWithTranslations.segmentWithTranslations}
-				currentHandle={currentUser?.handle}
-				voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
-				addTranslationFormTarget={
-					ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
-				}
-			/>
+			<span className="js-content">
+				<DynamicMemoizedParsedContent
+					html={pageWithTranslations.page.content}
+					segmentWithTranslations={pageWithTranslations.segmentWithTranslations}
+					currentHandle={currentUser?.handle}
+					voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
+					addTranslationFormTarget={
+						ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
+					}
+				/>
+			</span>
 		</>
 	);
 }

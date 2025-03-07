@@ -119,6 +119,7 @@
 		"eslint": "^9.21.0",
 		"eslint-config-next": "^15.2.0",
 		"eslint-plugin-react-compiler": "^19.0.0-beta-e1e972c-20250221",
+		"fishery": "^2.2.3",
 		"jest-mock-extended": "^4.0.0-beta1",
 		"jsdom": "26.0.0",
 		"postcss": "8.5.3",
