@@ -7,7 +7,7 @@ import { parseFormData } from "@/lib/parse-form-data";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { createNotificationPageComment } from "../../_db/mutations.server";
+import { createNotificationPageComment } from "./_db/mutations.server";
 import { createPageComment } from "./_db/mutations.server";
 import { processPageCommentHtml } from "./_lib/process-page-comment-html";
 
