@@ -16,7 +16,7 @@ export function parseHtmlToAst(html: string): Root {
 	return unified().use(rehypeParse, { fragment: true }).parse(html) as Root;
 }
 
-export function rehypeAddDataId(commentId: number): Plugin<[], Root> {
+function rehypeAddDataId(commentId: number): Plugin<[], Root> {
 	return function attacher() {
 		return async (tree: Root) => {
 			const blocks = collectBlocksFromRoot(tree);

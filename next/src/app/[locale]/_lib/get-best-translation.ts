@@ -1,8 +1,8 @@
 import type { SegmentTranslationWithVote } from "../types";
 
-export function getBestTranslation(
+export async function getBestTranslation(
 	translationsWithVotes: SegmentTranslationWithVote[],
-): SegmentTranslationWithVote | null {
+): Promise<SegmentTranslationWithVote | null> {
 	if (translationsWithVotes.length === 0) {
 		return null;
 	}

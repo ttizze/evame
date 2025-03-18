@@ -226,33 +226,34 @@ export async function fetchPageWithTranslations(
 		},
 		user,
 		tagPages: page.tagPages,
-		segmentWithTranslations: page.pageSegments.map((segment) => {
-			const segmentTranslationsWithVotes = segment.pageSegmentTranslations.map(
-				(segmentTranslation) => ({
-					segmentTranslation: {
-						...segmentTranslation,
-						user: segmentTranslation.user,
-					},
-					translationVote:
-						segmentTranslation.votes && segmentTranslation.votes.length > 0
-							? {
-									...segmentTranslation.votes[0],
-									translationId: segmentTranslation.id,
-								}
-							: null,
-				}),
-			);
+		segmentWithTranslations: await Promise.all(
+			page.pageSegments.map(async (segment) => {
+				const segmentTranslationsWithVotes =
+					segment.pageSegmentTranslations.map((segmentTranslation) => ({
+						segmentTranslation: {
+							...segmentTranslation,
+							user: segmentTranslation.user,
+						},
+						translationVote:
+							segmentTranslation.votes && segmentTranslation.votes.length > 0
+								? {
+										...segmentTranslation.votes[0],
+										translationId: segmentTranslation.id,
+									}
+								: null,
+					}));
 
-			const bestSegmentTranslationWithVote = getBestTranslation(
-				segmentTranslationsWithVotes,
-			);
+				const bestSegmentTranslationWithVote = await getBestTranslation(
+					segmentTranslationsWithVotes,
+				);
 
-			return {
-				segment,
-				segmentTranslationsWithVotes,
-				bestSegmentTranslationWithVote,
-			};
-		}),
+				return {
+					segment,
+					segmentTranslationsWithVotes,
+					bestSegmentTranslationWithVote,
+				};
+			}),
+		),
 	};
 }
 
