@@ -2,38 +2,35 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const JA_NUMBER_0 = "世界とつながる";
-const JA_NUMBER_1 = `Evameは、あなたが書いた記事もコメントも自動で翻訳される多言語コミュニティです。
-メニューから好きな言語を選ぶだけで、記事やコメントを思いのままに楽しめます。
-海外の読者とも手軽に交流でき、新たな出会いが生まれるかもしれません。
-さあ、Evameであなたのアイデアや物語を世界に向けて発信してみましょう。`;
+const JA_NUMBER_0 = "多言語ブログ";
+const JA_NUMBER_1 = `『Evame』は記事もコメントも自動翻訳する多言語ブログプラットフォームです。
+言語の壁を超え､あなたの言葉を世界に届け、国際的な交流や知識の共有を手軽に実現します。
+もっと多くの人に読んでほしいブロガーやライター、国際的なコミュニティを築きたい企業､メディア、グローバルに知識や情報を共有したい研究者や教育者・専門家に最適です。
+Evameで世界への扉を開きましょう。`;
 
-const EN_NUMBER_0: string = "Connect with the world";
-const EN_NUMBER_1 = `Evame is a multilingual community where your articles and comments are automatically translated.
-Just select your preferred language from the menu, and enjoy articles and comments freely.
-You can easily interact with international readers, which might lead to new encounters. 
-Come on, let's share your ideas and stories with the world through Evame.`;
+const EN_NUMBER_0: string = "Multilingual Blog";
+const EN_NUMBER_1 = `Evame is a multilingual blogging platform that automatically translates articles and comments.
+Overcome language barriers, share your words with the world, and easily achieve international interaction and knowledge exchange.
+Ideal for bloggers and writers aiming for wider readership, companies and media seeking global communities, and researchers, educators, or experts who wish to share knowledge internationally.
+Open the door to the world with Evame.`;
 
-// 中国語（簡体字）版
-const ZH_NUMBER_0: string = "与世界相连";
-const ZH_NUMBER_1 = `Evame是一个多语言社区，您撰写的文章和评论都会被自动翻译。
-只需从菜单中选择您喜欢的语言，您就可以随心所欲地享受文章和评论。
-您可以轻松地与海外读者交流，这可能会带来新的相遇。
-来吧，让我们通过Evame向世界分享您的想法和故事。`;
+const ZH_NUMBER_0: string = "多语言博客";
+const ZH_NUMBER_1 = `Evame是一个文章和评论都能自动翻译的多语言博客平台。
+跨越语言障碍，让您的文字传遍全球，轻松实现国际交流和知识共享。
+非常适合希望被更多人阅读的博主和作家，想建立国际社区的企业、媒体，以及希望全球分享知识与信息的研究人员、教育者和专业人士。
+用Evame开启通往世界的大门吧。`;
 
-// 韓国語版
-const KO_NUMBER_0: string = "세상과 연결되다";
-const KO_NUMBER_1 = `Evame는 당신이 작성한 글과 댓글이 자동으로 번역되는 다국어 커뮤니티입니다.
-메뉴에서 원하는 언어를 선택하기만 하면 글과 댓글을 마음껏 즐길 수 있습니다.
-해외 독자들과도 쉽게 교류할 수 있어 새로운 만남이 생길지도 모릅니다.
-자, Evame에서 당신의 아이디어와 이야기를 세계로 발신해 보세요.`;
+const KO_NUMBER_0: string = "다국어 블로그";
+const KO_NUMBER_1 = `『Evame』는 글과 댓글이 자동 번역되는 다국어 블로그 플랫폼입니다.
+언어의 장벽을 넘어 당신의 메시지를 세계에 전달하고 국제적인 교류와 지식 공유를 간편하게 실현합니다.
+더 많은 독자에게 다가가고 싶은 블로거와 작가, 국제 커뮤니티 구축을 원하는 기업과 미디어, 글로벌 지식과 정보 공유를 원하는 연구자, 교육자 및 전문가에게 최적입니다.
+Evame에서 세계로 향하는 문을 열어보세요.`;
 
-// スペイン語版
-const ES_NUMBER_0: string = "Conéctate con el mundo";
-const ES_NUMBER_1 = `Evame es una comunidad multilingüe donde tus artículos y comentarios se traducen automáticamente.
-Solo selecciona el idioma que prefieras del menú y disfruta de los artículos y comentarios libremente.
-Puedes interactuar fácilmente con lectores internacionales, lo que podría conducir a nuevos encuentros.
-Vamos, compartamos tus ideas e historias con el mundo a través de Evame.`;
+const ES_NUMBER_0: string = "Blog multilingüe";
+const ES_NUMBER_1 = `Evame es una plataforma de blogs multilingüe que traduce automáticamente artículos y comentarios.
+Supera las barreras del idioma, lleva tus palabras al mundo y facilita el intercambio internacional y la difusión de conocimiento.
+Perfecta para blogueros y escritores que buscan más lectores, empresas y medios que desean construir comunidades globales, y para investigadores, educadores o expertos que quieren compartir conocimientos e información internacionalmente.
+Abre la puerta al mundo con Evame.`;
 
 async function seed() {
 	await addRequiredData();
