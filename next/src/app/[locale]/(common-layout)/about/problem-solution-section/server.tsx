@@ -13,10 +13,12 @@ import {
 } from "lucide-react";
 import AboutSectionCard from "../about-section-card";
 import { fetchAboutPage } from "../lib/fetch-about-page";
-
+import { getCurrentUser } from "@/auth";
 export default async function ProblemSolutionSection({
 	locale,
 }: { locale: string }) {
+	const currentUser = await getCurrentUser();
+	const currentHandle = currentUser?.handle;
 	const pageWithTranslations = await fetchAboutPage(locale);
 	// Get problem header (segment 2)
 	const problemHeader = pageWithTranslations.segmentWithTranslations.find(
@@ -101,7 +103,7 @@ export default async function ProblemSolutionSection({
 					<SegmentAndTranslationSection
 						segmentWithTranslations={problemHeader}
 						elements={problemHeader.segment.text}
-						currentHandle={undefined}
+						currentHandle={currentHandle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 						addTranslationFormTarget={
 							ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
@@ -118,7 +120,7 @@ export default async function ProblemSolutionSection({
 								<SegmentAndTranslationSection
 									segmentWithTranslations={pair.header}
 									elements={pair.header.segment.text}
-									currentHandle={undefined}
+									currentHandle={currentHandle}
 									voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 									addTranslationFormTarget={
 										ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
@@ -129,7 +131,7 @@ export default async function ProblemSolutionSection({
 								<SegmentAndTranslationSection
 									segmentWithTranslations={pair.text}
 									elements={pair.text.segment.text}
-									currentHandle={undefined}
+									currentHandle={currentHandle}
 									voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 									addTranslationFormTarget={
 										ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
@@ -147,7 +149,7 @@ export default async function ProblemSolutionSection({
 					<SegmentAndTranslationSection
 						segmentWithTranslations={solutionHeader}
 						elements={solutionHeader.segment.text}
-						currentHandle={undefined}
+						currentHandle={currentHandle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 						addTranslationFormTarget={
 							ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
@@ -164,7 +166,7 @@ export default async function ProblemSolutionSection({
 								<SegmentAndTranslationSection
 									segmentWithTranslations={pair.header}
 									elements={pair.header.segment.text}
-									currentHandle={undefined}
+									currentHandle={currentHandle}
 									voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 									addTranslationFormTarget={
 										ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
@@ -175,7 +177,7 @@ export default async function ProblemSolutionSection({
 								<SegmentAndTranslationSection
 									segmentWithTranslations={pair.text}
 									elements={pair.text.segment.text}
-									currentHandle={undefined}
+									currentHandle={currentHandle}
 									voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 									addTranslationFormTarget={
 										ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION

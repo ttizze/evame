@@ -6,8 +6,11 @@ import {
 import { LanguagesIcon, Pencil, TrendingUp } from "lucide-react";
 import AboutSectionCard from "../about-section-card";
 import { fetchAboutPage } from "../lib/fetch-about-page";
+import { getCurrentUser } from "@/auth";
 
 export default async function FeatureSection({ locale }: { locale: string }) {
+	const currentUser = await getCurrentUser();
+	const currentHandle = currentUser?.handle;
 	const pageWithTranslations = await fetchAboutPage(locale);
 
 	// Get feature header (segment 16)
@@ -54,7 +57,7 @@ export default async function FeatureSection({ locale }: { locale: string }) {
 					<SegmentAndTranslationSection
 						segmentWithTranslations={featureHeader}
 						elements={featureHeader.segment.text}
-						currentHandle={undefined}
+						currentHandle={currentHandle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 						addTranslationFormTarget={
 							ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
@@ -72,7 +75,7 @@ export default async function FeatureSection({ locale }: { locale: string }) {
 							<SegmentAndTranslationSection
 								segmentWithTranslations={pair.header}
 								elements={pair.header.segment.text}
-								currentHandle={undefined}
+								currentHandle={currentHandle}
 								voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 								addTranslationFormTarget={
 									ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
@@ -83,7 +86,7 @@ export default async function FeatureSection({ locale }: { locale: string }) {
 							<SegmentAndTranslationSection
 								segmentWithTranslations={pair.text}
 								elements={pair.text.segment.text}
-								currentHandle={undefined}
+								currentHandle={currentHandle}
 								voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 								addTranslationFormTarget={
 									ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
