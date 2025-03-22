@@ -790,26 +790,35 @@ async function addRequiredData() {
 		},
 	];
 
-	// 各セグメントの upsert を実行
+	const BATCH_SIZE = 3; // Adjust based on your connection pool limit
 	const upsertPromises = segmentsByPage.flatMap(({ pageId, segments }) =>
-		segments.map((segment) =>
-			upsertSegment({
-				pageId,
-				number: segment.number,
-				text: segment.text,
-				textAndOccurrenceHash: segment.textAndOccurrenceHash,
-				translations: Object.entries(segment.translations).map(
-					([locale, text]) => ({
-						locale,
-						text,
-						userId: evame.id,
-					}),
-				),
-			}),
+		segments.map(
+			(segment) => () =>
+				upsertSegment({
+					pageId,
+					number: segment.number,
+					text: segment.text,
+					textAndOccurrenceHash: segment.textAndOccurrenceHash,
+					translations: Object.entries(segment.translations).map(
+						([locale, text]) => ({
+							locale,
+							text,
+							userId: evame.id,
+						}),
+					),
+				}),
 		),
 	);
 
-	await Promise.all(upsertPromises);
+	// Process in batches
+	for (let i = 0; i < upsertPromises.length; i += BATCH_SIZE) {
+		const batch = upsertPromises.slice(i, i + BATCH_SIZE);
+		await Promise.all(batch.map((fn) => fn()));
+		console.log(
+			`Processed batch ${i / BATCH_SIZE + 1} of ${Math.ceil(upsertPromises.length / BATCH_SIZE)}`,
+		);
+	}
+
 	console.log("Required data added successfully");
 }
 
