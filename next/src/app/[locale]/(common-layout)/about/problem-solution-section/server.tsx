@@ -3,6 +3,7 @@ import {
 	ADD_TRANSLATION_FORM_TARGET,
 	VOTE_TARGET,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import { getCurrentUser } from "@/auth";
 import {
 	AlertCircle,
 	DollarSign,
@@ -13,7 +14,6 @@ import {
 } from "lucide-react";
 import AboutSectionCard from "../about-section-card";
 import { fetchAboutPage } from "../lib/fetch-about-page";
-import { getCurrentUser } from "@/auth";
 export default async function ProblemSolutionSection({
 	locale,
 }: { locale: string }) {
