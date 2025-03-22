@@ -1,5 +1,6 @@
 "use server";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
+import { handlePageAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { parseFormData } from "@/lib/parse-form-data";
@@ -8,7 +9,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { updatePageStatus } from "./_db/mutations.server";
-import { handlePageTranslation } from "./_lib/handle-page-translation";
 const editPageStatusSchema = z.object({
 	pageId: z.coerce.number().min(1),
 	status: z.enum(["DRAFT", "PUBLIC", "ARCHIVE"]),
@@ -51,7 +51,7 @@ export async function editPageStatusAction(
 				message: "Gemini API key is not set. Page will not be translated.",
 			};
 		}
-		handlePageTranslation({
+		handlePageAutoTranslation({
 			currentUserId: currentUser.id,
 			pageId: page.id,
 			sourceLocale: page.sourceLocale,

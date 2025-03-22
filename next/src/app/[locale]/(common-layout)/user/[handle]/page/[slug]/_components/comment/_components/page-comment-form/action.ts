@@ -1,6 +1,7 @@
 "use server";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
+import { handleCommentAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { parseFormData } from "@/lib/parse-form-data";
@@ -10,7 +11,6 @@ import { z } from "zod";
 import { createNotificationPageComment } from "./_db/mutations.server";
 import { createPageComment } from "./_db/mutations.server";
 import { processPageCommentHtml } from "./_lib/process-page-comment-html";
-
 const createPageCommentSchema = z.object({
 	pageId: z.coerce.number(),
 	content: z.string().min(1, "Comment cannot be empty"),
@@ -69,6 +69,14 @@ export async function commentAction(
 			pageId,
 		),
 	]);
+	handleCommentAutoTranslation({
+		currentUserId: currentUser.id,
+		commentId: pageComment.id,
+		pageId,
+		content,
+		sourceLocale: locale,
+		geminiApiKey: process.env.GEMINI_API_KEY ?? "",
+	});
 	revalidatePath(`/user/${currentUser.handle}/page/${page.slug}`);
 	return { success: true };
 }
