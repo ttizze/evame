@@ -1,23 +1,17 @@
+import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/lib/fetch-about-page";
 import { SegmentAndTranslationSection } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/segment-and-translation-section";
 import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { VOTE_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { TranslateActionSection } from "@/app/[locale]/_components/translate-action-section";
-import { fetchPageWithTranslations } from "@/app/[locale]/_db/queries.server";
 import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/queries.server";
-import { notFound } from "next/navigation";
-
+import { getCurrentUser } from "@/auth";
 export default async function HeroSection({ locale }: { locale: string }) {
-	const pageSlug = locale === "ja" ? "evame" : "evame-ja";
-	const topPageWithTranslations = await fetchPageWithTranslations(
-		pageSlug,
-		locale,
-		undefined,
-	);
-	if (!topPageWithTranslations) {
-		return notFound();
-	}
+	const currentUser = await getCurrentUser();
+	const currentHandle = currentUser?.handle;
+	const topPageWithTranslations = await fetchAboutPage(locale);
+
 	const pageAITranslationInfo = await fetchLatestPageAITranslationInfo(
 		topPageWithTranslations.page.id,
 	);
@@ -42,7 +36,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 						segmentWithTranslations={heroTitle}
 						segmentTextClassName="w-full bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text !text-transparent mb-2"
 						elements={heroTitle.segment.text}
-						currentHandle={undefined}
+						currentHandle={currentHandle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 						addTranslationFormTarget={
 							ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
@@ -52,7 +46,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 				<div className="flex justify-center mb-10">
 					<TranslateActionSection
 						pageId={0}
-						currentHandle={undefined}
+						currentHandle={currentHandle}
 						userAITranslationInfo={null}
 						sourceLocale={sourceLocale}
 						pageAITranslationInfo={pageAITranslationInfo}
@@ -65,7 +59,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 						segmentWithTranslations={heroText}
 						segmentTextClassName="mb-2"
 						elements={heroText.segment.text}
-						currentHandle={undefined}
+						currentHandle={currentHandle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 						addTranslationFormTarget={
 							ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION

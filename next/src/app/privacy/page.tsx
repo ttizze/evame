@@ -94,10 +94,6 @@ export default function PrivacyPolicyPage() {
 					</p>
 				</section>
 
-				<section className="mb-8">
-					<p className="italic">Last updated: [Date]</p>
-				</section>
-
 				<div className="mt-8">
 					<Link href="/" className="text-blue-600 hover:underline">
 						Return to Home

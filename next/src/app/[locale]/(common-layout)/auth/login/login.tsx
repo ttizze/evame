@@ -4,7 +4,13 @@ import {
 	signInWithResendAction,
 } from "@/app/[locale]/auth-action";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -27,6 +33,12 @@ export function Login() {
 				<CardHeader>
 					<CardTitle className="text-center font-bold text-2xl">
 						Login to Evame
+						<CardDescription className="mt-2 flex flex-col items-center">
+							Evame is multilingual blog platform.
+							<Link href="/about" className="underline">
+								Learn more
+							</Link>
+						</CardDescription>
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="rounded-full">

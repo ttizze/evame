@@ -7,6 +7,12 @@ export function Footer() {
 			<div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
 				<div className="flex justify-center items-center text-sm text-gray-600 dark:text-gray-300 gap-4">
 					<Link
+						href="/about"
+						className="hover:text-gray-900 dark:hover:text-white"
+					>
+						About
+					</Link>
+					<Link
 						href="/privacy"
 						className="hover:text-gray-900 dark:hover:text-white"
 					>
