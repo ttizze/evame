@@ -46,18 +46,15 @@ export function SegmentAndTranslationSection({
 	return (
 		<span className="flex flex-col">
 			{showOriginal && (
-				<span>
-					<span
-						className={`inline-block ${
-							segmentWithTranslations.segmentTranslationsWithVotes.length ===
-								0 || !showTranslation
-								? "text-gray-700 dark:text-gray-200 [&>a]:text-gray-700 dark:[&>a]:text-gray-200 [&>strong]:text-gray-700 dark:[&>strong]:text-gray-200"
-								: "text-gray-300 dark:text-gray-600 [&>a]:text-gray-300 dark:[&>a]:text-gray-600 [&>strong]:text-gray-300 dark:[&>strong]:text-gray-600"
-						} ${segmentTextClassName}`}
-					>
-						{showLockIcon && <Lock className="h-6 w-6 mr-1 inline" />}
-						{elements}
-					</span>
+				<span
+					className={`inline-block ${
+						segmentWithTranslations.segmentTranslationsWithVotes.length === 0 ||
+						!showTranslation
+							? "text-gray-700 dark:text-gray-200 [&>a]:text-gray-700 dark:[&>a]:text-gray-200 [&>strong]:text-gray-700 dark:[&>strong]:text-gray-200"
+							: "text-gray-300 dark:text-gray-600 [&>a]:text-gray-300 dark:[&>a]:text-gray-600 [&>strong]:text-gray-300 dark:[&>strong]:text-gray-600"
+					} ${segmentTextClassName}`}
+				>
+					{showLockIcon && <Lock className="h-6 w-6 mr-1 inline" />}
 					{isOwner && slug && (
 						<div className="ml-2">
 							<Link href={`/user/${currentHandle}/page/${slug}/edit`}>
@@ -65,6 +62,7 @@ export function SegmentAndTranslationSection({
 							</Link>
 						</div>
 					)}
+					{elements}
 				</span>
 			)}
 			{showTranslation &&
