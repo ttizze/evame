@@ -1,23 +1,14 @@
+import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/lib/fetch-about-page";
 import { SegmentAndTranslationSection } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/segment-and-translation-section";
 import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { VOTE_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { TranslateActionSection } from "@/app/[locale]/_components/translate-action-section";
-import { fetchPageWithTranslations } from "@/app/[locale]/_db/queries.server";
 import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/queries.server";
-import { notFound } from "next/navigation";
-
 export default async function HeroSection({ locale }: { locale: string }) {
-	const pageSlug = locale === "ja" ? "evame" : "evame-ja";
-	const topPageWithTranslations = await fetchPageWithTranslations(
-		pageSlug,
-		locale,
-		undefined,
-	);
-	if (!topPageWithTranslations) {
-		return notFound();
-	}
+	const topPageWithTranslations = await fetchAboutPage(locale);
+
 	const pageAITranslationInfo = await fetchLatestPageAITranslationInfo(
 		topPageWithTranslations.page.id,
 	);

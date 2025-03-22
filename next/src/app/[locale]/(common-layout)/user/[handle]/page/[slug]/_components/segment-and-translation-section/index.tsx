@@ -44,9 +44,9 @@ export function SegmentAndTranslationSection({
 		defaultValue: true,
 	});
 	return (
-		<>
+		<span className="flex flex-col">
 			{showOriginal && (
-				<span className="flex justify-between">
+				<span>
 					<span
 						className={`inline-block ${
 							segmentWithTranslations.segmentTranslationsWithVotes.length ===
@@ -77,6 +77,6 @@ export function SegmentAndTranslationSection({
 						addTranslationFormTarget={addTranslationFormTarget}
 					/>
 				)}
-		</>
+		</span>
 	);
 }
