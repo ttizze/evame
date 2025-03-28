@@ -3,8 +3,8 @@ import { LikeButton } from "@/app/[locale]/_components/like-button/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Languages, Text } from "lucide-react";
-import { useQueryState } from "nuqs";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useContentDisplayState } from "./hooks/use-content-display-state";
 import { ShareDialog } from "./share-dialog";
 interface FloatingControlsProps {
 	liked: boolean;
@@ -23,21 +23,8 @@ export function FloatingControls({
 	const [lastScrollY, setLastScrollY] = useState(0);
 	const ignoreScrollRef = useRef(false);
 
-	const [showOriginal, setShowOriginal] = useQueryState("showOriginal", {
-		defaultValue: true,
-		parse: (val) => val === "true",
-		serialize: (val) => (val ? "true" : "false"),
-		shallow: true,
-	});
-	const [showTranslation, setShowTranslation] = useQueryState(
-		"showTranslation",
-		{
-			defaultValue: true,
-			parse: (val) => val === "true",
-			serialize: (val) => (val ? "true" : "false"),
-			shallow: true,
-		},
-	);
+	const { showOriginal, showTranslation, setShowOriginal, setShowTranslation } =
+		useContentDisplayState();
 	// スタイル定義
 	const STYLE = {
 		baseClasses:

@@ -7,8 +7,8 @@ import type { SegmentWithTranslations } from "@/app/[locale]/types";
 import { Link } from "@/i18n/routing";
 import { Lock } from "lucide-react";
 import { SquarePen } from "lucide-react";
-import { useQueryState } from "nuqs";
 import type { ReactNode } from "react";
+import { useContentDisplayState } from "../hooks/use-content-display-state";
 import { TranslationSection } from "./translation-section";
 interface SegmentAndTranslationSectionProps {
 	segmentWithTranslations: SegmentWithTranslations;
@@ -33,16 +33,7 @@ export function SegmentAndTranslationSection({
 	voteTarget,
 	addTranslationFormTarget,
 }: SegmentAndTranslationSectionProps) {
-	const [showOriginal] = useQueryState("showOriginal", {
-		parse: (val) => val === "true",
-		serialize: (val) => (val ? "true" : "false"),
-		defaultValue: true,
-	});
-	const [showTranslation] = useQueryState("showTranslation", {
-		parse: (val) => val === "true",
-		serialize: (val) => (val ? "true" : "false"),
-		defaultValue: true,
-	});
+	const { showOriginal, showTranslation } = useContentDisplayState();
 	return (
 		<span className="flex flex-col">
 			{showOriginal && (
