@@ -20,9 +20,11 @@ import {
 	Lock,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
+import { useHeaderVisibility } from "./hooks/use-header-visibility";
+
 interface EditHeaderProps {
 	currentUser: SanitizedUser;
 	initialStatus: PageStatus;
@@ -46,8 +48,8 @@ export function EditHeader({
 	>(editPageStatusAction, { success: false });
 	const currentPagePath = usePathname();
 	const pagePath = `/${currentPagePath.split("/").slice(2, -1).join("/")}`;
-	const [isVisible, setIsVisible] = useState(true);
-	const [lastScrollY, setLastScrollY] = useState(0);
+	//editページはiphoneSafari対応のため､baseHeaderとは別でスクロール管理が必要
+	const { isVisible } = useHeaderVisibility();
 
 	useEffect(() => {
 		if (state.success) {
@@ -55,29 +57,6 @@ export function EditHeader({
 		}
 	}, [state.success, state.message]);
 
-	useEffect(() => {
-		const container = document.getElementById("root");
-		if (!container) return;
-
-		const handleScroll = () => {
-			const currentScrollY = container.scrollTop;
-
-			if (currentScrollY < 10) {
-				setIsVisible(true);
-			} else if (currentScrollY < lastScrollY) {
-				// スクロールアップ
-				setIsVisible(true);
-			} else if (currentScrollY > lastScrollY) {
-				// スクロールダウン
-				setIsVisible(false);
-			}
-
-			setLastScrollY(currentScrollY);
-		};
-
-		container.addEventListener("scroll", handleScroll, { passive: true });
-		return () => container.removeEventListener("scroll", handleScroll);
-	}, [lastScrollY]);
 	const renderButtonIcon = () => {
 		if (hasUnsavedChanges) {
 			return <Loader2 className={`${ICON_CLASSES} animate-spin`} />;

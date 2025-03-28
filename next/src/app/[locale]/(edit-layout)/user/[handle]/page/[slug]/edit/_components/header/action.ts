@@ -9,6 +9,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { updatePageStatus } from "./_db/mutations.server";
+
 const editPageStatusSchema = z.object({
 	pageId: z.coerce.number().min(1),
 	status: z.enum(["DRAFT", "PUBLIC", "ARCHIVE"]),
@@ -21,6 +22,29 @@ export type EditPageStatusActionState = ActionResponse<
 		status: string;
 	}
 >;
+
+async function triggerAutoTranslationIfNeeded(
+	status: string,
+	pageId: number,
+	sourceLocale: string,
+	currentUserId: string,
+) {
+	if (status === "PUBLIC") {
+		const geminiApiKey = process.env.GEMINI_API_KEY;
+		if (!geminiApiKey || geminiApiKey === "undefined") {
+			console.error("Gemini API key is not set. Page will not be translated.");
+			return "Gemini API key is not set. Page will not be translated.";
+		}
+		handlePageAutoTranslation({
+			currentUserId,
+			pageId,
+			sourceLocale,
+			geminiApiKey,
+		});
+		return "Started translation.";
+	}
+	return "Page status updated successfully";
+}
 
 export async function editPageStatusAction(
 	previousState: EditPageStatusActionState,
@@ -40,28 +64,12 @@ export async function editPageStatusAction(
 		return redirect("/auth/login");
 	}
 	await updatePageStatus(pageId, status as PageStatus);
-	if (status === "PUBLIC") {
-		const geminiApiKey = process.env.GEMINI_API_KEY;
-		if (!geminiApiKey || geminiApiKey === "undefined") {
-			console.error("geminiApiKey is not set. Page will not be translated.");
-			revalidatePath(`/user/${currentUser.handle}/page/${page.slug}/edit`);
-			return {
-				success: true,
-				message: "Gemini API key is not set. Page will not be translated.",
-			};
-		}
-		handlePageAutoTranslation({
-			currentUserId: currentUser.id,
-			pageId: page.id,
-			sourceLocale: page.sourceLocale,
-			geminiApiKey,
-		});
-		revalidatePath(`/user/${currentUser.handle}/page/${page.slug}`);
-		return {
-			success: true,
-			message: "Started translation.",
-		};
-	}
+	const message = await triggerAutoTranslationIfNeeded(
+		status,
+		pageId,
+		page.sourceLocale,
+		currentUser.id,
+	);
 	revalidatePath(`/user/${currentUser.handle}/page/${page.slug}/edit`);
-	return { success: true, message: "Page status updated successfully" };
+	return { success: true, message };
 }

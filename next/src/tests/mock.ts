@@ -10,7 +10,7 @@ export const mockUsers = [
 		totalPoints: 0,
 		isAI: false,
 		name: "mockUserId1",
-		image: "mockUserId1",
+		image: "/test-user.png",
 	},
 	{
 		id: "mockUserId2",

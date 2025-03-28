@@ -52,7 +52,7 @@ describe("editPageStatusAction", () => {
 		const result = await editPageStatusAction({ success: false }, mockFormData);
 
 		expect(result.success).toBe(true);
-		expect(result.message).toBe("Page status updated successfully");
+		expect(result.message).toBe("Started translation.");
 		expect(revalidatePath).toHaveBeenCalledWith(
 			"/user/mockUserId1/page/mockUserId1-page1/edit",
 		);
