@@ -41,7 +41,6 @@ export async function editPageStatusAction(
 	}
 	await updatePageStatus(pageId, status as PageStatus);
 	if (status === "PUBLIC") {
-		console.log("pageStatus", status);
 		const geminiApiKey = process.env.GEMINI_API_KEY;
 		if (!geminiApiKey || geminiApiKey === "undefined") {
 			console.error("geminiApiKey is not set. Page will not be translated.");
@@ -57,6 +56,11 @@ export async function editPageStatusAction(
 			sourceLocale: page.sourceLocale,
 			geminiApiKey,
 		});
+		revalidatePath(`/user/${currentUser.handle}/page/${page.slug}`);
+		return {
+			success: true,
+			message: "Started translation.",
+		};
 	}
 	revalidatePath(`/user/${currentUser.handle}/page/${page.slug}/edit`);
 	return { success: true, message: "Page status updated successfully" };
