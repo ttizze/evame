@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Link as LinkI18n } from "@/i18n/routing";
 import { FaDiscord, FaGithub } from "react-icons/fa";
 
 export function Footer() {
@@ -6,12 +7,12 @@ export function Footer() {
 		<footer className="mt-auto">
 			<div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
 				<div className="flex justify-center items-center text-sm text-gray-600 dark:text-gray-300 gap-4">
-					<Link
+					<LinkI18n
 						href="/about"
 						className="hover:text-gray-900 dark:hover:text-white"
 					>
 						About
-					</Link>
+					</LinkI18n>
 					<Link
 						href="/privacy"
 						className="hover:text-gray-900 dark:hover:text-white"
