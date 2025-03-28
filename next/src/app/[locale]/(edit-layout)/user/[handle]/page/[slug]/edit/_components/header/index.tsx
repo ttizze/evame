@@ -125,10 +125,21 @@ export function EditHeader({
 							<button
 								type="submit"
 								className={MENU_BUTTON_CLASSES}
-								disabled={initialStatus === "PUBLIC"}
 							>
-								<Globe className={ICON_CLASSES} />
-								<span>Public</span>
+								{initialStatus === "PUBLIC" ? (
+									<>
+									<LanguagesIcon className={ICON_CLASSES} />
+									<span>Translate</span>
+									</>
+								) : (
+									<>
+										<Globe className={ICON_CLASSES} />
+										<span>Public</span>
+										<div className="flex items-center bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
+											<LanguagesIcon className="w-3 h-3" />
+										</div>
+									</>
+								)}
 							</button>
 
 							<Popover>
