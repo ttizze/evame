@@ -122,14 +122,11 @@ export function EditHeader({
 						/>
 						<input type="hidden" name="pageId" value={pageId ?? ""} />
 						<div className="flex justify-between items-center w-full">
-							<button
-								type="submit"
-								className={MENU_BUTTON_CLASSES}
-							>
+							<button type="submit" className={MENU_BUTTON_CLASSES}>
 								{initialStatus === "PUBLIC" ? (
 									<>
-									<LanguagesIcon className={ICON_CLASSES} />
-									<span>Translate</span>
+										<LanguagesIcon className={ICON_CLASSES} />
+										<span>Translate</span>
 									</>
 								) : (
 									<>
