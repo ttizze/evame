@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 interface EditHeaderProps {
 	currentUser: SanitizedUser;
@@ -47,6 +48,12 @@ export function EditHeader({
 	const pagePath = `/${currentPagePath.split("/").slice(2, -1).join("/")}`;
 	const [isVisible, setIsVisible] = useState(true);
 	const [lastScrollY, setLastScrollY] = useState(0);
+
+	useEffect(() => {
+		if (state.success) {
+			toast.success(state.message);
+		}
+	}, [state.success, state.message]);
 
 	useEffect(() => {
 		const container = document.getElementById("root");
@@ -115,12 +122,8 @@ export function EditHeader({
 			<PopoverContent className="w-38 rounded-xl py-1 px-3" align="end">
 				<div className="space-y-1">
 					<form action={action}>
-						<input
-							type="hidden"
-							name="status"
-							value={initialStatus === "PUBLIC" ? "DRAFT" : "PUBLIC"}
-						/>
 						<input type="hidden" name="pageId" value={pageId ?? ""} />
+						<input type="hidden" name="status" value="PUBLIC" />
 						<div className="flex justify-between items-center w-full">
 							<button type="submit" className={MENU_BUTTON_CLASSES}>
 								{initialStatus === "PUBLIC" ? (
@@ -138,7 +141,6 @@ export function EditHeader({
 									</>
 								)}
 							</button>
-
 							<Popover>
 								<PopoverTrigger asChild>
 									<button
@@ -172,32 +174,32 @@ export function EditHeader({
 								</PopoverContent>
 							</Popover>
 						</div>
-
-						<button
-							type="submit"
-							className={MENU_BUTTON_CLASSES}
-							disabled={initialStatus === "DRAFT"}
-						>
-							<Lock className={ICON_CLASSES} />
-							<span>Private</span>
-						</button>
 					</form>
-					{state.zodErrors?.status && (
-						<p className="text-sm text-red-500">{state.zodErrors.status}</p>
-					)}
-					{state.zodErrors?.pageId && (
-						<p className="text-sm text-red-500">{state.zodErrors.pageId}</p>
-					)}
-					{pageId && (
-						<>
-							<Separator />
-							<Link href={pagePath} className={MENU_BUTTON_CLASSES}>
-								<LinkIcon className={ICON_CLASSES} />
-								<span>Preview</span>
-							</Link>
-						</>
-					)}
 				</div>
+				<form action={action}>
+					<input type="hidden" name="pageId" value={pageId ?? ""} />
+					<button
+						type="submit"
+						className={MENU_BUTTON_CLASSES}
+						disabled={initialStatus === "DRAFT"}
+					>
+						<input type="hidden" name="status" value="DRAFT" />
+						<Lock className={ICON_CLASSES} />
+						<span>Private</span>
+					</button>
+				</form>
+
+				{state.zodErrors?.status && (
+					<p className="text-sm text-red-500">{state.zodErrors.status}</p>
+				)}
+				{state.zodErrors?.pageId && (
+					<p className="text-sm text-red-500">{state.zodErrors.pageId}</p>
+				)}
+				<Separator />
+				<Link href={pagePath} className={MENU_BUTTON_CLASSES}>
+					<LinkIcon className={ICON_CLASSES} />
+					<span>Preview</span>
+				</Link>
 			</PopoverContent>
 		</Popover>
 	);
