@@ -1,5 +1,6 @@
 "use server";
 
+import { uploadImage } from "@/app/[locale]/_lib/upload";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { parseFormData } from "@/lib/parse-form-data";
@@ -9,6 +10,21 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { upsertProjectTags } from "../_db/tag-queries.server";
 
+// Define a type for project links
+interface ProjectLink {
+	id?: string;
+	url: string;
+	description: string;
+}
+
+// Define a type for project images
+interface ProjectImage {
+	id?: string;
+	url: string;
+	caption: string;
+	order: number;
+}
+
 const projectLinkSchema = z.object({
 	id: z.string().optional(),
 	url: z.string().url({
@@ -17,6 +33,15 @@ const projectLinkSchema = z.object({
 	description: z.string().max(50, {
 		message: "Description must not exceed 50 characters.",
 	}),
+});
+
+const projectImageSchema = z.object({
+	id: z.string().optional(),
+	url: z.string(),
+	caption: z.string().max(200, {
+		message: "Caption must not exceed 200 characters.",
+	}),
+	order: z.number().int().min(0),
 });
 
 const projectFormSchema = z.object({
@@ -68,6 +93,16 @@ const projectFormSchema = z.object({
 		},
 		z.array(projectLinkSchema).max(5, "Maximum 5 links allowed"),
 	),
+	images: z.preprocess(
+		(value) => {
+			try {
+				return JSON.parse(value as string);
+			} catch {
+				return [];
+			}
+		},
+		z.array(projectImageSchema).max(10, "Maximum 10 images allowed"),
+	),
 });
 
 export type ProjectFormValues = z.infer<typeof projectFormSchema>;
@@ -91,14 +126,66 @@ export async function projectAction(
 		};
 	}
 
-	const { projectId, tags, links, ...projectData } = parsed.data;
+	const { projectId, tags, links, images, ...projectData } = parsed.data;
 
 	try {
+		// Process any uploaded image files
+		const imageFiles = formData.getAll("imageFiles") as File[];
+		const imageFileNames = formData.getAll("imageFileNames") as string[];
+
+		// Create array to store new image URLs
+		const uploadedImageUrls: Record<string, string> = {};
+
+		// Upload any new image files
+		if (imageFiles.length > 0) {
+			for (let i = 0; i < imageFiles.length; i++) {
+				const file = imageFiles[i];
+				const fileName = imageFileNames[i];
+
+				// Upload image to storage service using the existing uploadImage function
+				const result = await uploadImage(file);
+
+				// Only store URL if upload was successful
+				if (result.success && result.data?.imageUrl) {
+					uploadedImageUrls[fileName] = result.data.imageUrl;
+				} else {
+					return {
+						success: false,
+						message: result.message || "Failed to upload image",
+					};
+				}
+			}
+		}
+
+		// Process each image to use either the uploaded URL or existing URL
+		const processedImages = images.map((image) => {
+			// Check if it's a temporary URL (new image that needs uploading)
+			if (image.url.startsWith("temp://upload/")) {
+				// Extract file name from temp URL for matching with uploaded files
+				const fileName = image.url.split("/").pop() || "";
+				// Find matching uploaded URL
+				const uploadedUrl = uploadedImageUrls[fileName];
+
+				if (!uploadedUrl) {
+					// This shouldn't happen if front-end validation is working correctly
+					console.error(`No uploaded URL found for image: ${fileName}`);
+				}
+
+				return {
+					...image,
+					url: uploadedUrl || image.url, // Fallback to original URL if no match
+				};
+			}
+
+			// Existing image, keep as is
+			return image;
+		});
+
 		if (projectId) {
 			// Updating existing project
 			const existingProject = await prisma.project.findUnique({
 				where: { id: projectId },
-				include: { user: true, links: true },
+				include: { user: true, links: true, images: true },
 			});
 
 			if (!existingProject) {
@@ -169,6 +256,53 @@ export async function projectAction(
 					});
 				}
 			}
+
+			// Handle images
+			// First, collect existing image IDs for later deletion
+			const existingImageIds = existingProject.images.map((image) => image.id);
+			const newImageIds = processedImages
+				.filter((image) => image.id)
+				.map((image) => image.id as string);
+
+			// Find images to delete (those in existing but not in new)
+			const imageIdsToDelete = existingImageIds.filter(
+				(id) => !newImageIds.includes(id),
+			);
+
+			if (imageIdsToDelete.length > 0) {
+				await prisma.projectImage.deleteMany({
+					where: {
+						id: {
+							in: imageIdsToDelete,
+						},
+					},
+				});
+			}
+
+			// Upsert images
+			for (const image of processedImages) {
+				if (image.id) {
+					// Update existing image
+					await prisma.projectImage.update({
+						where: { id: image.id },
+						data: {
+							url: image.url,
+							caption: image.caption,
+							order: image.order,
+						},
+					});
+				} else {
+					// Create new image
+					await prisma.projectImage.create({
+						data: {
+							url: image.url,
+							caption: image.caption,
+							order: image.order,
+							projectId,
+						},
+					});
+				}
+			}
 		} else {
 			// Create new project
 			const newProject = await prisma.project.create({
@@ -189,6 +323,18 @@ export async function projectAction(
 					data: links.map((link) => ({
 						url: link.url,
 						description: link.description,
+						projectId: newProject.id,
+					})),
+				});
+			}
+
+			// Create images
+			if (processedImages.length > 0) {
+				await prisma.projectImage.createMany({
+					data: processedImages.map((image) => ({
+						url: image.url,
+						caption: image.caption,
+						order: image.order,
 						projectId: newProject.id,
 					})),
 				});

@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import type { ProjectWithRelations } from "../../_db/queries.server";
 import type { ProjectTagWithCount } from "../_db/tag-queries.server";
 import { type ProjectActionResponse, projectAction } from "./action";
+import { ProjectImageInput } from "./image-input";
 import { ProjectLinkInput } from "./link-input";
 import { ProjectTagInput } from "./tag-input";
 
@@ -24,6 +25,15 @@ interface ProjectLink {
 	id?: string;
 	url: string;
 	description: string;
+}
+
+// Define the ProjectImage interface to match the database schema
+interface ProjectImage {
+	id?: string;
+	url: string;
+	caption: string;
+	order: number;
+	file?: File; // For new uploads
 }
 
 interface ProjectFormProps {
@@ -51,12 +61,20 @@ export function ProjectForm({
 	const projectLinks = project?.links as ProjectLink[] | undefined;
 	const [links, setLinks] = useState<ProjectLink[]>(projectLinks || []);
 
+	// Initialize images from project or empty array
+	const projectImages = project?.images as ProjectImage[] | undefined;
+	const [images, setImages] = useState<ProjectImage[]>(projectImages || []);
+
 	const handleTagsChange = useCallback((newTags: string[]) => {
 		setTags(newTags);
 	}, []);
 
 	const handleLinksChange = useCallback((newLinks: ProjectLink[]) => {
 		setLinks(newLinks);
+	}, []);
+
+	const handleImagesChange = useCallback((newImages: ProjectImage[]) => {
+		setImages(newImages);
 	}, []);
 
 	const [state, action, isPending] = useActionState<
@@ -84,10 +102,35 @@ export function ProjectForm({
 	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		const formData = new FormData(event.currentTarget);
-		// タグ情報をフォームデータに追加
+
+		// Add project ID if editing
+		if (project?.id) {
+			formData.set("projectId", project.id);
+		}
+
+		// Add tag information to form data
 		formData.set("tags", JSON.stringify(tags));
-		// リンク情報をフォームデータに追加
+
+		// Add link information to form data
 		formData.set("links", JSON.stringify(links));
+
+		// Add image files to form data
+		for (const image of images) {
+			// Only add file for new images (with temp URL prefix)
+			if (image.file && image.url.startsWith("temp://upload/")) {
+				// Use the filename from the temp URL as the key to match in the server action
+				const fileName = image.url.split("/").pop() || "";
+				formData.append("imageFiles", image.file);
+				formData.append("imageFileNames", fileName);
+			}
+		}
+
+		// Add image metadata to form data
+		formData.set(
+			"images",
+			JSON.stringify(images.map(({ file, ...imageData }) => imageData)),
+		);
+
 		startTransition(() => {
 			action(formData);
 		});
@@ -107,10 +150,6 @@ export function ProjectForm({
 			</div>
 
 			<form onSubmit={handleSubmit} className="space-y-8">
-				{!isCreateMode && project?.id && (
-					<input type="hidden" name="projectId" value={project.id} />
-				)}
-
 				<div className="space-y-4">
 					<div>
 						<Label htmlFor="title">Project Title</Label>
@@ -180,6 +219,23 @@ export function ProjectForm({
 						)}
 						<p className="text-sm text-muted-foreground mt-1">
 							Add links to your project repository, demo, or documentation.
+						</p>
+					</div>
+
+					<div>
+						<Label htmlFor="images">Project Images</Label>
+						<ProjectImageInput
+							initialImages={images}
+							onChange={handleImagesChange}
+						/>
+						{state.zodErrors?.images && (
+							<p className="text-sm text-red-500 mt-1">
+								{state.zodErrors.images}
+							</p>
+						)}
+						<p className="text-sm text-muted-foreground mt-1">
+							Add images showcasing your project. The first image will be used
+							as the thumbnail.
 						</p>
 					</div>
 				</div>
