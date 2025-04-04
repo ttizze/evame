@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect } from "react";
+import { useActionState, useCallback, useEffect, useState, startTransition } from "react";
 import { toast } from "sonner";
 import type { ProjectWithRelations } from "../../_db/queries.server";
 import type { ProjectTagWithCount } from "../_db/tag-queries.server";
@@ -29,6 +29,14 @@ export function ProjectForm({
 	const selectedTags =
 		project?.projectTagRelations.map((relation) => relation.projectTag) || [];
 
+	const [tags, setTags] = useState<string[]>(
+		selectedTags.map((tag) => tag.name),
+	);
+
+	const handleTagsChange = useCallback((newTags: string[]) => {
+		setTags(newTags);
+	}, []);
+
 	const [state, action, isPending] = useActionState<
 		ProjectActionResponse,
 		FormData
@@ -51,6 +59,16 @@ export function ProjectForm({
 		}
 	}, [state, router, userHandle, project?.id, isCreateMode]);
 
+	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		const formData = new FormData(event.currentTarget);
+		// タグ情報をフォームデータに追加
+		formData.set("tags", JSON.stringify(tags));
+		startTransition(() => {
+			action(formData);
+		});
+	};
+
 	return (
 		<div className="space-y-6">
 			<div>
@@ -64,7 +82,7 @@ export function ProjectForm({
 				</p>
 			</div>
 
-			<form action={action} className="space-y-8">
+			<form onSubmit={handleSubmit} className="space-y-8">
 				{!isCreateMode && (
 					<input type="hidden" name="projectId" value={project.id} />
 				)}
@@ -113,8 +131,13 @@ export function ProjectForm({
 						<ProjectTagInput
 							initialTags={selectedTags}
 							allTagsWithCount={allProjectTags}
-							projectId={project?.id}
+							onChange={handleTagsChange}
 						/>
+						{state.zodErrors?.tags && (
+							<p className="text-sm text-red-500 mt-1">
+								{state.zodErrors.tags}
+							</p>
+						)}
 						<p className="text-sm text-muted-foreground mt-1">
 							Add up to 5 tags to categorize your project.
 						</p>
@@ -125,6 +148,11 @@ export function ProjectForm({
 						<Input
 							id="repositoryUrl"
 							name="repositoryUrl"
+							defaultValue={
+								project?.links?.find(
+									(link) => link.description === "Repository",
+								)?.url
+							}
 							placeholder="https://github.com/username/repo"
 							className="mt-1"
 						/>
@@ -133,22 +161,6 @@ export function ProjectForm({
 						)}
 						<p className="text-sm text-muted-foreground mt-1">
 							Link to your project's repository (optional).
-						</p>
-					</div>
-
-					<div>
-						<Label htmlFor="demoUrl">Demo URL</Label>
-						<Input
-							id="demoUrl"
-							name="demoUrl"
-							placeholder="https://my-project-demo.com"
-							className="mt-1"
-						/>
-						{state.zodErrors?.url && (
-							<p className="text-sm text-red-500 mt-1">{state.zodErrors.url}</p>
-						)}
-						<p className="text-sm text-muted-foreground mt-1">
-							Link to a live demo of your project (optional).
 						</p>
 					</div>
 				</div>

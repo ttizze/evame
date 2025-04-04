@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { upsertProjectTags } from "../_db/tag-queries.server";
 
 const projectFormSchema = z.object({
 	projectId: z.string().optional(),
@@ -26,6 +27,27 @@ const projectFormSchema = z.object({
 		.max(500, {
 			message: "Description must not exceed 500 characters.",
 		}),
+	tags: z.preprocess(
+		(value) => {
+			try {
+				return JSON.parse(value as string);
+			} catch {
+				return [];
+			}
+		},
+		z
+			.array(
+				z
+					.string()
+					.regex(
+						/^[^\s!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]+$/,
+						"Symbols and spaces cannot be used in tags",
+					)
+					.min(1, "Tag must be at least 1 character")
+					.max(15, "Tag must not exceed 15 characters"),
+			)
+			.max(5, "Maximum 5 tags allowed"),
+	),
 	url: z
 		.string()
 		.url({
@@ -55,7 +77,7 @@ export async function projectAction(
 		};
 	}
 
-	const { projectId, ...projectData } = parsed.data;
+	const { projectId, tags, url, ...projectData } = parsed.data;
 
 	try {
 		if (projectId) {
@@ -86,20 +108,31 @@ export async function projectAction(
 				data: projectData,
 			});
 
-			// Create links if provided
-			if (projectData.url) {
+			// Update tags
+			await upsertProjectTags(tags, projectId);
+
+			// Create/update repository link if provided
+			if (url) {
 				await prisma.projectLink.upsert({
 					where: {
 						id: `${projectId}-repo`, // Use a predictable ID for repository link
 					},
 					update: {
-						url: projectData.url,
+						url: url,
 						description: "Repository",
 					},
 					create: {
 						id: `${projectId}-repo`,
 						projectId,
-						url: projectData.url,
+						url: url,
+						description: "Repository",
+					},
+				});
+			} else {
+				// Delete repository link if it exists and URL is empty
+				await prisma.projectLink.deleteMany({
+					where: {
+						projectId,
 						description: "Repository",
 					},
 				});
@@ -113,13 +146,18 @@ export async function projectAction(
 				},
 			});
 
-			// Create links if provided
-			if (projectData.url) {
+			// Create tags
+			if (tags.length > 0) {
+				await upsertProjectTags(tags, newProject.id);
+			}
+
+			// Create repository link if provided
+			if (url) {
 				await prisma.projectLink.create({
 					data: {
 						id: `${newProject.id}-repo`,
 						projectId: newProject.id,
-						url: projectData.url,
+						url: url,
 						description: "Repository",
 					},
 				});

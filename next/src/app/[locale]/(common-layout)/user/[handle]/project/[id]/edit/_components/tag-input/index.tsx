@@ -2,33 +2,28 @@
 
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
-import { useState } from "react";
-import { useActionState } from "react";
+import { useEffect, useState } from "react";
 import CreatableSelect from "react-select/creatable";
 import type { ProjectTagWithCount } from "../../_db/tag-queries.server";
-import {
-	type EditProjectTagsActionState,
-	editProjectTagsAction,
-} from "./action";
 
 interface ProjectTagInputProps {
 	initialTags: { id: string; name: string }[];
 	allTagsWithCount: ProjectTagWithCount[];
-	projectId: string | undefined;
+	onChange: (tags: string[]) => void;
 }
 
 export function ProjectTagInput({
 	initialTags,
 	allTagsWithCount,
-	projectId,
+	onChange,
 }: ProjectTagInputProps) {
 	const [tags, setTags] = useState<string[]>(
 		initialTags.map((tag) => tag.name),
 	);
-	const [editState, editAction, isPending] = useActionState<
-		EditProjectTagsActionState,
-		FormData
-	>(editProjectTagsAction, { success: false });
+
+	useEffect(() => {
+		onChange(tags);
+	}, [tags, onChange]);
 
 	const handleCreateTag = (inputValue: string) => {
 		if (tags.length < 5) {
@@ -44,27 +39,17 @@ export function ProjectTagInput({
 
 	return (
 		<div>
-			<input type="hidden" name="projectId" value={projectId ?? ""} />
-			<input
-				type="hidden"
-				name="tags"
-				value={JSON.stringify(tags)}
-				data-testid="tags-input"
-			/>
-
 			<div className="flex flex-wrap items-center gap-2 pt-2 pb-3">
 				{tags.map((tag) => (
 					<div
 						key={tag}
 						className={cn(
 							"flex items-center gap-1 px-3 h-[32px] bg-primary rounded-full text-sm text-primary-foreground",
-							isPending && "opacity-50 cursor-not-allowed",
 						)}
 					>
 						<button
 							type="button"
 							onClick={() => handleRemoveTag(tag)}
-							disabled={isPending}
 							className="hover:text-destructive ml-1"
 						>
 							<X className="w-3 h-3" />
@@ -76,7 +61,6 @@ export function ProjectTagInput({
 					<CreatableSelect
 						instanceId="project-tags-input"
 						unstyled
-						isDisabled={isPending || !projectId}
 						placeholder="# Add tags"
 						isClearable
 						onChange={(newValue) => {
@@ -104,7 +88,6 @@ export function ProjectTagInput({
 							control: () =>
 								cn(
 									"border border-border px-4 w-30 rounded-full bg-transparent cursor-pointer text-sm",
-									isPending || (!projectId && "opacity-50 cursor-not-allowed"),
 								),
 							valueContainer: () => "w-full",
 							placeholder: () => "text-center flex items-center h-[32px]",
@@ -120,12 +103,6 @@ export function ProjectTagInput({
 					/>
 				)}
 			</div>
-			{editState.zodErrors?.tags && (
-				<p className="text-sm text-red-500">{editState.zodErrors.tags}</p>
-			)}
-			{editState.zodErrors?.projectId && (
-				<p className="text-sm text-red-500">Project not found</p>
-			)}
 		</div>
 	);
 }
