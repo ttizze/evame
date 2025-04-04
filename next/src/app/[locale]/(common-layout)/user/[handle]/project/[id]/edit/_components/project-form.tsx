@@ -12,11 +12,10 @@ import { type ProjectActionResponse, projectAction } from "./action";
 
 interface ProjectFormProps {
 	project?: ProjectWithRelations | null;
-	locale: string;
 	userHandle: string;
 }
 
-export function ProjectForm({ project, locale, userHandle }: ProjectFormProps) {
+export function ProjectForm({ project, userHandle }: ProjectFormProps) {
 	const router = useRouter();
 	const isCreateMode = !project;
 
@@ -37,14 +36,14 @@ export function ProjectForm({ project, locale, userHandle }: ProjectFormProps) {
 			);
 			// 新規作成時は一覧ページ、編集時は詳細ページへリダイレクト
 			const redirectPath = isCreateMode
-				? `/${locale}/user/${userHandle}/project-management`
-				: `/${locale}/user/${userHandle}/project/${project.id}`;
+				? `/user/${userHandle}/project-management`
+				: `/user/${userHandle}/project/${project.id}`;
 			router.push(redirectPath);
 			router.refresh();
 		} else if (state.message) {
 			toast.error(state.message);
 		}
-	}, [state, router, locale, userHandle, project?.id, isCreateMode]);
+	}, [state, router, userHandle, project?.id, isCreateMode]);
 
 	return (
 		<div className="space-y-6">
@@ -163,7 +162,19 @@ export function ProjectForm({ project, locale, userHandle }: ProjectFormProps) {
 					</div>
 				</div>
 
-				<div className="flex gap-4">
+				<div className="flex gap-4 justify-end">
+					<Button
+						type="button"
+						variant="outline"
+						onClick={() => {
+							const returnPath = isCreateMode
+								? `/user/${userHandle}/project-management`
+								: `/user/${userHandle}/project/${project.id}`;
+							router.push(returnPath);
+						}}
+					>
+						Cancel
+					</Button>
 					<Button type="submit" disabled={isPending}>
 						{isPending
 							? isCreateMode
@@ -172,18 +183,6 @@ export function ProjectForm({ project, locale, userHandle }: ProjectFormProps) {
 							: isCreateMode
 								? "Create Project"
 								: "Update Project"}
-					</Button>
-					<Button
-						type="button"
-						variant="outline"
-						onClick={() => {
-							const returnPath = isCreateMode
-								? `/${locale}/user/${userHandle}/project-management`
-								: `/${locale}/user/${userHandle}/project/${project.id}`;
-							router.push(returnPath);
-						}}
-					>
-						Cancel
 					</Button>
 				</div>
 			</form>

@@ -1,8 +1,9 @@
+import { getCurrentUser } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { fetchProjectWithRelations } from "../_db/queries.server";
 import { ProjectForm } from "./_components/project-form";
-
 interface ProjectEditPageProps {
 	params: {
 		handle: string;
@@ -12,7 +13,7 @@ interface ProjectEditPageProps {
 }
 
 export async function generateMetadata({ params }: ProjectEditPageProps) {
-	const { handle, id } = params;
+	const { handle, id } = await params;
 
 	const project = await prisma.project.findUnique({
 		where: { id },
@@ -34,17 +35,19 @@ export async function generateMetadata({ params }: ProjectEditPageProps) {
 export default async function ProjectEditPage({
 	params,
 }: ProjectEditPageProps) {
-	const { handle, id, locale } = params;
-	// Fetch the project
+	const { handle, id } = await params;
+	const currentUser = await getCurrentUser();
+	if (!currentUser || currentUser.handle !== handle) {
+		return redirect("/auth/login");
+	}
 	const project = await fetchProjectWithRelations(id);
-
 	if (!project) {
-		notFound();
+		return notFound();
 	}
 
 	return (
 		<div className="container max-w-4xl py-8">
-			<ProjectForm project={project} locale={locale} userHandle={handle} />
+			<ProjectForm project={project} userHandle={handle} />
 		</div>
 	);
 }

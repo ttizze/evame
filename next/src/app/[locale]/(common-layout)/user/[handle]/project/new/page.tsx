@@ -1,5 +1,6 @@
+import { getCurrentUser } from "@/auth";
+import { redirect } from "next/navigation";
 import { ProjectForm } from "../[id]/edit/_components/project-form";
-
 interface NewProjectPageProps {
 	params: {
 		handle: string;
@@ -17,12 +18,16 @@ export async function generateMetadata({ params }: NewProjectPageProps) {
 }
 
 export default async function NewProjectPage({ params }: NewProjectPageProps) {
-	const { handle, locale } = params;
+	const { handle } = params;
+	const currentUser = await getCurrentUser();
+	if (!currentUser || currentUser.handle !== handle) {
+		return redirect("/auth/login");
+	}
 
 	return (
 		<div className="container max-w-4xl py-8">
 			<div className="space-y-6">
-				<ProjectForm locale={locale} userHandle={handle} />
+				<ProjectForm userHandle={handle} />
 			</div>
 		</div>
 	);

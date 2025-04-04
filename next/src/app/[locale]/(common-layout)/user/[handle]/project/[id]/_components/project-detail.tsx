@@ -1,7 +1,6 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Carousel,
@@ -10,8 +9,7 @@ import {
 	CarouselNext,
 	CarouselPrevious,
 } from "@/components/ui/carousel";
-import type { ProjectImage, ProjectLink } from "@prisma/client";
-import { ExternalLink, Github, Globe } from "lucide-react";
+import type { ProjectImage } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import type { ProjectWithRelations } from "../_db/queries.server";
@@ -80,38 +78,13 @@ export default function ProjectDetail({ project, locale }: ProjectDetailProps) {
 				{project.links.length > 0 && (
 					<div className="space-y-2">
 						<h3 className="text-lg font-medium">Links</h3>
-						<div className="flex flex-wrap gap-2">
-							{project.links.map((link: ProjectLink) => {
-								const icon =
-									link.type === "github" ? (
-										<Github className="h-4 w-4 mr-2" />
-									) : link.type === "website" ? (
-										<Globe className="h-4 w-4 mr-2" />
-									) : (
-										<ExternalLink className="h-4 w-4 mr-2" />
-									);
-
-								return (
-									<Button key={link.id} variant="outline" asChild size="sm">
-										<Link
-											href={link.url}
-											target="_blank"
-											rel="noopener noreferrer"
-										>
-											{icon}
-											{link.type.charAt(0).toUpperCase() + link.type.slice(1)}
-										</Link>
-									</Button>
-								);
-							})}
-						</div>
 					</div>
 				)}
 
 				<div className="flex justify-between items-center pt-4 border-t">
 					<div className="flex items-center gap-2">
 						<Link
-							href={`/${locale}/user/${project.user.handle}`}
+							href={`/user/${project.user.handle}`}
 							className="text-sm text-muted-foreground hover:underline"
 						>
 							{project.user.name}
