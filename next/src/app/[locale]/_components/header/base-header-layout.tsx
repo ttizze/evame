@@ -10,7 +10,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
-import { LogOutIcon, SettingsIcon } from "lucide-react";
+import { BookOpenIcon, FolderOpenIcon, LogOutIcon } from "lucide-react";
 import Image from "next/image";
 import { getImageProps } from "next/image";
 import type { ReactNode } from "react";
@@ -92,8 +92,17 @@ export function BaseHeaderLayout({
 										href={`/user/${currentUser.handle}/page-management`}
 										className="flex items-center opacity-100 w-full rounded-none gap-2 px-4 py-3 cursor-pointer hover:bg-accent hover:text-accent-foreground"
 									>
-										<SettingsIcon className="w-4 h-4" />
+										<BookOpenIcon className="w-4 h-4" />
 										Page Management
+									</Link>
+								</DropdownMenuItem>
+								<DropdownMenuItem className="p-0 ">
+									<Link
+										href={`/user/${currentUser.handle}/project-management`}
+										className="flex items-center opacity-100 w-full rounded-none gap-2 px-4 py-3 cursor-pointer hover:bg-accent hover:text-accent-foreground"
+									>
+										<FolderOpenIcon className="w-4 h-4" />
+										Project Management
 									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuItem asChild>

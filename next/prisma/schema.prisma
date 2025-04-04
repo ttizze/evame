@@ -35,6 +35,7 @@ model User {
   pageComments                       PageComment[]
   pageCommentSegmentTranslations     PageCommentSegmentTranslation[]
   pageCommentSegmentTranslationVotes PageCommentSegmentTranslationVote[]
+  projects                           Project[]
   accounts                           Account[]
   sessions                           Session[]
   notifications                      Notification[]                      @relation("UserNotifications")
@@ -315,6 +316,64 @@ model PageCommentSegmentTranslationVote {
   @@index([pageCommentSegmentTranslationId])
   @@index([userId])
   @@map("page_comment_segment_translation_votes")
+}
+
+model Project {
+  id          String          @id @default(cuid())
+  userId      String          @map("user_id")
+  title       String
+  description String          @db.Text
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  links       ProjectLink[]
+  images      ProjectImage[]
+  projectTagRelations ProjectTagRelation[]
+
+  @@map("projects")
+}
+
+model ProjectLink {
+  id        String   @id @default(cuid())
+  projectId String   @map("project_id")
+  description      String   @default("")
+  url       String
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_links")
+}
+
+model ProjectImage {
+  id        String   @id @default(cuid())
+  projectId String   @map("project_id")
+  url       String
+  caption   String   @default("")
+  order     Int      @default(0)
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("project_images")
+}
+
+model ProjectTag {
+  id    String   @id @default(cuid())
+  name  String @unique
+  projectTagRelations ProjectTagRelation[]
+
+  @@map("project_tags")
+}
+
+model ProjectTagRelation {
+  projectId String   @map("project_id")
+  projectTagId     String   @map("project_tag_id")
+
+  project Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectTag     ProjectTag @relation(fields: [projectTagId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, projectTagId])
+  @@map("project_tag_relations")
 }
 
 model Account {
