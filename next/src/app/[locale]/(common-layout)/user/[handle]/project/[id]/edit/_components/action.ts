@@ -9,6 +9,16 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { upsertProjectTags } from "../_db/tag-queries.server";
 
+const projectLinkSchema = z.object({
+	id: z.string().optional(),
+	url: z.string().url({
+		message: "Please enter a valid URL.",
+	}),
+	description: z.string().max(50, {
+		message: "Description must not exceed 50 characters.",
+	}),
+});
+
 const projectFormSchema = z.object({
 	projectId: z.string().optional(),
 	title: z
@@ -48,12 +58,16 @@ const projectFormSchema = z.object({
 			)
 			.max(5, "Maximum 5 tags allowed"),
 	),
-	url: z
-		.string()
-		.url({
-			message: "Please enter a valid URL.",
-		})
-		.optional(),
+	links: z.preprocess(
+		(value) => {
+			try {
+				return JSON.parse(value as string);
+			} catch {
+				return [];
+			}
+		},
+		z.array(projectLinkSchema).max(5, "Maximum 5 links allowed"),
+	),
 });
 
 export type ProjectFormValues = z.infer<typeof projectFormSchema>;
@@ -77,14 +91,14 @@ export async function projectAction(
 		};
 	}
 
-	const { projectId, tags, url, ...projectData } = parsed.data;
+	const { projectId, tags, links, ...projectData } = parsed.data;
 
 	try {
 		if (projectId) {
 			// Updating existing project
 			const existingProject = await prisma.project.findUnique({
 				where: { id: projectId },
-				include: { user: true },
+				include: { user: true, links: true },
 			});
 
 			if (!existingProject) {
@@ -111,31 +125,49 @@ export async function projectAction(
 			// Update tags
 			await upsertProjectTags(tags, projectId);
 
-			// Create/update repository link if provided
-			if (url) {
-				await prisma.projectLink.upsert({
-					where: {
-						id: `${projectId}-repo`, // Use a predictable ID for repository link
-					},
-					update: {
-						url: url,
-						description: "Repository",
-					},
-					create: {
-						id: `${projectId}-repo`,
-						projectId,
-						url: url,
-						description: "Repository",
-					},
-				});
-			} else {
-				// Delete repository link if it exists and URL is empty
+			// Handle links
+			// First, collect existing link IDs for later deletion
+			const existingLinkIds = existingProject.links.map((link) => link.id);
+			const newLinkIds = links
+				.filter((link) => link.id)
+				.map((link) => link.id as string);
+
+			// Find links to delete (those in existing but not in new)
+			const linkIdsToDelete = existingLinkIds.filter(
+				(id) => !newLinkIds.includes(id),
+			);
+
+			if (linkIdsToDelete.length > 0) {
 				await prisma.projectLink.deleteMany({
 					where: {
-						projectId,
-						description: "Repository",
+						id: {
+							in: linkIdsToDelete,
+						},
 					},
 				});
+			}
+
+			// Upsert links
+			for (const link of links) {
+				if (link.id) {
+					// Update existing link
+					await prisma.projectLink.update({
+						where: { id: link.id },
+						data: {
+							url: link.url,
+							description: link.description,
+						},
+					});
+				} else {
+					// Create new link
+					await prisma.projectLink.create({
+						data: {
+							url: link.url,
+							description: link.description,
+							projectId,
+						},
+					});
+				}
 			}
 		} else {
 			// Create new project
@@ -151,15 +183,14 @@ export async function projectAction(
 				await upsertProjectTags(tags, newProject.id);
 			}
 
-			// Create repository link if provided
-			if (url) {
-				await prisma.projectLink.create({
-					data: {
-						id: `${newProject.id}-repo`,
+			// Create links
+			if (links.length > 0) {
+				await prisma.projectLink.createMany({
+					data: links.map((link) => ({
+						url: link.url,
+						description: link.description,
 						projectId: newProject.id,
-						url: url,
-						description: "Repository",
-					},
+					})),
 				});
 			}
 		}

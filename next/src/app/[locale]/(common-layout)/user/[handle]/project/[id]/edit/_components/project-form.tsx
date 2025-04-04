@@ -16,7 +16,15 @@ import { toast } from "sonner";
 import type { ProjectWithRelations } from "../../_db/queries.server";
 import type { ProjectTagWithCount } from "../_db/tag-queries.server";
 import { type ProjectActionResponse, projectAction } from "./action";
+import { ProjectLinkInput } from "./link-input";
 import { ProjectTagInput } from "./tag-input";
+
+// Define the ProjectLink interface to match the database schema
+interface ProjectLink {
+	id?: string;
+	url: string;
+	description: string;
+}
 
 interface ProjectFormProps {
 	project?: ProjectWithRelations | null;
@@ -39,8 +47,16 @@ export function ProjectForm({
 		selectedTags.map((tag) => tag.name),
 	);
 
+	// Initialize links from project or empty array
+	const projectLinks = project?.links as ProjectLink[] | undefined;
+	const [links, setLinks] = useState<ProjectLink[]>(projectLinks || []);
+
 	const handleTagsChange = useCallback((newTags: string[]) => {
 		setTags(newTags);
+	}, []);
+
+	const handleLinksChange = useCallback((newLinks: ProjectLink[]) => {
+		setLinks(newLinks);
 	}, []);
 
 	const [state, action, isPending] = useActionState<
@@ -57,7 +73,7 @@ export function ProjectForm({
 			// 新規作成時は一覧ページ、編集時は詳細ページへリダイレクト
 			const redirectPath = isCreateMode
 				? `/user/${userHandle}/project-management`
-				: `/user/${userHandle}/project/${project.id}`;
+				: `/user/${userHandle}/project/${project?.id}`;
 			router.push(redirectPath);
 			router.refresh();
 		} else if (state.message) {
@@ -70,6 +86,8 @@ export function ProjectForm({
 		const formData = new FormData(event.currentTarget);
 		// タグ情報をフォームデータに追加
 		formData.set("tags", JSON.stringify(tags));
+		// リンク情報をフォームデータに追加
+		formData.set("links", JSON.stringify(links));
 		startTransition(() => {
 			action(formData);
 		});
@@ -89,7 +107,7 @@ export function ProjectForm({
 			</div>
 
 			<form onSubmit={handleSubmit} className="space-y-8">
-				{!isCreateMode && (
+				{!isCreateMode && project?.id && (
 					<input type="hidden" name="projectId" value={project.id} />
 				)}
 
@@ -150,23 +168,18 @@ export function ProjectForm({
 					</div>
 
 					<div>
-						<Label htmlFor="repositoryUrl">Repository URL</Label>
-						<Input
-							id="repositoryUrl"
-							name="repositoryUrl"
-							defaultValue={
-								project?.links?.find(
-									(link) => link.description === "Repository",
-								)?.url
-							}
-							placeholder="https://github.com/username/repo"
-							className="mt-1"
+						<Label htmlFor="links">Project Links</Label>
+						<ProjectLinkInput
+							initialLinks={links}
+							onChange={handleLinksChange}
 						/>
-						{state.zodErrors?.url && (
-							<p className="text-sm text-red-500 mt-1">{state.zodErrors.url}</p>
+						{state.zodErrors?.links && (
+							<p className="text-sm text-red-500 mt-1">
+								{state.zodErrors.links}
+							</p>
 						)}
 						<p className="text-sm text-muted-foreground mt-1">
-							Link to your project's repository (optional).
+							Add links to your project repository, demo, or documentation.
 						</p>
 					</div>
 				</div>
@@ -178,7 +191,7 @@ export function ProjectForm({
 						onClick={() => {
 							const returnPath = isCreateMode
 								? `/user/${userHandle}/project-management`
-								: `/user/${userHandle}/project/${project.id}`;
+								: `/user/${userHandle}/project/${project?.id}`;
 							router.push(returnPath);
 						}}
 					>
