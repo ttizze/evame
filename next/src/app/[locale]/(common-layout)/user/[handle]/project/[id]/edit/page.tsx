@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { redirect } from "next/navigation";
 import { fetchProjectWithRelations } from "../_db/queries.server";
 import { ProjectForm } from "./_components/project-form";
+import { fetchAllProjectTags } from "./_db/tag-queries.server";
+
 interface ProjectEditPageProps {
 	params: {
 		handle: string;
@@ -35,19 +37,28 @@ export async function generateMetadata({ params }: ProjectEditPageProps) {
 export default async function ProjectEditPage({
 	params,
 }: ProjectEditPageProps) {
-	const { handle, id } = await params;
+	const { handle, id } = params;
 	const currentUser = await getCurrentUser();
 	if (!currentUser || currentUser.handle !== handle) {
 		return redirect("/auth/login");
 	}
-	const project = await fetchProjectWithRelations(id);
+
+	const [project, allProjectTags] = await Promise.all([
+		fetchProjectWithRelations(id),
+		fetchAllProjectTags(),
+	]);
+
 	if (!project) {
 		return notFound();
 	}
 
 	return (
 		<div className="container max-w-4xl py-8">
-			<ProjectForm project={project} userHandle={handle} />
+			<ProjectForm
+				project={project}
+				userHandle={handle}
+				allProjectTags={allProjectTags}
+			/>
 		</div>
 	);
 }

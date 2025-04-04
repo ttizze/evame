@@ -26,7 +26,6 @@ const projectFormSchema = z.object({
 		.max(500, {
 			message: "Description must not exceed 500 characters.",
 		}),
-	tagIds: z.array(z.string()).optional(),
 	url: z
 		.string()
 		.url({
@@ -56,49 +55,91 @@ export async function projectAction(
 		};
 	}
 
-	const { projectId, tagIds, url, ...projectData } = parsed.data;
-	if (projectId) {
-		const existingProject = await prisma.project.findUnique({
-			where: { id: projectId },
-			include: { user: true },
-		});
+	const { projectId, ...projectData } = parsed.data;
 
-		if (!existingProject) {
-			return {
-				success: false,
-				message: "Project not found",
-			};
+	try {
+		if (projectId) {
+			// Updating existing project
+			const existingProject = await prisma.project.findUnique({
+				where: { id: projectId },
+				include: { user: true },
+			});
+
+			if (!existingProject) {
+				return {
+					success: false,
+					message: "Project not found",
+				};
+			}
+
+			// Check if the current user is the owner of the project
+			if (existingProject.userId !== currentUser.id) {
+				return {
+					success: false,
+					message: "You don't have permission to edit this project",
+				};
+			}
+
+			// Update project
+			await prisma.project.update({
+				where: { id: projectId },
+				data: projectData,
+			});
+
+			// Create links if provided
+			if (projectData.url) {
+				await prisma.projectLink.upsert({
+					where: {
+						id: `${projectId}-repo`, // Use a predictable ID for repository link
+					},
+					update: {
+						url: projectData.url,
+						description: "Repository",
+					},
+					create: {
+						id: `${projectId}-repo`,
+						projectId,
+						url: projectData.url,
+						description: "Repository",
+					},
+				});
+			}
+		} else {
+			// Create new project
+			const newProject = await prisma.project.create({
+				data: {
+					...projectData,
+					userId: currentUser.id,
+				},
+			});
+
+			// Create links if provided
+			if (projectData.url) {
+				await prisma.projectLink.create({
+					data: {
+						id: `${newProject.id}-repo`,
+						projectId: newProject.id,
+						url: projectData.url,
+						description: "Repository",
+					},
+				});
+			}
 		}
 
-		// Check if the current user is the owner of the project
-		if (existingProject.userId !== currentUser.id) {
-			return {
-				success: false,
-				message: "You don't have permission to edit this project",
-			};
+		revalidatePath(`/user/${currentUser.handle}/project-management`);
+		if (projectId) {
+			revalidatePath(`/user/${currentUser.handle}/project/${projectId}`);
 		}
-		// Update existing project
-		await prisma.project.update({
-			where: { id: projectId },
-			data: {
-				...projectData,
-				// Handle links update logic here if needed
-			},
-		});
-	} else {
-		// Create new project
-		await prisma.project.create({
-			data: {
-				...projectData,
-				userId: currentUser.id,
-				// Handle links creation logic here if needed
-			},
-		});
+
+		return {
+			success: true,
+			message: `Project ${projectId ? "updated" : "created"} successfully`,
+		};
+	} catch (error) {
+		console.error("Project action error:", error);
+		return {
+			success: false,
+			message: "Failed to process project. Please try again.",
+		};
 	}
-	revalidatePath(`/user/${currentUser.handle}/project-management`);
-
-	return {
-		success: true,
-		message: "Project updated successfully",
-	};
 }

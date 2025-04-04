@@ -8,20 +8,26 @@ import { useRouter } from "next/navigation";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import type { ProjectWithRelations } from "../../_db/queries.server";
+import type { ProjectTagWithCount } from "../_db/tag-queries.server";
 import { type ProjectActionResponse, projectAction } from "./action";
+import { ProjectTagInput } from "./tag-input";
 
 interface ProjectFormProps {
 	project?: ProjectWithRelations | null;
 	userHandle: string;
+	allProjectTags: ProjectTagWithCount[];
 }
 
-export function ProjectForm({ project, userHandle }: ProjectFormProps) {
+export function ProjectForm({
+	project,
+	userHandle,
+	allProjectTags,
+}: ProjectFormProps) {
 	const router = useRouter();
 	const isCreateMode = !project;
 
 	const selectedTags =
-		project?.projectTagRelations.map((relation) => relation.projectTag.id) ||
-		[];
+		project?.projectTagRelations.map((relation) => relation.projectTag) || [];
 
 	const [state, action, isPending] = useActionState<
 		ProjectActionResponse,
@@ -104,29 +110,14 @@ export function ProjectForm({ project, userHandle }: ProjectFormProps) {
 
 					<div>
 						<Label htmlFor="tags">Tags</Label>
-						<div className="flex flex-wrap gap-2 mt-2">
-							{project?.projectTagRelations.map((relation) => (
-								<label
-									key={relation.projectTag.id}
-									className="flex items-center space-x-2 border rounded-md p-2"
-								>
-									<input
-										type="checkbox"
-										name="tagIds"
-										value={relation.projectTag.id}
-										defaultChecked={selectedTags.includes(
-											relation.projectTag.id,
-										)}
-									/>
-									<span>{relation.projectTag.name}</span>
-								</label>
-							))}
-						</div>
-						{state.zodErrors?.tagIds && (
-							<p className="text-sm text-red-500 mt-1">
-								{state.zodErrors.tagIds}
-							</p>
-						)}
+						<ProjectTagInput
+							initialTags={selectedTags}
+							allTagsWithCount={allProjectTags}
+							projectId={project?.id}
+						/>
+						<p className="text-sm text-muted-foreground mt-1">
+							Add up to 5 tags to categorize your project.
+						</p>
 					</div>
 
 					<div>

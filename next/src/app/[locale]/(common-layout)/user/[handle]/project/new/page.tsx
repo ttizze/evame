@@ -1,6 +1,8 @@
 import { getCurrentUser } from "@/auth";
 import { redirect } from "next/navigation";
 import { ProjectForm } from "../[id]/edit/_components/project-form";
+import { fetchAllProjectTags } from "../[id]/edit/_db/tag-queries.server";
+
 interface NewProjectPageProps {
 	params: {
 		handle: string;
@@ -24,11 +26,11 @@ export default async function NewProjectPage({ params }: NewProjectPageProps) {
 		return redirect("/auth/login");
 	}
 
+	const allProjectTags = await fetchAllProjectTags();
+
 	return (
 		<div className="container max-w-4xl py-8">
-			<div className="space-y-6">
-				<ProjectForm userHandle={handle} />
-			</div>
+			<ProjectForm userHandle={handle} allProjectTags={allProjectTags} />
 		</div>
 	);
 }
