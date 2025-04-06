@@ -37,9 +37,9 @@ export async function generateMetadata({ params }: ProjectEditPageProps) {
 export default async function ProjectEditPage({
 	params,
 }: ProjectEditPageProps) {
-	const { handle, id } = params;
+	const { handle, id } = await params;
 	const currentUser = await getCurrentUser();
-	if (!currentUser || currentUser.handle !== handle) {
+	if (!currentUser?.id || currentUser.handle !== handle) {
 		return redirect("/auth/login");
 	}
 

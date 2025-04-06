@@ -54,7 +54,7 @@ export default function ProjectDetail({ project, locale }: ProjectDetailProps) {
 											src={image.url}
 											alt={image.caption || project.title}
 											fill
-											className="object-cover"
+											className="object-contain"
 											sizes="(max-width: 768px) 100vw, 768px"
 										/>
 									</div>
@@ -78,6 +78,19 @@ export default function ProjectDetail({ project, locale }: ProjectDetailProps) {
 				{project.links.length > 0 && (
 					<div className="space-y-2">
 						<h3 className="text-lg font-medium">Links</h3>
+						<ul className="pl-5 space-y-1">
+							{project.links.map((link) => (
+								<li key={link.id} className="hover:underline">
+									<Link
+										href={link.url}
+										target="_blank"
+										rel="noopener noreferrer"
+									>
+										{link.description}
+									</Link>
+								</li>
+							))}
+						</ul>
 					</div>
 				)}
 

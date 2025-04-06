@@ -160,7 +160,7 @@ export function ProjectImageInput({
 								alt={image.caption || `Project image ${index + 1}`}
 								fill
 								sizes="(max-width: 640px) 100vw, 50vw"
-								className="object-cover"
+								className="object-contain"
 							/>
 							{image.url.startsWith("temp://upload/") && (
 								<div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-xs font-medium">

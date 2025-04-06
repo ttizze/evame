@@ -71,17 +71,21 @@ export function ProjectManagementTabClient({
 									className="flex border-b py-4 justify-between"
 								>
 									<div className="flex gap-4">
-										{project.images && project.images.length > 0 && (
-											<div className="relative h-16 w-24 overflow-hidden rounded">
+										<div className="relative h-16 w-24 overflow-hidden rounded">
+											{project.images && project.images.length > 0 ? (
 												<Image
 													src={project.images[0].url}
 													alt={project.title || ""}
 													fill
-													className="object-cover"
+													className="object-contain"
 													sizes="96px"
 												/>
-											</div>
-										)}
+											) : (
+												<div className="flex h-full w-full items-center justify-center bg-muted text-2xl font-semibold text-muted-foreground">
+													{project.title.charAt(0).toUpperCase()}
+												</div>
+											)}
+										</div>
 										<div>
 											<Link
 												href={`/user/${handle}/project/${project.id}`}
