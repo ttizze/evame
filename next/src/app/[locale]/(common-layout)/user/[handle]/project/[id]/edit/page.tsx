@@ -7,11 +7,11 @@ import { ProjectForm } from "./_components/project-form";
 import { fetchAllProjectTags } from "./_db/tag-queries.server";
 
 interface ProjectEditPageProps {
-	params: {
+	params: Promise<{
 		handle: string;
 		id: string;
 		locale: string;
-	};
+	}>;
 }
 
 export async function generateMetadata({ params }: ProjectEditPageProps) {

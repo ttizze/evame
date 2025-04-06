@@ -5,11 +5,11 @@ import ProjectDetail from "./_components/project-detail";
 import ProjectDetailSkeleton from "./_components/project-detail-skeleton";
 import { fetchProjectWithRelations } from "./_db/queries.server";
 interface ProjectPageProps {
-	params: {
+	params: Promise<{
 		handle: string;
 		id: string;
 		locale: string;
-	};
+	}>;
 }
 
 export async function generateMetadata({ params }: ProjectPageProps) {
