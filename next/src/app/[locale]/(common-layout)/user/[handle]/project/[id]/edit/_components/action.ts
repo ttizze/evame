@@ -8,22 +8,8 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { upsertProjectTags } from "../_db/tag-queries.server";
+import { upsertProjectTags } from "../_db/mutations.server";
 
-// Define a type for project links
-interface ProjectLink {
-	id?: string;
-	url: string;
-	description: string;
-}
-
-// Define a type for project images
-interface ProjectImage {
-	id?: string;
-	url: string;
-	caption: string;
-	order: number;
-}
 
 const projectLinkSchema = z.object({
 	id: z.string().optional(),

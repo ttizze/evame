@@ -1,34 +1,5 @@
 import { prisma } from "@/lib/prisma";
 
-export interface ProjectTagWithCount {
-	id: string;
-	name: string;
-	_count: {
-		projectTagRelations: number;
-	};
-}
-
-/**
- * Fetch all project tags with their usage count
- */
-export async function fetchAllProjectTags(): Promise<ProjectTagWithCount[]> {
-	return prisma.projectTag.findMany({
-		include: {
-			_count: {
-				select: {
-					projectTagRelations: true,
-				},
-			},
-		},
-		orderBy: {
-			name: "asc",
-		},
-	});
-}
-
-/**
- * Upsert project tags for a project
- */
 export async function upsertProjectTags(tagNames: string[], projectId: string) {
 	// Remove duplicates
 	const uniqueTags = Array.from(new Set(tagNames));

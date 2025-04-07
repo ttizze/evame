@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { redirect } from "next/navigation";
 import { fetchProjectWithRelations } from "../_db/queries.server";
 import { ProjectForm } from "./_components/project-form";
-import { fetchAllProjectTags } from "./_db/tag-queries.server";
+import { fetchAllProjectTags } from "./_db/queries.server";
 
 interface ProjectEditPageProps {
 	params: Promise<{

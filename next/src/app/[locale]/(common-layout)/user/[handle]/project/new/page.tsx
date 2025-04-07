@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@/auth";
 import { redirect } from "next/navigation";
 import { ProjectForm } from "../[id]/edit/_components/project-form";
-import { fetchAllProjectTags } from "../[id]/edit/_db/tag-queries.server";
+import { fetchAllProjectTags } from "../[id]/edit/_db/queries.server";
 
 interface NewProjectPageProps {
 	params: Promise<{

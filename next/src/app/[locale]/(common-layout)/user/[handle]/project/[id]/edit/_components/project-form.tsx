@@ -14,7 +14,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import type { ProjectWithRelations } from "../../_db/queries.server";
-import type { ProjectTagWithCount } from "../_db/tag-queries.server";
+import type { ProjectTagWithCount } from "../_db/queries.server";
 import { type ProjectActionResponse, projectAction } from "./action";
 import { ProjectImageInput } from "./image-input";
 import { ProjectLinkInput } from "./link-input";
@@ -86,7 +86,7 @@ export function ProjectForm({
 		if (state.success) {
 			toast.success(
 				state.message ||
-					`Project ${isCreateMode ? "created" : "updated"} successfully`,
+				`Project ${isCreateMode ? "created" : "updated"} successfully`,
 			);
 			// 新規作成時は一覧ページ、編集時は詳細ページへリダイレクト
 			const redirectPath = isCreateMode
@@ -147,18 +147,24 @@ export function ProjectForm({
 						? "Create a new project"
 						: "Update your project details"}
 				</p>
+				<div className="text-sm text-muted-foreground mb-4">
+					<span className="text-red-500">*</span> Required fields
+				</div>
 			</div>
 
 			<form onSubmit={handleSubmit} className="space-y-8">
 				<div className="space-y-4">
 					<div>
-						<Label htmlFor="title">Project Title</Label>
+						<Label htmlFor="title" className="flex items-center">
+							Project Title <span className="text-red-500 ml-1">*</span>
+						</Label>
 						<Input
 							id="title"
 							name="title"
 							defaultValue={project?.title}
 							placeholder="My Awesome Project"
 							className="mt-1"
+							required
 						/>
 						{state.zodErrors?.title && (
 							<p className="text-sm text-red-500 mt-1">
@@ -171,13 +177,16 @@ export function ProjectForm({
 					</div>
 
 					<div>
-						<Label htmlFor="description">Description</Label>
+						<Label htmlFor="description" className="flex items-center">
+							Description <span className="text-red-500 ml-1">*</span>
+						</Label>
 						<Textarea
 							id="description"
 							name="description"
 							defaultValue={project?.description}
 							placeholder="Describe your project..."
 							className="min-h-32 mt-1"
+							required
 						/>
 						{state.zodErrors?.description && (
 							<p className="text-sm text-red-500 mt-1">
@@ -239,7 +248,6 @@ export function ProjectForm({
 						</p>
 					</div>
 				</div>
-
 				<div className="flex gap-4 justify-end">
 					<Button
 						type="button"

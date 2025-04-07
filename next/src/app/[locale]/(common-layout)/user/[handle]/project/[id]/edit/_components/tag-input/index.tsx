@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import CreatableSelect from "react-select/creatable";
-import type { ProjectTagWithCount } from "../../_db/tag-queries.server";
+import type { ProjectTagWithCount } from "../../_db/queries.server";
 
 interface ProjectTagInputProps {
 	initialTags: { id: string; name: string }[];
