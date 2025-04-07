@@ -1,9 +1,15 @@
 import { prisma } from "@/lib/prisma";
+import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
-import ProjectDetail from "./_components/project-detail";
 import ProjectDetailSkeleton from "./_components/project-detail-skeleton";
 import { fetchProjectWithRelations } from "./_db/queries.server";
+
+const ProjectDetail = dynamic(
+	() => import("./_components/project-detail").then((mod) => mod.default),
+	{
+		loading: () => <ProjectDetailSkeleton />,
+	},
+);
 interface ProjectPageProps {
 	params: Promise<{
 		handle: string;
@@ -41,9 +47,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 	}
 	return (
 		<div className="container max-w-4xl py-8">
-			<Suspense fallback={<ProjectDetailSkeleton />}>
-				<ProjectDetail project={project} locale={locale} />
-			</Suspense>
+			<ProjectDetail project={project} locale={locale} />
 		</div>
 	);
 }

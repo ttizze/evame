@@ -1,4 +1,4 @@
-import { fetchProjectsWithPagination } from "./_db/queries.server";
+import { fetchProjectsWithPagination } from "../../_db/queries.server";
 import { UserProjectListClient } from "./client";
 
 interface UserProjectListProps {
