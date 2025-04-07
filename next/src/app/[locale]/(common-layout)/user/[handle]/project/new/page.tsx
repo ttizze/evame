@@ -4,15 +4,12 @@ import { ProjectForm } from "../[id]/edit/_components/project-form";
 import { fetchAllProjectTags } from "../[id]/edit/_db/tag-queries.server";
 
 interface NewProjectPageProps {
-	params: {
+	params: Promise<{
 		handle: string;
-		locale: string;
-	};
+	}>;
 }
 
-export async function generateMetadata({ params }: NewProjectPageProps) {
-	const { locale } = params;
-
+export async function generateMetadata() {
 	return {
 		title: "Create New Project",
 		description: "Create a new project",
@@ -20,7 +17,7 @@ export async function generateMetadata({ params }: NewProjectPageProps) {
 }
 
 export default async function NewProjectPage({ params }: NewProjectPageProps) {
-	const { handle } = params;
+	const { handle } = await params;
 	const currentUser = await getCurrentUser();
 	if (!currentUser || currentUser.handle !== handle) {
 		return redirect("/auth/login");
