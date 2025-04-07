@@ -86,7 +86,7 @@ export function ProjectForm({
 		if (state.success) {
 			toast.success(
 				state.message ||
-				`Project ${isCreateMode ? "created" : "updated"} successfully`,
+					`Project ${isCreateMode ? "created" : "updated"} successfully`,
 			);
 			// 新規作成時は一覧ページ、編集時は詳細ページへリダイレクト
 			const redirectPath = isCreateMode

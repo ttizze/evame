@@ -1,4 +1,5 @@
 import { fetchUserByHandle } from "@/app/_db/queries.server";
+import { getCurrentUser } from "@/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
@@ -6,7 +7,6 @@ import { notFound } from "next/navigation";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import type { SearchParams } from "nuqs/server";
 import { UserProjectList } from "./_components/user-project-list/server";
-import { getCurrentUser } from "@/auth";
 const PageList = dynamic(
 	() =>
 		import("./_components/page-list.server").then((mod) => mod.PageListServer),

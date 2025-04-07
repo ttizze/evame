@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 
-
 export async function fetchProjectsWithPagination(
 	userId: string,
 	page = 1,

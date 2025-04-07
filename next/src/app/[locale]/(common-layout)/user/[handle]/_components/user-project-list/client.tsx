@@ -1,8 +1,8 @@
 "use client";
 
+import type { ProjectWithRelations } from "@/app/[locale]/(common-layout)/user/[handle]/project/[id]/_db/queries.server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { ProjectList } from "@/app/[locale]/_components/project-list";
-import type { ProjectWithRelations } from "@/app/[locale]/(common-layout)/user/[handle]/project/[id]/_db/queries.server";
 interface UserProjectListClientProps {
 	projects: ProjectWithRelations[];
 	totalPages: number;
@@ -16,7 +16,7 @@ export function UserProjectListClient({
 }: UserProjectListClientProps) {
 	return (
 		<div className="">
-				<ProjectList projects={projects}  />
+			<ProjectList projects={projects} />
 
 			<div className="flex justify-center my-4">
 				<PaginationBar totalPages={totalPages} currentPage={currentPage} />

@@ -1,5 +1,6 @@
 "use client";
 
+import { DeleteProjectDialog } from "@/app/[locale]/_components/delete-project-dialog/client";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,6 @@ import { parseAsString, useQueryState } from "nuqs";
 import { useState } from "react";
 import { ProjectList } from "../../../../../../_components/project-list";
 import type { ProjectWithRelations } from "../../../project/[id]/_db/queries.server";
-import { DeleteProjectDialog } from "@/app/[locale]/_components/delete-project-dialog/client";
 interface ProjectManagementTabClientProps {
 	projects: ProjectWithRelations[];
 	totalPages: number;

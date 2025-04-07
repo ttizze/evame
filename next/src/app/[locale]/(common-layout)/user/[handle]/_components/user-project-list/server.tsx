@@ -19,7 +19,7 @@ export async function UserProjectList({
 		<UserProjectListClient
 			projects={projectsWithRelations}
 			totalPages={totalPages}
-			currentPage={currentPage}     
+			currentPage={currentPage}
 		/>
 	);
 }
