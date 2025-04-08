@@ -1,14 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sanitizeUser } from "@/lib/sanitize-user";
 
-export async function getUserByHandle(handle: string) {
-	const user = await prisma.user.findUnique({
-		where: { handle },
-	});
-	if (!user) return null;
-	return user;
-}
-
 export async function getPageComments(pageId: number) {
 	return await prisma.pageComment.findMany({
 		where: {

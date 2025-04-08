@@ -1,7 +1,7 @@
+import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { FolderOpenIcon } from "lucide-react";
 import { fetchProjectsWithPagination } from "../../_db/queries.server";
-import { getUserByHandle } from "../../_db/queries.server";
 import { UserProjectListClient } from "./client";
 
 interface UserProjectListProps {
@@ -15,7 +15,7 @@ export async function UserProjectList({
 	page,
 	query,
 }: UserProjectListProps) {
-	const user = await getUserByHandle(handle);
+	const user = await fetchUserByHandle(handle);
 	if (!user) {
 		return null;
 	}

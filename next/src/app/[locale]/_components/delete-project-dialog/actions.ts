@@ -11,18 +11,10 @@ export async function deleteProjectAction(projectId: string) {
 		};
 	}
 
-	try {
-		await deleteProject(projectId);
-		revalidatePath("/user/[handle]/project-management");
+	await deleteProject(projectId);
+	revalidatePath("/user/[handle]/project-management");
 
-		return {
-			success: true,
-		};
-	} catch (error) {
-		console.error("Error deleting project:", error);
-		return {
-			success: false,
-			message: "Failed to delete project",
-		};
-	}
+	return {
+		success: true,
+	};
 }
