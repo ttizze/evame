@@ -162,11 +162,6 @@ export function ProjectImageInput({
 								sizes="(max-width: 640px) 100vw, 50vw"
 								className="object-contain"
 							/>
-							{image.url.startsWith("temp://upload/") && (
-								<div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-xs font-medium">
-									Not uploaded yet
-								</div>
-							)}
 						</div>
 
 						{/* Caption */}
