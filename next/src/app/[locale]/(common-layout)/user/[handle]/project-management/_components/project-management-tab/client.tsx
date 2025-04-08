@@ -1,15 +1,15 @@
 "use client";
 
-import { DeleteProjectDialog } from "@/app/[locale]/_components/delete-project-dialog/client";
+import { useProjectActions } from "@/app/[locale]/(common-layout)/user/[handle]/_hooks/use-project-actions";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "@/i18n/routing";
-import { Edit, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
-import { useState } from "react";
 import { ProjectList } from "../../../../../../_components/project-list";
 import type { ProjectWithRelations } from "../../../project/[id]/_db/queries.server";
+
 interface ProjectManagementTabClientProps {
 	projects: ProjectWithRelations[];
 	totalPages: number;
@@ -29,31 +29,8 @@ export function ProjectManagementTabClient({
 			shallow: false,
 		}),
 	);
-	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-	const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
-	const handleDeleteClick = (projectId: string) => {
-		setProjectToDelete(projectId);
-		setDeleteDialogOpen(true);
-	};
-
-	const renderActions = (project: ProjectWithRelations) => (
-		<div className="flex gap-2">
-			<Link href={`/user/${project?.user.handle}/project/${project?.id}/edit`}>
-				<Button variant="ghost" size="icon">
-					<Edit className="h-4 w-4" />
-				</Button>
-			</Link>
-			<Button
-				variant="ghost"
-				size="icon"
-				className="text-destructive"
-				onClick={() => handleDeleteClick(project?.id ?? "")}
-			>
-				<Trash2 className="h-4 w-4" />
-			</Button>
-		</div>
-	);
+	const { renderActions, DeleteDialog } = useProjectActions();
 
 	return (
 		<div className="space-y-6">
@@ -90,11 +67,7 @@ export function ProjectManagementTabClient({
 				<PaginationBar totalPages={totalPages} currentPage={currentPage} />
 			</div>
 
-			<DeleteProjectDialog
-				projectId={projectToDelete}
-				isOpen={deleteDialogOpen}
-				onOpenChange={setDeleteDialogOpen}
-			/>
+			<DeleteDialog />
 		</div>
 	);
 }

@@ -1,12 +1,20 @@
 import { fetchUserByHandle } from "@/app/_db/queries.server";
-import { getCurrentUser } from "@/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import type { SearchParams } from "nuqs/server";
-import { UserProjectList } from "./_components/user-project-list/server";
+const UserProjectList = dynamic(
+	() =>
+		import("./_components/user-project-list/server").then(
+			(mod) => mod.UserProjectList,
+		),
+	{
+		loading: () => <Skeleton className="h-[200px] w-full mb-4" />,
+	},
+);
+
 const PageList = dynamic(
 	() =>
 		import("./_components/page-list.server").then((mod) => mod.PageListServer),
@@ -58,16 +66,11 @@ export default async function UserPage({
 }) {
 	const { locale, handle } = await params;
 	const { page, query } = await loadSearchParams(searchParams);
-	const currentUser = await getCurrentUser();
 
 	return (
 		<>
 			<UserInfo handle={handle} />
-			<UserProjectList
-				currentUserId={currentUser?.id ?? ""}
-				page={page}
-				query={query}
-			/>
+			<UserProjectList handle={handle} page={page} query={query} />
 			<PageList handle={handle} page={page} locale={locale} />
 		</>
 	);

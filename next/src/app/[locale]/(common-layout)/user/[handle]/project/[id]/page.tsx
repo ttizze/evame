@@ -5,7 +5,7 @@ import ProjectDetailSkeleton from "./_components/project-detail-skeleton";
 import { fetchProjectWithRelations } from "./_db/queries.server";
 
 const ProjectDetail = dynamic(
-	() => import("./_components/project-detail").then((mod) => mod.default),
+	() => import("./_components/project-detail").then((mod) => mod.ProjectDetail),
 	{
 		loading: () => <ProjectDetailSkeleton />,
 	},

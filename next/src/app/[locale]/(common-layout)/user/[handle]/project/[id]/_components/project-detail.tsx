@@ -19,7 +19,7 @@ interface ProjectDetailProps {
 	locale: string;
 }
 
-export default function ProjectDetail({ project, locale }: ProjectDetailProps) {
+export function ProjectDetail({ project, locale }: ProjectDetailProps) {
 	if (!project) {
 		return null;
 	}

@@ -1,9 +1,16 @@
 import { getCurrentUser } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { redirect } from "next/navigation";
 import { fetchProjectWithRelations } from "../_db/queries.server";
-import { ProjectForm } from "./_components/project-form";
+import ProjectEditSkeleton from "./_components/project-edit-skeleton";
+const ProjectForm = dynamic(
+	() => import("./_components/project-form").then((mod) => mod.ProjectForm),
+	{
+		loading: () => <ProjectEditSkeleton />,
+	},
+);
 import { fetchAllProjectTags } from "./_db/queries.server";
 
 interface ProjectEditPageProps {
