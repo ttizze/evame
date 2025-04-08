@@ -56,7 +56,9 @@ export function DeleteProjectDialog({
 				</DialogHeader>
 
 				{deleteState.message && !deleteState.success && (
-					<div className="text-destructive text-sm mt-2">{deleteState.message}</div>
+					<div className="text-destructive text-sm mt-2">
+						{deleteState.message}
+					</div>
 				)}
 
 				<DialogFooter>

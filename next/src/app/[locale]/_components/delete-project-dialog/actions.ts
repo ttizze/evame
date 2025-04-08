@@ -2,11 +2,11 @@
 
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
+import { parseFormData } from "@/lib/parse-form-data";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { deleteProject } from "./db/mutation.server";
-import { parseFormData } from "@/lib/parse-form-data";
 
 const deleteProjectSchema = z.object({
 	projectId: z.string().min(1),
