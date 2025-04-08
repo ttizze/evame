@@ -1,7 +1,7 @@
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { FolderOpenIcon } from "lucide-react";
-import { fetchProjectsWithPagination } from "../../_db/queries.server";
+import { fetchUserProjectsWithPagination } from "../../_db/queries.server";
 import { UserProjectListClient } from "./client";
 
 interface UserProjectListProps {
@@ -22,7 +22,7 @@ export async function UserProjectList({
 	const currentUser = await getCurrentUser();
 	const isOwner = currentUser?.handle === handle;
 	const { projectsWithRelations, totalPages, currentPage } =
-		await fetchProjectsWithPagination(user.id, page, 10, query);
+		await fetchUserProjectsWithPagination(user.id, page, 10, query);
 
 	return (
 		<div className="flex flex-col gap-4 border rounded-lg pt-4 px-4 mb-4">

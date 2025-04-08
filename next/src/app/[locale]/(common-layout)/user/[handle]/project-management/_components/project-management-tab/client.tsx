@@ -30,7 +30,7 @@ export function ProjectManagementTabClient({
 		}),
 	);
 
-	const { renderActions, DeleteDialog } = useProjectActions();
+	const { renderActions, DeleteDialog } = useProjectActions({ isOwner: true });
 
 	return (
 		<div className="space-y-6">

@@ -1,4 +1,4 @@
-import { fetchProjectsWithPagination } from "../../../_db/queries.server";
+import { fetchUserProjectsWithPagination } from "@/app/[locale]/(common-layout)/user/[handle]/_db/queries.server";
 import { ProjectManagementTabClient } from "./client";
 
 interface ProjectManagementTabProps {
@@ -15,7 +15,7 @@ export async function ProjectManagementTab({
 	handle,
 }: ProjectManagementTabProps) {
 	const { projectsWithRelations, totalPages, currentPage } =
-		await fetchProjectsWithPagination(currentUserId, page, 10, query);
+		await fetchUserProjectsWithPagination(currentUserId, page, 10, query);
 
 	return (
 		<ProjectManagementTabClient

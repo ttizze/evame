@@ -64,7 +64,7 @@ export async function fetchFollowingList(userId: string) {
 	}));
 }
 
-export async function fetchProjectsWithPagination(
+export async function fetchUserProjectsWithPagination(
 	userId: string,
 	page = 1,
 	pageSize = 10,

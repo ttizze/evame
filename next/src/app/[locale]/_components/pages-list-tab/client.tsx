@@ -34,7 +34,7 @@ export function PagesListTabClient({
 	};
 
 	return (
-		<div className="container mx-auto px-4">
+		<div className="">
 			<Tabs value={activeTab ?? initialTab} onValueChange={handleTabChange}>
 				<TabsList className="flex justify-center rounded-full mb-4">
 					<TabsTrigger value="recommended" className="rounded-full w-1/2">

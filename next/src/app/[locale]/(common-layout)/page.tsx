@@ -4,6 +4,12 @@ import type { SearchParams } from "nuqs/server";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
+const PopularProjectList = dynamic(
+	() => import("@/app/[locale]/_components/popular-project-list/server"),
+	{
+		loading: () => <Skeleton className="h-[770px] w-full mb-10" />,
+	},
+);
 
 const HeroSection = dynamic(
 	() => import("@/app/[locale]/_components/hero-section/server"),
@@ -37,6 +43,11 @@ export default async function HomePage({
 	return (
 		<div className="flex flex-col justify-between">
 			{!currentUser && <HeroSection locale={locale} />}
+			<PopularProjectList
+				handle={currentUser?.handle ?? ""}
+				page={1}
+				query={""}
+			/>
 			<PagesListTab
 				locale={locale}
 				currentUserId={currentUser?.id ?? ""}

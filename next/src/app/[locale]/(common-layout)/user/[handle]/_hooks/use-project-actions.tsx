@@ -12,7 +12,7 @@ interface UseProjectActionsOptions {
 }
 
 export function useProjectActions(options: UseProjectActionsOptions = {}) {
-	const { isOwner = true } = options;
+	const { isOwner = false } = options;
 
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
