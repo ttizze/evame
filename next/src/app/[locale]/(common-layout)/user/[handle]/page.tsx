@@ -3,8 +3,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
-import { createLoader, parseAsInteger } from "nuqs/server";
+import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import type { SearchParams } from "nuqs/server";
+const UserProjectList = dynamic(
+	() =>
+		import("./_components/user-project-list/server").then(
+			(mod) => mod.UserProjectList,
+		),
+	{
+		loading: () => <Skeleton className="h-[200px] w-full mb-4" />,
+	},
+);
+
 const PageList = dynamic(
 	() =>
 		import("./_components/page-list.server").then((mod) => mod.PageListServer),
@@ -43,6 +53,7 @@ export async function generateMetadata({
 
 const searchParamsSchema = {
 	page: parseAsInteger.withDefault(1),
+	query: parseAsString.withDefault(""),
 };
 const loadSearchParams = createLoader(searchParamsSchema);
 
@@ -54,11 +65,12 @@ export default async function UserPage({
 	searchParams: Promise<SearchParams>;
 }) {
 	const { locale, handle } = await params;
-	const { page } = await loadSearchParams(searchParams);
+	const { page, query } = await loadSearchParams(searchParams);
 
 	return (
 		<>
 			<UserInfo handle={handle} />
+			<UserProjectList handle={handle} page={page} query={query} />
 			<PageList handle={handle} page={page} locale={locale} />
 		</>
 	);
