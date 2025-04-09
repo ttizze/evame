@@ -38,9 +38,9 @@ export default async function PopularPageList({
 
 	return (
 		<div className="flex flex-col gap-4">
-			<h2 className="text-xl font-semibold text-center mb-4 flex items-center justify-center gap-2">
+			<h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
 				<BookOpenIcon className="w-4 h-4" />
-				Popular Pages 🔥
+				Popular Pages
 			</h2>
 			<PopularPageListClient
 				pagesWithRelations={pagesWithRelations}
