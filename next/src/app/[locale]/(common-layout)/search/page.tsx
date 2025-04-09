@@ -52,35 +52,23 @@ export default async function Page({
 
 	switch (category) {
 		case "title": {
-			const { pages: resultPages, totalCount: cnt } = await searchTitle(
-				query,
-				skip,
-				take,
-				locale,
-			);
+			const { pagesWithRelations: resultPages, totalCount: cnt } =
+				await searchTitle(query, skip, take, locale);
 			pages = resultPages;
 			totalCount = cnt;
 			break;
 		}
 		case "content": {
-			const { pages: resultPages, totalCount: cnt } = await searchContent(
-				query,
-				skip,
-				take,
-				locale,
-			);
+			const { pagesWithRelations: resultPages, totalCount: cnt } =
+				await searchContent(query, skip, take, locale);
 			pages = resultPages;
 			totalCount = cnt;
 			break;
 		}
 		case "tags": {
 			if (tagPage === "true") {
-				const { pages: resultPages, totalCount: cnt } = await searchByTag(
-					query,
-					skip,
-					take,
-					locale,
-				);
+				const { pagesWithRelations: resultPages, totalCount: cnt } =
+					await searchByTag(query, skip, take, locale);
 				pages = resultPages;
 				totalCount = cnt;
 			} else {

@@ -2,13 +2,7 @@ import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import { Link } from "@/i18n/routing";
 import Linkify from "linkify-react";
 import { Settings } from "lucide-react";
@@ -46,8 +40,8 @@ export async function UserInfo({
 	const followingList = await fetchFollowingList(pageOwner.id);
 
 	return (
-		<Card className="mb-8">
-			<CardHeader className="pb-4">
+		<div className="mb-8 border-b py-4">
+			<div className="pb-4">
 				<div className="flex w-full flex-col md:flex-row">
 					<div>
 						<Link href={`${pageOwner.image}`}>
@@ -61,13 +55,9 @@ export async function UserInfo({
 					</div>
 					<div className="mt-2 md:mt-0 md:ml-4 flex items-center justify-between w-full">
 						<div>
-							<CardTitle className="text-xl md:text-2xl font-bold">
-								{pageOwner.name}
-							</CardTitle>
+							<p className="text-xl md:text-2xl font-bold">{pageOwner.name}</p>
 							<div>
-								<CardDescription className="text-sm text-gray-500">
-									@{pageOwner.handle}
-								</CardDescription>
+								<p className="text-sm text-gray-500">@{pageOwner.handle}</p>
 								<FollowStats
 									followingCount={followCounts.following}
 									followersCount={followCounts.followers}
@@ -100,7 +90,7 @@ export async function UserInfo({
 						)}
 					</div>
 				</div>
-			</CardHeader>
+			</div>
 
 			<CardContent className="mt-4">
 				<Linkify options={{ className: "underline" }}>
@@ -123,6 +113,6 @@ export async function UserInfo({
 					)}
 				</div>
 			</CardContent>
-		</Card>
+		</div>
 	);
 }

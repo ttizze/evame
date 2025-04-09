@@ -4,10 +4,10 @@ import {
 	CATEGORIES,
 	type Category,
 } from "@/app/[locale]/(common-layout)/search/constants";
-import { PageCard } from "@/app/[locale]/_components/page-card";
+import { PageList } from "@/app/[locale]/_components/page-list";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { TagList } from "@/app/[locale]/_components/tag-list";
-import type { PageCardLocalizedType } from "@/app/[locale]/_db/queries.server";
+import type { PageWithRelationsType } from "@/app/[locale]/_db/queries.server";
 import type { SanitizedUser } from "@/app/types";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,7 +18,7 @@ import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { useTransition } from "react";
 
 interface Props {
-	pages: PageCardLocalizedType[] | undefined;
+	pages: PageWithRelationsType[] | undefined;
 	tags: Tag[] | undefined;
 	users: SanitizedUser[] | undefined;
 	totalPages: number;
@@ -129,9 +129,9 @@ export function SearchPageClient({ pages, tags, users, totalPages }: Props) {
 					{currentCategory === "tags" && pages?.length && pages.length > 0 && (
 						<div className="space-y-4">
 							{pages.map((p) => (
-								<PageCard
+								<PageList
 									key={p.id}
-									pageCard={p}
+									pageWithRelations={p}
 									pageLink={`/user/${p.user.handle}/page/${p.slug}`}
 									userLink={`/user/${p.user.handle}`}
 								/>
@@ -164,9 +164,9 @@ export function SearchPageClient({ pages, tags, users, totalPages }: Props) {
 						pages.length > 0 && (
 							<div className="space-y-4">
 								{pages.map((p) => (
-									<PageCard
+									<PageList
 										key={p.id}
-										pageCard={p}
+										pageWithRelations={p}
 										pageLink={`/user/${p.user.handle}/page/${p.slug}`}
 										userLink={`/user/${p.user.handle}`}
 									/>

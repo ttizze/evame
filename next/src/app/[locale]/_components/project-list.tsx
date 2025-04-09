@@ -20,6 +20,9 @@ export function ProjectList({ projects, renderActions }: ProjectListProps) {
 						}`}
 					>
 						<div className="flex gap-4">
+							<div className="flex items-center justify-center w-6 text-lg font-medium text-muted-foreground">
+								{index + 1}
+							</div>
 							<div className="relative h-16 w-24 flex-shrink-0 overflow-hidden rounded">
 								{project.images && project.images.length > 0 ? (
 									<Image

@@ -17,10 +17,10 @@ export default async function PopularProjectList({
 		await fetchPopularProjectsWithPagination(page, 10, query);
 
 	return (
-		<div className="flex flex-col gap-4 rounded-lg pt-4 px-4 mb-4">
-			<h2 className="text-lg font-semibold flex items-center gap-2">
+		<div className="flex flex-col gap-4">
+			<h2 className="text-xl font-semibold text-center mb-4 flex items-center justify-center gap-2">
 				<FolderOpenIcon className="w-4 h-4" />
-				Popular Projects
+				Popular Projects 🔥
 			</h2>
 			<PopularProjectListClient
 				projects={projectsWithRelations}

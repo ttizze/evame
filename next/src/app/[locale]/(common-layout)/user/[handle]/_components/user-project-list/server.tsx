@@ -25,7 +25,7 @@ export async function UserProjectList({
 		await fetchUserProjectsWithPagination(user.id, page, 10, query);
 
 	return (
-		<div className="flex flex-col gap-4 border rounded-lg pt-4 px-4 mb-4">
+		<div className="flex flex-col gap-4 ">
 			<h2 className="text-lg font-semibold flex items-center gap-2">
 				<FolderOpenIcon className="w-4 h-4" />
 				Projects

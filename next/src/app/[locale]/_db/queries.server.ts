@@ -3,7 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { getBestTranslation } from "../_lib/get-best-translation";
 import type { PageWithTranslations } from "../types";
 
-export function createPageCardSelect(locale?: string) {
+export function createPageWithRelationsSelect(locale?: string) {
 	return {
 		id: true,
 		slug: true,
@@ -54,13 +54,9 @@ export function createPageCardSelect(locale?: string) {
 	};
 }
 
-export type PageCardType = Prisma.PageGetPayload<{
-	select: ReturnType<typeof createPageCardSelect>;
+export type PageWithRelationsType = Prisma.PageGetPayload<{
+	select: ReturnType<typeof createPageWithRelationsSelect>;
 }>;
-
-export type PageCardLocalizedType = Omit<PageCardType, "createdAt"> & {
-	createdAt: string;
-};
 
 type FetchParams = {
 	page?: number;
@@ -83,7 +79,7 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	onlyUserOwn = false,
 	locale = "en",
 }: FetchParams): Promise<{
-	pagesWithInfo: PageCardLocalizedType[];
+	pagesWithRelations: PageWithRelationsType[];
 	totalPages: number;
 }> {
 	const skip = (page - 1) * pageSize;
@@ -121,17 +117,17 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	}
 
 	// 実際に使うselectを生成 (localeなどを含む)
-	const pageCardSelect = createPageCardSelect(locale);
+	const pageWithRelationsSelect = createPageWithRelationsSelect(locale);
 
 	// findManyとcountを同時並列で呼び出し
-	const [pages, totalCount] = await Promise.all([
+	const [pagesWithRelations, totalCount] = await Promise.all([
 		prisma.page.findMany({
 			where: baseWhere,
 			orderBy,
 			skip,
 			take: pageSize,
 			select: {
-				...pageCardSelect,
+				...pageWithRelationsSelect,
 				likePages: {
 					where: likeWhere,
 					select: {
@@ -145,14 +141,9 @@ export async function fetchPaginatedPublicPagesWithInfo({
 			where: baseWhere,
 		}),
 	]);
-	// 日付をロケール指定した文字列へ変換
-	const pagesWithInfo: PageCardLocalizedType[] = pages.map((p) => ({
-		...p,
-		createdAt: new Date(p.createdAt).toLocaleDateString(locale),
-	}));
 
 	return {
-		pagesWithInfo,
+		pagesWithRelations,
 		totalPages: Math.ceil(totalCount / pageSize),
 	};
 }

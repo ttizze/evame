@@ -18,7 +18,7 @@ const HeroSection = dynamic(
 	},
 );
 const PagesListTab = dynamic(
-	() => import("@/app/[locale]/_components/pages-list-tab/index"),
+	() => import("@/app/[locale]/_components/pages-list-tab/server"),
 	{
 		loading: () => <Skeleton className="h-[640px] w-full" />,
 	},
