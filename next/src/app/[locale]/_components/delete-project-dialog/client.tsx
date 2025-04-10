@@ -16,17 +16,17 @@ import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
 import { deleteProjectAction } from "./actions";
 
-interface DeleteProjectDialogProps {
-	projectId: string | null;
-	isOpen: boolean;
+interface DeleteProjectDialogClientProps {
+	projectId: string;
+	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }
 
-export function DeleteProjectDialog({
+export function DeleteProjectDialogClient({
 	projectId,
-	isOpen,
+	open,
 	onOpenChange,
-}: DeleteProjectDialogProps) {
+}: DeleteProjectDialogClientProps) {
 	const [deleteState, deleteAction, isDeleting] = useActionState<
 		ActionResponse,
 		FormData
@@ -42,54 +42,56 @@ export function DeleteProjectDialog({
 	}, [deleteState, onOpenChange, router]);
 
 	return (
-		<Dialog open={isOpen} onOpenChange={onOpenChange}>
-			<DialogContent>
-				<DialogHeader>
-					<DialogTitle className="flex items-center">
-						<Trash className="w-4 h-4 mr-2" />
-						Delete Project
-					</DialogTitle>
-					<DialogDescription>
-						Are you sure you want to delete this project? This action cannot be
-						undone.
-					</DialogDescription>
-				</DialogHeader>
+		<>
+			<Dialog open={open} onOpenChange={onOpenChange}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle className="flex items-center">
+							<Trash className="w-4 h-4 mr-2" />
+							Delete Project
+						</DialogTitle>
+						<DialogDescription>
+							Are you sure you want to delete this project? This action cannot
+							be undone.
+						</DialogDescription>
+					</DialogHeader>
 
-				{deleteState.message && !deleteState.success && (
-					<div className="text-destructive text-sm mt-2">
-						{deleteState.message}
-					</div>
-				)}
+					{deleteState.message && !deleteState.success && (
+						<div className="text-destructive text-sm mt-2">
+							{deleteState.message}
+						</div>
+					)}
 
-				<DialogFooter>
-					<div className="flex items-center justify-between gap-2 w-full">
-						<Button
-							variant="outline"
-							className="w-1/2"
-							onClick={() => onOpenChange(false)}
-							disabled={isDeleting}
-						>
-							Cancel
-						</Button>
-						<form action={deleteAction} className="w-1/2">
-							<input type="hidden" name="projectId" value={projectId || ""} />
+					<DialogFooter>
+						<div className="flex items-center justify-between gap-2 w-full">
 							<Button
-								variant="destructive"
-								type="submit"
-								className="w-full"
-								disabled={isDeleting || !projectId}
+								variant="outline"
+								className="w-1/2"
+								onClick={() => onOpenChange(false)}
+								disabled={isDeleting}
 							>
-								{isDeleting ? (
-									<Loader2 className="w-4 h-4 mr-2 animate-spin" />
-								) : (
-									<Trash className="w-4 h-4 mr-2" />
-								)}
-								Delete
+								Cancel
 							</Button>
-						</form>
-					</div>
-				</DialogFooter>
-			</DialogContent>
-		</Dialog>
+							<form action={deleteAction} className="w-1/2">
+								<input type="hidden" name="projectId" value={projectId} />
+								<Button
+									variant="destructive"
+									type="submit"
+									className="w-full"
+									disabled={isDeleting}
+								>
+									{isDeleting ? (
+										<Loader2 className="w-4 h-4 mr-2 animate-spin" />
+									) : (
+										<Trash className="w-4 h-4 mr-2" />
+									)}
+									Delete
+								</Button>
+							</form>
+						</div>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+		</>
 	);
 }

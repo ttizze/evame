@@ -1,5 +1,4 @@
-"use client";
-
+import { ProjectLikeButton } from "@/app/[locale]/_components/project-like-button/server";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -13,7 +12,6 @@ import type { ProjectImage } from "@prisma/client";
 import Image from "next/image";
 import Link from "next/link";
 import type { ProjectWithRelations } from "../_db/queries.server";
-
 interface ProjectDetailProps {
 	project: ProjectWithRelations;
 	locale: string;
@@ -70,7 +68,9 @@ export function ProjectDetail({ project, locale }: ProjectDetailProps) {
 						<CarouselNext className="right-2" />
 					</Carousel>
 				)}
-
+				<div className="flex justify-between items-center">
+					<ProjectLikeButton projectId={project.id} />
+				</div>
 				<div className="prose dark:prose-invert max-w-none">
 					<p className="whitespace-pre-wrap">{project.description}</p>
 				</div>

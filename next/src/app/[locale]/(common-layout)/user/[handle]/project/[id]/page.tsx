@@ -14,7 +14,10 @@ const UserInfo = dynamic(
 	},
 );
 const ProjectDetail = dynamic(
-	() => import("./_components/project-detail").then((mod) => mod.ProjectDetail),
+	() =>
+		import("./_components/project-detail.server").then(
+			(mod) => mod.ProjectDetail,
+		),
 	{
 		loading: () => <ProjectDetailSkeleton />,
 	},

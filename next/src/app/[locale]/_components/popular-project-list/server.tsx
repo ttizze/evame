@@ -1,7 +1,7 @@
+import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { FolderOpenIcon } from "lucide-react";
+import { ProjectList } from "../project-list";
 import { fetchPopularProjectsWithPagination } from "./_db/queries.server";
-import { PopularProjectListClient } from "./client";
-
 interface PopularProjectListProps {
 	handle: string;
 	page: number;
@@ -22,11 +22,11 @@ export default async function PopularProjectList({
 				<FolderOpenIcon className="w-4 h-4" />
 				Popular Projects
 			</h2>
-			<PopularProjectListClient
-				projects={projectsWithRelations}
-				totalPages={totalPages}
-				currentPage={currentPage}
-			/>
+			<ProjectList projects={projectsWithRelations} isOwner={false} />
+
+			<div className="flex justify-center my-4">
+				<PaginationBar totalPages={totalPages} currentPage={currentPage} />
+			</div>
 		</div>
 	);
 }

@@ -2,24 +2,29 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import type { ProjectWithRelations } from "../(common-layout)/user/[handle]/project/[id]/_db/queries.server";
+import { ProjectActionsDropdown } from "./project-actions-dropdown/client";
+import { ProjectLikeButton } from "./project-like-button/server";
 
 interface ProjectListProps {
 	projects: ProjectWithRelations[];
-	renderActions?: (project: ProjectWithRelations) => React.ReactNode;
+	isOwner?: boolean;
 }
 
-export function ProjectList({ projects, renderActions }: ProjectListProps) {
+export async function ProjectList({
+	projects,
+	isOwner = false,
+}: ProjectListProps) {
 	return (
 		<div className="space-y-4">
 			{projects.map((project, index) =>
 				project ? (
 					<div
 						key={project.id}
-						className={`flex py-4 justify-between ${
+						className={`flex py-4 ${
 							index !== projects.length - 1 ? "border-b" : ""
 						}`}
 					>
-						<div className="flex gap-4">
+						<div className="flex gap-4 flex-1">
 							<div className="flex items-center justify-center w-6 text-lg font-medium text-muted-foreground">
 								{index + 1}
 							</div>
@@ -39,32 +44,41 @@ export function ProjectList({ projects, renderActions }: ProjectListProps) {
 								)}
 							</div>
 							<div className="min-w-0 flex-1">
-								<Link
-									href={`/user/${project.user.handle}/project/${project.id}`}
-									className="font-medium"
-								>
-									{project.title}
-								</Link>
-								<p className="text-sm text-muted-foreground line-clamp-1 mt-1 overflow-hidden text-ellipsis max-w-full">
-									{project.description}
-								</p>
-								<div className="flex flex-wrap gap-1 mt-2">
-									{project.projectTagRelations.map(
-										(relation) =>
-											relation?.projectTag && (
-												<Badge
-													key={relation.projectTag.id}
-													variant="secondary"
-													className="text-xs"
-												>
-													{relation.projectTag.name}
-												</Badge>
-											),
-									)}
+								<div className="flex items-center justify-between">
+									<Link
+										href={`/user/${project.user.handle}/project/${project.id}`}
+										className="font-medium"
+									>
+										{project.title}
+									</Link>
+									{isOwner && <ProjectActionsDropdown project={project} />}
+								</div>
+								<div className="flex justify-between items-start mt-1">
+									<div className="flex-1">
+										<p className="text-sm text-muted-foreground line-clamp-1 overflow-hidden text-ellipsis max-w-full">
+											{project.description}
+										</p>
+										<div className="flex flex-wrap gap-1 mt-2">
+											{project.projectTagRelations.map(
+												(relation) =>
+													relation?.projectTag && (
+														<Badge
+															key={relation.projectTag.id}
+															variant="secondary"
+															className="text-xs"
+														>
+															{relation.projectTag.name}
+														</Badge>
+													),
+											)}
+										</div>
+									</div>
+									<div className="ml-4 flex-shrink-0">
+										<ProjectLikeButton projectId={project.id} />
+									</div>
 								</div>
 							</div>
 						</div>
-						{renderActions?.(project)}
 					</div>
 				) : null,
 			)}
