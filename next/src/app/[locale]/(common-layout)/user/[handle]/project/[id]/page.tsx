@@ -3,7 +3,15 @@ import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import ProjectDetailSkeleton from "./_components/project-detail-skeleton";
 import { fetchProjectWithRelations } from "./_db/queries.server";
-
+import { Skeleton } from "@/components/ui/skeleton";
+const UserInfo = dynamic(
+	() => import("@/app/[locale]/_components/user-info.server").then(
+		(mod) => mod.UserInfo,
+	),
+	{
+		loading: () => <Skeleton className="w-full h-10" />,
+	},
+);
 const ProjectDetail = dynamic(
 	() => import("./_components/project-detail").then((mod) => mod.ProjectDetail),
 	{
@@ -48,6 +56,9 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 	return (
 		<div className="container max-w-4xl py-8">
 			<ProjectDetail project={project} locale={locale} />
+			<div className="py-4">
+				<UserInfo handle={project.user.handle} />
+			</div>
 		</div>
 	);
 }

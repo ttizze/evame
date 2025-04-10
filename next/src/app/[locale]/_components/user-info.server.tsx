@@ -8,13 +8,13 @@ import Linkify from "linkify-react";
 import { Settings } from "lucide-react";
 import Image, { getImageProps } from "next/image";
 import { notFound } from "next/navigation";
+import { FollowButton } from "../(common-layout)/user/[handle]/_components/follow-button";
+import { FollowStats } from "../(common-layout)/user/[handle]/_components/follow-stats";
 import {
 	fetchFollowerList,
 	fetchFollowingList,
 	getFollowCounts,
-} from "../_db/queries.server";
-import { FollowButton } from "./follow-button";
-import { FollowStats } from "./follow-stats";
+} from "../(common-layout)/user/[handle]/_db/queries.server";
 export async function UserInfo({
 	handle,
 }: {
@@ -40,7 +40,7 @@ export async function UserInfo({
 	const followingList = await fetchFollowingList(pageOwner.id);
 
 	return (
-		<div className="mb-8 border-b py-4">
+		<div className="mb-8 py-4">
 			<div className="pb-4">
 				<div className="flex w-full flex-col md:flex-row">
 					<div>

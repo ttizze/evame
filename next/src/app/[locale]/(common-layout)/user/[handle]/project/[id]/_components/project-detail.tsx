@@ -95,14 +95,6 @@ export function ProjectDetail({ project, locale }: ProjectDetailProps) {
 				)}
 
 				<div className="flex justify-between items-center pt-4 border-t">
-					<div className="flex items-center gap-2">
-						<Link
-							href={`/user/${project.user.handle}`}
-							className="text-sm text-muted-foreground hover:underline"
-						>
-							{project.user.name}
-						</Link>
-					</div>
 					<p className="text-sm text-muted-foreground">
 						{new Date(project.createdAt).toLocaleDateString(locale)}
 					</p>
