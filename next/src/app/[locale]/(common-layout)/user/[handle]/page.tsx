@@ -29,7 +29,8 @@ const PageList = dynamic(
 	},
 );
 const UserInfo = dynamic(
-	() => import("../../../_components/user-info.server").then((mod) => mod.UserInfo),
+	() =>
+		import("../../../_components/user-info.server").then((mod) => mod.UserInfo),
 	{
 		loading: () => <Skeleton className="h-[200px] w-full mb-4" />,
 	},
