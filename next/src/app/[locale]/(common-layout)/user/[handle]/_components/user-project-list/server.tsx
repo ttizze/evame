@@ -1,7 +1,7 @@
+import { SortTabs } from "@/app/[locale]/_components/sort-tabs";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { fetchUserProjectsWithPagination } from "../../_db/queries.server";
-import { SortTabs } from "../profile/sort-tabs";
 import { UserProjectListClient } from "./client";
 
 interface UserProjectListProps {

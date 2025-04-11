@@ -9,10 +9,10 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { createLoader, parseAsString } from "nuqs/server";
 
-const DynamicHomeTabs = dynamic(
+const DynamicCommonTabs = dynamic(
 	() =>
-		import("@/app/[locale]/_components/home-tabs/home-tabs").then(
-			(mod) => mod.HomeTabs,
+		import("@/app/[locale]/_components/common-tabs").then(
+			(mod) => mod.CommonTabs,
 		),
 	{
 		loading: () => <Skeleton className="h-[50px] w-full mb-4" />,
@@ -56,9 +56,7 @@ const HeroSection = dynamic(
 
 const SortTabs = dynamic(
 	() =>
-		import("@/app/[locale]/_components/home-tabs/sort-tabs").then(
-			(mod) => mod.SortTabs,
-		),
+		import("@/app/[locale]/_components/sort-tabs").then((mod) => mod.SortTabs),
 	{
 		loading: () => <Skeleton className="h-[50px] w-full mb-4" />,
 	},
@@ -90,7 +88,7 @@ export default async function HomePage({
 	return (
 		<div className="flex flex-col gap-8 justify-between mb-12">
 			{!currentUser && <HeroSection locale={locale} />}
-			<DynamicHomeTabs defaultTab={tab}>
+			<DynamicCommonTabs defaultTab={tab}>
 				{tab === "home" && (
 					<div className="space-y-8">
 						<PopularProjectList
@@ -106,10 +104,10 @@ export default async function HomePage({
 								className="rounded-full w-1/2 md:w-1/3"
 							>
 								<Link
-									href={`?tab=projects&sort=${sort}`}
+									href={"?tab=projects&sort=popular"}
 									className="gap-1 flex items-center justify-center"
 								>
-									View more projects
+									View more
 									<ArrowRight className="h-3 w-3" />
 								</Link>
 							</Button>
@@ -127,10 +125,10 @@ export default async function HomePage({
 								className="rounded-full w-1/2 md:w-1/3"
 							>
 								<Link
-									href={`?tab=pages&sort=${sort}`}
+									href={"?tab=pages&sort=popular"}
 									className="gap-1 flex items-center justify-center"
 								>
-									View more pages
+									View more
 									<ArrowRight className="h-3 w-3" />
 								</Link>
 							</Button>
@@ -148,10 +146,10 @@ export default async function HomePage({
 								className="rounded-full w-1/2 md:w-1/3"
 							>
 								<Link
-									href={`?tab=projects&sort=${sort}`}
+									href={"?tab=projects&sort=new"}
 									className="gap-1 flex items-center justify-center"
 								>
-									View more projects
+									View more
 									<ArrowRight className="h-3 w-3" />
 								</Link>
 							</Button>
@@ -169,10 +167,10 @@ export default async function HomePage({
 								className="rounded-full w-1/2 md:w-1/3"
 							>
 								<Link
-									href={`?tab=pages&sort=${sort}`}
+									href={"?tab=pages&sort=new"}
 									className="gap-1 flex items-center justify-center"
 								>
-									View more pages
+									View more
 									<ArrowRight className="h-3 w-3" />
 								</Link>
 							</Button>
@@ -215,7 +213,7 @@ export default async function HomePage({
 						)}
 					</>
 				)}
-			</DynamicHomeTabs>
+			</DynamicCommonTabs>
 		</div>
 	);
 }

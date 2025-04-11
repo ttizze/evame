@@ -3,22 +3,26 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpenIcon, FolderOpenIcon, HomeIcon } from "lucide-react";
 import { useQueryState } from "nuqs";
-interface ProfileTabsProps {
+
+interface CommonTabsProps {
 	children: React.ReactNode;
 	defaultTab?: string;
+	queryParam?: string;
 }
 
-export function ProfileTabs({
+export function CommonTabs({
 	children,
 	defaultTab = "home",
-}: ProfileTabsProps) {
-	const [activeTab, setActiveTab] = useQueryState("tab", {
+	queryParam = "tab",
+}: CommonTabsProps) {
+	const [activeTab, setActiveTab] = useQueryState(queryParam, {
 		defaultValue: defaultTab,
 		parse: (value) =>
 			["home", "projects", "pages"].includes(value) ? value : defaultTab,
 		serialize: (value) => value,
 		shallow: false,
 	});
+
 	const handleTabChange = (value: string) => {
 		setActiveTab(value);
 	};

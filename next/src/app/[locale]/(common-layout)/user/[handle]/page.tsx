@@ -1,3 +1,4 @@
+import { SortTabs } from "@/app/[locale]/_components/sort-tabs";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,10 +9,11 @@ import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import type { SearchParams } from "nuqs/server";
-import { SortTabs } from "./_components/profile/sort-tabs";
-const DynamicProfileTabs = dynamic(
+const DynamicCommonTabs = dynamic(
 	() =>
-		import("./_components/profile/profile-tabs").then((mod) => mod.ProfileTabs),
+		import("@/app/[locale]/_components/common-tabs").then(
+			(mod) => mod.CommonTabs,
+		),
 	{
 		loading: () => <Skeleton className="h-[50px] w-full mb-4" />,
 	},
@@ -86,7 +88,7 @@ export default async function UserPage({
 	return (
 		<>
 			<DynamicUserInfo handle={handle} />
-			<DynamicProfileTabs defaultTab={tab}>
+			<DynamicCommonTabs defaultTab={tab}>
 				{tab === "home" && (
 					<div className="space-y-8">
 						<DynamicUserProjectList
@@ -158,7 +160,7 @@ export default async function UserPage({
 						/>
 					</>
 				)}
-			</DynamicProfileTabs>
+			</DynamicCommonTabs>
 		</>
 	);
 }
