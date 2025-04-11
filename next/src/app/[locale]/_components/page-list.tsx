@@ -39,7 +39,7 @@ export function PageList({
 	return (
 		<div className="flex py-4 justify-between border-b last:border-b-0">
 			{index !== undefined && (
-				<div className="flex items-center justify-center w-6 text-lg font-medium text-muted-foreground mr-2">
+				<div className="flex items-start justify-center w-6 text-lg font-medium text-muted-foreground mr-2">
 					{index + 1}
 				</div>
 			)}

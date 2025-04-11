@@ -1,9 +1,9 @@
-import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import type { ProjectWithRelations } from "../(common-layout)/user/[handle]/project/[id]/_db/queries.server";
 import { ProjectActionsDropdown } from "./project-actions-dropdown/client";
 import { ProjectLikeButton } from "./project-like-button/server";
+import { Hash } from "lucide-react";
 
 interface ProjectListProps {
 	projects: ProjectWithRelations[];
@@ -25,7 +25,7 @@ export async function ProjectList({
 						}`}
 					>
 						<div className="flex gap-4 flex-1">
-							<div className="flex items-center justify-center w-6 text-lg font-medium text-muted-foreground">
+							<div className="flex items-start justify-center w-6 text-lg font-medium text-muted-foreground">
 								{index + 1}
 							</div>
 							<div className="relative h-16 w-24 flex-shrink-0 overflow-hidden rounded">
@@ -62,13 +62,14 @@ export async function ProjectList({
 											{project.projectTagRelations.map(
 												(relation) =>
 													relation?.projectTag && (
-														<Badge
-															key={relation.projectTag.id}
-															variant="secondary"
-															className="text-xs"
-														>
+														<Link
+														href={`/search?query=${encodeURIComponent(relation.projectTag.name)}&category=tags&tagPage=true`}
+														key={relation.projectTag.id}
+														className="flex items-center gap-1 px-3 h-[32px] !no-underline bg-secondary rounded-full text-sm text-secondary-foreground"
+													>
+														<Hash className="w-3 h-3" />
 															{relation.projectTag.name}
-														</Badge>
+														</Link>
 													),
 											)}
 										</div>
