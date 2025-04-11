@@ -4,9 +4,9 @@ import {
 	CATEGORIES,
 	type Category,
 } from "@/app/[locale]/(common-layout)/search/constants";
-import { PageList } from "@/app/[locale]/_components/page-list.server";
+import { PageList } from "@/app/[locale]/_components/page/page-list.server";
+import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { TagList } from "@/app/[locale]/_components/tag-list";
 import type { PageWithRelationsType } from "@/app/[locale]/_db/queries.server";
 import type { SanitizedUser } from "@/app/types";
 import { Input } from "@/components/ui/input";
@@ -124,7 +124,7 @@ export function SearchPageClient({ pages, tags, users, totalPages }: Props) {
 					)}
 
 					{currentCategory === "tags" && tags?.length && tags.length > 0 && (
-						<TagList tag={tags} />
+						<PageTagList tag={tags} />
 					)}
 					{currentCategory === "tags" && pages?.length && pages.length > 0 && (
 						<div className="space-y-4">

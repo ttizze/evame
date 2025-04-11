@@ -1,10 +1,10 @@
+import { NewPageListClient } from "@/app/[locale]/_components/page/new-page-list/client";
+import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
 import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/_db/queries.server";
 import { getGuestId } from "@/lib/get-guest-id";
 import { SparklesIcon } from "lucide-react";
 import { createLoader, parseAsInteger } from "nuqs/server";
 import type { SearchParams } from "nuqs/server";
-import { PageListContainer } from "../page-list-container/server";
-import { NewPageListClient } from "./client";
 
 const searchParamsSchema = {
 	page: parseAsInteger.withDefault(1),

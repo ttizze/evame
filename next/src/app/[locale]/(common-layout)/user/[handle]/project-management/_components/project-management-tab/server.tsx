@@ -1,6 +1,6 @@
 import { fetchUserProjectsWithPagination } from "@/app/[locale]/(common-layout)/user/[handle]/_db/queries.server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { ProjectList } from "@/app/[locale]/_components/project-list";
+import { ProjectList } from "@/app/[locale]/_components/project/project-list";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";

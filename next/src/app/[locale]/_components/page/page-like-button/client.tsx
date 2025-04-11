@@ -3,8 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { useActionState, useOptimistic } from "react";
-import { type LikeButtonState, toggleLikeAction } from "./action";
-type LikeButtonProps = {
+import { type PageLikeButtonState, togglePageLikeAction } from "./action";
+type PageLikeButtonProps = {
 	liked: boolean;
 	likeCount: number;
 	slug: string;
@@ -12,17 +12,17 @@ type LikeButtonProps = {
 	className?: string;
 };
 
-export function LikeButton({
+export function PageLikeButton({
 	liked,
 	likeCount,
 	slug,
 	showCount,
 	className = "",
-}: LikeButtonProps) {
+}: PageLikeButtonProps) {
 	const [state, formAction, isPending] = useActionState<
-		LikeButtonState,
+		PageLikeButtonState,
 		FormData
-	>(toggleLikeAction, { success: false });
+	>(togglePageLikeAction, { success: false });
 
 	const [optimisticLiked, updateOptimisticLiked] = useOptimistic(
 		liked,

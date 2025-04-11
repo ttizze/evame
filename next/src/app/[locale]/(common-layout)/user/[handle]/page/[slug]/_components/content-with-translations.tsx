@@ -3,7 +3,7 @@ import {
 	TranslateTarget,
 	VOTE_TARGET,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
-import { TagList } from "@/app/[locale]/_components/tag-list";
+import { TagList } from "@/app/[locale]/_components/page/page-tag-list";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { fetchPageContext } from "../_lib/fetch-page-context";

@@ -1,6 +1,6 @@
 import type { ProjectWithRelations } from "@/app/[locale]/(common-layout)/user/[handle]/project/[id]/_db/queries.server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { ProjectList } from "@/app/[locale]/_components/project-list";
+import { ProjectList } from "@/app/[locale]/_components/project/project-list";
 
 interface UserProjectListClientProps {
 	projects: ProjectWithRelations[];

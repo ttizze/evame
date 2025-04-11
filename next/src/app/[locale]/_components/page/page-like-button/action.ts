@@ -6,13 +6,13 @@ import { getGuestId } from "@/lib/get-guest-id";
 import { setGuestId } from "@/lib/set-guest-id-action";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { toggleLike } from "./db/mutations.server";
+import { togglePageLike } from "./db/mutations.server";
 // フォームデータ用のスキーマ
 const schema = z.object({
 	slug: z.string(),
 });
 
-export type LikeButtonState = ActionResponse<
+export type PageLikeButtonState = ActionResponse<
 	{
 		liked: boolean;
 		likeCount: number;
@@ -22,10 +22,10 @@ export type LikeButtonState = ActionResponse<
 	}
 >;
 
-export async function toggleLikeAction(
-	previousState: LikeButtonState,
+export async function togglePageLikeAction(
+	previousState: PageLikeButtonState,
 	formData: FormData,
-): Promise<LikeButtonState> {
+): Promise<PageLikeButtonState> {
 	const validation = schema.safeParse({ slug: formData.get("slug") });
 	if (!validation.success) {
 		return {
@@ -37,7 +37,7 @@ export async function toggleLikeAction(
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
 		const guestId = (await getGuestId()) ?? (await setGuestId());
-		const { liked, likeCount } = await toggleLike(slug, {
+		const { liked, likeCount } = await togglePageLike(slug, {
 			type: "guest",
 			id: guestId,
 		});
@@ -51,7 +51,7 @@ export async function toggleLikeAction(
 		};
 	}
 
-	const { liked, likeCount } = await toggleLike(slug, {
+	const { liked, likeCount } = await togglePageLike(slug, {
 		type: "user",
 		id: currentUser.id,
 	});

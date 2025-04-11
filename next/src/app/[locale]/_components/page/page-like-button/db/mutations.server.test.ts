@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { Page, User } from "@prisma/client";
 import { beforeEach, describe, expect, it } from "vitest";
-import { toggleLike } from "./mutations.server";
+import { togglePageLike } from "./mutations.server";
 
 describe("toggleLike 実際のDB統合テスト", () => {
 	let testUser: User;
@@ -91,7 +91,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	});
 
 	it("userIdを指定した場合にlikeが新規作成される", async () => {
-		const result = await toggleLike(publicPage.slug, {
+		const result = await togglePageLike(publicPage.slug, {
 			type: "user",
 			id: testUser.id,
 		});
@@ -109,8 +109,8 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	});
 
 	it("userIdが既にlike済なら削除→liked:falseを返す", async () => {
-		await toggleLike(publicPage.slug, { type: "user", id: testUser.id });
-		const result = await toggleLike(publicPage.slug, {
+		await togglePageLike(publicPage.slug, { type: "user", id: testUser.id });
+		const result = await togglePageLike(publicPage.slug, {
 			type: "user",
 			id: testUser.id,
 		});
@@ -123,7 +123,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	});
 
 	it("guestIdでも同様に動作する (新規作成→liked:true)", async () => {
-		const result = await toggleLike(publicPage.slug, {
+		const result = await togglePageLike(publicPage.slug, {
 			type: "guest",
 			id: "guest-123",
 		});
@@ -137,8 +137,8 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	});
 
 	it("guestIdが既にlike済なら削除→liked:falseを返す", async () => {
-		await toggleLike(publicPage.slug, { type: "guest", id: "guest-123" });
-		const result = await toggleLike(publicPage.slug, {
+		await togglePageLike(publicPage.slug, { type: "guest", id: "guest-123" });
+		const result = await togglePageLike(publicPage.slug, {
 			type: "guest",
 			id: "guest-123",
 		});
@@ -152,7 +152,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 
 	it("Pageが存在しない場合はエラーを投げる", async () => {
 		await expect(
-			toggleLike("non-existing-slug", { type: "user", id: "1" }),
+			togglePageLike("non-existing-slug", { type: "user", id: "1" }),
 		).rejects.toThrow("Page not found");
 	});
 });

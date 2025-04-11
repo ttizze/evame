@@ -10,7 +10,7 @@ interface GuestIdentifier {
 	id: string;
 }
 
-export async function toggleLike(
+export async function togglePageLike(
 	slug: string,
 	identifier: UserIdentifier | GuestIdentifier,
 ) {

@@ -1,4 +1,4 @@
-import { ProjectLikeButton } from "@/app/[locale]/_components/project-like-button/server";
+import { ProjectLikeButton } from "@/app/[locale]/_components/project/project-like-button/server";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {

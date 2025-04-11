@@ -1,4 +1,5 @@
 "use client";
+import type { ProjectWithRelations } from "@/app/[locale]/(common-layout)/user/[handle]/project/[id]/_db/queries.server";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -9,7 +10,6 @@ import {
 import { Link } from "@/i18n/routing";
 import { Edit, MoreVertical, TrashIcon } from "lucide-react";
 import { useState } from "react";
-import type { ProjectWithRelations } from "../../(common-layout)/user/[handle]/project/[id]/_db/queries.server";
 import { DeleteProjectDialogClient } from "../delete-project-dialog/client";
 
 interface ProjectActionsDropdownProps {

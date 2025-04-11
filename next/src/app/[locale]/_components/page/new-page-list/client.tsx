@@ -1,21 +1,24 @@
 "use client";
 
-import { PageList } from "@/app/[locale]/_components/page-list.server";
+import { PageList } from "@/app/[locale]/_components/page/page-list.server";
+import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import type { PageWithRelationsType } from "@/app/[locale]/_db/queries.server";
 import { useQueryState } from "nuqs";
 import { parseAsInteger } from "nuqs";
-import { PaginationBar } from "../pagination-bar";
-interface PopularPageListClientProps {
+
+interface NewPageListClientProps {
 	pagesWithRelations: PageWithRelationsType[];
 	totalPages: number;
+	locale: string;
 	showPagination?: boolean;
 }
 
-export function PopularPageListClient({
+export function NewPageListClient({
 	pagesWithRelations,
 	totalPages,
+	locale,
 	showPagination = false,
-}: PopularPageListClientProps) {
+}: NewPageListClientProps) {
 	const [page, setPage] = useQueryState(
 		"page",
 		parseAsInteger.withDefault(1).withOptions({ shallow: false }),

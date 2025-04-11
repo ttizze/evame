@@ -20,28 +20,29 @@ const DynamicCommonTabs = dynamic(
 );
 
 const PopularProjectList = dynamic(
-	() => import("@/app/[locale]/_components/popular-project-list/server"),
+	() =>
+		import("@/app/[locale]/_components/project/popular-project-list/server"),
 	{
 		loading: () => <Skeleton className="h-[400px] w-full mb-10" />,
 	},
 );
 
 const NewProjectList = dynamic(
-	() => import("@/app/[locale]/_components/new-project-list/server"),
+	() => import("@/app/[locale]/_components/project/new-project-list/server"),
 	{
 		loading: () => <Skeleton className="h-[400px] w-full mb-10" />,
 	},
 );
 
 const PopularPageList = dynamic(
-	() => import("@/app/[locale]/_components/popular-page-list/server"),
+	() => import("@/app/[locale]/_components/page/popular-page-list/server"),
 	{
 		loading: () => <Skeleton className="h-[400px] w-full mb-10" />,
 	},
 );
 
 const NewPageList = dynamic(
-	() => import("@/app/[locale]/_components/new-page-list/server"),
+	() => import("@/app/[locale]/_components/page/new-page-list/server"),
 	{
 		loading: () => <Skeleton className="h-[400px] w-full mb-10" />,
 	},

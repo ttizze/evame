@@ -6,7 +6,7 @@ type TagListProps = {
 	tag: Tag[];
 };
 
-export function TagList({ tag }: TagListProps) {
+export function PageTagList({ tag }: TagListProps) {
 	return (
 		<div className="flex flex-wrap gap-2 pt-2 pb-3">
 			{tag.map((tag) => (

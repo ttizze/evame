@@ -1,7 +1,7 @@
+import type { ProjectWithRelations } from "@/app/[locale]/(common-layout)/user/[handle]/project/[id]/_db/queries.server";
 import { Link } from "@/i18n/routing";
 import { Hash } from "lucide-react";
 import Image from "next/image";
-import type { ProjectWithRelations } from "../(common-layout)/user/[handle]/project/[id]/_db/queries.server";
 import { ProjectActionsDropdown } from "./project-actions-dropdown/client";
 import { ProjectLikeButton } from "./project-like-button/server";
 

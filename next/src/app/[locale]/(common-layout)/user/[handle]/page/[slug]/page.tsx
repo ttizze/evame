@@ -20,10 +20,10 @@ const DynamicContentWithTranslations = dynamic(
 		loading: () => <Skeleton className="h-[500px] w-full" />,
 	},
 );
-const DynamicLikeButton = dynamic(
+const DynamicPageLikeButton = dynamic(
 	() =>
-		import("@/app/[locale]/_components/like-button/client").then(
-			(mod) => mod.LikeButton,
+		import("@/app/[locale]/_components/page/page-like-button/client").then(
+			(mod) => mod.PageLikeButton,
 		),
 	{
 		loading: () => <span>Loading LikeButton...</span>,
@@ -158,7 +158,7 @@ export default async function Page({
 					showTranslation={showTranslation}
 				/>
 				<div className="flex items-center gap-4">
-					<DynamicLikeButton
+					<DynamicPageLikeButton
 						liked={isLikedByUser}
 						likeCount={likeCount}
 						slug={slug}

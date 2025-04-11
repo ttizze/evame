@@ -1,5 +1,5 @@
 "use client";
-import { LikeButton } from "@/app/[locale]/_components/like-button/client";
+import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Languages, Text } from "lucide-react";
@@ -128,7 +128,7 @@ export function FloatingControls({
 
 				{/* いいねボタン */}
 				<div className={STYLE.baseClasses}>
-					<LikeButton liked={liked} likeCount={likeCount} slug={slug} />
+					<PageLikeButton liked={liked} likeCount={likeCount} slug={slug} />
 				</div>
 
 				{/* シェアボタン */}
