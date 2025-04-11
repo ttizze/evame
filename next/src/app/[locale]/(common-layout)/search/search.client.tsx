@@ -4,7 +4,7 @@ import {
 	CATEGORIES,
 	type Category,
 } from "@/app/[locale]/(common-layout)/search/constants";
-import { PageList } from "@/app/[locale]/_components/page-list";
+import { PageList } from "@/app/[locale]/_components/page-list.server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { TagList } from "@/app/[locale]/_components/tag-list";
 import type { PageWithRelationsType } from "@/app/[locale]/_db/queries.server";

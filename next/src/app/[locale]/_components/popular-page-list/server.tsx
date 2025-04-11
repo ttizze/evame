@@ -3,7 +3,9 @@ import { getGuestId } from "@/lib/get-guest-id";
 import { BookOpenIcon } from "lucide-react";
 import { createLoader, parseAsInteger } from "nuqs/server";
 import type { SearchParams } from "nuqs/server";
+import { PageListContainer } from "../page-list-container/server";
 import { PopularPageListClient } from "./client";
+
 const searchParamsSchema = {
 	page: parseAsInteger.withDefault(1),
 };
@@ -37,16 +39,11 @@ export default async function PopularPageList({
 	const totalPages = result.totalPages;
 
 	return (
-		<div className="flex flex-col gap-4">
-			<h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-				<BookOpenIcon className="w-4 h-4" />
-				Popular Pages
-			</h2>
+		<PageListContainer title="Popular Pages" icon={BookOpenIcon}>
 			<PopularPageListClient
 				pagesWithRelations={pagesWithRelations}
 				totalPages={totalPages}
-				locale={locale}
 			/>
-		</div>
+		</PageListContainer>
 	);
 }

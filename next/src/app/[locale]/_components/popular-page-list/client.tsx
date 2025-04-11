@@ -1,6 +1,6 @@
 "use client";
 
-import { PageList } from "@/app/[locale]/_components/page-list";
+import { PageList } from "@/app/[locale]/_components/page-list.server";
 import type { PageWithRelationsType } from "@/app/[locale]/_db/queries.server";
 import { useQueryState } from "nuqs";
 import { parseAsInteger } from "nuqs";
@@ -8,13 +8,13 @@ import { PaginationBar } from "../pagination-bar";
 interface PopularPageListClientProps {
 	pagesWithRelations: PageWithRelationsType[];
 	totalPages: number;
-	locale: string;
+	showPagination?: boolean;
 }
 
 export function PopularPageListClient({
 	pagesWithRelations,
 	totalPages,
-	locale,
+	showPagination = false,
 }: PopularPageListClientProps) {
 	const [page, setPage] = useQueryState(
 		"page",
@@ -35,10 +35,11 @@ export function PopularPageListClient({
 				))}
 			</div>
 
-			{/* ページネーション */}
-			<div className="mt-8 flex justify-center">
-				<PaginationBar totalPages={totalPages} currentPage={page} />
-			</div>
+			{showPagination && (
+				<div className="mt-8 flex justify-center">
+					<PaginationBar totalPages={totalPages} currentPage={page} />
+				</div>
+			)}
 		</div>
 	);
 }

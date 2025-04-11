@@ -89,7 +89,12 @@ export default async function UserPage({
 			<DynamicProfileTabs defaultTab={tab}>
 				{tab === "home" && (
 					<div className="space-y-8">
-						<DynamicUserProjectList handle={handle} page={1} query={query} />
+						<DynamicUserProjectList
+							handle={handle}
+							page={1}
+							query={query}
+							sort={sort}
+						/>
 						<div className="flex justify-center w-full mt-4">
 							<Button
 								variant="default"
@@ -131,7 +136,15 @@ export default async function UserPage({
 					</div>
 				)}
 				{tab === "projects" && (
-					<DynamicUserProjectList handle={handle} page={page} query={query} />
+					<>
+						<SortTabs defaultSort={sort} />
+						<DynamicUserProjectList
+							handle={handle}
+							page={page}
+							query={query}
+							sort={sort}
+						/>
+					</>
 				)}
 				{tab === "pages" && (
 					<>

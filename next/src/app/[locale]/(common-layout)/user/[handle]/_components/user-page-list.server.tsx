@@ -1,4 +1,4 @@
-import { PageList } from "@/app/[locale]/_components/page-list";
+import { PageList } from "@/app/[locale]/_components/page-list.server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/_db/queries.server";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
