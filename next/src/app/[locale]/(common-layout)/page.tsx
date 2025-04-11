@@ -3,14 +3,17 @@ import type { SearchParams } from "nuqs/server";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { createLoader, parseAsString } from "nuqs/server";
 
 const DynamicHomeTabs = dynamic(
-	() => import("@/app/[locale]/_components/home-tabs/home-tabs").then((mod) => mod.HomeTabs),
+	() =>
+		import("@/app/[locale]/_components/home-tabs/home-tabs").then(
+			(mod) => mod.HomeTabs,
+		),
 	{
 		loading: () => <Skeleton className="h-[50px] w-full mb-4" />,
 	},
@@ -52,7 +55,10 @@ const HeroSection = dynamic(
 );
 
 const SortTabs = dynamic(
-	() => import("@/app/[locale]/_components/home-tabs/sort-tabs").then((mod) => mod.SortTabs),
+	() =>
+		import("@/app/[locale]/_components/home-tabs/sort-tabs").then(
+			(mod) => mod.SortTabs,
+		),
 	{
 		loading: () => <Skeleton className="h-[50px] w-full mb-4" />,
 	},
