@@ -1,9 +1,9 @@
 import { Link } from "@/i18n/routing";
+import { Hash } from "lucide-react";
 import Image from "next/image";
 import type { ProjectWithRelations } from "../(common-layout)/user/[handle]/project/[id]/_db/queries.server";
 import { ProjectActionsDropdown } from "./project-actions-dropdown/client";
 import { ProjectLikeButton } from "./project-like-button/server";
-import { Hash } from "lucide-react";
 
 interface ProjectListProps {
 	projects: ProjectWithRelations[];
@@ -63,11 +63,11 @@ export async function ProjectList({
 												(relation) =>
 													relation?.projectTag && (
 														<Link
-														href={`/search?query=${encodeURIComponent(relation.projectTag.name)}&category=tags&tagPage=true`}
-														key={relation.projectTag.id}
-														className="flex items-center gap-1 px-3 h-[32px] !no-underline bg-secondary rounded-full text-sm text-secondary-foreground"
-													>
-														<Hash className="w-3 h-3" />
+															href={`/search?query=${encodeURIComponent(relation.projectTag.name)}&category=tags&tagPage=true`}
+															key={relation.projectTag.id}
+															className="flex items-center gap-1 px-3 h-[32px] !no-underline bg-secondary rounded-full text-sm text-secondary-foreground"
+														>
+															<Hash className="w-3 h-3" />
 															{relation.projectTag.name}
 														</Link>
 													),
