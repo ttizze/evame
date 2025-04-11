@@ -5,16 +5,21 @@ import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
 import { notFound } from "next/navigation";
+
 interface PageListServerProps {
 	handle: string;
 	page: number;
 	locale: string;
+	sort?: string;
+	showPagination?: boolean;
 }
 
 export async function PageListServer({
 	handle,
 	page,
 	locale,
+	sort = "popular",
+	showPagination = false,
 }: PageListServerProps) {
 	const currentUser = await getCurrentUser();
 	const guestId = !currentUser ? await getGuestId() : undefined;
@@ -24,13 +29,15 @@ export async function PageListServer({
 	if (!pageOwner) {
 		return notFound();
 	}
+
 	const { pagesWithRelations, totalPages } =
 		await fetchPaginatedPublicPagesWithInfo({
 			page: page,
-			pageSize: 9,
+			pageSize: 5,
 			currentUserId: currentUser?.id,
 			currentGuestId: guestId,
 			pageOwnerId: pageOwner.id,
+			isPopular: sort === "popular",
 			onlyUserOwn: true,
 			locale,
 		});
@@ -57,9 +64,11 @@ export async function PageListServer({
 				))}
 			</div>
 
-			<div className="mt-8 flex justify-center">
-				<PaginationBar totalPages={totalPages} currentPage={page} />
-			</div>
+			{showPagination && totalPages > 1 && (
+				<div className="mt-8 flex justify-center">
+					<PaginationBar totalPages={totalPages} currentPage={page} />
+				</div>
+			)}
 		</>
 	);
 }

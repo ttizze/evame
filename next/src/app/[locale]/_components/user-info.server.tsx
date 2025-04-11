@@ -2,7 +2,6 @@ import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { CardContent } from "@/components/ui/card";
 import { Link } from "@/i18n/routing";
 import Linkify from "linkify-react";
 import { Settings } from "lucide-react";
@@ -92,11 +91,11 @@ export async function UserInfo({
 				</div>
 			</div>
 
-			<CardContent className="mt-4">
+			<div className="mt-4">
 				<Linkify options={{ className: "underline" }}>
 					{pageOwner.profile}
 				</Linkify>
-				<div className="flex items-center gap-2 mt-2">
+				<div className="flex items-center gap-2 mt-6">
 					{pageOwner.twitterHandle && (
 						<Link
 							href={`https://x.com/${pageOwner.twitterHandle}`}
@@ -112,7 +111,7 @@ export async function UserInfo({
 						</Link>
 					)}
 				</div>
-			</CardContent>
+			</div>
 		</div>
 	);
 }

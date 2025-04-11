@@ -1,6 +1,5 @@
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
-import { FolderOpenIcon } from "lucide-react";
 import { fetchUserProjectsWithPagination } from "../../_db/queries.server";
 import { UserProjectListClient } from "./client";
 
@@ -26,10 +25,6 @@ export async function UserProjectList({
 
 	return (
 		<div className="flex flex-col gap-4 ">
-			<h2 className="text-lg font-semibold flex items-center gap-2">
-				<FolderOpenIcon className="w-4 h-4" />
-				Projects
-			</h2>
 			<UserProjectListClient
 				projects={projectsWithRelations}
 				totalPages={totalPages}

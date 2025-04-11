@@ -29,7 +29,7 @@ export default async function PopularPageList({
 		pageSize: 5,
 		currentUserId: currentUserId,
 		currentGuestId: guestId,
-		isRecommended: true,
+		isPopular: true,
 		locale,
 	});
 

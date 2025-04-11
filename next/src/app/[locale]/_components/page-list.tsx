@@ -78,6 +78,9 @@ export function PageList({
 							/>
 						)}
 					</div>
+					<TagList
+						tag={pageWithRelations.tagPages.map((tagPage) => tagPage.tag)}
+					/>
 
 					<div className="flex justify-between items-center mt-2">
 						<div className="flex items-center">
@@ -98,9 +101,6 @@ export function PageList({
 						</div>
 
 						<div className="flex items-center gap-2">
-							<TagList
-								tag={pageWithRelations.tagPages.map((tagPage) => tagPage.tag)}
-							/>
 							<LikeButton
 								liked={pageWithRelations.likePages.length > 0}
 								likeCount={pageWithRelations._count.likePages}

@@ -64,7 +64,7 @@ type FetchParams = {
 	currentUserId?: string;
 	currentGuestId?: string;
 	pageOwnerId?: string;
-	isRecommended?: boolean;
+	isPopular?: boolean;
 	onlyUserOwn?: boolean;
 	locale?: string;
 };
@@ -75,7 +75,7 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	currentUserId,
 	currentGuestId,
 	pageOwnerId,
-	isRecommended = false,
+	isPopular = false,
 	onlyUserOwn = false,
 	locale = "en",
 }: FetchParams): Promise<{
@@ -99,8 +99,8 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	let orderBy:
 		| Prisma.PageOrderByWithRelationInput
 		| Prisma.PageOrderByWithRelationInput[];
-	if (isRecommended) {
-		orderBy = [{ createdAt: "desc" }, { likePages: { _count: "desc" } }];
+	if (isPopular) {
+		orderBy = [{ likePages: { _count: "desc" } }, { createdAt: "desc" }];
 	} else {
 		// 新着順（全体）
 		orderBy = { createdAt: "desc" };
