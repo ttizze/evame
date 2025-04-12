@@ -23,7 +23,7 @@ export function PopularPageListClient({
 
 	return (
 		<div className="space-y-6">
-			<div className="space-y-1">
+			<div className="">
 				{pagesWithRelations.map((pageWithRelations, index) => (
 					<PageList
 						key={pageWithRelations.id}

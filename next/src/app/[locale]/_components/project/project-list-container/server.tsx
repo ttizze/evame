@@ -1,7 +1,7 @@
 import type { ProjectWithRelations } from "@/app/[locale]/(common-layout)/user/[handle]/project/[id]/_db/queries.server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import type { LucideIcon } from "lucide-react";
-import { ProjectList } from "../project-list";
+import { ProjectList } from "../project-list.server";
 
 interface ProjectListContainerProps {
 	title: string;

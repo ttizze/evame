@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/auth";
 import type { SearchParams } from "nuqs/server";
 
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
@@ -41,6 +42,13 @@ const PopularPageList = dynamic(
 	},
 );
 
+const PopularPageTagsList = dynamic(
+	() => import("@/app/[locale]/_components/page/popular-page-tags-list/server"),
+	{
+		loading: () => <Skeleton className="h-[100px] w-full mb-6" />,
+	},
+);
+
 const NewPageList = dynamic(
 	() => import("@/app/[locale]/_components/page/new-page-list/server"),
 	{
@@ -62,7 +70,12 @@ const SortTabs = dynamic(
 		loading: () => <Skeleton className="h-[50px] w-full mb-4" />,
 	},
 );
-
+const PopularUsersList = dynamic(
+	() => import("@/app/[locale]/_components/user/popular-users-list/server"),
+	{
+		loading: () => <Skeleton className="h-[200px] w-full mb-6" />,
+	},
+);
 export const metadata: Metadata = {
 	title: "Evame - Home - Latest Pages",
 	description:
@@ -85,97 +98,123 @@ export default async function HomePage({
 	const currentUser = await getCurrentUser();
 	const { locale } = await params;
 	const { tab, sort } = await loadSearchParams(searchParams);
-
+	const MoreButtonClass = "rounded-full w-1/2 md:w-1/3";
 	return (
 		<div className="flex flex-col gap-8 justify-between mb-12">
 			{!currentUser && <HeroSection locale={locale} />}
 			<DynamicCommonTabs defaultTab={tab}>
 				{tab === "home" && (
-					<div className="space-y-8">
-						<PopularProjectList
-							handle={currentUser?.handle ?? ""}
-							page={1}
-							query={""}
-						/>
-						<div className="flex justify-center w-full mt-4">
-							<Button
-								variant="default"
-								size="default"
-								asChild
-								className="rounded-full w-1/2 md:w-1/3"
-							>
-								<Link
-									href={"?tab=projects&sort=popular"}
-									className="gap-1 flex items-center justify-center"
+					<div className="space-y-12">
+						<section>
+							<PopularProjectList
+								handle={currentUser?.handle ?? ""}
+								page={1}
+								query={""}
+							/>
+							<div className="flex justify-center w-full mt-6">
+								<Button
+									variant="default"
+									size="default"
+									asChild
+									className={MoreButtonClass}
 								>
-									View more
-									<ArrowRight className="h-3 w-3" />
-								</Link>
-							</Button>
-						</div>
-						<PopularPageList
-							locale={locale}
-							currentUserId={currentUser?.id ?? ""}
-							searchParams={searchParams}
-						/>
-						<div className="flex justify-center w-full mt-4">
-							<Button
-								variant="default"
-								size="default"
-								asChild
-								className="rounded-full w-1/2 md:w-1/3"
-							>
-								<Link
-									href={"?tab=pages&sort=popular"}
-									className="gap-1 flex items-center justify-center"
+									<Link
+										href={"?tab=projects&sort=popular"}
+										className="gap-1 flex items-center justify-center"
+									>
+										View more
+										<ArrowRight className="h-3 w-3" />
+									</Link>
+								</Button>
+							</div>
+						</section>
+
+						<section>
+							<PopularPageList
+								locale={locale}
+								currentUserId={currentUser?.id ?? ""}
+								searchParams={searchParams}
+							/>
+							<div className="flex justify-center w-full mt-6">
+								<Button
+									variant="default"
+									size="default"
+									asChild
+									className={MoreButtonClass}
 								>
-									View more
-									<ArrowRight className="h-3 w-3" />
-								</Link>
-							</Button>
+									<Link
+										href={"?tab=pages&sort=popular"}
+										className="gap-1 flex items-center justify-center"
+									>
+										View more
+										<ArrowRight className="h-3 w-3" />
+									</Link>
+								</Button>
+							</div>
+						</section>
+
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+							<section>
+								<h2 className="text-2xl font-bold mb-4">Popular Tags</h2>
+								<Card className="rounded-lg p-4 shadow-sm">
+									<PopularPageTagsList limit={10} />
+								</Card>
+							</section>
+							<section>
+								<h2 className="text-2xl font-bold mb-4">Popular Users</h2>
+								<Card className="rounded-lg p-4 shadow-sm">
+									<PopularUsersList limit={5} />
+								</Card>
+							</section>
 						</div>
-						<NewProjectList
-							handle={currentUser?.handle ?? ""}
-							page={1}
-							query={""}
-						/>
-						<div className="flex justify-center w-full mt-4">
-							<Button
-								variant="default"
-								size="default"
-								asChild
-								className="rounded-full w-1/2 md:w-1/3"
-							>
-								<Link
-									href={"?tab=projects&sort=new"}
-									className="gap-1 flex items-center justify-center"
+
+						<section>
+							<NewProjectList
+								handle={currentUser?.handle ?? ""}
+								page={1}
+								query={""}
+							/>
+							<div className="flex justify-center w-full mt-6">
+								<Button
+									variant="default"
+									size="default"
+									asChild
+									className={MoreButtonClass}
 								>
-									View more
-									<ArrowRight className="h-3 w-3" />
-								</Link>
-							</Button>
-						</div>
-						<NewPageList
-							locale={locale}
-							currentUserId={currentUser?.id ?? ""}
-							searchParams={searchParams}
-						/>
-						<div className="flex justify-center w-full mt-4">
-							<Button
-								variant="default"
-								size="default"
-								asChild
-								className="rounded-full w-1/2 md:w-1/3"
-							>
-								<Link
-									href={"?tab=pages&sort=new"}
-									className="gap-1 flex items-center justify-center"
+									<Link
+										href={"?tab=projects&sort=new"}
+										className="gap-1 flex items-center justify-center"
+									>
+										View more
+										<ArrowRight className="h-3 w-3" />
+									</Link>
+								</Button>
+							</div>
+						</section>
+
+						<section>
+							<NewPageList
+								locale={locale}
+								currentUserId={currentUser?.id ?? ""}
+								searchParams={searchParams}
+							/>
+							<div className="flex justify-center w-full mt-6">
+								<Button
+									variant="default"
+									size="default"
+									asChild
+									className={MoreButtonClass}
 								>
-									View more
-									<ArrowRight className="h-3 w-3" />
-								</Link>
-							</Button>
-						</div>
+									<Link
+										href={"?tab=pages&sort=new"}
+										className="gap-1 flex items-center justify-center"
+									>
+										View more
+										<ArrowRight className="h-3 w-3" />
+									</Link>
+								</Button>
+							</div>
+						</section>
 					</div>
 				)}
 				{tab === "projects" && (

@@ -84,7 +84,7 @@ export default async function UserPage({
 }) {
 	const { locale, handle } = await params;
 	const { page, query, tab, sort } = await loadSearchParams(searchParams);
-
+	const MoreButtonClass = "rounded-full w-1/2 md:w-1/3";
 	return (
 		<>
 			<DynamicUserInfo handle={handle} />
@@ -102,13 +102,13 @@ export default async function UserPage({
 								variant="default"
 								size="default"
 								asChild
-								className="rounded-full w-1/2 md:w-1/3"
+								className={MoreButtonClass}
 							>
 								<Link
 									href={"?tab=projects&sort=popular"}
 									className="gap-1 flex items-center justify-center"
 								>
-									View more projects
+									View more
 									<ArrowRight className="h-3 w-3" />
 								</Link>
 							</Button>
@@ -124,13 +124,13 @@ export default async function UserPage({
 								variant="default"
 								size="default"
 								asChild
-								className="rounded-full w-1/2 md:w-1/3"
+								className={MoreButtonClass}
 							>
 								<Link
 									href={"?tab=pages&sort=popular"}
 									className="gap-1 flex items-center justify-center"
 								>
-									View more pages
+									View more
 									<ArrowRight className="h-3 w-3" />
 								</Link>
 							</Button>

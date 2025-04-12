@@ -1,5 +1,5 @@
 import { ProjectLikeButton } from "@/app/[locale]/_components/project/project-like-button/server";
-import { Badge } from "@/components/ui/badge";
+import { ProjectTagList } from "@/app/[locale]/_components/project/project-tag-list.server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Carousel,
@@ -31,13 +31,6 @@ export function ProjectDetail({ project, locale }: ProjectDetailProps) {
 			<CardHeader className="pb-0">
 				<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
 					<CardTitle className="text-2xl font-bold">{project.title}</CardTitle>
-					<div className="flex flex-wrap gap-2">
-						{tags.map((tag) => (
-							<Badge key={tag.id} variant="secondary">
-								{tag.name}
-							</Badge>
-						))}
-					</div>
 				</div>
 			</CardHeader>
 
@@ -46,7 +39,7 @@ export function ProjectDetail({ project, locale }: ProjectDetailProps) {
 					<Carousel className="w-full">
 						<CarouselContent>
 							{project.images.map((image: ProjectImage) => (
-								<CarouselItem key={image.id}>
+								<CarouselItem key={image.id} className="basis-1/3">
 									<div className="relative aspect-video w-full overflow-hidden rounded-lg">
 										<Image
 											src={image.url}
@@ -74,7 +67,9 @@ export function ProjectDetail({ project, locale }: ProjectDetailProps) {
 				<div className="prose dark:prose-invert max-w-none">
 					<p className="whitespace-pre-wrap">{project.description}</p>
 				</div>
-
+				<div className="flex flex-wrap gap-2">
+					<ProjectTagList projectTag={tags} />
+				</div>
 				{project.links.length > 0 && (
 					<div className="space-y-2">
 						<h3 className="text-lg font-medium">Links</h3>

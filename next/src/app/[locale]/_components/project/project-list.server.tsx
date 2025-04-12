@@ -1,10 +1,9 @@
 import type { ProjectWithRelations } from "@/app/[locale]/(common-layout)/user/[handle]/project/[id]/_db/queries.server";
 import { Link } from "@/i18n/routing";
-import { Hash } from "lucide-react";
 import Image from "next/image";
 import { ProjectActionsDropdown } from "./project-actions-dropdown/client";
 import { ProjectLikeButton } from "./project-like-button/server";
-
+import { ProjectTagList } from "./project-tag-list.server";
 interface ProjectListProps {
 	projects: ProjectWithRelations[];
 	isOwner?: boolean;
@@ -59,19 +58,11 @@ export async function ProjectList({
 											{project.description}
 										</p>
 										<div className="flex flex-wrap gap-1 mt-2">
-											{project.projectTagRelations.map(
-												(relation) =>
-													relation?.projectTag && (
-														<Link
-															href={`/search?query=${encodeURIComponent(relation.projectTag.name)}&category=tags&tagPage=true`}
-															key={relation.projectTag.id}
-															className="flex items-center gap-1 px-3 h-[32px] !no-underline bg-secondary rounded-full text-sm text-secondary-foreground"
-														>
-															<Hash className="w-3 h-3" />
-															{relation.projectTag.name}
-														</Link>
-													),
-											)}
+											<ProjectTagList
+												projectTag={project.projectTagRelations.map(
+													(relation) => relation.projectTag,
+												)}
+											/>
 										</div>
 									</div>
 									<div className="ml-4 flex-shrink-0">
