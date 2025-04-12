@@ -49,6 +49,7 @@ export function createPageWithRelationsSelect(locale?: string) {
 		_count: {
 			select: {
 				likePages: true,
+				pageComments: true,
 			},
 		},
 	};

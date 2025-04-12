@@ -1,4 +1,5 @@
 import { ClientDateFormatter } from "@/app/[locale]/_components/client-date-formatter";
+import { PageCommentButton } from "@/app/[locale]/_components/page/page-comment-button/client";
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/client";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import type { PageWithRelationsType } from "@/app/[locale]/_db/queries.server";
@@ -105,6 +106,12 @@ export function PageList({
 								liked={pageWithRelations.likePages.length > 0}
 								likeCount={pageWithRelations._count.likePages}
 								slug={pageWithRelations.slug}
+								showCount
+							/>
+							<PageCommentButton
+								commentCount={pageWithRelations._count.pageComments}
+								slug={pageWithRelations.slug}
+								userHandle={pageWithRelations.user.handle}
 								showCount
 							/>
 						</div>
