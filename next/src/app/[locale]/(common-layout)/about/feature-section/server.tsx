@@ -58,7 +58,6 @@ export default async function FeatureSection({ locale }: { locale: string }) {
 
 	return (
 		<div className="container mx-auto px-4 py-16">
-
 			<div className="grid grid-cols-1 gap-8">
 				{featureCardPairs.map((pair, index) => (
 					<AboutSectionCard
