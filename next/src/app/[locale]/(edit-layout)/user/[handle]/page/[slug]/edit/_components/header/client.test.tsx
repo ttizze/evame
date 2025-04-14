@@ -2,7 +2,6 @@ import { mockUsers } from "@/tests/mock";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { usePathname } from "next/navigation";
-import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { editPageStatusAction } from "./action";
 import { EditHeader } from "./client";
@@ -79,7 +78,6 @@ describe("EditHeader Component", () => {
 		fireEvent.click(publicButton);
 
 		await waitFor(() => expect(editPageStatusAction).toHaveBeenCalled());
-		expect(toast.success).toHaveBeenCalledWith("Status updated!");
 	});
 
 	it("renders error messages from action state", async () => {

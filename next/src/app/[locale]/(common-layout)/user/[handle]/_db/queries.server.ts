@@ -64,11 +64,12 @@ export async function fetchFollowingList(userId: string) {
 	}));
 }
 
-export async function fetchProjectsWithPagination(
+export async function fetchUserProjectsWithPagination(
 	userId: string,
 	page = 1,
 	pageSize = 10,
 	searchTerm = "",
+	sort = "popular",
 ) {
 	const skip = (page - 1) * pageSize;
 	const whereClause = {
@@ -89,12 +90,16 @@ export async function fetchProjectsWithPagination(
 		],
 	};
 
+	// Define sort order based on sort parameter
+	const orderBy =
+		sort === "new"
+			? { createdAt: "desc" as const }
+			: { updatedAt: "desc" as const };
+
 	const [projectsWithRelations, totalCount] = await Promise.all([
 		prisma.project.findMany({
 			where: whereClause,
-			orderBy: {
-				updatedAt: "desc",
-			},
+			orderBy,
 			skip,
 			take: pageSize,
 			include: {

@@ -41,6 +41,13 @@ const config: NextConfig = {
 				search: "",
 			},
 			{
+				protocol: "https",
+				hostname: "github.com",
+				port: "",
+				pathname: "",
+				search: "",
+			},
+			{
 				protocol: "http",
 				hostname: "localhost",
 				port: "9000",

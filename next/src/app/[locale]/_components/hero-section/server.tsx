@@ -1,4 +1,4 @@
-import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/lib/fetch-about-page";
+import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/_lib/fetch-about-page";
 import { SegmentAndTranslationSection } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/segment-and-translation-section";
 import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { VOTE_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
@@ -7,6 +7,8 @@ import { StartButton } from "@/app/[locale]/_components/start-button";
 import { TranslateActionSection } from "@/app/[locale]/_components/translate-action-section";
 import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/queries.server";
 import { getCurrentUser } from "@/auth";
+import Image from "next/image";
+
 export default async function HeroSection({ locale }: { locale: string }) {
 	const currentUser = await getCurrentUser();
 	const currentHandle = currentUser?.handle;
@@ -29,12 +31,36 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	const heroText = text;
 	const sourceLocale = topPageWithTranslations.page.sourceLocale;
 	return (
-		<div className="prose dark:prose-invert sm:prose lg:prose-lg mx-auto px-2 py-10 flex flex-col items-center justify-center">
-			<div className="max-w-4xl w-full">
-				<h1 className="text-7xl font-bold mb-10 text-center">
+		<div className="relative overflow-hidden border pt-10 flex flex-col items-center justify-center">
+			<div className="absolute top-0 left-0 z-10">
+				<svg
+					width="24"
+					height="24"
+					viewBox="0 0 24 24"
+					fill="none"
+					xmlns="http://www.w3.org/2000/svg"
+				>
+					<title>Back</title>
+					<path d="M1 12H12M12 1V12" stroke="currentColor" strokeWidth="1" />
+				</svg>
+			</div>
+
+			<div className="flex justify-center mb-10 z-10">
+				<TranslateActionSection
+					pageId={0}
+					currentHandle={currentHandle}
+					userAITranslationInfo={null}
+					sourceLocale={sourceLocale}
+					pageAITranslationInfo={pageAITranslationInfo}
+					translateTarget={TranslateTarget.TRANSLATE_PAGE}
+					showIcons={false}
+				/>
+			</div>
+			<div className="relative z-10 px-4 md:px-8 max-w-4xl mx-auto">
+				<h1 className="text-2xl md:text-4xl font-bold mb-6 text-center">
 					<SegmentAndTranslationSection
 						segmentWithTranslations={heroTitle}
-						segmentTextClassName="w-full bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text !text-transparent mb-2"
+						segmentTextClassName="w-full mb-2"
 						elements={heroTitle.segment.text}
 						currentHandle={currentHandle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
@@ -43,17 +69,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 						}
 					/>
 				</h1>
-				<div className="flex justify-center mb-10">
-					<TranslateActionSection
-						pageId={0}
-						currentHandle={currentHandle}
-						userAITranslationInfo={null}
-						sourceLocale={sourceLocale}
-						pageAITranslationInfo={pageAITranslationInfo}
-						translateTarget={TranslateTarget.TRANSLATE_PAGE}
-						showIcons={false}
-					/>
-				</div>
+
 				<span className="text-xl mb-12 w-full">
 					<SegmentAndTranslationSection
 						segmentWithTranslations={heroText}
@@ -66,10 +82,103 @@ export default async function HeroSection({ locale }: { locale: string }) {
 						}
 					/>
 				</span>
-
 				<div className="mb-12 flex justify-center mt-10">
-					<StartButton className="w-60 h-12 text-xl" />
+					<StartButton
+						text="Join Now"
+						icon={
+							<Image
+								src="/favicon.svg"
+								alt="Hero section image"
+								width={14}
+								height={14}
+								className="relative z-10 invert"
+							/>
+						}
+						className="w-60 h-12 text-xl rounded-full transition-all duration-300 hover:scale-105"
+					/>
 				</div>
+				<div className="relative  my-10 flex justify-center">
+					<div
+						className="absolute inset-0 dark:hidden"
+						style={{
+							background: `
+      repeating-conic-gradient(from 0deg at 50% center,
+        rgba(0, 0, 0, 0.05) 0deg,
+        rgba(0, 0, 0, 0.05) 0.5deg,
+        transparent 0.5deg,
+        transparent 3deg)
+    `,
+							maskImage:
+								"linear-gradient(to bottom, transparent 0%, transparent 30%, black 40%, black 60%, transparent 70%, transparent 100%)",
+							WebkitMaskImage:
+								"linear-gradient(to bottom, transparent 0%, transparent 30%, black 40%, black 60%, transparent 70%, transparent 100%)",
+						}}
+					/>
+					<div
+						className="absolute inset-0 hidden dark:block"
+						style={{
+							background: `
+      repeating-conic-gradient(from 0deg at 50% center,
+        rgba(255, 255, 255, 0.05) 0deg,
+        rgba(255, 255, 255, 0.05) 0.5deg,
+        transparent 0.5deg,
+        transparent 3deg)
+    `,
+							maskImage:
+								"linear-gradient(to bottom, transparent 0%, transparent 30%, black 40%, black 60%, transparent 70%, transparent 100%)",
+							WebkitMaskImage:
+								"linear-gradient(to bottom, transparent 0%, transparent 30%, black 40%, black 60%, transparent 70%, transparent 100%)",
+						}}
+					/>
+					{/* 色線（右側だけにマスク） */}
+					<div
+						className="absolute inset-0"
+						style={{
+							background: `
+repeating-conic-gradient(from -45deg at 50% center,
+          rgba(255, 0, 0, 0.3) 0deg,
+          rgba(255, 0, 0, 0.3) 1deg,
+          transparent 1deg,
+          transparent 20deg),
+        repeating-conic-gradient(from 0deg at 50% center,
+          rgba(0, 255, 0, 0.3) 0deg,
+          rgba(0, 255, 0, 0.3) 1deg,
+          transparent 1deg,
+          transparent 20deg),
+        repeating-conic-gradient(from 45deg at 50% center,
+          rgba(0, 100, 255, 0.3) 0deg,
+          rgba(0, 100, 255, 0.3) 1deg,
+          transparent 1deg,
+          transparent 20deg)
+      `,
+							WebkitMaskImage:
+								"linear-gradient(to right, transparent 52%, black 52%)",
+							maskImage:
+								"linear-gradient(to right, transparent 52%, black 52%)",
+						}}
+					/>
+
+					<Image
+						src="/favicon.svg"
+						alt="Hero section image"
+						width={100}
+						height={100}
+						className="relative z-10"
+					/>
+				</div>
+			</div>
+			<div className="absolute bottom-0 right-0 z-10">
+				<svg
+					width="24"
+					height="24"
+					viewBox="0 0 24 24"
+					fill="none"
+					xmlns="http://www.w3.org/2000/svg"
+					style={{ transform: "rotate(180deg)" }}
+				>
+					<title>Square Corner</title>
+					<path d="M1 12H12M12 1V12" stroke="currentColor" strokeWidth="1" />
+				</svg>
 			</div>
 		</div>
 	);

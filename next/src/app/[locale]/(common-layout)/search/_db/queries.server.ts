@@ -1,11 +1,102 @@
 // app/routes/search/functions/queries.server.ts
 
-import type { PageCardLocalizedType } from "@/app/[locale]/_db/queries.server";
-import { createPageCardSelect } from "@/app/[locale]/_db/queries.server";
+import type { PageWithRelationsType } from "@/app/[locale]/_db/queries.server";
+import { createPageWithRelationsSelect } from "@/app/[locale]/_db/queries.server";
 import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";
 import { sanitizeUser } from "@/lib/sanitize-user";
 import type { Tag } from "@prisma/client";
+import type { Category } from "../constants";
+
+/** 検索結果を統合的に取得する */
+export async function fetchSearchResults({
+	query,
+	category,
+	page,
+	locale = "en-US",
+	tagPage = "false",
+}: {
+	query: string;
+	category: Category;
+	page: number;
+	locale?: string;
+	tagPage?: string;
+}) {
+	if (!query || page < 1) {
+		return {
+			pages: [],
+			tags: [],
+			users: [],
+			totalPages: 0,
+		};
+	}
+
+	const PAGE_SIZE = 10;
+	const skip = (page - 1) * PAGE_SIZE;
+	const take = PAGE_SIZE;
+
+	let pages = undefined;
+	let tags: Tag[] | undefined = undefined;
+	let users: SanitizedUser[] | undefined = undefined;
+	let totalCount = 0;
+
+	switch (category) {
+		case "title": {
+			const { pagesWithRelations: resultPages, totalCount: cnt } =
+				await searchTitle(query, skip, take, locale);
+			pages = resultPages;
+			totalCount = cnt;
+			break;
+		}
+		case "content": {
+			const { pagesWithRelations: resultPages, totalCount: cnt } =
+				await searchContent(query, skip, take, locale);
+			pages = resultPages;
+			totalCount = cnt;
+			break;
+		}
+		case "tags": {
+			if (tagPage === "true") {
+				const { pagesWithRelations: resultPages, totalCount: cnt } =
+					await searchByTag(query, skip, take, locale);
+				pages = resultPages;
+				totalCount = cnt;
+			} else {
+				const { tags: resultTags, totalCount: cnt } = await searchTags(
+					query,
+					skip,
+					take,
+				);
+				tags = resultTags;
+				totalCount = cnt;
+			}
+			break;
+		}
+		case "user": {
+			const { users: resultUsers, totalCount: cnt } = await searchUsers(
+				query,
+				skip,
+				take,
+			);
+			users = resultUsers;
+			totalCount = cnt;
+			break;
+		}
+		default: {
+			throw new Error("Invalid category");
+		}
+	}
+
+	const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+	return {
+		pages,
+		tags,
+		users,
+		totalPages,
+	};
+}
+
 /** タイトル検索 */
 export async function searchTitle(
 	query: string,
@@ -13,11 +104,11 @@ export async function searchTitle(
 	take: number,
 	locale: string,
 ): Promise<{
-	pages: PageCardLocalizedType[];
+	pagesWithRelations: PageWithRelationsType[];
 	totalCount: number;
 }> {
-	const pageCardSelect = createPageCardSelect(locale);
-	const [pages, count] = await Promise.all([
+	const pageWithRelationsSelect = createPageWithRelationsSelect(locale);
+	const [pagesWithRelations, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
 			take,
@@ -30,7 +121,7 @@ export async function searchTitle(
 				},
 				status: "PUBLIC",
 			},
-			select: pageCardSelect,
+			select: pageWithRelationsSelect,
 		}),
 		prisma.page.count({
 			where: {
@@ -45,12 +136,7 @@ export async function searchTitle(
 		}),
 	]);
 
-	const pagesWithInfo = pages.map((page) => ({
-		...page,
-		createdAt: new Date(page.createdAt).toLocaleDateString(locale),
-	})) as PageCardLocalizedType[];
-
-	return { pages: pagesWithInfo, totalCount: count };
+	return { pagesWithRelations, totalCount: count };
 }
 
 /** タグ名でページを検索 */
@@ -60,11 +146,11 @@ export async function searchByTag(
 	take: number,
 	locale: string,
 ): Promise<{
-	pages: PageCardLocalizedType[];
+	pagesWithRelations: PageWithRelationsType[];
 	totalCount: number;
 }> {
-	const pageCardSelect = createPageCardSelect(locale);
-	const [pages, count] = await Promise.all([
+	const pageWithRelationsSelect = createPageWithRelationsSelect(locale);
+	const [pagesWithRelations, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
 			take,
@@ -78,7 +164,7 @@ export async function searchByTag(
 				},
 				status: "PUBLIC",
 			},
-			select: pageCardSelect,
+			select: pageWithRelationsSelect,
 		}),
 		prisma.page.count({
 			where: {
@@ -94,12 +180,7 @@ export async function searchByTag(
 		}),
 	]);
 
-	const pagesWithInfo = pages.map((page) => ({
-		...page,
-		createdAt: new Date(page.createdAt).toLocaleDateString(locale),
-	})) as PageCardLocalizedType[];
-
-	return { pages: pagesWithInfo, totalCount: count };
+	return { pagesWithRelations, totalCount: count };
 }
 
 /** コンテンツ検索 */
@@ -109,11 +190,11 @@ export async function searchContent(
 	take: number,
 	locale = "en-US",
 ): Promise<{
-	pages: PageCardLocalizedType[];
+	pagesWithRelations: PageWithRelationsType[];
 	totalCount: number;
 }> {
-	const pageCardSelect = createPageCardSelect(locale);
-	const [pages, count] = await Promise.all([
+	const pageWithRelationsSelect = createPageWithRelationsSelect(locale);
+	const [pagesWithRelations, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
 			take,
@@ -121,7 +202,7 @@ export async function searchContent(
 				content: { contains: query, mode: "insensitive" },
 				status: "PUBLIC",
 			},
-			select: pageCardSelect,
+			select: pageWithRelationsSelect,
 		}),
 		prisma.page.count({
 			where: {
@@ -131,12 +212,7 @@ export async function searchContent(
 		}),
 	]);
 
-	const pagesWithInfo = pages.map((page) => ({
-		...page,
-		createdAt: new Date(page.createdAt).toLocaleDateString(locale),
-	})) as PageCardLocalizedType[];
-
-	return { pages: pagesWithInfo, totalCount: count };
+	return { pagesWithRelations, totalCount: count };
 }
 
 /** タグ検索 (Tag.name) → Tag[] */

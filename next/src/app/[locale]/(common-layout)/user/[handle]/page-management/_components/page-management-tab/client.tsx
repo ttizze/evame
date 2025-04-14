@@ -1,6 +1,6 @@
 "use client";
 
-import { PageActionsDropdown } from "@/app/[locale]/_components/page-actions-dropdown/client";
+import { PageActionsDropdown } from "@/app/[locale]/_components/page/page-actions-dropdown/client";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";

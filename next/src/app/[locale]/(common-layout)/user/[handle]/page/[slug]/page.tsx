@@ -20,10 +20,10 @@ const DynamicContentWithTranslations = dynamic(
 		loading: () => <Skeleton className="h-[500px] w-full" />,
 	},
 );
-const DynamicLikeButton = dynamic(
+const DynamicPageLikeButton = dynamic(
 	() =>
-		import("@/app/[locale]/_components/like-button/client").then(
-			(mod) => mod.LikeButton,
+		import("@/app/[locale]/_components/page/page-like-button/server").then(
+			(mod) => mod.PageLikeButton,
 		),
 	{
 		loading: () => <span>Loading LikeButton...</span>,
@@ -32,7 +32,7 @@ const DynamicLikeButton = dynamic(
 
 const DynamicFloatingControls = dynamic(
 	() =>
-		import("./_components/floating-controls").then(
+		import("../../../../../_components/floating-controls.client").then(
 			(mod) => mod.FloatingControls,
 		),
 	{
@@ -138,8 +138,6 @@ export default async function Page({
 		currentUser,
 		pageAITranslationInfo,
 		userAITranslationInfo,
-		likeCount,
-		isLikedByUser,
 		pageCommentsCount,
 	} = data;
 
@@ -158,10 +156,8 @@ export default async function Page({
 					showTranslation={showTranslation}
 				/>
 				<div className="flex items-center gap-4">
-					<DynamicLikeButton
-						liked={isLikedByUser}
-						likeCount={likeCount}
-						slug={slug}
+					<DynamicPageLikeButton
+						pageId={pageWithTranslations.page.id}
 						showCount
 					/>
 					<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
@@ -169,14 +165,17 @@ export default async function Page({
 				</div>
 
 				<DynamicFloatingControls
-					liked={isLikedByUser}
-					likeCount={likeCount}
-					slug={slug}
+					likeButton={
+						<DynamicPageLikeButton
+							pageId={pageWithTranslations.page.id}
+							showCount={false}
+						/>
+					}
 					shareTitle={title}
 				/>
 
 				<div className="mt-8">
-					<div className="mt-8">
+					<div className="mt-8" id="comments">
 						<div className="flex items-center gap-2 py-2">
 							<h2 className="text-2xl not-prose font-bold">Comments</h2>
 							<DynamicTranslateActionSection

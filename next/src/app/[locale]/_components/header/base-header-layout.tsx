@@ -41,7 +41,7 @@ export function BaseHeaderLayout({
 	return (
 		<div ref={headerRef}>
 			<header
-				className={`z-50 bg-background transition-all duration-300 ${
+				className={`z-50 bg-background rounded-full transition-all duration-300 ${
 					!isVisible ? "-translate-y-full" : "translate-y-0"
 				} ${
 					isPinned ? "fixed top-0 left-0 right-0 shadow-md" : ""
