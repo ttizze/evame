@@ -1,4 +1,4 @@
-import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/lib/fetch-about-page";
+import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/_lib/fetch-about-page";
 import { SegmentAndTranslationSection } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/segment-and-translation-section";
 import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { VOTE_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";

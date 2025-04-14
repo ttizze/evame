@@ -76,6 +76,30 @@ const PopularUsersList = dynamic(
 		loading: () => <Skeleton className="h-[200px] w-full mb-6" />,
 	},
 );
+const DynamicHeroSection = dynamic(
+	() => import("@/app/[locale]/_components/hero-section/server"),
+	{
+		loading: () => <Skeleton className="h-[845px] w-full" />,
+	},
+);
+
+const DynamicProblemSolutionSection = dynamic(
+	() => import("@/app/[locale]/_components/problem-solution-section/server"),
+	{
+		loading: () => <Skeleton className="h-[845px] w-full" />,
+	},
+);
+
+const DynamicControl = dynamic(
+	() =>
+		import("@/app/[locale]/_components/top-page-control.server").then(
+			(mod) => mod.default,
+		),
+	{
+		loading: () => <Skeleton className="h-[845px] w-full" />,
+	},
+);
+import { StartButton } from "@/app/[locale]/_components/start-button";
 export const metadata: Metadata = {
 	title: "Evame - Home - Latest Pages",
 	description:
@@ -101,7 +125,16 @@ export default async function HomePage({
 	const MoreButtonClass = "rounded-full w-1/2 md:w-1/3";
 	return (
 		<div className="flex flex-col gap-8 justify-between mb-12">
-			{!currentUser && <HeroSection locale={locale} />}
+			{!currentUser && (
+				<>
+					<DynamicHeroSection locale={locale} />
+					<DynamicProblemSolutionSection locale={locale} />
+					<div className="mb-32 flex justify-center mt-10">
+						<StartButton className="w-60 h-12 text-xl" text="Get Started" />
+					</div>
+				</>
+			)}
+			<DynamicControl locale={locale} />
 			<DynamicCommonTabs defaultTab={tab}>
 				{tab === "home" && (
 					<div className="space-y-12">

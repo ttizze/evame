@@ -1,7 +1,7 @@
 import { getCurrentUser } from "@/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import dynamic from "next/dynamic";
-import { fetchAboutPage } from "../lib/fetch-about-page";
+import { fetchAboutPage } from "../_lib/fetch-about-page";
 
 const DynamicFloatingControls = dynamic(
 	() =>

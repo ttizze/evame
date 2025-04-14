@@ -3,18 +3,15 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { StartButton } from "../../_components/start-button";
 
-const HeroSection = dynamic(
+const DynamicHeroSection = dynamic(
 	() => import("@/app/[locale]/_components/hero-section/server"),
 	{
 		loading: () => <Skeleton className="h-[845px] w-full" />,
 	},
 );
 
-const ProblemSolutionSection = dynamic(
-	() =>
-		import(
-			"@/app/[locale]/(common-layout)/about/problem-solution-section/server"
-		),
+const DynamicProblemSolutionSection = dynamic(
+	() => import("@/app/[locale]/_components/problem-solution-section/server"),
 	{
 		loading: () => <Skeleton className="h-[845px] w-full" />,
 	},
@@ -23,7 +20,7 @@ const ProblemSolutionSection = dynamic(
 const DynamicControl = dynamic(
 	() =>
 		import(
-			"@/app/[locale]/(common-layout)/about/problem-solution-section/control.server"
+			"@/app/[locale]/(common-layout)/about/_components/control.server"
 		).then((mod) => mod.default),
 	{
 		loading: () => <Skeleton className="h-[845px] w-full" />,
@@ -53,10 +50,10 @@ export default async function AboutPage({
 
 	return (
 		<div className="flex flex-col">
-			<HeroSection locale={locale} />
-			<ProblemSolutionSection locale={locale} />
-			<div className="mb-12 flex justify-center mt-10">
-				<StartButton className="w-60 h-12 text-xl" />
+			<DynamicHeroSection locale={locale} />
+			<DynamicProblemSolutionSection locale={locale} />
+			<div className="mb-32 flex justify-center mt-10">
+				<StartButton className="w-60 h-12 text-xl" text="Get Started" />
 			</div>
 			<DynamicControl locale={locale} />
 		</div>

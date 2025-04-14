@@ -1,10 +1,10 @@
-import Globe from "@/app/[locale]/(common-layout)/about/problem-solution-section/globe";
 import { SegmentAndTranslationSection } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/segment-and-translation-section";
 import {
 	ADD_TRANSLATION_FORM_TARGET,
 	VOTE_TARGET,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
+import Globe from "@/app/[locale]/_components/problem-solution-section/components/globe.client";
 import { getCurrentUser } from "@/auth";
 import {
 	HandshakeIcon,
@@ -13,12 +13,12 @@ import {
 	TrendingUp,
 	Users,
 } from "lucide-react";
-import { FloatingControls } from "../../../_components/floating-controls.client";
-import AboutSectionCard from "../about-section-card";
-import { fetchAboutPage } from "../lib/fetch-about-page";
-import EditorMovie from "./editor-movie";
-import Reactions from "./reactions";
-import { SpreadOtherLanguage } from "./spread-other-language";
+import { fetchAboutPage } from "../../(common-layout)/about/_lib/fetch-about-page";
+import { FloatingControls } from "../floating-controls.client";
+import AboutSectionCard from "./components/about-section-card.server";
+import EditorMovie from "./components/editor-movie.server";
+import Reactions from "./components/reaction.client";
+import { SpreadOtherLanguage } from "./components/spread-other-language";
 export default async function ProblemSolutionSection({
 	locale,
 }: { locale: string }) {
@@ -92,9 +92,9 @@ export default async function ProblemSolutionSection({
 	}
 
 	return (
-		<div className="py-16 border-x">
+		<div className="pt-16 border-x">
 			{/* Problem Section */}
-			<div className="mb-16">
+			<div className="">
 				<div className="border-b">
 					<h2 className="text-2xl font-bold text-center mb-10">
 						<SegmentAndTranslationSection
