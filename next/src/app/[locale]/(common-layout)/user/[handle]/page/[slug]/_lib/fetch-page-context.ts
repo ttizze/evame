@@ -5,9 +5,7 @@ import { getGuestId } from "@/lib/get-guest-id";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import {
-	fetchIsLikedByUser,
 	fetchLatestUserAITranslationInfo,
-	fetchLikeCount,
 	fetchPageCommentsCount,
 } from "../_db/queries.server";
 
@@ -53,20 +51,12 @@ export const fetchPageContext = cache(
 		const [
 			pageAITranslationInfo,
 			userAITranslationInfo,
-			likeCount,
-			isLikedByUser,
 			pageCommentsCount,
 		] = await Promise.all([
 			fetchLatestPageAITranslationInfo(pageWithTranslations.page.id),
 			fetchLatestUserAITranslationInfo(
 				pageWithTranslations.page.id,
 				currentUser?.id ?? "0",
-			),
-			fetchLikeCount(pageWithTranslations.page.id),
-			fetchIsLikedByUser(
-				pageWithTranslations.page.id,
-				currentUser?.id,
-				guestId,
 			),
 			fetchPageCommentsCount(pageWithTranslations.page.id),
 		]);
@@ -76,8 +66,6 @@ export const fetchPageContext = cache(
 			title,
 			pageAITranslationInfo,
 			userAITranslationInfo,
-			likeCount,
-			isLikedByUser,
 			pageCommentsCount,
 		};
 	},

@@ -32,7 +32,7 @@ const DynamicPageLikeButton = dynamic(
 
 const DynamicFloatingControls = dynamic(
 	() =>
-		import("./_components/floating-controls").then(
+		import("../../../../../_components/floating-controls.client").then(
 			(mod) => mod.FloatingControls,
 		),
 	{
@@ -138,8 +138,6 @@ export default async function Page({
 		currentUser,
 		pageAITranslationInfo,
 		userAITranslationInfo,
-		likeCount,
-		isLikedByUser,
 		pageCommentsCount,
 	} = data;
 
@@ -170,7 +168,7 @@ export default async function Page({
 					likeButton={
 						<DynamicPageLikeButton
 							pageId={pageWithTranslations.page.id}
-							showCount
+							showCount={false}
 						/>
 					}
 					shareTitle={title}

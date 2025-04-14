@@ -20,6 +20,12 @@ const ProblemSolutionSection = dynamic(
 	},
 );
 
+const DynamicControl = dynamic(
+	() => import("@/app/[locale]/(common-layout)/about/problem-solution-section/control.server").then((mod) => mod.default),
+	{
+		loading: () => <Skeleton className="h-[845px] w-full" />,
+	},
+);
 export const metadata: Metadata = {
 	title: "Evame - About",
 	description:
@@ -49,6 +55,7 @@ export default async function AboutPage({
 			<div className="mb-12 flex justify-center mt-10">
 				<StartButton className="w-60 h-12 text-xl" />
 			</div>
+			<DynamicControl locale={locale} />
 		</div>
 	);
 }

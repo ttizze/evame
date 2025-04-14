@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Languages, Text } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useContentDisplayState } from "./hooks/use-content-display-state";
-import { ShareDialog } from "./share-dialog";
+import { useContentDisplayState } from "../(common-layout)/user/[handle]/page/[slug]/_components/hooks/use-content-display-state";
+import { ShareDialog } from "../(common-layout)/user/[handle]/page/[slug]/_components/share-dialog";
 interface FloatingControlsProps {
 	shareTitle: string;
 	likeButton?: React.ReactNode;
@@ -17,7 +17,7 @@ export function FloatingControls({
 	shareTitle,
 	position = `fixed bottom-4 right-4 md:right-auto md:left-1/2 
 			md:-translate-x-1/2 max-w-prose w-full px-4 md:px-0 
-			duration-300 z-999`,
+			duration-300 `,
 	alwaysVisible = false,
 }: FloatingControlsProps) {
 	const [isVisible, setIsVisible] = useState(alwaysVisible);
@@ -31,7 +31,7 @@ export function FloatingControls({
 		baseClasses: "h-12 w-12 rounded-full",
 		toggledOffClasses: `bg-muted after:absolute after:w-full after:h-[1px] after:bg-current after:top-1/2 
 		after:left-0 after:origin-center after:-rotate-45`,
-		containerClasses: `${position} w-64 border rounded-full p-2 bg-gray-50 dark:bg-gray-900 shadow-lg dark:shadow-gray-900`,
+		containerClasses: `${position} z-999 w-64 border rounded-full p-2 bg-gray-50 dark:bg-gray-900 shadow-lg dark:shadow-gray-900`,
 		tocContainerClasses:
 			"bg-background mb-3 p-4 rounded-xl drop-shadow-xl dark:drop-shadow-[0_9px_7px_rgba(255,255,255,0.1)] border border-border animate-in zoom-in-95 duration-200",
 	};

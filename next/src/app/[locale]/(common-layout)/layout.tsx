@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import dynamic from "next/dynamic";
-import { FloatingControls } from "./user/[handle]/page/[slug]/_components/floating-controls";
+
 const Header = dynamic(
 	() => import("@/app/[locale]/_components/header").then((mod) => mod.Header),
 	{
@@ -24,7 +24,6 @@ export default async function CommonLayout({
 				<main className="mb-5 mt-3 md:mt-5 flex-grow tracking-wider">
 					<div className="mx-auto px-2 max-w-4xl">{children}</div>
 				</main>
-				<FloatingControls shareTitle="evame" />
 				<Footer />
 			</NextIntlClientProvider>
 		</>

@@ -13,7 +13,7 @@ import {
 	TrendingUp,
 	Users,
 } from "lucide-react";
-import { FloatingControls } from "../../user/[handle]/page/[slug]/_components/floating-controls";
+import { FloatingControls } from "../../../_components/floating-controls.client";
 import AboutSectionCard from "../about-section-card";
 import { fetchAboutPage } from "../lib/fetch-about-page";
 import EditorMovie from "./editor-movie";
