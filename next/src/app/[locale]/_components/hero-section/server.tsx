@@ -31,7 +31,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	const heroText = text;
 	const sourceLocale = topPageWithTranslations.page.sourceLocale;
 	return (
-		<div className="relative overflow-hidden border py-10 flex flex-col items-center justify-center">
+		<div className="relative overflow-hidden border pt-10 flex flex-col items-center justify-center">
 			<div className="absolute top-0 left-0 z-10">
 				<svg
 					width="24"
@@ -97,7 +97,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 						className="w-60 h-12 text-xl rounded-full transition-all duration-300 hover:scale-105"
 					/>
 				</div>
-				<div className="relative  mt-10 flex justify-center">
+				<div className="relative  my-10 flex justify-center">
 					<div
 						className="absolute inset-0 dark:hidden"
 						style={{
@@ -166,6 +166,19 @@ repeating-conic-gradient(from -45deg at 50% center,
 						className="relative z-10"
 					/>
 				</div>
+			</div>
+			<div className="absolute bottom-0 right-0 z-10">
+				<svg
+					width="24"
+					height="24"
+					viewBox="0 0 24 24"
+					fill="none"
+					xmlns="http://www.w3.org/2000/svg"
+					style={{ transform: "rotate(180deg)" }}
+				>
+					<title>Square Corner</title>
+					<path d="M1 12H12M12 1V12"  stroke="currentColor" strokeWidth="1" />
+				</svg>
 			</div>
 		</div>
 	);
