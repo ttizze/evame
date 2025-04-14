@@ -142,10 +142,7 @@ export default async function HomePage({
 				{tab === "home" && (
 					<div className="space-y-12">
 						<section>
-							<PopularProjectList
-								page={1}
-								query={""}
-							/>
+							<PopularProjectList page={1} query={""} />
 							<div className="flex justify-center w-full mt-6">
 								<Button
 									variant="default"
