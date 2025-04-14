@@ -11,7 +11,10 @@ const DynamicHeroSection = dynamic(
 );
 
 const DynamicProblemSolutionSection = dynamic(
-	() => import("@/app/[locale]/_components/top-page/problem-solution-section/server"),
+	() =>
+		import(
+			"@/app/[locale]/_components/top-page/problem-solution-section/server"
+		),
 	{
 		loading: () => <Skeleton className="h-[845px] w-full" />,
 	},
