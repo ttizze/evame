@@ -7,7 +7,7 @@ import { getCurrentUser } from "@/auth";
 import { LanguagesIcon, Pencil, TrendingUp } from "lucide-react";
 import AboutSectionCard from "../about-section-card";
 import { fetchAboutPage } from "../lib/fetch-about-page";
-
+import EditorMovie from "./editor-movie";
 export default async function FeatureSection({ locale }: { locale: string }) {
 	const currentUser = await getCurrentUser();
 	const currentHandle = currentUser?.handle;
@@ -46,25 +46,18 @@ export default async function FeatureSection({ locale }: { locale: string }) {
 			<TrendingUp className="h-6 w-6 text-teal-500" />
 		</div>,
 	];
+	const featureComponents = [
+		<EditorMovie key="component-1" />,
+		// Add your second component here
+		<EditorMovie key="component-2" />,
+		<EditorMovie key="component-3" />,
+	];
 	if (!featureHeader || featureCardPairs.length === 0) {
 		return null;
 	}
 
 	return (
 		<div className="container mx-auto px-4 py-16">
-			<h2 className="text-3xl font-bold text-center mb-10">
-				{featureHeader && (
-					<SegmentAndTranslationSection
-						segmentWithTranslations={featureHeader}
-						elements={featureHeader.segment.text}
-						currentHandle={currentHandle}
-						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
-						addTranslationFormTarget={
-							ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
-						}
-					/>
-				)}
-			</h2>
 
 			<div className="grid grid-cols-1 gap-8">
 				{featureCardPairs.map((pair, index) => (
@@ -93,6 +86,7 @@ export default async function FeatureSection({ locale }: { locale: string }) {
 								}
 							/>
 						}
+						component={<EditorMovie />}
 					/>
 				))}
 			</div>

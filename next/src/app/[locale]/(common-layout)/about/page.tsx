@@ -51,12 +51,10 @@ export default async function AboutPage({
 	return (
 		<div className="flex flex-col">
 			<HeroSection locale={locale} />
-			<div className="container mx-auto px-4 ">
-				<ProblemSolutionSection locale={locale} />
-				<FeatureSection locale={locale} />
-				<div className="mb-12 flex justify-center mt-10">
-					<StartButton className="w-60 h-12 text-xl" />
-				</div>
+			<ProblemSolutionSection locale={locale} />
+			<FeatureSection locale={locale} />
+			<div className="mb-12 flex justify-center mt-10">
+				<StartButton className="w-60 h-12 text-xl" />
 			</div>
 		</div>
 	);

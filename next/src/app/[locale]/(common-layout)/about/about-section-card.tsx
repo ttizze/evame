@@ -1,24 +1,24 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 interface AboutSectionCardProps {
 	icon: React.ReactNode;
 	title: React.ReactNode;
 	description: React.ReactNode;
+	component: React.ReactNode;
 }
 
 export default async function AboutSectionCard({
 	icon,
 	title,
 	description,
+	component,
 }: AboutSectionCardProps) {
 	return (
-		<Card className="h-full flex flex-col">
-			<CardHeader className="flex flex-row items-center gap-2">
-				<div className="rounded-full p-2 bg-primary/10 text-primary">
-					{icon}
-				</div>
-				<CardTitle className="text-xl">{title}</CardTitle>
-			</CardHeader>
-			<CardContent className="flex-1">{description}</CardContent>
-		</Card>
+		<div className="h-full flex flex-col px-8 py-8 border-b">
+			<div className="flex flex-row items-center gap-2">
+				{icon}
+				<p className="text-lg">{title}</p>
+			</div>
+			<p className="text-md ">{description}</p>
+			{component}
+		</div>
 	);
 }

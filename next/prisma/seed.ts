@@ -1,218 +1,177 @@
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
-const JA_HERO_HEADER = "多言語ブログ";
-const JA_HERO_TEXT = `『Evame』は記事もコメントも自動翻訳する多言語ブログプラットフォームです。
-言語の壁を超え､あなたの言葉を世界に届け、国際的な交流や知識の共有を手軽に実現します。
-もっと多くの人に読んでほしいブロガーやライター、国際的なコミュニティを築きたい企業・メディア、グローバルに知識や情報を共有したい研究者や教育者・専門家に最適です。
-Evameで世界への扉を開きましょう。`;
+const JA_HERO_HEADER = "開発者のためのグローバルコミュニティ";
+const JA_HERO_TEXT = `『Evame』は、開発者がプロジェクトを世界に広め、グローバルなユーザーを獲得できる多言語コミュニティです。
+技術的な解説やストーリーを記事として発信したり、取り組んでいる製品やプロジェクトを共有し、世界中の開発者やユーザーと交流できます。
+言語の壁を気にせず、グローバルな認知度アップと技術交流を同時に実現しましょう。`;
+
 const JA_OUR_PROBLEM_HEADER = "言語の壁が、あなたの可能性を閉じ込めている";
-const JA_OUR_PROBLEM_1_HEADER = "限られた読者層";
-const JA_OUR_PROBLEM_1_TEXT = `どれだけ価値ある記事を書いても、一つの言語では潜在読者の90%以上にリーチできず、
-本来届くべき世界中の人々にあなたのメッセージが届いていません。`;
-const JA_OUR_PROBLEM_2_HEADER = "高すぎる多言語化のコストと手間";
-const JA_OUR_PROBLEM_2_TEXT = `専門の翻訳サービスは1記事あたり数万円のコストがかかり、自力で多言語対応するには膨大な時間と専門知識が必要。
-結果として多言語展開を諦めるケースが多発しています。`;
-const JA_OUR_PROBLEM_3_HEADER = "国際的な出会いの機会損失";
-const JA_OUR_PROBLEM_3_TEXT = `言語の異なる読者からのコメントやフィードバックを得られず、
-世界中の視点や知見を取り入れる貴重な機会を逃しています。`;
 
-const JA_OUR_SOLUTION_HEADER = "あなたの想いを世界に届ける";
-const JA_OUR_SOLUTION_1_HEADER = "世界の読者を獲得";
-const JA_OUR_SOLUTION_1_TEXT = `『Evame』なら、あなたがいつものように書くだけで自動で翻訳。
-世界中の何十億人もの読者にリーチし、メッセージを国際的に広げられます。`;
-const JA_OUR_SOLUTION_2_HEADER = "無料で多言語対応";
-const JA_OUR_SOLUTION_2_TEXT = `『Evame』なら、多言語対応を無料で始められます。
-`;
-const JA_OUR_SOLUTION_3_HEADER = "新たな出会いの機会";
-const JA_OUR_SOLUTION_3_TEXT = `『Evame』なら、言語の違いを超えて、世界中の読者との新たな出会いを手軽に実現できます。
-異なる言語・文化圏の読者からフィードバックを得ることで、新しい視点や考え方に触れ、あなたの思考と創造性を広げます。`;
+const JA_OUR_PROBLEM_1_HEADER = "自動多言語翻訳";
+const JA_OUR_PROBLEM_1_TEXT = `どれだけ優れたプロジェクトでも、一つの言語で発信するだけでは、世界中の潜在ユーザーの90%以上に届いていません。
+Evameでは、プロジェクトや記事を投稿すると、AIによって自動で多言語に翻訳され、世界中に自然に広がります。`;
 
-const EN_HERO_HEADER = "Multilingual Blog";
-const EN_HERO_TEXT = `"Evame" is a multilingual blogging platform that automatically translates both articles and comments.
-Overcome language barriers, share your words globally, and effortlessly facilitate international exchange and knowledge sharing.
-Ideal for bloggers and writers seeking a wider audience, companies and media aiming to build global communities, and researchers, educators, and experts wishing to globally share their knowledge and information.
-Open the door to the world with Evame.`;
+const JA_OUR_PROBLEM_2_HEADER = "翻訳コメントによる国際交流";
+const JA_OUR_PROBLEM_2_TEXT = `他の言語圏との交流は閉ざされていて、言語をまたいだ議論やフィードバックは実質的に不可能です。
+Evameでは、コメントも自動的に翻訳され、誰もが世界の開発者と自然に会話できます。`;
+
+const JA_OUR_PROBLEM_3_HEADER = "ユーザーと紡ぐ物語";
+const JA_OUR_PROBLEM_3_TEXT = `どれだけ優れた製品や技術であっても、その背景にある想いやストーリーが伝わらなければ、人々の心は動きません。
+Evameでは、あなたの製品開発の過程や技術的な挑戦を記事やコメントとして発信することで、世界中のユーザーとつながり、物語を共有しながら、共感とともにファンや仲間が自然と集まってきます。`;
+const EN_HERO_HEADER = "Global Community for Developers";
+const EN_HERO_TEXT = `"Evame" is a multilingual platform where developers can publish projects, articles, and comments, which are automatically translated into multiple languages and shared globally.
+Break down language barriers to gain visibility, connect with developers and users around the world, and grow together through global collaboration.`;
 
 const EN_OUR_PROBLEM_HEADER =
-	"Language barriers are holding back your potential.";
-const EN_OUR_PROBLEM_1_HEADER = "Limited readership";
-const EN_OUR_PROBLEM_1_TEXT = `No matter how valuable your articles are, using just one language prevents you from reaching over 90% of potential readers.
-Your message isn't reaching the global audience it deserves.`;
+	"Language barriers are locking away your potential.";
+
+const EN_OUR_PROBLEM_1_HEADER = "Automatic Multilingual Publishing";
+const EN_OUR_PROBLEM_1_TEXT = `No matter how great your project is, publishing in only one language means missing out on over 90% of potential global users.
+Evame automatically translates your content and spreads it worldwide, helping you reach a global audience effortlessly.`;
 
 const EN_OUR_PROBLEM_2_HEADER =
-	"High cost and effort for multilingual translation";
-const EN_OUR_PROBLEM_2_TEXT = `Professional translation services cost hundreds of dollars per article, and self-translation requires considerable time and expertise.
-As a result, many give up on multilingual expansion.`;
+	"International Dialogue through Translated Comments";
+const EN_OUR_PROBLEM_2_TEXT = `Interaction across language boundaries is virtually impossible without translation.
+With Evame, comments are automatically translated, enabling natural conversations with developers around the world.`;
 
-const EN_OUR_PROBLEM_3_HEADER = "Lost international opportunities";
-const EN_OUR_PROBLEM_3_TEXT = `You miss valuable feedback and insights from readers of different languages,
-missing chances to integrate global perspectives and ideas.`;
+const EN_OUR_PROBLEM_3_HEADER = "Stories that Connect with Users";
+const EN_OUR_PROBLEM_3_TEXT = `Even the best products and technologies struggle to inspire if their stories aren't told.
+By sharing the journey of your development through articles and comments, you build emotional connections and naturally attract passionate users and fans.`;
+const ZH_HERO_HEADER = "面向开发者的全球社区";
+const ZH_HERO_TEXT = `Evame 是一个多语言平台，开发者可以发布项目、文章和评论，系统会自动将内容翻译成多种语言并推向全球。
+打破语言壁垒，让你的作品获得全球曝光，与世界各地的用户和开发者互动，共同成长。`;
 
-const EN_OUR_SOLUTION_HEADER = "Deliver your voice to the world";
-const EN_OUR_SOLUTION_1_HEADER = "Reach a global audience";
-const EN_OUR_SOLUTION_1_TEXT = `With "Evame", simply write as you always do, and your articles are automatically translated.
-Reach billions of readers worldwide and amplify your message globally.`;
+const ZH_OUR_PROBLEM_HEADER = "语言的障碍正在封锁你的潜力。";
 
-const EN_OUR_SOLUTION_2_HEADER = "Multilingual support for free";
-const EN_OUR_SOLUTION_2_TEXT = `With "Evame", you can start multilingual blogging at no cost.`;
+const ZH_OUR_PROBLEM_1_HEADER = "自动多语言发布";
+const ZH_OUR_PROBLEM_1_TEXT = `即使项目再优秀，仅使用一种语言发布也无法触达全球90%以上的潜在用户。
+Evame 自动翻译并推广你的内容，助你轻松触达全球观众。`;
 
-const EN_OUR_SOLUTION_3_HEADER = "New international opportunities";
-const EN_OUR_SOLUTION_3_TEXT = `With "Evame", easily connect with readers across languages and cultures.
-Gain valuable feedback from diverse international readers, expanding your perspective and creativity.`;
+const ZH_OUR_PROBLEM_2_HEADER = "通过翻译评论实现国际交流";
+const ZH_OUR_PROBLEM_2_TEXT = `不同语言之间的互动几乎是不可能的。
+在 Evame，评论将被自动翻译，让你可以自然地与全球开发者交流对话。`;
 
-const ZH_HERO_HEADER = "多语言博客";
-const ZH_HERO_TEXT = `『Evame』是一个自动翻译文章和评论的多语言博客平台。
-突破语言障碍，让您的话语传遍世界，轻松实现国际交流与知识共享。
-非常适合希望更多人阅读的博主和作家、想建立国际社区的企业与媒体，以及希望全球分享知识与信息的研究人员、教育者和专家。
-用Evame打开通往世界的大门吧。`;
+const ZH_OUR_PROBLEM_3_HEADER = "与用户共同讲述你的故事";
+const ZH_OUR_PROBLEM_3_TEXT = `再好的产品与技术，如果背后的故事无法传达，也难以打动人心。
+通过发布你的开发过程、挑战和思考，建立情感连接，吸引热情的粉丝与用户。`;
+const KO_HERO_HEADER = "개발자를 위한 글로벌 커뮤니티";
+const KO_HERO_TEXT = `Evame는 개발자가 프로젝트, 글, 댓글을 게시하면 AI가 자동으로 여러 언어로 번역하여 전 세계에 퍼뜨리는 다국어 플랫폼입니다.
+언어 장벽을 허물고 전 세계 사용자 및 개발자와 연결되어 함께 성장하세요.`;
 
-const ZH_OUR_PROBLEM_HEADER = "语言障碍限制了您的潜力。";
-const ZH_OUR_PROBLEM_1_HEADER = "读者群有限";
-const ZH_OUR_PROBLEM_1_TEXT = `无论您的文章多么有价值，仅使用一种语言将使您无法触及90%以上的潜在读者。
-您的信息未能传递给全球应有的受众。`;
+const KO_OUR_PROBLEM_HEADER = "언어 장벽이 당신의 가능성을 가두고 있습니다.";
 
-const ZH_OUR_PROBLEM_2_HEADER = "多语言翻译成本与精力过高";
-const ZH_OUR_PROBLEM_2_TEXT = `专业翻译服务每篇文章花费数百美元，自行翻译又需要大量的时间和专业知识。
-因此，许多人放弃了多语言扩展。`;
+const KO_OUR_PROBLEM_1_HEADER = "자동 다국어 게시";
+const KO_OUR_PROBLEM_1_TEXT = `아무리 훌륭한 프로젝트라도 하나의 언어만으로는 전 세계 잠재 사용자의 90% 이상에게 도달하지 못합니다.
+Evame는 콘텐츠를 자동 번역하여 전 세계에 자연스럽게 확산시켜 줍니다.`;
 
-const ZH_OUR_PROBLEM_3_HEADER = "国际机会的流失";
-const ZH_OUR_PROBLEM_3_TEXT = `您无法获得来自不同语言读者的反馈和见解，
-错失整合全球视角与想法的宝贵机会。`;
+const KO_OUR_PROBLEM_2_HEADER = "번역 댓글을 통한 국제 교류";
+const KO_OUR_PROBLEM_2_TEXT = `언어가 다르면 개발자 간 대화와 피드백이 사실상 불가능합니다.
+Evame에서는 댓글이 자동 번역되어 누구나 자연스럽게 세계의 개발자와 대화할 수 있습니다.`;
 
-const ZH_OUR_SOLUTION_HEADER = "让您的声音传遍世界";
-const ZH_OUR_SOLUTION_1_HEADER = "触及全球读者";
-const ZH_OUR_SOLUTION_1_TEXT = `使用『Evame』，您只需像平常一样撰写文章，即可自动翻译。
-轻松接触全球数十亿读者，将您的信息传播到国际范围。`;
+const KO_OUR_PROBLEM_3_HEADER = "사용자와 함께 쓰는 이야기";
+const KO_OUR_PROBLEM_3_TEXT = `아무리 뛰어난 기술이나 제품이라도 그 배경과 이야기가 전달되지 않으면 사람들의 마음을 움직일 수 없습니다.
+개발 과정을 글과 댓글로 공유함으로써 전 세계 사용자와 연결되고, 열정을 공유하며 팬과 사용자를 자연스럽게 모을 수 있습니다.`;
+const ES_HERO_HEADER = "Comunidad global para desarrolladores";
+const ES_HERO_TEXT = `Evame es una plataforma multilingüe donde los desarrolladores pueden publicar proyectos, artículos y comentarios que se traducen automáticamente a varios idiomas y se comparten globalmente.
+Rompe las barreras del idioma, conéctate con desarrolladores de todo el mundo y haz crecer tu comunidad con colaboración internacional.`;
 
-const ZH_OUR_SOLUTION_2_HEADER = "免费实现多语言支持";
-const ZH_OUR_SOLUTION_2_TEXT = "使用『Evame』，您可以免费开始多语言博客。";
-
-const ZH_OUR_SOLUTION_3_HEADER = "新的国际交流机会";
-const ZH_OUR_SOLUTION_3_TEXT = `使用『Evame』，您可轻松与全球读者互动。
-获得多元国际读者的反馈，拓展您的视野与创造力。`;
-
-const KO_HERO_HEADER = "다국어 블로그";
-const KO_HERO_TEXT = `『Evame』는 기사와 댓글이 모두 자동으로 번역되는 다국어 블로그 플랫폼입니다.
-언어의 장벽을 넘어 당신의 메시지를 세계에 전하고 국제적 교류와 지식 공유를 간편히 실현합니다.
-더 많은 사람에게 읽히고 싶은 블로거와 작가, 국제적 커뮤니티를 만들고자 하는 기업과 미디어, 글로벌하게 지식과 정보를 공유하고자 하는 연구자, 교육자 및 전문가에게 최적입니다.
-Evame에서 세계로 향하는 문을 열어보세요.`;
-const KO_OUR_PROBLEM_HEADER = "언어의 장벽이 당신의 가능성을 가두고 있습니다.";
-
-const KO_OUR_PROBLEM_1_HEADER = "한정된 독자층";
-const KO_OUR_PROBLEM_1_TEXT = `아무리 가치 있는 글을 써도 단 하나의 언어만 사용하면 전 세계 잠재 독자의 90% 이상에게 도달할 수 없습니다.
-당신의 메시지가 전달되어야 할 글로벌 독자들에게 닿지 않고 있습니다.`;
-
-const KO_OUR_PROBLEM_2_HEADER = "높은 다국어 번역 비용과 부담";
-const KO_OUR_PROBLEM_2_TEXT = `전문 번역 서비스는 한 기사당 수십만 원의 비용이 들고, 직접 다국어 번역을 하려면 막대한 시간과 전문지식이 필요합니다.
-결국 많은 이들이 다국어 확장을 포기하고 있습니다.`;
-
-const KO_OUR_PROBLEM_3_HEADER = "국제적 소통 기회의 상실";
-const KO_OUR_PROBLEM_3_TEXT =
-	"다른 언어의 독자들로부터 댓글이나 피드백을 얻지 못해 전 세계의 다양한 관점과 지식을 받아들일 소중한 기회를 놓치고 있습니다.";
-
-const KO_OUR_SOLUTION_HEADER = "당신의 생각을 세계에 전하세요.";
-
-const KO_OUR_SOLUTION_1_HEADER = "글로벌 독자층 확보";
-const KO_OUR_SOLUTION_1_TEXT = `"Evame"에서는 평소처럼 글을 쓰기만 하면 자동으로 번역됩니다.
-전 세계 수십억 명의 독자에게 도달하여 메시지를 글로벌하게 확산할 수 있습니다.`;
-
-const KO_OUR_SOLUTION_2_HEADER = "무료로 다국어 지원";
-const KO_OUR_SOLUTION_2_TEXT = `"Evame"에서는 다국어 블로그를 무료로 시작할 수 있습니다.`;
-
-const KO_OUR_SOLUTION_3_HEADER = "새로운 국제적 교류 기회";
-const KO_OUR_SOLUTION_3_TEXT = `"Evame"를 통해 언어 장벽을 넘어 전 세계 독자와 쉽게 교류할 수 있습니다.
-다양한 문화권 독자의 피드백을 통해 새로운 관점과 창의력을 넓혀 보세요.`;
-const ES_HERO_HEADER = "Blog multilingüe";
-const ES_HERO_TEXT = `Evame es una plataforma de blogs multilingüe que traduce automáticamente artículos y comentarios.
-Supera las barreras del idioma, lleva tus palabras al mundo y facilita fácilmente la interacción internacional y el intercambio de conocimiento.
-Ideal para blogueros y escritores que desean más lectores, empresas y medios que buscan crear comunidades internacionales, e investigadores, educadores o expertos que quieren compartir conocimientos e información a nivel global.
-Abre la puerta al mundo con Evame.`;
 const ES_OUR_PROBLEM_HEADER =
-	"Las barreras del idioma están limitando tu potencial.";
+	"Las barreras del idioma están encerrando tu potencial.";
 
-const ES_OUR_PROBLEM_1_HEADER = "Audiencia limitada";
-const ES_OUR_PROBLEM_1_TEXT = `Por muy valiosos que sean tus artículos, utilizando un solo idioma no puedes llegar a más del 90% de los lectores potenciales.
-Tu mensaje no está llegando a la audiencia global que merece.`;
+const ES_OUR_PROBLEM_1_HEADER = "Publicación multilingüe automática";
+const ES_OUR_PROBLEM_1_TEXT = `No importa cuán excelente sea tu proyecto, si publicas solo en un idioma, no alcanzarás a más del 90% de los usuarios potenciales.
+Evame traduce tu contenido automáticamente y lo distribuye por todo el mundo.`;
 
 const ES_OUR_PROBLEM_2_HEADER =
-	"Alto costo y esfuerzo en traducción multilingüe";
-const ES_OUR_PROBLEM_2_TEXT = `Los servicios de traducción profesional cuestan cientos de dólares por artículo, y traducir por tu cuenta requiere mucho tiempo y conocimientos específicos.
-Como resultado, muchos renuncian a expandirse a otros idiomas.`;
+	"Comentarios traducidos para el diálogo internacional";
+const ES_OUR_PROBLEM_2_TEXT = `Sin traducción, la interacción entre idiomas es casi imposible.
+Evame traduce automáticamente los comentarios, permitiendo conversaciones naturales con desarrolladores de todo el mundo.`;
 
-const ES_OUR_PROBLEM_3_HEADER = "Oportunidades internacionales perdidas";
-const ES_OUR_PROBLEM_3_TEXT = `Pierdes valiosos comentarios y perspectivas de lectores en otros idiomas,
-desaprovechando oportunidades únicas para integrar ideas y visiones globales.`;
-
-const ES_OUR_SOLUTION_HEADER = "Lleva tu mensaje al mundo.";
-
-const ES_OUR_SOLUTION_1_HEADER = "Alcanza una audiencia global";
-const ES_OUR_SOLUTION_1_TEXT = `Con "Evame", simplemente escribe como siempre y tus artículos se traducirán automáticamente.
-Llega a miles de millones de lectores en todo el mundo y amplía tu mensaje globalmente.`;
-
-const ES_OUR_SOLUTION_2_HEADER = "Soporte multilingüe gratuito";
-const ES_OUR_SOLUTION_2_TEXT = `Con "Evame", puedes comenzar tu blog multilingüe sin ningún costo.`;
-
-const ES_OUR_SOLUTION_3_HEADER = "Nuevas oportunidades internacionales";
-const ES_OUR_SOLUTION_3_TEXT = `Con "Evame", conecta fácilmente con lectores de diferentes idiomas y culturas.
-Obtén valiosos comentarios internacionales, ampliando así tu perspectiva y creatividad.`;
+const ES_OUR_PROBLEM_3_HEADER = "Historias que conectan con los usuarios";
+const ES_OUR_PROBLEM_3_TEXT = `Incluso el mejor producto o tecnología no genera impacto si su historia no se cuenta.
+Evame te permite compartir tus desafíos y el proceso de desarrollo, creando conexiones emocionales que atraen fans y usuarios con entusiasmo.`;
 
 const JA_FEATURE_HEADER = "主な機能";
-const JA_FEATURE_1_HEADER = "翻訳";
+
+const JA_FEATURE_1_HEADER = "自動翻訳";
 const JA_FEATURE_1_TEXT =
-	"記事やコメントが自動的に複数の言語に翻訳され、言語の壁を取り払います。";
+	"記事やコメント、プロジェクトの説明が自動的に複数の言語に翻訳され、言語の壁を取り払います。";
+
 const JA_FEATURE_2_HEADER = "使いやすいエディタ";
 const JA_FEATURE_2_TEXT =
-	"Markdownをサポートする､PCでもモバイルでも使いやすいエディタ。自然に書くだけで、AIが翻訳をシームレスに処理します。";
+	"Markdownをサポートする､PCでもモバイルでも使いやすいエディタ。自然に書くだけで、AIが翻訳をシームレスに処理します。プロジェクトの登録や更新情報の共有も簡単に行えます。";
+
 const JA_FEATURE_3_HEADER = "継続的な改善";
 const JA_FEATURE_3_TEXT =
-	"ユーザーの投票やコミュニティによる新しい翻訳の追加により、翻訳は継続的に改善されます。試しにこの訳文をクリックしてみてください｡投票や追加のフォームが現れるはずです｡";
-
+	"ユーザーの投票やコミュニティによる新しい翻訳の追加により、翻訳は継続的に改善されます。試しにこの訳文をクリックしてみてください｡投票や追加のフォームが現れるはずです｡あなたのプロジェクトに対するフィードバックも世界中から得られ、継続的に改善できます。";
 const EN_FEATURE_HEADER = "Key Features";
-const EN_FEATURE_1_HEADER = "Translation";
+
+const EN_FEATURE_1_HEADER = "Automatic Translation";
 const EN_FEATURE_1_TEXT =
-	"Articles and comments are automatically translated into multiple languages, breaking down language barriers.";
+	"Articles, comments, and project descriptions are automatically translated into multiple languages, breaking down language barriers.";
+
 const EN_FEATURE_2_HEADER = "Easy-to-use Editor";
 const EN_FEATURE_2_TEXT =
-	"A user-friendly editor both on PC and mobile, supporting Markdown. Just write naturally and let the AI handle translations seamlessly.";
+	"A user-friendly editor for both PC and mobile, supporting Markdown. Just write naturally, easily manage your projects and updates, and let the AI handle translations seamlessly.";
+
 const EN_FEATURE_3_HEADER = "Continuous Improvement";
 const EN_FEATURE_3_TEXT =
-	"Translations continuously improve through user voting and the addition of new translations by the community. Try clicking on this translation to see the voting and addition form.";
+	"Translations continuously improve through user voting and community-contributed translations. Click on this translation to see the voting and submission form. Gather global feedback for your projects to ensure continuous improvement.";
 
+// Chinese
 const ZH_FEATURE_HEADER = "主要功能";
-const ZH_FEATURE_1_HEADER = "翻译";
-const ZH_FEATURE_1_TEXT = "文章和评论自动翻译成多种语言，打破语言障碍。";
+
+const ZH_FEATURE_1_HEADER = "自动翻译";
+const ZH_FEATURE_1_TEXT =
+	"文章、评论和项目介绍自动翻译成多种语言，打破语言障碍。";
+
 const ZH_FEATURE_2_HEADER = "易用的编辑器";
 const ZH_FEATURE_2_TEXT =
-	"支持Markdown的PC和移动设备用户友好编辑器。只需自然书写，让AI无缝处理翻译。";
+	"支持Markdown的PC和移动端友好编辑器。只需自然书写，轻松管理项目和更新，AI会无缝地进行翻译。";
+
 const ZH_FEATURE_3_HEADER = "持续改进";
 const ZH_FEATURE_3_TEXT =
-	"通过用户投票和社区添加新翻译，翻译质量不断提高。 试一试点击这个翻译，看看投票和添加表单是否会出现。";
+	"通过用户投票和社区贡献新翻译，不断提高翻译质量。点击此翻译即可看到投票和提交表单。您也能从全球获得对项目的反馈，确保持续改进。";
 
+// Korean
 const KO_FEATURE_HEADER = "주요 기능";
-const KO_FEATURE_1_HEADER = "번역";
+
+const KO_FEATURE_1_HEADER = "자동 번역";
 const KO_FEATURE_1_TEXT =
-	"글과 댓글이 여러 언어로 자동 번역되어 언어 장벽을 허물어 줍니다.";
+	"글, 댓글 및 프로젝트 소개가 여러 언어로 자동 번역되어 언어 장벽을 허물어 줍니다.";
+
 const KO_FEATURE_2_HEADER = "사용하기 쉬운 에디터";
 const KO_FEATURE_2_TEXT =
-	"마크다운을 지원하는 PC와 모바일 사용자 친화적인 에디터. 자연스럽게 작성하면 AI가 번역을 원활하게 처리합니다.";
+	"마크다운을 지원하는 PC 및 모바일 친화적인 에디터입니다. 자연스럽게 작성하고 프로젝트 관리 및 업데이트를 쉽게 하며, AI가 번역을 원활히 처리합니다.";
+
 const KO_FEATURE_3_HEADER = "지속적인 개선";
 const KO_FEATURE_3_TEXT =
-	"사용자 투표와 커뮤니티의 새로운 번역 추가를 통해 번역이 지속적으로 개선됩니다. 이 번역을 클릭해 보세요. 투표 및 추가 폼이 나타나야 합니다.";
+	"사용자 투표와 커뮤니티의 번역 추가를 통해 번역 품질이 지속적으로 개선됩니다. 이 번역을 클릭하면 투표 및 제출 양식이 나타납니다. 글로벌 피드백을 통해 프로젝트도 지속적으로 개선하세요.";
 
+// Spanish
 const ES_FEATURE_HEADER = "Características principales";
-const ES_FEATURE_1_HEADER = "Traducción";
+
+const ES_FEATURE_1_HEADER = "Traducción automática";
 const ES_FEATURE_1_TEXT =
-	"Los artículos y comentarios se traducen automáticamente a varios idiomas, eliminando las barreras lingüísticas.";
+	"Los artículos, comentarios y descripciones de proyectos se traducen automáticamente a varios idiomas, eliminando las barreras lingüísticas.";
+
 const ES_FEATURE_2_HEADER = "Editor fácil de usar";
 const ES_FEATURE_2_TEXT =
-	"Un editor amigable tanto en PC como en móvil, que soporta Markdown. Solo escribe naturalmente y deja que la IA maneje las traducciones sin problemas.";
+	"Editor intuitivo compatible con Markdown, tanto en PC como en dispositivos móviles. Escribe de manera natural, gestiona fácilmente tus proyectos y actualizaciones, y deja que la IA maneje las traducciones automáticamente.";
+
 const ES_FEATURE_3_HEADER = "Mejora continua";
 const ES_FEATURE_3_TEXT =
-	"Las traducciones mejoran continuamente a través de los votos de los usuarios y la adición de nuevas traducciones por parte de la comunidad. Intenta hacer clic en esta traducción para ver el formulario de votación y adición.";
+	"Las traducciones mejoran continuamente gracias a los votos de usuarios y las contribuciones de la comunidad. Haz clic en esta traducción para acceder al formulario de votación y envío. Además, recibe feedback global sobre tus proyectos para mejorarlos continuamente.";
 
 async function seed() {
-	await addRequiredData();
+	const { evame, evameEnPage, evameJaPage } = await addRequiredData();
+
+	// Create sample comments for the About page
+	await createPageComments(evame.id, evameEnPage.id);
+	await createPageComments(evame.id, evameJaPage.id);
+
+	console.log("Seed completed successfully");
 }
 
 interface TranslationInput {
@@ -376,85 +335,8 @@ async function addRequiredData() {
 				},
 				{
 					number: 9,
-					text: EN_OUR_SOLUTION_HEADER,
-					textAndOccurrenceHash: "evame-en-segment-9",
-					translations: {
-						ja: JA_OUR_SOLUTION_HEADER,
-						zh: ZH_OUR_SOLUTION_HEADER,
-						ko: KO_OUR_SOLUTION_HEADER,
-						es: ES_OUR_SOLUTION_HEADER,
-					},
-				},
-				{
-					number: 10,
-					text: EN_OUR_SOLUTION_1_HEADER,
-					textAndOccurrenceHash: "evame-en-segment-10",
-					translations: {
-						ja: JA_OUR_SOLUTION_1_HEADER,
-						zh: ZH_OUR_SOLUTION_1_HEADER,
-						ko: KO_OUR_SOLUTION_1_HEADER,
-						es: ES_OUR_SOLUTION_1_HEADER,
-					},
-				},
-				{
-					number: 11,
-					text: EN_OUR_SOLUTION_1_TEXT,
-					textAndOccurrenceHash: "evame-en-segment-11",
-					translations: {
-						ja: JA_OUR_SOLUTION_1_TEXT,
-						zh: ZH_OUR_SOLUTION_1_TEXT,
-						ko: KO_OUR_SOLUTION_1_TEXT,
-						es: ES_OUR_SOLUTION_1_TEXT,
-					},
-				},
-				{
-					number: 12,
-					text: EN_OUR_SOLUTION_2_HEADER,
-					textAndOccurrenceHash: "evame-en-segment-12",
-					translations: {
-						ja: JA_OUR_SOLUTION_2_HEADER,
-						zh: ZH_OUR_SOLUTION_2_HEADER,
-						ko: KO_OUR_SOLUTION_2_HEADER,
-						es: ES_OUR_SOLUTION_2_HEADER,
-					},
-				},
-				{
-					number: 13,
-					text: EN_OUR_SOLUTION_2_TEXT,
-					textAndOccurrenceHash: "evame-en-segment-13",
-					translations: {
-						ja: JA_OUR_SOLUTION_2_TEXT,
-						zh: ZH_OUR_SOLUTION_2_TEXT,
-						ko: KO_OUR_SOLUTION_2_TEXT,
-						es: ES_OUR_SOLUTION_2_TEXT,
-					},
-				},
-				{
-					number: 14,
-					text: EN_OUR_SOLUTION_3_HEADER,
-					textAndOccurrenceHash: "evame-en-segment-14",
-					translations: {
-						ja: JA_OUR_SOLUTION_3_HEADER,
-						zh: ZH_OUR_SOLUTION_3_HEADER,
-						ko: KO_OUR_SOLUTION_3_HEADER,
-						es: ES_OUR_SOLUTION_3_HEADER,
-					},
-				},
-				{
-					number: 15,
-					text: EN_OUR_SOLUTION_3_TEXT,
-					textAndOccurrenceHash: "evame-en-segment-15",
-					translations: {
-						ja: JA_OUR_SOLUTION_3_TEXT,
-						zh: ZH_OUR_SOLUTION_3_TEXT,
-						ko: KO_OUR_SOLUTION_3_TEXT,
-						es: ES_OUR_SOLUTION_3_TEXT,
-					},
-				},
-				{
-					number: 16,
 					text: EN_FEATURE_HEADER,
-					textAndOccurrenceHash: "evame-en-segment-16",
+					textAndOccurrenceHash: "evame-en-segment-9",
 					translations: {
 						ja: JA_FEATURE_HEADER,
 						zh: ZH_FEATURE_HEADER,
@@ -463,9 +345,9 @@ async function addRequiredData() {
 					},
 				},
 				{
-					number: 17,
+					number: 10,
 					text: EN_FEATURE_1_HEADER,
-					textAndOccurrenceHash: "evame-en-segment-17",
+					textAndOccurrenceHash: "evame-en-segment-10",
 					translations: {
 						ja: JA_FEATURE_1_HEADER,
 						zh: ZH_FEATURE_1_HEADER,
@@ -474,9 +356,9 @@ async function addRequiredData() {
 					},
 				},
 				{
-					number: 18,
+					number: 11,
 					text: EN_FEATURE_1_TEXT,
-					textAndOccurrenceHash: "evame-en-segment-18",
+					textAndOccurrenceHash: "evame-en-segment-11",
 					translations: {
 						ja: JA_FEATURE_1_TEXT,
 						zh: ZH_FEATURE_1_TEXT,
@@ -485,9 +367,9 @@ async function addRequiredData() {
 					},
 				},
 				{
-					number: 19,
+					number: 12,
 					text: EN_FEATURE_2_HEADER,
-					textAndOccurrenceHash: "evame-en-segment-19",
+					textAndOccurrenceHash: "evame-en-segment-12",
 					translations: {
 						ja: JA_FEATURE_2_HEADER,
 						zh: ZH_FEATURE_2_HEADER,
@@ -496,9 +378,9 @@ async function addRequiredData() {
 					},
 				},
 				{
-					number: 20,
+					number: 13,
 					text: EN_FEATURE_2_TEXT,
-					textAndOccurrenceHash: "evame-en-segment-20",
+					textAndOccurrenceHash: "evame-en-segment-13",
 					translations: {
 						ja: JA_FEATURE_2_TEXT,
 						zh: ZH_FEATURE_2_TEXT,
@@ -507,9 +389,9 @@ async function addRequiredData() {
 					},
 				},
 				{
-					number: 21,
+					number: 14,
 					text: EN_FEATURE_3_HEADER,
-					textAndOccurrenceHash: "evame-en-segment-21",
+					textAndOccurrenceHash: "evame-en-segment-14",
 					translations: {
 						ja: JA_FEATURE_3_HEADER,
 						zh: ZH_FEATURE_3_HEADER,
@@ -518,9 +400,9 @@ async function addRequiredData() {
 					},
 				},
 				{
-					number: 22,
+					number: 15,
 					text: EN_FEATURE_3_TEXT,
-					textAndOccurrenceHash: "evame-en-segment-22",
+					textAndOccurrenceHash: "evame-en-segment-15",
 					translations: {
 						ja: JA_FEATURE_3_TEXT,
 						zh: ZH_FEATURE_3_TEXT,
@@ -634,85 +516,8 @@ async function addRequiredData() {
 				},
 				{
 					number: 9,
-					text: JA_OUR_SOLUTION_HEADER,
-					textAndOccurrenceHash: "evame-ja-segment-9",
-					translations: {
-						en: EN_OUR_SOLUTION_HEADER,
-						zh: ZH_OUR_SOLUTION_HEADER,
-						ko: KO_OUR_SOLUTION_HEADER,
-						es: ES_OUR_SOLUTION_HEADER,
-					},
-				},
-				{
-					number: 10,
-					text: JA_OUR_SOLUTION_1_HEADER,
-					textAndOccurrenceHash: "evame-ja-segment-10",
-					translations: {
-						en: EN_OUR_SOLUTION_1_HEADER,
-						zh: ZH_OUR_SOLUTION_1_HEADER,
-						ko: KO_OUR_SOLUTION_1_HEADER,
-						es: ES_OUR_SOLUTION_1_HEADER,
-					},
-				},
-				{
-					number: 11,
-					text: JA_OUR_SOLUTION_1_TEXT,
-					textAndOccurrenceHash: "evame-ja-segment-11",
-					translations: {
-						en: EN_OUR_SOLUTION_1_TEXT,
-						zh: ZH_OUR_SOLUTION_1_TEXT,
-						ko: KO_OUR_SOLUTION_1_TEXT,
-						es: ES_OUR_SOLUTION_1_TEXT,
-					},
-				},
-				{
-					number: 12,
-					text: JA_OUR_SOLUTION_2_HEADER,
-					textAndOccurrenceHash: "evame-ja-segment-12",
-					translations: {
-						en: EN_OUR_SOLUTION_2_HEADER,
-						zh: ZH_OUR_SOLUTION_2_HEADER,
-						ko: KO_OUR_SOLUTION_2_HEADER,
-						es: ES_OUR_SOLUTION_2_HEADER,
-					},
-				},
-				{
-					number: 13,
-					text: JA_OUR_SOLUTION_2_TEXT,
-					textAndOccurrenceHash: "evame-ja-segment-13",
-					translations: {
-						en: EN_OUR_SOLUTION_2_TEXT,
-						zh: ZH_OUR_SOLUTION_2_TEXT,
-						ko: KO_OUR_SOLUTION_2_TEXT,
-						es: ES_OUR_SOLUTION_2_TEXT,
-					},
-				},
-				{
-					number: 14,
-					text: JA_OUR_SOLUTION_3_HEADER,
-					textAndOccurrenceHash: "evame-ja-segment-14",
-					translations: {
-						en: EN_OUR_SOLUTION_3_HEADER,
-						zh: ZH_OUR_SOLUTION_3_HEADER,
-						ko: KO_OUR_SOLUTION_3_HEADER,
-						es: ES_OUR_SOLUTION_3_HEADER,
-					},
-				},
-				{
-					number: 15,
-					text: JA_OUR_SOLUTION_3_TEXT,
-					textAndOccurrenceHash: "evame-ja-segment-15",
-					translations: {
-						en: EN_OUR_SOLUTION_3_TEXT,
-						zh: ZH_OUR_SOLUTION_3_TEXT,
-						ko: KO_OUR_SOLUTION_3_TEXT,
-						es: ES_OUR_SOLUTION_3_TEXT,
-					},
-				},
-				{
-					number: 16,
 					text: JA_FEATURE_HEADER,
-					textAndOccurrenceHash: "evame-ja-segment-16",
+					textAndOccurrenceHash: "evame-ja-segment-9",
 					translations: {
 						en: EN_FEATURE_HEADER,
 						zh: ZH_FEATURE_HEADER,
@@ -721,9 +526,9 @@ async function addRequiredData() {
 					},
 				},
 				{
-					number: 17,
+					number: 10,
 					text: JA_FEATURE_1_HEADER,
-					textAndOccurrenceHash: "evame-ja-segment-17",
+					textAndOccurrenceHash: "evame-ja-segment-10",
 					translations: {
 						en: EN_FEATURE_1_HEADER,
 						zh: ZH_FEATURE_1_HEADER,
@@ -732,9 +537,9 @@ async function addRequiredData() {
 					},
 				},
 				{
-					number: 18,
+					number: 11,
 					text: JA_FEATURE_1_TEXT,
-					textAndOccurrenceHash: "evame-ja-segment-18",
+					textAndOccurrenceHash: "evame-ja-segment-11",
 					translations: {
 						en: EN_FEATURE_1_TEXT,
 						zh: ZH_FEATURE_1_TEXT,
@@ -743,9 +548,9 @@ async function addRequiredData() {
 					},
 				},
 				{
-					number: 19,
+					number: 12,
 					text: JA_FEATURE_2_HEADER,
-					textAndOccurrenceHash: "evame-ja-segment-19",
+					textAndOccurrenceHash: "evame-ja-segment-12",
 					translations: {
 						en: EN_FEATURE_2_HEADER,
 						zh: ZH_FEATURE_2_HEADER,
@@ -754,9 +559,9 @@ async function addRequiredData() {
 					},
 				},
 				{
-					number: 20,
+					number: 13,
 					text: JA_FEATURE_2_TEXT,
-					textAndOccurrenceHash: "evame-ja-segment-20",
+					textAndOccurrenceHash: "evame-ja-segment-13",
 					translations: {
 						en: EN_FEATURE_2_TEXT,
 						zh: ZH_FEATURE_2_TEXT,
@@ -765,9 +570,9 @@ async function addRequiredData() {
 					},
 				},
 				{
-					number: 21,
+					number: 14,
 					text: JA_FEATURE_3_HEADER,
-					textAndOccurrenceHash: "evame-ja-segment-21",
+					textAndOccurrenceHash: "evame-ja-segment-14",
 					translations: {
 						en: EN_FEATURE_3_HEADER,
 						zh: ZH_FEATURE_3_HEADER,
@@ -776,9 +581,9 @@ async function addRequiredData() {
 					},
 				},
 				{
-					number: 22,
+					number: 15,
 					text: JA_FEATURE_3_TEXT,
-					textAndOccurrenceHash: "evame-ja-segment-22",
+					textAndOccurrenceHash: "evame-ja-segment-15",
 					translations: {
 						en: EN_FEATURE_3_TEXT,
 						zh: ZH_FEATURE_3_TEXT,
@@ -820,6 +625,8 @@ async function addRequiredData() {
 	}
 
 	console.log("Required data added successfully");
+
+	return { evame, evameEnPage, evameJaPage };
 }
 
 async function createUserAndPages() {
@@ -880,6 +687,73 @@ async function createUserAndPages() {
 	]);
 
 	return { evame, evameEnPage, evameJaPage };
+}
+
+async function createPageComments(userId: string, pageId: number) {
+	console.log("Creating sample comments for About page...");
+
+	// Create 3 sample comments
+	const commentContents = [
+		"This is a great platform! I've been looking for something that helps developers showcase their work globally.",
+		"I love how Evame handles translations automatically. As a developer who speaks multiple languages, this is exactly what I needed.",
+		"The automatic translation of comments is a game-changer. Now I can communicate with developers from all over the world!",
+	];
+
+	const commentLocales = ["en", "ja", "en"];
+
+	// Add sample comments
+	for (let i = 0; i < commentContents.length; i++) {
+		const comment = await prisma.pageComment.create({
+			data: {
+				content: commentContents[i],
+				locale: commentLocales[i],
+				userId: userId,
+				pageId: pageId,
+				// Create comment segments
+				pageCommentSegments: {
+					create: {
+						text: commentContents[i],
+						number: 0,
+						textAndOccurrenceHash: `sample-comment-${i}-hash`,
+						// Add segment translations
+						pageCommentSegmentTranslations: {
+							create: [
+								{
+									locale: "en",
+									text: commentContents[i],
+									userId: userId,
+								},
+								{
+									locale: "ja",
+									text:
+										i === 0
+											? "素晴らしいプラットフォームですね！開発者が自分の作品をグローバルに紹介できるものを探していました。"
+											: i === 1
+												? "Evameが自動的に翻訳を処理する方法が気に入っています。複数の言語を話す開発者として、これはまさに私が必要としていたものです。"
+												: "コメントの自動翻訳は革命的です。今なら世界中の開発者とコミュニケーションできます！",
+									userId: userId,
+								},
+								{
+									locale: "zh",
+									text:
+										i === 0
+											? "这是一个很棒的平台！我一直在寻找可以帮助开发者在全球范围内展示他们作品的工具。"
+											: i === 1
+												? "我喜欢Evame如何自动处理翻译。作为一个会说多种语言的开发者，这正是我所需要的。"
+												: "评论的自动翻译是一个改变游戏规则的功能。现在我可以与全世界的开发者交流了！",
+									userId: userId,
+								},
+							],
+						},
+					},
+				},
+			},
+		});
+
+		console.log(`Created comment ${i + 1} with ID: ${comment.id}`);
+	}
+
+	console.log("Sample comments created successfully");
 }
 
 seed()
