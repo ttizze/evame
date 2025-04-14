@@ -143,7 +143,6 @@ export default async function HomePage({
 					<div className="space-y-12">
 						<section>
 							<PopularProjectList
-								handle={currentUser?.handle ?? ""}
 								page={1}
 								query={""}
 							/>

@@ -357,10 +357,10 @@ async function addRequiredData() {
 					text: EN_OUR_PROBLEM_5_TEXT,
 					textAndOccurrenceHash: "evame-en-segment-12",
 					translations: {
-						ja: JA_OUR_PROBLEM_5_HEADER,
-						zh: ZH_OUR_PROBLEM_5_HEADER,
-						ko: KO_OUR_PROBLEM_5_HEADER,
-						es: ES_OUR_PROBLEM_5_HEADER,
+						ja: JA_OUR_PROBLEM_5_TEXT,
+						zh: ZH_OUR_PROBLEM_5_TEXT,
+						ko: KO_OUR_PROBLEM_5_TEXT,
+						es: ES_OUR_PROBLEM_5_TEXT,
 					},
 				},
 				{
