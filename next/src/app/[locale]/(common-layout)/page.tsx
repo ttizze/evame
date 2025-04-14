@@ -246,10 +246,7 @@ export default async function HomePage({
 					<>
 						<SortTabs defaultSort={sort} />
 						{sort === "popular" ? (
-							<PopularProjectList
-								page={1}
-								query={""}
-							/>
+							<PopularProjectList page={1} query={""} />
 						) : (
 							<NewProjectList
 								handle={currentUser?.handle ?? ""}
