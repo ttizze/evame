@@ -22,7 +22,7 @@ const DynamicContentWithTranslations = dynamic(
 );
 const DynamicPageLikeButton = dynamic(
 	() =>
-		import("@/app/[locale]/_components/page/page-like-button/client").then(
+		import("@/app/[locale]/_components/page/page-like-button/server").then(
 			(mod) => mod.PageLikeButton,
 		),
 	{
@@ -159,9 +159,7 @@ export default async function Page({
 				/>
 				<div className="flex items-center gap-4">
 					<DynamicPageLikeButton
-						liked={isLikedByUser}
-						likeCount={likeCount}
-						slug={slug}
+						pageId={pageWithTranslations.page.id}
 						showCount
 					/>
 					<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
@@ -169,9 +167,12 @@ export default async function Page({
 				</div>
 
 				<DynamicFloatingControls
-					liked={isLikedByUser}
-					likeCount={likeCount}
-					slug={slug}
+					likeButton={
+						<DynamicPageLikeButton
+							pageId={pageWithTranslations.page.id}
+							showCount
+						/>
+					}
 					shareTitle={title}
 				/>
 

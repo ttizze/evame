@@ -1,12 +1,11 @@
 import { ClientDateFormatter } from "@/app/[locale]/_components/client-date-formatter";
 import { PageCommentButton } from "@/app/[locale]/_components/page/page-comment-button/client";
-import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/client";
+import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import type { PageWithRelationsType } from "@/app/[locale]/_db/queries.server";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
-import { useLocale } from "next-intl";
 import { getImageProps } from "next/image";
 import Image from "next/image";
 import { PageActionsDropdown } from "./page-actions-dropdown/client";
@@ -16,6 +15,7 @@ type PageListProps = {
 	userLink: string;
 	showOwnerActions?: boolean;
 	index?: number;
+	locale: string;
 };
 
 export function PageList({
@@ -24,6 +24,7 @@ export function PageList({
 	userLink,
 	showOwnerActions = false,
 	index,
+	locale,
 }: PageListProps) {
 	const { props } = getImageProps({
 		src: pageWithRelations.user.image,
@@ -31,7 +32,6 @@ export function PageList({
 		width: 40,
 		height: 40,
 	});
-	const locale = useLocale();
 	const title = pageWithRelations.pageSegments[0].text;
 	const bestTranslationTitle =
 		pageWithRelations.pageSegments[0].pageSegmentTranslations[0]?.text;
@@ -102,12 +102,7 @@ export function PageList({
 						</div>
 
 						<div className="flex items-center gap-2">
-							<PageLikeButton
-								liked={pageWithRelations.likePages.length > 0}
-								likeCount={pageWithRelations._count.likePages}
-								slug={pageWithRelations.slug}
-								showCount
-							/>
+							<PageLikeButton pageId={pageWithRelations.id} showCount />
 							<PageCommentButton
 								commentCount={pageWithRelations._count.pageComments}
 								slug={pageWithRelations.slug}

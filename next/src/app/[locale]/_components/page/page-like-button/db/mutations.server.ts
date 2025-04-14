@@ -11,10 +11,10 @@ interface GuestIdentifier {
 }
 
 export async function togglePageLike(
-	slug: string,
+	pageId: number,
 	identifier: UserIdentifier | GuestIdentifier,
 ) {
-	const page = await prisma.page.findUnique({ where: { slug } });
+	const page = await prisma.page.findUnique({ where: { id: pageId } });
 	if (!page) {
 		throw new Error("Page not found");
 	}

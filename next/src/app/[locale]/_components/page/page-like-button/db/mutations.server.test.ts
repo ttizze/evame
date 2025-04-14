@@ -91,7 +91,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	});
 
 	it("userIdを指定した場合にlikeが新規作成される", async () => {
-		const result = await togglePageLike(publicPage.slug, {
+		const result = await togglePageLike(publicPage.id, {
 			type: "user",
 			id: testUser.id,
 		});
@@ -109,8 +109,8 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	});
 
 	it("userIdが既にlike済なら削除→liked:falseを返す", async () => {
-		await togglePageLike(publicPage.slug, { type: "user", id: testUser.id });
-		const result = await togglePageLike(publicPage.slug, {
+		await togglePageLike(publicPage.id, { type: "user", id: testUser.id });
+		const result = await togglePageLike(publicPage.id, {
 			type: "user",
 			id: testUser.id,
 		});
@@ -123,7 +123,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	});
 
 	it("guestIdでも同様に動作する (新規作成→liked:true)", async () => {
-		const result = await togglePageLike(publicPage.slug, {
+		const result = await togglePageLike(publicPage.id, {
 			type: "guest",
 			id: "guest-123",
 		});
@@ -137,8 +137,8 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	});
 
 	it("guestIdが既にlike済なら削除→liked:falseを返す", async () => {
-		await togglePageLike(publicPage.slug, { type: "guest", id: "guest-123" });
-		const result = await togglePageLike(publicPage.slug, {
+		await togglePageLike(publicPage.id, { type: "guest", id: "guest-123" });
+		const result = await togglePageLike(publicPage.id, {
 			type: "guest",
 			id: "guest-123",
 		});
@@ -152,7 +152,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 
 	it("Pageが存在しない場合はエラーを投げる", async () => {
 		await expect(
-			togglePageLike("non-existing-slug", { type: "user", id: "1" }),
+			togglePageLike(123413, { type: "user", id: "1" }),
 		).rejects.toThrow("Page not found");
 	});
 });

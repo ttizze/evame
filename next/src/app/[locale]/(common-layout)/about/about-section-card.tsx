@@ -18,7 +18,7 @@ export default async function AboutSectionCard({
 				<p className="text-lg">{title}</p>
 			</div>
 			<p className="text-md ">{description}</p>
-			{component}
+			<div className="flex justify-center py-2 gap-2">{component}</div>
 		</div>
 	);
 }

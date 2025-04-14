@@ -9,7 +9,7 @@ import { z } from "zod";
 import { togglePageLike } from "./db/mutations.server";
 // フォームデータ用のスキーマ
 const schema = z.object({
-	slug: z.string(),
+	pageId: z.number(),
 });
 
 export type PageLikeButtonState = ActionResponse<
@@ -18,7 +18,7 @@ export type PageLikeButtonState = ActionResponse<
 		likeCount: number;
 	},
 	{
-		slug: string;
+		pageId: number;
 	}
 >;
 
@@ -33,11 +33,11 @@ export async function togglePageLikeAction(
 			zodErrors: validation.error.flatten().fieldErrors,
 		};
 	}
-	const slug = validation.data.slug;
+	const pageId = validation.data.pageId;
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
 		const guestId = (await getGuestId()) ?? (await setGuestId());
-		const { liked, likeCount } = await togglePageLike(slug, {
+		const { liked, likeCount } = await togglePageLike(pageId, {
 			type: "guest",
 			id: guestId,
 		});
@@ -51,7 +51,7 @@ export async function togglePageLikeAction(
 		};
 	}
 
-	const { liked, likeCount } = await togglePageLike(slug, {
+	const { liked, likeCount } = await togglePageLike(pageId, {
 		type: "user",
 		id: currentUser.id,
 	});

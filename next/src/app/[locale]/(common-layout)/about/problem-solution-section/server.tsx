@@ -4,13 +4,21 @@ import {
 	ADD_TRANSLATION_FORM_TARGET,
 	VOTE_TARGET,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
 import { getCurrentUser } from "@/auth";
-import { HandshakeIcon, LanguagesIcon, Users } from "lucide-react";
+import {
+	HandshakeIcon,
+	LanguagesIcon,
+	Pencil,
+	TrendingUp,
+	Users,
+} from "lucide-react";
+import { FloatingControls } from "../../user/[handle]/page/[slug]/_components/floating-controls";
 import AboutSectionCard from "../about-section-card";
 import { fetchAboutPage } from "../lib/fetch-about-page";
-import { GlobeSpread } from "./grobe-spread";
+import EditorMovie from "./editor-movie";
 import Reactions from "./reactions";
-
+import { SpreadOtherLanguage } from "./spread-other-language";
 export default async function ProblemSolutionSection({
 	locale,
 }: { locale: string }) {
@@ -23,7 +31,7 @@ export default async function ProblemSolutionSection({
 	);
 	// Get problem cards (segments 3-8)
 	const problemCards = pageWithTranslations.segmentWithTranslations
-		.filter((st) => st.segment.number >= 3 && st.segment.number <= 8)
+		.filter((st) => st.segment.number >= 3 && st.segment.number <= 14)
 		.sort((a, b) => a.segment.number - b.segment.number);
 
 	// Group problem cards into pairs (header + text)
@@ -48,12 +56,35 @@ export default async function ProblemSolutionSection({
 		<div key="opportunity">
 			<Users className="h-6 w-6 " />
 		</div>,
+		<div key="translation">
+			<LanguagesIcon className="h-6 w-6" />
+		</div>,
+		<div key="editor">
+			<Pencil className="h-6 w-6 " />
+		</div>,
+		<div key="improvement">
+			<TrendingUp className="h-6 w-6 " />
+		</div>,
 	];
 	const problemComponents = [
-		<GlobeSpread key="component-1" />,
+		<SpreadOtherLanguage key="component-1" />,
 		// Add your second component here
 		<Reactions key="component-2" />,
 		<Globe key="component-3" />,
+		<EditorMovie key="component-4" />,
+		<FloatingControls
+			likeButton={
+				<PageLikeButton
+					pageId={pageWithTranslations.page.id}
+					showCount={false}
+				/>
+			}
+			shareTitle="evame"
+			position="w-full flex justify-center"
+			alwaysVisible={true}
+			key="component-5"
+		/>,
+		<span key="component-6" />,
 	];
 
 	if (!problemHeader || problemCardPairs.length === 0) {

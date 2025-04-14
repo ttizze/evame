@@ -30,8 +30,8 @@ export function ShareDialog({ title }: ShareDialogProps) {
 	const searchParams = useSearchParams();
 	const { showOriginal, showTranslation } = Object.fromEntries(searchParams);
 	// useParams で現在の locale と slug を取得
-	const { locale, slug } = useParams();
-	if (typeof locale !== "string" || typeof slug !== "string") {
+	const { locale } = useParams();
+	if (typeof locale !== "string") {
 		return null;
 	}
 

@@ -7,7 +7,7 @@ export default function EditorMovie() {
 				loop
 				muted
 				playsInline
-				className="w-full max-w-[500px] h-auto "
+				className="w-auto h-auto "
 			/>
 		</div>
 	);

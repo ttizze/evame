@@ -60,6 +60,7 @@ export async function PageListServer({
 						pageLink={`/user/${handle}/page/${pageWithRelations.slug}`}
 						userLink={`/user/${handle}`}
 						showOwnerActions={isOwner}
+						locale={locale}
 					/>
 				))}
 			</div>

@@ -20,12 +20,6 @@ const ProblemSolutionSection = dynamic(
 	},
 );
 
-const FeatureSection = dynamic(
-	() => import("@/app/[locale]/(common-layout)/about/feature-section/server"),
-	{
-		loading: () => <Skeleton className="h-[845px] w-full" />,
-	},
-);
 export const metadata: Metadata = {
 	title: "Evame - About",
 	description:
@@ -52,7 +46,6 @@ export default async function AboutPage({
 		<div className="flex flex-col">
 			<HeroSection locale={locale} />
 			<ProblemSolutionSection locale={locale} />
-			<FeatureSection locale={locale} />
 			<div className="mb-12 flex justify-center mt-10">
 				<StartButton className="w-60 h-12 text-xl" />
 			</div>

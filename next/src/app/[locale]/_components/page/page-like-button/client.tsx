@@ -4,21 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { useActionState, useOptimistic } from "react";
 import { type PageLikeButtonState, togglePageLikeAction } from "./action";
-type PageLikeButtonProps = {
+type PageLikeButtonClientProps = {
 	liked: boolean;
 	likeCount: number;
-	slug: string;
+	pageId: number;
 	showCount?: boolean;
 	className?: string;
 };
 
-export function PageLikeButton({
+export function PageLikeButtonClient({
 	liked,
 	likeCount,
-	slug,
+	pageId,
 	showCount,
 	className = "",
-}: PageLikeButtonProps) {
+}: PageLikeButtonClientProps) {
 	const [state, formAction, isPending] = useActionState<
 		PageLikeButtonState,
 		FormData
@@ -41,7 +41,7 @@ export function PageLikeButton({
 	return (
 		<div className="flex items-center gap-2">
 			<form action={handleSubmit}>
-				<input type="hidden" name="slug" value={slug} />
+				<input type="hidden" name="pageId" value={pageId} />
 				<Button
 					type="submit"
 					aria-label="Like"

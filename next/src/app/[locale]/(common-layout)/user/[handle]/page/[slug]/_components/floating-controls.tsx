@@ -1,5 +1,4 @@
 "use client";
-import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Languages, Text } from "lucide-react";
@@ -7,19 +6,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useContentDisplayState } from "./hooks/use-content-display-state";
 import { ShareDialog } from "./share-dialog";
 interface FloatingControlsProps {
-	liked: boolean;
-	likeCount: number;
-	slug: string;
 	shareTitle: string;
+	likeButton?: React.ReactNode;
+	position?: string;
+	alwaysVisible?: boolean;
 }
 
 export function FloatingControls({
-	liked,
-	likeCount,
-	slug,
+	likeButton,
 	shareTitle,
+	position = `fixed bottom-4 right-4 md:right-auto md:left-1/2 
+			md:-translate-x-1/2 max-w-prose w-full px-4 md:px-0 
+			duration-300 z-999`,
+	alwaysVisible = false,
 }: FloatingControlsProps) {
-	const [isVisible, setIsVisible] = useState(true);
+	const [isVisible, setIsVisible] = useState(alwaysVisible);
 	const [lastScrollY, setLastScrollY] = useState(0);
 	const ignoreScrollRef = useRef(false);
 
@@ -27,13 +28,10 @@ export function FloatingControls({
 		useContentDisplayState();
 	// スタイル定義
 	const STYLE = {
-		baseClasses:
-			"drop-shadow-xl dark:drop-shadow-[0_9px_7px_rgba(255,255,255,0.1)] h-12 w-12 rounded-full",
+		baseClasses: "h-12 w-12 rounded-full",
 		toggledOffClasses: `bg-muted after:absolute after:w-full after:h-[1px] after:bg-current after:top-1/2 
 		after:left-0 after:origin-center after:-rotate-45`,
-		containerClasses: `fixed bottom-4 right-4 md:right-auto md:left-1/2 
-			md:-translate-x-1/2 max-w-prose w-full px-4 md:px-0 
-			duration-300`,
+		containerClasses: `${position} w-64 border rounded-full p-2 bg-gray-50 dark:bg-gray-900 shadow-lg dark:shadow-gray-900`,
 		tocContainerClasses:
 			"bg-background mb-3 p-4 rounded-xl drop-shadow-xl dark:drop-shadow-[0_9px_7px_rgba(255,255,255,0.1)] border border-border animate-in zoom-in-95 duration-200",
 	};
@@ -45,6 +43,12 @@ export function FloatingControls({
 		}, duration);
 	};
 	const handleShowFloatingControls = useCallback(() => {
+		// alwaysVisibleが有効な場合は常に表示
+		if (alwaysVisible) {
+			setIsVisible(true);
+			return;
+		}
+
 		if (ignoreScrollRef.current) return;
 
 		const currentScrollY = window.scrollY;
@@ -68,23 +72,26 @@ export function FloatingControls({
 		}
 
 		setLastScrollY(currentScrollY);
-	}, [lastScrollY]);
+	}, [lastScrollY, alwaysVisible]);
 
 	useEffect(() => {
-		window.addEventListener("scroll", handleShowFloatingControls, {
-			passive: true,
-		});
-		return () => {
-			window.removeEventListener("scroll", handleShowFloatingControls);
-		};
-	}, [handleShowFloatingControls]);
+		// alwaysVisibleが有効な場合はスクロールイベントを登録しない
+		if (!alwaysVisible) {
+			window.addEventListener("scroll", handleShowFloatingControls, {
+				passive: true,
+			});
+			return () => {
+				window.removeEventListener("scroll", handleShowFloatingControls);
+			};
+		}
+	}, [handleShowFloatingControls, alwaysVisible]);
 
 	// コントロールボタンのレンダリング
 	const renderControlButtons = () => {
 		const baseButtonClasses = `${STYLE.baseClasses} border relative bg-background`;
 
 		return (
-			<div className="flex gap-3 justify-end">
+			<div className="flex gap-3 justify-center">
 				{/* 原文表示切替ボタン */}
 				<Button
 					variant="ghost"
@@ -126,10 +133,11 @@ export function FloatingControls({
 					/>
 				</Button>
 
-				{/* いいねボタン */}
-				<div className={STYLE.baseClasses}>
-					<PageLikeButton liked={liked} likeCount={likeCount} slug={slug} />
-				</div>
+				{likeButton && ( // likeButton が渡された場合のみ表示
+					<div className={STYLE.baseClasses}>
+						{likeButton} {/* 渡された likeButton をレンダリング */}
+					</div>
+				)}
 
 				{/* シェアボタン */}
 				<div className={STYLE.baseClasses}>
