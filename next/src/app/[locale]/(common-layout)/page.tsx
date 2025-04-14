@@ -56,13 +56,6 @@ const NewPageList = dynamic(
 	},
 );
 
-const HeroSection = dynamic(
-	() => import("@/app/[locale]/_components/hero-section/server"),
-	{
-		loading: () => <Skeleton className="h-[770px] w-full mb-10" />,
-	},
-);
-
 const SortTabs = dynamic(
 	() =>
 		import("@/app/[locale]/_components/sort-tabs").then((mod) => mod.SortTabs),
@@ -254,7 +247,6 @@ export default async function HomePage({
 						<SortTabs defaultSort={sort} />
 						{sort === "popular" ? (
 							<PopularProjectList
-								handle={currentUser?.handle ?? ""}
 								page={1}
 								query={""}
 							/>
