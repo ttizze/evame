@@ -177,7 +177,7 @@ repeating-conic-gradient(from -45deg at 50% center,
 					style={{ transform: "rotate(180deg)" }}
 				>
 					<title>Square Corner</title>
-					<path d="M1 12H12M12 1V12"  stroke="currentColor" strokeWidth="1" />
+					<path d="M1 12H12M12 1V12" stroke="currentColor" strokeWidth="1" />
 				</svg>
 			</div>
 		</div>
