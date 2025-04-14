@@ -9,7 +9,7 @@ import { z } from "zod";
 import { togglePageLike } from "./db/mutations.server";
 // フォームデータ用のスキーマ
 const schema = z.object({
-	pageId: z.number(),
+	pageId: z.coerce.number(),
 });
 
 export type PageLikeButtonState = ActionResponse<
@@ -26,7 +26,7 @@ export async function togglePageLikeAction(
 	previousState: PageLikeButtonState,
 	formData: FormData,
 ): Promise<PageLikeButtonState> {
-	const validation = schema.safeParse({ slug: formData.get("slug") });
+	const validation = schema.safeParse({ pageId: formData.get("pageId") });
 	if (!validation.success) {
 		return {
 			success: false,
