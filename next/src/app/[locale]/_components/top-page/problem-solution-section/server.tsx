@@ -4,7 +4,7 @@ import {
 	VOTE_TARGET,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
-import Globe from "@/app/[locale]/_components/problem-solution-section/components/globe.client";
+import Globe from "@/app/[locale]/_components/top-page/problem-solution-section/components/globe.client";
 import { getCurrentUser } from "@/auth";
 import {
 	HandshakeIcon,
@@ -13,8 +13,8 @@ import {
 	TrendingUp,
 	Users,
 } from "lucide-react";
-import { fetchAboutPage } from "../../(common-layout)/about/_lib/fetch-about-page";
-import { FloatingControls } from "../floating-controls.client";
+import { fetchAboutPage } from "../../../(common-layout)/about/_lib/fetch-about-page";
+import { FloatingControls } from "../../floating-controls.client";
 import AboutSectionCard from "./components/about-section-card.server";
 import EditorMovie from "./components/editor-movie.server";
 import Reactions from "./components/reaction.client";
