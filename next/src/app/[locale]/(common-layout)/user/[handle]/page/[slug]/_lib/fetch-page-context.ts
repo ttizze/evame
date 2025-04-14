@@ -48,18 +48,15 @@ export const fetchPageContext = cache(
 			title = pageTitleWithTranslations.segment.text;
 		}
 		const guestId = await getGuestId();
-		const [
-			pageAITranslationInfo,
-			userAITranslationInfo,
-			pageCommentsCount,
-		] = await Promise.all([
-			fetchLatestPageAITranslationInfo(pageWithTranslations.page.id),
-			fetchLatestUserAITranslationInfo(
-				pageWithTranslations.page.id,
-				currentUser?.id ?? "0",
-			),
-			fetchPageCommentsCount(pageWithTranslations.page.id),
-		]);
+		const [pageAITranslationInfo, userAITranslationInfo, pageCommentsCount] =
+			await Promise.all([
+				fetchLatestPageAITranslationInfo(pageWithTranslations.page.id),
+				fetchLatestUserAITranslationInfo(
+					pageWithTranslations.page.id,
+					currentUser?.id ?? "0",
+				),
+				fetchPageCommentsCount(pageWithTranslations.page.id),
+			]);
 		return {
 			pageWithTranslations,
 			currentUser,

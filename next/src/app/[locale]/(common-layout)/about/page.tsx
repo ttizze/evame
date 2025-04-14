@@ -21,7 +21,10 @@ const ProblemSolutionSection = dynamic(
 );
 
 const DynamicControl = dynamic(
-	() => import("@/app/[locale]/(common-layout)/about/problem-solution-section/control.server").then((mod) => mod.default),
+	() =>
+		import(
+			"@/app/[locale]/(common-layout)/about/problem-solution-section/control.server"
+		).then((mod) => mod.default),
 	{
 		loading: () => <Skeleton className="h-[845px] w-full" />,
 	},
