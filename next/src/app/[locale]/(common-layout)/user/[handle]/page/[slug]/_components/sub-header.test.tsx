@@ -1,4 +1,4 @@
-import type { PageWithTranslations } from "@/app/[locale]/types";
+import type { PageWithRelations } from "@/app/[locale]/types";
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { vi } from "vitest";
@@ -36,7 +36,7 @@ vi.mock("./toc", () => ({
 }));
 
 describe("SubHeader", () => {
-	const mockPageWithTranslations = {
+	const mockPageWithRelations = {
 		user: {
 			handle: "testuser",
 			name: "Test User",
@@ -49,7 +49,7 @@ describe("SubHeader", () => {
 			content: "Test content",
 			translations: [],
 		},
-	} as unknown as PageWithTranslations;
+	} as unknown as PageWithRelations;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -58,7 +58,7 @@ describe("SubHeader", () => {
 	test("renders user information correctly", () => {
 		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(false);
 
-		render(<SubHeader pageWithTranslations={mockPageWithTranslations} />);
+		render(<SubHeader pageWithRelations={mockPageWithRelations} />);
 
 		expect(screen.getByText("Test User")).toBeInTheDocument();
 		expect(screen.getByText("2023-01-01")).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe("SubHeader", () => {
 	test("does not render TOC button when no TOC content", () => {
 		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(false);
 
-		render(<SubHeader pageWithTranslations={mockPageWithTranslations} />);
+		render(<SubHeader pageWithRelations={mockPageWithRelations} />);
 
 		expect(screen.queryByTitle("Table of Contents")).not.toBeInTheDocument();
 	});
@@ -75,7 +75,7 @@ describe("SubHeader", () => {
 	test("renders TOC button when TOC content exists", () => {
 		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(true);
 
-		render(<SubHeader pageWithTranslations={mockPageWithTranslations} />);
+		render(<SubHeader pageWithRelations={mockPageWithRelations} />);
 
 		expect(screen.getByTitle("Table of Contents")).toBeInTheDocument();
 	});
@@ -83,7 +83,7 @@ describe("SubHeader", () => {
 	test("toggles TOC visibility when TOC button is clicked", () => {
 		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(true);
 
-		render(<SubHeader pageWithTranslations={mockPageWithTranslations} />);
+		render(<SubHeader pageWithRelations={mockPageWithRelations} />);
 
 		// TOC should not be visible initially
 		expect(screen.queryByTestId("toc")).not.toBeInTheDocument();
@@ -104,7 +104,7 @@ describe("SubHeader", () => {
 	test("closes TOC when a TOC item is clicked", () => {
 		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(true);
 
-		render(<SubHeader pageWithTranslations={mockPageWithTranslations} />);
+		render(<SubHeader pageWithRelations={mockPageWithRelations} />);
 
 		// Open the TOC
 		fireEvent.click(screen.getByTitle("Table of Contents"));

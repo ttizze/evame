@@ -88,7 +88,7 @@ export async function ContentWithTranslations({
 			<PageTagList
 				tag={pageWithTranslations.tagPages.map((tagPage) => tagPage.tag)}
 			/>
-			<SubHeader pageWithTranslations={pageWithTranslations} />
+			<SubHeader pageWithRelations={pageWithTranslations} />
 			<DynamicTranslateActionSection
 				pageId={pageWithTranslations.id}
 				currentHandle={currentUser?.handle}

@@ -39,9 +39,13 @@ export type SegmentWithTranslations = {
 export type TagPageWithTag = TagPage & {
 	tag: Tag;
 };
-export type PageWithTranslations = Omit<Page, "createdAt"> & {
+export type PageWithRelations = Omit<Page, "createdAt"> & {
 	createdAt: string;
 	user: SanitizedUser;
 	tagPages: TagPageWithTag[];
 	segmentWithTranslations: SegmentWithTranslations[];
+	_count?: {
+		pageComments: number;
+		likePages: number;
+	};
 };

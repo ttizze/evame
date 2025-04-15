@@ -1,6 +1,6 @@
 "use client";
 import { useHeaderScroll } from "@/app/[locale]/_components/header/hooks/use-header-scroll";
-import type { PageWithTranslations } from "@/app/[locale]/types";
+import type { PageWithRelations } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
@@ -10,9 +10,9 @@ import { useState } from "react";
 import Toc, { useHasTableOfContents } from "./toc";
 
 export function SubHeader({
-	pageWithTranslations,
+	pageWithRelations,
 }: {
-	pageWithTranslations: PageWithTranslations;
+	pageWithRelations: PageWithRelations;
 }) {
 	const [isTocOpen, setIsTocOpen] = useState(false);
 	const hasTocContent = useHasTableOfContents();
@@ -55,8 +55,8 @@ export function SubHeader({
 		);
 	};
 	const { props } = getImageProps({
-		src: pageWithTranslations.user.image,
-		alt: pageWithTranslations.user.name,
+		src: pageWithRelations.user.image,
+		alt: pageWithRelations.user.name,
 		width: 40,
 		height: 40,
 	});
@@ -72,20 +72,20 @@ export function SubHeader({
 					flex items-center not-prose justify-between relative ${isPinned ? "px-4" : ""}`}
 				>
 					<Link
-						href={`/user/${pageWithTranslations.user.handle}`}
+						href={`/user/${pageWithRelations.user.handle}`}
 						className="flex items-center mr-2 !no-underline hover:text-gray-700"
 					>
 						<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
 							<AvatarImage {...props} />
 							<AvatarFallback>
-								{pageWithTranslations.user.name.charAt(0).toUpperCase()}
+								{pageWithRelations.user.name.charAt(0).toUpperCase()}
 							</AvatarFallback>
 						</Avatar>
 						<div className="flex flex-col">
-							<span className="text-sm">{pageWithTranslations.user.name}</span>
+							<span className="text-sm">{pageWithRelations.user.name}</span>
 							{!isPinned && (
 								<span className="text-xs text-gray-500">
-									{pageWithTranslations.createdAt}
+									{pageWithRelations.createdAt}
 								</span>
 							)}
 						</div>

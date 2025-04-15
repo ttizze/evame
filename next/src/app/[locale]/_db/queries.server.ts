@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { getBestTranslation } from "../_lib/get-best-translation";
-import type { PageWithTranslations } from "../types";
+import type { PageWithRelations } from "../types";
 
 export function createPageWithRelationsSelect(locale?: string) {
 	return {
@@ -66,6 +66,7 @@ type FetchParams = {
 	isPopular?: boolean;
 	onlyUserOwn?: boolean;
 	locale?: string;
+	currentUserId?: string;
 };
 
 export async function fetchPaginatedPublicPagesWithInfo({
@@ -75,6 +76,7 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	isPopular = false,
 	onlyUserOwn = false,
 	locale = "en",
+	currentUserId,
 }: FetchParams): Promise<{
 	pagesWithRelations: PageWithRelationsType[];
 	totalPages: number;
@@ -132,7 +134,7 @@ export async function fetchPageWithTranslations(
 	slug: string,
 	locale: string,
 	currentUserId?: string,
-): Promise<PageWithTranslations | null> {
+): Promise<PageWithRelations | null> {
 	const page = await prisma.page.findFirst({
 		where: { slug },
 		include: {
