@@ -3,13 +3,11 @@ import { ProjectListContainer } from "../project-list-container/server";
 import { fetchNewProjectsWithPagination } from "./_db/queries.server";
 
 interface NewProjectListProps {
-	handle: string;
 	page: number;
 	query: string;
 }
 
 export default async function NewProjectList({
-	handle,
 	page,
 	query,
 }: NewProjectListProps) {
