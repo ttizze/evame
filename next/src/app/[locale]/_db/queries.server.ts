@@ -213,15 +213,11 @@ export async function fetchPageWithTranslations(
 	return {
 		...page,
 		createdAt: page.createdAt.toISOString(),
-		tagPages: page.tagPages,
 		segmentWithTranslations: await Promise.all(
 			page.pageSegments.map(async (segment) => {
 				const segmentTranslationsWithVotes =
 					segment.pageSegmentTranslations.map((segmentTranslation) => ({
-						segmentTranslation: {
-							...segmentTranslation,
-							user: segmentTranslation.user,
-						},
+						segmentTranslation: segmentTranslation,
 						translationVote:
 							segmentTranslation.votes && segmentTranslation.votes.length > 0
 								? {
