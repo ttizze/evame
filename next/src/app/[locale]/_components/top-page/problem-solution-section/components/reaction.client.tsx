@@ -160,11 +160,10 @@ const ReactionItem = ({ reaction }: { reaction: Reaction }) => {
 };
 
 interface ReactionsProps {
-	pageId?: number; // Optional pageId to fetch real data (future implementation)
 	className?: string;
 }
 
-export default function Reactions({ pageId, className = "" }: ReactionsProps) {
+export default function Reactions({ className = "" }: ReactionsProps) {
 	const [displayedReactions, setDisplayedReactions] = useState<
 		Array<Reaction & { left: number; top: number }>
 	>([]);

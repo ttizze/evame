@@ -130,7 +130,7 @@ export default async function HomePage({
 					</div>
 				</>
 			)}
-			<DynamicControl locale={locale} />
+			<DynamicControl />
 			<DynamicCommonTabs defaultTab={tab}>
 				{tab === "home" && (
 					<div className="space-y-12">
@@ -194,11 +194,7 @@ export default async function HomePage({
 						</div>
 
 						<section>
-							<NewProjectList
-								handle={currentUser?.handle ?? ""}
-								page={1}
-								query={""}
-							/>
+							<NewProjectList page={1} query={""} />
 							<div className="flex justify-center w-full mt-6">
 								<Button
 									variant="default"
@@ -248,11 +244,7 @@ export default async function HomePage({
 						{sort === "popular" ? (
 							<PopularProjectList page={1} query={""} />
 						) : (
-							<NewProjectList
-								handle={currentUser?.handle ?? ""}
-								page={1}
-								query={""}
-							/>
+							<NewProjectList page={1} query={""} />
 						)}
 					</>
 				)}

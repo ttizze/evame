@@ -11,6 +11,6 @@ const DynamicFloatingControls = dynamic(
 	},
 );
 
-export default async function Control({ locale }: { locale: string }) {
+export default async function Control() {
 	return <DynamicFloatingControls shareTitle="Evame" />;
 }

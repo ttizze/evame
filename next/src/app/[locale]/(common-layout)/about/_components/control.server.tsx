@@ -1,4 +1,3 @@
-import { getCurrentUser } from "@/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import dynamic from "next/dynamic";
 import { fetchAboutPage } from "../_lib/fetch-about-page";
@@ -24,7 +23,6 @@ const DynamicPageLikeButton = dynamic(
 );
 
 export default async function Control({ locale }: { locale: string }) {
-	const currentUser = await getCurrentUser();
 	const pageWithTranslations = await fetchAboutPage(locale);
 	return (
 		<DynamicFloatingControls
