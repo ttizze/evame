@@ -74,10 +74,10 @@ export async function ContentWithTranslations({
 				{pageSegmentTitleWithTranslations && (
 					<DynamicSegmentAndTranslationSection
 						segmentWithTranslations={pageSegmentTitleWithTranslations}
-						showLockIcon={pageWithTranslations.page.status === "DRAFT"}
+						showLockIcon={pageWithTranslations.status === "DRAFT"}
 						currentHandle={currentUser?.handle}
 						isOwner={pageWithTranslations.user.handle === currentUser?.handle}
-						slug={pageWithTranslations.page.slug}
+						slug={pageWithTranslations.slug}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 						addTranslationFormTarget={
 							ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
@@ -90,10 +90,10 @@ export async function ContentWithTranslations({
 			/>
 			<SubHeader pageWithTranslations={pageWithTranslations} />
 			<DynamicTranslateActionSection
-				pageId={pageWithTranslations.page.id}
+				pageId={pageWithTranslations.id}
 				currentHandle={currentUser?.handle}
 				userAITranslationInfo={userAITranslationInfo}
-				sourceLocale={pageWithTranslations.page.sourceLocale}
+				sourceLocale={pageWithTranslations.sourceLocale}
 				pageAITranslationInfo={pageAITranslationInfo}
 				className="pt-3"
 				translateTarget={TranslateTarget.TRANSLATE_PAGE}
@@ -101,7 +101,7 @@ export async function ContentWithTranslations({
 			/>
 			<span className="js-content">
 				<DynamicMemoizedParsedContent
-					html={pageWithTranslations.page.content}
+					html={pageWithTranslations.content}
 					segmentWithTranslations={pageWithTranslations.segmentWithTranslations}
 					currentHandle={currentUser?.handle}
 					voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}

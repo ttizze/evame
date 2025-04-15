@@ -39,11 +39,8 @@ export type SegmentWithTranslations = {
 export type TagPageWithTag = TagPage & {
 	tag: Tag;
 };
-export interface PageLocalizedDate extends Omit<Page, "createdAt"> {
+export type PageWithTranslations = Omit<Page, "createdAt"> & {
 	createdAt: string;
-}
-export type PageWithTranslations = {
-	page: PageLocalizedDate;
 	user: SanitizedUser;
 	tagPages: TagPageWithTag[];
 	segmentWithTranslations: SegmentWithTranslations[];

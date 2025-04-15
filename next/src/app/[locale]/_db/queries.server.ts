@@ -210,13 +210,9 @@ export async function fetchPageWithTranslations(
 
 	if (!page) return null;
 
-	const { user, ...pageWithoutUser } = page;
 	return {
-		page: {
-			...pageWithoutUser,
-			createdAt: page.createdAt.toLocaleString(locale),
-		},
-		user,
+		...page,
+		createdAt: page.createdAt.toISOString(),
 		tagPages: page.tagPages,
 		segmentWithTranslations: await Promise.all(
 			page.pageSegments.map(async (segment) => {

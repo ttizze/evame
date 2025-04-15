@@ -85,7 +85,7 @@ export function SubHeader({
 							<span className="text-sm">{pageWithTranslations.user.name}</span>
 							{!isPinned && (
 								<span className="text-xs text-gray-500">
-									{pageWithTranslations.page.createdAt}
+									{pageWithTranslations.createdAt}
 								</span>
 							)}
 						</div>

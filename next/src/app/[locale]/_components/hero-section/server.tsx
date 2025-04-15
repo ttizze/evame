@@ -32,7 +32,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	const topPageWithTranslations = await fetchAboutPage(locale);
 
 	const pageAITranslationInfo = await fetchLatestPageAITranslationInfo(
-		topPageWithTranslations.page.id,
+		topPageWithTranslations.id,
 	);
 
 	const [title, text] = topPageWithTranslations.segmentWithTranslations
@@ -46,7 +46,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	}
 	const heroTitle = title;
 	const heroText = text;
-	const sourceLocale = topPageWithTranslations.page.sourceLocale;
+	const sourceLocale = topPageWithTranslations.sourceLocale;
 	return (
 		<div className="relative overflow-hidden border pt-10 flex flex-col items-center justify-center">
 			<Icon className="absolute h-6 w-6 -top-3 -left-3 dark:text-white text-black" />

@@ -24,10 +24,7 @@ export const fetchPageContext = cache(
 			currentUser?.id,
 		);
 
-		if (
-			!pageWithTranslations ||
-			pageWithTranslations.page.status === "ARCHIVE"
-		) {
+		if (!pageWithTranslations || pageWithTranslations.status === "ARCHIVE") {
 			return notFound();
 		}
 		const pageTitleWithTranslations =
@@ -50,12 +47,12 @@ export const fetchPageContext = cache(
 		const guestId = await getGuestId();
 		const [pageAITranslationInfo, userAITranslationInfo, pageCommentsCount] =
 			await Promise.all([
-				fetchLatestPageAITranslationInfo(pageWithTranslations.page.id),
+				fetchLatestPageAITranslationInfo(pageWithTranslations.id),
 				fetchLatestUserAITranslationInfo(
-					pageWithTranslations.page.id,
+					pageWithTranslations.id,
 					currentUser?.id ?? "0",
 				),
-				fetchPageCommentsCount(pageWithTranslations.page.id),
+				fetchPageCommentsCount(pageWithTranslations.id),
 			]);
 		return {
 			pageWithTranslations,

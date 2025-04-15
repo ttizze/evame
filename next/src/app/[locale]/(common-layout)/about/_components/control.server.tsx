@@ -28,7 +28,7 @@ export default async function Control({ locale }: { locale: string }) {
 		<DynamicFloatingControls
 			likeButton={
 				<DynamicPageLikeButton
-					pageId={pageWithTranslations.page.id}
+					pageId={pageWithTranslations.id}
 					showCount={false}
 				/>
 			}
