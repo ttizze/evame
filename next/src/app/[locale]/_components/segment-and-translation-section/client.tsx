@@ -3,16 +3,14 @@ import type {
 	AddTranslationFormTarget,
 	VoteTarget,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import { useContentDisplayState } from "@/app/[locale]/_hooks/use-content-display-state";
 import type { SegmentWithTranslations } from "@/app/[locale]/types";
 import { Link } from "@/i18n/routing";
 import { Lock } from "lucide-react";
 import { SquarePen } from "lucide-react";
-import type { ReactNode } from "react";
-import { useContentDisplayState } from "../hooks/use-content-display-state";
 import { TranslationSection } from "./translation-section";
 interface SegmentAndTranslationSectionProps {
 	segmentWithTranslations: SegmentWithTranslations;
-	elements: string | ReactNode | ReactNode[];
 	showLockIcon?: boolean;
 	segmentTextClassName?: string;
 	currentHandle: string | undefined;
@@ -24,7 +22,6 @@ interface SegmentAndTranslationSectionProps {
 
 export function SegmentAndTranslationSection({
 	segmentWithTranslations,
-	elements,
 	showLockIcon = false,
 	segmentTextClassName,
 	currentHandle,
@@ -53,7 +50,7 @@ export function SegmentAndTranslationSection({
 							</Link>
 						</div>
 					)}
-					{elements}
+					{segmentWithTranslations.segment.text}
 				</span>
 			)}
 			{showTranslation &&

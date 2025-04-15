@@ -41,6 +41,10 @@ model User {
   notifications                      Notification[]                      @relation("UserNotifications")
   actedNotifications                 Notification[]                      @relation("NotificationActor")
   projectLikes                       ProjectLike[]
+  projectSegmentTranslations         ProjectSegmentTranslation[]
+  projectSegmentTranslationVotes     ProjectSegmentTranslationVote[]
+  projectUserAITranslationInfo       ProjectUserAITranslationInfo[]
+
   @@map("users")
 }
 
@@ -319,58 +323,63 @@ model PageCommentSegmentTranslationVote {
 }
 
 model Project {
-  id          String          @id @default(cuid())
-  userId      String          @map("user_id")
-  title       String
-  description String          @db.Text
-  createdAt   DateTime        @default(now()) @map("created_at")
-  updatedAt   DateTime        @updatedAt @map("updated_at")
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  title        String
+  description  String   @db.Text
+  sourceLocale String   @default("unknown") @map("source_locale")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  links       ProjectLink[]
-  images      ProjectImage[]
-  projectTagRelations ProjectTagRelation[]
-  projectLikes       ProjectLike[]
+  user                     User                           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  links                    ProjectLink[]
+  images                   ProjectImage[]
+  projectTagRelations      ProjectTagRelation[]
+  projectLikes             ProjectLike[]
+  projectSegments          ProjectSegment[]
+  userAITranslationInfo    ProjectUserAITranslationInfo[]
+  projectAITranslationInfo ProjectAITranslationInfo[]
+
   @@map("projects")
 }
 
 model ProjectLink {
-  id        String   @id @default(cuid())
-  projectId String   @map("project_id")
-  description      String   @default("")
-  url       String
+  id          String @id @default(cuid())
+  projectId   String @map("project_id")
+  description String @default("")
+  url         String
 
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@map("project_links")
 }
 
 model ProjectImage {
-  id        String   @id @default(cuid())
-  projectId String   @map("project_id")
+  id        String @id @default(cuid())
+  projectId String @map("project_id")
   url       String
-  caption   String   @default("")
-  order     Int      @default(0)
+  caption   String @default("")
+  order     Int    @default(0)
 
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@map("project_images")
 }
 
 model ProjectTag {
-  id    String   @id @default(cuid())
-  name  String @unique
+  id                  String               @id @default(cuid())
+  name                String               @unique
   projectTagRelations ProjectTagRelation[]
 
   @@map("project_tags")
 }
 
 model ProjectTagRelation {
-  projectId String   @map("project_id")
-  projectTagId     String   @map("project_tag_id")
+  projectId    String @map("project_id")
+  projectTagId String @map("project_tag_id")
 
-  project Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectTag     ProjectTag @relation(fields: [projectTagId], references: [id], onDelete: Cascade)
+  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectTag ProjectTag @relation(fields: [projectTagId], references: [id], onDelete: Cascade)
 
   @@id([projectId, projectTagId])
   @@map("project_tag_relations")
@@ -382,10 +391,99 @@ model ProjectLike {
   userId    String   @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
 
-  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("project_likes")
+}
+
+model ProjectSegment {
+  id                         Int                         @id @default(autoincrement())
+  text                       String
+  number                     Int
+  textAndOccurrenceHash      String                      @map("text_and_occurrence_hash")
+  projectSegmentTranslations ProjectSegmentTranslation[]
+  project                    Project                     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId                  String                      @map("project_id")
+  createdAt                  DateTime                    @default(now()) @map("created_at")
+  updatedAt                  DateTime                    @updatedAt @map("updated_at")
+
+  @@unique([projectId, number])
+  @@unique([projectId, textAndOccurrenceHash])
+  @@index([projectId])
+  @@index([number])
+  @@index([textAndOccurrenceHash])
+  @@map("project_segments")
+}
+
+model ProjectSegmentTranslation {
+  id               Int            @id @default(autoincrement())
+  locale           String
+  text             String
+  projectSegmentId Int            @map("project_segment_id")
+  userId           String         @map("user_id")
+  point            Int            @default(0)
+  isArchived       Boolean        @default(false) @map("is_archived")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  projectSegment   ProjectSegment @relation(fields: [projectSegmentId], references: [id], onDelete: Cascade)
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectSegmentTranslationVotes            ProjectSegmentTranslationVote[]
+
+  @@index([projectSegmentId])
+  @@index([userId])
+  @@index([locale])
+  @@index([locale, isArchived])
+  @@index([projectSegmentId, locale, isArchived])
+  @@index([point, createdAt])
+  @@map("project_segment_translations")
+}
+
+model ProjectSegmentTranslationVote {
+  id                          Int                       @id @default(autoincrement())
+  userId                      String                    @map("user_id")
+  projectSegmentTranslationId Int                       @map("project_segment_translation_id")
+  isUpvote                    Boolean                   @map("is_upvote")
+  createdAt                   DateTime                  @default(now()) @map("created_at")
+  updatedAt                   DateTime                  @updatedAt @map("updated_at")
+  projectSegmentTranslation   ProjectSegmentTranslation @relation(fields: [projectSegmentTranslationId], references: [id], onDelete: Cascade)
+  user                        User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectSegmentTranslationId, userId])
+  @@index([projectSegmentTranslationId])
+  @@index([userId])
+  @@map("project_segment_translation_votes")
+}
+
+model ProjectUserAITranslationInfo {
+  id                    Int               @id @default(autoincrement())
+  userId                String            @map("user_id")
+  projectId             String            @map("project_id")
+  locale                String
+  aiModel               String            @map("ai_model")
+  aiTranslationStatus   TranslationStatus @default(PENDING) @map("ai_translation_status")
+  aiTranslationProgress Int               @default(0) @map("ai_translation_progress")
+  createdAt             DateTime          @default(now()) @map("created_at")
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project               Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([projectId, locale])
+  @@map("project_user_ai_translation_info")
+}
+
+model ProjectAITranslationInfo {
+  id                  Int               @id @default(autoincrement())
+  projectId           String            @map("project_id")
+  locale              String
+  aiTranslationStatus TranslationStatus @default(PENDING) @map("ai_translation_status")
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+  project             Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([projectId, locale, createdAt])
+  @@map("project_ai_translation_info")
 }
 
 model Account {
@@ -406,7 +504,6 @@ model Account {
   @@id([provider, providerAccountId])
   @@map("accounts")
 }
-
 
 enum NotificationType {
   FOLLOW

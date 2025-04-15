@@ -63,6 +63,8 @@ export async function upsertTags(tags: string[], pageId: number) {
 	return updatedTags;
 }
 
+//テキストが編集された場合､元テキストとの紐づけを更新する
+//紐づけはtextAndOccurrenceHashをキーにして行う
 export async function synchronizePagePageSegments(
 	pageId: number,
 	blocks: BlockWithNumber[],

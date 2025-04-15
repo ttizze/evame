@@ -26,9 +26,9 @@ const DynamicMemoizedParsedContent = dynamic(
 );
 const DynamicSegmentAndTranslationSection = dynamic(
 	() =>
-		import("./segment-and-translation-section").then(
-			(mod) => mod.SegmentAndTranslationSection,
-		),
+		import(
+			"@/app/[locale]/_components/segment-and-translation-section/client"
+		).then((mod) => mod.SegmentAndTranslationSection),
 	{
 		loading: () => <span>Loading Segment And Translation Section...</span>,
 	},
@@ -75,7 +75,6 @@ export async function ContentWithTranslations({
 					<DynamicSegmentAndTranslationSection
 						segmentWithTranslations={pageSegmentTitleWithTranslations}
 						showLockIcon={pageWithTranslations.page.status === "DRAFT"}
-						elements={pageSegmentTitleWithTranslations?.segment.text}
 						currentHandle={currentUser?.handle}
 						isOwner={pageWithTranslations.user.handle === currentUser?.handle}
 						slug={pageWithTranslations.page.slug}

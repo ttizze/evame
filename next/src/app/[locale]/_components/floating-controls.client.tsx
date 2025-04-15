@@ -1,9 +1,9 @@
 "use client";
+import { useContentDisplayState } from "@/app/[locale]/_hooks/use-content-display-state";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Languages, Text } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useContentDisplayState } from "../(common-layout)/user/[handle]/page/[slug]/_components/hooks/use-content-display-state";
 import { ShareDialog } from "../(common-layout)/user/[handle]/page/[slug]/_components/share-dialog";
 interface FloatingControlsProps {
 	shareTitle: string;

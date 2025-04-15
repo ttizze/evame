@@ -1,8 +1,8 @@
 import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/_lib/fetch-about-page";
-import { SegmentAndTranslationSection } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/segment-and-translation-section";
 import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { VOTE_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { TranslateActionSection } from "@/app/[locale]/_components/translate-action-section";
 import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/queries.server";
@@ -69,7 +69,6 @@ export default async function HeroSection({ locale }: { locale: string }) {
 					<SegmentAndTranslationSection
 						segmentWithTranslations={heroTitle}
 						segmentTextClassName="w-full mb-2"
-						elements={heroTitle.segment.text}
 						currentHandle={currentHandle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 						addTranslationFormTarget={
@@ -82,7 +81,6 @@ export default async function HeroSection({ locale }: { locale: string }) {
 					<SegmentAndTranslationSection
 						segmentWithTranslations={heroText}
 						segmentTextClassName="mb-2"
-						elements={heroText.segment.text}
 						currentHandle={currentHandle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 						addTranslationFormTarget={

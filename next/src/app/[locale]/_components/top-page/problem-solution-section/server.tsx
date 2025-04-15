@@ -1,9 +1,9 @@
-import { SegmentAndTranslationSection } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/segment-and-translation-section";
 import {
 	ADD_TRANSLATION_FORM_TARGET,
 	VOTE_TARGET,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
+import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import Globe from "@/app/[locale]/_components/top-page/problem-solution-section/components/globe.client";
 import { getCurrentUser } from "@/auth";
 import {
@@ -99,7 +99,6 @@ export default async function ProblemSolutionSection({
 					<h2 className="text-2xl font-bold text-center mb-10">
 						<SegmentAndTranslationSection
 							segmentWithTranslations={problemHeader}
-							elements={problemHeader.segment.text}
 							currentHandle={currentHandle}
 							voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 							addTranslationFormTarget={
@@ -116,7 +115,6 @@ export default async function ProblemSolutionSection({
 							title={
 								<SegmentAndTranslationSection
 									segmentWithTranslations={pair.header}
-									elements={pair.header.segment.text}
 									currentHandle={currentHandle}
 									voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 									addTranslationFormTarget={
@@ -127,7 +125,6 @@ export default async function ProblemSolutionSection({
 							description={
 								<SegmentAndTranslationSection
 									segmentWithTranslations={pair.text}
-									elements={pair.text.segment.text}
 									currentHandle={currentHandle}
 									voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 									addTranslationFormTarget={
