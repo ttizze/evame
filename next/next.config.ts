@@ -42,9 +42,9 @@ const config: NextConfig = {
 			},
 			{
 				protocol: "https",
-				hostname: "github.com",
+				hostname: "avatars.githubusercontent.com",
 				port: "",
-				pathname: "",
+				pathname: "/u/**",
 				search: "",
 			},
 			{
