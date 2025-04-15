@@ -9,6 +9,24 @@ import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/queries.ser
 import { getCurrentUser } from "@/auth";
 import Image from "next/image";
 
+
+export const Icon = ({ className, ...rest }: { className: string }) => {
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			fill="none"
+			viewBox="0 0 24 24"
+			strokeWidth="1.5"
+			stroke="currentColor"
+			className={className}
+			{...rest}
+		>
+			<title>Back</title>
+			<path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
+		</svg>
+	);
+};
+
 export default async function HeroSection({ locale }: { locale: string }) {
 	const currentUser = await getCurrentUser();
 	const currentHandle = currentUser?.handle;
@@ -32,19 +50,10 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	const sourceLocale = topPageWithTranslations.page.sourceLocale;
 	return (
 		<div className="relative overflow-hidden border pt-10 flex flex-col items-center justify-center">
-			<div className="absolute top-0 left-0 z-10">
-				<svg
-					width="24"
-					height="24"
-					viewBox="0 0 24 24"
-					fill="none"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<title>Back</title>
-					<path d="M1 12H12M12 1V12" stroke="currentColor" strokeWidth="1" />
-				</svg>
-			</div>
-
+			<Icon className="absolute h-6 w-6 -top-3 -left-3 dark:text-white text-black" />
+      <Icon className="absolute h-6 w-6 -bottom-3 -left-3 dark:text-white text-black" />
+      <Icon className="absolute h-6 w-6 -top-3 -right-3 dark:text-white text-black" />
+      <Icon className="absolute h-6 w-6 -bottom-3 -right-3 dark:text-white text-black" />
 			<div className="flex justify-center mb-10 z-10">
 				<TranslateActionSection
 					pageId={0}
@@ -166,19 +175,6 @@ repeating-conic-gradient(from -45deg at 50% center,
 						className="relative z-10"
 					/>
 				</div>
-			</div>
-			<div className="absolute bottom-0 right-0 z-10">
-				<svg
-					width="24"
-					height="24"
-					viewBox="0 0 24 24"
-					fill="none"
-					xmlns="http://www.w3.org/2000/svg"
-					style={{ transform: "rotate(180deg)" }}
-				>
-					<title>Square Corner</title>
-					<path d="M1 12H12M12 1V12" stroke="currentColor" strokeWidth="1" />
-				</svg>
 			</div>
 		</div>
 	);
