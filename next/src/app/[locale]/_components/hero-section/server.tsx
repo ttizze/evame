@@ -9,7 +9,6 @@ import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/queries.ser
 import { getCurrentUser } from "@/auth";
 import Image from "next/image";
 
-
 export const Icon = ({ className, ...rest }: { className: string }) => {
 	return (
 		<svg
@@ -51,9 +50,9 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	return (
 		<div className="relative overflow-hidden border pt-10 flex flex-col items-center justify-center">
 			<Icon className="absolute h-6 w-6 -top-3 -left-3 dark:text-white text-black" />
-      <Icon className="absolute h-6 w-6 -bottom-3 -left-3 dark:text-white text-black" />
-      <Icon className="absolute h-6 w-6 -top-3 -right-3 dark:text-white text-black" />
-      <Icon className="absolute h-6 w-6 -bottom-3 -right-3 dark:text-white text-black" />
+			<Icon className="absolute h-6 w-6 -bottom-3 -left-3 dark:text-white text-black" />
+			<Icon className="absolute h-6 w-6 -top-3 -right-3 dark:text-white text-black" />
+			<Icon className="absolute h-6 w-6 -bottom-3 -right-3 dark:text-white text-black" />
 			<div className="flex justify-center mb-10 z-10">
 				<TranslateActionSection
 					pageId={0}
