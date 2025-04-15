@@ -62,8 +62,6 @@ export type PageWithRelationsType = Prisma.PageGetPayload<{
 type FetchParams = {
 	page?: number;
 	pageSize?: number;
-	currentUserId?: string;
-	currentGuestId?: string;
 	pageOwnerId?: string;
 	isPopular?: boolean;
 	onlyUserOwn?: boolean;
@@ -73,8 +71,6 @@ type FetchParams = {
 export async function fetchPaginatedPublicPagesWithInfo({
 	page = 1,
 	pageSize = 9,
-	currentUserId,
-	currentGuestId,
 	pageOwnerId,
 	isPopular = false,
 	onlyUserOwn = false,
@@ -107,16 +103,6 @@ export async function fetchPaginatedPublicPagesWithInfo({
 		orderBy = { createdAt: "desc" };
 	}
 
-	// いいね判定用where句 (ログインユーザ or ゲストID)
-	let likeWhere: Prisma.LikePageWhereInput;
-	if (currentUserId) {
-		likeWhere = { userId: currentUserId };
-	} else if (currentGuestId) {
-		likeWhere = { guestId: currentGuestId };
-	} else {
-		likeWhere = { userId: "null" };
-	}
-
 	// 実際に使うselectを生成 (localeなどを含む)
 	const pageWithRelationsSelect = createPageWithRelationsSelect(locale);
 
@@ -129,13 +115,6 @@ export async function fetchPaginatedPublicPagesWithInfo({
 			take: pageSize,
 			select: {
 				...pageWithRelationsSelect,
-				likePages: {
-					where: likeWhere,
-					select: {
-						userId: true,
-						guestId: true,
-					},
-				},
 			},
 		}),
 		prisma.page.count({

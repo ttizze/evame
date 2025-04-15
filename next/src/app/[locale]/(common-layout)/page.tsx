@@ -155,11 +155,7 @@ export default async function HomePage({
 						</section>
 
 						<section>
-							<PopularPageList
-								locale={locale}
-								currentUserId={currentUser?.id ?? ""}
-								searchParams={searchParams}
-							/>
+							<PopularPageList locale={locale} searchParams={searchParams} />
 							<div className="flex justify-center w-full mt-6">
 								<Button
 									variant="default"
@@ -214,11 +210,7 @@ export default async function HomePage({
 						</section>
 
 						<section>
-							<NewPageList
-								locale={locale}
-								currentUserId={currentUser?.id ?? ""}
-								searchParams={searchParams}
-							/>
+							<NewPageList locale={locale} searchParams={searchParams} />
 							<div className="flex justify-center w-full mt-6">
 								<Button
 									variant="default"
@@ -252,17 +244,9 @@ export default async function HomePage({
 					<>
 						<SortTabs defaultSort={sort} />
 						{sort === "popular" ? (
-							<PopularPageList
-								locale={locale}
-								currentUserId={currentUser?.id ?? ""}
-								searchParams={searchParams}
-							/>
+							<PopularPageList locale={locale} searchParams={searchParams} />
 						) : (
-							<NewPageList
-								locale={locale}
-								currentUserId={currentUser?.id ?? ""}
-								searchParams={searchParams}
-							/>
+							<NewPageList locale={locale} searchParams={searchParams} />
 						)}
 					</>
 				)}

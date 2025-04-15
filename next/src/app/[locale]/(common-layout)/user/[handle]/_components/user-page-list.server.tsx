@@ -3,7 +3,6 @@ import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/_db/queries.server";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
-import { getGuestId } from "@/lib/get-guest-id";
 import { notFound } from "next/navigation";
 
 interface PageListServerProps {
@@ -22,7 +21,6 @@ export async function PageListServer({
 	showPagination = false,
 }: PageListServerProps) {
 	const currentUser = await getCurrentUser();
-	const guestId = !currentUser ? await getGuestId() : undefined;
 	const isOwner = currentUser?.handle === handle;
 
 	const pageOwner = await fetchUserByHandle(handle);
@@ -34,8 +32,6 @@ export async function PageListServer({
 		await fetchPaginatedPublicPagesWithInfo({
 			page: page,
 			pageSize: 5,
-			currentUserId: currentUser?.id,
-			currentGuestId: guestId,
 			pageOwnerId: pageOwner.id,
 			isPopular: sort === "popular",
 			onlyUserOwn: true,

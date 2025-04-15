@@ -1,6 +1,5 @@
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/_db/queries.server";
-import { getGuestId } from "@/lib/get-guest-id";
 import { BookOpenIcon } from "lucide-react";
 import { createLoader, parseAsInteger } from "nuqs/server";
 import type { SearchParams } from "nuqs/server";
@@ -15,25 +14,20 @@ const loadSearchParams = createLoader(searchParamsSchema);
 
 interface PopularPageListProps {
 	locale: string;
-	currentUserId: string;
 	searchParams: Promise<SearchParams>;
 	showPagination?: boolean;
 }
 
 export default async function PopularPageList({
 	locale,
-	currentUserId,
 	searchParams,
 	showPagination = false,
 }: PopularPageListProps) {
 	const { page } = await loadSearchParams(searchParams);
-	const guestId = await getGuestId();
 
 	const result = await fetchPaginatedPublicPagesWithInfo({
 		page,
 		pageSize: 5,
-		currentUserId: currentUserId,
-		currentGuestId: guestId,
 		isPopular: true,
 		locale,
 	});
