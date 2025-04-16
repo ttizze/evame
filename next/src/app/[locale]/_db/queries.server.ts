@@ -58,7 +58,7 @@ function createTagPagesSelect() {
 		},
 	};
 }
-export function createPageWithRelationsForPageListSelect(
+export function createPagesWithRelationsSelect(
 	onlyTitle?: boolean,
 	locale?: string,
 ) {
@@ -81,22 +81,31 @@ export function createPageWithRelationsForPageListSelect(
 }
 
 type PageWithRelationsSelect = Prisma.PageGetPayload<{
-	select: ReturnType<typeof createPageWithRelationsForPageListSelect>;
+	select: ReturnType<typeof createPagesWithRelationsSelect>;
 }>;
 export type PagesWithRelations = Omit<
 	PageWithRelations,
 	"content" | "updatedAt" | "userId" | "sourceLocale"
 >;
 
-export async function transformToPageWithSegmentAndTranslations(
-	page: PageWithRelationsSelect,
-): Promise<PagesWithRelations> {
-	const segmentWithTranslations = await Promise.all(
-		page.pageSegments.map(async (segment) => {
+export async function transformPageSegments(
+	segments: PageWithRelationsSelect["pageSegments"],
+	includeUserVotes = false,
+) {
+	return Promise.all(
+		segments.map(async (segment) => {
 			const segmentTranslationsWithVotes = segment.pageSegmentTranslations.map(
 				(translation) => ({
 					...translation,
-					translationCurrentUserVote: null,
+					translationCurrentUserVote:
+						includeUserVotes &&
+						translation.votes &&
+						translation.votes.length > 0
+							? {
+									...translation.votes[0],
+									translationId: translation.id,
+								}
+							: null,
 				}),
 			);
 
@@ -113,6 +122,16 @@ export async function transformToPageWithSegmentAndTranslations(
 			};
 		}),
 	);
+}
+
+// 既存の関数を修正
+export async function transformToPageWithSegmentAndTranslations(
+	page: PageWithRelationsSelect,
+): Promise<PagesWithRelations> {
+	const segmentWithTranslations = await transformPageSegments(
+		page.pageSegments,
+		false,
+	);
 
 	return {
 		...page,
@@ -120,7 +139,6 @@ export async function transformToPageWithSegmentAndTranslations(
 		segmentWithTranslations,
 	};
 }
-
 type FetchParams = {
 	page?: number;
 	pageSize?: number;
@@ -131,7 +149,7 @@ type FetchParams = {
 	currentUserId?: string;
 };
 
-export async function fetchPaginatedPublicPagesWithInfo({
+export async function fetchPaginatedPublicPagesWithRelations({
 	page = 1,
 	pageSize = 9,
 	pageOwnerId,
@@ -167,10 +185,7 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	}
 
 	// 実際に使うselectを生成 (localeなどを含む)
-	const pageWithRelationsSelect = createPageWithRelationsForPageListSelect(
-		true,
-		locale,
-	);
+	const pageWithRelationsSelect = createPagesWithRelationsSelect(true, locale);
 
 	// findManyとcountを同時並列で呼び出し
 	const [rawPagesWithRelations, totalCount] = await Promise.all([
@@ -219,34 +234,14 @@ export async function fetchPageWithTranslations(
 
 	if (!page) return null;
 
+	const segmentWithTranslations = await transformPageSegments(
+		page.pageSegments,
+		true,
+	);
 	return {
 		...page,
 		createdAt: page.createdAt.toISOString(),
-		segmentWithTranslations: await Promise.all(
-			page.pageSegments.map(async (segment) => {
-				const segmentTranslationsWithVotes =
-					segment.pageSegmentTranslations.map((segmentTranslation) => ({
-						...segmentTranslation,
-						translationCurrentUserVote:
-							segmentTranslation.votes && segmentTranslation.votes.length > 0
-								? {
-										...segmentTranslation.votes[0],
-										translationId: segmentTranslation.id,
-									}
-								: null,
-					}));
-
-				const bestSegmentTranslationWithVote = await getBestTranslation(
-					segmentTranslationsWithVotes,
-				);
-
-				return {
-					...segment,
-					segmentTranslationsWithVotes,
-					bestSegmentTranslationWithVote,
-				};
-			}),
-		),
+		segmentWithTranslations,
 	};
 }
 

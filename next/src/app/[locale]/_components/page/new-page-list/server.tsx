@@ -1,6 +1,6 @@
 import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/_db/queries.server";
+import { fetchPaginatedPublicPagesWithRelations } from "@/app/[locale]/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { SparklesIcon } from "lucide-react";
 import { createLoader, parseAsInteger } from "nuqs/server";
@@ -28,7 +28,7 @@ export default async function NewPageList({
 	const currentUserHandle = currentUser?.handle;
 
 	const { pagesWithRelations, totalPages } =
-		await fetchPaginatedPublicPagesWithInfo({
+		await fetchPaginatedPublicPagesWithRelations({
 			page,
 			pageSize: 5,
 			isPopular: false,

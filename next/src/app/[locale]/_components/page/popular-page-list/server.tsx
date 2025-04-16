@@ -1,5 +1,5 @@
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/_db/queries.server";
+import { fetchPaginatedPublicPagesWithRelations } from "@/app/[locale]/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { BookOpenIcon } from "lucide-react";
 import { createLoader, parseAsInteger } from "nuqs/server";
@@ -28,7 +28,7 @@ export default async function PopularPageList({
 	const currentUser = await getCurrentUser();
 	const currentUserHandle = currentUser?.handle;
 
-	const result = await fetchPaginatedPublicPagesWithInfo({
+	const result = await fetchPaginatedPublicPagesWithRelations({
 		page,
 		pageSize: 5,
 		isPopular: true,

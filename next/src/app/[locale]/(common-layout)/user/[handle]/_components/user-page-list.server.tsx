@@ -1,6 +1,6 @@
 import { PageList } from "@/app/[locale]/_components/page/page-list.server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/_db/queries.server";
+import { fetchPaginatedPublicPagesWithRelations } from "@/app/[locale]/_db/queries.server";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { notFound } from "next/navigation";
@@ -30,7 +30,7 @@ export async function PageListServer({
 	}
 
 	const { pagesWithRelations, totalPages } =
-		await fetchPaginatedPublicPagesWithInfo({
+		await fetchPaginatedPublicPagesWithRelations({
 			page: page,
 			pageSize: 5,
 			pageOwnerId: pageOwner.id,
