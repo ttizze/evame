@@ -36,15 +36,6 @@ export type SegmentWithTranslations = Segment & {
 type TagPageWithTag = TagPage & {
 	tag: Tag;
 };
-export type PageBasicInfo = Omit<Page, "createdAt" | "content"> & {
-	createdAt: string;
-	user: SanitizedUser;
-	tagPages: TagPageWithTag[];
-	segmentWithTranslations: SegmentWithTranslations[];
-	_count?: {
-		pageComments: number;
-	};
-};
 export type PageWithRelations = Omit<Page, "createdAt"> & {
 	createdAt: string;
 	user: SanitizedUser;

@@ -7,7 +7,7 @@ import { PageCommentButton } from "@/app/[locale]/_components/page/page-comment-
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
-import type { PageWithRelationsListType } from "@/app/[locale]/_db/queries.server";
+import type { PagesWithRelations } from "@/app/[locale]/_db/queries.server";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
@@ -16,7 +16,7 @@ import Image from "next/image";
 import { PageActionsDropdown } from "./page-actions-dropdown/client";
 
 type PageListProps = {
-	pageWithRelations: PageWithRelationsListType;
+	pageWithRelations: PagesWithRelations;
 	pageLink: string;
 	userLink: string;
 	showOwnerActions?: boolean;

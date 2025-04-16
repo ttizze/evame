@@ -1,42 +1,43 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { getBestTranslation } from "../_lib/get-best-translation";
-import type { PageWithRelations, SegmentWithTranslations } from "../types";
+import type { PageWithRelations } from "../types";
 
-export function createPageWithRelationsSelect(locale?: string) {
+function createUserSelectFields() {
 	return {
 		id: true,
-		slug: true,
+		name: true,
+		handle: true,
+		image: true,
 		createdAt: true,
-		status: true,
-		user: {
-			select: {
-				handle: true,
-				name: true,
-				image: true,
-				profile: true,
-			},
-		},
+		updatedAt: true,
+		profile: true,
+		twitterHandle: true,
+		totalPoints: true,
+		isAI: true,
+	};
+}
+
+function createPageSegmentsSelect(
+	onlyTitle?: boolean,
+	locale?: string,
+	currentUserId?: string,
+) {
+	return {
 		pageSegments: {
-			where: { number: 0 },
+			where: onlyTitle ? { number: 0 } : undefined,
 			include: {
 				pageSegmentTranslations: {
 					where: { locale, isArchived: false },
 					include: {
 						user: {
-							select: {
-								id: true,
-								name: true,
-								handle: true,
-								image: true,
-								createdAt: true,
-								updatedAt: true,
-								profile: true,
-								twitterHandle: true,
-								totalPoints: true,
-								isAI: true,
-							},
+							select: createUserSelectFields(),
 						},
+						...(currentUserId && {
+							votes: {
+								where: { userId: currentUserId },
+							},
+						}),
 					},
 					orderBy: [
 						{ point: Prisma.SortOrder.desc },
@@ -45,16 +46,32 @@ export function createPageWithRelationsSelect(locale?: string) {
 				},
 			},
 		},
+	};
+}
+
+function createTagPagesSelect() {
+	return {
 		tagPages: {
-			select: {
-				tag: {
-					select: {
-						id: true,
-						name: true,
-					},
-				},
+			include: {
+				tag: true,
 			},
 		},
+	};
+}
+export function createPageWithRelationsForPageListSelect(
+	onlyTitle?: boolean,
+	locale?: string,
+) {
+	return {
+		id: true,
+		slug: true,
+		createdAt: true,
+		status: true,
+		user: {
+			select: createUserSelectFields(),
+		},
+		...createPageSegmentsSelect(onlyTitle, locale),
+		...createTagPagesSelect(),
 		_count: {
 			select: {
 				pageComments: true,
@@ -63,25 +80,17 @@ export function createPageWithRelationsSelect(locale?: string) {
 	};
 }
 
-export type PageWithRelationsSelectType = Prisma.PageGetPayload<{
-	select: ReturnType<typeof createPageWithRelationsSelect>;
+type PageWithRelationsSelect = Prisma.PageGetPayload<{
+	select: ReturnType<typeof createPageWithRelationsForPageListSelect>;
 }>;
-export type PageWithRelationsListType = Omit<
-	PageWithRelationsSelectType,
-	"createdAt" | "pageSegments"
-> & {
-	createdAt: string;
-	segmentWithTranslations: SegmentWithTranslations[];
-};
-// Transform the PageWithRelationsType to include segmentWithTranslations
+export type PagesWithRelations = Omit<
+	PageWithRelations,
+	"content" | "updatedAt" | "userId" | "sourceLocale"
+>;
+
 export async function transformToPageWithSegmentAndTranslations(
-	page: PageWithRelationsSelectType,
-): Promise<
-	Omit<PageWithRelationsSelectType, "createdAt"> & {
-		createdAt: string;
-		segmentWithTranslations: SegmentWithTranslations[];
-	}
-> {
+	page: PageWithRelationsSelect,
+): Promise<PagesWithRelations> {
 	const segmentWithTranslations = await Promise.all(
 		page.pageSegments.map(async (segment) => {
 			const segmentTranslationsWithVotes = segment.pageSegmentTranslations.map(
@@ -130,7 +139,7 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	onlyUserOwn = false,
 	locale = "en",
 }: FetchParams): Promise<{
-	pagesWithRelations: PageWithRelationsListType[];
+	pagesWithRelations: PagesWithRelations[];
 	totalPages: number;
 }> {
 	const skip = (page - 1) * pageSize;
@@ -158,7 +167,10 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	}
 
 	// 実際に使うselectを生成 (localeなどを含む)
-	const pageWithRelationsSelect = createPageWithRelationsSelect(locale);
+	const pageWithRelationsSelect = createPageWithRelationsForPageListSelect(
+		true,
+		locale,
+	);
 
 	// findManyとcountを同時並列で呼び出し
 	const [rawPagesWithRelations, totalCount] = await Promise.all([
@@ -198,53 +210,10 @@ export async function fetchPageWithTranslations(
 		where: { slug },
 		include: {
 			user: {
-				select: {
-					id: true,
-					name: true,
-					handle: true,
-					image: true,
-					createdAt: true,
-					updatedAt: true,
-					profile: true,
-					twitterHandle: true,
-					totalPoints: true,
-					isAI: true,
-				},
+				select: createUserSelectFields(),
 			},
-			pageSegments: {
-				include: {
-					pageSegmentTranslations: {
-						where: { locale, isArchived: false },
-						include: {
-							user: {
-								select: {
-									id: true,
-									name: true,
-									handle: true,
-									image: true,
-									createdAt: true,
-									updatedAt: true,
-									profile: true,
-									twitterHandle: true,
-									totalPoints: true,
-									isAI: true,
-								},
-							},
-							votes: {
-								where: currentUserId
-									? { userId: currentUserId }
-									: { userId: "0" },
-							},
-						},
-						orderBy: [{ point: "desc" }, { createdAt: "desc" }],
-					},
-				},
-			},
-			tagPages: {
-				include: {
-					tag: true,
-				},
-			},
+			...createPageSegmentsSelect(false, locale, currentUserId),
+			...createTagPagesSelect(),
 		},
 	});
 

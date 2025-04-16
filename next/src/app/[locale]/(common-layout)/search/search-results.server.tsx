@@ -1,13 +1,13 @@
 import { PageList } from "@/app/[locale]/_components/page/page-list.server";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import type { PageWithRelationsListType } from "@/app/[locale]/_db/queries.server";
+import type { PagesWithRelations } from "@/app/[locale]/_db/queries.server";
 import type { SanitizedUser } from "@/app/types";
 import type { Tag } from "@prisma/client";
 import type { Category } from "./constants";
 
 interface SearchResultsProps {
-	pages: PageWithRelationsListType[] | undefined;
+	pagesWithRelations: PagesWithRelations[] | undefined;
 	tags: Tag[] | undefined;
 	users: SanitizedUser[] | undefined;
 	totalPages: number;
@@ -17,7 +17,7 @@ interface SearchResultsProps {
 }
 
 export function SearchResults({
-	pages,
+	pagesWithRelations,
 	tags,
 	users,
 	totalPages,
@@ -29,7 +29,7 @@ export function SearchResults({
 		<div>
 			<div className="space-y-4">
 				{(currentCategory === "title" || currentCategory === "content") &&
-					pages?.length === 0 && (
+					pagesWithRelations?.length === 0 && (
 						<p className="text-gray-500">No results found.</p>
 					)}
 				{currentCategory === "tags" && tags?.length === 0 && (
@@ -42,19 +42,21 @@ export function SearchResults({
 				{currentCategory === "tags" && tags?.length && tags.length > 0 && (
 					<PageTagList tag={tags} />
 				)}
-				{currentCategory === "tags" && pages?.length && pages.length > 0 && (
-					<div className="space-y-4">
-						{pages.map((p) => (
-							<PageList
-								key={p.id}
-								pageWithRelations={p}
-								pageLink={`/user/${p.user.handle}/page/${p.slug}`}
-								userLink={`/user/${p.user.handle}`}
-								locale={locale}
-							/>
-						))}
-					</div>
-				)}
+				{currentCategory === "tags" &&
+					pagesWithRelations?.length &&
+					pagesWithRelations.length > 0 && (
+						<div className="space-y-4">
+							{pagesWithRelations.map((p) => (
+								<PageList
+									key={p.id}
+									pageWithRelations={p}
+									pageLink={`/user/${p.user.handle}/page/${p.slug}`}
+									userLink={`/user/${p.user.handle}`}
+									locale={locale}
+								/>
+							))}
+						</div>
+					)}
 
 				{currentCategory === "user" && users?.length && users.length > 0 && (
 					<div className="space-y-4">
@@ -72,10 +74,10 @@ export function SearchResults({
 				)}
 
 				{(currentCategory === "title" || currentCategory === "content") &&
-					pages?.length &&
-					pages.length > 0 && (
+					pagesWithRelations?.length &&
+					pagesWithRelations.length > 0 && (
 						<div className="space-y-4">
-							{pages.map((p) => (
+							{pagesWithRelations.map((p) => (
 								<PageList
 									key={p.id}
 									pageWithRelations={p}
