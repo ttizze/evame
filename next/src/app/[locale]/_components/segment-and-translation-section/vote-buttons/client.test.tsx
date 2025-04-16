@@ -8,13 +8,19 @@ import type { VoteTarget } from "./constants";
 const dummyVoteTarget = "example-target" as VoteTarget;
 
 const dummyTranslationUpvote = {
-	segmentTranslation: { id: 1, point: 10 },
-	translationVote: { isUpvote: true },
+	segmentTranslation: {
+		id: 1,
+		point: 10,
+		translationCurrentUserVote: { isUpvote: true },
+	},
 } as SegmentTranslationWithVote;
 
 const dummyTranslationDownvote = {
-	segmentTranslation: { id: 2, point: 5 },
-	translationVote: { isUpvote: false },
+	segmentTranslation: {
+		id: 2,
+		point: 5,
+		translationCurrentUserVote: { isUpvote: false },
+	},
 } as SegmentTranslationWithVote;
 
 vi.mock("next/form", () => ({

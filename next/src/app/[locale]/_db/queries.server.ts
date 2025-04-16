@@ -198,14 +198,16 @@ export async function fetchPageWithTranslations(
 			page.pageSegments.map(async (segment) => {
 				const segmentTranslationsWithVotes =
 					segment.pageSegmentTranslations.map((segmentTranslation) => ({
-						segmentTranslation: segmentTranslation,
-						translationVote:
-							segmentTranslation.votes && segmentTranslation.votes.length > 0
-								? {
-										...segmentTranslation.votes[0],
-										translationId: segmentTranslation.id,
-									}
-								: null,
+						segmentTranslation: {
+							...segmentTranslation,
+							translationCurrentUserVote:
+								segmentTranslation.votes && segmentTranslation.votes.length > 0
+									? {
+											...segmentTranslation.votes[0],
+											translationId: segmentTranslation.id,
+										}
+									: null,
+						},
 					}));
 
 				const bestSegmentTranslationWithVote = await getBestTranslation(

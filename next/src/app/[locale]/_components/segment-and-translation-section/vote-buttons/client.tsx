@@ -26,7 +26,9 @@ export const VoteButtons = memo(function VoteButtons({
 	>(voteTranslationAction, {
 		success: false,
 		data: {
-			isUpvote: translationWithVote.translationVote?.isUpvote,
+			isUpvote:
+				translationWithVote.segmentTranslation.translationCurrentUserVote
+					?.isUpvote,
 			point: translationWithVote.segmentTranslation.point,
 		},
 	});

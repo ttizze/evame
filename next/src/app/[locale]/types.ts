@@ -1,6 +1,11 @@
 import type { Page, Tag, TagPage } from "@prisma/client";
 import type { SanitizedUser } from "../types";
 
+type Segment = {
+	id: number;
+	number: number;
+	text: string;
+};
 type SegmentTranslation = {
 	id: number;
 	locale: string;
@@ -10,7 +15,7 @@ type SegmentTranslation = {
 	createdAt: Date;
 };
 
-type TranslationVote = {
+type TranslationCurrentUserVote = {
 	id: number;
 	userId: string;
 	translationId: number;
@@ -22,15 +27,10 @@ type TranslationVote = {
 export type SegmentTranslationWithVote = {
 	segmentTranslation: SegmentTranslation & {
 		user: SanitizedUser;
+		translationCurrentUserVote: TranslationCurrentUserVote | null;
 	};
-	translationVote: TranslationVote | null;
 };
 
-type Segment = {
-	id: number;
-	number: number;
-	text: string;
-};
 export type SegmentWithTranslations = {
 	segment: Segment;
 	segmentTranslationsWithVotes: SegmentTranslationWithVote[];

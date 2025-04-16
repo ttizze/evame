@@ -1,23 +1,26 @@
 import type { SegmentTranslationWithVote } from "../types";
 
 export async function getBestTranslation(
-	translationsWithVotes: SegmentTranslationWithVote[],
+	segmentTranslationWithVote: SegmentTranslationWithVote[],
 ): Promise<SegmentTranslationWithVote | null> {
-	if (translationsWithVotes.length === 0) {
+	if (segmentTranslationWithVote.length === 0) {
 		return null;
 	}
-	const upvotedTranslations = translationsWithVotes.filter(
-		(t) => t.translationVote?.isUpvote,
+	const upvotedTranslations = segmentTranslationWithVote.filter(
+		(t) => t.segmentTranslation.translationCurrentUserVote?.isUpvote,
 	);
 	if (upvotedTranslations.length > 0) {
 		return upvotedTranslations.reduce((prev, current) => {
 			const currentUpdatedAt =
-				current.translationVote?.updatedAt ?? new Date(0);
-			const prevUpdatedAt = prev.translationVote?.updatedAt ?? new Date(0);
+				current.segmentTranslation.translationCurrentUserVote?.updatedAt ??
+				new Date(0);
+			const prevUpdatedAt =
+				prev.segmentTranslation.translationCurrentUserVote?.updatedAt ??
+				new Date(0);
 			return currentUpdatedAt > prevUpdatedAt ? current : prev;
 		});
 	}
-	return translationsWithVotes.reduce((prev, current) => {
+	return segmentTranslationWithVote.reduce((prev, current) => {
 		if (prev.segmentTranslation.point !== current.segmentTranslation.point) {
 			return prev.segmentTranslation.point > current.segmentTranslation.point
 				? prev
