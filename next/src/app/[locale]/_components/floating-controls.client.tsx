@@ -31,7 +31,7 @@ export function FloatingControls({
 		baseClasses: "h-12 w-12 rounded-full",
 		toggledOffClasses: `bg-muted after:absolute after:w-full after:h-[1px] after:bg-current after:top-1/2 
 		after:left-0 after:origin-center after:-rotate-45`,
-		containerClasses: `${position} z-999 w-64 border rounded-full p-2 bg-gray-50 dark:bg-gray-900 shadow-lg dark:shadow-gray-900`,
+		containerClasses: `${position} z-50 w-64 border rounded-full p-2 bg-gray-50 dark:bg-gray-900 shadow-lg dark:shadow-gray-900`,
 		tocContainerClasses:
 			"bg-background mb-3 p-4 rounded-xl drop-shadow-xl dark:drop-shadow-[0_9px_7px_rgba(255,255,255,0.1)] border border-border animate-in zoom-in-95 duration-200",
 	};
