@@ -1,10 +1,10 @@
 import type { PageWithRelations } from "@/app/[locale]/types";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import type { ReactNode } from "react";
 import { vi } from "vitest";
 import { SubHeader } from "./sub-header";
 import * as TocModule from "./toc";
-
 // Mock the dependencies
 vi.mock("@/i18n/routing", () => ({
 	Link: ({
@@ -27,7 +27,6 @@ vi.mock("./toc", () => ({
 			onClick={onItemClick}
 			onKeyUp={onItemClick}
 			onKeyDown={onItemClick}
-			onKeyPress={onItemClick}
 		>
 			Table of Contents
 		</div>
@@ -37,17 +36,15 @@ vi.mock("./toc", () => ({
 
 describe("SubHeader", () => {
 	const mockPageWithRelations = {
+		createdAt: "2023-01-01T00:00:00.000Z",
+		slug: "test-page",
+		title: "Test Page",
+		content: "Test content",
+		translations: [],
 		user: {
 			handle: "testuser",
 			name: "Test User",
 			image: "/test-image.jpg",
-		},
-		page: {
-			createdAt: "2023-01-01",
-			slug: "test-page",
-			title: "Test Page",
-			content: "Test content",
-			translations: [],
 		},
 	} as unknown as PageWithRelations;
 
@@ -58,16 +55,24 @@ describe("SubHeader", () => {
 	test("renders user information correctly", () => {
 		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(false);
 
-		render(<SubHeader pageWithRelations={mockPageWithRelations} />);
+		render(
+			<NextIntlClientProvider locale="en">
+				<SubHeader pageWithRelations={mockPageWithRelations} />
+			</NextIntlClientProvider>,
+		);
 
 		expect(screen.getByText("Test User")).toBeInTheDocument();
-		expect(screen.getByText("2023-01-01")).toBeInTheDocument();
+		expect(screen.getByText("1/1/2023, 9:00:00 AM")).toBeInTheDocument();
 	});
 
 	test("does not render TOC button when no TOC content", () => {
 		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(false);
 
-		render(<SubHeader pageWithRelations={mockPageWithRelations} />);
+		render(
+			<NextIntlClientProvider locale="en">
+				<SubHeader pageWithRelations={mockPageWithRelations} />
+			</NextIntlClientProvider>,
+		);
 
 		expect(screen.queryByTitle("Table of Contents")).not.toBeInTheDocument();
 	});
@@ -75,7 +80,11 @@ describe("SubHeader", () => {
 	test("renders TOC button when TOC content exists", () => {
 		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(true);
 
-		render(<SubHeader pageWithRelations={mockPageWithRelations} />);
+		render(
+			<NextIntlClientProvider locale="en">
+				<SubHeader pageWithRelations={mockPageWithRelations} />
+			</NextIntlClientProvider>,
+		);
 
 		expect(screen.getByTitle("Table of Contents")).toBeInTheDocument();
 	});
@@ -83,7 +92,11 @@ describe("SubHeader", () => {
 	test("toggles TOC visibility when TOC button is clicked", () => {
 		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(true);
 
-		render(<SubHeader pageWithRelations={mockPageWithRelations} />);
+		render(
+			<NextIntlClientProvider locale="en">
+				<SubHeader pageWithRelations={mockPageWithRelations} />
+			</NextIntlClientProvider>,
+		);
 
 		// TOC should not be visible initially
 		expect(screen.queryByTestId("toc")).not.toBeInTheDocument();
@@ -104,7 +117,11 @@ describe("SubHeader", () => {
 	test("closes TOC when a TOC item is clicked", () => {
 		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(true);
 
-		render(<SubHeader pageWithRelations={mockPageWithRelations} />);
+		render(
+			<NextIntlClientProvider locale="en">
+				<SubHeader pageWithRelations={mockPageWithRelations} />
+			</NextIntlClientProvider>,
+		);
 
 		// Open the TOC
 		fireEvent.click(screen.getByTitle("Table of Contents"));
