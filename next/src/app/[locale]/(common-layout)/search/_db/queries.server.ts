@@ -1,7 +1,8 @@
 // app/routes/search/functions/queries.server.ts
 
-import type { PageWithRelationsType } from "@/app/[locale]/_db/queries.server";
 import { createPageWithRelationsSelect } from "@/app/[locale]/_db/queries.server";
+import type { PageWithRelationsListType } from "@/app/[locale]/_db/queries.server";
+import { transformToPageWithSegmentAndTranslations } from "@/app/[locale]/_db/queries.server";
 import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";
 import { sanitizeUser } from "@/lib/sanitize-user";
@@ -104,11 +105,11 @@ export async function searchTitle(
 	take: number,
 	locale: string,
 ): Promise<{
-	pagesWithRelations: PageWithRelationsType[];
+	pagesWithRelations: PageWithRelationsListType[];
 	totalCount: number;
 }> {
 	const pageWithRelationsSelect = createPageWithRelationsSelect(locale);
-	const [pagesWithRelations, count] = await Promise.all([
+	const [rawPagesWithRelations, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
 			take,
@@ -135,7 +136,11 @@ export async function searchTitle(
 			},
 		}),
 	]);
-
+	const pagesWithRelations = await Promise.all(
+		rawPagesWithRelations.map((page) =>
+			transformToPageWithSegmentAndTranslations(page),
+		),
+	);
 	return { pagesWithRelations, totalCount: count };
 }
 
@@ -146,11 +151,11 @@ export async function searchByTag(
 	take: number,
 	locale: string,
 ): Promise<{
-	pagesWithRelations: PageWithRelationsType[];
+	pagesWithRelations: PageWithRelationsListType[];
 	totalCount: number;
 }> {
 	const pageWithRelationsSelect = createPageWithRelationsSelect(locale);
-	const [pagesWithRelations, count] = await Promise.all([
+	const [rawPagesWithRelations, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
 			take,
@@ -179,7 +184,11 @@ export async function searchByTag(
 			},
 		}),
 	]);
-
+	const pagesWithRelations = await Promise.all(
+		rawPagesWithRelations.map((page) =>
+			transformToPageWithSegmentAndTranslations(page),
+		),
+	);
 	return { pagesWithRelations, totalCount: count };
 }
 
@@ -190,11 +199,11 @@ export async function searchContent(
 	take: number,
 	locale = "en-US",
 ): Promise<{
-	pagesWithRelations: PageWithRelationsType[];
+	pagesWithRelations: PageWithRelationsListType[];
 	totalCount: number;
 }> {
 	const pageWithRelationsSelect = createPageWithRelationsSelect(locale);
-	const [pagesWithRelations, count] = await Promise.all([
+	const [rawPagesWithRelations, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
 			take,
@@ -211,6 +220,11 @@ export async function searchContent(
 			},
 		}),
 	]);
+	const pagesWithRelations = await Promise.all(
+		rawPagesWithRelations.map((page) =>
+			transformToPageWithSegmentAndTranslations(page),
+		),
+	);
 
 	return { pagesWithRelations, totalCount: count };
 }

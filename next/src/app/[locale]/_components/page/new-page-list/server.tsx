@@ -1,6 +1,7 @@
 import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/_db/queries.server";
+import { getCurrentUser } from "@/auth";
 import { SparklesIcon } from "lucide-react";
 import { createLoader, parseAsInteger } from "nuqs/server";
 import type { SearchParams } from "nuqs/server";
@@ -23,6 +24,8 @@ export default async function NewPageList({
 	showPagination = false,
 }: NewPageListProps) {
 	const { page } = await loadSearchParams(searchParams);
+	const currentUser = await getCurrentUser();
+	const currentUserHandle = currentUser?.handle;
 
 	const { pagesWithRelations, totalPages } =
 		await fetchPaginatedPublicPagesWithInfo({
@@ -30,6 +33,7 @@ export default async function NewPageList({
 			pageSize: 5,
 			isPopular: false,
 			locale,
+			currentUserId: currentUser?.id,
 		});
 
 	return (
@@ -42,6 +46,7 @@ export default async function NewPageList({
 					userLink={`/user/${pageWithRelations.user.handle}`}
 					index={index}
 					locale={locale}
+					currentUserHandle={currentUserHandle}
 				/>
 			))}
 			{showPagination && totalPages > 1 && (

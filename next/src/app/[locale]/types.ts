@@ -33,8 +33,17 @@ export type SegmentWithTranslations = Segment & {
 	segmentTranslationsWithVotes: SegmentTranslationWithVote[];
 	bestSegmentTranslationWithVote: SegmentTranslationWithVote | null;
 };
-export type TagPageWithTag = TagPage & {
+type TagPageWithTag = TagPage & {
 	tag: Tag;
+};
+export type PageBasicInfo = Omit<Page, "createdAt" | "content"> & {
+	createdAt: string;
+	user: SanitizedUser;
+	tagPages: TagPageWithTag[];
+	segmentWithTranslations: SegmentWithTranslations[];
+	_count?: {
+		pageComments: number;
+	};
 };
 export type PageWithRelations = Omit<Page, "createdAt"> & {
 	createdAt: string;
@@ -43,6 +52,5 @@ export type PageWithRelations = Omit<Page, "createdAt"> & {
 	segmentWithTranslations: SegmentWithTranslations[];
 	_count?: {
 		pageComments: number;
-		likePages: number;
 	};
 };

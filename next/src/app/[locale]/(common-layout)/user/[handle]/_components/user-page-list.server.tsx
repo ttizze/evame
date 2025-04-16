@@ -22,6 +22,7 @@ export async function PageListServer({
 }: PageListServerProps) {
 	const currentUser = await getCurrentUser();
 	const isOwner = currentUser?.handle === handle;
+	const currentUserHandle = currentUser?.handle;
 
 	const pageOwner = await fetchUserByHandle(handle);
 	if (!pageOwner) {
@@ -36,6 +37,7 @@ export async function PageListServer({
 			isPopular: sort === "popular",
 			onlyUserOwn: true,
 			locale,
+			currentUserId: currentUser?.id,
 		});
 
 	if (pagesWithRelations.length === 0) {
@@ -57,6 +59,7 @@ export async function PageListServer({
 						userLink={`/user/${handle}`}
 						showOwnerActions={isOwner}
 						locale={locale}
+						currentUserHandle={currentUserHandle}
 					/>
 				))}
 			</div>

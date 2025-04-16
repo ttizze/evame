@@ -1,13 +1,13 @@
 import { PageList } from "@/app/[locale]/_components/page/page-list.server";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import type { PageWithRelationsType } from "@/app/[locale]/_db/queries.server";
+import type { PageWithRelationsListType } from "@/app/[locale]/_db/queries.server";
 import type { SanitizedUser } from "@/app/types";
 import type { Tag } from "@prisma/client";
 import type { Category } from "./constants";
 
 interface SearchResultsProps {
-	pages: PageWithRelationsType[] | undefined;
+	pages: PageWithRelationsListType[] | undefined;
 	tags: Tag[] | undefined;
 	users: SanitizedUser[] | undefined;
 	totalPages: number;

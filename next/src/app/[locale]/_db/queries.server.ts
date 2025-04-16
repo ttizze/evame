@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { getBestTranslation } from "../_lib/get-best-translation";
-import type { PageWithRelations } from "../types";
+import type { PageWithRelations, SegmentWithTranslations } from "../types";
 
 export function createPageWithRelationsSelect(locale?: string) {
 	return {
@@ -45,12 +45,6 @@ export function createPageWithRelationsSelect(locale?: string) {
 				},
 			},
 		},
-		likePages: {
-			select: {
-				userId: true,
-				guestId: true,
-			},
-		},
 		tagPages: {
 			select: {
 				tag: {
@@ -63,16 +57,60 @@ export function createPageWithRelationsSelect(locale?: string) {
 		},
 		_count: {
 			select: {
-				likePages: true,
 				pageComments: true,
 			},
 		},
 	};
 }
 
-export type PageWithRelationsType = Prisma.PageGetPayload<{
+export type PageWithRelationsSelectType = Prisma.PageGetPayload<{
 	select: ReturnType<typeof createPageWithRelationsSelect>;
 }>;
+export type PageWithRelationsListType = Omit<
+	PageWithRelationsSelectType,
+	"createdAt" | "pageSegments"
+> & {
+	createdAt: string;
+	segmentWithTranslations: SegmentWithTranslations[];
+};
+// Transform the PageWithRelationsType to include segmentWithTranslations
+export async function transformToPageWithSegmentAndTranslations(
+	page: PageWithRelationsSelectType,
+): Promise<
+	Omit<PageWithRelationsSelectType, "createdAt"> & {
+		createdAt: string;
+		segmentWithTranslations: SegmentWithTranslations[];
+	}
+> {
+	const segmentWithTranslations = await Promise.all(
+		page.pageSegments.map(async (segment) => {
+			const segmentTranslationsWithVotes = segment.pageSegmentTranslations.map(
+				(translation) => ({
+					...translation,
+					translationCurrentUserVote: null,
+				}),
+			);
+
+			const bestSegmentTranslationWithVote = await getBestTranslation(
+				segmentTranslationsWithVotes,
+			);
+
+			return {
+				id: segment.id,
+				number: segment.number,
+				text: segment.text,
+				segmentTranslationsWithVotes,
+				bestSegmentTranslationWithVote,
+			};
+		}),
+	);
+
+	return {
+		...page,
+		createdAt: page.createdAt.toISOString(),
+		segmentWithTranslations,
+	};
+}
 
 type FetchParams = {
 	page?: number;
@@ -92,7 +130,7 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	onlyUserOwn = false,
 	locale = "en",
 }: FetchParams): Promise<{
-	pagesWithRelations: PageWithRelationsType[];
+	pagesWithRelations: PageWithRelationsListType[];
 	totalPages: number;
 }> {
 	const skip = (page - 1) * pageSize;
@@ -123,7 +161,7 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	const pageWithRelationsSelect = createPageWithRelationsSelect(locale);
 
 	// findManyとcountを同時並列で呼び出し
-	const [pagesWithRelations, totalCount] = await Promise.all([
+	const [rawPagesWithRelations, totalCount] = await Promise.all([
 		prisma.page.findMany({
 			where: baseWhere,
 			orderBy,
@@ -137,6 +175,13 @@ export async function fetchPaginatedPublicPagesWithInfo({
 			where: baseWhere,
 		}),
 	]);
+
+	// Transform each page to include segmentWithTranslations
+	const pagesWithRelations = await Promise.all(
+		rawPagesWithRelations.map((page) =>
+			transformToPageWithSegmentAndTranslations(page),
+		),
+	);
 
 	return {
 		pagesWithRelations,
