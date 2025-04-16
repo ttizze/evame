@@ -24,11 +24,9 @@ type TranslationCurrentUserVote = {
 	updatedAt: Date;
 };
 
-export type SegmentTranslationWithVote = {
-	segmentTranslation: SegmentTranslation & {
-		user: SanitizedUser;
-		translationCurrentUserVote: TranslationCurrentUserVote | null;
-	};
+export type SegmentTranslationWithVote = SegmentTranslation & {
+	user: SanitizedUser;
+	translationCurrentUserVote: TranslationCurrentUserVote | null;
 };
 
 export type SegmentWithTranslations = Segment & {

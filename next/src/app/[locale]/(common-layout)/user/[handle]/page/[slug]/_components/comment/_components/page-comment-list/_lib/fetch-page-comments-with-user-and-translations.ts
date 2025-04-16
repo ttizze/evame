@@ -44,17 +44,15 @@ export async function mapCommentTranslations(
 		comment.pageCommentSegments.map(async (segment) => {
 			const segmentTranslationsWithVotes: SegmentTranslationWithVote[] =
 				segment.pageCommentSegmentTranslations.map((translation) => ({
-					segmentTranslation: {
-						...translation,
-						translationCurrentUserVote:
-							translation.pageCommentSegmentTranslationVotes &&
-							translation.pageCommentSegmentTranslationVotes.length > 0
-								? {
-										...translation.pageCommentSegmentTranslationVotes[0],
-										translationId: translation.id,
-									}
-								: null,
-					},
+					...translation,
+					translationCurrentUserVote:
+						translation.pageCommentSegmentTranslationVotes &&
+						translation.pageCommentSegmentTranslationVotes.length > 0
+							? {
+									...translation.pageCommentSegmentTranslationVotes[0],
+									translationId: translation.id,
+								}
+							: null,
 				}));
 			const bestSegmentTranslationWithVote = await getBestTranslation(
 				segmentTranslationsWithVotes,

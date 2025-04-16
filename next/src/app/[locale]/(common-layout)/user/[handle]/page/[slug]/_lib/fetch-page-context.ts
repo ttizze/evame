@@ -36,11 +36,11 @@ export const fetchPageContext = cache(
 		}
 		let title: string;
 		if (showTranslation && showOriginal) {
-			title = `${pageTitleWithTranslations.text} - ${pageTitleWithTranslations.bestSegmentTranslationWithVote?.segmentTranslation.text}`;
+			title = `${pageTitleWithTranslations.text} - ${pageTitleWithTranslations.bestSegmentTranslationWithVote?.text}`;
 		} else if (showTranslation) {
 			title =
-				pageTitleWithTranslations.bestSegmentTranslationWithVote
-					?.segmentTranslation.text ?? pageTitleWithTranslations.text;
+				pageTitleWithTranslations.bestSegmentTranslationWithVote?.text ??
+				pageTitleWithTranslations.text;
 		} else {
 			title = pageTitleWithTranslations.text;
 		}

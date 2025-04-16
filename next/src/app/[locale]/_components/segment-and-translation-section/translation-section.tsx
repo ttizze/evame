@@ -35,7 +35,7 @@ export function TranslationSection({
 			</span>
 		);
 	const sanitizedAndParsedText = sanitizeAndParseText(
-		bestSegmentTranslationWithVote.segmentTranslation.text,
+		bestSegmentTranslationWithVote.text,
 	);
 	return (
 		<span className={"group relative"}>
@@ -53,16 +53,15 @@ export function TranslationSection({
 				<>
 					<span className="flex items-center justify-end gap-2">
 						<Link
-							href={`/user/${bestSegmentTranslationWithVote?.segmentTranslation.user.handle}`}
+							href={`/user/${bestSegmentTranslationWithVote?.user.handle}`}
 							className="!no-underline"
 						>
 							<span className="text-sm text-gray-500 text-right flex  items-center">
-								by:{" "}
-								{bestSegmentTranslationWithVote?.segmentTranslation.user.name}
+								by: {bestSegmentTranslationWithVote?.user.name}
 							</span>
 						</Link>
 						<VoteButtons
-							key={bestSegmentTranslationWithVote.segmentTranslation.id}
+							key={bestSegmentTranslationWithVote.id}
 							translationWithVote={bestSegmentTranslationWithVote}
 							voteTarget={voteTarget}
 						/>

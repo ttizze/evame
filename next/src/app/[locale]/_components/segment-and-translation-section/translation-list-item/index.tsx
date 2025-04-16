@@ -29,16 +29,14 @@ export function TranslationListItem({
 		useActionState<ActionResponse, FormData>(deleteTranslationAction, {
 			success: false,
 		});
-	const isOwner = currentHandle === translation.segmentTranslation.user.handle;
+	const isOwner = currentHandle === translation.user.handle;
 
 	return (
 		<span className="pl-4 mt-1 block">
 			<span className="flex items-start justify-between">
 				<span className="flex">
 					<span className="flex-shrink-0 w-5 text-2xl">•</span>
-					<span>
-						{sanitizeAndParseText(translation.segmentTranslation.text)}
-					</span>
+					<span>{sanitizeAndParseText(translation.text)}</span>
 				</span>
 				{isOwner && (
 					<DropdownMenu modal={false}>
@@ -52,7 +50,7 @@ export function TranslationListItem({
 								<input
 									type="hidden"
 									name="translationId"
-									value={translation.segmentTranslation.id}
+									value={translation.id}
 								/>
 								<button
 									type="submit"
@@ -68,11 +66,11 @@ export function TranslationListItem({
 			</span>
 			<span className="flex items-center justify-end">
 				<Link
-					href={`/user/${translation.segmentTranslation.user.handle}`}
+					href={`/user/${translation.user.handle}`}
 					className="!no-underline mr-2 flex  items-center"
 				>
 					<span className="text-sm text-gray-500 text-right flex justify-end items-center  ">
-						by: {translation.segmentTranslation.user.name}
+						by: {translation.user.name}
 					</span>
 				</Link>
 				<VoteButtons

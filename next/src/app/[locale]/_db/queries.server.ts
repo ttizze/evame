@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { getBestTranslation } from "../_lib/get-best-translation";
 import type { PageWithRelations } from "../types";
 
@@ -19,14 +19,29 @@ export function createPageWithRelationsSelect(locale?: string) {
 		},
 		pageSegments: {
 			where: { number: 0 },
-			select: {
-				number: true,
-				text: true,
+			include: {
 				pageSegmentTranslations: {
-					where: locale ? { locale } : {},
-					select: {
-						text: true,
+					where: { locale, isArchived: false },
+					include: {
+						user: {
+							select: {
+								id: true,
+								name: true,
+								handle: true,
+								image: true,
+								createdAt: true,
+								updatedAt: true,
+								profile: true,
+								twitterHandle: true,
+								totalPoints: true,
+								isAI: true,
+							},
+						},
 					},
+					orderBy: [
+						{ point: Prisma.SortOrder.desc },
+						{ createdAt: Prisma.SortOrder.desc },
+					],
 				},
 			},
 		},
@@ -76,7 +91,6 @@ export async function fetchPaginatedPublicPagesWithInfo({
 	isPopular = false,
 	onlyUserOwn = false,
 	locale = "en",
-	currentUserId,
 }: FetchParams): Promise<{
 	pagesWithRelations: PageWithRelationsType[];
 	totalPages: number;
@@ -198,16 +212,14 @@ export async function fetchPageWithTranslations(
 			page.pageSegments.map(async (segment) => {
 				const segmentTranslationsWithVotes =
 					segment.pageSegmentTranslations.map((segmentTranslation) => ({
-						segmentTranslation: {
-							...segmentTranslation,
-							translationCurrentUserVote:
-								segmentTranslation.votes && segmentTranslation.votes.length > 0
-									? {
-											...segmentTranslation.votes[0],
-											translationId: segmentTranslation.id,
-										}
-									: null,
-						},
+						...segmentTranslation,
+						translationCurrentUserVote:
+							segmentTranslation.votes && segmentTranslation.votes.length > 0
+								? {
+										...segmentTranslation.votes[0],
+										translationId: segmentTranslation.id,
+									}
+								: null,
 					}));
 
 				const bestSegmentTranslationWithVote = await getBestTranslation(
