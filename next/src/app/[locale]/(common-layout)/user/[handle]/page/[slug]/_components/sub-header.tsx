@@ -1,4 +1,5 @@
 "use client";
+import { ClientDateFormatter } from "@/app/[locale]/_components/client-date-formatter";
 import { useHeaderScroll } from "@/app/[locale]/_components/header/hooks/use-header-scroll";
 import type { PageWithRelations } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -85,7 +86,9 @@ export function SubHeader({
 							<span className="text-sm">{pageWithRelations.user.name}</span>
 							{!isPinned && (
 								<span className="text-xs text-gray-500">
-									{pageWithRelations.createdAt}
+									<ClientDateFormatter
+										date={new Date(pageWithRelations.createdAt)}
+									/>
 								</span>
 							)}
 						</div>

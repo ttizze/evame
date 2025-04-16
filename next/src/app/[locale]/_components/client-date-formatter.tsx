@@ -8,8 +8,7 @@ interface ClientDateFormatterProps {
 
 export function ClientDateFormatter({ date }: ClientDateFormatterProps) {
 	const locale = useLocale();
-
 	return (
-		<time dateTime={date.toISOString()}>{date.toLocaleDateString(locale)}</time>
+		<time dateTime={date.toISOString()}>{date.toLocaleString(locale)}</time>
 	);
 }
