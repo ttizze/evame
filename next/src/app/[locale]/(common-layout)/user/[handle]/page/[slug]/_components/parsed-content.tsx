@@ -2,17 +2,13 @@ import type {
 	AddTranslationFormTarget,
 	VoteTarget,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import type { SegmentWithTranslations } from "@/app/[locale]/types";
-import parse, {
-	type HTMLReactParserOptions,
-	domToReact,
-	type DOMNode,
-} from "html-react-parser";
+import parse, { type HTMLReactParserOptions } from "html-react-parser";
 import DOMPurify from "isomorphic-dompurify";
 import { customAlphabet } from "nanoid";
 import Image from "next/image";
 import { memo } from "react";
-import { SegmentAndTranslationSection } from "./segment-and-translation-section";
 interface ParsedContentProps {
 	html: string;
 	segmentWithTranslations: SegmentWithTranslations[] | null;
@@ -47,7 +43,7 @@ export function ParsedContent({
 			if (domNode.type === "tag" && domNode.attribs["data-number-id"]) {
 				const number = Number(domNode.attribs["data-number-id"]);
 				const segmentWithTranslation = segmentWithTranslations?.find(
-					(info) => info.segment.number === number,
+					(info) => info.number === number,
 				);
 				if (!segmentWithTranslation) {
 					return null;
@@ -59,7 +55,6 @@ export function ParsedContent({
 						<SegmentAndTranslationSection
 							key={`translation-${number}`}
 							segmentWithTranslations={segmentWithTranslation}
-							elements={domToReact(domNode.children as DOMNode[], options)}
 							currentHandle={currentHandle}
 							voteTarget={voteTarget}
 							addTranslationFormTarget={addTranslationFormTarget}

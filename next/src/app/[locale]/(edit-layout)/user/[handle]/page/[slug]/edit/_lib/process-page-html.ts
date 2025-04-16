@@ -12,6 +12,10 @@ import {
 	upsertPageWithHtml,
 } from "../_db/mutations.server";
 
+//テキストが編集された場合､元テキストとの紐づけを更新する
+//紐づけはtextAndOccurrenceHashをキーにして行う
+//textAndOccurrenceHashはテキストのハッシュ値と出現回数を組み合わせたもの
+//表示にはtextAndOccurrenceHashをキーにすると時間がかかるので､data-number-idをキーにする
 export function rehypeAddDataId(
 	pageId: number,
 	title: string,

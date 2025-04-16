@@ -1,30 +1,29 @@
 import type { SegmentTranslationWithVote } from "../types";
 
 export async function getBestTranslation(
-	translationsWithVotes: SegmentTranslationWithVote[],
+	segmentTranslationWithVote: SegmentTranslationWithVote[],
 ): Promise<SegmentTranslationWithVote | null> {
-	if (translationsWithVotes.length === 0) {
+	if (segmentTranslationWithVote.length === 0) {
 		return null;
 	}
-	const upvotedTranslations = translationsWithVotes.filter(
-		(t) => t.translationVote?.isUpvote,
+	const upvotedTranslations = segmentTranslationWithVote.filter(
+		(t) => t.translationCurrentUserVote?.isUpvote,
 	);
 	if (upvotedTranslations.length > 0) {
 		return upvotedTranslations.reduce((prev, current) => {
 			const currentUpdatedAt =
-				current.translationVote?.updatedAt ?? new Date(0);
-			const prevUpdatedAt = prev.translationVote?.updatedAt ?? new Date(0);
+				current.translationCurrentUserVote?.updatedAt ?? new Date(0);
+			const prevUpdatedAt =
+				prev.translationCurrentUserVote?.updatedAt ?? new Date(0);
+			new Date(0);
 			return currentUpdatedAt > prevUpdatedAt ? current : prev;
 		});
 	}
-	return translationsWithVotes.reduce((prev, current) => {
-		if (prev.segmentTranslation.point !== current.segmentTranslation.point) {
-			return prev.segmentTranslation.point > current.segmentTranslation.point
-				? prev
-				: current;
+	return segmentTranslationWithVote.reduce((prev, current) => {
+		if (prev.point !== current.point) {
+			return prev.point > current.point ? prev : current;
 		}
-		return new Date(current.segmentTranslation.createdAt) >
-			new Date(prev.segmentTranslation.createdAt)
+		return new Date(current.createdAt) > new Date(prev.createdAt)
 			? current
 			: prev;
 	});

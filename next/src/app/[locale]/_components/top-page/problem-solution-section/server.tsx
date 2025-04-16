@@ -1,9 +1,9 @@
-import { SegmentAndTranslationSection } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/segment-and-translation-section";
 import {
 	ADD_TRANSLATION_FORM_TARGET,
 	VOTE_TARGET,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
+import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import Globe from "@/app/[locale]/_components/top-page/problem-solution-section/components/globe.client";
 import { getCurrentUser } from "@/auth";
 import {
@@ -27,12 +27,12 @@ export default async function ProblemSolutionSection({
 	const pageWithTranslations = await fetchAboutPage(locale);
 	// Get problem header (segment 2)
 	const problemHeader = pageWithTranslations.segmentWithTranslations.find(
-		(st) => st.segment.number === 2,
+		(st) => st.number === 2,
 	);
 	// Get problem cards (segments 3-8)
 	const problemCards = pageWithTranslations.segmentWithTranslations
-		.filter((st) => st.segment.number >= 3 && st.segment.number <= 14)
-		.sort((a, b) => a.segment.number - b.segment.number);
+		.filter((st) => st.number >= 3 && st.number <= 14)
+		.sort((a, b) => a.number - b.number);
 
 	// Group problem cards into pairs (header + text)
 	const problemCardPairs = [];
@@ -74,10 +74,7 @@ export default async function ProblemSolutionSection({
 		<EditorMovie key="component-4" />,
 		<FloatingControls
 			likeButton={
-				<PageLikeButton
-					pageId={pageWithTranslations.page.id}
-					showCount={false}
-				/>
+				<PageLikeButton pageId={pageWithTranslations.id} showCount={false} />
 			}
 			shareTitle="evame"
 			position="w-full flex justify-center"
@@ -99,7 +96,6 @@ export default async function ProblemSolutionSection({
 					<h2 className="text-2xl font-bold text-center mb-10">
 						<SegmentAndTranslationSection
 							segmentWithTranslations={problemHeader}
-							elements={problemHeader.segment.text}
 							currentHandle={currentHandle}
 							voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 							addTranslationFormTarget={
@@ -111,12 +107,11 @@ export default async function ProblemSolutionSection({
 				<div className="grid grid-cols-1 ">
 					{problemCardPairs.map((pair, index) => (
 						<AboutSectionCard
-							key={`problem-${pair.header.segment.number}`}
+							key={`problem-${pair.header.number}`}
 							icon={problemIcons[index]}
 							title={
 								<SegmentAndTranslationSection
 									segmentWithTranslations={pair.header}
-									elements={pair.header.segment.text}
 									currentHandle={currentHandle}
 									voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 									addTranslationFormTarget={
@@ -127,7 +122,6 @@ export default async function ProblemSolutionSection({
 							description={
 								<SegmentAndTranslationSection
 									segmentWithTranslations={pair.text}
-									elements={pair.text.segment.text}
 									currentHandle={currentHandle}
 									voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 									addTranslationFormTarget={

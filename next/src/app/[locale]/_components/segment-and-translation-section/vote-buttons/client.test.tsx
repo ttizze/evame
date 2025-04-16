@@ -8,13 +8,15 @@ import type { VoteTarget } from "./constants";
 const dummyVoteTarget = "example-target" as VoteTarget;
 
 const dummyTranslationUpvote = {
-	segmentTranslation: { id: 1, point: 10 },
-	translationVote: { isUpvote: true },
+	id: 1,
+	point: 10,
+	translationCurrentUserVote: { isUpvote: true },
 } as SegmentTranslationWithVote;
 
 const dummyTranslationDownvote = {
-	segmentTranslation: { id: 2, point: 5 },
-	translationVote: { isUpvote: false },
+	id: 2,
+	point: 5,
+	translationCurrentUserVote: { isUpvote: false },
 } as SegmentTranslationWithVote;
 
 vi.mock("next/form", () => ({
@@ -53,7 +55,7 @@ describe("VoteButtons コンポーネント", () => {
 
 		// hidden input (segmentTranslationId) の検証
 		const segmentTranslationIdInput = screen.getByDisplayValue(
-			dummyTranslationUpvote.segmentTranslation.id,
+			dummyTranslationUpvote.id,
 		);
 		expect(segmentTranslationIdInput).toBeInTheDocument();
 

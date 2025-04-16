@@ -1,6 +1,11 @@
 import type { Page, Tag, TagPage } from "@prisma/client";
 import type { SanitizedUser } from "../types";
 
+type Segment = {
+	id: number;
+	number: number;
+	text: string;
+};
 type SegmentTranslation = {
 	id: number;
 	locale: string;
@@ -10,7 +15,7 @@ type SegmentTranslation = {
 	createdAt: Date;
 };
 
-type TranslationVote = {
+type TranslationCurrentUserVote = {
 	id: number;
 	userId: string;
 	translationId: number;
@@ -19,32 +24,24 @@ type TranslationVote = {
 	updatedAt: Date;
 };
 
-export type SegmentTranslationWithVote = {
-	segmentTranslation: SegmentTranslation & {
-		user: SanitizedUser;
-	};
-	translationVote: TranslationVote | null;
+export type SegmentTranslationWithVote = SegmentTranslation & {
+	user: SanitizedUser;
+	translationCurrentUserVote: TranslationCurrentUserVote | null;
 };
 
-type Segment = {
-	id: number;
-	number: number;
-	text: string;
-};
-export type SegmentWithTranslations = {
-	segment: Segment;
+export type SegmentWithTranslations = Segment & {
 	segmentTranslationsWithVotes: SegmentTranslationWithVote[];
 	bestSegmentTranslationWithVote: SegmentTranslationWithVote | null;
 };
-export type TagPageWithTag = TagPage & {
+type TagPageWithTag = TagPage & {
 	tag: Tag;
 };
-export interface PageLocalizedDate extends Omit<Page, "createdAt"> {
+export type PageWithRelations = Omit<Page, "createdAt"> & {
 	createdAt: string;
-}
-export type PageWithTranslations = {
-	page: PageLocalizedDate;
 	user: SanitizedUser;
 	tagPages: TagPageWithTag[];
 	segmentWithTranslations: SegmentWithTranslations[];
+	_count?: {
+		pageComments: number;
+	};
 };

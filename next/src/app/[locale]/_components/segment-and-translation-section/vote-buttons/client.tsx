@@ -26,8 +26,8 @@ export const VoteButtons = memo(function VoteButtons({
 	>(voteTranslationAction, {
 		success: false,
 		data: {
-			isUpvote: translationWithVote.translationVote?.isUpvote,
-			point: translationWithVote.segmentTranslation.point,
+			isUpvote: translationWithVote.translationCurrentUserVote?.isUpvote,
+			point: translationWithVote.point,
 		},
 	});
 	return (
@@ -37,7 +37,7 @@ export const VoteButtons = memo(function VoteButtons({
 				<input
 					type="hidden"
 					name="segmentTranslationId"
-					value={translationWithVote.segmentTranslation.id}
+					value={translationWithVote.id}
 				/>
 				<span className="flex h-8">
 					<VoteButton

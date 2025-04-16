@@ -25,9 +25,7 @@ export function AddAndVoteTranslations({
 	const { bestSegmentTranslationWithVote, segmentTranslationsWithVotes } =
 		segmentWithTranslations;
 	const alternativeTranslationsWithVotes = segmentTranslationsWithVotes.filter(
-		(t) =>
-			t.segmentTranslation.id !==
-			bestSegmentTranslationWithVote?.segmentTranslation.id,
+		(t) => t.id !== bestSegmentTranslationWithVote?.id,
 	);
 
 	const displayedTranslations = useMemo(() => {
@@ -51,7 +49,7 @@ export function AddAndVoteTranslations({
 			<>
 				{displayedTranslations.map((displayedTranslation) => (
 					<TranslationListItem
-						key={displayedTranslation.segmentTranslation.id}
+						key={displayedTranslation.id}
 						translation={displayedTranslation}
 						currentHandle={currentHandle}
 						voteTarget={voteTarget}
@@ -77,7 +75,7 @@ export function AddAndVoteTranslations({
 			</>
 			<span className="mt-4">
 				<AddTranslationForm
-					segmentId={segmentWithTranslations.segment.id}
+					segmentId={segmentWithTranslations.id}
 					currentHandle={currentHandle}
 					addTranslationFormTarget={addTranslationFormTarget}
 				/>

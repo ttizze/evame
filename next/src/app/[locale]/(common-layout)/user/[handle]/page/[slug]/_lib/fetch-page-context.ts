@@ -24,38 +24,35 @@ export const fetchPageContext = cache(
 			currentUser?.id,
 		);
 
-		if (
-			!pageWithTranslations ||
-			pageWithTranslations.page.status === "ARCHIVE"
-		) {
+		if (!pageWithTranslations || pageWithTranslations.status === "ARCHIVE") {
 			return notFound();
 		}
 		const pageTitleWithTranslations =
 			pageWithTranslations.segmentWithTranslations.find(
-				(item) => item.segment?.number === 0,
+				(item) => item.number === 0,
 			);
 		if (!pageTitleWithTranslations) {
 			return null;
 		}
 		let title: string;
 		if (showTranslation && showOriginal) {
-			title = `${pageTitleWithTranslations.segment.text} - ${pageTitleWithTranslations.bestSegmentTranslationWithVote?.segmentTranslation.text}`;
+			title = `${pageTitleWithTranslations.text} - ${pageTitleWithTranslations.bestSegmentTranslationWithVote?.text}`;
 		} else if (showTranslation) {
 			title =
-				pageTitleWithTranslations.bestSegmentTranslationWithVote
-					?.segmentTranslation.text ?? pageTitleWithTranslations.segment.text;
+				pageTitleWithTranslations.bestSegmentTranslationWithVote?.text ??
+				pageTitleWithTranslations.text;
 		} else {
-			title = pageTitleWithTranslations.segment.text;
+			title = pageTitleWithTranslations.text;
 		}
 		const guestId = await getGuestId();
 		const [pageAITranslationInfo, userAITranslationInfo, pageCommentsCount] =
 			await Promise.all([
-				fetchLatestPageAITranslationInfo(pageWithTranslations.page.id),
+				fetchLatestPageAITranslationInfo(pageWithTranslations.id),
 				fetchLatestUserAITranslationInfo(
-					pageWithTranslations.page.id,
+					pageWithTranslations.id,
 					currentUser?.id ?? "0",
 				),
-				fetchPageCommentsCount(pageWithTranslations.page.id),
+				fetchPageCommentsCount(pageWithTranslations.id),
 			]);
 		return {
 			pageWithTranslations,

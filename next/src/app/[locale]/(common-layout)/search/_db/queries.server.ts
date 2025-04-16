@@ -1,7 +1,8 @@
 // app/routes/search/functions/queries.server.ts
 
-import type { PageWithRelationsType } from "@/app/[locale]/_db/queries.server";
-import { createPageWithRelationsSelect } from "@/app/[locale]/_db/queries.server";
+import { createPagesWithRelationsSelect } from "@/app/[locale]/_db/queries.server";
+import type { PagesWithRelations } from "@/app/[locale]/_db/queries.server";
+import { transformToPageWithSegmentAndTranslations } from "@/app/[locale]/_db/queries.server";
 import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";
 import { sanitizeUser } from "@/lib/sanitize-user";
@@ -35,7 +36,7 @@ export async function fetchSearchResults({
 	const skip = (page - 1) * PAGE_SIZE;
 	const take = PAGE_SIZE;
 
-	let pages = undefined;
+	let pagesWithRelations = undefined;
 	let tags: Tag[] | undefined = undefined;
 	let users: SanitizedUser[] | undefined = undefined;
 	let totalCount = 0;
@@ -44,14 +45,14 @@ export async function fetchSearchResults({
 		case "title": {
 			const { pagesWithRelations: resultPages, totalCount: cnt } =
 				await searchTitle(query, skip, take, locale);
-			pages = resultPages;
+			pagesWithRelations = resultPages;
 			totalCount = cnt;
 			break;
 		}
 		case "content": {
 			const { pagesWithRelations: resultPages, totalCount: cnt } =
 				await searchContent(query, skip, take, locale);
-			pages = resultPages;
+			pagesWithRelations = resultPages;
 			totalCount = cnt;
 			break;
 		}
@@ -59,7 +60,7 @@ export async function fetchSearchResults({
 			if (tagPage === "true") {
 				const { pagesWithRelations: resultPages, totalCount: cnt } =
 					await searchByTag(query, skip, take, locale);
-				pages = resultPages;
+				pagesWithRelations = resultPages;
 				totalCount = cnt;
 			} else {
 				const { tags: resultTags, totalCount: cnt } = await searchTags(
@@ -90,7 +91,7 @@ export async function fetchSearchResults({
 	const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
 	return {
-		pages,
+		pagesWithRelations,
 		tags,
 		users,
 		totalPages,
@@ -104,11 +105,11 @@ export async function searchTitle(
 	take: number,
 	locale: string,
 ): Promise<{
-	pagesWithRelations: PageWithRelationsType[];
+	pagesWithRelations: PagesWithRelations[];
 	totalCount: number;
 }> {
-	const pageWithRelationsSelect = createPageWithRelationsSelect(locale);
-	const [pagesWithRelations, count] = await Promise.all([
+	const pageWithRelationsSelect = createPagesWithRelationsSelect(true, locale);
+	const [rawPagesWithRelations, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
 			take,
@@ -135,7 +136,11 @@ export async function searchTitle(
 			},
 		}),
 	]);
-
+	const pagesWithRelations = await Promise.all(
+		rawPagesWithRelations.map((page) =>
+			transformToPageWithSegmentAndTranslations(page),
+		),
+	);
 	return { pagesWithRelations, totalCount: count };
 }
 
@@ -146,11 +151,11 @@ export async function searchByTag(
 	take: number,
 	locale: string,
 ): Promise<{
-	pagesWithRelations: PageWithRelationsType[];
+	pagesWithRelations: PagesWithRelations[];
 	totalCount: number;
 }> {
-	const pageWithRelationsSelect = createPageWithRelationsSelect(locale);
-	const [pagesWithRelations, count] = await Promise.all([
+	const pageWithRelationsSelect = createPagesWithRelationsSelect(true, locale);
+	const [rawPagesWithRelations, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
 			take,
@@ -179,7 +184,11 @@ export async function searchByTag(
 			},
 		}),
 	]);
-
+	const pagesWithRelations = await Promise.all(
+		rawPagesWithRelations.map((page) =>
+			transformToPageWithSegmentAndTranslations(page),
+		),
+	);
 	return { pagesWithRelations, totalCount: count };
 }
 
@@ -190,11 +199,11 @@ export async function searchContent(
 	take: number,
 	locale = "en-US",
 ): Promise<{
-	pagesWithRelations: PageWithRelationsType[];
+	pagesWithRelations: PagesWithRelations[];
 	totalCount: number;
 }> {
-	const pageWithRelationsSelect = createPageWithRelationsSelect(locale);
-	const [pagesWithRelations, count] = await Promise.all([
+	const pageWithRelationsSelect = createPagesWithRelationsSelect(true, locale);
+	const [rawPagesWithRelations, count] = await Promise.all([
 		prisma.page.findMany({
 			skip,
 			take,
@@ -211,6 +220,11 @@ export async function searchContent(
 			},
 		}),
 	]);
+	const pagesWithRelations = await Promise.all(
+		rawPagesWithRelations.map((page) =>
+			transformToPageWithSegmentAndTranslations(page),
+		),
+	);
 
 	return { pagesWithRelations, totalCount: count };
 }

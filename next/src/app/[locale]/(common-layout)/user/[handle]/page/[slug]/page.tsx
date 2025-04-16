@@ -85,10 +85,7 @@ export async function generateMetadata({
 		};
 	}
 	const { pageWithTranslations, title, pageAITranslationInfo } = data;
-	const description = stripHtmlTags(pageWithTranslations.page.content).slice(
-		0,
-		200,
-	);
+	const description = stripHtmlTags(pageWithTranslations.content).slice(0, 200);
 	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${slug}&showOriginal=${showOriginal}&showTranslation=${showTranslation}`;
 	return {
 		title,
@@ -107,7 +104,7 @@ export async function generateMetadata({
 		},
 		alternates: {
 			languages: buildAlternateLocales(
-				pageWithTranslations.page,
+				pageWithTranslations,
 				pageAITranslationInfo,
 				pageWithTranslations.user.handle,
 				locale,
@@ -142,7 +139,7 @@ export default async function Page({
 	} = data;
 
 	const isOwner = pageWithTranslations?.user.handle === currentUser?.handle;
-	if (!isOwner && pageWithTranslations.page.status !== "PUBLIC") {
+	if (!isOwner && pageWithTranslations.status !== "PUBLIC") {
 		return notFound();
 	}
 
@@ -156,10 +153,7 @@ export default async function Page({
 					showTranslation={showTranslation}
 				/>
 				<div className="flex items-center gap-4">
-					<DynamicPageLikeButton
-						pageId={pageWithTranslations.page.id}
-						showCount
-					/>
+					<DynamicPageLikeButton pageId={pageWithTranslations.id} showCount />
 					<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
 					<span>{pageCommentsCount}</span>
 				</div>
@@ -167,7 +161,7 @@ export default async function Page({
 				<DynamicFloatingControls
 					likeButton={
 						<DynamicPageLikeButton
-							pageId={pageWithTranslations.page.id}
+							pageId={pageWithTranslations.id}
 							showCount={false}
 						/>
 					}
@@ -179,22 +173,19 @@ export default async function Page({
 						<div className="flex items-center gap-2 py-2">
 							<h2 className="text-2xl not-prose font-bold">Comments</h2>
 							<DynamicTranslateActionSection
-								pageId={pageWithTranslations.page.id}
+								pageId={pageWithTranslations.id}
 								currentHandle={currentUser?.handle}
 								userAITranslationInfo={userAITranslationInfo}
 								pageAITranslationInfo={pageAITranslationInfo}
-								sourceLocale={pageWithTranslations.page.sourceLocale}
+								sourceLocale={pageWithTranslations.sourceLocale}
 								translateTarget={TranslateTarget.TRANSLATE_COMMENT}
 								showIcons={false}
 							/>
 						</div>
-						<PageCommentList
-							pageId={pageWithTranslations.page.id}
-							locale={locale}
-						/>
+						<PageCommentList pageId={pageWithTranslations.id} locale={locale} />
 					</div>
 					<DynamicPageCommentForm
-						pageId={pageWithTranslations.page.id}
+						pageId={pageWithTranslations.id}
 						currentHandle={currentUser?.handle}
 					/>
 				</div>

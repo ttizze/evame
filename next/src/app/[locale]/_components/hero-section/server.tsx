@@ -1,8 +1,8 @@
 import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/_lib/fetch-about-page";
-import { SegmentAndTranslationSection } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/segment-and-translation-section";
 import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { VOTE_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { TranslateActionSection } from "@/app/[locale]/_components/translate-action-section";
 import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/queries.server";
@@ -32,12 +32,12 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	const topPageWithTranslations = await fetchAboutPage(locale);
 
 	const pageAITranslationInfo = await fetchLatestPageAITranslationInfo(
-		topPageWithTranslations.page.id,
+		topPageWithTranslations.id,
 	);
 
 	const [title, text] = topPageWithTranslations.segmentWithTranslations
-		.filter((st) => st.segment.number === 0 || st.segment.number === 1)
-		.sort((a, b) => a.segment.number - b.segment.number);
+		.filter((st) => st.number === 0 || st.number === 1)
+		.sort((a, b) => a.number - b.number);
 
 	if (!title || !text) {
 		const error = new Error("Invalid hero section");
@@ -46,7 +46,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	}
 	const heroTitle = title;
 	const heroText = text;
-	const sourceLocale = topPageWithTranslations.page.sourceLocale;
+	const sourceLocale = topPageWithTranslations.sourceLocale;
 	return (
 		<div className="relative overflow-hidden border pt-10 flex flex-col items-center justify-center">
 			<Icon className="absolute h-6 w-6 -top-3 -left-3 dark:text-white text-black" />
@@ -69,7 +69,6 @@ export default async function HeroSection({ locale }: { locale: string }) {
 					<SegmentAndTranslationSection
 						segmentWithTranslations={heroTitle}
 						segmentTextClassName="w-full mb-2"
-						elements={heroTitle.segment.text}
 						currentHandle={currentHandle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 						addTranslationFormTarget={
@@ -82,7 +81,6 @@ export default async function HeroSection({ locale }: { locale: string }) {
 					<SegmentAndTranslationSection
 						segmentWithTranslations={heroText}
 						segmentTextClassName="mb-2"
-						elements={heroText.segment.text}
 						currentHandle={currentHandle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 						addTranslationFormTarget={

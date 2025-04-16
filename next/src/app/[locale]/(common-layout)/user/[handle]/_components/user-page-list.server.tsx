@@ -1,9 +1,8 @@
 import { PageList } from "@/app/[locale]/_components/page/page-list.server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/_db/queries.server";
+import { fetchPaginatedPublicPagesWithRelations } from "@/app/[locale]/_db/queries.server";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
-import { getGuestId } from "@/lib/get-guest-id";
 import { notFound } from "next/navigation";
 
 interface PageListServerProps {
@@ -22,8 +21,8 @@ export async function PageListServer({
 	showPagination = false,
 }: PageListServerProps) {
 	const currentUser = await getCurrentUser();
-	const guestId = !currentUser ? await getGuestId() : undefined;
 	const isOwner = currentUser?.handle === handle;
+	const currentUserHandle = currentUser?.handle;
 
 	const pageOwner = await fetchUserByHandle(handle);
 	if (!pageOwner) {
@@ -31,15 +30,14 @@ export async function PageListServer({
 	}
 
 	const { pagesWithRelations, totalPages } =
-		await fetchPaginatedPublicPagesWithInfo({
+		await fetchPaginatedPublicPagesWithRelations({
 			page: page,
 			pageSize: 5,
-			currentUserId: currentUser?.id,
-			currentGuestId: guestId,
 			pageOwnerId: pageOwner.id,
 			isPopular: sort === "popular",
 			onlyUserOwn: true,
 			locale,
+			currentUserId: currentUser?.id,
 		});
 
 	if (pagesWithRelations.length === 0) {
@@ -61,6 +59,7 @@ export async function PageListServer({
 						userLink={`/user/${handle}`}
 						showOwnerActions={isOwner}
 						locale={locale}
+						currentUserHandle={currentUserHandle}
 					/>
 				))}
 			</div>

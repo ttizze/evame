@@ -1,86 +1,158 @@
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { getBestTranslation } from "../_lib/get-best-translation";
-import type { PageWithTranslations } from "../types";
+import type { PageWithRelations } from "../types";
 
-export function createPageWithRelationsSelect(locale?: string) {
+function createUserSelectFields() {
+	return {
+		id: true,
+		name: true,
+		handle: true,
+		image: true,
+		createdAt: true,
+		updatedAt: true,
+		profile: true,
+		twitterHandle: true,
+		totalPoints: true,
+		isAI: true,
+	};
+}
+
+function createPageRelatedFields(
+	onlyTitle = false,
+	locale = "en",
+	currentUserId?: string,
+) {
+	return {
+		user: {
+			select: createUserSelectFields(),
+		},
+		tagPages: {
+			include: {
+				tag: true,
+			},
+		},
+		pageSegments: {
+			where: onlyTitle ? { number: 0 } : undefined,
+			include: {
+				pageSegmentTranslations: {
+					where: { locale, isArchived: false },
+					include: {
+						user: {
+							select: createUserSelectFields(),
+						},
+						...(currentUserId && {
+							votes: {
+								where: { userId: currentUserId },
+							},
+						}),
+					},
+					orderBy: [
+						{ point: Prisma.SortOrder.desc },
+						{ createdAt: Prisma.SortOrder.desc },
+					],
+				},
+			},
+		},
+	};
+}
+
+export function createPagesWithRelationsSelect(
+	onlyTitle = false,
+	locale = "en",
+) {
 	return {
 		id: true,
 		slug: true,
 		createdAt: true,
 		status: true,
-		user: {
-			select: {
-				handle: true,
-				name: true,
-				image: true,
-				profile: true,
-			},
-		},
-		pageSegments: {
-			where: { number: 0 },
-			select: {
-				number: true,
-				text: true,
-				pageSegmentTranslations: {
-					where: locale ? { locale } : {},
-					select: {
-						text: true,
-					},
-				},
-			},
-		},
-		likePages: {
-			select: {
-				userId: true,
-				guestId: true,
-			},
-		},
-		tagPages: {
-			select: {
-				tag: {
-					select: {
-						id: true,
-						name: true,
-					},
-				},
-			},
-		},
+		...createPageRelatedFields(onlyTitle, locale),
 		_count: {
 			select: {
-				likePages: true,
 				pageComments: true,
 			},
 		},
 	};
 }
 
-export type PageWithRelationsType = Prisma.PageGetPayload<{
-	select: ReturnType<typeof createPageWithRelationsSelect>;
+type PageWithRelationsSelect = Prisma.PageGetPayload<{
+	select: ReturnType<typeof createPagesWithRelationsSelect>;
 }>;
+export type PagesWithRelations = Omit<
+	PageWithRelations,
+	"content" | "updatedAt" | "userId" | "sourceLocale"
+>;
 
+export async function transformPageSegments(
+	segments: PageWithRelationsSelect["pageSegments"],
+	includeUserVotes = false,
+) {
+	return Promise.all(
+		segments.map(async (segment) => {
+			const segmentTranslationsWithVotes = segment.pageSegmentTranslations.map(
+				(translation) => ({
+					...translation,
+					translationCurrentUserVote:
+						includeUserVotes &&
+						translation.votes &&
+						translation.votes.length > 0
+							? {
+									...translation.votes[0],
+									translationId: translation.id,
+								}
+							: null,
+				}),
+			);
+
+			const bestSegmentTranslationWithVote = await getBestTranslation(
+				segmentTranslationsWithVotes,
+			);
+
+			return {
+				id: segment.id,
+				number: segment.number,
+				text: segment.text,
+				segmentTranslationsWithVotes,
+				bestSegmentTranslationWithVote,
+			};
+		}),
+	);
+}
+
+// 既存の関数を修正
+export async function transformToPageWithSegmentAndTranslations(
+	page: PageWithRelationsSelect,
+): Promise<PagesWithRelations> {
+	const segmentWithTranslations = await transformPageSegments(
+		page.pageSegments,
+		false,
+	);
+
+	return {
+		...page,
+		createdAt: page.createdAt.toISOString(),
+		segmentWithTranslations,
+	};
+}
 type FetchParams = {
 	page?: number;
 	pageSize?: number;
-	currentUserId?: string;
-	currentGuestId?: string;
 	pageOwnerId?: string;
 	isPopular?: boolean;
 	onlyUserOwn?: boolean;
 	locale?: string;
+	currentUserId?: string;
 };
 
-export async function fetchPaginatedPublicPagesWithInfo({
+export async function fetchPaginatedPublicPagesWithRelations({
 	page = 1,
 	pageSize = 9,
-	currentUserId,
-	currentGuestId,
 	pageOwnerId,
 	isPopular = false,
 	onlyUserOwn = false,
 	locale = "en",
 }: FetchParams): Promise<{
-	pagesWithRelations: PageWithRelationsType[];
+	pagesWithRelations: PagesWithRelations[];
 	totalPages: number;
 }> {
 	const skip = (page - 1) * pageSize;
@@ -107,21 +179,11 @@ export async function fetchPaginatedPublicPagesWithInfo({
 		orderBy = { createdAt: "desc" };
 	}
 
-	// いいね判定用where句 (ログインユーザ or ゲストID)
-	let likeWhere: Prisma.LikePageWhereInput;
-	if (currentUserId) {
-		likeWhere = { userId: currentUserId };
-	} else if (currentGuestId) {
-		likeWhere = { guestId: currentGuestId };
-	} else {
-		likeWhere = { userId: "null" };
-	}
-
 	// 実際に使うselectを生成 (localeなどを含む)
-	const pageWithRelationsSelect = createPageWithRelationsSelect(locale);
+	const pageWithRelationsSelect = createPagesWithRelationsSelect(true, locale);
 
 	// findManyとcountを同時並列で呼び出し
-	const [pagesWithRelations, totalCount] = await Promise.all([
+	const [rawPagesWithRelations, totalCount] = await Promise.all([
 		prisma.page.findMany({
 			where: baseWhere,
 			orderBy,
@@ -129,19 +191,19 @@ export async function fetchPaginatedPublicPagesWithInfo({
 			take: pageSize,
 			select: {
 				...pageWithRelationsSelect,
-				likePages: {
-					where: likeWhere,
-					select: {
-						userId: true,
-						guestId: true,
-					},
-				},
 			},
 		}),
 		prisma.page.count({
 			where: baseWhere,
 		}),
 	]);
+
+	// Transform each page to include segmentWithTranslations
+	const pagesWithRelations = await Promise.all(
+		rawPagesWithRelations.map((page) =>
+			transformToPageWithSegmentAndTranslations(page),
+		),
+	);
 
 	return {
 		pagesWithRelations,
@@ -153,99 +215,24 @@ export async function fetchPageWithTranslations(
 	slug: string,
 	locale: string,
 	currentUserId?: string,
-): Promise<PageWithTranslations | null> {
+): Promise<PageWithRelations | null> {
 	const page = await prisma.page.findFirst({
 		where: { slug },
 		include: {
-			user: {
-				select: {
-					id: true,
-					name: true,
-					handle: true,
-					image: true,
-					createdAt: true,
-					updatedAt: true,
-					profile: true,
-					twitterHandle: true,
-					totalPoints: true,
-					isAI: true,
-				},
-			},
-			pageSegments: {
-				include: {
-					pageSegmentTranslations: {
-						where: { locale, isArchived: false },
-						include: {
-							user: {
-								select: {
-									id: true,
-									name: true,
-									handle: true,
-									image: true,
-									createdAt: true,
-									updatedAt: true,
-									profile: true,
-									twitterHandle: true,
-									totalPoints: true,
-									isAI: true,
-								},
-							},
-							votes: {
-								where: currentUserId
-									? { userId: currentUserId }
-									: { userId: "0" },
-							},
-						},
-						orderBy: [{ point: "desc" }, { createdAt: "desc" }],
-					},
-				},
-			},
-			tagPages: {
-				include: {
-					tag: true,
-				},
-			},
+			...createPageRelatedFields(false, locale, currentUserId),
 		},
 	});
 
 	if (!page) return null;
 
-	const { user, ...pageWithoutUser } = page;
+	const segmentWithTranslations = await transformPageSegments(
+		page.pageSegments,
+		true,
+	);
 	return {
-		page: {
-			...pageWithoutUser,
-			createdAt: page.createdAt.toLocaleString(locale),
-		},
-		user,
-		tagPages: page.tagPages,
-		segmentWithTranslations: await Promise.all(
-			page.pageSegments.map(async (segment) => {
-				const segmentTranslationsWithVotes =
-					segment.pageSegmentTranslations.map((segmentTranslation) => ({
-						segmentTranslation: {
-							...segmentTranslation,
-							user: segmentTranslation.user,
-						},
-						translationVote:
-							segmentTranslation.votes && segmentTranslation.votes.length > 0
-								? {
-										...segmentTranslation.votes[0],
-										translationId: segmentTranslation.id,
-									}
-								: null,
-					}));
-
-				const bestSegmentTranslationWithVote = await getBestTranslation(
-					segmentTranslationsWithVotes,
-				);
-
-				return {
-					segment,
-					segmentTranslationsWithVotes,
-					bestSegmentTranslationWithVote,
-				};
-			}),
-		),
+		...page,
+		createdAt: page.createdAt.toISOString(),
+		segmentWithTranslations,
 	};
 }
 

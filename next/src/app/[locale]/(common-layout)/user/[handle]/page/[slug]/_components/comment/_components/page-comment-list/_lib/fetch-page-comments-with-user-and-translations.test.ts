@@ -70,7 +70,7 @@ describe("mapCommentTranslations", () => {
 		const result = await mapCommentTranslations(comment, "ja");
 		expect(
 			result.pageCommentSegmentsWithTranslations[0]
-				.bestSegmentTranslationWithVote?.segmentTranslation.point,
+				.bestSegmentTranslationWithVote?.point,
 		).toBe(1002);
 	});
 });

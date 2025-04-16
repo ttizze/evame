@@ -1,6 +1,6 @@
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedPublicPagesWithInfo } from "@/app/[locale]/_db/queries.server";
-import { getGuestId } from "@/lib/get-guest-id";
+import { fetchPaginatedPublicPagesWithRelations } from "@/app/[locale]/_db/queries.server";
+import { getCurrentUser } from "@/auth";
 import { BookOpenIcon } from "lucide-react";
 import { createLoader, parseAsInteger } from "nuqs/server";
 import type { SearchParams } from "nuqs/server";
@@ -15,27 +15,25 @@ const loadSearchParams = createLoader(searchParamsSchema);
 
 interface PopularPageListProps {
 	locale: string;
-	currentUserId: string;
 	searchParams: Promise<SearchParams>;
 	showPagination?: boolean;
 }
 
 export default async function PopularPageList({
 	locale,
-	currentUserId,
 	searchParams,
 	showPagination = false,
 }: PopularPageListProps) {
 	const { page } = await loadSearchParams(searchParams);
-	const guestId = await getGuestId();
+	const currentUser = await getCurrentUser();
+	const currentUserHandle = currentUser?.handle;
 
-	const result = await fetchPaginatedPublicPagesWithInfo({
+	const result = await fetchPaginatedPublicPagesWithRelations({
 		page,
 		pageSize: 5,
-		currentUserId: currentUserId,
-		currentGuestId: guestId,
 		isPopular: true,
 		locale,
+		currentUserId: currentUser?.id,
 	});
 
 	const pagesWithRelations = result.pagesWithRelations;
@@ -51,6 +49,7 @@ export default async function PopularPageList({
 					userLink={`/user/${pageWithRelations.user.handle}`}
 					index={index}
 					locale={locale}
+					currentUserHandle={currentUserHandle}
 				/>
 			))}
 			{showPagination && totalPages > 1 && (
