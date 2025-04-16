@@ -18,12 +18,20 @@ function createUserSelectFields() {
 	};
 }
 
-function createPageSegmentsSelect(
-	onlyTitle?: boolean,
-	locale?: string,
+function createPageRelatedFields(
+	onlyTitle = false,
+	locale = "en",
 	currentUserId?: string,
 ) {
 	return {
+		user: {
+			select: createUserSelectFields(),
+		},
+		tagPages: {
+			include: {
+				tag: true,
+			},
+		},
 		pageSegments: {
 			where: onlyTitle ? { number: 0 } : undefined,
 			include: {
@@ -49,29 +57,16 @@ function createPageSegmentsSelect(
 	};
 }
 
-function createTagPagesSelect() {
-	return {
-		tagPages: {
-			include: {
-				tag: true,
-			},
-		},
-	};
-}
 export function createPagesWithRelationsSelect(
-	onlyTitle?: boolean,
-	locale?: string,
+	onlyTitle = false,
+	locale = "en",
 ) {
 	return {
 		id: true,
 		slug: true,
 		createdAt: true,
 		status: true,
-		user: {
-			select: createUserSelectFields(),
-		},
-		...createPageSegmentsSelect(onlyTitle, locale),
-		...createTagPagesSelect(),
+		...createPageRelatedFields(onlyTitle, locale),
 		_count: {
 			select: {
 				pageComments: true,
@@ -224,11 +219,7 @@ export async function fetchPageWithTranslations(
 	const page = await prisma.page.findFirst({
 		where: { slug },
 		include: {
-			user: {
-				select: createUserSelectFields(),
-			},
-			...createPageSegmentsSelect(false, locale, currentUserId),
-			...createTagPagesSelect(),
+			...createPageRelatedFields(false, locale, currentUserId),
 		},
 	});
 
