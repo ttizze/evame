@@ -215,7 +215,7 @@ export async function fetchPageWithTranslations(
 				);
 
 				return {
-					segment,
+					...segment,
 					segmentTranslationsWithVotes,
 					bestSegmentTranslationWithVote,
 				};

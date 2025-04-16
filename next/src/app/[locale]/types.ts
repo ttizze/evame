@@ -31,8 +31,7 @@ export type SegmentTranslationWithVote = {
 	};
 };
 
-export type SegmentWithTranslations = {
-	segment: Segment;
+export type SegmentWithTranslations = Segment & {
 	segmentTranslationsWithVotes: SegmentTranslationWithVote[];
 	bestSegmentTranslationWithVote: SegmentTranslationWithVote | null;
 };

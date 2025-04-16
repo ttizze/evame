@@ -43,7 +43,7 @@ export function ParsedContent({
 			if (domNode.type === "tag" && domNode.attribs["data-number-id"]) {
 				const number = Number(domNode.attribs["data-number-id"]);
 				const segmentWithTranslation = segmentWithTranslations?.find(
-					(info) => info.segment.number === number,
+					(info) => info.number === number,
 				);
 				if (!segmentWithTranslation) {
 					return null;

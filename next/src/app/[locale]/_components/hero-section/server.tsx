@@ -36,8 +36,8 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	);
 
 	const [title, text] = topPageWithTranslations.segmentWithTranslations
-		.filter((st) => st.segment.number === 0 || st.segment.number === 1)
-		.sort((a, b) => a.segment.number - b.segment.number);
+		.filter((st) => st.number === 0 || st.number === 1)
+		.sort((a, b) => a.number - b.number);
 
 	if (!title || !text) {
 		const error = new Error("Invalid hero section");

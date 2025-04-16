@@ -27,12 +27,12 @@ export default async function ProblemSolutionSection({
 	const pageWithTranslations = await fetchAboutPage(locale);
 	// Get problem header (segment 2)
 	const problemHeader = pageWithTranslations.segmentWithTranslations.find(
-		(st) => st.segment.number === 2,
+		(st) => st.number === 2,
 	);
 	// Get problem cards (segments 3-8)
 	const problemCards = pageWithTranslations.segmentWithTranslations
-		.filter((st) => st.segment.number >= 3 && st.segment.number <= 14)
-		.sort((a, b) => a.segment.number - b.segment.number);
+		.filter((st) => st.number >= 3 && st.number <= 14)
+		.sort((a, b) => a.number - b.number);
 
 	// Group problem cards into pairs (header + text)
 	const problemCardPairs = [];
@@ -107,7 +107,7 @@ export default async function ProblemSolutionSection({
 				<div className="grid grid-cols-1 ">
 					{problemCardPairs.map((pair, index) => (
 						<AboutSectionCard
-							key={`problem-${pair.header.segment.number}`}
+							key={`problem-${pair.header.number}`}
 							icon={problemIcons[index]}
 							title={
 								<SegmentAndTranslationSection

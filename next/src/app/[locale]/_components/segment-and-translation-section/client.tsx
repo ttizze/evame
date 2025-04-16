@@ -50,13 +50,13 @@ export function SegmentAndTranslationSection({
 							</Link>
 						</div>
 					)}
-					{segmentWithTranslations.segment.text}
+					{segmentWithTranslations.text}
 				</span>
 			)}
 			{showTranslation &&
 				segmentWithTranslations.segmentTranslationsWithVotes.length > 0 && (
 					<TranslationSection
-						key={`translation-${segmentWithTranslations.segment.id}`}
+						key={`translation-${segmentWithTranslations.id}`}
 						segmentWithTranslations={segmentWithTranslations}
 						currentHandle={currentHandle}
 						voteTarget={voteTarget}

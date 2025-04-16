@@ -77,7 +77,7 @@ export function AddAndVoteTranslations({
 			</>
 			<span className="mt-4">
 				<AddTranslationForm
-					segmentId={segmentWithTranslations.segment.id}
+					segmentId={segmentWithTranslations.id}
 					currentHandle={currentHandle}
 					addTranslationFormTarget={addTranslationFormTarget}
 				/>

@@ -65,7 +65,7 @@ export async function ContentWithTranslations({
 
 	const pageSegmentTitleWithTranslations =
 		pageWithTranslations.segmentWithTranslations.filter(
-			(item) => item.segment?.number === 0,
+			(item) => item.number === 0,
 		)[0];
 
 	return (

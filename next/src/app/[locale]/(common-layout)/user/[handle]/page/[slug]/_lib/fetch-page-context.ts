@@ -29,20 +29,20 @@ export const fetchPageContext = cache(
 		}
 		const pageTitleWithTranslations =
 			pageWithTranslations.segmentWithTranslations.find(
-				(item) => item.segment?.number === 0,
+				(item) => item.number === 0,
 			);
 		if (!pageTitleWithTranslations) {
 			return null;
 		}
 		let title: string;
 		if (showTranslation && showOriginal) {
-			title = `${pageTitleWithTranslations.segment.text} - ${pageTitleWithTranslations.bestSegmentTranslationWithVote?.segmentTranslation.text}`;
+			title = `${pageTitleWithTranslations.text} - ${pageTitleWithTranslations.bestSegmentTranslationWithVote?.segmentTranslation.text}`;
 		} else if (showTranslation) {
 			title =
 				pageTitleWithTranslations.bestSegmentTranslationWithVote
-					?.segmentTranslation.text ?? pageTitleWithTranslations.segment.text;
+					?.segmentTranslation.text ?? pageTitleWithTranslations.text;
 		} else {
-			title = pageTitleWithTranslations.segment.text;
+			title = pageTitleWithTranslations.text;
 		}
 		const guestId = await getGuestId();
 		const [pageAITranslationInfo, userAITranslationInfo, pageCommentsCount] =

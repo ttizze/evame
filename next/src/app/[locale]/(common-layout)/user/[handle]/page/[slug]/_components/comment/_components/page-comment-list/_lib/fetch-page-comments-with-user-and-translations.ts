@@ -29,12 +29,10 @@ export async function buildCommentTree(
 
 export interface ExtendedComment
 	extends Omit<PageCommentWithPageCommentSegments, "replies"> {
-	pageCommentSegmentsWithTranslations: {
-		// 必要な型定義
-		segment: PageCommentWithPageCommentSegments["pageCommentSegments"][number];
+	pageCommentSegmentsWithTranslations: (PageCommentWithPageCommentSegments["pageCommentSegments"][number] & {
 		segmentTranslationsWithVotes: SegmentTranslationWithVote[];
 		bestSegmentTranslationWithVote: SegmentTranslationWithVote | null;
-	}[];
+	})[];
 	replies: ExtendedComment[];
 }
 
@@ -62,7 +60,7 @@ export async function mapCommentTranslations(
 				segmentTranslationsWithVotes,
 			);
 			return {
-				segment,
+				...segment,
 				segmentTranslationsWithVotes,
 				bestSegmentTranslationWithVote,
 			};
