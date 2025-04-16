@@ -21,7 +21,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: main
-    
+          TZ: 'Asia/Tokyo'
       neon-proxy:
         image: ghcr.io/timowilhelm/local-neon-http-proxy:main
         ports:

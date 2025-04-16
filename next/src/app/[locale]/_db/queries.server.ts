@@ -139,9 +139,7 @@ type FetchParams = {
 	pageSize?: number;
 	pageOwnerId?: string;
 	isPopular?: boolean;
-	onlyUserOwn?: boolean;
 	locale?: string;
-	currentUserId?: string;
 };
 
 export async function fetchPaginatedPublicPagesWithRelations({
@@ -149,7 +147,6 @@ export async function fetchPaginatedPublicPagesWithRelations({
 	pageSize = 9,
 	pageOwnerId,
 	isPopular = false,
-	onlyUserOwn = false,
 	locale = "en",
 }: FetchParams): Promise<{
 	pagesWithRelations: PagesWithRelations[];
@@ -160,24 +157,19 @@ export async function fetchPaginatedPublicPagesWithRelations({
 	// 共通フィルタ
 	const baseWhere: Prisma.PageWhereInput = {
 		status: "PUBLIC",
-		pageSegments: { some: { number: 0 } },
 	};
 
 	// 所有者のみ表示したい場合
-	if (onlyUserOwn && pageOwnerId) {
+	if (pageOwnerId) {
 		baseWhere.userId = pageOwnerId;
 	}
 
-	// ソート条件
-	let orderBy:
-		| Prisma.PageOrderByWithRelationInput
-		| Prisma.PageOrderByWithRelationInput[];
-	if (isPopular) {
-		orderBy = [{ likePages: { _count: "desc" } }, { createdAt: "desc" }];
-	} else {
-		// 新着順（全体）
-		orderBy = { createdAt: "desc" };
-	}
+	const orderBy = isPopular
+		? [
+				{ likePages: { _count: Prisma.SortOrder.desc } },
+				{ createdAt: Prisma.SortOrder.desc },
+			]
+		: { createdAt: Prisma.SortOrder.desc };
 
 	// 実際に使うselectを生成 (localeなどを含む)
 	const pageWithRelationsSelect = createPagesWithRelationsSelect(true, locale);

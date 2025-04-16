@@ -35,11 +35,8 @@ export async function PageListServer({
 			pageSize: 5,
 			pageOwnerId: pageOwner.id,
 			isPopular: sort === "popular",
-			onlyUserOwn: true,
 			locale,
-			currentUserId: currentUser?.id,
 		});
-
 	if (pagesWithRelations.length === 0) {
 		return (
 			<p className="text-center text-gray-500 mt-10">

@@ -33,7 +33,6 @@ export default async function PopularPageList({
 		pageSize: 5,
 		isPopular: true,
 		locale,
-		currentUserId: currentUser?.id,
 	});
 
 	const pagesWithRelations = result.pagesWithRelations;
