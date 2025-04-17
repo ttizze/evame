@@ -1,6 +1,6 @@
+import { ADD_TRANSLATION_FORM_TARGET, VOTE_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { ProjectLikeButton } from "@/app/[locale]/_components/project/project-like-button/server";
 import { ProjectTagList } from "@/app/[locale]/_components/project/project-tag-list.server";
-import type { ProjectWithRelations } from "@/app/[locale]/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Carousel,
@@ -13,11 +13,9 @@ import type { ProjectImage } from "@prisma/client";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
+import type { ProjectWithRelations } from "@/app/[locale]/types";
 const DynamicMemoizedParsedContent = dynamic(
-	() =>
-		import(
-			"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/parsed-content"
-		).then((mod) => mod.MemoizedParsedContent),
+	() => import("@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/parsed-content").then((mod) => mod.MemoizedParsedContent),
 	{
 		loading: () => <span>Loading Parsed Content...</span>,
 	},
@@ -74,7 +72,17 @@ export function ProjectDetail({ project, locale }: ProjectDetailProps) {
 				<div className="flex justify-between items-center">
 					<ProjectLikeButton projectId={project.id} />
 				</div>
-				{/* <div className="prose dark:prose-invert max-w-none"></div> */}
+				<div className="prose dark:prose-invert max-w-none">
+				<DynamicMemoizedParsedContent
+					html={project.description}
+					segmentWithTranslations={project.segmentWithTranslations}
+					currentHandle={project.user.handle}
+					voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
+					addTranslationFormTarget={
+						ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
+					}
+				/>
+				</div>
 				<div className="flex flex-wrap gap-2">
 					<ProjectTagList projectTag={tags} />
 				</div>

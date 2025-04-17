@@ -32,7 +32,7 @@ const searchParamsSchema = {
 const loadSearchParams = createLoader(searchParamsSchema);
 
 interface ProjectManagementPageProps {
-	params: Promise<{ handle: string }>;
+	params: Promise<{ handle: string; locale: string }>;
 	searchParams: Promise<SearchParams>;
 }
 
@@ -40,7 +40,7 @@ export default async function ProjectManagementPage({
 	params,
 	searchParams,
 }: ProjectManagementPageProps) {
-	const { handle } = await params;
+	const { handle, locale } = await params;
 	const currentUser = await getCurrentUser();
 	if (!currentUser?.id || currentUser.handle !== handle) {
 		return redirect("/auth/login");
@@ -53,6 +53,7 @@ export default async function ProjectManagementPage({
 				currentUserId={currentUser.id}
 				page={page}
 				query={query}
+				locale={locale}
 				handle={currentUser.handle}
 			/>
 		</div>
