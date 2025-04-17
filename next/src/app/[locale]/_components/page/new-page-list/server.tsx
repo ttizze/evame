@@ -33,6 +33,7 @@ export default async function NewPageList({
 			pageSize: 5,
 			isPopular: false,
 			locale,
+			currentUserId: currentUser?.id,
 		});
 
 	return (

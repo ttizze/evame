@@ -67,7 +67,7 @@ describe("mapCommentTranslations", () => {
 			{ transient: { customSegments: segments } }, // transientParams
 		);
 
-		const result = await mapCommentTranslations(comment, "ja");
+		const result = await mapCommentTranslations(comment);
 		expect(
 			result.pageCommentSegmentsWithTranslations[0]
 				.bestSegmentTranslationWithVote?.point,

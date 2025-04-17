@@ -36,6 +36,7 @@ export async function PageListServer({
 			pageOwnerId: pageOwner.id,
 			isPopular: sort === "popular",
 			locale,
+			currentUserId: currentUser?.id,
 		});
 	if (pagesWithRelations.length === 0) {
 		return (

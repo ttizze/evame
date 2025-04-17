@@ -38,7 +38,6 @@ export interface ExtendedComment
 
 export async function mapCommentTranslations(
 	comment: PageCommentWithPageCommentSegments,
-	locale: string,
 ): Promise<ExtendedComment> {
 	const pageCommentSegmentsWithTranslations = await Promise.all(
 		comment.pageCommentSegments.map(async (segment) => {
@@ -69,9 +68,7 @@ export async function mapCommentTranslations(
 		...comment,
 		pageCommentSegmentsWithTranslations,
 		replies: await Promise.all(
-			(comment.replies || []).map((child) =>
-				mapCommentTranslations(child, locale),
-			),
+			(comment.replies || []).map((child) => mapCommentTranslations(child)),
 		),
 	};
 }
@@ -94,7 +91,7 @@ export async function fetchPageCommentsWithUserAndTranslations(
 
 	// 3. ツリー構造の各コメントに対して翻訳情報をマッピング
 	return await Promise.all(
-		tree.map((comment) => mapCommentTranslations(comment, locale)),
+		tree.map((comment) => mapCommentTranslations(comment)),
 	);
 }
 

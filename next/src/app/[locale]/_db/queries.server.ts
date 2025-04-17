@@ -60,13 +60,14 @@ function createPageRelatedFields(
 export function createPagesWithRelationsSelect(
 	onlyTitle = false,
 	locale = "en",
+	currentUserId?: string,
 ) {
 	return {
 		id: true,
 		slug: true,
 		createdAt: true,
 		status: true,
-		...createPageRelatedFields(onlyTitle, locale),
+		...createPageRelatedFields(onlyTitle, locale, currentUserId),
 		_count: {
 			select: {
 				pageComments: true,
@@ -85,7 +86,6 @@ export type PagesWithRelations = Omit<
 
 export async function transformPageSegments(
 	segments: PageWithRelationsSelect["pageSegments"],
-	includeUserVotes = false,
 ) {
 	return Promise.all(
 		segments.map(async (segment) => {
@@ -93,9 +93,7 @@ export async function transformPageSegments(
 				(translation) => ({
 					...translation,
 					translationCurrentUserVote:
-						includeUserVotes &&
-						translation.votes &&
-						translation.votes.length > 0
+						translation.votes && translation.votes.length > 0
 							? {
 									...translation.votes[0],
 									translationId: translation.id,
@@ -125,7 +123,6 @@ export async function transformToPageWithSegmentAndTranslations(
 ): Promise<PagesWithRelations> {
 	const segmentWithTranslations = await transformPageSegments(
 		page.pageSegments,
-		false,
 	);
 
 	return {
@@ -140,6 +137,7 @@ type FetchParams = {
 	pageOwnerId?: string;
 	isPopular?: boolean;
 	locale?: string;
+	currentUserId?: string;
 };
 
 export async function fetchPaginatedPublicPagesWithRelations({
@@ -148,6 +146,7 @@ export async function fetchPaginatedPublicPagesWithRelations({
 	pageOwnerId,
 	isPopular = false,
 	locale = "en",
+	currentUserId,
 }: FetchParams): Promise<{
 	pagesWithRelations: PagesWithRelations[];
 	totalPages: number;
@@ -172,7 +171,11 @@ export async function fetchPaginatedPublicPagesWithRelations({
 		: { createdAt: Prisma.SortOrder.desc };
 
 	// 実際に使うselectを生成 (localeなどを含む)
-	const pageWithRelationsSelect = createPagesWithRelationsSelect(true, locale);
+	const pageWithRelationsSelect = createPagesWithRelationsSelect(
+		true,
+		locale,
+		currentUserId,
+	);
 
 	// findManyとcountを同時並列で呼び出し
 	const [rawPagesWithRelations, totalCount] = await Promise.all([
@@ -219,7 +222,6 @@ export async function fetchPageWithTranslations(
 
 	const segmentWithTranslations = await transformPageSegments(
 		page.pageSegments,
-		true,
 	);
 	return {
 		...page,

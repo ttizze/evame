@@ -40,6 +40,7 @@ export function ParsedContent({
 					domNode.attribs.id = uuid;
 				}
 			}
+			// セグメントの翻訳が存在する場合は、セグメントの翻訳を表示
 			if (domNode.type === "tag" && domNode.attribs["data-number-id"]) {
 				const number = Number(domNode.attribs["data-number-id"]);
 				const segmentWithTranslation = segmentWithTranslations?.find(

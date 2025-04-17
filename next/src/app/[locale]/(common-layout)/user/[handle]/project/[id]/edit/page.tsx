@@ -60,7 +60,7 @@ export default async function ProjectEditPage({
 	}
 
 	return (
-		<div className="container max-w-4xl py-8">
+		<div className="flex justify-center py-8">
 			<ProjectForm
 				project={project}
 				userHandle={handle}
