@@ -103,10 +103,17 @@ export async function fetchUserProjectsWithPagination(
 			skip,
 			take: pageSize,
 			include: {
-				user: true,
+				user: {
+					select: {
+						handle: true,
+						name: true,
+						image: true,
+					},
+				},
 				images: true,
 				links: true,
 				projectTagRelations: { include: { projectTag: true } },
+				projectSegments: { include: { projectSegmentTranslations: true } },
 			},
 		}),
 		prisma.project.count({

@@ -1,13 +1,13 @@
 "use client";
 
 import { Editor } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[slug]/edit/_components/editor/editor";
+import type { ProjectWithRelations } from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { ProjectWithRelations } from "../../_db/queries.server";
 import type { ProjectTagWithCount } from "../_db/queries.server";
 import { type ProjectActionResponse, projectAction } from "./action";
 import { ProjectImageInput } from "./image-input";

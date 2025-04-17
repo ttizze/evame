@@ -1,5 +1,6 @@
 import { ProjectLikeButton } from "@/app/[locale]/_components/project/project-like-button/server";
 import { ProjectTagList } from "@/app/[locale]/_components/project/project-tag-list.server";
+import type { ProjectWithRelations } from "@/app/[locale]/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Carousel,
@@ -9,9 +10,18 @@ import {
 	CarouselPrevious,
 } from "@/components/ui/carousel";
 import type { ProjectImage } from "@prisma/client";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import type { ProjectWithRelations } from "../_db/queries.server";
+const DynamicMemoizedParsedContent = dynamic(
+	() =>
+		import(
+			"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/parsed-content"
+		).then((mod) => mod.MemoizedParsedContent),
+	{
+		loading: () => <span>Loading Parsed Content...</span>,
+	},
+);
 interface ProjectDetailProps {
 	project: ProjectWithRelations;
 	locale: string;
@@ -64,9 +74,7 @@ export function ProjectDetail({ project, locale }: ProjectDetailProps) {
 				<div className="flex justify-between items-center">
 					<ProjectLikeButton projectId={project.id} />
 				</div>
-				<div className="prose dark:prose-invert max-w-none">
-					<p className="whitespace-pre-wrap">{project.description}</p>
-				</div>
+				{/* <div className="prose dark:prose-invert max-w-none"></div> */}
 				<div className="flex flex-wrap gap-2">
 					<ProjectTagList projectTag={tags} />
 				</div>

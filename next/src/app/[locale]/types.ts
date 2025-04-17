@@ -1,4 +1,13 @@
-import type { Page, Tag, TagPage } from "@prisma/client";
+import type {
+	Page,
+	Project,
+	ProjectImage,
+	ProjectLink,
+	ProjectTag,
+	ProjectTagRelation,
+	Tag,
+	TagPage,
+} from "@prisma/client";
 import type { SanitizedUser } from "../types";
 
 type Segment = {
@@ -43,5 +52,19 @@ export type PageWithRelations = Omit<Page, "createdAt"> & {
 	segmentWithTranslations: SegmentWithTranslations[];
 	_count?: {
 		pageComments: number;
+	};
+};
+type TagProjectWithTag = ProjectTagRelation & {
+	projectTag: ProjectTag;
+};
+export type ProjectWithRelations = Omit<Project, "createdAt"> & {
+	createdAt: string;
+	user: SanitizedUser;
+	images: ProjectImage[];
+	links: ProjectLink[];
+	projectTagRelations: TagProjectWithTag[];
+	segmentWithTranslations: SegmentWithTranslations[];
+	_count?: {
+		projectLikes: number;
 	};
 };

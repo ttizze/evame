@@ -135,7 +135,7 @@ export default async function HomePage({
 				{tab === "home" && (
 					<div className="space-y-12">
 						<section>
-							<PopularProjectList page={1} query={""} />
+							<PopularProjectList locale={locale} searchParams={searchParams} />
 							<div className="flex justify-center w-full mt-6">
 								<Button
 									variant="default"
@@ -190,7 +190,7 @@ export default async function HomePage({
 						</div>
 
 						<section>
-							<NewProjectList page={1} query={""} />
+							<NewProjectList locale={locale} searchParams={searchParams} />
 							<div className="flex justify-center w-full mt-6">
 								<Button
 									variant="default"
@@ -234,9 +234,9 @@ export default async function HomePage({
 					<>
 						<SortTabs defaultSort={sort} />
 						{sort === "popular" ? (
-							<PopularProjectList page={1} query={""} />
+							<PopularProjectList locale={locale} searchParams={searchParams} />
 						) : (
-							<NewProjectList page={1} query={""} />
+							<NewProjectList locale={locale} searchParams={searchParams} />
 						)}
 					</>
 				)}

@@ -1,5 +1,5 @@
 "use client";
-import type { ProjectWithRelations } from "@/app/[locale]/(common-layout)/user/[handle]/project/[id]/_db/queries.server";
+import type { ProjectWithRelationsForList } from "@/app/[locale]/_db/queries.server";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -13,7 +13,7 @@ import { useState } from "react";
 import { DeleteProjectDialogClient } from "../delete-project-dialog/client";
 
 interface ProjectActionsDropdownProps {
-	project: ProjectWithRelations;
+	project: ProjectWithRelationsForList;
 	className?: string;
 }
 

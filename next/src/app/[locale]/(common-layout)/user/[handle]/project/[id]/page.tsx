@@ -1,9 +1,9 @@
+import { fetchProjectWithTranslations } from "@/app/[locale]/_db/queries.server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { prisma } from "@/lib/prisma";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import ProjectDetailSkeleton from "./_components/project-detail-skeleton";
-import { fetchProjectWithRelations } from "./_db/queries.server";
 const UserInfo = dynamic(
 	() =>
 		import("@/app/[locale]/_components/user-info.server").then(
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: ProjectPageProps) {
 export default async function ProjectPage({ params }: ProjectPageProps) {
 	const { id, locale } = await params;
 
-	const project = await fetchProjectWithRelations(id);
+	const project = await fetchProjectWithTranslations(id, locale);
 	if (!project) {
 		return notFound();
 	}
