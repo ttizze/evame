@@ -3,11 +3,11 @@
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { ProjectActionsDropdown } from "@/app/[locale]/_components/project/project-actions-dropdown/client";
 import type { ProjectWithRelationsForList } from "@/app/[locale]/_db/queries.server";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Link } from "@/i18n/routing";
-import { parseAsString, useQueryState } from "nuqs";
 import { Plus } from "lucide-react";
+import { parseAsString, useQueryState } from "nuqs";
 
 interface ProjectManagementTabClientProps {
 	projectsWithRelations: ProjectWithRelationsForList[];
@@ -31,7 +31,7 @@ export function ProjectManagementTabClient({
 
 	return (
 		<div className="space-y-4">
-				<div className="flex justify-between items-center">
+			<div className="flex justify-between items-center">
 				<Input
 					placeholder="Search pages..."
 					value={query || ""}
