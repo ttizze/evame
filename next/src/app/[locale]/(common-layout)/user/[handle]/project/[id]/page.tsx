@@ -1,9 +1,9 @@
+import { fetchProjectDetail } from "@/app/[locale]/_db/project-queries.server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { prisma } from "@/lib/prisma";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import ProjectDetailSkeleton from "./_components/project-detail-skeleton";
-import { fetchProjectWithRelations } from "./_db/queries.server";
 const UserInfo = dynamic(
 	() =>
 		import("@/app/[locale]/_components/user-info.server").then(
@@ -13,11 +13,9 @@ const UserInfo = dynamic(
 		loading: () => <Skeleton className="w-full h-10" />,
 	},
 );
-const ProjectDetail = dynamic(
+const DynamicProject = dynamic(
 	() =>
-		import("./_components/project-detail.server").then(
-			(mod) => mod.ProjectDetail,
-		),
+		import("./_components/project-detail.server").then((mod) => mod.Project),
 	{
 		loading: () => <ProjectDetailSkeleton />,
 	},
@@ -53,15 +51,15 @@ export async function generateMetadata({ params }: ProjectPageProps) {
 export default async function ProjectPage({ params }: ProjectPageProps) {
 	const { id, locale } = await params;
 
-	const project = await fetchProjectWithRelations(id);
-	if (!project) {
+	const projectDetail = await fetchProjectDetail(id, locale);
+	if (!projectDetail) {
 		return notFound();
 	}
 	return (
 		<div className="container max-w-4xl py-8">
-			<ProjectDetail project={project} locale={locale} />
+			<DynamicProject projectDetail={projectDetail} locale={locale} />
 			<div className="py-4">
-				<UserInfo handle={project.user.handle} />
+				<UserInfo handle={projectDetail.user.handle} />
 			</div>
 		</div>
 	);

@@ -1,4 +1,4 @@
-import type { SegmentTranslationWithVote } from "@/app/[locale]/types";
+import type { BaseTranslation } from "@/app/[locale]/types";
 import { render, screen } from "@testing-library/react";
 // VoteButtons.test.tsx
 import React from "react";
@@ -10,14 +10,14 @@ const dummyVoteTarget = "example-target" as VoteTarget;
 const dummyTranslationUpvote = {
 	id: 1,
 	point: 10,
-	translationCurrentUserVote: { isUpvote: true },
-} as SegmentTranslationWithVote;
+	currentUserVote: { isUpvote: true },
+} as BaseTranslation;
 
 const dummyTranslationDownvote = {
 	id: 2,
 	point: 5,
-	translationCurrentUserVote: { isUpvote: false },
-} as SegmentTranslationWithVote;
+	currentUserVote: { isUpvote: false },
+} as BaseTranslation;
 
 vi.mock("next/form", () => ({
 	__esModule: true,
@@ -44,7 +44,7 @@ describe("VoteButtons コンポーネント", () => {
 
 		render(
 			<VoteButtons
-				translationWithVote={dummyTranslationUpvote}
+				translation={dummyTranslationUpvote}
 				voteTarget={dummyVoteTarget}
 			/>,
 		);
@@ -73,7 +73,7 @@ describe("VoteButtons コンポーネント", () => {
 
 		render(
 			<VoteButtons
-				translationWithVote={dummyTranslationUpvote}
+				translation={dummyTranslationUpvote}
 				voteTarget={dummyVoteTarget}
 			/>,
 		);
@@ -100,7 +100,7 @@ describe("VoteButtons コンポーネント", () => {
 
 		render(
 			<VoteButtons
-				translationWithVote={dummyTranslationDownvote}
+				translation={dummyTranslationDownvote}
 				voteTarget={dummyVoteTarget}
 			/>,
 		);
@@ -128,7 +128,7 @@ describe("VoteButtons コンポーネント", () => {
 
 		render(
 			<VoteButtons
-				translationWithVote={dummyTranslationUpvote}
+				translation={dummyTranslationUpvote}
 				voteTarget={dummyVoteTarget}
 			/>,
 		);

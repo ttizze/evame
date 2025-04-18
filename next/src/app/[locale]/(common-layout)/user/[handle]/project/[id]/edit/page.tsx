@@ -1,9 +1,9 @@
+import { fetchProjectDetail } from "@/app/[locale]/_db/project-queries.server";
 import { getCurrentUser } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { redirect } from "next/navigation";
-import { fetchProjectWithRelations } from "../_db/queries.server";
 import ProjectEditSkeleton from "./_components/project-edit-skeleton";
 const ProjectForm = dynamic(
 	() => import("./_components/project-form").then((mod) => mod.ProjectForm),
@@ -50,19 +50,19 @@ export default async function ProjectEditPage({
 		return redirect("/auth/login");
 	}
 
-	const [project, allProjectTags] = await Promise.all([
-		fetchProjectWithRelations(id),
+	const [projectDetail, allProjectTags] = await Promise.all([
+		fetchProjectDetail(id, currentUser?.id),
 		fetchAllProjectTags(),
 	]);
 
-	if (!project) {
+	if (!projectDetail) {
 		return notFound();
 	}
 
 	return (
-		<div className="container max-w-4xl py-8">
+		<div className="flex justify-center py-8">
 			<ProjectForm
-				project={project}
+				projectDetail={projectDetail}
 				userHandle={handle}
 				allProjectTags={allProjectTags}
 			/>

@@ -1,13 +1,13 @@
 import { PageList } from "@/app/[locale]/_components/page/page-list.server";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import type { PagesWithRelations } from "@/app/[locale]/_db/queries.server";
+import type { PageSummary } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
 import type { Tag } from "@prisma/client";
 import type { Category } from "./constants";
 
 interface SearchResultsProps {
-	pagesWithRelations: PagesWithRelations[] | undefined;
+	pageSummaries: PageSummary[] | undefined;
 	tags: Tag[] | undefined;
 	users: SanitizedUser[] | undefined;
 	totalPages: number;
@@ -17,7 +17,7 @@ interface SearchResultsProps {
 }
 
 export function SearchResults({
-	pagesWithRelations,
+	pageSummaries,
 	tags,
 	users,
 	totalPages,
@@ -29,7 +29,7 @@ export function SearchResults({
 		<div>
 			<div className="space-y-4">
 				{(currentCategory === "title" || currentCategory === "content") &&
-					pagesWithRelations?.length === 0 && (
+					pageSummaries?.length === 0 && (
 						<p className="text-gray-500">No results found.</p>
 					)}
 				{currentCategory === "tags" && tags?.length === 0 && (
@@ -43,13 +43,13 @@ export function SearchResults({
 					<PageTagList tag={tags} />
 				)}
 				{currentCategory === "tags" &&
-					pagesWithRelations?.length &&
-					pagesWithRelations.length > 0 && (
+					pageSummaries?.length &&
+					pageSummaries.length > 0 && (
 						<div className="space-y-4">
-							{pagesWithRelations.map((p) => (
+							{pageSummaries.map((p) => (
 								<PageList
 									key={p.id}
-									pageWithRelations={p}
+									pageSummary={p}
 									pageLink={`/user/${p.user.handle}/page/${p.slug}`}
 									userLink={`/user/${p.user.handle}`}
 									locale={locale}
@@ -74,13 +74,13 @@ export function SearchResults({
 				)}
 
 				{(currentCategory === "title" || currentCategory === "content") &&
-					pagesWithRelations?.length &&
-					pagesWithRelations.length > 0 && (
+					pageSummaries?.length &&
+					pageSummaries.length > 0 && (
 						<div className="space-y-4">
-							{pagesWithRelations.map((p) => (
+							{pageSummaries.map((p) => (
 								<PageList
 									key={p.id}
-									pageWithRelations={p}
+									pageSummary={p}
 									pageLink={`/user/${p.user.handle}/page/${p.slug}`}
 									userLink={`/user/${p.user.handle}`}
 									locale={locale}

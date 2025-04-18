@@ -1,5 +1,5 @@
 import type { AddTranslationFormTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
-import type { SegmentWithTranslations } from "@/app/[locale]/types";
+import type { SegmentBundle } from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, Languages } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -10,32 +10,29 @@ const INITIAL_DISPLAY_COUNT = 3;
 
 export function AddAndVoteTranslations({
 	currentHandle,
-	segmentWithTranslations,
+	segmentBundle,
 	open,
 	voteTarget,
 	addTranslationFormTarget,
 }: {
 	currentHandle: string | undefined;
-	segmentWithTranslations: SegmentWithTranslations;
+	segmentBundle: SegmentBundle;
 	open: boolean;
 	voteTarget: VoteTarget;
 	addTranslationFormTarget: AddTranslationFormTarget;
 }) {
 	const [showAll, setShowAll] = useState(false);
-	const { bestSegmentTranslationWithVote, segmentTranslationsWithVotes } =
-		segmentWithTranslations;
-	const alternativeTranslationsWithVotes = segmentTranslationsWithVotes.filter(
-		(t) => t.id !== bestSegmentTranslationWithVote?.id,
-	);
+	const { best, translations } = segmentBundle;
+	const alternativeTranslations = translations.filter((t) => t.id !== best?.id);
 
 	const displayedTranslations = useMemo(() => {
 		return showAll
-			? alternativeTranslationsWithVotes
-			: alternativeTranslationsWithVotes.slice(0, INITIAL_DISPLAY_COUNT);
-	}, [alternativeTranslationsWithVotes, showAll]);
+			? alternativeTranslations
+			: alternativeTranslations.slice(0, INITIAL_DISPLAY_COUNT);
+	}, [alternativeTranslations, showAll]);
 
 	const hasMoreTranslations =
-		alternativeTranslationsWithVotes.length > INITIAL_DISPLAY_COUNT;
+		alternativeTranslations.length > INITIAL_DISPLAY_COUNT;
 
 	const toggleShowAll = () => setShowAll((prev) => !prev);
 
@@ -75,7 +72,7 @@ export function AddAndVoteTranslations({
 			</>
 			<span className="mt-4">
 				<AddTranslationForm
-					segmentId={segmentWithTranslations.id}
+					segmentId={segmentBundle.segment.id}
 					currentHandle={currentHandle}
 					addTranslationFormTarget={addTranslationFormTarget}
 				/>

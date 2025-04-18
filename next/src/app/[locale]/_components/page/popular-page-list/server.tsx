@@ -1,5 +1,5 @@
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedPublicPagesWithRelations } from "@/app/[locale]/_db/queries.server";
+import { fetchPaginatedPublicPageSummaries } from "@/app/[locale]/_db/page-queries.server";
 import { getCurrentUser } from "@/auth";
 import { BookOpenIcon } from "lucide-react";
 import { createLoader, parseAsInteger } from "nuqs/server";
@@ -28,25 +28,24 @@ export default async function PopularPageList({
 	const currentUser = await getCurrentUser();
 	const currentUserHandle = currentUser?.handle;
 
-	const result = await fetchPaginatedPublicPagesWithRelations({
-		page,
-		pageSize: 5,
-		isPopular: true,
-		locale,
-		currentUserId: currentUser?.id,
-	});
-
-	const pagesWithRelations = result.pagesWithRelations;
-	const totalPages = result.totalPages;
+	const { pageSummaries, totalPages } = await fetchPaginatedPublicPageSummaries(
+		{
+			page,
+			pageSize: 5,
+			isPopular: true,
+			locale,
+			currentUserId: currentUser?.id,
+		},
+	);
 
 	return (
 		<PageListContainer title="Popular Pages" icon={BookOpenIcon}>
-			{pagesWithRelations.map((pageWithRelations, index) => (
+			{pageSummaries.map((pageSummary, index) => (
 				<PageList
-					key={pageWithRelations.id}
-					pageWithRelations={pageWithRelations}
-					pageLink={`/user/${pageWithRelations.user.handle}/page/${pageWithRelations.slug}`}
-					userLink={`/user/${pageWithRelations.user.handle}`}
+					key={pageSummary.id}
+					pageSummary={pageSummary}
+					pageLink={`/user/${pageSummary.user.handle}/page/${pageSummary.slug}`}
+					userLink={`/user/${pageSummary.user.handle}`}
 					index={index}
 					locale={locale}
 					currentUserHandle={currentUserHandle}

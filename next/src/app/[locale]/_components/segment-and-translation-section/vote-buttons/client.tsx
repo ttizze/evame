@@ -1,5 +1,5 @@
 "use client";
-import type { SegmentTranslationWithVote } from "@/app/[locale]/types";
+import type { BaseTranslation } from "@/app/[locale]/types";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import Form from "next/form";
 import { memo } from "react";
@@ -12,12 +12,12 @@ import type { VoteTarget } from "./constants";
 import { VoteButton } from "./vote-button";
 
 interface VoteButtonsProps {
-	translationWithVote: SegmentTranslationWithVote;
+	translation: BaseTranslation;
 	voteTarget: VoteTarget;
 }
 
 export const VoteButtons = memo(function VoteButtons({
-	translationWithVote,
+	translation,
 	voteTarget,
 }: VoteButtonsProps) {
 	const [voteState, voteAction, isVoting] = useActionState<
@@ -26,8 +26,8 @@ export const VoteButtons = memo(function VoteButtons({
 	>(voteTranslationAction, {
 		success: false,
 		data: {
-			isUpvote: translationWithVote.translationCurrentUserVote?.isUpvote,
-			point: translationWithVote.point,
+			isUpvote: translation.currentUserVote?.isUpvote,
+			point: translation.point,
 		},
 	});
 	return (
@@ -37,7 +37,7 @@ export const VoteButtons = memo(function VoteButtons({
 				<input
 					type="hidden"
 					name="segmentTranslationId"
-					value={translationWithVote.id}
+					value={translation.id}
 				/>
 				<span className="flex h-8">
 					<VoteButton

@@ -1,14 +1,15 @@
 // app/routes/search/functions/queries.server.ts
 
-import { createPagesWithRelationsSelect } from "@/app/[locale]/_db/queries.server";
-import type { PagesWithRelations } from "@/app/[locale]/_db/queries.server";
-import { transformToPageWithSegmentAndTranslations } from "@/app/[locale]/_db/queries.server";
+import { createPagesWithRelationsSelect } from "@/app/[locale]/_db/page-queries.server";
+import { normalizePageSegments } from "@/app/[locale]/_db/page-queries.server";
+import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
+import type { PageSummary } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";
 import { sanitizeUser } from "@/lib/sanitize-user";
 import type { Tag } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import type { Category } from "../constants";
-
 /** 検索結果を統合的に取得する */
 export async function fetchSearchResults({
 	query,
@@ -36,32 +37,44 @@ export async function fetchSearchResults({
 	const skip = (page - 1) * PAGE_SIZE;
 	const take = PAGE_SIZE;
 
-	let pagesWithRelations = undefined;
+	let pageSummaries: PageSummary[] | undefined = undefined;
 	let tags: Tag[] | undefined = undefined;
 	let users: SanitizedUser[] | undefined = undefined;
 	let totalCount = 0;
 
 	switch (category) {
 		case "title": {
-			const { pagesWithRelations: resultPages, totalCount: cnt } =
-				await searchTitle(query, skip, take, locale);
-			pagesWithRelations = resultPages;
-			totalCount = cnt;
+			const { pageSummaries: resultPages, total } = await searchTitle(
+				query,
+				skip,
+				take,
+				locale,
+			);
+			pageSummaries = resultPages;
+			totalCount = total;
 			break;
 		}
 		case "content": {
-			const { pagesWithRelations: resultPages, totalCount: cnt } =
-				await searchContent(query, skip, take, locale);
-			pagesWithRelations = resultPages;
-			totalCount = cnt;
+			const { pageSummaries: resultPages, total } = await searchContent(
+				query,
+				skip,
+				take,
+				locale,
+			);
+			pageSummaries = resultPages;
+			totalCount = total;
 			break;
 		}
 		case "tags": {
 			if (tagPage === "true") {
-				const { pagesWithRelations: resultPages, totalCount: cnt } =
-					await searchByTag(query, skip, take, locale);
-				pagesWithRelations = resultPages;
-				totalCount = cnt;
+				const { pageSummaries: resultPages, total } = await searchByTag(
+					query,
+					skip,
+					take,
+					locale,
+				);
+				pageSummaries = resultPages;
+				totalCount = total;
 			} else {
 				const { tags: resultTags, totalCount: cnt } = await searchTags(
 					query,
@@ -91,7 +104,7 @@ export async function fetchSearchResults({
 	const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
 	return {
-		pagesWithRelations,
+		pageSummaries,
 		tags,
 		users,
 		totalPages,
@@ -104,46 +117,45 @@ export async function searchTitle(
 	skip: number,
 	take: number,
 	locale: string,
+	currentUserId?: string,
 ): Promise<{
-	pagesWithRelations: PagesWithRelations[];
-	totalCount: number;
+	pageSummaries: PageSummary[];
+	total: number;
 }> {
-	const pageWithRelationsSelect = createPagesWithRelationsSelect(true, locale);
-	const [rawPagesWithRelations, count] = await Promise.all([
+	const select = createPagesWithRelationsSelect(true, locale, currentUserId);
+	const baseWhere: Prisma.PageWhereInput = {
+		status: "PUBLIC",
+		pageSegments: {
+			some: {
+				text: { contains: query, mode: "insensitive" },
+				number: 0,
+			},
+		},
+	};
+	const [rawPages, total] = await Promise.all([
 		prisma.page.findMany({
+			where: baseWhere,
 			skip,
 			take,
-			where: {
-				pageSegments: {
-					some: {
-						text: { contains: query, mode: "insensitive" },
-						number: 0,
-					},
-				},
-				status: "PUBLIC",
-			},
-			select: pageWithRelationsSelect,
+			select,
 		}),
-		prisma.page.count({
-			where: {
-				pageSegments: {
-					some: {
-						text: { contains: query, mode: "insensitive" },
-						number: 0,
-					},
-				},
-				status: "PUBLIC",
-			},
-		}),
+		prisma.page.count({ where: baseWhere }),
 	]);
-	const pagesWithRelations = await Promise.all(
-		rawPagesWithRelations.map((page) =>
-			transformToPageWithSegmentAndTranslations(page),
+	const pages = rawPages.map((p) => ({
+		...p,
+		createdAt: p.createdAt.toISOString(),
+		segmentBundles: toSegmentBundles(
+			"page",
+			p.id,
+			normalizePageSegments(p.pageSegments),
 		),
-	);
-	return { pagesWithRelations, totalCount: count };
-}
+	}));
 
+	return {
+		pageSummaries: pages,
+		total,
+	};
+}
 /** タグ名でページを検索 */
 export async function searchByTag(
 	tagName: string,
@@ -151,11 +163,11 @@ export async function searchByTag(
 	take: number,
 	locale: string,
 ): Promise<{
-	pagesWithRelations: PagesWithRelations[];
-	totalCount: number;
+	pageSummaries: PageSummary[];
+	total: number;
 }> {
-	const pageWithRelationsSelect = createPagesWithRelationsSelect(true, locale);
-	const [rawPagesWithRelations, count] = await Promise.all([
+	const select = createPagesWithRelationsSelect(true, locale);
+	const [rawPages, total] = await Promise.all([
 		prisma.page.findMany({
 			skip,
 			take,
@@ -169,7 +181,7 @@ export async function searchByTag(
 				},
 				status: "PUBLIC",
 			},
-			select: pageWithRelationsSelect,
+			select,
 		}),
 		prisma.page.count({
 			where: {
@@ -184,12 +196,17 @@ export async function searchByTag(
 			},
 		}),
 	]);
-	const pagesWithRelations = await Promise.all(
-		rawPagesWithRelations.map((page) =>
-			transformToPageWithSegmentAndTranslations(page),
+	const pages = rawPages.map((p) => ({
+		...p,
+		createdAt: p.createdAt.toISOString(),
+		segmentBundles: toSegmentBundles(
+			"page",
+			p.id,
+			normalizePageSegments(p.pageSegments),
 		),
-	);
-	return { pagesWithRelations, totalCount: count };
+	}));
+
+	return { pageSummaries: pages, total };
 }
 
 /** コンテンツ検索 */
@@ -199,11 +216,11 @@ export async function searchContent(
 	take: number,
 	locale = "en-US",
 ): Promise<{
-	pagesWithRelations: PagesWithRelations[];
-	totalCount: number;
+	pageSummaries: PageSummary[];
+	total: number;
 }> {
-	const pageWithRelationsSelect = createPagesWithRelationsSelect(true, locale);
-	const [rawPagesWithRelations, count] = await Promise.all([
+	const select = createPagesWithRelationsSelect(true, locale);
+	const [rawPages, total] = await Promise.all([
 		prisma.page.findMany({
 			skip,
 			take,
@@ -211,7 +228,7 @@ export async function searchContent(
 				content: { contains: query, mode: "insensitive" },
 				status: "PUBLIC",
 			},
-			select: pageWithRelationsSelect,
+			select,
 		}),
 		prisma.page.count({
 			where: {
@@ -220,13 +237,17 @@ export async function searchContent(
 			},
 		}),
 	]);
-	const pagesWithRelations = await Promise.all(
-		rawPagesWithRelations.map((page) =>
-			transformToPageWithSegmentAndTranslations(page),
+	const pages = rawPages.map((p) => ({
+		...p,
+		createdAt: p.createdAt.toISOString(),
+		segmentBundles: toSegmentBundles(
+			"page",
+			p.id,
+			normalizePageSegments(p.pageSegments),
 		),
-	);
+	}));
 
-	return { pagesWithRelations, totalCount: count };
+	return { pageSummaries: pages, total };
 }
 
 /** タグ検索 (Tag.name) → Tag[] */

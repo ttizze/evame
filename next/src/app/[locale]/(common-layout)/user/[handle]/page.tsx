@@ -21,7 +21,7 @@ const DynamicCommonTabs = dynamic(
 
 const DynamicUserProjectList = dynamic(
 	() =>
-		import("./_components/user-project-list/server").then(
+		import("./_components/user-project-list.server").then(
 			(mod) => mod.UserProjectList,
 		),
 	{
@@ -94,7 +94,7 @@ export default async function UserPage({
 						<DynamicUserProjectList
 							handle={handle}
 							page={1}
-							query={query}
+							locale={locale}
 							sort={sort}
 						/>
 						<div className="flex justify-center w-full mt-4">
@@ -143,7 +143,7 @@ export default async function UserPage({
 						<DynamicUserProjectList
 							handle={handle}
 							page={page}
-							query={query}
+							locale={locale}
 							sort={sort}
 						/>
 					</>

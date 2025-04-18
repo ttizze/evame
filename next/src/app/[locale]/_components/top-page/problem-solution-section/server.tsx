@@ -24,15 +24,15 @@ export default async function ProblemSolutionSection({
 }: { locale: string }) {
 	const currentUser = await getCurrentUser();
 	const currentHandle = currentUser?.handle;
-	const pageWithTranslations = await fetchAboutPage(locale);
+	const pageDetail = await fetchAboutPage(locale);
 	// Get problem header (segment 2)
-	const problemHeader = pageWithTranslations.segmentWithTranslations.find(
-		(st) => st.number === 2,
+	const problemHeader = pageDetail.segmentBundles.find(
+		(st) => st.segment.number === 2,
 	);
 	// Get problem cards (segments 3-8)
-	const problemCards = pageWithTranslations.segmentWithTranslations
-		.filter((st) => st.number >= 3 && st.number <= 14)
-		.sort((a, b) => a.number - b.number);
+	const problemCards = pageDetail.segmentBundles
+		.filter((st) => st.segment.number >= 3 && st.segment.number <= 14)
+		.sort((a, b) => a.segment.number - b.segment.number);
 
 	// Group problem cards into pairs (header + text)
 	const problemCardPairs = [];
@@ -73,9 +73,7 @@ export default async function ProblemSolutionSection({
 		<Globe key="component-3" />,
 		<EditorMovie key="component-4" />,
 		<FloatingControls
-			likeButton={
-				<PageLikeButton pageId={pageWithTranslations.id} showCount={false} />
-			}
+			likeButton={<PageLikeButton pageId={pageDetail.id} showCount={false} />}
 			shareTitle="evame"
 			position="w-full flex justify-center"
 			alwaysVisible={true}
@@ -95,7 +93,7 @@ export default async function ProblemSolutionSection({
 				<div className="border-b">
 					<h2 className="text-2xl font-bold text-center mb-10">
 						<SegmentAndTranslationSection
-							segmentWithTranslations={problemHeader}
+							segmentBundle={problemHeader}
 							currentHandle={currentHandle}
 							voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 							addTranslationFormTarget={
@@ -107,11 +105,11 @@ export default async function ProblemSolutionSection({
 				<div className="grid grid-cols-1 ">
 					{problemCardPairs.map((pair, index) => (
 						<AboutSectionCard
-							key={`problem-${pair.header.number}`}
+							key={`problem-${pair.header.segment.number}`}
 							icon={problemIcons[index]}
 							title={
 								<SegmentAndTranslationSection
-									segmentWithTranslations={pair.header}
+									segmentBundle={pair.header}
 									currentHandle={currentHandle}
 									voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 									addTranslationFormTarget={
@@ -121,7 +119,7 @@ export default async function ProblemSolutionSection({
 							}
 							description={
 								<SegmentAndTranslationSection
-									segmentWithTranslations={pair.text}
+									segmentBundle={pair.text}
 									currentHandle={currentHandle}
 									voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 									addTranslationFormTarget={

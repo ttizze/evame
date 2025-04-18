@@ -21,7 +21,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: main
-    
+
       neon-proxy:
         image: ghcr.io/timowilhelm/local-neon-http-proxy:main
         ports:
@@ -55,6 +55,8 @@ jobs:
           bun x biome ci .
 
       - name: Run Tests
+        env:
+          TZ: 'Asia/Tokyo'
         run: |
           cd next
           bunx prisma migrate dev && bunx prisma migrate deploy

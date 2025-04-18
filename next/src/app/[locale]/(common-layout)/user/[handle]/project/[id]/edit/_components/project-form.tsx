@@ -1,25 +1,18 @@
 "use client";
 
+import { Editor } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[slug]/edit/_components/editor/editor";
+import type { ProjectDetail } from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from "next/navigation";
-import {
-	startTransition,
-	useActionState,
-	useCallback,
-	useEffect,
-	useState,
-} from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { ProjectWithRelations } from "../../_db/queries.server";
 import type { ProjectTagWithCount } from "../_db/queries.server";
 import { type ProjectActionResponse, projectAction } from "./action";
 import { ProjectImageInput } from "./image-input";
 import { ProjectLinkInput } from "./link-input";
 import { ProjectTagInput } from "./tag-input";
-
 // Define the ProjectLink interface to match the database schema
 interface ProjectLink {
 	id?: string;
@@ -37,45 +30,35 @@ interface ProjectImage {
 }
 
 interface ProjectFormProps {
-	project?: ProjectWithRelations | null;
+	projectDetail?: ProjectDetail | null;
 	userHandle: string;
 	allProjectTags: ProjectTagWithCount[];
 }
 
 export function ProjectForm({
-	project,
+	projectDetail,
 	userHandle,
 	allProjectTags,
 }: ProjectFormProps) {
 	const router = useRouter();
-	const isCreateMode = !project;
+	const isCreateMode = !projectDetail;
 
-	const selectedTags =
-		project?.projectTagRelations.map((relation) => relation.projectTag) || [];
+	const initialTags =
+		projectDetail?.projectTagRelations.map((relation) => relation.projectTag) ||
+		[];
 
+	const initialLinks = (projectDetail?.links as ProjectLink[]) || [];
+	const initialImages = (projectDetail?.images as ProjectImage[]) || [];
+
+	// フォーム状態
 	const [tags, setTags] = useState<string[]>(
-		selectedTags.map((tag) => tag.name),
+		initialTags.map((tag) => tag.name),
 	);
-
-	// Initialize links from project or empty array
-	const projectLinks = project?.links as ProjectLink[] | undefined;
-	const [links, setLinks] = useState<ProjectLink[]>(projectLinks || []);
-
-	// Initialize images from project or empty array
-	const projectImages = project?.images as ProjectImage[] | undefined;
-	const [images, setImages] = useState<ProjectImage[]>(projectImages || []);
-
-	const handleTagsChange = useCallback((newTags: string[]) => {
-		setTags(newTags);
-	}, []);
-
-	const handleLinksChange = useCallback((newLinks: ProjectLink[]) => {
-		setLinks(newLinks);
-	}, []);
-
-	const handleImagesChange = useCallback((newImages: ProjectImage[]) => {
-		setImages(newImages);
-	}, []);
+	const [description, setDescription] = useState(
+		projectDetail?.description || "",
+	);
+	const [links, setLinks] = useState<ProjectLink[]>(initialLinks);
+	const [images, setImages] = useState<ProjectImage[]>(initialImages);
 
 	const [state, action, isPending] = useActionState<
 		ProjectActionResponse,
@@ -91,21 +74,21 @@ export function ProjectForm({
 			// 新規作成時は一覧ページ、編集時は詳細ページへリダイレクト
 			const redirectPath = isCreateMode
 				? `/user/${userHandle}/project-management`
-				: `/user/${userHandle}/project/${project?.id}`;
+				: `/user/${userHandle}/project/${projectDetail?.id}`;
 			router.push(redirectPath);
 			router.refresh();
 		} else if (state.message) {
 			toast.error(state.message);
 		}
-	}, [state, router, userHandle, project?.id, isCreateMode]);
+	}, [state, router, userHandle, projectDetail?.id, isCreateMode]);
 
 	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		const formData = new FormData(event.currentTarget);
 
 		// Add project ID if editing
-		if (project?.id) {
-			formData.set("projectId", project.id);
+		if (projectDetail?.id) {
+			formData.set("projectId", projectDetail.id);
 		}
 
 		// Add tag information to form data
@@ -137,7 +120,7 @@ export function ProjectForm({
 	};
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-6 ">
 			<div>
 				<h1 className="text-2xl font-bold">
 					{isCreateMode ? "New Project" : "Edit Project"}
@@ -161,7 +144,7 @@ export function ProjectForm({
 						<Input
 							id="title"
 							name="title"
-							defaultValue={project?.title}
+							defaultValue={projectDetail?.title}
 							placeholder="My Awesome Project"
 							className="mt-1"
 							required
@@ -180,14 +163,14 @@ export function ProjectForm({
 						<Label htmlFor="description" className="flex items-center">
 							Description <span className="text-red-500 ml-1">*</span>
 						</Label>
-						<Textarea
-							id="description"
-							name="description"
-							defaultValue={project?.description}
-							placeholder="Describe your project..."
-							className="min-h-32 mt-1"
-							required
-						/>
+						<div className="mt-1 prose dark:prose-invert">
+							<Editor
+								defaultValue={projectDetail?.description || ""}
+								name="description"
+								className="border border-input rounded-md  py-2 min-h-32"
+								placeholder="Describe your project..."
+							/>
+						</div>
 						{state.zodErrors?.description && (
 							<p className="text-sm text-red-500 mt-1">
 								{state.zodErrors.description}
@@ -201,9 +184,9 @@ export function ProjectForm({
 					<div>
 						<Label htmlFor="tags">Tags</Label>
 						<ProjectTagInput
-							initialTags={selectedTags}
+							initialTags={initialTags}
 							allTagsWithCount={allProjectTags}
-							onChange={handleTagsChange}
+							onChange={setTags}
 						/>
 						{state.zodErrors?.tags && (
 							<p className="text-sm text-red-500 mt-1">
@@ -217,10 +200,7 @@ export function ProjectForm({
 
 					<div>
 						<Label htmlFor="links">Project Links</Label>
-						<ProjectLinkInput
-							initialLinks={links}
-							onChange={handleLinksChange}
-						/>
+						<ProjectLinkInput initialLinks={links} onChange={setLinks} />
 						{state.zodErrors?.links && (
 							<p className="text-sm text-red-500 mt-1">
 								{state.zodErrors.links}
@@ -233,10 +213,7 @@ export function ProjectForm({
 
 					<div>
 						<Label htmlFor="images">Project Images</Label>
-						<ProjectImageInput
-							initialImages={images}
-							onChange={handleImagesChange}
-						/>
+						<ProjectImageInput initialImages={images} onChange={setImages} />
 						{state.zodErrors?.images && (
 							<p className="text-sm text-red-500 mt-1">
 								{state.zodErrors.images}
@@ -255,7 +232,7 @@ export function ProjectForm({
 						onClick={() => {
 							const returnPath = isCreateMode
 								? `/user/${userHandle}/project-management`
-								: `/user/${userHandle}/project/${project?.id}`;
+								: `/user/${userHandle}/project/${projectDetail?.id}`;
 							router.push(returnPath);
 						}}
 					>

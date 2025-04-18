@@ -1,10 +1,40 @@
-import { getBestTranslation } from "@/app/[locale]/_lib/get-best-translation";
-import type { SegmentTranslationWithVote } from "@/app/[locale]/types";
+import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
+import type { SegmentBundle } from "@/app/[locale]/types";
+import type { SanitizedUser } from "@/app/types";
 import {
 	type PageCommentWithPageCommentSegments,
 	fetchPageCommentsWithPageCommentSegments,
 } from "../_db/queries.server";
 
+export function normalizeCommentSegments(
+	segments: {
+		id: number;
+		number: number;
+		text: string;
+		pageCommentSegmentTranslations: {
+			id: number;
+			locale: string;
+			text: string;
+			point: number;
+			createdAt: Date;
+			user: SanitizedUser;
+			pageCommentSegmentTranslationVotes?: {
+				isUpvote: boolean;
+				updatedAt: Date;
+			}[];
+		}[];
+	}[],
+) {
+	return segments.map((seg) => ({
+		id: seg.id,
+		number: seg.number,
+		text: seg.text,
+		segmentTranslations: seg.pageCommentSegmentTranslations.map((t) => ({
+			...t,
+			currentUserVote: t.pageCommentSegmentTranslationVotes?.[0] ?? null,
+		})),
+	}));
+}
 export async function buildCommentTree(
 	flatComments: PageCommentWithPageCommentSegments[],
 ): Promise<PageCommentWithPageCommentSegments[]> {
@@ -29,50 +59,22 @@ export async function buildCommentTree(
 
 export interface ExtendedComment
 	extends Omit<PageCommentWithPageCommentSegments, "replies"> {
-	pageCommentSegmentsWithTranslations: (PageCommentWithPageCommentSegments["pageCommentSegments"][number] & {
-		segmentTranslationsWithVotes: SegmentTranslationWithVote[];
-		bestSegmentTranslationWithVote: SegmentTranslationWithVote | null;
-	})[];
+	segmentWithTranslations: SegmentBundle[];
 	replies: ExtendedComment[];
 }
-
-export async function mapCommentTranslations(
+export async function mapComment(
 	comment: PageCommentWithPageCommentSegments,
-	locale: string,
 ): Promise<ExtendedComment> {
-	const pageCommentSegmentsWithTranslations = await Promise.all(
-		comment.pageCommentSegments.map(async (segment) => {
-			const segmentTranslationsWithVotes: SegmentTranslationWithVote[] =
-				segment.pageCommentSegmentTranslations.map((translation) => ({
-					...translation,
-					translationCurrentUserVote:
-						translation.pageCommentSegmentTranslationVotes &&
-						translation.pageCommentSegmentTranslationVotes.length > 0
-							? {
-									...translation.pageCommentSegmentTranslationVotes[0],
-									translationId: translation.id,
-								}
-							: null,
-				}));
-			const bestSegmentTranslationWithVote = await getBestTranslation(
-				segmentTranslationsWithVotes,
-			);
-			return {
-				...segment,
-				segmentTranslationsWithVotes,
-				bestSegmentTranslationWithVote,
-			};
-		}),
+	const segmentWithTranslations = toSegmentBundles(
+		"comment",
+		comment.id,
+		normalizeCommentSegments(comment.pageCommentSegments),
 	);
 
 	return {
 		...comment,
-		pageCommentSegmentsWithTranslations,
-		replies: await Promise.all(
-			(comment.replies || []).map((child) =>
-				mapCommentTranslations(child, locale),
-			),
-		),
+		segmentWithTranslations, // ← 共通 DTO
+		replies: await Promise.all((comment.replies ?? []).map(mapComment)),
 	};
 }
 
@@ -93,9 +95,7 @@ export async function fetchPageCommentsWithUserAndTranslations(
 	const tree = await buildCommentTree(flatComments);
 
 	// 3. ツリー構造の各コメントに対して翻訳情報をマッピング
-	return await Promise.all(
-		tree.map((comment) => mapCommentTranslations(comment, locale)),
-	);
+	return await Promise.all(tree.map((comment) => mapComment(comment)));
 }
 
 export type PageCommentWithUserAndTranslations = Awaited<

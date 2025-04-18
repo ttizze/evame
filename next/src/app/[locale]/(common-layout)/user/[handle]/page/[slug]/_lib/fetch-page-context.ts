@@ -1,5 +1,5 @@
-import { fetchPageWithTranslations } from "@/app/[locale]/_db/queries.server";
-import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/queries.server";
+import { fetchPageDetail } from "@/app/[locale]/_db/page-queries.server";
+import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/page-queries.server";
 import { getCurrentUser } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
 import { notFound } from "next/navigation";
@@ -18,44 +18,36 @@ export const fetchPageContext = cache(
 	) => {
 		const currentUser = await getCurrentUser();
 
-		const pageWithTranslations = await fetchPageWithTranslations(
-			slug,
-			locale,
-			currentUser?.id,
-		);
+		const pageDetail = await fetchPageDetail(slug, locale, currentUser?.id);
 
-		if (!pageWithTranslations || pageWithTranslations.status === "ARCHIVE") {
+		if (!pageDetail || pageDetail.status === "ARCHIVE") {
 			return notFound();
 		}
-		const pageTitleWithTranslations =
-			pageWithTranslations.segmentWithTranslations.find(
-				(item) => item.number === 0,
-			);
+		const pageTitleWithTranslations = pageDetail.segmentBundles.find(
+			(item) => item.segment.number === 0,
+		);
 		if (!pageTitleWithTranslations) {
 			return null;
 		}
 		let title: string;
 		if (showTranslation && showOriginal) {
-			title = `${pageTitleWithTranslations.text} - ${pageTitleWithTranslations.bestSegmentTranslationWithVote?.text}`;
+			title = `${pageTitleWithTranslations.segment.text} - ${pageTitleWithTranslations.best?.text}`;
 		} else if (showTranslation) {
 			title =
-				pageTitleWithTranslations.bestSegmentTranslationWithVote?.text ??
-				pageTitleWithTranslations.text;
+				pageTitleWithTranslations.best?.text ??
+				pageTitleWithTranslations.segment.text;
 		} else {
-			title = pageTitleWithTranslations.text;
+			title = pageTitleWithTranslations.segment.text;
 		}
 		const guestId = await getGuestId();
 		const [pageAITranslationInfo, userAITranslationInfo, pageCommentsCount] =
 			await Promise.all([
-				fetchLatestPageAITranslationInfo(pageWithTranslations.id),
-				fetchLatestUserAITranslationInfo(
-					pageWithTranslations.id,
-					currentUser?.id ?? "0",
-				),
-				fetchPageCommentsCount(pageWithTranslations.id),
+				fetchLatestPageAITranslationInfo(pageDetail.id),
+				fetchLatestUserAITranslationInfo(pageDetail.id, currentUser?.id ?? "0"),
+				fetchPageCommentsCount(pageDetail.id),
 			]);
 		return {
-			pageWithTranslations,
+			pageDetail,
 			currentUser,
 			title,
 			pageAITranslationInfo,

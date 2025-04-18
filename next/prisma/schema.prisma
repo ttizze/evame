@@ -417,17 +417,17 @@ model ProjectSegment {
 }
 
 model ProjectSegmentTranslation {
-  id               Int            @id @default(autoincrement())
-  locale           String
-  text             String
-  projectSegmentId Int            @map("project_segment_id")
-  userId           String         @map("user_id")
-  point            Int            @default(0)
-  isArchived       Boolean        @default(false) @map("is_archived")
-  createdAt        DateTime       @default(now()) @map("created_at")
-  projectSegment   ProjectSegment @relation(fields: [projectSegmentId], references: [id], onDelete: Cascade)
-  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  projectSegmentTranslationVotes            ProjectSegmentTranslationVote[]
+  id                             Int                             @id @default(autoincrement())
+  locale                         String
+  text                           String
+  projectSegmentId               Int                             @map("project_segment_id")
+  userId                         String                          @map("user_id")
+  point                          Int                             @default(0)
+  isArchived                     Boolean                         @default(false) @map("is_archived")
+  createdAt                      DateTime                        @default(now()) @map("created_at")
+  projectSegment                 ProjectSegment                  @relation(fields: [projectSegmentId], references: [id], onDelete: Cascade)
+  user                           User                            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectSegmentTranslationVotes ProjectSegmentTranslationVote[]
 
   @@index([projectSegmentId])
   @@index([userId])

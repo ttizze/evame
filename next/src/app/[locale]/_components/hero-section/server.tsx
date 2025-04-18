@@ -5,7 +5,7 @@ import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/pa
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { TranslateActionSection } from "@/app/[locale]/_components/translate-action-section";
-import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/queries.server";
+import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/page-queries.server";
 import { getCurrentUser } from "@/auth";
 import Image from "next/image";
 
@@ -29,15 +29,15 @@ export const Icon = ({ className, ...rest }: { className: string }) => {
 export default async function HeroSection({ locale }: { locale: string }) {
 	const currentUser = await getCurrentUser();
 	const currentHandle = currentUser?.handle;
-	const topPageWithTranslations = await fetchAboutPage(locale);
+	const topPageDetail = await fetchAboutPage(locale);
 
 	const pageAITranslationInfo = await fetchLatestPageAITranslationInfo(
-		topPageWithTranslations.id,
+		topPageDetail.id,
 	);
 
-	const [title, text] = topPageWithTranslations.segmentWithTranslations
-		.filter((st) => st.number === 0 || st.number === 1)
-		.sort((a, b) => a.number - b.number);
+	const [title, text] = topPageDetail.segmentBundles
+		.filter((sb) => sb.segment.number === 0 || sb.segment.number === 1)
+		.sort((a, b) => a.segment.number - b.segment.number);
 
 	if (!title || !text) {
 		const error = new Error("Invalid hero section");
@@ -46,7 +46,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	}
 	const heroTitle = title;
 	const heroText = text;
-	const sourceLocale = topPageWithTranslations.sourceLocale;
+	const sourceLocale = topPageDetail.sourceLocale;
 	return (
 		<div className="relative overflow-hidden border pt-10 flex flex-col items-center justify-center">
 			<Icon className="absolute h-6 w-6 -top-3 -left-3 dark:text-white text-black" />
@@ -67,7 +67,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 			<div className="relative z-10 px-4 md:px-8 max-w-4xl mx-auto">
 				<h1 className="text-2xl md:text-4xl font-bold mb-6 text-center">
 					<SegmentAndTranslationSection
-						segmentWithTranslations={heroTitle}
+						segmentBundle={heroTitle}
 						segmentTextClassName="w-full mb-2"
 						currentHandle={currentHandle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
@@ -79,7 +79,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 
 				<span className="text-xl mb-12 w-full">
 					<SegmentAndTranslationSection
-						segmentWithTranslations={heroText}
+						segmentBundle={heroText}
 						segmentTextClassName="mb-2"
 						currentHandle={currentHandle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
