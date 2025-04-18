@@ -208,7 +208,9 @@ async function handleProjectImages(
 ) {
 	// Get IDs of images that will be updated
 	const newImageIds = images
-		.filter((image): image is ProjectImageSchemaType & { id: string } => !!image.id)
+		.filter(
+			(image): image is ProjectImageSchemaType & { id: string } => !!image.id,
+		)
 		.map((image) => image.id);
 
 	// Delete images that are no longer present
