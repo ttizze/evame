@@ -54,9 +54,9 @@ export function ProjectForm({
 	const [tags, setTags] = useState<string[]>(
 		initialTags.map((tag) => tag.name),
 	);
-	const [description, setDescription] = useState(
-		projectDetail?.description || "",
-	);
+	const tagLine = projectDetail?.segmentBundles.filter(
+		(item) => item.segment.number === 0,
+	)[0];
 	const [links, setLinks] = useState<ProjectLink[]>(initialLinks);
 	const [images, setImages] = useState<ProjectImage[]>(initialImages);
 
@@ -158,6 +158,19 @@ export function ProjectForm({
 							The name of your project.
 						</p>
 					</div>
+					<div>
+						<Label htmlFor="tagLine" className="flex items-center">
+							Tag Line <span className="text-red-500 ml-1">*</span>
+						</Label>
+						<Input
+							id="tagLine"
+							name="tagLine"
+							defaultValue={tagLine?.segment.text}
+							placeholder="My Awesome Project"
+							className="mt-1"
+							required
+						/>
+					</div>
 
 					<div>
 						<Label htmlFor="description" className="flex items-center">
@@ -167,7 +180,7 @@ export function ProjectForm({
 							<Editor
 								defaultValue={projectDetail?.description || ""}
 								name="description"
-								className="border border-input rounded-md  py-2 min-h-32"
+								className="border border-input rounded-md px-2 py-2 min-h-32"
 								placeholder="Describe your project..."
 							/>
 						</div>

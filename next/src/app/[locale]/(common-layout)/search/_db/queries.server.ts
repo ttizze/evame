@@ -1,6 +1,6 @@
 // app/routes/search/functions/queries.server.ts
 
-import { createPagesWithRelationsSelect } from "@/app/[locale]/_db/page-queries.server";
+import { selectPagesWithDetails } from "@/app/[locale]/_db/page-queries.server";
 import { normalizePageSegments } from "@/app/[locale]/_db/page-queries.server";
 import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
 import type { PageSummary } from "@/app/[locale]/types";
@@ -122,7 +122,7 @@ export async function searchTitle(
 	pageSummaries: PageSummary[];
 	total: number;
 }> {
-	const select = createPagesWithRelationsSelect(true, locale, currentUserId);
+	const select = selectPagesWithDetails(true, locale, currentUserId);
 	const baseWhere: Prisma.PageWhereInput = {
 		status: "PUBLIC",
 		pageSegments: {
@@ -166,7 +166,7 @@ export async function searchByTag(
 	pageSummaries: PageSummary[];
 	total: number;
 }> {
-	const select = createPagesWithRelationsSelect(true, locale);
+	const select = selectPagesWithDetails(true, locale);
 	const [rawPages, total] = await Promise.all([
 		prisma.page.findMany({
 			skip,
@@ -219,7 +219,7 @@ export async function searchContent(
 	pageSummaries: PageSummary[];
 	total: number;
 }> {
-	const select = createPagesWithRelationsSelect(true, locale);
+	const select = selectPagesWithDetails(true, locale);
 	const [rawPages, total] = await Promise.all([
 		prisma.page.findMany({
 			skip,

@@ -3,16 +3,16 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { toSegmentBundles } from "../_lib/to-segment-bundles";
 import type { ProjectDetail, ProjectSummary } from "../types";
-import { createUserSelectFields } from "./queries.server";
+import { selectUserFields } from "./queries.server";
 
-function createProjectRelatedFields(
+const selectProjectRelatedFields = (
 	onlyTitle = false,
 	locale = "en",
 	currentUserId?: string,
-) {
+) => {
 	return {
 		user: {
-			select: createUserSelectFields(),
+			select: selectUserFields(),
 		},
 		projectTagRelations: {
 			include: {
@@ -30,7 +30,7 @@ function createProjectRelatedFields(
 					where: { locale, isArchived: false },
 					include: {
 						user: {
-							select: createUserSelectFields(),
+							select: selectUserFields(),
 						},
 						...(currentUserId && {
 							projectSegmentTranslationVotes: {
@@ -46,26 +46,26 @@ function createProjectRelatedFields(
 			},
 		},
 	};
-}
+};
 
-export function createProjectsWithRelationsSelect(
+export const selectProjectsWithDetails = (
 	onlyTitle = false,
 	locale = "en",
 	currentUserId?: string,
-) {
+) => {
 	return {
 		id: true,
 		title: true,
 		createdAt: true,
 		updatedAt: true,
-		...createProjectRelatedFields(onlyTitle, locale, currentUserId),
+		...selectProjectRelatedFields(onlyTitle, locale, currentUserId),
 		_count: {
 			select: {
 				projectLikes: true,
 			},
 		},
 	};
-}
+};
 
 export function normalizeProjectSegments(
 	projectSegments: {
@@ -142,7 +142,7 @@ export async function fetchPaginatedProjectSummaries({
 		: { createdAt: Prisma.SortOrder.desc };
 
 	// 実際に使うselectを生成 (localeなどを含む)
-	const select = createProjectsWithRelationsSelect(true, locale, currentUserId);
+	const select = selectProjectsWithDetails(true, locale, currentUserId);
 
 	// findManyとcountを同時並列で呼び出し
 	const [rawProjects, total] = await Promise.all([
@@ -183,7 +183,7 @@ export async function fetchProjectDetail(
 	const project = await prisma.project.findUnique({
 		where: { id: projectId },
 		include: {
-			...createProjectRelatedFields(false, locale, currentUserId),
+			...selectProjectRelatedFields(false, locale, currentUserId),
 		},
 	});
 
