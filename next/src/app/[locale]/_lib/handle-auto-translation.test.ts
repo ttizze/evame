@@ -85,7 +85,7 @@ describe("handleAutoTranslation", () => {
 						{ number: 1, text: "Hello" },
 						{ number: 2, text: "World" },
 					],
-					translateTarget: "page",
+					targetContentType: "page",
 				}),
 			);
 
@@ -210,7 +210,7 @@ describe("handleAutoTranslation", () => {
 						{ number: 2, text: "a test comment" },
 						{ number: 0, text: "Test Page" },
 					],
-					translateTarget: "comment",
+					targetContentType: "comment",
 				}),
 			);
 		});
