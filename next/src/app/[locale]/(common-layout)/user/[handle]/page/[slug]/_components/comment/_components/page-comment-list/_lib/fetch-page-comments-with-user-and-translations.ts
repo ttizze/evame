@@ -35,6 +35,7 @@ export function normalizeCommentSegments(
 		})),
 	}));
 }
+
 export async function buildCommentTree(
 	flatComments: PageCommentWithPageCommentSegments[],
 ): Promise<PageCommentWithPageCommentSegments[]> {

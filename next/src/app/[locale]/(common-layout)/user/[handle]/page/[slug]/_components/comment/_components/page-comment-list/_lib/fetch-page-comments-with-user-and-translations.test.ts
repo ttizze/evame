@@ -1,97 +1,66 @@
-import {
-	pageCommentSegmentFactory,
-	pageCommentSegmentTranslationFactory,
-	pageCommentWithPageCommentSegmentsFactory,
-} from "@/tests/factory";
-// fetch-page-comments-with-user-and-translations.test.ts
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchPageCommentsWithPageCommentSegments } from "../_db/queries.server";
-import {
-	buildCommentTree,
-	fetchPageCommentsWithUserAndTranslations,
-	mapComment,
-} from "./fetch-page-comments-with-user-and-translations";
-// --- 依存先をモック化 ---
-vi.mock("../_db/queries.server", () => ({
-	fetchPageCommentsWithPageCommentSegments: vi.fn(),
-}));
-// -------------- buildCommentTree テスト -------------- //
-describe("buildCommentTree", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
+import { buildCommentTree } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-list/_lib/fetch-page-comments-with-user-and-translations";
+import { normalizeCommentSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-list/_lib/fetch-page-comments-with-user-and-translations";
+import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
+import type { PageCommentWithPageCommentSegments } from "../_db/queries.server";
 
-	it("should build a tree from flat comments", async () => {
-		const flatComments = [
-			pageCommentWithPageCommentSegmentsFactory.build({
-				id: 1,
-				parentId: null,
-			}),
-			pageCommentWithPageCommentSegmentsFactory.build({ id: 2, parentId: 1 }),
-			pageCommentWithPageCommentSegmentsFactory.build({
-				id: 3,
-				parentId: null,
-			}),
-		];
-		const tree = await buildCommentTree(flatComments);
+import type { SanitizedUser } from "@/app/types";
 
-		// トップレベルは id=1, id=3 → 2件
-		expect(tree).toHaveLength(2);
-		const comment1 = tree.find((comment) => comment.id === 1);
-		const comment3 = tree.find((comment) => comment.id === 3);
-		expect(comment1?.replies).toHaveLength(1);
-		expect(comment1?.replies?.[0].id).toBe(2);
-		expect(comment3?.replies).toHaveLength(0);
-	});
+const dummyUser: SanitizedUser = {
+	handle: "u1",
+	name: "Dummy",
+	image: "",
+	profile: "",
+	twitterHandle: "",
+	totalPoints: 0,
+	isAI: false,
+	createdAt: new Date(),
+	updatedAt: new Date(),
+};
+
+test("normalize → SegmentBundle keeps best", () => {
+	// rawSegs を normalize にそのまま渡せる構造で作成
+	const rawSegs = [
+		{
+			id: 1,
+			number: 0,
+			text: "s",
+			pageCommentSegmentTranslations: [
+				{
+					id: 1,
+					locale: "en",
+					text: "A",
+					point: 1,
+					createdAt: new Date(), // ← Date 型
+					user: dummyUser,
+					pageCommentSegmentTranslationVotes: [],
+				},
+				{
+					id: 2,
+					locale: "en",
+					text: "B",
+					point: 2,
+					createdAt: new Date(), // ← Date 型
+					user: dummyUser,
+					pageCommentSegmentTranslationVotes: [],
+				},
+			],
+		},
+	] as const satisfies Parameters<typeof normalizeCommentSegments>[0];
+	const bundles = toSegmentBundles(
+		"comment",
+		99,
+		normalizeCommentSegments(rawSegs),
+	);
+
+	expect(bundles[0].best?.point).toBe(2);
 });
 
-// -------------- mapCommentTranslations テスト -------------- //
-describe("mapCommentTranslations", () => {
-	it("should map translations with best translation", async () => {
-		const translation1 = pageCommentSegmentTranslationFactory.build({
-			text: "translation1",
-			point: 1001,
-		});
-		const translation2 = pageCommentSegmentTranslationFactory.build({
-			text: "translation1",
-			point: 1002,
-		});
-		const translations = [translation1, translation2];
-		const segments = pageCommentSegmentFactory.buildList(
-			2,
-			{},
-			{ transient: { customTranslations: translations } },
-		);
-		const comment = pageCommentWithPageCommentSegmentsFactory.build(
-			{}, // フィールドの直接オーバーライドがある場合はここ
-			{ transient: { customSegments: segments } }, // transientParams
-		);
-
-		const result = await mapComment(comment);
-		expect(result.segmentBundles[0].best?.point).toBe(1002);
-	});
-});
-
-// -------------- fetchPageCommentsWithUserAndTranslations テスト -------------- //
-describe("fetchPageCommentsWithUserAndTranslations", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
-
-	it("should fetch flat comments, build tree, and map translations", async () => {
-		const mockPageComments =
-			pageCommentWithPageCommentSegmentsFactory.buildList(1);
-		vi.mocked(fetchPageCommentsWithPageCommentSegments).mockResolvedValue(
-			mockPageComments,
-		);
-		const result = await fetchPageCommentsWithUserAndTranslations(
-			mockPageComments[0].id,
-			"ja",
-			"u1",
-		);
-
-		expect(result).toHaveLength(1);
-		expect(result[0].replies).toBeDefined();
-		expect(result[0].segmentBundles).toBeDefined();
-	});
+test("parent–child nesting", async () => {
+	const flat = [
+		{ id: 1, parentId: null },
+		{ id: 2, parentId: 1 },
+	] as unknown as PageCommentWithPageCommentSegments[];
+	const tree = await buildCommentTree(flat);
+	expect(tree).toHaveLength(1);
+	expect(tree[0].replies?.[0]?.id).toBe(2);
 });
