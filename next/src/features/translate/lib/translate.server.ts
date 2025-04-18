@@ -3,11 +3,18 @@ import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { TranslationStatus } from "@prisma/client";
 import { updateTranslationJob } from "../db/mutations.server";
 import { getLatestPageCommentSegments } from "../db/queries.server";
-import { getLatestPageSegments } from "../db/queries.server";
+import {
+	getLatestPageSegments,
+	getLatestProjectSegments,
+} from "../db/queries.server";
 import { getGeminiModelResponse } from "../services/gemini";
 import type { NumberedElement, TranslateJobParams } from "../types";
 import { extractTranslations } from "./extract-translations.server";
-import { saveTranslationsForComment, saveTranslationsForPage } from "./io-deps";
+import {
+	saveTranslationsForComment,
+	saveTranslationsForPage,
+	saveTranslationsForProject,
+} from "./io-deps";
 import { splitNumberedElements } from "./split-numbered-elements.server";
 
 export async function translate(params: TranslateJobParams) {
@@ -27,13 +34,13 @@ export async function translate(params: TranslateJobParams) {
 		for (let i = 0; i < chunks.length; i++) {
 			console.log(`Processing chunk ${i + 1} of ${totalChunks}`);
 			console.log(chunks[i]);
-
 			await translateChunk(
 				params.geminiApiKey,
 				params.aiModel,
 				chunks[i],
 				params.targetLocale,
 				params.pageId,
+				params.projectId,
 				params.title,
 				params.targetContentType,
 				params.commentId,
@@ -65,9 +72,10 @@ async function translateChunk(
 	aiModel: string,
 	numberedElements: NumberedElement[],
 	targetLocale: string,
-	pageId: number,
-	title: string,
-	targetContentType: TargetContentType,
+	pageId?: number,
+	projectId?: string,
+	title?: string,
+	targetContentType?: TargetContentType,
 	commentId?: number,
 ) {
 	// まだ翻訳が完了していない要素
@@ -84,7 +92,7 @@ async function translateChunk(
 			aiModel,
 			pendingElements,
 			targetLocale,
-			title,
+			title || "",
 		);
 
 		// extractTranslationsでJSONパースを試し、失敗時は正規表現抽出
@@ -93,6 +101,9 @@ async function translateChunk(
 		if (partialTranslations.length > 0) {
 			// 部分的にでも取得できた翻訳結果を保存
 			if (targetContentType === "page") {
+				if (!pageId) {
+					throw new Error("Page ID is required");
+				}
 				const pageSegments = await getLatestPageSegments(pageId);
 
 				await saveTranslationsForPage(
@@ -101,19 +112,25 @@ async function translateChunk(
 					targetLocale,
 					aiModel,
 				);
-			} else {
+			} else if (targetContentType === "comment") {
 				// コメント用の保存先テーブル or ロジック
-				if (!commentId) {
+				if (!commentId || !pageId) {
 					throw new Error("Comment ID is required");
 				}
 				const pageCommentSegments =
-					await getLatestPageCommentSegments(commentId);
+					await getLatestPageCommentSegments(pageId, commentId);
 				await saveTranslationsForComment(
 					partialTranslations,
 					pageCommentSegments,
 					targetLocale,
 					aiModel,
 				);
+			} else if (targetContentType === "project") {
+				if (!projectId) {
+					throw new Error("Project ID is required");
+				}
+				const projectSegments = await getLatestProjectSegments(projectId);
+				await saveTranslationsForProject(partialTranslations, projectSegments, targetLocale, aiModel);
 			}
 			// 成功した要素をpendingElementsから除去
 			const translatedNumbers = new Set(
@@ -134,6 +151,7 @@ async function translateChunk(
 		throw new Error("部分的な翻訳のみ完了し、残存要素は翻訳失敗しました。");
 	}
 }
+
 
 async function getTranslatedText(
 	geminiApiKey: string,
