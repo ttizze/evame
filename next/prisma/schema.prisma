@@ -27,7 +27,7 @@ model User {
   geminiApiKey                       GeminiApiKey?
   pages                              Page[]
   pageSegmentsTranslations           PageSegmentTranslation[]
-    votes                              Vote[]
+  votes                              Vote[]
   likePages                          LikePage[]
   followers                          Follow[]                            @relation("following")
   following                          Follow[]                            @relation("follower")
