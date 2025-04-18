@@ -290,5 +290,20 @@ export function MyComponent() {
 }
 ```
 
+## TODO
+1. page本文､project説明
+- 編集後も翻訳との紐づけを維持するために､textAndOccurrenceHashをキーにして紐づけを更新する
+- 表示にはtextAndOccurrenceHashをキーにすると時間がかかるので､data-number-idをキーにする
+となっているが､これ複雑すぎるので簡略化する
+
+2. page､project､コメントで要件が違っていて複雑すぎるのでなんとかする
+- pageはslugで特定してるので､slugをキーにして扱っている
+- projectはidで特定してるので､idをキーにして扱っている
+- コメントはidで特定してるので､idをキーにして扱っている
+- page､projectは編集後のひもづけ必要なので1.のようにしているが､コメントは編集機能がないので1.のようにしていない､しかし編集できたほうがいいので､できるようにする｡
+  
+3. userLocaleを取得してget-locale-from-html.tsで決まらなかったときそれにするようにする
+
+
 
 このガイドに従うことで、一貫性のあるコンポーネントを開発し、プロジェクト全体の整合性を維持することができます。 
