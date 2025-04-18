@@ -1,10 +1,7 @@
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { TranslationStatus } from "@prisma/client";
-import {
-	updatePageAITranslationInfo,
-	updateUserAITranslationInfo,
-} from "../db/mutations.server";
+import { updateTranslationJob } from "../db/mutations.server";
 import { getLatestPageCommentSegments } from "../db/queries.server";
 import { getLatestPageSegments } from "../db/queries.server";
 import { getGeminiModelResponse } from "../services/gemini";
@@ -15,8 +12,8 @@ import { splitNumberedElements } from "./split-numbered-elements.server";
 
 export async function translate(params: TranslateJobParams) {
 	try {
-		await updateUserAITranslationInfo(
-			params.userAITranslationInfoId,
+		await updateTranslationJob(
+			params.translationJobId,
 			TranslationStatus.IN_PROGRESS,
 			0,
 		);
@@ -42,25 +39,21 @@ export async function translate(params: TranslateJobParams) {
 				params.commentId,
 			);
 			const progress = ((i + 1) / totalChunks) * 100;
-			await updateUserAITranslationInfo(
-				params.userAITranslationInfoId,
+			await updateTranslationJob(
+				params.translationJobId,
 				TranslationStatus.IN_PROGRESS,
 				progress,
 			);
 		}
-		await updateUserAITranslationInfo(
-			params.userAITranslationInfoId,
+		await updateTranslationJob(
+			params.translationJobId,
 			TranslationStatus.COMPLETED,
 			100,
 		);
-		await updatePageAITranslationInfo(
-			params.pageAITranslationInfoId,
-			TranslationStatus.COMPLETED,
-		);
 	} catch (error) {
 		console.error("Background translation job failed:", error);
-		await updateUserAITranslationInfo(
-			params.userAITranslationInfoId,
+		await updateTranslationJob(
+			params.translationJobId,
 			TranslationStatus.FAILED,
 			0,
 		);

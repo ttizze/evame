@@ -1,8 +1,5 @@
 "use client";
-import type {
-	PageAITranslationInfo,
-	UserAITranslationInfo,
-} from "@prisma/client";
+import type { TranslationJob } from "@prisma/client";
 import { useState } from "react";
 import type { TargetContentType } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
 import { AddTranslateDialog } from "./add-translate-dialog";
@@ -11,8 +8,8 @@ type TranslateActionSectionClientProps = {
 	pageId: number;
 	currentHandle: string | undefined;
 	hasGeminiApiKey: boolean;
-	userAITranslationInfo: UserAITranslationInfo | null;
-	pageAITranslationInfo?: PageAITranslationInfo[];
+	translationJobs?: TranslationJob[];
+	latestUserTranslationJob: TranslationJob | null;
 	sourceLocale: string;
 	targetContentType: TargetContentType;
 	className?: string;
@@ -23,8 +20,8 @@ export function TranslateActionSectionClient({
 	pageId,
 	currentHandle,
 	hasGeminiApiKey,
-	userAITranslationInfo,
-	pageAITranslationInfo,
+	translationJobs,
+	latestUserTranslationJob,
 	sourceLocale,
 	targetContentType,
 	className,
@@ -38,7 +35,7 @@ export function TranslateActionSectionClient({
 					sourceLocale={sourceLocale}
 					className="w-[200px]"
 					onAddNew={() => setAddTranslateDialogOpen(true)}
-					pageAITranslationInfo={pageAITranslationInfo}
+					translationJobs={translationJobs}
 					showIcons={showIcons}
 				/>
 			</div>
@@ -48,7 +45,7 @@ export function TranslateActionSectionClient({
 				currentHandle={currentHandle}
 				pageId={pageId}
 				hasGeminiApiKey={hasGeminiApiKey}
-				userAITranslationInfo={userAITranslationInfo}
+				latestUserTranslationJob={latestUserTranslationJob}
 				targetContentType={targetContentType}
 			/>
 		</div>

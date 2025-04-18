@@ -32,8 +32,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		const pageRoutes = pages.flatMap((page: PageWithUserAndTranslation) => {
 			// translationInfo に値がある場合はその locale を使用、なければ 'en' を使用する
 			const locales =
-				page.translationInfo.length > 0
-					? page.translationInfo.map(({ locale }) => locale)
+				page.translationJobs.length > 0
+					? page.translationJobs.map(({ locale }) => locale)
 					: ["en"];
 
 			return locales.map((locale) => ({

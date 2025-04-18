@@ -1,5 +1,5 @@
 import { TranslationStatus } from "@prisma/client";
-import type { PageAITranslationInfo } from "@prisma/client";
+import type { TranslationJob } from "@prisma/client";
 import { renderHook } from "@testing-library/react";
 // useLocaleListAutoRefresh.test.ts
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -40,12 +40,12 @@ describe("useLocaleListAutoRefresh", () => {
 		const translationInfos = [
 			{
 				locale: "en",
-				aiTranslationStatus: TranslationStatus.COMPLETED,
-			} as PageAITranslationInfo,
+				status: TranslationStatus.COMPLETED,
+			} as TranslationJob,
 			{
 				locale: "fr",
-				aiTranslationStatus: TranslationStatus.COMPLETED,
-			} as PageAITranslationInfo,
+				status: TranslationStatus.COMPLETED,
+			} as TranslationJob,
 		];
 		renderHook(() => useLocaleListAutoRefresh(translationInfos));
 		vi.advanceTimersByTime(5000);
@@ -56,12 +56,12 @@ describe("useLocaleListAutoRefresh", () => {
 		const translationInfos = [
 			{
 				locale: "en",
-				aiTranslationStatus: TranslationStatus.IN_PROGRESS,
-			} as PageAITranslationInfo,
+				status: TranslationStatus.IN_PROGRESS,
+			} as TranslationJob,
 			{
 				locale: "fr",
-				aiTranslationStatus: TranslationStatus.COMPLETED,
-			} as PageAITranslationInfo,
+				status: TranslationStatus.COMPLETED,
+			} as TranslationJob,
 		];
 		renderHook(() => useLocaleListAutoRefresh(translationInfos));
 		vi.advanceTimersByTime(5000);
@@ -72,8 +72,8 @@ describe("useLocaleListAutoRefresh", () => {
 		const translationInfos = [
 			{
 				locale: "en",
-				aiTranslationStatus: TranslationStatus.IN_PROGRESS,
-			} as PageAITranslationInfo,
+				status: TranslationStatus.IN_PROGRESS,
+			} as TranslationJob,
 		];
 		renderHook(() => useLocaleListAutoRefresh(translationInfos));
 		vi.advanceTimersByTime(15000); // 5000ms × 3
@@ -84,8 +84,8 @@ describe("useLocaleListAutoRefresh", () => {
 		const translationInfos = [
 			{
 				locale: "en",
-				aiTranslationStatus: TranslationStatus.IN_PROGRESS,
-			} as PageAITranslationInfo,
+				status: TranslationStatus.IN_PROGRESS,
+			} as TranslationJob,
 		];
 		const { unmount } = renderHook(() =>
 			useLocaleListAutoRefresh(translationInfos),

@@ -181,8 +181,8 @@ export async function fetchPaginatedPublicPageSummaries({
 		totalPages: Math.ceil(total / pageSize),
 	};
 }
-export async function fetchLatestPageAITranslationInfo(pageId: number) {
-	const locales = await prisma.pageAITranslationInfo.findMany({
+export async function fetchLatestPageTranslationJobs(pageId: number) {
+	const locales = await prisma.translationJob.findMany({
 		where: { pageId },
 		select: { locale: true },
 		distinct: ["locale"],
@@ -191,7 +191,7 @@ export async function fetchLatestPageAITranslationInfo(pageId: number) {
 	// 2. 各localeについて最新のレコードを取得
 	const results = await Promise.all(
 		locales.map(({ locale }) =>
-			prisma.pageAITranslationInfo.findFirst({
+			prisma.translationJob.findFirst({
 				where: {
 					pageId,
 					locale,

@@ -1,6 +1,6 @@
 // buildAlternateLocales.test.ts
 import { BASE_URL } from "@/app/_constants/base-url";
-import type { PageAITranslationInfo } from "@prisma/client";
+import type { TranslationJob } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 import { buildAlternateLocales } from "./build-alternate-locales";
 
@@ -11,7 +11,7 @@ describe("buildAlternateLocales", () => {
 	it("重複するlocaleは1つにまとめられる", () => {
 		const result = buildAlternateLocales(
 			page,
-			[{ locale: "ja" }, { locale: "ja" }] as PageAITranslationInfo[],
+			[{ locale: "ja" }, { locale: "ja" }] as TranslationJob[],
 			userHandle,
 			"fr",
 		);
@@ -23,14 +23,14 @@ describe("buildAlternateLocales", () => {
 	});
 
 	it("currentLocale の翻訳は常に除外される", () => {
-		const pageAITranslationInfo = [
+		const pageTranslationJobs = [
 			{ locale: "fr" },
 			{ locale: "en" },
-		] as PageAITranslationInfo[];
+		] as TranslationJob[];
 		// currentLocale が "en" の場合、"en" の翻訳は除外され、かつ sourceLocale が存在するので追加されない
 		const result = buildAlternateLocales(
 			page,
-			pageAITranslationInfo,
+			pageTranslationJobs,
 			userHandle,
 			"en",
 		);
@@ -42,7 +42,7 @@ describe("buildAlternateLocales", () => {
 	it("sourceLocaleが翻訳情報に含まれていなくても常に含まれる", () => {
 		const result = buildAlternateLocales(
 			page,
-			[{ locale: "ja" }, { locale: "fr" }] as PageAITranslationInfo[],
+			[{ locale: "ja" }, { locale: "fr" }] as TranslationJob[],
 			userHandle,
 			"de",
 		);

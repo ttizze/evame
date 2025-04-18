@@ -1,7 +1,6 @@
 import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
 import { fetchPageWithTitleAndComments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
-import { createUserAITranslationInfo } from "@/app/[locale]/_db/mutations.server";
-import { createPageAITranslationInfo } from "@/app/[locale]/_db/mutations.server";
+import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslateJobParams } from "@/features/translate/types";
 
@@ -27,8 +26,7 @@ type TranslationParams =
 
 // 依存関係を明示的に注入するためのインターフェース
 interface TranslationDependencies {
-	createUserAITranslationInfo: typeof createUserAITranslationInfo;
-	createPageAITranslationInfo: typeof createPageAITranslationInfo;
+	createTranslationJob: typeof createTranslationJob;
 	fetchPageWithPageSegments: typeof fetchPageWithPageSegments;
 	fetchPageWithTitleAndComments: typeof fetchPageWithTitleAndComments;
 	fetchTranslateAPI: (
@@ -40,8 +38,7 @@ interface TranslationDependencies {
 
 // デフォルトの依存関係
 const defaultDependencies: TranslationDependencies = {
-	createUserAITranslationInfo,
-	createPageAITranslationInfo,
+	createTranslationJob,
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
 	fetchTranslateAPI: async (url, params) => {
@@ -68,16 +65,12 @@ export async function handleAutoTranslation(
 
 	for (const targetLocale of targetLocales) {
 		// 翻訳情報を作成
-		const userAITranslationInfo = await deps.createUserAITranslationInfo(
-			currentUserId,
+		const translationJob = await deps.createTranslationJob({
+			userId: currentUserId,
 			pageId,
-			targetLocale,
-			"gemini-1.5-flash",
-		);
-		const pageAITranslationInfo = await deps.createPageAITranslationInfo(
-			pageId,
-			targetLocale,
-		);
+			locale: targetLocale,
+			aiModel: "gemini-1.5-flash",
+		});
 
 		let jobParams: TranslateJobParams;
 
@@ -90,8 +83,7 @@ export async function handleAutoTranslation(
 
 			// 翻訳ジョブのパラメータを設定
 			jobParams = {
-				userAITranslationInfoId: userAITranslationInfo.id,
-				pageAITranslationInfoId: pageAITranslationInfo.id,
+				translationJobId: translationJob.id,
 				geminiApiKey: geminiApiKey,
 				aiModel: "gemini-1.5-flash",
 				userId: currentUserId,
@@ -136,8 +128,7 @@ export async function handleAutoTranslation(
 
 			// 翻訳ジョブのパラメータを設定
 			jobParams = {
-				userAITranslationInfoId: userAITranslationInfo.id,
-				pageAITranslationInfoId: pageAITranslationInfo.id,
+				translationJobId: translationJob.id,
 				geminiApiKey: geminiApiKey,
 				aiModel: "gemini-1.5-flash",
 				userId: currentUserId,

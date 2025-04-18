@@ -1,7 +1,4 @@
-import {
-	createPageAITranslationInfo,
-	createUserAITranslationInfo,
-} from "@/app/[locale]/_db/mutations.server";
+import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -32,7 +29,6 @@ describe("TranslateAction", () => {
 
 	beforeEach(async () => {
 		await prisma.user.deleteMany();
-		await prisma.userAITranslationInfo.deleteMany();
 		await prisma.page.deleteMany();
 		await prisma.pageSegment.deleteMany();
 		await prisma.pageComment.deleteMany();
@@ -55,7 +51,6 @@ describe("TranslateAction", () => {
 	});
 	afterEach(async () => {
 		await prisma.user.deleteMany();
-		await prisma.userAITranslationInfo.deleteMany();
 		await prisma.page.deleteMany();
 		await prisma.pageSegment.deleteMany();
 		await prisma.pageComment.deleteMany();
@@ -101,10 +96,7 @@ describe("TranslateAction", () => {
 			fetchPageWithTitleAndComments as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue(mockPage);
 		(
-			createUserAITranslationInfo as unknown as ReturnType<typeof vi.fn>
-		).mockResolvedValue({ id: 1 });
-		(
-			createPageAITranslationInfo as unknown as ReturnType<typeof vi.fn>
+			createTranslationJob as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue({ id: 1 });
 
 		const formData = new FormData();
@@ -131,10 +123,7 @@ describe("TranslateAction", () => {
 			fetchPageWithPageSegments as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue(mockPage);
 		(
-			createUserAITranslationInfo as unknown as ReturnType<typeof vi.fn>
-		).mockResolvedValue({ id: 1 });
-		(
-			createPageAITranslationInfo as unknown as ReturnType<typeof vi.fn>
+			createTranslationJob as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue({ id: 1 });
 
 		const formData = new FormData();

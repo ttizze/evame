@@ -1,9 +1,9 @@
 import { BASE_URL } from "@/app/_constants/base-url";
-import type { PageAITranslationInfo } from "@prisma/client";
+import type { TranslationJob } from "@prisma/client";
 
 export function buildAlternateLocales(
 	page: { sourceLocale: string; slug: string },
-	pageAITranslationInfo: PageAITranslationInfo[],
+	translationJobs: TranslationJob[],
 	userHandle: string,
 	currentLocale: string,
 ): Record<string, string> {
@@ -14,9 +14,9 @@ export function buildAlternateLocales(
 			`${BASE_URL}/${page.sourceLocale}/user/${userHandle}/page/${page.slug}`,
 		],
 		// 翻訳情報からのエントリ
-		...pageAITranslationInfo.map((info) => [
-			info.locale,
-			`${BASE_URL}/${info.locale}/user/${userHandle}/page/${page.slug}`,
+		...translationJobs.map((job) => [
+			job.locale,
+			`${BASE_URL}/${job.locale}/user/${userHandle}/page/${page.slug}`,
 		]),
 	];
 

@@ -1,4 +1,4 @@
-import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/page-queries.server";
+import { fetchLatestPageTranslationJobs } from "@/app/[locale]/_db/page-queries.server";
 import { prisma } from "@/lib/prisma";
 export const fetchPagesWithUser = async () => {
 	const pages = await prisma.page.findMany({
@@ -21,8 +21,8 @@ export async function fetchPagesWithUserAndTranslation() {
 	const pagesWithUser = await fetchPagesWithUser();
 	const pagesWithTranslation = await Promise.all(
 		pagesWithUser.map(async (page) => {
-			const translationInfo = await fetchLatestPageAITranslationInfo(page.id);
-			return { ...page, translationInfo };
+			const translationJobs = await fetchLatestPageTranslationJobs(page.id);
+			return { ...page, translationJobs };
 		}),
 	);
 	return pagesWithTranslation;

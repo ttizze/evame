@@ -623,10 +623,11 @@ async function createUserAndPages() {
 				content,
 				status: "DRAFT",
 				userId: evame.id,
-				pageAITranslationInfo: {
+				translationJobs: {
 					create: aiLocales.map((locale) => ({
 						locale,
-						aiTranslationStatus: "COMPLETED",
+						status: "COMPLETED",
+						aiModel: "test-model",
 					})),
 				},
 			},
@@ -636,10 +637,11 @@ async function createUserAndPages() {
 				content,
 				status: "DRAFT",
 				userId: evame.id,
-				pageAITranslationInfo: {
+				translationJobs: {
 					create: aiLocales.map((locale) => ({
 						locale,
-						aiTranslationStatus: "COMPLETED",
+						status: "COMPLETED",
+						aiModel: "test-model",
 					})),
 				},
 			},

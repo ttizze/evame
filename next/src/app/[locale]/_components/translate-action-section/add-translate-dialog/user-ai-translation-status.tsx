@@ -1,21 +1,22 @@
 "use client";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import type { UserAITranslationInfo } from "@prisma/client";
+import type { TranslationJob } from "@prisma/client";
+import { TranslationStatus } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 type UserAITranslationStatusProps = {
-	userAITranslationInfo: UserAITranslationInfo | null;
+	latestUserTranslationJob: TranslationJob | null;
 };
 
 export function UserAITranslationStatus({
-	userAITranslationInfo,
+	latestUserTranslationJob,
 }: UserAITranslationStatusProps) {
 	const router = useRouter();
 	useEffect(() => {
 		if (
-			!userAITranslationInfo ||
-			userAITranslationInfo?.aiTranslationStatus === "COMPLETED"
+			!latestUserTranslationJob ||
+			latestUserTranslationJob.status === TranslationStatus.COMPLETED
 		) {
 			return;
 		}
@@ -23,29 +24,29 @@ export function UserAITranslationStatus({
 			router.refresh();
 		}, 3000);
 		return () => clearInterval(intervalId);
-	}, [userAITranslationInfo, router]);
+	}, [latestUserTranslationJob, router]);
 
 	return (
 		<div className="h-[15px] flex mt-1 items-center space-y-1">
-			{userAITranslationInfo ? (
+			{latestUserTranslationJob ? (
 				<>
 					<Progress
-						value={userAITranslationInfo.aiTranslationProgress}
+						value={latestUserTranslationJob.progress}
 						className={cn(
 							"flex-grow",
-							userAITranslationInfo.aiTranslationStatus === "IN_PROGRESS" &&
-								"bg-blue-400 animate-pulse",
-							userAITranslationInfo.aiTranslationStatus === "FAILED" &&
+							latestUserTranslationJob.status ===
+								TranslationStatus.IN_PROGRESS && "bg-blue-400 animate-pulse",
+							latestUserTranslationJob.status === TranslationStatus.FAILED &&
 								"bg-red-400",
 						)}
 						indicatorClassName="bg-gray-400"
 					/>
 					<div className="flex items-center whitespace-nowrap ml-2">
 						<span className="text-xs text-gray-500 mr-1">
-							{Math.round(userAITranslationInfo.aiTranslationProgress)}
+							{Math.round(latestUserTranslationJob.progress)}
 						</span>
 						<span className="text-xs text-gray-500">
-							{userAITranslationInfo.aiTranslationStatus}
+							{latestUserTranslationJob.status}
 						</span>
 					</div>
 				</>

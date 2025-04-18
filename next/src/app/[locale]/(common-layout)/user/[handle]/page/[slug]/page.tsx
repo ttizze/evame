@@ -83,7 +83,7 @@ export async function generateMetadata({
 			title: "Page Not Found",
 		};
 	}
-	const { pageDetail, title, pageAITranslationInfo } = data;
+	const { pageDetail, title, pageTranslationJobs } = data;
 	const description = stripHtmlTags(pageDetail.content).slice(0, 200);
 	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${slug}&showOriginal=${showOriginal}&showTranslation=${showTranslation}`;
 	return {
@@ -104,7 +104,7 @@ export async function generateMetadata({
 		alternates: {
 			languages: buildAlternateLocales(
 				pageDetail,
-				pageAITranslationInfo,
+				pageTranslationJobs,
 				pageDetail.user.handle,
 				locale,
 			),
@@ -132,9 +132,9 @@ export default async function Page({
 		pageDetail,
 		title,
 		currentUser,
-		pageAITranslationInfo,
-		userAITranslationInfo,
 		pageCommentsCount,
+		pageTranslationJobs,
+		latestUserTranslationJob,
 	} = data;
 
 	const isOwner = pageDetail.user.handle === currentUser?.handle;
@@ -171,8 +171,8 @@ export default async function Page({
 							<DynamicTranslateActionSection
 								pageId={pageDetail.id}
 								currentHandle={currentUser?.handle}
-								userAITranslationInfo={userAITranslationInfo}
-								pageAITranslationInfo={pageAITranslationInfo}
+								latestUserTranslationJob={latestUserTranslationJob}
+								translationJobs={pageTranslationJobs}
 								sourceLocale={pageDetail.sourceLocale}
 								targetContentType="comment"
 								showIcons={false}
