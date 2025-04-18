@@ -1,7 +1,7 @@
 "use client";
 
 import { Editor } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[slug]/edit/_components/editor/editor";
-import type { ProjectWithRelations } from "@/app/[locale]/types";
+import type { ProjectDetail } from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,30 +30,33 @@ interface ProjectImage {
 }
 
 interface ProjectFormProps {
-	project?: ProjectWithRelations | null;
+	projectDetail?: ProjectDetail | null;
 	userHandle: string;
 	allProjectTags: ProjectTagWithCount[];
 }
 
 export function ProjectForm({
-	project,
+	projectDetail,
 	userHandle,
 	allProjectTags,
 }: ProjectFormProps) {
 	const router = useRouter();
-	const isCreateMode = !project;
+	const isCreateMode = !projectDetail;
 
 	const initialTags =
-		project?.projectTagRelations.map((relation) => relation.projectTag) || [];
+		projectDetail?.projectTagRelations.map((relation) => relation.projectTag) ||
+		[];
 
-	const initialLinks = (project?.links as ProjectLink[]) || [];
-	const initialImages = (project?.images as ProjectImage[]) || [];
+	const initialLinks = (projectDetail?.links as ProjectLink[]) || [];
+	const initialImages = (projectDetail?.images as ProjectImage[]) || [];
 
 	// フォーム状態
 	const [tags, setTags] = useState<string[]>(
 		initialTags.map((tag) => tag.name),
 	);
-	const [description, setDescription] = useState(project?.description || "");
+	const [description, setDescription] = useState(
+		projectDetail?.description || "",
+	);
 	const [links, setLinks] = useState<ProjectLink[]>(initialLinks);
 	const [images, setImages] = useState<ProjectImage[]>(initialImages);
 
@@ -71,21 +74,21 @@ export function ProjectForm({
 			// 新規作成時は一覧ページ、編集時は詳細ページへリダイレクト
 			const redirectPath = isCreateMode
 				? `/user/${userHandle}/project-management`
-				: `/user/${userHandle}/project/${project?.id}`;
+				: `/user/${userHandle}/project/${projectDetail?.id}`;
 			router.push(redirectPath);
 			router.refresh();
 		} else if (state.message) {
 			toast.error(state.message);
 		}
-	}, [state, router, userHandle, project?.id, isCreateMode]);
+	}, [state, router, userHandle, projectDetail?.id, isCreateMode]);
 
 	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		const formData = new FormData(event.currentTarget);
 
 		// Add project ID if editing
-		if (project?.id) {
-			formData.set("projectId", project.id);
+		if (projectDetail?.id) {
+			formData.set("projectId", projectDetail.id);
 		}
 
 		// Add tag information to form data
@@ -141,7 +144,7 @@ export function ProjectForm({
 						<Input
 							id="title"
 							name="title"
-							defaultValue={project?.title}
+							defaultValue={projectDetail?.title}
 							placeholder="My Awesome Project"
 							className="mt-1"
 							required
@@ -162,7 +165,7 @@ export function ProjectForm({
 						</Label>
 						<div className="mt-1 prose dark:prose-invert">
 							<Editor
-								defaultValue={project?.description || ""}
+								defaultValue={projectDetail?.description || ""}
 								name="description"
 								className="border border-input rounded-md  py-2 min-h-32"
 								placeholder="Describe your project..."
@@ -229,7 +232,7 @@ export function ProjectForm({
 						onClick={() => {
 							const returnPath = isCreateMode
 								? `/user/${userHandle}/project-management`
-								: `/user/${userHandle}/project/${project?.id}`;
+								: `/user/${userHandle}/project/${projectDetail?.id}`;
 							router.push(returnPath);
 						}}
 					>

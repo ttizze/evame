@@ -43,7 +43,7 @@ export interface SegmentBundle {
 type TagPageWithTag = TagPage & {
 	tag: Tag;
 };
-export type PageWithRelations = Omit<Page, "createdAt"> & {
+export type PageDetail = Omit<Page, "createdAt"> & {
 	createdAt: string;
 	user: SanitizedUser;
 	tagPages: TagPageWithTag[];
@@ -53,14 +53,14 @@ export type PageWithRelations = Omit<Page, "createdAt"> & {
 	};
 };
 export type PageSummary = Omit<
-	PageWithRelations,
+	PageDetail,
 	"content" | "updatedAt" | "userId" | "sourceLocale"
 >;
 
 type TagProjectWithTag = ProjectTagRelation & {
 	projectTag: ProjectTag;
 };
-export type ProjectWithRelations = Omit<Project, "createdAt"> & {
+export type ProjectDetail = Omit<Project, "createdAt"> & {
 	createdAt: string;
 	user: SanitizedUser;
 	images: ProjectImage[];
@@ -73,6 +73,6 @@ export type ProjectWithRelations = Omit<Project, "createdAt"> & {
 };
 
 export type ProjectSummary = Omit<
-	ProjectWithRelations,
+	ProjectDetail,
 	"description" | "userId" | "sourceLocale"
 >;

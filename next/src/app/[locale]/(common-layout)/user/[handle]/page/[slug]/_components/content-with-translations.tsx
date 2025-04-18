@@ -57,16 +57,15 @@ export async function ContentWithTranslations({
 		return notFound();
 	}
 	const {
-		pageWithTranslations,
+		pageDetail,
 		currentUser,
 		pageAITranslationInfo,
 		userAITranslationInfo,
 	} = data;
 
-	const pageSegmentTitleWithTranslations =
-		pageWithTranslations.segmentBundles.filter(
-			(item) => item.segment.number === 0,
-		)[0];
+	const pageSegmentTitleWithTranslations = pageDetail.segmentBundles.filter(
+		(item) => item.segment.number === 0,
+	)[0];
 
 	return (
 		<>
@@ -74,10 +73,10 @@ export async function ContentWithTranslations({
 				{pageSegmentTitleWithTranslations && (
 					<DynamicSegmentAndTranslationSection
 						segmentBundle={pageSegmentTitleWithTranslations}
-						showLockIcon={pageWithTranslations.status === "DRAFT"}
+						showLockIcon={pageDetail.status === "DRAFT"}
 						currentHandle={currentUser?.handle}
-						isOwner={pageWithTranslations.user.handle === currentUser?.handle}
-						slug={pageWithTranslations.slug}
+						isOwner={pageDetail.user.handle === currentUser?.handle}
+						slug={pageDetail.slug}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 						addTranslationFormTarget={
 							ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
@@ -85,15 +84,13 @@ export async function ContentWithTranslations({
 					/>
 				)}
 			</h1>
-			<PageTagList
-				tag={pageWithTranslations.tagPages.map((tagPage) => tagPage.tag)}
-			/>
-			<SubHeader pageWithRelations={pageWithTranslations} />
+			<PageTagList tag={pageDetail.tagPages.map((tagPage) => tagPage.tag)} />
+			<SubHeader pageDetail={pageDetail} />
 			<DynamicTranslateActionSection
-				pageId={pageWithTranslations.id}
+				pageId={pageDetail.id}
 				currentHandle={currentUser?.handle}
 				userAITranslationInfo={userAITranslationInfo}
-				sourceLocale={pageWithTranslations.sourceLocale}
+				sourceLocale={pageDetail.sourceLocale}
 				pageAITranslationInfo={pageAITranslationInfo}
 				className="pt-3"
 				translateTarget={TranslateTarget.TRANSLATE_PAGE}
@@ -101,8 +98,8 @@ export async function ContentWithTranslations({
 			/>
 			<span className="js-content">
 				<DynamicMemoizedParsedContent
-					html={pageWithTranslations.content}
-					segmentBundles={pageWithTranslations.segmentBundles}
+					html={pageDetail.content}
+					segmentBundles={pageDetail.segmentBundles}
 					currentHandle={currentUser?.handle}
 					voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 					addTranslationFormTarget={

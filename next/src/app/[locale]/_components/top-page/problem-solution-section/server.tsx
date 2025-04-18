@@ -24,13 +24,13 @@ export default async function ProblemSolutionSection({
 }: { locale: string }) {
 	const currentUser = await getCurrentUser();
 	const currentHandle = currentUser?.handle;
-	const pageWithTranslations = await fetchAboutPage(locale);
+	const pageDetail = await fetchAboutPage(locale);
 	// Get problem header (segment 2)
-	const problemHeader = pageWithTranslations.segmentBundles.find(
+	const problemHeader = pageDetail.segmentBundles.find(
 		(st) => st.segment.number === 2,
 	);
 	// Get problem cards (segments 3-8)
-	const problemCards = pageWithTranslations.segmentBundles
+	const problemCards = pageDetail.segmentBundles
 		.filter((st) => st.segment.number >= 3 && st.segment.number <= 14)
 		.sort((a, b) => a.segment.number - b.segment.number);
 
@@ -73,9 +73,7 @@ export default async function ProblemSolutionSection({
 		<Globe key="component-3" />,
 		<EditorMovie key="component-4" />,
 		<FloatingControls
-			likeButton={
-				<PageLikeButton pageId={pageWithTranslations.id} showCount={false} />
-			}
+			likeButton={<PageLikeButton pageId={pageDetail.id} showCount={false} />}
 			shareTitle="evame"
 			position="w-full flex justify-center"
 			alwaysVisible={true}

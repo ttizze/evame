@@ -1,4 +1,4 @@
-import { fetchPageWithTranslations } from "@/app/[locale]/_db/page-queries.server";
+import { fetchPageDetail } from "@/app/[locale]/_db/page-queries.server";
 import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/page-queries.server";
 import { getCurrentUser } from "@/auth";
 import { getGuestId } from "@/lib/get-guest-id";
@@ -18,16 +18,12 @@ export const fetchPageContext = cache(
 	) => {
 		const currentUser = await getCurrentUser();
 
-		const pageWithTranslations = await fetchPageWithTranslations(
-			slug,
-			locale,
-			currentUser?.id,
-		);
+		const pageDetail = await fetchPageDetail(slug, locale, currentUser?.id);
 
-		if (!pageWithTranslations || pageWithTranslations.status === "ARCHIVE") {
+		if (!pageDetail || pageDetail.status === "ARCHIVE") {
 			return notFound();
 		}
-		const pageTitleWithTranslations = pageWithTranslations.segmentBundles.find(
+		const pageTitleWithTranslations = pageDetail.segmentBundles.find(
 			(item) => item.segment.number === 0,
 		);
 		if (!pageTitleWithTranslations) {
@@ -46,15 +42,12 @@ export const fetchPageContext = cache(
 		const guestId = await getGuestId();
 		const [pageAITranslationInfo, userAITranslationInfo, pageCommentsCount] =
 			await Promise.all([
-				fetchLatestPageAITranslationInfo(pageWithTranslations.id),
-				fetchLatestUserAITranslationInfo(
-					pageWithTranslations.id,
-					currentUser?.id ?? "0",
-				),
-				fetchPageCommentsCount(pageWithTranslations.id),
+				fetchLatestPageAITranslationInfo(pageDetail.id),
+				fetchLatestUserAITranslationInfo(pageDetail.id, currentUser?.id ?? "0"),
+				fetchPageCommentsCount(pageDetail.id),
 			]);
 		return {
-			pageWithTranslations,
+			pageDetail,
 			currentUser,
 			title,
 			pageAITranslationInfo,

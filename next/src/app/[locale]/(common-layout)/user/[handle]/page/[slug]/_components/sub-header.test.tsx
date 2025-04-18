@@ -1,4 +1,4 @@
-import type { PageWithRelations } from "@/app/[locale]/types";
+import type { PageDetail } from "@/app/[locale]/types";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import type { ReactNode } from "react";
@@ -35,7 +35,7 @@ vi.mock("./toc", () => ({
 }));
 
 describe("SubHeader", () => {
-	const mockPageWithRelations = {
+	const mockPageDetail = {
 		createdAt: "2023-01-01T00:00:00.000Z",
 		slug: "test-page",
 		title: "Test Page",
@@ -46,7 +46,7 @@ describe("SubHeader", () => {
 			name: "Test User",
 			image: "/test-image.jpg",
 		},
-	} as unknown as PageWithRelations;
+	} as unknown as PageDetail;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -57,7 +57,7 @@ describe("SubHeader", () => {
 
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageWithRelations={mockPageWithRelations} />
+				<SubHeader pageDetail={mockPageDetail} />
 			</NextIntlClientProvider>,
 		);
 
@@ -70,7 +70,7 @@ describe("SubHeader", () => {
 
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageWithRelations={mockPageWithRelations} />
+				<SubHeader pageDetail={mockPageDetail} />
 			</NextIntlClientProvider>,
 		);
 
@@ -82,7 +82,7 @@ describe("SubHeader", () => {
 
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageWithRelations={mockPageWithRelations} />
+				<SubHeader pageDetail={mockPageDetail} />
 			</NextIntlClientProvider>,
 		);
 
@@ -94,7 +94,7 @@ describe("SubHeader", () => {
 
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageWithRelations={mockPageWithRelations} />
+				<SubHeader pageDetail={mockPageDetail} />
 			</NextIntlClientProvider>,
 		);
 
@@ -119,7 +119,7 @@ describe("SubHeader", () => {
 
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageWithRelations={mockPageWithRelations} />
+				<SubHeader pageDetail={mockPageDetail} />
 			</NextIntlClientProvider>,
 		);
 

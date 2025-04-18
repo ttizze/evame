@@ -35,8 +35,8 @@ export async function GET(req: Request): Promise<Response> {
 			},
 		);
 	}
-	const { pageWithTranslations, title } = pageContext;
-	const pageOwner = pageWithTranslations.user;
+	const { pageDetail, title } = pageContext;
+	const pageOwner = pageDetail.user;
 
 	return new ImageResponse(
 		<div

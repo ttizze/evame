@@ -1,7 +1,7 @@
 "use client";
 import { ClientDateFormatter } from "@/app/[locale]/_components/client-date-formatter";
 import { useHeaderScroll } from "@/app/[locale]/_components/header/hooks/use-header-scroll";
-import type { PageWithRelations } from "@/app/[locale]/types";
+import type { PageDetail } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
@@ -11,9 +11,9 @@ import { useState } from "react";
 import Toc, { useHasTableOfContents } from "./toc";
 
 export function SubHeader({
-	pageWithRelations,
+	pageDetail,
 }: {
-	pageWithRelations: PageWithRelations;
+	pageDetail: PageDetail;
 }) {
 	const [isTocOpen, setIsTocOpen] = useState(false);
 	const hasTocContent = useHasTableOfContents();
@@ -56,8 +56,8 @@ export function SubHeader({
 		);
 	};
 	const { props } = getImageProps({
-		src: pageWithRelations.user.image,
-		alt: pageWithRelations.user.name,
+		src: pageDetail.user.image,
+		alt: pageDetail.user.name,
 		width: 40,
 		height: 40,
 	});
@@ -73,22 +73,20 @@ export function SubHeader({
 					flex items-center not-prose justify-between relative ${isPinned ? "px-4" : ""}`}
 				>
 					<Link
-						href={`/user/${pageWithRelations.user.handle}`}
+						href={`/user/${pageDetail.user.handle}`}
 						className="flex items-center mr-2 !no-underline hover:text-gray-700"
 					>
 						<Avatar className="w-10 h-10 flex-shrink-0 mr-3 ">
 							<AvatarImage {...props} />
 							<AvatarFallback>
-								{pageWithRelations.user.name.charAt(0).toUpperCase()}
+								{pageDetail.user.name.charAt(0).toUpperCase()}
 							</AvatarFallback>
 						</Avatar>
 						<div className="flex flex-col">
-							<span className="text-sm">{pageWithRelations.user.name}</span>
+							<span className="text-sm">{pageDetail.user.name}</span>
 							{!isPinned && (
 								<span className="text-xs text-gray-500">
-									<ClientDateFormatter
-										date={new Date(pageWithRelations.createdAt)}
-									/>
+									<ClientDateFormatter date={new Date(pageDetail.createdAt)} />
 								</span>
 							)}
 						</div>

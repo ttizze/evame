@@ -1,6 +1,6 @@
 import { PageList } from "@/app/[locale]/_components/page/page-list.server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedPublicPagesWithRelations } from "@/app/[locale]/_db/page-queries.server";
+import { fetchPaginatedPublicPageSummaries } from "@/app/[locale]/_db/page-queries.server";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { notFound } from "next/navigation";
@@ -29,15 +29,16 @@ export async function PageListServer({
 		return notFound();
 	}
 
-	const { pageSummaries, totalPages } =
-		await fetchPaginatedPublicPagesWithRelations({
+	const { pageSummaries, totalPages } = await fetchPaginatedPublicPageSummaries(
+		{
 			page: page,
 			pageSize: 5,
 			pageOwnerId: pageOwner.id,
 			isPopular: sort === "popular",
 			locale,
 			currentUserId: currentUser?.id,
-		});
+		},
+	);
 	if (pageSummaries.length === 0) {
 		return (
 			<p className="text-center text-gray-500 mt-10">

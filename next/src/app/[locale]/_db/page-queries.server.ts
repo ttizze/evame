@@ -2,7 +2,7 @@ import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { toSegmentBundles } from "../_lib/to-segment-bundles";
-import type { PageSummary, PageWithRelations } from "../types";
+import type { PageDetail, PageSummary } from "../types";
 import { createUserSelectFields } from "./queries.server";
 
 function createPageRelatedFields(
@@ -98,11 +98,11 @@ export function normalizePageSegments(
 	}));
 }
 
-export async function fetchPageWithTranslations(
+export async function fetchPageDetail(
 	slug: string,
 	locale: string,
 	currentUserId?: string,
-): Promise<PageWithRelations | null> {
+): Promise<PageDetail | null> {
 	const page = await prisma.page.findFirst({
 		where: { slug },
 		include: {
@@ -121,7 +121,7 @@ export async function fetchPageWithTranslations(
 	};
 }
 
-export async function fetchPaginatedPublicPagesWithRelations({
+export async function fetchPaginatedPublicPageSummaries({
 	page = 1,
 	pageSize = 9,
 	pageOwnerId,

@@ -29,13 +29,13 @@ export const Icon = ({ className, ...rest }: { className: string }) => {
 export default async function HeroSection({ locale }: { locale: string }) {
 	const currentUser = await getCurrentUser();
 	const currentHandle = currentUser?.handle;
-	const topPageWithTranslations = await fetchAboutPage(locale);
+	const topPageDetail = await fetchAboutPage(locale);
 
 	const pageAITranslationInfo = await fetchLatestPageAITranslationInfo(
-		topPageWithTranslations.id,
+		topPageDetail.id,
 	);
 
-	const [title, text] = topPageWithTranslations.segmentBundles
+	const [title, text] = topPageDetail.segmentBundles
 		.filter((sb) => sb.segment.number === 0 || sb.segment.number === 1)
 		.sort((a, b) => a.segment.number - b.segment.number);
 
@@ -46,7 +46,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	}
 	const heroTitle = title;
 	const heroText = text;
-	const sourceLocale = topPageWithTranslations.sourceLocale;
+	const sourceLocale = topPageDetail.sourceLocale;
 	return (
 		<div className="relative overflow-hidden border pt-10 flex flex-col items-center justify-center">
 			<Icon className="absolute h-6 w-6 -top-3 -left-3 dark:text-white text-black" />

@@ -1,5 +1,5 @@
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedProjectsWithRelations } from "@/app/[locale]/_db/project-queries.server";
+import { fetchPaginatedProjectSummaries } from "@/app/[locale]/_db/project-queries.server";
 import { getCurrentUser } from "@/auth";
 import { FolderOpenIcon } from "lucide-react";
 import { createLoader, parseAsInteger } from "nuqs/server";
@@ -26,13 +26,14 @@ export default async function PopularProjectList({
 	const { page } = await loadSearchParams(searchParams);
 	const currentUser = await getCurrentUser();
 
-	const { projectSummaries, totalPages } =
-		await fetchPaginatedProjectsWithRelations({
+	const { projectSummaries, totalPages } = await fetchPaginatedProjectSummaries(
+		{
 			page,
 			pageSize: 10,
 			locale,
 			currentUserId: currentUser?.id,
-		});
+		},
+	);
 
 	return (
 		<ProjectListContainer title="Popular Projects" icon={FolderOpenIcon}>

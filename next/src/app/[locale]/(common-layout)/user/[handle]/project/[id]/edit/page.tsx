@@ -1,4 +1,4 @@
-import { fetchProjectWithTranslations } from "@/app/[locale]/_db/project-queries.server";
+import { fetchProjectDetail } from "@/app/[locale]/_db/project-queries.server";
 import { getCurrentUser } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import dynamic from "next/dynamic";
@@ -50,19 +50,19 @@ export default async function ProjectEditPage({
 		return redirect("/auth/login");
 	}
 
-	const [project, allProjectTags] = await Promise.all([
-		fetchProjectWithTranslations(id, currentUser?.id),
+	const [projectDetail, allProjectTags] = await Promise.all([
+		fetchProjectDetail(id, currentUser?.id),
 		fetchAllProjectTags(),
 	]);
 
-	if (!project) {
+	if (!projectDetail) {
 		return notFound();
 	}
 
 	return (
 		<div className="flex justify-center py-8">
 			<ProjectForm
-				project={project}
+				projectDetail={projectDetail}
 				userHandle={handle}
 				allProjectTags={allProjectTags}
 			/>

@@ -2,7 +2,7 @@ import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { toSegmentBundles } from "../_lib/to-segment-bundles";
-import type { ProjectSummary, ProjectWithRelations } from "../types";
+import type { ProjectDetail, ProjectSummary } from "../types";
 import { createUserSelectFields } from "./queries.server";
 
 function createProjectRelatedFields(
@@ -79,7 +79,7 @@ export function normalizeProjectSegments(
 			point: number;
 			createdAt: Date;
 			user: SanitizedUser;
-			votes?: { isUpvote: boolean; updatedAt: Date }[];
+			projectSegmentTranslationVotes?: { isUpvote: boolean; updatedAt: Date }[];
 		}[];
 	}[],
 ) {
@@ -89,7 +89,7 @@ export function normalizeProjectSegments(
 		text: seg.text,
 		segmentTranslations: seg.projectSegmentTranslations.map((t) => ({
 			...t,
-			currentUserVote: t.votes?.[0] ?? null,
+			currentUserVote: t.projectSegmentTranslationVotes?.[0] ?? null,
 		})),
 	}));
 }
@@ -104,7 +104,7 @@ type FetchProjectParams = {
 	tagIds?: string[];
 };
 
-export async function fetchPaginatedProjectsWithRelations({
+export async function fetchPaginatedProjectSummaries({
 	page = 1,
 	pageSize = 9,
 	projectOwnerId,
@@ -175,11 +175,11 @@ export async function fetchPaginatedProjectsWithRelations({
 	};
 }
 
-export async function fetchProjectWithTranslations(
+export async function fetchProjectDetail(
 	projectId: string,
 	locale: string,
 	currentUserId?: string,
-): Promise<ProjectWithRelations | null> {
+): Promise<ProjectDetail | null> {
 	const project = await prisma.project.findUnique({
 		where: { id: projectId },
 		include: {
