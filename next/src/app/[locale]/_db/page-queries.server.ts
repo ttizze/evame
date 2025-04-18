@@ -71,6 +71,7 @@ type FetchParams = {
 	locale?: string;
 	currentUserId?: string;
 };
+
 export function normalizePageSegments(
 	pageSegments: {
 		id: number;
