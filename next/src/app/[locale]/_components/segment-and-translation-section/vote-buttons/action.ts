@@ -1,13 +1,12 @@
 // app/serverActions/voteAction.ts
 "use server";
-
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { parseFormData } from "@/lib/parse-form-data";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { VOTE_TARGET, type VoteTarget } from "./constants";
 import {
 	createNotificationPageSegmentTranslationVote,
 	handleVote,
@@ -15,10 +14,7 @@ import {
 const schema = z.object({
 	segmentTranslationId: z.coerce.number().int(),
 	isUpvote: z.string().transform((val) => val === "true"),
-	voteTarget: z.enum([
-		VOTE_TARGET.PAGE_SEGMENT_TRANSLATION,
-		VOTE_TARGET.COMMENT_SEGMENT_TRANSLATION,
-	]),
+	targetContentType: z.enum(["page", "comment", "project"]),
 });
 
 export type VoteTranslationActionResponse = ActionResponse<
@@ -26,7 +22,7 @@ export type VoteTranslationActionResponse = ActionResponse<
 	{
 		segmentTranslationId: number;
 		isUpvote: boolean;
-		voteTarget: VoteTarget;
+		targetContentType: TargetContentType;
 	}
 >;
 export async function voteTranslationAction(
@@ -50,12 +46,9 @@ export async function voteTranslationAction(
 		parsedFormData.data.segmentTranslationId,
 		parsedFormData.data.isUpvote,
 		currentUser.id,
-		parsedFormData.data.voteTarget,
+		parsedFormData.data.targetContentType,
 	);
-	if (
-		parsedFormData.data.voteTarget === VOTE_TARGET.PAGE_SEGMENT_TRANSLATION &&
-		isUpvote
-	) {
+	if (parsedFormData.data.targetContentType === "page" && isUpvote) {
 		await createNotificationPageSegmentTranslationVote(
 			parsedFormData.data.segmentTranslationId,
 			currentUser.id,

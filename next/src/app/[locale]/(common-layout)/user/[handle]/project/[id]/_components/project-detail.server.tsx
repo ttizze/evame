@@ -1,9 +1,6 @@
-import {
-	ADD_TRANSLATION_FORM_TARGET,
-	VOTE_TARGET,
-} from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { ProjectLikeButton } from "@/app/[locale]/_components/project/project-like-button/server";
 import { ProjectTagList } from "@/app/[locale]/_components/project/project-tag-list.server";
+import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import type { ProjectDetail } from "@/app/[locale]/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -35,7 +32,9 @@ export function Project({ projectDetail, locale }: ProjectDetailProps) {
 	if (!projectDetail) {
 		return null;
 	}
-
+	const projectTitleSegmentBundle = projectDetail.segmentBundles.filter(
+		(item) => item.segment.number === 0,
+	)[0];
 	const tags = projectDetail.projectTagRelations.map(
 		(relation) => relation.projectTag,
 	);
@@ -80,15 +79,17 @@ export function Project({ projectDetail, locale }: ProjectDetailProps) {
 				<div className="flex justify-between items-center">
 					<ProjectLikeButton projectId={projectDetail.id} />
 				</div>
+				<h2 className="text-lg font-medium">
+					<SegmentAndTranslationSection
+						segmentBundle={projectTitleSegmentBundle}
+						currentHandle={projectDetail.user.handle}
+					/>
+				</h2>
 				<div className="prose dark:prose-invert max-w-none">
 					<DynamicMemoizedParsedContent
 						html={projectDetail.description}
 						segmentBundles={projectDetail.segmentBundles}
 						currentHandle={projectDetail.user.handle}
-						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
-						addTranslationFormTarget={
-							ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
-						}
 					/>
 				</div>
 				<div className="flex flex-wrap gap-2">
@@ -115,7 +116,7 @@ export function Project({ projectDetail, locale }: ProjectDetailProps) {
 
 				<div className="flex justify-between items-center pt-4 border-t">
 					<p className="text-sm text-muted-foreground">
-						{new Date(projectDetail.createdAt).toLocaleDateString(locale)}
+						{new Date(projectDetail.createdAt).toLocaleString(locale)}
 					</p>
 				</div>
 			</CardContent>

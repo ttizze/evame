@@ -1,6 +1,5 @@
 import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
 import { fetchPageWithTitleAndComments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
-import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { createUserAITranslationInfo } from "@/app/[locale]/_db/mutations.server";
 import { createPageAITranslationInfo } from "@/app/[locale]/_db/mutations.server";
 import { BASE_URL } from "@/app/_constants/base-url";
@@ -23,8 +22,8 @@ interface CommentTranslationParams extends BaseTranslationParams {
 }
 
 type TranslationParams =
-	| (PageTranslationParams & { type: TranslateTarget.TRANSLATE_PAGE })
-	| (CommentTranslationParams & { type: TranslateTarget.TRANSLATE_COMMENT });
+	| (PageTranslationParams & { type: "page" })
+	| (CommentTranslationParams & { type: "comment" });
 
 // 依存関係を明示的に注入するためのインターフェース
 interface TranslationDependencies {
@@ -82,7 +81,7 @@ export async function handleAutoTranslation(
 
 		let jobParams: TranslateJobParams;
 
-		if (type === TranslateTarget.TRANSLATE_PAGE) {
+		if (type === "page") {
 			// ページデータを取得
 			const pageWithPageSegments = await deps.fetchPageWithPageSegments(pageId);
 			if (!pageWithPageSegments) {
@@ -98,7 +97,7 @@ export async function handleAutoTranslation(
 				userId: currentUserId,
 				pageId: pageId,
 				targetLocale,
-				translateTarget: type,
+				targetContentType: type,
 				title: pageWithPageSegments.title,
 				numberedElements: pageWithPageSegments.pageSegments.map((st) => ({
 					number: st.number,
@@ -146,7 +145,7 @@ export async function handleAutoTranslation(
 				targetLocale,
 				title: pageWithTitleAndComments.title,
 				numberedElements: segments,
-				translateTarget: type,
+				targetContentType: type,
 				commentId: commentId,
 			};
 		}
@@ -171,7 +170,7 @@ export async function handlePageAutoTranslation({
 }): Promise<void> {
 	return handleAutoTranslation(
 		{
-			type: TranslateTarget.TRANSLATE_PAGE,
+			type: "page",
 			currentUserId,
 			pageId,
 			sourceLocale,
@@ -195,7 +194,7 @@ export async function handleCommentAutoTranslation({
 }): Promise<void> {
 	return handleAutoTranslation(
 		{
-			type: TranslateTarget.TRANSLATE_COMMENT,
+			type: "comment",
 			currentUserId,
 			pageId,
 			commentId,

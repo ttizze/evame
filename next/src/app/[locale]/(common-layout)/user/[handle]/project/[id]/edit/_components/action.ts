@@ -1,5 +1,6 @@
 "use server";
 
+import { generateHashForText } from "@/app/[locale]/_lib/generate-hash-for-text";
 import { uploadImage } from "@/app/[locale]/_lib/upload";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
@@ -38,6 +39,14 @@ const projectFormSchema = z.object({
 		})
 		.max(100, {
 			message: "Title must not exceed 100 characters.",
+		}),
+	tagLine: z
+		.string()
+		.min(3, {
+			message: "Tag line must be at least 3 characters.",
+		})
+		.max(100, {
+			message: "Tag line must not exceed 100 characters.",
 		}),
 	description: z
 		.string()
@@ -94,6 +103,47 @@ export type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
 export type ProjectActionResponse = ActionResponse<void, ProjectFormValues>;
 
+// Helper function to create or update project segment
+async function createOrUpdateProjectSegment(
+	projectId: string,
+	text: string,
+	number: number,
+) {
+	// Generate hash for the text (occurrence 0 for tagLine as it's unique)
+	const textAndOccurrenceHash = generateHashForText(text, 0);
+
+	// Try to find an existing segment for this project and number
+	const existingSegment = await prisma.projectSegment.findUnique({
+		where: {
+			projectId_number: {
+				projectId,
+				number,
+			},
+		},
+	});
+
+	if (existingSegment) {
+		// Update existing segment
+		return prisma.projectSegment.update({
+			where: { id: existingSegment.id },
+			data: {
+				text,
+				textAndOccurrenceHash,
+			},
+		});
+	}
+
+	// Create new segment
+	return prisma.projectSegment.create({
+		data: {
+			projectId,
+			number,
+			text,
+			textAndOccurrenceHash,
+		},
+	});
+}
+
 export async function projectAction(
 	previousState: ProjectActionResponse,
 	formData: FormData,
@@ -111,7 +161,9 @@ export async function projectAction(
 		};
 	}
 
-	const { projectId, tags, links, images, ...projectData } = parsed.data;
+	// Extract tagLine from the parsed data
+	const { projectId, tags, links, images, tagLine, ...projectData } =
+		parsed.data;
 
 	// Process any uploaded image files
 	const imageFiles = formData.getAll("imageFiles") as File[];
@@ -192,6 +244,9 @@ export async function projectAction(
 			where: { id: projectId },
 			data: projectData,
 		});
+
+		// Update tagLine as segment 0
+		await createOrUpdateProjectSegment(projectId, tagLine, 0);
 
 		// Update tags
 		await upsertProjectTags(tags, projectId);
@@ -295,6 +350,9 @@ export async function projectAction(
 				userId: currentUser.id,
 			},
 		});
+
+		// Create tagLine as segment 0
+		await createOrUpdateProjectSegment(newProject.id, tagLine, 0);
 
 		// Create tags
 		if (tags.length > 0) {

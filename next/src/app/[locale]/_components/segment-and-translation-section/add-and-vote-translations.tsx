@@ -1,25 +1,19 @@
-import type { AddTranslationFormTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import type { SegmentBundle } from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, Languages } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AddTranslationForm } from "./add-translation-form";
 import { TranslationListItem } from "./translation-list-item";
-import type { VoteTarget } from "./vote-buttons/constants";
 const INITIAL_DISPLAY_COUNT = 3;
 
 export function AddAndVoteTranslations({
 	currentHandle,
 	segmentBundle,
 	open,
-	voteTarget,
-	addTranslationFormTarget,
 }: {
 	currentHandle: string | undefined;
 	segmentBundle: SegmentBundle;
 	open: boolean;
-	voteTarget: VoteTarget;
-	addTranslationFormTarget: AddTranslationFormTarget;
 }) {
 	const [showAll, setShowAll] = useState(false);
 	const { best, translations } = segmentBundle;
@@ -49,7 +43,7 @@ export function AddAndVoteTranslations({
 						key={displayedTranslation.id}
 						translation={displayedTranslation}
 						currentHandle={currentHandle}
-						voteTarget={voteTarget}
+						targetContentType={segmentBundle.parentType}
 					/>
 				))}
 				{hasMoreTranslations && (
@@ -74,7 +68,7 @@ export function AddAndVoteTranslations({
 				<AddTranslationForm
 					segmentId={segmentBundle.segment.id}
 					currentHandle={currentHandle}
-					addTranslationFormTarget={addTranslationFormTarget}
+					targetContentType={segmentBundle.parentType}
 				/>
 			</span>
 		</span>

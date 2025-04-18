@@ -11,7 +11,6 @@ import {
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
 } from "../../../(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
-import { TranslateTarget } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
 import { translateAction } from "./action";
 vi.mock("@/auth", () => ({
 	getCurrentUser: vi.fn(),
@@ -71,7 +70,7 @@ describe("TranslateAction", () => {
 		formData.append("pageId", "1");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
-		formData.append("translateTarget", TranslateTarget.TRANSLATE_COMMENT);
+		formData.append("targetContentType", "comment");
 
 		await expect(translateAction({ success: false }, formData)).rejects.toThrow(
 			"NEXT_REDIRECT",
@@ -112,7 +111,7 @@ describe("TranslateAction", () => {
 		formData.append("pageId", "1");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
-		formData.append("translateTarget", TranslateTarget.TRANSLATE_COMMENT);
+		formData.append("targetContentType", "comment");
 
 		const result = await translateAction({ success: false }, formData);
 
@@ -142,7 +141,7 @@ describe("TranslateAction", () => {
 		formData.append("pageId", "1");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
-		formData.append("translateTarget", TranslateTarget.TRANSLATE_PAGE);
+		formData.append("targetContentType", "page");
 
 		const result = await translateAction({ success: false }, formData);
 
@@ -159,7 +158,7 @@ describe("TranslateAction", () => {
 		formData.append("pageId", "1");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
-		formData.append("translateTarget", TranslateTarget.TRANSLATE_PAGE);
+		formData.append("targetContentType", "page");
 
 		const result = await translateAction({ success: false }, formData);
 
@@ -178,7 +177,7 @@ describe("TranslateAction", () => {
 		formData.append("pageId", "1");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
-		formData.append("translateTarget", TranslateTarget.TRANSLATE_COMMENT);
+		formData.append("targetContentType", "comment");
 
 		const result = await translateAction({ success: false }, formData);
 
@@ -194,7 +193,7 @@ describe("TranslateAction", () => {
 		formData.append("pageId", "1");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
-		formData.append("translateTarget", TranslateTarget.TRANSLATE_PAGE);
+		formData.append("targetContentType", "page");
 
 		const result = await translateAction({ success: false }, formData);
 

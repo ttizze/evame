@@ -4,7 +4,7 @@ import type {
 	UserAITranslationInfo,
 } from "@prisma/client";
 import { useState } from "react";
-import type { TranslateTarget } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
 import { AddTranslateDialog } from "./add-translate-dialog";
 import { LocaleSelector } from "./locale-selector/client";
 type TranslateActionSectionClientProps = {
@@ -14,7 +14,7 @@ type TranslateActionSectionClientProps = {
 	userAITranslationInfo: UserAITranslationInfo | null;
 	pageAITranslationInfo?: PageAITranslationInfo[];
 	sourceLocale: string;
-	translateTarget: TranslateTarget;
+	targetContentType: TargetContentType;
 	className?: string;
 	showIcons: boolean;
 };
@@ -26,7 +26,7 @@ export function TranslateActionSectionClient({
 	userAITranslationInfo,
 	pageAITranslationInfo,
 	sourceLocale,
-	translateTarget,
+	targetContentType,
 	className,
 	showIcons,
 }: TranslateActionSectionClientProps) {
@@ -49,7 +49,7 @@ export function TranslateActionSectionClient({
 				pageId={pageId}
 				hasGeminiApiKey={hasGeminiApiKey}
 				userAITranslationInfo={userAITranslationInfo}
-				translateTarget={translateTarget}
+				targetContentType={targetContentType}
 			/>
 		</div>
 	);

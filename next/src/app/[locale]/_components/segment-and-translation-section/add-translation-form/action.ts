@@ -1,5 +1,4 @@
 "use server";
-import { ADD_TRANSLATION_FORM_TARGET } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
@@ -15,10 +14,7 @@ const schema = z.object({
 		.min(1, "Translation cannot be empty")
 		.max(30000, "Translation is too long")
 		.transform((val) => val.trim()),
-	addTranslationFormTarget: z.enum([
-		ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION,
-		ADD_TRANSLATION_FORM_TARGET.COMMENT_SEGMENT_TRANSLATION,
-	]),
+	targetContentType: z.enum(["page", "comment", "project"]),
 });
 
 export async function addTranslationFormAction(
@@ -33,7 +29,7 @@ export async function addTranslationFormAction(
 		segmentId: formData.get("segmentId"),
 		text: formData.get("text"),
 		locale: formData.get("locale"),
-		addTranslationFormTarget: formData.get("addTranslationFormTarget"),
+		targetContentType: formData.get("targetContentType"),
 	});
 	if (!parsedFormData.success) {
 		return {
@@ -41,14 +37,10 @@ export async function addTranslationFormAction(
 			zodErrors: parsedFormData.error.flatten().fieldErrors,
 		};
 	}
-	const { segmentId, text, locale, addTranslationFormTarget } =
-		parsedFormData.data;
+	const { segmentId, text, locale, targetContentType } = parsedFormData.data;
 
 	let pageSlug = "";
-	if (
-		addTranslationFormTarget ===
-		ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
-	) {
+	if (targetContentType === "page") {
 		const pageSegment = await getPageSegmentById(segmentId);
 		if (!pageSegment) {
 			return {
@@ -58,10 +50,7 @@ export async function addTranslationFormAction(
 		}
 		pageSlug = pageSegment.page.slug;
 	}
-	if (
-		addTranslationFormTarget ===
-		ADD_TRANSLATION_FORM_TARGET.COMMENT_SEGMENT_TRANSLATION
-	) {
+	if (targetContentType === "comment") {
 		const commentSegment = await getCommentSegmentById(segmentId);
 		if (!commentSegment) {
 			return {
@@ -82,7 +71,7 @@ export async function addTranslationFormAction(
 		text,
 		currentUser.id,
 		locale,
-		addTranslationFormTarget,
+		targetContentType,
 	);
 	revalidatePath(`/user/${currentUser.handle}/page/${pageSlug}`);
 	return {

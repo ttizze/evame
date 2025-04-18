@@ -1,8 +1,4 @@
 import { MemoizedParsedContent } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/parsed-content";
-import {
-	ADD_TRANSLATION_FORM_TARGET,
-	VOTE_TARGET,
-} from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getImageProps } from "next/image";
 import type { PageCommentWithUserAndTranslations } from "../_lib/fetch-page-comments-with-user-and-translations";
@@ -53,12 +49,8 @@ export default function PageCommentItem({
 			<div className="mt-2 prose dark:prose-invert">
 				<MemoizedParsedContent
 					html={pageComment.content}
-					segmentBundles={pageComment.segmentWithTranslations}
+					segmentBundles={pageComment.segmentBundles}
 					currentHandle={currentHandle}
-					voteTarget={VOTE_TARGET.COMMENT_SEGMENT_TRANSLATION}
-					addTranslationFormTarget={
-						ADD_TRANSLATION_FORM_TARGET.COMMENT_SEGMENT_TRANSLATION
-					}
 				/>
 			</div>
 			<ReplyForm

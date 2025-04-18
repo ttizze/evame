@@ -1,7 +1,3 @@
-import type {
-	AddTranslationFormTarget,
-	VoteTarget,
-} from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import type { SegmentBundle } from "@/app/[locale]/types";
 import parse, { type HTMLReactParserOptions } from "html-react-parser";
@@ -13,8 +9,6 @@ interface ParsedContentProps {
 	html: string;
 	segmentBundles: SegmentBundle[] | null;
 	currentHandle: string | undefined;
-	voteTarget: VoteTarget;
-	addTranslationFormTarget: AddTranslationFormTarget;
 }
 
 export const MemoizedParsedContent = memo(ParsedContent);
@@ -23,8 +17,6 @@ export function ParsedContent({
 	html,
 	segmentBundles,
 	currentHandle,
-	voteTarget,
-	addTranslationFormTarget,
 }: ParsedContentProps) {
 	const sanitizedContent = DOMPurify.sanitize(html);
 
@@ -57,8 +49,6 @@ export function ParsedContent({
 							key={`translation-${number}`}
 							segmentBundle={segmentBundle}
 							currentHandle={currentHandle}
-							voteTarget={voteTarget}
-							addTranslationFormTarget={addTranslationFormTarget}
 						/>
 					</DynamicTag>
 				);

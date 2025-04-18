@@ -1,8 +1,3 @@
-import {
-	ADD_TRANSLATION_FORM_TARGET,
-	TranslateTarget,
-	VOTE_TARGET,
-} from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
@@ -66,6 +61,10 @@ export async function ContentWithTranslations({
 	const pageSegmentTitleWithTranslations = pageDetail.segmentBundles.filter(
 		(item) => item.segment.number === 0,
 	)[0];
+	const editablePageSlug =
+		pageDetail.user.handle === currentUser?.handle
+			? pageDetail.slug
+			: undefined;
 
 	return (
 		<>
@@ -75,12 +74,7 @@ export async function ContentWithTranslations({
 						segmentBundle={pageSegmentTitleWithTranslations}
 						showLockIcon={pageDetail.status === "DRAFT"}
 						currentHandle={currentUser?.handle}
-						isOwner={pageDetail.user.handle === currentUser?.handle}
-						slug={pageDetail.slug}
-						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
-						addTranslationFormTarget={
-							ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
-						}
+						editablePageSlug={editablePageSlug}
 					/>
 				)}
 			</h1>
@@ -93,7 +87,7 @@ export async function ContentWithTranslations({
 				sourceLocale={pageDetail.sourceLocale}
 				pageAITranslationInfo={pageAITranslationInfo}
 				className="pt-3"
-				translateTarget={TranslateTarget.TRANSLATE_PAGE}
+				targetContentType="page"
 				showIcons={true}
 			/>
 			<span className="js-content">
@@ -101,10 +95,6 @@ export async function ContentWithTranslations({
 					html={pageDetail.content}
 					segmentBundles={pageDetail.segmentBundles}
 					currentHandle={currentUser?.handle}
-					voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
-					addTranslationFormTarget={
-						ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
-					}
 				/>
 			</span>
 		</>

@@ -1,6 +1,6 @@
 import type { SanitizedUser } from "@/app/types";
 import type { BaseTranslation, SegmentBundle } from "../types";
-import { selectBestTranslation } from "./get-best-translation";
+import { selectBestTranslation } from "./select-best-translation";
 
 export function toSegmentBundles<
 	RawVote extends { isUpvote: boolean; updatedAt: Date } | null | undefined,

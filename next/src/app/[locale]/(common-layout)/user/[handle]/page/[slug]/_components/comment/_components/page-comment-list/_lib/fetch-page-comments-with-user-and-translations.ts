@@ -35,6 +35,7 @@ export function normalizeCommentSegments(
 		})),
 	}));
 }
+
 export async function buildCommentTree(
 	flatComments: PageCommentWithPageCommentSegments[],
 ): Promise<PageCommentWithPageCommentSegments[]> {
@@ -59,13 +60,13 @@ export async function buildCommentTree(
 
 export interface ExtendedComment
 	extends Omit<PageCommentWithPageCommentSegments, "replies"> {
-	segmentWithTranslations: SegmentBundle[];
+	segmentBundles: SegmentBundle[];
 	replies: ExtendedComment[];
 }
 export async function mapComment(
 	comment: PageCommentWithPageCommentSegments,
 ): Promise<ExtendedComment> {
-	const segmentWithTranslations = toSegmentBundles(
+	const segmentBundles = toSegmentBundles(
 		"comment",
 		comment.id,
 		normalizeCommentSegments(comment.pageCommentSegments),
@@ -73,7 +74,7 @@ export async function mapComment(
 
 	return {
 		...comment,
-		segmentWithTranslations, // ← 共通 DTO
+		segmentBundles,
 		replies: await Promise.all((comment.replies ?? []).map(mapComment)),
 	};
 }

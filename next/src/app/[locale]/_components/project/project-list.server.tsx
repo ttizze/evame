@@ -4,16 +4,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
 import Image from "next/image";
 import { getImageProps } from "next/image";
+import { SegmentAndTranslationSection } from "../segment-and-translation-section/client";
 import { ProjectActionsDropdown } from "./project-actions-dropdown/client";
 import { ProjectLikeButton } from "./project-like-button/server";
 import { ProjectTagList } from "./project-tag-list.server";
-
 interface ProjectListProps {
 	projectSummary: ProjectSummary;
 	projectLink: string;
 	userLink: string;
 	showOwnerActions?: boolean;
 	index?: number;
+	currentUserHandle?: string;
 }
 
 export async function ProjectList({
@@ -22,6 +23,7 @@ export async function ProjectList({
 	userLink,
 	showOwnerActions = false,
 	index,
+	currentUserHandle,
 }: ProjectListProps) {
 	const { props } = getImageProps({
 		src: projectSummary.user.image,
@@ -29,6 +31,10 @@ export async function ProjectList({
 		width: 40,
 		height: 40,
 	});
+	// Get the title segment (which should be the first segment)
+	const tagLineSegment = projectSummary.segmentBundles.find(
+		(segment) => segment.segment.number === 0,
+	);
 
 	return (
 		<div className="flex py-4 justify-between border-b last:border-b-0">
@@ -70,9 +76,15 @@ export async function ProjectList({
 						)}
 					</div>
 
-					{/* <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-						{projectWithRelations.description}
-					</p> */}
+					{tagLineSegment && (
+						<div className="font-medium break-all overflow-wrap-anywhere">
+							<SegmentAndTranslationSection
+								segmentBundle={tagLineSegment}
+								currentHandle={currentUserHandle}
+								segmentTextClassName="line-clamp-1"
+							/>
+						</div>
+					)}
 
 					<ProjectTagList
 						projectTag={projectSummary.projectTagRelations.map(

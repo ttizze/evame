@@ -3,16 +3,16 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { toSegmentBundles } from "../_lib/to-segment-bundles";
 import type { PageDetail, PageSummary } from "../types";
-import { createUserSelectFields } from "./queries.server";
+import { selectUserFields } from "./queries.server";
 
-function createPageRelatedFields(
+const selectPageRelatedFields = (
 	onlyTitle = false,
 	locale = "en",
 	currentUserId?: string,
-) {
+) => {
 	return {
 		user: {
-			select: createUserSelectFields(),
+			select: selectUserFields(),
 		},
 		tagPages: {
 			include: {
@@ -26,7 +26,7 @@ function createPageRelatedFields(
 					where: { locale, isArchived: false },
 					include: {
 						user: {
-							select: createUserSelectFields(),
+							select: selectUserFields(),
 						},
 						...(currentUserId && {
 							votes: {
@@ -42,26 +42,26 @@ function createPageRelatedFields(
 			},
 		},
 	};
-}
+};
 
-export function createPagesWithRelationsSelect(
+export const selectPagesWithDetails = (
 	onlyTitle = false,
 	locale = "en",
 	currentUserId?: string,
-) {
+) => {
 	return {
 		id: true,
 		slug: true,
 		createdAt: true,
 		status: true,
-		...createPageRelatedFields(onlyTitle, locale, currentUserId),
+		...selectPageRelatedFields(onlyTitle, locale, currentUserId),
 		_count: {
 			select: {
 				pageComments: true,
 			},
 		},
 	};
-}
+};
 
 type FetchParams = {
 	page?: number;
@@ -106,7 +106,7 @@ export async function fetchPageDetail(
 	const page = await prisma.page.findFirst({
 		where: { slug },
 		include: {
-			...createPageRelatedFields(false, locale, currentUserId),
+			...selectPageRelatedFields(false, locale, currentUserId),
 		},
 	});
 
@@ -151,7 +151,7 @@ export async function fetchPaginatedPublicPageSummaries({
 			]
 		: { createdAt: Prisma.SortOrder.desc };
 
-	const select = createPagesWithRelationsSelect(true, locale, currentUserId);
+	const select = selectPagesWithDetails(true, locale, currentUserId);
 
 	const [rawPages, total] = await Promise.all([
 		prisma.page.findMany({

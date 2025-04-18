@@ -1,16 +1,15 @@
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { prisma } from "@/lib/prisma";
-import { VOTE_TARGET } from "../constants";
-import type { VoteTarget } from "../constants";
 
 export async function handleVote(
 	segmentTranslationId: number,
 	isUpvote: boolean,
 	currentUserId: string,
-	voteTarget: VoteTarget,
+	targetContentType: TargetContentType,
 ) {
 	let updatedPoint = 0;
 	let finalIsUpvote: boolean | null = isUpvote;
-	if (voteTarget === VOTE_TARGET.PAGE_SEGMENT_TRANSLATION) {
+	if (targetContentType === "page") {
 		updatedPoint = await prisma.$transaction(async (tx) => {
 			const existingVote = await tx.vote.findUnique({
 				where: {
@@ -61,7 +60,7 @@ export async function handleVote(
 			});
 			return updatedTranslation?.point ?? 0;
 		});
-	} else if (voteTarget === VOTE_TARGET.COMMENT_SEGMENT_TRANSLATION) {
+	} else if (targetContentType === "comment") {
 		updatedPoint = await prisma.$transaction(async (tx) => {
 			const existingVote =
 				await tx.pageCommentSegmentTranslationVote.findUnique({

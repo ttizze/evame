@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-export function createUserSelectFields() {
+export const selectUserFields = () => {
 	return {
 		id: true,
 		name: true,
@@ -12,8 +12,8 @@ export function createUserSelectFields() {
 		twitterHandle: true,
 		totalPoints: true,
 		isAI: true,
-	};
-}
+	} as const;
+};
 
 export async function getPageById(pageId: number) {
 	const page = await prisma.page.findUnique({

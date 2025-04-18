@@ -1,4 +1,3 @@
-import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	handleCommentAutoTranslation,
@@ -86,7 +85,7 @@ describe("handleAutoTranslation", () => {
 						{ number: 1, text: "Hello" },
 						{ number: 2, text: "World" },
 					],
-					translateTarget: TranslateTarget.TRANSLATE_PAGE,
+					targetContentType: "page",
 				}),
 			);
 
@@ -211,7 +210,7 @@ describe("handleAutoTranslation", () => {
 						{ number: 2, text: "a test comment" },
 						{ number: 0, text: "Test Page" },
 					],
-					translateTarget: TranslateTarget.TRANSLATE_COMMENT,
+					targetContentType: "comment",
 				}),
 			);
 		});

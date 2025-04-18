@@ -47,7 +47,6 @@ export async function fetchPageCommentsWithPageCommentSegments(
 		orderBy: { createdAt: "asc" },
 	});
 
-	// 日付をlocaleに合わせた文字列に変換して返す
 	return flatComments.map((comment) => ({
 		...comment,
 		createdAt: comment.createdAt.toISOString(),
@@ -60,11 +59,3 @@ export type PageCommentWithPageCommentSegments = NonNullable<
 > & {
 	replies?: PageCommentWithPageCommentSegments[];
 };
-export type PageCommentSegment =
-	PageCommentWithPageCommentSegments["pageCommentSegments"][number];
-
-export type PageCommentSegmentTranslation =
-	PageCommentSegment["pageCommentSegmentTranslations"][number];
-
-export type PageCommentSegmentTranslationVote =
-	PageCommentSegmentTranslation["pageCommentSegmentTranslationVotes"][number];

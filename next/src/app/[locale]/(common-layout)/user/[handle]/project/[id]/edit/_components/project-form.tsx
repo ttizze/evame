@@ -50,12 +50,16 @@ export function ProjectForm({
 	const initialLinks = (projectDetail?.links as ProjectLink[]) || [];
 	const initialImages = (projectDetail?.images as ProjectImage[]) || [];
 
+	// Get the tagLine from the segment with number 0
+	// This follows the same pattern as pages, where the title is stored as segment 0
+	const tagLineSegment = projectDetail?.segmentBundles.find(
+		(bundle) => bundle.segment.number === 0,
+	);
+	const tagLine = tagLineSegment?.segment.text || "";
+
 	// フォーム状態
 	const [tags, setTags] = useState<string[]>(
 		initialTags.map((tag) => tag.name),
-	);
-	const [description, setDescription] = useState(
-		projectDetail?.description || "",
 	);
 	const [links, setLinks] = useState<ProjectLink[]>(initialLinks);
 	const [images, setImages] = useState<ProjectImage[]>(initialImages);
@@ -158,6 +162,27 @@ export function ProjectForm({
 							The name of your project.
 						</p>
 					</div>
+					<div>
+						<Label htmlFor="tagLine" className="flex items-center">
+							Tag Line <span className="text-red-500 ml-1">*</span>
+						</Label>
+						<Input
+							id="tagLine"
+							name="tagLine"
+							defaultValue={tagLine}
+							placeholder="A short description of your project"
+							className="mt-1"
+							required
+						/>
+						{state.zodErrors?.tagLine && (
+							<p className="text-sm text-red-500 mt-1">
+								{state.zodErrors.tagLine}
+							</p>
+						)}
+						<p className="text-sm text-muted-foreground mt-1">
+							A brief one-line summary of your project.
+						</p>
+					</div>
 
 					<div>
 						<Label htmlFor="description" className="flex items-center">
@@ -167,7 +192,7 @@ export function ProjectForm({
 							<Editor
 								defaultValue={projectDetail?.description || ""}
 								name="description"
-								className="border border-input rounded-md  py-2 min-h-32"
+								className="border border-input rounded-md px-2 py-2 min-h-32"
 								placeholder="Describe your project..."
 							/>
 						</div>
@@ -177,7 +202,7 @@ export function ProjectForm({
 							</p>
 						)}
 						<p className="text-sm text-muted-foreground mt-1">
-							A brief description of your project.
+							A detailed description of your project.
 						</p>
 					</div>
 

@@ -1,11 +1,11 @@
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import type { BaseTranslation } from "@/app/[locale]/types";
 import { render, screen } from "@testing-library/react";
 // VoteButtons.test.tsx
 import React from "react";
 import { vi } from "vitest";
 import { VoteButtons } from "./client";
-import type { VoteTarget } from "./constants";
-const dummyVoteTarget = "example-target" as VoteTarget;
+const dummyVoteTarget = "example-target" as TargetContentType;
 
 const dummyTranslationUpvote = {
 	id: 1,
@@ -45,7 +45,7 @@ describe("VoteButtons コンポーネント", () => {
 		render(
 			<VoteButtons
 				translation={dummyTranslationUpvote}
-				voteTarget={dummyVoteTarget}
+				targetContentType={dummyVoteTarget}
 			/>,
 		);
 
@@ -74,7 +74,7 @@ describe("VoteButtons コンポーネント", () => {
 		render(
 			<VoteButtons
 				translation={dummyTranslationUpvote}
-				voteTarget={dummyVoteTarget}
+				targetContentType={dummyVoteTarget}
 			/>,
 		);
 
@@ -101,7 +101,7 @@ describe("VoteButtons コンポーネント", () => {
 		render(
 			<VoteButtons
 				translation={dummyTranslationDownvote}
-				voteTarget={dummyVoteTarget}
+				targetContentType={dummyVoteTarget}
 			/>,
 		);
 
@@ -129,7 +129,7 @@ describe("VoteButtons コンポーネント", () => {
 		render(
 			<VoteButtons
 				translation={dummyTranslationUpvote}
-				voteTarget={dummyVoteTarget}
+				targetContentType={dummyVoteTarget}
 			/>,
 		);
 
