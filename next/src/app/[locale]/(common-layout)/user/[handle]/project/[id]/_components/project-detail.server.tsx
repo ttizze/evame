@@ -116,7 +116,7 @@ export function Project({ projectDetail, locale }: ProjectDetailProps) {
 
 				<div className="flex justify-between items-center pt-4 border-t">
 					<p className="text-sm text-muted-foreground">
-						{new Date(projectDetail.createdAt).toLocaleDateString(locale)}
+						{new Date(projectDetail.createdAt).toLocaleString(locale)}
 					</p>
 				</div>
 			</CardContent>
