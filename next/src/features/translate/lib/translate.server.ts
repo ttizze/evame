@@ -2,10 +2,10 @@ import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[han
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { TranslationStatus } from "@prisma/client";
 import { updateTranslationJob } from "../db/mutations.server";
-import { getLatestPageCommentSegments } from "../db/queries.server";
 import {
-	getLatestPageSegments,
-	getLatestProjectSegments,
+	getPageCommentSegments,
+	getPageSegments,
+	getProjectSegments,
 } from "../db/queries.server";
 import { getGeminiModelResponse } from "../services/gemini";
 import type { NumberedElement, TranslateJobParams } from "../types";
@@ -104,7 +104,7 @@ async function translateChunk(
 				if (!pageId) {
 					throw new Error("Page ID is required");
 				}
-				const pageSegments = await getLatestPageSegments(pageId);
+				const pageSegments = await getPageSegments(pageId);
 
 				await saveTranslationsForPage(
 					partialTranslations,
@@ -117,8 +117,7 @@ async function translateChunk(
 				if (!commentId || !pageId) {
 					throw new Error("Comment ID is required");
 				}
-				const pageCommentSegments =
-					await getLatestPageCommentSegments(pageId, commentId);
+				const pageCommentSegments = await getPageCommentSegments(commentId);
 				await saveTranslationsForComment(
 					partialTranslations,
 					pageCommentSegments,
@@ -129,8 +128,13 @@ async function translateChunk(
 				if (!projectId) {
 					throw new Error("Project ID is required");
 				}
-				const projectSegments = await getLatestProjectSegments(projectId);
-				await saveTranslationsForProject(partialTranslations, projectSegments, targetLocale, aiModel);
+				const projectSegments = await getProjectSegments(projectId);
+				await saveTranslationsForProject(
+					partialTranslations,
+					projectSegments,
+					targetLocale,
+					aiModel,
+				);
 			}
 			// 成功した要素をpendingElementsから除去
 			const translatedNumbers = new Set(
@@ -151,7 +155,6 @@ async function translateChunk(
 		throw new Error("部分的な翻訳のみ完了し、残存要素は翻訳失敗しました。");
 	}
 }
-
 
 async function getTranslatedText(
 	geminiApiKey: string,

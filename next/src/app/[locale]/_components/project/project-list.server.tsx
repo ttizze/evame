@@ -77,7 +77,7 @@ export async function ProjectList({
 					</div>
 
 					{tagLineSegment && (
-						<div className="font-medium break-all overflow-wrap-anywhere">
+						<div className="text-sm break-all overflow-wrap-anywhere">
 							<SegmentAndTranslationSection
 								segmentBundle={tagLineSegment}
 								currentHandle={currentUserHandle}

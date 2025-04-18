@@ -56,7 +56,7 @@ export interface BlockWithNumber {
 
 export function collectBlocksFromRoot(
 	root: Root,
-	title?: string,
+	headerData?: string,
 ): BlockWithNumber[] {
 	const textOccurrenceMap: Map<string, number> = new Map();
 	const blocks: BlockInfo[] = [];
@@ -87,11 +87,11 @@ export function collectBlocksFromRoot(
 
 	// タイトルがあれば 0 番で先頭に追加
 	// 同じ文字列がテクスト中に出現する場合を考慮し、countは0にしておく
-	if (title) {
+	if (headerData) {
 		numberedBlocks.unshift({
 			element: {} as Element, // ダミー
-			text: title,
-			textAndOccurrenceHash: generateHashForText(title, 0),
+			text: headerData,
+			textAndOccurrenceHash: generateHashForText(headerData, 0),
 			number: 0,
 		});
 	}

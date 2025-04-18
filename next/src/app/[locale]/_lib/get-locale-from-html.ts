@@ -4,6 +4,7 @@ import { JSDOM } from "jsdom";
 export async function getLocaleFromHtml(
 	htmlContent: string,
 	title?: string,
+	userLocale?: string,
 ): Promise<string> {
 	const doc = new JSDOM(htmlContent);
 
@@ -43,10 +44,13 @@ export async function getLocaleFromHtml(
 		cld = cldFactory.create();
 		const result = await cld.findLanguage(sortedContent);
 		const languageCode = result?.language || "und";
+		if (languageCode === "und" && userLocale) {
+			return userLocale;
+		}
 		return languageCode;
 	} catch (error) {
 		console.error("Error detecting language:", error);
-		return "und";
+		return userLocale || "und";
 	} finally {
 		if (cld) {
 			cld.dispose();

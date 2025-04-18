@@ -6,7 +6,8 @@ export type NumberedElement = {
 
 export interface TranslateJobParams {
 	userId: string;
-	pageId: number;
+	pageId?: number;
+	projectId?: string;
 	translationJobId: number;
 	geminiApiKey: string;
 	aiModel: string;

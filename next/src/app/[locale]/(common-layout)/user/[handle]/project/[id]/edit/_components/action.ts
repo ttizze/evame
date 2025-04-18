@@ -1,6 +1,6 @@
 "use server";
 
-import { generateHashForText } from "@/app/[locale]/_lib/generate-hash-for-text";
+import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
 import { uploadImage } from "@/app/[locale]/_lib/upload";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
@@ -9,8 +9,9 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { processProjectHtml } from "../_components/_lib/process-project-html";
+import { triggerAutoTranslationIfNeeded } from "../_components/_lib/trigger-auto-translation";
 import { upsertProjectTags } from "../_db/mutations.server";
-
 // Schema definitions
 const projectLinkSchema = z.object({
 	id: z.string().optional(),
@@ -94,32 +95,6 @@ export type ProjectActionResponse = ActionResponse<void, ProjectFormValues>;
 // Type definitions
 type ProjectLinkSchemaType = z.infer<typeof projectLinkSchema>;
 type ProjectImageSchemaType = z.infer<typeof projectImageSchema>;
-
-// Helper functions
-async function createOrUpdateProjectSegment(
-	projectId: string,
-	text: string,
-	number: number,
-) {
-	const textAndOccurrenceHash = generateHashForText(text, 0);
-
-	const existingSegment = await prisma.projectSegment.findUnique({
-		where: {
-			projectId_number: { projectId, number },
-		},
-	});
-
-	if (existingSegment) {
-		return prisma.projectSegment.update({
-			where: { id: existingSegment.id },
-			data: { text, textAndOccurrenceHash },
-		});
-	}
-
-	return prisma.projectSegment.create({
-		data: { projectId, number, text, textAndOccurrenceHash },
-	});
-}
 
 async function uploadProjectImages(
 	imageFiles: File[],
@@ -273,6 +248,10 @@ export async function projectAction(
 		parsed.data;
 
 	try {
+		// Detect language for source locale
+		const combinedText = `${tagLine} ${projectData.description}`;
+		const sourceLocale = await getLocaleFromHtml(combinedText);
+
 		// Handle image uploads
 		const imageFiles = formData.getAll("imageFiles") as File[];
 		const imageFileNames = formData.getAll("imageFileNames") as string[];
@@ -301,16 +280,6 @@ export async function projectAction(
 					message: "You don't have permission to edit this project",
 				};
 			}
-
-			// Update project data
-			await prisma.project.update({
-				where: { id: projectId },
-				data: projectData,
-			});
-
-			// Update tagLine segment
-			await createOrUpdateProjectSegment(projectId, tagLine, 0);
-
 			// Update tags
 			await upsertProjectTags(tags, projectId);
 
@@ -320,17 +289,27 @@ export async function projectAction(
 
 			await handleProjectLinks(links, projectId, existingLinkIds);
 			await handleProjectImages(processedImages, projectId, existingImageIds);
+
+			await processProjectHtml(
+				projectId,
+				tagLine,
+				projectData.description,
+				currentUser.id,
+			);
+			await triggerAutoTranslationIfNeeded(
+				projectId,
+				sourceLocale,
+				currentUser.id,
+			);
 		} else {
 			// Create new project
 			const newProject = await prisma.project.create({
 				data: {
 					...projectData,
+					sourceLocale,
 					userId: currentUser.id,
 				},
 			});
-
-			// Create tagLine segment
-			await createOrUpdateProjectSegment(newProject.id, tagLine, 0);
 
 			// Create tags
 			if (tags.length > 0) {
@@ -345,6 +324,19 @@ export async function projectAction(
 			if (processedImages.length > 0) {
 				await handleProjectImages(processedImages, newProject.id);
 			}
+
+			// Trigger automatic translation
+			await processProjectHtml(
+				newProject.id,
+				tagLine,
+				projectData.description,
+				currentUser.id,
+			);
+			await triggerAutoTranslationIfNeeded(
+				newProject.id,
+				sourceLocale,
+				currentUser.id,
+			);
 		}
 
 		// Revalidate paths

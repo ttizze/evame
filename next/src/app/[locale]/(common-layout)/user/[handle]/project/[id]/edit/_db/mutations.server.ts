@@ -1,4 +1,18 @@
+import type { BlockWithNumber } from "@/app/[locale]/_lib/process-html";
+import { syncSegmentsChunk } from "@/app/[locale]/_lib/sync-segments-chunk";
+import { BATCH_SIZE, OFFSET } from "@/app/_constants/sync-segments";
 import { prisma } from "@/lib/prisma";
+
+export async function updateProjectWithHtml(
+	projectId: string,
+	description: string,
+	userId: string,
+) {
+	return await prisma.project.update({
+		where: { id: projectId, userId },
+		data: { description },
+	});
+}
 
 export async function upsertProjectTags(tagNames: string[], projectId: string) {
 	// Remove duplicates
@@ -40,4 +54,44 @@ export async function upsertProjectTags(tagNames: string[], projectId: string) {
 	});
 
 	return updatedTags;
+}
+
+export async function syncProjectSegments(
+	projectId: string,
+	blocks: readonly BlockWithNumber[],
+): Promise<void> {
+	const hashes = blocks.map((b) => b.textAndOccurrenceHash);
+
+	await prisma.$transaction(async (tx) => {
+		await tx.projectSegment.updateMany({
+			where: { projectId },
+			data: { number: { increment: OFFSET } },
+		});
+
+		await tx.projectSegment.deleteMany({
+			where: { projectId, textAndOccurrenceHash: { notIn: hashes } },
+		});
+
+		for (const batch of syncSegmentsChunk(blocks, BATCH_SIZE)) {
+			await Promise.all(
+				batch.map((b) =>
+					tx.projectSegment.upsert({
+						where: {
+							projectId_textAndOccurrenceHash: {
+								projectId,
+								textAndOccurrenceHash: b.textAndOccurrenceHash,
+							},
+						},
+						update: { text: b.text, number: b.number },
+						create: {
+							projectId,
+							textAndOccurrenceHash: b.textAndOccurrenceHash,
+							text: b.text,
+							number: b.number,
+						},
+					}),
+				),
+			);
+		}
+	});
 }

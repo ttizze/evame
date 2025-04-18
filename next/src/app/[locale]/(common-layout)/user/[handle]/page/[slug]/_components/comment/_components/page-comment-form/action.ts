@@ -73,7 +73,6 @@ export async function commentAction(
 		currentUserId: currentUser.id,
 		commentId: pageComment.id,
 		pageId,
-		content,
 		sourceLocale: locale,
 		geminiApiKey: process.env.GEMINI_API_KEY ?? "",
 	});

@@ -32,7 +32,7 @@ export function Project({ projectDetail, locale }: ProjectDetailProps) {
 	if (!projectDetail) {
 		return null;
 	}
-	const projectTitleSegmentBundle = projectDetail.segmentBundles.filter(
+	const projectTagLineSegmentBundle = projectDetail.segmentBundles.filter(
 		(item) => item.segment.number === 0,
 	)[0];
 	const tags = projectDetail.projectTagRelations.map(
@@ -81,7 +81,7 @@ export function Project({ projectDetail, locale }: ProjectDetailProps) {
 				</div>
 				<h2 className="text-lg font-medium">
 					<SegmentAndTranslationSection
-						segmentBundle={projectTitleSegmentBundle}
+						segmentBundle={projectTagLineSegmentBundle}
 						currentHandle={projectDetail.user.handle}
 					/>
 				</h2>
