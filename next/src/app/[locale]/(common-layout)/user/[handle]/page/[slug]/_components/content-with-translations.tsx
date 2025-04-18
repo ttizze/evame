@@ -64,8 +64,8 @@ export async function ContentWithTranslations({
 	} = data;
 
 	const pageSegmentTitleWithTranslations =
-		pageWithTranslations.segmentWithTranslations.filter(
-			(item) => item.number === 0,
+		pageWithTranslations.segmentBundles.filter(
+			(item) => item.segment.number === 0,
 		)[0];
 
 	return (
@@ -73,7 +73,7 @@ export async function ContentWithTranslations({
 			<h1 className="!mb-0 ">
 				{pageSegmentTitleWithTranslations && (
 					<DynamicSegmentAndTranslationSection
-						segmentWithTranslations={pageSegmentTitleWithTranslations}
+						segmentBundle={pageSegmentTitleWithTranslations}
 						showLockIcon={pageWithTranslations.status === "DRAFT"}
 						currentHandle={currentUser?.handle}
 						isOwner={pageWithTranslations.user.handle === currentUser?.handle}
@@ -102,7 +102,7 @@ export async function ContentWithTranslations({
 			<span className="js-content">
 				<DynamicMemoizedParsedContent
 					html={pageWithTranslations.content}
-					segmentWithTranslations={pageWithTranslations.segmentWithTranslations}
+					segmentBundles={pageWithTranslations.segmentBundles}
 					currentHandle={currentUser?.handle}
 					voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 					addTranslationFormTarget={

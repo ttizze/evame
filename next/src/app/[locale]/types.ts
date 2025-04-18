@@ -10,38 +10,36 @@ import type {
 } from "@prisma/client";
 import type { SanitizedUser } from "../types";
 
-type Segment = {
+export interface BaseSegment {
 	id: number;
 	number: number;
 	text: string;
-};
-type SegmentTranslation = {
+}
+
+export interface BaseTranslation {
 	id: number;
 	locale: string;
 	text: string;
-	userId: string;
 	point: number;
-	createdAt: Date;
-};
-
-type TranslationCurrentUserVote = {
-	id: number;
-	userId: string;
-	translationId: number;
-	isUpvote: boolean;
-	createdAt: Date;
-	updatedAt: Date;
-};
-
-export type SegmentTranslationWithVote = SegmentTranslation & {
+	createdAt: string; // ISO 文字列
 	user: SanitizedUser;
-	translationCurrentUserVote: TranslationCurrentUserVote | null;
-};
+	currentUserVote: UserVote | null;
+}
 
-export type SegmentWithTranslations = Segment & {
-	segmentTranslationsWithVotes: SegmentTranslationWithVote[];
-	bestSegmentTranslationWithVote: SegmentTranslationWithVote | null;
-};
+export interface UserVote {
+	isUpvote: boolean;
+	updatedAt: string; // ISO 文字列
+}
+
+/** React へ渡す統一バンドル */
+export interface SegmentBundle {
+	parentType: "page" | "project" | "comment";
+	parentId: string | number;
+	segment: BaseSegment;
+	translations: BaseTranslation[];
+	best: BaseTranslation | null;
+}
+
 type TagPageWithTag = TagPage & {
 	tag: Tag;
 };
@@ -49,11 +47,16 @@ export type PageWithRelations = Omit<Page, "createdAt"> & {
 	createdAt: string;
 	user: SanitizedUser;
 	tagPages: TagPageWithTag[];
-	segmentWithTranslations: SegmentWithTranslations[];
+	segmentBundles: SegmentBundle[];
 	_count?: {
 		pageComments: number;
 	};
 };
+export type PageSummary = Omit<
+	PageWithRelations,
+	"content" | "updatedAt" | "userId" | "sourceLocale"
+>;
+
 type TagProjectWithTag = ProjectTagRelation & {
 	projectTag: ProjectTag;
 };
@@ -63,8 +66,13 @@ export type ProjectWithRelations = Omit<Project, "createdAt"> & {
 	images: ProjectImage[];
 	links: ProjectLink[];
 	projectTagRelations: TagProjectWithTag[];
-	segmentWithTranslations: SegmentWithTranslations[];
+	segmentBundles: SegmentBundle[];
 	_count?: {
 		projectLikes: number;
 	};
 };
+
+export type ProjectSummary = Omit<
+	ProjectWithRelations,
+	"description" | "userId" | "sourceLocale"
+>;

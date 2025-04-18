@@ -3,7 +3,7 @@ import type {
 	VoteTarget,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
-import type { SegmentWithTranslations } from "@/app/[locale]/types";
+import type { SegmentBundle } from "@/app/[locale]/types";
 import parse, { type HTMLReactParserOptions } from "html-react-parser";
 import DOMPurify from "isomorphic-dompurify";
 import { customAlphabet } from "nanoid";
@@ -11,7 +11,7 @@ import Image from "next/image";
 import { memo } from "react";
 interface ParsedContentProps {
 	html: string;
-	segmentWithTranslations: SegmentWithTranslations[] | null;
+	segmentBundles: SegmentBundle[] | null;
 	currentHandle: string | undefined;
 	voteTarget: VoteTarget;
 	addTranslationFormTarget: AddTranslationFormTarget;
@@ -21,7 +21,7 @@ export const MemoizedParsedContent = memo(ParsedContent);
 
 export function ParsedContent({
 	html,
-	segmentWithTranslations,
+	segmentBundles,
 	currentHandle,
 	voteTarget,
 	addTranslationFormTarget,
@@ -43,10 +43,10 @@ export function ParsedContent({
 			// セグメントの翻訳が存在する場合は、セグメントの翻訳を表示
 			if (domNode.type === "tag" && domNode.attribs["data-number-id"]) {
 				const number = Number(domNode.attribs["data-number-id"]);
-				const segmentWithTranslation = segmentWithTranslations?.find(
-					(info) => info.number === number,
+				const segmentBundle = segmentBundles?.find(
+					(info) => info.segment.number === number,
 				);
-				if (!segmentWithTranslation) {
+				if (!segmentBundle) {
 					return null;
 				}
 				const DynamicTag = domNode.name as keyof React.JSX.IntrinsicElements;
@@ -55,7 +55,7 @@ export function ParsedContent({
 					<DynamicTag {...otherAttribs} className={className}>
 						<SegmentAndTranslationSection
 							key={`translation-${number}`}
-							segmentWithTranslations={segmentWithTranslation}
+							segmentBundle={segmentBundle}
 							currentHandle={currentHandle}
 							voteTarget={voteTarget}
 							addTranslationFormTarget={addTranslationFormTarget}

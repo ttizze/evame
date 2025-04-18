@@ -1,5 +1,5 @@
 import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
-import type { SegmentTranslationWithVote } from "@/app/[locale]/types";
+import type { BaseTranslation } from "@/app/[locale]/types";
 import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,7 @@ import type { VoteTarget } from "../vote-buttons/constants";
 import { deleteTranslationAction } from "./action";
 
 interface TranslationItemProps {
-	translation: SegmentTranslationWithVote;
+	translation: BaseTranslation;
 	currentHandle: string | undefined;
 	voteTarget: VoteTarget;
 }
@@ -73,10 +73,7 @@ export function TranslationListItem({
 						by: {translation.user.name}
 					</span>
 				</Link>
-				<VoteButtons
-					translationWithVote={translation}
-					voteTarget={voteTarget}
-				/>
+				<VoteButtons translation={translation} voteTarget={voteTarget} />
 			</span>
 		</span>
 	);

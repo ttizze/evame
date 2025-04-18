@@ -9,7 +9,7 @@ import { fetchPageCommentsWithPageCommentSegments } from "../_db/queries.server"
 import {
 	buildCommentTree,
 	fetchPageCommentsWithUserAndTranslations,
-	mapCommentTranslations,
+	mapComment,
 } from "./fetch-page-comments-with-user-and-translations";
 // --- 依存先をモック化 ---
 vi.mock("../_db/queries.server", () => ({
@@ -67,11 +67,8 @@ describe("mapCommentTranslations", () => {
 			{ transient: { customSegments: segments } }, // transientParams
 		);
 
-		const result = await mapCommentTranslations(comment);
-		expect(
-			result.pageCommentSegmentsWithTranslations[0]
-				.bestSegmentTranslationWithVote?.point,
-		).toBe(1002);
+		const result = await mapComment(comment);
+		expect(result.segmentWithTranslations[0].best?.point).toBe(1002);
 	});
 });
 
@@ -95,6 +92,6 @@ describe("fetchPageCommentsWithUserAndTranslations", () => {
 
 		expect(result).toHaveLength(1);
 		expect(result[0].replies).toBeDefined();
-		expect(result[0].pageCommentSegmentsWithTranslations).toBeDefined();
+		expect(result[0].segmentWithTranslations).toBeDefined();
 	});
 });

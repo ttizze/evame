@@ -7,7 +7,7 @@ import { PageCommentButton } from "@/app/[locale]/_components/page/page-comment-
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
-import type { PagesWithRelations } from "@/app/[locale]/_db/queries.server";
+import type { PageSummary } from "@/app/[locale]/types";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
@@ -16,7 +16,7 @@ import Image from "next/image";
 import { PageActionsDropdown } from "./page-actions-dropdown/client";
 
 type PageListProps = {
-	pageWithRelations: PagesWithRelations;
+	pageSummary: PageSummary;
 	pageLink: string;
 	userLink: string;
 	showOwnerActions?: boolean;
@@ -26,7 +26,7 @@ type PageListProps = {
 };
 
 export function PageList({
-	pageWithRelations,
+	pageSummary,
 	pageLink,
 	userLink,
 	showOwnerActions = false,
@@ -35,18 +35,18 @@ export function PageList({
 	currentUserHandle,
 }: PageListProps) {
 	const { props } = getImageProps({
-		src: pageWithRelations.user.image,
+		src: pageSummary.user.image,
 		alt: "",
 		width: 40,
 		height: 40,
 	});
 
 	// Get the title segment (which should be the first segment)
-	const titleSegment = pageWithRelations.segmentWithTranslations.find(
-		(segment) => segment.number === 0,
+	const titleSegment = pageSummary.segmentBundles.find(
+		(segment) => segment.segment.number === 0,
 	);
 
-	const ogpImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${pageWithRelations.slug}&showOriginal=${true}&showTranslation=${true}`;
+	const ogpImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${pageSummary.slug}&showOriginal=${true}&showTranslation=${true}`;
 	return (
 		<div className="flex py-4 justify-between border-b last:border-b-0">
 			{index !== undefined && (
@@ -60,7 +60,7 @@ export function PageList({
 					<Link href={pageLink} className="block h-full w-full">
 						<Image
 							src={ogpImageUrl}
-							alt={titleSegment?.text || ""}
+							alt={titleSegment?.segment.text || ""}
 							fill
 							className="object-cover"
 							sizes="96px"
@@ -74,13 +74,13 @@ export function PageList({
 							{titleSegment && (
 								<div className="font-medium break-all overflow-wrap-anywhere">
 									<SegmentAndTranslationSection
-										segmentWithTranslations={titleSegment}
+										segmentBundle={titleSegment}
 										currentHandle={currentUserHandle}
 										voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 										addTranslationFormTarget={
 											ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
 										}
-										slug={pageWithRelations.slug}
+										slug={pageSummary.slug}
 										isOwner={false}
 										segmentTextClassName="line-clamp-1"
 									/>
@@ -91,13 +91,13 @@ export function PageList({
 						{showOwnerActions && (
 							<PageActionsDropdown
 								editPath={`${pageLink}/edit`}
-								pageId={pageWithRelations.id}
-								status={pageWithRelations.status}
+								pageId={pageSummary.id}
+								status={pageSummary.status}
 							/>
 						)}
 					</div>
 					<PageTagList
-						tag={pageWithRelations.tagPages.map((tagPage) => tagPage.tag)}
+						tag={pageSummary.tagPages.map((tagPage) => tagPage.tag)}
 					/>
 
 					<div className="flex justify-between items-center mt-2">
@@ -106,26 +106,24 @@ export function PageList({
 								<Avatar className="w-5 h-5 mr-1">
 									<AvatarImage {...props} />
 									<AvatarFallback>
-										{pageWithRelations.user.handle.charAt(0).toUpperCase()}
+										{pageSummary.user.handle.charAt(0).toUpperCase()}
 									</AvatarFallback>
 								</Avatar>
 								<span className="text-xs text-gray-600">
-									{pageWithRelations.user.name}
+									{pageSummary.user.name}
 								</span>
 							</Link>
 							<p className="text-xs text-muted-foreground ml-2">
-								<ClientDateFormatter
-									date={new Date(pageWithRelations.createdAt)}
-								/>
+								<ClientDateFormatter date={new Date(pageSummary.createdAt)} />
 							</p>
 						</div>
 
 						<div className="flex items-center gap-2">
-							<PageLikeButton pageId={pageWithRelations.id} showCount />
+							<PageLikeButton pageId={pageSummary.id} showCount />
 							<PageCommentButton
-								commentCount={pageWithRelations._count?.pageComments || 0}
-								slug={pageWithRelations.slug}
-								userHandle={pageWithRelations.user.handle}
+								commentCount={pageSummary._count?.pageComments || 0}
+								slug={pageSummary.slug}
+								userHandle={pageSummary.user.handle}
 								showCount
 							/>
 						</div>

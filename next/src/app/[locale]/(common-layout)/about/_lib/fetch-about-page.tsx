@@ -1,4 +1,4 @@
-import { fetchPageWithTranslations } from "@/app/[locale]/_db/queries.server";
+import { fetchPageWithTranslations } from "@/app/[locale]/_db/page-queries.server";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 

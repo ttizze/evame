@@ -30,14 +30,13 @@ export default async function SearchPage({
 		? (category as Category)
 		: "title";
 
-	const { pagesWithRelations, tags, users, totalPages } =
-		await fetchSearchResults({
-			query,
-			category: validCategory,
-			page,
-			locale,
-			tagPage,
-		});
+	const { pageSummaries, tags, users, totalPages } = await fetchSearchResults({
+		query,
+		category: validCategory,
+		page,
+		locale,
+		tagPage,
+	});
 
 	return (
 		<main>
@@ -46,7 +45,7 @@ export default async function SearchPage({
 				{query && (
 					<div className="container mx-auto px-4">
 						<SearchResults
-							pagesWithRelations={pagesWithRelations}
+							pageSummaries={pageSummaries}
 							tags={tags}
 							users={users}
 							totalPages={totalPages}

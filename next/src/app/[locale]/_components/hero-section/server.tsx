@@ -5,7 +5,7 @@ import { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/pa
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { TranslateActionSection } from "@/app/[locale]/_components/translate-action-section";
-import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/queries.server";
+import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/page-queries.server";
 import { getCurrentUser } from "@/auth";
 import Image from "next/image";
 
@@ -35,9 +35,9 @@ export default async function HeroSection({ locale }: { locale: string }) {
 		topPageWithTranslations.id,
 	);
 
-	const [title, text] = topPageWithTranslations.segmentWithTranslations
-		.filter((st) => st.number === 0 || st.number === 1)
-		.sort((a, b) => a.number - b.number);
+	const [title, text] = topPageWithTranslations.segmentBundles
+		.filter((sb) => sb.segment.number === 0 || sb.segment.number === 1)
+		.sort((a, b) => a.segment.number - b.segment.number);
 
 	if (!title || !text) {
 		const error = new Error("Invalid hero section");
@@ -67,7 +67,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 			<div className="relative z-10 px-4 md:px-8 max-w-4xl mx-auto">
 				<h1 className="text-2xl md:text-4xl font-bold mb-6 text-center">
 					<SegmentAndTranslationSection
-						segmentWithTranslations={heroTitle}
+						segmentBundle={heroTitle}
 						segmentTextClassName="w-full mb-2"
 						currentHandle={currentHandle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
@@ -79,7 +79,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 
 				<span className="text-xl mb-12 w-full">
 					<SegmentAndTranslationSection
-						segmentWithTranslations={heroText}
+						segmentBundle={heroText}
 						segmentTextClassName="mb-2"
 						currentHandle={currentHandle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}

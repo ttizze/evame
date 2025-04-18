@@ -1,6 +1,6 @@
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { ProjectList } from "@/app/[locale]/_components/project/project-list.server";
-import { fetchPaginatedProjectsWithRelations } from "@/app/[locale]/_db/queries.server";
+import { fetchPaginatedProjectsWithRelations } from "@/app/[locale]/_db/project-queries.server";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { notFound } from "next/navigation";
@@ -29,7 +29,7 @@ export async function UserProjectList({
 	if (!pageOwner) {
 		return notFound();
 	}
-	const { projectsWithRelations, totalPages } =
+	const { projectSummaries, totalPages } =
 		await fetchPaginatedProjectsWithRelations({
 			page: page,
 			pageSize: 10,
@@ -37,7 +37,7 @@ export async function UserProjectList({
 			locale,
 			currentUserId: currentUser?.id,
 		});
-	if (projectsWithRelations.length === 0) {
+	if (projectSummaries.length === 0) {
 		return (
 			<p className="text-center text-gray-500 mt-10">
 				{isOwner ? "You haven't created any projects yet." : "No projects yet."}
@@ -47,11 +47,11 @@ export async function UserProjectList({
 	return (
 		<>
 			<div className="">
-				{projectsWithRelations.map((projectWithRelations) => (
+				{projectSummaries.map((projectSummary) => (
 					<ProjectList
-						key={projectWithRelations.id}
-						projectWithRelations={projectWithRelations}
-						projectLink={`/user/${handle}/project/${projectWithRelations.id}`}
+						key={projectSummary.id}
+						projectSummary={projectSummary}
+						projectLink={`/user/${handle}/project/${projectSummary.id}`}
 						userLink={`/user/${handle}`}
 						showOwnerActions={isOwner}
 					/>

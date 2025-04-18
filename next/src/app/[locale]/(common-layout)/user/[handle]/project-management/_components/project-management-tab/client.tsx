@@ -2,7 +2,7 @@
 
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { ProjectActionsDropdown } from "@/app/[locale]/_components/project/project-actions-dropdown/client";
-import type { ProjectWithRelationsForList } from "@/app/[locale]/_db/queries.server";
+import type { ProjectSummary } from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "@/i18n/routing";
@@ -10,14 +10,14 @@ import { Plus } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 
 interface ProjectManagementTabClientProps {
-	projectsWithRelations: ProjectWithRelationsForList[];
+	projectSummaries: ProjectSummary[];
 	totalPages: number;
 	currentPage: number;
 	handle: string;
 }
 
 export function ProjectManagementTabClient({
-	projectsWithRelations,
+	projectSummaries,
 	totalPages,
 	currentPage,
 	handle,
@@ -47,14 +47,17 @@ export function ProjectManagementTabClient({
 			</div>
 
 			<div className="rounded-md">
-				{projectsWithRelations.map((project) => (
-					<div key={project.id} className="flex border-b py-2 justify-between">
+				{projectSummaries.map((projectSummary) => (
+					<div
+						key={projectSummary.id}
+						className="flex border-b py-2 justify-between"
+					>
 						<div>
-							<Link href={`/user/${handle}/project/${project.id}`}>
-								{project.title}
+							<Link href={`/user/${handle}/project/${projectSummary.id}`}>
+								{projectSummary.title}
 							</Link>
 						</div>
-						<ProjectActionsDropdown project={project} />
+						<ProjectActionsDropdown projectSummary={projectSummary} />
 					</div>
 				))}
 			</div>

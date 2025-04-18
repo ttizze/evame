@@ -1,5 +1,5 @@
 "use client";
-import type { ProjectWithRelationsForList } from "@/app/[locale]/_db/queries.server";
+import type { ProjectSummary } from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -13,12 +13,12 @@ import { useState } from "react";
 import { DeleteProjectDialogClient } from "../delete-project-dialog/client";
 
 interface ProjectActionsDropdownProps {
-	project: ProjectWithRelationsForList;
+	projectSummary: ProjectSummary;
 	className?: string;
 }
 
 export function ProjectActionsDropdown({
-	project,
+	projectSummary,
 	className = "",
 }: ProjectActionsDropdownProps) {
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -37,7 +37,7 @@ export function ProjectActionsDropdown({
 			<DropdownMenuContent align="end">
 				<DropdownMenuItem asChild className="w-full text-left cursor-pointer">
 					<Link
-						href={`/user/${project?.user.handle}/project/${project?.id}/edit`}
+						href={`/user/${projectSummary.user.handle}/project/${projectSummary.id}/edit`}
 						className="w-full text-left"
 					>
 						<Edit className="h-4 w-4 mr-2" />
@@ -58,7 +58,7 @@ export function ProjectActionsDropdown({
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 			<DeleteProjectDialogClient
-				projectId={project?.id ?? ""}
+				projectId={projectSummary.id}
 				open={deleteDialogOpen}
 				onOpenChange={setDeleteDialogOpen}
 			/>

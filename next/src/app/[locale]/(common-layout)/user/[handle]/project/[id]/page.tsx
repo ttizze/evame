@@ -1,4 +1,4 @@
-import { fetchProjectWithTranslations } from "@/app/[locale]/_db/queries.server";
+import { fetchProjectWithTranslations } from "@/app/[locale]/_db/project-queries.server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { prisma } from "@/lib/prisma";
 import dynamic from "next/dynamic";

@@ -1,6 +1,6 @@
 import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedPublicPagesWithRelations } from "@/app/[locale]/_db/queries.server";
+import { fetchPaginatedPublicPagesWithRelations } from "@/app/[locale]/_db/page-queries.server";
 import { getCurrentUser } from "@/auth";
 import { SparklesIcon } from "lucide-react";
 import { createLoader, parseAsInteger } from "nuqs/server";
@@ -27,7 +27,7 @@ export default async function NewPageList({
 	const currentUser = await getCurrentUser();
 	const currentUserHandle = currentUser?.handle;
 
-	const { pagesWithRelations, totalPages } =
+	const { pageSummaries, totalPages } =
 		await fetchPaginatedPublicPagesWithRelations({
 			page,
 			pageSize: 5,
@@ -38,12 +38,12 @@ export default async function NewPageList({
 
 	return (
 		<PageListContainer title="New Pages" icon={SparklesIcon}>
-			{pagesWithRelations.map((pageWithRelations, index) => (
+			{pageSummaries.map((pageSummary, index) => (
 				<PageList
-					key={pageWithRelations.id}
-					pageWithRelations={pageWithRelations}
-					pageLink={`/user/${pageWithRelations.user.handle}/page/${pageWithRelations.slug}`}
-					userLink={`/user/${pageWithRelations.user.handle}`}
+					key={pageSummary.id}
+					pageSummary={pageSummary}
+					pageLink={`/user/${pageSummary.user.handle}/page/${pageSummary.slug}`}
+					userLink={`/user/${pageSummary.user.handle}`}
 					index={index}
 					locale={locale}
 					currentUserHandle={currentUserHandle}

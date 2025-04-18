@@ -1,30 +1,19 @@
-import type { SegmentTranslationWithVote } from "../types";
+import type { BaseTranslation } from "../types";
 
-export async function getBestTranslation(
-	segmentTranslationWithVote: SegmentTranslationWithVote[],
-): Promise<SegmentTranslationWithVote | null> {
-	if (segmentTranslationWithVote.length === 0) {
-		return null;
+export function selectBestTranslation<T extends BaseTranslation>(
+	translations: readonly T[],
+): T | null {
+	if (translations.length === 0) return null;
+
+	// 1) ユーザ投票を最優先
+	const upvoted = translations.find((t) => t.currentUserVote?.isUpvote);
+	if (upvoted) {
+		return upvoted;
 	}
-	const upvotedTranslations = segmentTranslationWithVote.filter(
-		(t) => t.translationCurrentUserVote?.isUpvote,
-	);
-	if (upvotedTranslations.length > 0) {
-		return upvotedTranslations.reduce((prev, current) => {
-			const currentUpdatedAt =
-				current.translationCurrentUserVote?.updatedAt ?? new Date(0);
-			const prevUpdatedAt =
-				prev.translationCurrentUserVote?.updatedAt ?? new Date(0);
-			new Date(0);
-			return currentUpdatedAt > prevUpdatedAt ? current : prev;
-		});
-	}
-	return segmentTranslationWithVote.reduce((prev, current) => {
-		if (prev.point !== current.point) {
-			return prev.point > current.point ? prev : current;
-		}
-		return new Date(current.createdAt) > new Date(prev.createdAt)
-			? current
-			: prev;
+
+	// 2) point → createdAt
+	return translations.reduce((best, cur) => {
+		if (cur.point !== best.point) return cur.point > best.point ? cur : best;
+		return cur.createdAt > best.createdAt ? cur : best;
 	});
 }

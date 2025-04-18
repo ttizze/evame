@@ -1,4 +1,4 @@
-import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/queries.server";
+import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/page-queries.server";
 import { prisma } from "@/lib/prisma";
 export const fetchPagesWithUser = async () => {
 	const pages = await prisma.page.findMany({

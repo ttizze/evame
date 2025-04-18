@@ -53,9 +53,7 @@ export default function PageCommentItem({
 			<div className="mt-2 prose dark:prose-invert">
 				<MemoizedParsedContent
 					html={pageComment.content}
-					segmentWithTranslations={
-						pageComment.pageCommentSegmentsWithTranslations
-					}
+					segmentBundles={pageComment.segmentWithTranslations}
 					currentHandle={currentHandle}
 					voteTarget={VOTE_TARGET.COMMENT_SEGMENT_TRANSLATION}
 					addTranslationFormTarget={

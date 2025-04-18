@@ -1,5 +1,5 @@
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedProjectsWithRelations } from "@/app/[locale]/_db/queries.server";
+import { fetchPaginatedProjectsWithRelations } from "@/app/[locale]/_db/project-queries.server";
 import { getCurrentUser } from "@/auth";
 import { SparklesIcon } from "lucide-react";
 import { createLoader, parseAsInteger } from "nuqs/server";
@@ -25,9 +25,8 @@ export default async function NewProjectList({
 }: NewProjectListProps) {
 	const { page } = await loadSearchParams(searchParams);
 	const currentUser = await getCurrentUser();
-	const currentUserHandle = currentUser?.handle;
 
-	const { projectsWithRelations, totalPages } =
+	const { projectSummaries, totalPages } =
 		await fetchPaginatedProjectsWithRelations({
 			page,
 			pageSize: 10,
@@ -37,12 +36,12 @@ export default async function NewProjectList({
 
 	return (
 		<ProjectListContainer title="New Projects" icon={SparklesIcon}>
-			{projectsWithRelations.map((projectWithRelations, index) => (
+			{projectSummaries.map((projectSummary, index) => (
 				<ProjectList
-					key={projectWithRelations.id}
-					projectWithRelations={projectWithRelations}
-					projectLink={`/user/${projectWithRelations.user.handle}/project/${projectWithRelations.id}`}
-					userLink={`/user/${projectWithRelations.user.handle}`}
+					key={projectSummary.id}
+					projectSummary={projectSummary}
+					projectLink={`/user/${projectSummary.user.handle}/project/${projectSummary.id}`}
+					userLink={`/user/${projectSummary.user.handle}`}
 					index={index}
 				/>
 			))}

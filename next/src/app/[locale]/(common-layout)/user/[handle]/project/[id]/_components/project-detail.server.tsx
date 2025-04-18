@@ -81,7 +81,7 @@ export function ProjectDetail({ project, locale }: ProjectDetailProps) {
 				<div className="prose dark:prose-invert max-w-none">
 					<DynamicMemoizedParsedContent
 						html={project.description}
-						segmentWithTranslations={project.segmentWithTranslations}
+						segmentBundles={project.segmentBundles}
 						currentHandle={project.user.handle}
 						voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
 						addTranslationFormTarget={

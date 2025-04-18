@@ -50,8 +50,8 @@ export async function fetchPageCommentsWithPageCommentSegments(
 	// 日付をlocaleに合わせた文字列に変換して返す
 	return flatComments.map((comment) => ({
 		...comment,
-		createdAt: comment.createdAt.toLocaleString(locale),
-		updatedAt: comment.updatedAt.toLocaleString(locale),
+		createdAt: comment.createdAt.toISOString(),
+		updatedAt: comment.updatedAt.toISOString(),
 	}));
 }
 

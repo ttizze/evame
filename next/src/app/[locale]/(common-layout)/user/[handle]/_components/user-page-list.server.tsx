@@ -1,6 +1,6 @@
 import { PageList } from "@/app/[locale]/_components/page/page-list.server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedPublicPagesWithRelations } from "@/app/[locale]/_db/queries.server";
+import { fetchPaginatedPublicPagesWithRelations } from "@/app/[locale]/_db/page-queries.server";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { notFound } from "next/navigation";
@@ -29,7 +29,7 @@ export async function PageListServer({
 		return notFound();
 	}
 
-	const { pagesWithRelations, totalPages } =
+	const { pageSummaries, totalPages } =
 		await fetchPaginatedPublicPagesWithRelations({
 			page: page,
 			pageSize: 5,
@@ -38,7 +38,7 @@ export async function PageListServer({
 			locale,
 			currentUserId: currentUser?.id,
 		});
-	if (pagesWithRelations.length === 0) {
+	if (pageSummaries.length === 0) {
 		return (
 			<p className="text-center text-gray-500 mt-10">
 				{isOwner ? "You haven't created any pages yet." : "No pages yet."}
@@ -49,11 +49,11 @@ export async function PageListServer({
 	return (
 		<>
 			<div className="">
-				{pagesWithRelations.map((pageWithRelations) => (
+				{pageSummaries.map((pageSummary) => (
 					<PageList
-						key={pageWithRelations.id}
-						pageWithRelations={pageWithRelations}
-						pageLink={`/user/${handle}/page/${pageWithRelations.slug}`}
+						key={pageSummary.id}
+						pageSummary={pageSummary}
+						pageLink={`/user/${handle}/page/${pageSummary.slug}`}
 						userLink={`/user/${handle}`}
 						showOwnerActions={isOwner}
 						locale={locale}
