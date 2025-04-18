@@ -1,4 +1,5 @@
 "use client";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import type { BaseTranslation } from "@/app/[locale]/types";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import Form from "next/form";
@@ -8,17 +9,16 @@ import {
 	type VoteTranslationActionResponse,
 	voteTranslationAction,
 } from "./action";
-import type { VoteTarget } from "./constants";
 import { VoteButton } from "./vote-button";
 
 interface VoteButtonsProps {
 	translation: BaseTranslation;
-	voteTarget: VoteTarget;
+	targetContentType: TargetContentType;
 }
 
 export const VoteButtons = memo(function VoteButtons({
 	translation,
-	voteTarget,
+	targetContentType,
 }: VoteButtonsProps) {
 	const [voteState, voteAction, isVoting] = useActionState<
 		VoteTranslationActionResponse,
@@ -33,7 +33,11 @@ export const VoteButtons = memo(function VoteButtons({
 	return (
 		<span className="flex h-full justify-end items-center">
 			<Form action={voteAction}>
-				<input type="hidden" name="voteTarget" value={voteTarget} />
+				<input
+					type="hidden"
+					name="targetContentType"
+					value={targetContentType}
+				/>
 				<input
 					type="hidden"
 					name="segmentTranslationId"

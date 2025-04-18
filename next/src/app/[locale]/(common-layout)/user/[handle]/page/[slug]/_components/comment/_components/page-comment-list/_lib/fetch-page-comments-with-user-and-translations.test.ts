@@ -68,7 +68,7 @@ describe("mapCommentTranslations", () => {
 		);
 
 		const result = await mapComment(comment);
-		expect(result.segmentWithTranslations[0].best?.point).toBe(1002);
+		expect(result.segmentBundles[0].best?.point).toBe(1002);
 	});
 });
 
@@ -92,6 +92,6 @@ describe("fetchPageCommentsWithUserAndTranslations", () => {
 
 		expect(result).toHaveLength(1);
 		expect(result[0].replies).toBeDefined();
-		expect(result[0].segmentWithTranslations).toBeDefined();
+		expect(result[0].segmentBundles).toBeDefined();
 	});
 });

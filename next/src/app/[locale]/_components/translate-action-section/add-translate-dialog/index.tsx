@@ -21,7 +21,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useActionState } from "react";
-import type { TranslateTarget } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
 import { type TranslateActionState, translateAction } from "./action";
 import { DialogLocaleSelector } from "./dialog-locale-selector";
 import { UserAITranslationStatus } from "./user-ai-translation-status";
@@ -33,7 +33,7 @@ type AddTranslateDialogProps = {
 	pageId: number;
 	hasGeminiApiKey: boolean;
 	userAITranslationInfo: UserAITranslationInfo | null;
-	translateTarget: TranslateTarget;
+	targetContentType: TargetContentType;
 };
 
 export function AddTranslateDialog({
@@ -43,7 +43,7 @@ export function AddTranslateDialog({
 	pageId,
 	hasGeminiApiKey,
 	userAITranslationInfo,
-	translateTarget,
+	targetContentType,
 }: AddTranslateDialogProps) {
 	const [translateState, action, isTranslating] = useActionState<
 		TranslateActionState,
@@ -112,8 +112,8 @@ export function AddTranslateDialog({
 									<input type="hidden" name="aiModel" value={selectedModel} />
 									<input
 										type="hidden"
-										name="translateTarget"
-										value={translateTarget}
+										name="targetContentType"
+										value={targetContentType}
 									/>
 									<Button type="submit" className="w-full">
 										{isTranslating ? (
@@ -147,9 +147,9 @@ export function AddTranslateDialog({
 									{translateState.zodErrors.targetLocale[0]}
 								</p>
 							)}
-							{translateState.zodErrors?.translateTarget && (
+							{translateState.zodErrors?.targetContentType && (
 								<p className="text-red-500">
-									{translateState.zodErrors.translateTarget[0]}
+									{translateState.zodErrors.targetContentType[0]}
 								</p>
 							)}
 							<UserAITranslationStatus

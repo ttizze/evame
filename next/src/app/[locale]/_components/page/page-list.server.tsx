@@ -1,7 +1,3 @@
-import {
-	ADD_TRANSLATION_FORM_TARGET,
-	VOTE_TARGET,
-} from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { ClientDateFormatter } from "@/app/[locale]/_components/client-date-formatter";
 import { PageCommentButton } from "@/app/[locale]/_components/page/page-comment-button/client";
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
@@ -76,12 +72,6 @@ export function PageList({
 									<SegmentAndTranslationSection
 										segmentBundle={titleSegment}
 										currentHandle={currentUserHandle}
-										voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
-										addTranslationFormTarget={
-											ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
-										}
-										slug={pageSummary.slug}
-										isOwner={false}
 										segmentTextClassName="line-clamp-1"
 									/>
 								</div>

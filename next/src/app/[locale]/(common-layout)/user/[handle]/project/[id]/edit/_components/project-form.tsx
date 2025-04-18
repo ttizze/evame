@@ -50,13 +50,17 @@ export function ProjectForm({
 	const initialLinks = (projectDetail?.links as ProjectLink[]) || [];
 	const initialImages = (projectDetail?.images as ProjectImage[]) || [];
 
+	// Get the tagLine from the segment with number 0
+	// This follows the same pattern as pages, where the title is stored as segment 0
+	const tagLineSegment = projectDetail?.segmentBundles.find(
+		(bundle) => bundle.segment.number === 0,
+	);
+	const tagLine = tagLineSegment?.segment.text || "";
+
 	// フォーム状態
 	const [tags, setTags] = useState<string[]>(
 		initialTags.map((tag) => tag.name),
 	);
-	const tagLine = projectDetail?.segmentBundles.filter(
-		(item) => item.segment.number === 0,
-	)[0];
 	const [links, setLinks] = useState<ProjectLink[]>(initialLinks);
 	const [images, setImages] = useState<ProjectImage[]>(initialImages);
 
@@ -165,11 +169,19 @@ export function ProjectForm({
 						<Input
 							id="tagLine"
 							name="tagLine"
-							defaultValue={tagLine?.segment.text}
-							placeholder="My Awesome Project"
+							defaultValue={tagLine}
+							placeholder="A short description of your project"
 							className="mt-1"
 							required
 						/>
+						{state.zodErrors?.tagLine && (
+							<p className="text-sm text-red-500 mt-1">
+								{state.zodErrors.tagLine}
+							</p>
+						)}
+						<p className="text-sm text-muted-foreground mt-1">
+							A brief one-line summary of your project.
+						</p>
 					</div>
 
 					<div>
@@ -190,7 +202,7 @@ export function ProjectForm({
 							</p>
 						)}
 						<p className="text-sm text-muted-foreground mt-1">
-							A brief description of your project.
+							A detailed description of your project.
 						</p>
 					</div>
 

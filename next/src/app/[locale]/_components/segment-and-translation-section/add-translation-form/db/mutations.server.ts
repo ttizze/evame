@@ -1,7 +1,4 @@
-import {
-	ADD_TRANSLATION_FORM_TARGET,
-	type AddTranslationFormTarget,
-} from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { prisma } from "@/lib/prisma";
 
 export async function addUserTranslation(
@@ -9,12 +6,9 @@ export async function addUserTranslation(
 	text: string,
 	userId: string,
 	locale: string,
-	addTranslationFormTarget: AddTranslationFormTarget,
+	targetContentType: TargetContentType,
 ) {
-	if (
-		addTranslationFormTarget ===
-		ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
-	) {
+	if (targetContentType === "page") {
 		const pageSegment = await prisma.pageSegment.findUnique({
 			where: { id: segmentId },
 		});
@@ -29,10 +23,7 @@ export async function addUserTranslation(
 				},
 			});
 		}
-	} else if (
-		addTranslationFormTarget ===
-		ADD_TRANSLATION_FORM_TARGET.COMMENT_SEGMENT_TRANSLATION
-	) {
+	} else if (targetContentType === "comment") {
 		const pageCommentSegment = await prisma.pageCommentSegment.findUnique({
 			where: { id: segmentId },
 		});

@@ -1,8 +1,4 @@
 "use client";
-import type {
-	AddTranslationFormTarget,
-	VoteTarget,
-} from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
 import type { SegmentBundle } from "@/app/[locale]/types";
 import { Link } from "@/i18n/routing";
@@ -10,22 +6,16 @@ import { Languages, Plus } from "lucide-react";
 import { useState } from "react";
 import { AddAndVoteTranslations } from "./add-and-vote-translations";
 import { VoteButtons } from "./vote-buttons/client";
-
 interface TranslationSectionProps {
 	segmentBundle: SegmentBundle;
 	currentHandle: string | undefined;
-	voteTarget: VoteTarget;
-	addTranslationFormTarget: AddTranslationFormTarget;
 }
 
 export function TranslationSection({
 	segmentBundle,
 	currentHandle,
-	voteTarget,
-	addTranslationFormTarget,
 }: TranslationSectionProps) {
 	const [isSelected, setIsSelected] = useState(false);
-
 	const { best } = segmentBundle;
 	if (!best)
 		return (
@@ -58,15 +48,13 @@ export function TranslationSection({
 						<VoteButtons
 							key={best.id}
 							translation={best}
-							voteTarget={voteTarget}
+							targetContentType={segmentBundle.parentType}
 						/>
 					</span>
 					<AddAndVoteTranslations
 						currentHandle={currentHandle}
 						segmentBundle={segmentBundle}
 						open={isSelected}
-						voteTarget={voteTarget}
-						addTranslationFormTarget={addTranslationFormTarget}
 					/>
 				</>
 			)}

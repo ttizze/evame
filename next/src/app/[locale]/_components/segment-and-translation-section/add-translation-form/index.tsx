@@ -1,4 +1,4 @@
-import type { AddTranslationFormTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
@@ -7,17 +7,16 @@ import { useLocale } from "next-intl";
 import { useActionState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { addTranslationFormAction } from "./action";
-
 interface AddTranslationFormProps {
 	segmentId: number;
 	currentHandle: string | undefined;
-	addTranslationFormTarget: AddTranslationFormTarget;
+	targetContentType: TargetContentType;
 }
 
 export function AddTranslationForm({
 	segmentId,
 	currentHandle,
-	addTranslationFormTarget,
+	targetContentType,
 }: AddTranslationFormProps) {
 	const locale = useLocale();
 	const [addTranslationState, addTranslationAction, isAddingTranslation] =
@@ -30,8 +29,8 @@ export function AddTranslationForm({
 			<form action={addTranslationAction}>
 				<input
 					type="hidden"
-					name="addTranslationFormTarget"
-					value={addTranslationFormTarget}
+					name="targetContentType"
+					value={targetContentType}
 				/>
 				<input type="hidden" name="segmentId" value={segmentId} />
 				<input type="hidden" name="locale" value={locale} />

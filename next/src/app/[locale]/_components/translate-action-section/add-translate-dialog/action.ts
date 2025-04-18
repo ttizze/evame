@@ -14,16 +14,13 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { fetchPageWithPageSegments } from "../../../(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
 import { fetchPageWithTitleAndComments } from "../../../(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
-import { TranslateTarget } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
 // バリデーション用のスキーマ
 const translateSchema = z.object({
 	pageId: z.coerce.number(),
 	aiModel: z.string().min(1, "モデルを選択してください"),
 	targetLocale: z.string().min(1, "localeを選択してください"),
-	translateTarget: z.enum([
-		TranslateTarget.TRANSLATE_PAGE,
-		TranslateTarget.TRANSLATE_COMMENT,
-	]),
+	targetContentType: z.enum(["page", "comment", "project"]),
 });
 
 export type TranslateActionState = ActionResponse<
@@ -32,7 +29,7 @@ export type TranslateActionState = ActionResponse<
 		pageId: number;
 		aiModel: string;
 		targetLocale: string;
-		translateTarget: string;
+		targetContentType: TargetContentType;
 	}
 >;
 
@@ -51,7 +48,7 @@ export async function translateAction(
 			zodErrors: parsedFormData.error.flatten().fieldErrors,
 		};
 	}
-	const { pageId, aiModel, targetLocale, translateTarget } =
+	const { pageId, aiModel, targetLocale, targetContentType } =
 		parsedFormData.data;
 	const geminiApiKey = await fetchGeminiApiKeyByHandle(currentUser.handle);
 	if (!geminiApiKey) {
@@ -61,7 +58,7 @@ export async function translateAction(
 		};
 	}
 
-	if (translateTarget === TranslateTarget.TRANSLATE_COMMENT) {
+	if (targetContentType === "comment") {
 		const pageWithTitleAndComments =
 			await fetchPageWithTitleAndComments(pageId);
 		if (!pageWithTitleAndComments) {
@@ -105,7 +102,7 @@ export async function translateAction(
 				targetLocale,
 				title: pageWithTitleAndComments.title,
 				numberedElements: comment.segments,
-				translateTarget,
+				targetContentType,
 				commentId: comment.commentId,
 			};
 			await fetch(`${BASE_URL}/api/translate`, {
@@ -147,7 +144,7 @@ export async function translateAction(
 			targetLocale,
 			title: pageWithPageSegments.title,
 			numberedElements,
-			translateTarget,
+			targetContentType,
 		};
 		await fetch(`${BASE_URL}/api/translate`, {
 			method: "POST",

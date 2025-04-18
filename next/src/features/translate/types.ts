@@ -1,4 +1,4 @@
-import type { TranslateTarget } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 export type NumberedElement = {
 	number: number;
 	text: string;
@@ -14,6 +14,6 @@ export interface TranslateJobParams {
 	targetLocale: string;
 	title: string;
 	numberedElements: NumberedElement[];
-	translateTarget: TranslateTarget;
+	targetContentType: TargetContentType;
 	commentId?: number;
 }

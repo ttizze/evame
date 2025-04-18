@@ -10,7 +10,6 @@ import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsBoolean } from "nuqs/server";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
-import { TranslateTarget } from "./constants";
 const DynamicContentWithTranslations = dynamic(
 	() =>
 		import("./_components/content-with-translations").then(
@@ -175,7 +174,7 @@ export default async function Page({
 								userAITranslationInfo={userAITranslationInfo}
 								pageAITranslationInfo={pageAITranslationInfo}
 								sourceLocale={pageDetail.sourceLocale}
-								translateTarget={TranslateTarget.TRANSLATE_COMMENT}
+								targetContentType="comment"
 								showIcons={false}
 							/>
 						</div>

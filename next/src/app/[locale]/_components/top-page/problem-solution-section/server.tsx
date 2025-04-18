@@ -1,7 +1,3 @@
-import {
-	ADD_TRANSLATION_FORM_TARGET,
-	VOTE_TARGET,
-} from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import Globe from "@/app/[locale]/_components/top-page/problem-solution-section/components/globe.client";
@@ -95,10 +91,6 @@ export default async function ProblemSolutionSection({
 						<SegmentAndTranslationSection
 							segmentBundle={problemHeader}
 							currentHandle={currentHandle}
-							voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
-							addTranslationFormTarget={
-								ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
-							}
 						/>
 					</h2>
 				</div>
@@ -111,20 +103,12 @@ export default async function ProblemSolutionSection({
 								<SegmentAndTranslationSection
 									segmentBundle={pair.header}
 									currentHandle={currentHandle}
-									voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
-									addTranslationFormTarget={
-										ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
-									}
 								/>
 							}
 							description={
 								<SegmentAndTranslationSection
 									segmentBundle={pair.text}
 									currentHandle={currentHandle}
-									voteTarget={VOTE_TARGET.PAGE_SEGMENT_TRANSLATION}
-									addTranslationFormTarget={
-										ADD_TRANSLATION_FORM_TARGET.PAGE_SEGMENT_TRANSLATION
-									}
 								/>
 							}
 							component={problemComponents[index]}

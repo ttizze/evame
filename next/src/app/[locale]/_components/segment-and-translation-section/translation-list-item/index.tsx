@@ -1,3 +1,4 @@
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
 import type { BaseTranslation } from "@/app/[locale]/types";
 import type { ActionResponse } from "@/app/types";
@@ -11,19 +12,18 @@ import { Link } from "@/i18n/routing";
 import { EllipsisVertical } from "lucide-react";
 import { useActionState } from "react";
 import { VoteButtons } from "../vote-buttons/client";
-import type { VoteTarget } from "../vote-buttons/constants";
 import { deleteTranslationAction } from "./action";
 
 interface TranslationItemProps {
 	translation: BaseTranslation;
 	currentHandle: string | undefined;
-	voteTarget: VoteTarget;
+	targetContentType: TargetContentType;
 }
 
 export function TranslationListItem({
 	translation,
 	currentHandle,
-	voteTarget,
+	targetContentType,
 }: TranslationItemProps) {
 	const [deleteTranslationState, action, isDeletingTranslation] =
 		useActionState<ActionResponse, FormData>(deleteTranslationAction, {
@@ -73,7 +73,10 @@ export function TranslationListItem({
 						by: {translation.user.name}
 					</span>
 				</Link>
-				<VoteButtons translation={translation} voteTarget={voteTarget} />
+				<VoteButtons
+					translation={translation}
+					targetContentType={targetContentType}
+				/>
 			</span>
 		</span>
 	);

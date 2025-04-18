@@ -3,7 +3,7 @@ import type {
 	PageAITranslationInfo,
 	UserAITranslationInfo,
 } from "@prisma/client";
-import type { TranslateTarget } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
 import { TranslateActionSectionClient } from "./client";
 type TranslateActionSectionProps = {
 	pageId: number;
@@ -11,7 +11,7 @@ type TranslateActionSectionProps = {
 	userAITranslationInfo: UserAITranslationInfo | null;
 	pageAITranslationInfo?: PageAITranslationInfo[];
 	sourceLocale: string;
-	translateTarget: TranslateTarget;
+	targetContentType: TargetContentType;
 	className?: string;
 	showIcons: boolean;
 };
@@ -22,7 +22,7 @@ export async function TranslateActionSection({
 	userAITranslationInfo,
 	pageAITranslationInfo,
 	sourceLocale,
-	translateTarget,
+	targetContentType,
 	className,
 	showIcons,
 }: TranslateActionSectionProps) {
@@ -36,7 +36,7 @@ export async function TranslateActionSection({
 			userAITranslationInfo={userAITranslationInfo}
 			pageAITranslationInfo={pageAITranslationInfo}
 			sourceLocale={sourceLocale}
-			translateTarget={translateTarget}
+			targetContentType={targetContentType}
 			className={className}
 			showIcons={showIcons}
 		/>

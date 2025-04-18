@@ -1,8 +1,4 @@
 "use client";
-import type {
-	AddTranslationFormTarget,
-	VoteTarget,
-} from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { useContentDisplayState } from "@/app/[locale]/_hooks/use-content-display-state";
 import type { SegmentBundle } from "@/app/[locale]/types";
 import { Link } from "@/i18n/routing";
@@ -13,11 +9,8 @@ interface SegmentAndTranslationSectionProps {
 	segmentBundle: SegmentBundle;
 	showLockIcon?: boolean;
 	segmentTextClassName?: string;
-	currentHandle: string | undefined;
-	isOwner?: boolean;
-	slug?: string;
-	voteTarget: VoteTarget;
-	addTranslationFormTarget: AddTranslationFormTarget;
+	currentHandle?: string;
+	editablePageSlug?: string;
 }
 
 export function SegmentAndTranslationSection({
@@ -25,10 +18,7 @@ export function SegmentAndTranslationSection({
 	showLockIcon = false,
 	segmentTextClassName,
 	currentHandle,
-	isOwner,
-	slug,
-	voteTarget,
-	addTranslationFormTarget,
+	editablePageSlug,
 }: SegmentAndTranslationSectionProps) {
 	const { showOriginal, showTranslation } = useContentDisplayState();
 	return (
@@ -42,9 +32,11 @@ export function SegmentAndTranslationSection({
 					} ${segmentTextClassName}`}
 				>
 					{showLockIcon && <Lock className="h-6 w-6 mr-1 inline" />}
-					{isOwner && slug && (
+					{currentHandle && editablePageSlug && (
 						<div className="ml-2">
-							<Link href={`/user/${currentHandle}/page/${slug}/edit`}>
+							<Link
+								href={`/user/${currentHandle}/page/${editablePageSlug}/edit`}
+							>
 								<SquarePen className="w-5 h-5" />
 							</Link>
 						</div>
@@ -57,8 +49,6 @@ export function SegmentAndTranslationSection({
 					key={`translation-${segmentBundle.segment.id}`}
 					segmentBundle={segmentBundle}
 					currentHandle={currentHandle}
-					voteTarget={voteTarget}
-					addTranslationFormTarget={addTranslationFormTarget}
 				/>
 			)}
 		</span>
