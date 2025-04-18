@@ -74,7 +74,7 @@ async function translateChunk(
 	targetLocale: string,
 	pageId: number,
 	title: string,
-	translateTarget: TargetContentType,
+	targetContentType: TargetContentType,
 	commentId?: number,
 ) {
 	// まだ翻訳が完了していない要素
@@ -99,7 +99,7 @@ async function translateChunk(
 
 		if (partialTranslations.length > 0) {
 			// 部分的にでも取得できた翻訳結果を保存
-			if (translateTarget === "page") {
+			if (targetContentType === "page") {
 				const pageSegments = await getLatestPageSegments(pageId);
 
 				await saveTranslationsForPage(
