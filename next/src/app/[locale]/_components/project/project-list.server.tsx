@@ -72,7 +72,10 @@ export async function ProjectList({
 						</Link>
 
 						{showOwnerActions && (
-							<ProjectActionsDropdown projectSummary={projectSummary} />
+							<ProjectActionsDropdown
+								projectId={projectSummary.id}
+								projectOwnerHandle={projectSummary.user.handle}
+							/>
 						)}
 					</div>
 

@@ -1,7 +1,9 @@
+import { ProjectActionsDropdown } from "@/app/[locale]/_components/project/project-actions-dropdown/client";
 import { ProjectLikeButton } from "@/app/[locale]/_components/project/project-like-button/server";
 import { ProjectTagList } from "@/app/[locale]/_components/project/project-tag-list.server";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import type { ProjectDetail } from "@/app/[locale]/types";
+import { getCurrentUser } from "@/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Carousel,
@@ -23,15 +25,17 @@ const DynamicMemoizedParsedContent = dynamic(
 		loading: () => <span>Loading Parsed Content...</span>,
 	},
 );
-interface ProjectDetailProps {
+interface ProjectProps {
 	projectDetail: ProjectDetail;
 	locale: string;
 }
 
-export function Project({ projectDetail, locale }: ProjectDetailProps) {
+export async function Project({ projectDetail, locale }: ProjectProps) {
 	if (!projectDetail) {
 		return null;
 	}
+	const currentUser = await getCurrentUser();
+	const isOwner = currentUser?.handle === projectDetail.user.handle;
 	const projectTagLineSegmentBundle = projectDetail.segmentBundles.filter(
 		(item) => item.segment.number === 0,
 	)[0];
@@ -41,14 +45,19 @@ export function Project({ projectDetail, locale }: ProjectDetailProps) {
 
 	return (
 		<Card className="overflow-hidden">
-			<CardHeader className="pb-0">
+			<CardHeader className="pb-0 flex justify-between">
 				<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
 					<CardTitle className="text-2xl font-bold">
 						{projectDetail.title}
 					</CardTitle>
+					{isOwner && (
+						<ProjectActionsDropdown
+							projectId={projectDetail.id}
+							projectOwnerHandle={projectDetail.user.handle}
+						/>
+					)}
 				</div>
 			</CardHeader>
-
 			<CardContent className="space-y-6 pt-6">
 				{projectDetail.images.length > 0 && (
 					<Carousel className="w-full">
