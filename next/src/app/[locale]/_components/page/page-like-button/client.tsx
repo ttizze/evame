@@ -47,7 +47,7 @@ export function PageLikeButtonClient({
 					aria-label="Like"
 					variant="ghost"
 					size="icon"
-					className={`${className}`}
+					className={`bg-background ${className}`}
 				>
 					<Heart
 						className={`h-5 w-5 rounded-full ${optimisticLiked ? "text-red-500" : ""}`}
