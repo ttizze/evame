@@ -134,7 +134,10 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 							</DropdownMenuContent>
 						</DropdownMenu>
 					)}
-					<ProjectLikeButton projectId={projectDetail.id} />
+					<ProjectLikeButton
+						projectId={projectDetail.id}
+						className="w-12 h-12 border rounded-full"
+					/>
 				</div>
 
 				{/* Description */}
