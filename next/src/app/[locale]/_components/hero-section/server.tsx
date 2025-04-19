@@ -91,7 +91,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 								alt="Hero section image"
 								width={14}
 								height={14}
-								className="relative z-10 invert"
+								className="relative z-10 invert dark:invert-0"
 							/>
 						}
 						className="w-60 h-12 text-xl rounded-full transition-all duration-300 hover:scale-105"
