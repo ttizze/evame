@@ -26,11 +26,12 @@ import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 
-const DynamicMemoizedParsedContent = dynamic(() =>
-	import(
-		"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/parsed-content"
-	).then((mod) => mod.MemoizedParsedContent),
-	{ loading: () => <span>Loading Parsed Content...</span> }
+const DynamicMemoizedParsedContent = dynamic(
+	() =>
+		import(
+			"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/parsed-content"
+		).then((mod) => mod.MemoizedParsedContent),
+	{ loading: () => <span>Loading Parsed Content...</span> },
 );
 
 interface ProjectProps {
@@ -45,11 +46,11 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 	const isOwner = currentUser?.handle === projectDetail.user.handle;
 
 	const projectTagLineSegmentBundle = projectDetail.segmentBundles.find(
-		(item) => item.segment.number === 0
+		(item) => item.segment.number === 0,
 	);
 	const tags = projectDetail.projectTagRelations.map((rel) => rel.projectTag);
 	const projectImages = projectDetail.images.filter(
-		(img) => img.id !== projectDetail.iconImage?.id
+		(img) => img.id !== projectDetail.iconImage?.id,
 	);
 
 	return (
@@ -150,7 +151,10 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 					<Carousel className="w-full">
 						<CarouselContent>
 							{projectImages.map((image: ProjectImage) => (
-								<CarouselItem key={image.id} className="sm:basis-1/2 md:basis-1/3">
+								<CarouselItem
+									key={image.id}
+									className="sm:basis-1/2 md:basis-1/3"
+								>
 									<div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm">
 										<Image
 											src={image.url}
@@ -175,7 +179,9 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 
 				{/* Created at */}
 				<div className="flex justify-between border-t pt-4 text-sm text-muted-foreground">
-					<span>{new Date(projectDetail.createdAt).toLocaleString(locale)}</span>
+					<span>
+						{new Date(projectDetail.createdAt).toLocaleString(locale)}
+					</span>
 				</div>
 			</CardContent>
 		</Card>
