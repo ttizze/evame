@@ -44,80 +44,97 @@ export function PageList({
 
 	const ogpImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${pageSummary.slug}&showOriginal=${true}&showTranslation=${true}`;
 	return (
-		<div className="flex py-4 justify-between border-b last:border-b-0">
+		<article
+			className={`grid gap-4 py-4 border-b last:border-b-0 ${index !== undefined
+				? "grid-cols-[max-content_96px_1fr]"
+				: "grid-cols-[96px_1fr]"
+				}`}
+		>
+			{/* ───── 1) インデックス番号 ───── */}
 			{index !== undefined && (
-				<div className="flex items-start justify-center w-6 text-lg font-medium text-muted-foreground mr-2">
+				<div className="text-lg font-medium text-muted-foreground self-start">
 					{index + 1}
 				</div>
 			)}
 
-			<div className="flex gap-4 w-full">
-				<div className="relative h-16 w-24 flex-shrink-0 overflow-hidden rounded">
-					<Link href={pageLink} className="block h-full w-full">
-						<Image
-							src={ogpImageUrl}
-							alt={titleSegment?.segment.text || ""}
-							fill
-							className="object-cover"
-							sizes="96px"
-						/>
-					</Link>
-				</div>
+			{/* ───── 2) OGP 画像 ───── */}
+			<Link
+				href={pageLink}
+				className="relative h-16 w-24 overflow-hidden rounded"
+			>
+				<Image
+					src={ogpImageUrl}
+					alt={titleSegment?.segment.text ?? ""}
+					fill
+					className="object-cover"
+					sizes="96px"
+				/>
+			</Link>
 
-				<div className="min-w-0 flex-1">
-					<div className="flex justify-between items-start">
-						<Link href={pageLink} className="block">
-							{titleSegment && (
-								<div className="font-medium break-all overflow-wrap-anywhere">
-									<SegmentAndTranslationSection
-										segmentBundle={titleSegment}
-										currentHandle={currentUserHandle}
-										segmentTextClassName="line-clamp-1"
-									/>
-								</div>
-							)}
-						</Link>
-
-						{showOwnerActions && (
-							<PageActionsDropdown
-								editPath={`${pageLink}/edit`}
-								pageId={pageSummary.id}
-								status={pageSummary.status}
+			{/* ───── 3) コンテンツ領域 ───── */}
+			{/**
+		 * コンテンツ領域は 3 行の Grid:
+		 *   row‑1: タイトル行（タイトル + 操作ドロップダウン）
+		 *   row‑2: タグ行
+		 *   row‑3: フッター行（ユーザ & 日付 & ボタン）
+		 */}
+			<div className="grid grid-rows-[auto_auto_auto_auto] gap-1 min-w-0">
+				{/* ─ row‑1: タイトル & オーナーアクション ─ */}
+				<div className="grid grid-cols-[1fr_auto] gap-2">
+					<Link href={pageLink} className="block overflow-hidden">
+						{titleSegment && (
+							<SegmentAndTranslationSection
+								segmentBundle={titleSegment}
+								currentHandle={currentUserHandle}
+								segmentTextClassName="line-clamp-1 break-all overflow-wrap-anywhere"
 							/>
 						)}
-					</div>
-					<PageTagList
-						tag={pageSummary.tagPages.map((tagPage) => tagPage.tag)}
-					/>
-
-					<div className="flex items-center mt-2">
-						<Link href={userLink} className="flex items-center">
-							<Avatar className="w-5 h-5 mr-1">
-								<AvatarImage {...props} />
-								<AvatarFallback>
-									{pageSummary.user.handle.charAt(0).toUpperCase()}
-								</AvatarFallback>
-							</Avatar>
-							<span className="text-xs text-gray-600">
-								{pageSummary.user.name}
-							</span>
-						</Link>
-						<p className="text-xs text-muted-foreground ml-2">
-							<ClientDateFormatter date={new Date(pageSummary.createdAt)} />
-						</p>
-					</div>
-
-					<div className="flex items-center justify-self-end gap-2 mt-2">
-						<PageLikeButton pageId={pageSummary.id} />
-						<PageCommentButton
-							commentCount={pageSummary._count?.pageComments || 0}
-							slug={pageSummary.slug}
-							userHandle={pageSummary.user.handle}
-							showCount
+					</Link>
+					{showOwnerActions && (
+						<PageActionsDropdown
+							editPath={`${pageLink}/edit`}
+							pageId={pageSummary.id}
+							status={pageSummary.status}
 						/>
-					</div>
+					)}
+				</div>
+
+				{/* ─ row‑2: タグリスト ─ */}
+				<PageTagList tag={pageSummary.tagPages.map((t) => t.tag)} />
+
+				{/* ─ row‑3: ユーザ情報 + ボタン ─ */}
+				<div className="flex items-center gap-2">
+					<Link href={userLink} className="flex items-center gap-1 min-w-0">
+						<Avatar className="w-5 h-5 flex-shrink-0">
+							<AvatarImage {...props} />
+							<AvatarFallback>
+								{pageSummary.user.handle.charAt(0).toUpperCase()}
+							</AvatarFallback>
+						</Avatar>
+						<span className="text-xs text-gray-600 truncate">
+							{pageSummary.user.name}
+						</span>
+					</Link>
+					<time
+						className="text-xs text-muted-foreground whitespace-nowrap"
+						dateTime={pageSummary.createdAt}
+					>
+						<ClientDateFormatter date={new Date(pageSummary.createdAt)} />
+					</time>
+				</div>
+
+
+				{/* ③ アクション（いいね＋コメント） */}
+				<div className="flex items-center gap-2 justify-end">
+					<PageLikeButton pageId={pageSummary.id} />
+					<PageCommentButton
+						commentCount={pageSummary._count?.pageComments ?? 0}
+						slug={pageSummary.slug}
+						userHandle={pageSummary.user.handle}
+						showCount
+					/>
 				</div>
 			</div>
-		</div>
+		</article>
 	);
 }
