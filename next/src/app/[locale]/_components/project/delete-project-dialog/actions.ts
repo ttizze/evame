@@ -31,6 +31,7 @@ export async function deleteProjectAction(
 
 	await deleteProject(projectId, currentUser.id);
 	revalidatePath("/user/[handle]/project-management");
+	redirect(`/user/${currentUser.handle}`);
 
 	return {
 		success: true,

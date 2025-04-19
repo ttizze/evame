@@ -2,6 +2,9 @@ import { fetchLatestPageTranslationJobs } from "@/app/[locale]/_db/page-queries.
 import { prisma } from "@/lib/prisma";
 export const fetchPagesWithUser = async () => {
 	const pages = await prisma.page.findMany({
+		where: {
+			status: "PUBLIC",
+		},
 		select: {
 			id: true,
 			slug: true,
