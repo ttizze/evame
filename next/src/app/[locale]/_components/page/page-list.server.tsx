@@ -45,10 +45,11 @@ export function PageList({
 	const ogpImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${pageSummary.slug}&showOriginal=${true}&showTranslation=${true}`;
 	return (
 		<article
-			className={`grid gap-4 py-4 border-b last:border-b-0 ${index !== undefined
-				? "grid-cols-[max-content_96px_1fr]"
-				: "grid-cols-[96px_1fr]"
-				}`}
+			className={`grid gap-4 py-4 border-b last:border-b-0 ${
+				index !== undefined
+					? "grid-cols-[max-content_96px_1fr]"
+					: "grid-cols-[96px_1fr]"
+			}`}
 		>
 			{/* ───── 1) インデックス番号 ───── */}
 			{index !== undefined && (
@@ -73,11 +74,11 @@ export function PageList({
 
 			{/* ───── 3) コンテンツ領域 ───── */}
 			{/**
-		 * コンテンツ領域は 3 行の Grid:
-		 *   row‑1: タイトル行（タイトル + 操作ドロップダウン）
-		 *   row‑2: タグ行
-		 *   row‑3: フッター行（ユーザ & 日付 & ボタン）
-		 */}
+			 * コンテンツ領域は 3 行の Grid:
+			 *   row‑1: タイトル行（タイトル + 操作ドロップダウン）
+			 *   row‑2: タグ行
+			 *   row‑3: フッター行（ユーザ & 日付 & ボタン）
+			 */}
 			<div className="grid grid-rows-[auto_auto_auto_auto] gap-1 min-w-0">
 				{/* ─ row‑1: タイトル & オーナーアクション ─ */}
 				<div className="grid grid-cols-[1fr_auto] gap-2">
@@ -122,7 +123,6 @@ export function PageList({
 						<ClientDateFormatter date={new Date(pageSummary.createdAt)} />
 					</time>
 				</div>
-
 
 				{/* ③ アクション（いいね＋コメント） */}
 				<div className="flex items-center gap-2 justify-end">

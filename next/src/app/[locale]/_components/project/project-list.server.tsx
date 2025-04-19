@@ -40,10 +40,11 @@ export async function ProjectList({
 	/* ── レイアウト ──────────────────────── */
 	return (
 		<article
-			className={`grid gap-4 py-4 border-b last:border-b-0 ${index !== undefined
+			className={`grid gap-4 py-4 border-b last:border-b-0 ${
+				index !== undefined
 					? "grid-cols-[max-content_96px_1fr]"
 					: "grid-cols-[96px_1fr]"
-				}`}
+			}`}
 		>
 			{/* ─ 1) インデックス番号 ─ */}
 			{index !== undefined && (
