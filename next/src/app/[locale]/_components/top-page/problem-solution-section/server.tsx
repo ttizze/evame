@@ -69,7 +69,13 @@ export default async function ProblemSolutionSection({
 		<Globe key="component-3" />,
 		<EditorMovie key="component-4" />,
 		<FloatingControls
-			likeButton={<PageLikeButton pageId={pageDetail.id} showCount={false} />}
+			likeButton={
+				<PageLikeButton
+					pageId={pageDetail.id}
+					showCount={false}
+					className="w-12 h-12 border rounded-full"
+				/>
+			}
 			shareTitle="evame"
 			position="w-full flex justify-center"
 			alwaysVisible={true}
