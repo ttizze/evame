@@ -15,32 +15,24 @@ export async function getOrCreateAIUser(name: string): Promise<string> {
 	return user.id;
 }
 
-export async function updateUserAITranslationInfo(
-	userAITranslationInfoId: number,
+export async function updateTranslationJob(
+	translationJobId: number,
 	status: TranslationStatus,
 	progress: number,
+	userId?: string,
+	pageId?: number,
+	projectId?: string,
 ) {
-	return await prisma.userAITranslationInfo.update({
+	return await prisma.translationJob.update({
 		where: {
-			id: userAITranslationInfoId,
+			id: translationJobId,
 		},
 		data: {
-			aiTranslationStatus: status,
-			aiTranslationProgress: progress,
-		},
-	});
-}
-
-export async function updatePageAITranslationInfo(
-	id: number,
-	status: TranslationStatus,
-) {
-	return await prisma.pageAITranslationInfo.update({
-		where: {
-			id: id,
-		},
-		data: {
-			aiTranslationStatus: status,
+			status,
+			progress,
+			userId,
+			pageId,
+			projectId,
 		},
 	});
 }

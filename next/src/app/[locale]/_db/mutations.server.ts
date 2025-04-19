@@ -1,44 +1,38 @@
 import { prisma } from "@/lib/prisma";
 import { TranslationStatus } from "@prisma/client";
 
-export async function createUserAITranslationInfo(
-	userId: string,
-	pageId: number,
-	aiModel: string,
-	locale: string,
-) {
-	try {
-		const userAITranslationInfo = await prisma.userAITranslationInfo.create({
-			data: {
-				userId,
-				pageId,
-				locale,
-				aiModel,
-				aiTranslationStatus: TranslationStatus.PENDING,
-				aiTranslationProgress: 0,
-			},
-		});
-		return userAITranslationInfo;
-	} catch (error) {
-		console.error("Error in createUserAITranslationInfo:", error);
-		throw error;
-	}
-}
+type PageJobParams = {
+	aiModel: string;
+	locale: string;
+	userId?: string;
+	pageId: number;
+	projectId?: never;
+};
 
-export async function createPageAITranslationInfo(
-	pageId: number,
-	locale: string,
-) {
-	try {
-		const pageAITranslationInfo = await prisma.pageAITranslationInfo.create({
-			data: {
-				pageId,
-				locale,
-			},
-		});
-		return pageAITranslationInfo;
-	} catch (error) {
-		console.error("Error in createPageAITranslationInfo:", error);
-		throw error;
+type ProjectJobParams = {
+	aiModel: string;
+	locale: string;
+	userId?: string;
+	projectId: string;
+	pageId?: never;
+};
+
+export type CreateTranslationJobParams = PageJobParams | ProjectJobParams;
+
+export async function createTranslationJob(params: CreateTranslationJobParams) {
+	if (!("pageId" in params) && !("projectId" in params)) {
+		throw new Error("pageId か projectId のどちらか 1 つは必須です");
 	}
+
+	return prisma.translationJob.create({
+		data: {
+			aiModel: params.aiModel,
+			locale: params.locale,
+			userId: params.userId,
+			pageId: "pageId" in params ? params.pageId : undefined,
+			projectId: "projectId" in params ? params.projectId : undefined,
+			status: TranslationStatus.PENDING,
+			progress: 0,
+		},
+	});
 }

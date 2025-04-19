@@ -29,8 +29,8 @@ export async function getProjectById(projectId: string) {
 	return project;
 }
 
-export async function fetchLatestProjectAITranslationInfo(projectId: string) {
-	const locales = await prisma.projectAITranslationInfo.findMany({
+export async function fetchLatestProjectTranslationJob(projectId: string) {
+	const locales = await prisma.translationJob.findMany({
 		where: { projectId },
 		select: { locale: true },
 		distinct: ["locale"],
@@ -39,7 +39,7 @@ export async function fetchLatestProjectAITranslationInfo(projectId: string) {
 	// 各localeについて最新のレコードを取得
 	const results = await Promise.all(
 		locales.map(({ locale }) =>
-			prisma.projectAITranslationInfo.findFirst({
+			prisma.translationJob.findFirst({
 				where: {
 					projectId,
 					locale,

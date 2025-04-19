@@ -1,36 +1,41 @@
 import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
 import { fetchPageWithTitleAndComments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
-import { createUserAITranslationInfo } from "@/app/[locale]/_db/mutations.server";
-import { createPageAITranslationInfo } from "@/app/[locale]/_db/mutations.server";
+import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
+import { fetchProjectWithProjectSegments } from "@/app/[locale]/_db/project-queries.server";
 import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslateJobParams } from "@/features/translate/types";
-
+import type { TranslationJob } from "@prisma/client";
 const TARGET_LOCALES = ["en", "ja", "zh", "ko"];
 
 interface BaseTranslationParams {
 	currentUserId: string;
-	pageId: number;
 	sourceLocale: string;
 	geminiApiKey: string;
 }
 
-interface PageTranslationParams extends BaseTranslationParams {}
+interface PageTranslationParams extends BaseTranslationParams {
+	pageId: number;
+}
 
-interface CommentTranslationParams extends BaseTranslationParams {
+interface ProjectTranslationParams extends BaseTranslationParams {
+	projectId: string;
+}
+
+interface CommentTranslationParams extends PageTranslationParams {
 	commentId: number;
-	content: string;
 }
 
 type TranslationParams =
 	| (PageTranslationParams & { type: "page" })
-	| (CommentTranslationParams & { type: "comment" });
+	| (CommentTranslationParams & { type: "comment" })
+	| (ProjectTranslationParams & { type: "project" });
 
 // 依存関係を明示的に注入するためのインターフェース
 interface TranslationDependencies {
-	createUserAITranslationInfo: typeof createUserAITranslationInfo;
-	createPageAITranslationInfo: typeof createPageAITranslationInfo;
+	createTranslationJob: typeof createTranslationJob;
 	fetchPageWithPageSegments: typeof fetchPageWithPageSegments;
 	fetchPageWithTitleAndComments: typeof fetchPageWithTitleAndComments;
+	fetchProjectWithProjectSegments: typeof fetchProjectWithProjectSegments;
 	fetchTranslateAPI: (
 		url: string,
 		params: TranslateJobParams,
@@ -40,10 +45,10 @@ interface TranslationDependencies {
 
 // デフォルトの依存関係
 const defaultDependencies: TranslationDependencies = {
-	createUserAITranslationInfo,
-	createPageAITranslationInfo,
+	createTranslationJob,
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
+	fetchProjectWithProjectSegments,
 	fetchTranslateAPI: async (url, params) => {
 		return fetch(url, {
 			method: "POST",
@@ -60,28 +65,26 @@ export async function handleAutoTranslation(
 	// デフォルトの依存関係とカスタム依存関係をマージ
 	const deps = { ...defaultDependencies, ...dependencies };
 
-	const { currentUserId, pageId, sourceLocale, geminiApiKey, type } = params;
+	const { currentUserId, sourceLocale, geminiApiKey, type } = params;
 
 	const targetLocales = TARGET_LOCALES.filter(
 		(locale) => locale !== sourceLocale,
 	);
 
 	for (const targetLocale of targetLocales) {
-		// 翻訳情報を作成
-		const userAITranslationInfo = await deps.createUserAITranslationInfo(
-			currentUserId,
-			pageId,
-			targetLocale,
-			"gemini-1.5-flash",
-		);
-		const pageAITranslationInfo = await deps.createPageAITranslationInfo(
-			pageId,
-			targetLocale,
-		);
-
+		let translationJob: TranslationJob;
 		let jobParams: TranslateJobParams;
 
 		if (type === "page") {
+			const { pageId } = params;
+			// 翻訳情報を作成
+			translationJob = await deps.createTranslationJob({
+				userId: currentUserId,
+				pageId,
+				locale: targetLocale,
+				aiModel: "gemini-1.5-flash",
+			});
+
 			// ページデータを取得
 			const pageWithPageSegments = await deps.fetchPageWithPageSegments(pageId);
 			if (!pageWithPageSegments) {
@@ -90,8 +93,7 @@ export async function handleAutoTranslation(
 
 			// 翻訳ジョブのパラメータを設定
 			jobParams = {
-				userAITranslationInfoId: userAITranslationInfo.id,
-				pageAITranslationInfoId: pageAITranslationInfo.id,
+				translationJobId: translationJob.id,
 				geminiApiKey: geminiApiKey,
 				aiModel: "gemini-1.5-flash",
 				userId: currentUserId,
@@ -104,8 +106,49 @@ export async function handleAutoTranslation(
 					text: st.text,
 				})),
 			};
-		} else {
-			// コメント翻訳の場合
+		} else if (type === "project") {
+			const { projectId } = params;
+			// 翻訳情報を作成
+			translationJob = await deps.createTranslationJob({
+				userId: currentUserId,
+				projectId,
+				locale: targetLocale,
+				aiModel: "gemini-1.5-flash",
+			});
+
+			// プロジェクトデータを取得
+			const projectWithSegments =
+				await deps.fetchProjectWithProjectSegments(projectId);
+			if (!projectWithSegments) {
+				throw new Error("Project with segments not found");
+			}
+
+			// 翻訳ジョブのパラメータを設定
+			jobParams = {
+				translationJobId: translationJob.id,
+				geminiApiKey: geminiApiKey,
+				aiModel: "gemini-1.5-flash",
+				userId: currentUserId,
+				projectId: projectId,
+				targetLocale,
+				targetContentType: type,
+				title: projectWithSegments.title,
+				numberedElements: projectWithSegments.pageSegments.map((st) => ({
+					number: st.number,
+					text: st.text,
+				})),
+			};
+		} else if (type === "comment") {
+			const { pageId, commentId } = params;
+			// 翻訳情報を作成
+			translationJob = await deps.createTranslationJob({
+				userId: currentUserId,
+				pageId,
+				locale: targetLocale,
+				aiModel: "gemini-1.5-flash",
+			});
+
+			// ページデータを取得し、特定のコメントを見つける
 			const pageWithTitleAndComments =
 				await deps.fetchPageWithTitleAndComments(pageId);
 			if (!pageWithTitleAndComments) {
@@ -113,7 +156,6 @@ export async function handleAutoTranslation(
 			}
 
 			// 特定のコメントIDを使用して対象のコメントを見つける
-			const commentId = (params as CommentTranslationParams).commentId;
 			const targetComment = pageWithTitleAndComments.pageComments.find(
 				(comment) => comment.id === commentId,
 			);
@@ -136,8 +178,7 @@ export async function handleAutoTranslation(
 
 			// 翻訳ジョブのパラメータを設定
 			jobParams = {
-				userAITranslationInfoId: userAITranslationInfo.id,
-				pageAITranslationInfoId: pageAITranslationInfo.id,
+				translationJobId: translationJob.id,
 				geminiApiKey: geminiApiKey,
 				aiModel: "gemini-1.5-flash",
 				userId: currentUserId,
@@ -148,6 +189,8 @@ export async function handleAutoTranslation(
 				targetContentType: type,
 				commentId: commentId,
 			};
+		} else {
+			throw new Error(`Unsupported translation type: ${type}`);
 		}
 
 		// 翻訳APIを呼び出し
@@ -180,12 +223,33 @@ export async function handlePageAutoTranslation({
 	);
 }
 
+// プロジェクト翻訳のためのヘルパー関数
+export async function handleProjectAutoTranslation({
+	currentUserId,
+	projectId,
+	sourceLocale,
+	geminiApiKey,
+	dependencies = {},
+}: ProjectTranslationParams & {
+	dependencies?: Partial<TranslationDependencies>;
+}): Promise<void> {
+	return handleAutoTranslation(
+		{
+			type: "project",
+			currentUserId,
+			projectId,
+			sourceLocale,
+			geminiApiKey,
+		},
+		dependencies,
+	);
+}
+
 // コメント翻訳のためのヘルパー関数
 export async function handleCommentAutoTranslation({
 	currentUserId,
 	pageId,
 	commentId,
-	content,
 	sourceLocale,
 	geminiApiKey,
 	dependencies = {},
@@ -198,7 +262,6 @@ export async function handleCommentAutoTranslation({
 			currentUserId,
 			pageId,
 			commentId,
-			content,
 			sourceLocale,
 			geminiApiKey,
 		},

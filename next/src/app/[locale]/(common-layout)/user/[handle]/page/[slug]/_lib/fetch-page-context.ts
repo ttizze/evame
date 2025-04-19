@@ -1,13 +1,10 @@
 import { fetchPageDetail } from "@/app/[locale]/_db/page-queries.server";
-import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/page-queries.server";
+import { fetchLatestPageTranslationJobs } from "@/app/[locale]/_db/page-queries.server";
 import { getCurrentUser } from "@/auth";
-import { getGuestId } from "@/lib/get-guest-id";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import {
-	fetchLatestUserAITranslationInfo,
-	fetchPageCommentsCount,
-} from "../_db/queries.server";
+import { fetchLatestUserTranslationJob } from "../_db/queries.server";
+import { fetchPageCommentsCount } from "../_db/queries.server";
 
 export const fetchPageContext = cache(
 	async (
@@ -39,19 +36,18 @@ export const fetchPageContext = cache(
 		} else {
 			title = pageTitleWithTranslations.segment.text;
 		}
-		const guestId = await getGuestId();
-		const [pageAITranslationInfo, userAITranslationInfo, pageCommentsCount] =
+		const [pageTranslationJobs, latestUserTranslationJob, pageCommentsCount] =
 			await Promise.all([
-				fetchLatestPageAITranslationInfo(pageDetail.id),
-				fetchLatestUserAITranslationInfo(pageDetail.id, currentUser?.id ?? "0"),
+				fetchLatestPageTranslationJobs(pageDetail.id),
+				fetchLatestUserTranslationJob(pageDetail.id, currentUser?.id ?? "0"),
 				fetchPageCommentsCount(pageDetail.id),
 			]);
 		return {
 			pageDetail,
 			currentUser,
 			title,
-			pageAITranslationInfo,
-			userAITranslationInfo,
+			pageTranslationJobs,
+			latestUserTranslationJob,
 			pageCommentsCount,
 		};
 	},

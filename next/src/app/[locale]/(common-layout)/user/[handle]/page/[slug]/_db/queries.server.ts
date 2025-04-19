@@ -29,11 +29,11 @@ export async function fetchPageWithPageSegments(pageId: number) {
 	};
 }
 
-export async function fetchLatestUserAITranslationInfo(
+export async function fetchLatestUserTranslationJob(
 	pageId: number,
 	userId: string,
 ) {
-	return await prisma.userAITranslationInfo.findFirst({
+	return await prisma.translationJob.findFirst({
 		where: { pageId, userId },
 		orderBy: { createdAt: "desc" },
 	});

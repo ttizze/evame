@@ -1,4 +1,5 @@
-import { type PageAITranslationInfo, TranslationStatus } from "@prisma/client";
+import { TranslationStatus } from "@prisma/client";
+import type { TranslationJob } from "@prisma/client";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -35,7 +36,7 @@ vi.mock("./lib/type-Icon.client", () => ({
 	}: {
 		code: string;
 		sourceLocale: string;
-		pageAITranslationInfo?: PageAITranslationInfo[];
+		translationJobs?: TranslationJob[];
 	}) => <div data-testid="type-icon">{code}</div>,
 }));
 vi.mock("./hooks/use-locale-list-auto-refresh.client", () => ({
@@ -75,11 +76,11 @@ describe("LocaleSelector", () => {
 				sourceLocale="en"
 				onAddNew={vi.fn()}
 				showIcons={false}
-				pageAITranslationInfo={[
+				translationJobs={[
 					{
 						locale: "ja",
-						aiTranslationStatus: TranslationStatus.COMPLETED,
-					} as PageAITranslationInfo,
+						status: TranslationStatus.COMPLETED,
+					} as TranslationJob,
 				]}
 			/>,
 		);
@@ -100,11 +101,11 @@ describe("LocaleSelector", () => {
 				onAddNew={() => {}}
 				showIcons={false}
 				// 存在するロケールとして "fr" を追加（buildLocaleOptions で "en" と "fr" の 2 件が生成される）
-				pageAITranslationInfo={[
+				translationJobs={[
 					{
 						locale: "fr",
-						aiTranslationStatus: "COMPLETED",
-					} as PageAITranslationInfo,
+						status: TranslationStatus.COMPLETED,
+					} as TranslationJob,
 				]}
 			/>,
 		);

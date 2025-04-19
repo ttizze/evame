@@ -1,15 +1,12 @@
 import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
-import type {
-	PageAITranslationInfo,
-	UserAITranslationInfo,
-} from "@prisma/client";
+import type { TranslationJob } from "@prisma/client";
 import type { TargetContentType } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
 import { TranslateActionSectionClient } from "./client";
 type TranslateActionSectionProps = {
 	pageId: number;
 	currentHandle: string | undefined;
-	userAITranslationInfo: UserAITranslationInfo | null;
-	pageAITranslationInfo?: PageAITranslationInfo[];
+	translationJobs?: TranslationJob[];
+	latestUserTranslationJob: TranslationJob | null;
 	sourceLocale: string;
 	targetContentType: TargetContentType;
 	className?: string;
@@ -19,8 +16,8 @@ type TranslateActionSectionProps = {
 export async function TranslateActionSection({
 	pageId,
 	currentHandle,
-	userAITranslationInfo,
-	pageAITranslationInfo,
+	translationJobs,
+	latestUserTranslationJob,
 	sourceLocale,
 	targetContentType,
 	className,
@@ -33,8 +30,8 @@ export async function TranslateActionSection({
 			pageId={pageId}
 			currentHandle={currentHandle}
 			hasGeminiApiKey={hasGeminiApiKey}
-			userAITranslationInfo={userAITranslationInfo}
-			pageAITranslationInfo={pageAITranslationInfo}
+			translationJobs={translationJobs}
+			latestUserTranslationJob={latestUserTranslationJob}
 			sourceLocale={sourceLocale}
 			targetContentType={targetContentType}
 			className={className}

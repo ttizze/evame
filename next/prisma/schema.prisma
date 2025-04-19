@@ -28,7 +28,6 @@ model User {
   pages                              Page[]
   pageSegmentsTranslations           PageSegmentTranslation[]
   votes                              Vote[]
-  userAITranslationInfo              UserAITranslationInfo[]
   likePages                          LikePage[]
   followers                          Follow[]                            @relation("following")
   following                          Follow[]                            @relation("follower")
@@ -43,7 +42,7 @@ model User {
   projectLikes                       ProjectLike[]
   projectSegmentTranslations         ProjectSegmentTranslation[]
   projectSegmentTranslationVotes     ProjectSegmentTranslationVote[]
-  projectUserAITranslationInfo       ProjectUserAITranslationInfo[]
+  translationJobs                    TranslationJob[]
 
   @@map("users")
 }
@@ -89,36 +88,25 @@ enum TranslationStatus {
   FAILED
 }
 
-model UserAITranslationInfo {
-  id                    Int               @id @default(autoincrement())
-  userId                String            @map("user_id")
-  pageId                Int               @map("page_id")
-  locale                String
-  aiModel               String            @map("ai_model")
-  aiTranslationStatus   TranslationStatus @default(PENDING) @map("ai_translation_status")
-  aiTranslationProgress Int               @default(0) @map("ai_translation_progress")
-  createdAt             DateTime          @default(now()) @map("created_at")
-  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  page                  Page              @relation(fields: [pageId], references: [id], onDelete: Cascade)
+model TranslationJob {
+  id        Int      @id @default(autoincrement())
+  pageId    Int?
+  projectId String?
+  // リレーション
+  page      Page?    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  userId    String?
+  user      User?             @relation(fields: [userId], references: [id])
+  locale    String
+  aiModel   String
+  status    TranslationStatus @default(PENDING)
+  progress  Int               @default(0)
+  error     String            @default("")
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
 
   @@index([userId])
-  @@index([pageId])
-  @@index([pageId, locale])
-  @@map("user_ai_translation_info")
-}
-
-model PageAITranslationInfo {
-  id                  Int               @id @default(autoincrement())
-  pageId              Int               @map("page_id")
-  locale              String
-  aiTranslationStatus TranslationStatus @default(PENDING) @map("ai_translation_status")
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
-  page                Page              @relation(fields: [pageId], references: [id], onDelete: Cascade)
-
-  @@index([pageId])
-  @@index([pageId, locale, createdAt])
-  @@map("page_ai_translation_info")
 }
 
 enum PageStatus {
@@ -128,22 +116,21 @@ enum PageStatus {
 }
 
 model Page {
-  id                    Int                     @id @default(autoincrement())
-  slug                  String                  @unique
-  content               String
-  sourceLocale          String                  @default("unknown") @map("source_locale")
-  status                PageStatus              @default(DRAFT)
-  createdAt             DateTime                @default(now()) @map("created_at")
-  updatedAt             DateTime                @updatedAt @map("updated_at")
-  user                  User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId                String                  @map("user_id")
-  userAITranslationInfo UserAITranslationInfo[]
-  pageAITranslationInfo PageAITranslationInfo[]
-  pageSegments          PageSegment[]
-  tagPages              TagPage[]
-  likePages             LikePage[]
-  pageComments          PageComment[]
-  notifications         Notification[]
+  id            Int            @id @default(autoincrement())
+  slug          String         @unique
+  content       String
+  sourceLocale  String         @default("unknown") @map("source_locale")
+  status        PageStatus     @default(DRAFT)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String         @map("user_id")
+  pageSegments  PageSegment[]
+  tagPages      TagPage[]
+  likePages     LikePage[]
+  pageComments  PageComment[]
+  notifications Notification[]
+  translationJobs TranslationJob[]
 
   @@index([createdAt])
   @@index([userId])
@@ -337,9 +324,7 @@ model Project {
   projectTagRelations      ProjectTagRelation[]
   projectLikes             ProjectLike[]
   projectSegments          ProjectSegment[]
-  userAITranslationInfo    ProjectUserAITranslationInfo[]
-  projectAITranslationInfo ProjectAITranslationInfo[]
-
+  translationJobs          TranslationJob[]
   @@map("projects")
 }
 
@@ -454,37 +439,6 @@ model ProjectSegmentTranslationVote {
   @@map("project_segment_translation_votes")
 }
 
-model ProjectUserAITranslationInfo {
-  id                    Int               @id @default(autoincrement())
-  userId                String            @map("user_id")
-  projectId             String            @map("project_id")
-  locale                String
-  aiModel               String            @map("ai_model")
-  aiTranslationStatus   TranslationStatus @default(PENDING) @map("ai_translation_status")
-  aiTranslationProgress Int               @default(0) @map("ai_translation_progress")
-  createdAt             DateTime          @default(now()) @map("created_at")
-  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project               Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([projectId])
-  @@index([projectId, locale])
-  @@map("project_user_ai_translation_info")
-}
-
-model ProjectAITranslationInfo {
-  id                  Int               @id @default(autoincrement())
-  projectId           String            @map("project_id")
-  locale              String
-  aiTranslationStatus TranslationStatus @default(PENDING) @map("ai_translation_status")
-  createdAt           DateTime          @default(now()) @map("created_at")
-  updatedAt           DateTime          @updatedAt @map("updated_at")
-  project             Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([projectId])
-  @@index([projectId, locale, createdAt])
-  @@map("project_ai_translation_info")
-}
 
 model Account {
   userId            String

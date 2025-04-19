@@ -17,7 +17,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
-import type { PageAITranslationInfo } from "@prisma/client";
+import type { TranslationJob } from "@prisma/client";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useParams } from "next/navigation";
@@ -34,7 +34,7 @@ interface LocaleSelectorProps {
 	/** Called if the user clicks the “Add New” button. */
 	onAddNew: () => void;
 	showIcons: boolean;
-	pageAITranslationInfo?: PageAITranslationInfo[];
+	translationJobs?: TranslationJob[];
 }
 
 //TODO: radix uiのせいで開発環境のモバイルで文字がぼける iphoneではボケてない､その他実機でもボケてたら対応する
@@ -43,7 +43,7 @@ export function LocaleSelector({
 	className,
 	onAddNew,
 	showIcons = false,
-	pageAITranslationInfo,
+	translationJobs,
 }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
 	const router = useCombinedRouter();
@@ -61,11 +61,11 @@ export function LocaleSelector({
 		});
 	};
 
-	useLocaleListAutoRefresh(pageAITranslationInfo);
+	useLocaleListAutoRefresh(translationJobs);
 
 	const localeOptions = buildLocaleOptions(
 		sourceLocale,
-		pageAITranslationInfo?.map((info) => info.locale) ?? [],
+		translationJobs?.map((job) => job.locale) ?? [],
 		supportedLocaleOptions,
 	);
 
@@ -109,7 +109,7 @@ export function LocaleSelector({
 										<TypeIcon
 											code={item.code}
 											sourceLocale={sourceLocale}
-											pageAITranslationInfo={pageAITranslationInfo}
+											translationJobs={translationJobs}
 										/>
 									)}
 									<span className="truncate flex-grow">{item.name}</span>

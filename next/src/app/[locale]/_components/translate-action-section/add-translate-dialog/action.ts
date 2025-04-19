@@ -1,8 +1,5 @@
 "use server";
-import {
-	createPageAITranslationInfo,
-	createUserAITranslationInfo,
-} from "@/app/[locale]/_db/mutations.server";
+import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
@@ -80,21 +77,16 @@ export async function translateAction(
 				segments,
 			};
 		});
-		const userAITranslationInfo = await createUserAITranslationInfo(
-			currentUser.id,
-			pageWithTitleAndComments.id,
+		const translationJob = await createTranslationJob({
+			userId: currentUser.id,
+			pageId: pageWithTitleAndComments.id,
 			aiModel,
-			targetLocale,
-		);
-		const pageAITranslationInfo = await createPageAITranslationInfo(
-			pageWithTitleAndComments.id,
-			targetLocale,
-		);
+			locale: targetLocale,
+		});
 
 		for (const comment of comments) {
 			const jobParams: TranslateJobParams = {
-				userAITranslationInfoId: userAITranslationInfo.id,
-				pageAITranslationInfoId: pageAITranslationInfo.id,
+				translationJobId: translationJob.id,
 				geminiApiKey: geminiApiKey.apiKey,
 				aiModel,
 				userId: currentUser.id,
@@ -123,20 +115,15 @@ export async function translateAction(
 			number: item.number,
 			text: item.text,
 		}));
-		const userAITranslationInfo = await createUserAITranslationInfo(
-			currentUser.id,
-			pageWithPageSegments.id,
+		const translationJob = await createTranslationJob({
+			userId: currentUser.id,
+			pageId: pageWithPageSegments.id,
 			aiModel,
-			targetLocale,
-		);
-		const pageAITranslationInfo = await createPageAITranslationInfo(
-			pageWithPageSegments.id,
-			targetLocale,
-		);
+			locale: targetLocale,
+		});
 
 		const jobParams: TranslateJobParams = {
-			userAITranslationInfoId: userAITranslationInfo.id,
-			pageAITranslationInfoId: pageAITranslationInfo.id,
+			translationJobId: translationJob.id,
 			geminiApiKey: geminiApiKey.apiKey,
 			aiModel,
 			userId: currentUser.id,

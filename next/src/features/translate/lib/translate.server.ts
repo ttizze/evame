@@ -1,22 +1,26 @@
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { TranslationStatus } from "@prisma/client";
+import { updateTranslationJob } from "../db/mutations.server";
 import {
-	updatePageAITranslationInfo,
-	updateUserAITranslationInfo,
-} from "../db/mutations.server";
-import { getLatestPageCommentSegments } from "../db/queries.server";
-import { getLatestPageSegments } from "../db/queries.server";
+	getPageCommentSegments,
+	getPageSegments,
+	getProjectSegments,
+} from "../db/queries.server";
 import { getGeminiModelResponse } from "../services/gemini";
 import type { NumberedElement, TranslateJobParams } from "../types";
 import { extractTranslations } from "./extract-translations.server";
-import { saveTranslationsForComment, saveTranslationsForPage } from "./io-deps";
+import {
+	saveTranslationsForComment,
+	saveTranslationsForPage,
+	saveTranslationsForProject,
+} from "./io-deps";
 import { splitNumberedElements } from "./split-numbered-elements.server";
 
 export async function translate(params: TranslateJobParams) {
 	try {
-		await updateUserAITranslationInfo(
-			params.userAITranslationInfoId,
+		await updateTranslationJob(
+			params.translationJobId,
 			TranslationStatus.IN_PROGRESS,
 			0,
 		);
@@ -30,37 +34,33 @@ export async function translate(params: TranslateJobParams) {
 		for (let i = 0; i < chunks.length; i++) {
 			console.log(`Processing chunk ${i + 1} of ${totalChunks}`);
 			console.log(chunks[i]);
-
 			await translateChunk(
 				params.geminiApiKey,
 				params.aiModel,
 				chunks[i],
 				params.targetLocale,
 				params.pageId,
+				params.projectId,
 				params.title,
 				params.targetContentType,
 				params.commentId,
 			);
 			const progress = ((i + 1) / totalChunks) * 100;
-			await updateUserAITranslationInfo(
-				params.userAITranslationInfoId,
+			await updateTranslationJob(
+				params.translationJobId,
 				TranslationStatus.IN_PROGRESS,
 				progress,
 			);
 		}
-		await updateUserAITranslationInfo(
-			params.userAITranslationInfoId,
+		await updateTranslationJob(
+			params.translationJobId,
 			TranslationStatus.COMPLETED,
 			100,
 		);
-		await updatePageAITranslationInfo(
-			params.pageAITranslationInfoId,
-			TranslationStatus.COMPLETED,
-		);
 	} catch (error) {
 		console.error("Background translation job failed:", error);
-		await updateUserAITranslationInfo(
-			params.userAITranslationInfoId,
+		await updateTranslationJob(
+			params.translationJobId,
 			TranslationStatus.FAILED,
 			0,
 		);
@@ -72,9 +72,10 @@ async function translateChunk(
 	aiModel: string,
 	numberedElements: NumberedElement[],
 	targetLocale: string,
-	pageId: number,
-	title: string,
-	targetContentType: TargetContentType,
+	pageId?: number,
+	projectId?: string,
+	title?: string,
+	targetContentType?: TargetContentType,
 	commentId?: number,
 ) {
 	// まだ翻訳が完了していない要素
@@ -91,7 +92,7 @@ async function translateChunk(
 			aiModel,
 			pendingElements,
 			targetLocale,
-			title,
+			title || "",
 		);
 
 		// extractTranslationsでJSONパースを試し、失敗時は正規表現抽出
@@ -100,7 +101,10 @@ async function translateChunk(
 		if (partialTranslations.length > 0) {
 			// 部分的にでも取得できた翻訳結果を保存
 			if (targetContentType === "page") {
-				const pageSegments = await getLatestPageSegments(pageId);
+				if (!pageId) {
+					throw new Error("Page ID is required");
+				}
+				const pageSegments = await getPageSegments(pageId);
 
 				await saveTranslationsForPage(
 					partialTranslations,
@@ -108,16 +112,26 @@ async function translateChunk(
 					targetLocale,
 					aiModel,
 				);
-			} else {
+			} else if (targetContentType === "comment") {
 				// コメント用の保存先テーブル or ロジック
-				if (!commentId) {
+				if (!commentId || !pageId) {
 					throw new Error("Comment ID is required");
 				}
-				const pageCommentSegments =
-					await getLatestPageCommentSegments(commentId);
+				const pageCommentSegments = await getPageCommentSegments(commentId);
 				await saveTranslationsForComment(
 					partialTranslations,
 					pageCommentSegments,
+					targetLocale,
+					aiModel,
+				);
+			} else if (targetContentType === "project") {
+				if (!projectId) {
+					throw new Error("Project ID is required");
+				}
+				const projectSegments = await getProjectSegments(projectId);
+				await saveTranslationsForProject(
+					partialTranslations,
+					projectSegments,
 					targetLocale,
 					aiModel,
 				);

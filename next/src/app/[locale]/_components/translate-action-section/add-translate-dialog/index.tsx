@@ -1,5 +1,5 @@
 "use client";
-import type { UserAITranslationInfo } from "@prisma/client";
+import type { TranslationJob } from "@prisma/client";
 
 import { GeminiApiKeyDialog } from "@/app/[locale]/_components/gemini-api-key-dialog/gemini-api-key-dialog";
 import { StartButton } from "@/app/[locale]/_components/start-button";
@@ -32,7 +32,7 @@ type AddTranslateDialogProps = {
 	currentHandle: string | undefined;
 	pageId: number;
 	hasGeminiApiKey: boolean;
-	userAITranslationInfo: UserAITranslationInfo | null;
+	latestUserTranslationJob: TranslationJob | null;
 	targetContentType: TargetContentType;
 };
 
@@ -42,7 +42,7 @@ export function AddTranslateDialog({
 	currentHandle,
 	pageId,
 	hasGeminiApiKey,
-	userAITranslationInfo,
+	latestUserTranslationJob,
 	targetContentType,
 }: AddTranslateDialogProps) {
 	const [translateState, action, isTranslating] = useActionState<
@@ -153,7 +153,7 @@ export function AddTranslateDialog({
 								</p>
 							)}
 							<UserAITranslationStatus
-								userAITranslationInfo={userAITranslationInfo}
+								latestUserTranslationJob={latestUserTranslationJob}
 							/>
 						</>
 					)}

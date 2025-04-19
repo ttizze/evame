@@ -203,3 +203,30 @@ export async function fetchProjectDetail(
 		),
 	};
 }
+
+export async function fetchProjectWithProjectSegments(projectId: string) {
+	const project = await prisma.project.findUnique({
+		where: { id: projectId },
+		select: {
+			id: true,
+			title: true,
+			description: true,
+			sourceLocale: true,
+			projectSegments: {
+				select: {
+					id: true,
+					number: true,
+					text: true,
+				},
+			},
+		},
+	});
+
+	if (!project) return null;
+
+	return {
+		...project,
+		// For consistency with page translation system
+		pageSegments: project.projectSegments,
+	};
+}

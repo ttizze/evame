@@ -1,26 +1,24 @@
-import type { PageAITranslationInfo } from "@prisma/client";
+import type { TranslationJob } from "@prisma/client";
 import { TranslationStatus } from "@prisma/client";
 import { Languages, Loader2, Text } from "lucide-react";
 
 export function TypeIcon({
 	code,
 	sourceLocale,
-	pageAITranslationInfo,
+	translationJobs,
 }: {
 	code: string;
 	sourceLocale: string;
-	pageAITranslationInfo?: PageAITranslationInfo[];
+	translationJobs?: TranslationJob[];
 }) {
-	const translationInfo = pageAITranslationInfo?.find(
-		(info) => info.locale === code,
-	);
+	const translationInfo = translationJobs?.find((job) => job.locale === code);
 
 	if (code === sourceLocale) {
 		return <Text data-testid="text-icon" className="w-4 h-4 mr-2" />;
 	}
 	if (
 		translationInfo &&
-		translationInfo.aiTranslationStatus !== TranslationStatus.COMPLETED
+		translationInfo.status !== TranslationStatus.COMPLETED
 	) {
 		return (
 			<Loader2

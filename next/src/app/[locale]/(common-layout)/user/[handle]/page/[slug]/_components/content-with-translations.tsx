@@ -54,8 +54,8 @@ export async function ContentWithTranslations({
 	const {
 		pageDetail,
 		currentUser,
-		pageAITranslationInfo,
-		userAITranslationInfo,
+		pageTranslationJobs,
+		latestUserTranslationJob,
 	} = data;
 
 	const pageSegmentTitleWithTranslations = pageDetail.segmentBundles.filter(
@@ -83,9 +83,9 @@ export async function ContentWithTranslations({
 			<DynamicTranslateActionSection
 				pageId={pageDetail.id}
 				currentHandle={currentUser?.handle}
-				userAITranslationInfo={userAITranslationInfo}
+				translationJobs={pageTranslationJobs}
+				latestUserTranslationJob={latestUserTranslationJob}
 				sourceLocale={pageDetail.sourceLocale}
-				pageAITranslationInfo={pageAITranslationInfo}
 				className="pt-3"
 				targetContentType="page"
 				showIcons={true}

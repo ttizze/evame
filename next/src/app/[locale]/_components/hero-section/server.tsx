@@ -2,7 +2,7 @@ import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/_lib/fetch-
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { TranslateActionSection } from "@/app/[locale]/_components/translate-action-section";
-import { fetchLatestPageAITranslationInfo } from "@/app/[locale]/_db/page-queries.server";
+import { fetchLatestPageTranslationJobs } from "@/app/[locale]/_db/page-queries.server";
 import { getCurrentUser } from "@/auth";
 import Image from "next/image";
 
@@ -28,7 +28,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	const currentHandle = currentUser?.handle;
 	const topPageDetail = await fetchAboutPage(locale);
 
-	const pageAITranslationInfo = await fetchLatestPageAITranslationInfo(
+	const pageTranslationJobs = await fetchLatestPageTranslationJobs(
 		topPageDetail.id,
 	);
 
@@ -54,9 +54,9 @@ export default async function HeroSection({ locale }: { locale: string }) {
 				<TranslateActionSection
 					pageId={0}
 					currentHandle={currentHandle}
-					userAITranslationInfo={null}
+					latestUserTranslationJob={null}
+					translationJobs={pageTranslationJobs}
 					sourceLocale={sourceLocale}
-					pageAITranslationInfo={pageAITranslationInfo}
 					targetContentType="page"
 					showIcons={false}
 				/>

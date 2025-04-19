@@ -1,6 +1,6 @@
 "use server";
 
-import { generateHashForText } from "@/app/[locale]/_lib/generate-hash-for-text";
+import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
 import { uploadImage } from "@/app/[locale]/_lib/upload";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
@@ -9,8 +9,10 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { processProjectHtml } from "../_components/_lib/process-project-html";
+import { triggerAutoTranslationIfNeeded } from "../_components/_lib/trigger-auto-translation";
 import { upsertProjectTags } from "../_db/mutations.server";
-
+// Schema definitions
 const projectLinkSchema = z.object({
 	id: z.string().optional(),
 	url: z.string().url({
@@ -34,28 +36,16 @@ const projectFormSchema = z.object({
 	projectId: z.string().optional(),
 	title: z
 		.string()
-		.min(3, {
-			message: "Title must be at least 3 characters.",
-		})
-		.max(100, {
-			message: "Title must not exceed 100 characters.",
-		}),
+		.min(3, { message: "Title must be at least 3 characters." })
+		.max(100, { message: "Title must not exceed 100 characters." }),
 	tagLine: z
 		.string()
-		.min(3, {
-			message: "Tag line must be at least 3 characters.",
-		})
-		.max(100, {
-			message: "Tag line must not exceed 100 characters.",
-		}),
+		.min(3, { message: "Tag line must be at least 3 characters." })
+		.max(100, { message: "Tag line must not exceed 100 characters." }),
 	description: z
 		.string()
-		.min(10, {
-			message: "Description must be at least 10 characters.",
-		})
-		.max(500, {
-			message: "Description must not exceed 500 characters.",
-		}),
+		.min(10, { message: "Description must be at least 10 characters." })
+		.max(500, { message: "Description must not exceed 500 characters." }),
 	tags: z.preprocess(
 		(value) => {
 			try {
@@ -100,59 +90,151 @@ const projectFormSchema = z.object({
 });
 
 export type ProjectFormValues = z.infer<typeof projectFormSchema>;
-
 export type ProjectActionResponse = ActionResponse<void, ProjectFormValues>;
 
-// Helper function to create or update project segment
-async function createOrUpdateProjectSegment(
-	projectId: string,
-	text: string,
-	number: number,
+// Type definitions
+type ProjectLinkSchemaType = z.infer<typeof projectLinkSchema>;
+type ProjectImageSchemaType = z.infer<typeof projectImageSchema>;
+
+async function uploadProjectImages(
+	imageFiles: File[],
+	imageFileNames: string[],
 ) {
-	// Generate hash for the text (occurrence 0 for tagLine as it's unique)
-	const textAndOccurrenceHash = generateHashForText(text, 0);
+	const uploadedImageUrls: Record<string, string> = {};
 
-	// Try to find an existing segment for this project and number
-	const existingSegment = await prisma.projectSegment.findUnique({
-		where: {
-			projectId_number: {
-				projectId,
-				number,
-			},
-		},
-	});
+	for (let i = 0; i < imageFiles.length; i++) {
+		const file = imageFiles[i];
+		const fileName = imageFileNames[i];
+		const result = await uploadImage(file);
 
-	if (existingSegment) {
-		// Update existing segment
-		return prisma.projectSegment.update({
-			where: { id: existingSegment.id },
-			data: {
-				text,
-				textAndOccurrenceHash,
-			},
-		});
+		if (result.success && result.data?.imageUrl) {
+			uploadedImageUrls[fileName] = result.data.imageUrl;
+		} else {
+			throw new Error(result.message || "Failed to upload image");
+		}
 	}
 
-	// Create new segment
-	return prisma.projectSegment.create({
-		data: {
-			projectId,
-			number,
-			text,
-			textAndOccurrenceHash,
-		},
+	return uploadedImageUrls;
+}
+
+function processImages(
+	images: ProjectImageSchemaType[],
+	uploadedImageUrls: Record<string, string>,
+): ProjectImageSchemaType[] {
+	return images.map((image) => {
+		if (image.url.startsWith("temp://upload/")) {
+			const fileName = image.url.split("/").pop() || "";
+			const uploadedUrl = uploadedImageUrls[fileName];
+
+			if (!uploadedUrl) {
+				console.error(`No uploaded URL found for image: ${fileName}`);
+			}
+
+			return { ...image, url: uploadedUrl || image.url };
+		}
+		return image;
 	});
 }
 
+async function handleProjectLinks(
+	links: ProjectLinkSchemaType[],
+	projectId: string,
+	existingLinkIds: string[] = [],
+) {
+	// Get IDs of links that will be updated
+	const newLinkIds = links
+		.filter((link): link is ProjectLinkSchemaType & { id: string } => !!link.id)
+		.map((link) => link.id);
+
+	// Delete links that are no longer present
+	const linkIdsToDelete = existingLinkIds.filter(
+		(id) => !newLinkIds.includes(id),
+	);
+
+	if (linkIdsToDelete.length > 0) {
+		await prisma.projectLink.deleteMany({
+			where: { id: { in: linkIdsToDelete } },
+		});
+	}
+
+	// Update or create links
+	for (const link of links) {
+		if (link.id) {
+			await prisma.projectLink.update({
+				where: { id: link.id },
+				data: { url: link.url, description: link.description },
+			});
+		} else {
+			await prisma.projectLink.create({
+				data: {
+					url: link.url,
+					description: link.description,
+					projectId,
+				},
+			});
+		}
+	}
+}
+
+async function handleProjectImages(
+	images: ProjectImageSchemaType[],
+	projectId: string,
+	existingImageIds: string[] = [],
+) {
+	// Get IDs of images that will be updated
+	const newImageIds = images
+		.filter(
+			(image): image is ProjectImageSchemaType & { id: string } => !!image.id,
+		)
+		.map((image) => image.id);
+
+	// Delete images that are no longer present
+	const imageIdsToDelete = existingImageIds.filter(
+		(id) => !newImageIds.includes(id),
+	);
+
+	if (imageIdsToDelete.length > 0) {
+		await prisma.projectImage.deleteMany({
+			where: { id: { in: imageIdsToDelete } },
+		});
+	}
+
+	// Update or create images
+	for (const image of images) {
+		if (image.id) {
+			await prisma.projectImage.update({
+				where: { id: image.id },
+				data: {
+					url: image.url,
+					caption: image.caption,
+					order: image.order,
+				},
+			});
+		} else {
+			await prisma.projectImage.create({
+				data: {
+					url: image.url,
+					caption: image.caption,
+					order: image.order,
+					projectId,
+				},
+			});
+		}
+	}
+}
+
+// Main action function
 export async function projectAction(
 	previousState: ProjectActionResponse,
 	formData: FormData,
 ): Promise<ProjectActionResponse> {
+	// Authentication check
 	const currentUser = await getCurrentUser();
 	if (!currentUser?.id) {
 		return redirect("/auth/login");
 	}
 
+	// Validate form data
 	const parsed = await parseFormData(projectFormSchema, formData);
 	if (!parsed.success) {
 		return {
@@ -161,235 +243,118 @@ export async function projectAction(
 		};
 	}
 
-	// Extract tagLine from the parsed data
+	// Extract data
 	const { projectId, tags, links, images, tagLine, ...projectData } =
 		parsed.data;
 
-	// Process any uploaded image files
-	const imageFiles = formData.getAll("imageFiles") as File[];
-	const imageFileNames = formData.getAll("imageFileNames") as string[];
+	try {
+		// Detect language for source locale
+		const combinedText = `${tagLine} ${projectData.description}`;
+		const sourceLocale = await getLocaleFromHtml(combinedText);
 
-	// Create array to store new image URLs
-	const uploadedImageUrls: Record<string, string> = {};
+		// Handle image uploads
+		const imageFiles = formData.getAll("imageFiles") as File[];
+		const imageFileNames = formData.getAll("imageFileNames") as string[];
+		const uploadedImageUrls =
+			imageFiles.length > 0
+				? await uploadProjectImages(imageFiles, imageFileNames)
+				: {};
 
-	// Upload any new image files
-	if (imageFiles.length > 0) {
-		for (let i = 0; i < imageFiles.length; i++) {
-			const file = imageFiles[i];
-			const fileName = imageFileNames[i];
+		// Process images with uploaded URLs
+		const processedImages = processImages(images, uploadedImageUrls);
 
-			// Upload image to storage service using the existing uploadImage function
-			const result = await uploadImage(file);
+		if (projectId) {
+			// Update existing project
+			const existingProject = await prisma.project.findUnique({
+				where: { id: projectId },
+				include: { user: true, links: true, images: true },
+			});
 
-			// Only store URL if upload was successful
-			if (result.success && result.data?.imageUrl) {
-				uploadedImageUrls[fileName] = result.data.imageUrl;
-			} else {
+			if (!existingProject) {
+				return { success: false, message: "Project not found" };
+			}
+
+			if (existingProject.userId !== currentUser.id) {
 				return {
 					success: false,
-					message: result.message || "Failed to upload image",
+					message: "You don't have permission to edit this project",
 				};
 			}
-		}
-	}
+			// Update tags
+			await upsertProjectTags(tags, projectId);
 
-	// Process each image to use either the uploaded URL or existing URL
-	const processedImages = images.map((image) => {
-		// Check if it's a temporary URL (new image that needs uploading)
-		if (image.url.startsWith("temp://upload/")) {
-			// Extract file name from temp URL for matching with uploaded files
-			const fileName = image.url.split("/").pop() || "";
-			// Find matching uploaded URL
-			const uploadedUrl = uploadedImageUrls[fileName];
+			// Update links and images
+			const existingLinkIds = existingProject.links.map((link) => link.id);
+			const existingImageIds = existingProject.images.map((image) => image.id);
 
-			if (!uploadedUrl) {
-				// This shouldn't happen if front-end validation is working correctly
-				console.error(`No uploaded URL found for image: ${fileName}`);
-			}
+			await handleProjectLinks(links, projectId, existingLinkIds);
+			await handleProjectImages(processedImages, projectId, existingImageIds);
 
-			return {
-				...image,
-				url: uploadedUrl || image.url, // Fallback to original URL if no match
-			};
-		}
-
-		// Existing image, keep as is
-		return image;
-	});
-
-	if (projectId) {
-		// Updating existing project
-		const existingProject = await prisma.project.findUnique({
-			where: { id: projectId },
-			include: { user: true, links: true, images: true },
-		});
-
-		if (!existingProject) {
-			return {
-				success: false,
-				message: "Project not found",
-			};
-		}
-
-		// Check if the current user is the owner of the project
-		if (existingProject.userId !== currentUser.id) {
-			return {
-				success: false,
-				message: "You don't have permission to edit this project",
-			};
-		}
-
-		// Update project
-		await prisma.project.update({
-			where: { id: projectId },
-			data: projectData,
-		});
-
-		// Update tagLine as segment 0
-		await createOrUpdateProjectSegment(projectId, tagLine, 0);
-
-		// Update tags
-		await upsertProjectTags(tags, projectId);
-
-		// Handle links
-		// First, collect existing link IDs for later deletion
-		const existingLinkIds = existingProject.links.map((link) => link.id);
-		const newLinkIds = links
-			.filter((link) => link.id)
-			.map((link) => link.id as string);
-
-		// Find links to delete (those in existing but not in new)
-		const linkIdsToDelete = existingLinkIds.filter(
-			(id) => !newLinkIds.includes(id),
-		);
-
-		if (linkIdsToDelete.length > 0) {
-			await prisma.projectLink.deleteMany({
-				where: {
-					id: {
-						in: linkIdsToDelete,
-					},
+			await processProjectHtml(
+				projectId,
+				tagLine,
+				projectData.description,
+				currentUser.id,
+			);
+			await triggerAutoTranslationIfNeeded(
+				projectId,
+				sourceLocale,
+				currentUser.id,
+			);
+		} else {
+			// Create new project
+			const newProject = await prisma.project.create({
+				data: {
+					...projectData,
+					sourceLocale,
+					userId: currentUser.id,
 				},
 			});
-		}
 
-		// Upsert links
-		for (const link of links) {
-			if (link.id) {
-				// Update existing link
-				await prisma.projectLink.update({
-					where: { id: link.id },
-					data: {
-						url: link.url,
-						description: link.description,
-					},
-				});
-			} else {
-				// Create new link
-				await prisma.projectLink.create({
-					data: {
-						url: link.url,
-						description: link.description,
-						projectId,
-					},
-				});
+			// Create tags
+			if (tags.length > 0) {
+				await upsertProjectTags(tags, newProject.id);
 			}
-		}
 
-		// Handle images
-		// First, collect existing image IDs for later deletion
-		const existingImageIds = existingProject.images.map((image) => image.id);
-		const newImageIds = processedImages
-			.filter((image) => image.id)
-			.map((image) => image.id as string);
-
-		// Find images to delete (those in existing but not in new)
-		const imageIdsToDelete = existingImageIds.filter(
-			(id) => !newImageIds.includes(id),
-		);
-
-		if (imageIdsToDelete.length > 0) {
-			await prisma.projectImage.deleteMany({
-				where: {
-					id: {
-						in: imageIdsToDelete,
-					},
-				},
-			});
-		}
-
-		// Upsert images
-		for (const image of processedImages) {
-			if (image.id) {
-				// Update existing image
-				await prisma.projectImage.update({
-					where: { id: image.id },
-					data: {
-						url: image.url,
-						caption: image.caption,
-						order: image.order,
-					},
-				});
-			} else {
-				// Create new image
-				await prisma.projectImage.create({
-					data: {
-						url: image.url,
-						caption: image.caption,
-						order: image.order,
-						projectId,
-					},
-				});
+			// Create links and images
+			if (links.length > 0) {
+				await handleProjectLinks(links, newProject.id);
 			}
-		}
-	} else {
-		// Create new project
-		const newProject = await prisma.project.create({
-			data: {
-				...projectData,
-				userId: currentUser.id,
-			},
-		});
 
-		// Create tagLine as segment 0
-		await createOrUpdateProjectSegment(newProject.id, tagLine, 0);
+			if (processedImages.length > 0) {
+				await handleProjectImages(processedImages, newProject.id);
+			}
 
-		// Create tags
-		if (tags.length > 0) {
-			await upsertProjectTags(tags, newProject.id);
-		}
-
-		// Create links
-		if (links.length > 0) {
-			await prisma.projectLink.createMany({
-				data: links.map((link) => ({
-					url: link.url,
-					description: link.description,
-					projectId: newProject.id,
-				})),
-			});
+			// Trigger automatic translation
+			await processProjectHtml(
+				newProject.id,
+				tagLine,
+				projectData.description,
+				currentUser.id,
+			);
+			await triggerAutoTranslationIfNeeded(
+				newProject.id,
+				sourceLocale,
+				currentUser.id,
+			);
 		}
 
-		// Create images
-		if (processedImages.length > 0) {
-			await prisma.projectImage.createMany({
-				data: processedImages.map((image) => ({
-					url: image.url,
-					caption: image.caption,
-					order: image.order,
-					projectId: newProject.id,
-				})),
-			});
+		// Revalidate paths
+		revalidatePath(`/user/${currentUser.handle}/project-management`);
+		if (projectId) {
+			revalidatePath(`/user/${currentUser.handle}/project/${projectId}`);
 		}
+
+		return {
+			success: true,
+			message: `Project ${projectId ? "updated" : "created"} successfully`,
+		};
+	} catch (error) {
+		console.error("Project action error:", error);
+		return {
+			success: false,
+			message:
+				error instanceof Error ? error.message : "An unexpected error occurred",
+		};
 	}
-
-	revalidatePath(`/user/${currentUser.handle}/project-management`);
-	if (projectId) {
-		revalidatePath(`/user/${currentUser.handle}/project/${projectId}`);
-	}
-
-	return {
-		success: true,
-		message: `Project ${projectId ? "updated" : "created"} successfully`,
-	};
 }
