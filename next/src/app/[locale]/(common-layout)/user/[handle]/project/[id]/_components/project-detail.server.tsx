@@ -6,7 +6,6 @@ import { ProjectTagList } from "@/app/[locale]/_components/project/project-tag-l
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import type { ProjectDetail } from "@/app/[locale]/types";
 import { getCurrentUser } from "@/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Carousel,
 	CarouselContent,
@@ -54,13 +53,13 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 	);
 
 	return (
-		<Card className="overflow-hidden">
+		<section className="">
 			{/* ------------ Header ------------- */}
-			<CardHeader className="pb-0">
+			<header className="pb-0">
 				{/* Grid: [icon] [title / tagline] [actions] – always three columns */}
-				<div className="grid grid-cols-[auto_1fr_auto] gap-4 items-center">
+				<div className="grid grid-cols-[auto_1fr_auto] gap-4">
 					{/* Icon */}
-					<div className="relative h-16 w-24 overflow-hidden rounded-md shadow-sm">
+					<div className="relative h-16 w-24 flex justify-self-start rounded-md shadow-sm">
 						{projectDetail.iconImage ? (
 							<Image
 								src={projectDetail.iconImage.url}
@@ -77,12 +76,21 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 					</div>
 
 					{/* Title & Tag‑line */}
-					<div className="flex flex-col gap-1 min-w-0">
-						<CardTitle className="truncate text-2xl font-bold leading-tight">
-							{projectDetail.title}
-						</CardTitle>
+					<div className="">
+						<div className="flex items-center justify-between gap-2">
+							<h1 className="text-2xl font-bold leading-tight">
+								{projectDetail.title}
+							</h1>
+							{/* Owner actions (空白列でも幅0なので邪魔しない) */}
+							{isOwner && (
+								<ProjectActionsDropdown
+									projectId={projectDetail.id}
+									projectOwnerHandle={projectDetail.user.handle}
+								/>
+							)}
+						</div>
 						{projectTagLineSegmentBundle && (
-							<h2 className="text-lg font-medium text-muted-foreground truncate">
+							<h2 className="text-lg font-medium text-muted-foreground">
 								<SegmentAndTranslationSection
 									segmentBundle={projectTagLineSegmentBundle}
 									currentHandle={projectDetail.user.handle}
@@ -90,19 +98,11 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 							</h2>
 						)}
 					</div>
-
-					{/* Owner actions (空白列でも幅0なので邪魔しない) */}
-					{isOwner && (
-						<ProjectActionsDropdown
-							projectId={projectDetail.id}
-							projectOwnerHandle={projectDetail.user.handle}
-						/>
-					)}
 				</div>
-			</CardHeader>
+			</header>
 
 			{/* ------------ Main Content ------------- */}
-			<CardContent className="pt-6 grid gap-6">
+			<div className="pt-6 grid gap-6">
 				{/* Tags */}
 				{tags.length > 0 && (
 					<div className="grid grid-flow-col auto-cols-max gap-2">
@@ -186,7 +186,7 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 						{new Date(projectDetail.createdAt).toLocaleString(locale)}
 					</span>
 				</div>
-			</CardContent>
-		</Card>
+			</div>
+		</section>
 	);
 }

@@ -31,10 +31,8 @@ export default async function UserEditPage({
 	}
 
 	return (
-		<div className="container mx-auto">
-			<div className="rounded-xl border p-4">
-				<EditProfileForm currentUser={currentUser} />
-			</div>
+		<div className="rounded-xl border p-4">
+			<EditProfileForm currentUser={currentUser} />
 		</div>
 	);
 }

@@ -143,8 +143,8 @@ export default async function Page({
 	}
 
 	return (
-		<div className="w-full max-w-3xl mx-auto">
-			<article className="w-full prose dark:prose-invert prose-a:underline  sm:prose lg:prose-lg mx-auto px-4 mb-20">
+		<div className="w-full  mx-auto">
+			<article className="w-full prose dark:prose-invert prose-a:underline  sm:prose lg:prose-lg mx-auto mb-20">
 				<DynamicContentWithTranslations
 					slug={slug}
 					locale={locale}

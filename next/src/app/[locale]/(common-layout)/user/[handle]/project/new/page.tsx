@@ -26,7 +26,7 @@ export default async function NewProjectPage({ params }: NewProjectPageProps) {
 	const allProjectTags = await fetchAllProjectTags();
 
 	return (
-		<div className="container max-w-4xl py-8">
+		<div className="py-8">
 			<ProjectForm userHandle={handle} allProjectTags={allProjectTags} />
 		</div>
 	);
