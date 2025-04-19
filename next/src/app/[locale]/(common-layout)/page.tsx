@@ -135,7 +135,7 @@ export default async function HomePage({
 				{tab === "home" && (
 					<div className="space-y-12">
 						<section>
-							<PopularProjectList locale={locale} searchParams={searchParams} />
+							<NewPageList locale={locale} searchParams={searchParams} />
 							<div className="flex justify-center w-full mt-6">
 								<Button
 									variant="default"
@@ -144,7 +144,26 @@ export default async function HomePage({
 									className={MoreButtonClass}
 								>
 									<Link
-										href={"?tab=projects&sort=popular"}
+										href={"?tab=pages&sort=new"}
+										className="gap-1 flex items-center justify-center"
+									>
+										View more
+										<ArrowRight className="h-3 w-3" />
+									</Link>
+								</Button>
+							</div>
+						</section>
+						<section>
+							<NewProjectList locale={locale} searchParams={searchParams} />
+							<div className="flex justify-center w-full mt-6">
+								<Button
+									variant="default"
+									size="default"
+									asChild
+									className={MoreButtonClass}
+								>
+									<Link
+										href={"?tab=projects&sort=new"}
 										className="gap-1 flex items-center justify-center"
 									>
 										View more
@@ -174,6 +193,26 @@ export default async function HomePage({
 							</div>
 						</section>
 
+						<section>
+							<PopularProjectList locale={locale} searchParams={searchParams} />
+							<div className="flex justify-center w-full mt-6">
+								<Button
+									variant="default"
+									size="default"
+									asChild
+									className={MoreButtonClass}
+								>
+									<Link
+										href={"?tab=projects&sort=popular"}
+										className="gap-1 flex items-center justify-center"
+									>
+										View more
+										<ArrowRight className="h-3 w-3" />
+									</Link>
+								</Button>
+							</div>
+						</section>
+
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 							<section>
 								<h2 className="text-2xl font-bold mb-4">Popular Tags</h2>
@@ -188,46 +227,6 @@ export default async function HomePage({
 								</Card>
 							</section>
 						</div>
-
-						<section>
-							<NewProjectList locale={locale} searchParams={searchParams} />
-							<div className="flex justify-center w-full mt-6">
-								<Button
-									variant="default"
-									size="default"
-									asChild
-									className={MoreButtonClass}
-								>
-									<Link
-										href={"?tab=projects&sort=new"}
-										className="gap-1 flex items-center justify-center"
-									>
-										View more
-										<ArrowRight className="h-3 w-3" />
-									</Link>
-								</Button>
-							</div>
-						</section>
-
-						<section>
-							<NewPageList locale={locale} searchParams={searchParams} />
-							<div className="flex justify-center w-full mt-6">
-								<Button
-									variant="default"
-									size="default"
-									asChild
-									className={MoreButtonClass}
-								>
-									<Link
-										href={"?tab=pages&sort=new"}
-										className="gap-1 flex items-center justify-center"
-									>
-										View more
-										<ArrowRight className="h-3 w-3" />
-									</Link>
-								</Button>
-							</div>
-						</section>
 					</div>
 				)}
 				{tab === "projects" && (

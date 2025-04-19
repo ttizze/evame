@@ -23,6 +23,7 @@ const selectProjectRelatedFields = (
 		images: {
 			orderBy: { order: Prisma.SortOrder.asc },
 		},
+		iconImage: true,
 		projectSegments: {
 			where: onlyTitle ? { number: 0 } : undefined,
 			include: {
@@ -58,6 +59,7 @@ export const selectProjectsWithDetails = (
 		title: true,
 		createdAt: true,
 		updatedAt: true,
+		iconImageId: true,
 		...selectProjectRelatedFields(onlyTitle, locale, currentUserId),
 		_count: {
 			select: {

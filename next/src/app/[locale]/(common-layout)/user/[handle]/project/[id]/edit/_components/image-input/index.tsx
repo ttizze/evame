@@ -7,25 +7,34 @@ import { Plus, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-interface ProjectImage {
+/* ---------- 型定義 ---------- */
+export interface ProjectImage {
 	id?: string;
 	url: string;
 	caption: string;
 	order: number;
-	file?: File; // For new uploads
+	file?: File;
 }
 
 interface ProjectImageInputProps {
 	initialImages: ProjectImage[];
 	onChange: (images: ProjectImage[]) => void;
+	maxImages?: number; // 追加: 最大枚数 (デフォルト = 10)
+	hideReorder?: boolean; // 追加: 並び替え UI を隠すか
+	showCaption?: boolean; // 追加: キャプションを表示するか
 }
 
+/* ---------- コンポーネント ---------- */
 export function ProjectImageInput({
 	initialImages,
 	onChange,
+	maxImages = 10,
+	hideReorder = false,
+	showCaption = true,
 }: ProjectImageInputProps) {
+	/* --- state --- */
 	const [images, setImages] = useState<ProjectImage[]>(
-		initialImages.sort((a, b) => a.order - b.order),
+		[...initialImages].sort((a, b) => a.order - b.order),
 	);
 	const [isAdding, setIsAdding] = useState(false);
 	const [newImage, setNewImage] = useState<ProjectImage>({
@@ -36,224 +45,157 @@ export function ProjectImageInput({
 	});
 	const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-	useEffect(() => {
-		// Update the parent component whenever images change
-		onChange(images);
-	}, [images, onChange]);
+	/* --- 親への通知 --- */
+	useEffect(() => onChange(images), [images, onChange]);
 
+	/* --- プレビュー URL 解放 --- */
+	useEffect(() => {
+		return () => {
+			if (previewUrl) {
+				URL.revokeObjectURL(previewUrl);
+			}
+		};
+	}, [previewUrl]);
+
+	/* ---------- ハンドラ ---------- */
 	const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
 		if (!file) return;
-
-		// Validate file is an image
 		if (!file.type.startsWith("image/")) {
 			alert("Please select an image file");
 			return;
 		}
 
-		// Create a temporary preview URL for display only
 		const objectUrl = URL.createObjectURL(file);
 		setPreviewUrl(objectUrl);
 
-		// Generate a temporary filename-based URL for identification
-		// This is not a real URL, just a way to identify the file later
+		// temp URL (ファイル識別用)
 		const tempUrl = `temp://upload/${Date.now()}-${file.name}`;
-
-		// Update the new image state
-		setNewImage({
-			...newImage,
-			file,
-			url: tempUrl, // Use the temp URL as identifier
-		});
-
-		// Cleanup preview URL when the component unmounts
-		return () => {
-			URL.revokeObjectURL(objectUrl);
-		};
+		setNewImage({ ...newImage, file, url: tempUrl });
 	};
 
 	const handleAddImage = () => {
 		if (!newImage.file) return;
+		if (images.length >= maxImages) return; // ★ 枚数上限
 
-		// Add the new image to the array with the correct order
-		const updatedImages = [
-			...images,
-			{
-				...newImage,
-				order: images.length,
-			},
-		];
+		setImages([...images, { ...newImage, order: images.length }]);
 
-		setImages(updatedImages);
-
-		// Reset the form
-		setNewImage({
-			url: "",
-			caption: "",
-			order: 0,
-			file: undefined,
-		});
+		// reset
+		setNewImage({ url: "", caption: "", order: 0, file: undefined });
 		setPreviewUrl(null);
 		setIsAdding(false);
 	};
 
 	const handleRemoveImage = (index: number) => {
-		// Remove the image at the specified index
-		const updatedImages = [...images];
-		updatedImages.splice(index, 1);
-
-		// Update order values for remaining images
-		const reorderedImages = updatedImages.map((img, idx) => ({
-			...img,
-			order: idx,
-		}));
-
-		setImages(reorderedImages);
+		const updated = images
+			.filter((_, i) => i !== index)
+			.map((img, idx) => ({ ...img, order: idx }));
+		setImages(updated);
 	};
 
-	const handleMoveImage = (index: number, direction: "up" | "down") => {
+	const handleMoveImage = (index: number, dir: "up" | "down") => {
+		if (hideReorder) return;
 		if (
-			(direction === "up" && index === 0) ||
-			(direction === "down" && index === images.length - 1)
-		) {
+			(dir === "up" && index === 0) ||
+			(dir === "down" && index === images.length - 1)
+		)
 			return;
-		}
 
-		const newIndex = direction === "up" ? index - 1 : index + 1;
-		const updatedImages = [...images];
-		const [movedImage] = updatedImages.splice(index, 1);
-		updatedImages.splice(newIndex, 0, movedImage);
-
-		// Update order values
-		const reorderedImages = updatedImages.map((img, idx) => ({
-			...img,
-			order: idx,
-		}));
-
-		setImages(reorderedImages);
+		const next = [...images];
+		const [moved] = next.splice(index, 1);
+		next.splice(dir === "up" ? index - 1 : index + 1, 0, moved);
+		setImages(next.map((img, idx) => ({ ...img, order: idx })));
 	};
 
-	// Function to get display URL for an image (either real URL or preview)
-	const getDisplayUrl = (image: ProjectImage, index: number) => {
-		// If it's a new image with a temporary URL, use the preview URL
-		if (image.url.startsWith("temp://upload/") && image.file) {
-			// Generate a preview URL on demand if we don't have one
-			return URL.createObjectURL(image.file);
-		}
-		// Otherwise use the stored URL
-		return image.url;
-	};
+	const displayUrl = (img: ProjectImage) =>
+		img.url.startsWith("temp://upload/") && img.file
+			? URL.createObjectURL(img.file)
+			: img.url;
 
+	/* ---------- JSX ---------- */
 	return (
 		<div className="space-y-4">
-			{/* Display existing images */}
+			{/* 一覧表示 */}
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-				{images.map((image, index) => (
+				{images.map((img, idx) => (
 					<div
-						key={`image-${image.id || index}`}
+						key={img.id ?? idx}
 						className="relative flex flex-col border border-border rounded-md overflow-hidden"
 					>
-						{/* Image */}
 						<div className="relative h-40 bg-muted">
 							<Image
-								src={getDisplayUrl(image, index)}
-								alt={image.caption || `Project image ${index + 1}`}
+								src={displayUrl(img)}
+								alt={img.caption || `Project image ${idx + 1}`}
 								fill
 								sizes="(max-width: 640px) 100vw, 50vw"
 								className="object-contain"
 							/>
 						</div>
 
-						{/* Caption */}
-						<div className="p-3 flex-1">
-							<p className="text-sm font-medium truncate">
-								{image.caption || `Image ${index + 1}`}
-							</p>
-							{image.file && (
-								<p className="text-xs text-muted-foreground truncate">
-									{image.file.name}
+						{showCaption && (
+							<div className="p-3 flex-1">
+								<p className="text-sm font-medium truncate">
+									{img.caption || `Image ${idx + 1}`}
 								</p>
-							)}
-						</div>
-
-						{/* Controls */}
-						<div className="p-2 bg-muted flex justify-between items-center">
-							<div className="flex gap-1">
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									className="h-8 w-8 p-0"
-									onClick={() => handleMoveImage(index, "up")}
-									disabled={index === 0}
-									aria-label="Move image up"
-								>
-									<svg
-										width="15"
-										height="15"
-										viewBox="0 0 15 15"
-										fill="none"
-										xmlns="http://www.w3.org/2000/svg"
-										className="h-4 w-4"
-										aria-hidden="true"
-									>
-										<path
-											d="M7.5 3L7.5 11M7.5 3L4 6.5M7.5 3L11 6.5"
-											stroke="currentColor"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										/>
-									</svg>
-								</Button>
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									className="h-8 w-8 p-0"
-									onClick={() => handleMoveImage(index, "down")}
-									disabled={index === images.length - 1}
-									aria-label="Move image down"
-								>
-									<svg
-										width="15"
-										height="15"
-										viewBox="0 0 15 15"
-										fill="none"
-										xmlns="http://www.w3.org/2000/svg"
-										className="h-4 w-4"
-										aria-hidden="true"
-									>
-										<path
-											d="M7.5 12L7.5 4M7.5 12L4 8.5M7.5 12L11 8.5"
-											stroke="currentColor"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										/>
-									</svg>
-								</Button>
+								{img.file && (
+									<p className="text-xs text-muted-foreground truncate">
+										{img.file.name}
+									</p>
+								)}
 							</div>
+						)}
+
+						<div className="p-2 bg-muted flex justify-between items-center">
+							{/* 並べ替えボタン */}
+							{!hideReorder && (
+								<div className="flex gap-1">
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										className="h-8 w-8 p-0"
+										onClick={() => handleMoveImage(idx, "up")}
+										disabled={idx === 0}
+										aria-label="Move image up"
+									>
+										▲
+									</Button>
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										className="h-8 w-8 p-0"
+										onClick={() => handleMoveImage(idx, "down")}
+										disabled={idx === images.length - 1}
+										aria-label="Move image down"
+									>
+										▼
+									</Button>
+								</div>
+							)}
+
+							{/* 削除ボタン */}
 							<Button
 								type="button"
 								variant="ghost"
 								size="sm"
 								className="h-8 w-8 p-0 text-destructive"
-								onClick={() => handleRemoveImage(index)}
-								aria-label={`Remove ${image.caption || `image ${index + 1}`}`}
+								onClick={() => handleRemoveImage(idx)}
+								aria-label="Remove image"
 							>
-								<X className="h-4 w-4" aria-hidden="true" />
+								<X className="h-4 w-4" />
 							</Button>
 						</div>
 					</div>
 				))}
 			</div>
 
-			{/* Add new image form */}
+			{/* 追加フォーム */}
 			{isAdding ? (
 				<div className="border border-border rounded-md p-4 space-y-4">
 					<div className="flex flex-col gap-2">
 						<label htmlFor="image-upload" className="text-sm font-medium">
-							Image
-							<span className="text-destructive"> *</span>
+							Image<span className="text-destructive"> *</span>
 						</label>
 						<Input
 							id="image-upload"
@@ -275,22 +217,22 @@ export function ProjectImageInput({
 							/>
 						</div>
 					)}
-
-					<div className="flex flex-col gap-2">
-						<label htmlFor="image-caption" className="text-sm font-medium">
-							Caption
-						</label>
-						<Textarea
-							id="image-caption"
-							placeholder="Describe this image..."
-							value={newImage.caption}
-							onChange={(e) =>
-								setNewImage({ ...newImage, caption: e.target.value })
-							}
-							className="min-h-20"
-						/>
-					</div>
-
+					{showCaption && (
+						<div className="flex flex-col gap-2">
+							<label htmlFor="image-caption" className="text-sm font-medium">
+								Caption
+							</label>
+							<Textarea
+								id="image-caption"
+								placeholder="Describe this image..."
+								value={newImage.caption}
+								onChange={(e) =>
+									setNewImage({ ...newImage, caption: e.target.value })
+								}
+								className="min-h-20"
+							/>
+						</div>
+					)}
 					<div className="flex justify-end gap-2">
 						<Button
 							type="button"
@@ -317,7 +259,7 @@ export function ProjectImageInput({
 						</Button>
 					</div>
 				</div>
-			) : (
+			) : images.length >= maxImages ? null : (
 				<Button
 					type="button"
 					variant="outline"

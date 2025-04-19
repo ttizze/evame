@@ -116,20 +116,20 @@ enum PageStatus {
 }
 
 model Page {
-  id            Int            @id @default(autoincrement())
-  slug          String         @unique
-  content       String
-  sourceLocale  String         @default("unknown") @map("source_locale")
-  status        PageStatus     @default(DRAFT)
-  createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String         @map("user_id")
-  pageSegments  PageSegment[]
-  tagPages      TagPage[]
-  likePages     LikePage[]
-  pageComments  PageComment[]
-  notifications Notification[]
+  id              Int              @id @default(autoincrement())
+  slug            String           @unique
+  content         String
+  sourceLocale    String           @default("unknown") @map("source_locale")
+  status          PageStatus       @default(DRAFT)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String           @map("user_id")
+  pageSegments    PageSegment[]
+  tagPages        TagPage[]
+  likePages       LikePage[]
+  pageComments    PageComment[]
+  notifications   Notification[]
   translationJobs TranslationJob[]
 
   @@index([createdAt])
@@ -317,14 +317,17 @@ model Project {
   sourceLocale String   @default("unknown") @map("source_locale")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+  iconImageId  String?  @unique @map("icon_image_id")
 
-  user                     User                           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  links                    ProjectLink[]
-  images                   ProjectImage[]
-  projectTagRelations      ProjectTagRelation[]
-  projectLikes             ProjectLike[]
-  projectSegments          ProjectSegment[]
-  translationJobs          TranslationJob[]
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  links               ProjectLink[]
+  images              ProjectImage[]       @relation("ProjectImages")
+  projectTagRelations ProjectTagRelation[]
+  projectLikes        ProjectLike[]
+  projectSegments     ProjectSegment[]
+  translationJobs     TranslationJob[]
+  iconImage           ProjectImage?        @relation("ProjectIcon", fields: [iconImageId], references: [id], onDelete: SetNull)
+
   @@map("projects")
 }
 
@@ -346,7 +349,8 @@ model ProjectImage {
   caption   String @default("")
   order     Int    @default(0)
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project     Project  @relation("ProjectImages", fields: [projectId], references: [id], onDelete: Cascade)
+  projectIcon Project? @relation("ProjectIcon")
 
   @@map("project_images")
 }
@@ -438,7 +442,6 @@ model ProjectSegmentTranslationVote {
   @@index([userId])
   @@map("project_segment_translation_votes")
 }
-
 
 model Account {
   userId            String
