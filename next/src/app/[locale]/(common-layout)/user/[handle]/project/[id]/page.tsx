@@ -20,6 +20,18 @@ const DynamicProject = dynamic(
 		loading: () => <ProjectDetailSkeleton />,
 	},
 );
+const DynamicFloatingControls = dynamic(
+	() =>
+		import("@/app/[locale]/_components/floating-controls.client").then(
+			(mod) => mod.FloatingControls,
+		),
+);
+const DynamicProjectLikeButton = dynamic(
+	() =>
+		import("@/app/[locale]/_components/project/project-like-button/server").then(
+			(mod) => mod.ProjectLikeButton,
+		),
+);
 interface ProjectPageProps {
 	params: Promise<{
 		handle: string;
@@ -61,6 +73,16 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 			<div className="py-4">
 				<UserInfo handle={projectDetail.user.handle} />
 			</div>
+			<DynamicFloatingControls
+					likeButton={
+						<DynamicProjectLikeButton
+							projectId={projectDetail.id}
+							showCount={false}
+							className="w-12 h-12 border rounded-full"
+						/>
+					}
+					shareTitle={projectDetail.title}
+				/>
 		</div>
 	);
 }
