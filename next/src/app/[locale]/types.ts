@@ -64,6 +64,7 @@ export type ProjectDetail = Omit<Project, "createdAt"> & {
 	createdAt: string;
 	user: SanitizedUser;
 	images: ProjectImage[];
+	iconImage: ProjectImage | null;
 	links: ProjectLink[];
 	projectTagRelations: TagProjectWithTag[];
 	segmentBundles: SegmentBundle[];

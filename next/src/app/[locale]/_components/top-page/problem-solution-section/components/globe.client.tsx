@@ -75,8 +75,8 @@ export default function Globe() {
 		// グローブの設定
 		const globe = createGlobe(canvas, {
 			devicePixelRatio: 2,
-			width: 500 * 2,
-			height: 500 * 2,
+			width: 450 * 2,
+			height: 450 * 2,
 			phi: 0,
 			theta: 0,
 			dark: 0,
@@ -113,7 +113,7 @@ export default function Globe() {
 		<div className="App flex justify-center items-center">
 			<canvas
 				ref={canvasRef}
-				className="w-[500px] h-[500px]"
+				className="w-[450px] h-[450px]"
 				style={{ aspectRatio: "1" }}
 			/>
 		</div>

@@ -6,10 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { startTransition, useActionState, useEffect, useState } from "react";
+import {
+	startTransition,
+	useActionState,
+	useEffect,
+	useMemo,
+	useState,
+} from "react";
 import { toast } from "sonner";
 import type { ProjectTagWithCount } from "../_db/queries.server";
 import { type ProjectActionResponse, projectAction } from "./action";
+import { ProjectIconInput } from "./icon-input.server";
 import { ProjectImageInput } from "./image-input";
 import { ProjectLinkInput } from "./link-input";
 import { ProjectTagInput } from "./tag-input";
@@ -28,12 +35,25 @@ interface ProjectImage {
 	order: number;
 	file?: File; // For new uploads
 }
-
+interface ProjectIcon {
+	// 1 枚だけ扱う
+	id?: string;
+	url: string;
+	file?: File; // 新規アップロード用
+}
 interface ProjectFormProps {
 	projectDetail?: ProjectDetail | null;
 	userHandle: string;
 	allProjectTags: ProjectTagWithCount[];
 }
+const fileNameFromUrl = (url: string): string => url.split("/").pop() ?? "";
+
+const stripFileField = <T extends { file?: File }>(
+	item: T,
+): Omit<T, "file"> => {
+	const { file: _file, ...rest } = item;
+	return rest;
+};
 
 export function ProjectForm({
 	projectDetail,
@@ -48,14 +68,17 @@ export function ProjectForm({
 		[];
 
 	const initialLinks = (projectDetail?.links as ProjectLink[]) || [];
-	const initialImages = (projectDetail?.images as ProjectImage[]) || [];
+	const initialImages =
+		(projectDetail?.images.filter(
+			(img) => img.id !== projectDetail?.iconImage?.id,
+		) as ProjectImage[]) || [];
 
-	// Get the tagLine from the segment with number 0
-	// This follows the same pattern as pages, where the title is stored as segment 0
-	const tagLineSegment = projectDetail?.segmentBundles.find(
-		(bundle) => bundle.segment.number === 0,
-	);
-	const tagLine = tagLineSegment?.segment.text || "";
+	const tagLine = useMemo(() => {
+		const bundle = projectDetail?.segmentBundles.find(
+			(b) => b.segment.number === 0,
+		);
+		return bundle?.segment.text ?? "";
+	}, [projectDetail]);
 
 	// フォーム状態
 	const [tags, setTags] = useState<string[]>(
@@ -63,7 +86,9 @@ export function ProjectForm({
 	);
 	const [links, setLinks] = useState<ProjectLink[]>(initialLinks);
 	const [images, setImages] = useState<ProjectImage[]>(initialImages);
-
+	const [icon, setIcon] = useState<ProjectImage | null>(
+		projectDetail?.iconImage ?? null,
+	);
 	const [state, action, isPending] = useActionState<
 		ProjectActionResponse,
 		FormData
@@ -85,42 +110,43 @@ export function ProjectForm({
 			toast.error(state.message);
 		}
 	}, [state, router, userHandle, projectDetail?.id, isCreateMode]);
-
-	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
+	const buildFormData = (event: React.FormEvent<HTMLFormElement>): FormData => {
 		const formData = new FormData(event.currentTarget);
 
-		// Add project ID if editing
-		if (projectDetail?.id) {
-			formData.set("projectId", projectDetail.id);
-		}
+		if (projectDetail?.id) formData.set("projectId", projectDetail.id);
 
-		// Add tag information to form data
 		formData.set("tags", JSON.stringify(tags));
-
-		// Add link information to form data
 		formData.set("links", JSON.stringify(links));
-
-		// Add image files to form data
-		for (const image of images) {
-			// Only add file for new images (with temp URL prefix)
-			if (image.file && image.url.startsWith("temp://upload/")) {
-				// Use the filename from the temp URL as the key to match in the server action
-				const fileName = image.url.split("/").pop() || "";
-				formData.append("imageFiles", image.file);
-				formData.append("imageFileNames", fileName);
+		// ---------------- Icon handling ----------------
+		if (!icon) {
+			formData.set("icon", ""); // removed
+		} else {
+			const { id, url, file } = icon;
+			// Send id when retaining; undefined id when new upload – server can infer
+			formData.set("icon", JSON.stringify({ id, url }));
+			if (file) {
+				formData.append("iconFile", file);
+				formData.append("iconFileName", file.name);
 			}
 		}
 
-		// Add image metadata to form data
-		formData.set(
-			"images",
-			JSON.stringify(images.map(({ file, ...imageData }) => imageData)),
-		);
+		// --------------- Images handling ---------------
+		for (const img of images) {
+			if (img.file && img.url.startsWith("temp://upload/")) {
+				formData.append("imageFiles", img.file);
+				formData.append("imageFileNames", fileNameFromUrl(img.url));
+			}
+		}
 
-		startTransition(() => {
-			action(formData);
-		});
+		formData.set("images", JSON.stringify(images.map(stripFileField)));
+
+		return formData;
+	};
+
+	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		const formData = buildFormData(e);
+		startTransition(() => action(formData));
 	};
 
 	return (
@@ -141,6 +167,19 @@ export function ProjectForm({
 
 			<form onSubmit={handleSubmit} className="space-y-8">
 				<div className="space-y-4">
+					<div>
+						<Label htmlFor="icon">Project Icon</Label>
+						<ProjectIconInput initialIcon={icon} onChange={setIcon} />
+						{state.zodErrors?.icon && (
+							<p className="text-sm text-red-500 mt-1">
+								{state.zodErrors.icon}
+							</p>
+						)}
+						<p className="text-sm text-muted-foreground mt-1">
+							This image will be shown on cards / OGP. 1 : 1 aspect ratio is
+							recommended.
+						</p>
+					</div>
 					<div>
 						<Label htmlFor="title" className="flex items-center">
 							Project Title <span className="text-red-500 ml-1">*</span>
@@ -245,8 +284,7 @@ export function ProjectForm({
 							</p>
 						)}
 						<p className="text-sm text-muted-foreground mt-1">
-							Add images showcasing your project. The first image will be used
-							as the thumbnail.
+							Add screenshots or visuals of your project.
 						</p>
 					</div>
 				</div>

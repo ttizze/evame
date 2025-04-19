@@ -57,7 +57,10 @@ export function ProjectManagementTabClient({
 								{projectSummary.title}
 							</Link>
 						</div>
-						<ProjectActionsDropdown projectSummary={projectSummary} />
+						<ProjectActionsDropdown
+							projectId={projectSummary.id}
+							projectOwnerHandle={projectSummary.user.handle}
+						/>
 					</div>
 				))}
 			</div>

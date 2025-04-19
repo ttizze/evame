@@ -90,33 +90,31 @@ export function PageList({
 						tag={pageSummary.tagPages.map((tagPage) => tagPage.tag)}
 					/>
 
-					<div className="flex justify-between items-center mt-2">
-						<div className="flex items-center">
-							<Link href={userLink} className="flex items-center">
-								<Avatar className="w-5 h-5 mr-1">
-									<AvatarImage {...props} />
-									<AvatarFallback>
-										{pageSummary.user.handle.charAt(0).toUpperCase()}
-									</AvatarFallback>
-								</Avatar>
-								<span className="text-xs text-gray-600">
-									{pageSummary.user.name}
-								</span>
-							</Link>
-							<p className="text-xs text-muted-foreground ml-2">
-								<ClientDateFormatter date={new Date(pageSummary.createdAt)} />
-							</p>
-						</div>
+					<div className="flex items-center mt-2">
+						<Link href={userLink} className="flex items-center">
+							<Avatar className="w-5 h-5 mr-1">
+								<AvatarImage {...props} />
+								<AvatarFallback>
+									{pageSummary.user.handle.charAt(0).toUpperCase()}
+								</AvatarFallback>
+							</Avatar>
+							<span className="text-xs text-gray-600">
+								{pageSummary.user.name}
+							</span>
+						</Link>
+						<p className="text-xs text-muted-foreground ml-2">
+							<ClientDateFormatter date={new Date(pageSummary.createdAt)} />
+						</p>
+					</div>
 
-						<div className="flex items-center gap-2">
-							<PageLikeButton pageId={pageSummary.id} showCount />
-							<PageCommentButton
-								commentCount={pageSummary._count?.pageComments || 0}
-								slug={pageSummary.slug}
-								userHandle={pageSummary.user.handle}
-								showCount
-							/>
-						</div>
+					<div className="flex items-center justify-self-end gap-2 mt-2">
+						<PageLikeButton pageId={pageSummary.id} />
+						<PageCommentButton
+							commentCount={pageSummary._count?.pageComments || 0}
+							slug={pageSummary.slug}
+							userHandle={pageSummary.user.handle}
+							showCount
+						/>
 					</div>
 				</div>
 			</div>

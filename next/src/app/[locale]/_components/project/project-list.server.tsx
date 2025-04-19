@@ -47,9 +47,9 @@ export async function ProjectList({
 			<div className="flex gap-4 w-full">
 				<div className="relative h-16 w-24 flex-shrink-0 overflow-hidden rounded">
 					<Link href={projectLink} className="block h-full w-full">
-						{projectSummary.images && projectSummary.images.length > 0 ? (
+						{projectSummary.iconImage ? (
 							<Image
-								src={projectSummary.images[0].url}
+								src={projectSummary.iconImage.url}
 								alt={projectSummary.title || ""}
 								fill
 								className="object-cover"
@@ -72,7 +72,10 @@ export async function ProjectList({
 						</Link>
 
 						{showOwnerActions && (
-							<ProjectActionsDropdown projectSummary={projectSummary} />
+							<ProjectActionsDropdown
+								projectId={projectSummary.id}
+								projectOwnerHandle={projectSummary.user.handle}
+							/>
 						)}
 					</div>
 
