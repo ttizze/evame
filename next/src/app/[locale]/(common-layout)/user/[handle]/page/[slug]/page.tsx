@@ -159,7 +159,11 @@ export default async function Page({
 
 				<DynamicFloatingControls
 					likeButton={
-						<DynamicPageLikeButton pageId={pageDetail.id} showCount={false} />
+						<DynamicPageLikeButton
+							pageId={pageDetail.id}
+							showCount={false}
+							className="w-12 h-12 border rounded-full"
+						/>
 					}
 					shareTitle={title}
 				/>

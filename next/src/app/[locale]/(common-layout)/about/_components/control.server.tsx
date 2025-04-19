@@ -30,6 +30,7 @@ export default async function Control({ locale }: { locale: string }) {
 				<DynamicPageLikeButton
 					pageId={pageWithTranslations.id}
 					showCount={false}
+					className="w-12 h-12 border rounded-full"
 				/>
 			}
 			shareTitle="Evame"
