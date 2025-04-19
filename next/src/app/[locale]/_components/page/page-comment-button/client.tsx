@@ -31,9 +31,9 @@ export function PageCommentButton({
 					aria-label="Comments"
 					variant="ghost"
 					size="icon"
-					className={`h-12 w-12 rounded-full border bg-background ${className}`}
+					className={`${className}`}
 				>
-					<MessageCircle className="h-5 w-5" />
+					<MessageCircle className="h-5 w-5 rounded-full" />
 				</Button>
 			</Link>
 			{showCount && (
