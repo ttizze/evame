@@ -35,6 +35,12 @@ const config: NextConfig = {
 			},
 			{
 				protocol: "https",
+				hostname: "evame.tech",
+				port: "",
+				pathname: "/api/og",
+			},
+			{
+				protocol: "https",
 				hostname: "lh3.googleusercontent.com",
 				port: "",
 				pathname: "/a/**",
