@@ -12,7 +12,14 @@ import {
 	CarouselNext,
 	CarouselPrevious,
 } from "@/components/ui/carousel";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { ProjectImage } from "@prisma/client";
+import { ExternalLink } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
@@ -51,15 +58,21 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 			<CardHeader className="pb-0 flex justify-between">
 				<div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
 					<CardTitle className="text-2xl flex items-center gap-2 font-bold">
-						{projectDetail.iconImage && (
-							<Image
-								src={projectDetail.iconImage.url}
-								alt={projectDetail.title}
-								width={100}
-								height={100}
-								className="aspect-square mr-2"
-							/>
-						)}
+						<div className="relative h-16 w-24 flex-shrink-0 overflow-hidden rounded">
+							{projectDetail.iconImage ? (
+								<Image
+									src={projectDetail.iconImage.url}
+									alt={projectDetail.title || ""}
+									fill
+									className="object-cover"
+									sizes="96px"
+								/>
+							) : (
+								<div className="flex h-full w-full items-center justify-center bg-muted text-2xl font-semibold text-muted-foreground">
+									{projectDetail.title.charAt(0).toUpperCase()}
+								</div>
+							)}
+						</div>
 						<div className="">
 							{projectDetail.title}
 							<h2 className="text-lg font-medium">
@@ -78,30 +91,41 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 					)}
 				</div>
 			</CardHeader>
-			<CardContent className="space-y-6 pt-6">
+			<CardContent className="pt-6">
 				<div className="flex flex-wrap gap-2">
 					<ProjectTagList projectTag={tags} />
 				</div>
-				<div className="flex justify-between items-center">
-					{projectDetail.links.length > 0 && (
-						<div className="space-y-2">
-							<h3 className="text-lg font-medium">Links</h3>
-							<ul className="pl-5 space-y-1">
-								{projectDetail.links.map((link) => (
-									<li key={link.id} className="hover:underline">
+				<div className="flex justify-end items-center">
+					<DropdownMenu>
+						<DropdownMenuTrigger className="border rounded-full px-5 py-1 mr-2 flex items-center gap-1 text-lg font-medium">
+							<ExternalLink className="w-4 h-4 mr-2" />
+							Visit
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="start">
+							{projectDetail.links.length > 0 &&
+								projectDetail.links.map((link) => (
+									<DropdownMenuItem key={link.id} asChild>
 										<Link
 											href={link.url}
 											target="_blank"
 											rel="noopener noreferrer"
+											className="flex items-center justify-between w-full"
 										>
-											{link.description}
+											<span>{link.description}</span>
 										</Link>
-									</li>
+									</DropdownMenuItem>
 								))}
-							</ul>
-						</div>
-					)}
+						</DropdownMenuContent>
+					</DropdownMenu>
 					<ProjectLikeButton projectId={projectDetail.id} />
+				</div>
+
+				<div className="prose dark:prose-invert max-w-none">
+					<DynamicMemoizedParsedContent
+						html={projectDetail.description}
+						segmentBundles={projectDetail.segmentBundles}
+						currentHandle={projectDetail.user.handle}
+					/>
 				</div>
 				{projectImages.length > 0 && (
 					<Carousel className="w-full">
@@ -129,14 +153,6 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 						<CarouselNext className="right-2" />
 					</Carousel>
 				)}
-
-				<div className="prose dark:prose-invert max-w-none">
-					<DynamicMemoizedParsedContent
-						html={projectDetail.description}
-						segmentBundles={projectDetail.segmentBundles}
-						currentHandle={projectDetail.user.handle}
-					/>
-				</div>
 
 				<div className="flex justify-between items-center pt-4 border-t">
 					<p className="text-sm text-muted-foreground">
