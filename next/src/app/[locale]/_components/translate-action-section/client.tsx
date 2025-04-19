@@ -2,7 +2,7 @@
 import type { TranslationJob } from "@prisma/client";
 import { useState } from "react";
 import type { TargetContentType } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
-import { AddTranslateDialog } from "./add-translate-dialog";
+import { AddTranslateDialog } from "./add-translate-dialog/client";
 import { LocaleSelector } from "./locale-selector/client";
 type TranslateActionSectionClientProps = {
 	pageId: number;

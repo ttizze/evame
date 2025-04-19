@@ -1,4 +1,5 @@
 import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/_lib/fetch-about-page";
+import { fetchLatestUserTranslationJob } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { TranslateActionSection } from "@/app/[locale]/_components/translate-action-section";
@@ -31,6 +32,10 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	const pageTranslationJobs = await fetchLatestPageTranslationJobs(
 		topPageDetail.id,
 	);
+	const latestUserTranslationJob = await fetchLatestUserTranslationJob(
+		topPageDetail.id,
+		currentUser?.id ?? "",
+	);
 
 	const [title, text] = topPageDetail.segmentBundles
 		.filter((sb) => sb.segment.number === 0 || sb.segment.number === 1)
@@ -52,9 +57,9 @@ export default async function HeroSection({ locale }: { locale: string }) {
 			<Icon className="absolute h-6 w-6 -bottom-3 -right-3 dark:text-white text-black" />
 			<div className="flex justify-center mb-10 z-10">
 				<TranslateActionSection
-					pageId={0}
+					pageId={topPageDetail.id}
 					currentHandle={currentHandle}
-					latestUserTranslationJob={null}
+					latestUserTranslationJob={latestUserTranslationJob}
 					translationJobs={pageTranslationJobs}
 					sourceLocale={sourceLocale}
 					targetContentType="page"
@@ -152,17 +157,16 @@ repeating-conic-gradient(from -45deg at 50% center,
 								"linear-gradient(to right, transparent 52%, black 52%)",
 						}}
 					/>
-
 					<Image
 						src="/favicon.svg"
 						alt="Hero section image"
 						width={100}
 						height={100}
 						className="relative z-10 dark:invert"
-						style={{ filter: "none" }}
 					/>
 				</div>
 			</div>
 		</div>
 	);
 }
+
