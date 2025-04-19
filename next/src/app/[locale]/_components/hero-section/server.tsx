@@ -169,4 +169,3 @@ repeating-conic-gradient(from -45deg at 50% center,
 		</div>
 	);
 }
-
