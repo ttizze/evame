@@ -158,7 +158,8 @@ repeating-conic-gradient(from -45deg at 50% center,
 						alt="Hero section image"
 						width={100}
 						height={100}
-						className="relative z-10"
+						className="relative z-10 dark:invert"
+						style={{ filter: 'none' }}
 					/>
 				</div>
 			</div>
