@@ -114,10 +114,9 @@ export async function ProjectList({
 								/>
 							</p>
 						</div>
-
-						<div className="flex items-center">
-							<ProjectLikeButton projectId={projectSummary.id} showCount />
-						</div>
+					</div>
+					<div className="flex justify-self-end items-center">
+						<ProjectLikeButton projectId={projectSummary.id} showCount />
 					</div>
 				</div>
 			</div>
