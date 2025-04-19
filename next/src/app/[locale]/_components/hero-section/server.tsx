@@ -159,7 +159,7 @@ repeating-conic-gradient(from -45deg at 50% center,
 						width={100}
 						height={100}
 						className="relative z-10 dark:invert"
-						style={{ filter: 'none' }}
+						style={{ filter: "none" }}
 					/>
 				</div>
 			</div>
