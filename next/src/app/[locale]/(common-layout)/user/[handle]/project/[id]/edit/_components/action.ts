@@ -119,7 +119,7 @@ export async function projectAction(
 		});
 		await upsertProjectTags(tags, projectId);
 		await upsertLinksTx(projectId, links);
-		await upsertImagesTx(projectId, processedImages);
+		await upsertImagesTx(projectId, processedImages, icon?.id);
 		await upsertIconTx(projectId, icon, iconFile, iconFileName);
 	} else {
 		// Create new project
@@ -133,7 +133,7 @@ export async function projectAction(
 
 		await upsertProjectTags(tags, created.id);
 		await upsertLinksTx(created.id, links);
-		await upsertImagesTx(created.id, processedImages);
+		await upsertImagesTx(created.id, processedImages, icon?.id);
 		await upsertIconTx(created.id, icon, iconFile, iconFileName);
 	}
 

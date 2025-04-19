@@ -57,7 +57,7 @@ export function SearchPageClient() {
 	}
 
 	return (
-		<div className="container mx-auto p-4">
+		<div className="">
 			<Form action="/search" className="mb-6">
 				<input type="hidden" name="category" value={currentCategory ?? ""} />
 				<div className="relative">

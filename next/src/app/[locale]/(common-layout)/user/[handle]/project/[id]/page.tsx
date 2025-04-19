@@ -66,7 +66,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 		return notFound();
 	}
 	return (
-		<div className="container max-w-4xl py-8">
+		<div className=" py-8">
 			<DynamicProject projectDetail={projectDetail} locale={locale} />
 			<div className="py-4">
 				<UserInfo handle={projectDetail.user.handle} />

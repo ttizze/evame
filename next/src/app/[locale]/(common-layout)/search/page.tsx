@@ -43,7 +43,7 @@ export default async function SearchPage({
 			<div className="max-w-screen-xl mx-auto py-6">
 				<SearchPageClient />
 				{query && (
-					<div className="container mx-auto px-4">
+					<div className="">
 						<SearchResults
 							pageSummaries={pageSummaries}
 							tags={tags}
