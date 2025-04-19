@@ -63,7 +63,7 @@ export async function ProjectList({
 						src={projectSummary.iconImage.url}
 						alt={projectSummary.title}
 						fill
-						className="object-cover"
+						className="object-contain"
 						sizes="96px"
 					/>
 				) : (

@@ -66,7 +66,7 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 								src={projectDetail.iconImage.url}
 								alt={projectDetail.title || ""}
 								fill
-								className="object-cover"
+								className="object-contain"
 								sizes="96px"
 							/>
 						) : (
