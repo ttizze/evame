@@ -115,7 +115,7 @@ describe("LocaleSelector", () => {
 		await user.click(button);
 
 		// "French" の選択肢が表示されるはず
-		const frenchOption = screen.getByText("français");
+		const frenchOption = screen.getByText("Français");
 		await user.click(frenchOption);
 
 		// handleLocaleChange により router.push が呼ばれることを検証
