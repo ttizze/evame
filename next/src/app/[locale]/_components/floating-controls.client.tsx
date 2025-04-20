@@ -31,11 +31,9 @@ export function FloatingControls({
 		<div className="flex gap-3 justify-center">
 			<DisplayModeCycle afterClick={ignoreNextScroll} />
 
-			{likeButton && <div className="h-12 w-12">{likeButton}</div>}
+			{likeButton && <div className="h-10 w-10">{likeButton}</div>}
 
-			<div className="h-12 w-12">
-				<ShareDialog />
-			</div>
+			<ShareDialog />
 		</div>
 	);
 
