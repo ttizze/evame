@@ -1,3 +1,4 @@
+import { FloatingControls } from "@/app/[locale]/_components/floating-controls.client";
 import { SortTabs } from "@/app/[locale]/_components/sort-tabs";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,6 @@ import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import type { SearchParams } from "nuqs/server";
-import { FloatingControls } from "@/app/[locale]/_components/floating-controls.client";
 const DynamicCommonTabs = dynamic(
 	() =>
 		import("@/app/[locale]/_components/common-tabs").then(
