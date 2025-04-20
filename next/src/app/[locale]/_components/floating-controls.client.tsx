@@ -2,7 +2,7 @@
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
 import { ShareDialog } from "../(common-layout)/user/[handle]/page/[slug]/_components/share-dialog";
-import { DisplayModeCycle } from "./display-mode-cycle";
+import { DisplayModeCycle } from "./display-mode-cycle.client";
 import { useScrollVisibility } from "./hooks/use-scroll-visibility";
 interface FloatingControlsProps {
 	likeButton?: React.ReactNode;
@@ -11,8 +11,8 @@ interface FloatingControlsProps {
 }
 export function FloatingControls({
 	likeButton,
-	position = `fixed bottom-4 right-4 md:right-auto md:left-1/2 
-              md:-translate-x-1/2 max-w-prose w-full px-4 md:px-0 
+	position = `fixed bottom-4 left-1/2 -translate-x-1/2
+              max-w-prose w-full px-4 md:px-0 
               duration-300 `,
 	alwaysVisible = false,
 }: FloatingControlsProps) {

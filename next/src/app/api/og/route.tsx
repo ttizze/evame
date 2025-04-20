@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fetchPageContext } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_lib/fetch-page-context";
+import type { DisplayMode } from "@/app/_context/display-types";
 import { ImageResponse } from "next/og";
 
 export const revalidate = 3600;
@@ -15,16 +16,11 @@ export async function GET(req: Request): Promise<Response> {
 	const locale: string = searchParams.get("locale") || "en";
 	const slug: string = searchParams.get("slug") || "";
 	const displayMode =
-		(searchParams.get("displayMode") as
-			| "source-only"
-			| "translation-only"
-			| "bilingual") ?? "translation-only"; // fallback
+		(searchParams.get("displayMode") as DisplayMode) ?? "both"; // fallback
 
 	const [logoData, pageContext] = await Promise.all([
 		readFile(join(process.cwd(), "public", "logo.png")),
-		fetchPageContext(slug, locale, {
-			displayMode,
-		}),
+		fetchPageContext(slug, locale),
 	]);
 
 	const logoSrc = Uint8Array.from(logoData).buffer;

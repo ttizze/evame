@@ -2,6 +2,7 @@ import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/pa
 import { stripHtmlTags } from "@/app/[locale]/_lib/strip-html-tags";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { DisplayProvider } from "@/app/_context/display-provider";
+import type { Pref } from "@/app/_context/display-types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
@@ -9,10 +10,8 @@ import dynamic from "next/dynamic";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import type { SearchParams } from "nuqs/server";
-import { createLoader, parseAsStringEnum } from "nuqs/server";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
-type Pref = "auto" | "source" | "translation" | "bilingual";
 const DynamicContentWithTranslations = dynamic(
 	() =>
 		import("./_components/content-with-translations").then(
@@ -62,30 +61,21 @@ const DynamicPageCommentForm = dynamic(
 );
 
 type Params = Promise<{ locale: string; handle: string; slug: string }>;
-const searchParamsSchema = {
-	displayMode: parseAsStringEnum([
-		"source-only",
-		"translation-only",
-		"bilingual",
-	]),
-};
-const loadSearchParams = createLoader(searchParamsSchema);
 
 export async function generateMetadata({
 	params,
-	searchParams,
 }: { params: Params; searchParams: Promise<SearchParams> }): Promise<Metadata> {
 	const { slug, locale } = await params;
-	const overrides = await loadSearchParams(searchParams);
-	const data = await fetchPageContext(slug, locale, overrides);
+	const data = await fetchPageContext(slug, locale);
 	if (!data) {
 		return {
 			title: "Page Not Found",
 		};
 	}
-	const { pageDetail, title, pageTranslationJobs, resolvedDisplayMode } = data;
+	const { pageDetail, pageTranslationJobs, title } = data;
+
 	const description = stripHtmlTags(pageDetail.content).slice(0, 200);
-	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${slug}&displayMode=${resolvedDisplayMode}`;
+	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${slug}`;
 	return {
 		title,
 		description,
@@ -114,11 +104,9 @@ export async function generateMetadata({
 
 export default async function Page({
 	params,
-	searchParams,
 }: { params: Params; searchParams: Promise<SearchParams> }) {
 	const { slug, locale } = await params;
-	const overrides = await loadSearchParams(searchParams);
-	const data = await fetchPageContext(slug, locale, overrides);
+	const data = await fetchPageContext(slug, locale);
 	if (!data) {
 		return notFound();
 	}
@@ -134,12 +122,13 @@ export default async function Page({
 	if (!isOwner && pageDetail.status !== "PUBLIC") {
 		return notFound();
 	}
-	const pref = (await cookies()).get("displayPref")?.value ?? ("auto" as Pref);
+	const pref: Pref =
+		((await cookies()).get("displayPref")?.value as Pref) ?? "auto";
 	return (
 		<DisplayProvider
 			userLocale={locale}
 			sourceLocale={pageDetail.sourceLocale}
-			initialPref={pref as Pref}
+			initialPref={pref}
 		>
 			<article className="w-full prose dark:prose-invert prose-a:underline  sm:prose lg:prose-lg mx-auto mb-20">
 				<DynamicContentWithTranslations pageData={data} />
