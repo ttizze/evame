@@ -2,7 +2,7 @@
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
 import { ShareDialog } from "../(common-layout)/user/[handle]/page/[slug]/_components/share-dialog";
-import { DisplayModeCycle } from "./display-mode-cycle";
+import { DisplayModeCycle } from "./display-mode-cycle.client";
 import { useScrollVisibility } from "./hooks/use-scroll-visibility";
 interface FloatingControlsProps {
 	likeButton?: React.ReactNode;
@@ -29,7 +29,7 @@ export function FloatingControls({
 	/* --- ボタン列 --- */
 	const Buttons = (
 		<div className="flex gap-3 justify-center">
-			<DisplayModeCycle />
+			<DisplayModeCycle afterClick={ignoreNextScroll} />
 
 			{likeButton && <div className="h-12 w-12">{likeButton}</div>}
 
