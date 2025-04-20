@@ -1,25 +1,18 @@
 "use client";
 import type { SegmentBundle } from "@/app/[locale]/types";
 import { useDisplay } from "@/app/_context/display-provider";
-import { Link } from "@/i18n/routing";
-import { Lock } from "lucide-react";
-import { SquarePen } from "lucide-react";
 import { TranslationSection } from "./translation-section";
 
 interface SegmentAndTranslationSectionProps {
 	segmentBundle: SegmentBundle;
-	showLockIcon?: boolean;
 	segmentTextClassName?: string;
 	currentHandle?: string;
-	editablePageSlug?: string;
 }
 
 export function SegmentAndTranslationSection({
 	segmentBundle,
-	showLockIcon = false,
 	segmentTextClassName,
 	currentHandle,
-	editablePageSlug,
 }: SegmentAndTranslationSectionProps) {
 	const { mode } = useDisplay();
 	return (
@@ -33,16 +26,6 @@ export function SegmentAndTranslationSection({
 							: "text-gray-300 dark:text-gray-600 [&>a]:text-gray-300 dark:[&>a]:text-gray-600 [&>strong]:text-gray-300 dark:[&>strong]:text-gray-600"
 					} ${segmentTextClassName}`}
 				>
-					{showLockIcon && <Lock className="h-6 w-6 mr-1 inline" />}
-					{currentHandle && editablePageSlug && (
-						<div className="ml-2">
-							<Link
-								href={`/user/${currentHandle}/page/${editablePageSlug}/edit`}
-							>
-								<SquarePen className="w-5 h-5" />
-							</Link>
-						</div>
-					)}
 					{segmentBundle.segment.text}
 				</span>
 			)}

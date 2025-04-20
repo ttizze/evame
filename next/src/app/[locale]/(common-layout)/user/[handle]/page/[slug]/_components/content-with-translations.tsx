@@ -60,14 +60,15 @@ export async function ContentWithTranslations({
 				{pageSegmentTitleWithTranslations && (
 					<DynamicSegmentAndTranslationSection
 						segmentBundle={pageSegmentTitleWithTranslations}
-						showLockIcon={pageDetail.status === "DRAFT"}
 						currentHandle={currentUser?.handle}
-						editablePageSlug={editablePageSlug}
 					/>
 				)}
 			</h1>
 			<PageTagList tag={pageDetail.tagPages.map((tagPage) => tagPage.tag)} />
-			<SubHeader pageDetail={pageDetail} />
+			<SubHeader
+				pageDetail={pageDetail}
+				currentUserHandle={currentUser?.handle}
+			/>
 			<DynamicTranslateActionSection
 				pageId={pageDetail.id}
 				currentHandle={currentUser?.handle}
