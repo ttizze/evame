@@ -53,7 +53,7 @@ const DynamicTranslateActionSection = dynamic(
 const DynamicPageCommentForm = dynamic(
 	() =>
 		import(
-			"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-form"
+			"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-form/client"
 		).then((mod) => mod.PageCommentForm),
 	{
 		loading: () => <p>Loading Comment Form...</p>,
@@ -162,11 +162,12 @@ export default async function Page({
 								showIcons={false}
 							/>
 						</div>
-						<PageCommentList pageId={pageDetail.id} locale={locale} />
+						<PageCommentList pageId={pageDetail.id} userLocale={locale} />
 					</div>
 					<DynamicPageCommentForm
 						pageId={pageDetail.id}
 						currentHandle={currentUser?.handle}
+						userLocale={locale}
 					/>
 				</div>
 			</article>

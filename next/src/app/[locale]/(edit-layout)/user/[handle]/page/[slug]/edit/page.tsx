@@ -8,7 +8,7 @@ import {
 	getPageWithTitleAndTagsBySlug,
 } from "./_db/queries.server";
 
-type Params = Promise<{ handle: string; slug: string }>;
+type Params = Promise<{ locale: string; handle: string; slug: string }>;
 
 const getPageData = cache(async (handle: string, slug: string) => {
 	if (!handle || !slug) notFound();
@@ -52,7 +52,7 @@ export default async function EditPage({
 }: {
 	params: Params;
 }) {
-	const { handle, slug } = await params;
+	const { locale, handle, slug } = await params;
 	const { currentUser, pageWithTitleAndTags, allTagsWithCount, title } =
 		await getPageData(handle, slug);
 
@@ -63,6 +63,7 @@ export default async function EditPage({
 			allTagsWithCount={allTagsWithCount}
 			initialTitle={title}
 			slug={slug}
+			userLocale={locale}
 		/>
 	);
 }

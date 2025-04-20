@@ -7,11 +7,13 @@ import { ReplyForm } from "./reply-form.client";
 interface PageCommentItemProps {
 	pageComment: PageCommentWithUserAndTranslations[number];
 	currentHandle: string | undefined;
+	userLocale: string;
 }
 
 export default function PageCommentItem({
 	pageComment,
 	currentHandle,
+	userLocale,
 }: PageCommentItemProps) {
 	const { props } = getImageProps({
 		src: pageComment.user.image,
@@ -57,6 +59,7 @@ export default function PageCommentItem({
 				pageId={pageComment.pageId}
 				currentHandle={currentHandle}
 				parentId={pageComment.id}
+				userLocale={userLocale}
 			/>
 			{pageComment.replies && pageComment.replies.length > 0 && (
 				<div className="border-l pl-4 pt-2">
@@ -65,6 +68,7 @@ export default function PageCommentItem({
 							key={reply.id}
 							pageComment={reply}
 							currentHandle={currentHandle}
+							userLocale={userLocale}
 						/>
 					))}
 				</div>

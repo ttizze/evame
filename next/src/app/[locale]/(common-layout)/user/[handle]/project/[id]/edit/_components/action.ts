@@ -31,6 +31,7 @@ function tagSchema() {
 
 const formSchema = z.object({
 	projectId: z.string().optional(),
+	userLocale: z.string(),
 	title: z.string().min(3).max(100),
 	tagLine: z.string().min(3).max(100),
 	description: z.string().min(10).max(500),
@@ -98,10 +99,18 @@ export async function projectAction(
 	if (!parsed.success)
 		return { success: false, zodErrors: parsed.error.flatten().fieldErrors };
 
-	const { projectId, tagLine, tags, links, images, icon, ...projectData } =
-		parsed.data;
+	const {
+		projectId,
+		tagLine,
+		tags,
+		links,
+		images,
+		icon,
+		userLocale,
+		...projectData
+	} = parsed.data;
 	const combined = `${tagLine} ${projectData.description}`;
-	const sourceLocale = await getLocaleFromHtml(combined);
+	const sourceLocale = await getLocaleFromHtml(combined, userLocale);
 
 	const imageFiles = formData.getAll("imageFiles") as File[];
 	const imageNames = formData.getAll("imageFileNames") as string[];
@@ -114,8 +123,14 @@ export async function projectAction(
 
 	if (projectId) {
 		// Update existing project
-		const existingProject = await prisma.project.findFirstOrThrow({
+		await prisma.project.findFirstOrThrow({
 			where: { id: projectId, userId: currentUser.id },
+		});
+		await prisma.project.update({
+			where: { id: projectId, userId: currentUser.id },
+			data: {
+				sourceLocale,
+			},
 		});
 		await upsertProjectTags(tags, projectId);
 		await upsertLinksTx(projectId, links);

@@ -7,11 +7,13 @@ import { type CommentActionResponse, commentAction } from "./action";
 
 export function PageCommentForm({
 	pageId,
+	userLocale,
 	currentHandle,
 	parentId,
 	onReplySuccess,
 }: {
 	pageId: number;
+	userLocale: string;
 	currentHandle: string | undefined;
 	parentId?: number;
 	onReplySuccess?: () => void;
@@ -30,6 +32,7 @@ export function PageCommentForm({
 		<>
 			<form action={action} className="space-y-4 relative">
 				<input type="hidden" name="pageId" value={pageId} />
+				<input type="hidden" name="userLocale" value={userLocale} />
 				{parentId && <input type="hidden" name="parentId" value={parentId} />}
 				<Editor
 					defaultValue={""}

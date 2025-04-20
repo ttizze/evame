@@ -35,16 +35,11 @@ interface ProjectImage {
 	order: number;
 	file?: File; // For new uploads
 }
-interface ProjectIcon {
-	// 1 枚だけ扱う
-	id?: string;
-	url: string;
-	file?: File; // 新規アップロード用
-}
 interface ProjectFormProps {
 	projectDetail?: ProjectDetail | null;
 	userHandle: string;
 	allProjectTags: ProjectTagWithCount[];
+	userLocale: string;
 }
 const fileNameFromUrl = (url: string): string => url.split("/").pop() ?? "";
 
@@ -59,6 +54,7 @@ export function ProjectForm({
 	projectDetail,
 	userHandle,
 	allProjectTags,
+	userLocale,
 }: ProjectFormProps) {
 	const router = useRouter();
 	const isCreateMode = !projectDetail;
@@ -166,6 +162,7 @@ export function ProjectForm({
 			</div>
 
 			<form onSubmit={handleSubmit} className="space-y-8">
+				<input type="hidden" name="userLocale" value={userLocale} />
 				<div className="space-y-4">
 					<div>
 						<Label htmlFor="icon">Project Icon</Label>
