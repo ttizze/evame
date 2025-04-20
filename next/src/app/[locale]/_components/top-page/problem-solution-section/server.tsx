@@ -76,7 +76,6 @@ export default async function ProblemSolutionSection({
 					className="w-12 h-12 border rounded-full"
 				/>
 			}
-			shareTitle="evame"
 			position="w-full flex justify-center"
 			alwaysVisible={true}
 			key="component-5"

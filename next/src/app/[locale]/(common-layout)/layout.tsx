@@ -1,4 +1,5 @@
 import { Footer } from "@/app/[locale]/_components/footer";
+import { DisplayProvider } from "@/app/_context/display-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
@@ -12,19 +13,25 @@ const Header = dynamic(
 );
 
 export default async function CommonLayout({
+	params,
 	children,
 }: {
+	params: Promise<{ locale: string }>;
 	children: React.ReactNode;
 }) {
 	const messages = await getMessages();
+	const { locale } = await params;
+
 	return (
 		<>
 			<NextIntlClientProvider messages={messages}>
-				<Header />
-				<main className="mb-5 mt-3 md:mt-5 flex-grow tracking-wider">
-					<div className="container mx-auto px-4 max-w-4xl">{children}</div>
-				</main>
-				<Footer />
+				<DisplayProvider userLocale={locale} sourceLocale="mixed">
+					<Header />
+					<main className="mb-5 mt-3 md:mt-5 flex-grow tracking-wider">
+						<div className="container mx-auto px-4 max-w-4xl">{children}</div>
+					</main>
+					<Footer />
+				</DisplayProvider>
 			</NextIntlClientProvider>
 		</>
 	);

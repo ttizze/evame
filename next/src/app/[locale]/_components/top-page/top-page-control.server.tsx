@@ -12,5 +12,5 @@ const DynamicFloatingControls = dynamic(
 );
 
 export default async function Control() {
-	return <DynamicFloatingControls shareTitle="Evame" />;
+	return <DynamicFloatingControls />;
 }

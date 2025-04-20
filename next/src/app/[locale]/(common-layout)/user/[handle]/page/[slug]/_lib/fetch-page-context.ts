@@ -1,18 +1,21 @@
 import { fetchPageDetail } from "@/app/[locale]/_db/page-queries.server";
 import { fetchLatestPageTranslationJobs } from "@/app/[locale]/_db/page-queries.server";
+import {
+	type DisplayMode,
+	decideFromLocales,
+} from "@/app/[locale]/_lib/display-preference";
 import { getCurrentUser } from "@/auth";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { fetchLatestUserTranslationJob } from "../_db/queries.server";
 import { fetchPageCommentsCount } from "../_db/queries.server";
 
+type Overrides = {
+	displayMode?: DisplayMode | null;
+};
+
 export const fetchPageContext = cache(
-	async (
-		slug: string,
-		locale: string,
-		showOriginal: boolean,
-		showTranslation: boolean,
-	) => {
+	async (slug: string, locale: string, overrides: Overrides) => {
 		const currentUser = await getCurrentUser();
 
 		const pageDetail = await fetchPageDetail(slug, locale, currentUser?.id);
@@ -20,22 +23,26 @@ export const fetchPageContext = cache(
 		if (!pageDetail || pageDetail.status === "ARCHIVE") {
 			return notFound();
 		}
-		const pageTitleWithTranslations = pageDetail.segmentBundles.find(
-			(item) => item.segment.number === 0,
+		const serverDefaultMode = decideFromLocales(
+			locale,
+			pageDetail.sourceLocale,
 		);
-		if (!pageTitleWithTranslations) {
-			return null;
-		}
-		let title: string;
-		if (showTranslation && showOriginal) {
-			title = `${pageTitleWithTranslations.segment.text} - ${pageTitleWithTranslations.best?.text}`;
-		} else if (showTranslation) {
-			title =
-				pageTitleWithTranslations.best?.text ??
-				pageTitleWithTranslations.segment.text;
-		} else {
-			title = pageTitleWithTranslations.segment.text;
-		}
+		const resolvedDisplayMode: DisplayMode =
+			overrides.displayMode ?? serverDefaultMode;
+
+		/* -------- タイトル決定 -------- */
+		const titleSegment = pageDetail.segmentBundles.find(
+			(b) => b.segment.number === 0,
+		);
+		if (!titleSegment) return null;
+
+		const title =
+			resolvedDisplayMode === "bilingual"
+				? `${titleSegment.segment.text} - ${titleSegment.best?.text ?? ""}`
+				: resolvedDisplayMode === "source-only"
+					? titleSegment.segment.text
+					: (titleSegment.best?.text ?? titleSegment.segment.text);
+
 		const [pageTranslationJobs, latestUserTranslationJob, pageCommentsCount] =
 			await Promise.all([
 				fetchLatestPageTranslationJobs(pageDetail.id),
@@ -49,6 +56,7 @@ export const fetchPageContext = cache(
 			pageTranslationJobs,
 			latestUserTranslationJob,
 			pageCommentsCount,
+			resolvedDisplayMode,
 		};
 	},
 );

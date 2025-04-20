@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-export async function getPageBySlug(slug: string) {
+export async function getPageWithTitleAndTagsBySlug(slug: string) {
 	return await prisma.page.findUnique({
 		where: { slug },
 		include: {
@@ -17,7 +17,9 @@ export async function getPageBySlug(slug: string) {
 		},
 	});
 }
-export type PageWithTitleAndTags = Awaited<ReturnType<typeof getPageBySlug>>;
+export type PageWithTitleAndTags = Awaited<
+	ReturnType<typeof getPageWithTitleAndTagsBySlug>
+>;
 
 export async function getAllTagsWithCount() {
 	return await prisma.tag.findMany({

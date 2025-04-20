@@ -1,3 +1,4 @@
+import { FloatingControls } from "@/app/[locale]/_components/floating-controls.client";
 import { SortTabs } from "@/app/[locale]/_components/sort-tabs";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { Button } from "@/components/ui/button";
@@ -161,6 +162,7 @@ export default async function UserPage({
 					</>
 				)}
 			</DynamicCommonTabs>
+			<FloatingControls />
 		</>
 	);
 }

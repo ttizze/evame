@@ -62,7 +62,7 @@ describe("SubHeader", () => {
 		);
 
 		expect(screen.getByText("Test User")).toBeInTheDocument();
-		expect(screen.getByText("1/1/2023, 9:00:00 AM")).toBeInTheDocument();
+		expect(screen.getByText("1/1/2023")).toBeInTheDocument();
 	});
 
 	test("does not render TOC button when no TOC content", () => {

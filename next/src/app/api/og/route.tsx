@@ -14,12 +14,17 @@ export async function GET(req: Request): Promise<Response> {
 	);
 	const locale: string = searchParams.get("locale") || "en";
 	const slug: string = searchParams.get("slug") || "";
-	const showTranslation: boolean =
-		searchParams.get("showTranslation") === "true";
-	const showOriginal: boolean = searchParams.get("showOriginal") === "true";
+	const displayMode =
+		(searchParams.get("displayMode") as
+			| "source-only"
+			| "translation-only"
+			| "bilingual") ?? "translation-only"; // fallback
+
 	const [logoData, pageContext] = await Promise.all([
 		readFile(join(process.cwd(), "public", "logo.png")),
-		fetchPageContext(slug, locale, showOriginal, showTranslation),
+		fetchPageContext(slug, locale, {
+			displayMode,
+		}),
 	]);
 
 	const logoSrc = Uint8Array.from(logoData).buffer;

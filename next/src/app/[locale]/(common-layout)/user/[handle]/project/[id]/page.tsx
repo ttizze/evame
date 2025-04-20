@@ -79,7 +79,6 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 						className="w-12 h-12 border rounded-full"
 					/>
 				}
-				shareTitle={projectDetail.title}
 			/>
 		</div>
 	);

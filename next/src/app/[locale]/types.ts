@@ -52,10 +52,7 @@ export type PageDetail = Omit<Page, "createdAt"> & {
 		pageComments: number;
 	};
 };
-export type PageSummary = Omit<
-	PageDetail,
-	"content" | "updatedAt" | "userId" | "sourceLocale"
->;
+export type PageSummary = Omit<PageDetail, "content" | "updatedAt" | "userId">;
 
 type TagProjectWithTag = ProjectTagRelation & {
 	projectTag: ProjectTag;
@@ -73,7 +70,4 @@ export type ProjectDetail = Omit<Project, "createdAt"> & {
 	};
 };
 
-export type ProjectSummary = Omit<
-	ProjectDetail,
-	"description" | "userId" | "sourceLocale"
->;
+export type ProjectSummary = Omit<ProjectDetail, "description" | "userId">;

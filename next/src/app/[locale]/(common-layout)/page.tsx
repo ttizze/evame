@@ -1,6 +1,4 @@
 import { getCurrentUser } from "@/auth";
-import type { SearchParams } from "nuqs/server";
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,8 +6,8 @@ import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsString } from "nuqs/server";
-
 const DynamicCommonTabs = dynamic(
 	() =>
 		import("@/app/[locale]/_components/common-tabs").then(

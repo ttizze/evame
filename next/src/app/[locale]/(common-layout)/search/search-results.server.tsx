@@ -47,13 +47,7 @@ export function SearchResults({
 					pageSummaries.length > 0 && (
 						<div className="space-y-4">
 							{pageSummaries.map((p) => (
-								<PageList
-									key={p.id}
-									pageSummary={p}
-									pageLink={`/user/${p.user.handle}/page/${p.slug}`}
-									userLink={`/user/${p.user.handle}`}
-									locale={locale}
-								/>
+								<PageList key={p.id} pageSummary={p} locale={locale} />
 							))}
 						</div>
 					)}
@@ -78,13 +72,7 @@ export function SearchResults({
 					pageSummaries.length > 0 && (
 						<div className="space-y-4">
 							{pageSummaries.map((p) => (
-								<PageList
-									key={p.id}
-									pageSummary={p}
-									pageLink={`/user/${p.user.handle}/page/${p.slug}`}
-									userLink={`/user/${p.user.handle}`}
-									locale={locale}
-								/>
+								<PageList key={p.id} pageSummary={p} locale={locale} />
 							))}
 						</div>
 					)}

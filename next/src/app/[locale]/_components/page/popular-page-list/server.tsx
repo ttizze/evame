@@ -44,8 +44,6 @@ export default async function PopularPageList({
 				<PageList
 					key={pageSummary.id}
 					pageSummary={pageSummary}
-					pageLink={`/user/${pageSummary.user.handle}/page/${pageSummary.slug}`}
-					userLink={`/user/${pageSummary.user.handle}`}
 					index={index}
 					locale={locale}
 					currentUserHandle={currentUserHandle}

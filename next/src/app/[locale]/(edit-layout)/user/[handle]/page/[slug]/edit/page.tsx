@@ -3,7 +3,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { EditPageClient } from "./_components/edit-page-client";
-import { getAllTagsWithCount, getPageBySlug } from "./_db/queries.server";
+import {
+	getAllTagsWithCount,
+	getPageWithTitleAndTagsBySlug,
+} from "./_db/queries.server";
 
 type Params = Promise<{ handle: string; slug: string }>;
 
@@ -15,7 +18,7 @@ const getPageData = cache(async (handle: string, slug: string) => {
 		return notFound();
 	}
 	const [pageWithTitleAndTags, allTagsWithCount] = await Promise.all([
-		getPageBySlug(slug),
+		getPageWithTitleAndTagsBySlug(slug),
 		getAllTagsWithCount(),
 	]);
 	const title = pageWithTitleAndTags?.pageSegments.find(
