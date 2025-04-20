@@ -54,8 +54,6 @@ export async function PageListServer({
 					<PageList
 						key={pageSummary.id}
 						pageSummary={pageSummary}
-						pageLink={`/user/${handle}/page/${pageSummary.slug}`}
-						userLink={`/user/${handle}`}
 						showOwnerActions={isOwner}
 						locale={locale}
 						currentUserHandle={currentUserHandle}
