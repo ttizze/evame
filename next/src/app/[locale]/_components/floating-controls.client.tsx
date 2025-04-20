@@ -11,8 +11,8 @@ interface FloatingControlsProps {
 }
 export function FloatingControls({
 	likeButton,
-	position = `fixed bottom-4 right-4 md:right-auto md:left-1/2 
-              md:-translate-x-1/2 max-w-prose w-full px-4 md:px-0 
+	position = `fixed bottom-4 left-1/2 -translate-x-1/2
+              max-w-prose w-full px-4 md:px-0 
               duration-300 `,
 	alwaysVisible = false,
 }: FloatingControlsProps) {
@@ -29,7 +29,7 @@ export function FloatingControls({
 	/* --- ボタン列 --- */
 	const Buttons = (
 		<div className="flex gap-3 justify-center">
-			<DisplayModeCycle afterClick={ignoreNextScroll} />
+			<DisplayModeCycle />
 
 			{likeButton && <div className="h-12 w-12">{likeButton}</div>}
 

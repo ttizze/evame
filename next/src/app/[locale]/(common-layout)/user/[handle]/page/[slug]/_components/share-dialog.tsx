@@ -25,7 +25,7 @@ export function ShareDialog() {
 	const [isOpen, setIsOpen] = useState(false);
 
 	/* いま表示中のモードを取得 */
-	const { mode } = useDisplay(); // "source-only" | "translation-only" | "bilingual"
+	const { mode } = useDisplay();
 
 	const shareTitle = typeof window !== "undefined" ? document.title : "";
 
