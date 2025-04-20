@@ -49,10 +49,6 @@ export async function ContentWithTranslations({
 	const pageSegmentTitleWithTranslations = pageDetail.segmentBundles.filter(
 		(item) => item.segment.number === 0,
 	)[0];
-	const editablePageSlug =
-		pageDetail.user.handle === currentUser?.handle
-			? pageDetail.slug
-			: undefined;
 
 	return (
 		<>
