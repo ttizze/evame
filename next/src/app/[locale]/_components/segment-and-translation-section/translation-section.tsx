@@ -9,11 +9,13 @@ import { VoteButtons } from "./vote-buttons/client";
 interface TranslationSectionProps {
 	segmentBundle: SegmentBundle;
 	currentHandle: string | undefined;
+	interactive?: boolean;
 }
 
 export function TranslationSection({
 	segmentBundle,
 	currentHandle,
+	interactive = true,
 }: TranslationSectionProps) {
 	const [isSelected, setIsSelected] = useState(false);
 	const { best } = segmentBundle;
@@ -37,7 +39,7 @@ export function TranslationSection({
 			>
 				{sanitizedAndParsedText}
 			</span>
-			{isSelected && (
+			{isSelected && interactive && (
 				<>
 					<span className="flex items-center justify-end gap-2">
 						<Link href={`/user/${best.user.handle}`} className="!no-underline">

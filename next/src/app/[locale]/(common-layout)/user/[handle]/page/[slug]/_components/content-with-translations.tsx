@@ -49,10 +49,6 @@ export async function ContentWithTranslations({
 	const pageSegmentTitleWithTranslations = pageDetail.segmentBundles.filter(
 		(item) => item.segment.number === 0,
 	)[0];
-	const editablePageSlug =
-		pageDetail.user.handle === currentUser?.handle
-			? pageDetail.slug
-			: undefined;
 
 	return (
 		<>
@@ -60,14 +56,15 @@ export async function ContentWithTranslations({
 				{pageSegmentTitleWithTranslations && (
 					<DynamicSegmentAndTranslationSection
 						segmentBundle={pageSegmentTitleWithTranslations}
-						showLockIcon={pageDetail.status === "DRAFT"}
 						currentHandle={currentUser?.handle}
-						editablePageSlug={editablePageSlug}
 					/>
 				)}
 			</h1>
 			<PageTagList tag={pageDetail.tagPages.map((tagPage) => tagPage.tag)} />
-			<SubHeader pageDetail={pageDetail} />
+			<SubHeader
+				pageDetail={pageDetail}
+				currentUserHandle={currentUser?.handle}
+			/>
 			<DynamicTranslateActionSection
 				pageId={pageDetail.id}
 				currentHandle={currentUser?.handle}
