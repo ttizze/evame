@@ -1,4 +1,5 @@
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-list/server";
+import { DisplayProvider } from "@/app/[locale]/_lib/display-provider";
 import { stripHtmlTags } from "@/app/[locale]/_lib/strip-html-tags";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -7,7 +8,7 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import type { SearchParams } from "nuqs/server";
-import { createLoader, parseAsBoolean } from "nuqs/server";
+import { createLoader, parseAsStringEnum } from "nuqs/server";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
 const DynamicContentWithTranslations = dynamic(
@@ -60,8 +61,11 @@ const DynamicPageCommentForm = dynamic(
 
 type Params = Promise<{ locale: string; handle: string; slug: string }>;
 const searchParamsSchema = {
-	showOriginal: parseAsBoolean.withDefault(true),
-	showTranslation: parseAsBoolean.withDefault(true),
+	displayMode: parseAsStringEnum([
+		"source-only",
+		"translation-only",
+		"bilingual",
+	]),
 };
 const loadSearchParams = createLoader(searchParamsSchema);
 
@@ -70,22 +74,16 @@ export async function generateMetadata({
 	searchParams,
 }: { params: Params; searchParams: Promise<SearchParams> }): Promise<Metadata> {
 	const { slug, locale } = await params;
-	const { showOriginal, showTranslation } =
-		await loadSearchParams(searchParams);
-	const data = await fetchPageContext(
-		slug,
-		locale,
-		showOriginal,
-		showTranslation,
-	);
+	const overrides = await loadSearchParams(searchParams);
+	const data = await fetchPageContext(slug, locale, overrides);
 	if (!data) {
 		return {
 			title: "Page Not Found",
 		};
 	}
-	const { pageDetail, title, pageTranslationJobs } = data;
+	const { pageDetail, title, pageTranslationJobs, resolvedDisplayMode } = data;
 	const description = stripHtmlTags(pageDetail.content).slice(0, 200);
-	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${slug}&showOriginal=${showOriginal}&showTranslation=${showTranslation}`;
+	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${slug}&displayMode=${resolvedDisplayMode}`;
 	return {
 		title,
 		description,
@@ -117,14 +115,8 @@ export default async function Page({
 	searchParams,
 }: { params: Params; searchParams: Promise<SearchParams> }) {
 	const { slug, locale } = await params;
-	const { showOriginal, showTranslation } =
-		await loadSearchParams(searchParams);
-	const data = await fetchPageContext(
-		slug,
-		locale,
-		showOriginal,
-		showTranslation,
-	);
+	const overrides = await loadSearchParams(searchParams);
+	const data = await fetchPageContext(slug, locale, overrides);
 	if (!data) {
 		return notFound();
 	}
@@ -135,6 +127,7 @@ export default async function Page({
 		pageCommentsCount,
 		pageTranslationJobs,
 		latestUserTranslationJob,
+		resolvedDisplayMode,
 	} = data;
 
 	const isOwner = pageDetail.user.handle === currentUser?.handle;
@@ -143,14 +136,13 @@ export default async function Page({
 	}
 
 	return (
-		<div className="w-full  mx-auto">
+		<DisplayProvider
+			sourceLocale={pageDetail.sourceLocale}
+			userLocale={locale}
+			forcedMode={resolvedDisplayMode}
+		>
 			<article className="w-full prose dark:prose-invert prose-a:underline  sm:prose lg:prose-lg mx-auto mb-20">
-				<DynamicContentWithTranslations
-					slug={slug}
-					locale={locale}
-					showOriginal={showOriginal}
-					showTranslation={showTranslation}
-				/>
+				<DynamicContentWithTranslations pageData={data} />
 				<div className="flex items-center gap-4">
 					<DynamicPageLikeButton pageId={pageDetail.id} showCount />
 					<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
@@ -190,6 +182,6 @@ export default async function Page({
 					/>
 				</div>
 			</article>
-		</div>
+		</DisplayProvider>
 	);
 }

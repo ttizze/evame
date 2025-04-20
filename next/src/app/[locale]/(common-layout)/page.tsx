@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/auth";
 import type { SearchParams } from "nuqs/server";
 
+import { DisplayProvider } from "@/app/[locale]/_lib/display-provider";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,7 +10,6 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { createLoader, parseAsString } from "nuqs/server";
-
 const DynamicCommonTabs = dynamic(
 	() =>
 		import("@/app/[locale]/_components/common-tabs").then(
@@ -120,136 +120,144 @@ export default async function HomePage({
 	const { tab, sort } = await loadSearchParams(searchParams);
 	const MoreButtonClass = "rounded-full w-1/2 md:w-1/3";
 	return (
-		<div className="flex flex-col gap-8 justify-between mb-12">
-			{!currentUser && (
-				<>
-					<DynamicHeroSection locale={locale} />
-					<DynamicProblemSolutionSection locale={locale} />
-					<div className="mb-32 flex justify-center mt-10">
-						<StartButton className="w-60 h-12 text-xl" text="Get Started" />
-					</div>
-				</>
-			)}
-			<DynamicControl />
-			<DynamicCommonTabs defaultTab={tab}>
-				{tab === "home" && (
-					<div className="space-y-12">
-						<section>
-							<NewPageList locale={locale} searchParams={searchParams} />
-							<div className="flex justify-center w-full mt-6">
-								<Button
-									variant="default"
-									size="default"
-									asChild
-									className={MoreButtonClass}
-								>
-									<Link
-										href={"?tab=pages&sort=new"}
-										className="gap-1 flex items-center justify-center"
-									>
-										View more
-										<ArrowRight className="h-3 w-3" />
-									</Link>
-								</Button>
-							</div>
-						</section>
-						<section>
-							<NewProjectList locale={locale} searchParams={searchParams} />
-							<div className="flex justify-center w-full mt-6">
-								<Button
-									variant="default"
-									size="default"
-									asChild
-									className={MoreButtonClass}
-								>
-									<Link
-										href={"?tab=projects&sort=new"}
-										className="gap-1 flex items-center justify-center"
-									>
-										View more
-										<ArrowRight className="h-3 w-3" />
-									</Link>
-								</Button>
-							</div>
-						</section>
-
-						<section>
-							<PopularPageList locale={locale} searchParams={searchParams} />
-							<div className="flex justify-center w-full mt-6">
-								<Button
-									variant="default"
-									size="default"
-									asChild
-									className={MoreButtonClass}
-								>
-									<Link
-										href={"?tab=pages&sort=popular"}
-										className="gap-1 flex items-center justify-center"
-									>
-										View more
-										<ArrowRight className="h-3 w-3" />
-									</Link>
-								</Button>
-							</div>
-						</section>
-
-						<section>
-							<PopularProjectList locale={locale} searchParams={searchParams} />
-							<div className="flex justify-center w-full mt-6">
-								<Button
-									variant="default"
-									size="default"
-									asChild
-									className={MoreButtonClass}
-								>
-									<Link
-										href={"?tab=projects&sort=popular"}
-										className="gap-1 flex items-center justify-center"
-									>
-										View more
-										<ArrowRight className="h-3 w-3" />
-									</Link>
-								</Button>
-							</div>
-						</section>
-
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-							<section>
-								<h2 className="text-2xl font-bold mb-4">Popular Tags</h2>
-								<Card className="rounded-lg p-4 shadow-sm">
-									<PopularPageTagsList limit={10} />
-								</Card>
-							</section>
-							<section>
-								<h2 className="text-2xl font-bold mb-4">Popular Users</h2>
-								<Card className="rounded-lg p-4 shadow-sm">
-									<PopularUsersList limit={5} />
-								</Card>
-							</section>
+		<DisplayProvider userLocale={locale} sourceLocale="mixed">
+			<div className="flex flex-col gap-8 justify-between mb-12">
+				{!currentUser && (
+					<>
+						<DynamicHeroSection locale={locale} />
+						<DynamicProblemSolutionSection locale={locale} />
+						<div className="mb-32 flex justify-center mt-10">
+							<StartButton className="w-60 h-12 text-xl" text="Get Started" />
 						</div>
-					</div>
-				)}
-				{tab === "projects" && (
-					<>
-						<SortTabs defaultSort={sort} />
-						{sort === "popular" ? (
-							<PopularProjectList locale={locale} searchParams={searchParams} />
-						) : (
-							<NewProjectList locale={locale} searchParams={searchParams} />
-						)}
 					</>
 				)}
-				{tab === "pages" && (
-					<>
-						<SortTabs defaultSort={sort} />
-						{sort === "popular" ? (
-							<PopularPageList locale={locale} searchParams={searchParams} />
-						) : (
-							<NewPageList locale={locale} searchParams={searchParams} />
-						)}
-					</>
-				)}
-			</DynamicCommonTabs>
-		</div>
+				<DynamicControl />
+				<DynamicCommonTabs defaultTab={tab}>
+					{tab === "home" && (
+						<div className="space-y-12">
+							<section>
+								<NewPageList locale={locale} searchParams={searchParams} />
+								<div className="flex justify-center w-full mt-6">
+									<Button
+										variant="default"
+										size="default"
+										asChild
+										className={MoreButtonClass}
+									>
+										<Link
+											href={"?tab=pages&sort=new"}
+											className="gap-1 flex items-center justify-center"
+										>
+											View more
+											<ArrowRight className="h-3 w-3" />
+										</Link>
+									</Button>
+								</div>
+							</section>
+							<section>
+								<NewProjectList locale={locale} searchParams={searchParams} />
+								<div className="flex justify-center w-full mt-6">
+									<Button
+										variant="default"
+										size="default"
+										asChild
+										className={MoreButtonClass}
+									>
+										<Link
+											href={"?tab=projects&sort=new"}
+											className="gap-1 flex items-center justify-center"
+										>
+											View more
+											<ArrowRight className="h-3 w-3" />
+										</Link>
+									</Button>
+								</div>
+							</section>
+
+							<section>
+								<PopularPageList locale={locale} searchParams={searchParams} />
+								<div className="flex justify-center w-full mt-6">
+									<Button
+										variant="default"
+										size="default"
+										asChild
+										className={MoreButtonClass}
+									>
+										<Link
+											href={"?tab=pages&sort=popular"}
+											className="gap-1 flex items-center justify-center"
+										>
+											View more
+											<ArrowRight className="h-3 w-3" />
+										</Link>
+									</Button>
+								</div>
+							</section>
+
+							<section>
+								<PopularProjectList
+									locale={locale}
+									searchParams={searchParams}
+								/>
+								<div className="flex justify-center w-full mt-6">
+									<Button
+										variant="default"
+										size="default"
+										asChild
+										className={MoreButtonClass}
+									>
+										<Link
+											href={"?tab=projects&sort=popular"}
+											className="gap-1 flex items-center justify-center"
+										>
+											View more
+											<ArrowRight className="h-3 w-3" />
+										</Link>
+									</Button>
+								</div>
+							</section>
+
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+								<section>
+									<h2 className="text-2xl font-bold mb-4">Popular Tags</h2>
+									<Card className="rounded-lg p-4 shadow-sm">
+										<PopularPageTagsList limit={10} />
+									</Card>
+								</section>
+								<section>
+									<h2 className="text-2xl font-bold mb-4">Popular Users</h2>
+									<Card className="rounded-lg p-4 shadow-sm">
+										<PopularUsersList limit={5} />
+									</Card>
+								</section>
+							</div>
+						</div>
+					)}
+					{tab === "projects" && (
+						<>
+							<SortTabs defaultSort={sort} />
+							{sort === "popular" ? (
+								<PopularProjectList
+									locale={locale}
+									searchParams={searchParams}
+								/>
+							) : (
+								<NewProjectList locale={locale} searchParams={searchParams} />
+							)}
+						</>
+					)}
+					{tab === "pages" && (
+						<>
+							<SortTabs defaultSort={sort} />
+							{sort === "popular" ? (
+								<PopularPageList locale={locale} searchParams={searchParams} />
+							) : (
+								<NewPageList locale={locale} searchParams={searchParams} />
+							)}
+						</>
+					)}
+				</DynamicCommonTabs>
+			</div>
+		</DisplayProvider>
 	);
 }

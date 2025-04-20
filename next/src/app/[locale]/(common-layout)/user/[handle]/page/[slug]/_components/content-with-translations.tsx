@@ -1,7 +1,7 @@
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
-import { fetchPageContext } from "../_lib/fetch-page-context";
+import type { fetchPageContext } from "../_lib/fetch-page-context";
 import { SubHeader } from "./sub-header";
 const DynamicTranslateActionSection = dynamic(
 	() =>
@@ -30,25 +30,13 @@ const DynamicSegmentAndTranslationSection = dynamic(
 );
 
 interface ContentWithTranslationsProps {
-	slug: string;
-	locale: string;
-	showOriginal: boolean;
-	showTranslation: boolean;
+	pageData: Awaited<ReturnType<typeof fetchPageContext>>;
 }
 
 export async function ContentWithTranslations({
-	slug,
-	locale,
-	showOriginal,
-	showTranslation,
+	pageData,
 }: ContentWithTranslationsProps) {
-	const data = await fetchPageContext(
-		slug,
-		locale,
-		showOriginal,
-		showTranslation,
-	);
-	if (!data) {
+	if (!pageData) {
 		return notFound();
 	}
 	const {
@@ -56,7 +44,7 @@ export async function ContentWithTranslations({
 		currentUser,
 		pageTranslationJobs,
 		latestUserTranslationJob,
-	} = data;
+	} = pageData;
 
 	const pageSegmentTitleWithTranslations = pageDetail.segmentBundles.filter(
 		(item) => item.segment.number === 0,

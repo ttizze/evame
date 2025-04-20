@@ -1,4 +1,5 @@
 import { Footer } from "@/app/[locale]/_components/footer";
+import { UserPrefProvider } from "@/app/_providers/user-pref-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
@@ -20,11 +21,13 @@ export default async function CommonLayout({
 	return (
 		<>
 			<NextIntlClientProvider messages={messages}>
-				<Header />
-				<main className="mb-5 mt-3 md:mt-5 flex-grow tracking-wider">
-					<div className="container mx-auto px-4 max-w-4xl">{children}</div>
-				</main>
-				<Footer />
+				<UserPrefProvider>
+					<Header />
+					<main className="mb-5 mt-3 md:mt-5 flex-grow tracking-wider">
+						<div className="container mx-auto px-4 max-w-4xl">{children}</div>
+					</main>
+					<Footer />
+				</UserPrefProvider>
 			</NextIntlClientProvider>
 		</>
 	);
