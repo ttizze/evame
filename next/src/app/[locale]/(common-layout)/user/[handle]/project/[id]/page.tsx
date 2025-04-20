@@ -76,7 +76,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 					<DynamicProjectLikeButton
 						projectId={projectDetail.id}
 						showCount={false}
-						className="w-12 h-12 border rounded-full"
+						className="w-10 h-10 border rounded-full"
 					/>
 				}
 			/>

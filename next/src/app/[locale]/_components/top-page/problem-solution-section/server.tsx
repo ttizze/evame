@@ -73,7 +73,7 @@ export default async function ProblemSolutionSection({
 				<PageLikeButton
 					pageId={pageDetail.id}
 					showCount={false}
-					className="w-12 h-12 border rounded-full"
+					className="w-10 h-10 border rounded-full"
 				/>
 			}
 			position="w-full flex justify-center"
