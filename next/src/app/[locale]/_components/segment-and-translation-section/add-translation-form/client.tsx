@@ -1,3 +1,4 @@
+"use client";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import type { ActionResponse } from "@/app/types";

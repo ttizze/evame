@@ -3,16 +3,19 @@ import { fetchPageCommentsWithUserAndTranslations } from "./_lib/fetch-page-comm
 import PageCommentItem from "./page-comment-item/server";
 
 interface CommentListProps {
-	locale: string;
+	userLocale: string;
 	pageId: number;
 }
 
-export async function PageCommentList({ locale, pageId }: CommentListProps) {
+export async function PageCommentList({
+	userLocale,
+	pageId,
+}: CommentListProps) {
 	const currentUser = await getCurrentUser();
 	const pageCommentsWithUserAndTranslations =
 		await fetchPageCommentsWithUserAndTranslations(
 			pageId,
-			locale,
+			userLocale,
 			currentUser?.id,
 		);
 	return (
@@ -23,6 +26,7 @@ export async function PageCommentList({ locale, pageId }: CommentListProps) {
 						key={pageComment.id}
 						pageComment={pageComment}
 						currentHandle={currentUser?.handle}
+						userLocale={userLocale}
 					/>
 				);
 			})}

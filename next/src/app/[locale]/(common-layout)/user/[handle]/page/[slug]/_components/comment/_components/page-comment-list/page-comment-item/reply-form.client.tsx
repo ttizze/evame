@@ -2,13 +2,19 @@
 import { Button } from "@/components/ui/button";
 import { Reply } from "lucide-react";
 import { useState } from "react";
-import { PageCommentForm } from "../../page-comment-form";
+import { PageCommentForm } from "../../page-comment-form/client";
 
 export function ReplyForm({
 	pageId,
 	currentHandle,
 	parentId,
-}: { pageId: number; currentHandle: string | undefined; parentId: number }) {
+	userLocale,
+}: {
+	pageId: number;
+	currentHandle: string | undefined;
+	parentId: number;
+	userLocale: string;
+}) {
 	const [isReplying, setIsReplying] = useState(false);
 	return (
 		<>
@@ -26,6 +32,7 @@ export function ReplyForm({
 					pageId={pageId}
 					currentHandle={currentHandle}
 					parentId={parentId}
+					userLocale={userLocale}
 					onReplySuccess={() => setIsReplying(false)}
 				/>
 			)}

@@ -17,6 +17,7 @@ describe("editPageContentAction", () => {
 	const mockFormData = new FormData();
 	mockFormData.append("slug", "mockUserId1-page1");
 	mockFormData.append("title", "Test Title");
+	mockFormData.append("userLocale", "en");
 	mockFormData.append("pageContent", "<p>Test content</p>");
 
 	beforeEach(() => {

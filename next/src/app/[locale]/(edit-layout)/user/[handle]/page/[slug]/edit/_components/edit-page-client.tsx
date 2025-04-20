@@ -24,6 +24,7 @@ interface EditPageClientProps {
 	allTagsWithCount: TagWithCount[];
 	initialTitle: string | undefined;
 	slug: string;
+	userLocale: string;
 }
 
 export function EditPageClient({
@@ -32,6 +33,7 @@ export function EditPageClient({
 	allTagsWithCount,
 	initialTitle,
 	slug,
+	userLocale,
 }: EditPageClientProps) {
 	const formRef = useRef<HTMLFormElement>(null);
 	const isKeyboardVisible = useKeyboardVisible();
@@ -130,6 +132,7 @@ export function EditPageClient({
 				<form action={editAction} ref={formRef}>
 					<input type="hidden" name="slug" value={slug} />
 					<input type="hidden" name="title" value={title} />
+					<input type="hidden" name="userLocale" value={userLocale} />
 					<Editor
 						defaultValue={pageWithTitleAndTags?.content || ""}
 						name="pageContent"

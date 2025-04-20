@@ -43,7 +43,7 @@ export function ShareDialog() {
 				<Button
 					variant="ghost"
 					size="icon"
-					className="h-12 w-12 rounded-full border bg-background"
+					className="h-10 w-10 rounded-full border bg-background"
 				>
 					<Share className="h-5 w-5" />
 				</Button>

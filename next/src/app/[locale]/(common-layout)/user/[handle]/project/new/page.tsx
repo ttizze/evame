@@ -6,6 +6,7 @@ import { fetchAllProjectTags } from "../[id]/edit/_db/queries.server";
 interface NewProjectPageProps {
 	params: Promise<{
 		handle: string;
+		locale: string;
 	}>;
 }
 
@@ -17,7 +18,7 @@ export async function generateMetadata() {
 }
 
 export default async function NewProjectPage({ params }: NewProjectPageProps) {
-	const { handle } = await params;
+	const { handle, locale } = await params;
 	const currentUser = await getCurrentUser();
 	if (!currentUser || currentUser.handle !== handle) {
 		return redirect("/auth/login");
@@ -27,7 +28,11 @@ export default async function NewProjectPage({ params }: NewProjectPageProps) {
 
 	return (
 		<div className="py-8">
-			<ProjectForm userHandle={handle} allProjectTags={allProjectTags} />
+			<ProjectForm
+				userHandle={handle}
+				allProjectTags={allProjectTags}
+				userLocale={locale}
+			/>
 		</div>
 	);
 }

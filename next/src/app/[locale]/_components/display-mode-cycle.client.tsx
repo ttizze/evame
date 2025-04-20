@@ -43,7 +43,7 @@ export function DisplayModeCycle({ afterClick }: Props) {
 			onClick={handleClick}
 			title={label}
 			aria-label={label}
-			className="h-12 w-12 rounded-full bg-background"
+			className="h-10 w-10 rounded-full bg-background"
 		>
 			{icon}
 		</Button>
