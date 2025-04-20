@@ -157,7 +157,6 @@ export default async function Page({
 							className="w-12 h-12 border rounded-full"
 						/>
 					}
-					shareTitle={title}
 				/>
 
 				<div className="mt-8">

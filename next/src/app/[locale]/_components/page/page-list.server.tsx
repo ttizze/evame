@@ -42,7 +42,7 @@ export function PageList({
 		(segment) => segment.segment.number === 0,
 	);
 
-	const ogpImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${pageSummary.slug}&showOriginal=${true}&showTranslation=${true}`;
+	const ogpImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${pageSummary.slug}`;
 	return (
 		<article
 			className={`grid gap-4 py-4 border-b last:border-b-0 ${
