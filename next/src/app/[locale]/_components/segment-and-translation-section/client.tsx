@@ -7,12 +7,14 @@ interface SegmentAndTranslationSectionProps {
 	segmentBundle: SegmentBundle;
 	segmentTextClassName?: string;
 	currentHandle?: string;
+	interactive?: boolean;
 }
 
 export function SegmentAndTranslationSection({
 	segmentBundle,
 	segmentTextClassName,
 	currentHandle,
+	interactive = true,
 }: SegmentAndTranslationSectionProps) {
 	const { mode } = useDisplay();
 	return (

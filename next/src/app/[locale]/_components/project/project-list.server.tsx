@@ -97,6 +97,7 @@ export async function ProjectList({
 						segmentBundle={tagLineSegment}
 						currentHandle={currentUserHandle}
 						segmentTextClassName="text-sm line-clamp-1 break-all overflow-wrap-anywhere"
+						interactive={false}
 					/>
 				)}
 

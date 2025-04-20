@@ -84,6 +84,7 @@ export function PageList({
 								segmentBundle={titleSegment}
 								currentHandle={currentUserHandle}
 								segmentTextClassName="line-clamp-1 break-all overflow-wrap-anywhere"
+								interactive={false}
 							/>
 						)}
 					</Link>
