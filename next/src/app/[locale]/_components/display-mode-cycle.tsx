@@ -1,14 +1,13 @@
 "use client";
-import { useDisplay } from "@/app/[locale]/_lib/display-provider";
+import { useDisplay } from "@/app/_context/display-provider";
 import { Button } from "@/components/ui/button";
 import { FileText, Languages, SplitSquareHorizontal } from "lucide-react";
 
 interface Props {
 	afterClick?: () => void;
 }
-
 export function DisplayModeCycle({ afterClick }: Props) {
-	const { mode, cycleMode } = useDisplay();
+	const { mode, cycle } = useDisplay();
 
 	const next =
 		mode === "source-only"
@@ -26,15 +25,8 @@ export function DisplayModeCycle({ afterClick }: Props) {
 			<FileText className="w-5 h-5" />
 		);
 
-	const label =
-		next === "translation-only"
-			? "Show Translation"
-			: next === "bilingual"
-				? "Show Bilingual"
-				: "Show Original";
-
 	const handleClick = () => {
-		cycleMode();
+		cycle();
 		afterClick?.(); // ← ここでスクロール無視を発火
 	};
 
@@ -43,9 +35,8 @@ export function DisplayModeCycle({ afterClick }: Props) {
 			variant="ghost"
 			size="icon"
 			onClick={handleClick}
-			title={label}
-			aria-label={label}
-			className="h-12 w-12 rounded-full bg-background"
+			title={`next: ${next}`}
+			className="border h-12 w-12 rounded-full bg-background hover:bg-gray-100 dark:hover:bg-gray-800"
 		>
 			{icon}
 		</Button>

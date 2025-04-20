@@ -1,16 +1,18 @@
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-list/server";
-import { DisplayProvider } from "@/app/[locale]/_lib/display-provider";
 import { stripHtmlTags } from "@/app/[locale]/_lib/strip-html-tags";
 import { BASE_URL } from "@/app/_constants/base-url";
+import { DisplayProvider } from "@/app/_context/display-provider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsStringEnum } from "nuqs/server";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
+type Pref = "auto" | "source" | "translation" | "bilingual";
 const DynamicContentWithTranslations = dynamic(
 	() =>
 		import("./_components/content-with-translations").then(
@@ -122,24 +124,22 @@ export default async function Page({
 	}
 	const {
 		pageDetail,
-		title,
 		currentUser,
 		pageCommentsCount,
 		pageTranslationJobs,
 		latestUserTranslationJob,
-		resolvedDisplayMode,
 	} = data;
 
 	const isOwner = pageDetail.user.handle === currentUser?.handle;
 	if (!isOwner && pageDetail.status !== "PUBLIC") {
 		return notFound();
 	}
-
+	const pref = (await cookies()).get("displayPref")?.value ?? ("auto" as Pref);
 	return (
 		<DisplayProvider
-			sourceLocale={pageDetail.sourceLocale}
 			userLocale={locale}
-			forcedMode={resolvedDisplayMode}
+			sourceLocale={pageDetail.sourceLocale}
+			initialPref={pref as Pref}
 		>
 			<article className="w-full prose dark:prose-invert prose-a:underline  sm:prose lg:prose-lg mx-auto mb-20">
 				<DynamicContentWithTranslations pageData={data} />

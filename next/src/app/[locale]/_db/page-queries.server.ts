@@ -54,6 +54,7 @@ export const selectPagesWithDetails = (
 		slug: true,
 		createdAt: true,
 		status: true,
+		sourceLocale: true,
 		...selectPageRelatedFields(onlyTitle, locale, currentUserId),
 		_count: {
 			select: {

@@ -59,6 +59,7 @@ export const selectProjectsWithDetails = (
 		title: true,
 		createdAt: true,
 		updatedAt: true,
+		sourceLocale: true,
 		iconImageId: true,
 		...selectProjectRelatedFields(onlyTitle, locale, currentUserId),
 		_count: {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useDisplay } from "@/app/[locale]/_lib/display-provider";
+import { useDisplay } from "@/app/_context/display-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,

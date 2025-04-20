@@ -1,10 +1,11 @@
 "use client";
-import { useDisplay } from "@/app/[locale]/_lib/display-provider";
 import type { SegmentBundle } from "@/app/[locale]/types";
+import { useDisplay } from "@/app/_context/display-provider";
 import { Link } from "@/i18n/routing";
 import { Lock } from "lucide-react";
 import { SquarePen } from "lucide-react";
 import { TranslationSection } from "./translation-section";
+
 interface SegmentAndTranslationSectionProps {
 	segmentBundle: SegmentBundle;
 	showLockIcon?: boolean;

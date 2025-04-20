@@ -10,11 +10,8 @@ import { Link } from "@/i18n/routing";
 import { getImageProps } from "next/image";
 import Image from "next/image";
 import { PageActionsDropdown } from "./page-actions-dropdown/client";
-
 type PageListProps = {
 	pageSummary: PageSummary;
-	pageLink: string;
-	userLink: string;
 	showOwnerActions?: boolean;
 	index?: number;
 	locale: string;
@@ -23,8 +20,6 @@ type PageListProps = {
 
 export function PageList({
 	pageSummary,
-	pageLink,
-	userLink,
 	showOwnerActions = false,
 	index,
 	locale,
@@ -36,13 +31,14 @@ export function PageList({
 		width: 40,
 		height: 40,
 	});
-
 	// Get the title segment (which should be the first segment)
 	const titleSegment = pageSummary.segmentBundles.find(
-		(segment) => segment.segment.number === 0,
+		(s) => s.segment.number === 0,
 	);
-
-	const ogpImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${pageSummary.slug}`;
+	const ogpImageUrl =
+		`${BASE_URL}/api/og?locale=${locale}` + `&slug=${pageSummary.slug}`;
+	const pageLink = `/user/${pageSummary.user.handle}/page/${pageSummary.slug}`;
+	const userLink = `/user/${pageSummary.user.handle}`;
 	return (
 		<article
 			className={`grid gap-4 py-4 border-b last:border-b-0 ${
