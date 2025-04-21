@@ -1,6 +1,6 @@
 import type { TranslationJob } from "@prisma/client";
 import { TranslationStatus } from "@prisma/client";
-import { Languages, Loader2, Text } from "lucide-react";
+import { FileText, Languages, Loader2 } from "lucide-react";
 
 export function TypeIcon({
 	code,
@@ -14,7 +14,7 @@ export function TypeIcon({
 	const translationInfo = translationJobs?.find((job) => job.locale === code);
 
 	if (code === sourceLocale) {
-		return <Text data-testid="text-icon" className="w-4 h-4 mr-2" />;
+		return <FileText data-testid="text-icon" className="w-4 h-4 mr-2" />;
 	}
 	if (
 		translationInfo &&
