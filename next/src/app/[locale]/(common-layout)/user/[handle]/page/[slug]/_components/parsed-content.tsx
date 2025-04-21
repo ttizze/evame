@@ -20,7 +20,7 @@ export function ParsedContent({
 	currentHandle,
 }: ParsedContentProps) {
 	const sanitizedContent = DOMPurify.sanitize(html, {
-		ADD_ATTR: ["xid", "data-type"],  // ← 追加
+		ADD_ATTR: ["xid", "data-type"], // ← 追加
 	});
 
 	const options: HTMLReactParserOptions = {
