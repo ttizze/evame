@@ -3,8 +3,8 @@ import { Link } from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { StarterKit } from "@tiptap/starter-kit";
 import { CustomImage } from "./custom-image";
+import { X } from "./extensions/x-embed";
 import { handleFileUpload } from "./use-file-upload";
-
 export function configureEditor(initialContent: string, placeholder: string) {
 	return {
 		immediatelyRender: false,
@@ -24,6 +24,7 @@ export function configureEditor(initialContent: string, placeholder: string) {
 				placeholder: placeholder,
 			}),
 			CustomImage,
+			X,
 			FileHandler.configure({
 				allowedMimeTypes: [
 					"image/png",

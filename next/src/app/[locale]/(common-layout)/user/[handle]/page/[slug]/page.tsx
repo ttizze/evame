@@ -130,7 +130,7 @@ export default async function Page({
 			sourceLocale={pageDetail.sourceLocale}
 			initialPref={pref}
 		>
-			<article className="w-full prose dark:prose-invert prose-a:underline  sm:prose lg:prose-lg mx-auto mb-20">
+			<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 				<DynamicContentWithTranslations pageData={data} />
 				<div className="flex items-center gap-4">
 					<DynamicPageLikeButton pageId={pageDetail.id} showCount />
