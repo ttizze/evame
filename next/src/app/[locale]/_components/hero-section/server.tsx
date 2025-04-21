@@ -98,65 +98,11 @@ export default async function HeroSection({ locale }: { locale: string }) {
 					/>
 				</div>
 				<div className="relative  my-10 flex justify-center">
-					<div
-						className="absolute inset-0 dark:hidden"
-						style={{
-							background: `
-      repeating-conic-gradient(from 0deg at 50% center,
-        rgba(0, 0, 0, 0.05) 0deg,
-        rgba(0, 0, 0, 0.05) 0.5deg,
-        transparent 0.5deg,
-        transparent 3deg)
-    `,
-							maskImage:
-								"linear-gradient(to bottom, transparent 0%, transparent 30%, black 40%, black 60%, transparent 70%, transparent 100%)",
-							WebkitMaskImage:
-								"linear-gradient(to bottom, transparent 0%, transparent 30%, black 40%, black 60%, transparent 70%, transparent 100%)",
-						}}
-					/>
-					<div
-						className="absolute inset-0 hidden dark:block"
-						style={{
-							background: `
-      repeating-conic-gradient(from 0deg at 50% center,
-        rgba(255, 255, 255, 0.05) 0deg,
-        rgba(255, 255, 255, 0.05) 0.5deg,
-        transparent 0.5deg,
-        transparent 3deg)
-    `,
-							maskImage:
-								"linear-gradient(to bottom, transparent 0%, transparent 30%, black 40%, black 60%, transparent 70%, transparent 100%)",
-							WebkitMaskImage:
-								"linear-gradient(to bottom, transparent 0%, transparent 30%, black 40%, black 60%, transparent 70%, transparent 100%)",
-						}}
-					/>
-					{/* 色線（右側だけにマスク） */}
-					<div
-						className="absolute inset-0"
-						style={{
-							background: `
-repeating-conic-gradient(from -45deg at 50% center,
-          rgba(255, 0, 0, 0.3) 0deg,
-          rgba(255, 0, 0, 0.3) 1deg,
-          transparent 1deg,
-          transparent 20deg),
-        repeating-conic-gradient(from 0deg at 50% center,
-          rgba(0, 255, 0, 0.3) 0deg,
-          rgba(0, 255, 0, 0.3) 1deg,
-          transparent 1deg,
-          transparent 20deg),
-        repeating-conic-gradient(from 45deg at 50% center,
-          rgba(0, 100, 255, 0.3) 0deg,
-          rgba(0, 100, 255, 0.3) 1deg,
-          transparent 1deg,
-          transparent 20deg)
-      `,
-							WebkitMaskImage:
-								"linear-gradient(to right, transparent 52%, black 52%)",
-							maskImage:
-								"linear-gradient(to right, transparent 52%, black 52%)",
-						}}
-					/>
+					{/* 左 : 入力線  ----------------------------------- */}
+					<div className="absolute inset-0 input-rays dark:input-rays-dark" />
+
+					{/* 右 : 出力線（多色） ----------------------------- */}
+					<div className="absolute inset-0 output-rays" />
 					<Image
 						src="/favicon.svg"
 						alt="Hero section image"

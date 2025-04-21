@@ -74,6 +74,49 @@
 		@apply bg-background text-foreground;
 		font-family: "Inter", "BIZ UDPGothic", sans-serif;
 	}
+	.input-rays,
+	.input-rays-dark {
+		clip-path: polygon(0 0, 46% 45%, 45% 55%, 0 100%);
+		background: repeating-conic-gradient(
+			from 0deg at 50% center,
+			currentColor 0deg,
+			currentColor 0.5deg,
+			transparent 0.5deg,
+			transparent 3deg
+		);
+
+		color: rgba(0, 0, 0, 0.4); /* ライト */
+	}
+	.input-rays-dark {
+		color: rgba(255, 255, 255, 0.3);
+	} /* ダーク */
+
+	/* ----- 右 (出力) ----- */
+	.output-rays {
+		clip-path: polygon(54% 0, 100% 0, 100% 100%, 54% 100%);
+		/* 赤 */
+		background: repeating-conic-gradient(
+				from -45deg at 50% center,
+				rgba(255, 0, 0, 0.5) 0deg,
+				rgba(255, 0, 0, 0.5) 1deg,
+				transparent 1deg,
+				transparent 20deg
+			),
+			repeating-conic-gradient(
+				from 0deg at 50% center,
+				rgba(0, 255, 0, 0.5) 0deg,
+				rgba(0, 255, 0, 0.5) 1deg,
+				transparent 1deg,
+				transparent 20deg
+			),
+			repeating-conic-gradient(
+				from 45deg at 50% center,
+				rgba(0, 100, 255, 0.5) 0deg,
+				rgba(0, 100, 255, 0.5) 1deg,
+				transparent 1deg,
+				transparent 20deg
+			);
+	}
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
