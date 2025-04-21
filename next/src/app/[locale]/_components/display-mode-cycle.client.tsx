@@ -2,7 +2,7 @@
 "use client";
 import { useDisplay } from "@/app/_context/display-provider";
 import { Button } from "@/components/ui/button";
-import { FileText, Languages, Rows2 } from "lucide-react";
+import { FileText, Rows2, UserRoundCheck } from "lucide-react";
 
 interface Props {
 	afterClick?: () => void;
@@ -21,7 +21,7 @@ export function DisplayModeCycle({ afterClick }: Props) {
 	/* アイコンをマッピング */
 	const icon =
 		next === "user" ? (
-			<Languages className="w-5 h-5" />
+			<UserRoundCheck className="w-5 h-5" />
 		) : next === "source" ? (
 			<FileText className="w-5 h-5" />
 		) : (
@@ -43,7 +43,7 @@ export function DisplayModeCycle({ afterClick }: Props) {
 			onClick={handleClick}
 			title={label}
 			aria-label={label}
-			className="h-10 w-10 rounded-full bg-background"
+			className="border h-10 w-10 rounded-full bg-background"
 		>
 			{icon}
 		</Button>
