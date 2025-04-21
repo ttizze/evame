@@ -64,6 +64,13 @@ const config = {
 					foreground: "hsl(var(--card-foreground))",
 				},
 			},
+			typography: {
+				lg: {
+					css: {
+						h1: { lineHeight: "1.2" },
+					},
+				},
+			},
 			borderRadius: {
 				lg: "var(--radius)",
 				md: "calc(var(--radius) - 2px)",

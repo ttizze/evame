@@ -5,6 +5,7 @@ import DOMPurify from "isomorphic-dompurify";
 import { customAlphabet } from "nanoid";
 import Image from "next/image";
 import { memo } from "react";
+import { Tweet as XPost } from "react-tweet";
 interface ParsedContentProps {
 	html: string;
 	segmentBundles: SegmentBundle[] | null;
@@ -18,7 +19,9 @@ export function ParsedContent({
 	segmentBundles,
 	currentHandle,
 }: ParsedContentProps) {
-	const sanitizedContent = DOMPurify.sanitize(html);
+	const sanitizedContent = DOMPurify.sanitize(html, {
+		ADD_ATTR: ["xid", "data-type"], // ← 追加
+	});
 
 	const options: HTMLReactParserOptions = {
 		replace: (domNode) => {
@@ -31,6 +34,20 @@ export function ParsedContent({
 					const uuid = customAlphabet(ALPHABET, 8)();
 					domNode.attribs.id = uuid;
 				}
+			}
+			/* ---------- X (旧 Twitter) ポスト ---------- */
+			if (
+				domNode.type === "tag" &&
+				domNode.name === "div" &&
+				domNode.attribs["data-type"] === "x"
+			) {
+				const xId = domNode.attribs.xid;
+				if (!xId) return null;
+				return (
+					<div data-type="x" data-x-id={xId} className="not-prose">
+						<XPost id={xId} />
+					</div>
+				);
 			}
 			// セグメントの翻訳が存在する場合は、セグメントの翻訳を表示
 			if (domNode.type === "tag" && domNode.attribs["data-number-id"]) {
