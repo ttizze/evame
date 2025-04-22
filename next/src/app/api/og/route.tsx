@@ -4,7 +4,7 @@ import { fetchPageContext } from "@/app/[locale]/(common-layout)/user/[handle]/p
 import type { DisplayMode } from "@/app/_context/display-types";
 import { ImageResponse } from "next/og";
 
-export const revalidate = 360000000; 
+export const revalidate = 360000000;
 export async function GET(req: Request): Promise<Response> {
 	const { searchParams } = new URL(req.url);
 	const interFontSemiBold = await readFile(
