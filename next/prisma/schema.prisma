@@ -237,7 +237,8 @@ model Vote {
 model PageComment {
   id                  Int                  @id @default(autoincrement())
   content             String
-  locale              String
+  contentJson Json @default("{}")
+  sourceLocale        String    @default("unknown") @map("source_locale")
   userId              String               @map("user_id")
   pageId              Int                  @map("page_id")
   parentId            Int?                 @map("parent_id")
@@ -315,6 +316,7 @@ model Project {
   userId       String   @map("user_id")
   title        String
   description  String   @db.Text
+  descriptionJson Json @default("{}")
   sourceLocale String   @default("unknown") @map("source_locale")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")

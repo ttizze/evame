@@ -1,6 +1,6 @@
 "use server";
 
-import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
+import { detectLocale } from "@/app/[locale]/_lib/detect-locale";
 
 import { uploadImage } from "@/app/[locale]/_lib/upload";
 import type { ActionResponse } from "@/app/types";
@@ -10,9 +10,11 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { processProjectHtml } from "../_components/_lib/process-project-html";
 import { triggerAutoTranslationIfNeeded } from "../_components/_lib/trigger-auto-translation";
-import { upsertProjectTags } from "../_db/mutations.server";
+import {
+	upsertProjectAndSegments,
+	upsertProjectTags,
+} from "../_db/mutations.server";
 import {
 	upsertIconTx,
 	upsertImagesTx,
@@ -34,7 +36,10 @@ const formSchema = z.object({
 	userLocale: z.string(),
 	title: z.string().min(3).max(100),
 	tagLine: z.string().min(3).max(100),
-	description: z.string().min(10).max(500),
+	descriptionJson: z
+		.string()
+		.min(1)
+		.transform((str) => JSON.parse(str)),
 	tags: z.preprocess(parseJSONSafe, z.array(tagSchema()).max(5)),
 	links: z.preprocess(parseJSONSafe, z.array(linkSchema).max(5)),
 	images: z.preprocess(parseJSONSafe, z.array(imageSchema).max(10)),
@@ -109,8 +114,8 @@ export async function projectAction(
 		userLocale,
 		...projectData
 	} = parsed.data;
-	const combined = `${tagLine} ${projectData.description}`;
-	const sourceLocale = await getLocaleFromHtml(combined, userLocale);
+	const combined = `${tagLine} ${projectData.descriptionJson}`;
+	const sourceLocale = await detectLocale(combined, userLocale);
 
 	const imageFiles = formData.getAll("imageFiles") as File[];
 	const imageNames = formData.getAll("imageFileNames") as string[];
@@ -141,6 +146,7 @@ export async function projectAction(
 		const created = await prisma.project.create({
 			data: {
 				...projectData,
+				description: "test",
 				sourceLocale,
 				userId: currentUser.id,
 			},
@@ -162,12 +168,14 @@ export async function projectAction(
 			})
 		)?.id;
 	if (pid) {
-		await processProjectHtml(
-			pid,
+		await upsertProjectAndSegments({
+			projectId: pid,
+			userId: currentUser.id,
+			title: projectData.title,
 			tagLine,
-			projectData.description,
-			currentUser.id,
-		);
+			descriptionJson: projectData.descriptionJson,
+			sourceLocale,
+		});
 		await triggerAutoTranslationIfNeeded(pid, sourceLocale, currentUser.id);
 	}
 

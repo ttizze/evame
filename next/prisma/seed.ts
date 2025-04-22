@@ -672,7 +672,7 @@ async function createPageComments(userId: string, pageId: number) {
 		const comment = await prisma.pageComment.create({
 			data: {
 				content: commentContents[i],
-				locale: commentLocales[i],
+				sourceLocale: commentLocales[i],
 				userId: userId,
 				pageId: pageId,
 				// Create comment segments

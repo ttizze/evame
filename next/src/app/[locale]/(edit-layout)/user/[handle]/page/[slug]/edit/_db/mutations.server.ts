@@ -12,7 +12,10 @@ export async function upsertPageAndSegments(p: {
 	contentJson: AstNode; // TipTap / Lexical など何でも OK
 	sourceLocale: string;
 }) {
-	const { segments, jsonWithHash } = collectSegments(p.contentJson, p.title);
+	const { segments, jsonWithHash } = collectSegments({
+		root: p.contentJson,
+		header: p.title,
+	});
 
 	const page = await prisma.page.upsert({
 		where: { slug: p.slug, userId: p.userId },
@@ -27,47 +30,6 @@ export async function upsertPageAndSegments(p: {
 	});
 
 	await syncPageSegments(page.id, segments);
-}
-
-export async function upsertTags(tags: string[], pageId: number) {
-	// 重複タグを除去
-	const uniqueTags = Array.from(new Set(tags));
-
-	const upsertPromises = uniqueTags.map(async (tagName) => {
-		const upsertedTag = await prisma.tag.upsert({
-			where: { name: tagName },
-			update: {},
-			create: { name: tagName },
-		});
-
-		await prisma.tagPage.upsert({
-			where: {
-				tagId_pageId: {
-					tagId: upsertedTag.id,
-					pageId: pageId,
-				},
-			},
-			update: {},
-			create: {
-				tagId: upsertedTag.id,
-				pageId: pageId,
-			},
-		});
-
-		return upsertedTag;
-	});
-
-	const updatedTags = await Promise.all(upsertPromises);
-
-	const tagIdsToKeep = updatedTags.map((tag) => tag.id);
-	await prisma.tagPage.deleteMany({
-		where: {
-			pageId,
-			tagId: { notIn: tagIdsToKeep },
-		},
-	});
-
-	return updatedTags;
 }
 
 /** 1ページ分のセグメントを同期 */
@@ -122,4 +84,45 @@ export async function syncPageSegments(pageId: number, drafts: SegmentDraft[]) {
 			});
 		}
 	});
+}
+
+export async function upsertTags(tags: string[], pageId: number) {
+	// 重複タグを除去
+	const uniqueTags = Array.from(new Set(tags));
+
+	const upsertPromises = uniqueTags.map(async (tagName) => {
+		const upsertedTag = await prisma.tag.upsert({
+			where: { name: tagName },
+			update: {},
+			create: { name: tagName },
+		});
+
+		await prisma.tagPage.upsert({
+			where: {
+				tagId_pageId: {
+					tagId: upsertedTag.id,
+					pageId: pageId,
+				},
+			},
+			update: {},
+			create: {
+				tagId: upsertedTag.id,
+				pageId: pageId,
+			},
+		});
+
+		return upsertedTag;
+	});
+
+	const updatedTags = await Promise.all(upsertPromises);
+
+	const tagIdsToKeep = updatedTags.map((tag) => tag.id);
+	await prisma.tagPage.deleteMany({
+		where: {
+			pageId,
+			tagId: { notIn: tagIdsToKeep },
+		},
+	});
+
+	return updatedTags;
 }

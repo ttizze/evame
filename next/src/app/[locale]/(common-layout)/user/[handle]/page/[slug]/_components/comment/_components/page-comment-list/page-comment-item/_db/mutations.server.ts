@@ -4,7 +4,12 @@ export async function deletePageComment(pageCommentId: number) {
 	return await prisma.pageComment.update({
 		where: { id: pageCommentId },
 		data: {
-			content: "deleted",
+			contentJson: {
+				type: "doc",
+				contentJson: [
+					{ type: "paragraph", content: [{ text: "deleted", type: "text" }] },
+				],
+			},
 		},
 	});
 }

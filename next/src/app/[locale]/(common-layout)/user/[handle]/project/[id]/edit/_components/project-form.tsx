@@ -226,15 +226,15 @@ export function ProjectForm({
 						</Label>
 						<div className="mt-1 prose dark:prose-invert">
 							<Editor
-								defaultValue={projectDetail?.description || ""}
-								name="description"
+								defaultValue={projectDetail?.descriptionJson || ""}
+								name="descriptionJson"
 								className="border border-input rounded-md px-2 py-2 min-h-32"
 								placeholder="Describe your project..."
 							/>
 						</div>
-						{state.zodErrors?.description && (
+						{state.zodErrors?.descriptionJson && (
 							<p className="text-sm text-red-500 mt-1">
-								{state.zodErrors.description}
+								{state.zodErrors.descriptionJson}
 							</p>
 						)}
 						<p className="text-sm text-muted-foreground mt-1">

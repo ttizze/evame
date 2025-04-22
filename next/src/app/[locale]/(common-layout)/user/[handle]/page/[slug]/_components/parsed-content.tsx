@@ -1,5 +1,7 @@
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
+import { jsonToHtml } from "@/app/[locale]/_lib/json-to-html";
 import type { SegmentBundle } from "@/app/[locale]/types";
+import type { AstNode } from "@/app/types/ast-node";
 import parse, { type HTMLReactParserOptions } from "html-react-parser";
 import DOMPurify from "isomorphic-dompurify";
 import { customAlphabet } from "nanoid";
@@ -7,7 +9,7 @@ import Image from "next/image";
 import { memo, useMemo } from "react";
 import { Tweet as XPost } from "react-tweet";
 interface ParsedContentProps {
-	html: string;
+	jsonValue: AstNode;
 	segmentBundles: SegmentBundle[] | null;
 	currentHandle: string | undefined;
 }
@@ -15,10 +17,11 @@ interface ParsedContentProps {
 export const MemoizedParsedContent = memo(ParsedContent);
 
 export function ParsedContent({
-	html,
+	jsonValue,
 	segmentBundles,
 	currentHandle,
 }: ParsedContentProps) {
+	const contentHtml = jsonToHtml(jsonValue as AstNode);
 	const bundleMap = useMemo(() => {
 		if (!segmentBundles) return new Map<string, SegmentBundle>();
 		return new Map(
@@ -26,7 +29,7 @@ export function ParsedContent({
 		);
 	}, [segmentBundles]);
 
-	const sanitizedContent = DOMPurify.sanitize(html, {
+	const sanitizedContent = DOMPurify.sanitize(contentHtml, {
 		ADD_ATTR: ["data-hash", "data-type", "xid"],
 	});
 

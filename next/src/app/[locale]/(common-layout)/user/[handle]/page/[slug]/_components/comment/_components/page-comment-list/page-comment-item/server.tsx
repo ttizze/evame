@@ -1,4 +1,5 @@
 import { MemoizedParsedContent } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/parsed-content";
+import type { AstNode } from "@/app/types/ast-node";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getImageProps } from "next/image";
 import type { PageCommentWithUserAndTranslations } from "../_lib/fetch-page-comments-with-user-and-translations";
@@ -50,7 +51,7 @@ export default function PageCommentItem({
 			</div>
 			<div className="mt-2 prose dark:prose-invert">
 				<MemoizedParsedContent
-					html={pageComment.content}
+					jsonValue={pageComment.contentJson as AstNode}
 					segmentBundles={pageComment.segmentBundles}
 					currentHandle={currentHandle}
 				/>

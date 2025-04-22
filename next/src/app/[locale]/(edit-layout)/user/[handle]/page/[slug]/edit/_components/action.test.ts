@@ -1,4 +1,4 @@
-import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
+import { detectLocale } from "@/app/[locale]/_lib/detect-locale";
 import { getCurrentUser } from "@/auth";
 import { mockUsers } from "@/tests/mock";
 import { revalidatePath } from "next/cache";
@@ -8,7 +8,7 @@ import { upsertPageAndSegments } from "../_db/mutations.server";
 import { editPageContentAction } from "./action";
 // Mocks
 vi.mock("@/auth");
-vi.mock("@/app/[locale]/_lib/get-locale-from-html");
+vi.mock("@/app/[locale]/_lib/detect-locale");
 vi.mock("../_lib/process-page-html");
 vi.mock("next/cache");
 vi.mock("next/navigation");
@@ -56,7 +56,7 @@ describe("editPageContentAction", () => {
 
 	it("should successfully update public page and trigger translation", async () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
-		vi.mocked(getLocaleFromHtml).mockResolvedValue("en");
+		vi.mocked(detectLocale).mockResolvedValue("en");
 
 		// Set up the mock implementation to return void
 		vi.mocked(upsertPageAndSegments).mockImplementation(async () => {

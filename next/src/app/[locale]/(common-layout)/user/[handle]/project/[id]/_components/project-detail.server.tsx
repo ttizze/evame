@@ -5,6 +5,7 @@ import { ProjectLikeButton } from "@/app/[locale]/_components/project/project-li
 import { ProjectTagList } from "@/app/[locale]/_components/project/project-tag-list.server";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import type { ProjectDetail } from "@/app/[locale]/types";
+import type { AstNode } from "@/app/types/ast-node";
 import { getCurrentUser } from "@/auth";
 import {
 	Carousel,
@@ -24,7 +25,6 @@ import { ExternalLink } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-
 const DynamicMemoizedParsedContent = dynamic(
 	() =>
 		import(
@@ -143,7 +143,7 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 				{/* Description */}
 				<div className="prose dark:prose-invert max-w-none">
 					<DynamicMemoizedParsedContent
-						html={projectDetail.description}
+						jsonValue={projectDetail.descriptionJson as AstNode}
 						segmentBundles={projectDetail.segmentBundles}
 						currentHandle={projectDetail.user.handle}
 					/>

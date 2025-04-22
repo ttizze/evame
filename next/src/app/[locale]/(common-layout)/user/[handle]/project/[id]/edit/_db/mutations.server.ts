@@ -1,18 +1,93 @@
-import type { BlockWithNumber } from "@/app/[locale]/_lib/process-html";
-import { syncSegmentsChunk } from "@/app/[locale]/_lib/sync-segments-chunk";
+import type { SegmentDraft } from "@/app/[locale]/_lib/collect-segments";
+import { collectSegments } from "@/app/[locale]/_lib/collect-segments";
 import { uploadImage } from "@/app/[locale]/_lib/upload";
-import { BATCH_SIZE, OFFSET } from "@/app/_constants/sync-segments";
+import type { AstNode } from "@/app/types/ast-node";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
-export async function updateProjectWithHtml(
+/* lib/page-upsert.ts */
+export async function upsertProjectAndSegments(p: {
+	projectId: string;
+	userId: string;
+	title: string;
+	tagLine: string;
+	descriptionJson: AstNode;
+	sourceLocale: string;
+}) {
+	const { segments, jsonWithHash } = collectSegments({
+		root: p.descriptionJson,
+		header: p.tagLine,
+	});
+
+	const project = await prisma.project.upsert({
+		where: { id: p.projectId, userId: p.userId },
+		update: { descriptionJson: jsonWithHash as Prisma.InputJsonValue },
+		create: {
+			title: p.title,
+			userId: p.userId,
+			description: "test",
+			descriptionJson: jsonWithHash as Prisma.InputJsonValue,
+			sourceLocale: p.sourceLocale,
+		},
+	});
+
+	await syncProjectSegments(project.id, segments);
+}
+
+/** 1ページ分のセグメントを同期 */
+export async function syncProjectSegments(
 	projectId: string,
-	description: string,
-	userId: string,
+	drafts: SegmentDraft[],
 ) {
-	return await prisma.project.update({
-		where: { id: projectId, userId },
-		data: { description },
+	const existing = await prisma.projectSegment.findMany({
+		where: { projectId },
+		select: { textAndOccurrenceHash: true },
+	});
+	const stale = new Set(existing.map((e) => e.textAndOccurrenceHash as string));
+
+	await prisma.$transaction(async (tx) => {
+		// A. 並び避難（既存あれば）
+		if (existing.length) {
+			await tx.projectSegment.updateMany({
+				where: { projectId },
+				data: { number: { increment: 1_000_000 } },
+			});
+		}
+
+		// B. UPSERT を **適度なバッチ & 逐次 await** で安定
+		const CHUNK = 200;
+		for (let i = 0; i < drafts.length; i += CHUNK) {
+			const chunk = drafts.slice(i, i + CHUNK);
+			await Promise.all(
+				chunk.map((d) =>
+					tx.projectSegment.upsert({
+						where: {
+							projectId_textAndOccurrenceHash: {
+								projectId,
+								textAndOccurrenceHash: d.hash,
+							},
+						},
+						update: { text: d.text, number: d.order },
+						create: {
+							projectId,
+							text: d.text,
+							number: d.order,
+							textAndOccurrenceHash: d.hash,
+						},
+					}),
+				),
+			);
+			for (const d of chunk) {
+				stale.delete(d.hash);
+			}
+		}
+
+		// C. 余った行を一括削除
+		if (stale.size) {
+			await tx.projectSegment.deleteMany({
+				where: { projectId, textAndOccurrenceHash: { in: [...stale] } },
+			});
+		}
 	});
 }
 
@@ -56,46 +131,6 @@ export async function upsertProjectTags(tagNames: string[], projectId: string) {
 	});
 
 	return updatedTags;
-}
-
-export async function syncProjectSegments(
-	projectId: string,
-	blocks: readonly BlockWithNumber[],
-): Promise<void> {
-	const hashes = blocks.map((b) => b.textAndOccurrenceHash);
-
-	await prisma.$transaction(async (tx) => {
-		await tx.projectSegment.updateMany({
-			where: { projectId },
-			data: { number: { increment: OFFSET } },
-		});
-
-		await tx.projectSegment.deleteMany({
-			where: { projectId, textAndOccurrenceHash: { notIn: hashes } },
-		});
-
-		for (const batch of syncSegmentsChunk(blocks, BATCH_SIZE)) {
-			await Promise.all(
-				batch.map((b) =>
-					tx.projectSegment.upsert({
-						where: {
-							projectId_textAndOccurrenceHash: {
-								projectId,
-								textAndOccurrenceHash: b.textAndOccurrenceHash,
-							},
-						},
-						update: { text: b.text, number: b.number },
-						create: {
-							projectId,
-							textAndOccurrenceHash: b.textAndOccurrenceHash,
-							text: b.text,
-							number: b.number,
-						},
-					}),
-				),
-			);
-		}
-	});
 }
 
 export const linkSchema = z.object({

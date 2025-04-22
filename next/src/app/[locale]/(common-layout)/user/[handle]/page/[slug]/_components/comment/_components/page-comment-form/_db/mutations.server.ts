@@ -1,17 +1,26 @@
-import type { BlockWithNumber } from "@/app/[locale]/_lib/process-html";
+import { collectSegments } from "@/app/[locale]/_lib/collect-segments";
+import type { SegmentDraft } from "@/app/[locale]/_lib/collect-segments";
+import type { AstNode } from "@/app/types/ast-node";
 import { prisma } from "@/lib/prisma";
-
-export async function createPageComment(
-	content: string,
-	locale: string,
-	userId: string,
-	pageId: number,
-	parentId?: number,
-) {
+import type { Prisma } from "@prisma/client";
+export async function createPageComment({
+	contentJson,
+	sourceLocale,
+	userId,
+	pageId,
+	parentId,
+}: {
+	contentJson: AstNode;
+	sourceLocale: string;
+	userId: string;
+	pageId: number;
+	parentId?: number;
+}) {
 	return await prisma.pageComment.create({
 		data: {
-			content,
-			locale,
+			contentJson: contentJson as Prisma.InputJsonValue,
+			content: "test",
+			sourceLocale,
 			pageId,
 			userId,
 			parentId,
@@ -27,56 +36,86 @@ export async function createPageComment(
 		},
 	});
 }
-
-export async function createPageCommentSegments(
-	pageCommentId: number,
-	blocks: BlockWithNumber[],
-) {
-	const segments = blocks.map((block) => ({
-		pageCommentId,
-		text: block.text,
-		number: block.number,
-		textAndOccurrenceHash: block.textAndOccurrenceHash,
-	}));
-	await prisma.pageCommentSegment.createMany({
-		data: segments,
+export async function upsertPageCommentAndSegments(params: {
+	pageId: number;
+	commentId: number;
+	userId: string;
+	contentJson: AstNode; // TipTap / Lexical など何でも OK
+	sourceLocale: string;
+}) {
+	const { segments, jsonWithHash } = collectSegments({
+		root: params.contentJson,
 	});
-	const insertedSegments = await prisma.pageCommentSegment.findMany({
-		where: { pageCommentId },
-		select: { id: true, textAndOccurrenceHash: true },
-	});
-	const hashToId = new Map<string, number>();
-	for (const seg of insertedSegments) {
-		// textAndOccurrenceHash が null の場合は無視
-		if (seg.textAndOccurrenceHash) {
-			hashToId.set(seg.textAndOccurrenceHash, seg.id);
-		}
-	}
 
-	// 4. hash => ID のマップを返却
-	return hashToId;
+	const pageComment = await prisma.pageComment.upsert({
+		where: { id: params.commentId },
+		update: { contentJson: jsonWithHash as Prisma.InputJsonValue },
+		create: {
+			id: params.commentId,
+			userId: params.userId,
+			content: "test",
+			contentJson: jsonWithHash as Prisma.InputJsonValue,
+			sourceLocale: params.sourceLocale,
+			pageId: params.pageId,
+		},
+	});
+
+	await syncPageCommentSegments(pageComment.id, segments);
 }
 
-export async function upsertPageComment(
-	id: number,
-	content: string,
-	locale: string,
-	userId: string,
-	pageId: number,
+export async function syncPageCommentSegments(
+	pageCommentId: number,
+	drafts: SegmentDraft[],
 ) {
-	await prisma.pageComment.upsert({
-		where: {
-			id,
-		},
-		update: {
-			content,
-		},
-		create: {
-			content,
-			locale,
-			userId,
-			pageId,
-		},
+	const existing = await prisma.pageCommentSegment.findMany({
+		where: { pageCommentId },
+		select: { textAndOccurrenceHash: true },
+	});
+	const stale = new Set(existing.map((e) => e.textAndOccurrenceHash as string));
+
+	await prisma.$transaction(async (tx) => {
+		// A. 並び避難（既存あれば）
+		if (existing.length) {
+			await tx.pageCommentSegment.updateMany({
+				where: { pageCommentId },
+				data: { number: { increment: 1_000_000 } },
+			});
+		}
+
+		// B. UPSERT を **適度なバッチ & 逐次 await** で安定
+		const CHUNK = 200;
+		for (let i = 0; i < drafts.length; i += CHUNK) {
+			const chunk = drafts.slice(i, i + CHUNK);
+			await Promise.all(
+				chunk.map((d) =>
+					tx.pageCommentSegment.upsert({
+						where: {
+							pageCommentId_textAndOccurrenceHash: {
+								pageCommentId,
+								textAndOccurrenceHash: d.hash,
+							},
+						},
+						update: { text: d.text, number: d.order },
+						create: {
+							pageCommentId,
+							text: d.text,
+							number: d.order,
+							textAndOccurrenceHash: d.hash,
+						},
+					}),
+				),
+			);
+			for (const d of chunk) {
+				stale.delete(d.hash);
+			}
+		}
+
+		// C. 余った行を一括削除
+		if (stale.size) {
+			await tx.pageCommentSegment.deleteMany({
+				where: { pageCommentId, textAndOccurrenceHash: { in: [...stale] } },
+			});
+		}
 	});
 }
 

@@ -10,10 +10,13 @@ export interface SegmentDraft {
 
 const GAP = 100;
 /** AstNode を走査して ①hash 付与 ②SegmentDraft[] 生成 */
-export function collectSegments(
-	root: AstNode,
-	header?: string,
-): { segments: SegmentDraft[]; jsonWithHash: AstNode } {
+export function collectSegments({
+	root,
+	header,
+}: {
+	root: AstNode;
+	header?: string;
+}): { segments: SegmentDraft[]; jsonWithHash: AstNode } {
 	const cloned: AstNode = structuredClone(root);
 	const occ = new Map<string, number>();
 	const segments: SegmentDraft[] = [];

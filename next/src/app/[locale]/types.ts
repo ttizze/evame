@@ -74,4 +74,7 @@ export type ProjectDetail = Omit<Project, "createdAt"> & {
 	};
 };
 
-export type ProjectSummary = Omit<ProjectDetail, "description" | "userId">;
+export type ProjectSummary = Omit<
+	ProjectDetail,
+	"description" | "descriptionJson" | "userId"
+>;

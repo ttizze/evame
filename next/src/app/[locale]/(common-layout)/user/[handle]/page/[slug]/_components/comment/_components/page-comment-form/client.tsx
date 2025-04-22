@@ -36,7 +36,7 @@ export function PageCommentForm({
 				{parentId && <input type="hidden" name="parentId" value={parentId} />}
 				<Editor
 					defaultValue={""}
-					name="content"
+					name="contentJson"
 					className={`border border-input rounded-md px-2 ${!currentHandle ? "opacity-50 bg-muted" : ""}`}
 					placeholder="Say Hello!"
 					onEditorUpdate={(editor) => setContent(editor?.getHTML() ?? "")}
@@ -52,8 +52,8 @@ export function PageCommentForm({
 					{isPending ? "posting" : "post"}
 				</Button>
 			</form>
-			{state.zodErrors?.content && (
-				<p className="text-sm text-red-500">{state.zodErrors.content}</p>
+			{state.zodErrors?.contentJson && (
+				<p className="text-sm text-red-500">{state.zodErrors.contentJson}</p>
 			)}
 		</>
 	);

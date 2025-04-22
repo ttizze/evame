@@ -1,5 +1,7 @@
+import { generateHashForText } from "@/app/[locale]/_lib/generate-hash-for-text";
+import { jsonToHtml } from "@/app/[locale]/_lib/json-to-html";
+import type { AstNode } from "@/app/types/ast-node";
 import { prisma } from "@/lib/prisma";
-import type { User } from "@prisma/client";
 import {
 	afterAll,
 	afterEach,
@@ -8,30 +10,42 @@ import {
 	expect,
 	test,
 } from "vitest";
-import { processProjectHtml } from "./process-project-html";
+import { upsertProjectAndSegments } from "../../_db/mutations.server";
 
-/**
- * Project ⇔ ProjectSegment 関連テスト
- *
- * processProjectHtml(
- *   projectId: string,
- *   title: string,
- *   descriptionHtml: string,
- *   userId: string,
- *   sourceLocale: string,
- * )
- */
+/* ----------------- helper ----------------- */
+const p = (text: string, hash: string): AstNode => ({
+	type: "paragraph",
+	content: [{ type: "text", text, attrs: { hash } }],
+});
 
-describe("processProjectHtml – integration", () => {
-	let user: User;
+const img = (src: string): AstNode => ({
+	type: "image",
+	attrs: { src, alt: "" },
+});
 
+function h(text: string, occ = 0) {
+	return generateHashForText(text, occ);
+}
+
+/* ----------------- spec ----------------- */
+describe("upsertProjectAndSegments – JSON integration", () => {
+	let userId: string;
+	let projectId: string;
+	const tagLine = "Tag Line";
+	const doc: AstNode = {
+		type: "doc",
+		content: [
+			p("This is a test.", h("This is a test.")),
+			p("This is another test.", h("This is another test.")),
+		],
+	};
 	beforeEach(async () => {
-		// DB をクリーンに
-		await prisma.projectSegment.deleteMany();
-		await prisma.project.deleteMany();
-		await prisma.user.deleteMany();
-
-		user = await prisma.user.create({
+		await prisma.$transaction([
+			prisma.projectSegment.deleteMany(),
+			prisma.project.deleteMany(),
+			prisma.user.deleteMany(),
+		]);
+		const u = await prisma.user.create({
 			data: {
 				handle: "tester",
 				name: "Tester",
@@ -39,231 +53,211 @@ describe("processProjectHtml – integration", () => {
 				image: "",
 			},
 		});
+		userId = u.id;
+
+		const project = await prisma.project.create({
+			data: {
+				userId,
+				title: "Title",
+				description: "test",
+				sourceLocale: "en",
+			},
+		});
+		projectId = project.id;
 	});
 
-	afterEach(async () => {
-		await prisma.projectSegment.deleteMany();
-		await prisma.project.deleteMany();
-		await prisma.user.deleteMany();
-	});
+	afterEach(() => prisma.$disconnect());
 
 	afterAll(async () => {
 		await prisma.$disconnect();
 	});
 
-	// 1. 基本動作
-	test("HTML を処理して Project / ProjectSegment / data-number-id を生成する", async () => {
-		const title = "Title";
-		const htmlInput = `
-			<p>This is a test.</p>
-			<p>This is another test.</p>
-		`;
-		const tagLine = "Tag Line";
-		const project = await prisma.project.create({
-			data: {
-				userId: user.id,
-				description: htmlInput,
-				title,
-				sourceLocale: "en",
-			},
+	/* ----------------- 1. 基本挿入 ----------------- */
+	test("store segments & hash from JSON input", async () => {
+		await upsertProjectAndSegments({
+			projectId,
+			userId,
+			title: "Title",
+			tagLine,
+			descriptionJson: doc,
+			sourceLocale: "en",
 		});
-		await processProjectHtml(project.id, tagLine, htmlInput, user.id);
-		const createdProject = await prisma.project.findUnique({
-			where: { id: project.id },
+
+		const foundProject = await prisma.project.findUnique({
+			where: { id: projectId },
 			include: { projectSegments: true },
 		});
-		expect(createdProject).not.toBeNull();
-		if (!createdProject) return;
+		expect(foundProject).not.toBeNull();
+		if (!foundProject) throw new Error("Project should exist");
 
-		// Segment が挿入され連番になっている
-		expect(createdProject.projectSegments.length).toBe(3);
-		expect(createdProject.projectSegments[0].number).toBe(0);
-		expect(createdProject.projectSegments[1].number).toBe(1);
-
-		// textAndOccurrenceHash が入る
-		for (const seg of createdProject.projectSegments) {
+		expect(foundProject?.projectSegments.length).toBe(3);
+		const [s0, s1] = foundProject.projectSegments.sort(
+			(a, b) => a.number - b.number,
+		);
+		expect(s0.number).toBe(0);
+		expect(s1.number).toBe(100);
+		for (const seg of foundProject?.projectSegments ?? []) {
 			expect(seg.textAndOccurrenceHash).toBeTruthy();
 		}
-
-		// HTML に <span data-number-id> が埋め込まれている
-		expect(createdProject.description).toMatch(
-			/<span data-number-id="\d+">This is a test\.<\/span>/,
-		);
-		expect(createdProject.description).toMatch(
-			/<span data-number-id="\d+">This is another test\.<\/span>/,
-		);
 	});
 
-	// 2. 編集後の差分処理
-	test("再処理で ID を維持・付与・変更する", async () => {
-		const title = "Title";
-		const htmlInput = `
-			<p>This is a test.</p>
-			<p>This is another line.</p>
-		`;
+	/* ----------------- 2. 編集後ハッシュ維持 ----------------- */
+	test("unchanged sentences keep ids after re‑save", async () => {
 		const tagLine = "Tag Line";
-		const project = await prisma.project.create({
-			data: {
-				userId: user.id,
-				description: htmlInput,
-				title,
-				sourceLocale: "en",
-			},
+		const v1: AstNode = {
+			type: "doc",
+			content: [p("A", h("A")), p("B", h("B")), p("C", h("C"))],
+		};
+
+		await upsertProjectAndSegments({
+			projectId,
+			userId,
+			title: "",
+			tagLine,
+			descriptionJson: v1,
+			sourceLocale: "en",
 		});
 
-		await processProjectHtml(project.id, tagLine, htmlInput, user.id);
-
-		const originalSegments = await prisma.projectSegment.findMany({
-			where: { projectId: project.id },
-		});
-		console.log(originalSegments);
-		const idByText = new Map(
-			originalSegments.map(({ text, id }) => [text, id]),
-		);
-
-		// 改変後
-		const editedHtml = `
-			<p>This is a line!?</p>
-			<p>This is another line.</p>
-			<p>new line</p>
-		`;
-
-		await processProjectHtml(project.id, tagLine, editedHtml, user.id);
-
-		const editedSegments = await prisma.projectSegment.findMany({
-			where: { projectId: project.id },
-		});
-		const editedIdByText = new Map(
-			editedSegments.map(({ text, id }) => [text, id]),
-		);
-
-		// 変わらないテキストは同じ ID
-		expect(editedIdByText.get("This is another line.")).toBe(
-			idByText.get("This is another line."),
-		);
-		// 変更テキストは新 ID
-		expect(editedIdByText.get("This is a line!?")).not.toBe(
-			idByText.get("This is a line."),
-		);
-		// 新規テキストは新 ID
-		expect(editedIdByText.get("new line")).toBeDefined();
-	});
-
-	// 3. タイトル重複
-	test("タイトルと本文が重複しても正しく分割・ID 付与される", async () => {
-		const title = "Unique Title";
-		const htmlInput = `
-			<h1>${title}</h1>
-			<p>This is ${title} in a paragraph.</p>
-			<p>Another paragraph.</p>
-		`;
-		const project = await prisma.project.create({
-			data: {
-				userId: user.id,
-				description: htmlInput,
-				title,
-				sourceLocale: "en",
-			},
-		});
-
-		await processProjectHtml(project.id, title, htmlInput, user.id);
-
-		const createdProject = await prisma.project.findUnique({
-			where: { id: project.id },
+		const first = await prisma.project.findUnique({
+			where: { id: projectId },
 			include: { projectSegments: true },
 		});
-		expect(createdProject).not.toBeNull();
-		if (!createdProject) return;
+		if (!first) throw new Error("First project should exist");
+		const idMap = new Map(first.projectSegments.map((s) => [s.text, s.id]));
 
-		// title と本文の同一文字列が 2 件存在
-		const occurrences = createdProject.projectSegments.filter(
-			(seg) => seg.text === title,
-		);
-		expect(occurrences.length).toBe(2);
-		expect(occurrences[0].id).not.toBe(occurrences[1].id);
+		const v2: AstNode = {
+			type: "doc",
+			content: [
+				p("A!", h("A!", 1)),
+				p("B", h("B")),
+				p("D", h("D")),
+				p("C", h("C")),
+			],
+		};
 
-		// HTML 内でも <h1><span …> と <span …> がある
-		expect(createdProject.description).toMatch(
-			new RegExp(`<h1><span data-number-id="\\d+">${title}</span></h1>`),
-		);
-		expect(createdProject.description).toMatch(
-			new RegExp(`<span data-number-id="\\d+">${title}</span>`),
-		);
-	});
-	test("無変更で再処理しても ProjectSegment が変わらない", async () => {
-		const title = "No Edit";
-		const htmlInput = `
-			<p>Line A</p>
-			<p>Line B</p>
-			<p>Line C</p>
-		`;
-
-		// ① 初回 Project 作成
-		const project = await prisma.project.create({
-			data: {
-				userId: user.id,
-				description: htmlInput,
-				title,
-				sourceLocale: "en",
-			},
+		await upsertProjectAndSegments({
+			projectId,
+			userId,
+			title: "",
+			tagLine,
+			descriptionJson: v2,
+			sourceLocale: "en",
 		});
 
-		// ②‐1 1 回目の処理
-		await processProjectHtml(project.id, title, htmlInput, user.id);
-		const firstSegments = await prisma.projectSegment.findMany({
-			where: { projectId: project.id },
+		const second = await prisma.project.findUnique({
+			where: { id: projectId },
+			include: { projectSegments: true },
 		});
-		const firstMap = new Map(firstSegments.map(({ text, id }) => [text, id]));
+		if (!second) throw new Error("Second project should exist");
+		const map2 = new Map(second.projectSegments.map((s) => [s.text, s.id]));
 
-		// ②‐2 まったく同じ HTML で 2 回目の処理
-		await processProjectHtml(project.id, title, htmlInput, user.id);
-		const secondSegments = await prisma.projectSegment.findMany({
-			where: { projectId: project.id },
-		});
-		const secondMap = new Map(secondSegments.map(({ text, id }) => [text, id]));
-
-		// ③ 検証 ― 件数も ID も変わらない
-		expect(secondSegments.length).toBe(firstSegments.length);
-		firstMap.forEach((id, text) => {
-			expect(secondMap.get(text)).toBe(id);
-		});
+		expect(map2.get("B")).toBe(idMap.get("B")); // unchanged
+		expect(map2.get("C")).toBe(idMap.get("C")); // unchanged
+		expect(map2.get("A!")).not.toBe(idMap.get("A")); // modified
+		expect(map2.get("D")).toBeDefined(); // new
 	});
 
-	// 5. 画像 unwrap
-	test("<img> が <p> でラップされない", async () => {
-		const title = "Image Test";
-		const htmlInput = `
-			<p>before</p>
-			<p><img src="http://localhost/sample.png" alt=""></p>
-			<p>after</p>
-		`;
+	/* ----------------- 3. タグライン重複 ----------------- */
+	test("tagline duplication handled via occurrence index", async () => {
+		const title = "Dup";
+		const tagLine = "Tag Line";
+		const doc: AstNode = {
+			type: "doc",
+			content: [p(tagLine, h(tagLine, 1))],
+		};
 
-		// ① Project 作成
-		const project = await prisma.project.create({
-			data: {
-				userId: user.id,
-				description: htmlInput,
-				title,
-				sourceLocale: "en",
-			},
+		await upsertProjectAndSegments({
+			projectId,
+			userId,
+			title,
+			tagLine,
+			descriptionJson: doc,
+			sourceLocale: "en",
 		});
 
-		// ② HTML 処理
-		await processProjectHtml(project.id, title, htmlInput, user.id);
-
-		// ③ 検証 ― unwrap されているか
-		const updated = await prisma.project.findUnique({
-			where: { id: project.id },
+		const prj = await prisma.project.findUnique({
+			where: { id: projectId },
+			include: { projectSegments: true },
 		});
-		expect(updated).not.toBeNull();
-		if (!updated) return;
+		if (!prj) throw new Error("Project should exist");
 
-		// <p><img …></p> という包み込みは無い
-		expect(updated.description).not.toMatch(/<p>\s*<img[^>]*>\s*<\/p>/);
+		const dupSegs = prj.projectSegments.filter((s) => s.text === tagLine);
+		expect(dupSegs.length).toBe(2); // occurrence 0 & 1
+		for (const seg of dupSegs) {
+			expect(seg.textAndOccurrenceHash).toBeTruthy();
+		}
+	});
 
-		// <img …> 自体は生きている
-		expect(updated.description).toMatch(
-			/<img [^>]*src="http:\/\/localhost\/sample\.png"[^>]*>/,
-		);
+	/* ----------------- 4. 再保存で ID 不変 ----------------- */
+	test("no-op save keeps identical segment ids", async () => {
+		const tagLine = "Tag Line";
+		const doc: AstNode = {
+			type: "doc",
+			content: [p("X", h("X")), p("Y", h("Y"))],
+		};
+
+		await upsertProjectAndSegments({
+			projectId,
+			userId,
+			title: "",
+			tagLine,
+			descriptionJson: doc,
+			sourceLocale: "en",
+		});
+		const first = await prisma.project.findUnique({
+			where: { id: projectId },
+			include: { projectSegments: true },
+		});
+		if (!first) throw new Error("First project should exist");
+		const ids = first.projectSegments.map((s) => s.id);
+
+		await upsertProjectAndSegments({
+			projectId,
+			userId,
+			title: "",
+			tagLine,
+			descriptionJson: doc,
+			sourceLocale: "en",
+		});
+		const second = await prisma.project.findUnique({
+			where: { id: projectId },
+			include: { projectSegments: true },
+		});
+		if (!second) throw new Error("Second project should exist");
+
+		expect(second.projectSegments.map((s) => s.id)).toEqual(ids);
+	});
+
+	/* ----------------- 5. 画像ノードが p でラップされない ----------------- */
+	test("image node outputs standalone img tag", async () => {
+		const tagLine = "Tag Line";
+		const src = "http://localhost/sample.png";
+		const doc: AstNode = {
+			type: "doc",
+			content: [
+				p("before", h("before")),
+				img(src), // p の外に配置
+				p("after", h("after")),
+			],
+		};
+
+		await upsertProjectAndSegments({
+			projectId,
+			userId,
+			title: "",
+			tagLine,
+			descriptionJson: doc,
+			sourceLocale: "en",
+		});
+
+		const prj = await prisma.project.findUnique({
+			where: { id: projectId },
+		});
+		if (!prj) throw new Error("Project should exist");
+
+		const html = jsonToHtml(prj.descriptionJson as AstNode);
+
+		expect(html).toMatch(new RegExp(`<img [^>]*src="${src}"[^>]*>`)); // 画像は存在
+		expect(html).not.toMatch(/<p><img[^>]*><\/p>/); // p でラップされていない
 	});
 });
