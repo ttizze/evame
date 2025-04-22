@@ -40,7 +40,7 @@ export default async function SearchPage({
 
 	return (
 		<main>
-			<div className="max-w-screen-xl mx-auto py-6">
+			<div className="max-w-(--breakpoint-xl) mx-auto py-6">
 				<SearchPageClient />
 				{query && (
 					<div className="">

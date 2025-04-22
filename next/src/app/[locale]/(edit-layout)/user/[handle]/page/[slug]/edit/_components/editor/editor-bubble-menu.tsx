@@ -148,7 +148,7 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 									<DropdownMenuPrimitive.Item
 										onSelect={() => editorCommands.regularText(editor)}
 										className={cn(
-											"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+											"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
 											!editor.isActive("heading") && "bg-secondary",
 										)}
 									>
@@ -162,7 +162,7 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 												key={level}
 												onSelect={() => editorCommands[`h${level}`](editor)}
 												className={cn(
-													"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+													"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
 													editor.isActive("heading", { level }) &&
 														"bg-secondary",
 												)}
@@ -182,7 +182,7 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 										type="button"
 										onClick={() => editorCommands[value](editor)}
 										className={cn(
-											"rounded-md inline-flex h-8 w-8 mx-0.5 items-center justify-center text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+											"rounded-md inline-flex h-8 w-8 mx-0.5 items-center justify-center text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 											isActive() && "bg-secondary text-foreground",
 										)}
 									>
@@ -230,7 +230,7 @@ function LinkPopover({ editor }: { editor: TiptapEditor }) {
 				<button
 					type="button"
 					className={cn(
-						"rounded-md inline-flex h-8 w-8 mx-0.5 items-center justify-center text-sm text-muted-foreground  transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+						"rounded-md inline-flex h-8 w-8 mx-0.5 items-center justify-center text-sm text-muted-foreground  transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 						editor.isActive("link") && "bg-secondary text-foreground",
 					)}
 				>

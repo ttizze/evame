@@ -108,7 +108,7 @@ export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
 											key={value}
 											onSelect={() => editorCommands[value](editor)}
 											className={cn(
-												"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+												"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
 												isActive(editor) && "bg-secondary",
 											)}
 										>
@@ -117,7 +117,7 @@ export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
 										</DropdownMenuPrimitive.Item>
 									))}
 									<DropdownMenuPrimitive.Item
-										className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground"
+										className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground"
 										onSelect={() =>
 											document.getElementById("imageUpload")?.click()
 										}

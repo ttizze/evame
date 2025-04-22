@@ -35,7 +35,7 @@ export function TranslationListItem({
 		<span className="pl-4 mt-1 block">
 			<span className="flex items-start justify-between">
 				<span className="flex">
-					<span className="flex-shrink-0 w-5 text-2xl">•</span>
+					<span className="shrink-0 w-5 text-2xl">•</span>
 					<span>{sanitizeAndParseText(translation.text)}</span>
 				</span>
 				{isOwner && (
@@ -67,7 +67,7 @@ export function TranslationListItem({
 			<span className="flex items-center justify-end">
 				<Link
 					href={`/user/${translation.user.handle}`}
-					className="!no-underline mr-2 flex  items-center"
+					className="no-underline! mr-2 flex  items-center"
 				>
 					<span className="text-sm text-gray-500 text-right flex justify-end items-center  ">
 						by: {translation.user.name}

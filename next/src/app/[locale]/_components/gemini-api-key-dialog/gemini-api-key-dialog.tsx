@@ -65,7 +65,7 @@ export function GeminiApiKeyDialog({
 							type="password"
 							name="geminiApiKey"
 							required
-							className="flex-grow"
+							className="grow"
 							placeholder="Enter your Gemini API Key"
 						/>
 						<Button type="submit" disabled={isPending}>

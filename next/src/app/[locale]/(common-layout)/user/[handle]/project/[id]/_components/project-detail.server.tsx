@@ -59,7 +59,7 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 				{/* Grid: [icon] [title / tagline] [actions] – always three columns */}
 				<div className="grid grid-cols-[auto_1fr_auto] gap-4">
 					{/* Icon */}
-					<div className="relative h-16 w-24 flex justify-self-start rounded-md shadow-sm">
+					<div className="relative h-16 w-24 flex justify-self-start rounded-md shadow-xs">
 						{projectDetail.iconImage ? (
 							<Image
 								src={projectDetail.iconImage.url}
@@ -158,7 +158,7 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 									key={image.id}
 									className="sm:basis-1/2 md:basis-1/3"
 								>
-									<div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-sm">
+									<div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-xs">
 										<Image
 											src={image.url}
 											alt={image.caption || projectDetail.title}

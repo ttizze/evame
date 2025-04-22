@@ -214,13 +214,13 @@ export default async function HomePage({
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 							<section>
 								<h2 className="text-2xl font-bold mb-4">Popular Tags</h2>
-								<Card className="rounded-lg p-4 shadow-sm">
+								<Card className="rounded-lg p-4 shadow-xs">
 									<PopularPageTagsList limit={10} />
 								</Card>
 							</section>
 							<section>
 								<h2 className="text-2xl font-bold mb-4">Popular Users</h2>
-								<Card className="rounded-lg p-4 shadow-sm">
+								<Card className="rounded-lg p-4 shadow-xs">
 									<PopularUsersList limit={5} />
 								</Card>
 							</section>

@@ -123,7 +123,7 @@ export function EditorKeyboardMenu({ editor }: EditorKeyboardMenuProps) {
 						}}
 						onMouseDown={(e) => e.preventDefault()}
 						className={cn(
-							"rounded-md inline-flex h-[48px] px-2 items-center justify-center text-sm text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation",
+							"rounded-md inline-flex h-[48px] px-2 items-center justify-center text-sm text-muted-foreground transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation",
 							"active:bg-secondary active:text-foreground",
 							(isActive() || activeStates[value]) &&
 								"bg-secondary text-foreground",
@@ -139,7 +139,7 @@ export function EditorKeyboardMenu({ editor }: EditorKeyboardMenuProps) {
 						document.getElementById("keyboardImageUpload")?.click()
 					}
 					className={cn(
-						"rounded-md inline-flex h-[48px] px-1 items-center justify-center text-sm text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation",
+						"rounded-md inline-flex h-[48px] px-1 items-center justify-center text-sm text-muted-foreground transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation",
 						"active:bg-secondary active:text-foreground",
 					)}
 					title="Insert Image"
