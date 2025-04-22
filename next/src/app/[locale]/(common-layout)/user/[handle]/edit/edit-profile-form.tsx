@@ -94,7 +94,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 							type="button"
 							onClick={handleImageClick}
 							disabled={isImageUploading}
-							className="w-40 h-40 rounded-full overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500"
+							className="w-40 h-40 rounded-full overflow-hidden focus:outline-hidden focus:ring-2 focus:ring-blue-500"
 						>
 							<Image
 								src={imageState.data?.imageUrl ?? ""}
@@ -170,7 +170,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 							minLength={3}
 							maxLength={25}
 							required
-							className="border rounded-lg bg-white dark:bg-black/50 focus:outline-none"
+							className="border rounded-lg bg-white dark:bg-black/50 focus:outline-hidden"
 						/>
 					</code>
 					{editState.zodErrors?.handle && (
@@ -188,7 +188,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 						minLength={3}
 						maxLength={25}
 						required
-						className="w-full h-10 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-none"
+						className="w-full h-10 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-hidden"
 					/>
 					{editState.zodErrors?.name && (
 						<div className="text-red-500 text-sm mt-1">
@@ -202,7 +202,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 					<textarea
 						defaultValue={editState.data?.profile}
 						name="profile"
-						className="w-full h-32 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-none"
+						className="w-full h-32 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-hidden"
 					/>
 					{editState.zodErrors?.profile && (
 						<div className="text-red-500 text-sm mt-1">
@@ -217,7 +217,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 						name="twitterHandle"
 						placeholder="start with @. e.g. @evame"
 						pattern="@[A-Za-z0-9_]+"
-						className="w-full h-10 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-none"
+						className="w-full h-10 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-hidden"
 					/>
 					{editState.zodErrors?.twitterHandle && (
 						<div className="text-red-500 text-sm mt-1">

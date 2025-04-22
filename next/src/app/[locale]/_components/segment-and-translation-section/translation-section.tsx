@@ -42,7 +42,7 @@ export function TranslationSection({
 			{isSelected && interactive && (
 				<>
 					<span className="flex items-center justify-end gap-2">
-						<Link href={`/user/${best.user.handle}`} className="!no-underline">
+						<Link href={`/user/${best.user.handle}`} className="no-underline!">
 							<span className="text-sm text-gray-500 text-right flex  items-center">
 								by: {best.user.name}
 							</span>

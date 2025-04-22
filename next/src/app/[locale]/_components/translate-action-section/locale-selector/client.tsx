@@ -112,7 +112,7 @@ export function LocaleSelector({
 											translationJobs={translationJobs}
 										/>
 									)}
-									<span className="truncate flex-grow">{item.name}</span>
+									<span className="truncate grow">{item.name}</span>
 									{targetLocale === item.code && (
 										<Check className="ml-2 h-4 w-4" />
 									)}

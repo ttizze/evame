@@ -103,7 +103,7 @@ export function PageList({
 				{/* ─ row‑3: ユーザ情報 + ボタン ─ */}
 				<div className="flex items-center gap-2">
 					<Link href={userLink} className="flex items-center gap-1 min-w-0">
-						<Avatar className="w-5 h-5 flex-shrink-0">
+						<Avatar className="w-5 h-5 shrink-0">
 							<AvatarImage {...props} />
 							<AvatarFallback>
 								{pageSummary.user.handle.charAt(0).toUpperCase()}

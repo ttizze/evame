@@ -99,17 +99,17 @@ export function EditPageClient({
 			/>
 			<main
 				className="w-full max-w-3xl prose dark:prose-invert sm:prose lg:prose-lg 
-          mx-auto px-4  prose-headings:text-gray-700 prose-headings:dark:text-gray-200 text-gray-700 dark:text-gray-200 mb-5 mt-3 md:mt-5 flex-grow tracking-wider"
+          mx-auto px-4  prose-headings:text-gray-700 dark:prose-headings:text-gray-200 text-gray-700 dark:text-gray-200 mb-5 mt-3 md:mt-5 grow tracking-wider"
 			>
 				<div className="">
-					<h1 className="!m-0 ">
+					<h1 className="m-0! ">
 						<TextareaAutosize
 							value={title}
 							onChange={handleTitleChange}
 							onKeyDown={handleTitleKeyDown}
 							name="title"
 							placeholder="Title"
-							className="w-full outline-none bg-transparent resize-none overflow-hidden"
+							className="w-full outline-hidden bg-transparent resize-none overflow-hidden"
 							minRows={1}
 							maxRows={10}
 							data-testid="title-input"
@@ -138,7 +138,7 @@ export function EditPageClient({
 						name="pageContent"
 						onEditorUpdate={handleChange}
 						onEditorCreate={setEditorInstance}
-						className="outline-none"
+						className="outline-hidden"
 						placeholder="Write to the world..."
 					/>
 				</form>

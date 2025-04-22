@@ -207,9 +207,9 @@ function NotificationAvatar({
 	return (
 		<Link
 			href={`/user/${actor.handle}`}
-			className="flex items-center mr-2 !no-underline hover:text-gray-700"
+			className="flex items-center mr-2 no-underline! hover:text-gray-700"
 		>
-			<Avatar className="w-10 h-10 flex-shrink-0 mr-3">
+			<Avatar className="w-10 h-10 shrink-0 mr-3">
 				<AvatarImage {...props} />
 				<AvatarFallback>{actor.name.charAt(0).toUpperCase()}</AvatarFallback>
 			</Avatar>

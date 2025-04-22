@@ -15,26 +15,23 @@ export function DisplayModeCycle({ afterClick }: Props) {
 		afterClick?.();
 		cycle(); // ③ 状態変更
 	};
-	/* 次に回るモードを計算 */
-	const next = mode === "user" ? "source" : mode === "source" ? "both" : "user";
-
-	/* アイコンをマッピング */
+	/* 現在のモードに対応するアイコンをマッピング */
 	const icon =
-		next === "user" ? (
+		mode === "user" ? (
 			<UserRoundCheck className="w-5 h-5" />
-		) : next === "source" ? (
+		) : mode === "source" ? (
 			<FileText className="w-5 h-5" />
 		) : (
 			<Rows2 className="w-5 h-5" />
 		);
 
-	/* アクセシブルラベル */
+	/* 現在のモードに対応するアクセシブルラベル */
 	const label =
-		next === "user"
-			? "Show user language only"
-			: next === "source"
-				? "Show source only"
-				: "Show both";
+		mode === "user"
+			? "Currently: User language only (Click to change)"
+			: mode === "source"
+				? "Currently: Source only (Click to change)"
+				: "Currently: Both languages (Click to change)";
 
 	return (
 		<Button

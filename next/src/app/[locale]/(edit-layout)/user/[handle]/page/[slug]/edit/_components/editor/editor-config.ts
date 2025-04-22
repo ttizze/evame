@@ -50,7 +50,7 @@ export function configureEditor(initialContent: string, placeholder: string) {
 		content: initialContent,
 		editorProps: {
 			attributes: {
-				class: "focus:outline-none",
+				class: "focus:outline-hidden",
 			},
 		},
 	};

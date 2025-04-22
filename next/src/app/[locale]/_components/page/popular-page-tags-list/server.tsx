@@ -20,7 +20,7 @@ export default async function PopularTagsList({ limit }: PopularTagsListProps) {
 				<Link
 					href={`/search?query=${encodeURIComponent(tag.name)}&category=tags&tagPage=true`}
 					key={tag.id}
-					className="flex items-center gap-1 px-3 h-[32px] !no-underline bg-secondary rounded-full text-sm text-secondary-foreground hover:bg-secondary/80 transition-colors"
+					className="flex items-center gap-1 px-3 h-[32px] no-underline! bg-secondary rounded-full text-sm text-secondary-foreground hover:bg-secondary/80 transition-colors"
 				>
 					<Hash className="w-3 h-3" />
 					<span>{tag.name}</span>

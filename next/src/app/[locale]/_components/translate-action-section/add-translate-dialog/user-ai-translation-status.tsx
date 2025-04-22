@@ -33,7 +33,7 @@ export function UserAITranslationStatus({
 					<Progress
 						value={latestUserTranslationJob.progress}
 						className={cn(
-							"flex-grow",
+							"grow",
 							latestUserTranslationJob.status ===
 								TranslationStatus.IN_PROGRESS && "bg-blue-400 animate-pulse",
 							latestUserTranslationJob.status === TranslationStatus.FAILED &&

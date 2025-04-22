@@ -4,8 +4,8 @@ import { FaDiscord, FaGithub } from "react-icons/fa";
 
 export function Footer() {
 	return (
-		<footer className="mt-auto">
-			<div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+		<footer className="mt-auto h-60 grid place-items-center">
+			<div className="w-full ">
 				<div className="flex justify-center items-center text-sm text-gray-600 dark:text-gray-300 gap-4">
 					<LinkI18n
 						href="/about"

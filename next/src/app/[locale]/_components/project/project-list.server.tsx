@@ -111,7 +111,7 @@ export async function ProjectList({
 				{/* row‑4: ユーザ情報 */}
 				<div className="flex items-center gap-2">
 					<Link href={userLink} className="flex items-center gap-1 min-w-0">
-						<Avatar className="w-5 h-5 flex-shrink-0">
+						<Avatar className="w-5 h-5 shrink-0">
 							<AvatarImage {...avatarProps} />
 							<AvatarFallback>
 								{projectSummary.user.handle.charAt(0).toUpperCase()}

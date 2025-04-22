@@ -52,7 +52,7 @@ export async function ContentWithTranslations({
 
 	return (
 		<>
-			<h1 className="!mb-0 ">
+			<h1 className="mb-0! ">
 				{pageSegmentTitleWithTranslations && (
 					<DynamicSegmentAndTranslationSection
 						segmentBundle={pageSegmentTitleWithTranslations}

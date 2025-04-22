@@ -43,7 +43,7 @@ export default async function Layout({
 			suppressHydrationWarning
 			className={`${inter.className} ${bizUDPGothic.variable}`}
 		>
-			<body className="transition-colors duration-300">
+			<body className="transition-colors duration-300 antialiased">
 				{gaTrackingId && <GoogleAnalytics gaId={gaTrackingId} />}
 				<NextTopLoader showSpinner={false} />
 				<NuqsAdapter>
