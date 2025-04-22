@@ -12,6 +12,7 @@ export type EditPageContentActionState = ActionResponse<
 	void,
 	{
 		slug: string;
+		userLocale: string;
 		title: string;
 		pageContent: string;
 	}
