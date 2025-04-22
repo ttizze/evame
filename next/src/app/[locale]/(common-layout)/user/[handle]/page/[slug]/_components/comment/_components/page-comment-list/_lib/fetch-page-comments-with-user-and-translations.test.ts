@@ -24,6 +24,7 @@ test("normalize → SegmentBundle keeps best", () => {
 			id: 1,
 			number: 0,
 			text: "s",
+			textAndOccurrenceHash: "s",
 			pageCommentSegmentTranslations: [
 				{
 					id: 1,

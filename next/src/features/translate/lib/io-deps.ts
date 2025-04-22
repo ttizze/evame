@@ -88,7 +88,7 @@ export async function saveTranslationsForComment(
 		"pageCommentSegmentId",
 		Prisma.PageCommentSegmentTranslationCreateManyInput
 	>(extracted, pageCommentSegments, locale, userId, "pageCommentSegmentId");
-	console.log(data);
+
 	if (data.length)
 		await prisma.pageCommentSegmentTranslation.createMany({ data });
 }

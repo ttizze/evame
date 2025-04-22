@@ -78,6 +78,7 @@ export function normalizePageSegments(
 		id: number;
 		number: number;
 		text: string;
+		textAndOccurrenceHash: string;
 		pageSegmentTranslations: {
 			id: number;
 			locale: string;
@@ -93,6 +94,7 @@ export function normalizePageSegments(
 		id: seg.id,
 		number: seg.number,
 		text: seg.text,
+		textAndOccurrenceHash: seg.textAndOccurrenceHash,
 		segmentTranslations: seg.pageSegmentTranslations.map((t) => ({
 			...t,
 			currentUserVote: t.votes?.[0] ?? null,

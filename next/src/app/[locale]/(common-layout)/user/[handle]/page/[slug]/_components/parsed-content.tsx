@@ -4,7 +4,7 @@ import parse, { type HTMLReactParserOptions } from "html-react-parser";
 import DOMPurify from "isomorphic-dompurify";
 import { customAlphabet } from "nanoid";
 import Image from "next/image";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { Tweet as XPost } from "react-tweet";
 interface ParsedContentProps {
 	html: string;
@@ -19,8 +19,15 @@ export function ParsedContent({
 	segmentBundles,
 	currentHandle,
 }: ParsedContentProps) {
+	const bundleMap = useMemo(() => {
+		if (!segmentBundles) return new Map<string, SegmentBundle>();
+		return new Map(
+			segmentBundles.map((b) => [b.segment.textAndOccurrenceHash, b]),
+		);
+	}, [segmentBundles]);
+
 	const sanitizedContent = DOMPurify.sanitize(html, {
-		ADD_ATTR: ["xid", "data-type"], // ← 追加
+		ADD_ATTR: ["data-hash", "data-type", "xid"],
 	});
 
 	const options: HTMLReactParserOptions = {
@@ -50,11 +57,9 @@ export function ParsedContent({
 				);
 			}
 			// セグメントの翻訳が存在する場合は、セグメントの翻訳を表示
-			if (domNode.type === "tag" && domNode.attribs["data-number-id"]) {
-				const number = Number(domNode.attribs["data-number-id"]);
-				const segmentBundle = segmentBundles?.find(
-					(info) => info.segment.number === number,
-				);
+			if (domNode.type === "tag" && domNode.attribs["data-hash"]) {
+				const hash = domNode.attribs["data-hash"];
+				const segmentBundle = bundleMap.get(hash);
 				if (!segmentBundle) {
 					return null;
 				}
@@ -63,7 +68,7 @@ export function ParsedContent({
 				return (
 					<DynamicTag {...otherAttribs} className={className}>
 						<SegmentAndTranslationSection
-							key={`translation-${number}`}
+							key={`translation-${hash}`}
 							segmentBundle={segmentBundle}
 							currentHandle={currentHandle}
 						/>

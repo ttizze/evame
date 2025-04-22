@@ -75,6 +75,7 @@ export function normalizeProjectSegments(
 		id: number;
 		number: number;
 		text: string;
+		textAndOccurrenceHash: string;
 		projectSegmentTranslations: {
 			id: number;
 			locale: string;
@@ -90,6 +91,7 @@ export function normalizeProjectSegments(
 		id: seg.id,
 		number: seg.number,
 		text: seg.text,
+		textAndOccurrenceHash: seg.textAndOccurrenceHash,
 		segmentTranslations: seg.projectSegmentTranslations.map((t) => ({
 			...t,
 			currentUserVote: t.projectSegmentTranslationVotes?.[0] ?? null,

@@ -17,6 +17,7 @@ export function toSegmentBundles<
 		id: number;
 		number: number;
 		text: string;
+		textAndOccurrenceHash: string;
 		segmentTranslations: readonly RawTranslation[];
 	},
 >(
@@ -49,6 +50,7 @@ export function toSegmentBundles<
 				id: seg.id,
 				number: seg.number,
 				text: seg.text,
+				textAndOccurrenceHash: seg.textAndOccurrenceHash,
 			},
 			translations,
 			best: selectBestTranslation(translations),

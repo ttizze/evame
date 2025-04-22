@@ -11,6 +11,7 @@ export function normalizeCommentSegments(
 		id: number;
 		number: number;
 		text: string;
+		textAndOccurrenceHash: string;
 		pageCommentSegmentTranslations: {
 			id: number;
 			locale: string;
@@ -29,6 +30,7 @@ export function normalizeCommentSegments(
 		id: seg.id,
 		number: seg.number,
 		text: seg.text,
+		textAndOccurrenceHash: seg.textAndOccurrenceHash,
 		segmentTranslations: seg.pageCommentSegmentTranslations.map((t) => ({
 			...t,
 			currentUserVote: t.pageCommentSegmentTranslationVotes?.[0] ?? null,

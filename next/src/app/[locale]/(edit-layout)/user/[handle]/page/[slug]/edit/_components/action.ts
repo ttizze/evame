@@ -1,13 +1,14 @@
+/* app/[locale]/(pages)/_actions/edit-page-content.ts */
 "use server";
-import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
+
+import { detectLocale } from "@/app/[locale]/_lib/detect-locale"; // ★ cld3 等で判定
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { parseFormData } from "@/lib/parse-form-data";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { processPageHtml } from "../_lib/process-page-html";
-
+import { upsertPageAndSegments } from "../_db/mutations.server";
 export type EditPageContentActionState = ActionResponse<
 	void,
 	{
@@ -18,32 +19,44 @@ export type EditPageContentActionState = ActionResponse<
 	}
 >;
 
-const editPageContentSchema = z.object({
+const schema = z.object({
 	slug: z.string().min(1),
 	userLocale: z.string(),
 	title: z.string().min(1).max(100),
-	pageContent: z.string().min(1),
+	pageContent: z
+		.string()
+		.min(1)
+		.transform((str) => JSON.parse(str)),
 });
 
 export async function editPageContentAction(
-	previousState: EditPageContentActionState,
+	_prev: EditPageContentActionState,
 	formData: FormData,
 ): Promise<EditPageContentActionState> {
-	const currentUser = await getCurrentUser();
-	if (!currentUser || !currentUser.id) {
-		return redirect("/auth/login");
-	}
-	const parsedFormData = await parseFormData(editPageContentSchema, formData);
-	if (!parsedFormData.success) {
-		return {
-			success: false,
-			zodErrors: parsedFormData.error.flatten().fieldErrors,
-		};
-	}
-	const { slug, title, pageContent, userLocale } = parsedFormData.data;
-	const sourceLocale = await getLocaleFromHtml(pageContent, userLocale);
-	await processPageHtml(title, pageContent, slug, currentUser.id, sourceLocale);
+	/* 1. 認証チェック */
+	const user = await getCurrentUser();
+	if (!user?.id) return redirect("/auth/login");
 
-	revalidatePath(`/user/${currentUser.handle}/page/${slug}`);
-	return { success: true, message: "Page updated successfully" };
+	/* 2. バリデーション & パース */
+	const parsed = await parseFormData(schema, formData);
+	if (!parsed.success) {
+		return { success: false, zodErrors: parsed.error.flatten().fieldErrors };
+	}
+	const { slug, title, pageContent, userLocale } = parsed.data;
+
+	const sourceLocale = await detectLocale(pageContent, userLocale);
+
+	/* 4. 本文 & セグメントをアップサート */
+	await upsertPageAndSegments({
+		slug,
+		userId: user.id,
+		title,
+		contentJson: pageContent,
+		sourceLocale,
+	});
+
+	/* 5. ISR / RSC キャッシュを再検証 */
+	revalidatePath(`/user/${user.handle}/page/${slug}`);
+
+	return { success: true, message: "Page updated successfully!" };
 }

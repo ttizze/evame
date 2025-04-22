@@ -1,11 +1,15 @@
 import { FileHandler } from "@tiptap-pro/extension-file-handler";
 import { Link } from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extension-placeholder";
+import type { JSONContent } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import { CustomImage } from "./custom-image";
 import { X } from "./extensions/x-embed";
 import { handleFileUpload } from "./use-file-upload";
-export function configureEditor(initialContent: string, placeholder: string) {
+export function configureEditor(
+	initialContent: JSONContent,
+	placeholder: string,
+) {
 	return {
 		immediatelyRender: false,
 		extensions: [

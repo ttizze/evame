@@ -22,6 +22,7 @@ const rawSegments = [
 		id: 1,
 		number: 0,
 		text: "segment‑text",
+		textAndOccurrenceHash: "segment‑text",
 		segmentTranslations: [
 			{
 				id: 11,

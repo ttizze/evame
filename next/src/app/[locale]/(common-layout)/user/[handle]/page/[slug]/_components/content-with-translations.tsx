@@ -28,7 +28,8 @@ const DynamicSegmentAndTranslationSection = dynamic(
 		loading: () => <span>Loading Segment And Translation Section...</span>,
 	},
 );
-
+import { jsonToHtml } from "@/app/[locale]/_lib/json-to-html";
+import type { AstNode } from "@/app/types/ast-node";
 interface ContentWithTranslationsProps {
 	pageData: Awaited<ReturnType<typeof fetchPageContext>>;
 }
@@ -45,11 +46,11 @@ export async function ContentWithTranslations({
 		pageTranslationJobs,
 		latestUserTranslationJob,
 	} = pageData;
+	const contentHtml = jsonToHtml(pageDetail.contentJson as AstNode);
 
 	const pageSegmentTitleWithTranslations = pageDetail.segmentBundles.filter(
 		(item) => item.segment.number === 0,
 	)[0];
-
 	return (
 		<>
 			<h1 className="mb-0! ">
@@ -77,7 +78,7 @@ export async function ContentWithTranslations({
 			/>
 			<span className="js-content">
 				<DynamicMemoizedParsedContent
-					html={pageDetail.content}
+					html={contentHtml}
 					segmentBundles={pageDetail.segmentBundles}
 					currentHandle={currentUser?.handle}
 				/>

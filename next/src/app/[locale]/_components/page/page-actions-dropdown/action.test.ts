@@ -25,6 +25,7 @@ describe("togglePublishAction", () => {
 			updatedAt: new Date(),
 			slug: "test",
 			content: "test",
+			contentJson: "test",
 			sourceLocale: "en",
 			status: "PUBLIC",
 			userId: mockUsers[0].id,

@@ -1,10 +1,10 @@
 import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
 import { getCurrentUser } from "@/auth";
-import { mockPages, mockUsers } from "@/tests/mock";
+import { mockUsers } from "@/tests/mock";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { processPageHtml } from "../_lib/process-page-html";
+import { upsertPageAndSegments } from "../_db/mutations.server";
 import { editPageContentAction } from "./action";
 // Mocks
 vi.mock("@/auth");
@@ -12,13 +12,19 @@ vi.mock("@/app/[locale]/_lib/get-locale-from-html");
 vi.mock("../_lib/process-page-html");
 vi.mock("next/cache");
 vi.mock("next/navigation");
+vi.mock("../_db/mutations.server", () => ({
+	upsertPageAndSegments: vi.fn(),
+}));
 
 describe("editPageContentAction", () => {
 	const mockFormData = new FormData();
 	mockFormData.append("slug", "mockUserId1-page1");
 	mockFormData.append("title", "Test Title");
 	mockFormData.append("userLocale", "en");
-	mockFormData.append("pageContent", "<p>Test content</p>");
+	mockFormData.append(
+		"pageContent",
+		'{"type": "doc", "content": [{"type": "paragraph"}]}',
+	);
 
 	beforeEach(() => {
 		vi.resetAllMocks();
@@ -51,7 +57,12 @@ describe("editPageContentAction", () => {
 	it("should successfully update public page and trigger translation", async () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
 		vi.mocked(getLocaleFromHtml).mockResolvedValue("en");
-		vi.mocked(processPageHtml).mockResolvedValue(mockPages[0]);
+
+		// Set up the mock implementation to return void
+		vi.mocked(upsertPageAndSegments).mockImplementation(async () => {
+			// Function returns void
+			return;
+		});
 
 		const result = await editPageContentAction(
 			{ success: false },
@@ -59,7 +70,7 @@ describe("editPageContentAction", () => {
 		);
 
 		expect(result.success).toBe(true);
-		expect(result.message).toBe("Page updated successfully");
+		expect(result.message).toBe("Page updated successfully!");
 		expect(revalidatePath).toHaveBeenCalledWith(
 			"/user/mockUserId1/page/mockUserId1-page1",
 		);

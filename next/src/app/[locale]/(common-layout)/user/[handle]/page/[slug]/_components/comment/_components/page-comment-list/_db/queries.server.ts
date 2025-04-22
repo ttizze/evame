@@ -19,6 +19,7 @@ export async function fetchPageCommentsWithPageCommentSegments(
 					id: true,
 					number: true,
 					text: true,
+					textAndOccurrenceHash: true,
 					pageCommentSegmentTranslations: {
 						where: { locale },
 						include: {

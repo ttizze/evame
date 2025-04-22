@@ -1,299 +1,235 @@
+import { generateHashForText } from "@/app/[locale]/_lib/generate-hash-for-text";
+import { jsonToHtml } from "@/app/[locale]/_lib/json-to-html";
+import type { AstNode } from "@/app/types/ast-node";
 import { prisma } from "@/lib/prisma";
-import type { User } from "@prisma/client";
-import { describe, expect, test } from "vitest";
-import { processPageHtml } from "./process-page-html";
-describe("processHtmlContent", () => {
-	let user: User;
+/* tests/process-json-content.test.ts */
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { upsertPageAndSegments } from "../_db/mutations.server";
+
+const p = (text: string, hash: string): AstNode => ({
+	type: "paragraph",
+	content: [{ type: "text", text, attrs: { hash } }],
+});
+
+/* img ノード */
+const img = (src: string): AstNode => ({
+	type: "image",
+	attrs: { src, alt: "" },
+});
+
+describe("upsertPageAndSegments", () => {
+	let userId: string;
+
 	beforeEach(async () => {
-		await prisma.user.deleteMany();
-		user = await prisma.user.create({
+		await prisma.$transaction([
+			prisma.page.deleteMany(),
+			prisma.user.deleteMany(),
+		]);
+		const u = await prisma.user.create({
 			data: {
-				handle: "noedit",
-				name: "noedit",
-				image: "noedit",
-				email: "noedit@example.com",
+				handle: "tester",
+				name: "Tester",
+				image: "x",
+				email: "test@example.com",
 			},
 		});
-	});
-	afterEach(async () => {
-		await prisma.user.deleteMany();
+		userId = u.id;
 	});
 
-	test("HTML入力を処理し、source_texts挿入とdata-id付きspanが生成されるかテスト", async () => {
-		const pageSlug = "html-test-page";
-		const title = "Title";
-		const htmlInput = `
-      <p>This is a test.</p>
-      <p>This is another test.</p>
-    `;
+	afterEach(() => prisma.$disconnect());
 
-		// HTMLを処理
-		await processPageHtml(title, htmlInput, pageSlug, user.id, "en");
+	function h(text: string, occ = 1) {
+		return generateHashForText(text, occ);
+	}
 
-		// ページがDBに存在し、HTMLが変換されているか確認
-		const dbPage = await prisma.page.findUnique({
-			where: { slug: pageSlug },
+	/* ----------------- 1. 基本挿入 ----------------- */
+	test("store segments & hash from JSON input", async () => {
+		const slug = "json-basic";
+		const content: AstNode = {
+			type: "doc",
+			content: [p("Line 1", h("Line 1")), p("Line 2", h("Line 2"))],
+		};
+
+		await upsertPageAndSegments({
+			slug,
+			userId,
+			title: "Title",
+			contentJson: content,
+			sourceLocale: "en",
+		});
+
+		const page = await prisma.page.findUnique({
+			where: { slug },
 			include: { pageSegments: true },
 		});
-		expect(dbPage).not.toBeNull();
-		if (!dbPage) return;
-		expect(dbPage.pageSegments.length).toBeGreaterThanOrEqual(2);
+		expect(page).not.toBeNull();
+		expect(page?.pageSegments.length).toBe(3);
 
-		// ページHTMLがdata-id付きspanを含むか確認
-		const updatedPage = await prisma.page.findUnique({
-			where: { slug: pageSlug },
-		});
+		// Make sure page is not null before accessing its properties
+		if (!page) throw new Error("Page should exist");
 
-		expect(updatedPage).not.toBeNull();
-		if (!updatedPage) return;
-		const htmlContent = updatedPage.content;
-
-		expect(htmlContent).toMatch(
-			/<span data-number-id="\d+">This is a test\.<\/span>/,
+		const [titleSeg, l1, l2] = page.pageSegments.sort(
+			(a, b) => a.number - b.number,
 		);
-		expect(htmlContent).toMatch(
-			/<span data-number-id="\d+">This is another test\.<\/span>/,
-		);
-
-		// source_textsのnumberが連番になっているか
-		const sortedTexts = dbPage.pageSegments.sort((a, b) => a.number - b.number);
-		expect(sortedTexts[0].number).toBe(0);
-		expect(sortedTexts[1].number).toBe(1);
-
-		// hashが設定されているか
-		for (const st of sortedTexts) {
-			expect(st.textAndOccurrenceHash).not.toBeNull();
-		}
+		expect(titleSeg.number).toBe(0);
+		expect(l1.textAndOccurrenceHash).toBe(h("Line 1"));
+		expect(l2.textAndOccurrenceHash).toBe(h("Line 2"));
 	});
 
-	test("HTML入力を編集後再度処理し、IDが保持・追加・変更されるか確認", async () => {
-		const pageSlug = "html-test-page-edit";
-		const originalTitle = " <h1>Title</h1>";
-		const originalHtml = `
-      <p>This is a line.</p>
-      <p>This is another line.</p>
-      <ul>
-        <li><p>List item 1</p></li>
-        <li><p>List item 2</p></li>
-      </ul>
-    `;
+	/* ----------------- 2. 編集後ハッシュ維持 ----------------- */
+	test("unchanged sentences keep ids after re‑save", async () => {
+		const slug = "json-edit";
+		const v1: AstNode = {
+			type: "doc",
+			content: [p("A", h("A")), p("B", h("B")), p("C", h("C"))],
+		};
+		await upsertPageAndSegments({
+			slug,
+			userId,
+			title: "",
+			contentJson: v1,
+			sourceLocale: "en",
+		});
 
-		// 初回処理
-		await processPageHtml(originalTitle, originalHtml, pageSlug, user.id, "en");
-
-		const dbPage1 = await prisma.page.findUnique({
-			where: { slug: pageSlug },
+		const first = await prisma.page.findUnique({
+			where: { slug },
 			include: { pageSegments: true },
 		});
-		expect(dbPage1).not.toBeNull();
-		if (!dbPage1) return;
+		expect(first).not.toBeNull();
+		if (!first) throw new Error("First page should exist");
 
-		expect(dbPage1.pageSegments.length).toBeGreaterThanOrEqual(4);
-		const originalMap = new Map<string, number>();
-		for (const st of dbPage1.pageSegments) {
-			originalMap.set(st.text, st.id);
-		}
+		const idMap = new Map(first.pageSegments.map((s) => [s.text, s.id]));
 
-		// HTML変更
-		const editedTitle = " <h1>Edited Title</h1>";
-		const editedHtml = `
-      <p>This is a line!?</p>
-      <p>This is another line.</p>
-      <p>new line</p>
-      <ol>
-        <li><p>List item 1</p></li>
-        <li><p>List item 2</p></li>
-      </ol>
-    `;
+		const v2: AstNode = {
+			type: "doc",
+			content: [
+				p("A!", h("A!", 1)),
+				p("B", h("B")),
+				p("D", h("D")),
+				p("C", h("C")),
+			],
+		};
+		await upsertPageAndSegments({
+			slug,
+			userId,
+			title: "",
+			contentJson: v2,
+			sourceLocale: "en",
+		});
 
-		// 再処理
-		await processPageHtml(editedTitle, editedHtml, pageSlug, user.id, "en");
-
-		const dbPage2 = await prisma.page.findUnique({
-			where: { slug: pageSlug },
+		const second = await prisma.page.findUnique({
+			where: { slug },
 			include: { pageSegments: true },
 		});
-		expect(dbPage2).not.toBeNull();
-		if (!dbPage2) return;
+		expect(second).not.toBeNull();
+		if (!second) throw new Error("Second page should exist");
 
-		expect(dbPage2.pageSegments.length).toBeGreaterThanOrEqual(5);
-		const editedMap = new Map<string, number>();
-		for (const st of dbPage2.pageSegments) {
-			editedMap.set(st.text, st.id);
-		}
+		const map2 = new Map(second.pageSegments.map((s) => [s.text, s.id]));
 
-		// 変更無しテキストは同じIDを維持
-		expect(editedMap.get("This is another line.")).toBe(
-			originalMap.get("This is another line."),
-		);
-
-		// 変更後テキストは新ID
-		expect(editedMap.get("This is a line!?")).not.toBe(
-			originalMap.get("This is a line."),
-		);
-
-		// 新規テキストは新IDであること
-		expect(editedMap.get("new line")).not.toBe(originalMap.get("1"));
-
-		// 既存リストアイテムはテキストが同じならID維持
-		expect(editedMap.get("List item 1")).toBe(originalMap.get("List item 1"));
+		expect(map2.get("B")).toBe(idMap.get("B")); // unchanged
+		expect(map2.get("C")).toBe(idMap.get("C")); // unchanged
+		expect(map2.get("A!")).not.toBe(idMap.get("A")); // modified text → new row
 	});
 
-	test("タイトルと同じ文章が本文に含まれている場合に正しく処理されるかテスト", async () => {
-		const pageSlug = "html-title-duplicate-test-page";
-		const title = "Unique Title";
-		const htmlInput = `
-      <h1>${title}</h1>
-      <p>This is a paragraph with the Unique Title embedded.</p>
-      <p>Another paragraph.</p>
-    `;
+	/* ----------------- 3. タイトル重複 ----------------- */
+	test("title duplication handled via occurrence index", async () => {
+		const slug = "json-dup";
+		const title = "Dup";
+		const content: AstNode = {
+			type: "doc",
+			content: [p(`${title}`, h(title, 1))],
+		};
+		await upsertPageAndSegments({
+			slug,
+			userId,
+			title,
+			contentJson: content,
+			sourceLocale: "en",
+		});
 
-		// HTMLを処理
-		await processPageHtml(title, htmlInput, pageSlug, user.id, "en");
-
-		// ページがDBに存在し、HTMLが変換されているか確認
-		const dbPage = await prisma.page.findUnique({
-			where: { slug: pageSlug },
+		const pg = await prisma.page.findUnique({
+			where: { slug },
 			include: { pageSegments: true },
 		});
-		expect(dbPage).not.toBeNull();
-		if (!dbPage) return;
+		expect(pg).not.toBeNull();
+		if (!pg) throw new Error("Page should exist");
 
-		// source_textsが適切に挿入されているか確認
-		expect(dbPage.pageSegments.length).toBeGreaterThanOrEqual(3); // title + 2 paragraphs
-
-		// ページHTMLがdata-id付きspanを含むか確認
-		const updatedPage = await prisma.page.findUnique({
-			where: { slug: pageSlug },
-		});
-
-		expect(updatedPage).not.toBeNull();
-		if (!updatedPage) return;
-		const htmlContent = updatedPage.content;
-
-		// タイトル部分のspanを確認
-		expect(htmlContent).toMatch(
-			new RegExp(`<h1><span data-number-id="\\d+">${title}</span></h1>`),
+		const dupSegs = pg.pageSegments.filter((s) => s.text === title);
+		expect(dupSegs.length).toBe(2); // occurrence=0 (title) & 1 (body)
+		dupSegs.forEach((s, i) =>
+			expect(s.textAndOccurrenceHash).toBe(h(title, i)),
 		);
-
-		// 本文中のタイトルのspanを確認
-		expect(htmlContent).toMatch(
-			new RegExp(`<span data-number-id="\\d+">${title}</span>`),
-		);
-
-		// その他の本文のspanを確認
-		expect(htmlContent).toMatch(
-			/<span data-number-id="\d+">This is a paragraph with the Unique Title embedded\.<\/span>/,
-		);
-		expect(htmlContent).toMatch(
-			/<span data-number-id="\d+">Another paragraph\.<\/span>/,
-		);
-
-		// page_segmentsのnumberが連番になっているか
-		const sortedTexts = dbPage.pageSegments.sort((a, b) => a.number - b.number);
-		sortedTexts.forEach((st, index) => {
-			expect(st.number).toBe(index);
-			expect(st.textAndOccurrenceHash).not.toBeNull();
-		});
-
-		// タイトルと本文で同じテキストが異なるsource_textsとして扱われているか
-		const titleOccurrences = dbPage.pageSegments.filter(
-			(st) => st.text === title,
-		);
-		expect(titleOccurrences.length).toBe(2); // One in title, one in content
-
-		// 各タイトル occurrence が異なる ID を持つことを確認
-		expect(titleOccurrences[0].id).not.toBe(titleOccurrences[1].id);
 	});
 
-	test("同一HTMLを再度処理した場合に、編集していない箇所のsource_textsが維持されるか確認", async () => {
-		const pageSlug = "html-no-edit-test-page";
-		const title = "No Edit Title";
-		const htmlInput = `
-			<p>Line A</p>
-			<p>Line B</p>
-			<p>Line C</p>
-		`;
-
-		// 初回処理
-		await processPageHtml(title, htmlInput, pageSlug, user.id, "en");
-
-		const dbPage1 = await prisma.page.findUnique({
-			where: { slug: pageSlug },
+	/* ----------------- 4. 再保存で ID 不変 ----------------- */
+	test("no-op save keeps identical segment ids", async () => {
+		const slug = "json-idempotent";
+		const body: AstNode = {
+			type: "doc",
+			content: [p("X", h("X")), p("Y", h("Y"))],
+		};
+		await upsertPageAndSegments({
+			slug,
+			userId,
+			title: "",
+			contentJson: body,
+			sourceLocale: "en",
+		});
+		const first = await prisma.page.findUnique({
+			where: { slug },
 			include: { pageSegments: true },
 		});
-		expect(dbPage1).not.toBeNull();
-		if (!dbPage1) return;
+		expect(first).not.toBeNull();
+		if (!first) throw new Error("First page should exist");
 
-		// 初回処理時のIDを記憶
-		const originalTextIdMap = new Map<string, number>();
-		for (const st of dbPage1.pageSegments) {
-			originalTextIdMap.set(st.text, st.id);
-		}
-		expect(originalTextIdMap.size).toBeGreaterThanOrEqual(3);
+		const ids = first.pageSegments.map((s) => s.id);
 
-		// 変更なしで再度同一HTMLを処理
-		await processPageHtml(title, htmlInput, pageSlug, user.id, "en");
-
-		const dbPage2 = await prisma.page.findUnique({
-			where: { slug: pageSlug },
+		await upsertPageAndSegments({
+			slug,
+			userId,
+			title: "",
+			contentJson: body,
+			sourceLocale: "en",
+		});
+		const second = await prisma.page.findUnique({
+			where: { slug },
 			include: { pageSegments: true },
 		});
-		expect(dbPage2).not.toBeNull();
-		if (!dbPage2) return;
+		expect(second).not.toBeNull();
+		if (!second) throw new Error("Second page should exist");
 
-		// 再処理後のIDマッピングを取得
-		const afterTextIdMap = new Map<string, number>();
-		for (const st of dbPage2.pageSegments) {
-			afterTextIdMap.set(st.text, st.id);
-		}
-
-		// 全てのテキストでIDが変わっていないことを確認
-		for (const [text, originalId] of originalTextIdMap.entries()) {
-			expect(afterTextIdMap.get(text)).toBe(originalId);
-		}
-
-		// source_textsの数が増減していないこと（無駄な消去がないこと）
-		expect(dbPage2.pageSegments.length).toBe(dbPage1.pageSegments.length);
+		expect(second.pageSegments.map((s) => s.id)).toEqual(ids);
 	});
-	test("画像が<p>タグで囲まれずに出力されるか確認", async () => {
-		const pageSlug = "html-image-test-page";
-		const title = "Image Test Title";
-		// 初期HTML内に画像を含める。画像はpタグ内に置いてみる
-		const htmlInput = `
-      <p>This is a text line.</p>
-      <p><img src="http://localhost:9000/evame/uploads/sample-image.png" alt=""></p>
-      <p>Another text line.</p>
-    `;
 
-		await processPageHtml(title, htmlInput, pageSlug, user.id, "en");
+	/* ----------------- 5. 画像ノードが p でラップされない ----------------- */
+	test("image node outputs standalone img tag", async () => {
+		const slug = "json-img";
+		const src = "http://localhost/img.png";
+		const doc: AstNode = {
+			type: "doc",
+			content: [
+				p("text", h("text")),
+				img(src), // <img> ノードを p の外に置く
+			],
+		};
 
-		const dbPage = await prisma.page.findUnique({
-			where: { slug: pageSlug },
-			include: { pageSegments: true },
+		await upsertPageAndSegments({
+			slug,
+			userId,
+			title: "",
+			contentJson: doc,
+			sourceLocale: "en",
 		});
-		expect(dbPage).not.toBeNull();
-		if (!dbPage) return;
 
-		const updatedPage = await prisma.page.findUnique({
-			where: { slug: pageSlug },
-		});
-		expect(updatedPage).not.toBeNull();
-		if (!updatedPage) return;
+		/* 1. DB に保存された JSON を取得 */
+		const page = await prisma.page.findUnique({ where: { slug } });
+		expect(page).not.toBeNull();
+		if (!page) throw new Error("Page should exist");
 
-		const htmlContent = updatedPage.content;
-		// <p>タグで<img>が囲まれていないことを確認
-		// 理想的には<img>タグが単独で存在、または<span>で囲まれているが<p>で囲まれてはならない
-		// 下記は <p><img のパターンがないことを確認する
-		expect(htmlContent).not.toMatch(/<p><img[^>]*><\/p>/);
+		const html = jsonToHtml(page.contentJson as AstNode);
 
-		// 念のため、<img>タグが存在することを確認
-		expect(htmlContent).toMatch(
-			/<img [^>]*src="http:\/\/localhost:9000\/evame\/uploads\/sample-image\.png"[^>]*>/,
-		);
-
-		// また、<img>タグにもdata-number-id付きspanが適用されていないことを確認する
-		// 基本的に画像そのものにはdata-number-idは付与されないが、パース時に問題なければこのままで良い。
-		// もし画像をinline化している場合はここでspan内に<img>があることを確認する処理を書いてもよい。
+		/* 3. アサーション */
+		expect(html).toMatch(new RegExp(`<img [^>]*src="${src}"[^>]*>`)); // 画像がある
+		expect(html).not.toMatch(/<p><img[^>]*><\/p>/);
 	});
 });

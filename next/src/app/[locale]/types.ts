@@ -14,6 +14,7 @@ export interface BaseSegment {
 	id: number;
 	number: number;
 	text: string;
+	textAndOccurrenceHash: string;
 }
 
 export interface BaseTranslation {
@@ -52,7 +53,10 @@ export type PageDetail = Omit<Page, "createdAt"> & {
 		pageComments: number;
 	};
 };
-export type PageSummary = Omit<PageDetail, "content" | "updatedAt" | "userId">;
+export type PageSummary = Omit<
+	PageDetail,
+	"content" | "updatedAt" | "userId" | "contentJson"
+>;
 
 type TagProjectWithTag = ProjectTagRelation & {
 	projectTag: ProjectTag;
