@@ -127,7 +127,7 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 											rel="noopener noreferrer"
 											className="flex w-full items-center justify-between"
 										>
-											<span>{link.description}</span>
+											<span>{link.description || link.url}</span>
 										</Link>
 									</DropdownMenuItem>
 								))}
