@@ -30,12 +30,19 @@ export function rehypeAddDataId(
 export async function processPageHtml(
 	title: string,
 	html: string,
-	pageSlug: string,
+	pageId: number,
+	slug: string,
 	userId: string,
 	sourceLocale: string,
 ) {
 	// HTML 入力に対応する page レコードを作成/更新
-	const page = await upsertPageWithHtml(pageSlug, html, userId, sourceLocale);
+	const page = await upsertPageWithHtml(
+		pageId,
+		slug,
+		html,
+		userId,
+		sourceLocale,
+	);
 
 	const file = await unified()
 		.use(rehypeParse, { fragment: true })

@@ -2,20 +2,27 @@ import type { BlockWithNumber } from "@/app/[locale]/_lib/process-html";
 import { syncSegmentsChunk } from "@/app/[locale]/_lib/sync-segments-chunk";
 import { BATCH_SIZE, OFFSET } from "@/app/_constants/sync-segments";
 import { prisma } from "@/lib/prisma";
-export async function upsertPageWithHtml(
-	pageSlug: string,
-	html: string,
-	userId: string,
-	sourceLocale: string,
-) {
+export async function upsertPageWithHtml({
+	pageId,
+	slug,
+	html,
+	userId,
+	sourceLocale,
+}: {
+	pageId: number;
+	slug: string;
+	html: string;
+	userId: string;
+	sourceLocale: string;
+}) {
 	return await prisma.page.upsert({
-		where: { slug: pageSlug },
+		where: { id: pageId, userId },
 		update: {
 			content: html,
 			sourceLocale,
 		},
 		create: {
-			slug: pageSlug,
+			slug,
 			content: html,
 			userId,
 			sourceLocale,
