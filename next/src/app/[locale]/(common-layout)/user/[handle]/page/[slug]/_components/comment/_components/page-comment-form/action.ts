@@ -63,7 +63,11 @@ export async function commentAction(
 		pageId,
 		parentId,
 	});
-	await createNotificationPageComment(currentUser.id, page.userId, pageComment.id);
+	await createNotificationPageComment(
+		currentUser.id,
+		page.userId,
+		pageComment.id,
+	);
 	await handleCommentAutoTranslation({
 		currentUserId: currentUser.id,
 		commentId: pageComment.id,
