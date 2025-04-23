@@ -1,17 +1,15 @@
+import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash";
 import { prisma } from "@/lib/prisma";
 
 export async function upsertPageAndSegments(p: {
+	pageId: number | undefined;
 	slug: string;
 	userId: string;
 	title: string;
 	content: string;
 	sourceLocale: string;
+	segments: SegmentDraft[];
 }) {
-	const { segments, jsonWithHash } = collectSegments({
-		root: p.content,
-		header: p.title,
-	});
-
 	const page = await prisma.page.upsert({
 		where: { slug: p.slug, userId: p.userId },
 		update: { content: p.content },
@@ -23,7 +21,7 @@ export async function upsertPageAndSegments(p: {
 		},
 	});
 
-	await syncPageSegments(page.id, segments);
+	await syncPageSegments(page.id, p.segments);
 }
 
 /** 1ページ分のセグメントを同期 */
@@ -56,11 +54,11 @@ export async function syncPageSegments(pageId: number, drafts: SegmentDraft[]) {
 								textAndOccurrenceHash: d.hash,
 							},
 						},
-						update: { text: d.text, number: d.order },
+						update: { text: d.text, number: d.number },
 						create: {
 							pageId,
 							text: d.text,
-							number: d.order,
+							number: d.number,
 							textAndOccurrenceHash: d.hash,
 						},
 					}),
@@ -79,6 +77,7 @@ export async function syncPageSegments(pageId: number, drafts: SegmentDraft[]) {
 		}
 	});
 }
+
 export async function upsertTags(tags: string[], pageId: number) {
 	// 重複タグを除去
 	const uniqueTags = Array.from(new Set(tags));
