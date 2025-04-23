@@ -1,25 +1,80 @@
-import type { BlockWithNumber } from "@/app/[locale]/_lib/process-html";
-import { syncSegmentsChunk } from "@/app/[locale]/_lib/sync-segments-chunk";
-import { BATCH_SIZE, OFFSET } from "@/app/_constants/sync-segments";
+import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash";
 import { prisma } from "@/lib/prisma";
-export async function upsertPageWithHtml(
-	pageSlug: string,
-	html: string,
-	userId: string,
-	sourceLocale: string,
-) {
-	return await prisma.page.upsert({
-		where: { slug: pageSlug },
-		update: {
-			content: html,
-			sourceLocale,
-		},
+
+export async function upsertPageAndSegments(p: {
+	pageId: number | undefined;
+	slug: string;
+	userId: string;
+	title: string;
+	content: string;
+	sourceLocale: string;
+	segments: SegmentDraft[];
+}) {
+	const page = await prisma.page.upsert({
+		where: { slug: p.slug, userId: p.userId },
+		update: { content: p.content },
 		create: {
-			slug: pageSlug,
-			content: html,
-			userId,
-			sourceLocale,
+			slug: p.slug,
+			userId: p.userId,
+			content: p.content,
+			sourceLocale: p.sourceLocale,
 		},
+	});
+
+	await syncPageSegments(page.id, p.segments);
+}
+
+/** 1ページ分のセグメントを同期 */
+export async function syncPageSegments(pageId: number, drafts: SegmentDraft[]) {
+	const existing = await prisma.pageSegment.findMany({
+		where: { pageId },
+		select: { textAndOccurrenceHash: true },
+	});
+	const stale = new Set(existing.map((e) => e.textAndOccurrenceHash as string));
+
+	await prisma.$transaction(async (tx) => {
+		// A. 並び避難（既存あれば）
+		if (existing.length) {
+			await tx.pageSegment.updateMany({
+				where: { pageId },
+				data: { number: { increment: 1_000_000 } },
+			});
+		}
+
+		// B. UPSERT を **適度なバッチ & 逐次 await** で安定
+		const CHUNK = 200;
+		for (let i = 0; i < drafts.length; i += CHUNK) {
+			const chunk = drafts.slice(i, i + CHUNK);
+			await Promise.all(
+				chunk.map((d) =>
+					tx.pageSegment.upsert({
+						where: {
+							pageId_textAndOccurrenceHash: {
+								pageId,
+								textAndOccurrenceHash: d.hash,
+							},
+						},
+						update: { text: d.text, number: d.number },
+						create: {
+							pageId,
+							text: d.text,
+							number: d.number,
+							textAndOccurrenceHash: d.hash,
+						},
+					}),
+				),
+			);
+			for (const d of chunk) {
+				stale.delete(d.hash);
+			}
+		}
+
+		// C. 余った行を一括削除
+		if (stale.size) {
+			await tx.pageSegment.deleteMany({
+				where: { pageId, textAndOccurrenceHash: { in: [...stale] } },
+			});
+		}
 	});
 }
 
@@ -62,47 +117,4 @@ export async function upsertTags(tags: string[], pageId: number) {
 	});
 
 	return updatedTags;
-}
-
-export async function syncPageSegments(
-	pageId: number,
-	blocks: readonly BlockWithNumber[],
-) {
-	const hashes = blocks.map((b) => b.textAndOccurrenceHash);
-
-	await prisma.$transaction(async (tx) => {
-		/* 1) 並び順を一気に避難 */
-		await tx.pageSegment.updateMany({
-			where: { pageId },
-			data: { number: { increment: OFFSET } },
-		});
-
-		/* 2) 消えた行を削除 */
-		await tx.pageSegment.deleteMany({
-			where: { pageId, textAndOccurrenceHash: { notIn: hashes } },
-		});
-
-		/* 3) 残す／新規行はハッシュで Upsert */
-		for (const batch of syncSegmentsChunk(blocks, BATCH_SIZE)) {
-			await Promise.all(
-				batch.map((b) =>
-					tx.pageSegment.upsert({
-						where: {
-							pageId_textAndOccurrenceHash: {
-								pageId,
-								textAndOccurrenceHash: b.textAndOccurrenceHash,
-							},
-						},
-						update: { text: b.text, number: b.number },
-						create: {
-							pageId,
-							textAndOccurrenceHash: b.textAndOccurrenceHash,
-							text: b.text,
-							number: b.number,
-						},
-					}),
-				),
-			);
-		}
-	});
 }

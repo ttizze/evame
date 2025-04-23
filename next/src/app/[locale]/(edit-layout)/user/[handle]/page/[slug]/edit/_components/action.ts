@@ -11,7 +11,7 @@ import { processPageHtml } from "../_lib/process-page-html";
 export type EditPageContentActionState = ActionResponse<
 	void,
 	{
-		slug: string;
+		pageId: string;
 		userLocale: string;
 		title: string;
 		pageContent: string;
@@ -19,7 +19,8 @@ export type EditPageContentActionState = ActionResponse<
 >;
 
 const editPageContentSchema = z.object({
-	slug: z.string().min(1),
+	pageId: z.coerce.number().optional(),
+	slug: z.string(),
 	userLocale: z.string(),
 	title: z.string().min(1).max(100),
 	pageContent: z.string().min(1),
@@ -33,16 +34,23 @@ export async function editPageContentAction(
 	if (!currentUser || !currentUser.id) {
 		return redirect("/auth/login");
 	}
-	const parsedFormData = await parseFormData(editPageContentSchema, formData);
-	if (!parsedFormData.success) {
+	const parsed = await parseFormData(editPageContentSchema, formData);
+	if (!parsed.success) {
 		return {
 			success: false,
-			zodErrors: parsedFormData.error.flatten().fieldErrors,
+			zodErrors: parsed.error.flatten().fieldErrors,
 		};
 	}
-	const { slug, title, pageContent, userLocale } = parsedFormData.data;
+	const { pageId, title, pageContent, userLocale, slug } = parsed.data;
 	const sourceLocale = await getLocaleFromHtml(pageContent, userLocale);
-	await processPageHtml(title, pageContent, slug, currentUser.id, sourceLocale);
+	await processPageHtml({
+		title,
+		html: pageContent,
+		pageId,
+		slug,
+		userId: currentUser.id,
+		sourceLocale,
+	});
 
 	revalidatePath(`/user/${currentUser.handle}/page/${slug}`);
 	return { success: true, message: "Page updated successfully" };

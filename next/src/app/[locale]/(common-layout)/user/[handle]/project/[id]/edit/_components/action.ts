@@ -6,7 +6,6 @@ import { uploadImage } from "@/app/[locale]/_lib/upload";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { parseFormData } from "@/lib/parse-form-data";
-import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -120,56 +119,23 @@ export async function projectAction(
 		? await uploadFiles(imageFiles, imageNames)
 		: {};
 	const processedImages = replaceTempUrls(images, uploadedMap);
-
-	if (projectId) {
-		// Update existing project
-		await prisma.project.findFirstOrThrow({
-			where: { id: projectId, userId: currentUser.id },
-		});
-		await prisma.project.update({
-			where: { id: projectId, userId: currentUser.id },
-			data: {
-				sourceLocale,
-			},
-		});
-		await upsertProjectTags(tags, projectId);
-		await upsertLinksTx(projectId, links);
-		await upsertImagesTx(projectId, processedImages, icon?.id);
-		await upsertIconTx(projectId, icon, iconFile, iconFileName);
-	} else {
-		// Create new project
-		const created = await prisma.project.create({
-			data: {
-				...projectData,
-				sourceLocale,
-				userId: currentUser.id,
-			},
-		});
-
-		await upsertProjectTags(tags, created.id);
-		await upsertLinksTx(created.id, links);
-		await upsertImagesTx(created.id, processedImages, icon?.id);
-		await upsertIconTx(created.id, icon, iconFile, iconFileName);
-	}
-
-	const pid =
-		projectId ??
-		(
-			await prisma.project.findFirst({
-				where: { userId: currentUser.id },
-				orderBy: { createdAt: "desc" },
-				select: { id: true },
-			})
-		)?.id;
-	if (pid) {
-		await processProjectHtml(
-			pid,
-			tagLine,
-			projectData.description,
-			currentUser.id,
-		);
-		await triggerAutoTranslationIfNeeded(pid, sourceLocale, currentUser.id);
-	}
+	const updatedProject = await processProjectHtml({
+		title: projectData.title,
+		description: projectData.description,
+		tagLine,
+		projectId,
+		userId: currentUser.id,
+		sourceLocale,
+	});
+	await upsertProjectTags(tags, updatedProject.id);
+	await upsertLinksTx(updatedProject.id, links);
+	await upsertImagesTx(updatedProject.id, processedImages, icon?.id);
+	await upsertIconTx(updatedProject.id, icon, iconFile, iconFileName);
+	await triggerAutoTranslationIfNeeded(
+		updatedProject.id,
+		sourceLocale,
+		currentUser.id,
+	);
 
 	// Revalidate paths
 	revalidatePath(`/user/${currentUser.handle}/project-management`);

@@ -1,10 +1,9 @@
 import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
 import { getCurrentUser } from "@/auth";
-import { mockPages, mockUsers } from "@/tests/mock";
+import { mockUsers } from "@/tests/mock";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { processPageHtml } from "../_lib/process-page-html";
 import { editPageContentAction } from "./action";
 // Mocks
 vi.mock("@/auth");
@@ -51,7 +50,6 @@ describe("editPageContentAction", () => {
 	it("should successfully update public page and trigger translation", async () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
 		vi.mocked(getLocaleFromHtml).mockResolvedValue("en");
-		vi.mocked(processPageHtml).mockResolvedValue(mockPages[0]);
 
 		const result = await editPageContentAction(
 			{ success: false },

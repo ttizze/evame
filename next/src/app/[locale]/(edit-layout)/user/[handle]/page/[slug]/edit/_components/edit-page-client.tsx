@@ -99,7 +99,7 @@ export function EditPageClient({
 			/>
 			<main
 				className="w-full max-w-3xl prose dark:prose-invert sm:prose lg:prose-lg 
-          mx-auto px-4  prose-headings:text-gray-700 dark:prose-headings:text-gray-200 text-gray-700 dark:text-gray-200 mb-5 mt-3 md:mt-5 grow tracking-wider"
+        mx-auto px-4  prose-headings:text-gray-700 dark:prose-headings:text-gray-200 text-gray-700 dark:text-gray-200 mb-5 mt-3 md:mt-5 grow tracking-wider"
 			>
 				<div className="">
 					<h1 className="m-0! ">
@@ -131,6 +131,11 @@ export function EditPageClient({
 				</div>
 				<form action={editAction} ref={formRef}>
 					<input type="hidden" name="slug" value={slug} />
+					<input
+						type="hidden"
+						name="pageId"
+						value={pageWithTitleAndTags?.id ?? ""}
+					/>
 					<input type="hidden" name="title" value={title} />
 					<input type="hidden" name="userLocale" value={userLocale} />
 					<Editor

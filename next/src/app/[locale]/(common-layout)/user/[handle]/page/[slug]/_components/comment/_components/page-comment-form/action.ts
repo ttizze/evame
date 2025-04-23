@@ -9,13 +9,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createNotificationPageComment } from "./_db/mutations.server";
-import { createPageComment } from "./_db/mutations.server";
 import { processPageCommentHtml } from "./_lib/process-page-comment-html";
 const createPageCommentSchema = z.object({
 	pageId: z.coerce.number(),
 	userLocale: z.string(),
 	content: z.string().min(1, "Comment cannot be empty"),
 	parentId: z.coerce.number().optional(),
+	pageCommentId: z.coerce.number().optional(),
 });
 
 export type CommentActionResponse = ActionResponse<
@@ -25,6 +25,7 @@ export type CommentActionResponse = ActionResponse<
 		userLocale: string;
 		content: string;
 		parentId?: number;
+		pageCommentId?: number;
 	}
 >;
 
@@ -43,7 +44,7 @@ export async function commentAction(
 			zodErrors: parsed.error.flatten().fieldErrors,
 		};
 	}
-	const { content, pageId, parentId, userLocale } = parsed.data;
+	const { content, pageId, parentId, userLocale, pageCommentId } = parsed.data;
 
 	const page = await getPageById(pageId);
 	if (!page) {
@@ -54,24 +55,20 @@ export async function commentAction(
 	}
 
 	const locale = await getLocaleFromHtml(content, userLocale);
-	const pageComment = await createPageComment(
-		content,
+	const pageComment = await processPageCommentHtml({
+		pageCommentId: pageCommentId ?? undefined,
+		commentHtml: content,
 		locale,
-		currentUser.id,
+		userId: currentUser.id,
 		pageId,
 		parentId,
+	});
+	await createNotificationPageComment(
+		currentUser.id,
+		page.userId,
+		pageComment.id,
 	);
-	await Promise.all([
-		createNotificationPageComment(currentUser.id, page.userId, pageComment.id),
-		processPageCommentHtml(
-			pageComment.id,
-			content,
-			locale,
-			currentUser.id,
-			pageId,
-		),
-	]);
-	handleCommentAutoTranslation({
+	await handleCommentAutoTranslation({
 		currentUserId: currentUser.id,
 		commentId: pageComment.id,
 		pageId,
