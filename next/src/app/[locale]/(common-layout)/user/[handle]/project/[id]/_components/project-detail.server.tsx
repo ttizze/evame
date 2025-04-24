@@ -27,9 +27,9 @@ import Link from "next/link";
 
 const DynamicMemoizedParsedContent = dynamic(
 	() =>
-		import(
-			"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/parsed-content"
-		).then((mod) => mod.MemoizedParsedContent),
+		import("@/app/[locale]/_components/parsed-content.client").then(
+			(mod) => mod.MemoizedParsedContent,
+		),
 	{ loading: () => <span>Loading Parsed Content...</span> },
 );
 

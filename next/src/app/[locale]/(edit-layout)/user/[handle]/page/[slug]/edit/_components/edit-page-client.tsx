@@ -97,61 +97,65 @@ export function EditPageClient({
 				hasUnsavedChanges={hasUnsavedChanges}
 				pageId={pageWithTitleAndTags?.id}
 			/>
-			<main
-				className="w-full max-w-3xl prose dark:prose-invert sm:prose lg:prose-lg 
-        mx-auto px-4  prose-headings:text-gray-700 dark:prose-headings:text-gray-200 text-gray-700 dark:text-gray-200 mb-5 mt-3 md:mt-5 grow tracking-wider"
-			>
-				<div className="">
-					<h1 className="m-0! ">
-						<TextareaAutosize
-							value={title}
-							onChange={handleTitleChange}
-							onKeyDown={handleTitleKeyDown}
-							name="title"
-							placeholder="Title"
-							className="w-full outline-hidden bg-transparent resize-none overflow-hidden"
-							minRows={1}
-							maxRows={10}
-							data-testid="title-input"
+			<main className="px-4">
+				<div
+					className="w-full max-w-3xl prose dark:prose-invert sm:prose lg:prose-lg 
+        mx-auto  prose-headings:text-gray-700 dark:prose-headings:text-gray-200 text-gray-700 dark:text-gray-200 mb-5 mt-3 md:mt-5 grow tracking-wider"
+				>
+					<div className="">
+						<h1 className="m-0! ">
+							<TextareaAutosize
+								value={title}
+								onChange={handleTitleChange}
+								onKeyDown={handleTitleKeyDown}
+								name="title"
+								placeholder="Title"
+								className="w-full outline-hidden bg-transparent resize-none overflow-hidden"
+								minRows={1}
+								maxRows={10}
+								data-testid="title-input"
+							/>
+						</h1>
+						{editState.zodErrors?.title && (
+							<p className="text-sm text-red-500">
+								{editState.zodErrors.title}
+							</p>
+						)}
+						<TagInput
+							initialTags={
+								pageWithTitleAndTags?.tagPages.map((tagPage) => ({
+									id: tagPage.tagId,
+									name: tagPage.tag.name,
+								})) || []
+							}
+							allTagsWithCount={allTagsWithCount}
+							pageId={pageWithTitleAndTags?.id}
 						/>
-					</h1>
-					{editState.zodErrors?.title && (
-						<p className="text-sm text-red-500">{editState.zodErrors.title}</p>
+					</div>
+					<form action={editAction} ref={formRef}>
+						<input type="hidden" name="slug" value={slug} />
+						<input
+							type="hidden"
+							name="pageId"
+							value={pageWithTitleAndTags?.id ?? ""}
+						/>
+						<input type="hidden" name="title" value={title} />
+						<input type="hidden" name="userLocale" value={userLocale} />
+						<Editor
+							defaultValue={pageWithTitleAndTags?.content || ""}
+							name="pageContent"
+							onEditorUpdate={handleChange}
+							onEditorCreate={setEditorInstance}
+							className="outline-hidden"
+							placeholder="Write to the world..."
+						/>
+					</form>
+					{editState.zodErrors?.pageContent && (
+						<p className="text-sm text-red-500">
+							{editState.zodErrors.pageContent}
+						</p>
 					)}
-					<TagInput
-						initialTags={
-							pageWithTitleAndTags?.tagPages.map((tagPage) => ({
-								id: tagPage.tagId,
-								name: tagPage.tag.name,
-							})) || []
-						}
-						allTagsWithCount={allTagsWithCount}
-						pageId={pageWithTitleAndTags?.id}
-					/>
 				</div>
-				<form action={editAction} ref={formRef}>
-					<input type="hidden" name="slug" value={slug} />
-					<input
-						type="hidden"
-						name="pageId"
-						value={pageWithTitleAndTags?.id ?? ""}
-					/>
-					<input type="hidden" name="title" value={title} />
-					<input type="hidden" name="userLocale" value={userLocale} />
-					<Editor
-						defaultValue={pageWithTitleAndTags?.content || ""}
-						name="pageContent"
-						onEditorUpdate={handleChange}
-						onEditorCreate={setEditorInstance}
-						className="outline-hidden"
-						placeholder="Write to the world..."
-					/>
-				</form>
-				{editState.zodErrors?.pageContent && (
-					<p className="text-sm text-red-500">
-						{editState.zodErrors.pageContent}
-					</p>
-				)}
 			</main>
 			{editorInstance && <EditorKeyboardMenu editor={editorInstance} />}
 		</div>

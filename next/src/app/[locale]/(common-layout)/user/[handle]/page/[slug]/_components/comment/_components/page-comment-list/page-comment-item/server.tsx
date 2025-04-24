@@ -1,4 +1,4 @@
-import { MemoizedParsedContent } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/parsed-content";
+import { MemoizedParsedContent } from "@/app/[locale]/_components/parsed-content.client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getImageProps } from "next/image";
 import type { PageCommentWithUserAndTranslations } from "../_lib/fetch-page-comments-with-user-and-translations";

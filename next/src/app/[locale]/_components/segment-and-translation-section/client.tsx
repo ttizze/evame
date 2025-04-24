@@ -1,9 +1,14 @@
 "use client";
 import type { SegmentBundle } from "@/app/[locale]/types";
 import { useDisplay } from "@/app/_context/display-provider";
+import type { ReactNode } from "react";
 import { TranslationSection } from "./translation-section";
 interface SegmentAndTranslationSectionProps {
 	segmentBundle: SegmentBundle;
+	//textを表示するだけだとtextの間にあるstrong等のtagが落ちてしまうため､それを防ぐために
+	//ReactNodeを受け取り直接表示している
+	//title部分等の､そういった心配がない箇所についてはsegmentbundleのtextをそのまま表示する
+	elements?: string | ReactNode | ReactNode[];
 	segmentTextClassName?: string;
 	currentHandle?: string;
 	interactive?: boolean;
@@ -11,6 +16,7 @@ interface SegmentAndTranslationSectionProps {
 
 export function SegmentAndTranslationSection({
 	segmentBundle,
+	elements,
 	segmentTextClassName,
 	currentHandle,
 	interactive = true,
@@ -39,7 +45,7 @@ export function SegmentAndTranslationSection({
 			{/* 原文を表示するのは user 以外（source / both）のとき */}
 			{effectiveMode !== "user" && (
 				<span className={`inline-block ${segmentTextClassName} ${sourceColor}`}>
-					{segmentBundle.segment.text}
+					{elements ?? segmentBundle.segment.text}
 				</span>
 			)}
 			{/* 訳を表示するのは source 以外（user / both）のとき */}

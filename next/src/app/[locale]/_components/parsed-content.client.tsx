@@ -1,11 +1,16 @@
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import type { SegmentBundle } from "@/app/[locale]/types";
-import parse, { type HTMLReactParserOptions } from "html-react-parser";
+import parse, {
+	type HTMLReactParserOptions,
+	type DOMNode,
+} from "html-react-parser";
+import { domToReact } from "html-react-parser";
 import DOMPurify from "isomorphic-dompurify";
 import { customAlphabet } from "nanoid";
 import Image from "next/image";
 import { memo } from "react";
 import { Tweet as XPost } from "react-tweet";
+
 interface ParsedContentProps {
 	html: string;
 	segmentBundles: SegmentBundle[] | null;
@@ -65,6 +70,7 @@ export function ParsedContent({
 						<SegmentAndTranslationSection
 							key={`translation-${number}`}
 							segmentBundle={segmentBundle}
+							elements={domToReact(domNode.children as DOMNode[], options)}
 							currentHandle={currentHandle}
 						/>
 					</DynamicTag>

@@ -14,7 +14,10 @@ const DynamicTranslateActionSection = dynamic(
 );
 
 const DynamicMemoizedParsedContent = dynamic(
-	() => import("./parsed-content").then((mod) => mod.MemoizedParsedContent),
+	() =>
+		import("../../../../../../_components/parsed-content.client").then(
+			(mod) => mod.MemoizedParsedContent,
+		),
 	{
 		loading: () => <span>Loading Parsed Content...</span>,
 	},
