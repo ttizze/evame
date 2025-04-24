@@ -306,9 +306,8 @@ export function MyComponent() {
  *
  * ▼ エディタを乗り換えるとき
  *
- *   1. mdast から新エディタのインポート形式（HTML か JSON）へ変換
- *      例: mdast → HTML → LexicalImportPlugin
- *   2. 旧 editorJson は参照しない（破棄しても可）
+ *   1. エディタの形式からmdastを出力する関数を書く
+ *   2. その関数をmdastToReactに渡す
  */
 
 ## TODO

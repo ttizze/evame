@@ -35,7 +35,7 @@ const bundles: SegmentBundle[] = [
 ];
 
 describe("mdastToReact", () => {
-	it("renders segments correctly", () => {
+	it("renders segments correctly", async () => {
 		const mdast: Root = {
 			type: "root",
 			children: [
@@ -53,7 +53,7 @@ describe("mdastToReact", () => {
 			],
 		};
 
-		const el = mdastToReact({
+		const el = await mdastToReact({
 			mdast: mdast as unknown as Prisma.JsonValue,
 			bundles,
 		});
@@ -64,7 +64,7 @@ describe("mdastToReact", () => {
 		expect(screen.getByText("def")).toBeInTheDocument();
 	});
 
-	it("converts Twitter/X links to XPost components", () => {
+	it("converts Twitter/X links to XPost components", async () => {
 		const mdast: Root = {
 			type: "root",
 			children: [
@@ -101,7 +101,7 @@ describe("mdastToReact", () => {
 			],
 		};
 
-		const el = mdastToReact({
+		const el = await mdastToReact({
 			mdast: mdast as unknown as Prisma.JsonValue,
 			bundles,
 		});
@@ -123,7 +123,7 @@ describe("mdastToReact", () => {
 			"https://example.com/not-a-tweet",
 		);
 	});
-	it("renders different HTML elements correctly", () => {
+	it("renders different HTML elements correctly", async () => {
 		const mdast: Root = {
 			type: "root",
 			children: [
@@ -211,7 +211,7 @@ describe("mdastToReact", () => {
 			},
 		];
 
-		const el = mdastToReact({
+		const el = await mdastToReact({
 			mdast: mdast as unknown as Prisma.JsonValue,
 			bundles: testBundles,
 		});
