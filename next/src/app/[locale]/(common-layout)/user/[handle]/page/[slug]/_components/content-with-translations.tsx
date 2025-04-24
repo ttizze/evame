@@ -1,4 +1,4 @@
-import { ArticleBody } from "@/app/[locale]/_components/mdast-rich-content";
+import { mdastToReact } from "@/app/[locale]/_components/mdast-to-react";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
@@ -13,7 +13,6 @@ const DynamicTranslateActionSection = dynamic(
 		loading: () => <span>Loading Translate Section...</span>,
 	},
 );
-
 const DynamicSegmentAndTranslationSection = dynamic(
 	() =>
 		import(
@@ -44,7 +43,11 @@ export async function ContentWithTranslations({
 	const pageSegmentTitleWithTranslations = pageDetail.segmentBundles.filter(
 		(item) => item.segment.number === 0,
 	)[0];
-
+	const content = await mdastToReact({
+		mdast: pageDetail.mdastJson,
+		bundles: pageDetail.segmentBundles,
+		currentHandle: currentUser?.handle,
+	});
 	return (
 		<>
 			<h1 className="mb-0! ">
@@ -70,13 +73,7 @@ export async function ContentWithTranslations({
 				targetContentType="page"
 				showIcons={true}
 			/>
-			<span className="js-content">
-				<ArticleBody
-					mdast={pageDetail.mdastJson}
-					bundles={pageDetail.segmentBundles}
-					currentHandle={currentUser?.handle}
-				/>
-			</span>
+			<span className="js-content">{content}</span>
 		</>
 	);
 }

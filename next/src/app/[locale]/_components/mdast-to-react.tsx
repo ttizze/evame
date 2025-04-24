@@ -109,11 +109,11 @@ interface Params {
 }
 
 /** mdast(JSON) → React 要素 */
-export function mdastToReact({
+export async function mdastToReact({
 	mdast,
 	bundles,
 	currentHandle,
-}: Params): ReactElement {
+}: Params): Promise<ReactElement> {
 	const components = Object.fromEntries(
 		SEGMENTABLE.map((t) => [t, wrapSegment(t, bundles, currentHandle)]),
 	);

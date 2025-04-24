@@ -1,5 +1,4 @@
-import { ArticleBody } from "@/app/[locale]/_components/mdast-rich-content";
-import { mdastToHtml } from "@/app/[locale]/_lib/mdast-to-html";
+import { mdastToReact } from "@/app/[locale]/_components/mdast-to-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getImageProps } from "next/image";
 import type { PageCommentWithUserAndTranslations } from "../_lib/fetch-page-comments-with-user-and-translations";
@@ -23,10 +22,11 @@ export default async function PageCommentItem({
 		width: 40,
 		height: 40,
 	});
-	const { html } = await mdastToHtml({
-		mdastJson: pageComment.mdastJson ?? {},
+	const content = await mdastToReact({
+		mdast: pageComment.mdastJson,
+		bundles: pageComment.segmentBundles,
+		currentHandle: currentHandle,
 	});
-
 	return (
 		<div className="">
 			<div className="flex items-center">
@@ -53,13 +53,7 @@ export default async function PageCommentItem({
 					</div>
 				</div>
 			</div>
-			<div className="mt-2 prose dark:prose-invert">
-				<ArticleBody
-					mdast={pageComment.mdastJson}
-					bundles={pageComment.segmentBundles}
-					currentHandle={currentHandle}
-				/>
-			</div>
+			<div className="mt-2 prose dark:prose-invert">{content}</div>
 			<ReplyForm
 				pageId={pageComment.pageId}
 				currentHandle={currentHandle}
