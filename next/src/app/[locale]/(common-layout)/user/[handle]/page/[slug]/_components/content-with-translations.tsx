@@ -1,3 +1,4 @@
+import { ArticleBody } from "@/app/[locale]/_components/mdast-rich-content";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
@@ -13,15 +14,6 @@ const DynamicTranslateActionSection = dynamic(
 	},
 );
 
-const DynamicMemoizedParsedContent = dynamic(
-	() =>
-		import("../../../../../../_components/parsed-content.client").then(
-			(mod) => mod.MemoizedParsedContent,
-		),
-	{
-		loading: () => <span>Loading Parsed Content...</span>,
-	},
-);
 const DynamicSegmentAndTranslationSection = dynamic(
 	() =>
 		import(
@@ -79,9 +71,9 @@ export async function ContentWithTranslations({
 				showIcons={true}
 			/>
 			<span className="js-content">
-				<DynamicMemoizedParsedContent
-					html={pageDetail.content}
-					segmentBundles={pageDetail.segmentBundles}
+				<ArticleBody
+					mdast={pageDetail.mdastJson}
+					bundles={pageDetail.segmentBundles}
 					currentHandle={currentUser?.handle}
 				/>
 			</span>

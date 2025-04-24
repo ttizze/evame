@@ -1,3 +1,4 @@
+import { mdastToHtml } from "@/app/[locale]/_lib/mdast-to-html";
 import { getCurrentUser } from "@/auth";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -7,7 +8,6 @@ import {
 	getAllTagsWithCount,
 	getPageWithTitleAndTagsBySlug,
 } from "./_db/queries.server";
-
 type Params = Promise<{ locale: string; handle: string; slug: string }>;
 
 const getPageData = cache(async (handle: string, slug: string) => {
@@ -55,6 +55,9 @@ export default async function EditPage({
 	const { locale, handle, slug } = await params;
 	const { currentUser, pageWithTitleAndTags, allTagsWithCount, title } =
 		await getPageData(handle, slug);
+	const { html } = await mdastToHtml({
+		mdastJson: pageWithTitleAndTags?.mdastJson ?? {},
+	});
 
 	return (
 		<EditPageClient
@@ -64,6 +67,7 @@ export default async function EditPage({
 			initialTitle={title}
 			slug={slug}
 			userLocale={locale}
+			html={html}
 		/>
 	);
 }

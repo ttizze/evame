@@ -1,7 +1,10 @@
 import { remark } from "remark";
 import type { VFile } from "vfile";
 import { describe, expect, it } from "vitest";
-import { type SegmentDraft, remarkHashAndSegments } from "./remark-hash";
+import {
+	type SegmentDraft,
+	remarkHashAndSegments,
+} from "./remark-hash-and-segments";
 
 describe("remarkHashAndSegments", () => {
 	it("パラグラフや見出しがsegments化され、number/hash/textが正しく付与される", async () => {

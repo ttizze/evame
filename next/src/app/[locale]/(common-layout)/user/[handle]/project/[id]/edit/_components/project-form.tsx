@@ -40,6 +40,7 @@ interface ProjectFormProps {
 	userHandle: string;
 	allProjectTags: ProjectTagWithCount[];
 	userLocale: string;
+	html: string;
 }
 const fileNameFromUrl = (url: string): string => url.split("/").pop() ?? "";
 
@@ -55,6 +56,7 @@ export function ProjectForm({
 	userHandle,
 	allProjectTags,
 	userLocale,
+	html,
 }: ProjectFormProps) {
 	const router = useRouter();
 	const isCreateMode = !projectDetail;
@@ -226,7 +228,7 @@ export function ProjectForm({
 						</Label>
 						<div className="mt-1 prose dark:prose-invert">
 							<Editor
-								defaultValue={projectDetail?.description || ""}
+								defaultValue={html}
 								name="description"
 								className="border border-input rounded-md px-2 py-2 min-h-32"
 								placeholder="Describe your project..."

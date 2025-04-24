@@ -31,7 +31,8 @@
 		".next/types/**/*.ts",
 		"../localecomponents/page.tsx",
 		"src/app/[locale]/(common-layout)/auth/login/_components/google-form.tsx",
-		"src/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/page-control.client.tsx"
+		"src/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/page-control.client.tsx",
+		"src/app/[locale]/_components/wrap-segments.tszx"
 	],
 	"exclude": ["node_modules"]
 }

@@ -1,16 +1,18 @@
-import { MemoizedParsedContent } from "@/app/[locale]/_components/parsed-content.client";
+import { ArticleBody } from "@/app/[locale]/_components/mdast-rich-content";
+import { mdastToHtml } from "@/app/[locale]/_lib/mdast-to-html";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getImageProps } from "next/image";
 import type { PageCommentWithUserAndTranslations } from "../_lib/fetch-page-comments-with-user-and-translations";
 import { PageCommentItemClient } from "./client";
 import { ReplyForm } from "./reply-form.client";
+
 interface PageCommentItemProps {
 	pageComment: PageCommentWithUserAndTranslations[number];
 	currentHandle: string | undefined;
 	userLocale: string;
 }
 
-export default function PageCommentItem({
+export default async function PageCommentItem({
 	pageComment,
 	currentHandle,
 	userLocale,
@@ -20,6 +22,9 @@ export default function PageCommentItem({
 		alt: pageComment.user.name,
 		width: 40,
 		height: 40,
+	});
+	const { html } = await mdastToHtml({
+		mdastJson: pageComment.mdastJson ?? {},
 	});
 
 	return (
@@ -49,9 +54,9 @@ export default function PageCommentItem({
 				</div>
 			</div>
 			<div className="mt-2 prose dark:prose-invert">
-				<MemoizedParsedContent
-					html={pageComment.content}
-					segmentBundles={pageComment.segmentBundles}
+				<ArticleBody
+					mdast={pageComment.mdastJson}
+					bundles={pageComment.segmentBundles}
 					currentHandle={currentHandle}
 				/>
 			</div>

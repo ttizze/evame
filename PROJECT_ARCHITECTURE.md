@@ -290,19 +290,37 @@ export function MyComponent() {
 }
 ```
 
+/**
+ * ■ データ保存戦略（2025-04-24 修正）
+ *
+ * ● editorHtml
+ *   - TipTap が吐いた HTML
+ *   - html → mdast 変換の一時フォーマット（DB には残さない）
+ *
+ * ● mdast (🍀 正規フォーマット)
+ *   - DB(json) に保存
+ *   - 表示レンダリング、全文検索、TOC 生成、リンク抽出などはすべてここから
+ *   - 未来のエディタ移行時は
+ *       mdast → (必要なら HTML) → NewEditorImport
+ *     で再生成する
+ *
+ * ▼ エディタを乗り換えるとき
+ *
+ *   1. mdast から新エディタのインポート形式（HTML か JSON）へ変換
+ *      例: mdast → HTML → LexicalImportPlugin
+ *   2. 旧 editorJson は参照しない（破棄しても可）
+ */
+
 ## TODO
 1. page本文､project説明
 - 編集後も翻訳との紐づけを維持するために､textAndOccurrenceHashをキーにして紐づけを更新する
 - 表示にはtextAndOccurrenceHashをキーにすると時間がかかるので､data-number-idをキーにする
-となっているが､これ複雑すぎるので簡略化する
+- numberは､翻訳で渡すときのキーにもなっている｡
+- これらをどうにかして簡略化する
 
 2. page､project､コメントで要件が違っていて複雑すぎるのでなんとかする
-- pageはslugで特定してるので､slugをキーにして扱っている
-- projectはidで特定してるので､idをキーにして扱っている
-- コメントはidで特定してるので､idをキーにして扱っている
 - page､projectは編集後のひもづけ必要なので1.のようにしているが､コメントは編集機能がないので1.のようにしていない､しかし編集できたほうがいいので､できるようにする｡
   
-3. userLocaleを取得してget-locale-from-html.tsで決まらなかったときそれにするようにする
 
 
 

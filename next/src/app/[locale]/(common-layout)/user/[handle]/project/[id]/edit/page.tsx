@@ -11,8 +11,8 @@ const ProjectForm = dynamic(
 		loading: () => <ProjectEditSkeleton />,
 	},
 );
+import { mdastToHtml } from "@/app/[locale]/_lib/mdast-to-html";
 import { fetchAllProjectTags } from "./_db/queries.server";
-
 interface ProjectEditPageProps {
 	params: Promise<{
 		handle: string;
@@ -58,6 +58,9 @@ export default async function ProjectEditPage({
 	if (!projectDetail) {
 		return notFound();
 	}
+	const { html } = await mdastToHtml({
+		mdastJson: projectDetail?.mdastJson ?? {},
+	});
 
 	return (
 		<div className="flex justify-center py-8">
@@ -66,6 +69,7 @@ export default async function ProjectEditPage({
 				userHandle={handle}
 				allProjectTags={allProjectTags}
 				userLocale={locale}
+				html={html}
 			/>
 		</div>
 	);

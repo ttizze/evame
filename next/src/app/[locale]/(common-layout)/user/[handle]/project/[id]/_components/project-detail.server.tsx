@@ -4,6 +4,7 @@ import { ProjectActionsDropdown } from "@/app/[locale]/_components/project/proje
 import { ProjectLikeButton } from "@/app/[locale]/_components/project/project-like-button/server";
 import { ProjectTagList } from "@/app/[locale]/_components/project/project-tag-list.server";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
+import { mdastToHtml } from "@/app/[locale]/_lib/mdast-to-html";
 import type { ProjectDetail } from "@/app/[locale]/types";
 import { getCurrentUser } from "@/auth";
 import {
@@ -24,13 +25,14 @@ import { ExternalLink } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-
-const DynamicMemoizedParsedContent = dynamic(
+const DynamicArticleBody = dynamic(
 	() =>
-		import("@/app/[locale]/_components/parsed-content.client").then(
-			(mod) => mod.MemoizedParsedContent,
+		import("@/app/[locale]/_components/mdast-rich-content").then(
+			(mod) => mod.ArticleBody,
 		),
-	{ loading: () => <span>Loading Parsed Content...</span> },
+	{
+		loading: () => <span>Loading Article Body...</span>,
+	},
 );
 
 interface ProjectProps {
@@ -51,6 +53,9 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 	const projectImages = projectDetail.images.filter(
 		(img) => img.id !== projectDetail.iconImage?.id,
 	);
+	const { html } = await mdastToHtml({
+		mdastJson: projectDetail?.mdastJson ?? {},
+	});
 
 	return (
 		<section className="">
@@ -142,10 +147,10 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 
 				{/* Description */}
 				<div className="prose dark:prose-invert max-w-none">
-					<DynamicMemoizedParsedContent
-						html={projectDetail.description}
-						segmentBundles={projectDetail.segmentBundles}
-						currentHandle={projectDetail.user.handle}
+					<DynamicArticleBody
+						mdast={projectDetail.mdastJson}
+						bundles={projectDetail.segmentBundles}
+						currentHandle={currentUser?.handle}
 					/>
 				</div>
 

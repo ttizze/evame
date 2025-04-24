@@ -17,7 +17,6 @@ import { Editor } from "./editor/editor";
 import { EditorKeyboardMenu } from "./editor/editor-keyboard-menu";
 import { EditHeader } from "./header/client";
 import { TagInput } from "./tag-input";
-
 interface EditPageClientProps {
 	currentUser: SanitizedUser;
 	pageWithTitleAndTags: PageWithTitleAndTags;
@@ -25,6 +24,7 @@ interface EditPageClientProps {
 	initialTitle: string | undefined;
 	slug: string;
 	userLocale: string;
+	html: string;
 }
 
 export function EditPageClient({
@@ -34,6 +34,7 @@ export function EditPageClient({
 	initialTitle,
 	slug,
 	userLocale,
+	html,
 }: EditPageClientProps) {
 	const formRef = useRef<HTMLFormElement>(null);
 	const isKeyboardVisible = useKeyboardVisible();
@@ -142,7 +143,7 @@ export function EditPageClient({
 						<input type="hidden" name="title" value={title} />
 						<input type="hidden" name="userLocale" value={userLocale} />
 						<Editor
-							defaultValue={pageWithTitleAndTags?.content || ""}
+							defaultValue={html}
 							name="pageContent"
 							onEditorUpdate={handleChange}
 							onEditorCreate={setEditorInstance}

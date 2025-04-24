@@ -1,6 +1,5 @@
-import { annotateHtmlWithSegments } from "@/app/[locale]/_lib/annotate-html-with-segments";
+import { htmlToMdastWithSegments } from "@/app/[locale]/_lib/html-to-mdast-with-segments";
 import { upsertPageCommentAndSegments } from "../_db/mutations.server";
-
 export async function processPageCommentHtml(p: {
 	pageCommentId?: number;
 	parentId?: number;
@@ -10,14 +9,14 @@ export async function processPageCommentHtml(p: {
 	pageId: number;
 }) {
 	const { pageCommentId, commentHtml, locale, userId, pageId, parentId } = p;
-	const { annotatedHtml, segments } = await annotateHtmlWithSegments({
+	const { mdastJson, segments } = await htmlToMdastWithSegments({
 		html: commentHtml,
 	});
 	const pageComment = await upsertPageCommentAndSegments({
 		pageId,
 		pageCommentId,
 		userId,
-		content: annotatedHtml,
+		mdastJson,
 		sourceLocale: locale,
 		segments,
 		parentId,

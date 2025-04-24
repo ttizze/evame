@@ -1,4 +1,4 @@
-import { annotateHtmlWithSegments } from "@/app/[locale]/_lib/annotate-html-with-segments";
+import { htmlToMdastWithSegments } from "@/app/[locale]/_lib/html-to-mdast-with-segments";
 import { upsertPageAndSegments } from "../_db/mutations.server";
 
 // 例） HTML → HAST →MDAST → HAST → HTML の流れで使う想定
@@ -11,7 +11,7 @@ export async function processPageHtml(p: {
 	sourceLocale: string;
 }) {
 	const { title, html, pageId, slug, userId, sourceLocale } = p;
-	const { annotatedHtml, segments } = await annotateHtmlWithSegments({
+	const { mdastJson, segments } = await htmlToMdastWithSegments({
 		header: title,
 		html,
 	});
@@ -20,7 +20,7 @@ export async function processPageHtml(p: {
 		slug,
 		userId,
 		title,
-		content: annotatedHtml,
+		mdastJson,
 		sourceLocale,
 		segments,
 	});

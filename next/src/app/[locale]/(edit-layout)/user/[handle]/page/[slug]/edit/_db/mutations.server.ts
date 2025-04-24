@@ -1,22 +1,24 @@
-import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash";
+import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 export async function upsertPageAndSegments(p: {
 	pageId: number | undefined;
 	slug: string;
 	userId: string;
 	title: string;
-	content: string;
+	mdastJson: Prisma.InputJsonValue;
 	sourceLocale: string;
 	segments: SegmentDraft[];
 }) {
 	const page = await prisma.page.upsert({
 		where: { slug: p.slug, userId: p.userId },
-		update: { content: p.content },
+		update: { mdastJson: p.mdastJson, sourceLocale: p.sourceLocale },
 		create: {
 			slug: p.slug,
 			userId: p.userId,
-			content: p.content,
+			mdastJson: p.mdastJson,
+			content: "test",
 			sourceLocale: p.sourceLocale,
 		},
 	});

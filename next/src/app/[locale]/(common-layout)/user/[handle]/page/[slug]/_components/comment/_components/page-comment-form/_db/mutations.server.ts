@@ -1,14 +1,14 @@
-import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash";
+import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
 import { prisma } from "@/lib/prisma";
 import type { PageComment } from "@prisma/client";
-
+import type { Prisma } from "@prisma/client";
 export async function upsertPageCommentAndSegments(p: {
 	pageId: number;
 	pageCommentId?: number;
 	parentId?: number;
 	userId: string;
 	sourceLocale: string;
-	content: string;
+	mdastJson: Prisma.InputJsonValue;
 	segments: SegmentDraft[];
 }) {
 	let pageComment: PageComment;
@@ -17,7 +17,8 @@ export async function upsertPageCommentAndSegments(p: {
 			data: {
 				pageId: p.pageId,
 				userId: p.userId,
-				content: p.content,
+				content: "test",
+				mdastJson: p.mdastJson,
 				locale: p.sourceLocale,
 				parentId: p.parentId,
 			},
@@ -25,7 +26,7 @@ export async function upsertPageCommentAndSegments(p: {
 	} else {
 		pageComment = await prisma.pageComment.update({
 			where: { id: p.pageCommentId, userId: p.userId },
-			data: { content: p.content },
+			data: { mdastJson: p.mdastJson, locale: p.sourceLocale },
 		});
 	}
 

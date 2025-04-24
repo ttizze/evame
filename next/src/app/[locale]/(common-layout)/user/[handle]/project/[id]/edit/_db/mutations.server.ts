@@ -1,7 +1,7 @@
 import { uploadImage } from "@/app/[locale]/_lib/upload";
 import { prisma } from "@/lib/prisma";
 
-import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash";
+import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
 import type { Prisma, Project } from "@prisma/client";
 import { z } from "zod";
 
@@ -10,7 +10,7 @@ export async function upsertProjectAndSegments(p: {
 	userId: string;
 	title: string;
 	tagLine: string;
-	description: string;
+	mdastJson: Prisma.InputJsonValue;
 	sourceLocale: string;
 	segments: SegmentDraft[];
 }) {
@@ -20,14 +20,20 @@ export async function upsertProjectAndSegments(p: {
 			data: {
 				userId: p.userId,
 				title: p.title,
-				description: p.description,
+				description: "test",
+				mdastJson: p.mdastJson,
 				sourceLocale: p.sourceLocale,
 			},
 		});
 	} else {
 		project = await prisma.project.update({
 			where: { id: p.projectId, userId: p.userId },
-			data: { title: p.title, description: p.description },
+			data: {
+				title: p.title,
+				description: "test",
+				mdastJson: p.mdastJson,
+				sourceLocale: p.sourceLocale,
+			},
 		});
 	}
 

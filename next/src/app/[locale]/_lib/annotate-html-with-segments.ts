@@ -1,7 +1,8 @@
-import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash";
-import { remarkHashAndSegments } from "@/app/[locale]/_lib/remark-hash";
+import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
+import { remarkHashAndSegments } from "@/app/[locale]/_lib/remark-hash-and-segments";
 import rehypeParse from "rehype-parse";
 import rehypeRemark from "rehype-remark";
+import rehypeSanitize from "rehype-sanitize";
 import rehypeStringify from "rehype-stringify";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
@@ -14,6 +15,7 @@ export async function annotateHtmlWithSegments(p: {
 }) {
 	const file = (await unified()
 		.use(rehypeParse, { fragment: true }) // HTML → HAST
+		.use(rehypeSanitize)
 		.use(rehypeRemark) // HAST → MDAST
 		.use(remarkHashAndSegments(p.header)) // ★ hash + segments + hProperties
 		.use(remarkRehype) // MDAST → HAST (hProperties → 属性)
@@ -21,6 +23,5 @@ export async function annotateHtmlWithSegments(p: {
 		.process(p.html)) as VFile & {
 		data: { segments: SegmentDraft[] };
 	};
-
 	return { annotatedHtml: String(file), segments: file.data.segments };
 }
