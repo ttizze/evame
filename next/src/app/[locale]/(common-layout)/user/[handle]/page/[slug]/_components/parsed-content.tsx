@@ -38,17 +38,23 @@ export function ParsedContent({
 			/* ---------- X (旧 Twitter) ポスト ---------- */
 			if (
 				domNode.type === "tag" &&
-				domNode.name === "div" &&
-				domNode.attribs["data-type"] === "x"
+				domNode.name === "a" &&
+				(domNode.attribs.href?.includes("twitter.com") ||
+					domNode.attribs.href?.includes("x.com"))
 			) {
-				const xId = domNode.attribs.xid;
-				if (!xId) return null;
-				return (
-					<div data-type="x" data-x-id={xId} className="not-prose">
-						<XPost id={xId} />
-					</div>
-				);
+				// Extract the status ID from the URL
+				const url = domNode.attribs.href;
+				const match = url.match(/status\/(\d+)/);
+				if (match?.[1]) {
+					const statusId = match[1];
+					return (
+						<div data-type="x" data-x-id={statusId} className="not-prose">
+							<XPost id={statusId} />
+						</div>
+					);
+				}
 			}
+
 			// セグメントの翻訳が存在する場合は、セグメントの翻訳を表示
 			if (domNode.type === "tag" && domNode.attribs["data-number-id"]) {
 				const number = Number(domNode.attribs["data-number-id"]);
