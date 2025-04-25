@@ -32,6 +32,7 @@ export default async function NewProjectPage({ params }: NewProjectPageProps) {
 				userHandle={handle}
 				allProjectTags={allProjectTags}
 				userLocale={locale}
+				html={""}
 			/>
 		</div>
 	);
