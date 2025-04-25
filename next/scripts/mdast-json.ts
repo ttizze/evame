@@ -1,6 +1,6 @@
 import "dotenv/config";
-import { Client } from "pg";
 import { htmlToMdastWithSegments } from "@/app/[locale]/_lib/html-to-mdast-with-segments";
+import { Client } from "pg";
 
 /* ─── 設定 ───────────────────────────── */
 const SCHEMA = process.env.PG_SCHEMA ?? "public";

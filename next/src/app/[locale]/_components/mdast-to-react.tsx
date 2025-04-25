@@ -1,8 +1,3 @@
-import rehypeRaw from "rehype-raw";
-import rehypeReact from "rehype-react";
-import rehypeSlug from "rehype-slug";
-import remarkRehype from "remark-rehype";
-import { unified } from "unified";
 import { SegmentWrapper } from "@/app/[locale]/_components/SegmentWrapper";
 import type { SegmentBundle } from "@/app/[locale]/types";
 import type { Prisma } from "@prisma/client";
@@ -13,9 +8,14 @@ import {
 	type ReactElement,
 	createElement,
 } from "react";
+import React from "react";
 import { Tweet as XPost } from "react-tweet";
 import * as jsxRuntime from "react/jsx-runtime";
-import React from "react";
+import rehypeRaw from "rehype-raw";
+import rehypeReact from "rehype-react";
+import rehypeSlug from "rehype-slug";
+import remarkRehype from "remark-rehype";
+import { unified } from "unified";
 
 const TWEET_ID_RE = /status\/(\d+)/;
 
@@ -46,7 +46,11 @@ const ImgComponent: ComponentType<JSX.IntrinsicElements["img"]> = (props) => (
 );
 
 /** Normal link renderer */
-const Link: ComponentType<JSX.IntrinsicElements["a"]> = ({ href = "", children, ...rest }) => (
+const Link: ComponentType<JSX.IntrinsicElements["a"]> = ({
+	href = "",
+	children,
+	...rest
+}) => (
 	<a href={href} {...rest}>
 		{children}
 	</a>
