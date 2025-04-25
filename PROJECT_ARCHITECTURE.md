@@ -300,15 +300,16 @@ export function MyComponent() {
  * ● mdast (🍀 正規フォーマット)
  *   - DB(json) に保存
  *   - 表示レンダリング、全文検索、TOC 生成、リンク抽出などはすべてここから
- *   - 未来のエディタ移行時は
- *       mdast → (必要なら HTML) → NewEditorImport
- *     で再生成する
+ *   - 注意点として､mdastに変換するときにsanitizeしているのでタグ等が消える場合がある｡基本はオリジナルではなく通常のタグを使用し､どうしてもカスタマイズが必要な場合はsanitizeスキーマを変更する
  *
  * ▼ エディタを乗り換えるとき
  *
  *   1. エディタの形式からmdastを出力する関数を書く
  *   2. その関数をmdastToReactに渡す
  */
+db､page､コメント､projectの移行
+表示と入力双方のテストの確認
+strongタグ等
 
 ## TODO
 1. page本文､project説明

@@ -13,7 +13,8 @@
 		"vercel-build": "prisma generate && prisma migrate deploy && prisma db seed && next build",
 		"check": "bunx @biomejs/biome check --write .",
 		"typecheck": "tsc --noEmit",
-		"seed": "prisma db seed"
+		"seed": "prisma db seed",
+		"mdast-json": "bunx tsx scripts/mdast-json.ts"
 	},
 	"prisma": {
 		"seed": "tsx prisma/seed.ts"
@@ -80,6 +81,7 @@
 		"nextjs-toploader": "3.7.15",
 		"nuqs": "2.4.0",
 		"p-limit": "6.2.0",
+		"pg": "^8.15.5",
 		"react": "19.0.0",
 		"react-dom": "19.0.0",
 		"react-icons": "5.5.0",

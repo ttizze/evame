@@ -3,7 +3,6 @@ import rehypeReact from "rehype-react";
 import rehypeSlug from "rehype-slug";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
-
 import { SegmentWrapper } from "@/app/[locale]/_components/SegmentWrapper";
 import type { SegmentBundle } from "@/app/[locale]/types";
 import type { Prisma } from "@prisma/client";
@@ -16,18 +15,69 @@ import {
 } from "react";
 import { Tweet as XPost } from "react-tweet";
 import * as jsxRuntime from "react/jsx-runtime";
+import React from "react";
+
+const TWEET_ID_RE = /status\/(\d+)/;
+
+const SEGMENTABLE = [
+	"p",
+	"h1",
+	"h2",
+	"h3",
+	"h4",
+	"h5",
+	"h6",
+	"li",
+	"td",
+	"th",
+	"blockquote",
+] as const satisfies readonly (keyof JSX.IntrinsicElements)[];
+
+const ImgComponent: ComponentType<JSX.IntrinsicElements["img"]> = (props) => (
+	<Image
+		{...props}
+		src={props.src ?? ""}
+		alt={props.alt ?? ""}
+		width={props.width ? Number(props.width) : 300}
+		height={props.height ? Number(props.height) : 300}
+		className="h-auto w-auto max-w-full"
+		priority={false}
+	/>
+);
+
+/** Normal link renderer */
+const Link: ComponentType<JSX.IntrinsicElements["a"]> = ({ href = "", children, ...rest }) => (
+	<a href={href} {...rest}>
+		{children}
+	</a>
+);
+
 function wrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 	Tag: Tag,
 	bundles: SegmentBundle[],
 	current?: string,
 ) {
 	return (p: JSX.IntrinsicElements[Tag] & { "data-number-id"?: number }) => {
+		/* ───────── ここから追加ロジック ───────── */
+		// <p> の唯一の子が tweet リンクなら <TweetContainer> で置換
+		if (Tag === "p") {
+			const kids = React.Children.toArray(p.children);
+			if (
+				kids.length === 1 &&
+				React.isValidElement<{ href?: string }>(kids[0]) &&
+				TWEET_ID_RE.test(kids[0].props.href ?? "")
+			) {
+				const id = TWEET_ID_RE.exec(kids[0].props.href ?? "")?.[1];
+				if (id) return <XPost id={id} />;
+			}
+		}
 		const id = p["data-number-id"];
 		const bundle =
 			id !== undefined
 				? bundles.find((b) => b.segment.number === +id)
 				: undefined;
 
+		/* ───────── 追加ここまで ───────── */
 		/* セグメント対象でなければそのまま DOM 要素を返す */
 		if (!bundle) return createElement(Tag, p, p.children);
 
@@ -47,58 +97,6 @@ function wrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 }
 
 /* -------------------------------------------------------------------------- */
-/*                               Helper Factory                               */
-/* -------------------------------------------------------------------------- */
-
-const SEGMENTABLE = [
-	"p",
-	"h1",
-	"h2",
-	"h3",
-	"h4",
-	"h5",
-	"h6",
-	"li",
-	"td",
-	"th",
-	"blockquote",
-] as const;
-
-/* -------------------------------------------------------------------------- */
-/*                               X (Post) Resolver                            */
-/* -------------------------------------------------------------------------- */
-
-// ツイートを処理するための特別なコンポーネント
-export const TweetContainer: ComponentType<{ id: string }> = ({ id }) => {
-	return (
-		<div className="my-4">
-			<XPost id={id} />
-		</div>
-	);
-};
-
-export const LinkOrTweet: ComponentType<JSX.IntrinsicElements["a"]> = ({
-	href = "",
-	children,
-	...rest
-}) => {
-	// ── ① status の後ろに続く数字だけ取る ──
-	const tweetId = href.match(/status\/(\d+)/)?.[1];
-
-	if (tweetId) {
-		// ツイートの場合は特別なコンポーネントを返す
-		// この時点では何も返さない（後で処理する）
-		return <TweetContainer id={tweetId} />;
-	}
-
-	// 通常のリンクの場合
-	return (
-		<a href={href} {...rest}>
-			{children}
-		</a>
-	);
-};
-/* -------------------------------------------------------------------------- */
 /*                               Main Converter                               */
 /* -------------------------------------------------------------------------- */
 
@@ -114,8 +112,8 @@ export async function mdastToReact({
 	bundles,
 	currentHandle,
 }: Params): Promise<ReactElement> {
-	const components = Object.fromEntries(
-		SEGMENTABLE.map((t) => [t, wrapSegment(t, bundles, currentHandle)]),
+	const segmentComponents = Object.fromEntries(
+		SEGMENTABLE.map((tag) => [tag, wrapSegment(tag, bundles, currentHandle)]),
 	);
 
 	const processor = unified()
@@ -127,19 +125,9 @@ export async function mdastToReact({
 			...jsxRuntime,
 			components: {
 				// image hydration → next/image
-				img: ((p: JSX.IntrinsicElements["img"]) => (
-					<Image
-						{...p}
-						src={p.src ?? ""}
-						alt={p.alt ?? ""}
-						width={p.width ? Number(p.width) : 300}
-						height={p.height ? Number(p.height) : 300}
-						className="h-auto w-auto max-w-full"
-						priority={false}
-					/>
-				)) as ComponentType<JSX.IntrinsicElements["img"]>,
-				a: LinkOrTweet,
-				...components,
+				img: ImgComponent,
+				a: Link,
+				...segmentComponents,
 			},
 		});
 
