@@ -35,7 +35,7 @@ export function PageCommentForm({
 				<input type="hidden" name="userLocale" value={userLocale} />
 				{parentId && <input type="hidden" name="parentId" value={parentId} />}
 				<Editor
-					defaultValue={""}
+					defaultValue={content}
 					name="content"
 					className={`border border-input rounded-md px-2 ${!currentHandle ? "opacity-50 bg-muted" : ""}`}
 					placeholder="Say Hello!"

@@ -10,10 +10,11 @@
 		"lint": "next lint",
 		"test": "vitest",
 		"test-migrate": "DATABASE_URL=postgres://postgres:postgres@db.localtest.me:5435/main bunx prisma migrate dev && bunx prisma migrate deploy",
-		"vercel-build": "prisma generate && prisma migrate deploy && prisma db seed && next build",
+		"vercel-build": "prisma generate && (prisma migrate deploy || (echo '1st migrate failed; retrying in 8s' && sleep 8 && prisma migrate deploy)) && bunx tsx scripts/mdast-json.ts && next build",
 		"check": "bunx @biomejs/biome check --write .",
 		"typecheck": "tsc --noEmit",
-		"seed": "prisma db seed"
+		"seed": "prisma db seed",
+		"mdast-json": "bunx tsx scripts/mdast-json.ts"
 	},
 	"prisma": {
 		"seed": "tsx prisma/seed.ts"
@@ -58,6 +59,7 @@
 		"@tiptap/react": "2.11.5",
 		"@tiptap/starter-kit": "2.11.5",
 		"@types/ws": "8.5.14",
+		"@vercel/edge-config": "^1.4.0",
 		"class-variance-authority": "0.7.1",
 		"cld3-asm": "4.0.0",
 		"clsx": "2.1.1",
@@ -80,6 +82,7 @@
 		"nextjs-toploader": "3.7.15",
 		"nuqs": "2.4.0",
 		"p-limit": "6.2.0",
+		"pg": "^8.15.5",
 		"react": "19.0.0",
 		"react-dom": "19.0.0",
 		"react-icons": "5.5.0",
@@ -89,7 +92,10 @@
 		"react-tweet": "^3.2.2",
 		"rehype-parse": "9.0.1",
 		"rehype-raw": "7.0.0",
+		"rehype-react": "^8.0.0",
 		"rehype-remark": "10.0.0",
+		"rehype-sanitize": "^6.0.0",
+		"rehype-slug": "^6.0.0",
 		"rehype-stringify": "10.0.1",
 		"rehype-unwrap-images": "1.0.0",
 		"remark": "15.0.1",
@@ -101,6 +107,7 @@
 		"tocbot": "4.35.0",
 		"tsx": "4.19.3",
 		"unified": "11.0.5",
+		"unist-util-remove-position": "^5.0.0",
 		"unist-util-visit": "5.0.0",
 		"use-debounce": "10.0.4",
 		"ws": "8.18.1",

@@ -1,6 +1,6 @@
-import { annotateHtmlWithSegments } from "@/app/[locale]/_lib/annotate-html-with-segments";
+import { htmlToMdastWithSegments } from "@/app/[locale]/_lib/html-to-mdast-with-segments";
+import type { Prisma } from "@prisma/client";
 import { upsertProjectAndSegments } from "../../_db/mutations.server";
-
 //titleはprojectsのtitleで翻訳はしない taglineは翻訳が必要で､header
 export async function processProjectHtml(p: {
 	title: string;
@@ -11,7 +11,7 @@ export async function processProjectHtml(p: {
 	sourceLocale: string;
 }) {
 	const { title, description, tagLine, projectId, userId, sourceLocale } = p;
-	const { annotatedHtml, segments } = await annotateHtmlWithSegments({
+	const { mdastJson, segments } = await htmlToMdastWithSegments({
 		header: tagLine,
 		html: description,
 	});
@@ -20,7 +20,7 @@ export async function processProjectHtml(p: {
 		userId,
 		title,
 		tagLine,
-		description: annotatedHtml,
+		mdastJson: mdastJson as unknown as Prisma.InputJsonValue,
 		sourceLocale,
 		segments,
 	});

@@ -1,5 +1,6 @@
 // Project.tsx – refactored with CSS Grid layout (fixed actions alignment)
 
+import { mdastToReact } from "@/app/[locale]/_components/mdast-to-react";
 import { ProjectActionsDropdown } from "@/app/[locale]/_components/project/project-actions-dropdown/client";
 import { ProjectLikeButton } from "@/app/[locale]/_components/project/project-like-button/server";
 import { ProjectTagList } from "@/app/[locale]/_components/project/project-tag-list.server";
@@ -21,17 +22,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { ProjectImage } from "@prisma/client";
 import { ExternalLink } from "lucide-react";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-
-const DynamicMemoizedParsedContent = dynamic(
-	() =>
-		import(
-			"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/parsed-content"
-		).then((mod) => mod.MemoizedParsedContent),
-	{ loading: () => <span>Loading Parsed Content...</span> },
-);
 
 interface ProjectProps {
 	projectDetail: ProjectDetail;
@@ -51,6 +43,11 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 	const projectImages = projectDetail.images.filter(
 		(img) => img.id !== projectDetail.iconImage?.id,
 	);
+	const content = await mdastToReact({
+		mdast: projectDetail.mdastJson,
+		bundles: projectDetail.segmentBundles,
+		currentHandle: currentUser?.handle,
+	});
 
 	return (
 		<section className="">
@@ -141,13 +138,7 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 				</div>
 
 				{/* Description */}
-				<div className="prose dark:prose-invert max-w-none">
-					<DynamicMemoizedParsedContent
-						html={projectDetail.description}
-						segmentBundles={projectDetail.segmentBundles}
-						currentHandle={projectDetail.user.handle}
-					/>
-				</div>
+				<div className="prose dark:prose-invert max-w-none">{content}</div>
 
 				{/* Image carousel */}
 				{projectImages.length > 0 && (

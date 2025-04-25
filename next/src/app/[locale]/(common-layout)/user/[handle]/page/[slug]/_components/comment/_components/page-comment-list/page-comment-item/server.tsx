@@ -1,16 +1,17 @@
-import { MemoizedParsedContent } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/parsed-content";
+import { mdastToReact } from "@/app/[locale]/_components/mdast-to-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getImageProps } from "next/image";
 import type { PageCommentWithUserAndTranslations } from "../_lib/fetch-page-comments-with-user-and-translations";
 import { PageCommentItemClient } from "./client";
 import { ReplyForm } from "./reply-form.client";
+
 interface PageCommentItemProps {
 	pageComment: PageCommentWithUserAndTranslations[number];
 	currentHandle: string | undefined;
 	userLocale: string;
 }
 
-export default function PageCommentItem({
+export default async function PageCommentItem({
 	pageComment,
 	currentHandle,
 	userLocale,
@@ -21,7 +22,11 @@ export default function PageCommentItem({
 		width: 40,
 		height: 40,
 	});
-
+	const content = await mdastToReact({
+		mdast: pageComment.mdastJson,
+		bundles: pageComment.segmentBundles,
+		currentHandle: currentHandle,
+	});
 	return (
 		<div className="">
 			<div className="flex items-center">
@@ -48,13 +53,7 @@ export default function PageCommentItem({
 					</div>
 				</div>
 			</div>
-			<div className="mt-2 prose dark:prose-invert">
-				<MemoizedParsedContent
-					html={pageComment.content}
-					segmentBundles={pageComment.segmentBundles}
-					currentHandle={currentHandle}
-				/>
-			</div>
+			<div className="mt-2 prose dark:prose-invert">{content}</div>
 			<ReplyForm
 				pageId={pageComment.pageId}
 				currentHandle={currentHandle}

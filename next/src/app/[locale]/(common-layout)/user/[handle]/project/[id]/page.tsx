@@ -65,6 +65,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 	if (!projectDetail) {
 		return notFound();
 	}
+
 	return (
 		<div className=" py-8">
 			<DynamicProject projectDetail={projectDetail} locale={locale} />

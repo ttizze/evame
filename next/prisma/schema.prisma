@@ -2,11 +2,11 @@ generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
 }
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 
 model User {
   id                                 String                              @id @default(cuid())
@@ -119,6 +119,7 @@ model Page {
   id              Int              @id @default(autoincrement())
   slug            String           @unique
   content         String
+  mdastJson       Json?            @map("mdast_json")
   sourceLocale    String           @default("unknown") @map("source_locale")
   status          PageStatus       @default(DRAFT)
   createdAt       DateTime         @default(now()) @map("created_at")
@@ -236,6 +237,7 @@ model Vote {
 model PageComment {
   id                  Int                  @id @default(autoincrement())
   content             String
+  mdastJson       Json?            @map("mdast_json")
   locale              String
   userId              String               @map("user_id")
   pageId              Int                  @map("page_id")
@@ -314,6 +316,7 @@ model Project {
   userId       String   @map("user_id")
   title        String
   description  String   @db.Text
+  mdastJson       Json?            @map("mdast_json")
   sourceLocale String   @default("unknown") @map("source_locale")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
