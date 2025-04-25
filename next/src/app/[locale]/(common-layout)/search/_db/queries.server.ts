@@ -219,24 +219,34 @@ export async function searchContent(
 	pageSummaries: PageSummary[];
 	total: number;
 }> {
+	/* 1. ヒットした pageId を一括取得 (distinct) ------------------------ */
+	const matchedIds = await prisma.pageSegment.findMany({
+		where: {
+			text: { contains: query, mode: "insensitive" },
+			page: { status: "PUBLIC" }, // ページ公開フラグ
+		},
+		select: { pageId: true },
+		distinct: ["pageId"], // ← pageId ごとに 1 行
+	});
+
+	/* 2. ページネーションを自前で行う ---------------------------------- */
+	const pageIds = matchedIds.map((row) => row.pageId).slice(skip, skip + take);
+
+	/* 3. 合計件数 (= DISTINCT pageId) を取得 --------------------------- */
+	const total = matchedIds.length;
+
+	if (pageIds.length === 0) {
+		return { pageSummaries: [], total };
+	}
+
+	/* 4. page と関連情報をフェッチ ------------------------------------ */
 	const select = selectPagesWithDetails(true, locale);
-	const [rawPages, total] = await Promise.all([
-		prisma.page.findMany({
-			skip,
-			take,
-			where: {
-				content: { contains: query, mode: "insensitive" },
-				status: "PUBLIC",
-			},
-			select,
-		}),
-		prisma.page.count({
-			where: {
-				content: { contains: query, mode: "insensitive" },
-				status: "PUBLIC",
-			},
-		}),
-	]);
+	const rawPages = await prisma.page.findMany({
+		where: { id: { in: pageIds } },
+		select,
+	});
+
+	/* 5. SegmentBundle へ変換して整形 -------------------------------- */
 	const pages = rawPages.map((p) => ({
 		...p,
 		createdAt: p.createdAt.toISOString(),
@@ -249,7 +259,6 @@ export async function searchContent(
 
 	return { pageSummaries: pages, total };
 }
-
 /** タグ検索 (Tag.name) → Tag[] */
 export async function searchTags(
 	query: string,

@@ -36,7 +36,12 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 			data: {
 				slug: "test-page",
 				userId: user.id,
-				content: "dummy-content",
+				mdastJson: {
+					type: "doc",
+					content: [
+						{ type: "paragraph", content: [{ type: "text", text: "Hello" }] },
+					],
+				},
 			},
 		});
 		pageId = page.id;

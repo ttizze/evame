@@ -20,7 +20,6 @@ export async function upsertProjectAndSegments(p: {
 			data: {
 				userId: p.userId,
 				title: p.title,
-				description: "test",
 				mdastJson: p.mdastJson,
 				sourceLocale: p.sourceLocale,
 			},
@@ -30,7 +29,6 @@ export async function upsertProjectAndSegments(p: {
 			where: { id: p.projectId, userId: p.userId },
 			data: {
 				title: p.title,
-				description: "test",
 				mdastJson: p.mdastJson,
 				sourceLocale: p.sourceLocale,
 			},

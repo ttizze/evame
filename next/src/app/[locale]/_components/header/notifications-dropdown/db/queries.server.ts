@@ -17,7 +17,6 @@ export async function getNotifications(currentUserHandle: string) {
 			},
 			pageComment: {
 				select: {
-					content: true,
 					page: {
 						select: {
 							slug: true,
@@ -57,7 +56,6 @@ export async function getNotifications(currentUserHandle: string) {
 							text: true,
 							pageComment: {
 								select: {
-									content: true,
 									page: {
 										select: {
 											slug: true,

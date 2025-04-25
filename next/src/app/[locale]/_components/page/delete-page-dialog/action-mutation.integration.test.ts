@@ -25,7 +25,7 @@ describe("archivePageAction", () => {
 				id: 1,
 				userId: mockUsers[0].id,
 				slug: "test",
-				content: "test",
+				mdastJson: "test",
 			},
 		});
 		await prisma.page.create({
@@ -33,7 +33,7 @@ describe("archivePageAction", () => {
 				id: 2,
 				userId: mockUsers[0].id,
 				slug: "test2",
-				content: "test2",
+				mdastJson: "test2",
 			},
 		});
 

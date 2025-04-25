@@ -4,7 +4,7 @@ export async function deletePageComment(pageCommentId: number) {
 	return await prisma.pageComment.update({
 		where: { id: pageCommentId },
 		data: {
-			content: "deleted",
+			mdastJson: "deleted",
 		},
 	});
 }

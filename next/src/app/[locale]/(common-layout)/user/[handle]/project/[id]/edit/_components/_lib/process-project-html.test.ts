@@ -41,7 +41,7 @@ describe("processProjectHtml – title, tagLine保存", () => {
 		const project = await prisma.project.create({
 			data: {
 				userId: user.id,
-				description: htmlInput,
+				mdastJson: htmlInput,
 				title,
 				sourceLocale: "en",
 			},
@@ -69,7 +69,7 @@ describe("processProjectHtml – title, tagLine保存", () => {
 		const project = await prisma.project.create({
 			data: {
 				userId: user.id,
-				description: htmlInput,
+				mdastJson: htmlInput,
 				title,
 				sourceLocale: "en",
 			},

@@ -23,7 +23,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 						{
 							slug: "public-page",
 							status: "PUBLIC",
-							content: "This is a test content",
+							mdastJson: "This is a test content",
 							pageSegments: {
 								create: {
 									number: 0,
@@ -35,7 +35,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 						{
 							slug: "private-page",
 							status: "DRAFT",
-							content: "This is a test content2",
+							mdastJson: "This is a test content2",
 							pageSegments: {
 								create: {
 									number: 0,
@@ -47,7 +47,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 						{
 							slug: "archived-page",
 							status: "ARCHIVE",
-							content: "This is a test content3",
+							mdastJson: "This is a test content3",
 							pageSegments: {
 								create: {
 									number: 0,

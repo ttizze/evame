@@ -1,4 +1,5 @@
 import { fetchProjectDetail } from "@/app/[locale]/_db/project-queries.server";
+import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { prisma } from "@/lib/prisma";
 import dynamic from "next/dynamic";
@@ -51,10 +52,12 @@ export async function generateMetadata({ params }: ProjectPageProps) {
 			title: "Project Not Found",
 		};
 	}
-
+	const description = await mdastToText(project.mdastJson).then((text) =>
+		text.slice(0, 200),
+	);
 	return {
 		title: `${project.title} | ${project.user.name}`,
-		description: project.description,
+		description,
 	};
 }
 

@@ -24,8 +24,12 @@ describe("togglePublishAction", () => {
 			createdAt: new Date(),
 			updatedAt: new Date(),
 			slug: "test",
-			content: "test",
-			mdastJson: {},
+			mdastJson: {
+				type: "doc",
+				content: [
+					{ type: "paragraph", content: [{ type: "text", text: "test" }] },
+				],
+			},
 			sourceLocale: "en",
 			status: "PUBLIC",
 			userId: mockUsers[0].id,

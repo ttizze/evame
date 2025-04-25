@@ -17,7 +17,6 @@ export async function upsertPageCommentAndSegments(p: {
 			data: {
 				pageId: p.pageId,
 				userId: p.userId,
-				content: "test",
 				mdastJson: p.mdastJson,
 				locale: p.sourceLocale,
 				parentId: p.parentId,

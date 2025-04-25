@@ -6,7 +6,6 @@ export async function fetchPageWithPageSegments(pageId: number) {
 		select: {
 			id: true,
 			slug: true,
-			content: true,
 			createdAt: true,
 			pageSegments: {
 				select: {
