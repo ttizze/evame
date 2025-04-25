@@ -9,7 +9,7 @@ import rehypeReact from "rehype-react";
 import rehypeSlug from "rehype-slug";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
-import { wrapSegment } from "./wrap-segments";
+import { wrapSegment } from "./wrap-segments.server";
 
 const SEGMENTABLE = [
 	"p",

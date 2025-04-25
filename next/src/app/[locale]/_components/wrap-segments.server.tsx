@@ -1,5 +1,4 @@
-"use client";
-import { SegmentWrapper } from "@/app/[locale]/_components/SegmentWrapper";
+import { SegmentWrapper } from "@/app/[locale]/_components/segment-wrapper.client";
 import type { SegmentBundle } from "@/app/[locale]/types";
 import { type JSX, createElement } from "react";
 import React from "react";
