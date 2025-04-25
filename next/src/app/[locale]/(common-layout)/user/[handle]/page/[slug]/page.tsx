@@ -1,5 +1,5 @@
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-list/server";
-import { stripHtmlTags } from "@/app/[locale]/_lib/strip-html-tags";
+import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { DisplayProvider } from "@/app/_context/display-provider";
 import type { Pref } from "@/app/_context/display-types";
@@ -74,7 +74,9 @@ export async function generateMetadata({
 	}
 	const { pageDetail, pageTranslationJobs, title } = data;
 
-	const description = stripHtmlTags(pageDetail.content).slice(0, 200);
+	const description = await mdastToText(pageDetail.mdastJson).then((text) =>
+		text.slice(0, 200),
+	);
 	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${slug}`;
 	return {
 		title,

@@ -36,7 +36,6 @@ const sampleNotifications: NotificationWithRelations[] = [
 		},
 		page: null,
 		pageComment: {
-			content: "Comment Content",
 			page: {
 				slug: "page-slug-comment",
 				pageSegments: [{ text: "Commented Page Title" }],

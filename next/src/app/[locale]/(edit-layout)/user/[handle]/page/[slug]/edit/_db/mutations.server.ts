@@ -18,7 +18,6 @@ export async function upsertPageAndSegments(p: {
 			slug: p.slug,
 			userId: p.userId,
 			mdastJson: p.mdastJson,
-			content: "test",
 			sourceLocale: p.sourceLocale,
 		},
 	});

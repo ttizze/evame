@@ -118,8 +118,7 @@ enum PageStatus {
 model Page {
   id              Int              @id @default(autoincrement())
   slug            String           @unique
-  content         String
-  mdastJson       Json?            @map("mdast_json")
+  mdastJson       Json            @map("mdast_json")
   sourceLocale    String           @default("unknown") @map("source_locale")
   status          PageStatus       @default(DRAFT)
   createdAt       DateTime         @default(now()) @map("created_at")
@@ -236,8 +235,7 @@ model Vote {
 
 model PageComment {
   id                  Int                  @id @default(autoincrement())
-  content             String
-  mdastJson       Json?            @map("mdast_json")
+  mdastJson       Json            @map("mdast_json")
   locale              String
   userId              String               @map("user_id")
   pageId              Int                  @map("page_id")
@@ -315,8 +313,7 @@ model Project {
   id           String   @id @default(cuid())
   userId       String   @map("user_id")
   title        String
-  description  String   @db.Text
-  mdastJson       Json?            @map("mdast_json")
+  mdastJson       Json            @map("mdast_json")
   sourceLocale String   @default("unknown") @map("source_locale")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")

@@ -213,7 +213,6 @@ export async function fetchProjectWithProjectSegments(projectId: string) {
 		select: {
 			id: true,
 			title: true,
-			description: true,
 			sourceLocale: true,
 			projectSegments: {
 				select: {

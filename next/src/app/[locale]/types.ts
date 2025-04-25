@@ -54,7 +54,7 @@ export type PageDetail = Omit<Page, "createdAt"> & {
 };
 export type PageSummary = Omit<
 	PageDetail,
-	"content" | "updatedAt" | "userId" | "mdastJson"
+	"updatedAt" | "userId" | "mdastJson"
 >;
 
 type TagProjectWithTag = ProjectTagRelation & {
@@ -73,7 +73,4 @@ export type ProjectDetail = Omit<Project, "createdAt"> & {
 	};
 };
 
-export type ProjectSummary = Omit<
-	ProjectDetail,
-	"description" | "userId" | "mdastJson"
->;
+export type ProjectSummary = Omit<ProjectDetail, "userId" | "mdastJson">;

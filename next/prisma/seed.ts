@@ -151,13 +151,7 @@ const ES_OUR_PROBLEM_6_TEXT = `Las traducciones automáticas tienen limitaciones
 En Evame, los usuarios pueden votar o proponer mejoras, lo que permite que la calidad de las traducciones mejore a diario. Solo haz clic en el texto traducido para enviar tu opinión y aprovecha el poder de la comunidad global.`;
 
 async function seed() {
-	const { evame, evameEnPage, evameJaPage } = await addRequiredData();
-
-	// Create sample comments for the About page
-	await createPageComments(evame.id, evameEnPage.id);
-	await createPageComments(evame.id, evameJaPage.id);
-
-	console.log("Seed completed successfully");
+	await addRequiredData();
 }
 
 interface TranslationInput {
@@ -620,7 +614,7 @@ async function createUserAndPages() {
 			update: {
 				slug,
 				sourceLocale,
-				content,
+				mdastJson: content,
 				status: "DRAFT",
 				userId: evame.id,
 				translationJobs: {
@@ -634,7 +628,7 @@ async function createUserAndPages() {
 			create: {
 				slug,
 				sourceLocale,
-				content,
+				mdastJson: content,
 				status: "DRAFT",
 				userId: evame.id,
 				translationJobs: {
@@ -653,73 +647,6 @@ async function createUserAndPages() {
 	]);
 
 	return { evame, evameEnPage, evameJaPage };
-}
-
-async function createPageComments(userId: string, pageId: number) {
-	console.log("Creating sample comments for About page...");
-
-	// Create 3 sample comments
-	const commentContents = [
-		"This is a great platform! I've been looking for something that helps developers showcase their work globally.",
-		"I love how Evame handles translations automatically. As a developer who speaks multiple languages, this is exactly what I needed.",
-		"The automatic translation of comments is a game-changer. Now I can communicate with developers from all over the world!",
-	];
-
-	const commentLocales = ["en", "ja", "en"];
-
-	// Add sample comments
-	for (let i = 0; i < commentContents.length; i++) {
-		const comment = await prisma.pageComment.create({
-			data: {
-				content: commentContents[i],
-				locale: commentLocales[i],
-				userId: userId,
-				pageId: pageId,
-				// Create comment segments
-				pageCommentSegments: {
-					create: {
-						text: commentContents[i],
-						number: 0,
-						textAndOccurrenceHash: `sample-comment-${i}-hash`,
-						// Add segment translations
-						pageCommentSegmentTranslations: {
-							create: [
-								{
-									locale: "en",
-									text: commentContents[i],
-									userId: userId,
-								},
-								{
-									locale: "ja",
-									text:
-										i === 0
-											? "素晴らしいプラットフォームですね！開発者が自分の作品をグローバルに紹介できるものを探していました。"
-											: i === 1
-												? "Evameが自動的に翻訳を処理する方法が気に入っています。複数の言語を話す開発者として、これはまさに私が必要としていたものです。"
-												: "コメントの自動翻訳は革命的です。今なら世界中の開発者とコミュニケーションできます！",
-									userId: userId,
-								},
-								{
-									locale: "zh",
-									text:
-										i === 0
-											? "这是一个很棒的平台！我一直在寻找可以帮助开发者在全球范围内展示他们作品的工具。"
-											: i === 1
-												? "我喜欢Evame如何自动处理翻译。作为一个会说多种语言的开发者，这正是我所需要的。"
-												: "评论的自动翻译是一个改变游戏规则的功能。现在我可以与全世界的开发者交流了！",
-									userId: userId,
-								},
-							],
-						},
-					},
-				},
-			},
-		});
-
-		console.log(`Created comment ${i + 1} with ID: ${comment.id}`);
-	}
-
-	console.log("Sample comments created successfully");
 }
 
 seed()
