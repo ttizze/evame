@@ -3,7 +3,8 @@ import type { SegmentBundle } from "@/app/[locale]/types";
 import { type JSX, createElement } from "react";
 import React from "react";
 import { Tweet as XPost } from "react-tweet";
-const TWEET_ID_RE = /status\/(\d+)/;
+const TWEET_ID_RE =
+	/https?:\/\/(?:mobile\.)?(?:twitter\.com|x\.com)\/(?:[^/]+\/status|i\/web\/status)\/(\d+)(?:\?.*)?$/i;
 
 export function wrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 	Tag: Tag,
@@ -13,15 +14,13 @@ export function wrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 	return (p: JSX.IntrinsicElements[Tag] & { "data-number-id"?: number }) => {
 		/* ───────── ここから追加ロジック ───────── */
 		// <p> の唯一の子が tweet リンクなら <TweetContainer> で置換
-		if (Tag === "p") {
-			const kids = React.Children.toArray(p.children);
-			if (
-				kids.length === 1 &&
-				React.isValidElement<{ href?: string }>(kids[0]) &&
-				TWEET_ID_RE.test(kids[0].props.href ?? "")
-			) {
-				const id = TWEET_ID_RE.exec(kids[0].props.href ?? "")?.[1];
-				if (id) return <XPost id={id} />;
+		const kids = React.Children.toArray(p.children);
+		if (Tag === "p" && kids.length === 1 && React.isValidElement<{ href?: string }>(kids[0])
+		) {
+			const href = kids[0].props.href ?? "";
+			const match = TWEET_ID_RE.exec(href);
+			if (match) {
+				return <XPost id={match[1]} />;
 			}
 		}
 		const id = p["data-number-id"];
