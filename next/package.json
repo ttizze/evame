@@ -59,6 +59,7 @@
 		"@tiptap/react": "2.11.5",
 		"@tiptap/starter-kit": "2.11.5",
 		"@types/ws": "8.5.14",
+		"@vercel/edge-config": "^1.4.0",
 		"class-variance-authority": "0.7.1",
 		"cld3-asm": "4.0.0",
 		"clsx": "2.1.1",
