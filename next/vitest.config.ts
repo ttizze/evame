@@ -20,7 +20,7 @@ export default defineConfig({
 		setupFiles: "./vitest.setup.ts",
 		server: {
 			deps: {
-				inline: ["next-auth"],
+				inline: ["next-auth", "next-intl"],
 			},
 		},
 	},
@@ -28,6 +28,7 @@ export default defineConfig({
 		alias: {
 			"@": path.resolve(__dirname, "src"),
 			"next/server": path.resolve(__dirname, "node_modules/next/server.js"),
+			"next/navigation": "next/navigation.js",
 		},
 	},
 });

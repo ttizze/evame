@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import * as tocbot from "tocbot";
+import tocbot from "tocbot";
 import "tocbot/dist/tocbot.css";
 
 export default function TableOfContents({

@@ -1,13 +1,20 @@
 import { cleanup, render } from "@testing-library/react";
-import * as tocbot from "tocbot";
+import tocbot from "tocbot";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import TableOfContents from "./toc";
 
 // tocbotのモック
-vi.mock("tocbot", () => ({
-	init: vi.fn(),
-	destroy: vi.fn(),
-}));
+vi.mock("tocbot", () => {
+  const init    = vi.fn();
+  const destroy = vi.fn();
+
+  return {
+    __esModule: true,   // ESModule 互換にする
+    init,
+    destroy,
+    default: { init, destroy }, // ← ここがポイント
+  };
+});
 
 describe("TableOfContents", () => {
 	const mockOnItemClick = vi.fn();
