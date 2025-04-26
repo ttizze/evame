@@ -1,10 +1,10 @@
 import { fetchProjectDetail } from "@/app/[locale]/_db/project-queries.server";
 import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
 import { Skeleton } from "@/components/ui/skeleton";
-import { prisma } from "@/lib/prisma";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import ProjectDetailSkeleton from "./_components/project-detail-skeleton";
+import { fetchProjectMetaData } from "./_db/queries.server";
 const UserInfo = dynamic(
 	() =>
 		import("@/app/[locale]/_components/user-info.server").then(
@@ -42,10 +42,7 @@ interface ProjectPageProps {
 export async function generateMetadata({ params }: ProjectPageProps) {
 	const { handle, id } = await params;
 
-	const project = await prisma.project.findUnique({
-		where: { id },
-		include: { user: true },
-	});
+	const project = await fetchProjectMetaData(id);
 
 	if (!project || project.user.handle !== handle) {
 		return {
@@ -58,6 +55,12 @@ export async function generateMetadata({ params }: ProjectPageProps) {
 	return {
 		title: `${project.title} | ${project.user.name}`,
 		description,
+		openGraph: {
+			type: "article",
+			title: `${project.title} | ${project.user.name}`,
+			description,
+			images: [{ url: project.iconImage?.url ?? "", width: 1200, height: 630 }],
+		},
 	};
 }
 
