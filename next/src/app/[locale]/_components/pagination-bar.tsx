@@ -16,12 +16,12 @@ interface PaginationBarProps {
 }
 
 export function PaginationBar({ totalPages, currentPage }: PaginationBarProps) {
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
 	if (totalPages <= 1) {
 		return null;
 	}
 
-	const pathname = usePathname();
-	const searchParams = useSearchParams();
 	const currentParams = Object.fromEntries(searchParams.entries());
 
 	// 現在の URL の pathname と既存の searchParams をベースに、

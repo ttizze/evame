@@ -1,7 +1,6 @@
 {
 	"extends": ["next/core-web-vitals", "next/typescript"],
-	"plugins": ["react-compiler"],
 	"rules": {
-		"react-compiler/react-compiler": "error"
+		"react-hooks/rules-of-hooks": "error"
 	}
 }

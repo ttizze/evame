@@ -6,7 +6,7 @@ import { useActionState } from "react";
 import { FcGoogle } from "react-icons/fc";
 
 export function GoogleForm({ redirectTo }: { redirectTo: string }) {
-	const [state, formAction, isPending] = useActionState<
+	const [, formAction, isPending] = useActionState<
 		ActionResponse,
 		FormData
 	>(signInWithGoogleAction, { success: false });

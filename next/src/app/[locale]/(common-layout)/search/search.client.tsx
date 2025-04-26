@@ -28,7 +28,7 @@ export function SearchPageClient() {
 		}),
 	);
 
-	const [pageNumber, setPageNumber] = useQueryState(
+	const [, setPageNumber] = useQueryState(
 		"page",
 		parseAsInteger.withDefault(1).withOptions({
 			shallow: false,
