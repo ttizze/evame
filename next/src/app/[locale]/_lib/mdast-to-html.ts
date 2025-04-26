@@ -26,6 +26,10 @@ interface Result {
  * data 属性などをそのまま rehypeStringify が吐き出す形にしておく。
  */
 export async function mdastToHtml({ mdastJson }: Params): Promise<Result> {
+	if (!mdastJson || Object.keys(mdastJson).length === 0) {
+		return { html: "" };
+	}
+
 	/* 1. mdastJson は plain object なのでそのまま cast -------------- */
 	const mdast = mdastJson as unknown as MdastRoot;
 
