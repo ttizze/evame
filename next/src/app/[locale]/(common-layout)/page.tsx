@@ -231,9 +231,17 @@ export default async function HomePage({
 					<>
 						<SortTabs defaultSort={sort} />
 						{sort === "popular" ? (
-							<PopularProjectList locale={locale} searchParams={searchParams} />
+							<PopularProjectList
+								locale={locale}
+								searchParams={searchParams}
+								showPagination
+							/>
 						) : (
-							<NewProjectList locale={locale} searchParams={searchParams} />
+							<NewProjectList
+								locale={locale}
+								searchParams={searchParams}
+								showPagination
+							/>
 						)}
 					</>
 				)}
@@ -241,9 +249,17 @@ export default async function HomePage({
 					<>
 						<SortTabs defaultSort={sort} />
 						{sort === "popular" ? (
-							<PopularPageList locale={locale} searchParams={searchParams} />
+							<PopularPageList
+								locale={locale}
+								searchParams={searchParams}
+								showPagination
+							/>
 						) : (
-							<NewPageList locale={locale} searchParams={searchParams} />
+							<NewPageList
+								locale={locale}
+								searchParams={searchParams}
+								showPagination
+							/>
 						)}
 					</>
 				)}
