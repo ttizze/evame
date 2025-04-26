@@ -1,6 +1,5 @@
 import { mockUsers } from "@/tests/mock";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
 import { usePathname } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { editPageStatusAction } from "./action";
@@ -14,7 +13,34 @@ vi.mock("sonner", () => ({
 		success: vi.fn(),
 	},
 }));
+vi.mock("next-intl", () => ({
+	NextIntlClientProvider: ({ children }: { children: React.ReactNode }) =>
+		children,
+	useTranslations: () => (key: string) => key,
+}));
+vi.mock("use-intl", async () => {
+	const React = await vi.importActual<typeof import("react")>("react");
 
+	// ダミー値
+	const DUMMY = { locale: "en", messages: {} };
+
+	// Context 自体を自前で作って渡す
+	const IntlContext = React.createContext(DUMMY);
+
+	return {
+		IntlContext,
+
+		// Provider: children をそのまま返す or Context.Provider を使う
+		IntlProvider: ({ children }: { children: React.ReactNode }) => (
+			<IntlContext.Provider value={DUMMY}>{children}</IntlContext.Provider>
+		),
+
+		// フックは何でも返すダミーでOK
+		useLocale: () => "en",
+		useMessages: () => ({}),
+		useTranslations: () => (id: string) => id,
+	};
+});
 beforeEach(() => {
 	vi.mocked(usePathname).mockReturnValue("/en/edit/page/123");
 	vi.mocked(useHeaderVisibility).mockReturnValue({ isVisible: true });
@@ -23,14 +49,12 @@ beforeEach(() => {
 describe("EditHeader Component", () => {
 	it("renders save button and status correctly", () => {
 		render(
-			<NextIntlClientProvider locale="ja">
-				<EditHeader
-					currentUser={mockUsers[0]}
-					initialStatus="PUBLIC"
-					hasUnsavedChanges={false}
-					pageId={123}
-				/>
-			</NextIntlClientProvider>,
+			<EditHeader
+				currentUser={mockUsers[0]}
+				initialStatus="PUBLIC"
+				hasUnsavedChanges={false}
+				pageId={123}
+			/>,
 		);
 
 		expect(screen.getByTestId("save-button")).toBeDisabled();
@@ -39,14 +63,12 @@ describe("EditHeader Component", () => {
 
 	it("shows loader icon when has unsaved changes", () => {
 		render(
-			<NextIntlClientProvider locale="ja">
-				<EditHeader
-					currentUser={mockUsers[0]}
-					initialStatus="PUBLIC"
-					hasUnsavedChanges={true}
-					pageId={123}
-				/>
-			</NextIntlClientProvider>,
+			<EditHeader
+				currentUser={mockUsers[0]}
+				initialStatus="PUBLIC"
+				hasUnsavedChanges={true}
+				pageId={123}
+			/>,
 		);
 
 		expect(screen.getByTestId("save-button")).not.toBeDisabled();
@@ -62,14 +84,12 @@ describe("EditHeader Component", () => {
 		});
 
 		render(
-			<NextIntlClientProvider locale="ja">
-				<EditHeader
-					currentUser={mockUsers[0]}
-					initialStatus="DRAFT"
-					hasUnsavedChanges={false}
-					pageId={123}
-				/>
-			</NextIntlClientProvider>,
+			<EditHeader
+				currentUser={mockUsers[0]}
+				initialStatus="DRAFT"
+				hasUnsavedChanges={false}
+				pageId={123}
+			/>,
 		);
 
 		fireEvent.click(screen.getByText("Private"));
@@ -87,14 +107,12 @@ describe("EditHeader Component", () => {
 		});
 
 		render(
-			<NextIntlClientProvider locale="ja">
-				<EditHeader
-					currentUser={mockUsers[0]}
-					initialStatus="DRAFT"
-					hasUnsavedChanges={false}
-					pageId={123}
-				/>
-			</NextIntlClientProvider>,
+			<EditHeader
+				currentUser={mockUsers[0]}
+				initialStatus="DRAFT"
+				hasUnsavedChanges={false}
+				pageId={123}
+			/>,
 		);
 
 		fireEvent.click(screen.getByText("Private"));
