@@ -1,18 +1,27 @@
 import type { Prisma } from "@prisma/client";
 
-export async function mdastToText(n: Prisma.JsonValue): Promise<string> {
-	if (n == null) return "";
+export async function mdastToText(
+	mdastJson: Prisma.JsonValue,
+): Promise<string> {
+	if (mdastJson == null) return "";
 
 	// ① 文字列・数値・真偽はそのまま／文字列化
-	if (typeof n === "string") return n;
-	if (typeof n === "number" || typeof n === "boolean") return String(n);
+	if (typeof mdastJson === "string") return mdastJson;
+	if (typeof mdastJson === "number" || typeof mdastJson === "boolean")
+		return String(mdastJson);
 
 	// ② 配列は各要素を再帰
-	if (Array.isArray(n)) return n.map(mdastToText).join("");
+	if (Array.isArray(mdastJson)) {
+		// 非同期処理を正しく処理
+		const results = await Promise.all(
+			mdastJson.map((item) => mdastToText(item)),
+		);
+		return results.join("");
+	}
 
 	// ③ オブジェクト（MDAST ノード）の処理
-	if (typeof n === "object") {
-		const node = n as Record<string, Prisma.JsonValue>;
+	if (typeof mdastJson === "object") {
+		const node = mdastJson as Record<string, Prisma.JsonValue>;
 
 		// text, inlineCode など: { value: "..." }
 		if (typeof node.value === "string") return node.value;
@@ -23,7 +32,13 @@ export async function mdastToText(n: Prisma.JsonValue): Promise<string> {
 
 		// 子ノードを下る
 		if (Array.isArray(node.children)) {
-			return (node.children as Prisma.JsonValue[]).map(mdastToText).join("");
+			// 非同期処理を正しく処理
+			const results = await Promise.all(
+				(node.children as Prisma.JsonValue[]).map((child) =>
+					mdastToText(child),
+				),
+			);
+			return results.join("");
 		}
 	}
 
