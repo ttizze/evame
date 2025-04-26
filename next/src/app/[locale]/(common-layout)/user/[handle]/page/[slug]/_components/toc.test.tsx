@@ -5,15 +5,15 @@ import TableOfContents from "./toc";
 
 // tocbotのモック
 vi.mock("tocbot", () => {
-  const init    = vi.fn();
-  const destroy = vi.fn();
+	const init = vi.fn();
+	const destroy = vi.fn();
 
-  return {
-    __esModule: true,   // ESModule 互換にする
-    init,
-    destroy,
-    default: { init, destroy }, // ← ここがポイント
-  };
+	return {
+		__esModule: true, // ESModule 互換にする
+		init,
+		destroy,
+		default: { init, destroy }, // ← ここがポイント
+	};
 });
 
 describe("TableOfContents", () => {
