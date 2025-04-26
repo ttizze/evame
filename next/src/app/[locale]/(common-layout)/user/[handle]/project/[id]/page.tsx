@@ -89,7 +89,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 	}
 
 	return (
-		<div className="py-8">
+		<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 			<DynamicProject projectDetail={projectDetail} locale={locale} />
 			<div className="py-4">
 				<UserInfo handle={projectDetail.user.handle} />
@@ -97,7 +97,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 			<div className="flex items-center gap-4">
 				<DynamicProjectLikeButton projectId={projectDetail.id} showCount />
 				<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
-				<span>{projectDetail.commentsCount}</span>
+				<span>{projectDetail._count?.projectLikes || 0}</span>
 			</div>
 
 			<DynamicFloatingControls
@@ -126,6 +126,6 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 					userLocale={locale}
 				/>
 			</div>
-		</div>
+		</article>
 	);
 }

@@ -44,7 +44,7 @@ export async function UserInfo({
 				<div className="flex w-full flex-col md:flex-row">
 					<div>
 						<Link href={`${pageOwner.image}`}>
-							<Avatar className="w-20 h-20 md:w-24 md:h-24">
+							<Avatar className="w-20 h-20 md:w-24 md:h-24 not-prose">
 								<AvatarImage {...props} />
 								<AvatarFallback>
 									{pageOwner.name.charAt(0).toUpperCase()}
@@ -54,9 +54,13 @@ export async function UserInfo({
 					</div>
 					<div className="mt-2 md:mt-0 md:ml-4 flex items-center justify-between w-full">
 						<div>
-							<p className="text-xl md:text-2xl font-bold">{pageOwner.name}</p>
+							<p className="text-xl md:text-2xl font-bold not-prose">
+								{pageOwner.name}
+							</p>
 							<div>
-								<p className="text-sm text-gray-500">@{pageOwner.handle}</p>
+								<p className="text-sm text-gray-500 not-prose">
+									@{pageOwner.handle}
+								</p>
 								<FollowStats
 									followingCount={followCounts.following}
 									followersCount={followCounts.followers}
