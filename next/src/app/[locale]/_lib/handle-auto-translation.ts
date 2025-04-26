@@ -268,3 +268,26 @@ export async function handleCommentAutoTranslation({
 		dependencies,
 	);
 }
+
+// プロジェクトコメント翻訳のためのヘルパー関数
+export async function handleProjectCommentAutoTranslation({
+	currentUserId,
+	commentId,
+	projectId,
+	sourceLocale,
+	geminiApiKey,
+	dependencies = {},
+}: ProjectTranslationParams & {
+	commentId: number;
+	dependencies?: Partial<TranslationDependencies>;
+}): Promise<void> {
+	// プロジェクトコメントの翻訳は現在未実装
+	// 必要になったら実装する
+	console.log("Project comment translation not implemented yet", {
+		currentUserId,
+		commentId,
+		projectId,
+		sourceLocale,
+	});
+	return Promise.resolve();
+}

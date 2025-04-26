@@ -232,3 +232,16 @@ export async function fetchProjectWithProjectSegments(projectId: string) {
 		pageSegments: project.projectSegments,
 	};
 }
+
+export async function getProjectById(projectId: string) {
+	const project = await prisma.project.findUnique({
+		where: { id: projectId },
+		include: {
+			user: {
+				select: selectUserFields(),
+			},
+		},
+	});
+
+	return project;
+}

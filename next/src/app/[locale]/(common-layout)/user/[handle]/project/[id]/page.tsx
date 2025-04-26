@@ -1,10 +1,13 @@
 import { fetchProjectDetail } from "@/app/[locale]/_db/project-queries.server";
 import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
+import { getCurrentUser } from "@/auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MessageCircle } from "lucide-react";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import ProjectDetailSkeleton from "./_components/project-detail-skeleton";
 import { fetchProjectMetaData } from "./_db/queries.server";
+
 const UserInfo = dynamic(
 	() =>
 		import("@/app/[locale]/_components/user-info.server").then(
@@ -31,6 +34,19 @@ const DynamicProjectLikeButton = dynamic(() =>
 		(mod) => mod.ProjectLikeButton,
 	),
 );
+
+const DynamicProjectCommentForm = dynamic(() =>
+	import("./_components/comment/_components/project-comment-form/client").then(
+		(mod) => mod.ProjectCommentForm,
+	),
+);
+
+const DynamicProjectCommentList = dynamic(() =>
+	import("./_components/comment/_components/project-comment-list/server").then(
+		(mod) => mod.ProjectCommentList,
+	),
+);
+
 interface ProjectPageProps {
 	params: Promise<{
 		handle: string;
@@ -65,19 +81,25 @@ export async function generateMetadata({ params }: ProjectPageProps) {
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
-	const { id, locale } = await params;
-
+	const { id, locale, handle } = await params;
+	const currentUser = await getCurrentUser();
 	const projectDetail = await fetchProjectDetail(id, locale);
 	if (!projectDetail) {
 		return notFound();
 	}
 
 	return (
-		<div className=" py-8">
+		<div className="py-8">
 			<DynamicProject projectDetail={projectDetail} locale={locale} />
 			<div className="py-4">
 				<UserInfo handle={projectDetail.user.handle} />
 			</div>
+			<div className="flex items-center gap-4">
+				<DynamicProjectLikeButton projectId={projectDetail.id} showCount />
+				<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
+				<span>{projectDetail.commentsCount}</span>
+			</div>
+
 			<DynamicFloatingControls
 				likeButton={
 					<DynamicProjectLikeButton
@@ -87,6 +109,23 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 					/>
 				}
 			/>
+
+			<div className="mt-8">
+				<div className="mt-8" id="comments">
+					<div className="flex items-center gap-2 py-2">
+						<h2 className="text-2xl not-prose font-bold">Comments</h2>
+					</div>
+					<DynamicProjectCommentList
+						projectId={projectDetail.id}
+						userLocale={locale}
+					/>
+				</div>
+				<DynamicProjectCommentForm
+					projectId={projectDetail.id}
+					currentHandle={currentUser?.handle}
+					userLocale={locale}
+				/>
+			</div>
 		</div>
 	);
 }

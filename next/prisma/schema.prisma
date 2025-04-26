@@ -2,47 +2,50 @@ generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
 }
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id                                 String                              @id @default(cuid())
-  handle                             String                              @unique @default(cuid())
-  email                              String                              @unique
-  name                               String
-  image                              String
-  profile                            String                              @default("")
-  twitterHandle                      String                              @default("")
-  plan                               String                              @default("free")
-  totalPoints                        Int                                 @default(0) @map("total_points")
-  isAI                               Boolean                             @default(false) @map("is_ai")
-  provider                           String                              @default("Credentials")
-  createdAt                          DateTime                            @default(now()) @map("created_at")
-  updatedAt                          DateTime                            @updatedAt @map("updated_at")
-  emailVerified                      DateTime?
-  credential                         UserCredential?
-  geminiApiKey                       GeminiApiKey?
-  pages                              Page[]
-  pageSegmentsTranslations           PageSegmentTranslation[]
-  votes                              Vote[]
-  likePages                          LikePage[]
-  followers                          Follow[]                            @relation("following")
-  following                          Follow[]                            @relation("follower")
-  pageComments                       PageComment[]
-  pageCommentSegmentTranslations     PageCommentSegmentTranslation[]
-  pageCommentSegmentTranslationVotes PageCommentSegmentTranslationVote[]
-  projects                           Project[]
-  accounts                           Account[]
-  sessions                           Session[]
-  notifications                      Notification[]                      @relation("UserNotifications")
-  actedNotifications                 Notification[]                      @relation("NotificationActor")
-  projectLikes                       ProjectLike[]
-  projectSegmentTranslations         ProjectSegmentTranslation[]
-  projectSegmentTranslationVotes     ProjectSegmentTranslationVote[]
-  translationJobs                    TranslationJob[]
+  id                                    String                                 @id @default(cuid())
+  handle                                String                                 @unique @default(cuid())
+  email                                 String                                 @unique
+  name                                  String
+  image                                 String
+  profile                               String                                 @default("")
+  twitterHandle                         String                                 @default("")
+  plan                                  String                                 @default("free")
+  totalPoints                           Int                                    @default(0) @map("total_points")
+  isAI                                  Boolean                                @default(false) @map("is_ai")
+  provider                              String                                 @default("Credentials")
+  createdAt                             DateTime                               @default(now()) @map("created_at")
+  updatedAt                             DateTime                               @updatedAt @map("updated_at")
+  emailVerified                         DateTime?
+  credential                            UserCredential?
+  geminiApiKey                          GeminiApiKey?
+  pages                                 Page[]
+  pageSegmentsTranslations              PageSegmentTranslation[]
+  votes                                 Vote[]
+  likePages                             LikePage[]
+  followers                             Follow[]                               @relation("following")
+  following                             Follow[]                               @relation("follower")
+  pageComments                          PageComment[]
+  pageCommentSegmentTranslations        PageCommentSegmentTranslation[]
+  pageCommentSegmentTranslationVotes    PageCommentSegmentTranslationVote[]
+  projects                              Project[]
+  accounts                              Account[]
+  sessions                              Session[]
+  notifications                         Notification[]                         @relation("UserNotifications")
+  actedNotifications                    Notification[]                         @relation("NotificationActor")
+  projectLikes                          ProjectLike[]
+  projectSegmentTranslations            ProjectSegmentTranslation[]
+  projectSegmentTranslationVotes        ProjectSegmentTranslationVote[]
+  translationJobs                       TranslationJob[]
+  projectComments                       ProjectComment[]
+  projectCommentSegmentTranslations     ProjectCommentSegmentTranslation[]
+  projectCommentSegmentTranslationVotes ProjectCommentSegmentTranslationVote[]
 
   @@map("users")
 }
@@ -118,7 +121,7 @@ enum PageStatus {
 model Page {
   id              Int              @id @default(autoincrement())
   slug            String           @unique
-  mdastJson       Json            @map("mdast_json")
+  mdastJson       Json             @map("mdast_json")
   sourceLocale    String           @default("unknown") @map("source_locale")
   status          PageStatus       @default(DRAFT)
   createdAt       DateTime         @default(now()) @map("created_at")
@@ -235,7 +238,7 @@ model Vote {
 
 model PageComment {
   id                  Int                  @id @default(autoincrement())
-  mdastJson       Json            @map("mdast_json")
+  mdastJson           Json                 @map("mdast_json")
   locale              String
   userId              String               @map("user_id")
   pageId              Int                  @map("page_id")
@@ -313,7 +316,7 @@ model Project {
   id           String   @id @default(cuid())
   userId       String   @map("user_id")
   title        String
-  mdastJson       Json            @map("mdast_json")
+  mdastJson    Json     @map("mdast_json")
   sourceLocale String   @default("unknown") @map("source_locale")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -327,6 +330,7 @@ model Project {
   projectSegments     ProjectSegment[]
   translationJobs     TranslationJob[]
   iconImage           ProjectImage?        @relation("ProjectIcon", fields: [iconImageId], references: [id], onDelete: SetNull)
+  projectComments     ProjectComment[]
 
   @@map("projects")
 }
@@ -417,6 +421,7 @@ model ProjectSegmentTranslation {
   projectSegment                 ProjectSegment                  @relation(fields: [projectSegmentId], references: [id], onDelete: Cascade)
   user                           User                            @relation(fields: [userId], references: [id], onDelete: Cascade)
   projectSegmentTranslationVotes ProjectSegmentTranslationVote[]
+  notifications                  Notification[]
 
   @@index([projectSegmentId])
   @@index([userId])
@@ -468,6 +473,10 @@ enum NotificationType {
   PAGE_LIKE
   PAGE_SEGMENT_TRANSLATION_VOTE
   PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE
+  PROJECT_COMMENT
+  PROJECT_LIKE
+  PROJECT_SEGMENT_TRANSLATION_VOTE
+  PROJECT_COMMENT_SEGMENT_TRANSLATION_VOTE
 }
 
 model Notification {
@@ -478,18 +487,25 @@ model Notification {
   read      Boolean          @default(false)
   createdAt DateTime         @default(now()) @map("created_at")
 
-  pageId                          Int? @map("page_id")
-  pageCommentId                   Int? @map("page_comment_id")
-  pageSegmentTranslationId        Int? @map("page_segment_translation_id")
-  pageCommentSegmentTranslationId Int? @map("page_comment_segment_translation_id")
+  pageId                             Int? @map("page_id")
+  pageCommentId                      Int? @map("page_comment_id")
+  pageSegmentTranslationId           Int? @map("page_segment_translation_id")
+  pageCommentSegmentTranslationId    Int? @map("page_comment_segment_translation_id")
+  projectId                          String? @map("project_id")
+  projectCommentId                   Int? @map("project_comment_id")
+  projectSegmentTranslationId        Int? @map("project_segment_translation_id")
+  projectCommentSegmentTranslationId Int? @map("project_comment_segment_translation_id")
 
   user  User @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
   actor User @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
 
-  page                          Page?                          @relation(fields: [pageId], references: [id])
-  pageComment                   PageComment?                   @relation(fields: [pageCommentId], references: [id])
-  pageSegmentTranslation        PageSegmentTranslation?        @relation(fields: [pageSegmentTranslationId], references: [id])
-  pageCommentSegmentTranslation PageCommentSegmentTranslation? @relation(fields: [pageCommentSegmentTranslationId], references: [id])
+  page                             Page?                             @relation(fields: [pageId], references: [id])
+  pageComment                      PageComment?                      @relation(fields: [pageCommentId], references: [id])
+  pageSegmentTranslation           PageSegmentTranslation?           @relation(fields: [pageSegmentTranslationId], references: [id])
+  pageCommentSegmentTranslation    PageCommentSegmentTranslation?    @relation(fields: [pageCommentSegmentTranslationId], references: [id])
+  projectComment                   ProjectComment?                   @relation(fields: [projectCommentId], references: [id])
+  projectCommentSegmentTranslation ProjectCommentSegmentTranslation? @relation(fields: [projectCommentSegmentTranslationId], references: [id])
+  projectSegmentTranslation        ProjectSegmentTranslation?        @relation(fields: [projectSegmentTranslationId], references: [id])
 
   @@index([userId])
   @@index([actorId])
@@ -512,4 +528,80 @@ model VerificationToken {
 
   @@id([identifier, token])
   @@map("verification_tokens")
+}
+
+model ProjectComment {
+  id                     Int                     @id @default(autoincrement())
+  mdastJson              Json                    @map("mdast_json")
+  sourceLocale           String                  @default("unknown") @map("source_locale")
+  userId                 String                  @map("user_id")
+  projectId              String                  @map("project_id")
+  parentId               Int?                    @map("parent_id")
+  createdAt              DateTime                @default(now()) @map("created_at")
+  updatedAt              DateTime                @updatedAt @map("updated_at")
+  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project                Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent                 ProjectComment?         @relation("ProjectCommentReplies", fields: [parentId], references: [id], onDelete: SetNull)
+  replies                ProjectComment[]        @relation("ProjectCommentReplies")
+  projectCommentSegments ProjectCommentSegment[]
+  notifications          Notification[]
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([createdAt])
+  @@map("project_comments")
+}
+
+model ProjectCommentSegment {
+  id                                Int                                @id @default(autoincrement())
+  text                              String
+  number                            Int
+  textAndOccurrenceHash             String                             @map("text_and_occurrence_hash")
+  projectCommentId                  Int                                @map("project_comment_id")
+  createdAt                         DateTime                           @default(now()) @map("created_at")
+  updatedAt                         DateTime                           @updatedAt @map("updated_at")
+  projectComment                    ProjectComment                     @relation(fields: [projectCommentId], references: [id], onDelete: Cascade)
+  projectCommentSegmentTranslations ProjectCommentSegmentTranslation[]
+
+  @@unique([projectCommentId, number])
+  @@unique([projectCommentId, textAndOccurrenceHash])
+  @@index([projectCommentId])
+  @@index([textAndOccurrenceHash])
+  @@map("project_comment_segments")
+}
+
+model ProjectCommentSegmentTranslation {
+  id                                    Int                                    @id @default(autoincrement())
+  locale                                String
+  text                                  String
+  userId                                String                                 @map("user_id")
+  point                                 Int                                    @default(0)
+  createdAt                             DateTime                               @default(now()) @map("created_at")
+  updatedAt                             DateTime                               @updatedAt @map("updated_at")
+  user                                  User                                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectCommentSegmentId               Int                                    @map("project_comment_segment_id")
+  projectCommentSegment                 ProjectCommentSegment                  @relation(fields: [projectCommentSegmentId], references: [id], onDelete: Cascade)
+  projectCommentSegmentTranslationVotes ProjectCommentSegmentTranslationVote[]
+  notifications                         Notification[]
+
+  @@index([projectCommentSegmentId])
+  @@index([userId])
+  @@index([locale])
+  @@map("project_comment_segment_translations")
+}
+
+model ProjectCommentSegmentTranslationVote {
+  id                                 Int                                @id @default(autoincrement())
+  userId                             String                           @map("user_id")
+  projectCommentSegmentTranslationId Int                                @map("project_comment_segment_translation_id")
+  isUpvote                           Boolean                          @map("is_upvote")
+  createdAt                          DateTime                         @default(now()) @map("created_at")
+  updatedAt                          DateTime                         @updatedAt @map("updated_at")
+  projectCommentSegmentTranslation   ProjectCommentSegmentTranslation @relation(fields: [projectCommentSegmentTranslationId], references: [id], onDelete: Cascade)
+  user                               User                             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectCommentSegmentTranslationId, userId])
+  @@index([projectCommentSegmentTranslationId])
+  @@index([userId])
+  @@map("project_comment_segment_translation_votes")
 }

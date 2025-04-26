@@ -43,6 +43,10 @@ const sampleNotifications: NotificationWithRelations[] = [
 		},
 		pageSegmentTranslation: null,
 		pageCommentSegmentTranslation: null,
+		projectCommentId: null,
+		projectId: null,
+		projectSegmentTranslationId: null,
+		projectCommentSegmentTranslationId: null,
 	},
 	{
 		id: 2,
@@ -72,6 +76,10 @@ const sampleNotifications: NotificationWithRelations[] = [
 		pageComment: null,
 		pageSegmentTranslation: null,
 		pageCommentSegmentTranslation: null,
+		projectCommentId: null,
+		projectId: null,
+		projectSegmentTranslationId: null,
+		projectCommentSegmentTranslationId: null,
 	},
 	{
 		id: 3,
@@ -98,6 +106,10 @@ const sampleNotifications: NotificationWithRelations[] = [
 		pageComment: null,
 		pageSegmentTranslation: null,
 		pageCommentSegmentTranslation: null,
+		projectCommentId: null,
+		projectId: null,
+		projectSegmentTranslationId: null,
+		projectCommentSegmentTranslationId: null,
 	},
 	{
 		id: 4,
@@ -136,6 +148,10 @@ const sampleNotifications: NotificationWithRelations[] = [
 			},
 		},
 		pageCommentSegmentTranslation: null,
+		projectCommentId: null,
+		projectId: null,
+		projectSegmentTranslationId: null,
+		projectCommentSegmentTranslationId: null,
 	},
 ];
 
