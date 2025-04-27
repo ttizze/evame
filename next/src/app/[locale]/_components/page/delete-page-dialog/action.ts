@@ -11,8 +11,6 @@ export const archivePageAction = createDeleteAction({
 
 	buildRevalidatePaths: (_input, userHandle) => [
 		`/user/${userHandle}/page-management`,
+		`/user/${userHandle}`,
 	],
-
-	buildSuccessRedirect: (_input, userHandle) =>
-		`/user/${userHandle}/page-management`,
 });

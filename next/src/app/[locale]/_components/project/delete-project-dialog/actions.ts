@@ -12,8 +12,6 @@ export const deleteProjectAction = createDeleteAction({
 
 	buildRevalidatePaths: (_input, userHandle) => [
 		`/user/${userHandle}/project-management`,
+		`/user/${userHandle}`,
 	],
-
-	buildSuccessRedirect: (_input, userHandle) =>
-		`/user/${userHandle}/project-management`,
 });

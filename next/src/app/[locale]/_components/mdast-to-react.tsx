@@ -52,7 +52,8 @@ export async function mdastToReact({
 	mdast,
 	bundles,
 	currentHandle,
-}: Params): Promise<ReactElement> {
+}: Params): Promise<ReactElement | null> {
+	if (!mdast || Object.keys(mdast).length === 0) return null;
 	const segmentComponents = Object.fromEntries(
 		SEGMENTABLE.map((tag) => [tag, wrapSegment(tag, bundles, currentHandle)]),
 	);
