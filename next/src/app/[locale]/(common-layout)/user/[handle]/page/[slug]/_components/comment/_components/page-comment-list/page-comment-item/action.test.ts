@@ -41,6 +41,5 @@ describe("deletePageCommentAction", () => {
 
 		/* キャッシュ再検証 */
 		expect(revalidatePath).toHaveBeenCalledWith("/user/t/page/99");
-
 	});
 });

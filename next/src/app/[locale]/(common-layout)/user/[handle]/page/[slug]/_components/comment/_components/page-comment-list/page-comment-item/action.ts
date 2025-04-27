@@ -24,5 +24,4 @@ export const deletePageCommentAction = createDeleteAction({
 	buildRevalidatePaths: ({ pageId }, handle) => [
 		`/user/${handle}/page/${pageId}`,
 	],
-
 });
