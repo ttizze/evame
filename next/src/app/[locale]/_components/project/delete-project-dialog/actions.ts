@@ -5,7 +5,7 @@ import { z } from "zod";
 import { deleteProject } from "./db/mutation.server";
 export const deleteProjectAction = createDeleteAction({
 	inputSchema: z.object({
-		projectId: z.string(),
+		projectId: z.coerce.number().min(1),
 	}),
 	deleteById: ({ projectId }, userId) =>
 		deleteProject(projectId, userId).then(() => {}),

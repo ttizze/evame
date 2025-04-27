@@ -43,7 +43,7 @@ export async function translate(params: TranslateJobParams) {
 				params.projectId,
 				params.title,
 				params.targetContentType,
-				params.commentId,
+				params.pageCommentId,
 			);
 			const progress = ((i + 1) / totalChunks) * 100;
 			await updateTranslationJob(
@@ -73,7 +73,7 @@ async function translateChunk(
 	numberedElements: NumberedElement[],
 	targetLocale: string,
 	pageId?: number,
-	projectId?: string,
+	projectId?: number,
 	title?: string,
 	targetContentType?: TargetContentType,
 	commentId?: number,

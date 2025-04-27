@@ -13,7 +13,7 @@ type ProjectJobParams = {
 	aiModel: string;
 	locale: string;
 	userId?: string;
-	projectId: string;
+	projectId: number;
 	pageId?: never;
 };
 

@@ -12,7 +12,7 @@ import { useState } from "react";
 import { DeleteProjectDialogClient } from "../delete-project-dialog/client";
 
 interface ProjectActionsDropdownProps {
-	projectId: string;
+	projectId: number;
 	projectOwnerHandle: string;
 	className?: string;
 }

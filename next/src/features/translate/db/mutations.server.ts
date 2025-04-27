@@ -21,7 +21,7 @@ export async function updateTranslationJob(
 	progress: number,
 	userId?: string,
 	pageId?: number,
-	projectId?: string,
+	projectId?: number,
 ) {
 	return await prisma.translationJob.update({
 		where: {

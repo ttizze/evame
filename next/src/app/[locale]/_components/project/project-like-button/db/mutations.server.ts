@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-export async function toggleProjectLike(projectId: string, userId: string) {
+export async function toggleProjectLike(projectId: number, userId: string) {
 	const project = await prisma.project.findUnique({ where: { id: projectId } });
 	if (!project) {
 		throw new Error("Project not found");

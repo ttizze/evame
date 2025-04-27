@@ -1,33 +1,5 @@
 import { prisma } from "@/lib/prisma";
 
-export async function fetchPageWithPageSegments(pageId: number) {
-	const pageWithSegments = await prisma.page.findFirst({
-		where: { id: pageId },
-		select: {
-			id: true,
-			slug: true,
-			createdAt: true,
-			pageSegments: {
-				select: {
-					id: true,
-					number: true,
-					text: true,
-				},
-			},
-		},
-	});
-
-	if (!pageWithSegments) return null;
-	const title = pageWithSegments.pageSegments.filter(
-		(item) => item.number === 0,
-	)[0].text;
-
-	return {
-		...pageWithSegments,
-		title,
-	};
-}
-
 export async function fetchLatestUserTranslationJob(
 	pageId: number,
 	userId: string,
@@ -63,25 +35,4 @@ export async function fetchIsLikedByUser(
 		return !!like;
 	}
 	return false;
-}
-
-export async function fetchPageWithTitleAndComments(pageId: number) {
-	const pageWithComments = await prisma.page.findFirst({
-		where: { id: pageId },
-		include: {
-			pageSegments: { where: { number: 0 } },
-			pageComments: {
-				include: {
-					pageCommentSegments: true,
-				},
-			},
-		},
-	});
-	if (!pageWithComments) return null;
-	const title = pageWithComments?.pageSegments[0].text;
-	if (!title) return null;
-	return {
-		...pageWithComments,
-		title,
-	};
 }

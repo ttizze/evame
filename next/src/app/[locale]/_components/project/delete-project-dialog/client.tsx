@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { deleteProjectAction } from "./actions";
 
 interface DeleteProjectDialogClientProps {
-	projectId: string;
+	projectId: number;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }

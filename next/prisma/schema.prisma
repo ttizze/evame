@@ -94,7 +94,7 @@ enum TranslationStatus {
 model TranslationJob {
   id        Int      @id @default(autoincrement())
   pageId    Int?
-  projectId String?
+  projectId Int?
   // リレーション
   page      Page?    @relation(fields: [pageId], references: [id], onDelete: Cascade)
   project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
@@ -313,14 +313,15 @@ model PageCommentSegmentTranslationVote {
 }
 
 model Project {
-  id           String   @id @default(cuid())
+  id           Int      @id @default(autoincrement())
+  slug         String   @unique
   userId       String   @map("user_id")
   title        String
   mdastJson    Json     @map("mdast_json")
   sourceLocale String   @default("unknown") @map("source_locale")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
-  iconImageId  String?  @unique @map("icon_image_id")
+  iconImageId  Int?     @unique @map("icon_image_id")
 
   user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   links               ProjectLink[]
@@ -336,8 +337,8 @@ model Project {
 }
 
 model ProjectLink {
-  id          String @id @default(cuid())
-  projectId   String @map("project_id")
+id          Int    @id @default(autoincrement())
+  projectId   Int @map("project_id")
   description String @default("")
   url         String
 
@@ -347,8 +348,8 @@ model ProjectLink {
 }
 
 model ProjectImage {
-  id        String @id @default(cuid())
-  projectId String @map("project_id")
+  id        Int    @id @default(autoincrement())
+  projectId Int    @map("project_id")
   url       String
   caption   String @default("")
   order     Int    @default(0)
@@ -360,7 +361,7 @@ model ProjectImage {
 }
 
 model ProjectTag {
-  id                  String               @id @default(cuid())
+  id                  Int                  @id @default(autoincrement())
   name                String               @unique
   projectTagRelations ProjectTagRelation[]
 
@@ -368,8 +369,8 @@ model ProjectTag {
 }
 
 model ProjectTagRelation {
-  projectId    String @map("project_id")
-  projectTagId String @map("project_tag_id")
+  projectId    Int @map("project_id")
+  projectTagId Int @map("project_tag_id")
 
   project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
   projectTag ProjectTag @relation(fields: [projectTagId], references: [id], onDelete: Cascade)
@@ -379,8 +380,8 @@ model ProjectTagRelation {
 }
 
 model ProjectLike {
-  id        String   @id @default(cuid())
-  projectId String   @map("project_id")
+  id        Int      @id @default(autoincrement())
+  projectId Int      @map("project_id")
   userId    String   @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -397,7 +398,7 @@ model ProjectSegment {
   textAndOccurrenceHash      String                      @map("text_and_occurrence_hash")
   projectSegmentTranslations ProjectSegmentTranslation[]
   project                    Project                     @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectId                  String                      @map("project_id")
+  projectId                  Int                         @map("project_id")
   createdAt                  DateTime                    @default(now()) @map("created_at")
   updatedAt                  DateTime                    @updatedAt @map("updated_at")
 
@@ -535,7 +536,7 @@ model ProjectComment {
   mdastJson              Json                    @map("mdast_json")
   sourceLocale           String                  @default("unknown") @map("source_locale")
   userId                 String                  @map("user_id")
-  projectId              String                  @map("project_id")
+  projectId              Int                     @map("project_id")
   parentId               Int?                    @map("parent_id")
   createdAt              DateTime                @default(now()) @map("created_at")
   updatedAt              DateTime                @updatedAt @map("updated_at")

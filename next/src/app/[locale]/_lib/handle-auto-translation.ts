@@ -1,7 +1,10 @@
-import { fetchPageWithPageSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
-import { fetchPageWithTitleAndComments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
-import { fetchProjectWithProjectSegments } from "@/app/[locale]/_db/project-queries.server";
+import { fetchPageWithPageSegments } from "@/app/[locale]/_db/page-queries.server";
+import { fetchPageWithTitleAndComments } from "@/app/[locale]/_db/page-queries.server";
+import {
+	fetchProjectWithProjectSegments,
+	fetchProjectWithTitleAndComments,
+} from "@/app/[locale]/_db/project-queries.server";
 import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslateJobParams } from "@/features/translate/types";
 import type { TranslationJob } from "@prisma/client";
@@ -13,34 +16,41 @@ interface BaseTranslationParams {
 	geminiApiKey: string;
 }
 
-interface PageTranslationParams extends BaseTranslationParams {
+export interface PageTranslationParams extends BaseTranslationParams {
+	type: "page";
 	pageId: number;
 }
 
-interface ProjectTranslationParams extends BaseTranslationParams {
-	projectId: string;
+export interface ProjectTranslationParams extends BaseTranslationParams {
+	type: "project";
+	projectId: number;
 }
 
-interface PageCommentTranslationParams extends PageTranslationParams {
+export interface PageCommentTranslationParams extends BaseTranslationParams {
+	type: "pageComment";
+	pageId: number;
 	pageCommentId: number;
 }
 
-interface ProjectCommentTranslationParams extends ProjectTranslationParams {
+export interface ProjectCommentTranslationParams extends BaseTranslationParams {
+	type: "projectComment";
+	projectId: number;
 	projectCommentId: number;
 }
 
-type TranslationParams =
-	| (PageTranslationParams & { type: "page" })
-	| (PageCommentTranslationParams & { type: "pageComment" })
-	| (ProjectTranslationParams & { type: "project" })
-	| (ProjectCommentTranslationParams & { type: "projectComment" });
+export type TranslationParams =
+	| PageTranslationParams
+	| ProjectTranslationParams
+	| PageCommentTranslationParams
+	| ProjectCommentTranslationParams;
 
 // 依存関係を明示的に注入するためのインターフェース
-interface TranslationDependencies {
+export interface TranslationDependencies {
 	createTranslationJob: typeof createTranslationJob;
 	fetchPageWithPageSegments: typeof fetchPageWithPageSegments;
 	fetchPageWithTitleAndComments: typeof fetchPageWithTitleAndComments;
 	fetchProjectWithProjectSegments: typeof fetchProjectWithProjectSegments;
+	fetchProjectWithTitleAndComments: typeof fetchProjectWithTitleAndComments;
 	fetchTranslateAPI: (
 		url: string,
 		params: TranslateJobParams,
@@ -54,6 +64,7 @@ const defaultDependencies: TranslationDependencies = {
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
 	fetchProjectWithProjectSegments,
+	fetchProjectWithTitleAndComments,
 	fetchTranslateAPI: async (url, params) => {
 		return fetch(url, {
 			method: "POST",
@@ -63,159 +74,82 @@ const defaultDependencies: TranslationDependencies = {
 	delay: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 };
 
-export async function handleAutoTranslation(
-	params: TranslationParams,
-	dependencies: Partial<TranslationDependencies> = {},
+export interface TranslationStrategy<T extends TranslationParams> {
+	createJob(
+		deps: TranslationDependencies,
+		params: T,
+		locale: string,
+	): Promise<TranslationJob>;
+
+	buildJobParams(
+		deps: TranslationDependencies,
+		params: T,
+		job: TranslationJob,
+		locale: string,
+	): Promise<TranslateJobParams>;
+}
+import pLimit from "p-limit";
+
+import {
+	pageCommentStrategy,
+	pageStrategy,
+	projectCommentStrategy,
+	projectStrategy,
+} from "./translation-strategies";
+
+type StrategyMap = {
+	[K in TranslationParams["type"]]: TranslationStrategy<
+		Extract<TranslationParams, { type: K }>
+	>;
+};
+
+const STRATEGY_TABLE: StrategyMap = {
+	page: pageStrategy,
+	pageComment: pageCommentStrategy,
+	project: projectStrategy,
+	projectComment: projectCommentStrategy,
+};
+
+const CONCURRENCY = 3;
+const limit = pLimit(CONCURRENCY);
+
+export async function handleAutoTranslation<T extends TranslationParams>(
+	params: T,
+	deps: TranslationDependencies,
 ): Promise<void> {
-	// デフォルトの依存関係とカスタム依存関係をマージ
-	const deps = { ...defaultDependencies, ...dependencies };
+	const strategy = STRATEGY_TABLE[params.type] as TranslationStrategy<T>;
 
-	const { currentUserId, sourceLocale, geminiApiKey, type } = params;
-
-	const targetLocales = TARGET_LOCALES.filter(
-		(locale) => locale !== sourceLocale,
+	const targetLocales = ["en", "ja", "zh", "ko"].filter(
+		(l) => l !== params.sourceLocale,
 	);
 
-	for (const targetLocale of targetLocales) {
-		let translationJob: TranslationJob;
-		let jobParams: TranslateJobParams;
-
-		if (type === "page") {
-			const { pageId } = params;
-			// 翻訳情報を作成
-			translationJob = await deps.createTranslationJob({
-				userId: currentUserId,
-				pageId,
-				locale: targetLocale,
-				aiModel: "gemini-1.5-flash",
-			});
-
-			// ページデータを取得
-			const pageWithPageSegments = await deps.fetchPageWithPageSegments(pageId);
-			if (!pageWithPageSegments) {
-				throw new Error("Page with page segments not found");
-			}
-
-			// 翻訳ジョブのパラメータを設定
-			jobParams = {
-				translationJobId: translationJob.id,
-				geminiApiKey: geminiApiKey,
-				aiModel: "gemini-1.5-flash",
-				userId: currentUserId,
-				pageId: pageId,
-				targetLocale,
-				targetContentType: type,
-				title: pageWithPageSegments.title,
-				numberedElements: pageWithPageSegments.pageSegments.map((st) => ({
-					number: st.number,
-					text: st.text,
-				})),
-			};
-		} else if (type === "project") {
-			const { projectId } = params;
-			// 翻訳情報を作成
-			translationJob = await deps.createTranslationJob({
-				userId: currentUserId,
-				projectId,
-				locale: targetLocale,
-				aiModel: "gemini-1.5-flash",
-			});
-
-			// プロジェクトデータを取得
-			const projectWithSegments =
-				await deps.fetchProjectWithProjectSegments(projectId);
-			if (!projectWithSegments) {
-				throw new Error("Project with segments not found");
-			}
-
-			// 翻訳ジョブのパラメータを設定
-			jobParams = {
-				translationJobId: translationJob.id,
-				geminiApiKey: geminiApiKey,
-				aiModel: "gemini-1.5-flash",
-				userId: currentUserId,
-				projectId: projectId,
-				targetLocale,
-				targetContentType: type,
-				title: projectWithSegments.title,
-				numberedElements: projectWithSegments.pageSegments.map((st) => ({
-					number: st.number,
-					text: st.text,
-				})),
-			};
-		} else if (type === "pageComment") {
-			const { pageId, pageCommentId } = params;
-			// 翻訳情報を作成
-			translationJob = await deps.createTranslationJob({
-				userId: currentUserId,
-				pageId,
-				locale: targetLocale,
-				aiModel: "gemini-1.5-flash",
-			});
-
-			// ページデータを取得し、特定のコメントを見つける
-			const pageWithTitleAndComments =
-				await deps.fetchPageWithTitleAndComments(pageId);
-			if (!pageWithTitleAndComments) {
-				throw new Error("Page with title and comments not found");
-			}
-
-			// 特定のコメントIDを使用して対象のコメントを見つける
-			const targetComment = pageWithTitleAndComments.pageComments.find(
-				(comment) => comment.id === pageCommentId,
-			);
-
-			if (!targetComment) {
-				throw new Error(`Comment with ID ${pageCommentId} not found`);
-			}
-
-			// コメントセグメントを準備
-			const segments = targetComment.pageCommentSegments.map((segment) => ({
-				number: segment.number,
-				text: segment.text,
-			}));
-
-			// タイトルを追加
-			segments.push({
-				number: 0,
-				text: pageWithTitleAndComments.title,
-			});
-
-			// 翻訳ジョブのパラメータを設定
-			jobParams = {
-				translationJobId: translationJob.id,
-				geminiApiKey: geminiApiKey,
-				aiModel: "gemini-1.5-flash",
-				userId: currentUserId,
-				pageId: pageWithTitleAndComments.id,
-				targetLocale,
-				title: pageWithTitleAndComments.title,
-				numberedElements: segments,
-				targetContentType: type,
-				commentId: pageCommentId,
-			};
-		} else {
-			throw new Error(`Unsupported translation type: ${type}`);
-		}
-
-		// 翻訳APIを呼び出し
-		await deps.fetchTranslateAPI(`${BASE_URL}/api/translate`, jobParams);
-
-		// 各言語の翻訳リクエスト間に少し間隔を空ける
-		await deps.delay(1000);
-	}
+	await Promise.all(
+		targetLocales.map((locale) =>
+			limit(async () => {
+				const job = await strategy.createJob(deps, params, locale);
+				const body = await strategy.buildJobParams(deps, params, job, locale);
+				await deps.fetchTranslateAPI(`${BASE_URL}/api/translate`, body);
+				await deps.delay(1000);
+			}),
+		),
+	);
 }
-
 // ページ翻訳のためのヘルパー関数
+
 export async function handlePageAutoTranslation({
 	currentUserId,
 	pageId,
 	sourceLocale,
 	geminiApiKey,
 	dependencies = {},
-}: PageTranslationParams & {
+}: Omit<PageTranslationParams, "type"> & {
 	dependencies?: Partial<TranslationDependencies>;
 }): Promise<void> {
+	const deps: TranslationDependencies = {
+		...defaultDependencies,
+		...dependencies,
+	};
+
 	return handleAutoTranslation(
 		{
 			type: "page",
@@ -224,10 +158,9 @@ export async function handlePageAutoTranslation({
 			sourceLocale,
 			geminiApiKey,
 		},
-		dependencies,
+		deps,
 	);
 }
-
 // プロジェクト翻訳のためのヘルパー関数
 export async function handleProjectAutoTranslation({
 	currentUserId,
@@ -235,9 +168,14 @@ export async function handleProjectAutoTranslation({
 	sourceLocale,
 	geminiApiKey,
 	dependencies = {},
-}: ProjectTranslationParams & {
+}: Omit<ProjectTranslationParams, "type"> & {
 	dependencies?: Partial<TranslationDependencies>;
 }): Promise<void> {
+	const deps: TranslationDependencies = {
+		...defaultDependencies,
+		...dependencies,
+	};
+
 	return handleAutoTranslation(
 		{
 			type: "project",
@@ -246,7 +184,7 @@ export async function handleProjectAutoTranslation({
 			sourceLocale,
 			geminiApiKey,
 		},
-		dependencies,
+		deps,
 	);
 }
 
@@ -258,9 +196,14 @@ export async function handleCommentAutoTranslation({
 	sourceLocale,
 	geminiApiKey,
 	dependencies = {},
-}: PageCommentTranslationParams & {
+}: Omit<PageCommentTranslationParams, "type"> & {
 	dependencies?: Partial<TranslationDependencies>;
 }): Promise<void> {
+	const deps: TranslationDependencies = {
+		...defaultDependencies,
+		...dependencies,
+	};
+
 	return handleAutoTranslation(
 		{
 			type: "pageComment",
@@ -270,7 +213,7 @@ export async function handleCommentAutoTranslation({
 			sourceLocale,
 			geminiApiKey,
 		},
-		dependencies,
+		deps,
 	);
 }
 
@@ -282,9 +225,14 @@ export async function handleProjectCommentAutoTranslation({
 	sourceLocale,
 	geminiApiKey,
 	dependencies = {},
-}: ProjectCommentTranslationParams & {
+}: Omit<ProjectCommentTranslationParams, "type"> & {
 	dependencies?: Partial<TranslationDependencies>;
 }): Promise<void> {
+	const deps: TranslationDependencies = {
+		...defaultDependencies,
+		...dependencies,
+	};
+
 	return handleAutoTranslation(
 		{
 			type: "projectComment",
@@ -294,6 +242,6 @@ export async function handleProjectCommentAutoTranslation({
 			sourceLocale,
 			geminiApiKey,
 		},
-		dependencies,
+		deps,
 	);
 }

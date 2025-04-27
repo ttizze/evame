@@ -8,7 +8,7 @@ import { type ProjectLikeButtonState, toggleProjectLikeAction } from "./action";
 interface ProjectLikeButtonClientProps {
 	liked: boolean;
 	likeCount: number;
-	projectId: string;
+	projectId: number;
 	showCount?: boolean;
 	className?: string;
 }

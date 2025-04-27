@@ -10,7 +10,7 @@ export async function getPageSegments(pageId: number) {
 	});
 }
 
-export async function getProjectSegments(projectId: string) {
+export async function getProjectSegments(projectId: number) {
 	return await prisma.projectSegment.findMany({
 		where: { projectId },
 		select: {

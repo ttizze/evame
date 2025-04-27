@@ -12,8 +12,8 @@ interface NewPageButtonProps {
 
 const generateSlug = () =>
 	customAlphabet(
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-		8,
+		"0123456789abcdefghijklmnopqrstuvwxyz",
+		12,
 	)();
 
 export const NewPageButton = ({ handle }: NewPageButtonProps) => {

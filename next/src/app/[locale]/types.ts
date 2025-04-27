@@ -34,7 +34,7 @@ export interface UserVote {
 /** React へ渡す統一バンドル */
 export interface SegmentBundle {
 	parentType: TargetContentType;
-	parentId: string | number;
+	parentId: number;
 	segment: BaseSegment;
 	translations: BaseTranslation[];
 	best: BaseTranslation | null;

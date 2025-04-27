@@ -21,7 +21,7 @@ export function toSegmentBundles<
 	},
 >(
 	parentType: TargetContentType,
-	parentId: string | number,
+	parentId: number,
 	rawSegments: readonly RawSegment[],
 ): SegmentBundle[] {
 	return rawSegments.map((seg) => {

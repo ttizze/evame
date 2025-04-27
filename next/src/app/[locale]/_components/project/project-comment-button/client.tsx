@@ -6,7 +6,7 @@ import { MessageCircle } from "lucide-react";
 
 type ProjectCommentButtonProps = {
 	commentCount: number;
-	projectId: string;
+	projectId: number;
 	userHandle?: string;
 	showCount?: boolean;
 	className?: string;
