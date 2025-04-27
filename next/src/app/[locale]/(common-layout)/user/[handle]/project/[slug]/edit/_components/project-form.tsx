@@ -93,10 +93,7 @@ export function ProjectForm({
 
 	useEffect(() => {
 		if (state.success) {
-			toast.success(
-				state.message ||
-				"Project updated successfully",
-			);
+			toast.success(state.message || "Project updated successfully");
 			// 新規作成時は一覧ページ、編集時は詳細ページへリダイレクト
 			const redirectPath = `/user/${userHandle}/project/${projectDetail.slug}`;
 			router.push(redirectPath);
@@ -148,12 +145,8 @@ export function ProjectForm({
 	return (
 		<div className="space-y-6 ">
 			<div>
-				<h1 className="text-2xl font-bold">
-					"Edit Project"
-				</h1>
-				<p className="text-muted-foreground">
-					"Update your project details"
-				</p>
+				<h1 className="text-2xl font-bold">"Edit Project"</h1>
+				<p className="text-muted-foreground">"Update your project details"</p>
 				<div className="text-sm text-muted-foreground mb-4">
 					<span className="text-red-500">*</span> Required fields
 				</div>
@@ -295,9 +288,7 @@ export function ProjectForm({
 						Cancel
 					</Button>
 					<Button type="submit" disabled={isPending}>
-						{isPending
-							? "Updating..."
-							: "Update Project"}
+						{isPending ? "Updating..." : "Update Project"}
 					</Button>
 				</div>
 			</form>
