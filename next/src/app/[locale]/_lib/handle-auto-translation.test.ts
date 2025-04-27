@@ -125,7 +125,7 @@ describe("handlePageAutoTranslation()", () => {
 describe("handleCommentAutoTranslation()", () => {
 	const commentParams = {
 		...baseParams,
-		commentId: 789,
+		pageCommentId: 789,
 		content: "This is a test comment",
 		sourceLocale: "en",
 	} as const;

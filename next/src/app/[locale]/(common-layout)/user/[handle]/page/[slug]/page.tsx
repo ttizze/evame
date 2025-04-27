@@ -160,7 +160,7 @@ export default async function Page({
 								latestUserTranslationJob={latestUserTranslationJob}
 								translationJobs={pageTranslationJobs}
 								sourceLocale={pageDetail.sourceLocale}
-								targetContentType="comment"
+								targetContentType="pageComment"
 								showIcons={false}
 							/>
 						</div>

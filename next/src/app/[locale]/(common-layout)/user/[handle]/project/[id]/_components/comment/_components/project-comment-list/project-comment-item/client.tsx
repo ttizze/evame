@@ -1,56 +1,51 @@
 "use client";
+
+import { CommentActionMenu } from "@/app/[locale]/_components/comment/comment-action-menu.client";
 import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Trash } from "lucide-react";
+import { useActionState } from "react";
 import type { ProjectCommentWithUserAndTranslations } from "../_lib/fetch-project-comments-with-user-and-translations";
+import {
+	type CommentDeleteActionResponse,
+	deleteProjectCommentAction,
+} from "./action";
+interface ProjectCommentItemClientProps {
+	projectComment: ProjectCommentWithUserAndTranslations[number];
+	currentHandle: string | undefined;
+}
 
 export function ProjectCommentItemClient({
 	projectComment,
 	currentHandle,
-}: {
-	projectComment: ProjectCommentWithUserAndTranslations[number];
-	currentHandle: string | undefined;
-}) {
-	const isMyComment = currentHandle === projectComment.user.handle;
+}: ProjectCommentItemClientProps) {
+	const [state, action, isPending] = useActionState<
+		CommentDeleteActionResponse,
+		FormData
+	>(deleteProjectCommentAction, { success: false });
 
-	if (!isMyComment) {
-		return null;
-	}
+	if (currentHandle !== projectComment.user.handle) return null;
 
 	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" size="icon" className="h-8 w-8">
-					<MoreHorizontal className="h-4 w-4" />
-					<span className="sr-only">Open menu</span>
-				</Button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end">
-				<DropdownMenuItem
-					disabled
-					className="text-destructive"
-					onClick={() => {
-						// 削除機能は未実装
-					}}
-				>
-					<Trash className="mr-2 h-4 w-4" />
-					Delete
-				</DropdownMenuItem>
-				<DropdownMenuItem
-					disabled
-					onClick={() => {
-						// 編集機能は未実装
-					}}
-				>
-					<Pencil className="mr-2 h-4 w-4" />
-					Edit
-				</DropdownMenuItem>
-			</DropdownMenuContent>
-		</DropdownMenu>
+		<CommentActionMenu>
+			<DropdownMenuItem asChild>
+				<form action={action} className="w-full">
+					<input
+						type="hidden"
+						name="projectCommentId"
+						value={projectComment.id}
+					/>
+					<input
+						type="hidden"
+						name="projectId"
+						value={projectComment.projectId}
+					/>
+					<Button type="submit" variant="ghost" disabled={isPending}>
+						<Trash className="mr-2 h-4 w-4" />
+						Delete
+					</Button>
+				</form>
+			</DropdownMenuItem>
+		</CommentActionMenu>
 	);
 }

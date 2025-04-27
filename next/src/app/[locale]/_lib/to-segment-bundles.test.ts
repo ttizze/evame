@@ -47,7 +47,7 @@ const rawSegments = [
 
 /* ---------- テスト ---------- */
 test("toSegmentBundles converts and selects best translation", () => {
-	const bundles = toSegmentBundles("comment", 99, rawSegments);
+	const bundles = toSegmentBundles("pageComment", 99, rawSegments);
 
 	// 構造チェック
 	expect(bundles).toHaveLength(1);

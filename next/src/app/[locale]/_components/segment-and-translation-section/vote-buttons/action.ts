@@ -1,6 +1,7 @@
 // app/serverActions/voteAction.ts
 "use server";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import { targetContentTypeValues } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { parseFormData } from "@/lib/parse-form-data";
@@ -14,7 +15,7 @@ import {
 const schema = z.object({
 	segmentTranslationId: z.coerce.number().int(),
 	isUpvote: z.string().transform((val) => val === "true"),
-	targetContentType: z.enum(["page", "comment", "project"]),
+	targetContentType: z.enum(targetContentTypeValues),
 });
 
 export type VoteTranslationActionResponse = ActionResponse<

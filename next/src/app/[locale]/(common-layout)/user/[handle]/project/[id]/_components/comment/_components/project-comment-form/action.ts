@@ -15,8 +15,8 @@ const createProjectCommentSchema = z.object({
 	projectId: z.string().min(1),
 	userLocale: z.string(),
 	content: z.string().min(1, "Comment cannot be empty"),
-	parentId: z.number().optional(),
-	projectCommentId: z.number().optional(),
+	parentId: z.coerce.number().optional(),
+	projectCommentId: z.coerce.number().optional(),
 });
 
 export type CommentActionResponse = ActionResponse<
@@ -74,7 +74,7 @@ export async function commentAction(
 
 	await handleProjectCommentAutoTranslation({
 		currentUserId: currentUser.id,
-		commentId: projectComment.id,
+		projectCommentId: projectComment.id,
 		projectId,
 		sourceLocale: locale,
 		geminiApiKey: process.env.GEMINI_API_KEY ?? "",

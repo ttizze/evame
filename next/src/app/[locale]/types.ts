@@ -1,3 +1,4 @@
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import type {
 	Page,
 	Project,
@@ -9,7 +10,6 @@ import type {
 	TagPage,
 } from "@prisma/client";
 import type { SanitizedUser } from "../types";
-
 export interface BaseSegment {
 	id: number;
 	number: number;
@@ -33,7 +33,7 @@ export interface UserVote {
 
 /** React へ渡す統一バンドル */
 export interface SegmentBundle {
-	parentType: "page" | "project" | "comment";
+	parentType: TargetContentType;
 	parentId: string | number;
 	segment: BaseSegment;
 	translations: BaseTranslation[];

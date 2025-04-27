@@ -1,8 +1,11 @@
 import { prisma } from "@/lib/prisma";
 
-export async function deletePageComment(pageCommentId: number, userId: string) {
-	return await prisma.pageComment.update({
-		where: { id: pageCommentId, userId },
+export async function deleteProjectComment(
+	projectCommentId: number,
+	userId: string,
+) {
+	return await prisma.projectComment.update({
+		where: { id: projectCommentId, userId },
 		data: {
 			mdastJson: {
 				type: "root",

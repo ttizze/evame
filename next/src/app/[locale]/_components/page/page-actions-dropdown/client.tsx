@@ -84,7 +84,7 @@ export function PageActionsDropdown({
 			<DeletePageDialog
 				open={deleteDialogOpen}
 				onOpenChange={setDeleteDialogOpen}
-				pageIds={[pageId]}
+				pageId={pageId}
 			/>
 		</DropdownMenu>
 	);

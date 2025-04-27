@@ -112,7 +112,7 @@ async function translateChunk(
 					targetLocale,
 					aiModel,
 				);
-			} else if (targetContentType === "comment") {
+			} else if (targetContentType === "pageComment") {
 				// コメント用の保存先テーブル or ロジック
 				if (!commentId || !pageId) {
 					throw new Error("Comment ID is required");

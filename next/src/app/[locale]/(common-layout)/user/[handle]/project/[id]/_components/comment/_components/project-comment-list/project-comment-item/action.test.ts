@@ -15,35 +15,35 @@ vi.mock("@/lib/parse-form-data", () => ({
 	parseFormData: () =>
 		Promise.resolve({
 			success: true,
-			data: { pageCommentId: 10, pageId: 99 },
+			data: { projectCommentId: 10, projectId: 99 },
 		}),
 }));
 vi.mock("./_db/queries.server", () => ({
-	getPageCommentById: vi.fn().mockResolvedValue({ userId: 1 }),
+	getProjectCommentById: vi.fn().mockResolvedValue({ userId: 1 }),
 }));
 vi.mock("./_db/mutations.server", () => ({
-	deletePageComment: vi.fn().mockResolvedValue(undefined),
+	deleteProjectComment: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { deletePageComment } from "./_db/mutations.server";
+import { deleteProjectComment } from "./_db/mutations.server";
 /* ─────────────────── ② テスト対象はモック宣言の後で import ─ */
-import { deletePageCommentAction } from "./action";
+import { deleteProjectCommentAction } from "./action";
 
 /* ─────────────────── ③ テスト ─────────────────── */
 describe("deletePageCommentAction", () => {
 	it("deletes comment, revalidates, and redirects", async () => {
 		/* 空の FormData—中身は parseFormData モックで固定済み */
-		await deletePageCommentAction({ success: true }, new FormData());
+		await deleteProjectCommentAction({ success: true }, new FormData());
 
 		/* 削除関数が正しい ID で呼ばれる */
-		expect(deletePageComment).toHaveBeenCalledWith(10, 1);
+		expect(deleteProjectComment).toHaveBeenCalledWith(10, 1);
 
 		/* キャッシュ再検証 */
-		expect(revalidatePath).toHaveBeenCalledWith("/user/t/page/99");
+		expect(revalidatePath).toHaveBeenCalledWith("/user/t/project/99");
 
 		/* リダイレクト */
-		expect(redirect).toHaveBeenCalledWith("/user/t/page/99");
+		expect(redirect).toHaveBeenCalledWith("/user/t/project/99");
 	});
 });

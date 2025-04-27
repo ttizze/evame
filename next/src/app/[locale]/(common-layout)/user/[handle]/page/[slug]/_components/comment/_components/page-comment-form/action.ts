@@ -70,7 +70,7 @@ export async function commentAction(
 	);
 	await handleCommentAutoTranslation({
 		currentUserId: currentUser.id,
-		commentId: pageComment.id,
+		pageCommentId: pageComment.id,
 		pageId,
 		sourceLocale: locale,
 		geminiApiKey: process.env.GEMINI_API_KEY ?? "",

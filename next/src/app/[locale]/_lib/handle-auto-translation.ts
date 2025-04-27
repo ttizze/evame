@@ -21,14 +21,19 @@ interface ProjectTranslationParams extends BaseTranslationParams {
 	projectId: string;
 }
 
-interface CommentTranslationParams extends PageTranslationParams {
-	commentId: number;
+interface PageCommentTranslationParams extends PageTranslationParams {
+	pageCommentId: number;
+}
+
+interface ProjectCommentTranslationParams extends ProjectTranslationParams {
+	projectCommentId: number;
 }
 
 type TranslationParams =
 	| (PageTranslationParams & { type: "page" })
-	| (CommentTranslationParams & { type: "comment" })
-	| (ProjectTranslationParams & { type: "project" });
+	| (PageCommentTranslationParams & { type: "pageComment" })
+	| (ProjectTranslationParams & { type: "project" })
+	| (ProjectCommentTranslationParams & { type: "projectComment" });
 
 // 依存関係を明示的に注入するためのインターフェース
 interface TranslationDependencies {
@@ -138,8 +143,8 @@ export async function handleAutoTranslation(
 					text: st.text,
 				})),
 			};
-		} else if (type === "comment") {
-			const { pageId, commentId } = params;
+		} else if (type === "pageComment") {
+			const { pageId, pageCommentId } = params;
 			// 翻訳情報を作成
 			translationJob = await deps.createTranslationJob({
 				userId: currentUserId,
@@ -157,11 +162,11 @@ export async function handleAutoTranslation(
 
 			// 特定のコメントIDを使用して対象のコメントを見つける
 			const targetComment = pageWithTitleAndComments.pageComments.find(
-				(comment) => comment.id === commentId,
+				(comment) => comment.id === pageCommentId,
 			);
 
 			if (!targetComment) {
-				throw new Error(`Comment with ID ${commentId} not found`);
+				throw new Error(`Comment with ID ${pageCommentId} not found`);
 			}
 
 			// コメントセグメントを準備
@@ -187,7 +192,7 @@ export async function handleAutoTranslation(
 				title: pageWithTitleAndComments.title,
 				numberedElements: segments,
 				targetContentType: type,
-				commentId: commentId,
+				commentId: pageCommentId,
 			};
 		} else {
 			throw new Error(`Unsupported translation type: ${type}`);
@@ -249,19 +254,19 @@ export async function handleProjectAutoTranslation({
 export async function handleCommentAutoTranslation({
 	currentUserId,
 	pageId,
-	commentId,
+	pageCommentId,
 	sourceLocale,
 	geminiApiKey,
 	dependencies = {},
-}: CommentTranslationParams & {
+}: PageCommentTranslationParams & {
 	dependencies?: Partial<TranslationDependencies>;
 }): Promise<void> {
 	return handleAutoTranslation(
 		{
-			type: "comment",
+			type: "pageComment",
 			currentUserId,
 			pageId,
-			commentId,
+			pageCommentId,
 			sourceLocale,
 			geminiApiKey,
 		},
@@ -272,22 +277,23 @@ export async function handleCommentAutoTranslation({
 // プロジェクトコメント翻訳のためのヘルパー関数
 export async function handleProjectCommentAutoTranslation({
 	currentUserId,
-	commentId,
 	projectId,
+	projectCommentId,
 	sourceLocale,
 	geminiApiKey,
 	dependencies = {},
-}: ProjectTranslationParams & {
-	commentId: number;
+}: ProjectCommentTranslationParams & {
 	dependencies?: Partial<TranslationDependencies>;
 }): Promise<void> {
-	// プロジェクトコメントの翻訳は現在未実装
-	// 必要になったら実装する
-	console.log("Project comment translation not implemented yet", {
-		currentUserId,
-		commentId,
-		projectId,
-		sourceLocale,
-	});
-	return Promise.resolve();
+	return handleAutoTranslation(
+		{
+			type: "projectComment",
+			currentUserId,
+			projectId,
+			projectCommentId,
+			sourceLocale,
+			geminiApiKey,
+		},
+		dependencies,
+	);
 }

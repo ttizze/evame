@@ -65,7 +65,7 @@ describe("TranslateAction", () => {
 		formData.append("pageId", "1");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
-		formData.append("targetContentType", "comment");
+		formData.append("targetContentType", "pageComment");
 
 		await expect(translateAction({ success: false }, formData)).rejects.toThrow(
 			"NEXT_REDIRECT",
@@ -103,7 +103,7 @@ describe("TranslateAction", () => {
 		formData.append("pageId", "1");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
-		formData.append("targetContentType", "comment");
+		formData.append("targetContentType", "pageComment");
 
 		const result = await translateAction({ success: false }, formData);
 
@@ -166,7 +166,7 @@ describe("TranslateAction", () => {
 		formData.append("pageId", "1");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
-		formData.append("targetContentType", "comment");
+		formData.append("targetContentType", "pageComment");
 
 		const result = await translateAction({ success: false }, formData);
 

@@ -47,7 +47,7 @@ test("normalize → SegmentBundle keeps best", () => {
 		},
 	] as const satisfies Parameters<typeof normalizeCommentSegments>[0];
 	const bundles = toSegmentBundles(
-		"comment",
+		"pageComment",
 		99,
 		normalizeCommentSegments(rawSegs),
 	);

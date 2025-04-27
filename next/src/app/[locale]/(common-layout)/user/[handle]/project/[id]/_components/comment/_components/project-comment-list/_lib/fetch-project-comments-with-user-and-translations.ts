@@ -67,7 +67,7 @@ export async function mapComment(
 	comment: ProjectCommentWithProjectCommentSegments,
 ): Promise<ExtendedComment> {
 	const segmentBundles = toSegmentBundles(
-		"comment",
+		"projectComment",
 		comment.id,
 		normalizeProjectCommentSegments(comment.projectCommentSegments),
 	);
