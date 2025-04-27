@@ -5,9 +5,9 @@ import { Link } from "@/i18n/routing";
 import Image, { getImageProps } from "next/image";
 import { SegmentAndTranslationSection } from "../segment-and-translation-section/client";
 import { ProjectActionsDropdown } from "./project-actions-dropdown/client";
+import { ProjectCommentButton } from "./project-comment-button/client";
 import { ProjectLikeButton } from "./project-like-button/server";
 import { ProjectTagList } from "./project-tag-list.server";
-
 interface ProjectListProps {
 	projectSummary: ProjectSummary;
 	projectLink: string;
@@ -133,6 +133,12 @@ export async function ProjectList({
 				{/* row‑5: いいねボタン（右端固定） */}
 				<div className="flex justify-end">
 					<ProjectLikeButton projectId={projectSummary.id} showCount />
+					<ProjectCommentButton
+						commentCount={projectSummary._count?.projectComments ?? 0}
+						projectId={projectSummary.id}
+						userHandle={projectSummary.user.handle}
+						showCount
+					/>
 				</div>
 			</div>
 		</article>

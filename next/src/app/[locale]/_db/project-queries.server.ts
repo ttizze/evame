@@ -46,6 +46,11 @@ const selectProjectRelatedFields = (
 				},
 			},
 		},
+		_count: {
+			select: {
+				projectComments: true,
+			},
+		},
 	};
 };
 

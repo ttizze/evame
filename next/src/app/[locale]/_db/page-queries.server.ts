@@ -41,6 +41,11 @@ const selectPageRelatedFields = (
 				},
 			},
 		},
+		_count: {
+			select: {
+				pageComments: true,
+			},
+		},
 	};
 };
 

@@ -5,7 +5,6 @@ import { getCurrentUser } from "@/auth";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { fetchLatestUserTranslationJob } from "../_db/queries.server";
-import { fetchPageCommentsCount } from "../_db/queries.server";
 
 export const fetchPageContext = cache(async (slug: string, locale: string) => {
 	const currentUser = await getCurrentUser();
@@ -28,18 +27,15 @@ export const fetchPageContext = cache(async (slug: string, locale: string) => {
 	if (!pageDetail || pageDetail.status === "ARCHIVE") {
 		return notFound();
 	}
-	const [pageTranslationJobs, latestUserTranslationJob, pageCommentsCount] =
-		await Promise.all([
-			fetchLatestPageTranslationJobs(pageDetail.id),
-			fetchLatestUserTranslationJob(pageDetail.id, currentUser?.id ?? "0"),
-			fetchPageCommentsCount(pageDetail.id),
-		]);
+	const [pageTranslationJobs, latestUserTranslationJob] = await Promise.all([
+		fetchLatestPageTranslationJobs(pageDetail.id),
+		fetchLatestUserTranslationJob(pageDetail.id, currentUser?.id ?? "0"),
+	]);
 	return {
 		pageDetail,
 		title,
 		currentUser,
 		pageTranslationJobs,
 		latestUserTranslationJob,
-		pageCommentsCount,
 	};
 });

@@ -48,7 +48,7 @@ export type PageDetail = Omit<Page, "createdAt"> & {
 	user: SanitizedUser;
 	tagPages: TagPageWithTag[];
 	segmentBundles: SegmentBundle[];
-	_count?: {
+	_count: {
 		pageComments: number;
 	};
 };
@@ -68,7 +68,7 @@ export type ProjectDetail = Omit<Project, "createdAt"> & {
 	links: ProjectLink[];
 	projectTagRelations: TagProjectWithTag[];
 	segmentBundles: SegmentBundle[];
-	_count?: {
+	_count: {
 		projectComments: number;
 	};
 };
