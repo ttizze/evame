@@ -2,12 +2,10 @@
 
 import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
 
+import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { uploadImage } from "@/app/[locale]/_lib/upload";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/auth";
-import { parseFormData } from "@/lib/parse-form-data";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { upsertProjectTags } from "../_db/mutations.server";
 import {
@@ -29,7 +27,7 @@ function tagSchema() {
 }
 
 const formSchema = z.object({
-	projectId: z.coerce.number().min(1).optional(),
+	projectId: z.coerce.number().min(1),
 	slug: z.string(),
 	userLocale: z.string(),
 	title: z.string().min(3).max(100),
@@ -91,13 +89,11 @@ export async function projectAction(
 	formData: FormData,
 ): Promise<ProjectActionResponse> {
 	// Authentication check
-	const currentUser = await getCurrentUser();
-	if (!currentUser?.id) {
-		return redirect("/auth/login");
+	const v = await authAndValidate(formSchema, formData);
+	if (!v.success) {
+		return { success: false, zodErrors: v.zodErrors };
 	}
-	const parsed = await parseFormData(formSchema, formData);
-	if (!parsed.success)
-		return { success: false, zodErrors: parsed.error.flatten().fieldErrors };
+	const { currentUser, data } = v;
 
 	const {
 		projectId,
@@ -109,7 +105,7 @@ export async function projectAction(
 		userLocale,
 		slug,
 		...projectData
-	} = parsed.data;
+	} = data;
 	const combined = `${tagLine} ${projectData.description}`;
 	const sourceLocale = await getLocaleFromHtml(combined, userLocale);
 
@@ -140,11 +136,7 @@ export async function projectAction(
 		currentUser.id,
 	);
 
-	// Revalidate paths
-	revalidatePath(`/user/${currentUser.handle}/project-management`);
-	if (projectId) {
-		revalidatePath(`/user/${currentUser.handle}/project/${projectId}`);
-	}
+	revalidatePath(`/user/${currentUser.handle}/project/${slug}`);
 
 	return {
 		success: true,

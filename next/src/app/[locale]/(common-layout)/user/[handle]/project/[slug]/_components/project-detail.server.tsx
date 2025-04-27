@@ -73,21 +73,22 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 					</div>
 
 					{/* Title & Tag‑line */}
-					<div className="">
-						<div className="flex items-center justify-between gap-2">
+					<div className="not-prose">
+						<div className="flex items-center justify-between gap-2 ">
 							<h1 className="text-2xl font-bold leading-tight">
 								{projectDetail.title}
 							</h1>
 							{/* Owner actions (空白列でも幅0なので邪魔しない) */}
 							{isOwner && (
 								<ProjectActionsDropdown
+									projectSlug={projectDetail.slug}
 									projectId={projectDetail.id}
 									projectOwnerHandle={projectDetail.user.handle}
 								/>
 							)}
 						</div>
 						{projectTagLineSegmentBundle && (
-							<h2 className="text-lg font-medium text-muted-foreground">
+							<h2 className=" text-lg font-medium text-muted-foreground">
 								<SegmentAndTranslationSection
 									segmentBundle={projectTagLineSegmentBundle}
 									currentHandle={projectDetail.user.handle}

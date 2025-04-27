@@ -47,19 +47,19 @@ export function createDeleteAction<TSchema extends z.ZodTypeAny>(
 		if (!v.success) {
 			return { success: false, zodErrors: v.zodErrors };
 		}
-		const { user, data } = v;
+		const { currentUser, data } = v;
 
 		/** 2. 削除 */
-		await deleteById(data, user.id);
+		await deleteById(data, currentUser.id);
 
 		/** 3. キャッシュ再検証 */
-		for (const p of buildRevalidatePaths(data, user.handle)) {
+		for (const p of buildRevalidatePaths(data, currentUser.handle)) {
 			deps.revalidatePath(p);
 		}
 
 		/** 4. リダイレクト */
 		if (buildSuccessRedirect) {
-			deps.redirect(buildSuccessRedirect(data, user.handle));
+			deps.redirect(buildSuccessRedirect(data, currentUser.handle));
 		}
 		return { success: true };
 	};

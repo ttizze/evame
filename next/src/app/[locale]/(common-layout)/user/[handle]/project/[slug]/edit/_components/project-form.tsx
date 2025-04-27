@@ -36,7 +36,7 @@ interface ProjectImage {
 	file?: File; // For new uploads
 }
 interface ProjectFormProps {
-	projectDetail?: ProjectDetail | null;
+	projectDetail: ProjectDetail;
 	userHandle: string;
 	allProjectTags: ProjectTagWithCount[];
 	userLocale: string;
@@ -59,7 +59,6 @@ export function ProjectForm({
 	html,
 }: ProjectFormProps) {
 	const router = useRouter();
-	const isCreateMode = !projectDetail;
 
 	const initialTags =
 		projectDetail?.projectTagRelations.map((relation) => relation.projectTag) ||
@@ -96,23 +95,21 @@ export function ProjectForm({
 		if (state.success) {
 			toast.success(
 				state.message ||
-					`Project ${isCreateMode ? "created" : "updated"} successfully`,
+				"Project updated successfully",
 			);
 			// 新規作成時は一覧ページ、編集時は詳細ページへリダイレクト
-			const redirectPath = isCreateMode
-				? `/user/${userHandle}/project-management`
-				: `/user/${userHandle}/project/${projectDetail?.id}`;
+			const redirectPath = `/user/${userHandle}/project/${projectDetail.slug}`;
 			router.push(redirectPath);
 			router.refresh();
 		} else if (state.message) {
 			toast.error(state.message);
 		}
-	}, [state, router, userHandle, projectDetail?.id, isCreateMode]);
+	}, [state, router, userHandle, projectDetail.slug]);
 	const buildFormData = (event: React.FormEvent<HTMLFormElement>): FormData => {
 		const formData = new FormData(event.currentTarget);
 
-		if (projectDetail?.id)
-			formData.set("projectId", projectDetail.id.toString());
+		formData.set("projectId", projectDetail.id.toString());
+		formData.set("slug", projectDetail.slug);
 
 		formData.set("tags", JSON.stringify(tags));
 		formData.set("links", JSON.stringify(links));
@@ -152,12 +149,10 @@ export function ProjectForm({
 		<div className="space-y-6 ">
 			<div>
 				<h1 className="text-2xl font-bold">
-					{isCreateMode ? "New Project" : "Edit Project"}
+					"Edit Project"
 				</h1>
 				<p className="text-muted-foreground">
-					{isCreateMode
-						? "Create a new project"
-						: "Update your project details"}
+					"Update your project details"
 				</p>
 				<div className="text-sm text-muted-foreground mb-4">
 					<span className="text-red-500">*</span> Required fields
@@ -293,9 +288,7 @@ export function ProjectForm({
 						type="button"
 						variant="outline"
 						onClick={() => {
-							const returnPath = isCreateMode
-								? `/user/${userHandle}/project-management`
-								: `/user/${userHandle}/project/${projectDetail?.id}`;
+							const returnPath = `/user/${userHandle}/project-management`;
 							router.push(returnPath);
 						}}
 					>
@@ -303,12 +296,8 @@ export function ProjectForm({
 					</Button>
 					<Button type="submit" disabled={isPending}>
 						{isPending
-							? isCreateMode
-								? "Creating..."
-								: "Updating..."
-							: isCreateMode
-								? "Create Project"
-								: "Update Project"}
+							? "Updating..."
+							: "Update Project"}
 					</Button>
 				</div>
 			</form>

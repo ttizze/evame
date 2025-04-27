@@ -40,7 +40,7 @@ export async function authAndValidate<T extends z.ZodTypeAny>(
 ): Promise<
 	| {
 			success: true;
-			user: {
+			currentUser: {
 				id: string;
 				handle: string;
 			};
@@ -63,7 +63,7 @@ export async function authAndValidate<T extends z.ZodTypeAny>(
 	/* 3. 成功 ――――――――――――――――――― */
 	return {
 		success: true,
-		user: { id: user.id, handle: user.handle },
+		currentUser: { id: user.id, handle: user.handle },
 		data: parsed.data,
 	};
 }

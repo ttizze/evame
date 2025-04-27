@@ -85,6 +85,7 @@ export async function ProjectList({
 
 					{showOwnerActions && (
 						<ProjectActionsDropdown
+							projectSlug={projectSummary.slug}
 							projectId={projectSummary.id}
 							projectOwnerHandle={projectSummary.user.handle}
 						/>
