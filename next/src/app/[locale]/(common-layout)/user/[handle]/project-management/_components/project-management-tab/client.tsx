@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "@/i18n/routing";
 import { Plus } from "lucide-react";
+import Form from "next/form";
 import { parseAsString, useQueryState } from "nuqs";
-
+import { createProjectDraft } from "./action";
 interface ProjectManagementTabClientProps {
 	projectSummaries: ProjectSummary[];
 	totalPages: number;
@@ -38,12 +39,12 @@ export function ProjectManagementTabClient({
 					onChange={(e) => setQuery(e.target.value)}
 					className="w-full"
 				/>
-				<Link href={`/user/${handle}/project/new`}>
-					<Button>
+				<Form action={createProjectDraft}>
+					<Button type="submit">
 						<Plus className="h-4 w-4 mr-2" />
 						Create
 					</Button>
-				</Link>
+				</Form>
 			</div>
 
 			<div className="rounded-md">

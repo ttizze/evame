@@ -14,6 +14,25 @@ export const authDefaultDeps: AuthDeps = {
 	redirect,
 };
 
+export type RequireAuthDeps = {
+	getCurrentUser: typeof getCurrentUser;
+	redirect: typeof redirect;
+};
+
+export const requireAuthDefaultDeps: RequireAuthDeps = {
+	getCurrentUser,
+	redirect,
+};
+
+export async function requireAuth(
+	deps: RequireAuthDeps = requireAuthDefaultDeps,
+): Promise<{ id: string; handle: string }> {
+	const user = await deps.getCurrentUser();
+	if (!user?.id) deps.redirect("/auth/login");
+
+	// userはnullではないことが保証されている
+	return { id: user.id, handle: user.handle };
+}
 export async function authAndValidate<T extends z.ZodTypeAny>(
 	schema: T,
 	formData: FormData,
