@@ -64,7 +64,7 @@ export const selectProjectsWithDetails = (
 		...selectProjectRelatedFields(onlyTitle, locale, currentUserId),
 		_count: {
 			select: {
-				projectLikes: true,
+				projectComments: true,
 			},
 		},
 	};
@@ -139,7 +139,7 @@ export async function fetchPaginatedProjectSummaries({
 
 	const orderBy = isPopular
 		? [
-				{ projectLikes: { _count: Prisma.SortOrder.desc } },
+				{ projectComments: { _count: Prisma.SortOrder.desc } },
 				{ createdAt: Prisma.SortOrder.desc },
 			]
 		: { createdAt: Prisma.SortOrder.desc };

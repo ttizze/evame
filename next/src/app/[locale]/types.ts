@@ -69,7 +69,7 @@ export type ProjectDetail = Omit<Project, "createdAt"> & {
 	projectTagRelations: TagProjectWithTag[];
 	segmentBundles: SegmentBundle[];
 	_count?: {
-		projectLikes: number;
+		projectComments: number;
 	};
 };
 

@@ -26,7 +26,6 @@ vi.mock("./_db/mutations.server", () => ({
 }));
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { deletePageComment } from "./_db/mutations.server";
 /* ─────────────────── ② テスト対象はモック宣言の後で import ─ */
 import { deletePageCommentAction } from "./action";
@@ -43,7 +42,5 @@ describe("deletePageCommentAction", () => {
 		/* キャッシュ再検証 */
 		expect(revalidatePath).toHaveBeenCalledWith("/user/t/page/99");
 
-		/* リダイレクト */
-		expect(redirect).toHaveBeenCalledWith("/user/t/page/99");
 	});
 });

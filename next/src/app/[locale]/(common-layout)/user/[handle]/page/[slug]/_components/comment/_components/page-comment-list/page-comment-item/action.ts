@@ -25,6 +25,4 @@ export const deletePageCommentAction = createDeleteAction({
 		`/user/${handle}/page/${pageId}`,
 	],
 
-	buildSuccessRedirect: ({ pageId }, handle) =>
-		`/user/${handle}/page/${pageId}`,
 });

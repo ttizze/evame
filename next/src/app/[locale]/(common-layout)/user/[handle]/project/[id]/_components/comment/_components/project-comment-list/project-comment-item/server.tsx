@@ -27,6 +27,7 @@ export default async function ProjectCommentItem({
 			content={content}
 			action={
 				<ProjectCommentItemClient
+					key={projectComment.id}
 					projectComment={projectComment}
 					currentHandle={currentHandle}
 				/>

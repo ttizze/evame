@@ -91,13 +91,13 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 	return (
 		<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 			<DynamicProject projectDetail={projectDetail} locale={locale} />
-			<div className="py-4">
-				<UserInfo handle={projectDetail.user.handle} />
-			</div>
 			<div className="flex items-center gap-4">
 				<DynamicProjectLikeButton projectId={projectDetail.id} showCount />
 				<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
-				<span>{projectDetail._count?.projectLikes || 0}</span>
+				<span>{projectDetail._count?.projectComments || 0}</span>
+			</div>
+			<div className="py-4">
+				<UserInfo handle={projectDetail.user.handle} />
 			</div>
 
 			<DynamicFloatingControls

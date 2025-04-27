@@ -28,6 +28,7 @@ export default async function PageCommentItem({
 			createdAt={pageComment.createdAt}
 			action={
 				<PageCommentItemClient
+					key={pageComment.id}
 					pageComment={pageComment}
 					currentHandle={currentHandle}
 				/>

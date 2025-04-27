@@ -25,7 +25,7 @@ export function createDeleteAction<TSchema extends z.ZodTypeAny>(
 			input: z.infer<TSchema>,
 			userHandle: string,
 		) => string[];
-		buildSuccessRedirect: (
+		buildSuccessRedirect?: (
 			input: z.infer<TSchema>,
 			userHandle: string,
 		) => string;
@@ -58,7 +58,9 @@ export function createDeleteAction<TSchema extends z.ZodTypeAny>(
 		}
 
 		/** 4. リダイレクト */
-		deps.redirect(buildSuccessRedirect(data, user.handle));
+		if (buildSuccessRedirect) {
+			deps.redirect(buildSuccessRedirect(data, user.handle));
+		}
 		return { success: true };
 	};
 }

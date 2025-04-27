@@ -22,7 +22,4 @@ export const deleteProjectCommentAction = createDeleteAction({
 	buildRevalidatePaths: ({ projectId }, handle) => [
 		`/user/${handle}/project/${projectId}`,
 	],
-
-	buildSuccessRedirect: ({ projectId }, handle) =>
-		`/user/${handle}/project/${projectId}`,
 });

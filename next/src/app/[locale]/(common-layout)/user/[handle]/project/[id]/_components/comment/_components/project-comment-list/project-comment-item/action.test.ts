@@ -43,7 +43,5 @@ describe("deletePageCommentAction", () => {
 		/* キャッシュ再検証 */
 		expect(revalidatePath).toHaveBeenCalledWith("/user/t/project/99");
 
-		/* リダイレクト */
-		expect(redirect).toHaveBeenCalledWith("/user/t/project/99");
 	});
 });
