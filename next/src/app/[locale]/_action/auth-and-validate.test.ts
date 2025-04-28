@@ -63,7 +63,7 @@ describe("authAndValidate", () => {
 
 		const deps: AuthDeps = {
 			getCurrentUser: vi.fn().mockResolvedValue({ id: "u1", handle: "alice" }),
-			redirect: vi.fn(),
+			redirect: vi.fn() as unknown as typeof redirect,
 			parseFormData: vi.fn().mockResolvedValue({
 				success: true,
 				data: { title: "hello" },

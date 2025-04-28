@@ -332,6 +332,7 @@ model Project {
   translationJobs     TranslationJob[]
   iconImage           ProjectImage?        @relation("ProjectIcon", fields: [iconImageId], references: [id], onDelete: SetNull)
   projectComments     ProjectComment[]
+  notifications       Notification[]
 
   @@map("projects")
 }
@@ -492,7 +493,7 @@ model Notification {
   pageCommentId                      Int? @map("page_comment_id")
   pageSegmentTranslationId           Int? @map("page_segment_translation_id")
   pageCommentSegmentTranslationId    Int? @map("page_comment_segment_translation_id")
-  projectId                          String? @map("project_id")
+  projectId                          Int? @map("project_id")
   projectCommentId                   Int? @map("project_comment_id")
   projectSegmentTranslationId        Int? @map("project_segment_translation_id")
   projectCommentSegmentTranslationId Int? @map("project_comment_segment_translation_id")
@@ -504,6 +505,7 @@ model Notification {
   pageComment                      PageComment?                      @relation(fields: [pageCommentId], references: [id])
   pageSegmentTranslation           PageSegmentTranslation?           @relation(fields: [pageSegmentTranslationId], references: [id])
   pageCommentSegmentTranslation    PageCommentSegmentTranslation?    @relation(fields: [pageCommentSegmentTranslationId], references: [id])
+  project                          Project?                          @relation(fields: [projectId], references: [id])
   projectComment                   ProjectComment?                   @relation(fields: [projectCommentId], references: [id])
   projectCommentSegmentTranslation ProjectCommentSegmentTranslation? @relation(fields: [projectCommentSegmentTranslationId], references: [id])
   projectSegmentTranslation        ProjectSegmentTranslation?        @relation(fields: [projectSegmentTranslationId], references: [id])

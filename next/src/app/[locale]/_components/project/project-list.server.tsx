@@ -136,7 +136,7 @@ export async function ProjectList({
 					<ProjectLikeButton projectId={projectSummary.id} showCount />
 					<ProjectCommentButton
 						commentCount={projectSummary._count?.projectComments ?? 0}
-						projectId={projectSummary.id}
+						projectSlug={projectSummary.slug}
 						userHandle={projectSummary.user.handle}
 						showCount
 					/>

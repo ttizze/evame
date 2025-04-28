@@ -6,7 +6,7 @@ import { MessageCircle } from "lucide-react";
 
 type ProjectCommentButtonProps = {
 	commentCount: number;
-	projectId: number;
+	projectSlug: string;
 	userHandle?: string;
 	showCount?: boolean;
 	className?: string;
@@ -15,14 +15,14 @@ type ProjectCommentButtonProps = {
 export function ProjectCommentButton({
 	commentCount,
 	userHandle,
-	projectId,
+	projectSlug,
 	showCount = true,
 	className = "",
 }: ProjectCommentButtonProps) {
 	// Construct the URL to the page's comment section
 	const commentUrl = userHandle
-		? `/user/${userHandle}/project/${projectId}#comments`
-		: `/project/${projectId}#comments`;
+		? `/user/${userHandle}/project/${projectSlug}#comments`
+		: `/project/${projectSlug}#comments`;
 
 	return (
 		<div className="flex items-center gap-2">
