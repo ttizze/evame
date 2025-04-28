@@ -133,7 +133,11 @@ export async function ProjectList({
 
 				{/* row‑5: いいねボタン（右端固定） */}
 				<div className="flex justify-end">
-					<ProjectLikeButton projectId={projectSummary.id} showCount />
+					<ProjectLikeButton
+						projectId={projectSummary.id}
+						projectSlug={projectSummary.slug}
+						showCount
+					/>
 					<ProjectCommentButton
 						commentCount={projectSummary._count?.projectComments ?? 0}
 						projectSlug={projectSummary.slug}

@@ -1,14 +1,14 @@
 "use server";
 
+import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { toggleProjectLike } from "./db/mutations.server";
-
 // Form data schema
 const schema = z.object({
 	projectId: z.coerce.number().min(1),
+	projectSlug: z.string().min(1),
 });
 
 export type ProjectLikeButtonState = ActionResponse<
@@ -18,6 +18,7 @@ export type ProjectLikeButtonState = ActionResponse<
 	},
 	{
 		projectId: string;
+		projectSlug: string;
 	}
 >;
 
@@ -25,29 +26,20 @@ export async function toggleProjectLikeAction(
 	previousState: ProjectLikeButtonState,
 	formData: FormData,
 ): Promise<ProjectLikeButtonState> {
-	const parsedData = schema.safeParse({ projectId: formData.get("projectId") });
-	if (!parsedData.success) {
+	const v = await authAndValidate(schema, formData);
+	if (!v.success) {
 		return {
 			success: false,
-			zodErrors: parsedData.error.flatten().fieldErrors,
+			zodErrors: v.zodErrors,
 		};
 	}
-
-	const projectId = parsedData.data.projectId;
-	const currentUser = await getCurrentUser();
-
-	if (!currentUser || !currentUser.id) {
-		return {
-			success: false,
-		};
-	}
+	const { currentUser, data } = await v;
 
 	const { liked, likeCount } = await toggleProjectLike(
-		projectId,
+		data.projectId,
 		currentUser.id,
 	);
-	revalidatePath("/projects");
-	revalidatePath(`/projects/${projectId}`);
+	revalidatePath(`/projects/${data.projectSlug}`);
 
 	return {
 		success: true,
