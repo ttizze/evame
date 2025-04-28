@@ -47,12 +47,12 @@ const rawSegments = [
 
 /* ---------- テスト ---------- */
 test("toSegmentBundles converts and selects best translation", () => {
-	const bundles = toSegmentBundles("comment", 99, rawSegments);
+	const bundles = toSegmentBundles("pageComment", 99, rawSegments);
 
 	// 構造チェック
 	expect(bundles).toHaveLength(1);
 	expect(bundles[0]).toMatchObject({
-		parentType: "comment",
+		parentType: "pageComment",
 		parentId: 99,
 		segment: { id: 1, number: 0, text: "segment‑text" },
 	});

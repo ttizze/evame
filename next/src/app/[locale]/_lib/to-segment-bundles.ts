@@ -1,7 +1,7 @@
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import type { SanitizedUser } from "@/app/types";
 import type { BaseTranslation, SegmentBundle } from "../types";
 import { selectBestTranslation } from "./select-best-translation";
-
 export function toSegmentBundles<
 	RawVote extends { isUpvote: boolean; updatedAt: Date } | null | undefined,
 	RawTranslation extends {
@@ -20,8 +20,8 @@ export function toSegmentBundles<
 		segmentTranslations: readonly RawTranslation[];
 	},
 >(
-	parentType: "page" | "project" | "comment",
-	parentId: string | number,
+	parentType: TargetContentType,
+	parentId: number,
 	rawSegments: readonly RawSegment[],
 ): SegmentBundle[] {
 	return rawSegments.map((seg) => {

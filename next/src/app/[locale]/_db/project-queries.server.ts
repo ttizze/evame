@@ -46,6 +46,11 @@ const selectProjectRelatedFields = (
 				},
 			},
 		},
+		_count: {
+			select: {
+				projectComments: true,
+			},
+		},
 	};
 };
 
@@ -56,6 +61,7 @@ export const selectProjectsWithDetails = (
 ) => {
 	return {
 		id: true,
+		slug: true,
 		title: true,
 		createdAt: true,
 		updatedAt: true,
@@ -64,7 +70,7 @@ export const selectProjectsWithDetails = (
 		...selectProjectRelatedFields(onlyTitle, locale, currentUserId),
 		_count: {
 			select: {
-				projectLikes: true,
+				projectComments: true,
 			},
 		},
 	};
@@ -104,7 +110,7 @@ type FetchProjectParams = {
 	isPopular?: boolean;
 	locale?: string;
 	currentUserId?: string;
-	tagIds?: string[];
+	tagIds?: number[];
 };
 
 export async function fetchPaginatedProjectSummaries({
@@ -139,7 +145,7 @@ export async function fetchPaginatedProjectSummaries({
 
 	const orderBy = isPopular
 		? [
-				{ projectLikes: { _count: Prisma.SortOrder.desc } },
+				{ projectComments: { _count: Prisma.SortOrder.desc } },
 				{ createdAt: Prisma.SortOrder.desc },
 			]
 		: { createdAt: Prisma.SortOrder.desc };
@@ -179,12 +185,12 @@ export async function fetchPaginatedProjectSummaries({
 }
 
 export async function fetchProjectDetail(
-	projectId: string,
+	slug: string,
 	locale: string,
 	currentUserId?: string,
 ): Promise<ProjectDetail | null> {
 	const project = await prisma.project.findUnique({
-		where: { id: projectId },
+		where: { slug },
 		include: {
 			...selectProjectRelatedFields(false, locale, currentUserId),
 		},
@@ -207,7 +213,7 @@ export async function fetchProjectDetail(
 	};
 }
 
-export async function fetchProjectWithProjectSegments(projectId: string) {
+export async function fetchProjectWithProjectSegments(projectId: number) {
 	const project = await prisma.project.findUnique({
 		where: { id: projectId },
 		select: {
@@ -230,5 +236,39 @@ export async function fetchProjectWithProjectSegments(projectId: string) {
 		...project,
 		// For consistency with page translation system
 		pageSegments: project.projectSegments,
+	};
+}
+
+export async function getProjectById(projectId: number) {
+	const project = await prisma.project.findUnique({
+		where: { id: projectId },
+		include: {
+			user: {
+				select: selectUserFields(),
+			},
+		},
+	});
+
+	return project;
+}
+
+export async function fetchProjectWithTitleAndComments(projectId: number) {
+	const projectWithComments = await prisma.project.findFirst({
+		where: { id: projectId },
+		include: {
+			projectSegments: { where: { number: 0 } },
+			projectComments: {
+				include: {
+					projectCommentSegments: true,
+				},
+			},
+		},
+	});
+	if (!projectWithComments) return null;
+	const title = projectWithComments?.projectSegments[0].text;
+	if (!title) return null;
+	return {
+		...projectWithComments,
+		title,
 	};
 }

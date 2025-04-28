@@ -1,7 +1,7 @@
 "use server";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
-import { handleCommentAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
+import { handlePageCommentAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { parseFormData } from "@/lib/parse-form-data";
@@ -68,9 +68,9 @@ export async function commentAction(
 		page.userId,
 		pageComment.id,
 	);
-	await handleCommentAutoTranslation({
+	await handlePageCommentAutoTranslation({
 		currentUserId: currentUser.id,
-		commentId: pageComment.id,
+		pageCommentId: pageComment.id,
 		pageId,
 		sourceLocale: locale,
 		geminiApiKey: process.env.GEMINI_API_KEY ?? "",

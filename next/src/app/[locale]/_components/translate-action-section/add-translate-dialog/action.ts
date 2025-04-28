@@ -1,5 +1,7 @@
 "use server";
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
+import { fetchPageWithPageSegments } from "@/app/[locale]/_db/page-queries.server";
+import { fetchPageWithTitleAndComments } from "@/app/[locale]/_db/page-queries.server";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
@@ -9,15 +11,14 @@ import { parseFormData } from "@/lib/parse-form-data";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { fetchPageWithPageSegments } from "../../../(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
-import { fetchPageWithTitleAndComments } from "../../../(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
 import type { TargetContentType } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
+import { targetContentTypeValues } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
 // バリデーション用のスキーマ
 const translateSchema = z.object({
 	pageId: z.coerce.number(),
 	aiModel: z.string().min(1, "モデルを選択してください"),
 	targetLocale: z.string().min(1, "localeを選択してください"),
-	targetContentType: z.enum(["page", "comment", "project"]),
+	targetContentType: z.enum(targetContentTypeValues),
 });
 
 export type TranslateActionState = ActionResponse<
@@ -55,7 +56,7 @@ export async function translateAction(
 		};
 	}
 
-	if (targetContentType === "comment") {
+	if (targetContentType === "pageComment") {
 		const pageWithTitleAndComments =
 			await fetchPageWithTitleAndComments(pageId);
 		if (!pageWithTitleAndComments) {
@@ -94,8 +95,8 @@ export async function translateAction(
 				targetLocale,
 				title: pageWithTitleAndComments.title,
 				numberedElements: comment.segments,
-				targetContentType,
-				commentId: comment.commentId,
+				targetContentType: "pageComment",
+				pageCommentId: comment.commentId,
 			};
 			await fetch(`${BASE_URL}/api/translate`, {
 				method: "POST",

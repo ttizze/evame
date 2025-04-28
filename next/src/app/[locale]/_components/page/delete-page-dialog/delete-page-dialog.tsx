@@ -17,13 +17,13 @@ import { archivePageAction } from "./action";
 interface DeletePageDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	pageIds: number[];
+	pageId: number;
 }
 
 export function DeletePageDialog({
 	open,
 	onOpenChange,
-	pageIds = [],
+	pageId,
 }: DeletePageDialogProps) {
 	const [archiveState, archiveAction, isArchiving] = useActionState<
 		ActionResponse,
@@ -60,7 +60,7 @@ export function DeletePageDialog({
 							Cancel
 						</Button>
 						<form action={archiveAction} className="w-1/2">
-							<input type="hidden" name="pageIds" value={pageIds.join(",")} />
+							<input type="hidden" name="pageId" value={pageId} />
 							<Button
 								variant="destructive"
 								type="submit"

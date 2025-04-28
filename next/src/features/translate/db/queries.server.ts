@@ -10,7 +10,18 @@ export async function getPageSegments(pageId: number) {
 	});
 }
 
-export async function getProjectSegments(projectId: string) {
+export async function getPageCommentSegments(pageCommentId: number) {
+	return await prisma.pageCommentSegment.findMany({
+		where: {
+			pageCommentId,
+		},
+		select: {
+			id: true,
+			number: true,
+		},
+	});
+}
+export async function getProjectSegments(projectId: number) {
 	return await prisma.projectSegment.findMany({
 		where: { projectId },
 		select: {
@@ -20,11 +31,9 @@ export async function getProjectSegments(projectId: string) {
 	});
 }
 
-export async function getPageCommentSegments(pageCommentId: number) {
-	return await prisma.pageCommentSegment.findMany({
-		where: {
-			pageCommentId,
-		},
+export async function getProjectCommentSegments(projectCommentId: number) {
+	return await prisma.projectCommentSegment.findMany({
+		where: { projectCommentId },
 		select: {
 			id: true,
 			number: true,

@@ -22,14 +22,14 @@ export async function getPageById(pageId: number) {
 	return page;
 }
 
-export async function getProjectById(projectId: string) {
+export async function getProjectById(projectId: number) {
 	const project = await prisma.project.findUnique({
 		where: { id: projectId },
 	});
 	return project;
 }
 
-export async function fetchLatestProjectTranslationJob(projectId: string) {
+export async function fetchLatestProjectTranslationJob(projectId: number) {
 	const locales = await prisma.translationJob.findMany({
 		where: { projectId },
 		select: { locale: true },

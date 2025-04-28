@@ -115,7 +115,6 @@ export default async function Page({
 	const {
 		pageDetail,
 		currentUser,
-		pageCommentsCount,
 		pageTranslationJobs,
 		latestUserTranslationJob,
 	} = data;
@@ -137,7 +136,7 @@ export default async function Page({
 				<div className="flex items-center gap-4">
 					<DynamicPageLikeButton pageId={pageDetail.id} showCount />
 					<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
-					<span>{pageCommentsCount}</span>
+					<span>{pageDetail._count?.pageComments || 0}</span>
 				</div>
 
 				<DynamicFloatingControls
@@ -160,7 +159,7 @@ export default async function Page({
 								latestUserTranslationJob={latestUserTranslationJob}
 								translationJobs={pageTranslationJobs}
 								sourceLocale={pageDetail.sourceLocale}
-								targetContentType="comment"
+								targetContentType="pageComment"
 								showIcons={false}
 							/>
 						</div>

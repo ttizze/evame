@@ -41,7 +41,7 @@ export default async function NewProjectList({
 				<ProjectList
 					key={projectSummary.id}
 					projectSummary={projectSummary}
-					projectLink={`/user/${projectSummary.user.handle}/project/${projectSummary.id}`}
+					projectLink={`/user/${projectSummary.user.handle}/project/${projectSummary.slug}`}
 					userLink={`/user/${projectSummary.user.handle}`}
 					index={index}
 				/>

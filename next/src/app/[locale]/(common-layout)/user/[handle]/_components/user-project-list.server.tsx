@@ -52,7 +52,7 @@ export async function UserProjectList({
 					<ProjectList
 						key={projectSummary.id}
 						projectSummary={projectSummary}
-						projectLink={`/user/${handle}/project/${projectSummary.id}`}
+						projectLink={`/user/${handle}/project/${projectSummary.slug}`}
 						userLink={`/user/${handle}`}
 						showOwnerActions={isOwner}
 					/>

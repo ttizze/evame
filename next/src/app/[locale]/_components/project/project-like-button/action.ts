@@ -8,7 +8,7 @@ import { toggleProjectLike } from "./db/mutations.server";
 
 // Form data schema
 const schema = z.object({
-	projectId: z.string(),
+	projectId: z.coerce.number().min(1),
 });
 
 export type ProjectLikeButtonState = ActionResponse<

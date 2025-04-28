@@ -1,3 +1,4 @@
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import type {
 	Page,
 	Project,
@@ -9,7 +10,6 @@ import type {
 	TagPage,
 } from "@prisma/client";
 import type { SanitizedUser } from "../types";
-
 export interface BaseSegment {
 	id: number;
 	number: number;
@@ -33,8 +33,8 @@ export interface UserVote {
 
 /** React へ渡す統一バンドル */
 export interface SegmentBundle {
-	parentType: "page" | "project" | "comment";
-	parentId: string | number;
+	parentType: TargetContentType;
+	parentId: number;
 	segment: BaseSegment;
 	translations: BaseTranslation[];
 	best: BaseTranslation | null;
@@ -48,7 +48,7 @@ export type PageDetail = Omit<Page, "createdAt"> & {
 	user: SanitizedUser;
 	tagPages: TagPageWithTag[];
 	segmentBundles: SegmentBundle[];
-	_count?: {
+	_count: {
 		pageComments: number;
 	};
 };
@@ -68,8 +68,8 @@ export type ProjectDetail = Omit<Project, "createdAt"> & {
 	links: ProjectLink[];
 	projectTagRelations: TagProjectWithTag[];
 	segmentBundles: SegmentBundle[];
-	_count?: {
-		projectLikes: number;
+	_count: {
+		projectComments: number;
 	};
 };
 

@@ -23,7 +23,7 @@ export async function addUserTranslation(
 				},
 			});
 		}
-	} else if (targetContentType === "comment") {
+	} else if (targetContentType === "pageComment") {
 		const pageCommentSegment = await prisma.pageCommentSegment.findUnique({
 			where: { id: segmentId },
 		});

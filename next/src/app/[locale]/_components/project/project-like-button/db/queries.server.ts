@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 export async function getProjectLikeAndCount(
-	projectId: string,
+	projectId: number,
 	currentUserId: string,
 ) {
 	// Get like count

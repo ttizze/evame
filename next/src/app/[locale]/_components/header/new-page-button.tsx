@@ -11,10 +11,7 @@ interface NewPageButtonProps {
 }
 
 const generateSlug = () =>
-	customAlphabet(
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-		8,
-	)();
+	customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 12)();
 
 export const NewPageButton = ({ handle }: NewPageButtonProps) => {
 	const router = useRouter();

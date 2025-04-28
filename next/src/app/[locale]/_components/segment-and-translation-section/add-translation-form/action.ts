@@ -1,4 +1,5 @@
 "use server";
+import { targetContentTypeValues } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
@@ -14,7 +15,7 @@ const schema = z.object({
 		.min(1, "Translation cannot be empty")
 		.max(30000, "Translation is too long")
 		.transform((val) => val.trim()),
-	targetContentType: z.enum(["page", "comment", "project"]),
+	targetContentType: z.enum(targetContentTypeValues),
 });
 
 export async function addTranslationFormAction(
@@ -50,7 +51,7 @@ export async function addTranslationFormAction(
 		}
 		pageSlug = pageSegment.page.slug;
 	}
-	if (targetContentType === "comment") {
+	if (targetContentType === "pageComment") {
 		const commentSegment = await getCommentSegmentById(segmentId);
 		if (!commentSegment) {
 			return {

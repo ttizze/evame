@@ -4,7 +4,7 @@ import { Reply } from "lucide-react";
 import { useState } from "react";
 import { PageCommentForm } from "../../page-comment-form/client";
 
-export function ReplyForm({
+export function PageCommentReplyForm({
 	pageId,
 	currentHandle,
 	parentId,

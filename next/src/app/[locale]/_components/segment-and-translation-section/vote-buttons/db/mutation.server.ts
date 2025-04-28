@@ -60,7 +60,7 @@ export async function handleVote(
 			});
 			return updatedTranslation?.point ?? 0;
 		});
-	} else if (targetContentType === "comment") {
+	} else if (targetContentType === "pageComment") {
 		updatedPoint = await prisma.$transaction(async (tx) => {
 			const existingVote =
 				await tx.pageCommentSegmentTranslationVote.findUnique({

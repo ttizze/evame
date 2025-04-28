@@ -3,7 +3,7 @@ import { ProjectLikeButtonClient } from "./client";
 import { getProjectLikeAndCount } from "./db/queries.server";
 
 interface ProjectLikeButtonProps {
-	projectId: string;
+	projectId: number;
 	showCount?: boolean;
 	className?: string;
 }
