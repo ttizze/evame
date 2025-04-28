@@ -89,8 +89,9 @@ function NotificationItem({
 }) {
 	return (
 		<DropdownMenuItem
-			className={`flex items-center p-4 border-t rounded-none ${!notificationWithRelations.read ? "bg-muted" : ""
-				} ${index === 0 ? "border-none" : ""}`}
+			className={`flex items-center p-4 border-t rounded-none ${
+				!notificationWithRelations.read ? "bg-muted" : ""
+			} ${index === 0 ? "border-none" : ""}`}
 		>
 			<NotificationContent
 				notificationWithRelations={notificationWithRelations}
@@ -204,9 +205,11 @@ function NotificationContent({
 			break;
 		}
 		case "PROJECT_SEGMENT_TRANSLATION_VOTE": {
-			const votedText = notificationWithRelations.projectSegmentTranslation?.text;
+			const votedText =
+				notificationWithRelations.projectSegmentTranslation?.text;
 			const votedProject =
-				notificationWithRelations.projectSegmentTranslation?.projectSegment.project;
+				notificationWithRelations.projectSegmentTranslation?.projectSegment
+					.project;
 			const votedProjectTitle = votedProject?.title;
 			const votedProjectUser = votedProject?.user;
 			actionText = <span className="text-gray-500"> voted for </span>;
