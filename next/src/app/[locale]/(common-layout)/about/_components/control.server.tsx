@@ -29,6 +29,8 @@ export default async function Control({ locale }: { locale: string }) {
 			likeButton={
 				<DynamicPageLikeButton
 					pageId={pageWithTranslations.id}
+					pageSlug={pageWithTranslations.slug}
+					ownerHandle={pageWithTranslations.user.handle}
 					showCount={false}
 					className="w-10 h-10 border rounded-full"
 				/>

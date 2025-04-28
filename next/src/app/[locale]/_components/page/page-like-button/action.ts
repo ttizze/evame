@@ -9,6 +9,7 @@ import { togglePageLike } from "./db/mutations.server";
 const schema = z.object({
 	pageId: z.coerce.number(),
 	pageSlug: z.string().min(1),
+	ownerHandle: z.string().min(1),
 });
 
 export type PageLikeButtonState = ActionResponse<
@@ -19,6 +20,7 @@ export type PageLikeButtonState = ActionResponse<
 	{
 		pageId: number;
 		pageSlug: string;
+		ownerHandle: string;
 	}
 >;
 
@@ -38,7 +40,7 @@ export async function togglePageLikeAction(
 		data.pageId,
 		currentUser.id,
 	);
-	revalidatePath(`/user/${currentUser.handle}/page/${data.pageSlug}`);
+	revalidatePath(`/user/${data.ownerHandle}/page/${data.pageSlug}`);
 	return {
 		success: true,
 		data: {

@@ -127,7 +127,12 @@ export default async function Page({
 			<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 				<DynamicContentWithTranslations pageData={data} />
 				<div className="flex items-center gap-4">
-					<DynamicPageLikeButton pageId={pageDetail.id} showCount />
+					<DynamicPageLikeButton
+						pageId={pageDetail.id}
+						pageSlug={pageDetail.slug}
+						ownerHandle={pageDetail.user.handle}
+						showCount
+					/>
 					<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
 					<span>{pageDetail._count?.pageComments || 0}</span>
 				</div>
@@ -136,6 +141,8 @@ export default async function Page({
 					likeButton={
 						<DynamicPageLikeButton
 							pageId={pageDetail.id}
+							pageSlug={pageDetail.slug}
+							ownerHandle={pageDetail.user.handle}
 							showCount={false}
 							className="w-10 h-10 border rounded-full"
 						/>

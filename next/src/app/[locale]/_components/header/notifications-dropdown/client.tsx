@@ -217,6 +217,12 @@ function NotificationContent({
 				<>
 					<span className="">{votedText}</span>
 					<span className="text-gray-500"> on </span>
+					<Link
+						href={`/user/${votedProjectUser?.handle}/project/${votedProject?.slug}`}
+						className="hover:underline font-bold"
+					>
+						{votedProjectTitle}
+					</Link>
 				</>
 			);
 			break;

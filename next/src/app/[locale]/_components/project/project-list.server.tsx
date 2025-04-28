@@ -136,6 +136,7 @@ export async function ProjectList({
 					<ProjectLikeButton
 						projectId={projectSummary.id}
 						projectSlug={projectSummary.slug}
+						ownerHandle={projectSummary.user.handle}
 						showCount
 					/>
 					<ProjectCommentButton

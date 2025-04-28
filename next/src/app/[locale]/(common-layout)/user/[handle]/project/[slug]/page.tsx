@@ -95,6 +95,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 				<DynamicProjectLikeButton
 					projectId={projectDetail.id}
 					projectSlug={projectDetail.slug}
+					ownerHandle={projectDetail.user.handle}
 					showCount
 				/>
 				<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
@@ -109,6 +110,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 					<DynamicProjectLikeButton
 						projectId={projectDetail.id}
 						projectSlug={projectDetail.slug}
+						ownerHandle={projectDetail.user.handle}
 						showCount={false}
 						className="w-10 h-10 border rounded-full"
 					/>

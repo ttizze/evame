@@ -10,6 +10,7 @@ interface ProjectLikeButtonClientProps {
 	likeCount: number;
 	projectId: number;
 	projectSlug: string;
+	ownerHandle: string;
 	showCount?: boolean;
 	className?: string;
 }
@@ -19,6 +20,7 @@ export function ProjectLikeButtonClient({
 	likeCount,
 	projectId,
 	projectSlug,
+	ownerHandle,
 	showCount = true,
 	className = "",
 }: ProjectLikeButtonClientProps) {
@@ -48,6 +50,7 @@ export function ProjectLikeButtonClient({
 			<form action={handleSubmit}>
 				<input type="hidden" name="projectId" value={projectId} />
 				<input type="hidden" name="projectSlug" value={projectSlug} />
+				<input type="hidden" name="ownerHandle" value={ownerHandle} />
 				<Button
 					type="submit"
 					aria-label="Like project"

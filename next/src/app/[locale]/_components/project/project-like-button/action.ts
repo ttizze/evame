@@ -9,6 +9,7 @@ import { toggleProjectLike } from "./db/mutations.server";
 const schema = z.object({
 	projectId: z.coerce.number().min(1),
 	projectSlug: z.string().min(1),
+	ownerHandle: z.string().min(1),
 });
 
 export type ProjectLikeButtonState = ActionResponse<
@@ -19,6 +20,7 @@ export type ProjectLikeButtonState = ActionResponse<
 	{
 		projectId: string;
 		projectSlug: string;
+		ownerHandle: string;
 	}
 >;
 
@@ -39,7 +41,7 @@ export async function toggleProjectLikeAction(
 		data.projectId,
 		currentUser.id,
 	);
-	revalidatePath(`/user/${currentUser.handle}/project/${data.projectSlug}`);
+	revalidatePath(`/user/${data.ownerHandle}/project/${data.projectSlug}`);
 
 	return {
 		success: true,

@@ -8,6 +8,8 @@ type PageLikeButtonClientProps = {
 	liked: boolean;
 	likeCount: number;
 	pageId: number;
+	pageSlug: string;
+	ownerHandle: string;
 	showCount?: boolean;
 	className?: string;
 };
@@ -16,6 +18,8 @@ export function PageLikeButtonClient({
 	liked,
 	likeCount,
 	pageId,
+	pageSlug,
+	ownerHandle,
 	showCount,
 	className = "",
 }: PageLikeButtonClientProps) {
@@ -42,6 +46,8 @@ export function PageLikeButtonClient({
 		<div className="flex items-center gap-2">
 			<form action={handleSubmit}>
 				<input type="hidden" name="pageId" value={pageId} />
+				<input type="hidden" name="pageSlug" value={pageSlug} />
+				<input type="hidden" name="ownerHandle" value={ownerHandle} />
 				<Button
 					type="submit"
 					aria-label="Like"
