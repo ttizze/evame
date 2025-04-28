@@ -15,8 +15,7 @@ export function FloatingControls({
               duration-300 `,
 	alwaysVisible = false,
 }: FloatingControlsProps) {
-  const { isVisible, ignoreNextScroll } =
-    useScrollVisibility(alwaysVisible);
+	const { isVisible, ignoreNextScroll } = useScrollVisibility(alwaysVisible);
 
 	/* --- ボタン列 --- */
 	const Buttons = (
