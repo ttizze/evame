@@ -1,6 +1,5 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { useEffect } from "react";
 import { ShareDialog } from "../(common-layout)/user/[handle]/page/[slug]/_components/share-dialog";
 import { DisplayModeCycle } from "./display-mode-cycle.client";
 import { useScrollVisibility } from "./hooks/use-scroll-visibility";
@@ -16,15 +15,8 @@ export function FloatingControls({
               duration-300 `,
 	alwaysVisible = false,
 }: FloatingControlsProps) {
-	const { isVisible, onScroll, ignoreNextScroll } =
-		useScrollVisibility(alwaysVisible);
-
-	/* --- スクロール監視 --- */
-	useEffect(() => {
-		if (alwaysVisible) return;
-		window.addEventListener("scroll", onScroll, { passive: true });
-		return () => window.removeEventListener("scroll", onScroll);
-	}, [onScroll, alwaysVisible]);
+  const { isVisible, ignoreNextScroll } =
+    useScrollVisibility(alwaysVisible);
 
 	/* --- ボタン列 --- */
 	const Buttons = (

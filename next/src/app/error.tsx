@@ -1,7 +1,7 @@
 "use client"; // Error boundaries must be Client Components
 
 import { Button } from "@/components/ui/button";
-import { Link } from "@/i18n/routing";
+import Link from "next/link";
 import * as Sentry from "@sentry/nextjs";
 import { AlertCircle } from "lucide-react";
 import { useEffect } from "react";
