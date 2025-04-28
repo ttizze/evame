@@ -89,9 +89,8 @@ function NotificationItem({
 }) {
 	return (
 		<DropdownMenuItem
-			className={`flex items-center p-4 border-t rounded-none ${
-				!notificationWithRelations.read ? "bg-muted" : ""
-			} ${index === 0 ? "border-none" : ""}`}
+			className={`flex items-center p-4 border-t rounded-none ${!notificationWithRelations.read ? "bg-muted" : ""
+				} ${index === 0 ? "border-none" : ""}`}
 		>
 			<NotificationContent
 				notificationWithRelations={notificationWithRelations}
@@ -170,6 +169,51 @@ function NotificationContent({
 					>
 						{votedPageTitle}
 					</Link>
+				</>
+			);
+			break;
+		}
+		case "PROJECT_LIKE": {
+			const { project } = notificationWithRelations;
+			const title = project?.title;
+			if (!title) return null;
+			actionText = <span className="text-gray-500"> liked your project </span>;
+			extraContent = (
+				<Link
+					href={`/user/${currentUserHandle}/project/${project?.slug}`}
+					className="hover:underline font-bold"
+				>
+					{title}
+				</Link>
+			);
+			break;
+		}
+		case "PROJECT_COMMENT": {
+			const { projectComment } = notificationWithRelations;
+			const title = projectComment?.project.title;
+			if (!title) return null;
+			actionText = <span className="text-gray-500"> commented on </span>;
+			extraContent = (
+				<Link
+					href={`/user/${currentUserHandle}/project/${projectComment?.project.slug}`}
+					className="hover:underline font-bold"
+				>
+					{title}
+				</Link>
+			);
+			break;
+		}
+		case "PROJECT_SEGMENT_TRANSLATION_VOTE": {
+			const votedText = notificationWithRelations.projectSegmentTranslation?.text;
+			const votedProject =
+				notificationWithRelations.projectSegmentTranslation?.projectSegment.project;
+			const votedProjectTitle = votedProject?.title;
+			const votedProjectUser = votedProject?.user;
+			actionText = <span className="text-gray-500"> voted for </span>;
+			extraContent = (
+				<>
+					<span className="">{votedText}</span>
+					<span className="text-gray-500"> on </span>
 				</>
 			);
 			break;

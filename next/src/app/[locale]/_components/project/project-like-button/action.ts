@@ -39,7 +39,7 @@ export async function toggleProjectLikeAction(
 		data.projectId,
 		currentUser.id,
 	);
-	revalidatePath(`/projects/${data.projectSlug}`);
+	revalidatePath(`/user/${currentUser.handle}/project/${data.projectSlug}`);
 
 	return {
 		success: true,

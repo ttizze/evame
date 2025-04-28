@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-export async function toggleProjectLike(projectId: number, userId: string) {
+export async function toggleProjectLike(projectId: number, currentUserId: string) {
 	const project = await prisma.project.findUnique({ where: { id: projectId } });
 	if (!project) {
 		throw new Error("Project not found");
@@ -9,7 +9,7 @@ export async function toggleProjectLike(projectId: number, userId: string) {
 	const existing = await prisma.projectLike.findFirst({
 		where: {
 			projectId,
-			userId,
+			userId: currentUserId,
 		},
 	});
 
@@ -21,8 +21,13 @@ export async function toggleProjectLike(projectId: number, userId: string) {
 		await prisma.projectLike.create({
 			data: {
 				projectId,
-				userId,
+				userId: currentUserId,
 			},
+		});
+		await createProjectLikeNotification({
+			projectId,
+			targetUserId: project.userId,
+			actorId: currentUserId,
 		});
 		liked = true;
 	}
@@ -33,4 +38,23 @@ export async function toggleProjectLike(projectId: number, userId: string) {
 	});
 
 	return { liked, likeCount };
+}
+
+export async function createProjectLikeNotification({
+	projectId,
+	targetUserId,
+	actorId,
+}: {
+	projectId: number;
+	targetUserId: string;
+	actorId: string;
+}) {
+	await prisma.notification.create({
+		data: {
+			projectId,
+			userId: targetUserId,
+			actorId,
+			type: "PROJECT_LIKE",
+		},
+	});
 }

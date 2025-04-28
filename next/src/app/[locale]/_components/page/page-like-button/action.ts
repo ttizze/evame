@@ -1,15 +1,14 @@
 "use server";
 
+import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/auth";
-import { getGuestId } from "@/lib/get-guest-id";
-import { setGuestId } from "@/lib/set-guest-id-action";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { togglePageLike } from "./db/mutations.server";
 // フォームデータ用のスキーマ
 const schema = z.object({
 	pageId: z.coerce.number(),
+	pageSlug: z.string().min(1),
 });
 
 export type PageLikeButtonState = ActionResponse<
@@ -19,6 +18,7 @@ export type PageLikeButtonState = ActionResponse<
 	},
 	{
 		pageId: number;
+		pageSlug: string;
 	}
 >;
 
@@ -26,36 +26,19 @@ export async function togglePageLikeAction(
 	previousState: PageLikeButtonState,
 	formData: FormData,
 ): Promise<PageLikeButtonState> {
-	const validation = schema.safeParse({ pageId: formData.get("pageId") });
-	if (!validation.success) {
+	const v = await authAndValidate(schema, formData);
+	if (!v.success) {
 		return {
 			success: false,
-			zodErrors: validation.error.flatten().fieldErrors,
+			zodErrors: v.zodErrors,
 		};
 	}
-	const pageId = validation.data.pageId;
-	const currentUser = await getCurrentUser();
-	if (!currentUser || !currentUser.id) {
-		const guestId = (await getGuestId()) ?? (await setGuestId());
-		const { liked, likeCount } = await togglePageLike(pageId, {
-			type: "guest",
-			id: guestId,
-		});
-		revalidatePath("/");
-		return {
-			success: true,
-			data: {
-				liked,
-				likeCount,
-			},
-		};
-	}
-
-	const { liked, likeCount } = await togglePageLike(pageId, {
-		type: "user",
-		id: currentUser.id,
-	});
-	revalidatePath("/");
+	const { currentUser, data } = await v;
+	const { liked, likeCount } = await togglePageLike(
+		data.pageId,
+		currentUser.id,
+	);
+	revalidatePath(`/user/${currentUser.handle}/page/${data.pageSlug}`);
 	return {
 		success: true,
 		data: {
