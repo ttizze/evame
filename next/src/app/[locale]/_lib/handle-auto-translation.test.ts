@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, test, vi } from "vitest";
 import {
-	handleCommentAutoTranslation,
 	handlePageAutoTranslation,
+	handlePageCommentAutoTranslation,
 } from "./handle-auto-translation";
 
 const baseParams = {
@@ -95,7 +95,7 @@ describe("handlePageAutoTranslation()", () => {
 				sourceLocale: "en",
 				dependencies: deps,
 			}),
-		).rejects.toThrow("Page with page segments not found");
+		).rejects.toThrow("Page not found");
 	});
 
 	it("handles multiple target locales", async () => {
@@ -122,7 +122,7 @@ describe("handlePageAutoTranslation()", () => {
 });
 
 /* ---------------- comment ---------------- */
-describe("handleCommentAutoTranslation()", () => {
+describe("handlePageCommentAutoTranslation()", () => {
 	const commentParams = {
 		...baseParams,
 		pageCommentId: 789,
@@ -146,7 +146,7 @@ describe("handleCommentAutoTranslation()", () => {
 			],
 		});
 
-		await handleCommentAutoTranslation({
+		await handlePageCommentAutoTranslation({
 			...commentParams,
 			dependencies: deps,
 		});
@@ -154,7 +154,7 @@ describe("handleCommentAutoTranslation()", () => {
 		expect(spies.fetchTranslateAPI).toHaveBeenCalledWith(
 			expect.any(String),
 			expect.objectContaining({
-				commentId: 789,
+				pageCommentId: 789,
 				targetLocale: "ja",
 			}),
 		);
@@ -169,8 +169,11 @@ describe("handleCommentAutoTranslation()", () => {
 		});
 
 		await expect(
-			handleCommentAutoTranslation({ ...commentParams, dependencies: deps }),
-		).rejects.toThrow("Comment with ID 789 not found");
+			handlePageCommentAutoTranslation({
+				...commentParams,
+				dependencies: deps,
+			}),
+		).rejects.toThrow("Comment not found");
 	});
 
 	it("throws if page missing", async () => {
@@ -178,7 +181,10 @@ describe("handleCommentAutoTranslation()", () => {
 		spies.fetchPageWithTitleAndComments.mockResolvedValue(null);
 
 		await expect(
-			handleCommentAutoTranslation({ ...commentParams, dependencies: deps }),
-		).rejects.toThrow("Page with title and comments not found");
+			handlePageCommentAutoTranslation({
+				...commentParams,
+				dependencies: deps,
+			}),
+		).rejects.toThrow("Page not found");
 	});
 });

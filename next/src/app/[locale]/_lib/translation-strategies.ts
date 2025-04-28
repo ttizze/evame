@@ -1,3 +1,4 @@
+import type { TranslateJobParams } from "@/features/translate/types";
 import type {
 	PageCommentTranslationParams,
 	PageTranslationParams,
@@ -5,7 +6,6 @@ import type {
 	ProjectTranslationParams,
 	TranslationStrategy,
 } from "./handle-auto-translation";
-
 export const pageStrategy: TranslationStrategy<PageTranslationParams> = {
 	async createJob(deps, { currentUserId, pageId }, locale) {
 		return deps.createTranslationJob({
@@ -21,7 +21,7 @@ export const pageStrategy: TranslationStrategy<PageTranslationParams> = {
 		{ currentUserId, pageId, geminiApiKey },
 		job,
 		locale,
-	) {
+	): Promise<TranslateJobParams> {
 		const page = await deps.fetchPageWithPageSegments(pageId);
 		if (!page) throw new Error("Page not found");
 
@@ -57,7 +57,7 @@ export const projectStrategy: TranslationStrategy<ProjectTranslationParams> = {
 		{ currentUserId, projectId, geminiApiKey },
 		job,
 		locale,
-	) {
+	): Promise<TranslateJobParams> {
 		const project = await deps.fetchProjectWithProjectSegments(projectId);
 		if (!project) throw new Error("Project not found");
 
@@ -94,7 +94,7 @@ export const pageCommentStrategy: TranslationStrategy<PageCommentTranslationPara
 			{ currentUserId, pageId, pageCommentId, geminiApiKey },
 			job,
 			locale,
-		) {
+		): Promise<TranslateJobParams> {
 			const page = await deps.fetchPageWithTitleAndComments(pageId);
 			if (!page) throw new Error("Page not found");
 
@@ -110,7 +110,7 @@ export const pageCommentStrategy: TranslationStrategy<PageCommentTranslationPara
 				targetLocale: locale,
 				targetContentType: "pageComment",
 				title: page.title,
-				commentId: pageCommentId,
+				pageCommentId,
 				numberedElements: [
 					...comment.pageCommentSegments.map(({ number, text }) => ({
 						number,
@@ -138,7 +138,7 @@ export const projectCommentStrategy: TranslationStrategy<ProjectCommentTranslati
 			{ currentUserId, projectId, projectCommentId, geminiApiKey },
 			job,
 			locale,
-		) {
+		): Promise<TranslateJobParams> {
 			const project = await deps.fetchProjectWithTitleAndComments(projectId);
 			if (!project) throw new Error("Project not found");
 
@@ -156,7 +156,7 @@ export const projectCommentStrategy: TranslationStrategy<ProjectCommentTranslati
 				targetLocale: locale,
 				targetContentType: "projectComment",
 				title: project.title,
-				commentId: projectCommentId,
+				projectCommentId,
 				numberedElements: [
 					...comment.projectCommentSegments.map(({ number, text }) => ({
 						number,

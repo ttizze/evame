@@ -62,6 +62,22 @@ export async function saveTranslationsForPage(
 	if (data.length) await prisma.pageSegmentTranslation.createMany({ data });
 }
 
+export async function saveTranslationsForPageComment(
+	extracted: NumberedElement[],
+	pageCommentSegments: Segment[],
+	locale: string,
+	aiModel: string,
+) {
+	const userId = await getOrCreateAIUser(aiModel);
+	const data = buildData<
+		"pageCommentSegmentId",
+		Prisma.PageCommentSegmentTranslationCreateManyInput
+	>(extracted, pageCommentSegments, locale, userId, "pageCommentSegmentId");
+	console.log(data);
+	if (data.length)
+		await prisma.pageCommentSegmentTranslation.createMany({ data });
+}
+
 export async function saveTranslationsForProject(
 	extracted: NumberedElement[],
 	projectSegments: Segment[],
@@ -77,21 +93,28 @@ export async function saveTranslationsForProject(
 	if (data.length) await prisma.projectSegmentTranslation.createMany({ data });
 }
 
-export async function saveTranslationsForComment(
+export async function saveTranslationsForProjectComment(
 	extracted: NumberedElement[],
-	pageCommentSegments: Segment[],
+	projectCommentSegments: Segment[],
 	locale: string,
 	aiModel: string,
 ) {
 	const userId = await getOrCreateAIUser(aiModel);
 	const data = buildData<
-		"pageCommentSegmentId",
-		Prisma.PageCommentSegmentTranslationCreateManyInput
-	>(extracted, pageCommentSegments, locale, userId, "pageCommentSegmentId");
+		"projectCommentSegmentId",
+		Prisma.ProjectCommentSegmentTranslationCreateManyInput
+	>(
+		extracted,
+		projectCommentSegments,
+		locale,
+		userId,
+		"projectCommentSegmentId",
+	);
 	console.log(data);
 	if (data.length)
-		await prisma.pageCommentSegmentTranslation.createMany({ data });
+		await prisma.projectCommentSegmentTranslation.createMany({ data });
 }
+
 export async function getTranslatedText(
 	geminiApiKey: string,
 	aiModel: string,

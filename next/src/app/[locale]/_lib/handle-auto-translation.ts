@@ -8,7 +8,6 @@ import {
 import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslateJobParams } from "@/features/translate/types";
 import type { TranslationJob } from "@prisma/client";
-const TARGET_LOCALES = ["en", "ja", "zh", "ko"];
 
 interface BaseTranslationParams {
 	currentUserId: string;
@@ -189,7 +188,7 @@ export async function handleProjectAutoTranslation({
 }
 
 // コメント翻訳のためのヘルパー関数
-export async function handleCommentAutoTranslation({
+export async function handlePageCommentAutoTranslation({
 	currentUserId,
 	pageId,
 	pageCommentId,

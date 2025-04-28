@@ -48,8 +48,7 @@ export async function authAndValidate<T extends z.ZodTypeAny>(
 	  }
 	| { success: false; zodErrors: Record<string, string[]> }
 > {
-	const user = await deps.getCurrentUser();
-	if (!user?.id) deps.redirect("/auth/login");
+	const user = await requireAuth(deps);
 
 	const parsed = await deps.parseFormData(schema, formData);
 	console.log("parsed", parsed);

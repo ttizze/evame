@@ -5,15 +5,17 @@ import { updateTranslationJob } from "../db/mutations.server";
 import {
 	getPageCommentSegments,
 	getPageSegments,
+	getProjectCommentSegments,
 	getProjectSegments,
 } from "../db/queries.server";
 import { getGeminiModelResponse } from "../services/gemini";
 import type { NumberedElement, TranslateJobParams } from "../types";
 import { extractTranslations } from "./extract-translations.server";
 import {
-	saveTranslationsForComment,
 	saveTranslationsForPage,
+	saveTranslationsForPageComment,
 	saveTranslationsForProject,
+	saveTranslationsForProjectComment,
 } from "./io-deps";
 import { splitNumberedElements } from "./split-numbered-elements.server";
 
@@ -24,7 +26,6 @@ export async function translate(params: TranslateJobParams) {
 			TranslationStatus.IN_PROGRESS,
 			0,
 		);
-
 		const sortedNumberedElements = params.numberedElements.sort(
 			(a, b) => a.number - b.number,
 		);
@@ -44,6 +45,7 @@ export async function translate(params: TranslateJobParams) {
 				params.title,
 				params.targetContentType,
 				params.pageCommentId,
+				params.projectCommentId,
 			);
 			const progress = ((i + 1) / totalChunks) * 100;
 			await updateTranslationJob(
@@ -76,7 +78,8 @@ async function translateChunk(
 	projectId?: number,
 	title?: string,
 	targetContentType?: TargetContentType,
-	commentId?: number,
+	pageCommentId?: number,
+	projectCommentId?: number,
 ) {
 	// まだ翻訳が完了していない要素
 	let pendingElements = [...numberedElements];
@@ -114,11 +117,11 @@ async function translateChunk(
 				);
 			} else if (targetContentType === "pageComment") {
 				// コメント用の保存先テーブル or ロジック
-				if (!commentId || !pageId) {
-					throw new Error("Comment ID is required");
+				if (!pageCommentId || !pageId) {
+					throw new Error("pageComment ID or page ID is required");
 				}
-				const pageCommentSegments = await getPageCommentSegments(commentId);
-				await saveTranslationsForComment(
+				const pageCommentSegments = await getPageCommentSegments(pageCommentId);
+				await saveTranslationsForPageComment(
 					partialTranslations,
 					pageCommentSegments,
 					targetLocale,
@@ -132,6 +135,18 @@ async function translateChunk(
 				await saveTranslationsForProject(
 					partialTranslations,
 					projectSegments,
+					targetLocale,
+					aiModel,
+				);
+			} else if (targetContentType === "projectComment") {
+				if (!projectCommentId || !projectId) {
+					throw new Error("Comment ID is required");
+				}
+				const projectCommentSegments =
+					await getProjectCommentSegments(projectCommentId);
+				await saveTranslationsForProjectComment(
+					partialTranslations,
+					projectCommentSegments,
 					targetLocale,
 					aiModel,
 				);

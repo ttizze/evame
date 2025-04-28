@@ -16,7 +16,7 @@ vi.mock("@/app/_db/queries.server", () => ({
 	fetchGeminiApiKeyByHandle: vi.fn(),
 }));
 vi.mock("@/app/[locale]/_db/mutations.server");
-vi.mock("@/app/[locale]/_db/queries.server");
+vi.mock("@/app/[locale]/_db/page-queries.server");
 vi.mock(
 	"../../../(common-layout)/user/[handle]/page/[slug]/_db/queries.server",
 );

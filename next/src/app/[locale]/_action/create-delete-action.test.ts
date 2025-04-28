@@ -60,7 +60,7 @@ describe("createDeleteAction", () => {
 		//biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		(authAndValidate as any).mockResolvedValue({
 			success: true,
-			user: { id: "1", handle: "u" },
+			currentUser: { id: "1", handle: "u" },
 			data: { id: 10 },
 		});
 
