@@ -1,9 +1,9 @@
 "use client"; // Error boundaries must be Client Components
 
 import { Button } from "@/components/ui/button";
-import { Link } from "@/i18n/routing";
 import * as Sentry from "@sentry/nextjs";
 import { AlertCircle } from "lucide-react";
+import Link from "next/link";
 import { useEffect } from "react";
 
 export default function ErrorPage({

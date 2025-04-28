@@ -1,13 +1,11 @@
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-list/server";
 import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
 import { BASE_URL } from "@/app/_constants/base-url";
-import { DisplayProvider } from "@/app/_context/display-provider";
-import type { Pref } from "@/app/_context/display-types";
+import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import type { SearchParams } from "nuqs/server";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
@@ -123,18 +121,18 @@ export default async function Page({
 	if (!isOwner && pageDetail.status !== "PUBLIC") {
 		return notFound();
 	}
-	const pref: Pref =
-		((await cookies()).get("displayPref")?.value as Pref) ?? "auto";
 	return (
-		<DisplayProvider
-			userLocale={locale}
-			sourceLocale={pageDetail.sourceLocale}
-			initialPref={pref}
-		>
+		<>
+			<SourceLocaleBridge locale={pageDetail.sourceLocale} />
 			<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 				<DynamicContentWithTranslations pageData={data} />
 				<div className="flex items-center gap-4">
-					<DynamicPageLikeButton pageId={pageDetail.id} showCount />
+					<DynamicPageLikeButton
+						pageId={pageDetail.id}
+						pageSlug={pageDetail.slug}
+						ownerHandle={pageDetail.user.handle}
+						showCount
+					/>
 					<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
 					<span>{pageDetail._count?.pageComments || 0}</span>
 				</div>
@@ -143,6 +141,8 @@ export default async function Page({
 					likeButton={
 						<DynamicPageLikeButton
 							pageId={pageDetail.id}
+							pageSlug={pageDetail.slug}
+							ownerHandle={pageDetail.user.handle}
 							showCount={false}
 							className="w-10 h-10 border rounded-full"
 						/>
@@ -172,6 +172,6 @@ export default async function Page({
 					/>
 				</div>
 			</article>
-		</DisplayProvider>
+		</>
 	);
 }

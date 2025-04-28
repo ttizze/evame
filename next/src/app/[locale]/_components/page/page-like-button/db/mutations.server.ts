@@ -1,31 +1,15 @@
 import { prisma } from "@/lib/prisma";
 
-interface UserIdentifier {
-	type: "user";
-	id: string;
-}
-
-interface GuestIdentifier {
-	type: "guest";
-	id: string;
-}
-
-export async function togglePageLike(
-	pageId: number,
-	identifier: UserIdentifier | GuestIdentifier,
-) {
+export async function togglePageLike(pageId: number, currentUserId: string) {
 	const page = await prisma.page.findUnique({ where: { id: pageId } });
 	if (!page) {
 		throw new Error("Page not found");
 	}
-	const where = {
-		pageId: page.id,
-		...(identifier.type === "user"
-			? { userId: identifier.id }
-			: { guestId: identifier.id }),
-	};
 	const existing = await prisma.likePage.findFirst({
-		where,
+		where: {
+			pageId: page.id,
+			userId: currentUserId,
+		},
 	});
 	let liked: boolean;
 	if (existing) {
@@ -35,14 +19,14 @@ export async function togglePageLike(
 		await prisma.likePage.create({
 			data: {
 				pageId: page.id,
-				...(identifier.type === "user"
-					? { userId: identifier.id }
-					: { guestId: identifier.id }),
+				userId: currentUserId,
 			},
 		});
-		if (identifier.type === "user") {
-			await createNotificationLike(page.id, page.userId, identifier.id);
-		}
+		await createPageLikeNotification({
+			pageId: page.id,
+			targetUserId: page.userId,
+			actorId: currentUserId,
+		});
 		liked = true;
 	}
 
@@ -54,16 +38,20 @@ export async function togglePageLike(
 	return { liked, likeCount };
 }
 
-export async function createNotificationLike(
-	pageId: number,
-	targetUserId: string,
-	actorId: string,
-) {
+export async function createPageLikeNotification({
+	pageId,
+	targetUserId,
+	actorId,
+}: {
+	pageId: number;
+	targetUserId: string;
+	actorId: string;
+}) {
 	await prisma.notification.create({
 		data: {
-			pageId: pageId,
+			pageId,
 			userId: targetUserId,
-			actorId: actorId,
+			actorId,
 			type: "PAGE_LIKE",
 		},
 	});

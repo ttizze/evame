@@ -4,12 +4,16 @@ import { getPageLikeAndCount } from "./db/queries.server";
 
 interface PageLikeButtonProps {
 	pageId: number;
+	pageSlug: string;
+	ownerHandle: string;
 	showCount?: boolean;
 	className?: string;
 }
 
 export async function PageLikeButton({
 	pageId,
+	pageSlug,
+	ownerHandle,
 	showCount = true,
 	className,
 }: PageLikeButtonProps) {
@@ -24,6 +28,8 @@ export async function PageLikeButton({
 			liked={liked}
 			likeCount={likeCount}
 			pageId={pageId}
+			pageSlug={pageSlug}
+			ownerHandle={ownerHandle}
 			showCount={showCount}
 			className={className}
 		/>

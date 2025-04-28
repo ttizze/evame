@@ -134,6 +134,8 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 					)}
 					<ProjectLikeButton
 						projectId={projectDetail.id}
+						projectSlug={projectDetail.slug}
+						ownerHandle={projectDetail.user.handle}
 						className="w-12 h-12 border rounded-full"
 					/>
 				</div>

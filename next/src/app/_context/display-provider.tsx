@@ -2,26 +2,41 @@
 "use client";
 
 import { parseAsStringEnum, useQueryState } from "nuqs";
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+	type ReactNode,
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useState,
+} from "react";
 import type { DisplayMode, Pref } from "./display-types";
-export function decideFromLocales(user: string, source: string): DisplayMode {
+
+function decideFromLocales(user: string, source: string): DisplayMode {
 	return user === source ? "source" : "user";
 }
 
-/* ---------------- Context ---------------- */
-const Ctx = createContext<{ mode: DisplayMode; cycle(): void } | null>(null);
+type CtxShape = {
+	mode: DisplayMode;
+	cycle(): void;
+	/** ページ側から現在の sourceLocale を通知 */
+	setSourceLocale(locale: string): void;
+};
+
+const Ctx = createContext<CtxShape | null>(null);
 
 /* ---------------- Provider ---------------- */
 export function DisplayProvider({
 	children,
 	userLocale,
-	sourceLocale,
+	/** 最初に訪れたページの sourceLocale を渡す (app/layout では "mixed") */
+	initialSourceLocale = "mixed",
 	initialPref = "auto",
 }: {
-	children: React.ReactNode;
+	children: ReactNode;
 	userLocale: string;
-	sourceLocale: string; // "mixed" なら自動判定しない
-	initialPref?: Pref; // SSR で cookies().get(...)
+	initialSourceLocale?: string;
+	initialPref?: Pref;
 }) {
 	/* 1) Cookie → pref */
 	const [pref, setPref] = useState<Pref>(initialPref);
@@ -31,7 +46,10 @@ export function DisplayProvider({
 		setPref(saved);
 	}, []);
 
-	/* 2) URL → queryMode */
+	/* 2) sourceLocale はページごとに書き換わる */
+	const [sourceLocale, setSourceLocale] = useState(initialSourceLocale);
+
+	/* 3) URL ↔︎ queryMode */
 	const [queryMode, setQueryMode] = useQueryState(
 		"displayMode",
 		parseAsStringEnum<DisplayMode>(["user", "source", "both"]).withOptions({
@@ -39,7 +57,7 @@ export function DisplayProvider({
 		}),
 	);
 
-	/* 3) 最終モード決定 */
+	/* 4) 現在の最終モード */
 	const fallback = decideFromLocales(userLocale, sourceLocale);
 	const mode: DisplayMode =
 		queryMode ??
@@ -51,27 +69,30 @@ export function DisplayProvider({
 					? "both"
 					: fallback); // auto
 
-	/* 3‑b) URL と Cookie を常に同期 */
+	/* 5) URL と Cookie を同期 */
 	useEffect(() => {
-		if (queryMode === mode) return; // 既に一致
+		if (queryMode === mode) return;
 		if (pref === "auto" && mode === fallback) {
-			setQueryMode(null); // デフォルトなら URL をクリーンに
+			setQueryMode(null); // URL をクリーンに
 		} else {
-			setQueryMode(mode); // 追加 / 更新
+			setQueryMode(mode);
 		}
 	}, [queryMode, mode, pref, fallback, setQueryMode]);
 
-	/* 4) トグル  ─3 段ループ */
-	const cycle = () => {
+	/* 6) トグル */
+	const cycle = useCallback(() => {
 		const next =
 			mode === "user" ? "source" : mode === "source" ? "both" : "user";
+		setQueryMode(next);
+		document.cookie = `displayPref=${next};path=/;max-age=31536000`;
+		setPref(next as Pref);
+	}, [mode, setQueryMode]);
 
-		setQueryMode(next); // URL 更新
-		const nextPref: Pref = next; // user | source | both
-		document.cookie = `displayPref=${nextPref};path=/;max-age=31536000`;
-	};
-
-	return <Ctx.Provider value={{ mode, cycle }}>{children}</Ctx.Provider>;
+	return (
+		<Ctx.Provider value={{ mode, cycle, setSourceLocale }}>
+			{children}
+		</Ctx.Provider>
+	);
 }
 
 /* ---------------- Hook ---------------- */

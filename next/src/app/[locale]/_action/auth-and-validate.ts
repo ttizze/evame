@@ -53,6 +53,8 @@ export async function authAndValidate<T extends z.ZodTypeAny>(
 	const parsed = await deps.parseFormData(schema, formData);
 	console.log("parsed", parsed);
 	if (!parsed.success) {
+		console.log("zod error flatten", parsed.error.flatten());
+		console.log("zod error errors", parsed.error.errors);
 		return {
 			success: false,
 			zodErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,

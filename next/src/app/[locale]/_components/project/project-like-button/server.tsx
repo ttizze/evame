@@ -4,12 +4,16 @@ import { getProjectLikeAndCount } from "./db/queries.server";
 
 interface ProjectLikeButtonProps {
 	projectId: number;
+	projectSlug: string;
+	ownerHandle: string;
 	showCount?: boolean;
 	className?: string;
 }
 
 export async function ProjectLikeButton({
 	projectId,
+	projectSlug,
+	ownerHandle,
 	showCount = true,
 	className,
 }: ProjectLikeButtonProps) {
@@ -24,6 +28,8 @@ export async function ProjectLikeButton({
 			liked={liked}
 			likeCount={likeCount}
 			projectId={projectId}
+			projectSlug={projectSlug}
+			ownerHandle={ownerHandle}
 			showCount={showCount}
 			className={className}
 		/>

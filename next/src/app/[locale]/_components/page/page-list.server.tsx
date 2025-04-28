@@ -123,7 +123,11 @@ export function PageList({
 
 				{/* ③ アクション（いいね＋コメント） */}
 				<div className="flex items-center gap-2 justify-end">
-					<PageLikeButton pageId={pageSummary.id} />
+					<PageLikeButton
+						pageId={pageSummary.id}
+						pageSlug={pageSummary.slug}
+						ownerHandle={pageSummary.user.handle}
+					/>
 					<PageCommentButton
 						commentCount={pageSummary._count?.pageComments ?? 0}
 						slug={pageSummary.slug}
