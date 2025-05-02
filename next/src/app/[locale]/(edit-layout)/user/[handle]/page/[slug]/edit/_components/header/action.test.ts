@@ -1,81 +1,128 @@
-import { getPageById } from "@/app/[locale]/_db/queries.server";
-import { getCurrentUser } from "@/auth";
-import { mockPages, mockUsers } from "@/tests/mock";
-import { revalidatePath } from "next/cache";
+// action.test.ts
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { editPageStatusAction } from "./action";
-vi.mock("@/auth");
-vi.mock("@/app/[locale]/lib/get-locale-from-html");
-vi.mock("next/cache");
-vi.mock("next/navigation");
-vi.mock("./_db/mutations.server");
-vi.mock("./_lib/handle-page-translation");
-vi.mock("@/app/[locale]/_db/queries.server");
-describe("editPageStatusAction", () => {
-	const mockFormData = new FormData();
-	mockFormData.append("pageId", "1");
-	mockFormData.append("status", "PUBLIC");
 
+/* ─────────────────────────────────────────────
+   1. 依存モジュールをモック
+   ──────────────────────────────────────────── */
+vi.mock("@/app/[locale]/_action/auth-and-validate", () => ({
+	authAndValidate: vi.fn(),
+}));
+vi.mock("@/app/[locale]/_db/queries.server", () => ({
+	getPageById: vi.fn(),
+}));
+vi.mock("./_db/mutations.server", () => ({
+	updatePageStatus: vi.fn(),
+}));
+vi.mock("@/app/[locale]/_lib/handle-auto-translation", () => ({
+	handlePageAutoTranslation: vi.fn(),
+}));
+vi.mock("next/cache", () => ({
+	revalidatePath: vi.fn(),
+}));
+vi.mock("next/navigation", () => ({
+	redirect: vi.fn(),
+}));
+
+/* ─────────────────────────────────────────────
+   2. モックの参照を取得
+   ──────────────────────────────────────────── */
+import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
+import { getPageById } from "@/app/[locale]/_db/queries.server";
+import { handlePageAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
+import { revalidatePath } from "next/cache";
+import { updatePageStatus } from "./_db/mutations.server";
+
+/* ─────────────────────────────────────────────
+   3. 共通ダミー
+   ──────────────────────────────────────────── */
+const user = { id: "user1", handle: "user1" };
+const page = {
+	id: 1,
+	userId: "user1",
+	slug: "test-page",
+	sourceLocale: "en",
+};
+
+const formData = (pageId: string, status: string) => {
+	const fd = new FormData();
+	fd.append("pageId", pageId);
+	fd.append("status", status);
+	return fd;
+};
+
+describe("editPageStatusAction", () => {
 	beforeEach(() => {
-		vi.resetAllMocks();
+		vi.clearAllMocks();
 		process.env.GEMINI_API_KEY = "test-key";
 	});
 
-	it("should return validation error for invalid form data", async () => {
-		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
+	it("returns validation error when authAndValidate fails", async () => {
+		vi.mocked(authAndValidate).mockResolvedValue({
+			success: false,
+			zodErrors: { pageId: ["Required"] },
 
-		const invalidFormData = new FormData();
-		invalidFormData.append("slug", "");
+			//biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		} as any);
 
 		const result = await editPageStatusAction(
 			{ success: false },
-			invalidFormData,
+			formData("", ""),
 		);
 
 		expect(result.success).toBe(false);
 		expect(!result.success && result.zodErrors).toBeDefined();
 	});
 
-	it("should successfully update public page and trigger translation", async () => {
-		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
-		// @ts-ignore
-		vi.mocked(getPageById).mockResolvedValue(mockPages[0]);
+	it("updates a PUBLIC page and triggers translation", async () => {
+		vi.mocked(authAndValidate).mockResolvedValue({
+			success: true,
+			currentUser: user,
+			data: { pageId: 1, status: "PUBLIC" },
 
-		const result = await editPageStatusAction({ success: false }, mockFormData);
+			//biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		} as any);
+		//biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		vi.mocked(getPageById).mockResolvedValue(page as any);
+		vi.mocked(handlePageAutoTranslation).mockResolvedValue([
+			{ jobId: 123, locale: "ja", jobStatus: "PENDING" },
 
-		expect(result.success).toBe(true);
-		expect(result.message).toBe("Started translation.");
+			//biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		] as any);
+
+		const res = await editPageStatusAction(
+			{ success: false },
+			formData("1", "PUBLIC"),
+		);
+
+		expect(res.success).toBe(true);
+		expect(res.success && res.data).toBeDefined();
+		expect(res.success && res.data?.translationJobs).toHaveLength(1);
+		expect(updatePageStatus).toHaveBeenCalledWith(1, "PUBLIC");
+		expect(handlePageAutoTranslation).toHaveBeenCalled();
 		expect(revalidatePath).toHaveBeenCalledWith(
-			"/user/mockUserId1/page/mockUserId1-page1/edit",
+			"/user/user1/page/test-page/edit",
 		);
 	});
 
-	it("should handle missing GEMINI_API_KEY for public pages", async () => {
-		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
-		// @ts-ignore
-		vi.mocked(getPageById).mockResolvedValue(mockPages[0]);
+	it("skips translation for non-PUBLIC status", async () => {
+		vi.mocked(authAndValidate).mockResolvedValue({
+			success: true,
+			currentUser: user,
+			data: { pageId: 1, status: "DRAFT" },
 
-		// biome-ignore lint/performance/noDelete: <explanation>
-		delete process.env.GEMINI_API_KEY;
+			//biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		} as any);
+		//biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		vi.mocked(getPageById).mockResolvedValue(page as any);
 
-		const result = await editPageStatusAction({ success: false }, mockFormData);
-
-		expect(result.success).toBe(true);
-		expect(result.message).toBe(
-			"Gemini API key is not set. Page will not be translated.",
+		const res = await editPageStatusAction(
+			{ success: false },
+			formData("1", "DRAFT"),
 		);
-		expect(revalidatePath).toHaveBeenCalledWith(
-			"/user/mockUserId1/page/mockUserId1-page1/edit",
-		);
-	});
 
-	it("should skip translation for non-public pages", async () => {
-		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
-		// @ts-ignore
-		vi.mocked(getPageById).mockResolvedValue(mockPages[0]);
-
-		const result = await editPageStatusAction({ success: false }, mockFormData);
-
-		expect(result.success).toBe(true);
+		expect(res.success).toBe(true);
+		expect(res.success && res.data?.translationJobs).toBeUndefined();
+		expect(handlePageAutoTranslation).not.toHaveBeenCalled();
 	});
 });

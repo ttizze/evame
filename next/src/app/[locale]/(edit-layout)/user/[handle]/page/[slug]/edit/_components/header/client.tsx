@@ -1,5 +1,7 @@
 "use client";
 import { BaseHeaderLayout } from "@/app/[locale]/_components/header/base-header-layout";
+import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
+import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
 import type { SanitizedUser } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,8 +25,6 @@ import { usePathname } from "next/navigation";
 import { useActionState } from "react";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
-import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
-import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 interface EditHeaderProps {
 	currentUser: SanitizedUser;
 	initialStatus: PageStatus;
@@ -51,7 +51,7 @@ export function EditHeader({
 	//editページはiphoneSafari対応のため､baseHeaderとは別でスクロール管理が必要
 	const { isVisible } = useHeaderVisibility();
 	const { jobs } = useTranslationJobs(
-		state.success ? state.data?.translationJobs ?? [] : [],
+		state.success ? (state.data?.translationJobs ?? []) : [],
 	);
 
 	useTranslationJobToast(jobs);

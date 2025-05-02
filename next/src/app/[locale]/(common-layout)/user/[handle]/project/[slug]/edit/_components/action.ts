@@ -15,10 +15,10 @@ import {
 } from "../_db/mutations.server";
 
 import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
+import { handleProjectAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
 import type { ActionResponse } from "@/app/types";
 import { z } from "zod";
 import { processProjectHtml } from "./_lib/process-project-html";
-import { handleProjectAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
 
 /* ────────────── 入力定義 ────────────── */
 function tagSchema() {
@@ -40,9 +40,9 @@ const parseJSONSafe = (value: unknown) => {
 };
 
 const toArray = <T>(v: unknown): T[] => {
-  if (v == null) return [];                // undefined / null → []
-  if (Array.isArray(v)) return v as T[];   // すでに配列ならそのまま
-  return [v as T];                         // 単数を配列に包む
+	if (v == null) return []; // undefined / null → []
+	if (Array.isArray(v)) return v as T[]; // すでに配列ならそのまま
+	return [v as T]; // 単数を配列に包む
 };
 
 const formSchema = z.object({
@@ -58,22 +58,22 @@ const formSchema = z.object({
 	icon: z.preprocess(parseJSONSafe, iconSchema),
 
 	/* ファイルは FormData そのまま受け取る */
-  imageFiles: z.preprocess(
-    (v) => toArray<File>(v),
-    z.array(z.instanceof(File)).max(10),
-  ),
+	imageFiles: z.preprocess(
+		(v) => toArray<File>(v),
+		z.array(z.instanceof(File)).max(10),
+	),
 
-  imageFileNames: z.preprocess(
-    (v) => toArray<string>(v),
-    z.array(z.string()).max(10),
-  ),
+	imageFileNames: z.preprocess(
+		(v) => toArray<string>(v),
+		z.array(z.string()).max(10),
+	),
 
-  // こちらは単数で良いのでそのまま
-  iconFile: z.preprocess(
-    (v) => (v === "" ? undefined : v),
-    z.instanceof(File).optional(),
-  ),
-  iconFileName: z.string().optional(),
+	// こちらは単数で良いのでそのまま
+	iconFile: z.preprocess(
+		(v) => (v === "" ? undefined : v),
+		z.instanceof(File).optional(),
+	),
+	iconFileName: z.string().optional(),
 });
 
 /* ────────────── 付帯ヘルパ ────────────── */

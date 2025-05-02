@@ -1,6 +1,7 @@
 "use server";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
+import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { handlePageAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
 import type { ActionResponse } from "@/app/types";
 import type { PageStatus } from "@prisma/client";
@@ -8,7 +9,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { updatePageStatus } from "./_db/mutations.server";
-import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
 const editPageStatusSchema = z.object({
 	pageId: z.coerce.number().min(1),
 	status: z.enum(["DRAFT", "PUBLIC", "ARCHIVE"]),
