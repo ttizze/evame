@@ -220,16 +220,17 @@ export async function upsertImagesTx(
 export async function upsertIconTx(
 	projectId: number,
 	icon: z.infer<typeof iconSchema> | undefined,
-	iconFile: File | null,
-	iconFileName: string | null,
+	iconFile: File | undefined,
+	iconFileName: string | undefined,
 ) {
 	let iconId: number | null = null;
 	if (iconFile && iconFileName) {
-		const { success, data, message } = await uploadImage(iconFile);
-		if (!success || !data?.imageUrl)
-			throw new Error(message || "Icon upload failed");
+		const result = await uploadImage(iconFile);
+		if (!result.success)
+			throw new Error(result.message || "Icon upload failed");
+		const { imageUrl } = result.data;
 		const created = await prisma.projectImage.create({
-			data: { url: data.imageUrl, caption: "", order: 0, projectId },
+			data: { url: imageUrl, caption: "", order: 0, projectId },
 		});
 		iconId = created.id;
 	} else if (icon?.id) {

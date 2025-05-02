@@ -1,25 +1,16 @@
 "use server";
+import { createActionFactory } from "@/app/[locale]/_action/create-action-factory";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
+import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
 import { handlePageCommentAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/auth";
-import { parseFormData } from "@/lib/parse-form-data";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createNotificationPageComment } from "./_db/mutations.server";
 import { processPageCommentHtml } from "./_lib/process-page-comment-html";
-const createPageCommentSchema = z.object({
-	pageId: z.coerce.number(),
-	userLocale: z.string(),
-	content: z.string().min(1, "Comment cannot be empty"),
-	parentId: z.coerce.number().optional(),
-	pageCommentId: z.coerce.number().optional(),
-});
 
 export type CommentActionResponse = ActionResponse<
-	void,
+	{ translationJobs: TranslationJobForToast[] },
 	{
 		pageId: number;
 		userLocale: string;
@@ -28,53 +19,73 @@ export type CommentActionResponse = ActionResponse<
 		pageCommentId?: number;
 	}
 >;
+/* Success 用データ型 ───────────── */
+type CommentSuccessData = { translationJobs: TranslationJobForToast[] };
 
-export async function commentAction(
-	previousState: CommentActionResponse,
-	formData: FormData,
-): Promise<CommentActionResponse> {
-	const currentUser = await getCurrentUser();
-	if (!currentUser?.id) {
-		return redirect("/auth/login");
-	}
-	const parsed = await parseFormData(createPageCommentSchema, formData);
-	if (!parsed.success) {
+/* create が内部で使う型（公開しない） */
+type CreateResult = CommentSuccessData & { revalidatePath: string };
+
+export const commentAction = createActionFactory<
+	// 1. Input schema
+	z.ZodTypeAny,
+	// 2. TCreateResult
+	CreateResult,
+	// 3. TResponseData
+	CommentSuccessData
+>({
+	inputSchema: z.object({
+		pageId: z.coerce.number(),
+		userLocale: z.string(),
+		content: z.string().min(1, "Comment cannot be empty"),
+		parentId: z.coerce.number().optional(),
+		pageCommentId: z.coerce.number().optional(),
+	}),
+	async create(input, currentUserId) {
+		const { content, pageId, parentId, userLocale, pageCommentId } = input;
+		const page = await getPageById(pageId);
+		if (!page) {
+			return {
+				success: false,
+				message: "Page not found",
+			};
+		}
+		const locale = await getLocaleFromHtml(content, userLocale);
+		const pageComment = await processPageCommentHtml({
+			pageCommentId: pageCommentId ?? undefined,
+			commentHtml: content,
+			locale,
+			currentUserId,
+			pageId,
+			parentId,
+		});
+		await createNotificationPageComment(
+			currentUserId,
+			page.userId,
+			pageComment.id,
+		);
+		const results = await handlePageCommentAutoTranslation({
+			currentUserId,
+			pageCommentId: pageComment.id,
+			pageId,
+			sourceLocale: locale,
+			geminiApiKey: process.env.GEMINI_API_KEY ?? "",
+		});
 		return {
-			success: false,
-			zodErrors: parsed.error.flatten().fieldErrors,
+			success: true,
+			data: {
+				translationJobs: results,
+				revalidatePath: `/user/${page.user.handle}/page/${page.slug}`,
+			},
 		};
-	}
-	const { content, pageId, parentId, userLocale, pageCommentId } = parsed.data;
+	},
 
-	const page = await getPageById(pageId);
-	if (!page) {
-		return {
-			success: false,
-			message: "Page not found",
-		};
-	}
-
-	const locale = await getLocaleFromHtml(content, userLocale);
-	const pageComment = await processPageCommentHtml({
-		pageCommentId: pageCommentId ?? undefined,
-		commentHtml: content,
-		locale,
-		userId: currentUser.id,
-		pageId,
-		parentId,
-	});
-	await createNotificationPageComment(
-		currentUser.id,
-		page.userId,
-		pageComment.id,
-	);
-	await handlePageCommentAutoTranslation({
-		currentUserId: currentUser.id,
-		pageCommentId: pageComment.id,
-		pageId,
-		sourceLocale: locale,
-		geminiApiKey: process.env.GEMINI_API_KEY ?? "",
-	});
-	revalidatePath(`/user/${currentUser.handle}/page/${page.slug}`);
-	return { success: true };
-}
+	buildRevalidatePaths: (_input, _userHandle, result) => [
+		result.revalidatePath ?? "",
+	],
+	buildResponse: (result) => ({
+		success: true,
+		data: {
+			translationJobs: result.translationJobs,
+		},
+	}),
+});

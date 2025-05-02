@@ -54,7 +54,7 @@ export function ProjectManagementTabClient({
 						className="flex border-b py-2 justify-between"
 					>
 						<div>
-							<Link href={`/user/${handle}/project/${projectSummary.id}`}>
+							<Link href={`/user/${handle}/project/${projectSummary.slug}`}>
 								{projectSummary.title}
 							</Link>
 						</div>

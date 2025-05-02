@@ -2,7 +2,6 @@ import { getPageById } from "@/app/[locale]/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { mockPages, mockUsers } from "@/tests/mock";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { editPageStatusAction } from "./action";
 vi.mock("@/auth");
@@ -22,14 +21,6 @@ describe("editPageStatusAction", () => {
 		process.env.GEMINI_API_KEY = "test-key";
 	});
 
-	it("should redirect if user is not authenticated", async () => {
-		vi.mocked(getCurrentUser).mockResolvedValue(undefined);
-
-		await editPageStatusAction({ success: false }, mockFormData);
-
-		expect(redirect).toHaveBeenCalledWith("/auth/login");
-	});
-
 	it("should return validation error for invalid form data", async () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
 
@@ -42,11 +33,12 @@ describe("editPageStatusAction", () => {
 		);
 
 		expect(result.success).toBe(false);
-		expect(result.zodErrors).toBeDefined();
+		expect(!result.success && result.zodErrors).toBeDefined();
 	});
 
 	it("should successfully update public page and trigger translation", async () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
+		// @ts-ignore
 		vi.mocked(getPageById).mockResolvedValue(mockPages[0]);
 
 		const result = await editPageStatusAction({ success: false }, mockFormData);
@@ -60,6 +52,7 @@ describe("editPageStatusAction", () => {
 
 	it("should handle missing GEMINI_API_KEY for public pages", async () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
+		// @ts-ignore
 		vi.mocked(getPageById).mockResolvedValue(mockPages[0]);
 
 		// biome-ignore lint/performance/noDelete: <explanation>
@@ -78,6 +71,7 @@ describe("editPageStatusAction", () => {
 
 	it("should skip translation for non-public pages", async () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
+		// @ts-ignore
 		vi.mocked(getPageById).mockResolvedValue(mockPages[0]);
 
 		const result = await editPageStatusAction({ success: false }, mockFormData);

@@ -125,10 +125,10 @@ export function TagInput({
 					/>
 				)}
 			</div>
-			{editState.zodErrors?.tags && (
+			{!editState.success && editState.zodErrors?.tags && (
 				<p className="text-sm text-red-500">{editState.zodErrors.tags}</p>
 			)}
-			{editState.zodErrors?.pageId && (
+			{!editState.success && editState.zodErrors?.pageId && (
 				<p className="text-sm text-red-500">Page not found</p>
 			)}
 		</form>

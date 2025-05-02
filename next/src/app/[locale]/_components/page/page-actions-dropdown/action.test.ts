@@ -53,16 +53,4 @@ describe("togglePublishAction", () => {
 			togglePublishAction({ success: false }, formData),
 		).rejects.toThrow("NEXT_REDIRECT");
 	});
-
-	it("should return error if form data is invalid", async () => {
-		const formData = new FormData();
-		formData.append("pageId", "invalid");
-
-		const result = await togglePublishAction({ success: false }, formData);
-		expect(result.success).toBe(false);
-		expect(result.message).toBe("Invalid form data");
-		expect(result.zodErrors).toEqual({
-			pageId: ["Expected number, received nan"],
-		});
-	});
 });

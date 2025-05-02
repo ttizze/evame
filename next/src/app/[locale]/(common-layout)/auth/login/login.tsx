@@ -57,7 +57,7 @@ export function Login() {
 									autoComplete="email"
 									className="rounded-lg"
 								/>
-								{state.zodErrors?.email && (
+								{!state.success && state.zodErrors?.email && (
 									<p className="text-sm text-red-500">
 										{state.zodErrors.email}
 									</p>

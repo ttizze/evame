@@ -6,7 +6,7 @@ export async function upsertPageCommentAndSegments(p: {
 	pageId: number;
 	pageCommentId?: number;
 	parentId?: number;
-	userId: string;
+	currentUserId: string;
 	sourceLocale: string;
 	mdastJson: Prisma.InputJsonValue;
 	segments: SegmentDraft[];
@@ -16,7 +16,7 @@ export async function upsertPageCommentAndSegments(p: {
 		pageComment = await prisma.pageComment.create({
 			data: {
 				pageId: p.pageId,
-				userId: p.userId,
+				userId: p.currentUserId,
 				mdastJson: p.mdastJson,
 				locale: p.sourceLocale,
 				parentId: p.parentId,
@@ -24,7 +24,7 @@ export async function upsertPageCommentAndSegments(p: {
 		});
 	} else {
 		pageComment = await prisma.pageComment.update({
-			where: { id: p.pageCommentId, userId: p.userId },
+			where: { id: p.pageCommentId, userId: p.currentUserId },
 			data: { mdastJson: p.mdastJson, locale: p.sourceLocale },
 		});
 	}

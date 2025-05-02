@@ -1,19 +1,13 @@
 "use client";
 
 import { Editor } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[slug]/edit/_components/editor/editor";
+import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
+import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
 import type { ProjectDetail } from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRouter } from "next/navigation";
-import {
-	startTransition,
-	useActionState,
-	useEffect,
-	useMemo,
-	useState,
-} from "react";
-import { toast } from "sonner";
+import { startTransition, useActionState, useMemo, useState } from "react";
 import type { ProjectTagWithCount } from "../_db/queries.server";
 import { type ProjectActionResponse, projectAction } from "./action";
 import { ProjectIconInput } from "./icon-input.server";
@@ -58,8 +52,6 @@ export function ProjectForm({
 	userLocale,
 	html,
 }: ProjectFormProps) {
-	const router = useRouter();
-
 	const initialTags =
 		projectDetail?.projectTagRelations.map((relation) => relation.projectTag) ||
 		[];
@@ -90,18 +82,11 @@ export function ProjectForm({
 		ProjectActionResponse,
 		FormData
 	>(projectAction, { success: false });
+	const { jobs } = useTranslationJobs(
+		state.success ? state.data.translationJobs : [],
+	);
 
-	useEffect(() => {
-		if (state.success) {
-			toast.success(state.message || "Project updated successfully");
-			// 新規作成時は一覧ページ、編集時は詳細ページへリダイレクト
-			const redirectPath = `/user/${userHandle}/project/${projectDetail.slug}`;
-			router.push(redirectPath);
-			router.refresh();
-		} else if (state.message) {
-			toast.error(state.message);
-		}
-	}, [state, router, userHandle, projectDetail.slug]);
+	useTranslationJobToast(jobs);
 	const buildFormData = (event: React.FormEvent<HTMLFormElement>): FormData => {
 		const formData = new FormData(event.currentTarget);
 
@@ -158,7 +143,7 @@ export function ProjectForm({
 					<div>
 						<Label htmlFor="icon">Project Icon</Label>
 						<ProjectIconInput initialIcon={icon} onChange={setIcon} />
-						{state.zodErrors?.icon && (
+						{!state.success && state.zodErrors?.icon && (
 							<p className="text-sm text-red-500 mt-1">
 								{state.zodErrors.icon}
 							</p>
@@ -180,7 +165,7 @@ export function ProjectForm({
 							className="mt-1"
 							required
 						/>
-						{state.zodErrors?.title && (
+						{!state.success && state.zodErrors?.title && (
 							<p className="text-sm text-red-500 mt-1">
 								{state.zodErrors.title}
 							</p>
@@ -201,7 +186,7 @@ export function ProjectForm({
 							className="mt-1"
 							required
 						/>
-						{state.zodErrors?.tagLine && (
+						{!state.success && state.zodErrors?.tagLine && (
 							<p className="text-sm text-red-500 mt-1">
 								{state.zodErrors.tagLine}
 							</p>
@@ -223,7 +208,7 @@ export function ProjectForm({
 								placeholder="Describe your project..."
 							/>
 						</div>
-						{state.zodErrors?.description && (
+						{!state.success && state.zodErrors?.description && (
 							<p className="text-sm text-red-500 mt-1">
 								{state.zodErrors.description}
 							</p>
@@ -240,7 +225,7 @@ export function ProjectForm({
 							allTagsWithCount={allProjectTags}
 							onChange={setTags}
 						/>
-						{state.zodErrors?.tags && (
+						{!state.success && state.zodErrors?.tags && (
 							<p className="text-sm text-red-500 mt-1">
 								{state.zodErrors.tags}
 							</p>
@@ -253,7 +238,7 @@ export function ProjectForm({
 					<div>
 						<Label htmlFor="links">Project Links</Label>
 						<ProjectLinkInput initialLinks={links} onChange={setLinks} />
-						{state.zodErrors?.links && (
+						{!state.success && state.zodErrors?.links && (
 							<p className="text-sm text-red-500 mt-1">
 								{state.zodErrors.links}
 							</p>
@@ -266,7 +251,7 @@ export function ProjectForm({
 					<div>
 						<Label htmlFor="images">Project Images</Label>
 						<ProjectImageInput initialImages={images} onChange={setImages} />
-						{state.zodErrors?.images && (
+						{!state.success && state.zodErrors?.images && (
 							<p className="text-sm text-red-500 mt-1">
 								{state.zodErrors.images}
 							</p>
@@ -277,16 +262,6 @@ export function ProjectForm({
 					</div>
 				</div>
 				<div className="flex gap-4 justify-end">
-					<Button
-						type="button"
-						variant="outline"
-						onClick={() => {
-							const returnPath = `/user/${userHandle}/project-management`;
-							router.push(returnPath);
-						}}
-					>
-						Cancel
-					</Button>
 					<Button type="submit" disabled={isPending}>
 						{isPending ? "Updating..." : "Update Project"}
 					</Button>

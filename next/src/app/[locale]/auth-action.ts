@@ -15,6 +15,7 @@ export async function signInWithGoogleAction(
 	await signIn("google");
 	return {
 		success: true,
+		data: undefined,
 	};
 }
 
@@ -44,6 +45,7 @@ export async function signInWithResendAction(
 
 	return {
 		success: true,
+		data: undefined,
 	};
 }
 

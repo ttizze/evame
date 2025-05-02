@@ -27,7 +27,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 		UserEditState,
 		FormData
 	>(userEditAction, {
-		success: false,
+		success: true,
 		data: {
 			name: currentUser.name,
 			profile: currentUser.profile,
@@ -38,7 +38,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 		UserImageEditState,
 		FormData
 	>(userImageEditAction, {
-		success: false,
+		success: true,
 		data: {
 			imageUrl: currentUser.image,
 		},
@@ -97,7 +97,9 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 							className="w-40 h-40 rounded-full overflow-hidden focus:outline-hidden focus:ring-2 focus:ring-blue-500"
 						>
 							<Image
-								src={imageState.data?.imageUrl ?? ""}
+								src={
+									imageState.success ? (imageState.data?.imageUrl ?? "") : ""
+								}
 								alt="Profile"
 								width={160}
 								height={160}
@@ -173,7 +175,7 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 							className="border rounded-lg bg-white dark:bg-black/50 focus:outline-hidden"
 						/>
 					</code>
-					{editState.zodErrors?.handle && (
+					{!editState.success && editState.zodErrors?.handle && (
 						<div className="text-red-500 text-sm mt-1">
 							{editState.zodErrors.handle}
 						</div>
@@ -183,14 +185,14 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 				<div>
 					<Label>Display Name</Label>
 					<Input
-						defaultValue={editState.data?.name}
+						defaultValue={editState.success ? editState.data?.name : ""}
 						name="name"
 						minLength={3}
 						maxLength={25}
 						required
 						className="w-full h-10 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-hidden"
 					/>
-					{editState.zodErrors?.name && (
+					{!editState.success && editState.zodErrors?.name && (
 						<div className="text-red-500 text-sm mt-1">
 							{editState.zodErrors.name}
 						</div>
@@ -200,11 +202,11 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 				<div>
 					<Label>Profile</Label>
 					<textarea
-						defaultValue={editState.data?.profile}
+						defaultValue={editState.success ? editState.data?.profile : ""}
 						name="profile"
 						className="w-full h-32 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-hidden"
 					/>
-					{editState.zodErrors?.profile && (
+					{!editState.success && editState.zodErrors?.profile && (
 						<div className="text-red-500 text-sm mt-1">
 							{editState.zodErrors.profile}
 						</div>
@@ -213,13 +215,15 @@ export function EditProfileForm({ currentUser }: EditProfileFormProps) {
 				<div>
 					<Label>Twitter Handle</Label>
 					<Input
-						defaultValue={editState.data?.twitterHandle}
+						defaultValue={
+							editState.success ? editState.data?.twitterHandle : ""
+						}
 						name="twitterHandle"
 						placeholder="start with @. e.g. @evame"
 						pattern="@[A-Za-z0-9_]+"
 						className="w-full h-10 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-hidden"
 					/>
-					{editState.zodErrors?.twitterHandle && (
+					{!editState.success && editState.zodErrors?.twitterHandle && (
 						<div className="text-red-500 text-sm mt-1">
 							{editState.zodErrors.twitterHandle}
 						</div>

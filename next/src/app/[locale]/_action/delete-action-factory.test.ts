@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 /* ─────────────────────────────────────────────
-   1. 依存モジュールを hoist-safe にモック
+  1. 依存モジュールを hoist-safe にモック
    ──────────────────────────────────────────── */
 vi.mock("./auth-and-validate", () => ({
 	// テストごとに戻り値を差し替える
@@ -15,16 +15,16 @@ vi.mock("./auth-and-validate", () => ({
 // モック後に読み込む
 // eslint-disable-next-line import/first
 import { authAndValidate } from "./auth-and-validate";
-import { createDeleteAction } from "./create-delete-action";
+import { deleteActionFactory } from "./delete-action-factory";
 
 /* ─────────────────────────────────────────────
-   2. 共通ダミー定義
+  2. 共通ダミー定義
    ──────────────────────────────────────────── */
 const schema = z.object({ id: z.number() });
 
 /** テスト用に共通 Action を作るファクトリ */
 const actionFactory = (deps: Record<string, unknown> = {}) =>
-	createDeleteAction(
+	deleteActionFactory(
 		{
 			inputSchema: schema,
 			deleteById: vi.fn().mockResolvedValue(undefined),
@@ -36,7 +36,7 @@ const actionFactory = (deps: Record<string, unknown> = {}) =>
 	);
 
 /* ─────────────────────────────────────────────
-   3. テスト本体
+  3. テスト本体
    ──────────────────────────────────────────── */
 describe("createDeleteAction", () => {
 	beforeEach(() => {
@@ -51,7 +51,7 @@ describe("createDeleteAction", () => {
 		});
 
 		const act = actionFactory();
-		const res = await act({ success: true }, new FormData());
+		const res = await act({ success: true, data: undefined }, new FormData());
 
 		expect(res).toEqual({ success: false, zodErrors: { id: ["required"] } });
 	});
@@ -74,7 +74,7 @@ describe("createDeleteAction", () => {
 
 		const deleteById = vi.fn().mockResolvedValue(undefined);
 
-		const act = createDeleteAction(
+		const act = deleteActionFactory(
 			{
 				inputSchema: schema,
 				deleteById,
@@ -85,7 +85,7 @@ describe("createDeleteAction", () => {
 			deps as any,
 		);
 
-		await act({ success: true }, new FormData());
+		await act({ success: true, data: undefined }, new FormData());
 
 		expect(deleteById).toHaveBeenCalledWith({ id: 10 }, "1");
 		expect(deps.revalidatePath).toHaveBeenCalledWith("/foo");

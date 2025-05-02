@@ -1,12 +1,11 @@
 "use server";
+import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { upsertTags } from "../../_db/mutations.server";
-
 const editPageTagsSchema = z.object({
 	pageId: z.coerce.number().min(1),
 	tags: z.preprocess(
@@ -43,23 +42,17 @@ export async function editPageTagsAction(
 	previousState: EditPageTagsActionState,
 	formData: FormData,
 ): Promise<EditPageTagsActionState> {
-	const parsedFormData = editPageTagsSchema.safeParse({
-		pageId: formData.get("pageId"),
-		tags: formData.get("tags"),
-	});
-	if (!parsedFormData.success) {
-		return {
-			success: false,
-			zodErrors: parsedFormData.error.flatten().fieldErrors,
-		};
+	const v = await authAndValidate(editPageTagsSchema, formData);
+	if (!v.success) {
+		return { success: false, zodErrors: v.zodErrors };
 	}
-	const { pageId, tags } = parsedFormData.data;
+	const { currentUser, data } = v;
+	const { pageId, tags } = data;
 	const page = await getPageById(pageId);
-	const currentUser = await getCurrentUser();
 	if (!currentUser?.id || page?.userId !== currentUser.id) {
 		return redirect("/auth/login");
 	}
 	await upsertTags(tags, pageId);
 	revalidatePath(`/user/${currentUser.handle}/page/${page.slug}/edit`);
-	return { success: true };
+	return { success: true, data: undefined };
 }

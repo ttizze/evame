@@ -44,7 +44,7 @@ describe("editPageContentAction", () => {
 		);
 
 		expect(result.success).toBe(false);
-		expect(result.zodErrors).toBeDefined();
+		expect(!result.success && result.zodErrors).toBeDefined();
 	});
 
 	it("should successfully update public page and trigger translation", async () => {

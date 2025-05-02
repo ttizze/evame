@@ -20,11 +20,11 @@ import {
 	Lock,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useActionState, useEffect } from "react";
-import { toast } from "sonner";
+import { useActionState } from "react";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
-
+import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
+import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 interface EditHeaderProps {
 	currentUser: SanitizedUser;
 	initialStatus: PageStatus;
@@ -50,12 +50,11 @@ export function EditHeader({
 	const pagePath = `/${currentPagePath.split("/").slice(2, -1).join("/")}`;
 	//editページはiphoneSafari対応のため､baseHeaderとは別でスクロール管理が必要
 	const { isVisible } = useHeaderVisibility();
+	const { jobs } = useTranslationJobs(
+		state.success ? state.data?.translationJobs ?? [] : [],
+	);
 
-	useEffect(() => {
-		if (state.success) {
-			toast.success(state.message);
-		}
-	}, [state.success, state.message]);
+	useTranslationJobToast(jobs);
 
 	const renderButtonIcon = () => {
 		if (hasUnsavedChanges) {
@@ -168,10 +167,10 @@ export function EditHeader({
 					</button>
 				</form>
 
-				{state.zodErrors?.status && (
+				{!state.success && state.zodErrors?.status && (
 					<p className="text-sm text-red-500">{state.zodErrors.status}</p>
 				)}
-				{state.zodErrors?.pageId && (
+				{!state.success && state.zodErrors?.pageId && (
 					<p className="text-sm text-red-500">{state.zodErrors.pageId}</p>
 				)}
 				<Separator />

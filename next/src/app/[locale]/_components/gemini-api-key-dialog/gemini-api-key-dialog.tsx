@@ -77,7 +77,7 @@ export function GeminiApiKeyDialog({
 						</Button>
 					</div>
 					<div className="text-red-500 text-center mt-2">
-						{state.zodErrors?.geminiApiKey}
+						{!state.success && state.zodErrors?.geminiApiKey}
 					</div>
 				</form>
 			</DialogContent>

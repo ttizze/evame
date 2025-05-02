@@ -5,10 +5,10 @@ import {
 	fetchProjectWithProjectSegments,
 	fetchProjectWithTitleAndComments,
 } from "@/app/[locale]/_db/project-queries.server";
+import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslateJobParams } from "@/features/translate/types";
 import type { TranslationJob } from "@prisma/client";
-
 interface BaseTranslationParams {
 	currentUserId: string;
 	sourceLocale: string;
@@ -115,23 +115,25 @@ const limit = pLimit(CONCURRENCY);
 export async function handleAutoTranslation<T extends TranslationParams>(
 	params: T,
 	deps: TranslationDependencies,
-): Promise<void> {
+): Promise<TranslationJobForToast[]> {
 	const strategy = STRATEGY_TABLE[params.type] as TranslationStrategy<T>;
 
 	const targetLocales = ["en", "ja", "zh", "ko"].filter(
 		(l) => l !== params.sourceLocale,
 	);
 
-	await Promise.all(
+	const results = await Promise.all(
 		targetLocales.map((locale) =>
 			limit(async () => {
 				const job = await strategy.createJob(deps, params, locale);
 				const body = await strategy.buildJobParams(deps, params, job, locale);
 				await deps.fetchTranslateAPI(`${BASE_URL}/api/translate`, body);
 				await deps.delay(1000);
+				return job;
 			}),
 		),
 	);
+	return results;
 }
 // ページ翻訳のためのヘルパー関数
 
@@ -143,7 +145,7 @@ export async function handlePageAutoTranslation({
 	dependencies = {},
 }: Omit<PageTranslationParams, "type"> & {
 	dependencies?: Partial<TranslationDependencies>;
-}): Promise<void> {
+}): Promise<TranslationJobForToast[]> {
 	const deps: TranslationDependencies = {
 		...defaultDependencies,
 		...dependencies,
@@ -169,7 +171,7 @@ export async function handleProjectAutoTranslation({
 	dependencies = {},
 }: Omit<ProjectTranslationParams, "type"> & {
 	dependencies?: Partial<TranslationDependencies>;
-}): Promise<void> {
+}): Promise<TranslationJobForToast[]> {
 	const deps: TranslationDependencies = {
 		...defaultDependencies,
 		...dependencies,
@@ -197,7 +199,7 @@ export async function handlePageCommentAutoTranslation({
 	dependencies = {},
 }: Omit<PageCommentTranslationParams, "type"> & {
 	dependencies?: Partial<TranslationDependencies>;
-}): Promise<void> {
+}): Promise<TranslationJobForToast[]> {
 	const deps: TranslationDependencies = {
 		...defaultDependencies,
 		...dependencies,
@@ -226,7 +228,7 @@ export async function handleProjectCommentAutoTranslation({
 	dependencies = {},
 }: Omit<ProjectCommentTranslationParams, "type"> & {
 	dependencies?: Partial<TranslationDependencies>;
-}): Promise<void> {
+}): Promise<TranslationJobForToast[]> {
 	const deps: TranslationDependencies = {
 		...defaultDependencies,
 		...dependencies,

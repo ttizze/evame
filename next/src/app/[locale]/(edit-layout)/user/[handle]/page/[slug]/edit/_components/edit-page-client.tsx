@@ -117,7 +117,7 @@ export function EditPageClient({
 								data-testid="title-input"
 							/>
 						</h1>
-						{editState.zodErrors?.title && (
+						{!editState.success && editState.zodErrors?.title && (
 							<p className="text-sm text-red-500">
 								{editState.zodErrors.title}
 							</p>
@@ -151,7 +151,7 @@ export function EditPageClient({
 							placeholder="Write to the world..."
 						/>
 					</form>
-					{editState.zodErrors?.pageContent && (
+					{!editState.success && editState.zodErrors?.pageContent && (
 						<p className="text-sm text-red-500">
 							{editState.zodErrors.pageContent}
 						</p>

@@ -1,15 +1,13 @@
 "use server";
+import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import { fetchPageWithPageSegments } from "@/app/[locale]/_db/page-queries.server";
 import { fetchPageWithTitleAndComments } from "@/app/[locale]/_db/page-queries.server";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/auth";
 import type { TranslateJobParams } from "@/features/translate/types";
-import { parseFormData } from "@/lib/parse-form-data";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { TargetContentType } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
 import { targetContentTypeValues } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
@@ -34,20 +32,16 @@ export type TranslateActionState = ActionResponse<
 export async function translateAction(
 	previousState: TranslateActionState,
 	formData: FormData,
-) {
-	const currentUser = await getCurrentUser();
-	if (!currentUser?.id) {
-		return redirect("/auth/login");
-	}
-	const parsedFormData = await parseFormData(translateSchema, formData);
-	if (!parsedFormData.success) {
+): Promise<TranslateActionState> {
+	const v = await authAndValidate(translateSchema, formData);
+	if (!v.success) {
 		return {
 			success: false,
-			zodErrors: parsedFormData.error.flatten().fieldErrors,
+			zodErrors: v.zodErrors,
 		};
 	}
-	const { pageId, aiModel, targetLocale, targetContentType } =
-		parsedFormData.data;
+	const { currentUser, data } = v;
+	const { pageId, aiModel, targetLocale, targetContentType } = data;
 	const geminiApiKey = await fetchGeminiApiKeyByHandle(currentUser.handle);
 	if (!geminiApiKey) {
 		return {
@@ -143,5 +137,6 @@ export async function translateAction(
 	revalidatePath(`/user/${currentUser.handle}/page`);
 	return {
 		success: true,
+		data: undefined,
 	};
 }

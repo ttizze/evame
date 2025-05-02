@@ -17,7 +17,7 @@ const defaultDeps: DeleteDeps = {
 	revalidatePath,
 	redirect,
 };
-export function createDeleteAction<TSchema extends z.ZodTypeAny>(
+export function deleteActionFactory<TSchema extends z.ZodTypeAny>(
 	config: {
 		inputSchema: TSchema;
 		deleteById: (input: z.infer<TSchema>, userId: string) => Promise<void>;
@@ -39,9 +39,9 @@ export function createDeleteAction<TSchema extends z.ZodTypeAny>(
 		buildSuccessRedirect,
 	} = config;
 	return async function deleteAction(
-		_prev: ActionResponse<void>,
+		_prev: ActionResponse,
 		formData: FormData,
-	): Promise<ActionResponse<void>> {
+	): Promise<ActionResponse> {
 		/** 1. 認証 + バリデーション */
 		const v = await authAndValidate(inputSchema, formData, deps);
 		if (!v.success) {
@@ -61,6 +61,6 @@ export function createDeleteAction<TSchema extends z.ZodTypeAny>(
 		if (buildSuccessRedirect) {
 			deps.redirect(buildSuccessRedirect(data, currentUser.handle));
 		}
-		return { success: true };
+		return { success: true, data: undefined, message: "Deleted successfully" };
 	};
 }

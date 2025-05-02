@@ -49,7 +49,7 @@ export default async function Layout({
 				<NuqsAdapter>
 					<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 						<SessionProvider>{children}</SessionProvider>
-						<Toaster richColors />
+						<Toaster richColors closeButton />
 					</ThemeProvider>
 				</NuqsAdapter>
 			</body>
