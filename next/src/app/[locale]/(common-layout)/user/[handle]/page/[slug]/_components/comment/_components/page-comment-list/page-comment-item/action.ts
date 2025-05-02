@@ -1,18 +1,18 @@
 "use server";
 
-import { createDeleteAction } from "@/app/[locale]/_action/create-delete-action";
+import { deleteActionFactory } from "@/app/[locale]/_action/delete-action-factory";
 import type { ActionResponse } from "@/app/types";
 import { z } from "zod";
 import { deletePageComment } from "./_db/mutations.server";
 
 export type CommentDeleteActionResponse = ActionResponse<
-	void,
+	undefined,
 	{
 		pageCommentId: number;
 		pageId: number;
 	}
 >;
-export const deletePageCommentAction = createDeleteAction({
+export const deletePageCommentAction = deleteActionFactory({
 	inputSchema: z.object({
 		pageCommentId: z.coerce.number(),
 		pageId: z.coerce.number(),

@@ -80,6 +80,7 @@ describe("EditHeader Component", () => {
 	it("calls action and shows success toast on status change", async () => {
 		vi.mocked(editPageStatusAction).mockResolvedValue({
 			success: true,
+			data: undefined,
 			message: "Status updated!",
 		});
 

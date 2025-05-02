@@ -1,16 +1,15 @@
 "use server";
+import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/auth";
 import { validateGeminiApiKey } from "@/features/translate/services/gemini";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { updateGeminiApiKey } from "./db/mutations.server";
 const geminiApiKeySchema = z.object({
 	geminiApiKey: z.string(),
 });
 export type GeminiApiKeyDialogState = ActionResponse<
-	void,
+	undefined,
 	{
 		geminiApiKey: string;
 	}
@@ -19,22 +18,15 @@ export async function updateGeminiApiKeyAction(
 	previousState: GeminiApiKeyDialogState,
 	formData: FormData,
 ): Promise<GeminiApiKeyDialogState> {
-	const currentUser = await getCurrentUser();
-	if (!currentUser?.id) {
-		return redirect("/auth/login");
-	}
-	const parsedFormData = geminiApiKeySchema.safeParse({
-		geminiApiKey: formData.get("geminiApiKey"),
-	});
-
-	if (!parsedFormData.success) {
+	const v = await authAndValidate(geminiApiKeySchema, formData);
+	if (!v.success) {
 		return {
 			success: false,
-			zodErrors: parsedFormData.error.flatten().fieldErrors,
+			zodErrors: v.zodErrors,
 		};
 	}
-
-	const { geminiApiKey } = parsedFormData.data;
+	const { currentUser, data } = v;
+	const { geminiApiKey } = data;
 
 	if (geminiApiKey && geminiApiKey.trim() !== "") {
 		const { isValid, errorMessage } = await validateGeminiApiKey(geminiApiKey);
@@ -47,5 +39,9 @@ export async function updateGeminiApiKeyAction(
 	}
 	await updateGeminiApiKey(currentUser.id, geminiApiKey);
 	revalidatePath("/");
-	return { success: true, message: "Gemini API key updated successfully" };
+	return {
+		success: true,
+		data: undefined,
+		message: "Gemini API key updated successfully",
+	};
 }

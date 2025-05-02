@@ -1,9 +1,9 @@
 "use server";
 
-import { createDeleteAction } from "@/app/[locale]/_action/create-delete-action";
+import { deleteActionFactory } from "@/app/[locale]/_action/delete-action-factory";
 import { z } from "zod";
 import { deleteProject } from "./db/mutation.server";
-export const deleteProjectAction = createDeleteAction({
+export const deleteProjectAction = deleteActionFactory({
 	inputSchema: z.object({
 		projectId: z.coerce.number().min(1),
 	}),

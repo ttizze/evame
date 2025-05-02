@@ -1,8 +1,6 @@
 "use server";
+import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/auth";
-import { parseFormData } from "@/lib/parse-form-data";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { togglePagePublicStatus } from "./db/mutations.server";
 const togglePublishSchema = z.object({
@@ -20,19 +18,19 @@ export async function togglePublishAction(
 	previousState: TogglePublishState,
 	formData: FormData,
 ): Promise<TogglePublishState> {
-	const currentUser = await getCurrentUser();
-	if (!currentUser || !currentUser.id) {
-		return redirect("/auth/login");
-	}
-	const parsedFormData = await parseFormData(togglePublishSchema, formData);
-	if (!parsedFormData.success) {
+	const v = await authAndValidate(togglePublishSchema, formData);
+	if (!v.success) {
 		return {
 			success: false,
-			message: "Invalid form data",
-			zodErrors: parsedFormData.error.flatten().fieldErrors,
+			zodErrors: v.zodErrors,
 		};
 	}
-	const { pageId } = parsedFormData.data;
+	const { currentUser, data } = v;
+	const { pageId } = data;
 	await togglePagePublicStatus(pageId, currentUser.id);
-	return { success: true, message: "Page status updated successfully" };
+	return {
+		success: true,
+		data: undefined,
+		message: "Page status updated successfully",
+	};
 }

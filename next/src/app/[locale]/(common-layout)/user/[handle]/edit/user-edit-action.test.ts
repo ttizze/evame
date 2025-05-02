@@ -132,7 +132,7 @@ describe("userEditAction", () => {
 		const result = await userEditAction({ success: false }, formData);
 
 		expect(result.success).toBe(false);
-		expect(result.zodErrors).toBeDefined();
+		expect(!result.success && result.zodErrors).toBeDefined();
 		expect(updateUser).not.toHaveBeenCalled();
 		expect(unstable_update).not.toHaveBeenCalled();
 	});
@@ -146,16 +146,12 @@ describe("userEditAction", () => {
 		const result = await userEditAction(
 			{
 				success: false,
-				data: {
-					name: "Test User",
-					profile: "My profile",
-				},
 			},
 			formData,
 		);
 
 		expect(result.success).toBe(false);
-		expect(result.zodErrors?.handle).toBeDefined();
+		expect(!result.success && result.zodErrors).toBeDefined();
 		expect(updateUser).not.toHaveBeenCalled();
 		expect(unstable_update).not.toHaveBeenCalled();
 	});

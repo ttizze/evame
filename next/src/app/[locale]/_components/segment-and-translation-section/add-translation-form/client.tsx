@@ -49,11 +49,12 @@ export function AddTranslationForm({
 					)}
 				</span>
 				<span className="space-x-2 flex justify-end items-center">
-					{addTranslationState.zodErrors?.text && (
-						<p className="text-red-500 text-sm">
-							{addTranslationState.zodErrors.text}
-						</p>
-					)}
+					{!addTranslationState.success &&
+						addTranslationState.zodErrors?.text && (
+							<p className="text-red-500 text-sm">
+								{addTranslationState.zodErrors.text}
+							</p>
+						)}
 					<Button
 						type="submit"
 						className="rounded-xl"

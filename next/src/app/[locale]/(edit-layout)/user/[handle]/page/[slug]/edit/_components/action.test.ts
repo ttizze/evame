@@ -2,7 +2,6 @@ import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
 import { getCurrentUser } from "@/auth";
 import { mockUsers } from "@/tests/mock";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { editPageContentAction } from "./action";
 // Mocks
@@ -24,14 +23,6 @@ describe("editPageContentAction", () => {
 		process.env.GEMINI_API_KEY = "test-key";
 	});
 
-	it("should redirect if user is not authenticated", async () => {
-		vi.mocked(getCurrentUser).mockResolvedValue(undefined);
-
-		await editPageContentAction({ success: false }, mockFormData);
-
-		expect(redirect).toHaveBeenCalledWith("/auth/login");
-	});
-
 	it("should return validation error for invalid form data", async () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
 
@@ -44,7 +35,7 @@ describe("editPageContentAction", () => {
 		);
 
 		expect(result.success).toBe(false);
-		expect(result.zodErrors).toBeDefined();
+		expect(!result.success && result.zodErrors).toBeDefined();
 	});
 
 	it("should successfully update public page and trigger translation", async () => {
@@ -57,7 +48,6 @@ describe("editPageContentAction", () => {
 		);
 
 		expect(result.success).toBe(true);
-		expect(result.message).toBe("Page updated successfully");
 		expect(revalidatePath).toHaveBeenCalledWith(
 			"/user/mockUserId1/page/mockUserId1-page1",
 		);

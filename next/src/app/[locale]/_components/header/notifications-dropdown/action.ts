@@ -16,5 +16,6 @@ export async function markNotificationAsReadAction(
 	revalidatePath("/");
 	return {
 		success: true,
+		data: undefined,
 	};
 }

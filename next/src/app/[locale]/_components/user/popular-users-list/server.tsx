@@ -20,8 +20,9 @@ export default async function PopularUsersList({
 	return (
 		<div className="space-y-4">
 			{popularUsers.map((user) => {
+				const imageSrc = user.image?.trim();
 				const { props } = getImageProps({
-					src: user.image,
+					src: imageSrc,
 					alt: user.name,
 					width: 40,
 					height: 40,

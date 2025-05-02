@@ -34,7 +34,10 @@ import { deletePageCommentAction } from "./action";
 describe("deletePageCommentAction", () => {
 	it("deletes comment, revalidates, and redirects", async () => {
 		/* 空の FormData—中身は parseFormData モックで固定済み */
-		await deletePageCommentAction({ success: true }, new FormData());
+		await deletePageCommentAction(
+			{ success: true, data: undefined },
+			new FormData(),
+		);
 
 		/* 削除関数が正しい ID で呼ばれる */
 		expect(deletePageComment).toHaveBeenCalledWith(10, 1);

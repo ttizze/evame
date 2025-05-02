@@ -1,9 +1,8 @@
 "use server";
 import { targetContentTypeValues } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/auth";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { addUserTranslation } from "./db/mutations.server";
 import { getCommentSegmentById, getPageSegmentById } from "./db/queries.server";
@@ -22,23 +21,15 @@ export async function addTranslationFormAction(
 	previousState: ActionResponse,
 	formData: FormData,
 ): Promise<ActionResponse> {
-	const currentUser = await getCurrentUser();
-	if (!currentUser?.id) {
-		return redirect("/auth/login");
-	}
-	const parsedFormData = schema.safeParse({
-		segmentId: formData.get("segmentId"),
-		text: formData.get("text"),
-		locale: formData.get("locale"),
-		targetContentType: formData.get("targetContentType"),
-	});
-	if (!parsedFormData.success) {
+	const v = await authAndValidate(schema, formData);
+	if (!v.success) {
 		return {
 			success: false,
-			zodErrors: parsedFormData.error.flatten().fieldErrors,
+			zodErrors: v.zodErrors,
 		};
 	}
-	const { segmentId, text, locale, targetContentType } = parsedFormData.data;
+	const { currentUser, data } = v;
+	const { segmentId, text, locale, targetContentType } = data;
 
 	let pageSlug = "";
 	if (targetContentType === "page") {
@@ -77,5 +68,6 @@ export async function addTranslationFormAction(
 	revalidatePath(`/user/${currentUser.handle}/page/${pageSlug}`);
 	return {
 		success: true,
+		data: undefined,
 	};
 }

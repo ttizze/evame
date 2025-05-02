@@ -15,7 +15,7 @@ export function FollowButtonClient({
 	const [state, formAction, isPending] = useActionState<
 		FollowActionResponse,
 		FormData
-	>(followAction, { success: false, data: { isFollowing } });
+	>(followAction, { success: true, data: { isFollowing } });
 
 	return (
 		<form action={formAction}>
@@ -23,14 +23,30 @@ export function FollowButtonClient({
 			<input
 				type="hidden"
 				name="action"
-				value={state.data?.isFollowing ? "unFollow" : "follow"}
+				value={
+					state.success
+						? state.data?.isFollowing
+							? "unFollow"
+							: "follow"
+						: "follow"
+				}
 			/>
 			<Button
-				variant={state.data?.isFollowing ? "outline" : "default"}
+				variant={
+					state.success
+						? state.data?.isFollowing
+							? "outline"
+							: "default"
+						: "default"
+				}
 				className="rounded-full"
 				disabled={isPending}
 			>
-				{state.data?.isFollowing ? "Following" : "Follow"}
+				{state.success
+					? state.data?.isFollowing
+						? "Following"
+						: "Follow"
+					: "Follow"}
 			</Button>
 			{state.message && <p>{state.message}</p>}
 		</form>

@@ -5,17 +5,24 @@ export async function processPageCommentHtml(p: {
 	parentId?: number;
 	commentHtml: string;
 	locale: string;
-	userId: string;
+	currentUserId: string;
 	pageId: number;
 }) {
-	const { pageCommentId, commentHtml, locale, userId, pageId, parentId } = p;
+	const {
+		pageCommentId,
+		commentHtml,
+		locale,
+		currentUserId,
+		pageId,
+		parentId,
+	} = p;
 	const { mdastJson, segments } = await htmlToMdastWithSegments({
 		html: commentHtml,
 	});
 	const pageComment = await upsertPageCommentAndSegments({
 		pageId,
 		pageCommentId,
-		userId,
+		currentUserId,
 		mdastJson,
 		sourceLocale: locale,
 		segments,
