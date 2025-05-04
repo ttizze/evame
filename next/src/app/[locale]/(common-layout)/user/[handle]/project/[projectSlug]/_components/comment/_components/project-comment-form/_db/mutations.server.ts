@@ -35,7 +35,7 @@ export async function upsertProjectCommentAndSegments(p: {
 }
 
 /** 1プロジェクト分のセグメントを同期 */
-export async function syncProjectCommentSegments(
+async function syncProjectCommentSegments(
 	projectCommentId: number,
 	drafts: SegmentDraft[],
 ) {

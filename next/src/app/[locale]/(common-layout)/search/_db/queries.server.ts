@@ -112,7 +112,7 @@ export async function fetchSearchResults({
 }
 
 /** タイトル検索 */
-export async function searchTitle(
+async function searchTitle(
 	query: string,
 	skip: number,
 	take: number,
@@ -157,7 +157,7 @@ export async function searchTitle(
 	};
 }
 /** タグ名でページを検索 */
-export async function searchByTag(
+async function searchByTag(
 	tagName: string,
 	skip: number,
 	take: number,
@@ -210,7 +210,7 @@ export async function searchByTag(
 }
 
 /** コンテンツ検索 */
-export async function searchContent(
+async function searchContent(
 	query: string,
 	skip: number,
 	take: number,
@@ -260,7 +260,7 @@ export async function searchContent(
 	return { pageSummaries: pages, total };
 }
 /** タグ検索 (Tag.name) → Tag[] */
-export async function searchTags(
+async function searchTags(
 	query: string,
 	skip: number,
 	take: number,
@@ -286,7 +286,7 @@ export async function searchTags(
 }
 
 /** ユーザー検索 */
-export async function searchUsers(
+async function searchUsers(
 	query: string,
 	skip: number,
 	take: number,

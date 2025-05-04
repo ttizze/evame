@@ -42,7 +42,7 @@ export async function upsertProjectAndSegments(p: {
 }
 
 /** 1ページ分のセグメントを同期 */
-export async function syncProjectSegments(
+async function syncProjectSegments(
 	projectId: number,
 	drafts: SegmentDraft[],
 ) {

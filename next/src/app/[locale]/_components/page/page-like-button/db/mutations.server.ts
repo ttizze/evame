@@ -38,7 +38,7 @@ export async function togglePageLike(pageId: number, currentUserId: string) {
 	return { liked, likeCount };
 }
 
-export async function createPageLikeNotification({
+async function createPageLikeNotification({
 	pageId,
 	targetUserId,
 	actorId,

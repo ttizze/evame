@@ -34,7 +34,7 @@ export async function upsertPageCommentAndSegments(p: {
 }
 
 /** 1ページ分のセグメントを同期 */
-export async function syncPageCommentSegments(
+async function syncPageCommentSegments(
 	pageCommentId: number,
 	drafts: SegmentDraft[],
 ) {
@@ -90,7 +90,7 @@ export async function syncPageCommentSegments(
 	});
 }
 
-export async function upsertTags(tags: string[], pageId: number) {
+async function upsertTags(tags: string[], pageId: number) {
 	// 重複タグを除去
 	const uniqueTags = Array.from(new Set(tags));
 

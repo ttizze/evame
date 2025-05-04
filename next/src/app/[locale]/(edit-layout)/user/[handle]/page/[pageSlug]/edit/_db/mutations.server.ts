@@ -26,7 +26,7 @@ export async function upsertPageAndSegments(p: {
 }
 
 /** 1ページ分のセグメントを同期 */
-export async function syncPageSegments(pageId: number, drafts: SegmentDraft[]) {
+async function syncPageSegments(pageId: number, drafts: SegmentDraft[]) {
 	const existing = await prisma.pageSegment.findMany({
 		where: { pageId },
 		select: { textAndOccurrenceHash: true },

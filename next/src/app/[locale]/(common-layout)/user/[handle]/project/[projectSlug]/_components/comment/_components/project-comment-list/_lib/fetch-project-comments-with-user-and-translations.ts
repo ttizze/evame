@@ -6,7 +6,7 @@ import {
 	fetchProjectCommentsWithProjectCommentSegments,
 } from "../_db/queries.server";
 
-export function normalizeProjectCommentSegments(
+function normalizeProjectCommentSegments(
 	segments: {
 		id: number;
 		number: number;
@@ -36,7 +36,7 @@ export function normalizeProjectCommentSegments(
 	}));
 }
 
-export async function buildProjectCommentTree(
+async function buildProjectCommentTree(
 	flatComments: ProjectCommentWithProjectCommentSegments[],
 ): Promise<ProjectCommentWithProjectCommentSegments[]> {
 	// 各コメントに空のrepliesプロパティを付与
@@ -58,12 +58,12 @@ export async function buildProjectCommentTree(
 	return tree;
 }
 
-export interface ExtendedComment
+interface ExtendedComment
 	extends Omit<ProjectCommentWithProjectCommentSegments, "replies"> {
 	segmentBundles: SegmentBundle[];
 	replies: ExtendedComment[];
 }
-export async function mapComment(
+async function mapComment(
 	comment: ProjectCommentWithProjectCommentSegments,
 ): Promise<ExtendedComment> {
 	const segmentBundles = toSegmentBundles(

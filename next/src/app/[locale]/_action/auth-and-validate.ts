@@ -19,7 +19,7 @@ export type RequireAuthDeps = {
 	redirect: typeof redirect;
 };
 
-export const requireAuthDefaultDeps: RequireAuthDeps = {
+const requireAuthDefaultDeps: RequireAuthDeps = {
 	getCurrentUser,
 	redirect,
 };

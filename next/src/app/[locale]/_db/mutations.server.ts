@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { TranslationStatus } from "@prisma/client";
 
-export type CreateTranslationJobParams = {
+type CreateTranslationJobParams = {
 	aiModel: string;
 	locale: string;
 	userId?: string;

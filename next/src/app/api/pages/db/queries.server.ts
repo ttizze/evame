@@ -16,10 +16,6 @@ export const fetchPagesWithUser = async () => {
 	});
 	return pages;
 };
-export type PageWithUser = Awaited<
-	ReturnType<typeof fetchPagesWithUser>
->[number];
-
 export async function fetchPagesWithUserAndTranslation() {
 	const pagesWithUser = await fetchPagesWithUser();
 	const pagesWithTranslation = await Promise.all(

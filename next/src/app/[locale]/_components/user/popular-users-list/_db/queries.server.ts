@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-export interface PopularUser {
+interface PopularUser {
 	id: string;
 	name: string;
 	handle: string;

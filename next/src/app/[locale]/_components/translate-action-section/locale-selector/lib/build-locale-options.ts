@@ -4,7 +4,7 @@ import type { LocaleOption } from "@/app/_constants/locale";
 export type LocaleStatus = "source" | "translated" | "untranslated";
 
 /** UI 側で扱いやすいように、既存型を拡張 */
-export interface LocaleOptionWithStatus extends LocaleOption {
+interface LocaleOptionWithStatus extends LocaleOption {
 	status: LocaleStatus;
 }
 

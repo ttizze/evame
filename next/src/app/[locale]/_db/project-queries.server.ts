@@ -54,7 +54,7 @@ const selectProjectRelatedFields = (
 	};
 };
 
-export const selectProjectsWithDetails = (
+const selectProjectsWithDetails = (
 	onlyTitle = false,
 	locale = "en",
 	currentUserId?: string,
@@ -76,7 +76,7 @@ export const selectProjectsWithDetails = (
 	};
 };
 
-export function normalizeProjectSegments(
+function normalizeProjectSegments(
 	projectSegments: {
 		id: number;
 		number: number;

@@ -58,12 +58,12 @@ export async function buildCommentTree(
 	return tree;
 }
 
-export interface ExtendedComment
+interface ExtendedComment
 	extends Omit<PageCommentWithPageCommentSegments, "replies"> {
 	segmentBundles: SegmentBundle[];
 	replies: ExtendedComment[];
 }
-export async function mapComment(
+async function mapComment(
 	comment: PageCommentWithPageCommentSegments,
 ): Promise<ExtendedComment> {
 	const segmentBundles = toSegmentBundles(
