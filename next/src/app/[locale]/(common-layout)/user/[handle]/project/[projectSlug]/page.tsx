@@ -50,15 +50,15 @@ const DynamicProjectCommentList = dynamic(() =>
 interface ProjectPageProps {
 	params: Promise<{
 		handle: string;
-		slug: string;
+		projectSlug: string;
 		locale: string;
 	}>;
 }
 
 export async function generateMetadata({ params }: ProjectPageProps) {
-	const { handle, slug } = await params;
+	const { handle, projectSlug } = await params;
 
-	const project = await fetchProjectMetaData(slug);
+	const project = await fetchProjectMetaData(projectSlug);
 
 	if (!project || project.user.handle !== handle) {
 		return {
@@ -81,9 +81,9 @@ export async function generateMetadata({ params }: ProjectPageProps) {
 }
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
-	const { slug, locale, handle } = await params;
+	const { projectSlug, locale, handle } = await params;
 	const currentUser = await getCurrentUser();
-	const projectDetail = await fetchProjectDetail(slug, locale);
+	const projectDetail = await fetchProjectDetail(projectSlug, locale);
 	if (!projectDetail) {
 		return notFound();
 	}

@@ -16,16 +16,16 @@ import { fetchAllProjectTags } from "./_db/queries.server";
 interface ProjectEditPageProps {
 	params: Promise<{
 		handle: string;
-		slug: string;
+		projectSlug: string;
 		locale: string;
 	}>;
 }
 
 export async function generateMetadata({ params }: ProjectEditPageProps) {
-	const { handle, slug } = await params;
+	const { handle, projectSlug } = await params;
 
 	const project = await prisma.project.findUnique({
-		where: { slug },
+		where: { slug: projectSlug },
 		include: { user: true },
 	});
 
@@ -44,14 +44,14 @@ export async function generateMetadata({ params }: ProjectEditPageProps) {
 export default async function ProjectEditPage({
 	params,
 }: ProjectEditPageProps) {
-	const { handle, slug, locale } = await params;
+	const { handle, projectSlug, locale } = await params;
 	const currentUser = await getCurrentUser();
 	if (!currentUser?.id || currentUser.handle !== handle) {
 		return redirect("/auth/login");
 	}
 
 	const [projectDetail, allProjectTags] = await Promise.all([
-		fetchProjectDetail(slug, currentUser?.id),
+		fetchProjectDetail(projectSlug, currentUser?.id),
 		fetchAllProjectTags(),
 	]);
 
