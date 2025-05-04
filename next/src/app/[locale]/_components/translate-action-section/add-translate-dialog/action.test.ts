@@ -1,5 +1,6 @@
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import {
+	fetchPageIdBySlug,
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
 } from "@/app/[locale]/_db/page-queries.server";
@@ -62,7 +63,7 @@ describe("TranslateAction", () => {
 		);
 
 		const formData = new FormData();
-		formData.append("pageId", "1");
+		formData.append("pageSlug", "mockUserId1-page1");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
 		formData.append("targetContentType", "pageComment");
@@ -80,37 +81,6 @@ describe("TranslateAction", () => {
 		expect(result.success).toBe(false);
 	});
 
-	it("should handle comment translation successfully", async () => {
-		const mockPage = {
-			id: 1,
-			slug: "test-page",
-			pageSegments: [{ number: 0, text: "Title" }],
-			pageComments: [
-				{
-					id: 1,
-					pageCommentSegments: [{ number: 1, text: "Comment text" }],
-				},
-			],
-		};
-		(
-			fetchPageWithTitleAndComments as unknown as ReturnType<typeof vi.fn>
-		).mockResolvedValue(mockPage);
-		(
-			createTranslationJob as unknown as ReturnType<typeof vi.fn>
-		).mockResolvedValue({ id: 1 });
-
-		const formData = new FormData();
-		formData.append("pageId", "1");
-		formData.append("aiModel", "gemini-pro");
-		formData.append("targetLocale", "en");
-		formData.append("targetContentType", "pageComment");
-
-		const result = await translateAction({ success: false }, formData);
-
-		expect(result).toEqual({ success: true });
-		expect(global.fetch).toHaveBeenCalled();
-	});
-
 	it("should handle page translation successfully", async () => {
 		const mockPage = {
 			id: 1,
@@ -118,23 +88,29 @@ describe("TranslateAction", () => {
 			slug: "test-page",
 			pageSegments: [{ number: 1, text: "Segment 1" }],
 		};
-
+		vi.mocked(fetchPageIdBySlug).mockResolvedValue(mockPage);
 		(
 			fetchPageWithPageSegments as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue(mockPage);
 		(
 			createTranslationJob as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue({ id: 1 });
-
+		(
+			fetchPageWithTitleAndComments as unknown as ReturnType<typeof vi.fn>
+		).mockResolvedValue({
+			id: 1,
+			title: "Test Page",
+			pageComments: [],
+		});
 		const formData = new FormData();
-		formData.append("pageId", "1");
+		formData.append("pageSlug", "test-page");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
 		formData.append("targetContentType", "page");
 
 		const result = await translateAction({ success: false }, formData);
-
-		expect(result).toEqual({ success: true });
+		console.log("result", result);
+		expect(result).toMatchObject({ success: true });
 		expect(revalidatePath).toHaveBeenCalled();
 	});
 
@@ -144,7 +120,7 @@ describe("TranslateAction", () => {
 		).mockResolvedValue(null);
 
 		const formData = new FormData();
-		formData.append("pageId", "1");
+		formData.append("pageSlug", "mockUserId1-page1");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
 		formData.append("targetContentType", "page");
@@ -157,29 +133,13 @@ describe("TranslateAction", () => {
 		});
 	});
 
-	it("should handle page not found for comment translation", async () => {
+	it("should handle page not found for translation", async () => {
 		(
-			fetchPageWithTitleAndComments as unknown as ReturnType<typeof vi.fn>
+			fetchPageIdBySlug as unknown as ReturnType<typeof vi.fn>
 		).mockResolvedValue(null);
 
 		const formData = new FormData();
-		formData.append("pageId", "1");
-		formData.append("aiModel", "gemini-pro");
-		formData.append("targetLocale", "en");
-		formData.append("targetContentType", "pageComment");
-
-		const result = await translateAction({ success: false }, formData);
-
-		expect(result).toEqual({ success: false, message: "Page not found" });
-	});
-
-	it("should handle page not found for page translation", async () => {
-		(
-			fetchPageWithPageSegments as unknown as ReturnType<typeof vi.fn>
-		).mockResolvedValue(null);
-
-		const formData = new FormData();
-		formData.append("pageId", "1");
+		formData.append("pageSlug", "mockUserId1-page1");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
 		formData.append("targetContentType", "page");

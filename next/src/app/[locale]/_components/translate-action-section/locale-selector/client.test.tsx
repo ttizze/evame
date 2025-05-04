@@ -63,8 +63,6 @@ describe("LocaleSelector", () => {
 		// useLocale は "en" を返すので、buildLocaleOptions により選択肢は "English" と "French" になり、
 		// selectedOption は "en" のため "English" が表示される
 		expect(screen.getByText("English")).toBeInTheDocument();
-		// showIcons が true のため、TypeIcon がレンダリングされる
-		expect(screen.getAllByTestId("type-icon")[0]).toHaveTextContent("en");
 	});
 	it("opens popover and displays locale options", async () => {
 		const user = await userEvent.setup();

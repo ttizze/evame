@@ -1,23 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { TranslationStatus } from "@prisma/client";
 
-type PageJobParams = {
+export type CreateTranslationJobParams = {
 	aiModel: string;
 	locale: string;
 	userId?: string;
-	pageId: number;
-	projectId?: never;
+	pageId?: number;
+	projectId?: number;
 };
-
-type ProjectJobParams = {
-	aiModel: string;
-	locale: string;
-	userId?: string;
-	projectId: number;
-	pageId?: never;
-};
-
-export type CreateTranslationJobParams = PageJobParams | ProjectJobParams;
 
 export async function createTranslationJob(params: CreateTranslationJobParams) {
 	if (!("pageId" in params) && !("projectId" in params)) {
