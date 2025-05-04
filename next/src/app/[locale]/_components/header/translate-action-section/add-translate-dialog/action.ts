@@ -1,5 +1,7 @@
 "use server";
 
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
+import { targetContentTypeValues } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import {
@@ -18,8 +20,6 @@ import type { ActionResponse } from "@/app/types";
 import type { TranslationJob } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
-import { targetContentTypeValues } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 
 /* ───────── 型 ───────── */
 
