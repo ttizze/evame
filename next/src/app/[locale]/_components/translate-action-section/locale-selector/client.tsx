@@ -89,7 +89,7 @@ export function LocaleSelector({
 	}
 
 	const slugKey = buildSlugKey({ pageSlug, projectSlug });
-	const apiUrl = slugKey ? `/api/translation-jobs/by-page?${slugKey}` : null;
+	const apiUrl = slugKey ? `/api/locale-info?${slugKey}` : null;
 
 	const { data, error } = useSWR(apiUrl, fetchTranslation);
 
