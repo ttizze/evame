@@ -1,4 +1,4 @@
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 export type NumberedElement = {
 	number: number;
 	text: string;

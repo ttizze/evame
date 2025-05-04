@@ -1,5 +1,5 @@
 import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/_lib/fetch-about-page";
-import { fetchLatestUserTranslationJob } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
+import { fetchLatestUserTranslationJob } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_db/queries.server";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { TranslateActionSection } from "@/app/[locale]/_components/translate-action-section/server";

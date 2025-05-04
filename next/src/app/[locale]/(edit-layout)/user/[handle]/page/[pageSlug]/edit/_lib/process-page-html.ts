@@ -6,18 +6,18 @@ export async function processPageHtml(p: {
 	title: string;
 	html: string;
 	pageId: number | undefined;
-	slug: string;
+	pageSlug: string;
 	userId: string;
 	sourceLocale: string;
 }) {
-	const { title, html, pageId, slug, userId, sourceLocale } = p;
+	const { title, html, pageId, pageSlug, userId, sourceLocale } = p;
 	const { mdastJson, segments } = await htmlToMdastWithSegments({
 		header: title,
 		html,
 	});
 	const updatedPage = await upsertPageAndSegments({
 		pageId,
-		slug,
+		pageSlug,
 		userId,
 		title,
 		mdastJson,

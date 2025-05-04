@@ -1,5 +1,5 @@
 "use server";
-import { targetContentTypeValues } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import { targetContentTypeValues } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
 import { revalidatePath } from "next/cache";

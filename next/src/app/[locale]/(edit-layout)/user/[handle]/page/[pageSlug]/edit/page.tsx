@@ -8,17 +8,17 @@ import {
 	getAllTagsWithCount,
 	getPageWithTitleAndTagsBySlug,
 } from "./_db/queries.server";
-type Params = Promise<{ locale: string; handle: string; slug: string }>;
+type Params = Promise<{ locale: string; handle: string; pageSlug: string }>;
 
-const getPageData = cache(async (handle: string, slug: string) => {
-	if (!handle || !slug) notFound();
+const getPageData = cache(async (handle: string, pageSlug: string) => {
+	if (!handle || !pageSlug) notFound();
 
 	const currentUser = await getCurrentUser();
 	if (currentUser?.handle !== handle) {
 		return notFound();
 	}
 	const [pageWithTitleAndTags, allTagsWithCount] = await Promise.all([
-		getPageWithTitleAndTagsBySlug(slug),
+		getPageWithTitleAndTagsBySlug(pageSlug),
 		getAllTagsWithCount(),
 	]);
 	const title = pageWithTitleAndTags?.pageSegments.find(
@@ -35,8 +35,8 @@ const getPageData = cache(async (handle: string, slug: string) => {
 export async function generateMetadata({
 	params,
 }: { params: Params }): Promise<Metadata> {
-	const { handle, slug } = await params;
-	const { title } = await getPageData(handle, slug);
+	const { handle, pageSlug } = await params;
+	const { title } = await getPageData(handle, pageSlug);
 
 	return {
 		title: title ? `Edit ${title}` : "Edit Page",
@@ -52,9 +52,9 @@ export default async function EditPage({
 }: {
 	params: Params;
 }) {
-	const { locale, handle, slug } = await params;
+	const { locale, handle, pageSlug } = await params;
 	const { currentUser, pageWithTitleAndTags, allTagsWithCount, title } =
-		await getPageData(handle, slug);
+		await getPageData(handle, pageSlug);
 	const { html } = await mdastToHtml({
 		mdastJson: pageWithTitleAndTags?.mdastJson ?? {},
 	});
@@ -65,7 +65,7 @@ export default async function EditPage({
 			pageWithTitleAndTags={pageWithTitleAndTags}
 			allTagsWithCount={allTagsWithCount}
 			initialTitle={title}
-			slug={slug}
+			pageSlug={pageSlug}
 			userLocale={locale}
 			html={html}
 		/>

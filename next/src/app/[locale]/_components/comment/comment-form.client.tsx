@@ -1,7 +1,7 @@
 // components/CommentFormLayout.tsx
 "use client";
 
-import { Editor } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[slug]/edit/_components/editor/editor";
+import { Editor } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/editor/editor";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";

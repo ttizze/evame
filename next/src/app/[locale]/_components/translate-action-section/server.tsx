@@ -1,6 +1,6 @@
 import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
 import type { TranslationJob } from "@prisma/client";
-import type { TargetContentType } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "../../(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { TranslateActionSectionClient } from "./client";
 
 type TranslateActionSectionProps = {

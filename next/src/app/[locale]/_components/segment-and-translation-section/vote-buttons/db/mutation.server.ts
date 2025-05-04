@@ -1,4 +1,4 @@
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { prisma } from "@/lib/prisma";
 
 export async function handleVote(

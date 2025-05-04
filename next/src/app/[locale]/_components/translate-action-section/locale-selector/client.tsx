@@ -23,28 +23,44 @@ import { useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { startTransition } from "react";
+import useSWR from "swr";
 import { useCombinedRouter } from "../hooks/use-combined-router";
 import { useLocaleListAutoRefresh } from "./hooks/use-locale-list-auto-refresh.client";
 import { buildLocaleOptions } from "./lib/build-locale-options";
 import { TypeIcon } from "./lib/type-Icon.client";
+const fetchJson = async (url: string) => {
+	const res = await fetch(url);
+	if (!res.ok) {
+		// ここで throw すれば SWR の error に入る
+		throw new Error(`fetch failed: ${res.status} ${res.statusText}`);
+	}
+	return res.json();
+};
+
 interface LocaleSelectorProps {
-	sourceLocale: string;
+	pageId?: number;
 	className?: string;
 
 	/** Called if the user clicks the “Add New” button. */
 	onAddNew: () => void;
 	showIcons: boolean;
-	translationJobs?: TranslationJob[];
 }
 
 //TODO: radix uiのせいで開発環境のモバイルで文字がぼける iphoneではボケてない､その他実機でもボケてたら対応する
 export function LocaleSelector({
-	sourceLocale,
+	pageId,
 	className,
 	onAddNew,
 	showIcons = false,
-	translationJobs,
 }: LocaleSelectorProps) {
+	const { data } = useSWR(
+		pageId ? `/api/translation-jobs/by-page?pageId=${pageId}` : null,
+		fetchJson,
+		{ refreshInterval: 5000 },
+	);
+	const sourceLocale = data?.sourceLocale;
+	const translationJobs = data?.translationJobs as TranslationJob[] | undefined;
+
 	const [open, setOpen] = useState(false);
 	const router = useCombinedRouter();
 	const params = useParams();
@@ -63,11 +79,11 @@ export function LocaleSelector({
 
 	useLocaleListAutoRefresh(translationJobs);
 
-	const localeOptions = buildLocaleOptions(
-		sourceLocale,
-		translationJobs?.map((job) => job.locale) ?? [],
-		supportedLocaleOptions,
-	);
+	const localeOptions = buildLocaleOptions({
+		sourceLocale: sourceLocale,
+		existLocales: translationJobs?.map((job) => job.locale) ?? [],
+		supported: supportedLocaleOptions,
+	});
 
 	const selectedOption = localeOptions.find(
 		(item) => item.code === targetLocale,
@@ -82,7 +98,7 @@ export function LocaleSelector({
 					data-testid="locale-selector-button"
 				>
 					<div className="flex items-center">
-						{showIcons && (
+						{showIcons && sourceLocale && (
 							<TypeIcon
 								code={selectedOption?.code ?? ""}
 								sourceLocale={sourceLocale}
@@ -105,7 +121,7 @@ export function LocaleSelector({
 									value={item.code}
 									onSelect={handleLocaleChange}
 								>
-									{showIcons && (
+									{showIcons && sourceLocale && (
 										<TypeIcon
 											code={item.code}
 											sourceLocale={sourceLocale}

@@ -22,7 +22,7 @@ interface EditPageClientProps {
 	pageWithTitleAndTags: PageWithTitleAndTags;
 	allTagsWithCount: TagWithCount[];
 	initialTitle: string | undefined;
-	slug: string;
+	pageSlug: string;
 	userLocale: string;
 	html: string;
 }
@@ -32,7 +32,7 @@ export function EditPageClient({
 	pageWithTitleAndTags,
 	allTagsWithCount,
 	initialTitle,
-	slug,
+	pageSlug,
 	userLocale,
 	html,
 }: EditPageClientProps) {
@@ -134,7 +134,7 @@ export function EditPageClient({
 						/>
 					</div>
 					<form action={editAction} ref={formRef}>
-						<input type="hidden" name="slug" value={slug} />
+						<input type="hidden" name="pageSlug" value={pageSlug} />
 						<input
 							type="hidden"
 							name="pageId"

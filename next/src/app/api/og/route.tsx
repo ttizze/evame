@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { fetchPageContext } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_lib/fetch-page-context";
+import { fetchPageContext } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_lib/fetch-page-context";
 import type { DisplayMode } from "@/app/_context/display-types";
 import { ImageResponse } from "next/og";
 

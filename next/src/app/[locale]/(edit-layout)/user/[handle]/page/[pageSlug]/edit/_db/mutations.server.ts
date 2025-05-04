@@ -4,7 +4,7 @@ import type { Prisma } from "@prisma/client";
 
 export async function upsertPageAndSegments(p: {
 	pageId: number | undefined;
-	slug: string;
+	pageSlug: string;
 	userId: string;
 	title: string;
 	mdastJson: Prisma.InputJsonValue;
@@ -12,10 +12,10 @@ export async function upsertPageAndSegments(p: {
 	segments: SegmentDraft[];
 }) {
 	const page = await prisma.page.upsert({
-		where: { slug: p.slug, userId: p.userId },
+		where: { slug: p.pageSlug, userId: p.userId },
 		update: { mdastJson: p.mdastJson, sourceLocale: p.sourceLocale },
 		create: {
-			slug: p.slug,
+			slug: p.pageSlug,
 			userId: p.userId,
 			mdastJson: p.mdastJson,
 			sourceLocale: p.sourceLocale,

@@ -1,5 +1,4 @@
 "use client";
-import type { TranslationJob } from "@prisma/client";
 
 import { GeminiApiKeyDialog } from "@/app/[locale]/_components/gemini-api-key-dialog/gemini-api-key-dialog";
 import { StartButton } from "@/app/[locale]/_components/start-button";
@@ -21,18 +20,16 @@ import {
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useActionState } from "react";
-import type { TargetContentType } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "../../../(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { type TranslateActionState, translateAction } from "./action";
 import { DialogLocaleSelector } from "./dialog-locale-selector";
-import { UserAITranslationStatus } from "./user-ai-translation-status";
 
 type AddTranslateDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	currentHandle: string | undefined;
-	pageId: number;
+	pageId?: number;
 	hasGeminiApiKey: boolean;
-	latestUserTranslationJob: TranslationJob | null;
 	targetContentType: TargetContentType;
 };
 
@@ -42,7 +39,6 @@ export function AddTranslateDialog({
 	currentHandle,
 	pageId,
 	hasGeminiApiKey,
-	latestUserTranslationJob,
 	targetContentType,
 }: AddTranslateDialogProps) {
 	const [translateState, action, isTranslating] = useActionState<
@@ -154,9 +150,6 @@ export function AddTranslateDialog({
 										{translateState.zodErrors.targetContentType[0]}
 									</p>
 								)}
-							<UserAITranslationStatus
-								latestUserTranslationJob={latestUserTranslationJob}
-							/>
 						</>
 					)}
 				</DialogContent>

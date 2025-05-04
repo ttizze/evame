@@ -26,7 +26,7 @@ const NotificationsDropdown = dynamic(
 export async function Header({
 	params,
 }: {
-	params: Promise<{ locale: string; handle?: string; slug?: string }>;
+	params: Promise<{ locale: string; handle?: string; pageSlug?: string }>;
 }) {
 	const currentUser = await getCurrentUser();
 

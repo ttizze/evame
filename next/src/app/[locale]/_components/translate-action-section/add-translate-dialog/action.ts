@@ -9,8 +9,8 @@ import type { ActionResponse } from "@/app/types";
 import type { TranslateJobParams } from "@/features/translate/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { TargetContentType } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
-import { targetContentTypeValues } from "../../../(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "../../../(common-layout)/user/[handle]/page/[pageSlug]/constants";
+import { targetContentTypeValues } from "../../../(common-layout)/user/[handle]/page/[pageSlug]/constants";
 // バリデーション用のスキーマ
 const translateSchema = z.object({
 	pageId: z.coerce.number(),

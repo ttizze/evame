@@ -1,4 +1,4 @@
-import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-list/server";
+import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
 import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
@@ -10,6 +10,7 @@ import { notFound } from "next/navigation";
 import type { SearchParams } from "nuqs/server";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
+
 const DynamicContentWithTranslations = dynamic(
 	() =>
 		import("./_components/content-with-translations").then(
@@ -51,20 +52,20 @@ const DynamicTranslateActionSection = dynamic(
 const DynamicPageCommentForm = dynamic(
 	() =>
 		import(
-			"@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_components/comment/_components/page-comment-form/client"
+			"@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-form/client"
 		).then((mod) => mod.PageCommentForm),
 	{
 		loading: () => <p>Loading Comment Form...</p>,
 	},
 );
 
-type Params = Promise<{ locale: string; handle: string; slug: string }>;
+type Params = Promise<{ locale: string; handle: string; pageSlug: string }>;
 
 export async function generateMetadata({
 	params,
 }: { params: Params; searchParams: Promise<SearchParams> }): Promise<Metadata> {
-	const { slug, locale } = await params;
-	const data = await fetchPageContext(slug, locale);
+	const { pageSlug, locale } = await params;
+	const data = await fetchPageContext(pageSlug, locale);
 	if (!data) {
 		return {
 			title: "Page Not Found",
@@ -75,7 +76,7 @@ export async function generateMetadata({
 	const description = await mdastToText(pageDetail.mdastJson).then((text) =>
 		text.slice(0, 200),
 	);
-	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${slug}`;
+	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${pageSlug}`;
 	return {
 		title,
 		description,
@@ -105,8 +106,8 @@ export async function generateMetadata({
 export default async function Page({
 	params,
 }: { params: Params; searchParams: Promise<SearchParams> }) {
-	const { slug, locale } = await params;
-	const data = await fetchPageContext(slug, locale);
+	const { pageSlug, locale } = await params;
+	const data = await fetchPageContext(pageSlug, locale);
 	if (!data) {
 		return notFound();
 	}

@@ -19,7 +19,7 @@ export default async function CommonLayout({
 	params,
 	children,
 }: {
-	params: Promise<{ locale: string; handle?: string; slug?: string }>;
+	params: Promise<{ locale: string; handle?: string; pageSlug?: string }>;
 	children: React.ReactNode;
 }) {
 	const messages = await getMessages();
