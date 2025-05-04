@@ -58,7 +58,7 @@ describe("LocaleSelector", () => {
 	});
 
 	it("renders button with the selected locale name and icon", () => {
-		render(<LocaleSelector onAddNew={() => {}} showIcons={true} />);
+		render(<LocaleSelector onAddNew={() => {}} />);
 
 		// useLocale は "en" を返すので、buildLocaleOptions により選択肢は "English" と "French" になり、
 		// selectedOption は "en" のため "English" が表示される
@@ -68,7 +68,7 @@ describe("LocaleSelector", () => {
 	});
 	it("opens popover and displays locale options", async () => {
 		const user = await userEvent.setup();
-		render(<LocaleSelector onAddNew={vi.fn()} showIcons={false} />);
+		render(<LocaleSelector onAddNew={vi.fn()} />);
 		const button = await screen.findByTestId("locale-selector-button");
 		await user.click(button);
 		// ポップオーバー内に検索ボックスが表示される
@@ -80,7 +80,7 @@ describe("LocaleSelector", () => {
 
 	it("calls router.push with the selected locale on command item select", async () => {
 		const user = userEvent.setup();
-		render(<LocaleSelector onAddNew={() => {}} showIcons={false} />);
+		render(<LocaleSelector onAddNew={() => {}} />);
 
 		// ポップオーバーを開くため、ボタンをクリック
 		const button = screen.getByTestId("locale-selector-button");
@@ -100,7 +100,7 @@ describe("LocaleSelector", () => {
 	it("calls onAddNew when the Add New button is clicked", async () => {
 		const onAddNewMock = vi.fn();
 		const user = userEvent.setup();
-		render(<LocaleSelector onAddNew={onAddNewMock} showIcons={false} />);
+		render(<LocaleSelector onAddNew={onAddNewMock} />);
 
 		// ポップオーバーを開く
 		const button = screen.getByTestId("locale-selector-button");

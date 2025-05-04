@@ -259,3 +259,10 @@ export async function fetchPageWithPageSegments(pageId: number) {
 		title,
 	};
 }
+
+export async function fetchPageIdBySlug(slug: string) {
+	return await prisma.page.findFirst({
+		where: { slug },
+		select: { id: true },
+	});
+}

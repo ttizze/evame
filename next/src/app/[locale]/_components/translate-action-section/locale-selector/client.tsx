@@ -25,42 +25,49 @@ import { useState } from "react";
 import { startTransition } from "react";
 import useSWR from "swr";
 import { useCombinedRouter } from "../hooks/use-combined-router";
-import { useLocaleListAutoRefresh } from "./hooks/use-locale-list-auto-refresh.client";
 import { buildLocaleOptions } from "./lib/build-locale-options";
 import { TypeIcon } from "./lib/type-Icon.client";
-const fetchJson = async (url: string) => {
-	const res = await fetch(url);
-	if (!res.ok) {
-		// ここで throw すれば SWR の error に入る
-		throw new Error(`fetch failed: ${res.status} ${res.statusText}`);
-	}
+type TranslationInfo = {
+	sourceLocale: string;
+	translationJobs: TranslationJob[];
+};
+
+const buildSlugKey = ({
+	pageSlug,
+	projectSlug,
+}: {
+	pageSlug?: string;
+	projectSlug?: string;
+}) =>
+	pageSlug
+		? `pageSlug=${pageSlug}`
+		: projectSlug
+			? `projectSlug=${projectSlug}`
+			: null;
+
+const fetchTranslation: (url: string) => Promise<TranslationInfo> = async (
+	url,
+) => {
+	const res = await fetch(url, { cache: "no-store" });
+	if (!res.ok) throw new Error(`HTTP ${res.status}`);
 	return res.json();
 };
 
 interface LocaleSelectorProps {
-	pageId?: number;
 	className?: string;
-
+	pageSlug?: string;
+	projectSlug?: string;
 	/** Called if the user clicks the “Add New” button. */
 	onAddNew: () => void;
-	showIcons: boolean;
 }
 
 //TODO: radix uiのせいで開発環境のモバイルで文字がぼける iphoneではボケてない､その他実機でもボケてたら対応する
 export function LocaleSelector({
-	pageId,
 	className,
 	onAddNew,
-	showIcons = false,
+	pageSlug,
+	projectSlug,
 }: LocaleSelectorProps) {
-	const { data } = useSWR(
-		pageId ? `/api/translation-jobs/by-page?pageId=${pageId}` : null,
-		fetchJson,
-		{ refreshInterval: 5000 },
-	);
-	const sourceLocale = data?.sourceLocale;
-	const translationJobs = data?.translationJobs as TranslationJob[] | undefined;
-
 	const [open, setOpen] = useState(false);
 	const router = useCombinedRouter();
 	const params = useParams();
@@ -76,16 +83,24 @@ export function LocaleSelector({
 			);
 		});
 	};
+	let showIcons = false;
+	if (pageSlug || projectSlug) {
+		showIcons = true;
+	}
 
-	useLocaleListAutoRefresh(translationJobs);
+	const slugKey = buildSlugKey({ pageSlug, projectSlug });
+	const apiUrl = slugKey ? `/api/translation-jobs/by-page?${slugKey}` : null;
 
-	const localeOptions = buildLocaleOptions({
-		sourceLocale: sourceLocale,
+	const { data, error } = useSWR(apiUrl, fetchTranslation);
+
+	const { sourceLocale, translationJobs } = data ?? {};
+	const localeOptionWithStatus = buildLocaleOptions({
+		sourceLocale,
 		existLocales: translationJobs?.map((job) => job.locale) ?? [],
 		supported: supportedLocaleOptions,
 	});
 
-	const selectedOption = localeOptions.find(
+	const selectedOption = localeOptionWithStatus.find(
 		(item) => item.code === targetLocale,
 	);
 
@@ -99,10 +114,7 @@ export function LocaleSelector({
 				>
 					<div className="flex items-center">
 						{showIcons && sourceLocale && (
-							<TypeIcon
-								code={selectedOption?.code ?? ""}
-								sourceLocale={sourceLocale}
-							/>
+							<TypeIcon status={selectedOption?.status ?? "untranslated"} />
 						)}
 						<span className="truncate">{selectedOption?.name ?? "Select"}</span>
 					</div>
@@ -115,18 +127,14 @@ export function LocaleSelector({
 					<CommandList>
 						<CommandEmpty>No locales found.</CommandEmpty>
 						<CommandGroup>
-							{localeOptions.map((item) => (
+							{localeOptionWithStatus.map((item) => (
 								<CommandItem
 									key={item.code}
 									value={item.code}
 									onSelect={handleLocaleChange}
 								>
 									{showIcons && sourceLocale && (
-										<TypeIcon
-											code={item.code}
-											sourceLocale={sourceLocale}
-											translationJobs={translationJobs}
-										/>
+										<TypeIcon status={item.status} />
 									)}
 									<span className="truncate grow">{item.name}</span>
 									{targetLocale === item.code && (

@@ -39,15 +39,6 @@ const DynamicFloatingControls = dynamic(
 		loading: () => <span>Loading Controls...</span>,
 	},
 );
-const DynamicTranslateActionSection = dynamic(
-	() =>
-		import("@/app/[locale]/_components/translate-action-section/server").then(
-			(mod) => mod.TranslateActionSection,
-		),
-	{
-		loading: () => <span>Loading Translate Section...</span>,
-	},
-);
 
 const DynamicPageCommentForm = dynamic(
 	() =>
@@ -154,15 +145,6 @@ export default async function Page({
 					<div className="mt-8" id="comments">
 						<div className="flex items-center gap-2 py-2">
 							<h2 className="text-2xl not-prose font-bold">Comments</h2>
-							<DynamicTranslateActionSection
-								pageId={pageDetail.id}
-								currentHandle={currentUser?.handle}
-								latestUserTranslationJob={latestUserTranslationJob}
-								translationJobs={pageTranslationJobs}
-								sourceLocale={pageDetail.sourceLocale}
-								targetContentType="pageComment"
-								showIcons={false}
-							/>
 						</div>
 						<PageCommentList pageId={pageDetail.id} userLocale={locale} />
 					</div>

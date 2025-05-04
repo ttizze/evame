@@ -2,6 +2,8 @@
 
 import { GeminiApiKeyDialog } from "@/app/[locale]/_components/gemini-api-key-dialog/gemini-api-key-dialog";
 import { StartButton } from "@/app/[locale]/_components/start-button";
+import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
+import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -28,19 +30,27 @@ type AddTranslateDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	currentHandle: string | undefined;
-	pageId?: number;
 	hasGeminiApiKey: boolean;
-	targetContentType: TargetContentType;
+	pageSlug?: string;
+	projectSlug?: string;
 };
 
 export function AddTranslateDialog({
 	open,
 	onOpenChange,
 	currentHandle,
-	pageId,
 	hasGeminiApiKey,
-	targetContentType,
+	pageSlug,
+	projectSlug,
 }: AddTranslateDialogProps) {
+	let targetContentType: TargetContentType;
+	if (pageSlug) {
+		targetContentType = "page";
+	} else if (projectSlug) {
+		targetContentType = "project";
+	} else {
+		throw new Error("pageSlug or projectSlug is required");
+	}
 	const [translateState, action, isTranslating] = useActionState<
 		TranslateActionState,
 		FormData
@@ -48,7 +58,11 @@ export function AddTranslateDialog({
 	const [targetLocale, setTargetLocale] = useState("");
 	const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
+	const { jobs } = useTranslationJobs(
+		translateState.success ? (translateState.data?.translationJobs ?? []) : [],
+	);
 
+	useTranslationJobToast(jobs);
 	return (
 		<>
 			<Dialog open={open} onOpenChange={onOpenChange}>
@@ -104,7 +118,8 @@ export function AddTranslateDialog({
 										name="targetLocale"
 										value={targetLocale}
 									/>
-									<input type="hidden" name="pageId" value={pageId} />
+									<input type="hidden" name="pageSlug" value={pageSlug} />
+									<input type="hidden" name="projectSlug" value={projectSlug} />
 									<input type="hidden" name="aiModel" value={selectedModel} />
 									<input
 										type="hidden"
@@ -128,11 +143,24 @@ export function AddTranslateDialog({
 									Set API Key
 								</Button>
 							)}
-							{!translateState.success && translateState.zodErrors?.pageId && (
-								<p className="text-red-500">
-									{translateState.zodErrors.pageId[0]}
-								</p>
-							)}
+							{!translateState.success &&
+								translateState.zodErrors?.pageSlug && (
+									<p className="text-red-500">
+										{translateState.zodErrors.pageSlug[0]}
+									</p>
+								)}
+							{!translateState.success &&
+								translateState.zodErrors?.projectSlug && (
+									<p className="text-red-500">
+										{translateState.zodErrors.projectSlug[0]}
+									</p>
+								)}
+							{!translateState.success &&
+								translateState.zodErrors?.projectSlug && (
+									<p className="text-red-500">
+										{translateState.zodErrors.projectSlug[0]}
+									</p>
+								)}
 							{!translateState.success && translateState.zodErrors?.aiModel && (
 								<p className="text-red-500">
 									{translateState.zodErrors.aiModel[0]}

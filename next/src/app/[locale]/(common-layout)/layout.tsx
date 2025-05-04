@@ -19,7 +19,7 @@ export default async function CommonLayout({
 	params,
 	children,
 }: {
-	params: Promise<{ locale: string; handle?: string; pageSlug?: string }>;
+	params: Promise<{ locale: string }>;
 	children: React.ReactNode;
 }) {
 	const messages = await getMessages();
@@ -29,7 +29,7 @@ export default async function CommonLayout({
 		<>
 			<NextIntlClientProvider messages={messages}>
 				<DisplayProvider userLocale={locale} initialSourceLocale="mixed">
-					<Header params={params} />
+					<Header />
 					<main className="mb-5 mt-3 md:mt-5 grow tracking-wider">
 						<div className="container mx-auto px-4 max-w-4xl">{children}</div>
 					</main>

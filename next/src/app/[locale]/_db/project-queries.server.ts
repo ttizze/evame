@@ -272,3 +272,10 @@ export async function fetchProjectWithTitleAndComments(projectId: number) {
 		title,
 	};
 }
+
+export async function fetchProjectIdBySlug(slug: string) {
+	return await prisma.project.findFirst({
+		where: { slug },
+		select: { id: true },
+	});
+}

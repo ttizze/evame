@@ -4,15 +4,6 @@ import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import type { fetchPageContext } from "../_lib/fetch-page-context";
 import { SubHeader } from "./sub-header";
-const DynamicTranslateActionSection = dynamic(
-	() =>
-		import("@/app/[locale]/_components/translate-action-section/server").then(
-			(mod) => mod.TranslateActionSection,
-		),
-	{
-		loading: () => <span>Loading Translate Section...</span>,
-	},
-);
 const DynamicSegmentAndTranslationSection = dynamic(
 	() =>
 		import(
@@ -62,16 +53,6 @@ export async function ContentWithTranslations({
 			<SubHeader
 				pageDetail={pageDetail}
 				currentUserHandle={currentUser?.handle}
-			/>
-			<DynamicTranslateActionSection
-				pageId={pageDetail.id}
-				currentHandle={currentUser?.handle}
-				translationJobs={pageTranslationJobs}
-				latestUserTranslationJob={latestUserTranslationJob}
-				sourceLocale={pageDetail.sourceLocale}
-				className="pt-3"
-				targetContentType="page"
-				showIcons={true}
 			/>
 			<span className="js-content">{content}</span>
 		</>

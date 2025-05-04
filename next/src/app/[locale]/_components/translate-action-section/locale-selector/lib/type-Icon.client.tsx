@@ -1,32 +1,30 @@
-import type { TranslationJob } from "@prisma/client";
-import { TranslationStatus } from "@prisma/client";
-import { FileText, Languages, Loader2 } from "lucide-react";
+import { FileQuestion, FileText, Languages } from "lucide-react";
+import type { LocaleStatus } from "./build-locale-options";
 
-export function TypeIcon({
-	code,
-	sourceLocale,
-	translationJobs,
-}: {
-	code: string;
-	sourceLocale: string;
-	translationJobs?: TranslationJob[];
-}) {
-	const translationInfo = translationJobs?.find((job) => job.locale === code);
+/**
+ * 3-state アイコン
+ * ───────────────────────────────────────────
+ *  source       : 原文                     → FileText
+ *  translated   : 既に翻訳がある           → Languages
+ *  untranslated : サポート対象だが未翻訳   → FileQuestion
+ */
+export function TypeIcon({ status }: { status: LocaleStatus }) {
+	switch (status) {
+		case "source":
+			return <FileText data-testid="source-icon" className="w-4 h-4 mr-2" />;
 
-	if (code === sourceLocale) {
-		return <FileText data-testid="text-icon" className="w-4 h-4 mr-2" />;
+		case "translated":
+			return (
+				<Languages data-testid="translated-icon" className="w-4 h-4 mr-2" />
+			);
+
+		/* 未翻訳: デフォルトで包むと将来ステータスが増えても安全 */
+		default:
+			return (
+				<FileQuestion
+					data-testid="untranslated-icon"
+					className="w-4 h-4 mr-2"
+				/>
+			);
 	}
-	if (
-		translationInfo &&
-		translationInfo.status !== TranslationStatus.COMPLETED
-	) {
-		return (
-			<Loader2
-				data-testid="loader-icon"
-				className="w-4 h-4 mr-2 animate-spin"
-			/>
-		);
-	}
-
-	return <Languages data-testid="languages-icon" className="w-4 h-4 mr-2" />;
 }

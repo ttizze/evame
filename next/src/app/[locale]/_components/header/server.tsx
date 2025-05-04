@@ -23,22 +23,12 @@ const NotificationsDropdown = dynamic(
 		loading: () => <Loader2 className="w-6 h-6 animate-spin" />,
 	},
 );
-export async function Header({
-	params,
-}: {
-	params: Promise<{ locale: string; handle?: string; pageSlug?: string }>;
-}) {
+export async function Header() {
 	const currentUser = await getCurrentUser();
 
 	const rightExtra = (
 		<>
-			<DynamicTranslateActionSection
-				currentHandle={currentUser?.handle}
-				latestUserTranslationJob={null}
-				sourceLocale="en"
-				targetContentType="page"
-				showIcons={true}
-			/>
+			<DynamicTranslateActionSection currentHandle={currentUser?.handle} />
 			<Link href="/search" aria-label="Search for pages">
 				<Search className="w-6 h-6 " />
 			</Link>
