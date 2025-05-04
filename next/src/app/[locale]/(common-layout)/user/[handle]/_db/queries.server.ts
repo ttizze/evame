@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sanitizeUser } from "@/lib/sanitize-user";
 
-
 export async function getFollowCounts(userId: string) {
 	const [followers, following] = await Promise.all([
 		prisma.follow.count({

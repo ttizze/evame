@@ -31,7 +31,6 @@ const s3Client = new S3Client(
 			},
 );
 
-
 async function uploadToR2(file: File): Promise<string> {
 	const key = `uploads/${Date.now()}-${file.name}`;
 	const arrayBuffer = await file.arrayBuffer();

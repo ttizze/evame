@@ -42,10 +42,7 @@ export async function upsertProjectAndSegments(p: {
 }
 
 /** 1ページ分のセグメントを同期 */
-async function syncProjectSegments(
-	projectId: number,
-	drafts: SegmentDraft[],
-) {
+async function syncProjectSegments(projectId: number, drafts: SegmentDraft[]) {
 	const existing = await prisma.projectSegment.findMany({
 		where: { projectId },
 		select: { textAndOccurrenceHash: true },

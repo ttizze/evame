@@ -3,7 +3,6 @@ import type {
 	Prisma, // ← @prisma/client から import
 } from "@prisma/client";
 import { getOrCreateAIUser } from "../db/mutations.server";
-import { getGeminiModelResponse } from "../services/gemini";
 import type { NumberedElement } from "../types";
 
 type Segment = { id: number; number: number };
