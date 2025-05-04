@@ -31,15 +31,6 @@ const s3Client = new S3Client(
 			},
 );
 
-export type imgActionState = ActionResponse<
-	{
-		imageUrl: string;
-	},
-	{
-		image: File;
-	}
->;
-
 async function uploadToR2(file: File): Promise<string> {
 	const key = `uploads/${Date.now()}-${file.name}`;
 	const arrayBuffer = await file.arrayBuffer();
@@ -56,7 +47,7 @@ async function uploadToR2(file: File): Promise<string> {
 		? `https://images.eveeve.org/${key}`
 		: `http://localhost:9000/${R2_BUCKET_NAME}/${key}`;
 }
-export type UploadImageResult = ActionResponse<
+type UploadImageResult = ActionResponse<
 	{
 		imageUrl: string;
 	},

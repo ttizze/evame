@@ -1,4 +1,4 @@
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import type {
 	Page,
 	Project,
@@ -10,7 +10,7 @@ import type {
 	TagPage,
 } from "@prisma/client";
 import type { SanitizedUser } from "../types";
-export interface BaseSegment {
+interface BaseSegment {
 	id: number;
 	number: number;
 	text: string;
@@ -26,7 +26,7 @@ export interface BaseTranslation {
 	currentUserVote: UserVote | null;
 }
 
-export interface UserVote {
+interface UserVote {
 	isUpvote: boolean;
 	updatedAt: string; // ISO 文字列
 }

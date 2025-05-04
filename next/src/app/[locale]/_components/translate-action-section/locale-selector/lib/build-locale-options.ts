@@ -1,26 +1,66 @@
 import type { LocaleOption } from "@/app/_constants/locale";
 
-export function buildLocaleOptions(
-	sourceLocale: string,
-	existLocales: string[],
-	supportedLocaleOptions: LocaleOption[],
-): LocaleOption[] {
-	// Get info for the source locale.
-	const sourceLocaleOption = supportedLocaleOptions.find(
-		(sl) => sl.code === sourceLocale,
-	) ?? { code: "und", name: "Unknown" };
-	// For each existing locale, make an option
-	const merged = [
-		sourceLocaleOption,
-		...existLocales.map((lc) => {
-			const localeName =
-				supportedLocaleOptions.find((sl) => sl.code === lc)?.name || lc;
-			return { code: lc, name: localeName };
-		}),
-	];
+/** 追加したい状態 */
+export type LocaleStatus = "source" | "translated" | "untranslated";
 
-	const existingOptions = merged.filter((option, index, self) => {
-		return self.findIndex((o) => o.code === option.code) === index;
+/** UI 側で扱いやすいように、既存型を拡張 */
+interface LocaleOptionWithStatus extends LocaleOption {
+	status: LocaleStatus;
+}
+
+/**
+ * - `existLocales`: すでに翻訳が存在する言語コード配列（例: ["en","zh"]）
+ * - `supported`   : アプリが対応している { code, name } 一覧（20 言語など）
+ * - `sourceLocale`: 原文の言語コード（undefined なら「原文」行を出さない）
+ *
+ * 返り値: ソース → 翻訳済み → 未翻訳 の順に重複なしで並んだ配列
+ */
+export function buildLocaleOptions({
+	existLocales,
+	supported,
+	sourceLocale,
+}: {
+	sourceLocale?: string;
+	existLocales: string[];
+	supported: LocaleOption[];
+}): LocaleOptionWithStatus[] {
+	/* name 解決を O(1) にするため Map 化 */
+	const nameMap = new Map(supported.map((o) => [o.code, o.name]));
+
+	const toOption = (
+		code: string,
+		status: LocaleStatus,
+	): LocaleOptionWithStatus => ({
+		code,
+		name: nameMap.get(code) ?? code, // 未登録言語でもフォールバック
+		status,
 	});
-	return existingOptions;
+
+	const seen = new Set<string>();
+	const result: LocaleOptionWithStatus[] = [];
+
+	/* 1) 原文 */
+	if (sourceLocale) {
+		result.push(toOption(sourceLocale, "source"));
+		seen.add(sourceLocale);
+	}
+
+	/* 2) 翻訳済み */
+	for (const code of existLocales) {
+		if (!seen.has(code)) {
+			result.push(toOption(code, "translated"));
+			seen.add(code);
+		}
+	}
+
+	/* 3) 未翻訳（supported でまだ出ていないもの）*/
+	for (const { code } of supported) {
+		if (!seen.has(code)) {
+			result.push(toOption(code, "untranslated"));
+			// seen への追加は不要だが一貫性のため入れておく
+			seen.add(code);
+		}
+	}
+
+	return result;
 }

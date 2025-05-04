@@ -4,12 +4,12 @@ export type SanitizedUser = Omit<
 	User,
 	"email" | "provider" | "plan" | "emailVerified" | "id"
 >;
-export type Failure<U = Record<string, unknown>> = {
+type Failure<U = Record<string, unknown>> = {
 	success: false;
 	message?: string;
 	zodErrors?: typeToFlattenedError<U>["fieldErrors"];
 };
-export type Success<T = undefined> = {
+type Success<T = undefined> = {
 	success: true;
 	data: T;
 	message?: string;

@@ -12,13 +12,16 @@ describe("buildLocaleOptions", () => {
 			{ code: "fr", name: "French" },
 		];
 
-		const result = buildLocaleOptions(
+		const result = buildLocaleOptions({
 			sourceLocale,
 			existLocales,
-			supportedLocaleOptions,
-		);
+			supported: supportedLocaleOptions,
+		});
 
-		expect(result).toEqual([{ code: "en", name: "English" }]);
+		expect(result).toEqual([
+			{ code: "en", name: "English", status: "source" },
+			{ code: "fr", name: "French", status: "untranslated" },
+		]);
 	});
 
 	it("existLocales に重複がある場合、重複なくマージされる", () => {
@@ -29,15 +32,15 @@ describe("buildLocaleOptions", () => {
 			{ code: "fr", name: "French" },
 		];
 
-		const result = buildLocaleOptions(
+		const result = buildLocaleOptions({
 			sourceLocale,
 			existLocales,
-			supportedLocaleOptions,
-		);
+			supported: supportedLocaleOptions,
+		});
 
 		expect(result).toEqual([
-			{ code: "en", name: "English" },
-			{ code: "fr", name: "French" },
+			{ code: "en", name: "English", status: "source" },
+			{ code: "fr", name: "French", status: "translated" },
 		]);
 	});
 });

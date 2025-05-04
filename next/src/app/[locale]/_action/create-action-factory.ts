@@ -10,7 +10,7 @@ import {
 } from "./auth-and-validate";
 
 /* ────────────── 共通依存 ────────────── */
-export type CreateDeps = AuthDeps & {
+type CreateDeps = AuthDeps & {
 	revalidatePath: typeof revalidatePath;
 	redirect: typeof redirect;
 };

@@ -1,4 +1,3 @@
-import { TranslationStatus } from "@prisma/client";
 import type { TranslationJob } from "@prisma/client";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -59,31 +58,15 @@ describe("LocaleSelector", () => {
 	});
 
 	it("renders button with the selected locale name and icon", () => {
-		render(
-			<LocaleSelector sourceLocale="en" onAddNew={() => {}} showIcons={true} />,
-		);
+		render(<LocaleSelector onAddNew={() => {}} />);
 
 		// useLocale は "en" を返すので、buildLocaleOptions により選択肢は "English" と "French" になり、
 		// selectedOption は "en" のため "English" が表示される
 		expect(screen.getByText("English")).toBeInTheDocument();
-		// showIcons が true のため、TypeIcon がレンダリングされる
-		expect(screen.getAllByTestId("type-icon")[0]).toHaveTextContent("en");
 	});
 	it("opens popover and displays locale options", async () => {
 		const user = await userEvent.setup();
-		render(
-			<LocaleSelector
-				sourceLocale="en"
-				onAddNew={vi.fn()}
-				showIcons={false}
-				translationJobs={[
-					{
-						locale: "ja",
-						status: TranslationStatus.COMPLETED,
-					} as TranslationJob,
-				]}
-			/>,
-		);
+		render(<LocaleSelector onAddNew={vi.fn()} />);
 		const button = await screen.findByTestId("locale-selector-button");
 		await user.click(button);
 		// ポップオーバー内に検索ボックスが表示される
@@ -95,20 +78,7 @@ describe("LocaleSelector", () => {
 
 	it("calls router.push with the selected locale on command item select", async () => {
 		const user = userEvent.setup();
-		render(
-			<LocaleSelector
-				sourceLocale="en"
-				onAddNew={() => {}}
-				showIcons={false}
-				// 存在するロケールとして "fr" を追加（buildLocaleOptions で "en" と "fr" の 2 件が生成される）
-				translationJobs={[
-					{
-						locale: "fr",
-						status: TranslationStatus.COMPLETED,
-					} as TranslationJob,
-				]}
-			/>,
-		);
+		render(<LocaleSelector onAddNew={() => {}} />);
 
 		// ポップオーバーを開くため、ボタンをクリック
 		const button = screen.getByTestId("locale-selector-button");
@@ -128,13 +98,7 @@ describe("LocaleSelector", () => {
 	it("calls onAddNew when the Add New button is clicked", async () => {
 		const onAddNewMock = vi.fn();
 		const user = userEvent.setup();
-		render(
-			<LocaleSelector
-				sourceLocale="en"
-				onAddNew={onAddNewMock}
-				showIcons={false}
-			/>,
-		);
+		render(<LocaleSelector onAddNew={onAddNewMock} />);
 
 		// ポップオーバーを開く
 		const button = screen.getByTestId("locale-selector-button");

@@ -1,9 +1,6 @@
 import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/_lib/fetch-about-page";
-import { fetchLatestUserTranslationJob } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import { StartButton } from "@/app/[locale]/_components/start-button";
-import { TranslateActionSection } from "@/app/[locale]/_components/translate-action-section";
-import { fetchLatestPageTranslationJobs } from "@/app/[locale]/_db/page-queries.server";
 import { getCurrentUser } from "@/auth";
 import Image from "next/image";
 
@@ -28,15 +25,6 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	const currentUser = await getCurrentUser();
 	const currentHandle = currentUser?.handle;
 	const topPageDetail = await fetchAboutPage(locale);
-
-	const pageTranslationJobs = await fetchLatestPageTranslationJobs(
-		topPageDetail.id,
-	);
-	const latestUserTranslationJob = await fetchLatestUserTranslationJob(
-		topPageDetail.id,
-		currentUser?.id ?? "",
-	);
-
 	const [title, text] = topPageDetail.segmentBundles
 		.filter((sb) => sb.segment.number === 0 || sb.segment.number === 1)
 		.sort((a, b) => a.segment.number - b.segment.number);
@@ -48,24 +36,12 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	}
 	const heroTitle = title;
 	const heroText = text;
-	const sourceLocale = topPageDetail.sourceLocale;
 	return (
 		<div className="relative overflow-hidden border pt-10 flex flex-col items-center justify-center">
 			<Icon className="absolute h-6 w-6 -top-3 -left-3 dark:text-white text-black" />
 			<Icon className="absolute h-6 w-6 -bottom-3 -left-3 dark:text-white text-black" />
 			<Icon className="absolute h-6 w-6 -top-3 -right-3 dark:text-white text-black" />
 			<Icon className="absolute h-6 w-6 -bottom-3 -right-3 dark:text-white text-black" />
-			<div className="flex justify-center mb-10 z-10">
-				<TranslateActionSection
-					pageId={topPageDetail.id}
-					currentHandle={currentHandle}
-					latestUserTranslationJob={latestUserTranslationJob}
-					translationJobs={pageTranslationJobs}
-					sourceLocale={sourceLocale}
-					targetContentType="page"
-					showIcons={false}
-				/>
-			</div>
 			<div className="relative z-10 px-4 md:px-8 max-w-4xl mx-auto">
 				<h1 className="text-2xl md:text-4xl font-bold mb-6 text-center">
 					<SegmentAndTranslationSection

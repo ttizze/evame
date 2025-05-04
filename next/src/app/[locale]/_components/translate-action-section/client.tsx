@@ -1,53 +1,42 @@
 "use client";
-import type { TranslationJob } from "@prisma/client";
+import { useParams } from "next/navigation";
 import { useState } from "react";
-import type { TargetContentType } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
 import { AddTranslateDialog } from "./add-translate-dialog/client";
 import { LocaleSelector } from "./locale-selector/client";
 type TranslateActionSectionClientProps = {
-	pageId: number;
 	currentHandle: string | undefined;
 	hasGeminiApiKey: boolean;
-	translationJobs?: TranslationJob[];
-	latestUserTranslationJob: TranslationJob | null;
-	sourceLocale: string;
-	targetContentType: TargetContentType;
-	className?: string;
-	showIcons: boolean;
 };
 
 export function TranslateActionSectionClient({
-	pageId,
 	currentHandle,
 	hasGeminiApiKey,
-	translationJobs,
-	latestUserTranslationJob,
-	sourceLocale,
-	targetContentType,
-	className,
-	showIcons,
 }: TranslateActionSectionClientProps) {
 	const [addTranslateDialogOpen, setAddTranslateDialogOpen] = useState(false);
+	const { pageSlug, projectSlug } = useParams<{
+		pageSlug?: string;
+		projectSlug?: string;
+	}>();
 	return (
-		<div className={className}>
+		<div>
 			<div className="flex items-center gap-2">
 				<LocaleSelector
-					sourceLocale={sourceLocale}
 					className="w-[200px]"
 					onAddNew={() => setAddTranslateDialogOpen(true)}
-					translationJobs={translationJobs}
-					showIcons={showIcons}
+					pageSlug={pageSlug}
+					projectSlug={projectSlug}
 				/>
 			</div>
-			<AddTranslateDialog
-				open={addTranslateDialogOpen}
-				onOpenChange={setAddTranslateDialogOpen}
-				currentHandle={currentHandle}
-				pageId={pageId}
-				hasGeminiApiKey={hasGeminiApiKey}
-				latestUserTranslationJob={latestUserTranslationJob}
-				targetContentType={targetContentType}
-			/>
+			{pageSlug || projectSlug ? (
+				<AddTranslateDialog
+					open={addTranslateDialogOpen}
+					onOpenChange={setAddTranslateDialogOpen}
+					currentHandle={currentHandle}
+					hasGeminiApiKey={hasGeminiApiKey}
+					pageSlug={pageSlug}
+					projectSlug={projectSlug}
+				/>
+			) : null}
 		</div>
 	);
 }

@@ -1,4 +1,4 @@
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import type { BaseTranslation } from "@/app/[locale]/types";
 import { render, screen } from "@testing-library/react";
 // VoteButtons.test.tsx

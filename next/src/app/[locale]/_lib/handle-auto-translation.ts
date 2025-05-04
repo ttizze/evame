@@ -37,14 +37,14 @@ export interface ProjectCommentTranslationParams extends BaseTranslationParams {
 	projectCommentId: number;
 }
 
-export type TranslationParams =
+type TranslationParams =
 	| PageTranslationParams
 	| ProjectTranslationParams
 	| PageCommentTranslationParams
 	| ProjectCommentTranslationParams;
 
 // 依存関係を明示的に注入するためのインターフェース
-export interface TranslationDependencies {
+interface TranslationDependencies {
 	createTranslationJob: typeof createTranslationJob;
 	fetchPageWithPageSegments: typeof fetchPageWithPageSegments;
 	fetchPageWithTitleAndComments: typeof fetchPageWithTitleAndComments;
@@ -112,7 +112,7 @@ const STRATEGY_TABLE: StrategyMap = {
 const CONCURRENCY = 3;
 const limit = pLimit(CONCURRENCY);
 
-export async function handleAutoTranslation<T extends TranslationParams>(
+async function handleAutoTranslation<T extends TranslationParams>(
 	params: T,
 	deps: TranslationDependencies,
 ): Promise<TranslationJobForToast[]> {

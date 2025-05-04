@@ -6,7 +6,10 @@ import { getMessages } from "next-intl/server";
 import dynamic from "next/dynamic";
 
 const Header = dynamic(
-	() => import("@/app/[locale]/_components/header").then((mod) => mod.Header),
+	() =>
+		import("@/app/[locale]/_components/header/server").then(
+			(mod) => mod.Header,
+		),
 	{
 		loading: () => <Skeleton className="h-10 w-full" />,
 	},

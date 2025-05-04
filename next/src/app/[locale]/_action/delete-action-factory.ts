@@ -7,7 +7,7 @@ import { type AuthDeps, authAndValidate } from "./auth-and-validate";
 import { authDefaultDeps } from "./auth-and-validate";
 // lib/createDeleteAction.ts  (抜粋)
 
-export type DeleteDeps = AuthDeps & {
+type DeleteDeps = AuthDeps & {
 	revalidatePath: typeof revalidatePath;
 	redirect: typeof redirect;
 };

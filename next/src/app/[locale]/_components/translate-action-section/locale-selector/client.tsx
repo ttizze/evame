@@ -23,27 +23,50 @@ import { useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { startTransition } from "react";
+import useSWR from "swr";
 import { useCombinedRouter } from "../hooks/use-combined-router";
-import { useLocaleListAutoRefresh } from "./hooks/use-locale-list-auto-refresh.client";
 import { buildLocaleOptions } from "./lib/build-locale-options";
 import { TypeIcon } from "./lib/type-Icon.client";
-interface LocaleSelectorProps {
+type TranslationInfo = {
 	sourceLocale: string;
-	className?: string;
+	translationJobs: TranslationJob[];
+};
 
+const buildSlugKey = ({
+	pageSlug,
+	projectSlug,
+}: {
+	pageSlug?: string;
+	projectSlug?: string;
+}) =>
+	pageSlug
+		? `pageSlug=${pageSlug}`
+		: projectSlug
+			? `projectSlug=${projectSlug}`
+			: null;
+
+const fetchTranslation: (url: string) => Promise<TranslationInfo> = async (
+	url,
+) => {
+	const res = await fetch(url, { cache: "no-store" });
+	if (!res.ok) throw new Error(`HTTP ${res.status}`);
+	return res.json();
+};
+
+interface LocaleSelectorProps {
+	className?: string;
+	pageSlug?: string;
+	projectSlug?: string;
 	/** Called if the user clicks the “Add New” button. */
 	onAddNew: () => void;
-	showIcons: boolean;
-	translationJobs?: TranslationJob[];
 }
 
 //TODO: radix uiのせいで開発環境のモバイルで文字がぼける iphoneではボケてない､その他実機でもボケてたら対応する
 export function LocaleSelector({
-	sourceLocale,
 	className,
 	onAddNew,
-	showIcons = false,
-	translationJobs,
+	pageSlug,
+	projectSlug,
 }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
 	const router = useCombinedRouter();
@@ -60,16 +83,24 @@ export function LocaleSelector({
 			);
 		});
 	};
+	let showIcons = false;
+	if (pageSlug || projectSlug) {
+		showIcons = true;
+	}
 
-	useLocaleListAutoRefresh(translationJobs);
+	const slugKey = buildSlugKey({ pageSlug, projectSlug });
+	const apiUrl = slugKey ? `/api/locale-info?${slugKey}` : null;
 
-	const localeOptions = buildLocaleOptions(
+	const { data, error } = useSWR(apiUrl, fetchTranslation);
+
+	const { sourceLocale, translationJobs } = data ?? {};
+	const localeOptionWithStatus = buildLocaleOptions({
 		sourceLocale,
-		translationJobs?.map((job) => job.locale) ?? [],
-		supportedLocaleOptions,
-	);
+		existLocales: translationJobs?.map((job) => job.locale) ?? [],
+		supported: supportedLocaleOptions,
+	});
 
-	const selectedOption = localeOptions.find(
+	const selectedOption = localeOptionWithStatus.find(
 		(item) => item.code === targetLocale,
 	);
 
@@ -82,11 +113,8 @@ export function LocaleSelector({
 					data-testid="locale-selector-button"
 				>
 					<div className="flex items-center">
-						{showIcons && (
-							<TypeIcon
-								code={selectedOption?.code ?? ""}
-								sourceLocale={sourceLocale}
-							/>
+						{showIcons && sourceLocale && (
+							<TypeIcon status={selectedOption?.status ?? "untranslated"} />
 						)}
 						<span className="truncate">{selectedOption?.name ?? "Select"}</span>
 					</div>
@@ -99,18 +127,14 @@ export function LocaleSelector({
 					<CommandList>
 						<CommandEmpty>No locales found.</CommandEmpty>
 						<CommandGroup>
-							{localeOptions.map((item) => (
+							{localeOptionWithStatus.map((item) => (
 								<CommandItem
 									key={item.code}
 									value={item.code}
 									onSelect={handleLocaleChange}
 								>
-									{showIcons && (
-										<TypeIcon
-											code={item.code}
-											sourceLocale={sourceLocale}
-											translationJobs={translationJobs}
-										/>
+									{showIcons && sourceLocale && (
+										<TypeIcon status={item.status} />
 									)}
 									<span className="truncate grow">{item.name}</span>
 									{targetLocale === item.code && (

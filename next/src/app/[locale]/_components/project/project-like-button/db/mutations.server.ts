@@ -43,7 +43,7 @@ export async function toggleProjectLike(
 	return { liked, likeCount };
 }
 
-export async function createProjectLikeNotification({
+async function createProjectLikeNotification({
 	projectId,
 	targetUserId,
 	actorId,

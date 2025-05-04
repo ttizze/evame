@@ -1,5 +1,5 @@
 "use client";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/constants";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";

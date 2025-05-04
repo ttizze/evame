@@ -3,7 +3,6 @@ import type {
 	Prisma, // ← @prisma/client から import
 } from "@prisma/client";
 import { getOrCreateAIUser } from "../db/mutations.server";
-import { getGeminiModelResponse } from "../services/gemini";
 import type { NumberedElement } from "../types";
 
 type Segment = { id: number; number: number };
@@ -113,23 +112,4 @@ export async function saveTranslationsForProjectComment(
 	console.log(data);
 	if (data.length)
 		await prisma.projectCommentSegmentTranslation.createMany({ data });
-}
-
-export async function getTranslatedText(
-	geminiApiKey: string,
-	aiModel: string,
-	numberedElements: NumberedElement[],
-	targetLocale: string,
-	title: string,
-) {
-	const source_text = numberedElements
-		.map((el) => JSON.stringify(el))
-		.join("\n");
-	return getGeminiModelResponse(
-		geminiApiKey,
-		aiModel,
-		title,
-		source_text,
-		targetLocale,
-	);
 }
