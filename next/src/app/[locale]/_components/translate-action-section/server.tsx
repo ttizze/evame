@@ -2,8 +2,9 @@ import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
 import type { TranslationJob } from "@prisma/client";
 import type { TargetContentType } from "../../(common-layout)/user/[handle]/page/[slug]/constants";
 import { TranslateActionSectionClient } from "./client";
+
 type TranslateActionSectionProps = {
-	pageId: number;
+	pageId?: number;
 	currentHandle: string | undefined;
 	translationJobs?: TranslationJob[];
 	latestUserTranslationJob: TranslationJob | null;
@@ -30,9 +31,6 @@ export async function TranslateActionSection({
 			pageId={pageId}
 			currentHandle={currentHandle}
 			hasGeminiApiKey={hasGeminiApiKey}
-			translationJobs={translationJobs}
-			latestUserTranslationJob={latestUserTranslationJob}
-			sourceLocale={sourceLocale}
 			targetContentType={targetContentType}
 			className={className}
 			showIcons={showIcons}

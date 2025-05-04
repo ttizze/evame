@@ -12,11 +12,11 @@ describe("buildLocaleOptions", () => {
 			{ code: "fr", name: "French" },
 		];
 
-		const result = buildLocaleOptions(
+		const result = buildLocaleOptions({
 			sourceLocale,
 			existLocales,
-			supportedLocaleOptions,
-		);
+			supported: supportedLocaleOptions,
+		});
 
 		expect(result).toEqual([{ code: "en", name: "English" }]);
 	});
@@ -29,11 +29,11 @@ describe("buildLocaleOptions", () => {
 			{ code: "fr", name: "French" },
 		];
 
-		const result = buildLocaleOptions(
+		const result = buildLocaleOptions({
 			sourceLocale,
 			existLocales,
-			supportedLocaleOptions,
-		);
+			supported: supportedLocaleOptions,
+		});
 
 		expect(result).toEqual([
 			{ code: "en", name: "English" },

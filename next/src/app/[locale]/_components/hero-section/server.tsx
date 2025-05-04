@@ -2,7 +2,7 @@ import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/_lib/fetch-
 import { fetchLatestUserTranslationJob } from "@/app/[locale]/(common-layout)/user/[handle]/page/[slug]/_db/queries.server";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import { StartButton } from "@/app/[locale]/_components/start-button";
-import { TranslateActionSection } from "@/app/[locale]/_components/translate-action-section";
+import { TranslateActionSection } from "@/app/[locale]/_components/translate-action-section/server";
 import { fetchLatestPageTranslationJobs } from "@/app/[locale]/_db/page-queries.server";
 import { getCurrentUser } from "@/auth";
 import Image from "next/image";

@@ -1,5 +1,5 @@
 "use client";
-import { BaseHeaderLayout } from "@/app/[locale]/_components/header/base-header-layout";
+import { BaseHeader } from "@/app/[locale]/_components/header/base-header";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
 import type { SanitizedUser } from "@/app/types";
@@ -186,7 +186,7 @@ export function EditHeader({
 		<div
 			className={`sticky top-0 z-50  ${isVisible ? "translate-y-0" : "-translate-y-full"}`}
 		>
-			<BaseHeaderLayout
+			<BaseHeader
 				currentUser={currentUser}
 				leftExtra={leftExtra}
 				rightExtra={rightExtra}

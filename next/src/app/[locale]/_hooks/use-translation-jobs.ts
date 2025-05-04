@@ -14,7 +14,7 @@ export function useTranslationJobs(
 ) {
 	const ids = initial.map((j) => j.id);
 	const key = ids.length
-		? `/api/translation-status?${ids.map((id) => `id=${id}`).join("&")}`
+		? `/api/translation-jobs?${ids.map((id) => `id=${id}`).join("&")}`
 		: null;
 
 	const { data } = useSWR<TranslationJobForToast[]>(key, fetcher, {

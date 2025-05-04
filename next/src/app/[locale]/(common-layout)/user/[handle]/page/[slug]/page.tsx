@@ -40,7 +40,7 @@ const DynamicFloatingControls = dynamic(
 );
 const DynamicTranslateActionSection = dynamic(
 	() =>
-		import("@/app/[locale]/_components/translate-action-section").then(
+		import("@/app/[locale]/_components/translate-action-section/server").then(
 			(mod) => mod.TranslateActionSection,
 		),
 	{

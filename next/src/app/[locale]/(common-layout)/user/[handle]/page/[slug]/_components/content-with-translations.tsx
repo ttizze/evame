@@ -6,7 +6,7 @@ import type { fetchPageContext } from "../_lib/fetch-page-context";
 import { SubHeader } from "./sub-header";
 const DynamicTranslateActionSection = dynamic(
 	() =>
-		import("@/app/[locale]/_components/translate-action-section").then(
+		import("@/app/[locale]/_components/translate-action-section/server").then(
 			(mod) => mod.TranslateActionSection,
 		),
 	{

@@ -4,8 +4,18 @@ import { Search } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { StartButton } from "../start-button";
-import { BaseHeaderLayout } from "./base-header-layout";
+import { BaseHeader } from "./base-header";
 import { NewPageButton } from "./new-page-button";
+
+const DynamicTranslateActionSection = dynamic(
+	() =>
+		import("../translate-action-section/server").then(
+			(mod) => mod.TranslateActionSection,
+		),
+	{
+		loading: () => <Loader2 className="w-6 h-6 animate-spin" />,
+	},
+);
 
 const NotificationsDropdown = dynamic(
 	() => import("./notifications-dropdown").then((mod) => mod.default),
@@ -13,11 +23,22 @@ const NotificationsDropdown = dynamic(
 		loading: () => <Loader2 className="w-6 h-6 animate-spin" />,
 	},
 );
-export async function Header() {
+export async function Header({
+	params,
+}: {
+	params: Promise<{ locale: string; handle?: string; slug?: string }>;
+}) {
 	const currentUser = await getCurrentUser();
 
 	const rightExtra = (
 		<>
+			<DynamicTranslateActionSection
+				currentHandle={currentUser?.handle}
+				latestUserTranslationJob={null}
+				sourceLocale="en"
+				targetContentType="page"
+				showIcons={true}
+			/>
 			<Link href="/search" aria-label="Search for pages">
 				<Search className="w-6 h-6 " />
 			</Link>
@@ -33,7 +54,7 @@ export async function Header() {
 	);
 
 	return (
-		<BaseHeaderLayout
+		<BaseHeader
 			currentUser={currentUser}
 			leftExtra={null}
 			rightExtra={rightExtra}

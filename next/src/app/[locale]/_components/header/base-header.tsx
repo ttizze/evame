@@ -17,19 +17,19 @@ import type { ReactNode } from "react";
 import { ModeToggle } from "../mode-toggle";
 import { useHeaderScroll } from "./hooks/use-header-scroll";
 
-interface BaseHeaderLayoutProps {
+interface BaseHeaderProps {
 	currentUser: SanitizedUser | undefined;
 	leftExtra?: ReactNode;
 	rightExtra?: ReactNode;
 	showUserMenu?: boolean;
 }
 
-export function BaseHeaderLayout({
+export function BaseHeader({
 	currentUser,
 	leftExtra,
 	rightExtra,
 	showUserMenu = true,
-}: BaseHeaderLayoutProps) {
+}: BaseHeaderProps) {
 	// カスタムフックを使用
 	const { headerRef, isPinned, isVisible, headerHeight } = useHeaderScroll();
 	const { props } = getImageProps({
