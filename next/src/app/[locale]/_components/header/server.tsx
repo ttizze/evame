@@ -9,7 +9,7 @@ import { NewPageButton } from "./new-page-button";
 
 const DynamicTranslateActionSection = dynamic(
 	() =>
-		import("../translate-action-section/server").then(
+		import("./translate-action-section/server").then(
 			(mod) => mod.TranslateActionSection,
 		),
 	{

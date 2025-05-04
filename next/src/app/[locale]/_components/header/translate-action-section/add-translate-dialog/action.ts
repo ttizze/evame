@@ -18,8 +18,8 @@ import type { ActionResponse } from "@/app/types";
 import type { TranslationJob } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import type { TargetContentType } from "../../../(common-layout)/user/[handle]/page/[pageSlug]/constants";
-import { targetContentTypeValues } from "../../../(common-layout)/user/[handle]/page/[pageSlug]/constants";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
+import { targetContentTypeValues } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 
 /* ───────── 型 ───────── */
 

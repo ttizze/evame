@@ -22,7 +22,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useActionState } from "react";
-import type { TargetContentType } from "../../../(common-layout)/user/[handle]/page/[pageSlug]/constants";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { type TranslateActionState, translateAction } from "./action";
 import { DialogLocaleSelector } from "./dialog-locale-selector";
 
