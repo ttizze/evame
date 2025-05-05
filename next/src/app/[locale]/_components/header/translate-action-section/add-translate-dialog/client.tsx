@@ -1,5 +1,6 @@
 "use client";
 
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { GeminiApiKeyDialog } from "@/app/[locale]/_components/gemini-api-key-dialog/gemini-api-key-dialog";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
@@ -22,7 +23,6 @@ import {
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useActionState } from "react";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { type TranslateActionState, translateAction } from "./action";
 import { DialogLocaleSelector } from "./dialog-locale-selector";
 

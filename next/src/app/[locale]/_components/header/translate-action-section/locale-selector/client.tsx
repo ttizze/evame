@@ -121,10 +121,11 @@ export function LocaleSelector({
 					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent 
-				sideOffset={-4}     // -4px で “ピタッ” と密着
+			<PopoverContent
+				sideOffset={-4} // -4px で “ピタッ” と密着
 				avoidCollisions={false}
-				className="w-full p-0  truncate">
+				className="w-full p-0  truncate"
+			>
 				<Command>
 					<CommandInput placeholder="search..." />
 					<CommandList>
@@ -163,6 +164,6 @@ export function LocaleSelector({
 					)}
 				</Command>
 			</PopoverContent>
-		</Popover >
+		</Popover>
 	);
 }

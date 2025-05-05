@@ -89,7 +89,10 @@ export function BaseHeader({
 									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuSeparator className="my-0" />
-									<TranslateActionSectionClient currentHandle={currentUser.handle} hasGeminiApiKey={true} />
+								<TranslateActionSectionClient
+									currentHandle={currentUser.handle}
+									hasGeminiApiKey={true}
+								/>
 								<DropdownMenuItem className="p-0 ">
 									<Link
 										href={`/user/${currentUser.handle}/page-management`}
