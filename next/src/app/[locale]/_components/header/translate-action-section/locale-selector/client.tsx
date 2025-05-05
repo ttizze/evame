@@ -54,7 +54,7 @@ const fetchTranslation: (url: string) => Promise<TranslationInfo> = async (
 };
 
 interface LocaleSelectorProps {
-	className?: string;
+	localeSelectorClassName?: string;
 	pageSlug?: string;
 	projectSlug?: string;
 	/** Called if the user clicks the “Add New” button. */
@@ -63,7 +63,7 @@ interface LocaleSelectorProps {
 
 //TODO: radix uiのせいで開発環境のモバイルで文字がぼける iphoneではボケてない､その他実機でもボケてたら対応する
 export function LocaleSelector({
-	className,
+	localeSelectorClassName,
 	onAddNew,
 	pageSlug,
 	projectSlug,
@@ -87,7 +87,7 @@ export function LocaleSelector({
 	if (pageSlug || projectSlug) {
 		showIcons = true;
 	}
-
+	const showAddNewButton = pageSlug || projectSlug;
 	const slugKey = buildSlugKey({ pageSlug, projectSlug });
 	const apiUrl = slugKey ? `/api/locale-info?${slugKey}` : null;
 
@@ -108,8 +108,8 @@ export function LocaleSelector({
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
 				<Button
-					variant="outline"
-					className={cn("justify-between rounded-xl", className)}
+					variant="ghost"
+					className={cn("justify-between w-[200px] ", localeSelectorClassName)}
 					data-testid="locale-selector-button"
 				>
 					<div className="flex items-center">
@@ -121,7 +121,11 @@ export function LocaleSelector({
 					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="w-full p-0 truncate">
+			<PopoverContent
+				sideOffset={-4} // -4px で “ピタッ” と密着
+				avoidCollisions={false}
+				className="w-full p-0  truncate"
+			>
 				<Command>
 					<CommandInput placeholder="search..." />
 					<CommandList>
@@ -144,16 +148,20 @@ export function LocaleSelector({
 							))}
 						</CommandGroup>
 					</CommandList>
-					<Separator />
-					<div className="flex justify-center m-2">
-						<Button
-							variant="default"
-							className="rounded-full"
-							onClick={onAddNew}
-						>
-							+ Add New
-						</Button>
-					</div>
+					{showAddNewButton && (
+						<>
+							<Separator />
+							<div className="flex justify-center m-2">
+								<Button
+									variant="default"
+									className="rounded-full"
+									onClick={onAddNew}
+								>
+									+ Add New
+								</Button>
+							</div>
+						</>
+					)}
 				</Command>
 			</PopoverContent>
 		</Popover>

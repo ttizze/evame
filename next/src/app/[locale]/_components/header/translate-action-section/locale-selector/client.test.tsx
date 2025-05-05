@@ -98,7 +98,7 @@ describe("LocaleSelector", () => {
 	it("calls onAddNew when the Add New button is clicked", async () => {
 		const onAddNewMock = vi.fn();
 		const user = userEvent.setup();
-		render(<LocaleSelector onAddNew={onAddNewMock} />);
+		render(<LocaleSelector onAddNew={onAddNewMock} pageSlug="test-page" />);
 
 		// ポップオーバーを開く
 		const button = screen.getByTestId("locale-selector-button");
