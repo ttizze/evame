@@ -1,5 +1,5 @@
 "use client";
-import { BaseHeader } from "@/app/[locale]/_components/header/base-header";
+import { BaseHeader } from "@/app/[locale]/_components/header/base-header.client";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
 import type { SanitizedUser } from "@/app/types";

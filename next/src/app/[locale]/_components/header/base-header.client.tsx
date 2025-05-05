@@ -16,7 +16,7 @@ import { getImageProps } from "next/image";
 import type { ReactNode } from "react";
 import { ModeToggle } from "../mode-toggle";
 import { useHeaderScroll } from "./hooks/use-header-scroll";
-
+import { TranslateActionSectionClient } from "./translate-action-section/client";
 interface BaseHeaderProps {
 	currentUser: SanitizedUser | undefined;
 	leftExtra?: ReactNode;
@@ -89,6 +89,7 @@ export function BaseHeader({
 									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuSeparator className="my-0" />
+									<TranslateActionSectionClient currentHandle={currentUser.handle} hasGeminiApiKey={true} />
 								<DropdownMenuItem className="p-0 ">
 									<Link
 										href={`/user/${currentUser.handle}/page-management`}
