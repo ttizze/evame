@@ -312,6 +312,19 @@ model PageCommentSegmentTranslationVote {
   @@map("page_comment_segment_translation_votes")
 }
 
+enum LifecycleStatus {
+  DRAFT
+  PUBLIC
+  ARCHIVED
+}
+
+enum Progress {
+  IDEA
+  WIP
+  REVIEW
+  RELEASED
+  FROZEN
+}
 model Project {
   id           Int      @id @default(autoincrement())
   slug         String   @unique
@@ -319,6 +332,8 @@ model Project {
   title        String
   mdastJson    Json     @map("mdast_json")
   sourceLocale String   @default("unknown") @map("source_locale")
+  status LifecycleStatus @default(DRAFT)
+  progress     Progress @default(IDEA)
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
   iconImageId  Int?     @unique @map("icon_image_id")

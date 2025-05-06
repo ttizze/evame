@@ -1,6 +1,6 @@
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { ProjectList } from "@/app/[locale]/_components/project/project-list.server";
-import { fetchPaginatedProjectSummaries } from "@/app/[locale]/_db/project-queries.server";
+import { fetchPaginatedPublicProjectSummaries } from "@/app/[locale]/_db/project-queries.server";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { notFound } from "next/navigation";
@@ -29,15 +29,14 @@ export async function UserProjectList({
 	if (!pageOwner) {
 		return notFound();
 	}
-	const { projectSummaries, totalPages } = await fetchPaginatedProjectSummaries(
-		{
+	const { projectSummaries, totalPages } =
+		await fetchPaginatedPublicProjectSummaries({
 			page: page,
 			pageSize: 10,
 			projectOwnerId: pageOwner.id,
 			locale,
 			currentUserId: currentUser?.id,
-		},
-	);
+		});
 	if (projectSummaries.length === 0) {
 		return (
 			<p className="text-center text-gray-500 mt-10">

@@ -10,9 +10,20 @@ export async function processProjectHtml(p: {
 	projectId: number | undefined;
 	userId: string;
 	sourceLocale: string;
+	status: string;
+	progress: string;
 }) {
-	const { title, description, tagLine, projectId, userId, sourceLocale, slug } =
-		p;
+	const {
+		title,
+		description,
+		tagLine,
+		projectId,
+		userId,
+		sourceLocale,
+		slug,
+		status,
+		progress,
+	} = p;
 	const { mdastJson, segments } = await htmlToMdastWithSegments({
 		header: tagLine,
 		html: description,
@@ -26,6 +37,8 @@ export async function processProjectHtml(p: {
 		mdastJson: mdastJson as unknown as Prisma.InputJsonValue,
 		sourceLocale,
 		segments,
+		status,
+		progress,
 	});
 	return updatedProject;
 }

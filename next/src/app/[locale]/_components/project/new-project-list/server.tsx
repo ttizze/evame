@@ -1,5 +1,5 @@
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedProjectSummaries } from "@/app/[locale]/_db/project-queries.server";
+import { fetchPaginatedPublicProjectSummaries } from "@/app/[locale]/_db/project-queries.server";
 import { getCurrentUser } from "@/auth";
 import { SparklesIcon } from "lucide-react";
 import { createLoader, parseAsInteger } from "nuqs/server";
@@ -26,14 +26,13 @@ export default async function NewProjectList({
 	const { page } = await loadSearchParams(searchParams);
 	const currentUser = await getCurrentUser();
 
-	const { projectSummaries, totalPages } = await fetchPaginatedProjectSummaries(
-		{
+	const { projectSummaries, totalPages } =
+		await fetchPaginatedPublicProjectSummaries({
 			page,
 			pageSize: 10,
 			locale,
 			currentUserId: currentUser?.id,
-		},
-	);
+		});
 
 	return (
 		<ProjectListContainer title="New Projects" icon={SparklesIcon}>
