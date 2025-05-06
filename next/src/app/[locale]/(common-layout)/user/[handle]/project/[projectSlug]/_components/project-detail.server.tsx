@@ -4,7 +4,6 @@ import { mdastToReact } from "@/app/[locale]/_components/mdast-to-react";
 import { ProjectActionsDropdown } from "@/app/[locale]/_components/project/project-actions-dropdown/client";
 import { ProjectTagList } from "@/app/[locale]/_components/project/project-tag-list.server";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
-import { ProgressBadge } from "./progress-badge";
 import type { ProjectDetail } from "@/app/[locale]/types";
 import { getCurrentUser } from "@/auth";
 import {
@@ -24,6 +23,7 @@ import type { ProjectImage } from "@prisma/client";
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { ProgressBadge } from "./progress-badge";
 
 interface ProjectProps {
 	projectDetail: ProjectDetail;

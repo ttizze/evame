@@ -230,9 +230,7 @@ export function ProjectForm({
 							value="PUBLIC"
 							disabled={isPending}
 						>
-							{isPending
-								? "Processing"
-								: "Publish"}
+							{isPending ? "Processing" : "Publish"}
 						</Button>
 					</div>
 				</div>
