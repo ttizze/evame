@@ -1,4 +1,5 @@
-import { type ProjectImage, ProjectImageInput } from "./image-input/index";
+import type { ProjectImage } from "../_db/mutations.server";
+import { ProjectImageInput } from "./image-input/client";
 
 interface ProjectIconInputProps {
 	initialIcon: ProjectImage | null;

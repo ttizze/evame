@@ -1,24 +1,26 @@
 "use client";
 
+import type { ProjectWithTitle } from "@/app/[locale]/(common-layout)/user/[handle]/project-management/_db/queries.server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { ProjectActionsDropdown } from "@/app/[locale]/_components/project/project-actions-dropdown/client";
-import type { ProjectSummary } from "@/app/[locale]/types";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "@/i18n/routing";
+import type { LifecycleStatus } from "@prisma/client";
 import { Plus } from "lucide-react";
 import Form from "next/form";
 import { parseAsString, useQueryState } from "nuqs";
 import { createProjectDraft } from "./action";
 interface ProjectManagementTabClientProps {
-	projectSummaries: ProjectSummary[];
+	projects: ProjectWithTitle[];
 	totalPages: number;
 	currentPage: number;
 	handle: string;
 }
 
 export function ProjectManagementTabClient({
-	projectSummaries,
+	projects,
 	totalPages,
 	currentPage,
 	handle,
@@ -29,6 +31,20 @@ export function ProjectManagementTabClient({
 			shallow: false,
 		}),
 	);
+	const getStatusBadge = (status: LifecycleStatus) => {
+		if (status === "PUBLIC") {
+			return (
+				<Badge variant="default" className="w-16 text-center">
+					Public
+				</Badge>
+			);
+		}
+		return (
+			<Badge variant="outline" className="w-16 text-center">
+				Private
+			</Badge>
+		);
+	};
 
 	return (
 		<div className="space-y-4">
@@ -48,20 +64,21 @@ export function ProjectManagementTabClient({
 			</div>
 
 			<div className="rounded-md">
-				{projectSummaries.map((projectSummary) => (
-					<div
-						key={projectSummary.id}
-						className="flex border-b py-2 justify-between"
-					>
+				{projects.map((project) => (
+					<div key={project.id} className="flex border-b py-2 justify-between">
 						<div>
-							<Link href={`/user/${handle}/project/${projectSummary.slug}`}>
-								{projectSummary.title}
+							<Link href={`/user/${handle}/project/${project.slug}`}>
+								{project.title}
 							</Link>
+							<div className="flex gap-2 mt-2">
+								{getStatusBadge(project.status)}
+								{project.updatedAt.toLocaleDateString()}
+							</div>
 						</div>
 						<ProjectActionsDropdown
-							projectSlug={projectSummary.slug}
-							projectId={projectSummary.id}
-							projectOwnerHandle={projectSummary.user.handle}
+							projectSlug={project.slug}
+							projectId={project.id}
+							projectOwnerHandle={handle}
 						/>
 					</div>
 				))}

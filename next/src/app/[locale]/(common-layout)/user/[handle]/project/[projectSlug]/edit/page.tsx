@@ -66,7 +66,6 @@ export default async function ProjectEditPage({
 		<div className="flex justify-center py-8">
 			<ProjectForm
 				projectDetail={projectDetail}
-				userHandle={handle}
 				allProjectTags={allProjectTags}
 				userLocale={locale}
 				html={html}

@@ -2,7 +2,6 @@
 
 import { mdastToReact } from "@/app/[locale]/_components/mdast-to-react";
 import { ProjectActionsDropdown } from "@/app/[locale]/_components/project/project-actions-dropdown/client";
-import { ProjectLikeButton } from "@/app/[locale]/_components/project/project-like-button/server";
 import { ProjectTagList } from "@/app/[locale]/_components/project/project-tag-list.server";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import type { ProjectDetail } from "@/app/[locale]/types";
@@ -24,6 +23,7 @@ import type { ProjectImage } from "@prisma/client";
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { ProgressBadge } from "./progress-badge";
 
 interface ProjectProps {
 	projectDetail: ProjectDetail;
@@ -78,6 +78,7 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 							<h1 className="text-2xl font-bold leading-tight">
 								{projectDetail.title}
 							</h1>
+							<ProgressBadge progress={projectDetail.progress} />
 							{/* Owner actions (空白列でも幅0なので邪魔しない) */}
 							{isOwner && (
 								<ProjectActionsDropdown
@@ -132,12 +133,6 @@ export async function Project({ projectDetail, locale }: ProjectProps) {
 							</DropdownMenuContent>
 						</DropdownMenu>
 					)}
-					<ProjectLikeButton
-						projectId={projectDetail.id}
-						projectSlug={projectDetail.slug}
-						ownerHandle={projectDetail.user.handle}
-						className="w-12 h-12 border rounded-full"
-					/>
 				</div>
 
 				{/* Description */}

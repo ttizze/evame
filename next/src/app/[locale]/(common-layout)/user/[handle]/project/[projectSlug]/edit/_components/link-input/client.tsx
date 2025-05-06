@@ -4,12 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ExternalLink, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
-
-interface ProjectLink {
-	id?: number;
-	url: string;
-	description: string;
-}
+import type { ProjectLink } from "../../_db/mutations.server";
 
 interface ProjectLinkInputProps {
 	initialLinks: ProjectLink[];

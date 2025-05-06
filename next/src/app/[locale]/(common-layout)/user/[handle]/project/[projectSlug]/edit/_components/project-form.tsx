@@ -7,77 +7,53 @@ import type { ProjectDetail } from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { startTransition, useActionState, useMemo, useState } from "react";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { useActionState } from "react";
 import type { ProjectTagWithCount } from "../_db/queries.server";
 import { type ProjectActionResponse, projectAction } from "./action";
 import { ProjectIconInput } from "./icon-input.server";
-import { ProjectImageInput } from "./image-input";
-import { ProjectLinkInput } from "./link-input";
-import { ProjectTagInput } from "./tag-input";
-// Define the ProjectLink interface to match the database schema
-interface ProjectLink {
-	id?: number;
-	url: string;
-	description: string;
-}
-
-// Define the ProjectImage interface to match the database schema
-interface ProjectImage {
-	id?: number;
-	url: string;
-	caption: string;
-	order: number;
-	file?: File; // For new uploads
-}
-interface ProjectFormProps {
+import { ProjectImageInput } from "./image-input/client";
+import { ProjectLinkInput } from "./link-input/client";
+import { ProjectTagInput } from "./tag-input/client";
+import { useProjectFormState } from "./use-form-fields";
+interface Props {
 	projectDetail: ProjectDetail;
-	userHandle: string;
 	allProjectTags: ProjectTagWithCount[];
 	userLocale: string;
 	html: string;
 }
-const fileNameFromUrl = (url: string): string => url.split("/").pop() ?? "";
-
-const stripFileField = <T extends { file?: File }>(
-	item: T,
-): Omit<T, "file"> => {
-	const { file: _file, ...rest } = item;
-	return rest;
-};
+const PROGRESS_VALUES = [
+	"IDEA",
+	"WIP",
+	"REVIEW",
+	"RELEASED",
+	"FROZEN",
+] as const;
 
 export function ProjectForm({
 	projectDetail,
-	userHandle,
 	allProjectTags,
 	userLocale,
 	html,
-}: ProjectFormProps) {
-	const initialTags =
-		projectDetail?.projectTagRelations.map((relation) => relation.projectTag) ||
-		[];
-
-	const initialLinks = (projectDetail?.links as ProjectLink[]) || [];
-	const initialImages =
-		(projectDetail?.images.filter(
-			(img) => img.id !== projectDetail?.iconImage?.id,
-		) as ProjectImage[]) || [];
-
-	const tagLine = useMemo(() => {
-		const bundle = projectDetail?.segmentBundles.find(
-			(b) => b.segment.number === 0,
-		);
-		return bundle?.segment.text ?? "";
-	}, [projectDetail]);
-
-	// フォーム状態
-	const [tags, setTags] = useState<string[]>(
-		initialTags.map((tag) => tag.name),
-	);
-	const [links, setLinks] = useState<ProjectLink[]>(initialLinks);
-	const [images, setImages] = useState<ProjectImage[]>(initialImages);
-	const [icon, setIcon] = useState<ProjectImage | null>(
-		projectDetail?.iconImage ?? null,
-	);
+}: Props) {
+	const {
+		tagLine,
+		tags,
+		setTags,
+		links,
+		setLinks,
+		images,
+		setImages,
+		icon,
+		setIcon,
+	} = useProjectFormState(projectDetail);
+	/* ───────── Action / Toast ───────── */
 	const [state, action, isPending] = useActionState<
 		ProjectActionResponse,
 		FormData
@@ -85,48 +61,9 @@ export function ProjectForm({
 	const { jobs } = useTranslationJobs(
 		state.success ? state.data.translationJobs : [],
 	);
-
 	useTranslationJobToast(jobs);
-	const buildFormData = (event: React.FormEvent<HTMLFormElement>): FormData => {
-		const formData = new FormData(event.currentTarget);
 
-		formData.set("projectId", projectDetail.id.toString());
-		formData.set("slug", projectDetail.slug);
-
-		formData.set("tags", JSON.stringify(tags));
-		formData.set("links", JSON.stringify(links));
-		// ---------------- Icon handling ----------------
-		if (!icon) {
-			formData.set("icon", ""); // removed
-		} else {
-			const { id, url, file } = icon;
-			// Send id when retaining; undefined id when new upload – server can infer
-			formData.set("icon", JSON.stringify({ id, url }));
-			if (file) {
-				formData.append("iconFile", file);
-				formData.append("iconFileName", file.name);
-			}
-		}
-
-		// --------------- Images handling ---------------
-		for (const img of images) {
-			if (img.file && img.url.startsWith("temp://upload/")) {
-				formData.append("imageFiles", img.file);
-				formData.append("imageFileNames", fileNameFromUrl(img.url));
-			}
-		}
-
-		formData.set("images", JSON.stringify(images.map(stripFileField)));
-
-		return formData;
-	};
-
-	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-		e.preventDefault();
-		const formData = buildFormData(e);
-		startTransition(() => action(formData));
-	};
-
+	/* ───────── JSX ───────── */
 	return (
 		<div className="space-y-6 ">
 			<div>
@@ -137,8 +74,14 @@ export function ProjectForm({
 				</div>
 			</div>
 
-			<form onSubmit={handleSubmit} className="space-y-8">
+			<form action={action} className="space-y-8">
 				<input type="hidden" name="userLocale" value={userLocale} />
+				<input type="hidden" name="projectId" value={projectDetail.id} />
+				<input type="hidden" name="slug" value={projectDetail.slug} />
+				<input type="hidden" name="tags" value={JSON.stringify(tags)} />
+				<input type="hidden" name="links" value={JSON.stringify(links)} />
+				<input type="hidden" name="images" value={JSON.stringify(images)} />
+				<input type="hidden" name="icon" value={JSON.stringify(icon)} />
 				<div className="space-y-4">
 					<div>
 						<Label htmlFor="icon">Project Icon</Label>
@@ -221,7 +164,9 @@ export function ProjectForm({
 					<div>
 						<Label htmlFor="tags">Tags</Label>
 						<ProjectTagInput
-							initialTags={initialTags}
+							initialTags={projectDetail.projectTagRelations.map(
+								(r) => r.projectTag,
+							)}
 							allTagsWithCount={allProjectTags}
 							onChange={setTags}
 						/>
@@ -260,11 +205,34 @@ export function ProjectForm({
 							Add screenshots or visuals of your project.
 						</p>
 					</div>
+
+					<div>
+						<Label>Progress *</Label>
+						<Select defaultValue={projectDetail.progress} name="progress">
+							<SelectTrigger className="mt-1">
+								<SelectValue placeholder="Progress" />
+							</SelectTrigger>
+							<SelectContent>
+								{PROGRESS_VALUES.map((v) => (
+									<SelectItem key={v} value={v} className="uppercase">
+										{v}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
 				</div>
-				<div className="flex gap-4 justify-end">
-					<Button type="submit" disabled={isPending}>
-						{isPending ? "Updating..." : "Update Project"}
-					</Button>
+				<div className="grid gap-4 justify-items-end">
+					<div>
+						<Button
+							type="submit"
+							name="status"
+							value="PUBLIC"
+							disabled={isPending}
+						>
+							{isPending ? "Processing" : "Publish"}
+						</Button>
+					</div>
 				</div>
 			</form>
 		</div>

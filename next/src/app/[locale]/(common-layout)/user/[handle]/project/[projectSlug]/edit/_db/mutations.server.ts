@@ -1,8 +1,12 @@
-import { uploadImage } from "@/app/[locale]/_lib/upload";
 import { prisma } from "@/lib/prisma";
 
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
-import type { Prisma, Project } from "@prisma/client";
+import type {
+	LifecycleStatus,
+	Prisma,
+	Progress,
+	Project,
+} from "@prisma/client";
 import { z } from "zod";
 
 export async function upsertProjectAndSegments(p: {
@@ -14,6 +18,8 @@ export async function upsertProjectAndSegments(p: {
 	mdastJson: Prisma.InputJsonValue;
 	sourceLocale: string;
 	segments: SegmentDraft[];
+	status: string;
+	progress: string;
 }) {
 	let project: Project;
 	if (!p.projectId) {
@@ -24,6 +30,8 @@ export async function upsertProjectAndSegments(p: {
 				title: p.title,
 				mdastJson: p.mdastJson,
 				sourceLocale: p.sourceLocale,
+				status: p.status as LifecycleStatus,
+				progress: p.progress as Progress,
 			},
 		});
 	} else {
@@ -33,6 +41,8 @@ export async function upsertProjectAndSegments(p: {
 				title: p.title,
 				mdastJson: p.mdastJson,
 				sourceLocale: p.sourceLocale,
+				status: p.status as LifecycleStatus,
+				progress: p.progress as Progress,
 			},
 		});
 	}
@@ -145,18 +155,7 @@ export const linkSchema = z.object({
 		.max(50, { message: "Description must not exceed 50 characters." }),
 });
 
-export const imageSchema = z.object({
-	id: z.number().optional(),
-	url: z.string(),
-	caption: z
-		.string()
-		.max(200, { message: "Caption must not exceed 200 characters." }),
-	order: z.number().int().min(0),
-});
-
-export const iconSchema = z
-	.object({ id: z.number().optional(), url: z.string() })
-	.optional();
+export type ProjectLink = z.infer<typeof linkSchema>;
 
 export async function upsertLinksTx(
 	projectId: number,
@@ -179,6 +178,21 @@ export async function upsertLinksTx(
 		),
 	);
 }
+
+export const imageSchema = z.object({
+	id: z.number().optional(),
+	url: z.string(),
+	caption: z
+		.string()
+		.max(200, { message: "Caption must not exceed 200 characters." }),
+	order: z.number().int().min(0),
+});
+
+export type ProjectImage = z.infer<typeof imageSchema>;
+
+export const iconSchema = z
+	.object({ id: z.number().optional(), url: z.string() })
+	.optional();
 
 export async function upsertImagesTx(
 	projectId: number,
@@ -216,25 +230,30 @@ export async function upsertImagesTx(
 
 export async function upsertIconTx(
 	projectId: number,
-	icon: z.infer<typeof iconSchema> | undefined,
-	iconFile: File | undefined,
-	iconFileName: string | undefined,
+	icon: z.infer<typeof iconSchema> | null, // null = アイコンを外す
 ) {
 	let iconId: number | null = null;
-	if (iconFile && iconFileName) {
-		const result = await uploadImage(iconFile);
-		if (!result.success)
-			throw new Error(result.message || "Icon upload failed");
-		const { imageUrl } = result.data;
-		const created = await prisma.projectImage.create({
-			data: { url: imageUrl, caption: "", order: 0, projectId },
-		});
-		iconId = created.id;
-	} else if (icon?.id) {
-		iconId = icon.id;
+
+	if (icon) {
+		if (icon.id) {
+			// 既存レコードを再利用
+			iconId = icon.id;
+		} else {
+			// URL だけ渡ってきた＝DB 未登録なので新規作成
+			const created = await prisma.projectImage.create({
+				data: {
+					url: icon.url,
+					caption: "",
+					order: 0,
+					projectId,
+				},
+			});
+			iconId = created.id;
+		}
 	}
+
 	await prisma.project.update({
 		where: { id: projectId },
-		data: { iconImageId: iconId },
+		data: { iconImageId: iconId }, // null ならアイコン解除
 	});
 }

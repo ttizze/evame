@@ -67,6 +67,8 @@ const selectProjectsWithDetails = (
 		updatedAt: true,
 		sourceLocale: true,
 		iconImageId: true,
+		status: true,
+		progress: true,
 		...selectProjectRelatedFields(onlyTitle, locale, currentUserId),
 		_count: {
 			select: {
@@ -113,7 +115,7 @@ type FetchProjectParams = {
 	tagIds?: number[];
 };
 
-export async function fetchPaginatedProjectSummaries({
+export async function fetchPaginatedPublicProjectSummaries({
 	page = 1,
 	pageSize = 9,
 	projectOwnerId,
@@ -127,11 +129,14 @@ export async function fetchPaginatedProjectSummaries({
 }> {
 	const skip = (page - 1) * pageSize;
 
-	// 共通フィルタ
-	const baseWhere: Prisma.ProjectWhereInput = {};
-	// 所有者のみ表示したい場合
-	if (projectOwnerId) baseWhere.userId = projectOwnerId;
+	const baseWhere: Prisma.ProjectWhereInput = {
+		status: "PUBLIC",
+	};
 
+	// 所有者のみ表示したい場合
+	if (projectOwnerId) {
+		baseWhere.userId = projectOwnerId;
+	}
 	// タグでフィルタリングする場合
 	if (tagIds && tagIds.length > 0) {
 		baseWhere.projectTagRelations = {
