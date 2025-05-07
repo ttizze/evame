@@ -92,6 +92,7 @@ export function BaseHeader({
 								<TranslateActionSectionClient
 									currentHandle={currentUser.handle}
 									hasGeminiApiKey={true}
+									localeSelectorClassName="w-[200px]"
 								/>
 								<DropdownMenuItem className="p-0 ">
 									<Link

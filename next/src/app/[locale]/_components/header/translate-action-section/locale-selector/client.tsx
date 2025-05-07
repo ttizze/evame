@@ -109,7 +109,7 @@ export function LocaleSelector({
 			<PopoverTrigger asChild>
 				<Button
 					variant="ghost"
-					className={cn("justify-between w-[200px] ", localeSelectorClassName)}
+					className={cn("justify-between ", localeSelectorClassName)}
 					data-testid="locale-selector-button"
 				>
 					<div className="flex items-center">
