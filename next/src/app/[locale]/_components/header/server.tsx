@@ -30,7 +30,7 @@ export async function Header() {
 				<TranslateActionSectionClient
 					currentHandle={undefined}
 					hasGeminiApiKey={hasGeminiApiKey}
-					localeSelectorClassName="border rounded-full"
+					localeSelectorClassName="border rounded-full w-[150px]"
 				/>
 			)}
 			{currentUser ? (
