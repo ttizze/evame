@@ -1,10 +1,10 @@
+import type { Root as MdastRoot } from "mdast";
+import pLimit from "p-limit";
 import sharp from "sharp";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
-import { uploadImage } from "./upload";
 import { fileFromUrl } from "./html-to-mdast-with-segments";
-import pLimit from "p-limit";
-import type { Root as MdastRoot } from "mdast";
+import { uploadImage } from "./upload";
 const limit = pLimit(5);
 
 export const remarkAutoUploadImages: Plugin<[]> = () => {

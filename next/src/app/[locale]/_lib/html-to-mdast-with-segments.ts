@@ -5,9 +5,9 @@ import rehypeSanitize from "rehype-sanitize";
 import { unified } from "unified";
 import { removePosition } from "unist-util-remove-position";
 
+import { remarkAutoUploadImages } from "@/app/[locale]/_lib/remark-auto-upload-images";
 import { remarkHashAndSegments } from "@/app/[locale]/_lib/remark-hash-and-segments";
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
-import { remarkAutoUploadImages } from "@/app/[locale]/_lib/remark-auto-upload-images";
 import type { Prisma } from "@prisma/client";
 import type { Root as MdastRoot } from "mdast";
 import pLimit from "p-limit";
@@ -63,4 +63,3 @@ export async function fileFromUrl(url: string): Promise<File> {
 	});
 }
 // S3 / R2 など
-

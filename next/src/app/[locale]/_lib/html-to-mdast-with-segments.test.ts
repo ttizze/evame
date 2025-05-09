@@ -265,7 +265,9 @@ describe("htmlToMdastWithSegments", () => {
 		expect(imageNodes.length).toBeGreaterThanOrEqual(1);
 		expect(
 			imageNodes.some(
-				(img) => img.url === "https://evame/uploads/test.jpg" && img.alt === "Test image",
+				(img) =>
+					img.url === "https://evame/uploads/test.jpg" &&
+					img.alt === "Test image",
 			),
 		).toBeTruthy();
 
