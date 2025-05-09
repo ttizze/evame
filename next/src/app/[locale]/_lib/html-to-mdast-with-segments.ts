@@ -10,10 +10,12 @@ import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments"
 import { uploadImage } from "@/app/[locale]/_lib/upload";
 import type { Prisma } from "@prisma/client";
 import type { Root as MdastRoot } from "mdast";
+import pLimit from "p-limit";
 import sharp from "sharp";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 import { VFile } from "vfile";
+const limit = pLimit(5);
 interface Params {
 	header?: string;
 	html: string;
@@ -73,7 +75,7 @@ export const remarkAutoUploadImages: Plugin<[]> = () => {
 		visit(tree, "image", (node) => {
 			if (!node.url.includes("evame/uploads")) return;
 			tasks.push(
-				(async () => {
+				limit(async () => {
 					const file = await fileFromUrl(node.url);
 
 					// 例：サーバで再エンコードして 2 MB 以下に
@@ -82,7 +84,8 @@ export const remarkAutoUploadImages: Plugin<[]> = () => {
 						.jpeg({ quality: 80, mozjpeg: true })
 						.toBuffer();
 
-					const compact = new File([buf], file.name, { type: "image/jpeg" });
+					const jpegName = file.name.replace(/\.[^.]+$/, ".jpg");
+					const compact = new File([buf], jpegName, { type: "image/jpeg" });
 
 					const result = await uploadImage(compact);
 					if (result.success) {
@@ -90,7 +93,7 @@ export const remarkAutoUploadImages: Plugin<[]> = () => {
 					} else {
 						console.error(result.message);
 					}
-				})(),
+				}),
 			);
 		});
 
