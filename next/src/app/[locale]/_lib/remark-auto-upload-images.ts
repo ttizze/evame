@@ -3,7 +3,7 @@ import pLimit from "p-limit";
 import sharp from "sharp";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
-import { fileFromUrl } from "./html-to-mdast-with-segments";
+import { fileFromUrl } from "./file-from-url";
 import { uploadImage } from "./upload";
 const limit = pLimit(5);
 
@@ -19,7 +19,7 @@ export const remarkAutoUploadImages: Plugin<[]> = () => {
 					const file = await fileFromUrl(node.url);
 
 					// 例：サーバで再エンコードして 2 MB 以下に
-					const buf = await sharp(await file.arrayBuffer())
+					const buf = await sharp(Buffer.from(await file.arrayBuffer()))
 						.resize({ width: 2560, withoutEnlargement: true })
 						.jpeg({ quality: 80, mozjpeg: true })
 						.toBuffer();
