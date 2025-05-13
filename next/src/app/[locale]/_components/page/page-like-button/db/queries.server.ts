@@ -9,7 +9,7 @@ export async function getPageLikeAndCount(
 		where: { pageId },
 	});
 
-	// Check if current user has liked the project
+	// Check if current user has liked the
 	let liked = false;
 	if (currentUserId) {
 		const existingLike = await prisma.likePage.findFirst({

@@ -21,7 +21,6 @@ export async function updateTranslationJob(
 	progress: number,
 	userId?: string,
 	pageId?: number,
-	projectId?: number,
 ) {
 	return await prisma.translationJob.update({
 		where: {
@@ -32,7 +31,6 @@ export async function updateTranslationJob(
 			progress,
 			userId,
 			pageId,
-			projectId,
 		},
 	});
 }

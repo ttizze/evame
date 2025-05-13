@@ -32,7 +32,6 @@ type AddTranslateDialogProps = {
 	currentHandle: string | undefined;
 	hasGeminiApiKey: boolean;
 	pageSlug?: string;
-	projectSlug?: string;
 };
 
 export function AddTranslateDialog({
@@ -41,15 +40,12 @@ export function AddTranslateDialog({
 	currentHandle,
 	hasGeminiApiKey,
 	pageSlug,
-	projectSlug,
 }: AddTranslateDialogProps) {
 	let targetContentType: TargetContentType;
 	if (pageSlug) {
 		targetContentType = "page";
-	} else if (projectSlug) {
-		targetContentType = "project";
 	} else {
-		throw new Error("pageSlug or projectSlug is required");
+		throw new Error("pageSlug is required");
 	}
 	const [translateState, action, isTranslating] = useActionState<
 		TranslateActionState,
@@ -119,7 +115,6 @@ export function AddTranslateDialog({
 										value={targetLocale}
 									/>
 									<input type="hidden" name="pageSlug" value={pageSlug} />
-									<input type="hidden" name="projectSlug" value={projectSlug} />
 									<input type="hidden" name="aiModel" value={selectedModel} />
 									<input
 										type="hidden"
@@ -149,18 +144,7 @@ export function AddTranslateDialog({
 										{translateState.zodErrors.pageSlug[0]}
 									</p>
 								)}
-							{!translateState.success &&
-								translateState.zodErrors?.projectSlug && (
-									<p className="text-red-500">
-										{translateState.zodErrors.projectSlug[0]}
-									</p>
-								)}
-							{!translateState.success &&
-								translateState.zodErrors?.projectSlug && (
-									<p className="text-red-500">
-										{translateState.zodErrors.projectSlug[0]}
-									</p>
-								)}
+
 							{!translateState.success && translateState.zodErrors?.aiModel && (
 								<p className="text-red-500">
 									{translateState.zodErrors.aiModel[0]}

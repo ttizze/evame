@@ -7,7 +7,6 @@ export type NumberedElement = {
 export interface TranslateJobParams {
 	userId: string;
 	pageId?: number;
-	projectId?: number;
 	translationJobId: number;
 	geminiApiKey: string;
 	aiModel: string;
@@ -16,5 +15,4 @@ export interface TranslateJobParams {
 	numberedElements: NumberedElement[];
 	targetContentType: TargetContentType;
 	pageCommentId?: number;
-	projectCommentId?: number;
 }

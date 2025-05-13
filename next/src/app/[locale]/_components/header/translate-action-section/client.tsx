@@ -15,9 +15,8 @@ export function TranslateActionSectionClient({
 	localeSelectorClassName,
 }: TranslateActionSectionClientProps) {
 	const [addTranslateDialogOpen, setAddTranslateDialogOpen] = useState(false);
-	const { pageSlug, projectSlug } = useParams<{
+	const { pageSlug } = useParams<{
 		pageSlug?: string;
-		projectSlug?: string;
 	}>();
 	return (
 		<div>
@@ -26,17 +25,15 @@ export function TranslateActionSectionClient({
 					localeSelectorClassName={localeSelectorClassName}
 					onAddNew={() => setAddTranslateDialogOpen(true)}
 					pageSlug={pageSlug}
-					projectSlug={projectSlug}
 				/>
 			</div>
-			{pageSlug || projectSlug ? (
+			{pageSlug ? (
 				<AddTranslateDialog
 					open={addTranslateDialogOpen}
 					onOpenChange={setAddTranslateDialogOpen}
 					currentHandle={currentHandle}
 					hasGeminiApiKey={hasGeminiApiKey}
 					pageSlug={pageSlug}
-					projectSlug={projectSlug}
 				/>
 			) : null}
 		</div>

@@ -1,14 +1,5 @@
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
-import type {
-	Page,
-	Project,
-	ProjectImage,
-	ProjectLink,
-	ProjectTag,
-	ProjectTagRelation,
-	Tag,
-	TagPage,
-} from "@prisma/client";
+import type { Page, Tag, TagPage } from "@prisma/client";
 import type { SanitizedUser } from "../types";
 interface BaseSegment {
 	id: number;
@@ -56,21 +47,3 @@ export type PageSummary = Omit<
 	PageDetail,
 	"updatedAt" | "userId" | "mdastJson"
 >;
-
-type TagProjectWithTag = ProjectTagRelation & {
-	projectTag: ProjectTag;
-};
-export type ProjectDetail = Omit<Project, "createdAt"> & {
-	createdAt: string;
-	user: SanitizedUser;
-	images: ProjectImage[];
-	iconImage: ProjectImage | null;
-	links: ProjectLink[];
-	projectTagRelations: TagProjectWithTag[];
-	segmentBundles: SegmentBundle[];
-	_count: {
-		projectComments: number;
-	};
-};
-
-export type ProjectSummary = Omit<ProjectDetail, "userId" | "mdastJson">;
