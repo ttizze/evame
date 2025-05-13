@@ -10,9 +10,8 @@ import { remarkHashAndSegments } from "@/app/[locale]/_lib/remark-hash-and-segme
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
 import type { Prisma } from "@prisma/client";
 import type { Root as MdastRoot } from "mdast";
-import pLimit from "p-limit";
 import { VFile } from "vfile";
-const limit = pLimit(5);
+
 interface Params {
 	header?: string;
 	html: string;
@@ -53,13 +52,3 @@ export async function htmlToMdastWithSegments({
 	};
 }
 
-export async function fileFromUrl(url: string): Promise<File> {
-	const res = await fetch(url);
-	if (!res.ok) throw new Error(`fetch failed: ${url}`);
-	const blob = await res.blob();
-	const ext = url.split(".").pop()?.split("?")[0] ?? "png";
-	return new File([blob], `remote.${ext}`, {
-		type: blob.type || `image/${ext}`,
-	});
-}
-// S3 / R2 など
