@@ -72,6 +72,7 @@ export default async function UserPage({
 					page={page}
 					locale={locale}
 					sort={sort}
+					showPagination={true}
 				/>
 			</>
 			<FloatingControls />
