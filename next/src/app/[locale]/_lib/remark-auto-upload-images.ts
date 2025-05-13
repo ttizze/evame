@@ -19,7 +19,7 @@ export const remarkAutoUploadImages: Plugin<[]> = () => {
 					const file = await fileFromUrl(node.url);
 
 					// 例：サーバで再エンコードして 2 MB 以下に
-          const buf = await sharp(Buffer.from(await file.arrayBuffer()))
+					const buf = await sharp(Buffer.from(await file.arrayBuffer()))
 						.resize({ width: 2560, withoutEnlargement: true })
 						.jpeg({ quality: 80, mozjpeg: true })
 						.toBuffer();

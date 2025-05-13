@@ -4,20 +4,20 @@ import { fileFromUrl } from "./file-from-url";
 import { remarkAutoUploadImages } from "./remark-auto-upload-images";
 import { uploadImage } from "./upload";
 vi.mock("@/app/[locale]/_lib/file-from-url", () => {
-  // 1×1 px 透明 PNG (完全な base64)
-  const pngBase64 =
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAAAXNSR0IArs4c6QAAAARnQU1BAACx"+
-    "jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY2AAAAACAAHiIbwzAAAAAElFTkSuQmCC";
+	// 1×1 px 透明 PNG (完全な base64)
+	const pngBase64 =
+		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAAAXNSR0IArs4c6QAAAARnQU1BAACx" +
+		"jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY2AAAAACAAHiIbwzAAAAAElFTkSuQmCC";
 
-  const pngBuffer = Buffer.from(pngBase64, "base64"); // ← **Buffer**
+	const pngBuffer = Buffer.from(pngBase64, "base64"); // ← **Buffer**
 
-  return {
-    fileFromUrl: vi.fn(async () => ({
-      name: "dummy.png",
-      type: "image/png",
-      arrayBuffer: async () => pngBuffer, // ← **そのまま Buffer を返す**
-    })),
-  };
+	return {
+		fileFromUrl: vi.fn(async () => ({
+			name: "dummy.png",
+			type: "image/png",
+			arrayBuffer: async () => pngBuffer, // ← **そのまま Buffer を返す**
+		})),
+	};
 });
 vi.mock("@/app/[locale]/_lib/upload", () => {
 	return {
@@ -27,7 +27,6 @@ vi.mock("@/app/[locale]/_lib/upload", () => {
 		})),
 	};
 });
-
 
 describe("remarkAutoUploadImages", () => {
 	beforeEach(() => {
