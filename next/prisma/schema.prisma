@@ -34,18 +34,11 @@ model User {
   pageComments                          PageComment[]
   pageCommentSegmentTranslations        PageCommentSegmentTranslation[]
   pageCommentSegmentTranslationVotes    PageCommentSegmentTranslationVote[]
-  projects                              Project[]
   accounts                              Account[]
   sessions                              Session[]
   notifications                         Notification[]                         @relation("UserNotifications")
   actedNotifications                    Notification[]                         @relation("NotificationActor")
-  projectLikes                          ProjectLike[]
-  projectSegmentTranslations            ProjectSegmentTranslation[]
-  projectSegmentTranslationVotes        ProjectSegmentTranslationVote[]
   translationJobs                       TranslationJob[]
-  projectComments                       ProjectComment[]
-  projectCommentSegmentTranslations     ProjectCommentSegmentTranslation[]
-  projectCommentSegmentTranslationVotes ProjectCommentSegmentTranslationVote[]
 
   @@map("users")
 }
@@ -93,11 +86,9 @@ enum TranslationStatus {
 
 model TranslationJob {
   id        Int      @id @default(autoincrement())
-  pageId    Int?
-  projectId Int?
+  pageId    Int
   // リレーション
-  page      Page?    @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  page      Page    @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   userId    String?
   user      User?             @relation(fields: [userId], references: [id])
@@ -312,158 +303,6 @@ model PageCommentSegmentTranslationVote {
   @@map("page_comment_segment_translation_votes")
 }
 
-enum LifecycleStatus {
-  DRAFT
-  PUBLIC
-  ARCHIVED
-}
-
-enum Progress {
-  IDEA
-  WIP
-  REVIEW
-  RELEASED
-  FROZEN
-}
-model Project {
-  id           Int      @id @default(autoincrement())
-  slug         String   @unique
-  userId       String   @map("user_id")
-  title        String
-  mdastJson    Json     @map("mdast_json")
-  sourceLocale String   @default("unknown") @map("source_locale")
-  status LifecycleStatus @default(DRAFT)
-  progress     Progress @default(IDEA)
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  iconImageId  Int?     @unique @map("icon_image_id")
-
-  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  links               ProjectLink[]
-  images              ProjectImage[]       @relation("ProjectImages")
-  projectTagRelations ProjectTagRelation[]
-  projectLikes        ProjectLike[]
-  projectSegments     ProjectSegment[]
-  translationJobs     TranslationJob[]
-  iconImage           ProjectImage?        @relation("ProjectIcon", fields: [iconImageId], references: [id], onDelete: SetNull)
-  projectComments     ProjectComment[]
-  notifications       Notification[]
-
-  @@map("projects")
-}
-
-model ProjectLink {
-id          Int    @id @default(autoincrement())
-  projectId   Int @map("project_id")
-  description String @default("")
-  url         String
-
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@map("project_links")
-}
-
-model ProjectImage {
-  id        Int    @id @default(autoincrement())
-  projectId Int    @map("project_id")
-  url       String
-  caption   String @default("")
-  order     Int    @default(0)
-
-  project     Project  @relation("ProjectImages", fields: [projectId], references: [id], onDelete: Cascade)
-  projectIcon Project? @relation("ProjectIcon")
-
-  @@map("project_images")
-}
-
-model ProjectTag {
-  id                  Int                  @id @default(autoincrement())
-  name                String               @unique
-  projectTagRelations ProjectTagRelation[]
-
-  @@map("project_tags")
-}
-
-model ProjectTagRelation {
-  projectId    Int @map("project_id")
-  projectTagId Int @map("project_tag_id")
-
-  project    Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectTag ProjectTag @relation(fields: [projectTagId], references: [id], onDelete: Cascade)
-
-  @@id([projectId, projectTagId])
-  @@map("project_tag_relations")
-}
-
-model ProjectLike {
-  id        Int      @id @default(autoincrement())
-  projectId Int      @map("project_id")
-  userId    String   @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("project_likes")
-}
-
-model ProjectSegment {
-  id                         Int                         @id @default(autoincrement())
-  text                       String
-  number                     Int
-  textAndOccurrenceHash      String                      @map("text_and_occurrence_hash")
-  projectSegmentTranslations ProjectSegmentTranslation[]
-  project                    Project                     @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectId                  Int                         @map("project_id")
-  createdAt                  DateTime                    @default(now()) @map("created_at")
-  updatedAt                  DateTime                    @updatedAt @map("updated_at")
-
-  @@unique([projectId, number])
-  @@unique([projectId, textAndOccurrenceHash])
-  @@index([projectId])
-  @@index([number])
-  @@index([textAndOccurrenceHash])
-  @@map("project_segments")
-}
-
-model ProjectSegmentTranslation {
-  id                             Int                             @id @default(autoincrement())
-  locale                         String
-  text                           String
-  projectSegmentId               Int                             @map("project_segment_id")
-  userId                         String                          @map("user_id")
-  point                          Int                             @default(0)
-  isArchived                     Boolean                         @default(false) @map("is_archived")
-  createdAt                      DateTime                        @default(now()) @map("created_at")
-  projectSegment                 ProjectSegment                  @relation(fields: [projectSegmentId], references: [id], onDelete: Cascade)
-  user                           User                            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  projectSegmentTranslationVotes ProjectSegmentTranslationVote[]
-  notifications                  Notification[]
-
-  @@index([projectSegmentId])
-  @@index([userId])
-  @@index([locale])
-  @@index([locale, isArchived])
-  @@index([projectSegmentId, locale, isArchived])
-  @@index([point, createdAt])
-  @@map("project_segment_translations")
-}
-
-model ProjectSegmentTranslationVote {
-  id                          Int                       @id @default(autoincrement())
-  userId                      String                    @map("user_id")
-  projectSegmentTranslationId Int                       @map("project_segment_translation_id")
-  isUpvote                    Boolean                   @map("is_upvote")
-  createdAt                   DateTime                  @default(now()) @map("created_at")
-  updatedAt                   DateTime                  @updatedAt @map("updated_at")
-  projectSegmentTranslation   ProjectSegmentTranslation @relation(fields: [projectSegmentTranslationId], references: [id], onDelete: Cascade)
-  user                        User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([projectSegmentTranslationId, userId])
-  @@index([projectSegmentTranslationId])
-  @@index([userId])
-  @@map("project_segment_translation_votes")
-}
 
 model Account {
   userId            String
@@ -490,10 +329,6 @@ enum NotificationType {
   PAGE_LIKE
   PAGE_SEGMENT_TRANSLATION_VOTE
   PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE
-  PROJECT_COMMENT
-  PROJECT_LIKE
-  PROJECT_SEGMENT_TRANSLATION_VOTE
-  PROJECT_COMMENT_SEGMENT_TRANSLATION_VOTE
 }
 
 model Notification {
@@ -508,10 +343,6 @@ model Notification {
   pageCommentId                      Int? @map("page_comment_id")
   pageSegmentTranslationId           Int? @map("page_segment_translation_id")
   pageCommentSegmentTranslationId    Int? @map("page_comment_segment_translation_id")
-  projectId                          Int? @map("project_id")
-  projectCommentId                   Int? @map("project_comment_id")
-  projectSegmentTranslationId        Int? @map("project_segment_translation_id")
-  projectCommentSegmentTranslationId Int? @map("project_comment_segment_translation_id")
 
   user  User @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
   actor User @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
@@ -520,10 +351,6 @@ model Notification {
   pageComment                      PageComment?                      @relation(fields: [pageCommentId], references: [id])
   pageSegmentTranslation           PageSegmentTranslation?           @relation(fields: [pageSegmentTranslationId], references: [id])
   pageCommentSegmentTranslation    PageCommentSegmentTranslation?    @relation(fields: [pageCommentSegmentTranslationId], references: [id])
-  project                          Project?                          @relation(fields: [projectId], references: [id])
-  projectComment                   ProjectComment?                   @relation(fields: [projectCommentId], references: [id])
-  projectCommentSegmentTranslation ProjectCommentSegmentTranslation? @relation(fields: [projectCommentSegmentTranslationId], references: [id])
-  projectSegmentTranslation        ProjectSegmentTranslation?        @relation(fields: [projectSegmentTranslationId], references: [id])
 
   @@index([userId])
   @@index([actorId])
@@ -546,80 +373,4 @@ model VerificationToken {
 
   @@id([identifier, token])
   @@map("verification_tokens")
-}
-
-model ProjectComment {
-  id                     Int                     @id @default(autoincrement())
-  mdastJson              Json                    @map("mdast_json")
-  sourceLocale           String                  @default("unknown") @map("source_locale")
-  userId                 String                  @map("user_id")
-  projectId              Int                     @map("project_id")
-  parentId               Int?                    @map("parent_id")
-  createdAt              DateTime                @default(now()) @map("created_at")
-  updatedAt              DateTime                @updatedAt @map("updated_at")
-  user                   User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project                Project                 @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  parent                 ProjectComment?         @relation("ProjectCommentReplies", fields: [parentId], references: [id], onDelete: SetNull)
-  replies                ProjectComment[]        @relation("ProjectCommentReplies")
-  projectCommentSegments ProjectCommentSegment[]
-  notifications          Notification[]
-
-  @@index([userId])
-  @@index([projectId])
-  @@index([createdAt])
-  @@map("project_comments")
-}
-
-model ProjectCommentSegment {
-  id                                Int                                @id @default(autoincrement())
-  text                              String
-  number                            Int
-  textAndOccurrenceHash             String                             @map("text_and_occurrence_hash")
-  projectCommentId                  Int                                @map("project_comment_id")
-  createdAt                         DateTime                           @default(now()) @map("created_at")
-  updatedAt                         DateTime                           @updatedAt @map("updated_at")
-  projectComment                    ProjectComment                     @relation(fields: [projectCommentId], references: [id], onDelete: Cascade)
-  projectCommentSegmentTranslations ProjectCommentSegmentTranslation[]
-
-  @@unique([projectCommentId, number])
-  @@unique([projectCommentId, textAndOccurrenceHash])
-  @@index([projectCommentId])
-  @@index([textAndOccurrenceHash])
-  @@map("project_comment_segments")
-}
-
-model ProjectCommentSegmentTranslation {
-  id                                    Int                                    @id @default(autoincrement())
-  locale                                String
-  text                                  String
-  userId                                String                                 @map("user_id")
-  point                                 Int                                    @default(0)
-  createdAt                             DateTime                               @default(now()) @map("created_at")
-  updatedAt                             DateTime                               @updatedAt @map("updated_at")
-  user                                  User                                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  projectCommentSegmentId               Int                                    @map("project_comment_segment_id")
-  projectCommentSegment                 ProjectCommentSegment                  @relation(fields: [projectCommentSegmentId], references: [id], onDelete: Cascade)
-  projectCommentSegmentTranslationVotes ProjectCommentSegmentTranslationVote[]
-  notifications                         Notification[]
-
-  @@index([projectCommentSegmentId])
-  @@index([userId])
-  @@index([locale])
-  @@map("project_comment_segment_translations")
-}
-
-model ProjectCommentSegmentTranslationVote {
-  id                                 Int                                @id @default(autoincrement())
-  userId                             String                           @map("user_id")
-  projectCommentSegmentTranslationId Int                                @map("project_comment_segment_translation_id")
-  isUpvote                           Boolean                          @map("is_upvote")
-  createdAt                          DateTime                         @default(now()) @map("created_at")
-  updatedAt                          DateTime                         @updatedAt @map("updated_at")
-  projectCommentSegmentTranslation   ProjectCommentSegmentTranslation @relation(fields: [projectCommentSegmentTranslationId], references: [id], onDelete: Cascade)
-  user                               User                             @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([projectCommentSegmentTranslationId, userId])
-  @@index([projectCommentSegmentTranslationId])
-  @@index([userId])
-  @@map("project_comment_segment_translation_votes")
 }

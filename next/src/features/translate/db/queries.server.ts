@@ -21,22 +21,3 @@ export async function getPageCommentSegments(pageCommentId: number) {
 		},
 	});
 }
-export async function getProjectSegments(projectId: number) {
-	return await prisma.projectSegment.findMany({
-		where: { projectId },
-		select: {
-			id: true,
-			number: true,
-		},
-	});
-}
-
-export async function getProjectCommentSegments(projectCommentId: number) {
-	return await prisma.projectCommentSegment.findMany({
-		where: { projectCommentId },
-		select: {
-			id: true,
-			number: true,
-		},
-	});
-}

@@ -8,14 +8,13 @@ export async function GET(req: NextRequest) {
 	const Params = z
 		.object({
 			pageSlug: z.string().optional(),
-			projectSlug: z.string().optional(),
 		})
-		.refine((p) => p.pageSlug || p.projectSlug, {
-			message: "pageSlug or projectSlug is required",
+		.refine((p) => p.pageSlug, {
+			message: "pageSlug is required",
 		});
 
 	/* ② ここでパース失敗なら 400 を返す */
-	const { pageSlug, projectSlug } = Params.parse(
+	const { pageSlug } = Params.parse(
 		Object.fromEntries(req.nextUrl.searchParams),
 	);
 
@@ -37,28 +36,8 @@ export async function GET(req: NextRequest) {
 		);
 	}
 
-	if (projectSlug) {
-		const project = await prisma.project.findUnique({
-			where: { slug: projectSlug },
-			select: { sourceLocale: true, translationJobs: true },
-		});
-		if (!project)
-			return NextResponse.json(
-				{ message: "project not found" },
-				{ status: 404 },
-			);
-
-		return NextResponse.json(
-			{
-				sourceLocale: project.sourceLocale,
-				translationJobs: pickBestPerLocale(project.translationJobs),
-			},
-			{ status: 200 },
-		);
-	}
-
 	return NextResponse.json(
-		{ message: "pageSlug or projectSlug is required" },
+		{ message: "pageSlug  is required" },
 		{ status: 400 },
 	);
 }

@@ -1,10 +1,6 @@
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import { fetchPageWithPageSegments } from "@/app/[locale]/_db/page-queries.server";
 import { fetchPageWithTitleAndComments } from "@/app/[locale]/_db/page-queries.server";
-import {
-	fetchProjectWithProjectSegments,
-	fetchProjectWithTitleAndComments,
-} from "@/app/[locale]/_db/project-queries.server";
 import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslateJobParams } from "@/features/translate/types";
@@ -20,36 +16,19 @@ export interface PageTranslationParams extends BaseTranslationParams {
 	pageId: number;
 }
 
-export interface ProjectTranslationParams extends BaseTranslationParams {
-	type: "project";
-	projectId: number;
-}
-
 export interface PageCommentTranslationParams extends BaseTranslationParams {
 	type: "pageComment";
 	pageId: number;
 	pageCommentId: number;
 }
 
-export interface ProjectCommentTranslationParams extends BaseTranslationParams {
-	type: "projectComment";
-	projectId: number;
-	projectCommentId: number;
-}
-
-type TranslationParams =
-	| PageTranslationParams
-	| ProjectTranslationParams
-	| PageCommentTranslationParams
-	| ProjectCommentTranslationParams;
+type TranslationParams = PageTranslationParams | PageCommentTranslationParams;
 
 // 依存関係を明示的に注入するためのインターフェース
 interface TranslationDependencies {
 	createTranslationJob: typeof createTranslationJob;
 	fetchPageWithPageSegments: typeof fetchPageWithPageSegments;
 	fetchPageWithTitleAndComments: typeof fetchPageWithTitleAndComments;
-	fetchProjectWithProjectSegments: typeof fetchProjectWithProjectSegments;
-	fetchProjectWithTitleAndComments: typeof fetchProjectWithTitleAndComments;
 	fetchTranslateAPI: (
 		url: string,
 		params: TranslateJobParams,
@@ -62,8 +41,6 @@ const defaultDependencies: TranslationDependencies = {
 	createTranslationJob,
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
-	fetchProjectWithProjectSegments,
-	fetchProjectWithTitleAndComments,
 	fetchTranslateAPI: async (url, params) => {
 		return fetch(url, {
 			method: "POST",
@@ -89,12 +66,7 @@ export interface TranslationStrategy<T extends TranslationParams> {
 }
 import pLimit from "p-limit";
 
-import {
-	pageCommentStrategy,
-	pageStrategy,
-	projectCommentStrategy,
-	projectStrategy,
-} from "./translation-strategies";
+import { pageCommentStrategy, pageStrategy } from "./translation-strategies";
 
 type StrategyMap = {
 	[K in TranslationParams["type"]]: TranslationStrategy<
@@ -105,8 +77,6 @@ type StrategyMap = {
 const STRATEGY_TABLE: StrategyMap = {
 	page: pageStrategy,
 	pageComment: pageCommentStrategy,
-	project: projectStrategy,
-	projectComment: projectCommentStrategy,
 };
 
 const CONCURRENCY = 3;
@@ -163,32 +133,6 @@ export async function handlePageAutoTranslation({
 	);
 }
 // プロジェクト翻訳のためのヘルパー関数
-export async function handleProjectAutoTranslation({
-	currentUserId,
-	projectId,
-	sourceLocale,
-	geminiApiKey,
-	dependencies = {},
-}: Omit<ProjectTranslationParams, "type"> & {
-	dependencies?: Partial<TranslationDependencies>;
-}): Promise<TranslationJobForToast[]> {
-	const deps: TranslationDependencies = {
-		...defaultDependencies,
-		...dependencies,
-	};
-
-	return handleAutoTranslation(
-		{
-			type: "project",
-			currentUserId,
-			projectId,
-			sourceLocale,
-			geminiApiKey,
-		},
-		deps,
-	);
-}
-
 // コメント翻訳のためのヘルパー関数
 export async function handlePageCommentAutoTranslation({
 	currentUserId,
@@ -211,35 +155,6 @@ export async function handlePageCommentAutoTranslation({
 			currentUserId,
 			pageId,
 			pageCommentId,
-			sourceLocale,
-			geminiApiKey,
-		},
-		deps,
-	);
-}
-
-// プロジェクトコメント翻訳のためのヘルパー関数
-export async function handleProjectCommentAutoTranslation({
-	currentUserId,
-	projectId,
-	projectCommentId,
-	sourceLocale,
-	geminiApiKey,
-	dependencies = {},
-}: Omit<ProjectCommentTranslationParams, "type"> & {
-	dependencies?: Partial<TranslationDependencies>;
-}): Promise<TranslationJobForToast[]> {
-	const deps: TranslationDependencies = {
-		...defaultDependencies,
-		...dependencies,
-	};
-
-	return handleAutoTranslation(
-		{
-			type: "projectComment",
-			currentUserId,
-			projectId,
-			projectCommentId,
 			sourceLocale,
 			geminiApiKey,
 		},

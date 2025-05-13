@@ -72,57 +72,6 @@ export async function getNotifications(currentUserHandle: string) {
 					},
 				},
 			},
-			project: {
-				select: {
-					slug: true,
-					title: true,
-				},
-			},
-			projectComment: {
-				select: {
-					project: {
-						select: { slug: true, title: true },
-					},
-				},
-			},
-			projectSegmentTranslation: {
-				select: {
-					text: true,
-					projectSegment: {
-						select: {
-							text: true,
-							project: {
-								select: {
-									slug: true,
-									title: true,
-									user: { select: { handle: true } },
-								},
-							},
-						},
-					},
-				},
-			},
-			projectCommentSegmentTranslation: {
-				select: {
-					text: true,
-					projectCommentSegment: {
-						select: {
-							text: true,
-							projectComment: {
-								select: {
-									project: {
-										select: {
-											slug: true,
-											title: true,
-											user: { select: { handle: true } },
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 		},
 		orderBy: {
 			createdAt: "desc",

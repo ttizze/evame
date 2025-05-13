@@ -34,16 +34,9 @@ type TranslationInfo = {
 
 const buildSlugKey = ({
 	pageSlug,
-	projectSlug,
 }: {
 	pageSlug?: string;
-	projectSlug?: string;
-}) =>
-	pageSlug
-		? `pageSlug=${pageSlug}`
-		: projectSlug
-			? `projectSlug=${projectSlug}`
-			: null;
+}) => (pageSlug ? `pageSlug=${pageSlug}` : null);
 
 const fetchTranslation: (url: string) => Promise<TranslationInfo> = async (
 	url,
@@ -56,7 +49,6 @@ const fetchTranslation: (url: string) => Promise<TranslationInfo> = async (
 interface LocaleSelectorProps {
 	localeSelectorClassName?: string;
 	pageSlug?: string;
-	projectSlug?: string;
 	/** Called if the user clicks the “Add New” button. */
 	onAddNew: () => void;
 }
@@ -66,7 +58,6 @@ export function LocaleSelector({
 	localeSelectorClassName,
 	onAddNew,
 	pageSlug,
-	projectSlug,
 }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
 	const router = useCombinedRouter();
@@ -84,11 +75,11 @@ export function LocaleSelector({
 		});
 	};
 	let showIcons = false;
-	if (pageSlug || projectSlug) {
+	if (pageSlug) {
 		showIcons = true;
 	}
-	const showAddNewButton = pageSlug || projectSlug;
-	const slugKey = buildSlugKey({ pageSlug, projectSlug });
+	const showAddNewButton = pageSlug;
+	const slugKey = buildSlugKey({ pageSlug });
 	const apiUrl = slugKey ? `/api/locale-info?${slugKey}` : null;
 
 	const { data, error } = useSWR(apiUrl, fetchTranslation);

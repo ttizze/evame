@@ -9,11 +9,6 @@ import {
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
 } from "@/app/[locale]/_db/page-queries.server";
-import {
-	fetchProjectIdBySlug,
-	fetchProjectWithProjectSegments,
-	fetchProjectWithTitleAndComments,
-} from "@/app/[locale]/_db/project-queries.server";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
@@ -29,7 +24,6 @@ export type TranslateActionState = ActionResponse<
 	{ translationJobs: TranslationJob[] },
 	{
 		pageSlug: string;
-		projectSlug: string;
 		aiModel: string;
 		targetLocale: string;
 		targetContentType: TargetContentType;
@@ -38,7 +32,6 @@ export type TranslateActionState = ActionResponse<
 
 const schema = z.object({
 	pageSlug: z.string().optional(),
-	projectSlug: z.string().optional(),
 	aiModel: z.string().min(1),
 	targetLocale: z.string().min(1),
 	targetContentType: z.enum(targetContentTypeValues),
@@ -62,17 +55,15 @@ async function newJobAndSend(args: {
 	aiModel: string;
 	locale: string;
 	pageId?: number;
-	projectId?: number;
 	pageCommentId?: number;
-	projectCommentId?: number;
 	title: string;
 	elements: Numbered[];
 	contentType: TargetContentType;
 	geminiKey: string;
 	jobs: TranslationJob[];
 }) {
-	if (!args.pageId && !args.projectId) {
-		throw new Error("pageId または projectId が必須です");
+	if (!args.pageId) {
+		throw new Error("pageId が必須です");
 	}
 
 	const job = await createTranslationJob({
@@ -80,7 +71,6 @@ async function newJobAndSend(args: {
 		aiModel: args.aiModel,
 		locale: args.locale,
 		pageId: args.pageId,
-		projectId: args.projectId,
 	});
 
 	args.jobs.push(job);
@@ -95,9 +85,7 @@ async function newJobAndSend(args: {
 		numberedElements: args.elements,
 		targetContentType: args.contentType,
 		pageId: args.pageId,
-		projectId: args.projectId,
 		pageCommentId: args.pageCommentId,
-		projectCommentId: args.projectCommentId,
 	});
 }
 
@@ -154,58 +142,6 @@ async function handlePage(opts: {
 	}
 }
 
-/* ───────── プロジェクト処理 ───────── */
-
-async function handleProject(opts: {
-	projectSlug: string;
-	aiModel: string;
-	locale: string;
-	userId: string;
-	geminiKey: string;
-	contentType: TargetContentType;
-	jobs: TranslationJob[];
-}) {
-	const id = (await fetchProjectIdBySlug(opts.projectSlug))?.id;
-	if (!id) return { success: false, message: "Project not found" };
-
-	const body = await fetchProjectWithProjectSegments(id);
-	if (body) {
-		await newJobAndSend({
-			userId: opts.userId,
-			aiModel: opts.aiModel,
-			locale: opts.locale,
-			projectId: id,
-			title: body.title,
-			elements: toNumbered(body.projectSegments),
-			contentType: opts.contentType,
-			geminiKey: opts.geminiKey,
-			jobs: opts.jobs,
-		});
-	}
-
-	const com = await fetchProjectWithTitleAndComments(id);
-	if (com) {
-		for (const c of com.projectComments) {
-			const elems = [
-				...toNumbered(c.projectCommentSegments),
-				{ number: 0, text: com.title },
-			];
-
-			await newJobAndSend({
-				userId: opts.userId,
-				aiModel: opts.aiModel,
-				locale: opts.locale,
-				projectId: id,
-				title: com.title,
-				elements: elems,
-				contentType: "projectComment",
-				geminiKey: opts.geminiKey,
-				jobs: opts.jobs,
-			});
-		}
-	}
-}
-
 /* ───────── Action ───────── */
 
 export async function translateAction(
@@ -235,22 +171,6 @@ export async function translateAction(
 			return { success: false, message: pageResult.message };
 		}
 		revalidatePath(`/user/${currentUser.handle}/page/${data.pageSlug}`);
-	}
-
-	if (data.projectSlug) {
-		const projectResult = await handleProject({
-			projectSlug: data.projectSlug,
-			aiModel: data.aiModel,
-			locale: data.targetLocale,
-			userId: currentUser.id,
-			geminiKey: gemini.apiKey,
-			contentType: data.targetContentType,
-			jobs,
-		});
-		if (projectResult && !projectResult.success) {
-			return { success: false, message: projectResult.message };
-		}
-		revalidatePath(`/user/${currentUser.handle}/project/${data.projectSlug}`);
 	}
 
 	return { success: true, data: { translationJobs: jobs } };

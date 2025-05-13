@@ -2,20 +2,13 @@ import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[han
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { TranslationStatus } from "@prisma/client";
 import { updateTranslationJob } from "../db/mutations.server";
-import {
-	getPageCommentSegments,
-	getPageSegments,
-	getProjectCommentSegments,
-	getProjectSegments,
-} from "../db/queries.server";
+import { getPageCommentSegments, getPageSegments } from "../db/queries.server";
 import { getGeminiModelResponse } from "../services/gemini";
 import type { NumberedElement, TranslateJobParams } from "../types";
 import { extractTranslations } from "./extract-translations.server";
 import {
 	saveTranslationsForPage,
 	saveTranslationsForPageComment,
-	saveTranslationsForProject,
-	saveTranslationsForProjectComment,
 } from "./io-deps";
 import { splitNumberedElements } from "./split-numbered-elements.server";
 
@@ -41,11 +34,9 @@ export async function translate(params: TranslateJobParams) {
 				chunks[i],
 				params.targetLocale,
 				params.pageId,
-				params.projectId,
 				params.title,
 				params.targetContentType,
 				params.pageCommentId,
-				params.projectCommentId,
 			);
 			const progress = ((i + 1) / totalChunks) * 100;
 			await updateTranslationJob(
@@ -75,11 +66,9 @@ async function translateChunk(
 	numberedElements: NumberedElement[],
 	targetLocale: string,
 	pageId?: number,
-	projectId?: number,
 	title?: string,
 	targetContentType?: TargetContentType,
 	pageCommentId?: number,
-	projectCommentId?: number,
 ) {
 	// まだ翻訳が完了していない要素
 	let pendingElements = [...numberedElements];
@@ -124,29 +113,6 @@ async function translateChunk(
 				await saveTranslationsForPageComment(
 					partialTranslations,
 					pageCommentSegments,
-					targetLocale,
-					aiModel,
-				);
-			} else if (targetContentType === "project") {
-				if (!projectId) {
-					throw new Error("Project ID is required");
-				}
-				const projectSegments = await getProjectSegments(projectId);
-				await saveTranslationsForProject(
-					partialTranslations,
-					projectSegments,
-					targetLocale,
-					aiModel,
-				);
-			} else if (targetContentType === "projectComment") {
-				if (!projectCommentId || !projectId) {
-					throw new Error("Comment ID is required");
-				}
-				const projectCommentSegments =
-					await getProjectCommentSegments(projectCommentId);
-				await saveTranslationsForProjectComment(
-					partialTranslations,
-					projectCommentSegments,
 					targetLocale,
 					aiModel,
 				);
