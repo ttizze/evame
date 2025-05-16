@@ -41,11 +41,10 @@ export function PageList({
 	const userLink = `/user/${pageSummary.user.handle}`;
 	return (
 		<article
-			className={`grid gap-4 py-4 border-b last:border-b-0 ${
-				index !== undefined
-					? "grid-cols-[max-content_96px_1fr]"
-					: "grid-cols-[96px_1fr]"
-			}`}
+			className={`grid gap-4 py-4 border-b last:border-b-0 ${index !== undefined
+					? "grid-cols-[max-content_1fr]"
+					: "grid-cols-1"
+				}`}
 		>
 			{/* ───── 1) インデックス番号 ───── */}
 			{index !== undefined && (
@@ -54,21 +53,7 @@ export function PageList({
 				</div>
 			)}
 
-			{/* ───── 2) OGP 画像 ───── */}
-			<Link
-				href={pageLink}
-				className="relative h-16 w-24 overflow-hidden rounded"
-			>
-				<Image
-					src={ogpImageUrl}
-					alt={titleSegment?.segment.text ?? ""}
-					fill
-					className="object-cover"
-					sizes="96px"
-				/>
-			</Link>
-
-			{/* ───── 3) コンテンツ領域 ───── */}
+			{/* ───── 2) コンテンツ領域 ───── */}
 			{/**
 			 * コンテンツ領域は 3 行の Grid:
 			 *   row‑1: タイトル行（タイトル + 操作ドロップダウン）
