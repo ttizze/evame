@@ -8,7 +8,6 @@ import { BASE_URL } from "@/app/_constants/base-url";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
 import { getImageProps } from "next/image";
-import Image from "next/image";
 import { PageActionsDropdown } from "./page-actions-dropdown/client";
 type PageListProps = {
 	pageSummary: PageSummary;
@@ -41,10 +40,9 @@ export function PageList({
 	const userLink = `/user/${pageSummary.user.handle}`;
 	return (
 		<article
-			className={`grid gap-4 py-4 border-b last:border-b-0 ${index !== undefined
-					? "grid-cols-[max-content_1fr]"
-					: "grid-cols-1"
-				}`}
+			className={`grid gap-4 py-4 border-b last:border-b-0 ${
+				index !== undefined ? "grid-cols-[max-content_1fr]" : "grid-cols-1"
+			}`}
 		>
 			{/* ───── 1) インデックス番号 ───── */}
 			{index !== undefined && (
