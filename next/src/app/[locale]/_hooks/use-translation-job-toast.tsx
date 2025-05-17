@@ -1,7 +1,7 @@
 "use client";
-import { toast } from "sonner";
 import { JobsView } from "@/app/[locale]/_components/jobs-view";
 import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 import type { TranslationJobForToast } from "./use-translation-jobs";
 
 export function useTranslationJobToast(jobs: TranslationJobForToast[]) {
