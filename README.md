@@ -36,13 +36,13 @@ The goal of this project is to open doors to stories and knowledge for people ar
 
 1. Clone this repository:
    ```
-   git clone https://github.com/ttizze/eveeve.git
+   git clone https://github.com/ttizze/evame.git
    ```
 
 2. Install dependencies:
    ```
-   cd eveeve
-   cd web
+   cd evame
+   cd next
    bun i
    ```
 
