@@ -2,108 +2,90 @@
 
 [日本語版はこちら](README.ja.md)
 
-## Overview
+Evame is an open-source project that helps people share knowledge by providing translations, footnotes and explanations for user-submitted texts. Our goal is to open doors to stories and ideas for everyone.
 
-Evame is an open-source project aimed at facilitating knowledge and cultural exchange by providing translations, footnotes, and explanations for user-submitted texts in a beautiful layout.
+## Repository Structure
 
-The goal of this project is to open doors to stories and knowledge for people around the world.
+```
+/
+├── next/                         # Main web application
+│   ├── src/                      # Source code
+│   ├── prisma/                   # Prisma schema and migrations
+│   └── public/                   # Static files
+└── components/                   # Chrome extension (currently empty)
+```
+
+Most development happens inside `next/`. Shared UI components live in `next/src/components/ui`, while feature specific code is under `next/src/features`.
+
+## Tech Stack
+
+- TypeScript
+- Shadcn UI (Radix UI)
+- Tailwind CSS
+- Prisma ORM with PostgreSQL
+- NextAuth for authentication
+- next-intl for i18n
+- TipTap editor
+- LLM based translation services
 
 ## Current Features
 
 - Article submission
-- Translation using Large Language Models (LLMs)
-- Saving translation results
-- Voting on translation results
-- User-submitted translations
-- Reader mode
+- LLM powered translation
+- Saving and voting on translations
+- Reader mode with user translations
 
 ## Features in Development
 
-- Improved readable layout: Better positioning of parallel translations
-- Addition of footnotes (planning stage)
-- Highlighting feature (planning stage)
-- Multi-format support: HTML, PDF, EPUB, plain text (planning stage)
-- Chrome extension (planning stage)
-- Integration of advanced natural language processing features (planning stage)
-  - Extracting important parts from text and searching for translations from dictionaries, etc.
-
-## System Architecture
-
-- React (Remix SSR mode)
-- Translation engine: Gemini (currently used exclusively due to its context length advantage)
+- Improved layout for parallel translations
+- Footnotes
+- Highlighting
+- Multi-format support: HTML, PDF, EPUB, plain text
+- Chrome extension
+- Advanced NLP features such as dictionary lookups
 
 ## Getting Started
 
-1. Clone this repository:
-   ```
-   git clone https://github.com/ttizze/eveeve.git
-   ```
-
+1. Clone this repository.
 2. Install dependencies:
+   ```bash
+   bun install
+   cd next
+   bun install
    ```
-   cd eveeve
-   cd web
-   bun i
-   ```
-
-3. Create and set up the environment variables file:
-   ```
+3. Copy the example environment file and set `SESSION_SECRET`:
+   ```bash
+   cd next
    cp .env.example .env
-   ```
-   Run the following command:
-   ```
    openssl rand -base64 32
    ```
-   Set the generated string as `SESSION_SECRET` in the `.env` file.
-
+   Add the generated string to `.env`.
 4. Start Docker:
-   ```
+   ```bash
    docker compose up -d
    ```
-
-5. Set up the database:
-   ```
+5. Run database migrations and seed:
+   ```bash
+   cd next
    bunx prisma migrate dev
-   ```
-
-6. Run the seed:
-   ```
    bun run seed
    ```
-
-7. Start the development server:
-   ```
+6. Start the development server:
+   ```bash
    bun run dev
    ```
+7. Open `http://localhost:5173` in your browser.
 
-8. Access Evame at `http://localhost:5173` in your browser.
+For local development you can log in at `/auth/login` using `dev@example.com` and `devpassword`. This shortcut is disabled in production.
 
-9. For local development, authentication is simplified:
-   - Visit `http://localhost:5173/auth/login` and log in with dev@example.com and devpassword.
-   
-   Note: This simplified authentication works only in the development environment and is disabled in production. The normal Google authentication flow is used in production.
+## Contributing
 
-## How to Contribute
-
-We welcome contributions in all forms, including translation, programming, design, and documentation. We are particularly seeking contributions in the following areas:
-
-- Implementation of multi-format input support (e.g., PDF)
-- Features for changing font size and colors
-
-Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
-
-## Known Limitations
-
-- Output formats are currently limited.
-- There are restrictions on processing long texts.
+We welcome contributions of all kinds. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## License
 
-This project is released under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is released under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## Contact
 
-If you have questions or suggestions, please create an issue or join our project Discord:
-https://discord.gg/2JfhZdu9zW
-
-## Let's work together to realize the vision of opening doors to stories and knowledge for people around the world!
+Questions or suggestions? Open an issue or join our [Discord](https://discord.gg/2JfhZdu9zW).
