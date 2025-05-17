@@ -46,16 +46,22 @@ Most development happens inside `next/`. Shared UI components live in `next/src/
 
 ## Getting Started
 
-1. Clone this repository.
-2. Install dependencies:
-   ```bash
-   bun install
-   cd next
-   bun install
+
+1. Clone this repository:
    ```
-3. Copy the example environment file and set `SESSION_SECRET`:
-   ```bash
+   git clone https://github.com/ttizze/evame.git
+   ```
+
+2. Install dependencies:
+   ```
+   cd evame
    cd next
+   bun i
+   ```
+
+3. Create and set up the environment variables file:
+   ```
+
    cp .env.example .env
    openssl rand -base64 32
    ```

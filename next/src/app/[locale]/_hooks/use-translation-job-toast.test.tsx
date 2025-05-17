@@ -10,6 +10,7 @@ vi.mock("sonner", () => {
 	let id = 0;
 	return {
 		toast: vi.fn((_jsx, opts: { id?: number } = {}) => opts?.id ?? ++id),
+		dismiss: vi.fn(),
 	};
 });
 
@@ -62,5 +63,23 @@ describe("useTranslationToast", () => {
 		if (!call) throw new Error("toast was not called");
 		const opts = call[1];
 		expect(opts.duration).toBe(3000);
+	});
+	it("keeps toast open for long-running jobs", () => {
+		const { rerender } = renderHook(
+			({ jobs }) => useTranslationJobToast(jobs),
+			{ initialProps: { jobs: pendingJobs } },
+		);
+
+		// 進捗を更新
+		const inProgressJobs = [...pendingJobs];
+		inProgressJobs[0].progress = 50;
+		rerender({ jobs: inProgressJobs });
+
+		const toastMock = toast as unknown as Mock;
+		const call = toastMock.mock.calls.at(-1);
+		expect(call).toBeDefined();
+		if (!call) throw new Error("toast was not called");
+		const opts = call[1];
+		expect(opts.duration).toBe(Number.POSITIVE_INFINITY);
 	});
 });

@@ -10,7 +10,7 @@ export function useTranslationJobToast(jobs: TranslationJobForToast[]) {
 		unstyled: true,
 		className: "w-72 rounded-xl border  p-4 shadow-xl",
 	};
-	/* 生成 */
+	// 生成
 	useEffect(() => {
 		if (jobs.length && !idRef.current) {
 			idRef.current = toast(<JobsView jobs={jobs} />, {
@@ -20,7 +20,7 @@ export function useTranslationJobToast(jobs: TranslationJobForToast[]) {
 		}
 	}, [jobs]);
 
-	/* 更新 */
+	// 更新
 	useEffect(() => {
 		if (!idRef.current || !jobs.length) return;
 
@@ -37,5 +37,16 @@ export function useTranslationJobToast(jobs: TranslationJobForToast[]) {
 					"absolute right-2 top-2 text-muted-foreground cursor-pointer",
 			},
 		});
+	}, [jobs]);
+
+	// 全完了後に ID をクリア
+	useEffect(() => {
+		if (!idRef.current) return;
+		if (jobs.every((j) => ["COMPLETED", "FAILED"].includes(j.status))) {
+			const t = setTimeout(() => {
+				idRef.current = undefined;
+			}, 3100);
+			return () => clearTimeout(t);
+		}
 	}, [jobs]);
 }

@@ -6,7 +6,7 @@ import type { LocaleStatus } from "./build-locale-options";
  * ───────────────────────────────────────────
  *  source       : 原文                     → FileText
  *  translated   : 既に翻訳がある           → Languages
- *  untranslated : サポート対象だが未翻訳   → FileQuestion
+ *  untranslated : サポート対象だが未翻訳   → FileX
  */
 export function TypeIcon({ status }: { status: LocaleStatus }) {
 	switch (status) {
