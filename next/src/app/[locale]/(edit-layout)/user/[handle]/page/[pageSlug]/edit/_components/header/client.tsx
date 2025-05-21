@@ -97,7 +97,7 @@ export function EditHeader({
 					<span>{initialStatus === "PUBLIC" ? "Public" : "Private"}</span>
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="w-42 rounded-xl py-1 px-3" align="end">
+			<PopoverContent className="w-46 rounded-xl py-1 px-3" align="end">
 				<div className="space-y-1">
 					<form action={action}>
 						<input type="hidden" name="pageId" value={pageId ?? ""} />
