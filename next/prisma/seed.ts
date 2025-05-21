@@ -39,7 +39,7 @@ const EN_HERO_TEXT = `"Evame" is a multilingual community where creators can sha
 You can post explanations of your work, daily events, share projects you're working on, and interact with creators from all over the world.
 Let's overcome language barriers and achieve global recognition and interaction simultaneously.`;
 const EN_OUR_PROBLEM_HEADER =
-  "Language barriers are locking away your potential.";
+	"Language barriers are locking away your potential.";
 
 const EN_OUR_PROBLEM_1_HEADER = "Reach the World Automatically";
 const EN_OUR_PROBLEM_1_TEXT = `No matter how excellent your work is, it won't reach more than half the world if it's only in one language.
@@ -137,7 +137,7 @@ const ES_HERO_TEXT = `"Evame" es una comunidad multilingüe donde los creadores 
 Puedes publicar explicaciones de tus obras, eventos diarios, compartir los proyectos en los que estás trabajando e interactuar con creadores de todo el mundo.
 Superemos las barreras del idioma y logremos reconocimiento global e interacción al mismo tiempo.`;
 const ES_OUR_PROBLEM_HEADER =
-  "Las barreras del idioma están encerrando tu potencial.";
+	"Las barreras del idioma están encerrando tu potencial.";
 
 const ES_OUR_PROBLEM_1_HEADER = "Llega al mundo automáticamente";
 const ES_OUR_PROBLEM_1_TEXT = `Por excelente que sea tu obra, si solo está en un idioma, no llegará a más de la mitad del mundo.
@@ -151,7 +151,8 @@ const ES_OUR_PROBLEM_3_HEADER = "Una comunidad global";
 const ES_OUR_PROBLEM_3_TEXT = `Las diferencias idiomáticas dificultan el diálogo técnico y la colaboración transfronteriza.
 En Evame, tanto los artículos como los comentarios se traducen automáticamente, creando un entorno donde puedes compartir ideas y colaborar en tiempo real con creadores de todo el mundo.`;
 
-const ES_OUR_PROBLEM_4_HEADER = "Un editor que te permite concentrarte en escribir";
+const ES_OUR_PROBLEM_4_HEADER =
+	"Un editor que te permite concentrarte en escribir";
 const ES_OUR_PROBLEM_4_TEXT = `¿Las traducciones, el formato o las pantallas de entrada difíciles de usar están obstaculizando tu creación?
 Evame ofrece un editor cómodo compatible con Markdown para PC y dispositivos móviles. Simplemente escribe de forma natural y la IA se encargará automáticamente de la traducción, permitiéndote concentrarte en escribir.`;
 
