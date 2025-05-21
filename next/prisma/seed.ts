@@ -1,23 +1,23 @@
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
-const JA_HERO_HEADER = "開発者のためのグローバルコミュニティ";
-const JA_HERO_TEXT = `『Evame』は、開発者がプロジェクトを世界に広め、グローバルなユーザーを獲得できる多言語コミュニティです。
-技術的な解説やストーリーを記事として発信したり、取り組んでいる製品やプロジェクトを共有し、世界中の開発者やユーザーと交流できます。
-言語の壁を気にせず、グローバルな認知度アップと技術交流を同時に実現しましょう。`;
+const JA_HERO_HEADER = "クリエイターのためのグローバルコミュニティ";
+const JA_HERO_TEXT = `『Evame』は、クリエイターが作品を世界に広め、グローバルなユーザーを獲得できる多言語コミュニティです。
+作品の解説や日々の出来事を発信したり、取り組んでいる作品を共有し、世界中のクリエイターと交流できます。
+言語の壁を気にせず、グローバルな認知度アップと交流を同時に実現しましょう。`;
 
 const JA_OUR_PROBLEM_HEADER = "言語の壁が、あなたの可能性を閉じ込めている";
 const JA_OUR_PROBLEM_1_HEADER = "自動で多言語に拡がる";
-const JA_OUR_PROBLEM_1_TEXT = `どれほど優れたプロジェクトでも、一つの言語だけでは世界の半分以上に届いていません。
+const JA_OUR_PROBLEM_1_TEXT = `どれほど優れた作品でも、一つの言語だけでは世界の半分以上に届いていません。
 Evameなら、投稿内容がAIによって自動的に多言語に翻訳され、あなたのアイデアが自然に世界へ広がります。`;
 
-const JA_OUR_PROBLEM_2_HEADER = "開発の想いが支援につながる";
-const JA_OUR_PROBLEM_2_TEXT = `技術や製品の背後にある熱意や挑戦が伝われば、それはただの投稿ではなく、支援を呼び込む物語になります。
+const JA_OUR_PROBLEM_2_HEADER = "想いが支援につながる";
+const JA_OUR_PROBLEM_2_TEXT = `作品の背後にある熱意や挑戦が伝われば、それはただの投稿ではなく、支援を呼び込む物語になります。
 Evameなら、その想いが世界に届き、自然と応援や協力の輪が広がります。`;
 
-const JA_OUR_PROBLEM_3_HEADER = "グローバルな技術コミュニティ";
+const JA_OUR_PROBLEM_3_HEADER = "グローバルなコミュニティ";
 const JA_OUR_PROBLEM_3_TEXT = `言語の違いで、国をまたいだ技術的な対話や協力が難しくなっています。
-Evameでは、コメントや議論も自動で翻訳され、世界中の開発者とリアルタイムにアイデアを共有し、協力し合える環境が整っています。`;
+Evameでは、記事もコメントも自動で翻訳され、世界中のクリエイターとリアルタイムにアイデアを共有し、協力し合える環境が整っています。`;
 
 const JA_OUR_PROBLEM_4_HEADER = "書きやすいエディタ";
 const JA_OUR_PROBLEM_4_TEXT = `翻訳や書式、使いにくい入力画面が創作の妨げになっていませんか？
@@ -29,127 +29,140 @@ Evameでは、上にスクロールすると出てくるフローティングコ
 
 const JA_OUR_PROBLEM_6_HEADER = "継続的な翻訳の改善";
 const JA_OUR_PROBLEM_6_TEXT = `自動翻訳の精度には限界があり、改善の余地が放置されがちです。
-Evameでは、ユーザーの投票や提案によって翻訳が日々改善されます。試しにこの訳文をクリックしてみてください｡投票や追加のフォームが現れるはずです｡あなたの文章に対するフィードバックも世界中から得られ、継続的に改善できます。`;
+Evameでは、ユーザーの投票や提案によって翻訳が日々改善されます。試しにこの訳文をクリックしてみてください｡
+投票や追加のフォームが現れるはずです｡
+あなたの文章の翻訳に対するフィードバックも世界中から得られ、継続的に改善できます。`;
 
-const EN_HERO_HEADER = "Global Community for Developers";
-const EN_HERO_TEXT = `"Evame" is a multilingual platform where developers can publish projects, articles, and comments, which are automatically translated into multiple languages and shared globally.
-Break down language barriers to gain visibility, connect with developers and users around the world, and grow together through global collaboration.`;
+// English Translations (Updated)
+const EN_HERO_HEADER = "Global Community for Creators";
+const EN_HERO_TEXT = `"Evame" is a multilingual community where creators can share their work with the world and gain global users.
+You can post explanations of your work, daily events, share projects you're working on, and interact with creators from all over the world.
+Let's overcome language barriers and achieve global recognition and interaction simultaneously.`;
 const EN_OUR_PROBLEM_HEADER =
-	"Language barriers are locking away your potential.";
+  "Language barriers are locking away your potential.";
 
 const EN_OUR_PROBLEM_1_HEADER = "Reach the World Automatically";
-const EN_OUR_PROBLEM_1_TEXT = `Even the best project won't reach more than half of the world if shared in only one language.
-Evame automatically translates your posts into multiple languages using AI, making it easy for your ideas to spread globally.`;
+const EN_OUR_PROBLEM_1_TEXT = `No matter how excellent your work is, it won't reach more than half the world if it's only in one language.
+With Evame, your posts are automatically translated into multiple languages by AI, allowing your ideas to naturally spread across the globe.`;
 
-const EN_OUR_PROBLEM_2_HEADER = "Your Story Inspires Support";
-const EN_OUR_PROBLEM_2_TEXT = `No matter how great the technology, people are moved when they understand the passion and challenges behind it.
-Evame helps you share your journey with the world, naturally attracting support and encouragement from across the globe.`;
+const EN_OUR_PROBLEM_2_HEADER = "Your Passion Inspires Support"; // Or "Your Story Inspires Support" if closer to original nuance
+const EN_OUR_PROBLEM_2_TEXT = `When the passion and challenges behind your work are conveyed, it's no longer just a post but a story that attracts support.
+With Evame, these sentiments reach the world, naturally expanding the circle of support and collaboration.`;
 
-const EN_OUR_PROBLEM_3_HEADER = "A Global Tech Community";
-const EN_OUR_PROBLEM_3_TEXT = `Language differences often block international collaboration and feedback.
-With Evame, comments and discussions are automatically translated, enabling real-time exchange of ideas with developers around the world.`;
+const EN_OUR_PROBLEM_3_HEADER = "A Global Community";
+const EN_OUR_PROBLEM_3_TEXT = `Language differences make cross-border technical dialogue and collaboration difficult.
+With Evame, articles and comments are automatically translated, creating an environment where you can share ideas and collaborate in real-time with creators from around the world.`;
 
 const EN_OUR_PROBLEM_4_HEADER = "An Editor That Lets You Focus on Writing";
-const EN_OUR_PROBLEM_4_TEXT = `Struggling with complex formatting or clunky input interfaces that hinder your creativity?
-Evame offers a Markdown-supported editor optimized for both PC and mobile. Just write naturally, and AI handles the translation seamlessly, letting you concentrate on your content.`;
+const EN_OUR_PROBLEM_4_TEXT = `Are translations, formatting, or difficult-to-use input screens hindering your creation?
+Evame provides a comfortable Markdown-enabled editor for both PC and mobile. Just write naturally, and AI will automatically handle the translation, allowing you to focus on writing.`;
 
 const EN_OUR_PROBLEM_5_HEADER = "Easily Compare Original and Translated Texts";
-const EN_OUR_PROBLEM_5_TEXT = `Perfect translations are rare; sometimes, you need to check the original text.
-With Evame's floating controller, you can swiftly switch between views to compare the original and translated content whenever needed.`;
+const EN_OUR_PROBLEM_5_TEXT = `No translation is perfect. There are times when you need to check the original text.
+With Evame, you can use the floating controller that appears when you scroll up to quickly switch views and compare when needed.`;
 
 const EN_OUR_PROBLEM_6_HEADER = "Continuous Translation Improvement";
-const EN_OUR_PROBLEM_6_TEXT = `Automatic translations have their limitations, and improvements are often overlooked.
-Evame allows users to vote and suggest enhancements, leading to daily improvements in translation quality. Click on a translation to provide feedback, and benefit from a global community's insights to refine your content.`;
+const EN_OUR_PROBLEM_6_TEXT = `The accuracy of automatic translation has its limits, and room for improvement is often neglected.
+At Evame, translations are improved daily through user votes and suggestions. Try clicking on this translated text. A form for voting or adding suggestions should appear.
+You can also receive feedback on your text's translation from around the world and continuously improve it.`;
 
-const ZH_HERO_HEADER = "面向开发者的全球社区";
-const ZH_HERO_TEXT = `Evame 是一个多语言平台，开发者可以发布项目、文章和评论，系统会自动将内容翻译成多种语言并推向全球。
-打破语言壁垒，让你的作品获得全球曝光，与世界各地的用户和开发者互动，共同成长。`;
+// Chinese (Simplified) Translations (Updated)
+const ZH_HERO_HEADER = "创作者的全球社区";
+const ZH_HERO_TEXT = `《Evame》是一个多语言社区，创作者可以在这里向世界推广自己的作品并获得全球用户。
+您可以发布作品解说、日常动态，分享正在进行的项目，并与来自世界各地的创作者交流。
+让我们不用担心语言障碍，同时实现全球知名度的提升和互动交流。`;
 const ZH_OUR_PROBLEM_HEADER = "语言的障碍正在封锁你的潜力。";
 
 const ZH_OUR_PROBLEM_1_HEADER = "自动触达全球用户";
-const ZH_OUR_PROBLEM_1_TEXT = `再优秀的项目，如果只使用一种语言发布，也无法触达全球超过一半的用户。
-Evame 利用 AI 自动将你的内容翻译成多种语言，让你的想法自然传播到世界各地。`;
+const ZH_OUR_PROBLEM_1_TEXT = `无论多么优秀的作品，如果仅以一种语言发布，也无法触及世界上一半以上的用户。
+有了 Evame，您的帖子内容会通过 AI 自动翻译成多种语言，让您的创意自然地传播到全世界。`;
 
-const ZH_OUR_PROBLEM_2_HEADER = "让故事赢得全球支持";
-const ZH_OUR_PROBLEM_2_TEXT = `再先进的技术，如果没有传达背后的热情与挑战，也难以打动人心。
-Evame 帮助你讲述开发的过程和故事，自然吸引来自世界各地的支持与共鸣。`;
+const ZH_OUR_PROBLEM_2_HEADER = "让热情赢得全球支持"; // Or "让故事赢得全球支持"
+const ZH_OUR_PROBLEM_2_TEXT = `如果能传达作品背后的热情与挑战，那它就不再仅仅是一篇帖子，而是能唤起支持的故事。
+有了 Evame，这份心意将传遍世界，自然而然地扩大支持与合作的圈子。`;
 
-const ZH_OUR_PROBLEM_3_HEADER = "构建全球技术社区";
-const ZH_OUR_PROBLEM_3_TEXT = `语言差异常常阻碍跨国的合作与反馈。
-在 Evame，评论与讨论会被自动翻译，让你可以实时与世界各地的开发者共享想法、协同创新。`;
+const ZH_OUR_PROBLEM_3_HEADER = "全球社区";
+const ZH_OUR_PROBLEM_3_TEXT = `语言的差异使得跨国的技术对话与合作变得困难。
+在 Evame，文章和评论都会被自动翻译，从而营造出一个可以与世界各地的创作者实时共享创意、携手合作的环境。`;
 
 const ZH_OUR_PROBLEM_4_HEADER = "专注写作的编辑器";
-const ZH_OUR_PROBLEM_4_TEXT = `复杂的格式和笨重的输入界面是否妨碍了你的创作？
-Evame 提供适配 PC 和移动端的 Markdown 编辑器，自然输入即可由 AI 自动翻译，让你专注创作。`;
+const ZH_OUR_PROBLEM_4_TEXT = `翻译、格式或难用的输入界面是否妨碍了您的创作？
+Evame 提供了支持 Markdown、在 PC 和移动设备上均可舒适使用的编辑器。只需自然书写，AI 就会自动进行翻译处理，让您可以专注于写作。`;
 
 const ZH_OUR_PROBLEM_5_HEADER = "轻松对比原文与译文";
-const ZH_OUR_PROBLEM_5_TEXT = `没有哪种翻译是完美的，有时你需要查阅原文。
-Evame 的浮动控制器支持一键切换视图，让你随时比对原文与译文内容。`;
+const ZH_OUR_PROBLEM_5_TEXT = `不存在完美的翻译。 有时您需要查看原文。
+在 Evame 中，您可以使用向上滚动时出现的浮动控制器，在需要时快速切换显示进行比较。`;
 
 const ZH_OUR_PROBLEM_6_HEADER = "翻译质量持续进化";
-const ZH_OUR_PROBLEM_6_TEXT = `自动翻译有其局限，许多平台缺乏改进机制。
-在 Evame，你可以对翻译进行投票或提交修改建议，系统会不断优化翻译质量。点击任一译文即可反馈，让全球社区帮助你完善内容。`;
+const ZH_OUR_PROBLEM_6_TEXT = `自动翻译的准确性有其局限，改进的空间往往被忽视。
+在 Evame，通过用户的投票和建议，翻译每天都在改进。不妨试试点击这段译文，应该会出现投票或添加建议的表单。
+您还可以从世界各地获得对您文章翻译的反馈，并持续改进。`;
 
-const KO_HERO_HEADER = "개발자를 위한 글로벌 커뮤니티";
-const KO_HERO_TEXT = `Evame는 개발자가 프로젝트, 글, 댓글을 게시하면 AI가 자동으로 여러 언어로 번역하여 전 세계에 퍼뜨리는 다국어 플랫폼입니다.
-언어 장벽을 허물고 전 세계 사용자 및 개발자와 연결되어 함께 성장하세요.`;
+// Korean Translations (Updated)
+const KO_HERO_HEADER = "크리에이터를 위한 글로벌 커뮤니티";
+const KO_HERO_TEXT = `『Evame』은 크리에이터가 작품을 세계에 알리고 글로벌 사용자를 확보할 수 있는 다국어 커뮤니티입니다.
+작품 해설이나 일상적인 일을 게시하거나, 진행 중인 작품을 공유하고 전 세계 크리에이터와 교류할 수 있습니다.
+언어의 장벽 없이 글로벌 인지도 향상과 교류를 동시에 실현해 보세요.`;
 
 const KO_OUR_PROBLEM_HEADER = "언어 장벽이 당신의 가능성을 가두고 있습니다.";
 
 const KO_OUR_PROBLEM_1_HEADER = "자동으로 세계에 도달하세요";
-const KO_OUR_PROBLEM_1_TEXT = `아무리 훌륭한 프로젝트라도 하나의 언어로만 공유하면 전 세계 절반 이상의 사용자에게 도달하지 못합니다.
-Evame는 게시물을 AI로 다국어로 자동 번역하여 아이디어가 자연스럽게 전 세계로 확산됩니다.`;
+const KO_OUR_PROBLEM_1_TEXT = `아무리 뛰어난 작품이라도 하나의 언어로만으로는 세계의 절반 이상에게 전달되지 않습니다.
+Evame에서는 게시 내용이 AI에 의해 자동으로 다국어로 번역되어 당신의 아이디어가 자연스럽게 세계로 확산됩니다.`;
 
-const KO_OUR_PROBLEM_2_HEADER = "당신의 이야기가 응원을 이끕니다";
-const KO_OUR_PROBLEM_2_TEXT = `아무리 뛰어난 기술이라도, 그 안에 담긴 열정과 도전이 전해지지 않으면 사람들의 마음을 움직이기 어렵습니다.
-Evame를 통해 개발 여정을 공유하고, 전 세계로부터 자연스럽게 공감과 응원을 받을 수 있습니다.`;
+const KO_OUR_PROBLEM_2_HEADER = "열정이 지원으로 이어집니다"; // Or "당신의 이야기가 응원을 이<0xEF><0x81><0x8D>니다"
+const KO_OUR_PROBLEM_2_TEXT = `작품 이면에 있는 열정이나 도전이 전달되면, 그것은 단순한 게시물이 아니라 지원을 불러일으키는 이야기가 됩니다.
+Evame에서는 그 마음이 세계에 전달되어 자연스럽게 응원과 협력의 장이 확산됩니다.`;
 
-const KO_OUR_PROBLEM_3_HEADER = "글로벌 기술 커뮤니티";
-const KO_OUR_PROBLEM_3_TEXT = `언어 차이는 국제적인 협력과 피드백을 어렵게 만듭니다.
-Evame에서는 댓글과 토론이 자동 번역되어, 세계 각국의 개발자들과 실시간으로 아이디어를 주고받을 수 있습니다.`;
+const KO_OUR_PROBLEM_3_HEADER = "글로벌 커뮤니티";
+const KO_OUR_PROBLEM_3_TEXT = `언어 차이로 인해 국가 간 기술적인 대화나 협력이 어려워지고 있습니다.
+Evame에서는 기사와 댓글이 모두 자동으로 번역되어, 전 세계 크리에이터들과 실시간으로 아이디어를 공유하고 협력할 수 있는 환경이 마련되어 있습니다.`;
 
 const KO_OUR_PROBLEM_4_HEADER = "글쓰기에 집중할 수 있는 에디터";
-const KO_OUR_PROBLEM_4_TEXT = `복잡한 포맷이나 불편한 입력 화면이 창작을 방해하고 있진 않나요?
-Evame는 PC와 모바일 모두에 최적화된 Markdown 에디터를 제공하며, 자연스럽게 작성하기만 하면 AI가 자동으로 번역을 처리해줍니다.`;
+const KO_OUR_PROBLEM_4_TEXT = `번역이나 서식, 사용하기 어려운 입력 화면이 창작을 방해하고 있지는 않나요?
+Evame에서는 마크다운을 지원하며 PC와 모바일 모두에서 편안한 에디터를 제공합니다. 자연스럽게 작성하기만 하면 AI가 자동으로 번역 처리를 수행하여 글쓰기에만 집중할 수 있습니다.`;
 
 const KO_OUR_PROBLEM_5_HEADER = "원문과 번역을 쉽게 비교";
-const KO_OUR_PROBLEM_5_TEXT = `완벽한 번역은 드뭅니다. 때때로 원문을 확인해야 할 때가 있죠.
-Evame의 플로팅 컨트롤러를 사용하면 원문과 번역을 언제든지 손쉽게 전환해 비교할 수 있습니다.`;
+const KO_OUR_PROBLEM_5_TEXT = `완벽한 번역은 존재하지 않습니다. 원문을 확인해야 할 때가 있습니다.
+Evame에서는 위로 스크롤하면 나타나는 플로팅 컨트롤러를 사용하여 필요할 때 표시를 바로 전환하여 비교할 수 있습니다.`;
 
 const KO_OUR_PROBLEM_6_HEADER = "지속적으로 개선되는 번역 품질";
-const KO_OUR_PROBLEM_6_TEXT = `자동 번역은 한계가 있으며, 많은 플랫폼에서는 품질 개선이 이루어지지 않습니다.
-Evame는 사용자 투표와 제안을 통해 매일 번역 품질이 향상되며, 번역문을 클릭해 쉽게 피드백을 제공할 수 있습니다. 전 세계 커뮤니티의 힘으로 더 나은 콘텐츠를 만들어보세요.`;
+const KO_OUR_PROBLEM_6_TEXT = `자동 번역의 정확도에는 한계가 있으며 개선의 여지가 방치되기 쉽습니다.
+Evame에서는 사용자 투표나 제안을 통해 번역이 매일 개선됩니다. 시험 삼아 이 번역문을 클릭해 보세요. 투표나 추가 양식이 나타날 것입니다.
+당신의 글 번역에 대한 피드백도 전 세계로부터 받아 지속적으로 개선할 수 있습니다.`;
 
-const ES_HERO_HEADER = "Comunidad global para desarrolladores";
-const ES_HERO_TEXT = `Evame es una plataforma multilingüe donde los desarrolladores pueden publicar proyectos, artículos y comentarios que se traducen automáticamente a varios idiomas y se comparten globalmente.
-Rompe las barreras del idioma, conéctate con desarrolladores de todo el mundo y haz crecer tu comunidad con colaboración internacional.`;
+// Spanish Translations (Updated)
+const ES_HERO_HEADER = "Comunidad global para creadores";
+const ES_HERO_TEXT = `"Evame" es una comunidad multilingüe donde los creadores pueden difundir su trabajo al mundo y ganar usuarios globales.
+Puedes publicar explicaciones de tus obras, eventos diarios, compartir los proyectos en los que estás trabajando e interactuar con creadores de todo el mundo.
+Superemos las barreras del idioma y logremos reconocimiento global e interacción al mismo tiempo.`;
 const ES_OUR_PROBLEM_HEADER =
-	"Las barreras del idioma están encerrando tu potencial.";
+  "Las barreras del idioma están encerrando tu potencial.";
 
 const ES_OUR_PROBLEM_1_HEADER = "Llega al mundo automáticamente";
-const ES_OUR_PROBLEM_1_TEXT = `Incluso el mejor proyecto no llegará a más de la mitad del mundo si se publica solo en un idioma.
-Evame traduce automáticamente tus publicaciones a múltiples idiomas mediante IA, lo que permite que tus ideas se difundan globalmente con facilidad.`;
+const ES_OUR_PROBLEM_1_TEXT = `Por excelente que sea tu obra, si solo está en un idioma, no llegará a más de la mitad del mundo.
+Con Evame, tus publicaciones se traducen automáticamente a varios idiomas mediante IA, permitiendo que tus ideas se difundan de forma natural por todo el globo.`;
 
-const ES_OUR_PROBLEM_2_HEADER = "Tu historia inspira apoyo";
-const ES_OUR_PROBLEM_2_TEXT = `Por muy avanzada que sea la tecnología, lo que realmente conmueve es conocer la pasión y los desafíos detrás de ella.
-Evame te ayuda a compartir tu camino con el mundo, atrayendo apoyo y ánimo de todas partes de forma natural.`;
+const ES_OUR_PROBLEM_2_HEADER = "Tu pasión inspira apoyo"; // Or "Tu historia inspira apoyo"
+const ES_OUR_PROBLEM_2_TEXT = `Cuando se transmiten la pasión y los desafíos detrás de tu obra, ya no es solo una publicación, sino una historia que atrae apoyo.
+Con Evame, esos sentimientos llegan al mundo, expandiendo naturalmente el círculo de apoyo y colaboración.`;
 
-const ES_OUR_PROBLEM_3_HEADER = "Una comunidad tecnológica global";
-const ES_OUR_PROBLEM_3_TEXT = `Las diferencias de idioma dificultan la colaboración internacional y el intercambio de ideas.
-Con Evame, los comentarios y debates se traducen automáticamente, permitiendo que los desarrolladores compartan ideas en tiempo real sin importar su idioma.`;
+const ES_OUR_PROBLEM_3_HEADER = "Una comunidad global";
+const ES_OUR_PROBLEM_3_TEXT = `Las diferencias idiomáticas dificultan el diálogo técnico y la colaboración transfronteriza.
+En Evame, tanto los artículos como los comentarios se traducen automáticamente, creando un entorno donde puedes compartir ideas y colaborar en tiempo real con creadores de todo el mundo.`;
 
-const ES_OUR_PROBLEM_4_HEADER = "Un editor que te permite concentrarte";
-const ES_OUR_PROBLEM_4_TEXT = `¿Te distraen los formatos complicados o las interfaces poco intuitivas?
-Evame ofrece un editor compatible con Markdown optimizado para PC y móviles. Solo escribe con naturalidad y la IA se encarga de la traducción, para que puedas enfocarte en tu contenido.`;
+const ES_OUR_PROBLEM_4_HEADER = "Un editor que te permite concentrarte en escribir";
+const ES_OUR_PROBLEM_4_TEXT = `¿Las traducciones, el formato o las pantallas de entrada difíciles de usar están obstaculizando tu creación?
+Evame ofrece un editor cómodo compatible con Markdown para PC y dispositivos móviles. Simplemente escribe de forma natural y la IA se encargará automáticamente de la traducción, permitiéndote concentrarte en escribir.`;
 
 const ES_OUR_PROBLEM_5_HEADER = "Compara fácilmente original y traducción";
-const ES_OUR_PROBLEM_5_TEXT = `Las traducciones perfectas no existen. A veces, es necesario revisar el texto original.
-Con el controlador flotante de Evame, puedes cambiar rápidamente entre vistas para comparar fácilmente el original con la traducción.`;
+const ES_OUR_PROBLEM_5_TEXT = `Ninguna traducción es perfecta. Hay momentos en los que necesitas revisar el texto original.
+En Evame, puedes usar el controlador flotante que aparece al desplazarte hacia arriba para cambiar rápidamente las vistas y comparar cuando sea necesario.`;
 
 const ES_OUR_PROBLEM_6_HEADER = "Traducción en mejora constante";
-const ES_OUR_PROBLEM_6_TEXT = `Las traducciones automáticas tienen limitaciones, y muchas veces no se actualizan.
-En Evame, los usuarios pueden votar o proponer mejoras, lo que permite que la calidad de las traducciones mejore a diario. Solo haz clic en el texto traducido para enviar tu opinión y aprovecha el poder de la comunidad global.`;
-
+const ES_OUR_PROBLEM_6_TEXT = `La precisión de la traducción automática tiene sus límites, y a menudo se descuida el margen de mejora.
+En Evame, las traducciones se mejoran a diario mediante los votos y sugerencias de los usuarios. Intenta hacer clic en este texto traducido. Debería aparecer un formulario para votar o añadir sugerencias.
+También puedes recibir comentarios sobre la traducción de tus textos de todo el mundo y mejorarla continuamente.`;
 async function seed() {
 	await addRequiredData();
 }
