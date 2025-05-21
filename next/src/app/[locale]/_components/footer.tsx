@@ -13,18 +13,18 @@ export function Footer() {
 					>
 						About
 					</LinkI18n>
-					<Link
+					<LinkI18n
 						href="/privacy"
 						className="hover:text-gray-900 dark:hover:text-white"
 					>
 						Privacy Policy
-					</Link>
-					<Link
+					</LinkI18n>
+					<LinkI18n
 						href="/terms"
 						className="hover:text-gray-900 dark:hover:text-white"
 					>
 						Terms of Service
-					</Link>
+					</LinkI18n>
 					<Link
 						href="https://github.com/ttizze/eveeve"
 						target="_blank"
