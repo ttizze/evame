@@ -98,10 +98,10 @@ export function EditPageClient({
 				hasUnsavedChanges={hasUnsavedChanges}
 				pageId={pageWithTitleAndTags?.id}
 			/>
-			<main className="px-4">
+			<main className="px-4 grow ">
 				<div
 					className="w-full max-w-3xl prose dark:prose-invert sm:prose lg:prose-lg 
-        mx-auto  prose-headings:text-gray-700 dark:prose-headings:text-gray-200 text-gray-700 dark:text-gray-200 mb-5 mt-3 md:mt-5 grow tracking-wider"
+        mx-auto  prose-headings:text-gray-700 dark:prose-headings:text-gray-200 text-gray-700 dark:text-gray-200 mb-5 mt-3 md:mt-5 tracking-wider"
 				>
 					<div className="">
 						<h1 className="m-0! ">
