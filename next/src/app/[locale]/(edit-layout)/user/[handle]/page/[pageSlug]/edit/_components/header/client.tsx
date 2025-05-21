@@ -32,8 +32,8 @@ interface EditHeaderProps {
 	pageId: number | undefined;
 }
 const BUTTON_BASE_CLASSES =
-	"flex items-center gap-2 rounded-full  transition-colors duration-200";
-const MENU_BUTTON_CLASSES = `${BUTTON_BASE_CLASSES} text-sm px-3 py-2 disabled:opacity-50 disabled:pointer-events-none `;
+	"flex items-center gap-2 rounded-full  transition-colors justify-start duration-200";
+const MENU_BUTTON_CLASSES = `${BUTTON_BASE_CLASSES} text-sm px-3 py-2 cursor-pointer hover:bg-transparent disabled:opacity-50 disabled:pointer-events-none `;
 const ICON_CLASSES = "w-4 h-4";
 
 export function EditHeader({
@@ -97,13 +97,17 @@ export function EditHeader({
 					<span>{initialStatus === "PUBLIC" ? "Public" : "Private"}</span>
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="w-38 rounded-xl py-1 px-3" align="end">
+			<PopoverContent className="w-42 rounded-xl py-1 px-3" align="end">
 				<div className="space-y-1">
 					<form action={action}>
 						<input type="hidden" name="pageId" value={pageId ?? ""} />
 						<input type="hidden" name="status" value="PUBLIC" />
 						<div className="flex justify-between items-center w-full">
-							<button type="submit" className={MENU_BUTTON_CLASSES}>
+							<Button
+								type="submit"
+								variant="ghost"
+								className={MENU_BUTTON_CLASSES}
+							>
 								{initialStatus === "PUBLIC" ? (
 									<>
 										<LanguagesIcon className={ICON_CLASSES} />
@@ -118,12 +122,12 @@ export function EditHeader({
 										</div>
 									</>
 								)}
-							</button>
+							</Button>
 							<Popover>
 								<PopoverTrigger asChild>
 									<button
 										type="button"
-										className="ml-3 text-muted-foreground hover:text-foreground flex items-center"
+										className="ml-3 text-muted-foreground cursor-pointer hover:text-foreground flex items-center"
 									>
 										<InfoIcon className={ICON_CLASSES} />
 									</button>
@@ -156,15 +160,16 @@ export function EditHeader({
 				</div>
 				<form action={action}>
 					<input type="hidden" name="pageId" value={pageId ?? ""} />
-					<button
+					<Button
 						type="submit"
+						variant="ghost"
 						className={MENU_BUTTON_CLASSES}
 						disabled={initialStatus === "DRAFT"}
 					>
 						<input type="hidden" name="status" value="DRAFT" />
 						<Lock className={ICON_CLASSES} />
 						<span>Private</span>
-					</button>
+					</Button>
 				</form>
 
 				{!state.success && state.zodErrors?.status && (
@@ -174,10 +179,12 @@ export function EditHeader({
 					<p className="text-sm text-red-500">{state.zodErrors.pageId}</p>
 				)}
 				<Separator />
-				<Link href={pagePath} className={MENU_BUTTON_CLASSES}>
-					<LinkIcon className={ICON_CLASSES} />
-					<span>Preview</span>
-				</Link>
+				<Button variant="ghost" className={MENU_BUTTON_CLASSES} asChild>
+					<Link href={pagePath}>
+						<LinkIcon className={ICON_CLASSES} />
+						<span>Preview</span>
+					</Link>
+				</Button>
 			</PopoverContent>
 		</Popover>
 	);
