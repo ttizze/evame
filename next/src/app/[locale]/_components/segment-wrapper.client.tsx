@@ -5,13 +5,7 @@ import { useDisplay } from "@/app/_context/display-provider";
 import { Fragment, type ReactNode, createElement } from "react";
 import type { JSX } from "react";
 import { TranslationSection } from "./segment-and-translation-section/translation-section";
-interface Props {
-	bundle: SegmentBundle;
-	tagName: keyof JSX.IntrinsicElements;
-	tagProps: React.HTMLAttributes<HTMLElement>;
-	currentHandle?: string;
-	children: ReactNode; // ← サーバーからシリアライズ済みで届く
-}
+
 interface BaseProps {
 	bundle: SegmentBundle;
 	currentHandle?: string;
