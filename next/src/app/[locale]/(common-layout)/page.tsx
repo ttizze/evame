@@ -67,9 +67,8 @@ const DynamicControl = dynamic(
 );
 import { StartButton } from "@/app/[locale]/_components/start-button";
 
-const PopularPageListByTag = dynamic(
-	() =>
-		import("@/app/[locale]/_components/page/popular-page-list-by-tag/server"),
+const NewPageListByTag = dynamic(
+	() => import("@/app/[locale]/_components/page/new-page-list-by-tag/server"),
 	{
 		loading: () => <Skeleton className="h-[400px] w-full mb-10" />,
 	},
@@ -110,25 +109,9 @@ export default async function HomePage({
 			)}
 			<DynamicControl />
 			<>
-				<PopularPageListByTag locale={locale} tagName="AI" />
-				<PopularPageListByTag locale={locale} tagName="Programming" />
-				<PopularPageListByTag locale={locale} tagName="Plurality" />
-				<SortTabs defaultSort={sort} />
-				{sort === "popular" ? (
-					<>
-						<PopularPageList
-							locale={locale}
-							searchParams={searchParams}
-							showPagination
-						/>
-					</>
-				) : (
-					<NewPageList
-						locale={locale}
-						searchParams={searchParams}
-						showPagination
-					/>
-				)}
+				<NewPageListByTag locale={locale} tagName="AI" />
+				<NewPageListByTag locale={locale} tagName="Programming" />
+				<NewPageListByTag locale={locale} tagName="Plurality" />
 			</>
 		</div>
 	);
