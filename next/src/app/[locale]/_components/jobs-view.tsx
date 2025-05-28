@@ -1,4 +1,5 @@
 import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
+import { Progress } from "@/components/ui/progress";
 import {
 	CheckCircle2,
 	Hourglass,
@@ -25,21 +26,22 @@ const statusIcon = (status: string) => {
 };
 
 export const JobsView = ({ jobs }: { jobs: TranslationJobForToast[] }) => (
-	<div className="w-64 py-2 ">
+	<div className="w-64 py-2">
 		<p className="text-sm font-medium mb-2 flex items-center">
 			<Languages className="w-4 h-4 mr-2" />
 			Translation Jobs
 		</p>
 		{jobs.map((j) => (
-			<div
-				key={j.locale}
-				className="flex items-center justify-between mb-1 last:mb-0"
-			>
-				<span className="flex items-center gap-1">
+			<div key={j.locale} className="mb-2 last:mb-0">
+				<span className="flex items-center gap-2">
 					{statusIcon(j.status)}
-					<span className="capitalize">{j.locale}</span>
+					<span className="capitalize text-xs min-w-[48px]">{j.locale}</span>
+					<Progress
+						value={j.progress ?? (j.status === "COMPLETED" ? 100 : 0)}
+						className="flex-1 h-2 mx-2"
+					/>
 				</span>
-				<span className="text-xs text-muted-foreground">{j.status}</span>
+				{j.error && <p className="text-xs text-red-500 mt-1">{j.error}</p>}
 			</div>
 		))}
 	</div>
