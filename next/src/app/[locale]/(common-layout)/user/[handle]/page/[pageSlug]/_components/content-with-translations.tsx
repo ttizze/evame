@@ -24,12 +24,7 @@ export async function ContentWithTranslations({
 	if (!pageData) {
 		return notFound();
 	}
-	const {
-		pageDetail,
-		currentUser,
-		pageTranslationJobs,
-		latestUserTranslationJob,
-	} = pageData;
+	const { pageDetail, currentUser } = pageData;
 
 	const pageSegmentTitleWithTranslations = pageDetail.segmentBundles.filter(
 		(item) => item.segment.number === 0,
