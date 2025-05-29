@@ -98,6 +98,7 @@ export function SubHeader({
 						{isEditable && (
 							<Link
 								href={`/user/${currentUserHandle}/page/${pageDetail.slug}/edit`}
+								prefetch={false}
 							>
 								<Button variant="ghost">
 									<PencilIcon className="h-4 w-4" />
