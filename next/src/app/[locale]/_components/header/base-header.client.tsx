@@ -51,14 +51,35 @@ export function BaseHeader({
 			>
 				<div className="flex items-center gap-4">
 					<Link href="/" className="flex items-center">
-						<Image
-							src="/logo.svg"
-							alt="Evame"
-							width={80}
-							height={32}
-							className="h-8 w-20 dark:invert"
-							aria-label="Evame Logo"
-						/>
+						{!currentUser ? (
+							<>
+								<Image
+									src="/favicon.svg"
+									alt="Evame"
+									width={32}
+									height={32}
+									className="h-8 w-8 dark:invert md:hidden"
+									aria-label="Evame Logo"
+								/>
+								<Image
+									src="/logo.svg"
+									alt="Evame"
+									width={80}
+									height={32}
+									className="h-8 w-20 dark:invert hidden md:block"
+									aria-label="Evame Logo"
+								/>
+							</>
+						) : (
+							<Image
+								src="/logo.svg"
+								alt="Evame"
+								width={80}
+								height={32}
+								className="h-8 w-20 dark:invert"
+								aria-label="Evame Logo"
+							/>
+						)}
 					</Link>
 					{leftExtra}
 				</div>

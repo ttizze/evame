@@ -101,8 +101,7 @@
 	--ring: 212.7 26.8% 83.9%;
 }
 
-.input-rays,
-.input-rays-dark {
+.input-rays {
 	clip-path: polygon(0 0, 46% 45%, 45% 55%, 0 100%);
 	background: repeating-conic-gradient(
 		from 0deg at 50% center,
@@ -111,12 +110,12 @@
 		transparent 0.5deg,
 		transparent 3deg
 	);
-
 	color: rgba(0, 0, 0, 0.4); /* ライト */
 }
-.input-rays-dark {
-	color: rgba(255, 255, 255, 0.3);
-} /* ダーク */
+
+.dark .input-rays {
+	color: rgba(255, 255, 255, 0.8); /* ダーク */
+}
 
 /* ----- 右 (出力) ----- */
 .output-rays {
