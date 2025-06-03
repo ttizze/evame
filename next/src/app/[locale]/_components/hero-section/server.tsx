@@ -75,7 +75,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 				</div>
 				<div className="relative  my-10 flex justify-center">
 					{/* 左 : 入力線  ----------------------------------- */}
-					<div className="absolute inset-0 input-rays dark:input-rays-dark" />
+					<div className="absolute inset-0 input-rays" />
 
 					{/* 右 : 出力線（多色） ----------------------------- */}
 					<div className="absolute inset-0 output-rays" />
