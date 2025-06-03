@@ -37,7 +37,7 @@ export default async function UserEditPage({
 	}
 
 	return (
-		<div className="rounded-xl border p-4">
+		<div className="">
 			<Tabs defaultValue="profile" className="w-full">
 				<TabsList className="mb-4 w-full flex rounded-full">
 					<TabsTrigger
