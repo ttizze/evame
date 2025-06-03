@@ -110,11 +110,11 @@
 		transparent 0.5deg,
 		transparent 3deg
 	);
-	color: rgba(0, 0, 0, 0.4); /* ライト */
+	color: rgba(0, 0, 0, 0.4); /* デフォルト */
 }
 
 .dark .input-rays {
-	color: rgba(255, 255, 255, 0.8); /* ダーク */
+	color: rgba(255, 255, 255, 0.8) !important; /* ダーク */
 }
 
 /* ----- 右 (出力) ----- */
