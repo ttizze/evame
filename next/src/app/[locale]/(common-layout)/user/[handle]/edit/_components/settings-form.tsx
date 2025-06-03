@@ -5,7 +5,6 @@ import type { SanitizedUser } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
 import { Loader2, SaveIcon } from "lucide-react";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -55,64 +54,78 @@ export function SettingsForm({ currentUser }: SettingsFormProps) {
 				/>
 			)}
 
-			<div>
-				<Label>User Name</Label>
-				<div className="space-y-2">
-					<div className="flex items-center gap-2">
-						<span className="text-sm">Current URL:</span>
-						<code className="px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-lg">
-							evame.tech/user/{currentUser.handle}
-						</code>
-					</div>
-					<div className="space-y-1 text-sm text-amber-500">
-						<p>⚠️ Important: Changing your handle will:</p>
-						<ul className="list-disc list-inside pl-4 space-y-1">
-							<li>Update all URLs of your page</li>
-							<li>Break existing links to your page</li>
-							<li>Allow your current handle to be claimed by others</li>
-						</ul>
-					</div>
-					<Button
-						type="button"
-						variant="outline"
-						onClick={() => setShowHandleInput(!showHandleInput)}
-					>
-						{showHandleInput ? "Cancel" : "Edit Handle"}
-					</Button>
-				</div>
+			<div className="space-y-4">
+				<div>
+					<Label htmlFor="handle" className="text-base font-medium mb-2 block">
+						Handle
+					</Label>
+					<div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 space-y-3">
+						<div className="flex items-center justify-between">
+							<code className="px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-sm font-mono">
+								evame.tech/user/{currentUser.handle}
+							</code>
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setShowHandleInput(!showHandleInput)}
+							>
+								{showHandleInput ? "Cancel" : "Edit"}
+							</Button>
+						</div>
 
-				<code
-					className={cn(
-						"flex items-center gap-2 px-2 mt-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-lg",
-						showHandleInput ? "block" : "hidden",
-					)}
-				>
-					evame.tech/user/
-					<Input
-						defaultValue={currentUser.handle}
-						name="handle"
-						minLength={3}
-						maxLength={25}
-						required
-						className="border rounded-lg bg-white dark:bg-black/50 focus:outline-hidden"
-					/>
-				</code>
-				{!editState.success && editState.zodErrors?.handle && (
-					<div className="text-red-500 text-sm mt-1">
-						{editState.zodErrors.handle}
+						{showHandleInput && (
+							<div className="space-y-3">
+								<div className="space-y-1 text-sm text-amber-500">
+									<p>⚠️ Important: Changing your handle will:</p>
+									<ul className="list-disc list-inside pl-4 space-y-1">
+										<li>Update all URLs of your page</li>
+										<li>Break existing links to your page</li>
+										<li>Allow your current handle to be claimed by others</li>
+									</ul>
+								</div>
+
+								<div className="space-y-2">
+									<Label htmlFor="handle-input" className="text-sm font-medium">
+										New handle
+									</Label>
+									<div className="flex items-center gap-2">
+										<code className="text-sm text-gray-600 dark:text-gray-400">
+											evame.tech/user/
+										</code>
+										<Input
+											id="handle-input"
+											defaultValue={currentUser.handle}
+											name="handle"
+											minLength={3}
+											maxLength={25}
+											required
+											className="flex-1 max-w-[200px]"
+											placeholder="your-handle"
+										/>
+									</div>
+									{!editState.success && editState.zodErrors?.handle && (
+										<p className="text-red-500 text-sm">
+											{editState.zodErrors.handle}
+										</p>
+									)}
+								</div>
+							</div>
+						)}
 					</div>
-				)}
+				</div>
 			</div>
 
-			<Label>Gemini API Key</Label>
-			<Button
-				type="button"
-				onClick={() => setIsApiKeyDialogOpen(true)}
-				className="w-full"
-				variant="outline"
-			>
-				Set API Key
-			</Button>
+			<div className="space-y-2">
+				<Label className="text-base font-medium">Gemini API Key</Label>
+				<Button
+					type="button"
+					onClick={() => setIsApiKeyDialogOpen(true)}
+					className="w-full"
+					variant="outline"
+				>
+					Set API Key
+				</Button>
+			</div>
 			<GeminiApiKeyDialog
 				isOpen={isApiKeyDialogOpen}
 				onOpenChange={setIsApiKeyDialogOpen}
