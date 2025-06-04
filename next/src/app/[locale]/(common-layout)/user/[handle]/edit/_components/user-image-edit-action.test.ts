@@ -14,7 +14,7 @@ vi.mock("@/app/[locale]/_lib/upload", () => ({
 	uploadImage: vi.fn(),
 }));
 
-vi.mock("./_db/mutations.server", () => ({
+vi.mock("../_db/mutations.server", () => ({
 	updateUserImage: vi.fn(),
 }));
 
