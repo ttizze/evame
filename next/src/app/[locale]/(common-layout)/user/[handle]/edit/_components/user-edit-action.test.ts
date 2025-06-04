@@ -11,7 +11,7 @@ vi.mock("@/auth", () => ({
 }));
 
 // DB mutation のモック
-vi.mock("./_db/mutations.server", () => ({
+vi.mock("../_db/mutations.server", () => ({
 	updateUser: vi.fn(),
 }));
 
