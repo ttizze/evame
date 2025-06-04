@@ -108,11 +108,10 @@ export default async function HomePage({
 				</>
 			)}
 			<DynamicControl />
-			<>
-				<NewPageListByTag locale={locale} tagName="AI" />
-				<NewPageListByTag locale={locale} tagName="Programming" />
-				<NewPageListByTag locale={locale} tagName="Plurality" />
-			</>
+			<NewPageList locale={locale} searchParams={searchParams} />
+			<NewPageListByTag locale={locale} tagName="AI" />
+			<NewPageListByTag locale={locale} tagName="Programming" />
+			<NewPageListByTag locale={locale} tagName="Plurality" />
 		</div>
 	);
 }
