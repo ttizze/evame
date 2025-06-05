@@ -40,24 +40,20 @@ jobs:
 
       - name: Create .env
         run: |
-          cd next
           echo "TIPTAP_PRO_API_KEY=${{ secrets.TIPTAP_PRO_API_KEY }}" >> .env
           echo "DATABASE_URL=postgres://postgres:postgres@db.localtest.me:5435/main" >> .env
 
       - name: Install dependencies
         run: |
-          cd next
           bun install
 
       - name: Run Biome
         run: |
-          cd next
           bun x biome ci .
 
       - name: Run Tests
         env:
           TZ: 'Asia/Tokyo'
         run: |
-          cd next
           bunx prisma migrate dev && bunx prisma migrate deploy
           bunx vitest
