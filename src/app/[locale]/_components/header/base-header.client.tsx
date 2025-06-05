@@ -22,6 +22,7 @@ interface BaseHeaderProps {
 	leftExtra?: ReactNode;
 	rightExtra?: ReactNode;
 	showUserMenu?: boolean;
+	hasGeminiApiKey?: boolean;
 }
 
 export function BaseHeader({
@@ -29,6 +30,7 @@ export function BaseHeader({
 	leftExtra,
 	rightExtra,
 	showUserMenu = true,
+	hasGeminiApiKey = false,
 }: BaseHeaderProps) {
 	// カスタムフックを使用
 	const { headerRef, isPinned, isVisible, headerHeight } = useHeaderScroll();
@@ -112,7 +114,7 @@ export function BaseHeader({
 								<DropdownMenuSeparator className="my-0" />
 								<TranslateActionSectionClient
 									currentHandle={currentUser.handle}
-									hasGeminiApiKey={true}
+									hasGeminiApiKey={hasGeminiApiKey}
 									localeSelectorClassName="w-[200px]"
 								/>
 								<DropdownMenuItem className="p-0 ">

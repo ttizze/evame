@@ -10,7 +10,7 @@ export const pageStrategy: TranslationStrategy<PageTranslationParams> = {
 			userId: currentUserId,
 			pageId,
 			locale,
-			aiModel: "gemini-1.5-flash",
+			aiModel: "gemini-2.0-flash",
 		});
 	},
 
@@ -47,7 +47,7 @@ export const pageCommentStrategy: TranslationStrategy<PageCommentTranslationPara
 				userId: currentUserId,
 				pageId,
 				locale,
-				aiModel: "gemini-1.5-flash",
+				aiModel: "gemini-2.0-flash",
 			});
 		},
 
