@@ -113,7 +113,7 @@ export default function Globe() {
 		<div className="App flex justify-center items-center">
 			<canvas
 				ref={canvasRef}
-				className="w-[450px] h-[450px]"
+				className="w-[300px] h-[300px] md:w-[450px] md:h-[450px]"
 				style={{ aspectRatio: "1" }}
 			/>
 		</div>
