@@ -52,7 +52,7 @@ export function AddTranslateDialog({
 		FormData
 	>(translateAction, { success: false });
 	const [targetLocale, setTargetLocale] = useState("");
-	const [selectedModel, setSelectedModel] = useState("gemini-1.5-flash");
+	const [selectedModel, setSelectedModel] = useState("gemini-2.0-flash");
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
 	const { jobs } = useTranslationJobs(
 		translateState.success ? (translateState.data?.translationJobs ?? []) : [],
@@ -94,14 +94,8 @@ export function AddTranslateDialog({
 										<SelectValue placeholder="Select a model" />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="gemini-1.5-flash">
-											Gemini 1.5 Flash
-										</SelectItem>
-										<SelectItem value="gemini-1.5-pro">
-											Gemini 1.5 Pro
-										</SelectItem>
-										<SelectItem value="gemini-2.0-flash-exp">
-											gemini-2.0-flash-exp
+										<SelectItem value="gemini-2.0-flash">
+											gemini-2.0-flash
 										</SelectItem>
 									</SelectContent>
 								</Select>
@@ -137,6 +131,9 @@ export function AddTranslateDialog({
 								>
 									Set API Key
 								</Button>
+							)}
+							{translateState.message && (
+								<p className="text-red-500">{translateState.message}</p>
 							)}
 							{!translateState.success &&
 								translateState.zodErrors?.pageSlug && (

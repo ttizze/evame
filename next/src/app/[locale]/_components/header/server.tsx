@@ -20,26 +20,30 @@ export async function Header() {
 	const geminiApiKey = await fetchGeminiApiKeyByHandle(
 		currentUser?.handle ?? "",
 	);
-	const hasGeminiApiKey = !!geminiApiKey;
+	const hasGeminiApiKey =
+		geminiApiKey !== null &&
+		geminiApiKey !== undefined &&
+		geminiApiKey.apiKey !== "";
 	const rightExtra = (
 		<>
 			<Link href="/search" aria-label="Search for pages">
 				<Search className="w-6 h-6 " />
 			</Link>
-			{!currentUser && (
-				<TranslateActionSectionClient
-					currentHandle={undefined}
-					hasGeminiApiKey={hasGeminiApiKey}
-					localeSelectorClassName="border rounded-full w-[150px]"
-				/>
-			)}
-			{currentUser ? (
+
+			{!currentUser ? (
+				<>
+					<TranslateActionSectionClient
+						currentHandle={undefined}
+						hasGeminiApiKey={false}
+						localeSelectorClassName="border rounded-full w-[150px]"
+					/>
+					<StartButton />
+				</>
+			) : (
 				<>
 					<NotificationsDropdown currentUserHandle={currentUser.handle} />
 					<NewPageButton handle={currentUser.handle} />
 				</>
-			) : (
-				<StartButton />
 			)}
 		</>
 	);
@@ -50,6 +54,7 @@ export async function Header() {
 			leftExtra={null}
 			rightExtra={rightExtra}
 			showUserMenu={!!currentUser}
+			hasGeminiApiKey={hasGeminiApiKey}
 		/>
 	);
 }
