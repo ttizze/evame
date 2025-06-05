@@ -2,8 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { translate } from "./translate.server";
 import { getGeminiModelResponse } from "../services/gemini";
+import { translate } from "./translate.server";
 
 vi.mock("../services/gemini", () => ({
 	getGeminiModelResponse: vi.fn(),
