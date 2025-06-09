@@ -63,6 +63,9 @@ export function EditHeader({
 		return <Check className={ICON_CLASSES} data-testid="save-button-check" />;
 	};
 	const renderStatusIcon = () => {
+		if (isPending) {
+			return <Loader2 className={`${ICON_CLASSES} animate-spin`} />;
+		}
 		return initialStatus === "PUBLIC" ? (
 			<Globe className={ICON_CLASSES} />
 		) : (
@@ -94,7 +97,14 @@ export function EditHeader({
 					disabled={isPending || !pageId}
 				>
 					{renderStatusIcon()}
-					<span>{initialStatus === "PUBLIC" ? "Public" : "Private"}</span>
+					<span>
+						{isPending
+							? "Processing..."
+							: initialStatus === "PUBLIC"
+								? "Public"
+								: "Private"
+						}
+					</span>
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent className="w-46 rounded-xl py-1 px-3" align="end">
@@ -107,8 +117,14 @@ export function EditHeader({
 								type="submit"
 								variant="ghost"
 								className={MENU_BUTTON_CLASSES}
+								disabled={isPending}
 							>
-								{initialStatus === "PUBLIC" ? (
+								{isPending ? (
+									<>
+										<Loader2 className={`${ICON_CLASSES} animate-spin`} />
+										<span>Processing...</span>
+									</>
+								) : initialStatus === "PUBLIC" ? (
 									<>
 										<LanguagesIcon className={ICON_CLASSES} />
 										<span>Translate</span>
@@ -164,11 +180,20 @@ export function EditHeader({
 						type="submit"
 						variant="ghost"
 						className={MENU_BUTTON_CLASSES}
-						disabled={initialStatus === "DRAFT"}
+						disabled={initialStatus === "DRAFT" || isPending}
 					>
 						<input type="hidden" name="status" value="DRAFT" />
-						<Lock className={ICON_CLASSES} />
-						<span>Private</span>
+						{isPending ? (
+							<>
+								<Loader2 className={`${ICON_CLASSES} animate-spin`} />
+								<span>Processing...</span>
+							</>
+						) : (
+							<>
+								<Lock className={ICON_CLASSES} />
+								<span>Private</span>
+							</>
+						)}
 					</Button>
 				</form>
 
