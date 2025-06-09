@@ -60,7 +60,9 @@ export function EditHeader({
 		if (hasUnsavedChanges) {
 			return <Loader2 className={`${ICON_CLASSES} animate-spin`} />;
 		}
-		return <CloudCheck className={ICON_CLASSES} data-testid="save-button-check" />;
+		return (
+			<CloudCheck className={ICON_CLASSES} data-testid="save-button-check" />
+		);
 	};
 	const renderStatusIcon = () => {
 		if (isPending) {
