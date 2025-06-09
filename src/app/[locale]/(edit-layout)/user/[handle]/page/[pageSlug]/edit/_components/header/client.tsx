@@ -102,8 +102,7 @@ export function EditHeader({
 							? "Processing..."
 							: initialStatus === "PUBLIC"
 								? "Public"
-								: "Private"
-						}
+								: "Private"}
 					</span>
 				</Button>
 			</PopoverTrigger>
