@@ -12,6 +12,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Link } from "@/i18n/routing";
 import type { PageStatus } from "@prisma/client";
+import { TranslationStatus } from "@prisma/client";
 import {
 	CloudCheck,
 	Globe,
@@ -25,6 +26,7 @@ import { usePathname } from "next/navigation";
 import { useActionState } from "react";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
+
 interface EditHeaderProps {
 	currentUser: SanitizedUser;
 	initialStatus: PageStatus;
@@ -53,8 +55,20 @@ export function EditHeader({
 	const { jobs } = useTranslationJobs(
 		state.success ? (state.data?.translationJobs ?? []) : [],
 	);
-
-	useTranslationJobToast(jobs);
+	const dummyJobs = [
+		{
+			id: 1,
+			locale: "en",
+			status: TranslationStatus.PENDING,
+			progress: 0,
+			error: "",
+			page: {
+				slug: "test-page",
+				user: { handle: "testuser" },
+			},
+		},
+	];
+	useTranslationJobToast(dummyJobs);
 
 	const renderButtonIcon = () => {
 		if (hasUnsavedChanges) {

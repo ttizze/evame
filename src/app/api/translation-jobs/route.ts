@@ -25,6 +25,16 @@ export async function GET(request: NextRequest) {
 			status: true,
 			progress: true,
 			error: true,
+			page: {
+				select: {
+					slug: true,
+					user: {
+						select: {
+							handle: true,
+						},
+					},
+				},
+			},
 		},
 	});
 

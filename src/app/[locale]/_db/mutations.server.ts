@@ -18,5 +18,17 @@ export async function createTranslationJob(params: CreateTranslationJobParams) {
 			status: TranslationStatus.PENDING,
 			progress: 0,
 		},
+		include: {
+			page: {
+				select: {
+					slug: true,
+					user: {
+						select: {
+							handle: true,
+						},
+					},
+				},
+			},
+		},
 	});
 }

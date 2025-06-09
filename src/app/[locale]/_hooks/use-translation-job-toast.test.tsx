@@ -15,13 +15,41 @@ vi.mock("sonner", () => {
 });
 
 const pendingJobs: TranslationJobForToast[] = [
-	{ id: 1, locale: "en", status: "PENDING", progress: 0, error: "" },
-	{ id: 2, locale: "ja", status: "IN_PROGRESS", progress: 0, error: "" },
+	{
+		id: 1,
+		locale: "en",
+		status: "PENDING",
+		progress: 0,
+		error: "",
+		page: { slug: "test-page", user: { handle: "testuser" } },
+	},
+	{
+		id: 2,
+		locale: "ja",
+		status: "IN_PROGRESS",
+		progress: 0,
+		error: "",
+		page: { slug: "test-page", user: { handle: "testuser" } },
+	},
 ];
 
 const completedJobs: TranslationJobForToast[] = [
-	{ id: 1, locale: "en", status: "COMPLETED", progress: 0, error: "" },
-	{ id: 2, locale: "ja", status: "COMPLETED", progress: 0, error: "" },
+	{
+		id: 1,
+		locale: "en",
+		status: "COMPLETED",
+		progress: 0,
+		error: "",
+		page: { slug: "test-page", user: { handle: "testuser" } },
+	},
+	{
+		id: 2,
+		locale: "ja",
+		status: "COMPLETED",
+		progress: 0,
+		error: "",
+		page: { slug: "test-page", user: { handle: "testuser" } },
+	},
 ];
 
 describe("useTranslationToast", () => {
