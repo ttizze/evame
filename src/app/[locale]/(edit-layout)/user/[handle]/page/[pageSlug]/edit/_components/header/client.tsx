@@ -51,10 +51,10 @@ export function EditHeader({
 	const pagePath = `/${currentPagePath.split("/").slice(2, -1).join("/")}`;
 	//editページはiphoneSafari対応のため､baseHeaderとは別でスクロール管理が必要
 	const { isVisible } = useHeaderVisibility();
-	const { jobs } = useTranslationJobs(
+	const { toastJobs } = useTranslationJobs(
 		state.success ? (state.data?.translationJobs ?? []) : [],
 	);
-	useTranslationJobToast(jobs);
+	useTranslationJobToast(toastJobs);
 
 	const renderButtonIcon = () => {
 		if (hasUnsavedChanges) {

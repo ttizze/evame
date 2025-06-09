@@ -1,3 +1,7 @@
+import {
+	type TranslationJobForToast,
+	translationJobForToastSchema,
+} from "@/app/types/translation-job";
 import { prisma } from "@/lib/prisma";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -8,7 +12,10 @@ function parseIds(url: string): number[] {
 	const schema = z.array(z.coerce.number().int().positive());
 	return schema.parse(ids);
 }
-export async function GET(request: NextRequest) {
+
+export async function GET(
+	request: NextRequest,
+): Promise<NextResponse<TranslationJobForToast[] | { message: string }>> {
 	const ids = parseIds(request.url);
 	if (!ids.length) {
 		return NextResponse.json(
@@ -17,7 +24,7 @@ export async function GET(request: NextRequest) {
 		);
 	}
 
-	const rows = await prisma.translationJob.findMany({
+	const rows: TranslationJobForToast[] = await prisma.translationJob.findMany({
 		where: { id: { in: ids } },
 		select: {
 			id: true,
@@ -38,5 +45,6 @@ export async function GET(request: NextRequest) {
 		},
 	});
 
-	return NextResponse.json(rows, { status: 200 });
+	const validatedRows = z.array(translationJobForToastSchema).parse(rows);
+	return NextResponse.json(validatedRows, { status: 200 });
 }

@@ -1,8 +1,8 @@
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import { fetchPageWithPageSegments } from "@/app/[locale]/_db/page-queries.server";
 import { fetchPageWithTitleAndComments } from "@/app/[locale]/_db/page-queries.server";
-import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { BASE_URL } from "@/app/_constants/base-url";
+import type { TranslationJobForTranslationAPI } from "@/app/types/translation-job";
 import type { TranslateJobParams } from "@/features/translate/types";
 interface BaseTranslationParams {
 	currentUserId: string;
@@ -50,16 +50,16 @@ const defaultDependencies: TranslationDependencies = {
 };
 
 export interface TranslationStrategy<T extends TranslationParams> {
-	createJob(
+	createTranslationJob(
 		deps: TranslationDependencies,
 		params: T,
 		locale: string,
-	): Promise<TranslationJobForToast>;
+	): Promise<TranslationJobForTranslationAPI>;
 
-	buildJobParams(
+	buildParamsForTranslationAPI(
 		deps: TranslationDependencies,
 		params: T,
-		job: TranslationJobForToast,
+		translationJob: TranslationJobForTranslationAPI,
 		locale: string,
 	): Promise<TranslateJobParams>;
 }
@@ -84,7 +84,7 @@ const limit = pLimit(CONCURRENCY);
 async function handleAutoTranslation<T extends TranslationParams>(
 	params: T,
 	deps: TranslationDependencies,
-): Promise<TranslationJobForToast[]> {
+): Promise<TranslationJobForTranslationAPI[]> {
 	const strategy = STRATEGY_TABLE[params.type] as TranslationStrategy<T>;
 
 	const targetLocales = ["en", "ja", "zh", "ko"].filter(
@@ -94,8 +94,13 @@ async function handleAutoTranslation<T extends TranslationParams>(
 	const results = await Promise.all(
 		targetLocales.map((locale) =>
 			limit(async () => {
-				const job = await strategy.createJob(deps, params, locale);
-				const body = await strategy.buildJobParams(deps, params, job, locale);
+				const job = await strategy.createTranslationJob(deps, params, locale);
+				const body = await strategy.buildParamsForTranslationAPI(
+					deps,
+					params,
+					job,
+					locale,
+				);
 				await deps.fetchTranslateAPI(`${BASE_URL}/api/translate`, body);
 				await deps.delay(1000);
 				return job;
@@ -114,7 +119,7 @@ export async function handlePageAutoTranslation({
 	dependencies = {},
 }: Omit<PageTranslationParams, "type"> & {
 	dependencies?: Partial<TranslationDependencies>;
-}): Promise<TranslationJobForToast[]> {
+}): Promise<TranslationJobForTranslationAPI[]> {
 	const deps: TranslationDependencies = {
 		...defaultDependencies,
 		...dependencies,
@@ -142,7 +147,7 @@ export async function handlePageCommentAutoTranslation({
 	dependencies = {},
 }: Omit<PageCommentTranslationParams, "type"> & {
 	dependencies?: Partial<TranslationDependencies>;
-}): Promise<TranslationJobForToast[]> {
+}): Promise<TranslationJobForTranslationAPI[]> {
 	const deps: TranslationDependencies = {
 		...defaultDependencies,
 		...dependencies,

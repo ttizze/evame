@@ -9,10 +9,10 @@ import {
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
 } from "@/app/[locale]/_db/page-queries.server";
-import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
+import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 

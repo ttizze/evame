@@ -54,11 +54,11 @@ export function AddTranslateDialog({
 	const [targetLocale, setTargetLocale] = useState("");
 	const [selectedModel, setSelectedModel] = useState("gemini-2.0-flash");
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
-	const { jobs } = useTranslationJobs(
+	const { toastJobs } = useTranslationJobs(
 		translateState.success ? (translateState.data?.translationJobs ?? []) : [],
 	);
 
-	useTranslationJobToast(jobs);
+	useTranslationJobToast(toastJobs);
 	return (
 		<>
 			<Dialog open={open} onOpenChange={onOpenChange}>

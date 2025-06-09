@@ -1,9 +1,9 @@
 "use server";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
-import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { handlePageAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
 import type { ActionResponse } from "@/app/types";
+import type { TranslationJobForToast } from "@/app/types/translation-job";
 import type { PageStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
