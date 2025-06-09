@@ -100,7 +100,7 @@ describe("useTranslationToast", () => {
 
 		// 進捗を更新
 		const inProgressJobs = pendingJobs.map((job, index) =>
-			index === 0 ? { ...job, progress: 50 } : job
+			index === 0 ? { ...job, progress: 50 } : job,
 		);
 		rerender({ jobs: inProgressJobs });
 

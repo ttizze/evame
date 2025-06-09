@@ -24,7 +24,7 @@ export async function GET(
 		);
 	}
 
-	const rows:TranslationJobForToast[] = await prisma.translationJob.findMany({
+	const rows: TranslationJobForToast[] = await prisma.translationJob.findMany({
 		where: { id: { in: ids } },
 		select: {
 			id: true,

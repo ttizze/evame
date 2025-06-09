@@ -1,10 +1,7 @@
-import type {
-	TranslationJobForToast,
-} from "@/app/types/translation-job";
+import type { TranslationJobForToast } from "@/app/types/translation-job";
 import useSWR from "swr";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
-
 
 export function useTranslationJobs(
 	initial: TranslationJobForToast[],
@@ -26,6 +23,5 @@ export function useTranslationJobs(
 	const allDone =
 		data?.every((j) => ["COMPLETED", "FAILED"].includes(j.status)) ?? false;
 
-		return { toastJobs: data ?? initial, allDone };
-	}
-	
+	return { toastJobs: data ?? initial, allDone };
+}
