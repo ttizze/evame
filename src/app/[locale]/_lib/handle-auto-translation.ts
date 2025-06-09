@@ -4,7 +4,6 @@ import { fetchPageWithTitleAndComments } from "@/app/[locale]/_db/page-queries.s
 import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslateJobParams } from "@/features/translate/types";
-import type { TranslationJob } from "@prisma/client";
 interface BaseTranslationParams {
 	currentUserId: string;
 	sourceLocale: string;
@@ -55,12 +54,12 @@ export interface TranslationStrategy<T extends TranslationParams> {
 		deps: TranslationDependencies,
 		params: T,
 		locale: string,
-	): Promise<TranslationJob>;
+	): Promise<TranslationJobForToast>;
 
 	buildJobParams(
 		deps: TranslationDependencies,
 		params: T,
-		job: TranslationJob,
+		job: TranslationJobForToast,
 		locale: string,
 	): Promise<TranslateJobParams>;
 }

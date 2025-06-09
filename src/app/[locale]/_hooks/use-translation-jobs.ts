@@ -6,7 +6,14 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 export type TranslationJobForToast = Pick<
 	TranslationJob,
 	"id" | "locale" | "status" | "progress" | "error"
->;
+> & {
+	page: {
+		slug: string;
+		user: {
+			handle: string;
+		};
+	};
+};
 
 export function useTranslationJobs(
 	initial: TranslationJobForToast[],

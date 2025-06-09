@@ -9,10 +9,10 @@ import {
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
 } from "@/app/[locale]/_db/page-queries.server";
+import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
-import type { TranslationJob } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -21,7 +21,7 @@ import { z } from "zod";
 type Numbered = { number: number; text: string };
 
 export type TranslateActionState = ActionResponse<
-	{ translationJobs: TranslationJob[] },
+	{ translationJobs: TranslationJobForToast[] },
 	{
 		pageSlug: string;
 		aiModel: string;
@@ -60,7 +60,7 @@ async function newJobAndSend(args: {
 	elements: Numbered[];
 	contentType: TargetContentType;
 	geminiKey: string;
-	jobs: TranslationJob[];
+	jobs: TranslationJobForToast[];
 }) {
 	if (!args.pageId) {
 		throw new Error("pageId が必須です");
@@ -98,7 +98,7 @@ async function handlePage(opts: {
 	userId: string;
 	geminiKey: string;
 	contentType: TargetContentType;
-	jobs: TranslationJob[];
+	jobs: TranslationJobForToast[];
 }) {
 	const id = (await fetchPageIdBySlug(opts.pageSlug))?.id;
 	if (!id) return { success: false, message: "Page not found" };
@@ -155,7 +155,7 @@ export async function translateAction(
 	const gemini = await fetchGeminiApiKeyByHandle(currentUser.handle);
 	if (!gemini) return { success: false, message: "Gemini API key not found" };
 
-	const jobs: TranslationJob[] = [];
+	const jobs: TranslationJobForToast[] = [];
 
 	if (data.pageSlug) {
 		const pageResult = await handlePage({
