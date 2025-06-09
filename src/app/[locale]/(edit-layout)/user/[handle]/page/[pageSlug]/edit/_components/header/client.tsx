@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { Link } from "@/i18n/routing";
 import type { PageStatus } from "@prisma/client";
 import {
-	Check,
+	CloudCheck,
 	Globe,
 	InfoIcon,
 	LanguagesIcon,
@@ -60,7 +60,9 @@ export function EditHeader({
 		if (hasUnsavedChanges) {
 			return <Loader2 className={`${ICON_CLASSES} animate-spin`} />;
 		}
-		return <Check className={ICON_CLASSES} data-testid="save-button-check" />;
+		return (
+			<CloudCheck className={ICON_CLASSES} data-testid="save-button-check" />
+		);
 	};
 	const renderStatusIcon = () => {
 		if (isPending) {
