@@ -25,11 +25,11 @@ export function PageCommentForm({
 		FormData
 	>(commentAction, { success: false });
 
-	const { jobs } = useTranslationJobs(
+	const { toastJobs } = useTranslationJobs(
 		state.success ? (state.data?.translationJobs ?? []) : [],
 	);
 
-	useTranslationJobToast(jobs);
+	useTranslationJobToast(toastJobs);
 	useEffect(() => {
 		if (state.success) onReplySuccess?.();
 	}, [state.success, onReplySuccess]);

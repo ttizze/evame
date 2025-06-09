@@ -1,4 +1,4 @@
-import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
+import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { Progress } from "@/components/ui/progress";
 import {
 	CheckCircle2,
