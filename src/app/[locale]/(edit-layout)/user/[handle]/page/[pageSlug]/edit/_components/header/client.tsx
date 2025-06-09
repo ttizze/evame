@@ -12,7 +12,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Link } from "@/i18n/routing";
 import type { PageStatus } from "@prisma/client";
-import { TranslationStatus } from "@prisma/client";
 import {
 	CloudCheck,
 	Globe,
@@ -55,20 +54,7 @@ export function EditHeader({
 	const { jobs } = useTranslationJobs(
 		state.success ? (state.data?.translationJobs ?? []) : [],
 	);
-	const dummyJobs = [
-		{
-			id: 1,
-			locale: "en",
-			status: TranslationStatus.PENDING,
-			progress: 0,
-			error: "",
-			page: {
-				slug: "test-page",
-				user: { handle: "testuser" },
-			},
-		},
-	];
-	useTranslationJobToast(dummyJobs);
+	useTranslationJobToast(jobs);
 
 	const renderButtonIcon = () => {
 		if (hasUnsavedChanges) {
