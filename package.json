@@ -14,7 +14,8 @@
 		"check": "bunx @biomejs/biome check --write .",
 		"typecheck": "tsc --noEmit",
 		"seed": "prisma db seed",
-		"mdast-json": "bunx tsx scripts/mdast-json.ts"
+		"mdast-json": "bunx tsx scripts/mdast-json.ts",
+		"tipitaka": "bunx tsx scripts/tipitaka.ts"
 	},
 	"prisma": {
 		"seed": "tsx prisma/seed.ts"

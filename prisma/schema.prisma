@@ -111,7 +111,13 @@ enum PageStatus {
 
 model Page {
   id              Int              @id @default(autoincrement())
+  parentId        Int?             @map("parent_id")
+  parent          Page?            @relation("ParentPage", fields: [parentId], references: [id])
+  children        Page[]           @relation("ParentPage")
+
   slug            String           @unique
+  order      Int          @default(0)
+
   mdastJson       Json             @map("mdast_json")
   sourceLocale    String           @default("unknown") @map("source_locale")
   status          PageStatus       @default(DRAFT)
@@ -126,7 +132,9 @@ model Page {
   notifications   Notification[]
   translationJobs TranslationJob[]
 
+  @@index([parentId])
   @@index([createdAt])
+  @@index([parentId, order])
   @@index([userId])
   @@index([slug])
   @@map("pages")
