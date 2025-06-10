@@ -130,20 +130,24 @@ export async function fetchPageDetail(
 
 	const normalized = await normalizePageSegments(page.pageSegments);
 	const segmentBundles = await toSegmentBundles("page", page.id, normalized);
-	
+
 	// Process children pages
 	const children = await Promise.all(
 		page.children.map(async (child) => {
 			const childNormalized = await normalizePageSegments(child.pageSegments);
-			const childSegmentBundles = await toSegmentBundles("page", child.id, childNormalized);
+			const childSegmentBundles = await toSegmentBundles(
+				"page",
+				child.id,
+				childNormalized,
+			);
 			return {
 				...child,
 				createdAt: child.createdAt.toISOString(),
 				segmentBundles: childSegmentBundles,
 			};
-		})
+		}),
 	);
-	
+
 	return {
 		...page,
 		createdAt: page.createdAt.toISOString(),
