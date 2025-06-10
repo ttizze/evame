@@ -14,7 +14,7 @@ export function GoogleForm({ redirectTo }: { redirectTo: string }) {
 		<Form action={formAction} className="w-full ">
 			<input type="hidden" name="redirectTo" value={redirectTo} />
 			<Button
-				variant="outline"
+				variant="default"
 				disabled={isPending}
 				className="w-full rounded-full h-12 text-md"
 			>
