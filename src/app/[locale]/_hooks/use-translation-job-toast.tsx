@@ -1,8 +1,8 @@
 "use client";
 import { JobsView } from "@/app/[locale]/_components/jobs-view";
+import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import type { TranslationJobForToast } from "./use-translation-jobs";
 
 export function useTranslationJobToast(jobs: TranslationJobForToast[]) {
 	const idRef = useRef<string | number>(undefined);

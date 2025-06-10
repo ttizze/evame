@@ -1,10 +1,10 @@
 "use server";
 import { createActionFactory } from "@/app/[locale]/_action/create-action-factory";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
-import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
 import { handlePageCommentAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
 import type { ActionResponse } from "@/app/types";
+import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { z } from "zod";
 import { createNotificationPageComment } from "./_db/mutations.server";
 import { processPageCommentHtml } from "./_lib/process-page-comment-html";

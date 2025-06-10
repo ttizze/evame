@@ -1,12 +1,14 @@
-import type { TranslationJobForToast } from "@/app/[locale]/_hooks/use-translation-jobs";
+import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { Progress } from "@/components/ui/progress";
 import {
 	CheckCircle2,
 	Hourglass,
 	Languages,
+	LinkIcon,
 	Loader2,
 	XCircle,
 } from "lucide-react";
+import Link from "next/link";
 
 const statusIcon = (status: string) => {
 	switch (status) {
@@ -35,7 +37,13 @@ export const JobsView = ({ jobs }: { jobs: TranslationJobForToast[] }) => (
 			<div key={j.locale} className="mb-2 last:mb-0">
 				<span className="flex items-center gap-2">
 					{statusIcon(j.status)}
-					<span className="capitalize text-xs min-w-[48px]">{j.locale}</span>
+					<Link
+						href={`/${j.locale}/user/${j.page.user.handle}/page/${j.page.slug}`}
+						className="capitalize  min-w-[48px] hover:underline cursor-pointer flex items-center"
+					>
+						<LinkIcon className="w-4 h-4 mr-1" />
+						{j.locale}
+					</Link>
 					<Progress
 						value={j.progress ?? (j.status === "COMPLETED" ? 100 : 0)}
 						className="flex-1 h-2 mx-2"

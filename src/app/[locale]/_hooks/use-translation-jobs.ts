@@ -1,12 +1,7 @@
-import type { TranslationJob } from "@prisma/client";
-/* useTranslationJobs.ts */
+import type { TranslationJobForToast } from "@/app/types/translation-job";
 import useSWR from "swr";
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
-export type TranslationJobForToast = Pick<
-	TranslationJob,
-	"id" | "locale" | "status" | "progress" | "error"
->;
+const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
 export function useTranslationJobs(
 	initial: TranslationJobForToast[],
@@ -27,5 +22,6 @@ export function useTranslationJobs(
 
 	const allDone =
 		data?.every((j) => ["COMPLETED", "FAILED"].includes(j.status)) ?? false;
-	return { jobs: data ?? initial, allDone };
+
+	return { toastJobs: data ?? initial, allDone };
 }

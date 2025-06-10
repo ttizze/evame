@@ -2,8 +2,8 @@ import { renderHook } from "@testing-library/react";
 import { toast } from "sonner";
 import { type Mock, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { useTranslationJobToast } from "./use-translation-job-toast";
-import type { TranslationJobForToast } from "./use-translation-jobs";
 
 // 🔧 sonner をモック：toast() が id を返し console に描画しないように
 vi.mock("sonner", () => {
@@ -15,13 +15,41 @@ vi.mock("sonner", () => {
 });
 
 const pendingJobs: TranslationJobForToast[] = [
-	{ id: 1, locale: "en", status: "PENDING", progress: 0, error: "" },
-	{ id: 2, locale: "ja", status: "IN_PROGRESS", progress: 0, error: "" },
+	{
+		id: 1,
+		locale: "en",
+		status: "PENDING",
+		progress: 0,
+		error: "",
+		page: { slug: "test-page", user: { handle: "testuser" } },
+	},
+	{
+		id: 2,
+		locale: "ja",
+		status: "IN_PROGRESS",
+		progress: 30,
+		error: "",
+		page: { slug: "test-page", user: { handle: "testuser" } },
+	},
 ];
 
 const completedJobs: TranslationJobForToast[] = [
-	{ id: 1, locale: "en", status: "COMPLETED", progress: 0, error: "" },
-	{ id: 2, locale: "ja", status: "COMPLETED", progress: 0, error: "" },
+	{
+		id: 1,
+		locale: "en",
+		status: "COMPLETED",
+		progress: 100,
+		error: "",
+		page: { slug: "test-page", user: { handle: "testuser" } },
+	},
+	{
+		id: 2,
+		locale: "ja",
+		status: "COMPLETED",
+		progress: 100,
+		error: "",
+		page: { slug: "test-page", user: { handle: "testuser" } },
+	},
 ];
 
 describe("useTranslationToast", () => {
@@ -71,8 +99,9 @@ describe("useTranslationToast", () => {
 		);
 
 		// 進捗を更新
-		const inProgressJobs = [...pendingJobs];
-		inProgressJobs[0].progress = 50;
+		const inProgressJobs = pendingJobs.map((job, index) =>
+			index === 0 ? { ...job, progress: 50 } : job,
+		);
 		rerender({ jobs: inProgressJobs });
 
 		const toastMock = toast as unknown as Mock;

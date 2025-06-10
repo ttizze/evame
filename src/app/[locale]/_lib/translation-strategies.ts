@@ -5,7 +5,7 @@ import type {
 	TranslationStrategy,
 } from "./handle-auto-translation";
 export const pageStrategy: TranslationStrategy<PageTranslationParams> = {
-	async createJob(deps, { currentUserId, pageId }, locale) {
+	async createTranslationJob(deps, { currentUserId, pageId }, locale) {
 		return deps.createTranslationJob({
 			userId: currentUserId,
 			pageId,
@@ -14,7 +14,7 @@ export const pageStrategy: TranslationStrategy<PageTranslationParams> = {
 		});
 	},
 
-	async buildJobParams(
+	async buildParamsForTranslationAPI(
 		deps,
 		{ currentUserId, pageId, geminiApiKey },
 		job,
@@ -42,7 +42,7 @@ export const pageStrategy: TranslationStrategy<PageTranslationParams> = {
 
 export const pageCommentStrategy: TranslationStrategy<PageCommentTranslationParams> =
 	{
-		async createJob(deps, { currentUserId, pageId }, locale) {
+		async createTranslationJob(deps, { currentUserId, pageId }, locale) {
 			return deps.createTranslationJob({
 				userId: currentUserId,
 				pageId,
@@ -51,7 +51,7 @@ export const pageCommentStrategy: TranslationStrategy<PageCommentTranslationPara
 			});
 		},
 
-		async buildJobParams(
+		async buildParamsForTranslationAPI(
 			deps,
 			{ currentUserId, pageId, pageCommentId, geminiApiKey },
 			job,
