@@ -39,6 +39,7 @@ async function createDirPage(
 			order: nextOrder(String(parentId)),
 			userId,
 			pageSegments: {
+				//TODO テキストのハッシュを指定する
 				create: [{ number: 0, text, textAndOccurrenceHash: "" }],
 			},
 		},
@@ -87,6 +88,7 @@ async function seed() {
 				mdastJson: mdastJson as unknown as Prisma.InputJsonValue,
 				userId,
 				pageSegments: {
+					//TODO テキストのハッシュを指定する
 					create: [{ number: 0, text: title, textAndOccurrenceHash: "" }],
 				},
 			},
