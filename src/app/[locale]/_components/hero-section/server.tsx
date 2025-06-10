@@ -60,7 +60,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 				</span>
 				<div className="mb-12 flex justify-center mt-10">
 					<StartButton
-						text="Join Now"
+						text="Start Now"
 						icon={
 							<Image
 								src="/favicon.svg"
@@ -70,7 +70,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 								className="relative z-10 invert dark:invert-0"
 							/>
 						}
-						className="w-60 h-12 text-xl rounded-full transition-all duration-300 hover:scale-105"
+						className="w-60 h-16 text-xl transition-all duration-300 hover:scale-105"
 					/>
 				</div>
 				<div className="relative  my-10 flex justify-center">
