@@ -141,6 +141,24 @@ export default async function Page({
 					}
 				/>
 
+				{pageDetail.children && pageDetail.children.length > 0 && (
+					<div className="mt-8 p-4 border rounded-lg">
+						<h2 className="text-xl font-bold mb-4">子ページ</h2>
+						<ul className="space-y-2">
+							{pageDetail.children.map((child) => (
+								<li key={child.id}>
+									<a
+										href={`/${locale}/user/${child.user.handle}/page/${child.slug}`}
+										className="text-blue-600 hover:underline"
+									>
+										{child.segmentBundles[0]?.segment.text || "Untitled"}
+									</a>
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
+
 				<div className="mt-8">
 					<div className="mt-8" id="comments">
 						<div className="flex items-center gap-2 py-2">

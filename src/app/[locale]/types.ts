@@ -42,6 +42,7 @@ export type PageDetail = Omit<Page, "createdAt"> & {
 	_count: {
 		pageComments: number;
 	};
+	children?: PageSummary[];
 };
 export type PageSummary = Omit<
 	PageDetail,

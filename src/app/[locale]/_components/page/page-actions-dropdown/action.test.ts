@@ -31,6 +31,8 @@ describe("togglePublishAction", () => {
 				],
 			},
 			sourceLocale: "en",
+			parentId: null,
+			order: 0,
 			status: "PUBLIC",
 			userId: mockUsers[0].id,
 		});

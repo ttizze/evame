@@ -82,6 +82,8 @@ async function seed() {
 				parentId,
 				order: nextOrder(String(parentId)),
 				slug: generateSlug(),
+				status: "PUBLIC",
+				sourceLocale: "pi",
 				mdastJson: mdastJson as unknown as Prisma.InputJsonValue,
 				userId,
 				pageSegments: {

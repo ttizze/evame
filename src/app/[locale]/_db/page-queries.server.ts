@@ -60,6 +60,8 @@ export const selectPagesWithDetails = (
 		createdAt: true,
 		status: true,
 		sourceLocale: true,
+		parentId: true,
+		order: true,
 		...selectPageRelatedFields(onlyTitle, locale, currentUserId),
 		_count: {
 			select: {
@@ -114,6 +116,13 @@ export async function fetchPageDetail(
 		where: { slug },
 		include: {
 			...selectPageRelatedFields(false, locale, currentUserId),
+			children: {
+				where: { status: "PUBLIC" },
+				orderBy: { order: "asc" },
+				include: {
+					...selectPageRelatedFields(true, locale, currentUserId),
+				},
+			},
 		},
 	});
 
@@ -121,10 +130,25 @@ export async function fetchPageDetail(
 
 	const normalized = await normalizePageSegments(page.pageSegments);
 	const segmentBundles = await toSegmentBundles("page", page.id, normalized);
+	
+	// Process children pages
+	const children = await Promise.all(
+		page.children.map(async (child) => {
+			const childNormalized = await normalizePageSegments(child.pageSegments);
+			const childSegmentBundles = await toSegmentBundles("page", child.id, childNormalized);
+			return {
+				...child,
+				createdAt: child.createdAt.toISOString(),
+				segmentBundles: childSegmentBundles,
+			};
+		})
+	);
+	
 	return {
 		...page,
 		createdAt: page.createdAt.toISOString(),
 		segmentBundles,
+		children,
 	};
 }
 
@@ -144,6 +168,7 @@ export async function fetchPaginatedPublicPageSummaries({
 	// 共通フィルタ
 	const baseWhere: Prisma.PageWhereInput = {
 		status: "PUBLIC",
+		parentId: null, // 親ページのみ表示（子ページは除外）
 	};
 
 	// 所有者のみ表示したい場合
