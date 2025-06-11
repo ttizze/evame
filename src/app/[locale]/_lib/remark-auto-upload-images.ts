@@ -1,6 +1,5 @@
 import type { Root as MdastRoot } from "mdast";
 import pLimit from "p-limit";
-import sharp from "sharp";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 import { fileFromUrl } from "./file-from-url";
@@ -17,17 +16,7 @@ export const remarkAutoUploadImages: Plugin<[]> = () => {
 			tasks.push(
 				limit(async () => {
 					const file = await fileFromUrl(node.url);
-
-					// 例：サーバで再エンコードして 2 MB 以下に
-					const buf = await sharp(Buffer.from(await file.arrayBuffer()))
-						.resize({ width: 2560, withoutEnlargement: true })
-						.jpeg({ quality: 80, mozjpeg: true })
-						.toBuffer();
-
-					const jpegName = file.name.replace(/\.[^.]+$/, ".jpg");
-					const compact = new File([buf], jpegName, { type: "image/jpeg" });
-
-					const result = await uploadImage(compact);
+					const result = await uploadImage(file);
 					if (result.success) {
 						node.url = result.data.imageUrl;
 					} else {

@@ -1,7 +1,9 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import type { ActionResponse } from "@/app/types";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import sharp from "sharp";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -32,7 +34,7 @@ const s3Client = new S3Client(
 );
 
 async function uploadToR2(file: File): Promise<string> {
-	const key = `uploads/${Date.now()}-${file.name}`;
+	const key = `uploads/${Date.now()}-${randomUUID()}`;
 	const arrayBuffer = await file.arrayBuffer();
 
 	const command = new PutObjectCommand({
@@ -61,16 +63,28 @@ export async function uploadImage(file: File): Promise<UploadImageResult> {
 		if (!file.type.startsWith("image/")) {
 			return { success: false, message: "Please select a valid image file" };
 		}
-
 		const maxSize = 5 * 1024 * 1024;
-		if (file.size > maxSize) {
+
+		const processed: File =
+			file.type === "image/svg+xml"
+				? file // ベクタは変換不要
+				: await (async () => {
+						const buf = await sharp(Buffer.from(await file.arrayBuffer()))
+							.resize({ width: 2560, withoutEnlargement: true })
+							.jpeg({ quality: 80, mozjpeg: true })
+							.toBuffer();
+						return new File([buf], file.name.replace(/\.[^.]+$/, ".jpg"), {
+							type: "image/jpeg",
+						});
+					})();
+
+		if (processed.size > maxSize) {
 			return {
 				success: false,
-				message: "Image file size must be less than 5MB",
+				message: "Image must be < 5 MB after processing",
 			};
 		}
-
-		const imageUrl = await uploadToR2(file);
+		const imageUrl = await uploadToR2(processed);
 
 		return {
 			success: true,
