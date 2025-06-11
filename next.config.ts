@@ -25,12 +25,22 @@ const config: NextConfig = {
 	},
 	images: {
 		minimumCacheTTL: 86400,
+		loader: "custom",
+		loaderFile: "./src/lib/cloudflare-loader.ts",
+
 		remotePatterns: [
 			{
 				protocol: "https",
 				hostname: "images.eveeve.org",
 				port: "",
 				pathname: "/uploads/**",
+				search: "",
+			},
+			{
+				protocol: "https",
+				hostname: "images.evame.tech",
+				port: "",
+				pathname: "/cdn-cgi/image/**",
 				search: "",
 			},
 			{

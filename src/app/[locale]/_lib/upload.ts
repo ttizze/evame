@@ -44,7 +44,7 @@ async function uploadToR2(file: File): Promise<string> {
 
 	await s3Client.send(command);
 	return isProduction
-		? `https://images.eveeve.org/${key}`
+		? `https://images.evame.tech/${key}`
 		: `http://localhost:9000/${R2_BUCKET_NAME}/${key}`;
 }
 type UploadImageResult = ActionResponse<

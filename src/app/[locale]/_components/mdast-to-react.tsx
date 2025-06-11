@@ -38,7 +38,6 @@ const ImgComponent: ComponentType<JSX.IntrinsicElements["img"]> = (props) => (
 		height={props.height ? Number(props.height) : 300}
 		className="h-auto w-auto max-w-full"
 		priority={false}
-		unoptimized
 	/>
 );
 
