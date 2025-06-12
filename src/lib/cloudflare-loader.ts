@@ -11,8 +11,8 @@ function normalizePath(src: string): string {
 	}
 }
 function appendParams(url: string, width: number, q: number) {
-  const sep = url.includes("?") ? "&" : "?";
-  return `${url}${sep}w=${width}&q=${q}`;
+	const sep = url.includes("?") ? "&" : "?";
+	return `${url}${sep}w=${width}&q=${q}`;
 }
 export default function cloudflareLoader({
 	src,
@@ -33,5 +33,5 @@ export default function cloudflareLoader({
 		return `https://${host}/cdn-cgi/image/width=${width},quality=${q},format=auto${safePath}`;
 	}
 
-  return appendParams(safePath, width, q);
+	return appendParams(safePath, width, q);
 }
