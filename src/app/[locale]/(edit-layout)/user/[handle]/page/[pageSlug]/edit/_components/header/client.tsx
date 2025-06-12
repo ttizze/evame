@@ -37,6 +37,25 @@ const BUTTON_BASE_CLASSES =
 const MENU_BUTTON_CLASSES = `${BUTTON_BASE_CLASSES} text-sm px-3 py-2 cursor-pointer hover:bg-transparent disabled:opacity-50 disabled:pointer-events-none `;
 const ICON_CLASSES = "w-4 h-4";
 
+function SaveButton({ hasUnsavedChanges }: { hasUnsavedChanges: boolean }) {
+	return (
+		<Button
+			type="submit"
+			variant="ghost"
+			size="sm"
+			className="rounded-full hover:bg-secondary/80"
+			disabled={!hasUnsavedChanges}
+			data-testid="save-button"
+		>
+			{hasUnsavedChanges ? (
+				<Loader2 className={`${ICON_CLASSES} animate-spin`} />
+			) : (
+				<CloudCheck className={ICON_CLASSES} data-testid="save-button-check" />
+			)}
+		</Button>
+	);
+}
+
 export function EditHeader({
 	currentUser,
 	initialStatus,
@@ -56,14 +75,6 @@ export function EditHeader({
 	);
 	useTranslationJobToast(toastJobs);
 
-	const renderButtonIcon = () => {
-		if (hasUnsavedChanges) {
-			return <Loader2 className={`${ICON_CLASSES} animate-spin`} />;
-		}
-		return (
-			<CloudCheck className={ICON_CLASSES} data-testid="save-button-check" />
-		);
-	};
 	const renderStatusIcon = () => {
 		if (isPending) {
 			return <Loader2 className={`${ICON_CLASSES} animate-spin`} />;
@@ -76,16 +87,7 @@ export function EditHeader({
 	};
 	const leftExtra = (
 		<>
-			<Button
-				type="submit"
-				variant="ghost"
-				size="sm"
-				className="rounded-full hover:bg-secondary/80"
-				disabled={!hasUnsavedChanges}
-				data-testid="save-button"
-			>
-				{renderButtonIcon()}
-			</Button>
+			<SaveButton hasUnsavedChanges={hasUnsavedChanges} />
 			<input type="hidden" name="status" value={initialStatus} />
 		</>
 	);
@@ -120,7 +122,7 @@ export function EditHeader({
 								className={MENU_BUTTON_CLASSES}
 								disabled={isPending}
 							>
-								{isPending ? (
+								{isPending && initialStatus === "DRAFT" ? (
 									<>
 										<Loader2 className={`${ICON_CLASSES} animate-spin`} />
 										<span>Processing...</span>
@@ -184,7 +186,7 @@ export function EditHeader({
 						disabled={initialStatus === "DRAFT" || isPending}
 					>
 						<input type="hidden" name="status" value="DRAFT" />
-						{isPending ? (
+						{isPending && initialStatus === "PUBLIC" ? (
 							<>
 								<Loader2 className={`${ICON_CLASSES} animate-spin`} />
 								<span>Processing...</span>
