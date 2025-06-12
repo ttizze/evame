@@ -2,7 +2,7 @@ import type { ImageLoaderProps } from "next/image";
 
 const host = process.env.NEXT_PUBLIC_CF_IMAGE_HOST ?? "images.evame.tech";
 
-function normalizePath(src: string): string {
+function toSafePath(src: string): string {
 	try {
 		const { pathname } = new URL(src);
 		return pathname.startsWith("/") ? pathname : `/${pathname}`;
@@ -25,13 +25,13 @@ export default function cloudflareLoader({
 		return appendParams(src, width, q);
 	}
 
-	/* ② 以降は今まで通り */
-	const rawPath = normalizePath(src);
-	const safePath = encodeURI(rawPath);
+	const isInternal = src.includes("evame") || src.includes("eveeve");
 
-	if (safePath.startsWith("/uploads/")) {
+	if (isInternal) {
+		const safePath = toSafePath(src);
 		return `https://${host}/cdn-cgi/image/width=${width},quality=${q},format=auto${safePath}`;
 	}
 
-	return appendParams(safePath, width, q);
+	// 3. それ以外はそのままパススルー
+	return appendParams(src, width, q);
 }
