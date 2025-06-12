@@ -10,22 +10,28 @@ function normalizePath(src: string): string {
 		return src.startsWith("/") ? src : `/${src}`;
 	}
 }
-
+function appendParams(url: string, width: number, q: number) {
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}w=${width}&q=${q}`;
+}
 export default function cloudflareLoader({
 	src,
 	width,
 	quality,
 }: ImageLoaderProps) {
 	/* ① ローカル（MinIO 等）の URL はそのまま返す */
-	if (src.startsWith("http://localhost")) return src;
-
-	/* ② 以降は今まで通り */
-	const path = normalizePath(src);
 	const q = quality ?? 75;
-
-	if (path.startsWith("/uploads/")) {
-		return `https://${host}/cdn-cgi/image/width=${width},quality=${q},format=auto${path}`;
+	if (src.startsWith("http://localhost")) {
+		return appendParams(src, width, q);
 	}
 
-	return path; // SVG や /icons/... など
+	/* ② 以降は今まで通り */
+	const rawPath = normalizePath(src);
+	const safePath = encodeURI(rawPath);
+
+	if (safePath.startsWith("/uploads/")) {
+		return `https://${host}/cdn-cgi/image/width=${width},quality=${q},format=auto${safePath}`;
+	}
+
+  return appendParams(safePath, width, q);
 }
