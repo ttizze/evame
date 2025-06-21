@@ -6,6 +6,7 @@ import { Markdown } from "tiptap-markdown";
 import { CustomImage } from "./custom-image";
 import { X } from "./extensions/x-embed";
 import { handleFileUpload } from "./use-file-upload";
+
 export function configureEditor(initialContent: string, placeholder: string) {
 	return {
 		immediatelyRender: false,
@@ -54,6 +55,16 @@ export function configureEditor(initialContent: string, placeholder: string) {
 		],
 		content: initialContent,
 		editorProps: {
+			transformPastedHTML(html: string) {
+				// 1) 改行文字を `<br>` に正規化
+				let processed = html.replace(/\r?\n/g, "<br>");
+				// 2) `<br>` が2つ以上連続する箇所を段落分割ポイントとして `</p><p>` に変換
+				processed = processed.replace(/(<br\b[^>]*>\s*){2,}/gi, "</p><p>");
+				// 3) 単一の `<br>` はそのまま残す（普通の改行として扱う）
+				// 4) 全体を `<p>` でラップ
+				const wrapped = `<p>${processed}</p>`;
+				return wrapped;
+			},
 			attributes: {
 				class: "focus:outline-hidden",
 			},
