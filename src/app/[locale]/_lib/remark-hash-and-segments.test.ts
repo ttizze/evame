@@ -141,7 +141,9 @@ describe("remarkHashAndSegments", () => {
 		expect(texts.some((t: string) => t.includes("Text with"))).toBe(true);
 		expect(texts.some((t: string) => t.includes("inline image"))).toBe(true);
 		// alt属性は含まれない（includeImageAlt: falseの効果）
-		expect(texts.some((t: string) => t.includes("important description"))).toBe(false);
+		expect(texts.some((t: string) => t.includes("important description"))).toBe(
+			false,
+		);
 		// 画像URLも含まれない
 		expect(texts.some((t: string) => t.includes("image.jpg"))).toBe(false);
 	});

@@ -80,7 +80,9 @@ export const remarkHashAndSegments =
 				if (hasNestedBlock) return;
 
 				/* テキスト抽出（画像のalt属性は除外） */
-				const merged = mdastToString(typedNode, { includeImageAlt: false }).trim();
+				const merged = mdastToString(typedNode, {
+					includeImageAlt: false,
+				}).trim();
 				if (!merged) return;
 
 				/* ハッシュ生成 */
