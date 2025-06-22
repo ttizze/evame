@@ -20,7 +20,7 @@ export default defineConfig({
 		setupFiles: "./vitest.setup.ts",
 		server: {
 			deps: {
-				inline: ["next-auth", "next-intl"],
+				inline: ["next-auth", "next-intl", "react-tweet"],
 			},
 		},
 	},

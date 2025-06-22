@@ -23,8 +23,9 @@ export function Editor({
 	placeholder,
 }: EditorProps) {
 	const editorRef = useRef<HTMLInputElement>(null);
+	const baseConfig = configureEditor(defaultValue, placeholder);
 	const editor = useEditor({
-		...configureEditor(defaultValue, placeholder),
+		...baseConfig,
 		onCreate: ({ editor }) => {
 			if (editorRef.current) {
 				editorRef.current.value = editor.getHTML();
@@ -35,7 +36,9 @@ export function Editor({
 			onEditorUpdate?.(editor);
 		},
 		editorProps: {
+			...baseConfig.editorProps,
 			attributes: {
+				...baseConfig.editorProps?.attributes,
 				"data-testid": "tiptap-editor",
 				class: className,
 			},
