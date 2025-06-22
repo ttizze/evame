@@ -196,7 +196,7 @@ describe("htmlToMdastWithSegments", () => {
 		expect(segmentTexts).toContain("Unordered list item 2");
 		expect(segmentTexts).toContain("Ordered list item 1");
 		expect(segmentTexts).toContain("Ordered list item 2");
-		expect(segmentTexts).toContain("Paragraph with Test image embedded image");
+		expect(segmentTexts).toContain("Paragraph with  embedded image");
 		expect(segmentTexts).toContain("Paragraph after horizontal rule");
 
 		// Check MDAST structure for various elements

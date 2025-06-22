@@ -125,5 +125,24 @@ describe("remarkHashAndSegments", () => {
 		expect(texts).toContain("B");
 		// 画像altやURLがsegmentに含まれないこと
 		expect(texts.some((t: string) => t.includes("image.png"))).toBe(false);
+		// alt属性もsegmentに含まれないこと（includeImageAlt: falseの効果）
+		expect(texts.some((t: string) => t.includes("alt"))).toBe(false);
+	});
+
+	it("段落内の画像alt属性は翻訳対象にならない", async () => {
+		const md = "Text with ![important description](image.jpg) inline image.";
+		const file = (await remark()
+			.use(remarkHashAndSegments())
+			.process(md)) as VFile & { data: { segments: SegmentDraft[] } };
+		const texts = (file.data.segments as SegmentDraft[]).map(
+			(s: SegmentDraft) => s.text,
+		);
+		// テキスト部分は含まれる
+		expect(texts.some((t: string) => t.includes("Text with"))).toBe(true);
+		expect(texts.some((t: string) => t.includes("inline image"))).toBe(true);
+		// alt属性は含まれない（includeImageAlt: falseの効果）
+		expect(texts.some((t: string) => t.includes("important description"))).toBe(false);
+		// 画像URLも含まれない
+		expect(texts.some((t: string) => t.includes("image.jpg"))).toBe(false);
 	});
 });
