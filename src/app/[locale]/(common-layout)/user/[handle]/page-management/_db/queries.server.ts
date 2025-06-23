@@ -70,3 +70,20 @@ export async function fetchPaginatedOwnPages(
 export type PageWithTitle = Awaited<
 	ReturnType<typeof fetchPaginatedOwnPages>
 >["pagesWithTitle"][number];
+
+export async function fetchPageViewCounts(pageIds: number[]) {
+	if (pageIds.length === 0) return {} as Record<number, number>;
+
+	const views = await prisma.pageView.findMany({
+		where: { pageId: { in: pageIds } },
+		select: { pageId: true, count: true },
+	});
+
+	return views.reduce(
+		(acc, v) => {
+			acc[v.pageId] = v.count;
+			return acc;
+		},
+		{} as Record<number, number>,
+	);
+}

@@ -4,6 +4,7 @@ import { fetchLatestPageTranslationJobs } from "@/app/[locale]/_db/page-queries.
 import { getCurrentUser } from "@/auth";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { incrementPageView } from "../_db/mutations.server";
 import { fetchLatestUserTranslationJob } from "../_db/queries.server";
 
 export const fetchPageContext = cache(async (slug: string, locale: string) => {
@@ -31,6 +32,12 @@ export const fetchPageContext = cache(async (slug: string, locale: string) => {
 		fetchLatestPageTranslationJobs(pageDetail.id),
 		fetchLatestUserTranslationJob(pageDetail.id, currentUser?.id ?? "0"),
 	]);
+
+	// 非同期にビューカウントをインクリメント（待たない）
+	if (pageDetail) {
+		void incrementPageView(pageDetail.id);
+	}
+
 	return {
 		pageDetail,
 		title,

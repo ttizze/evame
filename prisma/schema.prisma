@@ -9,51 +9,52 @@ datasource db {
 }
 
 model User {
-  id                                    String                                 @id @default(cuid())
-  handle                                String                                 @unique @default(cuid())
-  email                                 String                                 @unique
-  name                                  String
-  image                                 String
-  profile                               String                                 @default("")
-  twitterHandle                         String                                 @default("")
-  plan                                  String                                 @default("free")
-  totalPoints                           Int                                    @default(0) @map("total_points")
-  isAI                                  Boolean                                @default(false) @map("is_ai")
-  provider                              String                                 @default("Credentials")
-  createdAt                             DateTime                               @default(now()) @map("created_at")
-  updatedAt                             DateTime                               @updatedAt @map("updated_at")
-  emailVerified                         DateTime?
-  credential                            UserCredential?
-  geminiApiKey                          GeminiApiKey?
-  pages                                 Page[]
-  pageSegmentsTranslations              PageSegmentTranslation[]
-  votes                                 Vote[]
-  likePages                             LikePage[]
-  followers                             Follow[]                               @relation("following")
-  following                             Follow[]                               @relation("follower")
-  pageComments                          PageComment[]
-  pageCommentSegmentTranslations        PageCommentSegmentTranslation[]
-  pageCommentSegmentTranslationVotes    PageCommentSegmentTranslationVote[]
-  accounts                              Account[]
-  sessions                              Session[]
-  notifications                         Notification[]                         @relation("UserNotifications")
-  actedNotifications                    Notification[]                         @relation("NotificationActor")
-  translationJobs                       TranslationJob[]
-  userSettings                          UserSetting?
+  id                                 String                              @id @default(cuid())
+  handle                             String                              @unique @default(cuid())
+  email                              String                              @unique
+  name                               String
+  image                              String
+  profile                            String                              @default("")
+  twitterHandle                      String                              @default("")
+  plan                               String                              @default("free")
+  totalPoints                        Int                                 @default(0) @map("total_points")
+  isAI                               Boolean                             @default(false) @map("is_ai")
+  provider                           String                              @default("Credentials")
+  createdAt                          DateTime                            @default(now()) @map("created_at")
+  updatedAt                          DateTime                            @updatedAt @map("updated_at")
+  emailVerified                      DateTime?
+  credential                         UserCredential?
+  geminiApiKey                       GeminiApiKey?
+  pages                              Page[]
+  pageSegmentsTranslations           PageSegmentTranslation[]
+  votes                              Vote[]
+  likePages                          LikePage[]
+  followers                          Follow[]                            @relation("following")
+  following                          Follow[]                            @relation("follower")
+  pageComments                       PageComment[]
+  pageCommentSegmentTranslations     PageCommentSegmentTranslation[]
+  pageCommentSegmentTranslationVotes PageCommentSegmentTranslationVote[]
+  accounts                           Account[]
+  sessions                           Session[]
+  notifications                      Notification[]                      @relation("UserNotifications")
+  actedNotifications                 Notification[]                      @relation("NotificationActor")
+  translationJobs                    TranslationJob[]
+  userSettings                       UserSetting?
 
   @@map("users")
 }
 
 model UserSetting {
-  id        Int    @id @default(autoincrement())
-  userId    String @unique @map("user_id")
-  user      User   @relation(fields: [userId], references: [id])
+  id            Int      @id @default(autoincrement())
+  userId        String   @unique @map("user_id")
+  user          User     @relation(fields: [userId], references: [id])
   targetLocales String[] @default([]) @map("target_locales")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("user_settings")
 }
+
 model UserCredential {
   id       Int    @id @default(autoincrement())
   password String
@@ -96,10 +97,10 @@ enum TranslationStatus {
 }
 
 model TranslationJob {
-  id        Int      @id @default(autoincrement())
-  pageId    Int
+  id     Int  @id @default(autoincrement())
+  pageId Int
   // リレーション
-  page      Page    @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  page   Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   userId    String?
   user      User?             @relation(fields: [userId], references: [id])
@@ -121,13 +122,13 @@ enum PageStatus {
 }
 
 model Page {
-  id              Int              @id @default(autoincrement())
-  parentId        Int?             @map("parent_id")
-  parent          Page?            @relation("ParentPage", fields: [parentId], references: [id])
-  children        Page[]           @relation("ParentPage")
+  id       Int    @id @default(autoincrement())
+  parentId Int?   @map("parent_id")
+  parent   Page?  @relation("ParentPage", fields: [parentId], references: [id])
+  children Page[] @relation("ParentPage")
 
-  slug            String           @unique
-  order      Int          @default(0)
+  slug  String @unique
+  order Int    @default(0)
 
   mdastJson       Json             @map("mdast_json")
   sourceLocale    String           @default("unknown") @map("source_locale")
@@ -142,6 +143,7 @@ model Page {
   pageComments    PageComment[]
   notifications   Notification[]
   translationJobs TranslationJob[]
+  pageView        PageView?
 
   @@index([parentId])
   @@index([createdAt])
@@ -149,6 +151,13 @@ model Page {
   @@index([userId])
   @@index([slug])
   @@map("pages")
+}
+
+model PageView {
+  pageId Int @id
+  count  Int @default(0)
+
+  page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
 }
 
 model PageSegment {
@@ -322,7 +331,6 @@ model PageCommentSegmentTranslationVote {
   @@map("page_comment_segment_translation_votes")
 }
 
-
 model Account {
   userId            String
   type              String
@@ -358,18 +366,18 @@ model Notification {
   read      Boolean          @default(false)
   createdAt DateTime         @default(now()) @map("created_at")
 
-  pageId                             Int? @map("page_id")
-  pageCommentId                      Int? @map("page_comment_id")
-  pageSegmentTranslationId           Int? @map("page_segment_translation_id")
-  pageCommentSegmentTranslationId    Int? @map("page_comment_segment_translation_id")
+  pageId                          Int? @map("page_id")
+  pageCommentId                   Int? @map("page_comment_id")
+  pageSegmentTranslationId        Int? @map("page_segment_translation_id")
+  pageCommentSegmentTranslationId Int? @map("page_comment_segment_translation_id")
 
   user  User @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
   actor User @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
 
-  page                             Page?                             @relation(fields: [pageId], references: [id])
-  pageComment                      PageComment?                      @relation(fields: [pageCommentId], references: [id])
-  pageSegmentTranslation           PageSegmentTranslation?           @relation(fields: [pageSegmentTranslationId], references: [id])
-  pageCommentSegmentTranslation    PageCommentSegmentTranslation?    @relation(fields: [pageCommentSegmentTranslationId], references: [id])
+  page                          Page?                          @relation(fields: [pageId], references: [id])
+  pageComment                   PageComment?                   @relation(fields: [pageCommentId], references: [id])
+  pageSegmentTranslation        PageSegmentTranslation?        @relation(fields: [pageSegmentTranslationId], references: [id])
+  pageCommentSegmentTranslation PageCommentSegmentTranslation? @relation(fields: [pageCommentSegmentTranslationId], references: [id])
 
   @@index([userId])
   @@index([actorId])

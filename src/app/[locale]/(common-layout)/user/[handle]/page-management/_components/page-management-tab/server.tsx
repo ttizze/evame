@@ -1,14 +1,9 @@
-import dynamic from "next/dynamic";
-import { fetchPaginatedOwnPages } from "../../_db/queries.server";
+import {
+	fetchPageViewCounts,
+	fetchPaginatedOwnPages,
+} from "../../_db/queries.server";
 import { PageManagementTabClient } from "./client";
 
-const DynamicPageViewCounter = dynamic(
-	() =>
-		import("../page-view-data/view-data").then((mod) => mod.PageViewCounter),
-	{
-		loading: () => <span>Loading...</span>,
-	},
-);
 interface PageManagementTabProps {
 	currentUserId: string;
 	locale: string;
@@ -26,16 +21,17 @@ export async function PageManagementTab({
 }: PageManagementTabProps) {
 	const { pagesWithTitle, totalPages, currentPage } =
 		await fetchPaginatedOwnPages(currentUserId, locale, page, 10, query);
+
+	const counts = await fetchPageViewCounts(pagesWithTitle.map((p) => p.id));
+
 	const pageViewCounters = pagesWithTitle.reduce(
 		(acc, pageData) => {
-			const path = `/user/${handle}/page/${pageData.slug}`;
-			acc[pageData.id] = (
-				<DynamicPageViewCounter key={pageData.id} path={path} />
-			);
+			acc[pageData.id] = <span>{counts[pageData.id] ?? 0}</span>;
 			return acc;
 		},
 		{} as Record<string, React.ReactNode>,
 	);
+
 	return (
 		<PageManagementTabClient
 			pagesWithTitle={pagesWithTitle}
