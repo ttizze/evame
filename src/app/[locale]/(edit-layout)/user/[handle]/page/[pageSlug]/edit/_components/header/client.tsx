@@ -70,6 +70,7 @@ export function EditHeader({
 		FormData
 	>(editPageStatusAction, { success: false });
 	const currentPagePath = usePathname();
+	const { pageSlug } = useParams<{ pageSlug?: string }>();
 	const pagePath = `/${currentPagePath.split("/").slice(2, -1).join("/")}`;
 	//editページはiphoneSafari対応のため､baseHeaderとは別でスクロール管理が必要
 	const { isVisible } = useHeaderVisibility();
@@ -77,7 +78,6 @@ export function EditHeader({
 		state.success ? (state.data?.translationJobs ?? []) : [],
 	);
 	useTranslationJobToast(toastJobs);
-	const { pageSlug } = useParams<{ pageSlug?: string }>();
 
 	const isPublic = initialStatus === "PUBLIC";
 
