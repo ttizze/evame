@@ -22,7 +22,7 @@ import {
 	Lock,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useActionState } from "react";
+import { useActionState, useMemo } from "react";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
 
@@ -36,6 +36,8 @@ const BUTTON_BASE_CLASSES =
 	"flex items-center gap-2 rounded-full  transition-colors justify-start duration-200";
 const MENU_BUTTON_CLASSES = `${BUTTON_BASE_CLASSES} text-sm px-3 py-2 cursor-pointer hover:bg-transparent disabled:opacity-50 disabled:pointer-events-none `;
 const ICON_CLASSES = "w-4 h-4";
+const ICON_SPIN_CLASSES = `${ICON_CLASSES} animate-spin`;
+const PROCESSING_TEXT = "Processing...";
 
 function SaveButton({ hasUnsavedChanges }: { hasUnsavedChanges: boolean }) {
 	return (
@@ -48,7 +50,7 @@ function SaveButton({ hasUnsavedChanges }: { hasUnsavedChanges: boolean }) {
 			data-testid="save-button"
 		>
 			{hasUnsavedChanges ? (
-				<Loader2 className={`${ICON_CLASSES} animate-spin`} />
+				<Loader2 className={ICON_SPIN_CLASSES} />
 			) : (
 				<CloudCheck className={ICON_CLASSES} data-testid="save-button-check" />
 			)}
@@ -75,16 +77,19 @@ export function EditHeader({
 	);
 	useTranslationJobToast(toastJobs);
 
-	const renderStatusIcon = () => {
+	const isPublic = initialStatus === "PUBLIC";
+
+	const statusIcon = useMemo(() => {
 		if (isPending) {
-			return <Loader2 className={`${ICON_CLASSES} animate-spin`} />;
+			return <Loader2 className={ICON_SPIN_CLASSES} />;
 		}
-		return initialStatus === "PUBLIC" ? (
+		return isPublic ? (
 			<Globe className={ICON_CLASSES} />
 		) : (
 			<Lock className={ICON_CLASSES} />
 		);
-	};
+	}, [isPending, isPublic]);
+
 	const leftExtra = (
 		<>
 			<SaveButton hasUnsavedChanges={hasUnsavedChanges} />
@@ -100,10 +105,10 @@ export function EditHeader({
 					className={BUTTON_BASE_CLASSES}
 					disabled={isPending || !pageId}
 				>
-					{renderStatusIcon()}
+					{statusIcon}
 					<span>
 						{isPending
-							? "Processing..."
+							? PROCESSING_TEXT
 							: initialStatus === "PUBLIC"
 								? "Public"
 								: "Private"}
@@ -124,7 +129,7 @@ export function EditHeader({
 							>
 								{isPending && initialStatus === "DRAFT" ? (
 									<>
-										<Loader2 className={`${ICON_CLASSES} animate-spin`} />
+										<Loader2 className={ICON_SPIN_CLASSES} />
 										<span>Processing...</span>
 									</>
 								) : initialStatus === "PUBLIC" ? (
@@ -188,7 +193,7 @@ export function EditHeader({
 						<input type="hidden" name="status" value="DRAFT" />
 						{isPending && initialStatus === "PUBLIC" ? (
 							<>
-								<Loader2 className={`${ICON_CLASSES} animate-spin`} />
+								<Loader2 className={ICON_SPIN_CLASSES} />
 								<span>Processing...</span>
 							</>
 						) : (
