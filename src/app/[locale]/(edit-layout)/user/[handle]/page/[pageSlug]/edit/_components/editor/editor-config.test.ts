@@ -160,7 +160,7 @@ describe("editor-config", () => {
 			const html = '<p><br><br class="ProseMirror-trailingBreak"></p>';
 			expect(transformFn(html)).toBe("<p></p>");
 		});
-	
+
 		it("keeps paragraph with real content and converts consecutive br to paragraph break", () => {
 			const html = "<p>foo<br><br>bar</p>";
 			// 連続<br>で段落分割され、空段落は削除される
