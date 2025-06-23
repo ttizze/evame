@@ -66,17 +66,18 @@ describe("handlePageAutoTranslation()", () => {
 		await handlePageAutoTranslation({
 			...baseParams,
 			sourceLocale,
+			targetLocales: ["en", "zh"],
 			dependencies: deps,
 		});
 
 		expect(spies.createTranslationJob).toHaveBeenCalledWith(
-			expect.objectContaining({ locale: targetLocale }),
+			expect.objectContaining({ locale: "en" }),
 		);
 
 		expect(spies.fetchTranslateAPI).toHaveBeenCalledWith(
 			expect.any(String),
 			expect.objectContaining({
-				targetLocale,
+				targetLocale: "en",
 				title: page.title,
 				numberedElements: page.pageSegments,
 			}),
@@ -93,6 +94,7 @@ describe("handlePageAutoTranslation()", () => {
 			handlePageAutoTranslation({
 				...baseParams,
 				sourceLocale: "en",
+				targetLocales: ["en", "zh"],
 				dependencies: deps,
 			}),
 		).rejects.toThrow("Page not found");
@@ -108,16 +110,17 @@ describe("handlePageAutoTranslation()", () => {
 		await handlePageAutoTranslation({
 			...baseParams,
 			sourceLocale: "en",
+			targetLocales: ["en", "zh"],
 			dependencies: deps,
 		});
 
-		for (const locale of ["ja", "zh", "ko"]) {
+		for (const locale of ["ja", "zh"]) {
 			expect(spies.fetchTranslateAPI).toHaveBeenCalledWith(
 				expect.any(String),
-				expect.objectContaining({ targetLocale: locale }),
+				expect.objectContaining({ targetLocale: "en" }),
 			);
 		}
-		expect(spies.delay).toHaveBeenCalledTimes(3);
+		expect(spies.delay).toHaveBeenCalledTimes(2);
 	});
 });
 
@@ -148,6 +151,7 @@ describe("handlePageCommentAutoTranslation()", () => {
 
 		await handlePageCommentAutoTranslation({
 			...commentParams,
+			targetLocales: ["en", "zh"],
 			dependencies: deps,
 		});
 
@@ -155,7 +159,6 @@ describe("handlePageCommentAutoTranslation()", () => {
 			expect.any(String),
 			expect.objectContaining({
 				pageCommentId: 789,
-				targetLocale: "ja",
 			}),
 		);
 	});
@@ -171,6 +174,7 @@ describe("handlePageCommentAutoTranslation()", () => {
 		await expect(
 			handlePageCommentAutoTranslation({
 				...commentParams,
+				targetLocales: ["en", "zh"],
 				dependencies: deps,
 			}),
 		).rejects.toThrow("Comment not found");
@@ -183,6 +187,7 @@ describe("handlePageCommentAutoTranslation()", () => {
 		await expect(
 			handlePageCommentAutoTranslation({
 				...commentParams,
+				targetLocales: ["en", "zh"],
 				dependencies: deps,
 			}),
 		).rejects.toThrow("Page not found");

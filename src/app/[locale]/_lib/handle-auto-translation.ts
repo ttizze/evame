@@ -84,12 +84,9 @@ const limit = pLimit(CONCURRENCY);
 async function handleAutoTranslation<T extends TranslationParams>(
 	params: T,
 	deps: TranslationDependencies,
+	targetLocales: string[],
 ): Promise<TranslationJobForTranslationAPI[]> {
 	const strategy = STRATEGY_TABLE[params.type] as TranslationStrategy<T>;
-
-	const targetLocales = ["en", "ja", "zh", "ko"].filter(
-		(l) => l !== params.sourceLocale,
-	);
 
 	const results = await Promise.all(
 		targetLocales.map((locale) =>
@@ -116,8 +113,10 @@ export async function handlePageAutoTranslation({
 	pageId,
 	sourceLocale,
 	geminiApiKey,
+	targetLocales,
 	dependencies = {},
 }: Omit<PageTranslationParams, "type"> & {
+	targetLocales: string[];
 	dependencies?: Partial<TranslationDependencies>;
 }): Promise<TranslationJobForTranslationAPI[]> {
 	const deps: TranslationDependencies = {
@@ -134,6 +133,7 @@ export async function handlePageAutoTranslation({
 			geminiApiKey,
 		},
 		deps,
+		targetLocales,
 	);
 }
 // プロジェクト翻訳のためのヘルパー関数
@@ -144,8 +144,10 @@ export async function handlePageCommentAutoTranslation({
 	pageCommentId,
 	sourceLocale,
 	geminiApiKey,
+	targetLocales,
 	dependencies = {},
 }: Omit<PageCommentTranslationParams, "type"> & {
+	targetLocales: string[];
 	dependencies?: Partial<TranslationDependencies>;
 }): Promise<TranslationJobForTranslationAPI[]> {
 	const deps: TranslationDependencies = {
@@ -163,5 +165,6 @@ export async function handlePageCommentAutoTranslation({
 			geminiApiKey,
 		},
 		deps,
+		targetLocales,
 	);
 }

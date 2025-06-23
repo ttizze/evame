@@ -69,6 +69,7 @@ export const commentAction = createActionFactory<
 			pageId,
 			sourceLocale: locale,
 			geminiApiKey: process.env.GEMINI_API_KEY ?? "",
+			targetLocales: ["en", "zh"],
 		});
 		return {
 			success: true,

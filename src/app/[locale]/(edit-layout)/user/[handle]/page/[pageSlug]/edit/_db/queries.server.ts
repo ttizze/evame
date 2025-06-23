@@ -40,3 +40,11 @@ export async function getAllTagsWithCount() {
 export type TagWithCount = Awaited<
 	ReturnType<typeof getAllTagsWithCount>
 >[number];
+
+export async function getUserTargetLocales(userId: string) {
+	const setting = await prisma.userSetting.findUnique({
+		where: { userId },
+		select: { targetLocales: true },
+	});
+	return setting?.targetLocales ?? ["en", "zh"];
+}

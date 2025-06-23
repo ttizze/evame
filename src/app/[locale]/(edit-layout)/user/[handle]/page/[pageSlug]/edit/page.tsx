@@ -7,20 +7,24 @@ import { EditPageClient } from "./_components/edit-page-client";
 import {
 	getAllTagsWithCount,
 	getPageWithTitleAndTagsBySlug,
+	getUserTargetLocales,
 } from "./_db/queries.server";
+
 type Params = Promise<{ locale: string; handle: string; pageSlug: string }>;
 
 const getPageData = cache(async (handle: string, pageSlug: string) => {
 	if (!handle || !pageSlug) notFound();
 
 	const currentUser = await getCurrentUser();
-	if (currentUser?.handle !== handle) {
+	if (currentUser?.handle !== handle || !currentUser?.id) {
 		return notFound();
 	}
-	const [pageWithTitleAndTags, allTagsWithCount] = await Promise.all([
-		getPageWithTitleAndTagsBySlug(pageSlug),
-		getAllTagsWithCount(),
-	]);
+	const [pageWithTitleAndTags, allTagsWithCount, targetLocales] =
+		await Promise.all([
+			getPageWithTitleAndTagsBySlug(pageSlug),
+			getAllTagsWithCount(),
+			getUserTargetLocales(currentUser.id),
+		]);
 	const title = pageWithTitleAndTags?.pageSegments.find(
 		(pageSegment) => pageSegment.number === 0,
 	)?.text;
@@ -29,6 +33,7 @@ const getPageData = cache(async (handle: string, pageSlug: string) => {
 		pageWithTitleAndTags,
 		allTagsWithCount,
 		title,
+		targetLocales,
 	};
 });
 
@@ -53,8 +58,13 @@ export default async function EditPage({
 	params: Params;
 }) {
 	const { locale, handle, pageSlug } = await params;
-	const { currentUser, pageWithTitleAndTags, allTagsWithCount, title } =
-		await getPageData(handle, pageSlug);
+	const {
+		currentUser,
+		pageWithTitleAndTags,
+		allTagsWithCount,
+		title,
+		targetLocales,
+	} = await getPageData(handle, pageSlug);
 	const { html } = await mdastToHtml({
 		mdastJson: pageWithTitleAndTags?.mdastJson ?? {},
 	});
@@ -68,6 +78,7 @@ export default async function EditPage({
 			pageSlug={pageSlug}
 			userLocale={locale}
 			html={html}
+			targetLocales={targetLocales}
 		/>
 	);
 }
