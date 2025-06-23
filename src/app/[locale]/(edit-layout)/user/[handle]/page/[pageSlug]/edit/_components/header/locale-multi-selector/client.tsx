@@ -20,7 +20,7 @@ interface LocaleMultiSelectorProps {
 }
 
 export function LocaleMultiSelector({
-	defaultValue = ["en", "zh"],
+	defaultValue = ["en"],
 	onChange,
 	className,
 }: LocaleMultiSelectorProps) {
@@ -35,7 +35,7 @@ export function LocaleMultiSelector({
 	const selectedOptions = options.filter((o) => selected.includes(o.value));
 
 	const handleChange = (vals: MultiValue<{ value: string; label: string }>) => {
-		const codes = vals.map((v) => v.value).slice(0, 4);
+		const codes = vals.map((v) => v.value).slice(0, 2);
 		setSelected(codes);
 		onChange?.(codes);
 
@@ -45,8 +45,8 @@ export function LocaleMultiSelector({
 	};
 
 	const isOptionDisabled = (option?: { value: string }) =>
-		selected.length >= 4 && !selected.includes(option?.value ?? "");
-	const limitReached = selected.length >= 4;
+		selected.length >= 2 && !selected.includes(option?.value ?? "");
+	const limitReached = selected.length >= 2;
 	const count = selected.length;
 
 	const selectClassNames = {
