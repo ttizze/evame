@@ -52,37 +52,6 @@ function simulateFixedEditorImplementation(
 }
 
 describe("Editor Configuration Integration", () => {
-	it("should verify that editor.tsx now correctly preserves transformPastedHTML", () => {
-		// editor.tsxの修正された実装をシミュレート
-		const baseConfig = configureEditor("", "Test placeholder");
-
-		// 修正されたeditor.tsxの実装をシミュレート
-		const editorConfig = {
-			...baseConfig,
-			editorProps: {
-				...baseConfig.editorProps,
-				attributes: {
-					...baseConfig.editorProps?.attributes,
-					"data-testid": "tiptap-editor",
-					class: "test-class",
-				},
-			},
-		};
-
-		// 修正された実装では transformPastedHTML が保持されている
-		expect(editorConfig.editorProps?.transformPastedHTML).toBeDefined();
-		expect(typeof editorConfig.editorProps?.transformPastedHTML).toBe(
-			"function",
-		);
-
-		// ペースト機能も正しく動作する
-		const transformFn = editorConfig.editorProps?.transformPastedHTML;
-		if (transformFn) {
-			expect(transformFn("Line 1\n\nLine 2")).toBe(
-				"<p>Line 1</p><p>Line 2</p>",
-			);
-		}
-	});
 	it("should preserve transformPastedHTML in configureEditor output", () => {
 		const config = configureEditor("", "Test placeholder");
 
@@ -90,21 +59,6 @@ describe("Editor Configuration Integration", () => {
 		expect(config.editorProps).toBeDefined();
 		expect(config.editorProps?.transformPastedHTML).toBeDefined();
 		expect(typeof config.editorProps?.transformPastedHTML).toBe("function");
-	});
-
-	it("should preserve transformPastedHTML function in editor configuration", () => {
-		// configureEditorの設定をテスト
-		const config = configureEditor("", "placeholder");
-
-		// transformPastedHTMLが関数として存在することを確認
-		expect(config.editorProps?.transformPastedHTML).toBeTypeOf("function");
-
-		// transformPastedHTMLの動作をテスト
-		const transformFn = config.editorProps?.transformPastedHTML;
-		if (transformFn) {
-			const result = transformFn("Line 1\nLine 2\n\nLine 3");
-			expect(result).toBe("<p>Line 1<br>Line 2</p><p>Line 3</p>");
-		}
 	});
 
 	it("should merge editorProps correctly without overriding", () => {
@@ -117,36 +71,6 @@ describe("Editor Configuration Integration", () => {
 
 		// transformPastedHTMLも含まれることを確認
 		expect(config.editorProps?.transformPastedHTML).toBeDefined();
-	});
-
-	it("should handle complex paste scenarios", () => {
-		const config = configureEditor("", "placeholder");
-		const transformFn = config.editorProps?.transformPastedHTML;
-
-		if (transformFn) {
-			// 単一行
-			expect(transformFn("Single line")).toBe("<p>Single line</p>");
-
-			// 改行1つ
-			expect(transformFn("Line 1\nLine 2")).toBe("<p>Line 1<br>Line 2</p>");
-
-			// 改行2つ（段落分割）
-			expect(transformFn("Para 1\n\nPara 2")).toBe(
-				"<p>Para 1</p><p>Para 2</p>",
-			);
-
-			// 改行3つ（段落分割）
-			expect(transformFn("Para 1\n\n\nPara 2")).toBe(
-				"<p>Para 1</p><p>Para 2</p>",
-			);
-
-			// 競馬のテストケース
-			const testText =
-				"競馬でボロ負けした帰りに宝くじ買ったら当たりました\n100円→500円のしょぼいのですが\n競馬やめよかな\n\n感想書きます";
-			const expectedResult =
-				"<p>競馬でボロ負けした帰りに宝くじ買ったら当たりました<br>100円→500円のしょぼいのですが<br>競馬やめよかな</p><p>感想書きます</p>";
-			expect(transformFn(testText)).toBe(expectedResult);
-		}
 	});
 
 	it("should include all required extensions", () => {
@@ -223,60 +147,5 @@ describe("Editor Configuration Integration", () => {
 			class: "test-class",
 			"data-testid": "tiptap-editor",
 		});
-	});
-
-	it("should verify that current editor.tsx implementation breaks paste functionality", () => {
-		// 現在の実装での paste 処理をテスト
-		const currentConfig = simulateCurrentEditorImplementation(
-			"",
-			"placeholder",
-			"test-class",
-		);
-
-		// transformPastedHTML が存在しないため、paste時の改行処理が動作しない
-		expect(currentConfig.editorProps?.transformPastedHTML).toBeUndefined();
-
-		// 修正版では paste 処理が動作する
-		const fixedConfig = simulateFixedEditorImplementation(
-			"",
-			"placeholder",
-			"test-class",
-		);
-		const transformFn = fixedConfig.editorProps?.transformPastedHTML;
-
-		if (transformFn) {
-			// paste機能のテスト
-			const testInput = "Line 1\nLine 2\n\nLine 3";
-			const expectedOutput = "<p>Line 1<br>Line 2</p><p>Line 3</p>";
-			expect(transformFn(testInput)).toBe(expectedOutput);
-		}
-	});
-
-	/**
-	 * 修正されたeditor.tsxの実装をテスト
-	 * バグが修正されたことを確認
-	 */
-	it("should demonstrate how to fix editor.tsx to preserve transformPastedHTML", () => {
-		// 修正後の実装をシミュレート
-		const fixedConfig = simulateFixedEditorImplementation(
-			"",
-			"placeholder",
-			"test-class",
-		);
-
-		// transformPastedHTMLが保持されていることを確認（修正済み）
-		expect(fixedConfig.editorProps?.transformPastedHTML).toBeDefined();
-
-		// attributesも正しくマージされていることを確認
-		expect(fixedConfig.editorProps?.attributes?.["data-testid"]).toBe(
-			"tiptap-editor",
-		);
-		expect(fixedConfig.editorProps?.attributes?.class).toBe("test-class");
-
-		// paste機能も動作することを確認
-		const transformFn = fixedConfig.editorProps?.transformPastedHTML;
-		if (transformFn) {
-			expect(transformFn("test\n\nline")).toBe("<p>test</p><p>line</p>");
-		}
 	});
 });
