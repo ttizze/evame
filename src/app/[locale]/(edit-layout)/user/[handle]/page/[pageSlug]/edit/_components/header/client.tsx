@@ -15,22 +15,23 @@ import type { PageStatus } from "@prisma/client";
 import {
 	CloudCheck,
 	Globe,
-	InfoIcon,
 	LanguagesIcon,
 	LinkIcon,
 	Loader2,
 	Lock,
 } from "lucide-react";
 import { useParams, usePathname } from "next/navigation";
-import { useActionState, useMemo } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
+import { LocaleMultiSelector } from "./locale-multi-selector/client";
 
 interface EditHeaderProps {
 	currentUser: SanitizedUser;
 	initialStatus: PageStatus;
 	hasUnsavedChanges: boolean;
 	pageId: number | undefined;
+	targetLocales: string[];
 }
 const BUTTON_BASE_CLASSES =
 	"flex items-center gap-2 rounded-full  transition-colors justify-start duration-200";
@@ -63,6 +64,7 @@ export function EditHeader({
 	initialStatus,
 	hasUnsavedChanges,
 	pageId,
+	targetLocales,
 }: EditHeaderProps) {
 	const [state, action, isPending] = useActionState<
 		EditPageStatusActionState,
@@ -91,6 +93,13 @@ export function EditHeader({
 		);
 	}, [isPending, isPublic]);
 
+	const [locales, setLocales] = useState<string[]>(
+		targetLocales ?? ["en", "zh"],
+	);
+	const [clickedStatus, setClickedStatus] = useState<"PUBLIC" | "DRAFT" | null>(
+		null,
+	);
+
 	const leftExtra = (
 		<>
 			<SaveButton hasUnsavedChanges={hasUnsavedChanges} />
@@ -116,22 +125,27 @@ export function EditHeader({
 					</span>
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="w-46 rounded-xl py-1 px-3" align="end">
+			<PopoverContent className="w-56 rounded-xl py-1 px-3" align="end">
 				<div className="space-y-1">
 					<form action={action}>
 						<input type="hidden" name="pageId" value={pageId ?? ""} />
 						<input type="hidden" name="status" value="PUBLIC" />
+						<input
+							type="hidden"
+							name="targetLocales"
+							value={locales.join(",")}
+						/>
 						<div className="flex justify-between items-center w-full">
 							<Button
 								type="submit"
 								variant="ghost"
 								className={MENU_BUTTON_CLASSES}
 								disabled={isPending}
+								onClick={() => setClickedStatus("PUBLIC")}
 							>
-								{isPending && initialStatus === "DRAFT" ? (
+								{isPending && clickedStatus === "PUBLIC" ? (
 									<>
 										<Loader2 className={ICON_SPIN_CLASSES} />
-										<span>Processing...</span>
 									</>
 								) : initialStatus === "PUBLIC" ? (
 									<>
@@ -142,44 +156,16 @@ export function EditHeader({
 									<>
 										<Globe className={ICON_CLASSES} />
 										<span>Public</span>
-										<div className="flex items-center bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
-											<LanguagesIcon className="w-3 h-3" />
-										</div>
 									</>
 								)}
 							</Button>
-							<Popover>
-								<PopoverTrigger asChild>
-									<button
-										type="button"
-										className="ml-3 text-muted-foreground cursor-pointer hover:text-foreground flex items-center"
-									>
-										<InfoIcon className={ICON_CLASSES} />
-									</button>
-								</PopoverTrigger>
-								<PopoverContent
-									className="w-60 p-3 rounded-xl space-y-3"
-									side="right"
-								>
-									<div className="flex items-center justify-center gap-2">
-										<LanguagesIcon className="h-4 w-4 text-primary" />
-										<h4 className="font-medium text-sm">Auto-Translation</h4>
-									</div>
-
-									<div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-										<span>Translates to:</span>
-									</div>
-
-									<div className="bg-secondary/80 rounded-lg p-2">
-										<div className="grid grid-cols-4 gap-2 text-center">
-											<div className="text-xs font-medium">EN</div>
-											<div className="text-xs font-medium">JP</div>
-											<div className="text-xs font-medium">CN</div>
-											<div className="text-xs font-medium">KR</div>
-										</div>
-									</div>
-								</PopoverContent>
-							</Popover>
+							{pageSlug && (
+								<LocaleMultiSelector
+									defaultValue={locales}
+									onChange={setLocales}
+									className="ml-2"
+								/>
+							)}
 						</div>
 					</form>
 				</div>
@@ -190,12 +176,12 @@ export function EditHeader({
 						variant="ghost"
 						className={MENU_BUTTON_CLASSES}
 						disabled={initialStatus === "DRAFT" || isPending}
+						onClick={() => setClickedStatus("DRAFT")}
 					>
 						<input type="hidden" name="status" value="DRAFT" />
-						{isPending && initialStatus === "PUBLIC" ? (
+						{isPending && clickedStatus === "DRAFT" ? (
 							<>
 								<Loader2 className={ICON_SPIN_CLASSES} />
-								<span>Processing...</span>
 							</>
 						) : (
 							<>

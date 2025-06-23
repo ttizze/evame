@@ -12,6 +12,10 @@ import { updatePageStatus } from "./_db/mutations.server";
 const editPageStatusSchema = z.object({
 	pageId: z.coerce.number().min(1),
 	status: z.enum(["DRAFT", "PUBLIC", "ARCHIVE"]),
+	targetLocales: z
+		.string()
+		.optional()
+		.transform((val) => (val ? val.split(",").filter((l) => l) : [])),
 });
 
 export type EditPageStatusActionState = ActionResponse<
@@ -19,16 +23,16 @@ export type EditPageStatusActionState = ActionResponse<
 	{
 		pageId: number;
 		status: string;
+		targetLocales: string[];
 	}
 >;
 
-async function triggerAutoTranslationIfNeeded(
-	status: string,
+async function triggerAutoTranslation(
 	pageId: number,
 	sourceLocale: string,
 	currentUserId: string,
+	targetLocales: string[],
 ) {
-	if (status !== "PUBLIC") return undefined;
 	const geminiApiKey = process.env.GEMINI_API_KEY;
 	if (!geminiApiKey || geminiApiKey === "undefined") {
 		console.error("Gemini API key is not set. Page will not be translated.");
@@ -39,6 +43,7 @@ async function triggerAutoTranslationIfNeeded(
 		pageId,
 		sourceLocale,
 		geminiApiKey,
+		targetLocales,
 	});
 }
 
@@ -54,18 +59,22 @@ export async function editPageStatusAction(
 		};
 	}
 	const { currentUser, data } = v;
-	const { pageId, status } = data;
+	const { pageId, status, targetLocales } = data;
 	const page = await getPageById(pageId);
 	if (!currentUser?.id || page?.userId !== currentUser.id) {
 		return redirect("/auth/login");
 	}
 	await updatePageStatus(pageId, status as PageStatus);
-	const translationJobs = await triggerAutoTranslationIfNeeded(
-		status,
-		pageId,
-		page.sourceLocale,
-		currentUser.id,
-	);
+
+	let translationJobs: TranslationJobForToast[] | undefined = undefined;
+	if (status === "PUBLIC") {
+		translationJobs = await triggerAutoTranslation(
+			pageId,
+			page.sourceLocale,
+			currentUser.id,
+			targetLocales,
+		);
+	}
 	revalidatePath(`/user/${currentUser.handle}/page/${page.slug}/edit`);
 	return {
 		success: true,

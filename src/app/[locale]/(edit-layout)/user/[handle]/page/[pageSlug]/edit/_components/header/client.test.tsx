@@ -57,6 +57,7 @@ describe("EditHeader Component", () => {
 				initialStatus="PUBLIC"
 				hasUnsavedChanges={false}
 				pageId={123}
+				targetLocales={["en", "zh"]}
 			/>,
 		);
 
@@ -71,6 +72,7 @@ describe("EditHeader Component", () => {
 				initialStatus="PUBLIC"
 				hasUnsavedChanges={true}
 				pageId={123}
+				targetLocales={["en", "zh"]}
 			/>,
 		);
 
@@ -93,6 +95,7 @@ describe("EditHeader Component", () => {
 				initialStatus="DRAFT"
 				hasUnsavedChanges={false}
 				pageId={123}
+				targetLocales={["en", "zh"]}
 			/>,
 		);
 
@@ -116,6 +119,7 @@ describe("EditHeader Component", () => {
 				initialStatus="DRAFT"
 				hasUnsavedChanges={false}
 				pageId={123}
+				targetLocales={["en", "zh"]}
 			/>,
 		);
 
