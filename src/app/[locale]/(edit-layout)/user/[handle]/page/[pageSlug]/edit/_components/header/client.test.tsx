@@ -1,6 +1,6 @@
 import { mockUsers } from "@/tests/mock";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { editPageStatusAction } from "./action";
 import { EditHeader } from "./client";
@@ -43,6 +43,9 @@ vi.mock("use-intl", async () => {
 });
 beforeEach(() => {
 	vi.mocked(usePathname).mockReturnValue("/en/edit/page/123");
+	vi.mocked(useParams).mockReturnValue({
+		pageSlug: "test-page",
+	} as unknown as ReturnType<typeof useParams>);
 	vi.mocked(useHeaderVisibility).mockReturnValue({ isVisible: true });
 });
 

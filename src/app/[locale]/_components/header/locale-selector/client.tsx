@@ -29,16 +29,15 @@ import { useCombinedRouter } from "./hooks/use-combined-router";
 import { buildLocaleOptions } from "./lib/build-locale-options";
 import { TypeIcon } from "./lib/type-Icon.client";
 
-type TranslationInfo = {
+// Local types
+interface TranslationInfo {
 	sourceLocale: string;
 	translationJobs: TranslationJob[];
-};
+}
 
-const buildSlugKey = ({
-	pageSlug,
-}: {
-	pageSlug?: string;
-}) => (pageSlug ? `pageSlug=${pageSlug}` : null);
+// Helpers
+const buildSlugKey = ({ pageSlug }: { pageSlug?: string }) =>
+	pageSlug ? `pageSlug=${pageSlug}` : null;
 
 const fetchTranslation: (url: string) => Promise<TranslationInfo> = async (
 	url,
@@ -48,6 +47,7 @@ const fetchTranslation: (url: string) => Promise<TranslationInfo> = async (
 	return res.json();
 };
 
+// Props
 interface LocaleSelectorProps {
 	localeSelectorClassName?: string;
 	pageSlug?: string;
@@ -68,6 +68,7 @@ export function LocaleSelector({
 	const params = useParams();
 	const pathname = usePathname();
 	const targetLocale = useLocale();
+
 	const handleLocaleChange = (value: string) => {
 		setOpen(false);
 		startTransition(() => {
@@ -78,15 +79,14 @@ export function LocaleSelector({
 			);
 		});
 	};
-	let showIcons = false;
-	if (pageSlug) {
-		showIcons = true;
-	}
-	const showAddNewButton = pageSlug;
+
+	const showIcons = Boolean(pageSlug);
+	const showAddNewButton = Boolean(pageSlug);
+
 	const slugKey = buildSlugKey({ pageSlug });
 	const apiUrl = slugKey ? `/api/locale-info?${slugKey}` : null;
 
-	const { data, error } = useSWR(apiUrl, fetchTranslation);
+	const { data } = useSWR(apiUrl, fetchTranslation);
 
 	const { sourceLocale, translationJobs } = data ?? {};
 	const localeOptionWithStatus = buildLocaleOptions({

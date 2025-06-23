@@ -8,7 +8,7 @@ import { useLocaleListAutoRefresh } from "./use-locale-list-auto-refresh.client"
 const refreshMock = vi.fn();
 
 // useCombinedRouter をモック化して、常に refreshMock を返すようにする
-vi.mock("../../hooks/use-combined-router", () => ({
+vi.mock("./use-combined-router", () => ({
 	useCombinedRouter: () => ({
 		refresh: refreshMock,
 	}),

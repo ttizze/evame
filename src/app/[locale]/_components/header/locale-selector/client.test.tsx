@@ -5,13 +5,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LocaleSelector } from "./client";
 if (typeof global.ResizeObserver === "undefined") {
 	global.ResizeObserver = class {
-		observe() {}
-		unobserve() {}
-		disconnect() {}
+		observe() { }
+		unobserve() { }
+		disconnect() { }
 	};
 }
 if (typeof window.HTMLElement.prototype.scrollIntoView !== "function") {
-	window.HTMLElement.prototype.scrollIntoView = () => {};
+	window.HTMLElement.prototype.scrollIntoView = () => { };
 }
 // next-intl, next/navigation、supportedLocaleOptions をモック
 vi.mock(import("next-intl"), async (importOriginal) => {
@@ -24,6 +24,7 @@ vi.mock(import("next-intl"), async (importOriginal) => {
 
 vi.mock("next/navigation", () => ({
 	useParams: () => ({}),
+	redirect: () => { },
 }));
 vi.mock("@/i18n/routing", () => ({
 	usePathname: () => "/test",
@@ -39,12 +40,13 @@ vi.mock("./lib/type-Icon.client", () => ({
 	}) => <div data-testid="type-icon">{code}</div>,
 }));
 vi.mock("./hooks/use-locale-list-auto-refresh.client", () => ({
-	useLocaleListAutoRefresh: () => {},
+	useLocaleListAutoRefresh: () => { },
 }));
 const pushMock = vi.fn();
-vi.mock("../hooks/use-combined-router", () => ({
+vi.mock("./hooks/use-combined-router", () => ({
 	useCombinedRouter: () => ({
 		push: pushMock,
+		refresh: vi.fn(),
 	}),
 }));
 
