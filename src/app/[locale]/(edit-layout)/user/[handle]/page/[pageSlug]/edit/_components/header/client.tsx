@@ -1,6 +1,5 @@
 "use client";
 import { BaseHeader } from "@/app/[locale]/_components/header/base-header.client";
-import { LocaleSelector } from "@/app/[locale]/_components/header/locale-selector/client";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
 import type { SanitizedUser } from "@/app/types";
@@ -149,14 +148,6 @@ export function EditHeader({
 									</>
 								)}
 							</Button>
-							{initialStatus === "PUBLIC" && pageSlug && (
-								<LocaleSelector
-									pageSlug={pageSlug}
-									currentHandle={currentUser.handle}
-									hasGeminiApiKey={false}
-									localeSelectorClassName="w-[150px] ml-2"
-								/>
-							)}
 							<Popover>
 								<PopoverTrigger asChild>
 									<button
