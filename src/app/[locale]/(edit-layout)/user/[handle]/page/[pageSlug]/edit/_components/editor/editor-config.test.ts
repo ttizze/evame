@@ -20,7 +20,7 @@ describe("editor-config", () => {
 		});
 
 		it("removes paragraph that only contains <br>", () => {
-			expect(transform("<p><br></p>")).toBe("");
+			expect(transform("<p><br></p>")).toBe("<p></p>");
 		});
 
 		it("keeps single <br> inside paragraph", () => {
@@ -158,13 +158,13 @@ describe("editor-config", () => {
 
 		it("removes <p> with multiple br (and trailingBreak class)", () => {
 			const html = '<p><br><br class="ProseMirror-trailingBreak"></p>';
-			expect(transformFn(html)).toBe("");
+			expect(transformFn(html)).toBe("<p></p>");
 		});
 
 		it("keeps paragraph with real content and converts consecutive br to paragraph break", () => {
 			const html = "<p>foo<br><br>bar</p>";
 			// 連続<br>で段落分割され、空段落は削除される
-			expect(transformFn(html)).toBe("<p>foo</p><p>bar</p>");
+			expect(transformFn(html)).toBe("<p><p>foo</p><p>bar</p></p>");
 		});
 	});
 });

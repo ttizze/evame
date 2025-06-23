@@ -13,10 +13,12 @@ import { Link } from "@/i18n/routing";
 import { BookOpenIcon, LogOutIcon } from "lucide-react";
 import Image from "next/image";
 import { getImageProps } from "next/image";
+import { useParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { ModeToggle } from "../mode-toggle";
 import { useHeaderScroll } from "./hooks/use-header-scroll";
-import { TranslateActionSectionClient } from "./translate-action-section/client";
+import { LocaleSelector } from "./locale-selector/client";
+
 interface BaseHeaderProps {
 	currentUser: SanitizedUser | undefined;
 	leftExtra?: ReactNode;
@@ -40,6 +42,9 @@ export function BaseHeader({
 		width: 40,
 		height: 40,
 	});
+	const { pageSlug } = useParams<{
+		pageSlug?: string;
+	}>();
 	return (
 		<div ref={headerRef}>
 			<header
@@ -112,7 +117,8 @@ export function BaseHeader({
 									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuSeparator className="my-0" />
-								<TranslateActionSectionClient
+								<LocaleSelector
+									pageSlug={pageSlug}
 									currentHandle={currentUser.handle}
 									hasGeminiApiKey={hasGeminiApiKey}
 									localeSelectorClassName="w-[200px]"

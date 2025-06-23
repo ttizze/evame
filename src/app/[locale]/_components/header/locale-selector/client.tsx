@@ -24,19 +24,20 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { startTransition } from "react";
 import useSWR from "swr";
-import { useCombinedRouter } from "../hooks/use-combined-router";
+import { AddTranslateDialog } from "./add-translate-dialog/client";
+import { useCombinedRouter } from "./hooks/use-combined-router";
 import { buildLocaleOptions } from "./lib/build-locale-options";
 import { TypeIcon } from "./lib/type-Icon.client";
-type TranslationInfo = {
+
+// Local types
+interface TranslationInfo {
 	sourceLocale: string;
 	translationJobs: TranslationJob[];
-};
+}
 
-const buildSlugKey = ({
-	pageSlug,
-}: {
-	pageSlug?: string;
-}) => (pageSlug ? `pageSlug=${pageSlug}` : null);
+// Helpers
+const buildSlugKey = ({ pageSlug }: { pageSlug?: string }) =>
+	pageSlug ? `pageSlug=${pageSlug}` : null;
 
 const fetchTranslation: (url: string) => Promise<TranslationInfo> = async (
 	url,
@@ -46,24 +47,28 @@ const fetchTranslation: (url: string) => Promise<TranslationInfo> = async (
 	return res.json();
 };
 
+// Props
 interface LocaleSelectorProps {
 	localeSelectorClassName?: string;
 	pageSlug?: string;
-	/** Called if the user clicks the “Add New” button. */
-	onAddNew: () => void;
+	currentHandle?: string;
+	hasGeminiApiKey: boolean;
 }
 
 //TODO: radix uiのせいで開発環境のモバイルで文字がぼける iphoneではボケてない､その他実機でもボケてたら対応する
 export function LocaleSelector({
 	localeSelectorClassName,
-	onAddNew,
 	pageSlug,
+	currentHandle,
+	hasGeminiApiKey,
 }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
+	const [dialogOpen, setDialogOpen] = useState(false);
 	const router = useCombinedRouter();
 	const params = useParams();
 	const pathname = usePathname();
 	const targetLocale = useLocale();
+
 	const handleLocaleChange = (value: string) => {
 		setOpen(false);
 		startTransition(() => {
@@ -74,15 +79,14 @@ export function LocaleSelector({
 			);
 		});
 	};
-	let showIcons = false;
-	if (pageSlug) {
-		showIcons = true;
-	}
-	const showAddNewButton = pageSlug;
+
+	const showIcons = Boolean(pageSlug);
+	const showAddNewButton = Boolean(pageSlug);
+
 	const slugKey = buildSlugKey({ pageSlug });
 	const apiUrl = slugKey ? `/api/locale-info?${slugKey}` : null;
 
-	const { data, error } = useSWR(apiUrl, fetchTranslation);
+	const { data } = useSWR(apiUrl, fetchTranslation);
 
 	const { sourceLocale, translationJobs } = data ?? {};
 	const localeOptionWithStatus = buildLocaleOptions({
@@ -113,7 +117,7 @@ export function LocaleSelector({
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent
-				sideOffset={-4} // -4px で “ピタッ” と密着
+				sideOffset={-4} // -4px で "ピタッ" と密着
 				avoidCollisions={false}
 				className="w-full p-0  truncate"
 			>
@@ -146,7 +150,7 @@ export function LocaleSelector({
 								<Button
 									variant="default"
 									className="rounded-full"
-									onClick={onAddNew}
+									onClick={() => setDialogOpen(true)}
 								>
 									+ Add New
 								</Button>
@@ -155,6 +159,15 @@ export function LocaleSelector({
 					)}
 				</Command>
 			</PopoverContent>
+			{pageSlug && (
+				<AddTranslateDialog
+					open={dialogOpen}
+					onOpenChange={setDialogOpen}
+					currentHandle={currentHandle}
+					hasGeminiApiKey={hasGeminiApiKey}
+					pageSlug={pageSlug}
+				/>
+			)}
 		</Popover>
 	);
 }

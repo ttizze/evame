@@ -6,8 +6,8 @@ import { Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { StartButton } from "../start-button";
 import { BaseHeader } from "./base-header.client";
+import { LocaleSelector } from "./locale-selector/client";
 import { NewPageButton } from "./new-page-button";
-import { TranslateActionSectionClient } from "./translate-action-section/client";
 
 const NotificationsDropdown = dynamic(
 	() => import("./notifications-dropdown").then((mod) => mod.default),
@@ -32,7 +32,7 @@ export async function Header() {
 
 			{!currentUser ? (
 				<>
-					<TranslateActionSectionClient
+					<LocaleSelector
 						currentHandle={undefined}
 						hasGeminiApiKey={false}
 						localeSelectorClassName="border rounded-full w-[150px]"
