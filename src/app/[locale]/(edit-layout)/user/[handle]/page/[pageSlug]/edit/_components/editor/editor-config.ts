@@ -56,14 +56,20 @@ export function configureEditor(initialContent: string, placeholder: string) {
 		content: initialContent,
 		editorProps: {
 			transformPastedHTML(html: string) {
-				// 1) 改行文字を `<br>` に正規化
-				let processed = html.replace(/\r?\n/g, "<br>");
-				// 2) `<br>` が2つ以上連続する箇所を段落分割ポイントとして `</p><p>` に変換
-				processed = processed.replace(/(<br\b[^>]*>\s*){2,}/gi, "</p><p>");
-				// 3) 単一の `<br>` はそのまま残す（普通の改行として扱う）
-				// 4) 全体を `<p>` でラップ
-				const wrapped = `<p>${processed}</p>`;
-				return wrapped;
+				// 「テキスト塊」を <p> で包む
+				// まず最初と最後に 1 組の <p> を付ける
+				// 「連続 <br> 2 個以上」を </p><p> に置き換える
+				// そのあと 必ず ProseMirror に渡す
+				// ProseMirror は
+				// タグの整合を自動で取り
+				// 不要になった最外の <p> は取り除き
+				// キャレットを置くために必要なところだけ
+				// <br class="ProseMirror-trailingBreak"> を残します。
+				return `<p>${html
+					// 連続 <br> 2個以上 → 段落区切り
+					.replace(/(<br\b[^>]*>\s*){2,}/gi, "</p><p>")
+					// 中身が <br> しかない段落は削除
+					.replace(/<p[^>]*>(?:\s|&nbsp;|<br\b[^>]*>)*<\/p>/gi, "")}</p>`;
 			},
 			attributes: {
 				class: "focus:outline-hidden",

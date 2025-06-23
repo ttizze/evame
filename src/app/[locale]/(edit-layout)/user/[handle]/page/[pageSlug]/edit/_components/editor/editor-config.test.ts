@@ -1,100 +1,30 @@
 import { describe, expect, it, vi } from "vitest";
+import { configureEditor } from "./editor-config";
 
 describe("editor-config", () => {
 	describe("transformPastedHTML", () => {
-		// まず transformPastedHTML の処理を直接テスト
-		const transformPastedHTML = (html: string) => {
-			// editor-config.ts の transformPastedHTML と同じロジック
-			let processed = html.replace(/\r?\n/g, "<br>");
-			processed = processed.replace(/(<br\b[^>]*>\s*){2,}/gi, "</p><p>");
-			// 単一の <br> はそのまま残す
-			const wrapped = `<p>${processed}</p>`;
-			return wrapped;
-		};
+		// 実装済みの transformPastedHTML を取得
+		const { editorProps } = configureEditor("", "");
+		if (!editorProps?.transformPastedHTML) {
+			throw new Error("transformPastedHTML is undefined");
+		}
+		const transform = editorProps.transformPastedHTML;
 
-		it("should handle single line text", () => {
-			const html = "This is a single line of text";
-			const result = transformPastedHTML(html);
-			expect(result).toBe("<p>This is a single line of text</p>");
+		it("wraps single block with <p>", () => {
+			expect(transform("text")).toBe("<p>text</p>");
 		});
 
-		it("should convert single newline to br tag", () => {
-			const html = "Line 1\nLine 2";
-			const result = transformPastedHTML(html);
-			expect(result).toBe("<p>Line 1<br>Line 2</p>");
+		it("splits consecutive <br> into paragraphs", () => {
+			const html = "foo<br><br>bar";
+			expect(transform(html)).toBe("<p>foo</p><p>bar</p>");
 		});
 
-		it("should convert double newlines to paragraph breaks", () => {
-			const html = "Paragraph 1\n\nParagraph 2";
-			const result = transformPastedHTML(html);
-			expect(result).toBe("<p>Paragraph 1</p><p>Paragraph 2</p>");
+		it("removes paragraph that only contains <br>", () => {
+			expect(transform("<p><br></p>")).toBe("");
 		});
 
-		it("should handle multiple consecutive newlines", () => {
-			const html = "Paragraph 1\n\n\n\nParagraph 2";
-			const result = transformPastedHTML(html);
-			expect(result).toBe("<p>Paragraph 1</p><p>Paragraph 2</p>");
-		});
-
-		it("should handle Windows-style line endings (CRLF)", () => {
-			const html = "Line 1\r\nLine 2\r\n\r\nParagraph 2";
-			const result = transformPastedHTML(html);
-			expect(result).toBe("<p>Line 1<br>Line 2</p><p>Paragraph 2</p>");
-		});
-
-		it("should handle existing br tags", () => {
-			const html = "Line 1<br>Line 2<br><br>Paragraph 2";
-			const result = transformPastedHTML(html);
-			expect(result).toBe("<p>Line 1<br>Line 2</p><p>Paragraph 2</p>");
-		});
-
-		it("should handle br tags with attributes", () => {
-			const html = 'Line 1<br class="test">Line 2<br /><br/>Paragraph 2';
-			const result = transformPastedHTML(html);
-			expect(result).toBe(
-				'<p>Line 1<br class="test">Line 2</p><p>Paragraph 2</p>',
-			);
-		});
-
-		it("should handle mixed newlines and br tags", () => {
-			const html = "Line 1\n<br>Line 2\n\n<br><br>Paragraph 2";
-			const result = transformPastedHTML(html);
-			// \n<br> → <br><br> → 段落分割、\n\n<br><br> → </p><p>
-			expect(result).toBe("<p>Line 1</p><p>Line 2</p><p>Paragraph 2</p>");
-		});
-
-		it("should handle empty input", () => {
-			const html = "";
-			const result = transformPastedHTML(html);
-			expect(result).toBe("<p></p>");
-		});
-
-		it("should handle HTML with existing paragraph tags", () => {
-			const html = "<p>Existing paragraph</p>\n\n<p>Another paragraph</p>";
-			const result = transformPastedHTML(html);
-			expect(result).toBe(
-				"<p><p>Existing paragraph</p></p><p><p>Another paragraph</p></p>",
-			);
-		});
-
-		it("should handle list-like content with proper line breaks", () => {
-			const html =
-				"目次\nハルカゼマウンド\nあかね\nウィッチ\n鵺\nアオハコ\nひまてん\n愛する者の祓い方\n逃げ若";
-			const result = transformPastedHTML(html);
-			// 修正後の動作: 単一改行は<br>になる
-			expect(result).toBe(
-				"<p>目次<br>ハルカゼマウンド<br>あかね<br>ウィッチ<br>鵺<br>アオハコ<br>ひまてん<br>愛する者の祓い方<br>逃げ若</p>",
-			);
-		});
-
-		it("should handle list-like content with double newlines (better behavior)", () => {
-			const html =
-				"目次\n\nハルカゼマウンド\n\nあかね\n\nウィッチ\n\n鵺\n\nアオハコ\n\nひまてん\n\n愛する者の祓い方\n\n逃げ若";
-			const result = transformPastedHTML(html);
-			// 二重改行だと段落分割される
-			expect(result).toBe(
-				"<p>目次</p><p>ハルカゼマウンド</p><p>あかね</p><p>ウィッチ</p><p>鵺</p><p>アオハコ</p><p>ひまてん</p><p>愛する者の祓い方</p><p>逃げ若</p>",
-			);
+		it("keeps single <br> inside paragraph", () => {
+			expect(transform("foo<br>bar")).toBe("<p>foo<br>bar</p>");
 		});
 	});
 
@@ -216,6 +146,25 @@ describe("editor-config", () => {
 			onDrop(files, pos);
 
 			expect(mockHandleFileUpload).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("transformPastedHTML – br-only paragraph cleanup", () => {
+		const { editorProps } = configureEditor("", "");
+		if (!editorProps?.transformPastedHTML) {
+			throw new Error("transformPastedHTML is undefined");
+		}
+		const transformFn = editorProps.transformPastedHTML;
+
+		it("removes <p> with multiple br (and trailingBreak class)", () => {
+			const html = '<p><br><br class="ProseMirror-trailingBreak"></p>';
+			expect(transformFn(html)).toBe("");
+		});
+
+		it("keeps paragraph with real content and converts consecutive br to paragraph break", () => {
+			const html = "<p>foo<br><br>bar</p>";
+			// 連続<br>で段落分割され、空段落は削除される
+			expect(transformFn(html)).toBe("<p>foo</p><p>bar</p>");
 		});
 	});
 });
