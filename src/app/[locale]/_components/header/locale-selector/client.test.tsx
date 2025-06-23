@@ -58,7 +58,7 @@ describe("LocaleSelector", () => {
 	});
 
 	it("renders button with the selected locale name and icon", () => {
-		render(<LocaleSelector onAddNew={() => {}} />);
+		render(<LocaleSelector hasGeminiApiKey={false} currentHandle="" />);
 
 		// useLocale は "en" を返すので、buildLocaleOptions により選択肢は "English" と "French" になり、
 		// selectedOption は "en" のため "English" が表示される
@@ -66,7 +66,7 @@ describe("LocaleSelector", () => {
 	});
 	it("opens popover and displays locale options", async () => {
 		const user = await userEvent.setup();
-		render(<LocaleSelector onAddNew={vi.fn()} />);
+		render(<LocaleSelector hasGeminiApiKey={false} currentHandle="" />);
 		const button = await screen.findByTestId("locale-selector-button");
 		await user.click(button);
 		// ポップオーバー内に検索ボックスが表示される
@@ -78,7 +78,7 @@ describe("LocaleSelector", () => {
 
 	it("calls router.push with the selected locale on command item select", async () => {
 		const user = userEvent.setup();
-		render(<LocaleSelector onAddNew={() => {}} />);
+		render(<LocaleSelector hasGeminiApiKey={false} currentHandle="" />);
 
 		// ポップオーバーを開くため、ボタンをクリック
 		const button = screen.getByTestId("locale-selector-button");
@@ -93,21 +93,5 @@ describe("LocaleSelector", () => {
 			{ pathname: "/test", params: {} },
 			{ locale: "fr" },
 		);
-	});
-
-	it("calls onAddNew when the Add New button is clicked", async () => {
-		const onAddNewMock = vi.fn();
-		const user = userEvent.setup();
-		render(<LocaleSelector onAddNew={onAddNewMock} pageSlug="test-page" />);
-
-		// ポップオーバーを開く
-		const button = screen.getByTestId("locale-selector-button");
-		await user.click(button);
-
-		// Add New ボタンのクリックをシミュレーション
-		const addNewButton = screen.getByText("+ Add New");
-		await user.click(addNewButton);
-
-		expect(onAddNewMock).toHaveBeenCalled();
 	});
 });

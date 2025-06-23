@@ -1,7 +1,7 @@
 import type { TranslationJob } from "@prisma/client";
 import { TranslationStatus } from "@prisma/client";
 import { useEffect } from "react";
-import { useCombinedRouter } from "../../hooks/use-combined-router";
+import { useCombinedRouter } from "./use-combined-router";
 
 export function useLocaleListAutoRefresh(translationJobs?: TranslationJob[]) {
 	const router = useCombinedRouter();

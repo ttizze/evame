@@ -16,7 +16,8 @@ import { getImageProps } from "next/image";
 import type { ReactNode } from "react";
 import { ModeToggle } from "../mode-toggle";
 import { useHeaderScroll } from "./hooks/use-header-scroll";
-import { TranslateActionSectionClient } from "./translate-action-section/client";
+import { LocaleSelector } from "./locale-selector/client";
+
 interface BaseHeaderProps {
 	currentUser: SanitizedUser | undefined;
 	leftExtra?: ReactNode;
@@ -43,13 +44,11 @@ export function BaseHeader({
 	return (
 		<div ref={headerRef}>
 			<header
-				className={`z-50 bg-background rounded-b-3xl transition-all duration-300 ${
-					!isVisible ? "-translate-y-full" : "translate-y-0"
-				} ${
-					isPinned
+				className={`z-50 bg-background rounded-b-3xl transition-all duration-300 ${!isVisible ? "-translate-y-full" : "translate-y-0"
+					} ${isPinned
 						? "fixed top-0 left-0 right-0 shadow-md dark:shadow-gray-900"
 						: ""
-				} max-w-3xl mx-auto py-2 md:py-4 px-2 md:px-6 lg:px-8 flex justify-between items-center`}
+					} max-w-3xl mx-auto py-2 md:py-4 px-2 md:px-6 lg:px-8 flex justify-between items-center`}
 			>
 				<div className="flex items-center gap-4">
 					<Link href="/" className="flex items-center">
@@ -112,7 +111,7 @@ export function BaseHeader({
 									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuSeparator className="my-0" />
-								<TranslateActionSectionClient
+								<LocaleSelector
 									currentHandle={currentUser.handle}
 									hasGeminiApiKey={hasGeminiApiKey}
 									localeSelectorClassName="w-[200px]"

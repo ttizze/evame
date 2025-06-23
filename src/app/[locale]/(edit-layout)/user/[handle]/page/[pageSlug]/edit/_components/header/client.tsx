@@ -1,5 +1,6 @@
 "use client";
 import { BaseHeader } from "@/app/[locale]/_components/header/base-header.client";
+import { LocaleSelector } from "@/app/[locale]/_components/header/locale-selector/client";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
 import type { SanitizedUser } from "@/app/types";
@@ -21,7 +22,7 @@ import {
 	Loader2,
 	Lock,
 } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { useActionState, useMemo } from "react";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
@@ -76,6 +77,7 @@ export function EditHeader({
 		state.success ? (state.data?.translationJobs ?? []) : [],
 	);
 	useTranslationJobToast(toastJobs);
+	const { pageSlug } = useParams<{ pageSlug?: string }>();
 
 	const isPublic = initialStatus === "PUBLIC";
 
@@ -147,6 +149,14 @@ export function EditHeader({
 									</>
 								)}
 							</Button>
+							{initialStatus === "PUBLIC" && pageSlug && (
+								<LocaleSelector
+									pageSlug={pageSlug}
+									currentHandle={currentUser.handle}
+									hasGeminiApiKey={false}
+									localeSelectorClassName="w-[150px] ml-2"
+								/>
+							)}
 							<Popover>
 								<PopoverTrigger asChild>
 									<button
@@ -223,15 +233,17 @@ export function EditHeader({
 	);
 
 	return (
-		<div
-			className={`sticky top-0 z-50  ${isVisible ? "translate-y-0" : "-translate-y-full"}`}
-		>
-			<BaseHeader
-				currentUser={currentUser}
-				leftExtra={leftExtra}
-				rightExtra={rightExtra}
-				showUserMenu={true}
-			/>
-		</div>
+		<>
+			<div
+				className={`sticky top-0 z-50  ${isVisible ? "translate-y-0" : "-translate-y-full"}`}
+			>
+				<BaseHeader
+					currentUser={currentUser}
+					leftExtra={leftExtra}
+					rightExtra={rightExtra}
+					showUserMenu={true}
+				/>
+			</div>
+		</>
 	);
 }
