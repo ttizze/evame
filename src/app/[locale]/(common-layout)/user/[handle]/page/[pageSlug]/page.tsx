@@ -3,7 +3,7 @@ import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MessageCircle } from "lucide-react";
+import { EyeIcon, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
@@ -107,6 +107,7 @@ export default async function Page({
 		currentUser,
 		pageTranslationJobs,
 		latestUserTranslationJob,
+		pageViewCount,
 	} = data;
 
 	const isOwner = pageDetail.user.handle === currentUser?.handle;
@@ -119,14 +120,18 @@ export default async function Page({
 			<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 				<DynamicContentWithTranslations pageData={data} />
 				<div className="flex items-center gap-4">
+					<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
+					<span className="text-muted-foreground">{pageViewCount}</span>
 					<DynamicPageLikeButton
 						pageId={pageDetail.id}
 						pageSlug={pageDetail.slug}
 						ownerHandle={pageDetail.user.handle}
 						showCount
 					/>
-					<MessageCircle className="w-6 h-6" strokeWidth={1.5} />
-					<span>{pageDetail._count?.pageComments || 0}</span>
+					<MessageCircle className="w-5 h-5" strokeWidth={1.5} />
+					<span className="text-muted-foreground">
+						{pageDetail._count?.pageComments || 0}
+					</span>
 				</div>
 
 				<DynamicFloatingControls

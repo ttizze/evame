@@ -3,12 +3,15 @@ import { PageCommentButton } from "@/app/[locale]/_components/page/page-comment-
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
+import { fetchPageViewCount } from "@/app/[locale]/_db/page-queries.server";
 import type { PageSummary } from "@/app/[locale]/types";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
+import { EyeIcon } from "lucide-react";
 import { getImageProps } from "next/image";
 import { PageActionsDropdown } from "./page-actions-dropdown/client";
+
 type PageListProps = {
 	pageSummary: PageSummary;
 	showOwnerActions?: boolean;
@@ -17,7 +20,7 @@ type PageListProps = {
 	currentUserHandle?: string;
 };
 
-export function PageList({
+export async function PageList({
 	pageSummary,
 	showOwnerActions = false,
 	index,
@@ -38,6 +41,7 @@ export function PageList({
 		`${BASE_URL}/api/og?locale=${locale}` + `&slug=${pageSummary.slug}`;
 	const pageLink = `/user/${pageSummary.user.handle}/page/${pageSummary.slug}`;
 	const userLink = `/user/${pageSummary.user.handle}`;
+	const viewCount = await fetchPageViewCount(pageSummary.id);
 	return (
 		<article
 			className={`grid gap-4 py-4 border-b last:border-b-0 ${
@@ -53,7 +57,7 @@ export function PageList({
 
 			{/* ───── 2) コンテンツ領域 ───── */}
 			{/**
-			 * コンテンツ領域は 3 行の Grid:
+			 * コンテンツ領域は 3 行の Grid:
 			 *   row‑1: タイトル行（タイトル + 操作ドロップダウン）
 			 *   row‑2: タグ行
 			 *   row‑3: フッター行（ユーザ & 日付 & ボタン）
@@ -106,6 +110,8 @@ export function PageList({
 
 				{/* ③ アクション（いいね＋コメント） */}
 				<div className="flex items-center gap-2 justify-end">
+					<EyeIcon className="w-5 h-5" />
+					<span className="text-muted-foreground">{viewCount}</span>
 					<PageLikeButton
 						pageId={pageSummary.id}
 						pageSlug={pageSummary.slug}
