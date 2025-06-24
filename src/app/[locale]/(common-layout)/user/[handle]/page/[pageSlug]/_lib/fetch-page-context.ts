@@ -1,6 +1,7 @@
 import { fetchPageDetail } from "@/app/[locale]/_db/page-queries.server";
 import { fetchLatestPageTranslationJobs } from "@/app/[locale]/_db/page-queries.server";
 
+import { fetchPageViewCount } from "@/app/[locale]/_db/page-queries.server";
 import { getCurrentUser } from "@/auth";
 import { notFound } from "next/navigation";
 import { cache } from "react";
@@ -28,15 +29,15 @@ export const fetchPageContext = cache(async (slug: string, locale: string) => {
 	if (!pageDetail || pageDetail.status === "ARCHIVE") {
 		return notFound();
 	}
-	const [pageTranslationJobs, latestUserTranslationJob] = await Promise.all([
-		fetchLatestPageTranslationJobs(pageDetail.id),
-		fetchLatestUserTranslationJob(pageDetail.id, currentUser?.id ?? "0"),
-	]);
 
-	// 非同期にビューカウントをインクリメント（待たない）
-	if (pageDetail) {
-		void incrementPageView(pageDetail.id);
-	}
+	await incrementPageView(pageDetail.id);
+
+	const [pageTranslationJobs, latestUserTranslationJob, pageViewCount] =
+		await Promise.all([
+			fetchLatestPageTranslationJobs(pageDetail.id),
+			fetchLatestUserTranslationJob(pageDetail.id, currentUser?.id ?? "0"),
+			fetchPageViewCount(pageDetail.id),
+		]);
 
 	return {
 		pageDetail,
@@ -44,5 +45,6 @@ export const fetchPageContext = cache(async (slug: string, locale: string) => {
 		currentUser,
 		pageTranslationJobs,
 		latestUserTranslationJob,
+		pageViewCount,
 	};
 });
