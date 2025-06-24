@@ -18,6 +18,8 @@ function decideFromLocales(user: string, source: string): DisplayMode {
 
 type CtxShape = {
 	mode: DisplayMode;
+	userLocale: string;
+	sourceLocale: string;
 	cycle(): void;
 	/** ページ側から現在の sourceLocale を通知 */
 	setSourceLocale(locale: string): void;
@@ -89,7 +91,9 @@ export function DisplayProvider({
 	}, [mode, setQueryMode]);
 
 	return (
-		<Ctx.Provider value={{ mode, cycle, setSourceLocale }}>
+		<Ctx.Provider
+			value={{ mode, userLocale, sourceLocale, cycle, setSourceLocale }}
+		>
 			{children}
 		</Ctx.Provider>
 	);
