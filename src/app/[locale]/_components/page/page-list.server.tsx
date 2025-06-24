@@ -44,9 +44,8 @@ export async function PageList({
 	const viewCount = await fetchPageViewCount(pageSummary.id);
 	return (
 		<article
-			className={`grid gap-4 py-4 border-b last:border-b-0 ${
-				index !== undefined ? "grid-cols-[max-content_1fr]" : "grid-cols-1"
-			}`}
+			className={`grid gap-4 py-4 border-b last:border-b-0 ${index !== undefined ? "grid-cols-[max-content_1fr]" : "grid-cols-1"
+				}`}
 		>
 			{/* ───── 1) インデックス番号 ───── */}
 			{index !== undefined && (
