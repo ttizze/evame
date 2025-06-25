@@ -21,7 +21,7 @@ export async function getMarkdownSourceLocale(
   // 2. タイトルも含めて一括で判定用テキストを作る
   const combinedText = [title.trim(), cleanedMarkdown].join('\n\n');
 
-  let cld: LanguageIdentifier = null;
+  let cld: LanguageIdentifier | null = null;
   try {
     const cldFactory = await loadModule();
     cld = cldFactory.create();
