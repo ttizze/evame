@@ -28,12 +28,12 @@ export async function handleFileUpload(
   }
 
   let posToUpdate: number | null = null;
-  editor.state.doc.descendants((node, pos) => {
+  editor.state.doc.descendants((node, p) => {
     if (
       node.type.name === 'image' &&
       node.attrs['data-uploading-id'] === placeholderId
     ) {
-      posToUpdate = pos;
+      posToUpdate = p;
       return false; // 見つかったので探索終了
     }
   });

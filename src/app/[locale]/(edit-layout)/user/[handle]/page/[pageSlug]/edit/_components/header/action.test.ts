@@ -62,7 +62,7 @@ describe('editPageStatusAction', () => {
       success: false,
       zodErrors: { pageId: ['Required'] },
 
-      //biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      //biome-ignore lint/suspicious/noExplicitAny: <>
     } as any);
 
     const result = await editPageStatusAction(
@@ -80,14 +80,14 @@ describe('editPageStatusAction', () => {
       currentUser: user,
       data: { pageId: 1, status: 'PUBLIC' },
 
-      //biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      //biome-ignore lint/suspicious/noExplicitAny: <>
     } as any);
-    //biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    //biome-ignore lint/suspicious/noExplicitAny: <>
     vi.mocked(getPageById).mockResolvedValue(page as any);
     vi.mocked(handlePageAutoTranslation).mockResolvedValue([
       { jobId: 123, locale: 'ja', jobStatus: 'PENDING' },
 
-      //biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      //biome-ignore lint/suspicious/noExplicitAny: <>
     ] as any);
 
     const res = await editPageStatusAction(

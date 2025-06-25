@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { vi } from 'vitest';
 import type { PageDetail } from '@/app/[locale]/types';
 import { SubHeader } from './sub-header';
-import * as TocModule from './toc';
+import { useHasTableOfContents } from './toc';
 
 // Mock the dependencies
 vi.mock('@/i18n/routing', () => ({
@@ -25,14 +25,15 @@ interface TocProps {
 vi.mock('./toc', () => ({
   __esModule: true,
   default: ({ onItemClick }: TocProps) => (
-    <div
+    <button
       data-testid="toc"
       onClick={onItemClick}
       onKeyDown={onItemClick}
       onKeyUp={onItemClick}
+      type="button"
     >
       Table of Contents
-    </div>
+    </button>
   ),
   useHasTableOfContents: vi.fn(),
 }));
@@ -56,7 +57,7 @@ describe('SubHeader', () => {
   });
 
   test('renders user information correctly', () => {
-    vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(false);
+    vi.mocked(useHasTableOfContents).mockReturnValue(false);
 
     render(
       <NextIntlClientProvider locale="en">
@@ -69,7 +70,7 @@ describe('SubHeader', () => {
   });
 
   test('does not render TOC button when no TOC content', () => {
-    vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(false);
+    vi.mocked(useHasTableOfContents).mockReturnValue(false);
 
     render(
       <NextIntlClientProvider locale="en">
@@ -81,7 +82,7 @@ describe('SubHeader', () => {
   });
 
   test('renders TOC button when TOC content exists', () => {
-    vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(true);
+    vi.mocked(useHasTableOfContents).mockReturnValue(true);
 
     render(
       <NextIntlClientProvider locale="en">
@@ -93,7 +94,7 @@ describe('SubHeader', () => {
   });
 
   test('toggles TOC visibility when TOC button is clicked', () => {
-    vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(true);
+    vi.mocked(useHasTableOfContents).mockReturnValue(true);
 
     render(
       <NextIntlClientProvider locale="en">
@@ -118,7 +119,7 @@ describe('SubHeader', () => {
   });
 
   test('closes TOC when a TOC item is clicked', () => {
-    vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(true);
+    vi.mocked(useHasTableOfContents).mockReturnValue(true);
 
     render(
       <NextIntlClientProvider locale="en">

@@ -27,7 +27,7 @@ export function FollowStats({
 
   return (
     <div className="mt-2 flex gap-4 text-gray-500 text-sm">
-      <span
+      <button
         className="cursor-pointer"
         onClick={() => setOpenFollowing(true)}
         onKeyDown={(e) => {
@@ -35,10 +35,11 @@ export function FollowStats({
             setOpenFollowing(true);
           }
         }}
+        type="button"
       >
         {followingCount} following
-      </span>
-      <span
+      </button>
+      <button
         className="cursor-pointer"
         onClick={() => setOpenFollowers(true)}
         onKeyDown={(e) => {
@@ -46,9 +47,10 @@ export function FollowStats({
             setOpenFollowers(true);
           }
         }}
+        type="button"
       >
         {followersCount} followers
-      </span>
+      </button>
 
       <FollowListDialog
         onOpenChange={setOpenFollowing}

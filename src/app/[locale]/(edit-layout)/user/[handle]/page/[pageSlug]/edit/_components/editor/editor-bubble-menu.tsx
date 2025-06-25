@@ -1,4 +1,10 @@
-import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu';
+import {
+  Content as DropdownMenuPrimitiveContent,
+  Item as DropdownMenuPrimitiveItem,
+  Portal as DropdownMenuPrimitivePortal,
+  Root as DropdownMenuPrimitiveRoot,
+  Trigger as DropdownMenuPrimitiveTrigger,
+} from '@radix-ui/react-dropdown-menu';
 import { BubbleMenu, type Editor as TiptapEditor } from '@tiptap/react';
 import type { LucideIcon } from 'lucide-react';
 import {
@@ -126,8 +132,8 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
       <div className="flex items-center" ref={containerRef}>
         <TooltipProvider>
           <div className="flex items-center">
-            <DropdownMenuPrimitive.Root modal={false}>
-              <DropdownMenuPrimitive.Trigger
+            <DropdownMenuPrimitiveRoot modal={false}>
+              <DropdownMenuPrimitiveTrigger
                 className={cn(
                   'flex h-[32px] w-[38px] items-start rounded-md text-muted-foreground text-sm transition-colors hover:bg-secondary hover:text-foreground',
                   editor.isActive('heading') && 'bg-secondary text-foreground'
@@ -137,15 +143,15 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
                   <HeadingIcon className="mr-0.5 h-5 w-5" />
                   <ChevronDown className="mr-0.5 h-3 w-3" />
                 </div>
-              </DropdownMenuPrimitive.Trigger>
-              <DropdownMenuPrimitive.Portal container={containerRef.current}>
-                <DropdownMenuPrimitive.Content
+              </DropdownMenuPrimitiveTrigger>
+              <DropdownMenuPrimitivePortal container={containerRef.current}>
+                <DropdownMenuPrimitiveContent
                   align="start"
                   className="data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-0 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-2 text-popover-foreground shadow-md data-[state=closed]:animate-out data-[state=open]:animate-in"
                   side="bottom"
                   sideOffset={6}
                 >
-                  <DropdownMenuPrimitive.Item
+                  <DropdownMenuPrimitiveItem
                     className={cn(
                       'relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50',
                       !editor.isActive('heading') && 'bg-secondary'
@@ -154,11 +160,11 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
                   >
                     <Type className="mr-2 h-5 w-5" />
                     <span>Regular text</span>
-                  </DropdownMenuPrimitive.Item>
+                  </DropdownMenuPrimitiveItem>
                   {[2, 3, 4].map((level) => {
                     const Icon = headingIcons[level];
                     return (
-                      <DropdownMenuPrimitive.Item
+                      <DropdownMenuPrimitiveItem
                         className={cn(
                           'relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50',
                           editor.isActive('heading', { level }) &&
@@ -169,12 +175,12 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
                       >
                         <Icon className="mr-2 h-5 w-5" />
                         <span>Heading {level}</span>
-                      </DropdownMenuPrimitive.Item>
+                      </DropdownMenuPrimitiveItem>
                     );
                   })}
-                </DropdownMenuPrimitive.Content>
-              </DropdownMenuPrimitive.Portal>
-            </DropdownMenuPrimitive.Root>
+                </DropdownMenuPrimitiveContent>
+              </DropdownMenuPrimitivePortal>
+            </DropdownMenuPrimitiveRoot>
             {items.map(({ value, icon: Icon, isActive, label }) => (
               <Tooltip key={value}>
                 <TooltipTrigger asChild>

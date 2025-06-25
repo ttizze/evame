@@ -49,7 +49,7 @@ async function triggerAutoTranslation(
 }
 
 export async function editPageStatusAction(
-  previousState: EditPageStatusActionState,
+  _previousState: EditPageStatusActionState,
   formData: FormData
 ): Promise<EditPageStatusActionState> {
   const v = await authAndValidate(editPageStatusSchema, formData);

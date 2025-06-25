@@ -152,7 +152,9 @@ export function EditorKeyboardMenu({ editor }: EditorKeyboardMenuProps) {
         id="keyboardImageUpload"
         onChange={(e) => {
           const file = e.target.files?.[0];
-          if (file) handleFileUpload(file, editor);
+          if (file) {
+            handleFileUpload(file, editor);
+          }
         }}
         style={{ display: 'none' }}
         type="file"

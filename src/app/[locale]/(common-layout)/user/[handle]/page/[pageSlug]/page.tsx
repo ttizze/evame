@@ -108,13 +108,7 @@ export default async function Page({
   if (!data) {
     return notFound();
   }
-  const {
-    pageDetail,
-    currentUser,
-    pageTranslationJobs,
-    latestUserTranslationJob,
-    pageViewCount,
-  } = data;
+  const { pageDetail, currentUser, pageViewCount } = data;
 
   const isOwner = pageDetail.user.handle === currentUser?.handle;
   if (!isOwner && pageDetail.status !== 'PUBLIC') {

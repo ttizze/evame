@@ -6,7 +6,9 @@ export function useHeaderVisibility() {
 
   useEffect(() => {
     const container = document.getElementById('root');
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     const handleScroll = () => {
       const currentScrollY = container.scrollTop;
