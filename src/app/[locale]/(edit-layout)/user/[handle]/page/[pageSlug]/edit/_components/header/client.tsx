@@ -100,6 +100,33 @@ export function EditHeader({
     null
   );
 
+  const statusText = useMemo(() => {
+    if (isPending) {
+      return PROCESSING_TEXT;
+    }
+    return isPublic ? 'Public' : 'Private';
+  }, [isPending, isPublic]);
+
+  const publicButtonContent = useMemo(() => {
+    if (isPending && clickedStatus === 'PUBLIC') {
+      return <Loader2 className={ICON_SPIN_CLASSES} />;
+    }
+    if (isPublic) {
+      return (
+        <>
+          <LanguagesIcon className={ICON_CLASSES} />
+          <span>Translate</span>
+        </>
+      );
+    }
+    return (
+      <>
+        <Globe className={ICON_CLASSES} />
+        <span>Public</span>
+      </>
+    );
+  }, [isPending, clickedStatus, isPublic]);
+
   const leftExtra = (
     <>
       <SaveButton hasUnsavedChanges={hasUnsavedChanges} />
@@ -116,13 +143,7 @@ export function EditHeader({
           variant={initialStatus === 'PUBLIC' ? 'default' : 'secondary'}
         >
           {statusIcon}
-          <span>
-            {isPending
-              ? PROCESSING_TEXT
-              : initialStatus === 'PUBLIC'
-                ? 'Public'
-                : 'Private'}
-          </span>
+          <span>{statusText}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-56 rounded-xl px-3 py-1">
@@ -143,21 +164,7 @@ export function EditHeader({
                 type="submit"
                 variant="ghost"
               >
-                {isPending && clickedStatus === 'PUBLIC' ? (
-                  <>
-                    <Loader2 className={ICON_SPIN_CLASSES} />
-                  </>
-                ) : initialStatus === 'PUBLIC' ? (
-                  <>
-                    <LanguagesIcon className={ICON_CLASSES} />
-                    <span>Translate</span>
-                  </>
-                ) : (
-                  <>
-                    <Globe className={ICON_CLASSES} />
-                    <span>Public</span>
-                  </>
-                )}
+                {publicButtonContent}
               </Button>
               {pageSlug && (
                 <LocaleMultiSelector
@@ -180,9 +187,7 @@ export function EditHeader({
           >
             <input name="status" type="hidden" value="DRAFT" />
             {isPending && clickedStatus === 'DRAFT' ? (
-              <>
-                <Loader2 className={ICON_SPIN_CLASSES} />
-              </>
+              <Loader2 className={ICON_SPIN_CLASSES} />
             ) : (
               <>
                 <Lock className={ICON_CLASSES} />

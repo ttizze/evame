@@ -13,7 +13,7 @@ import {
 type Params = Promise<{ locale: string; handle: string; pageSlug: string }>;
 
 const getPageData = cache(async (handle: string, pageSlug: string) => {
-  if (!(handle && pageSlug)) notFound();
+  if (!(handle && pageSlug)) { notFound() };
 
   const currentUser = await getCurrentUser();
   if (currentUser?.handle !== handle || !currentUser?.id) {

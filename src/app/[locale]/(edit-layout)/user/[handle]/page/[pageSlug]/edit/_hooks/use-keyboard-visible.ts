@@ -5,7 +5,7 @@ export function useKeyboardVisible() {
 
   useEffect(() => {
     if (!(navigator.userAgent.match(/iPad|iPhone/i) && self.visualViewport))
-      return;
+      { return };
 
     const root = document.getElementById('root');
     let lastHeight: number | undefined;
@@ -13,7 +13,7 @@ export function useKeyboardVisible() {
 
     const updateLayout = () => {
       const viewport = self.visualViewport;
-      if (!viewport) return;
+      if (!viewport) { return };
       const height = viewport.height * viewport.scale;
       const offsetTop = viewport.offsetTop;
 

@@ -111,9 +111,9 @@ describe('editPageStatusAction', () => {
       currentUser: user,
       data: { pageId: 1, status: 'DRAFT' },
 
-      //biome-ignore lint/suspicious/noExplicitAny: <explanation>
+      //biome-ignore lint/suspicious/noExplicitAny: <>
     } as any);
-    //biome-ignore lint/suspicious/noExplicitAny: <explanation>
+    //biome-ignore lint/suspicious/noExplicitAny: <>
     vi.mocked(getPageById).mockResolvedValue(page as any);
 
     const res = await editPageStatusAction(

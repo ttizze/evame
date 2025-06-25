@@ -46,7 +46,7 @@ async function syncPageSegments(pageId: number, drafts: SegmentDraft[]) {
     const CHUNK = 200;
     for (let i = 0; i < drafts.length; i += CHUNK) {
       const chunk = drafts.slice(i, i + CHUNK);
-      // biome-ignore lint: チャンクごとに順序制御するため await が必要
+      // biome-ignore lint: <チャンクごとに順序制御するため await が必要>
       await Promise.all(
         chunk.map((d) =>
           tx.pageSegment.upsert({
