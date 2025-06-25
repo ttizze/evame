@@ -52,5 +52,5 @@ export const editPageContentAction = createActionFactory<
 
   buildRevalidatePaths: (i, handle) => [`/user/${handle}/page/${i.pageSlug}`],
 
-  buildResponse: (d) => ({ success: true, data: undefined }),
+  buildResponse: () => ({ success: true, data: undefined }),
 });

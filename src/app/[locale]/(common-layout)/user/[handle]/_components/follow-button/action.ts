@@ -21,7 +21,7 @@ export type FollowActionResponse = ActionResponse<
   }
 >;
 export async function followAction(
-  previousState: FollowActionResponse,
+  _previousState: FollowActionResponse,
   formData: FormData
 ): Promise<FollowActionResponse> {
   const v = await authAndValidate(followActionSchema, formData);

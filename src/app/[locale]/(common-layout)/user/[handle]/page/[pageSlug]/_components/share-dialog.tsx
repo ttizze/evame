@@ -31,7 +31,9 @@ export function ShareDialog() {
 
   /* 共有 URL を組み立て */
   const getShareUrl = () => {
-    if (typeof window === 'undefined') return '';
+    if (typeof window === 'undefined') {
+      return '';
+    }
     const url = new URL(window.location.href);
     url.searchParams.set('displayMode', mode);
     return url.toString();

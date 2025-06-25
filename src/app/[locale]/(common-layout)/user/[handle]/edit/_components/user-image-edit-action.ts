@@ -13,7 +13,7 @@ export type UserImageEditState = ActionResponse<
 >;
 
 export async function userImageEditAction(
-  previousState: UserImageEditState,
+  _previousState: UserImageEditState,
   formData: FormData
 ): Promise<UserImageEditState> {
   const currentUser = await getCurrentUser();

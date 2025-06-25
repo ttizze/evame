@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ImageResponse } from 'next/og';
-import type { DisplayMode } from '@/app/_context/display-types';
 import { fetchPageContext } from '@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_lib/fetch-page-context';
 
 export const revalidate = 360_000_000;
@@ -15,15 +14,13 @@ export async function GET(req: Request): Promise<Response> {
   );
   const locale: string = searchParams.get('locale') || 'en';
   const slug: string = searchParams.get('slug') || '';
-  const displayMode =
-    (searchParams.get('displayMode') as DisplayMode) ?? 'both'; // fallback
 
   const [logoData, pageContext] = await Promise.all([
     readFile(join(process.cwd(), 'public', 'logo.png')),
     fetchPageContext(slug, locale),
   ]);
 
-  const logoSrc = Uint8Array.from(logoData).buffer;
+  const logoSrc = `data:image/png;base64,${logoData.toString('base64')}`;
 
   if (!pageContext) {
     return new ImageResponse(
@@ -51,6 +48,7 @@ export async function GET(req: Request): Promise<Response> {
         <div tw="flex items-center justify-between w-full ">
           {/* 左側のアバターと名前 */}
           <div tw="flex items-center">
+            {/* biome-ignorelint/performance/noImgElement: <next> */}
             <img
               alt={pageOwner?.name}
               src={pageOwner?.image}
@@ -59,8 +57,8 @@ export async function GET(req: Request): Promise<Response> {
             <p tw="text-6xl ">{pageOwner?.name}</p>
           </div>
           {/* 右端にロゴ */}
+          {/* biome-ignorelint/performance/noImgElement: <next> */}
           <img
-            //@ts-expect-error srcの型がおかしいが､これはバグではない
             alt="logo"
             src={logoSrc}
             style={{

@@ -39,7 +39,7 @@ export default async function PageManagementPage({
   searchParams: Promise<SearchParams>;
 }) {
   const currentUser = await getCurrentUser();
-  if (!(currentUser && currentUser.id)) {
+  if (!currentUser?.id) {
     return redirect('/auth/login');
   }
   const { locale } = await params;

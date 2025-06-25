@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 export const dynamicParams = true;
 
-export async function generateStaticParams() {
+export function generateStaticParams() {
   const locales = ['en', 'ja', 'zh', 'ko', 'es'];
 
   return locales.map((locale) => ({

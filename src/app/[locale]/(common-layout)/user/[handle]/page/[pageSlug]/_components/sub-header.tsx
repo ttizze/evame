@@ -25,7 +25,9 @@ export function SubHeader({
   const { headerRef, isPinned, isVisible, headerHeight } = useHeaderScroll();
 
   const renderToc = () => {
-    if (!hasTocContent) return null;
+    if (!hasTocContent) {
+      return null;
+    }
 
     return (
       <>

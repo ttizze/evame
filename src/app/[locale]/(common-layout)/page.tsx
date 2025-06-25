@@ -1,23 +1,8 @@
 import type { Metadata } from 'next';
 import dynamic from 'next/dynamic';
 import type { SearchParams } from 'nuqs/server';
-import { createLoader, parseAsString } from 'nuqs/server';
 import { getCurrentUser } from '@/auth';
 import { Skeleton } from '@/components/ui/skeleton';
-
-const PopularPageList = dynamic(
-  () => import('@/app/[locale]/_components/page/popular-page-list/server'),
-  {
-    loading: () => <Skeleton className="mb-10 h-[400px] w-full" />,
-  }
-);
-
-const PopularPageTagsList = dynamic(
-  () => import('@/app/[locale]/_components/page/popular-page-tags-list/server'),
-  {
-    loading: () => <Skeleton className="mb-6 h-[100px] w-full" />,
-  }
-);
 
 const NewPageList = dynamic(
   () => import('@/app/[locale]/_components/page/new-page-list/server'),
@@ -26,19 +11,6 @@ const NewPageList = dynamic(
   }
 );
 
-const SortTabs = dynamic(
-  () =>
-    import('@/app/[locale]/_components/sort-tabs').then((mod) => mod.SortTabs),
-  {
-    loading: () => <Skeleton className="mb-4 h-[50px] w-full" />,
-  }
-);
-const PopularUsersList = dynamic(
-  () => import('@/app/[locale]/_components/user/popular-users-list/server'),
-  {
-    loading: () => <Skeleton className="mb-6 h-[200px] w-full" />,
-  }
-);
 const DynamicHeroSection = dynamic(
   () => import('@/app/[locale]/_components/hero-section/server'),
   {
@@ -81,12 +53,6 @@ export const metadata: Metadata = {
     'Evame is an open-source platform for collaborative article translation and sharing.',
 };
 
-const searchParamsSchema = {
-  tab: parseAsString.withDefault('home'),
-  sort: parseAsString.withDefault('popular'),
-};
-const loadSearchParams = createLoader(searchParamsSchema);
-
 export default async function HomePage({
   params,
   searchParams,
@@ -96,7 +62,6 @@ export default async function HomePage({
 }) {
   const currentUser = await getCurrentUser();
   const { locale } = await params;
-  const { sort } = await loadSearchParams(searchParams);
   return (
     <div className="mb-12 flex flex-col justify-between gap-8">
       {!currentUser && (

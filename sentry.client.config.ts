@@ -2,17 +2,22 @@
 // The config you add here will be used whenever a users loads a page in their browser.
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-import * as Sentry from '@sentry/nextjs';
+import {
+  browserProfilingIntegration,
+  browserTracingIntegration,
+  init,
+  replayIntegration,
+} from '@sentry/nextjs';
 
 if (process.env.NODE_ENV === 'production') {
-  Sentry.init({
+  init({
     dsn: 'https://0cda4c09dab97bb05116614428effb0c@o4507906314207232.ingest.us.sentry.io/4508805630263296',
 
     // Add optional integrations for additional features
     integrations: [
-      Sentry.replayIntegration(),
-      Sentry.browserProfilingIntegration(),
-      Sentry.browserTracingIntegration(),
+      replayIntegration(),
+      browserProfilingIntegration(),
+      browserTracingIntegration(),
     ],
 
     // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.

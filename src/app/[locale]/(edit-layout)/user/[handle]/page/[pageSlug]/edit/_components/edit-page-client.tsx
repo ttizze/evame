@@ -42,7 +42,7 @@ export function EditPageClient({
   const [editorInstance, setEditorInstance] = useState<TiptapEditor | null>(
     null
   );
-  const [editState, editAction, isEditing] = useActionState<
+  const [editState, editAction, _isEditing] = useActionState<
     EditPageContentActionState,
     FormData
   >(editPageContentAction, { success: false });
@@ -87,7 +87,7 @@ export function EditPageClient({
 
   return (
     <div
-      className={`flex flex-col overflow-x-hidden overflow-y-scroll ${isKeyboardVisible ? 'overscroll-y-contain' : null}`}
+      className={`flex flex-col overflow-x-hidden overflow-y-scroll ${isKeyboardVisible ? 'overscroll-y-contain' : ''}`}
       id="root"
       style={{
         height: 'calc(100 * var(--svh, 1svh))',

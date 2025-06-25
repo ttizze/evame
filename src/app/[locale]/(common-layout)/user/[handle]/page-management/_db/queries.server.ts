@@ -54,11 +54,11 @@ export async function fetchPaginatedOwnPages(
     }),
   ]);
 
-  const pagesWithTitle = pages.map((page) => ({
-    ...page,
-    createdAt: page.createdAt.toLocaleString(locale),
-    updatedAt: page.updatedAt.toLocaleString(locale),
-    title: page.pageSegments.filter((item) => item.number === 0)[0].text,
+  const pagesWithTitle = pages.map((p) => ({
+    ...p,
+    createdAt: p.createdAt.toLocaleString(locale),
+    updatedAt: p.updatedAt.toLocaleString(locale),
+    title: p.pageSegments.filter((item) => item.number === 0)[0].text,
   }));
   return {
     pagesWithTitle,
@@ -72,7 +72,9 @@ export type PageWithTitle = Awaited<
 >['pagesWithTitle'][number];
 
 export async function fetchPageViewCounts(pageIds: number[]) {
-  if (pageIds.length === 0) return {} as Record<number, number>;
+  if (pageIds.length === 0) {
+    return {} as Record<number, number>;
+  }
 
   const views = await prisma.pageView.findMany({
     where: { pageId: { in: pageIds } },

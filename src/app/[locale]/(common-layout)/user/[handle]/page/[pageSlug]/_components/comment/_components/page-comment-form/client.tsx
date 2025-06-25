@@ -31,7 +31,9 @@ export function PageCommentForm({
 
   useTranslationJobToast(toastJobs);
   useEffect(() => {
-    if (state.success) onReplySuccess?.();
+    if (state.success) {
+      onReplySuccess?.();
+    }
   }, [state.success, onReplySuccess]);
 
   return (

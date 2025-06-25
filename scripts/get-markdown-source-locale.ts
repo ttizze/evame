@@ -1,4 +1,4 @@
-import { loadModule } from 'cld3-asm';
+import { type LanguageIdentifier, loadModule } from 'cld3-asm';
 
 // Markdown版
 export async function getMarkdownSourceLocale(
@@ -21,7 +21,7 @@ export async function getMarkdownSourceLocale(
   // 2. タイトルも含めて一括で判定用テキストを作る
   const combinedText = [title.trim(), cleanedMarkdown].join('\n\n');
 
-  let cld = null;
+  let cld: LanguageIdentifier = null;
   try {
     const cldFactory = await loadModule();
     cld = cldFactory.create();

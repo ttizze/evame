@@ -78,6 +78,7 @@ const config: NextConfig = {
       },
     ],
   },
+  // biome-ignore lint/suspicious/useAwait: <next>
   async headers() {
     return [
       {

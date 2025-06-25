@@ -19,12 +19,14 @@ export function PageCommentItemClient({
   pageComment,
   currentHandle,
 }: PageCommentItemClientProps) {
-  const [state, action, isPending] = useActionState<
+  const [_, action, isPending] = useActionState<
     CommentDeleteActionResponse,
     FormData
   >(deletePageCommentAction, { success: false });
 
-  if (currentHandle !== pageComment.user.handle) return null;
+  if (currentHandle !== pageComment.user.handle) {
+    return null;
+  }
 
   return (
     <CommentActionMenu>
