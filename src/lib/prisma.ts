@@ -47,7 +47,7 @@ if (isDevelopment || isTest) {
 	};
 }
 
-const pool = new Pool({ connectionString, max: 0 });
+const pool = new Pool({ connectionString, max: 5 });
 const adapter = new PrismaNeon(pool);
 
 // prismaClient というローカル変数で PrismaClient インスタンスを管理
