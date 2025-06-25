@@ -1,8 +1,8 @@
 // import { describe, expect, it } from "vitest";
 // import { getVertexAIModelResponse } from "./vertexai";
 
-test("hello world", () => {
-	expect(1).toBe(1);
+test('hello world', () => {
+  expect(1).toBe(1);
 });
 
 // describe("getVertexAIModelResponse Integration Test", () => {

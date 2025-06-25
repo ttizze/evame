@@ -1,21 +1,21 @@
-import type { JsonValue } from "@prisma/client/runtime/library";
-import type { Root as MdastRoot } from "mdast";
-import rehypeStringify from "rehype-stringify";
-import remarkRehype from "remark-rehype";
-import { unified } from "unified";
+import type { JsonValue } from '@prisma/client/runtime/library';
+import type { Root as MdastRoot } from 'mdast';
+import rehypeStringify from 'rehype-stringify';
+import remarkRehype from 'remark-rehype';
+import { unified } from 'unified';
 
 /* -------------------------------------------------------------------------- */
 /*                               Public API                                   */
 /* -------------------------------------------------------------------------- */
 
 interface Params {
-	/** DB に入っている mdastJson (= Prisma.Json) */
-	mdastJson: JsonValue;
+  /** DB に入っている mdastJson (= Prisma.Json) */
+  mdastJson: JsonValue;
 }
 
 interface Result {
-	/** 画面描画・SSR 用にそのまま使える HTML 文字列 */
-	html: string;
+  /** 画面描画・SSR 用にそのまま使える HTML 文字列 */
+  html: string;
 }
 
 /**
@@ -26,19 +26,19 @@ interface Result {
  * data 属性などをそのまま rehypeStringify が吐き出す形にしておく。
  */
 export async function mdastToHtml({ mdastJson }: Params): Promise<Result> {
-	if (!mdastJson || Object.keys(mdastJson).length === 0) {
-		return { html: "" };
-	}
+  if (!mdastJson || Object.keys(mdastJson).length === 0) {
+    return { html: '' };
+  }
 
-	/* 1. mdastJson は plain object なのでそのまま cast -------------- */
-	const mdast = mdastJson as unknown as MdastRoot;
+  /* 1. mdastJson は plain object なのでそのまま cast -------------- */
+  const mdast = mdastJson as unknown as MdastRoot;
 
-	const processor = unified()
-		.use(remarkRehype, { allowDangerousHtml: true }) // mdast → hast
-		.use(rehypeStringify, { allowDangerousHtml: true });
+  const processor = unified()
+    .use(remarkRehype, { allowDangerousHtml: true }) // mdast → hast
+    .use(rehypeStringify, { allowDangerousHtml: true });
 
-	const hast = await processor.run(mdast); // ✅ parser 不要
-	const html = processor.stringify(hast); // stringify だけ実行
+  const hast = await processor.run(mdast); // ✅ parser 不要
+  const html = processor.stringify(hast); // stringify だけ実行
 
-	return { html: String(html) };
+  return { html: String(html) };
 }

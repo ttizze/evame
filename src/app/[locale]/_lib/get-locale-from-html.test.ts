@@ -1,11 +1,11 @@
-import { describe, expect, test } from "vitest";
-import { getLocaleFromHtml } from "./get-locale-from-html";
+import { describe, expect, test } from 'vitest';
+import { getLocaleFromHtml } from './get-locale-from-html';
 
-describe("getPagesourceLocale - Other Languages", () => {
-	// 長めの英語テストケース
-	test("英語（長文）のコンテンツを正しく検出できるか", async () => {
-		const title = "Long English Title";
-		const numberedContent = `
+describe('getPagesourceLocale - Other Languages', () => {
+  // 長めの英語テストケース
+  test('英語（長文）のコンテンツを正しく検出できるか', async () => {
+    const title = 'Long English Title';
+    const numberedContent = `
       <p>
         This is a long paragraph in English to test whether cld3-asm or similar
         libraries can correctly identify the primary language when given a fair
@@ -20,14 +20,14 @@ describe("getPagesourceLocale - Other Languages", () => {
         stood as a testament to the progress of civilization.
       </p>
     `;
-		const language = await getLocaleFromHtml(numberedContent, title);
-		expect(language).toBe("en");
-	});
+    const language = await getLocaleFromHtml(numberedContent, title);
+    expect(language).toBe('en');
+  });
 
-	// 長めのスペイン語テストケース
-	test("スペイン語（長文）のコンテンツを正しく検出できるか", async () => {
-		const title = "Título en español";
-		const numberedContent = `
+  // 長めのスペイン語テストケース
+  test('スペイン語（長文）のコンテンツを正しく検出できるか', async () => {
+    const title = 'Título en español';
+    const numberedContent = `
       <p>
         Este es un párrafo más extenso en español para comprobar si la librería
         reconoce correctamente el idioma principal. Al incluir varias oraciones
@@ -42,14 +42,14 @@ describe("getPagesourceLocale - Other Languages", () => {
         calidez humana.
       </p>
     `;
-		const language = await getLocaleFromHtml(numberedContent, title);
-		expect(language).toBe("es");
-	});
+    const language = await getLocaleFromHtml(numberedContent, title);
+    expect(language).toBe('es');
+  });
 
-	test("日本語のコンテンツを正しく検出できるか（長文版）", async () => {
-		const title = "日本語のタイトル";
-		// 文章をより長く、かつバリエーション豊かにする
-		const numberedContent = `
+  test('日本語のコンテンツを正しく検出できるか（長文版）', async () => {
+    const title = '日本語のタイトル';
+    // 文章をより長く、かつバリエーション豊かにする
+    const numberedContent = `
       <p>
         これは日本語の長めの文章です。日本語の文章を豊富に用意することで、
         cld3-asm などのライブラリがしっかりと日本語を判定できる可能性が高まります。
@@ -70,14 +70,14 @@ describe("getPagesourceLocale - Other Languages", () => {
         十分なテキスト量を確保し、言語判定の精度を上げることができます。
       </p>
     `;
-		const language = await getLocaleFromHtml(numberedContent, title);
-		expect(language).toBe("ja");
-	});
+    const language = await getLocaleFromHtml(numberedContent, title);
+    expect(language).toBe('ja');
+  });
 
-	// 混合言語（英語＋スペイン語）のテストケース
-	test("英語とスペイン語が混在するコンテンツの主要言語を正しく検出できるか", async () => {
-		const title = "Mixed English and Spanish Title";
-		const numberedContent = `
+  // 混合言語（英語＋スペイン語）のテストケース
+  test('英語とスペイン語が混在するコンテンツの主要言語を正しく検出できるか', async () => {
+    const title = 'Mixed English and Spanish Title';
+    const numberedContent = `
       <p>
         This paragraph starts in English, but then it switches to Spanish to see
         how the language detector behaves. Vamos a ver si el detector de idioma
@@ -89,8 +89,8 @@ describe("getPagesourceLocale - Other Languages", () => {
         al sistema o detectará el idioma predominante?
       </p>
     `;
-		const language = await getLocaleFromHtml(numberedContent, title);
-		// 主要言語が "en" または "es" と検出されることを想定
-		expect(["en", "es"]).toContain(language);
-	});
+    const language = await getLocaleFromHtml(numberedContent, title);
+    // 主要言語が "en" または "es" と検出されることを想定
+    expect(['en', 'es']).toContain(language);
+  });
 });

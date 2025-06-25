@@ -1,50 +1,50 @@
-import { Link as LinkI18n } from "@/i18n/routing";
-import Link from "next/link";
-import { FaDiscord, FaGithub } from "react-icons/fa";
+import Link from 'next/link';
+import { FaDiscord, FaGithub } from 'react-icons/fa';
+import { Link as LinkI18n } from '@/i18n/routing';
 
 export function Footer() {
-	return (
-		<footer className="mt-auto h-60 grid place-items-center">
-			<div className="w-full ">
-				<div className="flex justify-center items-center text-sm text-gray-600 dark:text-gray-300 gap-4">
-					<LinkI18n
-						href="/about"
-						className="hover:text-gray-900 dark:hover:text-white"
-					>
-						About
-					</LinkI18n>
-					<LinkI18n
-						href="/privacy"
-						className="hover:text-gray-900 dark:hover:text-white"
-					>
-						Privacy Policy
-					</LinkI18n>
-					<LinkI18n
-						href="/terms"
-						className="hover:text-gray-900 dark:hover:text-white"
-					>
-						Terms of Service
-					</LinkI18n>
-					<Link
-						href="https://github.com/ttizze/eveeve"
-						target="_blank"
-						rel="noopener noreferrer"
-						className="transition-colors"
-						aria-label="GitHub"
-					>
-						<FaGithub size={24} />
-					</Link>
-					<Link
-						href="https://discord.gg/2JfhZdu9zW"
-						target="_blank"
-						rel="noopener noreferrer"
-						className="transition-colors"
-						aria-label="Discord"
-					>
-						<FaDiscord size={24} />
-					</Link>
-				</div>
-			</div>
-		</footer>
-	);
+  return (
+    <footer className="mt-auto grid h-60 place-items-center">
+      <div className="w-full ">
+        <div className="flex items-center justify-center gap-4 text-gray-600 text-sm dark:text-gray-300">
+          <LinkI18n
+            className="hover:text-gray-900 dark:hover:text-white"
+            href="/about"
+          >
+            About
+          </LinkI18n>
+          <LinkI18n
+            className="hover:text-gray-900 dark:hover:text-white"
+            href="/privacy"
+          >
+            Privacy Policy
+          </LinkI18n>
+          <LinkI18n
+            className="hover:text-gray-900 dark:hover:text-white"
+            href="/terms"
+          >
+            Terms of Service
+          </LinkI18n>
+          <Link
+            aria-label="GitHub"
+            className="transition-colors"
+            href="https://github.com/ttizze/eveeve"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <FaGithub size={24} />
+          </Link>
+          <Link
+            aria-label="Discord"
+            className="transition-colors"
+            href="https://discord.gg/2JfhZdu9zW"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <FaDiscord size={24} />
+          </Link>
+        </div>
+      </div>
+    </footer>
+  );
 }

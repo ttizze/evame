@@ -1,70 +1,70 @@
 // components/CommentFormLayout.tsx
-"use client";
+'use client';
 
-import { Editor } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/editor/editor";
-import { StartButton } from "@/app/[locale]/_components/start-button";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState } from 'react';
+import { StartButton } from '@/app/[locale]/_components/start-button';
+import { Editor } from '@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/editor/editor';
+import { Button } from '@/components/ui/button';
 
 type Hidden = Record<string, string | number | undefined>;
 
 interface Props {
-	/** form の action 属性に渡す Server Action */
-	action: (formData: FormData) => void;
-	/** <input type="hidden"> にしたい name=value 一覧 */
-	hidden: Hidden;
-	/** ログイン中ハンドル（未ログインなら undefined） */
-	currentHandle?: string;
-	/** POST 中かどうか（isPending 相当） */
-	isPending: boolean;
-	/** content フィールドの Zod エラー (無ければ undefined) */
-	errorMsg?: string[];
+  /** form の action 属性に渡す Server Action */
+  action: (formData: FormData) => void;
+  /** <input type="hidden"> にしたい name=value 一覧 */
+  hidden: Hidden;
+  /** ログイン中ハンドル（未ログインなら undefined） */
+  currentHandle?: string;
+  /** POST 中かどうか（isPending 相当） */
+  isPending: boolean;
+  /** content フィールドの Zod エラー (無ければ undefined) */
+  errorMsg?: string[];
 }
 
 export function CommentForm({
-	action,
-	hidden,
-	currentHandle,
-	isPending,
-	errorMsg,
+  action,
+  hidden,
+  currentHandle,
+  isPending,
+  errorMsg,
 }: Props) {
-	const [content, setContent] = useState("");
+  const [content, setContent] = useState('');
 
-	return (
-		<>
-			<form action={action} className="space-y-4 relative">
-				{/* hidden inputs */}
-				{Object.entries(hidden).map(
-					([k, v]) =>
-						v !== undefined && (
-							<input key={k} type="hidden" name={k} value={v} />
-						),
-				)}
+  return (
+    <>
+      <form action={action} className="relative space-y-4">
+        {/* hidden inputs */}
+        {Object.entries(hidden).map(
+          ([k, v]) =>
+            v !== undefined && (
+              <input key={k} name={k} type="hidden" value={v} />
+            )
+        )}
 
-				<Editor
-					defaultValue={content}
-					name="content"
-					className={`border border-input rounded-md px-2 ${
-						!currentHandle ? "opacity-50 bg-muted" : ""
-					}`}
-					placeholder="Say Hello!"
-					onEditorUpdate={(ed) => setContent(ed?.getHTML() ?? "")}
-				/>
+        <Editor
+          className={`rounded-md border border-input px-2 ${
+            currentHandle ? '' : 'bg-muted opacity-50'
+          }`}
+          defaultValue={content}
+          name="content"
+          onEditorUpdate={(ed) => setContent(ed?.getHTML() ?? '')}
+          placeholder="Say Hello!"
+        />
 
-				{!currentHandle && (
-					<StartButton className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-				)}
+        {!currentHandle && (
+          <StartButton className="-translate-x-1/2 -translate-y-1/2 absolute top-1/2 left-1/2" />
+        )}
 
-				<Button
-					type="submit"
-					disabled={isPending || !currentHandle}
-					className={`w-full ${!currentHandle ? "opacity-50 bg-muted" : ""}`}
-				>
-					{isPending ? "posting" : "post"}
-				</Button>
-			</form>
+        <Button
+          className={`w-full ${currentHandle ? '' : 'bg-muted opacity-50'}`}
+          disabled={isPending || !currentHandle}
+          type="submit"
+        >
+          {isPending ? 'posting' : 'post'}
+        </Button>
+      </form>
 
-			{errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}
-		</>
-	);
+      {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
+    </>
+  );
 }

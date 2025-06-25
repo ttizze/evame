@@ -1,11 +1,11 @@
-import type { LocaleOption } from "@/app/_constants/locale";
+import type { LocaleOption } from '@/app/_constants/locale';
 
 /** 追加したい状態 */
-export type LocaleStatus = "source" | "translated" | "untranslated";
+export type LocaleStatus = 'source' | 'translated' | 'untranslated';
 
 /** UI 側で扱いやすいように、既存型を拡張 */
 interface LocaleOptionWithStatus extends LocaleOption {
-	status: LocaleStatus;
+  status: LocaleStatus;
 }
 
 /**
@@ -16,51 +16,51 @@ interface LocaleOptionWithStatus extends LocaleOption {
  * 返り値: ソース → 翻訳済み → 未翻訳 の順に重複なしで並んだ配列
  */
 export function buildLocaleOptions({
-	existLocales,
-	supported,
-	sourceLocale,
+  existLocales,
+  supported,
+  sourceLocale,
 }: {
-	sourceLocale?: string;
-	existLocales: string[];
-	supported: LocaleOption[];
+  sourceLocale?: string;
+  existLocales: string[];
+  supported: LocaleOption[];
 }): LocaleOptionWithStatus[] {
-	/* name 解決を O(1) にするため Map 化 */
-	const nameMap = new Map(supported.map((o) => [o.code, o.name]));
+  /* name 解決を O(1) にするため Map 化 */
+  const nameMap = new Map(supported.map((o) => [o.code, o.name]));
 
-	const toOption = (
-		code: string,
-		status: LocaleStatus,
-	): LocaleOptionWithStatus => ({
-		code,
-		name: nameMap.get(code) ?? code, // 未登録言語でもフォールバック
-		status,
-	});
+  const toOption = (
+    code: string,
+    status: LocaleStatus
+  ): LocaleOptionWithStatus => ({
+    code,
+    name: nameMap.get(code) ?? code, // 未登録言語でもフォールバック
+    status,
+  });
 
-	const seen = new Set<string>();
-	const result: LocaleOptionWithStatus[] = [];
+  const seen = new Set<string>();
+  const result: LocaleOptionWithStatus[] = [];
 
-	/* 1) 原文 */
-	if (sourceLocale) {
-		result.push(toOption(sourceLocale, "source"));
-		seen.add(sourceLocale);
-	}
+  /* 1) 原文 */
+  if (sourceLocale) {
+    result.push(toOption(sourceLocale, 'source'));
+    seen.add(sourceLocale);
+  }
 
-	/* 2) 翻訳済み */
-	for (const code of existLocales) {
-		if (!seen.has(code)) {
-			result.push(toOption(code, "translated"));
-			seen.add(code);
-		}
-	}
+  /* 2) 翻訳済み */
+  for (const code of existLocales) {
+    if (!seen.has(code)) {
+      result.push(toOption(code, 'translated'));
+      seen.add(code);
+    }
+  }
 
-	/* 3) 未翻訳（supported でまだ出ていないもの）*/
-	for (const { code } of supported) {
-		if (!seen.has(code)) {
-			result.push(toOption(code, "untranslated"));
-			// seen への追加は不要だが一貫性のため入れておく
-			seen.add(code);
-		}
-	}
+  /* 3) 未翻訳（supported でまだ出ていないもの）*/
+  for (const { code } of supported) {
+    if (!seen.has(code)) {
+      result.push(toOption(code, 'untranslated'));
+      // seen への追加は不要だが一貫性のため入れておく
+      seen.add(code);
+    }
+  }
 
-	return result;
+  return result;
 }

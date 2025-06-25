@@ -1,37 +1,38 @@
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
+
 interface VoteButtonProps {
-	type: "upvote" | "downvote";
-	isActive: boolean;
-	isVoting: boolean;
-	voteCount?: number;
-	children: (props: { iconClass: string }) => React.ReactNode;
+  type: 'upvote' | 'downvote';
+  isActive: boolean;
+  isVoting: boolean;
+  voteCount?: number;
+  children: (props: { iconClass: string }) => React.ReactNode;
 }
 export function VoteButton({
-	type,
-	isActive,
-	isVoting,
-	voteCount,
-	children,
+  type,
+  isActive,
+  isVoting,
+  voteCount,
+  children,
 }: VoteButtonProps) {
-	// テスト用の属性を設定
-	const testId = type === "upvote" ? "vote-up-button" : "vote-down-button";
-	// 状態に応じたクラス名を生成
-	const iconClass = `mr-2 h-4 w-4 transition-all duration-300 ${
-		isActive ? "[&>path]:fill-primary" : ""
-	} ${isVoting ? "animate-bounce" : ""}`;
+  // テスト用の属性を設定
+  const testId = type === 'upvote' ? 'vote-up-button' : 'vote-down-button';
+  // 状態に応じたクラス名を生成
+  const iconClass = `mr-2 h-4 w-4 transition-all duration-300 ${
+    isActive ? '[&>path]:fill-primary' : ''
+  } ${isVoting ? 'animate-bounce' : ''}`;
 
-	return (
-		<Button
-			type="submit"
-			name="isUpvote"
-			value={type === "upvote" ? "true" : "false"}
-			variant="ghost"
-			size="sm"
-			disabled={isVoting}
-			data-testid={testId}
-		>
-			{children({ iconClass })}
-			{type === "upvote" && voteCount !== undefined && voteCount}
-		</Button>
-	);
+  return (
+    <Button
+      data-testid={testId}
+      disabled={isVoting}
+      name="isUpvote"
+      size="sm"
+      type="submit"
+      value={type === 'upvote' ? 'true' : 'false'}
+      variant="ghost"
+    >
+      {children({ iconClass })}
+      {type === 'upvote' && voteCount !== undefined && voteCount}
+    </Button>
+  );
 }

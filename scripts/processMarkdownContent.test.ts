@@ -1,10 +1,10 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from 'vitest';
 
-describe("test", () => {
-	test("test", () => {
-		const markdown = "Hello, world!";
-		expect(markdown).toBe("Hello, world!");
-	});
+describe('test', () => {
+  test('test', () => {
+    const markdown = 'Hello, world!';
+    expect(markdown).toBe('Hello, world!');
+  });
 });
 
 // import { prisma } from "@/lib/prisma";

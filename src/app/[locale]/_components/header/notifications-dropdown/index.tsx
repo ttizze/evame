@@ -1,17 +1,17 @@
-import { NotificationsDropdownClient } from "./client";
-import { getNotifications } from "./db/queries.server";
+import { NotificationsDropdownClient } from './client';
+import { getNotifications } from './db/queries.server';
 
 export default async function NotificationsDropdown({
-	currentUserHandle,
+  currentUserHandle,
 }: {
-	currentUserHandle: string;
+  currentUserHandle: string;
 }) {
-	const notifications = await getNotifications(currentUserHandle);
+  const notifications = await getNotifications(currentUserHandle);
 
-	return (
-		<NotificationsDropdownClient
-			notifications={notifications}
-			currentUserHandle={currentUserHandle}
-		/>
-	);
+  return (
+    <NotificationsDropdownClient
+      currentUserHandle={currentUserHandle}
+      notifications={notifications}
+    />
+  );
 }

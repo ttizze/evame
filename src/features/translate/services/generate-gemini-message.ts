@@ -1,9 +1,9 @@
 export function generateSystemMessage(
-	title: string,
-	source_text: string,
-	target_locale: string,
+  title: string,
+  source_text: string,
+  target_locale: string
 ): string {
-	return `
+  return `
   You are a skilled translator. Your task is to accurately translate the given text into beautiful and natural sentences in the target language. Please follow these guidelines:
 
   1. Maintain consistency: Use the same words for recurring terms with the same meaning to avoid confusing the reader.

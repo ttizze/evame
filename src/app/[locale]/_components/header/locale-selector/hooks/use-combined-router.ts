@@ -1,43 +1,43 @@
-import { useRouter } from "@/i18n/routing";
-import { useRouter as useTopLoaderRouter } from "nextjs-toploader/app";
+import { useRouter as useTopLoaderRouter } from 'nextjs-toploader/app';
+import { useRouter } from '@/i18n/routing';
 
 interface NavigateOptions {
-	scroll?: boolean;
+  scroll?: boolean;
 }
 
 type Href =
-	| string
-	| {
-			pathname: string;
-			query?: Record<string, string | number | boolean | undefined>;
-	  };
+  | string
+  | {
+      pathname: string;
+      query?: Record<string, string | number | boolean | undefined>;
+    };
 
 export function useCombinedRouter() {
-	const topLoader = useTopLoaderRouter();
-	const intlRouter = useRouter();
+  const topLoader = useTopLoaderRouter();
+  const intlRouter = useRouter();
 
-	const push = async (href: Href, options?: NavigateOptions) => {
-		if (typeof href === "object") {
-			const searchParams = new URLSearchParams();
-			if (href.query) {
-				for (const [key, value] of Object.entries(href.query)) {
-					if (value !== undefined) {
-						searchParams.append(key, String(value));
-					}
-				}
-			}
-			const queryString = searchParams.toString();
-			const hrefString = `${href.pathname}${queryString ? `?${queryString}` : ""}`;
-			topLoader.push(hrefString, options);
-			await intlRouter.push(href, options);
-		} else {
-			topLoader.push(href, options);
-			await intlRouter.push(href, options);
-		}
-	};
+  const push = async (href: Href, options?: NavigateOptions) => {
+    if (typeof href === 'object') {
+      const searchParams = new URLSearchParams();
+      if (href.query) {
+        for (const [key, value] of Object.entries(href.query)) {
+          if (value !== undefined) {
+            searchParams.append(key, String(value));
+          }
+        }
+      }
+      const queryString = searchParams.toString();
+      const hrefString = `${href.pathname}${queryString ? `?${queryString}` : ''}`;
+      topLoader.push(hrefString, options);
+      await intlRouter.push(href, options);
+    } else {
+      topLoader.push(href, options);
+      await intlRouter.push(href, options);
+    }
+  };
 
-	return {
-		...intlRouter,
-		push,
-	};
+  return {
+    ...intlRouter,
+    push,
+  };
 }

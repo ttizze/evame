@@ -1,5 +1,5 @@
-import { FileText, FileX, Languages } from "lucide-react";
-import type { LocaleStatus } from "./build-locale-options";
+import { FileText, FileX, Languages } from 'lucide-react';
+import type { LocaleStatus } from './build-locale-options';
 
 /**
  * 3-state アイコン
@@ -9,17 +9,17 @@ import type { LocaleStatus } from "./build-locale-options";
  *  untranslated : サポート対象だが未翻訳   → FileX
  */
 export function TypeIcon({ status }: { status: LocaleStatus }) {
-	switch (status) {
-		case "source":
-			return <FileText data-testid="source-icon" className="w-4 h-4 mr-2" />;
+  switch (status) {
+    case 'source':
+      return <FileText className="mr-2 h-4 w-4" data-testid="source-icon" />;
 
-		case "translated":
-			return (
-				<Languages data-testid="translated-icon" className="w-4 h-4 mr-2" />
-			);
+    case 'translated':
+      return (
+        <Languages className="mr-2 h-4 w-4" data-testid="translated-icon" />
+      );
 
-		/* 未翻訳: デフォルトで包むと将来ステータスが増えても安全 */
-		default:
-			return <FileX data-testid="untranslated-icon" className="w-4 h-4 mr-2" />;
-	}
+    /* 未翻訳: デフォルトで包むと将来ステータスが増えても安全 */
+    default:
+      return <FileX className="mr-2 h-4 w-4" data-testid="untranslated-icon" />;
+  }
 }

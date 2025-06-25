@@ -1,30 +1,30 @@
-"use client";
+'use client';
 
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useQueryState } from "nuqs";
+import { useQueryState } from 'nuqs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface SortTabsProps {
-	defaultSort?: string;
+  defaultSort?: string;
 }
 
-export function SortTabs({ defaultSort = "popular" }: SortTabsProps) {
-	const [sort, setSort] = useQueryState("sort", {
-		defaultValue: defaultSort,
-		shallow: false,
-	});
+export function SortTabs({ defaultSort = 'popular' }: SortTabsProps) {
+  const [sort, setSort] = useQueryState('sort', {
+    defaultValue: defaultSort,
+    shallow: false,
+  });
 
-	return (
-		<div className="my-4 flex justify-center">
-			<Tabs value={sort} onValueChange={setSort} className="w-11/12">
-				<TabsList className=" w-full flex justify-center  rounded-full">
-					<TabsTrigger value="popular" className="text-xs w-1/2 rounded-full">
-						Popular
-					</TabsTrigger>
-					<TabsTrigger value="new" className="text-xs w-1/2 rounded-full">
-						New
-					</TabsTrigger>
-				</TabsList>
-			</Tabs>
-		</div>
-	);
+  return (
+    <div className="my-4 flex justify-center">
+      <Tabs className="w-11/12" onValueChange={setSort} value={sort}>
+        <TabsList className=" flex w-full justify-center rounded-full">
+          <TabsTrigger className="w-1/2 rounded-full text-xs" value="popular">
+            Popular
+          </TabsTrigger>
+          <TabsTrigger className="w-1/2 rounded-full text-xs" value="new">
+            New
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+    </div>
+  );
 }

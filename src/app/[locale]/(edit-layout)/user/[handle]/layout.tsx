@@ -1,13 +1,13 @@
-import { NextIntlClientProvider } from "next-intl";
+import { NextIntlClientProvider } from 'next-intl';
 
 export default async function CommonLayout({
-	children,
+  children,
 }: {
-	children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-	return (
-		<>
-			<NextIntlClientProvider>{children}</NextIntlClientProvider>
-		</>
-	);
+  return (
+    <>
+      <NextIntlClientProvider>{children}</NextIntlClientProvider>
+    </>
+  );
 }
