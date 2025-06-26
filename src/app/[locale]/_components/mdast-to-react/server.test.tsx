@@ -1,9 +1,10 @@
-import type { SegmentBundle } from "@/app/[locale]/types";
 import type { Prisma } from "@prisma/client";
 import { queryByAttribute } from "@testing-library/dom";
 import { render, screen } from "@testing-library/react";
 import type { Root } from "mdast";
 import { describe, expect, it, vi } from "vitest";
+import type { SegmentBundle } from "@/app/[locale]/types";
+
 vi.mock("@/app/_context/display-provider", () => ({
 	useDisplay: () => ({ mode: "source" }), // ← dummy 値
 }));
@@ -14,7 +15,7 @@ vi.mock("react-tweet", () => ({
 }));
 
 // 2. その後で被テストモジュールをimport
-import { mdastToReact } from "./mdast-to-react";
+import { mdastToReact } from "./server";
 
 // テスト用のセグメントバンドル
 const bundles: SegmentBundle[] = [

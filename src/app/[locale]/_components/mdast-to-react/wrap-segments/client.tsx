@@ -1,10 +1,10 @@
 "use client";
 
-import type { SegmentBundle } from "@/app/[locale]/types";
-import { useDisplay } from "@/app/_context/display-provider";
-import { Fragment, type ReactNode, createElement } from "react";
 import type { JSX } from "react";
-import { TranslationSection } from "./segment-and-translation-section/translation-section";
+import { createElement, Fragment, type ReactNode } from "react";
+import { useDisplay } from "@/app/_context/display-provider";
+import type { SegmentBundle } from "@/app/[locale]/types";
+import { TranslationSection } from "../../segment-and-translation-section/translation-section";
 
 interface BaseProps {
 	bundle: SegmentBundle;
@@ -37,32 +37,32 @@ export function SegmentWrapper<Tag extends keyof JSX.IntrinsicElements>({
 	const source =
 		eff !== "user"
 			? createElement(
-					tagName,
-					{
-						...tagProps,
-						className: srcCls,
-						"data-number-id": bundle.segment.number,
-					},
-					children,
-				)
+				tagName,
+				{
+					...tagProps,
+					className: srcCls,
+					"data-number-id": bundle.segment.number,
+				},
+				children,
+			)
 			: null;
 
 	/* 訳文 */
 	const translation =
 		eff !== "source" && hasTr
 			? createElement(
-					tagName,
-					{
-						...tagProps,
-						key: `tr-${bundle.segment.id}`,
-						"data-number-id": bundle.segment.number,
-					},
-					<TranslationSection
-						segmentBundle={bundle}
-						currentHandle={currentHandle}
-						interactive
-					/>,
-				)
+				tagName,
+				{
+					...tagProps,
+					key: `tr-${bundle.segment.id}`,
+					"data-number-id": bundle.segment.number,
+				},
+				<TranslationSection
+					segmentBundle={bundle}
+					currentHandle={currentHandle}
+					interactive
+				/>,
+			)
 			: null;
 
 	return (

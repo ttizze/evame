@@ -1,8 +1,8 @@
-import { SegmentWrapper } from "@/app/[locale]/_components/segment-wrapper.client";
-import type { SegmentBundle } from "@/app/[locale]/types";
-import { type JSX, createElement } from "react";
-import React from "react";
+import React, { createElement, type JSX } from "react";
 import { Tweet as XPost } from "react-tweet";
+import { SegmentWrapper } from "@/app/[locale]/_components/mdast-to-react/wrap-segments/client";
+import type { SegmentBundle } from "@/app/[locale]/types";
+
 const TWEET_ID_RE =
 	/https?:\/\/(?:mobile\.)?(?:twitter\.com|x\.com)\/(?:[^/]+\/status|i\/web\/status)\/(\d+)(?:\?.*)?$/i;
 
