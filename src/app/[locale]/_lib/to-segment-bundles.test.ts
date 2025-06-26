@@ -1,8 +1,7 @@
 // to-segment-bundles.spec.ts
-
-import { expect, test } from "vitest";
 import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
 import type { SanitizedUser } from "@/app/types";
+import { expect, test } from "vitest";
 
 /* ---------- テスト用ダミーユーザ ---------- */
 const dummyUser: SanitizedUser = {

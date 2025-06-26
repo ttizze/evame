@@ -1,10 +1,9 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { useActionState, useOptimistic } from "react";
-import { Button } from "@/components/ui/button";
 import { type PageLikeButtonState, togglePageLikeAction } from "./action";
-
 type PageLikeButtonClientProps = {
 	liked: boolean;
 	likeCount: number;

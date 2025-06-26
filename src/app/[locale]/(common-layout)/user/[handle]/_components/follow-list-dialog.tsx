@@ -1,13 +1,13 @@
 // app/components/FollowListDialog.tsx
 
+import { Link } from "@/i18n/routing";
+
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Link } from "@/i18n/routing";
-
 type followListUser = {
 	handle: string;
 	name: string;

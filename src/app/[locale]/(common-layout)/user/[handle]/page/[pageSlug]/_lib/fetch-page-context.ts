@@ -1,11 +1,10 @@
+import { fetchPageDetail } from "@/app/[locale]/_db/page-queries.server";
+import { fetchLatestPageTranslationJobs } from "@/app/[locale]/_db/page-queries.server";
+
+import { fetchPageViewCount } from "@/app/[locale]/_db/page-queries.server";
+import { getCurrentUser } from "@/auth";
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import {
-	fetchLatestPageTranslationJobs,
-	fetchPageDetail,
-	fetchPageViewCount,
-} from "@/app/[locale]/_db/page-queries.server";
-import { getCurrentUser } from "@/auth";
 import { incrementPageView } from "../_db/mutations.server";
 import { fetchLatestUserTranslationJob } from "../_db/queries.server";
 

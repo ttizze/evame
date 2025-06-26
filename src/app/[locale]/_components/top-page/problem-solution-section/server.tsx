@@ -1,3 +1,7 @@
+import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
+import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
+import Globe from "@/app/[locale]/_components/top-page/problem-solution-section/components/globe.client";
+import { getCurrentUser } from "@/auth";
 import {
 	HandshakeIcon,
 	LanguagesIcon,
@@ -5,10 +9,6 @@ import {
 	TrendingUp,
 	Users,
 } from "lucide-react";
-import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
-import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
-import Globe from "@/app/[locale]/_components/top-page/problem-solution-section/components/globe.client";
-import { getCurrentUser } from "@/auth";
 import { fetchAboutPage } from "../../../(common-layout)/about/_lib/fetch-about-page";
 import { FloatingControls } from "../../floating-controls.client";
 import AboutSectionCard from "./components/about-section-card.server";
@@ -17,9 +17,7 @@ import Reactions from "./components/reaction.client";
 import { SpreadOtherLanguage } from "./components/spread-other-language";
 export default async function ProblemSolutionSection({
 	locale,
-}: {
-	locale: string;
-}) {
+}: { locale: string }) {
 	const currentUser = await getCurrentUser();
 	const currentHandle = currentUser?.handle;
 	const pageDetail = await fetchAboutPage(locale);

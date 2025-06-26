@@ -1,9 +1,9 @@
-import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
+import type { SearchParams } from "nuqs/server";
 import { fetchSearchResults } from "./_db/queries.server";
 import { CATEGORIES, type Category } from "./constants";
-import { SearchPageClient } from "./search.client";
 import { SearchResults } from "./search-results.server";
+import { SearchPageClient } from "./search.client";
 
 const searchParamsSchema = {
 	page: parseAsInteger.withDefault(1),

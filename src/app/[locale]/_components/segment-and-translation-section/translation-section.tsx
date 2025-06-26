@@ -1,12 +1,11 @@
 "use client";
-import { Languages, Plus } from "lucide-react";
-import { useState } from "react";
 import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
 import type { SegmentBundle } from "@/app/[locale]/types";
 import { Link } from "@/i18n/routing";
+import { Languages, Plus } from "lucide-react";
+import { useState } from "react";
 import { AddAndVoteTranslations } from "./add-and-vote-translations";
 import { VoteButtons } from "./vote-buttons/client";
-
 interface TranslationSectionProps {
 	segmentBundle: SegmentBundle;
 	currentHandle: string | undefined;

@@ -1,11 +1,10 @@
 "use server";
-import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
 import { validateGeminiApiKey } from "@/features/translate/services/gemini";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { updateGeminiApiKey } from "./db/mutations.server";
-
 const geminiApiKeySchema = z.object({
 	geminiApiKey: z.string(),
 });

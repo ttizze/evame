@@ -1,7 +1,7 @@
+import { prisma } from "@/lib/prisma";
 import type {
 	Prisma, // ← @prisma/client から import
 } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
 import { getOrCreateAIUser } from "../db/mutations.server";
 import type { NumberedElement } from "../types";
 

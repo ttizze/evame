@@ -1,11 +1,10 @@
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
+import type { BaseTranslation } from "@/app/[locale]/types";
 import { render, screen } from "@testing-library/react";
 // VoteButtons.test.tsx
 import React from "react";
 import { vi } from "vitest";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
-import type { BaseTranslation } from "@/app/[locale]/types";
 import { VoteButtons } from "./client";
-
 const dummyVoteTarget = "example-target" as TargetContentType;
 
 const dummyTranslationUpvote = {
@@ -25,9 +24,7 @@ vi.mock("next/form", () => ({
 	default: function Form({
 		children,
 		...props
-	}: {
-		children: React.ReactNode;
-	}) {
+	}: { children: React.ReactNode }) {
 		return <form {...props}>{children}</form>;
 	},
 }));

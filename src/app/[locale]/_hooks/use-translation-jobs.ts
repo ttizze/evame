@@ -1,5 +1,5 @@
-import useSWR from "swr";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
+import useSWR from "swr";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 

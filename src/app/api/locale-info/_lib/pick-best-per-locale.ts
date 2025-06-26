@@ -1,5 +1,4 @@
 import type { TranslationJob, TranslationStatus } from "@prisma/client";
-
 const SCORE: Record<TranslationStatus, number> = {
 	COMPLETED: 3,
 	IN_PROGRESS: 2,

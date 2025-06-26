@@ -1,7 +1,5 @@
-import { EllipsisVertical } from "lucide-react";
-import { useActionState } from "react";
-import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
+import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
 import type { BaseTranslation } from "@/app/[locale]/types";
 import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
@@ -11,6 +9,8 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
+import { EllipsisVertical } from "lucide-react";
+import { useActionState } from "react";
 import { VoteButtons } from "../vote-buttons/client";
 import { deleteTranslationAction } from "./action";
 

@@ -1,5 +1,5 @@
-import type { GeminiApiKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import type { GeminiApiKey } from "@prisma/client";
 
 export async function fetchUserByHandle(handle: string) {
 	const user = await prisma.user.findUnique({

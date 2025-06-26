@@ -1,10 +1,9 @@
-import { ChevronDown, ChevronUp, Languages } from "lucide-react";
-import { useMemo, useState } from "react";
 import type { SegmentBundle } from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronUp, Languages } from "lucide-react";
+import { useMemo, useState } from "react";
 import { AddTranslationForm } from "./add-translation-form/client";
 import { TranslationListItem } from "./translation-list-item";
-
 const INITIAL_DISPLAY_COUNT = 3;
 
 export function AddAndVoteTranslations({

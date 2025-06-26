@@ -1,7 +1,4 @@
 "use client";
-import { CheckCircle } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { useActionState } from "react";
 import {
 	type SignInWithResendState,
 	signInWithResendAction,
@@ -18,6 +15,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "@/i18n/routing";
+import { CheckCircle } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { useActionState } from "react";
 import { GoogleForm } from "./_components/google-form";
 
 export function Login() {

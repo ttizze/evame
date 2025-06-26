@@ -4,11 +4,10 @@ import { describe, expect, it } from "vitest";
 import { NotificationsDropdownClient } from "./client";
 import type { NotificationWithRelations } from "./db/queries.server";
 import "@testing-library/jest-dom";
-import userEvent from "@testing-library/user-event";
-import { NextIntlClientProvider } from "next-intl";
 import { getCurrentUser } from "@/auth";
 import { mockUsers } from "@/tests/mock";
-
+import userEvent from "@testing-library/user-event";
+import { NextIntlClientProvider } from "next-intl";
 vi.mock("@/auth");
 vi.mock("next/cache", () => ({
 	revalidatePath: () => {},

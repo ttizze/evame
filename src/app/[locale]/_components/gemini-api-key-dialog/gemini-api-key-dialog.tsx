@@ -1,7 +1,4 @@
 "use client";
-import { ArrowUpFromLine, ExternalLink, Loader2 } from "lucide-react";
-import { useActionState, useEffect } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -10,6 +7,10 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ArrowUpFromLine } from "lucide-react";
+import { ExternalLink, Loader2 } from "lucide-react";
+import { useActionState, useEffect } from "react";
+import { toast } from "sonner";
 import {
 	type GeminiApiKeyDialogState,
 	updateGeminiApiKeyAction,

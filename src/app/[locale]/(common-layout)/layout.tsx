@@ -1,9 +1,9 @@
-import dynamic from "next/dynamic";
+import { Footer } from "@/app/[locale]/_components/footer";
+import { DisplayProvider } from "@/app/_context/display-provider";
+import { Skeleton } from "@/components/ui/skeleton";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
-import { DisplayProvider } from "@/app/_context/display-provider";
-import { Footer } from "@/app/[locale]/_components/footer";
-import { Skeleton } from "@/components/ui/skeleton";
+import dynamic from "next/dynamic";
 
 const Header = dynamic(
 	() =>

@@ -1,5 +1,14 @@
 "use client";
 
+import { useDisplay } from "@/app/_context/display-provider";
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
 import { CopyIcon, Share } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
@@ -11,15 +20,6 @@ import {
 	TwitterShareButton,
 } from "react-share";
 import { toast } from "sonner";
-import { useDisplay } from "@/app/_context/display-provider";
-import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
 
 export function ShareDialog() {
 	const [isOpen, setIsOpen] = useState(false);

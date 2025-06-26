@@ -1,11 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { togglePageLike } from "./db/mutations.server";
-
 // フォームデータ用のスキーマ
 const schema = z.object({
 	pageId: z.coerce.number(),

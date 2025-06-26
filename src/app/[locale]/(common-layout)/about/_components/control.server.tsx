@@ -1,5 +1,5 @@
-import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
+import dynamic from "next/dynamic";
 import { fetchAboutPage } from "../_lib/fetch-about-page";
 
 const DynamicFloatingControls = dynamic(

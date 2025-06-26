@@ -1,14 +1,13 @@
 "use client";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
+import { StartButton } from "@/app/[locale]/_components/start-button";
+import type { ActionResponse } from "@/app/types";
+import { Button } from "@/components/ui/button";
 import { ArrowUpFromLine } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useActionState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
-import { StartButton } from "@/app/[locale]/_components/start-button";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
-import type { ActionResponse } from "@/app/types";
-import { Button } from "@/components/ui/button";
 import { addTranslationFormAction } from "./action";
-
 interface AddTranslationFormProps {
 	segmentId: number;
 	currentHandle: string | undefined;

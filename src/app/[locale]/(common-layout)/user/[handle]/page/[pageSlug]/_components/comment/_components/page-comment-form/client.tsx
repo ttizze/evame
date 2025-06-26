@@ -1,11 +1,11 @@
 /* PageCommentForm.tsx */
 "use client";
-import { useActionState, useEffect } from "react";
 import { CommentForm } from "@/app/[locale]/_components/comment/comment-form.client";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
-import type { CommentActionResponse } from "./action";
+import { useActionState, useEffect } from "react";
 import { commentAction } from "./action";
+import type { CommentActionResponse } from "./action";
 
 export function PageCommentForm({
 	pageId,

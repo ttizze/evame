@@ -24,13 +24,13 @@ vi.mock("next/navigation", () => ({
 	redirect: vi.fn(),
 }));
 
-import { revalidatePath } from "next/cache";
 /* ─────────────────────────────────────────────
    2. モックの参照を取得
    ──────────────────────────────────────────── */
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import { handlePageAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
+import { revalidatePath } from "next/cache";
 import { updatePageStatus } from "./_db/mutations.server";
 
 /* ─────────────────────────────────────────────

@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import { ShareDialog } from "../(common-layout)/user/[handle]/page/[pageSlug]/_components/share-dialog";
 import { DisplayModeCycle } from "./display-mode-cycle.client";
 import { useScrollVisibility } from "./hooks/use-scroll-visibility";
-
 interface FloatingControlsProps {
 	likeButton?: React.ReactNode;
 	position?: string;

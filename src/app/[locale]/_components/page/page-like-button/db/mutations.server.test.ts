@@ -1,6 +1,6 @@
+import { prisma } from "@/lib/prisma";
 import type { Page, User } from "@prisma/client";
 import { beforeEach, describe, expect, it } from "vitest";
-import { prisma } from "@/lib/prisma";
 import { togglePageLike } from "./mutations.server";
 
 describe("toggleLike 実際のDB統合テスト", () => {

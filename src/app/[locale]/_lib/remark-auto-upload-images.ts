@@ -4,7 +4,6 @@ import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 import { fileFromUrl } from "./file-from-url";
 import { uploadImage } from "./upload";
-
 const limit = pLimit(5);
 
 export const remarkAutoUploadImages: Plugin<[]> = () => {

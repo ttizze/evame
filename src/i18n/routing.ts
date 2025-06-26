@@ -1,6 +1,6 @@
+import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { createNavigation } from "next-intl/navigation";
 import { defineRouting } from "next-intl/routing";
-import { supportedLocaleOptions } from "@/app/_constants/locale";
 export const routing = defineRouting({
 	// A list of all locales that are supported
 	locales: supportedLocaleOptions.map((locale) => locale.code),

@@ -1,6 +1,6 @@
 "use client";
-import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
+import { useActionState } from "react";
 import { type FollowActionResponse, followAction } from "./action";
 
 interface FollowButtonProps {

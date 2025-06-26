@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { Prisma } from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import fg from "fast-glob";
 import { customAlphabet } from "nanoid";
 import remarkParse from "remark-parse";

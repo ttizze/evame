@@ -1,10 +1,9 @@
-import dynamic from "next/dynamic";
-import { redirect } from "next/navigation";
-import type { SearchParams } from "nuqs/server";
-import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import { getCurrentUser } from "@/auth";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
+import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
+import type { SearchParams } from "nuqs/server";
 const PageManagementTab = dynamic(
 	() =>
 		import("./_components/page-management-tab/server").then(

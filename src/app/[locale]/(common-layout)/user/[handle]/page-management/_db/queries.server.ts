@@ -1,5 +1,5 @@
-import { PageStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { PageStatus } from "@prisma/client";
 export async function fetchPaginatedOwnPages(
 	userId: string,
 	locale: string,

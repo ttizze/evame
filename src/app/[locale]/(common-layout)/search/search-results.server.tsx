@@ -1,9 +1,9 @@
-import type { Tag } from "@prisma/client";
 import { PageList } from "@/app/[locale]/_components/page/page-list.server";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import type { PageSummary } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
+import type { Tag } from "@prisma/client";
 import type { Category } from "./constants";
 
 interface SearchResultsProps {

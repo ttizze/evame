@@ -1,9 +1,8 @@
 // lib/create-action-factory.ts
-
+import type { ActionResponse } from "@/app/types";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { z } from "zod";
-import type { ActionResponse } from "@/app/types";
 import {
 	type AuthDeps,
 	authAndValidate,

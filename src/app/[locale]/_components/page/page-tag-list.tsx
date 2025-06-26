@@ -1,6 +1,6 @@
+import { Link } from "@/i18n/routing";
 import type { Tag } from "@prisma/client";
 import { Hash } from "lucide-react";
-import { Link } from "@/i18n/routing";
 
 type TagListProps = {
 	tag: Tag[];

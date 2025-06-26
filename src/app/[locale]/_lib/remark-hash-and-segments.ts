@@ -11,7 +11,8 @@ import type {
 import { toString as mdastToString } from "mdast-util-to-string";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
-import type { Data, VFile } from "vfile";
+import type { Data } from "vfile";
+import type { VFile } from "vfile";
 import { generateHashForText } from "./generate-hash-for-text";
 /* ---------- 共通型 ---------- */
 

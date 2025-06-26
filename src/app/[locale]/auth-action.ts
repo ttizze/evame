@@ -1,8 +1,8 @@
 "use server";
 
-import { z } from "zod";
 import type { ActionResponse } from "@/app/types";
 import { signIn, signOut } from "@/auth";
+import { z } from "zod";
 
 const loginSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),

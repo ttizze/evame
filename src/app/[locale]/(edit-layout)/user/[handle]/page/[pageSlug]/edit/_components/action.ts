@@ -1,9 +1,9 @@
 "use server";
 
-import { z } from "zod";
 import { createActionFactory } from "@/app/[locale]/_action/create-action-factory";
 import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
 import type { ActionResponse } from "@/app/types";
+import { z } from "zod";
 import { processPageHtml } from "../_lib/process-page-html";
 
 /* ────────────── 入力スキーマ ────────────── */

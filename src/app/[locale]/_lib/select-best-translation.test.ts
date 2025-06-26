@@ -1,7 +1,6 @@
 // selectBestTranslation.spec.ts
 import { selectBestTranslation } from "@/app/[locale]/_lib/select-best-translation";
 import type { BaseTranslation } from "@/app/[locale]/types";
-
 test("choose by upvote, then point", () => {
 	const t1 = {
 		point: 10,

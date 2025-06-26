@@ -1,6 +1,6 @@
-import { getImageProps } from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
+import { getImageProps } from "next/image";
 import { fetchPopularUsers } from "./_db/queries.server";
 
 interface PopularUsersListProps {

@@ -1,8 +1,8 @@
 /* app/_components/display-mode-cycle.tsx */
 "use client";
-import { FileText } from "lucide-react";
 import { useDisplay } from "@/app/_context/display-provider";
 import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
 
 interface Props {
 	afterClick?: () => void;

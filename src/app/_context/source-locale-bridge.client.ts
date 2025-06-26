@@ -1,6 +1,6 @@
 "use client";
-import { useEffect } from "react";
 import { useDisplay } from "@/app/_context/display-provider";
+import { useEffect } from "react";
 
 /** レンダリングなしで sourceLocale を Provider にセットする */
 export function SourceLocaleBridge({ locale }: { locale: string }) {

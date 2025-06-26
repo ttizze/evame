@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { uploadImage } from "@/app/[locale]/_lib/upload";
 import { getCurrentUser, unstable_update } from "@/auth";
 import { mockUsers } from "@/tests/mock";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { updateUserImage } from "../_db/mutations.server";
 import { userImageEditAction } from "./user-image-edit-action";
 

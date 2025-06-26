@@ -1,12 +1,12 @@
-import Linkify from "linkify-react";
-import { Settings } from "lucide-react";
-import Image, { getImageProps } from "next/image";
-import { notFound } from "next/navigation";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
+import Linkify from "linkify-react";
+import { Settings } from "lucide-react";
+import Image, { getImageProps } from "next/image";
+import { notFound } from "next/navigation";
 import { FollowButton } from "../(common-layout)/user/[handle]/_components/follow-button";
 import { FollowStats } from "../(common-layout)/user/[handle]/_components/follow-stats";
 import {
@@ -14,7 +14,11 @@ import {
 	fetchFollowingList,
 	getFollowCounts,
 } from "../(common-layout)/user/[handle]/_db/queries.server";
-export async function UserInfo({ handle }: { handle: string }) {
+export async function UserInfo({
+	handle,
+}: {
+	handle: string;
+}) {
 	const pageOwner = await fetchUserByHandle(handle);
 	if (!pageOwner) {
 		return notFound();

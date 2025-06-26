@@ -1,3 +1,5 @@
+import type { TranslationJobForToast } from "@/app/types/translation-job";
+import { Progress } from "@/components/ui/progress";
 import {
 	CheckCircle2,
 	Hourglass,
@@ -7,8 +9,6 @@ import {
 	XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import type { TranslationJobForToast } from "@/app/types/translation-job";
-import { Progress } from "@/components/ui/progress";
 
 const statusIcon = (status: string) => {
 	switch (status) {

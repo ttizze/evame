@@ -1,10 +1,10 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import {
 	type TranslationJobForToast,
 	translationJobForToastSchema,
 } from "@/app/types/translation-job";
 import { prisma } from "@/lib/prisma";
+import { type NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 /** クエリ id=1&id=2 … を number[] にする */
 function parseIds(url: string): number[] {

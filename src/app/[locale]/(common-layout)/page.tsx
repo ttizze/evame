@@ -1,9 +1,9 @@
+import { getCurrentUser } from "@/auth";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsString } from "nuqs/server";
-import { getCurrentUser } from "@/auth";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const PopularPageList = dynamic(
 	() => import("@/app/[locale]/_components/page/popular-page-list/server"),
@@ -65,7 +65,6 @@ const DynamicControl = dynamic(
 		loading: () => <Skeleton className="h-[845px] w-full" />,
 	},
 );
-
 import { StartButton } from "@/app/[locale]/_components/start-button";
 
 const NewPageListByTag = dynamic(

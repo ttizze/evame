@@ -2,8 +2,8 @@ import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
 import type { SegmentBundle } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
 import {
-	fetchPageCommentsWithPageCommentSegments,
 	type PageCommentWithPageCommentSegments,
+	fetchPageCommentsWithPageCommentSegments,
 } from "../_db/queries.server";
 
 export function normalizeCommentSegments(

@@ -1,12 +1,9 @@
-import { BASE_URL } from "@/app/_constants/base-url";
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
-import {
-	fetchPageWithPageSegments,
-	fetchPageWithTitleAndComments,
-} from "@/app/[locale]/_db/page-queries.server";
+import { fetchPageWithPageSegments } from "@/app/[locale]/_db/page-queries.server";
+import { fetchPageWithTitleAndComments } from "@/app/[locale]/_db/page-queries.server";
+import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslationJobForTranslationAPI } from "@/app/types/translation-job";
 import type { TranslateJobParams } from "@/features/translate/types";
-
 interface BaseTranslationParams {
 	currentUserId: string;
 	sourceLocale: string;
@@ -66,7 +63,6 @@ export interface TranslationStrategy<T extends TranslationParams> {
 		locale: string,
 	): Promise<TranslateJobParams>;
 }
-
 import pLimit from "p-limit";
 
 import { pageCommentStrategy, pageStrategy } from "./translation-strategies";

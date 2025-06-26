@@ -1,10 +1,9 @@
+import { buildCommentTree } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/_lib/fetch-page-comments-with-user-and-translations";
+import { normalizeCommentSegments } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/_lib/fetch-page-comments-with-user-and-translations";
 import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
-import {
-	buildCommentTree,
-	normalizeCommentSegments,
-} from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/_lib/fetch-page-comments-with-user-and-translations";
-import type { SanitizedUser } from "@/app/types";
 import type { PageCommentWithPageCommentSegments } from "../_db/queries.server";
+
+import type { SanitizedUser } from "@/app/types";
 
 const dummyUser: SanitizedUser = {
 	handle: "u1",

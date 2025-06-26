@@ -1,8 +1,8 @@
 "use client";
 
-import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
+import { MessageCircle } from "lucide-react";
 
 type PageCommentButtonProps = {
 	commentCount: number;

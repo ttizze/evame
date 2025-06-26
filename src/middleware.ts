@@ -1,8 +1,8 @@
-import { get } from "@vercel/edge-config";
-import { type NextRequest, NextResponse } from "next/server";
-import createMiddleware from "next-intl/middleware";
 import { auth } from "@/auth";
 import { routing } from "@/i18n/routing";
+import { get } from "@vercel/edge-config";
+import createMiddleware from "next-intl/middleware";
+import { type NextRequest, NextResponse } from "next/server";
 
 const handleI18nRouting = createMiddleware(routing);
 

@@ -1,15 +1,14 @@
 // app/routes/search/functions/queries.server.ts
 
-import type { Prisma, Tag } from "@prisma/client";
-import {
-	normalizePageSegments,
-	selectPagesWithDetails,
-} from "@/app/[locale]/_db/page-queries.server";
+import { selectPagesWithDetails } from "@/app/[locale]/_db/page-queries.server";
+import { normalizePageSegments } from "@/app/[locale]/_db/page-queries.server";
 import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
 import type { PageSummary } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";
 import { sanitizeUser } from "@/lib/sanitize-user";
+import type { Tag } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import type { Category } from "../constants";
 /** 検索結果を統合的に取得する */
 export async function fetchSearchResults({
@@ -38,9 +37,9 @@ export async function fetchSearchResults({
 	const skip = (page - 1) * PAGE_SIZE;
 	const take = PAGE_SIZE;
 
-	let pageSummaries: PageSummary[] | undefined;
-	let tags: Tag[] | undefined;
-	let users: SanitizedUser[] | undefined;
+	let pageSummaries: PageSummary[] | undefined = undefined;
+	let tags: Tag[] | undefined = undefined;
+	let users: SanitizedUser[] | undefined = undefined;
 	let totalCount = 0;
 
 	switch (category) {

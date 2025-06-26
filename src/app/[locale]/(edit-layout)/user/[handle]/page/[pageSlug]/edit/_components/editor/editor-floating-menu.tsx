@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import type { Editor } from "@tiptap/core";
 import { FloatingMenu } from "@tiptap/react";
@@ -13,7 +14,6 @@ import {
 	Quote,
 } from "lucide-react";
 import { useRef } from "react";
-import { cn } from "@/lib/utils";
 import { handleFileUpload } from "./use-file-upload";
 
 interface EditorFloatingMenuProps {

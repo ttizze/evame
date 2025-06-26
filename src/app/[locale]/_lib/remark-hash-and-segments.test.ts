@@ -2,8 +2,8 @@ import { remark } from "remark";
 import type { VFile } from "vfile";
 import { describe, expect, it } from "vitest";
 import {
-	remarkHashAndSegments,
 	type SegmentDraft,
+	remarkHashAndSegments,
 } from "./remark-hash-and-segments";
 
 describe("remarkHashAndSegments", () => {
