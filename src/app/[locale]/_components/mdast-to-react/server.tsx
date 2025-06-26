@@ -1,9 +1,10 @@
+import type { SegmentBundle } from "@/app/[locale]/types";
 import type { Prisma } from "@prisma/client";
 import remarkEmbedder from "@remark-embedder/core";
 import oembedTransformer from "@remark-embedder/transformer-oembed";
 import Image from "next/image";
 import type { ReactElement } from "react";
-import { type ComponentType, createElement, type JSX } from "react";
+import { type ComponentType, type JSX, createElement } from "react";
 import * as jsxRuntime from "react/jsx-runtime";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeRaw from "rehype-raw";
@@ -12,7 +13,6 @@ import rehypeSlug from "rehype-slug";
 import remarkLinkCard from "remark-link-card-plus";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
-import type { SegmentBundle } from "@/app/[locale]/types";
 import { WrapSegment } from "./wrap-segments/server";
 
 const SEGMENTABLE = [

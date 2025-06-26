@@ -1,9 +1,9 @@
+import type { SegmentBundle } from "@/app/[locale]/types";
 import type { Prisma } from "@prisma/client";
 import { queryByAttribute } from "@testing-library/dom";
 import { render, screen } from "@testing-library/react";
 import type { Root } from "mdast";
 import { describe, expect, it, vi } from "vitest";
-import type { SegmentBundle } from "@/app/[locale]/types";
 
 vi.mock("@/app/_context/display-provider", () => ({
 	useDisplay: () => ({ mode: "source" }), // ← dummy 値
