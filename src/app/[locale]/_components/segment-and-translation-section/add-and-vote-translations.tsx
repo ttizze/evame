@@ -38,33 +38,27 @@ export function AddAndVoteTranslations({
 			<span className="flex mt-2 items-center justify-end text-gray-500 text-sm">
 				<Languages className="w-4 h-4 mr-1" /> Other translations
 			</span>
-			<>
-				{displayedTranslations.map((displayedTranslation) => (
-					<TranslationListItem
-						key={displayedTranslation.id}
-						translation={displayedTranslation}
-						currentHandle={currentHandle}
-						targetContentType={segmentBundle.parentType}
-					/>
-				))}
-				{hasMoreTranslations && (
-					<Button
-						variant="link"
-						className="mt-2 w-full text-sm"
-						onClick={toggleShowAll}
-					>
-						{showAll ? (
-							<>
-								<ChevronUp size={16} className="mr-1" />
-							</>
-						) : (
-							<>
-								<ChevronDown size={16} className="mr-1" />
-							</>
-						)}
-					</Button>
-				)}
-			</>
+			{displayedTranslations.map((displayedTranslation) => (
+				<TranslationListItem
+					key={displayedTranslation.id}
+					translation={displayedTranslation}
+					currentHandle={currentHandle}
+					targetContentType={segmentBundle.parentType}
+				/>
+			))}
+			{hasMoreTranslations && (
+				<Button
+					variant="link"
+					className="mt-2 w-full text-sm"
+					onClick={toggleShowAll}
+				>
+					{showAll ? (
+						<ChevronUp size={16} className="mr-1" />
+					) : (
+						<ChevronDown size={16} className="mr-1" />
+					)}
+				</Button>
+			)}
 			<span className="mt-4">
 				<AddTranslationForm
 					segmentId={segmentBundle.segment.id}

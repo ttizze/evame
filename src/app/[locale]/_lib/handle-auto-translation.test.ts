@@ -59,7 +59,7 @@ describe("handlePageAutoTranslation()", () => {
 		},
 	] as const;
 
-	test.each(cases)("$name", async ({ sourceLocale, targetLocale, page }) => {
+	test.each(cases)("$name", async ({ sourceLocale, page }) => {
 		const { deps, spies } = buildDeps();
 		spies.fetchPageWithPageSegments.mockResolvedValue(page);
 
@@ -114,7 +114,7 @@ describe("handlePageAutoTranslation()", () => {
 			dependencies: deps,
 		});
 
-		for (const locale of ["ja", "zh"]) {
+		for (const _locale of ["ja", "zh"]) {
 			expect(spies.fetchTranslateAPI).toHaveBeenCalledWith(
 				expect.any(String),
 				expect.objectContaining({ targetLocale: "en" }),

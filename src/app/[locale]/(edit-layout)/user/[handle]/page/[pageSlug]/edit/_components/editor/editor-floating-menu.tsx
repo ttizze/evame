@@ -132,7 +132,6 @@ export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
 				</div>
 			</FloatingMenu>
 			<input
-				id="imageUpload"
 				type="file"
 				accept="image/*"
 				onChange={(e) => {

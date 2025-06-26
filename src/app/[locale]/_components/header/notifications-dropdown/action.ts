@@ -5,8 +5,8 @@ import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { markAllNotificationAsRead } from "./db/mutations.server";
 export async function markNotificationAsReadAction(
-	previousState: ActionResponse,
-	formData: FormData,
+	_previousState: ActionResponse,
+	_formData: FormData,
 ): Promise<ActionResponse> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser?.id) {

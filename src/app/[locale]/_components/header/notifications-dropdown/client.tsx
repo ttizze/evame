@@ -22,7 +22,7 @@ export function NotificationsDropdownClient({
 	notifications: NotificationWithRelations[];
 	currentUserHandle: string;
 }) {
-	const [markNotificationAsReadResponse, action, isPending] = useActionState<
+	const [_markNotificationAsReadResponse, action, _isPending] = useActionState<
 		ActionResponse,
 		FormData
 	>(markNotificationAsReadAction, { success: false });
