@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildLocaleOptions } from "./build-locale-options";
-
 import type { LocaleOption } from "@/app/_constants/locale";
+import { buildLocaleOptions } from "./build-locale-options";
 
 describe("buildLocaleOptions", () => {
 	it("sourceLocale が supportedLocaleOptions に存在し、existLocales が空の場合、ソースロケールのみ返す", () => {

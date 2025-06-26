@@ -1,9 +1,10 @@
+import { revalidatePath } from "next/cache";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
 import { getCurrentUser } from "@/auth";
 import { mockUsers } from "@/tests/mock";
-import { revalidatePath } from "next/cache";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { editPageContentAction } from "./action";
+
 // Mocks
 vi.mock("@/auth");
 vi.mock("@/app/[locale]/_lib/get-locale-from-html");

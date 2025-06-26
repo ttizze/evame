@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+
 interface VoteButtonProps {
 	type: "upvote" | "downvote";
 	isActive: boolean;

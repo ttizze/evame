@@ -1,17 +1,18 @@
 // app/serverActions/voteAction.ts
 "use server";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { targetContentTypeValues } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/auth";
 import { parseFormData } from "@/lib/parse-form-data";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { z } from "zod";
 import {
 	createNotificationPageSegmentTranslationVote,
 	handleVote,
 } from "./db/mutation.server";
+
 const schema = z.object({
 	segmentTranslationId: z.coerce.number().int(),
 	isUpvote: z.string().transform((val) => val === "true"),

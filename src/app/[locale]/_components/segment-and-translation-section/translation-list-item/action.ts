@@ -1,9 +1,10 @@
 "use server";
-import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
-import type { ActionResponse } from "@/app/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
+import type { ActionResponse } from "@/app/types";
 import { deleteOwnTranslation } from "./db/mutations.server";
+
 const schema = z.object({
 	translationId: z.number(),
 });

@@ -1,5 +1,5 @@
-import { useRouter } from "@/i18n/routing";
 import { useRouter as useTopLoaderRouter } from "nextjs-toploader/app";
+import { useRouter } from "@/i18n/routing";
 
 interface NavigateOptions {
 	scroll?: boolean;

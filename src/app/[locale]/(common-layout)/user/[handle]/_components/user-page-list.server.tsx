@@ -1,9 +1,9 @@
+import { notFound } from "next/navigation";
+import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { PageList } from "@/app/[locale]/_components/page/page-list.server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { fetchPaginatedPublicPageSummaries } from "@/app/[locale]/_db/page-queries.server";
-import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
-import { notFound } from "next/navigation";
 
 interface PageListServerProps {
 	handle: string;

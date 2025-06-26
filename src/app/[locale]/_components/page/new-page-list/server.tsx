@@ -1,11 +1,12 @@
+import { SparklesIcon } from "lucide-react";
+import type { SearchParams } from "nuqs/server";
+import { createLoader, parseAsInteger } from "nuqs/server";
 import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { fetchPaginatedPublicPageSummaries } from "@/app/[locale]/_db/page-queries.server";
 import { getCurrentUser } from "@/auth";
-import { SparklesIcon } from "lucide-react";
-import { createLoader, parseAsInteger } from "nuqs/server";
-import type { SearchParams } from "nuqs/server";
 import { PageList } from "../page-list.server";
+
 const searchParamsSchema = {
 	page: parseAsInteger.withDefault(1),
 };

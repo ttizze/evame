@@ -1,8 +1,9 @@
 "use server";
+import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
-import { z } from "zod";
 import { togglePagePublicStatus } from "./db/mutations.server";
+
 const togglePublishSchema = z.object({
 	pageId: z.coerce.number(),
 });

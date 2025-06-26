@@ -1,6 +1,6 @@
-import { Link as LinkI18n } from "@/i18n/routing";
 import Link from "next/link";
 import { FaDiscord, FaGithub } from "react-icons/fa";
+import { Link as LinkI18n } from "@/i18n/routing";
 
 export function Footer() {
 	return (

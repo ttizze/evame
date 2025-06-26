@@ -1,6 +1,6 @@
+import type { Prisma } from "@prisma/client";
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
 
 export async function upsertPageAndSegments(p: {
 	pageId: number | undefined;

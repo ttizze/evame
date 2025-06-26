@@ -1,18 +1,21 @@
-import type { PageDetail } from "@/app/[locale]/types";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import type { ReactNode } from "react";
 import { vi } from "vitest";
+import type { PageDetail } from "@/app/[locale]/types";
 import { SubHeader } from "./sub-header";
 import * as TocModule from "./toc";
+
 // Mock the dependencies
 vi.mock("@/i18n/routing", () => ({
 	Link: ({
 		children,
 		...props
-	}: { children: ReactNode; href: string; className?: string }) => (
-		<a {...props}>{children}</a>
-	),
+	}: {
+		children: ReactNode;
+		href: string;
+		className?: string;
+	}) => <a {...props}>{children}</a>,
 }));
 
 interface TocProps {
@@ -22,14 +25,15 @@ interface TocProps {
 vi.mock("./toc", () => ({
 	__esModule: true,
 	default: ({ onItemClick }: TocProps) => (
-		<div
+		<button
+			type="button"
 			data-testid="toc"
 			onClick={onItemClick}
 			onKeyUp={onItemClick}
 			onKeyDown={onItemClick}
 		>
 			Table of Contents
-		</div>
+		</button>
 	),
 	useHasTableOfContents: vi.fn(),
 }));

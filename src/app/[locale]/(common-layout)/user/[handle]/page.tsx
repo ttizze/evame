@@ -1,12 +1,13 @@
-import { FloatingControls } from "@/app/[locale]/_components/floating-controls.client";
-import { SortTabs } from "@/app/[locale]/_components/sort-tabs";
-import { fetchUserByHandle } from "@/app/_db/queries.server";
-import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
-import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import type { SearchParams } from "nuqs/server";
+import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
+import { fetchUserByHandle } from "@/app/_db/queries.server";
+import { FloatingControls } from "@/app/[locale]/_components/floating-controls.client";
+import { SortTabs } from "@/app/[locale]/_components/sort-tabs";
+import { Skeleton } from "@/components/ui/skeleton";
+
 const DynamicPageList = dynamic(
 	() =>
 		import("./_components/user-page-list.server").then(

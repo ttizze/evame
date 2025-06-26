@@ -1,9 +1,9 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 const LANGUAGES = [
 	{ code: "jp", flag: "🇯🇵", name: "Japanese" },

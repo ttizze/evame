@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useId } from "react";
 
 export function GitHubIntegrationTab() {
 	return (
@@ -24,17 +25,21 @@ export function GitHubIntegrationTab() {
 						<div className="space-y-2">
 							<Label htmlFor="repo-url">Repository URL</Label>
 							<Input
-								id="repo-url"
+								id={useId()}
 								placeholder="https://github.com/username/repository"
 							/>
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor="branch">Branch</Label>
-							<Input id="branch" placeholder="main" defaultValue="main" />
+							<Input id={useId()} placeholder="main" defaultValue="main" />
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor="path">Content Path</Label>
-							<Input id="path" placeholder="/content" defaultValue="/content" />
+							<Input
+								id={useId()}
+								placeholder="/content"
+								defaultValue="/content"
+							/>
 						</div>
 						<Button className="w-full">Connect Repository</Button>
 					</CardContent>

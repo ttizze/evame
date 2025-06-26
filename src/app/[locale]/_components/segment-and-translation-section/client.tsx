@@ -1,8 +1,9 @@
 "use client";
-import type { SegmentBundle } from "@/app/[locale]/types";
-import { useDisplay } from "@/app/_context/display-provider";
 import type { ReactNode } from "react";
+import { useDisplay } from "@/app/_context/display-provider";
+import type { SegmentBundle } from "@/app/[locale]/types";
 import { TranslationSection } from "./translation-section";
+
 interface SegmentAndTranslationSectionProps {
 	segmentBundle: SegmentBundle;
 	//textを表示するだけだとtextの間にあるstrong等のtagが落ちてしまうため､それを防ぐために

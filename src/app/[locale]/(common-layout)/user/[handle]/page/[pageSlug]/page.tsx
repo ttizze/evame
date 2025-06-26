@@ -1,13 +1,13 @@
-import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
-import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
-import { BASE_URL } from "@/app/_constants/base-url";
-import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EyeIcon, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import type { SearchParams } from "nuqs/server";
+import { BASE_URL } from "@/app/_constants/base-url";
+import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
+import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
+import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
+import { Skeleton } from "@/components/ui/skeleton";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
 
@@ -54,7 +54,10 @@ type Params = Promise<{ locale: string; handle: string; pageSlug: string }>;
 
 export async function generateMetadata({
 	params,
-}: { params: Params; searchParams: Promise<SearchParams> }): Promise<Metadata> {
+}: {
+	params: Params;
+	searchParams: Promise<SearchParams>;
+}): Promise<Metadata> {
 	const { pageSlug, locale } = await params;
 	const data = await fetchPageContext(pageSlug, locale);
 	if (!data) {
@@ -96,7 +99,10 @@ export async function generateMetadata({
 
 export default async function Page({
 	params,
-}: { params: Params; searchParams: Promise<SearchParams> }) {
+}: {
+	params: Params;
+	searchParams: Promise<SearchParams>;
+}) {
 	const { pageSlug, locale } = await params;
 	const data = await fetchPageContext(pageSlug, locale);
 	if (!data) {

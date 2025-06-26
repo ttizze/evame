@@ -1,3 +1,7 @@
+import { Loader2, Trash } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect } from "react";
+import { toast } from "sonner";
 import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,12 +12,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, Trash } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useActionState } from "react";
-import { useEffect } from "react";
-import { toast } from "sonner";
 import { archivePageAction } from "./action";
+
 interface DeletePageDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;

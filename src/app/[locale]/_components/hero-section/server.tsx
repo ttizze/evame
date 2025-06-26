@@ -1,8 +1,8 @@
-import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/_lib/fetch-about-page";
+import Image from "next/image";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import { StartButton } from "@/app/[locale]/_components/start-button";
+import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/_lib/fetch-about-page";
 import { getCurrentUser } from "@/auth";
-import Image from "next/image";
 
 export const Icon = ({ className, ...rest }: { className: string }) => {
 	return (

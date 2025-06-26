@@ -1,15 +1,16 @@
+import { revalidatePath } from "next/cache";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import {
 	fetchPageIdBySlug,
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
 } from "@/app/[locale]/_db/page-queries.server";
-import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
 import { getCurrentUser } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { translateAction } from "./action";
+
 vi.mock("@/auth", () => ({
 	getCurrentUser: vi.fn(),
 }));

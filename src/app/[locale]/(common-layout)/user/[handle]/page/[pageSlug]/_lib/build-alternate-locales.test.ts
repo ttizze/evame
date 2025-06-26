@@ -1,7 +1,8 @@
 // buildAlternateLocales.test.ts
-import { BASE_URL } from "@/app/_constants/base-url";
+
 import type { TranslationJob } from "@prisma/client";
 import { describe, expect, it } from "vitest";
+import { BASE_URL } from "@/app/_constants/base-url";
 import { buildAlternateLocales } from "./build-alternate-locales";
 
 describe("buildAlternateLocales", () => {

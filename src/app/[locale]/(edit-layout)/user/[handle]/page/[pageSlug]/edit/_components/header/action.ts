@@ -1,14 +1,15 @@
 "use server";
+import type { PageStatus } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import { handlePageAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
-import type { PageStatus } from "@prisma/client";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { z } from "zod";
 import { updatePageStatus } from "./_db/mutations.server";
+
 const editPageStatusSchema = z.object({
 	pageId: z.coerce.number().min(1),
 	status: z.enum(["DRAFT", "PUBLIC", "ARCHIVE"]),
@@ -66,7 +67,7 @@ export async function editPageStatusAction(
 	}
 	await updatePageStatus(pageId, status as PageStatus);
 
-	let translationJobs: TranslationJobForToast[] | undefined = undefined;
+	let translationJobs: TranslationJobForToast[] | undefined;
 	if (status === "PUBLIC") {
 		translationJobs = await triggerAutoTranslation(
 			pageId,

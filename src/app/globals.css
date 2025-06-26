@@ -121,7 +121,8 @@
 .output-rays {
 	clip-path: polygon(54% 0, 100% 0, 100% 100%, 54% 100%);
 	/* 赤 */
-	background: repeating-conic-gradient(
+	background:
+		repeating-conic-gradient(
 			from -45deg at 50% center,
 			rgba(255, 0, 0, 0.5) 0deg,
 			rgba(255, 0, 0, 0.5) 1deg,

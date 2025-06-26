@@ -1,13 +1,13 @@
 "use client";
 
+import { Loader2, SaveIcon } from "lucide-react";
+import { useActionState, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { GeminiApiKeyDialog } from "@/app/[locale]/_components/gemini-api-key-dialog/gemini-api-key-dialog";
 import type { SanitizedUser } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, SaveIcon } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
-import { toast } from "sonner";
 import { type UserEditState, userEditAction } from "./user-edit-action";
 
 interface SettingsFormProps {
@@ -93,7 +93,6 @@ export function SettingsForm({ currentUser }: SettingsFormProps) {
 											evame.tech/user/
 										</code>
 										<Input
-											id="handle-input"
 											defaultValue={currentUser.handle}
 											name="handle"
 											minLength={3}
