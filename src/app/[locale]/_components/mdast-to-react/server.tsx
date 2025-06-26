@@ -13,7 +13,7 @@ import rehypeSlug from "rehype-slug";
 import remarkLinkCard from "remark-link-card-plus";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
-import { wrapSegment } from "./wrap-segments.server";
+import { WrapSegment } from "./wrap-segments/server";
 
 const SEGMENTABLE = [
 	"p",
@@ -55,7 +55,7 @@ export async function mdastToReact({
 }: Params): Promise<ReactElement | null> {
 	if (!mdast || Object.keys(mdast).length === 0) return null;
 	const segmentComponents = Object.fromEntries(
-		SEGMENTABLE.map((tag) => [tag, wrapSegment(tag, bundles, currentHandle)]),
+		SEGMENTABLE.map((tag) => [tag, WrapSegment(tag, bundles, currentHandle)]),
 	);
 
 	const processor = unified()
