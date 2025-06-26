@@ -12,7 +12,7 @@ interface BaseProps {
 	children: ReactNode;
 }
 
-export function SegmentWrapper<Tag extends keyof JSX.IntrinsicElements>({
+export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 	bundle,
 	tagName,
 	tagProps,

@@ -1,12 +1,12 @@
 import React, { createElement, type JSX } from "react";
 import { Tweet as XPost } from "react-tweet";
-import { SegmentWrapper } from "@/app/[locale]/_components/mdast-to-react/wrap-segments/client";
+import { WrapSegmentClient } from "@/app/[locale]/_components/mdast-to-react/wrap-segments/client";
 import type { SegmentBundle } from "@/app/[locale]/types";
 
 const TWEET_ID_RE =
 	/https?:\/\/(?:mobile\.)?(?:twitter\.com|x\.com)\/(?:[^/]+\/status|i\/web\/status)\/(\d+)(?:\?.*)?$/i;
 
-export function wrapSegment<Tag extends keyof JSX.IntrinsicElements>(
+export function WrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 	Tag: Tag,
 	bundles: SegmentBundle[],
 	current?: string,
@@ -39,14 +39,14 @@ export function wrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 		/* --- ここで Client Component に “シリアライズ可能な形” で渡す --- */
 		const { children, ...rest } = p;
 		return (
-			<SegmentWrapper
+			<WrapSegmentClient
 				bundle={bundle}
 				tagName={Tag}
 				tagProps={rest as JSX.IntrinsicElements[Tag]} // ★そのまま突っ込む
 				currentHandle={current}
 			>
 				{children} {/* ← children は React が面倒見てくれる */}
-			</SegmentWrapper>
+			</WrapSegmentClient>
 		);
 	};
 }
