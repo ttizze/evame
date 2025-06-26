@@ -4,12 +4,14 @@ interface PageListContainerProps {
 	title: string;
 	icon: LucideIcon;
 	children: React.ReactNode;
+	showPagination?: boolean;
 }
 
 export function PageListContainer({
 	title,
 	icon: Icon,
 	children,
+	showPagination = false,
 }: PageListContainerProps) {
 	return (
 		<div className="flex flex-col gap-4">

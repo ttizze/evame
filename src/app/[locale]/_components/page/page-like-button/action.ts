@@ -26,7 +26,7 @@ export type PageLikeButtonState = ActionResponse<
 >;
 
 export async function togglePageLikeAction(
-	_previousState: PageLikeButtonState,
+	previousState: PageLikeButtonState,
 	formData: FormData,
 ): Promise<PageLikeButtonState> {
 	const v = await authAndValidate(schema, formData);

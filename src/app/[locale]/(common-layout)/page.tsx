@@ -5,6 +5,20 @@ import { createLoader, parseAsString } from "nuqs/server";
 import { getCurrentUser } from "@/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const PopularPageList = dynamic(
+	() => import("@/app/[locale]/_components/page/popular-page-list/server"),
+	{
+		loading: () => <Skeleton className="h-[400px] w-full mb-10" />,
+	},
+);
+
+const PopularPageTagsList = dynamic(
+	() => import("@/app/[locale]/_components/page/popular-page-tags-list/server"),
+	{
+		loading: () => <Skeleton className="h-[100px] w-full mb-6" />,
+	},
+);
+
 const NewPageList = dynamic(
 	() => import("@/app/[locale]/_components/page/new-page-list/server"),
 	{
@@ -12,6 +26,19 @@ const NewPageList = dynamic(
 	},
 );
 
+const SortTabs = dynamic(
+	() =>
+		import("@/app/[locale]/_components/sort-tabs").then((mod) => mod.SortTabs),
+	{
+		loading: () => <Skeleton className="h-[50px] w-full mb-4" />,
+	},
+);
+const PopularUsersList = dynamic(
+	() => import("@/app/[locale]/_components/user/popular-users-list/server"),
+	{
+		loading: () => <Skeleton className="h-[200px] w-full mb-6" />,
+	},
+);
 const DynamicHeroSection = dynamic(
 	() => import("@/app/[locale]/_components/hero-section/server"),
 	{
@@ -69,7 +96,7 @@ export default async function HomePage({
 }) {
 	const currentUser = await getCurrentUser();
 	const { locale } = await params;
-	await loadSearchParams(searchParams);
+	const { sort } = await loadSearchParams(searchParams);
 	return (
 		<div className="flex flex-col gap-8 justify-between mb-12">
 			{!currentUser && (

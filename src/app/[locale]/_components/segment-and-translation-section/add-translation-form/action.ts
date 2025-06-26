@@ -19,7 +19,7 @@ const schema = z.object({
 });
 
 export async function addTranslationFormAction(
-	_previousState: ActionResponse,
+	previousState: ActionResponse,
 	formData: FormData,
 ): Promise<ActionResponse> {
 	const v = await authAndValidate(schema, formData);

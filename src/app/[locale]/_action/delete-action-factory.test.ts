@@ -31,7 +31,7 @@ const actionFactory = (deps: Record<string, unknown> = {}) =>
 			buildRevalidatePaths: () => ["/foo"],
 			buildSuccessRedirect: () => "/bar",
 		},
-		//biome-ignore lint/suspicious/noExplicitAny: <>
+		//biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		deps as any, // 型を満たすため any キャスト
 	);
 
@@ -44,7 +44,7 @@ describe("createDeleteAction", () => {
 	});
 
 	it("validation 失敗時は zodErrors を返す", async () => {
-		//biome-ignore lint/suspicious/noExplicitAny: <>
+		//biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		(authAndValidate as any).mockResolvedValue({
 			success: false,
 			zodErrors: { id: ["required"] },
@@ -57,7 +57,7 @@ describe("createDeleteAction", () => {
 	});
 
 	it("成功時は delete → revalidate → redirect を行う", async () => {
-		//biome-ignore lint/suspicious/noExplicitAny: <>
+		//biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		(authAndValidate as any).mockResolvedValue({
 			success: true,
 			currentUser: { id: "1", handle: "u" },
@@ -81,7 +81,7 @@ describe("createDeleteAction", () => {
 				buildRevalidatePaths: () => ["/foo"],
 				buildSuccessRedirect: () => "/bar",
 			},
-			//biome-ignore lint/suspicious/noExplicitAny: <>
+			//biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			deps as any,
 		);
 

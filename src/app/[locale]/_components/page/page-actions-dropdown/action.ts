@@ -16,7 +16,7 @@ export type TogglePublishState = ActionResponse<
 >;
 
 export async function togglePublishAction(
-	_previousState: TogglePublishState,
+	previousState: TogglePublishState,
 	formData: FormData,
 ): Promise<TogglePublishState> {
 	const v = await authAndValidate(togglePublishSchema, formData);

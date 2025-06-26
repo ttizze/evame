@@ -30,8 +30,7 @@ export function TranslationSection({
 	const sanitizedAndParsedText = sanitizeAndParseText(best.text);
 	return (
 		<span className={"group relative"}>
-			<button
-				type="button"
+			<span
 				className="notranslate inline-block py-2 text-gray-700 dark:text-gray-200"
 				onMouseUp={(e) => {
 					if (window.getSelection()?.toString()) return;
@@ -40,7 +39,7 @@ export function TranslationSection({
 				}}
 			>
 				{sanitizedAndParsedText}
-			</button>
+			</span>
 			{isSelected && interactive && (
 				<>
 					<span className="flex items-center justify-end gap-2">

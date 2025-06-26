@@ -40,7 +40,7 @@ export type EditPageTagsActionState = ActionResponse<
 >;
 
 export async function editPageTagsAction(
-	_previousState: EditPageTagsActionState,
+	previousState: EditPageTagsActionState,
 	formData: FormData,
 ): Promise<EditPageTagsActionState> {
 	const v = await authAndValidate(editPageTagsSchema, formData);

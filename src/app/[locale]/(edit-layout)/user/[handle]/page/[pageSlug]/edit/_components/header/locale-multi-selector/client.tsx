@@ -26,7 +26,7 @@ export function LocaleMultiSelector({
 }: LocaleMultiSelectorProps) {
 	const [selected, setSelected] = useState<string[]>(defaultValue);
 	const [open, setOpen] = useState(false);
-	const [_isSaving, startSaving] = useTransition();
+	const [isSaving, startSaving] = useTransition();
 
 	const options = supportedLocaleOptions.map((o) => ({
 		value: o.code,

@@ -24,14 +24,14 @@ export function PageLikeButtonClient({
 	showCount,
 	className = "",
 }: PageLikeButtonClientProps) {
-	const [_state, formAction, _isPending] = useActionState<
+	const [state, formAction, isPending] = useActionState<
 		PageLikeButtonState,
 		FormData
 	>(togglePageLikeAction, { success: false });
 
 	const [optimisticLiked, updateOptimisticLiked] = useOptimistic(
 		liked,
-		(_state, liked: boolean) => liked,
+		(state, liked: boolean) => liked,
 	);
 
 	const [optimisticCount, updateOptimisticCount] = useOptimistic(

@@ -108,7 +108,13 @@ export default async function Page({
 	if (!data) {
 		return notFound();
 	}
-	const { pageDetail, currentUser, pageViewCount } = data;
+	const {
+		pageDetail,
+		currentUser,
+		pageTranslationJobs,
+		latestUserTranslationJob,
+		pageViewCount,
+	} = data;
 
 	const isOwner = pageDetail.user.handle === currentUser?.handle;
 	if (!isOwner && pageDetail.status !== "PUBLIC") {
@@ -165,7 +171,7 @@ export default async function Page({
 				)}
 
 				<div className="mt-8">
-					<div className="mt-8">
+					<div className="mt-8" id="comments">
 						<div className="flex items-center gap-2 py-2">
 							<h2 className="text-2xl not-prose font-bold">Comments</h2>
 						</div>

@@ -144,7 +144,9 @@ export function EditHeader({
 								onClick={() => setClickedStatus("PUBLIC")}
 							>
 								{isPending && clickedStatus === "PUBLIC" ? (
-									<Loader2 className={ICON_SPIN_CLASSES} />
+									<>
+										<Loader2 className={ICON_SPIN_CLASSES} />
+									</>
 								) : initialStatus === "PUBLIC" ? (
 									<>
 										<LanguagesIcon className={ICON_CLASSES} />
@@ -178,7 +180,9 @@ export function EditHeader({
 					>
 						<input type="hidden" name="status" value="DRAFT" />
 						{isPending && clickedStatus === "DRAFT" ? (
-							<Loader2 className={ICON_SPIN_CLASSES} />
+							<>
+								<Loader2 className={ICON_SPIN_CLASSES} />
+							</>
 						) : (
 							<>
 								<Lock className={ICON_CLASSES} />

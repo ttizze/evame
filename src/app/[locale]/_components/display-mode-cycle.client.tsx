@@ -9,7 +9,7 @@ interface Props {
 }
 
 export function DisplayModeCycle({ afterClick }: Props) {
-	const { mode, cycle, userLocale } = useDisplay(); // mode: "user" | "source" | "both"
+	const { mode, cycle, userLocale, sourceLocale } = useDisplay(); // mode: "user" | "source" | "both"
 
 	const handleClick = () => {
 		afterClick?.();

@@ -28,7 +28,7 @@ export type VoteTranslationActionResponse = ActionResponse<
 	}
 >;
 export async function voteTranslationAction(
-	_previousState: VoteTranslationActionResponse,
+	previousState: VoteTranslationActionResponse,
 	formData: FormData,
 ): Promise<VoteTranslationActionResponse> {
 	const currentUser = await getCurrentUser();

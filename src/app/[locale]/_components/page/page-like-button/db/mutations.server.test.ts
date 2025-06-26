@@ -6,6 +6,8 @@ import { togglePageLike } from "./mutations.server";
 describe("toggleLike 実際のDB統合テスト", () => {
 	let testUser: User;
 	let publicPage: Page;
+	let privatePage: Page;
+	let archivedPage: Page;
 	beforeEach(async () => {
 		await prisma.user.deleteMany();
 		await prisma.page.deleteMany();

@@ -23,7 +23,7 @@ describe("editPageTagsAction", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
-		// biome-ignore lint/suspicious/noExplicitAny: <>
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		vi.mocked(getPageById).mockResolvedValue(mockPages[0] as any);
 		vi.mocked(upsertTags).mockResolvedValue(mockTags);
 	});

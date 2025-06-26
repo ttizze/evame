@@ -56,7 +56,7 @@ export type UserEditState = ActionResponse<
 	}
 >;
 export async function userEditAction(
-	_previousState: UserEditState,
+	previousState: UserEditState,
 	formData: FormData,
 ): Promise<UserEditState> {
 	const currentUser = await getCurrentUser();

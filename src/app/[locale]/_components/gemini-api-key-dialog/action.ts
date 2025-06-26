@@ -16,7 +16,7 @@ export type GeminiApiKeyDialogState = ActionResponse<
 	}
 >;
 export async function updateGeminiApiKeyAction(
-	_previousState: GeminiApiKeyDialogState,
+	previousState: GeminiApiKeyDialogState,
 	formData: FormData,
 ): Promise<GeminiApiKeyDialogState> {
 	const v = await authAndValidate(geminiApiKeySchema, formData);
