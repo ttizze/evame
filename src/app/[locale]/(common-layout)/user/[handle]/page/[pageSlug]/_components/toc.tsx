@@ -23,7 +23,7 @@ export default function TableOfContents({
 			headingLabelCallback: (text) => {
 				return text.length > 40 ? `${text.substring(0, 40)}...` : text;
 			},
-			onClick: (e) => {
+			onClick: (_e) => {
 				if (onItemClick) {
 					onItemClick();
 				}
