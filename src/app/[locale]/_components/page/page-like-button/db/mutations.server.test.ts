@@ -6,8 +6,6 @@ import { togglePageLike } from "./mutations.server";
 describe("toggleLike 実際のDB統合テスト", () => {
 	let testUser: User;
 	let publicPage: Page;
-	let privatePage: Page;
-	let archivedPage: Page;
 	beforeEach(async () => {
 		await prisma.user.deleteMany();
 		await prisma.page.deleteMany();
@@ -70,20 +68,6 @@ describe("toggleLike 実際のDB統合テスト", () => {
 			throw new Error("public-page が見つかりません");
 		}
 		publicPage = foundPublicPage;
-		const foundPrivatePage = createdUser.pages?.find(
-			(p) => p.slug === "private-page",
-		);
-		if (!foundPrivatePage) {
-			throw new Error("private-page が見つかりません");
-		}
-		privatePage = foundPrivatePage;
-		const foundArchivedPage = createdUser.pages?.find(
-			(p) => p.slug === "archived-page",
-		);
-		if (!foundArchivedPage) {
-			throw new Error("archived-page が見つかりません");
-		}
-		archivedPage = foundArchivedPage;
 	});
 	afterEach(async () => {
 		await prisma.user.deleteMany();

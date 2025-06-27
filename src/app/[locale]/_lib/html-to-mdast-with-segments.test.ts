@@ -203,9 +203,9 @@ describe("htmlToMdastWithSegments", () => {
 		const mdast = result.mdastJson;
 
 		// Find nodes by type in the MDAST
-		//biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		//biome-ignore lint/suspicious/noExplicitAny: <>
 		const findNodesByType = (node: any, type: string): any[] => {
-			//biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			//biome-ignore lint/suspicious/noExplicitAny: <>
 			const matches: any[] = [];
 			if (node.type === type) matches.push(node);
 			if (node.children) {

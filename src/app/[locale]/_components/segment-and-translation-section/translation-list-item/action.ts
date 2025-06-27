@@ -10,7 +10,7 @@ const schema = z.object({
 });
 
 export async function deleteTranslationAction(
-	previousState: ActionResponse,
+	_previousState: ActionResponse,
 	formData: FormData,
 ): Promise<ActionResponse> {
 	const v = await authAndValidate(schema, formData);

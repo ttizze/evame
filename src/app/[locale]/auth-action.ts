@@ -9,8 +9,8 @@ const loginSchema = z.object({
 });
 
 export async function signInWithGoogleAction(
-	previousState: ActionResponse,
-	formData: FormData,
+	_previousState: ActionResponse,
+	_formData: FormData,
 ): Promise<ActionResponse> {
 	await signIn("google");
 	return {
@@ -27,7 +27,7 @@ export type SignInWithResendState = ActionResponse<
 >;
 
 export async function signInWithResendAction(
-	previousState: SignInWithResendState,
+	_previousState: SignInWithResendState,
 	formData: FormData,
 ): Promise<SignInWithResendState> {
 	const validation = loginSchema.safeParse({

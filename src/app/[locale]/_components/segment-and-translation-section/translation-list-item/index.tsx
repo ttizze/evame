@@ -25,7 +25,7 @@ export function TranslationListItem({
 	currentHandle,
 	targetContentType,
 }: TranslationItemProps) {
-	const [deleteTranslationState, action, isDeletingTranslation] =
+	const [_deleteTranslationState, action, isDeletingTranslation] =
 		useActionState<ActionResponse, FormData>(deleteTranslationAction, {
 			success: false,
 		});

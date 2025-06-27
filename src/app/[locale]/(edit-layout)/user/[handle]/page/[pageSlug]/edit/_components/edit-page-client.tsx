@@ -42,7 +42,7 @@ export function EditPageClient({
 	const [editorInstance, setEditorInstance] = useState<TiptapEditor | null>(
 		null,
 	);
-	const [editState, editAction, isEditing] = useActionState<
+	const [editState, editAction, _isEditing] = useActionState<
 		EditPageContentActionState,
 		FormData
 	>(editPageContentAction, { success: false });

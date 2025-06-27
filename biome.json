@@ -16,6 +16,9 @@
 			"recommended": true,
 			"correctness": {
 				"noUnusedImports": "error"
+			},
+			"nursery": {
+				"useUniqueElementIds": "off"
 			}
 		}
 	},

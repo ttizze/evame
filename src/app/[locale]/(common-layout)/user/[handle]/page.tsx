@@ -66,16 +66,14 @@ export default async function UserPage({
 	return (
 		<>
 			<DynamicUserInfo handle={handle} />
-			<>
-				<SortTabs defaultSort={sort} />
-				<DynamicPageList
-					handle={handle}
-					page={page}
-					locale={locale}
-					sort={sort}
-					showPagination={true}
-				/>
-			</>
+			<SortTabs defaultSort={sort} />
+			<DynamicPageList
+				handle={handle}
+				page={page}
+				locale={locale}
+				sort={sort}
+				showPagination={true}
+			/>
 			<FloatingControls />
 		</>
 	);

@@ -13,6 +13,9 @@ interface TagInputProps {
 	pageId: number | undefined;
 }
 
+const DropdownIndicator = () => null;
+const IndicatorSeparator = () => null;
+
 export function TagInput({
 	initialTags,
 	allTagsWithCount,
@@ -96,8 +99,8 @@ export function TagInput({
 							}))}
 						value={null}
 						components={{
-							DropdownIndicator: () => null,
-							IndicatorSeparator: () => null,
+							DropdownIndicator,
+							IndicatorSeparator,
 						}}
 						styles={{
 							control: () => ({
