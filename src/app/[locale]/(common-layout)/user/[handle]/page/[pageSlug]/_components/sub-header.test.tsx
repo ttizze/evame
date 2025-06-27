@@ -25,14 +25,15 @@ interface TocProps {
 vi.mock("./toc", () => ({
 	__esModule: true,
 	default: ({ onItemClick }: TocProps) => (
-		<div
+		<button
+			type="button"
 			data-testid="toc"
 			onClick={onItemClick}
 			onKeyUp={onItemClick}
 			onKeyDown={onItemClick}
 		>
 			Table of Contents
-		</div>
+		</button>
 	),
 	useHasTableOfContents: vi.fn(),
 }));

@@ -20,7 +20,7 @@ export async function GET(req: Request): Promise<Response> {
 		fetchPageContext(slug, locale),
 	]);
 
-	const logoSrc = Uint8Array.from(logoData).buffer;
+	const logoSrc = `data:image/png;base64,${Buffer.from(logoData).toString("base64")}`;
 
 	if (!pageContext) {
 		return new ImageResponse(
@@ -48,6 +48,7 @@ export async function GET(req: Request): Promise<Response> {
 				<div tw="flex items-center justify-between w-full ">
 					{/* 左側のアバターと名前 */}
 					<div tw="flex items-center">
+						{/* biome-ignore lint/performance/noImgElement: <> */}
 						<img
 							tw="w-24 h-24 rounded-full mr-4"
 							src={pageOwner?.image}
@@ -56,8 +57,8 @@ export async function GET(req: Request): Promise<Response> {
 						<p tw="text-6xl ">{pageOwner?.name}</p>
 					</div>
 					{/* 右端にロゴ */}
+					{/* biome-ignore lint/performance/noImgElement: <> */}
 					<img
-						//@ts-expect-error srcの型がおかしいが､これはバグではない
 						src={logoSrc}
 						alt="logo"
 						style={{

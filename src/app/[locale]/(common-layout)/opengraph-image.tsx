@@ -10,7 +10,7 @@ export const contentType = "image/png";
 
 export default async function Image() {
 	const logoData = await readFile(join(process.cwd(), "public", "logo.png"));
-	const logoSrc = Uint8Array.from(logoData).buffer;
+	const logoSrc = `data:image/png;base64,${Buffer.from(logoData).toString("base64")}`;
 
 	return new ImageResponse(
 		<div
@@ -22,7 +22,7 @@ export default async function Image() {
 			}}
 			tw="flex items-center justify-center"
 		>
-			{/* @ts-expect-error srcの型がおかしいが､これはバグではない */}
+			{/* biome-ignore lint/performance/noImgElement: Using raw <img> is required for OG image generation. */}
 			<img src={logoSrc} alt="logo" />
 		</div>,
 		{
