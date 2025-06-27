@@ -109,4 +109,3 @@ export const useDisplay = () => {
 	if (!c) throw new Error("useDisplay must be inside DisplayProvider");
 	return c;
 };
-

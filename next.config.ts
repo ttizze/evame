@@ -25,7 +25,7 @@ const config: NextConfig = {
 		},
 	},
 	images: {
-		minimumCacheTTL: 86400,
+		minimumCacheTTL: 31536000,
 		loader: "custom",
 		loaderFile: "./src/lib/cloudflare-loader.ts",
 
