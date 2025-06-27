@@ -1,4 +1,15 @@
 "use client";
+import type { PageStatus } from "@prisma/client";
+import {
+	CloudCheck,
+	Globe,
+	LanguagesIcon,
+	LinkIcon,
+	Loader2,
+	Lock,
+} from "lucide-react";
+import { useParams, usePathname } from "next/navigation";
+import { useActionState, useMemo, useState } from "react";
 import { BaseHeader } from "@/app/[locale]/_components/header/base-header.client";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
@@ -11,17 +22,6 @@ import {
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "@/i18n/routing";
-import type { PageStatus } from "@prisma/client";
-import {
-	CloudCheck,
-	Globe,
-	LanguagesIcon,
-	LinkIcon,
-	Loader2,
-	Lock,
-} from "lucide-react";
-import { useParams, usePathname } from "next/navigation";
-import { useActionState, useMemo, useState } from "react";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
 import { LocaleMultiSelector } from "./locale-multi-selector/client";
@@ -144,9 +144,7 @@ export function EditHeader({
 								onClick={() => setClickedStatus("PUBLIC")}
 							>
 								{isPending && clickedStatus === "PUBLIC" ? (
-									<>
-										<Loader2 className={ICON_SPIN_CLASSES} />
-									</>
+									<Loader2 className={ICON_SPIN_CLASSES} />
 								) : initialStatus === "PUBLIC" ? (
 									<>
 										<LanguagesIcon className={ICON_CLASSES} />
@@ -180,9 +178,7 @@ export function EditHeader({
 					>
 						<input type="hidden" name="status" value="DRAFT" />
 						{isPending && clickedStatus === "DRAFT" ? (
-							<>
-								<Loader2 className={ICON_SPIN_CLASSES} />
-							</>
+							<Loader2 className={ICON_SPIN_CLASSES} />
 						) : (
 							<>
 								<Lock className={ICON_CLASSES} />

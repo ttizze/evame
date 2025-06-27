@@ -1,5 +1,8 @@
 "use client";
 
+import { Bell } from "lucide-react";
+import { getImageProps } from "next/image";
+import { startTransition, useActionState } from "react";
 import type { ActionResponse } from "@/app/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -9,9 +12,6 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
-import { Bell } from "lucide-react";
-import { getImageProps } from "next/image";
-import { startTransition, useActionState } from "react";
 import { markNotificationAsReadAction } from "./action";
 import type { NotificationWithRelations } from "./db/queries.server";
 
@@ -22,7 +22,7 @@ export function NotificationsDropdownClient({
 	notifications: NotificationWithRelations[];
 	currentUserHandle: string;
 }) {
-	const [markNotificationAsReadResponse, action, isPending] = useActionState<
+	const [_markNotificationAsReadResponse, action, _isPending] = useActionState<
 		ActionResponse,
 		FormData
 	>(markNotificationAsReadAction, { success: false });

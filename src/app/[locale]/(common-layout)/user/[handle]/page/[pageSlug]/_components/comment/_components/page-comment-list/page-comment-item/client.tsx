@@ -1,9 +1,9 @@
 "use client";
 
+import { useActionState } from "react";
 import { CommentActionMenu } from "@/app/[locale]/_components/comment/comment-action-menu.client";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { useActionState } from "react";
 import type { PageCommentWithUserAndTranslations } from "../_lib/fetch-page-comments-with-user-and-translations";
 import {
 	type CommentDeleteActionResponse,
@@ -19,7 +19,7 @@ export function PageCommentItemClient({
 	pageComment,
 	currentHandle,
 }: PageCommentItemClientProps) {
-	const [state, action, isPending] = useActionState<
+	const [_state, action, isPending] = useActionState<
 		CommentDeleteActionResponse,
 		FormData
 	>(deletePageCommentAction, { success: false });

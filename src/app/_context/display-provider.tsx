@@ -3,8 +3,8 @@
 
 import { parseAsStringEnum, useQueryState } from "nuqs";
 import {
-	type ReactNode,
 	createContext,
+	type ReactNode,
 	useCallback,
 	useContext,
 	useEffect,
@@ -86,7 +86,12 @@ export function DisplayProvider({
 		const next =
 			mode === "user" ? "source" : mode === "source" ? "both" : "user";
 		setQueryMode(next);
-		document.cookie = `displayPref=${next};path=/;max-age=31536000`;
+		window.cookieStore?.set({
+			name: "displayPref",
+			value: next,
+			path: "/",
+			maxAge: 60 * 60 * 24 * 365, // 1 year
+		});
 		setPref(next as Pref);
 	}, [mode, setQueryMode]);
 
@@ -98,7 +103,6 @@ export function DisplayProvider({
 		</Ctx.Provider>
 	);
 }
-
 /* ---------------- Hook ---------------- */
 export const useDisplay = () => {
 	const c = useContext(Ctx);

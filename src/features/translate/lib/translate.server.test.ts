@@ -1,13 +1,14 @@
 // translate.server.test.ts
 
-import { prisma } from "@/lib/prisma";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { prisma } from "@/lib/prisma";
 import { getGeminiModelResponse } from "../services/gemini";
 import { translate } from "./translate.server";
 
 vi.mock("../services/gemini", () => ({
 	getGeminiModelResponse: vi.fn(),
 }));
+
 // 型定義
 import type { TranslateJobParams } from "../types";
 

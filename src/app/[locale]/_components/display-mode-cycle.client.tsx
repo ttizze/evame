@@ -1,15 +1,15 @@
 /* app/_components/display-mode-cycle.tsx */
 "use client";
+import { FileText } from "lucide-react";
 import { useDisplay } from "@/app/_context/display-provider";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
 
 interface Props {
 	afterClick?: () => void;
 }
 
 export function DisplayModeCycle({ afterClick }: Props) {
-	const { mode, cycle, userLocale, sourceLocale } = useDisplay(); // mode: "user" | "source" | "both"
+	const { mode, cycle, userLocale } = useDisplay(); // mode: "user" | "source" | "both"
 
 	const handleClick = () => {
 		afterClick?.();

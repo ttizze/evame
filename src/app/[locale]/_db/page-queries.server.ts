@@ -1,6 +1,6 @@
+import { Prisma } from "@prisma/client";
 import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
 import { toSegmentBundles } from "../_lib/to-segment-bundles";
 import type { PageDetail, PageSummary } from "../types";
 import { selectUserFields } from "./queries.server";

@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DynamicFloatingControls = dynamic(
 	() =>

@@ -1,14 +1,14 @@
 "use client";
 
+import type { PageStatus } from "@prisma/client";
+import { EyeIcon } from "lucide-react";
+import { parseAsString, useQueryState } from "nuqs";
+import type { ReactNode } from "react";
 import { PageActionsDropdown } from "@/app/[locale]/_components/page/page-actions-dropdown/client";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Link } from "@/i18n/routing";
-import type { PageStatus } from "@prisma/client";
-import { EyeIcon } from "lucide-react";
-import { parseAsString, useQueryState } from "nuqs";
-import type { ReactNode } from "react";
 import type { PageWithTitle } from "../../_db/queries.server";
 
 interface PageManagementTabClientProps {

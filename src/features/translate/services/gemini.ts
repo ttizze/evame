@@ -1,11 +1,12 @@
-import { decrypt } from "@/lib/encryption.server";
 import {
 	GoogleGenerativeAI,
 	HarmBlockThreshold,
 	HarmCategory,
 	SchemaType,
 } from "@google/generative-ai";
+import { decrypt } from "@/lib/encryption.server";
 import { generateSystemMessage } from "./generate-gemini-message";
+
 const MAX_RETRIES = 3;
 
 export async function getGeminiModelResponse(

@@ -1,15 +1,15 @@
 "use client";
 
-import type { SegmentBundle } from "@/app/[locale]/types";
-import { useDisplay } from "@/app/_context/display-provider";
 import type { JSX } from "react";
 import {
 	Children,
-	Fragment,
-	type ReactNode,
 	createElement,
+	Fragment,
 	isValidElement,
+	type ReactNode,
 } from "react";
+import { useDisplay } from "@/app/_context/display-provider";
+import type { SegmentBundle } from "@/app/[locale]/types";
 import { TranslationSection } from "../../segment-and-translation-section/translation-section";
 
 interface BaseProps {

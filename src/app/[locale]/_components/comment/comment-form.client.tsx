@@ -1,10 +1,10 @@
 // components/CommentFormLayout.tsx
 "use client";
 
-import { Editor } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/editor/editor";
-import { StartButton } from "@/app/[locale]/_components/start-button";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { StartButton } from "@/app/[locale]/_components/start-button";
+import { Editor } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/editor/editor";
+import { Button } from "@/components/ui/button";
 
 type Hidden = Record<string, string | number | undefined>;
 

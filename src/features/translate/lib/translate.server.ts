@@ -1,6 +1,6 @@
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
-import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { TranslationStatus } from "@prisma/client";
+import { supportedLocaleOptions } from "@/app/_constants/locale";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { updateTranslationJob } from "../db/mutations.server";
 import { getPageCommentSegments, getPageSegments } from "../db/queries.server";
 import { getGeminiModelResponse } from "../services/gemini";

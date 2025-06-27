@@ -1,9 +1,9 @@
-import { signInWithGoogleAction } from "@/app/[locale]/auth-action";
-import type { ActionResponse } from "@/app/types";
-import { Button } from "@/components/ui/button";
 import Form from "next/form";
 import { useActionState } from "react";
 import { FcGoogle } from "react-icons/fc";
+import { signInWithGoogleAction } from "@/app/[locale]/auth-action";
+import type { ActionResponse } from "@/app/types";
+import { Button } from "@/components/ui/button";
 
 export function GoogleForm({ redirectTo }: { redirectTo: string }) {
 	const [, formAction, isPending] = useActionState<ActionResponse, FormData>(

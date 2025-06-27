@@ -1,12 +1,12 @@
 "use server";
 
-import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
+import { BookOpenIcon } from "lucide-react";
+import type { SearchParams } from "nuqs/server";
+import { createLoader, parseAsInteger } from "nuqs/server";
 import { PageList } from "@/app/[locale]/_components/page/page-list.server";
+import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { getCurrentUser } from "@/auth";
-import { BookOpenIcon } from "lucide-react";
-import { createLoader, parseAsInteger } from "nuqs/server";
-import type { SearchParams } from "nuqs/server";
 import { fetchPaginatedPublicPageSummariesByTag } from "./_db/queries.server";
 
 const searchParamsSchema = {

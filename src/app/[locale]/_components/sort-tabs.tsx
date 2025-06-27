@@ -1,7 +1,7 @@
 "use client";
 
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQueryState } from "nuqs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface SortTabsProps {
 	defaultSort?: string;

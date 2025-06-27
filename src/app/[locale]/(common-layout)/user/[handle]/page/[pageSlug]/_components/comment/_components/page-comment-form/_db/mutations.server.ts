@@ -1,7 +1,6 @@
+import type { PageComment, Prisma } from "@prisma/client";
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
 import { prisma } from "@/lib/prisma";
-import type { PageComment } from "@prisma/client";
-import type { Prisma } from "@prisma/client";
 export async function upsertPageCommentAndSegments(p: {
 	pageId: number;
 	pageCommentId?: number;
@@ -88,47 +87,6 @@ async function syncPageCommentSegments(
 			});
 		}
 	});
-}
-
-async function upsertTags(tags: string[], pageId: number) {
-	// 重複タグを除去
-	const uniqueTags = Array.from(new Set(tags));
-
-	const upsertPromises = uniqueTags.map(async (tagName) => {
-		const upsertedTag = await prisma.tag.upsert({
-			where: { name: tagName },
-			update: {},
-			create: { name: tagName },
-		});
-
-		await prisma.tagPage.upsert({
-			where: {
-				tagId_pageId: {
-					tagId: upsertedTag.id,
-					pageId: pageId,
-				},
-			},
-			update: {},
-			create: {
-				tagId: upsertedTag.id,
-				pageId: pageId,
-			},
-		});
-
-		return upsertedTag;
-	});
-
-	const updatedTags = await Promise.all(upsertPromises);
-
-	const tagIdsToKeep = updatedTags.map((tag) => tag.id);
-	await prisma.tagPage.deleteMany({
-		where: {
-			pageId,
-			tagId: { notIn: tagIdsToKeep },
-		},
-	});
-
-	return updatedTags;
 }
 
 export async function createNotificationPageComment(

@@ -1,4 +1,4 @@
-import { Node, PasteRule, mergeAttributes } from "@tiptap/core";
+import { mergeAttributes, Node, PasteRule } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import XView from "./x-view";
 

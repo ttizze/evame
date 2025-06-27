@@ -2,6 +2,7 @@ import withBundleAnalyzer from "@next/bundle-analyzer";
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+
 const withNextIntl = createNextIntlPlugin();
 const analyzeBundles = withBundleAnalyzer({
 	enabled: process.env.ANALYZE === "true",
@@ -24,7 +25,7 @@ const config: NextConfig = {
 		},
 	},
 	images: {
-		minimumCacheTTL: 86400,
+		minimumCacheTTL: 2_678_400,
 		loader: "custom",
 		loaderFile: "./src/lib/cloudflare-loader.ts",
 

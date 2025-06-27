@@ -1,12 +1,13 @@
 "use server";
+import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
-import { z } from "zod";
 import {
 	createFollow,
 	createNotificationFollow,
 	deleteFollow,
 } from "./db/mutations.server";
+
 const followActionSchema = z.object({
 	targetUserId: z.string(),
 	action: z.string(),
@@ -20,7 +21,7 @@ export type FollowActionResponse = ActionResponse<
 	}
 >;
 export async function followAction(
-	previousState: FollowActionResponse,
+	_previousState: FollowActionResponse,
 	formData: FormData,
 ): Promise<FollowActionResponse> {
 	const v = await authAndValidate(followActionSchema, formData);

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fileFromUrl } from "./file-from-url";
 import { remarkAutoUploadImages } from "./remark-auto-upload-images";
 import { uploadImage } from "./upload";
+
 vi.mock("@/app/[locale]/_lib/file-from-url", () => {
 	// 1×1 px 透明 PNG (完全な base64)
 	const pngBase64 =

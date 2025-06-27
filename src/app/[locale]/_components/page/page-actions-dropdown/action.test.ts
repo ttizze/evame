@@ -1,9 +1,11 @@
 // togglePublishAction.test.ts
+
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getCurrentUser } from "@/auth";
 import { mockUsers } from "@/tests/mock";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { togglePublishAction } from "./action";
 import { togglePagePublicStatus } from "./db/mutations.server";
+
 // モジュールの依存関数をモック
 vi.mock("@/auth");
 vi.mock("next/cache");

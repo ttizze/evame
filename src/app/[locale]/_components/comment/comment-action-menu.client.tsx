@@ -1,13 +1,13 @@
 "use client";
 
+import { MoreVertical } from "lucide-react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical } from "lucide-react";
-import type { ReactNode } from "react";
 
 interface CommentActionMenuProps {
 	children: ReactNode; // <DropdownMenuItem …> を並べる

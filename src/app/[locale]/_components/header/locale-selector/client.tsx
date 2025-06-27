@@ -1,4 +1,10 @@
 "use client";
+import type { TranslationJob } from "@prisma/client";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useLocale } from "next-intl";
+import { startTransition, useState } from "react";
+import useSWR from "swr";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,13 +23,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
-import type { TranslationJob } from "@prisma/client";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { useLocale } from "next-intl";
-import { useParams } from "next/navigation";
-import { useState } from "react";
-import { startTransition } from "react";
-import useSWR from "swr";
 import { AddTranslateDialog } from "./add-translate-dialog/client";
 import { useCombinedRouter } from "./hooks/use-combined-router";
 import { buildLocaleOptions } from "./lib/build-locale-options";

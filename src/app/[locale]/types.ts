@@ -1,6 +1,7 @@
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import type { Page, Tag, TagPage } from "@prisma/client";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import type { SanitizedUser } from "../types";
+
 interface BaseSegment {
 	id: number;
 	number: number;

@@ -3,10 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 import { ZodError, z } from "zod";
 import {
 	type AuthDeps,
-	type RequireAuthDeps,
 	authAndValidate,
+	type RequireAuthDeps,
 	requireAuth,
 } from "./auth-and-validate";
+
 /* ---------------- requireAuth ---------------- */
 const redirectMock = vi.fn().mockImplementation(() => {
 	throw new Error("redirect");

@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import {
 	normalizePageSegments,
 	selectPagesWithDetails,
@@ -5,7 +6,6 @@ import {
 import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
 import type { PageSummary } from "@/app/[locale]/types";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
 
 export interface FetchPaginatedPagesByTagParams {
 	tagName: string;

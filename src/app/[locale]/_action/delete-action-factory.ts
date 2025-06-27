@@ -1,10 +1,14 @@
-import type { ActionResponse } from "@/app/types";
 // lib/createDeleteAction.ts  ───────────────────────────────────────────
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { z } from "zod";
-import { type AuthDeps, authAndValidate } from "./auth-and-validate";
-import { authDefaultDeps } from "./auth-and-validate";
+import type { ActionResponse } from "@/app/types";
+import {
+	type AuthDeps,
+	authAndValidate,
+	authDefaultDeps,
+} from "./auth-and-validate";
+
 // lib/createDeleteAction.ts  (抜粋)
 
 type DeleteDeps = AuthDeps & {

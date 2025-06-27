@@ -1,3 +1,6 @@
+import { EyeIcon } from "lucide-react";
+import { getImageProps } from "next/image";
+import { BASE_URL } from "@/app/_constants/base-url";
 import { ClientDateFormatter } from "@/app/[locale]/_components/client-date-formatter";
 import { PageCommentButton } from "@/app/[locale]/_components/page/page-comment-button/client";
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
@@ -5,11 +8,8 @@ import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import { fetchPageViewCount } from "@/app/[locale]/_db/page-queries.server";
 import type { PageSummary } from "@/app/[locale]/types";
-import { BASE_URL } from "@/app/_constants/base-url";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
-import { EyeIcon } from "lucide-react";
-import { getImageProps } from "next/image";
 import { PageActionsDropdown } from "./page-actions-dropdown/client";
 
 type PageListProps = {
@@ -37,7 +37,7 @@ export async function PageList({
 	const titleSegment = pageSummary.segmentBundles.find(
 		(s) => s.segment.number === 0,
 	);
-	const ogpImageUrl =
+	const _ogpImageUrl =
 		`${BASE_URL}/api/og?locale=${locale}` + `&slug=${pageSummary.slug}`;
 	const pageLink = `/user/${pageSummary.user.handle}/page/${pageSummary.slug}`;
 	const userLink = `/user/${pageSummary.user.handle}`;

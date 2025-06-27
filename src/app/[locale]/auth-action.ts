@@ -1,16 +1,16 @@
 "use server";
 
+import { z } from "zod";
 import type { ActionResponse } from "@/app/types";
 import { signIn, signOut } from "@/auth";
-import { z } from "zod";
 
 const loginSchema = z.object({
 	email: z.string().email("Please enter a valid email address"),
 });
 
 export async function signInWithGoogleAction(
-	previousState: ActionResponse,
-	formData: FormData,
+	_previousState: ActionResponse,
+	_formData: FormData,
 ): Promise<ActionResponse> {
 	await signIn("google");
 	return {
@@ -27,7 +27,7 @@ export type SignInWithResendState = ActionResponse<
 >;
 
 export async function signInWithResendAction(
-	previousState: SignInWithResendState,
+	_previousState: SignInWithResendState,
 	formData: FormData,
 ): Promise<SignInWithResendState> {
 	const validation = loginSchema.safeParse({

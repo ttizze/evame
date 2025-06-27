@@ -1,9 +1,10 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { useActionState, useOptimistic } from "react";
+import { Button } from "@/components/ui/button";
 import { type PageLikeButtonState, togglePageLikeAction } from "./action";
+
 type PageLikeButtonClientProps = {
 	liked: boolean;
 	likeCount: number;
@@ -23,14 +24,14 @@ export function PageLikeButtonClient({
 	showCount,
 	className = "",
 }: PageLikeButtonClientProps) {
-	const [state, formAction, isPending] = useActionState<
+	const [_state, formAction, _isPending] = useActionState<
 		PageLikeButtonState,
 		FormData
 	>(togglePageLikeAction, { success: false });
 
 	const [optimisticLiked, updateOptimisticLiked] = useOptimistic(
 		liked,
-		(state, liked: boolean) => liked,
+		(_state, liked: boolean) => liked,
 	);
 
 	const [optimisticCount, updateOptimisticCount] = useOptimistic(

@@ -1,11 +1,12 @@
 "use client";
+import { Languages, Plus } from "lucide-react";
+import { useState } from "react";
 import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
 import type { SegmentBundle } from "@/app/[locale]/types";
 import { Link } from "@/i18n/routing";
-import { Languages, Plus } from "lucide-react";
-import { useState } from "react";
 import { AddAndVoteTranslations } from "./add-and-vote-translations";
 import { VoteButtons } from "./vote-buttons/client";
+
 interface TranslationSectionProps {
 	segmentBundle: SegmentBundle;
 	currentHandle: string | undefined;
@@ -29,7 +30,8 @@ export function TranslationSection({
 	const sanitizedAndParsedText = sanitizeAndParseText(best.text);
 	return (
 		<span className={"group relative"}>
-			<span
+			<button
+				type="button"
 				className="notranslate inline-block py-2 text-gray-700 dark:text-gray-200"
 				onMouseUp={(e) => {
 					if (window.getSelection()?.toString()) return;
@@ -38,7 +40,7 @@ export function TranslationSection({
 				}}
 			>
 				{sanitizedAndParsedText}
-			</span>
+			</button>
 			{isSelected && interactive && (
 				<>
 					<span className="flex items-center justify-end gap-2">

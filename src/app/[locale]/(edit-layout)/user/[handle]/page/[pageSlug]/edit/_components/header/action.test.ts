@@ -24,13 +24,13 @@ vi.mock("next/navigation", () => ({
 	redirect: vi.fn(),
 }));
 
+import { revalidatePath } from "next/cache";
 /* ─────────────────────────────────────────────
    2. モックの参照を取得
    ──────────────────────────────────────────── */
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import { handlePageAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
-import { revalidatePath } from "next/cache";
 import { updatePageStatus } from "./_db/mutations.server";
 
 /* ─────────────────────────────────────────────
@@ -62,7 +62,7 @@ describe("editPageStatusAction", () => {
 			success: false,
 			zodErrors: { pageId: ["Required"] },
 
-			//biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			//biome-ignore lint/suspicious/noExplicitAny: <>
 		} as any);
 
 		const result = await editPageStatusAction(
@@ -80,14 +80,14 @@ describe("editPageStatusAction", () => {
 			currentUser: user,
 			data: { pageId: 1, status: "PUBLIC" },
 
-			//biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			//biome-ignore lint/suspicious/noExplicitAny: <>
 		} as any);
-		//biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		//biome-ignore lint/suspicious/noExplicitAny: <>
 		vi.mocked(getPageById).mockResolvedValue(page as any);
 		vi.mocked(handlePageAutoTranslation).mockResolvedValue([
 			{ jobId: 123, locale: "ja", jobStatus: "PENDING" },
 
-			//biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			//biome-ignore lint/suspicious/noExplicitAny: <>
 		] as any);
 
 		const res = await editPageStatusAction(
@@ -111,9 +111,9 @@ describe("editPageStatusAction", () => {
 			currentUser: user,
 			data: { pageId: 1, status: "DRAFT" },
 
-			//biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			//biome-ignore lint/suspicious/noExplicitAny: <>
 		} as any);
-		//biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		//biome-ignore lint/suspicious/noExplicitAny: <>
 		vi.mocked(getPageById).mockResolvedValue(page as any);
 
 		const res = await editPageStatusAction(

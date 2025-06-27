@@ -1,6 +1,6 @@
 "use server";
-import { deleteActionFactory } from "@/app/[locale]/_action/delete-action-factory";
 import { z } from "zod";
+import { deleteActionFactory } from "@/app/[locale]/_action/delete-action-factory";
 import { archivePage } from "./db/mutations.server";
 export const archivePageAction = deleteActionFactory({
 	inputSchema: z.object({

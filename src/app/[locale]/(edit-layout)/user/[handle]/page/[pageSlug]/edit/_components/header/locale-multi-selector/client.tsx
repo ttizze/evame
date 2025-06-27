@@ -1,5 +1,8 @@
 "use client";
 
+import { ChevronDown, LanguagesIcon } from "lucide-react";
+import { useState, useTransition } from "react";
+import Select, { type MultiValue } from "react-select";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,9 +11,6 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { ChevronDown, LanguagesIcon } from "lucide-react";
-import { useState, useTransition } from "react";
-import Select, { type MultiValue } from "react-select";
 import { saveTargetLocalesAction } from "./action";
 
 interface LocaleMultiSelectorProps {
@@ -26,7 +26,7 @@ export function LocaleMultiSelector({
 }: LocaleMultiSelectorProps) {
 	const [selected, setSelected] = useState<string[]>(defaultValue);
 	const [open, setOpen] = useState(false);
-	const [isSaving, startSaving] = useTransition();
+	const [_isSaving, startSaving] = useTransition();
 
 	const options = supportedLocaleOptions.map((o) => ({
 		value: o.code,
@@ -66,7 +66,10 @@ export function LocaleMultiSelector({
 		option: ({
 			isFocused,
 			isDisabled,
-		}: { isFocused: boolean; isDisabled: boolean }) =>
+		}: {
+			isFocused: boolean;
+			isDisabled: boolean;
+		}) =>
 			cn(
 				"px-4 py-2 text-sm",
 				isDisabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer",
