@@ -37,7 +37,7 @@ export async function PageList({
 	const titleSegment = pageSummary.segmentBundles.find(
 		(s) => s.segment.number === 0,
 	);
-	const ogpImageUrl =
+	const _ogpImageUrl =
 		`${BASE_URL}/api/og?locale=${locale}` + `&slug=${pageSummary.slug}`;
 	const pageLink = `/user/${pageSummary.user.handle}/page/${pageSummary.slug}`;
 	const userLink = `/user/${pageSummary.user.handle}`;
