@@ -1,6 +1,6 @@
-import { Link } from "@/i18n/routing";
 import { Hash } from "lucide-react";
-import { type PopularTag, fetchPopularTags } from "./_db/queries.server";
+import { Link } from "@/i18n/routing";
+import { fetchPopularTags, type PopularTag } from "./_db/queries.server";
 
 interface PopularTagsListProps {
 	limit: number;

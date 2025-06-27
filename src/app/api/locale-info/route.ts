@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/prisma";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { prisma } from "@/lib/prisma";
 import { pickBestPerLocale } from "./_lib/pick-best-per-locale";
 
 export async function GET(req: NextRequest) {

@@ -1,9 +1,10 @@
-import { TranslationStatus } from "@prisma/client";
 import type { TranslationJob } from "@prisma/client";
+import { TranslationStatus } from "@prisma/client";
 import { renderHook } from "@testing-library/react";
 // useLocaleListAutoRefresh.test.ts
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useLocaleListAutoRefresh } from "./use-locale-list-auto-refresh.client";
+
 // モック用の refresh 関数
 const refreshMock = vi.fn();
 

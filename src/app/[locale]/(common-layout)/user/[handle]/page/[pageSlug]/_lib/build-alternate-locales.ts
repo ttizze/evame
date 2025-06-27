@@ -1,5 +1,5 @@
-import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslationJob } from "@prisma/client";
+import { BASE_URL } from "@/app/_constants/base-url";
 
 export function buildAlternateLocales(
 	page: { sourceLocale: string; slug: string },

@@ -1,19 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { BubbleMenu, type Editor as TiptapEditor } from "@tiptap/react";
+import type { LucideIcon } from "lucide-react";
 import {
 	ArrowUpFromLineIcon,
 	Bold,
@@ -30,8 +17,21 @@ import {
 	Strikethrough,
 	Type,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface EditorBubbleMenuProps {
 	editor: TiptapEditor;

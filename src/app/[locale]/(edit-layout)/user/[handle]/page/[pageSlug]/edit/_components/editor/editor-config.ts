@@ -1,7 +1,7 @@
-import { FileHandler } from "@tiptap-pro/extension-file-handler";
 import { Link } from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { StarterKit } from "@tiptap/starter-kit";
+import { FileHandler } from "@tiptap-pro/extension-file-handler";
 import { Markdown } from "tiptap-markdown";
 import { CustomImage } from "./custom-image";
 import { X } from "./extensions/x-embed";

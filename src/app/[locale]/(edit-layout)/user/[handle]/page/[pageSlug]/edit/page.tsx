@@ -1,8 +1,8 @@
-import { mdastToHtml } from "@/app/[locale]/_lib/mdast-to-html";
-import { getCurrentUser } from "@/auth";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { mdastToHtml } from "@/app/[locale]/_lib/mdast-to-html";
+import { getCurrentUser } from "@/auth";
 import { EditPageClient } from "./_components/edit-page-client";
 import {
 	getAllTagsWithCount,
@@ -39,7 +39,9 @@ const getPageData = cache(async (handle: string, pageSlug: string) => {
 
 export async function generateMetadata({
 	params,
-}: { params: Params }): Promise<Metadata> {
+}: {
+	params: Params;
+}): Promise<Metadata> {
 	const { handle, pageSlug } = await params;
 	const { title } = await getPageData(handle, pageSlug);
 
@@ -52,11 +54,7 @@ export async function generateMetadata({
 	};
 }
 
-export default async function EditPage({
-	params,
-}: {
-	params: Params;
-}) {
+export default async function EditPage({ params }: { params: Params }) {
 	const { locale, handle, pageSlug } = await params;
 	const {
 		currentUser,

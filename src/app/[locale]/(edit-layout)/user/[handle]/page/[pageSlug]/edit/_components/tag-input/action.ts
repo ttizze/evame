@@ -1,11 +1,12 @@
 "use server";
-import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
-import { getPageById } from "@/app/[locale]/_db/queries.server";
-import type { ActionResponse } from "@/app/types";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
+import { getPageById } from "@/app/[locale]/_db/queries.server";
+import type { ActionResponse } from "@/app/types";
 import { upsertTags } from "../../_db/mutations.server";
+
 const editPageTagsSchema = z.object({
 	pageId: z.coerce.number().min(1),
 	tags: z.preprocess(

@@ -1,16 +1,15 @@
+import type { Prisma } from "@prisma/client";
+import type { Root as MdastRoot } from "mdast";
 import rehypeParse from "rehype-parse";
 import rehypeRemark from "rehype-remark";
 import rehypeSanitize from "rehype-sanitize";
 /* html-to-mdast-with-segments.ts ----------------------------------------- */
 import { unified } from "unified";
 import { removePosition } from "unist-util-remove-position";
-
-import { remarkAutoUploadImages } from "@/app/[locale]/_lib/remark-auto-upload-images";
-import { remarkHashAndSegments } from "@/app/[locale]/_lib/remark-hash-and-segments";
-import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
-import type { Prisma } from "@prisma/client";
-import type { Root as MdastRoot } from "mdast";
 import { VFile } from "vfile";
+import { remarkAutoUploadImages } from "@/app/[locale]/_lib/remark-auto-upload-images";
+import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
+import { remarkHashAndSegments } from "@/app/[locale]/_lib/remark-hash-and-segments";
 
 interface Params {
 	header?: string;

@@ -1,10 +1,9 @@
 "use client";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
-import type { BaseTranslation } from "@/app/[locale]/types";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import Form from "next/form";
-import { memo } from "react";
-import { useActionState } from "react";
+import { memo, useActionState } from "react";
+import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
+import type { BaseTranslation } from "@/app/[locale]/types";
 import {
 	type VoteTranslationActionResponse,
 	voteTranslationAction,

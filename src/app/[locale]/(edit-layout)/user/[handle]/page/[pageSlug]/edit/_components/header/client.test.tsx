@@ -1,10 +1,11 @@
-import { mockUsers } from "@/tests/mock";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useParams, usePathname } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { mockUsers } from "@/tests/mock";
 import { editPageStatusAction } from "./action";
 import { EditHeader } from "./client";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
+
 vi.mock("./action");
 vi.mock("next/navigation");
 vi.mock("./hooks/use-header-visibility");

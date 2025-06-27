@@ -1,8 +1,8 @@
 "use server";
 
+import { z } from "zod";
 import { deleteActionFactory } from "@/app/[locale]/_action/delete-action-factory";
 import type { ActionResponse } from "@/app/types";
-import { z } from "zod";
 import { deletePageComment } from "./_db/mutations.server";
 
 export type CommentDeleteActionResponse = ActionResponse<

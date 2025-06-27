@@ -5,7 +5,9 @@ import "tocbot/dist/tocbot.css";
 
 export default function TableOfContents({
 	onItemClick,
-}: { onItemClick: () => void }) {
+}: {
+	onItemClick: () => void;
+}) {
 	useEffect(() => {
 		if (!document.querySelector(".js-content")) {
 			return;

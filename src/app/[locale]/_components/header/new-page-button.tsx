@@ -2,8 +2,8 @@
 
 import { Loader2, PencilIcon } from "lucide-react";
 import { customAlphabet } from "nanoid";
-import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 import { useState } from "react";
 
 interface NewPageButtonProps {

@@ -1,6 +1,6 @@
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
 export async function markAllNotificationAsRead() {
 	const currentUser = await getCurrentUser();
 	if (!currentUser?.id) {

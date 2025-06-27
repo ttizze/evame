@@ -1,4 +1,6 @@
 "use client";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { useState } from "react";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,8 +17,6 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { useState } from "react";
 
 interface DialogLocaleSelectorProps {
 	targetLocale: string;

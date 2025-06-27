@@ -1,11 +1,12 @@
 "use server";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser, unstable_update } from "@/auth";
 import { parseFormData } from "@/lib/parse-form-data";
-import { redirect } from "next/navigation";
-import { z } from "zod";
 import { updateUser } from "../_db/mutations.server";
 import reservedHandles from "./reserved-handles.json";
+
 const RESERVED_HANDLES = [...new Set([...reservedHandles])];
 const schema = z.object({
 	name: z

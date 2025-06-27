@@ -1,4 +1,8 @@
 "use client";
+import { BookOpenIcon, LogOutIcon } from "lucide-react";
+import Image, { getImageProps } from "next/image";
+import { useParams } from "next/navigation";
+import type { ReactNode } from "react";
 import { signOutAction } from "@/app/[locale]/auth-action";
 import type { SanitizedUser } from "@/app/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,11 +14,6 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
-import { BookOpenIcon, LogOutIcon } from "lucide-react";
-import Image from "next/image";
-import { getImageProps } from "next/image";
-import { useParams } from "next/navigation";
-import type { ReactNode } from "react";
 import { ModeToggle } from "../mode-toggle";
 import { useHeaderScroll } from "./hooks/use-header-scroll";
 import { LocaleSelector } from "./locale-selector/client";

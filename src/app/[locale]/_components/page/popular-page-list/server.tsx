@@ -1,11 +1,11 @@
+import { BookOpenIcon } from "lucide-react";
+import type { SearchParams } from "nuqs/server";
+import { createLoader, parseAsInteger } from "nuqs/server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { fetchPaginatedPublicPageSummaries } from "@/app/[locale]/_db/page-queries.server";
 import { getCurrentUser } from "@/auth";
-import { BookOpenIcon } from "lucide-react";
-import { createLoader, parseAsInteger } from "nuqs/server";
-import type { SearchParams } from "nuqs/server";
-import { PageListContainer } from "../page-list-container/server";
 import { PageList } from "../page-list.server";
+import { PageListContainer } from "../page-list-container/server";
 
 const searchParamsSchema = {
 	page: parseAsInteger.withDefault(1),

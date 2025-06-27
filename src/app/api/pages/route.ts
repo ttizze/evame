@@ -1,4 +1,5 @@
 export const revalidate = 86400;
+
 import { NextResponse } from "next/server";
 import { fetchPagesWithUserAndTranslation } from "./db/queries.server";
 

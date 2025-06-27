@@ -1,6 +1,6 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import { StartButton } from "../../_components/start-button";
 
 const DynamicHeroSection = dynamic(

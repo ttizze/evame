@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/auth";
 import { FollowButtonClient } from "./client";
 import { isFollowing } from "./db/queries.server";
+
 interface FollowButtonProps {
 	targetUserId: string;
 }

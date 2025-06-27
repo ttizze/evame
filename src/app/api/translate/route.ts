@@ -1,5 +1,5 @@
-import { translate } from "@/features/translate/lib/translate.server";
 import { after } from "next/server";
+import { translate } from "@/features/translate/lib/translate.server";
 
 export async function POST(request: Request) {
 	const data = await request.json();
