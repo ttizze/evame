@@ -91,7 +91,7 @@ export function LocaleMultiSelector({
 						className,
 					)}
 					size="sm"
-					variant="ghost"
+					variant="outline"
 				>
 					<LanguagesIcon className="w-4 h-4" />
 					{count > 0 && (
@@ -113,11 +113,12 @@ export function LocaleMultiSelector({
 					}
 					onChange={handleChange}
 					options={options}
-					placeholder="Select locales"
+					placeholder="Select locales (max 2)"
 					styles={selectStyles}
 					unstyled
 					value={selectedOptions}
 				/>
+				<p className="text-xs text-center">Up to 2 locales</p>
 				<Button className="w-full" onClick={() => setOpen(false)} size="sm">
 					Done
 				</Button>
