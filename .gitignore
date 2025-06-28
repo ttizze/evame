@@ -74,3 +74,4 @@ database.bak
 .env.sentry-build-plugin
 
 remark-link-card-plus
+.env*.local

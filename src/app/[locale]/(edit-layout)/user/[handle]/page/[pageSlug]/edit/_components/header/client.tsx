@@ -96,6 +96,9 @@ export function EditHeader({
 	const [locales, setLocales] = useState<string[]>(
 		targetLocales ?? ["en", "zh"],
 	);
+	// Determine selectable locale limit (premium users can select up to 4)
+	const maxSelectableLocales =
+		currentUser?.plan?.toLowerCase?.() === "premium" ? 4 : 2;
 	const [clickedStatus, setClickedStatus] = useState<"PUBLIC" | "DRAFT" | null>(
 		null,
 	);
@@ -161,6 +164,7 @@ export function EditHeader({
 								<LocaleMultiSelector
 									className="ml-2"
 									defaultValue={locales}
+									maxSelectable={maxSelectableLocales}
 									onChange={setLocales}
 								/>
 							)}

@@ -17,12 +17,15 @@ interface LocaleMultiSelectorProps {
 	defaultValue?: string[];
 	onChange?: (value: string[]) => void;
 	className?: string;
+	/** 最大選択数 (デフォルト: 2) */
+	maxSelectable: number;
 }
 
 export function LocaleMultiSelector({
 	defaultValue = ["en"],
 	onChange,
 	className,
+	maxSelectable = 2,
 }: LocaleMultiSelectorProps) {
 	const [selected, setSelected] = useState<string[]>(defaultValue);
 	const [open, setOpen] = useState(false);
@@ -35,7 +38,7 @@ export function LocaleMultiSelector({
 	const selectedOptions = options.filter((o) => selected.includes(o.value));
 
 	const handleChange = (vals: MultiValue<{ value: string; label: string }>) => {
-		const codes = vals.map((v) => v.value).slice(0, 2);
+		const codes = vals.map((v) => v.value).slice(0, maxSelectable);
 		setSelected(codes);
 		onChange?.(codes);
 
@@ -45,8 +48,8 @@ export function LocaleMultiSelector({
 	};
 
 	const isOptionDisabled = (option?: { value: string }) =>
-		selected.length >= 2 && !selected.includes(option?.value ?? "");
-	const limitReached = selected.length >= 2;
+		selected.length >= maxSelectable && !selected.includes(option?.value ?? "");
+	const limitReached = selected.length >= maxSelectable;
 	const count = selected.length;
 
 	const selectClassNames = {
@@ -113,12 +116,12 @@ export function LocaleMultiSelector({
 					}
 					onChange={handleChange}
 					options={options}
-					placeholder="Select locales (max 2)"
+					placeholder={`Select locales (max ${maxSelectable})`}
 					styles={selectStyles}
 					unstyled
 					value={selectedOptions}
 				/>
-				<p className="text-xs text-center">Up to 2 locales</p>
+				<p className="text-xs text-center">Up to {maxSelectable} locales</p>
 				<Button className="w-full" onClick={() => setOpen(false)} size="sm">
 					Done
 				</Button>

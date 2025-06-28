@@ -4,6 +4,7 @@ import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[han
 import { updateTranslationJob } from "../db/mutations.server";
 import { getPageCommentSegments, getPageSegments } from "../db/queries.server";
 import { getGeminiModelResponse } from "../services/gemini";
+import { getVertexAIModelResponse } from "../services/vertexai";
 import type { NumberedElement, TranslateJobParams } from "../types";
 import { extractTranslations } from "./extract-translations.server";
 import {
@@ -79,8 +80,7 @@ async function translateChunk(
 	while (pendingElements.length > 0 && attempt < maxRetries) {
 		attempt++;
 
-		const translatedText = await getTranslatedText(
-			geminiApiKey,
+		const translatedText = await getVertexAITranslatedText(
 			aiModel,
 			pendingElements,
 			targetLocale,
@@ -137,8 +137,29 @@ async function translateChunk(
 	}
 }
 
-async function getTranslatedText(
-	geminiApiKey: string,
+// async function getTranslatedText(
+// 	geminiApiKey: string,
+// 	aiModel: string,
+// 	numberedElements: NumberedElement[],
+// 	targetLocale: string,
+// 	title: string,
+// ) {
+// 	const source_text = numberedElements
+// 		.map((el) => JSON.stringify(el))
+// 		.join("\n");
+// 	const targetLocaleName =
+// 		supportedLocaleOptions.find((sl) => sl.code === targetLocale)?.name ||
+// 		targetLocale;
+// 	const result = await getGeminiModelResponse(
+// 		geminiApiKey,
+// 		aiModel,
+// 		title,
+// 		source_text,
+// 		targetLocaleName,
+// 	);
+// 	return result;
+// }
+async function getVertexAITranslatedText(
 	aiModel: string,
 	numberedElements: NumberedElement[],
 	targetLocale: string,
@@ -150,8 +171,7 @@ async function getTranslatedText(
 	const targetLocaleName =
 		supportedLocaleOptions.find((sl) => sl.code === targetLocale)?.name ||
 		targetLocale;
-	const result = await getGeminiModelResponse(
-		geminiApiKey,
+	const result = await getVertexAIModelResponse(
 		aiModel,
 		title,
 		source_text,
