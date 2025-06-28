@@ -5,9 +5,5 @@ export default async function CommonLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	return (
-		<>
-			<NextIntlClientProvider>{children}</NextIntlClientProvider>
-		</>
-	);
+	return <NextIntlClientProvider>{children}</NextIntlClientProvider>;
 }

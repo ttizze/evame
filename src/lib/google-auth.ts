@@ -2,10 +2,13 @@
 import { getVercelOidcToken } from "@vercel/functions/oidc";
 import { ExternalAccountClient } from "google-auth-library";
 
-export async function getAuthClient() {
+export async function getAuthClient(): Promise<
+	ExternalAccountClient | undefined
+> {
 	const oidc = getVercelOidcToken() || process.env.VERCEL_OIDC_TOKEN;
 
-	return ExternalAccountClient.fromJSON({
+	if (!oidc) return undefined;
+	const client = ExternalAccountClient.fromJSON({
 		type: "external_account",
 		audience:
 			`//iam.googleapis.com/projects/${process.env.GCP_PROJECT_NUMBER}` +
@@ -18,4 +21,6 @@ export async function getAuthClient() {
 			`${process.env.GCP_SERVICE_ACCOUNT_EMAIL}:generateAccessToken`,
 		subject_token_supplier: { getSubjectToken: () => oidc },
 	});
+	if (!client) throw new Error("authClient undefined");
+	return client;
 }
