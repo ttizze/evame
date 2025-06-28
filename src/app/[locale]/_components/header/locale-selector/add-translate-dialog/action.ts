@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { BASE_URL } from "@/app/_constants/base-url";
-import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import {
@@ -15,6 +14,7 @@ import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[han
 import { targetContentTypeValues } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
+import type { TranslateJobParams } from "@/features/translate/types";
 
 /* ───────── 型 ───────── */
 
@@ -43,7 +43,7 @@ const toNumbered = <T extends { number: number; text: string }>(
 	segments: T[],
 ): Numbered[] => segments.map(({ number, text }) => ({ number, text }));
 
-async function postTranslate(body: Record<string, unknown>) {
+async function postTranslate(body: TranslateJobParams) {
 	await fetch(`${BASE_URL}/api/translate`, {
 		method: "POST",
 		body: JSON.stringify(body),
@@ -59,7 +59,7 @@ async function newJobAndSend(args: {
 	title: string;
 	elements: Numbered[];
 	contentType: TargetContentType;
-	geminiKey: string;
+	provider: "gemini" | "vertex";
 	jobs: TranslationJobForToast[];
 }) {
 	if (!args.pageId) {
@@ -76,8 +76,8 @@ async function newJobAndSend(args: {
 	args.jobs.push(job);
 
 	await postTranslate({
+		provider: args.provider,
 		translationJobId: job.id,
-		geminiApiKey: args.geminiKey,
 		aiModel: args.aiModel,
 		userId: args.userId,
 		targetLocale: args.locale,
@@ -96,7 +96,7 @@ async function handlePage(opts: {
 	aiModel: string;
 	locale: string;
 	userId: string;
-	geminiKey: string;
+	provider: "gemini" | "vertex";
 	contentType: TargetContentType;
 	jobs: TranslationJobForToast[];
 }) {
@@ -113,7 +113,7 @@ async function handlePage(opts: {
 			title: body.title,
 			elements: toNumbered(body.pageSegments),
 			contentType: opts.contentType,
-			geminiKey: opts.geminiKey,
+			provider: opts.provider,
 			jobs: opts.jobs,
 		});
 	}
@@ -135,7 +135,7 @@ async function handlePage(opts: {
 				title: comments.title,
 				elements: elems,
 				contentType: "pageComment",
-				geminiKey: opts.geminiKey,
+				provider: opts.provider,
 				jobs: opts.jobs,
 			});
 		}
@@ -152,8 +152,7 @@ export async function translateAction(
 	if (!v.success) return { success: false, zodErrors: v.zodErrors };
 
 	const { currentUser, data } = v;
-	const gemini = await fetchGeminiApiKeyByHandle(currentUser.handle);
-	if (!gemini) return { success: false, message: "Gemini API key not found" };
+	const provider = currentUser.plan === "premium" ? "vertex" : "gemini";
 
 	const jobs: TranslationJobForToast[] = [];
 
@@ -163,7 +162,7 @@ export async function translateAction(
 			aiModel: data.aiModel,
 			locale: data.targetLocale,
 			userId: currentUser.id,
-			geminiKey: gemini.apiKey,
+			provider,
 			contentType: data.targetContentType,
 			jobs,
 		});

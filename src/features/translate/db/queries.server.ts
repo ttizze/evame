@@ -21,3 +21,21 @@ export async function getPageCommentSegments(pageCommentId: number) {
 		},
 	});
 }
+
+export async function fetchGeminiApiKeyByUserId(
+	userId: string,
+): Promise<string | null> {
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+	});
+	if (!user) {
+		return null;
+	}
+	const geminiApiKey = await prisma.geminiApiKey.findUnique({
+		where: { userId: user.id },
+	});
+	if (!geminiApiKey) {
+		return null;
+	}
+	return geminiApiKey.apiKey;
+}

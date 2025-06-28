@@ -4,11 +4,13 @@ export type NumberedElement = {
 	text: string;
 };
 
+export type TranslationProvider = "gemini" | "vertex";
+
 export interface TranslateJobParams {
 	userId: string;
-	pageId?: number;
+	pageId: number;
 	translationJobId: number;
-	geminiApiKey: string;
+	provider: TranslationProvider;
 	aiModel: string;
 	targetLocale: string;
 	title: string;

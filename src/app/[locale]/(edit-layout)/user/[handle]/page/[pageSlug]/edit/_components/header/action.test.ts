@@ -30,7 +30,7 @@ import { revalidatePath } from "next/cache";
    ──────────────────────────────────────────── */
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
-import { handlePageAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
+import { handlePageAutoTranslation } from "@/app/[locale]/_lib/auto-translation/handle-auto-translation";
 import { updatePageStatus } from "./_db/mutations.server";
 
 /* ─────────────────────────────────────────────

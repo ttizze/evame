@@ -9,13 +9,19 @@ import { generateSystemMessage } from "./generate-gemini-message";
 
 const MAX_RETRIES = 3;
 
-export async function getGeminiModelResponse(
-	geminiApiKey: string,
-	model: string,
-	title: string,
-	source_text: string,
-	target_locale: string,
-) {
+export async function getGeminiModelResponse({
+	geminiApiKey,
+	model,
+	title,
+	source_text,
+	target_locale,
+}: {
+	geminiApiKey: string;
+	model: string;
+	title: string;
+	source_text: string;
+	target_locale: string;
+}) {
 	const decryptedApiKey = decrypt(geminiApiKey);
 	const genAI = new GoogleGenerativeAI(decryptedApiKey);
 	const safetySetting = [

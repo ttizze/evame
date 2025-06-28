@@ -6,23 +6,10 @@ import {
 } from "@/app/[locale]/_db/page-queries.server";
 import type { TranslationJobForTranslationAPI } from "@/app/types/translation-job";
 import type { TranslateJobParams } from "@/features/translate/types";
-
-interface BaseTranslationParams {
-	currentUserId: string;
-	sourceLocale: string;
-	geminiApiKey: string;
-}
-
-export interface PageTranslationParams extends BaseTranslationParams {
-	type: "page";
-	pageId: number;
-}
-
-export interface PageCommentTranslationParams extends BaseTranslationParams {
-	type: "pageComment";
-	pageId: number;
-	pageCommentId: number;
-}
+import type {
+	PageCommentTranslationParams,
+	PageTranslationParams,
+} from "./auto-translation-strategies";
 
 type TranslationParams = PageTranslationParams | PageCommentTranslationParams;
 
@@ -69,7 +56,10 @@ export interface TranslationStrategy<T extends TranslationParams> {
 
 import pLimit from "p-limit";
 
-import { pageCommentStrategy, pageStrategy } from "./translation-strategies";
+import {
+	pageCommentStrategy,
+	pageStrategy,
+} from "./auto-translation-strategies";
 
 type StrategyMap = {
 	[K in TranslationParams["type"]]: TranslationStrategy<
@@ -116,7 +106,6 @@ export async function handlePageAutoTranslation({
 	currentUserId,
 	pageId,
 	sourceLocale,
-	geminiApiKey,
 	targetLocales,
 	dependencies = {},
 }: Omit<PageTranslationParams, "type"> & {
@@ -134,7 +123,7 @@ export async function handlePageAutoTranslation({
 			currentUserId,
 			pageId,
 			sourceLocale,
-			geminiApiKey,
+			provider: "vertex",
 		},
 		deps,
 		targetLocales,
@@ -147,7 +136,6 @@ export async function handlePageCommentAutoTranslation({
 	pageId,
 	pageCommentId,
 	sourceLocale,
-	geminiApiKey,
 	targetLocales,
 	dependencies = {},
 }: Omit<PageCommentTranslationParams, "type"> & {
@@ -166,7 +154,7 @@ export async function handlePageCommentAutoTranslation({
 			pageId,
 			pageCommentId,
 			sourceLocale,
-			geminiApiKey,
+			provider: "vertex",
 		},
 		deps,
 		targetLocales,

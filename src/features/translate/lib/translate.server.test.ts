@@ -76,7 +76,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 	test("正常ケース：Geminiから正常レスポンスが返った場合、最終的にステータスがcompletedとなり翻訳がDBに保存される", async () => {
 		const params: TranslateJobParams = {
 			translationJobId,
-			geminiApiKey: "dummy-key",
+			provider: "gemini",
 			aiModel: "test-model",
 			userId,
 			targetLocale: "ja",
@@ -118,7 +118,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 	test("失敗ケース：Geminiが空レスポンス([])しか返さず翻訳抽出不可→リトライ上限に達してfailedになる", async () => {
 		const params: TranslateJobParams = {
 			translationJobId,
-			geminiApiKey: "dummy-key",
+			provider: "gemini",
 			aiModel: "test-model",
 			userId,
 			targetLocale: "ja",
@@ -146,7 +146,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 	test("部分的失敗ケース：1回目は空レスポンス→2回目で正常レスポンス", async () => {
 		const params: TranslateJobParams = {
 			translationJobId,
-			geminiApiKey: "dummy-key",
+			provider: "gemini",
 			aiModel: "test-model",
 			userId,
 			targetLocale: "ja",

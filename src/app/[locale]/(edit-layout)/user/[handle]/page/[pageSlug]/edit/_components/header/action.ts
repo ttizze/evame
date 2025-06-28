@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
-import { handlePageAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
+import { handlePageAutoTranslation } from "@/app/[locale]/_lib/auto-translation/handle-auto-translation";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { updatePageStatus } from "./_db/mutations.server";
@@ -34,16 +34,10 @@ async function triggerAutoTranslation(
 	currentUserId: string,
 	targetLocales: string[],
 ) {
-	const geminiApiKey = process.env.GEMINI_API_KEY;
-	if (!geminiApiKey || geminiApiKey === "undefined") {
-		console.error("Gemini API key is not set. Page will not be translated.");
-		return undefined;
-	}
 	return await handlePageAutoTranslation({
 		currentUserId,
 		pageId,
 		sourceLocale,
-		geminiApiKey,
 		targetLocales,
 	});
 }
