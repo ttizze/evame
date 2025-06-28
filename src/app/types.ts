@@ -2,7 +2,7 @@ import type { User } from "@prisma/client";
 import type { typeToFlattenedError } from "zod";
 export type SanitizedUser = Omit<
 	User,
-	"email" | "provider" | "plan" | "emailVerified" | "id"
+	"email" | "provider" | "emailVerified" | "id"
 >;
 type Failure<U = Record<string, unknown>> = {
 	success: false;

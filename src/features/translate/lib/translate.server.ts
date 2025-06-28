@@ -2,9 +2,18 @@ import { TranslationStatus } from "@prisma/client";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { updateTranslationJob } from "../db/mutations.server";
-import { getPageCommentSegments, getPageSegments } from "../db/queries.server";
+import {
+	fetchGeminiApiKeyByUserId,
+	getPageCommentSegments,
+	getPageSegments,
+} from "../db/queries.server";
 import { getGeminiModelResponse } from "../services/gemini";
-import type { NumberedElement, TranslateJobParams } from "../types";
+import { getVertexAIModelResponse } from "../services/vertexai";
+import type {
+	NumberedElement,
+	TranslateJobParams,
+	TranslationProvider,
+} from "../types";
 import { extractTranslations } from "./extract-translations.server";
 import {
 	saveTranslationsForPage,
@@ -29,7 +38,8 @@ export async function translate(params: TranslateJobParams) {
 			console.log(`Processing chunk ${i + 1} of ${totalChunks}`);
 			console.log(chunks[i]);
 			await translateChunk(
-				params.geminiApiKey,
+				params.userId,
+				params.provider,
 				params.aiModel,
 				chunks[i],
 				params.targetLocale,
@@ -61,7 +71,8 @@ export async function translate(params: TranslateJobParams) {
 }
 
 async function translateChunk(
-	geminiApiKey: string,
+	userId: string,
+	provider: TranslationProvider,
 	aiModel: string,
 	numberedElements: NumberedElement[],
 	targetLocale: string,
@@ -80,7 +91,8 @@ async function translateChunk(
 		attempt++;
 
 		const translatedText = await getTranslatedText(
-			geminiApiKey,
+			userId,
+			provider,
 			aiModel,
 			pendingElements,
 			targetLocale,
@@ -138,7 +150,8 @@ async function translateChunk(
 }
 
 async function getTranslatedText(
-	geminiApiKey: string,
+	userId: string,
+	provider: TranslationProvider,
 	aiModel: string,
 	numberedElements: NumberedElement[],
 	targetLocale: string,
@@ -150,12 +163,28 @@ async function getTranslatedText(
 	const targetLocaleName =
 		supportedLocaleOptions.find((sl) => sl.code === targetLocale)?.name ||
 		targetLocale;
-	const result = await getGeminiModelResponse(
-		geminiApiKey,
+
+	if (provider === "gemini") {
+		const geminiApiKey = await fetchGeminiApiKeyByUserId(userId);
+		if (!geminiApiKey || geminiApiKey === "undefined") {
+			throw new Error(
+				"Gemini API key is not set. Page will not be translated.",
+			);
+		}
+		return await getGeminiModelResponse({
+			geminiApiKey,
+			model: aiModel,
+			title,
+			source_text,
+			target_locale: targetLocaleName,
+		});
+	}
+
+	// default Vertex AI
+	return await getVertexAIModelResponse(
 		aiModel,
 		title,
 		source_text,
 		targetLocaleName,
 	);
-	return result;
 }

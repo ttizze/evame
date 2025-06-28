@@ -23,6 +23,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
 				token.profile = session.user.profile;
 				token.twitterHandle = session.user.twitterHandle;
 				token.image = session.user.image;
+				token.plan = session.user.plan;
 			}
 			if (user) {
 				token.id = user.id;
@@ -35,6 +36,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
 				token.isAI = user.isAI;
 				token.name = user.name;
 				token.image = user.image;
+				token.plan = user.plan;
 			}
 			return token;
 		},
@@ -49,6 +51,7 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
 			session.user.isAI = token.isAI as boolean;
 			session.user.name = token.name as string;
 			session.user.image = token.image as string;
+			session.user.plan = token.plan as string;
 			return session;
 		},
 	},

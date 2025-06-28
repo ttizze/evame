@@ -26,12 +26,12 @@ const requireAuthDefaultDeps: RequireAuthDeps = {
 
 export async function requireAuth(
 	deps: RequireAuthDeps = requireAuthDefaultDeps,
-): Promise<{ id: string; handle: string }> {
+): Promise<{ id: string; handle: string; plan: string }> {
 	const user = await deps.getCurrentUser();
 	if (!user?.id) deps.redirect("/auth/login");
 
 	// userはnullではないことが保証されている
-	return { id: user.id, handle: user.handle };
+	return { id: user.id, handle: user.handle, plan: user.plan };
 }
 export async function authAndValidate<T extends z.ZodTypeAny>(
 	schema: T,
@@ -43,6 +43,7 @@ export async function authAndValidate<T extends z.ZodTypeAny>(
 			currentUser: {
 				id: string;
 				handle: string;
+				plan: string;
 			};
 			data: z.infer<T>;
 	  }
@@ -64,7 +65,7 @@ export async function authAndValidate<T extends z.ZodTypeAny>(
 	/* 3. 成功 ――――――――――――――――――― */
 	return {
 		success: true,
-		currentUser: { id: user.id, handle: user.handle },
+		currentUser: { id: user.id, handle: user.handle, plan: user.plan },
 		data: parsed.data,
 	};
 }

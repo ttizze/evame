@@ -2,20 +2,7 @@
 
 import { expect, test } from "vitest";
 import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
-import type { SanitizedUser } from "@/app/types";
-
-/* ---------- テスト用ダミーユーザ ---------- */
-const dummyUser: SanitizedUser = {
-	handle: "user1",
-	name: "Dummy",
-	image: "",
-	createdAt: new Date(),
-	updatedAt: new Date(),
-	profile: "",
-	twitterHandle: "",
-	totalPoints: 0,
-	isAI: false,
-};
+import { mockUsers } from "@/tests/mock";
 
 /* ---------- RawSegment 型と合致する fixture ---------- */
 const rawSegments = [
@@ -30,7 +17,7 @@ const rawSegments = [
 				text: "A",
 				point: 1,
 				createdAt: new Date("2024-01-01"),
-				user: dummyUser,
+				user: mockUsers[0],
 				currentUserVote: null,
 			},
 			{
@@ -39,7 +26,7 @@ const rawSegments = [
 				text: "B",
 				point: 2,
 				createdAt: new Date("2024-01-02"),
-				user: dummyUser,
+				user: mockUsers[0],
 				currentUserVote: { isUpvote: true, updatedAt: new Date("2024-01-03") },
 			},
 		],

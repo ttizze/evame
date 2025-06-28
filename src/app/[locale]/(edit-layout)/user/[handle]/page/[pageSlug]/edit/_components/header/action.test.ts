@@ -14,7 +14,7 @@ vi.mock("@/app/[locale]/_db/queries.server", () => ({
 vi.mock("./_db/mutations.server", () => ({
 	updatePageStatus: vi.fn(),
 }));
-vi.mock("@/app/[locale]/_lib/handle-auto-translation", () => ({
+vi.mock("@/app/[locale]/_lib/auto-translation/handle-auto-translation", () => ({
 	handlePageAutoTranslation: vi.fn(),
 }));
 vi.mock("next/cache", () => ({
@@ -30,7 +30,7 @@ import { revalidatePath } from "next/cache";
    ──────────────────────────────────────────── */
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
-import { handlePageAutoTranslation } from "@/app/[locale]/_lib/handle-auto-translation";
+import { handlePageAutoTranslation } from "@/app/[locale]/_lib/auto-translation/handle-auto-translation";
 import { updatePageStatus } from "./_db/mutations.server";
 
 /* ─────────────────────────────────────────────

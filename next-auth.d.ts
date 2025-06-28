@@ -13,6 +13,7 @@ declare module "@auth/core/adapters" {
 		isAI: boolean;
 		name: string;
 		image: string;
+		plan: string;
 	}
 }
 
@@ -27,6 +28,7 @@ declare module "next-auth" {
 		isAI: boolean;
 		name: string;
 		image: string;
+		plan: string;
 	}
 	interface Session {
 		user: DefaultSession["user"] & {

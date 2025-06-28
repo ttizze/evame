@@ -1,9 +1,21 @@
 import type { TranslateJobParams } from "@/features/translate/types";
-import type {
-	PageCommentTranslationParams,
-	PageTranslationParams,
-	TranslationStrategy,
-} from "./handle-auto-translation";
+import type { TranslationStrategy } from "./handle-auto-translation";
+
+interface BaseTranslationParams {
+	currentUserId: string;
+	sourceLocale: string;
+}
+
+export interface PageTranslationParams extends BaseTranslationParams {
+	type: "page";
+	pageId: number;
+}
+
+export interface PageCommentTranslationParams extends BaseTranslationParams {
+	type: "pageComment";
+	pageId: number;
+	pageCommentId: number;
+}
 export const pageStrategy: TranslationStrategy<PageTranslationParams> = {
 	async createTranslationJob(deps, { currentUserId, pageId }, locale) {
 		return deps.createTranslationJob({
@@ -16,7 +28,7 @@ export const pageStrategy: TranslationStrategy<PageTranslationParams> = {
 
 	async buildParamsForTranslationAPI(
 		deps,
-		{ currentUserId, pageId, geminiApiKey },
+		{ currentUserId, pageId },
 		job,
 		locale,
 	): Promise<TranslateJobParams> {
@@ -25,7 +37,7 @@ export const pageStrategy: TranslationStrategy<PageTranslationParams> = {
 
 		return {
 			translationJobId: job.id,
-			geminiApiKey,
+			provider: "vertex",
 			aiModel: job.aiModel,
 			userId: currentUserId,
 			pageId,
@@ -53,7 +65,7 @@ export const pageCommentStrategy: TranslationStrategy<PageCommentTranslationPara
 
 		async buildParamsForTranslationAPI(
 			deps,
-			{ currentUserId, pageId, pageCommentId, geminiApiKey },
+			{ currentUserId, pageId, pageCommentId },
 			job,
 			locale,
 		): Promise<TranslateJobParams> {
@@ -65,7 +77,7 @@ export const pageCommentStrategy: TranslationStrategy<PageCommentTranslationPara
 
 			return {
 				translationJobId: job.id,
-				geminiApiKey,
+				provider: "vertex",
 				aiModel: job.aiModel,
 				userId: currentUserId,
 				pageId,

@@ -11,6 +11,7 @@ export const mockUsers = [
 		isAI: false,
 		name: "mockUserId1",
 		image: "/test-user.png",
+		plan: "free",
 	},
 	{
 		id: "mockUserId2",
@@ -23,6 +24,7 @@ export const mockUsers = [
 		isAI: false,
 		name: "mockUserId2",
 		image: "mockUserId2",
+		plan: "free",
 	},
 ];
 

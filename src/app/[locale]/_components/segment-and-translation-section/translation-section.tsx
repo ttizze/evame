@@ -31,7 +31,7 @@ export function TranslationSection({
 	return (
 		<span className={"group relative"}>
 			<button
-				className="notranslate inline-block py-2 text-gray-700 dark:text-gray-200"
+				className="notranslate inline-block py-2 text-gray-700 dark:text-gray-200 text-left"
 				onMouseUp={(e) => {
 					if (window.getSelection()?.toString()) return;
 					if (e.button === 2) return;
