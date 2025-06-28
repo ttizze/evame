@@ -12,11 +12,11 @@ export function GoogleForm({ redirectTo }: { redirectTo: string }) {
 	);
 	return (
 		<Form action={formAction} className="w-full ">
-			<input type="hidden" name="redirectTo" value={redirectTo} />
+			<input name="redirectTo" type="hidden" value={redirectTo} />
 			<Button
-				variant="default"
-				disabled={isPending}
 				className="w-full rounded-full h-12 text-md"
+				disabled={isPending}
+				variant="default"
 			>
 				<FcGoogle className="mr-2 h-6 w-6" />
 				Google Login

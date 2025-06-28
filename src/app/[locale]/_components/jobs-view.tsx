@@ -34,19 +34,19 @@ export const JobsView = ({ jobs }: { jobs: TranslationJobForToast[] }) => (
 			Translation Jobs
 		</p>
 		{jobs.map((j) => (
-			<div key={j.locale} className="mb-2 last:mb-0">
+			<div className="mb-2 last:mb-0" key={j.locale}>
 				<span className="flex items-center gap-2">
 					{statusIcon(j.status)}
 					<Link
-						href={`/${j.locale}/user/${j.page.user.handle}/page/${j.page.slug}`}
 						className="capitalize  min-w-[48px] hover:underline cursor-pointer flex items-center"
+						href={`/${j.locale}/user/${j.page.user.handle}/page/${j.page.slug}`}
 					>
 						<LinkIcon className="w-4 h-4 mr-1" />
 						{j.locale}
 					</Link>
 					<Progress
-						value={j.progress ?? (j.status === "COMPLETED" ? 100 : 0)}
 						className="flex-1 h-2 mx-2"
+						value={j.progress ?? (j.status === "COMPLETED" ? 100 : 0)}
 					/>
 				</span>
 				{j.error && <p className="text-xs text-red-500 mt-1">{j.error}</p>}

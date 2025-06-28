@@ -65,13 +65,13 @@ export async function PageList({
 			<div className="grid grid-rows-[auto_auto_auto_auto] gap-1 min-w-0">
 				{/* ─ row‑1: タイトル & オーナーアクション ─ */}
 				<div className="grid grid-cols-[1fr_auto] gap-2">
-					<Link href={pageLink} className="block overflow-hidden">
+					<Link className="block overflow-hidden" href={pageLink}>
 						{titleSegment && (
 							<SegmentAndTranslationSection
-								segmentBundle={titleSegment}
 								currentHandle={currentUserHandle}
-								segmentTextClassName="line-clamp-1 break-all overflow-wrap-anywhere"
 								interactive={false}
+								segmentBundle={titleSegment}
+								segmentTextClassName="line-clamp-1 break-all overflow-wrap-anywhere"
 							/>
 						)}
 					</Link>
@@ -89,7 +89,7 @@ export async function PageList({
 
 				{/* ─ row‑3: ユーザ情報 + ボタン ─ */}
 				<div className="flex items-center gap-2">
-					<Link href={userLink} className="flex items-center gap-1 min-w-0">
+					<Link className="flex items-center gap-1 min-w-0" href={userLink}>
 						<Avatar className="w-5 h-5 shrink-0">
 							<AvatarImage {...props} />
 							<AvatarFallback>
@@ -113,15 +113,15 @@ export async function PageList({
 					<EyeIcon className="w-5 h-5" />
 					<span className="text-muted-foreground">{viewCount}</span>
 					<PageLikeButton
+						ownerHandle={pageSummary.user.handle}
 						pageId={pageSummary.id}
 						pageSlug={pageSummary.slug}
-						ownerHandle={pageSummary.user.handle}
 					/>
 					<PageCommentButton
 						commentCount={pageSummary._count?.pageComments ?? 0}
+						showCount
 						slug={pageSummary.slug}
 						userHandle={pageSummary.user.handle}
-						showCount
 					/>
 				</div>
 			</div>

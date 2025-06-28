@@ -30,12 +30,12 @@ export function SubHeader({
 		return (
 			<>
 				<Button
-					variant="ghost"
 					className={
 						"relative bg-background self-end flex items-center gap-1 rounded-full"
 					}
 					onClick={() => setIsTocOpen(!isTocOpen)}
 					title="Table of Contents"
+					variant="ghost"
 				>
 					<List className="h-5 w-5" />
 					<div
@@ -76,8 +76,8 @@ export function SubHeader({
 					flex items-center not-prose justify-between relative ${isPinned ? "px-4" : ""}`}
 				>
 					<Link
-						href={`/user/${pageDetail.user.handle}`}
 						className="flex items-center mr-2 no-underline! hover:text-gray-700"
+						href={`/user/${pageDetail.user.handle}`}
 					>
 						<Avatar className="w-10 h-10 shrink-0 mr-3 ">
 							<AvatarImage {...props} />

@@ -40,15 +40,15 @@ export async function ContentWithTranslations({
 			<h1 className="mb-0! ">
 				{pageSegmentTitleWithTranslations && (
 					<DynamicSegmentAndTranslationSection
-						segmentBundle={pageSegmentTitleWithTranslations}
 						currentHandle={currentUser?.handle}
+						segmentBundle={pageSegmentTitleWithTranslations}
 					/>
 				)}
 			</h1>
 			<PageTagList tag={pageDetail.tagPages.map((tagPage) => tagPage.tag)} />
 			<SubHeader
-				pageDetail={pageDetail}
 				currentUserHandle={currentUser?.handle}
+				pageDetail={pageDetail}
 			/>
 			<span className="js-content">{content}</span>
 		</>

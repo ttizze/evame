@@ -99,12 +99,12 @@ export function LocaleSelector({
 	);
 
 	return (
-		<Popover open={open} onOpenChange={setOpen}>
+		<Popover onOpenChange={setOpen} open={open}>
 			<PopoverTrigger asChild>
 				<Button
-					variant="ghost"
 					className={cn("justify-between ", localeSelectorClassName)}
 					data-testid="locale-selector-button"
+					variant="ghost"
 				>
 					<div className="flex items-center">
 						{showIcons && sourceLocale && (
@@ -116,9 +116,9 @@ export function LocaleSelector({
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent
-				sideOffset={-4} // -4px で "ピタッ" と密着
-				avoidCollisions={false}
+				avoidCollisions={false} // -4px で "ピタッ" と密着
 				className="w-full p-0  truncate"
+				sideOffset={-4}
 			>
 				<Command>
 					<CommandInput placeholder="search..." />
@@ -128,8 +128,8 @@ export function LocaleSelector({
 							{localeOptionWithStatus.map((item) => (
 								<CommandItem
 									key={item.code}
-									value={item.code}
 									onSelect={handleLocaleChange}
+									value={item.code}
 								>
 									{showIcons && sourceLocale && (
 										<TypeIcon status={item.status} />
@@ -147,9 +147,9 @@ export function LocaleSelector({
 							<Separator />
 							<div className="flex justify-center m-2">
 								<Button
-									variant="default"
 									className="rounded-full"
 									onClick={() => setDialogOpen(true)}
+									variant="default"
 								>
 									+ Add New
 								</Button>
@@ -160,10 +160,10 @@ export function LocaleSelector({
 			</PopoverContent>
 			{pageSlug && (
 				<AddTranslateDialog
-					open={dialogOpen}
-					onOpenChange={setDialogOpen}
 					currentHandle={currentHandle}
 					hasGeminiApiKey={hasGeminiApiKey}
+					onOpenChange={setDialogOpen}
+					open={dialogOpen}
 					pageSlug={pageSlug}
 				/>
 			)}

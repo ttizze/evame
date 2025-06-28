@@ -46,15 +46,15 @@ export function PageLikeButtonClient({
 	return (
 		<div className="flex items-center gap-2">
 			<form action={handleSubmit}>
-				<input type="hidden" name="pageId" value={pageId} />
-				<input type="hidden" name="pageSlug" value={pageSlug} />
-				<input type="hidden" name="ownerHandle" value={ownerHandle} />
+				<input name="pageId" type="hidden" value={pageId} />
+				<input name="pageSlug" type="hidden" value={pageSlug} />
+				<input name="ownerHandle" type="hidden" value={ownerHandle} />
 				<Button
-					type="submit"
 					aria-label="Like"
-					variant="ghost"
-					size="icon"
 					className={`bg-background ${className}`}
+					size="icon"
+					type="submit"
+					variant="ghost"
 				>
 					<Heart
 						className={`h-5 w-5 rounded-full ${optimisticLiked ? "text-red-500" : ""}`}

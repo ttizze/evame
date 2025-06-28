@@ -52,18 +52,18 @@ export async function PageListServer({
 			<div className="">
 				{pageSummaries.map((pageSummary) => (
 					<PageList
+						currentUserHandle={currentUserHandle}
 						key={pageSummary.id}
+						locale={locale}
 						pageSummary={pageSummary}
 						showOwnerActions={isOwner}
-						locale={locale}
-						currentUserHandle={currentUserHandle}
 					/>
 				))}
 			</div>
 
 			{showPagination && totalPages > 1 && (
 				<div className="mt-8 flex justify-center">
-					<PaginationBar totalPages={totalPages} currentPage={page} />
+					<PaginationBar currentPage={page} totalPages={totalPages} />
 				</div>
 			)}
 		</>

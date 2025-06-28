@@ -42,21 +42,21 @@ export function SettingsForm({ currentUser }: SettingsFormProps) {
 
 	return (
 		<form action={editAction} className="space-y-4">
-			<input type="hidden" name="name" value={currentUser.name} />
+			<input name="name" type="hidden" value={currentUser.name} />
 			{currentUser.profile && (
-				<input type="hidden" name="profile" value={currentUser.profile} />
+				<input name="profile" type="hidden" value={currentUser.profile} />
 			)}
 			{currentUser.twitterHandle && (
 				<input
-					type="hidden"
 					name="twitterHandle"
+					type="hidden"
 					value={currentUser.twitterHandle}
 				/>
 			)}
 
 			<div className="space-y-4">
 				<div>
-					<Label htmlFor="handle" className="text-base font-medium mb-2 block">
+					<Label className="text-base font-medium mb-2 block" htmlFor="handle">
 						Handle
 					</Label>
 					<div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 space-y-3">
@@ -65,9 +65,9 @@ export function SettingsForm({ currentUser }: SettingsFormProps) {
 								evame.tech/user/{currentUser.handle}
 							</code>
 							<Button
+								onClick={() => setShowHandleInput(!showHandleInput)}
 								type="button"
 								variant="outline"
-								onClick={() => setShowHandleInput(!showHandleInput)}
 							>
 								{showHandleInput ? "Cancel" : "Edit"}
 							</Button>
@@ -85,7 +85,7 @@ export function SettingsForm({ currentUser }: SettingsFormProps) {
 								</div>
 
 								<div className="space-y-2">
-									<Label htmlFor="handle-input" className="text-sm font-medium">
+									<Label className="text-sm font-medium" htmlFor="handle-input">
 										New handle
 									</Label>
 									<div className="flex items-center gap-2">
@@ -93,14 +93,14 @@ export function SettingsForm({ currentUser }: SettingsFormProps) {
 											evame.tech/user/
 										</code>
 										<Input
-											id="handle-input"
-											defaultValue={currentUser.handle}
-											name="handle"
-											minLength={3}
-											maxLength={25}
-											required
 											className="flex-1 max-w-[200px]"
+											defaultValue={currentUser.handle}
+											id="handle-input"
+											maxLength={25}
+											minLength={3}
+											name="handle"
 											placeholder="your-handle"
+											required
 										/>
 									</div>
 									{!editState.success && editState.zodErrors?.handle && (
@@ -118,9 +118,9 @@ export function SettingsForm({ currentUser }: SettingsFormProps) {
 			<div className="space-y-2">
 				<Label className="text-base font-medium">Gemini API Key</Label>
 				<Button
-					type="button"
-					onClick={() => setIsApiKeyDialogOpen(true)}
 					className="w-full"
+					onClick={() => setIsApiKeyDialogOpen(true)}
+					type="button"
 					variant="outline"
 				>
 					Set API Key
@@ -131,7 +131,7 @@ export function SettingsForm({ currentUser }: SettingsFormProps) {
 				onOpenChange={setIsApiKeyDialogOpen}
 			/>
 
-			<Button type="submit" className="w-full h-10" disabled={isEditPending}>
+			<Button className="w-full h-10" disabled={isEditPending} type="submit">
 				{isEditPending ? (
 					<Loader2 className="w-6 h-6 animate-spin" />
 				) : (

@@ -42,12 +42,12 @@ export function DisplayModeCycle({ afterClick }: Props) {
 
 	return (
 		<Button
-			variant="ghost"
-			size="icon"
-			onClick={handleClick}
-			title={label}
 			aria-label={label}
 			className="border h-10 w-10 rounded-full bg-background font-semibold text-xs"
+			onClick={handleClick}
+			size="icon"
+			title={label}
+			variant="ghost"
 		>
 			{inner}
 		</Button>

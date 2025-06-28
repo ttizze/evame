@@ -57,10 +57,10 @@ export default async function PageManagementPage({
 			{/* <TabsContent value="page-management"> */}
 			<PageManagementTab
 				currentUserId={currentUser.id}
+				handle={currentUser.handle}
 				locale={locale}
 				page={page}
 				query={query}
-				handle={currentUser.handle}
 			/>
 			{/* </TabsContent> */}
 			{/* </Tabs> */}

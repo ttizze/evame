@@ -11,15 +11,15 @@ import type { LocaleStatus } from "./build-locale-options";
 export function TypeIcon({ status }: { status: LocaleStatus }) {
 	switch (status) {
 		case "source":
-			return <FileText data-testid="source-icon" className="w-4 h-4 mr-2" />;
+			return <FileText className="w-4 h-4 mr-2" data-testid="source-icon" />;
 
 		case "translated":
 			return (
-				<Languages data-testid="translated-icon" className="w-4 h-4 mr-2" />
+				<Languages className="w-4 h-4 mr-2" data-testid="translated-icon" />
 			);
 
 		/* 未翻訳: デフォルトで包むと将来ステータスが増えても安全 */
 		default:
-			return <FileX data-testid="untranslated-icon" className="w-4 h-4 mr-2" />;
+			return <FileX className="w-4 h-4 mr-2" data-testid="untranslated-icon" />;
 	}
 }

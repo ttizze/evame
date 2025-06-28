@@ -2,12 +2,12 @@ export default function EditorMovie() {
 	return (
 		<div className="flex justify-center items-center">
 			<video
-				src="/editor-movie.mp4"
 				autoPlay
+				className="w-auto h-auto "
 				loop
 				muted
 				playsInline
-				className="w-auto h-auto "
+				src="/editor-movie.mp4"
 			/>
 		</div>
 	);

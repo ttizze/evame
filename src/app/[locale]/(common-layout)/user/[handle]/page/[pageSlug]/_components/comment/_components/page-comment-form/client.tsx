@@ -37,10 +37,10 @@ export function PageCommentForm({
 	return (
 		<CommentForm
 			action={action}
-			hidden={{ pageId, userLocale, parentId }}
 			currentHandle={currentHandle}
-			isPending={isPending}
 			errorMsg={!state.success ? state.zodErrors?.content : undefined}
+			hidden={{ pageId, userLocale, parentId }}
+			isPending={isPending}
 		/>
 	);
 }

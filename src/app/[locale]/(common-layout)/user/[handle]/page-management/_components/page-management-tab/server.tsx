@@ -34,11 +34,11 @@ export async function PageManagementTab({
 
 	return (
 		<PageManagementTabClient
-			pagesWithTitle={pagesWithTitle}
-			totalPages={totalPages}
 			currentPage={currentPage}
 			handle={handle}
+			pagesWithTitle={pagesWithTitle}
 			pageViewCounters={pageViewCounters}
+			totalPages={totalPages}
 		/>
 	);
 }

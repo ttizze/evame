@@ -111,8 +111,13 @@ export function EditorKeyboardMenu({ editor }: EditorKeyboardMenuProps) {
 			<footer className="sticky bottom-0 w-full h-[48px] md:hidden bg-background border-t border-border">
 				{items.map(({ value, icon: Icon, isActive, label }) => (
 					<button
+						className={cn(
+							"rounded-md inline-flex h-[48px] px-2 items-center justify-center text-sm text-muted-foreground transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation",
+							"active:bg-secondary active:text-foreground",
+							(isActive() || activeStates[value]) &&
+								"bg-secondary text-foreground",
+						)}
 						key={value}
-						type="button"
 						onClick={(e) => {
 							e.preventDefault();
 							editorCommands[value](editor);
@@ -122,40 +127,35 @@ export function EditorKeyboardMenu({ editor }: EditorKeyboardMenuProps) {
 							}));
 						}}
 						onMouseDown={(e) => e.preventDefault()}
-						className={cn(
-							"rounded-md inline-flex h-[48px] px-2 items-center justify-center text-sm text-muted-foreground transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation",
-							"active:bg-secondary active:text-foreground",
-							(isActive() || activeStates[value]) &&
-								"bg-secondary text-foreground",
-						)}
 						title={label}
+						type="button"
 					>
 						<Icon className="h-6 w-6" />
 					</button>
 				))}
 				<button
-					type="button"
-					onClick={() =>
-						document.getElementById("keyboardImageUpload")?.click()
-					}
 					className={cn(
 						"rounded-md inline-flex h-[48px] px-1 items-center justify-center text-sm text-muted-foreground transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation",
 						"active:bg-secondary active:text-foreground",
 					)}
+					onClick={() =>
+						document.getElementById("keyboardImageUpload")?.click()
+					}
 					title="Insert Image"
+					type="button"
 				>
 					<ImageIcon className="h-6 w-6" />
 				</button>
 			</footer>
 			<input
-				id="keyboardImageUpload"
-				type="file"
 				accept="image/*"
+				id="keyboardImageUpload"
 				onChange={(e) => {
 					const file = e.target.files?.[0];
 					if (file) handleFileUpload(file, editor);
 				}}
 				style={{ display: "none" }}
+				type="file"
 			/>
 		</>
 	);

@@ -23,21 +23,21 @@ export default async function PageCommentItem({
 
 	return (
 		<CommentList
-			authorName={pageComment.user?.name || "deleted_user"}
-			authorImage={pageComment.user?.image}
-			createdAt={pageComment.createdAt}
 			action={
 				<PageCommentItemClient
+					currentHandle={currentHandle}
 					key={pageComment.id}
 					pageComment={pageComment}
-					currentHandle={currentHandle}
 				/>
 			}
+			authorImage={pageComment.user?.image}
+			authorName={pageComment.user?.name || "deleted_user"}
 			content={content}
+			createdAt={pageComment.createdAt}
 			replyForm={
 				<PageCommentReplyForm
-					pageId={pageComment.pageId}
 					currentHandle={currentHandle}
+					pageId={pageComment.pageId}
 					parentId={pageComment.id}
 					userLocale={userLocale}
 				/>
@@ -45,9 +45,9 @@ export default async function PageCommentItem({
 		>
 			{pageComment.replies?.map((r) => (
 				<PageCommentItem
+					currentHandle={currentHandle}
 					key={r.id}
 					pageComment={r}
-					currentHandle={currentHandle}
 					userLocale={userLocale}
 				/>
 			))}

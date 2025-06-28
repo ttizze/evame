@@ -37,18 +37,18 @@ export function CommentForm({
 				{Object.entries(hidden).map(
 					([k, v]) =>
 						v !== undefined && (
-							<input key={k} type="hidden" name={k} value={v} />
+							<input key={k} name={k} type="hidden" value={v} />
 						),
 				)}
 
 				<Editor
-					defaultValue={content}
-					name="content"
 					className={`border border-input rounded-md px-2 ${
 						!currentHandle ? "opacity-50 bg-muted" : ""
 					}`}
-					placeholder="Say Hello!"
+					defaultValue={content}
+					name="content"
 					onEditorUpdate={(ed) => setContent(ed?.getHTML() ?? "")}
+					placeholder="Say Hello!"
 				/>
 
 				{!currentHandle && (
@@ -56,9 +56,9 @@ export function CommentForm({
 				)}
 
 				<Button
-					type="submit"
-					disabled={isPending || !currentHandle}
 					className={`w-full ${!currentHandle ? "opacity-50 bg-muted" : ""}`}
+					disabled={isPending || !currentHandle}
+					type="submit"
 				>
 					{isPending ? "posting" : "post"}
 				</Button>

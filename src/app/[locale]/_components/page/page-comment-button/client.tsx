@@ -29,9 +29,9 @@ export function PageCommentButton({
 			<Link href={commentUrl}>
 				<Button
 					aria-label="Comments"
-					variant="ghost"
-					size="icon"
 					className={`${className}`}
+					size="icon"
+					variant="ghost"
 				>
 					<MessageCircle className="h-5 w-5 rounded-full" />
 				</Button>

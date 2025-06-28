@@ -14,8 +14,8 @@ export async function FollowButton({ targetUserId }: FollowButtonProps) {
 	return (
 		<div>
 			<FollowButtonClient
-				targetUserId={targetUserId}
 				isFollowing={isCurrentUserFollowing}
+				targetUserId={targetUserId}
 			/>
 		</div>
 	);

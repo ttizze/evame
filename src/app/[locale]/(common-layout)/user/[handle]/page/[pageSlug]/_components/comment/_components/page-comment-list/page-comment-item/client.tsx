@@ -30,9 +30,9 @@ export function PageCommentItemClient({
 		<CommentActionMenu>
 			<DropdownMenuItem asChild>
 				<form action={action} className="w-full">
-					<input type="hidden" name="pageCommentId" value={pageComment.id} />
-					<input type="hidden" name="pageId" value={pageComment.pageId} />
-					<Button type="submit" variant="ghost" disabled={isPending}>
+					<input name="pageCommentId" type="hidden" value={pageComment.id} />
+					<input name="pageId" type="hidden" value={pageComment.pageId} />
+					<Button disabled={isPending} type="submit" variant="ghost">
 						Delete
 					</Button>
 				</form>

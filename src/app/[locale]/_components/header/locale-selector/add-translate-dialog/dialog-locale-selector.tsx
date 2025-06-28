@@ -39,11 +39,11 @@ export function DialogLocaleSelector({
 		onChange(value);
 	};
 	return (
-		<Popover open={open} onOpenChange={setOpen}>
+		<Popover onOpenChange={setOpen} open={open}>
 			<PopoverTrigger asChild>
 				<Button
-					variant="outline"
 					className={cn("justify-between rounded-xl w-full")}
+					variant="outline"
 				>
 					<div className="flex items-center">
 						<span className="truncate">{selectedOption?.name ?? "Select"}</span>
@@ -60,8 +60,8 @@ export function DialogLocaleSelector({
 							{supportedLocaleOptions.map((item) => (
 								<CommandItem
 									key={item.code}
-									value={item.code}
 									onSelect={handleLocaleChange}
+									value={item.code}
 								>
 									<span className="truncate grow">{item.name}</span>
 									{targetLocale === item.code && (

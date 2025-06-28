@@ -58,17 +58,17 @@ export async function UserInfo({ handle }: { handle: string }) {
 									@{pageOwner.handle}
 								</p>
 								<FollowStats
-									followingCount={followCounts.following}
-									followersCount={followCounts.followers}
-									followingList={followingList.map((item) => ({
-										handle: item.following.handle,
-										name: item.following.name,
-										image: item.following.image,
-									}))}
 									followerList={followerList.map((item) => ({
 										handle: item.follower.handle,
 										name: item.follower.name,
 										image: item.follower.image,
+									}))}
+									followersCount={followCounts.followers}
+									followingCount={followCounts.following}
+									followingList={followingList.map((item) => ({
+										handle: item.following.handle,
+										name: item.following.name,
+										image: item.following.image,
 									}))}
 								/>
 							</div>
@@ -77,8 +77,8 @@ export async function UserInfo({ handle }: { handle: string }) {
 						{isOwner ? (
 							<Link href={`/user/${pageOwner.handle}/edit`}>
 								<Button
-									variant="secondary"
 									className="flex items-center rounded-full"
+									variant="secondary"
 								>
 									<Settings className="w-4 h-4" />
 									<span className="ml-2 text-sm">Edit Profile</span>
@@ -102,11 +102,11 @@ export async function UserInfo({ handle }: { handle: string }) {
 							target="_blank"
 						>
 							<Image
-								src="/x.svg"
 								alt="X"
-								width={20}
-								height={20}
 								className="dark:invert"
+								height={20}
+								src="/x.svg"
+								width={20}
 							/>
 						</Link>
 					)}

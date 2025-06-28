@@ -30,11 +30,11 @@ export function GitHubIntegrationTab() {
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor="branch">Branch</Label>
-							<Input id="branch" placeholder="main" defaultValue="main" />
+							<Input defaultValue="main" id="branch" placeholder="main" />
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor="path">Content Path</Label>
-							<Input id="path" placeholder="/content" defaultValue="/content" />
+							<Input defaultValue="/content" id="path" placeholder="/content" />
 						</div>
 						<Button className="w-full">Connect Repository</Button>
 					</CardContent>

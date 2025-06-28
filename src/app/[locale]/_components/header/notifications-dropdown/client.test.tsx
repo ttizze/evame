@@ -150,8 +150,8 @@ describe("NotificationsDropdownClient", () => {
 	it("ベルアイコンと未読数バッジが表示される", async () => {
 		render(
 			<NotificationsDropdownClient
-				notifications={sampleNotifications}
 				currentUserHandle={mockUsers[0].handle}
+				notifications={sampleNotifications}
 			/>,
 		);
 
@@ -167,8 +167,8 @@ describe("NotificationsDropdownClient", () => {
 	it("通知が存在しない場合は『No notifications』と表示される", async () => {
 		render(
 			<NotificationsDropdownClient
-				notifications={[]}
 				currentUserHandle={mockUsers[0].handle}
+				notifications={[]}
 			/>,
 		);
 
@@ -187,8 +187,8 @@ describe("NotificationsDropdownClient", () => {
 		render(
 			<NextIntlClientProvider locale="ja">
 				<NotificationsDropdownClient
-					notifications={sampleNotifications}
 					currentUserHandle={mockUsers[0].handle}
+					notifications={sampleNotifications}
 				/>
 			</NextIntlClientProvider>,
 		);

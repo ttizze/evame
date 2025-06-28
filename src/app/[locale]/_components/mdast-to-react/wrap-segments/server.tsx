@@ -41,9 +41,9 @@ export function WrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 		return (
 			<WrapSegmentClient
 				bundle={bundle}
-				tagName={Tag}
-				tagProps={rest as JSX.IntrinsicElements[Tag]} // ★そのまま突っ込む
 				currentHandle={current}
+				tagName={Tag} // ★そのまま突っ込む
+				tagProps={rest as JSX.IntrinsicElements[Tag]}
 			>
 				{children} {/* ← children は React が面倒見てくれる */}
 			</WrapSegmentClient>

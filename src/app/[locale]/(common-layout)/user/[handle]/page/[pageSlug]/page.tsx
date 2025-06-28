@@ -123,9 +123,9 @@ export default async function Page({
 					<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
 					<span className="text-muted-foreground">{pageViewCount}</span>
 					<DynamicPageLikeButton
+						ownerHandle={pageDetail.user.handle}
 						pageId={pageDetail.id}
 						pageSlug={pageDetail.slug}
-						ownerHandle={pageDetail.user.handle}
 						showCount
 					/>
 					<MessageCircle className="w-5 h-5" strokeWidth={1.5} />
@@ -137,11 +137,11 @@ export default async function Page({
 				<DynamicFloatingControls
 					likeButton={
 						<DynamicPageLikeButton
+							className="w-10 h-10 border rounded-full"
+							ownerHandle={pageDetail.user.handle}
 							pageId={pageDetail.id}
 							pageSlug={pageDetail.slug}
-							ownerHandle={pageDetail.user.handle}
 							showCount={false}
-							className="w-10 h-10 border rounded-full"
 						/>
 					}
 				/>
@@ -153,8 +153,8 @@ export default async function Page({
 							{pageDetail.children.map((child) => (
 								<li key={child.id}>
 									<a
-										href={`/${locale}/user/${child.user.handle}/page/${child.slug}`}
 										className="text-blue-600 hover:underline"
+										href={`/${locale}/user/${child.user.handle}/page/${child.slug}`}
 									>
 										{child.segmentBundles[0]?.segment.text || "Untitled"}
 									</a>
@@ -172,8 +172,8 @@ export default async function Page({
 						<PageCommentList pageId={pageDetail.id} userLocale={locale} />
 					</div>
 					<DynamicPageCommentForm
-						pageId={pageDetail.id}
 						currentHandle={currentUser?.handle}
+						pageId={pageDetail.id}
 						userLocale={locale}
 					/>
 				</div>

@@ -15,12 +15,10 @@ export function StartButton({
 }: StartButtonProps) {
 	return (
 		<Link
-			href="/auth/login"
 			aria-label="Get started by logging in to your account"
+			href="/auth/login"
 		>
 			<Button
-				variant="default"
-				size="lg"
 				className={cn(
 					"relative  rounded-full",
 
@@ -34,6 +32,8 @@ export function StartButton({
 
 					className,
 				)}
+				size="lg"
+				variant="default"
 			>
 				<div className="flex items-center gap-2">
 					{icon}

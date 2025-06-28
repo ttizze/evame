@@ -25,7 +25,7 @@ export async function Header() {
 		geminiApiKey.apiKey !== "";
 	const rightExtra = (
 		<>
-			<Link href="/search" aria-label="Search for pages">
+			<Link aria-label="Search for pages" href="/search">
 				<Search className="w-6 h-6 " />
 			</Link>
 
@@ -50,10 +50,10 @@ export async function Header() {
 	return (
 		<BaseHeader
 			currentUser={currentUser}
+			hasGeminiApiKey={hasGeminiApiKey}
 			leftExtra={null}
 			rightExtra={rightExtra}
 			showUserMenu={!!currentUser}
-			hasGeminiApiKey={hasGeminiApiKey}
 		/>
 	);
 }

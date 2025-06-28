@@ -69,14 +69,14 @@ export default async function EditPage({ params }: { params: Params }) {
 
 	return (
 		<EditPageClient
-			currentUser={currentUser}
-			pageWithTitleAndTags={pageWithTitleAndTags}
 			allTagsWithCount={allTagsWithCount}
+			currentUser={currentUser}
+			html={html}
 			initialTitle={title}
 			pageSlug={pageSlug}
-			userLocale={locale}
-			html={html}
+			pageWithTitleAndTags={pageWithTitleAndTags}
 			targetLocales={targetLocales}
+			userLocale={locale}
 		/>
 	);
 }

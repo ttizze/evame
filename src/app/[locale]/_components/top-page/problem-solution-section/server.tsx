@@ -71,18 +71,18 @@ export default async function ProblemSolutionSection({
 		<Globe key="component-3" />,
 		<EditorMovie key="component-4" />,
 		<FloatingControls
+			alwaysVisible={true}
+			key="component-5"
 			likeButton={
 				<PageLikeButton
+					className="w-10 h-10 border rounded-full"
+					ownerHandle={pageDetail.user.handle}
 					pageId={pageDetail.id}
 					pageSlug={pageDetail.slug}
-					ownerHandle={pageDetail.user.handle}
 					showCount={false}
-					className="w-10 h-10 border rounded-full"
 				/>
 			}
 			position="w-full flex justify-center"
-			alwaysVisible={true}
-			key="component-5"
 		/>,
 		<span key="component-6" />,
 	];
@@ -98,29 +98,29 @@ export default async function ProblemSolutionSection({
 				<div className="border-b">
 					<h2 className="text-2xl font-bold text-center mb-10">
 						<SegmentAndTranslationSection
-							segmentBundle={problemHeader}
 							currentHandle={currentHandle}
+							segmentBundle={problemHeader}
 						/>
 					</h2>
 				</div>
 				<div className="grid grid-cols-1 ">
 					{problemCardPairs.map((pair, index) => (
 						<AboutSectionCard
-							key={`problem-${pair.header.segment.number}`}
-							icon={problemIcons[index]}
-							title={
-								<SegmentAndTranslationSection
-									segmentBundle={pair.header}
-									currentHandle={currentHandle}
-								/>
-							}
+							component={problemComponents[index]}
 							description={
 								<SegmentAndTranslationSection
-									segmentBundle={pair.text}
 									currentHandle={currentHandle}
+									segmentBundle={pair.text}
 								/>
 							}
-							component={problemComponents[index]}
+							icon={problemIcons[index]}
+							key={`problem-${pair.header.segment.number}`}
+							title={
+								<SegmentAndTranslationSection
+									currentHandle={currentHandle}
+									segmentBundle={pair.header}
+								/>
+							}
 						/>
 					))}
 				</div>

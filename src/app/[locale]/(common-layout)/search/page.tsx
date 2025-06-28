@@ -45,13 +45,13 @@ export default async function SearchPage({
 				{query && (
 					<div className="">
 						<SearchResults
-							pageSummaries={pageSummaries}
-							tags={tags}
-							users={users}
-							totalPages={totalPages}
 							currentCategory={validCategory}
 							currentPage={page}
 							locale={locale}
+							pageSummaries={pageSummaries}
+							tags={tags}
+							totalPages={totalPages}
+							users={users}
 						/>
 					</div>
 				)}

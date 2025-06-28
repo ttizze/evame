@@ -19,10 +19,10 @@ export function FollowButtonClient({
 
 	return (
 		<form action={formAction}>
-			<input type="hidden" name="targetUserId" value={targetUserId} />
+			<input name="targetUserId" type="hidden" value={targetUserId} />
 			<input
-				type="hidden"
 				name="action"
+				type="hidden"
 				value={
 					state.success
 						? state.data?.isFollowing
@@ -32,6 +32,8 @@ export function FollowButtonClient({
 				}
 			/>
 			<Button
+				className="rounded-full"
+				disabled={isPending}
 				variant={
 					state.success
 						? state.data?.isFollowing
@@ -39,8 +41,6 @@ export function FollowButtonClient({
 							: "default"
 						: "default"
 				}
-				className="rounded-full"
-				disabled={isPending}
 			>
 				{state.success
 					? state.data?.isFollowing

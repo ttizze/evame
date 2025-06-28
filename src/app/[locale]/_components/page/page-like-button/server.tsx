@@ -25,13 +25,13 @@ export async function PageLikeButton({
 	);
 	return (
 		<PageLikeButtonClient
-			liked={liked}
+			className={className}
 			likeCount={likeCount}
+			liked={liked}
+			ownerHandle={ownerHandle}
 			pageId={pageId}
 			pageSlug={pageSlug}
-			ownerHandle={ownerHandle}
 			showCount={showCount}
-			className={className}
 		/>
 	);
 }

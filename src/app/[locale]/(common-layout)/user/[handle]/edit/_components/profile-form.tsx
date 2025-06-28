@@ -92,21 +92,21 @@ export function ProfileForm({ currentUser }: ProfileFormProps) {
 				</div>
 				<div className="relative group">
 					<button
-						type="button"
-						onClick={handleImageClick}
-						disabled={isImageUploading}
 						className="w-40 h-40 rounded-full overflow-hidden focus:outline-hidden focus:ring-2 focus:ring-blue-500 relative"
+						disabled={isImageUploading}
+						onClick={handleImageClick}
+						type="button"
 					>
 						<Image
+							alt="Profile"
+							className="transition-opacity group-hover:opacity-75"
+							height={160}
 							src={
 								imageState.success
 									? imageState.data?.imageUrl
 									: currentUser.image
 							}
-							alt="Profile"
 							width={160}
-							height={160}
-							className="transition-opacity group-hover:opacity-75"
 						/>
 						<span className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 transition-opacity group-hover:opacity-100">
 							Change Image
@@ -114,17 +114,17 @@ export function ProfileForm({ currentUser }: ProfileFormProps) {
 					</button>
 				</div>
 				<Input
-					ref={fileInputRef}
-					type="file"
-					name="image"
 					accept="image/*"
+					className="hidden"
+					name="image"
 					onChange={() => {
 						const form = fileInputRef.current?.form;
 						if (form) {
 							form.requestSubmit();
 						}
 					}}
-					className="hidden"
+					ref={fileInputRef}
+					type="file"
 				/>
 				{imageState.success === false && (
 					<div className="text-red-500 text-sm mt-1">{imageState.message}</div>
@@ -133,16 +133,16 @@ export function ProfileForm({ currentUser }: ProfileFormProps) {
 
 			{/* ---------- Profile info ---------- */}
 			<form action={editAction} className="space-y-4">
-				<input type="hidden" name="handle" value={currentUser.handle} />
+				<input name="handle" type="hidden" value={currentUser.handle} />
 				<div>
 					<Label>Display Name</Label>
 					<Input
-						defaultValue={editState.success ? editState.data?.name : ""}
-						name="name"
-						minLength={3}
-						maxLength={25}
-						required
 						className="w-full h-10 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-hidden"
+						defaultValue={editState.success ? editState.data?.name : ""}
+						maxLength={25}
+						minLength={3}
+						name="name"
+						required
 					/>
 					{!editState.success && editState.zodErrors?.name && (
 						<div className="text-red-500 text-sm mt-1">
@@ -154,9 +154,9 @@ export function ProfileForm({ currentUser }: ProfileFormProps) {
 				<div>
 					<Label>Profile</Label>
 					<textarea
+						className="w-full h-32 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-hidden"
 						defaultValue={editState.success ? editState.data?.profile : ""}
 						name="profile"
-						className="w-full h-32 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-hidden"
 					/>
 					{!editState.success && editState.zodErrors?.profile && (
 						<div className="text-red-500 text-sm mt-1">
@@ -167,13 +167,13 @@ export function ProfileForm({ currentUser }: ProfileFormProps) {
 				<div>
 					<Label>Twitter Handle</Label>
 					<Input
+						className="w-full h-10 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-hidden"
 						defaultValue={
 							editState.success ? editState.data?.twitterHandle : ""
 						}
 						name="twitterHandle"
-						placeholder="start with @. e.g. @evame"
 						pattern="@[A-Za-z0-9_]+"
-						className="w-full h-10 px-3 py-2 border rounded-lg bg-white dark:bg-black/50 focus:outline-hidden"
+						placeholder="start with @. e.g. @evame"
 					/>
 					{!editState.success && editState.zodErrors?.twitterHandle && (
 						<div className="text-red-500 text-sm mt-1">
@@ -181,7 +181,7 @@ export function ProfileForm({ currentUser }: ProfileFormProps) {
 						</div>
 					)}
 				</div>
-				<Button type="submit" className="w-full h-10" disabled={isEditPending}>
+				<Button className="w-full h-10" disabled={isEditPending} type="submit">
 					{isEditPending ? (
 						<Loader2 className="w-6 h-6 animate-spin" />
 					) : (

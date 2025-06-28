@@ -25,10 +25,10 @@ export const NewPageButton = ({ handle }: NewPageButtonProps) => {
 
 	return (
 		<button
-			type="button"
-			onClick={handleNewPage}
-			disabled={isLoading}
 			className="cursor-pointer items-center"
+			disabled={isLoading}
+			onClick={handleNewPage}
+			type="button"
 		>
 			{isLoading ? (
 				<Loader2 className="h-6 w-6 animate-spin" />
