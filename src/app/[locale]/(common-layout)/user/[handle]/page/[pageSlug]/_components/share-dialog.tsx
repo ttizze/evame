@@ -38,12 +38,12 @@ export function ShareDialog() {
 	};
 
 	return (
-		<Dialog open={isOpen} onOpenChange={setIsOpen}>
+		<Dialog onOpenChange={setIsOpen} open={isOpen}>
 			<DialogTrigger asChild>
 				<Button
-					variant="ghost"
-					size="icon"
 					className="h-10 w-10 rounded-full border bg-background"
+					size="icon"
+					variant="ghost"
 				>
 					<Share className="h-5 w-5" />
 				</Button>
@@ -58,34 +58,34 @@ export function ShareDialog() {
 					<div className="flex justify-center space-x-4">
 						{/* コピー */}
 						<Button
-							variant="outline"
-							size="icon"
 							className="rounded-full"
 							onClick={() => {
 								navigator.clipboard.writeText(getShareUrl());
 								toast.success("Copied to clipboard");
 							}}
+							size="icon"
+							variant="outline"
 						>
 							<CopyIcon className="w-4 h-4" />
 						</Button>
 
 						{/* SNS */}
 						<FacebookShareButton url={getShareUrl()}>
-							<FacebookIcon size={32} round />
+							<FacebookIcon round size={32} />
 						</FacebookShareButton>
 
-						<TwitterShareButton url={getShareUrl()} title={shareTitle}>
+						<TwitterShareButton title={shareTitle} url={getShareUrl()}>
 							<Image
-								src="/x.svg"
 								alt="X"
-								width={32}
-								height={32}
 								className="dark:invert"
+								height={32}
+								src="/x.svg"
+								width={32}
 							/>
 						</TwitterShareButton>
 
-						<RedditShareButton url={getShareUrl()} title={shareTitle}>
-							<RedditIcon size={32} round />
+						<RedditShareButton title={shareTitle} url={getShareUrl()}>
+							<RedditIcon round size={32} />
 						</RedditShareButton>
 					</div>
 				</div>

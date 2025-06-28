@@ -35,10 +35,10 @@ export function PaginationBar({ totalPages, currentPage }: PaginationBarProps) {
 			<PaginationContent className="w-full justify-between">
 				<PaginationItem>
 					<PaginationPrevious
-						href={getPageUrl(currentPage - 1)}
 						className={
 							currentPage === 1 ? "pointer-events-none opacity-50" : ""
 						}
+						href={getPageUrl(currentPage - 1)}
 					/>
 				</PaginationItem>
 				<div className="flex items-center space-x-2">
@@ -72,10 +72,10 @@ export function PaginationBar({ totalPages, currentPage }: PaginationBarProps) {
 				</div>
 				<PaginationItem>
 					<PaginationNext
-						href={getPageUrl(currentPage + 1)}
 						className={
 							currentPage === totalPages ? "pointer-events-none opacity-50" : ""
 						}
+						href={getPageUrl(currentPage + 1)}
 					/>
 				</PaginationItem>
 			</PaginationContent>

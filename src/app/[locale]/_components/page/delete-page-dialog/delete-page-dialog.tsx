@@ -38,7 +38,7 @@ export function DeletePageDialog({
 		}
 	}, [archiveState, onOpenChange, router]);
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
+		<Dialog onOpenChange={onOpenChange} open={open}>
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle className="flex items-center">
@@ -53,19 +53,19 @@ export function DeletePageDialog({
 				<DialogFooter>
 					<div className="flex items-center justify-between gap-2 w-full">
 						<Button
-							variant="outline"
 							className="w-1/2"
 							onClick={() => onOpenChange(false)}
+							variant="outline"
 						>
 							Cancel
 						</Button>
 						<form action={archiveAction} className="w-1/2">
-							<input type="hidden" name="pageId" value={pageId} />
+							<input name="pageId" type="hidden" value={pageId} />
 							<Button
-								variant="destructive"
-								type="submit"
 								className="w-full"
 								disabled={isArchiving}
+								type="submit"
+								variant="destructive"
 							>
 								{isArchiving ? (
 									<Loader2 className="w-4 h-4 mr-2 animate-spin" />

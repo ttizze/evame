@@ -10,6 +10,13 @@
 			"!node_modules/**"
 		]
 	},
+	"assist": {
+		"actions": {
+			"source": {
+				"useSortedAttributes": "on"
+			}
+		}
+	},
 	"linter": {
 		"enabled": true,
 		"rules": {

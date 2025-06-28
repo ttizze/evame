@@ -36,13 +36,13 @@ export function PageManagementTabClient({
 	const getStatusBadge = (status: PageStatus) => {
 		if (status === "PUBLIC") {
 			return (
-				<Badge variant="default" className="w-16 text-center">
+				<Badge className="w-16 text-center" variant="default">
 					Public
 				</Badge>
 			);
 		}
 		return (
-			<Badge variant="outline" className="w-16 text-center">
+			<Badge className="w-16 text-center" variant="outline">
 				Private
 			</Badge>
 		);
@@ -52,16 +52,16 @@ export function PageManagementTabClient({
 		<div className="space-y-4">
 			<div className="">
 				<Input
+					className="w-full"
+					onChange={(e) => setQuery(e.target.value)}
 					placeholder="Search pages..."
 					value={query || ""}
-					onChange={(e) => setQuery(e.target.value)}
-					className="w-full"
 				/>
 			</div>
 
 			<div className="rounded-md">
 				{pagesWithTitle.map((page) => (
-					<div key={page.id} className="flex border-b py-2 justify-between">
+					<div className="flex border-b py-2 justify-between" key={page.id}>
 						<div>
 							<Link href={`/user/${handle}/page/${page.slug}`}>
 								{page.title}
@@ -87,7 +87,7 @@ export function PageManagementTabClient({
 			</div>
 
 			<div className="flex justify-center mt-4">
-				<PaginationBar totalPages={totalPages} currentPage={currentPage} />
+				<PaginationBar currentPage={currentPage} totalPages={totalPages} />
 			</div>
 		</div>
 	);

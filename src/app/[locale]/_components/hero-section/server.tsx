@@ -7,16 +7,16 @@ import { getCurrentUser } from "@/auth";
 export const Icon = ({ className, ...rest }: { className: string }) => {
 	return (
 		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			fill="none"
-			viewBox="0 0 24 24"
-			strokeWidth="1.5"
-			stroke="currentColor"
 			className={className}
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="1.5"
+			viewBox="0 0 24 24"
+			xmlns="http://www.w3.org/2000/svg"
 			{...rest}
 		>
 			<title>Back</title>
-			<path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m6-6H6" />
+			<path d="M12 6v12m6-6H6" strokeLinecap="round" strokeLinejoin="round" />
 		</svg>
 	);
 };
@@ -45,32 +45,32 @@ export default async function HeroSection({ locale }: { locale: string }) {
 			<div className="relative z-10 px-4 md:px-8 max-w-4xl mx-auto">
 				<h1 className="text-2xl md:text-4xl font-bold mb-6 text-center">
 					<SegmentAndTranslationSection
+						currentHandle={currentHandle}
 						segmentBundle={heroTitle}
 						segmentTextClassName="w-full mb-2"
-						currentHandle={currentHandle}
 					/>
 				</h1>
 
 				<span className="text-xl mb-12 w-full">
 					<SegmentAndTranslationSection
+						currentHandle={currentHandle}
 						segmentBundle={heroText}
 						segmentTextClassName="mb-2"
-						currentHandle={currentHandle}
 					/>
 				</span>
 				<div className="mb-12 flex justify-center mt-10">
 					<StartButton
-						text="Start Now"
+						className="w-60 h-16 text-xl transition-all duration-300 hover:scale-105"
 						icon={
 							<Image
-								src="/favicon.svg"
 								alt="Hero section image"
-								width={14}
-								height={14}
 								className="relative z-10 invert dark:invert-0"
+								height={14}
+								src="/favicon.svg"
+								width={14}
 							/>
 						}
-						className="w-60 h-16 text-xl transition-all duration-300 hover:scale-105"
+						text="Start Now"
 					/>
 				</div>
 				<div className="relative  my-10 flex justify-center">
@@ -80,11 +80,11 @@ export default async function HeroSection({ locale }: { locale: string }) {
 					{/* 右 : 出力線（多色） ----------------------------- */}
 					<div className="absolute inset-0 output-rays" />
 					<Image
-						src="/favicon.svg"
 						alt="Hero section image"
-						width={100}
-						height={100}
 						className="relative z-10 dark:invert"
+						height={100}
+						src="/favicon.svg"
+						width={100}
 					/>
 				</div>
 			</div>

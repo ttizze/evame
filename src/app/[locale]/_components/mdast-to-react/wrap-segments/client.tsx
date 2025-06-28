@@ -74,9 +74,9 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 						"data-number-id": bundle.segment.number,
 					},
 					<TranslationSection
-						segmentBundle={bundle}
 						currentHandle={currentHandle}
 						interactive
+						segmentBundle={bundle}
 					/>,
 				)
 			: null;

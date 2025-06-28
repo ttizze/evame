@@ -32,12 +32,12 @@ const SEGMENTABLE = [
 const ImgComponent: ComponentType<JSX.IntrinsicElements["img"]> = (props) => (
 	<Image
 		{...props}
-		src={props.src ?? ""}
 		alt={props.alt ?? ""}
-		width={props.width ? Number(props.width) : 300}
-		height={props.height ? Number(props.height) : 300}
 		className="h-auto w-auto max-w-full"
+		height={props.height ? Number(props.height) : 300}
 		priority={false}
+		src={props.src ?? ""}
+		width={props.width ? Number(props.width) : 300}
 	/>
 );
 

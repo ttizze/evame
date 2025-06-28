@@ -40,29 +40,29 @@ export function AddAndVoteTranslations({
 			</span>
 			{displayedTranslations.map((displayedTranslation) => (
 				<TranslationListItem
-					key={displayedTranslation.id}
-					translation={displayedTranslation}
 					currentHandle={currentHandle}
+					key={displayedTranslation.id}
 					targetContentType={segmentBundle.parentType}
+					translation={displayedTranslation}
 				/>
 			))}
 			{hasMoreTranslations && (
 				<Button
-					variant="link"
 					className="mt-2 w-full text-sm"
 					onClick={toggleShowAll}
+					variant="link"
 				>
 					{showAll ? (
-						<ChevronUp size={16} className="mr-1" />
+						<ChevronUp className="mr-1" size={16} />
 					) : (
-						<ChevronDown size={16} className="mr-1" />
+						<ChevronDown className="mr-1" size={16} />
 					)}
 				</Button>
 			)}
 			<span className="mt-4">
 				<AddTranslationForm
-					segmentId={segmentBundle.segment.id}
 					currentHandle={currentHandle}
+					segmentId={segmentBundle.segment.id}
 					targetContentType={segmentBundle.parentType}
 				/>
 			</span>

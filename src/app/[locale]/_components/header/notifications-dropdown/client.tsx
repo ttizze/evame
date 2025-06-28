@@ -39,16 +39,16 @@ export function NotificationsDropdownClient({
 	return (
 		<DropdownMenu
 			data-testid="notifications-menu"
-			onOpenChange={handleClick}
 			modal={false}
+			onOpenChange={handleClick}
 		>
 			<DropdownMenuTrigger asChild>
 				<div className="relative">
-					<Bell data-testid="bell-icon" className="w-6 h-6 cursor-pointer" />
+					<Bell className="w-6 h-6 cursor-pointer" data-testid="bell-icon" />
 					{unreadCount > 0 && (
 						<span
-							data-testid="unread-count"
 							className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center"
+							data-testid="unread-count"
 						>
 							{unreadCount}
 						</span>
@@ -66,10 +66,10 @@ export function NotificationsDropdownClient({
 				) : (
 					notifications.map((notification, index) => (
 						<NotificationItem
-							key={notification.id}
-							notificationWithRelations={notification}
 							currentUserHandle={currentUserHandle}
 							index={index}
+							key={notification.id}
+							notificationWithRelations={notification}
 						/>
 					))
 				)}
@@ -94,8 +94,8 @@ function NotificationItem({
 			} ${index === 0 ? "border-none" : ""}`}
 		>
 			<NotificationContent
-				notificationWithRelations={notificationWithRelations}
 				currentUserHandle={currentUserHandle}
+				notificationWithRelations={notificationWithRelations}
 			/>
 		</DropdownMenuItem>
 	);
@@ -109,7 +109,7 @@ function NotificationContent({
 }) {
 	const { actor, type } = notificationWithRelations;
 	const commonLink = (
-		<Link href={`/user/${actor.handle}`} className="hover:underline font-bold">
+		<Link className="hover:underline font-bold" href={`/user/${actor.handle}`}>
 			{actor.name}
 		</Link>
 	);
@@ -126,8 +126,8 @@ function NotificationContent({
 			actionText = <span className="text-gray-500"> commented on </span>;
 			extraContent = (
 				<Link
-					href={`/user/${currentUserHandle}/page/${pageComment?.page.slug}`}
 					className="hover:underline font-bold"
+					href={`/user/${currentUserHandle}/page/${pageComment?.page.slug}`}
 				>
 					{title}
 				</Link>
@@ -141,8 +141,8 @@ function NotificationContent({
 			actionText = <span className="text-gray-500"> liked your page </span>;
 			extraContent = (
 				<Link
-					href={`/user/${currentUserHandle}/page/${page?.slug}`}
 					className="hover:underline font-bold"
+					href={`/user/${currentUserHandle}/page/${page?.slug}`}
 				>
 					{title}
 				</Link>
@@ -165,8 +165,8 @@ function NotificationContent({
 					<span className="">{votedText}</span>
 					<span className="text-gray-500"> on </span>
 					<Link
-						href={`/user/${votedPageUser?.handle}/page/${votedPage?.slug}`}
 						className="hover:underline font-bold"
+						href={`/user/${votedPageUser?.handle}/page/${votedPage?.slug}`}
 					>
 						{votedPageTitle}
 					</Link>
@@ -207,8 +207,8 @@ function NotificationAvatar({
 	});
 	return (
 		<Link
-			href={`/user/${actor.handle}`}
 			className="flex items-center mr-2 no-underline! hover:text-gray-700"
+			href={`/user/${actor.handle}`}
 		>
 			<Avatar className="w-10 h-10 shrink-0 mr-3">
 				<AvatarImage {...props} />

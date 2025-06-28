@@ -5,7 +5,7 @@ import { VoteButton } from "./vote-button";
 describe("VoteButton コンポーネント", () => {
 	test("upvote タイプの場合、voteCount とアクティブ状態のクラスが正しく表示される", () => {
 		render(
-			<VoteButton type="upvote" isActive={true} isVoting={false} voteCount={15}>
+			<VoteButton isActive={true} isVoting={false} type="upvote" voteCount={15}>
 				{({ iconClass }) => <span data-testid="icon-element">{iconClass}</span>}
 			</VoteButton>,
 		);
@@ -30,9 +30,9 @@ describe("VoteButton コンポーネント", () => {
 	test("downvote タイプの場合、voteCount は表示されず、アクティブ状態のクラスも含まれない", () => {
 		render(
 			<VoteButton
-				type="downvote"
 				isActive={false}
 				isVoting={false}
+				type="downvote"
 				voteCount={20}
 			>
 				{({ iconClass }) => <span data-testid="icon-element">{iconClass}</span>}
@@ -52,7 +52,7 @@ describe("VoteButton コンポーネント", () => {
 
 	test("isVoting が true の場合、ボタンは disabled になる", () => {
 		render(
-			<VoteButton type="upvote" isActive={false} isVoting={true} voteCount={5}>
+			<VoteButton isActive={false} isVoting={true} type="upvote" voteCount={5}>
 				{({ iconClass }) => <span data-testid="icon-element">{iconClass}</span>}
 			</VoteButton>,
 		);
@@ -63,7 +63,7 @@ describe("VoteButton コンポーネント", () => {
 
 	test("isVoting が true の場合、iconClass に animate-bounce が含まれる", () => {
 		render(
-			<VoteButton type="downvote" isActive={false} isVoting={true}>
+			<VoteButton isActive={false} isVoting={true} type="downvote">
 				{({ iconClass }) => <span data-testid="icon-element">{iconClass}</span>}
 			</VoteButton>,
 		);

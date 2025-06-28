@@ -28,42 +28,42 @@ export function FollowStats({
 	return (
 		<div className="flex gap-4 mt-2 text-sm text-gray-500">
 			<button
-				type="button"
+				className="cursor-pointer"
 				onClick={() => setOpenFollowing(true)}
 				onKeyDown={(e) => {
 					if (e.key === "Enter") {
 						setOpenFollowing(true);
 					}
 				}}
-				className="cursor-pointer"
+				type="button"
 			>
 				{followingCount} following
 			</button>
 			<button
-				type="button"
+				className="cursor-pointer"
 				onClick={() => setOpenFollowers(true)}
 				onKeyDown={(e) => {
 					if (e.key === "Enter") {
 						setOpenFollowers(true);
 					}
 				}}
-				className="cursor-pointer"
+				type="button"
 			>
 				{followersCount} followers
 			</button>
 
 			<FollowListDialog
-				open={openFollowing}
 				onOpenChange={setOpenFollowing}
-				users={followingList}
+				open={openFollowing}
 				type="following"
+				users={followingList}
 			/>
 
 			<FollowListDialog
-				open={openFollowers}
 				onOpenChange={setOpenFollowers}
-				users={followerList}
+				open={openFollowers}
 				type="followers"
+				users={followerList}
 			/>
 		</div>
 	);

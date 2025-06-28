@@ -55,8 +55,8 @@ describe("EditHeader Component", () => {
 		render(
 			<EditHeader
 				currentUser={mockUsers[0]}
-				initialStatus="PUBLIC"
 				hasUnsavedChanges={false}
+				initialStatus="PUBLIC"
 				pageId={123}
 				targetLocales={["en", "zh"]}
 			/>,
@@ -70,8 +70,8 @@ describe("EditHeader Component", () => {
 		render(
 			<EditHeader
 				currentUser={mockUsers[0]}
-				initialStatus="PUBLIC"
 				hasUnsavedChanges={true}
+				initialStatus="PUBLIC"
 				pageId={123}
 				targetLocales={["en", "zh"]}
 			/>,
@@ -93,8 +93,8 @@ describe("EditHeader Component", () => {
 		render(
 			<EditHeader
 				currentUser={mockUsers[0]}
-				initialStatus="DRAFT"
 				hasUnsavedChanges={false}
+				initialStatus="DRAFT"
 				pageId={123}
 				targetLocales={["en", "zh"]}
 			/>,
@@ -117,8 +117,8 @@ describe("EditHeader Component", () => {
 		render(
 			<EditHeader
 				currentUser={mockUsers[0]}
-				initialStatus="DRAFT"
 				hasUnsavedChanges={false}
+				initialStatus="DRAFT"
 				pageId={123}
 				targetLocales={["en", "zh"]}
 			/>,

@@ -60,7 +60,7 @@ export function AddTranslateDialog({
 	useTranslationJobToast(toastJobs);
 	return (
 		<>
-			<Dialog open={open} onOpenChange={onOpenChange}>
+			<Dialog onOpenChange={onOpenChange} open={open}>
 				<DialogContent className="rounded-xl">
 					{!currentHandle ? (
 						<div className="text-center">
@@ -79,15 +79,15 @@ export function AddTranslateDialog({
 							<div className="space-y-2">
 								<Label htmlFor="language">Language</Label>
 								<DialogLocaleSelector
-									targetLocale={targetLocale}
 									onChange={(value) => setTargetLocale(value)}
+									targetLocale={targetLocale}
 								/>
 							</div>
 							<div className="space-y-2">
 								<Label htmlFor="ai-model">AI Model</Label>
 								<Select
-									value={selectedModel}
 									onValueChange={(value) => setSelectedModel(value)}
+									value={selectedModel}
 								>
 									<SelectTrigger className="rounded-xl">
 										<SelectValue placeholder="Select a model" />
@@ -103,18 +103,18 @@ export function AddTranslateDialog({
 							{hasGeminiApiKey ? (
 								<form action={action}>
 									<input
-										type="hidden"
 										name="targetLocale"
+										type="hidden"
 										value={targetLocale}
 									/>
-									<input type="hidden" name="pageSlug" value={pageSlug} />
-									<input type="hidden" name="aiModel" value={selectedModel} />
+									<input name="pageSlug" type="hidden" value={pageSlug} />
+									<input name="aiModel" type="hidden" value={selectedModel} />
 									<input
-										type="hidden"
 										name="targetContentType"
+										type="hidden"
 										value={targetContentType}
 									/>
-									<Button type="submit" className="w-full">
+									<Button className="w-full" type="submit">
 										{isTranslating ? (
 											<Loader2 className="w-4 h-4 animate-spin" />
 										) : (
@@ -124,9 +124,9 @@ export function AddTranslateDialog({
 								</form>
 							) : (
 								<Button
-									type="button"
-									onClick={() => setIsApiKeyDialogOpen(true)}
 									className="w-full"
+									onClick={() => setIsApiKeyDialogOpen(true)}
+									type="button"
 								>
 									Set API Key
 								</Button>

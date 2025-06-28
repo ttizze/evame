@@ -69,10 +69,10 @@ export default async function UserPage({
 			<SortTabs defaultSort={sort} />
 			<DynamicPageList
 				handle={handle}
-				page={page}
 				locale={locale}
-				sort={sort}
+				page={page}
 				showPagination={true}
+				sort={sort}
 			/>
 			<FloatingControls />
 		</>

@@ -51,9 +51,9 @@ export function Editor({
 			{editor && <EditorFloatingMenu editor={editor} />}
 			<EditorContent editor={editor} />
 			<input
-				type="hidden"
 				name={name}
 				ref={editorRef}
+				type="hidden"
 				value={editor?.getHTML() ?? defaultValue ?? ""}
 			/>
 		</div>

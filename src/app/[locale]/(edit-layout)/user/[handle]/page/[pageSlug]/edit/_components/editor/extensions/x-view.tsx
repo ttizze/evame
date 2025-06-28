@@ -10,7 +10,7 @@ export default function XView({ node }: NodeViewProps) {
 	const { xId } = node.attrs as XAttrs;
 
 	return (
-		<NodeViewWrapper data-type="x" data-x-id={xId} className="not-prose">
+		<NodeViewWrapper className="not-prose" data-type="x" data-x-id={xId}>
 			{/* ② react‑tweet に ID を渡して描画 */}
 			<XPost id={xId} />
 		</NodeViewWrapper>

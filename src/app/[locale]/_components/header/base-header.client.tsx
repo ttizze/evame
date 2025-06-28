@@ -56,34 +56,34 @@ export function BaseHeader({
 				} max-w-3xl mx-auto py-2 md:py-4 px-2 md:px-6 lg:px-8 flex justify-between items-center`}
 			>
 				<div className="flex items-center gap-4">
-					<Link href="/" className="flex items-center">
+					<Link className="flex items-center" href="/">
 						{!currentUser ? (
 							<>
 								<Image
-									src="/favicon.svg"
 									alt="Evame"
-									width={32}
-									height={32}
-									className="h-8 w-8 dark:invert md:hidden"
 									aria-label="Evame Logo"
+									className="h-8 w-8 dark:invert md:hidden"
+									height={32}
+									src="/favicon.svg"
+									width={32}
 								/>
 								<Image
-									src="/logo.svg"
 									alt="Evame"
-									width={80}
-									height={32}
-									className="h-8 w-20 dark:invert hidden md:block"
 									aria-label="Evame Logo"
+									className="h-8 w-20 dark:invert hidden md:block"
+									height={32}
+									src="/logo.svg"
+									width={80}
 								/>
 							</>
 						) : (
 							<Image
-								src="/logo.svg"
 								alt="Evame"
-								width={80}
-								height={32}
-								className="h-8 w-20 dark:invert"
 								aria-label="Evame Logo"
+								className="h-8 w-20 dark:invert"
+								height={32}
+								src="/logo.svg"
+								width={80}
 							/>
 						)}
 					</Link>
@@ -104,8 +104,8 @@ export function BaseHeader({
 							<DropdownMenuContent className="m-2 p-0 rounded-xl min-w-40">
 								<DropdownMenuItem className="p-0">
 									<Link
-										href={`/user/${currentUser.handle}`}
 										className="opacity-100 w-full rounded-none px-4 py-3  cursor-pointer hover:bg-accent hover:text-accent-foreground"
+										href={`/user/${currentUser.handle}`}
 									>
 										<div className="flex flex-col items-start">
 											{currentUser.name}
@@ -117,15 +117,15 @@ export function BaseHeader({
 								</DropdownMenuItem>
 								<DropdownMenuSeparator className="my-0" />
 								<LocaleSelector
-									pageSlug={pageSlug}
 									currentHandle={currentUser.handle}
 									hasGeminiApiKey={hasGeminiApiKey}
 									localeSelectorClassName="w-[200px]"
+									pageSlug={pageSlug}
 								/>
 								<DropdownMenuItem className="p-0 ">
 									<Link
-										href={`/user/${currentUser.handle}/page-management`}
 										className="flex items-center opacity-100 w-full rounded-none gap-2 px-4 py-3 cursor-pointer hover:bg-accent hover:text-accent-foreground"
+										href={`/user/${currentUser.handle}/page-management`}
 									>
 										<BookOpenIcon className="w-4 h-4" />
 										Page Management
@@ -136,9 +136,9 @@ export function BaseHeader({
 								</DropdownMenuItem>
 								<DropdownMenuItem asChild>
 									<button
-										type="submit"
-										onClick={signOutAction}
 										className="w-full gap-2 flex rounded-none cursor-pointer items-center px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground text-red-500"
+										onClick={signOutAction}
+										type="submit"
 									>
 										<LogOutIcon className="w-4 h-4" />
 										Log out

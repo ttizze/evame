@@ -50,29 +50,29 @@ export function TagInput({
 	};
 
 	return (
-		<form ref={formRef} action={editAction}>
-			<input type="hidden" name="pageId" value={pageId ?? ""} />
+		<form action={editAction} ref={formRef}>
+			<input name="pageId" type="hidden" value={pageId ?? ""} />
 			<input
-				type="hidden"
-				name="tags"
-				value={JSON.stringify(tags)}
 				data-testid="tags-input"
+				name="tags"
+				type="hidden"
+				value={JSON.stringify(tags)}
 			/>
 
 			<div className="flex flex-wrap items-center gap-2 pt-2 pb-3">
 				{tags.map((tag) => (
 					<div
-						key={tag}
 						className={cn(
 							"flex items-center gap-1 px-3 h-[32px] bg-primary rounded-full text-sm text-primary-foreground",
 							isPending && "opacity-50 cursor-not-allowed",
 						)}
+						key={tag}
 					>
 						<button
-							type="button"
-							onClick={() => handleRemoveTag(tag)}
-							disabled={isPending}
 							className="hover:text-destructive ml-1"
+							disabled={isPending}
+							onClick={() => handleRemoveTag(tag)}
+							type="button"
 						>
 							<X className="w-3 h-3" />
 						</button>
@@ -81,32 +81,6 @@ export function TagInput({
 				))}
 				{tags.length < 5 && (
 					<CreatableSelect
-						instanceId="tags-input"
-						unstyled
-						isDisabled={isPending || !pageId}
-						placeholder="# Add tags"
-						isClearable
-						onChange={(newValue) => {
-							if (newValue?.value) {
-								handleCreateTag(newValue.value);
-							}
-						}}
-						options={allTagsWithCount
-							.filter((tag) => !tags.includes(tag.name))
-							.map((tag) => ({
-								value: tag.name,
-								label: `${tag.name} (${tag._count.pages})`,
-							}))}
-						value={null}
-						components={{
-							DropdownIndicator,
-							IndicatorSeparator,
-						}}
-						styles={{
-							control: () => ({
-								height: "32px",
-							}),
-						}}
 						classNames={{
 							control: () =>
 								cn(
@@ -124,6 +98,32 @@ export function TagInput({
 									state.isFocused && "bg-accent",
 								),
 						}}
+						components={{
+							DropdownIndicator,
+							IndicatorSeparator,
+						}}
+						instanceId="tags-input"
+						isClearable
+						isDisabled={isPending || !pageId}
+						onChange={(newValue) => {
+							if (newValue?.value) {
+								handleCreateTag(newValue.value);
+							}
+						}}
+						options={allTagsWithCount
+							.filter((tag) => !tags.includes(tag.name))
+							.map((tag) => ({
+								value: tag.name,
+								label: `${tag.name} (${tag._count.pages})`,
+							}))}
+						placeholder="# Add tags"
+						styles={{
+							control: () => ({
+								height: "32px",
+							}),
+						}}
+						unstyled
+						value={null}
 					/>
 				)}
 			</div>

@@ -43,12 +43,12 @@ const PROCESSING_TEXT = "Processing...";
 function SaveButton({ hasUnsavedChanges }: { hasUnsavedChanges: boolean }) {
 	return (
 		<Button
+			className="rounded-full hover:bg-secondary/80"
+			data-testid="save-button"
+			disabled={!hasUnsavedChanges}
+			size="sm"
 			type="submit"
 			variant="ghost"
-			size="sm"
-			className="rounded-full hover:bg-secondary/80"
-			disabled={!hasUnsavedChanges}
-			data-testid="save-button"
 		>
 			{hasUnsavedChanges ? (
 				<Loader2 className={ICON_SPIN_CLASSES} />
@@ -103,17 +103,17 @@ export function EditHeader({
 	const leftExtra = (
 		<>
 			<SaveButton hasUnsavedChanges={hasUnsavedChanges} />
-			<input type="hidden" name="status" value={initialStatus} />
+			<input name="status" type="hidden" value={initialStatus} />
 		</>
 	);
 	const rightExtra = (
 		<Popover>
 			<PopoverTrigger asChild>
 				<Button
-					variant={initialStatus === "PUBLIC" ? "default" : "secondary"}
-					size="sm"
 					className={BUTTON_BASE_CLASSES}
 					disabled={isPending || !pageId}
+					size="sm"
+					variant={initialStatus === "PUBLIC" ? "default" : "secondary"}
 				>
 					{statusIcon}
 					<span>
@@ -125,23 +125,23 @@ export function EditHeader({
 					</span>
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="w-56 rounded-xl py-1 px-3" align="end">
+			<PopoverContent align="end" className="w-56 rounded-xl py-1 px-3">
 				<div className="space-y-1">
 					<form action={action}>
-						<input type="hidden" name="pageId" value={pageId ?? ""} />
-						<input type="hidden" name="status" value="PUBLIC" />
+						<input name="pageId" type="hidden" value={pageId ?? ""} />
+						<input name="status" type="hidden" value="PUBLIC" />
 						<input
-							type="hidden"
 							name="targetLocales"
+							type="hidden"
 							value={locales.join(",")}
 						/>
 						<div className="flex justify-between items-center w-full">
 							<Button
-								type="submit"
-								variant="ghost"
 								className={MENU_BUTTON_CLASSES}
 								disabled={isPending}
 								onClick={() => setClickedStatus("PUBLIC")}
+								type="submit"
+								variant="ghost"
 							>
 								{isPending && clickedStatus === "PUBLIC" ? (
 									<Loader2 className={ICON_SPIN_CLASSES} />
@@ -159,24 +159,24 @@ export function EditHeader({
 							</Button>
 							{pageSlug && (
 								<LocaleMultiSelector
+									className="ml-2"
 									defaultValue={locales}
 									onChange={setLocales}
-									className="ml-2"
 								/>
 							)}
 						</div>
 					</form>
 				</div>
 				<form action={action}>
-					<input type="hidden" name="pageId" value={pageId ?? ""} />
+					<input name="pageId" type="hidden" value={pageId ?? ""} />
 					<Button
-						type="submit"
-						variant="ghost"
 						className={MENU_BUTTON_CLASSES}
 						disabled={initialStatus === "DRAFT" || isPending}
 						onClick={() => setClickedStatus("DRAFT")}
+						type="submit"
+						variant="ghost"
 					>
-						<input type="hidden" name="status" value="DRAFT" />
+						<input name="status" type="hidden" value="DRAFT" />
 						{isPending && clickedStatus === "DRAFT" ? (
 							<Loader2 className={ICON_SPIN_CLASSES} />
 						) : (
@@ -195,7 +195,7 @@ export function EditHeader({
 					<p className="text-sm text-red-500">{state.zodErrors.pageId}</p>
 				)}
 				<Separator />
-				<Button variant="ghost" className={MENU_BUTTON_CLASSES} asChild>
+				<Button asChild className={MENU_BUTTON_CLASSES} variant="ghost">
 					<Link href={pagePath}>
 						<LinkIcon className={ICON_CLASSES} />
 						<span>Preview</span>

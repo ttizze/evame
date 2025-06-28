@@ -39,19 +39,19 @@ export default async function NewPageList({
 	);
 
 	return (
-		<PageListContainer title="New Pages" icon={SparklesIcon}>
+		<PageListContainer icon={SparklesIcon} title="New Pages">
 			{pageSummaries.map((pageSummary, index) => (
 				<PageList
-					key={pageSummary.id}
-					pageSummary={pageSummary}
-					index={index}
-					locale={locale}
 					currentUserHandle={currentUserHandle}
+					index={index}
+					key={pageSummary.id}
+					locale={locale}
+					pageSummary={pageSummary}
 				/>
 			))}
 			{showPagination && totalPages > 1 && (
 				<div className="mt-8 flex justify-center">
-					<PaginationBar totalPages={totalPages} currentPage={page} />
+					<PaginationBar currentPage={page} totalPages={totalPages} />
 				</div>
 			)}
 		</PageListContainer>

@@ -36,22 +36,22 @@ export function GeminiApiKeyDialog({
 		}
 	}, [state.success, state.message, onOpenChange]);
 	return (
-		<Dialog open={isOpen} onOpenChange={onOpenChange}>
+		<Dialog onOpenChange={onOpenChange} open={isOpen}>
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle className="text-center">Set Gemini API Key</DialogTitle>
 				</DialogHeader>
 				<div className="text-center mb-4">
 					<a
-						href="https://aistudio.google.com/app/apikey"
-						target="_blank"
-						rel="noopener noreferrer"
 						className="inline-flex items-center gap-2 transition-colors underline hover:text-blue-500"
+						href="https://aistudio.google.com/app/apikey"
+						rel="noopener noreferrer"
+						target="_blank"
 					>
 						<Button
-							variant="default"
-							size="sm"
 							className="gap-2 shadow-md hover:shadow-lg transition-shadow"
+							size="sm"
+							variant="default"
 						>
 							<span className="">Get API Key at Google AI Studio</span>
 							<ExternalLink className="w-4 h-4" />
@@ -61,13 +61,13 @@ export function GeminiApiKeyDialog({
 				<form action={formAction}>
 					<div className="flex items-center space-x-2">
 						<Input
-							type="password"
-							name="geminiApiKey"
-							required
 							className="grow"
+							name="geminiApiKey"
 							placeholder="Enter your Gemini API Key"
+							required
+							type="password"
 						/>
-						<Button type="submit" disabled={isPending}>
+						<Button disabled={isPending} type="submit">
 							{isPending ? (
 								<Loader2 className="w-4 h-4 animate-spin" />
 							) : (

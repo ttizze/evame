@@ -33,32 +33,32 @@ export const VoteButtons = memo(function VoteButtons({
 		<span className="flex h-full justify-end items-center">
 			<Form action={voteAction}>
 				<input
-					type="hidden"
 					name="targetContentType"
+					type="hidden"
 					value={targetContentType}
 				/>
 				<input
-					type="hidden"
 					name="segmentTranslationId"
+					type="hidden"
 					value={translation.id}
 				/>
 				<span className="flex h-8">
 					<VoteButton
-						type="upvote"
 						isActive={
 							voteState.success ? voteState.data?.isUpvote === true : false
 						}
 						isVoting={isVoting}
+						type="upvote"
 						voteCount={voteState.success ? voteState.data?.point : 0}
 					>
 						{({ iconClass }) => <ThumbsUp className={iconClass} />}
 					</VoteButton>
 					<VoteButton
-						type="downvote"
 						isActive={
 							voteState.success ? voteState.data?.isUpvote === false : false
 						}
 						isVoting={isVoting}
+						type="downvote"
 					>
 						{({ iconClass }) => <ThumbsDown className={iconClass} />}
 					</VoteButton>

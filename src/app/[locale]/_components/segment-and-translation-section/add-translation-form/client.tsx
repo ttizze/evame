@@ -30,20 +30,20 @@ export function AddTranslationForm({
 		<span className="mt-4 px-4 block">
 			<form action={addTranslationAction}>
 				<input
-					type="hidden"
 					name="targetContentType"
+					type="hidden"
 					value={targetContentType}
 				/>
-				<input type="hidden" name="segmentId" value={segmentId} />
-				<input type="hidden" name="locale" value={locale} />
+				<input name="segmentId" type="hidden" value={segmentId} />
+				<input name="locale" type="hidden" value={locale} />
 				<span className="relative">
 					<TextareaAutosize
-						name="text"
-						required
 						className={`w-full mb-2 rounded-xl p-2 text-base! border border-gray-500 bg-background resize-none overflow-hidden ${!currentHandle && "bg-muted"}`}
-						placeholder="Or enter your translation..."
 						disabled={!currentHandle}
 						minRows={3}
+						name="text"
+						placeholder="Or enter your translation..."
+						required
 					/>
 					{!currentHandle && (
 						<StartButton className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
@@ -57,9 +57,9 @@ export function AddTranslationForm({
 							</p>
 						)}
 					<Button
-						type="submit"
 						className="rounded-xl"
 						disabled={isAddingTranslation || !currentHandle}
+						type="submit"
 					>
 						<ArrowUpFromLine className="h-4 w-4" />
 						Submit

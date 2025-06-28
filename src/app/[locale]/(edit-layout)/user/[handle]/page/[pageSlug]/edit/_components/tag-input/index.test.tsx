@@ -24,8 +24,8 @@ describe("TagInput", () => {
 	it("should update tags immediately when creating a new tag", async () => {
 		render(
 			<TagInput
-				initialTags={mockInitialTags}
 				allTagsWithCount={mockAllTagsWithCount}
+				initialTags={mockInitialTags}
 				pageId={mockPageId}
 			/>,
 		);
@@ -51,6 +51,7 @@ describe("TagInput", () => {
 	it("should not allow more than 5 tags", async () => {
 		render(
 			<TagInput
+				allTagsWithCount={mockAllTagsWithCount}
 				initialTags={[
 					{ id: 1, name: "tag1" },
 					{ id: 2, name: "tag2" },
@@ -58,7 +59,6 @@ describe("TagInput", () => {
 					{ id: 4, name: "tag4" },
 					{ id: 5, name: "tag5" },
 				]}
-				allTagsWithCount={mockAllTagsWithCount}
 				pageId={mockPageId}
 			/>,
 		);
@@ -71,8 +71,8 @@ describe("TagInput", () => {
 	it("should remove tag when clicking remove button", async () => {
 		render(
 			<TagInput
-				initialTags={mockInitialTags}
 				allTagsWithCount={mockAllTagsWithCount}
+				initialTags={mockInitialTags}
 				pageId={mockPageId}
 			/>,
 		);
@@ -90,8 +90,8 @@ describe("TagInput", () => {
 	it("should send correct tags to action when creating a new tag", async () => {
 		render(
 			<TagInput
-				initialTags={mockInitialTags}
 				allTagsWithCount={mockAllTagsWithCount}
+				initialTags={mockInitialTags}
 				pageId={mockPageId}
 			/>,
 		);

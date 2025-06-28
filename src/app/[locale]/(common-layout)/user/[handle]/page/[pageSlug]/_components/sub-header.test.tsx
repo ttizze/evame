@@ -26,11 +26,11 @@ vi.mock("./toc", () => ({
 	__esModule: true,
 	default: ({ onItemClick }: TocProps) => (
 		<button
-			type="button"
 			data-testid="toc"
 			onClick={onItemClick}
-			onKeyUp={onItemClick}
 			onKeyDown={onItemClick}
+			onKeyUp={onItemClick}
+			type="button"
 		>
 			Table of Contents
 		</button>

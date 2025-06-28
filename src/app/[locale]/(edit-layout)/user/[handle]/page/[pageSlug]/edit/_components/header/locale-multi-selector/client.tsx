@@ -82,16 +82,16 @@ export function LocaleMultiSelector({
 	};
 
 	return (
-		<Popover open={open} onOpenChange={setOpen}>
+		<Popover onOpenChange={setOpen} open={open}>
 			<PopoverTrigger asChild>
 				<Button
-					variant="ghost"
-					size="sm"
+					aria-label="Select translation languages"
 					className={cn(
 						"h-8 px-3 flex items-center gap-1 rounded-full hover:bg-secondary/80",
 						className,
 					)}
-					aria-label="Select translation languages"
+					size="sm"
+					variant="outline"
 				>
 					<LanguagesIcon className="w-4 h-4" />
 					{count > 0 && (
@@ -102,23 +102,24 @@ export function LocaleMultiSelector({
 					<ChevronDown className="w-4 h-4" />
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="p-2 w-[300px] space-y-2" align="end">
+			<PopoverContent align="end" className="p-2 w-[300px] space-y-2">
 				<Select
-					isMulti
-					unstyled
-					isOptionDisabled={isOptionDisabled}
-					options={options}
-					value={selectedOptions}
-					onChange={handleChange}
-					placeholder="Select locales"
 					classNamePrefix="rs"
+					classNames={selectClassNames}
+					isMulti
+					isOptionDisabled={isOptionDisabled}
 					menuPortalTarget={
 						typeof window !== "undefined" ? document.body : undefined
 					}
-					classNames={selectClassNames}
+					onChange={handleChange}
+					options={options}
+					placeholder="Select locales (max 2)"
 					styles={selectStyles}
+					unstyled
+					value={selectedOptions}
 				/>
-				<Button size="sm" className="w-full" onClick={() => setOpen(false)}>
+				<p className="text-xs text-center">Up to 2 locales</p>
+				<Button className="w-full" onClick={() => setOpen(false)} size="sm">
 					Done
 				</Button>
 			</PopoverContent>

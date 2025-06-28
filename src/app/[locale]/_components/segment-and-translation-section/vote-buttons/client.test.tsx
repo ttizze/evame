@@ -47,8 +47,8 @@ describe("VoteButtons コンポーネント", () => {
 
 		render(
 			<VoteButtons
-				translation={dummyTranslationUpvote}
 				targetContentType={dummyVoteTarget}
+				translation={dummyTranslationUpvote}
 			/>,
 		);
 
@@ -76,8 +76,8 @@ describe("VoteButtons コンポーネント", () => {
 
 		render(
 			<VoteButtons
-				translation={dummyTranslationUpvote}
 				targetContentType={dummyVoteTarget}
+				translation={dummyTranslationUpvote}
 			/>,
 		);
 
@@ -103,8 +103,8 @@ describe("VoteButtons コンポーネント", () => {
 
 		render(
 			<VoteButtons
-				translation={dummyTranslationDownvote}
 				targetContentType={dummyVoteTarget}
+				translation={dummyTranslationDownvote}
 			/>,
 		);
 
@@ -131,8 +131,8 @@ describe("VoteButtons コンポーネント", () => {
 
 		render(
 			<VoteButtons
-				translation={dummyTranslationUpvote}
 				targetContentType={dummyVoteTarget}
+				translation={dummyTranslationUpvote}
 			/>,
 		);
 

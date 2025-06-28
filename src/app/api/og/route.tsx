@@ -50,17 +50,17 @@ export async function GET(req: Request): Promise<Response> {
 					<div tw="flex items-center">
 						{/* biome-ignore lint/performance/noImgElement: <> */}
 						<img
-							tw="w-24 h-24 rounded-full mr-4"
-							src={pageOwner?.image}
 							alt={pageOwner?.name}
+							src={pageOwner?.image}
+							tw="w-24 h-24 rounded-full mr-4"
 						/>
 						<p tw="text-6xl ">{pageOwner?.name}</p>
 					</div>
 					{/* 右端にロゴ */}
 					{/* biome-ignore lint/performance/noImgElement: <> */}
 					<img
-						src={logoSrc}
 						alt="logo"
+						src={logoSrc}
 						style={{
 							width: "200px",
 						}}

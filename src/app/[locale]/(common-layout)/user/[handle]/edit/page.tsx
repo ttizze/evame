@@ -38,17 +38,17 @@ export default async function UserEditPage({
 
 	return (
 		<div className="">
-			<Tabs defaultValue="profile" className="w-full">
+			<Tabs className="w-full" defaultValue="profile">
 				<TabsList className="mb-4 w-full flex rounded-full">
 					<TabsTrigger
-						value="profile"
 						className="flex-1 items-center justify-center rounded-full text-sm"
+						value="profile"
 					>
 						Profile
 					</TabsTrigger>
 					<TabsTrigger
-						value="settings"
 						className="flex-1 items-center justify-center rounded-full text-sm"
+						value="settings"
 					>
 						Settings
 					</TabsTrigger>

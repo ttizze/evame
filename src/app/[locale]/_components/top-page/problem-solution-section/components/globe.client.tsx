@@ -107,8 +107,8 @@ export default function Globe() {
 		<div className="flex justify-center items-center">
 			{/* モバイルは 280px、md 以上で 450px まで広げる */}
 			<canvas
-				ref={canvasRef}
 				className="w-[280px] h-[280px] md:w-[450px] md:h-[450px]"
+				ref={canvasRef}
 				style={{ aspectRatio: "1" }}
 			/>
 		</div>

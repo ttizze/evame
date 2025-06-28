@@ -31,34 +31,34 @@ export function TranslationSection({
 	return (
 		<span className={"group relative"}>
 			<button
-				type="button"
 				className="notranslate inline-block py-2 text-gray-700 dark:text-gray-200"
 				onMouseUp={(e) => {
 					if (window.getSelection()?.toString()) return;
 					if (e.button === 2) return;
 					setIsSelected((prev) => !prev);
 				}}
+				type="button"
 			>
 				{sanitizedAndParsedText}
 			</button>
 			{isSelected && interactive && (
 				<>
 					<span className="flex items-center justify-end gap-2">
-						<Link href={`/user/${best.user.handle}`} className="no-underline!">
+						<Link className="no-underline!" href={`/user/${best.user.handle}`}>
 							<span className="text-sm text-gray-500 text-right flex  items-center">
 								by: {best.user.name}
 							</span>
 						</Link>
 						<VoteButtons
 							key={best.id}
-							translation={best}
 							targetContentType={segmentBundle.parentType}
+							translation={best}
 						/>
 					</span>
 					<AddAndVoteTranslations
 						currentHandle={currentHandle}
-						segmentBundle={segmentBundle}
 						open={isSelected}
+						segmentBundle={segmentBundle}
 					/>
 				</>
 			)}

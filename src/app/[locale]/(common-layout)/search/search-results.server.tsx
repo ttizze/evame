@@ -47,7 +47,7 @@ export function SearchResults({
 					pageSummaries.length > 0 && (
 						<div className="space-y-4">
 							{pageSummaries.map((p) => (
-								<PageList key={p.id} pageSummary={p} locale={locale} />
+								<PageList key={p.id} locale={locale} pageSummary={p} />
 							))}
 						</div>
 					)}
@@ -55,7 +55,7 @@ export function SearchResults({
 				{currentCategory === "user" && users?.length && users.length > 0 && (
 					<div className="space-y-4">
 						{users.map((usr) => (
-							<div key={usr.handle} className="flex items-start p-4 rounded-lg">
+							<div className="flex items-start p-4 rounded-lg" key={usr.handle}>
 								<div className="flex-1">
 									<a href={`/user/${usr.handle}`}>
 										<h3 className="text-xl font-bold">{usr.name}</h3>
@@ -72,14 +72,14 @@ export function SearchResults({
 					pageSummaries.length > 0 && (
 						<div className="space-y-4">
 							{pageSummaries.map((p) => (
-								<PageList key={p.id} pageSummary={p} locale={locale} />
+								<PageList key={p.id} locale={locale} pageSummary={p} />
 							))}
 						</div>
 					)}
 			</div>
 			{totalPages > 1 && (
 				<div className="mt-4 flex items-center gap-4">
-					<PaginationBar totalPages={totalPages} currentPage={currentPage} />
+					<PaginationBar currentPage={currentPage} totalPages={totalPages} />
 				</div>
 			)}
 		</div>

@@ -23,9 +23,9 @@ export async function PageCommentList({
 			{pageCommentsWithUserAndTranslations.map((pageComment) => {
 				return (
 					<PageCommentItem
+						currentHandle={currentUser?.handle}
 						key={pageComment.id}
 						pageComment={pageComment}
-						currentHandle={currentUser?.handle}
 						userLocale={userLocale}
 					/>
 				);

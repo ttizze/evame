@@ -123,7 +123,7 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 				interactive: true,
 			}}
 		>
-			<div ref={containerRef} className="flex items-center">
+			<div className="flex items-center" ref={containerRef}>
 				<TooltipProvider>
 					<div className="flex items-center">
 						<DropdownMenuPrimitive.Root modal={false}>
@@ -140,17 +140,17 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 							</DropdownMenuPrimitive.Trigger>
 							<DropdownMenuPrimitive.Portal container={containerRef.current}>
 								<DropdownMenuPrimitive.Content
+									align="start"
 									className="p-2 z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-0 data-[side=top]:slide-in-from-bottom-2"
 									side="bottom"
-									align="start"
 									sideOffset={6}
 								>
 									<DropdownMenuPrimitive.Item
-										onSelect={() => editorCommands.regularText(editor)}
 										className={cn(
 											"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
 											!editor.isActive("heading") && "bg-secondary",
 										)}
+										onSelect={() => editorCommands.regularText(editor)}
 									>
 										<Type className="h-5 w-5 mr-2" />
 										<span>Regular text</span>
@@ -159,13 +159,13 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 										const Icon = headingIcons[level];
 										return (
 											<DropdownMenuPrimitive.Item
-												key={level}
-												onSelect={() => editorCommands[`h${level}`](editor)}
 												className={cn(
 													"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
 													editor.isActive("heading", { level }) &&
 														"bg-secondary",
 												)}
+												key={level}
+												onSelect={() => editorCommands[`h${level}`](editor)}
 											>
 												<Icon className="h-5 w-5 mr-2" />
 												<span>Heading {level}</span>
@@ -179,12 +179,12 @@ export function EditorBubbleMenu({ editor }: EditorBubbleMenuProps) {
 							<Tooltip key={value}>
 								<TooltipTrigger asChild>
 									<button
-										type="button"
-										onClick={() => editorCommands[value](editor)}
 										className={cn(
 											"rounded-md inline-flex h-8 w-8 mx-0.5 items-center justify-center text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 											isActive() && "bg-secondary text-foreground",
 										)}
+										onClick={() => editorCommands[value](editor)}
+										type="button"
 									>
 										<Icon className="h-5 w-5" />
 									</button>
@@ -225,14 +225,14 @@ function LinkPopover({ editor }: { editor: TiptapEditor }) {
 	};
 
 	return (
-		<Popover open={isOpen} onOpenChange={onOpenChange}>
+		<Popover onOpenChange={onOpenChange} open={isOpen}>
 			<PopoverTrigger asChild>
 				<button
-					type="button"
 					className={cn(
 						"rounded-md inline-flex h-8 w-8 mx-0.5 items-center justify-center text-sm text-muted-foreground  transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 						editor.isActive("link") && "bg-secondary text-foreground",
 					)}
+					type="button"
 				>
 					<LinkIcon className="h-5 w-5" />
 				</button>
@@ -240,16 +240,16 @@ function LinkPopover({ editor }: { editor: TiptapEditor }) {
 			<PopoverContent className="p-4 bg-background border rounded-xl shadow-lg">
 				<div className="flex space-x-2">
 					<Input
-						type="text"
-						placeholder="URL"
 						className="px-2 py-1 border rounded-md "
-						value={url}
 						onChange={(e) => setUrl(e.target.value)}
+						placeholder="URL"
+						type="text"
+						value={url}
 					/>
 					<Button
-						type="button"
-						onClick={applyLink}
 						className="px-3 py-1rounded-md hover:bg-primary-dark"
+						onClick={applyLink}
+						type="button"
 					>
 						<ArrowUpFromLineIcon className="h-5 w-5" />
 					</Button>

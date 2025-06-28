@@ -28,7 +28,7 @@ export function FollowListDialog({
 	users,
 }: FollowListDialogProps) {
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
+		<Dialog onOpenChange={onOpenChange} open={open}>
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>
@@ -41,7 +41,7 @@ export function FollowListDialog({
 						<ul className="space-y-2">
 							{users.map((user) => (
 								<li key={user.handle}>
-									<Link href={`/user/${user.handle}`} className="underline">
+									<Link className="underline" href={`/user/${user.handle}`}>
 										{user.name} (@{user.handle})
 									</Link>
 								</li>

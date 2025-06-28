@@ -52,10 +52,10 @@ export function SegmentAndTranslationSection({
 			{/* 訳を表示するのは source 以外（user / both）のとき */}
 			{effectiveMode !== "source" && hasTranslation && (
 				<TranslationSection
-					key={`translation-${segmentBundle.segment.id}`}
-					segmentBundle={segmentBundle}
 					currentHandle={currentHandle}
 					interactive={interactive}
+					key={`translation-${segmentBundle.segment.id}`}
+					segmentBundle={segmentBundle}
 				/>
 			)}
 		</span>

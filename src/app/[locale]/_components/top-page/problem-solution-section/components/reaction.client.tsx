@@ -141,7 +141,7 @@ const ReactionItem = ({ reaction }: { reaction: Reaction }) => {
 	return (
 		<div className="flex items-center gap-2 bg-white/90 dark:bg-gray-800/90 rounded-full px-3 py-2 shadow-md">
 			<Avatar className="w-8 h-8">
-				<AvatarImage src={reaction.user.image} alt={reaction.user.name} />
+				<AvatarImage alt={reaction.user.name} src={reaction.user.image} />
 				<AvatarFallback>
 					{reaction.user.name.charAt(0).toUpperCase()}
 				</AvatarFallback>
@@ -208,8 +208,8 @@ export default function Reactions({ className = "" }: ReactionsProps) {
 		<div className={`relative w-full h-64 overflow-hidden ${className}`}>
 			{displayedReactions.map((reaction) => (
 				<div
-					key={reaction.id}
 					className="absolute"
+					key={reaction.id}
 					style={{
 						left: `${reaction.left}%`,
 						top: `${reaction.top}%`,

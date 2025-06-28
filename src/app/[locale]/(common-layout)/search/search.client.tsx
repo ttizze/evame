@@ -59,32 +59,32 @@ export function SearchPageClient() {
 	return (
 		<div className="">
 			<Form action="/search" className="mb-6">
-				<input type="hidden" name="category" value={currentCategory ?? ""} />
+				<input name="category" type="hidden" value={currentCategory ?? ""} />
 				<div className="relative">
 					<Input
-						type="search"
+						className="w-full px-4 py-3 rounded-full border"
 						name="query"
-						required
-						value={query ?? ""}
 						onChange={(e) => setQuery(e.target.value)}
 						placeholder="Search..."
-						className="w-full px-4 py-3 rounded-full border"
+						required
+						type="search"
+						value={query ?? ""}
 					/>
 				</div>
 			</Form>
 
 			<Tabs
-				value={currentCategory ?? ""}
 				onValueChange={(val) => {
 					handleTabChange(val as Category);
 				}}
+				value={currentCategory ?? ""}
 			>
 				<TabsList className="mb-6 border-b w-full flex rounded-full">
 					{CATEGORIES.map((cat) => (
 						<TabsTrigger
+							className="flex-1 items-center justify-center rounded-full text-sm"
 							key={cat}
 							value={cat}
-							className="flex-1 items-center justify-center rounded-full text-sm"
 						>
 							{renderIcon(cat)}
 							{cat.charAt(0).toUpperCase() + cat.slice(1)}

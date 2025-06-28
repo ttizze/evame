@@ -23,13 +23,13 @@ export function VoteButton({
 
 	return (
 		<Button
-			type="submit"
+			data-testid={testId}
+			disabled={isVoting}
 			name="isUpvote"
+			size="sm"
+			type="submit"
 			value={type === "upvote" ? "true" : "false"}
 			variant="ghost"
-			size="sm"
-			disabled={isVoting}
-			data-testid={testId}
 		>
 			{children({ iconClass })}
 			{type === "upvote" && voteCount !== undefined && voteCount}

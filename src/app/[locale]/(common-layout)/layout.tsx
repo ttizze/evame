@@ -28,7 +28,7 @@ export default async function CommonLayout({
 	return (
 		<>
 			<NextIntlClientProvider messages={messages}>
-				<DisplayProvider userLocale={locale} initialSourceLocale="mixed">
+				<DisplayProvider initialSourceLocale="mixed" userLocale={locale}>
 					<Header />
 					<main className="mb-5 mt-3 md:mt-5 grow tracking-wider">
 						<div className="container mx-auto px-4 max-w-4xl">{children}</div>

@@ -44,26 +44,26 @@ export function PageActionsDropdown({
 		<DropdownMenu modal={false}>
 			<DropdownMenuTrigger asChild>
 				<Button
-					variant="ghost"
-					className={`h-8 w-6 p-0 ${className}`}
 					aria-label="More options"
+					className={`h-8 w-6 p-0 ${className}`}
+					variant="ghost"
 				>
 					<MoreVertical className="h-4 w-4" />
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				<DropdownMenuItem asChild className="w-full text-left cursor-pointer">
-					<Link href={editPath} className="w-full text-left">
+					<Link className="w-full text-left" href={editPath}>
 						Edit
 					</Link>
 				</DropdownMenuItem>
 				<DropdownMenuItem className="w-full text-left cursor-pointer">
 					<form action={publishAction}>
-						<input type="hidden" name="pageId" value={pageId} />
+						<input name="pageId" type="hidden" value={pageId} />
 						<button
-							type="submit"
-							disabled={isPublishing}
 							className="w-full text-left"
+							disabled={isPublishing}
+							type="submit"
 						>
 							{status === "PUBLIC" ? "Make Private" : "Make Public"}
 						</button>
@@ -71,19 +71,19 @@ export function PageActionsDropdown({
 				</DropdownMenuItem>
 				<DropdownMenuItem>
 					<button
-						type="button"
 						className="text-red-500 w-full text-left"
 						onClick={() => {
 							setDeleteDialogOpen(true);
 						}}
+						type="button"
 					>
 						Delete
 					</button>
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 			<DeletePageDialog
-				open={deleteDialogOpen}
 				onOpenChange={setDeleteDialogOpen}
+				open={deleteDialogOpen}
 				pageId={pageId}
 			/>
 		</DropdownMenu>

@@ -39,9 +39,9 @@ export default async function Layout({
 			: "";
 	return (
 		<html
+			className={`${inter.className} ${bizUDPGothic.variable}`}
 			lang={resolvedParams.locale}
 			suppressHydrationWarning
-			className={`${inter.className} ${bizUDPGothic.variable}`}
 		>
 			<body className="transition-colors duration-300 antialiased">
 				{gaTrackingId && <GoogleAnalytics gaId={gaTrackingId} />}
@@ -49,7 +49,7 @@ export default async function Layout({
 				<NuqsAdapter>
 					<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 						<SessionProvider>{children}</SessionProvider>
-						<Toaster richColors closeButton />
+						<Toaster closeButton richColors />
 					</ThemeProvider>
 				</NuqsAdapter>
 			</body>

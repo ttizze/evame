@@ -88,15 +88,15 @@ export function EditPageClient({
 	return (
 		<div
 			className={`overflow-y-scroll overflow-x-hidden flex flex-col ${isKeyboardVisible ? "overscroll-y-contain" : null}`}
+			id="root"
 			style={{
 				height: "calc(100 * var(--svh, 1svh))",
 			}}
-			id="root"
 		>
 			<EditHeader
 				currentUser={currentUser}
-				initialStatus={pageWithTitleAndTags?.status || "DRAFT"}
 				hasUnsavedChanges={hasUnsavedChanges}
+				initialStatus={pageWithTitleAndTags?.status || "DRAFT"}
 				pageId={pageWithTitleAndTags?.id}
 				targetLocales={targetLocales}
 			/>
@@ -108,15 +108,15 @@ export function EditPageClient({
 					<div className="">
 						<h1 className="m-0! ">
 							<TextareaAutosize
-								value={title}
+								className="w-full outline-hidden bg-transparent resize-none overflow-hidden"
+								data-testid="title-input"
+								maxRows={10}
+								minRows={1}
+								name="title"
 								onChange={handleTitleChange}
 								onKeyDown={handleTitleKeyDown}
-								name="title"
 								placeholder="Title"
-								className="w-full outline-hidden bg-transparent resize-none overflow-hidden"
-								minRows={1}
-								maxRows={10}
-								data-testid="title-input"
+								value={title}
 							/>
 						</h1>
 						{!editState.success && editState.zodErrors?.title && (
@@ -125,31 +125,31 @@ export function EditPageClient({
 							</p>
 						)}
 						<TagInput
+							allTagsWithCount={allTagsWithCount}
 							initialTags={
 								pageWithTitleAndTags?.tagPages.map((tagPage) => ({
 									id: tagPage.tagId,
 									name: tagPage.tag.name,
 								})) || []
 							}
-							allTagsWithCount={allTagsWithCount}
 							pageId={pageWithTitleAndTags?.id}
 						/>
 					</div>
 					<form action={editAction} ref={formRef}>
-						<input type="hidden" name="pageSlug" value={pageSlug} />
+						<input name="pageSlug" type="hidden" value={pageSlug} />
 						<input
-							type="hidden"
 							name="pageId"
+							type="hidden"
 							value={pageWithTitleAndTags?.id ?? ""}
 						/>
-						<input type="hidden" name="title" value={title} />
-						<input type="hidden" name="userLocale" value={userLocale} />
+						<input name="title" type="hidden" value={title} />
+						<input name="userLocale" type="hidden" value={userLocale} />
 						<Editor
+							className="outline-hidden"
 							defaultValue={html}
 							name="pageContent"
-							onEditorUpdate={handleChange}
 							onEditorCreate={setEditorInstance}
-							className="outline-hidden"
+							onEditorUpdate={handleChange}
 							placeholder="Write to the world..."
 						/>
 					</form>

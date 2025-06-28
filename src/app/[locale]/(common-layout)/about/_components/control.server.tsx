@@ -28,11 +28,11 @@ export default async function Control({ locale }: { locale: string }) {
 		<DynamicFloatingControls
 			likeButton={
 				<DynamicPageLikeButton
+					className="w-10 h-10 border rounded-full"
+					ownerHandle={pageWithTranslations.user.handle}
 					pageId={pageWithTranslations.id}
 					pageSlug={pageWithTranslations.slug}
-					ownerHandle={pageWithTranslations.user.handle}
 					showCount={false}
-					className="w-10 h-10 border rounded-full"
 				/>
 			}
 		/>

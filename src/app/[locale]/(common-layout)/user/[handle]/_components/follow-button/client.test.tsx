@@ -14,12 +14,12 @@ describe("FollowButton", () => {
 	});
 
 	it("displays 'Follow' when isFollowing is false", () => {
-		render(<FollowButtonClient targetUserId="2" isFollowing={false} />);
+		render(<FollowButtonClient isFollowing={false} targetUserId="2" />);
 		expect(screen.getByRole("button", { name: "Follow" })).toBeInTheDocument();
 	});
 
 	it("displays 'Following' when isFollowing is true", () => {
-		render(<FollowButtonClient targetUserId="2" isFollowing={true} />);
+		render(<FollowButtonClient isFollowing={true} targetUserId="2" />);
 		expect(
 			screen.getByRole("button", { name: "Following" }),
 		).toBeInTheDocument();

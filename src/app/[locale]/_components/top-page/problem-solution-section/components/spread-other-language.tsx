@@ -66,14 +66,14 @@ export function SpreadOtherLanguage() {
 
 				return (
 					<motion.div
-						key={lang.code}
-						className="absolute flex flex-col items-center"
-						initial={{ x, y, scale: 0, opacity: 0 }}
 						animate={
 							animate
 								? { x, y, scale: 1, opacity: 1 }
 								: { scale: 0, opacity: 0 }
 						}
+						className="absolute flex flex-col items-center"
+						initial={{ x, y, scale: 0, opacity: 0 }}
+						key={lang.code}
 						transition={{
 							duration: 0.7,
 							delay: i * 0.08,
@@ -85,11 +85,11 @@ export function SpreadOtherLanguage() {
 							className="z-10 flex items-center justify-center w-12 h-12 rounded-full border"
 							whileHover={{ scale: 1.1 }}
 						>
-							<span className="text-2xl" role="img" aria-label={lang.name}>
+							<span aria-label={lang.name} className="text-2xl" role="img">
 								{lang.flag}
 							</span>
 						</motion.div>
-						<Badge variant="secondary" className="mt-2">
+						<Badge className="mt-2" variant="secondary">
 							{lang.name}
 						</Badge>
 					</motion.div>
@@ -114,7 +114,11 @@ export function SpreadOtherLanguage() {
 			{/* パルス円 */}
 			{ringSizes.map((size, idx) => (
 				<motion.div
-					key={size}
+					animate={
+						animate
+							? { width: size, height: size, opacity: 0, borderWidth: 0.5 }
+							: { width: size * 0.15, height: size * 0.15, opacity: 0.8 }
+					}
 					className={`absolute rounded-full border-2 ${
 						idx === 0
 							? "border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.45)]"
@@ -123,11 +127,7 @@ export function SpreadOtherLanguage() {
 								: "border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.45)]"
 					}`}
 					initial={{ width: size * 0.25, height: size * 0.25, opacity: 0.8 }}
-					animate={
-						animate
-							? { width: size, height: size, opacity: 0, borderWidth: 0.5 }
-							: { width: size * 0.15, height: size * 0.15, opacity: 0.8 }
-					}
+					key={size}
 					transition={{
 						duration: 2,
 						delay: idx * 0.25,

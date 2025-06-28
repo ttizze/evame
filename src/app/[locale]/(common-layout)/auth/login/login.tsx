@@ -35,7 +35,7 @@ export function Login() {
 						Login to Evame
 						<CardDescription className="mt-2 flex flex-col items-center">
 							Evame is multilingual blog platform.
-							<Link href="/about" className="underline">
+							<Link className="underline" href="/about">
 								Learn more
 							</Link>
 						</CardDescription>
@@ -52,10 +52,10 @@ export function Login() {
 							<div className="space-y-2">
 								<Label>Email</Label>
 								<Input
-									type="email"
-									name="email"
 									autoComplete="email"
 									className="rounded-lg"
+									name="email"
+									type="email"
 								/>
 								{!state.success && state.zodErrors?.email && (
 									<p className="text-sm text-red-500">
@@ -63,7 +63,7 @@ export function Login() {
 									</p>
 								)}
 							</div>
-							<Button disabled={isPending} className="w-full rounded-full">
+							<Button className="w-full rounded-full" disabled={isPending}>
 								Send Email
 							</Button>
 						</div>
@@ -81,11 +81,11 @@ export function Login() {
 					</form>
 					<div className="text-center text-sm text-gray-500 my-2">
 						Login means you agree to our{" "}
-						<Link href="/terms" className="underline">
+						<Link className="underline" href="/terms">
 							Terms of Service
 						</Link>{" "}
 						and{" "}
-						<Link href="/privacy" className="underline">
+						<Link className="underline" href="/privacy">
 							Privacy Policy
 						</Link>
 					</div>

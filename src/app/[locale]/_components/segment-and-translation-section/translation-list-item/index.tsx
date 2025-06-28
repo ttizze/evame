@@ -41,21 +41,21 @@ export function TranslationListItem({
 				{isOwner && (
 					<DropdownMenu modal={false}>
 						<DropdownMenuTrigger asChild>
-							<Button type="button" variant="ghost" className="h-8 w-8 p-0 ">
+							<Button className="h-8 w-8 p-0 " type="button" variant="ghost">
 								<EllipsisVertical className="h-6 w-6 text-gray-400" />
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end">
 							<form action={action}>
 								<input
-									type="hidden"
 									name="translationId"
+									type="hidden"
 									value={translation.id}
 								/>
 								<button
-									type="submit"
 									className="w-full text-left"
 									disabled={isDeletingTranslation}
+									type="submit"
 								>
 									Delete
 								</button>
@@ -66,16 +66,16 @@ export function TranslationListItem({
 			</span>
 			<span className="flex items-center justify-end">
 				<Link
-					href={`/user/${translation.user.handle}`}
 					className="no-underline! mr-2 flex  items-center"
+					href={`/user/${translation.user.handle}`}
 				>
 					<span className="text-sm text-gray-500 text-right flex justify-end items-center  ">
 						by: {translation.user.name}
 					</span>
 				</Link>
 				<VoteButtons
-					translation={translation}
 					targetContentType={targetContentType}
+					translation={translation}
 				/>
 			</span>
 		</span>

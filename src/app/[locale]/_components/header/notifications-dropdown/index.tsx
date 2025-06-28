@@ -10,8 +10,8 @@ export default async function NotificationsDropdown({
 
 	return (
 		<NotificationsDropdownClient
-			notifications={notifications}
 			currentUserHandle={currentUserHandle}
+			notifications={notifications}
 		/>
 	);
 }

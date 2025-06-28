@@ -15,12 +15,12 @@ export function SortTabs({ defaultSort = "popular" }: SortTabsProps) {
 
 	return (
 		<div className="my-4 flex justify-center">
-			<Tabs value={sort} onValueChange={setSort} className="w-11/12">
+			<Tabs className="w-11/12" onValueChange={setSort} value={sort}>
 				<TabsList className=" w-full flex justify-center  rounded-full">
-					<TabsTrigger value="popular" className="text-xs w-1/2 rounded-full">
+					<TabsTrigger className="text-xs w-1/2 rounded-full" value="popular">
 						Popular
 					</TabsTrigger>
-					<TabsTrigger value="new" className="text-xs w-1/2 rounded-full">
+					<TabsTrigger className="text-xs w-1/2 rounded-full" value="new">
 						New
 					</TabsTrigger>
 				</TabsList>
