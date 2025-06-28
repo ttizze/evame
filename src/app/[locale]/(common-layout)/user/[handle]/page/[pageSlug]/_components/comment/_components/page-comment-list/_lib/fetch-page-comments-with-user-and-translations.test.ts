@@ -1,22 +1,11 @@
+import { expect, test } from "vitest";
 import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
 import {
 	buildCommentTree,
 	normalizeCommentSegments,
 } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/_lib/fetch-page-comments-with-user-and-translations";
-import type { SanitizedUser } from "@/app/types";
+import { mockUsers } from "@/tests/mock";
 import type { PageCommentWithPageCommentSegments } from "../_db/queries.server";
-
-const dummyUser: SanitizedUser = {
-	handle: "u1",
-	name: "Dummy",
-	image: "",
-	profile: "",
-	twitterHandle: "",
-	totalPoints: 0,
-	isAI: false,
-	createdAt: new Date(),
-	updatedAt: new Date(),
-};
 
 test("normalize → SegmentBundle keeps best", () => {
 	// rawSegs を normalize にそのまま渡せる構造で作成
@@ -32,7 +21,7 @@ test("normalize → SegmentBundle keeps best", () => {
 					text: "A",
 					point: 1,
 					createdAt: new Date(), // ← Date 型
-					user: dummyUser,
+					user: mockUsers[0],
 					pageCommentSegmentTranslationVotes: [],
 				},
 				{
@@ -41,7 +30,7 @@ test("normalize → SegmentBundle keeps best", () => {
 					text: "B",
 					point: 2,
 					createdAt: new Date(), // ← Date 型
-					user: dummyUser,
+					user: mockUsers[0],
 					pageCommentSegmentTranslationVotes: [],
 				},
 			],

@@ -118,30 +118,17 @@ describe("userImageEditAction (Integration)", () => {
 
 	it("should verify user data is correctly passed to unstable_update", async () => {
 		// 特定のユーザー情報でテスト
-		const specificUser = {
-			id: "user456",
-			name: "Test User",
-			handle: "testuser",
-			profile: "A test profile",
-			twitterHandle: "testtwitter",
-			image: "old-image.jpg",
-			createdAt: new Date(),
-			updatedAt: new Date(),
-			totalPoints: 100,
-			isAI: false,
-		};
-
-		vi.mocked(getCurrentUser).mockResolvedValue(specificUser);
+		vi.mocked(getCurrentUser).mockResolvedValue(mockUser);
 
 		await userImageEditAction({ success: false }, mockFormData);
 
 		// unstable_updateに正確なユーザー情報が渡されたことを検証
 		expect(unstable_update).toHaveBeenCalledWith({
 			user: {
-				name: specificUser.name,
-				handle: specificUser.handle,
-				profile: specificUser.profile,
-				twitterHandle: specificUser.twitterHandle,
+				name: mockUser.name,
+				handle: mockUser.handle,
+				profile: mockUser.profile,
+				twitterHandle: mockUser.twitterHandle,
 				image: mockImageUrl, // 新しい画像URLに更新されていることを確認
 			},
 		});

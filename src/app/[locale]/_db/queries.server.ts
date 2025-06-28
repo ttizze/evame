@@ -12,6 +12,7 @@ export const selectUserFields = () => {
 		twitterHandle: true,
 		totalPoints: true,
 		isAI: true,
+		plan: true,
 	} as const;
 };
 

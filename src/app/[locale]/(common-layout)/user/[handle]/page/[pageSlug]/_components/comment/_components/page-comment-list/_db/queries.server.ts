@@ -33,6 +33,7 @@ export async function fetchPageCommentsWithPageCommentSegments(
 									twitterHandle: true,
 									totalPoints: true,
 									isAI: true,
+									plan: true,
 								},
 							},
 							pageCommentSegmentTranslationVotes: {
