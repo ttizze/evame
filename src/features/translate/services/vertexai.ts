@@ -14,10 +14,15 @@ export async function getVertexAIModelResponse(
 	source_text: string,
 	target_language: string,
 ) {
-	await getAuthClient();
+	const authClient = await getAuthClient();
 	const vertexai = new VertexAI({
 		project: process.env.GCP_PROJECT_ID,
 		location: process.env.GCP_REGION,
+		googleAuthOptions: {
+			// biome-ignore lint/suspicious/noExplicitAny: <vertexaiの型がおかしい>
+			authClient: authClient as any,
+			projectId: process.env.GCP_PROJECT_ID,
+		},
 	});
 	const safetySetting = [
 		{

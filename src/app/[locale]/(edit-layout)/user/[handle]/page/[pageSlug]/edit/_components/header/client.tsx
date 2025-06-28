@@ -210,17 +210,15 @@ export function EditHeader({
 	);
 
 	return (
-		<>
-			<div
-				className={`sticky top-0 z-50  ${isVisible ? "translate-y-0" : "-translate-y-full"}`}
-			>
-				<BaseHeader
-					currentUser={currentUser}
-					leftExtra={leftExtra}
-					rightExtra={rightExtra}
-					showUserMenu={true}
-				/>
-			</div>
-		</>
+		<div
+			className={`sticky top-0 z-50  ${isVisible ? "translate-y-0" : "-translate-y-full"}`}
+		>
+			<BaseHeader
+				currentUser={currentUser}
+				leftExtra={leftExtra}
+				rightExtra={rightExtra}
+				showUserMenu={true}
+			/>
+		</div>
 	);
 }
