@@ -14,7 +14,7 @@ vi.mock("@/app/[locale]/_db/queries.server", () => ({
 vi.mock("./_db/mutations.server", () => ({
 	updatePageStatus: vi.fn(),
 }));
-vi.mock("@/app/[locale]/_lib/handle-auto-translation", () => ({
+vi.mock("@/app/[locale]/_lib/auto-translation/handle-auto-translation", () => ({
 	handlePageAutoTranslation: vi.fn(),
 }));
 vi.mock("next/cache", () => ({

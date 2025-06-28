@@ -65,8 +65,17 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 			},
 		});
 		translationJobId = translationJob.id;
+
+		// Gemini API Key を追加（translate で Gemini を使用する際に必須）
+		await prisma.geminiApiKey.create({
+			data: {
+				userId: user.id,
+				apiKey: "dummy-api-key",
+			},
+		});
 	});
 	afterEach(async () => {
+		await prisma.geminiApiKey.deleteMany();
 		await prisma.user.deleteMany();
 		await prisma.page.deleteMany();
 		await prisma.pageSegment.deleteMany();

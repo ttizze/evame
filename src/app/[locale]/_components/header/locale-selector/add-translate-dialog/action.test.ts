@@ -115,25 +115,6 @@ describe("TranslateAction", () => {
 		expect(revalidatePath).toHaveBeenCalled();
 	});
 
-	it("should handle missing Gemini API key", async () => {
-		(
-			fetchGeminiApiKeyByHandle as unknown as ReturnType<typeof vi.fn>
-		).mockResolvedValue(null);
-
-		const formData = new FormData();
-		formData.append("pageSlug", "mockUserId1-page1");
-		formData.append("aiModel", "gemini-pro");
-		formData.append("targetLocale", "en");
-		formData.append("targetContentType", "page");
-
-		const result = await translateAction({ success: false }, formData);
-
-		expect(result).toEqual({
-			success: false,
-			message: "Gemini API key not found",
-		});
-	});
-
 	it("should handle page not found for translation", async () => {
 		(
 			fetchPageIdBySlug as unknown as ReturnType<typeof vi.fn>
