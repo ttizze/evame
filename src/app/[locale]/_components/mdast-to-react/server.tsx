@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import remarkEmbedder from "@remark-embedder/core";
 import oembedTransformer from "@remark-embedder/transformer-oembed";
+import type { StaticImport } from "next/dist/shared/lib/get-img-props";
 import Image from "next/image";
 import type { ReactElement } from "react";
 import { type ComponentType, createElement, type JSX } from "react";
@@ -29,14 +30,18 @@ const SEGMENTABLE = [
 	"blockquote",
 ] as const satisfies readonly (keyof JSX.IntrinsicElements)[];
 
-const ImgComponent: ComponentType<JSX.IntrinsicElements["img"]> = (props) => (
+interface ImgProps extends Omit<JSX.IntrinsicElements["img"], "src"> {
+	src?: string | StaticImport;
+}
+
+const ImgComponent: ComponentType<ImgProps> = ({ src = "", ...props }) => (
 	<Image
 		{...props}
 		alt={props.alt ?? ""}
 		className="h-auto w-auto max-w-full"
 		height={props.height ? Number(props.height) : 300}
 		priority={false}
-		src={props.src ?? ""}
+		src={src}
 		width={props.width ? Number(props.width) : 300}
 	/>
 );
