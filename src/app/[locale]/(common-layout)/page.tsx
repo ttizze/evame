@@ -3,7 +3,9 @@ import dynamic from "next/dynamic";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsString } from "nuqs/server";
 import { getCurrentUser } from "@/auth";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Link } from "@/i18n/routing";
 
 const NewPageList = dynamic(
 	() => import("@/app/[locale]/_components/page/new-page-list/server"),
@@ -39,6 +41,7 @@ const DynamicControl = dynamic(
 	},
 );
 
+import { ArrowRightIcon } from "lucide-react";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 
 const NewPageListByTag = dynamic(
@@ -82,10 +85,45 @@ export default async function HomePage({
 				</>
 			)}
 			<DynamicControl />
-			<NewPageList locale={locale} searchParams={searchParams} />
+			<NewPageList
+				locale={locale}
+				searchParams={searchParams}
+				showPagination={false}
+			/>
+			<div className="flex justify-center">
+				<Button className="rounded-full w-40 h-10" variant="default">
+					<Link className="flex items-center gap-2" href="/new-pages">
+						More <ArrowRightIcon className="w-4 h-4" />
+					</Link>
+				</Button>
+			</div>
+
 			<NewPageListByTag locale={locale} tagName="AI" />
+			<div className="flex justify-center">
+				<Button className="rounded-full w-40 h-10" variant="default">
+					<Link className="flex items-center gap-2" href="/tag/AI">
+						More <ArrowRightIcon className="w-4 h-4" />
+					</Link>
+				</Button>
+			</div>
+
 			<NewPageListByTag locale={locale} tagName="Programming" />
+			<div className="flex justify-center">
+				<Button className="rounded-full w-40 h-10" variant="default">
+					<Link className="flex items-center gap-2" href="/tag/Programming">
+						More <ArrowRightIcon className="w-4 h-4" />
+					</Link>
+				</Button>
+			</div>
+
 			<NewPageListByTag locale={locale} tagName="Plurality" />
+			<div className="flex justify-center">
+				<Button className="rounded-full w-40 h-10" variant="default">
+					<Link className="flex items-center gap-2" href="/tag/Plurality">
+						More <ArrowRightIcon className="w-4 h-4" />
+					</Link>
+				</Button>
+			</div>
 		</div>
 	);
 }
