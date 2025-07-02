@@ -23,7 +23,11 @@ export function WrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 			const href = kids[0].props.href ?? "";
 			const match = TWEET_ID_RE.exec(href);
 			if (match) {
-				return <XPost id={match[1]} />;
+				return (
+					<span className="not-prose">
+						<XPost id={match[1]} />
+					</span>
+				);
 			}
 		}
 		const id = p["data-number-id"];
@@ -36,7 +40,7 @@ export function WrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 		/* セグメント対象でなければそのまま DOM 要素を返す */
 		if (!bundle) return createElement(Tag, p, p.children);
 
-		/* --- ここで Client Component に “シリアライズ可能な形” で渡す --- */
+		/* --- ここで Client Component に "シリアライズ可能な形" で渡す --- */
 		const { children, ...rest } = p;
 		return (
 			<WrapSegmentClient
