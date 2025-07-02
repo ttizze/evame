@@ -13,7 +13,15 @@ export const remarkAutoUploadImages: Plugin<[]> = () => {
 		const tasks: Promise<void>[] = [];
 
 		visit(tree, "image", (node) => {
-			if (node.url.includes("evame/uploads")) return;
+			// Skip images that are already hosted on our storage, or are local/placeholder URLs
+			if (
+				node.url.includes("evame/uploads") ||
+				node.url.startsWith("/") ||
+				node.url.startsWith("data:") ||
+				node.url.startsWith("blob:")
+			) {
+				return;
+			}
 			tasks.push(
 				limit(async () => {
 					const file = await fileFromUrl(node.url);
