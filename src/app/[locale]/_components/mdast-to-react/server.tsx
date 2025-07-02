@@ -65,7 +65,11 @@ export async function mdastToReact({
 
 	const processor = unified()
 		.use(remarkEmbedder, { transformers: [oembedTransformer] })
-		.use(remarkLinkCard, { cache: true, shortenUrl: true, noFavicon: true })
+		.use(remarkLinkCard, {
+			cache: false,
+			shortenUrl: true,
+			noFavicon: true,
+		})
 		.use(remarkRehype, { allowDangerousHtml: true }) // mdast → hast
 		.use(rehypeRaw) // parse raw HTML
 		.use(rehypeSlug) // add slug ids
