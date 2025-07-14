@@ -1,104 +1,262 @@
-import { readFile } from "node:fs/promises";
+import fs from "node:fs/promises";
 import path from "node:path";
-import type { Prisma } from "@prisma/client";
+import { generateSlug } from "@/app/[locale]/_lib/generateーslug";
+
+// Markdown → MDAST + SegmentDraft[] 変換ユーティリティ
+import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mdast-with-segments";
+// NOTE: プロジェクトの構成に合わせてパスを調整してください
+
 import { PrismaClient } from "@prisma/client";
-import fg from "fast-glob";
-import { customAlphabet } from "nanoid";
-import remarkParse from "remark-parse";
-import { unified } from "unified";
 
 const prisma = new PrismaClient();
-const ROOT = "./tipitaka2500/tipitaka";
-const SYSTEM_UID = "system";
 
-// 子の並び順を簡単に付けるカウンタ
-const orderCounter: Record<string, number> = {};
+/**
+ * 定数定義 ───────────────────────────────────────────────────────────────
+ */
+const SYSTEM_USER_HANDLE = "evame"; // ← デフォルトユーザ
+const ROOT_SLUG = "tipitaka" as const;
 
-function nextOrder(key: string) {
-	orderCounter[key] = (orderCounter[key] ?? 0) + 1;
-	return orderCounter[key];
-}
+/**
+ * Markdown 文字列を解析する
+ *  – heading       : 最初に現れる "# " 行
+ *  – bulletLinks   : "* [text](path)" 形式の箇条書きリンクを抽出
+ *  – paragraphs    : heading／リンク行／インラインリンクを除いた本文を段落ごとに分割
+ */
+function parseMarkdown(src: string) {
+	const lines = src.split(/\r?\n/);
+	let heading = "";
+	const bulletLinks: { text: string; href: string }[] = [];
+	const bodyLines: string[] = [];
 
-// Shared slug generator function
-const generateSlug = () =>
-	customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 12)();
+	const bulletRe = /^\*\s+\[([^\]]+)]\(([^)]+)\)/;
+	const headingRe = /^#\s+(.*)$/;
 
-async function createDirPage(
-	userId: string,
-	text: string,
-	parentId: number | null,
-) {
-	const slug = generateSlug();
-	const { id } = await prisma.page.create({
-		data: {
-			parentId,
-			slug,
-			status: "PUBLIC",
-			sourceLocale: "pi",
-			mdastJson: {},
-			order: nextOrder(String(parentId)),
-			userId,
-			pageSegments: {
-				//TODO テキストのハッシュを指定する
-				create: [{ number: 0, text, textAndOccurrenceHash: "" }],
-			},
-		},
-	});
-	return id;
-}
-
-async function seed() {
-	const files = await fg("**/*.md", { cwd: ROOT, absolute: true });
-
-	// ディレクトリ階層 → page.id をキャッシュ
-	const dirMap = new Map<string, number>(); // key = relDir (without trailing slash)
-
-	for (const absPath of files) {
-		const relPath = path.relative(ROOT, absPath); // 2V/1/1.5/1.5.1/1.5.1.1.md
-		const parts = relPath.split(path.sep);
-		let parentId: number | null = null;
-		let dirKey = "";
-		const user = await prisma.user.findUnique({ where: { handle: "evame" } });
-		const userId = user?.id ?? SYSTEM_UID;
-
-		// 1) 各ディレクトリをページとして生成
-		for (let i = 0; i < parts.length - 1; i++) {
-			dirKey = path.join(dirKey, parts[i]);
-			if (!dirMap.has(dirKey)) {
-				const id = await createDirPage(userId, parts[i], parentId);
-				dirMap.set(dirKey, id);
+	for (const line of lines) {
+		if (!heading) {
+			const m = headingRe.exec(line);
+			if (m) {
+				heading = m[1].trim();
+				continue; // 本文には含めない
 			}
-			parentId = dirMap.get(dirKey) ?? null;
+		}
+		const bm = bulletRe.exec(line);
+		if (bm) {
+			bulletLinks.push({ text: bm[1].trim(), href: bm[2].trim() });
+			continue; // 箇条書きリンク行は本文に含めない
+		}
+		// [Home] で始まるパンくず行は完全に無視
+		if (/^\[Home].*/.test(line)) continue;
+
+		bodyLines.push(line);
+	}
+
+	// 本文からインラインリンクを除去
+	const bodyText = bodyLines
+		.join("\n")
+		.replace(/\[[^\]]+]\([^)]*\)/g, "")
+		.replace(/\n{3,}/g, "\n\n");
+
+	// 空行で段落を分割
+	const paragraphs = bodyText
+		.split(/\n{2,}/)
+		.map((p) => p.trim())
+		.filter(Boolean);
+
+	return { heading, bulletLinks, paragraphs };
+}
+
+/**
+ * README を解析して三蔵ページを生成し、リンク先のキューを返す
+ */
+
+interface QueueItem {
+	path: string;
+	parentId: number;
+	order: number;
+}
+
+async function buildPitakaPages(params: {
+	readmeMd: string;
+	readmePath: string;
+	tipitakaPageId: number;
+	userId: string;
+}): Promise<QueueItem[]> {
+	const { readmeMd, readmePath, tipitakaPageId, userId } = params;
+
+	const lines = readmeMd.split(/\r?\n/);
+	const pitakaHeadRe = /^##\s+([^()]+)\s*\(/; // "## Vinayapiṭaka (V)" 等
+	const bulletRe = /^\*\s+\[[^\]]+]\(([^)]+)\)/;
+
+	let current: { id: number; order: number } | null = null;
+	let pitakaOrder = 0;
+	const queue: QueueItem[] = [];
+
+	for (const line of lines) {
+		const headMatch = pitakaHeadRe.exec(line);
+		if (headMatch) {
+			// 三蔵タイトル
+			const title = headMatch[1].trim();
+			const mdast = await markdownToMdastWithSegments({
+				header: title,
+				markdown: "",
+			});
+
+			const pitakaPage = await prisma.page.create({
+				data: {
+					slug: generateSlug(),
+					parentId: tipitakaPageId,
+					order: pitakaOrder,
+					userId,
+					mdastJson: mdast.mdastJson,
+					status: "PUBLIC",
+					sourceLocale: "pi",
+				},
+			});
+
+			// Segment(0)
+			await prisma.pageSegment.deleteMany({ where: { pageId: pitakaPage.id } });
+			await prisma.pageSegment.create({
+				data: {
+					pageId: pitakaPage.id,
+					number: 0,
+					text: title,
+					textAndOccurrenceHash: mdast.segments[0]?.hash ?? title,
+				},
+			});
+
+			current = { id: pitakaPage.id, order: 0 };
+			pitakaOrder += 1;
+			continue;
 		}
 
-		// 2) ファイル本体
-		const raw = await readFile(absPath, "utf8");
-		const h1 = raw.match(/^#\s+(.+?)$/m);
-		const title = h1 ? h1[1].trim() : path.parse(absPath).name;
-
-		const mdastJson = unified().use(remarkParse).parse(raw);
-
-		await prisma.page.create({
-			data: {
-				parentId,
-				order: nextOrder(String(parentId)),
-				slug: generateSlug(),
-				status: "PUBLIC",
-				sourceLocale: "pi",
-				mdastJson: mdastJson as unknown as Prisma.InputJsonValue,
-				userId,
-				pageSegments: {
-					//TODO テキストのハッシュを指定する
-					create: [{ number: 0, text: title, textAndOccurrenceHash: "" }],
-				},
-			},
-		});
+		// 箇条書き → 子ファイル
+		if (current) {
+			const b = bulletRe.exec(line);
+			if (b) {
+				const rel = b[1].trim();
+				const abs = path.resolve(path.dirname(readmePath), rel);
+				queue.push({ path: abs, parentId: current.id, order: current.order });
+				current.order += 1;
+			}
+		}
 	}
-	await prisma.$disconnect();
-	console.log("✔︎ Tipiṭaka import finished");
+
+	return queue;
 }
 
-seed().catch((e) => {
-	console.error(e);
-	prisma.$disconnect();
-});
+/**
+ * エントリポイント ───────────────────────────────────────────────────────
+ */
+(async () => {
+	// 1. ルート Page を保証し README を mdast 化
+	const readmePath = path.resolve("tipitaka-md", "README.md");
+	const readmeMd = await fs.readFile(readmePath, "utf8");
+	const readmeParsed = await markdownToMdastWithSegments({
+		header: "Tipitaka",
+		markdown: readmeMd,
+	});
+	const user = await prisma.user.findUnique({
+		where: {
+			handle: SYSTEM_USER_HANDLE,
+		},
+	});
+	if (!user) {
+		throw new Error(`User with handle ${SYSTEM_USER_HANDLE} not found`);
+	}
+
+	const tipitakaPage = await prisma.page.upsert({
+		where: { slug: ROOT_SLUG },
+		update: {
+			mdastJson: readmeParsed.mdastJson,
+		},
+		create: {
+			slug: ROOT_SLUG,
+			parentId: null,
+			order: 0,
+			userId: user?.id,
+			mdastJson: readmeParsed.mdastJson,
+			status: "PUBLIC",
+			sourceLocale: "pi",
+		},
+	});
+
+	// README セグメントを挿入（毎回置き換え）
+	await prisma.pageSegment.deleteMany({ where: { pageId: tipitakaPage.id } });
+	await prisma.pageSegment.createMany({
+		data: readmeParsed.segments.map((s) => ({
+			pageId: tipitakaPage.id,
+			number: s.number,
+			text: s.text,
+			textAndOccurrenceHash: s.hash,
+		})),
+	});
+
+	// 2. README から三蔵ページを作成し、リンク先をキューに積む
+	const queue = await buildPitakaPages({
+		readmeMd,
+		readmePath,
+		tipitakaPageId: tipitakaPage.id,
+		userId: user.id,
+	});
+
+	const visited = new Set<string>();
+
+	while (queue.length) {
+		const { path: filePath, parentId, order } = queue.shift()!;
+		if (visited.has(filePath)) continue;
+		visited.add(filePath);
+
+		const mdRaw = await fs.readFile(filePath, "utf8");
+		const { heading, bulletLinks, paragraphs } = parseMarkdown(mdRaw);
+
+		if (!heading) {
+			console.warn("No heading found in", filePath);
+			continue;
+		}
+
+		// cleaned markdown: paragraphs joined by blank line
+		const cleanedMd = paragraphs.join("\n\n");
+		const parsed = await markdownToMdastWithSegments({
+			header: heading,
+			markdown: cleanedMd,
+		});
+
+		// 3. upsert page
+		const pageSlug = generateSlug();
+		const page = await prisma.page.upsert({
+			where: { slug: pageSlug },
+			update: {
+				mdastJson: parsed.mdastJson,
+			},
+			create: {
+				slug: pageSlug,
+				parentId,
+				order,
+				userId: user?.id,
+				mdastJson: parsed.mdastJson,
+			},
+		});
+
+		// 4. Segment を挿入（冪等性のため既存を削除）
+		await prisma.pageSegment.deleteMany({ where: { pageId: page.id } });
+
+		const segData = parsed.segments.map((s) => ({
+			pageId: page.id,
+			number: s.number,
+			text: s.text,
+			textAndOccurrenceHash: s.hash,
+		}));
+		if (segData.length) {
+			await prisma.pageSegment.createMany({ data: segData });
+		}
+
+		// 5. 箇条書きリンクの順序で子をキューに追加
+		bulletLinks.forEach((lnk, idx) => {
+			const childAbs = path.resolve(path.dirname(filePath), lnk.href);
+			queue.push({ path: childAbs, parentId: page.id, order: idx });
+		});
+	}
+
+	console.log("インポートが完了しました");
+	await prisma.$disconnect();
+})();

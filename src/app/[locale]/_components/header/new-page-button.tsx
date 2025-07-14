@@ -1,17 +1,14 @@
 "use client";
 
 import { Loader2, PencilIcon } from "lucide-react";
-import { customAlphabet } from "nanoid";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useState } from "react";
+import { generateSlug } from "@/app/[locale]/_lib/generateーslug";
 
 interface NewPageButtonProps {
 	handle: string;
 }
-
-const generateSlug = () =>
-	customAlphabet("0123456789abcdefghijklmnopqrstuvwxyz", 12)();
 
 export const NewPageButton = ({ handle }: NewPageButtonProps) => {
 	const router = useRouter();
