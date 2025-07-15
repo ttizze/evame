@@ -144,21 +144,23 @@ async function buildPitakaPages(params: {
 	return queue;
 }
 
-/**
- * エントリポイント ───────────────────────────────────────────────────────
- */
-(async () => {
-	// 1. ルート Page を保証し README を mdast 化
+// 新規: Tipitaka ルートページを作成／更新するユーティリティ
+async function ensureRootPage() {
+	// ルート Page を保証し README を mdast 化
 	const readmePath = path.resolve("tipitaka-md", "README.md");
-	const readmeMd = await fs.readFile(readmePath, "utf8");
+	const rawReadmeMd = await fs.readFile(readmePath, "utf8");
+
+	// bullet 行やインラインリンクを除去してテキストだけを抽出
+	const { paragraphs } = parseMarkdown(rawReadmeMd);
+	const cleanedReadmeMd = paragraphs.join("\n\n");
+
 	const readmeParsed = await markdownToMdastWithSegments({
 		header: "Tipitaka",
-		markdown: readmeMd,
+		markdown: cleanedReadmeMd,
 	});
+
 	const user = await prisma.user.findUnique({
-		where: {
-			handle: SYSTEM_USER_HANDLE,
-		},
+		where: { handle: SYSTEM_USER_HANDLE },
 	});
 	if (!user) {
 		throw new Error(`User with handle ${SYSTEM_USER_HANDLE} not found`);
@@ -173,7 +175,7 @@ async function buildPitakaPages(params: {
 			slug: ROOT_SLUG,
 			parentId: null,
 			order: 0,
-			userId: user?.id,
+			userId: user.id,
 			mdastJson: readmeParsed.mdastJson,
 			status: "PUBLIC",
 			sourceLocale: "pi",
@@ -190,6 +192,16 @@ async function buildPitakaPages(params: {
 			textAndOccurrenceHash: s.hash,
 		})),
 	});
+
+	return { readmeMd: rawReadmeMd, readmePath, tipitakaPage, user };
+}
+
+/**
+ * エントリポイント ───────────────────────────────────────────────────────
+ */
+(async () => {
+	// 1. ルート Page を保証し README を mdast 化
+	const { readmeMd, readmePath, tipitakaPage, user } = await ensureRootPage();
 
 	// 2. README から三蔵ページを作成し、リンク先をキューに積む
 	const queue = await buildPitakaPages({
