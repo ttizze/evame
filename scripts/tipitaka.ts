@@ -66,7 +66,7 @@ function parseMarkdown(src: string) {
 }
 
 /**
- * README を解析して三蔵ページを生成し、リンク先のキューを返す
+ * README を解析して階層ページを生成し、リンク先のキューを返す
  */
 
 interface QueueItem {
@@ -75,7 +75,7 @@ interface QueueItem {
 	order: number;
 }
 
-async function buildPitakaPages(params: {
+async function buildPagesFromReadme(params: {
 	readmeMd: string;
 	readmePath: string;
 	tipitakaPageId: number;
@@ -83,29 +83,44 @@ async function buildPitakaPages(params: {
 }): Promise<QueueItem[]> {
 	const { readmeMd, readmePath, tipitakaPageId, userId } = params;
 
-	const lines = readmeMd.split(/\r?\n/);
-	const pitakaHeadRe = /^##\s+([^()]+)\s*\(/; // "## Vinayapiṭaka (V)" 等
+	const headingRe = /^(#{2,})\s+(.*)$/; // ##, ###, #### ...
 	const bulletRe = /^\*\s+\[[^\]]+]\(([^)]+)\)/;
 
-	let current: { id: number; order: number } | null = null;
-	let pitakaOrder = 0;
+	// stack[0] は root "tipitaka"
+	interface StackItem {
+		id: number;
+		orderCounter: number;
+	}
+	const stack: StackItem[] = [{ id: tipitakaPageId, orderCounter: 0 }];
+
 	const queue: QueueItem[] = [];
 
+	const lines = readmeMd.split(/\r?\n/);
+
 	for (const line of lines) {
-		const headMatch = pitakaHeadRe.exec(line);
-		if (headMatch) {
-			// 三蔵タイトル
-			const title = headMatch[1].trim();
+		// 1) Heading
+		const h = headingRe.exec(line);
+		if (h) {
+			const hashes = h[1];
+			const depth = hashes.length; // ## → 2, ### → 3 ...
+			const title = h[2].trim();
+
+			// depth 2 should be child of root (stack length 1). So we want stack len = depth-1 after adjustment
+			while (stack.length >= depth) {
+				stack.pop();
+			}
+
+			const parent = stack[stack.length - 1];
 			const mdast = await markdownToMdastWithSegments({
 				header: title,
 				markdown: "",
 			});
 
-			const pitakaPage = await prisma.page.create({
+			const page = await prisma.page.create({
 				data: {
 					slug: generateSlug(),
-					parentId: tipitakaPageId,
-					order: pitakaOrder,
+					parentId: parent.id,
+					order: parent.orderCounter,
 					userId,
 					mdastJson: mdast.mdastJson,
 					status: "PUBLIC",
@@ -113,31 +128,37 @@ async function buildPitakaPages(params: {
 				},
 			});
 
-			// Segment(0)
-			await prisma.pageSegment.deleteMany({ where: { pageId: pitakaPage.id } });
+			// Segment(0) = title (本文なし)
+			await prisma.pageSegment.deleteMany({ where: { pageId: page.id } });
 			await prisma.pageSegment.create({
 				data: {
-					pageId: pitakaPage.id,
+					pageId: page.id,
 					number: 0,
 					text: title,
 					textAndOccurrenceHash: mdast.segments[0]?.hash ?? title,
 				},
 			});
 
-			current = { id: pitakaPage.id, order: 0 };
-			pitakaOrder += 1;
-			continue;
+			// 新しい深さのStackItem 追加
+			stack.push({ id: page.id, orderCounter: 0 });
+			parent.orderCounter += 1;
+
+			continue; // 次の行へ
 		}
 
-		// 箇条書き → 子ファイル
-		if (current) {
-			const b = bulletRe.exec(line);
-			if (b) {
-				const rel = b[1].trim();
-				const abs = path.resolve(path.dirname(readmePath), rel);
-				queue.push({ path: abs, parentId: current.id, order: current.order });
-				current.order += 1;
-			}
+		// 2) Bullet link
+		const b = bulletRe.exec(line);
+		if (b) {
+			const rel = b[1].trim();
+			const abs = path.resolve(path.dirname(readmePath), rel);
+
+			const parent = stack[stack.length - 1];
+			queue.push({
+				path: abs,
+				parentId: parent.id,
+				order: parent.orderCounter,
+			});
+			parent.orderCounter += 1;
 		}
 	}
 
@@ -203,8 +224,8 @@ async function ensureRootPage() {
 	// 1. ルート Page を保証し README を mdast 化
 	const { readmeMd, readmePath, tipitakaPage, user } = await ensureRootPage();
 
-	// 2. README から三蔵ページを作成し、リンク先をキューに積む
-	const queue = await buildPitakaPages({
+	// 2. README からカテゴリー/Leaf ページを作成し、リンク先をキューに積む
+	const queue = await buildPagesFromReadme({
 		readmeMd,
 		readmePath,
 		tipitakaPageId: tipitakaPage.id,
