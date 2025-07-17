@@ -44,8 +44,24 @@ function parseMarkdown(src: string) {
 			bulletLinks.push({ text: bm[1].trim(), href: bm[2].trim() });
 			continue; // 箇条書きリンク行は本文に含めない
 		}
-		// [Home] で始まるパンくず行は完全に無視
-		if (/^\[Home].*/.test(line)) continue;
+
+		// リンクを伴わない bullet 行（上位構造の見出しなど）も無視
+		if (/^\*\s+[^[]/.test(line)) {
+			continue;
+		}
+
+		// パンくずナビゲーション行は完全に無視
+		if (
+			/^\[Home].*/.test(line) ||
+			/Go to (previous|parent|next) page/.test(line)
+		) {
+			continue;
+		}
+
+		// 純粋な番号行 ("(24.)" や "41.") は無視
+		if (/^\(?\d+\.?\)?\s*$/.test(line.trim())) {
+			continue;
+		}
 
 		bodyLines.push(line);
 	}
@@ -53,7 +69,9 @@ function parseMarkdown(src: string) {
 	// 本文からインラインリンクを除去
 	const bodyText = bodyLines
 		.join("\n")
-		.replace(/\[[^\]]+]\([^)]*\)/g, "")
+		.replace(/\[[^\]]+]\([^)]*\)/g, "") // インラインリンク除去
+		// 行頭の番号プレフィックス "41." "41\." "(24.)" などを除去
+		.replace(/^\s*(?:\(\d+\.\)|\d+\\?\.)\s+/gm, "")
 		.replace(/\n{3,}/g, "\n\n");
 
 	// 空行で段落を分割
