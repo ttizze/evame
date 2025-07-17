@@ -71,8 +71,8 @@ function parseMarkdown(src: string) {
 
 interface QueueItem {
 	path: string;
-	parentId: number;
-	order: number;
+	pageId: number;
+	fallbackTitle: string;
 }
 
 async function buildPagesFromReadme(params: {
@@ -84,7 +84,7 @@ async function buildPagesFromReadme(params: {
 	const { readmeMd, readmePath, tipitakaPageId, userId } = params;
 
 	const headingRe = /^(#{2,})\s+(.*)$/; // ##, ###, #### ...
-	const bulletRe = /^\*\s+\[[^\]]+]\(([^)]+)\)/;
+	const bulletRe = /^\*\s+\[([^\]]+)]\(([^)]+)\)/;
 
 	// stack[0] は root "tipitaka"
 	interface StackItem {
@@ -147,17 +147,38 @@ async function buildPagesFromReadme(params: {
 		}
 
 		// 2) Bullet link
-		const b = bulletRe.exec(line);
-		if (b) {
-			const rel = b[1].trim();
-			const abs = path.resolve(path.dirname(readmePath), rel);
+		const bl = bulletRe.exec(line);
+		if (bl) {
+			const linkTitle = bl[1].trim();
+			const relHref = bl[2].trim();
+			const abs = path.resolve(path.dirname(readmePath), relHref);
 
 			const parent = stack[stack.length - 1];
-			queue.push({
-				path: abs,
-				parentId: parent.id,
-				order: parent.orderCounter,
+
+			// Create placeholder page
+			const leafPage = await prisma.page.create({
+				data: {
+					slug: generateSlug(),
+					parentId: parent.id,
+					order: parent.orderCounter,
+					userId,
+					mdastJson: "", // later fill
+					status: "PUBLIC",
+					sourceLocale: "pi",
+				},
 			});
+
+			await prisma.pageSegment.deleteMany({ where: { pageId: leafPage.id } });
+			await prisma.pageSegment.create({
+				data: {
+					pageId: leafPage.id,
+					number: 0,
+					text: linkTitle,
+					textAndOccurrenceHash: linkTitle,
+				},
+			});
+
+			queue.push({ path: abs, pageId: leafPage.id, fallbackTitle: linkTitle });
 			parent.orderCounter += 1;
 		}
 	}
@@ -235,16 +256,18 @@ async function ensureRootPage() {
 	const visited = new Set<string>();
 
 	while (queue.length) {
-		const { path: filePath, parentId, order } = queue.shift()!;
+		const { path: filePath, pageId, fallbackTitle } = queue.shift()!;
 		if (visited.has(filePath)) continue;
 		visited.add(filePath);
 
 		const mdRaw = await fs.readFile(filePath, "utf8");
-		const { heading, bulletLinks, paragraphs } = parseMarkdown(mdRaw);
+		const parsedMd = parseMarkdown(mdRaw);
+		let heading = parsedMd.heading;
+		const bulletLinks = parsedMd.bulletLinks;
+		const paragraphs = parsedMd.paragraphs;
 
 		if (!heading) {
-			console.warn("No heading found in", filePath);
-			continue;
+			heading = fallbackTitle;
 		}
 
 		// cleaned markdown: paragraphs joined by blank line
@@ -254,27 +277,17 @@ async function ensureRootPage() {
 			markdown: cleanedMd,
 		});
 
-		// 3. upsert page
-		const pageSlug = generateSlug();
-		const page = await prisma.page.upsert({
-			where: { slug: pageSlug },
-			update: {
-				mdastJson: parsed.mdastJson,
-			},
-			create: {
-				slug: pageSlug,
-				parentId,
-				order,
-				userId: user?.id,
-				mdastJson: parsed.mdastJson,
-			},
+		// 3. update placeholder page with actual content
+		await prisma.page.update({
+			where: { id: pageId },
+			data: { mdastJson: parsed.mdastJson },
 		});
 
 		// 4. Segment を挿入（冪等性のため既存を削除）
-		await prisma.pageSegment.deleteMany({ where: { pageId: page.id } });
+		await prisma.pageSegment.deleteMany({ where: { pageId } });
 
 		const segData = parsed.segments.map((s) => ({
-			pageId: page.id,
+			pageId,
 			number: s.number,
 			text: s.text,
 			textAndOccurrenceHash: s.hash,
@@ -284,10 +297,39 @@ async function ensureRootPage() {
 		}
 
 		// 5. 箇条書きリンクの順序で子をキューに追加
-		bulletLinks.forEach((lnk, idx) => {
+		for (let idx = 0; idx < bulletLinks.length; idx++) {
+			const lnk = bulletLinks[idx];
 			const childAbs = path.resolve(path.dirname(filePath), lnk.href);
-			queue.push({ path: childAbs, parentId: page.id, order: idx });
-		});
+			const childTitle = lnk.text;
+
+			const childPage = await prisma.page.create({
+				data: {
+					slug: generateSlug(),
+					parentId: pageId,
+					order: idx,
+					userId: user.id,
+					mdastJson: "",
+					status: "PUBLIC",
+					sourceLocale: "pi",
+				},
+			});
+
+			await prisma.pageSegment.deleteMany({ where: { pageId: childPage.id } });
+			await prisma.pageSegment.create({
+				data: {
+					pageId: childPage.id,
+					number: 0,
+					text: childTitle,
+					textAndOccurrenceHash: childTitle,
+				},
+			});
+
+			queue.push({
+				path: childAbs,
+				pageId: childPage.id,
+				fallbackTitle: childTitle,
+			});
+		}
 	}
 
 	console.log("インポートが完了しました");
