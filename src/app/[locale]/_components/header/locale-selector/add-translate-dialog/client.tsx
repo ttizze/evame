@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { type TranslateActionState, translateAction } from "./action";
 import { DialogLocaleSelector } from "./dialog-locale-selector";
+import { useLocale } from "next-intl";
 
 type AddTranslateDialogProps = {
 	open: boolean;
@@ -40,6 +41,7 @@ export function AddTranslateDialog({
 	hasGeminiApiKey,
 	pageSlug,
 }: AddTranslateDialogProps) {
+	const currentLocale = useLocale();
 	let targetContentType: TargetContentType;
 	if (pageSlug) {
 		targetContentType = "page";
@@ -50,7 +52,7 @@ export function AddTranslateDialog({
 		TranslateActionState,
 		FormData
 	>(translateAction, { success: false });
-	const [targetLocale, setTargetLocale] = useState("");
+	const [targetLocale, setTargetLocale] = useState(currentLocale);
 	const [selectedModel, setSelectedModel] = useState("gemini-2.0-flash");
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
 	const { toastJobs } = useTranslationJobs(
