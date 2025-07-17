@@ -66,13 +66,15 @@ function parseMarkdown(src: string) {
 		bodyLines.push(line);
 	}
 
-	// 本文からインラインリンクを除去
-	const bodyText = bodyLines
-		.join("\n")
-		.replace(/\[[^\]]+]\([^)]*\)/g, "") // インラインリンク除去
-		// 行頭の番号プレフィックス "41." "41\." "(24.)" などを除去
-		.replace(/^\s*(?:\(\d+\.\)|\d+\\?\.)\s+/gm, "")
-		.replace(/\n{3,}/g, "\n\n");
+	// 行ごとに前処理: インラインリンク除去 & 番号プレフィックス除去
+	const linePrefixRe = /^\s*(?:\(\d+\.\)|\d+\\?\.)\s*/;
+	const cleanedBodyLines = bodyLines.map((ln) => {
+		let x = ln.replace(/\[[^\]]+]\([^)]*\)/g, ""); // インラインリンク除去
+		x = x.replace(linePrefixRe, ""); // 番号プレフィックス除去
+		return x;
+	});
+
+	const bodyText = cleanedBodyLines.join("\n").replace(/\n{3,}/g, "\n\n");
 
 	// 空行で段落を分割
 	const paragraphs = bodyText
