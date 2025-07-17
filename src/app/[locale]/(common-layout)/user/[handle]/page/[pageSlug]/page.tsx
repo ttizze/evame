@@ -119,6 +119,22 @@ export default async function Page({
 			<SourceLocaleBridge locale={pageDetail.sourceLocale} />
 			<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 				<DynamicContentWithTranslations pageData={data} />
+				{pageDetail.children && pageDetail.children.length > 0 && (
+					<div className="">
+						<ul className="space-y-2">
+							{pageDetail.children.map((child) => (
+								<li key={child.id}>
+									<a
+										className="hover:underline"
+										href={`/${locale}/user/${child.user.handle}/page/${child.slug}`}
+									>
+										{child.segmentBundles[0]?.segment.text || "Untitled"}
+									</a>
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
 				<div className="flex items-center gap-4">
 					<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
 					<span className="text-muted-foreground">{pageViewCount}</span>
@@ -145,24 +161,6 @@ export default async function Page({
 						/>
 					}
 				/>
-
-				{pageDetail.children && pageDetail.children.length > 0 && (
-					<div className="mt-8 p-4 border rounded-lg">
-						<h2 className="text-xl font-bold mb-4">子ページ</h2>
-						<ul className="space-y-2">
-							{pageDetail.children.map((child) => (
-								<li key={child.id}>
-									<a
-										className="text-blue-600 hover:underline"
-										href={`/${locale}/user/${child.user.handle}/page/${child.slug}`}
-									>
-										{child.segmentBundles[0]?.segment.text || "Untitled"}
-									</a>
-								</li>
-							))}
-						</ul>
-					</div>
-				)}
 
 				<div className="mt-8">
 					<div className="mt-8" id="comments">
