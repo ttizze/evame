@@ -10,6 +10,7 @@ import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/pa
 import { Skeleton } from "@/components/ui/skeleton";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
+import type { PageSummary } from "@/app/[locale]/types";
 
 const DynamicContentWithTranslations = dynamic(
 	() =>
@@ -109,32 +110,58 @@ export default async function Page({
 		return notFound();
 	}
 	const { pageDetail, currentUser, pageViewCount } = data;
-
 	const isOwner = pageDetail.user.handle === currentUser?.handle;
 	if (!isOwner && pageDetail.status !== "PUBLIC") {
 		return notFound();
 	}
+
+	// 再帰的にページ階層を描画するヘルパー
+	const renderChildPages = (nodes: PageSummary[], depth = 0) => {
+		return (
+			<ul className={`${depth === 0 ? "" : "ml-4"} space-y-1`}>
+				{nodes.map((child) => {
+					const title = child.segmentBundles?.[0]?.segment?.text || "Untitled";
+					const hasChildren = child.children && child.children.length > 0;
+					return (
+						<li key={child.id}>
+							{hasChildren ? (
+								<details className="group">
+									<summary className="cursor-pointer list-none flex items-center gap-1">
+										<span className="transition-transform group-open:rotate-90">▶</span>
+										<a
+											className="hover:underline"
+											href={`/${locale}/user/${child.user.handle}/page/${child.slug}`}
+										>
+											{title}
+										</a>
+									</summary>
+									{child.children && renderChildPages(child.children, depth + 1)}
+								</details>
+							) : (
+								<a
+									className="hover:underline"
+									href={`/${locale}/user/${child.user.handle}/page/${child.slug}`}
+								>
+									{title}
+								</a>
+							)}
+						</li>
+					);
+				})}
+			</ul>
+		);
+	};
 	return (
 		<>
 			<SourceLocaleBridge locale={pageDetail.sourceLocale} />
 			<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 				<DynamicContentWithTranslations pageData={data} />
-				{pageDetail.children && pageDetail.children.length > 0 && (
-					<div className="">
-						<ul className="space-y-2">
-							{pageDetail.children.map((child) => (
-								<li key={child.id}>
-									<a
-										className="hover:underline"
-										href={`/${locale}/user/${child.user.handle}/page/${child.slug}`}
-									>
-										{child.segmentBundles[0]?.segment.text || "Untitled"}
-									</a>
-								</li>
-							))}
-						</ul>
-					</div>
-				)}
+				{pageDetail.children &&
+					pageDetail.children.length > 0 && (
+						<div>
+							{renderChildPages(pageDetail.children)}
+						</div>
+					)}
 				<div className="flex items-center gap-4">
 					<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
 					<span className="text-muted-foreground">{pageViewCount}</span>

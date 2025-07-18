@@ -116,43 +116,84 @@ export async function fetchPageDetail(
 		where: { slug },
 		include: {
 			...selectPageRelatedFields(false, locale, currentUserId),
-			children: {
-				where: { status: "PUBLIC" },
-				orderBy: { order: "asc" },
-				include: {
-					...selectPageRelatedFields(true, locale, currentUserId),
-				},
-			},
 		},
 	});
 
 	if (!page) return null;
 
-	const normalized = await normalizePageSegments(page.pageSegments);
-	const segmentBundles = await toSegmentBundles("page", page.id, normalized);
+	const normalized = normalizePageSegments(page.pageSegments);
+	const segmentBundles = toSegmentBundles("page", page.id, normalized);
 
-	// Process children pages
-	const children = await Promise.all(
-		page.children.map(async (child) => {
-			const childNormalized = await normalizePageSegments(child.pageSegments);
-			const childSegmentBundles = await toSegmentBundles(
-				"page",
-				child.id,
-				childNormalized,
-			);
-			return {
-				...child,
-				createdAt: child.createdAt.toISOString(),
-				segmentBundles: childSegmentBundles,
-			};
-		}),
-	);
+	// ---------------- 子ページ取得（レベルごとにバッチ） ----------------
+	const fetchAllDescendants = async (rootIds: number[]): Promise<any[]> => {
+		let currentIds = rootIds;
+		const all: any[] = [];
+		while (currentIds.length > 0) {
+			const rows = await prisma.page.findMany({
+				where: {
+					parentId: { in: currentIds },
+					status: "PUBLIC",
+				},
+				orderBy: { order: "asc" },
+				include: {
+					...selectPageRelatedFields(true, locale, currentUserId),
+				},
+			});
+			if (rows.length === 0) break;
+			all.push(...rows);
+			currentIds = rows.map((r) => r.id);
+		}
+		return all;
+	};
 
+	const descendantPages = await fetchAllDescendants([page.id]);
+
+	// --- DTO 変換とツリー構築 ---
+	const idToNode = new Map<number, any>();
+	const rootChildren: any[] = [];
+
+	// ルートの children は後で返却オブジェクトにセットする
+
+	// まず全ノードを変換してマップに
+	for (const raw of descendantPages) {
+		const normalized = normalizePageSegments(raw.pageSegments);
+		const segmentBundles = toSegmentBundles("page", raw.id, normalized);
+		idToNode.set(raw.id, {
+			...(raw as any),
+			createdAt: raw.createdAt.toISOString(),
+			segmentBundles,
+			children: [],
+		});
+	}
+
+	// ツリーを組み立てる
+	for (const node of idToNode.values()) {
+		const parentId = node.parentId;
+		if (parentId === page.id) {
+			rootChildren.push(node);
+		} else {
+			const parentNode = idToNode.get(parentId);
+			if (parentNode) {
+				parentNode.children.push(node);
+			}
+		}
+	}
+
+	// 深さに関係なくソート
+	const sortChildren = (nodes: any[]) => {
+		nodes.sort((a, b) => a.order - b.order);
+		for (const n of nodes) {
+			if (n.children && n.children.length) sortChildren(n.children);
+		}
+	};
+	sortChildren(rootChildren);
+
+	// ---------------- DTO 変換 ----------------
 	return {
 		...page,
 		createdAt: page.createdAt.toISOString(),
 		segmentBundles,
-		children,
+		children: rootChildren,
 	};
 }
 

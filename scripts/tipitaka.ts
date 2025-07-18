@@ -68,11 +68,23 @@ function parseMarkdown(src: string) {
 
 	// 行ごとに前処理: インラインリンク除去 & 番号プレフィックス除去
 	const linePrefixRe = /^\s*(?:\(\d+\.\)|\d+\\?\.)\s*/;
-	const cleanedBodyLines = bodyLines.map((ln) => {
-		let x = ln.replace(/\[[^\]]+]\([^)]*\)/g, ""); // インラインリンク除去
-		x = x.replace(linePrefixRe, ""); // 番号プレフィックス除去
-		return x;
-	});
+	const splitEmDashRe = /—\s+“/g; // emダッシュ後に開き引用符
+	const splitTiRe = /”ti[?.]?\s+“/g; // ”ti? のあとに開き引用符
+
+	const cleanedBodyLines: string[] = [];
+	for (const ln of bodyLines) {
+		// 1) インラインリンク除去
+		let x = ln.replace(/\[[^\]]+]\([^)]*\)/g, "");
+		// 2) 数字プレフィックス除去
+		x = x.replace(linePrefixRe, "");
+		// 3) パターンに応じて改行を挿入
+		x = x
+			.replace(splitEmDashRe, "—\n\n“")
+			.replace(splitTiRe, (m) => m.replace(/\s+“$/, "\n\n“"));
+
+		// 4) 改行が入ったら分割して配列へ
+		x.split("\n").forEach((seg) => cleanedBodyLines.push(seg));
+	}
 
 	const bodyText = cleanedBodyLines.join("\n").replace(/\n{3,}/g, "\n\n");
 
