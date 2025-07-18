@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { useLocale } from "next-intl";
 import { useActionState, useState } from "react";
 import { GeminiApiKeyDialog } from "@/app/[locale]/_components/gemini-api-key-dialog/gemini-api-key-dialog";
 import { StartButton } from "@/app/[locale]/_components/start-button";
@@ -24,7 +25,6 @@ import {
 } from "@/components/ui/select";
 import { type TranslateActionState, translateAction } from "./action";
 import { DialogLocaleSelector } from "./dialog-locale-selector";
-import { useLocale } from "next-intl";
 
 type AddTranslateDialogProps = {
 	open: boolean;

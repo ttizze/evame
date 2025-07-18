@@ -7,10 +7,10 @@ import { BASE_URL } from "@/app/_constants/base-url";
 import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
+import type { PageSummary } from "@/app/[locale]/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
-import type { PageSummary } from "@/app/[locale]/types";
 
 const DynamicContentWithTranslations = dynamic(
 	() =>
@@ -127,7 +127,9 @@ export default async function Page({
 							{hasChildren ? (
 								<details className="group">
 									<summary className="cursor-pointer list-none flex items-center gap-1">
-										<span className="transition-transform group-open:rotate-90">▶</span>
+										<span className="transition-transform group-open:rotate-90">
+											▶
+										</span>
 										<a
 											className="hover:underline"
 											href={`/${locale}/user/${child.user.handle}/page/${child.slug}`}
@@ -135,7 +137,8 @@ export default async function Page({
 											{title}
 										</a>
 									</summary>
-									{child.children && renderChildPages(child.children, depth + 1)}
+									{child.children &&
+										renderChildPages(child.children, depth + 1)}
 								</details>
 							) : (
 								<a
@@ -156,12 +159,9 @@ export default async function Page({
 			<SourceLocaleBridge locale={pageDetail.sourceLocale} />
 			<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 				<DynamicContentWithTranslations pageData={data} />
-				{pageDetail.children &&
-					pageDetail.children.length > 0 && (
-						<div>
-							{renderChildPages(pageDetail.children)}
-						</div>
-					)}
+				{pageDetail.children && pageDetail.children.length > 0 && (
+					<div>{renderChildPages(pageDetail.children)}</div>
+				)}
 				<div className="flex items-center gap-4">
 					<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
 					<span className="text-muted-foreground">{pageViewCount}</span>
