@@ -112,7 +112,8 @@ export async function fetchPageDetail(
 	locale: string,
 	currentUserId?: string,
 ): Promise<PageDetail | null> {
-	const page = await prisma.page.findFirst({
+	// 1. ルートページを取得（slug は一意なので findUnique）
+	const page = await prisma.page.findUnique({
 		where: { slug },
 		include: {
 			...selectPageRelatedFields(false, locale, currentUserId),
@@ -124,70 +125,56 @@ export async function fetchPageDetail(
 	const normalized = normalizePageSegments(page.pageSegments);
 	const segmentBundles = toSegmentBundles("page", page.id, normalized);
 
-	// ---------------- 子ページ取得（レベルごとにバッチ） ----------------
-	const fetchAllDescendants = async (rootIds: number[]): Promise<any[]> => {
-		let currentIds = rootIds;
-		const all: any[] = [];
-		while (currentIds.length > 0) {
-			const rows = await prisma.page.findMany({
-				where: {
-					parentId: { in: currentIds },
-					status: "PUBLIC",
-				},
+	const childrenRaw = await prisma.page.findMany({
+		where: { parentId: page.id, status: "PUBLIC" },
+		orderBy: { order: "asc" },
+		include: {
+			...{
+				...selectPageRelatedFields(true, locale, currentUserId),
+			},
+			children: {
+				where: { status: "PUBLIC" },
 				orderBy: { order: "asc" },
 				include: {
 					...selectPageRelatedFields(true, locale, currentUserId),
 				},
-			});
-			if (rows.length === 0) break;
-			all.push(...rows);
-			currentIds = rows.map((r) => r.id);
-		}
-		return all;
-	};
+			},
+		},
+	});
 
-	const descendantPages = await fetchAllDescendants([page.id]);
+	// 型安全なツリー構造用データ（子 + 孫）
+	const toPageSummary = (raw: (typeof childrenRaw)[number]): PageSummary => {
+		const segmentBundles = toSegmentBundles(
+			"page",
+			raw.id,
+			normalizePageSegments(raw.pageSegments),
+		);
 
-	// --- DTO 変換とツリー構築 ---
-	const idToNode = new Map<number, any>();
-	const rootChildren: any[] = [];
+		const grandchildren = (raw.children ?? []).map((g) => {
+			const gBundles = toSegmentBundles(
+				"page",
+				g.id,
+				normalizePageSegments(g.pageSegments),
+			);
+			return {
+				...g,
+				createdAt: g.createdAt.toISOString(),
+				segmentBundles: gBundles,
+				children: [],
+			} as PageSummary;
+		});
 
-	// ルートの children は後で返却オブジェクトにセットする
-
-	// まず全ノードを変換してマップに
-	for (const raw of descendantPages) {
-		const normalized = normalizePageSegments(raw.pageSegments);
-		const segmentBundles = toSegmentBundles("page", raw.id, normalized);
-		idToNode.set(raw.id, {
-			...(raw as any),
+		return {
+			...raw,
 			createdAt: raw.createdAt.toISOString(),
 			segmentBundles,
-			children: [],
-		});
-	}
-
-	// ツリーを組み立てる
-	for (const node of idToNode.values()) {
-		const parentId = node.parentId;
-		if (parentId === page.id) {
-			rootChildren.push(node);
-		} else {
-			const parentNode = idToNode.get(parentId);
-			if (parentNode) {
-				parentNode.children.push(node);
-			}
-		}
-	}
-
-	// 深さに関係なくソート
-	const sortChildren = (nodes: any[]) => {
-		nodes.sort((a, b) => a.order - b.order);
-		for (const n of nodes) {
-			if (n.children && n.children.length) sortChildren(n.children);
-		}
+			children: grandchildren,
+		} as PageSummary;
 	};
-	sortChildren(rootChildren);
 
+	const rootChildren: PageSummary[] = childrenRaw.map(toPageSummary);
+
+	// Prisma で orderBy を指定しているため追加のソートは不要
 	// ---------------- DTO 変換 ----------------
 	return {
 		...page,
