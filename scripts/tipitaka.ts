@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { generateSlug } from "@/app/[locale]/_lib/generateーslug";
+import { generateSlug } from "@/app/[locale]/_lib/generate-slug";
 
 // Markdown → MDAST + SegmentDraft[] 変換ユーティリティ
 import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mdast-with-segments";
@@ -226,7 +226,10 @@ async function ensureRootPage() {
 
 	// bullet 行やインラインリンクを除去してテキストだけを抽出
 	const { paragraphs } = parseMarkdown(rawReadmeMd);
-	const cleanedReadmeMd = paragraphs.join("\n\n");
+	// README 内のカテゴリー見出し (##, ### など) はセグメントに含めたくないため除外
+	const cleanedReadmeMd = paragraphs
+		.filter((p) => !/^##+\s+/.test(p))
+		.join("\n\n");
 
 	const readmeParsed = await markdownToMdastWithSegments({
 		header: "Tipitaka",

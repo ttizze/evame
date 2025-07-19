@@ -4,7 +4,7 @@ import { Loader2, PencilIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useState } from "react";
-import { generateSlug } from "@/app/[locale]/_lib/generateーslug";
+import { generateSlug } from "@/app/[locale]/_lib/generate-slug";
 
 interface NewPageButtonProps {
 	handle: string;

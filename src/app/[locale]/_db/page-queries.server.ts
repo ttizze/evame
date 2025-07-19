@@ -128,21 +128,10 @@ export async function fetchPageDetail(
 	const childrenRaw = await prisma.page.findMany({
 		where: { parentId: page.id, status: "PUBLIC" },
 		orderBy: { order: "asc" },
-		include: {
-			...{
-				...selectPageRelatedFields(true, locale, currentUserId),
-			},
-			children: {
-				where: { status: "PUBLIC" },
-				orderBy: { order: "asc" },
-				include: {
-					...selectPageRelatedFields(true, locale, currentUserId),
-				},
-			},
-		},
+		select: selectLightPageFields(locale),
 	});
 
-	// 型安全なツリー構造用データ（子 + 孫）
+	// 型安全なツリー構造用データ（子レベルのみ）
 	const toPageSummary = (raw: (typeof childrenRaw)[number]): PageSummary => {
 		const segmentBundles = toSegmentBundles(
 			"page",
@@ -150,25 +139,11 @@ export async function fetchPageDetail(
 			normalizePageSegments(raw.pageSegments),
 		);
 
-		const grandchildren = (raw.children ?? []).map((g) => {
-			const gBundles = toSegmentBundles(
-				"page",
-				g.id,
-				normalizePageSegments(g.pageSegments),
-			);
-			return {
-				...g,
-				createdAt: g.createdAt.toISOString(),
-				segmentBundles: gBundles,
-				children: [],
-			} as PageSummary;
-		});
-
 		return {
 			...raw,
 			createdAt: raw.createdAt.toISOString(),
 			segmentBundles,
-			children: grandchildren,
+			children: [],
 		} as PageSummary;
 	};
 
@@ -345,3 +320,74 @@ export async function fetchPageViewCounts(
 		return acc;
 	}, {});
 }
+
+export async function fetchChildPages(
+	parentId: number,
+	locale: string,
+): Promise<PageSummary[]> {
+	const raws = await prisma.page.findMany({
+		where: { parentId, status: "PUBLIC" },
+		orderBy: { order: "asc" },
+		select: selectLightPageFields(locale),
+	});
+	return raws.map((raw) => ({
+		...raw,
+		createdAt: raw.createdAt.toISOString(),
+		segmentBundles: toSegmentBundles(
+			"page",
+			raw.id,
+			normalizePageSegments(raw.pageSegments),
+		),
+		children: [],
+	})) as PageSummary[];
+}
+
+const selectLightPageFields = (locale = "en") => ({
+	id: true,
+	slug: true,
+	order: true,
+	status: true,
+	parentId: true,
+	sourceLocale: true,
+	createdAt: true,
+	user: {
+		select: selectUserFields(),
+	},
+	tagPages: {
+		include: {
+			tag: true,
+		},
+	},
+	_count: {
+		select: {
+			pageComments: true,
+			children: true,
+		},
+	},
+	pageSegments: {
+		where: { number: 0 },
+		select: {
+			id: true,
+			number: true,
+			text: true,
+			pageSegmentTranslations: {
+				where: { locale, isArchived: false },
+				orderBy: [
+					{ point: Prisma.SortOrder.desc },
+					{ createdAt: Prisma.SortOrder.desc },
+				],
+				take: 1, // タイトル用に最良の翻訳 1 件だけ取得
+				select: {
+					id: true,
+					locale: true,
+					text: true,
+					point: true,
+					createdAt: true,
+					user: {
+						select: selectUserFields(),
+					},
+				},
+			},
+		},
+	},
+});

@@ -7,8 +7,8 @@ import { BASE_URL } from "@/app/_constants/base-url";
 import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
-import type { PageSummary } from "@/app/[locale]/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChildPageTree } from "./_components/child-page-tree.client";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
 
@@ -115,52 +115,22 @@ export default async function Page({
 		return notFound();
 	}
 
-	// 再帰的にページ階層を描画するヘルパー
-	const renderChildPages = (nodes: PageSummary[], depth = 0) => {
-		return (
-			<ul className={`${depth === 0 ? "" : "ml-4"} space-y-1`}>
-				{nodes.map((child) => {
-					const title = child.segmentBundles?.[0]?.segment?.text || "Untitled";
-					const hasChildren = child.children && child.children.length > 0;
-					return (
-						<li key={child.id}>
-							{hasChildren ? (
-								<details className="group">
-									<summary className="cursor-pointer list-none flex items-center gap-1">
-										<span className="transition-transform group-open:rotate-90">
-											▶
-										</span>
-										<a
-											className="hover:underline"
-											href={`/${locale}/user/${child.user.handle}/page/${child.slug}`}
-										>
-											{title}
-										</a>
-									</summary>
-									{child.children &&
-										renderChildPages(child.children, depth + 1)}
-								</details>
-							) : (
-								<a
-									className="hover:underline"
-									href={`/${locale}/user/${child.user.handle}/page/${child.slug}`}
-								>
-									{title}
-								</a>
-							)}
-						</li>
-					);
-				})}
-			</ul>
-		);
-	};
+	// ChildPageTree handles recursive lazy loading
 	return (
 		<>
 			<SourceLocaleBridge locale={pageDetail.sourceLocale} />
 			<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 				<DynamicContentWithTranslations pageData={data} />
 				{pageDetail.children && pageDetail.children.length > 0 && (
-					<div>{renderChildPages(pageDetail.children)}</div>
+					<div>
+						<ul className="space-y-1 list-none p-0">
+							{pageDetail.children.map((child) => (
+								<li key={child.id}>
+									<ChildPageTree locale={locale} parent={child} />
+								</li>
+							))}
+						</ul>
+					</div>
 				)}
 				<div className="flex items-center gap-4">
 					<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
