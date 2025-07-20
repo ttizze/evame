@@ -8,6 +8,7 @@ import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChildPageTree } from "./_components/child-page-tree.client";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
 
@@ -109,16 +110,28 @@ export default async function Page({
 		return notFound();
 	}
 	const { pageDetail, currentUser, pageViewCount } = data;
-
 	const isOwner = pageDetail.user.handle === currentUser?.handle;
 	if (!isOwner && pageDetail.status !== "PUBLIC") {
 		return notFound();
 	}
+
+	// ChildPageTree handles recursive lazy loading
 	return (
 		<>
 			<SourceLocaleBridge locale={pageDetail.sourceLocale} />
 			<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 				<DynamicContentWithTranslations pageData={data} />
+				{pageDetail.children && pageDetail.children.length > 0 && (
+					<div>
+						<ul className="space-y-1 list-none p-0">
+							{pageDetail.children.map((child) => (
+								<li key={child.id}>
+									<ChildPageTree locale={locale} parent={child} />
+								</li>
+							))}
+						</ul>
+					</div>
+				)}
 				<div className="flex items-center gap-4">
 					<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
 					<span className="text-muted-foreground">{pageViewCount}</span>
@@ -145,24 +158,6 @@ export default async function Page({
 						/>
 					}
 				/>
-
-				{pageDetail.children && pageDetail.children.length > 0 && (
-					<div className="mt-8 p-4 border rounded-lg">
-						<h2 className="text-xl font-bold mb-4">子ページ</h2>
-						<ul className="space-y-2">
-							{pageDetail.children.map((child) => (
-								<li key={child.id}>
-									<a
-										className="text-blue-600 hover:underline"
-										href={`/${locale}/user/${child.user.handle}/page/${child.slug}`}
-									>
-										{child.segmentBundles[0]?.segment.text || "Untitled"}
-									</a>
-								</li>
-							))}
-						</ul>
-					</div>
-				)}
 
 				<div className="mt-8">
 					<div className="mt-8" id="comments">

@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { useLocale } from "next-intl";
 import { useActionState, useState } from "react";
 import { GeminiApiKeyDialog } from "@/app/[locale]/_components/gemini-api-key-dialog/gemini-api-key-dialog";
 import { StartButton } from "@/app/[locale]/_components/start-button";
@@ -40,6 +41,7 @@ export function AddTranslateDialog({
 	hasGeminiApiKey,
 	pageSlug,
 }: AddTranslateDialogProps) {
+	const currentLocale = useLocale();
 	let targetContentType: TargetContentType;
 	if (pageSlug) {
 		targetContentType = "page";
@@ -50,7 +52,7 @@ export function AddTranslateDialog({
 		TranslateActionState,
 		FormData
 	>(translateAction, { success: false });
-	const [targetLocale, setTargetLocale] = useState("");
+	const [targetLocale, setTargetLocale] = useState(currentLocale);
 	const [selectedModel, setSelectedModel] = useState("gemini-2.0-flash");
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
 	const { toastJobs } = useTranslationJobs(

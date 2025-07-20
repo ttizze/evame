@@ -112,41 +112,33 @@ export async function fetchPageDetail(
 	locale: string,
 	currentUserId?: string,
 ): Promise<PageDetail | null> {
-	const page = await prisma.page.findFirst({
+	const page = await prisma.page.findUnique({
 		where: { slug },
 		include: {
 			...selectPageRelatedFields(false, locale, currentUserId),
 			children: {
 				where: { status: "PUBLIC" },
 				orderBy: { order: "asc" },
-				include: {
-					...selectPageRelatedFields(true, locale, currentUserId),
-				},
+				select: selectLightPageFields(locale),
 			},
 		},
 	});
 
 	if (!page) return null;
 
-	const normalized = await normalizePageSegments(page.pageSegments);
-	const segmentBundles = await toSegmentBundles("page", page.id, normalized);
+	const normalized = normalizePageSegments(page.pageSegments);
+	const segmentBundles = toSegmentBundles("page", page.id, normalized);
 
-	// Process children pages
-	const children = await Promise.all(
-		page.children.map(async (child) => {
-			const childNormalized = await normalizePageSegments(child.pageSegments);
-			const childSegmentBundles = await toSegmentBundles(
-				"page",
-				child.id,
-				childNormalized,
-			);
-			return {
-				...child,
-				createdAt: child.createdAt.toISOString(),
-				segmentBundles: childSegmentBundles,
-			};
-		}),
-	);
+	const children: PageSummary[] = (page.children ?? []).map((raw) => ({
+		...raw,
+		createdAt: raw.createdAt.toISOString(),
+		segmentBundles: toSegmentBundles(
+			"page",
+			raw.id,
+			normalizePageSegments(raw.pageSegments),
+		),
+		children: [],
+	}));
 
 	return {
 		...page,
@@ -317,3 +309,74 @@ export async function fetchPageViewCounts(
 		return acc;
 	}, {});
 }
+
+export async function fetchChildPages(
+	parentId: number,
+	locale: string,
+): Promise<PageSummary[]> {
+	const raws = await prisma.page.findMany({
+		where: { parentId, status: "PUBLIC" },
+		orderBy: { order: "asc" },
+		select: selectLightPageFields(locale),
+	});
+	return raws.map((raw) => ({
+		...raw,
+		createdAt: raw.createdAt.toISOString(),
+		segmentBundles: toSegmentBundles(
+			"page",
+			raw.id,
+			normalizePageSegments(raw.pageSegments),
+		),
+		children: [],
+	})) as PageSummary[];
+}
+
+const selectLightPageFields = (locale = "en") => ({
+	id: true,
+	slug: true,
+	order: true,
+	status: true,
+	parentId: true,
+	sourceLocale: true,
+	createdAt: true,
+	user: {
+		select: selectUserFields(),
+	},
+	tagPages: {
+		include: {
+			tag: true,
+		},
+	},
+	_count: {
+		select: {
+			pageComments: true,
+			children: true,
+		},
+	},
+	pageSegments: {
+		where: { number: 0 },
+		select: {
+			id: true,
+			number: true,
+			text: true,
+			pageSegmentTranslations: {
+				where: { locale, isArchived: false },
+				orderBy: [
+					{ point: Prisma.SortOrder.desc },
+					{ createdAt: Prisma.SortOrder.desc },
+				],
+				take: 1, // タイトル用に最良の翻訳 1 件だけ取得
+				select: {
+					id: true,
+					locale: true,
+					text: true,
+					point: true,
+					createdAt: true,
+					user: {
+						select: selectUserFields(),
+					},
+				},
+			},
+		},
+	},
+});
