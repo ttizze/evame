@@ -90,7 +90,8 @@ export function LocaleSelector({
 	const { sourceLocale, translationJobs } = data ?? {};
 	const localeOptionWithStatus = buildLocaleOptions({
 		sourceLocale,
-		existLocales: translationJobs?.map((job) => job.locale) ?? [],
+		existLocales:
+			translationJobs?.filter((job) => job.status === "COMPLETED").map((job) => job.locale) ?? [],
 		supported: supportedLocaleOptions,
 	});
 
