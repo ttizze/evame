@@ -2,23 +2,31 @@
 
 import { useState } from "react";
 import useSWR from "swr";
+import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
 import type { PageSummary } from "@/app/[locale]/types";
+import { Link } from "@/i18n/routing";
+import { cn } from "@/lib/utils";
 
 interface Props {
 	parent: PageSummary;
 	locale: string;
 }
 
+const fetcher = (url: string) =>
+	fetch(url).then((res) => res.json() as Promise<PageSummary[]>);
+
 export function ChildPageTree({ parent, locale }: Props) {
-	const [open, setOpen] = useState(false);
-	const hasChildrenKnown =
-		parent._count?.children && parent._count.children > 0;
+	const [isOpen, setIsOpen] = useState(false);
 
-	const fetcher = (url: string) =>
-		fetch(url).then((res) => res.json() as Promise<PageSummary[]>);
-
+	const hasChildren = Boolean(
+		parent._count?.children && parent._count.children > 0,
+	);
+	const pageLink = `/user/${parent.user.handle}/page/${parent.slug}`;
+	const titleSegment = parent.segmentBundles.find(
+		(s) => s.segment.number === 0,
+	);
 	const { data: children } = useSWR<PageSummary[]>(
-		open && hasChildrenKnown
+		isOpen && hasChildren
 			? `/api/child-pages?parentId=${parent.id}&locale=${locale}`
 			: null,
 		fetcher,
@@ -28,27 +36,40 @@ export function ChildPageTree({ parent, locale }: Props) {
 		},
 	);
 
-	if (!hasChildrenKnown) {
+	if (!hasChildren) {
 		return (
-			<a
-				className="hover:underline"
-				href={`/${locale}/user/${parent.user.handle}/page/${parent.slug}`}
-			>
-				{parent.segmentBundles?.[0]?.segment?.text || "Untitled"}
-			</a>
+			<Link className="block overflow-hidden" href={pageLink}>
+				{titleSegment && (
+					<SegmentAndTranslationSection
+						currentHandle={parent.user.handle}
+						interactive={false}
+						segmentBundle={titleSegment}
+						segmentTextClassName="line-clamp-1 break-all overflow-wrap-anywhere"
+					/>
+				)}
+			</Link>
 		);
 	}
 
 	return (
-		<details className="group" onToggle={(e) => setOpen(e.currentTarget.open)}>
+		<details
+			className="group"
+			onToggle={(e) => setIsOpen(e.currentTarget.open)}
+		>
 			<summary className="cursor-pointer list-none flex items-center gap-1">
-				<span className="transition-transform group-open:rotate-90">▶</span>
-				<a
-					className="hover:underline"
-					href={`/${locale}/user/${parent.user.handle}/page/${parent.slug}`}
-				>
-					{parent.segmentBundles?.[0]?.segment?.text || "Untitled"}
-				</a>
+				<span className={cn("transition-transform", isOpen && "rotate-90")}>
+					▶
+				</span>
+				<Link className="hover:underline" href={pageLink}>
+					{titleSegment && (
+						<SegmentAndTranslationSection
+							currentHandle={parent.user.handle}
+							interactive={false}
+							segmentBundle={titleSegment}
+							segmentTextClassName="line-clamp-1 break-all overflow-wrap-anywhere"
+						/>
+					)}
+				</Link>
 			</summary>
 			{children && (
 				<ul className="ml-4 space-y-1 list-none">
