@@ -42,7 +42,6 @@ export type PageDetail = Omit<Page, "createdAt"> & {
 	segmentBundles: SegmentBundle[];
 	_count: {
 		pageComments: number;
-		children?: number;
 	};
 	children?: PageSummary[];
 };
