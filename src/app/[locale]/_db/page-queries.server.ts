@@ -112,11 +112,15 @@ export async function fetchPageDetail(
 	locale: string,
 	currentUserId?: string,
 ): Promise<PageDetail | null> {
-	// 1. ルートページを取得（slug は一意なので findUnique）
 	const page = await prisma.page.findUnique({
 		where: { slug },
 		include: {
 			...selectPageRelatedFields(false, locale, currentUserId),
+			children: {
+				where: { status: "PUBLIC" },
+				orderBy: { order: "asc" },
+				select: selectLightPageFields(locale),
+			},
 		},
 	});
 
@@ -125,37 +129,22 @@ export async function fetchPageDetail(
 	const normalized = normalizePageSegments(page.pageSegments);
 	const segmentBundles = toSegmentBundles("page", page.id, normalized);
 
-	const childrenRaw = await prisma.page.findMany({
-		where: { parentId: page.id, status: "PUBLIC" },
-		orderBy: { order: "asc" },
-		select: selectLightPageFields(locale),
-	});
-
-	// 型安全なツリー構造用データ（子レベルのみ）
-	const toPageSummary = (raw: (typeof childrenRaw)[number]): PageSummary => {
-		const segmentBundles = toSegmentBundles(
+	const children: PageSummary[] = (page.children ?? []).map((raw) => ({
+		...raw,
+		createdAt: raw.createdAt.toISOString(),
+		segmentBundles: toSegmentBundles(
 			"page",
 			raw.id,
 			normalizePageSegments(raw.pageSegments),
-		);
+		),
+		children: [],
+	}));
 
-		return {
-			...raw,
-			createdAt: raw.createdAt.toISOString(),
-			segmentBundles,
-			children: [],
-		} as PageSummary;
-	};
-
-	const rootChildren: PageSummary[] = childrenRaw.map(toPageSummary);
-
-	// Prisma で orderBy を指定しているため追加のソートは不要
-	// ---------------- DTO 変換 ----------------
 	return {
 		...page,
 		createdAt: page.createdAt.toISOString(),
 		segmentBundles,
-		children: rootChildren,
+		children,
 	};
 }
 
