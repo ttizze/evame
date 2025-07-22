@@ -6,7 +6,7 @@ import {
 	Users,
 } from "lucide-react";
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
-import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
+import { SegmentWrap } from "@/app/[locale]/_components/segment-wrap/server";
 import Globe from "@/app/[locale]/_components/top-page/problem-solution-section/components/globe.client";
 import { getCurrentUser } from "@/auth";
 import { fetchAboutPage } from "../../../(common-layout)/about/_lib/fetch-about-page";
@@ -97,10 +97,12 @@ export default async function ProblemSolutionSection({
 			<div className="">
 				<div className="border-b">
 					<h2 className="text-2xl font-bold text-center mb-10">
-						<SegmentAndTranslationSection
-							currentHandle={currentHandle}
-							segmentBundle={problemHeader}
-						/>
+						{problemHeader && (
+							<SegmentWrap
+								bundle={problemHeader}
+								currentHandle={currentHandle}
+							/>
+						)}
 					</h2>
 				</div>
 				<div className="grid grid-cols-1 ">
@@ -108,17 +110,14 @@ export default async function ProblemSolutionSection({
 						<AboutSectionCard
 							component={problemComponents[index]}
 							description={
-								<SegmentAndTranslationSection
-									currentHandle={currentHandle}
-									segmentBundle={pair.text}
-								/>
+								<SegmentWrap bundle={pair.text} currentHandle={currentHandle} />
 							}
 							icon={problemIcons[index]}
 							key={`problem-${pair.header.segment.number}`}
 							title={
-								<SegmentAndTranslationSection
+								<SegmentWrap
+									bundle={pair.header}
 									currentHandle={currentHandle}
-									segmentBundle={pair.header}
 								/>
 							}
 						/>

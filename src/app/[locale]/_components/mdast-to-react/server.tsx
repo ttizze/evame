@@ -6,6 +6,7 @@ import Image from "next/image";
 import type { ReactElement } from "react";
 import { type ComponentType, createElement, type JSX } from "react";
 import * as jsxRuntime from "react/jsx-runtime";
+import { Tweet as XPost } from "react-tweet";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeRaw from "rehype-raw";
 import rehypeReact from "rehype-react";
@@ -14,8 +15,10 @@ import remarkLinkCard from "remark-link-card-plus";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import type { SegmentBundle } from "@/app/[locale]/types";
+import { remarkTweet } from "./remark-tweet";
 import { WrapSegment } from "./wrap-segments/server";
 
+// --------------
 const SEGMENTABLE = [
 	"p",
 	"h1",
@@ -64,6 +67,7 @@ export async function mdastToReact({
 	);
 
 	const processor = unified()
+		.use(remarkTweet)
 		.use(remarkEmbedder, { transformers: [oembedTransformer] })
 		.use(remarkLinkCard, {
 			cache: false,
@@ -91,6 +95,11 @@ export async function mdastToReact({
 			components: {
 				// image hydration → next/image
 				img: ImgComponent,
+				tweet: (props: { id: string }) => (
+					<span className="not-prose">
+						<XPost id={props.id} />
+					</span>
+				),
 				...segmentComponents,
 			},
 		});

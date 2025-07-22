@@ -4,8 +4,7 @@ import XView from "./x-view";
 
 export const X = Node.create({
 	name: "x",
-	inline: true, // ← ここを追加
-	group: "inline", // ← インライングループに
+	group: "block", // ブロック要素として扱う
 	atom: true,
 
 	addAttributes() {

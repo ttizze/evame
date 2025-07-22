@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
+import { WrapSegmentClient } from "@/app/[locale]/_components/mdast-to-react/wrap-segments/client";
 import type { PageSummary } from "@/app/[locale]/types";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
@@ -40,12 +40,17 @@ export function ChildPageTree({ parent, locale }: Props) {
 		return (
 			<Link className="block overflow-hidden" href={pageLink}>
 				{titleSegment && (
-					<SegmentAndTranslationSection
+					<WrapSegmentClient
+						bundle={titleSegment}
 						currentHandle={parent.user.handle}
 						interactive={false}
-						segmentBundle={titleSegment}
-						segmentTextClassName="line-clamp-1 break-all overflow-wrap-anywhere"
-					/>
+						tagName="span"
+						tagProps={{
+							className: "line-clamp-1 break-all overflow-wrap-anywhere",
+						}}
+					>
+						{titleSegment.segment.text}
+					</WrapSegmentClient>
 				)}
 			</Link>
 		);
@@ -67,12 +72,17 @@ export function ChildPageTree({ parent, locale }: Props) {
 				</span>
 				<Link className="hover:underline" href={pageLink}>
 					{titleSegment && (
-						<SegmentAndTranslationSection
+						<WrapSegmentClient
+							bundle={titleSegment}
 							currentHandle={parent.user.handle}
 							interactive={false}
-							segmentBundle={titleSegment}
-							segmentTextClassName="line-clamp-1 break-all overflow-wrap-anywhere"
-						/>
+							tagName="span"
+							tagProps={{
+								className: "line-clamp-1 break-all overflow-wrap-anywhere",
+							}}
+						>
+							{titleSegment.segment.text}
+						</WrapSegmentClient>
 					)}
 				</Link>
 			</summary>
