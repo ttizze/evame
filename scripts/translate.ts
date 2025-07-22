@@ -1,60 +1,164 @@
-// import { createUserAITranslationInfo } from "@/app/[locale]/db/mutations.server";
-// import { fetchUserByHandle } from "@/app/db/queries.server";
-// import { prisma } from "@/lib/prisma";
-// // 実際にはgetAllPagesByUserIdを何らかの形で用意する必要がある
-// // ここでは例としてprismaでpagesを取得する処理を記述
-// async function getAllPagesByUserId(userId: string) {
-// 	return prisma.page.findMany({
-// 		where: { userId },
-// 		include: { pageSegments: true },
-// 	});
-// }
+import { PrismaClient, TranslationStatus } from "@prisma/client";
+import { BASE_URL } from "@/app/_constants/base-url";
 
-// // スクリプト用メイン処理
-// (async () => {
-// 	try {
-// 		const USER_NAME = "evame";
-// 		const LOCALE = "en";
-// 		const AI_MODEL = "gemini-1.5-flash";
-// 		const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-// 		if (!GEMINI_API_KEY || GEMINI_API_KEY === "undefined") {
-// 			console.error("GEMINI_API_KEY is not set.");
-// 			process.exit(1);
-// 		}
+const prisma = new PrismaClient();
+// ---------------- Types ----------------
 
-// 		const user = await fetchUserByHandle(USER_NAME);
-// 		if (!user) {
-// 			console.error(`User ${USER_NAME} not found.`);
-// 			process.exit(1);
-// 		}
+type NumberedElement = { number: number; text: string };
 
-// 		const pages = await getAllPagesByUserId(user.id);
-// 		if (pages.length === 0) {
-// 			console.log("No pages found for user:", USER_NAME);
-// 			process.exit(0);
-// 		}
+// ---------------- Utils ----------------
 
-// 		// 全ページに対してキュー追加
-// 		for (const page of pages) {
-// 			if (!page.pageSegments || page.pageSegments.length === 0) {
-// 				console.log(`Skip page ${page.slug} because no pageSegments found.`);
-// 				continue;
-// 			}
-// 			const title = page.pageSegments.filter((item) => item.number === 0)[0]
-// 				.text;
+/**
+ * 再帰的に子ページを辿り、親を含むすべての pageId を取得します。
+ */
+async function getDescendantPageIds(parentId: number): Promise<number[]> {
+	const children = await prisma.page.findMany({
+		where: { parentId },
+		select: { id: true },
+	});
+	const ids: number[] = [];
+	for (const child of children) {
+		ids.push(child.id);
+		ids.push(...(await getDescendantPageIds(child.id)));
+	}
+	return ids;
+}
 
-// 			// UserAITranslationInfoを作成
-// 			const userAITranslationInfo = await createUserAITranslationInfo(
-// 				user.id,
-// 				page.id,
-// 				AI_MODEL,
-// 				LOCALE,
-// 			);
-// 		}
+const toNumberedElements = (
+	segments: { number: number; text: string }[],
+): NumberedElement[] => segments.map(({ number, text }) => ({ number, text }));
 
-// 		console.log("All pages have been queued for translation.");
-// 	} catch (error) {
-// 		console.error("Error:", error);
-// 		process.exit(1);
-// 	}
-// })();
+// ---------------- Local DB helpers ----------------
+
+type CreateTranslationJobParams = {
+	aiModel: string;
+	locale: string;
+	userId?: string;
+	pageId: number;
+};
+
+async function fetchUserByHandle(handle: string) {
+	return prisma.user.findUnique({ where: { handle } });
+}
+
+async function createTranslationJob(params: CreateTranslationJobParams) {
+	return prisma.translationJob.create({
+		data: {
+			aiModel: params.aiModel,
+			locale: params.locale,
+			userId: params.userId,
+			pageId: params.pageId,
+			status: TranslationStatus.PENDING,
+			progress: 0,
+		},
+	});
+}
+
+async function fetchPageIdBySlug(slug: string) {
+	return prisma.page.findFirst({ where: { slug }, select: { id: true } });
+}
+
+async function fetchPageWithPageSegments(pageId: number) {
+	const page = await prisma.page.findFirst({
+		where: { id: pageId },
+		select: {
+			slug: true,
+			pageSegments: { select: { number: true, text: true } },
+		},
+	});
+	if (!page) return null;
+	const title = page.pageSegments.find((seg) => seg.number === 0)?.text ?? "";
+	return { ...page, title } as {
+		slug: string;
+		title: string;
+		pageSegments: { number: number; text: string }[];
+	};
+}
+// ---------------- Main ----------------
+
+(async () => {
+	try {
+		const [
+			,
+			,
+			SLUG,
+			TARGET_LOCALE,
+			AI_MODEL = "gemini-2.0-flash",
+			USER_HANDLE = "evame",
+		] = process.argv;
+
+		if (!SLUG || !TARGET_LOCALE) {
+			console.error(
+				"Usage: ts-node scripts/translate.ts <slug> <targetLocale> [aiModel] [userHandle]",
+			);
+			process.exit(1);
+		}
+
+		// 1. ユーザー取得
+		const user = await fetchUserByHandle(USER_HANDLE);
+		if (!user) {
+			console.error(`User ${USER_HANDLE} not found.`);
+			process.exit(1);
+		}
+
+		// 2. ルートページ取得
+		const rootPage = await fetchPageIdBySlug(SLUG);
+		if (!rootPage) {
+			console.error(`Page with slug '${SLUG}' not found.`);
+			process.exit(1);
+		}
+
+		// 3. 子ページを含むすべての pageId を収集
+		const pageIds = [rootPage.id, ...(await getDescendantPageIds(rootPage.id))];
+
+		// 4. 各ページを翻訳キューに追加
+		for (const pageId of pageIds) {
+			const page = await fetchPageWithPageSegments(pageId);
+			if (!page) {
+				console.warn(`Page id ${pageId} not found. Skip.`);
+				continue;
+			}
+
+			const numberedElements = toNumberedElements(page.pageSegments);
+			if (numberedElements.length === 0) {
+				console.warn(`Page ${page.slug} has no segments. Skip.`);
+				continue;
+			}
+
+			// TranslationJob を作成
+			const job = await createTranslationJob({
+				userId: user.id,
+				aiModel: AI_MODEL,
+				locale: TARGET_LOCALE,
+				pageId,
+			});
+
+			// /api/translate エンドポイントへリクエスト
+			await fetch(`${BASE_URL}/api/translate`, {
+				method: "POST",
+				body: JSON.stringify({
+					provider: "gemini", // CLI では gemini を既定とする
+					translationJobId: job.id,
+					aiModel: AI_MODEL,
+					userId: user.id,
+					targetLocale: TARGET_LOCALE,
+					title: page.title,
+					numberedElements,
+					targetContentType: "page",
+					pageId,
+				}),
+			});
+
+			console.log(
+				`Queued translation for page slug '${page.slug}' (${TARGET_LOCALE}).`,
+			);
+		}
+
+		console.log("All pages have been queued for translation.");
+	} catch (error) {
+		console.error("Error:", error);
+		process.exit(1);
+	} finally {
+		await prisma.$disconnect();
+	}
+})();

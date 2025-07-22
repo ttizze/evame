@@ -18,7 +18,9 @@ const fetcher = (url: string) =>
 export function ChildPageTree({ parent, locale }: Props) {
 	const [isOpen, setIsOpen] = useState(false);
 
-	const hasChildren = Boolean(parent.children && parent.children.length > 0);
+	const hasChildren = Boolean(
+		parent._count?.children && parent._count.children > 0,
+	);
 	const pageLink = `/user/${parent.user.handle}/page/${parent.slug}`;
 	const titleSegment = parent.segmentBundles.find(
 		(s) => s.segment.number === 0,
@@ -55,7 +57,12 @@ export function ChildPageTree({ parent, locale }: Props) {
 			onToggle={(e) => setIsOpen(e.currentTarget.open)}
 		>
 			<summary className="cursor-pointer list-none flex items-center gap-1">
-				<span className={cn("transition-transform", isOpen && "rotate-90")}>
+				<span
+					className={cn(
+						"transition-transform self-start pt-0.5",
+						isOpen && "rotate-90",
+					)}
+				>
 					▶
 				</span>
 				<Link className="hover:underline" href={pageLink}>
