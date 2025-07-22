@@ -45,19 +45,6 @@ function parseMarkdown(src: string) {
 			continue; // 箇条書きリンク行は本文に含めない
 		}
 
-		// リンクを伴わない bullet 行（上位構造の見出しなど）も無視
-		if (/^\*\s+[^[]/.test(line)) {
-			continue;
-		}
-
-		// パンくずナビゲーション行は完全に無視
-		if (
-			/^\[Home].*/.test(line) ||
-			/Go to (previous|parent|next) page/.test(line)
-		) {
-			continue;
-		}
-
 		// 純粋な番号行 ("(24.)" や "41.") は無視
 		if (/^\(?\d+\.?\)?\s*$/.test(line.trim())) {
 			continue;
@@ -66,8 +53,7 @@ function parseMarkdown(src: string) {
 		bodyLines.push(line);
 	}
 
-	// 行ごとに前処理: インラインリンク除去 & 番号プレフィックス除去
-	const linePrefixRe = /^\s*(?:\(\d+\.\)|\d+\\?\.)\s*/;
+	const enumNumRe = /(\(\d+\\?\.\)|\(\d+\)|\d+\\?\.)/g;
 	const splitEmDashRe = /—\s+“/g; // emダッシュ後に開き引用符
 	const splitTiRe = /”ti[?.]?\s+“/g; // ”ti? のあとに開き引用符
 
@@ -76,13 +62,15 @@ function parseMarkdown(src: string) {
 		// 1) インラインリンク除去
 		let x = ln.replace(/\[[^\]]+]\([^)]*\)/g, "");
 		// 2) 数字プレフィックス除去
-		x = x.replace(linePrefixRe, "");
-		// 3) パターンに応じて改行を挿入
+		// 3) 行内の列挙番号 ((123.), (123), 123., 123\.) を除去
+		x = x.replace(enumNumRe, "");
+
+		// 4) パターンに応じて改行を挿入
 		x = x
 			.replace(splitEmDashRe, "—\n\n“")
 			.replace(splitTiRe, (m) => m.replace(/\s+“$/, "\n\n“"));
 
-		// 4) 改行が入ったら分割して配列へ
+		// 5) 改行が入ったら分割して配列へ
 		x.split("\n").forEach((seg) => cleanedBodyLines.push(seg));
 	}
 
