@@ -16,6 +16,11 @@ interface BaseProps {
 	bundle: SegmentBundle;
 	currentHandle?: string;
 	children: ReactNode;
+	/**
+	 * If false, disable interactive UI (votes, popovers, etc.) inside TranslationSection.
+	 * Defaults to true.
+	 */
+	interactive?: boolean;
 }
 
 export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
@@ -24,6 +29,7 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 	tagProps,
 	currentHandle,
 	children,
+	interactive = true,
 }: BaseProps & {
 	tagName: Tag;
 	tagProps: JSX.IntrinsicElements[Tag];
@@ -43,7 +49,7 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 	);
 
 	/* 色クラス差し替え */
-	const base = tagProps.className ?? "";
+	const base = `${tagProps.className ?? ""} block`;
 	const gray = "text-gray-300 dark:text-gray-600";
 	const normal = "text-gray-700 dark:text-gray-200";
 	const srcCls =
@@ -75,7 +81,7 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 					},
 					<TranslationSection
 						currentHandle={currentHandle}
-						interactive
+						interactive={interactive}
 						segmentBundle={bundle}
 					/>,
 				)

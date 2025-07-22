@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { SegmentAndTranslationSection } from "@/app/[locale]/_components/segment-and-translation-section/client";
+import { SegmentWrap } from "@/app/[locale]/_components/segment-wrap/server";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/_lib/fetch-about-page";
 import { getCurrentUser } from "@/auth";
@@ -44,18 +44,18 @@ export default async function HeroSection({ locale }: { locale: string }) {
 			<Icon className="absolute h-6 w-6 -bottom-3 -right-3 dark:text-white text-black" />
 			<div className="relative z-10 px-4 md:px-8 max-w-4xl mx-auto">
 				<h1 className="text-2xl md:text-4xl font-bold mb-6 text-center">
-					<SegmentAndTranslationSection
+					<SegmentWrap
+						bundle={heroTitle}
+						className="w-full mb-2"
 						currentHandle={currentHandle}
-						segmentBundle={heroTitle}
-						segmentTextClassName="w-full mb-2"
 					/>
 				</h1>
 
 				<span className="text-xl mb-12 w-full">
-					<SegmentAndTranslationSection
+					<SegmentWrap
+						bundle={heroText}
+						className="mb-2"
 						currentHandle={currentHandle}
-						segmentBundle={heroText}
-						segmentTextClassName="mb-2"
 					/>
 				</span>
 				<div className="mb-12 flex justify-center mt-10">
