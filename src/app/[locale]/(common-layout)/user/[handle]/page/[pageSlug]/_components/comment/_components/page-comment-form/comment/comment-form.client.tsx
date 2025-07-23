@@ -56,8 +56,8 @@ export function CommentForm({
 				)}
 
 				<Button
-					className={`w-full ${!currentHandle ? "opacity-50 bg-muted" : ""}`}
-					disabled={isPending || !currentHandle}
+					className="w-full"
+					disabled={isPending || !currentHandle || content.length === 0}
 					type="submit"
 				>
 					{isPending ? "posting" : "post"}
