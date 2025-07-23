@@ -1,5 +1,5 @@
-import { CommentList } from "@/app/[locale]/_components/comment/comment-list.client";
 import { mdastToReact } from "@/app/[locale]/_components/mdast-to-react/server";
+import { CommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-form/comment/comment-list.client";
 import type { PageCommentWithUserAndTranslations } from "../_lib/fetch-page-comments-with-user-and-translations";
 import { PageCommentItemClient } from "./client";
 import { PageCommentReplyForm } from "./reply-form.client";

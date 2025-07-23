@@ -1,9 +1,9 @@
 /* PageCommentForm.tsx */
 "use client";
 import { useActionState, useEffect } from "react";
-import { CommentForm } from "@/app/[locale]/_components/comment/comment-form.client";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
+import { CommentForm } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-form/comment/comment-form.client";
 import type { CommentActionResponse } from "./action";
 import { commentAction } from "./action";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { CommentActionMenu } from "@/app/[locale]/_components/comment/comment-action-menu.client";
+import { CommentActionMenu } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-form/comment/comment-action-menu.client";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import type { PageCommentWithUserAndTranslations } from "../_lib/fetch-page-comments-with-user-and-translations";
