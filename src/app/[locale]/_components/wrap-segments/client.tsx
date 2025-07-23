@@ -59,14 +59,14 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 	const source =
 		eff !== "user" || hasImage
 			? createElement(
-				tagName,
-				{
-					...tagProps,
-					className: srcCls,
-					"data-number-id": bundle.segment.number,
-				},
-				children,
-			)
+					tagName,
+					{
+						...tagProps,
+						className: srcCls,
+						"data-number-id": bundle.segment.number,
+					},
+					children,
+				)
 			: null;
 
 	const translation: ReactNode =

@@ -22,9 +22,7 @@ interface TranslationSectionProps<Tag extends keyof JSX.IntrinsicElements> {
 }
 
 // Renders: [<Tag>translated text button</Tag>, interactive UI siblings]
-export function TranslationSection<
-	Tag extends keyof JSX.IntrinsicElements,
->({
+export function TranslationSection<Tag extends keyof JSX.IntrinsicElements>({
 	bundle,
 	tagName,
 	tagProps,
