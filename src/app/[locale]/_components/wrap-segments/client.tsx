@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useDisplay } from "@/app/_context/display-provider";
 import type { SegmentBundle } from "@/app/[locale]/types";
-import { TranslationSection } from "../../segment-and-translation-section/translation-section";
+import { TranslationSection } from "../mdast-to-react/translation-section/translation-section";
 
 interface BaseProps {
 	bundle: SegmentBundle;

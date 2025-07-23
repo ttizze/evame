@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { mdastToReact } from "@/app/[locale]/_components/mdast-to-react/server";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
-import { SegmentWrap } from "@/app/[locale]/_components/segment-wrap/server";
+import { WrapSegmentsComponent } from "@/app/[locale]/_components/wrap-segments-component/server";
 import type { fetchPageContext } from "../_lib/fetch-page-context";
 import { SubHeader } from "./sub-header";
 
@@ -29,7 +29,7 @@ export async function ContentWithTranslations({
 		<>
 			<h1 className="mb-0! ">
 				{pageSegmentTitleWithTranslations && (
-					<SegmentWrap
+					<WrapSegmentsComponent
 						bundle={pageSegmentTitleWithTranslations}
 						currentHandle={currentUser?.handle}
 					/>
