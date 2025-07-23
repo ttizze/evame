@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { pickBestPerLocale } from "./_lib/pick-best-per-locale";
 
 export async function GET(req: NextRequest) {
 	/* ① クエリパラメータを 1 回でバリデート */
@@ -22,7 +21,12 @@ export async function GET(req: NextRequest) {
 	if (pageSlug) {
 		const page = await prisma.page.findUnique({
 			where: { slug: pageSlug },
-			select: { sourceLocale: true, translationJobs: true },
+			select: {
+				sourceLocale: true,
+				translationJobs: {
+					where: { status: "COMPLETED" },
+				},
+			},
 		});
 		if (!page)
 			return NextResponse.json({ message: "page not found" }, { status: 404 });
@@ -30,7 +34,7 @@ export async function GET(req: NextRequest) {
 		return NextResponse.json(
 			{
 				sourceLocale: page.sourceLocale,
-				translationJobs: pickBestPerLocale(page.translationJobs),
+				translationJobs: page.translationJobs,
 			},
 			{ status: 200 },
 		);
