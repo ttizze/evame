@@ -59,33 +59,26 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 	const source =
 		eff !== "user" || hasImage
 			? createElement(
-					tagName,
-					{
-						...tagProps,
-						className: srcCls,
-						"data-number-id": bundle.segment.number,
-					},
-					children,
-				)
+				tagName,
+				{
+					...tagProps,
+					className: srcCls,
+					"data-number-id": bundle.segment.number,
+				},
+				children,
+			)
 			: null;
 
-	/* 訳文 */
-	const translation =
-		eff !== "source" && hasTr
-			? createElement(
-					tagName,
-					{
-						...tagProps,
-						key: `tr-${bundle.segment.id}`,
-						"data-number-id": bundle.segment.number,
-					},
-					<TranslationSection
-						currentHandle={currentHandle}
-						interactive={interactive}
-						segmentBundle={bundle}
-					/>,
-				)
-			: null;
+	const translation: ReactNode =
+		eff !== "source" && hasTr ? (
+			<TranslationSection
+				bundle={bundle}
+				currentHandle={currentHandle}
+				interactive={interactive}
+				tagName={tagName}
+				tagProps={tagProps}
+			/>
+		) : null;
 
 	return (
 		<Fragment>

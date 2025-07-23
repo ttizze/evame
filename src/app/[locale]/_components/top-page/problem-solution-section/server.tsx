@@ -110,7 +110,10 @@ export default async function ProblemSolutionSection({
 						<AboutSectionCard
 							component={problemComponents[index]}
 							description={
-								<WrapSegmentsComponent bundle={pair.text} currentHandle={currentHandle} />
+								<WrapSegmentsComponent
+									bundle={pair.text}
+									currentHandle={currentHandle}
+								/>
 							}
 							icon={problemIcons[index]}
 							key={`problem-${pair.header.segment.number}`}
