@@ -1,6 +1,6 @@
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import type { Editor } from "@tiptap/core";
-import { FloatingMenu } from "@tiptap/react";
+import { FloatingMenu } from "@tiptap/react/menus";
 import {
 	Code,
 	Heading2,
@@ -84,10 +84,19 @@ export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
 			<FloatingMenu
 				className="hidden md:block"
 				editor={editor}
-				tippyOptions={{
+				options={{
+					strategy: "fixed",
 					placement: "left",
-					offset: [0, 10],
-					arrow: false,
+				}}
+				shouldShow={({ editor }) => {
+					// 空の段落で、かつカーソルが行の先頭にある場合のみ表示
+					return (
+						editor.isActive("paragraph") &&
+						editor.state.selection.empty &&
+						editor.state.selection.anchor === editor.state.selection.head &&
+						editor.state.selection.anchor ===
+							editor.state.doc.resolve(editor.state.selection.anchor).start()
+					);
 				}}
 			>
 				<div className="floating-menu">
