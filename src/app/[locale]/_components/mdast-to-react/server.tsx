@@ -15,8 +15,8 @@ import remarkLinkCard from "remark-link-card-plus";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import type { SegmentBundle } from "@/app/[locale]/types";
+import { WrapSegment } from "../wrap-segments/server";
 import { remarkTweet } from "./remark-tweet";
-import { WrapSegment } from "./wrap-segments/server";
 
 // --------------
 const SEGMENTABLE = [

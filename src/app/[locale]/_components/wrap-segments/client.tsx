@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useDisplay } from "@/app/_context/display-provider";
 import type { SegmentBundle } from "@/app/[locale]/types";
-import { TranslationSection } from "../../segment-and-translation-section/translation-section";
+import { TranslationSection } from "./translation-section/client";
 
 interface BaseProps {
 	bundle: SegmentBundle;
@@ -69,23 +69,16 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 				)
 			: null;
 
-	/* 訳文 */
-	const translation =
-		eff !== "source" && hasTr
-			? createElement(
-					tagName,
-					{
-						...tagProps,
-						key: `tr-${bundle.segment.id}`,
-						"data-number-id": bundle.segment.number,
-					},
-					<TranslationSection
-						currentHandle={currentHandle}
-						interactive={interactive}
-						segmentBundle={bundle}
-					/>,
-				)
-			: null;
+	const translation: ReactNode =
+		eff !== "source" && hasTr ? (
+			<TranslationSection
+				bundle={bundle}
+				currentHandle={currentHandle}
+				interactive={interactive}
+				tagName={tagName}
+				tagProps={tagProps}
+			/>
+		) : null;
 
 	return (
 		<Fragment>

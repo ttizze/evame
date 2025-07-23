@@ -5,7 +5,7 @@ import { ClientDateFormatter } from "@/app/[locale]/_components/client-date-form
 import { PageCommentButton } from "@/app/[locale]/_components/page/page-comment-button/client";
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
-import { SegmentWrap } from "@/app/[locale]/_components/segment-wrap/server";
+import { WrapSegmentsComponent } from "@/app/[locale]/_components/wrap-segments-component/server";
 import { fetchPageViewCount } from "@/app/[locale]/_db/page-queries.server";
 import type { PageSummary } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -67,7 +67,7 @@ export async function PageList({
 				<div className="grid grid-cols-[1fr_auto] gap-2">
 					<Link className="block overflow-hidden" href={pageLink}>
 						{titleSegment && (
-							<SegmentWrap
+							<WrapSegmentsComponent
 								bundle={titleSegment}
 								className="line-clamp-1 break-all overflow-wrap-anywhere"
 								currentHandle={currentUserHandle}

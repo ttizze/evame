@@ -1,8 +1,10 @@
 import type { JSX } from "react";
-import { WrapSegment } from "@/app/[locale]/_components/mdast-to-react/wrap-segments/server";
+import { WrapSegment } from "@/app/[locale]/_components/wrap-segments/server";
 import type { SegmentBundle } from "@/app/[locale]/types";
 
-interface SegmentWrapProps<Tag extends keyof JSX.IntrinsicElements = "span"> {
+interface WrapSegmentsComponentProps<
+	Tag extends keyof JSX.IntrinsicElements = "span",
+> {
 	/** HTML tag to render. Defaults to 'span'. */
 	tagName?: Tag;
 	/** Segment bundle to display */
@@ -15,13 +17,15 @@ interface SegmentWrapProps<Tag extends keyof JSX.IntrinsicElements = "span"> {
 	className?: string;
 }
 
-export function SegmentWrap<Tag extends keyof JSX.IntrinsicElements = "span">({
+export function WrapSegmentsComponent<
+	Tag extends keyof JSX.IntrinsicElements = "span",
+>({
 	tagName = "span" as Tag,
 	bundle,
 	currentHandle,
 	interactive = true,
 	className,
-}: SegmentWrapProps<Tag>) {
+}: WrapSegmentsComponentProps<Tag>) {
 	const WrapSegmentComponent = WrapSegment(
 		tagName,
 		[bundle],

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import useSWR from "swr";
-import { WrapSegmentClient } from "@/app/[locale]/_components/mdast-to-react/wrap-segments/client";
+import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
 import type { PageSummary } from "@/app/[locale]/types";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
