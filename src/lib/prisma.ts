@@ -1,4 +1,4 @@
-import { neonConfig, Pool } from "@neondatabase/serverless";
+import { neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
 import { WebSocket } from "ws";
@@ -47,8 +47,7 @@ if (isDevelopment || isTest) {
 	};
 }
 
-const pool = new Pool({ connectionString, max: 5 });
-const adapter = new PrismaNeon(pool);
+const adapter = new PrismaNeon({ connectionString, max: 5 });
 
 // prismaClient というローカル変数で PrismaClient インスタンスを管理
 let prismaClient: PrismaClient;

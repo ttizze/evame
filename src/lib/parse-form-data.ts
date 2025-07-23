@@ -1,10 +1,9 @@
 import type { z } from "zod";
-export async function parseFormData<
-	S extends z.ZodType<unknown, z.ZodTypeDef, unknown>,
->(
-	schema: S,
+
+export async function parseFormData<T extends z.ZodTypeAny>(
+	schema: T,
 	formData: FormData,
-): Promise<z.SafeParseReturnType<z.input<S>, z.infer<S>>> {
+): Promise<z.ZodSafeParseResult<z.infer<T>>> {
 	const data = Object.fromEntries(formData.entries());
 	return schema.safeParse(data);
 }

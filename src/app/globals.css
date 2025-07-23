@@ -162,10 +162,6 @@
 	content: none !important;
 }
 
-.tippy-box[data-theme="custom-transparent"] {
-	@apply rounded-lg border bg-background shadow-md p-1;
-}
-
 body.virtual-keyboard-shown {
 	margin-top: var(--visual-viewport-offset-top, 0px);
 }

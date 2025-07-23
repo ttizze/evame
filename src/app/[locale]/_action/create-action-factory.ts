@@ -24,7 +24,7 @@ const defaultDeps: CreateDeps = {
 
 /* ────────────── Factory 本体 ────────────── */
 export function createActionFactory<
-	TSchema extends z.ZodTypeAny,
+	TSchema extends z.ZodType,
 	TSuccess, // create が成功時に返す data の型
 	TPublic = TSuccess, // クライアントに渡す型（デフォルト＝同じ）
 >(

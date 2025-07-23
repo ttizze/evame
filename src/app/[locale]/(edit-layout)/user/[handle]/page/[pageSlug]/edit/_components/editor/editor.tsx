@@ -1,7 +1,7 @@
 "use client";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { useRef } from "react";
-import { EditorBubbleMenu } from "./editor-bubble-menu";
+import { EditorBubbleMenu } from "./editor-bubble-menu.client";
 import { configureEditor } from "./editor-config";
 import { EditorFloatingMenu } from "./editor-floating-menu";
 

@@ -25,21 +25,23 @@ type CommentSuccessData = { translationJobs: TranslationJobForToast[] };
 /* create が内部で使う型（公開しない） */
 type CreateResult = CommentSuccessData & { revalidatePath: string };
 
+const inputSchema = z.object({
+	pageId: z.coerce.number(),
+	userLocale: z.string(),
+	content: z.string().min(1, "Comment cannot be empty"),
+	parentId: z.coerce.number().optional(),
+	pageCommentId: z.coerce.number().optional(),
+});
+
 export const commentAction = createActionFactory<
 	// 1. Input schema
-	z.ZodTypeAny,
+	typeof inputSchema,
 	// 2. TCreateResult
 	CreateResult,
 	// 3. TResponseData
 	CommentSuccessData
 >({
-	inputSchema: z.object({
-		pageId: z.coerce.number(),
-		userLocale: z.string(),
-		content: z.string().min(1, "Comment cannot be empty"),
-		parentId: z.coerce.number().optional(),
-		pageCommentId: z.coerce.number().optional(),
-	}),
+	inputSchema,
 	async create(input, currentUserId) {
 		const { content, pageId, parentId, userLocale, pageCommentId } = input;
 		const page = await getPageById(pageId);
