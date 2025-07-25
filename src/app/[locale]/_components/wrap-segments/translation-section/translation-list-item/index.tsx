@@ -74,6 +74,7 @@ export function TranslationListItem({
 					</span>
 				</Link>
 				<VoteButtons
+					key={`${translation.id}-${translation.point}-${translation.currentUserVote?.isUpvote ?? "null"}`}
 					targetContentType={targetContentType}
 					translation={translation}
 				/>

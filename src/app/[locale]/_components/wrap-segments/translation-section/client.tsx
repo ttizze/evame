@@ -71,7 +71,11 @@ export function TranslationSection<Tag extends keyof JSX.IntrinsicElements>({
 								by: {best.user.name}
 							</span>
 						</Link>
-						<VoteButtons targetContentType={parentType} translation={best} />
+						<VoteButtons
+							key={`${best.id}-${best.point}-${best.currentUserVote?.isUpvote ?? "null"}`}
+							targetContentType={parentType}
+							translation={best}
+						/>
 					</span>
 					<AddAndVoteTranslations
 						currentHandle={currentHandle}
