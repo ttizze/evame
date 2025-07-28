@@ -1,29 +1,29 @@
 import type { Prisma } from "@prisma/client";
+import { calcProofStatus } from "@/app/[locale]/_components/wrap-segments/translation-section/vote-buttons/_lib/translation-proof-status";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { prisma } from "@/lib/prisma";
-import { calcProofStatus } from "@/app/[locale]/_components/wrap-segments/translation-section/vote-buttons/_lib/translation-proof-status";
 
 type VoteOutcome = {
-	finalIsUpvote: boolean | null;
+	finalIsUpvote: boolean | undefined;
 	/** How much the point field should be incremented (can be negative) */
 	pointDelta: number;
 	action: "create" | "update" | "delete";
 };
 
 function computeVoteOutcome(
-	previousIsUpvote: boolean | null,
+	previousIsUpvote: boolean | undefined,
 	newIsUpvote: boolean,
 ): VoteOutcome {
 	if (previousIsUpvote === newIsUpvote) {
 		// The same vote exists → remove it.
 		return {
-			finalIsUpvote: null,
+			finalIsUpvote: undefined,
 			pointDelta: newIsUpvote ? -1 : 1,
 			action: "delete",
 		} as const;
 	}
 
-	if (previousIsUpvote === null) {
+	if (previousIsUpvote === undefined) {
 		// No existing vote → create a new one.
 		return {
 			finalIsUpvote: newIsUpvote,
@@ -75,9 +75,15 @@ async function processPageVote(
 			select: {
 				locale: true,
 				pageSegment: { select: { pageId: true } },
+				point: true,
 			},
 		});
-		if (!segmentTranslation) return;
+		if (!segmentTranslation) {
+			return {
+				success: false,
+				data: { isUpvote: undefined, point: 0 },
+			};
+		}
 
 		const { pageId } = segmentTranslation.pageSegment;
 		const { locale } = segmentTranslation;
@@ -86,7 +92,7 @@ async function processPageVote(
 
 		return {
 			success: true,
-			data: { isUpvote: finalIsUpvote },
+			data: { isUpvote: finalIsUpvote, point: segmentTranslation.point },
 		};
 	});
 }
@@ -143,7 +149,10 @@ async function applyVoteOnPageSegment(
 		},
 	});
 
-	const outcome = computeVoteOutcome(existingVote?.isUpvote ?? null, isUpvote);
+	const outcome = computeVoteOutcome(
+		existingVote?.isUpvote ?? undefined,
+		isUpvote,
+	);
 
 	switch (outcome.action) {
 		case "delete":
@@ -189,7 +198,7 @@ async function processCommentVote(
 		});
 
 		const outcome = computeVoteOutcome(
-			existingVote?.isUpvote ?? null,
+			existingVote?.isUpvote ?? undefined,
 			isUpvote,
 		);
 
