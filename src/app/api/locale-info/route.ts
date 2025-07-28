@@ -26,6 +26,12 @@ export async function GET(req: NextRequest) {
 				translationJobs: {
 					where: { status: "COMPLETED" },
 				},
+				pageLocaleTranslationProofs: {
+					select: {
+						locale: true,
+						translationProofStatus: true,
+					},
+				},
 			},
 		});
 		if (!page)
@@ -35,6 +41,7 @@ export async function GET(req: NextRequest) {
 			{
 				sourceLocale: page.sourceLocale,
 				translationJobs: page.translationJobs,
+				translationProofs: page.pageLocaleTranslationProofs,
 			},
 			{ status: 200 },
 		);

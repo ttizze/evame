@@ -1,11 +1,13 @@
+import type { TranslationProofStatus } from "@prisma/client";
 import type { LocaleOption } from "@/app/_constants/locale";
 
-/** 追加したい状態 */
 export type LocaleStatus = "source" | "translated" | "untranslated";
 
 /** UI 側で扱いやすいように、既存型を拡張 */
-interface LocaleOptionWithStatus extends LocaleOption {
+export interface LocaleOptionWithStatus extends LocaleOption {
 	status: LocaleStatus;
+	/** 翻訳済みの場合のみ付与される */
+	proofStatus?: TranslationProofStatus;
 }
 
 /**
@@ -19,10 +21,13 @@ export function buildLocaleOptions({
 	existLocales,
 	supported,
 	sourceLocale,
+	proofStatusMap = {},
 }: {
 	sourceLocale?: string;
 	existLocales: string[];
 	supported: LocaleOption[];
+	/** locale => proofStatus の対応表 */
+	proofStatusMap?: Record<string, TranslationProofStatus>;
 }): LocaleOptionWithStatus[] {
 	/* name 解決を O(1) にするため Map 化 */
 	const nameMap = new Map(supported.map((o) => [o.code, o.name]));
@@ -30,11 +35,20 @@ export function buildLocaleOptions({
 	const toOption = (
 		code: string,
 		status: LocaleStatus,
-	): LocaleOptionWithStatus => ({
-		code,
-		name: nameMap.get(code) ?? code, // 未登録言語でもフォールバック
-		status,
-	});
+		proofStatus?: TranslationProofStatus,
+	): LocaleOptionWithStatus => {
+		const base = {
+			code,
+			name: nameMap.get(code) ?? code, // 未登録言語でもフォールバック
+			status,
+		} as LocaleOptionWithStatus;
+
+		if (proofStatus) {
+			(base as LocaleOptionWithStatus).proofStatus = proofStatus;
+		}
+
+		return base;
+	};
 
 	const seen = new Set<string>();
 	const result: LocaleOptionWithStatus[] = [];
@@ -48,7 +62,7 @@ export function buildLocaleOptions({
 	/* 2) 翻訳済み */
 	for (const code of existLocales) {
 		if (!seen.has(code)) {
-			result.push(toOption(code, "translated"));
+			result.push(toOption(code, "translated", proofStatusMap[code]));
 			seen.add(code);
 		}
 	}

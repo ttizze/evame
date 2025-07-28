@@ -130,20 +130,21 @@ model Page {
   slug  String @unique
   order Int    @default(0)
 
-  mdastJson       Json             @map("mdast_json")
-  sourceLocale    String           @default("unknown") @map("source_locale")
-  status          PageStatus       @default(DRAFT)
-  createdAt       DateTime         @default(now()) @map("created_at")
-  updatedAt       DateTime         @updatedAt @map("updated_at")
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          String           @map("user_id")
-  pageSegments    PageSegment[]
-  tagPages        TagPage[]
-  likePages       LikePage[]
-  pageComments    PageComment[]
-  notifications   Notification[]
-  translationJobs TranslationJob[]
-  pageView        PageView?
+  mdastJson                   Json                         @map("mdast_json")
+  sourceLocale                String                       @default("unknown") @map("source_locale")
+  status                      PageStatus                   @default(DRAFT)
+  createdAt                   DateTime                     @default(now()) @map("created_at")
+  updatedAt                   DateTime                     @updatedAt @map("updated_at")
+  user                        User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId                      String                       @map("user_id")
+  pageSegments                PageSegment[]
+  tagPages                    TagPage[]
+  likePages                   LikePage[]
+  pageComments                PageComment[]
+  notifications               Notification[]
+  translationJobs             TranslationJob[]
+  pageView                    PageView?
+  pageLocaleTranslationProofs PageLocaleTranslationProof[]
 
   @@index([parentId])
   @@index([createdAt])
@@ -158,6 +159,25 @@ model PageView {
   count  Int @default(0)
 
   page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+}
+
+enum TranslationProofStatus {
+  MACHINE_DRAFT // AI 一次下訳
+  HUMAN_TOUCHED // 人手で一部修正
+  PROOFREAD // 全文校正（1 人以上）
+  VALIDATED // 相互レビュー済（複数人）
+}
+
+model PageLocaleTranslationProof {
+  id          Int                    @id @default(autoincrement())
+  pageId      Int                    @map("page_id")
+  locale      String
+  translationProofStatus TranslationProofStatus @default(MACHINE_DRAFT) @map("translation_proof_status")
+  page        Page                   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, locale])
+  @@index([translationProofStatus])
+  @@map("page_locale_translation_proofs")
 }
 
 model PageSegment {
