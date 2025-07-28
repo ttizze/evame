@@ -116,7 +116,11 @@ export function AddTranslateDialog({
 										type="hidden"
 										value={targetContentType}
 									/>
-									<Button className="w-full" type="submit">
+									<Button
+										className="w-full"
+										disabled={isTranslating}
+										type="submit"
+									>
 										{isTranslating ? (
 											<Loader2 className="w-4 h-4 animate-spin" />
 										) : (

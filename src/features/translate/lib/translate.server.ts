@@ -1,7 +1,10 @@
 import { TranslationStatus } from "@prisma/client";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
-import { updateTranslationJob } from "../db/mutations.server";
+import {
+	ensurePageLocaleTranslationProof,
+	updateTranslationJob,
+} from "../db/mutations.server";
 import {
 	fetchGeminiApiKeyByUserId,
 	getPageCommentSegments,
@@ -116,6 +119,7 @@ async function translateChunk(
 					targetLocale,
 					aiModel,
 				);
+				await ensurePageLocaleTranslationProof(pageId, targetLocale);
 			} else if (targetContentType === "pageComment") {
 				// コメント用の保存先テーブル or ロジック
 				if (!pageCommentId || !pageId) {

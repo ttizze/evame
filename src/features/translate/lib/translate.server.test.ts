@@ -1,5 +1,6 @@
 // translate.server.test.ts
 
+import { TranslationProofStatus } from "@prisma/client";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { prisma } from "@/lib/prisma";
 import { getGeminiModelResponse } from "../services/gemini";
@@ -21,6 +22,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		await prisma.page.deleteMany();
 		await prisma.pageSegment.deleteMany();
 		await prisma.translationJob.deleteMany();
+		await prisma.pageLocaleTranslationProof.deleteMany();
 		// テスト用ユーザー
 		const user = await prisma.user.create({
 			data: {
@@ -80,6 +82,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		await prisma.page.deleteMany();
 		await prisma.pageSegment.deleteMany();
 		await prisma.translationJob.deleteMany();
+		await prisma.pageLocaleTranslationProof.deleteMany();
 	});
 
 	test("正常ケース：Geminiから正常レスポンスが返った場合、最終的にステータスがcompletedとなり翻訳がDBに保存される", async () => {
@@ -193,5 +196,87 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		expect(translatedTexts.length).toBeGreaterThanOrEqual(2);
 		expect(translatedTexts.some((t) => t.text === "こんにちは")).toBe(true);
 		expect(translatedTexts.some((t) => t.text === "世界")).toBe(true);
+	});
+
+	test("正常ケース：PageLocaleTranslationProofが存在しない場合、新規レコードが作成される", async () => {
+		const params: TranslateJobParams = {
+			translationJobId,
+			provider: "gemini",
+			aiModel: "test-model",
+			userId,
+			targetLocale: "ja",
+			pageId,
+			title: "Test Page",
+			numberedElements: [
+				{ number: 0, text: "Hello" },
+				{ number: 1, text: "World" },
+			],
+			targetContentType: "page",
+		};
+
+		vi.mocked(getGeminiModelResponse).mockResolvedValue(
+			`[
+				{"number": 0, "text": "こんにちは"},
+				{"number": 1, "text": "世界"}
+			]`,
+		);
+
+		await expect(translate(params)).resolves.toBeUndefined();
+
+		const proof = await prisma.pageLocaleTranslationProof.findUnique({
+			where: { pageId_locale: { pageId, locale: "ja" } },
+		});
+
+		expect(proof).not.toBeNull();
+		expect(proof?.translationProofStatus).toBe(
+			TranslationProofStatus.MACHINE_DRAFT,
+		);
+	});
+
+	test("既存のPageLocaleTranslationProofがある場合、translationProofStatusが変更されない", async () => {
+		// 事前に PROOFREAD ステータスで作成
+		const existingProof = await prisma.pageLocaleTranslationProof.create({
+			data: {
+				pageId,
+				locale: "ja",
+				translationProofStatus: TranslationProofStatus.PROOFREAD,
+			},
+		});
+
+		const params: TranslateJobParams = {
+			translationJobId,
+			provider: "gemini",
+			aiModel: "test-model",
+			userId,
+			targetLocale: "ja",
+			pageId,
+			title: "Test Page",
+			numberedElements: [
+				{ number: 0, text: "Hello" },
+				{ number: 1, text: "World" },
+			],
+			targetContentType: "page",
+		};
+
+		vi.mocked(getGeminiModelResponse).mockResolvedValue(
+			`[
+				{"number": 0, "text": "こんにちは"},
+				{"number": 1, "text": "世界"}
+			]`,
+		);
+
+		await expect(translate(params)).resolves.toBeUndefined();
+
+		const updatedProof = await prisma.pageLocaleTranslationProof.findUnique({
+			where: { pageId_locale: { pageId, locale: "ja" } },
+		});
+
+		expect(updatedProof).not.toBeNull();
+		// id が変わっていないこと
+		expect(updatedProof?.id).toBe(existingProof.id);
+		// ステータスが変更されていないこと
+		expect(updatedProof?.translationProofStatus).toBe(
+			TranslationProofStatus.PROOFREAD,
+		);
 	});
 });

@@ -1,5 +1,5 @@
 "use client";
-import type { TranslationJob } from "@prisma/client";
+import type { TranslationJob, TranslationProofStatus } from "@prisma/client";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useLocale } from "next-intl";
@@ -26,12 +26,17 @@ import { cn } from "@/lib/utils";
 import { AddTranslateDialog } from "./add-translate-dialog/client";
 import { useCombinedRouter } from "./hooks/use-combined-router";
 import { buildLocaleOptions } from "./lib/build-locale-options";
+import { ProofStatusIcon } from "./lib/proof-status-icon.client";
 import { TypeIcon } from "./lib/type-Icon.client";
 
 // Local types
 interface TranslationInfo {
 	sourceLocale: string;
 	translationJobs: TranslationJob[];
+	translationProofs: {
+		locale: string;
+		translationProofStatus: TranslationProofStatus;
+	}[];
 }
 
 // Helpers
@@ -87,11 +92,21 @@ export function LocaleSelector({
 
 	const { data } = useSWR(apiUrl, fetchTranslation);
 
-	const { sourceLocale, translationJobs } = data ?? {};
+	const { sourceLocale, translationJobs, translationProofs } = data ?? {};
+
+	// Build a map of locale => proof status using Prisma enum values directly
+	const proofStatusMap = Object.fromEntries(
+		(translationProofs ?? []).map<[string, TranslationProofStatus]>((p) => [
+			p.locale,
+			p.translationProofStatus,
+		]),
+	) as Record<string, TranslationProofStatus>;
+
 	const localeOptionWithStatus = buildLocaleOptions({
 		sourceLocale,
 		existLocales: translationJobs?.map((job) => job.locale) ?? [],
 		supported: supportedLocaleOptions,
+		proofStatusMap,
 	});
 
 	const selectedOption = localeOptionWithStatus.find(
@@ -108,7 +123,14 @@ export function LocaleSelector({
 				>
 					<div className="flex items-center">
 						{showIcons && sourceLocale && (
-							<TypeIcon status={selectedOption?.status ?? "untranslated"} />
+							<>
+								<TypeIcon status={selectedOption?.status ?? "untranslated"} />
+								{selectedOption?.proofStatus && (
+									<ProofStatusIcon
+										translationProofStatus={selectedOption.proofStatus}
+									/>
+								)}
+							</>
 						)}
 						<span className="truncate">{selectedOption?.name ?? "Select"}</span>
 					</div>
@@ -132,7 +154,14 @@ export function LocaleSelector({
 									value={item.code}
 								>
 									{showIcons && sourceLocale && (
-										<TypeIcon status={item.status} />
+										<>
+											<TypeIcon status={item.status} />
+											{item.proofStatus && (
+												<ProofStatusIcon
+													translationProofStatus={item.proofStatus}
+												/>
+											)}
+										</>
 									)}
 									<span className="truncate grow">{item.name}</span>
 									{targetLocale === item.code && (

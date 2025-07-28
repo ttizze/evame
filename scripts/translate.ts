@@ -137,7 +137,7 @@ async function fetchPageWithPageSegments(pageId: number) {
 			await fetch(`${BASE_URL}/api/translate`, {
 				method: "POST",
 				body: JSON.stringify({
-					provider: "gemini", // CLI では gemini を既定とする
+					provider: "vertex",
 					translationJobId: job.id,
 					aiModel: AI_MODEL,
 					userId: user.id,
