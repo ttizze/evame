@@ -27,7 +27,7 @@ import { AddTranslateDialog } from "./add-translate-dialog/client";
 import { useCombinedRouter } from "./hooks/use-combined-router";
 import { buildLocaleOptions } from "./lib/build-locale-options";
 import { ProofStatusIcon } from "./lib/proof-status-icon.client";
-import { TypeIcon } from "./lib/type-Icon.client";
+import { TranslateStatusIcon } from "./lib/translate-status-icon.client";
 
 // Local types
 interface TranslationInfo {
@@ -124,7 +124,9 @@ export function LocaleSelector({
 					<div className="flex items-center">
 						{showIcons && sourceLocale && (
 							<>
-								<TypeIcon status={selectedOption?.status ?? "untranslated"} />
+								<TranslateStatusIcon
+									status={selectedOption?.status ?? "untranslated"}
+								/>
 								{selectedOption?.proofStatus && (
 									<ProofStatusIcon
 										translationProofStatus={selectedOption.proofStatus}
@@ -155,7 +157,7 @@ export function LocaleSelector({
 								>
 									{showIcons && sourceLocale && (
 										<>
-											<TypeIcon status={item.status} />
+											<TranslateStatusIcon status={item.status} />
 											{item.proofStatus && (
 												<ProofStatusIcon
 													translationProofStatus={item.proofStatus}

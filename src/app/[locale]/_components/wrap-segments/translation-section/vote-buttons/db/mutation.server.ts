@@ -1,11 +1,7 @@
 import type { Prisma } from "@prisma/client";
-import { TranslationProofStatus } from "@prisma/client";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { prisma } from "@/lib/prisma";
-
-// ---------------------------------------------------------------------------
-// Shared helpers
-// ---------------------------------------------------------------------------
+import { calcProofStatus } from "@/app/[locale]/_components/wrap-segments/translation-section/vote-buttons/_lib/translation-proof-status";
 
 type VoteOutcome = {
 	finalIsUpvote: boolean | null;
@@ -14,11 +10,6 @@ type VoteOutcome = {
 	action: "create" | "update" | "delete";
 };
 
-/**
- * Compute how the vote should be applied based on the previous vote state.
- * Returns the final vote state (null = no vote), how much to change the point
- * count by, and what persistence action should be executed.
- */
 function computeVoteOutcome(
 	previousIsUpvote: boolean | null,
 	newIsUpvote: boolean,
@@ -65,10 +56,6 @@ export async function handleVote(
 		return processCommentVote(segmentTranslationId, isUpvote, currentUserId);
 	}
 }
-
-/* -------------------------------------------------------------------------- */
-/* Page Vote                                                                   */
-/* -------------------------------------------------------------------------- */
 
 async function processPageVote(
 	segmentTranslationId: number,
@@ -139,19 +126,6 @@ async function updateProofStatus(
 		update: { translationProofStatus: newStatus },
 	});
 }
-async function calcProofStatus(
-	totalSegments: number,
-	segmentsWith1PlusVotes: number,
-	segmentsWith2PlusVotes: number,
-): Promise<TranslationProofStatus> {
-	if (segmentsWith1PlusVotes === 0) return TranslationProofStatus.MACHINE_DRAFT;
-	if (segmentsWith1PlusVotes < totalSegments)
-		return TranslationProofStatus.HUMAN_TOUCHED;
-	if (segmentsWith2PlusVotes === totalSegments)
-		return TranslationProofStatus.VALIDATED;
-	// すべてのセグメントが1票以上あるが、すべてが2票以上あるわけではない場合
-	return TranslationProofStatus.PROOFREAD;
-}
 
 /* 投票と point 更新を行い、最終的な isUpvote を返す */
 async function applyVoteOnPageSegment(
@@ -198,10 +172,6 @@ async function applyVoteOnPageSegment(
 
 	return { finalIsUpvote: outcome.finalIsUpvote };
 }
-
-/* -------------------------------------------------------------------------- */
-/* Comment Vote                                                                */
-/* -------------------------------------------------------------------------- */
 
 async function processCommentVote(
 	segmentTranslationId: number,

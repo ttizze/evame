@@ -1,3 +1,4 @@
+import type { TranslationProofStatus } from "@prisma/client";
 import { Circle } from "lucide-react";
 import {
 	Tooltip,
@@ -6,21 +7,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { TranslationProofStatus } from "@prisma/client";
-
-const proofColorMap: Record<TranslationProofStatus, string> = {
-	MACHINE_DRAFT: "text-rose-500",
-	HUMAN_TOUCHED: "text-orange-400",
-	PROOFREAD: "text-amber-400",
-	VALIDATED: "text-emerald-500",
-};
-
-const proofLabelMap: Record<TranslationProofStatus, string> = {
-	MACHINE_DRAFT: "Machine draft",
-	HUMAN_TOUCHED: "Human touched",
-	PROOFREAD: "Proofread",
-	VALIDATED: "Validated",
-};
+import { proofColorMap, proofLabelMap } from "./translation-proof-status";
 
 export function ProofStatusIcon({
 	translationProofStatus,
@@ -32,7 +19,10 @@ export function ProofStatusIcon({
 			<Tooltip>
 				<TooltipTrigger asChild>
 					<Circle
-						className={cn("w-3 h-3 mr-1", proofColorMap[translationProofStatus])}
+						className={cn(
+							"w-3 h-3 mr-1",
+							proofColorMap[translationProofStatus],
+						)}
 						data-testid={`proof-${translationProofStatus}-icon`}
 						fill="currentColor"
 					/>
