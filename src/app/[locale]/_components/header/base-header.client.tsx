@@ -1,7 +1,6 @@
 "use client";
 import { BookOpenIcon, LogOutIcon } from "lucide-react";
 import Image, { getImageProps } from "next/image";
-import { useParams } from "next/navigation";
 import type { ReactNode } from "react";
 import { signOutAction } from "@/app/[locale]/auth-action";
 import type { SanitizedUser } from "@/app/types";
@@ -41,9 +40,6 @@ export function BaseHeader({
 		width: 40,
 		height: 40,
 	});
-	const { pageSlug } = useParams<{
-		pageSlug?: string;
-	}>();
 	return (
 		<div ref={headerRef}>
 			<header
@@ -57,35 +53,22 @@ export function BaseHeader({
 			>
 				<div className="flex items-center gap-4">
 					<Link className="flex items-center" href="/">
-						{!currentUser ? (
-							<>
-								<Image
-									alt="Evame"
-									aria-label="Evame Logo"
-									className="h-8 w-8 dark:invert md:hidden"
-									height={32}
-									src="/favicon.svg"
-									width={32}
-								/>
-								<Image
-									alt="Evame"
-									aria-label="Evame Logo"
-									className="h-8 w-20 dark:invert hidden md:block"
-									height={32}
-									src="/logo.svg"
-									width={80}
-								/>
-							</>
-						) : (
-							<Image
-								alt="Evame"
-								aria-label="Evame Logo"
-								className="h-8 w-20 dark:invert"
-								height={32}
-								src="/logo.svg"
-								width={80}
-							/>
-						)}
+						<Image
+							alt="Evame"
+							aria-label="Evame Logo"
+							className="h-8 w-8 dark:invert md:hidden"
+							height={32}
+							src="/favicon.svg"
+							width={32}
+						/>
+						<Image
+							alt="Evame"
+							aria-label="Evame Logo"
+							className="h-8 w-20 dark:invert hidden md:block"
+							height={32}
+							src="/logo.svg"
+							width={80}
+						/>
 					</Link>
 					{leftExtra}
 				</div>
@@ -120,7 +103,6 @@ export function BaseHeader({
 									currentHandle={currentUser.handle}
 									hasGeminiApiKey={hasGeminiApiKey}
 									localeSelectorClassName="w-[200px]"
-									pageSlug={pageSlug}
 								/>
 								<DropdownMenuItem className="p-0 ">
 									<Link

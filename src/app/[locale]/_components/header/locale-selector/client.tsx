@@ -54,7 +54,6 @@ const fetchTranslation: (url: string) => Promise<TranslationInfo> = async (
 // Props
 interface LocaleSelectorProps {
 	localeSelectorClassName?: string;
-	pageSlug?: string;
 	currentHandle?: string;
 	hasGeminiApiKey: boolean;
 }
@@ -62,7 +61,6 @@ interface LocaleSelectorProps {
 //TODO: radix uiのせいで開発環境のモバイルで文字がぼける iphoneではボケてない､その他実機でもボケてたら対応する
 export function LocaleSelector({
 	localeSelectorClassName,
-	pageSlug,
 	currentHandle,
 	hasGeminiApiKey,
 }: LocaleSelectorProps) {
@@ -72,7 +70,9 @@ export function LocaleSelector({
 	const params = useParams();
 	const pathname = usePathname();
 	const targetLocale = useLocale();
-
+	const { pageSlug } = useParams<{
+		pageSlug?: string;
+	}>();
 	const handleLocaleChange = (value: string) => {
 		setOpen(false);
 		startTransition(() => {
