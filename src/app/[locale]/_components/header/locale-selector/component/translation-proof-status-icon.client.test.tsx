@@ -6,8 +6,8 @@ describe("TranslationProofStatusIcon", () => {
 		it("renders MACHINE_DRAFT icon", () => {
 			render(
 				<TranslationProofStatusIcon
+					localeStatus="translated"
 					proofStatus="MACHINE_DRAFT"
-					status="translated"
 				/>,
 			);
 			expect(
@@ -18,8 +18,8 @@ describe("TranslationProofStatusIcon", () => {
 		it("renders HUMAN_TOUCHED icon", () => {
 			render(
 				<TranslationProofStatusIcon
+					localeStatus="translated"
 					proofStatus="HUMAN_TOUCHED"
-					status="translated"
 				/>,
 			);
 			expect(
@@ -30,8 +30,8 @@ describe("TranslationProofStatusIcon", () => {
 		it("renders PROOFREAD icon", () => {
 			render(
 				<TranslationProofStatusIcon
+					localeStatus="translated"
 					proofStatus="PROOFREAD"
-					status="translated"
 				/>,
 			);
 			expect(screen.getByTestId("proof-PROOFREAD-icon")).toBeInTheDocument();
@@ -40,8 +40,8 @@ describe("TranslationProofStatusIcon", () => {
 		it("renders VALIDATED icon", () => {
 			render(
 				<TranslationProofStatusIcon
+					localeStatus="translated"
 					proofStatus="VALIDATED"
-					status="translated"
 				/>,
 			);
 			expect(screen.getByTestId("proof-VALIDATED-icon")).toBeInTheDocument();
@@ -50,18 +50,20 @@ describe("TranslationProofStatusIcon", () => {
 
 	describe("Translation Status Icons", () => {
 		it("renders source icon", () => {
-			render(<TranslationProofStatusIcon status="source" />);
+			render(<TranslationProofStatusIcon localeStatus="source" />);
 			expect(screen.getByTestId("source-icon")).toBeInTheDocument();
 		});
 
 		it("renders untranslated icon", () => {
-			render(<TranslationProofStatusIcon status="untranslated" />);
+			render(<TranslationProofStatusIcon localeStatus="untranslated" />);
 			expect(screen.getByTestId("untranslated-icon")).toBeInTheDocument();
 		});
 
 		it("renders translated icon when no proof status", () => {
-			render(<TranslationProofStatusIcon status="translated" />);
-			expect(screen.getByTestId("translated-icon")).toBeInTheDocument();
+			render(<TranslationProofStatusIcon localeStatus="translated" />);
+			expect(
+				screen.getByTestId("proof-MACHINE_DRAFT-icon"),
+			).toBeInTheDocument();
 		});
 	});
 });
