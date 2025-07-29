@@ -125,8 +125,8 @@ export function LocaleSelector({
 						<div className="flex items-center">
 							{showIcons && sourceLocale && (
 								<TranslationProofStatusIcon
+									localeStatus={selectedOption?.status ?? "untranslated"}
 									proofStatus={selectedOption?.proofStatus}
-									status={selectedOption?.status ?? "untranslated"}
 								/>
 							)}
 							<span className="truncate">
@@ -158,8 +158,8 @@ export function LocaleSelector({
 											>
 												{showIcons && sourceLocale && (
 													<TranslationProofStatusIcon
+														localeStatus={item.status}
 														proofStatus={item.proofStatus}
-														status={item.status}
 													/>
 												)}
 												<span className="truncate grow">{item.name}</span>
