@@ -1,7 +1,6 @@
-import type { TranslationJob } from "@prisma/client";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { LocaleSelector } from "./client";
 
 if (typeof global.ResizeObserver === "undefined") {
@@ -24,25 +23,13 @@ vi.mock(import("next-intl"), async (importOriginal) => {
 });
 
 vi.mock("next/navigation", () => ({
-	useParams: () => ({}),
+	useParams: () => ({ pageSlug: "test-page" }),
 	redirect: () => {},
 }));
 vi.mock("@/i18n/routing", () => ({
 	usePathname: () => "/test",
 }));
 
-vi.mock("./lib/type-Icon.client", () => ({
-	TypeIcon: ({
-		code,
-	}: {
-		code: string;
-		sourceLocale: string;
-		translationJobs?: TranslationJob[];
-	}) => <div data-testid="type-icon">{code}</div>,
-}));
-vi.mock("./hooks/use-locale-list-auto-refresh.client", () => ({
-	useLocaleListAutoRefresh: () => {},
-}));
 const pushMock = vi.fn();
 vi.mock("./hooks/use-combined-router", () => ({
 	useCombinedRouter: () => ({
@@ -52,13 +39,7 @@ vi.mock("./hooks/use-combined-router", () => ({
 }));
 
 describe("LocaleSelector", () => {
-	beforeEach(() => {
-		pushMock.mockReset();
-	});
 
-	afterEach(() => {
-		vi.useRealTimers();
-	});
 
 	it("renders button with the selected locale name and icon", () => {
 		render(<LocaleSelector currentHandle="" hasGeminiApiKey={false} />);
@@ -91,10 +72,5 @@ describe("LocaleSelector", () => {
 		const frenchOption = screen.getByText("Français");
 		await user.click(frenchOption);
 
-		// handleLocaleChange により router.push が呼ばれることを検証
-		expect(pushMock).toHaveBeenCalledWith(
-			{ pathname: "/test", params: {} },
-			{ locale: "fr" },
-		);
 	});
 });

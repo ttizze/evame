@@ -1,6 +1,6 @@
 "use client";
 import type { TranslationJob, TranslationProofStatus } from "@prisma/client";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { startTransition, useState } from "react";
@@ -24,10 +24,10 @@ import { Separator } from "@/components/ui/separator";
 import { usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { AddTranslateDialog } from "./add-translate-dialog/client";
+import { TranslationProofStatusIcon } from "./component/translation-proof-status-icon.client";
+import { TextStatusGuide } from "./component/translation-status-guide";
 import { useCombinedRouter } from "./hooks/use-combined-router";
 import { buildLocaleOptions } from "./lib/build-locale-options";
-import { ProofStatusIcon } from "./lib/proof-status-icon.client";
-import { TranslateStatusIcon } from "./lib/translate-status-icon.client";
 
 // Local types
 interface TranslationInfo {
@@ -114,81 +114,81 @@ export function LocaleSelector({
 	);
 
 	return (
-		<Popover onOpenChange={setOpen} open={open}>
-			<PopoverTrigger asChild>
-				<Button
-					className={cn("justify-between ", localeSelectorClassName)}
-					data-testid="locale-selector-button"
-					variant="ghost"
-				>
-					<div className="flex items-center">
-						{showIcons && sourceLocale && (
-							<>
-								<TranslateStatusIcon
+		<div>
+			<Popover onOpenChange={setOpen} open={open}>
+				<PopoverTrigger asChild>
+					<Button
+						className={cn("justify-between ", localeSelectorClassName)}
+						data-testid="locale-selector-button"
+						variant="ghost"
+					>
+						<div className="flex items-center">
+							{showIcons && sourceLocale && (
+								<TranslationProofStatusIcon
+									proofStatus={selectedOption?.proofStatus}
 									status={selectedOption?.status ?? "untranslated"}
 								/>
-								{selectedOption?.proofStatus && (
-									<ProofStatusIcon
-										translationProofStatus={selectedOption.proofStatus}
-									/>
-								)}
+							)}
+							<span className="truncate">
+								{selectedOption?.name ?? "Select"}
+							</span>
+						</div>
+						<ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+					</Button>
+				</PopoverTrigger>
+				<PopoverContent
+					avoidCollisions={false} // -4px で "ピタッ" と密着
+					className="w-80 p-0  truncate"
+					sideOffset={-4}
+				>
+					<Command>
+						<CommandInput placeholder="search..." />
+						<CommandList>
+							{pageSlug && (
+								<>
+									<TextStatusGuide />
+									<Separator />
+									<CommandEmpty>No locales found.</CommandEmpty>
+									<CommandGroup>
+										{localeOptionWithStatus.map((item) => (
+											<CommandItem
+												key={item.code}
+												onSelect={handleLocaleChange}
+												value={item.code}
+											>
+												{showIcons && sourceLocale && (
+													<TranslationProofStatusIcon
+														proofStatus={item.proofStatus}
+														status={item.status}
+													/>
+												)}
+												<span className="truncate grow">{item.name}</span>
+												{targetLocale === item.code && (
+													<Check className="ml-2 h-4 w-4" />
+												)}
+											</CommandItem>
+										))}
+									</CommandGroup>
+								</>
+							)}
+						</CommandList>
+						{showAddNewButton && (
+							<>
+								<Separator />
+								<div className="flex justify-center m-2">
+									<Button
+										className="rounded-full"
+										onClick={() => setDialogOpen(true)}
+										variant="default"
+									>
+										+ Add New
+									</Button>
+								</div>
 							</>
 						)}
-						<span className="truncate">{selectedOption?.name ?? "Select"}</span>
-					</div>
-					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-				</Button>
-			</PopoverTrigger>
-			<PopoverContent
-				avoidCollisions={false} // -4px で "ピタッ" と密着
-				className="w-full p-0  truncate"
-				sideOffset={-4}
-			>
-				<Command>
-					<CommandInput placeholder="search..." />
-					<CommandList>
-						<CommandEmpty>No locales found.</CommandEmpty>
-						<CommandGroup>
-							{localeOptionWithStatus.map((item) => (
-								<CommandItem
-									key={item.code}
-									onSelect={handleLocaleChange}
-									value={item.code}
-								>
-									{showIcons && sourceLocale && (
-										<>
-											<TranslateStatusIcon status={item.status} />
-											{item.proofStatus && (
-												<ProofStatusIcon
-													translationProofStatus={item.proofStatus}
-												/>
-											)}
-										</>
-									)}
-									<span className="truncate grow">{item.name}</span>
-									{targetLocale === item.code && (
-										<Check className="ml-2 h-4 w-4" />
-									)}
-								</CommandItem>
-							))}
-						</CommandGroup>
-					</CommandList>
-					{showAddNewButton && (
-						<>
-							<Separator />
-							<div className="flex justify-center m-2">
-								<Button
-									className="rounded-full"
-									onClick={() => setDialogOpen(true)}
-									variant="default"
-								>
-									+ Add New
-								</Button>
-							</div>
-						</>
-					)}
-				</Command>
-			</PopoverContent>
+					</Command>
+				</PopoverContent>
+			</Popover>
 			{pageSlug && (
 				<AddTranslateDialog
 					currentHandle={currentHandle}
@@ -198,6 +198,6 @@ export function LocaleSelector({
 					pageSlug={pageSlug}
 				/>
 			)}
-		</Popover>
+		</div>
 	);
 }
