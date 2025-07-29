@@ -1,12 +1,13 @@
 name: Adds all issues and PRs to project board backlog
 
 on:
-  issues:
-    types:
-      - opened
-  pull_request:
-    types:
-      - opened
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: "Issue number"
+        required: true
+      pr_number:
+        description: "Pull request number"
 
 jobs:
   add-to-project:
