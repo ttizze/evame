@@ -30,8 +30,8 @@ export function TextStatusGuide() {
 				<div className="mt-2 space-y-3 p-2 bg-muted/50 rounded-md">
 					<div className="flex items-center gap-3">
 						<TranslationProofStatusIcon
+							localeStatus="source"
 							proofStatus={undefined}
-							status="source"
 						/>
 						<div className="flex-1 min-w-0">
 							<div className="font-medium text-sm">Source</div>
@@ -43,8 +43,8 @@ export function TextStatusGuide() {
 
 					<div className="flex items-center gap-3">
 						<TranslationProofStatusIcon
+							localeStatus="translated"
 							proofStatus="MACHINE_DRAFT"
-							status="translated"
 						/>
 						<div className="flex-1 min-w-0">
 							<div className="font-medium text-sm">Machine Draft</div>
@@ -55,8 +55,8 @@ export function TextStatusGuide() {
 					</div>
 					<div className="flex items-center gap-3">
 						<TranslationProofStatusIcon
+							localeStatus="translated"
 							proofStatus="HUMAN_TOUCHED"
-							status="translated"
 						/>
 						<div className="flex-1 min-w-0">
 							<div className="font-medium text-sm">Human Touched</div>
@@ -67,8 +67,8 @@ export function TextStatusGuide() {
 					</div>
 					<div className="flex items-center gap-3">
 						<TranslationProofStatusIcon
+							localeStatus="translated"
 							proofStatus="PROOFREAD"
-							status="translated"
 						/>
 						<div className="flex-1 min-w-0">
 							<div className="font-medium text-sm">Proofread</div>
@@ -79,8 +79,8 @@ export function TextStatusGuide() {
 					</div>
 					<div className="flex items-center gap-3">
 						<TranslationProofStatusIcon
+							localeStatus="translated"
 							proofStatus="VALIDATED"
-							status="translated"
 						/>
 						<div className="flex-1 min-w-0">
 							<div className="font-medium text-sm">Validated</div>
@@ -91,8 +91,8 @@ export function TextStatusGuide() {
 					</div>
 					<div className="flex items-center gap-3">
 						<TranslationProofStatusIcon
+							localeStatus="untranslated"
 							proofStatus={undefined}
-							status="untranslated"
 						/>
 						<div className="flex-1 min-w-0">
 							<div className="font-medium text-sm">Untranslated</div>
