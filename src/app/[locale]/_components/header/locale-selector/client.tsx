@@ -25,7 +25,7 @@ import { usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { AddTranslateDialog } from "./add-translate-dialog/client";
 import { TranslationProofStatusIcon } from "./component/translation-proof-status-icon.client";
-import { TextStatusGuide } from "./component/translation-status-guide";
+import { TextStatusGuide } from "./component/translation-status-guide.client";
 import { useCombinedRouter } from "./hooks/use-combined-router";
 import { buildLocaleOptions } from "./lib/build-locale-options";
 
