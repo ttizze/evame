@@ -136,11 +136,7 @@ export function LocaleSelector({
 						<ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent
-					avoidCollisions={false} // -4px で "ピタッ" と密着
-					className="w-80 p-0  truncate"
-					sideOffset={-4}
-				>
+				<PopoverContent className="w-60 p-0  truncate" sideOffset={-4}>
 					<Command>
 						<CommandInput placeholder="search..." />
 						<CommandList>
@@ -148,29 +144,29 @@ export function LocaleSelector({
 								<>
 									<TextStatusGuide />
 									<Separator />
-									<CommandEmpty>No locales found.</CommandEmpty>
-									<CommandGroup>
-										{localeOptionWithStatus.map((item) => (
-											<CommandItem
-												key={item.code}
-												onSelect={handleLocaleChange}
-												value={item.code}
-											>
-												{showIcons && sourceLocale && (
-													<TranslationProofStatusIcon
-														localeStatus={item.status}
-														proofStatus={item.proofStatus}
-													/>
-												)}
-												<span className="truncate grow">{item.name}</span>
-												{targetLocale === item.code && (
-													<Check className="ml-2 h-4 w-4" />
-												)}
-											</CommandItem>
-										))}
-									</CommandGroup>
 								</>
 							)}
+							<CommandEmpty>No locales found.</CommandEmpty>
+							<CommandGroup>
+								{localeOptionWithStatus.map((item) => (
+									<CommandItem
+										key={item.code}
+										onSelect={handleLocaleChange}
+										value={item.code}
+									>
+										{showIcons && sourceLocale && (
+											<TranslationProofStatusIcon
+												localeStatus={item.status}
+												proofStatus={item.proofStatus}
+											/>
+										)}
+										<span className="truncate grow">{item.name}</span>
+										{targetLocale === item.code && (
+											<Check className="ml-2 h-4 w-4" />
+										)}
+									</CommandItem>
+								))}
+							</CommandGroup>
 						</CommandList>
 						{showAddNewButton && (
 							<>
