@@ -29,7 +29,7 @@ async function run() {
 		while (compacted.length && compacted[compacted.length - 1].trim() === "") {
 			compacted.pop();
 		}
-		const cleaned = compacted.join("\n").trimEnd() + "\n";
+		const cleaned = `${compacted.join("\n").trimEnd()}\n`;
 
 		await fs.writeFile(file, cleaned);
 	}

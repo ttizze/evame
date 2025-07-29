@@ -279,7 +279,9 @@ async function ensureRootPage() {
 	const visited = new Set<string>();
 
 	while (queue.length) {
-		const { path: filePath, pageId, fallbackTitle } = queue.shift()!;
+		const item = queue.shift();
+		if (!item) continue;
+		const { path: filePath, pageId, fallbackTitle } = item;
 		if (visited.has(filePath)) continue;
 		visited.add(filePath);
 

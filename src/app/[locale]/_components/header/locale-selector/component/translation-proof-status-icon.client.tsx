@@ -2,19 +2,24 @@ import type { TranslationProofStatus } from "@prisma/client";
 import { FileText, FileX, Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LocaleStatus } from "../lib/build-locale-options";
-import { proofColorMap } from "./translation-proof-status";
 
 interface Props {
 	localeStatus: LocaleStatus;
 	proofStatus?: TranslationProofStatus;
 }
 
-// 翻訳ステータス別の色マップ
-const statusColorMap: Record<LocaleStatus, string> = {
+// 統合された色マップ
+const colorMap = {
+	// ロケールステータス別の色
 	source: "text-blue-500",
 	untranslated: "text-gray-400",
 	translated: "text-red-500",
-};
+	// 翻訳証明ステータス別の色
+	MACHINE_DRAFT: "text-rose-500",
+	HUMAN_TOUCHED: "text-orange-400",
+	PROOFREAD: "text-amber-400",
+	VALIDATED: "text-emerald-500",
+} as const;
 
 export function TranslationProofStatusIcon({
 	localeStatus,
@@ -26,8 +31,8 @@ export function TranslationProofStatusIcon({
 	let IconComponent: typeof FileText;
 	const colorClass =
 		localeStatus === "translated"
-			? proofColorMap[proofStatus]
-			: statusColorMap[localeStatus];
+			? colorMap[proofStatus]
+			: colorMap[localeStatus];
 
 	switch (localeStatus) {
 		case "source":
