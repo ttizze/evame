@@ -1,8 +1,8 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { ChevronDown, Info } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { TranslationProofStatusIcon } from "./translation-proof-status-icon.client";
 
 export function TextStatusGuide() {

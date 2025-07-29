@@ -39,8 +39,6 @@ vi.mock("./hooks/use-combined-router", () => ({
 }));
 
 describe("LocaleSelector", () => {
-
-
 	it("renders button with the selected locale name and icon", () => {
 		render(<LocaleSelector currentHandle="" hasGeminiApiKey={false} />);
 
@@ -71,6 +69,5 @@ describe("LocaleSelector", () => {
 		// "French" の選択肢が表示されるはず
 		const frenchOption = screen.getByText("Français");
 		await user.click(frenchOption);
-
 	});
 });
