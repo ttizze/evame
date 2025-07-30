@@ -117,10 +117,13 @@ export function LocaleSelector({
 		<div>
 			<Popover onOpenChange={setOpen} open={open}>
 				<PopoverTrigger asChild>
-					<Button
-						className={cn("justify-between ", localeSelectorClassName)}
+					<button
+						className={cn(
+							"flex justify-between items-center opacity-100 w-full rounded-none px-4 py-2  cursor-pointer hover:bg-accent hover:text-accent-foreground",
+							localeSelectorClassName,
+						)}
 						data-testid="locale-selector-button"
-						variant="ghost"
+						type="button"
 					>
 						<div className="flex items-center">
 							{showIcons && sourceLocale && (
@@ -133,8 +136,13 @@ export function LocaleSelector({
 								{selectedOption?.name ?? "Select"}
 							</span>
 						</div>
-						<ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-					</Button>
+						<ChevronDown
+							className={cn(
+								"ml-2 h-4 w-4 shrink-0 opacity-50 transition-transform",
+								open && "rotate-180",
+							)}
+						/>
+					</button>
 				</PopoverTrigger>
 				<PopoverContent className="w-60 p-0  truncate" sideOffset={-4}>
 					<Command>
