@@ -36,7 +36,7 @@ export function TextStatusGuide() {
 						<div className="flex-1 min-w-0">
 							<div className="font-medium text-sm">Source</div>
 							<div className="text-xs text-muted-foreground break-words whitespace-normal">
-								Original content in the source language.
+								Original content.
 							</div>
 						</div>
 					</div>
@@ -49,7 +49,7 @@ export function TextStatusGuide() {
 						<div className="flex-1 min-w-0">
 							<div className="font-medium text-sm">Machine Draft</div>
 							<div className="text-xs text-muted-foreground break-words whitespace-normal">
-								AI-generated translation without human review.
+								AI-generated translation.
 							</div>
 						</div>
 					</div>
@@ -61,7 +61,7 @@ export function TextStatusGuide() {
 						<div className="flex-1 min-w-0">
 							<div className="font-medium text-sm">Human Touched</div>
 							<div className="text-xs text-muted-foreground break-words whitespace-normal">
-								Manually edited by a human translator.
+								At least one translation option has 1 or more likes.
 							</div>
 						</div>
 					</div>
@@ -73,7 +73,7 @@ export function TextStatusGuide() {
 						<div className="flex-1 min-w-0">
 							<div className="font-medium text-sm">Proofread</div>
 							<div className="text-xs text-muted-foreground break-words whitespace-normal">
-								Reviewed for accuracy and cultural appropriateness.
+								All translation options have at least 1 like.
 							</div>
 						</div>
 					</div>
@@ -85,7 +85,7 @@ export function TextStatusGuide() {
 						<div className="flex-1 min-w-0">
 							<div className="font-medium text-sm">Validated</div>
 							<div className="text-xs text-muted-foreground break-words whitespace-normal">
-								Approved by a qualified reviewer. Ready for publication.
+								All translation options have at least 2 likes.
 							</div>
 						</div>
 					</div>
@@ -97,7 +97,7 @@ export function TextStatusGuide() {
 						<div className="flex-1 min-w-0">
 							<div className="font-medium text-sm">Untranslated</div>
 							<div className="text-xs text-muted-foreground break-words whitespace-normal">
-								Content that has not been translated yet.
+								Not translated yet.
 							</div>
 						</div>
 					</div>
