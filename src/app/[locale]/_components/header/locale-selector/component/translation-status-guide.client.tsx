@@ -83,7 +83,7 @@ export function TextStatusGuide() {
 							proofStatus="VALIDATED"
 						/>
 						<div className="flex-1 min-w-0">
-							<div className="font-medium text-sm">Verified</div>
+							<div className="font-medium text-sm">Validated</div>
 							<div className="text-xs text-muted-foreground break-words whitespace-normal">
 								All translation options have at least 2 likes.
 							</div>
