@@ -77,7 +77,7 @@ export function BaseHeader({
 					{showUserMenu && currentUser && (
 						<DropdownMenu modal={false}>
 							<DropdownMenuTrigger>
-								<Avatar className="w-6 h-6">
+								<Avatar className="w-6 h-6 cursor-pointer">
 									<AvatarImage {...props} />
 									<AvatarFallback>
 										{currentUser.handle.charAt(0).toUpperCase()}
@@ -104,6 +104,7 @@ export function BaseHeader({
 									hasGeminiApiKey={hasGeminiApiKey}
 									localeSelectorClassName="w-[200px]"
 								/>
+								<DropdownMenuSeparator className="my-0" />
 								<DropdownMenuItem className="p-0 ">
 									<Link
 										className="flex items-center opacity-100 w-full rounded-none gap-2 px-4 py-3 cursor-pointer hover:bg-accent hover:text-accent-foreground"
