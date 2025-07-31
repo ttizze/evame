@@ -1,6 +1,9 @@
 import type { MetadataRoute } from "next";
 import { BASE_URL } from "@/app/_constants/base-url";
-import type { PageWithUserAndTranslation } from "@/app/api/pages/db/queries.server";
+import {
+	fetchPagesWithUserAndTranslation,
+	type PageWithUserAndTranslation,
+} from "@/app/_db/sitemap-queries.server";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 	const locales = ["en", "ja"];
@@ -16,19 +19,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 	);
 
 	try {
-		// page list
-		const response = await fetch(`${BASE_URL}/api/pages`, {
-			next: { revalidate: 86400 },
-			headers: { "Cache-Control": "public, max-age=86400" },
-		});
+		// 直接DBからページデータを取得
+		const pages = await fetchPagesWithUserAndTranslation();
 
-		if (!response.ok) {
-			throw new Error(`Failed to fetch pages: ${response.statusText}`);
-		}
-
-		const pages = await response.json();
-
-		// generate  page url
+		// generate page url
 		const pageRoutes = pages.flatMap((page: PageWithUserAndTranslation) => {
 			// translationInfo に値がある場合はその locale を使用、なければ 'en' を使用する
 			const locales =
