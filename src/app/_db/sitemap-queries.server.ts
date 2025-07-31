@@ -1,5 +1,6 @@
 import { fetchLatestPageTranslationJobs } from "@/app/[locale]/_db/page-queries.server";
 import { prisma } from "@/lib/prisma";
+
 export const fetchPagesWithUser = async () => {
 	const pages = await prisma.page.findMany({
 		where: {
@@ -16,6 +17,7 @@ export const fetchPagesWithUser = async () => {
 	});
 	return pages;
 };
+
 export async function fetchPagesWithUserAndTranslation() {
 	const pagesWithUser = await fetchPagesWithUser();
 	const pagesWithTranslation = await Promise.all(
@@ -26,6 +28,7 @@ export async function fetchPagesWithUserAndTranslation() {
 	);
 	return pagesWithTranslation;
 }
+
 export type PageWithUserAndTranslation = Awaited<
 	ReturnType<typeof fetchPagesWithUserAndTranslation>
 >[number];
