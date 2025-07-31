@@ -38,7 +38,7 @@ export function TranslationSection<Tag extends keyof JSX.IntrinsicElements>({
 	// Text wrapped inside original semantic tag (p, h1, etc.)
 	const translationText = (
 		<button
-			className="notranslate inline-block py-2 text-gray-700 dark:text-gray-200 text-left"
+			className="inline-block py-2 text-gray-700 dark:text-gray-200 text-left cursor-pointer select-text"
 			onMouseUp={(e: MouseEvent) => {
 				if (window.getSelection()?.toString()) return;
 				if (e.button === 2) return;
