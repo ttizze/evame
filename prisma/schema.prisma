@@ -12,8 +12,8 @@ model User {
   id                                 String                              @id @default(cuid())
   handle                             String                              @unique @default(cuid())
   email                              String                              @unique
-  name                               String
-  image                              String
+  name                               String                              @default("new_user")
+  image                              String                              @default("https://evame.tech/avatar.png")
   profile                            String                              @default("")
   twitterHandle                      String                              @default("")
   plan                               String                              @default("free")
