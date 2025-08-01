@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import useSWR from "swr";
 import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
@@ -62,14 +63,9 @@ export function ChildPageTree({ parent, locale }: Props) {
 			onToggle={(e) => setIsOpen(e.currentTarget.open)}
 		>
 			<summary className="cursor-pointer list-none flex items-center gap-1">
-				<span
-					className={cn(
-						"transition-transform self-start pt-0.5",
-						isOpen && "rotate-90",
-					)}
-				>
-					▶
-				</span>
+				<ChevronRight
+					className={cn("h-5 w-5 transition-transform", isOpen && "rotate-90")}
+				/>
 				<Link className="hover:underline" href={pageLink}>
 					{titleSegment && (
 						<WrapSegmentClient
