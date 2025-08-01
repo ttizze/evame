@@ -1,12 +1,12 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
+import { useState } from "react";
+import useSWR from "swr";
 import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
 import type { PageSummary } from "@/app/[locale]/types";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
-import { ChevronRight } from "lucide-react";
-import { useState } from "react";
-import useSWR from "swr";
 
 interface Props {
 	parent: PageSummary;
