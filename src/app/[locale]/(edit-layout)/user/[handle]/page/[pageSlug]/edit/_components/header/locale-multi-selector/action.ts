@@ -1,6 +1,6 @@
 "use server";
 
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { updateUserTargetLocales } from "./_db/mutations.server";
 
 export async function saveTargetLocalesAction(locales: string[]) {

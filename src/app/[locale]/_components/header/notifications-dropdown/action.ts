@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { markAllNotificationAsRead } from "./db/mutations.server";
 export async function markNotificationAsReadAction(
 	_previousState: ActionResponse,

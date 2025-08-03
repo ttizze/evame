@@ -7,11 +7,11 @@ import {
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
 } from "@/app/[locale]/_db/page-queries.server";
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { prisma } from "@/lib/prisma";
 import { translateAction } from "./action";
 
-vi.mock("@/auth", () => ({
+vi.mock("@/lib/auth-server", () => ({
 	getCurrentUser: vi.fn(),
 }));
 vi.mock("@/app/_db/queries.server", () => ({

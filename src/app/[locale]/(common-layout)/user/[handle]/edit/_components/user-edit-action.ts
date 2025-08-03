@@ -1,8 +1,9 @@
 "use server";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser, unstable_update } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { parseFormData } from "@/lib/parse-form-data";
 import { updateUser } from "../_db/mutations.server";
 import reservedHandles from "./reserved-handles.json";
@@ -79,19 +80,10 @@ export async function userEditAction(
 		profile,
 		twitterHandle,
 	});
-	await unstable_update({
-		user: {
-			handle,
-			name,
-			profile,
-			twitterHandle,
-			image: currentUser.image,
-		},
-	});
 	if (handle !== currentUser.handle) {
 		return redirect(`/user/${handle}/edit`);
 	}
-
+	revalidatePath("/settings/profile");
 	return {
 		success: true,
 		message: "User updated successfully",

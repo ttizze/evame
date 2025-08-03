@@ -1,7 +1,6 @@
 import { get } from "@vercel/edge-config";
 import { type NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
-import { auth } from "@/auth";
 import { routing } from "@/i18n/routing";
 
 const handleI18nRouting = createMiddleware(routing);
@@ -22,8 +21,8 @@ async function maintenanceGate(req: NextRequest) {
 }
 
 /* ────────────────────────────────────────────── */
-/* ③ auth → maintenanceGate → i18n の順に合成     */
-export default auth(maintenanceGate);
+/* ③ メンテナンスゲート → i18n の順に合成 */
+export default maintenanceGate;
 
 /* ────────────────────────────────────────────── */
 export const config = {

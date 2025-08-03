@@ -6,7 +6,7 @@ import { z } from "zod";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { targetContentTypeValues } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { parseFormData } from "@/lib/parse-form-data";
 import {
 	createNotificationPageSegmentTranslationVote,

@@ -1,12 +1,10 @@
-"use server";
-
 import { SparklesIcon } from "lucide-react";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger } from "nuqs/server";
 import { PageList } from "@/app/[locale]/_components/page/page-list.server";
 import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { fetchPaginatedPublicNewestPageSummariesByTag } from "./_db/queries.server";
 
 const searchParamsSchema = {

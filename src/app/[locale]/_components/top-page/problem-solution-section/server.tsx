@@ -8,7 +8,7 @@ import {
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
 import Globe from "@/app/[locale]/_components/top-page/problem-solution-section/components/globe.client";
 import { WrapSegmentsComponent } from "@/app/[locale]/_components/wrap-segments-component/server";
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { fetchAboutPage } from "../../../(common-layout)/about/_lib/fetch-about-page";
 import { FloatingControls } from "../../floating-controls.client";
 import AboutSectionCard from "./components/about-section-card.server";

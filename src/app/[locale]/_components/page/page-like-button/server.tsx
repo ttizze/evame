@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { PageLikeButtonClient } from "./client";
 import { getPageLikeAndCount } from "./db/queries.server";
 

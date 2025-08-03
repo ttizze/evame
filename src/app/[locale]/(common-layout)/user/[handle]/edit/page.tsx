@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound, redirect } from "next/navigation";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
-import { getCurrentUser } from "@/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getCurrentUser } from "@/lib/auth-server";
 
 const ProfileForm = dynamic(
 	() => import("./_components/profile-form").then((mod) => mod.ProfileForm),

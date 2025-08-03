@@ -1,63 +1,78 @@
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
-import Resend from "next-auth/providers/resend";
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { customSession, magicLink } from "better-auth/plugins";
 import { prisma } from "@/lib/prisma";
-export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
-	providers: [
-		Google({
-			allowDangerousEmailAccountLinking: true,
+import { sendMagicLinkEmail } from "@/lib/resend.server";
+
+export const auth = betterAuth({
+	plugins: [
+		magicLink({
+			sendMagicLink: async ({ email, token, url }) => {
+				await sendMagicLinkEmail(email, url, token);
+			},
 		}),
-		Resend({ from: "noreply@mail.reimei.dev" }),
+		customSession(async ({ session }) => {
+			const currentUser = await prisma.user.findUnique({
+				where: {
+					id: session.userId,
+				},
+			});
+			if (!currentUser) {
+				throw new Error("User not found");
+			}
+			return {
+				user: {
+					id: currentUser.id,
+					name: currentUser.name,
+					handle: currentUser.handle,
+					plan: currentUser.plan,
+					profile: currentUser.profile,
+					twitterHandle: currentUser.twitterHandle,
+					totalPoints: currentUser.totalPoints,
+					isAI: currentUser.isAI,
+					image: currentUser.image,
+					createdAt: currentUser.createdAt,
+					updatedAt: currentUser.updatedAt,
+				},
+				session,
+			};
+		}),
 	],
-	adapter: PrismaAdapter(prisma),
+	// セッション設定
 	session: {
-		strategy: "jwt",
-	},
-	callbacks: {
-		async jwt({ token, user, trigger, session }) {
-			// unstable_updateが呼ばれた場合、sessionのデータをtokenにコピーする
-			if (trigger === "update") {
-				token.handle = session.user.handle;
-				token.name = session.user.name;
-				token.profile = session.user.profile;
-				token.twitterHandle = session.user.twitterHandle;
-				token.image = session.user.image;
-				token.plan = session.user.plan;
-			}
-			if (user) {
-				token.id = user.id;
-				token.handle = user.handle;
-				token.profile = user.profile;
-				token.twitterHandle = user.twitterHandle;
-				token.createdAt = user.createdAt;
-				token.updatedAt = user.updatedAt;
-				token.totalPoints = user.totalPoints;
-				token.isAI = user.isAI;
-				token.name = user.name;
-				token.image = user.image;
-				token.plan = user.plan;
-			}
-			return token;
+		fields: {
+			expiresAt: "expires",
+			token: "sessionToken",
 		},
-		async session({ session, token }) {
-			session.user.id = token.id as string;
-			session.user.handle = token.handle as string;
-			session.user.profile = token.profile as string;
-			session.user.twitterHandle = token.twitterHandle as string;
-			session.user.createdAt = token.createdAt as Date;
-			session.user.updatedAt = token.updatedAt as Date;
-			session.user.totalPoints = token.totalPoints as number;
-			session.user.isAI = token.isAI as boolean;
-			session.user.name = token.name as string;
-			session.user.image = token.image as string;
-			session.user.plan = token.plan as string;
-			return session;
+		expiresIn: 60 * 60 * 24 * 7, // 7 days
+	},
+	// データベース設定
+	database: prismaAdapter(prisma, {
+		provider: "postgresql",
+	}),
+	databaseHooks: {
+		user: {
+			create: {
+				before: async (user) => {
+					// name が空なら自動生成
+					if (!user.name?.trim()) {
+						return {
+							data: {
+								...user,
+								name: `new_user`, // 例: user_r4v5ts6k
+							},
+						};
+					}
+					return { data: user };
+				},
+			},
+		},
+	},
+	// ソーシャルプロバイダー設定
+	socialProviders: {
+		google: {
+			clientId: process.env.AUTH_GOOGLE_ID as string,
+			clientSecret: process.env.AUTH_GOOGLE_SECRET as string,
 		},
 	},
 });
-
-export async function getCurrentUser() {
-	const session = await auth();
-	return session?.user;
-}

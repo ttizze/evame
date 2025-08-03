@@ -8,6 +8,7 @@ import type { SanitizedUser } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { authClient } from "@/lib/auth-client";
 import { type UserEditState, userEditAction } from "./user-edit-action";
 import {
 	type UserImageEditState,
@@ -44,23 +45,41 @@ export function ProfileForm({ currentUser }: ProfileFormProps) {
 	});
 
 	useEffect(() => {
-		if (imageState.success && imageState.data?.imageUrl && imageState.message) {
-			toast.success(imageState.message);
-		} else if (!imageState.success && imageState.message) {
-			toast.error(imageState.message);
-		}
+		const updateImageSession = async () => {
+			if (
+				imageState.success &&
+				imageState.data?.imageUrl &&
+				imageState.message
+			) {
+				toast.success(imageState.message);
+				await authClient.updateUser({
+					image: imageState.data?.imageUrl,
+				});
+			} else if (!imageState.success && imageState.message) {
+				toast.error(imageState.message);
+			}
+		};
+
+		updateImageSession();
 	}, [imageState]);
 
 	useEffect(() => {
-		if (editState.success && editState.message) {
-			toast.success(editState.message);
-		} else if (
-			!editState.success &&
-			editState.message &&
-			!editState.zodErrors
-		) {
-			toast.error(editState.message);
-		}
+		const updateNameSession = async () => {
+			if (editState.success && editState.message) {
+				toast.success(editState.message);
+				await authClient.updateUser({
+					name: editState.data?.name,
+				});
+			} else if (
+				!editState.success &&
+				editState.message &&
+				!editState.zodErrors
+			) {
+				toast.error(editState.message);
+			}
+		};
+
+		updateNameSession();
 	}, [editState]);
 
 	const handleImageClick = () => {

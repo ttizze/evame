@@ -1,13 +1,14 @@
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { uploadImage } from "@/app/[locale]/_lib/upload";
-import { getCurrentUser, unstable_update } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { mockUsers } from "@/tests/mock";
 import { updateUserImage } from "../_db/mutations.server";
 import { userImageEditAction } from "./user-image-edit-action";
 
-vi.mock("@/auth", () => ({
+vi.mock("@/lib/auth-server", () => ({
 	getCurrentUser: vi.fn(),
-	unstable_update: vi.fn(),
 }));
 
 vi.mock("@/app/[locale]/_lib/upload", () => ({
@@ -18,8 +19,12 @@ vi.mock("../_db/mutations.server", () => ({
 	updateUserImage: vi.fn(),
 }));
 
+vi.mock("next/cache", () => ({
+	revalidatePath: vi.fn(),
+}));
+
 vi.mock("next/navigation", () => ({
-	redirect: (path: string) => path,
+	redirect: vi.fn(),
 }));
 
 describe("userImageEditAction (Integration)", () => {
@@ -36,7 +41,6 @@ describe("userImageEditAction (Integration)", () => {
 			data: { imageUrl: mockImageUrl },
 		});
 		vi.mocked(updateUserImage).mockResolvedValue(mockUser);
-		vi.mocked(unstable_update).mockResolvedValue(null);
 		mockFormData.set("image", mockFile);
 	});
 
@@ -53,24 +57,15 @@ describe("userImageEditAction (Integration)", () => {
 		expect(updateUserImage).toHaveBeenCalledWith(mockUser.id, mockImageUrl);
 
 		// unstable_updateが正しく呼ばれたことを検証
-		expect(unstable_update).toHaveBeenCalledWith({
-			user: {
-				name: mockUser.name,
-				handle: mockUser.handle,
-				profile: mockUser.profile,
-				twitterHandle: mockUser.twitterHandle,
-				image: mockImageUrl,
-			},
-		});
+		expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith("/settings/profile");
 	});
 
 	it("should redirect if user is not authenticated", async () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(undefined);
 
-		const result = await userImageEditAction({ success: false }, mockFormData);
+		await userImageEditAction({ success: false }, mockFormData);
 
-		expect(result).toBe("/auth/login");
-		expect(unstable_update).not.toHaveBeenCalled();
+		expect(vi.mocked(redirect)).toHaveBeenCalledWith("/auth/login");
 	});
 
 	it("should return error if no image is provided", async () => {
@@ -82,7 +77,6 @@ describe("userImageEditAction (Integration)", () => {
 			success: false,
 			message: "No image provided",
 		});
-		expect(unstable_update).not.toHaveBeenCalled();
 	});
 
 	it("should return error if image size exceeds limit", async () => {
@@ -98,7 +92,6 @@ describe("userImageEditAction (Integration)", () => {
 			success: false,
 			message: "Image size exceeds 5MB limit. Please choose a smaller file.",
 		});
-		expect(unstable_update).not.toHaveBeenCalled();
 	});
 
 	it("should handle upload failure", async () => {
@@ -113,7 +106,6 @@ describe("userImageEditAction (Integration)", () => {
 			success: false,
 			message: "Failed to upload image",
 		});
-		expect(unstable_update).not.toHaveBeenCalled();
 	});
 
 	it("should verify user data is correctly passed to unstable_update", async () => {
@@ -123,14 +115,6 @@ describe("userImageEditAction (Integration)", () => {
 		await userImageEditAction({ success: false }, mockFormData);
 
 		// unstable_updateに正確なユーザー情報が渡されたことを検証
-		expect(unstable_update).toHaveBeenCalledWith({
-			user: {
-				name: mockUser.name,
-				handle: mockUser.handle,
-				profile: mockUser.profile,
-				twitterHandle: mockUser.twitterHandle,
-				image: mockImageUrl, // 新しい画像URLに更新されていることを確認
-			},
-		});
+		expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith("/settings/profile");
 	});
 });

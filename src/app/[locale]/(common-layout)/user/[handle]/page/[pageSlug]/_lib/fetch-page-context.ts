@@ -5,7 +5,7 @@ import {
 	fetchPageDetail,
 	fetchPageViewCount,
 } from "@/app/[locale]/_db/page-queries.server";
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { incrementPageView } from "../_db/mutations.server";
 import { fetchLatestUserTranslationJob } from "../_db/queries.server";
 

@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsString } from "nuqs/server";
-import { getCurrentUser } from "@/auth";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/routing";
+import { getCurrentUser } from "@/lib/auth-server";
 
 const NewPageList = dynamic(
 	() => import("@/app/[locale]/_components/page/new-page-list/server"),

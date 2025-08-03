@@ -2,7 +2,7 @@ import Image from "next/image";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { WrapSegmentsComponent } from "@/app/[locale]/_components/wrap-segments-component/server";
 import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/_lib/fetch-about-page";
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 
 export const Icon = ({ className, ...rest }: { className: string }) => {
 	return (

@@ -8,7 +8,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("next/cache", () => ({
 	revalidatePath: vi.fn(),
 }));
-vi.mock("@/auth", () => ({
+vi.mock("@/lib/auth-server", () => ({
 	getCurrentUser: () => Promise.resolve({ id: 1, handle: "t" }),
 }));
 vi.mock("@/lib/parse-form-data", () => ({
