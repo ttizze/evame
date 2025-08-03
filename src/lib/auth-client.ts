@@ -7,7 +7,7 @@ import type { auth } from "@/auth";
 export const authClient = createAuthClient({
 	plugins: [customSessionClient<typeof auth>(), magicLinkClient()],
 	/** The base URL of the server (optional if you're using the same domain) */
-	baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+	baseURL: process.env.NEXT_PUBLIC_DOMAIN || "http://localhost:3000",
 	/** The path to the auth API route */
 	apiPath: "/api/auth",
 });
