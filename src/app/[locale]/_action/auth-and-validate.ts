@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 // lib/auth-and-validate.ts
 import type { z } from "zod";
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { parseFormData } from "@/lib/parse-form-data";
 export type AuthDeps = {
 	getCurrentUser: typeof getCurrentUser;

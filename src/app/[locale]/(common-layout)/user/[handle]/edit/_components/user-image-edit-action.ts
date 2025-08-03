@@ -1,8 +1,9 @@
 "use server";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { uploadImage } from "@/app/[locale]/_lib/upload";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser, unstable_update } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { updateUserImage } from "../_db/mutations.server";
 
 export type UserImageEditState = ActionResponse<
@@ -41,15 +42,7 @@ export async function userImageEditAction(
 		};
 	}
 	await updateUserImage(currentUser.id, result.data?.imageUrl);
-	await unstable_update({
-		user: {
-			name: currentUser.name,
-			handle: currentUser.handle,
-			profile: currentUser.profile,
-			twitterHandle: currentUser.twitterHandle,
-			image: result.data?.imageUrl,
-		},
-	});
+	revalidatePath("/settings/profile");
 	return {
 		success: true,
 		data: { imageUrl: result.data?.imageUrl },

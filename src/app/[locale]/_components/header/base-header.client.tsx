@@ -2,7 +2,6 @@
 import { BookOpenIcon, LogOutIcon } from "lucide-react";
 import Image, { getImageProps } from "next/image";
 import type { ReactNode } from "react";
-import { signOutAction } from "@/app/[locale]/auth-action";
 import type { SanitizedUser } from "@/app/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -13,6 +12,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
+import { authClient } from "@/lib/auth-client";
 import { ModeToggle } from "../mode-toggle";
 import { useHeaderScroll } from "./hooks/use-header-scroll";
 import { LocaleSelector } from "./locale-selector/client";
@@ -40,6 +40,20 @@ export function BaseHeader({
 		width: 40,
 		height: 40,
 	});
+
+	const handleSignOut = async () => {
+		try {
+			await authClient.signOut({
+				fetchOptions: {
+					onSuccess: () => {
+						window.location.href = "/";
+					},
+				},
+			});
+		} catch (error) {
+			console.error("Sign out error:", error);
+		}
+	};
 	return (
 		<div ref={headerRef}>
 			<header
@@ -120,7 +134,7 @@ export function BaseHeader({
 								<DropdownMenuItem asChild>
 									<button
 										className="w-full gap-2 flex rounded-none cursor-pointer items-center px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground text-red-500"
-										onClick={signOutAction}
+										onClick={handleSignOut}
 										type="submit"
 									>
 										<LogOutIcon className="w-4 h-4" />

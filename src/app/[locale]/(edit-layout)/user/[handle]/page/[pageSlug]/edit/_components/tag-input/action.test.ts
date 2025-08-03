@@ -2,13 +2,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { mockPages, mockUsers } from "@/tests/mock";
 import { upsertTags } from "../../_db/mutations.server";
 import { editPageTagsAction } from "./action";
 
 // Mocking dependencies
-vi.mock("@/auth");
+vi.mock("@/lib/auth-server");
 vi.mock("@/app/[locale]/_db/queries.server");
 vi.mock("../../_db/mutations.server");
 vi.mock("next/navigation");

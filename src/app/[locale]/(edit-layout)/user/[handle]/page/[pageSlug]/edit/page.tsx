@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { mdastToHtml } from "@/app/[locale]/_lib/mdast-to-html";
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { EditPageClient } from "./_components/edit-page-client";
 import {
 	getAllTagsWithCount,

@@ -1,11 +1,11 @@
+import { getCurrentUser } from "@/lib/auth-server";
+import { mockUsers } from "@/tests/mock";
+import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import "@testing-library/jest-dom";
-import { getCurrentUser } from "@/auth";
-import { mockUsers } from "@/tests/mock";
 import { FollowButtonClient } from "./client";
 
-vi.mock("@/auth");
+vi.mock("@/lib/auth-server");
 
 describe("FollowButton", () => {
 	beforeEach(() => {

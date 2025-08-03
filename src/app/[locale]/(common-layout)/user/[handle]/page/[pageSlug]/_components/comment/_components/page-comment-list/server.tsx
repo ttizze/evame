@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { fetchPageCommentsWithUserAndTranslations } from "./_lib/fetch-page-comments-with-user-and-translations";
 import PageCommentItem from "./page-comment-item/server";
 

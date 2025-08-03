@@ -1,12 +1,11 @@
-import "../globals.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Viewport } from "next";
 import { BIZ_UDPGothic, Inter } from "next/font/google";
-import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import NextTopLoader from "nextjs-toploader";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Toaster } from "@/components/ui/sonner";
+import "../globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 const bizUDPGothic = BIZ_UDPGothic({
@@ -48,7 +47,7 @@ export default async function Layout({
 				<NextTopLoader showSpinner={false} />
 				<NuqsAdapter>
 					<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-						<SessionProvider>{children}</SessionProvider>
+						{children}
 						<Toaster closeButton richColors />
 					</ThemeProvider>
 				</NuqsAdapter>

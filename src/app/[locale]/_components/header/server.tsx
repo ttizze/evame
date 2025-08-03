@@ -1,8 +1,8 @@
 import { Loader2, Search } from "lucide-react";
 import dynamic from "next/dynamic";
 import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
-import { getCurrentUser } from "@/auth";
 import { Link } from "@/i18n/routing";
+import { getCurrentUser } from "@/lib/auth-server";
 import { StartButton } from "../start-button";
 import { BaseHeader } from "./base-header.client";
 import { LocaleSelector } from "./locale-selector/client";

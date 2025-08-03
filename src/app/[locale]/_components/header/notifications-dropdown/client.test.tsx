@@ -1,15 +1,15 @@
 // NotificationsDropdownClient.test.tsx
+import { getCurrentUser } from "@/lib/auth-server";
+import { mockUsers } from "@/tests/mock";
+import "@testing-library/jest-dom";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { NextIntlClientProvider } from "next-intl";
 import { describe, expect, it } from "vitest";
 import { NotificationsDropdownClient } from "./client";
 import type { NotificationWithRelations } from "./db/queries.server";
-import "@testing-library/jest-dom";
-import userEvent from "@testing-library/user-event";
-import { NextIntlClientProvider } from "next-intl";
-import { getCurrentUser } from "@/auth";
-import { mockUsers } from "@/tests/mock";
 
-vi.mock("@/auth");
+vi.mock("@/lib/auth-server");
 vi.mock("next/cache", () => ({
 	revalidatePath: () => {},
 }));

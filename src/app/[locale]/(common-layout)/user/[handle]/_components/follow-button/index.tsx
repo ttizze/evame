@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { FollowButtonClient } from "./client";
 import { isFollowing } from "./db/queries.server";
 

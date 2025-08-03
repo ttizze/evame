@@ -1,13 +1,13 @@
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getCurrentUser, unstable_update } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { mockUsers } from "@/tests/mock";
 import { updateUser } from "../_db/mutations.server";
 import { userEditAction } from "./user-edit-action";
 
-vi.mock("@/auth", () => ({
+vi.mock("@/lib/auth-server", () => ({
 	getCurrentUser: vi.fn(),
-	unstable_update: vi.fn(),
 }));
 
 // DB mutation のモック
@@ -20,22 +20,24 @@ vi.mock("next/navigation", () => ({
 	redirect: vi.fn(),
 }));
 
+// Next.js cache のモック
+vi.mock("next/cache", () => ({
+	revalidatePath: vi.fn(),
+}));
+
 describe("userEditAction", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		vi.mocked(getCurrentUser).mockResolvedValue(mockUsers[0]);
 		vi.mocked(updateUser).mockResolvedValue(mockUsers[0]);
-		vi.mocked(unstable_update).mockResolvedValue(null);
 	});
 
 	it("未認証の場合、ログインページにリダイレクトする", async () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(undefined);
 		const formData = new FormData();
-
 		await userEditAction({ success: false }, formData);
 
 		expect(redirect).toHaveBeenCalledWith("/auth/login");
-		expect(unstable_update).not.toHaveBeenCalled();
 	});
 
 	it("正常な入力の場合、プロフィールを更新し、unstable_updateを呼び出す", async () => {
@@ -54,16 +56,7 @@ describe("userEditAction", () => {
 		});
 
 		// unstable_updateが正しく呼び出されたことを検証
-		expect(unstable_update).toHaveBeenCalledWith({
-			user: {
-				handle: "mockUserId1",
-				name: "Test User",
-				profile: "My profile",
-				twitterHandle: undefined,
-				image: mockUsers[0].image,
-			},
-		});
-
+		expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith("/settings/profile");
 		expect(result).toEqual({
 			success: true,
 			message: "User updated successfully",
@@ -82,16 +75,8 @@ describe("userEditAction", () => {
 
 		await userEditAction({ success: false }, formData);
 
-		// unstable_updateが呼び出されることを検証
-		expect(unstable_update).toHaveBeenCalledWith({
-			user: {
-				handle: "new-handle",
-				name: "Test User",
-				profile: "My profile",
-				twitterHandle: undefined,
-				image: mockUsers[0].image,
-			},
-		});
+		// handleが変更された場合、revalidatePathは呼び出されない
+		expect(vi.mocked(revalidatePath)).not.toHaveBeenCalled();
 
 		expect(redirect).toHaveBeenCalledWith("/user/new-handle/edit");
 	});
@@ -112,15 +97,7 @@ describe("userEditAction", () => {
 			twitterHandle: "@testuser",
 		});
 
-		expect(unstable_update).toHaveBeenCalledWith({
-			user: {
-				handle: "mockUserId1",
-				name: "Test User",
-				profile: "My profile",
-				twitterHandle: "@testuser",
-				image: mockUsers[0].image,
-			},
-		});
+		expect(vi.mocked(revalidatePath)).toHaveBeenCalledWith("/settings/profile");
 	});
 
 	it("バリデーションエラーの場合、エラーを返し、更新関数は呼ばれない", async () => {
@@ -134,7 +111,6 @@ describe("userEditAction", () => {
 		expect(result.success).toBe(false);
 		expect(!result.success && result.zodErrors).toBeDefined();
 		expect(updateUser).not.toHaveBeenCalled();
-		expect(unstable_update).not.toHaveBeenCalled();
 	});
 
 	it("予約済みhandleの場合、エラーを返し、更新関数は呼ばれない", async () => {
@@ -153,6 +129,5 @@ describe("userEditAction", () => {
 		expect(result.success).toBe(false);
 		expect(!result.success && result.zodErrors).toBeDefined();
 		expect(updateUser).not.toHaveBeenCalled();
-		expect(unstable_update).not.toHaveBeenCalled();
 	});
 });

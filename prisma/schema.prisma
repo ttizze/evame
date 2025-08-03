@@ -1,3 +1,4 @@
+
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -22,7 +23,7 @@ model User {
   provider                           String                              @default("Credentials")
   createdAt                          DateTime                            @default(now()) @map("created_at")
   updatedAt                          DateTime                            @updatedAt @map("updated_at")
-  emailVerified                      DateTime?
+  emailVerified                      Boolean?                             
   credential                         UserCredential?
   geminiApiKey                       GeminiApiKey?
   pages                              Page[]
@@ -169,11 +170,11 @@ enum TranslationProofStatus {
 }
 
 model PageLocaleTranslationProof {
-  id          Int                    @id @default(autoincrement())
-  pageId      Int                    @map("page_id")
-  locale      String
+  id                     Int                    @id @default(autoincrement())
+  pageId                 Int                    @map("page_id")
+  locale                 String
   translationProofStatus TranslationProofStatus @default(MACHINE_DRAFT) @map("translation_proof_status")
-  page        Page                   @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  page                   Page                   @relation(fields: [pageId], references: [id], onDelete: Cascade)
 
   @@unique([pageId, locale])
   @@index([translationProofStatus])
@@ -352,21 +353,24 @@ model PageCommentSegmentTranslationVote {
 }
 
 model Account {
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
+  id                   String    @id @default(cuid())
+  userId               String
+  providerId           String    @map("provider")
+  accountId            String    @map("providerAccountId")
+  refreshToken         String?   @map("refresh_token")
+  accessToken          String?   @map("access_token")
+  accessTokenExpiresAt DateTime? @map("expires_at")
+  scope                String?
+  idToken              String?   @map("id_token")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@id([provider, providerAccountId])
+  refreshTokenExpiresAt DateTime?
+  password              String?
+
+  @@unique([providerId, accountId])
   @@map("accounts")
 }
 
@@ -405,10 +409,16 @@ model Notification {
 }
 
 model Session {
+  id           String   @id @default(cuid())
   sessionToken String   @unique
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  ipAddress String?
+  userAgent String?
 
   @@map("sessions")
 }
@@ -420,4 +430,15 @@ model VerificationToken {
 
   @@id([identifier, token])
   @@map("verification_tokens")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
 }

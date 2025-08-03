@@ -4,7 +4,7 @@ import { createLoader, parseAsInteger } from "nuqs/server";
 import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { fetchPaginatedPublicPageSummaries } from "@/app/[locale]/_db/page-queries.server";
-import { getCurrentUser } from "@/auth";
+import { getCurrentUser } from "@/lib/auth-server";
 import { PageList } from "../page-list.server";
 
 const searchParamsSchema = {
