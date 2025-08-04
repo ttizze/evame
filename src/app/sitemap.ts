@@ -52,5 +52,4 @@ export default async function sitemap({
 	});
 	return id === 0 ? [...staticRoutes, ...pageRoutes] : pageRoutes;
 }
-export const dynamic = "force-dynamic";
 export const revalidate = 36000;
