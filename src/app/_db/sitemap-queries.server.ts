@@ -1,4 +1,3 @@
-import { fetchLatestPageTranslationJobs } from "@/app/[locale]/_db/page-queries.server";
 import { prisma } from "@/lib/prisma";
 
 export type PageWithUserAndTranslation = Awaited<
@@ -26,21 +25,22 @@ export async function fetchPagesWithUserAndTranslationChunk({
 			status: "PUBLIC",
 		},
 		select: {
-			id: true,
 			slug: true,
 			updatedAt: true,
 			user: {
 				select: { handle: true },
 			},
+			translationJobs: {
+				where: {
+					status: "COMPLETED",
+				},
+				select: {
+					locale: true,
+				},
+			},
 		},
 		skip: offset,
 		take: limit,
 	});
-	const pagesWithTranslation = await Promise.all(
-		pagesWithUser.map(async (page) => {
-			const translationJobs = await fetchLatestPageTranslationJobs(page.id);
-			return { ...page, translationJobs };
-		}),
-	);
-	return pagesWithTranslation;
+	return pagesWithUser;
 }
