@@ -1,8 +1,27 @@
 import { fetchLatestPageTranslationJobs } from "@/app/[locale]/_db/page-queries.server";
 import { prisma } from "@/lib/prisma";
 
-export const fetchPagesWithUser = async () => {
-	const pages = await prisma.page.findMany({
+export type PageWithUserAndTranslation = Awaited<
+	ReturnType<typeof fetchPagesWithUserAndTranslationChunk>
+>[number];
+
+export async function countPublicPages() {
+	const count = await prisma.page.count({
+		where: {
+			status: "PUBLIC",
+		},
+	});
+	return count;
+}
+
+export async function fetchPagesWithUserAndTranslationChunk({
+	limit,
+	offset,
+}: {
+	limit: number;
+	offset: number;
+}) {
+	const pagesWithUser = await prisma.page.findMany({
 		where: {
 			status: "PUBLIC",
 		},
@@ -14,12 +33,9 @@ export const fetchPagesWithUser = async () => {
 				select: { handle: true },
 			},
 		},
+		skip: offset,
+		take: limit,
 	});
-	return pages;
-};
-
-export async function fetchPagesWithUserAndTranslation() {
-	const pagesWithUser = await fetchPagesWithUser();
 	const pagesWithTranslation = await Promise.all(
 		pagesWithUser.map(async (page) => {
 			const translationJobs = await fetchLatestPageTranslationJobs(page.id);
@@ -28,7 +44,3 @@ export async function fetchPagesWithUserAndTranslation() {
 	);
 	return pagesWithTranslation;
 }
-
-export type PageWithUserAndTranslation = Awaited<
-	ReturnType<typeof fetchPagesWithUserAndTranslation>
->[number];
