@@ -1,7 +1,7 @@
-import { routing } from "@/i18n/routing";
 import { get } from "@vercel/edge-config";
-import createMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
+import createMiddleware from "next-intl/middleware";
+import { routing } from "@/i18n/routing";
 
 const handleI18nRouting = createMiddleware(routing);
 
@@ -29,6 +29,7 @@ export const config = {
 	// /maintenance だけは matcher から除外すると
 	// 静的ページでも SSR ページでも好きに置ける
 	matcher: [
-		"/((?!api|_next|_vercel|privacy|terms|monitoring|maintenance|sitemap.xml|.*\\..*).*)",
+		"/((?!api|_next|_vercel|privacy|terms|monitoring|maintenance|" +
+			"sitemap(?:$|/.*|\\.xml)|.*\\..*).*)",
 	],
 };
