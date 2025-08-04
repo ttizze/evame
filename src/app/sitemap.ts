@@ -6,7 +6,7 @@ import {
 	type PageWithUserAndTranslation,
 } from "@/app/_db/sitemap-queries.server";
 
-const CHUNK = 10_000;
+const CHUNK = 5_000;
 
 export async function generateSitemaps() {
 	const total = await countPublicPages();
