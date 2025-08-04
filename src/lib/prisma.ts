@@ -14,7 +14,7 @@ if (!connectionString) {
 const isLocalNeon = new URL(connectionString).hostname === "db.localtest.me";
 
 neonConfig.webSocketConstructor = WebSocket;
-
+neonConfig.fetchConnectionCache = true;
 if (!isLocalNeon) {
 	neonConfig.poolQueryViaFetch = true;
 }
@@ -34,6 +34,7 @@ const adapter = new PrismaNeon({
 	max: 1,
 });
 
+// prismaClient というローカル変数で PrismaClient インスタンスを管理
 let prismaClient: PrismaClient;
 
 if (isLocalNeon) {
