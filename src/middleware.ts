@@ -29,7 +29,6 @@ export const config = {
 	// /maintenance だけは matcher から除外すると
 	// 静的ページでも SSR ページでも好きに置ける
 	matcher: [
-		"/((?!api|_next|_vercel|privacy|terms|monitoring|maintenance|" +
-			"sitemap(?:$|/.*|\\.xml)|.*\\..*).*)",
+		"/((?!api|_next|_vercel|privacy|terms|monitoring|maintenance|sitemap(?:$|/.*|\\.xml)|.*\\..*).*)",
 	],
 };
