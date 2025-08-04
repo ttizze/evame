@@ -6,7 +6,7 @@ import type { ActionResponse } from "@/app/types";
 import { deleteOwnTranslation } from "./db/mutations.server";
 
 const schema = z.object({
-	translationId: z.number(),
+	translationId: z.coerce.number(),
 });
 
 export async function deleteTranslationAction(
