@@ -14,7 +14,6 @@ if (!connectionString) {
 const isLocalNeon = new URL(connectionString).hostname === "db.localtest.me";
 
 neonConfig.webSocketConstructor = WebSocket;
-neonConfig.fetchConnectionCache = true;
 if (!isLocalNeon) {
 	neonConfig.poolQueryViaFetch = true;
 }
