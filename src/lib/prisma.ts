@@ -11,48 +11,32 @@ const connectionString = process.env.DATABASE_URL || "";
 if (!connectionString) {
 	throw new Error("DATABASE_URL is not defined");
 }
+const isLocalNeon = new URL(connectionString).hostname === "db.localtest.me";
 
-if (process.env.NODE_ENV !== "test" && process.env.NODE_ENV !== "development") {
-	neonConfig.webSocketConstructor = WebSocket;
+neonConfig.webSocketConstructor = WebSocket;
+
+if (!isLocalNeon) {
 	neonConfig.poolQueryViaFetch = true;
 }
-
-// ローカル開発環境用の設定
-const isDevelopment = process.env.NODE_ENV === "development";
-const isTest = process.env.NODE_ENV === "test";
-
-if (isDevelopment || isTest) {
-	const LOCAL_HOST = "db.localtest.me";
-	const getLocalPort = () => (isTest ? 4445 : 4444);
-
-	// テスト環境の場合は、ホストが db.localtest.me のときのポートを変更
+if (isLocalNeon) {
+	const getLocalPort = () => (process.env.NODE_ENV === "test" ? 4445 : 4444);
 	neonConfig.fetchEndpoint = (host) => {
-		if (host === LOCAL_HOST) {
-			// テストなら 4445、本番開発なら 4444
-			return `http://${host}:${getLocalPort()}/sql`;
-		}
-		return `https://${host}:443/sql`;
+		return `http://${host}:${getLocalPort()}/sql`;
 	};
-
-	// WebSocket のセキュリティ設定
-	const connectionStringUrl = new URL(connectionString);
-	neonConfig.useSecureWebSocket = connectionStringUrl.hostname !== LOCAL_HOST;
-
-	// wsProxy の設定
+	neonConfig.useSecureWebSocket = false;
 	neonConfig.wsProxy = (host) => {
-		if (host === LOCAL_HOST) {
-			return `${host}:${getLocalPort()}/v2`;
-		}
-		return `${host}/v2`;
+		return `${host}:${getLocalPort()}/v2`;
 	};
 }
 
-const adapter = new PrismaNeon({ connectionString, max: 5 });
+const adapter = new PrismaNeon({
+	connectionString: `${connectionString}?connection_limit=1&pooler=connection-pooler`,
+	max: 1,
+});
 
-// prismaClient というローカル変数で PrismaClient インスタンスを管理
 let prismaClient: PrismaClient;
 
-if (isDevelopment) {
+if (isLocalNeon) {
 	prismaClient = globalThis.prisma || new PrismaClient({ adapter });
 	globalThis.prisma = prismaClient;
 } else {
