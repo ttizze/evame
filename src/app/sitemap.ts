@@ -6,7 +6,7 @@ import {
 	type PageWithUserAndTranslation,
 } from "@/app/_db/sitemap-queries.server";
 
-const CHUNK = 5_000;
+const CHUNK = 1_000;
 
 export async function generateSitemaps() {
 	const total = await countPublicPages();
@@ -52,4 +52,6 @@ export default async function sitemap({
 	});
 	return id === 0 ? [...staticRoutes, ...pageRoutes] : pageRoutes;
 }
+export const dynamic = "force-dynamic";
+
 export const revalidate = 36000;
