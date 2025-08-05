@@ -26,29 +26,42 @@ export default async function sitemap({
 		offset,
 	});
 
-	const staticLocales = ["en", "ja"];
-	const staticRoutes = ["/", "/search"].flatMap((route) =>
-		staticLocales.map((locale) => ({
-			url: `${BASE_URL}/${locale}${route === "/" ? "" : route}`,
-			lastModified: new Date(),
-			changeFrequency: "monthly" as const,
-			priority: route === "/" ? 1 : 0.8,
-		})),
-	);
+	const staticRoutes = ["/", "/search", "/about"].map((route) => ({
+		url: `${BASE_URL}/en${route === "/" ? "" : route}`, // デフォルトロケール（en）をメインURLとして使用
+		lastModified: new Date(),
+		changeFrequency: "monthly" as const,
+		priority: route === "/" ? 1 : 0.8,
+		alternates: {
+			languages: {
+				ja: `${BASE_URL}/ja${route === "/" ? "" : route}`,
+			},
+		},
+	}));
 
 	/* ------- 動的ルート ------- */
-	const pageRoutes = pages.flatMap((page: PageWithUserAndTranslation) => {
+	const pageRoutes = pages.map((page: PageWithUserAndTranslation) => {
 		const locales =
 			page.translationJobs.length > 0
 				? page.translationJobs.map(({ locale }) => locale)
 				: ["en"];
 
-		return locales.map((locale) => ({
-			url: `${BASE_URL}/${locale}/user/${page.user.handle}/page/${page.slug}`,
+		// デフォルトロケール（最初のロケール）をメインURLとして使用
+		const defaultLocale = locales[0];
+
+		return {
+			url: `${BASE_URL}/${defaultLocale}/user/${page.user.handle}/page/${page.slug}`,
 			lastModified: new Date(page.updatedAt),
 			changeFrequency: "daily" as const,
 			priority: 0.7,
-		}));
+			alternates: {
+				languages: Object.fromEntries(
+					locales.map((locale) => [
+						locale,
+						`${BASE_URL}/${locale}/user/${page.user.handle}/page/${page.slug}`,
+					]),
+				),
+			},
+		};
 	});
 	return id === 0 ? [...staticRoutes, ...pageRoutes] : pageRoutes;
 }
