@@ -26,15 +26,21 @@ export default async function sitemap({
 		offset,
 	});
 
+	const staticLocales = ["en", "ja"] as const;
 	const staticRoutes = ["/", "/search", "/about"].map((route) => ({
-		url: `${BASE_URL}/en${route === "/" ? "" : route}`, // デフォルトロケール（en）をメインURLとして使用
+		url: `${BASE_URL}/en${route === "/" ? "" : route}`,
 		lastModified: new Date(),
 		changeFrequency: "monthly" as const,
 		priority: route === "/" ? 1 : 0.8,
 		alternates: {
-			languages: {
-				ja: `${BASE_URL}/ja${route === "/" ? "" : route}`,
-			},
+			languages: Object.fromEntries(
+				staticLocales
+					.filter((locale) => locale !== "en")
+					.map((locale) => [
+						locale,
+						`${BASE_URL}/${locale}${route === "/" ? "" : route}`,
+					]),
+			),
 		},
 	}));
 
@@ -55,10 +61,12 @@ export default async function sitemap({
 			priority: 0.7,
 			alternates: {
 				languages: Object.fromEntries(
-					locales.map((locale) => [
-						locale,
-						`${BASE_URL}/${locale}/user/${page.user.handle}/page/${page.slug}`,
-					]),
+					locales
+						.filter((locale) => locale !== defaultLocale)
+						.map((locale) => [
+							locale,
+							`${BASE_URL}/${locale}/user/${page.user.handle}/page/${page.slug}`,
+						]),
 				),
 			},
 		};
