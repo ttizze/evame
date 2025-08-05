@@ -1,10 +1,10 @@
+import type { MetadataRoute } from "next";
 import { BASE_URL } from "@/app/_constants/base-url";
 import {
 	countPublicPages,
 	fetchPagesWithUserAndTranslationChunk,
 	type PageWithUserAndTranslation,
 } from "@/app/_db/sitemap-queries.server";
-import type { MetadataRoute } from "next";
 
 const CHUNK = 1_000;
 
