@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
-import { transformPageSegmentsWithVotes } from "@/app/[locale]/_db/page-utils.server";
 import { selectUserFields } from "@/app/[locale]/_db/queries.server";
 import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
+import { transformPageSegmentsWithVotes } from "@/app/[locale]/_lib/transform-page-segments-with-votes";
 import { prisma } from "@/lib/prisma";
 
 // 親ページの階層を取得する関数

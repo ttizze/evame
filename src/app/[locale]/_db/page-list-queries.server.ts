@@ -1,8 +1,8 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { toSegmentBundles } from "../_lib/to-segment-bundles";
+import { transformPageSegmentsWithVotes } from "../_lib/transform-page-segments-with-votes";
 import type { PageForList, PageForTitle } from "../types";
-import { transformPageSegmentsWithVotes } from "./page-utils.server";
 import { selectUserFields } from "./queries.server";
 
 const selectPageListFields = (locale = "en") => {
