@@ -24,14 +24,12 @@ const selectPageListFields = (locale = "en") => {
 		},
 		pageSegments: {
 			where: { number: 0 }, // タイトルのみ取得
-			include: {
+			select: {
+				id: true,
+				number: true,
+				text: true,
 				pageSegmentTranslations: {
 					where: { locale, isArchived: false },
-					include: {
-						user: {
-							select: selectUserFields(),
-						},
-					},
 					orderBy: [
 						{ point: Prisma.SortOrder.desc },
 						{ createdAt: Prisma.SortOrder.desc },
@@ -43,6 +41,9 @@ const selectPageListFields = (locale = "en") => {
 						text: true,
 						point: true,
 						createdAt: true,
+						user: {
+							select: selectUserFields(),
+						},
 					},
 				},
 			},
