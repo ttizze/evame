@@ -1,8 +1,8 @@
-import { Prisma } from "@prisma/client";
 import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { toSegmentBundles } from "../_lib/to-segment-bundles";
-import type { PageDetail, PageSummary } from "../types";
+import type { PageDetail, PageForList } from "../types";
 import { selectUserFields } from "./queries.server";
 
 const selectPageRelatedFields = (
@@ -116,11 +116,6 @@ export async function fetchPageDetail(
 		where: { slug },
 		include: {
 			...selectPageRelatedFields(false, locale, currentUserId),
-			children: {
-				where: { status: "PUBLIC" },
-				orderBy: { order: "asc" },
-				select: selectLightPageFields(locale),
-			},
 		},
 	});
 
@@ -129,22 +124,10 @@ export async function fetchPageDetail(
 	const normalized = normalizePageSegments(page.pageSegments);
 	const segmentBundles = toSegmentBundles("page", page.id, normalized);
 
-	const children: PageSummary[] = (page.children ?? []).map((raw) => ({
-		...raw,
-		createdAt: raw.createdAt.toISOString(),
-		segmentBundles: toSegmentBundles(
-			"page",
-			raw.id,
-			normalizePageSegments(raw.pageSegments),
-		),
-		children: [],
-	}));
-
 	return {
 		...page,
 		createdAt: page.createdAt.toISOString(),
 		segmentBundles,
-		children,
 	};
 }
 
@@ -156,7 +139,7 @@ export async function fetchPaginatedPublicPageSummaries({
 	locale = "en",
 	currentUserId,
 }: FetchParams): Promise<{
-	pageSummaries: PageSummary[];
+	pageSummaries: PageForList[];
 	totalPages: number;
 }> {
 	const skip = (page - 1) * pageSize;
@@ -313,7 +296,7 @@ export async function fetchPageViewCounts(
 export async function fetchChildPages(
 	parentId: number,
 	locale: string,
-): Promise<PageSummary[]> {
+): Promise<PageForList[]> {
 	const raws = await prisma.page.findMany({
 		where: { parentId, status: "PUBLIC" },
 		orderBy: { order: "asc" },
@@ -328,7 +311,7 @@ export async function fetchChildPages(
 			normalizePageSegments(raw.pageSegments),
 		),
 		children: [],
-	})) as PageSummary[];
+	})) as PageForList[];
 }
 
 const selectLightPageFields = (locale = "en") => ({

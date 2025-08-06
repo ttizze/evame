@@ -1,11 +1,11 @@
-import type { Prisma } from "@prisma/client";
 import {
 	normalizePageSegments,
 	selectPagesWithDetails,
 } from "@/app/[locale]/_db/page-queries.server";
 import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
-import type { PageSummary } from "@/app/[locale]/types";
+import type { PageForList } from "@/app/[locale]/types";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 export interface FetchPaginatedPagesByTagParams {
 	tagName: string;
@@ -25,7 +25,7 @@ export async function fetchPaginatedPublicPageSummariesByTag({
 	locale = "en",
 	currentUserId,
 }: FetchPaginatedPagesByTagParams): Promise<{
-	pageSummaries: PageSummary[];
+	pageSummaries: PageForList[];
 	totalPages: number;
 }> {
 	const skip = (page - 1) * pageSize;

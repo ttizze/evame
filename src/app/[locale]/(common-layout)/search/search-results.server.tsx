@@ -1,13 +1,13 @@
-import type { Tag } from "@prisma/client";
 import { PageList } from "@/app/[locale]/_components/page/page-list.server";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import type { PageSummary } from "@/app/[locale]/types";
+import type { PageForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
+import type { Tag } from "@prisma/client";
 import type { Category } from "./constants";
 
 interface SearchResultsProps {
-	pageSummaries: PageSummary[] | undefined;
+	pageSummaries: PageForList[] | undefined;
 	tags: Tag[] | undefined;
 	users: SanitizedUser[] | undefined;
 	totalPages: number;
@@ -47,7 +47,7 @@ export function SearchResults({
 					pageSummaries.length > 0 && (
 						<div className="space-y-4">
 							{pageSummaries.map((p) => (
-								<PageList key={p.id} locale={locale} pageSummary={p} />
+								<PageList key={p.id} locale={locale} PageForList={p} />
 							))}
 						</div>
 					)}
@@ -72,7 +72,7 @@ export function SearchResults({
 					pageSummaries.length > 0 && (
 						<div className="space-y-4">
 							{pageSummaries.map((p) => (
-								<PageList key={p.id} locale={locale} pageSummary={p} />
+								<PageList key={p.id} locale={locale} PageForList={p} />
 							))}
 						</div>
 					)}

@@ -1,15 +1,15 @@
 // app/routes/search/functions/queries.server.ts
 
-import type { Prisma, Tag } from "@prisma/client";
 import {
 	normalizePageSegments,
 	selectPagesWithDetails,
 } from "@/app/[locale]/_db/page-queries.server";
 import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
-import type { PageSummary } from "@/app/[locale]/types";
+import type { PageForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";
 import { sanitizeUser } from "@/lib/sanitize-user";
+import type { Prisma, Tag } from "@prisma/client";
 import type { Category } from "../constants";
 /** 検索結果を統合的に取得する */
 export async function fetchSearchResults({
@@ -38,7 +38,7 @@ export async function fetchSearchResults({
 	const skip = (page - 1) * PAGE_SIZE;
 	const take = PAGE_SIZE;
 
-	let pageSummaries: PageSummary[] | undefined;
+	let pageSummaries: PageForList[] | undefined;
 	let tags: Tag[] | undefined;
 	let users: SanitizedUser[] | undefined;
 	let totalCount = 0;
@@ -120,7 +120,7 @@ async function searchTitle(
 	locale: string,
 	currentUserId?: string,
 ): Promise<{
-	pageSummaries: PageSummary[];
+	pageSummaries: PageForList[];
 	total: number;
 }> {
 	const select = selectPagesWithDetails(true, locale, currentUserId);
@@ -164,7 +164,7 @@ async function searchByTag(
 	take: number,
 	locale: string,
 ): Promise<{
-	pageSummaries: PageSummary[];
+	pageSummaries: PageForList[];
 	total: number;
 }> {
 	const select = selectPagesWithDetails(true, locale);
@@ -217,7 +217,7 @@ async function searchContent(
 	take: number,
 	locale = "en-US",
 ): Promise<{
-	pageSummaries: PageSummary[];
+	pageSummaries: PageForList[];
 	total: number;
 }> {
 	/* 1. ヒットした pageId を一括取得 (distinct) ------------------------ */

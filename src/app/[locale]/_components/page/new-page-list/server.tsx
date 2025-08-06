@@ -1,10 +1,10 @@
-import { SparklesIcon } from "lucide-react";
-import type { SearchParams } from "nuqs/server";
-import { createLoader, parseAsInteger } from "nuqs/server";
 import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { fetchPaginatedPublicPageSummaries } from "@/app/[locale]/_db/page-queries.server";
 import { getCurrentUser } from "@/lib/auth-server";
+import { SparklesIcon } from "lucide-react";
+import type { SearchParams } from "nuqs/server";
+import { createLoader, parseAsInteger } from "nuqs/server";
 import { PageList } from "../page-list.server";
 
 const searchParamsSchema = {
@@ -40,13 +40,13 @@ export default async function NewPageList({
 
 	return (
 		<PageListContainer icon={SparklesIcon} title="New Pages">
-			{pageSummaries.map((pageSummary, index) => (
+			{pageSummaries.map((PageForList, index) => (
 				<PageList
 					currentUserHandle={currentUserHandle}
 					index={index}
-					key={pageSummary.id}
+					key={PageForList.id}
 					locale={locale}
-					pageSummary={pageSummary}
+					PageForList={PageForList}
 				/>
 			))}
 			{showPagination && totalPages > 1 && (

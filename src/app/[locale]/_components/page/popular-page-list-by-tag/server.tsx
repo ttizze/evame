@@ -1,12 +1,12 @@
 "use server";
 
+import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
+import { PageList } from "@/app/[locale]/_components/page/page-list.server";
+import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
+import { getCurrentUser } from "@/lib/auth-server";
 import { BookOpenIcon } from "lucide-react";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger } from "nuqs/server";
-import { PageList } from "@/app/[locale]/_components/page/page-list.server";
-import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
-import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { getCurrentUser } from "@/lib/auth-server";
 import { fetchPaginatedPublicPageSummariesByTag } from "./_db/queries.server";
 
 const searchParamsSchema = {
@@ -53,13 +53,13 @@ export default async function PopularPageListByTag({
 
 	return (
 		<PageListContainer icon={BookOpenIcon} title={`Popular Pages – ${tagName}`}>
-			{pageSummaries.map((pageSummary, index) => (
+			{pageSummaries.map((PageForList, index) => (
 				<PageList
 					currentUserHandle={currentUserHandle}
 					index={index}
-					key={pageSummary.id}
+					key={PageForList.id}
 					locale={locale}
-					pageSummary={pageSummary}
+					PageForList={PageForList}
 				/>
 			))}
 			{showPagination && totalPages > 1 && (
