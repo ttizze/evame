@@ -27,6 +27,7 @@ export async function fetchPagesWithUserAndTranslationChunk({
 		select: {
 			slug: true,
 			updatedAt: true,
+			sourceLocale: true,
 			user: {
 				select: { handle: true },
 			},
