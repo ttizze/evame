@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { normalizePageSegments } from "@/app/[locale]/_db/page-queries.server";
+import { transformPageSegmentsWithVotes } from "@/app/[locale]/_db/page-utils.server";
 import { selectUserFields } from "@/app/[locale]/_db/queries.server";
 import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
 import { prisma } from "@/lib/prisma";
@@ -38,7 +38,7 @@ export async function getParentChain(pageId: number, locale: string) {
 		});
 
 		if (parent) {
-			const normalized = normalizePageSegments(parent.pageSegments);
+			const normalized = transformPageSegmentsWithVotes(parent.pageSegments);
 			const segmentBundles = toSegmentBundles("page", parent.id, normalized);
 
 			parentChain.unshift({

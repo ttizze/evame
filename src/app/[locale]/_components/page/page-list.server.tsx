@@ -1,15 +1,15 @@
+import { EyeIcon } from "lucide-react";
+import { getImageProps } from "next/image";
+import { BASE_URL } from "@/app/_constants/base-url";
 import { ClientDateFormatter } from "@/app/[locale]/_components/client-date-formatter";
 import { PageCommentButton } from "@/app/[locale]/_components/page/page-comment-button/client";
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
 import { WrapSegmentsComponent } from "@/app/[locale]/_components/wrap-segments-component/server";
-import { fetchPageViewCount } from "@/app/[locale]/_db/page-queries.server";
+import { fetchPageViewCount } from "@/app/[locale]/_db/page-utility-queries.server";
 import type { PageForList } from "@/app/[locale]/types";
-import { BASE_URL } from "@/app/_constants/base-url";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
-import { EyeIcon } from "lucide-react";
-import { getImageProps } from "next/image";
 import { PageActionsDropdown } from "./page-actions-dropdown/client";
 
 type PageListProps = {

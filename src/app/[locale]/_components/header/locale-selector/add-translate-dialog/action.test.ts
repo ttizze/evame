@@ -3,10 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchGeminiApiKeyByHandle } from "@/app/_db/queries.server";
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import {
-	fetchPageIdBySlug,
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
-} from "@/app/[locale]/_db/page-queries.server";
+} from "@/app/[locale]/_db/page-detail-queries.server";
+import { fetchPageIdBySlug } from "@/app/[locale]/_db/page-utility-queries.server";
 import { getCurrentUser } from "@/lib/auth-server";
 import { prisma } from "@/lib/prisma";
 import { translateAction } from "./action";
@@ -18,10 +18,9 @@ vi.mock("@/app/_db/queries.server", () => ({
 	fetchGeminiApiKeyByHandle: vi.fn(),
 }));
 vi.mock("@/app/[locale]/_db/mutations.server");
-vi.mock("@/app/[locale]/_db/page-queries.server");
-vi.mock(
-	"../../../(common-layout)/user/[handle]/page/[slug]/_db/queries.server",
-);
+vi.mock("@/app/[locale]/_db/page-detail-queries.server");
+vi.mock("@/app/[locale]/_db/page-utility-queries.server");
+
 vi.mock("next/cache");
 
 describe("TranslateAction", () => {

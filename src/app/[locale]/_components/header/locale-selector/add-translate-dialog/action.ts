@@ -6,10 +6,10 @@ import { BASE_URL } from "@/app/_constants/base-url";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import {
-	fetchPageIdBySlug,
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
-} from "@/app/[locale]/_db/page-queries.server";
+} from "@/app/[locale]/_db/page-detail-queries.server";
+import { fetchPageIdBySlug } from "@/app/[locale]/_db/page-utility-queries.server";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { targetContentTypeValues } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import type { ActionResponse } from "@/app/types";

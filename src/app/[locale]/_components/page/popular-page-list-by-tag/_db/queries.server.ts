@@ -1,36 +1,29 @@
-import {
-	normalizePageSegments,
-	selectPagesWithDetails,
-} from "@/app/[locale]/_db/page-queries.server";
-import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
-import type { PageForList } from "@/app/[locale]/types";
-import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
+import { fetchPagesWithTransform } from "@/app/[locale]/_db/page-list-queries.server";
+import type { PageForList } from "@/app/[locale]/types";
 
 export interface FetchPaginatedPagesByTagParams {
 	tagName: string;
 	page?: number;
 	pageSize?: number;
 	locale?: string;
-	currentUserId?: string;
 }
 
 /**
  * Fetch paginated public page summaries filtered by given tag name and ordered by popularity.
  */
-export async function fetchPaginatedPublicPageSummariesByTag({
+export async function fetchPaginatedPublicPageListsByTag({
 	tagName,
 	page = 1,
 	pageSize = 5,
 	locale = "en",
-	currentUserId,
 }: FetchPaginatedPagesByTagParams): Promise<{
-	pageSummaries: PageForList[];
+	pageForLists: PageForList[];
 	totalPages: number;
 }> {
 	const skip = (page - 1) * pageSize;
 
-	const baseWhere: Prisma.PageWhereInput = {
+	const where: Prisma.PageWhereInput = {
 		status: "PUBLIC",
 		tagPages: {
 			some: {
@@ -46,31 +39,16 @@ export async function fetchPaginatedPublicPageSummariesByTag({
 		{ createdAt: "desc" },
 	];
 
-	const select = selectPagesWithDetails(true, locale, currentUserId);
-
-	const [rawPages, total] = await Promise.all([
-		prisma.page.findMany({
-			where: baseWhere,
-			orderBy,
-			skip,
-			take: pageSize,
-			select,
-		}),
-		prisma.page.count({ where: baseWhere }),
-	]);
-
-	const pages = rawPages.map((p) => ({
-		...p,
-		createdAt: p.createdAt.toISOString(),
-		segmentBundles: toSegmentBundles(
-			"page",
-			p.id,
-			normalizePageSegments(p.pageSegments),
-		),
-	}));
+	const { pageForLists, total } = await fetchPagesWithTransform(
+		where,
+		skip,
+		pageSize,
+		locale,
+		orderBy,
+	);
 
 	return {
-		pageSummaries: pages,
+		pageForLists,
 		totalPages: Math.ceil(total / pageSize),
 	};
 }

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { fetchChildPages } from "@/app/[locale]/_db/page-queries.server";
+import { fetchChildPages } from "@/app/[locale]/_db/page-list-queries.server";
 
 export async function GET(req: NextRequest) {
 	const Params = z

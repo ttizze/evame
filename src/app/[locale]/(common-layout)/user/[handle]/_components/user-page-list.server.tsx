@@ -1,9 +1,9 @@
+import { notFound } from "next/navigation";
+import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { PageList } from "@/app/[locale]/_components/page/page-list.server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedPublicPageSummaries } from "@/app/[locale]/_db/page-queries.server";
-import { fetchUserByHandle } from "@/app/_db/queries.server";
+import { fetchPaginatedPublicPageLists } from "@/app/[locale]/_db/page-list-queries.server";
 import { getCurrentUser } from "@/lib/auth-server";
-import { notFound } from "next/navigation";
 
 interface PageListServerProps {
 	handle: string;
@@ -29,17 +29,15 @@ export async function PageListServer({
 		return notFound();
 	}
 
-	const { pageSummaries, totalPages } = await fetchPaginatedPublicPageSummaries(
-		{
-			page: page,
-			pageSize: 5,
-			pageOwnerId: pageOwner.id,
-			isPopular: sort === "popular",
-			locale,
-			currentUserId: currentUser?.id,
-		},
-	);
-	if (pageSummaries.length === 0) {
+	const { pageForLists, totalPages } = await fetchPaginatedPublicPageLists({
+		page: page,
+		pageSize: 5,
+		pageOwnerId: pageOwner.id,
+		isPopular: sort === "popular",
+		locale,
+		currentUserId: currentUser?.id,
+	});
+	if (pageForLists.length === 0) {
 		return (
 			<p className="text-center text-gray-500 mt-10">
 				{isOwner ? "You haven't created any pages yet." : "No pages yet."}
@@ -50,7 +48,7 @@ export async function PageListServer({
 	return (
 		<>
 			<div className="">
-				{pageSummaries.map((PageForList) => (
+				{pageForLists.map((PageForList) => (
 					<PageList
 						currentUserHandle={currentUserHandle}
 						key={PageForList.id}

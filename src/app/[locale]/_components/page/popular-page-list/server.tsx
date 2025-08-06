@@ -1,11 +1,11 @@
-import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedPublicPageSummaries } from "@/app/[locale]/_db/page-queries.server";
-import { getCurrentUser } from "@/lib/auth-server";
 import { BookOpenIcon } from "lucide-react";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger } from "nuqs/server";
-import { PageListContainer } from "../page-list-container/server";
+import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
+import { fetchPaginatedPublicPageLists } from "@/app/[locale]/_db/page-list-queries.server";
+import { getCurrentUser } from "@/lib/auth-server";
 import { PageList } from "../page-list.server";
+import { PageListContainer } from "../page-list-container/server";
 
 const searchParamsSchema = {
 	page: parseAsInteger.withDefault(1),
@@ -28,19 +28,17 @@ export default async function PopularPageList({
 	const currentUser = await getCurrentUser();
 	const currentUserHandle = currentUser?.handle;
 
-	const { pageSummaries, totalPages } = await fetchPaginatedPublicPageSummaries(
-		{
-			page,
-			pageSize: 5,
-			isPopular: true,
-			locale,
-			currentUserId: currentUser?.id,
-		},
-	);
+	const { pageForLists, totalPages } = await fetchPaginatedPublicPageLists({
+		page,
+		pageSize: 5,
+		isPopular: true,
+		locale,
+		currentUserId: currentUser?.id,
+	});
 
 	return (
 		<PageListContainer icon={BookOpenIcon} title="Popular Pages">
-			{pageSummaries.map((PageForList, index) => (
+			{pageForLists.map((PageForList, index) => (
 				<PageList
 					currentUserHandle={currentUserHandle}
 					index={index}

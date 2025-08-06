@@ -1,29 +1,29 @@
 "use client";
 
-import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
-import type { PageForList } from "@/app/[locale]/types";
-import { Link } from "@/i18n/routing";
-import { cn } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import useSWR from "swr";
+import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
+import type { PageForTitle } from "@/app/[locale]/types";
+import { Link } from "@/i18n/routing";
+import { cn } from "@/lib/utils";
 
 interface Props {
-	parent: PageForList;
+	parent: PageForTitle;
 	locale: string;
 }
 
 interface PageLinkProps {
-	page: PageForList;
-	titleSegment: PageForList["segmentBundles"][0];
+	page: PageForTitle;
+	titleSegment: PageForTitle["segmentBundles"][0];
 	className?: string;
 }
 
 // カスタムフック: 子ページの取得
-function useChildPages(parent: PageForList, locale: string, isOpen: boolean) {
+function useChildPages(parent: PageForTitle, locale: string, isOpen: boolean) {
 	const hasChildren = parent._count?.children && parent._count.children > 0;
 
-	return useSWR<PageForList[]>(
+	return useSWR<PageForTitle[]>(
 		isOpen && hasChildren
 			? `/api/child-pages?parentId=${parent.id}&locale=${locale}`
 			: null,
@@ -61,7 +61,7 @@ function ChildPageList({
 	childPages,
 	locale,
 }: {
-	childPages: PageForList[];
+	childPages: PageForTitle[];
 	locale: string;
 }) {
 	return (

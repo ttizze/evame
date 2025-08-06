@@ -3,7 +3,7 @@ import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import {
 	fetchPageWithPageSegments,
 	fetchPageWithTitleAndComments,
-} from "@/app/[locale]/_db/page-queries.server";
+} from "@/app/[locale]/_db/page-detail-queries.server";
 import type { TranslationJobForTranslationAPI } from "@/app/types/translation-job";
 import type { TranslateJobParams } from "@/features/translate/types";
 import type {
