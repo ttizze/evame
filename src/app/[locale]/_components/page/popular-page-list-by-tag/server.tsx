@@ -7,7 +7,7 @@ import { PageList } from "@/app/[locale]/_components/page/page-list.server";
 import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import { getCurrentUser } from "@/lib/auth-server";
-import { fetchPaginatedPublicPageSummariesByTag } from "./_db/queries.server";
+import { fetchPaginatedPublicPageListsByTag } from "./_db/queries.server";
 
 const searchParamsSchema = {
 	page: parseAsInteger.withDefault(1),
@@ -38,28 +38,28 @@ export default async function PopularPageListByTag({
 	const currentUser = await getCurrentUser();
 	const currentUserHandle = currentUser?.handle;
 
-	const { pageSummaries, totalPages } =
-		await fetchPaginatedPublicPageSummariesByTag({
+	const { pageForLists, totalPages } = await fetchPaginatedPublicPageListsByTag(
+		{
 			tagName,
 			page,
 			pageSize: 5,
 			locale,
-			currentUserId: currentUser?.id,
-		});
+		},
+	);
 
-	if (pageSummaries.length === 0) {
+	if (pageForLists.length === 0) {
 		return null;
 	}
 
 	return (
 		<PageListContainer icon={BookOpenIcon} title={`Popular Pages – ${tagName}`}>
-			{pageSummaries.map((pageSummary, index) => (
+			{pageForLists.map((PageForList, index) => (
 				<PageList
 					currentUserHandle={currentUserHandle}
 					index={index}
-					key={pageSummary.id}
+					key={PageForList.id}
 					locale={locale}
-					pageSummary={pageSummary}
+					PageForList={PageForList}
 				/>
 			))}
 			{showPagination && totalPages > 1 && (

@@ -3,7 +3,7 @@ import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger } from "nuqs/server";
 import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedPublicPageSummaries } from "@/app/[locale]/_db/page-queries.server";
+import { fetchPaginatedPublicPageLists } from "@/app/[locale]/_db/page-list-queries.server";
 import { getCurrentUser } from "@/lib/auth-server";
 import { PageList } from "../page-list.server";
 
@@ -28,25 +28,23 @@ export default async function NewPageList({
 	const currentUser = await getCurrentUser();
 	const currentUserHandle = currentUser?.handle;
 
-	const { pageSummaries, totalPages } = await fetchPaginatedPublicPageSummaries(
-		{
-			page,
-			pageSize: 5,
-			isPopular: false,
-			locale,
-			currentUserId: currentUser?.id,
-		},
-	);
+	const { pageForLists, totalPages } = await fetchPaginatedPublicPageLists({
+		page,
+		pageSize: 5,
+		isPopular: false,
+		locale,
+		currentUserId: currentUser?.id,
+	});
 
 	return (
 		<PageListContainer icon={SparklesIcon} title="New Pages">
-			{pageSummaries.map((pageSummary, index) => (
+			{pageForLists.map((PageForList, index) => (
 				<PageList
 					currentUserHandle={currentUserHandle}
 					index={index}
-					key={pageSummary.id}
+					key={PageForList.id}
 					locale={locale}
-					pageSummary={pageSummary}
+					PageForList={PageForList}
 				/>
 			))}
 			{showPagination && totalPages > 1 && (

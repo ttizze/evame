@@ -1,12 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { fetchChildPages } from "@/app/[locale]/_db/page-queries.server";
+import { fetchChildPages } from "@/app/[locale]/_db/page-list-queries.server";
 
 export async function GET(req: NextRequest) {
 	const Params = z
 		.object({
 			parentId: z.coerce.number(),
-			locale: z.string().optional(),
+			locale: z.string(),
 		})
 		.refine((p) => !Number.isNaN(p.parentId), {
 			message: "parentId must be a number",
@@ -16,6 +16,6 @@ export async function GET(req: NextRequest) {
 		Object.fromEntries(req.nextUrl.searchParams),
 	);
 
-	const children = await fetchChildPages(parentId, locale ?? "en");
+	const children = await fetchChildPages(parentId, locale);
 	return NextResponse.json(children);
 }

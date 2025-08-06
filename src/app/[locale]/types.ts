@@ -44,9 +44,13 @@ export type PageDetail = Omit<Page, "createdAt"> & {
 		pageComments: number;
 		children?: number;
 	};
-	children?: PageSummary[];
 };
-export type PageSummary = Omit<
+export type PageForList = Omit<
 	PageDetail,
 	"updatedAt" | "userId" | "mdastJson"
+>;
+
+export type PageForTitle = Omit<
+	PageDetail,
+	"updatedAt" | "userId" | "mdastJson" | "tagPages"
 >;

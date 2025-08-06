@@ -8,10 +8,18 @@ import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChildPageTree } from "./_components/child-page-tree.client";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
 
+const DynamicPageBreadcrumb = dynamic(
+	() =>
+		import("./_components/page-breadcrumb/server").then(
+			(mod) => mod.PageBreadcrumb,
+		),
+	{
+		loading: () => <Skeleton className="h-[100px] w-full" />,
+	},
+);
 const DynamicContentWithTranslations = dynamic(
 	() =>
 		import("./_components/content-with-translations").then(
@@ -19,6 +27,13 @@ const DynamicContentWithTranslations = dynamic(
 		),
 	{
 		loading: () => <Skeleton className="h-[500px] w-full" />,
+	},
+);
+const DynamicChildPages = dynamic(
+	() =>
+		import("./_components/child-pages/server").then((mod) => mod.ChildPages),
+	{
+		loading: () => <Skeleton className="h-[100px] w-full" />,
 	},
 );
 const DynamicPageLikeButton = dynamic(
@@ -115,23 +130,13 @@ export default async function Page({
 		return notFound();
 	}
 
-	// ChildPageTree handles recursive lazy loading
 	return (
 		<>
 			<SourceLocaleBridge locale={pageDetail.sourceLocale} />
 			<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
+				<DynamicPageBreadcrumb locale={locale} pageDetail={pageDetail} />
 				<DynamicContentWithTranslations pageData={data} />
-				{pageDetail.children && pageDetail.children.length > 0 && (
-					<div>
-						<ul className="space-y-1 list-none p-0">
-							{pageDetail.children.map((child) => (
-								<li key={child.id}>
-									<ChildPageTree locale={locale} parent={child} />
-								</li>
-							))}
-						</ul>
-					</div>
-				)}
+				<DynamicChildPages locale={locale} parentId={pageDetail.id} />
 				<div className="flex items-center gap-4">
 					<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
 					<span className="text-muted-foreground">{pageViewCount}</span>

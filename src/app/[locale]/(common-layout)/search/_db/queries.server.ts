@@ -1,16 +1,17 @@
 // app/routes/search/functions/queries.server.ts
 
-import type { Prisma, Tag } from "@prisma/client";
+import type { Tag } from "@prisma/client";
 import {
-	normalizePageSegments,
-	selectPagesWithDetails,
-} from "@/app/[locale]/_db/page-queries.server";
-import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
-import type { PageSummary } from "@/app/[locale]/types";
+	searchPagesByContent,
+	searchPagesByTag,
+	searchPagesByTitle,
+} from "@/app/[locale]/_db/page-list-queries.server";
+import type { PageForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";
 import { sanitizeUser } from "@/lib/sanitize-user";
 import type { Category } from "../constants";
+
 /** 検索結果を統合的に取得する */
 export async function fetchSearchResults({
 	query,
@@ -38,14 +39,14 @@ export async function fetchSearchResults({
 	const skip = (page - 1) * PAGE_SIZE;
 	const take = PAGE_SIZE;
 
-	let pageSummaries: PageSummary[] | undefined;
+	let pageSummaries: PageForList[] | undefined;
 	let tags: Tag[] | undefined;
 	let users: SanitizedUser[] | undefined;
 	let totalCount = 0;
 
 	switch (category) {
 		case "title": {
-			const { pageSummaries: resultPages, total } = await searchTitle(
+			const { pageForLists: resultPages, total } = await searchPagesByTitle(
 				query,
 				skip,
 				take,
@@ -56,7 +57,7 @@ export async function fetchSearchResults({
 			break;
 		}
 		case "content": {
-			const { pageSummaries: resultPages, total } = await searchContent(
+			const { pageForLists: resultPages, total } = await searchPagesByContent(
 				query,
 				skip,
 				take,
@@ -68,7 +69,7 @@ export async function fetchSearchResults({
 		}
 		case "tags": {
 			if (tagPage === "true") {
-				const { pageSummaries: resultPages, total } = await searchByTag(
+				const { pageForLists: resultPages, total } = await searchPagesByTag(
 					query,
 					skip,
 					take,
@@ -112,154 +113,6 @@ export async function fetchSearchResults({
 	};
 }
 
-/** タイトル検索 */
-async function searchTitle(
-	query: string,
-	skip: number,
-	take: number,
-	locale: string,
-	currentUserId?: string,
-): Promise<{
-	pageSummaries: PageSummary[];
-	total: number;
-}> {
-	const select = selectPagesWithDetails(true, locale, currentUserId);
-	const baseWhere: Prisma.PageWhereInput = {
-		status: "PUBLIC",
-		pageSegments: {
-			some: {
-				text: { contains: query, mode: "insensitive" },
-				number: 0,
-			},
-		},
-	};
-	const [rawPages, total] = await Promise.all([
-		prisma.page.findMany({
-			where: baseWhere,
-			skip,
-			take,
-			select,
-		}),
-		prisma.page.count({ where: baseWhere }),
-	]);
-	const pages = rawPages.map((p) => ({
-		...p,
-		createdAt: p.createdAt.toISOString(),
-		segmentBundles: toSegmentBundles(
-			"page",
-			p.id,
-			normalizePageSegments(p.pageSegments),
-		),
-	}));
-
-	return {
-		pageSummaries: pages,
-		total,
-	};
-}
-/** タグ名でページを検索 */
-async function searchByTag(
-	tagName: string,
-	skip: number,
-	take: number,
-	locale: string,
-): Promise<{
-	pageSummaries: PageSummary[];
-	total: number;
-}> {
-	const select = selectPagesWithDetails(true, locale);
-	const [rawPages, total] = await Promise.all([
-		prisma.page.findMany({
-			skip,
-			take,
-			where: {
-				tagPages: {
-					some: {
-						tag: {
-							name: tagName,
-						},
-					},
-				},
-				status: "PUBLIC",
-			},
-			select,
-		}),
-		prisma.page.count({
-			where: {
-				tagPages: {
-					some: {
-						tag: {
-							name: tagName,
-						},
-					},
-				},
-				status: "PUBLIC",
-			},
-		}),
-	]);
-	const pages = rawPages.map((p) => ({
-		...p,
-		createdAt: p.createdAt.toISOString(),
-		segmentBundles: toSegmentBundles(
-			"page",
-			p.id,
-			normalizePageSegments(p.pageSegments),
-		),
-	}));
-
-	return { pageSummaries: pages, total };
-}
-
-/** コンテンツ検索 */
-async function searchContent(
-	query: string,
-	skip: number,
-	take: number,
-	locale = "en-US",
-): Promise<{
-	pageSummaries: PageSummary[];
-	total: number;
-}> {
-	/* 1. ヒットした pageId を一括取得 (distinct) ------------------------ */
-	const matchedIds = await prisma.pageSegment.findMany({
-		where: {
-			text: { contains: query, mode: "insensitive" },
-			page: { status: "PUBLIC" }, // ページ公開フラグ
-		},
-		select: { pageId: true },
-		distinct: ["pageId"], // ← pageId ごとに 1 行
-	});
-
-	/* 2. ページネーションを自前で行う ---------------------------------- */
-	const pageIds = matchedIds.map((row) => row.pageId).slice(skip, skip + take);
-
-	/* 3. 合計件数 (= DISTINCT pageId) を取得 --------------------------- */
-	const total = matchedIds.length;
-
-	if (pageIds.length === 0) {
-		return { pageSummaries: [], total };
-	}
-
-	/* 4. page と関連情報をフェッチ ------------------------------------ */
-	const select = selectPagesWithDetails(true, locale);
-	const rawPages = await prisma.page.findMany({
-		where: { id: { in: pageIds } },
-		select,
-	});
-
-	/* 5. SegmentBundle へ変換して整形 -------------------------------- */
-	const pages = rawPages.map((p) => ({
-		...p,
-		createdAt: p.createdAt.toISOString(),
-		segmentBundles: toSegmentBundles(
-			"page",
-			p.id,
-			normalizePageSegments(p.pageSegments),
-		),
-	}));
-
-	return { pageSummaries: pages, total };
-}
 /** タグ検索 (Tag.name) → Tag[] */
 async function searchTags(
 	query: string,
