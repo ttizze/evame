@@ -1,5 +1,4 @@
-import { Prisma } from "@prisma/client";
-import { selectUserFields } from "@/app/[locale]/_db/queries.server";
+import { selectPageFields } from "@/app/[locale]/_db/page-list-queries.server";
 import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
 import { transformPageSegmentsWithVotes } from "@/app/[locale]/_lib/transform-page-segments-with-votes";
 import { prisma } from "@/lib/prisma";
@@ -12,29 +11,7 @@ export async function getParentChain(pageId: number, locale: string) {
 	while (currentParentId) {
 		const parent = await prisma.page.findUnique({
 			where: { id: currentParentId },
-			include: {
-				user: {
-					select: selectUserFields(),
-				},
-				pageSegments: {
-					where: { number: 0 },
-					include: {
-						pageSegmentTranslations: {
-							where: { locale, isArchived: false },
-							include: {
-								user: {
-									select: selectUserFields(),
-								},
-							},
-							orderBy: [
-								{ point: Prisma.SortOrder.desc },
-								{ createdAt: Prisma.SortOrder.desc },
-							],
-							take: 1,
-						},
-					},
-				},
-			},
+			select: selectPageFields(locale),
 		});
 
 		if (parent) {

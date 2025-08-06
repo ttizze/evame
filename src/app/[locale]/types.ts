@@ -52,5 +52,9 @@ export type PageForList = Omit<
 
 export type PageForTitle = Omit<
 	PageDetail,
-	"updatedAt" | "userId" | "mdastJson" | "tagPages"
->;
+	"updatedAt" | "userId" | "mdastJson" | "tagPages" | "_count"
+> & {
+	_count: {
+		children: number;
+	};
+};
