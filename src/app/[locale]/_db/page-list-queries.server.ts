@@ -1,80 +1,23 @@
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { toSegmentBundles } from "../_lib/to-segment-bundles";
 import { transformPageSegmentsWithVotes } from "../_lib/transform-page-segments-with-votes";
 import type { PageForList, PageForTitle } from "../types";
 import { selectUserFields } from "./queries.server";
 
-const selectPageListFields = (locale = "en") => {
-	return {
-		id: true,
-		slug: true,
-		createdAt: true,
-		status: true,
-		sourceLocale: true,
-		parentId: true,
-		order: true,
-		user: {
-			select: selectUserFields(),
-		},
-		tagPages: {
-			include: {
-				tag: true,
-			},
-		},
-		pageSegments: {
-			where: { number: 0 }, // タイトルのみ取得
-			include: {
-				pageSegmentTranslations: {
-					where: { locale, isArchived: false },
-					include: {
-						user: {
-							select: selectUserFields(),
-						},
-					},
-					orderBy: [
-						{ point: Prisma.SortOrder.desc },
-						{ createdAt: Prisma.SortOrder.desc },
-					],
-					take: 1,
-					select: {
-						id: true,
-						locale: true,
-						text: true,
-						point: true,
-						createdAt: true,
-					},
-				},
-			},
-		},
-		_count: {
-			select: {
-				pageComments: true,
-			},
-		},
-	};
-};
-
-const selectTitleFields = (locale = "en") => ({
+export const selectPageFields = (locale = "en") => ({
 	id: true,
 	slug: true,
-	order: true,
-	status: true,
-	parentId: true,
-	sourceLocale: true,
 	createdAt: true,
-	// ページのurlを取得するために必要
+	status: true,
+	sourceLocale: true,
+	parentId: true,
+	order: true,
 	user: {
 		select: selectUserFields(),
 	},
-	_count: {
-		select: {
-			pageComments: true,
-			children: true,
-		},
-	},
 	pageSegments: {
-		where: { number: 0 },
+		where: { number: 0 }, // タイトルのみ取得
 		select: {
 			id: true,
 			number: true,
@@ -85,7 +28,7 @@ const selectTitleFields = (locale = "en") => ({
 					{ point: Prisma.SortOrder.desc },
 					{ createdAt: Prisma.SortOrder.desc },
 				],
-				take: 1, // タイトル用に最良の翻訳 1 件だけ取得
+				take: 1,
 				select: {
 					id: true,
 					locale: true,
@@ -97,6 +40,29 @@ const selectTitleFields = (locale = "en") => ({
 					},
 				},
 			},
+		},
+	},
+});
+
+const selectPageListFields = (locale = "en") => ({
+	...selectPageFields(locale),
+	tagPages: {
+		include: {
+			tag: true,
+		},
+	},
+	_count: {
+		select: {
+			pageComments: true,
+		},
+	},
+});
+
+const selectForTitleAndChildrenFields = (locale = "en") => ({
+	...selectPageFields(locale),
+	_count: {
+		select: {
+			children: true,
 		},
 	},
 });
@@ -202,7 +168,7 @@ export async function fetchChildPages(
 	const raws = await prisma.page.findMany({
 		where: { parentId, status: "PUBLIC" },
 		orderBy: { order: "asc" },
-		select: selectTitleFields(locale),
+		select: selectForTitleAndChildrenFields(locale),
 	});
 	return raws.map((raw) => ({
 		...raw,
