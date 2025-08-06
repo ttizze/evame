@@ -26,7 +26,7 @@ export default async function sitemap({
 		offset,
 	});
 
-	const staticLocales = ["en", "ja"] as const;
+	const staticLocales = ["ja", "zh"] as const;
 	const staticRoutes = ["/", "/search", "/about"].map((route) => ({
 		url: `${BASE_URL}/en${route === "/" ? "" : route}`,
 		lastModified: new Date(),
@@ -34,39 +34,27 @@ export default async function sitemap({
 		priority: route === "/" ? 1 : 0.8,
 		alternates: {
 			languages: Object.fromEntries(
-				staticLocales
-					.filter((locale) => locale !== "en")
-					.map((locale) => [
-						locale,
-						`${BASE_URL}/${locale}${route === "/" ? "" : route}`,
-					]),
+				staticLocales.map((locale) => [
+					locale,
+					`${BASE_URL}/${locale}${route === "/" ? "" : route}`,
+				]),
 			),
 		},
 	}));
 
 	/* ------- 動的ルート ------- */
 	const pageRoutes = pages.map((page: PageWithUserAndTranslation) => {
-		const locales =
-			page.translationJobs.length > 0
-				? page.translationJobs.map(({ locale }) => locale)
-				: ["en"];
-
-		// デフォルトロケール（最初のロケール）をメインURLとして使用
-		const defaultLocale = locales[0];
-
 		return {
-			url: `${BASE_URL}/${defaultLocale}/user/${page.user.handle}/page/${page.slug}`,
+			url: `${BASE_URL}/${page.sourceLocale}/user/${page.user.handle}/page/${page.slug}`,
 			lastModified: new Date(page.updatedAt),
 			changeFrequency: "daily" as const,
 			priority: 0.7,
 			alternates: {
 				languages: Object.fromEntries(
-					locales
-						.filter((locale) => locale !== defaultLocale)
-						.map((locale) => [
-							locale,
-							`${BASE_URL}/${locale}/user/${page.user.handle}/page/${page.slug}`,
-						]),
+					page.translationJobs.map((locale) => [
+						locale,
+						`${BASE_URL}/${locale}/user/${page.user.handle}/page/${page.slug}`,
+					]),
 				),
 			},
 		};
