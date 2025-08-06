@@ -17,6 +17,5 @@ export async function GET(req: NextRequest) {
 	);
 
 	const children = await fetchChildPages(parentId, locale);
-	console.log(children);
 	return NextResponse.json(children);
 }
