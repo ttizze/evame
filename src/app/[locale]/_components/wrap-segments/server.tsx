@@ -10,9 +10,7 @@ export function WrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 	return (p: JSX.IntrinsicElements[Tag] & { "data-number-id"?: number }) => {
 		const id = p["data-number-id"];
 		const bundle =
-			id !== undefined
-				? bundles.find((b) => b.segment.number === +id)
-				: undefined;
+			id !== undefined ? bundles.find((b) => b.number === +id) : undefined;
 
 		/* セグメント対象でなければそのまま DOM 要素を返す */
 		if (!bundle) return createElement(Tag, p, p.children);

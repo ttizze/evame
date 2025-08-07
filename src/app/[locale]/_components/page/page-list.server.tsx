@@ -32,9 +32,7 @@ export async function PageList({
 		height: 40,
 	});
 	// Get the title segment (which should be the first segment)
-	const titleSegment = PageForList.segmentBundles.find(
-		(s) => s.segment.number === 0,
-	);
+	const titleSegment = PageForList.segmentBundles.find((s) => s.number === 0);
 	const _ogpImageUrl =
 		`${BASE_URL}/api/og?locale=${locale}` + `&slug=${PageForList.slug}`;
 	const pageLink = `/user/${PageForList.user.handle}/page/${PageForList.slug}`;

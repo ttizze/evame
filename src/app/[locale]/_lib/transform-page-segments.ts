@@ -1,6 +1,6 @@
 import type { SanitizedUser } from "@/app/types";
 
-export function transformPageSegmentsWithVotes(
+export function transformPageSegments(
 	pageSegments: {
 		id: number;
 		number: number;
@@ -12,7 +12,6 @@ export function transformPageSegmentsWithVotes(
 			point: number;
 			createdAt: Date;
 			user: SanitizedUser;
-			votes?: { isUpvote: boolean; updatedAt: Date }[];
 		}[];
 	}[],
 ) {
@@ -20,9 +19,11 @@ export function transformPageSegmentsWithVotes(
 		id: seg.id,
 		number: seg.number,
 		text: seg.text,
-		segmentTranslations: seg.pageSegmentTranslations.map((t) => ({
-			...t,
-			currentUserVote: t.votes?.[0] ?? null,
-		})),
+		segmentTranslation: seg.pageSegmentTranslations[0]
+			? {
+					...seg.pageSegmentTranslations[0],
+					createdAt: seg.pageSegmentTranslations[0].createdAt.toISOString(),
+				}
+			: undefined,
 	}));
 }

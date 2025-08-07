@@ -6,13 +6,11 @@ import { PageCommentReplyForm } from "./reply-form.client";
 
 interface Props {
 	pageComment: PageCommentWithUserAndTranslations[number];
-	currentHandle: string | undefined;
 	userLocale: string;
 }
 
 export default async function PageCommentItem({
 	pageComment,
-	currentHandle,
 	userLocale,
 }: Props) {
 	const content = await mdastToReact({
@@ -23,11 +21,7 @@ export default async function PageCommentItem({
 	return (
 		<CommentList
 			action={
-				<PageCommentItemClient
-					currentHandle={currentHandle}
-					key={pageComment.id}
-					pageComment={pageComment}
-				/>
+				<PageCommentItemClient key={pageComment.id} pageComment={pageComment} />
 			}
 			authorImage={pageComment.user?.image}
 			authorName={pageComment.user?.name || "deleted_user"}
@@ -35,7 +29,6 @@ export default async function PageCommentItem({
 			createdAt={pageComment.createdAt}
 			replyForm={
 				<PageCommentReplyForm
-					currentHandle={currentHandle}
 					pageId={pageComment.pageId}
 					parentId={pageComment.id}
 					userLocale={userLocale}
@@ -43,12 +36,7 @@ export default async function PageCommentItem({
 			}
 		>
 			{pageComment.replies?.map((r) => (
-				<PageCommentItem
-					currentHandle={currentHandle}
-					key={r.id}
-					pageComment={r}
-					userLocale={userLocale}
-				/>
+				<PageCommentItem key={r.id} pageComment={r} userLocale={userLocale} />
 			))}
 		</CommentList>
 	);

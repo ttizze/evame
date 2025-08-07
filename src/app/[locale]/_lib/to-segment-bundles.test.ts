@@ -9,29 +9,17 @@ const rawSegments = [
 	{
 		id: 1,
 		number: 0,
-		text: "segment‑text",
-		segmentTranslations: [
-			{
-				id: 11,
-				locale: "en",
-				text: "A",
-				point: 1,
-				createdAt: new Date("2024-01-01"),
-				user: mockUsers[0],
-				currentUserVote: null,
-			},
-			{
-				id: 12,
-				locale: "en",
-				text: "B",
-				point: 2,
-				createdAt: new Date("2024-01-02"),
-				user: mockUsers[0],
-				currentUserVote: { isUpvote: true, updatedAt: new Date("2024-01-03") },
-			},
-		],
+		text: "segment-text",
+		segmentTranslation: {
+			id: 11,
+			locale: "en",
+			text: "A",
+			point: 1,
+			createdAt: new Date("2024-01-01").toISOString(),
+			user: mockUsers[0],
+		},
 	},
-] as const;
+];
 
 /* ---------- テスト ---------- */
 test("toSegmentBundles converts and selects best translation", () => {
@@ -42,13 +30,12 @@ test("toSegmentBundles converts and selects best translation", () => {
 	expect(bundles[0]).toMatchObject({
 		parentType: "pageComment",
 		parentId: 99,
-		segment: { id: 1, number: 0, text: "segment‑text" },
+		id: 1,
+		number: 0,
+		text: "segment-text",
 	});
 
-	// translations は ISO 文字列化されている
-	expect(typeof bundles[0].translations[0].createdAt).toBe("string");
-
-	// best は upvote の付いた id=12
-	expect(bundles[0].best?.id).toBe(12);
-	expect(bundles[0].best?.point).toBe(2);
+	// segmentTranslation の値チェック
+	expect(bundles[0].segmentTranslation?.id).toBe(11);
+	expect(bundles[0].segmentTranslation?.point).toBe(1);
 });

@@ -1,14 +1,11 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { toSegmentBundles } from "../_lib/to-segment-bundles";
-import { transformPageSegmentsWithVotes } from "../_lib/transform-page-segments-with-votes";
+import { transformPageSegments } from "../_lib/transform-page-segments";
 import type { PageDetail } from "../types";
 import { selectUserFields } from "./queries.server";
 
-export const selectPageDetailFields = (
-	locale = "en",
-	currentUserId?: string,
-) => {
+export const selectPageDetailFields = (locale = "en") => {
 	return {
 		user: {
 			select: selectUserFields(),
@@ -22,20 +19,16 @@ export const selectPageDetailFields = (
 			include: {
 				pageSegmentTranslations: {
 					where: { locale, isArchived: false },
-					include: {
-						user: {
-							select: selectUserFields(),
-						},
-						...(currentUserId && {
-							votes: {
-								where: { userId: currentUserId },
-							},
-						}),
-					},
 					orderBy: [
 						{ point: Prisma.SortOrder.desc },
 						{ createdAt: Prisma.SortOrder.desc },
 					],
+					take: 1,
+					include: {
+						user: {
+							select: selectUserFields(),
+						},
+					},
 				},
 			},
 		},
@@ -50,18 +43,17 @@ export const selectPageDetailFields = (
 export async function fetchPageDetail(
 	slug: string,
 	locale: string,
-	currentUserId?: string,
 ): Promise<PageDetail | null> {
 	const page = await prisma.page.findUnique({
 		where: { slug },
 		include: {
-			...selectPageDetailFields(locale, currentUserId),
+			...selectPageDetailFields(locale),
 		},
 	});
 
 	if (!page) return null;
 
-	const normalized = transformPageSegmentsWithVotes(page.pageSegments);
+	const normalized = transformPageSegments(page.pageSegments);
 	const segmentBundles = toSegmentBundles("page", page.id, normalized);
 
 	return {

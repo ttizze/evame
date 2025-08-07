@@ -18,7 +18,7 @@ export async function ContentWithTranslations({
 	const { pageDetail } = pageData;
 
 	const pageSegmentTitleWithTranslations = pageDetail.segmentBundles.filter(
-		(item) => item.segment.number === 0,
+		(item) => item.number === 0,
 	)[0];
 	const content = await mdastToReact({
 		mdast: pageDetail.mdastJson,

@@ -9,9 +9,7 @@ import {
 } from "react";
 import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
 import type { SegmentBundle } from "@/app/[locale]/types";
-import { Link } from "@/i18n/routing";
-import { AddAndVoteTranslations } from "./add-and-vote-translations";
-import { VoteButtons } from "./vote-buttons/client";
+import { AddAndVoteTranslations } from "./add-and-vote-translations.client";
 
 interface TranslationSectionProps<Tag extends keyof JSX.IntrinsicElements> {
 	bundle: SegmentBundle;
@@ -28,10 +26,11 @@ export function TranslationSection<Tag extends keyof JSX.IntrinsicElements>({
 	interactive,
 }: TranslationSectionProps<Tag>) {
 	const [isSelected, setIsSelected] = useState(false);
-	const { best, parentType } = bundle;
-	if (!best) return null;
+	const { segmentTranslation, parentType } = bundle;
 
-	const bestText = sanitizeAndParseText(best.text);
+	if (!segmentTranslation) return null;
+
+	const bestText = sanitizeAndParseText(segmentTranslation.text);
 
 	// Text wrapped inside original semantic tag (p, h1, etc.)
 	const translationText = (
@@ -52,8 +51,8 @@ export function TranslationSection<Tag extends keyof JSX.IntrinsicElements>({
 		tagName,
 		{
 			...tagProps,
-			"data-number-id": bundle.segment.number,
-			key: `tr-${bundle.segment.id}`,
+			"data-number-id": bundle.number,
+			key: `tr-${bundle.id}`,
 		},
 		translationText,
 	);
@@ -62,21 +61,12 @@ export function TranslationSection<Tag extends keyof JSX.IntrinsicElements>({
 		<Fragment>
 			{translationEl}
 			{isSelected && interactive && (
-				<>
-					<span className="flex items-center justify-end gap-2">
-						<Link className="no-underline!" href={`/user/${best.user.handle}`}>
-							<span className="text-sm text-gray-500 text-right flex items-center">
-								by: {best.user.name}
-							</span>
-						</Link>
-						<VoteButtons
-							key={`${best.id}-${best.point}-${best.currentUserVote?.isUpvote ?? "null"}`}
-							targetContentType={parentType}
-							translation={best}
-						/>
-					</span>
-					<AddAndVoteTranslations open={isSelected} segmentBundle={bundle} />
-				</>
+				<AddAndVoteTranslations
+					bestTranslation={segmentTranslation}
+					open={isSelected}
+					segmentId={bundle.id}
+					targetContentType={parentType}
+				/>
 			)}
 		</Fragment>
 	);

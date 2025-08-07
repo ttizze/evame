@@ -49,7 +49,7 @@ function PageLink({ page, titleSegment, className }: PageLinkProps) {
 					className: "line-clamp-1 break-all overflow-wrap-anywhere",
 				}}
 			>
-				{titleSegment.segment.text}
+				{titleSegment.text}
 			</WrapSegmentClient>
 		</Link>
 	);
@@ -79,9 +79,7 @@ export function ChildPageTree({ parent, locale }: Props) {
 	const { data: children } = useChildPages(parent, locale, isOpen);
 
 	// タイトルセグメントの取得
-	const titleSegment = parent.segmentBundles.find(
-		(s) => s.segment.number === 0,
-	);
+	const titleSegment = parent.segmentBundles.find((s) => s.number === 0);
 
 	// 早期リターン: タイトルセグメントが存在しない場合
 	if (!titleSegment) {
