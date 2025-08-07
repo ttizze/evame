@@ -1,4 +1,5 @@
-import { EllipsisVertical } from "lucide-react";
+"use client";
+import { EllipsisVertical, Trash2 } from "lucide-react";
 import { useActionState } from "react";
 import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
@@ -8,28 +9,30 @@ import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
+	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
+import { authClient } from "@/lib/auth-client";
 import { VoteButtons } from "../vote-buttons/client";
 import { deleteTranslationAction } from "./action";
 
 interface TranslationItemProps {
 	translation: BaseTranslation;
-	currentHandle: string | undefined;
 	targetContentType: TargetContentType;
 }
 
 export function TranslationListItem({
 	translation,
-	currentHandle,
 	targetContentType,
 }: TranslationItemProps) {
 	const [_deleteTranslationState, action, isDeletingTranslation] =
 		useActionState<ActionResponse, FormData>(deleteTranslationAction, {
 			success: false,
 		});
-	const isOwner = currentHandle === translation.user.handle;
+	const { data: session } = authClient.useSession();
+	const currentUser = session?.user;
+	const isOwner = currentUser?.handle === translation.user.handle;
 
 	return (
 		<span className="pl-4 mt-1 block">
@@ -45,20 +48,23 @@ export function TranslationListItem({
 								<EllipsisVertical className="h-6 w-6 text-gray-400" />
 							</Button>
 						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
+						<DropdownMenuContent align="end" className="w-48">
 							<form action={action}>
 								<input
 									name="translationId"
 									type="hidden"
 									value={translation.id}
 								/>
-								<button
-									className="w-full text-left"
-									disabled={isDeletingTranslation}
-									type="submit"
-								>
-									Delete
-								</button>
+								<DropdownMenuItem asChild>
+									<button
+										className="w-full flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
+										disabled={isDeletingTranslation}
+										type="submit"
+									>
+										<Trash2 className="h-4 w-4" />
+										{isDeletingTranslation ? "Deleting..." : "Delete"}
+									</button>
+								</DropdownMenuItem>
 							</form>
 						</DropdownMenuContent>
 					</DropdownMenu>

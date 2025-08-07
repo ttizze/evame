@@ -9,8 +9,6 @@ interface WrapSegmentsComponentProps<
 	tagName?: Tag;
 	/** Segment bundle to display */
 	bundle: SegmentBundle;
-	/** Logged-in user handle (for voting UI) */
-	currentHandle?: string;
 	/** Disable interactive UI (votes, popovers). Defaults to true */
 	interactive?: boolean;
 	/** Extra class names for the outer tag */
@@ -22,16 +20,10 @@ export function WrapSegmentsComponent<
 >({
 	tagName = "span" as Tag,
 	bundle,
-	currentHandle,
 	interactive = true,
 	className,
 }: WrapSegmentsComponentProps<Tag>) {
-	const WrapSegmentComponent = WrapSegment(
-		tagName,
-		[bundle],
-		currentHandle,
-		interactive,
-	);
+	const WrapSegmentComponent = WrapSegment(tagName, [bundle], interactive);
 	return (
 		<WrapSegmentComponent
 			className={className}
