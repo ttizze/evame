@@ -42,7 +42,7 @@ test("normalize → SegmentBundle keeps best", () => {
 		normalizeCommentSegments(rawSegs),
 	);
 
-	expect(bundles[0].best?.point).toBe(2);
+	expect(bundles[0].segmentTranslation?.point).toBe(2);
 });
 
 test("parent–child nesting", async () => {

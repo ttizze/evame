@@ -1,6 +1,6 @@
 import { selectPageFields } from "@/app/[locale]/_db/page-list-queries.server";
 import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
-import { transformPageSegmentsWithVotes } from "@/app/[locale]/_lib/transform-page-segments-with-votes";
+import { transformPageSegments } from "@/app/[locale]/_lib/transform-page-segments";
 import { prisma } from "@/lib/prisma";
 
 // 親ページの階層を取得する関数
@@ -15,7 +15,7 @@ export async function getParentChain(pageId: number, locale: string) {
 		});
 
 		if (parent) {
-			const normalized = transformPageSegmentsWithVotes(parent.pageSegments);
+			const normalized = transformPageSegments(parent.pageSegments);
 			const segmentBundles = toSegmentBundles("page", parent.id, normalized);
 
 			parentChain.unshift({

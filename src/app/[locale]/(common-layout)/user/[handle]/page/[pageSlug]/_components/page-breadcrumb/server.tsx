@@ -33,7 +33,7 @@ export async function PageBreadcrumb({
 	// 親ページを順番に追加
 	parentChain.forEach((parent) => {
 		const parentTitleSegment = parent.segmentBundles.find(
-			(s: SegmentBundle) => s.segment.number === 0,
+			(s: SegmentBundle) => s.number === 0,
 		);
 		if (!parentTitleSegment) {
 			return;
@@ -61,7 +61,7 @@ export async function PageBreadcrumb({
 												"line-clamp-1 break-all overflow-wrap-anywhere",
 										}}
 									>
-										{item.segmentBundle.segment.text}
+										{item.segmentBundle.text}
 									</WrapSegmentClient>
 								</Link>
 							</BreadcrumbLink>

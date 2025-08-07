@@ -2,7 +2,7 @@ import type { Page, Tag, TagPage } from "@prisma/client";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import type { SanitizedUser } from "../types";
 
-interface BaseSegment {
+export interface BaseSegment {
 	id: number;
 	number: number;
 	text: string;
@@ -15,7 +15,7 @@ export interface BaseTranslation {
 	point: number;
 	createdAt: string; // ISO 文字列
 	user: SanitizedUser;
-	currentUserVote: UserVote | null;
+	currentUserVote?: UserVote; //初期データは軽量化のためユーザーはundefined AddAndVoteComponentが開くとswrでユーザーが取得される
 }
 
 interface UserVote {
@@ -24,12 +24,10 @@ interface UserVote {
 }
 
 /** React へ渡す統一バンドル */
-export interface SegmentBundle {
+export interface SegmentBundle extends BaseSegment {
 	parentType: TargetContentType;
 	parentId: number;
-	segment: BaseSegment;
-	translations: BaseTranslation[];
-	best: BaseTranslation | null;
+	segmentTranslation?: BaseTranslation;
 }
 
 type TagPageWithTag = TagPage & {

@@ -23,8 +23,8 @@ export const Icon = ({ className, ...rest }: { className: string }) => {
 export default async function HeroSection({ locale }: { locale: string }) {
 	const topPageDetail = await fetchAboutPage(locale);
 	const [title, text] = topPageDetail.segmentBundles
-		.filter((sb) => sb.segment.number === 0 || sb.segment.number === 1)
-		.sort((a, b) => a.segment.number - b.segment.number);
+		.filter((sb) => sb.number === 0 || sb.number === 1)
+		.sort((a, b) => a.number - b.number);
 
 	if (!title || !text) {
 		const error = new Error("Invalid hero section");

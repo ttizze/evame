@@ -21,13 +21,11 @@ export default async function ProblemSolutionSection({
 }) {
 	const pageDetail = await fetchAboutPage(locale);
 	// Get problem header (segment 2)
-	const problemHeader = pageDetail.segmentBundles.find(
-		(st) => st.segment.number === 2,
-	);
+	const problemHeader = pageDetail.segmentBundles.find((st) => st.number === 2);
 	// Get problem cards (segments 3-8)
 	const problemCards = pageDetail.segmentBundles
-		.filter((st) => st.segment.number >= 3 && st.segment.number <= 14)
-		.sort((a, b) => a.segment.number - b.segment.number);
+		.filter((st) => st.number >= 3 && st.number <= 14)
+		.sort((a, b) => a.number - b.number);
 
 	// Group problem cards into pairs (header + text)
 	const problemCardPairs = [];
@@ -103,7 +101,7 @@ export default async function ProblemSolutionSection({
 							component={problemComponents[index]}
 							description={<WrapSegmentsComponent bundle={pair.text} />}
 							icon={problemIcons[index]}
-							key={`problem-${pair.header.segment.number}`}
+							key={`problem-${pair.header.number}`}
 							title={<WrapSegmentsComponent bundle={pair.header} />}
 						/>
 					))}

@@ -10,13 +10,11 @@ import { commentAction } from "./action";
 export function PageCommentForm({
 	pageId,
 	userLocale,
-	currentHandle,
 	parentId,
 	onReplySuccess,
 }: {
 	pageId: number;
 	userLocale: string;
-	currentHandle: string | undefined;
 	parentId?: number;
 	onReplySuccess?: () => void;
 }) {
@@ -37,7 +35,6 @@ export function PageCommentForm({
 	return (
 		<CommentForm
 			action={action}
-			currentHandle={currentHandle}
 			errorMsg={!state.success ? state.zodErrors?.content : undefined}
 			hidden={{ pageId, userLocale, parentId }}
 			isPending={isPending}

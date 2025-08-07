@@ -2,26 +2,25 @@
 import { Reply } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
 import { PageCommentForm } from "../../page-comment-form/client";
-
 export function PageCommentReplyForm({
 	pageId,
-	currentHandle,
 	parentId,
 	userLocale,
 }: {
 	pageId: number;
-	currentHandle: string | undefined;
 	parentId: number;
 	userLocale: string;
 }) {
 	const [isReplying, setIsReplying] = useState(false);
+	const { data: session } = authClient.useSession();
 	return (
 		<>
 			<Button
 				aria-label="Reply"
 				className="h-8 w-8 p-0"
-				disabled={!currentHandle}
+				disabled={!session?.user}
 				onClick={() => setIsReplying(!isReplying)}
 				variant="ghost"
 			>
@@ -29,7 +28,6 @@ export function PageCommentReplyForm({
 			</Button>
 			{isReplying && (
 				<PageCommentForm
-					currentHandle={currentHandle}
 					onReplySuccess={() => setIsReplying(false)}
 					pageId={pageId}
 					parentId={parentId}

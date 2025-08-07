@@ -8,6 +8,7 @@ import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getCurrentUser } from "@/lib/auth-server";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
 
@@ -124,7 +125,8 @@ export default async function Page({
 	if (!data) {
 		return notFound();
 	}
-	const { pageDetail, currentUser, pageViewCount } = data;
+	const { pageDetail, pageViewCount } = data;
+	const currentUser = await getCurrentUser();
 	const isOwner = pageDetail.user.handle === currentUser?.handle;
 	if (!isOwner && pageDetail.status !== "PUBLIC") {
 		return notFound();
@@ -171,11 +173,7 @@ export default async function Page({
 						</div>
 						<PageCommentList pageId={pageDetail.id} userLocale={locale} />
 					</div>
-					<DynamicPageCommentForm
-						currentHandle={currentUser?.handle}
-						pageId={pageDetail.id}
-						userLocale={locale}
-					/>
+					<DynamicPageCommentForm pageId={pageDetail.id} userLocale={locale} />
 				</div>
 			</article>
 		</>

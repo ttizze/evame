@@ -1,7 +1,7 @@
 "use client";
 import { ArrowUpFromLine } from "lucide-react";
 import { useLocale } from "next-intl";
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
@@ -13,23 +13,32 @@ import { addTranslationFormAction } from "./action";
 interface AddTranslationFormProps {
 	segmentId: number;
 	targetContentType: TargetContentType;
+	onTranslationAdded?: () => void;
 }
 
 export function AddTranslationForm({
 	segmentId,
 	targetContentType,
+	onTranslationAdded,
 }: AddTranslationFormProps) {
 	const locale = useLocale();
 	const { data: session } = authClient.useSession();
 	const currentUser = session?.user;
+	const formRef = useRef<HTMLFormElement>(null);
 	const [addTranslationState, addTranslationAction, isAddingTranslation] =
 		useActionState<ActionResponse, FormData>(addTranslationFormAction, {
 			success: false,
 		});
 
+	// 成功時にコールバックを呼び出し、フォームをリセット
+	if (addTranslationState.success) {
+		onTranslationAdded?.();
+		formRef.current?.reset();
+	}
+
 	return (
 		<span className="mt-4 px-4 block">
-			<form action={addTranslationAction}>
+			<form action={addTranslationAction} ref={formRef}>
 				<input
 					name="targetContentType"
 					type="hidden"

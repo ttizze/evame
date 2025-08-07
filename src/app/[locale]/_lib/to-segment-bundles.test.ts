@@ -31,7 +31,7 @@ const rawSegments = [
 			},
 		],
 	},
-] as const;
+];
 
 /* ---------- テスト ---------- */
 test("toSegmentBundles converts and selects best translation", () => {
@@ -46,9 +46,9 @@ test("toSegmentBundles converts and selects best translation", () => {
 	});
 
 	// translations は ISO 文字列化されている
-	expect(typeof bundles[0].translations[0].createdAt).toBe("string");
+	expect(typeof bundles[0].segmentTranslation?.createdAt).toBe("string");
 
 	// best は upvote の付いた id=12
-	expect(bundles[0].best?.id).toBe(12);
-	expect(bundles[0].best?.point).toBe(2);
+	expect(bundles[0].segmentTranslation?.id).toBe(12);
+	expect(bundles[0].segmentTranslation?.point).toBe(2);
 });

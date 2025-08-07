@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { toSegmentBundles } from "../_lib/to-segment-bundles";
-import { transformPageSegmentsWithVotes } from "../_lib/transform-page-segments-with-votes";
+import { transformPageSegments } from "../_lib/transform-page-segments";
 import type { PageForList, PageForTitle } from "../types";
 import { selectUserFields } from "./queries.server";
 
@@ -105,7 +105,7 @@ export async function fetchPagesWithTransform(
 		segmentBundles: toSegmentBundles(
 			"page",
 			p.id,
-			transformPageSegmentsWithVotes(p.pageSegments),
+			transformPageSegments(p.pageSegments),
 		),
 	}));
 
@@ -188,7 +188,7 @@ export async function fetchChildPages(
 		segmentBundles: toSegmentBundles(
 			"page",
 			raw.id,
-			transformPageSegmentsWithVotes(raw.pageSegments),
+			transformPageSegments(raw.pageSegments),
 		),
 		children: [],
 	})) as PageForTitle[];

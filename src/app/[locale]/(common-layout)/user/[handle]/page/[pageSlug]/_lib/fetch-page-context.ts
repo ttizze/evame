@@ -5,25 +5,20 @@ import {
 	fetchLatestPageTranslationJobs,
 	fetchPageViewCount,
 } from "@/app/[locale]/_db/page-utility-queries.server";
-import { getCurrentUser } from "@/lib/auth-server";
 import { incrementPageView } from "../_db/mutations.server";
-import { fetchLatestUserTranslationJob } from "../_db/queries.server";
 
 export const fetchPageContext = cache(async (slug: string, locale: string) => {
-	const currentUser = await getCurrentUser();
-
-	const pageDetail = await fetchPageDetail(slug, locale, currentUser?.id);
-	const titleSegment = pageDetail?.segmentBundles.find(
-		(b) => b.segment.number === 0,
-	);
+	const pageDetail = await fetchPageDetail(slug, locale);
+	const titleSegment = pageDetail?.segmentBundles.find((b) => b.number === 0);
 	if (!titleSegment) {
 		return notFound();
 	}
 
-	const raw = titleSegment.segment.text;
+	const raw = titleSegment.text;
 	const translated =
-		titleSegment.best?.text && titleSegment.best.text !== raw
-			? titleSegment.best.text
+		titleSegment.segmentTranslation?.text &&
+		titleSegment.segmentTranslation.text !== raw
+			? titleSegment.segmentTranslation.text
 			: null;
 
 	const title = translated ? `${raw} - ${translated}` : raw;
@@ -33,19 +28,15 @@ export const fetchPageContext = cache(async (slug: string, locale: string) => {
 
 	await incrementPageView(pageDetail.id);
 
-	const [pageTranslationJobs, latestUserTranslationJob, pageViewCount] =
-		await Promise.all([
-			fetchLatestPageTranslationJobs(pageDetail.id),
-			fetchLatestUserTranslationJob(pageDetail.id, currentUser?.id ?? "0"),
-			fetchPageViewCount(pageDetail.id),
-		]);
+	const [pageTranslationJobs, pageViewCount] = await Promise.all([
+		fetchLatestPageTranslationJobs(pageDetail.id),
+		fetchPageViewCount(pageDetail.id),
+	]);
 
 	return {
 		pageDetail,
 		title,
-		currentUser,
 		pageTranslationJobs,
-		latestUserTranslationJob,
 		pageViewCount,
 	};
 });

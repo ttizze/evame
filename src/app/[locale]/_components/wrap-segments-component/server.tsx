@@ -25,11 +25,8 @@ export function WrapSegmentsComponent<
 }: WrapSegmentsComponentProps<Tag>) {
 	const WrapSegmentComponent = WrapSegment(tagName, [bundle], interactive);
 	return (
-		<WrapSegmentComponent
-			className={className}
-			data-number-id={bundle.segment.number}
-		>
-			{bundle.segment.text}
+		<WrapSegmentComponent className={className} data-number-id={bundle.number}>
+			{bundle.text}
 		</WrapSegmentComponent>
 	);
 }
