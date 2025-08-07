@@ -1,4 +1,3 @@
-import { getCurrentUser } from "@/lib/auth-server";
 import { fetchPageCommentsWithUserAndTranslations } from "./_lib/fetch-page-comments-with-user-and-translations";
 import PageCommentItem from "./page-comment-item/server";
 
@@ -11,13 +10,8 @@ export async function PageCommentList({
 	userLocale,
 	pageId,
 }: CommentListProps) {
-	const currentUser = await getCurrentUser();
 	const pageCommentsWithUserAndTranslations =
-		await fetchPageCommentsWithUserAndTranslations(
-			pageId,
-			userLocale,
-			currentUser?.id,
-		);
+		await fetchPageCommentsWithUserAndTranslations(pageId, userLocale);
 	return (
 		<div className="space-y-4">
 			{pageCommentsWithUserAndTranslations.map((pageComment) => {

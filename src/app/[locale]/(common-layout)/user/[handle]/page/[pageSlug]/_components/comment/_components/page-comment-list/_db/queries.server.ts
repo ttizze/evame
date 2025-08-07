@@ -1,8 +1,9 @@
+import { selectUserFields } from "@/app/[locale]/_db/queries.server";
 import { prisma } from "@/lib/prisma";
+
 export async function fetchPageCommentsWithPageCommentSegments(
 	pageId: number,
 	locale: string,
-	currentUserId?: string,
 ) {
 	const flatComments = await prisma.pageComment.findMany({
 		where: { pageId },
@@ -21,26 +22,18 @@ export async function fetchPageCommentsWithPageCommentSegments(
 					text: true,
 					pageCommentSegmentTranslations: {
 						where: { locale },
-						include: {
+						select: {
+							id: true,
+							locale: true,
+							text: true,
+							point: true,
+							createdAt: true,
 							user: {
-								select: {
-									name: true,
-									handle: true,
-									image: true,
-									createdAt: true,
-									updatedAt: true,
-									profile: true,
-									twitterHandle: true,
-									totalPoints: true,
-									isAI: true,
-									plan: true,
-								},
-							},
-							pageCommentSegmentTranslationVotes: {
-								where: currentUserId ? { userId: currentUserId } : {},
+								select: selectUserFields(),
 							},
 						},
 						orderBy: [{ point: "desc" }, { createdAt: "desc" }],
+						take: 1,
 					},
 				},
 			},

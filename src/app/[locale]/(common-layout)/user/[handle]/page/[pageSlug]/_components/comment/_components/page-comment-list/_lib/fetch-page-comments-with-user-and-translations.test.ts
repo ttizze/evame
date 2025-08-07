@@ -16,22 +16,12 @@ test("normalize → SegmentBundle keeps best", () => {
 			text: "s",
 			pageCommentSegmentTranslations: [
 				{
-					id: 1,
-					locale: "en",
-					text: "A",
-					point: 1,
-					createdAt: new Date(), // ← Date 型
-					user: mockUsers[0],
-					pageCommentSegmentTranslationVotes: [],
-				},
-				{
 					id: 2,
 					locale: "en",
 					text: "B",
 					point: 2,
 					createdAt: new Date(), // ← Date 型
 					user: mockUsers[0],
-					pageCommentSegmentTranslationVotes: [],
 				},
 			],
 		},

@@ -18,10 +18,6 @@ export function normalizeCommentSegments(
 			point: number;
 			createdAt: Date;
 			user: SanitizedUser;
-			pageCommentSegmentTranslationVotes?: {
-				isUpvote: boolean;
-				updatedAt: Date;
-			}[];
 		}[];
 	}[],
 ) {
@@ -29,10 +25,13 @@ export function normalizeCommentSegments(
 		id: seg.id,
 		number: seg.number,
 		text: seg.text,
-		segmentTranslations: seg.pageCommentSegmentTranslations.map((t) => ({
-			...t,
-			currentUserVote: t.pageCommentSegmentTranslationVotes?.[0] ?? null,
-		})),
+		segmentTranslation: seg.pageCommentSegmentTranslations[0]
+			? {
+					...seg.pageCommentSegmentTranslations[0],
+					createdAt:
+						seg.pageCommentSegmentTranslations[0].createdAt.toISOString(),
+				}
+			: undefined,
 	}));
 }
 
@@ -83,13 +82,11 @@ async function mapComment(
 export async function fetchPageCommentsWithUserAndTranslations(
 	pageId: number,
 	locale: string,
-	currentUserId?: string,
 ) {
 	// 1. Prismaからflatなコメントを取得
 	const flatComments = await fetchPageCommentsWithPageCommentSegments(
 		pageId,
 		locale,
-		currentUserId,
 	);
 
 	// 2. flatなコメントからツリーを構築
