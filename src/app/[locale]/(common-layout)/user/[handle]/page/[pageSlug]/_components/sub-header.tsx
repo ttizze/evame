@@ -8,18 +8,15 @@ import type { PageDetail } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
+import { authClient } from "@/lib/auth-client";
 import Toc, { useHasTableOfContents } from "./toc";
 
-export function SubHeader({
-	pageDetail,
-	currentUserHandle,
-}: {
-	pageDetail: PageDetail;
-	currentUserHandle?: string;
-}) {
+export function SubHeader({ pageDetail }: { pageDetail: PageDetail }) {
 	const [isTocOpen, setIsTocOpen] = useState(false);
 	const hasTocContent = useHasTableOfContents();
-	const isEditable = currentUserHandle === pageDetail.user.handle;
+	const { data: session } = authClient.useSession();
+	const currentUser = session?.user;
+	const isEditable = currentUser?.handle === pageDetail.user.handle;
 
 	// カスタムフックを使用 - SubHeaderの特殊な動作のため初期オフセットを考慮
 	const { headerRef, isPinned, isVisible, headerHeight } = useHeaderScroll();
@@ -97,7 +94,7 @@ export function SubHeader({
 					<div className="flex items-center gap-2">
 						{isEditable && (
 							<Link
-								href={`/user/${currentUserHandle}/page/${pageDetail.slug}/edit`}
+								href={`/user/${currentUser?.handle}/page/${pageDetail.slug}/edit`}
 								prefetch={false}
 							>
 								<Button variant="ghost">

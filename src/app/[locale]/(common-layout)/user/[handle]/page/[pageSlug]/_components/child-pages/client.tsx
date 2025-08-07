@@ -43,7 +43,6 @@ function PageLink({ page, titleSegment, className }: PageLinkProps) {
 		<Link className={cn("block overflow-hidden", className)} href={pageLink}>
 			<WrapSegmentClient
 				bundle={titleSegment}
-				currentHandle={page.user.handle}
 				interactive={false}
 				tagName="span"
 				tagProps={{

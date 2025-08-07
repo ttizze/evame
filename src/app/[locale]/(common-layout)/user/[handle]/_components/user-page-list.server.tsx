@@ -25,7 +25,6 @@ export async function PageListServer({
 }: PageListServerProps) {
 	const currentUser = await getCurrentUser();
 	const isOwner = currentUser?.handle === handle;
-	const currentUserHandle = currentUser?.handle;
 
 	const pageOwner = await fetchUserByHandle(handle);
 	if (!pageOwner) {
@@ -43,7 +42,6 @@ export async function PageListServer({
 		pageSize: 5,
 		pageOwnerId: pageOwner.id,
 		locale,
-		currentUserId: currentUser?.id,
 	});
 	if (pageForLists.length === 0) {
 		return (
@@ -58,7 +56,6 @@ export async function PageListServer({
 			<div className="">
 				{pageForLists.map((PageForList) => (
 					<PageList
-						currentUserHandle={currentUserHandle}
 						key={PageForList.id}
 						locale={locale}
 						PageForList={PageForList}

@@ -6,7 +6,6 @@ import { createLoader, parseAsInteger } from "nuqs/server";
 import { PageList } from "@/app/[locale]/_components/page/page-list.server";
 import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { getCurrentUser } from "@/lib/auth-server";
 import { fetchPaginatedPublicPageListsByTag } from "./_db/queries.server";
 
 const searchParamsSchema = {
@@ -35,8 +34,6 @@ export default async function PopularPageListByTag({
 	const { page } = searchParams
 		? await loadSearchParams(searchParams)
 		: { page: 1 };
-	const currentUser = await getCurrentUser();
-	const currentUserHandle = currentUser?.handle;
 
 	const { pageForLists, totalPages } = await fetchPaginatedPublicPageListsByTag(
 		{
@@ -55,7 +52,6 @@ export default async function PopularPageListByTag({
 		<PageListContainer icon={BookOpenIcon} title={`Popular Pages – ${tagName}`}>
 			{pageForLists.map((PageForList, index) => (
 				<PageList
-					currentUserHandle={currentUserHandle}
 					index={index}
 					key={PageForList.id}
 					locale={locale}

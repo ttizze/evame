@@ -17,7 +17,6 @@ type PageListProps = {
 	showOwnerActions?: boolean;
 	index?: number;
 	locale: string;
-	currentUserHandle?: string;
 };
 
 export async function PageList({
@@ -25,7 +24,6 @@ export async function PageList({
 	showOwnerActions = false,
 	index,
 	locale,
-	currentUserHandle,
 }: PageListProps) {
 	const { props } = getImageProps({
 		src: PageForList.user.image,
@@ -70,7 +68,6 @@ export async function PageList({
 							<WrapSegmentsComponent
 								bundle={titleSegment}
 								className="line-clamp-1 break-all overflow-wrap-anywhere"
-								currentHandle={currentUserHandle}
 								interactive={false}
 							/>
 						)}
