@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { toSegmentBundles } from "../_lib/to-segment-bundles";
 import { transformPageSegmentsWithVotes } from "../_lib/transform-page-segments-with-votes";
 import type { PageForList, PageForTitle } from "../types";
@@ -71,9 +71,7 @@ type FetchListParams = {
 	page?: number;
 	pageSize?: number;
 	pageOwnerId?: string;
-	isPopular?: boolean;
 	locale?: string;
-	currentUserId?: string;
 };
 
 // 共通のページ取得・変換関数
@@ -117,13 +115,17 @@ export async function fetchPagesWithTransform(
 	};
 }
 
-export async function fetchPaginatedPublicPageLists({
+async function fetchPaginatedPublicPageListsWithOrderBy({
 	page = 1,
 	pageSize = 9,
 	pageOwnerId,
-	isPopular = false,
 	locale = "en",
-}: FetchListParams): Promise<{
+	orderBy,
+}: FetchListParams & {
+	orderBy:
+		| Prisma.PageOrderByWithRelationInput
+		| Prisma.PageOrderByWithRelationInput[];
+}): Promise<{
 	pageForLists: PageForList[];
 	totalPages: number;
 }> {
@@ -140,13 +142,6 @@ export async function fetchPaginatedPublicPageLists({
 		baseWhere.userId = pageOwnerId;
 	}
 
-	const orderBy = isPopular
-		? [
-				{ likePages: { _count: Prisma.SortOrder.desc } },
-				{ createdAt: Prisma.SortOrder.desc },
-			]
-		: { createdAt: Prisma.SortOrder.desc };
-
 	const { pageForLists, total } = await fetchPagesWithTransform(
 		baseWhere,
 		skip,
@@ -159,6 +154,23 @@ export async function fetchPaginatedPublicPageLists({
 		pageForLists,
 		totalPages: Math.ceil(total / pageSize),
 	};
+}
+
+export async function fetchPaginatedNewPageLists(params: FetchListParams) {
+	return fetchPaginatedPublicPageListsWithOrderBy({
+		...params,
+		orderBy: { createdAt: Prisma.SortOrder.desc },
+	});
+}
+
+export async function fetchPaginatedPopularPageLists(params: FetchListParams) {
+	return fetchPaginatedPublicPageListsWithOrderBy({
+		...params,
+		orderBy: [
+			{ likePages: { _count: Prisma.SortOrder.desc } },
+			{ createdAt: Prisma.SortOrder.desc },
+		],
+	});
 }
 
 export async function fetchChildPages(

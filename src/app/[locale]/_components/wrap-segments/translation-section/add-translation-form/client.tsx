@@ -7,20 +7,21 @@ import { StartButton } from "@/app/[locale]/_components/start-button";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
 import { addTranslationFormAction } from "./action";
 
 interface AddTranslationFormProps {
 	segmentId: number;
-	currentHandle: string | undefined;
 	targetContentType: TargetContentType;
 }
 
 export function AddTranslationForm({
 	segmentId,
-	currentHandle,
 	targetContentType,
 }: AddTranslationFormProps) {
 	const locale = useLocale();
+	const { data: session } = authClient.useSession();
+	const currentUser = session?.user;
 	const [addTranslationState, addTranslationAction, isAddingTranslation] =
 		useActionState<ActionResponse, FormData>(addTranslationFormAction, {
 			success: false,
@@ -38,14 +39,14 @@ export function AddTranslationForm({
 				<input name="locale" type="hidden" value={locale} />
 				<span className="relative">
 					<TextareaAutosize
-						className={`w-full mb-2 rounded-xl p-2 text-base! border border-gray-500 bg-background resize-none overflow-hidden ${!currentHandle && "bg-muted"}`}
-						disabled={!currentHandle}
+						className={`w-full mb-2 rounded-xl p-2 text-base! border border-gray-500 bg-background resize-none overflow-hidden ${!currentUser && "bg-muted"}`}
+						disabled={!currentUser}
 						minRows={3}
 						name="text"
 						placeholder="Or enter your translation..."
 						required
 					/>
-					{!currentHandle && (
+					{!currentUser && (
 						<StartButton className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
 					)}
 				</span>
@@ -58,7 +59,7 @@ export function AddTranslationForm({
 						)}
 					<Button
 						className="rounded-xl"
-						disabled={isAddingTranslation || !currentHandle}
+						disabled={isAddingTranslation || !currentUser}
 						type="submit"
 					>
 						<ArrowUpFromLine className="h-4 w-4" />

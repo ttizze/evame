@@ -18,7 +18,6 @@ export default async function PageCommentItem({
 	const content = await mdastToReact({
 		mdast: pageComment.mdastJson,
 		bundles: pageComment.segmentBundles,
-		currentHandle,
 	});
 
 	return (

@@ -5,7 +5,6 @@ import type { SegmentBundle } from "@/app/[locale]/types";
 export function WrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 	Tag: Tag,
 	bundles: SegmentBundle[],
-	currentHandle?: string,
 	interactive: boolean = true,
 ) {
 	return (p: JSX.IntrinsicElements[Tag] & { "data-number-id"?: number }) => {
@@ -23,7 +22,6 @@ export function WrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 		return (
 			<WrapSegmentClient
 				bundle={bundle}
-				currentHandle={currentHandle}
 				interactive={interactive}
 				tagName={Tag} // ★そのまま突っ込む
 				tagProps={rest as JSX.IntrinsicElements[Tag]}

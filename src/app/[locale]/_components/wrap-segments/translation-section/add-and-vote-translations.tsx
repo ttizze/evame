@@ -3,16 +3,14 @@ import { useMemo, useState } from "react";
 import type { SegmentBundle } from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
 import { AddTranslationForm } from "./add-translation-form/client";
-import { TranslationListItem } from "./translation-list-item";
+import { TranslationListItem } from "./translation-list-item/client";
 
 const INITIAL_DISPLAY_COUNT = 3;
 
 export function AddAndVoteTranslations({
-	currentHandle,
 	segmentBundle,
 	open,
 }: {
-	currentHandle: string | undefined;
 	segmentBundle: SegmentBundle;
 	open: boolean;
 }) {
@@ -40,7 +38,6 @@ export function AddAndVoteTranslations({
 			</span>
 			{displayedTranslations.map((displayedTranslation) => (
 				<TranslationListItem
-					currentHandle={currentHandle}
 					key={displayedTranslation.id}
 					targetContentType={segmentBundle.parentType}
 					translation={displayedTranslation}
@@ -61,7 +58,6 @@ export function AddAndVoteTranslations({
 			)}
 			<span className="mt-4">
 				<AddTranslationForm
-					currentHandle={currentHandle}
 					segmentId={segmentBundle.segment.id}
 					targetContentType={segmentBundle.parentType}
 				/>

@@ -52,18 +52,16 @@ const ImgComponent: ComponentType<ImgProps> = ({ src = "", ...props }) => (
 interface Params {
 	mdast: Prisma.JsonValue;
 	bundles: SegmentBundle[];
-	currentHandle?: string;
 }
 
 /** mdast(JSON) → React 要素 */
 export async function mdastToReact({
 	mdast,
 	bundles,
-	currentHandle,
 }: Params): Promise<ReactElement | null> {
 	if (!mdast || Object.keys(mdast).length === 0) return null;
 	const segmentComponents = Object.fromEntries(
-		SEGMENTABLE.map((tag) => [tag, WrapSegment(tag, bundles, currentHandle)]),
+		SEGMENTABLE.map((tag) => [tag, WrapSegment(tag, bundles)]),
 	);
 
 	const processor = unified()

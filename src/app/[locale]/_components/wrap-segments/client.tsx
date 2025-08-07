@@ -14,7 +14,6 @@ import { TranslationSection } from "./translation-section/client";
 
 interface BaseProps {
 	bundle: SegmentBundle;
-	currentHandle?: string;
 	children: ReactNode;
 	/**
 	 * If false, disable interactive UI (votes, popovers, etc.) inside TranslationSection.
@@ -27,7 +26,6 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 	bundle,
 	tagName,
 	tagProps,
-	currentHandle,
 	children,
 	interactive = true,
 }: BaseProps & {
@@ -73,7 +71,6 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 		eff !== "source" && hasTr ? (
 			<TranslationSection
 				bundle={bundle}
-				currentHandle={currentHandle}
 				interactive={interactive}
 				tagName={tagName}
 				tagProps={tagProps}

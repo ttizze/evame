@@ -15,7 +15,7 @@ export async function ContentWithTranslations({
 	if (!pageData) {
 		return notFound();
 	}
-	const { pageDetail, currentUser } = pageData;
+	const { pageDetail } = pageData;
 
 	const pageSegmentTitleWithTranslations = pageDetail.segmentBundles.filter(
 		(item) => item.segment.number === 0,
@@ -23,23 +23,16 @@ export async function ContentWithTranslations({
 	const content = await mdastToReact({
 		mdast: pageDetail.mdastJson,
 		bundles: pageDetail.segmentBundles,
-		currentHandle: currentUser?.handle,
 	});
 	return (
 		<>
 			<h1 className="mb-0! ">
 				{pageSegmentTitleWithTranslations && (
-					<WrapSegmentsComponent
-						bundle={pageSegmentTitleWithTranslations}
-						currentHandle={currentUser?.handle}
-					/>
+					<WrapSegmentsComponent bundle={pageSegmentTitleWithTranslations} />
 				)}
 			</h1>
 			<PageTagList tag={pageDetail.tagPages.map((tagPage) => tagPage.tag)} />
-			<SubHeader
-				currentUserHandle={currentUser?.handle}
-				pageDetail={pageDetail}
-			/>
+			<SubHeader pageDetail={pageDetail} />
 			<span className="js-content">{content}</span>
 		</>
 	);

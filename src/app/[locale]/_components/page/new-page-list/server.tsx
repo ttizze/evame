@@ -3,8 +3,7 @@ import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger } from "nuqs/server";
 import { PageListContainer } from "@/app/[locale]/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
-import { fetchPaginatedPublicPageLists } from "@/app/[locale]/_db/page-list-queries.server";
-import { getCurrentUser } from "@/lib/auth-server";
+import { fetchPaginatedNewPageLists } from "@/app/[locale]/_db/page-list-queries.server";
 import { PageList } from "../page-list.server";
 
 const searchParamsSchema = {
@@ -25,13 +24,10 @@ export default async function NewPageList({
 	showPagination = false,
 }: NewPageListProps) {
 	const { page } = await loadSearchParams(searchParams);
-	const currentUser = await getCurrentUser();
-	const currentUserHandle = currentUser?.handle;
 
-	const { pageForLists, totalPages } = await fetchPaginatedPublicPageLists({
+	const { pageForLists, totalPages } = await fetchPaginatedNewPageLists({
 		page,
 		pageSize: 5,
-		isPopular: false,
 		locale,
 	});
 
@@ -39,7 +35,6 @@ export default async function NewPageList({
 		<PageListContainer icon={SparklesIcon} title="New Pages">
 			{pageForLists.map((PageForList, index) => (
 				<PageList
-					currentUserHandle={currentUserHandle}
 					index={index}
 					key={PageForList.id}
 					locale={locale}

@@ -17,7 +17,6 @@ interface TranslationSectionProps<Tag extends keyof JSX.IntrinsicElements> {
 	bundle: SegmentBundle;
 	tagName: Tag;
 	tagProps: JSX.IntrinsicElements[Tag];
-	currentHandle: string | undefined;
 	interactive: boolean;
 }
 
@@ -26,7 +25,6 @@ export function TranslationSection<Tag extends keyof JSX.IntrinsicElements>({
 	bundle,
 	tagName,
 	tagProps,
-	currentHandle,
 	interactive,
 }: TranslationSectionProps<Tag>) {
 	const [isSelected, setIsSelected] = useState(false);
@@ -77,11 +75,7 @@ export function TranslationSection<Tag extends keyof JSX.IntrinsicElements>({
 							translation={best}
 						/>
 					</span>
-					<AddAndVoteTranslations
-						currentHandle={currentHandle}
-						open={isSelected}
-						segmentBundle={bundle}
-					/>
+					<AddAndVoteTranslations open={isSelected} segmentBundle={bundle} />
 				</>
 			)}
 		</Fragment>

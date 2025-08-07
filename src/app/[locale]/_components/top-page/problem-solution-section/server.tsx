@@ -8,7 +8,6 @@ import {
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
 import Globe from "@/app/[locale]/_components/top-page/problem-solution-section/components/globe.client";
 import { WrapSegmentsComponent } from "@/app/[locale]/_components/wrap-segments-component/server";
-import { getCurrentUser } from "@/lib/auth-server";
 import { fetchAboutPage } from "../../../(common-layout)/about/_lib/fetch-about-page";
 import { FloatingControls } from "../../floating-controls.client";
 import AboutSectionCard from "./components/about-section-card.server";
@@ -20,8 +19,6 @@ export default async function ProblemSolutionSection({
 }: {
 	locale: string;
 }) {
-	const currentUser = await getCurrentUser();
-	const currentHandle = currentUser?.handle;
 	const pageDetail = await fetchAboutPage(locale);
 	// Get problem header (segment 2)
 	const problemHeader = pageDetail.segmentBundles.find(
@@ -97,32 +94,17 @@ export default async function ProblemSolutionSection({
 			<div className="">
 				<div className="border-b">
 					<h2 className="text-2xl font-bold text-center mb-10">
-						{problemHeader && (
-							<WrapSegmentsComponent
-								bundle={problemHeader}
-								currentHandle={currentHandle}
-							/>
-						)}
+						{problemHeader && <WrapSegmentsComponent bundle={problemHeader} />}
 					</h2>
 				</div>
 				<div className="grid grid-cols-1 ">
 					{problemCardPairs.map((pair, index) => (
 						<AboutSectionCard
 							component={problemComponents[index]}
-							description={
-								<WrapSegmentsComponent
-									bundle={pair.text}
-									currentHandle={currentHandle}
-								/>
-							}
+							description={<WrapSegmentsComponent bundle={pair.text} />}
 							icon={problemIcons[index]}
 							key={`problem-${pair.header.segment.number}`}
-							title={
-								<WrapSegmentsComponent
-									bundle={pair.header}
-									currentHandle={currentHandle}
-								/>
-							}
+							title={<WrapSegmentsComponent bundle={pair.header} />}
 						/>
 					))}
 				</div>

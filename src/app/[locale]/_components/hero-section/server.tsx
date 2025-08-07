@@ -2,7 +2,6 @@ import Image from "next/image";
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { WrapSegmentsComponent } from "@/app/[locale]/_components/wrap-segments-component/server";
 import { fetchAboutPage } from "@/app/[locale]/(common-layout)/about/_lib/fetch-about-page";
-import { getCurrentUser } from "@/lib/auth-server";
 
 export const Icon = ({ className, ...rest }: { className: string }) => {
 	return (
@@ -22,8 +21,6 @@ export const Icon = ({ className, ...rest }: { className: string }) => {
 };
 
 export default async function HeroSection({ locale }: { locale: string }) {
-	const currentUser = await getCurrentUser();
-	const currentHandle = currentUser?.handle;
 	const topPageDetail = await fetchAboutPage(locale);
 	const [title, text] = topPageDetail.segmentBundles
 		.filter((sb) => sb.segment.number === 0 || sb.segment.number === 1)
@@ -44,19 +41,11 @@ export default async function HeroSection({ locale }: { locale: string }) {
 			<Icon className="absolute h-6 w-6 -bottom-3 -right-3 dark:text-white text-black" />
 			<div className="relative z-10 px-4 md:px-8 max-w-4xl mx-auto">
 				<h1 className="text-2xl md:text-4xl font-bold mb-6 text-center">
-					<WrapSegmentsComponent
-						bundle={heroTitle}
-						className="w-full mb-2"
-						currentHandle={currentHandle}
-					/>
+					<WrapSegmentsComponent bundle={heroTitle} className="w-full mb-2" />
 				</h1>
 
 				<span className="text-xl mb-12 w-full">
-					<WrapSegmentsComponent
-						bundle={heroText}
-						className="mb-2"
-						currentHandle={currentHandle}
-					/>
+					<WrapSegmentsComponent bundle={heroText} className="mb-2" />
 				</span>
 				<div className="mb-12 flex justify-center mt-10">
 					<StartButton

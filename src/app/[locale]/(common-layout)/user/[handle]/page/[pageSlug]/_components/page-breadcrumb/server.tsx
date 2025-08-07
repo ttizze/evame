@@ -19,7 +19,6 @@ interface PageBreadcrumbProps {
 interface BreadcrumbItemData {
 	href: string;
 	segmentBundle: SegmentBundle;
-	userHandle: string;
 }
 
 export async function PageBreadcrumb({
@@ -42,7 +41,6 @@ export async function PageBreadcrumb({
 		breadcrumbItems.push({
 			href: `/${locale}/user/${parent.user.handle}/page/${parent.slug}`,
 			segmentBundle: parentTitleSegment,
-			userHandle: parent.user.handle,
 		});
 	});
 
@@ -56,7 +54,6 @@ export async function PageBreadcrumb({
 								<Link href={item.href}>
 									<WrapSegmentClient
 										bundle={item.segmentBundle}
-										currentHandle={item.userHandle}
 										interactive={false}
 										tagName="span"
 										tagProps={{
