@@ -1,7 +1,7 @@
 import useSWR from "swr";
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import type { SanitizedUser } from "@/app/types";
-import type { BaseTranslation } from "../types";
+import type { BaseTranslation, UserVote } from "../types";
 
 interface UseSegmentTranslationsParams {
 	segmentId: number;
@@ -12,10 +12,7 @@ interface UseSegmentTranslationsParams {
 }
 
 interface SegmentTranslationsResponse {
-	bestTranslationCurrentUserVote: {
-		isUpvote: boolean;
-		updatedAt: string;
-	} | null;
+	bestTranslationCurrentUserVote?: UserVote;
 	bestTranslationUser: SanitizedUser;
 	translations: BaseTranslation[];
 }

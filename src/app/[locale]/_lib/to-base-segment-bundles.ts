@@ -1,19 +1,19 @@
 import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 
-import type { BaseSegment, BaseTranslation, SegmentBundle } from "../types";
+import type { BaseSegment, BaseSegmentBundle, BaseTranslation } from "../types";
 
-export function toSegmentBundles(
+export function toBaseSegmentBundles(
 	parentType: TargetContentType,
 	parentId: number,
 	rawSegments: readonly (BaseSegment & {
 		segmentTranslation?: BaseTranslation;
 	})[],
-): SegmentBundle[] {
+): BaseSegmentBundle[] {
 	return rawSegments.map((segment) => {
 		return {
 			parentType,
 			parentId,
 			...segment,
-		} satisfies SegmentBundle;
+		} satisfies BaseSegmentBundle;
 	});
 }

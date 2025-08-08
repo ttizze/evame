@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { toSegmentBundles } from "../_lib/to-segment-bundles";
-import { transformPageSegments } from "../_lib/transform-page-segments";
+import { toBaseSegmentBundles } from "../_lib/to-base-segment-bundles";
+import { toBaseSegmentWithTranslations } from "../_lib/to-base-segment-with-translations";
 import type { PageDetail } from "../types";
 import { selectUserFields } from "./queries.server";
 
@@ -53,12 +53,14 @@ export async function fetchPageDetail(
 
 	if (!page) return null;
 
-	const normalized = transformPageSegments(page.pageSegments);
-	const segmentBundles = toSegmentBundles("page", page.id, normalized);
+	const segmentBundles = toBaseSegmentBundles(
+		"page",
+		page.id,
+		toBaseSegmentWithTranslations(page.pageSegments, "pageSegmentTranslations"),
+	);
 
 	return {
 		...page,
-		createdAt: page.createdAt.toISOString(),
 		segmentBundles,
 	};
 }

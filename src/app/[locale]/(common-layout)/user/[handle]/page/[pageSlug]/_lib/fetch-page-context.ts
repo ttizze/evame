@@ -2,8 +2,8 @@ import { notFound } from "next/navigation";
 import { cache } from "react";
 import { fetchPageDetail } from "@/app/[locale]/_db/page-detail-queries.server";
 import {
-	fetchLatestPageTranslationJobs,
 	fetchPageViewCount,
+	fetchTranslationJobs,
 } from "@/app/[locale]/_db/page-utility-queries.server";
 import { incrementPageView } from "../_db/mutations.server";
 
@@ -29,7 +29,7 @@ export const fetchPageContext = cache(async (slug: string, locale: string) => {
 	await incrementPageView(pageDetail.id);
 
 	const [pageTranslationJobs, pageViewCount] = await Promise.all([
-		fetchLatestPageTranslationJobs(pageDetail.id),
+		fetchTranslationJobs(pageDetail.id),
 		fetchPageViewCount(pageDetail.id),
 	]);
 

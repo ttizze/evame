@@ -1,39 +1,10 @@
-import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
-import type { SegmentBundle } from "@/app/[locale]/types";
-import type { SanitizedUser } from "@/app/types";
+import { toBaseSegmentBundles } from "@/app/[locale]/_lib/to-base-segment-bundles";
+import { toBaseSegmentWithTranslations } from "@/app/[locale]/_lib/to-base-segment-with-translations";
+import type { BaseSegmentBundle } from "@/app/[locale]/types";
 import {
 	fetchPageCommentsWithPageCommentSegments,
 	type PageCommentWithPageCommentSegments,
 } from "../_db/queries.server";
-
-export function normalizeCommentSegments(
-	segments: {
-		id: number;
-		number: number;
-		text: string;
-		pageCommentSegmentTranslations: {
-			id: number;
-			locale: string;
-			text: string;
-			point: number;
-			createdAt: Date;
-			user: SanitizedUser;
-		}[];
-	}[],
-) {
-	return segments.map((seg) => ({
-		id: seg.id,
-		number: seg.number,
-		text: seg.text,
-		segmentTranslation: seg.pageCommentSegmentTranslations[0]
-			? {
-					...seg.pageCommentSegmentTranslations[0],
-					createdAt:
-						seg.pageCommentSegmentTranslations[0].createdAt.toISOString(),
-				}
-			: undefined,
-	}));
-}
 
 export async function buildCommentTree(
 	flatComments: PageCommentWithPageCommentSegments[],
@@ -59,16 +30,19 @@ export async function buildCommentTree(
 
 interface ExtendedComment
 	extends Omit<PageCommentWithPageCommentSegments, "replies"> {
-	segmentBundles: SegmentBundle[];
+	segmentBundles: BaseSegmentBundle[];
 	replies: ExtendedComment[];
 }
 async function mapComment(
 	comment: PageCommentWithPageCommentSegments,
 ): Promise<ExtendedComment> {
-	const segmentBundles = toSegmentBundles(
+	const segmentBundles = toBaseSegmentBundles(
 		"pageComment",
 		comment.id,
-		normalizeCommentSegments(comment.pageCommentSegments),
+		toBaseSegmentWithTranslations(
+			comment.pageCommentSegments,
+			"pageCommentSegmentTranslations",
+		),
 	);
 
 	return {

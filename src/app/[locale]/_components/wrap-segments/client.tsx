@@ -9,11 +9,11 @@ import {
 	type ReactNode,
 } from "react";
 import { useDisplay } from "@/app/_context/display-provider";
-import type { SegmentBundle } from "@/app/[locale]/types";
+import type { BaseSegmentBundle } from "@/app/[locale]/types";
 import { TranslationSection } from "./translation-section/client";
 
 interface BaseProps {
-	bundle: SegmentBundle;
+	bundle: BaseSegmentBundle;
 	children: ReactNode;
 	/**
 	 * If false, disable interactive UI (votes, popovers, etc.) inside TranslationSection.

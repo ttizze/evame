@@ -13,18 +13,18 @@ export interface BaseTranslation {
 	locale: string;
 	text: string;
 	point: number;
-	createdAt: string; // ISO 文字列
+	createdAt: Date;
 	user: SanitizedUser;
 	currentUserVote?: UserVote; //初期データは軽量化のためユーザーはundefined AddAndVoteComponentが開くとswrでユーザーが取得される
 }
 
-interface UserVote {
+export interface UserVote {
 	isUpvote: boolean;
-	updatedAt: string; // ISO 文字列
+	updatedAt: Date;
 }
 
 /** React へ渡す統一バンドル */
-export interface SegmentBundle extends BaseSegment {
+export interface BaseSegmentBundle extends BaseSegment {
 	parentType: TargetContentType;
 	parentId: number;
 	segmentTranslation?: BaseTranslation;
@@ -33,11 +33,10 @@ export interface SegmentBundle extends BaseSegment {
 type TagPageWithTag = TagPage & {
 	tag: Tag;
 };
-export type PageDetail = Omit<Page, "createdAt"> & {
-	createdAt: string;
+export type PageDetail = Page & {
 	user: SanitizedUser;
 	tagPages: TagPageWithTag[];
-	segmentBundles: SegmentBundle[];
+	segmentBundles: BaseSegmentBundle[];
 	_count: {
 		pageComments: number;
 		children?: number;

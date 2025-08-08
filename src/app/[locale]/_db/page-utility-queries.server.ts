@@ -1,27 +1,12 @@
 import { prisma } from "@/lib/prisma";
 
-export async function fetchLatestPageTranslationJobs(pageId: number) {
-	const locales = await prisma.translationJob.findMany({
-		where: { pageId },
-		select: { locale: true },
+export async function fetchTranslationJobs(pageId: number) {
+	// 単一クエリで各localeの最新COMPLETEDを取得
+	return prisma.translationJob.findMany({
+		where: { pageId, status: "COMPLETED" },
+		orderBy: [{ locale: "asc" }, { createdAt: "desc" }],
 		distinct: ["locale"],
 	});
-
-	// 2. 各localeについて最新のレコードを取得
-	const results = await Promise.all(
-		locales.map(({ locale }) =>
-			prisma.translationJob.findFirst({
-				where: {
-					pageId,
-					locale,
-				},
-				orderBy: { createdAt: "desc" },
-			}),
-		),
-	);
-
-	// nullでないレコードのみを返す
-	return results.filter((record) => record !== null);
 }
 
 export async function fetchPageIdBySlug(slug: string) {

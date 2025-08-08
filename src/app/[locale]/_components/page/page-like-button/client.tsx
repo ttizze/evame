@@ -10,7 +10,7 @@ type PageLikeButtonClientProps = {
 	likeCount: number;
 	pageId: number;
 	pageSlug: string;
-	ownerHandle: string;
+	pageOwnerHandle: string;
 	showCount?: boolean;
 	className?: string;
 };
@@ -20,7 +20,7 @@ export function PageLikeButtonClient({
 	likeCount,
 	pageId,
 	pageSlug,
-	ownerHandle,
+	pageOwnerHandle,
 	showCount,
 	className = "",
 }: PageLikeButtonClientProps) {
@@ -48,7 +48,7 @@ export function PageLikeButtonClient({
 			<form action={handleSubmit}>
 				<input name="pageId" type="hidden" value={pageId} />
 				<input name="pageSlug" type="hidden" value={pageSlug} />
-				<input name="ownerHandle" type="hidden" value={ownerHandle} />
+				<input name="pageOwnerHandle" type="hidden" value={pageOwnerHandle} />
 				<Button
 					aria-label="Like"
 					className={`bg-background ${className}`}

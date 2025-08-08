@@ -1,6 +1,6 @@
 import { selectPageFields } from "@/app/[locale]/_db/page-list-queries.server";
-import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
-import { transformPageSegments } from "@/app/[locale]/_lib/transform-page-segments";
+import { toBaseSegmentBundles } from "@/app/[locale]/_lib/to-base-segment-bundles";
+import { toBaseSegmentWithTranslations } from "@/app/[locale]/_lib/to-base-segment-with-translations";
 import { prisma } from "@/lib/prisma";
 
 // 親ページの階層を取得する関数
@@ -15,8 +15,14 @@ export async function getParentChain(pageId: number, locale: string) {
 		});
 
 		if (parent) {
-			const normalized = transformPageSegments(parent.pageSegments);
-			const segmentBundles = toSegmentBundles("page", parent.id, normalized);
+			const segmentBundles = toBaseSegmentBundles(
+				"page",
+				parent.id,
+				toBaseSegmentWithTranslations(
+					parent.pageSegments,
+					"pageSegmentTranslations",
+				),
+			);
 
 			parentChain.unshift({
 				id: parent.id,
