@@ -1,8 +1,8 @@
 "use client";
 import { ChevronDown, List, PencilIcon } from "lucide-react";
 import { getImageProps } from "next/image";
+import { useLocale } from "next-intl";
 import { useState } from "react";
-import { ClientDateFormatter } from "@/app/[locale]/_components/client-date-formatter";
 import { useHeaderScroll } from "@/app/[locale]/_components/header/hooks/use-header-scroll";
 import type { PageDetail } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,6 +12,7 @@ import { authClient } from "@/lib/auth-client";
 import Toc, { useHasTableOfContents } from "./toc";
 
 export function SubHeader({ pageDetail }: { pageDetail: PageDetail }) {
+	const locale = useLocale();
 	const [isTocOpen, setIsTocOpen] = useState(false);
 	const hasTocContent = useHasTableOfContents();
 	const { data: session } = authClient.useSession();
@@ -86,7 +87,7 @@ export function SubHeader({ pageDetail }: { pageDetail: PageDetail }) {
 							<span className="text-sm">{pageDetail.user.name}</span>
 							{!isPinned && (
 								<span className="text-xs text-gray-500">
-									<ClientDateFormatter date={new Date(pageDetail.createdAt)} />
+									<time>{pageDetail.createdAt.toLocaleDateString(locale)}</time>
 								</span>
 							)}
 						</div>

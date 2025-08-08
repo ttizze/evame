@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { toSegmentBundles } from "../_lib/to-segment-bundles";
-import { transformPageSegments } from "../_lib/transform-page-segments";
+import { toBaseSegmentBundles } from "../_lib/to-base-segment-bundles";
+import { toBaseSegmentWithTranslations } from "../_lib/to-base-segment-with-translations";
 import type { PageForList, PageForTitle } from "../types";
 import { selectUserFields } from "./queries.server";
 
@@ -101,11 +101,10 @@ export async function fetchPagesWithTransform(
 
 	const pages = rawPages.map((p) => ({
 		...p,
-		createdAt: p.createdAt.toISOString(),
-		segmentBundles: toSegmentBundles(
+		segmentBundles: toBaseSegmentBundles(
 			"page",
 			p.id,
-			transformPageSegments(p.pageSegments),
+			toBaseSegmentWithTranslations(p.pageSegments, "pageSegmentTranslations"),
 		),
 	}));
 
@@ -184,11 +183,13 @@ export async function fetchChildPages(
 	});
 	return raws.map((raw) => ({
 		...raw,
-		createdAt: raw.createdAt.toISOString(),
-		segmentBundles: toSegmentBundles(
+		segmentBundles: toBaseSegmentBundles(
 			"page",
 			raw.id,
-			transformPageSegments(raw.pageSegments),
+			toBaseSegmentWithTranslations(
+				raw.pageSegments,
+				"pageSegmentTranslations",
+			),
 		),
 		children: [],
 	})) as PageForTitle[];

@@ -143,8 +143,8 @@ export default async function Page({
 					<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
 					<span className="text-muted-foreground">{pageViewCount}</span>
 					<DynamicPageLikeButton
-						ownerHandle={pageDetail.user.handle}
 						pageId={pageDetail.id}
+						pageOwnerHandle={pageDetail.user.handle}
 						pageSlug={pageDetail.slug}
 						showCount
 					/>
@@ -158,8 +158,8 @@ export default async function Page({
 					likeButton={
 						<DynamicPageLikeButton
 							className="w-10 h-10 border rounded-full"
-							ownerHandle={pageDetail.user.handle}
 							pageId={pageDetail.id}
+							pageOwnerHandle={pageDetail.user.handle}
 							pageSlug={pageDetail.slug}
 							showCount={false}
 						/>

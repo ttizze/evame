@@ -3,7 +3,7 @@ import { queryByAttribute } from "@testing-library/dom";
 import { render, screen } from "@testing-library/react";
 import type { Root } from "mdast";
 import { describe, expect, it, vi } from "vitest";
-import type { SegmentBundle } from "@/app/[locale]/types";
+import type { BaseSegmentBundle } from "@/app/[locale]/types";
 
 vi.mock("@/app/_context/display-provider", () => ({
 	useDisplay: () => ({ mode: "source" }), // ← dummy 値
@@ -18,7 +18,7 @@ vi.mock("react-tweet", () => ({
 import { mdastToReact } from "./server";
 
 // テスト用のセグメントバンドル
-const bundles: SegmentBundle[] = [
+const bundles: BaseSegmentBundle[] = [
 	{
 		parentType: "page",
 		parentId: 1,
@@ -176,7 +176,7 @@ describe("mdastToReact", () => {
 			],
 		};
 
-		const testBundles: SegmentBundle[] = [
+		const testBundles: BaseSegmentBundle[] = [
 			{
 				parentType: "page",
 				parentId: 1,

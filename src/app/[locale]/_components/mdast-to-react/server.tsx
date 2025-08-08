@@ -14,7 +14,7 @@ import rehypeSlug from "rehype-slug";
 import remarkLinkCard from "remark-link-card-plus";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
-import type { SegmentBundle } from "@/app/[locale]/types";
+import type { BaseSegmentBundle } from "@/app/[locale]/types";
 import { WrapSegment } from "../wrap-segments/server";
 import { remarkTweet } from "./remark-tweet";
 
@@ -51,7 +51,7 @@ const ImgComponent: ComponentType<ImgProps> = ({ src = "", ...props }) => (
 
 interface Params {
 	mdast: Prisma.JsonValue;
-	bundles: SegmentBundle[];
+	bundles: BaseSegmentBundle[];
 }
 
 /** mdast(JSON) → React 要素 */

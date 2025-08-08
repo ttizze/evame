@@ -40,7 +40,7 @@ vi.mock("./toc", () => ({
 
 describe("SubHeader", () => {
 	const mockPageDetail = {
-		createdAt: "2023-01-01T00:00:00.000Z",
+		createdAt: new Date("2023-01-01T00:00:00.000Z"),
 		slug: "test-page",
 		title: "Test Page",
 		content: "Test content",

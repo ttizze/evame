@@ -1,34 +1,6 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
-import { Skeleton } from "@/components/ui/skeleton";
-import { StartButton } from "../../_components/start-button";
+import AboutSection from "@/app/[locale]/_components/about-section/server";
 
-const DynamicHeroSection = dynamic(
-	() => import("@/app/[locale]/_components/hero-section/server"),
-	{
-		loading: () => <Skeleton className="h-[845px] w-full" />,
-	},
-);
-
-const DynamicProblemSolutionSection = dynamic(
-	() =>
-		import(
-			"@/app/[locale]/_components/top-page/problem-solution-section/server"
-		),
-	{
-		loading: () => <Skeleton className="h-[845px] w-full" />,
-	},
-);
-
-const DynamicControl = dynamic(
-	() =>
-		import(
-			"@/app/[locale]/(common-layout)/about/_components/control.server"
-		).then((mod) => mod.default),
-	{
-		loading: () => <Skeleton className="h-[845px] w-full" />,
-	},
-);
 export const metadata: Metadata = {
 	title: "Evame - About",
 	description:
@@ -51,14 +23,5 @@ export default async function AboutPage({
 }) {
 	const { locale } = await params;
 
-	return (
-		<div className="flex flex-col">
-			<DynamicHeroSection locale={locale} />
-			<DynamicProblemSolutionSection locale={locale} />
-			<div className="mb-32 flex justify-center mt-10">
-				<StartButton className="w-60 h-12 text-xl" text="Get Started" />
-			</div>
-			<DynamicControl locale={locale} />
-		</div>
-	);
+	return <AboutSection locale={locale} topPage={false} />;
 }

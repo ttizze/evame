@@ -5,11 +5,11 @@ import {
 	TrendingUp,
 	Users,
 } from "lucide-react";
+import Globe from "@/app/[locale]/_components/about-section/problem-solution-section/components/globe.client";
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
-import Globe from "@/app/[locale]/_components/top-page/problem-solution-section/components/globe.client";
 import { WrapSegmentsComponent } from "@/app/[locale]/_components/wrap-segments-component/server";
-import { fetchAboutPage } from "../../../(common-layout)/about/_lib/fetch-about-page";
 import { FloatingControls } from "../../floating-controls.client";
+import { fetchAboutPage } from "../_lib/fetch-about-page";
 import AboutSectionCard from "./components/about-section-card.server";
 import EditorMovie from "./components/editor-movie.server";
 import Reactions from "./components/reaction.client";
@@ -71,8 +71,8 @@ export default async function ProblemSolutionSection({
 			likeButton={
 				<PageLikeButton
 					className="w-10 h-10 border rounded-full"
-					ownerHandle={pageDetail.user.handle}
 					pageId={pageDetail.id}
+					pageOwnerHandle={pageDetail.user.handle}
 					pageSlug={pageDetail.slug}
 					showCount={false}
 				/>

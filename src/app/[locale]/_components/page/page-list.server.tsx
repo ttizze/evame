@@ -1,7 +1,6 @@
 import { EyeIcon } from "lucide-react";
 import { getImageProps } from "next/image";
 import { BASE_URL } from "@/app/_constants/base-url";
-import { ClientDateFormatter } from "@/app/[locale]/_components/client-date-formatter";
 import { PageCommentButton } from "@/app/[locale]/_components/page/page-comment-button/client";
 import { PageLikeButton } from "@/app/[locale]/_components/page/page-like-button/server";
 import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
@@ -95,11 +94,8 @@ export async function PageList({
 							{PageForList.user.name}
 						</span>
 					</Link>
-					<time
-						className="text-xs text-muted-foreground whitespace-nowrap"
-						dateTime={PageForList.createdAt}
-					>
-						<ClientDateFormatter date={new Date(PageForList.createdAt)} />
+					<time className="text-xs text-muted-foreground whitespace-nowrap">
+						{PageForList.createdAt.toLocaleDateString(locale)}
 					</time>
 				</div>
 
@@ -108,15 +104,15 @@ export async function PageList({
 					<EyeIcon className="w-5 h-5" />
 					<span className="text-muted-foreground">{viewCount}</span>
 					<PageLikeButton
-						ownerHandle={PageForList.user.handle}
 						pageId={PageForList.id}
+						pageOwnerHandle={PageForList.user.handle}
 						pageSlug={PageForList.slug}
 					/>
 					<PageCommentButton
 						commentCount={PageForList._count?.pageComments ?? 0}
+						pageOwnerHandle={PageForList.user.handle}
+						pageSlug={PageForList.slug}
 						showCount
-						slug={PageForList.slug}
-						userHandle={PageForList.user.handle}
 					/>
 				</div>
 			</div>

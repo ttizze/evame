@@ -1,9 +1,7 @@
 import { expect, test } from "vitest";
-import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
-import {
-	buildCommentTree,
-	normalizeCommentSegments,
-} from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/_lib/fetch-page-comments-with-user-and-translations";
+import { toBaseSegmentBundles } from "@/app/[locale]/_lib/to-base-segment-bundles";
+import { toBaseSegmentWithTranslations } from "@/app/[locale]/_lib/to-base-segment-with-translations";
+import { buildCommentTree } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/_lib/fetch-page-comments-with-user-and-translations";
 import { mockUsers } from "@/tests/mock";
 import type { PageCommentWithPageCommentSegments } from "../_db/queries.server";
 
@@ -25,11 +23,11 @@ test("normalize → SegmentBundle keeps best", () => {
 				},
 			],
 		},
-	] as const satisfies Parameters<typeof normalizeCommentSegments>[0];
-	const bundles = toSegmentBundles(
+	] as const satisfies Parameters<typeof toBaseSegmentWithTranslations>[0];
+	const bundles = toBaseSegmentBundles(
 		"pageComment",
 		99,
-		normalizeCommentSegments(rawSegs),
+		toBaseSegmentWithTranslations(rawSegs, "pageCommentSegmentTranslations"),
 	);
 
 	expect(bundles[0].segmentTranslation?.point).toBe(2);

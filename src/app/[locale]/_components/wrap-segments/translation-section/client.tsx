@@ -8,11 +8,11 @@ import {
 	useState,
 } from "react";
 import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
-import type { SegmentBundle } from "@/app/[locale]/types";
+import type { BaseSegmentBundle } from "@/app/[locale]/types";
 import { AddAndVoteTranslations } from "./add-and-vote-translations.client";
 
 interface TranslationSectionProps<Tag extends keyof JSX.IntrinsicElements> {
-	bundle: SegmentBundle;
+	bundle: BaseSegmentBundle;
 	tagName: Tag;
 	tagProps: JSX.IntrinsicElements[Tag];
 	interactive: boolean;

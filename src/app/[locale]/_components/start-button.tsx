@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { LoginDialog } from "./login/_components/login-dialog.client";
 
@@ -16,6 +17,11 @@ export function StartButton({
 	text = "Start",
 	icon,
 }: StartButtonProps) {
+	const { data: session } = authClient.useSession();
+	const isLoggedIn = !!session;
+	if (isLoggedIn) {
+		return undefined;
+	}
 	return (
 		<LoginDialog
 			trigger={

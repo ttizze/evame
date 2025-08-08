@@ -6,27 +6,22 @@ import { Link } from "@/i18n/routing";
 
 type PageCommentButtonProps = {
 	commentCount: number;
-	slug: string;
-	userHandle?: string;
+	pageSlug: string;
+	pageOwnerHandle: string;
 	showCount?: boolean;
 	className?: string;
 };
 
 export function PageCommentButton({
 	commentCount,
-	slug,
-	userHandle,
+	pageSlug,
+	pageOwnerHandle,
 	showCount = true,
 	className = "",
 }: PageCommentButtonProps) {
-	// Construct the URL to the page's comment section
-	const commentUrl = userHandle
-		? `/user/${userHandle}/page/${slug}#comments`
-		: `/page/${slug}#comments`;
-
 	return (
 		<div className="flex items-center gap-2">
-			<Link href={commentUrl}>
+			<Link href={`/user/${pageOwnerHandle}/page/${pageSlug}#comments`}>
 				<Button
 					aria-label="Comments"
 					className={`${className}`}

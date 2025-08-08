@@ -1,7 +1,7 @@
 // to-segment-bundles.spec.ts
 
 import { expect, test } from "vitest";
-import { toSegmentBundles } from "@/app/[locale]/_lib/to-segment-bundles";
+import { toBaseSegmentBundles } from "@/app/[locale]/_lib/to-base-segment-bundles";
 import { mockUsers } from "@/tests/mock";
 
 /* ---------- RawSegment 型と合致する fixture ---------- */
@@ -15,7 +15,7 @@ const rawSegments = [
 			locale: "en",
 			text: "A",
 			point: 1,
-			createdAt: new Date("2024-01-01").toISOString(),
+			createdAt: new Date("2024-01-01"),
 			user: mockUsers[0],
 		},
 	},
@@ -23,7 +23,7 @@ const rawSegments = [
 
 /* ---------- テスト ---------- */
 test("toSegmentBundles converts and selects best translation", () => {
-	const bundles = toSegmentBundles("pageComment", 99, rawSegments);
+	const bundles = toBaseSegmentBundles("pageComment", 99, rawSegments);
 
 	// 構造チェック
 	expect(bundles).toHaveLength(1);

@@ -1,10 +1,10 @@
 import { createElement, type JSX } from "react";
 import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
-import type { SegmentBundle } from "@/app/[locale]/types";
+import type { BaseSegmentBundle } from "@/app/[locale]/types";
 
 export function WrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 	Tag: Tag,
-	bundles: SegmentBundle[],
+	bundles: BaseSegmentBundle[],
 	interactive: boolean = true,
 ) {
 	return (p: JSX.IntrinsicElements[Tag] & { "data-number-id"?: number }) => {

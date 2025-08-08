@@ -5,7 +5,6 @@ import { createLoader, parseAsString } from "nuqs/server";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/routing";
-import { getCurrentUser } from "@/lib/auth-server";
 
 const NewPageList = dynamic(
 	() => import("@/app/[locale]/_components/page/new-page-list/server"),
@@ -14,35 +13,8 @@ const NewPageList = dynamic(
 	},
 );
 
-const DynamicHeroSection = dynamic(
-	() => import("@/app/[locale]/_components/hero-section/server"),
-	{
-		loading: () => <Skeleton className="h-[845px] w-full" />,
-	},
-);
-
-const DynamicProblemSolutionSection = dynamic(
-	() =>
-		import(
-			"@/app/[locale]/_components/top-page/problem-solution-section/server"
-		),
-	{
-		loading: () => <Skeleton className="h-[845px] w-full" />,
-	},
-);
-
-const DynamicControl = dynamic(
-	() =>
-		import("@/app/[locale]/_components/top-page/top-page-control.server").then(
-			(mod) => mod.default,
-		),
-	{
-		loading: () => <Skeleton className="h-[845px] w-full" />,
-	},
-);
-
 import { ArrowRightIcon } from "lucide-react";
-import { StartButton } from "@/app/[locale]/_components/start-button";
+import AboutSection from "../_components/about-section/server";
 
 const NewPageListByTag = dynamic(
 	() => import("@/app/[locale]/_components/page/new-page-list-by-tag/server"),
@@ -70,21 +42,11 @@ export default async function HomePage({
 	params: Promise<{ locale: string }>;
 	searchParams: Promise<SearchParams>;
 }) {
-	const currentUser = await getCurrentUser();
 	const { locale } = await params;
 	await loadSearchParams(searchParams);
 	return (
 		<div className="flex flex-col gap-8 justify-between mb-12">
-			{!currentUser && (
-				<>
-					<DynamicHeroSection locale={locale} />
-					<DynamicProblemSolutionSection locale={locale} />
-					<div className="mb-32 flex justify-center mt-10">
-						<StartButton className="w-60 h-12 text-xl" text="Get Started" />
-					</div>
-				</>
-			)}
-			<DynamicControl />
+			<AboutSection locale={locale} topPage={true} />
 			<NewPageList
 				locale={locale}
 				searchParams={searchParams}
