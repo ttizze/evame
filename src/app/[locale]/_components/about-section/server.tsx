@@ -12,7 +12,7 @@ export default async function AboutSection({
 }) {
 	const currentUser = await getCurrentUser();
 	if (topPage && currentUser) {
-		return undefined;
+		return <FloatingControls />;
 	}
 	return (
 		<div className="flex flex-col">
