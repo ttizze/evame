@@ -71,7 +71,7 @@ function parseMarkdown(src: string) {
 			.replace(splitTiRe, (m) => m.replace(/\s+“$/, "\n\n“"));
 
 		// 5) 改行が入ったら分割して配列へ
-		x.split("\n").forEach((seg) => cleanedBodyLines.push(seg));
+		cleanedBodyLines.push(...x.split("\n"));
 	}
 
 	const bodyText = cleanedBodyLines.join("\n").replace(/\n{3,}/g, "\n\n");
