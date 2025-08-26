@@ -31,7 +31,7 @@ export async function PageList({
 		height: 40,
 	});
 	// Get the title segment (which should be the first segment)
-	const titleSegment = PageForList.segmentBundles.find((s) => s.number === 0);
+	const titleSegment = PageForList.content.segments.find((s) => s.number === 0);
 	const _ogpImageUrl =
 		`${BASE_URL}/api/og?locale=${locale}` + `&slug=${PageForList.slug}`;
 	const pageLink = `/user/${PageForList.user.handle}/page/${PageForList.slug}`;
@@ -63,9 +63,9 @@ export async function PageList({
 					<Link className="block overflow-hidden" href={pageLink}>
 						{titleSegment && (
 							<WrapSegmentsComponent
-								bundle={titleSegment}
 								className="line-clamp-1 break-all overflow-wrap-anywhere"
 								interactive={false}
+								segment={titleSegment}
 							/>
 						)}
 					</Link>

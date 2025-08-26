@@ -1,26 +1,26 @@
 import { createElement, type JSX } from "react";
 import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
-import type { BaseSegmentBundle } from "@/app/[locale]/types";
+import type { SegmentForUI } from "@/app/[locale]/types";
 
 export function WrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 	Tag: Tag,
-	bundles: BaseSegmentBundle[],
+	segments: SegmentForUI[],
 	interactive: boolean = true,
 ) {
 	return (p: JSX.IntrinsicElements[Tag] & { "data-number-id"?: number }) => {
 		const id = p["data-number-id"];
-		const bundle =
-			id !== undefined ? bundles.find((b) => b.number === +id) : undefined;
+		const segment =
+			id !== undefined ? segments.find((b) => b.number === +id) : undefined;
 
 		/* セグメント対象でなければそのまま DOM 要素を返す */
-		if (!bundle) return createElement(Tag, p, p.children);
+		if (!segment) return createElement(Tag, p, p.children);
 
 		/* --- ここで Client Component に "シリアライズ可能な形" で渡す --- */
 		const { children, ...rest } = p;
 		return (
 			<WrapSegmentClient
-				bundle={bundle}
 				interactive={interactive}
+				segment={segment}
 				tagName={Tag} // ★そのまま突っ込む
 				tagProps={rest as JSX.IntrinsicElements[Tag]}
 			>

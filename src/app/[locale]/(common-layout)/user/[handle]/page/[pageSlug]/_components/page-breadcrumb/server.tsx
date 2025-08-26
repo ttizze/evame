@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Fragment } from "react";
 import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
-import type { BaseSegmentBundle, PageDetail } from "@/app/[locale]/types";
+import type { PageDetail, SegmentForUI } from "@/app/[locale]/types";
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -18,7 +18,7 @@ interface PageBreadcrumbProps {
 
 interface BreadcrumbItemData {
 	href: string;
-	segmentBundle: BaseSegmentBundle;
+	segment: SegmentForUI;
 }
 
 export async function PageBreadcrumb({
@@ -32,15 +32,15 @@ export async function PageBreadcrumb({
 
 	// 親ページを順番に追加
 	parentChain.forEach((parent) => {
-		const parentTitleSegment = parent.segmentBundles.find(
-			(s: BaseSegmentBundle) => s.number === 0,
+		const parentTitleSegment = parent.content.segments.find(
+			(s: SegmentForUI) => s.number === 0,
 		);
 		if (!parentTitleSegment) {
 			return;
 		}
 		breadcrumbItems.push({
 			href: `/${locale}/user/${parent.user.handle}/page/${parent.slug}`,
-			segmentBundle: parentTitleSegment,
+			segment: parentTitleSegment,
 		});
 	});
 
@@ -53,15 +53,15 @@ export async function PageBreadcrumb({
 							<BreadcrumbLink asChild>
 								<Link href={item.href}>
 									<WrapSegmentClient
-										bundle={item.segmentBundle}
 										interactive={false}
+										segment={item.segment}
 										tagName="span"
 										tagProps={{
 											className:
 												"line-clamp-1 break-all overflow-wrap-anywhere",
 										}}
 									>
-										{item.segmentBundle.text}
+										{item.segment.text}
 									</WrapSegmentClient>
 								</Link>
 							</BreadcrumbLink>

@@ -9,9 +9,13 @@ export async function getNotifications(currentUserHandle: string) {
 			page: {
 				select: {
 					slug: true,
-					pageSegments: {
-						where: { number: 0 },
-						select: { text: true },
+					content: {
+						select: {
+							segments: {
+								where: { number: 0 },
+								select: { text: true },
+							},
+						},
 					},
 				},
 			},
@@ -20,25 +24,9 @@ export async function getNotifications(currentUserHandle: string) {
 					page: {
 						select: {
 							slug: true,
-							pageSegments: {
-								where: { number: 0 },
-								select: { text: true },
-							},
-						},
-					},
-				},
-			},
-			pageSegmentTranslation: {
-				select: {
-					text: true,
-					pageSegment: {
-						select: {
-							text: true,
-							page: {
+							content: {
 								select: {
-									slug: true,
-									user: { select: { handle: true } },
-									pageSegments: {
+									segments: {
 										where: { number: 0 },
 										select: { text: true },
 									},
@@ -48,21 +36,25 @@ export async function getNotifications(currentUserHandle: string) {
 					},
 				},
 			},
-			pageCommentSegmentTranslation: {
+			segmentTranslation: {
 				select: {
 					text: true,
-					pageCommentSegment: {
+					segment: {
 						select: {
 							text: true,
-							pageComment: {
+							content: {
 								select: {
 									page: {
 										select: {
 											slug: true,
 											user: { select: { handle: true } },
-											pageSegments: {
-												where: { number: 0 },
-												select: { text: true },
+											content: {
+												select: {
+													segments: {
+														where: { number: 0 },
+														select: { text: true },
+													},
+												},
 											},
 										},
 									},

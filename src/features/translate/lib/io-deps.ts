@@ -1,6 +1,4 @@
-import type {
-	Prisma, // ← @prisma/client から import
-} from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getOrCreateAIUser } from "../db/mutations.server";
 import type { NumberedElement } from "../types";
@@ -18,15 +16,11 @@ interface TranslationBase {
  *   [{ locale, text, userId, [idField]: id }, …]
  * を返すだけの小関数。
  */
-function buildData<
-	Field extends string,
-	Out extends TranslationBase & Record<Field, number>,
->(
+function buildData<Out extends TranslationBase & { segmentId: number }>(
 	extracted: readonly NumberedElement[],
 	segments: readonly Segment[],
 	locale: string,
 	userId: string,
-	idField: Field,
 ): Out[] {
 	const map = new Map(segments.map((s) => [s.number, s.id]));
 
@@ -41,7 +35,7 @@ function buildData<
 				locale,
 				text: el.text,
 				userId,
-				[idField]: id,
+				segmentId: id,
 			} as unknown as Out,
 		];
 	});
@@ -53,12 +47,14 @@ export async function saveTranslationsForPage(
 	aiModel: string,
 ) {
 	const userId = await getOrCreateAIUser(aiModel);
-	const data = buildData<
-		"pageSegmentId",
-		Prisma.PageSegmentTranslationCreateManyInput
-	>(extracted, pageSegments, locale, userId, "pageSegmentId");
+	const data = buildData<Prisma.SegmentTranslationCreateManyInput>(
+		extracted,
+		pageSegments,
+		locale,
+		userId,
+	);
 
-	if (data.length) await prisma.pageSegmentTranslation.createMany({ data });
+	if (data.length) await prisma.segmentTranslation.createMany({ data });
 }
 
 export async function saveTranslationsForPageComment(
@@ -68,11 +64,11 @@ export async function saveTranslationsForPageComment(
 	aiModel: string,
 ) {
 	const userId = await getOrCreateAIUser(aiModel);
-	const data = buildData<
-		"pageCommentSegmentId",
-		Prisma.PageCommentSegmentTranslationCreateManyInput
-	>(extracted, pageCommentSegments, locale, userId, "pageCommentSegmentId");
-	console.log(data);
-	if (data.length)
-		await prisma.pageCommentSegmentTranslation.createMany({ data });
+	const data = buildData<Prisma.SegmentTranslationCreateManyInput>(
+		extracted,
+		pageCommentSegments,
+		locale,
+		userId,
+	);
+	if (data.length) await prisma.segmentTranslation.createMany({ data });
 }
