@@ -1,4 +1,3 @@
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -23,12 +22,14 @@ model User {
   provider                           String                              @default("Credentials")
   createdAt                          DateTime                            @default(now()) @map("created_at")
   updatedAt                          DateTime                            @updatedAt @map("updated_at")
-  emailVerified                      Boolean?                             
+  emailVerified                      Boolean?
   credential                         UserCredential?
   geminiApiKey                       GeminiApiKey?
   pages                              Page[]
   pageSegmentsTranslations           PageSegmentTranslation[]
+  segmentTranslations                SegmentTranslation[]
   votes                              Vote[]
+  translationVotes                   TranslationVote[]
   likePages                          LikePage[]
   followers                          Follow[]                            @relation("following")
   following                          Follow[]                            @relation("follower")
@@ -136,6 +137,8 @@ model Page {
   status                      PageStatus                   @default(DRAFT)
   createdAt                   DateTime                     @default(now()) @map("created_at")
   updatedAt                   DateTime                     @updatedAt @map("updated_at")
+  contentId                   Int                         @unique @map("content_id")
+  content                     Content                     @relation(fields: [contentId], references: [id], onDelete: Cascade)
   user                        User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId                      String                       @map("user_id")
   pageSegments                PageSegment[]
@@ -285,6 +288,8 @@ model PageComment {
   parentId            Int?                 @map("parent_id")
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
+  contentId           Int                 @unique @map("content_id")
+  content             Content             @relation(fields: [contentId], references: [id], onDelete: Cascade)
   user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   page                Page                 @relation(fields: [pageId], references: [id], onDelete: Cascade)
   parent              PageComment?         @relation("CommentReplies", fields: [parentId], references: [id], onDelete: SetNull)
@@ -394,6 +399,7 @@ model Notification {
   pageCommentId                   Int? @map("page_comment_id")
   pageSegmentTranslationId        Int? @map("page_segment_translation_id")
   pageCommentSegmentTranslationId Int? @map("page_comment_segment_translation_id")
+  segmentTranslationId            Int? @map("segment_translation_id")
 
   user  User @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
   actor User @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
@@ -402,6 +408,7 @@ model Notification {
   pageComment                   PageComment?                   @relation(fields: [pageCommentId], references: [id])
   pageSegmentTranslation        PageSegmentTranslation?        @relation(fields: [pageSegmentTranslationId], references: [id])
   pageCommentSegmentTranslation PageCommentSegmentTranslation? @relation(fields: [pageCommentSegmentTranslationId], references: [id])
+  segmentTranslation            SegmentTranslation?            @relation(fields: [segmentTranslationId], references: [id])
 
   @@index([userId])
   @@index([actorId])
@@ -442,3 +449,83 @@ model Verification {
 
   @@map("verification")
 }
+
+enum ContentKind {
+  PAGE
+  PAGE_COMMENT
+}
+
+model Content {
+  id        Int         @id @default(autoincrement())
+  kind      ContentKind
+  createdAt DateTime    @default(now()) @map("created_at")
+  updatedAt DateTime    @updatedAt @map("updated_at")
+
+  // 各派生（1:1）
+  page        Page?
+  pageComment PageComment?
+
+  // 子セグメント（1:多）
+  segments Segment[]
+
+  @@index([kind])
+  @@map("contents")
+}
+
+model Segment {
+  id        Int     @id @default(autoincrement())
+  contentId Int     @map("content_id")
+  content   Content @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  number    Int
+  text      String
+  textAndOccurrenceHash String @map("text_and_occurrence_hash")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  segmentTranslations SegmentTranslation[]
+
+  // 1 Owner 内での並びをユニークに
+  @@unique([contentId, number])
+  @@unique([contentId, textAndOccurrenceHash])
+  @@index([contentId])
+  @@index([textAndOccurrenceHash])
+  @@map("segments")
+}
+
+model SegmentTranslation {
+  id        Int     @id @default(autoincrement())
+  segmentId Int     @map("segment_id")
+  segment   Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+
+  locale    String
+  text      String
+  point     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notifications Notification[]
+
+  votes TranslationVote[]
+
+  @@index([segmentId, locale])
+  @@index([userId])
+  @@map("segment_translations")
+}
+
+model TranslationVote {
+  translationId Int      @map("translation_id")
+  userId        String   @map("user_id")
+  isUpvote      Boolean  @map("is_upvote")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  translation SegmentTranslation @relation(fields: [translationId], references: [id], onDelete: Cascade)
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([translationId, userId]) // 1ユーザー1票
+  @@index([translationId])
+  @@index([userId])
+  @@map("translation_votes")
+}
+
