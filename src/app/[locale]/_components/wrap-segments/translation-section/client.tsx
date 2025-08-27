@@ -8,11 +8,11 @@ import {
 	useState,
 } from "react";
 import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
-import type { BaseSegmentBundle } from "@/app/[locale]/types";
+import type { SegmentForUI } from "@/app/[locale]/types";
 import { AddAndVoteTranslations } from "./add-and-vote-translations.client";
 
 interface TranslationSectionProps<Tag extends keyof JSX.IntrinsicElements> {
-	bundle: BaseSegmentBundle;
+	segment: SegmentForUI;
 	tagName: Tag;
 	tagProps: JSX.IntrinsicElements[Tag];
 	interactive: boolean;
@@ -20,17 +20,16 @@ interface TranslationSectionProps<Tag extends keyof JSX.IntrinsicElements> {
 
 // Renders: [<Tag>translated text button</Tag>, interactive UI siblings]
 export function TranslationSection<Tag extends keyof JSX.IntrinsicElements>({
-	bundle,
+	segment,
 	tagName,
 	tagProps,
 	interactive,
 }: TranslationSectionProps<Tag>) {
 	const [isSelected, setIsSelected] = useState(false);
-	const { segmentTranslation, parentType } = bundle;
 
-	if (!segmentTranslation) return null;
+	if (!segment.segmentTranslation) return null;
 
-	const bestText = sanitizeAndParseText(segmentTranslation.text);
+	const bestText = sanitizeAndParseText(segment.segmentTranslation.text);
 
 	// Text wrapped inside original semantic tag (p, h1, etc.)
 	const translationText = (
@@ -51,8 +50,8 @@ export function TranslationSection<Tag extends keyof JSX.IntrinsicElements>({
 		tagName,
 		{
 			...tagProps,
-			"data-number-id": bundle.number,
-			key: `tr-${bundle.id}`,
+			"data-number-id": segment.number,
+			key: `tr-${segment.id}`,
 		},
 		translationText,
 	);
@@ -62,10 +61,9 @@ export function TranslationSection<Tag extends keyof JSX.IntrinsicElements>({
 			{translationEl}
 			{isSelected && interactive && (
 				<AddAndVoteTranslations
-					bestTranslation={segmentTranslation}
+					bestTranslation={segment.segmentTranslation}
 					open={isSelected}
-					segmentId={bundle.id}
-					targetContentType={parentType}
+					segmentId={segment.id}
 				/>
 			)}
 		</Fragment>

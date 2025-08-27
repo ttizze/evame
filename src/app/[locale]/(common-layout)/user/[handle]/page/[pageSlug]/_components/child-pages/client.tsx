@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import useSWR from "swr";
 import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
-import type { PageForTitle } from "@/app/[locale]/types";
+import type { PageForTitle, SegmentForUI } from "@/app/[locale]/types";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +15,7 @@ interface Props {
 
 interface PageLinkProps {
 	page: PageForTitle;
-	titleSegment: PageForTitle["segmentBundles"][0];
+	titleSegment: SegmentForUI;
 	className?: string;
 }
 
@@ -42,8 +42,8 @@ function PageLink({ page, titleSegment, className }: PageLinkProps) {
 	return (
 		<Link className={cn("block overflow-hidden", className)} href={pageLink}>
 			<WrapSegmentClient
-				bundle={titleSegment}
 				interactive={false}
+				segment={titleSegment}
 				tagName="span"
 				tagProps={{
 					className: "line-clamp-1 break-all overflow-wrap-anywhere",
@@ -79,7 +79,7 @@ export function ChildPageTree({ parent, locale }: Props) {
 	const { data: children } = useChildPages(parent, locale, isOpen);
 
 	// タイトルセグメントの取得
-	const titleSegment = parent.segmentBundles.find((s) => s.number === 0);
+	const titleSegment = parent.content.segments.find((s) => s.number === 0);
 
 	// 早期リターン: タイトルセグメントが存在しない場合
 	if (!titleSegment) {

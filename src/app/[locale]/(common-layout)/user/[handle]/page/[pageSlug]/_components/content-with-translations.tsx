@@ -17,19 +17,15 @@ export async function ContentWithTranslations({
 	}
 	const { pageDetail } = pageData;
 
-	const pageSegmentTitleWithTranslations = pageDetail.segmentBundles.filter(
-		(item) => item.number === 0,
-	)[0];
+	const titleSegment = pageDetail.content.segments.find((s) => s.number === 0);
 	const content = await mdastToReact({
 		mdast: pageDetail.mdastJson,
-		bundles: pageDetail.segmentBundles,
+		segments: pageDetail.content.segments,
 	});
 	return (
 		<>
 			<h1 className="mb-0! ">
-				{pageSegmentTitleWithTranslations && (
-					<WrapSegmentsComponent bundle={pageSegmentTitleWithTranslations} />
-				)}
+				{titleSegment && <WrapSegmentsComponent segment={titleSegment} />}
 			</h1>
 			<PageTagList tag={pageDetail.tagPages.map((tagPage) => tagPage.tag)} />
 			<SubHeader pageDetail={pageDetail} />

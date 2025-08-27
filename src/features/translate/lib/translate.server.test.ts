@@ -20,7 +20,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 	beforeEach(async () => {
 		await prisma.user.deleteMany();
 		await prisma.page.deleteMany();
-		await prisma.pageSegment.deleteMany();
+		await prisma.segment.deleteMany();
 		await prisma.translationJob.deleteMany();
 		await prisma.pageLocaleTranslationProof.deleteMany();
 		// テスト用ユーザー
@@ -34,11 +34,19 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		});
 		userId = user.id;
 
+		// テスト用コンテンツ
+		const content = await prisma.content.create({
+			data: {
+				kind: "PAGE",
+			},
+		});
+
 		// テスト用ページ
 		const page = await prisma.page.create({
 			data: {
 				slug: "test-page",
 				userId: user.id,
+				id: content.id,
 				mdastJson: {
 					type: "doc",
 					content: [
@@ -50,10 +58,20 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		pageId = page.id;
 
 		// ページセグメント（翻訳対象）
-		await prisma.pageSegment.createMany({
+		await prisma.segment.createMany({
 			data: [
-				{ pageId, number: 0, text: "Hello", textAndOccurrenceHash: "hash0" },
-				{ pageId, number: 1, text: "World", textAndOccurrenceHash: "hash1" },
+				{
+					contentId: content.id,
+					number: 0,
+					text: "Hello",
+					textAndOccurrenceHash: "hash0",
+				},
+				{
+					contentId: content.id,
+					number: 1,
+					text: "World",
+					textAndOccurrenceHash: "hash1",
+				},
 			],
 		});
 
@@ -80,7 +98,8 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		await prisma.geminiApiKey.deleteMany();
 		await prisma.user.deleteMany();
 		await prisma.page.deleteMany();
-		await prisma.pageSegment.deleteMany();
+		await prisma.content.deleteMany();
+		await prisma.segment.deleteMany();
 		await prisma.translationJob.deleteMany();
 		await prisma.pageLocaleTranslationProof.deleteMany();
 	});
@@ -98,7 +117,6 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 				{ number: 0, text: "Hello" },
 				{ number: 1, text: "World" },
 			],
-			targetContentType: "page",
 		};
 
 		// モックの戻り値（正常レスポンス）
@@ -119,7 +137,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		expect(updatedInfo?.status).toBe("COMPLETED");
 
 		// 翻訳結果が保存されているか
-		const translatedTexts = await prisma.pageSegmentTranslation.findMany({
+		const translatedTexts = await prisma.segmentTranslation.findMany({
 			where: { locale: "ja" },
 		});
 		expect(translatedTexts.length).toBeGreaterThanOrEqual(2);
@@ -140,7 +158,6 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 				{ number: 0, text: "test" },
 				{ number: 1, text: "failed" },
 			],
-			targetContentType: "page",
 		};
 
 		// 何度呼んでも空配列を返す
@@ -168,7 +185,6 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 				{ number: 0, text: "Hello" },
 				{ number: 1, text: "World" },
 			],
-			targetContentType: "page",
 		};
 
 		// 1回目: 空レスポンス, 2回目: 正常レスポンス
@@ -190,7 +206,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		expect(updatedInfo?.status).toBe("COMPLETED");
 
 		// 翻訳結果
-		const translatedTexts = await prisma.pageSegmentTranslation.findMany({
+		const translatedTexts = await prisma.segmentTranslation.findMany({
 			where: { locale: "ja" },
 		});
 		expect(translatedTexts.length).toBeGreaterThanOrEqual(2);
@@ -211,7 +227,6 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 				{ number: 0, text: "Hello" },
 				{ number: 1, text: "World" },
 			],
-			targetContentType: "page",
 		};
 
 		vi.mocked(getGeminiModelResponse).mockResolvedValue(
@@ -255,7 +270,6 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 				{ number: 0, text: "Hello" },
 				{ number: 1, text: "World" },
 			],
-			targetContentType: "page",
 		};
 
 		vi.mocked(getGeminiModelResponse).mockResolvedValue(

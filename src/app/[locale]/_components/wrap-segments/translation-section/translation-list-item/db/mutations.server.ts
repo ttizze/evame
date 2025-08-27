@@ -4,7 +4,7 @@ export const deleteOwnTranslation = async (
 	currentHandle: string,
 	translationId: number,
 ) => {
-	const translation = await prisma.pageSegmentTranslation.findUnique({
+	const translation = await prisma.segmentTranslation.findUnique({
 		where: { id: translationId },
 		select: { user: true },
 	});
@@ -14,8 +14,5 @@ export const deleteOwnTranslation = async (
 	if (translation.user.handle !== currentHandle) {
 		return { error: "Unauthorized" };
 	}
-	await prisma.pageSegmentTranslation.update({
-		where: { id: translationId },
-		data: { isArchived: true },
-	});
+	await prisma.segmentTranslation.delete({ where: { id: translationId } });
 };

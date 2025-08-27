@@ -63,15 +63,20 @@ async function fetchPageWithPageSegments(pageId: number) {
 		where: { id: pageId },
 		select: {
 			slug: true,
-			pageSegments: { select: { number: true, text: true } },
+			content: {
+				select: {
+					segments: { select: { number: true, text: true } },
+				},
+			},
 		},
 	});
 	if (!page) return null;
-	const title = page.pageSegments.find((seg) => seg.number === 0)?.text ?? "";
+	const title =
+		page.content.segments.find((seg) => seg.number === 0)?.text ?? "";
 	return { ...page, title } as {
 		slug: string;
 		title: string;
-		pageSegments: { number: number; text: string }[];
+		content: { segments: { number: number; text: string }[] };
 	};
 }
 // ---------------- Main ----------------
@@ -119,7 +124,7 @@ async function fetchPageWithPageSegments(pageId: number) {
 				continue;
 			}
 
-			const numberedElements = toNumberedElements(page.pageSegments);
+			const numberedElements = toNumberedElements(page.content.segments);
 			if (numberedElements.length === 0) {
 				console.warn(`Page ${page.slug} has no segments. Skip.`);
 				continue;
@@ -144,7 +149,6 @@ async function fetchPageWithPageSegments(pageId: number) {
 					targetLocale: TARGET_LOCALE,
 					title: page.title,
 					numberedElements,
-					targetContentType: "page",
 					pageId,
 				}),
 			});

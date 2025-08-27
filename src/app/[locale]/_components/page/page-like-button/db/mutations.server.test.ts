@@ -9,6 +9,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	beforeEach(async () => {
 		await prisma.user.deleteMany();
 		await prisma.page.deleteMany();
+		await prisma.content.deleteMany();
 		const createdUser = await prisma.user.create({
 			data: {
 				handle: "testuser",
@@ -22,11 +23,16 @@ describe("toggleLike 実際のDB統合テスト", () => {
 							slug: "public-page",
 							status: "PUBLIC",
 							mdastJson: "This is a test content",
-							pageSegments: {
+							content: {
 								create: {
-									number: 0,
-									text: "Public Page",
-									textAndOccurrenceHash: "hash0",
+									kind: "PAGE",
+									segments: {
+										create: {
+											number: 0,
+											text: "Public Page",
+											textAndOccurrenceHash: "hash0",
+										},
+									},
 								},
 							},
 						},
@@ -34,11 +40,16 @@ describe("toggleLike 実際のDB統合テスト", () => {
 							slug: "private-page",
 							status: "DRAFT",
 							mdastJson: "This is a test content2",
-							pageSegments: {
+							content: {
 								create: {
-									number: 0,
-									text: "Private Page",
-									textAndOccurrenceHash: "hash1",
+									kind: "PAGE",
+									segments: {
+										create: {
+											number: 0,
+											text: "Private Page",
+											textAndOccurrenceHash: "hash1",
+										},
+									},
 								},
 							},
 						},
@@ -46,11 +57,16 @@ describe("toggleLike 実際のDB統合テスト", () => {
 							slug: "archived-page",
 							status: "ARCHIVE",
 							mdastJson: "This is a test content3",
-							pageSegments: {
+							content: {
 								create: {
-									number: 0,
-									text: "Archived Page",
-									textAndOccurrenceHash: "hash2",
+									kind: "PAGE",
+									segments: {
+										create: {
+											number: 0,
+											text: "Archived Page",
+											textAndOccurrenceHash: "hash2",
+										},
+									},
 								},
 							},
 						},
@@ -72,6 +88,7 @@ describe("toggleLike 実際のDB統合テスト", () => {
 	afterEach(async () => {
 		await prisma.user.deleteMany();
 		await prisma.page.deleteMany();
+		await prisma.content.deleteMany();
 	});
 
 	it("userIdを指定した場合にlikeが新規作成される", async () => {

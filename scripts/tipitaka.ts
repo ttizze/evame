@@ -136,28 +136,48 @@ async function buildPagesFromReadme(params: {
 				markdown: "",
 			});
 
+			// Create Content first
+			const content = await prisma.content.create({
+				data: {
+					kind: "PAGE",
+				},
+			});
+
 			const page = await prisma.page.create({
 				data: {
 					slug: generateSlug(),
 					parentId: parent.id,
 					order: parent.orderCounter,
 					userId,
+					id: content.id,
 					mdastJson: mdast.mdastJson,
 					status: "PUBLIC",
 					sourceLocale: "pi",
 				},
 			});
 
-			// Segment(0) = title (本文なし)
-			await prisma.pageSegment.deleteMany({ where: { pageId: page.id } });
-			await prisma.pageSegment.create({
-				data: {
-					pageId: page.id,
-					number: 0,
-					text: title,
-					textAndOccurrenceHash: mdast.segments[0]?.hash ?? title,
-				},
-			});
+			// Create segments for the page
+			await prisma.segment.deleteMany({ where: { contentId: content.id } });
+			if (mdast.segments.length > 0) {
+				await prisma.segment.createMany({
+					data: mdast.segments.map((segment) => ({
+						contentId: content.id,
+						number: segment.number,
+						text: segment.text,
+						textAndOccurrenceHash: segment.hash,
+					})),
+				});
+			} else {
+				// Create title segment if no segments exist
+				await prisma.segment.create({
+					data: {
+						contentId: content.id,
+						number: 0,
+						text: title,
+						textAndOccurrenceHash: title,
+					},
+				});
+			}
 
 			// 新しい深さのStackItem 追加
 			stack.push({ id: page.id, orderCounter: 0 });
@@ -175,6 +195,13 @@ async function buildPagesFromReadme(params: {
 
 			const parent = stack[stack.length - 1];
 
+			// Create Content first
+			const leafContent = await prisma.content.create({
+				data: {
+					kind: "PAGE",
+				},
+			});
+
 			// Create placeholder page
 			const leafPage = await prisma.page.create({
 				data: {
@@ -182,16 +209,17 @@ async function buildPagesFromReadme(params: {
 					parentId: parent.id,
 					order: parent.orderCounter,
 					userId,
+					id: leafContent.id,
 					mdastJson: "", // later fill
 					status: "PUBLIC",
 					sourceLocale: "pi",
 				},
 			});
 
-			await prisma.pageSegment.deleteMany({ where: { pageId: leafPage.id } });
-			await prisma.pageSegment.create({
+			await prisma.segment.deleteMany({ where: { contentId: leafContent.id } });
+			await prisma.segment.create({
 				data: {
-					pageId: leafPage.id,
+					contentId: leafContent.id,
 					number: 0,
 					text: linkTitle,
 					textAndOccurrenceHash: linkTitle,
@@ -231,32 +259,69 @@ async function ensureRootPage() {
 		throw new Error(`User with handle ${SYSTEM_USER_HANDLE} not found`);
 	}
 
-	const tipitakaPage = await prisma.page.upsert({
+	// Check if root page already exists
+	let tipitakaPage = await prisma.page.findUnique({
 		where: { slug: ROOT_SLUG },
-		update: {
-			mdastJson: readmeParsed.mdastJson,
-		},
-		create: {
-			slug: ROOT_SLUG,
-			parentId: null,
-			order: 0,
-			userId: user.id,
-			mdastJson: readmeParsed.mdastJson,
-			status: "PUBLIC",
-			sourceLocale: "pi",
-		},
+		include: { content: true },
 	});
 
-	// README セグメントを挿入（毎回置き換え）
-	await prisma.pageSegment.deleteMany({ where: { pageId: tipitakaPage.id } });
-	await prisma.pageSegment.createMany({
-		data: readmeParsed.segments.map((s) => ({
-			pageId: tipitakaPage.id,
-			number: s.number,
-			text: s.text,
-			textAndOccurrenceHash: s.hash,
-		})),
-	});
+	if (tipitakaPage) {
+		// Update existing page
+		const updatedPage = await prisma.page.update({
+			where: { slug: ROOT_SLUG },
+			data: {
+				mdastJson: readmeParsed.mdastJson,
+			},
+			include: { content: true },
+		});
+
+		// Update segments
+		await prisma.segment.deleteMany({
+			where: { contentId: updatedPage.id },
+		});
+		await prisma.segment.createMany({
+			data: readmeParsed.segments.map((s) => ({
+				contentId: updatedPage.id,
+				number: s.number,
+				text: s.text,
+				textAndOccurrenceHash: s.hash,
+			})),
+		});
+
+		tipitakaPage = updatedPage;
+	} else {
+		// Create new content first
+		const rootContent = await prisma.content.create({
+			data: {
+				kind: "PAGE",
+			},
+		});
+
+		// Create new page
+		tipitakaPage = await prisma.page.create({
+			data: {
+				slug: ROOT_SLUG,
+				parentId: null,
+				order: 0,
+				userId: user.id,
+				id: rootContent.id,
+				mdastJson: readmeParsed.mdastJson,
+				status: "PUBLIC",
+				sourceLocale: "pi",
+			},
+			include: { content: true },
+		});
+
+		// Create segments
+		await prisma.segment.createMany({
+			data: readmeParsed.segments.map((s) => ({
+				contentId: rootContent.id,
+				number: s.number,
+				text: s.text,
+				textAndOccurrenceHash: s.hash,
+			})),
+		});
+	}
 
 	return { readmeMd: rawReadmeMd, readmePath, tipitakaPage, user };
 }
@@ -302,23 +367,34 @@ async function ensureRootPage() {
 			markdown: cleanedMd,
 		});
 
-		// 3. update placeholder page with actual content
+		// 3. Get the page with content to update
+		const pageToUpdate = await prisma.page.findUnique({
+			where: { id: pageId },
+			include: { content: true },
+		});
+		if (!pageToUpdate) {
+			throw new Error(`Page with id ${pageId} not found`);
+		}
+
+		// Update placeholder page with actual content
 		await prisma.page.update({
 			where: { id: pageId },
 			data: { mdastJson: parsed.mdastJson },
 		});
 
-		// 4. Segment を挿入（冪等性のため既存を削除）
-		await prisma.pageSegment.deleteMany({ where: { pageId } });
+		// 4. Update segments (delete existing and create new ones)
+		await prisma.segment.deleteMany({
+			where: { contentId: pageToUpdate.id },
+		});
 
 		const segData = parsed.segments.map((s) => ({
-			pageId,
+			contentId: pageToUpdate.id,
 			number: s.number,
 			text: s.text,
 			textAndOccurrenceHash: s.hash,
 		}));
 		if (segData.length) {
-			await prisma.pageSegment.createMany({ data: segData });
+			await prisma.segment.createMany({ data: segData });
 		}
 
 		// 5. 箇条書きリンクの順序で子をキューに追加
@@ -327,22 +403,32 @@ async function ensureRootPage() {
 			const childAbs = path.resolve(path.dirname(filePath), lnk.href);
 			const childTitle = lnk.text;
 
+			// Create content for child page
+			const childContent = await prisma.content.create({
+				data: {
+					kind: "PAGE",
+				},
+			});
+
 			const childPage = await prisma.page.create({
 				data: {
 					slug: generateSlug(),
 					parentId: pageId,
 					order: idx,
 					userId: user.id,
+					id: childContent.id,
 					mdastJson: "",
 					status: "PUBLIC",
 					sourceLocale: "pi",
 				},
 			});
 
-			await prisma.pageSegment.deleteMany({ where: { pageId: childPage.id } });
-			await prisma.pageSegment.create({
+			await prisma.segment.deleteMany({
+				where: { contentId: childContent.id },
+			});
+			await prisma.segment.create({
 				data: {
-					pageId: childPage.id,
+					contentId: childContent.id,
 					number: 0,
 					text: childTitle,
 					textAndOccurrenceHash: childTitle,

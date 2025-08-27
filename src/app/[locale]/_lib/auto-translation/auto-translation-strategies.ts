@@ -1,17 +1,18 @@
 import type { TranslateJobParams } from "@/features/translate/types";
 import type { TranslationStrategy } from "./handle-auto-translation";
 
-interface BaseTranslationParams {
+interface TranslationWithInfoParams {
 	currentUserId: string;
 	sourceLocale: string;
 }
 
-export interface PageTranslationParams extends BaseTranslationParams {
+export interface PageTranslationParams extends TranslationWithInfoParams {
 	type: "page";
 	pageId: number;
 }
 
-export interface PageCommentTranslationParams extends BaseTranslationParams {
+export interface PageCommentTranslationParams
+	extends TranslationWithInfoParams {
 	type: "pageComment";
 	pageId: number;
 	pageCommentId: number;
@@ -42,9 +43,8 @@ export const pageStrategy: TranslationStrategy<PageTranslationParams> = {
 			userId: currentUserId,
 			pageId,
 			targetLocale: locale,
-			targetContentType: "page",
 			title: page.title,
-			numberedElements: page.pageSegments.map(({ number, text }) => ({
+			numberedElements: page.content.segments.map(({ number, text }) => ({
 				number,
 				text,
 			})),
@@ -82,11 +82,10 @@ export const pageCommentStrategy: TranslationStrategy<PageCommentTranslationPara
 				userId: currentUserId,
 				pageId,
 				targetLocale: locale,
-				targetContentType: "pageComment",
 				title: page.title,
 				pageCommentId,
 				numberedElements: [
-					...comment.pageCommentSegments.map(({ number, text }) => ({
+					...comment.content.segments.map(({ number, text }) => ({
 						number,
 						text,
 					})),

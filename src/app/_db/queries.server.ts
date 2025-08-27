@@ -24,37 +24,3 @@ export async function fetchGeminiApiKeyByHandle(
 		where: { userId: user.id },
 	});
 }
-
-export async function fetchAllPublishedPages() {
-	return prisma.page.findMany({
-		where: { status: "PUBLIC" },
-		select: {
-			id: true,
-			slug: true,
-			createdAt: true,
-			updatedAt: true,
-			user: { select: { handle: true } },
-			pageSegments: {
-				where: {
-					number: 0,
-				},
-				select: {
-					number: true,
-					text: true,
-					pageSegmentTranslations: {
-						select: { id: true, text: true },
-					},
-				},
-			},
-		},
-	});
-}
-
-export async function fetchAllUsersName() {
-	return prisma.user.findMany({
-		select: {
-			handle: true,
-			updatedAt: true,
-		},
-	});
-}

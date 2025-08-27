@@ -9,7 +9,7 @@ import { incrementPageView } from "../_db/mutations.server";
 
 export const fetchPageContext = cache(async (slug: string, locale: string) => {
 	const pageDetail = await fetchPageDetail(slug, locale);
-	const titleSegment = pageDetail?.segmentBundles.find((b) => b.number === 0);
+	const titleSegment = pageDetail?.content.segments.find((b) => b.number === 0);
 	if (!titleSegment) {
 		return notFound();
 	}

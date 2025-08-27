@@ -1,6 +1,5 @@
 import { TranslationStatus } from "@prisma/client";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import {
 	ensurePageLocaleTranslationProof,
 	updateTranslationJob,
@@ -18,10 +17,7 @@ import type {
 	TranslationProvider,
 } from "../types";
 import { extractTranslations } from "./extract-translations.server";
-import {
-	saveTranslationsForPage,
-	saveTranslationsForPageComment,
-} from "./io-deps";
+import { saveTranslations } from "./io-deps";
 import { splitNumberedElements } from "./split-numbered-elements.server";
 
 export async function translate(params: TranslateJobParams) {
@@ -37,21 +33,19 @@ export async function translate(params: TranslateJobParams) {
 		const chunks = splitNumberedElements(sortedNumberedElements);
 		const totalChunks = chunks.length;
 
-		for (let i = 0; i < chunks.length; i++) {
-			console.log(`Processing chunk ${i + 1} of ${totalChunks}`);
-			console.log(chunks[i]);
+		for (const [index, chunk] of chunks.entries()) {
+			console.log(`Processing chunk ${index + 1} of ${totalChunks}`);
 			await translateChunk(
 				params.userId,
 				params.provider,
 				params.aiModel,
-				chunks[i],
+				chunk,
 				params.targetLocale,
 				params.pageId,
 				params.title,
-				params.targetContentType,
 				params.pageCommentId,
 			);
-			const progress = ((i + 1) / totalChunks) * 100;
+			const progress = ((index + 1) / totalChunks) * 100;
 			await updateTranslationJob(
 				params.translationJobId,
 				TranslationStatus.IN_PROGRESS,
@@ -79,9 +73,8 @@ async function translateChunk(
 	aiModel: string,
 	numberedElements: NumberedElement[],
 	targetLocale: string,
-	pageId?: number,
+	pageId: number,
 	title?: string,
-	targetContentType?: TargetContentType,
 	pageCommentId?: number,
 ) {
 	// まだ翻訳が完了していない要素
@@ -106,33 +99,19 @@ async function translateChunk(
 		const partialTranslations = extractTranslations(translatedText);
 
 		if (partialTranslations.length > 0) {
-			// 部分的にでも取得できた翻訳結果を保存
-			if (targetContentType === "page") {
-				if (!pageId) {
-					throw new Error("Page ID is required");
-				}
-				const pageSegments = await getPageSegments(pageId);
+			// セグメント取得と翻訳保存を統一的に処理
+			const segments = pageCommentId
+				? await getPageCommentSegments(pageCommentId)
+				: await getPageSegments(pageId);
 
-				await saveTranslationsForPage(
-					partialTranslations,
-					pageSegments,
-					targetLocale,
-					aiModel,
-				);
-				await ensurePageLocaleTranslationProof(pageId, targetLocale);
-			} else if (targetContentType === "pageComment") {
-				// コメント用の保存先テーブル or ロジック
-				if (!pageCommentId || !pageId) {
-					throw new Error("pageComment ID or page ID is required");
-				}
-				const pageCommentSegments = await getPageCommentSegments(pageCommentId);
-				await saveTranslationsForPageComment(
-					partialTranslations,
-					pageCommentSegments,
-					targetLocale,
-					aiModel,
-				);
-			}
+			await saveTranslations(
+				partialTranslations,
+				segments,
+				targetLocale,
+				aiModel,
+			);
+
+			await ensurePageLocaleTranslationProof(pageId, targetLocale);
 			// 成功した要素をpendingElementsから除去
 			const translatedNumbers = new Set(
 				partialTranslations.map((e) => e.number),

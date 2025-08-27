@@ -21,14 +21,19 @@ export default async function ProblemSolutionSection({
 }) {
 	const pageDetail = await fetchAboutPage(locale);
 	// Get problem header (segment 2)
-	const problemHeader = pageDetail.segmentBundles.find((st) => st.number === 2);
-	// Get problem cards (segments 3-8)
-	const problemCards = pageDetail.segmentBundles
+	const problemHeader = pageDetail.content.segments.find(
+		(st) => st.number === 2,
+	);
+	// Get problem cards (segments 3-14)
+	const problemCards = pageDetail.content.segments
 		.filter((st) => st.number >= 3 && st.number <= 14)
 		.sort((a, b) => a.number - b.number);
 
 	// Group problem cards into pairs (header + text)
-	const problemCardPairs = [];
+	const problemCardPairs = [] as {
+		header: (typeof problemCards)[number];
+		text: (typeof problemCards)[number];
+	}[];
 	for (let i = 0; i < problemCards.length; i += 2) {
 		if (i + 1 < problemCards.length) {
 			problemCardPairs.push({
@@ -92,17 +97,17 @@ export default async function ProblemSolutionSection({
 			<div className="">
 				<div className="border-b">
 					<h2 className="text-2xl font-bold text-center mb-10">
-						{problemHeader && <WrapSegmentsComponent bundle={problemHeader} />}
+						{problemHeader && <WrapSegmentsComponent segment={problemHeader} />}
 					</h2>
 				</div>
 				<div className="grid grid-cols-1 ">
 					{problemCardPairs.map((pair, index) => (
 						<AboutSectionCard
 							component={problemComponents[index]}
-							description={<WrapSegmentsComponent bundle={pair.text} />}
+							description={<WrapSegmentsComponent segment={pair.text} />}
 							icon={problemIcons[index]}
 							key={`problem-${pair.header.number}`}
-							title={<WrapSegmentsComponent bundle={pair.header} />}
+							title={<WrapSegmentsComponent segment={pair.header} />}
 						/>
 					))}
 				</div>

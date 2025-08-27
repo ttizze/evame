@@ -3,8 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
-import { targetContentTypeValues } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/lib/auth-server";
 import { parseFormData } from "@/lib/parse-form-data";
@@ -16,7 +14,6 @@ import {
 const schema = z.object({
 	segmentTranslationId: z.coerce.number().int(),
 	isUpvote: z.string().transform((val) => val === "true"),
-	targetContentType: z.enum(targetContentTypeValues),
 });
 
 export type VoteTranslationActionResponse = ActionResponse<
@@ -24,7 +21,6 @@ export type VoteTranslationActionResponse = ActionResponse<
 	{
 		segmentTranslationId: number;
 		isUpvote: boolean;
-		targetContentType: TargetContentType;
 	}
 >;
 export async function voteTranslationAction(
@@ -48,9 +44,8 @@ export async function voteTranslationAction(
 		parsedFormData.data.segmentTranslationId,
 		parsedFormData.data.isUpvote,
 		currentUser.id,
-		parsedFormData.data.targetContentType,
 	);
-	if (parsedFormData.data.targetContentType === "page" && isUpvote) {
+	if (isUpvote) {
 		await createNotificationPageSegmentTranslationVote(
 			parsedFormData.data.segmentTranslationId,
 			currentUser.id,

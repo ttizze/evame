@@ -3,8 +3,10 @@ import { ChevronDown, ChevronUp, Languages } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useMemo, useState } from "react";
 import { useSegmentTranslations } from "@/app/[locale]/_hooks/use-segment-translations";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
-import type { BaseTranslation } from "@/app/[locale]/types";
+import type {
+	TranslationWithInfo,
+	TranslationWithUser,
+} from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { AddTranslationForm } from "./add-translation-form/client";
@@ -15,14 +17,12 @@ const INITIAL_DISPLAY_COUNT = 3;
 
 interface AddAndVoteTranslationsProps {
 	segmentId: number;
-	targetContentType: TargetContentType;
 	open: boolean;
-	bestTranslation: BaseTranslation;
+	bestTranslation: TranslationWithUser;
 }
 
 export function AddAndVoteTranslations({
 	segmentId,
-	targetContentType,
 	open,
 	bestTranslation,
 }: AddAndVoteTranslationsProps) {
@@ -30,7 +30,6 @@ export function AddAndVoteTranslations({
 	const locale = useLocale();
 	const { data, error, isLoading, mutate } = useSegmentTranslations({
 		segmentId,
-		targetContentType,
 		locale,
 		enabled: open,
 		bestTranslationId: bestTranslation.id,
@@ -39,15 +38,15 @@ export function AddAndVoteTranslations({
 	const alternativeTranslations = data?.translations ?? [];
 
 	// SWRから取得したbestTranslationCurrentUserVoteとbestTranslationUserをbestTranslationとマージ
-	const mergedBestTranslation = useMemo(() => {
+	const mergedBestTranslation: TranslationWithInfo = useMemo(() => {
 		const user = data?.bestTranslationUser ?? bestTranslation.user;
-		const currentUserVote = data?.bestTranslationCurrentUserVote ?? undefined;
+		const currentUserVote = data?.bestTranslationCurrentUserVote ?? null;
 
 		return {
 			...bestTranslation,
 			user,
 			currentUserVote,
-		};
+		} as TranslationWithInfo;
 	}, [
 		bestTranslation,
 		data?.bestTranslationCurrentUserVote,
@@ -100,7 +99,9 @@ export function AddAndVoteTranslations({
 				</Link>
 				<VoteButtons
 					key={`${mergedBestTranslation.id}-${mergedBestTranslation.point}-${mergedBestTranslation.currentUserVote?.isUpvote ?? "null"}`}
-					targetContentType={targetContentType}
+					onVoted={() => {
+						void mutate();
+					}}
 					translation={mergedBestTranslation}
 				/>
 			</span>
@@ -110,7 +111,9 @@ export function AddAndVoteTranslations({
 			{displayedTranslations.map((displayedTranslation) => (
 				<TranslationListItem
 					key={displayedTranslation.id}
-					targetContentType={targetContentType}
+					onVoted={() => {
+						void mutate();
+					}}
 					translation={displayedTranslation}
 				/>
 			))}
@@ -128,11 +131,7 @@ export function AddAndVoteTranslations({
 				</Button>
 			)}
 			<span className="mt-4">
-				<AddTranslationForm
-					onTranslationAdded={mutate}
-					segmentId={segmentId}
-					targetContentType={targetContentType}
-				/>
+				<AddTranslationForm onTranslationAdded={mutate} segmentId={segmentId} />
 			</span>
 		</span>
 	);

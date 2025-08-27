@@ -14,7 +14,7 @@ import rehypeSlug from "rehype-slug";
 import remarkLinkCard from "remark-link-card-plus";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
-import type { BaseSegmentBundle } from "@/app/[locale]/types";
+import type { SegmentForUI } from "@/app/[locale]/types";
 import { WrapSegment } from "../wrap-segments/server";
 import { remarkTweet } from "./remark-tweet";
 
@@ -51,17 +51,17 @@ const ImgComponent: ComponentType<ImgProps> = ({ src = "", ...props }) => (
 
 interface Params {
 	mdast: Prisma.JsonValue;
-	bundles: BaseSegmentBundle[];
+	segments: SegmentForUI[];
 }
 
 /** mdast(JSON) → React 要素 */
 export async function mdastToReact({
 	mdast,
-	bundles,
+	segments,
 }: Params): Promise<ReactElement | null> {
 	if (!mdast || Object.keys(mdast).length === 0) return null;
 	const segmentComponents = Object.fromEntries(
-		SEGMENTABLE.map((tag) => [tag, WrapSegment(tag, bundles)]),
+		SEGMENTABLE.map((tag) => [tag, WrapSegment(tag, segments)]),
 	);
 
 	const processor = unified()

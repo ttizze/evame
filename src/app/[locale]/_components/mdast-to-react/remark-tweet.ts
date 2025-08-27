@@ -17,6 +17,7 @@ export const remarkTweet: Plugin<[], Root> = () => (tree: Root) => {
 		// 段落が "リンク1つだけ" で構成されているか判定
 		if (paragraph.children.length !== 1) return;
 		const onlyChild = paragraph.children[0];
+		if (!onlyChild) return;
 		if (onlyChild.type !== "link") return;
 
 		const link = onlyChild as Link;

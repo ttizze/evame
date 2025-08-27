@@ -1,20 +1,19 @@
+import type { TranslationVote } from "@prisma/client";
 import useSWR from "swr";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import type { SanitizedUser } from "@/app/types";
-import type { BaseTranslation, UserVote } from "../types";
+import type { TranslationWithInfo } from "../types";
 
 interface UseSegmentTranslationsParams {
 	segmentId: number;
-	targetContentType: TargetContentType;
 	locale: string;
 	enabled: boolean;
-	bestTranslationId?: number;
+	bestTranslationId: number;
 }
 
 interface SegmentTranslationsResponse {
-	bestTranslationCurrentUserVote?: UserVote;
+	bestTranslationCurrentUserVote: TranslationVote | null;
 	bestTranslationUser: SanitizedUser;
-	translations: BaseTranslation[];
+	translations: TranslationWithInfo[];
 }
 
 const fetcher = async (url: string): Promise<SegmentTranslationsResponse> => {
@@ -27,20 +26,16 @@ const fetcher = async (url: string): Promise<SegmentTranslationsResponse> => {
 
 export function useSegmentTranslations({
 	segmentId,
-	targetContentType,
 	locale,
 	enabled,
 	bestTranslationId,
 }: UseSegmentTranslationsParams) {
 	const key = enabled
-		? `/api/segment-translations?segmentId=${segmentId}&targetContentType=${targetContentType}&locale=${locale}${bestTranslationId ? `&bestTranslationId=${bestTranslationId}` : ""}`
+		? `/api/segment-translations?segmentId=${segmentId}&locale=${locale}&bestTranslationId=${bestTranslationId}`
 		: null;
 
 	const { data, error, isLoading, mutate } =
-		useSWR<SegmentTranslationsResponse>(key, fetcher, {
-			revalidateOnFocus: false,
-			revalidateOnReconnect: false,
-		});
+		useSWR<SegmentTranslationsResponse>(key, fetcher);
 
 	return { data, error, isLoading, mutate };
 }

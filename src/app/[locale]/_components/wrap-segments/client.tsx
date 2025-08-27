@@ -9,11 +9,11 @@ import {
 	type ReactNode,
 } from "react";
 import { useDisplay } from "@/app/_context/display-provider";
-import type { BaseSegmentBundle } from "@/app/[locale]/types";
+import type { SegmentForUI } from "@/app/[locale]/types";
 import { TranslationSection } from "./translation-section/client";
 
 interface BaseProps {
-	bundle: BaseSegmentBundle;
+	segment: SegmentForUI;
 	children: ReactNode;
 	/**
 	 * If false, disable interactive UI (votes, popovers, etc.) inside TranslationSection.
@@ -23,7 +23,7 @@ interface BaseProps {
 }
 
 export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
-	bundle,
+	segment,
 	tagName,
 	tagProps,
 	children,
@@ -33,7 +33,7 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 	tagProps: JSX.IntrinsicElements[Tag];
 }) {
 	const { mode } = useDisplay();
-	const hasTr = bundle.segmentTranslation !== undefined;
+	const hasTr = segment.segmentTranslation !== null;
 	const eff = mode === "user" && !hasTr ? "source" : mode;
 
 	/* --------------------------------------------------
@@ -61,7 +61,7 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 					{
 						...tagProps,
 						className: srcCls,
-						"data-number-id": bundle.number,
+						"data-number-id": segment.number,
 					},
 					children,
 				)
@@ -70,8 +70,8 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 	const translation: ReactNode =
 		eff !== "source" && hasTr ? (
 			<TranslationSection
-				bundle={bundle}
 				interactive={interactive}
+				segment={segment}
 				tagName={tagName}
 				tagProps={tagProps}
 			/>

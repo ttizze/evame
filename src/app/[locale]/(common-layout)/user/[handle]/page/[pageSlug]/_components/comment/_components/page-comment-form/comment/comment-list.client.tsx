@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 interface CommentListProps {
 	authorName: string;
 	authorImage?: string | null;
-	createdAt: string;
+	createdAt: Date;
 	/** ケバブメニューなど右端に出すアクション */
 	action?: ReactNode;
 	/** markdown → React した本文 */

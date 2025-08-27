@@ -2,8 +2,7 @@
 import { EllipsisVertical, Trash2 } from "lucide-react";
 import { useActionState } from "react";
 import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
-import type { BaseTranslation } from "@/app/[locale]/types";
+import type { TranslationWithInfo } from "@/app/[locale]/types";
 import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,13 +17,13 @@ import { VoteButtons } from "../vote-buttons/client";
 import { deleteTranslationAction } from "./action";
 
 interface TranslationItemProps {
-	translation: BaseTranslation;
-	targetContentType: TargetContentType;
+	translation: TranslationWithInfo;
+	onVoted?: () => void;
 }
 
 export function TranslationListItem({
 	translation,
-	targetContentType,
+	onVoted,
 }: TranslationItemProps) {
 	const [_deleteTranslationState, action, isDeletingTranslation] =
 		useActionState<ActionResponse, FormData>(deleteTranslationAction, {
@@ -80,8 +79,10 @@ export function TranslationListItem({
 					</span>
 				</Link>
 				<VoteButtons
-					key={`${translation.id}-${translation.point}-${translation.currentUserVote?.isUpvote ?? "null"}`}
-					targetContentType={targetContentType}
+					key={`${translation.id}-${translation.point}-${translation.currentUserVote?.isUpvote ?? "undefined"}`}
+					onVoted={() => {
+						onVoted?.();
+					}}
 					translation={translation}
 				/>
 			</span>

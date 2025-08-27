@@ -1,4 +1,5 @@
 import type { PageComment, Prisma } from "@prisma/client";
+import { ContentKind } from "@prisma/client";
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
 import { prisma } from "@/lib/prisma";
 export async function upsertPageCommentAndSegments(p: {
@@ -12,14 +13,25 @@ export async function upsertPageCommentAndSegments(p: {
 }) {
 	let pageComment: PageComment;
 	if (!p.pageCommentId) {
-		pageComment = await prisma.pageComment.create({
-			data: {
-				pageId: p.pageId,
-				userId: p.currentUserId,
-				mdastJson: p.mdastJson,
-				locale: p.sourceLocale,
-				parentId: p.parentId,
-			},
+		pageComment = await prisma.$transaction(async (tx) => {
+			// コンテンツを作成
+			const content = await tx.content.create({
+				data: {
+					kind: ContentKind.PAGE_COMMENT,
+				},
+			});
+
+			// ページコメントを作成
+			return await tx.pageComment.create({
+				data: {
+					pageId: p.pageId,
+					userId: p.currentUserId,
+					mdastJson: p.mdastJson,
+					locale: p.sourceLocale,
+					parentId: p.parentId,
+					id: content.id,
+				},
+			});
 		});
 	} else {
 		pageComment = await prisma.pageComment.update({
@@ -32,22 +44,32 @@ export async function upsertPageCommentAndSegments(p: {
 	return pageComment;
 }
 
-/** 1ページ分のセグメントを同期 */
+/** 1ページコメント分のセグメントを同期 */
 async function syncPageCommentSegments(
 	pageCommentId: number,
 	drafts: SegmentDraft[],
 ) {
-	const existing = await prisma.pageCommentSegment.findMany({
-		where: { pageCommentId },
+	// ページコメントに関連するContentを取得
+	const pageComment = await prisma.pageComment.findUnique({
+		where: { id: pageCommentId },
+		select: { id: true },
+	});
+
+	if (!pageComment?.id) {
+		throw new Error(`PageComment ${pageCommentId} does not have a content`);
+	}
+
+	const existing = await prisma.segment.findMany({
+		where: { contentId: pageComment.id },
 		select: { textAndOccurrenceHash: true },
 	});
-	const stale = new Set(existing.map((e) => e.textAndOccurrenceHash as string));
+	const stale = new Set(existing.map((e) => e.textAndOccurrenceHash));
 
 	await prisma.$transaction(async (tx) => {
 		// A. 並び避難（既存あれば）
 		if (existing.length) {
-			await tx.pageCommentSegment.updateMany({
-				where: { pageCommentId },
+			await tx.segment.updateMany({
+				where: { contentId: pageComment.id },
 				data: { number: { increment: 1_000_000 } },
 			});
 		}
@@ -58,16 +80,16 @@ async function syncPageCommentSegments(
 			const chunk = drafts.slice(i, i + CHUNK);
 			await Promise.all(
 				chunk.map((d) =>
-					tx.pageCommentSegment.upsert({
+					tx.segment.upsert({
 						where: {
-							pageCommentId_textAndOccurrenceHash: {
-								pageCommentId,
+							contentId_textAndOccurrenceHash: {
+								contentId: pageComment.id,
 								textAndOccurrenceHash: d.hash,
 							},
 						},
 						update: { text: d.text, number: d.number },
 						create: {
-							pageCommentId,
+							contentId: pageComment.id,
 							text: d.text,
 							number: d.number,
 							textAndOccurrenceHash: d.hash,
@@ -82,8 +104,11 @@ async function syncPageCommentSegments(
 
 		// C. 余った行を一括削除
 		if (stale.size) {
-			await tx.pageCommentSegment.deleteMany({
-				where: { pageCommentId, textAndOccurrenceHash: { in: [...stale] } },
+			await tx.segment.deleteMany({
+				where: {
+					contentId: pageComment.id,
+					textAndOccurrenceHash: { in: [...stale] },
+				},
 			});
 		}
 	});

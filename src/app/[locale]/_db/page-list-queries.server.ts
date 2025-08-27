@@ -1,51 +1,11 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { toBaseSegmentBundles } from "../_lib/to-base-segment-bundles";
-import { toBaseSegmentWithTranslations } from "../_lib/to-base-segment-with-translations";
+import { normalizeSegments } from "../_lib/normalize-segments";
 import type { PageForList, PageForTitle } from "../types";
-import { selectUserFields } from "./queries.server";
-
-export const selectPageFields = (locale = "en") => ({
-	id: true,
-	slug: true,
-	createdAt: true,
-	status: true,
-	sourceLocale: true,
-	parentId: true,
-	order: true,
-	user: {
-		select: selectUserFields(),
-	},
-	pageSegments: {
-		where: { number: 0 }, // タイトルのみ取得
-		select: {
-			id: true,
-			number: true,
-			text: true,
-			pageSegmentTranslations: {
-				where: { locale, isArchived: false },
-				orderBy: [
-					{ point: Prisma.SortOrder.desc },
-					{ createdAt: Prisma.SortOrder.desc },
-				],
-				take: 1,
-				select: {
-					id: true,
-					locale: true,
-					text: true,
-					point: true,
-					createdAt: true,
-					user: {
-						select: selectUserFields(),
-					},
-				},
-			},
-		},
-	},
-});
+import { selectPageFields } from "./queries.server";
 
 const selectPageListFields = (locale = "en") => ({
-	...selectPageFields(locale),
+	...selectPageFields(locale, { number: 0 }),
 	tagPages: {
 		include: {
 			tag: true,
@@ -54,12 +14,13 @@ const selectPageListFields = (locale = "en") => ({
 	_count: {
 		select: {
 			pageComments: true,
+			children: true,
 		},
 	},
 });
 
 const selectForTitleAndChildrenFields = (locale = "en") => ({
-	...selectPageFields(locale),
+	...selectPageFields(locale, { number: 0 }),
 	_count: {
 		select: {
 			children: true,
@@ -99,17 +60,16 @@ export async function fetchPagesWithTransform(
 		prisma.page.count({ where }),
 	]);
 
-	const pages = rawPages.map((p) => ({
-		...p,
-		segmentBundles: toBaseSegmentBundles(
-			"page",
-			p.id,
-			toBaseSegmentWithTranslations(p.pageSegments, "pageSegmentTranslations"),
-		),
-	}));
+	// 正規化: segmentTranslations[] -> segmentTranslation
+	const pageForLists = rawPages.map((page) => ({
+		...page,
+		content: {
+			segments: normalizeSegments(page.content.segments),
+		},
+	})) as PageForList[];
 
 	return {
-		pageForLists: pages,
+		pageForLists,
 		total,
 	};
 }
@@ -183,14 +143,9 @@ export async function fetchChildPages(
 	});
 	return raws.map((raw) => ({
 		...raw,
-		segmentBundles: toBaseSegmentBundles(
-			"page",
-			raw.id,
-			toBaseSegmentWithTranslations(
-				raw.pageSegments,
-				"pageSegmentTranslations",
-			),
-		),
+		content: {
+			segments: normalizeSegments(raw.content.segments),
+		},
 		children: [],
 	})) as PageForTitle[];
 }
@@ -208,10 +163,12 @@ export async function searchPagesByTitle(
 }> {
 	const where: Prisma.PageWhereInput = {
 		status: "PUBLIC",
-		pageSegments: {
-			some: {
-				text: { contains: query, mode: "insensitive" },
-				number: 0,
+		content: {
+			segments: {
+				some: {
+					text: { contains: query, mode: "insensitive" },
+					number: 0,
+				},
 			},
 		},
 	};
@@ -251,21 +208,28 @@ export async function searchPagesByContent(
 	pageForLists: PageForList[];
 	total: number;
 }> {
-	/* 1. ヒットした pageId を一括取得 (distinct) ------------------------ */
-	const matchedIds = await prisma.pageSegment.findMany({
+	/* 1. ヒットしたページを直接取得 (distinct) ------------------------ */
+	const matchedPages = await prisma.page.findMany({
 		where: {
-			text: { contains: query, mode: "insensitive" },
-			page: { status: "PUBLIC" }, // ページ公開フラグ
+			status: "PUBLIC",
+			content: {
+				segments: {
+					some: {
+						text: { contains: query, mode: "insensitive" },
+					},
+				},
+			},
 		},
-		select: { pageId: true },
-		distinct: ["pageId"], // ← pageId ごとに 1 行
+		select: { id: true },
+		distinct: ["id"],
 	});
 
 	/* 2. ページネーションを自前で行う ---------------------------------- */
-	const pageIds = matchedIds.map((row) => row.pageId).slice(skip, skip + take);
+	const allPageIds = matchedPages.map((page) => page.id);
+	const pageIds = allPageIds.slice(skip, skip + take);
 
-	/* 3. 合計件数 (= DISTINCT pageId) を取得 --------------------------- */
-	const total = matchedIds.length;
+	/* 3. 合計件数を取得 ---------------------------------------------- */
+	const total = allPageIds.length;
 
 	if (pageIds.length === 0) {
 		return { pageForLists: [], total };
@@ -277,5 +241,12 @@ export async function searchPagesByContent(
 		status: "PUBLIC",
 	};
 
-	return fetchPagesWithTransform(where, 0, pageIds.length, locale);
+	const { pageForLists } = await fetchPagesWithTransform(
+		where,
+		0,
+		pageIds.length,
+		locale,
+	);
+
+	return { pageForLists, total };
 }

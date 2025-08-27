@@ -25,9 +25,10 @@ const getPageData = cache(async (handle: string, pageSlug: string) => {
 			getAllTagsWithCount(),
 			getUserTargetLocales(currentUser.id),
 		]);
-	const title = pageWithTitleAndTags?.pageSegments.find(
-		(pageSegment) => pageSegment.number === 0,
-	)?.text;
+	if (!pageWithTitleAndTags) {
+		return notFound();
+	}
+	const title = pageWithTitleAndTags.content.segments[0].text;
 	return {
 		currentUser,
 		pageWithTitleAndTags,
