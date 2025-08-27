@@ -99,25 +99,19 @@ async function translateChunk(
 		const partialTranslations = extractTranslations(translatedText);
 
 		if (partialTranslations.length > 0) {
-			const pageSegments = await getPageSegments(pageId);
+			// セグメント取得と翻訳保存を統一的に処理
+			const segments = pageCommentId
+				? await getPageCommentSegments(pageCommentId)
+				: await getPageSegments(pageId);
 
 			await saveTranslations(
 				partialTranslations,
-				pageSegments,
+				segments,
 				targetLocale,
 				aiModel,
 			);
-			await ensurePageLocaleTranslationProof(pageId, targetLocale);
 
-			if (pageCommentId) {
-				const segments = await getPageCommentSegments(pageCommentId);
-				await saveTranslations(
-					partialTranslations,
-					segments,
-					targetLocale,
-					aiModel,
-				);
-			}
+			await ensurePageLocaleTranslationProof(pageId, targetLocale);
 			// 成功した要素をpendingElementsから除去
 			const translatedNumbers = new Set(
 				partialTranslations.map((e) => e.number),

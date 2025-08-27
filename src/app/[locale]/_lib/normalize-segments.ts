@@ -5,11 +5,11 @@ export function normalizeSegments<
 	segments: Segment[],
 ): Array<
 	Omit<Segment, "segmentTranslations"> & {
-		segmentTranslation: Translation | undefined;
+		segmentTranslation: Translation | null;
 	}
 > {
 	return segments.map(({ segmentTranslations, ...segment }) => ({
 		...segment,
-		segmentTranslation: segmentTranslations[0],
+		segmentTranslation: segmentTranslations[0] ?? null,
 	}));
 }

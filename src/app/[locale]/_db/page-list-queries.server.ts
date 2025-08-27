@@ -241,5 +241,12 @@ export async function searchPagesByContent(
 		status: "PUBLIC",
 	};
 
-	return fetchPagesWithTransform(where, 0, pageIds.length, locale);
+	const { pageForLists } = await fetchPagesWithTransform(
+		where,
+		0,
+		pageIds.length,
+		locale,
+	);
+
+	return { pageForLists, total };
 }

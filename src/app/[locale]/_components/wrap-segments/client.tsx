@@ -33,7 +33,7 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 	tagProps: JSX.IntrinsicElements[Tag];
 }) {
 	const { mode } = useDisplay();
-	const hasTr = segment.segmentTranslation !== undefined;
+	const hasTr = segment.segmentTranslation !== null;
 	const eff = mode === "user" && !hasTr ? "source" : mode;
 
 	/* --------------------------------------------------

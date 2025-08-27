@@ -121,7 +121,7 @@ function NotificationContent({
 	switch (type) {
 		case "PAGE_COMMENT": {
 			const { pageComment } = notificationWithRelations;
-			const title = pageComment?.page.content.segments[0].text;
+			const title = pageComment?.page.content.segments[0]?.text;
 			if (!title) return null;
 			actionText = <span className="text-gray-500"> commented on </span>;
 			extraContent = (
@@ -136,7 +136,7 @@ function NotificationContent({
 		}
 		case "PAGE_LIKE": {
 			const { page } = notificationWithRelations;
-			const title = page?.content.segments[0].text;
+			const title = page?.content.segments[0]?.text;
 			if (!title) return null;
 			actionText = <span className="text-gray-500"> liked your page </span>;
 			extraContent = (
@@ -157,7 +157,7 @@ function NotificationContent({
 			const votedText = notificationWithRelations.segmentTranslation?.text;
 			const votedPage =
 				notificationWithRelations.segmentTranslation?.segment.content.page;
-			const votedPageTitle = votedPage?.content.segments[0].text;
+			const votedPageTitle = votedPage?.content.segments[0]?.text;
 			const votedPageUser = votedPage?.user;
 			actionText = <span className="text-gray-500"> voted for </span>;
 			extraContent = (

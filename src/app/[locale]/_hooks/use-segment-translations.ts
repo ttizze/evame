@@ -11,7 +11,7 @@ interface UseSegmentTranslationsParams {
 }
 
 interface SegmentTranslationsResponse {
-	bestTranslationCurrentUserVote: TranslationVote;
+	bestTranslationCurrentUserVote: TranslationVote | null;
 	bestTranslationUser: SanitizedUser;
 	translations: TranslationWithInfo[];
 }
@@ -32,7 +32,7 @@ export function useSegmentTranslations({
 }: UseSegmentTranslationsParams) {
 	const key = enabled
 		? `/api/segment-translations?segmentId=${segmentId}&locale=${locale}&bestTranslationId=${bestTranslationId}`
-		: undefined;
+		: null;
 
 	const { data, error, isLoading, mutate } =
 		useSWR<SegmentTranslationsResponse>(key, fetcher);

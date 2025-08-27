@@ -11,7 +11,7 @@ export type TranslationWithUser = SegmentTranslation & {
 	user: SanitizedUser;
 };
 export type TranslationWithInfo = TranslationWithUser & {
-	currentUserVote: TranslationVote | undefined; // undefined = 未投票
+	currentUserVote: TranslationVote | null; // null = 未投票
 };
 
 /**
@@ -22,7 +22,7 @@ export interface SegmentForUI {
 	id: number;
 	number: number;
 	text: string;
-	segmentTranslation: TranslationWithUser | undefined;
+	segmentTranslation: TranslationWithUser | null;
 }
 
 type TagPageWithTag = TagPage & {
@@ -36,7 +36,7 @@ export type PageDetail = Omit<Page, "updatedAt" | "userId"> & {
 	};
 	_count: {
 		pageComments: number;
-		children: number | undefined;
+		children: number | null;
 	};
 };
 

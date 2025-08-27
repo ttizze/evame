@@ -40,7 +40,7 @@ export function AddAndVoteTranslations({
 	// SWRから取得したbestTranslationCurrentUserVoteとbestTranslationUserをbestTranslationとマージ
 	const mergedBestTranslation: TranslationWithInfo = useMemo(() => {
 		const user = data?.bestTranslationUser ?? bestTranslation.user;
-		const currentUserVote = data?.bestTranslationCurrentUserVote ?? undefined;
+		const currentUserVote = data?.bestTranslationCurrentUserVote ?? null;
 
 		return {
 			...bestTranslation,
@@ -98,7 +98,7 @@ export function AddAndVoteTranslations({
 					</span>
 				</Link>
 				<VoteButtons
-					key={`${mergedBestTranslation.id}-${mergedBestTranslation.point}-${mergedBestTranslation.currentUserVote?.isUpvote ?? "undefined"}`}
+					key={`${mergedBestTranslation.id}-${mergedBestTranslation.point}-${mergedBestTranslation.currentUserVote?.isUpvote ?? "null"}`}
 					onVoted={() => {
 						void mutate();
 					}}

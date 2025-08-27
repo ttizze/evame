@@ -23,13 +23,13 @@ const segments: SegmentForUI[] = [
 		id: 10,
 		number: 1,
 		text: "abc",
-		segmentTranslation: undefined,
+		segmentTranslation: null,
 	},
 	{
 		id: 11,
 		number: 2,
 		text: "def",
-		segmentTranslation: undefined,
+		segmentTranslation: null,
 	},
 ];
 
@@ -177,31 +177,31 @@ describe("mdastToReact", () => {
 				id: 1,
 				number: 1,
 				text: "Heading 1",
-				segmentTranslation: undefined,
+				segmentTranslation: null,
 			},
 			{
 				id: 2,
 				number: 2,
 				text: "Heading 2",
-				segmentTranslation: undefined,
+				segmentTranslation: null,
 			},
 			{
 				id: 3,
 				number: 3,
 				text: "Paragraph text",
-				segmentTranslation: undefined,
+				segmentTranslation: null,
 			},
 			{
 				id: 4,
 				number: 4,
 				text: "List item",
-				segmentTranslation: undefined,
+				segmentTranslation: null,
 			},
 			{
 				id: 5,
 				number: 5,
 				text: "Blockquote text",
-				segmentTranslation: undefined,
+				segmentTranslation: null,
 			},
 		];
 
