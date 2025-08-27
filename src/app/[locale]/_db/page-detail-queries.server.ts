@@ -1,40 +1,25 @@
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { toBaseSegmentBundles } from "../_lib/to-base-segment-bundles";
-import { toBaseSegmentWithTranslations } from "../_lib/to-base-segment-with-translations";
+import { normalizeSegments } from "../_lib/normalize-segments";
 import type { PageDetail } from "../types";
-import { selectUserFields } from "./queries.server";
+import { selectPageFields } from "./queries.server";
 
 export const selectPageDetailFields = (locale = "en") => {
 	return {
-		user: {
-			select: selectUserFields(),
-		},
+		...selectPageFields(locale),
+		// PageDetail 型が要求するベースフィールド
+		mdastJson: true,
+		updatedAt: true,
+		userId: true,
 		tagPages: {
 			include: {
 				tag: true,
 			},
 		},
-		pageSegments: {
-			include: {
-				pageSegmentTranslations: {
-					where: { locale, isArchived: false },
-					orderBy: [
-						{ point: Prisma.SortOrder.desc },
-						{ createdAt: Prisma.SortOrder.desc },
-					],
-					take: 1,
-					include: {
-						user: {
-							select: selectUserFields(),
-						},
-					},
-				},
-			},
-		},
+
 		_count: {
 			select: {
 				pageComments: true,
+				children: true,
 			},
 		},
 	};
@@ -46,22 +31,14 @@ export async function fetchPageDetail(
 ): Promise<PageDetail | null> {
 	const page = await prisma.page.findUnique({
 		where: { slug },
-		include: {
-			...selectPageDetailFields(locale),
-		},
+		select: selectPageDetailFields(locale),
 	});
-
 	if (!page) return null;
-
-	const segmentBundles = toBaseSegmentBundles(
-		"page",
-		page.id,
-		toBaseSegmentWithTranslations(page.pageSegments, "pageSegmentTranslations"),
-	);
-
 	return {
 		...page,
-		segmentBundles,
+		content: {
+			segments: normalizeSegments(page.content.segments),
+		},
 	};
 }
 
@@ -69,16 +46,26 @@ export async function fetchPageWithTitleAndComments(pageId: number) {
 	const pageWithComments = await prisma.page.findFirst({
 		where: { id: pageId },
 		include: {
-			pageSegments: { where: { number: 0 } },
+			content: {
+				select: {
+					segments: { where: { number: 0 }, select: { text: true } },
+				},
+			},
 			pageComments: {
 				include: {
-					pageCommentSegments: true,
+					content: {
+						select: {
+							segments: {
+								select: { text: true, number: true },
+							},
+						},
+					},
 				},
 			},
 		},
 	});
 	if (!pageWithComments) return null;
-	const title = pageWithComments?.pageSegments[0].text;
+	const title = pageWithComments.content.segments[0]?.text;
 	if (!title) return null;
 	return {
 		...pageWithComments,
@@ -93,20 +80,24 @@ export async function fetchPageWithPageSegments(pageId: number) {
 			id: true,
 			slug: true,
 			createdAt: true,
-			pageSegments: {
+			content: {
 				select: {
-					id: true,
-					number: true,
-					text: true,
+					segments: { select: { id: true, number: true, text: true } },
 				},
 			},
 		},
 	});
 
 	if (!pageWithSegments) return null;
-	const title = pageWithSegments.pageSegments.filter(
+	const titleSegment = pageWithSegments.content.segments.filter(
 		(item) => item.number === 0,
-	)[0].text;
+	)[0];
+	if (!titleSegment) {
+		throw new Error(
+			`Page ${pageWithSegments.id} (slug: ${pageWithSegments.slug}) is missing required title segment (number: 0). This indicates data corruption.`,
+		);
+	}
+	const title = titleSegment.text;
 
 	return {
 		...pageWithSegments,

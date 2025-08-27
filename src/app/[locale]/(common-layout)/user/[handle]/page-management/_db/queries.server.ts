@@ -38,13 +38,17 @@ export async function fetchPaginatedOwnPages(
 				updatedAt: true,
 				createdAt: true,
 				status: true,
-				pageSegments: {
-					where: {
-						number: 0,
-					},
+				content: {
 					select: {
-						number: true,
-						text: true,
+						segments: {
+							where: {
+								number: 0,
+							},
+							select: {
+								number: true,
+								text: true,
+							},
+						},
 					},
 				},
 			},
@@ -54,12 +58,24 @@ export async function fetchPaginatedOwnPages(
 		}),
 	]);
 
-	const pagesWithTitle = pages.map((page) => ({
-		...page,
-		createdAt: page.createdAt.toLocaleString(locale),
-		updatedAt: page.updatedAt.toLocaleString(locale),
-		title: page.pageSegments.filter((item) => item.number === 0)[0].text,
-	}));
+	const pagesWithTitle = pages.map((page) => {
+		const titleSegment = page.content.segments.filter(
+			(item) => item.number === 0,
+		)[0];
+
+		if (!titleSegment) {
+			throw new Error(
+				`Page ${page.id} (slug: ${page.slug}) is missing required title segment (number: 0). This indicates data corruption.`,
+			);
+		}
+
+		return {
+			...page,
+			createdAt: page.createdAt.toLocaleString(locale),
+			updatedAt: page.updatedAt.toLocaleString(locale),
+			title: titleSegment.text,
+		};
+	});
 	return {
 		pagesWithTitle,
 		totalPages: Math.ceil(totalCount / pageSize),

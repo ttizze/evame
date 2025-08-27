@@ -1,6 +1,7 @@
+import type { TranslationVote } from "@prisma/client";
 import useSWR from "swr";
 import type { SanitizedUser } from "@/app/types";
-import type { BaseTranslation, UserVote } from "../types";
+import type { TranslationWithInfo } from "../types";
 
 interface UseSegmentTranslationsParams {
 	segmentId: number;
@@ -10,9 +11,9 @@ interface UseSegmentTranslationsParams {
 }
 
 interface SegmentTranslationsResponse {
-	bestTranslationCurrentUserVote?: UserVote;
+	bestTranslationCurrentUserVote?: TranslationVote; // 省略=未投票/未取得
 	bestTranslationUser: SanitizedUser;
-	translations: BaseTranslation[];
+	translations: TranslationWithInfo[];
 }
 
 const fetcher = async (url: string): Promise<SegmentTranslationsResponse> => {

@@ -21,10 +21,12 @@ export function extractTranslations(
 		/{\s*"number"\s*:\s*(\d+)\s*,\s*"text"\s*:\s*"((?:\\.|[^"\\])*)"\s*}/g;
 	let match = regex.exec(text);
 	while (match !== null) {
-		translations.push({
-			number: Number.parseInt(match[1], 10),
-			text: match[2],
-		});
+		if (match[1] && match[2]) {
+			translations.push({
+				number: Number.parseInt(match[1], 10),
+				text: match[2],
+			});
+		}
 		match = regex.exec(text);
 	}
 

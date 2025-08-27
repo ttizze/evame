@@ -3,7 +3,7 @@ import { queryByAttribute } from "@testing-library/dom";
 import { render, screen } from "@testing-library/react";
 import type { Root } from "mdast";
 import { describe, expect, it, vi } from "vitest";
-import type { BaseSegmentBundle } from "@/app/[locale]/types";
+import type { SegmentForUI } from "@/app/[locale]/types";
 
 vi.mock("@/app/_context/display-provider", () => ({
 	useDisplay: () => ({ mode: "source" }), // ← dummy 値
@@ -18,18 +18,14 @@ vi.mock("react-tweet", () => ({
 import { mdastToReact } from "./server";
 
 // テスト用のセグメントバンドル
-const bundles: BaseSegmentBundle[] = [
+const segments: SegmentForUI[] = [
 	{
-		parentType: "page",
-		parentId: 1,
 		id: 10,
 		number: 1,
 		text: "abc",
 		segmentTranslation: undefined,
 	},
 	{
-		parentType: "page",
-		parentId: 1,
 		id: 11,
 		number: 2,
 		text: "def",
@@ -58,7 +54,7 @@ describe("mdastToReact", () => {
 
 		const el = await mdastToReact({
 			mdast: mdast as unknown as Prisma.JsonValue,
-			bundles,
+			segments,
 		});
 		render(el);
 
@@ -106,7 +102,7 @@ describe("mdastToReact", () => {
 
 		const el = await mdastToReact({
 			mdast: mdast as unknown as Prisma.JsonValue,
-			bundles,
+			segments,
 		});
 		render(el);
 
@@ -176,42 +172,32 @@ describe("mdastToReact", () => {
 			],
 		};
 
-		const testBundles: BaseSegmentBundle[] = [
+		const segments: SegmentForUI[] = [
 			{
-				parentType: "page",
-				parentId: 1,
 				id: 1,
 				number: 1,
 				text: "Heading 1",
 				segmentTranslation: undefined,
 			},
 			{
-				parentType: "page",
-				parentId: 1,
 				id: 2,
 				number: 2,
 				text: "Heading 2",
 				segmentTranslation: undefined,
 			},
 			{
-				parentType: "page",
-				parentId: 1,
 				id: 3,
 				number: 3,
 				text: "Paragraph text",
 				segmentTranslation: undefined,
 			},
 			{
-				parentType: "page",
-				parentId: 1,
 				id: 4,
 				number: 4,
 				text: "List item",
 				segmentTranslation: undefined,
 			},
 			{
-				parentType: "page",
-				parentId: 1,
 				id: 5,
 				number: 5,
 				text: "Blockquote text",
@@ -221,7 +207,7 @@ describe("mdastToReact", () => {
 
 		const el = await mdastToReact({
 			mdast: mdast as unknown as Prisma.JsonValue,
-			bundles: testBundles,
+			segments,
 		});
 		const { container } = render(el);
 

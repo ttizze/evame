@@ -39,10 +39,12 @@ describe("handlePageAutoTranslation()", () => {
 			targetLocale: "ja",
 			page: {
 				title: "Test Title",
-				pageSegments: [
-					{ number: 1, text: "Hello" },
-					{ number: 2, text: "World" },
-				],
+				content: {
+					segments: [
+						{ number: 1, text: "Hello" },
+						{ number: 2, text: "World" },
+					],
+				},
 			},
 		},
 		{
@@ -51,10 +53,12 @@ describe("handlePageAutoTranslation()", () => {
 			targetLocale: "en",
 			page: {
 				title: "テストタイトル",
-				pageSegments: [
-					{ number: 1, text: "こんにちは" },
-					{ number: 2, text: "世界" },
-				],
+				content: {
+					segments: [
+						{ number: 1, text: "こんにちは" },
+						{ number: 2, text: "世界" },
+					],
+				},
 			},
 		},
 	] as const;
@@ -79,7 +83,7 @@ describe("handlePageAutoTranslation()", () => {
 			expect.objectContaining({
 				targetLocale: "en",
 				title: page.title,
-				numberedElements: page.pageSegments,
+				numberedElements: page.content.segments,
 			}),
 		);
 
@@ -104,7 +108,9 @@ describe("handlePageAutoTranslation()", () => {
 		const { deps, spies } = buildDeps();
 		spies.fetchPageWithPageSegments.mockResolvedValue({
 			title: "Title",
-			pageSegments: [{ number: 1, text: "Hello" }],
+			content: {
+				segments: [{ number: 1, text: "Hello" }],
+			},
 		});
 
 		await handlePageAutoTranslation({
@@ -141,10 +147,12 @@ describe("handlePageCommentAutoTranslation()", () => {
 			pageComments: [
 				{
 					id: 789,
-					pageCommentSegments: [
-						{ number: 1, text: "This is" },
-						{ number: 2, text: "a test comment" },
-					],
+					content: {
+						segments: [
+							{ number: 1, text: "This is" },
+							{ number: 2, text: "a test comment" },
+						],
+					},
 				},
 			],
 		});
@@ -168,7 +176,7 @@ describe("handlePageCommentAutoTranslation()", () => {
 		spies.fetchPageWithTitleAndComments.mockResolvedValue({
 			id: 1,
 			title: "Test Page",
-			pageComments: [{ id: 999, pageCommentSegments: [] }],
+			pageComments: [{ id: 999, content: { segments: [] } }],
 		});
 
 		await expect(

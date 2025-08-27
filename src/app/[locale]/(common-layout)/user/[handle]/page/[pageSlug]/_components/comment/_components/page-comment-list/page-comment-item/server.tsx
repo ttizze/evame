@@ -15,7 +15,7 @@ export default async function PageCommentItem({
 }: Props) {
 	const content = await mdastToReact({
 		mdast: pageComment.mdastJson,
-		bundles: pageComment.segmentBundles,
+		segments: pageComment.content.segments,
 	});
 
 	return (

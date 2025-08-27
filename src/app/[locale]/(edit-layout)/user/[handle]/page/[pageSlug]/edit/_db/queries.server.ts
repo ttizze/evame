@@ -4,9 +4,11 @@ export async function getPageWithTitleAndTagsBySlug(slug: string) {
 	return await prisma.page.findUnique({
 		where: { slug },
 		include: {
-			pageSegments: {
-				where: {
-					number: 0,
+			content: {
+				include: {
+					segments: {
+						where: { number: 0 },
+					},
 				},
 			},
 			tagPages: {

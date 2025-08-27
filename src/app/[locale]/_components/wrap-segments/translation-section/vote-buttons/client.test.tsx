@@ -2,23 +2,20 @@ import { render, screen } from "@testing-library/react";
 // VoteButtons.test.tsx
 import React from "react";
 import { vi } from "vitest";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
-import type { BaseTranslation } from "@/app/[locale]/types";
+import type { TranslationWithInfo } from "@/app/[locale]/types";
 import { VoteButtons } from "./client";
-
-const dummyVoteTarget = "example-target" as TargetContentType;
 
 const dummyTranslationUpvote = {
 	id: 1,
 	point: 10,
 	currentUserVote: { isUpvote: true },
-} as BaseTranslation;
+} as TranslationWithInfo;
 
 const dummyTranslationDownvote = {
 	id: 2,
 	point: 5,
 	currentUserVote: { isUpvote: false },
-} as BaseTranslation;
+} as TranslationWithInfo;
 
 vi.mock("next/form", () => ({
 	__esModule: true,
@@ -45,15 +42,10 @@ describe("VoteButtons コンポーネント", () => {
 			false, // isVoting: false
 		]);
 
-		render(
-			<VoteButtons
-				targetContentType={dummyVoteTarget}
-				translation={dummyTranslationUpvote}
-			/>,
-		);
+		render(<VoteButtons translation={dummyTranslationUpvote} />);
 
 		// hidden input (voteTarget) の検証
-		const voteTargetInput = screen.getByDisplayValue(dummyVoteTarget);
+		const voteTargetInput = screen.getByDisplayValue(dummyTranslationUpvote.id);
 		expect(voteTargetInput).toBeInTheDocument();
 
 		// hidden input (segmentTranslationId) の検証
@@ -74,12 +66,7 @@ describe("VoteButtons コンポーネント", () => {
 			false,
 		]);
 
-		render(
-			<VoteButtons
-				targetContentType={dummyVoteTarget}
-				translation={dummyTranslationUpvote}
-			/>,
-		);
+		render(<VoteButtons translation={dummyTranslationUpvote} />);
 
 		const upvoteButton = screen.getByTestId("vote-up-button");
 		// upvote ボタンは voteCount (10) を表示する
@@ -101,12 +88,7 @@ describe("VoteButtons コンポーネント", () => {
 			false,
 		]);
 
-		render(
-			<VoteButtons
-				targetContentType={dummyVoteTarget}
-				translation={dummyTranslationDownvote}
-			/>,
-		);
+		render(<VoteButtons translation={dummyTranslationDownvote} />);
 
 		const downvoteButton = screen.getByTestId("vote-down-button");
 		expect(downvoteButton).toBeInTheDocument();
@@ -129,12 +111,7 @@ describe("VoteButtons コンポーネント", () => {
 			true, // isVoting: true
 		]);
 
-		render(
-			<VoteButtons
-				targetContentType={dummyVoteTarget}
-				translation={dummyTranslationUpvote}
-			/>,
-		);
+		render(<VoteButtons translation={dummyTranslationUpvote} />);
 
 		const upvoteButton = screen.getByTestId("vote-up-button");
 		const downvoteButton = screen.getByTestId("vote-down-button");

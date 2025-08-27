@@ -10,8 +10,6 @@ import {
 	fetchPageWithTitleAndComments,
 } from "@/app/[locale]/_db/page-detail-queries.server";
 import { fetchPageIdBySlug } from "@/app/[locale]/_db/page-utility-queries.server";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
-import { targetContentTypeValues } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
 import type { TranslateJobParams } from "@/features/translate/types";
@@ -26,7 +24,6 @@ export type TranslateActionState = ActionResponse<
 		pageSlug: string;
 		aiModel: string;
 		targetLocale: string;
-		targetContentType: TargetContentType;
 	}
 >;
 
@@ -34,7 +31,6 @@ const schema = z.object({
 	pageSlug: z.string().optional(),
 	aiModel: z.string().min(1),
 	targetLocale: z.string().min(1),
-	targetContentType: z.enum(targetContentTypeValues),
 });
 
 /* ───────── 共通ユーティリティ ───────── */
@@ -58,7 +54,6 @@ async function newJobAndSend(args: {
 	pageCommentId?: number;
 	title: string;
 	elements: Numbered[];
-	contentType: TargetContentType;
 	provider: "gemini" | "vertex";
 	jobs: TranslationJobForToast[];
 }) {
@@ -83,7 +78,6 @@ async function newJobAndSend(args: {
 		targetLocale: args.locale,
 		title: args.title,
 		numberedElements: args.elements,
-		targetContentType: args.contentType,
 		pageId: args.pageId,
 		pageCommentId: args.pageCommentId,
 	});
@@ -97,7 +91,6 @@ async function handlePage(opts: {
 	locale: string;
 	userId: string;
 	provider: "gemini" | "vertex";
-	contentType: TargetContentType;
 	jobs: TranslationJobForToast[];
 }) {
 	const id = (await fetchPageIdBySlug(opts.pageSlug))?.id;
@@ -111,8 +104,7 @@ async function handlePage(opts: {
 			locale: opts.locale,
 			pageId: id,
 			title: body.title,
-			elements: toNumbered(body.pageSegments),
-			contentType: opts.contentType,
+			elements: toNumbered(body.content.segments),
 			provider: opts.provider,
 			jobs: opts.jobs,
 		});
@@ -122,7 +114,7 @@ async function handlePage(opts: {
 	if (comments) {
 		for (const c of comments.pageComments) {
 			const elems = [
-				...toNumbered(c.pageCommentSegments),
+				...toNumbered(c.content.segments),
 				{ number: 0, text: comments.title },
 			];
 
@@ -134,7 +126,6 @@ async function handlePage(opts: {
 				pageCommentId: c.id,
 				title: comments.title,
 				elements: elems,
-				contentType: "pageComment",
 				provider: opts.provider,
 				jobs: opts.jobs,
 			});
@@ -163,7 +154,6 @@ export async function translateAction(
 			locale: data.targetLocale,
 			userId: currentUser.id,
 			provider,
-			contentType: data.targetContentType,
 			jobs,
 		});
 		if (pageResult && !pageResult.success) {

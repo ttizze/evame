@@ -31,9 +31,9 @@ describe("TranslateAction", () => {
 	beforeEach(async () => {
 		await prisma.user.deleteMany();
 		await prisma.page.deleteMany();
-		await prisma.pageSegment.deleteMany();
+		await prisma.content.deleteMany();
 		await prisma.pageComment.deleteMany();
-		await prisma.pageCommentSegment.deleteMany();
+		await prisma.segment.deleteMany();
 		vi.clearAllMocks();
 		(getCurrentUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
 			id: 1,
@@ -53,9 +53,9 @@ describe("TranslateAction", () => {
 	afterEach(async () => {
 		await prisma.user.deleteMany();
 		await prisma.page.deleteMany();
-		await prisma.pageSegment.deleteMany();
+		await prisma.content.deleteMany();
 		await prisma.pageComment.deleteMany();
-		await prisma.pageCommentSegment.deleteMany();
+		await prisma.segment.deleteMany();
 	});
 	it("should return unauthorized error if no user", async () => {
 		(getCurrentUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
@@ -66,7 +66,6 @@ describe("TranslateAction", () => {
 		formData.append("pageSlug", "mockUserId1-page1");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
-		formData.append("targetContentType", "pageComment");
 
 		await expect(translateAction({ success: false }, formData)).rejects.toThrow(
 			"NEXT_REDIRECT",
@@ -86,7 +85,9 @@ describe("TranslateAction", () => {
 			id: 1,
 			title: "Test Page",
 			slug: "test-page",
-			pageSegments: [{ number: 1, text: "Segment 1" }],
+			content: {
+				segments: [{ number: 1, text: "Segment 1" }],
+			},
 		};
 		vi.mocked(fetchPageIdBySlug).mockResolvedValue(mockPage);
 		(
@@ -106,7 +107,6 @@ describe("TranslateAction", () => {
 		formData.append("pageSlug", "test-page");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
-		formData.append("targetContentType", "page");
 
 		const result = await translateAction({ success: false }, formData);
 		console.log("result", result);
@@ -123,7 +123,6 @@ describe("TranslateAction", () => {
 		formData.append("pageSlug", "mockUserId1-page1");
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
-		formData.append("targetContentType", "page");
 
 		const result = await translateAction({ success: false }, formData);
 

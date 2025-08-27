@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { ContentKind, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 const JA_HERO_HEADER = "クリエイターのためのグローバルコミュニティ";
@@ -175,23 +175,22 @@ interface TranslationInput {
 }
 
 interface UpsertSegmentParams {
-	pageId: number;
+	contentId: number;
 	number: number;
 	text: string;
 	textAndOccurrenceHash: string;
 	translations: TranslationInput[];
 }
 async function upsertSegment(params: UpsertSegmentParams) {
-	await prisma.pageSegment.upsert({
+	await prisma.segment.upsert({
 		where: {
-			pageId_number: { pageId: params.pageId, number: params.number },
+			contentId_number: { contentId: params.contentId, number: params.number },
 		},
 		update: {
 			text: params.text,
 			number: params.number,
-			pageId: params.pageId,
 			textAndOccurrenceHash: params.textAndOccurrenceHash,
-			pageSegmentTranslations: {
+			segmentTranslations: {
 				create: params.translations.map((t) => ({
 					locale: t.locale,
 					text: t.text,
@@ -200,11 +199,11 @@ async function upsertSegment(params: UpsertSegmentParams) {
 			},
 		},
 		create: {
+			contentId: params.contentId,
 			text: params.text,
 			number: params.number,
-			pageId: params.pageId,
 			textAndOccurrenceHash: params.textAndOccurrenceHash,
-			pageSegmentTranslations: {
+			segmentTranslations: {
 				create: params.translations.map((t) => ({
 					locale: t.locale,
 					text: t.text,
@@ -569,22 +568,31 @@ async function addRequiredData() {
 
 	const BATCH_SIZE = 3; // Adjust based on your connection pool limit
 	const upsertPromises = segmentsByPage.flatMap(({ pageId, segments }) =>
-		segments.map(
-			(segment) => () =>
-				upsertSegment({
-					pageId,
-					number: segment.number,
-					text: segment.text,
-					textAndOccurrenceHash: segment.textAndOccurrenceHash,
-					translations: Object.entries(segment.translations).map(
-						([locale, text]) => ({
-							locale,
-							text,
-							userId: evame.id,
-						}),
-					),
-				}),
-		),
+		segments.map((segment) => async () => {
+			// pageIdからcontentIdを取得
+			const page = await prisma.page.findUnique({
+				where: { id: pageId },
+				select: { id: true },
+			});
+
+			if (!page?.id) {
+				throw new Error(`Page ${pageId} does not have a content`);
+			}
+
+			return upsertSegment({
+				contentId: page.id,
+				number: segment.number,
+				text: segment.text,
+				textAndOccurrenceHash: segment.textAndOccurrenceHash,
+				translations: Object.entries(segment.translations).map(
+					([locale, text]) => ({
+						locale,
+						text,
+						userId: evame.id,
+					}),
+				),
+			});
+		}),
 	);
 
 	// Process in batches
@@ -622,38 +630,58 @@ async function createUserAndPages() {
 		sourceLocale: string,
 		content: string,
 		aiLocales: string[],
-	) =>
-		prisma.page.upsert({
+	) => {
+		// 既存ページを確認
+		const existingPage = await prisma.page.findUnique({
 			where: { slug },
-			update: {
-				slug,
-				sourceLocale,
-				mdastJson: content,
-				status: "DRAFT",
-				userId: evame.id,
-				translationJobs: {
-					create: aiLocales.map((locale) => ({
-						locale,
-						status: "COMPLETED",
-						aiModel: "test-model",
-					})),
-				},
-			},
-			create: {
-				slug,
-				sourceLocale,
-				mdastJson: content,
-				status: "DRAFT",
-				userId: evame.id,
-				translationJobs: {
-					create: aiLocales.map((locale) => ({
-						locale,
-						status: "COMPLETED",
-						aiModel: "test-model",
-					})),
-				},
-			},
+			include: { content: true },
 		});
+
+		if (existingPage) {
+			// 既存ページを更新
+			return await prisma.page.update({
+				where: { id: existingPage.id },
+				data: {
+					sourceLocale,
+					mdastJson: content,
+					status: "DRAFT",
+					translationJobs: {
+						create: aiLocales.map((locale) => ({
+							locale,
+							status: "COMPLETED",
+							aiModel: "test-model",
+						})),
+					},
+				},
+			});
+		} else {
+			// 新しいコンテンツを作成
+			const pageContent = await prisma.content.create({
+				data: {
+					kind: ContentKind.PAGE,
+				},
+			});
+
+			// 新しいページを作成
+			return await prisma.page.create({
+				data: {
+					slug,
+					sourceLocale,
+					mdastJson: content,
+					status: "DRAFT",
+					userId: evame.id,
+					id: pageContent.id,
+					translationJobs: {
+						create: aiLocales.map((locale) => ({
+							locale,
+							status: "COMPLETED",
+							aiModel: "test-model",
+						})),
+					},
+				},
+			});
+		}
+	};
 
 	const [evameEnPage, evameJaPage] = await Promise.all([
 		createPage("evame", "en", EN_HERO_HEADER, ["ja", "zh", "ko", "es"]),

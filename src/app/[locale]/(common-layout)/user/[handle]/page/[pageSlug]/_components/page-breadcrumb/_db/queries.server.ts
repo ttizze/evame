@@ -1,29 +1,34 @@
-import { selectPageFields } from "@/app/[locale]/_db/page-list-queries.server";
-import { toBaseSegmentBundles } from "@/app/[locale]/_lib/to-base-segment-bundles";
-import { toBaseSegmentWithTranslations } from "@/app/[locale]/_lib/to-base-segment-with-translations";
+import { selectPageFields } from "@/app/[locale]/_db/queries.server";
+import { normalizeSegments } from "@/app/[locale]/_lib/normalize-segments";
+import type { SegmentForUI } from "@/app/[locale]/types";
+import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";
+
+type ParentNode = {
+	id: number;
+	slug: string;
+	order: number;
+	sourceLocale: string;
+	status: string;
+	parentId: number | null;
+	createdAt: string;
+	user: SanitizedUser;
+	content: { segments: SegmentForUI[] };
+	children: ParentNode[];
+};
 
 // 親ページの階層を取得する関数
 export async function getParentChain(pageId: number, locale: string) {
-	const parentChain = [];
+	const parentChain: ParentNode[] = [];
 	let currentParentId = await getParentId(pageId);
 
 	while (currentParentId) {
 		const parent = await prisma.page.findUnique({
 			where: { id: currentParentId },
-			select: selectPageFields(locale),
+			select: selectPageFields(locale, { number: 0 }),
 		});
 
 		if (parent) {
-			const segmentBundles = toBaseSegmentBundles(
-				"page",
-				parent.id,
-				toBaseSegmentWithTranslations(
-					parent.pageSegments,
-					"pageSegmentTranslations",
-				),
-			);
-
 			parentChain.unshift({
 				id: parent.id,
 				slug: parent.slug,
@@ -32,8 +37,10 @@ export async function getParentChain(pageId: number, locale: string) {
 				status: parent.status,
 				parentId: parent.parentId,
 				createdAt: parent.createdAt.toISOString(),
-				user: parent.user,
-				segmentBundles,
+				user: parent.user as SanitizedUser,
+				content: {
+					segments: normalizeSegments(parent.content.segments),
+				},
 				children: [],
 			});
 

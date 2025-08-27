@@ -30,6 +30,9 @@ export function decrypt(text: string): string {
 	}
 
 	const [ivHex, encryptedHex] = text.split(":");
+	if (!ivHex || !encryptedHex) {
+		throw new Error("Input is not in encrypted format - missing separator ':'");
+	}
 
 	// Verify hex format
 	if (!/^[0-9a-f]+$/i.test(ivHex) || !/^[0-9a-f]+$/i.test(encryptedHex)) {

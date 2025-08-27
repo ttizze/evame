@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
 
 export async function getPageSegments(pageId: number) {
-	return await prisma.pageSegment.findMany({
-		where: { pageId },
+	return await prisma.segment.findMany({
+		where: { content: { page: { id: pageId } } },
 		select: {
 			id: true,
 			number: true,
@@ -11,9 +11,9 @@ export async function getPageSegments(pageId: number) {
 }
 
 export async function getPageCommentSegments(pageCommentId: number) {
-	return await prisma.pageCommentSegment.findMany({
+	return await prisma.segment.findMany({
 		where: {
-			pageCommentId,
+			content: { pageComment: { id: pageCommentId } },
 		},
 		select: {
 			id: true,

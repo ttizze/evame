@@ -2,7 +2,7 @@
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import Form from "next/form";
 import { memo, useActionState } from "react";
-import type { BaseTranslation } from "@/app/[locale]/types";
+import type { TranslationWithInfo } from "@/app/[locale]/types";
 import {
 	type VoteTranslationActionResponse,
 	voteTranslationAction,
@@ -10,7 +10,7 @@ import {
 import { VoteButton } from "./vote-button";
 
 interface VoteButtonsProps {
-	translation: BaseTranslation;
+	translation: TranslationWithInfo;
 }
 
 export const VoteButtons = memo(function VoteButtons({

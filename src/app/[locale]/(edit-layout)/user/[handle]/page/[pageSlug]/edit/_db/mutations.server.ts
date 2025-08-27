@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { ContentKind } from "@prisma/client";
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
 import { prisma } from "@/lib/prisma";
 
@@ -11,15 +12,40 @@ export async function upsertPageAndSegments(p: {
 	sourceLocale: string;
 	segments: SegmentDraft[];
 }) {
-	const page = await prisma.page.upsert({
-		where: { slug: p.pageSlug, userId: p.userId },
-		update: { mdastJson: p.mdastJson, sourceLocale: p.sourceLocale },
-		create: {
-			slug: p.pageSlug,
-			userId: p.userId,
-			mdastJson: p.mdastJson,
-			sourceLocale: p.sourceLocale,
-		},
+	const page = await prisma.$transaction(async (tx) => {
+		// 既存ページを確認
+		const existingPage = await tx.page.findFirst({
+			where: { slug: p.pageSlug, userId: p.userId },
+		});
+
+		if (existingPage) {
+			// 既存ページを更新
+			return await tx.page.update({
+				where: { id: existingPage.id },
+				data: {
+					mdastJson: p.mdastJson,
+					sourceLocale: p.sourceLocale,
+				},
+			});
+		} else {
+			// 新しいコンテンツを作成
+			const content = await tx.content.create({
+				data: {
+					kind: ContentKind.PAGE,
+				},
+			});
+
+			// 新しいページを作成
+			return await tx.page.create({
+				data: {
+					slug: p.pageSlug,
+					userId: p.userId,
+					mdastJson: p.mdastJson,
+					sourceLocale: p.sourceLocale,
+					id: content.id,
+				},
+			});
+		}
 	});
 
 	await syncPageSegments(page.id, p.segments);
@@ -27,17 +53,27 @@ export async function upsertPageAndSegments(p: {
 
 /** 1ページ分のセグメントを同期 */
 async function syncPageSegments(pageId: number, drafts: SegmentDraft[]) {
-	const existing = await prisma.pageSegment.findMany({
-		where: { pageId },
+	// ページに関連するContentを取得
+	const page = await prisma.page.findUnique({
+		where: { id: pageId },
+		select: { id: true },
+	});
+
+	if (!page?.id) {
+		throw new Error(`Page ${pageId} does not have a content`);
+	}
+
+	const existing = await prisma.segment.findMany({
+		where: { contentId: page.id },
 		select: { textAndOccurrenceHash: true },
 	});
-	const stale = new Set(existing.map((e) => e.textAndOccurrenceHash as string));
+	const stale = new Set(existing.map((e) => e.textAndOccurrenceHash));
 
 	await prisma.$transaction(async (tx) => {
 		// A. 並び避難（既存あれば）
 		if (existing.length) {
-			await tx.pageSegment.updateMany({
-				where: { pageId },
+			await tx.segment.updateMany({
+				where: { contentId: page.id },
 				data: { number: { increment: 1_000_000 } },
 			});
 		}
@@ -48,16 +84,16 @@ async function syncPageSegments(pageId: number, drafts: SegmentDraft[]) {
 			const chunk = drafts.slice(i, i + CHUNK);
 			await Promise.all(
 				chunk.map((d) =>
-					tx.pageSegment.upsert({
+					tx.segment.upsert({
 						where: {
-							pageId_textAndOccurrenceHash: {
-								pageId,
+							contentId_textAndOccurrenceHash: {
+								contentId: page.id,
 								textAndOccurrenceHash: d.hash,
 							},
 						},
 						update: { text: d.text, number: d.number },
 						create: {
-							pageId,
+							contentId: page.id,
 							text: d.text,
 							number: d.number,
 							textAndOccurrenceHash: d.hash,
@@ -72,8 +108,11 @@ async function syncPageSegments(pageId: number, drafts: SegmentDraft[]) {
 
 		// C. 余った行を一括削除
 		if (stale.size) {
-			await tx.pageSegment.deleteMany({
-				where: { pageId, textAndOccurrenceHash: { in: [...stale] } },
+			await tx.segment.deleteMany({
+				where: {
+					contentId: page.id,
+					textAndOccurrenceHash: { in: [...stale] },
+				},
 			});
 		}
 	});

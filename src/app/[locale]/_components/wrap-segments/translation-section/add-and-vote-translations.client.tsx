@@ -3,7 +3,10 @@ import { ChevronDown, ChevronUp, Languages } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useMemo, useState } from "react";
 import { useSegmentTranslations } from "@/app/[locale]/_hooks/use-segment-translations";
-import type { BaseTranslation } from "@/app/[locale]/types";
+import type {
+	TranslationWithInfo,
+	TranslationWithUser,
+} from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { AddTranslationForm } from "./add-translation-form/client";
@@ -15,7 +18,7 @@ const INITIAL_DISPLAY_COUNT = 3;
 interface AddAndVoteTranslationsProps {
 	segmentId: number;
 	open: boolean;
-	bestTranslation: BaseTranslation;
+	bestTranslation: TranslationWithUser;
 }
 
 export function AddAndVoteTranslations({
@@ -35,7 +38,7 @@ export function AddAndVoteTranslations({
 	const alternativeTranslations = data?.translations ?? [];
 
 	// SWRから取得したbestTranslationCurrentUserVoteとbestTranslationUserをbestTranslationとマージ
-	const mergedBestTranslation = useMemo(() => {
+	const mergedBestTranslation: TranslationWithInfo = useMemo(() => {
 		const user = data?.bestTranslationUser ?? bestTranslation.user;
 		const currentUserVote = data?.bestTranslationCurrentUserVote ?? undefined;
 
@@ -43,7 +46,7 @@ export function AddAndVoteTranslations({
 			...bestTranslation,
 			user,
 			currentUserVote,
-		};
+		} as TranslationWithInfo;
 	}, [
 		bestTranslation,
 		data?.bestTranslationCurrentUserVote,

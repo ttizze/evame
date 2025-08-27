@@ -40,33 +40,17 @@ function buildData<Out extends TranslationBase & { segmentId: number }>(
 		];
 	});
 }
-export async function saveTranslationsForPage(
+
+export async function saveTranslations(
 	extracted: NumberedElement[],
-	pageSegments: Segment[],
+	segments: Segment[],
 	locale: string,
 	aiModel: string,
 ) {
 	const userId = await getOrCreateAIUser(aiModel);
 	const data = buildData<Prisma.SegmentTranslationCreateManyInput>(
 		extracted,
-		pageSegments,
-		locale,
-		userId,
-	);
-
-	if (data.length) await prisma.segmentTranslation.createMany({ data });
-}
-
-export async function saveTranslationsForPageComment(
-	extracted: NumberedElement[],
-	pageCommentSegments: Segment[],
-	locale: string,
-	aiModel: string,
-) {
-	const userId = await getOrCreateAIUser(aiModel);
-	const data = buildData<Prisma.SegmentTranslationCreateManyInput>(
-		extracted,
-		pageCommentSegments,
+		segments,
 		locale,
 		userId,
 	);

@@ -2,7 +2,7 @@
 import { EllipsisVertical, Trash2 } from "lucide-react";
 import { useActionState } from "react";
 import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
-import type { BaseTranslation } from "@/app/[locale]/types";
+import type { TranslationWithInfo } from "@/app/[locale]/types";
 import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,7 @@ import { VoteButtons } from "../vote-buttons/client";
 import { deleteTranslationAction } from "./action";
 
 interface TranslationItemProps {
-	translation: BaseTranslation;
+	translation: TranslationWithInfo;
 }
 
 export function TranslationListItem({ translation }: TranslationItemProps) {

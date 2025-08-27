@@ -26,16 +26,12 @@ model User {
   credential                         UserCredential?
   geminiApiKey                       GeminiApiKey?
   pages                              Page[]
-  pageSegmentsTranslations           PageSegmentTranslation[]
   segmentTranslations                SegmentTranslation[]
-  votes                              Vote[]
   translationVotes                   TranslationVote[]
   likePages                          LikePage[]
   followers                          Follow[]                            @relation("following")
   following                          Follow[]                            @relation("follower")
   pageComments                       PageComment[]
-  pageCommentSegmentTranslations     PageCommentSegmentTranslation[]
-  pageCommentSegmentTranslationVotes PageCommentSegmentTranslationVote[]
   accounts                           Account[]
   sessions                           Session[]
   notifications                      Notification[]                      @relation("UserNotifications")
@@ -124,7 +120,7 @@ enum PageStatus {
 }
 
 model Page {
-  id       Int    @id @default(autoincrement())
+  id       Int    @id
   parentId Int?   @map("parent_id")
   parent   Page?  @relation("ParentPage", fields: [parentId], references: [id])
   children Page[] @relation("ParentPage")
@@ -137,11 +133,9 @@ model Page {
   status                      PageStatus                   @default(DRAFT)
   createdAt                   DateTime                     @default(now()) @map("created_at")
   updatedAt                   DateTime                     @updatedAt @map("updated_at")
-  contentId                   Int                         @unique @map("content_id")
-  content                     Content                     @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  content                     Content                     @relation(fields: [id], references: [id], onDelete: Cascade)
   user                        User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId                      String                       @map("user_id")
-  pageSegments                PageSegment[]
   tagPages                    TagPage[]
   likePages                   LikePage[]
   pageComments                PageComment[]
@@ -184,47 +178,6 @@ model PageLocaleTranslationProof {
   @@map("page_locale_translation_proofs")
 }
 
-model PageSegment {
-  id                      Int                      @id @default(autoincrement())
-  text                    String
-  number                  Int
-  textAndOccurrenceHash   String                   @map("text_and_occurrence_hash")
-  pageSegmentTranslations PageSegmentTranslation[]
-  page                    Page                     @relation(fields: [pageId], references: [id], onDelete: Cascade)
-  pageId                  Int                      @map("page_id")
-  createdAt               DateTime                 @default(now()) @map("created_at")
-  updatedAt               DateTime                 @updatedAt @map("updated_at")
-
-  @@unique([pageId, number])
-  @@unique([pageId, textAndOccurrenceHash])
-  @@index([pageId])
-  @@index([number])
-  @@index([textAndOccurrenceHash])
-  @@map("page_segments")
-}
-
-model PageSegmentTranslation {
-  id            Int            @id @default(autoincrement())
-  locale        String
-  text          String
-  pageSegmentId Int            @map("page_segment_id")
-  userId        String         @map("user_id")
-  point         Int            @default(0)
-  isArchived    Boolean        @default(false) @map("is_archived")
-  createdAt     DateTime       @default(now()) @map("created_at")
-  pageSegment   PageSegment    @relation(fields: [pageSegmentId], references: [id], onDelete: Cascade)
-  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  votes         Vote[]
-  notifications Notification[]
-
-  @@index([pageSegmentId])
-  @@index([userId])
-  @@index([locale])
-  @@index([locale, isArchived])
-  @@index([pageSegmentId, locale, isArchived])
-  @@index([point, createdAt])
-  @@map("page_segment_translations")
-}
 
 model LikePage {
   id        Int      @id @default(autoincrement())
@@ -263,24 +216,9 @@ model TagPage {
   @@map("tag_pages")
 }
 
-model Vote {
-  id                       Int                    @id @default(autoincrement())
-  userId                   String                 @map("user_id")
-  pageSegmentTranslationId Int                    @map("page_segment_translation_id")
-  isUpvote                 Boolean                @map("is_upvote")
-  createdAt                DateTime               @default(now()) @map("created_at")
-  updatedAt                DateTime               @updatedAt @map("updated_at")
-  pageSegmentTranslation   PageSegmentTranslation @relation(fields: [pageSegmentTranslationId], references: [id], onDelete: Cascade)
-  user                     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([pageSegmentTranslationId, userId])
-  @@index([pageSegmentTranslationId])
-  @@index([userId])
-  @@map("votes")
-}
 
 model PageComment {
-  id                  Int                  @id @default(autoincrement())
+  id                  Int                  @id
   mdastJson           Json                 @map("mdast_json")
   locale              String
   userId              String               @map("user_id")
@@ -288,73 +226,17 @@ model PageComment {
   parentId            Int?                 @map("parent_id")
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
-  contentId           Int                 @unique @map("content_id")
-  content             Content             @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  content             Content             @relation(fields: [id], references: [id], onDelete: Cascade)
   user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   page                Page                 @relation(fields: [pageId], references: [id], onDelete: Cascade)
   parent              PageComment?         @relation("CommentReplies", fields: [parentId], references: [id], onDelete: SetNull)
   replies             PageComment[]        @relation("CommentReplies")
-  pageCommentSegments PageCommentSegment[]
   notifications       Notification[]
 
   @@index([userId])
   @@index([pageId])
   @@index([createdAt])
   @@map("page_comments")
-}
-
-model PageCommentSegment {
-  id                             Int                             @id @default(autoincrement())
-  text                           String
-  number                         Int
-  textAndOccurrenceHash          String                          @map("text_and_occurrence_hash")
-  pageCommentId                  Int                             @map("page_comment_id")
-  createdAt                      DateTime                        @default(now()) @map("created_at")
-  updatedAt                      DateTime                        @updatedAt @map("updated_at")
-  pageComment                    PageComment                     @relation(fields: [pageCommentId], references: [id], onDelete: Cascade)
-  pageCommentSegmentTranslations PageCommentSegmentTranslation[]
-
-  @@unique([pageCommentId, number])
-  @@unique([pageCommentId, textAndOccurrenceHash])
-  @@index([pageCommentId])
-  @@index([textAndOccurrenceHash])
-  @@map("page_comment_segments")
-}
-
-model PageCommentSegmentTranslation {
-  id                                 Int                                 @id @default(autoincrement())
-  locale                             String
-  text                               String
-  userId                             String                              @map("user_id")
-  point                              Int                                 @default(0)
-  createdAt                          DateTime                            @default(now()) @map("created_at")
-  updatedAt                          DateTime                            @updatedAt @map("updated_at")
-  user                               User                                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pageCommentSegmentId               Int                                 @map("page_comment_segment_id")
-  pageCommentSegment                 PageCommentSegment                  @relation(fields: [pageCommentSegmentId], references: [id], onDelete: Cascade)
-  pageCommentSegmentTranslationVotes PageCommentSegmentTranslationVote[]
-  notifications                      Notification[]
-
-  @@index([pageCommentSegmentId])
-  @@index([userId])
-  @@index([locale])
-  @@map("page_comment_segment_translations")
-}
-
-model PageCommentSegmentTranslationVote {
-  id                              Int                           @id @default(autoincrement())
-  userId                          String                        @map("user_id")
-  pageCommentSegmentTranslationId Int                           @map("page_comment_segment_translation_id")
-  isUpvote                        Boolean                       @map("is_upvote")
-  createdAt                       DateTime                      @default(now()) @map("created_at")
-  updatedAt                       DateTime                      @updatedAt @map("updated_at")
-  pageCommentSegmentTranslation   PageCommentSegmentTranslation @relation(fields: [pageCommentSegmentTranslationId], references: [id], onDelete: Cascade)
-  user                            User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([pageCommentSegmentTranslationId, userId])
-  @@index([pageCommentSegmentTranslationId])
-  @@index([userId])
-  @@map("page_comment_segment_translation_votes")
 }
 
 model Account {
@@ -397,8 +279,6 @@ model Notification {
 
   pageId                          Int? @map("page_id")
   pageCommentId                   Int? @map("page_comment_id")
-  pageSegmentTranslationId        Int? @map("page_segment_translation_id")
-  pageCommentSegmentTranslationId Int? @map("page_comment_segment_translation_id")
   segmentTranslationId            Int? @map("segment_translation_id")
 
   user  User @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
@@ -406,8 +286,6 @@ model Notification {
 
   page                          Page?                          @relation(fields: [pageId], references: [id])
   pageComment                   PageComment?                   @relation(fields: [pageCommentId], references: [id])
-  pageSegmentTranslation        PageSegmentTranslation?        @relation(fields: [pageSegmentTranslationId], references: [id])
-  pageCommentSegmentTranslation PageCommentSegmentTranslation? @relation(fields: [pageCommentSegmentTranslationId], references: [id])
   segmentTranslation            SegmentTranslation?            @relation(fields: [segmentTranslationId], references: [id])
 
   @@index([userId])

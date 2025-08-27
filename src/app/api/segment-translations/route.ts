@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
 
 		return NextResponse.json({
 			bestTranslationCurrentUserVote:
-				bestTranslationWithVote?.votes?.[0] ?? null,
+				bestTranslationWithVote?.votes?.[0] ?? undefined,
 			bestTranslationUser: bestTranslationWithVote?.user ?? null,
 			translations: translations.map((t) => ({
 				id: t.id,
@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
 				point: t.point,
 				createdAt: t.createdAt.toISOString(),
 				user: t.user,
-				currentUserVote: t.votes?.[0] ?? null,
+				currentUserVote: t.votes?.[0] ?? undefined,
 			})),
 		});
 	} catch (error) {

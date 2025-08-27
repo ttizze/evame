@@ -7,7 +7,6 @@ import { GeminiApiKeyDialog } from "@/app/[locale]/_components/gemini-api-key-di
 import { StartButton } from "@/app/[locale]/_components/start-button";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -42,9 +41,7 @@ export function AddTranslateDialog({
 	pageSlug,
 }: AddTranslateDialogProps) {
 	const currentLocale = useLocale();
-	let targetContentType: TargetContentType;
 	if (pageSlug) {
-		targetContentType = "page";
 	} else {
 		throw new Error("pageSlug is required");
 	}
@@ -111,11 +108,6 @@ export function AddTranslateDialog({
 									/>
 									<input name="pageSlug" type="hidden" value={pageSlug} />
 									<input name="aiModel" type="hidden" value={selectedModel} />
-									<input
-										name="targetContentType"
-										type="hidden"
-										value={targetContentType}
-									/>
 									<Button
 										className="w-full"
 										disabled={isTranslating}
@@ -156,12 +148,6 @@ export function AddTranslateDialog({
 								translateState.zodErrors?.targetLocale && (
 									<p className="text-red-500">
 										{translateState.zodErrors.targetLocale[0]}
-									</p>
-								)}
-							{!translateState.success &&
-								translateState.zodErrors?.targetContentType && (
-									<p className="text-red-500">
-										{translateState.zodErrors.targetContentType[0]}
 									</p>
 								)}
 						</>

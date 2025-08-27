@@ -1,6 +1,6 @@
-import type { BaseTranslation } from "../types";
+import type { TranslationWithInfo } from "../types";
 
-export function selectBestTranslation<T extends BaseTranslation>(
+export function selectBestTranslation<T extends TranslationWithInfo>(
 	translations: readonly T[],
 ): T | null {
 	if (translations.length === 0) return null;

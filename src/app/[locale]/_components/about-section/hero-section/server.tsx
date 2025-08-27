@@ -22,8 +22,8 @@ export const Icon = ({ className, ...rest }: { className: string }) => {
 
 export default async function HeroSection({ locale }: { locale: string }) {
 	const topPageDetail = await fetchAboutPage(locale);
-	const [title, text] = topPageDetail.segmentBundles
-		.filter((sb) => sb.number === 0 || sb.number === 1)
+	const [title, text] = topPageDetail.content.segments
+		.filter((s) => s.number === 0 || s.number === 1)
 		.sort((a, b) => a.number - b.number);
 
 	if (!title || !text) {
@@ -41,11 +41,11 @@ export default async function HeroSection({ locale }: { locale: string }) {
 			<Icon className="absolute h-6 w-6 -bottom-3 -right-3 dark:text-white text-black" />
 			<div className="relative z-10 px-4 md:px-8 max-w-4xl mx-auto">
 				<h1 className="text-2xl md:text-4xl font-bold mb-6 text-center">
-					<WrapSegmentsComponent bundle={heroTitle} className="w-full mb-2" />
+					<WrapSegmentsComponent className="w-full mb-2" segment={heroTitle} />
 				</h1>
 
 				<span className="text-xl mb-12 w-full">
-					<WrapSegmentsComponent bundle={heroText} className="mb-2" />
+					<WrapSegmentsComponent className="mb-2" segment={heroText} />
 				</span>
 				<div className="mb-12 flex justify-center mt-10">
 					<StartButton

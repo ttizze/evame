@@ -1,55 +1,50 @@
-import type { Page, Tag, TagPage } from "@prisma/client";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
+import type {
+	Page,
+	SegmentTranslation,
+	Tag,
+	TagPage,
+	TranslationVote,
+} from "@prisma/client";
 import type { SanitizedUser } from "../types";
 
-export interface BaseSegment {
+export type TranslationWithUser = SegmentTranslation & {
+	user: SanitizedUser;
+};
+export type TranslationWithInfo = TranslationWithUser & {
+	currentUserVote: TranslationVote | undefined; // undefined = 未投票
+};
+
+/**
+ * UI 用セグメント（Content -> Segment の最小形）。
+ * segmentTranslations はクエリ側で take:1 などにより最良を先頭に入れる前提。
+ */
+export interface SegmentForUI {
 	id: number;
 	number: number;
 	text: string;
-}
-
-export interface BaseTranslation {
-	id: number;
-	locale: string;
-	text: string;
-	point: number;
-	createdAt: Date;
-	user: SanitizedUser;
-	currentUserVote?: UserVote; //初期データは軽量化のためユーザーはundefined AddAndVoteComponentが開くとswrでユーザーが取得される
-}
-
-export interface UserVote {
-	isUpvote: boolean;
-	updatedAt: Date;
-}
-
-/** React へ渡す統一バンドル */
-export interface BaseSegmentBundle extends BaseSegment {
-	parentType: TargetContentType;
-	parentId: number;
-	segmentTranslation?: BaseTranslation;
+	segmentTranslation: TranslationWithUser | undefined;
 }
 
 type TagPageWithTag = TagPage & {
 	tag: Tag;
 };
-export type PageDetail = Page & {
+export type PageDetail = Omit<Page, "updatedAt" | "userId"> & {
 	user: SanitizedUser;
 	tagPages: TagPageWithTag[];
-	segmentBundles: BaseSegmentBundle[];
+	content: {
+		segments: SegmentForUI[];
+	};
 	_count: {
 		pageComments: number;
-		children?: number;
+		children: number | undefined;
 	};
 };
-export type PageForList = Omit<
-	PageDetail,
-	"updatedAt" | "userId" | "mdastJson"
->;
+
+export type PageForList = Omit<PageDetail, "mdastJson">;
 
 export type PageForTitle = Omit<
 	PageDetail,
-	"updatedAt" | "userId" | "mdastJson" | "tagPages" | "_count"
+	"mdastJson" | "tagPages" | "_count"
 > & {
 	_count: {
 		children: number;

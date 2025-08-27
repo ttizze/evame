@@ -1,6 +1,5 @@
 import type { Prisma } from "@prisma/client";
 import { calcProofStatus } from "@/app/[locale]/_components/wrap-segments/translation-section/vote-buttons/_lib/translation-proof-status";
-import type { TargetContentType } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/constants";
 import { prisma } from "@/lib/prisma";
 
 type VoteOutcome = {
@@ -48,13 +47,16 @@ export async function handleVote(
 	segmentTranslationId: number,
 	isUpvote: boolean,
 	currentUserId: string,
-	targetContentType: TargetContentType,
 ) {
-	if (targetContentType === "page") {
+	const kind = await prisma.segmentTranslation.findUnique({
+		where: { id: segmentTranslationId },
+		select: { segment: { select: { content: { select: { kind: true } } } } },
+	});
+	const contentKind = kind?.segment.content.kind;
+	if (contentKind === "PAGE") {
 		return processPageVote(segmentTranslationId, isUpvote, currentUserId);
-	} else {
-		return processCommentVote(segmentTranslationId, isUpvote, currentUserId);
 	}
+	return processCommentVote(segmentTranslationId, isUpvote, currentUserId);
 }
 
 async function processPageVote(
@@ -63,18 +65,20 @@ async function processPageVote(
 	currentUserId: string,
 ) {
 	return prisma.$transaction(async (tx) => {
-		const { finalIsUpvote } = await applyVoteOnPageSegment(
+		const { finalIsUpvote } = await applyVoteUnified(
 			tx,
 			segmentTranslationId,
 			isUpvote,
 			currentUserId,
 		);
 
-		const segmentTranslation = await tx.pageSegmentTranslation.findUnique({
+		const segmentTranslation = await tx.segmentTranslation.findUnique({
 			where: { id: segmentTranslationId },
 			select: {
 				locale: true,
-				pageSegment: { select: { pageId: true } },
+				segment: {
+					select: { content: { select: { page: { select: { id: true } } } } },
+				},
 				point: true,
 			},
 		});
@@ -85,10 +89,12 @@ async function processPageVote(
 			};
 		}
 
-		const { pageId } = segmentTranslation.pageSegment;
+		const pageId = segmentTranslation.segment.content.page?.id;
 		const { locale } = segmentTranslation;
 
-		await updateProofStatus(tx, pageId, locale);
+		if (pageId) {
+			await updateProofStatus(tx, pageId, locale);
+		}
 
 		return {
 			success: true,
@@ -102,20 +108,23 @@ async function updateProofStatus(
 	pageId: number,
 	locale: string,
 ) {
-	const totalSegments = await tx.pageSegment.count({ where: { pageId } });
+	const totalSegments = await tx.segment.count({
+		where: { content: { page: { id: pageId } } },
+	});
 	if (totalSegments === 0) return;
-	const segmentsWith1PlusVotes = await tx.pageSegmentTranslation.count({
+
+	const segmentsWith1PlusVotes = await tx.segmentTranslation.count({
 		where: {
 			locale,
-			pageSegment: { pageId },
+			segment: { content: { page: { id: pageId } } },
 			point: { gte: 1 },
 		},
 	});
 
-	const segmentsWith2PlusVotes = await tx.pageSegmentTranslation.count({
+	const segmentsWith2PlusVotes = await tx.segmentTranslation.count({
 		where: {
 			locale,
-			pageSegment: { pageId },
+			segment: { content: { page: { id: pageId } } },
 			point: { gte: 2 },
 		},
 	});
@@ -133,17 +142,17 @@ async function updateProofStatus(
 	});
 }
 
-/* 投票と point 更新を行い、最終的な isUpvote を返す */
-async function applyVoteOnPageSegment(
+/* 投票と point 更新（統一テーブル）を行い、最終的な isUpvote を返す */
+async function applyVoteUnified(
 	tx: Prisma.TransactionClient,
 	segmentTranslationId: number,
 	isUpvote: boolean,
 	currentUserId: string,
 ) {
-	const existingVote = await tx.vote.findUnique({
+	const existingVote = await tx.translationVote.findUnique({
 		where: {
-			pageSegmentTranslationId_userId: {
-				pageSegmentTranslationId: segmentTranslationId,
+			translationId_userId: {
+				translationId: segmentTranslationId,
 				userId: currentUserId,
 			},
 		},
@@ -156,25 +165,37 @@ async function applyVoteOnPageSegment(
 
 	switch (outcome.action) {
 		case "delete":
-			await tx.vote.delete({ where: { id: existingVote?.id } });
+			await tx.translationVote.delete({
+				where: {
+					translationId_userId: {
+						translationId: segmentTranslationId,
+						userId: currentUserId,
+					},
+				},
+			});
 			break;
 		case "update":
-			await tx.vote.update({
-				where: { id: existingVote?.id },
+			await tx.translationVote.update({
+				where: {
+					translationId_userId: {
+						translationId: segmentTranslationId,
+						userId: currentUserId,
+					},
+				},
 				data: { isUpvote },
 			});
 			break;
 		case "create":
-			await tx.vote.create({
+			await tx.translationVote.create({
 				data: {
+					translationId: segmentTranslationId,
 					userId: currentUserId,
-					pageSegmentTranslationId: segmentTranslationId,
 					isUpvote,
 				},
 			});
 	}
 
-	await tx.pageSegmentTranslation.update({
+	await tx.segmentTranslation.update({
 		where: { id: segmentTranslationId },
 		data: { point: { increment: outcome.pointDelta } },
 	});
@@ -188,53 +209,23 @@ async function processCommentVote(
 	currentUserId: string,
 ) {
 	return prisma.$transaction(async (tx) => {
-		const existingVote = await tx.pageCommentSegmentTranslationVote.findUnique({
-			where: {
-				pageCommentSegmentTranslationId_userId: {
-					pageCommentSegmentTranslationId: segmentTranslationId,
-					userId: currentUserId,
-				},
-			},
-		});
-
-		const outcome = computeVoteOutcome(
-			existingVote?.isUpvote ?? undefined,
+		const { finalIsUpvote } = await applyVoteUnified(
+			tx,
+			segmentTranslationId,
 			isUpvote,
+			currentUserId,
 		);
 
-		switch (outcome.action) {
-			case "delete":
-				await tx.pageCommentSegmentTranslationVote.delete({
-					where: { id: existingVote?.id },
-				});
-				break;
-			case "update":
-				await tx.pageCommentSegmentTranslationVote.update({
-					where: { id: existingVote?.id },
-					data: { isUpvote },
-				});
-				break;
-			case "create":
-				await tx.pageCommentSegmentTranslationVote.create({
-					data: {
-						userId: currentUserId,
-						pageCommentSegmentTranslationId: segmentTranslationId,
-						isUpvote,
-					},
-				});
-		}
-
-		const updatedTranslation = await tx.pageCommentSegmentTranslation.update({
+		const updatedTranslation = await tx.segmentTranslation.findUnique({
 			where: { id: segmentTranslationId },
-			data: { point: { increment: outcome.pointDelta } },
 			select: { point: true },
 		});
 
 		return {
 			success: true,
 			data: {
-				isUpvote: outcome.finalIsUpvote,
-				point: updatedTranslation.point,
+				isUpvote: finalIsUpvote,
+				point: updatedTranslation?.point ?? 0,
 			},
 		};
 	});
@@ -244,21 +235,17 @@ export async function createNotificationPageSegmentTranslationVote(
 	pageSegmentTranslationId: number,
 	actorId: string,
 ) {
-	const pageSegmentTranslation = await prisma.pageSegmentTranslation.findUnique(
-		{
-			where: { id: pageSegmentTranslationId },
-			select: {
-				user: { select: { id: true } },
-			},
-		},
-	);
-	if (!pageSegmentTranslation) {
+	const segmentTranslation = await prisma.segmentTranslation.findUnique({
+		where: { id: pageSegmentTranslationId },
+		select: { user: { select: { id: true } } },
+	});
+	if (!segmentTranslation) {
 		return;
 	}
 	await prisma.notification.create({
 		data: {
-			pageSegmentTranslationId: pageSegmentTranslationId,
-			userId: pageSegmentTranslation.user.id,
+			segmentTranslationId: pageSegmentTranslationId,
+			userId: segmentTranslation.user.id,
 			actorId: actorId,
 			type: "PAGE_SEGMENT_TRANSLATION_VOTE",
 		},

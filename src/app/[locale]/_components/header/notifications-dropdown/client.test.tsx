@@ -20,8 +20,7 @@ const sampleNotifications: NotificationWithRelations[] = [
 		actorId: "john_doe",
 		pageId: null,
 		pageCommentId: 1,
-		pageSegmentTranslationId: null,
-		pageCommentSegmentTranslationId: null,
+		segmentTranslationId: null,
 		read: false,
 		createdAt: new Date("2023-01-01T00:00:00Z"),
 		type: "PAGE_COMMENT",
@@ -39,11 +38,12 @@ const sampleNotifications: NotificationWithRelations[] = [
 		pageComment: {
 			page: {
 				slug: "page-slug-comment",
-				pageSegments: [{ text: "Commented Page Title" }],
+				content: {
+					segments: [{ text: "Commented Page Title" }],
+				},
 			},
 		},
-		pageSegmentTranslation: null,
-		pageCommentSegmentTranslation: null,
+		segmentTranslation: null,
 	},
 	{
 		id: 2,
@@ -51,8 +51,7 @@ const sampleNotifications: NotificationWithRelations[] = [
 		actorId: "jane_doe",
 		pageId: 1,
 		pageCommentId: null,
-		pageSegmentTranslationId: null,
-		pageCommentSegmentTranslationId: null,
+		segmentTranslationId: null,
 		read: true,
 		createdAt: new Date("2023-01-02T00:00:00Z"),
 		type: "PAGE_LIKE",
@@ -68,11 +67,12 @@ const sampleNotifications: NotificationWithRelations[] = [
 		},
 		page: {
 			slug: "page-slug-like",
-			pageSegments: [{ text: "Liked Page Title" }],
+			content: {
+				segments: [{ text: "Liked Page Title" }],
+			},
 		},
 		pageComment: null,
-		pageSegmentTranslation: null,
-		pageCommentSegmentTranslation: null,
+		segmentTranslation: null,
 	},
 	{
 		id: 3,
@@ -80,8 +80,7 @@ const sampleNotifications: NotificationWithRelations[] = [
 		actorId: "bob_smith",
 		pageId: null,
 		pageCommentId: null,
-		pageSegmentTranslationId: null,
-		pageCommentSegmentTranslationId: null,
+		segmentTranslationId: null,
 		read: false,
 		createdAt: new Date("2023-01-03T00:00:00Z"),
 		type: "FOLLOW",
@@ -97,8 +96,7 @@ const sampleNotifications: NotificationWithRelations[] = [
 		},
 		page: null,
 		pageComment: null,
-		pageSegmentTranslation: null,
-		pageCommentSegmentTranslation: null,
+		segmentTranslation: null,
 	},
 	{
 		id: 4,
@@ -106,8 +104,7 @@ const sampleNotifications: NotificationWithRelations[] = [
 		actorId: "alice_jones",
 		pageId: null,
 		pageCommentId: null,
-		pageSegmentTranslationId: 1,
-		pageCommentSegmentTranslationId: null,
+		segmentTranslationId: 1,
 		read: false,
 		createdAt: new Date("2023-01-04T00:00:00Z"),
 		type: "PAGE_SEGMENT_TRANSLATION_VOTE",
@@ -123,20 +120,23 @@ const sampleNotifications: NotificationWithRelations[] = [
 		},
 		page: null,
 		pageComment: null,
-		pageSegmentTranslation: {
+		segmentTranslation: {
 			text: "Translation Text",
-			pageSegment: {
+			segment: {
 				text: "Translation Text",
-				page: {
-					slug: "page-slug-translation",
-					pageSegments: [{ text: "Translated Page Title" }],
-					user: {
-						handle: "user_of_page",
+				content: {
+					page: {
+						slug: "page-slug-translation",
+						content: {
+							segments: [{ text: "Translated Page Title" }],
+						},
+						user: {
+							handle: "user_of_page",
+						},
 					},
 				},
 			},
 		},
-		pageCommentSegmentTranslation: null,
 	},
 ];
 
