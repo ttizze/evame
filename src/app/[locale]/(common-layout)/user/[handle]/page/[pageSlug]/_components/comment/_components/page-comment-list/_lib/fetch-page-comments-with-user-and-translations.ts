@@ -25,15 +25,6 @@ export async function buildCommentTree(
 	return tree;
 }
 
-async function mapComment(
-	comment: PageCommentWithSegments,
-): Promise<PageCommentWithSegments> {
-	return {
-		...comment,
-		replies: await Promise.all((comment.replies ?? []).map(mapComment)),
-	};
-}
-
 // メインの関数
 export async function fetchPageCommentsWithUserAndTranslations(
 	pageId: number,
@@ -42,11 +33,8 @@ export async function fetchPageCommentsWithUserAndTranslations(
 	// 1. Prismaからflatなコメントを取得
 	const flatComments = await fetchPageCommentsWithSegments(pageId, locale);
 
-	// 2. flatなコメントからツリーを構築
-	const tree = await buildCommentTree(flatComments);
-
-	// 3. ツリー構造の各コメントに対して翻訳情報をマッピング
-	return await Promise.all(tree.map((comment) => mapComment(comment)));
+	// 2. flatなコメントからツリーを構築してそのまま返却
+	return await buildCommentTree(flatComments);
 }
 
 export type PageCommentWithUserAndTranslations = Awaited<
