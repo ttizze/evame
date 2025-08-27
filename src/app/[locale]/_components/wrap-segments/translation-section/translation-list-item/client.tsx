@@ -18,9 +18,13 @@ import { deleteTranslationAction } from "./action";
 
 interface TranslationItemProps {
 	translation: TranslationWithInfo;
+	onVoted?: () => void;
 }
 
-export function TranslationListItem({ translation }: TranslationItemProps) {
+export function TranslationListItem({
+	translation,
+	onVoted,
+}: TranslationItemProps) {
 	const [_deleteTranslationState, action, isDeletingTranslation] =
 		useActionState<ActionResponse, FormData>(deleteTranslationAction, {
 			success: false,
@@ -75,7 +79,10 @@ export function TranslationListItem({ translation }: TranslationItemProps) {
 					</span>
 				</Link>
 				<VoteButtons
-					key={`${translation.id}-${translation.point}-${translation.currentUserVote?.isUpvote ?? "null"}`}
+					key={`${translation.id}-${translation.point}-${translation.currentUserVote?.isUpvote ?? "undefined"}`}
+					onVoted={() => {
+						onVoted?.();
+					}}
 					translation={translation}
 				/>
 			</span>

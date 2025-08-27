@@ -11,10 +11,12 @@ import { VoteButton } from "./vote-button";
 
 interface VoteButtonsProps {
 	translation: TranslationWithInfo;
+	onVoted?: () => void;
 }
 
 export const VoteButtons = memo(function VoteButtons({
 	translation,
+	onVoted,
 }: VoteButtonsProps) {
 	const [voteState, voteAction, isVoting] = useActionState<
 		VoteTranslationActionResponse,
@@ -26,6 +28,10 @@ export const VoteButtons = memo(function VoteButtons({
 			point: translation.point,
 		},
 	});
+
+	if (voteState.success) {
+		onVoted?.();
+	}
 	return (
 		<span className="flex h-full justify-end items-center">
 			<Form action={voteAction}>

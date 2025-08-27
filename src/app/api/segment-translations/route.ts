@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 
 	try {
 		const bestTranslationWithVote = await prisma.segmentTranslation.findUnique({
-			where: { id: bestTranslationId },
+			where: { segmentId, id: bestTranslationId, locale },
 			include: {
 				user: {
 					select: selectUserFields(),

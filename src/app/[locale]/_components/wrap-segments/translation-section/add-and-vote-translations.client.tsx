@@ -98,7 +98,10 @@ export function AddAndVoteTranslations({
 					</span>
 				</Link>
 				<VoteButtons
-					key={`${mergedBestTranslation.id}-${mergedBestTranslation.point}-${mergedBestTranslation.currentUserVote?.isUpvote ?? "null"}`}
+					key={`${mergedBestTranslation.id}-${mergedBestTranslation.point}-${mergedBestTranslation.currentUserVote?.isUpvote ?? "undefined"}`}
+					onVoted={() => {
+						void mutate();
+					}}
 					translation={mergedBestTranslation}
 				/>
 			</span>
@@ -108,6 +111,9 @@ export function AddAndVoteTranslations({
 			{displayedTranslations.map((displayedTranslation) => (
 				<TranslationListItem
 					key={displayedTranslation.id}
+					onVoted={() => {
+						void mutate();
+					}}
 					translation={displayedTranslation}
 				/>
 			))}

@@ -7,11 +7,11 @@ interface UseSegmentTranslationsParams {
 	segmentId: number;
 	locale: string;
 	enabled: boolean;
-	bestTranslationId?: number;
+	bestTranslationId: number;
 }
 
 interface SegmentTranslationsResponse {
-	bestTranslationCurrentUserVote?: TranslationVote; // 省略=未投票/未取得
+	bestTranslationCurrentUserVote: TranslationVote;
 	bestTranslationUser: SanitizedUser;
 	translations: TranslationWithInfo[];
 }
@@ -31,14 +31,11 @@ export function useSegmentTranslations({
 	bestTranslationId,
 }: UseSegmentTranslationsParams) {
 	const key = enabled
-		? `/api/segment-translations?segmentId=${segmentId}&locale=${locale}${bestTranslationId ? `&bestTranslationId=${bestTranslationId}` : ""}`
-		: null;
+		? `/api/segment-translations?segmentId=${segmentId}&locale=${locale}&bestTranslationId=${bestTranslationId}`
+		: undefined;
 
 	const { data, error, isLoading, mutate } =
-		useSWR<SegmentTranslationsResponse>(key, fetcher, {
-			revalidateOnFocus: false,
-			revalidateOnReconnect: false,
-		});
+		useSWR<SegmentTranslationsResponse>(key, fetcher);
 
 	return { data, error, isLoading, mutate };
 }
