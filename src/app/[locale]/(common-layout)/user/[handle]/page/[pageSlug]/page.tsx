@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import type { SearchParams } from "nuqs/server";
+import { createLoader, parseAsArrayOf, parseAsInteger } from "nuqs/server";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
@@ -116,11 +117,15 @@ export async function generateMetadata({
 
 export default async function Page({
 	params,
+	searchParams,
 }: {
 	params: Params;
 	searchParams: Promise<SearchParams>;
 }) {
 	const { pageSlug, locale } = await params;
+	const { commentExpandedIds } = await createLoader({
+		commentExpandedIds: parseAsArrayOf(parseAsInteger).withDefault([]),
+	})(searchParams);
 	const data = await fetchPageContext(pageSlug, locale);
 	if (!data) {
 		return notFound();
@@ -171,7 +176,11 @@ export default async function Page({
 						<div className="flex items-center gap-2 py-2">
 							<h2 className="text-2xl not-prose font-bold">Comments</h2>
 						</div>
-						<PageCommentList pageId={pageDetail.id} userLocale={locale} />
+						<PageCommentList
+							expandedIds={commentExpandedIds}
+							pageId={pageDetail.id}
+							userLocale={locale}
+						/>
 					</div>
 					<DynamicPageCommentForm pageId={pageDetail.id} userLocale={locale} />
 				</div>
