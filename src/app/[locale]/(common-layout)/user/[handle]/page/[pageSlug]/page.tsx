@@ -176,18 +176,14 @@ export default async function Page({
 					}
 				/>
 
-				<div className="mt-8">
-					<div className="mt-8" id="comments">
-						<div className="flex items-center gap-2 py-2">
-							<h2 className="text-2xl not-prose font-bold">Comments</h2>
-						</div>
-						<PageCommentList
-							expandedIds={commentExpandedIds}
-							pageId={pageDetail.id}
-							userLocale={locale}
-						/>
-					</div>
+				<div className="mt-8 space-y-4" id="comments">
+					<h2 className="text-2xl not-prose font-bold">Comments</h2>
 					<DynamicPageCommentForm pageId={pageDetail.id} userLocale={locale} />
+					<PageCommentList
+						expandedIds={commentExpandedIds}
+						pageId={pageDetail.id}
+						userLocale={locale}
+					/>
 				</div>
 			</article>
 		</>

@@ -5,18 +5,21 @@ import { CommentActionMenu } from "@/app/[locale]/(common-layout)/user/[handle]/
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
-import type { PageCommentWithUserAndTranslations } from "../_lib/fetch-page-comments-with-user-and-translations";
 import {
 	type CommentDeleteActionResponse,
 	deletePageCommentAction,
 } from "./action";
 
 interface PageCommentItemClientProps {
-	pageComment: PageCommentWithUserAndTranslations[number];
+	pageCommentId: number;
+	pageId: number;
+	user: { handle: string };
 }
 
 export function PageCommentItemClient({
-	pageComment,
+	pageCommentId,
+	pageId,
+	user,
 }: PageCommentItemClientProps) {
 	const [_state, action, isPending] = useActionState<
 		CommentDeleteActionResponse,
@@ -24,14 +27,14 @@ export function PageCommentItemClient({
 	>(deletePageCommentAction, { success: false });
 	const { data: session } = authClient.useSession();
 
-	if (session?.user.handle !== pageComment.user.handle) return null;
+	if (session?.user.handle !== user.handle) return null;
 
 	return (
 		<CommentActionMenu>
 			<DropdownMenuItem asChild>
 				<form action={action} className="w-full">
-					<input name="pageCommentId" type="hidden" value={pageComment.id} />
-					<input name="pageId" type="hidden" value={pageComment.pageId} />
+					<input name="pageCommentId" type="hidden" value={pageCommentId} />
+					<input name="pageId" type="hidden" value={pageId} />
 					<Button disabled={isPending} type="submit" variant="ghost">
 						Delete
 					</Button>

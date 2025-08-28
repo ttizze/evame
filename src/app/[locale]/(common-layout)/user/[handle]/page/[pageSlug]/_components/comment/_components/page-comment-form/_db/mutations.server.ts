@@ -21,8 +21,21 @@ export async function upsertPageCommentAndSegments(p: {
 				},
 			});
 
-			// ページコメントを作成
-			return await tx.pageComment.create({
+			// 親コメントの path を取得し、子の path/depth を算出
+			let path: number[] = [];
+			if (p.parentId) {
+				const parent = await tx.pageComment.findUnique({
+					where: { id: p.parentId },
+					select: { id: true, path: true },
+				});
+				if (parent) {
+					path = [...(parent.path ?? []), parent.id];
+				}
+			}
+			const depth = path.length;
+
+			// ページコメントを作成（path/depth を反映）
+			const created = await tx.pageComment.create({
 				data: {
 					pageId: p.pageId,
 					userId: p.currentUserId,
@@ -30,8 +43,23 @@ export async function upsertPageCommentAndSegments(p: {
 					locale: p.sourceLocale,
 					parentId: p.parentId,
 					id: content.id,
+					path,
+					depth,
 				},
 			});
+
+			// 親の直下返信数/最終返信時刻を更新（直下のみ）
+			if (p.parentId) {
+				await tx.pageComment.update({
+					where: { id: p.parentId },
+					data: {
+						replyCount: { increment: 1 },
+						lastReplyAt: created.createdAt,
+					},
+				});
+			}
+
+			return created;
 		});
 	} else {
 		pageComment = await prisma.pageComment.update({

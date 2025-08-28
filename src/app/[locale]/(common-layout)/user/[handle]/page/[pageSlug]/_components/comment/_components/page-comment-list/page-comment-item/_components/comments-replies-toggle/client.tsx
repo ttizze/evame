@@ -1,13 +1,17 @@
 "use client";
 
-import { ChevronDown, ChevronRight, Loader2 } from "lucide-react";
-import { parseAsArrayOf, parseAsInteger, useQueryState } from "nuqs";
-import { useState, useTransition } from "react";
+import {
+	ChevronDown,
+	ChevronRight,
+	Loader2,
+	MessageCirclePlus,
+} from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { COMMENT_EXPANDED_IDS_KEY } from "../../../_constants/query-keys";
-import { PageCommentForm } from "../../page-comment-form/client";
+import { useExpandedComments } from "../../../../../_hooks/use-expanded-comments";
+import { PageCommentForm } from "../../../../page-comment-form/client";
 
-interface RepliesToggleProps {
+interface CommentRepliesToggleProps {
 	commentId: number;
 	isExpanded: boolean;
 	replyCount: number;
@@ -15,21 +19,14 @@ interface RepliesToggleProps {
 	userLocale: string;
 }
 
-export function RepliesToggle({
+export function CommentRepliesToggle({
 	commentId,
 	isExpanded,
 	replyCount,
 	pageId,
 	userLocale,
-}: RepliesToggleProps) {
-	const [isPending, startTransition] = useTransition();
-	const [expandedIds, setExpandedIds] = useQueryState(
-		COMMENT_EXPANDED_IDS_KEY,
-		parseAsArrayOf(parseAsInteger).withDefault([]).withOptions({
-			shallow: false,
-			startTransition,
-		}),
-	);
+}: CommentRepliesToggleProps) {
+	const { expandedIds, setExpandedIds, isPending } = useExpandedComments();
 	const [isReplying, setIsReplying] = useState(false);
 
 	const toggleExpand = async () => {
@@ -68,6 +65,7 @@ export function RepliesToggle({
 					size="sm"
 					variant="ghost"
 				>
+					<MessageCirclePlus className="w-4 h-4 mr-1" />
 					<span className="text-xs">Reply</span>
 				</Button>
 			</div>
