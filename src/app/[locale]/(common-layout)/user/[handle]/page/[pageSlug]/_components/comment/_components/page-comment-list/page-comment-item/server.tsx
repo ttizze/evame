@@ -5,7 +5,6 @@ import { CommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[
 import type { PageCommentWithSegments } from "../_db/queries.server";
 import { listChildPageComments } from "../_db/queries.server";
 import { PageCommentItemClient } from "./client";
-import { PageCommentReplyForm } from "./reply-form.client";
 import { RepliesToggle } from "./toggle.client";
 
 interface Props {
@@ -40,18 +39,13 @@ export default async function PageCommentItem({
 			content={content}
 			createdAt={pageComment.createdAt}
 			replyForm={
-				<>
-					<RepliesToggle
-						commentId={pageComment.id}
-						isExpanded={isExpanded}
-						replyCount={pageComment.replyCount ?? children.length}
-					/>
-					<PageCommentReplyForm
-						pageId={pageComment.pageId}
-						parentId={pageComment.id}
-						userLocale={userLocale}
-					/>
-				</>
+				<RepliesToggle
+					commentId={pageComment.id}
+					isExpanded={isExpanded}
+					pageId={pageComment.pageId}
+					replyCount={pageComment.replyCount ?? children.length}
+					userLocale={userLocale}
+				/>
 			}
 		>
 			<Suspense

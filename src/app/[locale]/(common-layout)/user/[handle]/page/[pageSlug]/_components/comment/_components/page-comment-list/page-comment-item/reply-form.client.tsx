@@ -1,8 +1,7 @@
 "use client";
-import { Reply } from "lucide-react";
+import { MessageSquarePlus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
 import { PageCommentForm } from "../../page-comment-form/client";
 export function PageCommentReplyForm({
 	pageId,
@@ -14,26 +13,27 @@ export function PageCommentReplyForm({
 	userLocale: string;
 }) {
 	const [isReplying, setIsReplying] = useState(false);
-	const { data: session } = authClient.useSession();
 	return (
-		<>
+		<div>
 			<Button
 				aria-label="Reply"
-				className="h-8 w-8 p-0"
-				disabled={!session?.user}
+				className="h-7 px-2"
 				onClick={() => setIsReplying(!isReplying)}
 				variant="ghost"
 			>
-				<Reply className="h-4 w-4" />
+				<MessageSquarePlus className="w-4 h-4 mr-1" />
+				<span className="text-xs">Reply</span>
 			</Button>
 			{isReplying && (
-				<PageCommentForm
-					onReplySuccess={() => setIsReplying(false)}
-					pageId={pageId}
-					parentId={parentId}
-					userLocale={userLocale}
-				/>
+				<div className="mt-2">
+					<PageCommentForm
+						onReplySuccess={() => setIsReplying(false)}
+						pageId={pageId}
+						parentId={parentId}
+						userLocale={userLocale}
+					/>
+				</div>
 			)}
-		</>
+		</div>
 	);
 }

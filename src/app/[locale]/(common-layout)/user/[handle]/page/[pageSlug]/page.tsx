@@ -10,6 +10,7 @@ import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/lib/auth-server";
+import { COMMENT_EXPANDED_IDS_KEY } from "./_components/comment/_constants/query-keys";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
 
@@ -123,9 +124,13 @@ export default async function Page({
 	searchParams: Promise<SearchParams>;
 }) {
 	const { pageSlug, locale } = await params;
-	const { commentExpandedIds } = await createLoader({
-		commentExpandedIds: parseAsArrayOf(parseAsInteger).withDefault([]),
-	})(searchParams);
+	const { [COMMENT_EXPANDED_IDS_KEY]: commentExpandedIds } = await createLoader(
+		{
+			[COMMENT_EXPANDED_IDS_KEY]: parseAsArrayOf(parseAsInteger).withDefault(
+				[],
+			),
+		},
+	)(searchParams);
 	const data = await fetchPageContext(pageSlug, locale);
 	if (!data) {
 		return notFound();
