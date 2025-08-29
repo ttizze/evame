@@ -90,7 +90,6 @@ export function DisplayProvider({
 			name: "displayPref",
 			value: next,
 			path: "/",
-			maxAge: 60 * 60 * 24 * 365, // 1 year
 		});
 		setPref(next as Pref);
 	}, [mode, setQueryMode]);
