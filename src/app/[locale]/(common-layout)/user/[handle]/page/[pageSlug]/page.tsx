@@ -3,12 +3,14 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import type { SearchParams } from "nuqs/server";
+import { createLoader, parseAsArrayOf, parseAsInteger } from "nuqs/server";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/lib/auth-server";
+import { COMMENT_EXPANDED_IDS_KEY } from "./_components/comment/_constants/query-keys";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
 
@@ -116,11 +118,19 @@ export async function generateMetadata({
 
 export default async function Page({
 	params,
+	searchParams,
 }: {
 	params: Params;
 	searchParams: Promise<SearchParams>;
 }) {
 	const { pageSlug, locale } = await params;
+	const { [COMMENT_EXPANDED_IDS_KEY]: commentExpandedIds } = await createLoader(
+		{
+			[COMMENT_EXPANDED_IDS_KEY]: parseAsArrayOf(parseAsInteger).withDefault(
+				[],
+			),
+		},
+	)(searchParams);
 	const data = await fetchPageContext(pageSlug, locale);
 	if (!data) {
 		return notFound();
@@ -166,14 +176,14 @@ export default async function Page({
 					}
 				/>
 
-				<div className="mt-8">
-					<div className="mt-8" id="comments">
-						<div className="flex items-center gap-2 py-2">
-							<h2 className="text-2xl not-prose font-bold">Comments</h2>
-						</div>
-						<PageCommentList pageId={pageDetail.id} userLocale={locale} />
-					</div>
+				<div className="mt-8 space-y-4" id="comments">
+					<h2 className="text-2xl not-prose font-bold">Comments</h2>
 					<DynamicPageCommentForm pageId={pageDetail.id} userLocale={locale} />
+					<PageCommentList
+						expandedIds={commentExpandedIds}
+						pageId={pageDetail.id}
+						userLocale={locale}
+					/>
 				</div>
 			</article>
 		</>

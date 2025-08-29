@@ -22,7 +22,7 @@ export async function upsertPageCommentAndSegments(p: {
 			});
 
 			// ページコメントを作成
-			return await tx.pageComment.create({
+			const created = await tx.pageComment.create({
 				data: {
 					pageId: p.pageId,
 					userId: p.currentUserId,
@@ -32,6 +32,19 @@ export async function upsertPageCommentAndSegments(p: {
 					id: content.id,
 				},
 			});
+
+			// 親の直下返信数/最終返信時刻を更新（直下のみ）
+			if (p.parentId) {
+				await tx.pageComment.update({
+					where: { id: p.parentId },
+					data: {
+						replyCount: { increment: 1 },
+						lastReplyAt: created.createdAt,
+					},
+				});
+			}
+
+			return created;
 		});
 	} else {
 		pageComment = await prisma.pageComment.update({
