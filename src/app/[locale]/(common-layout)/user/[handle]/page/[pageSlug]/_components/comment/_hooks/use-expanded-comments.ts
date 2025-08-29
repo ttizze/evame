@@ -9,12 +9,21 @@ import { COMMENT_EXPANDED_IDS_KEY } from "../_constants/query-keys";
  */
 export function useExpandedComments() {
 	const [isPending, startTransition] = useTransition();
-	const [expandedIds, setExpandedIds] = useQueryState(
+	const [_, setExpandedIds] = useQueryState(
 		COMMENT_EXPANDED_IDS_KEY,
 		parseAsArrayOf(parseAsInteger)
 			.withDefault([])
 			.withOptions({ shallow: false, startTransition }),
 	);
-
-	return { expandedIds, setExpandedIds, isPending } as const;
+	const toggleExpandedId = (id: number) =>
+		setExpandedIds((prev) => {
+			const set = new Set(prev ?? []);
+			if (set.has(id)) set.delete(id);
+			else set.add(id);
+			return Array.from(set).sort((a, b) => a - b);
+		});
+	return {
+		toggleExpandedId,
+		isPending,
+	} as const;
 }

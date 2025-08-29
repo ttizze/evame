@@ -26,14 +26,11 @@ export function CommentRepliesToggle({
 	pageId,
 	userLocale,
 }: CommentRepliesToggleProps) {
-	const { expandedIds, setExpandedIds, isPending } = useExpandedComments();
+	const { isPending, toggleExpandedId } = useExpandedComments();
 	const [isReplying, setIsReplying] = useState(false);
 
 	const toggleExpand = async () => {
-		const set = new Set(expandedIds);
-		if (set.has(commentId)) set.delete(commentId);
-		else set.add(commentId);
-		await setExpandedIds(Array.from(set));
+		toggleExpandedId(commentId);
 	};
 
 	return (

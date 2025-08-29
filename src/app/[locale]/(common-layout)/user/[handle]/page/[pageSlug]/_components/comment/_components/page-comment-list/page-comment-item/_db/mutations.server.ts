@@ -13,7 +13,7 @@ export async function deletePageComment(pageCommentId: number, userId: string) {
 
 		// 2) コメントを論理削除（本文は 'deleted' に、isDeleted を true）
 		const updated = await tx.pageComment.update({
-			where: { id: pageCommentId, userId },
+			where: { id: pageCommentId },
 			data: {
 				isDeleted: true,
 				mdastJson: {
