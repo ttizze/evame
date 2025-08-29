@@ -21,21 +21,7 @@ export async function upsertPageCommentAndSegments(p: {
 				},
 			});
 
-			// 親コメントの path を取得し、子の path/depth を算出
-			let path: number[] = [];
-			if (p.parentId) {
-				const parent = await tx.pageComment.findFirst({
-					where: { id: p.parentId, isDeleted: false, pageId: p.pageId },
-					select: { id: true, path: true },
-				});
-				if (!parent) {
-					throw new Error(`Parent comment ${p.parentId} not found`);
-				}
-				path = [...(parent.path ?? []), parent.id];
-			}
-			const depth = path.length;
-
-			// ページコメントを作成（path/depth を反映）
+			// ページコメントを作成
 			const created = await tx.pageComment.create({
 				data: {
 					pageId: p.pageId,
@@ -44,8 +30,6 @@ export async function upsertPageCommentAndSegments(p: {
 					locale: p.sourceLocale,
 					parentId: p.parentId,
 					id: content.id,
-					path,
-					depth,
 				},
 			});
 

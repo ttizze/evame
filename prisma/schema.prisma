@@ -230,17 +230,13 @@ model PageComment {
   parent    PageComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: SetNull)
   replies   PageComment[] @relation("CommentReplies")
 
-  path        Int[]     @default([])
-  depth       Int       @default(0) // path の長さ
   isDeleted   Boolean   @default(false) @map("is_deleted")
   replyCount  Int       @default(0) @map("reply_count") // 直下の返信数（運用で定義）
   lastReplyAt DateTime? @map("last_reply_at")
 
   notifications Notification[]
 
-  @@index([path], type: Gin)
   @@index([pageId, parentId, createdAt])
-  @@index([pageId, depth, createdAt])
   @@index([parentId, isDeleted, createdAt])
   @@index([userId])
   @@map("page_comments")
