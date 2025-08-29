@@ -15,8 +15,8 @@ function CommentHeader({
 	userLocale: string;
 }) {
 	const { props } = getImageProps({
-		src: pageComment.user.image ?? "",
-		alt: pageComment.user.name ?? "",
+		src: pageComment.user.image,
+		alt: pageComment.user.name,
 		width: 40,
 		height: 40,
 	});
