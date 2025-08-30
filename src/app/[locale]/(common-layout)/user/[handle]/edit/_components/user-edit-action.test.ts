@@ -15,12 +15,7 @@ vi.mock("../_db/mutations.server", () => ({
 	updateUser: vi.fn(),
 }));
 
-// Next.js redirect のモック（本番と同様に throw する）
-vi.mock("next/navigation", () => ({
-	redirect: vi.fn((url: string) => {
-		throw new Error(`NEXT_REDIRECT:${url}`);
-	}),
-}));
+// redirect は vitest.setup.ts でグローバルにモックされています
 
 // Next.js cache のモック
 vi.mock("next/cache", () => ({
@@ -38,7 +33,7 @@ describe("userEditAction", () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(undefined);
 		const formData = new FormData();
 		await expect(userEditAction({ success: false }, formData)).rejects.toThrow(
-			/NEXT_REDIRECT:\/auth\/login/,
+			/NEXT_REDIRECT/,
 		);
 
 		expect(redirect).toHaveBeenCalledWith("/auth/login");
@@ -78,7 +73,7 @@ describe("userEditAction", () => {
 		formData.append("profile", "My profile");
 
 		await expect(userEditAction({ success: false }, formData)).rejects.toThrow(
-			/NEXT_REDIRECT:\/user\/new-handle\/edit/,
+			/NEXT_REDIRECT/,
 		);
 
 		// handleが変更された場合、revalidatePathは呼び出されない
