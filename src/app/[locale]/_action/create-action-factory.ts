@@ -1,5 +1,6 @@
 // lib/create-action-factory.ts
 
+import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { z } from "zod";
@@ -85,7 +86,9 @@ export function createActionFactory<
 			deps.revalidatePath(p);
 		}
 		if (buildSuccessRedirect) {
-			deps.redirect(buildSuccessRedirect(data, currentUser.handle, res.data));
+			deps.redirect(
+				buildSuccessRedirect(data, currentUser.handle, res.data) as Route,
+			);
 		}
 
 		/* 4. 成功レスポンスを整形して返却 */

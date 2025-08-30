@@ -2,6 +2,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import { AlertCircle } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ export default function ErrorPage({
 					<Button onClick={() => reset()} variant="default">
 						Try again
 					</Button>
-					<Link href="/">
+					<Link href={"/" as Route}>
 						<Button variant="outline">Go to home</Button>
 					</Link>
 				</div>

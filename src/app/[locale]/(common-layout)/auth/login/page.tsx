@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { LoginDialog } from "@/app/[locale]/_components/login/_components/login-dialog.client";
 import { getCurrentUser } from "@/lib/auth-server";
@@ -5,7 +6,7 @@ import { getCurrentUser } from "@/lib/auth-server";
 export default async function LoginPage() {
 	const currentUser = await getCurrentUser();
 	if (currentUser) {
-		return redirect("/");
+		redirect("/" as Route);
 	}
 	return (
 		<div className="container mx-auto max-w-md py-8">

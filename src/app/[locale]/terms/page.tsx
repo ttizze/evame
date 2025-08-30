@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 
 export default function TermsPage() {
@@ -199,7 +200,7 @@ export default function TermsPage() {
 				</section>
 
 				<div className="mt-8">
-					<Link className="text-blue-600 hover:underline" href="/">
+					<Link className="text-blue-600 hover:underline" href={"/" as Route}>
 						Return to Home
 					</Link>
 				</div>

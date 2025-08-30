@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 import { Fragment } from "react";
 import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
@@ -51,7 +52,7 @@ export async function PageBreadcrumb({
 					<Fragment key={`${item.href}-${index}`}>
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
-								<Link href={item.href}>
+								<Link href={item.href as Route}>
 									<WrapSegmentClient
 										interactive={false}
 										segment={item.segment}

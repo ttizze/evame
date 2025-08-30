@@ -1,4 +1,5 @@
 "use server";
+import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -62,7 +63,7 @@ export async function userEditAction(
 ): Promise<UserEditState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser?.id) {
-		return redirect("/auth/login");
+		redirect("/auth/login" as Route);
 	}
 	const parsedData = await parseFormData(schema, formData);
 	if (!parsedData.success) {
@@ -81,7 +82,7 @@ export async function userEditAction(
 		twitterHandle,
 	});
 	if (handle !== currentUser.handle) {
-		return redirect(`/user/${handle}/edit`);
+		redirect(`/user/${handle}/edit` as Route);
 	}
 	revalidatePath("/settings/profile");
 	return {

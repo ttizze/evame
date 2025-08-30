@@ -1,5 +1,6 @@
 // app/serverActions/voteAction.ts
 "use server";
+import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -29,7 +30,7 @@ export async function voteTranslationAction(
 ): Promise<VoteTranslationActionResponse> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser?.id) {
-		return redirect("/auth/login");
+		redirect("/auth/login" as Route);
 	}
 	const parsedFormData = await parseFormData(schema, formData);
 	if (!parsedFormData.success) {

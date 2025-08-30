@@ -1,5 +1,5 @@
+import type { Route } from "next";
 import { redirect } from "next/navigation";
-// lib/auth-and-validate.ts
 import type { z } from "zod";
 import { getCurrentUser } from "@/lib/auth-server";
 import { parseFormData } from "@/lib/parse-form-data";
@@ -28,7 +28,7 @@ export async function requireAuth(
 	deps: RequireAuthDeps = requireAuthDefaultDeps,
 ): Promise<{ id: string; handle: string; plan: string }> {
 	const user = await deps.getCurrentUser();
-	if (!user?.id) deps.redirect("/auth/login");
+	if (!user?.id) deps.redirect("/auth/login" as Route);
 
 	// userはnullではないことが保証されている
 	return { id: user.id, handle: user.handle, plan: user.plan };
