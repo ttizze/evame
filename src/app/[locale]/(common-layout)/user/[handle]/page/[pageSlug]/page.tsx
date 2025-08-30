@@ -6,6 +6,7 @@ import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { FloatingControls } from "@/app/[locale]/_components/floating-controls.client";
 import { PageLikeButtonClient } from "@/app/[locale]/_components/page/page-like-button/client";
 import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
+import { PageViewCounter } from "@/app/[locale]/_components/page/page-view-counter/client";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
 import { ChildPages } from "./_components/child-pages/server";
 import { PageCommentForm } from "./_components/comment/_components/page-comment-form/client";
@@ -86,7 +87,11 @@ export default async function Page({ params }: { params: Params }) {
 				<ChildPages locale={locale} parentId={pageDetail.id} />
 				<div className="flex items-center gap-4">
 					<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
-					<span className="text-muted-foreground">{pageViewCount}</span>
+					<PageViewCounter
+						className="text-muted-foreground"
+						initialCount={pageViewCount}
+						pageId={pageDetail.id}
+					/>
 					<PageLikeButtonClient className="" pageId={pageDetail.id} showCount />
 					<MessageCircle className="w-5 h-5" strokeWidth={1.5} />
 					<span className="text-muted-foreground">

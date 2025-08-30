@@ -31,7 +31,7 @@ export function PageLikeButtonClient({
 	);
 
 	// Server action returns latest liked/count; prefer it when available
-	const [_actionState, formAction, isPending] = useActionState<
+	const [actionState, formAction, isPending] = useActionState<
 		PageLikeButtonState,
 		FormData
 	>(togglePageLikeAction, { success: false });
@@ -52,6 +52,9 @@ export function PageLikeButtonClient({
 		// Trigger server action
 		formAction(formData);
 	};
+	if (actionState.success) {
+		mutate();
+	}
 
 	return (
 		<div className="flex items-center gap-2">
