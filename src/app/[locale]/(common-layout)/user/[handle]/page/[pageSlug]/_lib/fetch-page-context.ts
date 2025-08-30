@@ -25,10 +25,10 @@ export const fetchPageContext = cache(async (slug: string, locale: string) => {
 		return notFound();
 	}
 
-    const [pageTranslationJobs, pageViewCount] = await Promise.all([
-        fetchTranslationJobs(pageDetail.id),
-        fetchPageViewCount(pageDetail.id),
-    ]);
+	const [pageTranslationJobs, pageViewCount] = await Promise.all([
+		fetchTranslationJobs(pageDetail.id),
+		fetchPageViewCount(pageDetail.id),
+	]);
 
 	return {
 		pageDetail,
