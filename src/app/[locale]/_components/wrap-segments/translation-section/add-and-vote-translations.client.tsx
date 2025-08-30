@@ -27,10 +27,10 @@ export function AddAndVoteTranslations({
 	bestTranslation,
 }: AddAndVoteTranslationsProps) {
 	const [showAll, setShowAll] = useState(false);
-	const locale = useLocale();
+	const userLocale = useLocale();
 	const { data, error, isLoading, mutate } = useSegmentTranslations({
 		segmentId,
-		locale,
+		userLocale,
 		enabled: open,
 		bestTranslationId: bestTranslation.id,
 	});

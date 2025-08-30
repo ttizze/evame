@@ -12,6 +12,7 @@ export const mockUsers = [
 		name: "mockUserId1",
 		image: "/test-user.png",
 		plan: "free",
+		hasGeminiApiKey: false,
 	},
 	{
 		id: "mockUserId2",
@@ -25,6 +26,7 @@ export const mockUsers = [
 		name: "mockUserId2",
 		image: "mockUserId2",
 		plan: "free",
+		hasGeminiApiKey: false,
 	},
 ];
 

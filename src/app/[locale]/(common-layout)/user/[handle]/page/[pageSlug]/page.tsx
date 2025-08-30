@@ -1,81 +1,30 @@
 import { EyeIcon, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
-import type { SearchParams } from "nuqs/server";
-import { createLoader, parseAsArrayOf, parseAsInteger } from "nuqs/server";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
+import { FloatingControls } from "@/app/[locale]/_components/floating-controls.client";
+import { PageLikeButtonClient } from "@/app/[locale]/_components/page/page-like-button/client";
 import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getCurrentUser } from "@/lib/auth-server";
-import { COMMENT_EXPANDED_IDS_KEY } from "./_components/comment/_constants/query-keys";
+import { ChildPages } from "./_components/child-pages/server";
+import { PageCommentForm } from "./_components/comment/_components/page-comment-form/client";
+import { ContentWithTranslations } from "./_components/content-with-translations";
+import { PageBreadcrumb } from "./_components/page-breadcrumb/server";
 import { buildAlternateLocales } from "./_lib/build-alternate-locales";
 import { fetchPageContext } from "./_lib/fetch-page-context";
 
-const DynamicPageBreadcrumb = dynamic(
-	() =>
-		import("./_components/page-breadcrumb/server").then(
-			(mod) => mod.PageBreadcrumb,
-		),
-	{
-		loading: () => <Skeleton className="h-[100px] w-full" />,
-	},
-);
-const DynamicContentWithTranslations = dynamic(
-	() =>
-		import("./_components/content-with-translations").then(
-			(mod) => mod.ContentWithTranslations,
-		),
-	{
-		loading: () => <Skeleton className="h-[500px] w-full" />,
-	},
-);
-const DynamicChildPages = dynamic(
-	() =>
-		import("./_components/child-pages/server").then((mod) => mod.ChildPages),
-	{
-		loading: () => <Skeleton className="h-[100px] w-full" />,
-	},
-);
-const DynamicPageLikeButton = dynamic(
-	() =>
-		import("@/app/[locale]/_components/page/page-like-button/server").then(
-			(mod) => mod.PageLikeButton,
-		),
-	{
-		loading: () => <span>Loading LikeButton...</span>,
-	},
-);
-
-const DynamicFloatingControls = dynamic(
-	() =>
-		import("../../../../../_components/floating-controls.client").then(
-			(mod) => mod.FloatingControls,
-		),
-	{
-		loading: () => <span>Loading Controls...</span>,
-	},
-);
-
-const DynamicPageCommentForm = dynamic(
-	() =>
-		import(
-			"@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-form/client"
-		).then((mod) => mod.PageCommentForm),
-	{
-		loading: () => <p>Loading Comment Form...</p>,
-	},
-);
-
 type Params = Promise<{ locale: string; handle: string; pageSlug: string }>;
+
+// Force static rendering for this route (no dynamic APIs allowed)
+export const dynamic = "force-static";
+// Optionally enable ISR; adjust as needed
+export const revalidate = 60;
 
 export async function generateMetadata({
 	params,
 }: {
 	params: Params;
-	searchParams: Promise<SearchParams>;
 }): Promise<Metadata> {
 	const { pageSlug, locale } = await params;
 	const data = await fetchPageContext(pageSlug, locale);
@@ -116,29 +65,15 @@ export async function generateMetadata({
 	};
 }
 
-export default async function Page({
-	params,
-	searchParams,
-}: {
-	params: Params;
-	searchParams: Promise<SearchParams>;
-}) {
+export default async function Page({ params }: { params: Params }) {
 	const { pageSlug, locale } = await params;
-	const { [COMMENT_EXPANDED_IDS_KEY]: commentExpandedIds } = await createLoader(
-		{
-			[COMMENT_EXPANDED_IDS_KEY]: parseAsArrayOf(parseAsInteger).withDefault(
-				[],
-			),
-		},
-	)(searchParams);
 	const data = await fetchPageContext(pageSlug, locale);
 	if (!data) {
 		return notFound();
 	}
 	const { pageDetail, pageViewCount } = data;
-	const currentUser = await getCurrentUser();
-	const isOwner = pageDetail.user.handle === currentUser?.handle;
-	if (!isOwner && pageDetail.status !== "PUBLIC") {
+	// Only allow public pages in static rendering
+	if (pageDetail.status !== "PUBLIC") {
 		return notFound();
 	}
 
@@ -146,31 +81,24 @@ export default async function Page({
 		<>
 			<SourceLocaleBridge locale={pageDetail.sourceLocale} />
 			<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
-				<DynamicPageBreadcrumb locale={locale} pageDetail={pageDetail} />
-				<DynamicContentWithTranslations pageData={data} />
-				<DynamicChildPages locale={locale} parentId={pageDetail.id} />
+				<PageBreadcrumb locale={locale} pageDetail={pageDetail} />
+				<ContentWithTranslations pageData={data} />
+				<ChildPages locale={locale} parentId={pageDetail.id} />
 				<div className="flex items-center gap-4">
 					<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
 					<span className="text-muted-foreground">{pageViewCount}</span>
-					<DynamicPageLikeButton
-						pageId={pageDetail.id}
-						pageOwnerHandle={pageDetail.user.handle}
-						pageSlug={pageDetail.slug}
-						showCount
-					/>
+					<PageLikeButtonClient className="" pageId={pageDetail.id} showCount />
 					<MessageCircle className="w-5 h-5" strokeWidth={1.5} />
 					<span className="text-muted-foreground">
 						{pageDetail._count?.pageComments || 0}
 					</span>
 				</div>
 
-				<DynamicFloatingControls
+				<FloatingControls
 					likeButton={
-						<DynamicPageLikeButton
+						<PageLikeButtonClient
 							className="w-10 h-10 border rounded-full"
 							pageId={pageDetail.id}
-							pageOwnerHandle={pageDetail.user.handle}
-							pageSlug={pageDetail.slug}
 							showCount={false}
 						/>
 					}
@@ -178,12 +106,8 @@ export default async function Page({
 
 				<div className="mt-8 space-y-4" id="comments">
 					<h2 className="text-2xl not-prose font-bold">Comments</h2>
-					<DynamicPageCommentForm pageId={pageDetail.id} userLocale={locale} />
-					<PageCommentList
-						expandedIds={commentExpandedIds}
-						pageId={pageDetail.id}
-						userLocale={locale}
-					/>
+					<PageCommentForm pageId={pageDetail.id} userLocale={locale} />
+					<PageCommentList pageId={pageDetail.id} userLocale={locale} />
 				</div>
 			</article>
 		</>

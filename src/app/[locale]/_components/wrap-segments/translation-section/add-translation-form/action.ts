@@ -1,5 +1,4 @@
 "use server";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
@@ -54,7 +53,6 @@ export async function addTranslationFormAction(
 	}
 
 	await addUserTranslation(segmentId, text, currentUser.id, locale);
-	revalidatePath(`/user/${currentUser.handle}/page/${pageSlug}`);
 	return {
 		success: true,
 		data: undefined,

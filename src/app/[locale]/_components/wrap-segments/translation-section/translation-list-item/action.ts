@@ -1,5 +1,4 @@
 "use server";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
@@ -23,6 +22,5 @@ export async function deleteTranslationAction(
 	const { currentUser, data } = v;
 	const { translationId } = data;
 	await deleteOwnTranslation(currentUser.handle, translationId);
-	revalidatePath(`/user/${currentUser.handle}/page/}`);
 	return { success: true, data: undefined };
 }

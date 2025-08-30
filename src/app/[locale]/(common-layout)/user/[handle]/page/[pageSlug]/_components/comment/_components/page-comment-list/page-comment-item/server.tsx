@@ -53,11 +53,9 @@ function CommentHeader({
 
 function RepliesBlock({
 	replies,
-	expandedIds,
 	userLocale,
 }: {
 	replies: PageCommentWithSegments[];
-	expandedIds: number[];
 	userLocale: string;
 }) {
 	return (
@@ -69,12 +67,7 @@ function RepliesBlock({
 				/>
 			</div>
 			{replies.map((r) => (
-				<PageCommentItem
-					expandedIds={expandedIds}
-					key={r.id}
-					pageComment={r}
-					userLocale={userLocale}
-				/>
+				<PageCommentItem key={r.id} pageComment={r} userLocale={userLocale} />
 			))}
 		</div>
 	);
@@ -83,23 +76,19 @@ function RepliesBlock({
 interface Props {
 	pageComment: PageCommentWithSegments;
 	userLocale: string;
-	expandedIds: number[];
 }
 
 export default async function PageCommentItem({
 	pageComment,
 	userLocale,
-	expandedIds,
 }: Props) {
 	const content = await mdastToReact({
 		mdast: pageComment.mdastJson,
 		segments: pageComment.content.segments,
 	});
 
-	const isExpanded = expandedIds.includes(pageComment.id);
-	const replies = isExpanded
-		? await listChildPageComments(pageComment.id, userLocale)
-		: [];
+	// Always fetch replies so the page remains static; visibility is toggled on client
+	const replies = await listChildPageComments(pageComment.id, userLocale);
 
 	return (
 		<div>
@@ -113,18 +102,12 @@ export default async function PageCommentItem({
 			)}
 			<CommentRepliesToggle
 				commentId={pageComment.id}
-				isExpanded={isExpanded}
 				pageId={pageComment.pageId}
-				replyCount={pageComment.replyCount ?? replies.length}
 				userLocale={userLocale}
 			/>
 
-			{isExpanded && replies.length > 0 ? (
-				<RepliesBlock
-					expandedIds={expandedIds}
-					replies={replies}
-					userLocale={userLocale}
-				/>
+			{replies.length > 0 ? (
+				<RepliesBlock replies={replies} userLocale={userLocale} />
 			) : null}
 		</div>
 	);

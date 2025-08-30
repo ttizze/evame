@@ -5,7 +5,7 @@ import type { TranslationWithInfo } from "../types";
 
 interface UseSegmentTranslationsParams {
 	segmentId: number;
-	locale: string;
+	userLocale: string;
 	enabled: boolean;
 	bestTranslationId: number;
 }
@@ -26,12 +26,12 @@ const fetcher = async (url: string): Promise<SegmentTranslationsResponse> => {
 
 export function useSegmentTranslations({
 	segmentId,
-	locale,
+	userLocale,
 	enabled,
 	bestTranslationId,
 }: UseSegmentTranslationsParams) {
 	const key = enabled
-		? `/api/segment-translations?segmentId=${segmentId}&locale=${locale}&bestTranslationId=${bestTranslationId}`
+		? `/api/segment-translations?segmentId=${segmentId}&userLocale=${userLocale}&bestTranslationId=${bestTranslationId}`
 		: null;
 
 	const { data, error, isLoading, mutate } =
