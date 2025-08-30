@@ -24,7 +24,9 @@ vi.mock("next/cache", () => ({
 }));
 
 vi.mock("next/navigation", () => ({
-	redirect: vi.fn(),
+	redirect: vi.fn((url: string) => {
+		throw new Error(`NEXT_REDIRECT:${url}`);
+	}),
 }));
 
 describe("userImageEditAction (Integration)", () => {
@@ -63,7 +65,9 @@ describe("userImageEditAction (Integration)", () => {
 	it("should redirect if user is not authenticated", async () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(undefined);
 
-		await userImageEditAction({ success: false }, mockFormData);
+		await expect(
+			userImageEditAction({ success: false }, mockFormData),
+		).rejects.toThrow(/NEXT_REDIRECT:\/auth\/login/);
 
 		expect(vi.mocked(redirect)).toHaveBeenCalledWith("/auth/login");
 	});
