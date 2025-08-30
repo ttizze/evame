@@ -14,6 +14,7 @@ declare module "@auth/core/adapters" {
 		name: string;
 		image: string;
 		plan: string;
+		hasGeminiApiKey: boolean;
 	}
 }
 
@@ -29,6 +30,7 @@ declare module "next-auth" {
 		name: string;
 		image: string;
 		plan: string;
+		hasGeminiApiKey: boolean;
 	}
 	interface Session {
 		user: DefaultSession["user"] & {
@@ -41,6 +43,7 @@ declare module "next-auth" {
 			isAI: boolean;
 			name: string;
 			image: string;
+			hasGeminiApiKey: boolean;
 		};
 	}
 }

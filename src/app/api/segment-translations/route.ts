@@ -20,11 +20,10 @@ export async function GET(req: NextRequest) {
 
 	const { segmentId, userLocale, bestTranslationId } = validation.data;
 	const currentUser = await getCurrentUser();
-	console.log("userLocale", userLocale);
 
 	try {
 		const bestTranslationWithVote = await prisma.segmentTranslation.findUnique({
-			where: { id: bestTranslationId, locale: userLocale },
+			where: { id: bestTranslationId },
 			include: {
 				user: {
 					select: selectUserFields(),
@@ -36,8 +35,6 @@ export async function GET(req: NextRequest) {
 				}),
 			},
 		});
-		console.log("bestTranslationWithVote", bestTranslationWithVote);
-
 		// その他の翻訳を取得
 		const translations = await prisma.segmentTranslation.findMany({
 			where: {
