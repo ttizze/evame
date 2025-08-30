@@ -20,7 +20,7 @@ export default async function CommonLayout(props: LayoutProps<"/[locale]">) {
 	const messages = await getMessages();
 
 	return (
-		<NextIntlClientProvider messages={messages}>
+		<NextIntlClientProvider locale={locale} messages={messages}>
 			<DisplayProvider initialSourceLocale="mixed" userLocale={locale}>
 				<Header />
 				<main className="mb-5 mt-3 md:mt-5 grow tracking-wider">
