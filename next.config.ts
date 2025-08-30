@@ -24,6 +24,7 @@ const config: NextConfig = {
 			bodySizeLimit: "5mb",
 		},
 	},
+	typedRoutes: true,
 	images: {
 		minimumCacheTTL: 2_678_400,
 		loader: "custom",

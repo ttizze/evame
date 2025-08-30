@@ -33,5 +33,5 @@
 		".next/types/**/*.ts",
 		"src/app/[locale]/(common-layout)/auth/login/_components/google-form.tsx"
 	],
-	"exclude": ["node_modules"]
+	"exclude": ["node_modules", ".next/types/validator.ts"]
 }

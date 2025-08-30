@@ -15,10 +15,7 @@ vi.mock("../_db/mutations.server", () => ({
 	updateUser: vi.fn(),
 }));
 
-// Next.js redirect のモック
-vi.mock("next/navigation", () => ({
-	redirect: vi.fn(),
-}));
+// redirect は vitest.setup.ts でグローバルにモックされています
 
 // Next.js cache のモック
 vi.mock("next/cache", () => ({
@@ -35,7 +32,9 @@ describe("userEditAction", () => {
 	it("未認証の場合、ログインページにリダイレクトする", async () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(undefined);
 		const formData = new FormData();
-		await userEditAction({ success: false }, formData);
+		await expect(userEditAction({ success: false }, formData)).rejects.toThrow(
+			/NEXT_REDIRECT/,
+		);
 
 		expect(redirect).toHaveBeenCalledWith("/auth/login");
 	});
@@ -73,7 +72,9 @@ describe("userEditAction", () => {
 		formData.append("handle", "new-handle");
 		formData.append("profile", "My profile");
 
-		await userEditAction({ success: false }, formData);
+		await expect(userEditAction({ success: false }, formData)).rejects.toThrow(
+			/NEXT_REDIRECT/,
+		);
 
 		// handleが変更された場合、revalidatePathは呼び出されない
 		expect(vi.mocked(revalidatePath)).not.toHaveBeenCalled();

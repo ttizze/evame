@@ -1,5 +1,6 @@
 "use server";
 import type { PageStatus } from "@prisma/client";
+import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -57,7 +58,7 @@ export async function editPageStatusAction(
 	const { pageId, status, targetLocales } = data;
 	const page = await getPageById(pageId);
 	if (!currentUser?.id || page?.userId !== currentUser.id) {
-		return redirect("/auth/login");
+		redirect("/auth/login" as Route);
 	}
 	await updatePageStatus(pageId, status as PageStatus);
 

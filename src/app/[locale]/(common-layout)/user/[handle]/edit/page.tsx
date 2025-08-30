@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import dynamic from "next/dynamic";
 import { notFound, redirect } from "next/navigation";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
@@ -29,7 +29,7 @@ export default async function UserEditPage({
 	const { handle } = await params;
 
 	if (!currentUser || currentUser.handle !== handle) {
-		return redirect("/auth/login");
+		redirect("/auth/login" as Route);
 	}
 
 	if (!(await fetchUserByHandle(currentUser.handle))) {

@@ -73,7 +73,13 @@ export async function uploadImage(file: File): Promise<UploadImageResult> {
 							.resize({ width: 2560, withoutEnlargement: true })
 							.jpeg({ quality: 80, mozjpeg: true })
 							.toBuffer();
-						return new File([buf], file.name.replace(/\.[^.]+$/, ".jpg"), {
+						// Convert Node.js Buffer -> ArrayBuffer to satisfy DOM File typing
+						const ab = (() => {
+							const arrayBuffer = new ArrayBuffer(buf.byteLength);
+							new Uint8Array(arrayBuffer).set(buf);
+							return arrayBuffer;
+						})();
+						return new File([ab], file.name.replace(/\.[^.]+$/, ".jpg"), {
 							type: "image/jpeg",
 						});
 					})();

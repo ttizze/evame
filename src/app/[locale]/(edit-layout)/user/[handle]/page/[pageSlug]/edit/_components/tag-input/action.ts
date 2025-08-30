@@ -1,4 +1,5 @@
 "use server";
+import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -51,7 +52,7 @@ export async function editPageTagsAction(
 	const { pageId, tags } = data;
 	const page = await getPageById(pageId);
 	if (!currentUser?.id || page?.userId !== currentUser.id) {
-		return redirect("/auth/login");
+		redirect("/auth/login" as Route);
 	}
 	await upsertTags(tags, pageId);
 	revalidatePath(`/user/${currentUser.handle}/page/${page.slug}/edit`);

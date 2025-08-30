@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 import type { SearchParams } from "nuqs/server";
@@ -40,7 +41,7 @@ export default async function PageManagementPage({
 }) {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
-		return redirect("/auth/login");
+		redirect("/auth/login" as Route);
 	}
 	const { locale } = await params;
 	const { page, query } = await loadSearchParams(searchParams);

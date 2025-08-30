@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
-import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { FloatingControls } from "@/app/[locale]/_components/floating-controls.client";
@@ -54,15 +53,11 @@ const searchParamsSchema = {
 };
 const loadSearchParams = createLoader(searchParamsSchema);
 
-export default async function UserPage({
-	params,
-	searchParams,
-}: {
-	params: Promise<{ locale: string; handle: string }>;
-	searchParams: Promise<SearchParams>;
-}) {
-	const { locale, handle } = await params;
-	const { sort, page } = await loadSearchParams(searchParams);
+export default async function UserPage(
+	props: PageProps<"/[locale]/user/[handle]">,
+) {
+	const { handle, locale } = await props.params;
+	const { sort, page } = await loadSearchParams(props.searchParams);
 	return (
 		<>
 			<DynamicUserInfo handle={handle} />

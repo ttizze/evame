@@ -23,9 +23,7 @@ vi.mock("next/cache", () => ({
 	revalidatePath: vi.fn(),
 }));
 
-vi.mock("next/navigation", () => ({
-	redirect: vi.fn(),
-}));
+// redirect は vitest.setup.ts でグローバルにモックされています
 
 describe("userImageEditAction (Integration)", () => {
 	const mockUser = mockUsers[0];
@@ -63,7 +61,9 @@ describe("userImageEditAction (Integration)", () => {
 	it("should redirect if user is not authenticated", async () => {
 		vi.mocked(getCurrentUser).mockResolvedValue(undefined);
 
-		await userImageEditAction({ success: false }, mockFormData);
+		await expect(
+			userImageEditAction({ success: false }, mockFormData),
+		).rejects.toThrow(/NEXT_REDIRECT/);
 
 		expect(vi.mocked(redirect)).toHaveBeenCalledWith("/auth/login");
 	});

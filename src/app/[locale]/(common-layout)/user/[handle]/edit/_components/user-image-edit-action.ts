@@ -1,4 +1,5 @@
 "use server";
+import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { uploadImage } from "@/app/[locale]/_lib/upload";
@@ -19,7 +20,7 @@ export async function userImageEditAction(
 ): Promise<UserImageEditState> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser?.id) {
-		return redirect("/auth/login");
+		redirect("/auth/login" as Route);
 	}
 	const file = formData.get("image") as File;
 	if (!file) {
