@@ -1,8 +1,9 @@
 "use client";
 
-import { Bell } from "lucide-react";
+import { Bell, Loader2 } from "lucide-react";
 import { getImageProps } from "next/image";
 import { startTransition, useActionState } from "react";
+import useSWR from "swr";
 import type { ActionResponse } from "@/app/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -14,26 +15,45 @@ import {
 import { Link } from "@/i18n/routing";
 import { markNotificationAsReadAction } from "./action";
 import type { NotificationWithRelations } from "./db/queries.server";
-
 export function NotificationsDropdownClient({
-	notifications,
 	currentUserHandle,
 }: {
-	notifications: NotificationWithRelations[];
 	currentUserHandle: string;
 }) {
 	const [_markNotificationAsReadResponse, action, _isPending] = useActionState<
 		ActionResponse,
 		FormData
 	>(markNotificationAsReadAction, { success: false });
+	const { data, isLoading, mutate } = useSWR<{
+		notifications: NotificationWithRelations[];
+	}>(
+		"/api/notifications",
+		(url) => fetch(url, { credentials: "include" }).then((r) => r.json()),
+		{ revalidateOnFocus: true },
+	);
+
+	if (isLoading) return <Loader2 className="w-6 h-6 animate-spin" />;
+
 	const handleClick = (open: boolean) => {
 		if (open) {
 			startTransition(() => {
 				action(new FormData());
 			});
+			mutate(
+				(prev) => {
+					if (!prev) return prev;
+					return {
+						notifications: prev.notifications.map((n) => ({
+							...n,
+							read: true,
+						})),
+					};
+				},
+				{ revalidate: false },
+			);
 		}
 	};
-	const unreadCount = notifications.filter(
+	const unreadCount = data?.notifications.filter(
 		(notification) => !notification.read,
 	).length;
 	return (
@@ -45,26 +65,28 @@ export function NotificationsDropdownClient({
 			<DropdownMenuTrigger asChild>
 				<div className="relative">
 					<Bell className="w-6 h-6 cursor-pointer" data-testid="bell-icon" />
-					{unreadCount > 0 && (
-						<span
-							className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center"
-							data-testid="unread-count"
-						>
-							{unreadCount}
-						</span>
-					)}
+					{unreadCount
+						? unreadCount > 0 && (
+								<span
+									className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center"
+									data-testid="unread-count"
+								>
+									{unreadCount}
+								</span>
+							)
+						: null}
 				</div>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent
 				className="w-80 overflow-y-scroll h-96 p-0 rounded-xl"
 				data-testid="notifications-menu-content"
 			>
-				{notifications.length === 0 ? (
+				{data?.notifications.length === 0 ? (
 					<DropdownMenuItem className="cursor-default">
 						No notifications
 					</DropdownMenuItem>
 				) : (
-					notifications.map((notification, index) => (
+					data?.notifications.map((notification, index) => (
 						<NotificationItem
 							currentUserHandle={currentUserHandle}
 							index={index}

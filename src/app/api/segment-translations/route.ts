@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
 	segmentId: z.coerce.number().int(),
-	locale: z.string(),
+	userLocale: z.string(),
 	bestTranslationId: z.coerce.number().int(),
 });
 
@@ -18,12 +18,12 @@ export async function GET(req: NextRequest) {
 		return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
 	}
 
-	const { segmentId, locale, bestTranslationId } = validation.data;
+	const { segmentId, userLocale, bestTranslationId } = validation.data;
 	const currentUser = await getCurrentUser();
 
 	try {
 		const bestTranslationWithVote = await prisma.segmentTranslation.findUnique({
-			where: { segmentId, id: bestTranslationId, locale },
+			where: { id: bestTranslationId },
 			include: {
 				user: {
 					select: selectUserFields(),
@@ -35,12 +35,11 @@ export async function GET(req: NextRequest) {
 				}),
 			},
 		});
-
 		// その他の翻訳を取得
 		const translations = await prisma.segmentTranslation.findMany({
 			where: {
 				segmentId,
-				locale,
+				locale: userLocale,
 				id: { not: bestTranslationId },
 			},
 			include: {

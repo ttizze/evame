@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
@@ -9,8 +8,6 @@ import { togglePageLike } from "./db/mutations.server";
 // フォームデータ用のスキーマ
 const schema = z.object({
 	pageId: z.coerce.number(),
-	pageSlug: z.string().min(1),
-	pageOwnerHandle: z.string().min(1),
 });
 
 export type PageLikeButtonState = ActionResponse<
@@ -20,8 +17,6 @@ export type PageLikeButtonState = ActionResponse<
 	},
 	{
 		pageId: number;
-		pageSlug: string;
-		pageOwnerHandle: string;
 	}
 >;
 
@@ -41,7 +36,6 @@ export async function togglePageLikeAction(
 		data.pageId,
 		currentUser.id,
 	);
-	revalidatePath(`/user/${data.pageOwnerHandle}/page/${data.pageSlug}`);
 	return {
 		success: true,
 		data: {

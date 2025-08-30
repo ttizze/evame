@@ -16,10 +16,18 @@ export const auth = betterAuth({
 				where: {
 					id: session.userId,
 				},
+				include: {
+					geminiApiKey: true,
+				},
 			});
 			if (!currentUser) {
 				throw new Error("User not found");
 			}
+
+			// Check if the user has a Gemini API key
+			const hasGeminiApiKey = !!(
+				currentUser.geminiApiKey && currentUser.geminiApiKey.apiKey !== ""
+			);
 			return {
 				user: {
 					id: currentUser.id,
@@ -33,6 +41,7 @@ export const auth = betterAuth({
 					image: currentUser.image,
 					createdAt: currentUser.createdAt,
 					updatedAt: currentUser.updatedAt,
+					hasGeminiApiKey,
 				},
 				session,
 			};

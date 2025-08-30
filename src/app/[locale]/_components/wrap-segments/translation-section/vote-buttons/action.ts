@@ -1,7 +1,6 @@
 // app/serverActions/voteAction.ts
 "use server";
 import type { Route } from "next";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { ActionResponse } from "@/app/types";
@@ -52,6 +51,5 @@ export async function voteTranslationAction(
 			currentUser.id,
 		);
 	}
-	revalidatePath("/");
 	return { success: true, data: { isUpvote, point } };
 }

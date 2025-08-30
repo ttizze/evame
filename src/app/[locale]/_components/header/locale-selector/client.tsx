@@ -67,7 +67,6 @@ export function LocaleSelector({
 	const [open, setOpen] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
 	const router = useCombinedRouter();
-	const params = useParams();
 	const pathname = usePathname();
 	const targetLocale = useLocale();
 	const { pageSlug } = useParams<{
@@ -76,11 +75,7 @@ export function LocaleSelector({
 	const handleLocaleChange = (value: string) => {
 		setOpen(false);
 		startTransition(() => {
-			router.push(
-				// @ts-expect-error next-intlの型がおかしい
-				{ pathname, params },
-				{ locale: value },
-			);
+			router.push(pathname, { locale: value });
 		});
 	};
 

@@ -77,8 +77,6 @@ export default async function ProblemSolutionSection({
 				<PageLikeButton
 					className="w-10 h-10 border rounded-full"
 					pageId={pageDetail.id}
-					pageOwnerHandle={pageDetail.user.handle}
-					pageSlug={pageDetail.slug}
 					showCount={false}
 				/>
 			}

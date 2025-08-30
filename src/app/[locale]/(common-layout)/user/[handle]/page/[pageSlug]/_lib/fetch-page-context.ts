@@ -5,7 +5,6 @@ import {
 	fetchPageViewCount,
 	fetchTranslationJobs,
 } from "@/app/[locale]/_db/page-utility-queries.server";
-import { incrementPageView } from "../_db/mutations.server";
 
 export const fetchPageContext = cache(async (slug: string, locale: string) => {
 	const pageDetail = await fetchPageDetail(slug, locale);
@@ -25,8 +24,6 @@ export const fetchPageContext = cache(async (slug: string, locale: string) => {
 	if (!pageDetail || pageDetail.status === "ARCHIVE") {
 		return notFound();
 	}
-
-	await incrementPageView(pageDetail.id);
 
 	const [pageTranslationJobs, pageViewCount] = await Promise.all([
 		fetchTranslationJobs(pageDetail.id),

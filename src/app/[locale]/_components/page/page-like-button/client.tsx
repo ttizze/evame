@@ -1,69 +1,85 @@
 "use client";
 
-import { Heart } from "lucide-react";
-import { useActionState, useOptimistic } from "react";
+import { Heart, Loader2 } from "lucide-react";
+import { useActionState } from "react";
+import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { type PageLikeButtonState, togglePageLikeAction } from "./action";
 
 type PageLikeButtonClientProps = {
-	liked: boolean;
-	likeCount: number;
 	pageId: number;
-	pageSlug: string;
-	pageOwnerHandle: string;
 	showCount?: boolean;
 	className?: string;
 };
 
 export function PageLikeButtonClient({
-	liked,
-	likeCount,
 	pageId,
-	pageSlug,
-	pageOwnerHandle,
 	showCount,
 	className = "",
 }: PageLikeButtonClientProps) {
-	const [_state, formAction, _isPending] = useActionState<
+	const fetcher = (url: string) =>
+		fetch(url, { credentials: "include" }).then((r) => {
+			if (!r.ok) throw new Error("failed");
+			return r.json() as Promise<{ liked: boolean; likeCount: number }>;
+		});
+	const { data, mutate, isLoading } = useSWR(
+		`/api/page-likes/${pageId}/state`,
+		fetcher,
+		{
+			revalidateOnFocus: false,
+		},
+	);
+
+	// Server action returns latest liked/count; prefer it when available
+	const [actionState, formAction, isPending] = useActionState<
 		PageLikeButtonState,
 		FormData
 	>(togglePageLikeAction, { success: false });
 
-	const [optimisticLiked, updateOptimisticLiked] = useOptimistic(
-		liked,
-		(_state, liked: boolean) => liked,
-	);
+	type LikeState = { liked: boolean; likeCount: number };
 
-	const [optimisticCount, updateOptimisticCount] = useOptimistic(
-		likeCount,
-		(state, increment: boolean) => (increment ? state + 1 : state - 1),
-	);
-	const handleSubmit = async (formData: FormData) => {
-		updateOptimisticLiked(!optimisticLiked);
-		updateOptimisticCount(!optimisticLiked);
+	const handleSubmit = (formData: FormData) => {
+		// Guard until initial state is loaded
+		if (!data) return;
+
+		// Compute and broadcast optimistic next state for all instances
+		const next: LikeState = {
+			liked: !data.liked,
+			likeCount: data.likeCount + (data.liked ? -1 : 1),
+		};
+		mutate(next, { revalidate: false });
+
+		// Trigger server action
 		formAction(formData);
 	};
+	if (actionState.success) {
+		mutate();
+	}
+
 	return (
 		<div className="flex items-center gap-2">
 			<form action={handleSubmit}>
 				<input name="pageId" type="hidden" value={pageId} />
-				<input name="pageSlug" type="hidden" value={pageSlug} />
-				<input name="pageOwnerHandle" type="hidden" value={pageOwnerHandle} />
 				<Button
 					aria-label="Like"
 					className={`bg-background ${className}`}
+					disabled={isPending || isLoading}
 					size="icon"
 					type="submit"
 					variant="ghost"
 				>
-					<Heart
-						className={`h-5 w-5 rounded-full ${optimisticLiked ? "text-red-500" : ""}`}
-						fill={optimisticLiked ? "currentColor" : "none"}
-					/>
+					{isPending || isLoading ? (
+						<Loader2 className="h-5 w-5 rounded-full" />
+					) : (
+						<Heart
+							className={`h-5 w-5 rounded-full ${data?.liked ? "text-red-500" : ""}`}
+							fill={data?.liked ? "currentColor" : "none"}
+						/>
+					)}
 				</Button>
 			</form>
-			{showCount && (
-				<span className="text-muted-foreground">{optimisticCount}</span>
+			{showCount && data && (
+				<span className="text-muted-foreground">{data.likeCount}</span>
 			)}
 		</div>
 	);
