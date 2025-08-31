@@ -12,6 +12,8 @@
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
 		"test-migrate": "DATABASE_URL=postgres://postgres:postgres@db.localtest.me:5435/main bunx prisma migrate dev && bunx prisma migrate deploy",
+		"db:setup": "bunx prisma generate && bunx prisma migrate dev",
+		"init": "bun install && bun run db:setup && bun run seed",
 		"vercel-build": "prisma generate && (prisma migrate deploy || (echo '1st migrate failed; retrying in 8s' && sleep 8 && prisma migrate deploy)) && prisma db seed && next build",
 		"check": "bunx @biomejs/biome check --write .",
 		"typecheck": "tsc --noEmit",
