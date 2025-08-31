@@ -1,7 +1,7 @@
 "use client";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import Form from "next/form";
-import { memo, useActionState } from "react";
+import { memo, useActionState, useEffect } from "react";
 import type { TranslationWithInfo } from "@/app/[locale]/types";
 import {
 	type VoteTranslationActionResponse,
@@ -25,9 +25,11 @@ export const VoteButtons = memo(function VoteButtons({
 		success: false,
 	});
 
-	if (voteState.success) {
-		onVoted?.();
-	}
+
+	// Fire callback when the action has completed successfully
+	useEffect(() => {
+		if (voteState.success && !isVoting) onVoted?.();
+	}, [voteState.success, isVoting, onVoted]);
 	return (
 		<span className="flex h-full justify-end items-center">
 			<Form action={voteAction}>
