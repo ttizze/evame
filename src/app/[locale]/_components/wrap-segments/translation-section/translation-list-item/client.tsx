@@ -1,6 +1,6 @@
 "use client";
 import { EllipsisVertical, Trash2 } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
 import type { TranslationWithInfo } from "@/app/[locale]/types";
 import type { ActionResponse } from "@/app/types";
@@ -19,11 +19,13 @@ import { deleteTranslationAction } from "./action";
 interface TranslationItemProps {
 	translation: TranslationWithInfo;
 	onVoted?: () => void;
+	onDeleted?: () => void;
 }
 
 export function TranslationListItem({
 	translation,
 	onVoted,
+	onDeleted,
 }: TranslationItemProps) {
 	const [_deleteTranslationState, action, isDeletingTranslation] =
 		useActionState<ActionResponse, FormData>(deleteTranslationAction, {
@@ -32,6 +34,13 @@ export function TranslationListItem({
 	const { data: session } = authClient.useSession();
 	const currentUser = session?.user;
 	const isOwner = currentUser?.handle === translation.user.handle;
+
+	// Fire callback when delete action has completed successfully
+	useEffect(() => {
+		if (_deleteTranslationState.success && !isDeletingTranslation) {
+			onDeleted?.();
+		}
+	}, [_deleteTranslationState.success, isDeletingTranslation, onDeleted]);
 
 	return (
 		<span className="pl-4 mt-1 block">

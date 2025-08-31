@@ -25,7 +25,6 @@ export const VoteButtons = memo(function VoteButtons({
 		success: false,
 	});
 
-
 	// Fire callback when the action has completed successfully
 	useEffect(() => {
 		if (voteState.success && !isVoting) onVoted?.();

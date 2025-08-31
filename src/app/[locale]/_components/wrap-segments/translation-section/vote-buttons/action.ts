@@ -7,11 +7,11 @@ import { z } from "zod";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/lib/auth-server";
 import { parseFormData } from "@/lib/parse-form-data";
+import { findPageSlugAndHandleBySegmentTranslationId } from "../_db/queries.server";
 import {
 	createNotificationPageSegmentTranslationVote,
 	handleVote,
 } from "./db/mutation.server";
-import { findPageSlugAndHandleBySegmentTranslationId } from "./db/queries.server";
 
 const schema = z.object({
 	segmentTranslationId: z.coerce.number().int(),
