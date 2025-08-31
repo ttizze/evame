@@ -98,7 +98,6 @@ export function AddAndVoteTranslations({
 					</span>
 				</Link>
 				<VoteButtons
-					key={`${mergedBestTranslation.id}-${mergedBestTranslation.point}-${mergedBestTranslation.currentUserVote?.isUpvote ?? "null"}`}
 					onVoted={() => {
 						void mutate();
 					}}

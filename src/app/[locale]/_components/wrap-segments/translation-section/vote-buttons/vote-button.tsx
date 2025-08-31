@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 
 interface VoteButtonProps {
 	type: "upvote" | "downvote";
-	isActive: boolean;
+	isActive: boolean | undefined;
 	isVoting: boolean;
 	voteCount?: number;
 	children: (props: { iconClass: string }) => React.ReactNode;

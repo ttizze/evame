@@ -1,6 +1,7 @@
 // app/serverActions/voteAction.ts
 "use server";
 import type { Route } from "next";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { ActionResponse } from "@/app/types";
@@ -10,6 +11,7 @@ import {
 	createNotificationPageSegmentTranslationVote,
 	handleVote,
 } from "./db/mutation.server";
+import { findPageSlugAndHandleBySegmentTranslationId } from "./db/queries.server";
 
 const schema = z.object({
 	segmentTranslationId: z.coerce.number().int(),
@@ -51,5 +53,12 @@ export async function voteTranslationAction(
 			currentUser.id,
 		);
 	}
+
+	const pageSlugAndHandle = await findPageSlugAndHandleBySegmentTranslationId(
+		parsedFormData.data.segmentTranslationId,
+	);
+	revalidatePath(
+		`/user/${pageSlugAndHandle.handle}/page/${pageSlugAndHandle.slug}`,
+	);
 	return { success: true, data: { isUpvote, point } };
 }

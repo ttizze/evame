@@ -22,11 +22,7 @@ export const VoteButtons = memo(function VoteButtons({
 		VoteTranslationActionResponse,
 		FormData
 	>(voteTranslationAction, {
-		success: true,
-		data: {
-			isUpvote: translation.currentUserVote?.isUpvote,
-			point: translation.point,
-		},
+		success: false,
 	});
 
 	if (voteState.success) {
@@ -42,19 +38,15 @@ export const VoteButtons = memo(function VoteButtons({
 				/>
 				<span className="flex h-8">
 					<VoteButton
-						isActive={
-							voteState.success ? voteState.data?.isUpvote === true : false
-						}
+						isActive={translation.currentUserVote?.isUpvote}
 						isVoting={isVoting}
 						type="upvote"
-						voteCount={voteState.success ? voteState.data?.point : 0}
+						voteCount={translation.point}
 					>
 						{({ iconClass }) => <ThumbsUp className={iconClass} />}
 					</VoteButton>
 					<VoteButton
-						isActive={
-							voteState.success ? voteState.data?.isUpvote === false : false
-						}
+						isActive={translation.currentUserVote?.isUpvote === false}
 						isVoting={isVoting}
 						type="downvote"
 					>
