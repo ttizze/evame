@@ -84,7 +84,7 @@ export function createActionFactory<
 
 		/* 3. キャッシュ再検証 & リダイレクト（成功時のみ） */
 		for (const p of buildRevalidatePaths(data, currentUser.handle, res.data)) {
-			revalidateAllLocales(p);
+			revalidateAllLocales(p, deps.revalidatePath);
 		}
 		if (buildSuccessRedirect) {
 			deps.redirect(

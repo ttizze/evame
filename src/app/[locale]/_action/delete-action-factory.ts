@@ -60,7 +60,7 @@ export function deleteActionFactory<TSchema extends z.ZodTypeAny>(
 
 		/** 3. キャッシュ再検証 */
 		for (const p of buildRevalidatePaths(data, currentUser.handle)) {
-			revalidateAllLocales(p);
+			revalidateAllLocales(p, deps.revalidatePath);
 		}
 
 		/** 4. リダイレクト */
