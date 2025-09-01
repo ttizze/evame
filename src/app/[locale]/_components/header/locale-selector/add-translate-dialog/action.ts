@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
@@ -13,6 +12,7 @@ import { fetchPageIdBySlug } from "@/app/[locale]/_db/page-utility-queries.serve
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
 import type { TranslateJobParams } from "@/features/translate/types";
+import { revalidateAllLocales } from "@/lib/revalidate-utils";
 
 /* ───────── 型 ───────── */
 
@@ -159,7 +159,7 @@ export async function translateAction(
 		if (pageResult && !pageResult.success) {
 			return { success: false, message: pageResult.message };
 		}
-		revalidatePath(`/user/${currentUser.handle}/page/${data.pageSlug}`);
+		revalidateAllLocales(`/user/${currentUser.handle}/page/${data.pageSlug}`);
 	}
 
 	return { success: true, data: { translationJobs: jobs } };

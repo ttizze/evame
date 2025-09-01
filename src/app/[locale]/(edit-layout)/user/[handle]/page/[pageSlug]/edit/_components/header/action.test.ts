@@ -20,9 +20,6 @@ vi.mock("@/app/[locale]/_lib/auto-translation/handle-auto-translation", () => ({
 vi.mock("next/cache", () => ({
 	revalidatePath: vi.fn(),
 }));
-vi.mock("next/navigation", () => ({
-	redirect: vi.fn(),
-}));
 
 import { revalidatePath } from "next/cache";
 /* ─────────────────────────────────────────────
@@ -100,9 +97,7 @@ describe("editPageStatusAction", () => {
 		expect(res.success && res.data?.translationJobs).toHaveLength(1);
 		expect(updatePageStatus).toHaveBeenCalledWith(1, "PUBLIC");
 		expect(handlePageAutoTranslation).toHaveBeenCalled();
-		expect(revalidatePath).toHaveBeenCalledWith(
-			"/user/user1/page/test-page/edit",
-		);
+		expect(revalidatePath).toHaveBeenCalledWith("/user/user1/page/test-page");
 	});
 
 	it("skips translation for non-PUBLIC status", async () => {

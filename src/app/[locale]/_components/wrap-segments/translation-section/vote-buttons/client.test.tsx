@@ -5,6 +5,10 @@ import { vi } from "vitest";
 import type { TranslationWithInfo } from "@/app/[locale]/types";
 import { VoteButtons } from "./client";
 
+vi.mock("next-intl", () => ({
+	useLocale: () => "en",
+}));
+
 const dummyTranslationUpvote = {
 	id: 1,
 	point: 10,

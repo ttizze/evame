@@ -7,15 +7,16 @@ import { z } from "zod";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/lib/auth-server";
 import { parseFormData } from "@/lib/parse-form-data";
+import { findPageSlugAndHandleBySegmentTranslationId } from "../_db/queries.server";
 import {
 	createNotificationPageSegmentTranslationVote,
 	handleVote,
 } from "./db/mutation.server";
-import { findPageSlugAndHandleBySegmentTranslationId } from "./db/queries.server";
 
 const schema = z.object({
 	segmentTranslationId: z.coerce.number().int(),
 	isUpvote: z.string().transform((val) => val === "true"),
+	userLocale: z.string().min(1),
 });
 
 export type VoteTranslationActionResponse = ActionResponse<
@@ -58,7 +59,7 @@ export async function voteTranslationAction(
 		parsedFormData.data.segmentTranslationId,
 	);
 	revalidatePath(
-		`/user/${pageSlugAndHandle.handle}/page/${pageSlugAndHandle.slug}`,
+		`/${parsedFormData.data.userLocale}/user/${pageSlugAndHandle.handle}/page/${pageSlugAndHandle.slug}`,
 	);
 	return { success: true, data: { isUpvote, point } };
 }

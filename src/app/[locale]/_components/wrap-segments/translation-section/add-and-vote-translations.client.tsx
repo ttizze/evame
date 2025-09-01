@@ -110,6 +110,9 @@ export function AddAndVoteTranslations({
 			{displayedTranslations.map((displayedTranslation) => (
 				<TranslationListItem
 					key={displayedTranslation.id}
+					onDeleted={() => {
+						void mutate();
+					}}
 					onVoted={() => {
 						void mutate();
 					}}

@@ -24,4 +24,5 @@ vi.mock("next/navigation", () => ({
 	notFound: vi.fn(() => {
 		throw new Error("NEXT_NOT_FOUND");
 	}),
+	revalidatePath: vi.fn(),
 }));
