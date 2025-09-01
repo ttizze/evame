@@ -8,7 +8,8 @@ import {
 	Loader2,
 	Lock,
 } from "lucide-react";
-import { useParams, usePathname } from "next/navigation";
+import type { Route } from "next";
+import { useParams } from "next/navigation";
 import { useActionState, useMemo, useState } from "react";
 import { BaseHeader } from "@/app/[locale]/_components/header/base-header.client";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
@@ -70,9 +71,12 @@ export function EditHeader({
 		EditPageStatusActionState,
 		FormData
 	>(editPageStatusAction, { success: false });
-	const currentPagePath = usePathname();
-	const { pageSlug } = useParams<{ pageSlug?: string }>();
-	const pagePath = `/${currentPagePath.split("/").slice(2, -1).join("/")}`;
+	const { handle, pageSlug } = useParams<{
+		handle: string;
+		pageSlug: string;
+	}>();
+	// Build canonical view path explicitly using params
+	const previewHref = `/user/${handle}/page/${pageSlug}/preview`;
 	//editページはiphoneSafari対応のため､baseHeaderとは別でスクロール管理が必要
 	const { isVisible } = useHeaderVisibility();
 	const { toastJobs } = useTranslationJobs(
@@ -200,7 +204,7 @@ export function EditHeader({
 				)}
 				<Separator />
 				<Button asChild className={MENU_BUTTON_CLASSES} variant="ghost">
-					<Link href={pagePath}>
+					<Link href={previewHref as Route}>
 						<LinkIcon className={ICON_CLASSES} />
 						<span>Preview</span>
 					</Link>

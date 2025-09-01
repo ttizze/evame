@@ -1,9 +1,9 @@
 "use server";
 import type { Route } from "next";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/lib/auth-server";
+import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import { markAllNotificationAsRead } from "./db/mutations.server";
 export async function markNotificationAsReadAction(
 	_previousState: ActionResponse,
@@ -14,7 +14,7 @@ export async function markNotificationAsReadAction(
 		redirect("/auth/login" as Route);
 	}
 	await markAllNotificationAsRead();
-	revalidatePath("/");
+	revalidateAllLocales("/");
 	return {
 		success: true,
 		data: undefined,

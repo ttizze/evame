@@ -1,7 +1,6 @@
 "use server";
 import type { PageStatus } from "@prisma/client";
 import type { Route } from "next";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
@@ -9,6 +8,7 @@ import { getPageById } from "@/app/[locale]/_db/queries.server";
 import { handlePageAutoTranslation } from "@/app/[locale]/_lib/auto-translation/handle-auto-translation";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
+import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import { updatePageStatus } from "./_db/mutations.server";
 
 const editPageStatusSchema = z.object({
@@ -71,7 +71,8 @@ export async function editPageStatusAction(
 			targetLocales,
 		);
 	}
-	revalidatePath(`/user/${currentUser.handle}/page/${page.slug}`);
+	const basePath = `/user/${currentUser.handle}/page/${page.slug}`;
+	revalidateAllLocales(basePath);
 
 	return {
 		success: true,

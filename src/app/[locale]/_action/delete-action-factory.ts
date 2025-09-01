@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { z } from "zod";
 import type { ActionResponse } from "@/app/types";
+import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import {
 	type AuthDeps,
 	authAndValidate,
@@ -59,7 +60,7 @@ export function deleteActionFactory<TSchema extends z.ZodTypeAny>(
 
 		/** 3. キャッシュ再検証 */
 		for (const p of buildRevalidatePaths(data, currentUser.handle)) {
-			deps.revalidatePath(p);
+			revalidateAllLocales(p);
 		}
 
 		/** 4. リダイレクト */

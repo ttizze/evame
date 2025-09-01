@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { z } from "zod";
 import type { ActionResponse } from "@/app/types";
+import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import {
 	type AuthDeps,
 	authAndValidate,
@@ -83,7 +84,7 @@ export function createActionFactory<
 
 		/* 3. キャッシュ再検証 & リダイレクト（成功時のみ） */
 		for (const p of buildRevalidatePaths(data, currentUser.handle, res.data)) {
-			deps.revalidatePath(p);
+			revalidateAllLocales(p);
 		}
 		if (buildSuccessRedirect) {
 			deps.redirect(
