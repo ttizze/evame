@@ -50,7 +50,7 @@ describe("editPageContentAction", () => {
 
 		expect(result.success).toBe(true);
 		expect(revalidatePath).toHaveBeenCalledWith(
-			"/user/mockUserId1/page/mockUserId1-page1",
+			"/en/user/mockUserId1/page/mockUserId1-page1",
 		);
 	});
 });

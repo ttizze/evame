@@ -1,7 +1,8 @@
 "use client";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import Form from "next/form";
-import { memo, useActionState, useEffect } from "react";
+import { useLocale } from "next-intl";
+import { memo, useActionState } from "react";
 import type { TranslationWithInfo } from "@/app/[locale]/types";
 import {
 	type VoteTranslationActionResponse,
@@ -18,20 +19,22 @@ export const VoteButtons = memo(function VoteButtons({
 	translation,
 	onVoted,
 }: VoteButtonsProps) {
-	const [voteState, voteAction, isVoting] = useActionState<
-		VoteTranslationActionResponse,
-		FormData
-	>(voteTranslationAction, {
-		success: false,
-	});
+	const locale = useLocale();
+	const [_voteState, action, isVoting] = useActionState(
+		async (_prev: VoteTranslationActionResponse, formData: FormData) => {
+			const res = await voteTranslationAction(_prev, formData);
+			if (res.success) {
+				onVoted?.();
+			}
+			return res;
+		},
+		{ success: false },
+	);
 
-	// Fire callback when the action has completed successfully
-	useEffect(() => {
-		if (voteState.success && !isVoting) onVoted?.();
-	}, [voteState.success, isVoting, onVoted]);
 	return (
 		<span className="flex h-full justify-end items-center">
-			<Form action={voteAction}>
+			<Form action={action}>
+				<input name="userLocale" type="hidden" value={locale} />
 				<input
 					name="segmentTranslationId"
 					type="hidden"

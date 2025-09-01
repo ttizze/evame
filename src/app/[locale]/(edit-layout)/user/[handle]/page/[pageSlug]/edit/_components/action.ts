@@ -50,7 +50,9 @@ export const editPageContentAction = createActionFactory<
 		};
 	},
 
-	buildRevalidatePaths: (i, handle) => [`/user/${handle}/page/${i.pageSlug}`],
+	buildRevalidatePaths: (i, handle) => [
+		`/${i.userLocale}/user/${handle}/page/${i.pageSlug}`,
+	],
 
 	buildResponse: (_d) => ({ success: true, data: undefined }),
 });

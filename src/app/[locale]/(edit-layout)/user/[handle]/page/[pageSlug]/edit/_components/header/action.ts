@@ -71,7 +71,8 @@ export async function editPageStatusAction(
 			targetLocales,
 		);
 	}
-	revalidatePath(`/user/${currentUser.handle}/page/${page.slug}/edit`);
+	revalidatePath(`/user/${currentUser.handle}/page/${page.slug}`);
+
 	return {
 		success: true,
 		data: translationJobs?.length ? { translationJobs } : undefined,

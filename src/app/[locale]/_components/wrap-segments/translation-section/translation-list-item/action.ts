@@ -8,6 +8,7 @@ import { deleteOwnTranslation } from "./db/mutations.server";
 
 const schema = z.object({
 	translationId: z.coerce.number(),
+	userLocale: z.string().min(1),
 });
 
 export async function deleteTranslationAction(
@@ -28,7 +29,7 @@ export async function deleteTranslationAction(
 		await findPageSlugAndHandleBySegmentTranslationId(translationId);
 	await deleteOwnTranslation(currentUser.handle, translationId);
 	revalidatePath(
-		`/user/${pageSlugAndHandle.handle}/page/${pageSlugAndHandle.slug}`,
+		`/${data.userLocale}/user/${pageSlugAndHandle.handle}/page/${pageSlugAndHandle.slug}`,
 	);
 	return { success: true, data: undefined };
 }

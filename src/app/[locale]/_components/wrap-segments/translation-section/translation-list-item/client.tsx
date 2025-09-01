@@ -1,6 +1,7 @@
 "use client";
 import { EllipsisVertical, Trash2 } from "lucide-react";
-import { useActionState, useEffect } from "react";
+import { useLocale } from "next-intl";
+import { useActionState } from "react";
 import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
 import type { TranslationWithInfo } from "@/app/[locale]/types";
 import type { ActionResponse } from "@/app/types";
@@ -27,20 +28,22 @@ export function TranslationListItem({
 	onVoted,
 	onDeleted,
 }: TranslationItemProps) {
+	const locale = useLocale();
 	const [_deleteTranslationState, action, isDeletingTranslation] =
-		useActionState<ActionResponse, FormData>(deleteTranslationAction, {
-			success: false,
-		});
+		useActionState(
+			async (_prev: ActionResponse, formData: FormData) => {
+				const res = await deleteTranslationAction(_prev, formData);
+				if (res.success) {
+					onDeleted?.();
+				}
+				return res;
+			},
+			{ success: false },
+		);
+
 	const { data: session } = authClient.useSession();
 	const currentUser = session?.user;
 	const isOwner = currentUser?.handle === translation.user.handle;
-
-	// Fire callback when delete action has completed successfully
-	useEffect(() => {
-		if (_deleteTranslationState.success && !isDeletingTranslation) {
-			onDeleted?.();
-		}
-	}, [_deleteTranslationState.success, isDeletingTranslation, onDeleted]);
 
 	return (
 		<span className="pl-4 mt-1 block">
@@ -58,6 +61,7 @@ export function TranslationListItem({
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="w-48">
 							<form action={action}>
+								<input name="userLocale" type="hidden" value={locale} />
 								<input
 									name="translationId"
 									type="hidden"

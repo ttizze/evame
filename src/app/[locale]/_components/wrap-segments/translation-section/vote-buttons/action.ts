@@ -16,6 +16,7 @@ import {
 const schema = z.object({
 	segmentTranslationId: z.coerce.number().int(),
 	isUpvote: z.string().transform((val) => val === "true"),
+	userLocale: z.string().min(1),
 });
 
 export type VoteTranslationActionResponse = ActionResponse<
@@ -58,7 +59,7 @@ export async function voteTranslationAction(
 		parsedFormData.data.segmentTranslationId,
 	);
 	revalidatePath(
-		`/user/${pageSlugAndHandle.handle}/page/${pageSlugAndHandle.slug}`,
+		`/${parsedFormData.data.userLocale}/user/${pageSlugAndHandle.handle}/page/${pageSlugAndHandle.slug}`,
 	);
 	return { success: true, data: { isUpvote, point } };
 }
