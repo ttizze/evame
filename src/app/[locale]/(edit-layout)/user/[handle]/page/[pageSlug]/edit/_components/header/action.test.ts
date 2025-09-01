@@ -20,10 +20,6 @@ vi.mock("@/app/[locale]/_lib/auto-translation/handle-auto-translation", () => ({
 vi.mock("next/cache", () => ({
 	revalidatePath: vi.fn(),
 }));
-vi.mock("next/navigation", () => ({
-	redirect: vi.fn(),
-}));
-
 import { revalidatePath } from "next/cache";
 /* ─────────────────────────────────────────────
    2. モックの参照を取得
@@ -101,7 +97,7 @@ describe("editPageStatusAction", () => {
 		expect(updatePageStatus).toHaveBeenCalledWith(1, "PUBLIC");
 		expect(handlePageAutoTranslation).toHaveBeenCalled();
 		expect(revalidatePath).toHaveBeenCalledWith(
-			"/user/user1/page/test-page/edit",
+			"/user/user1/page/test-page",
 		);
 	});
 
