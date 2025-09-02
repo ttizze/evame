@@ -1,18 +1,30 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { BASE_URL } from "@/app/_constants/base-url";
-import type {
-	TranslateChunkParams,
-	TranslateJobParams,
-} from "@/app/api/translate/types";
+import type { TranslateChunkParams } from "@/app/api/translate/types";
 import { prisma } from "@/lib/prisma";
 import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import { updateTranslationJob } from "./_db/mutations.server";
 import { splitNumberedElements } from "./_lib/split-numbered-elements.server";
 import { withQstashVerification } from "./_lib/with-qstash-signature";
 
+const ParamsSchema = z.object({
+	userId: z.string().min(1),
+	pageId: z.number().int().positive(),
+	translationJobId: z.number().int().positive(),
+	provider: z.enum(["gemini", "vertex"]),
+	aiModel: z.string().min(1),
+	targetLocale: z.string().min(1),
+	title: z.string(),
+	numberedElements: z.array(
+		z.object({ number: z.number().int(), text: z.string() }),
+	),
+	pageCommentId: z.number().int().positive().optional(),
+});
+
 async function handler(req: Request) {
 	try {
-		const params = (await req.json()) as TranslateJobParams;
+		const params = ParamsSchema.parse(await req.json());
 
 		// Mark job started
 		await updateTranslationJob(params.translationJobId, "IN_PROGRESS", 0);
