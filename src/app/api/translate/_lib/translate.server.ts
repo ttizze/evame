@@ -1,73 +1,17 @@
-import { TranslationStatus } from "@prisma/client";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
-import {
-	ensurePageLocaleTranslationProof,
-	updateTranslationJob,
-} from "../db/mutations.server";
+import { ensurePageLocaleTranslationProof } from "../_db/mutations.server";
 import {
 	fetchGeminiApiKeyByUserId,
 	getPageCommentSegments,
 	getPageSegments,
-} from "../db/queries.server";
-import { getGeminiModelResponse } from "../services/gemini";
-import { getVertexAIModelResponse } from "../services/vertexai";
-import type {
-	NumberedElement,
-	TranslateJobParams,
-	TranslationProvider,
-} from "../types";
+} from "../_db/queries.server";
+import { getGeminiModelResponse } from "../_services/gemini";
+import { getVertexAIModelResponse } from "../_services/vertexai";
+import type { NumberedElement, TranslationProvider } from "../types";
 import { extractTranslations } from "./extract-translations.server";
 import { saveTranslations } from "./io-deps";
-import { splitNumberedElements } from "./split-numbered-elements.server";
 
-export async function translate(params: TranslateJobParams) {
-	try {
-		await updateTranslationJob(
-			params.translationJobId,
-			TranslationStatus.IN_PROGRESS,
-			0,
-		);
-		const sortedNumberedElements = params.numberedElements.sort(
-			(a, b) => a.number - b.number,
-		);
-		const chunks = splitNumberedElements(sortedNumberedElements);
-		const totalChunks = chunks.length;
-
-		for (const [index, chunk] of chunks.entries()) {
-			console.log(`Processing chunk ${index + 1} of ${totalChunks}`);
-			await translateChunk(
-				params.userId,
-				params.provider,
-				params.aiModel,
-				chunk,
-				params.targetLocale,
-				params.pageId,
-				params.title,
-				params.pageCommentId,
-			);
-			const progress = ((index + 1) / totalChunks) * 100;
-			await updateTranslationJob(
-				params.translationJobId,
-				TranslationStatus.IN_PROGRESS,
-				progress,
-			);
-		}
-		await updateTranslationJob(
-			params.translationJobId,
-			TranslationStatus.COMPLETED,
-			100,
-		);
-	} catch (error) {
-		console.error("Background translation job failed:", error);
-		await updateTranslationJob(
-			params.translationJobId,
-			TranslationStatus.FAILED,
-			0,
-		);
-	}
-}
-
-async function translateChunk(
+export async function translateChunk(
 	userId: string,
 	provider: TranslationProvider,
 	aiModel: string,

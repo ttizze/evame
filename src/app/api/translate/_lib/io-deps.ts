@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getOrCreateAIUser } from "../db/mutations.server";
+import { getOrCreateAIUser } from "../_db/mutations.server";
 import type { NumberedElement } from "../types";
 
 type Segment = { id: number; number: number };

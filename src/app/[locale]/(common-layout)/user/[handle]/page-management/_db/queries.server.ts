@@ -13,12 +13,14 @@ export async function fetchPaginatedOwnPages(
 		status: {
 			in: [PageStatus.PUBLIC, PageStatus.DRAFT],
 		},
-		pageSegments: {
-			some: {
-				number: 0,
-				text: {
-					contains: searchTerm,
-					mode: "insensitive" as const,
+		content: {
+			segments: {
+				some: {
+					number: 0,
+					text: {
+						contains: searchTerm,
+						mode: "insensitive" as const,
+					},
 				},
 			},
 		},

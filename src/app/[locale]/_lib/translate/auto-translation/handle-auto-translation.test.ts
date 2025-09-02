@@ -11,17 +11,19 @@ const baseParams = {
 } as const;
 
 function buildDeps() {
-	const createTranslationJob = vi.fn().mockResolvedValue({ id: 123 });
+	const createTranslationJob = vi
+		.fn()
+		.mockResolvedValue({ id: 123, aiModel: "gemini-2.0-flash" });
 	const fetchPageWithPageSegments = vi.fn();
 	const fetchPageWithTitleAndComments = vi.fn();
-	const fetchTranslateAPI = vi.fn().mockResolvedValue({ ok: true });
+	const enqueue = vi.fn().mockResolvedValue({ ok: true });
 	const delay = vi.fn().mockResolvedValue(undefined);
 
 	const deps = {
 		createTranslationJob,
 		fetchPageWithPageSegments,
 		fetchPageWithTitleAndComments,
-		fetchTranslateAPI,
+		enqueue,
 		delay,
 	};
 
@@ -78,16 +80,13 @@ describe("handlePageAutoTranslation()", () => {
 			expect.objectContaining({ locale: "en" }),
 		);
 
-		expect(spies.fetchTranslateAPI).toHaveBeenCalledWith(
-			expect.any(String),
+		expect(spies.enqueue).toHaveBeenCalledWith(
 			expect.objectContaining({
 				targetLocale: "en",
 				title: page.title,
 				numberedElements: page.content.segments,
 			}),
 		);
-
-		expect(spies.delay).toHaveBeenCalledWith(1000);
 	});
 
 	it("throws if page not found", async () => {
@@ -121,12 +120,10 @@ describe("handlePageAutoTranslation()", () => {
 		});
 
 		for (const _locale of ["ja", "zh"]) {
-			expect(spies.fetchTranslateAPI).toHaveBeenCalledWith(
-				expect.any(String),
+			expect(spies.enqueue).toHaveBeenCalledWith(
 				expect.objectContaining({ targetLocale: "en" }),
 			);
 		}
-		expect(spies.delay).toHaveBeenCalledTimes(2);
 	});
 });
 
@@ -163,8 +160,7 @@ describe("handlePageCommentAutoTranslation()", () => {
 			dependencies: deps,
 		});
 
-		expect(spies.fetchTranslateAPI).toHaveBeenCalledWith(
-			expect.any(String),
+		expect(spies.enqueue).toHaveBeenCalledWith(
 			expect.objectContaining({
 				pageCommentId: 789,
 			}),

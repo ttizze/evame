@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   neon:
     image: postgres:17
@@ -83,6 +82,16 @@ services:
       tail -f /dev/null
       "
 
+  qstash:
+    image: public.ecr.aws/upstash/qstash:latest
+    command: ["qstash", "dev"]
+    ports:
+      - "8080:8080"
+    # Ensure the container can resolve the host machine as host.docker.internal
+    # so it can deliver webhooks to Next.js at http://host.docker.internal:3000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
 volumes:
   redis:
     driver: local
@@ -92,4 +101,3 @@ volumes:
     driver: local
   test_db_data:
     driver: local
-

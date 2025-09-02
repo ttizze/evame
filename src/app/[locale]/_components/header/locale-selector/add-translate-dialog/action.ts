@@ -1,7 +1,6 @@
 "use server";
 
 import { z } from "zod";
-import { BASE_URL } from "@/app/_constants/base-url";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import {
@@ -9,10 +8,9 @@ import {
 	fetchPageWithTitleAndComments,
 } from "@/app/[locale]/_db/page-detail-queries.server";
 import { fetchPageIdBySlug } from "@/app/[locale]/_db/page-utility-queries.server";
+import { enqueueTranslate } from "@/app/[locale]/_lib/translate/enqueue.server";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
-import type { TranslateJobParams } from "@/features/translate/types";
-import { revalidateAllLocales } from "@/lib/revalidate-utils";
 
 /* ───────── 型 ───────── */
 
@@ -39,13 +37,6 @@ const toNumbered = <T extends { number: number; text: string }>(
 	segments: T[],
 ): Numbered[] => segments.map(({ number, text }) => ({ number, text }));
 
-async function postTranslate(body: TranslateJobParams) {
-	await fetch(`${BASE_URL}/api/translate`, {
-		method: "POST",
-		body: JSON.stringify(body),
-	});
-}
-
 async function newJobAndSend(args: {
 	userId: string;
 	aiModel: string;
@@ -70,7 +61,7 @@ async function newJobAndSend(args: {
 
 	args.jobs.push(job);
 
-	await postTranslate({
+	await enqueueTranslate({
 		provider: args.provider,
 		translationJobId: job.id,
 		aiModel: args.aiModel,
@@ -159,7 +150,6 @@ export async function translateAction(
 		if (pageResult && !pageResult.success) {
 			return { success: false, message: pageResult.message };
 		}
-		revalidateAllLocales(`/user/${currentUser.handle}/page/${data.pageSlug}`);
 	}
 
 	return { success: true, data: { translationJobs: jobs } };

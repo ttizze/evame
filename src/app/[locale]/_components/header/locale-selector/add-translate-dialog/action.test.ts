@@ -111,7 +111,6 @@ describe("TranslateAction", () => {
 		const result = await translateAction({ success: false }, formData);
 		console.log("result", result);
 		expect(result).toMatchObject({ success: true });
-		expect(revalidatePath).toHaveBeenCalled();
 	});
 
 	it("should handle page not found for translation", async () => {

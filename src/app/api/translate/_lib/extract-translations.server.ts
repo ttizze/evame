@@ -22,10 +22,12 @@ export function extractTranslations(
 	let match = regex.exec(text);
 	while (match !== null) {
 		if (match[1] && match[2]) {
-			translations.push({
-				number: Number.parseInt(match[1], 10),
-				text: match[2],
-			});
+			const number = Number.parseInt(match[1], 10);
+			const raw = match[2];
+			// Attempt to JSON-decode escape sequences (e.g. \n, \t, \" , \uXXXX)
+			let decoded = raw;
+			decoded = JSON.parse(`"${raw}"`);
+			translations.push({ number, text: decoded });
 		}
 		match = regex.exec(text);
 	}
