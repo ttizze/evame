@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import {
 	incrementTranslationProgress,
-	updateTranslationJob,
+	markJobFailed,
 } from "../_db/mutations.server";
 import { stepForChunk } from "../_lib/progress";
 import { translateChunk } from "../_lib/translate.server";
@@ -35,10 +35,8 @@ async function handler(req: Request) {
 			inc,
 		);
 
-		// If we just reached or exceeded 100, finalize the job and revalidate.
-		if (updated.progress >= 100) {
-			await updateTranslationJob(params.translationJobId, "COMPLETED", 100);
-
+		// If the job is completed, revalidate the page.
+		if (updated && updated.status === "COMPLETED") {
 			const page = await prisma.page.findFirst({
 				where: { id: params.pageId },
 				select: { slug: true, user: { select: { handle: true } } },
@@ -51,11 +49,10 @@ async function handler(req: Request) {
 		return NextResponse.json({ ok: true });
 	} catch (error) {
 		console.error("/api/translate/chunk error:", error);
-		// Mark the whole job as failed on any chunk failure
-		try {
-			const body = (await req.clone().json()) as TranslateChunkParams;
-			await updateTranslationJob(body.translationJobId, "FAILED", 0);
-		} catch {}
+
+		const body = (await req.clone().json()) as TranslateChunkParams;
+		await markJobFailed(body.translationJobId, 0);
+
 		return NextResponse.json({ ok: false }, { status: 500 });
 	}
 }
