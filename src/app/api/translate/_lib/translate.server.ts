@@ -33,23 +33,34 @@ export async function translate(params: TranslateJobParams) {
 		const chunks = splitNumberedElements(sortedNumberedElements);
 		const totalChunks = chunks.length;
 
-		for (const [index, chunk] of chunks.entries()) {
-			console.log(`Processing chunk ${index + 1} of ${totalChunks}`);
-			await translateChunk(
-				params.userId,
-				params.provider,
-				params.aiModel,
-				chunk,
-				params.targetLocale,
-				params.pageId,
-				params.title,
-				params.pageCommentId,
-			);
-			const progress = ((index + 1) / totalChunks) * 100;
-			await updateTranslationJob(
-				params.translationJobId,
-				TranslationStatus.IN_PROGRESS,
-				progress,
+		const concurrency = Number(process.env.TRANSLATE_CONCURRENCY ?? 2) || 2;
+		let completed = 0; // 逆行防止に必須（総完了数で進捗を計算）
+		for (let start = 0; start < chunks.length; start += concurrency) {
+			const batch = chunks.slice(start, start + concurrency);
+			await Promise.all(
+				batch.map(async (chunk, j) => {
+					const idx = start + j;
+					console.log(
+						`Processing chunk ${idx + 1} of ${totalChunks} (concurrency=${concurrency})`,
+					);
+					await translateChunk(
+						params.userId,
+						params.provider,
+						params.aiModel,
+						chunk,
+						params.targetLocale,
+						params.pageId,
+						params.title,
+						params.pageCommentId,
+					);
+					// 完了数ベースで進捗を更新（逆行しない）。
+					const progress = (++completed / totalChunks) * 100;
+					await updateTranslationJob(
+						params.translationJobId,
+						TranslationStatus.IN_PROGRESS,
+						progress,
+					);
+				}),
 			);
 		}
 		await updateTranslationJob(

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
-import { handlePageAutoTranslation } from "@/app/[locale]/_lib/auto-translation/handle-auto-translation";
+import { handlePageAutoTranslation } from "@/app/[locale]/_lib/translate/auto-translation/handle-auto-translation";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { revalidateAllLocales } from "@/lib/revalidate-utils";
@@ -29,20 +29,6 @@ export type EditPageStatusActionState = ActionResponse<
 	}
 >;
 
-async function triggerAutoTranslation(
-	pageId: number,
-	sourceLocale: string,
-	currentUserId: string,
-	targetLocales: string[],
-) {
-	return await handlePageAutoTranslation({
-		currentUserId,
-		pageId,
-		sourceLocale,
-		targetLocales,
-	});
-}
-
 export async function editPageStatusAction(
 	_previousState: EditPageStatusActionState,
 	formData: FormData,
@@ -64,12 +50,12 @@ export async function editPageStatusAction(
 
 	let translationJobs: TranslationJobForToast[] | undefined;
 	if (status === "PUBLIC") {
-		translationJobs = await triggerAutoTranslation(
+		translationJobs = await handlePageAutoTranslation({
+			currentUserId: currentUser.id,
 			pageId,
-			page.sourceLocale,
-			currentUser.id,
+			sourceLocale: page.sourceLocale,
 			targetLocales,
-		);
+		});
 	}
 	const basePath = `/user/${currentUser.handle}/page/${page.slug}`;
 	revalidateAllLocales(basePath);
