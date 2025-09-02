@@ -4,7 +4,7 @@ import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslateChunkParams } from "@/app/api/translate/types";
 import { prisma } from "@/lib/prisma";
 import { revalidateAllLocales } from "@/lib/revalidate-utils";
-import { updateTranslationJob } from "./_db/mutations.server";
+import { markJobCompleted, markJobInProgress } from "./_db/mutations.server";
 import { splitNumberedElements } from "./_lib/split-numbered-elements.server";
 import { withQstashVerification } from "./_lib/with-qstash-signature";
 
@@ -26,9 +26,6 @@ async function handler(req: Request) {
 	try {
 		const params = ParamsSchema.parse(await req.json());
 
-		// Mark job started
-		await updateTranslationJob(params.translationJobId, "IN_PROGRESS", 0);
-
 		const chunks = splitNumberedElements(
 			[...params.numberedElements].sort((a, b) => a.number - b.number),
 		);
@@ -36,7 +33,7 @@ async function handler(req: Request) {
 
 		// If there is nothing to translate, finalize immediately.
 		if (totalChunks === 0) {
-			await updateTranslationJob(params.translationJobId, "COMPLETED", 100);
+			await markJobCompleted(params.translationJobId);
 			const page = await prisma.page.findFirst({
 				where: { id: params.pageId },
 				select: { slug: true, user: { select: { handle: true } } },
@@ -46,6 +43,9 @@ async function handler(req: Request) {
 			}
 			return NextResponse.json({ ok: true }, { status: 201 });
 		}
+
+		// Mark job started only when there is work to do
+		await markJobInProgress(params.translationJobId);
 
 		// Publish each chunk as an individual QStash message to /api/translate/chunk
 		const { Client } = await import("@upstash/qstash");
@@ -72,7 +72,7 @@ async function handler(req: Request) {
 					url: `${publishBaseUrl}/api/translate/chunk`,
 					body,
 					deduplicationId: `translate-${params.translationJobId}-c${idx}`,
-					retries: 5,
+					retries: 3,
 					retryDelay: "10000",
 					timeout: 240,
 				});

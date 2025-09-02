@@ -26,7 +26,7 @@ export async function enqueueTranslate(
 		body,
 		// QStash does not allow ':' in deduplicationId
 		deduplicationId: options.dedupe ?? `translate-${body.translationJobId}`,
-		retries: options.retries ?? 5,
+		retries: options.retries ?? 3,
 		retryDelay: options.retryDelay ?? "10000",
 		timeout: 240,
 	});
