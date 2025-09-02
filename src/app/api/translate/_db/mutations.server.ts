@@ -54,3 +54,16 @@ export async function ensurePageLocaleTranslationProof(
 		},
 	});
 }
+
+export async function incrementTranslationProgress(
+	translationJobId: number,
+	inc: number,
+) {
+	return await prisma.translationJob.update({
+		where: { id: translationJobId },
+		data: {
+			status: "IN_PROGRESS",
+			progress: { increment: inc },
+		},
+	});
+}

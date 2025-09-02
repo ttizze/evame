@@ -16,3 +16,10 @@ export interface TranslateJobParams {
 	numberedElements: NumberedElement[];
 	pageCommentId?: number;
 }
+
+export interface TranslateChunkParams
+	extends Omit<TranslateJobParams, "numberedElements"> {
+	numberedElements: NumberedElement[];
+	totalChunks: number;
+	chunkIndex: number;
+}

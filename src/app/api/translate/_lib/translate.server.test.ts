@@ -2,22 +2,24 @@
 
 import { TranslationProofStatus } from "@prisma/client";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { translate } from "@/app/api/translate/_lib/translate.server";
+import { translateChunk } from "@/app/api/translate/_lib/translate.server";
 import { prisma } from "@/lib/prisma";
-import { getGeminiModelResponse } from "../services/gemini";
+import { getGeminiModelResponse } from "../_services/gemini";
 
-vi.mock("../services/gemini", () => ({
+// Mock the correct module used by the implementation
+vi.mock("../_services/gemini", () => ({
 	getGeminiModelResponse: vi.fn(),
 }));
 
 // 型定義
 import type { TranslateJobParams } from "../types";
 
-describe("translate関数の単体テスト (Gemini呼び出しのみモック)", () => {
+describe("translateChunk の単体テスト (Gemini 呼び出しのみモック)", () => {
 	let userId: string;
 	let pageId: number;
 	let translationJobId: number;
 	beforeEach(async () => {
+		vi.resetAllMocks();
 		await prisma.user.deleteMany();
 		await prisma.page.deleteMany();
 		await prisma.segment.deleteMany();
@@ -104,7 +106,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		await prisma.pageLocaleTranslationProof.deleteMany();
 	});
 
-	test("正常ケース：Geminiから正常レスポンスが返った場合、最終的にステータスがcompletedとなり翻訳がDBに保存される", async () => {
+	test("正常ケース：Geminiから正常レスポンスが返った場合、翻訳がDBに保存される", async () => {
 		const params: TranslateJobParams = {
 			translationJobId,
 			provider: "gemini",
@@ -127,14 +129,19 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
       ]
     `);
 
-		// 依存注入：commonDeps, pageDeps, commentDeps とパラメータを渡す
-		await expect(translate(params)).resolves.toBeUndefined();
-
-		// 最終的に completed となっているはず
-		const updatedInfo = await prisma.translationJob.findUnique({
-			where: { id: translationJobId },
-		});
-		expect(updatedInfo?.status).toBe("COMPLETED");
+		// 実装に合わせて translateChunk を直接呼び出す
+		await expect(
+			translateChunk(
+				params.userId,
+				params.provider,
+				params.aiModel,
+				params.numberedElements,
+				params.targetLocale,
+				params.pageId,
+				params.title,
+				params.pageCommentId,
+			),
+		).resolves.toBeUndefined();
 
 		// 翻訳結果が保存されているか
 		const translatedTexts = await prisma.segmentTranslation.findMany({
@@ -145,7 +152,7 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		expect(translatedTexts.some((t) => t.text === "世界")).toBe(true);
 	});
 
-	test("失敗ケース：Geminiが空レスポンス([])しか返さず翻訳抽出不可→リトライ上限に達してfailedになる", async () => {
+	test("失敗ケース：Gemini が空レスポンス([])のみ→リトライ後にエラーで失敗", async () => {
 		const params: TranslateJobParams = {
 			translationJobId,
 			provider: "gemini",
@@ -163,13 +170,28 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 		// 何度呼んでも空配列を返す
 		vi.mocked(getGeminiModelResponse).mockResolvedValue("[]");
 
-		await expect(translate(params)).resolves.toBeUndefined();
+		await expect(
+			translateChunk(
+				params.userId,
+				params.provider,
+				params.aiModel,
+				params.numberedElements,
+				params.targetLocale,
+				params.pageId,
+				params.title,
+				params.pageCommentId,
+			),
+		).rejects.toThrow();
 
-		const updatedInfo = await prisma.translationJob.findUnique({
-			where: { id: translationJobId },
+		// 失敗時は翻訳が保存されず、Proof も作られない
+		const translatedTexts = await prisma.segmentTranslation.findMany({
+			where: { locale: "ja" },
 		});
-		// リトライ上限に達してfailedになったか
-		expect(updatedInfo?.status).toBe("FAILED");
+		expect(translatedTexts.length).toBe(0);
+		const proof = await prisma.pageLocaleTranslationProof.findUnique({
+			where: { pageId_locale: { pageId, locale: "ja" } },
+		});
+		expect(proof).toBeNull();
 	});
 
 	test("部分的失敗ケース：1回目は空レスポンス→2回目で正常レスポンス", async () => {
@@ -197,13 +219,18 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
         ]
       `);
 
-		await expect(translate(params)).resolves.toBeUndefined();
-
-		const updatedInfo = await prisma.translationJob.findUnique({
-			where: { id: translationJobId },
-		});
-		// 結局成功→completed となるはず
-		expect(updatedInfo?.status).toBe("COMPLETED");
+		await expect(
+			translateChunk(
+				params.userId,
+				params.provider,
+				params.aiModel,
+				params.numberedElements,
+				params.targetLocale,
+				params.pageId,
+				params.title,
+				params.pageCommentId,
+			),
+		).resolves.toBeUndefined();
 
 		// 翻訳結果
 		const translatedTexts = await prisma.segmentTranslation.findMany({
@@ -236,7 +263,18 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 			]`,
 		);
 
-		await expect(translate(params)).resolves.toBeUndefined();
+		await expect(
+			translateChunk(
+				params.userId,
+				params.provider,
+				params.aiModel,
+				params.numberedElements,
+				params.targetLocale,
+				params.pageId,
+				params.title,
+				params.pageCommentId,
+			),
+		).resolves.toBeUndefined();
 
 		const proof = await prisma.pageLocaleTranslationProof.findUnique({
 			where: { pageId_locale: { pageId, locale: "ja" } },
@@ -279,7 +317,18 @@ describe("translate関数の単体テスト (Gemini呼び出しのみモック)"
 			]`,
 		);
 
-		await expect(translate(params)).resolves.toBeUndefined();
+		await expect(
+			translateChunk(
+				params.userId,
+				params.provider,
+				params.aiModel,
+				params.numberedElements,
+				params.targetLocale,
+				params.pageId,
+				params.title,
+				params.pageCommentId,
+			),
+		).resolves.toBeUndefined();
 
 		const updatedProof = await prisma.pageLocaleTranslationProof.findUnique({
 			where: { pageId_locale: { pageId, locale: "ja" } },
