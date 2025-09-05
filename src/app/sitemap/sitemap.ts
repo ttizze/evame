@@ -10,7 +10,8 @@ const CHUNK = 1_000;
 
 export async function generateSitemaps() {
 	const total = await countPublicPages();
-	const chunks = Math.ceil(total / CHUNK);
+	// 少なくとも 1 チャンクは返す（id=0 は静的ルートも含めるため）
+	const chunks = Math.max(1, Math.ceil(total / CHUNK));
 	// [ { id: 0 }, { id: 1 }, ... ] を返す形式が Next.js 流儀
 	return Array.from({ length: chunks }, (_, id) => ({ id }));
 }
@@ -51,9 +52,9 @@ export default async function sitemap({
 			priority: 0.7,
 			alternates: {
 				languages: Object.fromEntries(
-					page.translationJobs.map((locale) => [
-						locale,
-						`${BASE_URL}/${locale}/user/${page.user.handle}/page/${page.slug}`,
+					page.translationJobs.map((job) => [
+						job.locale,
+						`${BASE_URL}/${job.locale}/user/${page.user.handle}/page/${page.slug}`,
 					]),
 				),
 			},
