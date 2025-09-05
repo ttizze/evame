@@ -10,10 +10,11 @@ const CHUNK = 1_000;
  */
 export default async function robots(): Promise<MetadataRoute.Robots> {
 	const total = await countPublicPages();
-	const chunks = Math.ceil(total / CHUNK);
+	// 少なくとも 1 本は出す（/sitemap/sitemap/0.xml）
+	const chunks = Math.max(1, Math.ceil(total / CHUNK));
 	const sitemaps = Array.from(
 		{ length: chunks },
-		(_, id) => `${BASE_URL}/sitemap/${id}.xml`,
+		(_, id) => `${BASE_URL}/sitemap/sitemap/${id}.xml`,
 	);
 
 	return {
