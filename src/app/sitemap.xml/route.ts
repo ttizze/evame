@@ -11,7 +11,8 @@ const CHUNK = 1_000;
  */
 export async function GET() {
 	const total = await countPublicPages();
-	const chunks = Math.ceil(total / CHUNK);
+	// id=0 は静的ルートを含めるため、最低 1 チャンクは出す
+	const chunks = Math.max(1, Math.ceil(total / CHUNK));
 
 	const sitemapItems = Array.from({ length: chunks }, (_, id) => {
 		return `<sitemap>
