@@ -1,9 +1,9 @@
 "use server";
-import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
-import { findPageSlugAndHandleBySegmentTranslationId } from "../_db/queries.server";
+import { revalidatePageTreeAllLocales } from "@/lib/revalidate-utils";
+import { findPageIdBySegmentTranslationId } from "../_db/queries.server";
 import { deleteOwnTranslation } from "./db/mutations.server";
 
 const schema = z.object({
@@ -24,12 +24,9 @@ export async function deleteTranslationAction(
 	}
 	const { currentUser, data } = v;
 	const { translationId } = data;
-	// Resolve page info BEFORE deletion, since the record won't exist after
-	const pageSlugAndHandle =
-		await findPageSlugAndHandleBySegmentTranslationId(translationId);
 	await deleteOwnTranslation(currentUser.handle, translationId);
-	revalidatePath(
-		`/${data.userLocale}/user/${pageSlugAndHandle.handle}/page/${pageSlugAndHandle.slug}`,
-	);
+	// Revalidate page + parent/children across all locales
+	const pageId = await findPageIdBySegmentTranslationId(translationId);
+	await revalidatePageTreeAllLocales(pageId);
 	return { success: true, data: undefined };
 }

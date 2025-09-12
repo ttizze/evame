@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-// We reuse translateChunk logic from ../_lib by calling the public translate()
-// on a single chunk payload for simplicity. To avoid duplicating the chunk code,
-// we keep the implementation in _lib and only handle progress and finalize here.
-import { prisma } from "@/lib/prisma";
-import { revalidateAllLocales } from "@/lib/revalidate-utils";
+import { revalidatePageTreeAllLocales } from "@/lib/revalidate-utils";
 import {
 	incrementTranslationProgress,
 	markJobFailed,
@@ -35,15 +31,9 @@ async function handler(req: Request) {
 			inc,
 		);
 
-		// If the job is completed, revalidate the page.
+		// If the job is completed, revalidate the page and its parent/children.
 		if (updated && updated.status === "COMPLETED") {
-			const page = await prisma.page.findFirst({
-				where: { id: params.pageId },
-				select: { slug: true, user: { select: { handle: true } } },
-			});
-			if (page) {
-				revalidateAllLocales(`/user/${page.user.handle}/page/${page.slug}`);
-			}
+			await revalidatePageTreeAllLocales(params.pageId);
 		}
 
 		return NextResponse.json({ ok: true });
