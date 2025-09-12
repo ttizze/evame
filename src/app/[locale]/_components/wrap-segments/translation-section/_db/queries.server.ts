@@ -1,31 +1,23 @@
 import { prisma } from "@/lib/prisma";
 
-export async function findPageSlugAndHandleBySegmentTranslationId(
+export async function findPageIdBySegmentTranslationId(
 	segmentTranslationId: number,
-): Promise<{ slug: string; handle: string }> {
+): Promise<number> {
 	const st = await prisma.segmentTranslation.findUnique({
 		where: { id: segmentTranslationId },
 		select: {
 			segment: {
 				select: {
 					content: {
-						select: {
-							page: {
-								select: {
-									slug: true,
-									user: { select: { handle: true } },
-								},
-							},
-						},
+						select: { page: { select: { id: true } } },
 					},
 				},
 			},
 		},
 	});
-
-	const page = st?.segment?.content?.page;
-	if (!page) {
+	const id = st?.segment?.content?.page?.id;
+	if (!id) {
 		throw new Error("Page not found");
 	}
-	return { slug: page.slug, handle: page.user.handle };
+	return id;
 }

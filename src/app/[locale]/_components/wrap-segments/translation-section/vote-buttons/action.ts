@@ -1,13 +1,13 @@
 // app/serverActions/voteAction.ts
 "use server";
 import type { Route } from "next";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/lib/auth-server";
 import { parseFormData } from "@/lib/parse-form-data";
-import { findPageSlugAndHandleBySegmentTranslationId } from "../_db/queries.server";
+import { revalidatePageTreeAllLocales } from "@/lib/revalidate-utils";
+import { findPageIdBySegmentTranslationId } from "../_db/queries.server";
 import {
 	createNotificationPageSegmentTranslationVote,
 	handleVote,
@@ -55,11 +55,10 @@ export async function voteTranslationAction(
 		);
 	}
 
-	const pageSlugAndHandle = await findPageSlugAndHandleBySegmentTranslationId(
+	// Revalidate page + parent/children across all locales
+	const pageId = await findPageIdBySegmentTranslationId(
 		parsedFormData.data.segmentTranslationId,
 	);
-	revalidatePath(
-		`/${parsedFormData.data.userLocale}/user/${pageSlugAndHandle.handle}/page/${pageSlugAndHandle.slug}`,
-	);
+	await revalidatePageTreeAllLocales(pageId);
 	return { success: true, data: { isUpvote, point } };
 }

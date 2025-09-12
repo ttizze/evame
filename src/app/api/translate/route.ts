@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslateChunkParams } from "@/app/api/translate/types";
-import { prisma } from "@/lib/prisma";
-import { revalidateAllLocales } from "@/lib/revalidate-utils";
+import { revalidatePageTreeAllLocales } from "@/lib/revalidate-utils";
 import { markJobCompleted, markJobInProgress } from "./_db/mutations.server";
 import { splitNumberedElements } from "./_lib/split-numbered-elements.server";
 import { withQstashVerification } from "./_lib/with-qstash-signature";
@@ -34,13 +33,7 @@ async function handler(req: Request) {
 		// If there is nothing to translate, finalize immediately.
 		if (totalChunks === 0) {
 			await markJobCompleted(params.translationJobId);
-			const page = await prisma.page.findFirst({
-				where: { id: params.pageId },
-				select: { slug: true, user: { select: { handle: true } } },
-			});
-			if (page) {
-				revalidateAllLocales(`/user/${page.user.handle}/page/${page.slug}`);
-			}
+			await revalidatePageTreeAllLocales(params.pageId);
 			return NextResponse.json({ ok: true }, { status: 201 });
 		}
 
