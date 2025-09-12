@@ -24,9 +24,10 @@ export async function deleteTranslationAction(
 	}
 	const { currentUser, data } = v;
 	const { translationId } = data;
+	// Resolve page info BEFORE deletion
+	const pageId = await findPageIdBySegmentTranslationId(translationId);
 	await deleteOwnTranslation(currentUser.handle, translationId);
 	// Revalidate page + parent/children across all locales
-	const pageId = await findPageIdBySegmentTranslationId(translationId);
 	await revalidatePageTreeAllLocales(pageId);
 	return { success: true, data: undefined };
 }
