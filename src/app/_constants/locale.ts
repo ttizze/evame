@@ -26,4 +26,5 @@ export const supportedLocaleOptions: LocaleOption[] = [
 	{ code: "nl", name: "Nederlands" }, // ~0.9 %
 	{ code: "tl", name: "Filipino" }, // ~0.9 %
 	{ code: "hi", name: "हिन्दी" }, // ~0.8 %
+	{ code: "pi", name: "pali" },
 ];
