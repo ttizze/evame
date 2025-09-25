@@ -1,6 +1,7 @@
 import type { PageComment, Prisma } from "@prisma/client";
 import { ContentKind } from "@prisma/client";
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
+import { syncSegments } from "@/app/[locale]/_lib/sync-segments";
 import { prisma } from "@/lib/prisma";
 export async function upsertPageCommentAndSegments(p: {
 	pageId: number;
@@ -53,78 +54,8 @@ export async function upsertPageCommentAndSegments(p: {
 		});
 	}
 
-	await syncPageCommentSegments(pageComment.id, p.segments);
+	await syncSegments(prisma, pageComment.id, p.segments);
 	return pageComment;
-}
-
-/** 1ページコメント分のセグメントを同期 */
-async function syncPageCommentSegments(
-	pageCommentId: number,
-	drafts: SegmentDraft[],
-) {
-	// ページコメントに関連するContentを取得
-	const pageComment = await prisma.pageComment.findUnique({
-		where: { id: pageCommentId },
-		select: { id: true },
-	});
-
-	if (!pageComment?.id) {
-		throw new Error(`PageComment ${pageCommentId} does not have a content`);
-	}
-
-	const existing = await prisma.segment.findMany({
-		where: { contentId: pageComment.id },
-		select: { textAndOccurrenceHash: true },
-	});
-	const stale = new Set(existing.map((e) => e.textAndOccurrenceHash));
-
-	await prisma.$transaction(async (tx) => {
-		// A. 並び避難（既存あれば）
-		if (existing.length) {
-			await tx.segment.updateMany({
-				where: { contentId: pageComment.id },
-				data: { number: { increment: 1_000_000 } },
-			});
-		}
-
-		// B. UPSERT を **適度なバッチ & 逐次 await** で安定
-		const CHUNK = 200;
-		for (let i = 0; i < drafts.length; i += CHUNK) {
-			const chunk = drafts.slice(i, i + CHUNK);
-			await Promise.all(
-				chunk.map((d) =>
-					tx.segment.upsert({
-						where: {
-							contentId_textAndOccurrenceHash: {
-								contentId: pageComment.id,
-								textAndOccurrenceHash: d.hash,
-							},
-						},
-						update: { text: d.text, number: d.number },
-						create: {
-							contentId: pageComment.id,
-							text: d.text,
-							number: d.number,
-							textAndOccurrenceHash: d.hash,
-						},
-					}),
-				),
-			);
-			for (const d of chunk) {
-				stale.delete(d.hash);
-			}
-		}
-
-		// C. 余った行を一括削除
-		if (stale.size) {
-			await tx.segment.deleteMany({
-				where: {
-					contentId: pageComment.id,
-					textAndOccurrenceHash: { in: [...stale] },
-				},
-			});
-		}
-	});
 }
 
 export async function createNotificationPageComment(
