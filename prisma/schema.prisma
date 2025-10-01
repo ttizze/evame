@@ -349,8 +349,21 @@ model Content {
   // 子セグメント（1:多）
   segments Segment[]
 
+  importFile ImportFile? @relation(fields: [importFileId], references: [id])
+  importFileId Int?      @map("import_file_id")
+
   @@index([kind])
   @@map("contents")
+}
+
+model SegmentType {
+  id        Int       @id @default(autoincrement())
+  key       String    @unique         // "PRIMARY" | "COMMENTARY" | "GLOSS" など
+  label     String                    // 表示名
+  isPrimary Boolean   @default(false) @map("is_primary") // 本文に相当するタイプを true（1件想定）
+  weight    Int       @default(0)     // 一括表示時の既定順（任意）
+
+  segments  Segment[]
 }
 
 model Segment {
@@ -364,6 +377,13 @@ model Segment {
   createdAt             DateTime @default(now()) @map("created_at")
 
   segmentTranslations SegmentTranslation[]
+  segmentType         SegmentType          @relation(fields: [segmentTypeId], references: [id])
+  segmentTypeId       Int                  @map("segment_type_id")
+
+  linksFrom SegmentLink[] @relation("linksFrom") // 通常: 注側から張る
+  linksTo   SegmentLink[] @relation("linksTo") // 通常: 本文側が受ける
+
+  pageBreaks PageBreak[]
 
   // 1 Owner 内での並びをユニークに
   @@unique([contentId, number])
@@ -373,6 +393,43 @@ model Segment {
   @@map("segments")
 }
 
+model SegmentLink {
+  id Int @id @default(autoincrement())
+
+  // from = 注（COMMENTARY/SUBCOMMENTARY）
+  fromSegmentId Int @map("from_segment_id")
+  fromSegment   Segment @relation("linksFrom", fields: [fromSegmentId], references: [id])
+
+  // to = 本文（PRIMARY）
+  toSegmentId Int @map("to_segment_id")
+  toSegment   Segment @relation("linksTo", fields: [toSegmentId], references: [id])
+
+
+  createdAt DateTime @default(now())
+
+  @@unique([fromSegmentId, toSegmentId])
+  @@index([fromSegmentId])
+  @@index([toSegmentId])
+}
+model PageBreak {
+  id         Int     @id @default(autoincrement())
+  segmentId  Int @map("segment_id")
+  segment    Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+
+  edition    String   // "PTS" | "VRI" | "Thai" | "Myanmar" | "OUP" …自由
+  pageCode   String   @map("page_code") // XMLの n="vol.page" をそのまま（例 "0.0001"）
+
+  createdAt  DateTime @default(now())
+
+  @@index([edition, pageCode])
+  @@index([segmentId, edition])
+  @@unique([segmentId, edition, pageCode]) // 同じ場所に同じ版ページを二重登録しない
+}
+
+model Edition {
+  code    String  @id           // "PTS" など（PageBreak.edition と対応）
+  label   String
+}
 model SegmentTranslation {
   id        Int     @id @default(autoincrement())
   segmentId Int     @map("segment_id")
@@ -408,4 +465,24 @@ model TranslationVote {
   @@index([translationId])
   @@index([userId])
   @@map("translation_votes")
+}
+
+model ImportRun {
+  id         Int          @id @default(autoincrement())
+  startedAt  DateTime     @default(now()) @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+  status     String       @default("RUNNING")
+  files      ImportFile[]
+}
+
+model ImportFile {
+  id          Int          @id @default(autoincrement())
+  importRunId Int @map("import_run_id")
+  importRun   ImportRun    @relation(fields: [importRunId], references: [id], onDelete: Cascade)
+  path        String
+  checksum    String
+  status      String       @default("PENDING")
+  message     String       @default("")
+  contents    Content[]
+  createdAt   DateTime     @default(now())
 }
