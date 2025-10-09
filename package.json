@@ -72,7 +72,7 @@
 		"@vercel/edge-config": "1.4.0",
 		"@upstash/qstash": "2.8.2",
 		"@vercel/functions": "2.2.13",
-		"better-auth": "1.3.7",
+		"better-auth": "1.3.26",
 		"class-variance-authority": "0.7.1",
 		"cld3-asm": "4.0.0",
 		"clsx": "2.1.1",
