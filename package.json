@@ -15,6 +15,7 @@
 		"db:setup": "bunx prisma generate && bunx prisma migrate dev",
 		"init": "bun install && bun run db:setup && bun run seed",
 		"vercel-build": "prisma generate && (prisma migrate deploy || (echo '1st migrate failed; retrying in 8s' && sleep 8 && prisma migrate deploy)) && prisma db seed && next build",
+		"biome": "bunx @biomejs/biome check --write .",
 		"check": "bunx @biomejs/biome check --write .",
 		"typecheck": "tsc --noEmit",
 		"seed": "prisma db seed",
