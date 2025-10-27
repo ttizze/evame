@@ -1,0 +1,2904 @@
+{
+	"generatedAt": "2025-10-24T07:58:24.654Z",
+	"count": 217,
+	"data": {
+		"s0101m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"01-digha-nikaya",
+				"01-silakkhandhavaggapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [61],
+			"tikaIndices": [108],
+			"chapterListTypes": ["book", "sutta"]
+		},
+		"s0102m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"01-digha-nikaya",
+				"02-mahavaggapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [62],
+			"tikaIndices": [109],
+			"chapterListTypes": ["book", "sutta"]
+		},
+		"s0103m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"01-digha-nikaya",
+				"03-pathikavaggapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [63],
+			"tikaIndices": [110],
+			"chapterListTypes": ["book", "sutta"]
+		},
+		"s0201m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"02-majjhima-nikaya",
+				"01-mulapannasapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [64],
+			"tikaIndices": [113],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0202m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"02-majjhima-nikaya",
+				"02-majjhimapannasapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [65],
+			"tikaIndices": [114],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0203m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"02-majjhima-nikaya",
+				"03-uparipannasapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [66],
+			"tikaIndices": [115],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0301m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"03-samyutta-nikaya",
+				"01-sagathavaggapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [67],
+			"tikaIndices": [116],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0302m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"03-samyutta-nikaya",
+				"02-nidanavaggapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [68],
+			"tikaIndices": [117],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0303m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"03-samyutta-nikaya",
+				"03-khandhavaggapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [69],
+			"tikaIndices": [118],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0304m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"03-samyutta-nikaya",
+				"04-salayatanavaggapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [70],
+			"tikaIndices": [119],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0305m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"03-samyutta-nikaya",
+				"05-mahavaggapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [71],
+			"tikaIndices": [120],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0401m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"04-anguttara-nikaya",
+				"01-ekakanipatapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [72],
+			"tikaIndices": [121],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0402m1.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"04-anguttara-nikaya",
+				"02-dukanipatapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [73],
+			"tikaIndices": [122],
+			"chapterListTypes": ["book", "pannasaka", "vagga", "peyyala"]
+		},
+		"s0402m2.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"04-anguttara-nikaya",
+				"03-tikanipatapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [73],
+			"tikaIndices": [122],
+			"chapterListTypes": ["book", "pannasaka", "vagga"]
+		},
+		"s0402m3.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"04-anguttara-nikaya",
+				"04-catukkanipatapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [73],
+			"tikaIndices": [122],
+			"chapterListTypes": ["book", "pannasaka", "vagga"]
+		},
+		"s0403m1.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"04-anguttara-nikaya",
+				"05-pancakanipatapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [74],
+			"tikaIndices": [123],
+			"chapterListTypes": ["book", "pannasaka", "vagga", "peyyala"]
+		},
+		"s0403m2.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"04-anguttara-nikaya",
+				"06-chakkanipatapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [74],
+			"tikaIndices": [123],
+			"chapterListTypes": ["book", "pannasaka", "vagga", "peyyala"]
+		},
+		"s0403m3.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"04-anguttara-nikaya",
+				"07-sattakanipatapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [74],
+			"tikaIndices": [123],
+			"chapterListTypes": ["book", "pannasaka", "vagga", "peyyala"]
+		},
+		"s0404m1.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"04-anguttara-nikaya",
+				"08-atthakanipatapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [75],
+			"tikaIndices": [124],
+			"chapterListTypes": ["book", "pannasaka", "vagga", "peyyala"]
+		},
+		"s0404m2.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"04-anguttara-nikaya",
+				"09-navakanipatapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [75],
+			"tikaIndices": [124],
+			"chapterListTypes": ["book", "pannasaka", "vagga", "peyyala"]
+		},
+		"s0404m3.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"04-anguttara-nikaya",
+				"10-dasakanipatapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [75],
+			"tikaIndices": [124],
+			"chapterListTypes": ["book", "pannasaka", "vagga", "peyyala"]
+		},
+		"s0404m4.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"04-anguttara-nikaya",
+				"11-ekadasakanipatapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [75],
+			"tikaIndices": [124],
+			"chapterListTypes": ["book", "vagga", "peyyala"]
+		},
+		"s0501m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"01-khuddakapathapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [76],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "chapter"]
+		},
+		"s0502m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"02-dhammapadapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [77],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0503m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"03-udanapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [78],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0504m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"04-itivuttakapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [79],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "nipata"]
+		},
+		"s0505m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"05-suttanipatapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [80],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0506m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"06-vimanavatthupali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [81],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "vimana"]
+		},
+		"s0507m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"07-petavatthupali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [82],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0508m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"08-theragathapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [83, 84],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "nipata"]
+		},
+		"s0509m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"09-therigathapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [85],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "nipata"]
+		},
+		"s0510m1.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"10-apadanapali-1"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [86],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0510m2.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"11-apadanapali-2"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [86],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0511m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"12-buddhavamsapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [87],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "chapter"]
+		},
+		"s0512m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"13-cariyapitakapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [88],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0513m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"14-jatakapali-1"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [89, 90, 91, 92],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "nipata"]
+		},
+		"s0514m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"15-jatakapali-2"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [93, 94, 95],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "nipata"]
+		},
+		"s0515m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"16-mahaniddesapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [96],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "chapter"]
+		},
+		"s0516m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"17-culaniddesapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [97],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "chapter"]
+		},
+		"s0517m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"18-patisambhidamaggapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [98],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0519m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"19-nettippakaranapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [99],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "chapter"]
+		},
+		"s0518m.nrf.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"20-milindapanhapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "chapter"]
+		},
+		"s0520m.nrf.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"01-sutta-pitaka",
+				"05-khuddaka-nikaya",
+				"21-petakopadesapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "chapter"]
+		},
+		"vin01m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"02-vinaya-pitaka",
+				"01-parajikapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [100],
+			"tikaIndices": [127, 128],
+			"chapterListTypes": ["book", "kanda"]
+		},
+		"vin02m1.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"02-vinaya-pitaka",
+				"02-pacittiyapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [101],
+			"tikaIndices": [129],
+			"chapterListTypes": ["book", "subbook", "kanda"]
+		},
+		"vin02m2.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"02-vinaya-pitaka",
+				"03-mahavaggapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [102],
+			"tikaIndices": [129],
+			"chapterListTypes": ["book", "khandaka"]
+		},
+		"vin02m3.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"02-vinaya-pitaka",
+				"04-culavaggapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [103],
+			"tikaIndices": [129],
+			"chapterListTypes": ["book", "khandaka"]
+		},
+		"vin02m4.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"02-vinaya-pitaka",
+				"05-parivarapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [104],
+			"tikaIndices": [129],
+			"chapterListTypes": ["book", "chapter"]
+		},
+		"abh01m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"03-abhidhamma-pitaka",
+				"01-dhammasanganipali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [105],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "chapter"]
+		},
+		"abh02m.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"03-abhidhamma-pitaka",
+				"02-vibhangapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [106],
+			"tikaIndices": [141],
+			"chapterListTypes": []
+		},
+		"abh03m1.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"03-abhidhamma-pitaka",
+				"03-dhatukathapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [107],
+			"tikaIndices": [142],
+			"chapterListTypes": []
+		},
+		"abh03m2.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"03-abhidhamma-pitaka",
+				"04-puggalapannattipali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [107],
+			"tikaIndices": [142],
+			"chapterListTypes": []
+		},
+		"abh03m3.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"03-abhidhamma-pitaka",
+				"05-kathavatthupali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [107],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"abh03m4.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"03-abhidhamma-pitaka",
+				"06-yamakapali-1"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [107],
+			"tikaIndices": [142],
+			"chapterListTypes": []
+		},
+		"abh03m5.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"03-abhidhamma-pitaka",
+				"07-yamakapali-2"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [107],
+			"tikaIndices": [142],
+			"chapterListTypes": []
+		},
+		"abh03m6.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"03-abhidhamma-pitaka",
+				"08-yamakapali-3"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [107],
+			"tikaIndices": [142],
+			"chapterListTypes": []
+		},
+		"abh03m7.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"03-abhidhamma-pitaka",
+				"09-patthanapali-1"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [107],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"abh03m8.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"03-abhidhamma-pitaka",
+				"10-patthanapali-2"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [107],
+			"tikaIndices": [142],
+			"chapterListTypes": []
+		},
+		"abh03m9.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"03-abhidhamma-pitaka",
+				"11-patthanapali-3"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [107],
+			"tikaIndices": [142],
+			"chapterListTypes": []
+		},
+		"abh03m10.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"03-abhidhamma-pitaka",
+				"12-patthanapali-4"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [107],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"abh03m11.mul.xml": {
+			"level": "Mula",
+			"dirSegments": [
+				"01-tipitaka-mula",
+				"03-abhidhamma-pitaka",
+				"13-patthanapali-5"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [107],
+			"tikaIndices": [142],
+			"chapterListTypes": []
+		},
+		"s0101a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"01-digha-nikaya-atthakatha",
+				"01-silakkhandhavagga-atthakatha"
+			],
+			"mulaFileName": "s0101m.mul.xml",
+			"mulaFileNames": ["s0101m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [108],
+			"chapterListTypes": ["book", "sutta"]
+		},
+		"s0102a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"01-digha-nikaya-atthakatha",
+				"02-mahavagga-atthakatha"
+			],
+			"mulaFileName": "s0102m.mul.xml",
+			"mulaFileNames": ["s0102m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [109],
+			"chapterListTypes": ["book", "sutta"]
+		},
+		"s0103a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"01-digha-nikaya-atthakatha",
+				"03-pathikavagga-atthakatha"
+			],
+			"mulaFileName": "s0103m.mul.xml",
+			"mulaFileNames": ["s0103m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [110],
+			"chapterListTypes": ["book", "sutta"]
+		},
+		"s0201a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"02-majjhima-nikaya-atthakatha",
+				"01-mulapannasa-atthakatha"
+			],
+			"mulaFileName": "s0201m.mul.xml",
+			"mulaFileNames": ["s0201m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [113],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0202a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"02-majjhima-nikaya-atthakatha",
+				"02-majjhimapannasa-atthakatha"
+			],
+			"mulaFileName": "s0202m.mul.xml",
+			"mulaFileNames": ["s0202m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [114],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0203a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"02-majjhima-nikaya-atthakatha",
+				"03-uparipannasa-atthakatha"
+			],
+			"mulaFileName": "s0203m.mul.xml",
+			"mulaFileNames": ["s0203m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [115],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0301a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"03-samyutta-nikaya-atthakatha",
+				"01-sagathavagga-atthakatha"
+			],
+			"mulaFileName": "s0301m.mul.xml",
+			"mulaFileNames": ["s0301m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [116],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0302a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"03-samyutta-nikaya-atthakatha",
+				"02-nidanavagga-atthakatha"
+			],
+			"mulaFileName": "s0302m.mul.xml",
+			"mulaFileNames": ["s0302m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [117],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0303a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"03-samyutta-nikaya-atthakatha",
+				"03-khandhavagga-atthakatha"
+			],
+			"mulaFileName": "s0303m.mul.xml",
+			"mulaFileNames": ["s0303m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [118],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0304a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"03-samyutta-nikaya-atthakatha",
+				"04-salayatanavagga-atthakatha"
+			],
+			"mulaFileName": "s0304m.mul.xml",
+			"mulaFileNames": ["s0304m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [119],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0305a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"03-samyutta-nikaya-atthakatha",
+				"05-mahavagga-atthakatha"
+			],
+			"mulaFileName": "s0305m.mul.xml",
+			"mulaFileNames": ["s0305m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [120],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0401a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"04-anguttara-nikaya-atthakatha",
+				"01-ekakanipata-atthakatha"
+			],
+			"mulaFileName": "s0401m.mul.xml",
+			"mulaFileNames": ["s0401m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [121],
+			"chapterListTypes": ["book", "intro", "vagga"]
+		},
+		"s0402a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"04-anguttara-nikaya-atthakatha",
+				"02-duka-tika-catukkanipata-atthakatha"
+			],
+			"mulaFileName": "s0402m1.mul.xml",
+			"mulaFileNames": [
+				"s0402m1.mul.xml",
+				"s0402m2.mul.xml",
+				"s0402m3.mul.xml"
+			],
+			"atthakathaIndices": [],
+			"tikaIndices": [122],
+			"chapterListTypes": ["book", "pannasaka", "vagga"]
+		},
+		"s0403a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"04-anguttara-nikaya-atthakatha",
+				"03-pancaka-chakka-sattakanipata-atthakatha"
+			],
+			"mulaFileName": "s0403m1.mul.xml",
+			"mulaFileNames": [
+				"s0403m1.mul.xml",
+				"s0403m2.mul.xml",
+				"s0403m3.mul.xml"
+			],
+			"atthakathaIndices": [],
+			"tikaIndices": [123],
+			"chapterListTypes": ["book", "pannasaka", "vagga", "peyyala"]
+		},
+		"s0404a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"04-anguttara-nikaya-atthakatha",
+				"04-atthakadinipata-atthakatha"
+			],
+			"mulaFileName": "s0404m1.mul.xml",
+			"mulaFileNames": [
+				"s0404m1.mul.xml",
+				"s0404m2.mul.xml",
+				"s0404m3.mul.xml",
+				"s0404m4.mul.xml"
+			],
+			"atthakathaIndices": [],
+			"tikaIndices": [124],
+			"chapterListTypes": ["book", "pannasaka", "vagga", "peyyala"]
+		},
+		"s0501a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"01-khuddakapatha-atthakatha"
+			],
+			"mulaFileName": "s0501m.mul.xml",
+			"mulaFileNames": ["s0501m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0502a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"02-dhammapada-atthakatha"
+			],
+			"mulaFileName": "s0502m.mul.xml",
+			"mulaFileNames": ["s0502m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0503a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"03-udana-atthakatha"
+			],
+			"mulaFileName": "s0503m.mul.xml",
+			"mulaFileNames": ["s0503m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0504a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"04-itivuttaka-atthakatha"
+			],
+			"mulaFileName": "s0504m.mul.xml",
+			"mulaFileNames": ["s0504m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0505a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"05-suttanipata-atthakatha"
+			],
+			"mulaFileName": "s0505m.mul.xml",
+			"mulaFileNames": ["s0505m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0506a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"06-vimanavatthu-atthakatha"
+			],
+			"mulaFileName": "s0506m.mul.xml",
+			"mulaFileNames": ["s0506m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0507a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"07-petavatthu-atthakatha"
+			],
+			"mulaFileName": "s0507m.mul.xml",
+			"mulaFileNames": ["s0507m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0508a1.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"08-theragatha-atthakatha-1"
+			],
+			"mulaFileName": "s0508m.mul.xml",
+			"mulaFileNames": ["s0508m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0508a2.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"09-theragatha-atthakatha-2"
+			],
+			"mulaFileName": "s0508m.mul.xml",
+			"mulaFileNames": ["s0508m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0509a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"10-therigatha-atthakatha"
+			],
+			"mulaFileName": "s0509m.mul.xml",
+			"mulaFileNames": ["s0509m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0510a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"11-apadana-atthakatha"
+			],
+			"mulaFileName": "s0510m1.mul.xml",
+			"mulaFileNames": ["s0510m1.mul.xml", "s0510m2.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0511a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"12-buddhavamsa-atthakatha"
+			],
+			"mulaFileName": "s0511m.mul.xml",
+			"mulaFileNames": ["s0511m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0512a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"13-cariyapitaka-atthakatha"
+			],
+			"mulaFileName": "s0512m.mul.xml",
+			"mulaFileNames": ["s0512m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0513a1.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"14-jataka-atthakatha-1"
+			],
+			"mulaFileName": "s0513m.mul.xml",
+			"mulaFileNames": ["s0513m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0513a2.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"15-jataka-atthakatha-2"
+			],
+			"mulaFileName": "s0513m.mul.xml",
+			"mulaFileNames": ["s0513m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0513a3.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"16-jataka-atthakatha-3"
+			],
+			"mulaFileName": "s0513m.mul.xml",
+			"mulaFileNames": ["s0513m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0513a4.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"17-jataka-atthakatha-4"
+			],
+			"mulaFileName": "s0513m.mul.xml",
+			"mulaFileNames": ["s0513m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0514a1.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"18-jataka-atthakatha-5"
+			],
+			"mulaFileName": "s0514m.mul.xml",
+			"mulaFileNames": ["s0514m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0514a2.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"19-jataka-atthakatha-6"
+			],
+			"mulaFileName": "s0514m.mul.xml",
+			"mulaFileNames": ["s0514m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0514a3.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"20-jataka-atthakatha-7"
+			],
+			"mulaFileName": "s0514m.mul.xml",
+			"mulaFileNames": ["s0514m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0515a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"21-mahaniddesa-atthakatha"
+			],
+			"mulaFileName": "s0515m.mul.xml",
+			"mulaFileNames": ["s0515m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0516a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"22-culaniddesa-atthakatha"
+			],
+			"mulaFileName": "s0516m.mul.xml",
+			"mulaFileNames": ["s0516m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0517a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"23-patisambhidamagga-atthakatha"
+			],
+			"mulaFileName": "s0517m.mul.xml",
+			"mulaFileNames": ["s0517m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0519a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"01-sutta-pitaka-atthakatha",
+				"05-khuddaka-nikaya-atthakatha",
+				"24-nettippakarana-atthakatha"
+			],
+			"mulaFileName": "s0519m.mul.xml",
+			"mulaFileNames": ["s0519m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"vin01a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"02-vinaya-pitaka-atthakatha",
+				"01-parajikakanda-atthakatha"
+			],
+			"mulaFileName": "vin01m.mul.xml",
+			"mulaFileNames": ["vin01m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [127, 128],
+			"chapterListTypes": []
+		},
+		"vin02a1.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"02-vinaya-pitaka-atthakatha",
+				"02-pacittiya-atthakatha"
+			],
+			"mulaFileName": "vin02m1.mul.xml",
+			"mulaFileNames": ["vin02m1.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [129],
+			"chapterListTypes": []
+		},
+		"vin02a2.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"02-vinaya-pitaka-atthakatha",
+				"03-mahavagga-atthakatha"
+			],
+			"mulaFileName": "vin02m2.mul.xml",
+			"mulaFileNames": ["vin02m2.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [129],
+			"chapterListTypes": []
+		},
+		"vin02a3.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"02-vinaya-pitaka-atthakatha",
+				"04-culavagga-atthakatha"
+			],
+			"mulaFileName": "vin02m3.mul.xml",
+			"mulaFileNames": ["vin02m3.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [129],
+			"chapterListTypes": []
+		},
+		"vin02a4.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"02-vinaya-pitaka-atthakatha",
+				"05-parivara-atthakatha"
+			],
+			"mulaFileName": "vin02m4.mul.xml",
+			"mulaFileNames": ["vin02m4.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [129],
+			"chapterListTypes": []
+		},
+		"abh01a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"03-abhidhamma-pitaka-atthakatha",
+				"01-dhammasangani-atthakatha"
+			],
+			"mulaFileName": "abh01m.mul.xml",
+			"mulaFileNames": ["abh01m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"abh02a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"03-abhidhamma-pitaka-atthakatha",
+				"02-sammohavinodani-atthakatha"
+			],
+			"mulaFileName": "abh02m.mul.xml",
+			"mulaFileNames": ["abh02m.mul.xml"],
+			"atthakathaIndices": [],
+			"tikaIndices": [141],
+			"chapterListTypes": []
+		},
+		"abh03a.att.xml": {
+			"level": "Atthakatha",
+			"dirSegments": [
+				"02-atthakatha",
+				"03-abhidhamma-pitaka-atthakatha",
+				"03-pancapakarana-atthakatha"
+			],
+			"mulaFileName": "abh03m1.mul.xml",
+			"mulaFileNames": [
+				"abh03m1.mul.xml",
+				"abh03m2.mul.xml",
+				"abh03m3.mul.xml",
+				"abh03m4.mul.xml",
+				"abh03m5.mul.xml",
+				"abh03m6.mul.xml",
+				"abh03m7.mul.xml",
+				"abh03m8.mul.xml",
+				"abh03m9.mul.xml",
+				"abh03m10.mul.xml",
+				"abh03m11.mul.xml"
+			],
+			"atthakathaIndices": [],
+			"tikaIndices": [142],
+			"chapterListTypes": []
+		},
+		"s0101t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"01-digha-nikaya-tika",
+				"01-silakkhandhavagga-tika"
+			],
+			"mulaFileName": "s0101m.mul.xml",
+			"mulaFileNames": ["s0101m.mul.xml"],
+			"atthakathaIndices": [61],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "sutta"]
+		},
+		"s0102t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"01-digha-nikaya-tika",
+				"02-mahavagga-tika"
+			],
+			"mulaFileName": "s0102m.mul.xml",
+			"mulaFileNames": ["s0102m.mul.xml"],
+			"atthakathaIndices": [62],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "sutta"]
+		},
+		"s0103t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"01-digha-nikaya-tika",
+				"03-pathikavagga-tika"
+			],
+			"mulaFileName": "s0103m.mul.xml",
+			"mulaFileNames": ["s0103m.mul.xml"],
+			"atthakathaIndices": [63],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "sutta"]
+		},
+		"s0104t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"01-digha-nikaya-tika",
+				"04-silakkhandhavagga-abhinavatika-1"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0105t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"01-digha-nikaya-tika",
+				"05-silakkhandhavagga-abhinavatika-2"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0201t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"02-majjhima-nikaya-tika",
+				"01-mulapannasa-tika"
+			],
+			"mulaFileName": "s0201m.mul.xml",
+			"mulaFileNames": ["s0201m.mul.xml"],
+			"atthakathaIndices": [64],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0202t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"02-majjhima-nikaya-tika",
+				"02-majjhimapannasa-tika"
+			],
+			"mulaFileName": "s0202m.mul.xml",
+			"mulaFileNames": ["s0202m.mul.xml"],
+			"atthakathaIndices": [65],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0203t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"02-majjhima-nikaya-tika",
+				"03-uparipannasa-tika"
+			],
+			"mulaFileName": "s0203m.mul.xml",
+			"mulaFileNames": ["s0203m.mul.xml"],
+			"atthakathaIndices": [66],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "vagga"]
+		},
+		"s0301t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"03-samyutta-nikaya-tika",
+				"01-sagathavagga-tika"
+			],
+			"mulaFileName": "s0301m.mul.xml",
+			"mulaFileNames": ["s0301m.mul.xml"],
+			"atthakathaIndices": [67],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0302t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"03-samyutta-nikaya-tika",
+				"02-nidanavagga-tika"
+			],
+			"mulaFileName": "s0302m.mul.xml",
+			"mulaFileNames": ["s0302m.mul.xml"],
+			"atthakathaIndices": [68],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0303t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"03-samyutta-nikaya-tika",
+				"03-khandhavagga-tika"
+			],
+			"mulaFileName": "s0303m.mul.xml",
+			"mulaFileNames": ["s0303m.mul.xml"],
+			"atthakathaIndices": [69],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0304t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"03-samyutta-nikaya-tika",
+				"04-salayatanavagga-tika"
+			],
+			"mulaFileName": "s0304m.mul.xml",
+			"mulaFileNames": ["s0304m.mul.xml"],
+			"atthakathaIndices": [70],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0305t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"03-samyutta-nikaya-tika",
+				"05-mahavagga-tika"
+			],
+			"mulaFileName": "s0305m.mul.xml",
+			"mulaFileNames": ["s0305m.mul.xml"],
+			"atthakathaIndices": [71],
+			"tikaIndices": [],
+			"chapterListTypes": ["book", "samyutta"]
+		},
+		"s0401t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"04-anguttaranikaya-tika",
+				"01-ekakanipata-tika"
+			],
+			"mulaFileName": "s0401m.mul.xml",
+			"mulaFileNames": ["s0401m.mul.xml"],
+			"atthakathaIndices": [72],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0402t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"04-anguttaranikaya-tika",
+				"02-duka-tika-catukkanipata-tika"
+			],
+			"mulaFileName": "s0402m1.mul.xml",
+			"mulaFileNames": [
+				"s0402m1.mul.xml",
+				"s0402m2.mul.xml",
+				"s0402m3.mul.xml"
+			],
+			"atthakathaIndices": [73],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0403t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"04-anguttaranikaya-tika",
+				"03-pancaka-chakka-sattakanipata-tika"
+			],
+			"mulaFileName": "s0403m1.mul.xml",
+			"mulaFileNames": [
+				"s0403m1.mul.xml",
+				"s0403m2.mul.xml",
+				"s0403m3.mul.xml"
+			],
+			"atthakathaIndices": [74],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0404t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"04-anguttaranikaya-tika",
+				"04-atthakadinipata-tika"
+			],
+			"mulaFileName": "s0404m1.mul.xml",
+			"mulaFileNames": [
+				"s0404m1.mul.xml",
+				"s0404m2.mul.xml",
+				"s0404m3.mul.xml",
+				"s0404m4.mul.xml"
+			],
+			"atthakathaIndices": [75],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0519t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"05-khuddakanikaya-tika",
+				"01-nettippakarana-tika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"s0501t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"01-sutta-pitaka-tika",
+				"05-khuddakanikaya-tika",
+				"02-nettivibhavini"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"vin01t1.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"02-vinayapitaka-tika",
+				"01-saratthadipani-tika-1"
+			],
+			"mulaFileName": "vin01m.mul.xml",
+			"mulaFileNames": ["vin01m.mul.xml"],
+			"atthakathaIndices": [100],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"vin01t2.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"02-vinayapitaka-tika",
+				"02-saratthadipani-tika-2"
+			],
+			"mulaFileName": "vin01m.mul.xml",
+			"mulaFileNames": ["vin01m.mul.xml"],
+			"atthakathaIndices": [100],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"vin02t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"02-vinayapitaka-tika",
+				"03-saratthadipani-tika-3"
+			],
+			"mulaFileName": "vin02m1.mul.xml",
+			"mulaFileNames": [
+				"vin02m1.mul.xml",
+				"vin02m2.mul.xml",
+				"vin02m3.mul.xml",
+				"vin02m4.mul.xml"
+			],
+			"atthakathaIndices": [101, 102, 103, 104],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"vin04t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": ["03-tika", "02-vinayapitaka-tika", "04-dvematikapali"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"vin05t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"02-vinayapitaka-tika",
+				"05-vinayasangaha-atthakatha"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"vin06t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"02-vinayapitaka-tika",
+				"06-vajirabuddhi-tika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"vin07t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"02-vinayapitaka-tika",
+				"07-vimativinodani-tika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"vin08t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"02-vinayapitaka-tika",
+				"08-vinayalankara-tika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"vin09t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"02-vinayapitaka-tika",
+				"09-kankhavitaranipurana-tika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"vin10t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"02-vinayapitaka-tika",
+				"10-vinayavinicchaya-uttaravinicchaya"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"vin11t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"02-vinayapitaka-tika",
+				"11-vinayavinicchaya-tika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"vin12t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"02-vinayapitaka-tika",
+				"12-pacityadiyojanapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"vin13t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"02-vinayapitaka-tika",
+				"13-khuddasikkha-mulasikkha"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"abh01t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"03-abhidhamma-pitaka-tika",
+				"01-dhammasangani-mulatika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"abh02t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"03-abhidhamma-pitaka-tika",
+				"02-vibhanga-mulatika"
+			],
+			"mulaFileName": "abh02m.mul.xml",
+			"mulaFileNames": ["abh02m.mul.xml"],
+			"atthakathaIndices": [106],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"abh03t.tik.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"03-abhidhamma-pitaka-tika",
+				"03-pancapakarana-mulatika"
+			],
+			"mulaFileName": "abh03m1.mul.xml",
+			"mulaFileNames": [
+				"abh03m1.mul.xml",
+				"abh03m2.mul.xml",
+				"abh03m4.mul.xml",
+				"abh03m5.mul.xml",
+				"abh03m6.mul.xml",
+				"abh03m8.mul.xml",
+				"abh03m9.mul.xml",
+				"abh03m11.mul.xml"
+			],
+			"atthakathaIndices": [107],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"abh04t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"03-abhidhamma-pitaka-tika",
+				"04-dhammasangani-anutika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"abh05t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"03-abhidhamma-pitaka-tika",
+				"05-pancapakarana-anutika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"abh06t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"03-abhidhamma-pitaka-tika",
+				"06-abhidhammavataro-namarupaparicchedo"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"abh07t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"03-abhidhamma-pitaka-tika",
+				"07-abhidhammatthasangaho"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"abh08t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"03-abhidhamma-pitaka-tika",
+				"08-abhidhammavatara-puranatika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"abh09t.nrf.xml": {
+			"level": "Tika",
+			"dirSegments": [
+				"03-tika",
+				"03-abhidhamma-pitaka-tika",
+				"09-abhidhammamatikapali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0101n.mul.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "01-visuddhimagga", "01-visuddhimagga-1"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0102n.mul.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "01-visuddhimagga", "02-visuddhimagga-2"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0103n.att.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"01-visuddhimagga",
+				"03-visuddhimagga-mahatika-1"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0104n.att.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"01-visuddhimagga",
+				"04-visuddhimagga-mahatika-2"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0105n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"01-visuddhimagga",
+				"05-visuddhimagga-nidanakatha"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0901n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"02-samgayana-puccha-vissajjana",
+				"01-dighanikaya-pu-vi"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0902n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"02-samgayana-puccha-vissajjana",
+				"02-majjhimanikaya-pu-vi"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0903n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"02-samgayana-puccha-vissajjana",
+				"03-samyuttanikaya-pu-vi"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0904n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"02-samgayana-puccha-vissajjana",
+				"04-anguttaranikaya-pu-vi"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0905n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"02-samgayana-puccha-vissajjana",
+				"05-vinayapitaka-pu-vi"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0906n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"02-samgayana-puccha-vissajjana",
+				"06-abhidhammapitaka-pu-vi"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0907n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"02-samgayana-puccha-vissajjana",
+				"07-atthakatha-pu-vi"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0201n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"03-ledi-sayado-gantha-sangaho",
+				"01-niruttidipani"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0301n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"03-ledi-sayado-gantha-sangaho",
+				"02-paramatthadipani-sangahamahatikapatha"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0401n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"03-ledi-sayado-gantha-sangaho",
+				"03-anudipanipatha"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0501n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"03-ledi-sayado-gantha-sangaho",
+				"04-patthanuddesadipanipatha"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0601n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"04-buddha-vandana-gantha-sangaho",
+				"01-namakkaratika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0602n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"04-buddha-vandana-gantha-sangaho",
+				"02-mahapanamapatha"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0603n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"04-buddha-vandana-gantha-sangaho",
+				"03-lakkhanato-buddhathomanagatha"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0604n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"04-buddha-vandana-gantha-sangaho",
+				"04-sutavandana"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0605n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"04-buddha-vandana-gantha-sangaho",
+				"05-jinalankara"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0606n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"04-buddha-vandana-gantha-sangaho",
+				"06-kamalanjali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0607n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"04-buddha-vandana-gantha-sangaho",
+				"07-pajjamadhu"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0608n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"04-buddha-vandana-gantha-sangaho",
+				"08-buddhagunagathavali"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0701n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"05-vamsa-gantha-sangaho",
+				"01-culaganthavamsa"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0702n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "05-vamsa-gantha-sangaho", "02-sasanavamsa"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0703n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "05-vamsa-gantha-sangaho", "03-mahavamsa"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0801n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"06-byakarana-gantha-sangaho",
+				"01-moggallanabyakaranam"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0802n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"06-byakarana-gantha-sangaho",
+				"02-kaccayanabyakaranam"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0803n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"06-byakarana-gantha-sangaho",
+				"03-saddanitippakaranam-padamala"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0804n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"06-byakarana-gantha-sangaho",
+				"04-saddanitippakaranam-dhatumala"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0805n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"06-byakarana-gantha-sangaho",
+				"05-padarupasiddhi"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0806n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"06-byakarana-gantha-sangaho",
+				"06-mogallanapancika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0807n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"06-byakarana-gantha-sangaho",
+				"07-payogasiddhipatha"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0808n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"06-byakarana-gantha-sangaho",
+				"08-vuttodayapatha"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0809n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"06-byakarana-gantha-sangaho",
+				"09-abhidhanappadapikapatha"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0810n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"06-byakarana-gantha-sangaho",
+				"10-abhidhanappadapikatika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0811n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"06-byakarana-gantha-sangaho",
+				"11-subodhalankarapatha"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0812n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"06-byakarana-gantha-sangaho",
+				"12-subodhalankaratika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e0813n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"06-byakarana-gantha-sangaho",
+				"13-balavatara-ganthipadatthavinicchayasara"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1001n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"07-niti-gantha-sangaho",
+				"01-kavidappananiti"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1002n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "07-niti-gantha-sangaho", "02-nitimanjari"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1003n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "07-niti-gantha-sangaho", "03-dhammaniti"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1004n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "07-niti-gantha-sangaho", "04-maharahaniti"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1005n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "07-niti-gantha-sangaho", "05-lokaniti"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1006n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "07-niti-gantha-sangaho", "06-suttantaniti"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1007n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "07-niti-gantha-sangaho", "07-surassatiniti"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1008n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "07-niti-gantha-sangaho", "08-canakyaniti"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1009n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"07-niti-gantha-sangaho",
+				"09-naradakkhadipani"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1010n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"07-niti-gantha-sangaho",
+				"10-caturarakkhadipani"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1101n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"08-pakinnaka-gantha-sangaho",
+				"01-rasavahini"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1102n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"08-pakinnaka-gantha-sangaho",
+				"02-simavisodhanipatha"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1103n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"08-pakinnaka-gantha-sangaho",
+				"03-vessantaragiti"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1201n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"09-sihala-gantha-sangaho",
+				"01-moggallana-vuttivivaranapancika"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1202n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "09-sihala-gantha-sangaho", "02-thupavamsa"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1203n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "09-sihala-gantha-sangaho", "03-dathavamsa"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1204n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"09-sihala-gantha-sangaho",
+				"04-dhatupathavilasiniya"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1205n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "09-sihala-gantha-sangaho", "05-dhatuvamsa"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1206n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"09-sihala-gantha-sangaho",
+				"06-hatthavanagallaviharavamsa"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1207n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "09-sihala-gantha-sangaho", "07-jinacaritaya"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1208n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"09-sihala-gantha-sangaho",
+				"08-jinavamsadipam"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1209n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"09-sihala-gantha-sangaho",
+				"09-telakatahagatha"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1210n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "09-sihala-gantha-sangaho", "10-milidatika"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1211n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "09-sihala-gantha-sangaho", "11-padamanjari"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1212n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": ["04-anna", "09-sihala-gantha-sangaho", "12-padasadhanam"],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1213n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"09-sihala-gantha-sangaho",
+				"13-saddabindupakaranam"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1214n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"09-sihala-gantha-sangaho",
+				"14-kaccayanadhatumanjusa"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		},
+		"e1215n.nrf.xml": {
+			"level": "Other",
+			"dirSegments": [
+				"04-anna",
+				"09-sihala-gantha-sangaho",
+				"15-samantakutavannana"
+			],
+			"mulaFileName": null,
+			"mulaFileNames": [],
+			"atthakathaIndices": [],
+			"tikaIndices": [],
+			"chapterListTypes": []
+		}
+	}
+}
