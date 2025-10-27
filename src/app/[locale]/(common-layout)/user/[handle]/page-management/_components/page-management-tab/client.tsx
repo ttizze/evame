@@ -63,9 +63,7 @@ export function PageManagementTabClient({
 				{pagesWithTitle.map((page) => (
 					<div className="flex border-b py-2 justify-between" key={page.id}>
 						<div>
-							{
-								/* Draft/private pages should open preview for owners */
-							}
+							{/* Draft/private pages should open preview for owners */}
 							<Link
 								href={
 									page.status === "PUBLIC"
