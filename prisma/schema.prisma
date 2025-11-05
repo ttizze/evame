@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  features = ["driverAdapters"]
 }
 
 datasource db {
@@ -360,7 +360,6 @@ model SegmentType {
   id        Int       @id @default(autoincrement())
   key       String    @unique         // "PRIMARY" | "COMMENTARY" | "GLOSS" など
   label     String                    // 表示名
-  isPrimary Boolean   @default(false) @map("is_primary") // 本文に相当するタイプを true（1件想定）
   weight    Int       @default(0)     // 一括表示時の既定順（任意）
 
   segments  Segment[]

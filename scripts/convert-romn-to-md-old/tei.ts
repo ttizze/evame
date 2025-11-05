@@ -111,3 +111,56 @@ export function getChildElements(element: Element): Element[] {
 		(child): child is Element => child.nodeType === ELEMENT_NODE,
 	);
 }
+
+// 目的: 指定した `rend` 属性値を持つ要素を優先タグ内から探し出す。
+// 処理: 幅優先探索で子孫を辿り、タグと `rend` の組み合わせが一致した要素を返す。
+export function findElementByRend(
+	element: Element,
+	rend: string,
+	tags: string[] = ["p", "head"],
+): Element | null {
+	const targetRend = rend.toLowerCase();
+	const tagSet = new Set(tags.map((tag) => tag.toLowerCase()));
+	const stack: Element[] = [element];
+
+	for (let index = 0; index < stack.length; index += 1) {
+		const current = stack[index];
+		const tag = normalizeTagName(current.tagName);
+		const currentRend = (current.getAttribute("rend") ?? "").toLowerCase();
+		if (tagSet.has(tag) && currentRend === targetRend) {
+			return current;
+		}
+		stack.push(...getChildElements(current));
+	}
+
+	return null;
+}
+
+// 目的: 指定した `rend` 属性の要素テキストを取得し、無ければ既定値を返す。
+// 処理: `findElementByRend` で対象要素を探し、`extractTextContent` を圧縮して返す。
+export function extractTextByRend(
+	element: Element,
+	rend: string,
+	defaultValue?: string,
+): string | undefined {
+	const node = findElementByRend(element, rend);
+	if (!node) {
+		return defaultValue;
+	}
+	const text = extractTextContent(node).replace(/\s+/g, " ").trim();
+	return text || defaultValue;
+}
+
+// 目的: 章コンテナから見出し要素とテキストをまとめて取得する。
+// 処理: `findElementByRend` で章見出しを探し、存在すれば `extractTextContent` でタイトルを抽出する。
+export function extractChapterHeadingInfo(container: Element): {
+	node: Element | null;
+	text: string | null;
+} {
+	const node = findElementByRend(container, "chapter");
+	if (!node) {
+		return { node: null, text: null };
+	}
+	const text = extractTextContent(node).replace(/\s+/g, " ").trim();
+	return { node, text: text.length > 0 ? text : null };
+}

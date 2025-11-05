@@ -4,7 +4,7 @@ import * as path from "node:path";
 
 import { DOMParser } from "@xmldom/xmldom";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { getClassificationForFile } from "../../convert-romn-to-md-nosplit/books";
+import { getClassificationForFile } from "../../convert-romn-to-md/books";
 import { extractBodyFrontMatter, extractChapters } from "../chapters";
 import { convertXmlFileToMarkdown } from "../cli";
 import { resetChapterCounters, writeChapterMarkdown } from "../render";

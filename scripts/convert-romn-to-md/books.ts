@@ -18,7 +18,7 @@ interface BooksJsonPayload {
 const BOOKS_JSON_PATH = path.resolve(
 	process.cwd(),
 	"scripts",
-	"convert-romn-to-md-nosplit",
+	"convert-romn-to-md",
 	"data",
 	"books.json",
 );

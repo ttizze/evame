@@ -19,10 +19,9 @@
 		"typecheck": "tsc --noEmit",
 		"seed": "prisma db seed",
 		"mdast-json": "bunx tsx scripts/mdast-json.ts",
-		"tipitaka": "bunx tsx scripts/tipitaka.ts",
+		"tipitaka": "bunx tsx scripts/tipitaka-import.ts",
 		"translate": "bunx tsx scripts/translate.ts",
-		"convert:romn:split": "bun scripts/convert-romn-to-md.ts",
-		"convert:romn:nosplit": "bun scripts/convert-romn-to-md-nosplit.ts"
+		"convert:romn": "bun scripts/convert-romn-to-md.ts"
 	},
 	"prisma": {
 		"seed": "tsx prisma/seed.ts"
