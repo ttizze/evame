@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { prisma } from "@/lib/prisma";
 import { revalidatePageTreeAllLocales } from "./revalidate-utils";
 
@@ -14,9 +13,8 @@ describe("revalidatePageTreeAllLocales", () => {
 	});
 
 	describe("ページが存在する", () => {
-		it("祖先と公開な子孫を全ロケールで再検証する", async () => {
-			// Given: gp(11) -> p(10) -> self(1) -> c1(2) -> gc1(4)
-			//                              └─ c2(3)
+		it("自己と祖先を利用可能なロケールで再検証する", async () => {
+			// Given: gp(11) -> p(10) -> self(1)
 			vi.spyOn(prisma.page, "findUnique").mockImplementation((async (
 				// biome-ignore lint/suspicious/noExplicitAny: <>
 				args: any,
@@ -26,72 +24,54 @@ describe("revalidatePageTreeAllLocales", () => {
 					return {
 						id: 1,
 						slug: "self",
+						sourceLocale: "pi",
 						user: { handle: "u" },
 						parentId: 10,
+						pageLocaleTranslationProofs: [{ locale: "ja" }],
 						// biome-ignore lint/suspicious/noExplicitAny: <>
 					} as any;
 				if (id === 10)
 					return {
 						id: 10,
 						slug: "p1",
+						sourceLocale: "en",
 						user: { handle: "u" },
 						parentId: 11,
+						pageLocaleTranslationProofs: [{ locale: "ja" }],
 						// biome-ignore lint/suspicious/noExplicitAny: <>
 					} as any;
 				if (id === 11)
 					return {
 						id: 11,
 						slug: "p2",
+						sourceLocale: "en",
 						user: { handle: "u" },
 						parentId: null,
+						pageLocaleTranslationProofs: [],
 						// biome-ignore lint/suspicious/noExplicitAny: <>
 					} as any;
 				// biome-ignore lint/suspicious/noExplicitAny: <>
 				return null as any;
 				// biome-ignore lint/suspicious/noExplicitAny: <>
 			}) as any);
-			vi.spyOn(prisma.page, "findMany").mockImplementation((async (
-				// biome-ignore lint/suspicious/noExplicitAny: <>
-				args: any,
-			) => {
-				const ins: number[] = args.where.parentId.in ?? [];
-				// biome-ignore lint/suspicious/noExplicitAny: <>
-				const rows: any[] = [];
-				if (ins.includes(1)) {
-					rows.push(
-						{ id: 2, slug: "c1", user: { handle: "u" } },
-						{ id: 3, slug: "c2", user: { handle: "u" } },
-					);
-				}
-				if (ins.includes(2)) {
-					rows.push({ id: 4, slug: "gc1", user: { handle: "u" } });
-				}
-				return rows;
-				// biome-ignore lint/suspicious/noExplicitAny: <>
-			}) as any);
 			const revalidated: string[] = [];
 			const revalidateSpy = (p: string) => void revalidated.push(p);
 
 			// When
-			await revalidatePageTreeAllLocales(1, revalidateSpy);
+			await revalidatePageTreeAllLocales(1, { revalidateFn: revalidateSpy });
 
 			// Then
-			const targets = [
+			const expected = new Set([
 				"/user/u/page/self",
+				"/pi/user/u/page/self",
+				"/ja/user/u/page/self",
 				"/user/u/page/p1",
+				"/en/user/u/page/p1",
+				"/ja/user/u/page/p1",
 				"/user/u/page/p2",
-				"/user/u/page/c1",
-				"/user/u/page/c2",
-				"/user/u/page/gc1",
-			];
-			const expected = targets.length * (1 + supportedLocaleOptions.length);
-			expect(revalidated.length).toBe(expected);
-			for (const base of targets) {
-				expect(revalidated).toContain(base);
-				for (const { code } of supportedLocaleOptions.slice(0, 2)) {
-					expect(revalidated).toContain(`/${code}${base}`);
-				}
-			}
+				"/en/user/u/page/p2",
+			]);
+			expect(new Set(revalidated)).toEqual(expected);
 		});
 	});
 });

@@ -2,84 +2,141 @@ import { revalidatePath } from "next/cache";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { prisma } from "@/lib/prisma";
 
+type RevalidateAllLocalesOptions = {
+	revalidateFn?: (path: string) => void;
+	locales?: Iterable<string>;
+};
+
+const SUPPORTED_LOCALE_CODES = new Set(
+	supportedLocaleOptions.map(({ code }) => code),
+);
+
+function normalizeLocaleList(locales?: Iterable<string>) {
+	const codes = locales
+		? Array.from(
+			new Set(Array.from(locales).map((code) => code.trim().toLowerCase())),
+		  )
+		: supportedLocaleOptions.map(({ code }) => code);
+	return codes.filter((code) => code && SUPPORTED_LOCALE_CODES.has(code));
+}
+
 export function revalidateAllLocales(
 	basePath: string,
-	revalidateFn: (path: string) => void = revalidatePath,
+	revalidateFnOrOptions?: ((path: string) => void) | RevalidateAllLocalesOptions,
+	maybeOptions?: RevalidateAllLocalesOptions,
 ) {
+	let revalidateFn = revalidatePath;
+	let locales: string[] | undefined;
+
+	if (typeof revalidateFnOrOptions === "function") {
+		revalidateFn = revalidateFnOrOptions;
+		locales = normalizeLocaleList(maybeOptions?.locales);
+	} else if (revalidateFnOrOptions) {
+		revalidateFn =
+			revalidateFnOrOptions.revalidateFn ?? revalidateFn;
+		locales = normalizeLocaleList(revalidateFnOrOptions.locales);
+	} else {
+		locales = normalizeLocaleList();
+	}
+
+	if (!locales) {
+		locales = normalizeLocaleList();
+	}
+
 	// Default-locale path (no prefix in as-needed strategy)
 	revalidateFn(basePath);
 	// Locale-prefixed paths
-	for (const { code } of supportedLocaleOptions) {
+	for (const code of locales) {
 		revalidateFn(`/${code}${basePath}`);
 	}
 }
 
 /**
- * Revalidate self + all ancestors and all descendants (recursive) across locales.
- * Note: descendants are limited to PUBLIC to match visible routes.
+ * Revalidate self and ancestors across locales that actually exist for the page.
  */
-export async function revalidatePageTreeAllLocales(
-	pageId: number,
-	revalidateFn: (path: string) => void = revalidatePath,
-) {
-	// Fetch self and initial parentId
-	const self = await prisma.page.findUnique({
+type RevalidatePageTreeOptions = {
+	revalidateFn?: (path: string) => void;
+};
+
+type PageForRevalidate = {
+	id: number;
+	slug: string;
+	parentId: number | null;
+	sourceLocale: string;
+	locales: string[];
+	handle: string;
+};
+
+function toLocales(sourceLocale: string, locales: string[]) {
+	const merged = new Set<string>();
+	const normalizedSource = sourceLocale.trim().toLowerCase();
+	if (normalizedSource && SUPPORTED_LOCALE_CODES.has(normalizedSource)) {
+		merged.add(normalizedSource);
+	}
+	for (const locale of locales) {
+		const normalized = locale.trim().toLowerCase();
+		if (normalized && SUPPORTED_LOCALE_CODES.has(normalized)) {
+			merged.add(normalized);
+		}
+	}
+	return Array.from(merged);
+}
+
+async function fetchPageForRevalidate(pageId: number): Promise<PageForRevalidate | null> {
+	const page = await prisma.page.findUnique({
 		where: { id: pageId },
 		select: {
 			id: true,
 			slug: true,
-			user: { select: { handle: true } },
 			parentId: true,
+			sourceLocale: true,
+			user: { select: { handle: true } },
+			pageLocaleTranslationProofs: { select: { locale: true } },
 		},
 	});
+	if (!page) return null;
+	return {
+		id: page.id,
+		slug: page.slug,
+		parentId: page.parentId ?? null,
+		sourceLocale: page.sourceLocale,
+		locales: page.pageLocaleTranslationProofs.map((proof) => proof.locale),
+		handle: page.user.handle,
+	};
+}
+
+export async function revalidatePageTreeAllLocales(
+	pageId: number,
+	options: RevalidatePageTreeOptions = {},
+) {
+	const revalidateFn = options.revalidateFn ?? revalidatePath;
+
+	// Fetch self and initial parentId
+	const self = await fetchPageForRevalidate(pageId);
 	if (!self) return;
 
-	const paths = new Set<string>();
-	const visitedIds = new Set<number>([self.id]);
+	const targets = new Map<string, string[]>();
 	// Add self
-	paths.add(`/user/${self.user.handle}/page/${self.slug}`);
+	targets.set(
+		`/user/${self.handle}/page/${self.slug}`,
+		toLocales(self.sourceLocale, self.locales),
+	);
 
 	// Walk ancestors
 	let currentParentId = self.parentId ?? null;
 	const ancestorGuard = new Set<number>();
 	while (currentParentId && !ancestorGuard.has(currentParentId)) {
 		ancestorGuard.add(currentParentId);
-		const parent = await prisma.page.findUnique({
-			where: { id: currentParentId },
-			select: {
-				id: true,
-				slug: true,
-				user: { select: { handle: true } },
-				parentId: true,
-			},
-		});
+		const parent = await fetchPageForRevalidate(currentParentId);
 		if (!parent) break;
-		paths.add(`/user/${parent.user.handle}/page/${parent.slug}`);
-		visitedIds.add(parent.id);
+		targets.set(
+			`/user/${parent.handle}/page/${parent.slug}`,
+			toLocales(parent.sourceLocale, parent.locales),
+		);
 		currentParentId = parent.parentId ?? null;
 	}
 
-	// Walk descendants (BFS)
-	let frontier: number[] = [self.id];
-	const childGuard = new Set<number>([self.id]);
-	while (frontier.length > 0) {
-		const children = await prisma.page.findMany({
-			where: { parentId: { in: frontier }, status: "PUBLIC" },
-			select: { id: true, slug: true, user: { select: { handle: true } } },
-			orderBy: { order: "asc" },
-		});
-		const next: number[] = [];
-		for (const c of children) {
-			if (childGuard.has(c.id)) continue;
-			childGuard.add(c.id);
-			visitedIds.add(c.id);
-			paths.add(`/user/${c.user.handle}/page/${c.slug}`);
-			next.push(c.id);
-		}
-		frontier = next;
-	}
-
-	for (const basePath of paths) {
-		revalidateAllLocales(basePath, revalidateFn);
+	for (const [basePath, locales] of targets) {
+		revalidateAllLocales(basePath, { revalidateFn, locales });
 	}
 }
