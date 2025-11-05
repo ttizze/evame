@@ -93,7 +93,7 @@ export async function createContentPage({
 	const raw = await fs.readFile(entry.filePath, "utf8");
 	const { header, body } = splitHeaderAndBody(raw);
 	const fallbackTitle = beautifySlug(
-		path.basename(entry.mdFileName, ".md").replace(/\./g, " "),
+		path.basename(entry.filePath, ".md").replace(/\./g, " "),
 	);
 	const title = header || fallbackTitle;
 

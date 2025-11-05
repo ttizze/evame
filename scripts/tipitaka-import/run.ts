@@ -27,39 +27,29 @@ function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 	});
 }
 
-// Step 3b: 生成済みディレクトリページのパスとページIDをマッピングする
 function createCategoryLookup(
 	root: DirectoryNode,
 	rootPage: PageWithContent,
 ): Map<string, number> {
 	const pathMap = collectPathMap(root);
-	const lookup = new Map<string, number>();
+	const lookup = new Map<string, number>([["", rootPage.id]]);
 	for (const [path, node] of pathMap.entries()) {
 		if (!node.pageId) {
 			throw new Error(`Category page missing pageId for path: ${path}`);
 		}
 		lookup.set(path, node.pageId);
 	}
-	lookup.set("", rootPage.id);
 	return lookup;
 }
 
-// Step 4b: Markdown ファイルがぶら下がるカテゴリページのIDを取得する
 function resolveCategoryPageId(
 	segments: string[],
 	categoryLookup: Map<string, number>,
 ): number {
-	if (segments.length === 0) {
-		const rootId = categoryLookup.get("");
-		if (typeof rootId !== "number") {
-			throw new Error("Root page id missing in category lookup.");
-		}
-		return rootId;
-	}
-	const key = segments.join("/");
+	const key = segments.length === 0 ? "" : segments.join("/");
 	const pageId = categoryLookup.get(key);
 	if (typeof pageId !== "number") {
-		throw new Error(`Category page not found for path: ${key}`);
+		throw new Error(`Category page not found for path: ${key || "(root)"}`);
 	}
 	return pageId;
 }
@@ -83,19 +73,12 @@ export async function runTipitakaImport(): Promise<void> {
 		const segmentTypeIdMap = new Map(
 			segmentTypes.map((item) => [item.key as SegmentType["key"], item.id]),
 		);
-		const lookupSegmentTypeId = (key: SegmentType["key"]): number => {
-			const id = segmentTypeIdMap.get(key);
-			if (id === undefined) {
-				throw new Error(`Segment type "${key}" not found`);
-			}
-			return id;
-		};
+		const primaryTypeId = segmentTypeIdMap.get("PRIMARY");
+		if (!primaryTypeId) {
+			throw new Error('Segment type "PRIMARY" not found');
+		}
 
-		const rootPage = await ensureRootPage(
-			prisma,
-			user.id,
-			lookupSegmentTypeId("PRIMARY"),
-		);
+		const rootPage = await ensureRootPage(prisma, user.id, primaryTypeId);
 
 		// Step 2: books.json から各ファイルのメタデータを取得し、ディレクトリツリーを作る
 		const { entries } = await readBooksJson();
@@ -110,9 +93,7 @@ export async function runTipitakaImport(): Promise<void> {
 
 		const nextDirectoryOrder = getOrderGenerator();
 
-		while (queue.length > 0) {
-			const item = queue.shift();
-			if (!item) break;
+		for (const item of queue) {
 			const { node, parentId } = item;
 			const order = nextDirectoryOrder(parentId);
 			await createDirectoryPage({
@@ -121,20 +102,29 @@ export async function runTipitakaImport(): Promise<void> {
 				parentId,
 				userId: user.id,
 				order,
-				segmentTypeId: lookupSegmentTypeId("PRIMARY"),
+				segmentTypeId: primaryTypeId,
 			});
 			for (const child of getSortedChildren(node)) {
-				if (!node.pageId) continue;
-				queue.push({ node: child, parentId: node.pageId });
+				if (node.pageId) {
+					queue.push({ node: child, parentId: node.pageId });
+				}
 			}
 		}
 
 		// Step 3c: 生成したカテゴリ階層を素早く引き当てられるようにマッピングする
 		const categoryLookup = createCategoryLookup(directoryRoot, rootPage);
 		const orderForParent = getOrderGenerator();
-		const paragraphMapByFile = new Map<string, Map<number, number[]>>();
+		const paragraphNumberToSegmentIdsByFile = new Map<
+			string,
+			Map<number, number[]>
+		>();
 
 		const sortedEntries = sortEntries(entries);
+
+		const otherTypeId = segmentTypeIdMap.get("OTHER");
+		if (!otherTypeId) {
+			throw new Error('Segment type "OTHER" not found');
+		}
 
 		for (const entry of sortedEntries) {
 			const parentPageId = resolveCategoryPageId(
@@ -142,11 +132,10 @@ export async function runTipitakaImport(): Promise<void> {
 				categoryLookup,
 			);
 			const order = orderForParent(parentPageId);
-			const upper = entry.level?.toUpperCase?.() ?? "";
-			const levelKey = segmentTypeIdMap.has(upper as SegmentType["key"])
-				? (upper as SegmentType["key"])
-				: "OTHER";
-			const segmentTypeId = lookupSegmentTypeId(levelKey);
+			const levelKey = entry.level?.toUpperCase?.() ?? "";
+			const segmentTypeId =
+				segmentTypeIdMap.get(levelKey as SegmentType["key"]) ?? otherTypeId;
+
 			const pageId = await createContentPage({
 				prisma,
 				entry,
@@ -155,15 +144,28 @@ export async function runTipitakaImport(): Promise<void> {
 				order,
 				segmentTypeId,
 			});
-			const paragraphMap = await collectParagraphSegments(prisma, pageId);
-			paragraphMapByFile.set(entry.fileKey.toLowerCase(), paragraphMap);
+
+			const paragraphNumberToSegmentIds =
+				await buildParagraphNumberToSegmentIdsMap(prisma, pageId);
+			paragraphNumberToSegmentIdsByFile.set(
+				entry.fileKey.toLowerCase(),
+				paragraphNumberToSegmentIds,
+			);
+
 			if (
 				(levelKey === "ATTHAKATHA" || levelKey === "TIKA") &&
 				entry.mulaFileKey
 			) {
-				const mulaMap = paragraphMapByFile.get(entry.mulaFileKey.toLowerCase());
-				if (mulaMap) {
-					await linkParagraphs(prisma, paragraphMap, mulaMap);
+				const mulaParagraphNumberToSegmentIds =
+					paragraphNumberToSegmentIdsByFile.get(
+						entry.mulaFileKey.toLowerCase(),
+					);
+				if (mulaParagraphNumberToSegmentIds) {
+					await linkSegmentsByParagraphNumber(
+						prisma,
+						paragraphNumberToSegmentIds,
+						mulaParagraphNumberToSegmentIds,
+					);
 				}
 			}
 		}
@@ -172,9 +174,13 @@ export async function runTipitakaImport(): Promise<void> {
 	}
 }
 
-const PARAGRAPH_REGEX = /§\s*(\d+)/g;
+const PARAGRAPH_NUMBER_REGEX = /§\s*(\d+)/g;
 
-async function collectParagraphSegments(
+/**
+ * ページ内の各セグメントから段落番号（§ N）を抽出し、
+ * 段落番号 → セグメントIDの配列のマッピングを構築する
+ */
+async function buildParagraphNumberToSegmentIdsMap(
 	prisma: PrismaClient,
 	pageId: number,
 ): Promise<Map<number, number[]>> {
@@ -182,37 +188,52 @@ async function collectParagraphSegments(
 		where: { contentId: pageId },
 		select: { id: true, text: true },
 	});
-	const map = new Map<number, number[]>();
-	for (const seg of segments) {
-		PARAGRAPH_REGEX.lastIndex = 0;
-		let match: RegExpExecArray | null = PARAGRAPH_REGEX.exec(seg.text);
+	const paragraphNumberToSegmentIds = new Map<number, number[]>();
+	for (const segment of segments) {
+		PARAGRAPH_NUMBER_REGEX.lastIndex = 0;
+		let match: RegExpExecArray | null = PARAGRAPH_NUMBER_REGEX.exec(
+			segment.text,
+		);
 		while (match !== null) {
-			const value = Number.parseInt(match[1] ?? "", 10);
-			if (!Number.isFinite(value)) continue;
-			const bucket = map.get(value) ?? [];
-			bucket.push(seg.id);
-			map.set(value, bucket);
-			match = PARAGRAPH_REGEX.exec(seg.text);
+			const paragraphNumber = Number.parseInt(match[1] ?? "", 10);
+			if (!Number.isFinite(paragraphNumber)) continue;
+			const segmentIds = paragraphNumberToSegmentIds.get(paragraphNumber) ?? [];
+			segmentIds.push(segment.id);
+			paragraphNumberToSegmentIds.set(paragraphNumber, segmentIds);
+			match = PARAGRAPH_NUMBER_REGEX.exec(segment.text);
 		}
 	}
-	return map;
+	return paragraphNumberToSegmentIds;
 }
 
-async function linkParagraphs(
+/**
+ * 注釈書（Atthakatha/Tika）と根本経典（Mula）の間で、
+ * 同じ段落番号を持つセグメント同士をリンクする
+ */
+async function linkSegmentsByParagraphNumber(
 	prisma: PrismaClient,
-	fromMap: Map<number, number[]>,
-	toMap: Map<number, number[]>,
+	commentaryParagraphMap: Map<number, number[]>,
+	rootTextParagraphMap: Map<number, number[]>,
 ) {
-	const data: { fromSegmentId: number; toSegmentId: number }[] = [];
-	for (const [para, fromIds] of fromMap) {
-		const targets = toMap.get(para);
-		if (!targets || targets.length === 0) continue;
-		for (const fromId of fromIds) {
-			for (const toId of targets) {
-				data.push({ fromSegmentId: fromId, toSegmentId: toId });
+	const segmentLinks: { fromSegmentId: number; toSegmentId: number }[] = [];
+	for (const [
+		paragraphNumber,
+		commentarySegmentIds,
+	] of commentaryParagraphMap) {
+		const rootTextSegmentIds = rootTextParagraphMap.get(paragraphNumber);
+		if (!rootTextSegmentIds || rootTextSegmentIds.length === 0) continue;
+		for (const commentarySegmentId of commentarySegmentIds) {
+			for (const rootTextSegmentId of rootTextSegmentIds) {
+				segmentLinks.push({
+					fromSegmentId: commentarySegmentId,
+					toSegmentId: rootTextSegmentId,
+				});
 			}
 		}
 	}
-	if (data.length === 0) return;
-	await prisma.segmentLink.createMany({ data, skipDuplicates: true });
+	if (segmentLinks.length === 0) return;
+	await prisma.segmentLink.createMany({
+		data: segmentLinks,
+		skipDuplicates: true,
+	});
 }

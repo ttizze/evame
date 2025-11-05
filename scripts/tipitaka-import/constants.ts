@@ -16,19 +16,6 @@ export const BASE_DIR = (() => {
 	return path.resolve(match?.name ?? TIPITAKA_DIR_PREFIX);
 })();
 
-const CONVERT_PREFIX = "convert-romn-to-md";
-
-export const BOOKS_JSON_PATH = (() => {
-	const scriptsDir = path.resolve("scripts");
-	const entries = fs.readdirSync(scriptsDir, { withFileTypes: true });
-	for (const entry of entries) {
-		if (!entry.isDirectory()) continue;
-		if (!entry.name.startsWith(CONVERT_PREFIX)) continue;
-		const candidate = path.join(scriptsDir, entry.name, "data", "books.json");
-		try {
-			fs.accessSync(candidate);
-			return candidate;
-		} catch {}
-	}
-	return path.join(scriptsDir, CONVERT_PREFIX, "data", "books.json");
-})();
+export const BOOKS_JSON_PATH = path.resolve(
+	"scripts/convert-romn-to-md/data/books.json",
+);

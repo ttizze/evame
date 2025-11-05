@@ -1,8 +1,9 @@
-import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mdast-with-segments";
-import { syncSegments } from "@/lib/sync-segments";
-import type { Prisma, PrismaClient } from "@prisma/client";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+import type { Prisma, PrismaClient } from "@prisma/client";
+import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mdast-with-segments";
+import { syncSegments } from "@/lib/sync-segments";
 
 import { ROOT_SLUG, ROOT_TITLE } from "./constants";
 
@@ -13,7 +14,8 @@ export async function ensureRootPage(
 	userId: string,
 	segmentTypeId: number,
 ): Promise<PageWithContent> {
-	const readmePath = path.join(__dirname, "README.md");
+	const currentDir = path.dirname(fileURLToPath(import.meta.url));
+	const readmePath = path.join(currentDir, "README.md");
 	const markdownContent = await fs.readFile(readmePath, "utf-8");
 
 	const parsed = await markdownToMdastWithSegments({
@@ -46,13 +48,7 @@ export async function ensureRootPage(
 			include: { content: true },
 		});
 
-		// number: 0 にタイトルを常に追加
-		const segments = [
-			{ number: 0, text: ROOT_TITLE, hash: ROOT_TITLE },
-			...parsed.segments,
-		];
-
-		await syncSegments(tx, page.id, segments, segmentTypeId);
+		await syncSegments(tx, page.id, parsed.segments, segmentTypeId);
 
 		return page;
 	});

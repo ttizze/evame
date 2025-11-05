@@ -94,7 +94,6 @@ export async function readBooksJson(): Promise<{
 
 		const entry: ImportEntry = {
 			fileKey,
-			mdFileName,
 			filePath,
 			level: meta.level,
 			resolvedDirSegments: [...resolved.resolvedDirSegments],
