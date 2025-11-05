@@ -39,6 +39,12 @@ export const selectPageFields = (
 					id: true,
 					number: true,
 					text: true,
+					segmentType: {
+						select: {
+							key: true,
+							label: true,
+						},
+					},
 					segmentTranslations:
 						selectSegmentTranslations(locale).segmentTranslations,
 				},

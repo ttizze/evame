@@ -1,6 +1,7 @@
 import type {
 	Page,
 	SegmentTranslation,
+	SegmentType,
 	Tag,
 	TagPage,
 	TranslationVote,
@@ -18,11 +19,23 @@ export type TranslationWithInfo = TranslationWithUser & {
  * UI 用セグメント（Content -> Segment の最小形）。
  * segmentTranslations はクエリ側で take:1 などにより最良を先頭に入れる前提。
  */
+export interface SegmentTypeForUI {
+	key: SegmentType["key"];
+	label: SegmentType["label"];
+}
+
+export interface LinkedSegmentGroup {
+	type: SegmentTypeForUI;
+	segments: SegmentForUI[];
+}
+
 export interface SegmentForUI {
 	id: number;
 	number: number;
 	text: string;
 	segmentTranslation: TranslationWithUser | null;
+	segmentType?: SegmentTypeForUI | null;
+	linkedSegments?: LinkedSegmentGroup[];
 }
 
 type TagPageWithTag = TagPage & {

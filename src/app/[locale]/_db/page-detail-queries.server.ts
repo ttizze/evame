@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
-import { normalizeSegments } from "../_lib/normalize-segments";
-import type { PageDetail } from "../types";
-import { selectPageFields } from "./queries.server";
+import { pickBestTranslation } from "../_lib/pick-best-translation";
+import type { LinkedSegmentGroup, PageDetail, SegmentForUI } from "../types";
+import { selectPageFields, selectSegmentTranslations } from "./queries.server";
 
 export const selectPageDetailFields = (locale = "en") => {
 	return {
@@ -34,10 +34,69 @@ export async function fetchPageDetail(
 		select: selectPageDetailFields(locale),
 	});
 	if (!page) return null;
+
+	const normalizedSegments = pickBestTranslation(
+		page.content.segments,
+	) as Array<SegmentForUI & { segmentType?: SegmentForUI["segmentType"] }>;
+
+	const segmentIdList = normalizedSegments.map((segment) => segment.id);
+	let linkedSegmentsByTarget = new Map<number, LinkedSegmentGroup[]>();
+
+	if (segmentIdList.length > 0) {
+		const links = await prisma.segmentLink.findMany({
+			where: { toSegmentId: { in: segmentIdList } },
+			select: {
+				toSegmentId: true,
+				fromSegment: {
+					select: {
+						id: true,
+						number: true,
+						text: true,
+						segmentType: {
+							select: { key: true, label: true },
+						},
+						...selectSegmentTranslations(locale),
+					},
+				},
+			},
+		});
+
+		linkedSegmentsByTarget = links.reduce((map, link) => {
+			const normalized = pickBestTranslation([
+				link.fromSegment,
+			])[0] as SegmentForUI;
+			if (!normalized.segmentType) return map;
+			const current = map.get(link.toSegmentId) ?? [];
+			let group = current.find(
+				(item) => item.type.key === normalized.segmentType?.key,
+			);
+			if (!group) {
+				group = {
+					type: normalized.segmentType,
+					segments: [],
+				};
+				current.push(group);
+				map.set(link.toSegmentId, current);
+			}
+			group.segments.push(normalized);
+			return map;
+		}, new Map<number, LinkedSegmentGroup[]>());
+	}
+
+	const segmentsWithLinks = normalizedSegments.map((segment) => {
+		const linked = linkedSegmentsByTarget.get(segment.id) ?? [];
+		return linked.length
+			? {
+					...segment,
+					linkedSegments: linked,
+				}
+			: segment;
+	});
+
 	return {
 		...page,
 		content: {
-			segments: normalizeSegments(page.content.segments),
+			segments: segmentsWithLinks,
 		},
 	};
 }

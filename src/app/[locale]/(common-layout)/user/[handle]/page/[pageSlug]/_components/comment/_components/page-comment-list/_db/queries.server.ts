@@ -1,5 +1,5 @@
 import { selectSegmentTranslations } from "@/app/[locale]/_db/queries.server";
-import { normalizeSegments } from "@/app/[locale]/_lib/normalize-segments";
+import { pickBestTranslation } from "@/app/[locale]/_lib/pick-best-translation";
 import { prisma } from "@/lib/prisma";
 
 export async function fetchPageCommentsWithSegments(
@@ -35,7 +35,7 @@ export async function fetchPageCommentsWithSegments(
 	return comments.map((comment) => ({
 		...comment,
 		content: {
-			segments: normalizeSegments(comment.content.segments),
+			segments: pickBestTranslation(comment.content.segments),
 		},
 	}));
 }
@@ -87,7 +87,7 @@ export async function listRootPageComments(
 	return comments.map((comment) => ({
 		...comment,
 		content: {
-			segments: normalizeSegments(comment.content.segments),
+			segments: pickBestTranslation(comment.content.segments),
 		},
 	}));
 }
@@ -129,7 +129,7 @@ export async function listChildPageComments(
 	return comments.map((comment) => ({
 		...comment,
 		content: {
-			segments: normalizeSegments(comment.content.segments),
+			segments: pickBestTranslation(comment.content.segments),
 		},
 	}));
 }
