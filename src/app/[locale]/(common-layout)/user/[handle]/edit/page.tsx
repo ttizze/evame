@@ -1,6 +1,7 @@
 import type { Metadata, Route } from "next";
 import dynamic from "next/dynamic";
 import { notFound, redirect } from "next/navigation";
+import type React from "react";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,13 +21,11 @@ export const metadata: Metadata = {
 	title: "Edit Profile",
 };
 
-export default async function UserEditPage({
-	params,
-}: {
-	params: Promise<{ handle: string }>;
-}) {
+export default async function UserEditPage(
+	props: PageProps<"/[locale]/user/[handle]/edit">,
+): Promise<React.ReactNode> {
 	const currentUser = await getCurrentUser();
-	const { handle } = await params;
+	const { handle } = await props.params;
 
 	if (!currentUser || currentUser.handle !== handle) {
 		redirect("/auth/login" as Route);

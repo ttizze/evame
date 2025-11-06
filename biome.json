@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.2.2/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.3.4/schema.json",
 	"files": {
 		"includes": [
 			"**",
@@ -9,7 +9,16 @@
 			"!.next",
 			"!node_modules",
 			"!**/*.css",
-			"!**/*-xml"
+			"!tipitaka-md",
+			"!tipitaka-md-nosplit",
+			"!tipitaka-xml",
+			"!playwright-report",
+			"!cst",
+			"!coverage",
+			"!.turbo",
+			"!.vercel",
+			"!.cache",
+			"!dist"
 		]
 	},
 	"assist": {

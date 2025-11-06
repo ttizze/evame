@@ -7,9 +7,9 @@ export const revalidate = 0;
 
 export async function POST(
 	_req: Request,
-	{ params }: { params: Promise<{ pageId: string }> },
+	context: RouteContext<"/api/page-views/[pageId]/increment">,
 ) {
-	const { pageId } = await params;
+	const { pageId } = await context.params;
 	const id = Number(pageId);
 	if (!Number.isFinite(id)) {
 		return NextResponse.json({ error: "invalid pageId" }, { status: 400 });

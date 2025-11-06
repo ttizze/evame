@@ -20,7 +20,8 @@ type Params = Promise<{ locale: string; handle: string; pageSlug: string }>;
 // Force static rendering for this route (no dynamic APIs allowed)
 export const dynamic = "force-static";
 // Optionally enable ISR; adjust as needed
-export const revalidate = 3600;
+// Revalidate once per month (30 days = 2,592,000 seconds)
+export const revalidate = 2592000;
 
 export async function generateMetadata({
 	params,

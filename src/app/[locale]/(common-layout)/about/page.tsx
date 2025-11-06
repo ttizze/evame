@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type React from "react";
 import AboutSection from "@/app/[locale]/_components/about-section/server";
 
 export const metadata: Metadata = {
@@ -16,12 +17,10 @@ export async function generateStaticParams() {
 		locale,
 	}));
 }
-export default async function AboutPage({
-	params,
-}: {
-	params: Promise<{ locale: string }>;
-}) {
-	const { locale } = await params;
+export default async function AboutPage(
+	props: PageProps<"/[locale]/about">,
+): Promise<React.ReactNode> {
+	const { locale } = await props.params;
 
 	return <AboutSection locale={locale} topPage={false} />;
 }

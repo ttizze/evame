@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
-import type { SearchParams } from "nuqs/server";
+import type React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const NewPageList = dynamic(
@@ -15,19 +15,15 @@ export const metadata: Metadata = {
 	description: "Browse the latest pages on Evame.",
 };
 
-export default async function NewPagesPage({
-	params,
-	searchParams,
-}: {
-	params: Promise<{ locale: string }>;
-	searchParams: Promise<SearchParams>;
-}) {
-	const { locale } = await params;
+export default async function NewPagesPage(
+	props: PageProps<"/[locale]/new-pages">,
+): Promise<React.ReactNode> {
+	const { locale } = await props.params;
 	return (
 		<div className="flex flex-col gap-8 mb-12">
 			<NewPageList
 				locale={locale}
-				searchParams={searchParams}
+				searchParams={props.searchParams}
 				showPagination={true}
 			/>
 		</div>

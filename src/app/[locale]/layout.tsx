@@ -4,6 +4,7 @@ import { BIZ_UDPGothic, Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import NextTopLoader from "nextjs-toploader";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
+import type React from "react";
 import { Toaster } from "@/components/ui/sonner";
 import "../globals.css";
 
@@ -23,13 +24,10 @@ export const viewport: Viewport = {
 	interactiveWidget: "resizes-content",
 };
 
-export default async function Layout({
-	children,
-	params,
-}: {
-	children: React.ReactNode;
-	params: Promise<{ locale: "en" }>;
-}) {
+export default async function Layout(
+	props: LayoutProps<"/[locale]">,
+): Promise<React.ReactNode> {
+	const { children, params } = props;
 	const resolvedParams = await params;
 
 	const gaTrackingId =
