@@ -1,7 +1,10 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { prisma } from "@/lib/prisma";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { revalidatePageTreeAllLocales } from "./revalidate-utils";
+
+const originalFindUnique = prisma.page.findUnique;
+const originalFindMany = prisma.page.findMany;
 
 // t-wada TDD style
 // - 明確なコンテキスト（describe）
@@ -10,6 +13,8 @@ import { revalidatePageTreeAllLocales } from "./revalidate-utils";
 
 describe("revalidatePageTreeAllLocales", () => {
 	afterEach(() => {
+		prisma.page.findUnique = originalFindUnique;
+		prisma.page.findMany = originalFindMany;
 		vi.restoreAllMocks();
 	});
 
@@ -17,7 +22,7 @@ describe("revalidatePageTreeAllLocales", () => {
 		it("祖先と公開な子孫を全ロケールで再検証する", async () => {
 			// Given: gp(11) -> p(10) -> self(1) -> c1(2) -> gc1(4)
 			//                              └─ c2(3)
-			vi.spyOn(prisma.page, "findUnique").mockImplementation((async (
+			const findUniqueMock = vi.fn((async (
 				// biome-ignore lint/suspicious/noExplicitAny: <>
 				args: any,
 			) => {
@@ -50,7 +55,10 @@ describe("revalidatePageTreeAllLocales", () => {
 				return null as any;
 				// biome-ignore lint/suspicious/noExplicitAny: <>
 			}) as any);
-			vi.spyOn(prisma.page, "findMany").mockImplementation((async (
+			prisma.page.findUnique =
+				findUniqueMock as unknown as typeof originalFindUnique;
+
+			const findManyMock = vi.fn((async (
 				// biome-ignore lint/suspicious/noExplicitAny: <>
 				args: any,
 			) => {
@@ -69,6 +77,7 @@ describe("revalidatePageTreeAllLocales", () => {
 				return rows;
 				// biome-ignore lint/suspicious/noExplicitAny: <>
 			}) as any);
+			prisma.page.findMany = findManyMock as unknown as typeof originalFindMany;
 			const revalidated: string[] = [];
 			const revalidateSpy = (p: string) => void revalidated.push(p);
 
