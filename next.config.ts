@@ -87,6 +87,9 @@ const config: NextConfig = {
 			},
 		];
 	},
+	// Turbopack/Webpackのサーバーサイドバンドルからjsdomを除外
+	// isomorphic-dompurifyはjsdomに依存しているが、クライアントコンポーネントでのみ使用されるため
+	serverExternalPackages: ["jsdom", "isomorphic-dompurify", "parse5"],
 };
 
 export default analyzeBundles(
