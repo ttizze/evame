@@ -1,20 +1,20 @@
 import { loadModule } from "cld3-asm";
-import { JSDOM } from "jsdom";
+import { parse } from "node-html-parser";
 
 export async function getLocaleFromHtml(
 	htmlContent: string,
 	userLocale: string,
 ): Promise<string> {
-	const doc = new JSDOM(htmlContent);
+	const doc = parse(htmlContent);
 
-	for (const el of doc.window.document.querySelectorAll("code, a")) {
+	// Remove code and anchor elements
+	doc.querySelectorAll("code, a").forEach((el) => {
 		el.remove();
-	}
+	});
 
-	const contents = [
-		...doc.window.document.querySelectorAll("p,h1,h2,h3,h4,h5,h6,li,td,th"),
-	]
-		.map((el) => el.textContent?.trim() ?? "")
+	const contents = doc
+		.querySelectorAll("p,h1,h2,h3,h4,h5,h6,li,td,th")
+		.map((el) => el.text?.trim() ?? "")
 		.filter(Boolean)
 		.join("\n");
 
