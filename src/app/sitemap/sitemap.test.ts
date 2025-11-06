@@ -75,4 +75,20 @@ describe("sitemap split & entries", () => {
 		expect(typeof langs.en).toBe("string");
 		expect(typeof langs.zh).toBe("string");
 	});
+
+	it("accepts a string id at runtime if coerced (defensive)", async () => {
+		mocks.countPublicPages.mockResolvedValue(1);
+		mocks.fetchPagesWithUserAndTranslationChunk.mockResolvedValueOnce([]);
+
+		const mod = await import("./sitemap");
+		// Type-level the route expects a number; this simulates a coerced value.
+		await expect(
+			mod.default({ id: "0" as unknown as number }),
+		).resolves.toBeDefined();
+
+		expect(mocks.fetchPagesWithUserAndTranslationChunk).toHaveBeenCalledWith({
+			limit: 1_000,
+			offset: 0,
+		});
+	});
 });

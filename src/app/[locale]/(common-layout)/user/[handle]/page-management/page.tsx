@@ -1,7 +1,6 @@
 import type { Route } from "next";
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
-import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentUser } from "@/lib/auth-server";
@@ -32,19 +31,15 @@ const searchParamsSchema = {
 };
 const loadSearchParams = createLoader(searchParamsSchema);
 
-export default async function PageManagementPage({
-	params,
-	searchParams,
-}: {
-	params: Promise<{ locale: string }>;
-	searchParams: Promise<SearchParams>;
-}) {
+export default async function PageManagementPage(
+	props: PageProps<"/[locale]/user/[handle]/page-management">,
+): Promise<React.ReactNode> {
 	const currentUser = await getCurrentUser();
 	if (!currentUser || !currentUser.id) {
 		redirect("/auth/login" as Route);
 	}
-	const { locale } = await params;
-	const { page, query } = await loadSearchParams(searchParams);
+	const { locale } = await props.params;
+	const { page, query } = await loadSearchParams(props.searchParams);
 
 	return (
 		<div className="mx-auto max-w-4xl py-10">
