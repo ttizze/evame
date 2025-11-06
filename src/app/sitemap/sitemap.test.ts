@@ -1,5 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PageWithUserAndTranslation } from "@/app/_db/sitemap-queries.server";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mocks that can be changed per-test
 const mocks = {
@@ -60,7 +60,7 @@ describe("sitemap split & entries", () => {
 		]);
 
 		const mod = await import("./sitemap");
-		const entries = await mod.default({ id: 0 });
+		const entries = await mod.default({ id: Promise.resolve(0) });
 
 		const dynamic = entries.find(
 			(e) => e.url === "https://example.com/ja/user/alice/page/p1",
@@ -81,9 +81,9 @@ describe("sitemap split & entries", () => {
 		mocks.fetchPagesWithUserAndTranslationChunk.mockResolvedValueOnce([]);
 
 		const mod = await import("./sitemap");
-		// Type-level the route expects a number; this simulates a coerced value.
+		// Type-level the route expects a Promise<number>; this simulates a coerced value.
 		await expect(
-			mod.default({ id: "0" as unknown as number }),
+			mod.default({ id: Promise.resolve("0" as unknown as number) }),
 		).resolves.toBeDefined();
 
 		expect(mocks.fetchPagesWithUserAndTranslationChunk).toHaveBeenCalledWith({
