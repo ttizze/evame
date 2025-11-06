@@ -1,8 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	type MockInstance,
+	vi,
+} from "vitest";
 import { extractTranslations } from "./extract-translations.server";
 
 describe("extractTranslations", () => {
-	let warnSpy: ReturnType<typeof vi.spyOn>;
+	let warnSpy: MockInstance<typeof console.warn>;
 
 	beforeEach(() => {
 		warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});

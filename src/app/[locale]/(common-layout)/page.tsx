@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
-import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsString } from "nuqs/server";
+import type React from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/routing";
@@ -35,21 +35,17 @@ const searchParamsSchema = {
 };
 const loadSearchParams = createLoader(searchParamsSchema);
 
-export default async function HomePage({
-	params,
-	searchParams,
-}: {
-	params: Promise<{ locale: string }>;
-	searchParams: Promise<SearchParams>;
-}) {
-	const { locale } = await params;
-	await loadSearchParams(searchParams);
+export default async function HomePage(
+	props: PageProps<"/[locale]">,
+): Promise<React.ReactNode> {
+	const { locale } = await props.params;
+	await loadSearchParams(props.searchParams);
 	return (
 		<div className="flex flex-col gap-8 justify-between mb-12">
 			<AboutSection locale={locale} topPage={true} />
 			<NewPageList
 				locale={locale}
-				searchParams={searchParams}
+				searchParams={props.searchParams}
 				showPagination={false}
 			/>
 			<div className="flex justify-center">

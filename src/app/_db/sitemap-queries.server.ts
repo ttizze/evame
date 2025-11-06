@@ -1,3 +1,5 @@
+import { PageStatus, TranslationStatus } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 
 export type PageWithUserAndTranslation = Awaited<
@@ -7,7 +9,7 @@ export type PageWithUserAndTranslation = Awaited<
 export async function countPublicPages() {
 	const count = await prisma.page.count({
 		where: {
-			status: "PUBLIC",
+			status: PageStatus.PUBLIC,
 		},
 	});
 	return count;
@@ -22,7 +24,7 @@ export async function fetchPagesWithUserAndTranslationChunk({
 }) {
 	const pagesWithUser = await prisma.page.findMany({
 		where: {
-			status: "PUBLIC",
+			status: PageStatus.PUBLIC,
 		},
 		select: {
 			slug: true,
@@ -33,7 +35,7 @@ export async function fetchPagesWithUserAndTranslationChunk({
 			},
 			translationJobs: {
 				where: {
-					status: "COMPLETED",
+					status: TranslationStatus.COMPLETED,
 				},
 				select: {
 					locale: true,

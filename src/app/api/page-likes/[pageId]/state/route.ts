@@ -4,9 +4,9 @@ import { getCurrentUser } from "@/lib/auth-server";
 
 export async function GET(
 	_req: Request,
-	{ params }: { params: Promise<{ pageId: string }> },
+	context: RouteContext<"/api/page-likes/[pageId]/state">,
 ) {
-	const { pageId } = await params;
+	const { pageId } = await context.params;
 	const id = Number(pageId);
 	if (!Number.isFinite(id)) {
 		return NextResponse.json({ error: "invalid pageId" }, { status: 400 });
