@@ -1,6 +1,6 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { prisma } from "@/lib/prisma";
-import { afterEach, describe, expect, it, vi } from "vitest";
 import { revalidatePageTreeAllLocales } from "./revalidate-utils";
 
 const originalFindUnique = prisma.page.findUnique;
