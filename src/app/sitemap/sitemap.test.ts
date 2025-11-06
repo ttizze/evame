@@ -1,5 +1,5 @@
-import type { PageWithUserAndTranslation } from "@/app/_db/sitemap-queries.server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { PageWithUserAndTranslation } from "@/app/_db/sitemap-queries.server";
 
 // Mocks that can be changed per-test
 const mocks = {
