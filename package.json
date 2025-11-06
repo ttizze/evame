@@ -85,7 +85,7 @@
 		"hast": "1.0.0",
 		"hast-util-to-html": "9.0.5",
 		"html-react-parser": "5.2.8",
-		"isomorphic-dompurify": "2.31.0",
+		"isomorphic-dompurify": "2.26.0",
 		"jsdom": "27.0.0",
 		"linkify-react": "4.3.2",
 		"lucide-react": "0.552.0",
