@@ -6,7 +6,7 @@ import { z } from "zod";
 import type { ActionResponse } from "@/app/types";
 import { getCurrentUser } from "@/lib/auth-server";
 import { parseFormData } from "@/lib/parse-form-data";
-import { revalidatePageTreeAllLocales } from "@/lib/revalidate-utils";
+import { revalidatePageForLocale } from "@/lib/revalidate-utils";
 import { findPageIdBySegmentTranslationId } from "../_db/queries.server";
 import {
 	createNotificationPageSegmentTranslationVote,
@@ -55,10 +55,10 @@ export async function voteTranslationAction(
 		);
 	}
 
-	// Revalidate page + parent/children across all locales
+	// Revalidate page for the current locale
 	const pageId = await findPageIdBySegmentTranslationId(
 		parsedFormData.data.segmentTranslationId,
 	);
-	await revalidatePageTreeAllLocales(pageId);
+	await revalidatePageForLocale(pageId, parsedFormData.data.userLocale);
 	return { success: true, data: { isUpvote, point } };
 }

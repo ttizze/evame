@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslateChunkParams } from "@/app/api/translate/types";
-import { revalidatePageTreeAllLocales } from "@/lib/revalidate-utils";
+import { revalidatePageForLocale } from "@/lib/revalidate-utils";
 import { markJobCompleted, markJobInProgress } from "./_db/mutations.server";
 import { splitNumberedElements } from "./_lib/split-numbered-elements.server";
 import { withQstashVerification } from "./_lib/with-qstash-signature";
@@ -33,7 +33,7 @@ async function handler(req: Request) {
 		// If there is nothing to translate, finalize immediately.
 		if (totalChunks === 0) {
 			await markJobCompleted(params.translationJobId);
-			await revalidatePageTreeAllLocales(params.pageId);
+			await revalidatePageForLocale(params.pageId, params.targetLocale);
 			return NextResponse.json({ ok: true }, { status: 201 });
 		}
 
