@@ -12,12 +12,6 @@ export async function syncSegments(
 	drafts: SegmentDraft[],
 	segmentTypeId?: number,
 ) {
-	const existing = await tx.segment.findMany({
-		where: { contentId },
-		select: { textAndOccurrenceHash: true },
-	});
-	const stale = new Set(existing.map((e) => e.textAndOccurrenceHash));
-
 	// segmentTypeId が指定されていない場合は PRIMARY を取得
 	const typeId =
 		segmentTypeId ??
@@ -27,10 +21,16 @@ export async function syncSegments(
 		throw new Error("Primary segment type not found");
 	}
 
+	const existing = await tx.segment.findMany({
+		where: { contentId, segmentTypeId: typeId },
+		select: { textAndOccurrenceHash: true },
+	});
+	const stale = new Set(existing.map((e) => e.textAndOccurrenceHash));
+
 	// A. 並び避難（既存あれば）
 	if (existing.length) {
 		await tx.segment.updateMany({
-			where: { contentId },
+			where: { contentId, segmentTypeId: typeId },
 			data: { number: { increment: 1_000_000 } },
 		});
 	}
@@ -45,7 +45,7 @@ export async function syncSegments(
 					where: {
 						contentId_textAndOccurrenceHash: {
 							contentId,
-							textAndOccurrenceHash: d.hash,
+							textAndOccurrenceHash: d.textAndOccurrenceHash,
 						},
 					},
 					update: { text: d.text, number: d.number },
@@ -53,14 +53,14 @@ export async function syncSegments(
 						contentId,
 						text: d.text,
 						number: d.number,
-						textAndOccurrenceHash: d.hash,
+						textAndOccurrenceHash: d.textAndOccurrenceHash,
 						segmentTypeId: typeId,
 					},
 				}),
 			),
 		);
 		for (const d of chunk) {
-			stale.delete(d.hash);
+			stale.delete(d.textAndOccurrenceHash);
 		}
 	}
 
@@ -69,6 +69,7 @@ export async function syncSegments(
 		await tx.segment.deleteMany({
 			where: {
 				contentId,
+				segmentTypeId: typeId,
 				textAndOccurrenceHash: { in: [...stale] },
 			},
 		});

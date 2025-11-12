@@ -66,9 +66,14 @@ export function renderInlineElementToString(element: Element): string {
 			return inner ? `${leading}_${inner}_${trailing}` : content;
 		}
 		if (parts.includes("paranum")) {
-			// Make paranum unambiguous for downstream parsing (e.g., §123.)
-			return `${leading}§${inner}${trailing}`;
+			// Markdown の番号付きリスト判定を避けるため、直後のドットをエスケープ
+			return `${content}\\`;
 		}
+	}
+	if (tag === "note") {
+		// 異読をインライン表示: [内容] 形式（CSTと同じ形式）
+		const noteContent = renderInlineChildren(element).trim();
+		return `[${noteContent}]`;
 	}
 	const attrsString = stringifyAttributes(Array.from(element.attributes ?? []));
 	if (!element.firstChild) {

@@ -1,4 +1,13 @@
+import type { Prisma, PrismaClient } from "@prisma/client";
+import { generateHashForText } from "@/app/[locale]/_lib/generate-hash-for-text";
+import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
+import { syncSegments } from "@/lib/sync-segments";
+
 import type { DirectoryNode } from "./types";
+
+type TransactionClient = Parameters<
+	Parameters<PrismaClient["$transaction"]>[0]
+>[0];
 
 export function beautifySlug(slug: string): string {
 	return slug
@@ -53,4 +62,112 @@ export function getSortedChildren(node: DirectoryNode): DirectoryNode[] {
 		if (a.order !== b.order) return a.order - b.order;
 		return a.title.localeCompare(b.title);
 	});
+}
+
+/**
+ * 入力文字列をスラグに変換する
+ * 同じ入力に対して常に同じスラグを生成する（一意性を保証）
+ */
+export function slugify(input: string): string {
+	const normalized = input.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+	const ascii = normalized
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-+|-+$/g, "");
+	return ascii || "untitled";
+}
+
+interface UpsertPageParams {
+	tx: TransactionClient;
+	slug: string;
+	mdastJson: Prisma.InputJsonValue;
+	parentId: number | null;
+	order: number;
+	userId: string;
+}
+
+/**
+ * ページを upsert し、contentId を返す
+ */
+export async function upsertPage({
+	tx,
+	slug,
+	mdastJson,
+	parentId,
+	order,
+	userId,
+}: UpsertPageParams): Promise<{ id: number; contentId: number }> {
+	const existingPage = await tx.page.findUnique({
+		where: { slug },
+	});
+
+	const contentId =
+		existingPage?.id ??
+		(await tx.content.create({ data: { kind: "PAGE" } })).id;
+
+	const page = await tx.page.upsert({
+		where: { slug },
+		update: {
+			mdastJson,
+			order,
+		},
+		create: {
+			id: contentId,
+			slug,
+			parentId,
+			order,
+			userId,
+			mdastJson,
+			status: "PUBLIC",
+			sourceLocale: "pi",
+		},
+	});
+
+	return { id: page.id, contentId };
+}
+
+/**
+ * セグメントが空の場合はタイトルをセグメントとして追加して同期する
+ */
+export async function syncSegmentsWithFallback(
+	tx: TransactionClient,
+	pageId: number,
+	segments: SegmentDraft[],
+	fallbackTitle: string,
+	segmentTypeId: number,
+): Promise<void> {
+	const segmentsToSync =
+		segments.length === 0
+			? [
+					{
+						number: 0,
+						text: fallbackTitle,
+						textAndOccurrenceHash: generateHashForText(fallbackTitle, 0),
+					},
+				]
+			: segments;
+
+	await syncSegments(tx, pageId, segmentsToSync, segmentTypeId);
+}
+
+/**
+ * ページを upsert し、セグメントを同期する共通処理
+ */
+export async function upsertPageWithSegments(
+	tx: TransactionClient,
+	params: Omit<UpsertPageParams, "tx"> & {
+		segments: SegmentDraft[];
+		fallbackTitle: string;
+		segmentTypeId: number;
+	},
+): Promise<number> {
+	const page = await upsertPage({ ...params, tx });
+	await syncSegmentsWithFallback(
+		tx,
+		page.id,
+		params.segments,
+		params.fallbackTitle,
+		params.segmentTypeId,
+	);
+	return page.id;
 }

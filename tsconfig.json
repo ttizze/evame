@@ -34,5 +34,13 @@
 		"src/app/[locale]/(common-layout)/auth/login/_components/google-form.tsx",
 		".next/dev/types/**/*.ts"
 	],
-	"exclude": ["node_modules", ".next/types/validator.ts", "dist", "build"]
+	"exclude": [
+		"node_modules",
+		".next/types/validator.ts",
+		"dist",
+		"build",
+		"scripts/convert-romn-to-md.ts",
+		"scripts/convert-romn-to-md/**",
+		"scripts/convert-romn-to-md-old/**"
+	]
 }

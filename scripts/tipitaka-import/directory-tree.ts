@@ -40,7 +40,7 @@ export function buildDirectoryTree(
 ): DirectoryNode {
 	const root = createDirectoryRoot(rootTitle);
 	for (const entry of entries) {
-		ensurePath(root, entry.resolvedDirSegments);
+		ensurePath(root, entry.dirSegments);
 	}
 	return root;
 }

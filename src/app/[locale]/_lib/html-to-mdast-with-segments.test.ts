@@ -148,7 +148,9 @@ describe("htmlToMdastWithSegments", () => {
 		expect(result.segments[0].text).toBe("Repeated text");
 		expect(result.segments[1].text).toBe("Repeated text");
 		// Despite having the same text, hashes should be different
-		expect(result.segments[0].hash).not.toBe(result.segments[1].hash);
+		expect(result.segments[0].textAndOccurrenceHash).not.toBe(
+			result.segments[1].textAndOccurrenceHash,
+		);
 	});
 
 	it("should remove position data from the returned MDAST", async () => {

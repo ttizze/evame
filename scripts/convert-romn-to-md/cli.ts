@@ -2,9 +2,9 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import { DOMParser } from "@xmldom/xmldom";
-import { getChildElements } from "../convert-romn-to-md-old/tei";
 import { getFileData } from "./books";
 import { writeBookMarkdown } from "./render";
+import { getChildElements } from "./tei";
 import type { BookDoc } from "./types";
 
 const fsPromises = fs.promises;

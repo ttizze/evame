@@ -3,9 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mdast-with-segments";
-import { syncSegments } from "@/lib/sync-segments";
-
 import { ROOT_SLUG, ROOT_TITLE } from "./constants";
+import { syncSegmentsWithFallback, upsertPage } from "./helpers";
 
 type PageWithContent = Prisma.PageGetPayload<{ include: { content: true } }>;
 
@@ -23,33 +22,32 @@ export async function ensureRootPage(
 		markdown: markdownContent,
 	});
 
-	return await prisma.$transaction(async (tx) => {
-		const existingPage = await tx.page.findUnique({
-			where: { slug: ROOT_SLUG },
-		});
-
-		const contentId =
-			existingPage?.id ??
-			(await tx.content.create({ data: { kind: "PAGE" } })).id;
-
-		const page = await tx.page.upsert({
-			where: { slug: ROOT_SLUG },
-			update: { mdastJson: parsed.mdastJson },
-			create: {
-				id: contentId,
+	return await prisma.$transaction(
+		async (tx) => {
+			const page = await upsertPage({
+				tx,
 				slug: ROOT_SLUG,
+				mdastJson: parsed.mdastJson,
 				parentId: null,
 				order: 0,
 				userId,
-				mdastJson: parsed.mdastJson,
-				status: "PUBLIC",
-				sourceLocale: "pi",
-			},
-			include: { content: true },
-		});
+			});
 
-		await syncSegments(tx, page.id, parsed.segments, segmentTypeId);
+			await syncSegmentsWithFallback(
+				tx,
+				page.id,
+				parsed.segments,
+				ROOT_TITLE,
+				segmentTypeId,
+			);
 
-		return page;
-	});
+			return await tx.page.findUniqueOrThrow({
+				where: { id: page.id },
+				include: { content: true },
+			});
+		},
+		{
+			timeout: 60000, // 60 seconds for batch operations
+		},
+	);
 }

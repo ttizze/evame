@@ -7,10 +7,13 @@ export function WrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 	segments: SegmentForUI[],
 	interactive: boolean = true,
 ) {
+	const segmentsMap = new Map<number, SegmentForUI>(
+		segments.map((s) => [s.number, s]),
+	);
+
 	return (p: JSX.IntrinsicElements[Tag] & { "data-number-id"?: number }) => {
 		const id = p["data-number-id"];
-		const segment =
-			id !== undefined ? segments.find((b) => b.number === +id) : undefined;
+		const segment = id !== undefined ? segmentsMap.get(+id) : undefined;
 
 		/* セグメント対象でなければそのまま DOM 要素を返す */
 		if (!segment) return createElement(Tag, p, p.children);

@@ -10,6 +10,15 @@ import type { DirectoryNode, ImportEntry } from "./types";
 
 type PageWithContent = Prisma.PageGetPayload<{ include: { content: true } }>;
 
+/**
+ * fileKeyから順序を抽出する（例: "s0101m.mul.xml" → 101）
+ */
+function extractOrderFromFileKey(fileKey: string): number {
+	const match = fileKey.match(/\d+/);
+	if (!match) return Number.MAX_SAFE_INTEGER;
+	return Number.parseInt(match[0], 10);
+}
+
 // Step 4a: ムーラ → アッタカタ → ティカ → その他の順に並べ、親データを先に作成できるようにする
 function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 	const levelOrder: Record<ImportEntry["level"], number> = {
@@ -22,7 +31,9 @@ function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 	return [...entries].sort((a, b) => {
 		const levelDiff = levelOrder[a.level] - levelOrder[b.level];
 		if (levelDiff !== 0) return levelDiff;
-		if (a.orderHint !== b.orderHint) return a.orderHint - b.orderHint;
+		const orderA = extractOrderFromFileKey(a.fileKey);
+		const orderB = extractOrderFromFileKey(b.fileKey);
+		if (orderA !== orderB) return orderA - orderB;
 		return a.fileKey.localeCompare(b.fileKey);
 	});
 }
@@ -86,19 +97,25 @@ export async function runTipitakaImport(): Promise<void> {
 		directoryRoot.pageId = rootPage.id;
 
 		// Step 3a: 幅優先でカテゴリ階層（中間ページ）を作成していく
-		const queue: Array<{ node: DirectoryNode; parentId: number }> = [];
+		const queue: Array<{
+			node: DirectoryNode;
+			parentId: number;
+			path: string;
+		}> = [];
 		for (const child of getSortedChildren(directoryRoot)) {
-			queue.push({ node: child, parentId: rootPage.id });
+			const path = child.segment;
+			queue.push({ node: child, parentId: rootPage.id, path });
 		}
 
 		const nextDirectoryOrder = getOrderGenerator();
 
 		for (const item of queue) {
-			const { node, parentId } = item;
+			const { node, parentId, path } = item;
 			const order = nextDirectoryOrder(parentId);
 			await createDirectoryPage({
 				prisma,
 				node,
+				directoryPath: path,
 				parentId,
 				userId: user.id,
 				order,
@@ -106,7 +123,8 @@ export async function runTipitakaImport(): Promise<void> {
 			});
 			for (const child of getSortedChildren(node)) {
 				if (node.pageId) {
-					queue.push({ node: child, parentId: node.pageId });
+					const childPath = path ? `${path}/${child.segment}` : child.segment;
+					queue.push({ node: child, parentId: node.pageId, path: childPath });
 				}
 			}
 		}
@@ -126,47 +144,85 @@ export async function runTipitakaImport(): Promise<void> {
 			throw new Error('Segment type "OTHER" not found');
 		}
 
+		// エントリをレベルごとにグループ化
+		const entriesByLevel = new Map<ImportEntry["level"], ImportEntry[]>();
 		for (const entry of sortedEntries) {
-			const parentPageId = resolveCategoryPageId(
-				entry.resolvedDirSegments,
-				categoryLookup,
-			);
-			const order = orderForParent(parentPageId);
-			const levelKey = entry.level?.toUpperCase?.() ?? "";
-			const segmentTypeId =
-				segmentTypeIdMap.get(levelKey as SegmentType["key"]) ?? otherTypeId;
+			const level = entry.level;
+			const levelEntries = entriesByLevel.get(level);
+			if (levelEntries) {
+				levelEntries.push(entry);
+			} else {
+				entriesByLevel.set(level, [entry]);
+			}
+		}
 
-			const pageId = await createContentPage({
-				prisma,
-				entry,
-				parentId: parentPageId,
-				userId: user.id,
-				order,
-				segmentTypeId,
-			});
+		// レベルごとに順次処理（依存関係を保証）、レベル内では並列処理
+		const levelOrder: ImportEntry["level"][] = [
+			"Mula",
+			"Atthakatha",
+			"Tika",
+			"Other",
+		];
+		const CONCURRENCY = 10; // 同時処理数
 
-			const paragraphNumberToSegmentIds =
-				await buildParagraphNumberToSegmentIdsMap(prisma, pageId);
-			paragraphNumberToSegmentIdsByFile.set(
-				entry.fileKey.toLowerCase(),
-				paragraphNumberToSegmentIds,
-			);
+		for (const level of levelOrder) {
+			const levelEntries = entriesByLevel.get(level);
+			if (!levelEntries || levelEntries.length === 0) continue;
 
-			if (
-				(levelKey === "ATTHAKATHA" || levelKey === "TIKA") &&
-				entry.mulaFileKey
-			) {
-				const mulaParagraphNumberToSegmentIds =
-					paragraphNumberToSegmentIdsByFile.get(
-						entry.mulaFileKey.toLowerCase(),
-					);
-				if (mulaParagraphNumberToSegmentIds) {
-					await linkSegmentsByParagraphNumber(
-						prisma,
-						paragraphNumberToSegmentIds,
-						mulaParagraphNumberToSegmentIds,
-					);
-				}
+			console.log(`Processing ${level} level: ${levelEntries.length} entries`);
+
+			// バッチで並列処理
+			for (let i = 0; i < levelEntries.length; i += CONCURRENCY) {
+				const batch = levelEntries.slice(i, i + CONCURRENCY);
+				await Promise.all(
+					batch.map(async (entry) => {
+						const parentPageId = resolveCategoryPageId(
+							entry.dirSegments,
+							categoryLookup,
+						);
+						const order = orderForParent(parentPageId);
+						const levelKey = entry.level?.toUpperCase?.() ?? "";
+						const segmentTypeId =
+							segmentTypeIdMap.get(levelKey as SegmentType["key"]) ??
+							otherTypeId;
+
+						const pageId = await createContentPage({
+							prisma,
+							entry,
+							parentId: parentPageId,
+							userId: user.id,
+							order,
+							segmentTypeId,
+						});
+
+						const paragraphNumberToSegmentIds =
+							await buildParagraphNumberToSegmentIdsMap(prisma, pageId);
+						paragraphNumberToSegmentIdsByFile.set(
+							entry.fileKey.toLowerCase(),
+							paragraphNumberToSegmentIds,
+						);
+
+						if (
+							(levelKey === "ATTHAKATHA" || levelKey === "TIKA") &&
+							entry.mulaFileKey
+						) {
+							const mulaParagraphNumberToSegmentIds =
+								paragraphNumberToSegmentIdsByFile.get(
+									entry.mulaFileKey.toLowerCase(),
+								);
+							if (mulaParagraphNumberToSegmentIds) {
+								await linkSegmentsByParagraphNumber(
+									prisma,
+									paragraphNumberToSegmentIds,
+									mulaParagraphNumberToSegmentIds,
+								);
+							}
+						}
+					}),
+				);
+				console.log(
+					`  Processed ${Math.min(i + CONCURRENCY, levelEntries.length)}/${levelEntries.length} entries`,
+				);
 			}
 		}
 	} finally {
@@ -174,10 +230,15 @@ export async function runTipitakaImport(): Promise<void> {
 	}
 }
 
-const PARAGRAPH_NUMBER_REGEX = /§\s*(\d+)/g;
+/**
+ * 段落番号のパターン: 数字にドット（例: "123." または "123\."）
+ * segment.textからは§記号が削除されているため、数字+ドットのパターンで識別する
+ * エスケープされたドット（\.）にも対応
+ */
+const PARAGRAPH_NUMBER_REGEX = /(\d+)(?:\.|\\.)/g;
 
 /**
- * ページ内の各セグメントから段落番号（§ N）を抽出し、
+ * ページ内の各セグメントから段落番号（数字.）を抽出し、
  * 段落番号 → セグメントIDの配列のマッピングを構築する
  */
 async function buildParagraphNumberToSegmentIdsMap(

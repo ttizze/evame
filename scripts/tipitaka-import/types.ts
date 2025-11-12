@@ -8,11 +8,7 @@ export interface DirectoryNode {
 
 export interface ImportEntry {
 	fileKey: string;
-	filePath: string;
 	level: string;
-	resolvedDirSegments: string[];
 	dirSegments: string[];
-	orderHint: number;
 	mulaFileKey: string | null;
-	atthakathaIndex?: number;
 }

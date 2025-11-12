@@ -1,11 +1,11 @@
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
   features = ["driverAdapters"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
@@ -112,6 +112,7 @@ model TranslationJob {
   updatedAt DateTime          @updatedAt
 
   @@index([userId])
+  @@map("translation_jobs")
 }
 
 enum PageStatus {
@@ -158,6 +159,8 @@ model PageView {
   count  Int @default(0)
 
   page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@map("page_views")
 }
 
 enum TranslationProofStatus {
@@ -350,20 +353,22 @@ model Content {
   // 子セグメント（1:多）
   segments Segment[]
 
-  importFile ImportFile? @relation(fields: [importFileId], references: [id])
-  importFileId Int?      @map("import_file_id")
+  importFile   ImportFile? @relation(fields: [importFileId], references: [id])
+  importFileId Int?        @map("import_file_id")
 
   @@index([kind])
   @@map("contents")
 }
 
 model SegmentType {
-  id        Int       @id @default(autoincrement())
-  key       String    @unique         // "PRIMARY" | "COMMENTARY" | "GLOSS" など
-  label     String                    // 表示名
-  weight    Int       @default(0)     // 一括表示時の既定順（任意）
+  id     Int    @id @default(autoincrement())
+  key    String @unique // "PRIMARY" | "COMMENTARY" | "GLOSS" など
+  label  String // 表示名
+  weight Int    @default(0) // 一括表示時の既定順（任意）
 
-  segments  Segment[]
+  segments Segment[]
+
+  @@map("segment_types")
 }
 
 model Segment {
@@ -397,39 +402,44 @@ model SegmentLink {
   id Int @id @default(autoincrement())
 
   // from = 注（COMMENTARY/SUBCOMMENTARY）
-  fromSegmentId Int @map("from_segment_id")
-  fromSegment   Segment @relation("linksFrom", fields: [fromSegmentId], references: [id])
+  fromSegmentId Int     @map("from_segment_id")
+  fromSegment   Segment @relation("linksFrom", fields: [fromSegmentId], references: [id], onDelete: Cascade)
 
   // to = 本文（PRIMARY）
-  toSegmentId Int @map("to_segment_id")
-  toSegment   Segment @relation("linksTo", fields: [toSegmentId], references: [id])
-
+  toSegmentId Int     @map("to_segment_id")
+  toSegment   Segment @relation("linksTo", fields: [toSegmentId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
   @@unique([fromSegmentId, toSegmentId])
   @@index([fromSegmentId])
   @@index([toSegmentId])
+  @@map("segment_links")
 }
+
 model PageBreak {
-  id         Int     @id @default(autoincrement())
-  segmentId  Int @map("segment_id")
-  segment    Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  id        Int     @id @default(autoincrement())
+  segmentId Int     @map("segment_id")
+  segment   Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
 
-  edition    String   // "PTS" | "VRI" | "Thai" | "Myanmar" | "OUP" …自由
-  pageCode   String   @map("page_code") // XMLの n="vol.page" をそのまま（例 "0.0001"）
+  edition  String // "PTS" | "VRI" | "Thai" | "Myanmar" | "OUP" …自由
+  pageCode String @map("page_code") // XMLの n="vol.page" をそのまま（例 "0.0001"）
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
+  @@unique([segmentId, edition, pageCode]) // 同じ場所に同じ版ページを二重登録しない
   @@index([edition, pageCode])
   @@index([segmentId, edition])
-  @@unique([segmentId, edition, pageCode]) // 同じ場所に同じ版ページを二重登録しない
+  @@map("page_breaks")
 }
 
 model Edition {
-  code    String  @id           // "PTS" など（PageBreak.edition と対応）
-  label   String
+  code  String @id // "PTS" など（PageBreak.edition と対応）
+  label String
+
+  @@map("editions")
 }
+
 model SegmentTranslation {
   id        Int     @id @default(autoincrement())
   segmentId Int     @map("segment_id")
@@ -470,19 +480,23 @@ model TranslationVote {
 model ImportRun {
   id         Int          @id @default(autoincrement())
   startedAt  DateTime     @default(now()) @map("started_at")
-  finishedAt DateTime? @map("finished_at")
+  finishedAt DateTime?    @map("finished_at")
   status     String       @default("RUNNING")
   files      ImportFile[]
+
+  @@map("import_runs")
 }
 
 model ImportFile {
-  id          Int          @id @default(autoincrement())
-  importRunId Int @map("import_run_id")
-  importRun   ImportRun    @relation(fields: [importRunId], references: [id], onDelete: Cascade)
+  id          Int       @id @default(autoincrement())
+  importRunId Int       @map("import_run_id")
+  importRun   ImportRun @relation(fields: [importRunId], references: [id], onDelete: Cascade)
   path        String
   checksum    String
-  status      String       @default("PENDING")
-  message     String       @default("")
+  status      String    @default("PENDING")
+  message     String    @default("")
   contents    Content[]
-  createdAt   DateTime     @default(now())
+  createdAt   DateTime  @default(now())
+
+  @@map("import_files")
 }

@@ -1,3 +1,4 @@
+import type { Segment } from "@prisma/client";
 import type {
 	Blockquote,
 	Heading,
@@ -15,29 +16,65 @@ import type { Data, VFile } from "vfile";
 import { generateHashForText } from "./generate-hash-for-text";
 /* ---------- 共通型 ---------- */
 
-export interface SegmentDraft {
-	hash: string;
-	text: string;
-	number: number;
-}
+export type SegmentDraft = Omit<
+	Segment,
+	"id" | "contentId" | "createdAt" | "segmentTypeId"
+>;
 
 /* mdast で「1 ブロック」とみなすノード型 */
 type BlockNode = Paragraph | Heading | ListItem | Blockquote | TableCell;
 
-/* visit のテスト引数で使うリストと Set（ネスト判定用） */
-const BLOCK_TYPES = [
+const BLOCK_TYPES: ReadonlyArray<BlockNode["type"]> = [
 	"paragraph",
 	"heading",
 	"listItem",
 	"blockquote",
 	"tableCell",
-] as const satisfies ReadonlyArray<BlockNode["type"]>;
-const BLOCK_SET = new Set<string>(BLOCK_TYPES);
+] as const;
 
 const canonicalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 
 interface SegmentData extends Data {
 	segments: SegmentDraft[];
+}
+
+/* ---------- ヘルパー関数 ---------- */
+
+function isBlockNode(node: Node): node is BlockNode {
+	return BLOCK_TYPES.includes(node.type as BlockNode["type"]);
+}
+
+function hasNestedBlock(node: BlockNode): boolean {
+	if (!("children" in node)) return false;
+	return (node.children as RootContent[]).some((child) => isBlockNode(child));
+}
+
+function extractText(node: BlockNode): string {
+	return mdastToString(node, { includeImageAlt: false }).trim();
+}
+
+function setNodeDataNumber(node: BlockNode, number: number): void {
+	if (node.data === undefined) {
+		node.data = {};
+	}
+	const data = node.data as Data & {
+		hProperties?: Record<string, unknown>;
+	};
+	if (data.hProperties === undefined) {
+		data.hProperties = {};
+	}
+	(data.hProperties as Record<string, string>)["data-number-id"] =
+		number.toString();
+}
+
+function generateHashAndTrackOccurrence(
+	text: string,
+	occurrenceMap: Map<string, number>,
+): string {
+	const canonicalizedText = canonicalize(text);
+	const occurrence = (occurrenceMap.get(canonicalizedText) ?? 0) + 1;
+	occurrenceMap.set(canonicalizedText, occurrence);
+	return generateHashForText(text, occurrence);
 }
 
 /* ---------- プラグイン本体 ---------- */
@@ -50,63 +87,35 @@ export const remarkHashAndSegments =
 		const f = file as typeof file & { data: SegmentData };
 		f.data.segments ??= [];
 
-		const occ = new Map<string, number>();
+		const occurrenceMap = new Map<string, number>();
 		let number = 1; // 0 はタイトル用、本文は 1 から
 
 		/* ── 0. タイトル ─────────────────── */
 		if (header?.trim()) {
-			const hash = generateHashForText(header, 0);
-			f.data.segments.push({ hash, text: header, number: 0 });
-			occ.set(canonicalize(header), 0);
+			const textAndOccurrenceHash = generateHashForText(header, 0);
+			f.data.segments.push({ textAndOccurrenceHash, text: header, number: 0 });
+			occurrenceMap.set(canonicalize(header), 0);
 		}
 
 		/* ── 1. 本文ブロック ─────────────── */
-		visit(
-			tree,
-			(node: Node): boolean => {
-				const nodeType = node.type;
-				return BLOCK_TYPES.includes(nodeType as BlockNode["type"]);
-			},
-			(node) => {
-				const typedNode = node as BlockNode;
+		visit(tree, isBlockNode, (node) => {
+			/* ネストしたブロック要素は除外 */
+			if (hasNestedBlock(node)) return;
 
-				/* ネストしたブロック要素は除外 */
-				const hasNestedBlock =
-					"children" in typedNode &&
-					(typedNode.children as RootContent[]).some((c) =>
-						BLOCK_SET.has(c.type),
-					);
-				if (hasNestedBlock) return;
+			/* テキスト抽出 */
+			const text = extractText(node);
+			if (!text) return;
 
-				/* テキスト抽出（画像のalt属性は除外） */
-				const merged = mdastToString(typedNode, {
-					includeImageAlt: false,
-				}).trim();
-				if (!merged) return;
+			/* ハッシュ生成と出現回数を追跡 */
+			const textAndOccurrenceHash = generateHashAndTrackOccurrence(
+				text,
+				occurrenceMap,
+			);
 
-				/* ハッシュ生成 */
-				const canon = canonicalize(merged);
-				const n = (occ.get(canon) ?? 0) + 1;
-				occ.set(canon, n);
+			/* HTML 変換時用の data-number-id を付与 */
+			setNodeDataNumber(node, number);
 
-				const hash = generateHashForText(merged, n);
-
-				/* HTML 変換時用の data-number-id を付与 */
-				if (typedNode.data === undefined) {
-					typedNode.data = {};
-				}
-				const data = typedNode.data as Data & {
-					hProperties?: Record<string, unknown>;
-				};
-
-				if (data.hProperties === undefined) {
-					data.hProperties = {};
-				}
-				(data.hProperties as Record<string, string>)["data-number-id"] =
-					number.toString();
-
-				f.data.segments.push({ hash, text: merged, number });
-				number += 1; // ← 純連番インクリメント
-			},
-		);
+			f.data.segments.push({ textAndOccurrenceHash, text, number });
+			number += 1;
+		});
 	};

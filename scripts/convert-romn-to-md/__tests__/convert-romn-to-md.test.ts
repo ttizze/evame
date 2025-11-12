@@ -5,7 +5,7 @@ import * as path from "node:path";
 import { DOMParser } from "@xmldom/xmldom";
 import { afterEach, describe, expect, test } from "vitest";
 import { getFileData } from "../books";
-import { convertXmlFileToMarkdownNoSplit } from "../cli";
+import { convertXmlFileToMarkdown } from "../cli";
 import { writeBookMarkdown } from "../render";
 import { ELEMENT_NODE, getChildElements, TEXT_NODE } from "../tei";
 import type { BookDoc } from "../types";
@@ -105,7 +105,7 @@ describe("writeBookMarkdown", () => {
 				<div>
 					<head rend="chapter">第一章</head>
 				<p rend="gatha1">詩句ラインA</p>
-				<p rend="bodytext" class="note" n="12">導入文 <hi rend="bold">強調</hi> と <hi rend="italics">斜体</hi> を含む。</p>
+				<p rend="bodytext" n="12">導入文 <hi rend="bold">強調</hi> と <hi rend="italics">斜体</hi> を含む。</p>
 				<p>本文段落。</p>
 				</div>
 			</body>
@@ -135,10 +135,8 @@ describe("writeBookMarkdown", () => {
 		expect(content).toMatch(/^#\sニカーヤ見出し$/m);
 		expect(content).toMatch(/^##\s書籍の説明$/m);
 		expect(content).toMatch(/^###\s第一章$/m);
-		expect(content).toMatch(/```\n詩句ラインA\n```/m);
-		expect(content).toContain(
-			'<p class="note">導入文 **強調** と _斜体_ を含む。</p>',
-		);
+		expect(content).toMatch(/^\*詩句ラインA\*$/m);
+		expect(content).toContain("導入文 **強調** と _斜体_ を含む。");
 		expect(content.endsWith("本文段落。")).toBe(true);
 	});
 
@@ -153,8 +151,8 @@ describe("writeBookMarkdown", () => {
 				<head rend="title">タイトル</head>
 				<p rend="subhead">サブ見出し</p>
 				<p rend="subsubhead">小見出し</p>
-				<p rend="centre" type="intro">中央寄せの行</p>
-				<p rend="bodytext" class="note" n="12"><hi rend="paranum">123</hi><hi rend="dot">.</hi> 本文 <hi rend="bold">太字</hi> <hi rend="italics">斜体</hi></p>
+				<p rend="centre">中央寄せの行</p>
+				<p rend="bodytext" n="12"><hi rend="paranum">123</hi><hi rend="dot">.</hi> 本文 <hi rend="bold">太字</hi> <hi rend="italics">斜体</hi></p>
 				<p rend="indent">インデント <hi rend="hit" id="hit1">ヒット</hi></p>
 				<p rend="unindented">インデントなし</p>
 				<p rend="hangnum" n="33">ぶら下げ番号</p>
@@ -194,18 +192,18 @@ describe("writeBookMarkdown", () => {
 		expect(content).toMatch(/^####\sサブ見出し$/m);
 		expect(content).toMatch(/^####\s小見出し$/m);
 
-		expect(content).toContain('<p type="intro">中央寄せの行</p>');
-		expect(content).toContain('<p class="note">§123. 本文 **太字** _斜体_</p>');
+		expect(content).toContain("::centre\n中央寄せの行\n::");
+		expect(content).toContain("123. 本文 **太字** _斜体_");
 		expect(content).toContain(
-			'<p rend="indent">インデント <hi rend="hit" id="hit1">ヒット</hi></p>',
+			'::indent\nインデント <hi rend="hit" id="hit1">ヒット</hi>\n::',
 		);
-		expect(content).toContain('<p rend="unindented">インデントなし</p>');
-		expect(content).toContain('<p rend="hangnum">ぶら下げ番号</p>');
+		expect(content).toContain("::unindented\nインデントなし\n::");
+		expect(content).toContain("::hangnum\nぶら下げ番号\n::");
 
-		expect(content).toMatch(/```\n詩句1\n```/);
-		expect(content).toMatch(/```\n詩句2\n```/);
-		expect(content).toMatch(/```\n詩句3\n```/);
-		expect(content).toMatch(/```\n詩句4\n```/);
+		expect(content).toMatch(/^\*詩句1\*$/m);
+		expect(content).toMatch(/^\*詩句2\*$/m);
+		expect(content).toMatch(/^\*詩句3\*$/m);
+		expect(content).toMatch(/^\*詩句4\*$/m);
 		expect(content).toContain('<pb ed="vri" n="123" />');
 	});
 });
@@ -222,7 +220,7 @@ describe("convertXmlFileToMarkdownNoSplit", () => {
 		expect(fs.existsSync(sampleFile)).toBe(true);
 		const outputDir = createTempDir("nosplit-convert-");
 
-		await convertXmlFileToMarkdownNoSplit(sampleFile, outputDir);
+		await convertXmlFileToMarkdown(sampleFile, outputDir);
 
 		const classification = getFileData(path.basename(sampleFile).toLowerCase());
 		const outputFileName = `${path.basename(
@@ -250,7 +248,7 @@ describe("convertXmlFileToMarkdownNoSplit", () => {
 		expect(fs.existsSync(sampleFile)).toBe(true);
 		const outputDir = createTempDir("nosplit-text-");
 
-		await convertXmlFileToMarkdownNoSplit(sampleFile, outputDir);
+		await convertXmlFileToMarkdown(sampleFile, outputDir);
 
 		const classification = getFileData(path.basename(sampleFile).toLowerCase());
 		const outputFileName = `${path.basename(
@@ -310,7 +308,7 @@ describe("convertXmlFileToMarkdownNoSplit", () => {
 			const filePath = path.join(romnDir, name);
 			// 一括変換と同じ条件で順次変換し、負荷を抑える。
 			// eslint-disable-next-line no-await-in-loop
-			await convertXmlFileToMarkdownNoSplit(filePath, outputDir);
+			await convertXmlFileToMarkdown(filePath, outputDir);
 		}
 
 		const normalize = (text: string): string =>
@@ -379,8 +377,8 @@ describe("convertXmlFileToMarkdownNoSplit", () => {
 		fs.writeFileSync(filePath, xml, "utf16le");
 		const outputDir = createTempDir("nosplit-multibody-out-");
 
-		await expect(
-			convertXmlFileToMarkdownNoSplit(filePath, outputDir),
-		).rejects.toThrow(/Multiple <body>/);
+		await expect(convertXmlFileToMarkdown(filePath, outputDir)).rejects.toThrow(
+			/Multiple <body>/,
+		);
 	});
 });
