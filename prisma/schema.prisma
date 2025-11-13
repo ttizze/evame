@@ -6,7 +6,6 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model User {
@@ -388,7 +387,7 @@ model Segment {
   linksFrom SegmentLink[] @relation("linksFrom") // 通常: 注側から張る
   linksTo   SegmentLink[] @relation("linksTo") // 通常: 本文側が受ける
 
-  pageBreaks PageBreak[]
+  metadata SegmentMetadata[]
 
   // 1 Owner 内での並びをユニークに
   @@unique([contentId, number])
@@ -417,20 +416,35 @@ model SegmentLink {
   @@map("segment_links")
 }
 
-model PageBreak {
-  id        Int     @id @default(autoincrement())
-  segmentId Int     @map("segment_id")
-  segment   Segment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+model SegmentMetadataType {
+  id            Int              @id @default(autoincrement())
+  key           String           @unique
+  label         String
+  contextLabel  String?          @map("context_label")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  metadataItems SegmentMetadata[]
 
-  edition  String // "PTS" | "VRI" | "Thai" | "Myanmar" | "OUP" …自由
-  pageCode String @map("page_code") // XMLの n="vol.page" をそのまま（例 "0.0001"）
+  @@map("segment_metadata_types")
+}
 
-  createdAt DateTime @default(now())
+model SegmentMetadata {
+  id           Int                  @id @default(autoincrement())
+  segmentId    Int                  @map("segment_id")
+  metadataTypeId Int                @map("metadata_type_id")
+  segment      Segment              @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  metadataType SegmentMetadataType  @relation(fields: [metadataTypeId], references: [id], onDelete: Cascade)
 
-  @@unique([segmentId, edition, pageCode]) // 同じ場所に同じ版ページを二重登録しない
-  @@index([edition, pageCode])
-  @@index([segmentId, edition])
-  @@map("page_breaks")
+  contextKey String   @map("context_key") // 版コードや番号体系識別子
+  value      String
+  part       String?  @default("")
+  extra      Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([segmentId, metadataTypeId, contextKey, value, part])
+  @@index([metadataTypeId])
+  @@index([segmentId])
+  @@index([contextKey])
+  @@map("segment_metadata")
 }
 
 model Edition {
