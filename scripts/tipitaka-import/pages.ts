@@ -47,7 +47,7 @@ export async function createDirectoryPage({
 
 	const slug = slugify(`tipitaka-${directoryPath}`);
 
-	const pageId = await prisma.$transaction(
+	const pageResult = await prisma.$transaction(
 		async (tx) => {
 			return await upsertPageWithSegments(tx, {
 				slug,
@@ -65,7 +65,7 @@ export async function createDirectoryPage({
 		},
 	);
 
-	node.pageId = pageId;
+	node.pageId = pageResult;
 }
 
 function getFilePath(entry: ImportEntry): string {

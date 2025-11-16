@@ -71,9 +71,24 @@ export function renderInlineElementToString(element: Element): string {
 		}
 	}
 	if (tag === "note") {
-		// 異読をインライン表示: [内容] 形式（CSTと同じ形式）
+		// 異読をインライン表示: {note:内容} 形式（Markdownリンク記法と衝突しない）
 		const noteContent = renderInlineChildren(element).trim();
-		return `[${noteContent}]`;
+		return `{note:${noteContent}}`;
+	}
+	if (tag === "pb") {
+		// ページブレークを特殊記法で表示: {pb:ed:n} 形式（noteと区別し、Markdownリンク記法と衝突しない）
+		const ed = element.getAttribute("ed") ?? "";
+		const n = element.getAttribute("n") ?? "";
+		if (ed && n) {
+			return `{pb:${ed}:${n}}`;
+		}
+		if (ed) {
+			return `{pb:${ed}}`;
+		}
+		if (n) {
+			return `{pb:${n}}`;
+		}
+		return "{pb}";
 	}
 	const attrsString = stringifyAttributes(Array.from(element.attributes ?? []));
 	if (!element.firstChild) {

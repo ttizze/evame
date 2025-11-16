@@ -4,8 +4,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -350,7 +350,8 @@ model Content {
   pageComment PageComment?
 
   // 子セグメント（1:多）
-  segments Segment[]
+  segments        Segment[]
+  segmentLocators SegmentLocator[]
 
   importFile   ImportFile? @relation(fields: [importFileId], references: [id])
   importFileId Int?        @map("import_file_id")
@@ -384,10 +385,8 @@ model Segment {
   segmentType         SegmentType          @relation(fields: [segmentTypeId], references: [id])
   segmentTypeId       Int                  @map("segment_type_id")
 
-  linksFrom SegmentLink[] @relation("linksFrom") // 通常: 注側から張る
-  linksTo   SegmentLink[] @relation("linksTo") // 通常: 本文側が受ける
-
   metadata SegmentMetadata[]
+  locators SegmentLocatorLink[]
 
   // 1 Owner 内での並びをユニークに
   @@unique([contentId, number])
@@ -397,61 +396,62 @@ model Segment {
   @@map("segments")
 }
 
-model SegmentLink {
-  id Int @id @default(autoincrement())
+enum SegmentLocatorSystem {
+  VRI_PARAGRAPH
+}
 
-  // from = 注（COMMENTARY/SUBCOMMENTARY）
-  fromSegmentId Int     @map("from_segment_id")
-  fromSegment   Segment @relation("linksFrom", fields: [fromSegmentId], references: [id], onDelete: Cascade)
+model SegmentLocator {
+  id        Int                  @id @default(autoincrement())
+  contentId Int                  @map("content_id")
+  content   Content              @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  system    SegmentLocatorSystem
+  value     String
+  createdAt DateTime             @default(now()) @map("created_at")
+  updatedAt DateTime             @default(now()) @updatedAt @map("updated_at")
 
-  // to = 本文（PRIMARY）
-  toSegmentId Int     @map("to_segment_id")
-  toSegment   Segment @relation("linksTo", fields: [toSegmentId], references: [id], onDelete: Cascade)
+  segments SegmentLocatorLink[]
 
-  createdAt DateTime @default(now())
+  @@unique([contentId, system, value])
+  @@index([contentId])
+  @@map("segment_locators")
+}
 
-  @@unique([fromSegmentId, toSegmentId])
-  @@index([fromSegmentId])
-  @@index([toSegmentId])
-  @@map("segment_links")
+model SegmentLocatorLink {
+  segmentLocatorId Int      @map("segment_locator_id")
+  segmentId        Int      @map("segment_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  locator SegmentLocator @relation(fields: [segmentLocatorId], references: [id], onDelete: Cascade)
+  segment Segment        @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+
+  @@id([segmentLocatorId, segmentId])
+  @@index([segmentId])
+  @@map("segment_locator_links")
 }
 
 model SegmentMetadataType {
-  id            Int              @id @default(autoincrement())
-  key           String           @unique
+  id            Int               @id @default(autoincrement())
+  key           String            @unique
   label         String
-  contextLabel  String?          @map("context_label")
-  createdAt     DateTime         @default(now()) @map("created_at")
   metadataItems SegmentMetadata[]
 
   @@map("segment_metadata_types")
 }
 
 model SegmentMetadata {
-  id           Int                  @id @default(autoincrement())
-  segmentId    Int                  @map("segment_id")
-  metadataTypeId Int                @map("metadata_type_id")
-  segment      Segment              @relation(fields: [segmentId], references: [id], onDelete: Cascade)
-  metadataType SegmentMetadataType  @relation(fields: [metadataTypeId], references: [id], onDelete: Cascade)
+  id             Int                 @id @default(autoincrement())
+  segmentId      Int                 @map("segment_id")
+  metadataTypeId Int                 @map("metadata_type_id")
+  segment        Segment             @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  metadataType   SegmentMetadataType @relation(fields: [metadataTypeId], references: [id], onDelete: Cascade)
 
-  contextKey String   @map("context_key") // 版コードや番号体系識別子
-  value      String
-  part       String?  @default("")
-  extra      Json?
-  createdAt  DateTime @default(now()) @map("created_at")
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
 
-  @@unique([segmentId, metadataTypeId, contextKey, value, part])
+  @@unique([segmentId, metadataTypeId, value])
   @@index([metadataTypeId])
   @@index([segmentId])
-  @@index([contextKey])
   @@map("segment_metadata")
-}
-
-model Edition {
-  code  String @id // "PTS" など（PageBreak.edition と対応）
-  label String
-
-  @@map("editions")
 }
 
 model SegmentTranslation {

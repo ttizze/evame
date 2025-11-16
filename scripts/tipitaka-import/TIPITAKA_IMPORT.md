@@ -380,29 +380,44 @@ function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 							segmentTypeId,
 						});
 
+						// 段落番号でセグメントをグループ化
 						const paragraphNumberToSegmentIds =
-							await buildParagraphNumberToSegmentIdsMap(prisma, pageId);
-						paragraphNumberToSegmentIdsByFile.set(
-							entry.fileKey.toLowerCase(),
-							paragraphNumberToSegmentIds,
-						);
-
-						if (
-							(levelKey === "ATTHAKATHA" || levelKey === "TIKA") &&
-							entry.mulaFileKey
-						) {
-							const mulaParagraphNumberToSegmentIds =
-								paragraphNumberToSegmentIdsByFile.get(
-									entry.mulaFileKey.toLowerCase(),
-								);
-							if (mulaParagraphNumberToSegmentIds) {
-								await linkSegmentsByParagraphNumber(
-									prisma,
-									paragraphNumberToSegmentIds,
-									mulaParagraphNumberToSegmentIds,
-								);
-							}
+							await buildParagraphSegmentMap(pageId);
+						if (paragraphNumberToSegmentIds.size === 0) {
+							return;
 						}
+
+						// ムーラ（根本経典）の場合: ロケータを作成してセグメントをリンク
+						if (levelKey === "MULA") {
+							const locatorIdMap = await ensureSegmentLocators(
+								pageId,
+								paragraphNumberToSegmentIds,
+							);
+							// 注釈書で参照できるようにマッピングを保存
+							locatorIdByParagraphNumberByMulaFile.set(
+								entry.fileKey.toLowerCase(),
+								locatorIdMap,
+							);
+							return;
+						}
+
+						// 注釈書の場合: ムーラのロケータにリンク
+						if (!entry.mulaFileKey) {
+							return;
+						}
+
+						const locatorIdMap = locatorIdByParagraphNumberByMulaFile.get(
+							entry.mulaFileKey.toLowerCase(),
+						);
+						if (!locatorIdMap) {
+							return;
+						}
+
+						// 同じ段落番号のロケータにセグメントをリンク
+						await linkSegmentsToExistingLocators(
+							paragraphNumberToSegmentIds,
+							locatorIdMap,
+						);
 					}),
 				);
 				console.log(
@@ -427,87 +442,179 @@ function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 
 4. **各エントリの処理**:
    - **コンテンツページの作成**: Markdownファイルを読み込み、MDAST形式に変換してページを作成
-   - **段落番号マッピングの構築**: セグメント内の段落番号（例: `"123."`）を抽出し、段落番号→セグメントIDのマッピングを作成
-   - **リンクの作成**: Atthakatha/Tikaの場合、対応するMulaファイルの段落番号マッピングを取得し、同じ段落番号のセグメント間でリンクを作成
+   - **段落番号マッピングの構築**: セグメントのテキストから段落番号（例: `"123."`）を抽出し、段落番号→セグメントID配列のマッピングを作成
+   - **ロケータの作成とリンク**:
+     - **Mula（根本経典）の場合**: 段落番号ごとに`SegmentLocator`を作成し、その段落番号に属するすべてのセグメントをロケータにリンク
+     - **Atthakatha/Tika（注釈書）の場合**: 対応するMulaファイルで作成されたロケータを参照し、同じ段落番号を持つセグメントをそのロケータにリンク
 
-**段落番号の抽出** (`run.ts` 222-257行目):
-```222:257:scripts/tipitaka-import/run.ts
+**段落番号の抽出** (`segment-locators.ts` 20-86行目):
+```20:86:scripts/tipitaka-import/segment-locators.ts
 /**
  * 段落番号のパターン: 数字にドット（例: "123." または "123\."）
- * segment.textからは§記号が削除されているため、数字+ドットのパターンで識別する
  * エスケープされたドット（\.）にも対応
  */
 const PARAGRAPH_NUMBER_REGEX = /(\d+)(?:\.|\\.)/g;
 
 /**
- * ページ内の各セグメントから段落番号（数字.）を抽出し、
- * 段落番号 → セグメントIDの配列のマッピングを構築する
+ * セグメントのテキストから最初の段落番号を抽出する
  */
-async function buildParagraphNumberToSegmentIdsMap(
-	prisma: PrismaClient,
-	pageId: number,
-): Promise<Map<number, number[]>> {
+function extractFirstParagraphNumber(text: string): string | null {
+	PARAGRAPH_NUMBER_REGEX.lastIndex = 0;
+	const match = PARAGRAPH_NUMBER_REGEX.exec(text);
+	if (match?.[1]) {
+		return match[1];
+	}
+	return null;
+}
+
+/**
+ * コンテンツ内のセグメントを段落番号でグループ化する
+ *
+ * セグメントのテキストから段落番号を抽出し、
+ * その段落番号が出現してから次の段落番号が出現するまでの
+ * すべてのセグメントを同じグループに分類する。
+ *
+ * @param contentId コンテンツID
+ * @returns 段落番号 → セグメントID配列のマッピング
+ */
+export async function buildParagraphSegmentMap(
+	contentId: number,
+): Promise<ParagraphSegmentMap> {
 	const segments = await prisma.segment.findMany({
-		where: { contentId: pageId },
+		where: { contentId },
+		orderBy: { number: "asc" },
 		select: { id: true, text: true },
 	});
-	const paragraphNumberToSegmentIds = new Map<number, number[]>();
+
+	// セグメントID → 段落番号のマッピングを作成
+	const paragraphNumberBySegmentId = new Map<number, string>();
 	for (const segment of segments) {
-		PARAGRAPH_NUMBER_REGEX.lastIndex = 0;
-		let match: RegExpExecArray | null = PARAGRAPH_NUMBER_REGEX.exec(
-			segment.text,
-		);
-		while (match !== null) {
-			const paragraphNumber = Number.parseInt(match[1] ?? "", 10);
-			if (!Number.isFinite(paragraphNumber)) continue;
-			const segmentIds = paragraphNumberToSegmentIds.get(paragraphNumber) ?? [];
-			segmentIds.push(segment.id);
-			paragraphNumberToSegmentIds.set(paragraphNumber, segmentIds);
-			match = PARAGRAPH_NUMBER_REGEX.exec(segment.text);
+		const paragraphNumber = extractFirstParagraphNumber(segment.text);
+		if (paragraphNumber) {
+			paragraphNumberBySegmentId.set(segment.id, paragraphNumber);
 		}
 	}
+
+	const paragraphNumberToSegmentIds: ParagraphSegmentMap = new Map();
+	let currentParagraphNumber: string | null = null;
+
+	// セグメントを順番に処理し、段落番号でグループ化
+	// 段落番号が出現したらそれを現在の段落番号として保持し、
+	// 次の段落番号が出現するまで同じグループに分類する
+	for (const segment of segments) {
+		const paragraphNumber = paragraphNumberBySegmentId.get(segment.id) ?? null;
+		if (paragraphNumber) {
+			currentParagraphNumber = paragraphNumber;
+		}
+		if (!currentParagraphNumber) continue;
+
+		const segmentIds =
+			paragraphNumberToSegmentIds.get(currentParagraphNumber) ?? [];
+		segmentIds.push(segment.id);
+		paragraphNumberToSegmentIds.set(currentParagraphNumber, segmentIds);
+	}
+
 	return paragraphNumberToSegmentIds;
 }
 ```
 
-**リンクの作成** (`run.ts` 259-289行目):
-```259:289:scripts/tipitaka-import/run.ts
+**ロケータの作成とリンク** (`segment-locators.ts` 88-171行目):
+```88:171:scripts/tipitaka-import/segment-locators.ts
 /**
- * 注釈書（Atthakatha/Tika）と根本経典（Mula）の間で、
- * 同じ段落番号を持つセグメント同士をリンクする
+ * セグメントロケータを作成し、セグメントとリンクする
+ *
+ * ムーラ（根本経典）で使用する関数。
+ * 段落番号ごとにSegmentLocatorを作成し、
+ * その段落番号に属するすべてのセグメントをロケータにリンクする。
+ *
+ * @param contentId コンテンツID
+ * @param paragraphNumberToSegmentIds 段落番号 → セグメントID配列のマッピング
+ * @returns 段落番号 → ロケータIDのマッピング（注釈書で使用）
  */
-async function linkSegmentsByParagraphNumber(
-	prisma: PrismaClient,
-	commentaryParagraphMap: Map<number, number[]>,
-	rootTextParagraphMap: Map<number, number[]>,
-) {
-	const segmentLinks: { fromSegmentId: number; toSegmentId: number }[] = [];
-	for (const [
-		paragraphNumber,
-		commentarySegmentIds,
-	] of commentaryParagraphMap) {
-		const rootTextSegmentIds = rootTextParagraphMap.get(paragraphNumber);
-		if (!rootTextSegmentIds || rootTextSegmentIds.length === 0) continue;
-		for (const commentarySegmentId of commentarySegmentIds) {
-			for (const rootTextSegmentId of rootTextSegmentIds) {
-				segmentLinks.push({
-					fromSegmentId: commentarySegmentId,
-					toSegmentId: rootTextSegmentId,
-				});
-			}
-		}
+export async function ensureSegmentLocators(
+	contentId: number,
+	paragraphNumberToSegmentIds: ParagraphSegmentMap,
+): Promise<ParagraphLocatorMap> {
+	const paragraphNumbers = [...paragraphNumberToSegmentIds.keys()];
+	if (paragraphNumbers.length === 0) {
+		return new Map();
 	}
-	if (segmentLinks.length === 0) return;
-	await prisma.segmentLink.createMany({
-		data: segmentLinks,
+
+	// 段落番号ごとにSegmentLocatorを作成（既存の場合はスキップ）
+	await prisma.segmentLocator.createMany({
+		data: paragraphNumbers.map((value) => ({
+			contentId,
+			system: SegmentLocatorSystem.VRI_PARAGRAPH,
+			value,
+		})),
 		skipDuplicates: true,
 	});
+
+	// 作成したロケータを取得してIDをマッピング
+	const locators = await prisma.segmentLocator.findMany({
+		where: {
+			contentId,
+			system: SegmentLocatorSystem.VRI_PARAGRAPH,
+			value: { in: paragraphNumbers },
+		},
+		select: { id: true, value: true },
+	});
+
+	const locatorIdByParagraphNumber: ParagraphLocatorMap = new Map();
+	for (const locator of locators) {
+		locatorIdByParagraphNumber.set(locator.value, locator.id);
+	}
+
+	// セグメントをロケータにリンク
+	const linkData: Array<{ segmentLocatorId: number; segmentId: number }> = [];
+	for (const [paragraphNumber, segmentIds] of paragraphNumberToSegmentIds) {
+		const segmentLocatorId = locatorIdByParagraphNumber.get(paragraphNumber);
+		if (!segmentLocatorId) continue;
+		for (const segmentId of segmentIds) {
+			linkData.push({ segmentLocatorId, segmentId });
+		}
+	}
+
+	await createSegmentLocatorLinks(linkData);
+
+	return locatorIdByParagraphNumber;
+}
+
+/**
+ * 既存のロケータにセグメントをリンクする
+ *
+ * 注釈書（Atthakatha/Tika）で使用する関数。
+ * ムーラで作成したロケータを参照し、同じ段落番号を持つセグメントを
+ * そのロケータにリンクすることで、注釈と本文を結びつける。
+ *
+ * @param paragraphNumberToSegmentIds 段落番号 → セグメントID配列のマッピング
+ * @param locatorIdByParagraphNumber 段落番号 → ロケータIDのマッピング（ムーラから取得）
+ */
+export async function linkSegmentsToExistingLocators(
+	paragraphNumberToSegmentIds: ParagraphSegmentMap,
+	locatorIdByParagraphNumber: ParagraphLocatorMap,
+): Promise<void> {
+	const linkData: Array<{ segmentLocatorId: number; segmentId: number }> = [];
+	for (const [paragraphNumber, segmentIds] of paragraphNumberToSegmentIds) {
+		const segmentLocatorId = locatorIdByParagraphNumber.get(paragraphNumber);
+		if (!segmentLocatorId) continue;
+		for (const segmentId of segmentIds) {
+			linkData.push({ segmentLocatorId, segmentId });
+		}
+	}
+	await createSegmentLocatorLinks(linkData);
 }
 ```
 
 **目的**: 
 - コンテンツページをデータベースにインポート
-- 注釈書と根本経典の間で段落番号ベースのリンクを自動生成
+- ムーラ（根本経典）で段落番号ベースのロケータを作成
+- 注釈書（Atthakatha/Tika）と根本経典の間で段落番号ベースのロケータリンクを自動生成
+
+**ロケータシステムの仕組み**:
+- **SegmentLocator**: 段落番号を表すロケータ（例: `system: "VRI_PARAGRAPH"`, `value: "123"`）
+- **SegmentLocatorLink**: セグメントとロケータの多対多の関係
+- ムーラで作成されたロケータを注釈書が参照することで、同じ段落番号を持つセグメント間の関係を確立
 
 ---
 
@@ -601,6 +708,7 @@ interface DirectoryNode {
 - `pages.ts`: ページ作成処理（カテゴリページ・コンテンツページ）
 - `helpers.ts`: ユーティリティ関数
 - `segment-types.ts`: セグメントタイプの管理
+- `segment-locators.ts`: 段落番号ベースのロケータ作成とリンク処理
 - `root-page.ts`: ルートページの作成
 - `types.ts`: 型定義
 - `constants.ts`: 定数定義

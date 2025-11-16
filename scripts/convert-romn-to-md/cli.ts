@@ -42,9 +42,11 @@ export async function runConversionCliNoSplit(): Promise<void> {
 	// 既存の分割版と混ざらないよう、出力ルートを分ける
 	const outputDir = path.resolve(process.cwd(), "tipitaka-md");
 
-	if (!fs.existsSync(outputDir)) {
-		await fsPromises.mkdir(outputDir, { recursive: true });
+	// 既存の出力ディレクトリを削除してから再作成
+	if (fs.existsSync(outputDir)) {
+		await fsPromises.rm(outputDir, { recursive: true, force: true });
 	}
+	await fsPromises.mkdir(outputDir, { recursive: true });
 
 	const xmlFiles = (await fsPromises.readdir(inputDir, { withFileTypes: true }))
 		.filter((e) => e.isFile() && e.name.toLowerCase().endsWith(".xml"))

@@ -204,7 +204,7 @@ describe("writeBookMarkdown", () => {
 		expect(content).toMatch(/^\*詩句2\*$/m);
 		expect(content).toMatch(/^\*詩句3\*$/m);
 		expect(content).toMatch(/^\*詩句4\*$/m);
-		expect(content).toContain('<pb ed="vri" n="123" />');
+		expect(content).toContain("{pb:vri:123}");
 	});
 });
 

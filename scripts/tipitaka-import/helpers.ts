@@ -1,7 +1,10 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { generateHashForText } from "@/app/[locale]/_lib/generate-hash-for-text";
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
-import { syncSegments } from "@/lib/sync-segments";
+import {
+	syncSegmentMetadataAndLocators,
+	syncSegments,
+} from "@/app/[locale]/_lib/sync-segments";
 
 import type { DirectoryNode } from "./types";
 
@@ -126,28 +129,39 @@ export async function upsertPage({
 	return { id: page.id, contentId };
 }
 
-/**
- * セグメントが空の場合はタイトルをセグメントとして追加して同期する
- */
 export async function syncSegmentsWithFallback(
 	tx: TransactionClient,
 	pageId: number,
 	segments: SegmentDraft[],
 	fallbackTitle: string,
 	segmentTypeId: number,
-): Promise<void> {
-	const segmentsToSync =
-		segments.length === 0
-			? [
-					{
-						number: 0,
-						text: fallbackTitle,
-						textAndOccurrenceHash: generateHashForText(fallbackTitle, 0),
-					},
-				]
-			: segments;
+) {
+	let segmentsToSync = segments;
 
-	await syncSegments(tx, pageId, segmentsToSync, segmentTypeId);
+	if (segments.length === 0) {
+		const fallbackHash = generateHashForText(fallbackTitle, 0);
+		segmentsToSync = [
+			{
+				number: 0,
+				text: fallbackTitle,
+				textAndOccurrenceHash: fallbackHash,
+				metadata: { items: [] },
+			},
+		];
+	}
+
+	const hashToSegmentId = await syncSegments(
+		tx,
+		pageId,
+		segmentsToSync,
+		segmentTypeId,
+	);
+	await syncSegmentMetadataAndLocators(
+		tx,
+		pageId,
+		hashToSegmentId,
+		segmentsToSync,
+	);
 }
 
 /**

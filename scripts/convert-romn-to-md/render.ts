@@ -89,6 +89,11 @@ function renderParagraph(node: Element): string[] {
 	// 通常の段落として処理（rend属性がない場合、またはbodytextの場合）
 	// すべてのrend属性は上記で処理済みなので、ここに到達するのはrend属性がない場合のみ
 	const content = renderInlineChildren(node).trim();
+	const n = node.getAttribute("n");
+	// 段落番号がある場合は {para:n} 形式で先頭に追加
+	if (n && content) {
+		return [`{para:${n}} ${content}`];
+	}
 	return [content];
 }
 

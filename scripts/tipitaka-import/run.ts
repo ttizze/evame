@@ -3,6 +3,7 @@ import { readBooksJson } from "./books";
 import { ROOT_TITLE, SYSTEM_USER_HANDLE } from "./constants";
 import { buildDirectoryTree, collectPathMap } from "./directory-tree";
 import { getOrderGenerator, getSortedChildren } from "./helpers";
+import { ensureMetadataTypes } from "./metadata-types";
 import { createContentPage, createDirectoryPage } from "./pages";
 import { ensureRootPage } from "./root-page";
 import { ensureSegmentTypes } from "./segment-types";
@@ -38,6 +39,13 @@ function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 	});
 }
 
+/**
+ * カテゴリページのパス → ページIDのルックアップマップを作成する
+ *
+ * @param root ディレクトリツリーのルートノード
+ * @param rootPage ルートページ
+ * @returns パス → ページIDのマッピング
+ */
 function createCategoryLookup(
 	root: DirectoryNode,
 	rootPage: PageWithContent,
@@ -53,6 +61,13 @@ function createCategoryLookup(
 	return lookup;
 }
 
+/**
+ * ディレクトリセグメントからカテゴリページIDを解決する
+ *
+ * @param segments ディレクトリセグメントの配列
+ * @param categoryLookup カテゴリルックアップマップ
+ * @returns カテゴリページID
+ */
 function resolveCategoryPageId(
 	segments: string[],
 	categoryLookup: Map<string, number>,
@@ -88,6 +103,9 @@ export async function runTipitakaImport(): Promise<void> {
 		if (!primaryTypeId) {
 			throw new Error('Segment type "PRIMARY" not found');
 		}
+
+		// メタデータタイプを確保
+		await ensureMetadataTypes(prisma);
 
 		const rootPage = await ensureRootPage(prisma, user.id, primaryTypeId);
 
@@ -132,11 +150,6 @@ export async function runTipitakaImport(): Promise<void> {
 		// Step 3c: 生成したカテゴリ階層を素早く引き当てられるようにマッピングする
 		const categoryLookup = createCategoryLookup(directoryRoot, rootPage);
 		const orderForParent = getOrderGenerator();
-		const paragraphNumberToSegmentIdsByFile = new Map<
-			string,
-			Map<number, number[]>
-		>();
-
 		const sortedEntries = sortEntries(entries);
 
 		const otherTypeId = segmentTypeIdMap.get("OTHER");
@@ -157,6 +170,8 @@ export async function runTipitakaImport(): Promise<void> {
 		}
 
 		// レベルごとに順次処理（依存関係を保証）、レベル内では並列処理
+		// Mula → Atthakatha → Tika → Other の順で処理することで、
+		// 注釈書が参照するムーラのロケータが確実に存在することを保証
 		const levelOrder: ImportEntry["level"][] = [
 			"Mula",
 			"Atthakatha",
@@ -186,7 +201,7 @@ export async function runTipitakaImport(): Promise<void> {
 							segmentTypeIdMap.get(levelKey as SegmentType["key"]) ??
 							otherTypeId;
 
-						const pageId = await createContentPage({
+						await createContentPage({
 							prisma,
 							entry,
 							parentId: parentPageId,
@@ -194,30 +209,6 @@ export async function runTipitakaImport(): Promise<void> {
 							order,
 							segmentTypeId,
 						});
-
-						const paragraphNumberToSegmentIds =
-							await buildParagraphNumberToSegmentIdsMap(prisma, pageId);
-						paragraphNumberToSegmentIdsByFile.set(
-							entry.fileKey.toLowerCase(),
-							paragraphNumberToSegmentIds,
-						);
-
-						if (
-							(levelKey === "ATTHAKATHA" || levelKey === "TIKA") &&
-							entry.mulaFileKey
-						) {
-							const mulaParagraphNumberToSegmentIds =
-								paragraphNumberToSegmentIdsByFile.get(
-									entry.mulaFileKey.toLowerCase(),
-								);
-							if (mulaParagraphNumberToSegmentIds) {
-								await linkSegmentsByParagraphNumber(
-									prisma,
-									paragraphNumberToSegmentIds,
-									mulaParagraphNumberToSegmentIds,
-								);
-							}
-						}
 					}),
 				);
 				console.log(
@@ -228,73 +219,4 @@ export async function runTipitakaImport(): Promise<void> {
 	} finally {
 		await prisma.$disconnect();
 	}
-}
-
-/**
- * 段落番号のパターン: 数字にドット（例: "123." または "123\."）
- * segment.textからは§記号が削除されているため、数字+ドットのパターンで識別する
- * エスケープされたドット（\.）にも対応
- */
-const PARAGRAPH_NUMBER_REGEX = /(\d+)(?:\.|\\.)/g;
-
-/**
- * ページ内の各セグメントから段落番号（数字.）を抽出し、
- * 段落番号 → セグメントIDの配列のマッピングを構築する
- */
-async function buildParagraphNumberToSegmentIdsMap(
-	prisma: PrismaClient,
-	pageId: number,
-): Promise<Map<number, number[]>> {
-	const segments = await prisma.segment.findMany({
-		where: { contentId: pageId },
-		select: { id: true, text: true },
-	});
-	const paragraphNumberToSegmentIds = new Map<number, number[]>();
-	for (const segment of segments) {
-		PARAGRAPH_NUMBER_REGEX.lastIndex = 0;
-		let match: RegExpExecArray | null = PARAGRAPH_NUMBER_REGEX.exec(
-			segment.text,
-		);
-		while (match !== null) {
-			const paragraphNumber = Number.parseInt(match[1] ?? "", 10);
-			if (!Number.isFinite(paragraphNumber)) continue;
-			const segmentIds = paragraphNumberToSegmentIds.get(paragraphNumber) ?? [];
-			segmentIds.push(segment.id);
-			paragraphNumberToSegmentIds.set(paragraphNumber, segmentIds);
-			match = PARAGRAPH_NUMBER_REGEX.exec(segment.text);
-		}
-	}
-	return paragraphNumberToSegmentIds;
-}
-
-/**
- * 注釈書（Atthakatha/Tika）と根本経典（Mula）の間で、
- * 同じ段落番号を持つセグメント同士をリンクする
- */
-async function linkSegmentsByParagraphNumber(
-	prisma: PrismaClient,
-	commentaryParagraphMap: Map<number, number[]>,
-	rootTextParagraphMap: Map<number, number[]>,
-) {
-	const segmentLinks: { fromSegmentId: number; toSegmentId: number }[] = [];
-	for (const [
-		paragraphNumber,
-		commentarySegmentIds,
-	] of commentaryParagraphMap) {
-		const rootTextSegmentIds = rootTextParagraphMap.get(paragraphNumber);
-		if (!rootTextSegmentIds || rootTextSegmentIds.length === 0) continue;
-		for (const commentarySegmentId of commentarySegmentIds) {
-			for (const rootTextSegmentId of rootTextSegmentIds) {
-				segmentLinks.push({
-					fromSegmentId: commentarySegmentId,
-					toSegmentId: rootTextSegmentId,
-				});
-			}
-		}
-	}
-	if (segmentLinks.length === 0) return;
-	await prisma.segmentLink.createMany({
-		data: segmentLinks,
-		skipDuplicates: true,
-	});
 }
