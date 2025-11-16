@@ -19,8 +19,13 @@ export async function getVertexAIModelResponse(
 		project: process.env.GCP_PROJECT_ID,
 		location: process.env.GCP_REGION,
 		googleAuthOptions: {
-			// biome-ignore lint/suspicious/noExplicitAny: <vertexaiの型がおかしい>
-			authClient: authClient as any,
+			// authClientが存在する場合（Vercel環境）はOIDCトークンを使用
+			// authClientがundefinedの場合（ローカル開発時）はauthClientを渡さず、
+			// VertexAIが自動的にApplication Default Credentialsを使用する
+			...(authClient && {
+				// biome-ignore lint/suspicious/noExplicitAny: <vertexaiの型がおかしい>
+				authClient: authClient as any,
+			}),
 			projectId: process.env.GCP_PROJECT_ID,
 		},
 	});
@@ -87,7 +92,7 @@ export async function getVertexAIModelResponse(
 
 			if (retryCount < MAX_RETRIES - 1) {
 				const delay = 1000 * (retryCount + 1);
-				console.log(`Retrying in ${delay / 100} seconds...`);
+				console.log(`Retrying in ${delay / 1000} seconds...`);
 				await new Promise((resolve) => setTimeout(resolve, delay));
 			}
 		}

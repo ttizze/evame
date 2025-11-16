@@ -16,8 +16,9 @@ describe("htmlToMdastWithSegments", () => {
 		expect(result.segments[0]).toMatchObject({
 			text: "Hello World",
 			number: 1,
-			hash: expect.any(String),
+			textAndOccurrenceHash: expect.any(String),
 		});
+		// segmentLocators is embedded per-segment when present; no top-level field
 
 		// Check the mdastJson structure
 		expect(result.mdastJson).toMatchObject({
@@ -39,12 +40,12 @@ describe("htmlToMdastWithSegments", () => {
 		expect(result.segments[0]).toMatchObject({
 			text: "First paragraph",
 			number: 1,
-			hash: expect.any(String),
+			textAndOccurrenceHash: expect.any(String),
 		});
 		expect(result.segments[1]).toMatchObject({
 			text: "Second paragraph",
 			number: 2,
-			hash: expect.any(String),
+			textAndOccurrenceHash: expect.any(String),
 		});
 	});
 
@@ -57,12 +58,12 @@ describe("htmlToMdastWithSegments", () => {
 		expect(result.segments[0]).toMatchObject({
 			text: "Document Title",
 			number: 0, // Header should be number 0
-			hash: expect.any(String),
+			textAndOccurrenceHash: expect.any(String),
 		});
 		expect(result.segments[1]).toMatchObject({
 			text: "Content paragraph",
 			number: 1,
-			hash: expect.any(String),
+			textAndOccurrenceHash: expect.any(String),
 		});
 	});
 
@@ -148,7 +149,9 @@ describe("htmlToMdastWithSegments", () => {
 		expect(result.segments[0].text).toBe("Repeated text");
 		expect(result.segments[1].text).toBe("Repeated text");
 		// Despite having the same text, hashes should be different
-		expect(result.segments[0].hash).not.toBe(result.segments[1].hash);
+		expect(result.segments[0].textAndOccurrenceHash).not.toBe(
+			result.segments[1].textAndOccurrenceHash,
+		);
 	});
 
 	it("should remove position data from the returned MDAST", async () => {
@@ -274,5 +277,38 @@ describe("htmlToMdastWithSegments", () => {
 		// Verify thematic break (hr)
 		const thematicBreakNodes = findNodesByType(mdast, "thematicBreak");
 		expect(thematicBreakNodes.length).toBeGreaterThanOrEqual(1);
+	});
+
+	it("should handle style tags and other unsupported HTML elements", async () => {
+		const html = `
+      <p>Normal paragraph</p>
+      <style>
+        .custom { color: red; }
+      </style>
+      <p>Another paragraph</p>
+      <div style="color: blue;">Styled div</div>
+      <script>console.log('test');</script>
+    `;
+		const result = await htmlToMdastWithSegments({ html });
+
+		const mdastString = JSON.stringify(result.mdastJson);
+
+		// rehypeSanitize removes style and script tags, but style tag content becomes text
+		// style tag itself is removed (no "style" tag in output)
+		expect(mdastString).not.toMatch(/<style/i);
+		expect(mdastString).not.toMatch(/<script/i);
+
+		// style attribute is removed from elements
+		expect(mdastString).not.toContain('style="color: blue"');
+
+		// script content is completely removed
+		expect(mdastString).not.toContain("console.log");
+
+		// Valid content remains
+		expect(mdastString).toContain("Normal paragraph");
+		expect(mdastString).toContain("Another paragraph");
+		expect(mdastString).toContain("Styled div");
+
+		// Style tag content is sanitized and not included as a text segment
 	});
 });

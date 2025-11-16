@@ -3,6 +3,7 @@ import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
 import { prisma } from "@/lib/prisma";
+import { revalidatePageForLocale } from "@/lib/revalidate-utils";
 import { addUserTranslation } from "./db/mutations.server";
 
 const schema = z.object({
@@ -29,30 +30,34 @@ export async function addTranslationFormAction(
 	const { currentUser, data } = v;
 	const { segmentId, text, locale } = data;
 
-	// Infer page slug by resolving segment -> content -> page or pageComment
+	// Infer page slug and id by resolving segment -> content -> page or pageComment
 	const resolved = await prisma.segment.findUnique({
 		where: { id: segmentId },
 		select: {
 			content: {
 				select: {
-					page: { select: { slug: true } },
-					pageComment: { select: { page: { select: { slug: true } } } },
+					page: { select: { id: true, slug: true } },
+					pageComment: {
+						select: { page: { select: { id: true, slug: true } } },
+					},
 				},
 			},
 		},
 	});
-	const pageSlug =
-		resolved?.content.page?.slug ??
-		resolved?.content.pageComment?.page.slug ??
-		"";
-	if (!pageSlug) {
+	const page =
+		resolved?.content.page ?? resolved?.content.pageComment?.page ?? null;
+	if (!page) {
 		return {
 			success: false,
-			message: "pageSlug is not defined",
+			message: "page not found",
 		};
 	}
 
 	await addUserTranslation(segmentId, text, currentUser.id, locale);
+
+	// Revalidate page for ISR to include the new translation
+	await revalidatePageForLocale(page.id, locale);
+
 	return {
 		success: true,
 		data: undefined,

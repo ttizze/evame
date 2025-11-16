@@ -67,12 +67,14 @@ describe("translateChunk の単体テスト (Gemini 呼び出しのみモック)
 					number: 0,
 					text: "Hello",
 					textAndOccurrenceHash: "hash0",
+					segmentTypeId: 1,
 				},
 				{
 					contentId: content.id,
 					number: 1,
 					text: "World",
 					textAndOccurrenceHash: "hash1",
+					segmentTypeId: 1,
 				},
 			],
 		});
