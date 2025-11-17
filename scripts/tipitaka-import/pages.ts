@@ -6,6 +6,7 @@ import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mda
 import { BASE_DIR } from "./constants";
 import {
 	beautifySlug,
+	parseSegmentLabel,
 	slugify,
 	splitHeaderAndBody,
 	upsertPageWithSegments,
@@ -84,10 +85,11 @@ export async function createContentPage({
 	const filePath = getFilePath(entry);
 	const raw = await fs.readFile(filePath, "utf8");
 	const { header, body } = splitHeaderAndBody(raw);
+	const directoryTitle = getDirectoryTitle(entry);
 	const fallbackTitle = beautifySlug(
 		path.basename(filePath, ".md").replace(/\./g, " "),
 	);
-	const title = header || fallbackTitle;
+	const title = directoryTitle || header || fallbackTitle;
 
 	const mdast = await markdownToMdastWithSegments({
 		header: title,
@@ -113,4 +115,11 @@ export async function createContentPage({
 			timeout: 60000, // 60 seconds for batch operations
 		},
 	);
+}
+
+function getDirectoryTitle(entry: ImportEntry): string {
+	const lastSegment = entry.dirSegments[entry.dirSegments.length - 1];
+	if (!lastSegment) return "";
+	const { title } = parseSegmentLabel(lastSegment);
+	return title;
 }

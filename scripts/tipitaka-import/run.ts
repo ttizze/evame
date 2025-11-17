@@ -54,7 +54,7 @@ function createCategoryLookup(
 	const lookup = new Map<string, number>([["", rootPage.id]]);
 	for (const [path, node] of pathMap.entries()) {
 		if (!node.pageId) {
-			throw new Error(`Category page missing pageId for path: ${path}`);
+			continue;
 		}
 		lookup.set(path, node.pageId);
 	}
@@ -129,6 +129,9 @@ export async function runTipitakaImport(): Promise<void> {
 
 		for (const item of queue) {
 			const { node, parentId, path } = item;
+			if (node.children.size === 0) {
+				continue;
+			}
 			const order = nextDirectoryOrder(parentId);
 			await createDirectoryPage({
 				prisma,
@@ -191,8 +194,9 @@ export async function runTipitakaImport(): Promise<void> {
 				const batch = levelEntries.slice(i, i + CONCURRENCY);
 				await Promise.all(
 					batch.map(async (entry) => {
+						const directorySegments = entry.dirSegments.slice(0, -1);
 						const parentPageId = resolveCategoryPageId(
-							entry.dirSegments,
+							directorySegments,
 							categoryLookup,
 						);
 						const order = orderForParent(parentPageId);

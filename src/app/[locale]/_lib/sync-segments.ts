@@ -293,7 +293,7 @@ async function ensureLocatorsForSystem(
 	}>,
 	system: SegmentLocatorSystem,
 ): Promise<Map<string, number>> {
-	// 対象 system のユニークな value を抽出
+	// 対象 drafts のユニークな value を抽出
 	const uniqueValues = [
 		...new Set(
 			drafts
@@ -307,6 +307,7 @@ async function ensureLocatorsForSystem(
 		await tx.segmentLocator.deleteMany({ where: { contentId, system } });
 		return new Map();
 	}
+
 	await tx.segmentLocator.deleteMany({
 		where: {
 			contentId,
