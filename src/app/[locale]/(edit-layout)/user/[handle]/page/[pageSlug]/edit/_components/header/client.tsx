@@ -26,6 +26,7 @@ import { Link } from "@/i18n/routing";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
 import { LocaleMultiSelector } from "./locale-multi-selector/client";
+import { MarkdownHelpPopover } from "./markdown-help-popover";
 
 interface EditHeaderProps {
 	currentUser: SanitizedUser;
@@ -109,7 +110,10 @@ export function EditHeader({
 
 	const leftExtra = (
 		<>
-			<SaveButton hasUnsavedChanges={hasUnsavedChanges} />
+			<div className="flex items-center gap-1.5">
+				<SaveButton hasUnsavedChanges={hasUnsavedChanges} />
+				<MarkdownHelpPopover />
+			</div>
 			<input name="status" type="hidden" value={initialStatus} />
 		</>
 	);
