@@ -31,6 +31,44 @@ const editorCommands: Record<string, (editor: Editor) => boolean> = {
 	codeBlock: (editor) => editor.chain().focus().toggleCodeBlock().run(),
 };
 
+const MENU_ICON_SIZE = 40;
+const MENU_GAP = 12;
+const VIEWPORT_PADDING = 16;
+
+const getFixedLeftReferenceRect = (editor: Editor) => {
+	const { view, state } = editor;
+	const selection = state.selection;
+
+	let selectionCoords: { top: number; bottom: number };
+
+	try {
+		const coords = view.coordsAtPos(selection.from);
+		selectionCoords = { top: coords.top, bottom: coords.bottom };
+	} catch {
+		const fallbackRect = view.dom.getBoundingClientRect();
+		selectionCoords = {
+			top: fallbackRect.top,
+			bottom: fallbackRect.top,
+		};
+	}
+
+	const editorRect = view.dom.getBoundingClientRect();
+	const computedLeft =
+		editorRect.left - MENU_ICON_SIZE - MENU_GAP;
+	const left = Math.max(VIEWPORT_PADDING, computedLeft);
+	const top = selectionCoords.top;
+	const height = Math.max(1, (selectionCoords.bottom ?? top) - top);
+
+	return {
+		width: 0,
+		height,
+		top,
+		bottom: top + height,
+		left,
+		right: left,
+	};
+};
+
 const menuItems = [
 	{
 		value: "h2",
@@ -86,7 +124,10 @@ export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
 				editor={editor}
 				options={{
 					strategy: "fixed",
-					placement: "left",
+					placement: "right",
+				}}
+				tippyOptions={{
+					getReferenceClientRect: () => getFixedLeftReferenceRect(editor),
 				}}
 				shouldShow={({ editor }) => {
 					// 空の段落で、かつカーソルが行の先頭にある場合のみ表示
