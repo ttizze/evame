@@ -7,6 +7,27 @@ import { CustomImage } from "./custom-image";
 import { X } from "./extensions/x-embed";
 import { handleFileUpload } from "./use-file-upload";
 
+const PARAGRAPH_BREAK_RE = /(?:<br\b[^>]*>\s*){2,}/gi;
+const EMPTY_PARAGRAPH_RE = /<p[^>]*>(?:\s|&nbsp;|<br\b[^>]*>)*<\/p>/gi;
+const TRAILING_BREAK_RE =
+	/<br\b[^>]*class=["'][^"']*ProseMirror-trailingBreak[^"']*["'][^>]*>/gi;
+const BLOCK_TAG_RE =
+	/<(?:blockquote|p|div|section|article|aside|figure|figcaption|ul|ol|li|table|thead|tbody|tfoot|tr|td|th|pre|h[1-6])/i;
+const PARAGRAPH_TAG_RE = /<p[\s>]/i;
+
+function splitInlineIntoParagraphs(html: string) {
+	const segments = html
+		.split(PARAGRAPH_BREAK_RE)
+		.map((segment) => segment.trim())
+		.filter((segment) => segment.length > 0);
+
+	if (segments.length === 0) {
+		return "<p></p>";
+	}
+
+	return segments.map((segment) => `<p>${segment}</p>`).join("");
+}
+
 export function configureEditor(initialContent: string, placeholder: string) {
 	return {
 		immediatelyRender: false,
@@ -56,20 +77,30 @@ export function configureEditor(initialContent: string, placeholder: string) {
 		content: initialContent,
 		editorProps: {
 			transformPastedHTML(html: string) {
-				// 「テキスト塊」を <p> で包む
-				// まず最初と最後に 1 組の <p> を付ける
-				// 「連続 <br> 2 個以上」を </p><p> に置き換える
-				// そのあと 必ず ProseMirror に渡す
-				// ProseMirror は
-				// タグの整合を自動で取り
-				// 不要になった最外の <p> は取り除き
-				// キャレットを置くために必要なところだけ
-				// <br class="ProseMirror-trailingBreak"> を残します。
-				return `<p>${html
-					// 連続 <br> 2個以上 → 段落区切り
-					.replace(/(<br\b[^>]*>\s*){2,}/gi, "</p><p>")
-					// 中身が <br> しかない段落は削除
-					.replace(/<p[^>]*>(?:\s|&nbsp;|<br\b[^>]*>)*<\/p>/gi, "")}</p>`;
+				const trimmed = html?.trim() ?? "";
+				if (!trimmed) return "<p></p>";
+
+				const withoutTrailingBreaks = trimmed.replace(TRAILING_BREAK_RE, "");
+				const withoutEmptyParagraphs = withoutTrailingBreaks.replace(
+					EMPTY_PARAGRAPH_RE,
+					"",
+				);
+
+				if (!withoutEmptyParagraphs) {
+					return "<p></p>";
+				}
+
+				const hasBlockElements = BLOCK_TAG_RE.test(withoutEmptyParagraphs);
+
+				if (!hasBlockElements) {
+					return splitInlineIntoParagraphs(withoutEmptyParagraphs);
+				}
+
+				if (PARAGRAPH_TAG_RE.test(withoutEmptyParagraphs)) {
+					return withoutEmptyParagraphs.replace(PARAGRAPH_BREAK_RE, "</p><p>");
+				}
+
+				return withoutEmptyParagraphs;
 			},
 			attributes: {
 				class: "focus:outline-hidden",
