@@ -55,7 +55,7 @@ const loadSearchParams = createLoader(searchParamsSchema);
 
 export default async function UserPage(
 	props: PageProps<"/[locale]/user/[handle]">,
-) {
+): Promise<React.ReactNode> {
 	const { handle, locale } = await props.params;
 	const { sort, page } = await loadSearchParams(props.searchParams);
 	return (

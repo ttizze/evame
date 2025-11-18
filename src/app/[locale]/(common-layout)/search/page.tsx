@@ -1,5 +1,5 @@
-import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
+import type React from "react";
 import { fetchSearchResults } from "./_db/queries.server";
 import { CATEGORIES, type Category } from "./constants";
 import { SearchPageClient } from "./search.client";
@@ -14,16 +14,13 @@ const searchParamsSchema = {
 
 const loadSearchParams = createLoader(searchParamsSchema);
 
-export default async function SearchPage({
-	params,
-	searchParams,
-}: {
-	params: Promise<{ locale: string }>;
-	searchParams: Promise<SearchParams>;
-}) {
-	const { locale } = await params;
-	const { page, query, category, tagPage } =
-		await loadSearchParams(searchParams);
+export default async function SearchPage(
+	props: PageProps<"/[locale]/search">,
+): Promise<React.ReactNode> {
+	const { locale } = await props.params;
+	const { page, query, category, tagPage } = await loadSearchParams(
+		props.searchParams,
+	);
 
 	// 型安全性を確保
 	const validCategory: Category = CATEGORIES.includes(category as Category)

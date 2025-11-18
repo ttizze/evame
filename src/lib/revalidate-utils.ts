@@ -15,6 +15,24 @@ export function revalidateAllLocales(
 }
 
 /**
+ * Revalidate a specific page for a specific locale.
+ * Fetches page info and revalidates only the specified locale path.
+ */
+export async function revalidatePageForLocale(
+	pageId: number,
+	locale: string,
+	revalidateFn: (path: string) => void = revalidatePath,
+) {
+	const page = await prisma.page.findUnique({
+		where: { id: pageId },
+		select: { slug: true, user: { select: { handle: true } } },
+	});
+	if (page) {
+		revalidateFn(`/${locale}/user/${page.user.handle}/page/${page.slug}`);
+	}
+}
+
+/**
  * Revalidate self + all ancestors and all descendants (recursive) across locales.
  * Note: descendants are limited to PUBLIC to match visible routes.
  */

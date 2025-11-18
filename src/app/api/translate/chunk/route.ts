@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePageTreeAllLocales } from "@/lib/revalidate-utils";
+import { revalidatePageForLocale } from "@/lib/revalidate-utils";
 import {
 	incrementTranslationProgress,
 	markJobFailed,
@@ -31,9 +31,9 @@ async function handler(req: Request) {
 			inc,
 		);
 
-		// If the job is completed, revalidate the page and its parent/children.
+		// If the job is completed, revalidate the page.
 		if (updated && updated.status === "COMPLETED") {
-			await revalidatePageTreeAllLocales(params.pageId);
+			await revalidatePageForLocale(params.pageId, params.targetLocale);
 		}
 
 		return NextResponse.json({ ok: true });

@@ -1,6 +1,6 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
+  features = ["driverAdapters"]
 }
 
 datasource db {
@@ -111,6 +111,7 @@ model TranslationJob {
   updatedAt DateTime          @updatedAt
 
   @@index([userId])
+  @@map("translation_jobs")
 }
 
 enum PageStatus {
@@ -157,6 +158,8 @@ model PageView {
   count  Int @default(0)
 
   page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@map("page_views")
 }
 
 enum TranslationProofStatus {
@@ -347,10 +350,25 @@ model Content {
   pageComment PageComment?
 
   // 子セグメント（1:多）
-  segments Segment[]
+  segments        Segment[]
+  segmentLocators SegmentLocator[]
+
+  importFile   ImportFile? @relation(fields: [importFileId], references: [id])
+  importFileId Int?        @map("import_file_id")
 
   @@index([kind])
   @@map("contents")
+}
+
+model SegmentType {
+  id     Int    @id @default(autoincrement())
+  key    String @unique // "PRIMARY" | "COMMENTARY" | "GLOSS" など
+  label  String // 表示名
+  weight Int    @default(0) // 一括表示時の既定順（任意）
+
+  segments Segment[]
+
+  @@map("segment_types")
 }
 
 model Segment {
@@ -364,6 +382,11 @@ model Segment {
   createdAt             DateTime @default(now()) @map("created_at")
 
   segmentTranslations SegmentTranslation[]
+  segmentType         SegmentType          @relation(fields: [segmentTypeId], references: [id])
+  segmentTypeId       Int                  @map("segment_type_id")
+
+  metadata SegmentMetadata[]
+  locators SegmentLocatorLink[]
 
   // 1 Owner 内での並びをユニークに
   @@unique([contentId, number])
@@ -371,6 +394,64 @@ model Segment {
   @@index([contentId])
   @@index([textAndOccurrenceHash])
   @@map("segments")
+}
+
+enum SegmentLocatorSystem {
+  VRI_PARAGRAPH
+}
+
+model SegmentLocator {
+  id        Int                  @id @default(autoincrement())
+  contentId Int                  @map("content_id")
+  content   Content              @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  system    SegmentLocatorSystem
+  value     String
+  createdAt DateTime             @default(now()) @map("created_at")
+  updatedAt DateTime             @default(now()) @updatedAt @map("updated_at")
+
+  segments SegmentLocatorLink[]
+
+  @@unique([contentId, system, value])
+  @@index([contentId])
+  @@map("segment_locators")
+}
+
+model SegmentLocatorLink {
+  segmentLocatorId Int      @map("segment_locator_id")
+  segmentId        Int      @map("segment_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  locator SegmentLocator @relation(fields: [segmentLocatorId], references: [id], onDelete: Cascade)
+  segment Segment        @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+
+  @@id([segmentLocatorId, segmentId])
+  @@index([segmentId])
+  @@map("segment_locator_links")
+}
+
+model SegmentMetadataType {
+  id            Int               @id @default(autoincrement())
+  key           String            @unique
+  label         String
+  metadataItems SegmentMetadata[]
+
+  @@map("segment_metadata_types")
+}
+
+model SegmentMetadata {
+  id             Int                 @id @default(autoincrement())
+  segmentId      Int                 @map("segment_id")
+  metadataTypeId Int                 @map("metadata_type_id")
+  segment        Segment             @relation(fields: [segmentId], references: [id], onDelete: Cascade)
+  metadataType   SegmentMetadataType @relation(fields: [metadataTypeId], references: [id], onDelete: Cascade)
+
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([segmentId, metadataTypeId, value])
+  @@index([metadataTypeId])
+  @@index([segmentId])
+  @@map("segment_metadata")
 }
 
 model SegmentTranslation {
@@ -408,4 +489,28 @@ model TranslationVote {
   @@index([translationId])
   @@index([userId])
   @@map("translation_votes")
+}
+
+model ImportRun {
+  id         Int          @id @default(autoincrement())
+  startedAt  DateTime     @default(now()) @map("started_at")
+  finishedAt DateTime?    @map("finished_at")
+  status     String       @default("RUNNING")
+  files      ImportFile[]
+
+  @@map("import_runs")
+}
+
+model ImportFile {
+  id          Int       @id @default(autoincrement())
+  importRunId Int       @map("import_run_id")
+  importRun   ImportRun @relation(fields: [importRunId], references: [id], onDelete: Cascade)
+  path        String
+  checksum    String
+  status      String    @default("PENDING")
+  message     String    @default("")
+  contents    Content[]
+  createdAt   DateTime  @default(now())
+
+  @@map("import_files")
 }

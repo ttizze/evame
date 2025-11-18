@@ -14,7 +14,7 @@
 		"moduleResolution": "bundler",
 		"resolveJsonModule": true,
 		"isolatedModules": true,
-		"jsx": "preserve",
+		"jsx": "react-jsx",
 		"incremental": true,
 		"plugins": [
 			{
@@ -31,7 +31,16 @@
 		"**/*.ts",
 		"**/*.tsx",
 		".next/types/**/*.ts",
-		"src/app/[locale]/(common-layout)/auth/login/_components/google-form.tsx"
+		"src/app/[locale]/(common-layout)/auth/login/_components/google-form.tsx",
+		".next/dev/types/**/*.ts"
 	],
-	"exclude": ["node_modules", ".next/types/validator.ts"]
+	"exclude": [
+		"node_modules",
+		".next/types/validator.ts",
+		"dist",
+		"build",
+		"scripts/convert-romn-to-md.ts",
+		"scripts/convert-romn-to-md/**",
+		"scripts/convert-romn-to-md-old/**"
+	]
 }

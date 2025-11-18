@@ -2,7 +2,7 @@
 import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
-import { revalidatePageTreeAllLocales } from "@/lib/revalidate-utils";
+import { revalidatePageForLocale } from "@/lib/revalidate-utils";
 import { findPageIdBySegmentTranslationId } from "../_db/queries.server";
 import { deleteOwnTranslation } from "./db/mutations.server";
 
@@ -27,7 +27,7 @@ export async function deleteTranslationAction(
 	// Resolve page info BEFORE deletion
 	const pageId = await findPageIdBySegmentTranslationId(translationId);
 	await deleteOwnTranslation(currentUser.handle, translationId);
-	// Revalidate page + parent/children across all locales
-	await revalidatePageTreeAllLocales(pageId);
+	// Revalidate page for the current locale
+	await revalidatePageForLocale(pageId, data.userLocale);
 	return { success: true, data: undefined };
 }

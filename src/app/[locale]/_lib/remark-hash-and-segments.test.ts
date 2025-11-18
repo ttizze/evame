@@ -13,9 +13,17 @@ describe("remarkHashAndSegments", () => {
 			.use(remarkHashAndSegments("Title"))
 			.process(md)) as VFile & { data: { segments: SegmentDraft[] } };
 		expect(file.data.segments).toMatchObject([
-			{ text: "Title", number: 0, hash: expect.any(String) },
-			{ text: "Paragraph1", number: 1, hash: expect.any(String) },
-			{ text: "Paragraph2", number: 2, hash: expect.any(String) },
+			{ text: "Title", number: 0, textAndOccurrenceHash: expect.any(String) },
+			{
+				text: "Paragraph1",
+				number: 1,
+				textAndOccurrenceHash: expect.any(String),
+			},
+			{
+				text: "Paragraph2",
+				number: 2,
+				textAndOccurrenceHash: expect.any(String),
+			},
 		]);
 	});
 
@@ -28,7 +36,9 @@ describe("remarkHashAndSegments", () => {
 			(s: SegmentDraft) => s.text === "Same",
 		);
 		expect(sameSegs.length).toBe(2);
-		expect(sameSegs[0].hash).not.toBe(sameSegs[1].hash);
+		expect(sameSegs[0].textAndOccurrenceHash).not.toBe(
+			sameSegs[1].textAndOccurrenceHash,
+		);
 	});
 
 	it("タイトルと本文で同じテキストでもhashが異なる", async () => {
@@ -40,7 +50,9 @@ describe("remarkHashAndSegments", () => {
 			(s: SegmentDraft) => s.text === "Title",
 		);
 		expect(titleSegs.length).toBe(3); // header, heading, paragraph
-		expect(new Set(titleSegs.map((s: SegmentDraft) => s.hash)).size).toBe(3);
+		expect(
+			new Set(titleSegs.map((s: SegmentDraft) => s.textAndOccurrenceHash)).size,
+		).toBe(3);
 	});
 
 	it("編集して入れ替わってもsegmentsはhashが維持される", async () => {
@@ -51,7 +63,7 @@ describe("remarkHashAndSegments", () => {
 		const map1 = new Map(
 			(file1.data.segments as SegmentDraft[]).map((s: SegmentDraft) => [
 				s.text,
-				s.hash,
+				s.textAndOccurrenceHash,
 			]),
 		);
 		const md2 = "A\n\nC\n\nB";
@@ -61,11 +73,11 @@ describe("remarkHashAndSegments", () => {
 		const map2 = new Map(
 			(file2.data.segments as SegmentDraft[]).map((s: SegmentDraft) => [
 				s.text,
-				s.hash,
+				s.textAndOccurrenceHash,
 			]),
 		);
-		for (const [text, hash] of map1.entries()) {
-			expect(map2.get(text)).toBe(hash);
+		for (const [text, textAndOccurrenceHash] of map1.entries()) {
+			expect(map2.get(text)).toBe(textAndOccurrenceHash);
 		}
 		expect((file2.data.segments as SegmentDraft[]).length).toBe(
 			(file1.data.segments as SegmentDraft[]).length,
