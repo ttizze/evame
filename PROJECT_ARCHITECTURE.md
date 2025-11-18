@@ -12,6 +12,8 @@
 - [コンポーネント開発ガイドライン](#コンポーネント開発ガイドライン)
 - [データ取得とミューテーション](#データ取得とミューテーション)
 - [国際化対応](#国際化対応)
+- [データ保存と表示の流れ](#データ保存と表示の流れ)
+- [Markdown処理とレンダリング](#markdown処理とレンダリング)
 
 ## プロジェクト概要
 
@@ -311,6 +313,122 @@ db､page､コメント､projectの移行
 表示と入力双方のテストの確認
 strongタグ等
 
+### データ保存と表示の流れ
+
+プロジェクトでは、TipTapエディタからの入力とMarkdownファイルからのインポートの2つの方法でコンテンツを保存できます。どちらの場合も、最終的にはmdast形式に統一されてデータベースに保存され、同じ方法で表示されます。
+
+#### TipTapエディタからの保存フロー
+
+1. **ユーザー入力**
+   - TipTapエディタでユーザーがコンテンツを編集
+   - TipTapがHTML形式で出力（`editorHtml`）
+
+2. **HTML → mdast 変換**
+   ```
+   TipTap HTML → htmlToMdastWithSegments() → mdast + segments
+   ```
+   - `src/app/[locale]/_lib/html-to-mdast-with-segments.ts` の `htmlToMdastWithSegments` 関数を使用
+   - 処理の流れ:
+     - `rehypeParse`: HTML → HAST（HTML AST）に変換
+     - `rehypeSanitize`: XSS対策のためのサニタイズ
+     - `rehypeRemark`: HAST → MDAST に変換
+     - `remarkHashAndSegments`: セグメント情報とハッシュを生成
+     - `remarkAutoUploadImages`: 画像の自動アップロード
+
+3. **データベース保存**
+   - `processPageHtml` → `upsertPageAndSegments` を経由
+   - `mdastJson` を `Page.mdastJson` に保存（JSON形式）
+   - `segments` を `Segment` テーブルに保存（翻訳との紐づけ用）
+
+#### Markdownファイルからのインポートフロー
+
+1. **Markdownファイル読み込み**
+   - `scripts/tipitaka-import/pages.ts` などでMarkdownファイルを読み込み
+   - ファイルをヘッダー（タイトル）と本文に分割
+
+2. **Markdown → mdast 変換**
+   ```
+   Markdown文字列 → markdownToMdastWithSegments() → mdast + segments
+   ```
+   - `src/app/[locale]/_lib/markdown-to-mdast-with-segments.ts` の `markdownToMdastWithSegments` 関数を使用
+   - 処理の流れ:
+     - `remarkParse`: Markdown → MDAST に直接変換（HTML経由不要）
+     - `remarkHashAndSegments`: セグメント情報とハッシュを生成
+     - `remarkAutoUploadImages`: 画像の自動アップロード
+
+3. **データベース保存**
+   - `createContentPage` → `upsertPageWithSegments` を経由
+   - TipTapと同様に `mdastJson` と `segments` を保存
+
+#### 表示フロー（共通）
+
+どちらの方法で保存されたコンテンツも、同じ方法で表示されます：
+
+1. **データベースから取得**
+   - `Page.mdastJson` と `Segment` テーブルからデータを取得
+
+2. **mdast → React要素への変換**
+   ```
+   mdast + segments → mdastToReact() → React要素
+   ```
+   - `src/app/[locale]/_components/mdast-to-react/server.tsx` の `mdastToReact` 関数を使用
+   - 処理の流れ:
+     - `remarkTweet`: ツイート埋め込み
+     - `remarkEmbedder`: oEmbed埋め込み
+     - `remarkLinkCard`: リンクカード生成
+     - `remarkRehype`: MDAST → HAST に変換
+     - `rehypeRaw`: 生HTMLのパース
+     - `rehypeSlug`: 見出しにID付与
+     - `rehypePrettyCode`: コードハイライト
+     - `rehypeReact`: HAST → React要素に変換
+     - `WrapSegment`: セグメント要素をラップ（原文と訳文の制御）
+
+3. **ブラウザ表示**
+   - React要素がサーバーコンポーネントとしてレンダリング
+   - 最終的には静的なHTMLとしてストリーミング
+   - クライアント側で翻訳表示モードの切り替えなどのインタラクティブ機能が動作
+
+#### 共通の変換ポイント
+
+- **セグメント生成**: `remarkHashAndSegments` プラグインが、`p`, `h1`-`h6`, `li`, `td`, `th`, `blockquote` などのブロック要素ごとにセグメントを生成し、`textAndOccurrenceHash` を計算します
+- **画像処理**: どちらの方法でも `remarkAutoUploadImages` が画像を自動的にアップロードします
+- **軽量化**: `removePosition` でmdastから位置情報を削除して軽量化します
+
+この設計により、入力方法が異なっても、保存形式と表示方法が統一され、一貫性のあるコンテンツ管理が可能になっています。
+
+## Markdown処理とレンダリング
+
+### mdastToReact
+
+`mdastToReact` 関数は、mdast（Markdown Abstract Syntax Tree）のJSON形式をReact要素に変換する関数です。この関数は `src/app/[locale]/_components/mdast-to-react/server.tsx` に実装されています。
+
+#### 主な機能
+
+1. **mdast → hast → React要素への変換**
+   - `unified` プロセッサを使用して、mdastをHTML AST（hast）に変換し、最終的にReact要素に変換します
+
+2. **セグメント機能の統合**
+   - `p`, `h1`-`h6`, `li`, `td`, `th`, `blockquote` などの特定のHTML要素を `WrapSegment` でラップし、セグメント情報（原文と訳文の紐づけ）を付与します
+   - これにより、原文と訳文を動的に切り替える機能が実現されます
+
+3. **各種プラグインの適用**
+   - **ツイート埋め込み**: `remarkTweet` でツイートを `react-tweet` のコンポーネントに変換
+   - **oEmbed埋め込み**: `remarkEmbedder` で外部コンテンツ（YouTube、Vimeoなど）を埋め込み
+   - **リンクカード**: `remarkLinkCard` でリンクをカード形式で表示
+   - **コードハイライト**: `rehypePrettyCode` でシンタックスハイライト（ダーク/ライトモード自動切替対応）
+   - **画像最適化**: `img` タグを Next.js の `Image` コンポーネントに変換
+   - **見出しID**: `rehypeSlug` で見出しにスラッグIDを自動付与
+
+#### 原文と訳文のReact化について
+
+原文もReact要素に変換する理由は、単純にHTMLとして表示するためではなく、以下の機能を実現するためです：
+
+- **セグメント制御**: `WrapSegment` を通じて、原文と訳文の表示/非表示を動的に切り替える
+- **インタラクティブ機能**: 投票、ポップオーバー、翻訳表示モードの切り替えなどの機能を提供
+- **コンポーネント統合**: 画像の最適化、コードハイライト、埋め込みコンテンツなど、Reactコンポーネントとして統合する必要がある要素を処理
+
+原文を完全に静的なHTMLとして扱うと、これらの機能を実現するために別の仕組み（DOM操作など）が必要になり、かえって複雑になります。サーバーコンポーネントとして実装されているため、React要素に変換しても最終的には静的なHTMLとしてストリーミングされ、パフォーマンスへの影響は最小限です。
+
 ## TODO
 1. page本文､project説明
 - 編集後も翻訳との紐づけを維持するために､textAndOccurrenceHashをキーにして紐づけを更新する
@@ -322,6 +440,7 @@ strongタグ等
 - page､projectは編集後のひもづけ必要なので1.のようにしているが､コメントは編集機能がないので1.のようにしていない､しかし編集できたほうがいいので､できるようにする｡
   
 
-
+3. Lexicalへの移行
+tiptapにはmdを吐く公式の無料機能がないので､htmlを吐いているが､mdと統一するためにLexicalに移行し､Lexicalが吐いたmdを扱うようにしたい
 
 このガイドに従うことで、一貫性のあるコンポーネントを開発し、プロジェクト全体の整合性を維持することができます。 

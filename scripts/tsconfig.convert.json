@@ -1,0 +1,9 @@
+{
+	"extends": "../tsconfig.json",
+	"include": [
+		"./convert-romn-to-md.ts",
+		"./convert-romn-to-md/**/*.ts",
+		"./convert-romn-to-md-nosplit.ts",
+		"./convert-romn-to-md-nosplit/**/*.ts"
+	]
+}
