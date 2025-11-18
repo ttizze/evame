@@ -1,10 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { ContentKind } from "@prisma/client";
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
-import {
-	syncSegmentMetadataAndLocators,
-	syncSegments,
-} from "@/app/[locale]/_lib/sync-segments";
+import { syncSegments } from "@/app/[locale]/_lib/sync-segments";
 import { prisma } from "@/lib/prisma";
 export async function upsertPageCommentAndSegments(p: {
 	pageId: number;
@@ -47,13 +44,7 @@ export async function upsertPageCommentAndSegments(p: {
 			});
 		}
 
-		const hashToSegmentId = await syncSegments(tx, pageComment.id, p.segments);
-		await syncSegmentMetadataAndLocators(
-			tx,
-			pageComment.id,
-			hashToSegmentId,
-			p.segments,
-		);
+		await syncSegments(tx, pageComment.id, p.segments);
 
 		return pageComment;
 	});

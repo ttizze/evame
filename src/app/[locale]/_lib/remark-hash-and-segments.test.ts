@@ -14,8 +14,16 @@ describe("remarkHashAndSegments", () => {
 			.process(md)) as VFile & { data: { segments: SegmentDraft[] } };
 		expect(file.data.segments).toMatchObject([
 			{ text: "Title", number: 0, textAndOccurrenceHash: expect.any(String) },
-			{ text: "Paragraph1", number: 1, textAndOccurrenceHash: expect.any(String) },
-			{ text: "Paragraph2", number: 2, textAndOccurrenceHash: expect.any(String) },
+			{
+				text: "Paragraph1",
+				number: 1,
+				textAndOccurrenceHash: expect.any(String),
+			},
+			{
+				text: "Paragraph2",
+				number: 2,
+				textAndOccurrenceHash: expect.any(String),
+			},
 		]);
 	});
 
