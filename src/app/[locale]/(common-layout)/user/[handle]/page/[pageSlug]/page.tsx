@@ -2,10 +2,6 @@ import { EyeIcon, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BASE_URL } from "@/app/_constants/base-url";
-import {
-	LinkedSegmentsProvider,
-	type LinkedSegmentTypeInfo,
-} from "@/app/_context/linked-segment-provider.client";
 import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { FloatingControls } from "@/app/[locale]/_components/floating-controls.client";
 import { PageLikeButtonClient } from "@/app/[locale]/_components/page/page-like-button/client";
@@ -78,23 +74,6 @@ export default async function Page(
 		return notFound();
 	}
 
-	const linkedSegmentTypeMap = new Map<string, LinkedSegmentTypeInfo>();
-	for (const segment of pageDetail.content.segments) {
-		for (const group of segment.linkedSegments ?? []) {
-			const existing = linkedSegmentTypeMap.get(group.type.key);
-			if (existing) {
-				existing.count += group.segments.length;
-			} else {
-				linkedSegmentTypeMap.set(group.type.key, {
-					key: group.type.key,
-					label: group.type.label,
-					count: group.segments.length,
-				});
-			}
-		}
-	}
-	const linkedSegmentTypes = Array.from(linkedSegmentTypeMap.values());
-
 	const article = (
 		<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 			<PageBreadcrumb locale={locale} pageDetail={pageDetail} />
@@ -135,13 +114,7 @@ export default async function Page(
 	return (
 		<>
 			<SourceLocaleBridge locale={pageDetail.sourceLocale} />
-			{linkedSegmentTypes.length > 0 ? (
-				<LinkedSegmentsProvider types={linkedSegmentTypes}>
-					{article}
-				</LinkedSegmentsProvider>
-			) : (
-				article
-			)}
+			{article}
 		</>
 	);
 }

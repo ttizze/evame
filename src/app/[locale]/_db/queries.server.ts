@@ -17,10 +17,20 @@ export const selectUserFields = () => {
 	};
 };
 
-export const selectPageFields = (
-	locale = "en",
-	where?: Prisma.SegmentWhereInput,
-) => ({
+export const selectSegmentFields = (locale: string) => ({
+	id: true,
+	number: true,
+	text: true,
+	segmentType: {
+		select: {
+			key: true,
+			label: true,
+		},
+	},
+	...selectSegmentTranslations(locale),
+});
+
+const basePageFieldSelect = {
 	id: true,
 	slug: true,
 	createdAt: true,
@@ -31,27 +41,76 @@ export const selectPageFields = (
 	user: {
 		select: selectUserFields(),
 	},
-	content: {
-		select: {
-			segments: {
-				...(where ? { where } : {}),
-				select: {
-					id: true,
-					number: true,
-					text: true,
-					segmentType: {
-						select: {
-							key: true,
-							label: true,
-						},
-					},
-					segmentTranslations:
-						selectSegmentTranslations(locale).segmentTranslations,
+} as const;
+
+const buildPageSelect = (locale: string, where?: Prisma.SegmentWhereInput) =>
+	({
+		...basePageFieldSelect,
+		content: {
+			select: {
+				segments: {
+					...(where ? { where } : {}),
+					select: selectSegmentFields(locale),
 				},
 			},
 		},
-	},
-});
+	}) as const;
+
+const buildPageSelectWithLocators = (
+	locale: string,
+	where?: Prisma.SegmentWhereInput,
+) =>
+	({
+		...basePageFieldSelect,
+		content: {
+			select: {
+				segments: {
+					...(where ? { where } : {}),
+					select: {
+						...selectSegmentFields(locale),
+						locators: {
+							select: {
+								segmentLocatorId: true,
+								locator: {
+									select: {
+										id: true,
+										segments: {
+											select: {
+												segment: {
+													select: selectSegmentFields(locale),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}) as const;
+
+export function selectPageFields(
+	locale?: string,
+	where?: Prisma.SegmentWhereInput,
+	includeLocators?: false,
+): ReturnType<typeof buildPageSelect>;
+export function selectPageFields(
+	locale: string | undefined,
+	where: Prisma.SegmentWhereInput | undefined,
+	includeLocators: true,
+): ReturnType<typeof buildPageSelectWithLocators>;
+export function selectPageFields(
+	locale = "en",
+	where?: Prisma.SegmentWhereInput,
+	includeLocators = false,
+) {
+	if (includeLocators) {
+		return buildPageSelectWithLocators(locale, where);
+	}
+	return buildPageSelect(locale, where);
+}
 // 共通: locale ごとの最適化済み segmentTranslations を取得する include/select ビルダー
 export const selectSegmentTranslations = (locale: string) => ({
 	segmentTranslations: {

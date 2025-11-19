@@ -1,12 +1,10 @@
 import type {
-	Page,
 	SegmentTranslation,
 	SegmentType,
-	Tag,
-	TagPage,
 	TranslationVote,
 } from "@prisma/client";
 import type { SanitizedUser } from "../types";
+import type { fetchPageDetail } from "./_db/page-detail-queries.server";
 
 export type TranslationWithUser = SegmentTranslation & {
 	user: SanitizedUser;
@@ -24,41 +22,28 @@ export interface SegmentTypeForUI {
 	label: SegmentType["label"];
 }
 
+// fetchPageDetail の戻り値から型を推論
+export type PageDetail = NonNullable<
+	Awaited<ReturnType<typeof fetchPageDetail>>
+>;
+
+// PageDetail から実際のセグメント型を取得
+export type SegmentForUI = PageDetail["content"]["segments"][number];
+
 export interface LinkedSegmentGroup {
 	type: SegmentTypeForUI;
 	segments: SegmentForUI[];
 }
 
-export interface SegmentForUI {
-	id: number;
-	number: number;
-	text: string;
-	segmentTranslation: TranslationWithUser | null;
-	segmentType?: SegmentTypeForUI | null;
-	linkedSegments?: LinkedSegmentGroup[];
-}
-
-type TagPageWithTag = TagPage & {
-	tag: Tag;
-};
-export type PageDetail = Omit<Page, "updatedAt" | "userId"> & {
-	user: SanitizedUser;
-	tagPages: TagPageWithTag[];
-	content: {
-		segments: SegmentForUI[];
-	};
-	_count: {
-		pageComments: number;
-		children: number | null;
-	};
-};
-
 export type PageForList = Omit<PageDetail, "mdastJson">;
 
 export type PageForTitle = Omit<
 	PageDetail,
-	"mdastJson" | "tagPages" | "_count"
+	"mdastJson" | "tagPages" | "_count" | "content" | "updatedAt" | "userId"
 > & {
+	content: {
+		segments: SegmentForUI[];
+	};
 	_count: {
 		children: number;
 	};

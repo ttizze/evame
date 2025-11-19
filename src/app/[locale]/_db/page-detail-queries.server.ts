@@ -1,11 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { pickBestTranslation } from "../_lib/pick-best-translation";
-import type { LinkedSegmentGroup, PageDetail, SegmentForUI } from "../types";
-import { selectPageFields, selectSegmentTranslations } from "./queries.server";
+import { selectPageFields } from "./queries.server";
 
 export const selectPageDetailFields = (locale = "en") => {
 	return {
-		...selectPageFields(locale),
+		...selectPageFields(locale, undefined, true),
 		// PageDetail 型が要求するベースフィールド
 		mdastJson: true,
 		updatedAt: true,
@@ -25,78 +24,49 @@ export const selectPageDetailFields = (locale = "en") => {
 	};
 };
 
-export async function fetchPageDetail(
-	slug: string,
-	locale: string,
-): Promise<PageDetail | null> {
+export async function fetchPageDetail(slug: string, locale: string) {
 	const page = await prisma.page.findUnique({
 		where: { slug },
 		select: selectPageDetailFields(locale),
 	});
 	if (!page) return null;
 
-	const normalizedSegments = pickBestTranslation(
-		page.content.segments,
-	) as Array<SegmentForUI & { segmentType?: SegmentForUI["segmentType"] }>;
-
-	const segmentIdList = normalizedSegments.map((segment) => segment.id);
-	let linkedSegmentsByTarget = new Map<number, LinkedSegmentGroup[]>();
-
-	if (segmentIdList.length > 0) {
-		const links = await prisma.segmentLink.findMany({
-			where: { toSegmentId: { in: segmentIdList } },
-			select: {
-				toSegmentId: true,
-				fromSegment: {
-					select: {
-						id: true,
-						number: true,
-						text: true,
-						segmentType: {
-							select: { key: true, label: true },
-						},
-						...selectSegmentTranslations(locale),
-					},
-				},
-			},
-		});
-
-		linkedSegmentsByTarget = links.reduce((map, link) => {
-			const normalized = pickBestTranslation([
-				link.fromSegment,
-			])[0] as SegmentForUI;
-			if (!normalized.segmentType) return map;
-			const current = map.get(link.toSegmentId) ?? [];
-			let group = current.find(
-				(item) => item.type.key === normalized.segmentType?.key,
-			);
-			if (!group) {
-				group = {
-					type: normalized.segmentType,
-					segments: [],
-				};
-				current.push(group);
-				map.set(link.toSegmentId, current);
+	const segmentsWithNormalizedLocators = page.content.segments.map(
+		(segment) => {
+			if (!segment.locators) {
+				return segment;
 			}
-			group.segments.push(normalized);
-			return map;
-		}, new Map<number, LinkedSegmentGroup[]>());
-	}
 
-	const segmentsWithLinks = normalizedSegments.map((segment) => {
-		const linked = linkedSegmentsByTarget.get(segment.id) ?? [];
-		return linked.length
-			? {
-					...segment,
-					linkedSegments: linked,
-				}
-			: segment;
-	});
+			const locators = segment.locators.map((segmentLocator) => {
+				const linkedSegments = segmentLocator.locator.segments.map(
+					({ segment: linkedSegment }) => linkedSegment,
+				);
+
+				return {
+					...segmentLocator,
+					locator: {
+						...segmentLocator.locator,
+						segments: pickBestTranslation(linkedSegments),
+					},
+				};
+			});
+
+			return {
+				...segment,
+				locators,
+			};
+		},
+	);
+
+	// その後、メインの segments に pickBestTranslation を適用
+	const normalizedSegments = pickBestTranslation(
+		segmentsWithNormalizedLocators,
+	);
 
 	return {
 		...page,
 		content: {
-			segments: segmentsWithLinks,
+			segments: normalizedSegments,
 		},
 	};
 }
