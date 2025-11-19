@@ -42,7 +42,7 @@ export type PageForTitle = Omit<
 	"mdastJson" | "tagPages" | "_count" | "content" | "updatedAt" | "userId"
 > & {
 	content: {
-		segments: SegmentForUI[];
+		segments: Array<Omit<SegmentForUI, "locators">>;
 	};
 	_count: {
 		children: number;

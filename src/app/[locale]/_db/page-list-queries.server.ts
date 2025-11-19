@@ -1,5 +1,5 @@
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { pickBestTranslation } from "../_lib/pick-best-translation";
 import type { PageForList, PageForTitle } from "../types";
 import { selectPageFields } from "./queries.server";
