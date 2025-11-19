@@ -28,11 +28,11 @@ export type PageDetail = NonNullable<
 >;
 
 // PageDetail から実際のセグメント型を取得
-export type SegmentForUI = PageDetail["content"]["segments"][number];
-
+export type SegmentForDetail = PageDetail["content"]["segments"][number];
+export type SegmentForList = Omit<SegmentForDetail, "locators">;
 export interface LinkedSegmentGroup {
 	type: SegmentTypeForUI;
-	segments: SegmentForUI[];
+	segments: SegmentForDetail[];
 }
 
 export type PageForList = Omit<PageDetail, "mdastJson">;
@@ -42,7 +42,7 @@ export type PageForTitle = Omit<
 	"mdastJson" | "tagPages" | "_count" | "content" | "updatedAt" | "userId"
 > & {
 	content: {
-		segments: Array<Omit<SegmentForUI, "locators">>;
+		segments: SegmentForList[];
 	};
 	_count: {
 		children: number;

@@ -29,6 +29,27 @@ export const selectSegmentFields = (locale: string) => ({
 	},
 	...selectSegmentTranslations(locale),
 });
+// 共通: locale ごとの最適化済み segmentTranslations を取得する include/select ビルダー
+const selectSegmentTranslations = (locale: string) => ({
+	segmentTranslations: {
+		where: { locale },
+		select: {
+			segmentId: true,
+			userId: true,
+			id: true,
+			locale: true,
+			text: true,
+			point: true,
+			createdAt: true,
+			user: { select: selectUserFields() },
+		},
+		orderBy: [
+			{ point: Prisma.SortOrder.desc },
+			{ createdAt: Prisma.SortOrder.desc },
+		],
+		take: 1,
+	},
+});
 
 const basePageFieldSelect = {
 	id: true,
@@ -111,27 +132,6 @@ export function selectPageFields(
 	}
 	return buildPageSelect(locale, where);
 }
-// 共通: locale ごとの最適化済み segmentTranslations を取得する include/select ビルダー
-export const selectSegmentTranslations = (locale: string) => ({
-	segmentTranslations: {
-		where: { locale },
-		select: {
-			segmentId: true,
-			userId: true,
-			id: true,
-			locale: true,
-			text: true,
-			point: true,
-			createdAt: true,
-			user: { select: selectUserFields() },
-		},
-		orderBy: [
-			{ point: Prisma.SortOrder.desc },
-			{ createdAt: Prisma.SortOrder.desc },
-		],
-		take: 1,
-	},
-});
 
 export async function getPageById(pageId: number) {
 	const page = await prisma.page.findUnique({

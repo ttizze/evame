@@ -2,7 +2,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { Fragment } from "react";
 import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
-import type { PageDetail, SegmentForUI } from "@/app/[locale]/types";
+import type { PageDetail, SegmentForList } from "@/app/[locale]/types";
 import {
 	Breadcrumb,
 	BreadcrumbItem,
@@ -19,7 +19,7 @@ interface PageBreadcrumbProps {
 
 interface BreadcrumbItemData {
 	href: string;
-	segment: SegmentForUI;
+	segment: SegmentForList;
 }
 
 export async function PageBreadcrumb({
@@ -34,7 +34,7 @@ export async function PageBreadcrumb({
 	// 親ページを順番に追加
 	parentChain.forEach((parent) => {
 		const parentTitleSegment = parent.content.segments.find(
-			(s: SegmentForUI) => s.number === 0,
+			(s: SegmentForList) => s.number === 0,
 		);
 		if (!parentTitleSegment) {
 			return;

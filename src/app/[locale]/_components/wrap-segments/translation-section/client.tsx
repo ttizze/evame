@@ -8,11 +8,11 @@ import {
 	useState,
 } from "react";
 import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
-import type { SegmentForUI } from "@/app/[locale]/types";
+import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
 import { AddAndVoteTranslations } from "./add-and-vote-translations.client";
 
 interface TranslationSectionProps<Tag extends keyof JSX.IntrinsicElements> {
-	segment: SegmentForUI;
+	segment: SegmentForDetail | SegmentForList;
 	tagName: Tag;
 	tagProps: JSX.IntrinsicElements[Tag];
 	interactive: boolean;

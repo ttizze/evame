@@ -4,7 +4,7 @@ import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import useSWR from "swr";
 import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
-import type { PageForTitle, SegmentForUI } from "@/app/[locale]/types";
+import type { PageForTitle, SegmentForList } from "@/app/[locale]/types";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +15,7 @@ interface Props {
 
 interface PageLinkProps {
 	page: PageForTitle;
-	titleSegment: SegmentForUI;
+	titleSegment: SegmentForList;
 	className?: string;
 }
 

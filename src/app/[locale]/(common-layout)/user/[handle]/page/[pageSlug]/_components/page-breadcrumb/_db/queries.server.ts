@@ -1,6 +1,6 @@
 import { selectPageFields } from "@/app/[locale]/_db/queries.server";
 import { pickBestTranslation } from "@/app/[locale]/_lib/pick-best-translation";
-import type { SegmentForUI } from "@/app/[locale]/types";
+import type { SegmentForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";
 
@@ -13,7 +13,7 @@ type ParentNode = {
 	parentId: number | null;
 	createdAt: string;
 	user: SanitizedUser;
-	content: { segments: Array<Omit<SegmentForUI, "locators">> };
+	content: { segments: SegmentForList[] };
 	children: ParentNode[];
 };
 

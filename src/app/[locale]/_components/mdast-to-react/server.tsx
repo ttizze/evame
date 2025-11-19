@@ -14,7 +14,7 @@ import rehypeSlug from "rehype-slug";
 import remarkLinkCard from "remark-link-card-plus";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
-import type { SegmentForUI } from "@/app/[locale]/types";
+import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
 import { WrapSegment } from "../wrap-segments/server";
 import { remarkTweet } from "./remark-tweet";
 
@@ -51,7 +51,7 @@ const ImgComponent: ComponentType<ImgProps> = ({ src = "", ...props }) => (
 
 interface Params {
 	mdast: Prisma.JsonValue;
-	segments: SegmentForUI[];
+	segments: (SegmentForDetail | SegmentForList)[];
 }
 
 /** mdast(JSON) → React 要素 */
