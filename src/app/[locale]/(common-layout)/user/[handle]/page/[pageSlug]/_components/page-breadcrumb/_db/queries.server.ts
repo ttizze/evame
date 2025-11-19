@@ -13,7 +13,7 @@ type ParentNode = {
 	parentId: number | null;
 	createdAt: string;
 	user: SanitizedUser;
-	content: { segments: SegmentForUI[] };
+	content: { segments: Array<Omit<SegmentForUI, "locators">> };
 	children: ParentNode[];
 };
 
