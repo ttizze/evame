@@ -360,11 +360,14 @@ model Content {
   @@map("contents")
 }
 
+enum SegmentTypeKey {
+  PRIMARY
+  COMMENTARY
+}
 model SegmentType {
   id     Int    @id @default(autoincrement())
-  key    String @unique // "PRIMARY" | "COMMENTARY" | "GLOSS" など
+  key    SegmentTypeKey
   label  String // 表示名
-  weight Int    @default(0) // 一括表示時の既定順（任意）
 
   segments Segment[]
 

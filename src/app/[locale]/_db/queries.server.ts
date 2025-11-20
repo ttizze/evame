@@ -87,6 +87,8 @@ const buildPageSelectWithLocators = (
 			select: {
 				segments: {
 					...(where ? { where } : {}),
+					segmentType: { key: "PRIMARY" },
+					orderBy: { number: "asc" },
 					select: {
 						...selectSegmentFields(locale),
 						locators: {
@@ -96,6 +98,14 @@ const buildPageSelectWithLocators = (
 									select: {
 										id: true,
 										segments: {
+											where: {
+												segment: {
+													// 本文を除外（contentId が違うかどうかは気にしない）
+													segmentType: {
+														key: { not: "PRIMARY" },
+													},
+												},
+											},
 											select: {
 												segment: {
 													select: selectSegmentFields(locale),
