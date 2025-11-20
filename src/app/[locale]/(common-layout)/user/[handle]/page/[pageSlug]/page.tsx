@@ -74,43 +74,47 @@ export default async function Page(
 		return notFound();
 	}
 
+	const article = (
+		<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
+			<PageBreadcrumb locale={locale} pageDetail={pageDetail} />
+			<ContentWithTranslations pageData={data} />
+			<ChildPages locale={locale} parentId={pageDetail.id} />
+			<div className="flex items-center gap-4">
+				<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
+				<PageViewCounter
+					className="text-muted-foreground"
+					initialCount={pageViewCount}
+					pageId={pageDetail.id}
+				/>
+				<PageLikeButtonClient className="" pageId={pageDetail.id} showCount />
+				<MessageCircle className="w-5 h-5" strokeWidth={1.5} />
+				<span className="text-muted-foreground">
+					{pageDetail._count?.pageComments || 0}
+				</span>
+			</div>
+
+			<FloatingControls
+				likeButton={
+					<PageLikeButtonClient
+						className="w-10 h-10 border rounded-full"
+						pageId={pageDetail.id}
+						showCount={false}
+					/>
+				}
+			/>
+
+			<div className="mt-8 space-y-4" id="comments">
+				<h2 className="text-2xl not-prose font-bold">Comments</h2>
+				<PageCommentForm pageId={pageDetail.id} userLocale={locale} />
+				<PageCommentList pageId={pageDetail.id} userLocale={locale} />
+			</div>
+		</article>
+	);
+
 	return (
 		<>
 			<SourceLocaleBridge locale={pageDetail.sourceLocale} />
-			<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
-				<PageBreadcrumb locale={locale} pageDetail={pageDetail} />
-				<ContentWithTranslations pageData={data} />
-				<ChildPages locale={locale} parentId={pageDetail.id} />
-				<div className="flex items-center gap-4">
-					<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
-					<PageViewCounter
-						className="text-muted-foreground"
-						initialCount={pageViewCount}
-						pageId={pageDetail.id}
-					/>
-					<PageLikeButtonClient className="" pageId={pageDetail.id} showCount />
-					<MessageCircle className="w-5 h-5" strokeWidth={1.5} />
-					<span className="text-muted-foreground">
-						{pageDetail._count?.pageComments || 0}
-					</span>
-				</div>
-
-				<FloatingControls
-					likeButton={
-						<PageLikeButtonClient
-							className="w-10 h-10 border rounded-full"
-							pageId={pageDetail.id}
-							showCount={false}
-						/>
-					}
-				/>
-
-				<div className="mt-8 space-y-4" id="comments">
-					<h2 className="text-2xl not-prose font-bold">Comments</h2>
-					<PageCommentForm pageId={pageDetail.id} userLocale={locale} />
-					<PageCommentList pageId={pageDetail.id} userLocale={locale} />
-				</div>
-			</article>
+			{article}
 		</>
 	);
 }

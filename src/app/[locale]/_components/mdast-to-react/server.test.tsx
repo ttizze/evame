@@ -3,7 +3,7 @@ import { queryByAttribute } from "@testing-library/dom";
 import { render, screen } from "@testing-library/react";
 import type { Root } from "mdast";
 import { describe, expect, it, vi } from "vitest";
-import type { SegmentForUI } from "@/app/[locale]/types";
+import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
 
 vi.mock("@/app/_context/display-provider", () => ({
 	useDisplay: () => ({ mode: "source" }), // ← dummy 値
@@ -18,18 +18,20 @@ vi.mock("react-tweet", () => ({
 import { mdastToReact } from "./server";
 
 // テスト用のセグメントバンドル
-const segments: SegmentForUI[] = [
+const segments: (SegmentForDetail | SegmentForList)[] = [
 	{
 		id: 10,
 		number: 1,
 		text: "abc",
 		segmentTranslation: null,
+		segmentType: { key: "heading", label: "Heading" },
 	},
 	{
 		id: 11,
 		number: 2,
 		text: "def",
 		segmentTranslation: null,
+		segmentType: { key: "paragraph", label: "Paragraph" },
 	},
 ];
 
@@ -172,36 +174,41 @@ describe("mdastToReact", () => {
 			],
 		};
 
-		const segments: SegmentForUI[] = [
+		const segments: (SegmentForDetail | SegmentForList)[] = [
 			{
 				id: 1,
 				number: 1,
 				text: "Heading 1",
 				segmentTranslation: null,
+				segmentType: { key: "heading", label: "Heading" },
 			},
 			{
 				id: 2,
 				number: 2,
 				text: "Heading 2",
 				segmentTranslation: null,
+				segmentType: { key: "heading", label: "Heading" },
 			},
 			{
 				id: 3,
 				number: 3,
 				text: "Paragraph text",
 				segmentTranslation: null,
+				segmentType: { key: "paragraph", label: "Paragraph" },
 			},
 			{
 				id: 4,
 				number: 4,
 				text: "List item",
 				segmentTranslation: null,
+				segmentType: { key: "listItem", label: "List Item" },
 			},
 			{
 				id: 5,
 				number: 5,
 				text: "Blockquote text",
 				segmentTranslation: null,
+				segmentType: { key: "blockquote", label: "Blockquote" },
 			},
 		];
 

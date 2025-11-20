@@ -1,13 +1,13 @@
 import { createElement, type JSX } from "react";
 import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
-import type { SegmentForUI } from "@/app/[locale]/types";
+import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
 
 export function WrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 	Tag: Tag,
-	segments: SegmentForUI[],
+	segments: (SegmentForDetail | SegmentForList)[],
 	interactive: boolean = true,
 ) {
-	const segmentsMap = new Map<number, SegmentForUI>(
+	const segmentsMap = new Map<number, SegmentForDetail | SegmentForList>(
 		segments.map((s) => [s.number, s]),
 	);
 

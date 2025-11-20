@@ -1,11 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import { normalizeSegments } from "../_lib/normalize-segments";
-import type { PageDetail } from "../types";
+import { pickBestTranslation } from "../_lib/pick-best-translation";
 import { selectPageFields } from "./queries.server";
 
 export const selectPageDetailFields = (locale = "en") => {
 	return {
-		...selectPageFields(locale),
+		...selectPageFields(locale, undefined, true),
 		// PageDetail 型が要求するベースフィールド
 		mdastJson: true,
 		updatedAt: true,
@@ -25,19 +24,49 @@ export const selectPageDetailFields = (locale = "en") => {
 	};
 };
 
-export async function fetchPageDetail(
-	slug: string,
-	locale: string,
-): Promise<PageDetail | null> {
+export async function fetchPageDetail(slug: string, locale: string) {
 	const page = await prisma.page.findUnique({
 		where: { slug },
 		select: selectPageDetailFields(locale),
 	});
 	if (!page) return null;
+
+	const segmentsWithNormalizedLocators = page.content.segments.map(
+		(segment) => {
+			if (!segment.locators) {
+				return segment;
+			}
+
+			const locators = segment.locators.map((segmentLocator) => {
+				const linkedSegments = segmentLocator.locator.segments.map(
+					({ segment: linkedSegment }) => linkedSegment,
+				);
+
+				return {
+					...segmentLocator,
+					locator: {
+						...segmentLocator.locator,
+						segments: pickBestTranslation(linkedSegments),
+					},
+				};
+			});
+
+			return {
+				...segment,
+				locators,
+			};
+		},
+	);
+
+	// その後、メインの segments に pickBestTranslation を適用
+	const normalizedSegments = pickBestTranslation(
+		segmentsWithNormalizedLocators,
+	);
+
 	return {
 		...page,
 		content: {
-			segments: normalizeSegments(page.content.segments),
+			segments: normalizedSegments,
 		},
 	};
 }

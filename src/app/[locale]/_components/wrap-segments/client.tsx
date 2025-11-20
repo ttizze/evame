@@ -9,11 +9,11 @@ import {
 	type ReactNode,
 } from "react";
 import { useDisplay } from "@/app/_context/display-provider";
-import type { SegmentForUI } from "@/app/[locale]/types";
+import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
 import { TranslationSection } from "./translation-section/client";
 
 interface BaseProps {
-	segment: SegmentForUI;
+	segment: SegmentForDetail | SegmentForList;
 	children: ReactNode;
 	/**
 	 * If false, disable interactive UI (votes, popovers, etc.) inside TranslationSection.

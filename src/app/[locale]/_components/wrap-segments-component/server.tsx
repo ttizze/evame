@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 import { WrapSegment } from "@/app/[locale]/_components/wrap-segments/server";
-import type { SegmentForUI } from "@/app/[locale]/types";
+import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
 
 interface WrapSegmentsComponentProps<
 	Tag extends keyof JSX.IntrinsicElements = "span",
@@ -8,7 +8,7 @@ interface WrapSegmentsComponentProps<
 	/** HTML tag to render. Defaults to 'span'. */
 	tagName?: Tag;
 	/** Segment to display */
-	segment: SegmentForUI;
+	segment: SegmentForDetail | SegmentForList;
 	/** Disable interactive UI (votes, popovers). Defaults to true */
 	interactive?: boolean;
 	/** Extra class names for the outer tag */

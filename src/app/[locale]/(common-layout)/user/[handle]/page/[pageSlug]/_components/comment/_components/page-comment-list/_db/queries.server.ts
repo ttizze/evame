@@ -1,7 +1,6 @@
-import { selectSegmentTranslations } from "@/app/[locale]/_db/queries.server";
-import { normalizeSegments } from "@/app/[locale]/_lib/normalize-segments";
+import { selectSegmentFields } from "@/app/[locale]/_db/queries.server";
+import { pickBestTranslation } from "@/app/[locale]/_lib/pick-best-translation";
 import { prisma } from "@/lib/prisma";
-
 export async function fetchPageCommentsWithSegments(
 	pageId: number,
 	locale: string,
@@ -19,13 +18,7 @@ export async function fetchPageCommentsWithSegments(
 			content: {
 				select: {
 					segments: {
-						select: {
-							id: true,
-							number: true,
-							text: true,
-							segmentTranslations:
-								selectSegmentTranslations(locale).segmentTranslations,
-						},
+						select: selectSegmentFields(locale),
 					},
 				},
 			},
@@ -35,7 +28,7 @@ export async function fetchPageCommentsWithSegments(
 	return comments.map((comment) => ({
 		...comment,
 		content: {
-			segments: normalizeSegments(comment.content.segments),
+			segments: pickBestTranslation(comment.content.segments),
 		},
 	}));
 }
@@ -68,13 +61,7 @@ export async function listRootPageComments(
 			content: {
 				select: {
 					segments: {
-						select: {
-							id: true,
-							number: true,
-							text: true,
-							segmentTranslations:
-								selectSegmentTranslations(locale).segmentTranslations,
-						},
+						select: selectSegmentFields(locale),
 					},
 				},
 			},
@@ -87,7 +74,7 @@ export async function listRootPageComments(
 	return comments.map((comment) => ({
 		...comment,
 		content: {
-			segments: normalizeSegments(comment.content.segments),
+			segments: pickBestTranslation(comment.content.segments),
 		},
 	}));
 }
@@ -110,13 +97,7 @@ export async function listChildPageComments(
 			content: {
 				select: {
 					segments: {
-						select: {
-							id: true,
-							number: true,
-							text: true,
-							segmentTranslations:
-								selectSegmentTranslations(locale).segmentTranslations,
-						},
+						select: selectSegmentFields(locale),
 					},
 				},
 			},
@@ -129,7 +110,7 @@ export async function listChildPageComments(
 	return comments.map((comment) => ({
 		...comment,
 		content: {
-			segments: normalizeSegments(comment.content.segments),
+			segments: pickBestTranslation(comment.content.segments),
 		},
 	}));
 }
