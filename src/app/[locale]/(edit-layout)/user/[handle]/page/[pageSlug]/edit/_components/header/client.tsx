@@ -26,6 +26,7 @@ import { Link } from "@/i18n/routing";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
 import { LocaleMultiSelector } from "./locale-multi-selector/client";
+import { MarkdownHelpPopover } from "./markdown-help-popover";
 
 interface EditHeaderProps {
 	currentUser: SanitizedUser;
@@ -114,103 +115,106 @@ export function EditHeader({
 		</>
 	);
 	const rightExtra = (
-		<Popover>
-			<PopoverTrigger asChild>
-				<Button
-					className={BUTTON_BASE_CLASSES}
-					disabled={isPending || !pageId}
-					size="sm"
-					variant={initialStatus === "PUBLIC" ? "default" : "secondary"}
-				>
-					{statusIcon}
-					<span>
-						{isPending
-							? PROCESSING_TEXT
-							: initialStatus === "PUBLIC"
-								? "Public"
-								: "Private"}
-					</span>
-				</Button>
-			</PopoverTrigger>
-			<PopoverContent align="end" className="w-56 rounded-xl py-1 px-3">
-				<div className="space-y-1">
+		<div className="flex items-center gap-1.5">
+			<MarkdownHelpPopover />
+			<Popover>
+				<PopoverTrigger asChild>
+					<Button
+						className={BUTTON_BASE_CLASSES}
+						disabled={isPending || !pageId}
+						size="sm"
+						variant={initialStatus === "PUBLIC" ? "default" : "secondary"}
+					>
+						{statusIcon}
+						<span>
+							{isPending
+								? PROCESSING_TEXT
+								: initialStatus === "PUBLIC"
+									? "Public"
+									: "Private"}
+						</span>
+					</Button>
+				</PopoverTrigger>
+				<PopoverContent align="end" className="w-56 rounded-xl py-1 px-3">
+					<div className="space-y-1">
+						<form action={action}>
+							<input name="pageId" type="hidden" value={pageId ?? ""} />
+							<input name="status" type="hidden" value="PUBLIC" />
+							<input
+								name="targetLocales"
+								type="hidden"
+								value={locales.join(",")}
+							/>
+							<div className="flex justify-between items-center w-full">
+								<Button
+									className={MENU_BUTTON_CLASSES}
+									disabled={isPending}
+									onClick={() => setClickedStatus("PUBLIC")}
+									type="submit"
+									variant="ghost"
+								>
+									{isPending && clickedStatus === "PUBLIC" ? (
+										<Loader2 className={ICON_SPIN_CLASSES} />
+									) : initialStatus === "PUBLIC" ? (
+										<>
+											<LanguagesIcon className={ICON_CLASSES} />
+											<span>Translate</span>
+										</>
+									) : (
+										<>
+											<Globe className={ICON_CLASSES} />
+											<span>Public</span>
+										</>
+									)}
+								</Button>
+								{pageSlug && (
+									<LocaleMultiSelector
+										className="ml-2"
+										defaultValue={locales}
+										maxSelectable={maxSelectableLocales}
+										onChange={setLocales}
+									/>
+								)}
+							</div>
+						</form>
+					</div>
 					<form action={action}>
 						<input name="pageId" type="hidden" value={pageId ?? ""} />
-						<input name="status" type="hidden" value="PUBLIC" />
-						<input
-							name="targetLocales"
-							type="hidden"
-							value={locales.join(",")}
-						/>
-						<div className="flex justify-between items-center w-full">
-							<Button
-								className={MENU_BUTTON_CLASSES}
-								disabled={isPending}
-								onClick={() => setClickedStatus("PUBLIC")}
-								type="submit"
-								variant="ghost"
-							>
-								{isPending && clickedStatus === "PUBLIC" ? (
-									<Loader2 className={ICON_SPIN_CLASSES} />
-								) : initialStatus === "PUBLIC" ? (
-									<>
-										<LanguagesIcon className={ICON_CLASSES} />
-										<span>Translate</span>
-									</>
-								) : (
-									<>
-										<Globe className={ICON_CLASSES} />
-										<span>Public</span>
-									</>
-								)}
-							</Button>
-							{pageSlug && (
-								<LocaleMultiSelector
-									className="ml-2"
-									defaultValue={locales}
-									maxSelectable={maxSelectableLocales}
-									onChange={setLocales}
-								/>
+						<Button
+							className={MENU_BUTTON_CLASSES}
+							disabled={initialStatus === "DRAFT" || isPending}
+							onClick={() => setClickedStatus("DRAFT")}
+							type="submit"
+							variant="ghost"
+						>
+							<input name="status" type="hidden" value="DRAFT" />
+							{isPending && clickedStatus === "DRAFT" ? (
+								<Loader2 className={ICON_SPIN_CLASSES} />
+							) : (
+								<>
+									<Lock className={ICON_CLASSES} />
+									<span>Private</span>
+								</>
 							)}
-						</div>
+						</Button>
 					</form>
-				</div>
-				<form action={action}>
-					<input name="pageId" type="hidden" value={pageId ?? ""} />
-					<Button
-						className={MENU_BUTTON_CLASSES}
-						disabled={initialStatus === "DRAFT" || isPending}
-						onClick={() => setClickedStatus("DRAFT")}
-						type="submit"
-						variant="ghost"
-					>
-						<input name="status" type="hidden" value="DRAFT" />
-						{isPending && clickedStatus === "DRAFT" ? (
-							<Loader2 className={ICON_SPIN_CLASSES} />
-						) : (
-							<>
-								<Lock className={ICON_CLASSES} />
-								<span>Private</span>
-							</>
-						)}
-					</Button>
-				</form>
 
-				{!state.success && state.zodErrors?.status && (
-					<p className="text-sm text-red-500">{state.zodErrors.status}</p>
-				)}
-				{!state.success && state.zodErrors?.pageId && (
-					<p className="text-sm text-red-500">{state.zodErrors.pageId}</p>
-				)}
-				<Separator />
-				<Button asChild className={MENU_BUTTON_CLASSES} variant="ghost">
-					<Link href={previewHref as Route}>
-						<LinkIcon className={ICON_CLASSES} />
-						<span>Preview</span>
-					</Link>
-				</Button>
-			</PopoverContent>
-		</Popover>
+					{!state.success && state.zodErrors?.status && (
+						<p className="text-sm text-red-500">{state.zodErrors.status}</p>
+					)}
+					{!state.success && state.zodErrors?.pageId && (
+						<p className="text-sm text-red-500">{state.zodErrors.pageId}</p>
+					)}
+					<Separator />
+					<Button asChild className={MENU_BUTTON_CLASSES} variant="ghost">
+						<Link href={previewHref as Route}>
+							<LinkIcon className={ICON_CLASSES} />
+							<span>Preview</span>
+						</Link>
+					</Button>
+				</PopoverContent>
+			</Popover>
+		</div>
 	);
 
 	return (
