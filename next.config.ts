@@ -19,6 +19,7 @@ const config: NextConfig = {
 			bodySizeLimit: "5mb",
 		},
 	},
+	serverExternalPackages: ["jsdom", "isomorphic-dompurify"],
 	typedRoutes: true,
 	images: {
 		minimumCacheTTL: 2_678_400,
