@@ -1,8 +1,10 @@
 "use client";
 import parse from "html-react-parser";
-import DOMPurify from "isomorphic-dompurify";
 
-export function sanitizeAndParseText(text: string): React.ReactNode {
+export async function sanitizeAndParseText(
+	text: string,
+): Promise<React.ReactNode> {
+	const DOMPurify = (await import("isomorphic-dompurify")).default;
 	const sanitized = DOMPurify.sanitize(
 		text.replace(/(\r\n|\n|\\n)/g, "<br />"),
 	);
