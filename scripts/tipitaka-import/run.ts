@@ -6,6 +6,12 @@ import { getOrderGenerator, getSortedChildren } from "./helpers";
 import { ensureMetadataTypes } from "./metadata-types";
 import { createContentPage, createDirectoryPage } from "./pages";
 import { ensureRootPage } from "./root-page";
+import {
+	buildParagraphAnchorMap,
+	buildParagraphSegmentMap,
+	linkAnnotationSegments,
+	type ParagraphAnchorMap,
+} from "./segment-annotations";
 import { ensureSegmentTypes } from "./segment-types";
 import type { DirectoryNode, ImportEntry } from "./types";
 
@@ -155,9 +161,9 @@ export async function runTipitakaImport(): Promise<void> {
 		const orderForParent = getOrderGenerator();
 		const sortedEntries = sortEntries(entries);
 
-		const otherTypeId = segmentTypeIdMap.get("OTHER");
+		const otherTypeId = segmentTypeIdMap.get("Commentary");
 		if (!otherTypeId) {
-			throw new Error('Segment type "OTHER" not found');
+			throw new Error('Segment type "Commentary" not found');
 		}
 
 		// エントリをレベルごとにグループ化
@@ -174,7 +180,7 @@ export async function runTipitakaImport(): Promise<void> {
 
 		// レベルごとに順次処理（依存関係を保証）、レベル内では並列処理
 		// Mula → Atthakatha → Tika → Other の順で処理することで、
-		// 注釈書が参照するムーラのロケータが確実に存在することを保証
+		// 注釈書が参照するムーラのアンカーセグメントが確実に存在することを保証
 		const levelOrder: ImportEntry["level"][] = [
 			"Mula",
 			"Atthakatha",
@@ -182,6 +188,9 @@ export async function runTipitakaImport(): Promise<void> {
 			"Other",
 		];
 		const CONCURRENCY = 10; // 同時処理数
+
+		// Mulaファイルの段落番号 → アンカーセグメントIDのマッピングを保存
+		const anchorMapByMulaFile = new Map<string, ParagraphAnchorMap>();
 
 		for (const level of levelOrder) {
 			const levelEntries = entriesByLevel.get(level);
@@ -205,7 +214,7 @@ export async function runTipitakaImport(): Promise<void> {
 							segmentTypeIdMap.get(levelKey as SegmentType["key"]) ??
 							otherTypeId;
 
-						await createContentPage({
+						const pageId = await createContentPage({
 							prisma,
 							entry,
 							parentId: parentPageId,
@@ -213,6 +222,63 @@ export async function runTipitakaImport(): Promise<void> {
 							order,
 							segmentTypeId,
 						});
+
+						// ページのコンテンツIDを取得
+						const page = await prisma.page.findUnique({
+							where: { id: pageId },
+							select: { contentId: true },
+						});
+						if (!page) return;
+
+						// 段落番号でセグメントをグループ化
+						const paragraphNumberToSegmentIds = await buildParagraphSegmentMap(
+							prisma,
+							page.contentId,
+						);
+						if (paragraphNumberToSegmentIds.size === 0) {
+							return;
+						}
+
+						// Mula（根本経典）の場合: アンカーセグメントを特定して保存
+						if (levelKey === "MULA") {
+							const anchorMap = await buildParagraphAnchorMap(
+								prisma,
+								paragraphNumberToSegmentIds,
+							);
+							// 注釈書で参照できるようにマッピングを保存
+							anchorMapByMulaFile.set(entry.fileKey.toLowerCase(), anchorMap);
+							return;
+						}
+
+						// 注釈書の場合: Mulaのアンカーセグメントにリンク
+						if (!entry.mulaFileKey) {
+							return;
+						}
+
+						const anchorMap = anchorMapByMulaFile.get(
+							entry.mulaFileKey.toLowerCase(),
+						);
+						if (!anchorMap) {
+							console.warn(
+								`Anchor map not found for mula file: ${entry.mulaFileKey}`,
+							);
+							return;
+						}
+
+						// 同じ段落番号のアンカーセグメントに注釈セグメントをリンク
+						for (const [
+							paragraphNumber,
+							annotationSegmentIds,
+						] of paragraphNumberToSegmentIds) {
+							const mainSegmentId = anchorMap.get(paragraphNumber);
+							if (!mainSegmentId) continue;
+
+							await linkAnnotationSegments(
+								prisma,
+								annotationSegmentIds,
+								mainSegmentId,
+							);
+						}
 					}),
 				);
 				console.log(

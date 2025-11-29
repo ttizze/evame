@@ -7,10 +7,9 @@ export default defineConfig({
 	plugins: [react(), tsconfigPaths()],
 	test: {
 		globals: true,
-		fileParallelism: false,
 		env: {
 			SESSION_SECRET: "test",
-			DATABASE_URL: "postgres://postgres:postgres@db.localtest.me:5435/main",
+			// DATABASE_URLはvitest.setup.tsで設定される（worker IDベースのDB名に変換）
 			ENCRYPTION_KEY:
 				"2f9a0a1b3c4d5e6f7890123456789012345678901234567890abcdef123456",
 			RESEND_API_KEY: "test",

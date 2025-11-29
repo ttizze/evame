@@ -1,5 +1,4 @@
 import type { PrismaClient } from "@prisma/client";
-import { SegmentLocatorSystem } from "@prisma/client";
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
 
 type TransactionClient = Parameters<
@@ -7,7 +6,6 @@ type TransactionClient = Parameters<
 >[0];
 
 const SEGMENT_UPSERT_CHUNK_SIZE = 200;
-const SEGMENT_LOCATOR_LINK_CHUNK_SIZE = 1_000;
 const NUMBER_OFFSET_FOR_REORDERING = 1_000_000;
 
 /**
@@ -99,10 +97,10 @@ export async function syncSegments(
 }
 
 /**
- * SegmentDraft のメタデータとロケーターを同期する
+ * SegmentDraft のメタデータを同期する
  *
  * @param hashToSegmentId syncSegments の戻り値
- * @param segments セグメントドラフト（メタデータとロケーターを含む）
+ * @param segments セグメントドラフト（メタデータを含む）
  */
 export async function syncSegmentMetadataAndLocators(
 	tx: TransactionClient,
@@ -118,18 +116,11 @@ export async function syncSegmentMetadataAndLocators(
 		items: Array<{ typeKey: string; value: string }>;
 	}> = [];
 
-	// ロケータードラフトを収集
-	const locatorDrafts: Array<{
-		segmentId: number;
-		system: "VRI_PARAGRAPH";
-		value: string;
-	}> = [];
-
 	for (const segment of segments) {
 		const segmentId = hashToSegmentId.get(segment.textAndOccurrenceHash);
 		if (!segmentId) {
 			console.warn(
-				`Segment for hash "${segment.textAndOccurrenceHash}" not found, skipping metadata and locators`,
+				`Segment for hash "${segment.textAndOccurrenceHash}" not found, skipping metadata`,
 			);
 			continue;
 		}
@@ -140,20 +131,9 @@ export async function syncSegmentMetadataAndLocators(
 				items: segment.metadata.items,
 			});
 		}
-
-		if (segment.locators) {
-			for (const locator of segment.locators) {
-				locatorDrafts.push({
-					segmentId,
-					system: locator.system,
-					value: locator.value,
-				});
-			}
-		}
 	}
 
 	await syncSegmentMetadataDrafts(tx, segmentIds, metadataDrafts);
-	await syncLocatorsAndLinks(tx, contentId, locatorDrafts);
 }
 
 /**
@@ -240,146 +220,3 @@ async function syncSegmentMetadataDrafts(
 	}
 }
 
-/**
- * SegmentLocatorDraft を同期する（本文/注釈 共通のシンプルなフロー）
- *
- * 目的:
- * - contentId の VRI_PARAGRAPH ロケーター集合を、渡された values のみに収束
- *   1) 足りないロケーターを作成、余計なロケーターを削除
- *   2) ロケーターとセグメントのリンクを差分同期（不要削除・不足作成）
- *
- * @param locatorDrafts セグメントIDとロケーターのペア（system は VRI_PARAGRAPH 前提）
- */
-async function syncLocatorsAndLinks(
-	tx: TransactionClient,
-	contentId: number,
-	locatorDrafts: Array<{
-		segmentId: number;
-		system: keyof typeof SegmentLocatorSystem;
-		value: string;
-	}>,
-	system: SegmentLocatorSystem = SegmentLocatorSystem.VRI_PARAGRAPH,
-): Promise<void> {
-	// 1) ロケータ集合を同期し、value -> id マップを取得（抽出は関数内で実施）
-	const locatorIdByValue = await ensureLocatorsForSystem(
-		tx,
-		contentId,
-		locatorDrafts,
-		system,
-	);
-	if (locatorIdByValue.size === 0) return;
-
-	// 3) 望ましいリンク集合を構築（locatorId -> segmentIds）
-	const locatorIdToSegmentIds = buildLocatorIdToSegmentIds(
-		locatorDrafts,
-		locatorIdByValue,
-		system,
-	);
-	if (locatorIdToSegmentIds.size === 0) return;
-
-	// 4) リンクを置き換え
-	await replaceLinksForLocators(tx, locatorIdToSegmentIds);
-}
-
-// --- helpers (関心分離) ---
-
-async function ensureLocatorsForSystem(
-	tx: TransactionClient,
-	contentId: number,
-	drafts: Array<{
-		segmentId: number;
-		system: keyof typeof SegmentLocatorSystem;
-		value: string;
-	}>,
-	system: SegmentLocatorSystem,
-): Promise<Map<string, number>> {
-	// 対象 drafts のユニークな value を抽出
-	const uniqueValues = [
-		...new Set(
-			drafts
-				.filter((d) => d.system === system && Boolean(d.value))
-				.map((d) => d.value),
-		),
-	];
-
-	// 値が空の場合は、その contentId/system のロケーターを全削除し、空マップを返す
-	if (uniqueValues.length === 0) {
-		await tx.segmentLocator.deleteMany({ where: { contentId, system } });
-		return new Map();
-	}
-
-	await tx.segmentLocator.deleteMany({
-		where: {
-			contentId,
-			system,
-			value: { notIn: uniqueValues },
-		},
-	});
-	await tx.segmentLocator.createMany({
-		data: uniqueValues.map((value) => ({
-			contentId,
-			system,
-			value,
-		})),
-		skipDuplicates: true,
-	});
-	const locators = await tx.segmentLocator.findMany({
-		where: {
-			contentId,
-			system,
-			value: { in: uniqueValues },
-		},
-		select: { id: true, value: true },
-	});
-	return new Map(locators.map((l) => [l.value, l.id]));
-}
-
-/**
- * locatorId -> segmentIds の対応を構築する
- */
-function buildLocatorIdToSegmentIds(
-	drafts: Array<{
-		segmentId: number;
-		system: keyof typeof SegmentLocatorSystem;
-		value: string;
-	}>,
-	locatorIdByValue: Map<string, number>,
-	system: SegmentLocatorSystem,
-): Map<number, Set<number>> {
-	const map = new Map<number, Set<number>>();
-	for (const d of drafts) {
-		if (d.system !== system) continue;
-		if (!d.value) continue;
-		const locatorId = locatorIdByValue.get(d.value);
-		if (!locatorId) continue;
-		let set = map.get(locatorId);
-		if (!set) {
-			set = new Set<number>();
-			map.set(locatorId, set);
-		}
-		set.add(d.segmentId);
-	}
-	return map;
-}
-async function replaceLinksForLocators(
-	tx: TransactionClient,
-	locatorIdToSegmentIds: Map<number, Set<number>>,
-): Promise<void> {
-	const locatorIds = [...locatorIdToSegmentIds.keys()];
-	await tx.segmentLocatorLink.deleteMany({
-		where: { segmentLocatorId: { in: locatorIds } },
-	});
-	const linkData: Array<{ segmentLocatorId: number; segmentId: number }> = [];
-	for (const [locatorId, segSet] of locatorIdToSegmentIds) {
-		for (const segId of segSet)
-			linkData.push({ segmentLocatorId: locatorId, segmentId: segId });
-	}
-	if (linkData.length === 0) return;
-	for (let i = 0; i < linkData.length; i += SEGMENT_LOCATOR_LINK_CHUNK_SIZE) {
-		const chunk = linkData.slice(i, i + SEGMENT_LOCATOR_LINK_CHUNK_SIZE);
-		await tx.segmentLocatorLink.createMany({
-			data: chunk,
-			skipDuplicates: true,
-		});
-	}
-}

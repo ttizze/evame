@@ -31,36 +31,26 @@ export async function fetchPageDetail(slug: string, locale: string) {
 	});
 	if (!page) return null;
 
-	const segmentsWithNormalizedLocators = page.content.segments.map(
+	const segmentsWithNormalizedAnnotations = page.content.segments.map(
 		(segment) => {
-			if (!segment.locators) {
+			if (!segment.annotations || segment.annotations.length === 0) {
 				return segment;
 			}
 
-			const locators = segment.locators.map((segmentLocator) => {
-				const linkedSegments = segmentLocator.locator.segments.map(
-					({ segment: linkedSegment }) => linkedSegment,
-				);
-
-				return {
-					...segmentLocator,
-					locator: {
-						...segmentLocator.locator,
-						segments: pickBestTranslation(linkedSegments),
-					},
-				};
-			});
+			const annotationSegments = segment.annotations.map(
+				(link) => link.annotationSegment,
+			);
 
 			return {
 				...segment,
-				locators,
+				annotations: pickBestTranslation(annotationSegments),
 			};
 		},
 	);
 
 	// その後、メインの segments に pickBestTranslation を適用
 	const normalizedSegments = pickBestTranslation(
-		segmentsWithNormalizedLocators,
+		segmentsWithNormalizedAnnotations,
 	);
 
 	return {

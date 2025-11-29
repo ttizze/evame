@@ -1,5 +1,5 @@
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 export const selectUserFields = () => {
 	return {
@@ -77,7 +77,7 @@ const buildPageSelect = (locale: string, where?: Prisma.SegmentWhereInput) =>
 		},
 	}) as const;
 
-const buildPageSelectWithLocators = (
+const buildPageSelectWithAnnotations = (
 	locale: string,
 	where?: Prisma.SegmentWhereInput,
 ) =>
@@ -86,33 +86,17 @@ const buildPageSelectWithLocators = (
 		content: {
 			select: {
 				segments: {
-					...(where ? { where } : {}),
-					segmentType: { key: "PRIMARY" },
+					where: {
+						...(where || {}),
+						segmentType: { key: "PRIMARY" },
+					},
 					orderBy: { number: "asc" },
 					select: {
 						...selectSegmentFields(locale),
-						locators: {
+						annotations: {
 							select: {
-								segmentLocatorId: true,
-								locator: {
-									select: {
-										id: true,
-										segments: {
-											where: {
-												segment: {
-													// 本文を除外（contentId が違うかどうかは気にしない）
-													segmentType: {
-														key: { not: "PRIMARY" },
-													},
-												},
-											},
-											select: {
-												segment: {
-													select: selectSegmentFields(locale),
-												},
-											},
-										},
-									},
+								annotationSegment: {
+									select: selectSegmentFields(locale),
 								},
 							},
 						},
@@ -125,20 +109,20 @@ const buildPageSelectWithLocators = (
 export function selectPageFields(
 	locale?: string,
 	where?: Prisma.SegmentWhereInput,
-	includeLocators?: false,
+	includeAnnotations?: false,
 ): ReturnType<typeof buildPageSelect>;
 export function selectPageFields(
 	locale: string | undefined,
 	where: Prisma.SegmentWhereInput | undefined,
-	includeLocators: true,
-): ReturnType<typeof buildPageSelectWithLocators>;
+	includeAnnotations: true,
+): ReturnType<typeof buildPageSelectWithAnnotations>;
 export function selectPageFields(
 	locale = "en",
 	where?: Prisma.SegmentWhereInput,
-	includeLocators = false,
+	includeAnnotations = false,
 ) {
-	if (includeLocators) {
-		return buildPageSelectWithLocators(locale, where);
+	if (includeAnnotations) {
+		return buildPageSelectWithAnnotations(locale, where);
 	}
 	return buildPageSelect(locale, where);
 }
