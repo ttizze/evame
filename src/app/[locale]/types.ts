@@ -16,7 +16,10 @@ export type PageDetail = NonNullable<
 
 // PageDetail から実際のセグメント型を取得
 export type SegmentForDetail = PageDetail["content"]["segments"][number];
-export type SegmentForList = Omit<SegmentForDetail, "locators">;
+export type SegmentForList = Omit<SegmentForDetail, "annotations">;
+
+// SegmentForDetail と SegmentForList のユニオン型
+export type Segment = SegmentForDetail | SegmentForList;
 
 export type PageForList = Omit<PageDetail, "mdastJson">;
 

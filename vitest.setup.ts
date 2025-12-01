@@ -30,9 +30,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 // ベースURLを取得（元のDATABASE_URL、worker IDベースではない）
-const baseUrl =
-	process.env.DATABASE_URL ||
-	"postgres://postgres:postgres@db.localtest.me:5435/main";
+const baseUrl = "postgres://postgres:postgres@db.localtest.me:5435/main";
 const workerId = process.env.VITEST_WORKER_ID ?? "0";
 
 // DB名だけworkerごとに変える
@@ -53,9 +51,17 @@ beforeAll(async () => {
 	try {
 		// 1. test DBを作成（存在しなければ）
 		// Dockerコンテナ内のPostgreSQLを使用
+		// コンテナ名を取得（docker compose ps で確認）
+		const containerName = execSync(
+			"docker compose ps test_neon --format '{{.Name}}'",
+			{ encoding: "utf-8" },
+		).trim();
+		if (!containerName) {
+			throw new Error("test_neon container not found");
+		}
 		console.log(`${workerInfo} Creating test database: ${finalTestDbName}`);
 		execSync(
-			`docker exec test_neon psql -U postgres -c 'CREATE DATABASE "${finalTestDbName}" WITH TEMPLATE=template0;'`,
+			`docker exec ${containerName} psql -U postgres -c 'CREATE DATABASE "${finalTestDbName}" WITH TEMPLATE=template0;'`,
 			{ stdio: "ignore" },
 		);
 	} catch (error) {
@@ -89,6 +95,4 @@ afterAll(async () => {
 	// @/lib/prismaからインポートしたprismaクライアントを切断
 	const { prisma } = await import("@/lib/prisma");
 	await prisma.$disconnect();
-	// 後片付けまでやりたければ DROP DATABASE してもよい
-	// ただし、次回のテスト実行時に再作成が必要になる
 });

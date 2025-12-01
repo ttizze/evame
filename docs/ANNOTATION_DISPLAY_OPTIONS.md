@@ -128,5 +128,3 @@ WrapSegmentClient (クライアント)
   - 注釈を表示
 ```
 
-
-

@@ -370,7 +370,9 @@ model SegmentType {
   label String // 表示名
 
   segments Segment[]
-
+  @@unique([key, label])
+  @@index([key])
+  @@index([label])
   @@map("segment_types")
 }
 

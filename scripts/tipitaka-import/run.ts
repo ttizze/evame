@@ -1,4 +1,4 @@
-import { type Prisma, PrismaClient, type SegmentType } from "@prisma/client";
+import { type Prisma, PrismaClient } from "@prisma/client";
 import { readBooksJson } from "./books";
 import { ROOT_TITLE, SYSTEM_USER_HANDLE } from "./constants";
 import { buildDirectoryTree, collectPathMap } from "./directory-tree";
@@ -102,18 +102,28 @@ export async function runTipitakaImport(): Promise<void> {
 
 		// Step 1: セグメント種別を upsert し、ルートページも最新状態にそろえる
 		const segmentTypes = await ensureSegmentTypes(prisma);
-		const segmentTypeIdMap = new Map(
-			segmentTypes.map((item) => [item.key as SegmentType["key"], item.id]),
+		// PRIMARY は1つだけなので直接取得
+		const primarySegmentType = segmentTypes.find(
+			(item) => item.key === "PRIMARY",
 		);
-		const primaryTypeId = segmentTypeIdMap.get("PRIMARY");
-		if (!primaryTypeId) {
+		if (!primarySegmentType) {
 			throw new Error('Segment type "PRIMARY" not found');
 		}
+		// COMMENTARY は複数（Atthakatha, Tika）があるので label ベースでマッピング
+		const segmentTypeIdByLabel = new Map(
+			segmentTypes
+				.filter((item) => item.key === "COMMENTARY")
+				.map((item) => [item.label, item.id]),
+		);
 
 		// メタデータタイプを確保
 		await ensureMetadataTypes(prisma);
 
-		const rootPage = await ensureRootPage(prisma, user.id, primaryTypeId);
+		const rootPage = await ensureRootPage(
+			prisma,
+			user.id,
+			primarySegmentType.id,
+		);
 
 		// Step 2: books.json から各ファイルのメタデータを取得し、ディレクトリツリーを作る
 		const { entries } = await readBooksJson();
@@ -125,19 +135,17 @@ export async function runTipitakaImport(): Promise<void> {
 			node: DirectoryNode;
 			parentId: number;
 			path: string;
-		}> = [];
-		for (const child of getSortedChildren(directoryRoot)) {
-			const path = child.segment;
-			queue.push({ node: child, parentId: rootPage.id, path });
-		}
+		}> = getSortedChildren(directoryRoot).map((child) => ({
+			node: child,
+			parentId: rootPage.id,
+			path: child.segment,
+		}));
 
 		const nextDirectoryOrder = getOrderGenerator();
 
-		for (const item of queue) {
-			const { node, parentId, path } = item;
-			if (node.children.size === 0) {
-				continue;
-			}
+		for (const { node, parentId, path } of queue) {
+			if (node.children.size === 0) continue;
+
 			const order = nextDirectoryOrder(parentId);
 			await createDirectoryPage({
 				prisma,
@@ -146,12 +154,16 @@ export async function runTipitakaImport(): Promise<void> {
 				parentId,
 				userId: user.id,
 				order,
-				segmentTypeId: primaryTypeId,
+				segmentTypeId: primarySegmentType.id,
 			});
-			for (const child of getSortedChildren(node)) {
-				if (node.pageId) {
-					const childPath = path ? `${path}/${child.segment}` : child.segment;
-					queue.push({ node: child, parentId: node.pageId, path: childPath });
+
+			if (node.pageId) {
+				for (const child of getSortedChildren(node)) {
+					queue.push({
+						node: child,
+						parentId: node.pageId,
+						path: `${path}/${child.segment}`,
+					});
 				}
 			}
 		}
@@ -160,11 +172,6 @@ export async function runTipitakaImport(): Promise<void> {
 		const categoryLookup = createCategoryLookup(directoryRoot, rootPage);
 		const orderForParent = getOrderGenerator();
 		const sortedEntries = sortEntries(entries);
-
-		const otherTypeId = segmentTypeIdMap.get("Commentary");
-		if (!otherTypeId) {
-			throw new Error('Segment type "Commentary" not found');
-		}
 
 		// エントリをレベルごとにグループ化
 		const entriesByLevel = new Map<ImportEntry["level"], ImportEntry[]>();
@@ -210,9 +217,22 @@ export async function runTipitakaImport(): Promise<void> {
 						);
 						const order = orderForParent(parentPageId);
 						const levelKey = entry.level?.toUpperCase?.() ?? "";
-						const segmentTypeId =
-							segmentTypeIdMap.get(levelKey as SegmentType["key"]) ??
-							otherTypeId;
+						// PRIMARY（Mula/Other）の場合は primarySegmentType.id を使用
+						// COMMENTARY（Atthakatha/Tika）の場合は label ベースで取得
+						let segmentTypeId: number;
+						if (levelKey === "MULA" || levelKey === "OTHER") {
+							segmentTypeId = primarySegmentType.id;
+						} else {
+							const label =
+								levelKey.charAt(0) + levelKey.slice(1).toLowerCase();
+							const commentaryTypeId = segmentTypeIdByLabel.get(label);
+							if (!commentaryTypeId) {
+								throw new Error(
+									`Segment type not found for level: ${entry.level} (label: ${label})`,
+								);
+							}
+							segmentTypeId = commentaryTypeId;
+						}
 
 						const pageId = await createContentPage({
 							prisma,
@@ -223,17 +243,11 @@ export async function runTipitakaImport(): Promise<void> {
 							segmentTypeId,
 						});
 
-						// ページのコンテンツIDを取得
-						const page = await prisma.page.findUnique({
-							where: { id: pageId },
-							select: { contentId: true },
-						});
-						if (!page) return;
-
 						// 段落番号でセグメントをグループ化
+						// page.id === content.id なので、pageIdをそのままcontentIdとして使用
 						const paragraphNumberToSegmentIds = await buildParagraphSegmentMap(
 							prisma,
-							page.contentId,
+							pageId, // contentIdとして使用
 						);
 						if (paragraphNumberToSegmentIds.size === 0) {
 							return;

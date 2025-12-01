@@ -24,7 +24,7 @@ export async function syncSegments(
 ): Promise<Map<string, number>> {
 	const typeId =
 		segmentTypeId ??
-		(await tx.segmentType.findUnique({ where: { key: "PRIMARY" } }))?.id;
+		(await tx.segmentType.findFirst({ where: { key: "PRIMARY" } }))?.id;
 
 	if (!typeId) {
 		throw new Error("Primary segment type not found");
@@ -104,7 +104,6 @@ export async function syncSegments(
  */
 export async function syncSegmentMetadataAndLocators(
 	tx: TransactionClient,
-	contentId: number,
 	hashToSegmentId: Map<string, number>,
 	segments: SegmentDraft[],
 ): Promise<void> {
@@ -219,4 +218,3 @@ async function syncSegmentMetadataDrafts(
 		});
 	}
 }
-

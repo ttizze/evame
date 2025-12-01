@@ -156,12 +156,7 @@ export async function syncSegmentsWithFallback(
 		segmentsToSync,
 		segmentTypeId,
 	);
-	await syncSegmentMetadataAndLocators(
-		tx,
-		pageId,
-		hashToSegmentId,
-		segmentsToSync,
-	);
+	await syncSegmentMetadataAndLocators(tx, hashToSegmentId, segmentsToSync);
 }
 
 /**

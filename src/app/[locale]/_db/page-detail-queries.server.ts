@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { pickBestTranslation } from "../_lib/pick-best-translation";
-import { selectPageFields } from "./queries.server";
+import { selectPageFields, selectSegmentFields } from "./queries.server";
 
 export const selectPageDetailFields = (locale = "en") => {
 	return {
@@ -24,6 +24,50 @@ export const selectPageDetailFields = (locale = "en") => {
 	};
 };
 
+/**
+ * PRIMARYセグメントがない場合（例: attakata単独ページ）、COMMENTARYセグメントを取得する
+ * ページ表示時に使用するメインセグメントを解決する
+ */
+async function resolveMainDisplaySegments<T extends Array<unknown>>(
+	slug: string,
+	locale: string,
+	primarySegments: T,
+): Promise<T> {
+	// PRIMARYセグメントがあればそれを返す
+	if (primarySegments.length > 0) {
+		return primarySegments;
+	}
+
+	// PRIMARYセグメントがない場合、COMMENTARYセグメントを取得
+	const pageWithCommentary = await prisma.page.findUnique({
+		where: { slug },
+		select: {
+			content: {
+				select: {
+					segments: {
+						where: {
+							segmentType: { key: "COMMENTARY" },
+						},
+						orderBy: { number: "asc" },
+						select: {
+							...selectSegmentFields(locale),
+							annotations: {
+								select: {
+									annotationSegment: {
+										select: selectSegmentFields(locale),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	});
+
+	return (pageWithCommentary?.content.segments ?? []) as T;
+}
+
 export async function fetchPageDetail(slug: string, locale: string) {
 	const page = await prisma.page.findUnique({
 		where: { slug },
@@ -31,24 +75,34 @@ export async function fetchPageDetail(slug: string, locale: string) {
 	});
 	if (!page) return null;
 
-	const segmentsWithNormalizedAnnotations = page.content.segments.map(
-		(segment) => {
-			if (!segment.annotations || segment.annotations.length === 0) {
-				return segment;
-			}
-
-			const annotationSegments = segment.annotations.map(
-				(link) => link.annotationSegment,
-			);
-
-			return {
-				...segment,
-				annotations: pickBestTranslation(annotationSegments),
-			};
-		},
+	const segments = await resolveMainDisplaySegments(
+		slug,
+		locale,
+		page.content.segments,
 	);
 
-	// その後、メインの segments に pickBestTranslation を適用
+	// 各セグメントのannotations内のannotationSegmentにpickBestTranslationを適用
+	const segmentsWithNormalizedAnnotations = segments.map((segment) => {
+		if (!segment.annotations || segment.annotations.length === 0) {
+			return segment;
+		}
+
+		const annotationSegments = segment.annotations.map(
+			(link) => link.annotationSegment,
+		);
+		const normalizedAnnotationSegments =
+			pickBestTranslation(annotationSegments);
+
+		return {
+			...segment,
+			annotations: segment.annotations.map((link, index) => ({
+				...link,
+				annotationSegment: normalizedAnnotationSegments[index],
+			})),
+		};
+	});
+
+	// メインの segments に pickBestTranslation を適用
 	const normalizedSegments = pickBestTranslation(
 		segmentsWithNormalizedAnnotations,
 	);

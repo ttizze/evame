@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import type { SegmentTypeKey } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 /**
  * データベースをリセット（全テーブルをクリーンアップ）

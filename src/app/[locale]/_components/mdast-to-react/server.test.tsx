@@ -3,7 +3,7 @@ import { queryByAttribute } from "@testing-library/dom";
 import { render, screen } from "@testing-library/react";
 import type { Root } from "mdast";
 import { describe, expect, it, vi } from "vitest";
-import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
+import type { Segment } from "@/app/[locale]/types";
 
 vi.mock("@/app/_context/display-provider", () => ({
 	useDisplay: () => ({ mode: "source" }), // ← dummy 値
@@ -18,22 +18,10 @@ vi.mock("react-tweet", () => ({
 import { mdastToReact } from "./server";
 
 // テスト用のセグメントバンドル
-const segments: (SegmentForDetail | SegmentForList)[] = [
-	{
-		id: 10,
-		number: 1,
-		text: "abc",
-		segmentTranslation: null,
-		segmentType: { key: "heading", label: "Heading" },
-	},
-	{
-		id: 11,
-		number: 2,
-		text: "def",
-		segmentTranslation: null,
-		segmentType: { key: "paragraph", label: "Paragraph" },
-	},
-];
+const segments: Segment[] = Array.from(
+	{ length: 5 },
+	(_, i) => ({ number: i + 1 }) as Segment,
+);
 
 describe("mdastToReact", () => {
 	it("renders segments correctly", async () => {
@@ -173,44 +161,6 @@ describe("mdastToReact", () => {
 				},
 			],
 		};
-
-		const segments: (SegmentForDetail | SegmentForList)[] = [
-			{
-				id: 1,
-				number: 1,
-				text: "Heading 1",
-				segmentTranslation: null,
-				segmentType: { key: "heading", label: "Heading" },
-			},
-			{
-				id: 2,
-				number: 2,
-				text: "Heading 2",
-				segmentTranslation: null,
-				segmentType: { key: "heading", label: "Heading" },
-			},
-			{
-				id: 3,
-				number: 3,
-				text: "Paragraph text",
-				segmentTranslation: null,
-				segmentType: { key: "paragraph", label: "Paragraph" },
-			},
-			{
-				id: 4,
-				number: 4,
-				text: "List item",
-				segmentTranslation: null,
-				segmentType: { key: "listItem", label: "List Item" },
-			},
-			{
-				id: 5,
-				number: 5,
-				text: "Blockquote text",
-				segmentTranslation: null,
-				segmentType: { key: "blockquote", label: "Blockquote" },
-			},
-		];
 
 		const el = await mdastToReact({
 			mdast: mdast as unknown as Prisma.JsonValue,

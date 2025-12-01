@@ -1,4 +1,7 @@
 "use client";
+import { MessageSquare } from "lucide-react";
+import { parseAsBoolean, useQueryState } from "nuqs";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ShareDialog } from "../(common-layout)/user/[handle]/page/[pageSlug]/_components/share-dialog";
 import { DisplayModeCycle } from "./display-mode-cycle.client";
@@ -8,6 +11,8 @@ interface FloatingControlsProps {
 	likeButton?: React.ReactNode;
 	position?: string;
 	alwaysVisible?: boolean;
+	annotationLabel?: string; // 注釈タイプのラベル（例: "Commentary"）
+	hasAnnotations?: boolean; // 注釈があるかどうか
 }
 export function FloatingControls({
 	likeButton,
@@ -15,8 +20,14 @@ export function FloatingControls({
               max-w-prose w-full px-4 md:px-0 
               duration-300 `,
 	alwaysVisible = false,
+	annotationLabel,
+	hasAnnotations = false,
 }: FloatingControlsProps) {
 	const { isVisible, ignoreNextScroll } = useScrollVisibility(alwaysVisible);
+	const [showAnnotations, setShowAnnotations] = useQueryState(
+		"showAnnotations",
+		parseAsBoolean.withDefault(false),
+	);
 
 	/* --- ボタン列 --- */
 	const Buttons = (
@@ -24,6 +35,21 @@ export function FloatingControls({
 			<DisplayModeCycle afterClick={ignoreNextScroll} />
 
 			{likeButton && <div className="h-10 w-10">{likeButton}</div>}
+
+			{hasAnnotations && annotationLabel && (
+				<Button
+					className="h-10 w-10 rounded-full"
+					onClick={() => {
+						setShowAnnotations(!showAnnotations);
+						ignoreNextScroll();
+					}}
+					size="icon"
+					title={`${annotationLabel}を${showAnnotations ? "非表示" : "表示"}`}
+					variant="outline"
+				>
+					<MessageSquare className="h-4 w-4" />
+				</Button>
+			)}
 
 			<ShareDialog />
 		</div>

@@ -1,10 +1,8 @@
 import type { PrismaClient, SegmentType } from "@prisma/client";
 
 const SEED_DATA: Array<Pick<SegmentType, "key" | "label">> = [
-	{ key: "PRIMARY", label: "Mula" },
 	{ key: "COMMENTARY", label: "Atthakatha" },
 	{ key: "COMMENTARY", label: "Tika" },
-	{ key: "PRIMARY", label: "Other" },
 ];
 
 export async function ensureSegmentTypes(prisma: PrismaClient) {

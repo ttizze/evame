@@ -1,5 +1,5 @@
-import { prisma } from "@/lib/prisma";
 import type { PageStatus, SegmentTypeKey } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { getSegmentTypeId } from "./db-helpers";
 
 /**
