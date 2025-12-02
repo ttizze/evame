@@ -1,4 +1,5 @@
-import type { PrismaClient, SegmentMetadataType } from "@prisma/client";
+import type { SegmentMetadataType } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 const METADATA_TYPE_SEED_DATA: Array<
 	Pick<SegmentMetadataType, "key" | "label">
@@ -10,7 +11,7 @@ const METADATA_TYPE_SEED_DATA: Array<
 	{ key: "OTHER_PAGEBREAK", label: "Other Page Break" },
 ];
 
-export async function ensureMetadataTypes(prisma: PrismaClient) {
+export async function ensureMetadataTypes() {
 	await prisma.segmentMetadataType.createMany({
 		data: METADATA_TYPE_SEED_DATA,
 		skipDuplicates: true,

@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { generateHashForText } from "@/app/[locale]/_lib/generate-hash-for-text";
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
-import { syncSegmentsWithFallback } from "./helpers";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { syncSegmentsWithFallback } from "./_pages";
 
 const syncSegmentsMock = vi.fn();
 const syncSegmentMetadataAndLocatorsMock = vi.fn();

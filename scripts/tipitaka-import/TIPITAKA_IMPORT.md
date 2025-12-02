@@ -67,37 +67,17 @@ graph TD
 
 ### Step 1: セグメントタイプ・メタデータタイプの確保とルートページの作成
 
-**ファイル**: `run.ts` (103-125行目), `segment-types.ts`, `metadata-types.ts`, `root-page.ts`
+**ファイル**: `run.ts` (19-21行目), `db/segment-types.ts`, `db/metadata-types.ts`, `initial-setup/root-page.ts`
 
-```103:125:scripts/tipitaka-import/run.ts
-		// Step 1: セグメント種別を upsert し、ルートページも最新状態にそろえる
-		const segmentTypes = await ensureSegmentTypes(prisma);
-		// labelベースのマッピング（levelKey → segmentTypeId）
-		const segmentTypeIdByLabel = new Map(
-			segmentTypes.map((item) => [item.label, item.id]),
-		);
-		// keyベースのマッピング（PRIMARY/COMMENTARY → segmentTypeId）
-		// 同じkeyに対して複数のlabelがある場合、最初のものを使用
-		const segmentTypeIdMap = new Map<SegmentType["key"], number>();
-		for (const item of segmentTypes) {
-			if (!segmentTypeIdMap.has(item.key)) {
-				segmentTypeIdMap.set(item.key, item.id);
-			}
-		}
-		const primaryTypeId = segmentTypeIdMap.get("PRIMARY");
-		if (!primaryTypeId) {
-			throw new Error('Segment type "PRIMARY" not found');
-		}
-
-		// メタデータタイプを確保
-		await ensureMetadataTypes(prisma);
-
-		const rootPage = await ensureRootPage(prisma, user.id, primaryTypeId);
+```19:21:scripts/tipitaka-import/run.ts
+		// Step 1: セグメントタイプ、メタデータタイプ、ルートページの初期セットアップ
+		const { primarySegmentType, commentarySegmentTypeIdByLabel, rootPage } =
+			await setupInitialRequirements(user.id);
 ```
 
 **処理内容**:
 
-1. **セグメントタイプの確保** (`segment-types.ts`):
+1. **セグメントタイプの確保** (`db/segment-types.ts`):
    - 以下の4種類のセグメントタイプを作成:
      - `{ key: "PRIMARY", label: "Mula" }`
      - `{ key: "COMMENTARY", label: "Atthakatha" }`
@@ -106,11 +86,11 @@ graph TD
    - `label`ベースと`key`ベースの両方のマッピングを作成
    - コンテンツページ作成時は`label`ベースのマッピングを使用（例: `"Mula"` → `segmentTypeId`）
 
-2. **メタデータタイプの確保** (`metadata-types.ts`):
+2. **メタデータタイプの確保** (`db/metadata-types.ts`):
    - ページブレークなどのメタデータタイプを作成:
      - `VRI_PAGEBREAK`, `PTS_PAGEBREAK`, `THAI_PAGEBREAK`, `MYANMAR_PAGEBREAK`, `OTHER_PAGEBREAK`
 
-3. **ルートページの作成** (`root-page.ts`):
+3. **ルートページの作成** (`initial-setup/root-page.ts`):
    - スラグ `"tipitaka"` のルートページを作成または更新
    - `README.md`の内容をMarkdownとして読み込み、MDAST形式に変換
    - セグメントを同期
@@ -209,15 +189,15 @@ interface ImportEntry {
 				continue;
 			}
 			const order = nextDirectoryOrder(parentId);
-			await createDirectoryPage({
-				prisma,
-				node,
-				directoryPath: path,
-				parentId,
-				userId: user.id,
-				order,
-				segmentTypeId: primaryTypeId,
-			});
+		await createDirectoryPage({
+			prisma,
+			node,
+			dirPath: path,
+			parentId,
+			userId: user.id,
+			order,
+			segmentTypeId: primaryTypeId,
+		});
 			for (const child of getSortedChildren(node)) {
 				if (node.pageId) {
 					const childPath = path ? `${path}/${child.segment}` : child.segment;
@@ -262,8 +242,8 @@ interface ImportEntry {
    - 各ディレクトリノード（`DirectoryNode`）から以下の情報を取得：
      - `node.title`: `parseSegmentLabel`で`dirSegments`から抽出したタイトル（例: `"01-tipitaka-mula"` → `"Tipitaka Mula"`）
      - `node.segment`: セグメント名（例: `"01-tipitaka-mula"`）
-     - `directoryPath`: パス文字列（例: `"01-tipitaka-mula/01-sutta-pitaka"`）
-   - スラグは `tipitaka-{directoryPath}` の形式で生成
+     - `dirPath`: パス文字列（例: `"01-tipitaka-mula/01-sutta-pitaka"`）
+   - スラグは `tipitaka-{dirPath}` の形式で生成
    - タイトル（`node.title`）のみのMarkdownをMDAST形式に変換
    - セグメントを同期（タイトルがセグメントとして登録される）
    
@@ -423,22 +403,22 @@ function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 							segmentTypeId,
 						});
 
-						// 段落番号でセグメントをグループ化
-						// page.id === content.id なので、pageIdをそのままcontentIdとして使用
-						const paragraphNumberToSegmentIds = await buildParagraphSegmentMap(
-							prisma,
-							pageId, // contentIdとして使用
-						);
+					// 段落番号でセグメントをグループ化
+					// page.id === content.id なので、pageIdをそのままcontentIdとして使用
+					const segments = await getSegmentsForContent(prisma, pageId);
+					const paragraphNumberToSegmentIds = buildParagraphSegmentMap(
+						segments,
+					);
 						if (paragraphNumberToSegmentIds.size === 0) {
 							return;
 						}
 
 						// Mula（根本経典）の場合: アンカーセグメントを特定して保存
 						if (levelKey === "MULA") {
-							const anchorMap = await buildParagraphAnchorMap(
-								prisma,
-								paragraphNumberToSegmentIds,
-							);
+						const anchorMap = buildParagraphAnchorMap(
+							paragraphNumberToSegmentIds,
+							segments,
+						);
 							// 注釈書で参照できるようにマッピングを保存
 							anchorMapByMulaFile.set(entry.fileKey.toLowerCase(), anchorMap);
 							return;
@@ -532,20 +512,12 @@ function extractFirstParagraphNumber(text: string): string | null {
  * その段落番号が出現してから次の段落番号が出現するまでの
  * すべてのセグメントを同じグループに分類する。
  *
- * @param prisma Prismaクライアント
- * @param contentId コンテンツID
+ * @param segments セグメント配列（id, number, text）
  * @returns 段落番号 → セグメントID配列のマッピング
  */
-export async function buildParagraphSegmentMap(
-	prisma: PrismaClient,
-	contentId: number,
-): Promise<ParagraphSegmentMap> {
-	const segments = await prisma.segment.findMany({
-		where: { contentId },
-		orderBy: { number: "asc" },
-		select: { id: true, number: true, text: true },
-	});
-
+export function buildParagraphSegmentMap(
+	segments: SegmentRecord[],
+): ParagraphSegmentMap {
 	// セグメントID → 段落番号のマッピングを作成
 	const paragraphNumberBySegmentId = new Map<number, string>();
 	for (const segment of segments) {
@@ -583,31 +555,31 @@ export async function buildParagraphSegmentMap(
 /**
  * 各段落番号について、最大ナンバーのセグメント（アンカーセグメント）を特定する
  *
- * @param prisma Prismaクライアント
  * @param paragraphNumberToSegmentIds 段落番号 → セグメントID配列のマッピング
+ * @param segments セグメント配列（id, number, text）
  * @returns 段落番号 → アンカーセグメントIDのマッピング
  */
-export async function buildParagraphAnchorMap(
-	prisma: PrismaClient,
+export function buildParagraphAnchorMap(
 	paragraphNumberToSegmentIds: ParagraphSegmentMap,
-): Promise<ParagraphAnchorMap> {
+	segments: SegmentRecord[],
+): ParagraphAnchorMap {
 	const anchorMap: ParagraphAnchorMap = new Map();
+	const segmentNumberById = new Map<number, number>();
+	for (const segment of segments) {
+		segmentNumberById.set(segment.id, segment.number);
+	}
 
 	for (const [paragraphNumber, segmentIds] of paragraphNumberToSegmentIds) {
 		if (segmentIds.length === 0) continue;
 
-		// セグメントのナンバーを取得
-		const segments = await prisma.segment.findMany({
-			where: { id: { in: segmentIds } },
-			select: { id: true, number: true },
+		// 最大ナンバーのセグメントをアンカーとして選択
+		const anchorSegmentId = segmentIds.reduce((maxId, currentId) => {
+			const maxNumber = segmentNumberById.get(maxId) ?? -Infinity;
+			const currentNumber = segmentNumberById.get(currentId) ?? -Infinity;
+			return currentNumber > maxNumber ? currentId : maxId;
 		});
 
-		// 最大ナンバーのセグメントをアンカーとして選択
-		const anchorSegment = segments.reduce((max, seg) =>
-			seg.number > max.number ? seg : max,
-		);
-
-		anchorMap.set(paragraphNumber, anchorSegment.id);
+		anchorMap.set(paragraphNumber, anchorSegmentId);
 	}
 
 	return anchorMap;
@@ -743,10 +715,9 @@ interface DirectoryNode {
 - `directory-tree.ts`: ディレクトリツリーの構築
 - `pages.ts`: ページ作成処理（カテゴリページ・コンテンツページ）
 - `helpers.ts`: ユーティリティ関数
-- `segment-types.ts`: セグメントタイプの管理
-- `metadata-types.ts`: メタデータタイプの管理
+- `db/segment-types.ts`: セグメントタイプの管理
+- `db/metadata-types.ts`: メタデータタイプの管理
 - `segment-annotations.ts`: 段落番号ベースのアンカーセグメント特定とアノテーションリンク処理
-- `root-page.ts`: ルートページの作成
+- `initial-setup/root-page.ts`: ルートページの作成
 - `types.ts`: 型定義
 - `constants.ts`: 定数定義
-

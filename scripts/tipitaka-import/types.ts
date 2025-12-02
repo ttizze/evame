@@ -1,14 +1,20 @@
-export interface DirectoryNode {
-	segment: string;
+import type { Prisma } from "@prisma/client";
+
+export interface CategoryNode {
+	dirSegment: string;
 	title: string;
 	order: number;
-	children: Map<string, DirectoryNode>;
+	children: Map<string, CategoryNode>;
 	pageId?: number;
 }
 
-export interface ImportEntry {
+export interface TipitakaFileMeta {
 	fileKey: string;
-	level: string;
+	primaryOrCommentary: string; // "Mula" | "Atthakatha" | "Tika" | "Other"
 	dirSegments: string[];
 	mulaFileKey: string | null;
 }
+
+export type PageWithContent = Prisma.PageGetPayload<{
+	include: { content: true };
+}>;
