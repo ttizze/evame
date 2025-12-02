@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import { readBooksJson } from "./books";
-import { setupCategoryPages } from "./_setup-category-pages/application/setup-category-pages";
-import { SYSTEM_USER_HANDLE } from "./constants";
 import { importAllContentPages } from "./_content-pages/application/import-all-content-pages";
+import { createCategoryPages } from "./_create-category-pages/application/create-category-pages";
 import { setupInitialRequirements } from "./_initial-setup/application/setup-initial-requirements";
 import { findUserByHandle } from "./_initial-setup/db/users";
+import { readBooksJson } from "./utils/books";
+import { SYSTEM_USER_HANDLE } from "./utils/constants";
 
 export async function runTipitakaImport(): Promise<void> {
 	try {
@@ -17,26 +17,23 @@ export async function runTipitakaImport(): Promise<void> {
 		}
 
 		// Step 1: セグメントタイプ、メタデータタイプ、ルートページの初期セットアップ
-		const { primarySegmentType, commentarySegmentTypeIdByLabel, rootPage } =
-			await setupInitialRequirements(user.id);
+		const { rootPageId } = await setupInitialRequirements(user.id);
 
 		// Step 2-3: books.jsonから各Tipitakaファイルのメタデータを取得し、
 		// カテゴリツリーを構築してカテゴリページを作成する
 		const { tipitakaFileMetas } = await readBooksJson();
-		const categoryPageLookup = await setupCategoryPages(
+		const categoryPageLookup = await createCategoryPages(
 			tipitakaFileMetas,
-			rootPage,
+			rootPageId,
 			user.id,
-			primarySegmentType.id,
 		);
 
 		// Step 4: すべてのコンテンツページをインポート
 		await importAllContentPages(
 			tipitakaFileMetas,
 			categoryPageLookup,
+			rootPageId,
 			user.id,
-			primarySegmentType.id,
-			commentarySegmentTypeIdByLabel,
 		);
 	} finally {
 		await prisma.$disconnect();

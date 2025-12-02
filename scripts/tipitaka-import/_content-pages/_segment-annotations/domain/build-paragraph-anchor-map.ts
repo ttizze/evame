@@ -1,5 +1,5 @@
+import type { ParagraphSegmentMap } from "../../domain/paragraph-segments/build-paragraph-segment-map";
 import type { SegmentRecord } from "../db/segments";
-import type { ParagraphSegmentMap } from "./build-paragraph-segment-map";
 
 /**
  * 段落番号 → アンカーセグメントIDのマッピング

@@ -5,13 +5,16 @@ import { syncSegments } from "@/app/[locale]/_lib/sync-segments";
 import { prisma } from "@/lib/prisma";
 
 export async function upsertPageAndSegments(p: {
-	pageId: number | undefined;
+	pageId?: number;
 	pageSlug: string;
 	userId: string;
 	title: string;
 	mdastJson: Prisma.InputJsonValue;
 	sourceLocale: string;
 	segments: SegmentDraft[];
+	segmentTypeId?: number;
+	parentId?: number;
+	order?: number;
 }) {
 	await prisma.$transaction(async (tx) => {
 		// 既存ページを確認
@@ -25,6 +28,8 @@ export async function upsertPageAndSegments(p: {
 					data: {
 						mdastJson: p.mdastJson,
 						sourceLocale: p.sourceLocale,
+						...(p.parentId !== undefined && { parentId: p.parentId }),
+						...(p.order !== undefined && { order: p.order }),
 					},
 				})
 			: await tx.page.create({
@@ -33,12 +38,14 @@ export async function upsertPageAndSegments(p: {
 						userId: p.userId,
 						mdastJson: p.mdastJson,
 						sourceLocale: p.sourceLocale,
+						parentId: p.parentId ?? null,
+						order: p.order ?? 0,
 						id: (await tx.content.create({ data: { kind: ContentKind.PAGE } }))
 							.id,
 					},
 				});
 
-		await syncSegments(tx, page.id, p.segments);
+		await syncSegments(tx, page.id, p.segments, p.segmentTypeId);
 	});
 }
 

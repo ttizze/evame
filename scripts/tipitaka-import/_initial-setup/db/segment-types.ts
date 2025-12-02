@@ -12,13 +12,7 @@ export async function ensureSegmentTypes() {
 		skipDuplicates: true,
 	});
 
-	const labelMatchConditions = SEED_DATA.map((item) => ({
-		key: item.key,
-		label: item.label,
-	}));
-
 	return prisma.segmentType.findMany({
-		where: { OR: labelMatchConditions },
 		select: { key: true, id: true, label: true },
 	});
 }

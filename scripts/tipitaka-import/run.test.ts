@@ -12,7 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/prisma";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createUser } from "@/tests/factories";
-import { SYSTEM_USER_HANDLE } from "./constants";
+import { SYSTEM_USER_HANDLE } from "./utils/constants";
 
 describe("runTipitakaImport", () => {
 	beforeEach(async () => {
