@@ -1,4 +1,4 @@
-import { parseDirSegment } from "../../../domain/parse-dir-segment";
+import { parseDirSegment } from "../../../domain/parse-dir-segment/parse-dir-segment";
 import type { TipitakaFileMeta } from "../../../types";
 
 export function getDirectoryTitle(tipitakaFileMeta: TipitakaFileMeta): string {

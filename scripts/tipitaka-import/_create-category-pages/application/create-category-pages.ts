@@ -1,4 +1,4 @@
-import { parseDirSegment } from "../../domain/parse-dir-segment";
+import { parseDirSegment } from "../../domain/parse-dir-segment/parse-dir-segment";
 import type { TipitakaFileMeta } from "../../types";
 import { extractUniqueCategoryPaths } from "../utils/extract-unique-category-paths";
 import { getLastSegment } from "../utils/get-last-segment";

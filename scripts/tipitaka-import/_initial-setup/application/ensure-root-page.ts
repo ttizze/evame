@@ -8,7 +8,6 @@ import { ROOT_SLUG, ROOT_TITLE } from "../../utils/constants";
 
 export async function ensureRootPage(
 	userId: string,
-	primarySegmentTypeId: number,
 ): Promise<number> {
 	const currentDir = path.dirname(fileURLToPath(import.meta.url));
 	const readmePath = path.join(currentDir, "..", "..", "README.md");
@@ -26,7 +25,6 @@ export async function ensureRootPage(
 		mdastJson: parsed.mdastJson,
 		sourceLocale: "pi",
 		segments: parsed.segments,
-		segmentTypeId: primarySegmentTypeId,
 		order: 0,
 	});
 

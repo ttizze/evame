@@ -1,4 +1,4 @@
-import { beautifySlug } from "../utils/beautify-slug";
+import { beautifySlug } from "./utils/beautify-slug";
 
 /**
  * ディレクトリセグメント名から順序番号とタイトルを抽出する

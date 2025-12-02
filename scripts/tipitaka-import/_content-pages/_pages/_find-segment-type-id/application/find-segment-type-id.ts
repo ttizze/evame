@@ -1,18 +1,18 @@
-import { findPrimarySegmentTypeId } from "../../../../db/find-primary-segment-type";
 import type { TipitakaFileMeta } from "../../../../types";
 import { findCommentarySegmentTypeId } from "../db/segment-types";
 import { formatCommentaryLabel } from "../utils/format-commentary-label";
 
 /**
  * Tipitakaファイルの本文/注釈書の種類からセグメントタイプIDを取得する
+ * primary の場合は undefined を返す
  */
 export async function findSegmentTypeIdForTipitakaPrimaryOrCommentary(
 	primaryOrCommentary: TipitakaFileMeta["primaryOrCommentary"],
-): Promise<number> {
+): Promise<number | undefined> {
 	const normalizedKey = primaryOrCommentary?.toUpperCase();
 
 	if (normalizedKey === "MULA" || normalizedKey === "OTHER") {
-		return await findPrimarySegmentTypeId();
+		return undefined;
 	}
 
 	const label = formatCommentaryLabel(normalizedKey);
