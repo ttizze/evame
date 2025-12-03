@@ -2,7 +2,7 @@
  * remark プラグイン: MDAST からセグメントを生成し、安定ハッシュ/番号/メタデータを付与する。
  * - header があれば 0 番のセグメントとして先頭に追加
  * - ブロック要素（段落/見出し/リスト項目/引用/表セル）を 1 セグメントとして抽出（ネストは除外）
- * - {para:n} を locators に、<span class="pb" ...> を metadata.items に格納
+ * - {para:n} を paragraphNumber に、<span class="pb" ...> を metadata.items に格納
  * - 同一テキストでも出現回数込みで一意なハッシュを生成
  * - ノードには HTML 変換用の data-number-id を付与
  * 備考: locale はここでは扱わない
@@ -31,7 +31,7 @@ export type SegmentDraft = Omit<
 	"id" | "contentId" | "createdAt" | "segmentTypeId"
 > & {
 	metadata?: { items: Array<{ typeKey: string; value: string }> };
-	locators?: Array<{ system: "VRI_PARAGRAPH"; value: string }>;
+	paragraphNumber?: string;
 };
 
 /* mdast で「1 ブロック」とみなすノード型 */
@@ -152,6 +152,9 @@ export const remarkHashAndSegments =
 		}
 
 		/* ── 1. 本文ブロック ─────────────── */
+		// 段落番号に基づいてセグメントをグループ化するため、現在の段落番号を追跡
+		let currentParagraphNumber: string | null = null;
+
 		visit(tree, isBlockNode, (node) => {
 			/* ネストしたブロック要素は除外 */
 			if (hasNestedBlock(node)) return;
@@ -162,12 +165,20 @@ export const remarkHashAndSegments =
 
 			/* 段落番号とページブレークを抽出 */
 			const metadata: Array<{ typeKey: string; value: string }> = [];
-			const locatorValues: string[] = [];
+			let paragraphNumberFromBlock: string | null = null;
+			const isHeading = "depth" in node;
 
-			// 段落番号の抽出: {para:n} (まだ変換されていない場合)
+			// 段落番号の抽出: {para:n} または {para:1-5} のような範囲形式 (まだ変換されていない場合)
 			const paraMatch = text.match(/^\{para:([^}]+)\}\s*/);
 			if (paraMatch) {
-				locatorValues.push(paraMatch[1]);
+				paragraphNumberFromBlock = paraMatch[1];
+				// 範囲形式（例：「1-5」）の場合は、最後の数字（5）を取得
+				if (paragraphNumberFromBlock.includes("-")) {
+					const parts = paragraphNumberFromBlock.split("-");
+					currentParagraphNumber = parts[parts.length - 1];
+				} else {
+					currentParagraphNumber = paragraphNumberFromBlock;
+				}
 				text = text.slice(paraMatch[0].length);
 			}
 
@@ -193,18 +204,19 @@ export const remarkHashAndSegments =
 			/* HTML 変換時用の data-number-id を付与 */
 			setNodeDataNumber(node, number);
 
+			// 現在の段落番号（段落番号が出現してから次の段落番号が出現するまでのすべてのブロックに同じ段落番号を付与）
+			// ヘッダー（見出し）の場合は段落番号を付けない
+			const paragraphNumber =
+				!isHeading && currentParagraphNumber !== null
+					? currentParagraphNumber
+					: undefined;
+
 			f.data.segments.push({
 				textAndOccurrenceHash,
 				text,
 				number,
 				metadata: metadata.length > 0 ? { items: metadata } : undefined,
-				locators:
-					locatorValues.length > 0
-						? locatorValues.map((value) => ({
-								system: "VRI_PARAGRAPH" as const,
-								value,
-							}))
-						: undefined,
+				paragraphNumber,
 			});
 			number += 1;
 		});

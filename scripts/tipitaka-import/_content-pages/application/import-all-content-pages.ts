@@ -1,7 +1,7 @@
+import { parseDirSegment } from "../../domain/parse-dir-segment/parse-dir-segment";
 import type { TipitakaFileMeta } from "../../types";
-import type { ParagraphAnchorMap } from "../_segment-annotations";
-import { groupTipitakaFileMetasByPrimaryOrCommentary } from "../domain/file-metas/group-tipitaka-file-metas";
-import { importContentPagesFromTipitakaFiles } from "./import-content-pages-from-tipitaka-files";
+import { createContentPage } from "../_pages/application/create-content-page";
+import { sortTipitakaFileMetasFromPrimary } from "../utils/file-metas/sort-tipitaka-file-metas";
 
 /**
  * すべてのコンテンツページをインポートする
@@ -10,10 +10,8 @@ import { importContentPagesFromTipitakaFiles } from "./import-content-pages-from
  * 順次コンテンツページを作成します。
  *
  * **処理順序**:
- * 1. ページ順序生成関数の作成
- * 2. ファイルメタデータを種類ごとにグループ化
- * 3. Mula（本文）→ Atthakatha → Tika → Other の順で処理
- *    （注釈書が参照するムーラのアンカーセグメントが確実に存在することを保証）
+ * Mula（本文）→ Atthakatha → Tika → Other の順で処理することで、
+ * 注釈書が参照するムーラのアンカーセグメントが確実に存在することを保証
  *
  * @param tipitakaFileMetas - Tipitakaファイルのメタデータ配列
  * @param categoryPageLookup - カテゴリページのパス → ページIDのルックアップマップ
@@ -26,22 +24,87 @@ export async function importAllContentPages(
 	rootPageId: number,
 	userId: string,
 ): Promise<void> {
-	// 本文から順に処理できるように、本文/注釈書の種類順にソートしてから種類ごとにグループ化
-	// Mula（本文）→ Atthakatha → Tika → Other の順で処理することで、
-	// 注釈書が参照するムーラのアンカーセグメントが確実に存在することを保証
-	const tipitakaFileMetasGroupedByKind =
-		groupTipitakaFileMetasByPrimaryOrCommentary(tipitakaFileMetas);
+	// 本文から順に処理できるようにソート
+	const sortedFileMetas = sortTipitakaFileMetasFromPrimary(tipitakaFileMetas);
 
-	// Mulaファイルの段落番号 → アンカーセグメントIDのマッピングを保存
-	const mulaAnchorMapByFileKey = new Map<string, ParagraphAnchorMap>();
+	// 各ファイルキー → 作成したページIDのマッピング
+	const pageIdByFileKey = new Map<string, number>();
 
-	for (const [, tipitakaFileMetasOfKind] of tipitakaFileMetasGroupedByKind) {
-		await importContentPagesFromTipitakaFiles({
-			tipitakaFileMetas: tipitakaFileMetasOfKind,
-			categoryPageLookup,
-			rootPageId,
-			userId,
-			mulaAnchorMapByFileKey,
-		});
+	const CONCURRENCY = 10;
+	let currentKind: string | undefined;
+	let processedCount = 0;
+
+	for (let i = 0; i < sortedFileMetas.length; i += CONCURRENCY) {
+		const fileMetaBatch = sortedFileMetas.slice(i, i + CONCURRENCY);
+
+		// 種類が変わったらログを出力
+		const firstKind = fileMetaBatch[0]?.primaryOrCommentary;
+		if (firstKind && firstKind !== currentKind) {
+			currentKind = firstKind;
+			const kindCount = sortedFileMetas.filter(
+				(fm) => fm.primaryOrCommentary === currentKind,
+			).length;
+			console.log(`Processing ${currentKind}: ${kindCount} files`);
+		}
+
+		await Promise.all(
+			fileMetaBatch.map((fileMeta) =>
+				processTipitakaFile(fileMeta, {
+					categoryPageLookup,
+					rootPageId,
+					userId,
+					pageIdByFileKey,
+				}),
+			),
+		);
+
+		processedCount += fileMetaBatch.length;
+		console.log(
+			`  Processed ${processedCount}/${sortedFileMetas.length} files`,
+		);
 	}
+}
+
+interface ProcessFileParams {
+	categoryPageLookup: Map<string, number>;
+	rootPageId: number;
+	userId: string;
+	pageIdByFileKey: Map<string, number>;
+}
+
+async function processTipitakaFile(
+	fileMeta: TipitakaFileMeta,
+	params: ProcessFileParams,
+): Promise<void> {
+	const { categoryPageLookup, rootPageId, userId, pageIdByFileKey } = params;
+
+	const parentPath = fileMeta.dirSegments.slice(0, -1).join("/") || "";
+	const parentCategoryPageId = categoryPageLookup.get(parentPath) ?? rootPageId;
+	const lastSegment = fileMeta.dirSegments[fileMeta.dirSegments.length - 1];
+	const { order: pageOrder } = parseDirSegment(lastSegment);
+
+	const fileKeyLower = fileMeta.fileKey.toLowerCase();
+	const isMula = fileMeta.primaryOrCommentary?.toUpperCase() === "MULA";
+
+	let anchorContentId: number | undefined;
+	if (!isMula && fileMeta.mulaFileKey) {
+		const anchorId = pageIdByFileKey.get(fileMeta.mulaFileKey.toLowerCase());
+		if (!anchorId) {
+			console.warn(
+				`Anchor page not found for mula file: ${fileMeta.mulaFileKey}`,
+			);
+		} else {
+			anchorContentId = anchorId;
+		}
+	}
+
+	const contentPageId = await createContentPage({
+		entry: fileMeta,
+		parentId: parentCategoryPageId,
+		userId,
+		order: pageOrder,
+		anchorContentId,
+	});
+
+	pageIdByFileKey.set(fileKeyLower, contentPageId);
 }

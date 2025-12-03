@@ -6,9 +6,7 @@ import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/user/[handle
 import { prisma } from "@/lib/prisma";
 import { ROOT_SLUG, ROOT_TITLE } from "../../utils/constants";
 
-export async function ensureRootPage(
-	userId: string,
-): Promise<number> {
+export async function ensureRootPage(userId: string): Promise<number> {
 	const currentDir = path.dirname(fileURLToPath(import.meta.url));
 	const readmePath = path.join(currentDir, "..", "..", "README.md");
 	const markdownContent = await fs.readFile(readmePath, "utf-8");

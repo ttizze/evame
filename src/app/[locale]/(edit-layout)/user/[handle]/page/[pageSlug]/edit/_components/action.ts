@@ -8,7 +8,6 @@ import { processPageHtml } from "../_lib/process-page-html";
 
 /* ────────────── 入力スキーマ ────────────── */
 const formSchema = z.object({
-	pageId: z.coerce.number().optional(),
 	pageSlug: z.string(),
 	userLocale: z.string(),
 	title: z.string().min(1).max(100),
@@ -31,14 +30,13 @@ export const editPageContentAction = createActionFactory<
 	inputSchema: formSchema,
 
 	async create(input, userId) {
-		const { pageId, pageSlug, userLocale, title, pageContent } = input;
+		const { pageSlug, userLocale, title, pageContent } = input;
 
 		const sourceLocale = await getLocaleFromHtml(pageContent, userLocale);
 
 		await processPageHtml({
 			title,
 			html: pageContent,
-			pageId,
 			pageSlug,
 			userId,
 			sourceLocale,

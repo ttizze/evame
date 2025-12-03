@@ -5,7 +5,6 @@ import { upsertPageAndSegments } from "../_db/mutations.server";
 export async function processPageHtml(params: {
 	title: string;
 	html: string;
-	pageId: number | undefined;
 	pageSlug: string;
 	userId: string;
 	sourceLocale: string;
@@ -15,7 +14,6 @@ export async function processPageHtml(params: {
 		html: params.html,
 	});
 	const updatedPage = await upsertPageAndSegments({
-		pageId: params.pageId,
 		pageSlug: params.pageSlug,
 		userId: params.userId,
 		title: params.title,

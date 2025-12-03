@@ -1,12 +1,12 @@
-import fs from "node:fs/promises";
-import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mdast-with-segments";
 import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_db/mutations.server";
-import { prisma } from "@/lib/prisma";
+import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mdast-with-segments";
+import fs from "node:fs/promises";
+import { parseDirSegment } from "../../../domain/parse-dir-segment/parse-dir-segment";
 import type { TipitakaFileMeta } from "../../../types";
 import { slugify } from "../../utils/slugify";
 import { findSegmentTypeIdForTipitakaPrimaryOrCommentary } from "../_find-segment-type-id/application/find-segment-type-id";
+import { findPageBySlugAndUserId } from "../db/pages";
 import { removeHeader } from "../domain/remove-header";
-import { getDirectoryTitle } from "../utils/get-directory-title";
 import { getFilePath } from "../utils/get-file-path";
 
 interface ContentPageParams {
@@ -14,6 +14,7 @@ interface ContentPageParams {
 	parentId: number;
 	userId: string;
 	order: number;
+	anchorContentId?: number;
 }
 
 export async function createContentPage({
@@ -21,13 +22,14 @@ export async function createContentPage({
 	parentId,
 	userId,
 	order,
+	anchorContentId,
 }: ContentPageParams): Promise<number> {
 	const filePath = getFilePath(tipitakaFileMeta);
 	const raw = await fs.readFile(filePath, "utf8");
 	const { body } = removeHeader(raw);
-	const directoryTitle = getDirectoryTitle(tipitakaFileMeta);
-
-	const title = directoryTitle;
+	const lastSegment =
+		tipitakaFileMeta.dirSegments[tipitakaFileMeta.dirSegments.length - 1];
+	const { title } = parseDirSegment(lastSegment);
 
 	const mdast = await markdownToMdastWithSegments({
 		header: title,
@@ -50,12 +52,10 @@ export async function createContentPage({
 		segmentTypeId,
 		parentId,
 		order,
+		anchorContentId,
 	});
 
-	const page = await prisma.page.findFirstOrThrow({
-		where: { slug, userId },
-		select: { id: true },
-	});
+	const page = await findPageBySlugAndUserId(slug, userId);
 
 	return page.id;
 }

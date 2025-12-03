@@ -1,11 +1,13 @@
 import type { Prisma } from "@prisma/client";
 import { ContentKind } from "@prisma/client";
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
-import { syncSegments } from "@/app/[locale]/_lib/sync-segments";
+import {
+	syncSegmentMetadataAndAnnotationLinks,
+	syncSegments,
+} from "@/app/[locale]/_lib/sync-segments";
 import { prisma } from "@/lib/prisma";
 
 export async function upsertPageAndSegments(p: {
-	pageId?: number;
 	pageSlug: string;
 	userId: string;
 	title: string;
@@ -15,6 +17,7 @@ export async function upsertPageAndSegments(p: {
 	segmentTypeId?: number;
 	parentId?: number;
 	order?: number;
+	anchorContentId?: number;
 }) {
 	await prisma.$transaction(async (tx) => {
 		// 既存ページを確認
@@ -45,7 +48,19 @@ export async function upsertPageAndSegments(p: {
 					},
 				});
 
-		await syncSegments(tx, page.id, p.segments, p.segmentTypeId);
+		const hashToSegmentId = await syncSegments(
+			tx,
+			page.id,
+			p.segments,
+			p.segmentTypeId,
+		);
+		await syncSegmentMetadataAndAnnotationLinks(
+			tx,
+			hashToSegmentId,
+			p.segments,
+			page.id,
+			p.anchorContentId,
+		);
 	});
 }
 

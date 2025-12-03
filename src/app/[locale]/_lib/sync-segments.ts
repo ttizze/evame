@@ -1,11 +1,30 @@
 import type { PrismaClient } from "@prisma/client";
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
 
+/**
+ * Prismaのトランザクションクライアントの型
+ */
 type TransactionClient = Parameters<
 	Parameters<PrismaClient["$transaction"]>[0]
 >[0];
 
+/**
+ * セグメントメタデータのドラフト型
+ */
+type MetadataDraft = {
+	segmentId: number;
+	items: Array<{ typeKey: string; value: string }>;
+};
+
+/**
+ * セグメントのupsert処理を実行する際のバッチサイズ
+ */
 const SEGMENT_UPSERT_CHUNK_SIZE = 200;
+
+/**
+ * 既存セグメントの番号を一時的にオフセットする際に使用する値
+ * 重複を回避するために大きな値を加算する
+ */
 const NUMBER_OFFSET_FOR_REORDERING = 1_000_000;
 
 /**
@@ -22,6 +41,7 @@ export async function syncSegments(
 	drafts: SegmentDraft[],
 	segmentTypeId?: number,
 ): Promise<Map<string, number>> {
+	// セグメントタイプIDを取得（指定されていない場合はPRIMARYをデフォルトとして使用）
 	const typeId =
 		segmentTypeId ??
 		(await tx.segmentType.findFirst({ where: { key: "PRIMARY" } }))?.id;
@@ -30,10 +50,12 @@ export async function syncSegments(
 		throw new Error("Primary segment type not found");
 	}
 
+	// 既存のセグメントを取得（ハッシュのみ）
 	const existing = await tx.segment.findMany({
 		where: { contentId, segmentTypeId: typeId },
 		select: { textAndOccurrenceHash: true },
 	});
+	// 既存セグメントのハッシュをセットとして保持（削除対象の判定に使用）
 	const staleHashes = new Set(existing.map((e) => e.textAndOccurrenceHash));
 
 	// 既存セグメントの番号を一時的にオフセットして重複を回避
@@ -44,13 +66,15 @@ export async function syncSegments(
 		});
 	}
 
+	// ハッシュ → セグメントIDのマッピング（戻り値として使用）
 	const hashToSegmentId = new Map<string, number>();
 
-	// ドラフトをバッチでupsert
+	// ドラフトをバッチサイズごとに分割してupsert処理を実行
 	for (let i = 0; i < drafts.length; i += SEGMENT_UPSERT_CHUNK_SIZE) {
 		const chunk = drafts.slice(i, i + SEGMENT_UPSERT_CHUNK_SIZE);
 		const results = await Promise.all(
 			chunk.map(async (draft) => {
+				// セグメントをupsert（存在すれば更新、存在しなければ作成）
 				const segment = await tx.segment.upsert({
 					where: {
 						contentId_textAndOccurrenceHash: {
@@ -76,6 +100,7 @@ export async function syncSegments(
 			}),
 		);
 
+		// 結果をマッピングに追加し、削除対象から除外
 		for (const { hash, segmentId } of results) {
 			hashToSegmentId.set(hash, segmentId);
 			staleHashes.delete(hash);
@@ -97,24 +122,29 @@ export async function syncSegments(
 }
 
 /**
- * SegmentDraft のメタデータを同期する
+ * SegmentDraft のメタデータを同期し、段落番号を使ってアノテーションリンクを作成する
  *
- * @param hashToSegmentId syncSegments の戻り値
- * @param segments セグメントドラフト（メタデータを含む）
+ * 処理の流れ:
+ * 1. 各セグメントのメタデータを収集（段落番号も含める）
+ * 2. 段落番号ごとにセグメントIDをグループ化
+ * 3. メタデータをデータベースに同期
+ * 4. 段落番号を使ってアノテーションリンクを作成
  */
-export async function syncSegmentMetadataAndLocators(
+export async function syncSegmentMetadataAndAnnotationLinks(
 	tx: TransactionClient,
 	hashToSegmentId: Map<string, number>,
 	segments: SegmentDraft[],
+	contentId: number,
+	anchorContentId?: number,
 ): Promise<void> {
+	// 同期対象のセグメントIDのセット
 	const segmentIds = new Set(hashToSegmentId.values());
+	// メタデータドラフトのリスト
+	const metadataDrafts: MetadataDraft[] = [];
+	// 段落番号 → 注釈セグメントID配列のマッピング（アノテーションリンク作成用）
+	const paragraphNumberToAnnotationSegmentIds = new Map<string, number[]>();
 
-	// メタデータドラフトを収集
-	const metadataDrafts: Array<{
-		segmentId: number;
-		items: Array<{ typeKey: string; value: string }>;
-	}> = [];
-
+	// 各セグメントドラフトを処理
 	for (const segment of segments) {
 		const segmentId = hashToSegmentId.get(segment.textAndOccurrenceHash);
 		if (!segmentId) {
@@ -124,34 +154,152 @@ export async function syncSegmentMetadataAndLocators(
 			continue;
 		}
 
-		if (segment.metadata) {
-			metadataDrafts.push({
-				segmentId,
-				items: segment.metadata.items,
+		// 既存のメタデータアイテムを取得
+		const items: Array<{ typeKey: string; value: string }> = [
+			...(segment.metadata?.items ?? []),
+		];
+
+		// 段落番号がある場合はメタデータとして追加し、アノテーションリンク用のマッピングに追加
+		if (segment.paragraphNumber) {
+			items.push({
+				typeKey: "VRI_PARAGRAPH",
+				value: segment.paragraphNumber,
+			});
+
+			// 段落番号ごとにセグメントIDをグループ化
+			const existing =
+				paragraphNumberToAnnotationSegmentIds.get(segment.paragraphNumber) ??
+				[];
+			existing.push(segmentId);
+			paragraphNumberToAnnotationSegmentIds.set(
+				segment.paragraphNumber,
+				existing,
+			);
+		}
+
+		// メタデータアイテムがある場合のみドラフトに追加
+		if (items.length > 0) {
+			metadataDrafts.push({ segmentId, items });
+		}
+	}
+
+	// メタデータを同期
+	await syncSegmentMetadataDrafts(tx, segmentIds, metadataDrafts);
+
+	// 段落番号がある場合、アノテーションリンクを作成
+	if (paragraphNumberToAnnotationSegmentIds.size > 0) {
+		await syncAnnotationLinksByParagraphNumber(
+			tx,
+			contentId,
+			paragraphNumberToAnnotationSegmentIds,
+			anchorContentId,
+		);
+	}
+}
+
+/**
+ * セグメントの順序（number）を使ってアノテーションリンクを作成する
+ *
+ * 処理の流れ:
+ * 1. 現在のコンテンツがCOMMENTARYタイプか確認
+ * 2. 親ページのPRIMARYセグメントを取得（number順にソート）
+ * 3. 注釈セグメントを取得（number順にソート）
+ * 4. セグメントの順序（number）で対応させてリンクを作成
+ */
+async function syncAnnotationLinksByParagraphNumber(
+	tx: TransactionClient,
+	contentId: number,
+	paragraphNumberToAnnotationSegmentIds: Map<string, number[]>,
+	anchorContentId?: number,
+): Promise<void> {
+	// 現在のコンテンツのセグメントタイプを確認
+	const currentSegmentType = await tx.segment.findFirst({
+		where: { contentId },
+		select: { segmentType: { select: { key: true } } },
+	});
+
+	// COMMENTARYタイプでない場合は処理を終了（アノテーションリンクはCOMMENTARYのみ）
+	if (currentSegmentType?.segmentType.key !== "COMMENTARY") return;
+
+	// 親ページのPRIMARYセグメントを取得（number順にソート）
+	const primarySegments = await tx.segment.findMany({
+		where: {
+			contentId: anchorContentId,
+		},
+		select: {
+			id: true,
+			number: true,
+		},
+		orderBy: { number: "asc" },
+	});
+
+	// number → PRIMARYセグメントIDのマッピング
+	const numberToPrimarySegmentId = new Map<number, number>();
+	for (const segment of primarySegments) {
+		numberToPrimarySegmentId.set(segment.number, segment.id);
+	}
+
+	// 注釈セグメントを取得（number順にソート）
+	const annotationSegmentIds = Array.from(
+		paragraphNumberToAnnotationSegmentIds.values(),
+	).flat();
+
+	if (annotationSegmentIds.length === 0) return;
+
+	const annotationSegments = await tx.segment.findMany({
+		where: { id: { in: annotationSegmentIds } },
+		select: { id: true, number: true },
+		orderBy: { number: "asc" },
+	});
+
+	// 既存のアノテーションリンクを削除
+	await tx.segmentAnnotationLink.deleteMany({
+		where: { annotationSegmentId: { in: annotationSegmentIds } },
+	});
+
+	// セグメントの順序（number）で対応させてリンクを作成
+	const linksToCreate: Array<{
+		mainSegmentId: number;
+		annotationSegmentId: number;
+	}> = [];
+
+	for (const annotationSegment of annotationSegments) {
+		const primarySegmentId = numberToPrimarySegmentId.get(
+			annotationSegment.number,
+		);
+		if (primarySegmentId) {
+			linksToCreate.push({
+				mainSegmentId: primarySegmentId,
+				annotationSegmentId: annotationSegment.id,
 			});
 		}
 	}
 
-	await syncSegmentMetadataDrafts(tx, segmentIds, metadataDrafts);
+	// アノテーションリンクを作成
+	if (linksToCreate.length > 0) {
+		await tx.segmentAnnotationLink.createMany({
+			data: linksToCreate,
+			skipDuplicates: true,
+		});
+	}
 }
 
 /**
- * SegmentMetadataDraft を同期する
+ * SegmentMetadataDraft をデータベースに同期する
  *
- * @param segmentIds 同期対象のセグメントIDのセット
- * @param metadataDrafts セグメントIDとメタデータのペア
+ * 処理の流れ:
+ * 1. 使用されているメタデータタイプのキーを収集
+ * 2. メタデータタイプを取得または作成
+ * 3. メタデータアイテムを作成するデータを収集
+ * 4. 既存のメタデータを削除
+ * 5. 新しいメタデータを作成
  */
 async function syncSegmentMetadataDrafts(
 	tx: TransactionClient,
 	segmentIds: Set<number>,
-	metadataDrafts: Array<{
-		segmentId: number;
-		items: Array<{ typeKey: string; value: string }>;
-	}>,
+	metadataDrafts: MetadataDraft[],
 ): Promise<void> {
-	const segmentIdsToClear = new Set(segmentIds);
-
-	// メタデータタイプのキーを収集
+	// 使用されているメタデータタイプのキーを収集
 	const metadataTypeKeys = new Set<string>();
 	for (const draft of metadataDrafts) {
 		for (const item of draft.items) {
@@ -159,20 +307,30 @@ async function syncSegmentMetadataDrafts(
 		}
 	}
 
-	// メタデータタイプのマップを構築
-	const metadataTypeMap =
-		metadataTypeKeys.size > 0
-			? new Map(
-					(
-						await tx.segmentMetadataType.findMany({
-							select: { key: true, id: true },
-							where: { key: { in: [...metadataTypeKeys] } },
-						})
-					).map((mt) => [mt.key, mt.id]),
-				)
-			: new Map<string, number>();
+	// メタデータタイプのキー → IDのマッピングを構築
+	const metadataTypeMap = new Map<string, number>();
+	if (metadataTypeKeys.size > 0) {
+		// 既存のメタデータタイプを取得
+		const existingTypes = await tx.segmentMetadataType.findMany({
+			select: { key: true, id: true },
+			where: { key: { in: [...metadataTypeKeys] } },
+		});
+		for (const mt of existingTypes) {
+			metadataTypeMap.set(mt.key, mt.id);
+		}
 
-	// 作成するメタデータを収集
+		// 存在しないメタデータタイプを自動作成
+		for (const key of metadataTypeKeys) {
+			if (!metadataTypeMap.has(key)) {
+				const created = await tx.segmentMetadataType.create({
+					data: { key, label: key },
+				});
+				metadataTypeMap.set(key, created.id);
+			}
+		}
+	}
+
+	// 作成するメタデータアイテムを収集
 	const metadataToCreate: Array<{
 		segmentId: number;
 		metadataTypeId: number;
@@ -180,6 +338,7 @@ async function syncSegmentMetadataDrafts(
 	}> = [];
 
 	for (const draft of metadataDrafts) {
+		// セグメントIDが有効か確認
 		if (!segmentIds.has(draft.segmentId)) {
 			console.warn(
 				`Segment ID ${draft.segmentId} not found in segmentIds, skipping metadata`,
@@ -187,6 +346,7 @@ async function syncSegmentMetadataDrafts(
 			continue;
 		}
 
+		// 各メタデータアイテムを作成データに追加
 		for (const item of draft.items) {
 			const metadataTypeId = metadataTypeMap.get(item.typeKey);
 			if (!metadataTypeId) {
@@ -203,10 +363,10 @@ async function syncSegmentMetadataDrafts(
 		}
 	}
 
-	// 既存メタデータを削除
-	if (segmentIdsToClear.size > 0) {
+	// 既存のメタデータを削除（同期対象のセグメントの全てのメタデータを削除）
+	if (segmentIds.size > 0) {
 		await tx.segmentMetadata.deleteMany({
-			where: { segmentId: { in: [...segmentIdsToClear] } },
+			where: { segmentId: { in: [...segmentIds] } },
 		});
 	}
 

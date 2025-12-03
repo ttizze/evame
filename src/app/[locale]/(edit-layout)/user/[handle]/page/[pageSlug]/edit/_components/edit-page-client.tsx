@@ -137,11 +137,6 @@ export function EditPageClient({
 					</div>
 					<form action={editAction} ref={formRef}>
 						<input name="pageSlug" type="hidden" value={pageSlug} />
-						<input
-							name="pageId"
-							type="hidden"
-							value={pageWithTitleAndTags?.id ?? ""}
-						/>
 						<input name="title" type="hidden" value={title} />
 						<input name="userLocale" type="hidden" value={userLocale} />
 						<Editor

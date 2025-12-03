@@ -2,7 +2,6 @@ import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mda
 import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_db/mutations.server";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "../../_content-pages/utils/slugify";
-import { findPrimarySegmentType } from "../../db/find-primary-segment-type";
 
 interface CategoryPageParams {
 	title: string;
@@ -25,18 +24,13 @@ export async function createCategoryPage({
 	});
 
 	const slug = slugify(`tipitaka-${dirPath}`);
-
-	const segmentTypeId = await findPrimarySegmentType();
-
 	await upsertPageAndSegments({
-		pageId: undefined,
 		pageSlug: slug,
 		userId,
 		title,
 		mdastJson: mdast.mdastJson,
 		sourceLocale: "pi",
 		segments: mdast.segments,
-		segmentTypeId,
 		parentId,
 		order,
 	});
