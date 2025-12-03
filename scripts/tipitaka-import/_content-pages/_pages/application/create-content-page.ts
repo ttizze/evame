@@ -3,7 +3,7 @@ import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mda
 import fs from "node:fs/promises";
 import { parseDirSegment } from "../../../domain/parse-dir-segment/parse-dir-segment";
 import type { TipitakaFileMeta } from "../../../types";
-import { slugify } from "../../utils/slugify";
+import { slugify } from "../../../utils/slugify";
 import { findSegmentTypeIdForTipitakaPrimaryOrCommentary } from "../_find-segment-type-id/application/find-segment-type-id";
 import { findPageBySlugAndUserId } from "../db/pages";
 import { removeHeader } from "../domain/remove-header";

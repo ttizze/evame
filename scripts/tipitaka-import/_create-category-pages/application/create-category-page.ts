@@ -1,7 +1,7 @@
-import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mdast-with-segments";
 import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_db/mutations.server";
+import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mdast-with-segments";
 import { prisma } from "@/lib/prisma";
-import { slugify } from "../../_content-pages/utils/slugify";
+import { slugify } from "../../utils/slugify";
 
 interface CategoryPageParams {
 	title: string;
