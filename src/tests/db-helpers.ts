@@ -62,6 +62,7 @@ export async function setupMasterData() {
 		{ key: "THAI_PAGEBREAK", label: "Thai Page Break" },
 		{ key: "MYANMAR_PAGEBREAK", label: "Myanmar Page Break" },
 		{ key: "OTHER_PAGEBREAK", label: "Other Page Break" },
+		{ key: "PARAGRAPH_NUMBER", label: "Paragraph Number" },
 	];
 
 	await prisma.segmentMetadataType.createMany({

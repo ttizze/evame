@@ -59,7 +59,7 @@ describe("userImageEditAction (Integration)", () => {
 	});
 
 	it("should redirect if user is not authenticated", async () => {
-		vi.mocked(getCurrentUser).mockResolvedValue(undefined);
+		vi.mocked(getCurrentUser).mockResolvedValue(null);
 
 		await expect(
 			userImageEditAction({ success: false }, mockFormData),

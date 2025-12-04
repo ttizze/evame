@@ -4,7 +4,7 @@ const mocks = {
 	countPublicPages: vi.fn<() => Promise<number>>(),
 };
 
-vi.mock("@/app/_db/sitemap-queries.server", () => ({
+vi.mock("../_db/sitemap-queries.server", () => ({
 	countPublicPages: () => mocks.countPublicPages(),
 }));
 

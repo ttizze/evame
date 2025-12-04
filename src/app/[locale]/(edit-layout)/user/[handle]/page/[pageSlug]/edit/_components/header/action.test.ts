@@ -11,7 +11,7 @@ vi.mock("@/app/[locale]/_action/auth-and-validate", () => ({
 vi.mock("@/app/[locale]/_db/queries.server", () => ({
 	getPageById: vi.fn(),
 }));
-vi.mock("./_db/mutations.server", () => ({
+vi.mock("./db/mutations.server", () => ({
 	updatePageStatus: vi.fn(),
 }));
 vi.mock(

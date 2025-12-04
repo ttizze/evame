@@ -1,6 +1,6 @@
+import type { PrismaClient } from "@prisma/client";
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
 import { createServerLogger } from "@/lib/logger.server";
-import type { PrismaClient } from "@prisma/client";
 import { syncAnnotationLinksByParagraphNumber } from "../sync-annotation-links-by-paragraph-number";
 import { syncSegmentMetadata } from "./db/mutations.server";
 import { collectMetadataDrafts } from "./domain/collect-metadata-drafts";

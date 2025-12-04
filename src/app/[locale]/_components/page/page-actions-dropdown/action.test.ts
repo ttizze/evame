@@ -49,7 +49,7 @@ describe("togglePublishAction", () => {
 	});
 
 	it("should redirect to login if user is not authenticated", async () => {
-		vi.mocked(getCurrentUser).mockResolvedValue(undefined);
+		vi.mocked(getCurrentUser).mockResolvedValue(null);
 		const formData = new FormData();
 		formData.append("pageId", "1");
 

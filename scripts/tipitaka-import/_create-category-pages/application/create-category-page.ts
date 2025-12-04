@@ -1,7 +1,7 @@
-import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/edit-page-client/service/upsert-page-and-segments";
-import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mdast-with-segments";
-import { prisma } from "@/lib/prisma";
 import { PageStatus } from "@prisma/client";
+import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mdast-with-segments";
+import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/edit-page-client/service/upsert-page-and-segments";
+import { prisma } from "@/lib/prisma";
 import { slugify } from "../../utils/slugify";
 
 interface CategoryPageParams {

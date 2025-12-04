@@ -30,7 +30,7 @@ describe("userEditAction", () => {
 	});
 
 	it("未認証の場合、ログインページにリダイレクトする", async () => {
-		vi.mocked(getCurrentUser).mockResolvedValue(undefined);
+		vi.mocked(getCurrentUser).mockResolvedValue(null);
 		const formData = new FormData();
 		await expect(userEditAction({ success: false }, formData)).rejects.toThrow(
 			/NEXT_REDIRECT/,

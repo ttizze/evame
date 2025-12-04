@@ -265,3 +265,18 @@ export async function createPageWithAnnotations(data: {
 		annotationContent,
 	};
 }
+
+/**
+ * Gemini API Keyを作成
+ */
+export async function createGeminiApiKey(data: {
+	userId: string;
+	apiKey?: string;
+}) {
+	return await prisma.geminiApiKey.create({
+		data: {
+			userId: data.userId,
+			apiKey: data.apiKey ?? "dummy-api-key",
+		},
+	});
+}

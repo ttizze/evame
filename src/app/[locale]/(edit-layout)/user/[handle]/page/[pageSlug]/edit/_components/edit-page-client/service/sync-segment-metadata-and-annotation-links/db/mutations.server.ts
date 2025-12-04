@@ -1,5 +1,5 @@
-import { createServerLogger } from "@/lib/logger.server";
 import type { PrismaClient } from "@prisma/client";
+import { createServerLogger } from "@/lib/logger.server";
 import type { MetadataDraft } from "../domain/collect-metadata-drafts";
 
 /**

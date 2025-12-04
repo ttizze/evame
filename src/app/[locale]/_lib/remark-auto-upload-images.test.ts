@@ -4,7 +4,7 @@ import { fileFromUrl } from "./file-from-url";
 import { remarkAutoUploadImages } from "./remark-auto-upload-images";
 import { uploadImage } from "./upload";
 
-vi.mock("@/app/[locale]/_lib/file-from-url", () => {
+vi.mock("./file-from-url", () => {
 	// 1×1 px 透明 PNG (完全な base64)
 	const pngBase64 =
 		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAAAXNSR0IArs4c6QAAAARnQU1BAACx" +
@@ -20,7 +20,7 @@ vi.mock("@/app/[locale]/_lib/file-from-url", () => {
 		})),
 	};
 });
-vi.mock("@/app/[locale]/_lib/upload", () => {
+vi.mock("./upload", () => {
 	return {
 		uploadImage: vi.fn(async () => ({
 			success: true,

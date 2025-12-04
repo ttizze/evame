@@ -13,7 +13,7 @@ const mocks = {
 		>(),
 };
 
-vi.mock("@/app/_db/sitemap-queries.server", () => ({
+vi.mock("../_db/sitemap-queries.server", () => ({
 	countPublicPages: () => mocks.countPublicPages(),
 	fetchPagesWithUserAndTranslationChunk: (args: {
 		limit: number;
