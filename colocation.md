@@ -1,129 +1,85 @@
 # colocation
 
-機能ごと（feature-first）にコードをまとめ、「この機能はこのフォルダだけ見れば全部わかる」を目指す。
+各ルート配下で必要なコードをまとめ、「このルートのことはこのフォルダだけ見れば全部わかる」を目指す。
 
 ## 基本概念
 
-- **feature** = まとまりのある機能単位
-- **layer** = feature の中の役割（application / domain / db / utils）
-- **`_`** = Next.js のルート除外専用（route files を置かないバケツ）
-- **内部実装かどうか** = 「どこから import してよいか」という運用ルールで区別（記号では区別しない）
+- **route** = ルート（画面や編集体験など）
+- **layer** = route の中の役割（component / service / domain / db / utils）
+- **`_`** = Next.js のルート除外専用（`page.tsx` を置かないトップレベルのフォルダに付ける）
+- コンポーネントでしか使わないコードはコンポーネント配下、共通のコードはルート直下に配置
 
 ## ディレクトリ構造
 
-feature 直下には「レイヤ名」だけ置く。ユースケース名のフォルダを feature 直下に混在させない。
-
 ```
-feature-name/
-  application/          # ユースケースのフロー
-    use-case-name.ts
-    another-use-case.ts
-    complex-use-case/   # そのユースケース専用の domain/ や db/ がある場合のサブフォルダ（コロケーション原則）
-      application/      # このユースケースのフロー
-        index.ts
-        prepare-input.ts
-      domain/           # このユースケース専用の純粋ロジック
-        validation.ts
-      db/               # このユースケース専用の DB アクセス
-        query.ts
-  domain/               # 複数ユースケースで使う純粋ロジック（I/Oなし）
-    sub-feature/
-      logic-a.ts
-      logic-b.ts
-    another-sub-feature/
-      helper.ts
-  db/                   # feature 専用の DB アクセス（Prisma 等）
-    query.ts
-    mutation.ts
-  utils/                # feature 内で使う小さな純粋ヘルパー（オプション）
-    formatter.ts
-    sorter.ts
+route-a/
+  _components/            # route-a 専用のUIコンポーネント
+    component-a/
+      service/            # component-a 専用で使うユースケース（サービス）
+        service-a.ts
+        service-b/        # 複雑なサービスはサブフォルダにまとめる
+          domain/
+          db/
+  _db/                    # route-a 専用で使うDBアクセス
+    queries.server.ts
+  _domain/                 # route-a 専用で使うドメインロジック
+    domain-a.ts
+  _service/                # route-a 専用で使うユースケース（サービス）
+    service-a.ts
+  _utils/                  # route-a 専用で使う純粋なヘルパー
+    utils.ts
+  page.tsx
+  route-b/          # 別のルート
+    _domain/           # route-b 専用で使うドメインロジック
+      domain-a.ts
+    _db/               # route-b 専用で使うDBアクセス
+      queries.server.ts
+    _service/          # route-b 専用で使うユースケース（サービス）
+      service-a.ts
+      service-b/        # 複雑なサービスはサブフォルダにまとめる
+        domain/
+        db/            # route-b 専用で使うDBアクセス
+    page.tsx
 ```
 
 ## 各レイヤーの役割
 
-### `feature/application/`
-- ユースケースのフロー定義
-- `domain/` のロジックと `db/` のリポジトリを組み合わせる層
-- 基本は「1ユースケース = 1ファイル」
-- **そのユースケースでしか使わない `domain/` や `db/` がある場合は、コロケーション原則に従ってサブフォルダを切る**
-- サブフォルダ内では、`application/`, `domain/`, `db/` のレイヤー構造を維持する
-- 1ファイルで収まらない場合は、サブフォルダ内の `application/` に複数ファイルを配置する
+### `service/`
+- ユースケース（サービス）のフロー定義
+- `domain/` と `db/` を組み合わせて副作用をオーケストレーション
+- 基本は「1サービス = 1ファイル」。複雑な場合はサブフォルダに `domain/` や `db/` を配置
 
-### `feature/domain/`
-- 複数ユースケースで使う純粋ロジック（ビジネスロジック）
-- 外部 I/O なし（Prisma、fetch 等禁止）
-- 他の feature でも使いたくなったら、必要に応じて上位（shared/domain/ 等）に昇格
-- 関連するロジックはサブフォルダでまとめる
-- **1ユースケースでしか使わないドメインロジックは、そのユースケースのサブフォルダ内に `domain/` を置く（コロケーション原則）**
+### `domain/`
+- 純粋ビジネスロジック（I/O禁止）
+- 複数サービスで共有する場合はルート直下の `_domain/`、サービス/コンポーネント専用は各配下の `domain/`
 
-### `feature/db/`
-- この feature 専用の DB アクセス層
-- Prisma や SQL はここに集約
-- `application/` からだけ呼ばれる
-- **1ユースケースでしか使わない DB アクセスは、そのユースケースのサブフォルダ内に `db/` を置く（コロケーション原則）**
+### `db/`
+- DB アクセス層（Prisma / SQL）
+- サービス層からのみ呼び出される
+- ルート全体で使う場合は `_db/`、サービス/コンポーネント専用は各配下の `db/`
 
-### `feature/utils/`（オプション）
-- feature 全体で使う小さな純粋ヘルパー
-- データ変換、文字列処理、ソートなど
-- I/O 禁止
-- 「ドメインの意味を持つロジック」は `domain/`、「ただの形式変換・小技」は `utils/` に寄せる
+### `utils/`（任意）
+- 純粋な小ヘルパー（I/O禁止）。ドメインの意味を持つなら `domain/` に昇格
 
-## 内部実装の扱い（記号を使わない）
+## 配置ルール
 
+- **ルート直下**: `_components/`, `_db/`, `_domain/`, `_service/`, `_utils/` など（`_` 付き）
+- **コンポーネント配下**: `service/`, `domain/`, `db/`, `utils/`, `hooks/` など（`_` なし）
+- **サービス配下**: `domain/`, `db/` など（`_` なし）
+- コンポーネント間で共有するロジックはルート直下の `_domain/` や `_db/` に配置
 
-**ポリシー：**
-- feature の **外** から import してよいのは：`feature/application/`（or その index.ts）だけ
-- feature の **中** では：
-  - `application/` → `domain/`, `db/`, `utils/` を自由に使ってよい
-  - `domain/` → `utils/` は OK
-  - `domain/` → `db/` は禁止（必ず application 経由）
+## 依存方向
 
-これを守ることで、「内部実装かどうか」を名前ではなく **依存方向と import 規約** で表現する。
+- route 内の依存方向:
+  - `service/` → `domain/`, `db/`, `utils/` ✅
+  - `domain/` → `utils/` ✅
+  - `domain/` → `db/` ❌（必ず service 経由）
+  - `utils/` → `db/` ❌
+  - `components/` → `service/`, `domain/`, `db/`, `utils/` ✅
 
-## Next.js App Router との組み合わせ
-
-### `_`（アンダースコア）の意味
-`_` は Next.js のルート除外専用とする。「内部実装」の意味では使わない。
-
-```
-page/[pageSlug]/
-  page.tsx                 # ルートの入口
-  _db/                     # このルート専用のDBアクセス（route files を置かない）
-    queries.server.ts
-  _components/             # このルート専用のUIとfeature
-    PageClient.tsx
-    feature-name/          # 画面内の feature
-      application/
-        use-case.ts
-      domain/
-      db/
-```
-
-**ルール：**
-- `src/app/...` 直下で `page.tsx` を置かないバケツには `_` を付ける（`_components`, `_db`, `_hooks`）
-- `_components` の下は「普通の feature フォルダ」として扱い、feature/application / feature/domain / feature/db / feature/utils のルールを適用
-- 「内部ユースケースだから `_xxx`」みたいに `_` を二重の意味で使わない
-
-## 依存関係のルール
-
-```
-application/ → domain/ ✅
-application/ → utils/ ✅
-application/ → db/ ✅
-domain/ → utils/ ✅
-utils/ → domain/ ❌（避ける）
-domain/ → db/ ❌（必ず application 経由）
-utils/ → db/ ❌（必ず application 経由）
-
-他 feature → feature/application/** ✅（公開API）
-他 feature → feature/domain/** ❌
-他 feature → feature/db/** ❌
-他 feature → feature/utils/** ❌
-```
 ## テスト方針
 
-- **`domain/`**: ユニットテスト（ロジック・分岐・境界値）を厚めに書く
-- **`utils/`**: シンプルなものはテスト省略可。複雑になってきたら `domain/` に昇格させてテストを書く
-- **`db/`**: 必要なところだけテスト DB で統合テスト。生 SQL / 複雑クエリ / 重要なビジネスルールが絡むところを優先
-- **`application/`**: ハッピーパス + 最小限のケース。「どの domain/db をどの順で呼ぶか」の確認用。分岐の網羅は `domain/` 側でやる
+- **`domain/`**: ユニットテストを厚めに。分岐・境界値の責務はここで担保
+- **`utils/`**: シンプルなものは省略可。複雑になったら `domain/` に昇格してテストを書く
+- **`db/`**: 必要箇所だけ統合テスト（テスト DB）。複雑クエリや重要な制約を優先
+- **`service/`**: ハッピーパス＋主要な異常系を押さえ、どの domain/db をどうオーケストレーションするかを確認
