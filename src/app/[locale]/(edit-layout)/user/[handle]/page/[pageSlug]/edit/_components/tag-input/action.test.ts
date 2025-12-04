@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import { getCurrentUser } from "@/lib/auth-server";
 import { mockPages, mockUsers } from "@/tests/mock";
-import { upsertTags } from "../../_db/mutations.server";
+import { upsertTags } from "./_db/mutations.server";
 import { editPageTagsAction } from "./action";
 
 // Mocking dependencies

@@ -1,20 +1,23 @@
 "use client";
 
+import type { SanitizedUser } from "@/app/types";
 import type { Editor as TiptapEditor } from "@tiptap/react";
 import { useActionState, useCallback, useRef, useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { useDebouncedCallback } from "use-debounce";
-import type { SanitizedUser } from "@/app/types";
-import type { PageWithTitleAndTags, TagWithCount } from "../_db/queries.server";
-import { useKeyboardVisible } from "../_hooks/use-keyboard-visible";
+import type {
+	PageWithTitleAndTags,
+	TagWithCount,
+} from "../../_db/queries.server";
+import { useKeyboardVisible } from "../../_hooks/use-keyboard-visible";
+import { Editor } from "../editor/editor";
+import { EditorKeyboardMenu } from "../editor/editor-keyboard-menu";
 import {
 	type EditPageContentActionState,
 	editPageContentAction,
 } from "./action";
-import { Editor } from "./editor/editor";
-import { EditorKeyboardMenu } from "./editor/editor-keyboard-menu";
-import { EditHeader } from "./header/client";
-import { TagInput } from "./tag-input";
+import { EditHeader } from "../header/client";
+import { TagInput } from "../tag-input";
 
 interface EditPageClientProps {
 	currentUser: SanitizedUser;

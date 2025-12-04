@@ -1,6 +1,7 @@
+import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/edit-page-client/service/upsert-page-and-segments";
 import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mdast-with-segments";
-import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_db/mutations.server";
 import { prisma } from "@/lib/prisma";
+import { PageStatus } from "@prisma/client";
 import { slugify } from "../../utils/slugify";
 
 interface CategoryPageParams {
@@ -33,6 +34,7 @@ export async function createCategoryPage({
 		segments: mdast.segments,
 		parentId,
 		order,
+		status: PageStatus.PUBLIC,
 	});
 
 	const page = await prisma.page.findFirstOrThrow({

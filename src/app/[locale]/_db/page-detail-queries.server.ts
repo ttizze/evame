@@ -73,7 +73,9 @@ export async function fetchPageDetail(slug: string, locale: string) {
 		where: { slug },
 		select: selectPageDetailFields(locale),
 	});
-	if (!page) return null;
+	if (!page) {
+		return null;
+	}
 
 	const segments = await resolveMainDisplaySegments(
 		slug,

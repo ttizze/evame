@@ -7,12 +7,14 @@ export function removeHeader(markdown: string): {
 } {
 	const lines = markdown.split(/\r?\n/);
 	const bodyLines: string[] = [];
+	let headerRemoved = false;
 
 	for (let i = 0; i < lines.length; i++) {
 		const line = lines[i];
 
-		// 最初の `# ` で始まる行（ヘッダー）をスキップ
-		if (i === 0 && /^#\s+/.test(line.trim())) {
+		// まだヘッダーを削除していない場合、最初の `# ` で始まる行（ヘッダー）をスキップ
+		if (!headerRemoved && /^#\s+/.test(line.trim())) {
+			headerRemoved = true;
 			// 次の行が `##` で始まる場合もスキップ
 			if (i + 1 < lines.length && /^##\s+/.test(lines[i + 1].trim())) {
 				i++; // 次の行もスキップ

@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
+import { createServerLogger } from "@/lib/logger.server";
 import { PageContent } from "./_components/page-content";
 import { fetchPageContext } from "./_lib/fetch-page-context";
 import { generatePageMetadata } from "./_lib/generate-page-metadata";
+
+const logger = createServerLogger("page-view");
 
 type Params = Promise<{ locale: string; handle: string; pageSlug: string }>;
 
@@ -33,13 +36,25 @@ export async function generateMetadata({
 export default async function Page(
 	props: PageProps<"/[locale]/user/[handle]/page/[pageSlug]">,
 ) {
-	const { pageSlug, locale } = await props.params;
+	const { pageSlug, locale, handle } = await props.params;
 	const data = await fetchPageContext(pageSlug, locale);
-	if (!data) return notFound();
+	if (!data) {
+		logger.warn({ pageSlug, locale, handle }, "Page context not found");
+		return notFound();
+	}
 	const { pageDetail } = data;
 
 	// Public route only renders PUBLIC pages
 	if (pageDetail.status !== "PUBLIC") {
+		logger.warn(
+			{
+				pageSlug,
+				status: pageDetail.status,
+				pageId: pageDetail.id,
+				handle,
+			},
+			"Page status is not PUBLIC",
+		);
 		return notFound();
 	}
 

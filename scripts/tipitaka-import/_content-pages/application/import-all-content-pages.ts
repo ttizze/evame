@@ -1,3 +1,4 @@
+import { createServerLogger } from "@/lib/logger.server";
 import { parseDirSegment } from "../../domain/parse-dir-segment/parse-dir-segment";
 import type { TipitakaFileMeta } from "../../types";
 import { createContentPage } from "../_pages/application/create-content-page";
@@ -78,6 +79,12 @@ async function processTipitakaFile(
 ): Promise<void> {
 	const { categoryPageLookup, rootPageId, userId, pageIdByFileKey } = params;
 
+	const logger = createServerLogger("import-content-page", {
+		userId,
+		fileKey: fileMeta.fileKey,
+		primaryOrCommentary: fileMeta.primaryOrCommentary,
+	});
+
 	const parentPath = fileMeta.dirSegments.slice(0, -1).join("/") || "";
 	const parentCategoryPageId = categoryPageLookup.get(parentPath) ?? rootPageId;
 	const lastSegment = fileMeta.dirSegments[fileMeta.dirSegments.length - 1];
@@ -90,13 +97,36 @@ async function processTipitakaFile(
 	if (!isMula && fileMeta.mulaFileKey) {
 		const anchorId = pageIdByFileKey.get(fileMeta.mulaFileKey.toLowerCase());
 		if (!anchorId) {
-			console.warn(
-				`Anchor page not found for mula file: ${fileMeta.mulaFileKey}`,
+			logger.warn(
+				{
+					mulaFileKey: fileMeta.mulaFileKey,
+					fileKey: fileMeta.fileKey,
+					primaryOrCommentary: fileMeta.primaryOrCommentary,
+				},
+				"Anchor page not found for mula file - annotation links will not be created",
 			);
 		} else {
 			anchorContentId = anchorId;
+			logger.debug(
+				{
+					mulaFileKey: fileMeta.mulaFileKey,
+					anchorContentId,
+					fileKey: fileMeta.fileKey,
+				},
+				"Anchor content ID found for commentary",
+			);
 		}
 	}
+
+	logger.debug(
+		{
+			isMula,
+			anchorContentId,
+			parentId: parentCategoryPageId,
+			order: pageOrder,
+		},
+		"Creating content page",
+	);
 
 	const contentPageId = await createContentPage({
 		entry: fileMeta,
@@ -105,6 +135,15 @@ async function processTipitakaFile(
 		order: pageOrder,
 		anchorContentId,
 	});
+
+	logger.debug(
+		{
+			contentPageId,
+			anchorContentId,
+			isMula,
+		},
+		"Content page created",
+	);
 
 	pageIdByFileKey.set(fileKeyLower, contentPageId);
 }

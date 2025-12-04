@@ -1,0 +1,69 @@
+src/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/
+├── page.tsx
+├── _components/
+│   ├── action.ts
+│   ├── action.test.ts
+│   ├── edit-page-client.tsx
+│   ├── _application/
+│   │   ├── process-page-html/
+│   │   │   └── index.ts
+│   │   └── upsert-page-and-segments/
+│   │       ├── application/
+│   │       │   ├── index.ts
+│   │       │   ├── sync-annotation-links/
+│   │       │   │   ├── index.ts
+│   │       │   │   ├── db/
+│   │       │   │   │   ├── mutations.server.ts
+│   │       │   │   │   └── queries.server.ts
+│   │       │   │   └── domain/
+│   │       │   │       ├── build-links-to-create.ts
+│   │       │   │       └── build-paragraph-mapping.ts
+│   │       │   └── sync-segment-metadata-and-links/
+│   │       │       ├── index.ts
+│   │       │       ├── _db/
+│   │       │       │   └── sync-segment-metadata.ts
+│   │       │       └── _domain/
+│   │       │           └── segment-metadata/
+│   │       │               ├── collect-metadata-drafts.ts
+│   │       │               └── group-by-paragraph-number.ts
+│   │       └── db/
+│   │           └── upsert-page.ts
+│   ├── editor/
+│   │   ├── custom-image.tsx
+│   │   ├── editor-bubble-menu.client.tsx
+│   │   ├── editor-config.test.ts
+│   │   ├── editor-config.ts
+│   │   ├── editor-floating-menu.tsx
+│   │   ├── editor-integration.test.tsx
+│   │   ├── editor-keyboard-menu.tsx
+│   │   ├── editor.tsx
+│   │   ├── extensions/
+│   │   │   ├── x-embed.ts
+│   │   │   └── x-view.tsx
+│   │   └── use-file-upload.ts
+│   ├── header/
+│   │   ├── _db/
+│   │   │   └── mutations.server.ts
+│   │   ├── action.test.ts
+│   │   ├── action.ts
+│   │   ├── client.test.tsx
+│   │   ├── client.tsx
+│   │   ├── hooks/
+│   │   │   └── use-header-visibility.ts
+│   │   └── locale-multi-selector/
+│   │       ├── _db/
+│   │       │   └── mutations.server.ts
+│   │       ├── action.ts
+│   │       └── client.tsx
+│   └── tag-input/
+│       ├── _db/
+│       │   └── mutations.server.ts
+│       ├── action.test.ts
+│       ├── action.ts
+│       ├── index.test.tsx
+│       └── index.tsx
+├── _db/
+│   └── queries.server.ts
+└── _hooks/
+    └── use-keyboard-visible.ts
+

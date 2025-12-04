@@ -6,7 +6,7 @@ import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
 import { revalidateAllLocales } from "@/lib/revalidate-utils";
-import { upsertTags } from "../../_db/mutations.server";
+import { upsertTags } from "./_db/mutations.server";
 
 const editPageTagsSchema = z.object({
 	pageId: z.coerce.number().min(1),

@@ -1,3 +1,4 @@
+import { createServerLogger } from "@/lib/logger.server";
 import { prisma } from "@/lib/prisma";
 import { importAllContentPages } from "./_content-pages/application/import-all-content-pages";
 import { createCategoryPages } from "./_create-category-pages/application/create-category-pages";
@@ -7,6 +8,11 @@ import { readBooksJson } from "./utils/books";
 import { SYSTEM_USER_HANDLE } from "./utils/constants";
 
 export async function runTipitakaImport(): Promise<void> {
+	const logger = createServerLogger("tipitaka-import");
+	logger.info(
+		{ logLevel: process.env.LOG_LEVEL || "default" },
+		"Starting Tipitaka import",
+	);
 	try {
 		// Step 0: 取り込み先となるシステムユーザ（evame）が存在するか確認する
 		const user = await findUserByHandle(SYSTEM_USER_HANDLE);

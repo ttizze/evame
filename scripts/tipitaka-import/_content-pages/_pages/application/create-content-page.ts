@@ -1,6 +1,7 @@
-import fs from "node:fs/promises";
+import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/edit-page-client/service/upsert-page-and-segments";
 import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mdast-with-segments";
-import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_db/mutations.server";
+import { PageStatus } from "@prisma/client";
+import fs from "node:fs/promises";
 import { parseDirSegment } from "../../../domain/parse-dir-segment/parse-dir-segment";
 import type { TipitakaFileMeta } from "../../../types";
 import { slugify } from "../../../utils/slugify";
@@ -53,6 +54,7 @@ export async function createContentPage({
 		parentId,
 		order,
 		anchorContentId,
+		status: PageStatus.PUBLIC,
 	});
 
 	const page = await findPageBySlugAndUserId(slug, userId);
