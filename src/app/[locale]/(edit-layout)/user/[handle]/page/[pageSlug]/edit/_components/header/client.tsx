@@ -27,6 +27,7 @@ import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
 import { LocaleMultiSelector } from "./locale-multi-selector/client";
 
+
 interface EditHeaderProps {
 	currentUser: SanitizedUser;
 	initialStatus: PageStatus;
