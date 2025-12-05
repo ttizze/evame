@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
  * 外部キー制約の順序に注意して削除
  */
 export async function resetDatabase() {
+	// PrismaClientが切断されているケース（テストで$disconnectした直後など）に備えて再接続
+	await prisma.$connect();
 	// 外部キー制約の順序に注意して削除
 	await prisma.segmentAnnotationLink.deleteMany();
 	await prisma.segmentMetadata.deleteMany();

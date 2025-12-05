@@ -5,7 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { toSessionUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
+import { setupDbPerFile } from "@/tests/test-db-manager";
 import { editPageTagsAction } from "./action";
+
+await setupDbPerFile(import.meta.url);
 
 // 外部システムのみモック（認証とNext.jsのキャッシュ機能はvitest.setup.tsで共通モック済み）
 

@@ -6,7 +6,10 @@ import { prisma } from "@/lib/prisma";
 import { toSessionUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPageWithSegments, createUser } from "@/tests/factories";
+import { setupDbPerFile } from "@/tests/test-db-manager";
 import { translateAction } from "./action";
+
+await setupDbPerFile(import.meta.url);
 
 // 外部システムのみモック（キューシステム）
 vi.mock("@/app/[locale]/_lib/translate/enqueue.server", () => ({

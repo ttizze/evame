@@ -8,7 +8,22 @@ import {
 	createPageWithSegments,
 	createUser,
 } from "@/tests/factories";
+import { setupDbPerFile } from "@/tests/test-db-manager";
 import { getGeminiModelResponse } from "../_services/gemini";
+
+await setupDbPerFile(import.meta.url);
+
+if (process.env.DEBUG_TEST_DB === "1") {
+	const vitestEnvKeys = Object.keys(process.env)
+		.filter((key) => key.startsWith("VITEST"))
+		.sort();
+	console.log(
+		`[translate.server.integration.test] VITEST_FILE_PATH=${process.env.VITEST_FILE_PATH ?? "<undefined>"}`,
+	);
+	console.log(
+		`[translate.server.integration.test] VITEST_* keys=${vitestEnvKeys.join(", ") || "<none>"}`,
+	);
+}
 
 // 外部システムのみモック（Gemini API）
 vi.mock("../_services/gemini", () => ({

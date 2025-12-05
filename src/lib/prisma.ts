@@ -1,31 +1,38 @@
-// db.ts
-
 import { neonConfig } from "@neondatabase/serverless";
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
 import { WebSocket } from "ws";
 
 declare global {
-	var prisma: PrismaClient | undefined;
+	var __prismaClient: PrismaClient | null;
 }
 
-const connectionString = process.env.DATABASE_URL || "";
-if (!connectionString) {
-	throw new Error("DATABASE_URL is not defined");
-}
-const isLocal = new URL(connectionString).hostname === "db.localtest.me";
-
-// Production（Neon本番）のみアダプタを使う
-function makeClient() {
-	if (isLocal) {
-		return new PrismaClient(); // TCP直
+function makeClient(): PrismaClient {
+	const connectionString = process.env.DATABASE_URL || "";
+	if (!connectionString) {
+		throw new Error("DATABASE_URL is not defined");
 	}
-	// Neon serverless を使う環境だけ設定
+
+	const isLocal = new URL(connectionString).hostname === "db.localtest.me";
+	if (isLocal) {
+		return new PrismaClient();
+	}
+
+	// Neon serverless 環境のみアダプタを使用
 	neonConfig.webSocketConstructor = WebSocket;
-	const adapter = new PrismaNeon({ connectionString });
-	return new PrismaClient({ adapter });
+	return new PrismaClient({ adapter: new PrismaNeon({ connectionString }) });
 }
 
-const prismaClient = globalThis.prisma ?? makeClient();
-globalThis.prisma = prismaClient;
-export { prismaClient as prisma };
+// Proxyでラップすることで、テスト時にDATABASE_URLを切り替えても新しい接続が使われる
+export const prisma: PrismaClient = new Proxy({} as PrismaClient, {
+	get(_target, prop: string | symbol) {
+		if (!globalThis.__prismaClient) {
+			globalThis.__prismaClient = makeClient();
+		}
+		const value = globalThis.__prismaClient[prop as keyof PrismaClient];
+		if (typeof value === "function") {
+			return value.bind(globalThis.__prismaClient);
+		}
+		return value;
+	},
+});

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { PageStatus, SegmentTypeKey } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSegmentTypeId } from "./db-helpers";
@@ -12,11 +13,12 @@ export async function createUser(data?: {
 	image?: string;
 	profile?: string;
 }) {
+	const uniqueId = randomUUID().slice(0, 8);
 	return await prisma.user.create({
 		data: {
-			handle: data?.handle ?? `testuser-${Date.now()}`,
+			handle: data?.handle ?? `testuser-${uniqueId}`,
 			name: data?.name ?? "Test User",
-			email: data?.email ?? `testuser-${Date.now()}@example.com`,
+			email: data?.email ?? `testuser-${uniqueId}@example.com`,
 			image: data?.image ?? "https://example.com/image.jpg",
 			profile: data?.profile ?? "",
 		},
@@ -32,6 +34,7 @@ export async function createPage(data: {
 	status?: PageStatus;
 	mdastJson?: unknown;
 	sourceLocale?: string;
+	parentId?: number;
 }) {
 	const content = await prisma.content.create({
 		data: { kind: "PAGE" },
@@ -45,6 +48,7 @@ export async function createPage(data: {
 			status: data.status ?? "PUBLIC",
 			mdastJson: data.mdastJson ?? {},
 			sourceLocale: data.sourceLocale ?? "en",
+			parentId: data.parentId,
 		},
 	});
 }
@@ -277,6 +281,42 @@ export async function createGeminiApiKey(data: {
 		data: {
 			userId: data.userId,
 			apiKey: data.apiKey ?? "dummy-api-key",
+		},
+	});
+}
+
+/**
+ * テスト用PageCommentを作成
+ */
+export async function createPageComment(data: {
+	userId: string;
+	pageId: number;
+	locale?: string;
+	mdastJson?: unknown;
+	parentId?: number;
+	isDeleted?: boolean;
+}) {
+	const content = await prisma.content.create({
+		data: { kind: "PAGE_COMMENT" },
+	});
+
+	return await prisma.pageComment.create({
+		data: {
+			id: content.id,
+			userId: data.userId,
+			pageId: data.pageId,
+			locale: data.locale ?? "en",
+			mdastJson: data.mdastJson ?? {
+				type: "root",
+				children: [
+					{
+						type: "paragraph",
+						children: [{ type: "text", value: "test comment" }],
+					},
+				],
+			},
+			parentId: data.parentId,
+			isDeleted: data.isDeleted ?? false,
 		},
 	});
 }

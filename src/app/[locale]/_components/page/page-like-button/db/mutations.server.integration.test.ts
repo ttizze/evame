@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/prisma";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
+import { setupDbPerFile } from "@/tests/test-db-manager";
 import { togglePageLike } from "./mutations.server";
+
+await setupDbPerFile(import.meta.url);
 
 describe("togglePageLike", () => {
 	beforeEach(async () => {

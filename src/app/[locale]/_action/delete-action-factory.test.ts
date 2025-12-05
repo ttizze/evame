@@ -1,94 +1,121 @@
-// create-delete-action.test.ts
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
-/* ─────────────────────────────────────────────
-  1. 依存モジュールを hoist-safe にモック
-   ──────────────────────────────────────────── */
+// authAndValidate は DI で注入するためモック
 vi.mock("./auth-and-validate", () => ({
-	// テストごとに戻り値を差し替える
 	authAndValidate: vi.fn(),
-	// 既定 deps を使わないので空で OK
 	authDefaultDeps: {},
 }));
 
-// モック後に読み込む
-// eslint-disable-next-line import/first
 import { authAndValidate } from "./auth-and-validate";
 import { deleteActionFactory } from "./delete-action-factory";
 
-/* ─────────────────────────────────────────────
-  2. 共通ダミー定義
-   ──────────────────────────────────────────── */
 const schema = z.object({ id: z.number() });
 
-/** テスト用に共通 Action を作るファクトリ */
-const actionFactory = (deps: Record<string, unknown> = {}) =>
-	deleteActionFactory(
-		{
-			inputSchema: schema,
-			deleteById: vi.fn().mockResolvedValue(undefined),
-			buildRevalidatePaths: () => ["/foo"],
-			buildSuccessRedirect: () => "/bar",
-		},
-		//biome-ignore lint/suspicious/noExplicitAny: <>
-		deps as any, // 型を満たすため any キャスト
-	);
-
-/* ─────────────────────────────────────────────
-  3. テスト本体
-   ──────────────────────────────────────────── */
-describe("createDeleteAction", () => {
+describe("deleteActionFactory", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it("validation 失敗時は zodErrors を返す", async () => {
-		//biome-ignore lint/suspicious/noExplicitAny: <>
-		(authAndValidate as any).mockResolvedValue({
-			success: false,
-			zodErrors: { id: ["required"] },
+	describe("バリデーション失敗時", () => {
+		it("zodErrorsを含む失敗レスポンスを返す", async () => {
+			vi.mocked(authAndValidate).mockResolvedValue({
+				success: false,
+				zodErrors: { id: ["required"] },
+			});
+
+			const action = deleteActionFactory(
+				{
+					inputSchema: schema,
+					deleteById: vi.fn(),
+					buildRevalidatePaths: () => ["/foo"],
+				},
+				//biome-ignore lint/suspicious/noExplicitAny: DI用
+				{} as any,
+			);
+
+			const result = await action(
+				{ success: true, data: undefined },
+				new FormData(),
+			);
+
+			expect(result).toEqual({
+				success: false,
+				zodErrors: { id: ["required"] },
+			});
 		});
-
-		const act = actionFactory();
-		const res = await act({ success: true, data: undefined }, new FormData());
-
-		expect(res).toEqual({ success: false, zodErrors: { id: ["required"] } });
 	});
 
-	it("成功時は delete → revalidate → redirect を行う", async () => {
-		//biome-ignore lint/suspicious/noExplicitAny: <>
-		(authAndValidate as any).mockResolvedValue({
-			success: true,
-			currentUser: { id: "1", handle: "u" },
-			data: { id: 10 },
+	describe("削除成功時", () => {
+		it("削除 → キャッシュ再検証 → リダイレクトの順で実行する", async () => {
+			vi.mocked(authAndValidate).mockResolvedValue({
+				success: true,
+				currentUser: { id: "user1", handle: "testuser", plan: "free" },
+				data: { id: 10 },
+			});
+
+			const deps = {
+				revalidatePath: vi.fn(),
+				redirect: vi.fn(),
+				getCurrentUser: vi.fn(),
+				parseFormData: vi.fn(),
+			};
+			const deleteById = vi.fn().mockResolvedValue(undefined);
+
+			const action = deleteActionFactory(
+				{
+					inputSchema: schema,
+					deleteById,
+					buildRevalidatePaths: () => ["/foo"],
+					buildSuccessRedirect: () => "/bar",
+				},
+				//biome-ignore lint/suspicious/noExplicitAny: DI用
+				deps as any,
+			);
+
+			await action({ success: true, data: undefined }, new FormData());
+
+			expect(deleteById).toHaveBeenCalledWith({ id: 10 }, "user1");
+			expect(deps.revalidatePath).toHaveBeenCalledWith("/foo");
+			expect(deps.redirect).toHaveBeenCalledWith("/bar");
 		});
 
-		/* 依存を全部 spy にして注入 */
-		const deps = {
-			revalidatePath: vi.fn(),
-			redirect: vi.fn(),
-			getCurrentUser: vi.fn(), // AuthDeps を満たすためダミー
-			parseFormData: vi.fn(),
-		};
+		it("buildSuccessRedirectが未定義の場合、リダイレクトしない", async () => {
+			vi.mocked(authAndValidate).mockResolvedValue({
+				success: true,
+				currentUser: { id: "user1", handle: "testuser", plan: "free" },
+				data: { id: 10 },
+			});
 
-		const deleteById = vi.fn().mockResolvedValue(undefined);
+			const deps = {
+				revalidatePath: vi.fn(),
+				redirect: vi.fn(),
+				getCurrentUser: vi.fn(),
+				parseFormData: vi.fn(),
+			};
 
-		const act = deleteActionFactory(
-			{
-				inputSchema: schema,
-				deleteById,
-				buildRevalidatePaths: () => ["/foo"],
-				buildSuccessRedirect: () => "/bar",
-			},
-			//biome-ignore lint/suspicious/noExplicitAny: <>
-			deps as any,
-		);
+			const action = deleteActionFactory(
+				{
+					inputSchema: schema,
+					deleteById: vi.fn(),
+					buildRevalidatePaths: () => ["/foo"],
+					// buildSuccessRedirect を指定しない
+				},
+				//biome-ignore lint/suspicious/noExplicitAny: DI用
+				deps as any,
+			);
 
-		await act({ success: true, data: undefined }, new FormData());
+			const result = await action(
+				{ success: true, data: undefined },
+				new FormData(),
+			);
 
-		expect(deleteById).toHaveBeenCalledWith({ id: 10 }, "1");
-		expect(deps.revalidatePath).toHaveBeenCalledWith("/foo");
-		expect(deps.redirect).toHaveBeenCalledWith("/bar");
+			expect(result).toEqual({
+				success: true,
+				data: undefined,
+				message: "Deleted successfully",
+			});
+			expect(deps.redirect).not.toHaveBeenCalled();
+		});
 	});
 });

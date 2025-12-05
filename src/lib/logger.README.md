@@ -37,16 +37,44 @@ logger.error({ err: error }, "Failed to load page");
 
 ## ログレベル
 
-環境変数`LOG_LEVEL`で設定できます：
+ログレベルは環境に応じて自動的に設定されますが、環境変数`LOG_LEVEL`で明示的に上書きすることもできます。
+
+### ログレベルの優先順位
+
+1. **環境変数 `LOG_LEVEL`**（最優先 - 明示的に設定されている場合）
+2. **テスト環境のデフォルト**: `error`（`VITEST`環境または`NODE_ENV=test`）
+3. **CI環境のデフォルト**: `warn`（`CI`環境変数が設定されている場合）
+4. **本番環境のデフォルト**: `info`（`NODE_ENV=production`）
+5. **開発環境のデフォルト**: `debug`（それ以外）
+
+### 利用可能なログレベル
 
 - `debug`: すべてのログを出力（開発環境のデフォルト）
 - `info`: 情報レベル以上を出力（本番環境のデフォルト）
-- `warn`: 警告以上を出力
-- `error`: エラーのみ出力
+- `warn`: 警告以上を出力（CI環境のデフォルト）
+- `error`: エラーのみ出力（テスト環境のデフォルト）
+
+### 環境別のデフォルト設定
+
+| 環境 | デフォルトレベル | 検知方法 | 理由 |
+|------|-----------------|----------|------|
+| テスト環境 | `error` | `VITEST`環境変数または`NODE_ENV=test` | テスト中のログ出力を抑制し、テスト結果を見やすくする |
+| CI環境 | `warn` | `CI`環境変数 | エラーと警告のみ記録して、CIログを簡潔に保つ |
+| 本番環境 | `info` | `NODE_ENV=production` | エラー、警告、重要なビジネスイベントを記録 |
+| 開発環境 | `debug` | それ以外 | すべてのログを出力して開発時のデバッグを支援 |
+
+### 明示的な設定
+
+環境変数`LOG_LEVEL`で明示的に設定すると、環境別のデフォルトを上書きできます：
 
 ```bash
-# .env.local
-LOG_LEVEL=debug
+# .env.local（開発環境でもinfoレベル以上のみ）
+LOG_LEVEL=info
+
+# テスト環境でもログを見たい場合（vitest.config.ts）
+env: {
+  LOG_LEVEL: "debug",
+}
 ```
 
 ## オブザーバビリティのベストプラクティス
@@ -204,17 +232,13 @@ if (shouldLog) {
 
 ## 開発環境での表示
 
-開発環境では、JSON形式でログが出力されます。読みやすくするには、`pino-pretty`をパイプで使用：
+開発環境（`NODE_ENV=development`）では、自動的に`pino-pretty`で読みやすく表示されます。
+パイプは不要です。
+
+本番環境で一時的にpretty表示したい場合は環境変数を使用：
 
 ```bash
-bun run dev | bunx pino-pretty
-```
-
-または、ログをファイルに出力してから表示：
-
-```bash
-bun run dev > app.log 2>&1
-tail -f app.log | bunx pino-pretty
+LOG_PRETTY=true bun run start
 ```
 
 ## 本番環境での出力
