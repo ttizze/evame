@@ -63,11 +63,48 @@ function getStream() {
 	return undefined;
 }
 
+/**
+ * 機密情報として扱うフィールドのパス
+ * これらのパスに一致する値は自動的に "[REDACTED]" に置換される
+ *
+ * @see https://github.com/pinojs/pino/blob/main/docs/redaction.md
+ */
+const REDACT_PATHS = [
+	// 認証・セキュリティ関連
+	"password",
+	"*.password",
+	"token",
+	"*.token",
+	"secret",
+	"*.secret",
+	"apiKey",
+	"*.apiKey",
+	"api_key",
+	"*.api_key",
+	"authorization",
+	"*.authorization",
+	"cookie",
+	"*.cookie",
+	"session",
+	"*.session",
+	"credential",
+	"*.credential",
+	// ネストされたオブジェクト内
+	"*.*.password",
+	"*.*.token",
+	"*.*.secret",
+	"*.*.apiKey",
+];
+
 export const logger = pino(
 	{
 		level: getLogLevel(),
 		formatters: { level: (label) => ({ level: label }) },
 		timestamp: pino.stdTimeFunctions.isoTime,
+		redact: {
+			paths: REDACT_PATHS,
+			censor: "[REDACTED]",
+		},
 	},
 	getStream(),
 );

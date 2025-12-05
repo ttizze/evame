@@ -31,7 +31,7 @@ export async function syncSegments(
 	tx: TransactionClient,
 	contentId: number,
 	drafts: SegmentDraft[],
-	segmentTypeId?: number,
+	segmentTypeId: number | null,
 ): Promise<Map<string, number>> {
 	// セグメントタイプIDを取得（指定されていない場合はPRIMARYをデフォルトとして使用）
 	const typeId =

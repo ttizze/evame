@@ -15,7 +15,7 @@ interface ContentPageParams {
 	parentId: number;
 	userId: string;
 	order: number;
-	anchorContentId?: number;
+	anchorContentId: number | null;
 }
 
 export async function createContentPage({

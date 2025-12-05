@@ -27,7 +27,7 @@ export async function syncSegmentMetadataAndAnnotationLinks(
 	hashToSegmentId: Map<string, number>,
 	segments: SegmentDraft[],
 	contentId: number,
-	anchorContentId?: number,
+	anchorContentId: number | null,
 ): Promise<void> {
 	const logger = createServerLogger("sync-segment-metadata-and-links", {
 		contentId,

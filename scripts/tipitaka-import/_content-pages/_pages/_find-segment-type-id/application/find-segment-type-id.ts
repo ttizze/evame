@@ -8,11 +8,11 @@ import { formatCommentaryLabel } from "../utils/format-commentary-label";
  */
 export async function findSegmentTypeIdForTipitakaPrimaryOrCommentary(
 	primaryOrCommentary: TipitakaFileMeta["primaryOrCommentary"],
-): Promise<number | undefined> {
-	const normalizedKey = primaryOrCommentary?.toUpperCase();
+): Promise<number | null> {
+	const normalizedKey = primaryOrCommentary.toUpperCase();
 
 	if (normalizedKey === "MULA" || normalizedKey === "OTHER") {
-		return undefined;
+		return null;
 	}
 
 	const label = formatCommentaryLabel(normalizedKey);

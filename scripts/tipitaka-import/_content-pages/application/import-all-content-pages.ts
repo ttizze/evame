@@ -93,7 +93,7 @@ async function processTipitakaFile(
 	const fileKeyLower = fileMeta.fileKey.toLowerCase();
 	const isMula = fileMeta.primaryOrCommentary?.toUpperCase() === "MULA";
 
-	let anchorContentId: number | undefined;
+	let anchorContentId: number | null = null;
 	if (!isMula && fileMeta.mulaFileKey) {
 		const anchorId = pageIdByFileKey.get(fileMeta.mulaFileKey.toLowerCase());
 		if (!anchorId) {

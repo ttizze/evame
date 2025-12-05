@@ -1,9 +1,9 @@
-import type { Route } from "next";
-import { redirect } from "next/navigation";
-import type { z } from "zod";
 import { getCurrentUser } from "@/lib/auth-server";
 import { createServerLogger } from "@/lib/logger.server";
 import { parseFormData } from "@/lib/parse-form-data";
+import type { Route } from "next";
+import { redirect } from "next/navigation";
+import type { z } from "zod";
 export type AuthDeps = {
 	getCurrentUser: typeof getCurrentUser;
 	parseFormData: typeof parseFormData;
@@ -54,15 +54,15 @@ export async function authAndValidate<T extends z.ZodTypeAny>(
 
 	const parsed = await deps.parseFormData(schema, formData);
 	const logger = createServerLogger("auth-and-validate", { userId: user.id });
-	logger.debug({ parsed }, "Form data parsed");
 	if (!parsed.success) {
-		logger.warn({ error: parsed.error }, "Zod validation errors");
+		// 機密情報漏洩を防ぐため、失敗したフィールド名のみをログに記録（入力値は含めない）
+		const failedFields = Object.keys(parsed.error.flatten().fieldErrors);
+		logger.warn({ failedFields }, "Zod validation errors");
 		return {
 			success: false,
 			zodErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
 		};
 	}
-
 	/* 3. 成功 ――――――――――――――――――― */
 	return {
 		success: true,

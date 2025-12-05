@@ -30,7 +30,7 @@ export async function syncAnnotationLinksByParagraphNumber(
 	tx: TransactionClient,
 	contentId: number,
 	paragraphNumberToAnnotationSegmentIds: Map<string, number[]>,
-	anchorContentId?: number,
+	anchorContentId: number | null,
 ): Promise<void> {
 	const annotationSegmentIds = Array.from(
 		paragraphNumberToAnnotationSegmentIds.values(),

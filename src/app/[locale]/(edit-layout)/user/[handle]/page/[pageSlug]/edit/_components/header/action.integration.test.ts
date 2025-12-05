@@ -1,4 +1,3 @@
-"use server";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { handlePageAutoTranslation } from "@/app/[locale]/_lib/translate/auto-translation/handle-auto-translation";

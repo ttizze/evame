@@ -21,11 +21,11 @@ export async function upsertPageAndSegments(p: {
 	mdastJson: Prisma.InputJsonValue;
 	sourceLocale: string;
 	segments: SegmentDraft[];
-	segmentTypeId?: number;
-	parentId?: number;
-	order?: number;
-	anchorContentId?: number;
-	status?: PageStatus;
+	segmentTypeId: number | null;
+	parentId: number | null;
+	order: number;
+	anchorContentId: number | null;
+	status: PageStatus;
 }) {
 	const logger = createServerLogger("upsert-page-and-segments", {
 		userId: p.userId,
