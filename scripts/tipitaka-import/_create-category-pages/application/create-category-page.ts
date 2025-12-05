@@ -32,8 +32,10 @@ export async function createCategoryPage({
 		mdastJson: mdast.mdastJson,
 		sourceLocale: "pi",
 		segments: mdast.segments,
+		segmentTypeId: null,
 		parentId,
 		order,
+		anchorContentId: null,
 		status: PageStatus.PUBLIC,
 	});
 

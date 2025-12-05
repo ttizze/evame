@@ -1,3 +1,4 @@
+import type { PageStatus } from "@prisma/client";
 import { htmlToMdastWithSegments } from "@/app/[locale]/_lib/html-to-mdast-with-segments";
 import { createServerLogger } from "@/lib/logger.server";
 import { upsertPageAndSegments } from "../upsert-page-and-segments";
@@ -15,6 +16,11 @@ export async function processPageHtml(params: {
 	pageSlug: string;
 	userId: string;
 	sourceLocale: string;
+	segmentTypeId: number | null;
+	parentId: number | null;
+	order: number;
+	anchorContentId: number | null;
+	status: PageStatus;
 }) {
 	const logger = createServerLogger("process-page-html", {
 		userId: params.userId,
@@ -40,6 +46,11 @@ export async function processPageHtml(params: {
 		mdastJson,
 		sourceLocale: params.sourceLocale,
 		segments,
+		segmentTypeId: params.segmentTypeId,
+		parentId: params.parentId,
+		order: params.order,
+		anchorContentId: params.anchorContentId,
+		status: params.status,
 	});
 
 	logger.debug(

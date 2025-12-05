@@ -24,7 +24,10 @@ export async function ensureRootPage(userId: string): Promise<number> {
 		mdastJson: parsed.mdastJson,
 		sourceLocale: "pi",
 		segments: parsed.segments,
+		segmentTypeId: null,
+		parentId: null,
 		order: 0,
+		anchorContentId: null,
 		status: PageStatus.PUBLIC,
 	});
 

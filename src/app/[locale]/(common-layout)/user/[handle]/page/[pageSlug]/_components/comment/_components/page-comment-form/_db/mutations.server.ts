@@ -45,7 +45,7 @@ export async function upsertPageCommentAndSegments(p: {
 				});
 			}
 
-			await syncSegments(tx, pageComment.id, p.segments);
+			await syncSegments(tx, pageComment.id, p.segments, null);
 
 			return pageComment;
 		},

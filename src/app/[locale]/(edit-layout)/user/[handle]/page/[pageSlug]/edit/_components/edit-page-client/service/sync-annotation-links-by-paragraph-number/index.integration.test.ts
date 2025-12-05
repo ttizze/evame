@@ -193,7 +193,7 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 				tx,
 				annotationContentId,
 				new Map([["1", [annotationSegments[0].id]]]),
-				undefined,
+				null,
 			),
 		);
 

@@ -5,6 +5,7 @@ import { createActionFactory } from "@/app/[locale]/_action/create-action-factor
 import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
 import type { ActionResponse } from "@/app/types";
 import { createServerLogger } from "@/lib/logger.server";
+import { prisma } from "@/lib/prisma";
 import { processPageHtml } from "./service/process-page-html";
 
 /* ────────────── 入力スキーマ ────────────── */
@@ -48,12 +49,27 @@ export const editPageContentAction = createActionFactory<
 			const sourceLocale = await getLocaleFromHtml(pageContent, userLocale);
 			logger.debug({ sourceLocale }, "Source locale detected");
 
+			// 既存ページの情報を取得
+			const existingPage = await prisma.page.findFirst({
+				where: { slug: pageSlug, userId },
+				select: {
+					parentId: true,
+					order: true,
+					status: true,
+				},
+			});
+
 			await processPageHtml({
 				title,
 				html: pageContent,
 				pageSlug,
 				userId,
 				sourceLocale,
+				segmentTypeId: null,
+				parentId: existingPage?.parentId ?? null,
+				order: existingPage?.order ?? 0,
+				anchorContentId: null,
+				status: existingPage?.status ?? "DRAFT",
 			});
 
 			logger.debug({}, "Page saved successfully");
