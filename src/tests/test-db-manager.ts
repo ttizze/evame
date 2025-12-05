@@ -76,7 +76,7 @@ export async function ensureTemplateDatabase(): Promise<void> {
 
 	execSync(
 		`docker compose exec -T ${containerService} psql -U postgres -c 'CREATE DATABASE "${templateDbName}" WITH TEMPLATE=template0;'`,
-		{ stdio: "inherit" },
+		{ stdio: "pipe" },
 	);
 
 	runMigrations(templateDbUrl);
@@ -105,7 +105,7 @@ export function cloneTemplateDatabase(dbName: string): void {
 
 	execSync(
 		`docker compose exec -T ${containerService} psql -U postgres -c 'CREATE DATABASE "${dbName}" WITH TEMPLATE="${templateDbName}";'`,
-		{ stdio: "inherit" },
+		{ stdio: "pipe" },
 	);
 }
 

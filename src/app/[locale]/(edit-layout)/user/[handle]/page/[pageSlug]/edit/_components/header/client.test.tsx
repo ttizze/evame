@@ -1,135 +1,133 @@
+import { mockUsers } from "@/tests/mock";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useParams, usePathname } from "next/navigation";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mockUsers } from "@/tests/mock";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { editPageStatusAction } from "./action";
 import { EditHeader } from "./client";
-import { useHeaderVisibility } from "./hooks/use-header-visibility";
 
+// 外部システムのみモック（古典学派：モックは外部システムに限定）
 vi.mock("./action");
 vi.mock("next/navigation");
-vi.mock("./hooks/use-header-visibility");
 vi.mock("sonner", () => ({
-	toast: {
-		success: vi.fn(),
-	},
+	toast: { success: vi.fn() },
 }));
 vi.mock("next-intl", () => ({
 	NextIntlClientProvider: ({ children }: { children: React.ReactNode }) =>
 		children,
 	useTranslations: () => (key: string) => key,
 }));
-vi.mock("use-intl", async () => {
-	const React = await vi.importActual<typeof import("react")>("react");
+vi.mock("use-intl", () => ({
+	useLocale: () => "en",
+	useMessages: () => ({}),
+	useTranslations: () => (id: string) => id,
+}));
 
-	// ダミー値
-	const DUMMY = { locale: "en", messages: {} };
+// useHeaderVisibilityが依存するDOM要素を準備（モックではなく実際のDOMを使用）
+function setupScrollContainer() {
+	const container = document.createElement("div");
+	container.id = "root";
+	container.style.height = "500px";
+	container.style.overflow = "auto";
+	document.body.appendChild(container);
+	return container;
+}
 
-	// Context 自体を自前で作って渡す
-	const IntlContext = React.createContext(DUMMY);
+function cleanupScrollContainer() {
+	const container = document.getElementById("root");
+	if (container) {
+		document.body.removeChild(container);
+	}
+}
 
-	return {
-		IntlContext,
+// テスト用のデフォルトProps
+const defaultProps = {
+	currentUser: mockUsers[0],
+	hasUnsavedChanges: false,
+	initialStatus: "PUBLIC" as const,
+	pageId: 123,
+	targetLocales: ["en", "zh"],
+};
 
-		// Provider: children をそのまま返す or Context.Provider を使う
-		IntlProvider: ({ children }: { children: React.ReactNode }) => (
-			<IntlContext.Provider value={DUMMY}>{children}</IntlContext.Provider>
-		),
-
-		// フックは何でも返すダミーでOK
-		useLocale: () => "en",
-		useMessages: () => ({}),
-		useTranslations: () => (id: string) => id,
-	};
-});
 beforeEach(() => {
+	setupScrollContainer();
 	vi.mocked(usePathname).mockReturnValue("/en/edit/page/123");
 	vi.mocked(useParams).mockReturnValue({
+		handle: "test-user",
 		pageSlug: "test-page",
 	} as unknown as ReturnType<typeof useParams>);
-	vi.mocked(useHeaderVisibility).mockReturnValue({ isVisible: true });
 });
 
-describe("EditHeader Component", () => {
-	it("renders save button and status correctly", () => {
-		render(
-			<EditHeader
-				currentUser={mockUsers[0]}
-				hasUnsavedChanges={false}
-				initialStatus="PUBLIC"
-				pageId={123}
-				targetLocales={["en", "zh"]}
-			/>,
-		);
+afterEach(() => {
+	cleanupScrollContainer();
+});
 
-		expect(screen.getByTestId("save-button")).toBeDisabled();
-		expect(screen.getByText("Public")).toBeInTheDocument();
-	});
+describe("EditHeader", () => {
+	describe("保存ボタン", () => {
+		it("未保存の変更がない場合_保存ボタンは無効になりチェックアイコンを表示する", () => {
+			render(<EditHeader {...defaultProps} hasUnsavedChanges={false} />);
 
-	it("shows loader icon when has unsaved changes", () => {
-		render(
-			<EditHeader
-				currentUser={mockUsers[0]}
-				hasUnsavedChanges={true}
-				initialStatus="PUBLIC"
-				pageId={123}
-				targetLocales={["en", "zh"]}
-			/>,
-		);
-
-		expect(screen.getByTestId("save-button")).not.toBeDisabled();
-		expect(
-			screen.getByTestId("save-button").querySelector(".animate-spin"),
-		).toBeTruthy();
-	});
-
-	it("calls action and shows success toast on status change", async () => {
-		vi.mocked(editPageStatusAction).mockResolvedValue({
-			success: true,
-			data: undefined,
-			message: "Status updated!",
+			const saveButton = screen.getByTestId("save-button");
+			expect(saveButton).toBeDisabled();
+			expect(screen.getByTestId("save-button-check")).toBeInTheDocument();
 		});
 
-		render(
-			<EditHeader
-				currentUser={mockUsers[0]}
-				hasUnsavedChanges={false}
-				initialStatus="DRAFT"
-				pageId={123}
-				targetLocales={["en", "zh"]}
-			/>,
-		);
+		it("未保存の変更がある場合_保存ボタンは有効になりローディングアイコンを表示する", () => {
+			render(<EditHeader {...defaultProps} hasUnsavedChanges={true} />);
 
-		fireEvent.click(screen.getByText("Private"));
-
-		const publicButton = await screen.findByText("Public");
-		fireEvent.click(publicButton);
-
-		await waitFor(() => expect(editPageStatusAction).toHaveBeenCalled());
+			const saveButton = screen.getByTestId("save-button");
+			expect(saveButton).not.toBeDisabled();
+			expect(saveButton.querySelector(".animate-spin")).toBeTruthy();
+		});
 	});
 
-	it("renders error messages from action state", async () => {
-		vi.mocked(editPageStatusAction).mockResolvedValue({
-			success: false,
-			zodErrors: { status: ["Invalid status"], pageId: ["Invalid pageId"] },
+	describe("ステータス表示", () => {
+		it("PUBLICステータスの場合_Publicラベルを表示する", () => {
+			render(<EditHeader {...defaultProps} initialStatus="PUBLIC" />);
+
+			expect(screen.getByText("Public")).toBeInTheDocument();
 		});
 
-		render(
-			<EditHeader
-				currentUser={mockUsers[0]}
-				hasUnsavedChanges={false}
-				initialStatus="DRAFT"
-				pageId={123}
-				targetLocales={["en", "zh"]}
-			/>,
-		);
+		it("DRAFTステータスの場合_Privateラベルを表示する", () => {
+			render(<EditHeader {...defaultProps} initialStatus="DRAFT" />);
 
-		fireEvent.click(screen.getByText("Private"));
+			expect(screen.getByText("Private")).toBeInTheDocument();
+		});
+	});
 
-		const publicButton = await screen.findByText("Public");
-		fireEvent.click(publicButton);
+	describe("ステータス変更", () => {
+		it("DRAFTからPublicボタンをクリックした場合_editPageStatusActionが呼び出される", async () => {
+			vi.mocked(editPageStatusAction).mockResolvedValue({
+				success: true,
+				data: undefined,
+			});
 
-		expect(await screen.findByText("Invalid status")).toBeInTheDocument();
-		expect(await screen.findByText("Invalid pageId")).toBeInTheDocument();
+			render(<EditHeader {...defaultProps} initialStatus="DRAFT" />);
+
+			// ポップオーバーを開く
+			fireEvent.click(screen.getByText("Private"));
+			// Publicボタンをクリック
+			const publicButton = await screen.findByText("Public");
+			fireEvent.click(publicButton);
+
+			await waitFor(() => {
+				expect(editPageStatusAction).toHaveBeenCalled();
+			});
+		});
+
+		it("アクションがバリデーションエラーを返した場合_エラーメッセージを表示する", async () => {
+			vi.mocked(editPageStatusAction).mockResolvedValue({
+				success: false,
+				zodErrors: { status: ["Invalid status"], pageId: ["Invalid pageId"] },
+			});
+
+			render(<EditHeader {...defaultProps} initialStatus="DRAFT" />);
+
+			fireEvent.click(screen.getByText("Private"));
+			const publicButton = await screen.findByText("Public");
+			fireEvent.click(publicButton);
+
+			expect(await screen.findByText("Invalid status")).toBeInTheDocument();
+			expect(await screen.findByText("Invalid pageId")).toBeInTheDocument();
+		});
 	});
 });

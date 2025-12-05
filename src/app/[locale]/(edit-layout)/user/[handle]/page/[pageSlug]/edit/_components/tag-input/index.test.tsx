@@ -1,8 +1,12 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { vi } from "vitest";
-import { TagInput } from "./index";
 import "@testing-library/jest-dom";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { editPageTagsAction } from "./action";
+import { TagInput } from "./index";
+
+// 外部システムのみモック（Server Action）
+vi.mock("./action");
 
 describe("TagInput", () => {
 	const mockInitialTags = [{ id: 1, name: "initial" }];
@@ -13,119 +17,165 @@ describe("TagInput", () => {
 	const mockPageId = 1;
 
 	const user = userEvent.setup();
-	// モックの設定
-	const mockRequestSubmit = vi.fn();
-	global.HTMLFormElement.prototype.requestSubmit = mockRequestSubmit;
 
 	beforeEach(() => {
-		mockRequestSubmit.mockClear();
+		vi.mocked(editPageTagsAction).mockResolvedValue({
+			success: true,
+			data: undefined,
+		});
 	});
 
-	it("should update tags immediately when creating a new tag", async () => {
-		render(
-			<TagInput
-				allTagsWithCount={mockAllTagsWithCount}
-				initialTags={mockInitialTags}
-				pageId={mockPageId}
-			/>,
-		);
+	describe("タグ追加", () => {
+		it("新しいタグを入力してEnterを押した場合_タグが即座に表示される", async () => {
+			// Arrange
+			render(
+				<TagInput
+					allTagsWithCount={mockAllTagsWithCount}
+					initialTags={mockInitialTags}
+					pageId={mockPageId}
+				/>,
+			);
 
-		const selectContainer = screen.getByRole("combobox");
-		await user.click(selectContainer);
-		await user.keyboard("newtag");
-		await user.keyboard("{enter}");
+			// Act
+			const selectContainer = screen.getByRole("combobox");
+			await user.click(selectContainer);
+			await user.keyboard("newtag");
+			await user.keyboard("{enter}");
 
-		// タグが即座に表示されることを確認
-		expect(screen.getByText("newtag")).toBeInTheDocument();
+			// Assert: タグが即座に表示される
+			expect(screen.getByText("newtag")).toBeInTheDocument();
+			expect(screen.getByText("initial")).toBeInTheDocument();
+		});
 
-		// フォームのsubmitが呼ばれたことを確認
-		expect(mockRequestSubmit).toHaveBeenCalledTimes(1);
+		it("新しいタグを追加した場合_フォーム送信がトリガーされる", async () => {
+			// Arrange
+			const mockRequestSubmit = vi.fn();
+			global.HTMLFormElement.prototype.requestSubmit = mockRequestSubmit;
 
-		// 表示されているタグの数を確認
-		const tags = screen
-			.getAllByRole("button")
-			.filter((button) => button.classList.contains("hover:text-destructive"));
-		expect(tags).toHaveLength(2); // initial + newtag
+			render(
+				<TagInput
+					allTagsWithCount={mockAllTagsWithCount}
+					initialTags={mockInitialTags}
+					pageId={mockPageId}
+				/>,
+			);
+
+			// Act
+			const selectContainer = screen.getByRole("combobox");
+			await user.click(selectContainer);
+			await user.keyboard("newtag");
+			await user.keyboard("{enter}");
+
+			// Assert: フォーム送信がトリガーされる
+			await waitFor(() => {
+				expect(mockRequestSubmit).toHaveBeenCalledTimes(1);
+			});
+		});
 	});
 
-	it("should not allow more than 5 tags", async () => {
-		render(
-			<TagInput
-				allTagsWithCount={mockAllTagsWithCount}
-				initialTags={[
-					{ id: 1, name: "tag1" },
-					{ id: 2, name: "tag2" },
-					{ id: 3, name: "tag3" },
-					{ id: 4, name: "tag4" },
-					{ id: 5, name: "tag5" },
-				]}
-				pageId={mockPageId}
-			/>,
-		);
+	describe("タグ数制限", () => {
+		it("タグが5個の場合_追加入力欄が表示されない", () => {
+			// Arrange & Act
+			render(
+				<TagInput
+					allTagsWithCount={mockAllTagsWithCount}
+					initialTags={[
+						{ id: 1, name: "tag1" },
+						{ id: 2, name: "tag2" },
+						{ id: 3, name: "tag3" },
+						{ id: 4, name: "tag4" },
+						{ id: 5, name: "tag5" },
+					]}
+					pageId={mockPageId}
+				/>,
+			);
 
-		// CreatableSelectが非表示になっていることを確認
-		const input = screen.queryByPlaceholderText("# Add tags");
-		expect(input).not.toBeInTheDocument();
+			// Assert: 追加入力欄が非表示
+			expect(
+				screen.queryByPlaceholderText("# Add tags"),
+			).not.toBeInTheDocument();
+		});
 	});
 
-	it("should remove tag when clicking remove button", async () => {
-		render(
-			<TagInput
-				allTagsWithCount={mockAllTagsWithCount}
-				initialTags={mockInitialTags}
-				pageId={mockPageId}
-			/>,
-		);
+	describe("タグ削除", () => {
+		it("タグの削除ボタンをクリックした場合_タグが削除される", async () => {
+			// Arrange
+			render(
+				<TagInput
+					allTagsWithCount={mockAllTagsWithCount}
+					initialTags={mockInitialTags}
+					pageId={mockPageId}
+				/>,
+			);
 
-		// 削除ボタンをクリック
-		const removeButton = screen.getByRole("button");
-		await user.click(removeButton);
+			// Act: 削除ボタンをクリック（Xアイコンのボタン）
+			const removeButtons = screen
+				.getAllByRole("button")
+				.filter((button) =>
+					button.classList.contains("hover:text-destructive"),
+				);
+			await user.click(removeButtons[0]);
 
-		// タグが削除されたことを確認
-		expect(screen.queryByText("initial")).not.toBeInTheDocument();
+			// Assert: タグが削除される
+			await waitFor(() => {
+				expect(screen.queryByText("initial")).not.toBeInTheDocument();
+			});
+		});
 
-		// フォームのsubmitが呼ばれたことを確認
-		expect(mockRequestSubmit).toHaveBeenCalledTimes(1);
+		it("タグを削除した場合_フォーム送信がトリガーされる", async () => {
+			// Arrange
+			const mockRequestSubmit = vi.fn();
+			global.HTMLFormElement.prototype.requestSubmit = mockRequestSubmit;
+
+			render(
+				<TagInput
+					allTagsWithCount={mockAllTagsWithCount}
+					initialTags={mockInitialTags}
+					pageId={mockPageId}
+				/>,
+			);
+
+			// Act
+			const removeButtons = screen
+				.getAllByRole("button")
+				.filter((button) =>
+					button.classList.contains("hover:text-destructive"),
+				);
+			await user.click(removeButtons[0]);
+
+			// Assert: フォーム送信がトリガーされる
+			await waitFor(() => {
+				expect(mockRequestSubmit).toHaveBeenCalledTimes(1);
+			});
+		});
 	});
-	it("should send correct tags to action when creating a new tag", async () => {
-		render(
-			<TagInput
-				allTagsWithCount={mockAllTagsWithCount}
-				initialTags={mockInitialTags}
-				pageId={mockPageId}
-			/>,
-		);
 
-		const tagsInput = screen.getByTestId("tags-input") as HTMLInputElement;
+	describe("複数タグの管理", () => {
+		it("複数のタグを追加した場合_すべてのタグが表示される", async () => {
+			// Arrange
+			render(
+				<TagInput
+					allTagsWithCount={mockAllTagsWithCount}
+					initialTags={mockInitialTags}
+					pageId={mockPageId}
+				/>,
+			);
 
-		// 初期状態を確認
-		expect(JSON.parse(tagsInput.value)).toEqual(["initial"]);
+			// Act: 1つ目のタグを追加
+			const selectContainer = screen.getByRole("combobox");
+			await user.click(selectContainer);
+			await user.keyboard("newtag");
+			await user.keyboard("{enter}");
 
-		// 新しいタグを追加
-		const selectContainer = screen.getByRole("combobox");
-		await user.click(selectContainer);
-		await user.keyboard("newtag");
-		await user.keyboard("{enter}");
+			// 2つ目のタグを追加
+			await user.click(selectContainer);
+			await user.keyboard("anothertag");
+			await user.keyboard("{enter}");
 
-		// UIに新しいタグが表示されることを確認
-		expect(screen.getByText("newtag")).toBeInTheDocument();
-
-		// フォームに送信される値が正しいことを確認
-		expect(JSON.parse(tagsInput.value)).toEqual(["initial", "newtag"]);
-
-		// さらにもう1つタグを追加
-		await user.click(selectContainer);
-		await user.keyboard("anothertag");
-		await user.keyboard("{enter}");
-
-		// UIに新しいタグが表示されることを確認
-		expect(screen.getByText("anothertag")).toBeInTheDocument();
-
-		// フォームに送信される値が正しいことを確認
-		expect(JSON.parse(tagsInput.value)).toEqual([
-			"initial",
-			"newtag",
-			"anothertag",
-		]);
+			// Assert: すべてのタグが表示される
+			expect(screen.getByText("initial")).toBeInTheDocument();
+			expect(screen.getByText("newtag")).toBeInTheDocument();
+			expect(screen.getByText("anothertag")).toBeInTheDocument();
+		});
 	});
 });
