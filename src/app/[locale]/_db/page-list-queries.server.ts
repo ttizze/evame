@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { normalizeSegments } from "../_lib/normalize-segments";
+import { pickBestTranslation } from "../_lib/pick-best-translation";
 import type { PageForList, PageForTitle } from "../types";
 import { selectPageFields } from "./queries.server";
 
@@ -64,7 +64,7 @@ export async function fetchPagesWithTransform(
 	const pageForLists = rawPages.map((page) => ({
 		...page,
 		content: {
-			segments: normalizeSegments(page.content.segments),
+			segments: pickBestTranslation(page.content.segments),
 		},
 	})) as PageForList[];
 
@@ -144,7 +144,7 @@ export async function fetchChildPages(
 	return raws.map((raw) => ({
 		...raw,
 		content: {
-			segments: normalizeSegments(raw.content.segments),
+			segments: pickBestTranslation(raw.content.segments),
 		},
 		children: [],
 	})) as PageForTitle[];

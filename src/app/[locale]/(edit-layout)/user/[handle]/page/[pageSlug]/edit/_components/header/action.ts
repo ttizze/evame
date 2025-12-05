@@ -9,7 +9,7 @@ import { handlePageAutoTranslation } from "@/app/[locale]/_lib/translate/auto-tr
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { revalidateAllLocales } from "@/lib/revalidate-utils";
-import { updatePageStatus } from "./_db/mutations.server";
+import { updatePageStatus } from "./db/mutations.server";
 
 const editPageStatusSchema = z.object({
 	pageId: z.coerce.number().min(1),

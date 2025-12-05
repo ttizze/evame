@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# 保存されたファイルのパスを取得
+FILE_PATH="$1"
+
+# ファイルパスが提供されていない場合は、すべてのファイルに対してBiomeを実行
+if [ -z "$FILE_PATH" ]; then
+  bunx @biomejs/biome check --write .
+else
+  # ファイルが存在し、Biomeの対象ファイルである場合のみ実行
+  if [ -f "$FILE_PATH" ]; then
+    # TypeScript/JavaScript/JSONファイルのみを対象とする
+    case "$FILE_PATH" in
+      *.ts|*.tsx|*.js|*.jsx|*.json|*.mjs|*.cjs)
+        bunx @biomejs/biome check --write "$FILE_PATH"
+        ;;
+    esac
+  fi
+fi
+

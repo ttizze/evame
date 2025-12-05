@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { ContentKind } from "@prisma/client";
+import { syncSegments } from "@/app/[locale]/_db/sync-segments";
 import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
-import { syncSegments } from "@/app/[locale]/_lib/sync-segments";
 import { prisma } from "@/lib/prisma";
 export async function upsertPageCommentAndSegments(p: {
 	pageId: number;
@@ -12,42 +12,48 @@ export async function upsertPageCommentAndSegments(p: {
 	mdastJson: Prisma.InputJsonValue;
 	segments: SegmentDraft[];
 }) {
-	return await prisma.$transaction(async (tx) => {
-		const pageComment = p.pageCommentId
-			? await tx.pageComment.update({
-					where: { id: p.pageCommentId, userId: p.currentUserId },
-					data: { mdastJson: p.mdastJson, locale: p.sourceLocale },
-				})
-			: await tx.pageComment.create({
+	return await prisma.$transaction(
+		async (tx) => {
+			const pageComment = p.pageCommentId
+				? await tx.pageComment.update({
+						where: { id: p.pageCommentId, userId: p.currentUserId },
+						data: { mdastJson: p.mdastJson, locale: p.sourceLocale },
+					})
+				: await tx.pageComment.create({
+						data: {
+							pageId: p.pageId,
+							userId: p.currentUserId,
+							mdastJson: p.mdastJson,
+							locale: p.sourceLocale,
+							parentId: p.parentId,
+							id: (
+								await tx.content.create({
+									data: { kind: ContentKind.PAGE_COMMENT },
+								})
+							).id,
+						},
+					});
+
+			// 親の直下返信数/最終返信時刻を更新（直下のみ）
+			if (!p.pageCommentId && p.parentId) {
+				await tx.pageComment.update({
+					where: { id: p.parentId },
 					data: {
-						pageId: p.pageId,
-						userId: p.currentUserId,
-						mdastJson: p.mdastJson,
-						locale: p.sourceLocale,
-						parentId: p.parentId,
-						id: (
-							await tx.content.create({
-								data: { kind: ContentKind.PAGE_COMMENT },
-							})
-						).id,
+						replyCount: { increment: 1 },
+						lastReplyAt: pageComment.createdAt,
 					},
 				});
+			}
 
-		// 親の直下返信数/最終返信時刻を更新（直下のみ）
-		if (!p.pageCommentId && p.parentId) {
-			await tx.pageComment.update({
-				where: { id: p.parentId },
-				data: {
-					replyCount: { increment: 1 },
-					lastReplyAt: pageComment.createdAt,
-				},
-			});
-		}
+			await syncSegments(tx, pageComment.id, p.segments, null);
 
-		await syncSegments(tx, pageComment.id, p.segments);
-
-		return pageComment;
-	});
+			return pageComment;
+		},
+		{
+			maxWait: 10_000, // トランザクション開始を待つ最大時間: 10秒
+			timeout: 60_000, // トランザクション実行の最大時間: 60秒（コメントは通常ページよりセグメント数が少ない）
+		},
+	);
 }
 
 export async function createNotificationPageComment(

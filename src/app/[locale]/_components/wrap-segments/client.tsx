@@ -9,11 +9,12 @@ import {
 	type ReactNode,
 } from "react";
 import { useDisplay } from "@/app/_context/display-provider";
-import type { SegmentForUI } from "@/app/[locale]/types";
+import type { Segment } from "@/app/[locale]/types";
+import { AnnotationsSection } from "./annotations-section/client";
 import { TranslationSection } from "./translation-section/client";
 
 interface BaseProps {
-	segment: SegmentForUI;
+	segment: Segment;
 	children: ReactNode;
 	/**
 	 * If false, disable interactive UI (votes, popovers, etc.) inside TranslationSection.
@@ -77,10 +78,21 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 			/>
 		) : null;
 
+	const annotations: ReactNode =
+		"annotations" in segment ? (
+			<AnnotationsSection
+				interactive={interactive}
+				segment={segment}
+				tagName={tagName}
+				tagProps={tagProps}
+			/>
+		) : null;
+
 	return (
 		<Fragment>
 			{source}
 			{translation}
+			{annotations}
 		</Fragment>
 	);
 }

@@ -350,8 +350,7 @@ model Content {
   pageComment PageComment?
 
   // 子セグメント（1:多）
-  segments        Segment[]
-  segmentLocators SegmentLocator[]
+  segments Segment[]
 
   importFile   ImportFile? @relation(fields: [importFileId], references: [id])
   importFileId Int?        @map("import_file_id")
@@ -360,14 +359,20 @@ model Content {
   @@map("contents")
 }
 
+enum SegmentTypeKey {
+  PRIMARY
+  COMMENTARY
+}
+
 model SegmentType {
-  id     Int    @id @default(autoincrement())
-  key    String @unique // "PRIMARY" | "COMMENTARY" | "GLOSS" など
-  label  String // 表示名
-  weight Int    @default(0) // 一括表示時の既定順（任意）
+  id    Int            @id @default(autoincrement())
+  key   SegmentTypeKey
+  label String // 表示名
 
   segments Segment[]
-
+  @@unique([key, label])
+  @@index([key])
+  @@index([label])
   @@map("segment_types")
 }
 
@@ -386,7 +391,10 @@ model Segment {
   segmentTypeId       Int                  @map("segment_type_id")
 
   metadata SegmentMetadata[]
-  locators SegmentLocatorLink[]
+
+  // 注釈への直接リンク
+  annotations       SegmentAnnotationLink[] @relation("MainSegment")
+  annotationTargets SegmentAnnotationLink[] @relation("AnnotationSegment")
 
   // 1 Owner 内での並びをユニークに
   @@unique([contentId, number])
@@ -396,37 +404,18 @@ model Segment {
   @@map("segments")
 }
 
-enum SegmentLocatorSystem {
-  VRI_PARAGRAPH
-}
+model SegmentAnnotationLink {
+  mainSegmentId       Int      @map("main_segment_id")
+  annotationSegmentId Int      @map("annotation_segment_id")
+  createdAt           DateTime @default(now()) @map("created_at")
 
-model SegmentLocator {
-  id        Int                  @id @default(autoincrement())
-  contentId Int                  @map("content_id")
-  content   Content              @relation(fields: [contentId], references: [id], onDelete: Cascade)
-  system    SegmentLocatorSystem
-  value     String
-  createdAt DateTime             @default(now()) @map("created_at")
-  updatedAt DateTime             @default(now()) @updatedAt @map("updated_at")
+  mainSegment       Segment @relation("MainSegment", fields: [mainSegmentId], references: [id], onDelete: Cascade)
+  annotationSegment Segment @relation("AnnotationSegment", fields: [annotationSegmentId], references: [id], onDelete: Cascade)
 
-  segments SegmentLocatorLink[]
-
-  @@unique([contentId, system, value])
-  @@index([contentId])
-  @@map("segment_locators")
-}
-
-model SegmentLocatorLink {
-  segmentLocatorId Int      @map("segment_locator_id")
-  segmentId        Int      @map("segment_id")
-  createdAt        DateTime @default(now()) @map("created_at")
-
-  locator SegmentLocator @relation(fields: [segmentLocatorId], references: [id], onDelete: Cascade)
-  segment Segment        @relation(fields: [segmentId], references: [id], onDelete: Cascade)
-
-  @@id([segmentLocatorId, segmentId])
-  @@index([segmentId])
-  @@map("segment_locator_links")
+  @@id([mainSegmentId, annotationSegmentId])
+  @@index([mainSegmentId])
+  @@index([annotationSegmentId])
+  @@map("segment_annotation_links")
 }
 
 model SegmentMetadataType {

@@ -6,15 +6,21 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
 	plugins: [react(), tsconfigPaths()],
 	test: {
+		globalSetup: ["./vitest.global-setup.ts"],
 		globals: true,
-		fileParallelism: false,
+		slowTestThreshold: 1000,
 		env: {
+			// DATABASE_URLを空に設定して.envの値を上書き
+			// setupDbPerFile()を呼ばずにPrismaを使うとエラーになる
+			DATABASE_URL: "",
 			SESSION_SECRET: "test",
-			DATABASE_URL: "postgres://postgres:postgres@db.localtest.me:5435/main",
 			ENCRYPTION_KEY:
 				"2f9a0a1b3c4d5e6f7890123456789012345678901234567890abcdef123456",
 			RESEND_API_KEY: "test",
 			MAGIC_LINK_SECRET: "test",
+			// テスト環境のログレベルは logger.ts で自動的に "error" に設定される
+			// 特定のテストでログを見たい場合は、ここで明示的に設定可能
+			// LOG_LEVEL: "debug",
 		},
 		environment: "jsdom",
 		setupFiles: "./vitest.setup.ts",

@@ -139,9 +139,9 @@ function buildSegmentsForLocale(
 
 async function addRequiredData() {
 	const primarySegmentType = await prisma.segmentType.upsert({
-		where: { key: "PRIMARY" },
+		where: { id: 1 },
 		update: {},
-		create: { key: "PRIMARY", label: "Primary", weight: 0 },
+		create: { key: "PRIMARY", label: "Primary" },
 	});
 
 	const { evame, evameEnPage, evameJaPage } = await createUserAndPages();

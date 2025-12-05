@@ -1,8 +1,6 @@
 import "@testing-library/jest-dom";
-import { vi } from "vitest";
+import { afterAll, vi } from "vitest";
 
-// Provide a default mock for next/navigation across tests.
-// Individual tests can override with their own vi.mock if necessary.
 vi.mock("next/navigation", () => ({
 	usePathname: vi.fn(() => "/"),
 	useSearchParams: vi.fn(() => new URLSearchParams()),
@@ -26,3 +24,20 @@ vi.mock("next/navigation", () => ({
 	}),
 	revalidatePath: vi.fn(),
 }));
+
+vi.mock("next/cache", () => ({
+	revalidatePath: vi.fn(),
+}));
+
+vi.mock("@/lib/auth-server", () => ({
+	getCurrentUser: vi.fn(),
+	getSession: vi.fn(),
+}));
+
+afterAll(async () => {
+	// Prismaの接続を切断する
+	// globalThis.__prismaClientが存在する場合のみ（DBを使ったテストの場合のみ）
+	if (globalThis.__prismaClient) {
+		await globalThis.__prismaClient.$disconnect();
+	}
+});

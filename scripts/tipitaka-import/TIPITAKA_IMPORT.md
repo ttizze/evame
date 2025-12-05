@@ -43,13 +43,9 @@ graph TD
 
 ### Step 0: システムユーザーの確認
 
-**ファイル**: `run.ts` (57-69行目)
+**ファイル**: `run.ts` (93-101行目)
 
-```57:69:scripts/tipitaka-import/run.ts
-export async function runTipitakaImport(): Promise<void> {
-	const prisma = new PrismaClient();
-
-	try {
+```93:101:scripts/tipitaka-import/run.ts
 		// Step 0: 取り込み先となるシステムユーザ（evame）が存在するか確認する
 		const user = await prisma.user.findUnique({
 			where: { handle: SYSTEM_USER_HANDLE },
@@ -69,46 +65,47 @@ export async function runTipitakaImport(): Promise<void> {
 
 ---
 
-### Step 1: セグメントタイプの確保とルートページの作成
+### Step 1: セグメントタイプ・メタデータタイプの確保とルートページの作成
 
-**ファイル**: `run.ts` (71-81行目), `segment-types.ts`, `root-page.ts`
+**ファイル**: `run.ts` (19-21行目), `db/segment-types.ts`, `db/metadata-types.ts`, `initial-setup/root-page.ts`
 
-```71:81:scripts/tipitaka-import/run.ts
-		// Step 1: セグメント種別を upsert し、ルートページも最新状態にそろえる
-		const segmentTypes = await ensureSegmentTypes(prisma);
-		const segmentTypeIdMap = new Map(
-			segmentTypes.map((item) => [item.key as SegmentType["key"], item.id]),
-		);
-		const primaryTypeId = segmentTypeIdMap.get("PRIMARY");
-		if (!primaryTypeId) {
-			throw new Error('Segment type "PRIMARY" not found');
-		}
-
-		const rootPage = await ensureRootPage(prisma, user.id, primaryTypeId);
+```19:21:scripts/tipitaka-import/run.ts
+		// Step 1: セグメントタイプ、メタデータタイプ、ルートページの初期セットアップ
+		const { primarySegmentType, commentarySegmentTypeIdByLabel, rootPage } =
+			await setupInitialRequirements(user.id);
 ```
 
 **処理内容**:
 
-1. **セグメントタイプの確保** (`segment-types.ts`):
-   - `MULA`, `ATTHAKATHA`, `TIKA`, `OTHER` の4種類のセグメントタイプを作成
-   - 各タイプには重み（weight）が設定され、表示順序を制御
+1. **セグメントタイプの確保** (`db/segment-types.ts`):
+   - 以下の4種類のセグメントタイプを作成:
+     - `{ key: "PRIMARY", label: "Mula" }`
+     - `{ key: "COMMENTARY", label: "Atthakatha" }`
+     - `{ key: "COMMENTARY", label: "Tika" }`
+     - `{ key: "PRIMARY", label: "Other" }`
+   - `label`ベースと`key`ベースの両方のマッピングを作成
+   - コンテンツページ作成時は`label`ベースのマッピングを使用（例: `"Mula"` → `segmentTypeId`）
 
-2. **ルートページの作成** (`root-page.ts`):
+2. **メタデータタイプの確保** (`db/metadata-types.ts`):
+   - ページブレークなどのメタデータタイプを作成:
+     - `VRI_PAGEBREAK`, `PTS_PAGEBREAK`, `THAI_PAGEBREAK`, `MYANMAR_PAGEBREAK`, `OTHER_PAGEBREAK`
+
+3. **ルートページの作成** (`initial-setup/root-page.ts`):
    - スラグ `"tipitaka"` のルートページを作成または更新
    - `README.md`の内容をMarkdownとして読み込み、MDAST形式に変換
    - セグメントを同期
 
 **目的**: 
-- コンテンツの分類に必要なセグメントタイプを準備
+- コンテンツの分類に必要なセグメントタイプとメタデータタイプを準備
 - Tipitaka全体のルートとなるページを確保
 
 ---
 
 ### Step 2: books.jsonの読み込みとディレクトリツリーの構築
 
-**ファイル**: `run.ts` (83-86行目), `books.ts`, `directory-tree.ts`
+**ファイル**: `run.ts` (127-130行目), `books.ts`, `directory-tree.ts`
 
-```83:86:scripts/tipitaka-import/run.ts
+```127:130:scripts/tipitaka-import/run.ts
 		// Step 2: books.json から各ファイルのメタデータを取得し、ディレクトリツリーを作る
 		const { entries } = await readBooksJson();
 		const directoryRoot = buildDirectoryTree(entries, ROOT_TITLE);
@@ -170,9 +167,9 @@ interface ImportEntry {
 
 ### Step 3a: カテゴリページの作成（幅優先探索）
 
-**ファイル**: `run.ts` (88-119行目), `pages.ts`
+**ファイル**: `run.ts` (132-166行目), `pages.ts`
 
-```88:119:scripts/tipitaka-import/run.ts
+```132:166:scripts/tipitaka-import/run.ts
 		// Step 3a: 幅優先でカテゴリ階層（中間ページ）を作成していく
 		const queue: Array<{
 			node: DirectoryNode;
@@ -188,16 +185,19 @@ interface ImportEntry {
 
 		for (const item of queue) {
 			const { node, parentId, path } = item;
+			if (node.children.size === 0) {
+				continue;
+			}
 			const order = nextDirectoryOrder(parentId);
-			await createDirectoryPage({
-				prisma,
-				node,
-				directoryPath: path,
-				parentId,
-				userId: user.id,
-				order,
-				segmentTypeId: primaryTypeId,
-			});
+		await createDirectoryPage({
+			prisma,
+			node,
+			dirPath: path,
+			parentId,
+			userId: user.id,
+			order,
+			segmentTypeId: primaryTypeId,
+		});
 			for (const child of getSortedChildren(node)) {
 				if (node.pageId) {
 					const childPath = path ? `${path}/${child.segment}` : child.segment;
@@ -238,11 +238,12 @@ interface ImportEntry {
 
 2. **カテゴリページの作成** (`pages.ts`):
    - **データソース**: `DirectoryNode`ツリー（`buildDirectoryTree`で`books.json`の`dirSegments`から構築）
+   - **作成条件**: 子ノードが存在する場合のみ作成（`node.children.size > 0`）
    - 各ディレクトリノード（`DirectoryNode`）から以下の情報を取得：
      - `node.title`: `parseSegmentLabel`で`dirSegments`から抽出したタイトル（例: `"01-tipitaka-mula"` → `"Tipitaka Mula"`）
      - `node.segment`: セグメント名（例: `"01-tipitaka-mula"`）
-     - `directoryPath`: パス文字列（例: `"01-tipitaka-mula/01-sutta-pitaka"`）
-   - スラグは `tipitaka-{directoryPath}` の形式で生成
+     - `dirPath`: パス文字列（例: `"01-tipitaka-mula/01-sutta-pitaka"`）
+   - スラグは `tipitaka-{dirPath}` の形式で生成
    - タイトル（`node.title`）のみのMarkdownをMDAST形式に変換
    - セグメントを同期（タイトルがセグメントとして登録される）
    
@@ -278,16 +279,19 @@ interface ImportEntry {
 
 ### Step 3c: カテゴリルックアップマップの作成
 
-**ファイル**: `run.ts` (121-122行目)
+**ファイル**: `run.ts` (168-170行目)
 
-```121:122:scripts/tipitaka-import/run.ts
+```168:170:scripts/tipitaka-import/run.ts
 		// Step 3c: 生成したカテゴリ階層を素早く引き当てられるようにマッピングする
 		const categoryLookup = createCategoryLookup(directoryRoot, rootPage);
+		const orderForParent = getOrderGenerator();
+		const sortedEntries = sortEntries(entries);
 ```
 
 **処理内容**:
-- ディレクトリパス（例: `"vinaya/suttavibhanga"`）からページIDへのマッピングを作成
+- ディレクトリパス（例: `"01-tipitaka-mula/01-sutta-pitaka"`）からページIDへのマッピングを作成
 - 後続の処理で高速に親ページIDを取得するため
+- 親ページごとの順序カウンターを初期化
 
 **目的**: コンテンツページ作成時に親ページを素早く特定
 
@@ -295,9 +299,18 @@ interface ImportEntry {
 
 ### Step 4a: エントリのソート
 
-**ファイル**: `run.ts` (14-28行目, 129行目)
+**ファイル**: `run.ts` (20-46行目, 171行目)
 
-```14:28:scripts/tipitaka-import/run.ts
+```20:46:scripts/tipitaka-import/run.ts
+/**
+ * fileKeyから順序を抽出する（例: "s0101m.mul.xml" → 101）
+ */
+function extractOrderFromFileKey(fileKey: string): number {
+	const match = fileKey.match(/\d+/);
+	if (!match) return Number.MAX_SAFE_INTEGER;
+	return Number.parseInt(match[0], 10);
+}
+
 // Step 4a: ムーラ → アッタカタ → ティカ → その他の順に並べ、親データを先に作成できるようにする
 function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 	const levelOrder: Record<ImportEntry["level"], number> = {
@@ -310,7 +323,9 @@ function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 	return [...entries].sort((a, b) => {
 		const levelDiff = levelOrder[a.level] - levelOrder[b.level];
 		if (levelDiff !== 0) return levelDiff;
-		if (a.orderHint !== b.orderHint) return a.orderHint - b.orderHint;
+		const orderA = extractOrderFromFileKey(a.fileKey);
+		const orderB = extractOrderFromFileKey(b.fileKey);
+		if (orderA !== orderB) return orderA - orderB;
 		return a.fileKey.localeCompare(b.fileKey);
 	});
 }
@@ -318,7 +333,7 @@ function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 
 **処理内容**:
 - レベル順（Mula → Atthakatha → Tika → Other）にソート
-- 同じレベル内では `fileKey` から抽出した順序でソート、さらにファイルキーでソート
+- 同じレベル内では `fileKey` から抽出した順序（数字部分）でソート、さらにファイルキーでソート
 
 **目的**: 依存関係を保証（Mulaが先に作成されることで、Atthakatha/Tikaが参照できる）
 
@@ -326,9 +341,9 @@ function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 
 ### Step 4b: レベルごとの順次処理と並列処理
 
-**ファイル**: `run.ts` (136-216行目)
+**ファイル**: `run.ts` (178-293行目)
 
-```136:216:scripts/tipitaka-import/run.ts
+```178:293:scripts/tipitaka-import/run.ts
 		// エントリをレベルごとにグループ化
 		const entriesByLevel = new Map<ImportEntry["level"], ImportEntry[]>();
 		for (const entry of sortedEntries) {
@@ -342,6 +357,8 @@ function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 		}
 
 		// レベルごとに順次処理（依存関係を保証）、レベル内では並列処理
+		// Mula → Atthakatha → Tika → Other の順で処理することで、
+		// 注釈書が参照するムーラのアンカーセグメントが確実に存在することを保証
 		const levelOrder: ImportEntry["level"][] = [
 			"Mula",
 			"Atthakatha",
@@ -349,6 +366,9 @@ function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 			"Other",
 		];
 		const CONCURRENCY = 10; // 同時処理数
+
+		// Mulaファイルの段落番号 → アンカーセグメントIDのマッピングを保存
+		const anchorMapByMulaFile = new Map<string, ParagraphAnchorMap>();
 
 		for (const level of levelOrder) {
 			const levelEntries = entriesByLevel.get(level);
@@ -361,15 +381,18 @@ function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 				const batch = levelEntries.slice(i, i + CONCURRENCY);
 				await Promise.all(
 					batch.map(async (entry) => {
+						const directorySegments = entry.dirSegments.slice(0, -1);
 						const parentPageId = resolveCategoryPageId(
-							entry.resolvedDirSegments,
+							directorySegments,
 							categoryLookup,
 						);
 						const order = orderForParent(parentPageId);
 						const levelKey = entry.level?.toUpperCase?.() ?? "";
+						// levelKey（"MULA", "ATTHAKATHA"など）からlabelを取得
+						// levelKeyは大文字、labelは先頭大文字（"Mula", "Atthakatha"など）
+						const label = levelKey.charAt(0) + levelKey.slice(1).toLowerCase();
 						const segmentTypeId =
-							segmentTypeIdMap.get(levelKey as SegmentType["key"]) ??
-							otherTypeId;
+							segmentTypeIdByLabel.get(label) ?? otherTypeId;
 
 						const pageId = await createContentPage({
 							prisma,
@@ -380,44 +403,56 @@ function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 							segmentTypeId,
 						});
 
-						// 段落番号でセグメントをグループ化
-						const paragraphNumberToSegmentIds =
-							await buildParagraphSegmentMap(pageId);
+					// 段落番号でセグメントをグループ化
+					// page.id === content.id なので、pageIdをそのままcontentIdとして使用
+					const segments = await getSegmentsForContent(prisma, pageId);
+					const paragraphNumberToSegmentIds = buildParagraphSegmentMap(
+						segments,
+					);
 						if (paragraphNumberToSegmentIds.size === 0) {
 							return;
 						}
 
-						// ムーラ（根本経典）の場合: ロケータを作成してセグメントをリンク
+						// Mula（根本経典）の場合: アンカーセグメントを特定して保存
 						if (levelKey === "MULA") {
-							const locatorIdMap = await ensureSegmentLocators(
-								pageId,
-								paragraphNumberToSegmentIds,
-							);
+						const anchorMap = buildParagraphAnchorMap(
+							paragraphNumberToSegmentIds,
+							segments,
+						);
 							// 注釈書で参照できるようにマッピングを保存
-							locatorIdByParagraphNumberByMulaFile.set(
-								entry.fileKey.toLowerCase(),
-								locatorIdMap,
-							);
+							anchorMapByMulaFile.set(entry.fileKey.toLowerCase(), anchorMap);
 							return;
 						}
 
-						// 注釈書の場合: ムーラのロケータにリンク
+						// 注釈書の場合: Mulaのアンカーセグメントにリンク
 						if (!entry.mulaFileKey) {
 							return;
 						}
 
-						const locatorIdMap = locatorIdByParagraphNumberByMulaFile.get(
+						const anchorMap = anchorMapByMulaFile.get(
 							entry.mulaFileKey.toLowerCase(),
 						);
-						if (!locatorIdMap) {
+						if (!anchorMap) {
+							console.warn(
+								`Anchor map not found for mula file: ${entry.mulaFileKey}`,
+							);
 							return;
 						}
 
-						// 同じ段落番号のロケータにセグメントをリンク
-						await linkSegmentsToExistingLocators(
-							paragraphNumberToSegmentIds,
-							locatorIdMap,
-						);
+						// 同じ段落番号のアンカーセグメントに注釈セグメントをリンク
+						for (const [
+							paragraphNumber,
+							annotationSegmentIds,
+						] of paragraphNumberToSegmentIds) {
+							const mainSegmentId = anchorMap.get(paragraphNumber);
+							if (!mainSegmentId) continue;
+
+							await linkAnnotationSegments(
+								prisma,
+								annotationSegmentIds,
+								mainSegmentId,
+							);
+						}
 					}),
 				);
 				console.log(
@@ -443,12 +478,12 @@ function sortEntries(entries: ImportEntry[]): ImportEntry[] {
 4. **各エントリの処理**:
    - **コンテンツページの作成**: Markdownファイルを読み込み、MDAST形式に変換してページを作成
    - **段落番号マッピングの構築**: セグメントのテキストから段落番号（例: `"123."`）を抽出し、段落番号→セグメントID配列のマッピングを作成
-   - **ロケータの作成とリンク**:
-     - **Mula（根本経典）の場合**: 段落番号ごとに`SegmentLocator`を作成し、その段落番号に属するすべてのセグメントをロケータにリンク
-     - **Atthakatha/Tika（注釈書）の場合**: 対応するMulaファイルで作成されたロケータを参照し、同じ段落番号を持つセグメントをそのロケータにリンク
+   - **アンカーセグメントの特定とリンク**:
+     - **Mula（根本経典）の場合**: 各段落番号について、最大ナンバーのセグメントをアンカーセグメントとして特定し、段落番号→アンカーセグメントIDのマッピングを保存
+     - **Atthakatha/Tika（注釈書）の場合**: 対応するMulaファイルのアンカーセグメントを参照し、同じ段落番号を持つ注釈セグメントをアンカーセグメントに直接リンク
 
-**段落番号の抽出** (`segment-locators.ts` 20-86行目):
-```20:86:scripts/tipitaka-import/segment-locators.ts
+**段落番号の抽出** (`segment-annotations.ts` 7-19行目):
+```7:19:scripts/tipitaka-import/segment-annotations.ts
 /**
  * 段落番号のパターン: 数字にドット（例: "123." または "123\."）
  * エスケープされたドット（\.）にも対応
@@ -466,7 +501,10 @@ function extractFirstParagraphNumber(text: string): string | null {
 	}
 	return null;
 }
+```
 
+**段落番号マッピングの構築** (`segment-annotations.ts` 43-82行目):
+```43:82:scripts/tipitaka-import/segment-annotations.ts
 /**
  * コンテンツ内のセグメントを段落番号でグループ化する
  *
@@ -474,18 +512,12 @@ function extractFirstParagraphNumber(text: string): string | null {
  * その段落番号が出現してから次の段落番号が出現するまでの
  * すべてのセグメントを同じグループに分類する。
  *
- * @param contentId コンテンツID
+ * @param segments セグメント配列（id, number, text）
  * @returns 段落番号 → セグメントID配列のマッピング
  */
-export async function buildParagraphSegmentMap(
-	contentId: number,
-): Promise<ParagraphSegmentMap> {
-	const segments = await prisma.segment.findMany({
-		where: { contentId },
-		orderBy: { number: "asc" },
-		select: { id: true, text: true },
-	});
-
+export function buildParagraphSegmentMap(
+	segments: SegmentRecord[],
+): ParagraphSegmentMap {
 	// セグメントID → 段落番号のマッピングを作成
 	const paragraphNumberBySegmentId = new Map<number, string>();
 	for (const segment of segments) {
@@ -518,103 +550,79 @@ export async function buildParagraphSegmentMap(
 }
 ```
 
-**ロケータの作成とリンク** (`segment-locators.ts` 88-171行目):
-```88:171:scripts/tipitaka-import/segment-locators.ts
+**アンカーセグメントの特定** (`segment-annotations.ts` 84-115行目):
+```84:115:scripts/tipitaka-import/segment-annotations.ts
 /**
- * セグメントロケータを作成し、セグメントとリンクする
+ * 各段落番号について、最大ナンバーのセグメント（アンカーセグメント）を特定する
  *
- * ムーラ（根本経典）で使用する関数。
- * 段落番号ごとにSegmentLocatorを作成し、
- * その段落番号に属するすべてのセグメントをロケータにリンクする。
- *
- * @param contentId コンテンツID
  * @param paragraphNumberToSegmentIds 段落番号 → セグメントID配列のマッピング
- * @returns 段落番号 → ロケータIDのマッピング（注釈書で使用）
+ * @param segments セグメント配列（id, number, text）
+ * @returns 段落番号 → アンカーセグメントIDのマッピング
  */
-export async function ensureSegmentLocators(
-	contentId: number,
+export function buildParagraphAnchorMap(
 	paragraphNumberToSegmentIds: ParagraphSegmentMap,
-): Promise<ParagraphLocatorMap> {
-	const paragraphNumbers = [...paragraphNumberToSegmentIds.keys()];
-	if (paragraphNumbers.length === 0) {
-		return new Map();
+	segments: SegmentRecord[],
+): ParagraphAnchorMap {
+	const anchorMap: ParagraphAnchorMap = new Map();
+	const segmentNumberById = new Map<number, number>();
+	for (const segment of segments) {
+		segmentNumberById.set(segment.id, segment.number);
 	}
 
-	// 段落番号ごとにSegmentLocatorを作成（既存の場合はスキップ）
-	await prisma.segmentLocator.createMany({
-		data: paragraphNumbers.map((value) => ({
-			contentId,
-			system: SegmentLocatorSystem.VRI_PARAGRAPH,
-			value,
-		})),
+	for (const [paragraphNumber, segmentIds] of paragraphNumberToSegmentIds) {
+		if (segmentIds.length === 0) continue;
+
+		// 最大ナンバーのセグメントをアンカーとして選択
+		const anchorSegmentId = segmentIds.reduce((maxId, currentId) => {
+			const maxNumber = segmentNumberById.get(maxId) ?? -Infinity;
+			const currentNumber = segmentNumberById.get(currentId) ?? -Infinity;
+			return currentNumber > maxNumber ? currentId : maxId;
+		});
+
+		anchorMap.set(paragraphNumber, anchorSegmentId);
+	}
+
+	return anchorMap;
+}
+```
+
+**アノテーションリンクの作成** (`segment-annotations.ts` 117-140行目):
+```117:140:scripts/tipitaka-import/segment-annotations.ts
+/**
+ * 注釈セグメントを本文セグメントに直接リンクする
+ *
+ * @param prisma Prismaクライアント
+ * @param annotationSegmentIds 注釈セグメントID配列
+ * @param mainSegmentId 本文セグメントID（アンカー）
+ */
+export async function linkAnnotationSegments(
+	prisma: PrismaClient,
+	annotationSegmentIds: number[],
+	mainSegmentId: number,
+): Promise<void> {
+	if (annotationSegmentIds.length === 0) return;
+
+	const linkData = annotationSegmentIds.map((annotationSegmentId) => ({
+		mainSegmentId,
+		annotationSegmentId,
+	}));
+
+	await prisma.segmentAnnotationLink.createMany({
+		data: linkData,
 		skipDuplicates: true,
 	});
-
-	// 作成したロケータを取得してIDをマッピング
-	const locators = await prisma.segmentLocator.findMany({
-		where: {
-			contentId,
-			system: SegmentLocatorSystem.VRI_PARAGRAPH,
-			value: { in: paragraphNumbers },
-		},
-		select: { id: true, value: true },
-	});
-
-	const locatorIdByParagraphNumber: ParagraphLocatorMap = new Map();
-	for (const locator of locators) {
-		locatorIdByParagraphNumber.set(locator.value, locator.id);
-	}
-
-	// セグメントをロケータにリンク
-	const linkData: Array<{ segmentLocatorId: number; segmentId: number }> = [];
-	for (const [paragraphNumber, segmentIds] of paragraphNumberToSegmentIds) {
-		const segmentLocatorId = locatorIdByParagraphNumber.get(paragraphNumber);
-		if (!segmentLocatorId) continue;
-		for (const segmentId of segmentIds) {
-			linkData.push({ segmentLocatorId, segmentId });
-		}
-	}
-
-	await createSegmentLocatorLinks(linkData);
-
-	return locatorIdByParagraphNumber;
-}
-
-/**
- * 既存のロケータにセグメントをリンクする
- *
- * 注釈書（Atthakatha/Tika）で使用する関数。
- * ムーラで作成したロケータを参照し、同じ段落番号を持つセグメントを
- * そのロケータにリンクすることで、注釈と本文を結びつける。
- *
- * @param paragraphNumberToSegmentIds 段落番号 → セグメントID配列のマッピング
- * @param locatorIdByParagraphNumber 段落番号 → ロケータIDのマッピング（ムーラから取得）
- */
-export async function linkSegmentsToExistingLocators(
-	paragraphNumberToSegmentIds: ParagraphSegmentMap,
-	locatorIdByParagraphNumber: ParagraphLocatorMap,
-): Promise<void> {
-	const linkData: Array<{ segmentLocatorId: number; segmentId: number }> = [];
-	for (const [paragraphNumber, segmentIds] of paragraphNumberToSegmentIds) {
-		const segmentLocatorId = locatorIdByParagraphNumber.get(paragraphNumber);
-		if (!segmentLocatorId) continue;
-		for (const segmentId of segmentIds) {
-			linkData.push({ segmentLocatorId, segmentId });
-		}
-	}
-	await createSegmentLocatorLinks(linkData);
 }
 ```
 
 **目的**: 
 - コンテンツページをデータベースにインポート
-- ムーラ（根本経典）で段落番号ベースのロケータを作成
-- 注釈書（Atthakatha/Tika）と根本経典の間で段落番号ベースのロケータリンクを自動生成
+- ムーラ（根本経典）で各段落番号のアンカーセグメントを特定
+- 注釈書（Atthakatha/Tika）のセグメントを根本経典のアンカーセグメントに直接リンク
 
-**ロケータシステムの仕組み**:
-- **SegmentLocator**: 段落番号を表すロケータ（例: `system: "VRI_PARAGRAPH"`, `value: "123"`）
-- **SegmentLocatorLink**: セグメントとロケータの多対多の関係
-- ムーラで作成されたロケータを注釈書が参照することで、同じ段落番号を持つセグメント間の関係を確立
+**アノテーションリンクシステムの仕組み**:
+- **アンカーセグメント**: 各段落番号について、最大ナンバーのセグメントをアンカーとして選択（段落の終わりを表す）
+- **SegmentAnnotationLink**: 注釈セグメントと本文セグメント（アンカー）の多対多の関係
+- ムーラで特定されたアンカーセグメントに注釈書のセグメントをリンクすることで、注釈と本文を結びつける
 
 ---
 
@@ -707,9 +715,9 @@ interface DirectoryNode {
 - `directory-tree.ts`: ディレクトリツリーの構築
 - `pages.ts`: ページ作成処理（カテゴリページ・コンテンツページ）
 - `helpers.ts`: ユーティリティ関数
-- `segment-types.ts`: セグメントタイプの管理
-- `segment-locators.ts`: 段落番号ベースのロケータ作成とリンク処理
-- `root-page.ts`: ルートページの作成
+- `db/segment-types.ts`: セグメントタイプの管理
+- `db/metadata-types.ts`: メタデータタイプの管理
+- `segment-annotations.ts`: 段落番号ベースのアンカーセグメント特定とアノテーションリンク処理
+- `initial-setup/root-page.ts`: ルートページの作成
 - `types.ts`: 型定義
 - `constants.ts`: 定数定義
-

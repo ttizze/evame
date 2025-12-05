@@ -1,19 +1,12 @@
-import { EyeIcon, MessageCircle } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { BASE_URL } from "@/app/_constants/base-url";
 import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
-import { FloatingControls } from "@/app/[locale]/_components/floating-controls.client";
-import { PageLikeButtonClient } from "@/app/[locale]/_components/page/page-like-button/client";
-import { PageViewCounter } from "@/app/[locale]/_components/page/page-view-counter/client";
-import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
-import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
-import { ChildPages } from "./_components/child-pages/server";
-import { PageCommentForm } from "./_components/comment/_components/page-comment-form/client";
-import { ContentWithTranslations } from "./_components/content-with-translations";
-import { PageBreadcrumb } from "./_components/page-breadcrumb/server";
-import { buildAlternateLocales } from "./_lib/build-alternate-locales";
+import { createServerLogger } from "@/lib/logger.server";
+import { PageContent } from "./_components/page-content";
 import { fetchPageContext } from "./_lib/fetch-page-context";
+import { generatePageMetadata } from "./_lib/generate-page-metadata";
+
+const logger = createServerLogger("page-view");
 
 type Params = Promise<{ locale: string; handle: string; pageSlug: string }>;
 
@@ -31,86 +24,44 @@ export async function generateMetadata({
 	const { pageSlug, locale } = await params;
 	const data = await fetchPageContext(pageSlug, locale);
 	if (!data) return notFound();
-	const { pageDetail, pageTranslationJobs, title } = data;
 
-	const description = await mdastToText(pageDetail.mdastJson).then((text) =>
-		text.slice(0, 200),
-	);
-	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${pageSlug}`;
-	return {
-		title,
-		description,
-		openGraph: {
-			type: "article",
-			title,
-			description,
-			images: [{ url: ogImageUrl, width: 1200, height: 630 }],
-		},
-		twitter: {
-			card: "summary_large_image",
-			title,
-			description,
-			images: [{ url: ogImageUrl, width: 1200, height: 630 }],
-		},
-		alternates: {
-			languages: buildAlternateLocales(
-				pageDetail,
-				pageTranslationJobs,
-				pageDetail.user.handle,
-				locale,
-			),
-		},
-	};
+	return generatePageMetadata({
+		pageData: data,
+		locale,
+		pageSlug,
+		isPreview: false,
+	});
 }
 
 export default async function Page(
 	props: PageProps<"/[locale]/user/[handle]/page/[pageSlug]">,
 ) {
-	const { pageSlug, locale } = await props.params;
+	const { pageSlug, locale, handle } = await props.params;
 	const data = await fetchPageContext(pageSlug, locale);
-	const { pageDetail, pageViewCount } = data;
+	if (!data) {
+		logger.warn({ pageSlug, locale, handle }, "Page context not found");
+		return notFound();
+	}
+	const { pageDetail } = data;
+
 	// Public route only renders PUBLIC pages
 	if (pageDetail.status !== "PUBLIC") {
+		logger.warn(
+			{
+				pageSlug,
+				status: pageDetail.status,
+				pageId: pageDetail.id,
+				handle,
+			},
+			"Page status is not PUBLIC",
+		);
 		return notFound();
 	}
 
 	return (
 		<>
 			<SourceLocaleBridge locale={pageDetail.sourceLocale} />
-			<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
-				<PageBreadcrumb locale={locale} pageDetail={pageDetail} />
-				<ContentWithTranslations pageData={data} />
-				<ChildPages locale={locale} parentId={pageDetail.id} />
-				<div className="flex items-center gap-4">
-					<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
-					<PageViewCounter
-						className="text-muted-foreground"
-						initialCount={pageViewCount}
-						pageId={pageDetail.id}
-					/>
-					<PageLikeButtonClient className="" pageId={pageDetail.id} showCount />
-					<MessageCircle className="w-5 h-5" strokeWidth={1.5} />
-					<span className="text-muted-foreground">
-						{pageDetail._count?.pageComments || 0}
-					</span>
-				</div>
-
-				<FloatingControls
-					likeButton={
-						<PageLikeButtonClient
-							className="w-10 h-10 border rounded-full"
-							pageId={pageDetail.id}
-							showCount={false}
-						/>
-					}
-				/>
-
-				<div className="mt-8 space-y-4" id="comments">
-					<h2 className="text-2xl not-prose font-bold">Comments</h2>
-					<PageCommentForm pageId={pageDetail.id} userLocale={locale} />
-					<PageCommentList pageId={pageDetail.id} userLocale={locale} />
-				</div>
-			</article>
+			<PageContent locale={locale} pageData={data} />
 		</>
 	);
 }

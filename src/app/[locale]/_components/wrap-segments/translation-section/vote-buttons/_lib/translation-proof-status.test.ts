@@ -1,4 +1,5 @@
 import { TranslationProofStatus } from "@prisma/client";
+import { describe, expect, it } from "vitest";
 import { calcProofStatus } from "./translation-proof-status";
 
 describe("calcProofStatus", () => {

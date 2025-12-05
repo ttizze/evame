@@ -1,6 +1,6 @@
 import { selectPageFields } from "@/app/[locale]/_db/queries.server";
-import { normalizeSegments } from "@/app/[locale]/_lib/normalize-segments";
-import type { SegmentForUI } from "@/app/[locale]/types";
+import { pickBestTranslation } from "@/app/[locale]/_lib/pick-best-translation";
+import type { SegmentForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";
 
@@ -13,7 +13,7 @@ type ParentNode = {
 	parentId: number | null;
 	createdAt: string;
 	user: SanitizedUser;
-	content: { segments: SegmentForUI[] };
+	content: { segments: SegmentForList[] };
 	children: ParentNode[];
 };
 
@@ -39,7 +39,7 @@ export async function getParentChain(pageId: number, locale: string) {
 				createdAt: parent.createdAt.toISOString(),
 				user: parent.user as SanitizedUser,
 				content: {
-					segments: normalizeSegments(parent.content.segments),
+					segments: pickBestTranslation(parent.content.segments),
 				},
 				children: [],
 			});
