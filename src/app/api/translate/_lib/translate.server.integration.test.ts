@@ -1,3 +1,5 @@
+import { TranslationProofStatus } from "@prisma/client";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { translateChunk } from "@/app/api/translate/_lib/translate.server";
 import { prisma } from "@/lib/prisma";
 import { resetDatabase } from "@/tests/db-helpers";
@@ -7,8 +9,6 @@ import {
 	createUser,
 } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
-import { TranslationProofStatus } from "@prisma/client";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getGeminiModelResponse } from "../_services/gemini";
 
 await setupDbPerFile(import.meta.url);

@@ -1,7 +1,7 @@
-import { mockUsers } from "@/tests/mock";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useParams, usePathname } from "next/navigation";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { mockUsers } from "@/tests/mock";
 import { editPageStatusAction } from "./action";
 import { EditHeader } from "./client";
 

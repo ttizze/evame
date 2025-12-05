@@ -25,20 +25,9 @@ export const selectPageDetailFields = (locale = "en") => {
 };
 
 /**
- * PRIMARYセグメントがない場合（例: attakata単独ページ）、COMMENTARYセグメントを取得する
- * ページ表示時に使用するメインセグメントを解決する
+ * PRIMARYセグメントがない場合（例: attakata単独ページ）、COMMENTARYセグメントをフォールバックとして取得する
  */
-async function resolveMainDisplaySegments<T extends Array<unknown>>(
-	slug: string,
-	locale: string,
-	primarySegments: T,
-): Promise<T> {
-	// PRIMARYセグメントがあればそれを返す
-	if (primarySegments.length > 0) {
-		return primarySegments;
-	}
-
-	// PRIMARYセグメントがない場合、COMMENTARYセグメントを取得
+async function fetchCommentarySegmentsAsFallback(slug: string, locale: string) {
 	const pageWithCommentary = await prisma.page.findUnique({
 		where: { slug },
 		select: {
@@ -64,8 +53,7 @@ async function resolveMainDisplaySegments<T extends Array<unknown>>(
 			},
 		},
 	});
-
-	return (pageWithCommentary?.content.segments ?? []) as T;
+	return pageWithCommentary?.content.segments ?? [];
 }
 
 export async function fetchPageDetail(slug: string, locale: string) {
@@ -77,11 +65,10 @@ export async function fetchPageDetail(slug: string, locale: string) {
 		return null;
 	}
 
-	const segments = await resolveMainDisplaySegments(
-		slug,
-		locale,
-		page.content.segments,
-	);
+	const segments =
+		page.content.segments.length > 0
+			? page.content.segments
+			: await fetchCommentarySegmentsAsFallback(slug, locale);
 
 	// 各セグメントのannotations内のannotationSegmentにpickBestTranslationを適用
 	const segmentsWithNormalizedAnnotations = segments.map((segment) => {
