@@ -2,9 +2,9 @@
 import type { PageStatus } from "@prisma/client";
 import {
 	CloudCheck,
+	LinkIcon,
 	Globe,
 	LanguagesIcon,
-	LinkIcon,
 	Loader2,
 	Lock,
 } from "lucide-react";
@@ -76,7 +76,9 @@ export function EditHeader({
 		pageSlug: string;
 	}>();
 	// Build canonical view path explicitly using params
-	const previewHref = `/user/${handle}/page/${pageSlug}/preview`;
+	// For public pages, link to actual page; for drafts, link to preview
+	const viewHref = `/user/${handle}/page/${pageSlug}`;
+	const previewHref = `${viewHref}/preview`;
 	//editページはiphoneSafari対応のため､baseHeaderとは別でスクロール管理が必要
 	const { isVisible } = useHeaderVisibility();
 	const { toastJobs } = useTranslationJobs(
@@ -204,9 +206,9 @@ export function EditHeader({
 				)}
 				<Separator />
 				<Button asChild className={MENU_BUTTON_CLASSES} variant="ghost">
-					<Link href={previewHref as Route}>
+					<Link href={(isPublic ? viewHref : previewHref) as Route}>
 						<LinkIcon className={ICON_CLASSES} />
-						<span>Preview</span>
+						<span>{isPublic ? "View Page" : "Preview"}</span>
 					</Link>
 				</Button>
 			</PopoverContent>
