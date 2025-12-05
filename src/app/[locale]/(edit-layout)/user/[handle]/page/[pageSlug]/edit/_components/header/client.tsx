@@ -2,9 +2,9 @@
 import type { PageStatus } from "@prisma/client";
 import {
 	CloudCheck,
-	LinkIcon,
 	Globe,
 	LanguagesIcon,
+	LinkIcon,
 	Loader2,
 	Lock,
 } from "lucide-react";
