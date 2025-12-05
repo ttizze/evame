@@ -9,6 +9,7 @@ const analyzeBundles = withBundleAnalyzer({
 });
 /** @type {import('next').NextConfig} */
 const config: NextConfig = {
+	serverExternalPackages: ["pino"],
 	logging: {
 		fetches: {
 			fullUrl: true,
