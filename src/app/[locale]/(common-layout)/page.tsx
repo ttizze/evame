@@ -7,17 +7,23 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/routing";
 
 const NewPageList = dynamic(
-	() => import("@/app/[locale]/_components/page/new-page-list/server"),
+	() =>
+		import(
+			"@/app/[locale]/(common-layout)/_components/page/new-page-list/server"
+		),
 	{
 		loading: () => <Skeleton className="h-[400px] w-full mb-10" />,
 	},
 );
 
 import { ArrowRightIcon } from "lucide-react";
-import AboutSection from "../_components/about-section/server";
+import AboutSection from "@/app/[locale]/(common-layout)/_components/about-section/server";
 
 const NewPageListByTag = dynamic(
-	() => import("@/app/[locale]/_components/page/new-page-list-by-tag/server"),
+	() =>
+		import(
+			"@/app/[locale]/(common-layout)/_components/page/new-page-list-by-tag/server"
+		),
 	{
 		loading: () => <Skeleton className="h-[400px] w-full mb-10" />,
 	},

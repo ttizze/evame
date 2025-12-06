@@ -1,6 +1,6 @@
 import { remark } from "remark";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { uploadImage } from "../_lib/upload";
+import { uploadImage } from "../_service/upload/upload-image";
 import { fileFromUrl } from "../_utils/file-from-url";
 import { remarkAutoUploadImages } from "./remark-auto-upload-images";
 
@@ -20,7 +20,7 @@ vi.mock("../_utils/file-from-url", () => {
 	};
 });
 
-vi.mock("../_lib/upload", () => ({
+vi.mock("../_service/upload/upload-image", () => ({
 	uploadImage: vi.fn(async () => ({
 		success: true,
 		data: { imageUrl: "https://evame/uploads/uploaded.jpg" },

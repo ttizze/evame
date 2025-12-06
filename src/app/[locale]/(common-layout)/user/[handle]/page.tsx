@@ -3,8 +3,8 @@ import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
-import { FloatingControls } from "@/app/[locale]/_components/floating-controls.client";
-import { SortTabs } from "@/app/[locale]/_components/sort-tabs";
+import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls.client";
+import { SortTabs } from "@/app/[locale]/(common-layout)/_components/sort-tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const DynamicPageList = dynamic(
@@ -22,9 +22,11 @@ const DynamicPageList = dynamic(
 		),
 	},
 );
-const DynamicUserInfo = dynamic(
+const DynamicUserInfo = dynamic<{ handle: string }>(
 	() =>
-		import("../../../_components/user-info.server").then((mod) => mod.UserInfo),
+		import("@/app/[locale]/(common-layout)/_components/user-info.server").then(
+			(mod) => mod.UserInfo,
+		),
 	{
 		loading: () => <Skeleton className="h-[200px] w-full mb-4" />,
 	},

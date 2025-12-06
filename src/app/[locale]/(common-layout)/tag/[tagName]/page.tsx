@@ -4,7 +4,10 @@ import type React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const NewPageListByTag = dynamic(
-	() => import("@/app/[locale]/_components/page/new-page-list-by-tag/server"),
+	() =>
+		import(
+			"@/app/[locale]/(common-layout)/_components/page/new-page-list-by-tag/server"
+		),
 	{
 		loading: () => <Skeleton className="h-[400px] w-full mb-10" />,
 	},

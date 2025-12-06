@@ -3,7 +3,7 @@ import { ChevronDown, List, PencilIcon } from "lucide-react";
 import { getImageProps } from "next/image";
 import { useLocale } from "next-intl";
 import { useState } from "react";
-import { useHeaderScroll } from "@/app/[locale]/_components/header/hooks/use-header-scroll";
+import { useHeaderScroll } from "@/app/[locale]/(common-layout)/_components/header/hooks/use-header-scroll";
 import type { PageDetail } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";

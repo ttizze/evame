@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { StartButton } from "@/app/[locale]/_components/start-button";
+import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
 import { Editor } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/editor/editor";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";

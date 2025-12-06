@@ -2,7 +2,7 @@ import type { Root as MdastRoot } from "mdast";
 import pLimit from "p-limit";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
-import { uploadImage } from "../_lib/upload";
+import { uploadImage } from "../_service/upload/upload-image";
 import { fileFromUrl } from "../_utils/file-from-url";
 
 const limit = pLimit(5);

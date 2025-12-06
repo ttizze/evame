@@ -3,7 +3,7 @@
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import useSWR from "swr";
-import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
+import { WrapSegmentClient } from "@/app/[locale]/(common-layout)/_components/wrap-segments/client";
 import type { PageForTitle, SegmentForList } from "@/app/[locale]/types";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
