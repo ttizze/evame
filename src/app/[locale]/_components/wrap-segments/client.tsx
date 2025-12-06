@@ -1,5 +1,16 @@
 "use client";
 
+/**
+ * ## アーキテクチャ決定: 本文 vs 翻訳・注釈のレンダリング方式
+ *
+ * - 本文: mdast → mdastToReact（リッチコンテンツ対応: 画像、コードハイライト、埋め込み等）
+ * - 翻訳・注釈: segment.text → sanitizeAndParseText（プレーンテキスト）
+ *
+ * 理由: 本文はMarkdownで書かれリッチコンテンツを含む可能性があるが、
+ * 翻訳・注釈は基本的にプレーンテキストなので軽量な処理で十分。
+ * 統一も検討したが、翻訳をmdast化すると処理コストとDB増加の懸念がある。
+ */
+
 import type { JSX } from "react";
 import {
 	Children,

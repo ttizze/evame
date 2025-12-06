@@ -1,7 +1,8 @@
 "use client";
 
-import { parseAsBoolean, useQueryState } from "nuqs";
+import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import type { JSX } from "react";
+import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
 import type { SegmentForDetail } from "@/app/[locale]/types";
 import { WrapSegmentClient } from "../client";
 
@@ -18,18 +19,32 @@ export function AnnotationsSection<Tag extends keyof JSX.IntrinsicElements>({
 	tagProps,
 	interactive = true,
 }: AnnotationsSectionProps<Tag>) {
-	const [showAnnotations] = useQueryState(
-		"showAnnotations",
-		parseAsBoolean.withDefault(false),
+	const [visibleAnnotations] = useQueryState(
+		"annotations",
+		parseAsArrayOf(parseAsString, "~").withDefault([]),
 	);
 
-	if (!showAnnotations || !segment.annotations) {
+	if (!segment.annotations || visibleAnnotations.length === 0) {
+		return null;
+	}
+
+	// visibleAnnotationsに含まれる注釈タイプのみをフィルタリング
+	// key_label の組み合わせで一意に識別（URLセーフな区切り文字）
+	const filteredAnnotations = segment.annotations.filter((link) => {
+		const annotationSegment = link.annotationSegment as SegmentForDetail;
+		const segType = annotationSegment?.segmentType;
+		if (!segType?.key || !segType?.label) return false;
+		const uniqueKey = `${segType.key}_${segType.label}`;
+		return visibleAnnotations.includes(uniqueKey);
+	});
+
+	if (filteredAnnotations.length === 0) {
 		return null;
 	}
 
 	return (
 		<>
-			{segment.annotations.map((link, index) => {
+			{filteredAnnotations.map((link, index) => {
 				const annotationSegment = link.annotationSegment as SegmentForDetail;
 				return (
 					<WrapSegmentClient
@@ -42,7 +57,7 @@ export function AnnotationsSection<Tag extends keyof JSX.IntrinsicElements>({
 							className: `${tagProps.className ?? ""} ml-4`,
 						}}
 					>
-						{annotationSegment.text}
+						{sanitizeAndParseText(annotationSegment.text)}
 					</WrapSegmentClient>
 				);
 			})}
