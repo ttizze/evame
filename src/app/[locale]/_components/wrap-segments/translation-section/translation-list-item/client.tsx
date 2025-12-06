@@ -2,7 +2,7 @@
 import { EllipsisVertical, Trash2 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useActionState } from "react";
-import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
+import { sanitizeAndParseText } from "@/app/[locale]/_utils/sanitize-and-parse-text.client";
 import type { TranslationWithInfo } from "@/app/[locale]/types";
 import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";

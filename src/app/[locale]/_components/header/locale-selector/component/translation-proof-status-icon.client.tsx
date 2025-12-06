@@ -1,7 +1,7 @@
 import type { TranslationProofStatus } from "@prisma/client";
 import { FileText, FileX, Languages } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { LocaleStatus } from "../lib/build-locale-options";
+import type { LocaleStatus } from "../domain/build-locale-options";
 
 interface Props {
 	localeStatus: LocaleStatus;

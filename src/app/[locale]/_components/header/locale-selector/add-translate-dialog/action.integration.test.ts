@@ -1,20 +1,27 @@
 import { ContentKind } from "@prisma/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { enqueueTranslate } from "@/app/[locale]/_lib/translate/enqueue.server";
+import { enqueueTranslate } from "@/app/[locale]/_infrastructure/qstash/enqueue-translate.server";
 import { getCurrentUser } from "@/lib/auth-server";
 import { prisma } from "@/lib/prisma";
 import { toSessionUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
-import { createPageWithSegments, createUser } from "@/tests/factories";
+import {
+	createPageWithAnnotations,
+	createPageWithSegments,
+	createUser,
+} from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { translateAction } from "./action";
 
 await setupDbPerFile(import.meta.url);
 
 // 外部システムのみモック（キューシステム）
-vi.mock("@/app/[locale]/_lib/translate/enqueue.server", () => ({
-	enqueueTranslate: vi.fn(),
-}));
+vi.mock(
+	"@/app/[locale]/_infrastructure/qstash/enqueue-translate.server",
+	() => ({
+		enqueueTranslate: vi.fn(),
+	}),
+);
 
 describe("translateAction", () => {
 	beforeEach(async () => {
@@ -200,5 +207,62 @@ describe("translateAction", () => {
 
 		// Assert: キューに複数のジョブがエンキューされている
 		expect(enqueueTranslate).toHaveBeenCalledTimes(translationJobs.length);
+	});
+
+	it("ページに注釈がある場合、注釈も翻訳ジョブに含まれる", async () => {
+		// Arrange: メインページと注釈を作成
+		const user = await createUser();
+		const { mainPage, annotationContent } = await createPageWithAnnotations({
+			userId: user.id,
+			mainPageSlug: "page-with-annotations",
+			mainPageSegments: [
+				{
+					number: 0,
+					text: "Page Title",
+					textAndOccurrenceHash: "hash-title",
+				},
+				{
+					number: 1,
+					text: "Main text",
+					textAndOccurrenceHash: "hash-main-1",
+				},
+			],
+			annotationSegments: [
+				{
+					number: 0,
+					text: "Annotation text",
+					textAndOccurrenceHash: "hash-anno-0",
+					linkedToMainSegmentNumber: 1,
+				},
+			],
+		});
+
+		vi.mocked(getCurrentUser).mockResolvedValue(toSessionUser(user));
+
+		const formData = new FormData();
+		formData.append("pageSlug", mainPage.slug);
+		formData.append("aiModel", "gemini-pro");
+		formData.append("targetLocale", "ja");
+
+		// Act
+		const result = await translateAction({ success: false }, formData);
+
+		// Assert
+		expect(result.success).toBe(true);
+		const translationJobs = await prisma.translationJob.findMany({
+			where: { pageId: mainPage.id },
+		});
+		expect(translationJobs.length).toBeGreaterThanOrEqual(2);
+
+		const annotationCall = vi
+			.mocked(enqueueTranslate)
+			.mock.calls.find(
+				([body]) => body.annotationContentId === annotationContent.id,
+			);
+		expect(annotationCall?.[0]).toMatchObject({
+			annotationContentId: annotationContent.id,
+			pageId: mainPage.id,
+			targetLocale: "ja",
+		});
 	});
 });

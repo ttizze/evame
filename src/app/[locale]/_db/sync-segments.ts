@@ -1,5 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
-import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
+import type { SegmentDraft } from "../_domain/remark-hash-and-segments";
 
 /**
  * Prismaのトランザクションクライアントの型

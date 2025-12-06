@@ -7,7 +7,7 @@ import {
 	type MouseEvent,
 	useState,
 } from "react";
-import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
+import { sanitizeAndParseText } from "@/app/[locale]/_utils/sanitize-and-parse-text.client";
 import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
 import { AddAndVoteTranslations } from "./add-and-vote-translations.client";
 

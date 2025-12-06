@@ -23,7 +23,7 @@ import { toString as mdastToString } from "mdast-util-to-string";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 import type { Data, VFile } from "vfile";
-import { generateHashForText } from "./generate-hash-for-text";
+import { generateHashForText } from "../_utils/generate-hash-for-text";
 /* ---------- 共通型 ---------- */
 
 export type SegmentDraft = Omit<
@@ -44,6 +44,8 @@ const BLOCK_TYPES: ReadonlyArray<BlockNode["type"]> = [
 	"blockquote",
 	"tableCell",
 ] as const;
+
+const PARA_NOTATION_REGEX = /^\{para:([^}]+)\}\s*/;
 
 const canonicalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 
@@ -127,6 +129,128 @@ function generateHashAndTrackOccurrence(
 	return generateHashForText(text, occurrence);
 }
 
+function stripParagraphNotationFromNode(node: BlockNode): void {
+	if (!("children" in node)) return;
+	const children = node.children as RootContent[];
+	for (let i = 0; i < children.length; i += 1) {
+		const child = children[i];
+		if (child.type !== "text") continue;
+		const newValue = child.value.replace(PARA_NOTATION_REGEX, "");
+		if (newValue === child.value) {
+			return;
+		}
+		if (newValue.length > 0) {
+			child.value = newValue;
+		} else {
+			children.splice(i, 1);
+		}
+		return;
+	}
+}
+
+/**
+ * ブロックノードから段落番号を抽出し、テキストから削除する
+ */
+function extractParagraphNumber(
+	text: string,
+	node: BlockNode,
+): { paragraphNumber: string | null; cleanedText: string } {
+	const paraMatch = text.match(PARA_NOTATION_REGEX);
+	if (!paraMatch) {
+		return { paragraphNumber: null, cleanedText: text };
+	}
+
+	let paragraphNumber = paraMatch[1];
+	// 範囲形式（例：「1-5」）の場合は、最後の数字（5）を取得
+	if (paragraphNumber.includes("-")) {
+		const parts = paragraphNumber.split("-");
+		paragraphNumber = parts[parts.length - 1];
+	}
+
+	stripParagraphNotationFromNode(node);
+	const cleanedText = text.slice(paraMatch[0].length);
+
+	return { paragraphNumber, cleanedText };
+}
+
+/**
+ * ブロックノードからセグメント情報を抽出してセグメントドラフトを作成する
+ * @returns セグメントドラフトと更新された段落番号のタプル
+ */
+function createSegmentFromBlockNode(
+	node: BlockNode,
+	number: number,
+	currentParagraphNumber: string | null,
+	occurrenceMap: Map<string, number>,
+): { segment: SegmentDraft | null; updatedParagraphNumber: string | null } {
+	// ネストしたブロック要素は除外
+	if (hasNestedBlock(node)) {
+		return { segment: null, updatedParagraphNumber: currentParagraphNumber };
+	}
+
+	// テキスト抽出
+	let text = extractText(node);
+	if (!text) {
+		return { segment: null, updatedParagraphNumber: currentParagraphNumber };
+	}
+
+	// 段落番号とページブレークを抽出
+	const metadata: Array<{ typeKey: string; value: string }> = [];
+	const isHeading = "depth" in node;
+
+	// 段落番号の抽出と更新
+	const { paragraphNumber: paragraphNumberFromBlock, cleanedText } =
+		extractParagraphNumber(text, node);
+	const updatedParagraphNumber =
+		paragraphNumberFromBlock ?? currentParagraphNumber;
+	const effectiveParagraphNumber =
+		paragraphNumberFromBlock ?? currentParagraphNumber;
+
+	// ページブレークの抽出
+	const pageBreaks = extractPageBreaksFromNode(node);
+	metadata.push(...pageBreaks);
+
+	// メタデータ記法をテキストから削除
+	text = cleanedText
+		.replace(PARA_NOTATION_REGEX, "")
+		.replace(/\{pb:[^}]+\}/g, "")
+		.replace(/\{pb\}/g, "")
+		.trim();
+
+	if (!text) {
+		return {
+			segment: null,
+			updatedParagraphNumber: updatedParagraphNumber,
+		};
+	}
+
+	// ハッシュ生成と出現回数を追跡
+	const textAndOccurrenceHash = generateHashAndTrackOccurrence(
+		text,
+		occurrenceMap,
+	);
+
+	// HTML 変換時用の data-number-id を付与
+	setNodeDataNumber(node, number);
+
+	// ヘッダー（見出し）の場合は段落番号を付けない
+	const paragraphNumber =
+		!isHeading && effectiveParagraphNumber !== null
+			? effectiveParagraphNumber
+			: undefined;
+
+	return {
+		segment: {
+			textAndOccurrenceHash,
+			text,
+			number,
+			metadata: metadata.length > 0 ? { items: metadata } : undefined,
+			paragraphNumber,
+		},
+		updatedParagraphNumber: updatedParagraphNumber,
+	};
+}
+
 /* ---------- プラグイン本体 ---------- */
 
 export const remarkHashAndSegments =
@@ -156,68 +280,16 @@ export const remarkHashAndSegments =
 		let currentParagraphNumber: string | null = null;
 
 		visit(tree, isBlockNode, (node) => {
-			/* ネストしたブロック要素は除外 */
-			if (hasNestedBlock(node)) return;
-
-			/* テキスト抽出 */
-			let text = extractText(node);
-			if (!text) return;
-
-			/* 段落番号とページブレークを抽出 */
-			const metadata: Array<{ typeKey: string; value: string }> = [];
-			let paragraphNumberFromBlock: string | null = null;
-			const isHeading = "depth" in node;
-
-			// 段落番号の抽出: {para:n} または {para:1-5} のような範囲形式 (まだ変換されていない場合)
-			const paraMatch = text.match(/^\{para:([^}]+)\}\s*/);
-			if (paraMatch) {
-				paragraphNumberFromBlock = paraMatch[1];
-				// 範囲形式（例：「1-5」）の場合は、最後の数字（5）を取得
-				if (paragraphNumberFromBlock.includes("-")) {
-					const parts = paragraphNumberFromBlock.split("-");
-					currentParagraphNumber = parts[parts.length - 1];
-				} else {
-					currentParagraphNumber = paragraphNumberFromBlock;
-				}
-				text = text.slice(paraMatch[0].length);
-			}
-
-			// ページブレークの抽出: HTMLノードから抽出（remark-custom-blocksで変換済み）
-			const pageBreaks = extractPageBreaksFromNode(node);
-			metadata.push(...pageBreaks);
-
-			// メタデータ記法をテキストから削除（まだ変換されていない場合）
-			text = text
-				.replace(/^\{para:[^}]+\}\s*/g, "")
-				.replace(/\{pb:[^}]+\}/g, "")
-				.replace(/\{pb\}/g, "")
-				.trim();
-
-			if (!text) return;
-
-			/* ハッシュ生成と出現回数を追跡 */
-			const textAndOccurrenceHash = generateHashAndTrackOccurrence(
-				text,
+			const { segment, updatedParagraphNumber } = createSegmentFromBlockNode(
+				node,
+				number,
+				currentParagraphNumber,
 				occurrenceMap,
 			);
+			if (!segment) return;
 
-			/* HTML 変換時用の data-number-id を付与 */
-			setNodeDataNumber(node, number);
-
-			// 現在の段落番号（段落番号が出現してから次の段落番号が出現するまでのすべてのブロックに同じ段落番号を付与）
-			// ヘッダー（見出し）の場合は段落番号を付けない
-			const paragraphNumber =
-				!isHeading && currentParagraphNumber !== null
-					? currentParagraphNumber
-					: undefined;
-
-			f.data.segments.push({
-				textAndOccurrenceHash,
-				text,
-				number,
-				metadata: metadata.length > 0 ? { items: metadata } : undefined,
-				paragraphNumber,
-			});
+			currentParagraphNumber = updatedParagraphNumber;
+			f.data.segments.push(segment);
 			number += 1;
 		});
 	};

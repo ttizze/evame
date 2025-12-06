@@ -159,4 +159,18 @@ describe("remarkHashAndSegments", () => {
 		// 画像URLも含まれない
 		expect(texts.some((t: string) => t.includes("image.jpg"))).toBe(false);
 	});
+
+	it("{para:n} 記号は段落番号として保存され、本文からは除去される", async () => {
+		const md = "{para:3} Para text";
+		const file = (await remark()
+			.use(remarkHashAndSegments())
+			.process(md)) as VFile & { data: { segments: SegmentDraft[] } };
+		const segs = file.data.segments as SegmentDraft[];
+		expect(segs[0]).toMatchObject({
+			text: "Para text",
+			paragraphNumber: "3",
+		});
+		expect(String(file)).toContain("Para text");
+		expect(String(file)).not.toContain("{para:3}");
+	});
 });

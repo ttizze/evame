@@ -1,10 +1,30 @@
+/**
+ * 翻訳ジョブのオーケストレーター
+ *
+ * ファンアウトパターンを採用:
+ * 呼び出し元 → QStash → /api/translate (このファイル)
+ *                           ↓
+ *                     QStash → /api/translate/chunk ×N (並列)
+ *
+ * この設計により以下を実現:
+ * - 並列処理: 複数チャンクを同時に翻訳
+ * - 部分失敗の分離: 失敗したチャンクのみリトライ
+ * - タイムアウト回避: 各ワーカーが独立して時間を使用
+ */
+
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslateChunkParams } from "@/app/api/translate/types";
 import { revalidatePageForLocale } from "@/lib/revalidate-utils";
 import { markJobCompleted, markJobInProgress } from "./_db/mutations.server";
-import { splitNumberedElements } from "./_lib/split-numbered-elements.server";
+import {
+	getAnnotationSegments,
+	getPageCommentSegments,
+	getPageSegments,
+	getPageTitle,
+} from "./_db/queries.server";
+import { splitSegments } from "./_lib/split-segments.server";
 import { withQstashVerification } from "./_lib/with-qstash-signature";
 
 const ParamsSchema = z.object({
@@ -14,20 +34,26 @@ const ParamsSchema = z.object({
 	provider: z.enum(["gemini", "vertex"]),
 	aiModel: z.string().min(1),
 	targetLocale: z.string().min(1),
-	title: z.string(),
-	numberedElements: z.array(
-		z.object({ number: z.number().int(), text: z.string() }),
-	),
-	pageCommentId: z.number().int().positive().optional(),
+	pageCommentId: z.number().int().positive().nullable(),
+	annotationContentId: z.number().int().positive().nullable(),
 });
 
 async function handler(req: Request) {
 	try {
 		const params = ParamsSchema.parse(await req.json());
 
-		const chunks = splitNumberedElements(
-			[...params.numberedElements].sort((a, b) => a.number - b.number),
-		);
+		// pageCommentId / annotationContentId に応じてセグメントを取得
+		const segments = params.annotationContentId
+			? await getAnnotationSegments(params.annotationContentId)
+			: params.pageCommentId
+				? await getPageCommentSegments(params.pageCommentId)
+				: await getPageSegments(params.pageId);
+
+		// ページタイトルを取得（翻訳プロンプト用）
+		const title = (await getPageTitle(params.pageId)) ?? "";
+
+		const sortedSegments = [...segments].sort((a, b) => a.number - b.number);
+		const chunks = splitSegments(sortedSegments);
 		const totalChunks = chunks.length;
 
 		// If there is nothing to translate, finalize immediately.
@@ -54,10 +80,11 @@ async function handler(req: Request) {
 					aiModel: params.aiModel,
 					userId: params.userId,
 					targetLocale: params.targetLocale,
-					title: params.title,
 					pageId: params.pageId,
 					pageCommentId: params.pageCommentId,
-					numberedElements: chunk,
+					annotationContentId: params.annotationContentId,
+					segments: chunk,
+					title,
 					totalChunks,
 					chunkIndex: idx,
 				};

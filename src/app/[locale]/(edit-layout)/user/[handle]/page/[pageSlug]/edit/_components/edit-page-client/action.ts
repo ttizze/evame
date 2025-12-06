@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { createActionFactory } from "@/app/[locale]/_action/create-action-factory";
-import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
+import { getLocaleFromHtml } from "@/app/[locale]/_domain/get-locale-from-html";
 import type { ActionResponse } from "@/app/types";
 import { createServerLogger } from "@/lib/logger.server";
 import { prisma } from "@/lib/prisma";

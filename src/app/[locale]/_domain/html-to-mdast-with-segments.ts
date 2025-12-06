@@ -3,13 +3,13 @@ import type { Root as MdastRoot } from "mdast";
 import rehypeParse from "rehype-parse";
 import rehypeRemark from "rehype-remark";
 import rehypeSanitize from "rehype-sanitize";
-/* html-to-mdast-with-segments.ts ----------------------------------------- */
 import { unified } from "unified";
 import { removePosition } from "unist-util-remove-position";
 import { VFile } from "vfile";
-import { remarkAutoUploadImages } from "@/app/[locale]/_lib/remark-auto-upload-images";
-import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
-import { remarkHashAndSegments } from "@/app/[locale]/_lib/remark-hash-and-segments";
+/* html-to-mdast-with-segments.ts ----------------------------------------- */
+import { remarkAutoUploadImages } from "@/app/[locale]/_domain/remark-auto-upload-images";
+import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
+import { remarkHashAndSegments } from "@/app/[locale]/_domain/remark-hash-and-segments";
 
 interface Params {
 	header?: string;

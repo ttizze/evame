@@ -42,27 +42,34 @@ async function setupTranslationTest(data?: {
 	}>;
 }) {
 	const user = await createUser();
+	const segmentsData = data?.segments ?? [
+		{
+			number: 0,
+			text: "Hello",
+			textAndOccurrenceHash: "hash0",
+			segmentTypeKey: "PRIMARY" as const,
+		},
+		{
+			number: 1,
+			text: "World",
+			textAndOccurrenceHash: "hash1",
+			segmentTypeKey: "PRIMARY" as const,
+		},
+	];
 	const page = await createPageWithSegments({
 		userId: user.id,
 		slug: "test-page",
-		segments: data?.segments ?? [
-			{
-				number: 0,
-				text: "Hello",
-				textAndOccurrenceHash: "hash0",
-				segmentTypeKey: "PRIMARY",
-			},
-			{
-				number: 1,
-				text: "World",
-				textAndOccurrenceHash: "hash1",
-				segmentTypeKey: "PRIMARY",
-			},
-		],
+		segments: segmentsData,
 	});
 	await createGeminiApiKey({ userId: user.id });
 
-	return { user, page };
+	// 作成されたセグメントを取得（実際のIDを使用するため）
+	const segments = await prisma.segment.findMany({
+		where: { contentId: page.id },
+		orderBy: { number: "asc" },
+	});
+
+	return { user, page, segments };
 }
 
 describe("translateChunk", () => {
@@ -73,7 +80,7 @@ describe("translateChunk", () => {
 
 	it("Geminiから正常レスポンスが返された場合、翻訳がデータベースに保存される", async () => {
 		// Arrange: テスト用データを作成
-		const { user, page } = await setupTranslationTest();
+		const { user, page, segments } = await setupTranslationTest();
 
 		// Gemini APIのモック（正常レスポンス）
 		vi.mocked(getGeminiModelResponse).mockResolvedValue(`
@@ -88,10 +95,7 @@ describe("translateChunk", () => {
 			user.id,
 			"gemini",
 			"test-model",
-			[
-				{ number: 0, text: "Hello" },
-				{ number: 1, text: "World" },
-			],
+			segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 			"ja",
 			page.id,
 			"Test Page",
@@ -108,7 +112,7 @@ describe("translateChunk", () => {
 
 	it("Geminiが空レスポンスを返し続けた場合、リトライ後にエラーで失敗し翻訳が保存されない", async () => {
 		// Arrange: テスト用データを作成
-		const { user, page } = await setupTranslationTest({
+		const { user, page, segments } = await setupTranslationTest({
 			segments: [
 				{
 					number: 0,
@@ -134,10 +138,7 @@ describe("translateChunk", () => {
 				user.id,
 				"gemini",
 				"test-model",
-				[
-					{ number: 0, text: "test" },
-					{ number: 1, text: "failed" },
-				],
+				segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 				"ja",
 				page.id,
 				"Test Page",
@@ -157,7 +158,7 @@ describe("translateChunk", () => {
 
 	it("1回目は空レスポンスで2回目で正常レスポンスが返された場合、リトライ後に翻訳が保存される", async () => {
 		// Arrange: テスト用データを作成
-		const { user, page } = await setupTranslationTest();
+		const { user, page, segments } = await setupTranslationTest();
 
 		// Gemini APIのモック（1回目: 空レスポンス, 2回目: 正常レスポンス）
 		vi.mocked(getGeminiModelResponse)
@@ -174,10 +175,7 @@ describe("translateChunk", () => {
 			user.id,
 			"gemini",
 			"test-model",
-			[
-				{ number: 0, text: "Hello" },
-				{ number: 1, text: "World" },
-			],
+			segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 			"ja",
 			page.id,
 			"Test Page",
@@ -194,7 +192,7 @@ describe("translateChunk", () => {
 
 	it("PageLocaleTranslationProofが存在しない場合、新規レコードがMACHINE_DRAFTステータスで作成される", async () => {
 		// Arrange: テスト用データを作成
-		const { user, page } = await setupTranslationTest();
+		const { user, page, segments } = await setupTranslationTest();
 
 		// Gemini APIのモック（正常レスポンス）
 		vi.mocked(getGeminiModelResponse).mockResolvedValue(
@@ -209,10 +207,7 @@ describe("translateChunk", () => {
 			user.id,
 			"gemini",
 			"test-model",
-			[
-				{ number: 0, text: "Hello" },
-				{ number: 1, text: "World" },
-			],
+			segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 			"ja",
 			page.id,
 			"Test Page",
@@ -231,7 +226,7 @@ describe("translateChunk", () => {
 
 	it("既存のPageLocaleTranslationProofがある場合、ステータスが変更されずに既存レコードが保持される", async () => {
 		// Arrange: テスト用データを作成
-		const { user, page } = await setupTranslationTest();
+		const { user, page, segments } = await setupTranslationTest();
 
 		// 事前にPROOFREADステータスでPageLocaleTranslationProofを作成
 		const existingProof = await prisma.pageLocaleTranslationProof.create({
@@ -255,10 +250,7 @@ describe("translateChunk", () => {
 			user.id,
 			"gemini",
 			"test-model",
-			[
-				{ number: 0, text: "Hello" },
-				{ number: 1, text: "World" },
-			],
+			segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 			"ja",
 			page.id,
 			"Test Page",

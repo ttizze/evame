@@ -1,5 +1,5 @@
 import { selectSegmentFields } from "@/app/[locale]/_db/queries.server";
-import { pickBestTranslation } from "@/app/[locale]/_lib/pick-best-translation";
+import { pickBestTranslation } from "@/app/[locale]/_utils/pick-best-translation";
 import { prisma } from "@/lib/prisma";
 export async function fetchPageCommentsWithSegments(
 	pageId: number,

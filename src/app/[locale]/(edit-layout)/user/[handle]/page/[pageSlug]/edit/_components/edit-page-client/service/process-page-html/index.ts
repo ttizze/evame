@@ -1,5 +1,5 @@
 import type { PageStatus } from "@prisma/client";
-import { htmlToMdastWithSegments } from "@/app/[locale]/_lib/html-to-mdast-with-segments";
+import { htmlToMdastWithSegments } from "@/app/[locale]/_domain/html-to-mdast-with-segments";
 import { createServerLogger } from "@/lib/logger.server";
 import { upsertPageAndSegments } from "../upsert-page-and-segments";
 

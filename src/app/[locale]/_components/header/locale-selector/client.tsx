@@ -26,8 +26,8 @@ import { cn } from "@/lib/utils";
 import { AddTranslateDialog } from "./add-translate-dialog/client";
 import { TranslationProofStatusIcon } from "./component/translation-proof-status-icon.client";
 import { TextStatusGuide } from "./component/translation-status-guide.client";
+import { buildLocaleOptions } from "./domain/build-locale-options";
 import { useCombinedRouter } from "./hooks/use-combined-router";
-import { buildLocaleOptions } from "./lib/build-locale-options";
 
 // Local types
 interface TranslationInfo {

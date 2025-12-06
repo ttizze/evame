@@ -1,11 +1,11 @@
 import { remark } from "remark";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fileFromUrl } from "./file-from-url";
+import { uploadImage } from "../_lib/upload";
+import { fileFromUrl } from "../_utils/file-from-url";
 import { remarkAutoUploadImages } from "./remark-auto-upload-images";
-import { uploadImage } from "./upload";
 
 // 外部ファイルシステム・アップロードサービスをモック（共有依存）
-vi.mock("./file-from-url", () => {
+vi.mock("../_utils/file-from-url", () => {
 	const pngBase64 =
 		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAAAXNSR0IArs4c6QAAAARnQU1BAACx" +
 		"jwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAMSURBVBhXY2AAAAACAAHiIbwzAAAAAElFTkSuQmCC";
@@ -20,7 +20,7 @@ vi.mock("./file-from-url", () => {
 	};
 });
 
-vi.mock("./upload", () => ({
+vi.mock("../_lib/upload", () => ({
 	uploadImage: vi.fn(async () => ({
 		success: true,
 		data: { imageUrl: "https://evame/uploads/uploaded.jpg" },

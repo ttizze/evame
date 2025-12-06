@@ -1,6 +1,6 @@
 import type { SegmentTranslation, TranslationVote } from "@prisma/client";
+import type { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
 import type { SanitizedUser } from "../types";
-import type { fetchPageDetail } from "./_db/page-detail-queries.server";
 
 export type TranslationWithUser = SegmentTranslation & {
 	user: SanitizedUser;
