@@ -3,7 +3,7 @@ import * as path from "node:path";
 import {
 	BLOCK_TYPES,
 	GATHA_BLOCK_TYPES,
-} from "../../src/app/[locale]/_lib/custom-block-types";
+} from "../../src/app/[locale]/_domain/custom-block-types";
 import {
 	getChildElements,
 	normalizeTagName,

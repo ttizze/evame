@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"target": "ES2017",
 		"lib": ["dom", "dom.iterable", "esnext"],
-		"types": ["vite/client", "vitest/globals"],
+		"types": ["node", "vite/client", "vitest/globals"],
 		"allowJs": true,
 		"skipLibCheck": true,
 		"strict": true,
@@ -39,8 +39,6 @@
 		".next/types/validator.ts",
 		"dist",
 		"build",
-		"scripts/convert-romn-to-md.ts",
-		"scripts/convert-romn-to-md/**",
 		"scripts/convert-romn-to-md-old/**"
 	]
 }

@@ -327,7 +327,7 @@ strongタグ等
    ```
    TipTap HTML → htmlToMdastWithSegments() → mdast + segments
    ```
-   - `src/app/[locale]/_lib/html-to-mdast-with-segments.ts` の `htmlToMdastWithSegments` 関数を使用
+   - `src/app/[locale]/_domain/html-to-mdast-with-segments.ts` の `htmlToMdastWithSegments` 関数を使用
    - 処理の流れ:
      - `rehypeParse`: HTML → HAST（HTML AST）に変換
      - `rehypeSanitize`: XSS対策のためのサニタイズ
@@ -350,7 +350,7 @@ strongタグ等
    ```
    Markdown文字列 → markdownToMdastWithSegments() → mdast + segments
    ```
-   - `src/app/[locale]/_lib/markdown-to-mdast-with-segments.ts` の `markdownToMdastWithSegments` 関数を使用
+   - `src/app/[locale]/_domain/markdown-to-mdast-with-segments.ts` の `markdownToMdastWithSegments` 関数を使用
    - 処理の流れ:
      - `remarkParse`: Markdown → MDAST に直接変換（HTML経由不要）
      - `remarkHashAndSegments`: セグメント情報とハッシュを生成
@@ -371,7 +371,7 @@ strongタグ等
    ```
    mdast + segments → mdastToReact() → React要素
    ```
-   - `src/app/[locale]/_components/mdast-to-react/server.tsx` の `mdastToReact` 関数を使用
+   - `src/app/[locale]/(common-layout)/_components/mdast-to-react/server.tsx` の `mdastToReact` 関数を使用
    - 処理の流れ:
      - `remarkTweet`: ツイート埋め込み
      - `remarkEmbedder`: oEmbed埋め込み
@@ -400,7 +400,7 @@ strongタグ等
 
 ### mdastToReact
 
-`mdastToReact` 関数は、mdast（Markdown Abstract Syntax Tree）のJSON形式をReact要素に変換する関数です。この関数は `src/app/[locale]/_components/mdast-to-react/server.tsx` に実装されています。
+`mdastToReact` 関数は、mdast（Markdown Abstract Syntax Tree）のJSON形式をReact要素に変換する関数です。この関数は `src/app/[locale]/(common-layout)/_components/mdast-to-react/server.tsx` に実装されています。
 
 #### 主な機能
 
