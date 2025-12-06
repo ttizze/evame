@@ -1,18 +1,21 @@
 "use client";
-import { MessageSquare } from "lucide-react";
-import { parseAsBoolean, useQueryState } from "nuqs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import { ShareDialog } from "../(common-layout)/user/[handle]/page/[pageSlug]/_components/share-dialog";
 import { DisplayModeCycle } from "./display-mode-cycle.client";
 import { useScrollVisibility } from "./hooks/use-scroll-visibility";
+
+interface AnnotationType {
+	key: string;
+	label: string;
+}
 
 interface FloatingControlsProps {
 	likeButton?: React.ReactNode;
 	position?: string;
 	alwaysVisible?: boolean;
-	annotationLabel?: string; // 注釈タイプのラベル（例: "Commentary"）
-	hasAnnotations?: boolean; // 注釈があるかどうか
+	annotationTypes?: AnnotationType[]; // 注釈タイプのリスト
 }
 export function FloatingControls({
 	likeButton,
@@ -20,36 +23,51 @@ export function FloatingControls({
               max-w-prose w-full px-4 md:px-0 
               duration-300 `,
 	alwaysVisible = false,
-	annotationLabel,
-	hasAnnotations = false,
+	annotationTypes = [],
 }: FloatingControlsProps) {
 	const { isVisible, ignoreNextScroll } = useScrollVisibility(alwaysVisible);
-	const [showAnnotations, setShowAnnotations] = useQueryState(
-		"showAnnotations",
-		parseAsBoolean.withDefault(false),
+	const [visibleAnnotations, setVisibleAnnotations] = useQueryState(
+		"annotations",
+		parseAsArrayOf(parseAsString, "~").withDefault([]),
 	);
+
+	// key_label の組み合わせで一意に識別（URLセーフな区切り文字）
+	const getUniqueKey = (annotationType: AnnotationType) =>
+		`${annotationType.key}_${annotationType.label}`;
+
+	const toggleAnnotationType = (annotationType: AnnotationType) => {
+		const uniqueKey = getUniqueKey(annotationType);
+		const isVisible = visibleAnnotations.includes(uniqueKey);
+		if (isVisible) {
+			setVisibleAnnotations(visibleAnnotations.filter((k) => k !== uniqueKey));
+		} else {
+			setVisibleAnnotations([...visibleAnnotations, uniqueKey]);
+		}
+		ignoreNextScroll();
+	};
 
 	/* --- ボタン列 --- */
 	const Buttons = (
-		<div className="flex gap-3 justify-center">
+		<div className="flex gap-3 justify-center flex-wrap">
 			<DisplayModeCycle afterClick={ignoreNextScroll} />
 
 			{likeButton && <div className="h-10 w-10">{likeButton}</div>}
 
-			{hasAnnotations && annotationLabel && (
-				<Button
-					className="h-10 w-10 rounded-full"
-					onClick={() => {
-						setShowAnnotations(!showAnnotations);
-						ignoreNextScroll();
-					}}
-					size="icon"
-					title={`${annotationLabel}を${showAnnotations ? "非表示" : "表示"}`}
-					variant="outline"
-				>
-					<MessageSquare className="h-4 w-4" />
-				</Button>
-			)}
+			{annotationTypes.map((annotationType) => {
+				const uniqueKey = getUniqueKey(annotationType);
+				const isActive = visibleAnnotations.includes(uniqueKey);
+				return (
+					<Button
+						key={uniqueKey}
+						className="h-10 px-3 rounded-full text-sm"
+						onClick={() => toggleAnnotationType(annotationType)}
+						title={`${annotationType.label}を${isActive ? "非表示" : "表示"}`}
+						variant={isActive ? "default" : "outline"}
+					>
+						{annotationType.label}
+					</Button>
+				);
+			})}
 
 			<ShareDialog />
 		</div>

@@ -1,13 +1,16 @@
-import { EyeIcon, MessageCircle } from "lucide-react";
+import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
 import { FloatingControls } from "@/app/[locale]/_components/floating-controls.client";
 import { PageLikeButtonClient } from "@/app/[locale]/_components/page/page-like-button/client";
 import { PageViewCounter } from "@/app/[locale]/_components/page/page-view-counter/client";
-import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
+import { createLogger } from "@/lib/logger";
+import { EyeIcon, MessageCircle } from "lucide-react";
 import type { fetchPageContext } from "../_lib/fetch-page-context";
 import { ChildPages } from "./child-pages/server";
 import { PageCommentForm } from "./comment/_components/page-comment-form/client";
 import { ContentWithTranslations } from "./content-with-translations";
 import { PageBreadcrumb } from "./page-breadcrumb/server";
+
+const logger = createLogger("page-content");
 
 interface PageContentProps {
 	pageData: Awaited<ReturnType<typeof fetchPageContext>>;
@@ -17,22 +20,26 @@ interface PageContentProps {
 export async function PageContent({ pageData, locale }: PageContentProps) {
 	const { pageDetail, pageViewCount } = pageData;
 
-	const annotationLabel = (() => {
+	// 複数のユニークな注釈タイプを収集
+	const annotationTypes = (() => {
+		const typeMap = new Map<string, { key: string; label: string }>();
 		for (const segment of pageDetail.content.segments) {
 			if (segment.annotations && segment.annotations.length > 0) {
 				for (const link of segment.annotations) {
-					if (link.annotationSegment?.segmentType?.label) {
-						return link.annotationSegment.segmentType.label;
+					const segType = link.annotationSegment?.segmentType;
+					if (segType?.key && segType?.label) {
+						// key_label の組み合わせでユニーク判定（同じkeyでも異なるlabelは別タイプ）
+						const uniqueKey = `${segType.key}_${segType.label}`;
+						if (!typeMap.has(uniqueKey)) {
+							typeMap.set(uniqueKey, { key: segType.key, label: segType.label });
+						}
 					}
 				}
 			}
 		}
-		return undefined;
+		return Array.from(typeMap.values());
 	})();
-
-	const hasAnnotations = pageDetail.content.segments.some(
-		(s) => s.annotations && s.annotations.length > 0,
-	);
+	logger.debug({ annotationTypes }, "collected annotation types");
 
 	return (
 		<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
@@ -54,8 +61,7 @@ export async function PageContent({ pageData, locale }: PageContentProps) {
 			</div>
 
 			<FloatingControls
-				annotationLabel={annotationLabel}
-				hasAnnotations={hasAnnotations}
+				annotationTypes={annotationTypes}
 				likeButton={
 					<PageLikeButtonClient
 						className="w-10 h-10 border rounded-full"
