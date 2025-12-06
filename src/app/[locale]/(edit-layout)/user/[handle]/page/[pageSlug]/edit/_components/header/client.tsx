@@ -11,9 +11,9 @@ import {
 import type { Route } from "next";
 import { useParams } from "next/navigation";
 import { useActionState, useMemo, useState } from "react";
-import { BaseHeader } from "@/app/[locale]/_components/header/base-header.client";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
+import { BaseHeader } from "@/app/[locale]/(common-layout)/_components/header/base-header.client";
 import type { SanitizedUser } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import {

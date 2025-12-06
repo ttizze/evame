@@ -1,6 +1,6 @@
 import type { Editor as TiptapEditor } from "@tiptap/core";
 import { nanoid } from "nanoid";
-import { uploadImage } from "@/app/[locale]/_lib/upload";
+import { uploadImage } from "@/app/[locale]/_service/upload/upload-image";
 export async function handleFileUpload(
 	file: File,
 	editor: TiptapEditor,

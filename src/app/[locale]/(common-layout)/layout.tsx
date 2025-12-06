@@ -2,12 +2,12 @@ import dynamic from "next/dynamic";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { DisplayProvider } from "@/app/_context/display-provider";
-import { Footer } from "@/app/[locale]/_components/footer";
+import { Footer } from "@/app/[locale]/(common-layout)/_components/footer";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Header = dynamic(
 	() =>
-		import("@/app/[locale]/_components/header/server").then(
+		import("@/app/[locale]/(common-layout)/_components/header/server").then(
 			(mod) => mod.Header,
 		),
 	{

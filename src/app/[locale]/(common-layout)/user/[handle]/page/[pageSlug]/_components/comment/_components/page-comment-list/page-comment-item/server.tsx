@@ -1,5 +1,5 @@
 import { getImageProps } from "next/image";
-import { mdastToReact } from "@/app/[locale]/_components/mdast-to-react/server";
+import { mdastToReact } from "@/app/[locale]/(common-layout)/_components/mdast-to-react/server";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import type { PageCommentWithSegments } from "../_db/queries.server";

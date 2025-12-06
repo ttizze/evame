@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getPageLikeAndCount } from "@/app/[locale]/_components/page/page-like-button/db/queries.server";
+import { getPageLikeAndCount } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/db/queries.server";
 import { getCurrentUser } from "@/lib/auth-server";
 
 export async function GET(

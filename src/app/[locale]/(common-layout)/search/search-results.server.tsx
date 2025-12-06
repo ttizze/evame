@@ -1,7 +1,7 @@
 import type { Tag } from "@prisma/client";
-import { PageList } from "@/app/[locale]/_components/page/page-list.server";
-import { PageTagList } from "@/app/[locale]/_components/page/page-tag-list";
-import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
+import { PageList } from "@/app/[locale]/(common-layout)/_components/page/page-list.server";
+import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
+import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
 import type { PageForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
 import type { Category } from "./constants";

@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
-import { PageList } from "@/app/[locale]/_components/page/page-list.server";
-import { PaginationBar } from "@/app/[locale]/_components/pagination-bar";
 import {
 	fetchPaginatedNewPageLists,
 	fetchPaginatedPopularPageLists,
 } from "@/app/[locale]/_db/page-list-queries.server";
+import { PageList } from "@/app/[locale]/(common-layout)/_components/page/page-list.server";
+import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
 import { getCurrentUser } from "@/lib/auth-server";
 
 interface PageListServerProps {

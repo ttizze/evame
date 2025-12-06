@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type React from "react";
-import AboutSection from "@/app/[locale]/_components/about-section/server";
+import AboutSection from "@/app/[locale]/(common-layout)/_components/about-section/server";
 
 export const metadata: Metadata = {
 	title: "Evame - About",

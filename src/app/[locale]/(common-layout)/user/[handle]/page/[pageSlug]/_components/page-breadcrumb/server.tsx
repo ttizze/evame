@@ -1,7 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { Fragment } from "react";
-import { WrapSegmentClient } from "@/app/[locale]/_components/wrap-segments/client";
+import { WrapSegmentClient } from "@/app/[locale]/(common-layout)/_components/wrap-segments/client";
 import type { PageDetail, SegmentForList } from "@/app/[locale]/types";
 import {
 	Breadcrumb,
