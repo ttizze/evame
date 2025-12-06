@@ -1,9 +1,9 @@
-import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
+import { EyeIcon, MessageCircle } from "lucide-react";
 import { FloatingControls } from "@/app/[locale]/_components/floating-controls.client";
 import { PageLikeButtonClient } from "@/app/[locale]/_components/page/page-like-button/client";
 import { PageViewCounter } from "@/app/[locale]/_components/page/page-view-counter/client";
+import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
 import { createLogger } from "@/lib/logger";
-import { EyeIcon, MessageCircle } from "lucide-react";
 import type { fetchPageContext } from "../_lib/fetch-page-context";
 import { ChildPages } from "./child-pages/server";
 import { PageCommentForm } from "./comment/_components/page-comment-form/client";
@@ -31,7 +31,10 @@ export async function PageContent({ pageData, locale }: PageContentProps) {
 						// key_label の組み合わせでユニーク判定（同じkeyでも異なるlabelは別タイプ）
 						const uniqueKey = `${segType.key}_${segType.label}`;
 						if (!typeMap.has(uniqueKey)) {
-							typeMap.set(uniqueKey, { key: segType.key, label: segType.label });
+							typeMap.set(uniqueKey, {
+								key: segType.key,
+								label: segType.label,
+							});
 						}
 					}
 				}

@@ -1,9 +1,9 @@
 "use client";
 
-import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
-import type { SegmentForDetail } from "@/app/[locale]/types";
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import type { JSX } from "react";
+import { sanitizeAndParseText } from "@/app/[locale]/_lib/sanitize-and-parse-text.client";
+import type { SegmentForDetail } from "@/app/[locale]/types";
 import { WrapSegmentClient } from "../client";
 
 interface AnnotationsSectionProps<Tag extends keyof JSX.IntrinsicElements> {

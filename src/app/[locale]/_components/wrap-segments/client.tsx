@@ -11,8 +11,6 @@
  * 統一も検討したが、翻訳をmdast化すると処理コストとDB増加の懸念がある。
  */
 
-import type { Segment } from "@/app/[locale]/types";
-import { useDisplay } from "@/app/_context/display-provider";
 import type { JSX } from "react";
 import {
 	Children,
@@ -21,6 +19,8 @@ import {
 	isValidElement,
 	type ReactNode,
 } from "react";
+import { useDisplay } from "@/app/_context/display-provider";
+import type { Segment } from "@/app/[locale]/types";
 import { AnnotationsSection } from "./annotations-section/client";
 import { TranslationSection } from "./translation-section/client";
 

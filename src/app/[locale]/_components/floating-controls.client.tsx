@@ -1,7 +1,7 @@
 "use client";
+import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import { ShareDialog } from "../(common-layout)/user/[handle]/page/[pageSlug]/_components/share-dialog";
 import { DisplayModeCycle } from "./display-mode-cycle.client";
 import { useScrollVisibility } from "./hooks/use-scroll-visibility";
@@ -58,8 +58,8 @@ export function FloatingControls({
 				const isActive = visibleAnnotations.includes(uniqueKey);
 				return (
 					<Button
-						key={uniqueKey}
 						className="h-10 px-3 rounded-full text-sm"
+						key={uniqueKey}
 						onClick={() => toggleAnnotationType(annotationType)}
 						title={`${annotationType.label}を${isActive ? "非表示" : "表示"}`}
 						variant={isActive ? "default" : "outline"}
