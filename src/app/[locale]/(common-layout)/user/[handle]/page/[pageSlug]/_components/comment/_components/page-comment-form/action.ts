@@ -2,12 +2,12 @@
 import { z } from "zod";
 import { createActionFactory } from "@/app/[locale]/_action/create-action-factory";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
-import { getLocaleFromHtml } from "@/app/[locale]/_lib/get-locale-from-html";
-import { handlePageCommentAutoTranslation } from "@/app/[locale]/_lib/translate/auto-translation/handle-auto-translation";
+import { getLocaleFromHtml } from "@/app/[locale]/_domain/get-locale-from-html";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { createNotificationPageComment } from "./_db/mutations.server";
 import { processPageCommentHtml } from "./_lib/process-page-comment-html";
+import { enqueueCommentTranslation } from "./service/enqueue-comment-translation";
 
 export type CommentActionResponse = ActionResponse<
 	{ translationJobs: TranslationJobForToast[] },
@@ -65,11 +65,10 @@ export const commentAction = createActionFactory<
 			page.userId,
 			pageComment.id,
 		);
-		const results = await handlePageCommentAutoTranslation({
+		const results = await enqueueCommentTranslation({
 			currentUserId,
 			pageCommentId: pageComment.id,
 			pageId,
-			sourceLocale: locale,
 			targetLocales: ["en", "zh"],
 		});
 		return {

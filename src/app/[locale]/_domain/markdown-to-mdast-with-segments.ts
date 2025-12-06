@@ -3,10 +3,10 @@ import remarkParse from "remark-parse";
 import { unified } from "unified";
 import { removePosition } from "unist-util-remove-position";
 import { VFile } from "vfile";
-import { remarkAutoUploadImages } from "@/app/[locale]/_lib/remark-auto-upload-images";
-import { remarkCustomBlocks } from "@/app/[locale]/_lib/remark-custom-blocks";
-import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
-import { remarkHashAndSegments } from "@/app/[locale]/_lib/remark-hash-and-segments";
+import { remarkAutoUploadImages } from "./remark-auto-upload-images";
+import { remarkCustomBlocks } from "./remark-custom-blocks";
+import type { SegmentDraft } from "./remark-hash-and-segments";
+import { remarkHashAndSegments } from "./remark-hash-and-segments";
 
 interface Params {
 	header?: string;

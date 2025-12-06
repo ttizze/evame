@@ -1,5 +1,5 @@
 import { selectPageFields } from "@/app/[locale]/_db/queries.server";
-import { pickBestTranslation } from "@/app/[locale]/_lib/pick-best-translation";
+import { pickBestTranslation } from "@/app/[locale]/_utils/pick-best-translation";
 import type { SegmentForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
 import { prisma } from "@/lib/prisma";

@@ -1,6 +1,6 @@
 import type { PageStatus, Prisma } from "@prisma/client";
 import { syncSegments } from "@/app/[locale]/_db/sync-segments";
-import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
+import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
 import { createServerLogger } from "@/lib/logger.server";
 import { prisma } from "@/lib/prisma";
 import { syncSegmentMetadataAndAnnotationLinks } from "../sync-segment-metadata-and-annotation-links";

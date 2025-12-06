@@ -17,11 +17,10 @@ async function handler(req: Request) {
 			params.userId,
 			params.provider,
 			params.aiModel,
-			params.numberedElements,
+			params.segments,
 			params.targetLocale,
 			params.pageId,
 			params.title,
-			params.pageCommentId,
 		);
 
 		// Atomically increment progress based on this chunk's share

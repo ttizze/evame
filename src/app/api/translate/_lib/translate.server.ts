@@ -1,67 +1,57 @@
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { ensurePageLocaleTranslationProof } from "../_db/mutations.server";
-import {
-	fetchGeminiApiKeyByUserId,
-	getPageCommentSegments,
-	getPageSegments,
-} from "../_db/queries.server";
+import { fetchGeminiApiKeyByUserId } from "../_db/queries.server";
 import { getGeminiModelResponse } from "../_services/gemini";
 import { getVertexAIModelResponse } from "../_services/vertexai";
-import type { NumberedElement, TranslationProvider } from "../types";
+import type { SegmentElement, TranslationProvider } from "../types";
 import { extractTranslations } from "./extract-translations.server";
-import { saveTranslations } from "./io-deps";
+import { saveTranslations } from "./save-translations.server";
 
 export async function translateChunk(
 	userId: string,
 	provider: TranslationProvider,
 	aiModel: string,
-	numberedElements: NumberedElement[],
+	segments: SegmentElement[],
 	targetLocale: string,
 	pageId: number,
-	title?: string,
-	pageCommentId?: number,
+	title: string,
 ) {
-	// まだ翻訳が完了していない要素
-	let pendingElements = [...numberedElements];
+	// まだ翻訳が完了していないセグメント
+	let pendingSegments = [...segments];
 	const maxRetries = 3;
 	let attempt = 0;
 
 	// 全部翻訳が終わるか、リトライ上限まで試す
-	while (pendingElements.length > 0 && attempt < maxRetries) {
+	while (pendingSegments.length > 0 && attempt < maxRetries) {
 		attempt++;
 
 		const translatedText = await getTranslatedText(
 			userId,
 			provider,
 			aiModel,
-			pendingElements,
+			pendingSegments,
 			targetLocale,
-			title || "",
+			title,
 		);
 
 		// extractTranslationsでJSONパースを試し、失敗時は正規表現抽出
 		const partialTranslations = extractTranslations(translatedText);
 
 		if (partialTranslations.length > 0) {
-			// セグメント取得と翻訳保存を統一的に処理
-			const segments = pageCommentId
-				? await getPageCommentSegments(pageCommentId)
-				: await getPageSegments(pageId);
-
 			await saveTranslations(
 				partialTranslations,
-				segments,
+				pendingSegments,
 				targetLocale,
 				aiModel,
 			);
 
 			await ensurePageLocaleTranslationProof(pageId, targetLocale);
-			// 成功した要素をpendingElementsから除去
+			// 成功した要素をpendingSegmentsから除去
 			const translatedNumbers = new Set(
 				partialTranslations.map((e) => e.number),
 			);
-			pendingElements = pendingElements.filter(
-				(el) => !translatedNumbers.has(el.number),
+			pendingSegments = pendingSegments.filter(
+				(seg) => !translatedNumbers.has(seg.number),
 			);
 		} else {
 			console.error("今回の試行では翻訳を抽出できませんでした。");
@@ -69,9 +59,9 @@ export async function translateChunk(
 		}
 	}
 
-	if (pendingElements.length > 0) {
+	if (pendingSegments.length > 0) {
 		// リトライ回数超過後も未翻訳要素が残っている場合はエラー処理
-		console.error("一部要素は翻訳できませんでした:", pendingElements);
+		console.error("一部要素は翻訳できませんでした:", pendingSegments);
 		throw new Error("部分的な翻訳のみ完了し、残存要素は翻訳失敗しました。");
 	}
 }
@@ -80,12 +70,13 @@ async function getTranslatedText(
 	userId: string,
 	provider: TranslationProvider,
 	aiModel: string,
-	numberedElements: NumberedElement[],
+	segments: SegmentElement[],
 	targetLocale: string,
 	title: string,
 ) {
-	const source_text = numberedElements
-		.map((el) => JSON.stringify(el))
+	// AIに送るのは number と text のペアのみ（id は不要）
+	const source_text = segments
+		.map((seg) => JSON.stringify({ number: seg.number, text: seg.text }))
 		.join("\n");
 	const targetLocaleName =
 		supportedLocaleOptions.find((sl) => sl.code === targetLocale)?.name ||

@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { handlePageAutoTranslation } from "@/app/[locale]/_lib/translate/auto-translation/handle-auto-translation";
 import { prisma } from "@/lib/prisma";
 import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import { mockCurrentUser } from "@/tests/auth-helpers";
@@ -8,6 +7,7 @@ import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { editPageStatusAction } from "./action";
+import { enqueuePageTranslation } from "./service/enqueue-page-translation.server";
 
 // このテストファイル用のDBをセットアップ
 await setupDbPerFile(import.meta.url);
@@ -18,9 +18,9 @@ vi.mock("@/lib/auth-server", () => ({
 }));
 // 外部翻訳API呼び出しをモック
 vi.mock(
-	"@/app/[locale]/_lib/translate/auto-translation/handle-auto-translation",
+	"@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/header/service/enqueue-page-translation.server",
 	() => ({
-		handlePageAutoTranslation: vi.fn(),
+		enqueuePageTranslation: vi.fn(),
 	}),
 );
 vi.mock("@/lib/revalidate-utils", () => ({
@@ -105,7 +105,7 @@ describe("editPageStatusAction", () => {
 				status: "DRAFT",
 			});
 			mockCurrentUser(user);
-			vi.mocked(handlePageAutoTranslation).mockResolvedValue([
+			vi.mocked(enqueuePageTranslation).mockResolvedValue([
 				{
 					id: 1,
 					locale: "ja",
@@ -133,10 +133,9 @@ describe("editPageStatusAction", () => {
 			});
 			expect(updatedPage?.status).toBe("PUBLIC");
 
-			expect(handlePageAutoTranslation).toHaveBeenCalledWith({
+			expect(enqueuePageTranslation).toHaveBeenCalledWith({
 				currentUserId: user.id,
 				pageId: page.id,
-				sourceLocale: page.sourceLocale,
 				targetLocales: ["ja", "zh"],
 			});
 
@@ -162,7 +161,7 @@ describe("editPageStatusAction", () => {
 
 			expect(result.success).toBe(true);
 			expect(result.success && result.data).toBeUndefined();
-			expect(handlePageAutoTranslation).not.toHaveBeenCalled();
+			expect(enqueuePageTranslation).not.toHaveBeenCalled();
 
 			const updatedPage = await prisma.page.findUnique({
 				where: { id: page.id },
@@ -178,7 +177,7 @@ describe("editPageStatusAction", () => {
 				status: "DRAFT",
 			});
 			mockCurrentUser(user);
-			vi.mocked(handlePageAutoTranslation).mockResolvedValue([]);
+			vi.mocked(enqueuePageTranslation).mockResolvedValue([]);
 
 			const formData = new FormData();
 			formData.append("pageId", page.id.toString());

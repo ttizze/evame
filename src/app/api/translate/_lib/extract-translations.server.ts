@@ -1,6 +1,6 @@
-export function extractTranslations(
-	text: string,
-): { number: number; text: string }[] {
+import type { TranslatedElement } from "../types";
+
+export function extractTranslations(text: string): TranslatedElement[] {
 	try {
 		const parsed = JSON.parse(text);
 		if (Array.isArray(parsed)) {
@@ -16,7 +16,7 @@ export function extractTranslations(
 		);
 	}
 
-	const translations: { number: number; text: string }[] = [];
+	const translations: TranslatedElement[] = [];
 	const regex =
 		/{\s*"number"\s*:\s*(\d+)\s*,\s*"text"\s*:\s*"((?:\\.|[^"\\])*)"\s*}/g;
 	let match = regex.exec(text);

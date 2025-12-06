@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { fetchPageDetail } from "@/app/[locale]/_db/page-detail-queries.server";
+import { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
 
 export const fetchAboutPage = cache(async (locale: string) => {
 	const pageSlug = locale === "ja" ? "evame" : "evame-ja";

@@ -1,5 +1,13 @@
+/**
+ * 翻訳ジョブをQStashキューに投入するエントリーポイント
+ *
+ * ファンアウトパターンの起点:
+ * enqueueTranslate → QStash → /api/translate (オーケストレーター)
+ *                                  ↓
+ *                            QStash → /api/translate/chunk ×N (並列)
+ */
 import { BASE_URL } from "@/app/_constants/base-url";
-import type { TranslateJobParams } from "../../../api/translate/types";
+import type { TranslateJobParams } from "@/app/api/translate/types";
 
 type Options = {
 	dedupe?: string;

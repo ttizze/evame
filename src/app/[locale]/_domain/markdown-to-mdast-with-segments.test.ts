@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { markdownToMdastWithSegments } from "@/app/[locale]/_lib/markdown-to-mdast-with-segments";
+import { markdownToMdastWithSegments } from "@/app/[locale]/_domain/markdown-to-mdast-with-segments";
 
 describe("markdownToMdastWithSegments – custom blocks", () => {
 	it("segments other custom block types (gatha, indent, centre)", async () => {

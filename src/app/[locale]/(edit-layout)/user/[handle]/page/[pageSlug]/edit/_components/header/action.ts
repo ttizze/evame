@@ -5,11 +5,11 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
-import { handlePageAutoTranslation } from "@/app/[locale]/_lib/translate/auto-translation/handle-auto-translation";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import { updatePageStatus } from "./db/mutations.server";
+import { enqueuePageTranslation } from "./service/enqueue-page-translation.server";
 
 const editPageStatusSchema = z.object({
 	pageId: z.coerce.number().min(1),
@@ -50,10 +50,9 @@ export async function editPageStatusAction(
 
 	let translationJobs: TranslationJobForToast[] | undefined;
 	if (status === "PUBLIC") {
-		translationJobs = await handlePageAutoTranslation({
+		translationJobs = await enqueuePageTranslation({
 			currentUserId: currentUser.id,
 			pageId,
-			sourceLocale: page.sourceLocale,
 			targetLocales,
 		});
 	}

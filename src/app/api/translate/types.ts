@@ -1,10 +1,19 @@
-export type NumberedElement = {
+/** 翻訳対象セグメント（id付き） */
+export type SegmentElement = {
+	id: number;
+	number: number;
+	text: string;
+};
+
+/** 翻訳結果の要素（idなし、number と翻訳後 text のペア） */
+export type TranslatedElement = {
 	number: number;
 	text: string;
 };
 
 export type TranslationProvider = "gemini" | "vertex";
 
+/** action → /api/translate へ渡すパラメータ */
 export interface TranslateJobParams {
 	userId: string;
 	pageId: number;
@@ -12,14 +21,16 @@ export interface TranslateJobParams {
 	provider: TranslationProvider;
 	aiModel: string;
 	targetLocale: string;
-	title: string;
-	numberedElements: NumberedElement[];
-	pageCommentId?: number;
+	pageCommentId: number | null;
+	annotationContentId: number | null;
 }
 
-export interface TranslateChunkParams
-	extends Omit<TranslateJobParams, "numberedElements"> {
-	numberedElements: NumberedElement[];
+/** /api/translate → /api/translate/chunk へ渡すパラメータ */
+export interface TranslateChunkParams extends TranslateJobParams {
+	/** チャンク分割後のセグメント（id, number, text を含む） */
+	segments: SegmentElement[];
+	/** ページタイトル（翻訳プロンプト用） */
+	title: string;
 	totalChunks: number;
 	chunkIndex: number;
 }

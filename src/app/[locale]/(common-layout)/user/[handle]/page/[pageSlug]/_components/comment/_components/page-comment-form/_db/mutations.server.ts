@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { ContentKind } from "@prisma/client";
 import { syncSegments } from "@/app/[locale]/_db/sync-segments";
-import type { SegmentDraft } from "@/app/[locale]/_lib/remark-hash-and-segments";
+import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
 import { prisma } from "@/lib/prisma";
 export async function upsertPageCommentAndSegments(p: {
 	pageId: number;

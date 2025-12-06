@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { BASE_URL } from "@/app/_constants/base-url";
-import { mdastToText } from "@/app/[locale]/_lib/mdast-to-text";
+import { mdastToText } from "@/app/[locale]/_domain/mdast-to-text";
 import { buildAlternateLocales } from "./build-alternate-locales";
 import type { fetchPageContext } from "./fetch-page-context";
 
