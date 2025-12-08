@@ -1,5 +1,6 @@
 // scripts/sqldef.mjs
 import { execFileSync } from "child_process";
+import { existsSync } from "fs";
 import path from "path";
 
 const url = new URL(process.env.DATABASE_URL);
@@ -30,5 +31,12 @@ if (subcommand === "export") {
 
 // ★ pnpx / bunx は使わず、node_modules/.bin/sqldef を直叩き
 const bin = path.join(process.cwd(), "node_modules", ".bin", "sqldef");
+
+// バイナリ未配置なら postinstall を再実行してリカバリ
+const psqldefBin = path.join(process.cwd(), "node_modules", "sqldef", "psqldef");
+if (!existsSync(psqldefBin)) {
+  const postinstall = path.join(process.cwd(), "node_modules", "sqldef", "postinstall.js");
+  execFileSync("node", [postinstall], { stdio: "inherit" });
+}
 
 execFileSync(bin, args, { stdio: "inherit" });
