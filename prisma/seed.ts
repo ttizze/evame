@@ -1,8 +1,12 @@
-import { ContentKind, PrismaClient } from "@prisma/client";
+import "dotenv/config";
 
+import { Kysely, PostgresDialect, sql } from "kysely";
+import type { DB } from "kysely-codegen";
+// pg は ESM ではデフォルトエクスポートから取り出す必要がある
+import pg from "pg";
 import { LOCALE_CONTENT } from "./seed-data/content";
 
-const prisma = new PrismaClient();
+const { Pool } = pg;
 
 type LocaleKey = keyof typeof LOCALE_CONTENT;
 
@@ -31,8 +35,41 @@ const SEGMENT_KEYS: SegmentKey[] = (() => {
 const EN_TRANSLATIONS: LocaleKey[] = ["ja", "zh", "ko", "es"];
 const JA_TRANSLATIONS: LocaleKey[] = ["en", "zh", "ko", "es"];
 
+const db = new Kysely<DB>({
+	dialect: new PostgresDialect({
+		pool: new Pool({
+			connectionString: process.env.DATABASE_URL,
+		}),
+	}),
+});
+
 async function seed() {
-	await addRequiredData();
+	// 必要なシードのみ挿入する
+	const primarySegmentTypeId = await ensurePrimarySegmentType();
+	const evameUserId = await ensureEvameUser();
+	const { evameEnPageId, evameJaPageId } = await ensurePages(evameUserId);
+
+	const segmentsByPage: { pageId: number; segments: SegmentData[] }[] = [
+		{
+			pageId: evameEnPageId,
+			segments: buildSegmentsForLocale("en", EN_TRANSLATIONS),
+		},
+		{
+			pageId: evameJaPageId,
+			segments: buildSegmentsForLocale("ja", JA_TRANSLATIONS),
+		},
+	];
+
+	for (const { pageId, segments } of segmentsByPage) {
+		await upsertSegmentsWithTranslations({
+			pageId,
+			segments,
+			segmentTypeId: primarySegmentTypeId,
+			userId: evameUserId,
+		});
+	}
+
+	console.log("Seed completed");
 }
 
 interface TranslationInput {
@@ -48,46 +85,199 @@ interface SegmentData {
 	translations: Record<string, string>;
 }
 
-async function upsertSegment(params: {
-	contentId: number;
-	number: number;
-	text: string;
-	textAndOccurrenceHash: string;
-	segmentTypeId: number;
-	translations: TranslationInput[];
-}) {
-	await prisma.segment.upsert({
-		where: {
-			contentId_number: { contentId: params.contentId, number: params.number },
-		},
-		update: {
-			text: params.text,
-			number: params.number,
-			textAndOccurrenceHash: params.textAndOccurrenceHash,
-			segmentTypeId: params.segmentTypeId,
-			segmentTranslations: {
-				create: params.translations.map((t) => ({
-					locale: t.locale,
-					text: t.text,
-					userId: t.userId,
-				})),
-			},
-		},
-		create: {
-			contentId: params.contentId,
-			text: params.text,
-			number: params.number,
-			textAndOccurrenceHash: params.textAndOccurrenceHash,
-			segmentTypeId: params.segmentTypeId,
-			segmentTranslations: {
-				create: params.translations.map((t) => ({
-					locale: t.locale,
-					text: t.text,
-					userId: t.userId,
-				})),
-			},
-		},
+async function ensurePrimarySegmentType(): Promise<number> {
+	// PRIMARY がなければ作る。あれば ID を返す。
+	const existing = await db
+		.selectFrom("segment_types")
+		.select(["id"])
+		.where("key", "=", "PRIMARY")
+		.executeTakeFirst();
+
+	if (existing) return existing.id;
+
+	const inserted = await db
+		.insertInto("segment_types")
+		.values({ key: "PRIMARY", label: "Primary" })
+		.returning("id")
+		.executeTakeFirst();
+
+	if (!inserted?.id) {
+		throw new Error("failed to insert segment_types.PRIMARY");
+	}
+	return inserted.id;
+}
+
+async function ensureEvameUser(): Promise<string> {
+	const existing = await db
+		.selectFrom("users")
+		.select(["id"])
+		.where("handle", "=", "evame")
+		.executeTakeFirst();
+
+	if (existing) {
+		// 必要項目だけ更新
+		await db
+			.updateTable("users")
+			.set({
+				provider: "Admin",
+				image: "https://evame.tech/favicon.svg",
+			})
+			.where("id", "=", existing.id)
+			.execute();
+		return existing.id;
+	}
+
+	const inserted = await db
+		.insertInto("users")
+		.values({
+			handle: "evame",
+			name: "evame",
+			provider: "Admin",
+			image: "https://evame.tech/favicon.svg",
+			email: "evame@evame.tech",
+			profile: "",
+			twitterHandle: "",
+			plan: "free",
+			total_points: 0,
+			is_ai: false,
+		})
+		.returning("id")
+		.executeTakeFirst();
+
+	if (!inserted?.id) throw new Error("failed to insert user evame");
+	return inserted.id;
+}
+
+async function ensurePages(userId: string) {
+	const evameEnPageId = await upsertPage({
+		slug: "evame",
+		sourceLocale: "en",
+		content: LOCALE_CONTENT.en.heroHeader,
+		aiLocales: EN_TRANSLATIONS,
+		userId,
 	});
+
+	const evameJaPageId = await upsertPage({
+		slug: "evame-ja",
+		sourceLocale: "ja",
+		content: LOCALE_CONTENT.ja.heroHeader,
+		aiLocales: JA_TRANSLATIONS,
+		userId,
+	});
+
+	return { evameEnPageId, evameJaPageId };
+}
+
+async function upsertPage(params: {
+	slug: string;
+	sourceLocale: string;
+	content: string;
+	aiLocales: string[];
+	userId: string;
+}): Promise<number> {
+	const existing = await db
+		.selectFrom("pages")
+		.select(["id"])
+		.where("slug", "=", params.slug)
+		.executeTakeFirst();
+
+	if (existing) {
+		await db
+			.updateTable("pages")
+			.set({
+				source_locale: params.sourceLocale,
+				// mdast_json は JSONB カラムのためプレーン文字列は入らない
+				mdast_json: buildMdastJson(params.content),
+				status: "DRAFT",
+			})
+			.where("id", "=", existing.id)
+			.execute();
+
+		// 既存の translation_jobs を一度クリアして入れ直す
+		await db
+			.deleteFrom("translation_jobs")
+			.where("pageId", "=", existing.id)
+			.execute();
+
+		await insertTranslationJobs(existing.id, params.aiLocales);
+		return existing.id;
+	}
+
+	const contentId = await insertContentRow();
+
+	const insertedPage = await db
+		.insertInto("pages")
+		.values({
+			id: contentId,
+			slug: params.slug,
+			source_locale: params.sourceLocale,
+			// mdast_json は JSONB カラムのためプレーン文字列は入らない
+			mdast_json: buildMdastJson(params.content),
+			status: "DRAFT",
+			user_id: params.userId,
+			order: 0,
+			parent_id: null,
+		})
+		.returning("id")
+		.executeTakeFirst();
+
+	if (!insertedPage?.id) {
+		throw new Error(`failed to insert page ${params.slug}`);
+	}
+
+	await insertTranslationJobs(insertedPage.id, params.aiLocales);
+	return insertedPage.id;
+}
+
+function buildMdastJson(text: string) {
+	return {
+		type: "root",
+		children: [
+			{
+				type: "paragraph",
+				children: [
+					{
+						type: "text",
+						value: text,
+					},
+				],
+			},
+		],
+	};
+}
+
+async function insertContentRow(): Promise<number> {
+	const inserted = await db
+		.insertInto("contents")
+		.values({
+			kind: "PAGE",
+			import_file_id: null,
+		})
+		.returning("id")
+		.executeTakeFirst();
+
+	if (!inserted?.id) throw new Error("failed to insert contents row");
+	return inserted.id;
+}
+
+async function insertTranslationJobs(pageId: number, locales: string[]) {
+	if (!locales.length) return;
+
+	await db
+		.insertInto("translation_jobs")
+		.values(
+			locales.map((locale) => ({
+				pageId,
+				userId: null,
+				locale,
+				aiModel: "test-model",
+				status: "COMPLETED",
+				progress: 0,
+				error: "",
+				updatedAt: new Date(),
+			})),
+		)
+		.execute();
 }
 
 function getLocalizedText(locale: LocaleKey, key: SegmentKey): string {
@@ -137,144 +327,67 @@ function buildSegmentsForLocale(
 	});
 }
 
-async function addRequiredData() {
-	const primarySegmentType = await prisma.segmentType.upsert({
-		where: { id: 1 },
-		update: {},
-		create: { key: "PRIMARY", label: "Primary" },
-	});
-
-	const { evame, evameEnPage, evameJaPage } = await createUserAndPages();
-
-	const segmentsByPage: { pageId: number; segments: SegmentData[] }[] = [
-		{
-			pageId: evameEnPage.id,
-			segments: buildSegmentsForLocale("en", EN_TRANSLATIONS),
-		},
-		{
-			pageId: evameJaPage.id,
-			segments: buildSegmentsForLocale("ja", JA_TRANSLATIONS),
-		},
-	];
-
-	const BATCH_SIZE = 20;
-	const upsertPromises = segmentsByPage.flatMap(({ pageId, segments }) =>
-		segments.map((segment) => async () => {
-			const page = await prisma.page.findUnique({
-				where: { id: pageId },
-				select: { id: true },
-			});
-
-			if (!page?.id) {
-				throw new Error(`Page ${pageId} does not have a content`);
-			}
-
-			await upsertSegment({
-				contentId: page.id,
+async function upsertSegmentsWithTranslations(params: {
+	pageId: number;
+	segments: SegmentData[];
+	segmentTypeId: number;
+	userId: string;
+}) {
+	for (const segment of params.segments) {
+		const segmentRow = await db
+			.insertInto("segments")
+			.values({
+				content_id: params.pageId,
 				number: segment.number,
 				text: segment.text,
-				textAndOccurrenceHash: segment.textAndOccurrenceHash,
-				segmentTypeId: primarySegmentType.id,
-				translations: Object.entries(segment.translations).map(
-					([locale, text]) => ({
-						locale,
-						text,
-						userId: evame.id,
-					}),
-				),
-			});
-		}),
-	);
+				text_and_occurrence_hash: segment.textAndOccurrenceHash,
+				segment_type_id: params.segmentTypeId,
+				created_at: new Date(),
+			})
+			.onConflict((oc) =>
+				oc.columns(["content_id", "number"]).doUpdateSet({
+					text: segment.text,
+					text_and_occurrence_hash: segment.textAndOccurrenceHash,
+					segment_type_id: params.segmentTypeId,
+					created_at: sql`EXCLUDED.created_at`,
+				}),
+			)
+			.returning(["id"])
+			.executeTakeFirst();
 
-	for (let i = 0; i < upsertPromises.length; i += BATCH_SIZE) {
-		const batch = upsertPromises.slice(i, i + BATCH_SIZE);
-		await Promise.all(batch.map((fn) => fn()));
-		console.log(
-			`Processed batch ${i / BATCH_SIZE + 1} of ${Math.ceil(upsertPromises.length / BATCH_SIZE)}`,
-		);
-	}
-
-	console.log("Required data added successfully");
-
-	return { evame, evameEnPage, evameJaPage };
-}
-
-async function createUserAndPages() {
-	const evame = await prisma.user.upsert({
-		where: { handle: "evame" },
-		update: {
-			provider: "Admin",
-			image: "https://evame.tech/favicon.svg",
-		},
-		create: {
-			handle: "evame",
-			name: "evame",
-			provider: "Admin",
-			image: "https://evame.tech/favicon.svg",
-			email: "evame@evame.tech",
-		},
-	});
-
-	const createPage = async (
-		slug: string,
-		sourceLocale: string,
-		content: string,
-		aiLocales: string[],
-	) => {
-		const existingPage = await prisma.page.findUnique({
-			where: { slug },
-			include: { content: true },
-		});
-
-		if (existingPage) {
-			return await prisma.page.update({
-				where: { id: existingPage.id },
-				data: {
-					sourceLocale,
-					mdastJson: content,
-					status: "DRAFT",
-					translationJobs: {
-						create: aiLocales.map((locale) => ({
-							locale,
-							status: "COMPLETED",
-							aiModel: "test-model",
-						})),
-					},
-				},
-			});
-		} else {
-			const pageContent = await prisma.content.create({
-				data: {
-					kind: ContentKind.PAGE,
-				},
-			});
-
-			return await prisma.page.create({
-				data: {
-					slug,
-					sourceLocale,
-					mdastJson: content,
-					status: "DRAFT",
-					userId: evame.id,
-					id: pageContent.id,
-					translationJobs: {
-						create: aiLocales.map((locale) => ({
-							locale,
-							status: "COMPLETED",
-							aiModel: "test-model",
-						})),
-					},
-				},
-			});
+		if (!segmentRow?.id) {
+			throw new Error(`failed to upsert segment ${segment.number}`);
 		}
-	};
 
-	const [evameEnPage, evameJaPage] = await Promise.all([
-		createPage("evame", "en", LOCALE_CONTENT.en.heroHeader, EN_TRANSLATIONS),
-		createPage("evame-ja", "ja", LOCALE_CONTENT.ja.heroHeader, JA_TRANSLATIONS),
-	]);
+		// 既存翻訳をクリアしてから挿入する
+		await db
+			.deleteFrom("segment_translations")
+			.where("segment_id", "=", segmentRow.id)
+			.execute();
 
-	return { evame, evameEnPage, evameJaPage };
+		const translations: TranslationInput[] = Object.entries(
+			segment.translations,
+		).map(([locale, text]) => ({
+			locale,
+			text,
+			userId: params.userId,
+		}));
+
+		if (translations.length > 0) {
+			await db
+				.insertInto("segment_translations")
+				.values(
+					translations.map((t) => ({
+						segment_id: segmentRow.id,
+						locale: t.locale,
+						text: t.text,
+						user_id: t.userId,
+						point: 0,
+					})),
+				)
+				.execute();
+		}
+	}
 }
 
 seed()
@@ -283,5 +396,5 @@ seed()
 		process.exit(1);
 	})
 	.finally(async () => {
-		await prisma.$disconnect();
+		await db.destroy();
 	});
