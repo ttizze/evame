@@ -1,37 +1,37 @@
 // scripts/sqldef.mjs
-// psqldef バイナリを確保し、DBマイグレーションを実行する
+// psqldef バイナリを直接叩いて DB マイグレーションを実行する
 import { execFileSync, execSync } from "child_process";
 import { chmodSync, existsSync, writeFileSync } from "fs";
 import path from "path";
 
 const dbUrl = new URL(process.env.DATABASE_URL);
+const database = dbUrl.pathname.slice(1);
 
+// psqldef に渡す共通オプション
 const common = [
-  "--type=postgres",
+  database,
   `--host=${dbUrl.hostname}`,
-  `--port=${dbUrl.port}`,
-  `--database=${dbUrl.pathname.slice(1)}`,
   `--user=${dbUrl.username}`,
   `--password=${dbUrl.password}`,
-  "--file=schema.sql",
 ];
+if (dbUrl.port) common.push(`--port=${dbUrl.port}`);
 
 const subcommand = process.argv[2]; // export | plan | migrate
 
 let args;
 if (subcommand === "export") {
-  args = ["export", ...common, "--no-confirm"];
+  // 現在の DB スキーマを出力
+  args = [...common, "--export"];
 } else if (subcommand === "plan") {
-  args = ["import", ...common, "--no-confirm", "--dry"];
+  // dry-run: 変更内容を表示するだけで実行しない
+  args = [...common, "--dry-run", "--file=schema.sql"];
 } else if (subcommand === "migrate") {
-  args = ["import", ...common, "--no-confirm"];
+  // 実際にマイグレーション実行
+  args = [...common, "--file=schema.sql"];
 } else {
   console.error("Usage: bun scripts/sqldef.mjs [export|plan|migrate]");
   process.exit(1);
 }
-
-// ★ pnpx / bunx は使わず、node_modules/.bin/sqldef を直叩き
-const bin = path.join(process.cwd(), "node_modules", ".bin", "sqldef");
 
 // psqldef バイナリが無ければ GitHub から直接取得（postinstall が動かない環境用）
 const sqldefDir = path.join(process.cwd(), "node_modules", "sqldef");
@@ -64,4 +64,5 @@ if (!existsSync(psqldefBin)) {
   console.log("psqldef downloaded successfully");
 }
 
-execFileSync(bin, args, { stdio: "inherit" });
+// psqldef を直接実行（node-sqldef ラッパーを経由しない）
+execFileSync(psqldefBin, args, { stdio: "inherit" });
