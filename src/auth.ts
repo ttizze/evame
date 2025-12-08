@@ -64,10 +64,7 @@ export const auth = betterAuth({
 		user: {
 			create: {
 				before: async (user) => {
-					const handle =
-						typeof user.handle === "string" && user.handle.trim()
-							? user.handle
-							: createId();
+					const handle = createId();
 					const name =
 						typeof user.name === "string" && user.name.trim()
 							? user.name
