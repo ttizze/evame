@@ -80,7 +80,7 @@ CREATE TABLE "public"."contents" (
     "id" serial NOT NULL,
     "kind" "ContentKind" NOT NULL,
     "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) NOT NULL,
+    "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "import_file_id" integer,
     CONSTRAINT contents_pkey PRIMARY KEY ("id")
 );
@@ -197,7 +197,7 @@ CREATE TABLE "public"."page_comments" (
     "id" integer NOT NULL,
     "page_id" integer NOT NULL,
     "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) NOT NULL,
+    "updated_at" timestamp(3) NOT NULL  DEFAULT CURRENT_TIMESTAMP,
     "locale" text NOT NULL,
     "user_id" text NOT NULL,
     "parent_id" integer,
@@ -253,7 +253,7 @@ CREATE TABLE "public"."pages" (
     "slug" text NOT NULL,
     "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "source_locale" text NOT NULL DEFAULT 'unknown'::text,
-    "updated_at" timestamp(3) NOT NULL,
+    "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "status" "PageStatus" NOT NULL DEFAULT 'DRAFT'::"PageStatus",
     "user_id" text NOT NULL,
     "mdast_json" jsonb NOT NULL,
@@ -436,7 +436,7 @@ CREATE TABLE "public"."translation_jobs" (
     "progress" integer NOT NULL DEFAULT 0,
     "error" text NOT NULL DEFAULT ''::text,
     "createdAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" timestamp(3) NOT NULL,
+    "updatedAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT translation_jobs_pkey PRIMARY KEY ("id")
 );
 
@@ -455,7 +455,7 @@ CREATE TABLE "public"."translation_votes" (
     "user_id" text NOT NULL,
     "is_upvote" boolean NOT NULL,
     "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) NOT NULL
+    "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX translation_votes_translation_id_idx ON public.translation_votes USING btree (translation_id);
@@ -490,7 +490,7 @@ CREATE TABLE "public"."user_settings" (
     "user_id" text NOT NULL,
     "target_locales" text[] NOT NULL DEFAULT ARRAY[]::text[],
     "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) NOT NULL,
+    "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT user_settings_pkey PRIMARY KEY ("id")
 );
 
@@ -509,7 +509,7 @@ CREATE TABLE "public"."users" (
     "is_ai" boolean NOT NULL DEFAULT false,
     "provider" text NOT NULL DEFAULT 'Credentials'::text,
     "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) NOT NULL,
+    "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "name" text NOT NULL DEFAULT 'new_user'::text,
     "handle" text NOT NULL,
     "profile" text NOT NULL DEFAULT ''::text,
