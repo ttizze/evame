@@ -1,8 +1,9 @@
 // scripts/sqldef.ts
 // psqldef バイナリを直接叩いて DB マイグレーションを実行する
-import { execFileSync, execSync } from "child_process";
-import { chmodSync, existsSync, writeFileSync } from "fs";
-import path from "path";
+
+import { execFileSync, execSync } from "node:child_process";
+import { chmodSync, existsSync, writeFileSync } from "node:fs";
+import path from "node:path";
 
 const SCHEMA_FILE = "schema.sql";
 const SQLDEF_DIR = path.join(process.cwd(), "node_modules", "sqldef");
@@ -46,7 +47,10 @@ async function ensurePsqldef(): Promise<void> {
 
 // DATABASE_URL から psqldef 用の接続オプションを生成
 function buildConnectionArgs(): string[] {
-	const dbUrl = new URL(process.env.DATABASE_URL!);
+	if (!process.env.DATABASE_URL) {
+		throw new Error("DATABASE_URL is not defined");
+	}
+	const dbUrl = new URL(process.env.DATABASE_URL);
 	const args = [
 		dbUrl.pathname.slice(1), // database name
 		`--host=${dbUrl.hostname}`,
