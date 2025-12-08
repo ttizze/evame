@@ -439,7 +439,7 @@ ALTER TABLE ONLY "public"."user_credentials" ADD CONSTRAINT "user_credentials_us
 CREATE TABLE "public"."user_settings" (
     "id" serial NOT NULL,
     "user_id" text NOT NULL,
-    "target_locales" text[] DEFAULT ARRAY[]::text[],
+    "target_locales" text[] NOT NULL DEFAULT ARRAY[]::text[],
     "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" timestamp(3) NOT NULL,
     CONSTRAINT user_settings_pkey PRIMARY KEY ("id")

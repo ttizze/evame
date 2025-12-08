@@ -69,4 +69,12 @@ if (!subcommandOptions) {
 await ensurePsqldef();
 
 const args = [...buildConnectionArgs(), ...subcommandOptions];
-execFileSync(PSQLDEF_BIN, args, { stdio: "inherit" });
+
+// export の場合は出力を schema.sql に書き込む
+if (subcommand === "export") {
+  const output = execFileSync(PSQLDEF_BIN, args, { encoding: "utf-8" });
+  writeFileSync(SCHEMA_FILE, output);
+  console.log(`Exported schema to ${SCHEMA_FILE}`);
+} else {
+  execFileSync(PSQLDEF_BIN, args, { stdio: "inherit" });
+}
