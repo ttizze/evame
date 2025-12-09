@@ -1,12 +1,12 @@
-import type { SegmentTranslation, TranslationVote } from "@prisma/client";
+import type { DB } from "kysely-codegen";
 import type { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
 import type { SanitizedUser } from "../types";
 
-export type TranslationWithUser = SegmentTranslation & {
+export type TranslationWithUser = DB["segmentTranslations"] & {
 	user: SanitizedUser;
 };
 export type TranslationWithInfo = TranslationWithUser & {
-	currentUserVote: TranslationVote | null; // null = 未投票
+	currentUserVote: DB["translationVotes"] | null; // null = 未投票
 };
 
 // fetchPageDetail の戻り値から型を推論

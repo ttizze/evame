@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/db/kysely";
 
 export interface PopularTag {
 	id: number;
@@ -14,21 +14,24 @@ export interface PopularTag {
  * @returns Array of popular tags with usage count
  */
 export async function fetchPopularTags(limit: number): Promise<PopularTag[]> {
-	return prisma.tag.findMany({
-		take: limit,
-		orderBy: {
-			pages: {
-				_count: "desc",
-			},
+	const tags = await db
+		.selectFrom("tags")
+		.leftJoin("tagPages", "tagPages.tagId", "tags.id")
+		.select([
+			"tags.id",
+			"tags.name",
+			({ fn }) => fn.count<number>("tagPages.pageId").as("pageCount"),
+		])
+		.groupBy(["tags.id", "tags.name"])
+		.orderBy("pageCount", "desc")
+		.limit(limit)
+		.execute();
+
+	return tags.map((tag) => ({
+		id: tag.id,
+		name: tag.name,
+		_count: {
+			pages: Number(tag.pageCount) || 0,
 		},
-		select: {
-			id: true,
-			name: true,
-			_count: {
-				select: {
-					pages: true,
-				},
-			},
-		},
-	});
+	}));
 }

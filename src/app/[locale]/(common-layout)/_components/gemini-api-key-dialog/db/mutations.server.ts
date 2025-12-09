@@ -1,5 +1,5 @@
+import { db } from "@/db/kysely";
 import { encrypt } from "@/lib/encryption.server";
-import { prisma } from "@/lib/prisma";
 
 export const updateGeminiApiKey = async (
 	userId: string,
@@ -7,16 +7,17 @@ export const updateGeminiApiKey = async (
 ) => {
 	const encryptedKey = encrypt(geminiApiKey);
 
-	await prisma.geminiApiKey.upsert({
-		where: {
-			userId: userId,
-		},
-		create: {
-			userId: userId,
+	// Kysely の onConflict を使って upsert を実装
+	await db
+		.insertInto("geminiApiKeys")
+		.values({
+			userId,
 			apiKey: encryptedKey,
-		},
-		update: {
-			apiKey: encryptedKey,
-		},
-	});
+		})
+		.onConflict((oc) =>
+			oc.column("userId").doUpdateSet({
+				apiKey: encryptedKey,
+			}),
+		)
+		.execute();
 };

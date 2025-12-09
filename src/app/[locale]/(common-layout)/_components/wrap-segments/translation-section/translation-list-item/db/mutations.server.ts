@@ -1,18 +1,24 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/db/kysely";
 
 export const deleteOwnTranslation = async (
 	currentHandle: string,
 	translationId: number,
 ) => {
-	const translation = await prisma.segmentTranslation.findUnique({
-		where: { id: translationId },
-		select: { user: true },
-	});
+	const translation = await db
+		.selectFrom("segmentTranslations")
+		.innerJoin("users", "users.id", "segmentTranslations.userId")
+		.select(["users.handle"])
+		.where("segmentTranslations.id", "=", translationId)
+		.executeTakeFirst();
+
 	if (!translation) {
 		return { error: "Translation not found" };
 	}
-	if (translation.user.handle !== currentHandle) {
+	if (translation.handle !== currentHandle) {
 		return { error: "Unauthorized" };
 	}
-	await prisma.segmentTranslation.delete({ where: { id: translationId } });
+	await db
+		.deleteFrom("segmentTranslations")
+		.where("id", "=", translationId)
+		.execute();
 };

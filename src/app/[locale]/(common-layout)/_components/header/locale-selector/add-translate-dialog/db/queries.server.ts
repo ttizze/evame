@@ -1,11 +1,12 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/db/kysely";
 
 /** ページに紐づくコメントのID一覧を取得 */
 export async function fetchPageCommentIds(pageId: number): Promise<number[]> {
-	const comments = await prisma.pageComment.findMany({
-		where: { pageId },
-		select: { id: true },
-	});
+	const comments = await db
+		.selectFrom("pageComments")
+		.select(["id"])
+		.where("pageId", "=", pageId)
+		.execute();
 	return comments.map((c) => c.id);
 }
 
@@ -19,21 +20,28 @@ export async function fetchPageCommentIds(pageId: number): Promise<number[]> {
 export async function fetchAnnotationContentIdsForPage(
 	pageId: number,
 ): Promise<number[]> {
-	const links = await prisma.segmentAnnotationLink.findMany({
-		where: {
-			mainSegment: { contentId: pageId },
-			annotationSegment: { contentId: { not: pageId } },
-		},
-		select: {
-			annotationSegment: { select: { contentId: true } },
-		},
-	});
+	const links = await db
+		.selectFrom("segmentAnnotationLinks")
+		.innerJoin(
+			"segments as mainSegment",
+			"mainSegment.id",
+			"segmentAnnotationLinks.mainSegmentId",
+		)
+		.innerJoin(
+			"segments as annotationSegment",
+			"annotationSegment.id",
+			"segmentAnnotationLinks.annotationSegmentId",
+		)
+		.select(["annotationSegment.contentId"])
+		.where("mainSegment.contentId", "=", pageId)
+		.where("annotationSegment.contentId", "!=", pageId)
+		.execute();
 
 	// 重複を除去してコンテンツID一覧を返す
 	const contentIds = new Set<number>();
-	for (const { annotationSegment } of links) {
-		if (annotationSegment) {
-			contentIds.add(annotationSegment.contentId);
+	for (const link of links) {
+		if (link.contentId) {
+			contentIds.add(link.contentId);
 		}
 	}
 	return Array.from(contentIds);

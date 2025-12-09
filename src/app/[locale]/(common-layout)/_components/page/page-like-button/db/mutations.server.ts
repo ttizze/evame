@@ -1,27 +1,35 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/db/kysely";
 
 export async function togglePageLike(pageId: number, currentUserId: string) {
-	const page = await prisma.page.findUnique({ where: { id: pageId } });
+	const page = await db
+		.selectFrom("pages")
+		.selectAll()
+		.where("id", "=", pageId)
+		.executeTakeFirst();
+
 	if (!page) {
 		throw new Error("Page not found");
 	}
-	const existing = await prisma.likePage.findFirst({
-		where: {
-			pageId: page.id,
-			userId: currentUserId,
-		},
-	});
+
+	const existing = await db
+		.selectFrom("likePages")
+		.selectAll()
+		.where("pageId", "=", page.id)
+		.where("userId", "=", currentUserId)
+		.executeTakeFirst();
+
 	let liked: boolean;
 	if (existing) {
-		await prisma.likePage.delete({ where: { id: existing.id } });
+		await db.deleteFrom("likePages").where("id", "=", existing.id).execute();
 		liked = false;
 	} else {
-		await prisma.likePage.create({
-			data: {
+		await db
+			.insertInto("likePages")
+			.values({
 				pageId: page.id,
 				userId: currentUserId,
-			},
-		});
+			})
+			.execute();
 		await createPageLikeNotification({
 			pageId: page.id,
 			targetUserId: page.userId,
@@ -31,9 +39,13 @@ export async function togglePageLike(pageId: number, currentUserId: string) {
 	}
 
 	// 更新後の最新のいいね数を取得する
-	const likeCount = await prisma.likePage.count({
-		where: { pageId: page.id },
-	});
+	const likeCountResult = await db
+		.selectFrom("likePages")
+		.select(({ fn }) => [fn.count<number>("id").as("count")])
+		.where("pageId", "=", page.id)
+		.executeTakeFirst();
+
+	const likeCount = likeCountResult?.count ?? 0;
 
 	return { liked, likeCount };
 }
@@ -47,12 +59,13 @@ async function createPageLikeNotification({
 	targetUserId: string;
 	actorId: string;
 }) {
-	await prisma.notification.create({
-		data: {
+	await db
+		.insertInto("notifications")
+		.values({
 			pageId,
 			userId: targetUserId,
 			actorId,
 			type: "PAGE_LIKE",
-		},
-	});
+		})
+		.execute();
 }

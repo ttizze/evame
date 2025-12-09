@@ -1,23 +1,27 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/db/kysely";
 
 export async function getPageLikeAndCount(
 	pageId: number,
 	currentUserId: string,
 ) {
 	// Get like count
-	const likeCount = await prisma.likePage.count({
-		where: { pageId },
-	});
+	const likeCountResult = await db
+		.selectFrom("likePages")
+		.select(({ fn }) => [fn.count<number>("id").as("count")])
+		.where("pageId", "=", pageId)
+		.executeTakeFirst();
 
-	// Check if current user has liked the
+	const likeCount = likeCountResult?.count ?? 0;
+
+	// Check if current user has liked the page
 	let liked = false;
 	if (currentUserId) {
-		const existingLike = await prisma.likePage.findFirst({
-			where: {
-				pageId,
-				userId: currentUserId,
-			},
-		});
+		const existingLike = await db
+			.selectFrom("likePages")
+			.selectAll()
+			.where("pageId", "=", pageId)
+			.where("userId", "=", currentUserId)
+			.executeTakeFirst();
 		liked = !!existingLike;
 	}
 

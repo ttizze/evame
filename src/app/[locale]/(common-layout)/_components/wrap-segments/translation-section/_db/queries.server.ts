@@ -1,23 +1,19 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/db/kysely";
 
 export async function findPageIdBySegmentTranslationId(
 	segmentTranslationId: number,
 ): Promise<number> {
-	const st = await prisma.segmentTranslation.findUnique({
-		where: { id: segmentTranslationId },
-		select: {
-			segment: {
-				select: {
-					content: {
-						select: { page: { select: { id: true } } },
-					},
-				},
-			},
-		},
-	});
-	const id = st?.segment?.content?.page?.id;
-	if (!id) {
+	const result = await db
+		.selectFrom("segmentTranslations")
+		.innerJoin("segments", "segments.id", "segmentTranslations.segmentId")
+		.innerJoin("contents", "contents.id", "segments.contentId")
+		.innerJoin("pages", "pages.id", "contents.id")
+		.select(["pages.id"])
+		.where("segmentTranslations.id", "=", segmentTranslationId)
+		.executeTakeFirst();
+
+	if (!result?.id) {
 		throw new Error("Page not found");
 	}
-	return id;
+	return result.id;
 }

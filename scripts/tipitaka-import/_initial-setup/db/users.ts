@@ -1,7 +1,9 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "../../../../src/db/kysely";
 
 export async function findUserByHandle(handle: string) {
-	return prisma.user.findUnique({
-		where: { handle },
-	});
+	return db
+		.selectFrom("users")
+		.selectAll()
+		.where("handle", "=", handle)
+		.executeTakeFirst();
 }

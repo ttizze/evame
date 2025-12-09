@@ -1,8 +1,8 @@
-import type { User } from "@prisma/client";
+import type { DB } from "kysely-codegen";
 import type { ZodFlattenedError } from "zod";
 
 export type SanitizedUser = Omit<
-	User,
+	DB["users"],
 	"email" | "provider" | "emailVerified" | "id"
 >;
 

@@ -1,19 +1,23 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/db/kysely";
+
 export async function archivePage(pageId: number, userId: string) {
-	const page = await prisma.page.findFirst({
-		where: {
-			id: pageId,
-			userId,
-		},
-	});
+	const page = await db
+		.selectFrom("pages")
+		.selectAll()
+		.where("id", "=", pageId)
+		.where("userId", "=", userId)
+		.executeTakeFirst();
 
 	if (!page) {
 		throw new Error("Page not found or unauthorized");
 	}
 
-	const result = await prisma.page.update({
-		where: { id: pageId },
-		data: { status: "ARCHIVE" },
-	});
+	const result = await db
+		.updateTable("pages")
+		.set({ status: "ARCHIVE" })
+		.where("id", "=", pageId)
+		.returningAll()
+		.executeTakeFirst();
+
 	return result;
 }

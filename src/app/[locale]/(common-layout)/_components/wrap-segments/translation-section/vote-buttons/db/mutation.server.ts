@@ -1,6 +1,8 @@
-import type { Prisma } from "@prisma/client";
+import type { Kysely } from "kysely";
+import { sql } from "kysely";
+import type { DB } from "kysely-codegen";
 import { calcProofStatus } from "@/app/[locale]/(common-layout)/_components/wrap-segments/translation-section/vote-buttons/_lib/translation-proof-status";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/db/kysely";
 
 type VoteOutcome = {
 	finalIsUpvote: boolean | undefined;
@@ -48,11 +50,15 @@ export async function handleVote(
 	isUpvote: boolean,
 	currentUserId: string,
 ) {
-	const kind = await prisma.segmentTranslation.findUnique({
-		where: { id: segmentTranslationId },
-		select: { segment: { select: { content: { select: { kind: true } } } } },
-	});
-	const contentKind = kind?.segment.content.kind;
+	const kind = await db
+		.selectFrom("segmentTranslations")
+		.innerJoin("segments", "segments.id", "segmentTranslations.segmentId")
+		.innerJoin("contents", "contents.id", "segments.contentId")
+		.select(["contents.kind"])
+		.where("segmentTranslations.id", "=", segmentTranslationId)
+		.executeTakeFirst();
+
+	const contentKind = kind?.kind;
 	if (contentKind === "PAGE") {
 		return processPageVote(segmentTranslationId, isUpvote, currentUserId);
 	}
@@ -64,24 +70,27 @@ async function processPageVote(
 	isUpvote: boolean,
 	currentUserId: string,
 ) {
-	return prisma.$transaction(async (tx) => {
+	return db.transaction().execute(async (trx) => {
 		const { finalIsUpvote } = await applyVoteUnified(
-			tx,
+			trx,
 			segmentTranslationId,
 			isUpvote,
 			currentUserId,
 		);
 
-		const segmentTranslation = await tx.segmentTranslation.findUnique({
-			where: { id: segmentTranslationId },
-			select: {
-				locale: true,
-				segment: {
-					select: { content: { select: { page: { select: { id: true } } } } },
-				},
-				point: true,
-			},
-		});
+		const segmentTranslation = await trx
+			.selectFrom("segmentTranslations")
+			.innerJoin("segments", "segments.id", "segmentTranslations.segmentId")
+			.innerJoin("contents", "contents.id", "segments.contentId")
+			.leftJoin("pages", "pages.id", "contents.id")
+			.select([
+				"segmentTranslations.locale",
+				"segmentTranslations.point",
+				"pages.id as pageId",
+			])
+			.where("segmentTranslations.id", "=", segmentTranslationId)
+			.executeTakeFirst();
+
 		if (!segmentTranslation) {
 			return {
 				success: false,
@@ -89,11 +98,11 @@ async function processPageVote(
 			};
 		}
 
-		const pageId = segmentTranslation.segment.content.page?.id;
+		const pageId = segmentTranslation.pageId;
 		const { locale } = segmentTranslation;
 
 		if (pageId) {
-			await updateProofStatus(tx, pageId, locale);
+			await updateProofStatus(trx, pageId, locale);
 		}
 
 		return {
@@ -104,30 +113,50 @@ async function processPageVote(
 }
 
 async function updateProofStatus(
-	tx: Prisma.TransactionClient,
+	trx: Kysely<DB>,
 	pageId: number,
 	locale: string,
 ) {
-	const totalSegments = await tx.segment.count({
-		where: { content: { page: { id: pageId } } },
-	});
+	const totalSegmentsResult = await trx
+		.selectFrom("segments")
+		.innerJoin("contents", "contents.id", "segments.contentId")
+		.innerJoin("pages", "pages.id", "contents.id")
+		.select(({ fn }) => [fn.count<number>("segments.id").as("count")])
+		.where("pages.id", "=", pageId)
+		.executeTakeFirst();
+
+	const totalSegments = totalSegmentsResult?.count ?? 0;
 	if (totalSegments === 0) return;
 
-	const segmentsWith1PlusVotes = await tx.segmentTranslation.count({
-		where: {
-			locale,
-			segment: { content: { page: { id: pageId } } },
-			point: { gte: 1 },
-		},
-	});
+	const segmentsWith1PlusVotesResult = await trx
+		.selectFrom("segmentTranslations")
+		.innerJoin("segments", "segments.id", "segmentTranslations.segmentId")
+		.innerJoin("contents", "contents.id", "segments.contentId")
+		.innerJoin("pages", "pages.id", "contents.id")
+		.select(({ fn }) => [
+			fn.count<number>("segmentTranslations.id").as("count"),
+		])
+		.where("pages.id", "=", pageId)
+		.where("segmentTranslations.locale", "=", locale)
+		.where("segmentTranslations.point", ">=", 1)
+		.executeTakeFirst();
 
-	const segmentsWith2PlusVotes = await tx.segmentTranslation.count({
-		where: {
-			locale,
-			segment: { content: { page: { id: pageId } } },
-			point: { gte: 2 },
-		},
-	});
+	const segmentsWith1PlusVotes = segmentsWith1PlusVotesResult?.count ?? 0;
+
+	const segmentsWith2PlusVotesResult = await trx
+		.selectFrom("segmentTranslations")
+		.innerJoin("segments", "segments.id", "segmentTranslations.segmentId")
+		.innerJoin("contents", "contents.id", "segments.contentId")
+		.innerJoin("pages", "pages.id", "contents.id")
+		.select(({ fn }) => [
+			fn.count<number>("segmentTranslations.id").as("count"),
+		])
+		.where("pages.id", "=", pageId)
+		.where("segmentTranslations.locale", "=", locale)
+		.where("segmentTranslations.point", ">=", 2)
+		.executeTakeFirst();
+
+	const segmentsWith2PlusVotes = segmentsWith2PlusVotesResult?.count ?? 0;
 
 	const newStatus = await calcProofStatus(
 		totalSegments,
@@ -135,28 +164,34 @@ async function updateProofStatus(
 		segmentsWith2PlusVotes,
 	);
 
-	await tx.pageLocaleTranslationProof.upsert({
-		where: { pageId_locale: { pageId, locale } },
-		create: { pageId, locale, translationProofStatus: newStatus },
-		update: { translationProofStatus: newStatus },
-	});
+	await trx
+		.insertInto("pageLocaleTranslationProofs")
+		.values({
+			pageId,
+			locale,
+			translationProofStatus: newStatus,
+		})
+		.onConflict((oc) =>
+			oc.columns(["pageId", "locale"]).doUpdateSet({
+				translationProofStatus: newStatus,
+			}),
+		)
+		.execute();
 }
 
 /* 投票と point 更新（統一テーブル）を行い、最終的な isUpvote を返す */
 async function applyVoteUnified(
-	tx: Prisma.TransactionClient,
+	trx: Kysely<DB>,
 	segmentTranslationId: number,
 	isUpvote: boolean,
 	currentUserId: string,
 ) {
-	const existingVote = await tx.translationVote.findUnique({
-		where: {
-			translationId_userId: {
-				translationId: segmentTranslationId,
-				userId: currentUserId,
-			},
-		},
-	});
+	const existingVote = await trx
+		.selectFrom("translationVotes")
+		.selectAll()
+		.where("translationId", "=", segmentTranslationId)
+		.where("userId", "=", currentUserId)
+		.executeTakeFirst();
 
 	const outcome = computeVoteOutcome(
 		existingVote?.isUpvote ?? undefined,
@@ -165,40 +200,39 @@ async function applyVoteUnified(
 
 	switch (outcome.action) {
 		case "delete":
-			await tx.translationVote.delete({
-				where: {
-					translationId_userId: {
-						translationId: segmentTranslationId,
-						userId: currentUserId,
-					},
-				},
-			});
+			await trx
+				.deleteFrom("translationVotes")
+				.where("translationId", "=", segmentTranslationId)
+				.where("userId", "=", currentUserId)
+				.execute();
 			break;
 		case "update":
-			await tx.translationVote.update({
-				where: {
-					translationId_userId: {
-						translationId: segmentTranslationId,
-						userId: currentUserId,
-					},
-				},
-				data: { isUpvote },
-			});
+			await trx
+				.updateTable("translationVotes")
+				.set({ isUpvote })
+				.where("translationId", "=", segmentTranslationId)
+				.where("userId", "=", currentUserId)
+				.execute();
 			break;
 		case "create":
-			await tx.translationVote.create({
-				data: {
+			await trx
+				.insertInto("translationVotes")
+				.values({
 					translationId: segmentTranslationId,
 					userId: currentUserId,
 					isUpvote,
-				},
-			});
+				})
+				.execute();
 	}
 
-	await tx.segmentTranslation.update({
-		where: { id: segmentTranslationId },
-		data: { point: { increment: outcome.pointDelta } },
-	});
+	// point を increment する（Kysely には increment がないので sql を使う）
+	await trx
+		.updateTable("segmentTranslations")
+		.set({
+			point: sql`point + ${outcome.pointDelta}`,
+		})
+		.where("id", "=", segmentTranslationId)
+		.execute();
 
 	return { finalIsUpvote: outcome.finalIsUpvote };
 }
@@ -208,18 +242,19 @@ async function processCommentVote(
 	isUpvote: boolean,
 	currentUserId: string,
 ) {
-	return prisma.$transaction(async (tx) => {
+	return db.transaction().execute(async (trx) => {
 		const { finalIsUpvote } = await applyVoteUnified(
-			tx,
+			trx,
 			segmentTranslationId,
 			isUpvote,
 			currentUserId,
 		);
 
-		const updatedTranslation = await tx.segmentTranslation.findUnique({
-			where: { id: segmentTranslationId },
-			select: { point: true },
-		});
+		const updatedTranslation = await trx
+			.selectFrom("segmentTranslations")
+			.select(["point"])
+			.where("id", "=", segmentTranslationId)
+			.executeTakeFirst();
 
 		return {
 			success: true,
@@ -235,19 +270,23 @@ export async function createNotificationPageSegmentTranslationVote(
 	pageSegmentTranslationId: number,
 	actorId: string,
 ) {
-	const segmentTranslation = await prisma.segmentTranslation.findUnique({
-		where: { id: pageSegmentTranslationId },
-		select: { user: { select: { id: true } } },
-	});
+	const segmentTranslation = await db
+		.selectFrom("segmentTranslations")
+		.innerJoin("users", "users.id", "segmentTranslations.userId")
+		.select(["users.id as userId"])
+		.where("segmentTranslations.id", "=", pageSegmentTranslationId)
+		.executeTakeFirst();
+
 	if (!segmentTranslation) {
 		return;
 	}
-	await prisma.notification.create({
-		data: {
+	await db
+		.insertInto("notifications")
+		.values({
 			segmentTranslationId: pageSegmentTranslationId,
-			userId: segmentTranslation.user.id,
-			actorId: actorId,
+			userId: segmentTranslation.userId,
+			actorId,
 			type: "PAGE_SEGMENT_TRANSLATION_VOTE",
-		},
-	});
+		})
+		.execute();
 }

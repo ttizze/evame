@@ -1,6 +1,6 @@
-import { revalidatePath } from "next/cache";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/db/kysely";
+import { revalidatePath } from "next/cache";
 
 export function revalidateAllLocales(
 	basePath: string,
@@ -23,12 +23,14 @@ export async function revalidatePageForLocale(
 	locale: string,
 	revalidateFn: (path: string) => void = revalidatePath,
 ) {
-	const page = await prisma.page.findUnique({
-		where: { id: pageId },
-		select: { slug: true, user: { select: { handle: true } } },
-	});
+	const page = await db
+		.selectFrom("pages")
+		.innerJoin("users", "users.id", "pages.userId")
+		.select(["pages.slug", "users.handle"])
+		.where("pages.id", "=", pageId)
+		.executeTakeFirst();
 	if (page) {
-		revalidateFn(`/${locale}/user/${page.user.handle}/page/${page.slug}`);
+		revalidateFn(`/${locale}/user/${page.handle}/page/${page.slug}`);
 	}
 }
 
@@ -41,38 +43,32 @@ export async function revalidatePageTreeAllLocales(
 	revalidateFn: (path: string) => void = revalidatePath,
 ) {
 	// Fetch self and initial parentId
-	const self = await prisma.page.findUnique({
-		where: { id: pageId },
-		select: {
-			id: true,
-			slug: true,
-			user: { select: { handle: true } },
-			parentId: true,
-		},
-	});
+	const self = await db
+		.selectFrom("pages")
+		.innerJoin("users", "users.id", "pages.userId")
+		.select(["pages.id", "pages.slug", "users.handle", "pages.parentId"])
+		.where("pages.id", "=", pageId)
+		.executeTakeFirst();
 	if (!self) return;
 
 	const paths = new Set<string>();
 	const visitedIds = new Set<number>([self.id]);
 	// Add self
-	paths.add(`/user/${self.user.handle}/page/${self.slug}`);
+	paths.add(`/user/${self.handle}/page/${self.slug}`);
 
 	// Walk ancestors
 	let currentParentId = self.parentId ?? null;
 	const ancestorGuard = new Set<number>();
 	while (currentParentId && !ancestorGuard.has(currentParentId)) {
 		ancestorGuard.add(currentParentId);
-		const parent = await prisma.page.findUnique({
-			where: { id: currentParentId },
-			select: {
-				id: true,
-				slug: true,
-				user: { select: { handle: true } },
-				parentId: true,
-			},
-		});
+		const parent = await db
+			.selectFrom("pages")
+			.innerJoin("users", "users.id", "pages.userId")
+			.select(["pages.id", "pages.slug", "users.handle", "pages.parentId"])
+			.where("pages.id", "=", currentParentId)
+			.executeTakeFirst();
 		if (!parent) break;
-		paths.add(`/user/${parent.user.handle}/page/${parent.slug}`);
+		paths.add(`/user/${parent.handle}/page/${parent.slug}`);
 		visitedIds.add(parent.id);
 		currentParentId = parent.parentId ?? null;
 	}
@@ -81,17 +77,20 @@ export async function revalidatePageTreeAllLocales(
 	let frontier: number[] = [self.id];
 	const childGuard = new Set<number>([self.id]);
 	while (frontier.length > 0) {
-		const children = await prisma.page.findMany({
-			where: { parentId: { in: frontier }, status: "PUBLIC" },
-			select: { id: true, slug: true, user: { select: { handle: true } } },
-			orderBy: { order: "asc" },
-		});
+		const children = await db
+			.selectFrom("pages")
+			.innerJoin("users", "users.id", "pages.userId")
+			.select(["pages.id", "pages.slug", "users.handle"])
+			.where("pages.parentId", "in", frontier)
+			.where("pages.status", "=", "PUBLIC")
+			.orderBy("pages.order", "asc")
+			.execute();
 		const next: number[] = [];
 		for (const c of children) {
 			if (childGuard.has(c.id)) continue;
 			childGuard.add(c.id);
 			visitedIds.add(c.id);
-			paths.add(`/user/${c.user.handle}/page/${c.slug}`);
+			paths.add(`/user/${c.handle}/page/${c.slug}`);
 			next.push(c.id);
 		}
 		frontier = next;

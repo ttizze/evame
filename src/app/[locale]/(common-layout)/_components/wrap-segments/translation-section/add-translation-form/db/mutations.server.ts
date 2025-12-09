@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/db/kysely";
 
 export async function addUserTranslation(
 	segmentId: number,
@@ -6,8 +6,15 @@ export async function addUserTranslation(
 	userId: string,
 	locale: string,
 ) {
-	await prisma.segmentTranslation.create({
-		data: { segmentId, locale, text, userId },
-	});
+	await db
+		.insertInto("segmentTranslations")
+		.values({
+			segmentId,
+			locale,
+			text,
+			userId,
+			point: 0,
+		})
+		.execute();
 	return { success: true };
 }
