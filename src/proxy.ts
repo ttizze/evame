@@ -20,7 +20,6 @@ async function maintenanceGate(req: NextRequest) {
 	return handleI18nRouting(req);
 }
 
-
 /* ────────────────────────────────────────────── */
 /* ③ メンテナンスゲート → i18n の順に合成 */
 export default maintenanceGate;

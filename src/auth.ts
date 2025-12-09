@@ -1,3 +1,4 @@
+import { createId } from "@paralleldrive/cuid2";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { customSession, magicLink } from "better-auth/plugins";
@@ -63,16 +64,18 @@ export const auth = betterAuth({
 		user: {
 			create: {
 				before: async (user) => {
-					// name が空なら自動生成
-					if (!user.name?.trim()) {
-						return {
-							data: {
-								...user,
-								name: `new_user`, // 例: user_r4v5ts6k
-							},
-						};
-					}
-					return { data: user };
+					const handle = createId();
+					const name =
+						typeof user.name === "string" && user.name.trim()
+							? user.name
+							: "new_user";
+					return {
+						data: {
+							...user,
+							handle,
+							name,
+						},
+					};
 				},
 			},
 		},
