@@ -14,8 +14,8 @@ type Subcommand = "export" | "plan" | "migrate";
 // サブコマンドごとの追加オプションを定義
 const SUBCOMMAND_OPTIONS: Record<Subcommand, string[]> = {
 	export: ["--export"],
-	plan: ["--dry-run", `--file=${SCHEMA_FILE}`],
-	migrate: [`--file=${SCHEMA_FILE}`],
+	plan: ["--dry-run", `--file=${SCHEMA_FILE}`, "--enable-drop"],
+	migrate: [`--file=${SCHEMA_FILE}`, "--enable-drop"],
 };
 
 // psqldef バイナリが無ければ GitHub から取得
@@ -61,13 +61,6 @@ function buildConnectionArgs(): string[] {
 	return args;
 }
 
-// 管理対象スキーマを public に限定する（環境変数で上書き可）
-function buildConfigArgs(): string[] {
-	const configInline =
-		process.env.SQLDEF_CONFIG_INLINE ?? "target_schema: |\n  public";
-	return [`--config-inline=${configInline}`];
-}
-
 // サブcommandを安全に取得する
 function parseSubcommand(): Subcommand {
 	const subcommand = process.argv[2] as Subcommand | undefined;
@@ -82,7 +75,6 @@ function parseSubcommand(): Subcommand {
 function buildArgs(subcommand: Subcommand): string[] {
 	return [
 		...buildConnectionArgs(),
-		...buildConfigArgs(),
 		...SUBCOMMAND_OPTIONS[subcommand],
 	];
 }

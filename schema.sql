@@ -1,23 +1,6 @@
--- UUID v7 拡張（uuid_generate_v7 を利用）
-CREATE EXTENSION IF NOT EXISTS "pg_uuidv7";
+CREATE SCHEMA "neon_control_plane";
 
--- updated_at 自動更新トリガー
-CREATE OR REPLACE FUNCTION set_updated_at()
-RETURNS trigger AS $$
-BEGIN
-    NEW.updated_at := NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- updatedAt (CamelCase) 用
-CREATE OR REPLACE FUNCTION set_updatedAt()
-RETURNS trigger AS $$
-BEGIN
-    NEW."updatedAt" := NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+CREATE EXTENSION "pg_uuidv7";
 
 CREATE TYPE "public"."ContentKind" AS ENUM ('PAGE_COMMENT', 'PAGE');
 
@@ -31,6 +14,31 @@ CREATE TYPE "public"."TranslationProofStatus" AS ENUM ('HUMAN_TOUCHED', 'PROOFRE
 
 CREATE TYPE "public"."TranslationStatus" AS ENUM ('PENDING', 'IN_PROGRESS', 'FAILED', 'COMPLETED');
 
+CREATE OR REPLACE FUNCTION public.set_updated_at()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    NEW.updated_at := NOW();
+    RETURN NEW;
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION public.set_updatedat()
+ RETURNS trigger
+ LANGUAGE plpgsql
+AS $function$
+BEGIN
+    NEW."updatedAt" := NOW();
+    RETURN NEW;
+END;
+$function$;
+
+CREATE TABLE "neon_control_plane"."endpoints" (
+    "endpoint_id" character varying(255) NOT NULL,
+    "allowed_ips" character varying(255),
+    CONSTRAINT endpoints_pkey PRIMARY KEY ("endpoint_id")
+);
 
 CREATE TABLE "public"."_prisma_migrations" (
     "id" character varying(36) NOT NULL,
@@ -53,17 +61,13 @@ CREATE TABLE "public"."accounts" (
     "scope" text,
     "id_token" text,
     "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "id" text NOT NULL DEFAULT uuid_generate_v7()::text,
+    "id" text NOT NULL DEFAULT (uuid_generate_v7())::text,
     "password" text,
     "refreshTokenExpiresAt" timestamp(3),
     "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "expires_at" timestamp(3),
     CONSTRAINT accounts_pkey PRIMARY KEY ("id")
 );
-
-CREATE TRIGGER accounts_set_updated_at
-BEFORE UPDATE ON "public"."accounts"
-FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE UNIQUE INDEX "accounts_provider_providerAccountId_key" ON public.accounts USING btree (provider, "providerAccountId");
 
@@ -81,10 +85,6 @@ CREATE TABLE "public"."contents" (
 CREATE INDEX contents_kind_idx ON public.contents USING btree (kind);
 
 ALTER TABLE ONLY "public"."contents" ADD CONSTRAINT "contents_import_file_id_fkey" FOREIGN KEY ("import_file_id") REFERENCES "public"."import_files" ("id") ON UPDATE CASCADE ON DELETE SET NULL;
-
-CREATE TRIGGER contents_set_updated_at
-BEFORE UPDATE ON "public"."contents"
-FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE "public"."follows" (
     "id" serial NOT NULL,
@@ -190,7 +190,7 @@ CREATE TABLE "public"."page_comments" (
     "id" integer NOT NULL,
     "page_id" integer NOT NULL,
     "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" timestamp(3) NOT NULL  DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "locale" text NOT NULL,
     "user_id" text NOT NULL,
     "parent_id" integer,
@@ -214,10 +214,6 @@ ALTER TABLE ONLY "public"."page_comments" ADD CONSTRAINT "page_comments_page_id_
 ALTER TABLE ONLY "public"."page_comments" ADD CONSTRAINT "page_comments_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "public"."page_comments" ("id") ON UPDATE CASCADE ON DELETE SET NULL;
 
 ALTER TABLE ONLY "public"."page_comments" ADD CONSTRAINT "page_comments_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
-
-CREATE TRIGGER page_comments_set_updated_at
-BEFORE UPDATE ON "public"."page_comments"
-FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE "public"."page_locale_translation_proofs" (
     "id" serial NOT NULL,
@@ -272,10 +268,6 @@ ALTER TABLE ONLY "public"."pages" ADD CONSTRAINT "pages_id_fkey" FOREIGN KEY ("i
 ALTER TABLE ONLY "public"."pages" ADD CONSTRAINT "pages_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "public"."pages" ("id") ON UPDATE CASCADE ON DELETE SET NULL;
 
 ALTER TABLE ONLY "public"."pages" ADD CONSTRAINT "pages_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
-
-CREATE TRIGGER pages_set_updated_at
-BEFORE UPDATE ON "public"."pages"
-FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE "public"."segment_annotation_links" (
     "main_segment_id" integer NOT NULL,
@@ -380,16 +372,12 @@ CREATE TABLE "public"."sessions" (
     "userId" text NOT NULL,
     "expires" timestamp(3) NOT NULL,
     "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "id" text NOT NULL DEFAULT uuid_generate_v7()::text,
+    "id" text NOT NULL DEFAULT (uuid_generate_v7())::text,
     "ipAddress" text,
     "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "userAgent" text,
     CONSTRAINT sessions_pkey PRIMARY KEY ("id")
 );
-
-CREATE TRIGGER sessions_set_updated_at
-BEFORE UPDATE ON "public"."sessions"
-FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE UNIQUE INDEX "sessions_sessionToken_key" ON public.sessions USING btree ("sessionToken");
 
@@ -439,10 +427,6 @@ ALTER TABLE ONLY "public"."translation_jobs" ADD CONSTRAINT "translation_jobs_pa
 
 ALTER TABLE ONLY "public"."translation_jobs" ADD CONSTRAINT "translation_jobs_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users" ("id") ON UPDATE CASCADE ON DELETE SET NULL;
 
-CREATE TRIGGER translation_jobs_set_updatedAt
-BEFORE UPDATE ON "public"."translation_jobs"
-FOR EACH ROW EXECUTE FUNCTION set_updatedAt();
-
 CREATE TABLE "public"."translation_votes" (
     "translation_id" integer NOT NULL,
     "user_id" text NOT NULL,
@@ -460,10 +444,6 @@ CREATE UNIQUE INDEX translation_votes_translation_id_user_id_key ON public.trans
 ALTER TABLE ONLY "public"."translation_votes" ADD CONSTRAINT "translation_votes_translation_id_fkey" FOREIGN KEY ("translation_id") REFERENCES "public"."segment_translations" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
 
 ALTER TABLE ONLY "public"."translation_votes" ADD CONSTRAINT "translation_votes_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
-
-CREATE TRIGGER translation_votes_set_updated_at
-BEFORE UPDATE ON "public"."translation_votes"
-FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE TABLE "public"."user_credentials" (
     "id" serial NOT NULL,
@@ -491,10 +471,6 @@ CREATE UNIQUE INDEX user_settings_user_id_key ON public.user_settings USING btre
 
 ALTER TABLE ONLY "public"."user_settings" ADD CONSTRAINT "user_settings_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users" ("id") ON UPDATE CASCADE ON DELETE RESTRICT;
 
-CREATE TRIGGER user_settings_set_updated_at
-BEFORE UPDATE ON "public"."user_settings"
-FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-
 CREATE TABLE "public"."users" (
     "image" text NOT NULL DEFAULT 'https://evame.tech/avatar.png'::text,
     "plan" text NOT NULL DEFAULT 'free'::text,
@@ -506,16 +482,12 @@ CREATE TABLE "public"."users" (
     "name" text NOT NULL DEFAULT 'new_user'::text,
     "handle" text NOT NULL,
     "profile" text NOT NULL DEFAULT ''::text,
-    "id" text NOT NULL DEFAULT uuid_generate_v7()::text,
+    "id" text NOT NULL DEFAULT (uuid_generate_v7())::text,
     "email" text NOT NULL,
     "twitterHandle" text NOT NULL DEFAULT ''::text,
     "emailVerified" boolean,
     CONSTRAINT users_pkey PRIMARY KEY ("id")
 );
-
-CREATE TRIGGER users_set_updated_at
-BEFORE UPDATE ON "public"."users"
-FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email);
 
@@ -539,3 +511,21 @@ CREATE TABLE "public"."verification_tokens" (
 );
 
 CREATE UNIQUE INDEX verification_tokens_token_key ON public.verification_tokens USING btree (token);
+
+CREATE TRIGGER accounts_set_updated_at BEFORE UPDATE ON public.accounts FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER contents_set_updated_at BEFORE UPDATE ON public.contents FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER page_comments_set_updated_at BEFORE UPDATE ON public.page_comments FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER pages_set_updated_at BEFORE UPDATE ON public.pages FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER sessions_set_updated_at BEFORE UPDATE ON public.sessions FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER "translation_jobs_set_updatedAt" BEFORE UPDATE ON public.translation_jobs FOR EACH ROW EXECUTE FUNCTION set_updatedat();
+
+CREATE TRIGGER translation_votes_set_updated_at BEFORE UPDATE ON public.translation_votes FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER user_settings_set_updated_at BEFORE UPDATE ON public.user_settings FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER users_set_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION set_updated_at();
