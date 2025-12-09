@@ -6,9 +6,7 @@ import { DOMParser } from "@xmldom/xmldom";
 import { afterEach, describe, expect, test } from "vitest";
 import { getFileData } from "../books";
 import { convertXmlFileToMarkdown } from "../cli";
-import { writeBookMarkdown } from "../render";
-import { ELEMENT_NODE, getChildElements, TEXT_NODE } from "../tei";
-import type { BookDoc } from "../types";
+import { ELEMENT_NODE, TEXT_NODE } from "../tei";
 
 // このテストファイルは convert-romn-to-md-nosplit の書籍変換フロー全体を確認する。
 // - writeBookMarkdown が期待どおりの Markdown を生成し、分類ディレクトリ配下に配置される
@@ -95,117 +93,117 @@ afterEach(() => {
 });
 
 // describe("writeBookMarkdown", () => {
-	// 分類パス配下へ Markdown が生成され、主要要素が期待どおり整形されるか検証する。
-	// test("分類ディレクトリへ書籍 Markdown を出力する", () => {
-	// 	const parser = new DOMParser();
-	// 	const xml = `
-	// 		<body>
-	// 			<head rend="nikaya">ニカーヤ見出し</head>
-	// 			<p rend="book">書籍の説明</p>
-	// 			<div>
-	// 				<head rend="chapter">第一章</head>
-	// 			<p rend="gatha1">詩句ラインA</p>
-	// 			<p rend="bodytext" n="12">導入文 <hi rend="bold">強調</hi> と <hi rend="italics">斜体</hi> を含む。</p>
-	// 			<p>本文段落。</p>
-	// 			</div>
-	// 		</body>
-	// 	`;
-	// 	const document = parser.parseFromString(xml, "application/xml");
-	// 	const body = document.getElementsByTagName("body").item(0);
-	// 	expect(body).not.toBeNull();
-	// 	if (!body) {
-	// 		throw new Error("<body> 要素が存在しません");
-	// 	}
-	// 	const doc: BookDoc = {
-	// 		nodes: getChildElements(body),
-	// 		dirSegments: ["01-テスト分類", "02-サンプル書籍"],
-	// 	};
-	// 	const outputDir = createTempDir("nosplit-render-");
+// 分類パス配下へ Markdown が生成され、主要要素が期待どおり整形されるか検証する。
+// test("分類ディレクトリへ書籍 Markdown を出力する", () => {
+// 	const parser = new DOMParser();
+// 	const xml = `
+// 		<body>
+// 			<head rend="nikaya">ニカーヤ見出し</head>
+// 			<p rend="book">書籍の説明</p>
+// 			<div>
+// 				<head rend="chapter">第一章</head>
+// 			<p rend="gatha1">詩句ラインA</p>
+// 			<p rend="bodytext" n="12">導入文 <hi rend="bold">強調</hi> と <hi rend="italics">斜体</hi> を含む。</p>
+// 			<p>本文段落。</p>
+// 			</div>
+// 		</body>
+// 	`;
+// 	const document = parser.parseFromString(xml, "application/xml");
+// 	const body = document.getElementsByTagName("body").item(0);
+// 	expect(body).not.toBeNull();
+// 	if (!body) {
+// 		throw new Error("<body> 要素が存在しません");
+// 	}
+// 	const doc: BookDoc = {
+// 		nodes: getChildElements(body),
+// 		dirSegments: ["01-テスト分類", "02-サンプル書籍"],
+// 	};
+// 	const outputDir = createTempDir("nosplit-render-");
 
-	// 	writeBookMarkdown(doc, outputDir, "sample.md");
+// 	writeBookMarkdown(doc, outputDir, "sample.md");
 
-	// 	const expectedPath = path.join(
-	// 		outputDir,
-	// 		"01-テスト分類",
-	// 		"02-サンプル書籍",
-	// 		"sample.md",
-	// 	);
-	// 	expect(fs.existsSync(expectedPath)).toBe(true);
-	// 	const content = fs.readFileSync(expectedPath, "utf8").trim();
-	// 	expect(content).toMatch(/^#\sニカーヤ見出し$/m);
-	// 	expect(content).toMatch(/^##\s書籍の説明$/m);
-	// 	expect(content).toMatch(/^###\s第一章$/m);
-	// 	expect(content).toMatch(/^\*詩句ラインA\*$/m);
-	// 	expect(content).toContain("導入文 **強調** と _斜体_ を含む。");
-	// 	expect(content.endsWith("本文段落。")).toBe(true);
-	// });
+// 	const expectedPath = path.join(
+// 		outputDir,
+// 		"01-テスト分類",
+// 		"02-サンプル書籍",
+// 		"sample.md",
+// 	);
+// 	expect(fs.existsSync(expectedPath)).toBe(true);
+// 	const content = fs.readFileSync(expectedPath, "utf8").trim();
+// 	expect(content).toMatch(/^#\sニカーヤ見出し$/m);
+// 	expect(content).toMatch(/^##\s書籍の説明$/m);
+// 	expect(content).toMatch(/^###\s第一章$/m);
+// 	expect(content).toMatch(/^\*詩句ラインA\*$/m);
+// 	expect(content).toContain("導入文 **強調** と _斜体_ を含む。");
+// 	expect(content.endsWith("本文段落。")).toBe(true);
+// });
 
-	// // tipitaka-latn.xsl に登場する主な rend を網羅し、Markdown 化の挙動が維持されているか検証する。
-	// test("XSL由来の各種 rend 属性をまとめて検証する", () => {
-	// 	const parser = new DOMParser();
-	// 	const xml = `
-	// 		<body>
-	// 			<head rend="nikaya">ニカーヤ見出し</head>
-	// 			<head rend="book">書籍見出し</head>
-	// 			<head rend="chapter">章見出し</head>
-	// 			<head rend="title">タイトル</head>
-	// 			<p rend="subhead">サブ見出し</p>
-	// 			<p rend="subsubhead">小見出し</p>
-	// 			<p rend="centre">中央寄せの行</p>
-	// 			<p rend="bodytext" n="12"><hi rend="paranum">123</hi><hi rend="dot">.</hi> 本文 <hi rend="bold">太字</hi> <hi rend="italics">斜体</hi></p>
-	// 			<p rend="indent">インデント <hi rend="hit" id="hit1">ヒット</hi></p>
-	// 			<p rend="unindented">インデントなし</p>
-	// 			<p rend="hangnum" n="33">ぶら下げ番号</p>
-	// 			<p rend="gatha1">詩句1</p>
-	// 			<p rend="gatha2">詩句2</p>
-	// 			<p rend="gatha3">詩句3</p>
-	// 			<p rend="gathalast">詩句4</p>
-	// 			<pb ed="vri" n="123" />
-	// 		</body>
-	// 	`;
-	// 	const document = parser.parseFromString(xml, "application/xml");
-	// 	const body = document.getElementsByTagName("body").item(0);
-	// 	expect(body).not.toBeNull();
-	// 	if (!body) {
-	// 		throw new Error("<body> 要素が存在しません");
-	// 	}
-	// 	const doc: BookDoc = {
-	// 		nodes: getChildElements(body),
-	// 		dirSegments: ["01-レンダリング検証"],
-	// 	};
-	// 	const outputDir = createTempDir("nosplit-xsl-");
+// // tipitaka-latn.xsl に登場する主な rend を網羅し、Markdown 化の挙動が維持されているか検証する。
+// test("XSL由来の各種 rend 属性をまとめて検証する", () => {
+// 	const parser = new DOMParser();
+// 	const xml = `
+// 		<body>
+// 			<head rend="nikaya">ニカーヤ見出し</head>
+// 			<head rend="book">書籍見出し</head>
+// 			<head rend="chapter">章見出し</head>
+// 			<head rend="title">タイトル</head>
+// 			<p rend="subhead">サブ見出し</p>
+// 			<p rend="subsubhead">小見出し</p>
+// 			<p rend="centre">中央寄せの行</p>
+// 			<p rend="bodytext" n="12"><hi rend="paranum">123</hi><hi rend="dot">.</hi> 本文 <hi rend="bold">太字</hi> <hi rend="italics">斜体</hi></p>
+// 			<p rend="indent">インデント <hi rend="hit" id="hit1">ヒット</hi></p>
+// 			<p rend="unindented">インデントなし</p>
+// 			<p rend="hangnum" n="33">ぶら下げ番号</p>
+// 			<p rend="gatha1">詩句1</p>
+// 			<p rend="gatha2">詩句2</p>
+// 			<p rend="gatha3">詩句3</p>
+// 			<p rend="gathalast">詩句4</p>
+// 			<pb ed="vri" n="123" />
+// 		</body>
+// 	`;
+// 	const document = parser.parseFromString(xml, "application/xml");
+// 	const body = document.getElementsByTagName("body").item(0);
+// 	expect(body).not.toBeNull();
+// 	if (!body) {
+// 		throw new Error("<body> 要素が存在しません");
+// 	}
+// 	const doc: BookDoc = {
+// 		nodes: getChildElements(body),
+// 		dirSegments: ["01-レンダリング検証"],
+// 	};
+// 	const outputDir = createTempDir("nosplit-xsl-");
 
-	// 	writeBookMarkdown(doc, outputDir, "patterns.md");
+// 	writeBookMarkdown(doc, outputDir, "patterns.md");
 
-	// 	const outputPath = path.join(
-	// 		outputDir,
-	// 		"01-レンダリング検証",
-	// 		"patterns.md",
-	// 	);
-	// 	expect(fs.existsSync(outputPath)).toBe(true);
-	// 	const content = fs.readFileSync(outputPath, "utf8");
+// 	const outputPath = path.join(
+// 		outputDir,
+// 		"01-レンダリング検証",
+// 		"patterns.md",
+// 	);
+// 	expect(fs.existsSync(outputPath)).toBe(true);
+// 	const content = fs.readFileSync(outputPath, "utf8");
 
-	// 	expect(content).toMatch(/^#\sニカーヤ見出し$/m);
-	// 	expect(content).toMatch(/^##\s書籍見出し$/m);
-	// 	expect(content).toMatch(/^###\s章見出し$/m);
-	// 	expect(content).toMatch(/^####\sタイトル$/m);
-	// 	expect(content).toMatch(/^####\sサブ見出し$/m);
-	// 	expect(content).toMatch(/^####\s小見出し$/m);
+// 	expect(content).toMatch(/^#\sニカーヤ見出し$/m);
+// 	expect(content).toMatch(/^##\s書籍見出し$/m);
+// 	expect(content).toMatch(/^###\s章見出し$/m);
+// 	expect(content).toMatch(/^####\sタイトル$/m);
+// 	expect(content).toMatch(/^####\sサブ見出し$/m);
+// 	expect(content).toMatch(/^####\s小見出し$/m);
 
-	// 	expect(content).toContain("::centre\n中央寄せの行\n::");
-	// 	expect(content).toContain("123. 本文 **太字** _斜体_");
-	// 	expect(content).toContain(
-	// 		'::indent\nインデント <hi rend="hit" id="hit1">ヒット</hi>\n::',
-	// 	);
-	// 	expect(content).toContain("::unindented\nインデントなし\n::");
-	// 	expect(content).toContain("::hangnum\nぶら下げ番号\n::");
+// 	expect(content).toContain("::centre\n中央寄せの行\n::");
+// 	expect(content).toContain("123. 本文 **太字** _斜体_");
+// 	expect(content).toContain(
+// 		'::indent\nインデント <hi rend="hit" id="hit1">ヒット</hi>\n::',
+// 	);
+// 	expect(content).toContain("::unindented\nインデントなし\n::");
+// 	expect(content).toContain("::hangnum\nぶら下げ番号\n::");
 
-	// 	expect(content).toMatch(/^\*詩句1\*$/m);
-	// 	expect(content).toMatch(/^\*詩句2\*$/m);
-	// 	expect(content).toMatch(/^\*詩句3\*$/m);
-	// 	expect(content).toMatch(/^\*詩句4\*$/m);
-	// 	expect(content).toContain("{pb:vri:123}");
-	// });
+// 	expect(content).toMatch(/^\*詩句1\*$/m);
+// 	expect(content).toMatch(/^\*詩句2\*$/m);
+// 	expect(content).toMatch(/^\*詩句3\*$/m);
+// 	expect(content).toMatch(/^\*詩句4\*$/m);
+// 	expect(content).toContain("{pb:vri:123}");
+// });
 // });
 
 describe("convertXmlFileToMarkdownNoSplit", () => {
