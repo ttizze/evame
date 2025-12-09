@@ -68,30 +68,41 @@ function buildConfigArgs(): string[] {
 	return [`--config-inline=${configInline}`];
 }
 
-// メイン処理
-const subcommand = process.argv[2] as Subcommand | undefined;
-const subcommandOptions = subcommand
-	? SUBCOMMAND_OPTIONS[subcommand]
-	: undefined;
-
-if (!subcommandOptions) {
-	console.error("Usage: bun scripts/sqldef.ts [export|plan|migrate]");
-	process.exit(1);
+// サブcommandを安全に取得する
+function parseSubcommand(): Subcommand {
+	const subcommand = process.argv[2] as Subcommand | undefined;
+	if (!subcommand || !SUBCOMMAND_OPTIONS[subcommand]) {
+		console.error("Usage: bun scripts/sqldef.ts [export|plan|migrate]");
+		process.exit(1);
+	}
+	return subcommand;
 }
 
-await ensurePsqldef();
+// psqldef を実行する引数を組み立てる
+function buildArgs(subcommand: Subcommand): string[] {
+	return [
+		...buildConnectionArgs(),
+		...buildConfigArgs(),
+		...SUBCOMMAND_OPTIONS[subcommand],
+	];
+}
 
-const args = [
-	...buildConnectionArgs(),
-	...buildConfigArgs(),
-	...subcommandOptions,
-];
+// メイン処理: 何をするか→psqldefを準備し、指定サブコマンドを実行する
+async function main(): Promise<void> {
+	const subcommand = parseSubcommand();
+	await ensurePsqldef();
+	const args = buildArgs(subcommand);
 
-// export の場合は出力を schema.sql に書き込む
-if (subcommand === "export") {
-	const output = execFileSync(PSQLDEF_BIN, args, { encoding: "utf-8" });
-	writeFileSync(SCHEMA_FILE, output);
-	console.log(`Exported schema to ${SCHEMA_FILE}`);
-} else {
+	if (subcommand === "export") {
+		// 何のために: スキーマをファイルへ書き出す
+		const output = execFileSync(PSQLDEF_BIN, args, { encoding: "utf-8" });
+		writeFileSync(SCHEMA_FILE, output);
+		console.log(`Exported schema to ${SCHEMA_FILE}`);
+		return;
+	}
+
+	// 何のために: plan/migrate をそのまま実行する
 	execFileSync(PSQLDEF_BIN, args, { stdio: "inherit" });
 }
+
+await main();
