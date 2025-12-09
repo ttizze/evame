@@ -493,14 +493,14 @@ CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email);
 
 CREATE UNIQUE INDEX users_handle_key ON public.users USING btree (handle);
 
-CREATE TABLE "public"."verification" (
+CREATE TABLE "public"."verifications" (
     "id" text NOT NULL,
     "identifier" text NOT NULL,
     "value" text NOT NULL,
     "expiresAt" timestamp(3) NOT NULL,
     "createdAt" timestamp(3),
     "updatedAt" timestamp(3),
-    CONSTRAINT verification_pkey PRIMARY KEY ("id")
+    CONSTRAINT verifications_pkey PRIMARY KEY ("id")
 );
 
 CREATE TABLE "public"."verification_tokens" (
