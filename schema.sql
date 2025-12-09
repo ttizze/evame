@@ -1,5 +1,3 @@
-CREATE SCHEMA "neon_control_plane";
-
 -- UUID v7 拡張（uuid_generate_v7 を利用）
 CREATE EXTENSION IF NOT EXISTS "pg_uuidv7";
 
@@ -33,11 +31,6 @@ CREATE TYPE "public"."TranslationProofStatus" AS ENUM ('HUMAN_TOUCHED', 'PROOFRE
 
 CREATE TYPE "public"."TranslationStatus" AS ENUM ('PENDING', 'IN_PROGRESS', 'FAILED', 'COMPLETED');
 
-CREATE TABLE "neon_control_plane"."endpoints" (
-    "endpoint_id" character varying(255) NOT NULL,
-    "allowed_ips" character varying(255),
-    CONSTRAINT endpoints_pkey PRIMARY KEY ("endpoint_id")
-);
 
 CREATE TABLE "public"."_prisma_migrations" (
     "id" character varying(36) NOT NULL,

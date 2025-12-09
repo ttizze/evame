@@ -61,6 +61,13 @@ function buildConnectionArgs(): string[] {
 	return args;
 }
 
+// 管理対象スキーマを public に限定する（環境変数で上書き可）
+function buildConfigArgs(): string[] {
+	const configInline =
+		process.env.SQLDEF_CONFIG_INLINE ?? "target_schema: |\n  public";
+	return [`--config-inline=${configInline}`];
+}
+
 // メイン処理
 const subcommand = process.argv[2] as Subcommand | undefined;
 const subcommandOptions = subcommand
@@ -74,7 +81,11 @@ if (!subcommandOptions) {
 
 await ensurePsqldef();
 
-const args = [...buildConnectionArgs(), ...subcommandOptions];
+const args = [
+	...buildConnectionArgs(),
+	...buildConfigArgs(),
+	...subcommandOptions,
+];
 
 // export の場合は出力を schema.sql に書き込む
 if (subcommand === "export") {
