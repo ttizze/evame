@@ -331,7 +331,7 @@ model Verification {
   createdAt  DateTime?
   updatedAt  DateTime?
 
-  @@map("verification")
+  @@map("verifications")
 }
 
 enum ContentKind {

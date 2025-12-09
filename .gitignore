@@ -77,3 +77,4 @@ remark-link-card-plus
 .env*.local
 tipitaka-md/
 cst/
+*.db
