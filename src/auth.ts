@@ -1,9 +1,9 @@
+import { db } from "@/lib/db";
+import { sendMagicLinkEmail } from "@/lib/resend.server";
 import { createId } from "@paralleldrive/cuid2";
 import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
 import { customSession, magicLink } from "better-auth/plugins";
-import { prisma } from "@/lib/prisma";
-import { sendMagicLinkEmail } from "@/lib/resend.server";
+import { kyselyAdapter } from "../node_modules/better-auth/dist/adapters/kysely-adapter/index.mjs";
 
 export const auth = betterAuth({
 	plugins: [
@@ -13,21 +13,32 @@ export const auth = betterAuth({
 			},
 		}),
 		customSession(async ({ session }) => {
-			const currentUser = await prisma.user.findUnique({
-				where: {
-					id: session.userId,
-				},
-				include: {
-					geminiApiKey: true,
-				},
-			});
+			const currentUser = await db
+				.selectFrom("users")
+				.leftJoin("gemini_api_keys", "users.id", "gemini_api_keys.user_id")
+				.select([
+					"users.id",
+					"users.name",
+					"users.handle",
+					"users.plan",
+					"users.profile",
+					"users.twitterHandle",
+					"users.total_points",
+					"users.is_ai",
+					"users.image",
+					"users.created_at",
+					"users.updated_at",
+					"gemini_api_keys.api_key",
+				])
+				.where("users.id", "=", session.userId)
+				.executeTakeFirst();
 			if (!currentUser) {
 				throw new Error("User not found");
 			}
 
 			// Check if the user has a Gemini API key
 			const hasGeminiApiKey = !!(
-				currentUser.geminiApiKey && currentUser.geminiApiKey.apiKey !== ""
+				currentUser.api_key && currentUser.api_key !== ""
 			);
 			return {
 				user: {
@@ -37,11 +48,11 @@ export const auth = betterAuth({
 					plan: currentUser.plan,
 					profile: currentUser.profile,
 					twitterHandle: currentUser.twitterHandle,
-					totalPoints: currentUser.totalPoints,
-					isAI: currentUser.isAI,
+					totalPoints: currentUser.total_points,
+					isAI: currentUser.is_ai,
 					image: currentUser.image,
-					createdAt: currentUser.createdAt,
-					updatedAt: currentUser.updatedAt,
+					createdAt: currentUser.created_at,
+					updatedAt: currentUser.updated_at,
 					hasGeminiApiKey,
 				},
 				session,
@@ -53,12 +64,28 @@ export const auth = betterAuth({
 		fields: {
 			expiresAt: "expires",
 			token: "sessionToken",
+			createdAt: "created_at",
+			updatedAt: "updated_at",
 		},
 		expiresIn: 60 * 60 * 24 * 7, // 7 days
 	},
+	account: {
+		fields: {
+			accountId: "providerAccountId",
+			providerId: "provider",
+			accessToken: "access_token",
+			refreshToken: "refresh_token",
+			idToken: "id_token",
+			accessTokenExpiresAt: "expires_at",
+			refreshTokenExpiresAt: "refreshTokenExpiresAt",
+			createdAt: "created_at",
+			updatedAt: "updated_at",
+		},
+	},
 	// データベース設定
-	database: prismaAdapter(prisma, {
-		provider: "postgresql",
+	database: kyselyAdapter(db, {
+		type: "postgres",
+		usePlural: true,
 	}),
 	databaseHooks: {
 		user: {

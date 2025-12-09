@@ -88,7 +88,7 @@ interface SegmentData {
 async function ensurePrimarySegmentType(): Promise<number> {
 	// PRIMARY がなければ作る。あれば ID を返す。
 	const existing = await db
-		.selectFrom("segment_types")
+		.selectFrom("segmentTypes")
 		.select(["id"])
 		.where("key", "=", "PRIMARY")
 		.executeTakeFirst();
@@ -96,13 +96,13 @@ async function ensurePrimarySegmentType(): Promise<number> {
 	if (existing) return existing.id;
 
 	const inserted = await db
-		.insertInto("segment_types")
+		.insertInto("segmentTypes")
 		.values({ key: "PRIMARY", label: "Primary" })
 		.returning("id")
 		.executeTakeFirst();
 
 	if (!inserted?.id) {
-		throw new Error("failed to insert segment_types.PRIMARY");
+			throw new Error("failed to insert segmentTypes.PRIMARY");
 	}
 	return inserted.id;
 }
@@ -138,8 +138,8 @@ async function ensureEvameUser(): Promise<string> {
 			profile: "",
 			twitterHandle: "",
 			plan: "free",
-			total_points: 0,
-			is_ai: false,
+			totalPoints: 0,
+			isAi: false,
 		})
 		.returning("id")
 		.executeTakeFirst();
@@ -185,9 +185,9 @@ async function upsertPage(params: {
 		await db
 			.updateTable("pages")
 			.set({
-				source_locale: params.sourceLocale,
+				sourceLocale: params.sourceLocale,
 				// mdast_json は JSONB カラムのためプレーン文字列は入らない
-				mdast_json: buildMdastJson(params.content),
+				mdastJson: buildMdastJson(params.content),
 				status: "DRAFT",
 			})
 			.where("id", "=", existing.id)
@@ -195,7 +195,7 @@ async function upsertPage(params: {
 
 		// 既存の translation_jobs を一度クリアして入れ直す
 		await db
-			.deleteFrom("translation_jobs")
+			.deleteFrom("translationJobs")
 			.where("pageId", "=", existing.id)
 			.execute();
 
@@ -210,13 +210,13 @@ async function upsertPage(params: {
 		.values({
 			id: contentId,
 			slug: params.slug,
-			source_locale: params.sourceLocale,
+			sourceLocale: params.sourceLocale,
 			// mdast_json は JSONB カラムのためプレーン文字列は入らない
-			mdast_json: buildMdastJson(params.content),
+			mdastJson: buildMdastJson(params.content),
 			status: "DRAFT",
-			user_id: params.userId,
+			userId: params.userId,
 			order: 0,
-			parent_id: null,
+			parentId: null,
 		})
 		.returning("id")
 		.executeTakeFirst();
@@ -251,7 +251,7 @@ async function insertContentRow(): Promise<number> {
 		.insertInto("contents")
 		.values({
 			kind: "PAGE",
-			import_file_id: null,
+			importFileId: null,
 		})
 		.returning("id")
 		.executeTakeFirst();
@@ -264,7 +264,7 @@ async function insertTranslationJobs(pageId: number, locales: string[]) {
 	if (!locales.length) return;
 
 	await db
-		.insertInto("translation_jobs")
+		.insertInto("translationJobs")
 		.values(
 			locales.map((locale) => ({
 				pageId,
@@ -337,19 +337,17 @@ async function upsertSegmentsWithTranslations(params: {
 		const segmentRow = await db
 			.insertInto("segments")
 			.values({
-				content_id: params.pageId,
+				contentId: params.pageId,
 				number: segment.number,
 				text: segment.text,
-				text_and_occurrence_hash: segment.textAndOccurrenceHash,
-				segment_type_id: params.segmentTypeId,
-				created_at: new Date(),
+				textAndOccurrenceHash: segment.textAndOccurrenceHash,
+				segmentTypeId: params.segmentTypeId,
 			})
 			.onConflict((oc) =>
-				oc.columns(["content_id", "number"]).doUpdateSet({
+				oc.columns(["contentId", "number"]).doUpdateSet({
 					text: segment.text,
-					text_and_occurrence_hash: segment.textAndOccurrenceHash,
-					segment_type_id: params.segmentTypeId,
-					created_at: sql`EXCLUDED.created_at`,
+					textAndOccurrenceHash: segment.textAndOccurrenceHash,
+					segmentTypeId: params.segmentTypeId,
 				}),
 			)
 			.returning(["id"])
@@ -361,8 +359,8 @@ async function upsertSegmentsWithTranslations(params: {
 
 		// 既存翻訳をクリアしてから挿入する
 		await db
-			.deleteFrom("segment_translations")
-			.where("segment_id", "=", segmentRow.id)
+			.deleteFrom("segmentTranslations")
+			.where("segmentId", "=", segmentRow.id)
 			.execute();
 
 		const translations: TranslationInput[] = Object.entries(
@@ -375,13 +373,13 @@ async function upsertSegmentsWithTranslations(params: {
 
 		if (translations.length > 0) {
 			await db
-				.insertInto("segment_translations")
+				.insertInto("segmentTranslations")
 				.values(
 					translations.map((t) => ({
-						segment_id: segmentRow.id,
+						segmentId: segmentRow.id,
 						locale: t.locale,
 						text: t.text,
-						user_id: t.userId,
+						userId: t.userId,
 						point: 0,
 					})),
 				)
