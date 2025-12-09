@@ -24,12 +24,12 @@ BEGIN
 END;
 $function$;
 
-CREATE OR REPLACE FUNCTION public.set_updatedat()
+CREATE OR REPLACE FUNCTION public.set_updated_at()
  RETURNS trigger
  LANGUAGE plpgsql
 AS $function$
 BEGIN
-    NEW."updatedAt" := NOW();
+    NEW.updated_at := NOW();
     RETURN NEW;
 END;
 $function$;
@@ -53,9 +53,9 @@ CREATE TABLE "public"."_prisma_migrations" (
 );
 
 CREATE TABLE "public"."accounts" (
-    "userId" text NOT NULL,
+    "user_id" text NOT NULL,
     "provider" text NOT NULL,
-    "providerAccountId" text NOT NULL,
+    "provider_account_id" text NOT NULL,
     "refresh_token" text,
     "access_token" text,
     "scope" text,
@@ -63,15 +63,15 @@ CREATE TABLE "public"."accounts" (
     "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "id" text NOT NULL DEFAULT (uuid_generate_v7())::text,
     "password" text,
-    "refreshTokenExpiresAt" timestamp(3),
+    "refresh_token_expires_at" timestamp(3),
     "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "expires_at" timestamp(3),
     CONSTRAINT accounts_pkey PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "accounts_provider_providerAccountId_key" ON public.accounts USING btree (provider, "providerAccountId");
+CREATE UNIQUE INDEX "accounts_provider_provider_account_id_key" ON public.accounts USING btree (provider, "provider_account_id");
 
-ALTER TABLE ONLY "public"."accounts" ADD CONSTRAINT "accounts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."accounts" ADD CONSTRAINT "accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
 
 CREATE TABLE "public"."contents" (
     "id" serial NOT NULL,
@@ -124,7 +124,7 @@ CREATE TABLE "public"."import_files" (
     "checksum" text NOT NULL,
     "status" text NOT NULL DEFAULT 'PENDING'::text,
     "message" text NOT NULL DEFAULT ''::text,
-    "createdAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT import_files_pkey PRIMARY KEY ("id")
 );
 
@@ -230,12 +230,12 @@ CREATE UNIQUE INDEX page_locale_translation_proofs_page_id_locale_key ON public.
 ALTER TABLE ONLY "public"."page_locale_translation_proofs" ADD CONSTRAINT "page_locale_translation_proofs_page_id_fkey" FOREIGN KEY ("page_id") REFERENCES "public"."pages" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
 
 CREATE TABLE "public"."page_views" (
-    "pageId" integer NOT NULL,
+    "page_id" integer NOT NULL,
     "count" integer NOT NULL DEFAULT 0,
-    CONSTRAINT page_views_pkey PRIMARY KEY ("pageId")
+    CONSTRAINT page_views_pkey PRIMARY KEY ("page_id")
 );
 
-ALTER TABLE ONLY "public"."page_views" ADD CONSTRAINT "page_views_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "public"."pages" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."page_views" ADD CONSTRAINT "page_views_page_id_fkey" FOREIGN KEY ("page_id") REFERENCES "public"."pages" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
 
 CREATE TABLE "public"."pages" (
     "id" integer NOT NULL,
@@ -368,34 +368,34 @@ ALTER TABLE ONLY "public"."segments" ADD CONSTRAINT "segments_content_id_fkey" F
 ALTER TABLE ONLY "public"."segments" ADD CONSTRAINT "segments_segment_type_id_fkey" FOREIGN KEY ("segment_type_id") REFERENCES "public"."segment_types" ("id") ON UPDATE CASCADE ON DELETE RESTRICT;
 
 CREATE TABLE "public"."sessions" (
-    "sessionToken" text NOT NULL,
-    "userId" text NOT NULL,
+    "session_token" text NOT NULL,
+    "user_id" text NOT NULL,
     "expires" timestamp(3) NOT NULL,
     "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "id" text NOT NULL DEFAULT (uuid_generate_v7())::text,
-    "ipAddress" text,
+    "ip_address" text,
     "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "userAgent" text,
+    "user_agent" text,
     CONSTRAINT sessions_pkey PRIMARY KEY ("id")
 );
 
-CREATE UNIQUE INDEX "sessions_sessionToken_key" ON public.sessions USING btree ("sessionToken");
+CREATE UNIQUE INDEX "sessions_session_token_key" ON public.sessions USING btree ("session_token");
 
-ALTER TABLE ONLY "public"."sessions" ADD CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."sessions" ADD CONSTRAINT "sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
 
 CREATE TABLE "public"."tag_pages" (
-    "tagId" integer NOT NULL,
-    "pageId" integer NOT NULL,
-    CONSTRAINT tag_pages_pkey PRIMARY KEY ("tagId", "pageId")
+    "tag_id" integer NOT NULL,
+    "page_id" integer NOT NULL,
+    CONSTRAINT tag_pages_pkey PRIMARY KEY ("tag_id", "page_id")
 );
 
-CREATE INDEX "tag_pages_pageId_idx" ON public.tag_pages USING btree ("pageId");
+CREATE INDEX "tag_pages_page_id_idx" ON public.tag_pages USING btree ("page_id");
 
-CREATE INDEX "tag_pages_tagId_idx" ON public.tag_pages USING btree ("tagId");
+CREATE INDEX "tag_pages_tag_id_idx" ON public.tag_pages USING btree ("tag_id");
 
-ALTER TABLE ONLY "public"."tag_pages" ADD CONSTRAINT "tag_pages_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "public"."pages" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."tag_pages" ADD CONSTRAINT "tag_pages_page_id_fkey" FOREIGN KEY ("page_id") REFERENCES "public"."pages" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE ONLY "public"."tag_pages" ADD CONSTRAINT "tag_pages_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "public"."tags" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."tag_pages" ADD CONSTRAINT "tag_pages_tag_id_fkey" FOREIGN KEY ("tag_id") REFERENCES "public"."tags" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
 
 CREATE TABLE "public"."tags" (
     "id" serial NOT NULL,
@@ -409,23 +409,23 @@ CREATE UNIQUE INDEX tags_name_key ON public.tags USING btree (name);
 
 CREATE TABLE "public"."translation_jobs" (
     "id" serial NOT NULL,
-    "pageId" integer NOT NULL,
-    "userId" text,
+    "page_id" integer NOT NULL,
+    "user_id" text,
     "locale" text NOT NULL,
-    "aiModel" text NOT NULL,
+    "ai_model" text NOT NULL,
     "status" "TranslationStatus" NOT NULL DEFAULT 'PENDING'::"TranslationStatus",
     "progress" integer NOT NULL DEFAULT 0,
     "error" text NOT NULL DEFAULT ''::text,
-    "createdAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "created_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT translation_jobs_pkey PRIMARY KEY ("id")
 );
 
-CREATE INDEX "translation_jobs_userId_idx" ON public.translation_jobs USING btree ("userId");
+CREATE INDEX "translation_jobs_user_id_idx" ON public.translation_jobs USING btree ("user_id");
 
-ALTER TABLE ONLY "public"."translation_jobs" ADD CONSTRAINT "translation_jobs_pageId_fkey" FOREIGN KEY ("pageId") REFERENCES "public"."pages" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."translation_jobs" ADD CONSTRAINT "translation_jobs_page_id_fkey" FOREIGN KEY ("page_id") REFERENCES "public"."pages" ("id") ON UPDATE CASCADE ON DELETE CASCADE;
 
-ALTER TABLE ONLY "public"."translation_jobs" ADD CONSTRAINT "translation_jobs_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."users" ("id") ON UPDATE CASCADE ON DELETE SET NULL;
+ALTER TABLE ONLY "public"."translation_jobs" ADD CONSTRAINT "translation_jobs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users" ("id") ON UPDATE CASCADE ON DELETE SET NULL;
 
 CREATE TABLE "public"."translation_votes" (
     "translation_id" integer NOT NULL,
@@ -484,8 +484,8 @@ CREATE TABLE "public"."users" (
     "profile" text NOT NULL DEFAULT ''::text,
     "id" text NOT NULL DEFAULT (uuid_generate_v7())::text,
     "email" text NOT NULL,
-    "twitterHandle" text NOT NULL DEFAULT ''::text,
-    "emailVerified" boolean,
+    "twitter_handle" text NOT NULL DEFAULT ''::text,
+    "email_verified" boolean,
     CONSTRAINT users_pkey PRIMARY KEY ("id")
 );
 
@@ -493,14 +493,14 @@ CREATE UNIQUE INDEX users_email_key ON public.users USING btree (email);
 
 CREATE UNIQUE INDEX users_handle_key ON public.users USING btree (handle);
 
-CREATE TABLE "public"."verification" (
+CREATE TABLE "public"."verifications" (
     "id" text NOT NULL,
     "identifier" text NOT NULL,
     "value" text NOT NULL,
-    "expiresAt" timestamp(3) NOT NULL,
-    "createdAt" timestamp(3),
-    "updatedAt" timestamp(3),
-    CONSTRAINT verification_pkey PRIMARY KEY ("id")
+    "expires_at" timestamp(3) NOT NULL,
+    "created_at" timestamp(3),
+    "updated_at" timestamp(3),
+    CONSTRAINT verifications_pkey PRIMARY KEY ("id")
 );
 
 CREATE TABLE "public"."verification_tokens" (
@@ -522,7 +522,7 @@ CREATE TRIGGER pages_set_updated_at BEFORE UPDATE ON public.pages FOR EACH ROW E
 
 CREATE TRIGGER sessions_set_updated_at BEFORE UPDATE ON public.sessions FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-CREATE TRIGGER "translation_jobs_set_updatedAt" BEFORE UPDATE ON public.translation_jobs FOR EACH ROW EXECUTE FUNCTION set_updatedat();
+CREATE TRIGGER "translation_jobs_set_updated_at" BEFORE UPDATE ON public.translation_jobs FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
 CREATE TRIGGER translation_votes_set_updated_at BEFORE UPDATE ON public.translation_votes FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
