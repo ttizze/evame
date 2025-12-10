@@ -1,3 +1,4 @@
+import { createId } from "@paralleldrive/cuid2";
 import { sql } from "drizzle-orm";
 import {
 	boolean,
@@ -306,8 +307,8 @@ export const accounts = pgTable(
 	"accounts",
 	{
 		userId: text().notNull(),
-		provider: text().notNull(),
-		providerAccountId: text().notNull(),
+		providerId: text().notNull(),
+		accountId: text().notNull(),
 		refreshToken: text("refresh_token"),
 		accessToken: text("access_token"),
 		scope: text(),
@@ -321,13 +322,16 @@ export const accounts = pgTable(
 		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		expiresAt: timestamp("expires_at", { precision: 3, mode: "string" }),
+		accessTokenExpiresAt: timestamp("access_token_expires_at", {
+			precision: 3,
+			mode: "string",
+		}),
 	},
 	(table) => [
-		uniqueIndex("accounts_provider_providerAccountId_key").using(
+		uniqueIndex("accounts_provider_accountId_key").using(
 			"btree",
-			table.provider.asc().nullsLast(),
-			table.providerAccountId.asc().nullsLast(),
+			table.providerId.asc().nullsLast(),
+			table.accountId.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.userId],
@@ -399,9 +403,12 @@ export const pageViews = pgTable(
 export const sessions = pgTable(
 	"sessions",
 	{
-		sessionToken: text().notNull(),
+		token: text().notNull(),
 		userId: text().notNull(),
-		expires: timestamp({ precision: 3, mode: "string" }).notNull(),
+		expiresAt: timestamp("expires_at", {
+			precision: 3,
+			mode: "string",
+		}).notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
@@ -413,9 +420,9 @@ export const sessions = pgTable(
 		userAgent: text(),
 	},
 	(table) => [
-		uniqueIndex("sessions_sessionToken_key").using(
+		uniqueIndex("sessions_token_key").using(
 			"btree",
-			table.sessionToken.asc().nullsLast(),
+			table.token.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.userId],
@@ -827,7 +834,9 @@ export const users = pgTable(
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		name: text().default("new_user").notNull(),
-		handle: text().notNull(),
+		handle: text()
+			.$defaultFn(() => createId())
+			.notNull(),
 		profile: text().default("").notNull(),
 		id: text().default(sql`uuid_generate_v7()`).primaryKey().notNull(),
 		email: text().notNull(),

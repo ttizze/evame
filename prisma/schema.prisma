@@ -246,8 +246,8 @@ model PageComment {
 model Account {
   id                   String    @id @default(cuid())
   userId               String
-  providerId           String    @map("provider")
-  accountId            String    @map("providerAccountId")
+  providerId           String    @map("provider_id")
+  accountId            String    @map("account_id")
   refreshToken         String?   @map("refresh_token")
   accessToken          String?   @map("access_token")
   accessTokenExpiresAt DateTime? @map("expires_at")
@@ -368,6 +368,7 @@ model SegmentType {
   label String // 表示名
 
   segments Segment[]
+
   @@unique([key, label])
   @@index([key])
   @@index([label])

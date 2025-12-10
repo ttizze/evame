@@ -3,8 +3,8 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { customSession, magicLink } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
-import { db } from "@/drizzle";
 import { sendMagicLinkEmail } from "@/lib/resend.server";
+import { db } from "./drizzle";
 import { geminiApiKeys, users } from "./drizzle/schema";
 
 export const auth = betterAuth({
@@ -56,10 +56,6 @@ export const auth = betterAuth({
 	],
 	// セッション設定
 	session: {
-		fields: {
-			expiresAt: "expires",
-			token: "sessionToken",
-		},
 		expiresIn: 60 * 60 * 24 * 7, // 7 days
 	},
 	// データベース設定
