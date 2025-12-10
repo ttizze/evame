@@ -9,11 +9,13 @@ type DrizzleDb =
 	| ReturnType<typeof drizzleNeon<typeof schema>>
 	| ReturnType<typeof drizzlePg<typeof schema>>;
 
+type DrizzleDbWithPool = DrizzleDb & { pool?: Pool };
+
 declare global {
-	var __drizzleDb: DrizzleDb | null;
+	var __drizzleDb: DrizzleDbWithPool | null;
 }
 
-function makeDb(): DrizzleDb {
+export function makeDb(): DrizzleDbWithPool {
 	const connectionString = process.env.DATABASE_URL || "";
 	if (!connectionString) {
 		throw new Error("DATABASE_URL is not defined");
@@ -23,7 +25,8 @@ function makeDb(): DrizzleDb {
 	if (isLocal) {
 		// ローカル環境ではpgクライアントを使用
 		const pool = new Pool({ connectionString });
-		return drizzlePg(pool, { schema });
+		const db = drizzlePg(pool, { schema });
+		return Object.assign(db, { pool });
 	}
 
 	// Neon serverless 環境
