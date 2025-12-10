@@ -247,20 +247,18 @@ async function insertContentRow(): Promise<number> {
 async function insertTranslationJobs(pageId: number, locales: string[]) {
 	if (!locales.length) return;
 
-	await db
-		.insert(schema.translationJobs)
-		.values(
-			locales.map((locale) => ({
-				pageId,
-				userId: null,
-				locale,
-				aiModel: "test-model",
-				status: "COMPLETED" as const,
-				progress: 0,
-				error: "",
-				updatedAt: new Date().toISOString(),
-			})),
-		);
+	await db.insert(schema.translationJobs).values(
+		locales.map((locale) => ({
+			pageId,
+			userId: null,
+			locale,
+			aiModel: "test-model",
+			status: "COMPLETED" as const,
+			progress: 0,
+			error: "",
+			updatedAt: new Date().toISOString(),
+		})),
+	);
 }
 
 function getLocalizedText(locale: LocaleKey, key: SegmentKey): string {
@@ -355,17 +353,15 @@ async function upsertSegmentsWithTranslations(params: {
 		}));
 
 		if (translations.length > 0) {
-			await db
-				.insert(schema.segmentTranslations)
-				.values(
-					translations.map((t) => ({
-						segmentId: segmentRow[0].id,
-						locale: t.locale,
-						text: t.text,
-						userId: t.userId,
-						point: 0,
-					})),
-				);
+			await db.insert(schema.segmentTranslations).values(
+				translations.map((t) => ({
+					segmentId: segmentRow[0].id,
+					locale: t.locale,
+					text: t.text,
+					userId: t.userId,
+					point: 0,
+				})),
+			);
 		}
 	}
 }
@@ -377,7 +373,9 @@ seed()
 	})
 	.finally(async () => {
 		// ローカル環境の場合のみPoolを閉じる
-		const dbWithPool = db as typeof db & { pool?: { end: () => Promise<void> } };
+		const dbWithPool = db as typeof db & {
+			pool?: { end: () => Promise<void> };
+		};
 		if (dbWithPool.pool) {
 			await dbWithPool.pool.end();
 		}
