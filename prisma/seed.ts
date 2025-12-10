@@ -1,12 +1,9 @@
 import "dotenv/config";
 
-import { Kysely, PostgresDialect, sql } from "kysely";
-import type { DB } from "kysely-codegen";
-// pg は ESM ではデフォルトエクスポートから取り出す必要がある
-import pg from "pg";
+import { eq } from "drizzle-orm";
+import * as schema from "../drizzle/schema";
+import { makeDb } from "../src/db/index";
 import { LOCALE_CONTENT } from "./seed-data/content";
-
-const { Pool } = pg;
 
 type LocaleKey = keyof typeof LOCALE_CONTENT;
 
@@ -35,13 +32,7 @@ const SEGMENT_KEYS: SegmentKey[] = (() => {
 const EN_TRANSLATIONS: LocaleKey[] = ["ja", "zh", "ko", "es"];
 const JA_TRANSLATIONS: LocaleKey[] = ["en", "zh", "ko", "es"];
 
-const db = new Kysely<DB>({
-	dialect: new PostgresDialect({
-		pool: new Pool({
-			connectionString: process.env.DATABASE_URL,
-		}),
-	}),
-});
+const db = makeDb();
 
 async function seed() {
 	// 必要なシードのみ挿入する
@@ -88,47 +79,45 @@ interface SegmentData {
 async function ensurePrimarySegmentType(): Promise<number> {
 	// PRIMARY がなければ作る。あれば ID を返す。
 	const existing = await db
-		.selectFrom("segment_types")
-		.select(["id"])
-		.where("key", "=", "PRIMARY")
-		.executeTakeFirst();
+		.select({ id: schema.segmentTypes.id })
+		.from(schema.segmentTypes)
+		.where(eq(schema.segmentTypes.key, "PRIMARY"))
+		.limit(1);
 
-	if (existing) return existing.id;
+	if (existing.length > 0) return existing[0].id;
 
 	const inserted = await db
-		.insertInto("segment_types")
-		.values({ key: "PRIMARY", label: "Primary" })
-		.returning("id")
-		.executeTakeFirst();
+		.insert(schema.segmentTypes)
+		.values({ key: "PRIMARY" as const, label: "Primary" })
+		.returning({ id: schema.segmentTypes.id });
 
-	if (!inserted?.id) {
+	if (!inserted[0]?.id) {
 		throw new Error("failed to insert segment_types.PRIMARY");
 	}
-	return inserted.id;
+	return inserted[0].id;
 }
 
 async function ensureEvameUser(): Promise<string> {
 	const existing = await db
-		.selectFrom("users")
-		.select(["id"])
-		.where("handle", "=", "evame")
-		.executeTakeFirst();
+		.select({ id: schema.users.id })
+		.from(schema.users)
+		.where(eq(schema.users.handle, "evame"))
+		.limit(1);
 
-	if (existing) {
+	if (existing.length > 0) {
 		// 必要項目だけ更新
 		await db
-			.updateTable("users")
+			.update(schema.users)
 			.set({
 				provider: "Admin",
 				image: "https://evame.tech/favicon.svg",
 			})
-			.where("id", "=", existing.id)
-			.execute();
-		return existing.id;
+			.where(eq(schema.users.id, existing[0].id));
+		return existing[0].id;
 	}
 
 	const inserted = await db
-		.insertInto("users")
+		.insert(schema.users)
 		.values({
 			handle: "evame",
 			name: "evame",
@@ -138,14 +127,13 @@ async function ensureEvameUser(): Promise<string> {
 			profile: "",
 			twitterHandle: "",
 			plan: "free",
-			total_points: 0,
-			is_ai: false,
+			totalPoints: 0,
+			isAi: false,
 		})
-		.returning("id")
-		.executeTakeFirst();
+		.returning({ id: schema.users.id });
 
-	if (!inserted?.id) throw new Error("failed to insert user evame");
-	return inserted.id;
+	if (!inserted[0]?.id) throw new Error("failed to insert user evame");
+	return inserted[0].id;
 }
 
 async function ensurePages(userId: string) {
@@ -176,57 +164,54 @@ async function upsertPage(params: {
 	userId: string;
 }): Promise<number> {
 	const existing = await db
-		.selectFrom("pages")
-		.select(["id"])
-		.where("slug", "=", params.slug)
-		.executeTakeFirst();
+		.select({ id: schema.pages.id })
+		.from(schema.pages)
+		.where(eq(schema.pages.slug, params.slug))
+		.limit(1);
 
-	if (existing) {
+	if (existing.length > 0) {
 		await db
-			.updateTable("pages")
+			.update(schema.pages)
 			.set({
-				source_locale: params.sourceLocale,
+				sourceLocale: params.sourceLocale,
 				// mdast_json は JSONB カラムのためプレーン文字列は入らない
-				mdast_json: buildMdastJson(params.content),
-				status: "DRAFT",
+				mdastJson: buildMdastJson(params.content),
+				status: "DRAFT" as const,
 			})
-			.where("id", "=", existing.id)
-			.execute();
+			.where(eq(schema.pages.id, existing[0].id));
 
 		// 既存の translation_jobs を一度クリアして入れ直す
 		await db
-			.deleteFrom("translation_jobs")
-			.where("pageId", "=", existing.id)
-			.execute();
+			.delete(schema.translationJobs)
+			.where(eq(schema.translationJobs.pageId, existing[0].id));
 
-		await insertTranslationJobs(existing.id, params.aiLocales);
-		return existing.id;
+		await insertTranslationJobs(existing[0].id, params.aiLocales);
+		return existing[0].id;
 	}
 
 	const contentId = await insertContentRow();
 
 	const insertedPage = await db
-		.insertInto("pages")
+		.insert(schema.pages)
 		.values({
 			id: contentId,
 			slug: params.slug,
-			source_locale: params.sourceLocale,
+			sourceLocale: params.sourceLocale,
 			// mdast_json は JSONB カラムのためプレーン文字列は入らない
-			mdast_json: buildMdastJson(params.content),
-			status: "DRAFT",
-			user_id: params.userId,
+			mdastJson: buildMdastJson(params.content),
+			status: "DRAFT" as const,
+			userId: params.userId,
 			order: 0,
-			parent_id: null,
+			parentId: null,
 		})
-		.returning("id")
-		.executeTakeFirst();
+		.returning({ id: schema.pages.id });
 
-	if (!insertedPage?.id) {
+	if (!insertedPage[0]?.id) {
 		throw new Error(`failed to insert page ${params.slug}`);
 	}
 
-	await insertTranslationJobs(insertedPage.id, params.aiLocales);
-	return insertedPage.id;
+	await insertTranslationJobs(insertedPage[0].id, params.aiLocales);
+	return insertedPage[0].id;
 }
 
 function buildMdastJson(text: string) {
@@ -248,36 +233,32 @@ function buildMdastJson(text: string) {
 
 async function insertContentRow(): Promise<number> {
 	const inserted = await db
-		.insertInto("contents")
+		.insert(schema.contents)
 		.values({
 			kind: "PAGE",
-			import_file_id: null,
+			importFileId: null,
 		})
-		.returning("id")
-		.executeTakeFirst();
+		.returning({ id: schema.contents.id });
 
-	if (!inserted?.id) throw new Error("failed to insert contents row");
-	return inserted.id;
+	if (!inserted[0]?.id) throw new Error("failed to insert contents row");
+	return inserted[0].id;
 }
 
 async function insertTranslationJobs(pageId: number, locales: string[]) {
 	if (!locales.length) return;
 
-	await db
-		.insertInto("translation_jobs")
-		.values(
-			locales.map((locale) => ({
-				pageId,
-				userId: null,
-				locale,
-				aiModel: "test-model",
-				status: "COMPLETED",
-				progress: 0,
-				error: "",
-				updatedAt: new Date(),
-			})),
-		)
-		.execute();
+	await db.insert(schema.translationJobs).values(
+		locales.map((locale) => ({
+			pageId,
+			userId: null,
+			locale,
+			aiModel: "test-model",
+			status: "COMPLETED" as const,
+			progress: 0,
+			error: "",
+			updatedAt: new Date().toISOString(),
+		})),
+	);
 }
 
 function getLocalizedText(locale: LocaleKey, key: SegmentKey): string {
@@ -335,35 +316,33 @@ async function upsertSegmentsWithTranslations(params: {
 }) {
 	for (const segment of params.segments) {
 		const segmentRow = await db
-			.insertInto("segments")
+			.insert(schema.segments)
 			.values({
-				content_id: params.pageId,
+				contentId: params.pageId,
 				number: segment.number,
 				text: segment.text,
-				text_and_occurrence_hash: segment.textAndOccurrenceHash,
-				segment_type_id: params.segmentTypeId,
-				created_at: new Date(),
+				textAndOccurrenceHash: segment.textAndOccurrenceHash,
+				segmentTypeId: params.segmentTypeId,
+				createdAt: new Date().toISOString(),
 			})
-			.onConflict((oc) =>
-				oc.columns(["content_id", "number"]).doUpdateSet({
+			.onConflictDoUpdate({
+				target: [schema.segments.contentId, schema.segments.number],
+				set: {
 					text: segment.text,
-					text_and_occurrence_hash: segment.textAndOccurrenceHash,
-					segment_type_id: params.segmentTypeId,
-					created_at: sql`EXCLUDED.created_at`,
-				}),
-			)
-			.returning(["id"])
-			.executeTakeFirst();
+					textAndOccurrenceHash: segment.textAndOccurrenceHash,
+					segmentTypeId: params.segmentTypeId,
+				},
+			})
+			.returning({ id: schema.segments.id });
 
-		if (!segmentRow?.id) {
+		if (!segmentRow[0]?.id) {
 			throw new Error(`failed to upsert segment ${segment.number}`);
 		}
 
 		// 既存翻訳をクリアしてから挿入する
 		await db
-			.deleteFrom("segment_translations")
-			.where("segment_id", "=", segmentRow.id)
-			.execute();
+			.delete(schema.segmentTranslations)
+			.where(eq(schema.segmentTranslations.segmentId, segmentRow[0].id));
 
 		const translations: TranslationInput[] = Object.entries(
 			segment.translations,
@@ -374,18 +353,15 @@ async function upsertSegmentsWithTranslations(params: {
 		}));
 
 		if (translations.length > 0) {
-			await db
-				.insertInto("segment_translations")
-				.values(
-					translations.map((t) => ({
-						segment_id: segmentRow.id,
-						locale: t.locale,
-						text: t.text,
-						user_id: t.userId,
-						point: 0,
-					})),
-				)
-				.execute();
+			await db.insert(schema.segmentTranslations).values(
+				translations.map((t) => ({
+					segmentId: segmentRow[0].id,
+					locale: t.locale,
+					text: t.text,
+					userId: t.userId,
+					point: 0,
+				})),
+			);
 		}
 	}
 }
@@ -396,5 +372,11 @@ seed()
 		process.exit(1);
 	})
 	.finally(async () => {
-		await db.destroy();
+		// ローカル環境の場合のみPoolを閉じる
+		const dbWithPool = db as typeof db & {
+			pool?: { end: () => Promise<void> };
+		};
+		if (dbWithPool.pool) {
+			await dbWithPool.pool.end();
+		}
 	});
