@@ -308,56 +308,56 @@ ALTER TABLE "tag_pages" ADD CONSTRAINT "tag_pages_pageId_fkey" FOREIGN KEY ("pag
 ALTER TABLE "tag_pages" ADD CONSTRAINT "tag_pages_tagId_fkey" FOREIGN KEY ("tagId") REFERENCES "public"."tags"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "segment_annotation_links" ADD CONSTRAINT "segment_annotation_links_annotation_segment_id_fkey" FOREIGN KEY ("annotation_segment_id") REFERENCES "public"."segments"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
 ALTER TABLE "segment_annotation_links" ADD CONSTRAINT "segment_annotation_links_main_segment_id_fkey" FOREIGN KEY ("main_segment_id") REFERENCES "public"."segments"("id") ON DELETE cascade ON UPDATE cascade;--> statement-breakpoint
-CREATE INDEX "follows_follower_id_idx" ON "follows" USING btree ("follower_id" text_ops);--> statement-breakpoint
-CREATE INDEX "follows_following_id_idx" ON "follows" USING btree ("following_id" text_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "like_pages_guest_id_page_id_key" ON "like_pages" USING btree ("guest_id" int4_ops,"page_id" int4_ops);--> statement-breakpoint
-CREATE INDEX "like_pages_page_id_idx" ON "like_pages" USING btree ("page_id" int4_ops);--> statement-breakpoint
-CREATE INDEX "like_pages_user_id_idx" ON "like_pages" USING btree ("user_id" text_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "like_pages_user_id_page_id_key" ON "like_pages" USING btree ("user_id" int4_ops,"page_id" int4_ops);--> statement-breakpoint
-CREATE INDEX "contents_kind_idx" ON "contents" USING btree ("kind" enum_ops);--> statement-breakpoint
-CREATE INDEX "gemini_api_keys_user_id_idx" ON "gemini_api_keys" USING btree ("user_id" text_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "gemini_api_keys_user_id_key" ON "gemini_api_keys" USING btree ("user_id" text_ops);--> statement-breakpoint
-CREATE INDEX "notifications_actor_id_idx" ON "notifications" USING btree ("actor_id" text_ops);--> statement-breakpoint
-CREATE INDEX "notifications_user_id_idx" ON "notifications" USING btree ("user_id" text_ops);--> statement-breakpoint
-CREATE INDEX "segment_types_key_idx" ON "segment_types" USING btree ("key" enum_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "segment_types_key_label_key" ON "segment_types" USING btree ("key" text_ops,"label" text_ops);--> statement-breakpoint
-CREATE INDEX "segment_types_label_idx" ON "segment_types" USING btree ("label" text_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "accounts_provider_providerAccountId_key" ON "accounts" USING btree ("provider" text_ops,"providerAccountId" text_ops);--> statement-breakpoint
-CREATE INDEX "translation_jobs_userId_idx" ON "translation_jobs" USING btree ("userId" text_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "sessions_sessionToken_key" ON "sessions" USING btree ("sessionToken" text_ops);--> statement-breakpoint
-CREATE INDEX "tags_name_idx" ON "tags" USING btree ("name" text_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "tags_name_key" ON "tags" USING btree ("name" text_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "page_locale_translation_proofs_page_id_locale_key" ON "page_locale_translation_proofs" USING btree ("page_id" int4_ops,"locale" int4_ops);--> statement-breakpoint
-CREATE INDEX "page_locale_translation_proofs_translation_proof_status_idx" ON "page_locale_translation_proofs" USING btree ("translation_proof_status" enum_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "segment_metadata_types_key_key" ON "segment_metadata_types" USING btree ("key" text_ops);--> statement-breakpoint
-CREATE INDEX "translation_votes_translation_id_idx" ON "translation_votes" USING btree ("translation_id" int4_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "translation_votes_translation_id_user_id_key" ON "translation_votes" USING btree ("translation_id" int4_ops,"user_id" int4_ops);--> statement-breakpoint
-CREATE INDEX "translation_votes_user_id_idx" ON "translation_votes" USING btree ("user_id" text_ops);--> statement-breakpoint
-CREATE INDEX "user_credentials_user_id_idx" ON "user_credentials" USING btree ("user_id" text_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "user_credentials_user_id_key" ON "user_credentials" USING btree ("user_id" text_ops);--> statement-breakpoint
-CREATE INDEX "segment_translations_segment_id_locale_idx" ON "segment_translations" USING btree ("segment_id" int4_ops,"locale" int4_ops);--> statement-breakpoint
-CREATE INDEX "segment_translations_user_id_idx" ON "segment_translations" USING btree ("user_id" text_ops);--> statement-breakpoint
-CREATE INDEX "page_comments_page_id_parent_id_created_at_idx" ON "page_comments" USING btree ("page_id" int4_ops,"parent_id" int4_ops,"created_at" timestamp_ops);--> statement-breakpoint
-CREATE INDEX "page_comments_parent_id_is_deleted_created_at_idx" ON "page_comments" USING btree ("parent_id" timestamp_ops,"is_deleted" timestamp_ops,"created_at" timestamp_ops);--> statement-breakpoint
-CREATE INDEX "page_comments_user_id_idx" ON "page_comments" USING btree ("user_id" text_ops);--> statement-breakpoint
-CREATE INDEX "pages_created_at_idx" ON "pages" USING btree ("created_at" timestamp_ops);--> statement-breakpoint
-CREATE INDEX "pages_parent_id_idx" ON "pages" USING btree ("parent_id" int4_ops);--> statement-breakpoint
-CREATE INDEX "pages_parent_id_order_idx" ON "pages" USING btree ("parent_id" int4_ops,"order" int4_ops);--> statement-breakpoint
-CREATE INDEX "pages_slug_idx" ON "pages" USING btree ("slug" text_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "pages_slug_key" ON "pages" USING btree ("slug" text_ops);--> statement-breakpoint
-CREATE INDEX "pages_user_id_idx" ON "pages" USING btree ("user_id" text_ops);--> statement-breakpoint
-CREATE INDEX "segments_content_id_idx" ON "segments" USING btree ("content_id" int4_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "segments_content_id_number_key" ON "segments" USING btree ("content_id" int4_ops,"number" int4_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "segments_content_id_text_and_occurrence_hash_key" ON "segments" USING btree ("content_id" int4_ops,"text_and_occurrence_hash" text_ops);--> statement-breakpoint
-CREATE INDEX "segments_text_and_occurrence_hash_idx" ON "segments" USING btree ("text_and_occurrence_hash" text_ops);--> statement-breakpoint
-CREATE INDEX "segment_metadata_metadata_type_id_idx" ON "segment_metadata" USING btree ("metadata_type_id" int4_ops);--> statement-breakpoint
-CREATE INDEX "segment_metadata_segment_id_idx" ON "segment_metadata" USING btree ("segment_id" int4_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "segment_metadata_segment_id_metadata_type_id_value_key" ON "segment_metadata" USING btree ("segment_id" text_ops,"metadata_type_id" int4_ops,"value" int4_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "users_email_key" ON "users" USING btree ("email" text_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "users_handle_key" ON "users" USING btree ("handle" text_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "user_settings_user_id_key" ON "user_settings" USING btree ("user_id" text_ops);--> statement-breakpoint
-CREATE INDEX "tag_pages_pageId_idx" ON "tag_pages" USING btree ("pageId" int4_ops);--> statement-breakpoint
-CREATE INDEX "tag_pages_tagId_idx" ON "tag_pages" USING btree ("tagId" int4_ops);--> statement-breakpoint
-CREATE UNIQUE INDEX "verification_tokens_token_key" ON "verification_tokens" USING btree ("token" text_ops);--> statement-breakpoint
-CREATE INDEX "segment_annotation_links_annotation_segment_id_idx" ON "segment_annotation_links" USING btree ("annotation_segment_id" int4_ops);--> statement-breakpoint
-CREATE INDEX "segment_annotation_links_main_segment_id_idx" ON "segment_annotation_links" USING btree ("main_segment_id" int4_ops);
+CREATE INDEX "follows_follower_id_idx" ON "follows" USING btree ("follower_id");--> statement-breakpoint
+CREATE INDEX "follows_following_id_idx" ON "follows" USING btree ("following_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "like_pages_guest_id_page_id_key" ON "like_pages" USING btree ("guest_id","page_id");--> statement-breakpoint
+CREATE INDEX "like_pages_page_id_idx" ON "like_pages" USING btree ("page_id");--> statement-breakpoint
+CREATE INDEX "like_pages_user_id_idx" ON "like_pages" USING btree ("user_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "like_pages_user_id_page_id_key" ON "like_pages" USING btree ("user_id","page_id");--> statement-breakpoint
+CREATE INDEX "contents_kind_idx" ON "contents" USING btree ("kind");--> statement-breakpoint
+CREATE INDEX "gemini_api_keys_user_id_idx" ON "gemini_api_keys" USING btree ("user_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "gemini_api_keys_user_id_key" ON "gemini_api_keys" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "notifications_actor_id_idx" ON "notifications" USING btree ("actor_id");--> statement-breakpoint
+CREATE INDEX "notifications_user_id_idx" ON "notifications" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "segment_types_key_idx" ON "segment_types" USING btree ("key");--> statement-breakpoint
+CREATE UNIQUE INDEX "segment_types_key_label_key" ON "segment_types" USING btree ("key","label");--> statement-breakpoint
+CREATE INDEX "segment_types_label_idx" ON "segment_types" USING btree ("label");--> statement-breakpoint
+CREATE UNIQUE INDEX "accounts_provider_providerAccountId_key" ON "accounts" USING btree ("provider","providerAccountId");--> statement-breakpoint
+CREATE INDEX "translation_jobs_userId_idx" ON "translation_jobs" USING btree ("userId");--> statement-breakpoint
+CREATE UNIQUE INDEX "sessions_sessionToken_key" ON "sessions" USING btree ("sessionToken");--> statement-breakpoint
+CREATE INDEX "tags_name_idx" ON "tags" USING btree ("name");--> statement-breakpoint
+CREATE UNIQUE INDEX "tags_name_key" ON "tags" USING btree ("name");--> statement-breakpoint
+CREATE UNIQUE INDEX "page_locale_translation_proofs_page_id_locale_key" ON "page_locale_translation_proofs" USING btree ("page_id","locale");--> statement-breakpoint
+CREATE INDEX "page_locale_translation_proofs_translation_proof_status_idx" ON "page_locale_translation_proofs" USING btree ("translation_proof_status");--> statement-breakpoint
+CREATE UNIQUE INDEX "segment_metadata_types_key_key" ON "segment_metadata_types" USING btree ("key");--> statement-breakpoint
+CREATE INDEX "translation_votes_translation_id_idx" ON "translation_votes" USING btree ("translation_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "translation_votes_translation_id_user_id_key" ON "translation_votes" USING btree ("translation_id","user_id");--> statement-breakpoint
+CREATE INDEX "translation_votes_user_id_idx" ON "translation_votes" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "user_credentials_user_id_idx" ON "user_credentials" USING btree ("user_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "user_credentials_user_id_key" ON "user_credentials" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "segment_translations_segment_id_locale_idx" ON "segment_translations" USING btree ("segment_id","locale");--> statement-breakpoint
+CREATE INDEX "segment_translations_user_id_idx" ON "segment_translations" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "page_comments_page_id_parent_id_created_at_idx" ON "page_comments" USING btree ("page_id","parent_id","created_at");--> statement-breakpoint
+CREATE INDEX "page_comments_parent_id_is_deleted_created_at_idx" ON "page_comments" USING btree ("parent_id","is_deleted","created_at");--> statement-breakpoint
+CREATE INDEX "page_comments_user_id_idx" ON "page_comments" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "pages_created_at_idx" ON "pages" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX "pages_parent_id_idx" ON "pages" USING btree ("parent_id");--> statement-breakpoint
+CREATE INDEX "pages_parent_id_order_idx" ON "pages" USING btree ("parent_id","order");--> statement-breakpoint
+CREATE INDEX "pages_slug_idx" ON "pages" USING btree ("slug");--> statement-breakpoint
+CREATE UNIQUE INDEX "pages_slug_key" ON "pages" USING btree ("slug");--> statement-breakpoint
+CREATE INDEX "pages_user_id_idx" ON "pages" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "segments_content_id_idx" ON "segments" USING btree ("content_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "segments_content_id_number_key" ON "segments" USING btree ("content_id","number");--> statement-breakpoint
+CREATE UNIQUE INDEX "segments_content_id_text_and_occurrence_hash_key" ON "segments" USING btree ("content_id","text_and_occurrence_hash");--> statement-breakpoint
+CREATE INDEX "segments_text_and_occurrence_hash_idx" ON "segments" USING btree ("text_and_occurrence_hash");--> statement-breakpoint
+CREATE INDEX "segment_metadata_metadata_type_id_idx" ON "segment_metadata" USING btree ("metadata_type_id");--> statement-breakpoint
+CREATE INDEX "segment_metadata_segment_id_idx" ON "segment_metadata" USING btree ("segment_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "segment_metadata_segment_id_metadata_type_id_value_key" ON "segment_metadata" USING btree ("segment_id","metadata_type_id","value");--> statement-breakpoint
+CREATE UNIQUE INDEX "users_email_key" ON "users" USING btree ("email");--> statement-breakpoint
+CREATE UNIQUE INDEX "users_handle_key" ON "users" USING btree ("handle");--> statement-breakpoint
+CREATE UNIQUE INDEX "user_settings_user_id_key" ON "user_settings" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "tag_pages_pageId_idx" ON "tag_pages" USING btree ("pageId");--> statement-breakpoint
+CREATE INDEX "tag_pages_tagId_idx" ON "tag_pages" USING btree ("tagId");--> statement-breakpoint
+CREATE UNIQUE INDEX "verification_tokens_token_key" ON "verification_tokens" USING btree ("token");--> statement-breakpoint
+CREATE INDEX "segment_annotation_links_annotation_segment_id_idx" ON "segment_annotation_links" USING btree ("annotation_segment_id");--> statement-breakpoint
+CREATE INDEX "segment_annotation_links_main_segment_id_idx" ON "segment_annotation_links" USING btree ("main_segment_id");
