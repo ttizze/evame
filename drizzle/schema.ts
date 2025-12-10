@@ -102,15 +102,9 @@ export const likePages = pgTable(
 		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		guestId: text("guest_id"),
 		userId: text("user_id"),
 	},
 	(table) => [
-		uniqueIndex("like_pages_guest_id_page_id_key").using(
-			"btree",
-			table.guestId.asc().nullsLast(),
-			table.pageId.asc().nullsLast(),
-		),
 		index("like_pages_page_id_idx").using(
 			"btree",
 			table.pageId.asc().nullsLast(),
