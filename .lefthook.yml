@@ -1,0 +1,36 @@
+# lefthook設定ファイル
+# すべてのGitフックでbiomeを実行
+
+pre-commit:
+  parallel: true
+  commands:
+    biome:
+      run: bun run biome
+      stage_fixed: true
+
+pre-push:
+  parallel: true
+  commands:
+    biome:
+      run: bun run biome
+
+commit-msg:
+  commands:
+    biome:
+      run: bun run biome
+
+pre-rebase:
+  commands:
+    biome:
+      run: bun run biome
+
+post-merge:
+  commands:
+    biome:
+      run: bun run biome
+
+post-checkout:
+  commands:
+    biome:
+      run: bun run biome
+
