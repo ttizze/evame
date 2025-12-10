@@ -1,8 +1,8 @@
 import "dotenv/config";
 
 import { eq } from "drizzle-orm";
-import * as schema from "../drizzle/schema";
 import { makeDb } from "../src/db/index";
+import * as schema from "./schema";
 import { LOCALE_CONTENT } from "./seed-data/content";
 
 type LocaleKey = keyof typeof LOCALE_CONTENT;
