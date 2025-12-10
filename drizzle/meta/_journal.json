@@ -1,34 +1,34 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1765325238247,
-      "tag": "0000_late_wiccan",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1765326107871,
-      "tag": "0001_melodic_thanos",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1765328608389,
-      "tag": "0002_little_ronan",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1765329163544,
-      "tag": "0003_bouncy_misty_knight",
-      "breakpoints": true
-    }
-  ]
+	"version": "7",
+	"dialect": "postgresql",
+	"entries": [
+		{
+			"idx": 0,
+			"version": "7",
+			"when": 1765325238247,
+			"tag": "0000_late_wiccan",
+			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1765326107871,
+			"tag": "0001_melodic_thanos",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1765328608389,
+			"tag": "0002_little_ronan",
+			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "7",
+			"when": 1765329163544,
+			"tag": "0003_bouncy_misty_knight",
+			"breakpoints": true
+		}
+	]
 }

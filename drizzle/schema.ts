@@ -173,10 +173,7 @@ export const contents = pgTable(
 		importFileId: integer("import_file_id"),
 	},
 	(table) => [
-		index("contents_kind_idx").using(
-			"btree",
-			table.kind.asc().nullsLast(),
-		),
+		index("contents_kind_idx").using("btree", table.kind.asc().nullsLast()),
 		foreignKey({
 			columns: [table.importFileId],
 			foreignColumns: [importFiles.id],
@@ -292,10 +289,7 @@ export const segmentTypes = pgTable(
 		key: segmentTypeKey().notNull(),
 	},
 	(table) => [
-		index("segment_types_key_idx").using(
-			"btree",
-			table.key.asc().nullsLast(),
-		),
+		index("segment_types_key_idx").using("btree", table.key.asc().nullsLast()),
 		uniqueIndex("segment_types_key_label_key").using(
 			"btree",
 			table.key.asc().nullsLast(),
@@ -440,14 +434,8 @@ export const tags = pgTable(
 		name: text().notNull(),
 	},
 	(table) => [
-		index("tags_name_idx").using(
-			"btree",
-			table.name.asc().nullsLast(),
-		),
-		uniqueIndex("tags_name_key").using(
-			"btree",
-			table.name.asc().nullsLast(),
-		),
+		index("tags_name_idx").using("btree", table.name.asc().nullsLast()),
+		uniqueIndex("tags_name_key").using("btree", table.name.asc().nullsLast()),
 	],
 );
 
@@ -705,18 +693,9 @@ export const pages = pgTable(
 			table.parentId.asc().nullsLast(),
 			table.order.asc().nullsLast(),
 		),
-		index("pages_slug_idx").using(
-			"btree",
-			table.slug.asc().nullsLast(),
-		),
-		uniqueIndex("pages_slug_key").using(
-			"btree",
-			table.slug.asc().nullsLast(),
-		),
-		index("pages_user_id_idx").using(
-			"btree",
-			table.userId.asc().nullsLast(),
-		),
+		index("pages_slug_idx").using("btree", table.slug.asc().nullsLast()),
+		uniqueIndex("pages_slug_key").using("btree", table.slug.asc().nullsLast()),
+		index("pages_user_id_idx").using("btree", table.userId.asc().nullsLast()),
 		foreignKey({
 			columns: [table.id],
 			foreignColumns: [contents.id],
@@ -906,10 +885,7 @@ export const tagPages = pgTable(
 			"btree",
 			table.pageId.asc().nullsLast(),
 		),
-		index("tag_pages_tagId_idx").using(
-			"btree",
-			table.tagId.asc().nullsLast(),
-		),
+		index("tag_pages_tagId_idx").using("btree", table.tagId.asc().nullsLast()),
 		foreignKey({
 			columns: [table.pageId],
 			foreignColumns: [pages.id],

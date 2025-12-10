@@ -5,7 +5,9 @@ import { Pool } from "pg";
 import { WebSocket } from "ws";
 import * as schema from "../../drizzle/schema";
 
-type DrizzleDb = ReturnType<typeof drizzleNeon<typeof schema>> | ReturnType<typeof drizzlePg<typeof schema>>;
+type DrizzleDb =
+	| ReturnType<typeof drizzleNeon<typeof schema>>
+	| ReturnType<typeof drizzlePg<typeof schema>>;
 
 declare global {
 	var __drizzleDb: DrizzleDb | null;
