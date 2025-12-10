@@ -244,7 +244,7 @@ CREATE TABLE "users" (
 CREATE TABLE "user_settings" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
-	"target_locales" text[] DEFAULT '{"RAY"}' NOT NULL,
+	"target_locales" text[] DEFAULT ARRAY[]::text[] NOT NULL,
 	"created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	"updated_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
