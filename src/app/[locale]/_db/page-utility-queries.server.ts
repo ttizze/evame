@@ -1,5 +1,4 @@
-import type { InferSelectModel } from "drizzle-orm";
-import { eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/drizzle";
 import { pages, pageViews, translationJobs } from "@/drizzle/schema";
 
@@ -7,20 +6,18 @@ import { pages, pageViews, translationJobs } from "@/drizzle/schema";
  * ページの翻訳ジョブを取得（各localeの最新COMPLETEDのみ）
  * Drizzleに移行済み
  */
-export async function fetchTranslationJobs(
-	pageId: number,
-): Promise<InferSelectModel<typeof translationJobs>[]> {
+export async function fetchTranslationJobs(pageId: number) {
 	// DISTINCT ONを使用して各localeの最新レコードを取得
-	const result = await db.execute(
-		sql`
-			SELECT DISTINCT ON (locale) *
-			FROM ${translationJobs}
-			WHERE ${translationJobs.pageId} = ${pageId}
-				AND ${translationJobs.status} = 'COMPLETED'
-			ORDER BY ${translationJobs.locale} ASC, ${translationJobs.createdAt} DESC
-		`,
-	);
-	return result.rows as InferSelectModel<typeof translationJobs>[];
+	return await db
+		.selectDistinctOn([translationJobs.locale])
+		.from(translationJobs)
+		.where(
+			and(
+				eq(translationJobs.pageId, pageId),
+				eq(translationJobs.status, "COMPLETED"),
+			),
+		)
+		.orderBy(translationJobs.locale, desc(translationJobs.createdAt));
 }
 
 /**
