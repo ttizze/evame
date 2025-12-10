@@ -1,26 +1,16 @@
-import type { GeminiApiKey } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { eq } from "drizzle-orm";
+import { db } from "@/drizzle";
+import { users } from "@/drizzle/schema";
 
+/**
+ * handleからユーザーを取得
+ * Drizzleに移行済み
+ */
 export async function fetchUserByHandle(handle: string) {
-	const user = await prisma.user.findUnique({
-		where: { handle },
-	});
-	if (!user) {
-		return null;
-	}
-	return user;
-}
-
-export async function fetchGeminiApiKeyByHandle(
-	handle: string,
-): Promise<GeminiApiKey | null> {
-	const user = await prisma.user.findUnique({
-		where: { handle },
-	});
-	if (!user) {
-		return null;
-	}
-	return await prisma.geminiApiKey.findUnique({
-		where: { userId: user.id },
-	});
+	const result = await db
+		.select()
+		.from(users)
+		.where(eq(users.handle, handle))
+		.limit(1);
+	return result[0] ?? null;
 }

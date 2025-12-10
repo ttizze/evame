@@ -1,7 +1,10 @@
+import { eq } from "drizzle-orm";
 import { selectPageFields } from "@/app/[locale]/_db/queries.server";
 import { pickBestTranslation } from "@/app/[locale]/_utils/pick-best-translation";
 import type { SegmentForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
+import { db } from "@/drizzle";
+import { pages } from "@/drizzle/schema";
 import { prisma } from "@/lib/prisma";
 
 type ParentNode = {
@@ -54,10 +57,12 @@ export async function getParentChain(pageId: number, locale: string) {
 }
 
 // ページの親IDを取得する関数
+// Drizzleに移行済み
 async function getParentId(pageId: number): Promise<number | null> {
-	const page = await prisma.page.findUnique({
-		where: { id: pageId },
-		select: { parentId: true },
-	});
-	return page?.parentId || null;
+	const result = await db
+		.select({ parentId: pages.parentId })
+		.from(pages)
+		.where(eq(pages.id, pageId))
+		.limit(1);
+	return result[0]?.parentId ?? null;
 }

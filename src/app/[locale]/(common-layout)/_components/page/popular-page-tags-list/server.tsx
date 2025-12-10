@@ -1,6 +1,6 @@
 import { Hash } from "lucide-react";
 import { Link } from "@/i18n/routing";
-import { fetchPopularTags, type PopularTag } from "./_db/queries.server";
+import { fetchPopularTags } from "./_db/queries.server";
 
 interface PopularTagsListProps {
 	limit: number;
@@ -16,7 +16,7 @@ export default async function PopularTagsList({ limit }: PopularTagsListProps) {
 
 	return (
 		<div className="flex flex-wrap gap-2">
-			{popularTags.map((tag: PopularTag) => (
+			{popularTags.map((tag) => (
 				<Link
 					className="flex items-center gap-1 px-3 h-[32px] no-underline! bg-secondary rounded-full text-sm text-secondary-foreground hover:bg-secondary/80 transition-colors"
 					href={`/search?query=${encodeURIComponent(tag.name)}&category=tags&tagPage=true`}

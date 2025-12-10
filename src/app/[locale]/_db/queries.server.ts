@@ -1,5 +1,7 @@
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { eq } from "drizzle-orm";
+import { db } from "@/drizzle";
+import { pages, users } from "@/drizzle/schema";
 
 export const selectUserFields = () => {
 	return {
@@ -127,14 +129,37 @@ export function selectPageFields(
 	return buildPageSelect(locale, where);
 }
 
+/**
+ * ページIDでページとユーザー情報を取得
+ * Drizzleに移行済み
+ */
 export async function getPageById(pageId: number) {
-	const page = await prisma.page.findUnique({
-		where: { id: pageId },
-		include: {
+	const result = await db
+		.select({
+			page: pages,
 			user: {
-				select: selectUserFields(),
+				id: users.id,
+				name: users.name,
+				handle: users.handle,
+				image: users.image,
+				createdAt: users.createdAt,
+				updatedAt: users.updatedAt,
+				profile: users.profile,
+				twitterHandle: users.twitterHandle,
+				totalPoints: users.totalPoints,
+				isAI: users.isAI,
+				plan: users.plan,
 			},
-		},
-	});
-	return page;
+		})
+		.from(pages)
+		.leftJoin(users, eq(pages.userId, users.id))
+		.where(eq(pages.id, pageId))
+		.limit(1);
+
+	if (!result[0] || !result[0].user) return null;
+
+	return {
+		...result[0].page,
+		user: result[0].user,
+	};
 }
