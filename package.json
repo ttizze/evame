@@ -22,7 +22,7 @@
 		"vercel-build": " (bun run db:migrate || (echo '1st migrate failed; retrying in 8s' && sleep 8 && bun run db:migrate )) && bun run prisma generate && bun run seed && next build",
 		"biome": "bunx @biomejs/biome check --write .",
 		"typecheck": "tsc --noEmit",
-		"seed": "tsx drizzle/seed.ts",
+		"seed": "tsx src/drizzle/seed.ts",
 		"mdast-json": "bunx tsx scripts/mdast-json.ts",
 		"tipitaka": "bunx tsx scripts/tipitaka-import.ts",
 		"translate": "bunx tsx scripts/translate.ts",

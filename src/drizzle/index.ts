@@ -3,7 +3,7 @@ import { drizzle as drizzleNeon } from "drizzle-orm/neon-serverless";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { WebSocket } from "ws";
-import * as schema from "../../drizzle/schema";
+import * as schema from "./schema";
 
 type DrizzleDb =
 	| ReturnType<typeof drizzleNeon<typeof schema>>
