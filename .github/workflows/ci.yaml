@@ -40,9 +40,10 @@ jobs:
              git clone --depth 1 https://github.com/fboulnois/pg_uuidv7.git && \
              cd pg_uuidv7 && \
              make && \
-             make install) && \
-            docker compose -f docker-compose.yml exec -T test_neon psql -U postgres -d main -c 'CREATE EXTENSION IF NOT EXISTS pg_uuidv7;'
+             make install)
           "
+          # 拡張機能を有効化
+          docker compose -f docker-compose.yml exec -T test_neon psql -U postgres -d main -c 'CREATE EXTENSION IF NOT EXISTS pg_uuidv7;'
 
       - name: Create .env
         run: |
