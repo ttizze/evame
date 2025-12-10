@@ -1,7 +1,7 @@
 import "dotenv/config";
 
 import { eq } from "drizzle-orm";
-import { makeDb } from "../src/db/index";
+import { makeDb } from "./index";
 import * as schema from "./schema";
 import { LOCALE_CONTENT } from "./seed-data/content";
 

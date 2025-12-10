@@ -1,9 +1,11 @@
 import { createId } from "@paralleldrive/cuid2";
 import { betterAuth } from "better-auth";
-import { prismaAdapter } from "better-auth/adapters/prisma";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { customSession, magicLink } from "better-auth/plugins";
-import { prisma } from "@/lib/prisma";
+import { eq } from "drizzle-orm";
+import { db } from "@/drizzle";
 import { sendMagicLinkEmail } from "@/lib/resend.server";
+import { geminiApiKeys, users } from "./drizzle/schema";
 
 export const auth = betterAuth({
 	plugins: [
@@ -13,22 +15,26 @@ export const auth = betterAuth({
 			},
 		}),
 		customSession(async ({ session }) => {
-			const currentUser = await prisma.user.findUnique({
-				where: {
-					id: session.userId,
-				},
-				include: {
-					geminiApiKey: true,
-				},
-			});
+			// ユーザー情報を取得
+			const [currentUser] = await db
+				.select()
+				.from(users)
+				.where(eq(users.id, session.userId))
+				.limit(1);
+
 			if (!currentUser) {
 				throw new Error("User not found");
 			}
 
+			// Gemini APIキーを取得
+			const [geminiApiKey] = await db
+				.select()
+				.from(geminiApiKeys)
+				.where(eq(geminiApiKeys.userId, session.userId))
+				.limit(1);
+
 			// Check if the user has a Gemini API key
-			const hasGeminiApiKey = !!(
-				currentUser.geminiApiKey && currentUser.geminiApiKey.apiKey !== ""
-			);
+			const hasGeminiApiKey = !!(geminiApiKey && geminiApiKey.apiKey !== "");
 			return {
 				user: {
 					id: currentUser.id,
@@ -38,10 +44,10 @@ export const auth = betterAuth({
 					profile: currentUser.profile,
 					twitterHandle: currentUser.twitterHandle,
 					totalPoints: currentUser.totalPoints,
-					isAI: currentUser.isAI,
+					isAI: currentUser.isAi,
 					image: currentUser.image,
-					createdAt: currentUser.createdAt,
-					updatedAt: currentUser.updatedAt,
+					createdAt: new Date(currentUser.createdAt),
+					updatedAt: new Date(currentUser.updatedAt),
 					hasGeminiApiKey,
 				},
 				session,
@@ -57,8 +63,9 @@ export const auth = betterAuth({
 		expiresIn: 60 * 60 * 24 * 7, // 7 days
 	},
 	// データベース設定
-	database: prismaAdapter(prisma, {
-		provider: "postgresql",
+	database: drizzleAdapter(db, {
+		provider: "pg",
+		usePlural: true,
 	}),
 	databaseHooks: {
 		user: {
