@@ -1,12 +1,16 @@
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { DOMParser } from "@xmldom/xmldom";
 import { afterEach, describe, expect, test } from "vitest";
 import { getFileData } from "../books";
 import { convertXmlFileToMarkdown } from "../cli";
 import { ELEMENT_NODE, TEXT_NODE } from "../tei";
+
+// ESM環境で__dirnameを取得する
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // このテストファイルは convert-romn-to-md-nosplit の書籍変換フロー全体を確認する。
 // - writeBookMarkdown が期待どおりの Markdown を生成し、分類ディレクトリ配下に配置される
@@ -209,12 +213,7 @@ afterEach(() => {
 describe("convertXmlFileToMarkdownNoSplit", () => {
 	// 実際の ROMN XML を 1 書籍 1 Markdown として出力し、分類パスが維持されることを確認する。
 	test("ROMN XML を単一 Markdown に変換する", async () => {
-		const sampleFile = path.resolve(
-			process.cwd(),
-			"tipitaka-xml",
-			"romn",
-			"abh01m.mul.xml",
-		);
+		const sampleFile = path.resolve(__dirname, "fixtures", "abh01m.mul.xml");
 		expect(fs.existsSync(sampleFile)).toBe(true);
 		const outputDir = createTempDir("nosplit-convert-");
 
@@ -237,12 +236,7 @@ describe("convertXmlFileToMarkdownNoSplit", () => {
 
 	// XML のテキストノードがすべて Markdown 出力に含まれているか確認し、行落ちを防ぐ。
 	test("ROMN XML の本文テキストが Markdown に保持される", async () => {
-		const sampleFile = path.resolve(
-			process.cwd(),
-			"tipitaka-xml",
-			"romn",
-			"abh01m.mul.xml",
-		);
+		const sampleFile = path.resolve(__dirname, "fixtures", "abh01m.mul.xml");
 		expect(fs.existsSync(sampleFile)).toBe(true);
 		const outputDir = createTempDir("nosplit-text-");
 
