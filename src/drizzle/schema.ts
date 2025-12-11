@@ -1,5 +1,4 @@
 import { createId } from "@paralleldrive/cuid2";
-import { sql } from "drizzle-orm";
 import {
 	boolean,
 	foreignKey,
@@ -15,10 +14,7 @@ import {
 	unique,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-
-// PostgreSQL拡張機能の設定
-// マイグレーションファイルで CREATE EXTENSION IF NOT EXISTS "pg_uuidv7"; を実行してください
-// 例: drizzle/0000_late_wiccan.sql の先頭に追加
+import type { Root as MdastRoot } from "mdast";
 
 export const contentKind = pgEnum("ContentKind", ["PAGE", "PAGE_COMMENT"]);
 export const notificationType = pgEnum("NotificationType", [
@@ -55,7 +51,9 @@ export const verifications = pgTable("verifications", {
 		mode: "date",
 	}).notNull(),
 	createdAt: timestamp("created_at", { precision: 3, mode: "date" }),
-	updatedAt: timestamp("updated_at", { precision: 3, mode: "date" }),
+	updatedAt: timestamp("updated_at", { precision: 3, mode: "date" }).$onUpdate(
+		() => new Date(),
+	),
 });
 
 export const follows = pgTable(
@@ -63,7 +61,7 @@ export const follows = pgTable(
 	{
 		id: serial().primaryKey().notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 		followerId: text("follower_id").notNull(),
 		followingId: text("following_id").notNull(),
@@ -104,7 +102,7 @@ export const likePages = pgTable(
 		id: serial().primaryKey().notNull(),
 		pageId: integer("page_id").notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 		userId: text("user_id"),
 	},
@@ -149,7 +147,7 @@ export const importFiles = pgTable(
 		status: text().default("PENDING").notNull(),
 		message: text().default("").notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 	},
 	(table) => [
@@ -169,11 +167,12 @@ export const contents = pgTable(
 		id: serial().primaryKey().notNull(),
 		kind: contentKind().notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
+			.defaultNow()
+			.notNull()
+			.$onUpdate(() => new Date()),
 		importFileId: integer("import_file_id"),
 	},
 	(table) => [
@@ -217,7 +216,7 @@ export const geminiApiKeys = pgTable(
 export const importRuns = pgTable("import_runs", {
 	id: serial().primaryKey().notNull(),
 	startedAt: timestamp("started_at", { precision: 3, mode: "date" })
-		.default(sql`CURRENT_TIMESTAMP`)
+		.defaultNow()
 		.notNull(),
 	finishedAt: timestamp("finished_at", { precision: 3, mode: "date" }),
 	status: text().default("RUNNING").notNull(),
@@ -231,7 +230,7 @@ export const notifications = pgTable(
 		type: notificationType().notNull(),
 		read: boolean().default(false).notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 		actorId: text("actor_id").notNull(),
 		pageCommentId: integer("page_comment_id"),
@@ -317,17 +316,21 @@ export const accounts = pgTable(
 		scope: text(),
 		idToken: text("id_token"),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
-		id: text().default(sql`uuid_generate_v7()`).primaryKey().notNull(),
+		id: text()
+			.$defaultFn(() => createId())
+			.primaryKey()
+			.notNull(),
 		password: text(),
 		refreshTokenExpiresAt: timestamp("refresh_token_expires_at", {
 			precision: 3,
 			mode: "date",
 		}),
 		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
+			.defaultNow()
+			.notNull()
+			.$onUpdate(() => new Date()),
 		accessTokenExpiresAt: timestamp("access_token_expires_at", {
 			precision: 3,
 			mode: "date",
@@ -361,11 +364,12 @@ export const translationJobs = pgTable(
 		progress: integer().default(0).notNull(),
 		error: text().default("").notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
+			.defaultNow()
+			.notNull()
+			.$onUpdate(() => new Date()),
 	},
 	(table) => [
 		index("translation_jobs_userId_idx").using(
@@ -416,13 +420,17 @@ export const sessions = pgTable(
 			mode: "date",
 		}).notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
-		id: text().default(sql`uuid_generate_v7()`).primaryKey().notNull(),
+		id: text()
+			.$defaultFn(() => createId())
+			.primaryKey()
+			.notNull(),
 		ipAddress: text("ip_address"),
 		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
+			.defaultNow()
+			.notNull()
+			.$onUpdate(() => new Date()),
 		userAgent: text("user_agent"),
 	},
 	(table) => [
@@ -504,11 +512,12 @@ export const translationVotes = pgTable(
 		userId: text("user_id").notNull(),
 		isUpvote: boolean("is_upvote").notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
+			.defaultNow()
+			.notNull()
+			.$onUpdate(() => new Date()),
 	},
 	(table) => [
 		index("translation_votes_translation_id_idx").using(
@@ -576,7 +585,7 @@ export const segmentTranslations = pgTable(
 		text: text().notNull(),
 		point: integer().default(0).notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 		userId: text("user_id").notNull(),
 	},
@@ -613,15 +622,16 @@ export const pageComments = pgTable(
 		id: integer().primaryKey().notNull(),
 		pageId: integer("page_id").notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
+			.defaultNow()
+			.notNull()
+			.$onUpdate(() => new Date()),
 		locale: text().notNull(),
 		userId: text("user_id").notNull(),
 		parentId: integer("parent_id"),
-		mdastJson: jsonb("mdast_json").notNull(),
+		mdastJson: jsonb("mdast_json").$type<MdastRoot>().notNull(),
 		isDeleted: boolean("is_deleted").default(false).notNull(),
 		lastReplyAt: timestamp("last_reply_at", { precision: 3, mode: "date" }),
 		replyCount: integer("reply_count").default(0).notNull(),
@@ -680,15 +690,17 @@ export const pages = pgTable(
 		id: integer().primaryKey().notNull(),
 		slug: text().notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 		sourceLocale: text("source_locale").default("unknown").notNull(),
 		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
+			.defaultNow()
+			.notNull()
+			.$onUpdate(() => new Date()),
 		status: pageStatus().default("DRAFT").notNull(),
 		userId: text("user_id").notNull(),
-		mdastJson: jsonb("mdast_json").notNull(),
+		// mdast_json は mdast の Root 型として扱う
+		mdastJson: jsonb("mdast_json").$type<MdastRoot>().notNull(),
 		order: integer().default(0).notNull(),
 		parentId: integer("parent_id"),
 	},
@@ -742,7 +754,7 @@ export const segments = pgTable(
 		text: text().notNull(),
 		textAndOccurrenceHash: text("text_and_occurrence_hash").notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 		segmentTypeId: integer("segment_type_id").notNull(),
 	},
@@ -790,7 +802,7 @@ export const segmentMetadata = pgTable(
 		metadataTypeId: integer("metadata_type_id").notNull(),
 		value: text().notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 	},
 	(table) => [
@@ -834,17 +846,21 @@ export const users = pgTable(
 		isAI: boolean("is_ai").default(false).notNull(),
 		provider: text().default("Credentials").notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
+			.defaultNow()
+			.notNull()
+			.$onUpdate(() => new Date()),
 		name: text().default("new_user").notNull(),
 		handle: text()
 			.$defaultFn(() => createId())
 			.notNull(),
 		profile: text().default("").notNull(),
-		id: text().default(sql`uuid_generate_v7()`).primaryKey().notNull(),
+		id: text()
+			.$defaultFn(() => createId())
+			.primaryKey()
+			.notNull(),
 		email: text().notNull(),
 		twitterHandle: text("twitter_handle").default("").notNull(),
 		emailVerified: boolean("email_verified"),
@@ -868,11 +884,12 @@ export const userSettings = pgTable(
 		userId: text("user_id").notNull(),
 		targetLocales: text("target_locales").array().default(["RAY"]).notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
+			.defaultNow()
+			.notNull()
+			.$onUpdate(() => new Date()),
 	},
 	(table) => [
 		uniqueIndex("user_settings_user_id_key").using(
@@ -947,7 +964,7 @@ export const segmentAnnotationLinks = pgTable(
 		mainSegmentId: integer("main_segment_id").notNull(),
 		annotationSegmentId: integer("annotation_segment_id").notNull(),
 		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.default(sql`CURRENT_TIMESTAMP`)
+			.defaultNow()
 			.notNull(),
 	},
 	(table) => [

@@ -1,6 +1,7 @@
 import "dotenv/config";
 
 import { eq } from "drizzle-orm";
+import type { Root as MdastRoot, Paragraph, Text } from "mdast";
 import { makeDb } from "./index";
 import * as schema from "./schema";
 import { LOCALE_CONTENT } from "./seed-data/content";
@@ -214,21 +215,26 @@ async function upsertPage(params: {
 	return insertedPage[0].id;
 }
 
-function buildMdastJson(text: string) {
-	return {
-		type: "root",
-		children: [
-			{
-				type: "paragraph",
-				children: [
-					{
-						type: "text",
-						value: text,
-					},
-				],
-			},
-		],
+/**
+ * テキストからMDASTのRootノードを構築
+ */
+function buildMdastJson(text: string): MdastRoot {
+	const textNode: Text = {
+		type: "text",
+		value: text,
 	};
+
+	const paragraphNode: Paragraph = {
+		type: "paragraph",
+		children: [textNode],
+	};
+
+	const rootNode: MdastRoot = {
+		type: "root",
+		children: [paragraphNode],
+	};
+
+	return rootNode;
 }
 
 async function insertContentRow(): Promise<number> {

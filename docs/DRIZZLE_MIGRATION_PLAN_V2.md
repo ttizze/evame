@@ -739,3 +739,500 @@ async function fetchTagsForPages(pageIds: number[]) {
 
 **合計**: 約8-13時間（テスト含む）
 
+## テスト関連の移行戦略
+
+### 現状分析
+
+#### 既に移行済み
+- ✅ **テストファクトリー** (`src/tests/factories.ts`): Drizzleを使用してテストデータを作成
+- ✅ **一部の統合テスト**: Drizzleを使用（例: `sync-annotation-links-by-paragraph-number/index.integration.test.ts`）
+
+#### 移行が必要
+- ❌ **テストDBマネージャー** (`src/tests/test-db-manager.ts`): Prismaクライアント管理が残っている
+- ❌ **DBヘルパー** (`src/tests/db-helpers.ts`): `resetDatabase`, `setupMasterData`, `getSegmentTypeId`がPrismaを使用
+- ❌ **統合テストファイル**: 約20ファイルがPrismaを直接使用（`import { prisma } from "@/lib/prisma"`）
+
+### テスト移行の原則
+
+#### 1. **テストインフラを先に移行**
+- テストの基盤（DB管理、ヘルパー）を先に移行
+- 個別のテストファイルは後から段階的に移行
+
+#### 2. **統合テストを優先**
+- モックを使わない統合テストから移行
+- 実際のDBを使うテストは移行が容易
+
+#### 3. **段階的な移行**
+- 一度に全てを移行せず、機能単位で移行
+- 移行済みのテストは即座に動作確認
+
+### フェーズ別テスト移行計画
+
+#### フェーズ0: テストインフラの移行（最優先）
+
+**目的**: テストの基盤をDrizzleに移行し、以降のテスト移行を容易にする
+
+##### ステップ0.1: `db-helpers.ts`の移行
+
+**Before:**
+```typescript
+// src/tests/db-helpers.ts
+import { prisma } from "@/lib/prisma";
+
+export async function resetDatabase() {
+  await prisma.$connect();
+  await prisma.segmentAnnotationLink.deleteMany();
+  // ... 他のテーブルも同様
+}
+```
+
+**After:**
+```typescript
+// src/tests/db-helpers.ts
+import { db } from "@/drizzle";
+import {
+  segmentAnnotationLinks,
+  segmentMetadata,
+  // ... 他のテーブル
+} from "@/drizzle/schema";
+
+export async function resetDatabase() {
+  // 外部キー制約の順序に注意して削除
+  await db.delete(segmentAnnotationLinks);
+  await db.delete(segmentMetadata);
+  // ... 他のテーブルも同様
+}
+```
+
+**チェックリスト:**
+- [ ] `resetDatabase`をDrizzleに移行
+- [ ] `setupMasterData`をDrizzleに移行
+- [ ] `getSegmentTypeId`をDrizzleに移行
+- [ ] 既存のテストが動作することを確認
+
+##### ステップ0.2: `test-db-manager.ts`の移行
+
+**変更点:**
+- `resetPrismaClient`を削除または`resetDrizzleClient`に置き換え（必要に応じて）
+- `runMigrations`から`prisma generate`を削除（Drizzleのみに）
+
+**Before:**
+```typescript
+function runMigrations(dbUrl: string, silent = false): void {
+  const env = { ...process.env, DATABASE_URL: dbUrl };
+  execSync("bunx drizzle-kit migrate", { env, stdio });
+  execSync("bunx prisma generate", { env, stdio }); // ❌ 削除
+}
+```
+
+**After:**
+```typescript
+function runMigrations(dbUrl: string, silent = false): void {
+  const env = { ...process.env, DATABASE_URL: dbUrl };
+  execSync("bunx drizzle-kit migrate", { env, stdio });
+  // Prisma Client生成は不要
+}
+```
+
+**チェックリスト:**
+- [ ] `runMigrations`から`prisma generate`を削除
+- [ ] `resetPrismaClient`を削除（またはDrizzle用に変更）
+- [ ] グローバルセットアップが動作することを確認
+
+#### フェーズ1: 統合テストの移行（機能単位）
+
+**方針**: 機能ごとにテストを移行。移行済みの機能のテストから開始。
+
+##### ステップ1.1: ページリスト関連のテスト
+
+**対象**: `page-list-queries.server.ts`のテスト（新規作成が必要な場合）
+
+**アプローチ:**
+1. テストファイルを作成: `src/app/[locale]/_db/page-list-queries.server.integration.test.ts`
+2. `fetchPagesWithTransform`のテストを実装
+3. 各ヘルパー関数（`fetchPagesBasic`, `fetchSegmentsForPages`など）のテストを実装
+
+**チェックリスト:**
+- [ ] `fetchPagesBasic`のテスト
+- [ ] `fetchSegmentsForPages`のテスト
+- [ ] `fetchTagsForPages`のテスト
+- [ ] `fetchCountsForPages`のテスト
+- [ ] `fetchPagesWithTransform`の統合テスト
+- [ ] `searchPagesByTitle`, `searchPagesByTag`, `searchPagesByContent`のテスト
+
+##### ステップ1.2: 既存の統合テストを移行
+
+**移行順序（依存関係が少ない順）:**
+
+1. **ページ詳細関連** (`fetch-page-detail.server.ts`のテスト)
+2. **ミューテーション関連** (`mutations.server.ts`のテスト)
+3. **アクション関連** (`action.ts`のテスト)
+
+**移行パターン:**
+
+**Before:**
+```typescript
+import { prisma } from "@/lib/prisma";
+
+it("should fetch page", async () => {
+  const page = await prisma.page.findFirst();
+  // テストロジック
+});
+```
+
+**After:**
+```typescript
+import { db } from "@/drizzle";
+import { pages } from "@/drizzle/schema";
+
+it("should fetch page", async () => {
+  const [page] = await db.select().from(pages).limit(1);
+  // テストロジック
+});
+```
+
+**チェックリスト（各テストファイル）:**
+- [ ] Prismaのインポートを削除
+- [ ] Drizzleのインポートを追加
+- [ ] クエリをDrizzle構文に変更
+- [ ] テストが動作することを確認
+
+#### フェーズ2: モックテストの移行（低優先度）
+
+**対象**: Prismaをモックしているユニットテスト
+
+**注意点:**
+- 統合テストを優先し、モックテストは後回しでも可
+- モックが必要な場合は、Drizzleクライアントをモック
+
+**移行パターン:**
+
+**Before:**
+```typescript
+vi.mock("@/lib/prisma", () => ({
+  prisma: {
+    page: {
+      findMany: vi.fn(),
+    },
+  },
+}));
+```
+
+**After:**
+```typescript
+vi.mock("@/drizzle", () => ({
+  db: {
+    select: vi.fn(),
+  },
+}));
+```
+
+**推奨:**
+- モックテストは統合テストに置き換えることを検討
+- 実際のDBを使うテストの方が信頼性が高い
+
+### テスト移行のチェックリスト（全体）
+
+#### フェーズ0: テストインフラ
+- [ ] `src/tests/db-helpers.ts`をDrizzleに移行
+  - [ ] `resetDatabase`を移行
+  - [ ] `setupMasterData`を移行
+  - [ ] `getSegmentTypeId`を移行
+- [ ] `src/tests/test-db-manager.ts`を更新
+  - [ ] `runMigrations`から`prisma generate`を削除
+  - [ ] `resetPrismaClient`を削除または更新
+- [ ] 既存のテストが動作することを確認
+
+#### フェーズ1: 統合テストの移行
+- [ ] ページリスト関連のテストを作成
+- [ ] ページ詳細関連のテストを移行
+- [ ] ミューテーション関連のテストを移行
+- [ ] アクション関連のテストを移行
+
+#### フェーズ2: モックテストの移行（オプション）
+- [ ] Prismaをモックしているテストを特定
+- [ ] Drizzle用のモックに変更、または統合テストに置き換え
+
+### テスト移行の注意事項
+
+#### 1. テストデータの作成
+- `factories.ts`は既にDrizzleを使用しているため、そのまま利用可能
+- 新しいファクトリー関数が必要な場合は、Drizzleで実装
+
+#### 2. トランザクションの扱い
+- Drizzleのトランザクションは`db.transaction()`を使用
+- テスト内でトランザクションを使う場合は、Drizzle構文に変更
+
+#### 3. 型安全性
+- Drizzleの型を活用して、テストでも型安全性を保つ
+- `InferSelectModel`, `InferInsertModel`などを使用
+
+#### 4. パフォーマンス
+- 統合テストは実際のDBを使用するため、テスト時間が増える可能性
+- テストDBのクローン機能（`setupDbPerFile`）を活用して並列実行を維持
+
+### テスト移行の目安
+
+- **フェーズ0（テストインフラ）**: 2-3時間
+- **フェーズ1（統合テスト）**: 4-6時間（テストファイル数による）
+- **フェーズ2（モックテスト）**: 1-2時間（オプション）
+
+**合計**: 約7-11時間（フェーズ2含む）
+
+### 推奨される移行順序
+
+1. **まずテストインフラを移行**（フェーズ0）
+   - これにより、以降のテスト移行が容易になる
+   - 既存のテストが動作することを確認
+
+2. **新機能のテストをDrizzleで作成**
+   - 移行済みの機能（`page-list-queries`など）のテストを新規作成
+   - 最初からDrizzleで書くことで、移行の手間を省く
+
+3. **既存テストを段階的に移行**（フェーズ1）
+   - 機能単位で移行
+   - 移行後は即座に動作確認
+
+4. **モックテストは最後**（フェーズ2）
+   - 統合テストを優先
+   - モックテストは必要に応じて移行または削除
+
+## @rawsql-ts/pg-testkit によるテストインフラの置き換え（検討案）
+
+### 概要
+
+[`@rawsql-ts/pg-testkit`](https://zenn.dev/mkmonaka/articles/c2413d99ae67bb) は「ZeroTableDependency (ZTD)」という手法で、テーブルを作成せずにSQLテストを実行できるライブラリです。
+
+**メリット:**
+- マイグレーション、シーディング、クリーンアップが不要
+- テストDBのクローンが不要（空のDB 1つでOK）
+- データ競合問題を解消し、並列実行に対応
+- 高速なテスト実行
+
+### 制約事項
+
+**⚠️ 重要な制約:**
+- **ストアドプロシージャ/関数**: 対応不可
+- **トリガー**: 対応不可
+- **View**: 対応不可
+
+**現在のプロジェクトの状況:**
+- ✅ View: 使用していない
+- ⚠️ トリガー: `updated_at`の自動更新のみ（`set_updated_at`, `set_updatedat`）
+- ⚠️ ストアドプロシージャ: `set_updated_at()`, `set_updatedat()`が存在
+
+### 適用可能性の検討
+
+#### ケース1: 完全適用（推奨度: 低）
+
+**問題点:**
+- トリガーが使われているため、ZTDの制約に抵触
+- `updated_at`の自動更新がテストで重要な場合、動作しない可能性
+
+**対応策:**
+- テストで`updated_at`を手動で設定
+- トリガーに依存しないテスト設計に変更
+
+#### ケース2: 部分的適用（推奨度: 中）
+
+**方針:**
+- トリガーに依存しないテストのみZTDを使用
+- トリガーが必要なテストは従来方式を維持
+
+**メリット:**
+- 段階的に導入可能
+- リスクが低い
+
+**デメリット:**
+- 2つのテストインフラを管理する必要がある
+
+#### ケース3: トリガーをアプリケーション層に移動（推奨度: 高）
+
+**方針:**
+- トリガーを削除し、Drizzleのフックやアプリケーション層で`updated_at`を更新
+- これによりZTDの制約を回避
+
+**メリット:**
+- ZTDを完全に適用可能
+- テストが高速化
+- アプリケーション層で制御できるため、柔軟性が向上
+
+**デメリット:**
+- 既存のトリガーを削除する必要がある
+- アプリケーション層での更新処理を実装する必要がある
+
+### 実装例（ケース3を採用した場合）
+
+#### 1. テストクライアントのセットアップ
+
+```typescript
+// src/tests/pg-testkit-setup.ts
+import { Client } from "pg";
+import { createPgTestkitClient } from "@rawsql-ts/pg-testkit";
+import * as path from "node:path";
+
+// DDLファイルのパス（Drizzleのスキーマから生成）
+const ddlPath = path.resolve(__dirname, "../../drizzle");
+
+export const testClient = createPgTestkitClient({
+  connectionFactory: () => new Client({
+    connectionString: process.env.TEST_DB || "postgres://postgres:postgres@db.localtest.me:5435/main",
+  }),
+
+  // DDLからCREATE TABLEを読み込む
+  ddl: {
+    directories: [ddlPath],
+    extensions: [".sql"],
+  },
+
+  // テスト用のfixtures（必要に応じて）
+  tableRows: [],
+});
+```
+
+#### 2. テストDBマネージャーの置き換え
+
+**Before:**
+```typescript
+// 複雑なDBクローン処理
+export async function setupDbPerFile(fileUrl: string) {
+  const fileId = getFileId(fileUrl);
+  const dbName = `${baseDbName}_test_${fileId}`;
+  cloneTemplateDatabase(dbName);
+  process.env.DATABASE_URL = buildDbUrl(dbName);
+}
+```
+
+**After:**
+```typescript
+// シンプルに空のDBに接続するだけ
+export async function setupDbPerFile(fileUrl: string) {
+  // 空のDBに接続（テーブルは不要）
+  process.env.DATABASE_URL = "postgres://postgres:postgres@db.localtest.me:5435/main";
+  // pg-testkitが自動的にCTEに置き換える
+}
+```
+
+#### 3. テストファイルでの使用例
+
+```typescript
+// src/app/[locale]/_db/page-list-queries.server.integration.test.ts
+import { testClient } from "@/tests/pg-testkit-setup";
+import { db } from "@/drizzle";
+import { fetchPagesWithTransform } from "./page-list-queries.server";
+
+// pg-testkitでDrizzleクライアントをラップ
+const wrappedDb = testClient.adaptDrizzle(db);
+
+describe("fetchPagesWithTransform", () => {
+  it("should fetch pages", async () => {
+    // fixturesでテストデータを定義
+    const client = testClient.withFixtures({
+      tableRows: [
+        {
+          tableName: "users",
+          rows: [
+            { id: "user1", handle: "testuser", name: "Test User", email: "test@example.com" },
+          ],
+        },
+        {
+          tableName: "pages",
+          rows: [
+            { id: 1, slug: "test-page", userId: "user1", status: "PUBLIC" },
+          ],
+        },
+      ],
+    });
+
+    // ラップされたDBを使用
+    const result = await fetchPagesWithTransform(
+      { status: "PUBLIC" },
+      0,
+      10,
+      "en",
+    );
+
+    expect(result.pageForLists).toHaveLength(1);
+  });
+});
+```
+
+### 移行手順（ケース3を採用した場合）
+
+#### ステップ1: トリガーの削除とアプリケーション層への移行
+
+1. **Drizzleスキーマからトリガー定義を削除**
+   - マイグレーションファイルから`CREATE TRIGGER`を削除
+   - `set_updated_at()`, `set_updatedat()`関数を削除
+
+2. **アプリケーション層で`updated_at`を更新**
+   - Drizzleの`update`時に`updated_at`を明示的に設定
+   - または、Drizzleのフック機能を使用
+
+```typescript
+// 例: 更新時に自動的にupdated_atを設定
+await db.update(pages)
+  .set({ 
+    ...data,
+    updatedAt: new Date(), // 明示的に設定
+  })
+  .where(eq(pages.id, pageId));
+```
+
+#### ステップ2: @rawsql-ts/pg-testkitの導入
+
+1. **パッケージのインストール**
+   ```bash
+   bun add -D @rawsql-ts/pg-testkit
+   ```
+
+2. **テストセットアップファイルの作成**
+   - `src/tests/pg-testkit-setup.ts`を作成
+   - DDLファイルのパスを設定
+
+3. **テストDBマネージャーの置き換え**
+   - `setupDbPerFile`を簡素化
+   - DBクローン処理を削除
+
+#### ステップ3: 既存テストの移行
+
+1. **テストファイルを段階的に移行**
+   - 新しいテストからZTDを使用
+   - 既存テストは動作確認しながら移行
+
+2. **fixturesの定義**
+   - テストデータをfixturesとして定義
+   - 再利用可能なfixturesを作成
+
+### メリット・デメリットの比較
+
+| 項目 | 従来方式 | ZTD方式 |
+|------|---------|---------|
+| **DB作成** | テストファイルごとにクローン | 不要（空のDB 1つ） |
+| **マイグレーション** | 必要 | 不要（DDLから読み込み） |
+| **シーディング** | 必要 | fixturesで定義 |
+| **クリーンアップ** | 必要 | 不要（書き込みしない） |
+| **並列実行** | 競合に注意が必要 | 問題なし |
+| **テスト速度** | やや遅い | 高速 |
+| **トリガー対応** | ✅ 対応可能 | ❌ 対応不可 |
+| **導入コスト** | 低（既存） | 中（トリガー削除が必要） |
+
+### 推奨事項
+
+1. **短期**: ケース2（部分的適用）を検討
+   - トリガーに依存しないテストからZTDを導入
+   - リスクを抑えながら効果を検証
+
+2. **長期**: ケース3（トリガー削除 + 完全適用）を検討
+   - トリガーをアプリケーション層に移動
+   - ZTDを完全に適用してテストを高速化
+
+3. **検証**: まずは小規模なテストで試行
+   - 1つのテストファイルでZTDを試す
+   - 効果と問題点を確認してから本格導入
+
+### 参考リンク
+
+- [@rawsql-ts/pg-testkit 公式ドキュメント](https://zenn.dev/mkmonaka/articles/c2413d99ae67bb)
+- [GitHub: rawsql-ts/pg-testkit](https://github.com/rawsql-ts/pg-testkit)
+

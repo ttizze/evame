@@ -57,6 +57,20 @@
 			"when": 1765340980277,
 			"tag": "0007_jittery_bloodstrike",
 			"breakpoints": true
+		},
+		{
+			"idx": 8,
+			"version": "7",
+			"when": 1765342000000,
+			"tag": "0008_remove_triggers_and_functions",
+			"breakpoints": true
+		},
+		{
+			"idx": 9,
+			"version": "7",
+			"when": 1765429852651,
+			"tag": "0009_dear_maelstrom",
+			"breakpoints": true
 		}
 	]
 }

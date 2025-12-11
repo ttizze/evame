@@ -1,9 +1,6 @@
 -- Current sql file was generated after introspecting the database
 -- If you want to run this migration please uncomment this code before executing migrations
 
--- PostgreSQL拡張機能の有効化（uuid_generate_v7()関数を提供）
-CREATE EXTENSION IF NOT EXISTS "pg_uuidv7";--> statement-breakpoint
-
 -- 型が存在しない場合のみ作成する（本番環境では既に存在する可能性があるため）
 DO $$ BEGIN
     CREATE TYPE "public"."ContentKind" AS ENUM('PAGE', 'PAGE_COMMENT');
@@ -129,7 +126,7 @@ CREATE TABLE IF NOT EXISTS "accounts" (
 	"scope" text,
 	"id_token" text,
 	"created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	"id" text PRIMARY KEY DEFAULT (uuid_generate_v7()) NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"password" text,
 	"refreshTokenExpiresAt" timestamp(3),
 	"updated_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -159,7 +156,7 @@ CREATE TABLE IF NOT EXISTS "sessions" (
 	"userId" text NOT NULL,
 	"expires" timestamp(3) NOT NULL,
 	"created_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
-	"id" text PRIMARY KEY DEFAULT (uuid_generate_v7()) NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"ipAddress" text,
 	"updated_at" timestamp(3) DEFAULT CURRENT_TIMESTAMP NOT NULL,
 	"userAgent" text
@@ -263,7 +260,7 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"name" text DEFAULT 'new_user' NOT NULL,
 	"handle" text NOT NULL,
 	"profile" text DEFAULT '' NOT NULL,
-	"id" text PRIMARY KEY DEFAULT (uuid_generate_v7()) NOT NULL,
+	"id" text PRIMARY KEY NOT NULL,
 	"email" text NOT NULL,
 	"twitterHandle" text DEFAULT '' NOT NULL,
 	"emailVerified" boolean
