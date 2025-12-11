@@ -2,17 +2,7 @@
 -- If you want to run this migration please uncomment this code before executing migrations
 
 -- PostgreSQL拡張機能の有効化（uuid_generate_v7()関数を提供）
--- 拡張機能がインストールされていない場合は、フォールバック関数を作成
-DO $$ BEGIN
-    CREATE EXTENSION IF NOT EXISTS "pg_uuidv7";
-EXCEPTION
-    WHEN OTHERS THEN
-        -- 拡張機能が存在しない場合は、gen_random_uuid()を使うフォールバック関数を作成
-        CREATE OR REPLACE FUNCTION uuid_generate_v7() RETURNS uuid AS $$
-            SELECT gen_random_uuid();
-        $$ LANGUAGE sql;
-        RAISE WARNING 'Extension pg_uuidv7 could not be created: %. Using gen_random_uuid() as fallback.', SQLERRM;
-END $$;--> statement-breakpoint
+CREATE EXTENSION IF NOT EXISTS "pg_uuidv7";--> statement-breakpoint
 
 -- 型が存在しない場合のみ作成する（本番環境では既に存在する可能性があるため）
 DO $$ BEGIN
