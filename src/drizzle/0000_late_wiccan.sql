@@ -1,6 +1,9 @@
 -- Current sql file was generated after introspecting the database
 -- If you want to run this migration please uncomment this code before executing migrations
 
+-- PostgreSQL拡張機能の有効化（uuid_generate_v7()関数を提供）
+CREATE EXTENSION IF NOT EXISTS "pg_uuidv7";--> statement-breakpoint
+
 -- 型が存在しない場合のみ作成する（本番環境では既に存在する可能性があるため）
 DO $$ BEGIN
     CREATE TYPE "public"."ContentKind" AS ENUM('PAGE', 'PAGE_COMMENT');

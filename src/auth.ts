@@ -44,7 +44,7 @@ export const auth = betterAuth({
 					profile: currentUser.profile,
 					twitterHandle: currentUser.twitterHandle,
 					totalPoints: currentUser.totalPoints,
-					isAI: currentUser.isAi,
+					isAI: currentUser.isAI,
 					image: currentUser.image,
 					createdAt: new Date(currentUser.createdAt),
 					updatedAt: new Date(currentUser.updatedAt),

@@ -33,7 +33,7 @@
 		"rules": {
 			"recommended": true,
 			"correctness": {
-				"noUnusedImports": "error",
+				"noUnusedImports": { "level": "warn", "fix": "safe" },
 				"useUniqueElementIds": "off"
 			}
 		}

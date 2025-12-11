@@ -1,63 +1,85 @@
-import { prisma } from "@/lib/prisma";
+import { and, eq, type SQL } from "drizzle-orm";
+import { db } from "@/drizzle";
+import {
+	contents,
+	geminiApiKeys,
+	pageComments,
+	pages,
+	segments,
+	users,
+} from "@/drizzle/schema";
 
+/**
+ * セグメントの選択フィールド（共通）
+ */
 const segmentSelect = {
-	id: true,
-	number: true,
-	text: true,
+	id: segments.id,
+	number: segments.number,
+	text: segments.text,
 } as const;
 
+/**
+ * セグメントを取得する共通関数（id, number, text）
+ * Drizzleに移行済み
+ */
+async function getSegments(where: SQL) {
+	return await db.select(segmentSelect).from(segments).where(where);
+}
+
 /** ページ本文のセグメントを取得（id, number, text） */
+/** Drizzleに移行済み */
 export async function getPageSegments(pageId: number) {
-	return await prisma.segment.findMany({
-		where: { content: { page: { id: pageId } } },
-		select: segmentSelect,
-	});
+	return await db
+		.select(segmentSelect)
+		.from(segments)
+		.innerJoin(contents, eq(segments.contentId, contents.id))
+		.innerJoin(pages, eq(contents.id, pages.id))
+		.where(eq(pages.id, pageId));
 }
 
 /** ページコメントのセグメントを取得（id, number, text） */
+/** Drizzleに移行済み */
 export async function getPageCommentSegments(pageCommentId: number) {
-	return await prisma.segment.findMany({
-		where: {
-			content: { pageComment: { id: pageCommentId } },
-		},
-		select: segmentSelect,
-	});
+	return await db
+		.select(segmentSelect)
+		.from(segments)
+		.innerJoin(contents, eq(segments.contentId, contents.id))
+		.innerJoin(pageComments, eq(contents.id, pageComments.id))
+		.where(eq(pageComments.id, pageCommentId));
 }
 
 /** 注釈コンテンツのセグメントを取得（id, number, text） */
+/** Drizzleに移行済み */
 export async function getAnnotationSegments(contentId: number) {
-	return await prisma.segment.findMany({
-		where: { contentId },
-		select: segmentSelect,
-	});
+	return getSegments(eq(segments.contentId, contentId));
 }
 
 /** ページタイトル（セグメント番号0のテキスト）を取得 */
+/** Drizzleに移行済み */
 export async function getPageTitle(pageId: number): Promise<string | null> {
-	const segment = await prisma.segment.findFirst({
-		where: {
-			content: { page: { id: pageId } },
-			number: 0,
-		},
-		select: { text: true },
-	});
-	return segment?.text ?? null;
+	const result = await db
+		.select({ text: segments.text })
+		.from(segments)
+		.innerJoin(contents, eq(segments.contentId, contents.id))
+		.innerJoin(pages, eq(contents.id, pages.id))
+		.where(and(eq(pages.id, pageId), eq(segments.number, 0)))
+		.limit(1);
+	return result[0]?.text ?? null;
 }
 
+/**
+ * ユーザーIDからGemini APIキーを取得
+ * Drizzleに移行済み
+ */
 export async function fetchGeminiApiKeyByUserId(
 	userId: string,
 ): Promise<string | null> {
-	const user = await prisma.user.findUnique({
-		where: { id: userId },
-	});
-	if (!user) {
-		return null;
-	}
-	const geminiApiKey = await prisma.geminiApiKey.findUnique({
-		where: { userId: user.id },
-	});
-	if (!geminiApiKey) {
-		return null;
-	}
-	return geminiApiKey.apiKey;
+	const result = await db
+		.select({ apiKey: geminiApiKeys.apiKey })
+		.from(users)
+		.innerJoin(geminiApiKeys, eq(users.id, geminiApiKeys.userId))
+		.where(eq(users.id, userId))
+		.limit(1);
+
+	return result[0]?.apiKey ?? null;
 }

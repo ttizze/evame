@@ -41,10 +41,12 @@ function terminateConnections(dbName: string): void {
 }
 
 function runMigrations(dbUrl: string, silent = false): void {
-	execSync("bunx prisma migrate deploy", {
-		env: { ...process.env, DATABASE_URL: dbUrl },
-		stdio: silent ? "pipe" : "inherit",
-	});
+	const env = { ...process.env, DATABASE_URL: dbUrl };
+	const stdio = silent ? "pipe" : "inherit";
+
+	// Drizzleのマイグレーションを適用し、Prisma Clientを再生成
+	execSync("bunx drizzle-kit migrate", { env, stdio });
+	execSync("bunx prisma generate", { env, stdio });
 }
 
 export async function resetPrismaClient(): Promise<void> {

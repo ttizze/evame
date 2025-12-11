@@ -1,3 +1,6 @@
+import { count, desc, eq } from "drizzle-orm";
+import { db } from "@/drizzle";
+import { tagPages, tags, userSettings } from "@/drizzle/schema";
 import { prisma } from "@/lib/prisma";
 
 export async function getPageWithTitleAndTagsBySlug(slug: string) {
@@ -23,30 +26,37 @@ export type PageWithTitleAndTags = Awaited<
 	ReturnType<typeof getPageWithTitleAndTagsBySlug>
 >;
 
+/**
+ * 全タグを取得（使用数順）
+ * Drizzleに移行済み
+ */
 export async function getAllTagsWithCount() {
-	return await prisma.tag.findMany({
-		select: {
-			id: true,
-			name: true,
+	return await db
+		.select({
+			id: tags.id,
+			name: tags.name,
 			_count: {
-				select: { pages: true },
+				pages: count(tagPages.pageId),
 			},
-		},
-		orderBy: {
-			pages: {
-				_count: "desc",
-			},
-		},
-	});
+		})
+		.from(tags)
+		.leftJoin(tagPages, eq(tags.id, tagPages.tagId))
+		.groupBy(tags.id, tags.name)
+		.orderBy(desc(count(tagPages.pageId)));
 }
 export type TagWithCount = Awaited<
 	ReturnType<typeof getAllTagsWithCount>
 >[number];
 
+/**
+ * ユーザーのターゲットロケールを取得
+ * Drizzleに移行済み
+ */
 export async function getUserTargetLocales(userId: string) {
-	const setting = await prisma.userSetting.findUnique({
-		where: { userId },
-		select: { targetLocales: true },
-	});
-	return setting?.targetLocales ?? ["en", "zh"];
+	const result = await db
+		.select({ targetLocales: userSettings.targetLocales })
+		.from(userSettings)
+		.where(eq(userSettings.userId, userId))
+		.limit(1);
+	return result[0]?.targetLocales ?? ["en", "zh"];
 }

@@ -128,7 +128,7 @@ async function ensureEvameUser(): Promise<string> {
 			twitterHandle: "",
 			plan: "free",
 			totalPoints: 0,
-			isAi: false,
+			isAI: false,
 		})
 		.returning({ id: schema.users.id });
 
@@ -256,7 +256,6 @@ async function insertTranslationJobs(pageId: number, locales: string[]) {
 			status: "COMPLETED" as const,
 			progress: 0,
 			error: "",
-			updatedAt: new Date().toISOString(),
 		})),
 	);
 }
@@ -323,7 +322,6 @@ async function upsertSegmentsWithTranslations(params: {
 				text: segment.text,
 				textAndOccurrenceHash: segment.textAndOccurrenceHash,
 				segmentTypeId: params.segmentTypeId,
-				createdAt: new Date().toISOString(),
 			})
 			.onConflictDoUpdate({
 				target: [schema.segments.contentId, schema.segments.number],

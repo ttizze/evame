@@ -50,16 +50,19 @@ export const verifications = pgTable("verifications", {
 	id: text().primaryKey().notNull(),
 	identifier: text().notNull(),
 	value: text().notNull(),
-	expiresAt: timestamp({ precision: 3, mode: "string" }).notNull(),
-	createdAt: timestamp({ precision: 3, mode: "string" }),
-	updatedAt: timestamp({ precision: 3, mode: "string" }),
+	expiresAt: timestamp("expires_at", {
+		precision: 3,
+		mode: "date",
+	}).notNull(),
+	createdAt: timestamp("created_at", { precision: 3, mode: "date" }),
+	updatedAt: timestamp("updated_at", { precision: 3, mode: "date" }),
 });
 
 export const follows = pgTable(
 	"follows",
 	{
 		id: serial().primaryKey().notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		followerId: text("follower_id").notNull(),
@@ -100,7 +103,7 @@ export const likePages = pgTable(
 	{
 		id: serial().primaryKey().notNull(),
 		pageId: integer("page_id").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		userId: text("user_id"),
@@ -145,7 +148,7 @@ export const importFiles = pgTable(
 		checksum: text().notNull(),
 		status: text().default("PENDING").notNull(),
 		message: text().default("").notNull(),
-		createdAt: timestamp({ precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 	},
@@ -165,10 +168,10 @@ export const contents = pgTable(
 	{
 		id: serial().primaryKey().notNull(),
 		kind: contentKind().notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		importFileId: integer("import_file_id"),
@@ -213,10 +216,10 @@ export const geminiApiKeys = pgTable(
 
 export const importRuns = pgTable("import_runs", {
 	id: serial().primaryKey().notNull(),
-	startedAt: timestamp("started_at", { precision: 3, mode: "string" })
+	startedAt: timestamp("started_at", { precision: 3, mode: "date" })
 		.default(sql`CURRENT_TIMESTAMP`)
 		.notNull(),
-	finishedAt: timestamp("finished_at", { precision: 3, mode: "string" }),
+	finishedAt: timestamp("finished_at", { precision: 3, mode: "date" }),
 	status: text().default("RUNNING").notNull(),
 });
 
@@ -227,7 +230,7 @@ export const notifications = pgTable(
 		userId: text("user_id").notNull(),
 		type: notificationType().notNull(),
 		read: boolean().default(false).notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		actorId: text("actor_id").notNull(),
@@ -306,25 +309,28 @@ export const segmentTypes = pgTable(
 export const accounts = pgTable(
 	"accounts",
 	{
-		userId: text().notNull(),
-		providerId: text().notNull(),
-		accountId: text().notNull(),
+		userId: text("user_id").notNull(),
+		providerId: text("provider_id").notNull(),
+		accountId: text("account_id").notNull(),
 		refreshToken: text("refresh_token"),
 		accessToken: text("access_token"),
 		scope: text(),
 		idToken: text("id_token"),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		id: text().default(sql`uuid_generate_v7()`).primaryKey().notNull(),
 		password: text(),
-		refreshTokenExpiresAt: timestamp({ precision: 3, mode: "string" }),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+		refreshTokenExpiresAt: timestamp("refresh_token_expires_at", {
+			precision: 3,
+			mode: "date",
+		}),
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		accessTokenExpiresAt: timestamp("access_token_expires_at", {
 			precision: 3,
-			mode: "string",
+			mode: "date",
 		}),
 	},
 	(table) => [
@@ -347,17 +353,17 @@ export const translationJobs = pgTable(
 	"translation_jobs",
 	{
 		id: serial().primaryKey().notNull(),
-		pageId: integer().notNull(),
-		userId: text(),
+		pageId: integer("page_id").notNull(),
+		userId: text("user_id"),
 		locale: text().notNull(),
-		aiModel: text().notNull(),
+		aiModel: text("ai_model").notNull(),
 		status: translationStatus().default("PENDING").notNull(),
 		progress: integer().default(0).notNull(),
 		error: text().default("").notNull(),
-		createdAt: timestamp({ precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		updatedAt: timestamp({ precision: 3, mode: "string" })
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 	},
@@ -386,7 +392,7 @@ export const translationJobs = pgTable(
 export const pageViews = pgTable(
 	"page_views",
 	{
-		pageId: integer().primaryKey().notNull(),
+		pageId: integer("page_id").primaryKey().notNull(),
 		count: integer().default(0).notNull(),
 	},
 	(table) => [
@@ -404,20 +410,20 @@ export const sessions = pgTable(
 	"sessions",
 	{
 		token: text().notNull(),
-		userId: text().notNull(),
+		userId: text("user_id").notNull(),
 		expiresAt: timestamp("expires_at", {
 			precision: 3,
-			mode: "string",
+			mode: "date",
 		}).notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		id: text().default(sql`uuid_generate_v7()`).primaryKey().notNull(),
-		ipAddress: text(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+		ipAddress: text("ip_address"),
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		userAgent: text(),
+		userAgent: text("user_agent"),
 	},
 	(table) => [
 		uniqueIndex("sessions_token_key").using(
@@ -497,10 +503,10 @@ export const translationVotes = pgTable(
 		translationId: integer("translation_id").notNull(),
 		userId: text("user_id").notNull(),
 		isUpvote: boolean("is_upvote").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 	},
@@ -569,7 +575,7 @@ export const segmentTranslations = pgTable(
 		locale: text().notNull(),
 		text: text().notNull(),
 		point: integer().default(0).notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		userId: text("user_id").notNull(),
@@ -606,10 +612,10 @@ export const pageComments = pgTable(
 	{
 		id: integer().primaryKey().notNull(),
 		pageId: integer("page_id").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		locale: text().notNull(),
@@ -617,7 +623,7 @@ export const pageComments = pgTable(
 		parentId: integer("parent_id"),
 		mdastJson: jsonb("mdast_json").notNull(),
 		isDeleted: boolean("is_deleted").default(false).notNull(),
-		lastReplyAt: timestamp("last_reply_at", { precision: 3, mode: "string" }),
+		lastReplyAt: timestamp("last_reply_at", { precision: 3, mode: "date" }),
 		replyCount: integer("reply_count").default(0).notNull(),
 	},
 	(table) => [
@@ -673,11 +679,11 @@ export const pages = pgTable(
 	{
 		id: integer().primaryKey().notNull(),
 		slug: text().notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		sourceLocale: text("source_locale").default("unknown").notNull(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		status: pageStatus().default("DRAFT").notNull(),
@@ -735,7 +741,7 @@ export const segments = pgTable(
 		number: integer().notNull(),
 		text: text().notNull(),
 		textAndOccurrenceHash: text("text_and_occurrence_hash").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		segmentTypeId: integer("segment_type_id").notNull(),
@@ -783,7 +789,7 @@ export const segmentMetadata = pgTable(
 		segmentId: integer("segment_id").notNull(),
 		metadataTypeId: integer("metadata_type_id").notNull(),
 		value: text().notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 	},
@@ -825,12 +831,12 @@ export const users = pgTable(
 		image: text().default("https://evame.tech/avatar.png").notNull(),
 		plan: text().default("free").notNull(),
 		totalPoints: integer("total_points").default(0).notNull(),
-		isAi: boolean("is_ai").default(false).notNull(),
+		isAI: boolean("is_ai").default(false).notNull(),
 		provider: text().default("Credentials").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		name: text().default("new_user").notNull(),
@@ -840,8 +846,8 @@ export const users = pgTable(
 		profile: text().default("").notNull(),
 		id: text().default(sql`uuid_generate_v7()`).primaryKey().notNull(),
 		email: text().notNull(),
-		twitterHandle: text().default("").notNull(),
-		emailVerified: boolean(),
+		twitterHandle: text("twitter_handle").default("").notNull(),
+		emailVerified: boolean("email_verified"),
 	},
 	(table) => [
 		uniqueIndex("users_email_key").using(
@@ -861,10 +867,10 @@ export const userSettings = pgTable(
 		id: serial().primaryKey().notNull(),
 		userId: text("user_id").notNull(),
 		targetLocales: text("target_locales").array().default(["RAY"]).notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 	},
@@ -886,8 +892,8 @@ export const userSettings = pgTable(
 export const tagPages = pgTable(
 	"tag_pages",
 	{
-		tagId: integer().notNull(),
-		pageId: integer().notNull(),
+		tagId: integer("tag_id").notNull(),
+		pageId: integer("page_id").notNull(),
 	},
 	(table) => [
 		index("tag_pages_pageId_idx").using(
@@ -921,7 +927,7 @@ export const verificationTokens = pgTable(
 	{
 		identifier: text().notNull(),
 		token: text().notNull(),
-		expires: timestamp({ precision: 3, mode: "string" }).notNull(),
+		expires: timestamp({ precision: 3, mode: "date" }).notNull(),
 	},
 	(table) => [
 		uniqueIndex("verification_tokens_token_key").using(
@@ -940,7 +946,7 @@ export const segmentAnnotationLinks = pgTable(
 	{
 		mainSegmentId: integer("main_segment_id").notNull(),
 		annotationSegmentId: integer("annotation_segment_id").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 	},
