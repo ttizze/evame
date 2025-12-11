@@ -218,6 +218,9 @@ export function selectPageFields(
 /**
  * ページIDでページとユーザー情報を取得
  * Drizzleに移行済み
+ *
+ * 返却構造: ページオブジェクトにuserをネストして返す
+ * これにより、page.user.nameのようにアクセスでき、ドメインモデルとの整合性が保たれる
  */
 export async function getPageById(pageId: number) {
 	const result = await db
@@ -226,12 +229,13 @@ export async function getPageById(pageId: number) {
 			user: selectUserFieldsDrizzle(),
 		})
 		.from(pages)
-		.leftJoin(users, eq(pages.userId, users.id))
+		.innerJoin(users, eq(pages.userId, users.id))
 		.where(eq(pages.id, pageId))
 		.limit(1);
 
-	if (!result[0] || !result[0].user) return null;
+	if (!result[0]) return null;
 
+	// ドメインモデルに合わせて、userをページオブジェクト内にネストして返す
 	return {
 		...result[0].page,
 		user: result[0].user,
