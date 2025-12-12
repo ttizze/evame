@@ -196,6 +196,8 @@ async function fetchTranslationData(notifications: NotificationRow[]): Promise<
 		),
 	);
 
+	if (translationIds.length === 0) return new Map();
+
 	const titleSegments = alias(segments, "title_segments");
 
 	const translationsWithAllData = await db
