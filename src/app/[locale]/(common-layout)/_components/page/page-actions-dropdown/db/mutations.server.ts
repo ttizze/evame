@@ -32,7 +32,7 @@ export async function togglePagePublicStatus(
 	const [updatedPage] = await db
 		.update(pages)
 		.set({ status: newStatus })
-		.where(eq(pages.id, pageId))
+		.where(and(eq(pages.id, pageId), eq(pages.userId, currentUserId)))
 		.returning();
 
 	if (!updatedPage) {
