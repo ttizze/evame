@@ -1,19 +1,21 @@
-import { prisma } from "@/lib/prisma";
-export async function archivePage(pageId: number, userId: string) {
-	const page = await prisma.page.findFirst({
-		where: {
-			id: pageId,
-			userId,
-		},
-	});
+import { and, eq } from "drizzle-orm";
+import { db } from "@/drizzle";
+import { pages } from "@/drizzle/schema";
 
-	if (!page) {
+/**
+ * ページをアーカイブ状態にする
+ * Drizzle版に移行済み
+ */
+export async function archivePage(pageId: number, userId: string) {
+	const [result] = await db
+		.update(pages)
+		.set({ status: "ARCHIVE" })
+		.where(and(eq(pages.id, pageId), eq(pages.userId, userId)))
+		.returning();
+
+	if (!result) {
 		throw new Error("Page not found or unauthorized");
 	}
 
-	const result = await prisma.page.update({
-		where: { id: pageId },
-		data: { status: "ARCHIVE" },
-	});
 	return result;
 }

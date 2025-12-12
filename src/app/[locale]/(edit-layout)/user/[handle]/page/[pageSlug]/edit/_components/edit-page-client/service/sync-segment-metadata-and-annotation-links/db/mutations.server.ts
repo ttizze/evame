@@ -1,13 +1,8 @@
-import type { PrismaClient } from "@prisma/client";
+import { inArray } from "drizzle-orm";
+import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
+import { segmentMetadata, segmentMetadataTypes } from "@/drizzle/schema";
 import { createServerLogger } from "@/lib/logger.server";
 import type { MetadataDraft } from "../domain/collect-metadata-drafts";
-
-/**
- * Prismaのトランザクションクライアントの型
- */
-type TransactionClient = Parameters<
-	Parameters<PrismaClient["$transaction"]>[0]
->[0];
 
 /**
  * SegmentMetadataDraft をデータベースに同期する
@@ -18,6 +13,9 @@ type TransactionClient = Parameters<
  * 3. メタデータアイテムを作成するデータを収集
  * 4. 既存のメタデータを削除
  * 5. 新しいメタデータを作成
+ *
+ * @param segmentIds このページのセグメントIDのみを含むセット（他のページのセグメントは含まれない）
+ * @param metadataDrafts 同期するメタデータドラフトの配列
  */
 export async function syncSegmentMetadata(
 	tx: TransactionClient,
@@ -40,21 +38,34 @@ export async function syncSegmentMetadata(
 	const metadataTypeMap = new Map<string, number>();
 	if (metadataTypeKeys.size > 0) {
 		// 既存のメタデータタイプを取得
-		const existingTypes = await tx.segmentMetadataType.findMany({
-			select: { key: true, id: true },
-			where: { key: { in: [...metadataTypeKeys] } },
-		});
+		const existingTypes = await tx
+			.select({ key: segmentMetadataTypes.key, id: segmentMetadataTypes.id })
+			.from(segmentMetadataTypes)
+			.where(inArray(segmentMetadataTypes.key, [...metadataTypeKeys]));
+
 		for (const mt of existingTypes) {
 			metadataTypeMap.set(mt.key, mt.id);
 		}
 
-		// 存在しないメタデータタイプを自動作成
-		for (const key of metadataTypeKeys) {
-			if (!metadataTypeMap.has(key)) {
-				const created = await tx.segmentMetadataType.create({
-					data: { key, label: key },
-				});
-				metadataTypeMap.set(key, created.id);
+		// 存在しないメタデータタイプをバッチで自動作成
+		const missingKeys = [...metadataTypeKeys].filter(
+			(key) => !metadataTypeMap.has(key),
+		);
+		if (missingKeys.length > 0) {
+			// 存在しないタイプをバッチで挿入（競合時は何もしない）
+			await tx
+				.insert(segmentMetadataTypes)
+				.values(missingKeys.map((key) => ({ key, label: key })))
+				.onConflictDoNothing();
+
+			// 挿入したタイプを再取得してマッピングに追加
+			const createdTypes = await tx
+				.select({ key: segmentMetadataTypes.key, id: segmentMetadataTypes.id })
+				.from(segmentMetadataTypes)
+				.where(inArray(segmentMetadataTypes.key, missingKeys));
+
+			for (const created of createdTypes) {
+				metadataTypeMap.set(created.key, created.id);
 			}
 		}
 	}
@@ -94,18 +105,20 @@ export async function syncSegmentMetadata(
 		}
 	}
 
-	// 既存のメタデータを削除（同期対象のセグメントの全てのメタデータを削除）
+	// 既存のメタデータを削除
+	// 注意: segmentIdsはこのページのセグメントIDのみを含むため、
+	// 他のページのセグメントのメタデータは削除されない
 	if (segmentIds.size > 0) {
-		await tx.segmentMetadata.deleteMany({
-			where: { segmentId: { in: [...segmentIds] } },
-		});
+		await tx
+			.delete(segmentMetadata)
+			.where(inArray(segmentMetadata.segmentId, [...segmentIds]));
 	}
 
 	// 新しいメタデータを作成
 	if (metadataToCreate.length > 0) {
-		await tx.segmentMetadata.createMany({
-			data: metadataToCreate,
-			skipDuplicates: true,
-		});
+		await tx
+			.insert(segmentMetadata)
+			.values(metadataToCreate)
+			.onConflictDoNothing();
 	}
 }

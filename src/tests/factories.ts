@@ -1,6 +1,19 @@
 import { randomUUID } from "node:crypto";
-import type { PageStatus, SegmentTypeKey } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { and, eq } from "drizzle-orm";
+import type { Root as MdastRoot } from "mdast";
+import { db } from "@/drizzle";
+import {
+	contents,
+	geminiApiKeys,
+	pageComments,
+	pages,
+	segmentAnnotationLinks,
+	segments,
+	tagPages,
+	tags,
+	users,
+} from "@/drizzle/schema";
+import type { PageStatus, SegmentTypeKey } from "@/drizzle/types";
 import { getSegmentTypeId } from "./db-helpers";
 
 /**
@@ -14,15 +27,20 @@ export async function createUser(data?: {
 	profile?: string;
 }) {
 	const uniqueId = randomUUID().slice(0, 8);
-	return await prisma.user.create({
-		data: {
+	const [user] = await db
+		.insert(users)
+		.values({
 			handle: data?.handle ?? `testuser-${uniqueId}`,
 			name: data?.name ?? "Test User",
 			email: data?.email ?? `testuser-${uniqueId}@example.com`,
 			image: data?.image ?? "https://example.com/image.jpg",
 			profile: data?.profile ?? "",
-		},
-	});
+		})
+		.returning();
+	if (!user) {
+		throw new Error("Failed to create user");
+	}
+	return user;
 }
 
 /**
@@ -36,21 +54,30 @@ export async function createPage(data: {
 	sourceLocale?: string;
 	parentId?: number;
 }) {
-	const content = await prisma.content.create({
-		data: { kind: "PAGE" },
-	});
+	const [content] = await db
+		.insert(contents)
+		.values({ kind: "PAGE" })
+		.returning();
+	if (!content) {
+		throw new Error("Failed to create content");
+	}
 
-	return await prisma.page.create({
-		data: {
+	const [page] = await db
+		.insert(pages)
+		.values({
 			id: content.id,
 			slug: data.slug,
 			userId: data.userId,
 			status: data.status ?? "PUBLIC",
-			mdastJson: data.mdastJson ?? {},
+			mdastJson: (data.mdastJson ?? {}) as MdastRoot,
 			sourceLocale: data.sourceLocale ?? "en",
-			parentId: data.parentId,
-		},
-	});
+			parentId: data.parentId ?? null,
+		})
+		.returning();
+	if (!page) {
+		throw new Error("Failed to create page");
+	}
+	return page;
 }
 
 /**
@@ -65,15 +92,20 @@ export async function createSegment(data: {
 }) {
 	const segmentTypeId = await getSegmentTypeId(data.segmentTypeKey);
 
-	return await prisma.segment.create({
-		data: {
+	const [segment] = await db
+		.insert(segments)
+		.values({
 			contentId: data.contentId,
 			number: data.number,
 			text: data.text,
 			textAndOccurrenceHash: data.textAndOccurrenceHash,
 			segmentTypeId,
-		},
-	});
+		})
+		.returning();
+	if (!segment) {
+		throw new Error("Failed to create segment");
+	}
+	return segment;
 }
 
 /**
@@ -97,15 +129,15 @@ export async function createSegments(data: {
 		COMMENTARY: commentarySegmentTypeId,
 	};
 
-	return await prisma.segment.createMany({
-		data: data.segments.map((seg) => ({
+	await db.insert(segments).values(
+		data.segments.map((seg) => ({
 			contentId: data.contentId,
 			number: seg.number,
 			text: seg.text,
 			textAndOccurrenceHash: seg.textAndOccurrenceHash,
 			segmentTypeId: segmentTypeIdMap[seg.segmentTypeKey],
 		})),
-	});
+	);
 }
 
 /**
@@ -115,7 +147,7 @@ export async function createPageWithSegments(data: {
 	userId: string;
 	slug: string;
 	status?: PageStatus;
-	mdastJson?: unknown;
+	mdastJson?: MdastRoot;
 	sourceLocale?: string;
 	segments: Array<{
 		number: number;
@@ -147,12 +179,17 @@ export async function createSegmentAnnotationLink(data: {
 	mainSegmentId: number;
 	annotationSegmentId: number;
 }) {
-	return await prisma.segmentAnnotationLink.create({
-		data: {
+	const [link] = await db
+		.insert(segmentAnnotationLinks)
+		.values({
 			mainSegmentId: data.mainSegmentId,
 			annotationSegmentId: data.annotationSegmentId,
-		},
-	});
+		})
+		.returning();
+	if (!link) {
+		throw new Error("Failed to create segment annotation link");
+	}
+	return link;
 }
 
 /**
@@ -175,23 +212,33 @@ export async function createPageWithTags(data: {
 	});
 
 	// タグを作成または取得
-	const tags = await Promise.all(
+	const tagResults = await Promise.all(
 		data.tagNames.map(async (name) => {
-			return await prisma.tag.upsert({
-				where: { name },
-				update: {},
-				create: { name },
-			});
+			const [existing] = await db
+				.select()
+				.from(tags)
+				.where(eq(tags.name, name))
+				.limit(1);
+
+			if (existing) {
+				return existing;
+			}
+
+			const [newTag] = await db.insert(tags).values({ name }).returning();
+			if (!newTag) {
+				throw new Error(`Failed to create tag: ${name}`);
+			}
+			return newTag;
 		}),
 	);
 
 	// タグとページをリンク
-	await prisma.tagPage.createMany({
-		data: tags.map((tag) => ({
+	await db.insert(tagPages).values(
+		tagResults.map((tag) => ({
 			tagId: tag.id,
 			pageId: page.id,
 		})),
-	});
+	);
 
 	return page;
 }
@@ -225,9 +272,13 @@ export async function createPageWithAnnotations(data: {
 	});
 
 	// 注釈コンテンツを作成
-	const annotationContent = await prisma.content.create({
-		data: { kind: "PAGE" },
-	});
+	const [annotationContent] = await db
+		.insert(contents)
+		.values({ kind: "PAGE" })
+		.returning();
+	if (!annotationContent) {
+		throw new Error("Failed to create annotation content");
+	}
 
 	// 注釈セグメントを作成
 	await createSegments({
@@ -241,20 +292,28 @@ export async function createPageWithAnnotations(data: {
 	// 直接リンクを作成
 	for (const annotationSegment of data.annotationSegments) {
 		// メインセグメントを取得
-		const mainSegment = await prisma.segment.findFirst({
-			where: {
-				contentId: mainPage.id,
-				number: annotationSegment.linkedToMainSegmentNumber,
-			},
-		});
+		const [mainSegment] = await db
+			.select()
+			.from(segments)
+			.where(
+				and(
+					eq(segments.contentId, mainPage.id),
+					eq(segments.number, annotationSegment.linkedToMainSegmentNumber),
+				),
+			)
+			.limit(1);
 
 		// 注釈セグメントを取得
-		const annSegment = await prisma.segment.findFirst({
-			where: {
-				contentId: annotationContent.id,
-				number: annotationSegment.number,
-			},
-		});
+		const [annSegment] = await db
+			.select()
+			.from(segments)
+			.where(
+				and(
+					eq(segments.contentId, annotationContent.id),
+					eq(segments.number, annotationSegment.number),
+				),
+			)
+			.limit(1);
 
 		if (mainSegment && annSegment) {
 			await createSegmentAnnotationLink({
@@ -277,12 +336,17 @@ export async function createGeminiApiKey(data: {
 	userId: string;
 	apiKey?: string;
 }) {
-	return await prisma.geminiApiKey.create({
-		data: {
+	const [apiKey] = await db
+		.insert(geminiApiKeys)
+		.values({
 			userId: data.userId,
 			apiKey: data.apiKey ?? "dummy-api-key",
-		},
-	});
+		})
+		.returning();
+	if (!apiKey) {
+		throw new Error("Failed to create Gemini API key");
+	}
+	return apiKey;
 }
 
 /**
@@ -296,27 +360,38 @@ export async function createPageComment(data: {
 	parentId?: number;
 	isDeleted?: boolean;
 }) {
-	const content = await prisma.content.create({
-		data: { kind: "PAGE_COMMENT" },
-	});
+	const [content] = await db
+		.insert(contents)
+		.values({ kind: "PAGE_COMMENT" })
+		.returning();
+	if (!content) {
+		throw new Error("Failed to create content");
+	}
 
-	return await prisma.pageComment.create({
-		data: {
+	const defaultMdastJson: MdastRoot = {
+		type: "root",
+		children: [
+			{
+				type: "paragraph",
+				children: [{ type: "text", value: "test comment" }],
+			},
+		],
+	};
+
+	const [pageComment] = await db
+		.insert(pageComments)
+		.values({
 			id: content.id,
 			userId: data.userId,
 			pageId: data.pageId,
 			locale: data.locale ?? "en",
-			mdastJson: data.mdastJson ?? {
-				type: "root",
-				children: [
-					{
-						type: "paragraph",
-						children: [{ type: "text", value: "test comment" }],
-					},
-				],
-			},
-			parentId: data.parentId,
+			mdastJson: (data.mdastJson ?? defaultMdastJson) as MdastRoot,
+			parentId: data.parentId ?? null,
 			isDeleted: data.isDeleted ?? false,
-		},
-	});
+		})
+		.returning();
+	if (!pageComment) {
+		throw new Error("Failed to create page comment");
+	}
+	return pageComment;
 }

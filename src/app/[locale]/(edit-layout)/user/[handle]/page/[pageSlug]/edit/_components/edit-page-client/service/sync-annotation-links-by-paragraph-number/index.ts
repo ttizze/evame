@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
 import { createServerLogger } from "@/lib/logger.server";
 import {
 	createAnnotationLinks,
@@ -10,13 +10,6 @@ import {
 } from "./db/queries.server";
 import { buildLinksToCreate } from "./domain/build-links-to-create";
 import { buildParagraphMapping } from "./domain/build-paragraph-mapping";
-
-/**
- * Prismaのトランザクションクライアントの型
- */
-type TransactionClient = Parameters<
-	Parameters<PrismaClient["$transaction"]>[0]
->[0];
 
 /**
  * 段落番号を使ってアノテーションリンクを作成する

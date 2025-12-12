@@ -1,17 +1,10 @@
-import type { PrismaClient } from "@prisma/client";
 import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
+import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
 import { createServerLogger } from "@/lib/logger.server";
 import { syncAnnotationLinksByParagraphNumber } from "../sync-annotation-links-by-paragraph-number";
 import { syncSegmentMetadata } from "./db/mutations.server";
 import { collectMetadataDrafts } from "./domain/collect-metadata-drafts";
 import { groupByParagraphNumber } from "./domain/group-by-paragraph-number";
-
-/**
- * Prismaのトランザクションクライアントの型
- */
-type TransactionClient = Parameters<
-	Parameters<PrismaClient["$transaction"]>[0]
->[0];
 
 /**
  * SegmentDraft のメタデータを同期し、段落番号を使ってアノテーションリンクを作成する

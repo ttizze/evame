@@ -51,7 +51,7 @@ export async function editPageTagsAction(
 	const { currentUser, data } = v;
 	const { pageId, tags } = data;
 	const page = await getPageById(pageId);
-	if (!currentUser?.id || page?.userId !== currentUser.id) {
+	if (!currentUser?.id || page?.user.id !== currentUser.id) {
 		redirect("/auth/login" as Route);
 	}
 	await upsertTags(tags, pageId);

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
 import { markNotificationAsReadAction } from "./action";
-import type { NotificationWithRelations } from "./db/queries.server";
+import type { NotificationRowsWithRelations } from "./db/queries.server";
 export function NotificationsDropdownClient({
 	currentUserHandle,
 }: {
@@ -25,7 +25,7 @@ export function NotificationsDropdownClient({
 		FormData
 	>(markNotificationAsReadAction, { success: false });
 	const { data, isLoading, mutate } = useSWR<{
-		notifications: NotificationWithRelations[];
+		notifications: NotificationRowsWithRelations[];
 	}>(
 		"/api/notifications",
 		(url) => fetch(url, { credentials: "include" }).then((r) => r.json()),
@@ -53,9 +53,10 @@ export function NotificationsDropdownClient({
 			);
 		}
 	};
-	const unreadCount = data?.notifications.filter(
-		(notification) => !notification.read,
-	).length;
+	const unreadCount =
+		data?.notifications?.filter(
+			(notificationRowsWithRelations) => !notificationRowsWithRelations.read,
+		).length ?? 0;
 	return (
 		<DropdownMenu
 			data-testid="notifications-menu"
@@ -81,19 +82,24 @@ export function NotificationsDropdownClient({
 				className="w-80 overflow-y-scroll h-96 p-0 rounded-xl"
 				data-testid="notifications-menu-content"
 			>
-				{data?.notifications.length === 0 ? (
+				{!data?.notifications || data.notifications.length === 0 ? (
 					<DropdownMenuItem className="cursor-default">
 						No notifications
 					</DropdownMenuItem>
 				) : (
-					data?.notifications.map((notification, index) => (
-						<NotificationItem
-							currentUserHandle={currentUserHandle}
-							index={index}
-							key={notification.id}
-							notificationWithRelations={notification}
-						/>
-					))
+					data.notifications.map(
+						(
+							notificationRowWithRelations: NotificationRowsWithRelations,
+							index: number,
+						) => (
+							<NotificationItem
+								currentUserHandle={currentUserHandle}
+								index={index}
+								key={notificationRowWithRelations.id}
+								notificationRowsWithRelations={notificationRowWithRelations}
+							/>
+						),
+					)
 				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
@@ -101,86 +107,86 @@ export function NotificationsDropdownClient({
 }
 
 function NotificationItem({
-	notificationWithRelations,
+	notificationRowsWithRelations,
 	currentUserHandle,
 	index,
 }: {
-	notificationWithRelations: NotificationWithRelations;
+	notificationRowsWithRelations: NotificationRowsWithRelations;
 	currentUserHandle: string;
 	index: number;
 }) {
 	return (
 		<DropdownMenuItem
 			className={`flex items-center p-4 border-t rounded-none ${
-				!notificationWithRelations.read ? "bg-muted" : ""
+				!notificationRowsWithRelations.read ? "bg-muted" : ""
 			} ${index === 0 ? "border-none" : ""}`}
 		>
 			<NotificationContent
 				currentUserHandle={currentUserHandle}
-				notificationWithRelations={notificationWithRelations}
+				notificationRowsWithRelations={notificationRowsWithRelations}
 			/>
 		</DropdownMenuItem>
 	);
 }
 function NotificationContent({
-	notificationWithRelations,
-	currentUserHandle,
+	notificationRowsWithRelations,
 }: {
-	notificationWithRelations: NotificationWithRelations;
+	notificationRowsWithRelations: NotificationRowsWithRelations;
 	currentUserHandle: string;
 }) {
-	const { actor, type } = notificationWithRelations;
+	const { actorHandle, actorName, actorImage, type } =
+		notificationRowsWithRelations;
 	const commonLink = (
-		<Link className="hover:underline font-bold" href={`/user/${actor.handle}`}>
-			{actor.name}
+		<Link className="hover:underline font-bold" href={`/user/${actorHandle}`}>
+			{actorName}
 		</Link>
 	);
-	const commonDate = notificationWithRelations.createdAt.toLocaleString();
+	const commonDate = notificationRowsWithRelations.createdAt.toLocaleString();
+
+	// ページ情報を取得してリンクを生成する共通関数
+	const getPageLink = () => {
+		const pageTitle = notificationRowsWithRelations.pageTitle;
+		const pageSlug = notificationRowsWithRelations.pageSlug;
+		const pageOwnerHandle = notificationRowsWithRelations.pageOwnerHandle;
+		if (!pageTitle || !pageSlug || !pageOwnerHandle) return null;
+		return (
+			<Link
+				className="hover:underline font-bold"
+				href={`/user/${pageOwnerHandle}/page/${pageSlug}`}
+			>
+				{pageTitle}
+			</Link>
+		);
+	};
 
 	let actionText: React.ReactNode = null;
 	let extraContent: React.ReactNode = null;
 
 	switch (type) {
 		case "PAGE_COMMENT": {
-			const { pageComment } = notificationWithRelations;
-			const title = pageComment?.page.content.segments[0]?.text;
-			if (!title) return null;
 			actionText = <span className="text-gray-500"> commented on </span>;
-			extraContent = (
-				<Link
-					className="hover:underline font-bold"
-					href={`/user/${currentUserHandle}/page/${pageComment?.page.slug}`}
-				>
-					{title}
-				</Link>
-			);
+			extraContent = getPageLink();
+			if (!extraContent) return null;
 			break;
 		}
 		case "PAGE_LIKE": {
-			const { page } = notificationWithRelations;
-			const title = page?.content.segments[0]?.text;
-			if (!title) return null;
 			actionText = <span className="text-gray-500"> liked your page </span>;
-			extraContent = (
-				<Link
-					className="hover:underline font-bold"
-					href={`/user/${currentUserHandle}/page/${page?.slug}`}
-				>
-					{title}
-				</Link>
-			);
+			extraContent = getPageLink();
+			if (!extraContent) return null;
 			break;
 		}
 		case "FOLLOW": {
 			actionText = <span className="text-gray-500"> followed you</span>;
 			break;
 		}
-		case "PAGE_SEGMENT_TRANSLATION_VOTE": {
-			const votedText = notificationWithRelations.segmentTranslation?.text;
-			const votedPage =
-				notificationWithRelations.segmentTranslation?.segment.content.page;
-			const votedPageTitle = votedPage?.content.segments[0]?.text;
-			const votedPageUser = votedPage?.user;
+		case "PAGE_SEGMENT_TRANSLATION_VOTE":
+		case "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE": {
+			const votedText = notificationRowsWithRelations.segmentTranslationText;
+			const pageTitle = notificationRowsWithRelations.pageTitle;
+			const pageSlug = notificationRowsWithRelations.pageSlug;
+			const pageOwnerHandle = notificationRowsWithRelations.pageOwnerHandle;
+			if (!votedText || !pageTitle || !pageSlug || !pageOwnerHandle)
+				return null;
 			actionText = <span className="text-gray-500"> voted for </span>;
 			extraContent = (
 				<>
@@ -188,9 +194,9 @@ function NotificationContent({
 					<span className="text-gray-500"> on </span>
 					<Link
 						className="hover:underline font-bold"
-						href={`/user/${votedPageUser?.handle}/page/${votedPage?.slug}`}
+						href={`/user/${pageOwnerHandle}/page/${pageSlug}`}
 					>
-						{votedPageTitle}
+						{pageTitle}
 					</Link>
 				</>
 			);
@@ -203,7 +209,11 @@ function NotificationContent({
 
 	return (
 		<>
-			<NotificationAvatar actor={actor} />
+			<NotificationAvatar
+				actorHandle={actorHandle}
+				actorImage={actorImage}
+				actorName={actorName}
+			/>
 			<span className="flex flex-col">
 				<span>
 					{commonLink}
@@ -217,24 +227,30 @@ function NotificationContent({
 }
 
 function NotificationAvatar({
-	actor,
+	actorHandle,
+	actorImage,
+	actorName,
 }: {
-	actor: { handle: string; image: string; name: string };
+	actorHandle: string;
+	actorImage: string;
+	actorName: string;
 }) {
 	const { props } = getImageProps({
-		src: actor.image,
-		alt: actor.name,
+		src: actorImage || "",
+		alt: actorName || "",
 		width: 40,
 		height: 40,
 	});
 	return (
 		<Link
 			className="flex items-center mr-2 no-underline! hover:text-gray-700"
-			href={`/user/${actor.handle}`}
+			href={`/user/${actorHandle}`}
 		>
 			<Avatar className="w-10 h-10 shrink-0 mr-3">
 				<AvatarImage {...props} />
-				<AvatarFallback>{actor.name.charAt(0).toUpperCase()}</AvatarFallback>
+				<AvatarFallback>
+					{(actorName || actorHandle).charAt(0).toUpperCase()}
+				</AvatarFallback>
 			</Avatar>
 		</Link>
 	);

@@ -2,12 +2,20 @@
 目的: syncAnnotationLinksByParagraphNumber の「段落番号一致によるアノテーションリンク作成」と
 「主要な例外ケース」を担保する。
 
-方法: 実際のデータベースとPrisma Clientを使用した統合テスト（古典派）。
+方法: 実際のデータベースとDrizzle ORMを使用した統合テスト（古典派）。
 */
 
-import type { Page, Segment } from "@prisma/client";
+import { eq, inArray } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/drizzle";
+import {
+	contents,
+	segmentAnnotationLinks,
+	segmentMetadata,
+	segmentMetadataTypes,
+	segments,
+} from "@/drizzle/schema";
+import type { Page, Segment } from "@/drizzle/types";
 import {
 	getSegmentTypeId,
 	resetDatabase,
@@ -18,39 +26,53 @@ import { setupDbPerFile } from "@/tests/test-db-manager";
 import { syncAnnotationLinksByParagraphNumber } from "./index";
 
 await setupDbPerFile(import.meta.url);
-
 async function addParagraphNumbersToSegments(
 	segmentParagraphPairs: Array<{ segmentId: number; paragraphNumber: string }>,
 ): Promise<void> {
-	const metadataType = await prisma.segmentMetadataType.findFirstOrThrow({
-		where: { key: "PARAGRAPH_NUMBER" },
-	});
-	await prisma.segmentMetadata.createMany({
-		data: segmentParagraphPairs.map(({ segmentId, paragraphNumber }) => ({
+	const [metadataType] = await db
+		.select()
+		.from(segmentMetadataTypes)
+		.where(eq(segmentMetadataTypes.key, "PARAGRAPH_NUMBER"))
+		.limit(1);
+	if (!metadataType) {
+		throw new Error("PARAGRAPH_NUMBER metadata type not found");
+	}
+	await db.insert(segmentMetadata).values(
+		segmentParagraphPairs.map(({ segmentId, paragraphNumber }) => ({
 			segmentId,
 			metadataTypeId: metadataType.id,
 			value: paragraphNumber,
 		})),
-	});
+	);
 }
 
 async function createAnnotationContentWithSegments(
 	texts: string[],
 ): Promise<{ annotationContentId: number; annotationSegments: Segment[] }> {
-	const content = await prisma.content.create({ data: { kind: "PAGE" } });
+	const [content] = await db
+		.insert(contents)
+		.values({ kind: "PAGE" })
+		.returning();
+	if (!content) {
+		throw new Error("Failed to create content");
+	}
 	const commentaryTypeId = await getSegmentTypeId("COMMENTARY");
 
 	const annotationSegments: Segment[] = [];
 	for (let i = 0; i < texts.length; i++) {
-		const segment = await prisma.segment.create({
-			data: {
+		const [segment] = await db
+			.insert(segments)
+			.values({
 				contentId: content.id,
 				number: i,
 				text: texts[i],
 				textAndOccurrenceHash: `hash-ann-${i}`,
 				segmentTypeId: commentaryTypeId,
-			},
-		});
+			})
+			.returning();
+		if (!segment) {
+			throw new Error(`Failed to create segment ${i}`);
+		}
 		annotationSegments.push(segment);
 	}
 
@@ -61,7 +83,7 @@ async function createMainPageWithParagraphNumbers(
 	paragraphNumbers: string[],
 ): Promise<{ mainPage: Page; mainSegments: Segment[] }> {
 	const user = await createUser();
-	const mainPage = await createPageWithSegments({
+	const mainPage = (await createPageWithSegments({
 		userId: user.id,
 		slug: "main-page",
 		segments: paragraphNumbers.map((_, i) => ({
@@ -70,11 +92,12 @@ async function createMainPageWithParagraphNumbers(
 			textAndOccurrenceHash: `hash-main-${i}`,
 			segmentTypeKey: "PRIMARY",
 		})),
-	});
-	const mainSegments = await prisma.segment.findMany({
-		where: { contentId: mainPage.id },
-		orderBy: { number: "asc" },
-	});
+	})) as Page;
+	const mainSegments = await db
+		.select()
+		.from(segments)
+		.where(eq(segments.contentId, mainPage.id))
+		.orderBy(segments.number);
 
 	await addParagraphNumbersToSegments(
 		mainSegments.map((seg, i) => ({
@@ -104,7 +127,7 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			["2", [annotationSegments[1].id]],
 		]);
 
-		await prisma.$transaction((tx) =>
+		await db.transaction(async (tx) =>
 			syncAnnotationLinksByParagraphNumber(
 				tx,
 				annotationContentId,
@@ -113,11 +136,15 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			),
 		);
 
-		const links = await prisma.segmentAnnotationLink.findMany({
-			where: {
-				annotationSegmentId: { in: annotationSegments.map((s) => s.id) },
-			},
-		});
+		const links = await db
+			.select()
+			.from(segmentAnnotationLinks)
+			.where(
+				inArray(
+					segmentAnnotationLinks.annotationSegmentId,
+					annotationSegments.map((s) => s.id),
+				),
+			);
 		expect(links).toHaveLength(2);
 		expect(links).toContainEqual(
 			expect.objectContaining({
@@ -136,20 +163,22 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 	it("COMMENTARYタイプでない場合、リンクは作成されない", async () => {
 		const { mainPage } = await createMainPageWithParagraphNumbers(["1"]);
 
-		const primaryContent = await prisma.content.create({
-			data: { kind: "PAGE" },
-		});
-		await prisma.segment.create({
-			data: {
-				contentId: primaryContent.id,
-				number: 0,
-				text: "Primary segment",
-				textAndOccurrenceHash: "hash-primary",
-				segmentTypeId: await getSegmentTypeId("PRIMARY"),
-			},
+		const [primaryContent] = await db
+			.insert(contents)
+			.values({ kind: "PAGE" })
+			.returning();
+		if (!primaryContent) {
+			throw new Error("Failed to create content");
+		}
+		await db.insert(segments).values({
+			contentId: primaryContent.id,
+			number: 0,
+			text: "Primary segment",
+			textAndOccurrenceHash: "hash-primary",
+			segmentTypeId: await getSegmentTypeId("PRIMARY"),
 		});
 
-		await prisma.$transaction((tx) =>
+		await db.transaction(async (tx) =>
 			syncAnnotationLinksByParagraphNumber(
 				tx,
 				primaryContent.id,
@@ -158,9 +187,10 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			),
 		);
 
-		const links = await prisma.segmentAnnotationLink.findMany({
-			where: { annotationSegmentId: 999 },
-		});
+		const links = await db
+			.select()
+			.from(segmentAnnotationLinks)
+			.where(eq(segmentAnnotationLinks.annotationSegmentId, 999));
 		expect(links).toHaveLength(0);
 	});
 
@@ -169,7 +199,7 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 		const { annotationContentId, annotationSegments } =
 			await createAnnotationContentWithSegments(["Ann"]);
 
-		await prisma.$transaction((tx) =>
+		await db.transaction(async (tx) =>
 			syncAnnotationLinksByParagraphNumber(
 				tx,
 				annotationContentId,
@@ -178,9 +208,15 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			),
 		);
 
-		const links = await prisma.segmentAnnotationLink.findMany({
-			where: { annotationSegmentId: annotationSegments[0].id },
-		});
+		const links = await db
+			.select()
+			.from(segmentAnnotationLinks)
+			.where(
+				eq(
+					segmentAnnotationLinks.annotationSegmentId,
+					annotationSegments[0].id,
+				),
+			);
 		expect(links).toHaveLength(0);
 	});
 
@@ -188,7 +224,7 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 		const { annotationContentId, annotationSegments } =
 			await createAnnotationContentWithSegments(["Ann"]);
 
-		await prisma.$transaction((tx) =>
+		await db.transaction(async (tx) =>
 			syncAnnotationLinksByParagraphNumber(
 				tx,
 				annotationContentId,
@@ -197,9 +233,15 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			),
 		);
 
-		const links = await prisma.segmentAnnotationLink.findMany({
-			where: { annotationSegmentId: annotationSegments[0].id },
-		});
+		const links = await db
+			.select()
+			.from(segmentAnnotationLinks)
+			.where(
+				eq(
+					segmentAnnotationLinks.annotationSegmentId,
+					annotationSegments[0].id,
+				),
+			);
 		expect(links).toHaveLength(0);
 	});
 
@@ -209,23 +251,25 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			await createAnnotationContentWithSegments(["Ann"]);
 
 		// 既存リンクを作成
-		const extraMainSegment = await prisma.segment.create({
-			data: {
+		const [extraMainSegment] = await db
+			.insert(segments)
+			.values({
 				contentId: mainPage.id,
 				number: 999,
 				text: "Extra",
 				textAndOccurrenceHash: "hash-extra",
 				segmentTypeId: await getSegmentTypeId("PRIMARY"),
-			},
-		});
-		await prisma.segmentAnnotationLink.create({
-			data: {
-				mainSegmentId: extraMainSegment.id,
-				annotationSegmentId: annotationSegments[0].id,
-			},
+			})
+			.returning();
+		if (!extraMainSegment) {
+			throw new Error("Failed to create segment");
+		}
+		await db.insert(segmentAnnotationLinks).values({
+			mainSegmentId: extraMainSegment.id,
+			annotationSegmentId: annotationSegments[0].id,
 		});
 
-		await prisma.$transaction((tx) =>
+		await db.transaction(async (tx) =>
 			syncAnnotationLinksByParagraphNumber(
 				tx,
 				annotationContentId,
@@ -234,9 +278,15 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			),
 		);
 
-		const links = await prisma.segmentAnnotationLink.findMany({
-			where: { annotationSegmentId: annotationSegments[0].id },
-		});
+		const links = await db
+			.select()
+			.from(segmentAnnotationLinks)
+			.where(
+				eq(
+					segmentAnnotationLinks.annotationSegmentId,
+					annotationSegments[0].id,
+				),
+			);
 		expect(links).toHaveLength(0);
 	});
 
@@ -251,7 +301,7 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			["1", [annotationSegments[0].id, annotationSegments[1].id]],
 		]);
 
-		await prisma.$transaction((tx) =>
+		await db.transaction(async (tx) =>
 			syncAnnotationLinksByParagraphNumber(
 				tx,
 				annotationContentId,
@@ -260,11 +310,15 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			),
 		);
 
-		const links = await prisma.segmentAnnotationLink.findMany({
-			where: {
-				annotationSegmentId: { in: annotationSegments.map((s) => s.id) },
-			},
-		});
+		const links = await db
+			.select()
+			.from(segmentAnnotationLinks)
+			.where(
+				inArray(
+					segmentAnnotationLinks.annotationSegmentId,
+					annotationSegments.map((s) => s.id),
+				),
+			);
 		expect(links).toHaveLength(2);
 		expect(links.every((l) => l.mainSegmentId === mainSegments[0].id)).toBe(
 			true,
@@ -278,7 +332,7 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 		const { annotationContentId, annotationSegments } =
 			await createAnnotationContentWithSegments(["Ann"]);
 
-		await prisma.$transaction((tx) =>
+		await db.transaction(async (tx) =>
 			syncAnnotationLinksByParagraphNumber(
 				tx,
 				annotationContentId,
@@ -287,9 +341,15 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			),
 		);
 
-		const links = await prisma.segmentAnnotationLink.findMany({
-			where: { annotationSegmentId: annotationSegments[0].id },
-		});
+		const links = await db
+			.select()
+			.from(segmentAnnotationLinks)
+			.where(
+				eq(
+					segmentAnnotationLinks.annotationSegmentId,
+					annotationSegments[0].id,
+				),
+			);
 		expect(links).toHaveLength(1);
 		expect(links[0].mainSegmentId).toBe(mainSegments[1].id);
 	});

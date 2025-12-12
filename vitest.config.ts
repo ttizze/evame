@@ -6,7 +6,6 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
 	plugins: [react(), tsconfigPaths()],
 	test: {
-		globalSetup: ["./vitest.global-setup.ts"],
 		globals: true,
 		slowTestThreshold: 1000,
 		env: {

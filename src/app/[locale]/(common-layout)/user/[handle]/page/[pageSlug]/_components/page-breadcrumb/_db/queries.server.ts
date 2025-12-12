@@ -1,8 +1,10 @@
-import { selectPageFields } from "@/app/[locale]/_db/queries.server";
-import { pickBestTranslation } from "@/app/[locale]/_utils/pick-best-translation";
+import { eq } from "drizzle-orm";
+import { fetchSegmentsForPages } from "@/app/[locale]/_db/page-list-helpers.server";
+import { getPageById } from "@/app/[locale]/_db/queries.server";
 import type { SegmentForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/drizzle";
+import { pages } from "@/drizzle/schema";
 
 type ParentNode = {
 	id: number;
@@ -18,46 +20,49 @@ type ParentNode = {
 };
 
 // 親ページの階層を取得する関数
+// Drizzle版に移行済み
 export async function getParentChain(pageId: number, locale: string) {
 	const parentChain: ParentNode[] = [];
 	let currentParentId = await getParentId(pageId);
 
 	while (currentParentId) {
-		const parent = await prisma.page.findUnique({
-			where: { id: currentParentId },
-			select: selectPageFields(locale, { number: 0 }),
-		});
-
-		if (parent) {
-			parentChain.unshift({
-				id: parent.id,
-				slug: parent.slug,
-				order: parent.order,
-				sourceLocale: parent.sourceLocale,
-				status: parent.status,
-				parentId: parent.parentId,
-				createdAt: parent.createdAt.toISOString(),
-				user: parent.user as SanitizedUser,
-				content: {
-					segments: pickBestTranslation(parent.content.segments),
-				},
-				children: [],
-			});
-
-			currentParentId = parent.parentId;
-		} else {
+		// ページ基本情報を取得
+		const parent = await getPageById(currentParentId);
+		if (!parent) {
 			break;
 		}
+
+		// セグメント（number: 0のみ）を取得
+		const segments = await fetchSegmentsForPages([parent.id], locale);
+
+		parentChain.unshift({
+			id: parent.id,
+			slug: parent.slug,
+			order: parent.order,
+			sourceLocale: parent.sourceLocale,
+			status: parent.status,
+			parentId: parent.parentId,
+			createdAt: parent.createdAt.toISOString(),
+			user: parent.user as SanitizedUser,
+			content: {
+				segments: segments,
+			},
+			children: [],
+		});
+
+		currentParentId = parent.parentId;
 	}
 
 	return parentChain;
 }
 
 // ページの親IDを取得する関数
+// Drizzle版に移行済み
 async function getParentId(pageId: number): Promise<number | null> {
-	const page = await prisma.page.findUnique({
-		where: { id: pageId },
-		select: { parentId: true },
-	});
-	return page?.parentId || null;
+	const result = await db
+		.select({ parentId: pages.parentId })
+		.from(pages)
+		.where(eq(pages.id, pageId))
+		.limit(1);
+	return result[0]?.parentId ?? null;
 }

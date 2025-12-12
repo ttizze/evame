@@ -1,4 +1,3 @@
-import type { Prisma } from "@prisma/client";
 import { queryByAttribute } from "@testing-library/dom";
 import { render, screen } from "@testing-library/react";
 import type { Root } from "mdast";
@@ -43,7 +42,7 @@ describe("mdastToReact", () => {
 		};
 
 		const el = await mdastToReact({
-			mdast: mdast as unknown as Prisma.JsonValue,
+			mdast: mdast,
 			segments,
 		});
 		render(el);
@@ -91,7 +90,7 @@ describe("mdastToReact", () => {
 		};
 
 		const el = await mdastToReact({
-			mdast: mdast as unknown as Prisma.JsonValue,
+			mdast: mdast,
 			segments,
 		});
 		render(el);
@@ -163,7 +162,7 @@ describe("mdastToReact", () => {
 		};
 
 		const el = await mdastToReact({
-			mdast: mdast as unknown as Prisma.JsonValue,
+			mdast: mdast,
 			segments,
 		});
 		const { container } = render(el);

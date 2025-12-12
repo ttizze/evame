@@ -1,11 +1,11 @@
-import type { PageStatus, Prisma } from "@prisma/client";
-import { syncSegments } from "@/app/[locale]/_db/sync-segments";
+import type { PageStatus } from "@prisma/client";
+import type { Root as MdastRoot } from "mdast";
 import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
+import { syncSegments } from "@/app/[locale]/_service/sync-segments";
+import { db } from "@/drizzle";
 import { createServerLogger } from "@/lib/logger.server";
-import { prisma } from "@/lib/prisma";
 import { syncSegmentMetadataAndAnnotationLinks } from "../sync-segment-metadata-and-annotation-links";
 import { upsertPage } from "./db/mutations.server";
-
 /**
  * ページとセグメントをupsertする（ユースケースフロー）
  *
@@ -18,7 +18,7 @@ export async function upsertPageAndSegments(p: {
 	pageSlug: string;
 	userId: string;
 	title: string;
-	mdastJson: Prisma.InputJsonValue;
+	mdastJson: MdastRoot;
 	sourceLocale: string;
 	segments: SegmentDraft[];
 	segmentTypeId: number | null;
@@ -42,43 +42,37 @@ export async function upsertPageAndSegments(p: {
 	);
 
 	try {
-		const result = await prisma.$transaction(
-			async (tx) => {
-				// db操作: ページをupsert
-				const page = await upsertPage(tx, {
-					pageSlug: p.pageSlug,
-					userId: p.userId,
-					mdastJson: p.mdastJson,
-					sourceLocale: p.sourceLocale,
-					parentId: p.parentId,
-					order: p.order,
-					status: p.status,
-				});
+		const result = await db.transaction(async (tx) => {
+			// db操作: ページをupsert
+			const page = await upsertPage(tx, {
+				pageSlug: p.pageSlug,
+				userId: p.userId,
+				mdastJson: p.mdastJson,
+				sourceLocale: p.sourceLocale,
+				parentId: p.parentId,
+				order: p.order,
+				status: p.status,
+			});
 
-				// db操作: セグメントを同期
-				const hashToSegmentId = await syncSegments(
-					tx,
-					page.id,
-					p.segments,
-					p.segmentTypeId,
-				);
+			// db操作: セグメントを同期
+			const hashToSegmentId = await syncSegments(
+				tx,
+				page.id,
+				p.segments,
+				p.segmentTypeId,
+			);
 
-				// application: メタデータとアノテーションリンクを同期
-				await syncSegmentMetadataAndAnnotationLinks(
-					tx,
-					hashToSegmentId,
-					p.segments,
-					page.id,
-					p.anchorContentId,
-				);
+			// application: メタデータとアノテーションリンクを同期
+			await syncSegmentMetadataAndAnnotationLinks(
+				tx,
+				hashToSegmentId,
+				p.segments,
+				page.id,
+				p.anchorContentId,
+			);
 
-				return page;
-			},
-			{
-				maxWait: 30_000, // トランザクション開始を待つ最大時間: 30秒
-				timeout: 120_000, // トランザクション実行の最大時間: 120秒（大量のセグメント処理に対応）
-			},
-		);
+			return page;
+		});
 
 		logger.debug({ pageId: result.id }, "Transaction completed successfully");
 

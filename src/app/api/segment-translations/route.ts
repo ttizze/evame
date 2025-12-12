@@ -1,8 +1,10 @@
+import { and, desc, eq, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { selectUserFields } from "@/app/[locale]/_db/queries.server";
+import { selectUserFieldsDrizzle } from "@/app/[locale]/_db/queries.server";
+import { db } from "@/drizzle";
+import { segmentTranslations, translationVotes, users } from "@/drizzle/schema";
 import { getCurrentUser } from "@/lib/auth-server";
-import { prisma } from "@/lib/prisma";
 
 const schema = z.object({
 	segmentId: z.coerce.number().int(),
@@ -22,55 +24,106 @@ export async function GET(req: NextRequest) {
 	const currentUser = await getCurrentUser();
 
 	try {
-		const bestTranslationWithVote = await prisma.segmentTranslation.findUnique({
-			where: { id: bestTranslationId },
-			include: {
-				user: {
-					select: selectUserFields(),
-				},
-				...(currentUser?.id && {
-					votes: {
-						where: { userId: currentUser.id },
-					},
-				}),
-			},
-		});
+		// ベスト翻訳を取得（ユーザー情報と現在のユーザーの投票情報を含む）
+		// ログイン有無で select() と JOIN を分岐（未ログイン時は translationVotes を選択しない）
+		const bestTranslationQuery = currentUser?.id
+			? db
+					.select({
+						translation: segmentTranslations,
+						user: selectUserFieldsDrizzle(),
+						vote: translationVotes,
+					})
+					.from(segmentTranslations)
+					.innerJoin(users, eq(segmentTranslations.userId, users.id))
+					.leftJoin(
+						translationVotes,
+						and(
+							eq(translationVotes.translationId, segmentTranslations.id),
+							eq(translationVotes.userId, currentUser.id),
+						),
+					)
+			: db
+					.select({
+						translation: segmentTranslations,
+						user: selectUserFieldsDrizzle(),
+					})
+					.from(segmentTranslations)
+					.innerJoin(users, eq(segmentTranslations.userId, users.id));
+
+		// スコープ検証: bestTranslationId が指定 segmentId/userLocale に属することを確認
+		const bestTranslationResult = await bestTranslationQuery
+			.where(
+				and(
+					eq(segmentTranslations.id, bestTranslationId),
+					eq(segmentTranslations.segmentId, segmentId),
+					eq(segmentTranslations.locale, userLocale),
+				),
+			)
+			.limit(1);
+		const bestTranslationWithVote = bestTranslationResult[0] ?? null;
+
 		// その他の翻訳を取得
-		const translations = await prisma.segmentTranslation.findMany({
-			where: {
-				segmentId,
-				locale: userLocale,
-				id: { not: bestTranslationId },
-			},
-			include: {
-				user: {
-					select: {
-						handle: true,
-						name: true,
-						image: true,
-					},
-				},
-				...(currentUser?.id && {
-					votes: {
-						where: { userId: currentUser.id },
-					},
-				}),
-			},
-			orderBy: [{ point: "desc" }, { createdAt: "desc" }],
-		});
+		// ログイン有無で select() と JOIN を分岐（未ログイン時は translationVotes を選択しない）
+		const translationsQuery = currentUser?.id
+			? db
+					.select({
+						translation: segmentTranslations,
+						user: {
+							handle: users.handle,
+							name: users.name,
+							image: users.image,
+						},
+						vote: translationVotes,
+					})
+					.from(segmentTranslations)
+					.innerJoin(users, eq(segmentTranslations.userId, users.id))
+					.leftJoin(
+						translationVotes,
+						and(
+							eq(translationVotes.translationId, segmentTranslations.id),
+							eq(translationVotes.userId, currentUser.id),
+						),
+					)
+			: db
+					.select({
+						translation: segmentTranslations,
+						user: {
+							handle: users.handle,
+							name: users.name,
+							image: users.image,
+						},
+					})
+					.from(segmentTranslations)
+					.innerJoin(users, eq(segmentTranslations.userId, users.id));
+
+		const translations = await translationsQuery
+			.where(
+				and(
+					eq(segmentTranslations.segmentId, segmentId),
+					eq(segmentTranslations.locale, userLocale),
+					ne(segmentTranslations.id, bestTranslationId),
+				),
+			)
+			.orderBy(
+				desc(segmentTranslations.point),
+				desc(segmentTranslations.createdAt),
+			);
 
 		return NextResponse.json({
 			bestTranslationCurrentUserVote:
-				bestTranslationWithVote?.votes?.[0] ?? null,
+				(currentUser?.id &&
+					"vote" in bestTranslationWithVote &&
+					bestTranslationWithVote.vote) ??
+				null,
 			bestTranslationUser: bestTranslationWithVote?.user ?? null,
 			translations: translations.map((t) => ({
-				id: t.id,
-				locale: t.locale,
-				text: t.text,
-				point: t.point,
-				createdAt: t.createdAt.toISOString(),
+				id: t.translation.id,
+				locale: t.translation.locale,
+				text: t.translation.text,
+				point: t.translation.point,
+				createdAt: t.translation.createdAt.toISOString(),
 				user: t.user,
-				currentUserVote: t.votes?.[0] ?? null,
+				currentUserVote: (currentUser?.id && "vote" in t && t.vote) ?? null,
 			})),
 		});
 	} catch (error) {

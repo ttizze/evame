@@ -1,35 +1,59 @@
-import type { SegmentTypeKey } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { eq } from "drizzle-orm";
+import { db } from "@/drizzle";
+import {
+	accounts,
+	contents,
+	follows,
+	geminiApiKeys,
+	likePages,
+	notifications,
+	pageComments,
+	pageLocaleTranslationProofs,
+	pages,
+	pageViews,
+	segmentAnnotationLinks,
+	segmentMetadata,
+	segmentMetadataTypes,
+	segments,
+	segmentTranslations,
+	segmentTypes,
+	sessions,
+	tagPages,
+	translationJobs,
+	translationVotes,
+	userCredentials,
+	userSettings,
+	users,
+} from "@/drizzle/schema";
+import type { SegmentTypeKey } from "@/drizzle/types";
 
 /**
  * データベースをリセット（全テーブルをクリーンアップ）
  * 外部キー制約の順序に注意して削除
  */
 export async function resetDatabase() {
-	// PrismaClientが切断されているケース（テストで$disconnectした直後など）に備えて再接続
-	await prisma.$connect();
 	// 外部キー制約の順序に注意して削除
-	await prisma.segmentAnnotationLink.deleteMany();
-	await prisma.segmentMetadata.deleteMany();
-	await prisma.translationVote.deleteMany();
-	await prisma.segmentTranslation.deleteMany();
-	await prisma.segment.deleteMany();
-	await prisma.notification.deleteMany();
-	await prisma.pageComment.deleteMany();
-	await prisma.likePage.deleteMany();
-	await prisma.tagPage.deleteMany();
-	await prisma.translationJob.deleteMany();
-	await prisma.pageLocaleTranslationProof.deleteMany();
-	await prisma.pageView.deleteMany();
-	await prisma.page.deleteMany();
-	await prisma.content.deleteMany();
-	await prisma.userSetting.deleteMany();
-	await prisma.userCredential.deleteMany();
-	await prisma.geminiApiKey.deleteMany();
-	await prisma.follow.deleteMany();
-	await prisma.account.deleteMany();
-	await prisma.session.deleteMany();
-	await prisma.user.deleteMany();
+	await db.delete(segmentAnnotationLinks);
+	await db.delete(segmentMetadata);
+	await db.delete(translationVotes);
+	await db.delete(segmentTranslations);
+	await db.delete(segments);
+	await db.delete(notifications);
+	await db.delete(pageComments);
+	await db.delete(likePages);
+	await db.delete(tagPages);
+	await db.delete(translationJobs);
+	await db.delete(pageLocaleTranslationProofs);
+	await db.delete(pageViews);
+	await db.delete(pages);
+	await db.delete(contents);
+	await db.delete(userSettings);
+	await db.delete(userCredentials);
+	await db.delete(geminiApiKeys);
+	await db.delete(follows);
+	await db.delete(accounts);
+	await db.delete(sessions);
+	await db.delete(users);
 	// SegmentTypeとTagはマスターデータなので削除しない（グローバルで管理）
 }
 
@@ -39,22 +63,38 @@ export async function resetDatabase() {
  */
 export async function setupMasterData() {
 	// SegmentTypeを取得または作成（既に存在する場合は更新しない）
-	let primaryType = await prisma.segmentType.findFirst({
-		where: { key: "PRIMARY" },
-	});
+	const [primaryType] = await db
+		.select()
+		.from(segmentTypes)
+		.where(eq(segmentTypes.key, "PRIMARY"))
+		.limit(1);
+
+	let primarySegmentTypeId: number;
 	if (!primaryType) {
-		primaryType = await prisma.segmentType.create({
-			data: { key: "PRIMARY", label: "Primary" },
-		});
+		const [inserted] = await db
+			.insert(segmentTypes)
+			.values({ key: "PRIMARY", label: "Primary" })
+			.returning();
+		primarySegmentTypeId = inserted.id;
+	} else {
+		primarySegmentTypeId = primaryType.id;
 	}
 
-	let commentaryType = await prisma.segmentType.findFirst({
-		where: { key: "COMMENTARY" },
-	});
+	const [commentaryType] = await db
+		.select()
+		.from(segmentTypes)
+		.where(eq(segmentTypes.key, "COMMENTARY"))
+		.limit(1);
+
+	let commentarySegmentTypeId: number;
 	if (!commentaryType) {
-		commentaryType = await prisma.segmentType.create({
-			data: { key: "COMMENTARY", label: "Commentary" },
-		});
+		const [inserted] = await db
+			.insert(segmentTypes)
+			.values({ key: "COMMENTARY", label: "Commentary" })
+			.returning();
+		commentarySegmentTypeId = inserted.id;
+	} else {
+		commentarySegmentTypeId = commentaryType.id;
 	}
 
 	// SegmentMetadataTypeを取得または作成
@@ -67,14 +107,21 @@ export async function setupMasterData() {
 		{ key: "PARAGRAPH_NUMBER", label: "Paragraph Number" },
 	];
 
-	await prisma.segmentMetadataType.createMany({
-		data: metadataTypeSeedData,
-		skipDuplicates: true,
-	});
+	// skipDuplicates相当の処理: 既存のkeyを確認してから挿入
+	for (const data of metadataTypeSeedData) {
+		const [existing] = await db
+			.select()
+			.from(segmentMetadataTypes)
+			.where(eq(segmentMetadataTypes.key, data.key))
+			.limit(1);
+		if (!existing) {
+			await db.insert(segmentMetadataTypes).values(data);
+		}
+	}
 
 	return {
-		primarySegmentTypeId: primaryType.id,
-		commentarySegmentTypeId: commentaryType.id,
+		primarySegmentTypeId,
+		commentarySegmentTypeId,
 	};
 }
 
@@ -82,9 +129,11 @@ export async function setupMasterData() {
  * SegmentTypeのIDを取得（マスターデータから）
  */
 export async function getSegmentTypeId(key: SegmentTypeKey): Promise<number> {
-	const segmentType = await prisma.segmentType.findFirst({
-		where: { key },
-	});
+	const [segmentType] = await db
+		.select()
+		.from(segmentTypes)
+		.where(eq(segmentTypes.key, key))
+		.limit(1);
 	if (!segmentType) {
 		throw new Error(
 			`SegmentType with key "${key}" not found. Make sure setupMasterData() is called.`,
