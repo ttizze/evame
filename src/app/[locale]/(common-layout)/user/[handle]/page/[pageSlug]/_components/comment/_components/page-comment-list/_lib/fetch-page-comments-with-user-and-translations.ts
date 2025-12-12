@@ -30,7 +30,6 @@ export async function fetchPageCommentsWithUserAndTranslations(
 	pageId: number,
 	locale: string,
 ) {
-	// 1. Prismaからflatなコメントを取得
 	const flatComments = await fetchPageCommentsWithSegments(pageId, locale);
 
 	// 2. flatなコメントからツリーを構築してそのまま返却

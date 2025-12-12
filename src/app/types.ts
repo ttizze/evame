@@ -1,5 +1,5 @@
-import type { User } from "@prisma/client";
 import type { ZodFlattenedError } from "zod";
+import type { User } from "@/drizzle/types";
 
 export type SanitizedUser = Omit<
 	User,

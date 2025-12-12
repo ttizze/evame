@@ -1,17 +1,18 @@
-import type { TranslationJob } from "@prisma/client";
-import { TranslationStatus } from "@prisma/client";
 import { useEffect } from "react";
+import type { TranslationJob } from "@/drizzle/types";
 import { useCombinedRouter } from "./use-combined-router";
 
 export function useLocaleListAutoRefresh(translationJobs?: TranslationJob[]) {
 	const router = useCombinedRouter();
 
 	useEffect(() => {
-		// 翻訳情報が存在しない、または全てCOMPLETEDの場合はリフレッシュ不要
+		// 翻訳情報が存在しない、または全て終了状態（COMPLETED/FAILED）の場合はリフレッシュ不要
 		if (
 			!translationJobs ||
 			translationJobs.length === 0 ||
-			translationJobs.every((job) => job.status === TranslationStatus.COMPLETED)
+			!translationJobs.some(
+				(job) => job.status === "PENDING" || job.status === "IN_PROGRESS",
+			)
 		) {
 			return;
 		}

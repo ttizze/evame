@@ -1,5 +1,5 @@
-import type { User } from "@prisma/client";
 import { vi } from "vitest";
+import type { User } from "@/drizzle/types";
 import { getCurrentUser } from "@/lib/auth-server";
 
 export type SessionUser = {
@@ -18,7 +18,7 @@ export type SessionUser = {
 };
 
 /**
- * PrismaのUser型をgetCurrentUserが返す型に変換するヘルパー
+ * DrizzleのUser型をgetCurrentUserが返す型に変換するヘルパー
  * （テスト用：実際のセッション管理は外部システムなのでモック）
  */
 export function toSessionUser(user: User): SessionUser {

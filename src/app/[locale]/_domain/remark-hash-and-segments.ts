@@ -7,7 +7,7 @@
  * - ノードには HTML 変換用の data-number-id を付与
  * 備考: locale はここでは扱わない
  */
-import type { Segment } from "@prisma/client";
+
 import type {
 	Blockquote,
 	Heading,
@@ -23,6 +23,7 @@ import { toString as mdastToString } from "mdast-util-to-string";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 import type { Data, VFile } from "vfile";
+import type { Segment } from "@/drizzle/types";
 import { generateHashForText } from "../_utils/generate-hash-for-text";
 /* ---------- 共通型 ---------- */
 

@@ -1,8 +1,8 @@
-import type { PageStatus } from "@prisma/client";
 import type { Root as MdastRoot } from "mdast";
 import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
 import { syncSegments } from "@/app/[locale]/_service/sync-segments";
 import { db } from "@/drizzle";
+import type { PageStatus } from "@/drizzle/types";
 import { createServerLogger } from "@/lib/logger.server";
 import { syncSegmentMetadataAndAnnotationLinks } from "../sync-segment-metadata-and-annotation-links";
 import { upsertPage } from "./db/mutations.server";

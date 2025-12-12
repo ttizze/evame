@@ -1,5 +1,4 @@
 "use client";
-import type { PageStatus } from "@prisma/client";
 import { MoreVertical } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
@@ -11,6 +10,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { PageStatus } from "@/drizzle/types";
 import { Link } from "@/i18n/routing";
 import { DeletePageDialog } from "../delete-page-dialog/delete-page-dialog";
 import { type TogglePublishState, togglePublishAction } from "./action";

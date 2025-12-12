@@ -1,5 +1,5 @@
-import type { SegmentTranslation, TranslationVote } from "@prisma/client";
 import type { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
+import type { SegmentTranslation, TranslationVote } from "@/drizzle/types";
 import type { SanitizedUser } from "../types";
 
 export type TranslationWithUser = SegmentTranslation & {

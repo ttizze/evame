@@ -1,8 +1,7 @@
-import type { TranslationJob } from "@prisma/client";
-import { TranslationStatus } from "@prisma/client";
 import { renderHook } from "@testing-library/react";
 // useLocaleListAutoRefresh.test.ts
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { TranslationJob } from "@/drizzle/types";
 import { useLocaleListAutoRefresh } from "./use-locale-list-auto-refresh.client";
 
 // モック用の refresh 関数
@@ -41,11 +40,11 @@ describe("useLocaleListAutoRefresh", () => {
 		const translationInfos = [
 			{
 				locale: "en",
-				status: TranslationStatus.COMPLETED,
+				status: "COMPLETED",
 			} as TranslationJob,
 			{
 				locale: "fr",
-				status: TranslationStatus.COMPLETED,
+				status: "COMPLETED",
 			} as TranslationJob,
 		];
 		renderHook(() => useLocaleListAutoRefresh(translationInfos));
@@ -57,11 +56,11 @@ describe("useLocaleListAutoRefresh", () => {
 		const translationInfos = [
 			{
 				locale: "en",
-				status: TranslationStatus.IN_PROGRESS,
+				status: "IN_PROGRESS",
 			} as TranslationJob,
 			{
 				locale: "fr",
-				status: TranslationStatus.COMPLETED,
+				status: "COMPLETED",
 			} as TranslationJob,
 		];
 		renderHook(() => useLocaleListAutoRefresh(translationInfos));
@@ -73,7 +72,7 @@ describe("useLocaleListAutoRefresh", () => {
 		const translationInfos = [
 			{
 				locale: "en",
-				status: TranslationStatus.IN_PROGRESS,
+				status: "IN_PROGRESS",
 			} as TranslationJob,
 		];
 		renderHook(() => useLocaleListAutoRefresh(translationInfos));
@@ -85,7 +84,7 @@ describe("useLocaleListAutoRefresh", () => {
 		const translationInfos = [
 			{
 				locale: "en",
-				status: TranslationStatus.IN_PROGRESS,
+				status: "IN_PROGRESS",
 			} as TranslationJob,
 		];
 		const { unmount } = renderHook(() =>

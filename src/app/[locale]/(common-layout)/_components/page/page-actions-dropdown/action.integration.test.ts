@@ -1,7 +1,9 @@
 "use server";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/drizzle";
+import { pages } from "@/drizzle/schema";
 import { mockCurrentUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
@@ -69,9 +71,11 @@ describe("togglePublishAction", () => {
 				message: "Page status updated successfully",
 			});
 
-			const updatedPage = await prisma.page.findUnique({
-				where: { id: page.id },
-			});
+			const [updatedPage] = await db
+				.select()
+				.from(pages)
+				.where(eq(pages.id, page.id))
+				.limit(1);
 			expect(updatedPage?.status).toBe("DRAFT");
 		});
 
@@ -91,9 +95,11 @@ describe("togglePublishAction", () => {
 
 			expect(result.success).toBe(true);
 
-			const updatedPage = await prisma.page.findUnique({
-				where: { id: page.id },
-			});
+			const [updatedPage] = await db
+				.select()
+				.from(pages)
+				.where(eq(pages.id, page.id))
+				.limit(1);
 			expect(updatedPage?.status).toBe("PUBLIC");
 		});
 

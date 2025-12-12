@@ -1,5 +1,5 @@
-import type { TranslationProofStatus } from "@prisma/client";
 import { FileText, FileX, Languages } from "lucide-react";
+import type { TranslationProofStatus } from "@/drizzle/types";
 import { cn } from "@/lib/utils";
 import type { LocaleStatus } from "../domain/build-locale-options";
 
