@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Root as MdastRoot } from "mdast";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import { removePosition } from "unist-util-remove-position";
@@ -14,7 +14,7 @@ interface Params {
 }
 
 interface Result {
-	mdastJson: Prisma.InputJsonValue;
+	mdastJson: MdastRoot;
 	segments: SegmentDraft[];
 	file: VFile;
 }
@@ -42,7 +42,7 @@ export async function markdownToMdastWithSegments({
 	removePosition(tree, { force: true });
 
 	return {
-		mdastJson: tree as unknown as Prisma.InputJsonValue,
+		mdastJson: tree as MdastRoot,
 		segments: (file.data as { segments: SegmentDraft[] }).segments,
 		file,
 	};

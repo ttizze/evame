@@ -1,5 +1,5 @@
 import { htmlToMdastWithSegments } from "@/app/[locale]/_domain/html-to-mdast-with-segments";
-import { upsertPageCommentAndSegments } from "../_db/mutations.server";
+import { upsertPageCommentAndSegments } from "./upsert-page-comment-and-segments";
 export async function processPageCommentHtml(p: {
 	pageCommentId?: number;
 	parentId?: number;

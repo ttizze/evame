@@ -1,4 +1,3 @@
-import type { Prisma } from "@prisma/client";
 import type { Root as MdastRoot } from "mdast";
 import rehypeParse from "rehype-parse";
 import rehypeRemark from "rehype-remark";
@@ -17,7 +16,7 @@ interface Params {
 }
 
 interface Result {
-	mdastJson: Prisma.InputJsonValue; // DB 書き込み用
+	mdastJson: MdastRoot; // DB 書き込み用
 	segments: SegmentDraft[];
 	file: VFile; // ログや警告を見たい時用
 }
@@ -45,7 +44,7 @@ export async function htmlToMdastWithSegments({
 	removePosition(mdast, { force: true });
 
 	return {
-		mdastJson: mdast as unknown as Prisma.InputJsonValue,
+		mdastJson: mdast,
 		segments: (file.data as { segments: SegmentDraft[] }).segments,
 		file,
 	};

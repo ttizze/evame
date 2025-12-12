@@ -6,8 +6,8 @@ import { getLocaleFromHtml } from "@/app/[locale]/_domain/get-locale-from-html";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { createNotificationPageComment } from "./_db/mutations.server";
-import { processPageCommentHtml } from "./_lib/process-page-comment-html";
 import { enqueueCommentTranslation } from "./service/enqueue-comment-translation";
+import { processPageCommentHtml } from "./service/process-page-comment-html";
 
 export type CommentActionResponse = ActionResponse<
 	{ translationJobs: TranslationJobForToast[] },

@@ -1,26 +1,25 @@
-import type { PrismaClient } from "@prisma/client";
-
-/**
- * Prismaのトランザクションクライアントの型
- */
-type TransactionClient = Parameters<
-	Parameters<PrismaClient["$transaction"]>[0]
->[0];
+import { inArray } from "drizzle-orm";
+import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
+import { segmentAnnotationLinks } from "@/drizzle/schema";
 
 /**
  * 既存のアノテーションリンクを削除する
+ * Drizzle版に移行済み
  */
 export async function deleteAnnotationLinks(
 	tx: TransactionClient,
 	annotationSegmentIds: number[],
 ): Promise<void> {
-	await tx.segmentAnnotationLink.deleteMany({
-		where: { annotationSegmentId: { in: annotationSegmentIds } },
-	});
+	await tx
+		.delete(segmentAnnotationLinks)
+		.where(
+			inArray(segmentAnnotationLinks.annotationSegmentId, annotationSegmentIds),
+		);
 }
 
 /**
  * アノテーションリンクを作成する
+ * Drizzle版に移行済み
  */
 export async function createAnnotationLinks(
 	tx: TransactionClient,
@@ -29,8 +28,8 @@ export async function createAnnotationLinks(
 		annotationSegmentId: number;
 	}>,
 ): Promise<void> {
-	await tx.segmentAnnotationLink.createMany({
-		data: linksToCreate,
-		skipDuplicates: true,
-	});
+	await tx
+		.insert(segmentAnnotationLinks)
+		.values(linksToCreate)
+		.onConflictDoNothing();
 }

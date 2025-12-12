@@ -1,7 +1,13 @@
-import type { Prisma } from "@prisma/client";
+import type { Root as MdastRoot, RootContent } from "mdast";
 
+/**
+ * MDASTノード（RootまたはRootContent）をテキストに変換
+ *
+ * DrizzleスキーマではmdastJsonはMdastRoot型として定義されている。
+ * 再帰的な処理のため、RootContent型やRootContent[]も受け入れる。
+ */
 export async function mdastToText(
-	mdastJson: Prisma.JsonValue,
+	mdastJson: MdastRoot | RootContent | RootContent[] | null,
 ): Promise<string> {
 	if (mdastJson == null) return "";
 
@@ -10,38 +16,41 @@ export async function mdastToText(
 	if (typeof mdastJson === "number" || typeof mdastJson === "boolean")
 		return String(mdastJson);
 
-	// ② 配列は各要素を再帰
+	// ② 配列の場合は各要素を再帰処理
 	if (Array.isArray(mdastJson)) {
-		// 非同期処理を正しく処理
 		const results = await Promise.all(
 			mdastJson.map((item) => mdastToText(item)),
 		);
 		return results.join("");
 	}
 
-	// ③ オブジェクト（MDAST ノード）の処理
+	// オブジェクト（MDAST ノード）の処理
 	if (typeof mdastJson === "object") {
-		const node = mdastJson as Record<string, Prisma.JsonValue>;
+		// Root型またはRootContent型のノード
+		const node = mdastJson as MdastRoot | RootContent;
 
 		// text, inlineCode など: { value: "..." }
-		if (typeof node.value === "string") return node.value;
+		if ("value" in node && typeof node.value === "string") {
+			return node.value;
+		}
 
 		// 画像キャプション・リンクタイトルなど alt/title にも文字列がある場合
-		if (typeof node.alt === "string") return node.alt;
-		if (typeof node.title === "string") return node.title;
+		if ("alt" in node && typeof node.alt === "string") {
+			return node.alt;
+		}
+		if ("title" in node && typeof node.title === "string") {
+			return node.title;
+		}
 
-		// 子ノードを下る
-		if (Array.isArray(node.children)) {
-			// 非同期処理を正しく処理
+		// 子ノードを下る（Root型と多くのRootContent型はchildrenを持つ）
+		if ("children" in node && Array.isArray(node.children)) {
 			const results = await Promise.all(
-				(node.children as Prisma.JsonValue[]).map((child) =>
-					mdastToText(child),
-				),
+				node.children.map((child) => mdastToText(child as RootContent)),
 			);
 			return results.join("");
 		}
 	}
 
-	// ④ それ以外は無視
+	// それ以外は無視
 	return "";
 }
