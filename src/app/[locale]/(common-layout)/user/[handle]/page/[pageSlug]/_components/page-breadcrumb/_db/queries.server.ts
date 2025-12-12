@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import { fetchSegmentsForPages } from "@/app/[locale]/_db/page-list-helpers.server";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
-import { pickBestTranslation } from "@/app/[locale]/_utils/pick-best-translation";
 import type { SegmentForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
 import { db } from "@/drizzle";
@@ -35,7 +34,6 @@ export async function getParentChain(pageId: number, locale: string) {
 
 		// セグメント（number: 0のみ）を取得
 		const segments = await fetchSegmentsForPages([parent.id], locale);
-		const normalizedSegments = pickBestTranslation(segments);
 
 		parentChain.unshift({
 			id: parent.id,
@@ -47,7 +45,7 @@ export async function getParentChain(pageId: number, locale: string) {
 			createdAt: parent.createdAt.toISOString(),
 			user: parent.user as SanitizedUser,
 			content: {
-				segments: normalizedSegments as unknown as SegmentForList[],
+				segments: segments,
 			},
 			children: [],
 		});

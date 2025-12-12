@@ -13,10 +13,16 @@ import {
 	segmentTypes,
 	users,
 } from "@/drizzle/schema";
+import { serverLogger } from "@/lib/logger.server";
 import {
+	buildSegmentsMap,
 	fetchCountsForPages,
 	fetchTagsForPages,
 } from "./page-list-helpers.server";
+import {
+	basePageFieldSelectDrizzle,
+	selectSegmentWithTranslationDrizzle,
+} from "./queries.server";
 
 /**
  * ページ基本情報を取得（slugで）
@@ -24,29 +30,8 @@ import {
 async function fetchPageBasicBySlug(slug: string) {
 	const result = await db
 		.select({
-			id: pages.id,
-			slug: pages.slug,
-			createdAt: pages.createdAt,
-			updatedAt: pages.updatedAt,
-			status: pages.status,
-			sourceLocale: pages.sourceLocale,
-			parentId: pages.parentId,
-			order: pages.order,
-			userId: pages.userId,
+			...basePageFieldSelectDrizzle(),
 			mdastJson: pages.mdastJson,
-			user: {
-				id: users.id,
-				name: users.name,
-				handle: users.handle,
-				image: users.image,
-				createdAt: users.createdAt,
-				updatedAt: users.updatedAt,
-				profile: users.profile,
-				twitterHandle: users.twitterHandle,
-				totalPoints: users.totalPoints,
-				isAI: users.isAI,
-				plan: users.plan,
-			},
 		})
 		.from(pages)
 		.innerJoin(users, eq(pages.userId, users.id))
@@ -54,114 +39,6 @@ async function fetchPageBasicBySlug(slug: string) {
 		.limit(1);
 
 	return result[0] || null;
-}
-
-/**
- * セグメントと翻訳のクエリ結果を、セグメントごとにグループ化して最良の翻訳を1件のみ選択
- */
-export function buildSegmentsMap(
-	rows: Array<{
-		segment: {
-			id: number;
-			contentId: number;
-			number: number;
-			text: string;
-			textAndOccurrenceHash: string;
-			createdAt: Date;
-			segmentTypeId: number;
-		};
-		segmentType: {
-			key: string;
-			label: string;
-		};
-		translation: {
-			id: number;
-			segmentId: number;
-			userId: string;
-			locale: string;
-			text: string;
-			point: number;
-			createdAt: Date;
-		} | null;
-		translationUser: {
-			id: string;
-			name: string;
-			handle: string;
-			image: string;
-			createdAt: Date;
-			updatedAt: Date;
-			profile: string;
-			twitterHandle: string;
-			totalPoints: number;
-			isAI: boolean;
-			plan: string;
-		} | null;
-	}>,
-) {
-	const segmentsMap = new Map<
-		number,
-		{
-			id: number;
-			contentId: number;
-			number: number;
-			text: string;
-			textAndOccurrenceHash: string;
-			createdAt: Date;
-			segmentTypeId: number;
-			segmentType: { key: string; label: string };
-			segmentTranslation: {
-				id: number;
-				segmentId: number;
-				userId: string;
-				locale: string;
-				text: string;
-				point: number;
-				createdAt: Date;
-				user: {
-					id: string;
-					name: string;
-					handle: string;
-					image: string;
-					createdAt: Date;
-					updatedAt: Date;
-					profile: string;
-					twitterHandle: string;
-					totalPoints: number;
-					isAI: boolean;
-					plan: string;
-				};
-			} | null;
-		}
-	>();
-
-	for (const row of rows) {
-		const segmentId = row.segment.id;
-
-		if (!segmentsMap.has(segmentId)) {
-			segmentsMap.set(segmentId, {
-				...row.segment,
-				segmentType: row.segmentType,
-				segmentTranslation: null,
-			});
-		}
-
-		// 最初の翻訳のみ追加（既にpoint DESC, createdAt DESCでソート済み）
-		const segment = segmentsMap.get(segmentId);
-		if (!segment) continue;
-
-		if (
-			row.translation?.id &&
-			row.translationUser &&
-			segment.segmentTranslation === null
-		) {
-			segment.segmentTranslation = {
-				...row.translation,
-				user: row.translationUser,
-			};
-		}
-	}
-
-	return segmentsMap;
 }
 
 /**
@@ -174,43 +51,7 @@ async function fetchSegmentsWithAnnotations(
 ) {
 	// セグメントとその最良の翻訳を取得
 	const allSegments = await db
-		.select({
-			segment: {
-				id: segmentsTable.id,
-				contentId: segmentsTable.contentId,
-				number: segmentsTable.number,
-				text: segmentsTable.text,
-				textAndOccurrenceHash: segmentsTable.textAndOccurrenceHash,
-				createdAt: segmentsTable.createdAt,
-				segmentTypeId: segmentsTable.segmentTypeId,
-			},
-			segmentType: {
-				key: segmentTypes.key,
-				label: segmentTypes.label,
-			},
-			translation: {
-				id: segmentTranslations.id,
-				segmentId: segmentTranslations.segmentId,
-				userId: segmentTranslations.userId,
-				locale: segmentTranslations.locale,
-				text: segmentTranslations.text,
-				point: segmentTranslations.point,
-				createdAt: segmentTranslations.createdAt,
-			},
-			translationUser: {
-				id: users.id,
-				name: users.name,
-				handle: users.handle,
-				image: users.image,
-				createdAt: users.createdAt,
-				updatedAt: users.updatedAt,
-				profile: users.profile,
-				twitterHandle: users.twitterHandle,
-				totalPoints: users.totalPoints,
-				isAI: users.isAI,
-				plan: users.plan,
-			},
-		})
+		.select(selectSegmentWithTranslationDrizzle())
 		.from(segmentsTable)
 		.innerJoin(segmentTypes, eq(segmentsTable.segmentTypeId, segmentTypes.id))
 		.leftJoin(
@@ -266,43 +107,7 @@ async function fetchSegmentsWithAnnotations(
 
 	// 注釈セグメントとその翻訳を取得
 	const annotationSegmentsRaw = await db
-		.select({
-			segment: {
-				id: segmentsTable.id,
-				contentId: segmentsTable.contentId,
-				number: segmentsTable.number,
-				text: segmentsTable.text,
-				textAndOccurrenceHash: segmentsTable.textAndOccurrenceHash,
-				createdAt: segmentsTable.createdAt,
-				segmentTypeId: segmentsTable.segmentTypeId,
-			},
-			segmentType: {
-				key: segmentTypes.key,
-				label: segmentTypes.label,
-			},
-			translation: {
-				id: segmentTranslations.id,
-				segmentId: segmentTranslations.segmentId,
-				userId: segmentTranslations.userId,
-				locale: segmentTranslations.locale,
-				text: segmentTranslations.text,
-				point: segmentTranslations.point,
-				createdAt: segmentTranslations.createdAt,
-			},
-			translationUser: {
-				id: users.id,
-				name: users.name,
-				handle: users.handle,
-				image: users.image,
-				createdAt: users.createdAt,
-				updatedAt: users.updatedAt,
-				profile: users.profile,
-				twitterHandle: users.twitterHandle,
-				totalPoints: users.totalPoints,
-				isAI: users.isAI,
-				plan: users.plan,
-			},
-		})
+		.select(selectSegmentWithTranslationDrizzle())
 		.from(segmentsTable)
 		.innerJoin(segmentTypes, eq(segmentsTable.segmentTypeId, segmentTypes.id))
 		.leftJoin(
@@ -333,19 +138,34 @@ async function fetchSegmentsWithAnnotations(
 		const segmentAnnotations = annotationsMap.get(segment.id) || [];
 		return {
 			...segment,
-			annotations: segmentAnnotations.map((link) => {
-				const annotationSegment = annotationSegmentsMap.get(
-					link.annotationSegmentId,
-				);
-				if (!annotationSegment) {
-					throw new Error(
-						`Annotation segment ${link.annotationSegmentId} not found`,
+			annotations: segmentAnnotations
+				.map((link) => {
+					const annotationSegment = annotationSegmentsMap.get(
+						link.annotationSegmentId,
 					);
-				}
-				return {
-					annotationSegment,
-				};
-			}),
+					if (!annotationSegment) {
+						// 注釈セグメントが見つからない場合はスキップ（耐障害性）
+						serverLogger.warn(
+							{
+								annotationSegmentId: link.annotationSegmentId,
+								mainSegmentId: link.mainSegmentId,
+								pageId,
+							},
+							"Annotation segment not found, skipping",
+						);
+						return null;
+					}
+					return {
+						annotationSegment,
+					};
+				})
+				.filter(
+					(
+						v,
+					): v is {
+						annotationSegment: NonNullable<typeof v>["annotationSegment"];
+					} => v !== null,
+				),
 		};
 	});
 }
@@ -391,7 +211,6 @@ export async function fetchPageDetail(slug: string, locale: string) {
 		sourceLocale: page.sourceLocale,
 		parentId: page.parentId,
 		order: page.order,
-		userId: page.userId,
 		mdastJson: page.mdastJson,
 		user: page.user,
 		tagPages: tags,

@@ -43,7 +43,7 @@ export async function editPageStatusAction(
 	const { currentUser, data } = v;
 	const { pageId, status, targetLocales } = data;
 	const page = await getPageById(pageId);
-	if (!currentUser?.id || page?.userId !== currentUser.id) {
+	if (!currentUser?.id || page?.user.id !== currentUser.id) {
 		redirect("/auth/login" as Route);
 	}
 	await updatePageStatus(pageId, status as PageStatus);

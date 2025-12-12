@@ -91,7 +91,7 @@
 		"hast-util-to-html": "9.0.5",
 		"html-react-parser": "5.2.10",
 		"isomorphic-dompurify": "2.26.0",
-		"jsdom": "27.0.0",
+		"jsdom": "26.1.0",
 		"linkify-react": "4.3.2",
 		"lucide-react": "0.556.0",
 		"nanoid": "5.1.6",
@@ -176,8 +176,6 @@
 		"vitest": "4.0.15"
 	},
 	"overrides": {
-		"css-select": "4.3.0",
-		"@types/react": "19.2.2",
-		"@types/react-dom": "19.2.2"
+		"css-select": "4.3.0"
 	}
 }

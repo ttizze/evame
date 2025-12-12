@@ -21,15 +21,13 @@ export type SegmentForList = Omit<SegmentForDetail, "annotations">;
 // SegmentForDetail と SegmentForList のユニオン型
 export type Segment = SegmentForDetail | SegmentForList;
 
-export type PageForList = Omit<PageDetail, "mdastJson">;
-
-export type PageForTitle = Omit<
-	PageDetail,
-	"mdastJson" | "tagPages" | "_count" | "content" | "updatedAt" | "userId"
-> & {
+export type PageForList = Omit<PageDetail, "mdastJson" | "content"> & {
 	content: {
 		segments: SegmentForList[];
 	};
+};
+
+export type PageForTitle = Omit<PageForList, "tagPages" | "_count"> & {
 	_count: {
 		children: number;
 	};

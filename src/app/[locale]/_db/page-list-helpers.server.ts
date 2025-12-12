@@ -8,6 +8,7 @@ import type { SQL } from "drizzle-orm";
 import {
 	and,
 	asc,
+	count,
 	desc,
 	eq,
 	exists,
@@ -16,6 +17,7 @@ import {
 	isNull,
 	sql,
 } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/drizzle";
 import {
 	likePages,
@@ -28,6 +30,10 @@ import {
 	tags,
 	users,
 } from "@/drizzle/schema";
+import {
+	basePageFieldSelectDrizzle,
+	selectSegmentWithTranslationDrizzle,
+} from "./queries.server";
 import type { PageOrderByInput, PageWhereInput } from "./types";
 
 /**
@@ -101,23 +107,6 @@ export function buildOrderBy(
 }
 
 /**
- * ユーザーフィールドのselectオブジェクト
- */
-export const selectUserFieldsDrizzle = () => ({
-	id: users.id,
-	name: users.name,
-	handle: users.handle,
-	image: users.image,
-	createdAt: users.createdAt,
-	updatedAt: users.updatedAt,
-	profile: users.profile,
-	twitterHandle: users.twitterHandle,
-	totalPoints: users.totalPoints,
-	isAI: users.isAI,
-	plan: users.plan,
-});
-
-/**
  * ページ基本情報を取得（ユーザー情報含む）
  */
 export async function fetchPagesBasic(
@@ -130,16 +119,7 @@ export async function fetchPagesBasic(
 	const orderByConditions = buildOrderBy(orderBy);
 
 	const query = db
-		.select({
-			id: pages.id,
-			slug: pages.slug,
-			createdAt: pages.createdAt,
-			status: pages.status,
-			sourceLocale: pages.sourceLocale,
-			parentId: pages.parentId,
-			order: pages.order,
-			user: selectUserFieldsDrizzle(),
-		})
+		.select(basePageFieldSelectDrizzle())
 		.from(pages)
 		.leftJoin(users, eq(pages.userId, users.id))
 		.$dynamic();
@@ -183,66 +163,47 @@ export async function fetchPageCount(where: PageWhereInput): Promise<number> {
 }
 
 /**
- * 複数ページのセグメントを取得（number: 0のみ、最良の翻訳1件のみ）
- *
- * 各セグメントに対して、point DESC, createdAt DESCでソートした最良の翻訳を1件のみ取得
+ * セグメントと翻訳のクエリ結果を、セグメントごとにグループ化して最良の翻訳を1件のみ選択
  */
-export async function fetchSegmentsForPages(pageIds: number[], locale: string) {
-	if (pageIds.length === 0) return [];
-
-	const allSegments = await db
-		.select({
-			segment: {
-				id: segments.id,
-				contentId: segments.contentId,
-				number: segments.number,
-				text: segments.text,
-			},
-			segmentType: {
-				key: segmentTypes.key,
-				label: segmentTypes.label,
-			},
-			translation: {
-				id: segmentTranslations.id,
-				segmentId: segmentTranslations.segmentId,
-				userId: segmentTranslations.userId,
-				locale: segmentTranslations.locale,
-				text: segmentTranslations.text,
-				point: segmentTranslations.point,
-				createdAt: segmentTranslations.createdAt,
-			},
-			translationUser: {
-				id: users.id,
-				name: users.name,
-				handle: users.handle,
-				image: users.image,
-				createdAt: users.createdAt,
-				updatedAt: users.updatedAt,
-				profile: users.profile,
-				twitterHandle: users.twitterHandle,
-				totalPoints: users.totalPoints,
-				isAI: users.isAI,
-				plan: users.plan,
-			},
-		})
-		.from(segments)
-		.innerJoin(segmentTypes, eq(segments.segmentTypeId, segmentTypes.id))
-		.leftJoin(
-			segmentTranslations,
-			and(
-				eq(segments.id, segmentTranslations.segmentId),
-				eq(segmentTranslations.locale, locale),
-			),
-		)
-		.leftJoin(users, eq(segmentTranslations.userId, users.id))
-		.where(and(inArray(segments.contentId, pageIds), eq(segments.number, 0)))
-		.orderBy(
-			segments.id,
-			desc(segmentTranslations.point),
-			desc(segmentTranslations.createdAt),
-		);
-
-	// セグメントごとにグループ化し、最良の翻訳を1件のみ選択
+export function buildSegmentsMap(
+	rows: Array<{
+		segment: {
+			id: number;
+			contentId: number;
+			number: number;
+			text: string;
+			textAndOccurrenceHash: string;
+			createdAt: Date;
+			segmentTypeId: number;
+		};
+		segmentType: {
+			key: string;
+			label: string;
+		};
+		translation: {
+			id: number;
+			segmentId: number;
+			userId: string;
+			locale: string;
+			text: string;
+			point: number;
+			createdAt: Date;
+		} | null;
+		translationUser: {
+			id: string;
+			name: string;
+			handle: string;
+			image: string;
+			createdAt: Date;
+			updatedAt: Date;
+			profile: string;
+			twitterHandle: string;
+			totalPoints: number;
+			isAI: boolean;
+			plan: string;
+		} | null;
+	}>,
+) {
 	const segmentsMap = new Map<
 		number,
 		{
@@ -250,8 +211,11 @@ export async function fetchSegmentsForPages(pageIds: number[], locale: string) {
 			contentId: number;
 			number: number;
 			text: string;
+			textAndOccurrenceHash: string;
+			createdAt: Date;
+			segmentTypeId: number;
 			segmentType: { key: string; label: string };
-			segmentTranslations: Array<{
+			segmentTranslation: {
 				id: number;
 				segmentId: number;
 				userId: string;
@@ -272,18 +236,18 @@ export async function fetchSegmentsForPages(pageIds: number[], locale: string) {
 					isAI: boolean;
 					plan: string;
 				};
-			}>;
+			} | null;
 		}
 	>();
 
-	for (const row of allSegments) {
+	for (const row of rows) {
 		const segmentId = row.segment.id;
 
 		if (!segmentsMap.has(segmentId)) {
 			segmentsMap.set(segmentId, {
 				...row.segment,
 				segmentType: row.segmentType,
-				segmentTranslations: [],
+				segmentTranslation: null,
 			});
 		}
 
@@ -294,14 +258,47 @@ export async function fetchSegmentsForPages(pageIds: number[], locale: string) {
 		if (
 			row.translation?.id &&
 			row.translationUser &&
-			segment.segmentTranslations.length === 0
+			segment.segmentTranslation === null
 		) {
-			segment.segmentTranslations.push({
+			segment.segmentTranslation = {
 				...row.translation,
 				user: row.translationUser,
-			});
+			};
 		}
 	}
+
+	return segmentsMap;
+}
+
+/**
+ * 複数ページのセグメントを取得（number: 0のみ、最良の翻訳1件のみ）
+ *
+ * 各セグメントに対して、point DESC, createdAt DESCでソートした最良の翻訳を1件のみ取得
+ */
+export async function fetchSegmentsForPages(pageIds: number[], locale: string) {
+	if (pageIds.length === 0) return [];
+
+	const allSegments = await db
+		.select(selectSegmentWithTranslationDrizzle())
+		.from(segments)
+		.innerJoin(segmentTypes, eq(segments.segmentTypeId, segmentTypes.id))
+		.leftJoin(
+			segmentTranslations,
+			and(
+				eq(segments.id, segmentTranslations.segmentId),
+				eq(segmentTranslations.locale, locale),
+			),
+		)
+		.leftJoin(users, eq(segmentTranslations.userId, users.id))
+		.where(and(inArray(segments.contentId, pageIds), eq(segments.number, 0)))
+		.orderBy(
+			segments.id,
+			desc(segmentTranslations.point),
+			desc(segmentTranslations.createdAt),
+		);
+
+	// セグメントごとにグループ化し、最良の翻訳を1件のみ選択
+	const segmentsMap = buildSegmentsMap(allSegments);
 
 	return Array.from(segmentsMap.values());
 }
@@ -333,24 +330,45 @@ export async function fetchTagsForPages(pageIds: number[]) {
 export async function fetchCountsForPages(pageIds: number[]) {
 	if (pageIds.length === 0) return [];
 
-	// inArrayを使う方が型安全
+	// 子ページをカウントするためにpagesテーブルのエイリアスを作成
+	const children = alias(pages, "children");
+
+	// コメント数のサブクエリ（countにエイリアスを付けてサブクエリ参照を可能にする）
+	const commentsCountSubquery = db
+		.select({
+			pageId: pageComments.pageId,
+			count: count().as("comment_count"),
+		})
+		.from(pageComments)
+		.where(eq(pageComments.isDeleted, false))
+		.groupBy(pageComments.pageId)
+		.as("comments_count");
+
+	// 子ページ数のサブクエリ（countにエイリアスを付けてサブクエリ参照を可能にする）
+	const childrenCountSubquery = db
+		.select({
+			parentId: children.parentId,
+			count: count().as("children_count"),
+		})
+		.from(children)
+		.where(eq(children.status, "PUBLIC"))
+		.groupBy(children.parentId)
+		.as("children_count");
+
 	const result = await db
 		.select({
 			pageId: pages.id,
-			pageCommentsCount: sql<number>`COALESCE((
-        SELECT COUNT(*)::int
-        FROM ${pageComments} pc
-        WHERE pc.page_id = ${pages.id}
-          AND pc.is_deleted = false
-      ), 0)`,
-			childrenCount: sql<number>`COALESCE((
-        SELECT COUNT(*)::int
-        FROM ${pages} children
-        WHERE children.parent_id = ${pages.id}
-          AND children.status = 'PUBLIC'
-      ), 0)`,
+			// コメント数をLEFT JOINで取得
+			pageCommentsCount: sql<number>`COALESCE(${commentsCountSubquery.count}, 0)`,
+			// 子ページ数をLEFT JOINで取得
+			childrenCount: sql<number>`COALESCE(${childrenCountSubquery.count}, 0)`,
 		})
 		.from(pages)
+		.leftJoin(commentsCountSubquery, eq(pages.id, commentsCountSubquery.pageId))
+		.leftJoin(
+			childrenCountSubquery,
+			eq(pages.id, childrenCountSubquery.parentId),
+		)
 		.where(inArray(pages.id, pageIds));
 
 	return result.map((row) => ({

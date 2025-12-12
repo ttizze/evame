@@ -62,7 +62,7 @@ export const commentAction = createActionFactory<
 		});
 		await createNotificationPageComment(
 			currentUserId,
-			page.userId,
+			page.user.id,
 			pageComment.id,
 		);
 		const results = await enqueueCommentTranslation({

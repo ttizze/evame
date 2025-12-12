@@ -3,7 +3,7 @@
  */
 
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { buildSegmentsMap } from "@/app/[locale]/_db/fetch-page-detail.server";
+import { buildSegmentsMap } from "@/app/[locale]/_db/page-list-helpers.server";
 import { db } from "@/drizzle";
 import {
 	segments,

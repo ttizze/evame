@@ -1,7 +1,6 @@
 import { and, eq, ilike } from "drizzle-orm";
 import { db } from "@/drizzle";
 import { pages, segments } from "@/drizzle/schema";
-import { pickBestTranslation } from "../_utils/pick-best-translation";
 import type { PageForList, PageForTitle } from "../types";
 import {
 	fetchCountsForPages,
@@ -37,16 +36,16 @@ export async function fetchPagesWithTransform(
 	total: number;
 }> {
 	// 1. 基本情報を取得
-	const [pages, total] = await Promise.all([
+	const [pagesResult, total] = await Promise.all([
 		fetchPagesBasic(where, orderBy, take, skip),
 		fetchPageCount(where),
 	]);
 
-	if (pages.length === 0) {
+	if (pagesResult.length === 0) {
 		return { pageForLists: [], total: 0 };
 	}
 
-	const pageIds = pages.map((p) => p.id);
+	const pageIds = pagesResult.map((p) => p.id);
 
 	// 2. 関連データを並列取得
 	const [segmentsData, tagsData, countsData] = await Promise.all([
@@ -71,7 +70,7 @@ export async function fetchPagesWithTransform(
 	const countsMap = new Map(countsData.map((c) => [c.pageId, c]));
 
 	// 4. データを結合してPageForList型に変換
-	const pageForLists: PageForList[] = pages.map((page) => {
+	const pageForLists: PageForList[] = pagesResult.map((page) => {
 		const pageSegments = segmentsMap.get(page.id) || [];
 		const pageTags = tagsMap.get(page.id) || [];
 		const counts = countsMap.get(page.id) || {
@@ -79,36 +78,29 @@ export async function fetchPagesWithTransform(
 			children: 0,
 		};
 
-		// pickBestTranslationを適用
-		const normalizedSegments = pickBestTranslation(
-			pageSegments.map((s) => ({
-				...s,
-				segmentTranslations: s.segmentTranslations,
-			})),
-		);
-
 		if (!page.user) {
 			throw new Error(`User not found for page ${page.id}`);
 		}
-
+		console.log("counts", counts);
 		return {
 			id: page.id,
 			slug: page.slug,
 			createdAt: page.createdAt,
+			updatedAt: page.updatedAt,
 			status: page.status,
 			sourceLocale: page.sourceLocale,
 			parentId: page.parentId,
 			order: page.order,
 			user: page.user,
 			content: {
-				segments: normalizedSegments,
+				segments: pageSegments,
 			},
 			tagPages: pageTags.map((t) => ({ tag: t.tag })),
 			_count: {
 				pageComments: counts.pageComments,
 				children: counts.children,
 			},
-		} as unknown as PageForList;
+		};
 	});
 
 	return {
@@ -201,7 +193,7 @@ export async function fetchChildPages(
 			_count: {
 				children: page._count.children,
 			},
-		} as PageForTitle;
+		};
 	});
 }
 
