@@ -10,10 +10,10 @@
 ## 実行環境
 - パッケージランナー: `bun`
 - フレームワーク: Next.js (App Router)
-- ORM/DB: Prisma + PostgreSQL
+- ORM/DB: Drizzle + PostgreSQL
 
 ## よく使うスクリプト
-- 依存関係/初期化: `bun run init`（依存インストール → Prisma generate → migrate dev → seed）
+- 依存関係/初期化: `bun run init`（依存インストール → Drizzle generate → migrate dev → seed）
 - DB セットアップのみ: `bun run db:setup`
 - 開発サーバ: `bun run dev`
 - 型チェック: `bun run typecheck`
@@ -43,10 +43,10 @@
 - 調査/実行: `shell` を使用（出力は必要最小限に分割して取得）。
 - 計画管理: 必要に応じて `update_plan` で段階を明確化（単純作業では不要）。
 
-## DB と Prisma
-- スキーマ変更時は `schema.prisma` を更新 → `bunx prisma migrate dev`。
-- シードは `prisma/seed.ts`。`bun run seed` で実行。
-- 本番系のマイグレーションは `prisma migrate deploy` を使用（CI/デプロイ時）。
+## DB と Drizzle
+- スキーマ変更時は `schema.ts` を更新 → `bunx drizzle-kit migrate dev`。
+- シードは `seed.ts`。`bun run seed` で実行。
+- 本番系のマイグレーションは `drizzle-kit migrate deploy` を使用（CI/デプロイ時）。
 
 ## セキュリティ/秘匿情報
 - `.env` のキーは外部に出さない。ログ/PR/エラーメッセージに含めない。

@@ -12,7 +12,7 @@ Evame は、ユーザが投稿したテクストに対訳・脚注・解説を�
 /
 ├── next/                         # メインアプリケーション
 │   ├── src/                      # ソースコード
-│   ├── prisma/                   # Prisma スキーマとマイグレーション
+│   ├── drizzle/                   # Drizzle スキーマとマイグレーション
 │   └── public/                   # 静的ファイル
 └── components/                   # Chrome 拡張機能 (現在は空)
 ```
@@ -24,7 +24,7 @@ Evame は、ユーザが投稿したテクストに対訳・脚注・解説を�
 - TypeScript
 - Shadcn UI (Radix UI)
 - Tailwind CSS
-- Prisma ORM と PostgreSQL
+- Drizzle ORM と PostgreSQL
 - NextAuth 認証
 - next-intl による i18n
 - TipTap エディタ
@@ -69,7 +69,7 @@ Evame は、ユーザが投稿したテクストに対訳・脚注・解説を�
 5. データベースをセットアップし、シードを実行します。
    ```bash
    cd next
-   bunx prisma migrate dev
+   bunx drizzle-kit migrate dev
    bun run seed
    ```
 6. 開発サーバーを起動します。

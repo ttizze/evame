@@ -1,4 +1,4 @@
-import { TranslationProofStatus } from "@prisma/client";
+import type { TranslationProofStatus } from "@/drizzle/types";
 
 /**
  * 翻訳の証明ステータスを計算する
@@ -13,11 +13,9 @@ export function calcProofStatus(
 	segmentsWith1PlusVotes: number,
 	segmentsWith2PlusVotes: number,
 ): TranslationProofStatus {
-	if (segmentsWith1PlusVotes === 0) return TranslationProofStatus.MACHINE_DRAFT;
-	if (segmentsWith1PlusVotes < totalSegments)
-		return TranslationProofStatus.HUMAN_TOUCHED;
-	if (segmentsWith2PlusVotes === totalSegments)
-		return TranslationProofStatus.VALIDATED;
+	if (segmentsWith1PlusVotes === 0) return "MACHINE_DRAFT";
+	if (segmentsWith1PlusVotes < totalSegments) return "HUMAN_TOUCHED";
+	if (segmentsWith2PlusVotes === totalSegments) return "VALIDATED";
 	// すべてのセグメントが1票以上あるが、すべてが2票以上あるわけではない場合
-	return TranslationProofStatus.PROOFREAD;
+	return "PROOFREAD";
 }

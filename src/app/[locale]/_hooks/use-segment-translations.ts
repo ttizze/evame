@@ -1,6 +1,6 @@
-import type { TranslationVote } from "@prisma/client";
 import useSWR from "swr";
 import type { SanitizedUser } from "@/app/types";
+import type { TranslationVote } from "@/drizzle/types";
 import type { TranslationWithInfo } from "../types";
 
 interface UseSegmentTranslationsParams {

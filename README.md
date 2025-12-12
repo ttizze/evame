@@ -10,7 +10,7 @@ Evame is an open-source project that helps people share knowledge by providing t
 /
 ├── next/                         # Main web application
 │   ├── src/                      # Source code
-│   ├── prisma/                   # Prisma schema and migrations
+│   ├── drizzle/                   # Drizzle schema and migrations
 │   └── public/                   # Static files
 └── components/                   # Chrome extension (currently empty)
 ```
@@ -22,7 +22,7 @@ Most development happens inside `next/`. Shared UI components live in `next/src/
 - TypeScript
 - Shadcn UI (Radix UI)
 - Tailwind CSS
-- Prisma ORM with PostgreSQL
+- Drizzle ORM with PostgreSQL
 - NextAuth for authentication
 - next-intl for i18n
 - TipTap editor
@@ -73,7 +73,7 @@ Most development happens inside `next/`. Shared UI components live in `next/src/
 5. Run database migrations and seed:
    ```bash
    cd next
-   bunx prisma migrate dev
+   bunx drizzle-kit migrate dev
    bun run seed
    ```
 6. Start the development server:

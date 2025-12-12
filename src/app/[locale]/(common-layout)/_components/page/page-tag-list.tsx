@@ -1,5 +1,5 @@
-import type { Tag } from "@prisma/client";
 import { Hash } from "lucide-react";
+import type { Tag } from "@/drizzle/types";
 import { Link } from "@/i18n/routing";
 
 type TagListProps = {

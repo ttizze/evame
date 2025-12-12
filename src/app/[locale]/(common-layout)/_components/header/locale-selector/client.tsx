@@ -1,5 +1,4 @@
 "use client";
-import type { TranslationJob, TranslationProofStatus } from "@prisma/client";
 import { Check, ChevronDown } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useLocale } from "next-intl";
@@ -21,6 +20,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import type { TranslationJob, TranslationProofStatus } from "@/drizzle/types";
 import { usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { AddTranslateDialog } from "./add-translate-dialog/client";
@@ -89,7 +89,7 @@ export function LocaleSelector({
 
 	const { sourceLocale, translationJobs, translationProofs } = data ?? {};
 
-	// Build a map of locale => proof status using Prisma enum values directly
+	// Build a map of locale => proof status using Drizzle enum values directly
 	const proofStatusMap = Object.fromEntries(
 		(translationProofs ?? []).map<[string, TranslationProofStatus]>((p) => [
 			p.locale,

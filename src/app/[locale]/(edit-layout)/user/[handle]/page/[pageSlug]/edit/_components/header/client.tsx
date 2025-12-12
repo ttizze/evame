@@ -1,5 +1,4 @@
 "use client";
-import type { PageStatus } from "@prisma/client";
 import {
 	CloudCheck,
 	Globe,
@@ -22,6 +21,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import type { PageStatus } from "@/drizzle/types";
 import { Link } from "@/i18n/routing";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";

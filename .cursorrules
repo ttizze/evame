@@ -28,7 +28,7 @@ Evame はNext.js（App Router）を使用したWebアプリケーションで、
   - Shadcn UI (Radix UI ベース)
   - React 19
 - **スタイリング**: Tailwind CSS
-- **データベース**: Prisma ORM を使用した PostgreSQL
+- **データベース**: Drizzle ORM を使用した PostgreSQL
 - **認証**: better auth
 - **国際化**: next-intl
 - **状態管理**: React Server Components + nuqs (URL検索パラメータ管理)
@@ -56,7 +56,7 @@ Evame はNext.js（App Router）を使用したWebアプリケーションで、
 │   │   ├── lib/                  # ユーティリティ関数
 │   │   ├── types/                # 型定義
 │   │   └── i18n/                 # 国際化設定
-│   ├── prisma/                   # Prisma スキーマとマイグレーション
+│   ├── drizzle/                   # Drizzle スキーマとマイグレーション
 │   └── public/                   # 静的ファイル
 └── components/                   # クロームエクステンション用コンポーネント（空）
 ```
@@ -82,11 +82,11 @@ Evame はNext.js（App Router）を使用したWebアプリケーションで、
 
 ### データベース
 
-データベースは Prisma ORM を使用して管理されています：
+データベースは Drizzle ORM を使用して管理されています：
 
-- スキーマ定義: `next/prisma/schema.prisma`
-- マイグレーション: `next/prisma/migrations/`
-- シードスクリプト: `next/prisma/seed.ts`
+- スキーマ定義: `next/drizzle/schema.ts`
+- マイグレーション: `next/drizzle/migrations/`
+- シードスクリプト: `next/drizzle/seed.ts`
 
 ### 認証
 
@@ -180,15 +180,15 @@ export default async function NewProjectList({ page, query }: Props) {
 
 ```typescript
 // クエリ例: _db/queries.server.ts
-import { prisma } from "@/lib/prisma";
+import { db } from "@/drizzle";
 
 export async function fetchNewProjectsWithPagination(
   page = 1,
   pageSize = 10,
   searchTerm = "",
 ) {
-  // Prismaを使用したデータ取得ロジック
-  const data = await prisma.someModel.findMany({ /* ... */ });
+  // Drizzleを使用したデータ取得ロジック
+  const data = await db.select().from(someModel);
   return { data };
 }
 ```
@@ -239,10 +239,10 @@ export async function togglePageLikeAction(previousState, formData: FormData) {
 
 ```typescript
 // db/mutations.server.ts
-import { prisma } from "@/lib/prisma";
+import { db } from "@/drizzle";
 
 export async function togglePageLike(slug: string, identifier) {
-  // Prismaを使用したデータベース操作
+  // Drizzleを使用したデータベース操作
   // ...
   return { liked, likeCount };
 }
@@ -266,7 +266,6 @@ export function PageLikeButton({ liked, likeCount, slug }: Props) {
 ### テスト
 
 - データ取得関数とミューテーション関数のテストは、それぞれ `queries.server.test.ts` と `mutations.server.test.ts` に記述します
-- モックを使用してPrismaの動作をシミュレートします
 
 ## 国際化対応
 

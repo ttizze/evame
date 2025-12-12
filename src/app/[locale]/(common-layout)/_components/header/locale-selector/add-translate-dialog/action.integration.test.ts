@@ -1,10 +1,17 @@
-import { ContentKind } from "@prisma/client";
+import { eq } from "drizzle-orm";
+import type { Root as MdastRoot } from "mdast";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { enqueueTranslate } from "@/app/[locale]/_infrastructure/qstash/enqueue-translate.server";
+import { db } from "@/drizzle";
+import {
+	contents,
+	pageComments,
+	segments,
+	translationJobs,
+} from "@/drizzle/schema";
 import { getCurrentUser } from "@/lib/auth-server";
-import { prisma } from "@/lib/prisma";
 import { toSessionUser } from "@/tests/auth-helpers";
-import { resetDatabase } from "@/tests/db-helpers";
+import { getSegmentTypeId, resetDatabase } from "@/tests/db-helpers";
 import {
 	createPageWithAnnotations,
 	createPageWithSegments,
@@ -124,12 +131,13 @@ describe("translateAction", () => {
 		}
 
 		// Assert: 翻訳ジョブがデータベースに作成されている（実際のDBで検証）
-		const translationJobs = await prisma.translationJob.findMany({
-			where: { pageId: page.id },
-		});
-		expect(translationJobs).toHaveLength(1);
-		expect(translationJobs[0]?.locale).toBe("ja");
-		expect(translationJobs[0]?.aiModel).toBe("gemini-pro");
+		const jobs = await db
+			.select()
+			.from(translationJobs)
+			.where(eq(translationJobs.pageId, page.id));
+		expect(jobs).toHaveLength(1);
+		expect(jobs[0]?.locale).toBe("ja");
+		expect(jobs[0]?.aiModel).toBe("gemini-pro");
 
 		// Assert: キューにジョブがエンキューされている（外部システムのモック）
 		expect(enqueueTranslate).toHaveBeenCalledTimes(1);
@@ -158,28 +166,33 @@ describe("translateAction", () => {
 		});
 
 		// コメントを作成
-		const commentContent = await prisma.content.create({
-			data: { kind: ContentKind.PAGE_COMMENT },
+		const [commentContent] = await db
+			.insert(contents)
+			.values({ kind: "PAGE_COMMENT" })
+			.returning();
+		if (!commentContent) {
+			throw new Error("Failed to create comment content");
+		}
+		const segmentTypeId = await getSegmentTypeId("PRIMARY");
+		await db.insert(segments).values({
+			contentId: commentContent.id,
+			number: 1,
+			text: "Comment text",
+			textAndOccurrenceHash: "hash-comment-1",
+			segmentTypeId,
 		});
-		await prisma.segment.create({
-			data: {
-				contentId: commentContent.id,
-				number: 1,
-				text: "Comment text",
-				textAndOccurrenceHash: "hash-comment-1",
-				segmentTypeId: await (
-					await import("@/tests/db-helpers")
-				).getSegmentTypeId("PRIMARY"),
-			},
-		});
-		await prisma.pageComment.create({
-			data: {
-				id: commentContent.id,
-				pageId: page.id,
-				userId: user.id,
-				mdastJson: {},
-				locale: "en",
-			},
+		const mdastJson: MdastRoot = {
+			type: "root",
+			children: [],
+		};
+		await db.insert(pageComments).values({
+			id: commentContent.id,
+			pageId: page.id,
+			userId: user.id,
+			mdastJson,
+			locale: "en",
+			parentId: null,
+			isDeleted: false,
 		});
 
 		vi.mocked(getCurrentUser).mockResolvedValue(toSessionUser(user));
@@ -200,13 +213,14 @@ describe("translateAction", () => {
 		}
 
 		// Assert: 複数の翻訳ジョブがデータベースに作成されている
-		const translationJobs = await prisma.translationJob.findMany({
-			where: { pageId: page.id },
-		});
-		expect(translationJobs.length).toBeGreaterThanOrEqual(2);
+		const jobs = await db
+			.select()
+			.from(translationJobs)
+			.where(eq(translationJobs.pageId, page.id));
+		expect(jobs.length).toBeGreaterThanOrEqual(2);
 
 		// Assert: キューに複数のジョブがエンキューされている
-		expect(enqueueTranslate).toHaveBeenCalledTimes(translationJobs.length);
+		expect(enqueueTranslate).toHaveBeenCalledTimes(jobs.length);
 	});
 
 	it("ページに注釈がある場合、注釈も翻訳ジョブに含まれる", async () => {
@@ -249,10 +263,11 @@ describe("translateAction", () => {
 
 		// Assert
 		expect(result.success).toBe(true);
-		const translationJobs = await prisma.translationJob.findMany({
-			where: { pageId: mainPage.id },
-		});
-		expect(translationJobs.length).toBeGreaterThanOrEqual(2);
+		const jobs = await db
+			.select()
+			.from(translationJobs)
+			.where(eq(translationJobs.pageId, mainPage.id));
+		expect(jobs.length).toBeGreaterThanOrEqual(2);
 
 		const annotationCall = vi
 			.mocked(enqueueTranslate)

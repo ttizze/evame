@@ -10,7 +10,6 @@ export default defineConfig({
 		slowTestThreshold: 1000,
 		env: {
 			// DATABASE_URLを空に設定して.envの値を上書き
-			// setupDbPerFile()を呼ばずにPrismaを使うとエラーになる
 			DATABASE_URL: "",
 			SESSION_SECRET: "test",
 			ENCRYPTION_KEY:
