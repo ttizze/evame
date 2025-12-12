@@ -29,7 +29,7 @@ export async function upsertPage(
 		.limit(1);
 
 	if (existing.length > 0) {
-		// 既存の場合はUPSERTで1回のクエリで更新
+		// 既存の場合はUPDATEで更新（PRIMARY KEY制約違反を避けるため）
 		const updateData: {
 			mdastJson: MdastRoot;
 			sourceLocale: string;
@@ -52,21 +52,9 @@ export async function upsertPage(
 		}
 
 		const [updated] = await tx
-			.insert(pages)
-			.values({
-				id: existing[0].id,
-				slug: p.pageSlug,
-				userId: p.userId,
-				mdastJson: p.mdastJson,
-				sourceLocale: p.sourceLocale,
-				parentId: p.parentId,
-				order: p.order ?? 0,
-				status: p.status ?? "DRAFT",
-			})
-			.onConflictDoUpdate({
-				target: [pages.slug],
-				set: updateData,
-			})
+			.update(pages)
+			.set(updateData)
+			.where(eq(pages.slug, p.pageSlug))
 			.returning();
 
 		if (!updated) {

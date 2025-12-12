@@ -81,7 +81,7 @@ export async function fetchPagesWithTransform(
 		if (!page.user) {
 			throw new Error(`User not found for page ${page.id}`);
 		}
-		console.log("counts", counts);
+
 		return {
 			id: page.id,
 			slug: page.slug,

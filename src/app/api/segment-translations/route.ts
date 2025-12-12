@@ -25,57 +25,76 @@ export async function GET(req: NextRequest) {
 
 	try {
 		// ベスト翻訳を取得（ユーザー情報と現在のユーザーの投票情報を含む）
-		const bestTranslationQuery = db
-			.select({
-				translation: segmentTranslations,
-				user: selectUserFieldsDrizzle(),
-				vote: translationVotes,
-			})
-			.from(segmentTranslations)
-			.innerJoin(users, eq(segmentTranslations.userId, users.id))
-			.$dynamic();
+		// ログイン有無で select() と JOIN を分岐（未ログイン時は translationVotes を選択しない）
+		const bestTranslationQuery = currentUser?.id
+			? db
+					.select({
+						translation: segmentTranslations,
+						user: selectUserFieldsDrizzle(),
+						vote: translationVotes,
+					})
+					.from(segmentTranslations)
+					.innerJoin(users, eq(segmentTranslations.userId, users.id))
+					.leftJoin(
+						translationVotes,
+						and(
+							eq(translationVotes.translationId, segmentTranslations.id),
+							eq(translationVotes.userId, currentUser.id),
+						),
+					)
+			: db
+					.select({
+						translation: segmentTranslations,
+						user: selectUserFieldsDrizzle(),
+					})
+					.from(segmentTranslations)
+					.innerJoin(users, eq(segmentTranslations.userId, users.id));
 
-		// 現在のユーザーがログインしている場合のみ、投票情報をJOIN
-		if (currentUser?.id) {
-			bestTranslationQuery.leftJoin(
-				translationVotes,
-				and(
-					eq(translationVotes.translationId, segmentTranslations.id),
-					eq(translationVotes.userId, currentUser.id),
-				),
-			);
-		}
-
+		// スコープ検証: bestTranslationId が指定 segmentId/userLocale に属することを確認
 		const bestTranslationResult = await bestTranslationQuery
-			.where(eq(segmentTranslations.id, bestTranslationId))
+			.where(
+				and(
+					eq(segmentTranslations.id, bestTranslationId),
+					eq(segmentTranslations.segmentId, segmentId),
+					eq(segmentTranslations.locale, userLocale),
+				),
+			)
 			.limit(1);
 		const bestTranslationWithVote = bestTranslationResult[0] ?? null;
 
 		// その他の翻訳を取得
-		const translationsQuery = db
-			.select({
-				translation: segmentTranslations,
-				user: {
-					handle: users.handle,
-					name: users.name,
-					image: users.image,
-				},
-				vote: translationVotes,
-			})
-			.from(segmentTranslations)
-			.innerJoin(users, eq(segmentTranslations.userId, users.id))
-			.$dynamic();
-
-		// 現在のユーザーがログインしている場合のみ、投票情報をJOIN
-		if (currentUser?.id) {
-			translationsQuery.leftJoin(
-				translationVotes,
-				and(
-					eq(translationVotes.translationId, segmentTranslations.id),
-					eq(translationVotes.userId, currentUser.id),
-				),
-			);
-		}
+		// ログイン有無で select() と JOIN を分岐（未ログイン時は translationVotes を選択しない）
+		const translationsQuery = currentUser?.id
+			? db
+					.select({
+						translation: segmentTranslations,
+						user: {
+							handle: users.handle,
+							name: users.name,
+							image: users.image,
+						},
+						vote: translationVotes,
+					})
+					.from(segmentTranslations)
+					.innerJoin(users, eq(segmentTranslations.userId, users.id))
+					.leftJoin(
+						translationVotes,
+						and(
+							eq(translationVotes.translationId, segmentTranslations.id),
+							eq(translationVotes.userId, currentUser.id),
+						),
+					)
+			: db
+					.select({
+						translation: segmentTranslations,
+						user: {
+							handle: users.handle,
+							name: users.name,
+							image: users.image,
+						},
+					})
+					.from(segmentTranslations)
+					.innerJoin(users, eq(segmentTranslations.userId, users.id));
 
 		const translations = await translationsQuery
 			.where(
@@ -92,7 +111,10 @@ export async function GET(req: NextRequest) {
 
 		return NextResponse.json({
 			bestTranslationCurrentUserVote:
-				(currentUser?.id && bestTranslationWithVote?.vote) ?? null,
+				(currentUser?.id &&
+					"vote" in bestTranslationWithVote &&
+					bestTranslationWithVote.vote) ??
+				null,
 			bestTranslationUser: bestTranslationWithVote?.user ?? null,
 			translations: translations.map((t) => ({
 				id: t.translation.id,
@@ -101,7 +123,7 @@ export async function GET(req: NextRequest) {
 				point: t.translation.point,
 				createdAt: t.translation.createdAt.toISOString(),
 				user: t.user,
-				currentUserVote: (currentUser?.id && t.vote) ?? null,
+				currentUserVote: (currentUser?.id && "vote" in t && t.vote) ?? null,
 			})),
 		});
 	} catch (error) {

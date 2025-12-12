@@ -73,7 +73,6 @@ async function fetchNotificationRows(currentUserHandle: string) {
 // ページデータ取得の共通処理
 async function fetchPageDataByPageIds(
 	pageIds: number[],
-	currentUserHandle: string,
 ): Promise<
 	Map<number, { pageSlug: string; pageOwnerHandle: string; pageTitle: string }>
 > {
@@ -86,8 +85,10 @@ async function fetchPageDataByPageIds(
 			pageId: pages.id,
 			pageSlug: pages.slug,
 			pageTitle: titleSegments.text,
+			userHandle: users.handle,
 		})
 		.from(pages)
+		.innerJoin(users, eq(pages.userId, users.id))
 		.innerJoin(
 			titleSegments,
 			and(eq(titleSegments.contentId, pages.id), eq(titleSegments.number, 0)),
@@ -101,7 +102,7 @@ async function fetchPageDataByPageIds(
 	for (const row of pagesWithTitles) {
 		result.set(row.pageId, {
 			pageSlug: row.pageSlug,
-			pageOwnerHandle: currentUserHandle,
+			pageOwnerHandle: row.userHandle,
 			pageTitle: row.pageTitle,
 		});
 	}
@@ -113,7 +114,6 @@ async function fetchPageDataByPageIds(
  */
 async function fetchLikePageData(
 	notifications: NotificationRow[],
-	currentUserHandle: string,
 ): Promise<
 	Map<number, { pageSlug: string; pageOwnerHandle: string; pageTitle: string }>
 > {
@@ -124,7 +124,7 @@ async function fetchLikePageData(
 				.map((n) => n.pageId as number),
 		),
 	);
-	return fetchPageDataByPageIds(pageIds, currentUserHandle);
+	return fetchPageDataByPageIds(pageIds);
 }
 
 /**
@@ -132,7 +132,6 @@ async function fetchLikePageData(
  */
 async function fetchCommentPageData(
 	notifications: NotificationRow[],
-	currentUserHandle: string,
 ): Promise<
 	Map<number, { pageSlug: string; pageOwnerHandle: string; pageTitle: string }>
 > {
@@ -155,7 +154,7 @@ async function fetchCommentPageData(
 		.where(inArray(pageComments.id, commentIds));
 
 	const pageIds = Array.from(new Set(commentsWithPageIds.map((c) => c.pageId)));
-	const pageDataMap = await fetchPageDataByPageIds(pageIds, currentUserHandle);
+	const pageDataMap = await fetchPageDataByPageIds(pageIds);
 
 	const result = new Map<
 		number,
@@ -278,8 +277,8 @@ export async function fetchNotificationRowsWithRelations(
 	const notificationRows = await fetchNotificationRows(currentUserHandle);
 
 	const [likePageData, commentPageData, translationData] = await Promise.all([
-		fetchLikePageData(notificationRows, currentUserHandle),
-		fetchCommentPageData(notificationRows, currentUserHandle),
+		fetchLikePageData(notificationRows),
+		fetchCommentPageData(notificationRows),
 		fetchTranslationData(notificationRows),
 	]);
 

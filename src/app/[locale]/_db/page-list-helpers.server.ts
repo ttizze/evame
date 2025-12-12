@@ -121,7 +121,7 @@ export async function fetchPagesBasic(
 	const query = db
 		.select(basePageFieldSelectDrizzle())
 		.from(pages)
-		.leftJoin(users, eq(pages.userId, users.id))
+		.innerJoin(users, eq(pages.userId, users.id))
 		.$dynamic();
 
 	if (whereCondition) {

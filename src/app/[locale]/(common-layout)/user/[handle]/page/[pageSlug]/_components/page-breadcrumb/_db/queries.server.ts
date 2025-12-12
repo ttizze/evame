@@ -64,5 +64,5 @@ async function getParentId(pageId: number): Promise<number | null> {
 		.from(pages)
 		.where(eq(pages.id, pageId))
 		.limit(1);
-	return result[0]?.parentId || null;
+	return result[0]?.parentId ?? null;
 }
