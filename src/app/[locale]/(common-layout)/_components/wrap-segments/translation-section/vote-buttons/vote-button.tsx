@@ -7,6 +7,7 @@ interface VoteButtonProps {
 	voteCount?: number;
 	children: (props: { iconClass: string }) => React.ReactNode;
 }
+
 export function VoteButton({
 	type,
 	isActive,
@@ -14,9 +15,7 @@ export function VoteButton({
 	voteCount,
 	children,
 }: VoteButtonProps) {
-	// テスト用の属性を設定
 	const testId = type === "upvote" ? "vote-up-button" : "vote-down-button";
-	// 状態に応じたクラス名を生成
 	const iconClass = `mr-2 h-4 w-4 transition-all duration-300 ${
 		isActive ? "[&>path]:fill-primary" : ""
 	} ${isVoting ? "animate-bounce" : ""}`;
