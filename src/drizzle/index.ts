@@ -1,37 +1,19 @@
-import { neonConfig } from "@neondatabase/serverless";
-import { drizzle as drizzleNeon } from "drizzle-orm/neon-serverless";
 import { drizzle as drizzlePg } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
-import { WebSocket } from "ws";
+import type { Pool } from "pg";
+import { pool } from "@/db/pool";
 import * as schema from "./schema";
 
-type DrizzleDb =
-	| ReturnType<typeof drizzleNeon<typeof schema>>
-	| ReturnType<typeof drizzlePg<typeof schema>>;
-
-type DrizzleDbWithPool = DrizzleDb & { pool?: Pool };
+type DrizzleDb = ReturnType<typeof drizzlePg<typeof schema>>;
+type DrizzleDbWithPool = DrizzleDb & { pool: Pool };
 
 declare global {
 	var __drizzleDb: DrizzleDbWithPool | null;
 }
 
 export function makeDb(): DrizzleDbWithPool {
-	const connectionString = process.env.DATABASE_URL || "";
-	if (!connectionString) {
-		throw new Error("DATABASE_URL is not defined");
-	}
-
-	const isLocal = new URL(connectionString).hostname === "db.localtest.me";
-	if (isLocal) {
-		// ローカル環境ではpgクライアントを使用
-		const pool = new Pool({ connectionString });
-		const db = drizzlePg(pool, { schema });
-		return Object.assign(db, { pool });
-	}
-
-	// Neon serverless 環境
-	neonConfig.webSocketConstructor = WebSocket;
-	return drizzleNeon(connectionString, { schema });
+	// 共有の Pool インスタンスを使用
+	const db = drizzlePg(pool, { schema });
+	return Object.assign(db, { pool });
 }
 
 // Proxyでラップすることで、テスト時にDATABASE_URLを切り替えても新しい接続が使われる

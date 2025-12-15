@@ -1,4 +1,4 @@
-import type { JsonValue } from "@prisma/client/runtime/library";
+import type { Json } from "kysely-codegen/dist/db";
 import type { Root as MdastRoot } from "mdast";
 import rehypeStringify from "rehype-stringify";
 import remarkRehype from "remark-rehype";
@@ -10,7 +10,7 @@ import { unified } from "unified";
 
 interface Params {
 	/** DB に入っている mdastJson (= Prisma.Json) */
-	mdastJson: JsonValue;
+	mdastJson: Json;
 }
 
 interface Result {
