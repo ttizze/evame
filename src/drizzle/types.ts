@@ -5,8 +5,21 @@
  * InferSelectModel: SELECT結果の型
  * InferInsertModel: INSERT用の型
  */
-import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
+import type {
+	ExtractTablesWithRelations,
+	InferInsertModel,
+	InferSelectModel,
+} from "drizzle-orm";
+import type { NeonQueryResultHKT } from "drizzle-orm/neon-serverless";
+import type { PgTransaction } from "drizzle-orm/pg-core";
 import type * as schema from "./schema";
+
+// トランザクションクライアント型（エイリアス）
+export type TransactionClient = PgTransaction<
+	NeonQueryResultHKT,
+	typeof schema,
+	ExtractTablesWithRelations<typeof schema>
+>;
 
 // テーブル型のエクスポート
 export type User = InferSelectModel<typeof schema.users>;
@@ -113,13 +126,6 @@ export type ImportFileInsert = InferInsertModel<typeof schema.importFiles>;
 
 export type Verification = InferSelectModel<typeof schema.verifications>;
 export type VerificationInsert = InferInsertModel<typeof schema.verifications>;
-
-export type VerificationToken = InferSelectModel<
-	typeof schema.verificationTokens
->;
-export type VerificationTokenInsert = InferInsertModel<
-	typeof schema.verificationTokens
->;
 
 // Enum型のエクスポート
 export type ContentKind = (typeof schema.contentKind.enumValues)[number];

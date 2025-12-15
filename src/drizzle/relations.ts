@@ -121,8 +121,14 @@ export const contentsRelations = relations(contents, ({ one, many }) => ({
 		fields: [contents.importFileId],
 		references: [importFiles.id],
 	}),
-	pageComments: many(pageComments),
-	pages: many(pages),
+	pageComment: one(pageComments, {
+		fields: [contents.id],
+		references: [pageComments.id],
+	}),
+	page: one(pages, {
+		fields: [contents.id],
+		references: [pages.id],
+	}),
 	segments: many(segments),
 }));
 

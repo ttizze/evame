@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { db } from "@/drizzle";
+import { segmentTranslations } from "@/drizzle/schema";
 
 export async function addUserTranslation(
 	segmentId: number,
@@ -6,8 +7,11 @@ export async function addUserTranslation(
 	userId: string,
 	locale: string,
 ) {
-	await prisma.segmentTranslation.create({
-		data: { segmentId, locale, text, userId },
+	await db.insert(segmentTranslations).values({
+		segmentId,
+		locale,
+		text,
+		userId,
 	});
 	return { success: true };
 }

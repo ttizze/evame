@@ -1,11 +1,4 @@
-import type { db } from "@/drizzle";
-
-/**
- * Drizzleのトランザクションクライアントの型
- */
-export type TransactionClient = Parameters<
-	Parameters<typeof db.transaction>[0]
->[0];
+export type { TransactionClient } from "@/drizzle/types";
 
 /**
  * 既存セグメントの情報（変更検出に使用）
