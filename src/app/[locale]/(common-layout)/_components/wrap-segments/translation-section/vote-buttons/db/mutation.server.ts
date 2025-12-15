@@ -1,42 +1,52 @@
-import type { Prisma } from "@prisma/client";
+import { and, eq, sql } from "drizzle-orm";
 import { calcProofStatus } from "@/app/[locale]/(common-layout)/_components/wrap-segments/translation-section/vote-buttons/_lib/translation-proof-status";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/drizzle";
+import {
+	contents,
+	notifications,
+	pageLocaleTranslationProofs,
+	pages,
+	segments,
+	segmentTranslations,
+	translationVotes,
+} from "@/drizzle/schema";
+import type { TransactionClient } from "@/drizzle/types";
 
 type VoteOutcome = {
 	finalIsUpvote: boolean | undefined;
-	/** How much the point field should be incremented (can be negative) */
 	pointDelta: number;
 	action: "create" | "update" | "delete";
 };
 
+/**
+ * 投票結果を計算する
+ * - 同じ投票が存在 → 削除
+ * - 投票なし → 新規作成
+ * - 反対の投票が存在 → 更新
+ */
 function computeVoteOutcome(
 	previousIsUpvote: boolean | undefined,
 	newIsUpvote: boolean,
 ): VoteOutcome {
 	if (previousIsUpvote === newIsUpvote) {
-		// The same vote exists → remove it.
 		return {
 			finalIsUpvote: undefined,
 			pointDelta: newIsUpvote ? -1 : 1,
 			action: "delete",
-		} as const;
+		};
 	}
-
 	if (previousIsUpvote === undefined) {
-		// No existing vote → create a new one.
 		return {
 			finalIsUpvote: newIsUpvote,
 			pointDelta: newIsUpvote ? 1 : -1,
 			action: "create",
-		} as const;
+		};
 	}
-
-	// Previous vote exists but with the opposite polarity → update.
 	return {
 		finalIsUpvote: newIsUpvote,
 		pointDelta: newIsUpvote ? 2 : -2,
 		action: "update",
-	} as const;
+	};
 }
 
 /* -------------------------------------------------------------------------- */
@@ -48,206 +58,167 @@ export async function handleVote(
 	isUpvote: boolean,
 	currentUserId: string,
 ) {
-	const kind = await prisma.segmentTranslation.findUnique({
-		where: { id: segmentTranslationId },
-		select: { segment: { select: { content: { select: { kind: true } } } } },
-	});
-	const contentKind = kind?.segment.content.kind;
-	if (contentKind === "PAGE") {
-		return processPageVote(segmentTranslationId, isUpvote, currentUserId);
-	}
-	return processCommentVote(segmentTranslationId, isUpvote, currentUserId);
-}
-
-async function processPageVote(
-	segmentTranslationId: number,
-	isUpvote: boolean,
-	currentUserId: string,
-) {
-	return prisma.$transaction(async (tx) => {
-		const { finalIsUpvote } = await applyVoteUnified(
+	return db.transaction(async (tx) => {
+		// 投票処理と関連情報を同時に取得
+		const { finalIsUpvote } = await applyVote(
 			tx,
 			segmentTranslationId,
 			isUpvote,
 			currentUserId,
 		);
 
-		const segmentTranslation = await tx.segmentTranslation.findUnique({
-			where: { id: segmentTranslationId },
-			select: {
-				locale: true,
-				segment: {
-					select: { content: { select: { page: { select: { id: true } } } } },
-				},
-				point: true,
-			},
-		});
-		if (!segmentTranslation) {
-			return {
-				success: false,
-				data: { isUpvote: undefined, point: 0 },
-			};
+		// 更新後のpoint と ページ情報を取得
+		const result = await tx
+			.select({
+				point: segmentTranslations.point,
+				locale: segmentTranslations.locale,
+				pageId: pages.id,
+			})
+			.from(segmentTranslations)
+			.innerJoin(segments, eq(segmentTranslations.segmentId, segments.id))
+			.innerJoin(contents, eq(segments.contentId, contents.id))
+			.leftJoin(pages, eq(contents.id, pages.id))
+			.where(eq(segmentTranslations.id, segmentTranslationId))
+			.limit(1);
+
+		const row = result[0];
+		if (!row) {
+			return { success: false, data: { isUpvote: undefined, point: 0 } };
 		}
 
-		const pageId = segmentTranslation.segment.content.page?.id;
-		const { locale } = segmentTranslation;
-
-		if (pageId) {
-			await updateProofStatus(tx, pageId, locale);
+		// ページの場合のみproof statusを更新
+		if (row.pageId) {
+			await updateProofStatus(tx, row.pageId, row.locale);
 		}
 
 		return {
 			success: true,
-			data: { isUpvote: finalIsUpvote, point: segmentTranslation.point },
+			data: { isUpvote: finalIsUpvote, point: row.point },
 		};
 	});
 }
 
+/**
+ * 投票の適用とpoint更新を行う
+ */
+async function applyVote(
+	tx: TransactionClient,
+	segmentTranslationId: number,
+	isUpvote: boolean,
+	currentUserId: string,
+) {
+	const existingVote = await tx
+		.select({ isUpvote: translationVotes.isUpvote })
+		.from(translationVotes)
+		.where(
+			and(
+				eq(translationVotes.translationId, segmentTranslationId),
+				eq(translationVotes.userId, currentUserId),
+			),
+		)
+		.limit(1);
+
+	const outcome = computeVoteOutcome(
+		existingVote[0]?.isUpvote ?? undefined,
+		isUpvote,
+	);
+	const voteCondition = and(
+		eq(translationVotes.translationId, segmentTranslationId),
+		eq(translationVotes.userId, currentUserId),
+	);
+
+	// 投票テーブルの操作
+	if (outcome.action === "delete") {
+		await tx.delete(translationVotes).where(voteCondition);
+	} else if (outcome.action === "update") {
+		await tx.update(translationVotes).set({ isUpvote }).where(voteCondition);
+	} else {
+		await tx.insert(translationVotes).values({
+			translationId: segmentTranslationId,
+			userId: currentUserId,
+			isUpvote,
+		});
+	}
+
+	// point更新
+	await tx
+		.update(segmentTranslations)
+		.set({ point: sql`${segmentTranslations.point} + ${outcome.pointDelta}` })
+		.where(eq(segmentTranslations.id, segmentTranslationId));
+
+	return { finalIsUpvote: outcome.finalIsUpvote };
+}
+
+/**
+ * ページのproof statusを更新する
+ * 1クエリで全カウントを取得（sql<number>で型安全）
+ */
 async function updateProofStatus(
-	tx: Prisma.TransactionClient,
+	tx: TransactionClient,
 	pageId: number,
 	locale: string,
 ) {
-	const totalSegments = await tx.segment.count({
-		where: { content: { page: { id: pageId } } },
-	});
+	const stats = await tx
+		.select({
+			totalSegments: sql<number>`count(*)`,
+			segmentsWith1PlusVotes: sql<number>`count(case when ${segmentTranslations.point} >= 1 then 1 end)`,
+			segmentsWith2PlusVotes: sql<number>`count(case when ${segmentTranslations.point} >= 2 then 1 end)`,
+		})
+		.from(segments)
+		.innerJoin(contents, eq(segments.contentId, contents.id))
+		.innerJoin(pages, eq(contents.id, pages.id))
+		.leftJoin(
+			segmentTranslations,
+			and(
+				eq(segmentTranslations.segmentId, segments.id),
+				eq(segmentTranslations.locale, locale),
+			),
+		)
+		.where(eq(pages.id, pageId));
+
+	const { totalSegments, segmentsWith1PlusVotes, segmentsWith2PlusVotes } =
+		stats[0] ?? {
+			totalSegments: 0,
+			segmentsWith1PlusVotes: 0,
+			segmentsWith2PlusVotes: 0,
+		};
+
 	if (totalSegments === 0) return;
 
-	const segmentsWith1PlusVotes = await tx.segmentTranslation.count({
-		where: {
-			locale,
-			segment: { content: { page: { id: pageId } } },
-			point: { gte: 1 },
-		},
-	});
-
-	const segmentsWith2PlusVotes = await tx.segmentTranslation.count({
-		where: {
-			locale,
-			segment: { content: { page: { id: pageId } } },
-			point: { gte: 2 },
-		},
-	});
-
-	const newStatus = await calcProofStatus(
+	const newStatus = calcProofStatus(
 		totalSegments,
 		segmentsWith1PlusVotes,
 		segmentsWith2PlusVotes,
 	);
 
-	await tx.pageLocaleTranslationProof.upsert({
-		where: { pageId_locale: { pageId, locale } },
-		create: { pageId, locale, translationProofStatus: newStatus },
-		update: { translationProofStatus: newStatus },
-	});
-}
-
-/* 投票と point 更新（統一テーブル）を行い、最終的な isUpvote を返す */
-async function applyVoteUnified(
-	tx: Prisma.TransactionClient,
-	segmentTranslationId: number,
-	isUpvote: boolean,
-	currentUserId: string,
-) {
-	const existingVote = await tx.translationVote.findUnique({
-		where: {
-			translationId_userId: {
-				translationId: segmentTranslationId,
-				userId: currentUserId,
-			},
-		},
-	});
-
-	const outcome = computeVoteOutcome(
-		existingVote?.isUpvote ?? undefined,
-		isUpvote,
-	);
-
-	switch (outcome.action) {
-		case "delete":
-			await tx.translationVote.delete({
-				where: {
-					translationId_userId: {
-						translationId: segmentTranslationId,
-						userId: currentUserId,
-					},
-				},
-			});
-			break;
-		case "update":
-			await tx.translationVote.update({
-				where: {
-					translationId_userId: {
-						translationId: segmentTranslationId,
-						userId: currentUserId,
-					},
-				},
-				data: { isUpvote },
-			});
-			break;
-		case "create":
-			await tx.translationVote.create({
-				data: {
-					translationId: segmentTranslationId,
-					userId: currentUserId,
-					isUpvote,
-				},
-			});
-	}
-
-	await tx.segmentTranslation.update({
-		where: { id: segmentTranslationId },
-		data: { point: { increment: outcome.pointDelta } },
-	});
-
-	return { finalIsUpvote: outcome.finalIsUpvote };
-}
-
-async function processCommentVote(
-	segmentTranslationId: number,
-	isUpvote: boolean,
-	currentUserId: string,
-) {
-	return prisma.$transaction(async (tx) => {
-		const { finalIsUpvote } = await applyVoteUnified(
-			tx,
-			segmentTranslationId,
-			isUpvote,
-			currentUserId,
-		);
-
-		const updatedTranslation = await tx.segmentTranslation.findUnique({
-			where: { id: segmentTranslationId },
-			select: { point: true },
+	await tx
+		.insert(pageLocaleTranslationProofs)
+		.values({ pageId, locale, translationProofStatus: newStatus })
+		.onConflictDoUpdate({
+			target: [
+				pageLocaleTranslationProofs.pageId,
+				pageLocaleTranslationProofs.locale,
+			],
+			set: { translationProofStatus: newStatus },
 		});
-
-		return {
-			success: true,
-			data: {
-				isUpvote: finalIsUpvote,
-				point: updatedTranslation?.point ?? 0,
-			},
-		};
-	});
 }
 
 export async function createNotificationPageSegmentTranslationVote(
 	pageSegmentTranslationId: number,
 	actorId: string,
 ) {
-	const segmentTranslation = await prisma.segmentTranslation.findUnique({
-		where: { id: pageSegmentTranslationId },
-		select: { user: { select: { id: true } } },
-	});
-	if (!segmentTranslation) {
-		return;
-	}
-	await prisma.notification.create({
-		data: {
-			segmentTranslationId: pageSegmentTranslationId,
-			userId: segmentTranslation.user.id,
-			actorId: actorId,
-			type: "PAGE_SEGMENT_TRANSLATION_VOTE",
-		},
+	const segmentTranslation = await db
+		.select({ userId: segmentTranslations.userId })
+		.from(segmentTranslations)
+		.where(eq(segmentTranslations.id, pageSegmentTranslationId))
+		.limit(1);
+
+	if (!segmentTranslation[0]) return;
+
+	await db.insert(notifications).values({
+		segmentTranslationId: pageSegmentTranslationId,
+		userId: segmentTranslation[0].userId,
+		actorId,
+		type: "PAGE_SEGMENT_TRANSLATION_VOTE",
 	});
 }

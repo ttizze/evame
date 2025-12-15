@@ -939,25 +939,6 @@ export const tagPages = pgTable(
 	],
 );
 
-export const verificationTokens = pgTable(
-	"verification_tokens",
-	{
-		identifier: text().notNull(),
-		token: text().notNull(),
-		expires: timestamp({ precision: 3, mode: "date" }).notNull(),
-	},
-	(table) => [
-		uniqueIndex("verification_tokens_token_key").using(
-			"btree",
-			table.token.asc().nullsLast(),
-		),
-		primaryKey({
-			columns: [table.identifier, table.token],
-			name: "verification_tokens_pkey",
-		}),
-	],
-);
-
 export const segmentAnnotationLinks = pgTable(
 	"segment_annotation_links",
 	{
