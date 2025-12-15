@@ -1,6 +1,5 @@
 "use client";
 
-import type { PageStatus } from "@prisma/client";
 import { EyeIcon } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 import type { ReactNode } from "react";
@@ -8,6 +7,7 @@ import { PageActionsDropdown } from "@/app/[locale]/(common-layout)/_components/
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import type { PageStatus } from "@/drizzle/types";
 import { Link } from "@/i18n/routing";
 import type { PageWithTitle } from "../../_db/queries.server";
 

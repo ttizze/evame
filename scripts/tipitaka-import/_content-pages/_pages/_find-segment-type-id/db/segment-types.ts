@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/tests/prisma";
 
 /**
  * COMMENTARYセグメントタイプのIDを取得する

@@ -40,7 +40,8 @@ const schema = z.object({
 	twitterHandle: z
 		.string()
 		.max(100, "Too Long. Must be 100 characters or less")
-		.regex(/^@/, "Must start with @")
+		.refine((val) => val === "" || val.startsWith("@"), "Must start with @")
+		.transform((val) => (val === "" ? undefined : val))
 		.optional(),
 });
 

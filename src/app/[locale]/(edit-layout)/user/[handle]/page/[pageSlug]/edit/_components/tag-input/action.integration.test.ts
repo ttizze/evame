@@ -1,7 +1,9 @@
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { db } from "@/drizzle";
+import { tagPages, tags } from "@/drizzle/schema";
 import { getCurrentUser } from "@/lib/auth-server";
-import { prisma } from "@/lib/prisma";
 import { toSessionUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
@@ -120,12 +122,18 @@ describe("editPageTagsAction", () => {
 		expect(result.success).toBe(true);
 
 		// Assert: タグがデータベースに保存されている（実際のDBで検証）
-		const tagPages = await prisma.tagPage.findMany({
-			where: { pageId: page.id },
-			include: { tag: true },
-		});
-		expect(tagPages).toHaveLength(2);
-		const tagNames = tagPages.map((tp) => tp.tag.name).sort();
+		const tagPagesResult = await db
+			.select({
+				tag: {
+					id: tags.id,
+					name: tags.name,
+				},
+			})
+			.from(tagPages)
+			.innerJoin(tags, eq(tagPages.tagId, tags.id))
+			.where(eq(tagPages.pageId, page.id));
+		expect(tagPagesResult).toHaveLength(2);
+		const tagNames = tagPagesResult.map((tp) => tp.tag.name).sort();
 		expect(tagNames).toEqual(["tag1", "tag2"]);
 
 		// Assert: キャッシュ再検証が呼ばれる
@@ -143,13 +151,18 @@ describe("editPageTagsAction", () => {
 		});
 
 		// 既存のタグを作成（upsertを使用してユニーク制約エラーを回避）
-		const existingTag = await prisma.tag.upsert({
-			where: { name: `oldtag${Date.now()}` },
-			update: {},
-			create: { name: `oldtag${Date.now()}` },
-		});
-		await prisma.tagPage.create({
-			data: { tagId: existingTag.id, pageId: page.id },
+		const tagName = `oldtag${Date.now()}`;
+		const [existingTag] = await db
+			.insert(tags)
+			.values({ name: tagName })
+			.onConflictDoUpdate({
+				target: [tags.name],
+				set: { name: tagName },
+			})
+			.returning();
+		await db.insert(tagPages).values({
+			tagId: existingTag.id,
+			pageId: page.id,
 		});
 
 		vi.mocked(getCurrentUser).mockResolvedValue(toSessionUser(user));
@@ -165,12 +178,18 @@ describe("editPageTagsAction", () => {
 		expect(result.success).toBe(true);
 
 		// Assert: 古いタグが削除され、新しいタグが保存されている
-		const tagPages = await prisma.tagPage.findMany({
-			where: { pageId: page.id },
-			include: { tag: true },
-		});
-		expect(tagPages).toHaveLength(2);
-		const tagNames = tagPages.map((tp) => tp.tag.name).sort();
+		const tagPagesResult = await db
+			.select({
+				tag: {
+					id: tags.id,
+					name: tags.name,
+				},
+			})
+			.from(tagPages)
+			.innerJoin(tags, eq(tagPages.tagId, tags.id))
+			.where(eq(tagPages.pageId, page.id));
+		expect(tagPagesResult).toHaveLength(2);
+		const tagNames = tagPagesResult.map((tp) => tp.tag.name).sort();
 		expect(tagNames).toEqual(["newtag1", "newtag2"]);
 		expect(tagNames).not.toContain(existingTag.name);
 	});
@@ -197,12 +216,18 @@ describe("editPageTagsAction", () => {
 		expect(result.success).toBe(true);
 
 		// Assert: 重複が除去されて保存されている
-		const tagPages = await prisma.tagPage.findMany({
-			where: { pageId: page.id },
-			include: { tag: true },
-		});
-		expect(tagPages).toHaveLength(2);
-		const tagNames = tagPages.map((tp) => tp.tag.name).sort();
+		const tagPagesResult = await db
+			.select({
+				tag: {
+					id: tags.id,
+					name: tags.name,
+				},
+			})
+			.from(tagPages)
+			.innerJoin(tags, eq(tagPages.tagId, tags.id))
+			.where(eq(tagPages.pageId, page.id));
+		expect(tagPagesResult).toHaveLength(2);
+		const tagNames = tagPagesResult.map((tp) => tp.tag.name).sort();
 		expect(tagNames).toEqual(["tag1", "tag2"]);
 	});
 });

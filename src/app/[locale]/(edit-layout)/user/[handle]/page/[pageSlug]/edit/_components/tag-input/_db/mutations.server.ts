@@ -1,42 +1,51 @@
-import { prisma } from "@/lib/prisma";
+import { and, eq, inArray, notInArray } from "drizzle-orm";
+import { db } from "@/drizzle";
+import { tagPages, tags } from "@/drizzle/schema";
 
-export async function upsertTags(tags: string[], pageId: number) {
-	// 重複タグを除去
-	const uniqueTags = Array.from(new Set(tags));
+export async function upsertTags(tagNames: string[], pageId: number) {
+	const uniqueTagNames = Array.from(new Set(tagNames));
 
-	const upsertPromises = uniqueTags.map(async (tagName) => {
-		const upsertedTag = await prisma.tag.upsert({
-			where: { name: tagName },
-			update: {},
-			create: { name: tagName },
-		});
+	if (uniqueTagNames.length === 0) {
+		await db.delete(tagPages).where(eq(tagPages.pageId, pageId));
+		return [];
+	}
 
-		await prisma.tagPage.upsert({
-			where: {
-				tagId_pageId: {
-					tagId: upsertedTag.id,
-					pageId: pageId,
-				},
-			},
-			update: {},
-			create: {
-				tagId: upsertedTag.id,
-				pageId: pageId,
-			},
-		});
+	// 既存タグを取得
+	const existingTags = await db
+		.select()
+		.from(tags)
+		.where(inArray(tags.name, uniqueTagNames));
 
-		return upsertedTag;
-	});
+	const existingNames = new Set(existingTags.map((t) => t.name));
+	const newNames = uniqueTagNames.filter((name) => !existingNames.has(name));
 
-	const updatedTags = await Promise.all(upsertPromises);
+	// 新規タグのみinsert
+	const insertedTags =
+		newNames.length > 0
+			? await db
+					.insert(tags)
+					.values(newNames.map((name) => ({ name })))
+					.returning()
+			: [];
 
-	const tagIdsToKeep = updatedTags.map((tag) => tag.id);
-	await prisma.tagPage.deleteMany({
-		where: {
-			pageId,
-			tagId: { notIn: tagIdsToKeep },
-		},
-	});
+	const allTags = [...existingTags, ...insertedTags];
 
-	return updatedTags;
+	// tagPagesをupsert
+	await db
+		.insert(tagPages)
+		.values(allTags.map((tag) => ({ tagId: tag.id, pageId })))
+		.onConflictDoNothing();
+
+	// 不要なtagPagesを削除
+	const tagIdsToKeep = allTags.map((tag) => tag.id);
+	await db
+		.delete(tagPages)
+		.where(
+			and(
+				eq(tagPages.pageId, pageId),
+				notInArray(tagPages.tagId, tagIdsToKeep),
+			),
+		);
+
+	return allTags;
 }

@@ -1,5 +1,4 @@
-import type { JsonValue } from "@prisma/client/runtime/library";
-import type { Root as MdastRoot } from "mdast";
+import type { Root as MdastRoot, RootContent } from "mdast";
 import rehypeStringify from "rehype-stringify";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
@@ -10,7 +9,7 @@ import { unified } from "unified";
 
 interface Params {
 	/** DB に入っている mdastJson (= Prisma.Json) */
-	mdastJson: JsonValue;
+	mdastJson: MdastRoot | RootContent | RootContent[] | null;
 }
 
 interface Result {
@@ -31,7 +30,7 @@ export async function mdastToHtml({ mdastJson }: Params): Promise<Result> {
 	}
 
 	/* 1. mdastJson は plain object なのでそのまま cast -------------- */
-	const mdast = mdastJson as unknown as MdastRoot;
+	const mdast = mdastJson;
 
 	const processor = unified()
 		.use(remarkRehype, { allowDangerousHtml: true }) // mdast → hast
