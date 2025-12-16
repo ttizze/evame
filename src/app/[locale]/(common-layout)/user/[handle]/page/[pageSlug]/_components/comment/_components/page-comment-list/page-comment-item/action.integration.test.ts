@@ -1,10 +1,11 @@
-"use server";
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { db } from "@/drizzle";
+import { pageComments } from "@/drizzle/schema";
 import { mockCurrentUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createPageComment, createUser } from "@/tests/factories";
-import { prisma } from "@/tests/prisma";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { deletePageCommentAction } from "./action";
 
@@ -58,9 +59,11 @@ describe("deletePageCommentAction", () => {
 			expect(result.success).toBe(true);
 
 			// DBの状態を確認（論理削除されている）
-			const deletedComment = await prisma.pageComment.findUnique({
-				where: { id: comment.id },
-			});
+			const [deletedComment] = await db
+				.select()
+				.from(pageComments)
+				.where(eq(pageComments.id, comment.id))
+				.limit(1);
 			expect(deletedComment?.isDeleted).toBe(true);
 			expect(deletedComment?.mdastJson).toEqual({
 				type: "root",
@@ -88,9 +91,11 @@ describe("deletePageCommentAction", () => {
 				deletePageCommentAction({ success: false }, formData),
 			).rejects.toThrow("Comment not found or not owned by user");
 
-			const unchangedComment = await prisma.pageComment.findUnique({
-				where: { id: comment.id },
-			});
+			const [unchangedComment] = await db
+				.select()
+				.from(pageComments)
+				.where(eq(pageComments.id, comment.id))
+				.limit(1);
 			expect(unchangedComment?.isDeleted).toBe(false);
 		});
 
@@ -123,10 +128,10 @@ describe("deletePageCommentAction", () => {
 				parentId: parent.id,
 			});
 
-			await prisma.pageComment.update({
-				where: { id: parent.id },
-				data: { replyCount: 1 },
-			});
+			await db
+				.update(pageComments)
+				.set({ replyCount: 1 })
+				.where(eq(pageComments.id, parent.id));
 
 			mockCurrentUser(user);
 
@@ -136,9 +141,11 @@ describe("deletePageCommentAction", () => {
 
 			await deletePageCommentAction({ success: false }, formData);
 
-			const updatedParent = await prisma.pageComment.findUnique({
-				where: { id: parent.id },
-			});
+			const [updatedParent] = await db
+				.select()
+				.from(pageComments)
+				.where(eq(pageComments.id, parent.id))
+				.limit(1);
 			expect(updatedParent?.replyCount).toBe(0);
 		});
 	});

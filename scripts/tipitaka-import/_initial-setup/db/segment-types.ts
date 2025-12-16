@@ -1,5 +1,7 @@
-import type { SegmentType } from "@prisma/client";
-import { prisma } from "@/tests/prisma";
+import { and, eq } from "drizzle-orm";
+import { db } from "@/drizzle";
+import { segmentTypes } from "@/drizzle/schema";
+import type { SegmentType } from "@/drizzle/types";
 
 const SEED_DATA: Array<Pick<SegmentType, "key" | "label">> = [
 	{ key: "COMMENTARY", label: "Atthakatha" },
@@ -7,12 +9,25 @@ const SEED_DATA: Array<Pick<SegmentType, "key" | "label">> = [
 ];
 
 export async function ensureSegmentTypes() {
-	await prisma.segmentType.createMany({
-		data: SEED_DATA,
-		skipDuplicates: true,
-	});
+	// skipDuplicates相当の処理: 既存のkey+labelを確認してから挿入
+	for (const data of SEED_DATA) {
+		const [existing] = await db
+			.select()
+			.from(segmentTypes)
+			.where(
+				and(eq(segmentTypes.key, data.key), eq(segmentTypes.label, data.label)),
+			)
+			.limit(1);
+		if (!existing) {
+			await db.insert(segmentTypes).values(data);
+		}
+	}
 
-	return prisma.segmentType.findMany({
-		select: { key: true, id: true, label: true },
-	});
+	return db
+		.select({
+			key: segmentTypes.key,
+			id: segmentTypes.id,
+			label: segmentTypes.label,
+		})
+		.from(segmentTypes);
 }

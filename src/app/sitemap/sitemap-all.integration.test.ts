@@ -1,5 +1,5 @@
-import type { User } from "@prisma/client";
 import { beforeAll, describe, expect, it } from "vitest";
+import type { User } from "@/drizzle/types";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
