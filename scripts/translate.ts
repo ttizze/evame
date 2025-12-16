@@ -1,7 +1,9 @@
-import { PrismaClient, TranslationStatus } from "@prisma/client";
+import { asc, eq } from "drizzle-orm";
 import { BASE_URL } from "@/app/_constants/base-url";
+import { createTranslationJob as createTranslationJobDb } from "@/app/[locale]/_db/mutations.server";
+import { db } from "@/drizzle";
+import { pages, segments, users } from "@/drizzle/schema";
 
-const prisma = new PrismaClient();
 // ---------------- Types ----------------
 
 type NumberedElement = { number: number; text: string };
@@ -12,10 +14,10 @@ type NumberedElement = { number: number; text: string };
  * 再帰的に子ページを辿り、親を含むすべての pageId を取得します。
  */
 async function getDescendantPageIds(parentId: number): Promise<number[]> {
-	const children = await prisma.page.findMany({
-		where: { parentId },
-		select: { id: true },
-	});
+	const children = await db
+		.select({ id: pages.id })
+		.from(pages)
+		.where(eq(pages.parentId, parentId));
 	const ids: number[] = [];
 	for (const child of children) {
 		ids.push(child.id);
@@ -38,45 +40,54 @@ type CreateTranslationJobParams = {
 };
 
 async function fetchUserByHandle(handle: string) {
-	return prisma.user.findUnique({ where: { handle } });
+	const [user] = await db
+		.select()
+		.from(users)
+		.where(eq(users.handle, handle))
+		.limit(1);
+	return user ?? null;
 }
 
 async function createTranslationJob(params: CreateTranslationJobParams) {
-	return prisma.translationJob.create({
-		data: {
-			aiModel: params.aiModel,
-			locale: params.locale,
-			userId: params.userId,
-			pageId: params.pageId,
-			status: TranslationStatus.PENDING,
-			progress: 0,
-		},
+	return createTranslationJobDb({
+		aiModel: params.aiModel,
+		locale: params.locale,
+		userId: params.userId,
+		pageId: params.pageId,
 	});
 }
 
 async function fetchPageIdBySlug(slug: string) {
-	return prisma.page.findFirst({ where: { slug }, select: { id: true } });
+	const [page] = await db
+		.select({ id: pages.id })
+		.from(pages)
+		.where(eq(pages.slug, slug))
+		.limit(1);
+	return page ?? null;
 }
 
 async function fetchPageWithPageSegments(pageId: number) {
-	const page = await prisma.page.findFirst({
-		where: { id: pageId },
-		select: {
-			slug: true,
-			content: {
-				select: {
-					segments: { select: { number: true, text: true } },
-				},
-			},
-		},
-	});
+	const [page] = await db
+		.select({ slug: pages.slug })
+		.from(pages)
+		.where(eq(pages.id, pageId))
+		.limit(1);
 	if (!page) return null;
-	const title =
-		page.content.segments.find((seg) => seg.number === 0)?.text ?? "";
-	return { ...page, title } as {
-		slug: string;
-		title: string;
-		content: { segments: { number: number; text: string }[] };
+
+	const pageSegments = await db
+		.select({
+			number: segments.number,
+			text: segments.text,
+		})
+		.from(segments)
+		.where(eq(segments.contentId, pageId))
+		.orderBy(asc(segments.number));
+
+	const title = pageSegments.find((seg) => seg.number === 0)?.text ?? "";
+	return {
+		slug: page.slug,
+		title,
+		content: { segments: pageSegments },
 	};
 }
 // ---------------- Main ----------------
@@ -163,6 +174,9 @@ async function fetchPageWithPageSegments(pageId: number) {
 		console.error("Error:", error);
 		process.exit(1);
 	} finally {
-		await prisma.$disconnect();
+		// Drizzleでは明示的な切断は不要（接続プールが自動管理）
+		if (db.pool) {
+			await db.pool.end();
+		}
 	}
 })();

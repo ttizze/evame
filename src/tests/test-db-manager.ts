@@ -14,10 +14,6 @@ function psql(sql: string): void {
 
 /** DB接続をリセット */
 export async function resetAllClients(): Promise<void> {
-	if (globalThis.__prismaClient) {
-		await globalThis.__prismaClient.$disconnect();
-		globalThis.__prismaClient = null;
-	}
 	if (globalThis.__drizzleDb) {
 		if ("pool" in globalThis.__drizzleDb && globalThis.__drizzleDb.pool) {
 			await globalThis.__drizzleDb.pool.end();

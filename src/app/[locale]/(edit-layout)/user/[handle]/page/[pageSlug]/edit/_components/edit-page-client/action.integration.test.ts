@@ -1,10 +1,12 @@
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { db } from "@/drizzle";
+import { pages } from "@/drizzle/schema";
 import { getCurrentUser } from "@/lib/auth-server";
 import { toSessionUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
-import { prisma } from "@/tests/prisma";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { editPageContentAction } from "./action";
 
@@ -64,9 +66,11 @@ describe("editPageContentAction", () => {
 		expect(result.success).toBe(true);
 
 		// Assert: データベースにページが保存されている（実際のDBで検証）
-		const updatedPage = await prisma.page.findUnique({
-			where: { id: page.id },
-		});
+		const [updatedPage] = await db
+			.select()
+			.from(pages)
+			.where(eq(pages.id, page.id))
+			.limit(1);
 		expect(updatedPage).toBeTruthy();
 		expect(updatedPage?.slug).toBe(page.slug);
 

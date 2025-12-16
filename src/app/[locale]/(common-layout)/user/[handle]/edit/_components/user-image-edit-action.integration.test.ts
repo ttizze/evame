@@ -1,12 +1,13 @@
-"use server";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { uploadImage } from "@/app/[locale]/_service/upload/upload-image";
+import { db } from "@/drizzle";
+import { users } from "@/drizzle/schema";
 import { mockCurrentUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createUser } from "@/tests/factories";
-import { prisma } from "@/tests/prisma";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { userImageEditAction } from "./user-image-edit-action";
 
@@ -116,9 +117,11 @@ describe("userImageEditAction", () => {
 				message: "Profile image updated successfully",
 			});
 
-			const updatedUser = await prisma.user.findUnique({
-				where: { id: user.id },
-			});
+			const [updatedUser] = await db
+				.select()
+				.from(users)
+				.where(eq(users.id, user.id))
+				.limit(1);
 			expect(updatedUser?.image).toBe(mockImageUrl);
 
 			expect(revalidatePath).toHaveBeenCalledWith("/settings/profile");

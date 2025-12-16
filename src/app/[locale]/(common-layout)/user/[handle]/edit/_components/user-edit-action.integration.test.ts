@@ -1,11 +1,12 @@
-"use server";
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { db } from "@/drizzle";
+import { users } from "@/drizzle/schema";
 import { mockCurrentUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createUser } from "@/tests/factories";
-import { prisma } from "@/tests/prisma";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { userEditAction } from "./user-edit-action";
 
@@ -104,9 +105,11 @@ describe("userEditAction", () => {
 				},
 			});
 
-			const updatedUser = await prisma.user.findUnique({
-				where: { id: user.id },
-			});
+			const [updatedUser] = await db
+				.select()
+				.from(users)
+				.where(eq(users.id, user.id))
+				.limit(1);
 			expect(updatedUser?.name).toBe("Updated Name");
 			expect(updatedUser?.profile).toBe("My profile");
 
@@ -127,9 +130,11 @@ describe("userEditAction", () => {
 
 			expect(result.success).toBe(true);
 
-			const updatedUser = await prisma.user.findUnique({
-				where: { id: user.id },
-			});
+			const [updatedUser] = await db
+				.select()
+				.from(users)
+				.where(eq(users.id, user.id))
+				.limit(1);
 			expect(updatedUser?.twitterHandle).toBe("@testuser");
 		});
 	});
@@ -148,9 +153,11 @@ describe("userEditAction", () => {
 				userEditAction({ success: false }, formData),
 			).rejects.toThrow(/NEXT_REDIRECT/);
 
-			const updatedUser = await prisma.user.findUnique({
-				where: { id: user.id },
-			});
+			const [updatedUser] = await db
+				.select()
+				.from(users)
+				.where(eq(users.id, user.id))
+				.limit(1);
 			expect(updatedUser?.handle).toBe("newhandle");
 
 			expect(redirect).toHaveBeenCalledWith("/user/newhandle/edit");

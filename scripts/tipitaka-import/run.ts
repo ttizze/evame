@@ -1,5 +1,5 @@
+import { db } from "@/drizzle";
 import { createServerLogger } from "@/lib/logger.server";
-import { prisma } from "@/tests/prisma";
 import { importAllContentPages } from "./_content-pages/application/import-all-content-pages";
 import { createCategoryPages } from "./_create-category-pages/application/create-category-pages";
 import { setupInitialRequirements } from "./_initial-setup/application/setup-initial-requirements";
@@ -42,6 +42,9 @@ export async function runTipitakaImport(): Promise<void> {
 			user.id,
 		);
 	} finally {
-		await prisma.$disconnect();
+		// Drizzleでは明示的な切断は不要（接続プールが自動管理）
+		if (db.pool) {
+			await db.pool.end();
+		}
 	}
 }
