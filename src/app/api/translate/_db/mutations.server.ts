@@ -11,6 +11,18 @@ import type {
 } from "@/drizzle/types";
 
 export async function getOrCreateAIUser(name: string): Promise<string> {
+	// 既存ユーザーを確認
+	const [existing] = await db
+		.select()
+		.from(users)
+		.where(eq(users.handle, name))
+		.limit(1);
+
+	if (existing) {
+		return existing.id;
+	}
+
+	// 存在しない場合は作成
 	const [user] = await db
 		.insert(users)
 		.values({
@@ -20,10 +32,12 @@ export async function getOrCreateAIUser(name: string): Promise<string> {
 			image: "",
 			email: `${name}@ai.com`,
 		})
-		.onConflictDoNothing({
-			target: [users.handle],
-		})
 		.returning();
+
+	if (!user) {
+		throw new Error(`Failed to create AI user: ${name}`);
+	}
+
 	return user.id;
 }
 
