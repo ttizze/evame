@@ -1,0 +1,5 @@
+{
+	"outFile": "./src/db/types.ts",
+	"url": "env(DATABASE_URL)",
+	"dialect": "postgres"
+}

@@ -1,7 +1,7 @@
-import type { Json } from "kysely-codegen/dist/db";
 import rehypeStringify from "rehype-stringify";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
+import type { Json } from "@/db/types";
 
 /* -------------------------------------------------------------------------- */
 /*                               Public API                                   */
