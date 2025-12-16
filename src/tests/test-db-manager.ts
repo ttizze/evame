@@ -12,13 +12,19 @@ function psql(sql: string): void {
 	});
 }
 
-/** DB接続をリセット */
+/** DB接続をリセット（Drizzle + Kysely） */
 export async function resetAllClients(): Promise<void> {
+	// Drizzle
 	if (globalThis.__drizzleDb) {
-		if ("pool" in globalThis.__drizzleDb && globalThis.__drizzleDb.pool) {
+		if (globalThis.__drizzleDb.pool) {
 			await globalThis.__drizzleDb.pool.end();
 		}
 		globalThis.__drizzleDb = null;
+	}
+	// Kysely
+	if (globalThis.__kyselyDb) {
+		await globalThis.__kyselyDb.pool.end();
+		globalThis.__kyselyDb = null;
 	}
 }
 

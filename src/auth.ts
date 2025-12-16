@@ -78,7 +78,7 @@ export const auth = betterAuth({
 	},
 	advanced: {
 		database: {
-			generateId: (options) => {
+			generateId: () => {
 				return createId();
 			},
 		},
