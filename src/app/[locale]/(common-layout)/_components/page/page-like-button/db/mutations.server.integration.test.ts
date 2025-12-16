@@ -1,5 +1,7 @@
+import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/drizzle";
+import { likePages } from "@/drizzle/schema";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
@@ -24,10 +26,11 @@ describe("togglePageLike", () => {
 		expect(result).toStrictEqual({ liked: true, likeCount: 1 });
 
 		// Assert: データベースの状態を確認
-		const likeEntry = await prisma.likePage.findFirst({
-			where: { pageId: page.id, userId: user.id },
-		});
-		expect(likeEntry).toBeTruthy();
+		const likeEntry = await db
+			.select()
+			.from(likePages)
+			.where(and(eq(likePages.pageId, page.id), eq(likePages.userId, user.id)));
+		expect(likeEntry.length).toBe(1);
 	});
 
 	it("ユーザーが既にページにいいねしている場合、いいねを削除してliked:falseとlikeCount:0を返す", async () => {
@@ -43,10 +46,11 @@ describe("togglePageLike", () => {
 		expect(result).toStrictEqual({ liked: false, likeCount: 0 });
 
 		// Assert: データベースからいいねが削除されていることを確認
-		const remaining = await prisma.likePage.findFirst({
-			where: { pageId: page.id, userId: user.id },
-		});
-		expect(remaining).toBeNull();
+		const remaining = await db
+			.select()
+			.from(likePages)
+			.where(and(eq(likePages.pageId, page.id), eq(likePages.userId, user.id)));
+		expect(remaining.length).toBe(0);
 	});
 
 	it("存在しないページIDを指定した場合、エラーを投げる", async () => {

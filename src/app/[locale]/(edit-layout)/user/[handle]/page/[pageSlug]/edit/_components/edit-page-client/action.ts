@@ -1,11 +1,13 @@
 "use server";
 
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { createActionFactory } from "@/app/[locale]/_action/create-action-factory";
 import { getLocaleFromHtml } from "@/app/[locale]/_domain/get-locale-from-html";
 import type { ActionResponse } from "@/app/types";
+import { db } from "@/drizzle";
+import { pages } from "@/drizzle/schema";
 import { createServerLogger } from "@/lib/logger.server";
-import { prisma } from "@/lib/prisma";
 import { processPageHtml } from "./service/process-page-html";
 
 /* ────────────── 入力スキーマ ────────────── */
@@ -50,14 +52,16 @@ export const editPageContentAction = createActionFactory<
 			logger.debug({ sourceLocale }, "Source locale detected");
 
 			// 既存ページの情報を取得
-			const existingPage = await prisma.page.findFirst({
-				where: { slug: pageSlug, userId },
-				select: {
-					parentId: true,
-					order: true,
-					status: true,
-				},
-			});
+			const existingPageResult = await db
+				.select({
+					parentId: pages.parentId,
+					order: pages.order,
+					status: pages.status,
+				})
+				.from(pages)
+				.where(and(eq(pages.slug, pageSlug), eq(pages.userId, userId)))
+				.limit(1);
+			const existingPage = existingPageResult[0] ?? null;
 
 			await processPageHtml({
 				title,

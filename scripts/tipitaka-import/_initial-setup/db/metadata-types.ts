@@ -1,5 +1,5 @@
 import type { SegmentMetadataType } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/tests/prisma";
 
 const METADATA_TYPE_SEED_DATA: Array<
 	Pick<SegmentMetadataType, "key" | "label">

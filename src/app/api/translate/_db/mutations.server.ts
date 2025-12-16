@@ -1,17 +1,43 @@
-import { TranslationProofStatus, type TranslationStatus } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { and, eq, sql } from "drizzle-orm";
+import { db } from "@/drizzle";
+import {
+	pageLocaleTranslationProofs,
+	translationJobs,
+	users,
+} from "@/drizzle/schema";
+import type {
+	TranslationProofStatus,
+	TranslationStatus,
+} from "@/drizzle/types";
+
 export async function getOrCreateAIUser(name: string): Promise<string> {
-	const user = await prisma.user.upsert({
-		where: { handle: name },
-		update: {},
-		create: {
+	// 既存ユーザーを確認
+	const [existing] = await db
+		.select()
+		.from(users)
+		.where(eq(users.handle, name))
+		.limit(1);
+
+	if (existing) {
+		return existing.id;
+	}
+
+	// 存在しない場合は作成
+	const [user] = await db
+		.insert(users)
+		.values({
 			handle: name,
 			name: name,
 			isAI: true,
 			image: "",
 			email: `${name}@ai.com`,
-		},
-	});
+		})
+		.returning();
+
+	if (!user) {
+		throw new Error(`Failed to create AI user: ${name}`);
+	}
+
 	return user.id;
 }
 
@@ -22,94 +48,117 @@ export async function updateTranslationJob(
 	userId?: string,
 	pageId?: number,
 ) {
-	return await prisma.translationJob.update({
-		where: {
-			id: translationJobId,
-		},
-		data: {
-			status,
-			progress,
-			userId,
-			pageId,
-		},
-	});
+	const updateData: {
+		status: TranslationStatus;
+		progress: number;
+		userId?: string;
+		pageId?: number;
+	} = {
+		status,
+		progress,
+	};
+	if (userId !== undefined) {
+		updateData.userId = userId;
+	}
+	if (pageId !== undefined) {
+		updateData.pageId = pageId;
+	}
+	const [updated] = await db
+		.update(translationJobs)
+		.set(updateData)
+		.where(eq(translationJobs.id, translationJobId))
+		.returning();
+	return updated;
 }
 
 // Convenience helpers to avoid scattering raw status writes around the codebase
 export async function markJobInProgress(translationJobId: number) {
-	return await prisma.translationJob.update({
-		where: { id: translationJobId },
-		data: { status: "IN_PROGRESS", progress: 0 },
-	});
+	const [updated] = await db
+		.update(translationJobs)
+		.set({ status: "IN_PROGRESS" satisfies TranslationStatus, progress: 0 })
+		.where(eq(translationJobs.id, translationJobId))
+		.returning();
+	return updated;
 }
 
 export async function markJobCompleted(translationJobId: number) {
-	return await prisma.translationJob.update({
-		where: { id: translationJobId },
-		data: { status: "COMPLETED", progress: 100 },
-	});
+	const [updated] = await db
+		.update(translationJobs)
+		.set({ status: "COMPLETED" satisfies TranslationStatus, progress: 100 })
+		.where(eq(translationJobs.id, translationJobId))
+		.returning();
+	return updated;
 }
 
 export async function markJobFailed(translationJobId: number, progress = 0) {
-	return await prisma.translationJob.update({
-		where: { id: translationJobId },
-		data: { status: "FAILED", progress },
-	});
+	const [updated] = await db
+		.update(translationJobs)
+		.set({ status: "FAILED" satisfies TranslationStatus, progress })
+		.where(eq(translationJobs.id, translationJobId))
+		.returning();
+	return updated;
 }
 
 export async function ensurePageLocaleTranslationProof(
 	pageId: number,
 	locale: string,
 ) {
-	await prisma.pageLocaleTranslationProof.upsert({
-		where: {
-			pageId_locale: {
-				pageId,
-				locale,
-			},
-		},
-		update: {},
-		create: {
+	await db
+		.insert(pageLocaleTranslationProofs)
+		.values({
 			pageId,
 			locale,
-			translationProofStatus: TranslationProofStatus.MACHINE_DRAFT,
-		},
-	});
+			translationProofStatus: "MACHINE_DRAFT" satisfies TranslationProofStatus,
+		})
+		.onConflictDoNothing({
+			target: [
+				pageLocaleTranslationProofs.pageId,
+				pageLocaleTranslationProofs.locale,
+			],
+		});
 }
 
 export async function incrementTranslationProgress(
 	translationJobId: number,
 	inc: number,
 ) {
-	return await prisma.$transaction(async (tx) => {
+	return db.transaction(async (tx) => {
 		// 端末状態（COMPLETED/FAILED）や 100 到達後は増分しない
-		await tx.translationJob.updateMany({
-			where: {
-				id: translationJobId,
-				status: { notIn: ["COMPLETED", "FAILED"] },
-				progress: { lt: 100 },
-			},
-			data: {
-				status: "IN_PROGRESS",
-				progress: { increment: inc },
-			},
-		});
+		await tx
+			.update(translationJobs)
+			.set({
+				status: "IN_PROGRESS" satisfies TranslationStatus,
+				progress: sql`${translationJobs.progress} + ${inc}`,
+			})
+			.where(
+				and(
+					eq(translationJobs.id, translationJobId),
+					sql`${translationJobs.status} NOT IN ('COMPLETED', 'FAILED')`,
+					sql`${translationJobs.progress} < 100`,
+				),
+			);
 
 		// 100 以上になったら完了＆100 でクランプ（冪等）
-		await tx.translationJob.updateMany({
-			where: {
-				id: translationJobId,
-				progress: { gte: 100 },
-				status: { not: "COMPLETED" },
-			},
-			data: {
-				status: "COMPLETED",
+		await tx
+			.update(translationJobs)
+			.set({
+				status: "COMPLETED" satisfies TranslationStatus,
 				progress: 100,
-			},
-		});
+			})
+			.where(
+				and(
+					eq(translationJobs.id, translationJobId),
+					sql`${translationJobs.progress} >= 100`,
+					sql`${translationJobs.status} != 'COMPLETED'`,
+				),
+			);
 
-		return tx.translationJob.findUnique({
-			where: { id: translationJobId },
-		});
+		const [result] = await tx
+			.select()
+			.from(translationJobs)
+			.where(eq(translationJobs.id, translationJobId))
+			.limit(1);
+
+		return result;
 	});
 }

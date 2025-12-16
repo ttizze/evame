@@ -62,7 +62,7 @@ export default async function EditPage({ params }: { params: Params }) {
 		targetLocales,
 	} = await getPageData(handle, pageSlug);
 	const { html } = await mdastToHtml({
-		mdastJson: pageWithTitleAndTags?.mdastJson ?? {},
+		mdastJson: pageWithTitleAndTags?.mdastJson ?? null,
 	});
 
 	return (

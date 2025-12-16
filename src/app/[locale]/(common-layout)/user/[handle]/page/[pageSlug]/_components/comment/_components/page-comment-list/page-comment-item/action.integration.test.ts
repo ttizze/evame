@@ -1,10 +1,10 @@
 "use server";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { prisma } from "@/lib/prisma";
 import { mockCurrentUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createPageComment, createUser } from "@/tests/factories";
+import { prisma } from "@/tests/prisma";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { deletePageCommentAction } from "./action";
 

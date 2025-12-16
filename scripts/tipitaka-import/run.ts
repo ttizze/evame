@@ -1,5 +1,5 @@
 import { createServerLogger } from "@/lib/logger.server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/tests/prisma";
 import { importAllContentPages } from "./_content-pages/application/import-all-content-pages";
 import { createCategoryPages } from "./_create-category-pages/application/create-category-pages";
 import { setupInitialRequirements } from "./_initial-setup/application/setup-initial-requirements";
