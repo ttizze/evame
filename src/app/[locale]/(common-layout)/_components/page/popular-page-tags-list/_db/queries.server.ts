@@ -1,25 +1,31 @@
-import { count, desc, eq } from "drizzle-orm";
-import { db } from "@/drizzle";
-import { tagPages, tags } from "@/drizzle/schema";
+import { sql } from "kysely";
+import { db } from "@/db";
 
 /**
  * Fetches popular tags based on usage count
- * Drizzleに移行済み
+ * Kyselyに移行済み
  * @param limit Maximum number of tags to return
  * @returns Array of popular tags with usage count
  */
 export async function fetchPopularTags(limit: number) {
-	return await db
-		.select({
-			id: tags.id,
-			name: tags.name,
-			_count: {
-				pages: count(tagPages.pageId),
-			},
-		})
-		.from(tags)
-		.leftJoin(tagPages, eq(tags.id, tagPages.tagId))
-		.groupBy(tags.id, tags.name)
-		.orderBy(desc(count(tagPages.pageId)))
-		.limit(limit);
+	const results = await db
+		.selectFrom("tags")
+		.leftJoin("tagPages", "tags.id", "tagPages.tagId")
+		.select([
+			"tags.id",
+			"tags.name",
+			sql<number>`count(tag_pages.page_id)::int`.as("pagesCount"),
+		])
+		.groupBy(["tags.id", "tags.name"])
+		.orderBy(sql`count(tag_pages.page_id)`, "desc")
+		.limit(limit)
+		.execute();
+
+	return results.map((r) => ({
+		id: r.id,
+		name: r.name,
+		_count: {
+			pages: r.pagesCount,
+		},
+	}));
 }

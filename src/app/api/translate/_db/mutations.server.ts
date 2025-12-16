@@ -1,55 +1,46 @@
-import { and, eq, sql } from "drizzle-orm";
-import { db } from "@/drizzle";
-import {
-	pageLocaleTranslationProofs,
-	translationJobs,
-	users,
-} from "@/drizzle/schema";
-import type {
-	TranslationProofStatus,
-	TranslationStatus,
-} from "@/drizzle/types";
+import { createId } from "@paralleldrive/cuid2";
+import { sql } from "kysely";
+import { db } from "@/db";
+import type { Translationproofstatus, Translationstatus } from "@/db/types";
 
 export async function getOrCreateAIUser(name: string): Promise<string> {
 	// 既存ユーザーを確認
-	const [existing] = await db
-		.select()
-		.from(users)
-		.where(eq(users.handle, name))
-		.limit(1);
+	const existing = await db
+		.selectFrom("users")
+		.selectAll()
+		.where("handle", "=", name)
+		.executeTakeFirst();
 
 	if (existing) {
 		return existing.id;
 	}
 
 	// 存在しない場合は作成
-	const [user] = await db
-		.insert(users)
+	const user = await db
+		.insertInto("users")
 		.values({
+			id: createId(),
 			handle: name,
 			name: name,
-			isAI: true,
+			isAi: true,
 			image: "",
 			email: `${name}@ai.com`,
 		})
-		.returning();
-
-	if (!user) {
-		throw new Error(`Failed to create AI user: ${name}`);
-	}
+		.returningAll()
+		.executeTakeFirstOrThrow();
 
 	return user.id;
 }
 
 export async function updateTranslationJob(
 	translationJobId: number,
-	status: TranslationStatus,
+	status: Translationstatus,
 	progress: number,
 	userId?: string,
 	pageId?: number,
 ) {
 	const updateData: {
-		status: TranslationStatus;
+		status: Translationstatus;
 		progress: number;
 		userId?: string;
 		pageId?: number;
@@ -63,39 +54,43 @@ export async function updateTranslationJob(
 	if (pageId !== undefined) {
 		updateData.pageId = pageId;
 	}
-	const [updated] = await db
-		.update(translationJobs)
+	const updated = await db
+		.updateTable("translationJobs")
 		.set(updateData)
-		.where(eq(translationJobs.id, translationJobId))
-		.returning();
+		.where("id", "=", translationJobId)
+		.returningAll()
+		.executeTakeFirst();
 	return updated;
 }
 
 // Convenience helpers to avoid scattering raw status writes around the codebase
 export async function markJobInProgress(translationJobId: number) {
-	const [updated] = await db
-		.update(translationJobs)
-		.set({ status: "IN_PROGRESS" satisfies TranslationStatus, progress: 0 })
-		.where(eq(translationJobs.id, translationJobId))
-		.returning();
+	const updated = await db
+		.updateTable("translationJobs")
+		.set({ status: "IN_PROGRESS" satisfies Translationstatus, progress: 0 })
+		.where("id", "=", translationJobId)
+		.returningAll()
+		.executeTakeFirst();
 	return updated;
 }
 
 export async function markJobCompleted(translationJobId: number) {
-	const [updated] = await db
-		.update(translationJobs)
-		.set({ status: "COMPLETED" satisfies TranslationStatus, progress: 100 })
-		.where(eq(translationJobs.id, translationJobId))
-		.returning();
+	const updated = await db
+		.updateTable("translationJobs")
+		.set({ status: "COMPLETED" satisfies Translationstatus, progress: 100 })
+		.where("id", "=", translationJobId)
+		.returningAll()
+		.executeTakeFirst();
 	return updated;
 }
 
 export async function markJobFailed(translationJobId: number, progress = 0) {
-	const [updated] = await db
-		.update(translationJobs)
-		.set({ status: "FAILED" satisfies TranslationStatus, progress })
-		.where(eq(translationJobs.id, translationJobId))
-		.returning();
+	const updated = await db
+		.updateTable("translationJobs")
+		.set({ status: "FAILED" satisfies Translationstatus, progress })
+		.where("id", "=", translationJobId)
+		.returningAll()
+		.executeTakeFirst();
 	return updated;
 }
 
@@ -104,60 +99,50 @@ export async function ensurePageLocaleTranslationProof(
 	locale: string,
 ) {
 	await db
-		.insert(pageLocaleTranslationProofs)
+		.insertInto("pageLocaleTranslationProofs")
 		.values({
 			pageId,
 			locale,
-			translationProofStatus: "MACHINE_DRAFT" satisfies TranslationProofStatus,
+			translationProofStatus: "MACHINE_DRAFT" satisfies Translationproofstatus,
 		})
-		.onConflictDoNothing({
-			target: [
-				pageLocaleTranslationProofs.pageId,
-				pageLocaleTranslationProofs.locale,
-			],
-		});
+		.onConflict((oc) => oc.columns(["pageId", "locale"]).doNothing())
+		.execute();
 }
 
 export async function incrementTranslationProgress(
 	translationJobId: number,
 	inc: number,
 ) {
-	return db.transaction(async (tx) => {
+	return db.transaction().execute(async (tx) => {
 		// 端末状態（COMPLETED/FAILED）や 100 到達後は増分しない
 		await tx
-			.update(translationJobs)
+			.updateTable("translationJobs")
 			.set({
-				status: "IN_PROGRESS" satisfies TranslationStatus,
-				progress: sql`${translationJobs.progress} + ${inc}`,
+				status: "IN_PROGRESS" satisfies Translationstatus,
+				progress: sql`progress + ${inc}`,
 			})
-			.where(
-				and(
-					eq(translationJobs.id, translationJobId),
-					sql`${translationJobs.status} NOT IN ('COMPLETED', 'FAILED')`,
-					sql`${translationJobs.progress} < 100`,
-				),
-			);
+			.where("id", "=", translationJobId)
+			.where("status", "not in", ["COMPLETED", "FAILED"])
+			.where("progress", "<", 100)
+			.execute();
 
 		// 100 以上になったら完了＆100 でクランプ（冪等）
 		await tx
-			.update(translationJobs)
+			.updateTable("translationJobs")
 			.set({
-				status: "COMPLETED" satisfies TranslationStatus,
+				status: "COMPLETED" satisfies Translationstatus,
 				progress: 100,
 			})
-			.where(
-				and(
-					eq(translationJobs.id, translationJobId),
-					sql`${translationJobs.progress} >= 100`,
-					sql`${translationJobs.status} != 'COMPLETED'`,
-				),
-			);
+			.where("id", "=", translationJobId)
+			.where("progress", ">=", 100)
+			.where("status", "!=", "COMPLETED")
+			.execute();
 
-		const [result] = await tx
-			.select()
-			.from(translationJobs)
-			.where(eq(translationJobs.id, translationJobId))
-			.limit(1);
+		const result = await tx
+			.selectFrom("translationJobs")
+			.selectAll()
+			.where("id", "=", translationJobId)
+			.executeTakeFirst();
 
 		return result;
 	});

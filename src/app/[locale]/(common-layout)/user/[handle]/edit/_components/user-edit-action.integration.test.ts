@@ -1,9 +1,7 @@
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { db } from "@/drizzle";
-import { users } from "@/drizzle/schema";
+import { db } from "@/db";
 import { mockCurrentUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createUser } from "@/tests/factories";
@@ -105,11 +103,11 @@ describe("userEditAction", () => {
 				},
 			});
 
-			const [updatedUser] = await db
-				.select()
-				.from(users)
-				.where(eq(users.id, user.id))
-				.limit(1);
+			const updatedUser = await db
+				.selectFrom("users")
+				.selectAll()
+				.where("id", "=", user.id)
+				.executeTakeFirst();
 			expect(updatedUser?.name).toBe("Updated Name");
 			expect(updatedUser?.profile).toBe("My profile");
 
@@ -130,11 +128,11 @@ describe("userEditAction", () => {
 
 			expect(result.success).toBe(true);
 
-			const [updatedUser] = await db
-				.select()
-				.from(users)
-				.where(eq(users.id, user.id))
-				.limit(1);
+			const updatedUser = await db
+				.selectFrom("users")
+				.selectAll()
+				.where("id", "=", user.id)
+				.executeTakeFirst();
 			expect(updatedUser?.twitterHandle).toBe("@testuser");
 		});
 	});
@@ -153,11 +151,11 @@ describe("userEditAction", () => {
 				userEditAction({ success: false }, formData),
 			).rejects.toThrow(/NEXT_REDIRECT/);
 
-			const [updatedUser] = await db
-				.select()
-				.from(users)
-				.where(eq(users.id, user.id))
-				.limit(1);
+			const updatedUser = await db
+				.selectFrom("users")
+				.selectAll()
+				.where("id", "=", user.id)
+				.executeTakeFirst();
 			expect(updatedUser?.handle).toBe("newhandle");
 
 			expect(redirect).toHaveBeenCalledWith("/user/newhandle/edit");

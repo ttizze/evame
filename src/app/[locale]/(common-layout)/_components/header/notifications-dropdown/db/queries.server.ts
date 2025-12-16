@@ -1,14 +1,4 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
-import { db } from "@/drizzle";
-import {
-	notifications,
-	pageComments,
-	pages,
-	segments,
-	segmentTranslations,
-	users,
-} from "@/drizzle/schema";
+import { db } from "@/db";
 
 // 通知の型定義（シンプルな構造で、必要なフィールドをオプショナルに）
 export type NotificationRowsWithRelations = {
@@ -42,32 +32,30 @@ type NotificationRow = Awaited<
  * 通知データを取得
  */
 async function fetchNotificationRows(currentUserHandle: string) {
-	const userUsers = alias(users, "user_users");
-	const actorUsers = alias(users, "actor_users");
-
 	return await db
-		.select({
-			id: notifications.id,
-			userId: notifications.userId,
-			actorId: notifications.actorId,
-			type: notifications.type,
-			read: notifications.read,
-			createdAt: notifications.createdAt,
-			pageId: notifications.pageId,
-			pageCommentId: notifications.pageCommentId,
-			segmentTranslationId: notifications.segmentTranslationId,
-			userHandle: userUsers.handle,
-			userImage: userUsers.image,
-			userName: userUsers.name,
-			actorHandle: actorUsers.handle,
-			actorImage: actorUsers.image,
-			actorName: actorUsers.name,
-		})
-		.from(notifications)
-		.innerJoin(userUsers, eq(notifications.userId, userUsers.id))
-		.innerJoin(actorUsers, eq(notifications.actorId, actorUsers.id))
-		.where(eq(userUsers.handle, currentUserHandle))
-		.orderBy(desc(notifications.createdAt));
+		.selectFrom("notifications")
+		.innerJoin("users as userUsers", "notifications.userId", "userUsers.id")
+		.innerJoin("users as actorUsers", "notifications.actorId", "actorUsers.id")
+		.select([
+			"notifications.id",
+			"notifications.userId",
+			"notifications.actorId",
+			"notifications.type",
+			"notifications.read",
+			"notifications.createdAt",
+			"notifications.pageId",
+			"notifications.pageCommentId",
+			"notifications.segmentTranslationId",
+			"userUsers.handle as userHandle",
+			"userUsers.image as userImage",
+			"userUsers.name as userName",
+			"actorUsers.handle as actorHandle",
+			"actorUsers.image as actorImage",
+			"actorUsers.name as actorName",
+		])
+		.where("userUsers.handle", "=", currentUserHandle)
+		.orderBy("notifications.createdAt", "desc")
+		.execute();
 }
 
 // ページデータ取得の共通処理
@@ -78,22 +66,22 @@ async function fetchPageDataByPageIds(
 > {
 	if (pageIds.length === 0) return new Map();
 
-	const titleSegments = alias(segments, "title_segments");
-
 	const pagesWithTitles = await db
-		.select({
-			pageId: pages.id,
-			pageSlug: pages.slug,
-			pageTitle: titleSegments.text,
-			userHandle: users.handle,
-		})
-		.from(pages)
-		.innerJoin(users, eq(pages.userId, users.id))
-		.innerJoin(
-			titleSegments,
-			and(eq(titleSegments.contentId, pages.id), eq(titleSegments.number, 0)),
+		.selectFrom("pages")
+		.innerJoin("users", "pages.userId", "users.id")
+		.innerJoin("segments as titleSegments", (join) =>
+			join
+				.onRef("titleSegments.contentId", "=", "pages.id")
+				.on("titleSegments.number", "=", 0),
 		)
-		.where(inArray(pages.id, pageIds));
+		.select([
+			"pages.id as pageId",
+			"pages.slug as pageSlug",
+			"titleSegments.text as pageTitle",
+			"users.handle as userHandle",
+		])
+		.where("pages.id", "in", pageIds)
+		.execute();
 
 	const result = new Map<
 		number,
@@ -146,12 +134,10 @@ async function fetchCommentPageData(
 	if (commentIds.length === 0) return new Map();
 
 	const commentsWithPageIds = await db
-		.select({
-			commentId: pageComments.id,
-			pageId: pageComments.pageId,
-		})
-		.from(pageComments)
-		.where(inArray(pageComments.id, commentIds));
+		.selectFrom("pageComments")
+		.select(["id as commentId", "pageId"])
+		.where("id", "in", commentIds)
+		.execute();
 
 	const pageIds = Array.from(new Set(commentsWithPageIds.map((c) => c.pageId)));
 	const pageDataMap = await fetchPageDataByPageIds(pageIds);
@@ -197,25 +183,25 @@ async function fetchTranslationData(notifications: NotificationRow[]): Promise<
 
 	if (translationIds.length === 0) return new Map();
 
-	const titleSegments = alias(segments, "title_segments");
-
 	const translationsWithAllData = await db
-		.select({
-			translationId: segmentTranslations.id,
-			translationText: segmentTranslations.text,
-			pageSlug: pages.slug,
-			userHandle: users.handle,
-			pageTitle: titleSegments.text,
-		})
-		.from(segmentTranslations)
-		.innerJoin(segments, eq(segmentTranslations.segmentId, segments.id))
-		.innerJoin(pages, eq(segments.contentId, pages.id))
-		.innerJoin(users, eq(pages.userId, users.id))
-		.innerJoin(
-			titleSegments,
-			and(eq(titleSegments.contentId, pages.id), eq(titleSegments.number, 0)),
+		.selectFrom("segmentTranslations")
+		.innerJoin("segments", "segmentTranslations.segmentId", "segments.id")
+		.innerJoin("pages", "segments.contentId", "pages.id")
+		.innerJoin("users", "pages.userId", "users.id")
+		.innerJoin("segments as titleSegments", (join) =>
+			join
+				.onRef("titleSegments.contentId", "=", "pages.id")
+				.on("titleSegments.number", "=", 0),
 		)
-		.where(inArray(segmentTranslations.id, translationIds));
+		.select([
+			"segmentTranslations.id as translationId",
+			"segmentTranslations.text as translationText",
+			"pages.slug as pageSlug",
+			"users.handle as userHandle",
+			"titleSegments.text as pageTitle",
+		])
+		.where("segmentTranslations.id", "in", translationIds)
+		.execute();
 
 	const result = new Map<
 		number,

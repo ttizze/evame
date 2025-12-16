@@ -1,9 +1,7 @@
-import { and, asc, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
-import { db } from "@/drizzle";
-import { pages, users } from "@/drizzle/schema";
-import type { PageStatus } from "@/drizzle/types";
+import { db } from "@/db";
+import type { Pagestatus } from "@/db/types";
 
 export function revalidateAllLocales(
 	basePath: string,
@@ -27,18 +25,14 @@ export async function revalidatePageForLocale(
 	revalidateFn: (path: string) => void = revalidatePath,
 ) {
 	const result = await db
-		.select({
-			slug: pages.slug,
-			userHandle: users.handle,
-		})
-		.from(pages)
-		.innerJoin(users, eq(pages.userId, users.id))
-		.where(eq(pages.id, pageId))
-		.limit(1);
+		.selectFrom("pages")
+		.innerJoin("users", "pages.userId", "users.id")
+		.select(["pages.slug", "users.handle as userHandle"])
+		.where("pages.id", "=", pageId)
+		.executeTakeFirst();
 
-	const page = result[0];
-	if (page) {
-		revalidateFn(`/${locale}/user/${page.userHandle}/page/${page.slug}`);
+	if (result) {
+		revalidateFn(`/${locale}/user/${result.userHandle}/page/${result.slug}`);
 	}
 }
 
@@ -51,19 +45,18 @@ export async function revalidatePageTreeAllLocales(
 	revalidateFn: (path: string) => void = revalidatePath,
 ) {
 	// Fetch self and initial parentId
-	const selfResult = await db
-		.select({
-			id: pages.id,
-			slug: pages.slug,
-			userHandle: users.handle,
-			parentId: pages.parentId,
-		})
-		.from(pages)
-		.innerJoin(users, eq(pages.userId, users.id))
-		.where(eq(pages.id, pageId))
-		.limit(1);
+	const self = await db
+		.selectFrom("pages")
+		.innerJoin("users", "pages.userId", "users.id")
+		.select([
+			"pages.id",
+			"pages.slug",
+			"users.handle as userHandle",
+			"pages.parentId",
+		])
+		.where("pages.id", "=", pageId)
+		.executeTakeFirst();
 
-	const self = selfResult[0];
 	if (!self) return;
 
 	const paths = new Set<string>();
@@ -76,19 +69,18 @@ export async function revalidatePageTreeAllLocales(
 	const ancestorGuard = new Set<number>();
 	while (currentParentId && !ancestorGuard.has(currentParentId)) {
 		ancestorGuard.add(currentParentId);
-		const parentResult = await db
-			.select({
-				id: pages.id,
-				slug: pages.slug,
-				userHandle: users.handle,
-				parentId: pages.parentId,
-			})
-			.from(pages)
-			.innerJoin(users, eq(pages.userId, users.id))
-			.where(eq(pages.id, currentParentId))
-			.limit(1);
+		const parent = await db
+			.selectFrom("pages")
+			.innerJoin("users", "pages.userId", "users.id")
+			.select([
+				"pages.id",
+				"pages.slug",
+				"users.handle as userHandle",
+				"pages.parentId",
+			])
+			.where("pages.id", "=", currentParentId)
+			.executeTakeFirst();
 
-		const parent = parentResult[0];
 		if (!parent) break;
 		paths.add(`/user/${parent.userHandle}/page/${parent.slug}`);
 		visitedIds.add(parent.id);
@@ -100,20 +92,13 @@ export async function revalidatePageTreeAllLocales(
 	const childGuard = new Set<number>([self.id]);
 	while (frontier.length > 0) {
 		const children = await db
-			.select({
-				id: pages.id,
-				slug: pages.slug,
-				userHandle: users.handle,
-			})
-			.from(pages)
-			.innerJoin(users, eq(pages.userId, users.id))
-			.where(
-				and(
-					inArray(pages.parentId, frontier),
-					eq(pages.status, "PUBLIC" satisfies PageStatus),
-				),
-			)
-			.orderBy(asc(pages.order));
+			.selectFrom("pages")
+			.innerJoin("users", "pages.userId", "users.id")
+			.select(["pages.id", "pages.slug", "users.handle as userHandle"])
+			.where("pages.parentId", "in", frontier)
+			.where("pages.status", "=", "PUBLIC" satisfies Pagestatus)
+			.orderBy("pages.order", "asc")
+			.execute();
 
 		const next: number[] = [];
 		for (const c of children) {

@@ -1,7 +1,5 @@
-import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { db } from "@/drizzle";
-import { segments } from "@/drizzle/schema";
+import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
 import {
 	createPage,
@@ -29,7 +27,7 @@ describe("syncSegments", () => {
 		];
 
 		// Act
-		const result = await db.transaction(async (tx) => {
+		const result = await db.transaction().execute(async (tx) => {
 			return await syncSegments(tx, page.id, drafts, null);
 		});
 
@@ -40,9 +38,10 @@ describe("syncSegments", () => {
 
 		// Assert: DBにセグメントが作成されている
 		const createdSegments = await db
-			.select()
-			.from(segments)
-			.where(eq(segments.contentId, page.id));
+			.selectFrom("segments")
+			.selectAll()
+			.where("contentId", "=", page.id)
+			.execute();
 		expect(createdSegments).toHaveLength(2);
 
 		const titleSegment = createdSegments.find((s) => s.number === 0);
@@ -79,15 +78,16 @@ describe("syncSegments", () => {
 		];
 
 		// Act
-		await db.transaction(async (tx) => {
+		await db.transaction().execute(async (tx) => {
 			return await syncSegments(tx, page.id, drafts, null);
 		});
 
 		// Assert: 番号が更新されている
 		const updatedSegments = await db
-			.select()
-			.from(segments)
-			.where(eq(segments.contentId, page.id));
+			.selectFrom("segments")
+			.selectAll()
+			.where("contentId", "=", page.id)
+			.execute();
 
 		const titleSegment = updatedSegments.find(
 			(s) => s.textAndOccurrenceHash === "hash-title",
@@ -135,15 +135,16 @@ describe("syncSegments", () => {
 		];
 
 		// Act
-		await db.transaction(async (tx) => {
+		await db.transaction().execute(async (tx) => {
 			return await syncSegments(tx, page.id, drafts, null);
 		});
 
 		// Assert: セグメントが2つに減っている
 		const remainingSegments = await db
-			.select()
-			.from(segments)
-			.where(eq(segments.contentId, page.id));
+			.selectFrom("segments")
+			.selectAll()
+			.where("contentId", "=", page.id)
+			.execute();
 
 		expect(remainingSegments).toHaveLength(2);
 
@@ -183,7 +184,7 @@ describe("syncSegments", () => {
 		];
 
 		// Act
-		const result = await db.transaction(async (tx) => {
+		const result = await db.transaction().execute(async (tx) => {
 			return await syncSegments(tx, page.id, drafts, null);
 		});
 
@@ -195,9 +196,10 @@ describe("syncSegments", () => {
 
 		// Assert: DBの状態を確認
 		const finalSegments = await db
-			.select()
-			.from(segments)
-			.where(eq(segments.contentId, page.id));
+			.selectFrom("segments")
+			.selectAll()
+			.where("contentId", "=", page.id)
+			.execute();
 
 		expect(finalSegments).toHaveLength(2);
 
@@ -238,7 +240,7 @@ describe("syncSegments", () => {
 		});
 
 		// Act
-		const result = await db.transaction(async (tx) => {
+		const result = await db.transaction().execute(async (tx) => {
 			return await syncSegments(tx, page.id, [], null);
 		});
 
@@ -246,9 +248,10 @@ describe("syncSegments", () => {
 		expect(result.size).toBe(0);
 
 		const remainingSegments = await db
-			.select()
-			.from(segments)
-			.where(eq(segments.contentId, page.id));
+			.selectFrom("segments")
+			.selectAll()
+			.where("contentId", "=", page.id)
+			.execute();
 		expect(remainingSegments).toHaveLength(0);
 	});
 
@@ -262,7 +265,7 @@ describe("syncSegments", () => {
 		];
 
 		// Act
-		const result = await db.transaction(async (tx) => {
+		const result = await db.transaction().execute(async (tx) => {
 			return await syncSegments(tx, page.id, drafts, null);
 		});
 

@@ -1,6 +1,4 @@
-import { and, eq } from "drizzle-orm";
-import { db } from "@/drizzle";
-import { pages } from "@/drizzle/schema";
+import { db } from "@/db";
 
 /**
  * スラグとユーザーIDからページを取得する
@@ -9,11 +7,12 @@ export async function findPageBySlugAndUserId(
 	slug: string,
 	userId: string,
 ): Promise<{ id: number }> {
-	const [page] = await db
-		.select({ id: pages.id })
-		.from(pages)
-		.where(and(eq(pages.slug, slug), eq(pages.userId, userId)))
-		.limit(1);
+	const page = await db
+		.selectFrom("pages")
+		.select("id")
+		.where("slug", "=", slug)
+		.where("userId", "=", userId)
+		.executeTakeFirst();
 
 	if (!page) {
 		throw new Error(`Page with slug ${slug} and userId ${userId} not found`);

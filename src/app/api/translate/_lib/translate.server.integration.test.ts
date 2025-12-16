@@ -1,12 +1,6 @@
-import { and, asc, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { translateChunk } from "@/app/api/translate/_lib/translate.server";
-import { db } from "@/drizzle";
-import {
-	pageLocaleTranslationProofs,
-	segments,
-	segmentTranslations,
-} from "@/drizzle/schema";
+import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
 import {
 	createGeminiApiKey,
@@ -70,10 +64,11 @@ async function setupTranslationTest(data?: {
 
 	// 作成されたセグメントを取得（実際のIDを使用するため）
 	const segmentsResult = await db
-		.select()
-		.from(segments)
-		.where(eq(segments.contentId, page.id))
-		.orderBy(asc(segments.number));
+		.selectFrom("segments")
+		.selectAll()
+		.where("contentId", "=", page.id)
+		.orderBy("number", "asc")
+		.execute();
 
 	return { user, page, segments: segmentsResult };
 }
@@ -109,9 +104,10 @@ describe("translateChunk", () => {
 
 		// Assert: 翻訳結果がデータベースに保存されている（実際のDBで検証）
 		const translatedTexts = await db
-			.select()
-			.from(segmentTranslations)
-			.where(eq(segmentTranslations.locale, "ja"));
+			.selectFrom("segmentTranslations")
+			.selectAll()
+			.where("locale", "=", "ja")
+			.execute();
 		expect(translatedTexts.length).toBeGreaterThanOrEqual(2);
 		expect(translatedTexts.some((t) => t.text === "こんにちは")).toBe(true);
 		expect(translatedTexts.some((t) => t.text === "世界")).toBe(true);
@@ -154,21 +150,18 @@ describe("translateChunk", () => {
 
 		// Assert: 失敗時は翻訳が保存されず、Proofも作られない（実際のDBで検証）
 		const translatedTexts = await db
-			.select()
-			.from(segmentTranslations)
-			.where(eq(segmentTranslations.locale, "ja"));
+			.selectFrom("segmentTranslations")
+			.selectAll()
+			.where("locale", "=", "ja")
+			.execute();
 		expect(translatedTexts.length).toBe(0);
 		const proofResult = await db
-			.select()
-			.from(pageLocaleTranslationProofs)
-			.where(
-				and(
-					eq(pageLocaleTranslationProofs.pageId, page.id),
-					eq(pageLocaleTranslationProofs.locale, "ja"),
-				),
-			)
-			.limit(1);
-		expect(proofResult[0]).toBeUndefined();
+			.selectFrom("pageLocaleTranslationProofs")
+			.selectAll()
+			.where("pageId", "=", page.id)
+			.where("locale", "=", "ja")
+			.executeTakeFirst();
+		expect(proofResult).toBeUndefined();
 	});
 
 	it("1回目は空レスポンスで2回目で正常レスポンスが返された場合、リトライ後に翻訳が保存される", async () => {
@@ -198,9 +191,10 @@ describe("translateChunk", () => {
 
 		// Assert: 翻訳結果がデータベースに保存されている（実際のDBで検証）
 		const translatedTexts = await db
-			.select()
-			.from(segmentTranslations)
-			.where(eq(segmentTranslations.locale, "ja"));
+			.selectFrom("segmentTranslations")
+			.selectAll()
+			.where("locale", "=", "ja")
+			.execute();
 		expect(translatedTexts.length).toBeGreaterThanOrEqual(2);
 		expect(translatedTexts.some((t) => t.text === "こんにちは")).toBe(true);
 		expect(translatedTexts.some((t) => t.text === "世界")).toBe(true);
@@ -230,17 +224,12 @@ describe("translateChunk", () => {
 		);
 
 		// Assert: PageLocaleTranslationProofがMACHINE_DRAFTステータスで作成されている（実際のDBで検証）
-		const proofResult = await db
-			.select()
-			.from(pageLocaleTranslationProofs)
-			.where(
-				and(
-					eq(pageLocaleTranslationProofs.pageId, page.id),
-					eq(pageLocaleTranslationProofs.locale, "ja"),
-				),
-			)
-			.limit(1);
-		const proof = proofResult[0];
+		const proof = await db
+			.selectFrom("pageLocaleTranslationProofs")
+			.selectAll()
+			.where("pageId", "=", page.id)
+			.where("locale", "=", "ja")
+			.executeTakeFirst();
 
 		expect(proof).not.toBeUndefined();
 		expect(proof?.translationProofStatus).toBe("MACHINE_DRAFT");
@@ -251,18 +240,15 @@ describe("translateChunk", () => {
 		const { user, page, segments } = await setupTranslationTest();
 
 		// 事前にPROOFREADステータスでPageLocaleTranslationProofを作成
-		const existingProofResult = await db
-			.insert(pageLocaleTranslationProofs)
+		const existingProof = await db
+			.insertInto("pageLocaleTranslationProofs")
 			.values({
 				pageId: page.id,
 				locale: "ja",
 				translationProofStatus: "PROOFREAD",
 			})
-			.returning();
-		const existingProof = existingProofResult[0];
-		if (!existingProof) {
-			throw new Error("Failed to create existing proof");
-		}
+			.returningAll()
+			.executeTakeFirstOrThrow();
 
 		// Gemini APIのモック（正常レスポンス）
 		vi.mocked(getGeminiModelResponse).mockResolvedValue(
@@ -284,17 +270,12 @@ describe("translateChunk", () => {
 		);
 
 		// Assert: 既存のレコードが保持され、ステータスが変更されていない（実際のDBで検証）
-		const updatedProofResult = await db
-			.select()
-			.from(pageLocaleTranslationProofs)
-			.where(
-				and(
-					eq(pageLocaleTranslationProofs.pageId, page.id),
-					eq(pageLocaleTranslationProofs.locale, "ja"),
-				),
-			)
-			.limit(1);
-		const updatedProof = updatedProofResult[0];
+		const updatedProof = await db
+			.selectFrom("pageLocaleTranslationProofs")
+			.selectAll()
+			.where("pageId", "=", page.id)
+			.where("locale", "=", "ja")
+			.executeTakeFirst();
 
 		expect(updatedProof).not.toBeUndefined();
 		// idが変わっていないこと

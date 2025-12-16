@@ -1,7 +1,7 @@
-import type { PageStatus } from "@/drizzle/types";
+import type { Pagestatus } from "@/db/types";
 
 export type PageWhereInput = {
-	status?: PageStatus;
+	status?: Pagestatus;
 	userId?: string;
 	parentId?: number | null;
 	id?: { in?: number[] };

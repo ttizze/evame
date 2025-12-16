@@ -1,109 +1,82 @@
 /**
  * ページリストクエリ用のヘルパー関数
  *
- * Drizzle ORMを使用して、WHERE条件とORDER BY条件を構築する関数群
+ * Kysely ORMを使用して、WHERE条件とORDER BY条件を構築する関数群
  */
 
-import type { SQL } from "drizzle-orm";
-import {
-	and,
-	asc,
-	count,
-	desc,
-	eq,
-	exists,
-	ilike,
-	inArray,
-	isNull,
-	sql,
-} from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
-import { db } from "@/drizzle";
-import {
-	likePages,
-	pageComments,
-	pages,
-	segments,
-	segmentTranslations,
-	segmentTypes,
-	tagPages,
-	tags,
-	users,
-} from "@/drizzle/schema";
-import {
-	basePageFieldSelectDrizzle,
-	selectSegmentWithTranslationDrizzle,
-} from "./queries.server";
+import type { SelectQueryBuilder } from "kysely";
+import { sql } from "kysely";
+import { db } from "@/db";
+import type { DB } from "@/db/types";
 import type { PageOrderByInput, PageWhereInput } from "./types";
 
 /**
- * WHERE条件をDrizzle SQLに変換
+ * WHERE条件をKyselyクエリに適用
  */
-export function buildWhereCondition(where: PageWhereInput): SQL | undefined {
-	const conditions: SQL[] = [];
+export function applyWhereCondition<O>(
+	query: SelectQueryBuilder<DB, "pages", O>,
+	where: PageWhereInput,
+): SelectQueryBuilder<DB, "pages", O> {
+	let q = query;
 
 	if (where.status) {
-		conditions.push(eq(pages.status, where.status));
+		q = q.where("pages.status", "=", where.status);
 	}
 
 	if (where.userId) {
-		conditions.push(eq(pages.userId, where.userId));
+		q = q.where("pages.userId", "=", where.userId);
 	}
 
 	if (where.parentId === null) {
-		conditions.push(isNull(pages.parentId));
+		q = q.where("pages.parentId", "is", null);
 	} else if (where.parentId !== undefined) {
-		conditions.push(eq(pages.parentId, where.parentId));
+		q = q.where("pages.parentId", "=", where.parentId);
 	}
 
 	if (where.id?.in) {
-		conditions.push(inArray(pages.id, where.id.in));
+		q = q.where("pages.id", "in", where.id.in);
 	}
 
-	return conditions.length > 0 ? and(...conditions) : undefined;
+	return q;
 }
 
 /**
- * ORDER BY条件をDrizzle SQLに変換
+ * ORDER BY条件をKyselyクエリに適用
  */
-export function buildOrderBy(
+export function applyOrderBy<O>(
+	query: SelectQueryBuilder<DB, "pages", O>,
 	orderBy?: PageOrderByInput | PageOrderByInput[],
-): SQL[] {
+): SelectQueryBuilder<DB, "pages", O> {
 	if (!orderBy) {
-		return [desc(pages.createdAt)];
+		return query.orderBy("pages.createdAt", "desc");
 	}
 
 	const orders = Array.isArray(orderBy) ? orderBy : [orderBy];
-	const drizzleOrders: SQL[] = [];
+	let q = query;
 
 	for (const order of orders) {
 		if ("createdAt" in order) {
-			drizzleOrders.push(
-				order.createdAt === "desc"
-					? desc(pages.createdAt)
-					: asc(pages.createdAt),
+			q = q.orderBy(
+				"pages.createdAt",
+				order.createdAt === "desc" ? "desc" : "asc",
 			);
 		}
 
 		if ("likePages" in order) {
-			const likeCount = sql<number>`(
-        SELECT COUNT(*)::int
-        FROM ${likePages}
-        WHERE ${likePages.pageId} = ${pages.id}
-      )`;
-			drizzleOrders.push(
-				order.likePages._count === "desc" ? desc(likeCount) : asc(likeCount),
+			// サブクエリでいいね数を計算
+			const direction = order.likePages._count === "desc" ? "desc" : "asc";
+			q = q.orderBy(
+				sql`(SELECT COUNT(*) FROM like_pages WHERE like_pages.page_id = pages.id)`,
+				direction,
 			);
 		}
 
 		if ("order" in order) {
-			drizzleOrders.push(
-				order.order === "desc" ? desc(pages.order) : asc(pages.order),
-			);
+			q = q.orderBy("pages.order", order.order === "desc" ? "desc" : "asc");
 		}
 	}
 
-	return drizzleOrders.length > 0 ? drizzleOrders : [desc(pages.createdAt)];
+	return q;
 }
 
 /**
@@ -115,51 +88,81 @@ export async function fetchPagesBasic(
 	limit?: number,
 	offset?: number,
 ) {
-	const whereCondition = buildWhereCondition(where);
-	const orderByConditions = buildOrderBy(orderBy);
+	let query = db
+		.selectFrom("pages")
+		.innerJoin("users", "pages.userId", "users.id")
+		.select([
+			"pages.id",
+			"pages.slug",
+			"pages.createdAt",
+			"pages.updatedAt",
+			"pages.status",
+			"pages.sourceLocale",
+			"pages.parentId",
+			"pages.order",
+			"users.id as userId",
+			"users.name as userName",
+			"users.handle as userHandle",
+			"users.image as userImage",
+			"users.createdAt as userCreatedAt",
+			"users.updatedAt as userUpdatedAt",
+			"users.profile as userProfile",
+			"users.twitterHandle as userTwitterHandle",
+			"users.totalPoints as userTotalPoints",
+			"users.isAi as userIsAI",
+			"users.plan as userPlan",
+		]);
 
-	const query = db
-		.select(basePageFieldSelectDrizzle())
-		.from(pages)
-		.innerJoin(users, eq(pages.userId, users.id))
-		.$dynamic();
-
-	if (whereCondition) {
-		query.where(whereCondition);
-	}
-
-	if (orderByConditions.length > 0) {
-		query.orderBy(...orderByConditions);
-	}
+	query = applyWhereCondition(query, where);
+	query = applyOrderBy(query, orderBy);
 
 	if (limit !== undefined) {
-		query.limit(limit);
+		query = query.limit(limit);
 	}
 
 	if (offset !== undefined) {
-		query.offset(offset);
+		query = query.offset(offset);
 	}
 
-	return await query;
+	const results = await query.execute();
+
+	return results.map((row) => ({
+		id: row.id,
+		slug: row.slug,
+		createdAt: row.createdAt,
+		updatedAt: row.updatedAt,
+		status: row.status,
+		sourceLocale: row.sourceLocale,
+		parentId: row.parentId,
+		order: row.order,
+		user: {
+			id: row.userId,
+			name: row.userName,
+			handle: row.userHandle,
+			image: row.userImage,
+			createdAt: row.userCreatedAt,
+			updatedAt: row.userUpdatedAt,
+			profile: row.userProfile,
+			twitterHandle: row.userTwitterHandle,
+			totalPoints: row.userTotalPoints,
+			isAI: row.userIsAI,
+			plan: row.userPlan,
+		},
+	}));
 }
 
 /**
  * ページの総数を取得
  */
 export async function fetchPageCount(where: PageWhereInput): Promise<number> {
-	const whereCondition = buildWhereCondition(where);
+	let query = db
+		.selectFrom("pages")
+		.select(sql<number>`count(*)::int`.as("count"));
 
-	const query = db
-		.select({ count: sql<number>`count(*)::int` })
-		.from(pages)
-		.$dynamic();
+	query = applyWhereCondition(query, where);
 
-	if (whereCondition) {
-		query.where(whereCondition);
-	}
-
-	const result = await query;
-	return Number(result[0]?.count ?? 0);
+	const result = await query.executeTakeFirst();
+	return Number(result?.count ?? 0);
 }
 
 /**
@@ -279,26 +282,95 @@ export async function fetchSegmentsForPages(pageIds: number[], locale: string) {
 	if (pageIds.length === 0) return [];
 
 	const allSegments = await db
-		.select(selectSegmentWithTranslationDrizzle())
-		.from(segments)
-		.innerJoin(segmentTypes, eq(segments.segmentTypeId, segmentTypes.id))
-		.leftJoin(
-			segmentTranslations,
-			and(
-				eq(segments.id, segmentTranslations.segmentId),
-				eq(segmentTranslations.locale, locale),
-			),
+		.selectFrom("segments")
+		.innerJoin("segmentTypes", "segments.segmentTypeId", "segmentTypes.id")
+		.leftJoin("segmentTranslations", (join) =>
+			join
+				.onRef("segments.id", "=", "segmentTranslations.segmentId")
+				.on("segmentTranslations.locale", "=", locale),
 		)
-		.leftJoin(users, eq(segmentTranslations.userId, users.id))
-		.where(and(inArray(segments.contentId, pageIds), eq(segments.number, 0)))
-		.orderBy(
-			segments.id,
-			desc(segmentTranslations.point),
-			desc(segmentTranslations.createdAt),
-		);
+		.leftJoin("users", "segmentTranslations.userId", "users.id")
+		.select([
+			"segments.id as segmentId",
+			"segments.contentId as segmentContentId",
+			"segments.number as segmentNumber",
+			"segments.text as segmentText",
+			"segments.textAndOccurrenceHash as segmentTextAndOccurrenceHash",
+			"segments.createdAt as segmentCreatedAt",
+			"segments.segmentTypeId as segmentSegmentTypeId",
+			"segmentTypes.key as segmentTypeKey",
+			"segmentTypes.label as segmentTypeLabel",
+			"segmentTranslations.id as translationId",
+			"segmentTranslations.segmentId as translationSegmentId",
+			"segmentTranslations.userId as translationUserId",
+			"segmentTranslations.locale as translationLocale",
+			"segmentTranslations.text as translationText",
+			"segmentTranslations.point as translationPoint",
+			"segmentTranslations.createdAt as translationCreatedAt",
+			"users.id as userId",
+			"users.name as userName",
+			"users.handle as userHandle",
+			"users.image as userImage",
+			"users.createdAt as userCreatedAt",
+			"users.updatedAt as userUpdatedAt",
+			"users.profile as userProfile",
+			"users.twitterHandle as userTwitterHandle",
+			"users.totalPoints as userTotalPoints",
+			"users.isAi as userIsAI",
+			"users.plan as userPlan",
+		])
+		.where("segments.contentId", "in", pageIds)
+		.where("segments.number", "=", 0)
+		.orderBy("segments.id")
+		.orderBy("segmentTranslations.point", "desc")
+		.orderBy("segmentTranslations.createdAt", "desc")
+		.execute();
+
+	// buildSegmentsMap用にデータを変換
+	const mappedSegments = allSegments.map((row) => ({
+		segment: {
+			id: row.segmentId,
+			contentId: row.segmentContentId,
+			number: row.segmentNumber,
+			text: row.segmentText,
+			textAndOccurrenceHash: row.segmentTextAndOccurrenceHash,
+			createdAt: row.segmentCreatedAt,
+			segmentTypeId: row.segmentSegmentTypeId,
+		},
+		segmentType: {
+			key: row.segmentTypeKey,
+			label: row.segmentTypeLabel,
+		},
+		translation: row.translationId
+			? {
+					id: row.translationId,
+					segmentId: row.translationSegmentId!,
+					userId: row.translationUserId!,
+					locale: row.translationLocale!,
+					text: row.translationText!,
+					point: row.translationPoint!,
+					createdAt: row.translationCreatedAt!,
+				}
+			: null,
+		translationUser: row.userId
+			? {
+					id: row.userId,
+					name: row.userName!,
+					handle: row.userHandle!,
+					image: row.userImage!,
+					createdAt: row.userCreatedAt!,
+					updatedAt: row.userUpdatedAt!,
+					profile: row.userProfile!,
+					twitterHandle: row.userTwitterHandle!,
+					totalPoints: row.userTotalPoints!,
+					isAI: row.userIsAI!,
+					plan: row.userPlan!,
+				}
+			: null,
+	}));
 
 	// セグメントごとにグループ化し、最良の翻訳を1件のみ選択
-	const segmentsMap = buildSegmentsMap(allSegments);
+	const segmentsMap = buildSegmentsMap(mappedSegments);
 
 	return Array.from(segmentsMap.values());
 }
@@ -310,18 +382,19 @@ export async function fetchTagsForPages(pageIds: number[]) {
 	if (pageIds.length === 0) return [];
 
 	const result = await db
-		.select({
-			pageId: tagPages.pageId,
-			tag: {
-				id: tags.id,
-				name: tags.name,
-			},
-		})
-		.from(tagPages)
-		.innerJoin(tags, eq(tagPages.tagId, tags.id))
-		.where(inArray(tagPages.pageId, pageIds));
+		.selectFrom("tagPages")
+		.innerJoin("tags", "tagPages.tagId", "tags.id")
+		.select(["tagPages.pageId", "tags.id as tagId", "tags.name as tagName"])
+		.where("tagPages.pageId", "in", pageIds)
+		.execute();
 
-	return result;
+	return result.map((row) => ({
+		pageId: row.pageId,
+		tag: {
+			id: row.tagId,
+			name: row.tagName,
+		},
+	}));
 }
 
 /**
@@ -330,46 +403,39 @@ export async function fetchTagsForPages(pageIds: number[]) {
 export async function fetchCountsForPages(pageIds: number[]) {
 	if (pageIds.length === 0) return [];
 
-	// 子ページをカウントするためにpagesテーブルのエイリアスを作成
-	const children = alias(pages, "children");
-
-	// コメント数のサブクエリ（countにエイリアスを付けてサブクエリ参照を可能にする）
-	const commentsCountSubquery = db
-		.select({
-			pageId: pageComments.pageId,
-			count: count().as("comment_count"),
-		})
-		.from(pageComments)
-		.where(eq(pageComments.isDeleted, false))
-		.groupBy(pageComments.pageId)
-		.as("comments_count");
-
-	// 子ページ数のサブクエリ（countにエイリアスを付けてサブクエリ参照を可能にする）
-	const childrenCountSubquery = db
-		.select({
-			parentId: children.parentId,
-			count: count().as("children_count"),
-		})
-		.from(children)
-		.where(eq(children.status, "PUBLIC"))
-		.groupBy(children.parentId)
-		.as("children_count");
-
 	const result = await db
-		.select({
-			pageId: pages.id,
-			// コメント数をLEFT JOINで取得
-			pageCommentsCount: sql<number>`COALESCE(${commentsCountSubquery.count}, 0)`,
-			// 子ページ数をLEFT JOINで取得
-			childrenCount: sql<number>`COALESCE(${childrenCountSubquery.count}, 0)`,
-		})
-		.from(pages)
-		.leftJoin(commentsCountSubquery, eq(pages.id, commentsCountSubquery.pageId))
+		.selectFrom("pages")
 		.leftJoin(
-			childrenCountSubquery,
-			eq(pages.id, childrenCountSubquery.parentId),
+			(eb) =>
+				eb
+					.selectFrom("pageComments")
+					.select(["pageId", sql<number>`count(*)::int`.as("commentCount")])
+					.where("isDeleted", "=", false)
+					.groupBy("pageId")
+					.as("commentsCount"),
+			(join) => join.onRef("pages.id", "=", "commentsCount.pageId"),
 		)
-		.where(inArray(pages.id, pageIds));
+		.leftJoin(
+			(eb) =>
+				eb
+					.selectFrom("pages as children")
+					.select(["parentId", sql<number>`count(*)::int`.as("childrenCount")])
+					.where("status", "=", "PUBLIC")
+					.groupBy("parentId")
+					.as("childrenCount"),
+			(join) => join.onRef("pages.id", "=", "childrenCount.parentId"),
+		)
+		.select([
+			"pages.id as pageId",
+			sql<number>`COALESCE(comments_count.comment_count, 0)`.as(
+				"pageCommentsCount",
+			),
+			sql<number>`COALESCE(children_count.children_count, 0)`.as(
+				"childrenCount",
+			),
+		])
+		.where("pages.id", "in", pageIds)
+		.execute();
 
 	return result.map((row) => ({
 		pageId: row.pageId,
@@ -386,32 +452,44 @@ export async function searchPageIdsBySegmentText(
 	query: string,
 	additionalWhere?: PageWhereInput,
 ): Promise<number[]> {
-	const conditions = [
-		eq(segments.number, 0),
-		ilike(segments.text, `%${query}%`),
-	];
+	let baseQuery = db
+		.selectFrom("segments")
+		.select("contentId as pageId")
+		.distinct()
+		.where("number", "=", 0)
+		.where("text", "ilike", `%${query}%`);
 
-	const pageWhereCondition = additionalWhere
-		? buildWhereCondition(additionalWhere)
-		: undefined;
+	if (additionalWhere) {
+		baseQuery = baseQuery.where((eb) =>
+			eb.exists(
+				eb
+					.selectFrom("pages")
+					.select(sql`1`.as("one"))
+					.whereRef("pages.id", "=", "segments.contentId")
+					.$call((q) => {
+						let subQ = q;
+						if (additionalWhere.status) {
+							subQ = subQ.where("pages.status", "=", additionalWhere.status);
+						}
+						if (additionalWhere.userId) {
+							subQ = subQ.where("pages.userId", "=", additionalWhere.userId);
+						}
+						if (additionalWhere.parentId === null) {
+							subQ = subQ.where("pages.parentId", "is", null);
+						} else if (additionalWhere.parentId !== undefined) {
+							subQ = subQ.where(
+								"pages.parentId",
+								"=",
+								additionalWhere.parentId,
+							);
+						}
+						return subQ;
+					}),
+			),
+		);
+	}
 
-	const segmentCondition = pageWhereCondition
-		? and(
-				...conditions,
-				exists(
-					db
-						.select()
-						.from(pages)
-						.where(and(eq(pages.id, segments.contentId), pageWhereCondition)),
-				),
-			)
-		: and(...conditions);
-
-	const result = await db
-		.selectDistinct({ pageId: segments.contentId })
-		.from(segments)
-		.where(segmentCondition);
-
+	const result = await baseQuery.execute();
 	return result.map((r) => r.pageId);
 }
 
@@ -422,29 +500,43 @@ export async function searchPageIdsByTagName(
 	tagName: string,
 	additionalWhere?: PageWhereInput,
 ): Promise<number[]> {
-	const conditions = [eq(tags.name, tagName)];
+	let baseQuery = db
+		.selectFrom("tagPages")
+		.innerJoin("tags", "tagPages.tagId", "tags.id")
+		.select("tagPages.pageId")
+		.distinct()
+		.where("tags.name", "=", tagName);
 
-	const pageWhereCondition = additionalWhere
-		? buildWhereCondition(additionalWhere)
-		: undefined;
+	if (additionalWhere) {
+		baseQuery = baseQuery.where((eb) =>
+			eb.exists(
+				eb
+					.selectFrom("pages")
+					.select(sql`1`.as("one"))
+					.whereRef("pages.id", "=", "tagPages.pageId")
+					.$call((q) => {
+						let subQ = q;
+						if (additionalWhere.status) {
+							subQ = subQ.where("pages.status", "=", additionalWhere.status);
+						}
+						if (additionalWhere.userId) {
+							subQ = subQ.where("pages.userId", "=", additionalWhere.userId);
+						}
+						if (additionalWhere.parentId === null) {
+							subQ = subQ.where("pages.parentId", "is", null);
+						} else if (additionalWhere.parentId !== undefined) {
+							subQ = subQ.where(
+								"pages.parentId",
+								"=",
+								additionalWhere.parentId,
+							);
+						}
+						return subQ;
+					}),
+			),
+		);
+	}
 
-	const tagCondition = pageWhereCondition
-		? and(
-				...conditions,
-				exists(
-					db
-						.select()
-						.from(pages)
-						.where(and(eq(pages.id, tagPages.pageId), pageWhereCondition)),
-				),
-			)
-		: and(...conditions);
-
-	const result = await db
-		.selectDistinct({ pageId: tagPages.pageId })
-		.from(tagPages)
-		.innerJoin(tags, eq(tagPages.tagId, tags.id))
-		.where(tagCondition);
-
+	const result = await baseQuery.execute();
 	return result.map((r) => r.pageId);
 }

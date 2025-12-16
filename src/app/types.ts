@@ -1,8 +1,8 @@
 import type { ZodFlattenedError } from "zod";
-import type { User } from "@/drizzle/types";
+import type { Users } from "@/db/types";
 
 export type SanitizedUser = Omit<
-	User,
+	Users,
 	"email" | "provider" | "emailVerified" | "id"
 >;
 

@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { User } from "@/drizzle/types";
+import type { Users } from "@/db/types";
 import { getCurrentUser } from "@/lib/auth-server";
 
 export type SessionUser = {
@@ -18,10 +18,10 @@ export type SessionUser = {
 };
 
 /**
- * DrizzleのUser型をgetCurrentUserが返す型に変換するヘルパー
+ * KyselyのUsers型をgetCurrentUserが返す型に変換するヘルパー
  * （テスト用：実際のセッション管理は外部システムなのでモック）
  */
-export function toSessionUser(user: User): SessionUser {
+export function toSessionUser(user: Users): SessionUser {
 	return {
 		id: user.id,
 		name: user.name,
@@ -30,10 +30,10 @@ export function toSessionUser(user: User): SessionUser {
 		profile: user.profile,
 		twitterHandle: user.twitterHandle,
 		totalPoints: user.totalPoints,
-		isAI: user.isAI,
+		isAI: user.isAi,
 		image: user.image,
-		createdAt: user.createdAt,
-		updatedAt: user.updatedAt,
+		createdAt: user.createdAt as Date,
+		updatedAt: user.updatedAt as Date,
 		hasGeminiApiKey: false,
 	};
 }
@@ -42,7 +42,7 @@ export function toSessionUser(user: User): SessionUser {
  * getCurrentUserのモックを設定するヘルパー
  * 使用例: mockCurrentUser(user) または mockCurrentUser(null)
  */
-export function mockCurrentUser(user: User | null): void {
+export function mockCurrentUser(user: Users | null): void {
 	vi.mocked(getCurrentUser).mockResolvedValue(
 		user ? toSessionUser(user) : null,
 	);

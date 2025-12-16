@@ -1,4 +1,4 @@
-import type { PageStatus } from "@/drizzle/types";
+import type { Pagestatus } from "@/db/types";
 export const mockUsers = [
 	{
 		id: "mockUserId1",
@@ -38,7 +38,7 @@ export const mockPages = [
 		mdastJson: {},
 		slug: "mockUserId1-page1",
 		sourceLocale: "en",
-		status: "PUBLIC" as PageStatus,
+		status: "PUBLIC" as Pagestatus,
 		createdAt: new Date(),
 		updatedAt: new Date(),
 	},
@@ -49,7 +49,7 @@ export const mockPages = [
 		mdastJson: {},
 		slug: "mockUserId2-page1",
 		sourceLocale: "en",
-		status: "PUBLIC" as PageStatus,
+		status: "PUBLIC" as Pagestatus,
 		createdAt: new Date(),
 		updatedAt: new Date(),
 	},
@@ -60,7 +60,7 @@ export const mockPages = [
 		mdastJson: {},
 		slug: "mockUserId1-page2-draft",
 		sourceLocale: "en",
-		status: "DRAFT" as PageStatus,
+		status: "DRAFT" as Pagestatus,
 		createdAt: new Date(),
 		updatedAt: new Date(),
 	},

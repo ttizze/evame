@@ -1,9 +1,6 @@
-import { and, desc, eq, ne } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { selectUserFieldsDrizzle } from "@/app/[locale]/_db/queries.server";
-import { db } from "@/drizzle";
-import { segmentTranslations, translationVotes, users } from "@/drizzle/schema";
+import { db } from "@/db";
 import { getCurrentUser } from "@/lib/auth-server";
 
 const schema = z.object({
@@ -25,105 +22,145 @@ export async function GET(req: NextRequest) {
 
 	try {
 		// ベスト翻訳を取得（ユーザー情報と現在のユーザーの投票情報を含む）
-		// ログイン有無で select() と JOIN を分岐（未ログイン時は translationVotes を選択しない）
-		const bestTranslationQuery = currentUser?.id
-			? db
-					.select({
-						translation: segmentTranslations,
-						user: selectUserFieldsDrizzle(),
-						vote: translationVotes,
-					})
-					.from(segmentTranslations)
-					.innerJoin(users, eq(segmentTranslations.userId, users.id))
-					.leftJoin(
-						translationVotes,
-						and(
-							eq(translationVotes.translationId, segmentTranslations.id),
-							eq(translationVotes.userId, currentUser.id),
-						),
-					)
-			: db
-					.select({
-						translation: segmentTranslations,
-						user: selectUserFieldsDrizzle(),
-					})
-					.from(segmentTranslations)
-					.innerJoin(users, eq(segmentTranslations.userId, users.id));
+		let bestTranslationQuery = db
+			.selectFrom("segmentTranslations")
+			.innerJoin("users", "segmentTranslations.userId", "users.id")
+			.select([
+				"segmentTranslations.id",
+				"segmentTranslations.segmentId",
+				"segmentTranslations.locale",
+				"segmentTranslations.text",
+				"segmentTranslations.point",
+				"segmentTranslations.createdAt",
+				"segmentTranslations.userId",
+				"users.id as usersId",
+				"users.name",
+				"users.handle",
+				"users.image",
+				"users.createdAt as userCreatedAt",
+				"users.updatedAt as userUpdatedAt",
+				"users.profile",
+				"users.twitterHandle",
+				"users.totalPoints",
+				"users.isAi",
+				"users.plan",
+			]);
+
+		if (currentUser?.id) {
+			bestTranslationQuery = bestTranslationQuery
+				.leftJoin("translationVotes", (join) =>
+					join
+						.onRef(
+							"translationVotes.translationId",
+							"=",
+							"segmentTranslations.id",
+						)
+						.on("translationVotes.userId", "=", currentUser.id),
+				)
+				.select([
+					"translationVotes.isUpvote as voteIsUpvote",
+					"translationVotes.translationId as voteTranslationId",
+					"translationVotes.userId as voteUserId",
+				]);
+		}
 
 		// スコープ検証: bestTranslationId が指定 segmentId/userLocale に属することを確認
-		const bestTranslationResult = await bestTranslationQuery
-			.where(
-				and(
-					eq(segmentTranslations.id, bestTranslationId),
-					eq(segmentTranslations.segmentId, segmentId),
-					eq(segmentTranslations.locale, userLocale),
-				),
-			)
-			.limit(1);
-		const bestTranslationWithVote = bestTranslationResult[0] ?? null;
+		const bestTranslationWithVote = await bestTranslationQuery
+			.where("segmentTranslations.id", "=", bestTranslationId)
+			.where("segmentTranslations.segmentId", "=", segmentId)
+			.where("segmentTranslations.locale", "=", userLocale)
+			.executeTakeFirst();
 
 		// その他の翻訳を取得
-		// ログイン有無で select() と JOIN を分岐（未ログイン時は translationVotes を選択しない）
-		const translationsQuery = currentUser?.id
-			? db
-					.select({
-						translation: segmentTranslations,
-						user: {
-							handle: users.handle,
-							name: users.name,
-							image: users.image,
-						},
-						vote: translationVotes,
-					})
-					.from(segmentTranslations)
-					.innerJoin(users, eq(segmentTranslations.userId, users.id))
-					.leftJoin(
-						translationVotes,
-						and(
-							eq(translationVotes.translationId, segmentTranslations.id),
-							eq(translationVotes.userId, currentUser.id),
-						),
-					)
-			: db
-					.select({
-						translation: segmentTranslations,
-						user: {
-							handle: users.handle,
-							name: users.name,
-							image: users.image,
-						},
-					})
-					.from(segmentTranslations)
-					.innerJoin(users, eq(segmentTranslations.userId, users.id));
+		let translationsQuery = db
+			.selectFrom("segmentTranslations")
+			.innerJoin("users", "segmentTranslations.userId", "users.id")
+			.select([
+				"segmentTranslations.id",
+				"segmentTranslations.locale",
+				"segmentTranslations.text",
+				"segmentTranslations.point",
+				"segmentTranslations.createdAt",
+				"users.handle",
+				"users.name",
+				"users.image",
+			]);
+
+		if (currentUser?.id) {
+			translationsQuery = translationsQuery
+				.leftJoin("translationVotes", (join) =>
+					join
+						.onRef(
+							"translationVotes.translationId",
+							"=",
+							"segmentTranslations.id",
+						)
+						.on("translationVotes.userId", "=", currentUser.id),
+				)
+				.select([
+					"translationVotes.isUpvote as voteIsUpvote",
+					"translationVotes.translationId as voteTranslationId",
+					"translationVotes.userId as voteUserId",
+				]);
+		}
 
 		const translations = await translationsQuery
-			.where(
-				and(
-					eq(segmentTranslations.segmentId, segmentId),
-					eq(segmentTranslations.locale, userLocale),
-					ne(segmentTranslations.id, bestTranslationId),
-				),
-			)
-			.orderBy(
-				desc(segmentTranslations.point),
-				desc(segmentTranslations.createdAt),
-			);
+			.where("segmentTranslations.segmentId", "=", segmentId)
+			.where("segmentTranslations.locale", "=", userLocale)
+			.where("segmentTranslations.id", "!=", bestTranslationId)
+			.orderBy("segmentTranslations.point", "desc")
+			.orderBy("segmentTranslations.createdAt", "desc")
+			.execute();
 
 		return NextResponse.json({
 			bestTranslationCurrentUserVote:
-				(currentUser?.id &&
-					"vote" in bestTranslationWithVote &&
-					bestTranslationWithVote.vote) ??
-				null,
-			bestTranslationUser: bestTranslationWithVote?.user ?? null,
+				currentUser?.id &&
+				bestTranslationWithVote &&
+				"voteIsUpvote" in bestTranslationWithVote &&
+				bestTranslationWithVote.voteTranslationId
+					? {
+							isUpvote: bestTranslationWithVote.voteIsUpvote,
+							translationId: bestTranslationWithVote.voteTranslationId,
+							userId: bestTranslationWithVote.voteUserId,
+						}
+					: null,
+			bestTranslationUser: bestTranslationWithVote
+				? {
+						id: bestTranslationWithVote.usersId,
+						name: bestTranslationWithVote.name,
+						handle: bestTranslationWithVote.handle,
+						image: bestTranslationWithVote.image,
+						createdAt: bestTranslationWithVote.userCreatedAt,
+						updatedAt: bestTranslationWithVote.userUpdatedAt,
+						profile: bestTranslationWithVote.profile,
+						twitterHandle: bestTranslationWithVote.twitterHandle,
+						totalPoints: bestTranslationWithVote.totalPoints,
+						isAI: bestTranslationWithVote.isAi,
+						plan: bestTranslationWithVote.plan,
+					}
+				: null,
 			translations: translations.map((t) => ({
-				id: t.translation.id,
-				locale: t.translation.locale,
-				text: t.translation.text,
-				point: t.translation.point,
-				createdAt: t.translation.createdAt.toISOString(),
-				user: t.user,
-				currentUserVote: (currentUser?.id && "vote" in t && t.vote) ?? null,
+				id: t.id,
+				locale: t.locale,
+				text: t.text,
+				point: t.point,
+				createdAt: t.createdAt.toISOString(),
+				user: {
+					handle: t.handle,
+					name: t.name,
+					image: t.image,
+				},
+				currentUserVote:
+					currentUser?.id &&
+					"voteIsUpvote" in t &&
+					(t as { voteTranslationId?: number }).voteTranslationId
+						? {
+								isUpvote: (t as { voteIsUpvote: boolean }).voteIsUpvote,
+								translationId: (t as { voteTranslationId: number })
+									.voteTranslationId,
+								userId: (t as { voteUserId: string }).voteUserId,
+							}
+						: null,
 			})),
 		});
 	} catch (error) {

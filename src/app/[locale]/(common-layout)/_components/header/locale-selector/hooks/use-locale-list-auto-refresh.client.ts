@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import type { TranslationJob } from "@/drizzle/types";
+import type { TranslationJobs } from "@/db/types";
 import { useCombinedRouter } from "./use-combined-router";
 
-export function useLocaleListAutoRefresh(translationJobs?: TranslationJob[]) {
+export function useLocaleListAutoRefresh(translationJobs?: TranslationJobs[]) {
 	const router = useCombinedRouter();
 
 	useEffect(() => {

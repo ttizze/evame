@@ -1,16 +1,14 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/drizzle";
-import { users } from "@/drizzle/schema";
+import { db } from "@/db";
 
 /**
  * handleが使用されているかチェック
- * Drizzleに移行済み
+ * Kyselyに移行済み
  */
 export async function isHandleTaken(handle: string): Promise<boolean> {
 	const result = await db
-		.select({ id: users.id })
-		.from(users)
-		.where(eq(users.handle, handle))
-		.limit(1);
-	return !!result[0];
+		.selectFrom("users")
+		.select("id")
+		.where("handle", "=", handle)
+		.executeTakeFirst();
+	return !!result;
 }

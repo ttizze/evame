@@ -1,10 +1,8 @@
-import { eq } from "drizzle-orm";
 import { fetchSegmentsForPages } from "@/app/[locale]/_db/page-list-helpers.server";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import type { SegmentForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
-import { db } from "@/drizzle";
-import { pages } from "@/drizzle/schema";
+import { db } from "@/db";
 
 type ParentNode = {
 	id: number;
@@ -20,7 +18,7 @@ type ParentNode = {
 };
 
 // 親ページの階層を取得する関数
-// Drizzle版に移行済み
+// Kysely版に移行済み
 export async function getParentChain(pageId: number, locale: string) {
 	const parentChain: ParentNode[] = [];
 	let currentParentId = await getParentId(pageId);
@@ -57,12 +55,12 @@ export async function getParentChain(pageId: number, locale: string) {
 }
 
 // ページの親IDを取得する関数
-// Drizzle版に移行済み
+// Kysely版に移行済み
 async function getParentId(pageId: number): Promise<number | null> {
 	const result = await db
-		.select({ parentId: pages.parentId })
-		.from(pages)
-		.where(eq(pages.id, pageId))
-		.limit(1);
-	return result[0]?.parentId ?? null;
+		.selectFrom("pages")
+		.select("parentId")
+		.where("id", "=", pageId)
+		.executeTakeFirst();
+	return result?.parentId ?? null;
 }

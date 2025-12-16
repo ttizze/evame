@@ -1,6 +1,4 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/drizzle";
-import { contents, pages, segments } from "@/drizzle/schema";
+import { db } from "@/db";
 
 /**
  * segment から page を解決する（page または pageComment 経由）
@@ -8,16 +6,13 @@ import { contents, pages, segments } from "@/drizzle/schema";
  */
 export async function findPageBySegmentId(segmentId: number) {
 	// まず、segment -> content -> page を試す
-	const [pageResult] = await db
-		.select({
-			id: pages.id,
-			slug: pages.slug,
-		})
-		.from(segments)
-		.innerJoin(contents, eq(segments.contentId, contents.id))
-		.innerJoin(pages, eq(contents.id, pages.id))
-		.where(eq(segments.id, segmentId))
-		.limit(1);
+	const pageResult = await db
+		.selectFrom("segments")
+		.innerJoin("contents", "segments.contentId", "contents.id")
+		.innerJoin("pages", "contents.id", "pages.id")
+		.select(["pages.id", "pages.slug"])
+		.where("segments.id", "=", segmentId)
+		.executeTakeFirst();
 
 	return pageResult ?? null;
 }

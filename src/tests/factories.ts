@@ -1,19 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { createId } from "@paralleldrive/cuid2";
 import type { Root as MdastRoot } from "mdast";
-import { db } from "@/drizzle";
-import {
-	contents,
-	geminiApiKeys,
-	pageComments,
-	pages,
-	segmentAnnotationLinks,
-	segments,
-	tagPages,
-	tags,
-	users,
-} from "@/drizzle/schema";
-import type { PageStatus, SegmentTypeKey } from "@/drizzle/types";
+import { db } from "@/db";
+import type { JsonValue, Pagestatus, Segmenttypekey } from "@/db/types";
 import { getSegmentTypeId } from "./db-helpers";
 
 /**
@@ -27,19 +16,18 @@ export async function createUser(data?: {
 	profile?: string;
 }) {
 	const uniqueId = randomUUID().slice(0, 8);
-	const [user] = await db
-		.insert(users)
+	const user = await db
+		.insertInto("users")
 		.values({
+			id: createId(),
 			handle: data?.handle ?? `testuser-${uniqueId}`,
 			name: data?.name ?? "Test User",
 			email: data?.email ?? `testuser-${uniqueId}@example.com`,
 			image: data?.image ?? "https://example.com/image.jpg",
 			profile: data?.profile ?? "",
 		})
-		.returning();
-	if (!user) {
-		throw new Error("Failed to create user");
-	}
+		.returningAll()
+		.executeTakeFirstOrThrow();
 	return user;
 }
 
@@ -49,34 +37,30 @@ export async function createUser(data?: {
 export async function createPage(data: {
 	userId: string;
 	slug: string;
-	status?: PageStatus;
+	status?: Pagestatus;
 	mdastJson?: unknown;
 	sourceLocale?: string;
 	parentId?: number;
 }) {
-	const [content] = await db
-		.insert(contents)
+	const content = await db
+		.insertInto("contents")
 		.values({ kind: "PAGE" })
-		.returning();
-	if (!content) {
-		throw new Error("Failed to create content");
-	}
+		.returningAll()
+		.executeTakeFirstOrThrow();
 
-	const [page] = await db
-		.insert(pages)
+	const page = await db
+		.insertInto("pages")
 		.values({
 			id: content.id,
 			slug: data.slug,
 			userId: data.userId,
 			status: data.status ?? "PUBLIC",
-			mdastJson: (data.mdastJson ?? {}) as MdastRoot,
+			mdastJson: (data.mdastJson ?? {}) as JsonValue,
 			sourceLocale: data.sourceLocale ?? "en",
 			parentId: data.parentId ?? null,
 		})
-		.returning();
-	if (!page) {
-		throw new Error("Failed to create page");
-	}
+		.returningAll()
+		.executeTakeFirstOrThrow();
 	return page;
 }
 
@@ -88,12 +72,12 @@ export async function createSegment(data: {
 	number: number;
 	text: string;
 	textAndOccurrenceHash: string;
-	segmentTypeKey: SegmentTypeKey;
+	segmentTypeKey: Segmenttypekey;
 }) {
 	const segmentTypeId = await getSegmentTypeId(data.segmentTypeKey);
 
-	const [segment] = await db
-		.insert(segments)
+	const segment = await db
+		.insertInto("segments")
 		.values({
 			contentId: data.contentId,
 			number: data.number,
@@ -101,10 +85,8 @@ export async function createSegment(data: {
 			textAndOccurrenceHash: data.textAndOccurrenceHash,
 			segmentTypeId,
 		})
-		.returning();
-	if (!segment) {
-		throw new Error("Failed to create segment");
-	}
+		.returningAll()
+		.executeTakeFirstOrThrow();
 	return segment;
 }
 
@@ -117,27 +99,30 @@ export async function createSegments(data: {
 		number: number;
 		text: string;
 		textAndOccurrenceHash: string;
-		segmentTypeKey: SegmentTypeKey;
+		segmentTypeKey: Segmenttypekey;
 	}>;
 }) {
 	const primarySegmentTypeId = await getSegmentTypeId("PRIMARY");
 	const commentarySegmentTypeId = await getSegmentTypeId("COMMENTARY");
 
 	// segmentTypeKeyに基づいてIDをマッピング
-	const segmentTypeIdMap: Record<SegmentTypeKey, number> = {
+	const segmentTypeIdMap: Record<Segmenttypekey, number> = {
 		PRIMARY: primarySegmentTypeId,
 		COMMENTARY: commentarySegmentTypeId,
 	};
 
-	await db.insert(segments).values(
-		data.segments.map((seg) => ({
-			contentId: data.contentId,
-			number: seg.number,
-			text: seg.text,
-			textAndOccurrenceHash: seg.textAndOccurrenceHash,
-			segmentTypeId: segmentTypeIdMap[seg.segmentTypeKey],
-		})),
-	);
+	await db
+		.insertInto("segments")
+		.values(
+			data.segments.map((seg) => ({
+				contentId: data.contentId,
+				number: seg.number,
+				text: seg.text,
+				textAndOccurrenceHash: seg.textAndOccurrenceHash,
+				segmentTypeId: segmentTypeIdMap[seg.segmentTypeKey],
+			})),
+		)
+		.execute();
 }
 
 /**
@@ -146,14 +131,14 @@ export async function createSegments(data: {
 export async function createPageWithSegments(data: {
 	userId: string;
 	slug: string;
-	status?: PageStatus;
+	status?: Pagestatus;
 	mdastJson?: MdastRoot;
 	sourceLocale?: string;
 	segments: Array<{
 		number: number;
 		text: string;
 		textAndOccurrenceHash: string;
-		segmentTypeKey: SegmentTypeKey;
+		segmentTypeKey: Segmenttypekey;
 	}>;
 }) {
 	const page = await createPage({
@@ -179,16 +164,14 @@ export async function createSegmentAnnotationLink(data: {
 	mainSegmentId: number;
 	annotationSegmentId: number;
 }) {
-	const [link] = await db
-		.insert(segmentAnnotationLinks)
+	const link = await db
+		.insertInto("segmentAnnotationLinks")
 		.values({
 			mainSegmentId: data.mainSegmentId,
 			annotationSegmentId: data.annotationSegmentId,
 		})
-		.returning();
-	if (!link) {
-		throw new Error("Failed to create segment annotation link");
-	}
+		.returningAll()
+		.executeTakeFirstOrThrow();
 	return link;
 }
 
@@ -198,7 +181,7 @@ export async function createSegmentAnnotationLink(data: {
 export async function createPageWithTags(data: {
 	userId: string;
 	slug: string;
-	status?: PageStatus;
+	status?: Pagestatus;
 	mdastJson?: unknown;
 	sourceLocale?: string;
 	tagNames: string[];
@@ -214,31 +197,35 @@ export async function createPageWithTags(data: {
 	// タグを作成または取得
 	const tagResults = await Promise.all(
 		data.tagNames.map(async (name) => {
-			const [existing] = await db
-				.select()
-				.from(tags)
-				.where(eq(tags.name, name))
-				.limit(1);
+			const existing = await db
+				.selectFrom("tags")
+				.selectAll()
+				.where("name", "=", name)
+				.executeTakeFirst();
 
 			if (existing) {
 				return existing;
 			}
 
-			const [newTag] = await db.insert(tags).values({ name }).returning();
-			if (!newTag) {
-				throw new Error(`Failed to create tag: ${name}`);
-			}
+			const newTag = await db
+				.insertInto("tags")
+				.values({ name })
+				.returningAll()
+				.executeTakeFirstOrThrow();
 			return newTag;
 		}),
 	);
 
 	// タグとページをリンク
-	await db.insert(tagPages).values(
-		tagResults.map((tag) => ({
-			tagId: tag.id,
-			pageId: page.id,
-		})),
-	);
+	await db
+		.insertInto("tagPages")
+		.values(
+			tagResults.map((tag) => ({
+				tagId: tag.id,
+				pageId: page.id,
+			})),
+		)
+		.execute();
 
 	return page;
 }
@@ -267,53 +254,43 @@ export async function createPageWithAnnotations(data: {
 		slug: data.mainPageSlug,
 		segments: data.mainPageSegments.map((seg) => ({
 			...seg,
-			segmentTypeKey: "PRIMARY" as SegmentTypeKey,
+			segmentTypeKey: "PRIMARY" as Segmenttypekey,
 		})),
 	});
 
 	// 注釈コンテンツを作成
-	const [annotationContent] = await db
-		.insert(contents)
+	const annotationContent = await db
+		.insertInto("contents")
 		.values({ kind: "PAGE" })
-		.returning();
-	if (!annotationContent) {
-		throw new Error("Failed to create annotation content");
-	}
+		.returningAll()
+		.executeTakeFirstOrThrow();
 
 	// 注釈セグメントを作成
 	await createSegments({
 		contentId: annotationContent.id,
 		segments: data.annotationSegments.map((seg) => ({
 			...seg,
-			segmentTypeKey: "COMMENTARY" as SegmentTypeKey,
+			segmentTypeKey: "COMMENTARY" as Segmenttypekey,
 		})),
 	});
 
 	// 直接リンクを作成
 	for (const annotationSegment of data.annotationSegments) {
 		// メインセグメントを取得
-		const [mainSegment] = await db
-			.select()
-			.from(segments)
-			.where(
-				and(
-					eq(segments.contentId, mainPage.id),
-					eq(segments.number, annotationSegment.linkedToMainSegmentNumber),
-				),
-			)
-			.limit(1);
+		const mainSegment = await db
+			.selectFrom("segments")
+			.selectAll()
+			.where("contentId", "=", mainPage.id)
+			.where("number", "=", annotationSegment.linkedToMainSegmentNumber)
+			.executeTakeFirst();
 
 		// 注釈セグメントを取得
-		const [annSegment] = await db
-			.select()
-			.from(segments)
-			.where(
-				and(
-					eq(segments.contentId, annotationContent.id),
-					eq(segments.number, annotationSegment.number),
-				),
-			)
-			.limit(1);
+		const annSegment = await db
+			.selectFrom("segments")
+			.selectAll()
+			.where("contentId", "=", annotationContent.id)
+			.where("number", "=", annotationSegment.number)
+			.executeTakeFirst();
 
 		if (mainSegment && annSegment) {
 			await createSegmentAnnotationLink({
@@ -336,16 +313,14 @@ export async function createGeminiApiKey(data: {
 	userId: string;
 	apiKey?: string;
 }) {
-	const [apiKey] = await db
-		.insert(geminiApiKeys)
+	const apiKey = await db
+		.insertInto("geminiApiKeys")
 		.values({
 			userId: data.userId,
 			apiKey: data.apiKey ?? "dummy-api-key",
 		})
-		.returning();
-	if (!apiKey) {
-		throw new Error("Failed to create Gemini API key");
-	}
+		.returningAll()
+		.executeTakeFirstOrThrow();
 	return apiKey;
 }
 
@@ -360,13 +335,11 @@ export async function createPageComment(data: {
 	parentId?: number;
 	isDeleted?: boolean;
 }) {
-	const [content] = await db
-		.insert(contents)
+	const content = await db
+		.insertInto("contents")
 		.values({ kind: "PAGE_COMMENT" })
-		.returning();
-	if (!content) {
-		throw new Error("Failed to create content");
-	}
+		.returningAll()
+		.executeTakeFirstOrThrow();
 
 	const defaultMdastJson: MdastRoot = {
 		type: "root",
@@ -378,20 +351,18 @@ export async function createPageComment(data: {
 		],
 	};
 
-	const [pageComment] = await db
-		.insert(pageComments)
+	const pageComment = await db
+		.insertInto("pageComments")
 		.values({
 			id: content.id,
 			userId: data.userId,
 			pageId: data.pageId,
 			locale: data.locale ?? "en",
-			mdastJson: (data.mdastJson ?? defaultMdastJson) as MdastRoot,
+			mdastJson: (data.mdastJson ?? defaultMdastJson) as JsonValue,
 			parentId: data.parentId ?? null,
 			isDeleted: data.isDeleted ?? false,
 		})
-		.returning();
-	if (!pageComment) {
-		throw new Error("Failed to create page comment");
-	}
+		.returningAll()
+		.executeTakeFirstOrThrow();
 	return pageComment;
 }

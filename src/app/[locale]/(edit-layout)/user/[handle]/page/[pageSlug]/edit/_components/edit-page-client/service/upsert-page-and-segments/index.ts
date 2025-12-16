@@ -1,8 +1,8 @@
 import type { Root as MdastRoot } from "mdast";
 import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
 import { syncSegments } from "@/app/[locale]/_service/sync-segments";
-import { db } from "@/drizzle";
-import type { PageStatus } from "@/drizzle/types";
+import { db } from "@/db";
+import type { Pagestatus } from "@/db/types";
 import { createServerLogger } from "@/lib/logger.server";
 import { syncSegmentMetadataAndAnnotationLinks } from "../sync-segment-metadata-and-annotation-links";
 import { upsertPage } from "./db/mutations.server";
@@ -25,7 +25,7 @@ export async function upsertPageAndSegments(p: {
 	parentId: number | null;
 	order: number;
 	anchorContentId: number | null;
-	status: PageStatus;
+	status: Pagestatus;
 }) {
 	const logger = createServerLogger("upsert-page-and-segments", {
 		userId: p.userId,
@@ -42,7 +42,7 @@ export async function upsertPageAndSegments(p: {
 	);
 
 	try {
-		const result = await db.transaction(async (tx) => {
+		const result = await db.transaction().execute(async (tx) => {
 			// db操作: ページをupsert
 			const page = await upsertPage(tx, {
 				pageSlug: p.pageSlug,

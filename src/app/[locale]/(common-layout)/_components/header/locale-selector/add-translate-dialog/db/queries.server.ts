@@ -1,28 +1,18 @@
-import { and, eq, ne } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
-import { db } from "@/drizzle";
-import {
-	pageComments,
-	segmentAnnotationLinks,
-	segments,
-} from "@/drizzle/schema";
+import { db } from "@/db";
 
 /**
  * ページに紐づくコメントのID一覧を取得
- * Drizzle版に移行済み
+ * Kysely版に移行済み
  */
 export async function fetchPageCommentIds(pageId: number): Promise<number[]> {
 	const comments = await db
-		.select({ id: pageComments.id })
-		.from(pageComments)
-		.where(eq(pageComments.pageId, pageId));
+		.selectFrom("pageComments")
+		.select("id")
+		.where("pageId", "=", pageId)
+		.execute();
 
 	return comments.map((c) => c.id);
 }
-
-// 同じsegmentsテーブルを2回JOINするためのエイリアス
-const mainSegment = alias(segments, "main_segment");
-const annotationSegment = alias(segments, "annotation_segment");
 
 /**
  * 本文にリンクされた注釈のうち、別コンテンツに属するもののコンテンツID一覧を取得
@@ -31,30 +21,28 @@ const annotationSegment = alias(segments, "annotation_segment");
  * - 本文と同じ contentId の注釈は本文ジョブで翻訳されるため除外し、別コンテンツのみ返す
  * - 注釈が別コンテンツになるケース: ティピタカ系では注釈自体が単体で読まれる構造がある
  *
- * Drizzle版に移行済み
+ * Kysely版に移行済み
  */
 export async function fetchAnnotationContentIdsForPage(
 	pageId: number,
 ): Promise<number[]> {
 	const result = await db
-		.selectDistinct({
-			contentId: annotationSegment.contentId,
-		})
-		.from(segmentAnnotationLinks)
+		.selectFrom("segmentAnnotationLinks")
 		.innerJoin(
-			mainSegment,
-			eq(segmentAnnotationLinks.mainSegmentId, mainSegment.id),
+			"segments as mainSegment",
+			"segmentAnnotationLinks.mainSegmentId",
+			"mainSegment.id",
 		)
 		.innerJoin(
-			annotationSegment,
-			eq(segmentAnnotationLinks.annotationSegmentId, annotationSegment.id),
+			"segments as annotationSegment",
+			"segmentAnnotationLinks.annotationSegmentId",
+			"annotationSegment.id",
 		)
-		.where(
-			and(
-				eq(mainSegment.contentId, pageId),
-				ne(annotationSegment.contentId, pageId),
-			),
-		);
+		.select("annotationSegment.contentId")
+		.distinct()
+		.where("mainSegment.contentId", "=", pageId)
+		.where("annotationSegment.contentId", "!=", pageId)
+		.execute();
 
 	return result.map((row) => row.contentId);
 }

@@ -1,17 +1,16 @@
-import { db } from "@/drizzle";
-import { userSettings } from "@/drizzle/schema";
+import { db } from "@/db";
 
 export async function updateUserTargetLocales(
 	userId: string,
 	locales: string[],
 ) {
-	const [result] = await db
-		.insert(userSettings)
+	const result = await db
+		.insertInto("userSettings")
 		.values({ userId, targetLocales: locales })
-		.onConflictDoUpdate({
-			target: userSettings.userId,
-			set: { targetLocales: locales },
-		})
-		.returning();
+		.onConflict((oc) =>
+			oc.column("userId").doUpdateSet({ targetLocales: locales }),
+		)
+		.returningAll()
+		.executeTakeFirst();
 	return result;
 }

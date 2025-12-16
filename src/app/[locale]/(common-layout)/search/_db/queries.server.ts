@@ -1,6 +1,6 @@
 // app/routes/search/functions/queries.server.ts
 
-import { count, ilike } from "drizzle-orm";
+import { sql } from "kysely";
 import {
 	searchPagesByContent,
 	searchPagesByTag,
@@ -8,11 +8,14 @@ import {
 } from "@/app/[locale]/_db/page-list-queries.server";
 import type { PageForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
-import { db } from "@/drizzle";
-import { tags, users } from "@/drizzle/schema";
-import type { Tag } from "@/drizzle/types";
+import { db } from "@/db";
 import { sanitizeUser } from "@/lib/sanitize-user";
 import type { Category } from "../constants";
+
+type Tag = {
+	id: number;
+	name: string;
+};
 
 /** 検索結果を統合的に取得する */
 export async function fetchSearchResults({
@@ -126,19 +129,21 @@ async function searchTags(
 }> {
 	const [tagResults, countResult] = await Promise.all([
 		db
-			.select()
-			.from(tags)
-			.where(ilike(tags.name, `%${query}%`))
+			.selectFrom("tags")
+			.selectAll()
+			.where("name", "ilike", `%${query}%`)
 			.limit(take)
-			.offset(skip),
+			.offset(skip)
+			.execute(),
 		db
-			.select({ count: count() })
-			.from(tags)
-			.where(ilike(tags.name, `%${query}%`)),
+			.selectFrom("tags")
+			.select(sql<number>`count(*)::int`.as("count"))
+			.where("name", "ilike", `%${query}%`)
+			.executeTakeFirst(),
 	]);
 	return {
 		tags: tagResults,
-		totalCount: Number(countResult[0]?.count ?? 0),
+		totalCount: Number(countResult?.count ?? 0),
 	};
 }
 
@@ -153,19 +158,26 @@ async function searchUsers(
 }> {
 	const [userResults, countResult] = await Promise.all([
 		db
-			.select()
-			.from(users)
-			.where(ilike(users.name, `%${query}%`))
+			.selectFrom("users")
+			.selectAll()
+			.where("name", "ilike", `%${query}%`)
 			.limit(take)
-			.offset(skip),
+			.offset(skip)
+			.execute(),
 		db
-			.select({ count: count() })
-			.from(users)
-			.where(ilike(users.name, `%${query}%`)),
+			.selectFrom("users")
+			.select(sql<number>`count(*)::int`.as("count"))
+			.where("name", "ilike", `%${query}%`)
+			.executeTakeFirst(),
 	]);
-	const sanitizedUsers = userResults.map((user) => sanitizeUser(user));
+	const sanitizedUsers = userResults.map((user) =>
+		sanitizeUser({
+			...user,
+			isAI: user.isAi,
+		}),
+	);
 	return {
 		users: sanitizedUsers,
-		totalCount: Number(countResult[0]?.count ?? 0),
+		totalCount: Number(countResult?.count ?? 0),
 	};
 }

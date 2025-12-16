@@ -1,6 +1,6 @@
 import useSWR from "swr";
 import type { SanitizedUser } from "@/app/types";
-import type { TranslationVote } from "@/drizzle/types";
+import type { TranslationVotes } from "@/db/types";
 import type { TranslationWithInfo } from "../types";
 
 interface UseSegmentTranslationsParams {
@@ -11,7 +11,7 @@ interface UseSegmentTranslationsParams {
 }
 
 interface SegmentTranslationsResponse {
-	bestTranslationCurrentUserVote: TranslationVote | null;
+	bestTranslationCurrentUserVote: TranslationVotes | null;
 	bestTranslationUser: SanitizedUser;
 	translations: TranslationWithInfo[];
 }

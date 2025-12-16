@@ -2,20 +2,12 @@
 目的: syncAnnotationLinksByParagraphNumber の「段落番号一致によるアノテーションリンク作成」と
 「主要な例外ケース」を担保する。
 
-方法: 実際のデータベースとDrizzle ORMを使用した統合テスト（古典派）。
+方法: 実際のデータベースとKysely ORMを使用した統合テスト（古典派）。
 */
 
-import { eq, inArray } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { db } from "@/drizzle";
-import {
-	contents,
-	segmentAnnotationLinks,
-	segmentMetadata,
-	segmentMetadataTypes,
-	segments,
-} from "@/drizzle/schema";
-import type { Page, Segment } from "@/drizzle/types";
+import { db } from "@/db";
+import type { Pages, Segments } from "@/db/types";
 import {
 	getSegmentTypeId,
 	resetDatabase,
@@ -29,39 +21,40 @@ await setupDbPerFile(import.meta.url);
 async function addParagraphNumbersToSegments(
 	segmentParagraphPairs: Array<{ segmentId: number; paragraphNumber: string }>,
 ): Promise<void> {
-	const [metadataType] = await db
-		.select()
-		.from(segmentMetadataTypes)
-		.where(eq(segmentMetadataTypes.key, "PARAGRAPH_NUMBER"))
-		.limit(1);
+	const metadataType = await db
+		.selectFrom("segmentMetadataTypes")
+		.selectAll()
+		.where("key", "=", "PARAGRAPH_NUMBER")
+		.executeTakeFirst();
 	if (!metadataType) {
 		throw new Error("PARAGRAPH_NUMBER metadata type not found");
 	}
-	await db.insert(segmentMetadata).values(
-		segmentParagraphPairs.map(({ segmentId, paragraphNumber }) => ({
-			segmentId,
-			metadataTypeId: metadataType.id,
-			value: paragraphNumber,
-		})),
-	);
+	await db
+		.insertInto("segmentMetadata")
+		.values(
+			segmentParagraphPairs.map(({ segmentId, paragraphNumber }) => ({
+				segmentId,
+				metadataTypeId: metadataType.id,
+				value: paragraphNumber,
+			})),
+		)
+		.execute();
 }
 
 async function createAnnotationContentWithSegments(
 	texts: string[],
-): Promise<{ annotationContentId: number; annotationSegments: Segment[] }> {
-	const [content] = await db
-		.insert(contents)
+): Promise<{ annotationContentId: number; annotationSegments: Segments[] }> {
+	const content = await db
+		.insertInto("contents")
 		.values({ kind: "PAGE" })
-		.returning();
-	if (!content) {
-		throw new Error("Failed to create content");
-	}
+		.returningAll()
+		.executeTakeFirstOrThrow();
 	const commentaryTypeId = await getSegmentTypeId("COMMENTARY");
 
-	const annotationSegments: Segment[] = [];
+	const annotationSegments: Segments[] = [];
 	for (let i = 0; i < texts.length; i++) {
-		const [segment] = await db
-			.insert(segments)
+		const segment = await db
+			.insertInto("segments")
 			.values({
 				contentId: content.id,
 				number: i,
@@ -69,10 +62,8 @@ async function createAnnotationContentWithSegments(
 				textAndOccurrenceHash: `hash-ann-${i}`,
 				segmentTypeId: commentaryTypeId,
 			})
-			.returning();
-		if (!segment) {
-			throw new Error(`Failed to create segment ${i}`);
-		}
+			.returningAll()
+			.executeTakeFirstOrThrow();
 		annotationSegments.push(segment);
 	}
 
@@ -81,7 +72,7 @@ async function createAnnotationContentWithSegments(
 
 async function createMainPageWithParagraphNumbers(
 	paragraphNumbers: string[],
-): Promise<{ mainPage: Page; mainSegments: Segment[] }> {
+): Promise<{ mainPage: Pages; mainSegments: Segments[] }> {
 	const user = await createUser();
 	const mainPage = (await createPageWithSegments({
 		userId: user.id,
@@ -92,12 +83,13 @@ async function createMainPageWithParagraphNumbers(
 			textAndOccurrenceHash: `hash-main-${i}`,
 			segmentTypeKey: "PRIMARY",
 		})),
-	})) as Page;
+	})) as Pages;
 	const mainSegments = await db
-		.select()
-		.from(segments)
-		.where(eq(segments.contentId, mainPage.id))
-		.orderBy(segments.number);
+		.selectFrom("segments")
+		.selectAll()
+		.where("contentId", "=", mainPage.id)
+		.orderBy("number")
+		.execute();
 
 	await addParagraphNumbersToSegments(
 		mainSegments.map((seg, i) => ({
@@ -127,24 +119,26 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			["2", [annotationSegments[1].id]],
 		]);
 
-		await db.transaction(async (tx) =>
-			syncAnnotationLinksByParagraphNumber(
-				tx,
-				annotationContentId,
-				paragraphToAnnotationIds,
-				mainPage.id,
-			),
-		);
-
-		const links = await db
-			.select()
-			.from(segmentAnnotationLinks)
-			.where(
-				inArray(
-					segmentAnnotationLinks.annotationSegmentId,
-					annotationSegments.map((s) => s.id),
+		await db
+			.transaction()
+			.execute(async (tx) =>
+				syncAnnotationLinksByParagraphNumber(
+					tx,
+					annotationContentId,
+					paragraphToAnnotationIds,
+					mainPage.id,
 				),
 			);
+
+		const links = await db
+			.selectFrom("segmentAnnotationLinks")
+			.selectAll()
+			.where(
+				"annotationSegmentId",
+				"in",
+				annotationSegments.map((s) => s.id),
+			)
+			.execute();
 		expect(links).toHaveLength(2);
 		expect(links).toContainEqual(
 			expect.objectContaining({
@@ -163,34 +157,38 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 	it("COMMENTARYタイプでない場合、リンクは作成されない", async () => {
 		const { mainPage } = await createMainPageWithParagraphNumbers(["1"]);
 
-		const [primaryContent] = await db
-			.insert(contents)
+		const primaryContent = await db
+			.insertInto("contents")
 			.values({ kind: "PAGE" })
-			.returning();
-		if (!primaryContent) {
-			throw new Error("Failed to create content");
-		}
-		await db.insert(segments).values({
-			contentId: primaryContent.id,
-			number: 0,
-			text: "Primary segment",
-			textAndOccurrenceHash: "hash-primary",
-			segmentTypeId: await getSegmentTypeId("PRIMARY"),
-		});
+			.returningAll()
+			.executeTakeFirstOrThrow();
+		await db
+			.insertInto("segments")
+			.values({
+				contentId: primaryContent.id,
+				number: 0,
+				text: "Primary segment",
+				textAndOccurrenceHash: "hash-primary",
+				segmentTypeId: await getSegmentTypeId("PRIMARY"),
+			})
+			.execute();
 
-		await db.transaction(async (tx) =>
-			syncAnnotationLinksByParagraphNumber(
-				tx,
-				primaryContent.id,
-				new Map([["1", [999]]]),
-				mainPage.id,
-			),
-		);
+		await db
+			.transaction()
+			.execute(async (tx) =>
+				syncAnnotationLinksByParagraphNumber(
+					tx,
+					primaryContent.id,
+					new Map([["1", [999]]]),
+					mainPage.id,
+				),
+			);
 
 		const links = await db
-			.select()
-			.from(segmentAnnotationLinks)
-			.where(eq(segmentAnnotationLinks.annotationSegmentId, 999));
+			.selectFrom("segmentAnnotationLinks")
+			.selectAll()
+			.where("annotationSegmentId", "=", 999)
+			.execute();
 		expect(links).toHaveLength(0);
 	});
 
@@ -199,24 +197,22 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 		const { annotationContentId, annotationSegments } =
 			await createAnnotationContentWithSegments(["Ann"]);
 
-		await db.transaction(async (tx) =>
-			syncAnnotationLinksByParagraphNumber(
-				tx,
-				annotationContentId,
-				new Map(),
-				mainPage.id,
-			),
-		);
-
-		const links = await db
-			.select()
-			.from(segmentAnnotationLinks)
-			.where(
-				eq(
-					segmentAnnotationLinks.annotationSegmentId,
-					annotationSegments[0].id,
+		await db
+			.transaction()
+			.execute(async (tx) =>
+				syncAnnotationLinksByParagraphNumber(
+					tx,
+					annotationContentId,
+					new Map(),
+					mainPage.id,
 				),
 			);
+
+		const links = await db
+			.selectFrom("segmentAnnotationLinks")
+			.selectAll()
+			.where("annotationSegmentId", "=", annotationSegments[0].id)
+			.execute();
 		expect(links).toHaveLength(0);
 	});
 
@@ -224,24 +220,22 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 		const { annotationContentId, annotationSegments } =
 			await createAnnotationContentWithSegments(["Ann"]);
 
-		await db.transaction(async (tx) =>
-			syncAnnotationLinksByParagraphNumber(
-				tx,
-				annotationContentId,
-				new Map([["1", [annotationSegments[0].id]]]),
-				null,
-			),
-		);
-
-		const links = await db
-			.select()
-			.from(segmentAnnotationLinks)
-			.where(
-				eq(
-					segmentAnnotationLinks.annotationSegmentId,
-					annotationSegments[0].id,
+		await db
+			.transaction()
+			.execute(async (tx) =>
+				syncAnnotationLinksByParagraphNumber(
+					tx,
+					annotationContentId,
+					new Map([["1", [annotationSegments[0].id]]]),
+					null,
 				),
 			);
+
+		const links = await db
+			.selectFrom("segmentAnnotationLinks")
+			.selectAll()
+			.where("annotationSegmentId", "=", annotationSegments[0].id)
+			.execute();
 		expect(links).toHaveLength(0);
 	});
 
@@ -251,8 +245,8 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			await createAnnotationContentWithSegments(["Ann"]);
 
 		// 既存リンクを作成
-		const [extraMainSegment] = await db
-			.insert(segments)
+		const extraMainSegment = await db
+			.insertInto("segments")
 			.values({
 				contentId: mainPage.id,
 				number: 999,
@@ -260,33 +254,32 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 				textAndOccurrenceHash: "hash-extra",
 				segmentTypeId: await getSegmentTypeId("PRIMARY"),
 			})
-			.returning();
-		if (!extraMainSegment) {
-			throw new Error("Failed to create segment");
-		}
-		await db.insert(segmentAnnotationLinks).values({
-			mainSegmentId: extraMainSegment.id,
-			annotationSegmentId: annotationSegments[0].id,
-		});
+			.returningAll()
+			.executeTakeFirstOrThrow();
+		await db
+			.insertInto("segmentAnnotationLinks")
+			.values({
+				mainSegmentId: extraMainSegment.id,
+				annotationSegmentId: annotationSegments[0].id,
+			})
+			.execute();
 
-		await db.transaction(async (tx) =>
-			syncAnnotationLinksByParagraphNumber(
-				tx,
-				annotationContentId,
-				new Map([["999", [annotationSegments[0].id]]]),
-				mainPage.id,
-			),
-		);
-
-		const links = await db
-			.select()
-			.from(segmentAnnotationLinks)
-			.where(
-				eq(
-					segmentAnnotationLinks.annotationSegmentId,
-					annotationSegments[0].id,
+		await db
+			.transaction()
+			.execute(async (tx) =>
+				syncAnnotationLinksByParagraphNumber(
+					tx,
+					annotationContentId,
+					new Map([["999", [annotationSegments[0].id]]]),
+					mainPage.id,
 				),
 			);
+
+		const links = await db
+			.selectFrom("segmentAnnotationLinks")
+			.selectAll()
+			.where("annotationSegmentId", "=", annotationSegments[0].id)
+			.execute();
 		expect(links).toHaveLength(0);
 	});
 
@@ -301,24 +294,26 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			["1", [annotationSegments[0].id, annotationSegments[1].id]],
 		]);
 
-		await db.transaction(async (tx) =>
-			syncAnnotationLinksByParagraphNumber(
-				tx,
-				annotationContentId,
-				paragraphToAnnotationIds,
-				mainPage.id,
-			),
-		);
-
-		const links = await db
-			.select()
-			.from(segmentAnnotationLinks)
-			.where(
-				inArray(
-					segmentAnnotationLinks.annotationSegmentId,
-					annotationSegments.map((s) => s.id),
+		await db
+			.transaction()
+			.execute(async (tx) =>
+				syncAnnotationLinksByParagraphNumber(
+					tx,
+					annotationContentId,
+					paragraphToAnnotationIds,
+					mainPage.id,
 				),
 			);
+
+		const links = await db
+			.selectFrom("segmentAnnotationLinks")
+			.selectAll()
+			.where(
+				"annotationSegmentId",
+				"in",
+				annotationSegments.map((s) => s.id),
+			)
+			.execute();
 		expect(links).toHaveLength(2);
 		expect(links.every((l) => l.mainSegmentId === mainSegments[0].id)).toBe(
 			true,
@@ -332,24 +327,22 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 		const { annotationContentId, annotationSegments } =
 			await createAnnotationContentWithSegments(["Ann"]);
 
-		await db.transaction(async (tx) =>
-			syncAnnotationLinksByParagraphNumber(
-				tx,
-				annotationContentId,
-				new Map([["1", [annotationSegments[0].id]]]),
-				mainPage.id,
-			),
-		);
-
-		const links = await db
-			.select()
-			.from(segmentAnnotationLinks)
-			.where(
-				eq(
-					segmentAnnotationLinks.annotationSegmentId,
-					annotationSegments[0].id,
+		await db
+			.transaction()
+			.execute(async (tx) =>
+				syncAnnotationLinksByParagraphNumber(
+					tx,
+					annotationContentId,
+					new Map([["1", [annotationSegments[0].id]]]),
+					mainPage.id,
 				),
 			);
+
+		const links = await db
+			.selectFrom("segmentAnnotationLinks")
+			.selectAll()
+			.where("annotationSegmentId", "=", annotationSegments[0].id)
+			.execute();
 		expect(links).toHaveLength(1);
 		expect(links[0].mainSegmentId).toBe(mainSegments[1].id);
 	});

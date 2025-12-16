@@ -1,10 +1,9 @@
-import { and, count, eq } from "drizzle-orm";
-import { db } from "@/drizzle";
-import { likePages } from "@/drizzle/schema";
+import { sql } from "kysely";
+import { db } from "@/db";
 
 /**
  * ページのいいね数と現在のユーザーがいいねしているかチェック
- * Drizzleに移行済み
+ * Kyselyに移行済み
  */
 export async function getPageLikeAndCount(
 	pageId: number,
@@ -13,25 +12,22 @@ export async function getPageLikeAndCount(
 	// Get like count and check if current user has liked in a single query
 	const [likeCountResult, userLikeResult] = await Promise.all([
 		db
-			.select({ count: count() })
-			.from(likePages)
-			.where(eq(likePages.pageId, pageId)),
+			.selectFrom("likePages")
+			.select(sql<number>`count(*)::int`.as("count"))
+			.where("pageId", "=", pageId)
+			.executeTakeFirst(),
 		currentUserId
 			? db
-					.select()
-					.from(likePages)
-					.where(
-						and(
-							eq(likePages.pageId, pageId),
-							eq(likePages.userId, currentUserId),
-						),
-					)
-					.limit(1)
-			: Promise.resolve([]),
+					.selectFrom("likePages")
+					.selectAll()
+					.where("pageId", "=", pageId)
+					.where("userId", "=", currentUserId)
+					.executeTakeFirst()
+			: Promise.resolve(undefined),
 	]);
 
 	return {
-		likeCount: Number(likeCountResult[0]?.count ?? 0),
-		liked: !!userLikeResult[0],
+		likeCount: Number(likeCountResult?.count ?? 0),
+		liked: !!userLikeResult,
 	};
 }

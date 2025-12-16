@@ -20,7 +20,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import type { TranslationJob, TranslationProofStatus } from "@/drizzle/types";
+import type { TranslationJobs, Translationproofstatus } from "@/db/types";
 import { usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { AddTranslateDialog } from "./add-translate-dialog/client";
@@ -32,10 +32,10 @@ import { useCombinedRouter } from "./hooks/use-combined-router";
 // Local types
 interface TranslationInfo {
 	sourceLocale: string;
-	translationJobs: TranslationJob[];
+	translationJobs: TranslationJobs[];
 	translationProofs: {
 		locale: string;
-		translationProofStatus: TranslationProofStatus;
+		translationProofStatus: Translationproofstatus;
 	}[];
 }
 
@@ -89,13 +89,13 @@ export function LocaleSelector({
 
 	const { sourceLocale, translationJobs, translationProofs } = data ?? {};
 
-	// Build a map of locale => proof status using Drizzle enum values directly
+	// Build a map of locale => proof status using Kysely enum values directly
 	const proofStatusMap = Object.fromEntries(
-		(translationProofs ?? []).map<[string, TranslationProofStatus]>((p) => [
+		(translationProofs ?? []).map<[string, Translationproofstatus]>((p) => [
 			p.locale,
 			p.translationProofStatus,
 		]),
-	) as Record<string, TranslationProofStatus>;
+	) as Record<string, Translationproofstatus>;
 
 	const localeOptionWithStatus = buildLocaleOptions({
 		sourceLocale,

@@ -1,23 +1,22 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/drizzle";
-import { pageViews } from "@/drizzle/schema";
+import { db } from "@/db";
 
 export async function incrementPageView(pageId: number) {
 	// 既存レコードを確認
 	const existing = await db
-		.select({ count: pageViews.count })
-		.from(pageViews)
-		.where(eq(pageViews.pageId, pageId))
-		.limit(1);
+		.selectFrom("pageViews")
+		.select("count")
+		.where("pageId", "=", pageId)
+		.executeTakeFirst();
 
-	if (existing.length > 0) {
+	if (existing) {
 		// 既存の場合はcountをincrement
 		await db
-			.update(pageViews)
-			.set({ count: existing[0].count + 1 })
-			.where(eq(pageViews.pageId, pageId));
+			.updateTable("pageViews")
+			.set({ count: existing.count + 1 })
+			.where("pageId", "=", pageId)
+			.execute();
 	} else {
 		// 新規の場合は作成
-		await db.insert(pageViews).values({ pageId, count: 1 });
+		await db.insertInto("pageViews").values({ pageId, count: 1 }).execute();
 	}
 }

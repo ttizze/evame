@@ -1,12 +1,12 @@
 import type { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
-import type { SegmentTranslation, TranslationVote } from "@/drizzle/types";
+import type { SegmentTranslations, TranslationVotes } from "@/db/types";
 import type { SanitizedUser } from "../types";
 
-export type TranslationWithUser = SegmentTranslation & {
+export type TranslationWithUser = SegmentTranslations & {
 	user: SanitizedUser;
 };
 export type TranslationWithInfo = TranslationWithUser & {
-	currentUserVote: TranslationVote | null; // null = 未投票
+	currentUserVote: TranslationVotes | null; // null = 未投票
 };
 
 // fetchPageDetail の戻り値から型を推論

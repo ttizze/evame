@@ -1,7 +1,5 @@
-import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { db } from "@/drizzle";
-import { likePages } from "@/drizzle/schema";
+import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
@@ -27,9 +25,11 @@ describe("togglePageLike", () => {
 
 		// Assert: データベースの状態を確認
 		const likeEntry = await db
-			.select()
-			.from(likePages)
-			.where(and(eq(likePages.pageId, page.id), eq(likePages.userId, user.id)));
+			.selectFrom("likePages")
+			.selectAll()
+			.where("pageId", "=", page.id)
+			.where("userId", "=", user.id)
+			.execute();
 		expect(likeEntry.length).toBe(1);
 	});
 
@@ -47,9 +47,11 @@ describe("togglePageLike", () => {
 
 		// Assert: データベースからいいねが削除されていることを確認
 		const remaining = await db
-			.select()
-			.from(likePages)
-			.where(and(eq(likePages.pageId, page.id), eq(likePages.userId, user.id)));
+			.selectFrom("likePages")
+			.selectAll()
+			.where("pageId", "=", page.id)
+			.where("userId", "=", user.id)
+			.execute();
 		expect(remaining.length).toBe(0);
 	});
 

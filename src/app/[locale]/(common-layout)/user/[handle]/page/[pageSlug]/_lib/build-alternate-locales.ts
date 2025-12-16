@@ -1,9 +1,9 @@
 import { BASE_URL } from "@/app/_constants/base-url";
-import type { TranslationJob } from "@/drizzle/types";
+import type { TranslationJobs } from "@/db/types";
 
 export function buildAlternateLocales(
 	page: { sourceLocale: string; slug: string },
-	translationJobs: TranslationJob[],
+	translationJobs: TranslationJobs[],
 	userHandle: string,
 	currentLocale: string,
 ): Record<string, string> {

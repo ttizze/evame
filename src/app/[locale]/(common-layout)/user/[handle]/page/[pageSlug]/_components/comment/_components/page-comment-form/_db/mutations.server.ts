@@ -1,23 +1,23 @@
-import { db } from "@/drizzle";
-import { notifications } from "@/drizzle/schema";
+import { db } from "@/db";
 
 /**
  * ページコメント通知を作成（DB操作のみ）
- * Drizzle版に移行済み
+ * Kysely版に移行済み
  */
 export async function createNotificationPageComment(
 	actorId: string,
 	userId: string,
 	pageCommentId: number,
 ) {
-	const [notification] = await db
-		.insert(notifications)
+	const notification = await db
+		.insertInto("notifications")
 		.values({
 			userId: userId,
 			type: "PAGE_COMMENT",
 			pageCommentId,
 			actorId: actorId,
 		})
-		.returning();
+		.returningAll()
+		.executeTakeFirstOrThrow();
 	return notification;
 }

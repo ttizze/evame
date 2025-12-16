@@ -1,6 +1,4 @@
-import { and, eq, ilike } from "drizzle-orm";
-import { db } from "@/drizzle";
-import { pages, segments } from "@/drizzle/schema";
+import { db } from "@/db";
 import type { PageForList, PageForTitle } from "../types";
 import {
 	fetchCountsForPages,
@@ -23,7 +21,7 @@ type FetchListParams = {
 /**
  * ページ取得・変換関数
  *
- * Drizzle ORMを使用してページリストを取得・変換する
+ * Kysely ORMを使用してページリストを取得・変換する
  */
 export async function fetchPagesWithTransform(
 	where: PageWhereInput,
@@ -164,7 +162,7 @@ export async function fetchPaginatedPopularPageLists(params: FetchListParams) {
 
 /**
  * 子ページを取得
- * Drizzle版に移行済み
+ * Kysely版に移行済み
  *
  * 親ページIDで子ページを取得し、order順でソートして返す
  * PageForTitle型を返す（tagPagesは含まない、children countのみ）
@@ -239,7 +237,7 @@ async function transformSearchResults(
 
 /**
  * タイトル（セグメント number: 0）でページを検索
- * Drizzle版に移行済み
+ * Kysely版に移行済み
  */
 export async function searchPagesByTitle(
 	query: string,
@@ -258,7 +256,7 @@ export async function searchPagesByTitle(
 
 /**
  * タグ名でページを検索
- * Drizzle版に移行済み
+ * Kysely版に移行済み
  */
 export async function searchPagesByTag(
 	tagName: string,
@@ -277,7 +275,7 @@ export async function searchPagesByTag(
 
 /**
  * コンテンツ（全セグメント）でページを検索
- * Drizzle版に移行済み
+ * Kysely版に移行済み
  *
  * 注意: この関数は全セグメント（number: 0以外も含む）で検索します
  * タイトルのみを検索したい場合は searchPagesByTitle を使用してください
@@ -292,10 +290,13 @@ export async function searchPagesByContent(
 	total: number;
 }> {
 	const result = await db
-		.selectDistinct({ pageId: segments.contentId })
-		.from(segments)
-		.innerJoin(pages, eq(segments.contentId, pages.id))
-		.where(and(eq(pages.status, "PUBLIC"), ilike(segments.text, `%${query}%`)));
+		.selectFrom("segments")
+		.innerJoin("pages", "segments.contentId", "pages.id")
+		.select("segments.contentId as pageId")
+		.distinct()
+		.where("pages.status", "=", "PUBLIC")
+		.where("segments.text", "ilike", `%${query}%`)
+		.execute();
 
 	const allPageIds = result.map((r: { pageId: number }) => r.pageId);
 	return transformSearchResults(allPageIds, skip, take, locale);

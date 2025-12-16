@@ -3,12 +3,12 @@ import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/pag
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
 import type { PageForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
-import type { Tag } from "@/drizzle/types";
+import type { Tags } from "@/db/types";
 import type { Category } from "./constants";
 
 interface SearchResultsProps {
 	pageSummaries: PageForList[] | undefined;
-	tags: Tag[] | undefined;
+	tags: Tags[] | undefined;
 	users: SanitizedUser[] | undefined;
 	totalPages: number;
 	currentCategory: Category;
