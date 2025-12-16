@@ -1,6 +1,5 @@
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { refreshDb } from "@/drizzle";
 import { setupMasterData } from "./db-helpers";
 
 const BASE_URL = "postgres://postgres:postgres@db.localtest.me:5435/main";
@@ -25,8 +24,6 @@ export async function resetAllClients(): Promise<void> {
 		}
 		globalThis.__drizzleDb = null;
 	}
-	// dbインスタンスを再作成
-	refreshDb();
 }
 
 /** テストファイルごとにDBを作成（マイグレーション + マスターデータ） */

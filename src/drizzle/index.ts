@@ -24,11 +24,7 @@ export function makeDb(): DrizzleDbWithPool {
 	const isLocal = new URL(connectionString).hostname === "db.localtest.me";
 	if (isLocal) {
 		// ローカル環境ではpgクライアントを使用
-		const pool = new Pool({
-			connectionString,
-			idleTimeoutMillis: 0,
-			connectionTimeoutMillis: 0,
-		});
+		const pool = new Pool({ connectionString });
 		const db = drizzlePg(pool, { schema });
 		return Object.assign(db, { pool });
 	}
@@ -38,18 +34,16 @@ export function makeDb(): DrizzleDbWithPool {
 	return drizzleNeon(connectionString, { schema });
 }
 
-function getOrCreateDb(): DrizzleDbWithPool {
-	if (!globalThis.__drizzleDb) {
-		globalThis.__drizzleDb = makeDb();
-	}
-	return globalThis.__drizzleDb;
-}
-
-// 通常はシングルトン、テスト時はresetAllClients()で切断してから再取得
-export let db: DrizzleDbWithPool = getOrCreateDb();
-
-// テスト用：接続を再作成（DATABASE_URL変更後に呼ぶ）
-export function refreshDb(): void {
-	globalThis.__drizzleDb = null;
-	db = getOrCreateDb();
-}
+// Proxyでラップすることで、テスト時にDATABASE_URLを切り替えても新しい接続が使われる
+export const db = new Proxy({} as DrizzleDb, {
+	get(_target, prop: string | symbol) {
+		if (!globalThis.__drizzleDb) {
+			globalThis.__drizzleDb = makeDb();
+		}
+		const value = globalThis.__drizzleDb[prop as keyof DrizzleDb];
+		if (typeof value === "function") {
+			return value.bind(globalThis.__drizzleDb);
+		}
+		return value;
+	},
+});

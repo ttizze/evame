@@ -5,21 +5,14 @@
  * InferSelectModel: SELECT結果の型
  * InferInsertModel: INSERT用の型
  */
-import type {
-	ExtractTablesWithRelations,
-	InferInsertModel,
-	InferSelectModel,
-} from "drizzle-orm";
-import type { NeonQueryResultHKT } from "drizzle-orm/neon-serverless";
-import type { PgTransaction } from "drizzle-orm/pg-core";
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
+import type { db } from "./index";
 import type * as schema from "./schema";
 
-// トランザクションクライアント型（エイリアス）
-export type TransactionClient = PgTransaction<
-	NeonQueryResultHKT,
-	typeof schema,
-	ExtractTablesWithRelations<typeof schema>
->;
+// トランザクションクライアント型（dbから推論）
+export type TransactionClient = Parameters<
+	Parameters<typeof db.transaction>[0]
+>[0];
 
 // テーブル型のエクスポート
 export type User = InferSelectModel<typeof schema.users>;
