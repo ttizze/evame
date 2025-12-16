@@ -1,26 +1,73 @@
-import { count, desc, eq } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import { db } from "@/drizzle";
-import { tagPages, tags, userSettings } from "@/drizzle/schema";
-import { prisma } from "@/lib/prisma";
+import {
+	contents,
+	pages,
+	segments,
+	tagPages,
+	tags,
+	userSettings,
+} from "@/drizzle/schema";
 
 export async function getPageWithTitleAndTagsBySlug(slug: string) {
-	return await prisma.page.findUnique({
-		where: { slug },
-		include: {
-			content: {
-				include: {
-					segments: {
-						where: { number: 0 },
-					},
+	// ページを取得
+	const pageResult = await db
+		.select({
+			id: pages.id,
+			slug: pages.slug,
+			createdAt: pages.createdAt,
+			updatedAt: pages.updatedAt,
+			status: pages.status,
+			sourceLocale: pages.sourceLocale,
+			userId: pages.userId,
+			mdastJson: pages.mdastJson,
+			parentId: pages.parentId,
+			order: pages.order,
+		})
+		.from(pages)
+		.where(eq(pages.slug, slug))
+		.limit(1);
+
+	const page = pageResult[0];
+	if (!page) {
+		return null;
+	}
+
+	// セグメント（number: 0）とタグを並列取得
+	const [segmentsResult, tagPagesResult] = await Promise.all([
+		db
+			.select({
+				id: segments.id,
+				contentId: segments.contentId,
+				number: segments.number,
+				text: segments.text,
+				textAndOccurrenceHash: segments.textAndOccurrenceHash,
+				createdAt: segments.createdAt,
+				segmentTypeId: segments.segmentTypeId,
+			})
+			.from(segments)
+			.innerJoin(contents, eq(segments.contentId, contents.id))
+			.innerJoin(pages, eq(contents.id, pages.id))
+			.where(and(eq(pages.id, page.id), eq(segments.number, 0))),
+		db
+			.select({
+				tag: {
+					id: tags.id,
+					name: tags.name,
 				},
-			},
-			tagPages: {
-				include: {
-					tag: true,
-				},
-			},
+			})
+			.from(tagPages)
+			.innerJoin(tags, eq(tagPages.tagId, tags.id))
+			.where(eq(tagPages.pageId, page.id)),
+	]);
+
+	return {
+		...page,
+		content: {
+			segments: segmentsResult,
 		},
-	});
+		tagPages: tagPagesResult,
+	};
 }
 export type PageWithTitleAndTags = Awaited<
 	ReturnType<typeof getPageWithTitleAndTagsBySlug>

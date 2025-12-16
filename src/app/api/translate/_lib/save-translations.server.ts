@@ -1,5 +1,5 @@
-import type { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { db } from "@/drizzle";
+import { segmentTranslations } from "@/drizzle/schema";
 import { getOrCreateAIUser } from "../_db/mutations.server";
 import type { SegmentElement, TranslatedElement } from "../types";
 
@@ -12,7 +12,7 @@ function buildData(
 	segments: readonly SegmentElement[],
 	locale: string,
 	userId: string,
-): Prisma.SegmentTranslationCreateManyInput[] {
+) {
 	const map = new Map(segments.map((s) => [s.number, s.id]));
 
 	return extracted.flatMap((el) => {
@@ -33,5 +33,7 @@ export async function saveTranslations(
 ) {
 	const userId = await getOrCreateAIUser(aiModel);
 	const data = buildData(extracted, segments, locale, userId);
-	if (data.length) await prisma.segmentTranslation.createMany({ data });
+	if (data.length) {
+		await db.insert(segmentTranslations).values(data);
+	}
 }

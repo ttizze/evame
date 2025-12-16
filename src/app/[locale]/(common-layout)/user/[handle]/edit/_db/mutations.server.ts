@@ -1,6 +1,7 @@
-import { prisma } from "@/lib/prisma";
-import { sanitizeUser } from "@/lib/sanitize-user";
-import { isHandleTaken } from "./queries.server";
+import { eq } from "drizzle-orm";
+import { db } from "@/drizzle";
+import { users } from "@/drizzle/schema";
+
 export async function updateUser(
 	userId: string,
 	data: {
@@ -10,32 +11,45 @@ export async function updateUser(
 		twitterHandle: string | undefined;
 	},
 ) {
-	return prisma.$transaction(async (tx) => {
-		const currentUser = await tx.user.findUnique({
-			where: { id: userId },
+	const [updatedUser] = await db
+		.update(users)
+		.set(data)
+		.where(eq(users.id, userId))
+		.returning({
+			id: users.id,
+			handle: users.handle,
+			name: users.name,
+			image: users.image,
+			emailVerified: users.emailVerified,
+			createdAt: users.createdAt,
+			updatedAt: users.updatedAt,
+			profile: users.profile,
+			twitterHandle: users.twitterHandle,
+			totalPoints: users.totalPoints,
+			isAI: users.isAI,
+			plan: users.plan,
 		});
-		if (!currentUser) {
-			throw new Error("User not found");
-		}
-		if (data.handle !== currentUser.handle) {
-			if (await isHandleTaken(data.handle)) {
-				throw new Error("This handle is already taken.");
-			}
-		}
-		const updatedUser = await tx.user.update({
-			where: {
-				id: userId,
-			},
-			data,
-		});
-		return sanitizeUser(updatedUser);
-	});
+	return updatedUser;
 }
 
 export async function updateUserImage(userId: string, imageUrl: string) {
-	const updatedUser = await prisma.user.update({
-		where: { id: userId },
-		data: { image: imageUrl },
-	});
-	return sanitizeUser(updatedUser);
+	const [updatedUser] = await db
+		.update(users)
+		.set({ image: imageUrl })
+		.where(eq(users.id, userId))
+		.returning({
+			id: users.id,
+			handle: users.handle,
+			name: users.name,
+			image: users.image,
+			emailVerified: users.emailVerified,
+			createdAt: users.createdAt,
+			updatedAt: users.updatedAt,
+			profile: users.profile,
+			twitterHandle: users.twitterHandle,
+			totalPoints: users.totalPoints,
+			isAI: users.isAI,
+			plan: users.plan,
+		});
+	return updatedUser;
 }

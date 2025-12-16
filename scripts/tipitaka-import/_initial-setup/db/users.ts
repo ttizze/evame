@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/tests/prisma";
 
 export async function findUserByHandle(handle: string) {
 	return prisma.user.findUnique({

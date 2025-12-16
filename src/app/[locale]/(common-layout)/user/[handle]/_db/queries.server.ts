@@ -1,45 +1,75 @@
-import { prisma } from "@/lib/prisma";
-import { sanitizeUser } from "@/lib/sanitize-user";
+import { count, eq } from "drizzle-orm";
+import { db } from "@/drizzle";
+import { follows, users } from "@/drizzle/schema";
 
 export async function getFollowCounts(userId: string) {
-	const [followers, following] = await Promise.all([
-		prisma.follow.count({
-			where: { followingId: userId },
-		}),
-		prisma.follow.count({
-			where: { followerId: userId },
-		}),
+	const [[followersResult], [followingResult]] = await Promise.all([
+		db
+			.select({ count: count() })
+			.from(follows)
+			.where(eq(follows.followingId, userId)),
+		db
+			.select({ count: count() })
+			.from(follows)
+			.where(eq(follows.followerId, userId)),
 	]);
 
-	return { followers, following };
+	return {
+		followers: Number(followersResult?.count ?? 0),
+		following: Number(followingResult?.count ?? 0),
+	};
 }
 
 export async function fetchFollowerList(userId: string) {
-	const followers = await prisma.follow.findMany({
-		where: {
-			followingId: userId,
-		},
-		include: {
-			follower: true,
-		},
-	});
-	return followers.map((record) => ({
-		...record,
-		follower: sanitizeUser(record.follower),
-	}));
+	return db
+		.select({
+			id: follows.id,
+			createdAt: follows.createdAt,
+			followerId: follows.followerId,
+			followingId: follows.followingId,
+			follower: {
+				id: users.id,
+				handle: users.handle,
+				name: users.name,
+				image: users.image,
+				emailVerified: users.emailVerified,
+				createdAt: users.createdAt,
+				updatedAt: users.updatedAt,
+				profile: users.profile,
+				twitterHandle: users.twitterHandle,
+				totalPoints: users.totalPoints,
+				isAI: users.isAI,
+				plan: users.plan,
+			},
+		})
+		.from(follows)
+		.innerJoin(users, eq(follows.followerId, users.id))
+		.where(eq(follows.followingId, userId));
 }
 
 export async function fetchFollowingList(userId: string) {
-	const following = await prisma.follow.findMany({
-		where: {
-			followerId: userId,
-		},
-		include: {
-			following: true,
-		},
-	});
-	return following.map((record) => ({
-		...record,
-		following: sanitizeUser(record.following),
-	}));
+	return db
+		.select({
+			id: follows.id,
+			createdAt: follows.createdAt,
+			followerId: follows.followerId,
+			followingId: follows.followingId,
+			following: {
+				id: users.id,
+				handle: users.handle,
+				name: users.name,
+				image: users.image,
+				emailVerified: users.emailVerified,
+				createdAt: users.createdAt,
+				updatedAt: users.updatedAt,
+				profile: users.profile,
+				twitterHandle: users.twitterHandle,
+				totalPoints: users.totalPoints,
+				isAI: users.isAI,
+				plan: users.plan,
+			},
+		})
+		.from(follows)
+		.innerJoin(users, eq(follows.followingId, users.id))
+		.where(eq(follows.followerId, userId));
 }

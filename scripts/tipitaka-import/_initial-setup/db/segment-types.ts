@@ -1,5 +1,5 @@
 import type { SegmentType } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/tests/prisma";
 
 const SEED_DATA: Array<Pick<SegmentType, "key" | "label">> = [
 	{ key: "COMMENTARY", label: "Atthakatha" },
