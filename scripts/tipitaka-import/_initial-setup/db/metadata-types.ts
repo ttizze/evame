@@ -1,5 +1,7 @@
-import type { SegmentMetadataType } from "@prisma/client";
-import { prisma } from "@/tests/prisma";
+import { eq, inArray } from "drizzle-orm";
+import { db } from "@/drizzle";
+import { segmentMetadataTypes } from "@/drizzle/schema";
+import type { SegmentMetadataType } from "@/drizzle/types";
 
 const METADATA_TYPE_SEED_DATA: Array<
 	Pick<SegmentMetadataType, "key" | "label">
@@ -12,13 +14,28 @@ const METADATA_TYPE_SEED_DATA: Array<
 ];
 
 export async function ensureMetadataTypes() {
-	await prisma.segmentMetadataType.createMany({
-		data: METADATA_TYPE_SEED_DATA,
-		skipDuplicates: true,
-	});
+	// skipDuplicates相当の処理: 既存のkeyを確認してから挿入
+	for (const data of METADATA_TYPE_SEED_DATA) {
+		const [existing] = await db
+			.select()
+			.from(segmentMetadataTypes)
+			.where(eq(segmentMetadataTypes.key, data.key))
+			.limit(1);
+		if (!existing) {
+			await db.insert(segmentMetadataTypes).values(data);
+		}
+	}
 
-	return prisma.segmentMetadataType.findMany({
-		where: { key: { in: METADATA_TYPE_SEED_DATA.map((item) => item.key) } },
-		select: { key: true, id: true },
-	});
+	return db
+		.select({
+			key: segmentMetadataTypes.key,
+			id: segmentMetadataTypes.id,
+		})
+		.from(segmentMetadataTypes)
+		.where(
+			inArray(
+				segmentMetadataTypes.key,
+				METADATA_TYPE_SEED_DATA.map((item) => item.key),
+			),
+		);
 }

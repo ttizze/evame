@@ -1,10 +1,12 @@
+import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { db } from "@/drizzle";
+import { pages } from "@/drizzle/schema";
 import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import { mockCurrentUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
-import { prisma } from "@/tests/prisma";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { editPageStatusAction } from "./action";
 import { enqueuePageTranslation } from "./service/enqueue-page-translation.server";
@@ -128,9 +130,11 @@ describe("editPageStatusAction", () => {
 			expect(result.success).toBe(true);
 			expect(result.success && result.data?.translationJobs).toHaveLength(1);
 
-			const updatedPage = await prisma.page.findUnique({
-				where: { id: page.id },
-			});
+			const [updatedPage] = await db
+				.select()
+				.from(pages)
+				.where(eq(pages.id, page.id))
+				.limit(1);
 			expect(updatedPage?.status).toBe("PUBLIC");
 
 			expect(enqueuePageTranslation).toHaveBeenCalledWith({
@@ -163,9 +167,11 @@ describe("editPageStatusAction", () => {
 			expect(result.success && result.data).toBeUndefined();
 			expect(enqueuePageTranslation).not.toHaveBeenCalled();
 
-			const updatedPage = await prisma.page.findUnique({
-				where: { id: page.id },
-			});
+			const [updatedPage] = await db
+				.select()
+				.from(pages)
+				.where(eq(pages.id, page.id))
+				.limit(1);
 			expect(updatedPage?.status).toBe("DRAFT");
 		});
 

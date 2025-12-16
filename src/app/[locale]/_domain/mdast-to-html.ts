@@ -8,7 +8,6 @@ import { unified } from "unified";
 /* -------------------------------------------------------------------------- */
 
 interface Params {
-	/** DB に入っている mdastJson (= Prisma.Json) */
 	mdastJson: MdastRoot | RootContent | RootContent[] | null;
 }
 

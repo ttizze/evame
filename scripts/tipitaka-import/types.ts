@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Page } from "@/drizzle/types";
 
 export interface TipitakaFileMeta {
 	fileKey: string;
@@ -7,6 +7,4 @@ export interface TipitakaFileMeta {
 	mulaFileKey: string | null;
 }
 
-export type PageWithContent = Prisma.PageGetPayload<{
-	include: { content: true };
-}>;
+export type PageWithContent = Page;
