@@ -173,10 +173,5 @@ async function fetchPageWithPageSegments(pageId: number) {
 	} catch (error) {
 		console.error("Error:", error);
 		process.exit(1);
-	} finally {
-		// Drizzleでは明示的な切断は不要（接続プールが自動管理）
-		if (db.pool) {
-			await db.pool.end();
-		}
 	}
 })();
