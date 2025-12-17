@@ -1,5 +1,5 @@
-import type { Root as MdastRoot } from "mdast";
 import { db } from "@/db";
+import type { JsonValue } from "@/db/types";
 import { fetchSegmentsForCommentIds } from "./helpers.server";
 
 // コメントとセグメントを結合する共通処理
@@ -12,7 +12,7 @@ async function combineCommentsWithSegments(
 		locale: string;
 		userId: string;
 		parentId: number | null;
-		mdastJson: MdastRoot;
+		mdastJson: JsonValue;
 		isDeleted: boolean;
 		lastReplyAt: Date | null;
 		replyCount: number;
@@ -88,7 +88,7 @@ export async function fetchPageCommentsWithSegments(
 		locale: r.locale,
 		userId: r.userId,
 		parentId: r.parentId,
-		mdastJson: r.mdastJson as MdastRoot,
+		mdastJson: r.mdastJson,
 		isDeleted: r.isDeleted,
 		lastReplyAt: r.lastReplyAt,
 		replyCount: r.replyCount,
@@ -156,7 +156,7 @@ export async function listRootPageComments(
 		locale: r.locale,
 		userId: r.userId,
 		parentId: r.parentId,
-		mdastJson: r.mdastJson as MdastRoot,
+		mdastJson: r.mdastJson,
 		isDeleted: r.isDeleted,
 		lastReplyAt: r.lastReplyAt,
 		replyCount: r.replyCount,
@@ -213,7 +213,7 @@ export async function listChildPageComments(
 		locale: r.locale,
 		userId: r.userId,
 		parentId: r.parentId,
-		mdastJson: r.mdastJson as MdastRoot,
+		mdastJson: r.mdastJson,
 		isDeleted: r.isDeleted,
 		lastReplyAt: r.lastReplyAt,
 		replyCount: r.replyCount,

@@ -62,7 +62,7 @@ export async function fetchFollowerList(userId: string) {
 			profile: r.followerProfile,
 			twitterHandle: r.followerTwitterHandle,
 			totalPoints: r.followerTotalPoints,
-			isAI: r.followerIsAI,
+			isAi: r.followerIsAI,
 			plan: r.followerPlan,
 		},
 	}));
@@ -109,7 +109,7 @@ export async function fetchFollowingList(userId: string) {
 			profile: r.followingProfile,
 			twitterHandle: r.followingTwitterHandle,
 			totalPoints: r.followingTotalPoints,
-			isAI: r.followingIsAI,
+			isAi: r.followingIsAI,
 			plan: r.followingPlan,
 		},
 	}));

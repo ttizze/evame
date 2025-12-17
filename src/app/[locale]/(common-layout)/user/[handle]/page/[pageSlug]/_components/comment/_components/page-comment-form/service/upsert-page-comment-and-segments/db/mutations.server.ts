@@ -1,20 +1,7 @@
 import { sql } from "kysely";
-import type { Root as MdastRoot } from "mdast";
 import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
-
-type PageCommentRecord = {
-	id: number;
-	pageId: number;
-	userId: string;
-	locale: string;
-	parentId: number | null;
-	mdastJson: MdastRoot;
-	isDeleted: boolean;
-	replyCount: number;
-	lastReplyAt: Date | null;
-	createdAt: Date;
-	updatedAt: Date;
-};
+import type { JsonValue } from "@/db/types";
+import type { PageComment } from "@/db/types.helpers";
 
 /**
  * ページコメントを更新する（DB操作のみ）
@@ -23,9 +10,9 @@ export async function updatePageComment(
 	tx: TransactionClient,
 	pageCommentId: number,
 	userId: string,
-	mdastJson: MdastRoot,
+	mdastJson: JsonValue,
 	locale: string,
-): Promise<PageCommentRecord> {
+): Promise<PageComment> {
 	const updated = await tx
 		.updateTable("pageComments")
 		.set({
@@ -41,7 +28,7 @@ export async function updatePageComment(
 		throw new Error(`Failed to update page comment ${pageCommentId}`);
 	}
 
-	return updated as PageCommentRecord;
+	return updated;
 }
 
 /**
@@ -51,10 +38,10 @@ export async function createPageComment(
 	tx: TransactionClient,
 	pageId: number,
 	userId: string,
-	mdastJson: MdastRoot,
+	mdastJson: JsonValue,
 	locale: string,
 	parentId: number | null,
-): Promise<PageCommentRecord> {
+): Promise<PageComment> {
 	// 1. content行を作成
 	const content = await tx
 		.insertInto("contents")
@@ -76,7 +63,7 @@ export async function createPageComment(
 		.returningAll()
 		.executeTakeFirstOrThrow();
 
-	return created as PageCommentRecord;
+	return created;
 }
 
 /**

@@ -1,4 +1,4 @@
-import { searchPagesByTag } from "@/app/[locale]/_db/page-list-queries.server";
+import { searchPagesByTag } from "@/app/[locale]/_db/page-search.server";
 import type { PageForList } from "@/app/[locale]/types";
 
 export interface FetchPaginatedNewestPagesByTagParams {

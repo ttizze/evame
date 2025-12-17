@@ -1,7 +1,7 @@
-import type { Root as MdastRoot } from "mdast";
 import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
 import { syncSegments } from "@/app/[locale]/_service/sync-segments";
 import { db } from "@/db";
+import type { JsonValue } from "@/db/types";
 import {
 	createPageComment,
 	updatePageComment,
@@ -22,7 +22,7 @@ export async function upsertPageCommentAndSegments(p: {
 	parentId?: number;
 	currentUserId: string;
 	sourceLocale: string;
-	mdastJson: MdastRoot;
+	mdastJson: JsonValue;
 	segments: SegmentDraft[];
 }) {
 	return await db.transaction().execute(async (tx) => {

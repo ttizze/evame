@@ -1,11 +1,11 @@
 import { sql } from "kysely";
-import type { Root as MdastRoot } from "mdast";
 import { db } from "@/db";
+import type { JsonValue } from "@/db/types";
 
 export async function deletePageComment(pageCommentId: number, userId: string) {
 	return db.transaction().execute(async (tx) => {
 		// コメントを論理削除（本文は 'deleted' に、isDeleted を true）
-		const deletedMdast: MdastRoot = {
+		const deletedMdast: JsonValue = {
 			type: "root",
 			children: [
 				{

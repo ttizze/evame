@@ -5,7 +5,7 @@ import {
 	searchPagesByContent,
 	searchPagesByTag,
 	searchPagesByTitle,
-} from "@/app/[locale]/_db/page-list-queries.server";
+} from "@/app/[locale]/_db/page-search.server";
 import type { PageForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
 import { db } from "@/db";
@@ -173,7 +173,7 @@ async function searchUsers(
 	const sanitizedUsers = userResults.map((user) =>
 		sanitizeUser({
 			...user,
-			isAI: user.isAi,
+			isAi: user.isAi,
 		}),
 	);
 	return {

@@ -1,8 +1,8 @@
 import { queryByAttribute } from "@testing-library/dom";
 import { render, screen } from "@testing-library/react";
-import type { Root } from "mdast";
 import { describe, expect, it, vi } from "vitest";
 import type { Segment } from "@/app/[locale]/types";
+import type { JsonValue } from "@/db/types";
 
 vi.mock("@/app/_context/display-provider", () => ({
 	useDisplay: () => ({ mode: "source" }), // ← dummy 値
@@ -24,7 +24,7 @@ const segments: Segment[] = Array.from(
 
 describe("mdastToReact", () => {
 	it("renders segments correctly", async () => {
-		const mdast: Root = {
+		const mdast: JsonValue = {
 			type: "root",
 			children: [
 				{
@@ -53,7 +53,7 @@ describe("mdastToReact", () => {
 	});
 
 	it("converts Twitter/X links to XPost components", async () => {
-		const mdast: Root = {
+		const mdast: JsonValue = {
 			type: "root",
 			children: [
 				{
@@ -112,7 +112,7 @@ describe("mdastToReact", () => {
 		);
 	});
 	it("renders different HTML elements correctly", async () => {
-		const mdast: Root = {
+		const mdast: JsonValue = {
 			type: "root",
 			children: [
 				{

@@ -1,9 +1,9 @@
 import { Hash } from "lucide-react";
-import type { Tags } from "@/db/types";
+import type { Tag } from "@/db/types.helpers";
 import { Link } from "@/i18n/routing";
 
 type TagListProps = {
-	tag: Tags[];
+	tag: Tag[];
 };
 
 export function PageTagList({ tag }: TagListProps) {

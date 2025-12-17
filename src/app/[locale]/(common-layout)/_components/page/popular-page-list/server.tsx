@@ -1,7 +1,7 @@
 import { BookOpenIcon } from "lucide-react";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger } from "nuqs/server";
-import { fetchPaginatedPopularPageLists } from "@/app/[locale]/_db/page-list-queries.server";
+import { fetchPaginatedPopularPageLists } from "@/app/[locale]/_db/page-list.server";
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
 import { PageList } from "../page-list.server";
 import { PageListContainer } from "../page-list-container/server";
