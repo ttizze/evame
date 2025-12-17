@@ -140,6 +140,7 @@
 		"zod": "4.2.1"
 	},
 	"devDependencies": {
+		"@ariga/atlas": "^0.38.0",
 		"@biomejs/biome": "2.3.9",
 		"@eslint/eslintrc": "3.3.3",
 		"@eslint/js": "9.39.2",
