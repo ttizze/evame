@@ -1,7 +1,12 @@
-import type { SanitizedUser } from "@/app/types";
-import type { Users } from "@/db/types";
+import type { SanitizedUser, User } from "@/db/types.helpers";
 
-export function sanitizeUser(user: Users): SanitizedUser {
-	const { email: _email, provider: _provider, ...sanitizedUser } = user;
+export function sanitizeUser(user: User): SanitizedUser {
+	const {
+		email: _email,
+		provider: _provider,
+		emailVerified: _emailVerified,
+		id: _id,
+		...sanitizedUser
+	} = user;
 	return sanitizedUser;
 }

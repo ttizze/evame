@@ -1,6 +1,5 @@
-import type { Root as MdastRoot } from "mdast";
 import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
-import type { Pagestatus } from "@/db/types";
+import type { JsonValue, Pagestatus } from "@/db/types";
 
 /**
  * ページをupsertする（DB操作のみ）
@@ -12,7 +11,7 @@ export async function upsertPage(
 	p: {
 		pageSlug: string;
 		userId: string;
-		mdastJson: MdastRoot;
+		mdastJson: JsonValue;
 		sourceLocale: string;
 		parentId: number | null;
 		order: number | null;
@@ -29,7 +28,7 @@ export async function upsertPage(
 	if (existing) {
 		// 既存の場合はUPDATEで更新（PRIMARY KEY制約違反を避けるため）
 		const updateData: {
-			mdastJson: MdastRoot;
+			mdastJson: JsonValue;
 			sourceLocale: string;
 			parentId?: number | null;
 			order?: number;

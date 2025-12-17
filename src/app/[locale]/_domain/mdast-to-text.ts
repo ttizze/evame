@@ -1,14 +1,12 @@
-import type { Root as MdastRoot, RootContent } from "mdast";
+import type { JsonValue } from "@/db/types";
 
 /**
- * MDASTノード（RootまたはRootContent）をテキストに変換
+ * MDASTノード（JsonValue）をテキストに変換
  *
- * DrizzleスキーマではmdastJsonはMdastRoot型として定義されている。
- * 再帰的な処理のため、RootContent型やRootContent[]も受け入れる。
+ * DBではJsonValue型として保存されている。
+ * 再帰的な処理のため、配列も受け入れる。
  */
-export async function mdastToText(
-	mdastJson: MdastRoot | RootContent | RootContent[] | null,
-): Promise<string> {
+export async function mdastToText(mdastJson: JsonValue): Promise<string> {
 	if (mdastJson == null) return "";
 
 	// ① 文字列・数値・真偽はそのまま／文字列化
@@ -26,8 +24,7 @@ export async function mdastToText(
 
 	// オブジェクト（MDAST ノード）の処理
 	if (typeof mdastJson === "object") {
-		// Root型またはRootContent型のノード
-		const node = mdastJson as MdastRoot | RootContent;
+		const node = mdastJson as Record<string, unknown>;
 
 		// text, inlineCode など: { value: "..." }
 		if ("value" in node && typeof node.value === "string") {
@@ -45,7 +42,7 @@ export async function mdastToText(
 		// 子ノードを下る（Root型と多くのRootContent型はchildrenを持つ）
 		if ("children" in node && Array.isArray(node.children)) {
 			const results = await Promise.all(
-				node.children.map((child) => mdastToText(child as RootContent)),
+				(node.children as JsonValue[]).map((child) => mdastToText(child)),
 			);
 			return results.join("");
 		}

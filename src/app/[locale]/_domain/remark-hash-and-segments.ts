@@ -23,12 +23,12 @@ import { toString as mdastToString } from "mdast-util-to-string";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 import type { Data, VFile } from "vfile";
-import type { Segments } from "@/db/types";
+import type { Segment } from "@/db/types.helpers";
 import { generateHashForText } from "../_utils/generate-hash-for-text";
 /* ---------- 共通型 ---------- */
 
 export type SegmentDraft = Omit<
-	Segments,
+	Segment,
 	"id" | "contentId" | "createdAt" | "segmentTypeId"
 > & {
 	metadata?: { items: Array<{ typeKey: string; value: string }> };

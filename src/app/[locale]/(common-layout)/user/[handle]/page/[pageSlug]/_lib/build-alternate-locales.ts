@@ -1,9 +1,9 @@
 import { BASE_URL } from "@/app/_constants/base-url";
-import type { TranslationJobs } from "@/db/types";
+import type { TranslationJob } from "@/db/types.helpers";
 
 export function buildAlternateLocales(
 	page: { sourceLocale: string; slug: string },
-	translationJobs: TranslationJobs[],
+	translationJobs: TranslationJob[],
 	userHandle: string,
 	currentLocale: string,
 ): Record<string, string> {

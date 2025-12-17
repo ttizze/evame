@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "vitest";
 import { BASE_URL } from "@/app/_constants/base-url";
-import type { TranslationJobs } from "@/db/types";
+import type { TranslationJob } from "@/db/types.helpers";
 import { buildAlternateLocales } from "./build-alternate-locales";
 
 describe("buildAlternateLocales", () => {
@@ -12,7 +12,7 @@ describe("buildAlternateLocales", () => {
 	it("重複するlocaleは1つにまとめられる", () => {
 		const result = buildAlternateLocales(
 			page,
-			[{ locale: "ja" }, { locale: "ja" }] as TranslationJobs[],
+			[{ locale: "ja" }, { locale: "ja" }] as TranslationJob[],
 			userHandle,
 			"fr",
 		);
@@ -27,7 +27,7 @@ describe("buildAlternateLocales", () => {
 		const pageTranslationJobs = [
 			{ locale: "fr" },
 			{ locale: "en" },
-		] as TranslationJobs[];
+		] as TranslationJob[];
 		// currentLocale が "en" の場合、"en" の翻訳は除外され、かつ sourceLocale が存在するので追加されない
 		const result = buildAlternateLocales(
 			page,
@@ -43,7 +43,7 @@ describe("buildAlternateLocales", () => {
 	it("sourceLocaleが翻訳情報に含まれていなくても常に含まれる", () => {
 		const result = buildAlternateLocales(
 			page,
-			[{ locale: "ja" }, { locale: "fr" }] as TranslationJobs[],
+			[{ locale: "ja" }, { locale: "fr" }] as TranslationJob[],
 			userHandle,
 			"de",
 		);

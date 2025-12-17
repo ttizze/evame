@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { Users } from "@/db/types";
+import type { User } from "@/db/types.helpers";
 import { getCurrentUser } from "@/lib/auth-server";
 
 export type SessionUser = {
@@ -10,7 +10,7 @@ export type SessionUser = {
 	profile: string;
 	twitterHandle: string;
 	totalPoints: number;
-	isAI: boolean;
+	isAi: boolean;
 	image: string;
 	createdAt: Date;
 	updatedAt: Date;
@@ -21,7 +21,7 @@ export type SessionUser = {
  * KyselyのUsers型をgetCurrentUserが返す型に変換するヘルパー
  * （テスト用：実際のセッション管理は外部システムなのでモック）
  */
-export function toSessionUser(user: Users): SessionUser {
+export function toSessionUser(user: User): SessionUser {
 	return {
 		id: user.id,
 		name: user.name,
@@ -30,7 +30,7 @@ export function toSessionUser(user: Users): SessionUser {
 		profile: user.profile,
 		twitterHandle: user.twitterHandle,
 		totalPoints: user.totalPoints,
-		isAI: user.isAi,
+		isAi: user.isAi,
 		image: user.image,
 		createdAt: user.createdAt as Date,
 		updatedAt: user.updatedAt as Date,
@@ -42,7 +42,7 @@ export function toSessionUser(user: Users): SessionUser {
  * getCurrentUserのモックを設定するヘルパー
  * 使用例: mockCurrentUser(user) または mockCurrentUser(null)
  */
-export function mockCurrentUser(user: Users | null): void {
+export function mockCurrentUser(user: User | null): void {
 	vi.mocked(getCurrentUser).mockResolvedValue(
 		user ? toSessionUser(user) : null,
 	);

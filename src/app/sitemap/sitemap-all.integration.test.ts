@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import type { Users } from "@/db/types";
+import type { User } from "@/db/types.helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
@@ -23,7 +23,7 @@ await setupDbPerFile(import.meta.url);
 
 describe("大量ページでのチャンク分割テスト", () => {
 	describe("1001件（2チャンク）", () => {
-		let user: Users;
+		let user: User;
 
 		beforeAll(async () => {
 			await resetDatabase();

@@ -39,12 +39,7 @@ export async function getPageWithTitleAndTagsBySlug(slug: string) {
 	const tagPagesData = await db
 		.selectFrom("tagPages")
 		.innerJoin("tags", "tagPages.tagId", "tags.id")
-		.select([
-			"tagPages.tagId",
-			"tagPages.pageId",
-			"tags.id as tag_id",
-			"tags.name as tag_name",
-		])
+		.select(["tagPages.tagId", "tagPages.pageId", "tags.name as tagName"])
 		.where("tagPages.pageId", "=", page.id)
 		.execute();
 
@@ -53,8 +48,7 @@ export async function getPageWithTitleAndTagsBySlug(slug: string) {
 		tagId: tp.tagId,
 		pageId: tp.pageId,
 		tag: {
-			id: tp.tag_id,
-			name: tp.tag_name,
+			name: tp.tagName,
 		},
 	}));
 
@@ -82,7 +76,7 @@ export async function getAllTagsWithCount() {
 		.select([
 			"tags.id",
 			"tags.name",
-			db.fn.count("tagPages.pageId").as("_count_pages"),
+			db.fn.count("tagPages.pageId").as("countPages"),
 		])
 		.groupBy(["tags.id", "tags.name"])
 		.orderBy(db.fn.count("tagPages.pageId"), "desc")
@@ -92,7 +86,7 @@ export async function getAllTagsWithCount() {
 				id: r.id,
 				name: r.name,
 				_count: {
-					pages: Number(r._count_pages ?? 0),
+					pages: Number(r.countPages ?? 0),
 				},
 			})),
 		);

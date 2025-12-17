@@ -29,7 +29,7 @@ export async function getPageById(pageId: number) {
 			"users.profile as userProfile",
 			"users.twitterHandle as userTwitterHandle",
 			"users.totalPoints as userTotalPoints",
-			"users.isAi as userIsAI",
+			"users.isAi as userIsAi",
 			"users.plan as userPlan",
 		])
 		.where("pages.id", "=", pageId)
@@ -57,7 +57,7 @@ export async function getPageById(pageId: number) {
 			profile: result.userProfile,
 			twitterHandle: result.userTwitterHandle,
 			totalPoints: result.userTotalPoints,
-			isAI: result.userIsAI,
+			isAi: result.userIsAi,
 			plan: result.userPlan,
 		},
 	};

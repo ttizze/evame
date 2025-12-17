@@ -21,146 +21,81 @@ export async function GET(req: NextRequest) {
 	const currentUser = await getCurrentUser();
 
 	try {
-		// ベスト翻訳を取得（ユーザー情報と現在のユーザーの投票情報を含む）
-		let bestTranslationQuery = db
-			.selectFrom("segmentTranslations")
-			.innerJoin("users", "segmentTranslations.userId", "users.id")
+		// 1クエリで全翻訳を取得
+		const allTranslations = await db
+			.selectFrom("segmentTranslations as st")
+			.innerJoin("users as u", "st.userId", "u.id")
+			.leftJoin("translationVotes as tv", (join) =>
+				join
+					.onRef("tv.translationId", "=", "st.id")
+					.on("tv.userId", "=", currentUser?.id ?? ""),
+			)
 			.select([
-				"segmentTranslations.id",
-				"segmentTranslations.segmentId",
-				"segmentTranslations.locale",
-				"segmentTranslations.text",
-				"segmentTranslations.point",
-				"segmentTranslations.createdAt",
-				"segmentTranslations.userId",
-				"users.id as usersId",
-				"users.name",
-				"users.handle",
-				"users.image",
-				"users.createdAt as userCreatedAt",
-				"users.updatedAt as userUpdatedAt",
-				"users.profile",
-				"users.twitterHandle",
-				"users.totalPoints",
-				"users.isAi",
-				"users.plan",
-			]);
-
-		if (currentUser?.id) {
-			bestTranslationQuery = bestTranslationQuery
-				.leftJoin("translationVotes", (join) =>
-					join
-						.onRef(
-							"translationVotes.translationId",
-							"=",
-							"segmentTranslations.id",
-						)
-						.on("translationVotes.userId", "=", currentUser.id),
-				)
-				.select([
-					"translationVotes.isUpvote as voteIsUpvote",
-					"translationVotes.translationId as voteTranslationId",
-					"translationVotes.userId as voteUserId",
-				]);
-		}
-
-		// スコープ検証: bestTranslationId が指定 segmentId/userLocale に属することを確認
-		const bestTranslationWithVote = await bestTranslationQuery
-			.where("segmentTranslations.id", "=", bestTranslationId)
-			.where("segmentTranslations.segmentId", "=", segmentId)
-			.where("segmentTranslations.locale", "=", userLocale)
-			.executeTakeFirst();
-
-		// その他の翻訳を取得
-		let translationsQuery = db
-			.selectFrom("segmentTranslations")
-			.innerJoin("users", "segmentTranslations.userId", "users.id")
-			.select([
-				"segmentTranslations.id",
-				"segmentTranslations.locale",
-				"segmentTranslations.text",
-				"segmentTranslations.point",
-				"segmentTranslations.createdAt",
-				"users.handle",
-				"users.name",
-				"users.image",
-			]);
-
-		if (currentUser?.id) {
-			translationsQuery = translationsQuery
-				.leftJoin("translationVotes", (join) =>
-					join
-						.onRef(
-							"translationVotes.translationId",
-							"=",
-							"segmentTranslations.id",
-						)
-						.on("translationVotes.userId", "=", currentUser.id),
-				)
-				.select([
-					"translationVotes.isUpvote as voteIsUpvote",
-					"translationVotes.translationId as voteTranslationId",
-					"translationVotes.userId as voteUserId",
-				]);
-		}
-
-		const translations = await translationsQuery
-			.where("segmentTranslations.segmentId", "=", segmentId)
-			.where("segmentTranslations.locale", "=", userLocale)
-			.where("segmentTranslations.id", "!=", bestTranslationId)
-			.orderBy("segmentTranslations.point", "desc")
-			.orderBy("segmentTranslations.createdAt", "desc")
+				"st.id",
+				"st.locale",
+				"st.text",
+				"st.point",
+				"st.createdAt",
+				"u.id as userId",
+				"u.name",
+				"u.handle",
+				"u.image",
+				"u.createdAt as userCreatedAt",
+				"u.updatedAt as userUpdatedAt",
+				"u.profile",
+				"u.twitterHandle",
+				"u.totalPoints",
+				"u.isAi",
+				"u.plan",
+				"tv.isUpvote as voteIsUpvote",
+				"tv.translationId as voteTranslationId",
+				"tv.userId as voteUserId",
+			])
+			.where("st.segmentId", "=", segmentId)
+			.where("st.locale", "=", userLocale)
+			.orderBy("st.point", "desc")
+			.orderBy("st.createdAt", "desc")
 			.execute();
 
-		return NextResponse.json({
-			bestTranslationCurrentUserVote:
-				currentUser?.id &&
-				bestTranslationWithVote &&
-				"voteIsUpvote" in bestTranslationWithVote &&
-				bestTranslationWithVote.voteTranslationId
-					? {
-							isUpvote: bestTranslationWithVote.voteIsUpvote,
-							translationId: bestTranslationWithVote.voteTranslationId,
-							userId: bestTranslationWithVote.voteUserId,
-						}
-					: null,
-			bestTranslationUser: bestTranslationWithVote
+		// best と others に分離
+		const best = allTranslations.find((t) => t.id === bestTranslationId);
+		const others = allTranslations.filter((t) => t.id !== bestTranslationId);
+
+		// 投票情報を抽出するヘルパー
+		const extractVote = (t: (typeof allTranslations)[number]) =>
+			currentUser?.id && t.voteTranslationId
 				? {
-						id: bestTranslationWithVote.usersId,
-						name: bestTranslationWithVote.name,
-						handle: bestTranslationWithVote.handle,
-						image: bestTranslationWithVote.image,
-						createdAt: bestTranslationWithVote.userCreatedAt,
-						updatedAt: bestTranslationWithVote.userUpdatedAt,
-						profile: bestTranslationWithVote.profile,
-						twitterHandle: bestTranslationWithVote.twitterHandle,
-						totalPoints: bestTranslationWithVote.totalPoints,
-						isAI: bestTranslationWithVote.isAi,
-						plan: bestTranslationWithVote.plan,
+						isUpvote: t.voteIsUpvote ?? false,
+						translationId: t.voteTranslationId,
+						userId: t.voteUserId ?? currentUser.id,
+					}
+				: null;
+
+		return NextResponse.json({
+			bestTranslationCurrentUserVote: best ? extractVote(best) : null,
+			bestTranslationUser: best
+				? {
+						id: best.userId,
+						name: best.name,
+						handle: best.handle,
+						image: best.image,
+						createdAt: best.userCreatedAt,
+						updatedAt: best.userUpdatedAt,
+						profile: best.profile,
+						twitterHandle: best.twitterHandle,
+						totalPoints: best.totalPoints,
+						isAi: best.isAi,
+						plan: best.plan,
 					}
 				: null,
-			translations: translations.map((t) => ({
+			translations: others.map((t) => ({
 				id: t.id,
 				locale: t.locale,
 				text: t.text,
 				point: t.point,
 				createdAt: t.createdAt.toISOString(),
-				user: {
-					handle: t.handle,
-					name: t.name,
-					image: t.image,
-				},
-				currentUserVote:
-					currentUser?.id &&
-					"voteIsUpvote" in t &&
-					(t as { voteTranslationId?: number }).voteTranslationId
-						? {
-								isUpvote: (t as { voteIsUpvote: boolean }).voteIsUpvote,
-								translationId: (t as { voteTranslationId: number })
-									.voteTranslationId,
-								userId: (t as { voteUserId: string }).voteUserId,
-							}
-						: null,
+				user: { handle: t.handle, name: t.name, image: t.image },
+				currentUserVote: extractVote(t),
 			})),
 		});
 	} catch (error) {

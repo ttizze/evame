@@ -1,8 +1,7 @@
-import type { Root as MdastRoot } from "mdast";
 import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
 import { syncSegments } from "@/app/[locale]/_service/sync-segments";
 import { db } from "@/db";
-import type { Pagestatus } from "@/db/types";
+import type { JsonValue, Pagestatus } from "@/db/types";
 import { createServerLogger } from "@/lib/logger.server";
 import { syncSegmentMetadataAndAnnotationLinks } from "../sync-segment-metadata-and-annotation-links";
 import { upsertPage } from "./db/mutations.server";
@@ -18,7 +17,7 @@ export async function upsertPageAndSegments(p: {
 	pageSlug: string;
 	userId: string;
 	title: string;
-	mdastJson: MdastRoot;
+	mdastJson: JsonValue;
 	sourceLocale: string;
 	segments: SegmentDraft[];
 	segmentTypeId: number | null;

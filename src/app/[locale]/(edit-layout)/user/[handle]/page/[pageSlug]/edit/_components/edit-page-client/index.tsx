@@ -131,7 +131,6 @@ export function EditPageClient({
 							allTagsWithCount={allTagsWithCount}
 							initialTags={
 								pageWithTitleAndTags?.tagPages.map((tagPage) => ({
-									id: tagPage.tag.id,
 									name: tagPage.tag.name,
 								})) || []
 							}

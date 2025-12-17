@@ -7,7 +7,7 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db";
-import type { Pages, Segments } from "@/db/types";
+import type { Page, Segment } from "@/db/types.helpers";
 import {
 	getSegmentTypeId,
 	resetDatabase,
@@ -43,7 +43,7 @@ async function addParagraphNumbersToSegments(
 
 async function createAnnotationContentWithSegments(
 	texts: string[],
-): Promise<{ annotationContentId: number; annotationSegments: Segments[] }> {
+): Promise<{ annotationContentId: number; annotationSegments: Segment[] }> {
 	const content = await db
 		.insertInto("contents")
 		.values({ kind: "PAGE" })
@@ -51,7 +51,7 @@ async function createAnnotationContentWithSegments(
 		.executeTakeFirstOrThrow();
 	const commentaryTypeId = await getSegmentTypeId("COMMENTARY");
 
-	const annotationSegments: Segments[] = [];
+	const annotationSegments: Segment[] = [];
 	for (let i = 0; i < texts.length; i++) {
 		const segment = await db
 			.insertInto("segments")
@@ -72,7 +72,7 @@ async function createAnnotationContentWithSegments(
 
 async function createMainPageWithParagraphNumbers(
 	paragraphNumbers: string[],
-): Promise<{ mainPage: Pages; mainSegments: Segments[] }> {
+): Promise<{ mainPage: Page; mainSegments: Segment[] }> {
 	const user = await createUser();
 	const mainPage = (await createPageWithSegments({
 		userId: user.id,
@@ -83,7 +83,7 @@ async function createMainPageWithParagraphNumbers(
 			textAndOccurrenceHash: `hash-main-${i}`,
 			segmentTypeKey: "PRIMARY",
 		})),
-	})) as Pages;
+	})) as Page;
 	const mainSegments = await db
 		.selectFrom("segments")
 		.selectAll()
