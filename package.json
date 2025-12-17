@@ -14,7 +14,7 @@
 		"db:migrate": "npx @ariga/atlas schema apply --env local",
 		"db:migrate:test": "npx @ariga/atlas schema apply --env test --auto-approve",
 		"db:migrate:prod": "npx @ariga/atlas schema apply --env production --auto-approve",
-		"db:diff": "atlas schema diff --from \"${DATABASE_URL}?search_path=public\" --to 'file://atlas/schema.sql'",
+		"db:diff": "atlas schema diff --from \"${DATABASE_URL}&search_path=public\" --to 'file://atlas/schema.sql'",
 		"db:inspect": "npx @ariga/atlas schema inspect --env local --format '{{ sql .}}' > atlas/schema.sql",
 		"db:reset": "bash scripts/reset-db.sh",
 		"db:codegen": "bun run kysely-codegen",
