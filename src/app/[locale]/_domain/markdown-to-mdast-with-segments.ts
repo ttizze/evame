@@ -1,8 +1,8 @@
-import type { Root as MdastRoot } from "mdast";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import { removePosition } from "unist-util-remove-position";
 import { VFile } from "vfile";
+import type { JsonValue } from "@/db/types";
 import { remarkAutoUploadImages } from "./remark-auto-upload-images";
 import { remarkCustomBlocks } from "./remark-custom-blocks";
 import type { SegmentDraft } from "./remark-hash-and-segments";
@@ -14,7 +14,7 @@ interface Params {
 }
 
 interface Result {
-	mdastJson: MdastRoot;
+	mdastJson: JsonValue;
 	segments: SegmentDraft[];
 	file: VFile;
 }
@@ -42,7 +42,7 @@ export async function markdownToMdastWithSegments({
 	removePosition(tree, { force: true });
 
 	return {
-		mdastJson: tree as MdastRoot,
+		mdastJson: tree as JsonValue,
 		segments: (file.data as { segments: SegmentDraft[] }).segments,
 		file,
 	};

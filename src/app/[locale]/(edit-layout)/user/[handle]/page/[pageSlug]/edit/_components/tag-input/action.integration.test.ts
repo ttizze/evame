@@ -1,8 +1,6 @@
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { db } from "@/drizzle";
-import { tagPages, tags } from "@/drizzle/schema";
+import { db } from "@/db";
 import { getCurrentUser } from "@/lib/auth-server";
 import { toSessionUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
@@ -123,17 +121,13 @@ describe("editPageTagsAction", () => {
 
 		// Assert: タグがデータベースに保存されている（実際のDBで検証）
 		const tagPagesResult = await db
-			.select({
-				tag: {
-					id: tags.id,
-					name: tags.name,
-				},
-			})
-			.from(tagPages)
-			.innerJoin(tags, eq(tagPages.tagId, tags.id))
-			.where(eq(tagPages.pageId, page.id));
+			.selectFrom("tagPages")
+			.innerJoin("tags", "tags.id", "tagPages.tagId")
+			.select(["tags.id", "tags.name"])
+			.where("tagPages.pageId", "=", page.id)
+			.execute();
 		expect(tagPagesResult).toHaveLength(2);
-		const tagNames = tagPagesResult.map((tp) => tp.tag.name).sort();
+		const tagNames = tagPagesResult.map((tp) => tp.name).sort();
 		expect(tagNames).toEqual(["tag1", "tag2"]);
 
 		// Assert: キャッシュ再検証が呼ばれる
@@ -152,18 +146,19 @@ describe("editPageTagsAction", () => {
 
 		// 既存のタグを作成（upsertを使用してユニーク制約エラーを回避）
 		const tagName = `oldtag${Date.now()}`;
-		const [existingTag] = await db
-			.insert(tags)
+		const existingTag = await db
+			.insertInto("tags")
 			.values({ name: tagName })
-			.onConflictDoUpdate({
-				target: [tags.name],
-				set: { name: tagName },
+			.onConflict((oc) => oc.column("name").doUpdateSet({ name: tagName }))
+			.returningAll()
+			.executeTakeFirstOrThrow();
+		await db
+			.insertInto("tagPages")
+			.values({
+				tagId: existingTag.id,
+				pageId: page.id,
 			})
-			.returning();
-		await db.insert(tagPages).values({
-			tagId: existingTag.id,
-			pageId: page.id,
-		});
+			.execute();
 
 		vi.mocked(getCurrentUser).mockResolvedValue(toSessionUser(user));
 
@@ -179,17 +174,13 @@ describe("editPageTagsAction", () => {
 
 		// Assert: 古いタグが削除され、新しいタグが保存されている
 		const tagPagesResult = await db
-			.select({
-				tag: {
-					id: tags.id,
-					name: tags.name,
-				},
-			})
-			.from(tagPages)
-			.innerJoin(tags, eq(tagPages.tagId, tags.id))
-			.where(eq(tagPages.pageId, page.id));
+			.selectFrom("tagPages")
+			.innerJoin("tags", "tags.id", "tagPages.tagId")
+			.select(["tags.id", "tags.name"])
+			.where("tagPages.pageId", "=", page.id)
+			.execute();
 		expect(tagPagesResult).toHaveLength(2);
-		const tagNames = tagPagesResult.map((tp) => tp.tag.name).sort();
+		const tagNames = tagPagesResult.map((tp) => tp.name).sort();
 		expect(tagNames).toEqual(["newtag1", "newtag2"]);
 		expect(tagNames).not.toContain(existingTag.name);
 	});
@@ -217,17 +208,13 @@ describe("editPageTagsAction", () => {
 
 		// Assert: 重複が除去されて保存されている
 		const tagPagesResult = await db
-			.select({
-				tag: {
-					id: tags.id,
-					name: tags.name,
-				},
-			})
-			.from(tagPages)
-			.innerJoin(tags, eq(tagPages.tagId, tags.id))
-			.where(eq(tagPages.pageId, page.id));
+			.selectFrom("tagPages")
+			.innerJoin("tags", "tags.id", "tagPages.tagId")
+			.select(["tags.id", "tags.name"])
+			.where("tagPages.pageId", "=", page.id)
+			.execute();
 		expect(tagPagesResult).toHaveLength(2);
-		const tagNames = tagPagesResult.map((tp) => tp.tag.name).sort();
+		const tagNames = tagPagesResult.map((tp) => tp.name).sort();
 		expect(tagNames).toEqual(["tag1", "tag2"]);
 	});
 });

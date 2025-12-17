@@ -1,72 +1,64 @@
-import { and, count, desc, eq } from "drizzle-orm";
-import { db } from "@/drizzle";
-import {
-	contents,
-	pages,
-	segments,
-	tagPages,
-	tags,
-	userSettings,
-} from "@/drizzle/schema";
+import { db } from "@/db";
 
+/**
+ * ページをタイトルとタグと共に取得
+ * Kyselyに移行済み
+ */
 export async function getPageWithTitleAndTagsBySlug(slug: string) {
-	// ページを取得
-	const pageResult = await db
-		.select({
-			id: pages.id,
-			slug: pages.slug,
-			createdAt: pages.createdAt,
-			updatedAt: pages.updatedAt,
-			status: pages.status,
-			sourceLocale: pages.sourceLocale,
-			userId: pages.userId,
-			mdastJson: pages.mdastJson,
-			parentId: pages.parentId,
-			order: pages.order,
-		})
-		.from(pages)
-		.where(eq(pages.slug, slug))
-		.limit(1);
+	// ページ基本情報を取得
+	const page = await db
+		.selectFrom("pages")
+		.selectAll()
+		.where("slug", "=", slug)
+		.executeTakeFirst();
 
-	const page = pageResult[0];
 	if (!page) {
 		return null;
 	}
 
-	// セグメント（number: 0）とタグを並列取得
-	const [segmentsResult, tagPagesResult] = await Promise.all([
-		db
-			.select({
-				id: segments.id,
-				contentId: segments.contentId,
-				number: segments.number,
-				text: segments.text,
-				textAndOccurrenceHash: segments.textAndOccurrenceHash,
-				createdAt: segments.createdAt,
-				segmentTypeId: segments.segmentTypeId,
-			})
-			.from(segments)
-			.innerJoin(contents, eq(segments.contentId, contents.id))
-			.innerJoin(pages, eq(contents.id, pages.id))
-			.where(and(eq(pages.id, page.id), eq(segments.number, 0))),
-		db
-			.select({
-				tag: {
-					id: tags.id,
-					name: tags.name,
-				},
-			})
-			.from(tagPages)
-			.innerJoin(tags, eq(tagPages.tagId, tags.id))
-			.where(eq(tagPages.pageId, page.id)),
-	]);
+	// コンテンツ情報を取得（pages.id = contents.id）
+	const content = await db
+		.selectFrom("contents")
+		.selectAll()
+		.where("id", "=", page.id)
+		.executeTakeFirst();
+
+	if (!content) {
+		return null;
+	}
+
+	// セグメントを取得（number = 0のみ）
+	const segments = await db
+		.selectFrom("segments")
+		.selectAll()
+		.where("contentId", "=", content.id)
+		.where("number", "=", 0)
+		.execute();
+
+	// タグページとタグを取得
+	const tagPagesData = await db
+		.selectFrom("tagPages")
+		.innerJoin("tags", "tagPages.tagId", "tags.id")
+		.select(["tagPages.tagId", "tagPages.pageId", "tags.name as tagName"])
+		.where("tagPages.pageId", "=", page.id)
+		.execute();
+
+	// Prismaの構造に合わせてデータを整形
+	const tagPages = tagPagesData.map((tp) => ({
+		tagId: tp.tagId,
+		pageId: tp.pageId,
+		tag: {
+			name: tp.tagName,
+		},
+	}));
 
 	return {
 		...page,
 		content: {
-			segments: segmentsResult,
+			...content,
+			segments,
 		},
-		tagPages: tagPagesResult,
+		tagPages,
 	};
 }
 export type PageWithTitleAndTags = Awaited<
@@ -75,21 +67,29 @@ export type PageWithTitleAndTags = Awaited<
 
 /**
  * 全タグを取得（使用数順）
- * Drizzleに移行済み
+ * Kyselyに移行済み
  */
 export async function getAllTagsWithCount() {
 	return await db
-		.select({
-			id: tags.id,
-			name: tags.name,
-			_count: {
-				pages: count(tagPages.pageId),
-			},
-		})
-		.from(tags)
-		.leftJoin(tagPages, eq(tags.id, tagPages.tagId))
-		.groupBy(tags.id, tags.name)
-		.orderBy(desc(count(tagPages.pageId)));
+		.selectFrom("tags")
+		.leftJoin("tagPages", "tags.id", "tagPages.tagId")
+		.select([
+			"tags.id",
+			"tags.name",
+			db.fn.count("tagPages.pageId").as("countPages"),
+		])
+		.groupBy(["tags.id", "tags.name"])
+		.orderBy(db.fn.count("tagPages.pageId"), "desc")
+		.execute()
+		.then((results) =>
+			results.map((r) => ({
+				id: r.id,
+				name: r.name,
+				_count: {
+					pages: Number(r.countPages ?? 0),
+				},
+			})),
+		);
 }
 export type TagWithCount = Awaited<
 	ReturnType<typeof getAllTagsWithCount>
@@ -97,13 +97,13 @@ export type TagWithCount = Awaited<
 
 /**
  * ユーザーのターゲットロケールを取得
- * Drizzleに移行済み
+ * Kyselyに移行済み
  */
 export async function getUserTargetLocales(userId: string) {
 	const result = await db
-		.select({ targetLocales: userSettings.targetLocales })
-		.from(userSettings)
-		.where(eq(userSettings.userId, userId))
-		.limit(1);
-	return result[0]?.targetLocales ?? ["en", "zh"];
+		.selectFrom("userSettings")
+		.select("targetLocales")
+		.where("userId", "=", userId)
+		.executeTakeFirst();
+	return result?.targetLocales ?? ["en", "zh"];
 }

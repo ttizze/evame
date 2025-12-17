@@ -1,8 +1,6 @@
-import { asc, eq } from "drizzle-orm";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { createTranslationJob as createTranslationJobDb } from "@/app/[locale]/_db/mutations.server";
-import { db } from "@/drizzle";
-import { pages, segments, users } from "@/drizzle/schema";
+import { db } from "@/db";
 
 // ---------------- Types ----------------
 
@@ -15,9 +13,10 @@ type NumberedElement = { number: number; text: string };
  */
 async function getDescendantPageIds(parentId: number): Promise<number[]> {
 	const children = await db
-		.select({ id: pages.id })
-		.from(pages)
-		.where(eq(pages.parentId, parentId));
+		.selectFrom("pages")
+		.select("id")
+		.where("parentId", "=", parentId)
+		.execute();
 	const ids: number[] = [];
 	for (const child of children) {
 		ids.push(child.id);
@@ -40,11 +39,11 @@ type CreateTranslationJobParams = {
 };
 
 async function fetchUserByHandle(handle: string) {
-	const [user] = await db
-		.select()
-		.from(users)
-		.where(eq(users.handle, handle))
-		.limit(1);
+	const user = await db
+		.selectFrom("users")
+		.selectAll()
+		.where("handle", "=", handle)
+		.executeTakeFirst();
 	return user ?? null;
 }
 
@@ -58,30 +57,28 @@ async function createTranslationJob(params: CreateTranslationJobParams) {
 }
 
 async function fetchPageIdBySlug(slug: string) {
-	const [page] = await db
-		.select({ id: pages.id })
-		.from(pages)
-		.where(eq(pages.slug, slug))
-		.limit(1);
+	const page = await db
+		.selectFrom("pages")
+		.select("id")
+		.where("slug", "=", slug)
+		.executeTakeFirst();
 	return page ?? null;
 }
 
 async function fetchPageWithPageSegments(pageId: number) {
-	const [page] = await db
-		.select({ slug: pages.slug })
-		.from(pages)
-		.where(eq(pages.id, pageId))
-		.limit(1);
+	const page = await db
+		.selectFrom("pages")
+		.select("slug")
+		.where("id", "=", pageId)
+		.executeTakeFirst();
 	if (!page) return null;
 
 	const pageSegments = await db
-		.select({
-			number: segments.number,
-			text: segments.text,
-		})
-		.from(segments)
-		.where(eq(segments.contentId, pageId))
-		.orderBy(asc(segments.number));
+		.selectFrom("segments")
+		.select(["number", "text"])
+		.where("contentId", "=", pageId)
+		.orderBy("number", "asc")
+		.execute();
 
 	const title = pageSegments.find((seg) => seg.number === 0)?.text ?? "";
 	return {

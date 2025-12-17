@@ -1,14 +1,7 @@
-import { eq } from "drizzle-orm";
 import type { Root as MdastRoot } from "mdast";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { enqueueTranslate } from "@/app/[locale]/_infrastructure/qstash/enqueue-translate.server";
-import { db } from "@/drizzle";
-import {
-	contents,
-	pageComments,
-	segments,
-	translationJobs,
-} from "@/drizzle/schema";
+import { db } from "@/db";
 import { getCurrentUser } from "@/lib/auth-server";
 import { toSessionUser } from "@/tests/auth-helpers";
 import { getSegmentTypeId, resetDatabase } from "@/tests/db-helpers";
@@ -132,9 +125,10 @@ describe("translateAction", () => {
 
 		// Assert: 翻訳ジョブがデータベースに作成されている（実際のDBで検証）
 		const jobs = await db
-			.select()
-			.from(translationJobs)
-			.where(eq(translationJobs.pageId, page.id));
+			.selectFrom("translationJobs")
+			.selectAll()
+			.where("pageId", "=", page.id)
+			.execute();
 		expect(jobs).toHaveLength(1);
 		expect(jobs[0]?.locale).toBe("ja");
 		expect(jobs[0]?.aiModel).toBe("gemini-pro");
@@ -166,34 +160,38 @@ describe("translateAction", () => {
 		});
 
 		// コメントを作成
-		const [commentContent] = await db
-			.insert(contents)
+		const commentContent = await db
+			.insertInto("contents")
 			.values({ kind: "PAGE_COMMENT" })
-			.returning();
-		if (!commentContent) {
-			throw new Error("Failed to create comment content");
-		}
+			.returningAll()
+			.executeTakeFirstOrThrow();
 		const segmentTypeId = await getSegmentTypeId("PRIMARY");
-		await db.insert(segments).values({
-			contentId: commentContent.id,
-			number: 1,
-			text: "Comment text",
-			textAndOccurrenceHash: "hash-comment-1",
-			segmentTypeId,
-		});
+		await db
+			.insertInto("segments")
+			.values({
+				contentId: commentContent.id,
+				number: 1,
+				text: "Comment text",
+				textAndOccurrenceHash: "hash-comment-1",
+				segmentTypeId,
+			})
+			.execute();
 		const mdastJson: MdastRoot = {
 			type: "root",
 			children: [],
 		};
-		await db.insert(pageComments).values({
-			id: commentContent.id,
-			pageId: page.id,
-			userId: user.id,
-			mdastJson,
-			locale: "en",
-			parentId: null,
-			isDeleted: false,
-		});
+		await db
+			.insertInto("pageComments")
+			.values({
+				id: commentContent.id,
+				pageId: page.id,
+				userId: user.id,
+				mdastJson: JSON.stringify(mdastJson),
+				locale: "en",
+				parentId: null,
+				isDeleted: false,
+			})
+			.execute();
 
 		vi.mocked(getCurrentUser).mockResolvedValue(toSessionUser(user));
 
@@ -214,9 +212,10 @@ describe("translateAction", () => {
 
 		// Assert: 複数の翻訳ジョブがデータベースに作成されている
 		const jobs = await db
-			.select()
-			.from(translationJobs)
-			.where(eq(translationJobs.pageId, page.id));
+			.selectFrom("translationJobs")
+			.selectAll()
+			.where("pageId", "=", page.id)
+			.execute();
 		expect(jobs.length).toBeGreaterThanOrEqual(2);
 
 		// Assert: キューに複数のジョブがエンキューされている
@@ -264,9 +263,10 @@ describe("translateAction", () => {
 		// Assert
 		expect(result.success).toBe(true);
 		const jobs = await db
-			.select()
-			.from(translationJobs)
-			.where(eq(translationJobs.pageId, mainPage.id));
+			.selectFrom("translationJobs")
+			.selectAll()
+			.where("pageId", "=", mainPage.id)
+			.execute();
 		expect(jobs.length).toBeGreaterThanOrEqual(2);
 
 		const annotationCall = vi

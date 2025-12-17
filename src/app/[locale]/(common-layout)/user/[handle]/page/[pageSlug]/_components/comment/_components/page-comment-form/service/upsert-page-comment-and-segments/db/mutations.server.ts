@@ -1,7 +1,7 @@
-import { and, eq, sql } from "drizzle-orm";
-import type { Root as MdastRoot } from "mdast";
+import { sql } from "kysely";
 import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
-import { contents, pageComments } from "@/drizzle/schema";
+import type { JsonValue } from "@/db/types";
+import type { PageComment } from "@/db/types.helpers";
 
 /**
  * ページコメントを更新する（DB操作のみ）
@@ -10,19 +10,19 @@ export async function updatePageComment(
 	tx: TransactionClient,
 	pageCommentId: number,
 	userId: string,
-	mdastJson: MdastRoot,
+	mdastJson: JsonValue,
 	locale: string,
-): Promise<typeof pageComments.$inferSelect> {
-	const [updated] = await tx
-		.update(pageComments)
+): Promise<PageComment> {
+	const updated = await tx
+		.updateTable("pageComments")
 		.set({
 			mdastJson,
 			locale,
 		})
-		.where(
-			and(eq(pageComments.id, pageCommentId), eq(pageComments.userId, userId)),
-		)
-		.returning();
+		.where("id", "=", pageCommentId)
+		.where("userId", "=", userId)
+		.returningAll()
+		.executeTakeFirst();
 
 	if (!updated) {
 		throw new Error(`Failed to update page comment ${pageCommentId}`);
@@ -38,23 +38,20 @@ export async function createPageComment(
 	tx: TransactionClient,
 	pageId: number,
 	userId: string,
-	mdastJson: MdastRoot,
+	mdastJson: JsonValue,
 	locale: string,
 	parentId: number | null,
-): Promise<typeof pageComments.$inferSelect> {
+): Promise<PageComment> {
 	// 1. content行を作成
-	const [content] = await tx
-		.insert(contents)
+	const content = await tx
+		.insertInto("contents")
 		.values({ kind: "PAGE_COMMENT" })
-		.returning({ id: contents.id });
-
-	if (!content) {
-		throw new Error("Failed to create content row");
-	}
+		.returning(["id"])
+		.executeTakeFirstOrThrow();
 
 	// 2. ページコメントを作成
-	const [created] = await tx
-		.insert(pageComments)
+	const created = await tx
+		.insertInto("pageComments")
 		.values({
 			id: content.id,
 			pageId,
@@ -63,11 +60,8 @@ export async function createPageComment(
 			locale,
 			parentId,
 		})
-		.returning();
-
-	if (!created) {
-		throw new Error("Failed to create page comment");
-	}
+		.returningAll()
+		.executeTakeFirstOrThrow();
 
 	return created;
 }
@@ -81,10 +75,11 @@ export async function updateParentReplyCount(
 	lastReplyAt: Date,
 ): Promise<void> {
 	await tx
-		.update(pageComments)
+		.updateTable("pageComments")
 		.set({
-			replyCount: sql`${pageComments.replyCount} + 1`,
+			replyCount: sql`reply_count + 1`,
 			lastReplyAt,
 		})
-		.where(eq(pageComments.id, parentId));
+		.where("id", "=", parentId)
+		.execute();
 }

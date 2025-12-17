@@ -1,9 +1,7 @@
 "use server";
-import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { db } from "@/drizzle";
-import { pages } from "@/drizzle/schema";
+import { db } from "@/db";
 import { mockCurrentUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
@@ -71,11 +69,11 @@ describe("togglePublishAction", () => {
 				message: "Page status updated successfully",
 			});
 
-			const [updatedPage] = await db
-				.select()
-				.from(pages)
-				.where(eq(pages.id, page.id))
-				.limit(1);
+			const updatedPage = await db
+				.selectFrom("pages")
+				.selectAll()
+				.where("id", "=", page.id)
+				.executeTakeFirst();
 			expect(updatedPage?.status).toBe("DRAFT");
 		});
 
@@ -95,11 +93,11 @@ describe("togglePublishAction", () => {
 
 			expect(result.success).toBe(true);
 
-			const [updatedPage] = await db
-				.select()
-				.from(pages)
-				.where(eq(pages.id, page.id))
-				.limit(1);
+			const updatedPage = await db
+				.selectFrom("pages")
+				.selectAll()
+				.where("id", "=", page.id)
+				.executeTakeFirst();
 			expect(updatedPage?.status).toBe("PUBLIC");
 		});
 

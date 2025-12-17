@@ -1,5 +1,5 @@
 import { BASE_URL } from "@/app/_constants/base-url";
-import type { TranslationJob } from "@/drizzle/types";
+import type { TranslationJob } from "@/db/types.helpers";
 
 export function buildAlternateLocales(
 	page: { sourceLocale: string; slug: string },

@@ -1,5 +1,5 @@
 import { vi } from "vitest";
-import type { User } from "@/drizzle/types";
+import type { User } from "@/db/types.helpers";
 import { getCurrentUser } from "@/lib/auth-server";
 
 export type SessionUser = {
@@ -10,7 +10,7 @@ export type SessionUser = {
 	profile: string;
 	twitterHandle: string;
 	totalPoints: number;
-	isAI: boolean;
+	isAi: boolean;
 	image: string;
 	createdAt: Date;
 	updatedAt: Date;
@@ -18,7 +18,7 @@ export type SessionUser = {
 };
 
 /**
- * DrizzleのUser型をgetCurrentUserが返す型に変換するヘルパー
+ * KyselyのUsers型をgetCurrentUserが返す型に変換するヘルパー
  * （テスト用：実際のセッション管理は外部システムなのでモック）
  */
 export function toSessionUser(user: User): SessionUser {
@@ -30,10 +30,10 @@ export function toSessionUser(user: User): SessionUser {
 		profile: user.profile,
 		twitterHandle: user.twitterHandle,
 		totalPoints: user.totalPoints,
-		isAI: user.isAI,
+		isAi: user.isAi,
 		image: user.image,
-		createdAt: user.createdAt,
-		updatedAt: user.updatedAt,
+		createdAt: user.createdAt as Date,
+		updatedAt: user.updatedAt as Date,
 		hasGeminiApiKey: false,
 	};
 }

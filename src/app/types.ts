@@ -1,10 +1,6 @@
 import type { ZodFlattenedError } from "zod";
-import type { User } from "@/drizzle/types";
 
-export type SanitizedUser = Omit<
-	User,
-	"email" | "provider" | "emailVerified" | "id"
->;
+export type { SanitizedUser } from "@/db/types.helpers";
 
 type Failure<U = Record<string, unknown>> = {
 	success: false;

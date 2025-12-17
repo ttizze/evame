@@ -1,5 +1,6 @@
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { disposeDb } from "@/db";
 import { setupMasterData } from "./db-helpers";
 
 const BASE_URL = "postgres://postgres:postgres@db.localtest.me:5435/main";
@@ -12,14 +13,10 @@ function psql(sql: string): void {
 	});
 }
 
-/** DB接続をリセット */
+/** DB接続をリセット（Drizzle + Kysely） */
 export async function resetAllClients(): Promise<void> {
-	if (globalThis.__drizzleDb) {
-		if ("pool" in globalThis.__drizzleDb && globalThis.__drizzleDb.pool) {
-			await globalThis.__drizzleDb.pool.end();
-		}
-		globalThis.__drizzleDb = null;
-	}
+	// Kysely
+	await disposeDb();
 }
 
 /** テストファイルごとにDBを作成（マイグレーション + マスターデータ） */

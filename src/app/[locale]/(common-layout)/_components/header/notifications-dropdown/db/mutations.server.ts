@@ -1,13 +1,11 @@
-import { eq } from "drizzle-orm";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
-import { db } from "@/drizzle";
-import { notifications } from "@/drizzle/schema";
+import { db } from "@/db";
 import { getCurrentUser } from "@/lib/auth-server";
 
 /**
  * すべての通知を既読にする
- * Drizzle版に移行済み
+ * Kysely版に移行済み
  */
 export async function markAllNotificationAsRead() {
 	const currentUser = await getCurrentUser();
@@ -16,7 +14,8 @@ export async function markAllNotificationAsRead() {
 	}
 
 	await db
-		.update(notifications)
+		.updateTable("notifications")
 		.set({ read: true })
-		.where(eq(notifications.userId, currentUser.id));
+		.where("userId", "=", currentUser.id)
+		.execute();
 }

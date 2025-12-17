@@ -8,7 +8,7 @@ import type { TagWithCount } from "../../_db/queries.server";
 import { type EditPageTagsActionState, editPageTagsAction } from "./action";
 
 interface TagInputProps {
-	initialTags: { id: number; name: string }[];
+	initialTags: { name: string }[];
 	allTagsWithCount: TagWithCount[];
 	pageId: number | undefined;
 }

@@ -1,11 +1,8 @@
 import { createId } from "@paralleldrive/cuid2";
 import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { customSession, magicLink } from "better-auth/plugins";
-import { eq } from "drizzle-orm";
 import { sendMagicLinkEmail } from "@/lib/resend.server";
-import { db } from "./drizzle";
-import { geminiApiKeys, users } from "./drizzle/schema";
+import { db } from "./db";
 
 export const auth = betterAuth({
 	plugins: [
@@ -15,23 +12,23 @@ export const auth = betterAuth({
 			},
 		}),
 		customSession(async ({ session }) => {
-			// ユーザー情報を取得
-			const [currentUser] = await db
-				.select()
-				.from(users)
-				.where(eq(users.id, session.userId))
-				.limit(1);
+			// ユーザー情報を取得（Kysely を使用）
+			const currentUser = await db
+				.selectFrom("users")
+				.selectAll()
+				.where("id", "=", session.userId)
+				.executeTakeFirst();
 
 			if (!currentUser) {
 				throw new Error("User not found");
 			}
 
-			// Gemini APIキーを取得
-			const [geminiApiKey] = await db
-				.select()
-				.from(geminiApiKeys)
-				.where(eq(geminiApiKeys.userId, session.userId))
-				.limit(1);
+			// Gemini APIキーを取得（Kysely を使用）
+			const geminiApiKey = await db
+				.selectFrom("geminiApiKeys")
+				.selectAll()
+				.where("userId", "=", session.userId)
+				.executeTakeFirst();
 
 			// Check if the user has a Gemini API key
 			const hasGeminiApiKey = !!(geminiApiKey && geminiApiKey.apiKey !== "");
@@ -44,42 +41,45 @@ export const auth = betterAuth({
 					profile: currentUser.profile,
 					twitterHandle: currentUser.twitterHandle,
 					totalPoints: currentUser.totalPoints,
-					isAI: currentUser.isAI,
+					isAi: currentUser.isAi,
 					image: currentUser.image,
-					createdAt: new Date(currentUser.createdAt),
-					updatedAt: new Date(currentUser.updatedAt),
+					createdAt: currentUser.createdAt,
+					updatedAt: currentUser.updatedAt,
 					hasGeminiApiKey,
 				},
 				session,
 			};
 		}),
 	],
-	// セッション設定
+	// データベース設定（Kysely を直接使用）
+	database: {
+		db: db,
+		type: "postgres",
+	},
+	user: {
+		modelName: "users",
+		additionalFields: {
+			handle: {
+				type: "string",
+				required: true,
+				defaultValue: () => createId(),
+			},
+		},
+	},
 	session: {
+		modelName: "sessions",
 		expiresIn: 60 * 60 * 24 * 7, // 7 days
 	},
-	// データベース設定
-	database: drizzleAdapter(db, {
-		provider: "pg",
-		usePlural: true,
-	}),
-	databaseHooks: {
-		user: {
-			create: {
-				before: async (user) => {
-					const handle = createId();
-					const name =
-						typeof user.name === "string" && user.name.trim()
-							? user.name
-							: "new_user";
-					return {
-						data: {
-							...user,
-							handle,
-							name,
-						},
-					};
-				},
+	account: {
+		modelName: "accounts",
+	},
+	verification: {
+		modelName: "verifications",
+	},
+	advanced: {
+		database: {
+			generateId: () => {
+				return createId();
 			},
 		},
 	},

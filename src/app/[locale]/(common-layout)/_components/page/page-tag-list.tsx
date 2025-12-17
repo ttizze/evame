@@ -1,5 +1,5 @@
 import { Hash } from "lucide-react";
-import type { Tag } from "@/drizzle/types";
+import type { Tag } from "@/db/types.helpers";
 import { Link } from "@/i18n/routing";
 
 type TagListProps = {

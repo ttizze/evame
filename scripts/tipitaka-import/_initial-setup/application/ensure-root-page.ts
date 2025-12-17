@@ -1,12 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { and, eq } from "drizzle-orm";
 import { markdownToMdastWithSegments } from "@/app/[locale]/_domain/markdown-to-mdast-with-segments";
 import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/edit-page-client/service/upsert-page-and-segments";
-import { db } from "@/drizzle";
-import { pages } from "@/drizzle/schema";
-import type { PageStatus } from "@/drizzle/types";
+import { db } from "@/db";
+import type { Pagestatus } from "@/db/types";
 import { ROOT_SLUG, ROOT_TITLE } from "../../utils/constants";
 
 export async function ensureRootPage(userId: string): Promise<number> {
@@ -30,14 +28,15 @@ export async function ensureRootPage(userId: string): Promise<number> {
 		parentId: null,
 		order: 0,
 		anchorContentId: null,
-		status: "PUBLIC" as PageStatus,
+		status: "PUBLIC" as Pagestatus,
 	});
 
-	const [page] = await db
-		.select({ id: pages.id })
-		.from(pages)
-		.where(and(eq(pages.slug, ROOT_SLUG), eq(pages.userId, userId)))
-		.limit(1);
+	const page = await db
+		.selectFrom("pages")
+		.select("id")
+		.where("slug", "=", ROOT_SLUG)
+		.where("userId", "=", userId)
+		.executeTakeFirst();
 
 	if (!page) {
 		throw new Error(

@@ -1,13 +1,12 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/drizzle";
-import { pages } from "@/drizzle/schema";
-import type { PageStatus } from "@/drizzle/types";
+import { db } from "@/db";
+import type { Pagestatus } from "@/db/types";
 
-export async function updatePageStatus(pageId: number, status: PageStatus) {
-	const [updated] = await db
-		.update(pages)
+export async function updatePageStatus(pageId: number, status: Pagestatus) {
+	const updated = await db
+		.updateTable("pages")
 		.set({ status })
-		.where(eq(pages.id, pageId))
-		.returning();
+		.where("id", "=", pageId)
+		.returningAll()
+		.executeTakeFirst();
 	return updated;
 }

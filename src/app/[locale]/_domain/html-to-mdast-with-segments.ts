@@ -1,4 +1,3 @@
-import type { Root as MdastRoot } from "mdast";
 import rehypeParse from "rehype-parse";
 import rehypeRemark from "rehype-remark";
 import rehypeSanitize from "rehype-sanitize";
@@ -9,6 +8,7 @@ import { VFile } from "vfile";
 import { remarkAutoUploadImages } from "@/app/[locale]/_domain/remark-auto-upload-images";
 import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
 import { remarkHashAndSegments } from "@/app/[locale]/_domain/remark-hash-and-segments";
+import type { JsonValue } from "@/db/types";
 
 interface Params {
 	header?: string;
@@ -16,7 +16,7 @@ interface Params {
 }
 
 interface Result {
-	mdastJson: MdastRoot; // DB 書き込み用
+	mdastJson: JsonValue; // DB 書き込み用
 	segments: SegmentDraft[];
 	file: VFile; // ログや警告を見たい時用
 }
@@ -38,13 +38,11 @@ export async function htmlToMdastWithSegments({
 	let tree = processor.parse(file); // HAST
 	tree = await processor.run(tree, file); // MDAST + segments
 
-	const mdast = tree as MdastRoot;
-
 	/* 3. position を削ぎ落として軽量化 ------------------------------- */
-	removePosition(mdast, { force: true });
+	removePosition(tree, { force: true });
 
 	return {
-		mdastJson: mdast,
+		mdastJson: tree as JsonValue,
 		segments: (file.data as { segments: SegmentDraft[] }).segments,
 		file,
 	};

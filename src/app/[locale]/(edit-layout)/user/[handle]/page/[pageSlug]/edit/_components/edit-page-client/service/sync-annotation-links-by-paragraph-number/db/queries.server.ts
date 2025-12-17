@@ -1,35 +1,26 @@
-import { and, eq, inArray } from "drizzle-orm";
 import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
-import {
-	segmentMetadata,
-	segmentMetadataTypes,
-	segments,
-	segmentTypes,
-} from "@/drizzle/schema";
 
 /**
  * コンテンツのセグメントタイプを取得する
- * Drizzle版に移行済み
+ * Kysely版に移行済み
  */
 export async function fetchSegmentTypeKey(
 	tx: TransactionClient,
 	contentId: number,
 ): Promise<string | undefined> {
-	const [currentSegment] = await tx
-		.select({
-			segmentTypeKey: segmentTypes.key,
-		})
-		.from(segments)
-		.innerJoin(segmentTypes, eq(segments.segmentTypeId, segmentTypes.id))
-		.where(eq(segments.contentId, contentId))
-		.limit(1);
+	const currentSegment = await tx
+		.selectFrom("segments")
+		.innerJoin("segmentTypes", "segmentTypes.id", "segments.segmentTypeId")
+		.select("segmentTypes.key as segmentTypeKey")
+		.where("segments.contentId", "=", contentId)
+		.executeTakeFirst();
 
 	return currentSegment?.segmentTypeKey;
 }
 
 /**
  * 親ページのPRIMARYセグメントを取得（メタデータも取得して段落番号を取得）
- * Drizzle版に移行済み
+ * Kysely版に移行済み
  */
 export async function fetchPrimarySegmentsWithParagraphNumbers(
 	tx: TransactionClient,
@@ -43,19 +34,13 @@ export async function fetchPrimarySegmentsWithParagraphNumbers(
 > {
 	// セグメントを取得
 	const segmentRows = await tx
-		.select({
-			id: segments.id,
-			number: segments.number,
-		})
-		.from(segments)
-		.innerJoin(segmentTypes, eq(segments.segmentTypeId, segmentTypes.id))
-		.where(
-			and(
-				eq(segments.contentId, anchorContentId),
-				eq(segmentTypes.key, "PRIMARY"),
-			),
-		)
-		.orderBy(segments.number);
+		.selectFrom("segments")
+		.innerJoin("segmentTypes", "segmentTypes.id", "segments.segmentTypeId")
+		.select(["segments.id", "segments.number"])
+		.where("segments.contentId", "=", anchorContentId)
+		.where("segmentTypes.key", "=", "PRIMARY")
+		.orderBy("segments.number")
+		.execute();
 
 	// 各セグメントのメタデータを取得
 	const segmentIds = segmentRows.map((s) => s.id);
@@ -64,11 +49,11 @@ export async function fetchPrimarySegmentsWithParagraphNumbers(
 	}
 
 	// PARAGRAPH_NUMBERメタデータタイプのIDを取得
-	const [paragraphNumberType] = await tx
-		.select({ id: segmentMetadataTypes.id })
-		.from(segmentMetadataTypes)
-		.where(eq(segmentMetadataTypes.key, "PARAGRAPH_NUMBER"))
-		.limit(1);
+	const paragraphNumberType = await tx
+		.selectFrom("segmentMetadataTypes")
+		.select("id")
+		.where("key", "=", "PARAGRAPH_NUMBER")
+		.executeTakeFirst();
 
 	if (!paragraphNumberType) {
 		// メタデータタイプが存在しない場合は空のメタデータ配列を返す
@@ -77,17 +62,11 @@ export async function fetchPrimarySegmentsWithParagraphNumbers(
 
 	// メタデータを取得
 	const metadataRows = await tx
-		.select({
-			segmentId: segmentMetadata.segmentId,
-			value: segmentMetadata.value,
-		})
-		.from(segmentMetadata)
-		.where(
-			and(
-				eq(segmentMetadata.metadataTypeId, paragraphNumberType.id),
-				inArray(segmentMetadata.segmentId, segmentIds),
-			),
-		);
+		.selectFrom("segmentMetadata")
+		.select(["segmentId", "value"])
+		.where("metadataTypeId", "=", paragraphNumberType.id)
+		.where("segmentId", "in", segmentIds)
+		.execute();
 
 	// segmentIdごとにメタデータをグループ化
 	const metadataMap = new Map<number, Array<{ value: string }>>();

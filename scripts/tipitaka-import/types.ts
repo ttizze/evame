@@ -1,4 +1,4 @@
-import type { Page } from "@/drizzle/types";
+import type { Pages } from "@/db/types";
 
 export interface TipitakaFileMeta {
 	fileKey: string;
@@ -7,4 +7,4 @@ export interface TipitakaFileMeta {
 	mulaFileKey: string | null;
 }
 
-export type PageWithContent = Page;
+export type PageWithContent = Pages;

@@ -1,6 +1,4 @@
-import { inArray } from "drizzle-orm";
 import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
-import { segmentMetadata, segmentMetadataTypes } from "@/drizzle/schema";
 import { createServerLogger } from "@/lib/logger.server";
 import type { MetadataDraft } from "../domain/collect-metadata-drafts";
 
@@ -39,9 +37,10 @@ export async function syncSegmentMetadata(
 	if (metadataTypeKeys.size > 0) {
 		// 既存のメタデータタイプを取得
 		const existingTypes = await tx
-			.select({ key: segmentMetadataTypes.key, id: segmentMetadataTypes.id })
-			.from(segmentMetadataTypes)
-			.where(inArray(segmentMetadataTypes.key, [...metadataTypeKeys]));
+			.selectFrom("segmentMetadataTypes")
+			.select(["key", "id"])
+			.where("key", "in", [...metadataTypeKeys])
+			.execute();
 
 		for (const mt of existingTypes) {
 			metadataTypeMap.set(mt.key, mt.id);
@@ -54,15 +53,17 @@ export async function syncSegmentMetadata(
 		if (missingKeys.length > 0) {
 			// 存在しないタイプをバッチで挿入（競合時は何もしない）
 			await tx
-				.insert(segmentMetadataTypes)
+				.insertInto("segmentMetadataTypes")
 				.values(missingKeys.map((key) => ({ key, label: key })))
-				.onConflictDoNothing();
+				.onConflict((oc) => oc.doNothing())
+				.execute();
 
 			// 挿入したタイプを再取得してマッピングに追加
 			const createdTypes = await tx
-				.select({ key: segmentMetadataTypes.key, id: segmentMetadataTypes.id })
-				.from(segmentMetadataTypes)
-				.where(inArray(segmentMetadataTypes.key, missingKeys));
+				.selectFrom("segmentMetadataTypes")
+				.select(["key", "id"])
+				.where("key", "in", missingKeys)
+				.execute();
 
 			for (const created of createdTypes) {
 				metadataTypeMap.set(created.key, created.id);
@@ -110,15 +111,17 @@ export async function syncSegmentMetadata(
 	// 他のページのセグメントのメタデータは削除されない
 	if (segmentIds.size > 0) {
 		await tx
-			.delete(segmentMetadata)
-			.where(inArray(segmentMetadata.segmentId, [...segmentIds]));
+			.deleteFrom("segmentMetadata")
+			.where("segmentId", "in", [...segmentIds])
+			.execute();
 	}
 
 	// 新しいメタデータを作成
 	if (metadataToCreate.length > 0) {
 		await tx
-			.insert(segmentMetadata)
+			.insertInto("segmentMetadata")
 			.values(metadataToCreate)
-			.onConflictDoNothing();
+			.onConflict((oc) => oc.doNothing())
+			.execute();
 	}
 }

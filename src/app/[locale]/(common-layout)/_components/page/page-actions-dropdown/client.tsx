@@ -10,7 +10,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { PageStatus } from "@/drizzle/types";
+import type { Pagestatus } from "@/db/types";
 import { Link } from "@/i18n/routing";
 import { DeletePageDialog } from "../delete-page-dialog/delete-page-dialog";
 import { type TogglePublishState, togglePublishAction } from "./action";
@@ -18,7 +18,7 @@ import { type TogglePublishState, togglePublishAction } from "./action";
 interface PageActionsDropdownProps {
 	editPath: string;
 	pageId: number;
-	status: PageStatus;
+	status: Pagestatus;
 	className?: string;
 }
 

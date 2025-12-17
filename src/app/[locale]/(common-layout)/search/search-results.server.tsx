@@ -2,8 +2,7 @@ import { PageList } from "@/app/[locale]/(common-layout)/_components/page/page-l
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
 import type { PageForList } from "@/app/[locale]/types";
-import type { SanitizedUser } from "@/app/types";
-import type { Tag } from "@/drizzle/types";
+import type { SanitizedUser, Tag } from "@/db/types.helpers";
 import type { Category } from "./constants";
 
 interface SearchResultsProps {

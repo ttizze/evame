@@ -6,7 +6,7 @@ import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
-import type { PageStatus } from "@/drizzle/types";
+import type { Pagestatus } from "@/db/types";
 import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import { updatePageStatus } from "./db/mutations.server";
 import { enqueuePageTranslation } from "./service/enqueue-page-translation.server";
@@ -46,7 +46,7 @@ export async function editPageStatusAction(
 	if (!currentUser?.id || page?.user.id !== currentUser.id) {
 		redirect("/auth/login" as Route);
 	}
-	await updatePageStatus(pageId, status as PageStatus);
+	await updatePageStatus(pageId, status as Pagestatus);
 
 	let translationJobs: TranslationJobForToast[] | undefined;
 	if (status === "PUBLIC") {

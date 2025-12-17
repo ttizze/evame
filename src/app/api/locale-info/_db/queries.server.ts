@@ -1,10 +1,4 @@
-import { and, eq } from "drizzle-orm";
-import { db } from "@/drizzle";
-import {
-	pageLocaleTranslationProofs,
-	pages,
-	translationJobs,
-} from "@/drizzle/schema";
+import { db } from "@/db";
 
 /**
  * pageSlugからページのロケール情報を取得
@@ -15,29 +9,35 @@ import {
 export async function fetchLocaleInfoByPageSlug(pageSlug: string) {
 	// 1回のクエリで全て取得（LEFT JOIN を使用）
 	const rows = await db
-		.select({
-			pageId: pages.id,
-			sourceLocale: pages.sourceLocale,
-			translationJob: translationJobs,
-			translationProof: {
-				locale: pageLocaleTranslationProofs.locale,
-				translationProofStatus:
-					pageLocaleTranslationProofs.translationProofStatus,
-			},
-		})
-		.from(pages)
-		.leftJoin(
-			translationJobs,
-			and(
-				eq(translationJobs.pageId, pages.id),
-				eq(translationJobs.status, "COMPLETED"),
-			),
+		.selectFrom("pages")
+		.leftJoin("translationJobs", (join) =>
+			join
+				.onRef("translationJobs.pageId", "=", "pages.id")
+				.on("translationJobs.status", "=", "COMPLETED"),
 		)
 		.leftJoin(
-			pageLocaleTranslationProofs,
-			eq(pageLocaleTranslationProofs.pageId, pages.id),
+			"pageLocaleTranslationProofs",
+			"pageLocaleTranslationProofs.pageId",
+			"pages.id",
 		)
-		.where(eq(pages.slug, pageSlug));
+		.select([
+			"pages.id as pageId",
+			"pages.sourceLocale",
+			"translationJobs.id as translationJobId",
+			"translationJobs.pageId as translationJobPageId",
+			"translationJobs.userId as translationJobUserId",
+			"translationJobs.locale as translationJobLocale",
+			"translationJobs.aiModel as translationJobAiModel",
+			"translationJobs.status as translationJobStatus",
+			"translationJobs.progress as translationJobProgress",
+			"translationJobs.error as translationJobError",
+			"translationJobs.createdAt as translationJobCreatedAt",
+			"translationJobs.updatedAt as translationJobUpdatedAt",
+			"pageLocaleTranslationProofs.locale as proofLocale",
+			"pageLocaleTranslationProofs.translationProofStatus",
+		])
+		.where("pages.slug", "=", pageSlug)
+		.execute();
 
 	if (rows.length === 0) {
 		return null;
@@ -55,18 +55,32 @@ export async function fetchLocaleInfoByPageSlug(pageSlug: string) {
 
 	for (const row of rows) {
 		// translationJobs を集約（null でない場合のみ）
-		if (row.translationJob) {
-			const key = `${row.translationJob.id}`;
+		if (row.translationJobId) {
+			const key = `${row.translationJobId}`;
 			if (!translationJobsSet.has(key)) {
-				translationJobsSet.set(key, row.translationJob);
+				translationJobsSet.set(key, {
+					id: row.translationJobId,
+					pageId: row.translationJobPageId,
+					userId: row.translationJobUserId,
+					locale: row.translationJobLocale,
+					aiModel: row.translationJobAiModel,
+					status: row.translationJobStatus,
+					progress: row.translationJobProgress,
+					error: row.translationJobError,
+					createdAt: row.translationJobCreatedAt,
+					updatedAt: row.translationJobUpdatedAt,
+				});
 			}
 		}
 
 		// translationProofs を集約（null でない場合のみ）
-		if (row.translationProof?.locale) {
-			const key = row.translationProof.locale;
+		if (row.proofLocale) {
+			const key = row.proofLocale;
 			if (!translationProofsSet.has(key)) {
-				translationProofsSet.set(key, row.translationProof);
+				translationProofsSet.set(key, {
+					locale: row.proofLocale,
+					translationProofStatus: row.translationProofStatus,
+				});
 			}
 		}
 	}

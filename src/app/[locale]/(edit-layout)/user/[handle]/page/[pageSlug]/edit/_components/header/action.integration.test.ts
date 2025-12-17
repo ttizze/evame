@@ -1,8 +1,6 @@
-import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { db } from "@/drizzle";
-import { pages } from "@/drizzle/schema";
+import { db } from "@/db";
 import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import { mockCurrentUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
@@ -130,11 +128,11 @@ describe("editPageStatusAction", () => {
 			expect(result.success).toBe(true);
 			expect(result.success && result.data?.translationJobs).toHaveLength(1);
 
-			const [updatedPage] = await db
-				.select()
-				.from(pages)
-				.where(eq(pages.id, page.id))
-				.limit(1);
+			const updatedPage = await db
+				.selectFrom("pages")
+				.selectAll()
+				.where("id", "=", page.id)
+				.executeTakeFirst();
 			expect(updatedPage?.status).toBe("PUBLIC");
 
 			expect(enqueuePageTranslation).toHaveBeenCalledWith({
@@ -167,11 +165,11 @@ describe("editPageStatusAction", () => {
 			expect(result.success && result.data).toBeUndefined();
 			expect(enqueuePageTranslation).not.toHaveBeenCalled();
 
-			const [updatedPage] = await db
-				.select()
-				.from(pages)
-				.where(eq(pages.id, page.id))
-				.limit(1);
+			const updatedPage = await db
+				.selectFrom("pages")
+				.selectAll()
+				.where("id", "=", page.id)
+				.executeTakeFirst();
 			expect(updatedPage?.status).toBe("DRAFT");
 		});
 

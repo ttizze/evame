@@ -1,6 +1,4 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/drizzle";
-import { pages, translationJobs, users } from "@/drizzle/schema";
+import { db } from "@/db";
 
 type CreateTranslationJobParams = {
 	aiModel: string;
@@ -11,12 +9,12 @@ type CreateTranslationJobParams = {
 
 /**
  * 翻訳ジョブを作成
- * Drizzle版に移行済み
+ * Kyselyに移行済み
  */
 export async function createTranslationJob(params: CreateTranslationJobParams) {
 	// 1. 翻訳ジョブを作成
-	const [translationJob] = await db
-		.insert(translationJobs)
+	const translationJob = await db
+		.insertInto("translationJobs")
 		.values({
 			aiModel: params.aiModel,
 			locale: params.locale,
@@ -25,26 +23,16 @@ export async function createTranslationJob(params: CreateTranslationJobParams) {
 			status: "PENDING",
 			progress: 0,
 		})
-		.returning();
-
-	if (!translationJob) {
-		throw new Error("Failed to create translation job");
-	}
+		.returningAll()
+		.executeTakeFirstOrThrow();
 
 	// 2. ページとユーザー情報を取得
-	const [pageData] = await db
-		.select({
-			page: {
-				slug: pages.slug,
-			},
-			user: {
-				handle: users.handle,
-			},
-		})
-		.from(pages)
-		.innerJoin(users, eq(pages.userId, users.id))
-		.where(eq(pages.id, params.pageId))
-		.limit(1);
+	const pageData = await db
+		.selectFrom("pages")
+		.innerJoin("users", "pages.userId", "users.id")
+		.select(["pages.slug as pageSlug", "users.handle as userHandle"])
+		.where("pages.id", "=", params.pageId)
+		.executeTakeFirst();
 
 	if (!pageData) {
 		throw new Error("Page not found");
@@ -53,9 +41,9 @@ export async function createTranslationJob(params: CreateTranslationJobParams) {
 	return {
 		...translationJob,
 		page: {
-			slug: pageData.page.slug,
+			slug: pageData.pageSlug,
 			user: {
-				handle: pageData.user.handle,
+				handle: pageData.userHandle,
 			},
 		},
 	};

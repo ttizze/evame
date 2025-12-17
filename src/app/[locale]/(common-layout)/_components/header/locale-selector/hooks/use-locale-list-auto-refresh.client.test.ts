@@ -1,7 +1,7 @@
 import { renderHook } from "@testing-library/react";
-// useLocaleListAutoRefresh.test.ts
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { TranslationJob } from "@/drizzle/types";
+// useLocaleListAutoRefresh.test.ts
+import type { TranslationJob } from "@/db/types.helpers";
 import { useLocaleListAutoRefresh } from "./use-locale-list-auto-refresh.client";
 
 // モック用の refresh 関数

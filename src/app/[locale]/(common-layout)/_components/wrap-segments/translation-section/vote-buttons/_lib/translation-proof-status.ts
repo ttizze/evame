@@ -1,4 +1,4 @@
-import type { TranslationProofStatus } from "@/drizzle/types";
+import type { Translationproofstatus } from "@/db/types";
 
 /**
  * 翻訳の証明ステータスを計算する
@@ -12,7 +12,7 @@ export function calcProofStatus(
 	totalSegments: number,
 	segmentsWith1PlusVotes: number,
 	segmentsWith2PlusVotes: number,
-): TranslationProofStatus {
+): Translationproofstatus {
 	if (segmentsWith1PlusVotes === 0) return "MACHINE_DRAFT";
 	if (segmentsWith1PlusVotes < totalSegments) return "HUMAN_TOUCHED";
 	if (segmentsWith2PlusVotes === totalSegments) return "VALIDATED";

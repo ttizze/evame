@@ -1,12 +1,9 @@
-import { eq } from "drizzle-orm";
-import type { Root as MdastRoot } from "mdast";
 import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
-import { contents, pages } from "@/drizzle/schema";
-import type { PageStatus } from "@/drizzle/types";
+import type { JsonValue, Pagestatus } from "@/db/types";
 
 /**
  * ページをupsertする（DB操作のみ）
- * Drizzle版に移行済み
+ * Kysely版に移行済み
  * 既存の場合は1回のクエリで更新、新規の場合はcontents作成後にpagesをINSERT
  */
 export async function upsertPage(
@@ -14,28 +11,28 @@ export async function upsertPage(
 	p: {
 		pageSlug: string;
 		userId: string;
-		mdastJson: MdastRoot;
+		mdastJson: JsonValue;
 		sourceLocale: string;
 		parentId: number | null;
 		order: number | null;
-		status: PageStatus | null;
+		status: Pagestatus | null;
 	},
 ) {
 	// 既存ページのidを取得（1回のクエリ）
 	const existing = await tx
-		.select({ id: pages.id })
-		.from(pages)
-		.where(eq(pages.slug, p.pageSlug))
-		.limit(1);
+		.selectFrom("pages")
+		.select("id")
+		.where("slug", "=", p.pageSlug)
+		.executeTakeFirst();
 
-	if (existing.length > 0) {
+	if (existing) {
 		// 既存の場合はUPDATEで更新（PRIMARY KEY制約違反を避けるため）
 		const updateData: {
-			mdastJson: MdastRoot;
+			mdastJson: JsonValue;
 			sourceLocale: string;
 			parentId?: number | null;
 			order?: number;
-			status?: PageStatus;
+			status?: Pagestatus;
 		} = {
 			mdastJson: p.mdastJson,
 			sourceLocale: p.sourceLocale,
@@ -51,11 +48,12 @@ export async function upsertPage(
 			updateData.status = p.status;
 		}
 
-		const [updated] = await tx
-			.update(pages)
+		const updated = await tx
+			.updateTable("pages")
 			.set(updateData)
-			.where(eq(pages.slug, p.pageSlug))
-			.returning();
+			.where("slug", "=", p.pageSlug)
+			.returningAll()
+			.executeTakeFirst();
 
 		if (!updated) {
 			throw new Error(`Failed to update page with slug ${p.pageSlug}`);
@@ -65,17 +63,14 @@ export async function upsertPage(
 	}
 
 	// 新規作成: contentsを先に作成してからpagesをINSERT
-	const [content] = await tx
-		.insert(contents)
+	const content = await tx
+		.insertInto("contents")
 		.values({ kind: "PAGE" })
-		.returning({ id: contents.id });
+		.returning(["id"])
+		.executeTakeFirstOrThrow();
 
-	if (!content) {
-		throw new Error("Failed to create content row");
-	}
-
-	const [page] = await tx
-		.insert(pages)
+	const page = await tx
+		.insertInto("pages")
 		.values({
 			id: content.id,
 			slug: p.pageSlug,
@@ -86,11 +81,8 @@ export async function upsertPage(
 			order: p.order ?? 0,
 			status: p.status ?? "DRAFT",
 		})
-		.returning();
-
-	if (!page) {
-		throw new Error(`Failed to create page with slug ${p.pageSlug}`);
-	}
+		.returningAll()
+		.executeTakeFirstOrThrow();
 
 	return page;
 }

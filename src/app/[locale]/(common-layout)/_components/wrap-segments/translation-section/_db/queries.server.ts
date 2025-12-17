@@ -1,25 +1,18 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/drizzle";
-import {
-	contents,
-	pages,
-	segments,
-	segmentTranslations,
-} from "@/drizzle/schema";
+import { db } from "@/db";
 
 export async function findPageIdBySegmentTranslationId(
 	segmentTranslationId: number,
 ): Promise<number> {
 	const result = await db
-		.select({ pageId: pages.id })
-		.from(segmentTranslations)
-		.innerJoin(segments, eq(segmentTranslations.segmentId, segments.id))
-		.innerJoin(contents, eq(segments.contentId, contents.id))
-		.innerJoin(pages, eq(contents.id, pages.id))
-		.where(eq(segmentTranslations.id, segmentTranslationId))
-		.limit(1);
+		.selectFrom("segmentTranslations")
+		.innerJoin("segments", "segmentTranslations.segmentId", "segments.id")
+		.innerJoin("contents", "segments.contentId", "contents.id")
+		.innerJoin("pages", "contents.id", "pages.id")
+		.select("pages.id as pageId")
+		.where("segmentTranslations.id", "=", segmentTranslationId)
+		.executeTakeFirst();
 
-	const id = result[0]?.pageId;
+	const id = result?.pageId;
 	if (!id) {
 		throw new Error("Page not found");
 	}

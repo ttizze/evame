@@ -1,6 +1,5 @@
 import remarkEmbedder from "@remark-embedder/core";
 import oembedTransformer from "@remark-embedder/transformer-oembed";
-import type { Root as MdastRoot } from "mdast";
 import type { StaticImport } from "next/dist/shared/lib/get-img-props";
 import Image from "next/image";
 import type { ReactElement } from "react";
@@ -15,6 +14,7 @@ import remarkLinkCard from "remark-link-card-plus";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import type { Segment } from "@/app/[locale]/types";
+import type { JsonValue } from "@/db/types";
 import { WrapSegment } from "../wrap-segments/server";
 import { remarkTweet } from "./remark-tweet";
 
@@ -50,7 +50,7 @@ const ImgComponent: ComponentType<ImgProps> = ({ src = "", ...props }) => (
 );
 
 interface Params<T extends Segment = Segment> {
-	mdast: MdastRoot;
+	mdast: JsonValue;
 	segments: T[];
 }
 

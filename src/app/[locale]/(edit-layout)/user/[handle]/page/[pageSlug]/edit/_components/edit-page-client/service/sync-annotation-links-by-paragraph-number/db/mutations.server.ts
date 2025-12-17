@@ -1,25 +1,22 @@
-import { inArray } from "drizzle-orm";
 import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
-import { segmentAnnotationLinks } from "@/drizzle/schema";
 
 /**
  * 既存のアノテーションリンクを削除する
- * Drizzle版に移行済み
+ * Kysely版に移行済み
  */
 export async function deleteAnnotationLinks(
 	tx: TransactionClient,
 	annotationSegmentIds: number[],
 ): Promise<void> {
 	await tx
-		.delete(segmentAnnotationLinks)
-		.where(
-			inArray(segmentAnnotationLinks.annotationSegmentId, annotationSegmentIds),
-		);
+		.deleteFrom("segmentAnnotationLinks")
+		.where("annotationSegmentId", "in", annotationSegmentIds)
+		.execute();
 }
 
 /**
  * アノテーションリンクを作成する
- * Drizzle版に移行済み
+ * Kysely版に移行済み
  */
 export async function createAnnotationLinks(
 	tx: TransactionClient,
@@ -29,7 +26,8 @@ export async function createAnnotationLinks(
 	}>,
 ): Promise<void> {
 	await tx
-		.insert(segmentAnnotationLinks)
+		.insertInto("segmentAnnotationLinks")
 		.values(linksToCreate)
-		.onConflictDoNothing();
+		.onConflict((oc) => oc.doNothing())
+		.execute();
 }

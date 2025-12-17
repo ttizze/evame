@@ -1,5 +1,4 @@
-import { db } from "@/drizzle";
-import { segmentTranslations } from "@/drizzle/schema";
+import { db } from "@/db";
 import { getOrCreateAIUser } from "../_db/mutations.server";
 import type { SegmentElement, TranslatedElement } from "../types";
 
@@ -34,6 +33,6 @@ export async function saveTranslations(
 	const userId = await getOrCreateAIUser(aiModel);
 	const data = buildData(extracted, segments, locale, userId);
 	if (data.length) {
-		await db.insert(segmentTranslations).values(data);
+		await db.insertInto("segmentTranslations").values(data).execute();
 	}
 }

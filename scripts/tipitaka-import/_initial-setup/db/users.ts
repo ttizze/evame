@@ -1,12 +1,10 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/drizzle";
-import { users } from "@/drizzle/schema";
+import { db } from "@/db";
 
 export async function findUserByHandle(handle: string) {
-	const [user] = await db
-		.select()
-		.from(users)
-		.where(eq(users.handle, handle))
-		.limit(1);
+	const user = await db
+		.selectFrom("users")
+		.selectAll()
+		.where("handle", "=", handle)
+		.executeTakeFirst();
 	return user ?? null;
 }

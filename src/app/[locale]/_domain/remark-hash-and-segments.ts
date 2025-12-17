@@ -23,7 +23,7 @@ import { toString as mdastToString } from "mdast-util-to-string";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 import type { Data, VFile } from "vfile";
-import type { Segment } from "@/drizzle/types";
+import type { Segment } from "@/db/types.helpers";
 import { generateHashForText } from "../_utils/generate-hash-for-text";
 /* ---------- 共通型 ---------- */
 

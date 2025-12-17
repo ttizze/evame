@@ -1,4 +1,4 @@
-import { fetchChildPages } from "@/app/[locale]/_db/page-list-queries.server";
+import { fetchChildPages } from "@/app/[locale]/_db/page-list.server";
 import { ChildPageTree } from "./client";
 
 interface ChildPagesProps {

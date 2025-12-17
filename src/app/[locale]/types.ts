@@ -1,6 +1,9 @@
 import type { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
-import type { SegmentTranslation, TranslationVote } from "@/drizzle/types";
-import type { SanitizedUser } from "../types";
+import type {
+	SanitizedUser,
+	SegmentTranslation,
+	TranslationVote,
+} from "@/db/types.helpers";
 
 export type TranslationWithUser = SegmentTranslation & {
 	user: SanitizedUser;

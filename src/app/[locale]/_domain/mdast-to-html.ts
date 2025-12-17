@@ -1,14 +1,15 @@
-import type { Root as MdastRoot, RootContent } from "mdast";
 import rehypeStringify from "rehype-stringify";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
+import type { Json } from "@/db/types";
 
 /* -------------------------------------------------------------------------- */
 /*                               Public API                                   */
 /* -------------------------------------------------------------------------- */
 
 interface Params {
-	mdastJson: MdastRoot | RootContent | RootContent[] | null;
+	/** DB に入っている mdastJson (= Prisma.Json) */
+	mdastJson: Json;
 }
 
 interface Result {

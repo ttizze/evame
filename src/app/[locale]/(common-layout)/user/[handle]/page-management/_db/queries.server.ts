@@ -1,7 +1,6 @@
-import { and, count, desc, eq, exists, ilike, inArray } from "drizzle-orm";
-import { db } from "@/drizzle";
-import { pages, pageViews, segments } from "@/drizzle/schema";
-import type { PageStatus } from "@/drizzle/types";
+import { sql } from "kysely";
+import { db } from "@/db";
+import type { Pagestatus } from "@/db/types";
 
 export async function fetchPaginatedOwnPages(
 	userId: string,
@@ -12,70 +11,52 @@ export async function fetchPaginatedOwnPages(
 ) {
 	const skip = (page - 1) * pageSize;
 
-	// WHERE条件の構築
-	const conditions = [
-		eq(pages.userId, userId),
-		inArray(pages.status, ["PUBLIC", "DRAFT"] satisfies PageStatus[]),
-	];
+	// 基本クエリを構築
+	let baseQuery = db
+		.selectFrom("pages")
+		.where("userId", "=", userId)
+		.where("status", "in", ["PUBLIC", "DRAFT"] satisfies Pagestatus[]);
 
 	// searchTermがある場合、EXISTS句で該当するセグメントを持つページをフィルタリング
 	if (searchTerm) {
-		conditions.push(
-			exists(
-				db
-					.select()
-					.from(segments)
-					.where(
-						and(
-							eq(segments.contentId, pages.id),
-							eq(segments.number, 0),
-							ilike(segments.text, `%${searchTerm}%`),
-						),
-					),
+		baseQuery = baseQuery.where((eb) =>
+			eb.exists(
+				eb
+					.selectFrom("segments")
+					.select(sql`1`.as("one"))
+					.whereRef("segments.contentId", "=", "pages.id")
+					.where("segments.number", "=", 0)
+					.where("segments.text", "ilike", `%${searchTerm}%`),
 			),
 		);
 	}
 
-	const whereClause = and(...conditions);
-
 	// ページと総数を取得
 	const [rawPages, totalCountResult] = await Promise.all([
-		db
-			.select({
-				id: pages.id,
-				slug: pages.slug,
-				updatedAt: pages.updatedAt,
-				createdAt: pages.createdAt,
-				status: pages.status,
-			})
-			.from(pages)
-			.where(whereClause)
-			.orderBy(desc(pages.updatedAt))
+		baseQuery
+			.select(["id", "slug", "updatedAt", "createdAt", "status"])
+			.orderBy("updatedAt", "desc")
 			.limit(pageSize)
-			.offset(skip),
-		db.select({ count: count() }).from(pages).where(whereClause),
+			.offset(skip)
+			.execute(),
+		baseQuery.select(sql<number>`count(*)::int`.as("count")).executeTakeFirst(),
 	]);
 
-	const totalCount = Number(totalCountResult[0]?.count ?? 0);
+	const totalCount = Number(totalCountResult?.count ?? 0);
 
 	// タイトルセグメント（number = 0）を取得
 	const titleSegments =
 		rawPages.length > 0
 			? await db
-					.select({
-						contentId: segments.contentId,
-						text: segments.text,
-					})
-					.from(segments)
+					.selectFrom("segments")
+					.select(["contentId", "text"])
 					.where(
-						and(
-							inArray(
-								segments.contentId,
-								rawPages.map((p) => p.id),
-							),
-							eq(segments.number, 0),
-						),
+						"contentId",
+						"in",
+						rawPages.map((p) => p.id),
 					)
+					.where("number", "=", 0)
+					.execute()
 			: [];
 
 	// セグメントをマップに変換
@@ -113,12 +94,10 @@ export async function fetchPageViewCounts(pageIds: number[]) {
 	if (pageIds.length === 0) return {} as Record<number, number>;
 
 	const views = await db
-		.select({
-			pageId: pageViews.pageId,
-			count: pageViews.count,
-		})
-		.from(pageViews)
-		.where(inArray(pageViews.pageId, pageIds));
+		.selectFrom("pageViews")
+		.select(["pageId", "count"])
+		.where("pageId", "in", pageIds)
+		.execute();
 
 	return views.reduce(
 		(acc, v) => {

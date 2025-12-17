@@ -1,6 +1,5 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { sql } from "kysely";
 import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
-import { segments, segmentTypes } from "@/drizzle/schema";
 import type { ExistingSegment, TransactionClient } from "../types";
 
 /**
@@ -14,11 +13,11 @@ export async function getSegmentTypeId(
 		return segmentTypeId;
 	}
 
-	const [segmentType] = await tx
-		.select({ id: segmentTypes.id })
-		.from(segmentTypes)
-		.where(eq(segmentTypes.key, "PRIMARY"))
-		.limit(1);
+	const segmentType = await tx
+		.selectFrom("segmentTypes")
+		.select("id")
+		.where("key", "=", "PRIMARY")
+		.executeTakeFirst();
 
 	if (!segmentType) {
 		throw new Error("Primary segment type not found");
@@ -36,19 +35,11 @@ export async function fetchExistingSegments(
 	segmentTypeId: number,
 ): Promise<ExistingSegment[]> {
 	return await tx
-		.select({
-			id: segments.id,
-			text: segments.text,
-			number: segments.number,
-			textAndOccurrenceHash: segments.textAndOccurrenceHash,
-		})
-		.from(segments)
-		.where(
-			and(
-				eq(segments.contentId, contentId),
-				eq(segments.segmentTypeId, segmentTypeId),
-			),
-		);
+		.selectFrom("segments")
+		.select(["id", "text", "number", "textAndOccurrenceHash"])
+		.where("contentId", "=", contentId)
+		.where("segmentTypeId", "=", segmentTypeId)
+		.execute();
 }
 
 /**
@@ -60,16 +51,13 @@ export async function offsetSegmentNumbers(
 	segmentTypeId: number,
 ): Promise<void> {
 	await tx
-		.update(segments)
+		.updateTable("segments")
 		.set({
-			number: sql`${segments.number} + ${1_000_000}`,
+			number: sql`number + 1000000`,
 		})
-		.where(
-			and(
-				eq(segments.contentId, contentId),
-				eq(segments.segmentTypeId, segmentTypeId),
-			),
-		);
+		.where("contentId", "=", contentId)
+		.where("segmentTypeId", "=", segmentTypeId)
+		.execute();
 }
 
 /**
@@ -81,8 +69,8 @@ export async function upsertSingleSegment(
 	segmentTypeId: number,
 	draft: SegmentDraft,
 ): Promise<{ hash: string; segmentId: number }> {
-	const [segment] = await tx
-		.insert(segments)
+	const segment = await tx
+		.insertInto("segments")
 		.values({
 			contentId,
 			text: draft.text,
@@ -90,19 +78,13 @@ export async function upsertSingleSegment(
 			textAndOccurrenceHash: draft.textAndOccurrenceHash,
 			segmentTypeId,
 		})
-		.onConflictDoUpdate({
-			target: [segments.contentId, segments.textAndOccurrenceHash],
-			set: {
+		.onConflict((oc) =>
+			oc.columns(["contentId", "textAndOccurrenceHash"]).doUpdateSet({
 				number: draft.number,
-			},
-		})
-		.returning({ id: segments.id });
-
-	if (!segment) {
-		throw new Error(
-			`Failed to upsert segment with hash ${draft.textAndOccurrenceHash}`,
-		);
-	}
+			}),
+		)
+		.returning(["id"])
+		.executeTakeFirstOrThrow();
 
 	return {
 		hash: draft.textAndOccurrenceHash,
@@ -149,12 +131,9 @@ export async function deleteStaleSegments(
 	}
 
 	await tx
-		.delete(segments)
-		.where(
-			and(
-				eq(segments.contentId, contentId),
-				eq(segments.segmentTypeId, segmentTypeId),
-				inArray(segments.textAndOccurrenceHash, [...hashesToDelete]),
-			),
-		);
+		.deleteFrom("segments")
+		.where("contentId", "=", contentId)
+		.where("segmentTypeId", "=", segmentTypeId)
+		.where("textAndOccurrenceHash", "in", [...hashesToDelete])
+		.execute();
 }

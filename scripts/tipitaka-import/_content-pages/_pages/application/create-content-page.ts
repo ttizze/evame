@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import { markdownToMdastWithSegments } from "@/app/[locale]/_domain/markdown-to-mdast-with-segments";
 import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/edit-page-client/service/upsert-page-and-segments";
-import type { PageStatus } from "@/drizzle/types";
+import type { Pagestatus } from "@/db/types";
 import { parseDirSegment } from "../../../domain/parse-dir-segment/parse-dir-segment";
 import type { TipitakaFileMeta } from "../../../types";
 import { slugify } from "../../../utils/slugify";
@@ -54,7 +54,7 @@ export async function createContentPage({
 		parentId,
 		order,
 		anchorContentId,
-		status: "PUBLIC" as PageStatus,
+		status: "PUBLIC" as Pagestatus,
 	});
 
 	const page = await findPageBySlugAndUserId(slug, userId);

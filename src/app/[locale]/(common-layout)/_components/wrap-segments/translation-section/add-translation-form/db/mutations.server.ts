@@ -1,5 +1,4 @@
-import { db } from "@/drizzle";
-import { segmentTranslations } from "@/drizzle/schema";
+import { db } from "@/db";
 
 export async function addUserTranslation(
 	segmentId: number,
@@ -7,11 +6,14 @@ export async function addUserTranslation(
 	userId: string,
 	locale: string,
 ) {
-	await db.insert(segmentTranslations).values({
-		segmentId,
-		locale,
-		text,
-		userId,
-	});
+	await db
+		.insertInto("segmentTranslations")
+		.values({
+			segmentId,
+			locale,
+			text,
+			userId,
+		})
+		.execute();
 	return { success: true };
 }

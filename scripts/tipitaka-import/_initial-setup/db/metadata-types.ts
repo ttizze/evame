@@ -1,11 +1,6 @@
-import { eq, inArray } from "drizzle-orm";
-import { db } from "@/drizzle";
-import { segmentMetadataTypes } from "@/drizzle/schema";
-import type { SegmentMetadataType } from "@/drizzle/types";
+import { db } from "@/db";
 
-const METADATA_TYPE_SEED_DATA: Array<
-	Pick<SegmentMetadataType, "key" | "label">
-> = [
+const METADATA_TYPE_SEED_DATA = [
 	{ key: "VRI_PAGEBREAK", label: "VRI Page Break" },
 	{ key: "PTS_PAGEBREAK", label: "PTS Page Break" },
 	{ key: "THAI_PAGEBREAK", label: "Thai Page Break" },
@@ -16,26 +11,23 @@ const METADATA_TYPE_SEED_DATA: Array<
 export async function ensureMetadataTypes() {
 	// skipDuplicates相当の処理: 既存のkeyを確認してから挿入
 	for (const data of METADATA_TYPE_SEED_DATA) {
-		const [existing] = await db
-			.select()
-			.from(segmentMetadataTypes)
-			.where(eq(segmentMetadataTypes.key, data.key))
-			.limit(1);
+		const existing = await db
+			.selectFrom("segmentMetadataTypes")
+			.selectAll()
+			.where("key", "=", data.key)
+			.executeTakeFirst();
 		if (!existing) {
-			await db.insert(segmentMetadataTypes).values(data);
+			await db.insertInto("segmentMetadataTypes").values(data).execute();
 		}
 	}
 
 	return db
-		.select({
-			key: segmentMetadataTypes.key,
-			id: segmentMetadataTypes.id,
-		})
-		.from(segmentMetadataTypes)
+		.selectFrom("segmentMetadataTypes")
+		.select(["key", "id"])
 		.where(
-			inArray(
-				segmentMetadataTypes.key,
-				METADATA_TYPE_SEED_DATA.map((item) => item.key),
-			),
-		);
+			"key",
+			"in",
+			METADATA_TYPE_SEED_DATA.map((item) => item.key),
+		)
+		.execute();
 }

@@ -1,16 +1,8 @@
-import { and, eq, sql } from "drizzle-orm";
+import type { Transaction } from "kysely";
+import { sql } from "kysely";
 import { calcProofStatus } from "@/app/[locale]/(common-layout)/_components/wrap-segments/translation-section/vote-buttons/_lib/translation-proof-status";
-import { db } from "@/drizzle";
-import {
-	contents,
-	notifications,
-	pageLocaleTranslationProofs,
-	pages,
-	segments,
-	segmentTranslations,
-	translationVotes,
-} from "@/drizzle/schema";
-import type { TransactionClient } from "@/drizzle/types";
+import { db } from "@/db";
+import type { DB } from "@/db/types";
 
 type VoteOutcome = {
 	finalIsUpvote: boolean | undefined;
@@ -58,7 +50,7 @@ export async function handleVote(
 	isUpvote: boolean,
 	currentUserId: string,
 ) {
-	return db.transaction(async (tx) => {
+	return db.transaction().execute(async (tx) => {
 		// 投票処理と関連情報を同時に取得
 		const { finalIsUpvote } = await applyVote(
 			tx,
@@ -69,31 +61,30 @@ export async function handleVote(
 
 		// 更新後のpoint と ページ情報を取得
 		const result = await tx
-			.select({
-				point: segmentTranslations.point,
-				locale: segmentTranslations.locale,
-				pageId: pages.id,
-			})
-			.from(segmentTranslations)
-			.innerJoin(segments, eq(segmentTranslations.segmentId, segments.id))
-			.innerJoin(contents, eq(segments.contentId, contents.id))
-			.leftJoin(pages, eq(contents.id, pages.id))
-			.where(eq(segmentTranslations.id, segmentTranslationId))
-			.limit(1);
+			.selectFrom("segmentTranslations")
+			.innerJoin("segments", "segmentTranslations.segmentId", "segments.id")
+			.innerJoin("contents", "segments.contentId", "contents.id")
+			.leftJoin("pages", "contents.id", "pages.id")
+			.select([
+				"segmentTranslations.point",
+				"segmentTranslations.locale",
+				"pages.id as pageId",
+			])
+			.where("segmentTranslations.id", "=", segmentTranslationId)
+			.executeTakeFirst();
 
-		const row = result[0];
-		if (!row) {
+		if (!result) {
 			return { success: false, data: { isUpvote: undefined, point: 0 } };
 		}
 
 		// ページの場合のみproof statusを更新
-		if (row.pageId) {
-			await updateProofStatus(tx, row.pageId, row.locale);
+		if (result.pageId) {
+			await updateProofStatus(tx, result.pageId, result.locale);
 		}
 
 		return {
 			success: true,
-			data: { isUpvote: finalIsUpvote, point: row.point },
+			data: { isUpvote: finalIsUpvote, point: result.point },
 		};
 	});
 }
@@ -102,82 +93,87 @@ export async function handleVote(
  * 投票の適用とpoint更新を行う
  */
 async function applyVote(
-	tx: TransactionClient,
+	tx: Transaction<DB>,
 	segmentTranslationId: number,
 	isUpvote: boolean,
 	currentUserId: string,
 ) {
 	const existingVote = await tx
-		.select({ isUpvote: translationVotes.isUpvote })
-		.from(translationVotes)
-		.where(
-			and(
-				eq(translationVotes.translationId, segmentTranslationId),
-				eq(translationVotes.userId, currentUserId),
-			),
-		)
-		.limit(1);
+		.selectFrom("translationVotes")
+		.select("isUpvote")
+		.where("translationId", "=", segmentTranslationId)
+		.where("userId", "=", currentUserId)
+		.executeTakeFirst();
 
-	const outcome = computeVoteOutcome(
-		existingVote[0]?.isUpvote ?? undefined,
-		isUpvote,
-	);
-	const voteCondition = and(
-		eq(translationVotes.translationId, segmentTranslationId),
-		eq(translationVotes.userId, currentUserId),
-	);
+	const outcome = computeVoteOutcome(existingVote?.isUpvote, isUpvote);
 
 	// 投票テーブルの操作
 	if (outcome.action === "delete") {
-		await tx.delete(translationVotes).where(voteCondition);
+		await tx
+			.deleteFrom("translationVotes")
+			.where("translationId", "=", segmentTranslationId)
+			.where("userId", "=", currentUserId)
+			.execute();
 	} else if (outcome.action === "update") {
-		await tx.update(translationVotes).set({ isUpvote }).where(voteCondition);
+		await tx
+			.updateTable("translationVotes")
+			.set({ isUpvote })
+			.where("translationId", "=", segmentTranslationId)
+			.where("userId", "=", currentUserId)
+			.execute();
 	} else {
-		await tx.insert(translationVotes).values({
-			translationId: segmentTranslationId,
-			userId: currentUserId,
-			isUpvote,
-		});
+		await tx
+			.insertInto("translationVotes")
+			.values({
+				translationId: segmentTranslationId,
+				userId: currentUserId,
+				isUpvote,
+			})
+			.execute();
 	}
 
 	// point更新
 	await tx
-		.update(segmentTranslations)
-		.set({ point: sql`${segmentTranslations.point} + ${outcome.pointDelta}` })
-		.where(eq(segmentTranslations.id, segmentTranslationId));
+		.updateTable("segmentTranslations")
+		.set({ point: sql`point + ${outcome.pointDelta}` })
+		.where("id", "=", segmentTranslationId)
+		.execute();
 
 	return { finalIsUpvote: outcome.finalIsUpvote };
 }
 
 /**
  * ページのproof statusを更新する
- * 1クエリで全カウントを取得（sql<number>で型安全）
+ * 1クエリで全カウントを取得
  */
 async function updateProofStatus(
-	tx: TransactionClient,
+	tx: Transaction<DB>,
 	pageId: number,
 	locale: string,
 ) {
 	const stats = await tx
-		.select({
-			totalSegments: sql<number>`count(*)`,
-			segmentsWith1PlusVotes: sql<number>`count(case when ${segmentTranslations.point} >= 1 then 1 end)`,
-			segmentsWith2PlusVotes: sql<number>`count(case when ${segmentTranslations.point} >= 2 then 1 end)`,
-		})
-		.from(segments)
-		.innerJoin(contents, eq(segments.contentId, contents.id))
-		.innerJoin(pages, eq(contents.id, pages.id))
-		.leftJoin(
-			segmentTranslations,
-			and(
-				eq(segmentTranslations.segmentId, segments.id),
-				eq(segmentTranslations.locale, locale),
-			),
+		.selectFrom("segments")
+		.innerJoin("contents", "segments.contentId", "contents.id")
+		.innerJoin("pages", "contents.id", "pages.id")
+		.leftJoin("segmentTranslations", (join) =>
+			join
+				.onRef("segmentTranslations.segmentId", "=", "segments.id")
+				.on("segmentTranslations.locale", "=", locale),
 		)
-		.where(eq(pages.id, pageId));
+		.select([
+			sql<number>`count(*)::int`.as("totalSegments"),
+			sql<number>`count(case when segment_translations.point >= 1 then 1 end)::int`.as(
+				"segmentsWith1PlusVotes",
+			),
+			sql<number>`count(case when segment_translations.point >= 2 then 1 end)::int`.as(
+				"segmentsWith2PlusVotes",
+			),
+		])
+		.where("pages.id", "=", pageId)
+		.executeTakeFirst();
 
 	const { totalSegments, segmentsWith1PlusVotes, segmentsWith2PlusVotes } =
-		stats[0] ?? {
+		stats ?? {
 			totalSegments: 0,
 			segmentsWith1PlusVotes: 0,
 			segmentsWith2PlusVotes: 0,
@@ -192,15 +188,14 @@ async function updateProofStatus(
 	);
 
 	await tx
-		.insert(pageLocaleTranslationProofs)
+		.insertInto("pageLocaleTranslationProofs")
 		.values({ pageId, locale, translationProofStatus: newStatus })
-		.onConflictDoUpdate({
-			target: [
-				pageLocaleTranslationProofs.pageId,
-				pageLocaleTranslationProofs.locale,
-			],
-			set: { translationProofStatus: newStatus },
-		});
+		.onConflict((oc) =>
+			oc.columns(["pageId", "locale"]).doUpdateSet({
+				translationProofStatus: newStatus,
+			}),
+		)
+		.execute();
 }
 
 export async function createNotificationPageSegmentTranslationVote(
@@ -208,17 +203,20 @@ export async function createNotificationPageSegmentTranslationVote(
 	actorId: string,
 ) {
 	const segmentTranslation = await db
-		.select({ userId: segmentTranslations.userId })
-		.from(segmentTranslations)
-		.where(eq(segmentTranslations.id, pageSegmentTranslationId))
-		.limit(1);
+		.selectFrom("segmentTranslations")
+		.select("userId")
+		.where("id", "=", pageSegmentTranslationId)
+		.executeTakeFirst();
 
-	if (!segmentTranslation[0]) return;
+	if (!segmentTranslation) return;
 
-	await db.insert(notifications).values({
-		segmentTranslationId: pageSegmentTranslationId,
-		userId: segmentTranslation[0].userId,
-		actorId,
-		type: "PAGE_SEGMENT_TRANSLATION_VOTE",
-	});
+	await db
+		.insertInto("notifications")
+		.values({
+			segmentTranslationId: pageSegmentTranslationId,
+			userId: segmentTranslation.userId,
+			actorId,
+			type: "PAGE_SEGMENT_TRANSLATION_VOTE",
+		})
+		.execute();
 }

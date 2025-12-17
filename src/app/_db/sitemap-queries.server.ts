@@ -1,7 +1,6 @@
-import { and, count, eq, inArray } from "drizzle-orm";
-import { db } from "@/drizzle";
-import { pages, translationJobs, users } from "@/drizzle/schema";
-import type { PageStatus, TranslationStatus } from "@/drizzle/types";
+import { sql } from "kysely";
+import { db } from "@/db";
+import type { Pagestatus, Translationstatus } from "@/db/types";
 
 export type PageWithUserAndTranslation = Awaited<
 	ReturnType<typeof fetchPagesWithUserAndTranslationChunk>
@@ -9,10 +8,11 @@ export type PageWithUserAndTranslation = Awaited<
 
 export async function countPublicPages() {
 	const result = await db
-		.select({ count: count() })
-		.from(pages)
-		.where(eq(pages.status, "PUBLIC" satisfies PageStatus));
-	return Number(result[0]?.count ?? 0);
+		.selectFrom("pages")
+		.select(sql<number>`count(*)::int`.as("count"))
+		.where("status", "=", "PUBLIC" satisfies Pagestatus)
+		.executeTakeFirst();
+	return Number(result?.count ?? 0);
 }
 
 export async function fetchPagesWithUserAndTranslationChunk({
@@ -24,18 +24,19 @@ export async function fetchPagesWithUserAndTranslationChunk({
 }) {
 	// まずページとユーザーを取得
 	const pagesResult = await db
-		.select({
-			slug: pages.slug,
-			updatedAt: pages.updatedAt,
-			sourceLocale: pages.sourceLocale,
-			pageId: pages.id,
-			userHandle: users.handle,
-		})
-		.from(pages)
-		.innerJoin(users, eq(pages.userId, users.id))
-		.where(eq(pages.status, "PUBLIC" satisfies PageStatus))
+		.selectFrom("pages")
+		.innerJoin("users", "pages.userId", "users.id")
+		.select([
+			"pages.slug",
+			"pages.updatedAt",
+			"pages.sourceLocale",
+			"pages.id as pageId",
+			"users.handle as userHandle",
+		])
+		.where("pages.status", "=", "PUBLIC" satisfies Pagestatus)
 		.limit(limit)
-		.offset(offset);
+		.offset(offset)
+		.execute();
 
 	if (pagesResult.length === 0) {
 		return [];
@@ -45,17 +46,11 @@ export async function fetchPagesWithUserAndTranslationChunk({
 
 	// 各ページの翻訳ジョブを取得
 	const translationJobsResult = await db
-		.select({
-			pageId: translationJobs.pageId,
-			locale: translationJobs.locale,
-		})
-		.from(translationJobs)
-		.where(
-			and(
-				inArray(translationJobs.pageId, pageIds.length > 0 ? pageIds : [-1]),
-				eq(translationJobs.status, "COMPLETED" satisfies TranslationStatus),
-			),
-		);
+		.selectFrom("translationJobs")
+		.select(["pageId", "locale"])
+		.where("pageId", "in", pageIds.length > 0 ? pageIds : [-1])
+		.where("status", "=", "COMPLETED" satisfies Translationstatus)
+		.execute();
 
 	// ページIDごとに翻訳ジョブをグループ化
 	const translationJobsMap = new Map<number, Array<{ locale: string }>>();

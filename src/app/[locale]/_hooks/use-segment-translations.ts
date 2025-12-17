@@ -1,6 +1,6 @@
 import useSWR from "swr";
 import type { SanitizedUser } from "@/app/types";
-import type { TranslationVote } from "@/drizzle/types";
+import type { TranslationVote } from "@/db/types.helpers";
 import type { TranslationWithInfo } from "../types";
 
 interface UseSegmentTranslationsParams {

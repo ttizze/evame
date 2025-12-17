@@ -1,8 +1,6 @@
-import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { db } from "@/drizzle";
-import { pageComments } from "@/drizzle/schema";
+import { db } from "@/db";
 import { mockCurrentUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createPageComment, createUser } from "@/tests/factories";
@@ -59,11 +57,11 @@ describe("deletePageCommentAction", () => {
 			expect(result.success).toBe(true);
 
 			// DBの状態を確認（論理削除されている）
-			const [deletedComment] = await db
-				.select()
-				.from(pageComments)
-				.where(eq(pageComments.id, comment.id))
-				.limit(1);
+			const deletedComment = await db
+				.selectFrom("pageComments")
+				.selectAll()
+				.where("id", "=", comment.id)
+				.executeTakeFirst();
 			expect(deletedComment?.isDeleted).toBe(true);
 			expect(deletedComment?.mdastJson).toEqual({
 				type: "root",
@@ -91,11 +89,11 @@ describe("deletePageCommentAction", () => {
 				deletePageCommentAction({ success: false }, formData),
 			).rejects.toThrow("Comment not found or not owned by user");
 
-			const [unchangedComment] = await db
-				.select()
-				.from(pageComments)
-				.where(eq(pageComments.id, comment.id))
-				.limit(1);
+			const unchangedComment = await db
+				.selectFrom("pageComments")
+				.selectAll()
+				.where("id", "=", comment.id)
+				.executeTakeFirst();
 			expect(unchangedComment?.isDeleted).toBe(false);
 		});
 
@@ -129,9 +127,10 @@ describe("deletePageCommentAction", () => {
 			});
 
 			await db
-				.update(pageComments)
+				.updateTable("pageComments")
 				.set({ replyCount: 1 })
-				.where(eq(pageComments.id, parent.id));
+				.where("id", "=", parent.id)
+				.execute();
 
 			mockCurrentUser(user);
 
@@ -141,11 +140,11 @@ describe("deletePageCommentAction", () => {
 
 			await deletePageCommentAction({ success: false }, formData);
 
-			const [updatedParent] = await db
-				.select()
-				.from(pageComments)
-				.where(eq(pageComments.id, parent.id))
-				.limit(1);
+			const updatedParent = await db
+				.selectFrom("pageComments")
+				.selectAll()
+				.where("id", "=", parent.id)
+				.executeTakeFirst();
 			expect(updatedParent?.replyCount).toBe(0);
 		});
 	});
