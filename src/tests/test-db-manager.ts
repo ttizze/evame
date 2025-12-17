@@ -36,10 +36,10 @@ export async function setupDbPerFile(fileUrl: string): Promise<void> {
 	psql(`CREATE DATABASE "${dbName}" WITH TEMPLATE=template0`);
 
 	// マイグレーション実行
-	execSync("bunx drizzle-kit migrate", {
-		env: { ...process.env, DATABASE_URL: dbUrl },
-		stdio: "pipe",
-	});
+	execSync(
+		`bunx atlas schema apply -u "${dbUrl}?search_path=public&sslmode=disable" --to file://atlas/schema.sql --dev-url "docker://postgres/17/dev?search_path=public" --auto-approve`,
+		{ stdio: "pipe" },
+	);
 
 	// マスターデータ投入
 	process.env.DATABASE_URL = dbUrl;
