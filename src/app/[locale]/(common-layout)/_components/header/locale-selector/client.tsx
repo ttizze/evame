@@ -20,7 +20,8 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import type { TranslationJobs, Translationproofstatus } from "@/db/types";
+import type { Translationproofstatus } from "@/db/types";
+import type { TranslationJob } from "@/db/types.helpers";
 import { usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { AddTranslateDialog } from "./add-translate-dialog/client";
@@ -32,7 +33,7 @@ import { useCombinedRouter } from "./hooks/use-combined-router";
 // Local types
 interface TranslationInfo {
 	sourceLocale: string;
-	translationJobs: TranslationJobs[];
+	translationJobs: TranslationJob[];
 	translationProofs: {
 		locale: string;
 		translationProofStatus: Translationproofstatus;

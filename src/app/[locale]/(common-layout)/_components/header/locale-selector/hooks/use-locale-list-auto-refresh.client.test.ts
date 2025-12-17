@@ -1,7 +1,7 @@
 import { renderHook } from "@testing-library/react";
-// useLocaleListAutoRefresh.test.ts
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { TranslationJobs } from "@/db/types";
+// useLocaleListAutoRefresh.test.ts
+import type { TranslationJob } from "@/db/types.helpers";
 import { useLocaleListAutoRefresh } from "./use-locale-list-auto-refresh.client";
 
 // モック用の refresh 関数
@@ -41,11 +41,11 @@ describe("useLocaleListAutoRefresh", () => {
 			{
 				locale: "en",
 				status: "COMPLETED",
-			} as TranslationJobs,
+			} as TranslationJob,
 			{
 				locale: "fr",
 				status: "COMPLETED",
-			} as TranslationJobs,
+			} as TranslationJob,
 		];
 		renderHook(() => useLocaleListAutoRefresh(translationInfos));
 		vi.advanceTimersByTime(5000);
@@ -57,11 +57,11 @@ describe("useLocaleListAutoRefresh", () => {
 			{
 				locale: "en",
 				status: "IN_PROGRESS",
-			} as TranslationJobs,
+			} as TranslationJob,
 			{
 				locale: "fr",
 				status: "COMPLETED",
-			} as TranslationJobs,
+			} as TranslationJob,
 		];
 		renderHook(() => useLocaleListAutoRefresh(translationInfos));
 		vi.advanceTimersByTime(5000);
@@ -73,7 +73,7 @@ describe("useLocaleListAutoRefresh", () => {
 			{
 				locale: "en",
 				status: "IN_PROGRESS",
-			} as TranslationJobs,
+			} as TranslationJob,
 		];
 		renderHook(() => useLocaleListAutoRefresh(translationInfos));
 		vi.advanceTimersByTime(15000); // 5000ms × 3
@@ -85,7 +85,7 @@ describe("useLocaleListAutoRefresh", () => {
 			{
 				locale: "en",
 				status: "IN_PROGRESS",
-			} as TranslationJobs,
+			} as TranslationJob,
 		];
 		const { unmount } = renderHook(() =>
 			useLocaleListAutoRefresh(translationInfos),

@@ -1,12 +1,15 @@
 import type { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
-import type { SegmentTranslations, TranslationVotes } from "@/db/types";
-import type { SanitizedUser } from "../types";
+import type {
+	SanitizedUser,
+	SegmentTranslation,
+	TranslationVote,
+} from "@/db/types.helpers";
 
-export type TranslationWithUser = SegmentTranslations & {
+export type TranslationWithUser = SegmentTranslation & {
 	user: SanitizedUser;
 };
 export type TranslationWithInfo = TranslationWithUser & {
-	currentUserVote: TranslationVotes | null; // null = 未投票
+	currentUserVote: TranslationVote | null; // null = 未投票
 };
 
 // fetchPageDetail の戻り値から型を推論

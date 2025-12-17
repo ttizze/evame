@@ -35,6 +35,9 @@
 			"correctness": {
 				"noUnusedImports": { "level": "warn", "fix": "safe" },
 				"useUniqueElementIds": "off"
+			},
+			"style": {
+				"noNonNullAssertion": "off"
 			}
 		}
 	},
