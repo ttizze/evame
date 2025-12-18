@@ -23,7 +23,6 @@ import {
 	tags,
 	translationJobs,
 	translationVotes,
-	userCredentials,
 	userSettings,
 	users,
 } from "./schema";
@@ -60,7 +59,6 @@ export const usersRelations = relations(users, ({ many }) => ({
 	translationJobs: many(translationJobs),
 	sessions: many(sessions),
 	translationVotes: many(translationVotes),
-	userCredentials: many(userCredentials),
 	segmentTranslations: many(segmentTranslations),
 	pageComments: many(pageComments),
 	pages: many(pages),
@@ -261,16 +259,6 @@ export const translationVotesRelations = relations(
 		}),
 		user: one(users, {
 			fields: [translationVotes.userId],
-			references: [users.id],
-		}),
-	}),
-);
-
-export const userCredentialsRelations = relations(
-	userCredentials,
-	({ one }) => ({
-		user: one(users, {
-			fields: [userCredentials.userId],
 			references: [users.id],
 		}),
 	}),

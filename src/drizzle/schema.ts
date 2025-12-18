@@ -550,32 +550,6 @@ export const translationVotes = pgTable(
 	],
 );
 
-export const userCredentials = pgTable(
-	"user_credentials",
-	{
-		id: serial().primaryKey().notNull(),
-		password: text().notNull(),
-		userId: text("user_id").notNull(),
-	},
-	(table) => [
-		index("user_credentials_user_id_idx").using(
-			"btree",
-			table.userId.asc().nullsLast(),
-		),
-		uniqueIndex("user_credentials_user_id_key").using(
-			"btree",
-			table.userId.asc().nullsLast(),
-		),
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "user_credentials_user_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("restrict"),
-	],
-);
-
 export const segmentTranslations = pgTable(
 	"segment_translations",
 	{

@@ -81,11 +81,6 @@ export type SessionInsert = InferInsertModel<typeof schema.sessions>;
 export type UserSetting = InferSelectModel<typeof schema.userSettings>;
 export type UserSettingInsert = InferInsertModel<typeof schema.userSettings>;
 
-export type UserCredential = InferSelectModel<typeof schema.userCredentials>;
-export type UserCredentialInsert = InferInsertModel<
-	typeof schema.userCredentials
->;
-
 export type GeminiApiKey = InferSelectModel<typeof schema.geminiApiKeys>;
 export type GeminiApiKeyInsert = InferInsertModel<typeof schema.geminiApiKeys>;
 

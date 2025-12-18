@@ -266,12 +266,6 @@ export interface TranslationVotes {
 	userId: string;
 }
 
-export interface UserCredentials {
-	id: Generated<number>;
-	password: string;
-	userId: string;
-}
-
 export interface Users {
 	createdAt: Generated<Timestamp>;
 	email: string;
@@ -332,7 +326,6 @@ export interface DB {
 	tags: Tags;
 	translationJobs: TranslationJobs;
 	translationVotes: TranslationVotes;
-	userCredentials: UserCredentials;
 	users: Users;
 	userSettings: UserSettings;
 	verifications: Verifications;
