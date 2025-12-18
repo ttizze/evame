@@ -74,7 +74,9 @@ async function ensurePrimarySegmentType(): Promise<number> {
 	const result = await db
 		.insertInto("segmentTypes")
 		.values({ key: "PRIMARY", label: "Primary" })
-		.onConflict((oc) => oc.columns(["key", "label"]).doUpdateSet({}))
+		.onConflict((oc) =>
+			oc.columns(["key", "label"]).doUpdateSet({ label: "Primary" }),
+		)
 		.returning("id")
 		.executeTakeFirstOrThrow();
 
@@ -97,7 +99,7 @@ async function ensureEvameUser(): Promise<string> {
 			totalPoints: 0,
 			isAi: false,
 		})
-		.onConflict((oc) => oc.column("handle").doUpdateSet({}))
+		.onConflict((oc) => oc.column("handle").doUpdateSet({ handle: "evame" }))
 		.returning("id")
 		.executeTakeFirstOrThrow();
 
@@ -182,19 +184,27 @@ async function insertTranslationJobs(
 	if (!locales.length) return;
 
 	for (const locale of locales) {
-		await tx
-			.insertInto("translationJobs")
-			.values({
-				pageId,
-				userId: null,
-				locale,
-				aiModel: "test-model",
-				status: "COMPLETED",
-				progress: 0,
-				error: "",
-			})
-			.onConflict((oc) => oc.columns(["pageId", "locale"]).doNothing())
-			.execute();
+		const existing = await tx
+			.selectFrom("translationJobs")
+			.select("id")
+			.where("pageId", "=", pageId)
+			.where("locale", "=", locale)
+			.executeTakeFirst();
+
+		if (!existing) {
+			await tx
+				.insertInto("translationJobs")
+				.values({
+					pageId,
+					userId: null,
+					locale,
+					aiModel: "test-model",
+					status: "COMPLETED",
+					progress: 0,
+					error: "",
+				})
+				.execute();
+		}
 	}
 }
 
@@ -272,22 +282,31 @@ async function upsertSegmentsWithTranslations(params: {
 			.executeTakeFirstOrThrow();
 
 		for (const [locale, text] of Object.entries(segment.translations)) {
-			await db
-				.insertInto("segmentTranslations")
-				.values({
-					segmentId: seg.id,
-					locale,
-					text,
-					userId: params.userId,
-					point: 0,
-				})
-				.onConflict((oc) =>
-					oc.columns(["segmentId", "locale"]).doUpdateSet({
+			const existing = await db
+				.selectFrom("segmentTranslations")
+				.select("id")
+				.where("segmentId", "=", seg.id)
+				.where("locale", "=", locale)
+				.executeTakeFirst();
+
+			if (existing) {
+				await db
+					.updateTable("segmentTranslations")
+					.set({ text, userId: params.userId })
+					.where("id", "=", existing.id)
+					.execute();
+			} else {
+				await db
+					.insertInto("segmentTranslations")
+					.values({
+						segmentId: seg.id,
+						locale,
 						text,
 						userId: params.userId,
-					}),
-				)
-				.execute();
+						point: 0,
+					})
+					.execute();
+			}
 		}
 	}
 }
