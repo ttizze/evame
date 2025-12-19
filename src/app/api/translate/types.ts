@@ -11,14 +11,11 @@ export type TranslatedElement = {
 	text: string;
 };
 
-export type TranslationProvider = "gemini" | "vertex";
-
-/** action → /api/translate へ渡すパラメータ */
+/** ac	tion → /api/translate へ渡すパラメータ */
 export interface TranslateJobParams {
 	userId: string;
 	pageId: number;
 	translationJobId: number;
-	provider: TranslationProvider;
 	aiModel: string;
 	targetLocale: string;
 	pageCommentId: number | null;

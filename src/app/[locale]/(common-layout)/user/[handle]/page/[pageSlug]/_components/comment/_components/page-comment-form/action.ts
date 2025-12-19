@@ -70,6 +70,7 @@ export const commentAction = createActionFactory<
 			pageCommentId: pageComment.id,
 			pageId,
 			targetLocales: ["en", "zh"],
+			aiModel: "gemini-2.5-flash-lite",
 		});
 		return {
 			success: true,

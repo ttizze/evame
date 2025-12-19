@@ -136,6 +136,7 @@ describe("editPageStatusAction", () => {
 			expect(updatedPage?.status).toBe("PUBLIC");
 
 			expect(enqueuePageTranslation).toHaveBeenCalledWith({
+				aiModel: "gemini-2.5-flash-lite",
 				currentUserId: user.id,
 				pageId: page.id,
 				targetLocales: ["ja", "zh"],

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { revalidatePageForLocale } from "@/lib/revalidate-utils";
+import { withQstashVerification } from "../_utils/with-qstash-signature";
+import type { TranslateChunkParams } from "../types";
 import {
 	incrementTranslationProgress,
 	markJobFailed,
-} from "../_db/mutations.server";
-import { stepForChunk } from "../_lib/progress";
-import { translateChunk } from "../_lib/translate.server";
-import { withQstashVerification } from "../_lib/with-qstash-signature";
-import type { TranslateChunkParams } from "../types";
+} from "./_db/mutations.server";
+import { translateChunk } from "./_service/translate-chunk.server";
+import { stepForChunk } from "./_utils/progress";
 
 async function handler(req: Request) {
 	try {
@@ -15,7 +15,6 @@ async function handler(req: Request) {
 
 		await translateChunk(
 			params.userId,
-			params.provider,
 			params.aiModel,
 			params.segments,
 			params.targetLocale,

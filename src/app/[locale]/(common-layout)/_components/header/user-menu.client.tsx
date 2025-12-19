@@ -16,7 +16,7 @@ import { ModeToggle } from "../mode-toggle";
 import { LocaleSelector } from "./locale-selector/client";
 
 interface UserMenuProps {
-	currentUser: { handle: string; name: string; image: string };
+	currentUser: { handle: string; name: string; image: string; plan: string };
 	hasGeminiApiKey?: boolean;
 }
 
@@ -74,6 +74,7 @@ export function UserMenu({
 					currentHandle={currentUser.handle}
 					hasGeminiApiKey={hasGeminiApiKey}
 					localeSelectorClassName="w-[200px]"
+					userPlan={currentUser.plan}
 				/>
 				<DropdownMenuSeparator className="my-0" />
 				<DropdownMenuItem className="p-0 ">

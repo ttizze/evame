@@ -24,14 +24,13 @@ import {
 	getPageSegments,
 	getPageTitle,
 } from "./_db/queries.server";
-import { splitSegments } from "./_lib/split-segments.server";
-import { withQstashVerification } from "./_lib/with-qstash-signature";
+import { splitSegments } from "./_domain/split-segments";
+import { withQstashVerification } from "./_utils/with-qstash-signature";
 
 const ParamsSchema = z.object({
 	userId: z.string().min(1),
 	pageId: z.number().int().positive(),
 	translationJobId: z.number().int().positive(),
-	provider: z.enum(["gemini", "vertex"]),
 	aiModel: z.string().min(1),
 	targetLocale: z.string().min(1),
 	pageCommentId: z.number().int().positive().nullable(),
@@ -53,7 +52,7 @@ async function handler(req: Request) {
 		const title = (await getPageTitle(params.pageId)) ?? "";
 
 		const sortedSegments = [...segments].sort((a, b) => a.number - b.number);
-		const chunks = splitSegments(sortedSegments);
+		const chunks = splitSegments(sortedSegments, params.aiModel);
 		const totalChunks = chunks.length;
 
 		// If there is nothing to translate, finalize immediately.
@@ -76,7 +75,6 @@ async function handler(req: Request) {
 			chunks.map((chunk, idx) => {
 				const body: TranslateChunkParams = {
 					translationJobId: params.translationJobId,
-					provider: params.provider,
 					aiModel: params.aiModel,
 					userId: params.userId,
 					targetLocale: params.targetLocale,

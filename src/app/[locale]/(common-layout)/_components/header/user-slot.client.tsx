@@ -31,6 +31,7 @@ export function HeaderUserSlot() {
 						currentHandle={undefined}
 						hasGeminiApiKey={false}
 						localeSelectorClassName="border rounded-full w-[150px]"
+						userPlan="free"
 					/>
 					<StartButton />
 				</>
