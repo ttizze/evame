@@ -25,7 +25,7 @@ if (process.env.DEBUG_TEST_DB === "1") {
 }
 
 // 外部システムのみモック（Gemini API）
-vi.mock("../_services/gemini", () => ({
+vi.mock("../_infra/gemini", () => ({
 	getGeminiModelResponse: vi.fn(),
 }));
 
@@ -94,7 +94,7 @@ describe("translateChunk", () => {
 		// Act
 		await translateChunk(
 			user.id,
-			"test-model",
+			"gemini-2.5-flash-lite",
 			segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 			"ja",
 			page.id,
