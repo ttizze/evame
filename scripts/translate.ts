@@ -96,7 +96,7 @@ async function fetchPageWithPageSegments(pageId: number) {
 			,
 			SLUG,
 			TARGET_LOCALE,
-			AI_MODEL = "gemini-2.0-flash",
+			AI_MODEL = "gemini-2.5-flash",
 			USER_HANDLE = "evame",
 		] = process.argv;
 

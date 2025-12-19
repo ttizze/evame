@@ -1,15 +1,19 @@
-import { MAX_CHUNK_SIZE } from "../constants";
+import { getMaxChunkSizeForModel } from "../constants";
 import type { SegmentElement } from "../types";
 
-/** セグメントを MAX_CHUNK_SIZE 以下のチャンクに分割 */
-export function splitSegments(segments: SegmentElement[]): SegmentElement[][] {
+/** セグメントをモデル別の最大チャンクサイズ以下のチャンクに分割 */
+export function splitSegments(
+	segments: SegmentElement[],
+	model: string,
+): SegmentElement[][] {
+	const maxChunkSize = getMaxChunkSizeForModel(model);
 	const chunks: SegmentElement[][] = [];
 	let currentChunk: SegmentElement[] = [];
 	let currentSize = 0;
 
 	for (const segment of segments) {
 		if (
-			currentSize + segment.text.length > MAX_CHUNK_SIZE &&
+			currentSize + segment.text.length > maxChunkSize &&
 			currentChunk.length > 0
 		) {
 			chunks.push(currentChunk);

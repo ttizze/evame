@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { splitSegments } from "./split-segments.server";
+import { splitSegments } from "./split-segments";
 
 describe("splitSegments", () => {
 	it("keeps small inputs in a single chunk", () => {
-		const chunks = splitSegments([
-			{ id: 1, number: 1, text: "a" },
-			{ id: 2, number: 2, text: "b" },
-		]);
+		const chunks = splitSegments(
+			[
+				{ id: 1, number: 1, text: "a" },
+				{ id: 2, number: 2, text: "b" },
+			],
+			"gemini-2.5-flash",
+		);
 		expect(chunks.length).toBe(1);
 		expect(chunks[0].map((e) => e.number)).toEqual([1, 2]);
 	});
@@ -18,7 +21,7 @@ describe("splitSegments", () => {
 			number: i + 1,
 			text: "x".repeat(600),
 		}));
-		const chunks = splitSegments(many);
+		const chunks = splitSegments(many, "gemini-2.5-flash");
 		expect(chunks.length).toBe(2);
 		expect(chunks[0].length).toBe(16);
 		expect(chunks[1].length).toBe(4);

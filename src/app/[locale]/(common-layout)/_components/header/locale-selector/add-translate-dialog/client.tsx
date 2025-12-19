@@ -31,6 +31,7 @@ type AddTranslateDialogProps = {
 	currentHandle: string | undefined;
 	hasGeminiApiKey: boolean;
 	pageSlug?: string;
+	userPlan: string;
 };
 
 export function AddTranslateDialog({
@@ -39,6 +40,7 @@ export function AddTranslateDialog({
 	currentHandle,
 	hasGeminiApiKey,
 	pageSlug,
+	userPlan,
 }: AddTranslateDialogProps) {
 	const currentLocale = useLocale();
 	if (pageSlug) {
@@ -50,7 +52,8 @@ export function AddTranslateDialog({
 		FormData
 	>(translateAction, { success: false });
 	const [targetLocale, setTargetLocale] = useState(currentLocale);
-	const [selectedModel, setSelectedModel] = useState("gemini-2.0-flash");
+	const isPremium = userPlan === "premium";
+	const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash-lite");
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
 	const { toastJobs } = useTranslationJobs(
 		translateState.success ? (translateState.data?.translationJobs ?? []) : [],
@@ -92,9 +95,22 @@ export function AddTranslateDialog({
 										<SelectValue placeholder="Select a model" />
 									</SelectTrigger>
 									<SelectContent>
-										<SelectItem value="gemini-2.0-flash">
-											gemini-2.0-flash
+										<SelectItem value="gemini-2.5-flash-lite">
+											Gemini 2.5 Flash Lite
 										</SelectItem>
+										{isPremium && (
+											<>
+												<SelectItem value="gemini-2.5-flash">
+													Gemini 2.5 Flash
+												</SelectItem>
+												<SelectItem value="gpt-5-nano-2025-08-07">
+													GPT-5 Nano
+												</SelectItem>
+												<SelectItem value="deepseek-reasoner">
+													DeepSeek Reasoner (Thinking Mode)
+												</SelectItem>
+											</>
+										)}
 									</SelectContent>
 								</Select>
 							</div>

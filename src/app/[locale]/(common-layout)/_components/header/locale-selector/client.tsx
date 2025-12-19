@@ -57,6 +57,7 @@ interface LocaleSelectorProps {
 	localeSelectorClassName?: string;
 	currentHandle?: string;
 	hasGeminiApiKey: boolean;
+	userPlan: string;
 }
 
 //TODO: radix uiのせいで開発環境のモバイルで文字がぼける iphoneではボケてない､その他実機でもボケてたら対応する
@@ -64,6 +65,7 @@ export function LocaleSelector({
 	localeSelectorClassName,
 	currentHandle,
 	hasGeminiApiKey,
+	userPlan,
 }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -196,6 +198,7 @@ export function LocaleSelector({
 					onOpenChange={setDialogOpen}
 					open={dialogOpen}
 					pageSlug={pageSlug}
+					userPlan={userPlan}
 				/>
 			)}
 		</div>

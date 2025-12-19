@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { translateChunk } from "@/app/api/translate/_lib/translate.server";
+import { translateChunk } from "@/app/api/translate/chunk/_service/translate-chunk.server";
 import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
 import {
@@ -8,7 +8,7 @@ import {
 	createUser,
 } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
-import { getGeminiModelResponse } from "../_services/gemini";
+import { getGeminiModelResponse } from "../_infra/gemini";
 
 await setupDbPerFile(import.meta.url);
 
@@ -17,10 +17,10 @@ if (process.env.DEBUG_TEST_DB === "1") {
 		.filter((key) => key.startsWith("VITEST"))
 		.sort();
 	console.log(
-		`[translate.server.integration.test] VITEST_FILE_PATH=${process.env.VITEST_FILE_PATH ?? "<undefined>"}`,
+		`[translate-chunk.server.integration.test] VITEST_FILE_PATH=${process.env.VITEST_FILE_PATH ?? "<undefined>"}`,
 	);
 	console.log(
-		`[translate.server.integration.test] VITEST_* keys=${vitestEnvKeys.join(", ") || "<none>"}`,
+		`[translate-chunk.server.integration.test] VITEST_* keys=${vitestEnvKeys.join(", ") || "<none>"}`,
 	);
 }
 
@@ -94,7 +94,6 @@ describe("translateChunk", () => {
 		// Act
 		await translateChunk(
 			user.id,
-			"gemini",
 			"test-model",
 			segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 			"ja",
@@ -139,7 +138,6 @@ describe("translateChunk", () => {
 		await expect(
 			translateChunk(
 				user.id,
-				"gemini",
 				"test-model",
 				segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 				"ja",
@@ -181,7 +179,6 @@ describe("translateChunk", () => {
 		// Act
 		await translateChunk(
 			user.id,
-			"gemini",
 			"test-model",
 			segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 			"ja",
@@ -215,7 +212,6 @@ describe("translateChunk", () => {
 		// Act
 		await translateChunk(
 			user.id,
-			"gemini",
 			"test-model",
 			segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 			"ja",
@@ -261,7 +257,6 @@ describe("translateChunk", () => {
 		// Act
 		await translateChunk(
 			user.id,
-			"gemini",
 			"test-model",
 			segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 			"ja",

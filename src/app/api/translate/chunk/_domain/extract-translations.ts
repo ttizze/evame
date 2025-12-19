@@ -1,4 +1,4 @@
-import type { TranslatedElement } from "../types";
+import type { TranslatedElement } from "../../types";
 
 export function extractTranslations(text: string): TranslatedElement[] {
 	try {

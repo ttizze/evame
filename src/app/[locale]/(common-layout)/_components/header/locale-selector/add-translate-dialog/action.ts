@@ -33,7 +33,6 @@ export async function translateAction(
 	if (!v.success) return { success: false, zodErrors: v.zodErrors };
 
 	const { currentUser, data } = v;
-	const provider = currentUser.plan === "premium" ? "vertex" : "gemini";
 
 	if (data.pageSlug) {
 		const result = await translatePage({
@@ -41,7 +40,6 @@ export async function translateAction(
 			aiModel: data.aiModel,
 			locale: data.targetLocale,
 			userId: currentUser.id,
-			provider,
 		});
 
 		if (!result.success) {
