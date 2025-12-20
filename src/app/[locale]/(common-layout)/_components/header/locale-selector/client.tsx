@@ -20,7 +20,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import type { Translationproofstatus } from "@/db/types";
+import type { TranslationProofStatus } from "@/db/types";
 import type { TranslationJob } from "@/db/types.helpers";
 import { usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ interface TranslationInfo {
 	translationJobs: TranslationJob[];
 	translationProofs: {
 		locale: string;
-		translationProofStatus: Translationproofstatus;
+		translationProofStatus: TranslationProofStatus;
 	}[];
 }
 
@@ -94,11 +94,11 @@ export function LocaleSelector({
 
 	// Build a map of locale => proof status using Kysely enum values directly
 	const proofStatusMap = Object.fromEntries(
-		(translationProofs ?? []).map<[string, Translationproofstatus]>((p) => [
+		(translationProofs ?? []).map<[string, TranslationProofStatus]>((p) => [
 			p.locale,
 			p.translationProofStatus,
 		]),
-	) as Record<string, Translationproofstatus>;
+	) as Record<string, TranslationProofStatus>;
 
 	const localeOptionWithStatus = buildLocaleOptions({
 		sourceLocale,

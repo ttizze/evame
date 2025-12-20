@@ -1,11 +1,11 @@
 import { FileText, FileX, Languages } from "lucide-react";
-import type { Translationproofstatus } from "@/db/types";
+import type { TranslationProofStatus } from "@/db/types";
 import { cn } from "@/lib/utils";
 import type { LocaleStatus } from "../domain/build-locale-options";
 
 interface Props {
 	localeStatus: LocaleStatus;
-	proofStatus?: Translationproofstatus;
+	proofStatus?: TranslationProofStatus;
 }
 
 // 統合された色マップ

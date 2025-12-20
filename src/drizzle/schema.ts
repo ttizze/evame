@@ -16,26 +16,26 @@ import {
 } from "drizzle-orm/pg-core";
 import type { Root as MdastRoot } from "mdast";
 
-export const contentKind = pgEnum("ContentKind", ["PAGE", "PAGE_COMMENT"]);
-export const notificationType = pgEnum("NotificationType", [
+export const contentKind = pgEnum("content_kind", ["PAGE", "PAGE_COMMENT"]);
+export const notificationType = pgEnum("notification_type", [
 	"FOLLOW",
 	"PAGE_COMMENT",
 	"PAGE_LIKE",
 	"PAGE_SEGMENT_TRANSLATION_VOTE",
 	"PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE",
 ]);
-export const pageStatus = pgEnum("PageStatus", ["DRAFT", "PUBLIC", "ARCHIVE"]);
-export const segmentTypeKey = pgEnum("SegmentTypeKey", [
+export const pageStatus = pgEnum("page_status", ["DRAFT", "PUBLIC", "ARCHIVE"]);
+export const segmentTypeKey = pgEnum("segment_type_key", [
 	"PRIMARY",
 	"COMMENTARY",
 ]);
-export const translationProofStatus = pgEnum("TranslationProofStatus", [
+export const translationProofStatus = pgEnum("translation_proof_status", [
 	"MACHINE_DRAFT",
 	"HUMAN_TOUCHED",
 	"PROOFREAD",
 	"VALIDATED",
 ]);
-export const translationStatus = pgEnum("TranslationStatus", [
+export const translationStatus = pgEnum("translation_status", [
 	"PENDING",
 	"IN_PROGRESS",
 	"COMPLETED",

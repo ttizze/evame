@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { db } from "@/db";
-import type { Pagestatus } from "@/db/types";
+import type { PageStatus } from "@/db/types";
 
 export function revalidateAllLocales(
 	basePath: string,
@@ -96,7 +96,7 @@ export async function revalidatePageTreeAllLocales(
 			.innerJoin("users", "pages.userId", "users.id")
 			.select(["pages.id", "pages.slug", "users.handle as userHandle"])
 			.where("pages.parentId", "in", frontier)
-			.where("pages.status", "=", "PUBLIC" satisfies Pagestatus)
+			.where("pages.status", "=", "PUBLIC" satisfies PageStatus)
 			.orderBy("pages.order", "asc")
 			.execute();
 

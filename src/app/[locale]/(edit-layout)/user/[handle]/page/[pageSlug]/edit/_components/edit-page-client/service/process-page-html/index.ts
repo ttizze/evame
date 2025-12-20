@@ -1,5 +1,5 @@
 import { htmlToMdastWithSegments } from "@/app/[locale]/_domain/html-to-mdast-with-segments";
-import type { Pagestatus } from "@/db/types";
+import type { PageStatus } from "@/db/types";
 import { createServerLogger } from "@/lib/logger.server";
 import { upsertPageAndSegments } from "../upsert-page-and-segments";
 
@@ -20,7 +20,7 @@ export async function processPageHtml(params: {
 	parentId: number | null;
 	order: number;
 	anchorContentId: number | null;
-	status: Pagestatus;
+	status: PageStatus;
 }) {
 	const logger = createServerLogger("process-page-html", {
 		userId: params.userId,
