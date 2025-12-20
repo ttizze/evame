@@ -5,9 +5,11 @@ import {
 	SchemaType,
 } from "@google/generative-ai";
 import { decrypt } from "@/lib/encryption.server";
+import { createServerLogger } from "@/lib/logger.server";
 import { generateSystemMessage } from "./generate-gemini-message";
 
 const MAX_RETRIES = 3;
+const logger = createServerLogger("gemini-translation");
 
 export async function getGeminiModelResponse({
 	geminiApiKey,
@@ -73,21 +75,70 @@ export async function getGeminiModelResponse({
 			);
 			return result.response.text();
 		} catch (error: unknown) {
-			const typedError = error as Error;
-			console.error(
-				`Translation attempt ${retryCount + 1} failed:`,
-				typedError,
-			);
+			const typedError = error as Error & {
+				status?: number;
+				errorDetails?: unknown[];
+			};
 			lastError = typedError;
 
+			// 429エラー（レート制限）の場合は、エラーレスポンスからretryDelayを抽出
+			let delay = 1000 * (retryCount + 1);
+			if (typedError.status === 429) {
+				// エラーメッセージからretryDelayを抽出
+				// パターン1: "Please retry in 24.775996888s."
+				// パターン2: "retryDelay": "24s"
+				const retryDelayMatch =
+					typedError.message.match(/retry in (\d+(?:\.\d+)?)s/i) ||
+					typedError.message.match(
+						/retryDelay["']?\s*:\s*["']?(\d+(?:\.\d+)?)s/i,
+					);
+				if (retryDelayMatch) {
+					const retryDelaySeconds = parseFloat(retryDelayMatch[1]);
+					// 安全マージンを追加（+1秒）
+					delay = Math.ceil(retryDelaySeconds * 1000) + 1000;
+					logger.warn(
+						{
+							attempt: retryCount + 1,
+							retryDelaySeconds,
+							delaySeconds: delay / 1000,
+							model,
+						},
+						"Rate limit exceeded, using API-specified retry delay",
+					);
+				} else {
+					// retryDelayが見つからない場合は長めの遅延を使用
+					delay = 30000; // 30秒
+					logger.warn(
+						{
+							attempt: retryCount + 1,
+							model,
+						},
+						"Rate limit exceeded, using default 30s delay",
+					);
+				}
+			}
+
+			logger.error(
+				{
+					attempt: retryCount + 1,
+					status: typedError.status,
+					error_name: typedError.name,
+					error_message: typedError.message,
+					model,
+				},
+				"Gemini translation failed",
+			);
+
 			if (retryCount < MAX_RETRIES - 1) {
-				const delay = 1000 * (retryCount + 1);
-				console.log(`Retrying in ${delay / 100} seconds...`);
+				logger.info(
+					{ delayMs: delay, delaySeconds: delay / 1000 },
+					"Retrying after delay",
+				);
 				await new Promise((resolve) => setTimeout(resolve, delay));
 			}
 		}
 	}
-	console.error("Max retries reached. Translation failed.");
+	logger.error({ model }, "Max retries reached. Translation failed.");
 	throw lastError || new Error("Translation failed after max retries");
 }
 
@@ -104,7 +155,14 @@ export async function validateGeminiApiKey(
 
 		return { isValid: text.length > 0 };
 	} catch (error) {
-		console.error("Gemini API key validation failed:", error);
+		const validationLogger = createServerLogger("gemini-api-key-validation");
+		validationLogger.error(
+			{
+				error_name: error instanceof Error ? error.name : "Unknown",
+				error_message: error instanceof Error ? error.message : String(error),
+			},
+			"Gemini API key validation failed",
+		);
 		if (
 			error instanceof Error &&
 			error.message.includes("The model is overloaded")
