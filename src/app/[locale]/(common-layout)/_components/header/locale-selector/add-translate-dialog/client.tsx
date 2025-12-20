@@ -53,7 +53,7 @@ export function AddTranslateDialog({
 	>(translateAction, { success: false });
 	const [targetLocale, setTargetLocale] = useState(currentLocale);
 	const isPremium = userPlan === "premium";
-	const [selectedModel, setSelectedModel] = useState("gemini-2.5-flash-lite");
+	const [selectedModel, setSelectedModel] = useState("gemini-2.0-flash");
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
 	const { toastJobs } = useTranslationJobs(
 		translateState.success ? (translateState.data?.translationJobs ?? []) : [],
@@ -95,6 +95,9 @@ export function AddTranslateDialog({
 										<SelectValue placeholder="Select a model" />
 									</SelectTrigger>
 									<SelectContent>
+										<SelectItem value="gemini-2.0-flash">
+											Gemini 2.0 Flash
+										</SelectItem>
 										<SelectItem value="gemini-2.5-flash-lite">
 											Gemini 2.5 Flash Lite
 										</SelectItem>

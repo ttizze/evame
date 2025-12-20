@@ -32,10 +32,18 @@ export async function getOrCreateAIUser(name: string): Promise<string> {
 	return user.id;
 }
 
-export async function markJobFailed(translationJobId: number, progress = 0) {
+export async function markJobFailed(
+	translationJobId: number,
+	progress = 0,
+	errorMessage?: string,
+) {
 	const updated = await db
 		.updateTable("translationJobs")
-		.set({ status: "FAILED" satisfies Translationstatus, progress })
+		.set({
+			status: "FAILED" satisfies Translationstatus,
+			progress,
+			error: errorMessage ?? "",
+		})
 		.where("id", "=", translationJobId)
 		.returningAll()
 		.executeTakeFirst();
