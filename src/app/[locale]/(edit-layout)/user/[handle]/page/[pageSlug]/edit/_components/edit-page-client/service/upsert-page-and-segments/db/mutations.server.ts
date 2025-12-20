@@ -1,5 +1,5 @@
 import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
-import type { JsonValue, Pagestatus } from "@/db/types";
+import type { JsonValue, PageStatus } from "@/db/types";
 
 /**
  * ページをupsertする（DB操作のみ）
@@ -15,7 +15,7 @@ export async function upsertPage(
 		sourceLocale: string;
 		parentId: number | null;
 		order: number | null;
-		status: Pagestatus | null;
+		status: PageStatus | null;
 	},
 ) {
 	// 既存ページのidを取得（1回のクエリ）
@@ -32,7 +32,7 @@ export async function upsertPage(
 			sourceLocale: string;
 			parentId?: number | null;
 			order?: number;
-			status?: Pagestatus;
+			status?: PageStatus;
 		} = {
 			mdastJson: p.mdastJson,
 			sourceLocale: p.sourceLocale,

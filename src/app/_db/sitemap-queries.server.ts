@@ -1,6 +1,6 @@
 import { sql } from "kysely";
 import { db } from "@/db";
-import type { Pagestatus, Translationstatus } from "@/db/types";
+import type { PageStatus, TranslationStatus } from "@/db/types";
 
 export type PageWithUserAndTranslation = Awaited<
 	ReturnType<typeof fetchPagesWithUserAndTranslationChunk>
@@ -10,7 +10,7 @@ export async function countPublicPages() {
 	const result = await db
 		.selectFrom("pages")
 		.select(sql<number>`count(*)::int`.as("count"))
-		.where("status", "=", "PUBLIC" satisfies Pagestatus)
+		.where("status", "=", "PUBLIC" satisfies PageStatus)
 		.executeTakeFirst();
 	return Number(result?.count ?? 0);
 }
@@ -33,7 +33,7 @@ export async function fetchPagesWithUserAndTranslationChunk({
 			"pages.id as pageId",
 			"users.handle as userHandle",
 		])
-		.where("pages.status", "=", "PUBLIC" satisfies Pagestatus)
+		.where("pages.status", "=", "PUBLIC" satisfies PageStatus)
 		.limit(limit)
 		.offset(offset)
 		.execute();
@@ -49,7 +49,7 @@ export async function fetchPagesWithUserAndTranslationChunk({
 		.selectFrom("translationJobs")
 		.select(["pageId", "locale"])
 		.where("pageId", "in", pageIds.length > 0 ? pageIds : [-1])
-		.where("status", "=", "COMPLETED" satisfies Translationstatus)
+		.where("status", "=", "COMPLETED" satisfies TranslationStatus)
 		.execute();
 
 	// ページIDごとに翻訳ジョブをグループ化

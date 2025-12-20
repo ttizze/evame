@@ -1,7 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import { sql } from "kysely";
 import { db } from "@/db";
-import type { Translationproofstatus, Translationstatus } from "@/db/types";
+import type { TranslationProofStatus, TranslationStatus } from "@/db/types";
 
 export async function getOrCreateAIUser(name: string): Promise<string> {
 	// 既存ユーザーを確認
@@ -40,7 +40,7 @@ export async function markJobFailed(
 	const updated = await db
 		.updateTable("translationJobs")
 		.set({
-			status: "FAILED" satisfies Translationstatus,
+			status: "FAILED" satisfies TranslationStatus,
 			progress,
 			error: errorMessage ?? "",
 		})
@@ -59,7 +59,7 @@ export async function ensurePageLocaleTranslationProof(
 		.values({
 			pageId,
 			locale,
-			translationProofStatus: "MACHINE_DRAFT" satisfies Translationproofstatus,
+			translationProofStatus: "MACHINE_DRAFT" satisfies TranslationProofStatus,
 		})
 		.onConflict((oc) => oc.columns(["pageId", "locale"]).doNothing())
 		.execute();
@@ -74,7 +74,7 @@ export async function incrementTranslationProgress(
 		await tx
 			.updateTable("translationJobs")
 			.set({
-				status: "IN_PROGRESS" satisfies Translationstatus,
+				status: "IN_PROGRESS" satisfies TranslationStatus,
 				progress: sql`progress + ${inc}`,
 			})
 			.where("id", "=", translationJobId)
@@ -86,7 +86,7 @@ export async function incrementTranslationProgress(
 		await tx
 			.updateTable("translationJobs")
 			.set({
-				status: "COMPLETED" satisfies Translationstatus,
+				status: "COMPLETED" satisfies TranslationStatus,
 				progress: 100,
 			})
 			.where("id", "=", translationJobId)

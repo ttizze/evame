@@ -8,7 +8,7 @@
 
 import { sql } from "kysely";
 import { db } from "@/db";
-import type { Pagestatus } from "@/db/types";
+import type { PageStatus } from "@/db/types";
 import type { PageForList, PageForTitle, SegmentForList } from "../types";
 
 // ============================================
@@ -58,7 +58,7 @@ async function fetchTagsMap(pageIds: number[]) {
  * 総ページ数を取得
  */
 async function fetchTotalCount(
-	status: Pagestatus,
+	status: PageStatus,
 	parentId: number | null,
 	userId?: string,
 ): Promise<number> {
@@ -167,7 +167,7 @@ type PageRowWithRelations = {
 	slug: string;
 	createdAt: Date;
 	updatedAt: Date;
-	status: Pagestatus;
+	status: PageStatus;
 	sourceLocale: string;
 	parentId: number | null;
 	order: number;

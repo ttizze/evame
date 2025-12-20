@@ -1,15 +1,15 @@
 import { db } from "@/db";
-import type { Translationstatus } from "@/db/types";
+import type { TranslationStatus } from "@/db/types";
 
 export async function updateTranslationJob(
 	translationJobId: number,
-	status: Translationstatus,
+	status: TranslationStatus,
 	progress: number,
 	userId?: string,
 	pageId?: number,
 ) {
 	const updateData: {
-		status: Translationstatus;
+		status: TranslationStatus;
 		progress: number;
 		userId?: string;
 		pageId?: number;
@@ -36,7 +36,7 @@ export async function updateTranslationJob(
 export async function markJobInProgress(translationJobId: number) {
 	const updated = await db
 		.updateTable("translationJobs")
-		.set({ status: "IN_PROGRESS" satisfies Translationstatus, progress: 0 })
+		.set({ status: "IN_PROGRESS" satisfies TranslationStatus, progress: 0 })
 		.where("id", "=", translationJobId)
 		.returningAll()
 		.executeTakeFirst();
@@ -46,7 +46,7 @@ export async function markJobInProgress(translationJobId: number) {
 export async function markJobCompleted(translationJobId: number) {
 	const updated = await db
 		.updateTable("translationJobs")
-		.set({ status: "COMPLETED" satisfies Translationstatus, progress: 100 })
+		.set({ status: "COMPLETED" satisfies TranslationStatus, progress: 100 })
 		.where("id", "=", translationJobId)
 		.returningAll()
 		.executeTakeFirst();

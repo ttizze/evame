@@ -1,7 +1,7 @@
 import { markdownToMdastWithSegments } from "@/app/[locale]/_domain/markdown-to-mdast-with-segments";
 import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/edit-page-client/service/upsert-page-and-segments";
 import { db } from "@/db";
-import type { Pagestatus } from "@/db/types";
+import type { PageStatus } from "@/db/types";
 import { slugify } from "../../utils/slugify";
 
 interface CategoryPageParams {
@@ -36,7 +36,7 @@ export async function createCategoryPage({
 		parentId,
 		order,
 		anchorContentId: null,
-		status: "PUBLIC" satisfies Pagestatus,
+		status: "PUBLIC" satisfies PageStatus,
 	});
 
 	const page = await db

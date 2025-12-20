@@ -21,7 +21,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import type { Pagestatus } from "@/db/types";
+import type { PageStatus } from "@/db/types";
 import { Link } from "@/i18n/routing";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
@@ -29,7 +29,7 @@ import { LocaleMultiSelector } from "./locale-multi-selector/client";
 
 interface EditHeaderProps {
 	currentUser: SanitizedUser;
-	initialStatus: Pagestatus;
+	initialStatus: PageStatus;
 	hasUnsavedChanges: boolean;
 	pageId: number | undefined;
 	targetLocales: string[];
