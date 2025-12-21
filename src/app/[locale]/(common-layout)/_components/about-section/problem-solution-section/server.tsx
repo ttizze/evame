@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import Globe from "@/app/[locale]/(common-layout)/_components/about-section/problem-solution-section/components/globe.client";
 import { PageLikeButton } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/server";
-import { WrapSegmentsComponent } from "@/app/[locale]/(common-layout)/_components/wrap-segments-component/server";
+import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { FloatingControls } from "../../floating-controls.client";
 import { fetchAboutPage } from "../_lib/fetch-about-page";
 import AboutSectionCard from "./components/about-section-card.server";
@@ -95,17 +95,19 @@ export default async function ProblemSolutionSection({
 			<div className="">
 				<div className="border-b">
 					<h2 className="text-2xl font-bold text-center mb-10">
-						{problemHeader && <WrapSegmentsComponent segment={problemHeader} />}
+						<SegmentElement segment={problemHeader} tagName="span" />
 					</h2>
 				</div>
 				<div className="grid grid-cols-1 ">
 					{problemCardPairs.map((pair, index) => (
 						<AboutSectionCard
 							component={problemComponents[index]}
-							description={<WrapSegmentsComponent segment={pair.text} />}
+							description={
+								<SegmentElement segment={pair.text} tagName="span" />
+							}
 							icon={problemIcons[index]}
 							key={`problem-${pair.header.number}`}
-							title={<WrapSegmentsComponent segment={pair.header} />}
+							title={<SegmentElement segment={pair.header} tagName="span" />}
 						/>
 					))}
 				</div>

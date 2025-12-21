@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { fetchAboutPage } from "@/app/[locale]/(common-layout)/_components/about-section/_lib/fetch-about-page";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
-import { WrapSegmentsComponent } from "@/app/[locale]/(common-layout)/_components/wrap-segments-component/server";
+import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 
 export const Icon = ({ className, ...rest }: { className: string }) => {
 	return (
@@ -41,11 +41,15 @@ export default async function HeroSection({ locale }: { locale: string }) {
 			<Icon className="absolute h-6 w-6 -bottom-3 -right-3 dark:text-white text-black" />
 			<div className="relative z-10 px-4 md:px-8 max-w-4xl mx-auto">
 				<h1 className="text-2xl md:text-4xl font-bold mb-6 text-center">
-					<WrapSegmentsComponent className="w-full mb-2" segment={heroTitle} />
+					<SegmentElement
+						className="w-full mb-2"
+						segment={heroTitle}
+						tagName="span"
+					/>
 				</h1>
 
 				<span className="text-xl mb-12 w-full">
-					<WrapSegmentsComponent className="mb-2" segment={heroText} />
+					<SegmentElement className="mb-2" segment={heroText} tagName="span" />
 				</span>
 				<div className="mb-12 flex justify-center mt-10">
 					<StartButton

@@ -1,7 +1,12 @@
 /* app/_context/display-provider.client.tsx */
 "use client";
 
-import { parseAsStringEnum, useQueryState } from "nuqs";
+import {
+	parseAsArrayOf,
+	parseAsString,
+	parseAsStringEnum,
+	useQueryState,
+} from "nuqs";
 import {
 	createContext,
 	type ReactNode,
@@ -58,6 +63,12 @@ export function DisplayProvider({
 			shallow: true,
 		}),
 	);
+	const [annotationsQuery] = useQueryState(
+		"annotations",
+		parseAsArrayOf(parseAsString, "~").withDefault([]).withOptions({
+			shallow: true,
+		}),
+	);
 
 	/* 4) 現在の最終モード */
 	const fallback = decideFromLocales(userLocale, sourceLocale);
@@ -80,6 +91,29 @@ export function DisplayProvider({
 			setQueryMode(mode);
 		}
 	}, [queryMode, mode, pref, fallback, setQueryMode]);
+
+	/* 5.5) CSS 用に data-display-mode を同期 */
+	useEffect(() => {
+		document.documentElement.dataset.displayMode = mode;
+		return () => {
+			// Keep it if another provider sets it, but clear on unmount to avoid stale state.
+			if (document.documentElement.dataset.displayMode === mode) {
+				delete document.documentElement.dataset.displayMode;
+			}
+		};
+	}, [mode]);
+
+	/* 5.6) 注釈の表示切替用 (URL param -> DOM) */
+	useEffect(() => {
+		// Token list is `a~b~c` in URL; we sync to DOM for CSS selectors.
+		const tokens = annotationsQuery.filter(Boolean);
+		if (tokens.length === 0) {
+			delete document.documentElement.dataset.annotations;
+			return;
+		}
+		// NOTE: We intentionally do not traverse the DOM to toggle classes; visibility is handled by CSS.
+		document.documentElement.dataset.annotations = tokens.join(" ");
+	}, [annotationsQuery]);
 
 	/* 6) トグル */
 	const cycle = useCallback(() => {

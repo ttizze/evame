@@ -3,10 +3,6 @@ import { ChevronDown, ChevronUp, Languages } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useMemo, useState } from "react";
 import { useSegmentTranslations } from "@/app/[locale]/_hooks/use-segment-translations";
-import type {
-	TranslationWithInfo,
-	TranslationWithUser,
-} from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { AddTranslationForm } from "./add-translation-form/client";
@@ -18,13 +14,11 @@ const INITIAL_DISPLAY_COUNT = 3;
 interface AddAndVoteTranslationsProps {
 	segmentId: number;
 	open: boolean;
-	bestTranslation: TranslationWithUser;
 }
 
 export function AddAndVoteTranslations({
 	segmentId,
 	open,
-	bestTranslation,
 }: AddAndVoteTranslationsProps) {
 	const [showAll, setShowAll] = useState(false);
 	const userLocale = useLocale();
@@ -32,26 +26,9 @@ export function AddAndVoteTranslations({
 		segmentId,
 		userLocale,
 		enabled: open,
-		bestTranslationId: bestTranslation.id,
 	});
 
 	const alternativeTranslations = data?.translations ?? [];
-
-	// SWRから取得したbestTranslationCurrentUserVoteとbestTranslationUserをbestTranslationとマージ
-	const mergedBestTranslation: TranslationWithInfo = useMemo(() => {
-		const user = data?.bestTranslationUser ?? bestTranslation.user;
-		const currentUserVote = data?.bestTranslationCurrentUserVote ?? null;
-
-		return {
-			...bestTranslation,
-			user,
-			currentUserVote,
-		} as TranslationWithInfo;
-	}, [
-		bestTranslation,
-		data?.bestTranslationCurrentUserVote,
-		data?.bestTranslationUser,
-	]);
 
 	const displayedTranslations = useMemo(() => {
 		return showAll
@@ -66,7 +43,7 @@ export function AddAndVoteTranslations({
 
 	if (!open) return null;
 
-	if (isLoading) {
+	if (isLoading || !data?.bestTranslation) {
 		return (
 			<span className="w-full">
 				<span className="flex mt-2 items-center justify-end text-gray-500 text-sm">
@@ -91,17 +68,17 @@ export function AddAndVoteTranslations({
 			<span className="flex items-center justify-end gap-2">
 				<Link
 					className="no-underline!"
-					href={`/user/${mergedBestTranslation.user?.handle}`}
+					href={`/user/${data.bestTranslation.user?.handle}`}
 				>
 					<span className="text-sm text-gray-500 text-right flex items-center">
-						by: {mergedBestTranslation.user?.name}
+						by: {data.bestTranslation.user?.name}
 					</span>
 				</Link>
 				<VoteButtons
 					onVoted={() => {
 						void mutate();
 					}}
-					translation={mergedBestTranslation}
+					translation={data.bestTranslation}
 				/>
 			</span>
 			<span className="flex mt-2 items-center justify-end text-gray-500 text-sm">
