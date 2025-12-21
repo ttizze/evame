@@ -5,7 +5,7 @@ import { fetchPageViewCount } from "@/app/[locale]/_db/page-utility-queries.serv
 import { PageCommentButton } from "@/app/[locale]/(common-layout)/_components/page/page-comment-button/client";
 import { PageLikeButton } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/server";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
-import { WrapSegmentsComponent } from "@/app/[locale]/(common-layout)/_components/wrap-segments-component/server";
+import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { PageForList } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
@@ -61,13 +61,14 @@ export async function PageList({
 				{/* ─ row‑1: タイトル & オーナーアクション ─ */}
 				<div className="grid grid-cols-[1fr_auto] gap-2">
 					<Link className="block overflow-hidden" href={pageLink}>
-						{titleSegment && (
-							<WrapSegmentsComponent
+						{titleSegment ? (
+							<SegmentElement
 								className="line-clamp-1 break-all overflow-wrap-anywhere"
 								interactive={false}
 								segment={titleSegment}
+								tagName="span"
 							/>
-						)}
+						) : null}
 					</Link>
 					{showOwnerActions && (
 						<PageActionsDropdown

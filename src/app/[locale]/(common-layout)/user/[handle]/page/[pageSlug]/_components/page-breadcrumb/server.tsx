@@ -1,7 +1,7 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { Fragment } from "react";
-import { WrapSegmentClient } from "@/app/[locale]/(common-layout)/_components/wrap-segments/client";
+import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { PageDetail, SegmentForList } from "@/app/[locale]/types";
 import {
 	Breadcrumb,
@@ -53,17 +53,12 @@ export async function PageBreadcrumb({
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
 								<Link href={item.href as Route}>
-									<WrapSegmentClient
+									<SegmentElement
+										className="line-clamp-1 break-all overflow-wrap-anywhere"
 										interactive={false}
 										segment={item.segment}
 										tagName="span"
-										tagProps={{
-											className:
-												"line-clamp-1 break-all overflow-wrap-anywhere",
-										}}
-									>
-										{item.segment.text}
-									</WrapSegmentClient>
+									/>
 								</Link>
 							</BreadcrumbLink>
 						</BreadcrumbItem>

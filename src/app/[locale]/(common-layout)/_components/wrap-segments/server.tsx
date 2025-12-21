@@ -1,7 +1,19 @@
-import { createElement, type JSX } from "react";
-import { WrapSegmentClient } from "@/app/[locale]/(common-layout)/_components/wrap-segments/client";
+import type { JSX } from "react";
+import { createElement } from "react";
+import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
 
+/**
+ * rehype-react 用アダプタ。
+ *
+ * `mdastToReact` では `components: { p: Component, h2: Component, ... }` の形で
+ * 「タグごとのコンポーネント関数」を渡す必要があるため、ここでは高階関数の形を取る。
+ *
+ * 実際の描画ロジックは `SegmentElement` に集約し、ここは
+ * - data-number-id → segment を引く
+ * - SegmentElement に props/children を渡す
+ * だけを担当する。
+ */
 export function WrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 	Tag: Tag,
 	segments: (SegmentForDetail | SegmentForList)[],
@@ -15,20 +27,19 @@ export function WrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 		const id = p["data-number-id"];
 		const segment = id !== undefined ? segmentsMap.get(+id) : undefined;
 
-		/* セグメント対象でなければそのまま DOM 要素を返す */
+		// セグメント対象でなければそのまま DOM 要素を返す
 		if (!segment) return createElement(Tag, p, p.children);
 
-		/* --- ここで Client Component に "シリアライズ可能な形" で渡す --- */
 		const { children, ...rest } = p;
 		return (
-			<WrapSegmentClient
+			<SegmentElement
 				interactive={interactive}
 				segment={segment}
-				tagName={Tag} // ★そのまま突っ込む
-				tagProps={rest as JSX.IntrinsicElements[Tag]}
+				tagName={Tag}
+				tagProps={rest}
 			>
-				{children} {/* ← children は React が面倒見てくれる */}
-			</WrapSegmentClient>
+				{children}
+			</SegmentElement>
 		);
 	};
 }
