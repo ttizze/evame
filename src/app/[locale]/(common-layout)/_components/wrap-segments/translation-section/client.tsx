@@ -16,6 +16,8 @@ interface TranslationSectionProps<Tag extends keyof JSX.IntrinsicElements> {
 	tagName: Tag;
 	tagProps: JSX.IntrinsicElements[Tag];
 	interactive: boolean;
+	bestTranslationText: string;
+	onBestTranslationUpdated: (newText: string) => void;
 }
 
 // Renders: [<Tag>translated text button</Tag>, interactive UI siblings]
@@ -24,12 +26,14 @@ export function TranslationSection<Tag extends keyof JSX.IntrinsicElements>({
 	tagName,
 	tagProps,
 	interactive,
+	bestTranslationText,
+	onBestTranslationUpdated,
 }: TranslationSectionProps<Tag>) {
 	const [isSelected, setIsSelected] = useState(false);
 
 	if (!segment.segmentTranslation) return null;
 
-	const bestText = sanitizeAndParseText(segment.segmentTranslation.text);
+	const bestText = sanitizeAndParseText(bestTranslationText);
 
 	// Text wrapped inside original semantic tag (p, h1, etc.)
 	const translationText = (
@@ -62,6 +66,7 @@ export function TranslationSection<Tag extends keyof JSX.IntrinsicElements>({
 			{isSelected && interactive && (
 				<AddAndVoteTranslations
 					bestTranslation={segment.segmentTranslation}
+					onBestTranslationUpdated={onBestTranslationUpdated}
 					open={isSelected}
 					segmentId={segment.id}
 				/>

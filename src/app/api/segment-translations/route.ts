@@ -72,6 +72,14 @@ export async function GET(req: NextRequest) {
 				: null;
 
 		return NextResponse.json({
+			bestTranslation: best
+				? {
+						id: best.id,
+						text: best.text,
+						point: best.point,
+						createdAt: best.createdAt.toISOString(),
+					}
+				: null,
 			bestTranslationCurrentUserVote: best ? extractVote(best) : null,
 			bestTranslationUser: best
 				? {

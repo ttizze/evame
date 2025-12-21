@@ -19,12 +19,14 @@ interface AddAndVoteTranslationsProps {
 	segmentId: number;
 	open: boolean;
 	bestTranslation: TranslationWithUser;
+	onBestTranslationUpdated: (newText: string) => void;
 }
 
 export function AddAndVoteTranslations({
 	segmentId,
 	open,
 	bestTranslation,
+	onBestTranslationUpdated,
 }: AddAndVoteTranslationsProps) {
 	const [showAll, setShowAll] = useState(false);
 	const userLocale = useLocale();
@@ -41,16 +43,29 @@ export function AddAndVoteTranslations({
 	const mergedBestTranslation: TranslationWithInfo = useMemo(() => {
 		const user = data?.bestTranslationUser ?? bestTranslation.user;
 		const currentUserVote = data?.bestTranslationCurrentUserVote ?? null;
+		const text = data?.bestTranslation?.text ?? bestTranslation.text;
+		const id = data?.bestTranslation?.id ?? bestTranslation.id;
+		const point = data?.bestTranslation?.point ?? bestTranslation.point;
+
+		// ベスト翻訳のテキストが変更された場合、親コンポーネントに通知
+		if (data?.bestTranslation?.text && data.bestTranslation.text !== bestTranslation.text) {
+			onBestTranslationUpdated(data.bestTranslation.text);
+		}
 
 		return {
 			...bestTranslation,
+			id,
+			text,
+			point,
 			user,
 			currentUserVote,
 		} as TranslationWithInfo;
 	}, [
 		bestTranslation,
+		data?.bestTranslation,
 		data?.bestTranslationCurrentUserVote,
 		data?.bestTranslationUser,
+		onBestTranslationUpdated,
 	]);
 
 	const displayedTranslations = useMemo(() => {

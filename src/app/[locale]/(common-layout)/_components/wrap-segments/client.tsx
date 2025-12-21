@@ -18,6 +18,7 @@ import {
 	Fragment,
 	isValidElement,
 	type ReactNode,
+	useState,
 } from "react";
 import { useDisplay } from "@/app/_context/display-provider";
 import type { Segment } from "@/app/[locale]/types";
@@ -47,6 +48,9 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 	const { mode } = useDisplay();
 	const hasTr = segment.segmentTranslation !== null;
 	const eff = mode === "user" && !hasTr ? "source" : mode;
+	const [bestTranslationText, setBestTranslationText] = useState(
+		segment.segmentTranslation?.text ?? "",
+	);
 
 	/* --------------------------------------------------
 		Markdown から変換された画像は Next.js の <Image> を
@@ -82,7 +86,9 @@ export function WrapSegmentClient<Tag extends keyof JSX.IntrinsicElements>({
 	const translation: ReactNode =
 		eff !== "source" && hasTr ? (
 			<TranslationSection
+				bestTranslationText={bestTranslationText}
 				interactive={interactive}
+				onBestTranslationUpdated={setBestTranslationText}
 				segment={segment}
 				tagName={tagName}
 				tagProps={tagProps}

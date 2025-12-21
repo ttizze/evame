@@ -11,6 +11,12 @@ interface UseSegmentTranslationsParams {
 }
 
 interface SegmentTranslationsResponse {
+	bestTranslation: {
+		id: number;
+		text: string;
+		point: number;
+		createdAt: string;
+	} | null;
 	bestTranslationCurrentUserVote: TranslationVote | null;
 	bestTranslationUser: SanitizedUser;
 	translations: TranslationWithInfo[];
