@@ -29,7 +29,10 @@ export async function htmlToMdastWithSegments({
 	const processor = unified()
 		.use(rehypeParse, { fragment: true }) // HTML → HAST
 		.use(rehypeSanitize) // XSS 対策
-		.use(rehypeRemark) // HAST → MDAST
+		.use(rehypeRemark, {
+			// Prevent extra newlines in blockquotes and other elements
+			newlines: false,
+		}) // HAST → MDAST
 		.use(remarkHashAndSegments(header)) // ハッシュ抽出
 		.use(remarkAutoUploadImages); // 画像自動アップロード
 

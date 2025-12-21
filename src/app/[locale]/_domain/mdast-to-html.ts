@@ -33,8 +33,17 @@ export async function mdastToHtml({ mdastJson }: Params): Promise<Result> {
 	const mdast = mdastJson;
 
 	const processor = unified()
-		.use(remarkRehype, { allowDangerousHtml: true }) // mdast → hast
-		.use(rehypeStringify, { allowDangerousHtml: true });
+		.use(remarkRehype, {
+			allowDangerousHtml: true,
+			// Prevent extra line breaks in blockquotes
+			tightLists: true,
+		}) // mdast → hast
+		.use(rehypeStringify, {
+			allowDangerousHtml: true,
+			// Minimize extra whitespace
+			tightSelfClosing: true,
+			closeSelfClosing: true,
+		});
 
 	const hast = await processor.run(mdast); // ✅ parser 不要
 	const html = processor.stringify(hast); // stringify だけ実行
