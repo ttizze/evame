@@ -76,6 +76,8 @@ describe("SegmentElement", () => {
 		expect(tr).not.toBeNull();
 		expect(tr).toHaveAttribute("data-segment-id", "10");
 		expect(tr).toHaveAttribute("data-best-translation-id", "99");
+		expect(tr).toHaveAttribute("role", "button");
+		expect(tr).toHaveAttribute("tabindex", "0");
 		expect(tr).toHaveTextContent("translation");
 	});
 
@@ -122,6 +124,11 @@ describe("SegmentElement", () => {
 
 		expect(
 			container.querySelector('[data-annotation-type="Atthakatha"].seg-ann'),
+		).not.toBeNull();
+		expect(
+			container.querySelector(
+				'[data-annotation-type="Atthakatha"].seg-ann.seg-tr[role="button"]',
+			),
 		).not.toBeNull();
 		expect(container).toHaveTextContent("ann-src");
 		expect(container).toHaveTextContent("ann-tr");

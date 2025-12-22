@@ -49,7 +49,9 @@ export function SegmentElement({
 						// Avoid duplicate IDs (headings etc.)
 						id: undefined,
 						className:
-							`${baseClassName} seg-tr ${interactive ? "cursor-pointer select-text" : ""}`.trim(),
+							`${baseClassName} seg-tr ${interactive ? "cursor-pointer select-text text-left" : ""}`.trim(),
+						role: interactive ? "button" : undefined,
+						tabIndex: interactive ? 0 : undefined,
 						"data-number-id": segment.number,
 						...(interactive
 							? {
@@ -97,7 +99,9 @@ export function SegmentElement({
 							...(tagProps as Record<string, unknown> | undefined),
 							id: undefined,
 							className:
-								`${annotationBase} seg-tr ${interactive ? "cursor-pointer select-text" : ""}`.trim(),
+								`${annotationBase} seg-tr ${interactive ? "cursor-pointer select-text text-left" : ""}`.trim(),
+							role: interactive ? "button" : undefined,
+							tabIndex: interactive ? 0 : undefined,
 							"data-annotation-type": typeKey,
 							"data-number-id": a.number,
 							...(interactive

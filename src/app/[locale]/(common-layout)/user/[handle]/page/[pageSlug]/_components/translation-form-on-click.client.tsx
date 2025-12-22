@@ -104,14 +104,43 @@ export function TranslationFormOnClick() {
 			setSegmentId(segId);
 		};
 
+		const onKeyDown = (e: KeyboardEvent) => {
+			if (e.key !== "Enter" && e.key !== " ") return;
+
+			const target = e.target instanceof Element ? e.target : null;
+			const el = target?.closest?.("[data-segment-id]") as HTMLElement | null;
+			if (!el) return;
+			if (!(container as HTMLElement).contains(el)) return;
+
+			// Prevent page scroll on Space
+			if (e.key === " ") e.preventDefault();
+
+			const segIdRaw = el.dataset.segmentId;
+			const segId = segIdRaw ? Number(segIdRaw) : NaN;
+			if (!Number.isFinite(segId)) return;
+
+			if (segmentId === segId) {
+				setSegmentId(null);
+				setRootEl(null);
+				return;
+			}
+
+			const translationBlock = el.closest(".seg-tr");
+			if (!translationBlock) return;
+			setRootEl(ensureFormRoot(translationBlock));
+			setSegmentId(segId);
+		};
+
 		const listener = (e: Event) => {
 			void onClick(e as MouseEvent);
 		};
 		container.addEventListener("pointerdown", onPointerDown, true);
 		container.addEventListener("click", listener);
+		container.addEventListener("keydown", onKeyDown);
 		return () => {
 			container.removeEventListener("pointerdown", onPointerDown, true);
 			container.removeEventListener("click", listener);
+			container.removeEventListener("keydown", onKeyDown);
 		};
 	}, [segmentId]);
 

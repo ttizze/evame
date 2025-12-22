@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TranslationFormOnClick } from "./translation-form-on-click.client";
 
@@ -16,9 +16,9 @@ describe("TranslationFormOnClick", () => {
 		const user = userEvent.setup();
 		const { container } = render(
 			<>
-				<div className="seg-tr" data-segment-id="123">
+				<button className="seg-tr" data-segment-id="123" type="button">
 					open
-				</div>
+				</button>
 				<TranslationFormOnClick />
 			</>,
 		);
@@ -50,9 +50,9 @@ describe("TranslationFormOnClick", () => {
 		const user = userEvent.setup();
 		render(
 			<>
-				<div className="seg-tr" data-segment-id="123">
+				<button className="seg-tr" data-segment-id="123" type="button">
 					open
-				</div>
+				</button>
 				<TranslationFormOnClick />
 			</>,
 		);
@@ -69,9 +69,9 @@ describe("TranslationFormOnClick", () => {
 		const user = userEvent.setup();
 		render(
 			<>
-				<div className="seg-tr" data-segment-id="123">
+				<button className="seg-tr" data-segment-id="123" type="button">
 					open
-				</div>
+				</button>
 				<TranslationFormOnClick />
 			</>,
 		);
@@ -87,5 +87,25 @@ describe("TranslationFormOnClick", () => {
 		expect(screen.queryByTestId("tr-ui")).toBeNull();
 
 		window.getSelection = original;
+	});
+
+	test("キーボード（Enter/Space）で UI を開ける", async () => {
+		const user = userEvent.setup();
+		const { container } = render(
+			<>
+				<button className="seg-tr" data-segment-id="123" type="button">
+					open
+				</button>
+				<TranslationFormOnClick />
+			</>,
+		);
+
+		await user.tab();
+		const el = container.querySelector(
+			"[data-segment-id='123']",
+		) as HTMLElement | null;
+		expect(el).not.toBeNull();
+		fireEvent.keyDown(el as HTMLElement, { key: "Enter" });
+		expect(screen.getByTestId("tr-ui")).toHaveTextContent("segment:123");
 	});
 });
