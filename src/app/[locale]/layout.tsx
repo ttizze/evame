@@ -42,7 +42,8 @@ export default async function Layout(
 		>
 			<body className="transition-colors duration-300 antialiased">
 				{gaTrackingId && <GoogleAnalytics gaId={gaTrackingId} />}
-				<NextTopLoader showSpinner={false} />
+				{/* trickle(crawl) は setTimeout ループになりやすいので無効化 */}
+				<NextTopLoader crawl={false} showSpinner={false} />
 				<NuqsAdapter>
 					<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 						{children}

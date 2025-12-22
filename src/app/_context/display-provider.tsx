@@ -95,12 +95,6 @@ export function DisplayProvider({
 	/* 5.5) CSS 用に data-display-mode を同期 */
 	useEffect(() => {
 		document.documentElement.dataset.displayMode = mode;
-		return () => {
-			// Keep it if another provider sets it, but clear on unmount to avoid stale state.
-			if (document.documentElement.dataset.displayMode === mode) {
-				delete document.documentElement.dataset.displayMode;
-			}
-		};
 	}, [mode]);
 
 	/* 5.6) 注釈の表示切替用 (URL param -> DOM) */

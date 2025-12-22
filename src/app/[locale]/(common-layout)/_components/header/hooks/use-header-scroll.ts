@@ -1,5 +1,6 @@
 "use client";
 import { type RefObject, useEffect, useRef, useState } from "react";
+import { subscribeScrollY } from "./scroll-y-store.client";
 
 interface UseHeaderScrollOptions {
 	// ヘッダーの初期オフセット位置（オプション、SubHeaderで使用）
@@ -134,19 +135,18 @@ export function useHeaderScroll(
 			lastScrollYRef.current = currentScrollY;
 		};
 
-		const handleScroll = () => {
-			latestScrollYRef.current = window.scrollY;
+		const unsubscribe = subscribeScrollY((scrollY) => {
+			latestScrollYRef.current = scrollY;
 			if (rafIdRef.current !== null) return;
 
 			rafIdRef.current = window.requestAnimationFrame(() => {
 				rafIdRef.current = null;
 				applyScrollState(latestScrollYRef.current);
 			});
-		};
+		});
 
-		window.addEventListener("scroll", handleScroll, { passive: true });
 		return () => {
-			window.removeEventListener("scroll", handleScroll);
+			unsubscribe();
 			if (rafIdRef.current !== null) {
 				window.cancelAnimationFrame(rafIdRef.current);
 			}

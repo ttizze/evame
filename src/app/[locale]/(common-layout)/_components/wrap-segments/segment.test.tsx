@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
 import { SegmentElement } from "./segment";
 
@@ -60,8 +60,8 @@ function makeDetailSegment(
 }
 
 describe("SegmentElement", () => {
-	test("interactive=true かつ訳文があるとき、訳文は data-segment-id 付きの button になる", () => {
-		render(
+	test("interactive=true かつ訳文があるとき、訳文ブロックに data-segment-id が付く", () => {
+		const { container } = render(
 			<SegmentElement
 				interactive={true}
 				segment={makeListSegment({
@@ -71,13 +71,17 @@ describe("SegmentElement", () => {
 			/>,
 		);
 
-		const button = screen.getByRole("button");
-		expect(button).toHaveAttribute("data-segment-id", "10");
-		expect(button).toHaveAttribute("data-best-translation-id", "99");
-		expect(button).toHaveTextContent("translation");
+		expect(container.querySelector("button")).toBeNull();
+		const tr = container.querySelector(".seg-tr");
+		expect(tr).not.toBeNull();
+		expect(tr).toHaveAttribute("data-segment-id", "10");
+		expect(tr).toHaveAttribute("data-best-translation-id", "99");
+		expect(tr).toHaveAttribute("role", "button");
+		expect(tr).toHaveAttribute("tabindex", "0");
+		expect(tr).toHaveTextContent("translation");
 	});
 
-	test("interactive=false のとき、訳文は button ではなくテキストとして描画される", () => {
+	test("interactive=false のとき、訳文に data-segment-id は付かない", () => {
 		const { container } = render(
 			<SegmentElement
 				interactive={false}
@@ -88,6 +92,9 @@ describe("SegmentElement", () => {
 		);
 
 		expect(container.querySelector("button")).toBeNull();
+		expect(
+			container.querySelector(".seg-tr")?.getAttribute("data-segment-id"),
+		).toBeNull();
 		expect(container).toHaveTextContent("translation");
 	});
 
@@ -117,6 +124,11 @@ describe("SegmentElement", () => {
 
 		expect(
 			container.querySelector('[data-annotation-type="Atthakatha"].seg-ann'),
+		).not.toBeNull();
+		expect(
+			container.querySelector(
+				'[data-annotation-type="Atthakatha"].seg-ann.seg-tr[role="button"]',
+			),
 		).not.toBeNull();
 		expect(container).toHaveTextContent("ann-src");
 		expect(container).toHaveTextContent("ann-tr");

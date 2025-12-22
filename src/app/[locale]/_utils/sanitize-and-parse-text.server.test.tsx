@@ -21,4 +21,16 @@ describe("sanitizeAndParseText", () => {
 		expect(container.querySelector("script")).toBeNull();
 		expect(container).toHaveTextContent("ok");
 	});
+
+	test("ブロックタグを unwrap して無効なネストを避ける", () => {
+		const { container } = render(
+			<div data-testid="root">
+				{sanitizeAndParseText("<p>a</p><h2>b</h2>")}
+			</div>,
+		);
+
+		expect(container.querySelector("p")).toBeNull();
+		expect(container.querySelector("h2")).toBeNull();
+		expect(container).toHaveTextContent("ab");
+	});
 });

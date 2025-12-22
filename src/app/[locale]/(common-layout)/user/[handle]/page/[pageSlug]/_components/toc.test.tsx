@@ -1,4 +1,4 @@
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, render, waitFor } from "@testing-library/react";
 import tocbot from "tocbot";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import TableOfContents from "./toc";
@@ -28,15 +28,11 @@ describe("TableOfContents", () => {
         <h3 id="heading3">Heading 3</h3>
       </div>
     `;
-
-		// タイマーのモック
-		vi.useFakeTimers();
 	});
 
 	afterEach(() => {
 		cleanup();
 		vi.resetAllMocks();
-		vi.useRealTimers();
 	});
 
 	it("should render the TOC container", () => {
@@ -48,7 +44,7 @@ describe("TableOfContents", () => {
 	it("should call onItemClick when TOC item is clicked", async () => {
 		render(<TableOfContents onItemClick={mockOnItemClick} />);
 
-		vi.advanceTimersByTime(300);
+		await waitFor(() => expect(tocbot.init).toHaveBeenCalledTimes(1));
 
 		// tocbot.initが呼ばれた時のonClickコールバックを取得
 		const initCall = vi.mocked(tocbot.init).mock.calls[0][0];
@@ -65,15 +61,12 @@ describe("TableOfContents", () => {
 		expect(mockOnItemClick).toHaveBeenCalledTimes(1);
 	});
 
-	it("should clean up tocbot on unmount", () => {
+	it("should clean up tocbot on unmount", async () => {
 		const { unmount } = render(
 			<TableOfContents onItemClick={mockOnItemClick} />,
 		);
 
-		vi.advanceTimersByTime(300);
-
-		// tocbot.initが呼ばれたことを確認
-		expect(tocbot.init).toHaveBeenCalledTimes(1);
+		await waitFor(() => expect(tocbot.init).toHaveBeenCalledTimes(1));
 
 		// コンポーネントをアンマウント
 		unmount();
@@ -82,10 +75,10 @@ describe("TableOfContents", () => {
 		expect(tocbot.destroy).toHaveBeenCalledTimes(1);
 	});
 
-	it("should truncate long heading text", () => {
+	it("should truncate long heading text", async () => {
 		render(<TableOfContents onItemClick={mockOnItemClick} />);
 
-		vi.advanceTimersByTime(300);
+		await waitFor(() => expect(tocbot.init).toHaveBeenCalledTimes(1));
 
 		// tocbot.initが呼ばれた時のheadingLabelCallbackを取得
 		const initCall = vi.mocked(tocbot.init).mock.calls[0][0];
