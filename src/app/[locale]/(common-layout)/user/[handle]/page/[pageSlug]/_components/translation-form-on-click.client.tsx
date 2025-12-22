@@ -29,15 +29,15 @@ function ensureFormRoot(afterEl: Element) {
  *
  * 仕組み:
  * - 本文/コメントのセグメントは Server Component 側で静的にレンダする
- *   （`WrapSegment` が訳文を `<button data-segment-id="...">` として出す）。
+ *   （`WrapSegment` が訳文ブロック（`.seg-tr`）に `data-segment-id` を付けて出す）。
  * - `document.body` に 1 本だけ click リスナーを付ける（イベント委譲）ことで、
  *   本文だけでなくコメント内の訳文ボタンも同じ挙動で拾える。
  * - クリックされた `.seg-tr` の直後に Portal 用の root を作り、
  *   そこへ `AddAndVoteTranslations` を `createPortal` で差し込む。
  *
  * 重要:
- * - `data-segment-id` は「クリック可能な訳文ボタン」にだけ付けること。
- *   `p/li` など親要素に付けると、余白クリックでもUIが開いてしまう。
+ * - `.seg-tr` はブロック要素なので、余白クリックまで拾うと体験が悪い。
+ *   そのため「クリック位置が実際にテキスト上か」をチェックしてから開く。
  */
 export function TranslationFormOnClick() {
 	const [segmentId, setSegmentId] = useState<number | null>(null);
@@ -45,14 +45,49 @@ export function TranslationFormOnClick() {
 
 	useEffect(() => {
 		const container = document.body;
+		const hadSelectionOnPointerDownRef = { current: false };
+
+		const isClickOnText = (e: MouseEvent) => {
+			// Chrome: caretRangeFromPoint / Safari: caretRangeFromPoint
+			const d = document as Document & {
+				caretRangeFromPoint?: (x: number, y: number) => Range | null;
+				caretPositionFromPoint?: (
+					x: number,
+					y: number,
+				) => { offsetNode: Node | null } | null;
+			};
+
+			// jsdom や一部環境では API が無いので、その場合はチェックをスキップする。
+			if (!d.caretRangeFromPoint && !d.caretPositionFromPoint) return true;
+
+			const range = d.caretRangeFromPoint?.(e.clientX, e.clientY);
+			if (range) return range.startContainer.nodeType === Node.TEXT_NODE;
+
+			const pos = d.caretPositionFromPoint?.(e.clientX, e.clientY);
+			return pos?.offsetNode?.nodeType === Node.TEXT_NODE;
+		};
+
+		const getHasSelection = () => {
+			const sel = window.getSelection?.();
+			return !!sel && !sel.isCollapsed && sel.toString().length > 0;
+		};
+
+		const onPointerDown = () => {
+			// 「選択解除のためのクリック」でも UI が開くと邪魔なので、
+			// pointerdown 時点で選択があればこのクリックは無視する。
+			hadSelectionOnPointerDownRef.current = getHasSelection();
+		};
 
 		const onClick = async (e: MouseEvent) => {
 			const target = e.target instanceof Element ? e.target : null;
-			const btn = target?.closest?.("[data-segment-id]") as HTMLElement | null;
-			if (!btn) return;
-			if (!(container as HTMLElement).contains(btn)) return;
+			const el = target?.closest?.("[data-segment-id]") as HTMLElement | null;
+			if (!el) return;
+			if (!(container as HTMLElement).contains(el)) return;
+			if (hadSelectionOnPointerDownRef.current) return;
+			if (getHasSelection()) return;
+			if (!isClickOnText(e)) return;
 
-			const segIdRaw = btn.dataset.segmentId;
+			const segIdRaw = el.dataset.segmentId;
 			const segId = segIdRaw ? Number(segIdRaw) : NaN;
 			if (!Number.isFinite(segId)) return;
 
@@ -63,7 +98,7 @@ export function TranslationFormOnClick() {
 				return;
 			}
 
-			const translationBlock = btn.closest(".seg-tr");
+			const translationBlock = el.closest(".seg-tr");
 			if (!translationBlock) return;
 			setRootEl(ensureFormRoot(translationBlock));
 			setSegmentId(segId);
@@ -72,8 +107,12 @@ export function TranslationFormOnClick() {
 		const listener = (e: Event) => {
 			void onClick(e as MouseEvent);
 		};
+		container.addEventListener("pointerdown", onPointerDown, true);
 		container.addEventListener("click", listener);
-		return () => container.removeEventListener("click", listener);
+		return () => {
+			container.removeEventListener("pointerdown", onPointerDown, true);
+			container.removeEventListener("click", listener);
+		};
 	}, [segmentId]);
 
 	if (!segmentId || !rootEl) return null;

@@ -16,16 +16,14 @@ describe("TranslationFormOnClick", () => {
 		const user = userEvent.setup();
 		const { container } = render(
 			<>
-				<div className="seg-tr">
-					<button data-segment-id="123" type="button">
-						open
-					</button>
+				<div className="seg-tr" data-segment-id="123">
+					open
 				</div>
 				<TranslationFormOnClick />
 			</>,
 		);
 
-		await user.click(screen.getByRole("button", { name: "open" }));
+		await user.click(screen.getByText("open"));
 
 		expect(screen.getByTestId("tr-ui")).toHaveTextContent("segment:123");
 
@@ -39,14 +37,12 @@ describe("TranslationFormOnClick", () => {
 		const user = userEvent.setup();
 		render(
 			<>
-				<div className="seg-tr">
-					<button type="button">noop</button>
-				</div>
+				<div className="seg-tr">noop</div>
 				<TranslationFormOnClick />
 			</>,
 		);
 
-		await user.click(screen.getByRole("button", { name: "noop" }));
+		await user.click(screen.getByText("noop"));
 		expect(screen.queryByTestId("tr-ui")).toBeNull();
 	});
 
@@ -54,20 +50,42 @@ describe("TranslationFormOnClick", () => {
 		const user = userEvent.setup();
 		render(
 			<>
-				<div className="seg-tr">
-					<button data-segment-id="123" type="button">
-						open
-					</button>
+				<div className="seg-tr" data-segment-id="123">
+					open
 				</div>
 				<TranslationFormOnClick />
 			</>,
 		);
 
-		const btn = screen.getByRole("button", { name: "open" });
-		await user.click(btn);
+		const target = screen.getByText("open");
+		await user.click(target);
 		expect(screen.getByTestId("tr-ui")).toBeInTheDocument();
 
-		await user.click(btn);
+		await user.click(target);
 		expect(screen.queryByTestId("tr-ui")).toBeNull();
+	});
+
+	test("テキスト選択がある状態のクリックでは UI を開かない（コピーしやすさ優先）", async () => {
+		const user = userEvent.setup();
+		render(
+			<>
+				<div className="seg-tr" data-segment-id="123">
+					open
+				</div>
+				<TranslationFormOnClick />
+			</>,
+		);
+
+		const original = window.getSelection;
+		window.getSelection = () =>
+			({
+				isCollapsed: false,
+				toString: () => "selected",
+			}) as unknown as Selection;
+
+		await user.click(screen.getByText("open"));
+		expect(screen.queryByTestId("tr-ui")).toBeNull();
+
+		window.getSelection = original;
 	});
 });

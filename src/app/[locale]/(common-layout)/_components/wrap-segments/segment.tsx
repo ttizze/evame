@@ -2,9 +2,6 @@ import { createElement, Fragment, type JSX, type ReactNode } from "react";
 import { sanitizeAndParseText } from "@/app/[locale]/_utils/sanitize-and-parse-text.server";
 import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
 
-const CONTENT_VISIBILITY =
-	"supports-[content-visibility:auto]:content-visibility-auto supports-[content-visibility:auto]:[contain-intrinsic-size:1px_800px] supports-[content-visibility:auto]:[contain:layout_paint_style]";
-
 /**
  * セグメント1つを「普通の props コンポーネント」として描画する（高階関数にしない）。
  *
@@ -30,7 +27,7 @@ export function SegmentElement({
 	const TagName = tagName ?? "span";
 	const hasTr = segment.segmentTranslation !== null;
 	const baseClassName =
-		`${(tagProps?.className as string | undefined) ?? ""} ${className ?? ""} block ${CONTENT_VISIBILITY}`.trim();
+		`${(tagProps?.className as string | undefined) ?? ""} ${className ?? ""} block seg-cv`.trim();
 
 	const sourceEl = createElement(
 		TagName,
@@ -51,21 +48,17 @@ export function SegmentElement({
 						...(tagProps as Record<string, unknown> | undefined),
 						// Avoid duplicate IDs (headings etc.)
 						id: undefined,
-						className: `${baseClassName} seg-tr`.trim(),
+						className:
+							`${baseClassName} seg-tr ${interactive ? "cursor-pointer select-text" : ""}`.trim(),
 						"data-number-id": segment.number,
+						...(interactive
+							? {
+									"data-best-translation-id": segment.segmentTranslation?.id,
+									"data-segment-id": segment.id,
+								}
+							: null),
 					},
-					interactive ? (
-						<button
-							className="text-inherit text-left cursor-pointer select-text"
-							data-best-translation-id={segment.segmentTranslation?.id}
-							data-segment-id={segment.id}
-							type="button"
-						>
-							{sanitizeAndParseText(trText)}
-						</button>
-					) : (
-						sanitizeAndParseText(trText)
-					),
+					sanitizeAndParseText(trText),
 				);
 			})()
 		: null;
@@ -103,22 +96,18 @@ export function SegmentElement({
 						{
 							...(tagProps as Record<string, unknown> | undefined),
 							id: undefined,
-							className: `${annotationBase} seg-tr`.trim(),
+							className:
+								`${annotationBase} seg-tr ${interactive ? "cursor-pointer select-text" : ""}`.trim(),
 							"data-annotation-type": typeKey,
 							"data-number-id": a.number,
+							...(interactive
+								? {
+										"data-best-translation-id": a.segmentTranslation?.id,
+										"data-segment-id": a.id,
+									}
+								: null),
 						},
-						interactive ? (
-							<button
-								className="text-inherit text-left cursor-pointer select-text"
-								data-best-translation-id={a.segmentTranslation?.id}
-								data-segment-id={a.id}
-								type="button"
-							>
-								{sanitizeAndParseText(a.segmentTranslation?.text ?? "")}
-							</button>
-						) : (
-							sanitizeAndParseText(a.segmentTranslation?.text ?? "")
-						),
+						sanitizeAndParseText(a.segmentTranslation?.text ?? ""),
 					);
 
 					return [

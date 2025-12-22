@@ -1,9 +1,9 @@
 // components/CommentFormLayout.tsx
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
-import { Editor } from "@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/editor/editor";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 
@@ -20,6 +20,14 @@ interface Props {
 	errorMsg?: string[];
 }
 
+const Editor = dynamic(
+	() =>
+		import(
+			"@/app/[locale]/(edit-layout)/user/[handle]/page/[pageSlug]/edit/_components/editor/editor"
+		).then((m) => m.Editor),
+	{ ssr: false },
+);
+
 export function CommentForm({ action, hidden, isPending, errorMsg }: Props) {
 	const [content, setContent] = useState("");
 	const { data: session } = authClient.useSession();
@@ -34,15 +42,24 @@ export function CommentForm({ action, hidden, isPending, errorMsg }: Props) {
 						),
 				)}
 
-				<Editor
-					className={`border border-input rounded-md px-2 ${
-						!session?.user ? "opacity-50 bg-muted" : ""
-					}`}
-					defaultValue={content}
-					name="content"
-					onEditorUpdate={(ed) => setContent(ed?.getHTML() ?? "")}
-					placeholder="Say Hello!"
-				/>
+				{session?.user ? (
+					<Editor
+						className="border border-input rounded-md px-2"
+						defaultValue={content}
+						name="content"
+						onEditorUpdate={(ed) => setContent(ed?.getHTML() ?? "")}
+						placeholder="Say Hello!"
+						// コメント欄ではメニュー表示が不要で、position 計測が重くなりやすいので無効化する
+						showMenus={false}
+					/>
+				) : (
+					<div
+						aria-disabled="true"
+						className="border border-input rounded-md px-2 py-3 opacity-50 bg-muted"
+					>
+						Say Hello!
+					</div>
+				)}
 
 				{!session?.user && (
 					<StartButton className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />

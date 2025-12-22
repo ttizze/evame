@@ -10,6 +10,10 @@ const analyzeBundles = withBundleAnalyzer({
 /** @type {import('next').NextConfig} */
 const config: NextConfig = {
 	serverExternalPackages: ["pino"],
+	// ローカルで本番相当の Performance を見たいとき用。
+	// `PRODUCTION_BROWSER_SOURCEMAPS=true` で build すると、DevTools から呼び出し元が追えるようになる。
+	// (bundle サイズが増えるので常時 ON は非推奨)
+	productionBrowserSourceMaps: true,
 	logging: {
 		fetches: {
 			fullUrl: true,

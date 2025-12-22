@@ -12,6 +12,8 @@ interface EditorProps {
 	onEditorCreate?: (editor: ReturnType<typeof useEditor>) => void;
 	className: string;
 	placeholder: string;
+	/** 文章編集ページでは true、コメント等の軽量用途では false を想定 */
+	showMenus?: boolean;
 }
 
 export function Editor({
@@ -21,6 +23,7 @@ export function Editor({
 	onEditorCreate,
 	className,
 	placeholder,
+	showMenus = true,
 }: EditorProps) {
 	const editorRef = useRef<HTMLInputElement>(null);
 	const baseConfig = configureEditor(defaultValue, placeholder);
@@ -47,8 +50,8 @@ export function Editor({
 
 	return (
 		<div className="">
-			{editor && <EditorBubbleMenu editor={editor} />}
-			{editor && <EditorFloatingMenu editor={editor} />}
+			{showMenus && editor && <EditorBubbleMenu editor={editor} />}
+			{showMenus && editor && <EditorFloatingMenu editor={editor} />}
 			<EditorContent editor={editor} />
 			<input
 				name={name}
