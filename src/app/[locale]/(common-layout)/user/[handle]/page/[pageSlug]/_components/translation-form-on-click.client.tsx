@@ -83,6 +83,8 @@ export function TranslationFormOnClick() {
 			const el = target?.closest?.("[data-segment-id]") as HTMLElement | null;
 			if (!el) return;
 			if (!(container as HTMLElement).contains(el)) return;
+			// When segments are wrapped in a link, don't hijack the click (navigation should win).
+			if (el.closest("a")) return;
 			if (hadSelectionOnPointerDownRef.current) return;
 			if (getHasSelection()) return;
 			if (!isClickOnText(e)) return;
@@ -111,6 +113,8 @@ export function TranslationFormOnClick() {
 			const el = target?.closest?.("[data-segment-id]") as HTMLElement | null;
 			if (!el) return;
 			if (!(container as HTMLElement).contains(el)) return;
+			// When segments are wrapped in a link, don't hijack keyboard activation.
+			if (el.closest("a")) return;
 
 			// Prevent page scroll on Space
 			if (e.key === " ") e.preventDefault();

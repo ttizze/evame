@@ -46,6 +46,21 @@ describe("TranslationFormOnClick", () => {
 		expect(screen.queryByTestId("tr-ui")).toBeNull();
 	});
 
+	test("リンク内の data-segment-id をクリックしてもUIは開かない（ナビゲーション優先）", async () => {
+		const user = userEvent.setup();
+		render(
+			<>
+				<a className="seg-tr" data-segment-id="123" href="#x">
+					open
+				</a>
+				<TranslationFormOnClick />
+			</>,
+		);
+
+		await user.click(screen.getByText("open"));
+		expect(screen.queryByTestId("tr-ui")).toBeNull();
+	});
+
 	test("同じ段をもう一度クリックすると閉じる（toggle）", async () => {
 		const user = userEvent.setup();
 		render(
@@ -87,6 +102,22 @@ describe("TranslationFormOnClick", () => {
 		expect(screen.queryByTestId("tr-ui")).toBeNull();
 
 		window.getSelection = original;
+	});
+
+	test("リンク内ではキーボード（Enter/Space）でも UI は開かない", async () => {
+		render(
+			<>
+				<a className="seg-tr" data-segment-id="123" href="#x">
+					open
+				</a>
+				<TranslationFormOnClick />
+			</>,
+		);
+
+		const target = screen.getByText("open");
+		fireEvent.keyDown(target, { key: "Enter" });
+		fireEvent.keyDown(target, { key: " " });
+		expect(screen.queryByTestId("tr-ui")).toBeNull();
 	});
 
 	test("キーボード（Enter/Space）で UI を開ける", async () => {
