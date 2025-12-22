@@ -43,6 +43,7 @@ function PageLink({ page, titleSegment, className }: PageLinkProps) {
 		<Link className={cn("block overflow-hidden", className)} href={pageLink}>
 			<SegmentElement
 				className="line-clamp-1 break-all overflow-wrap-anywhere"
+				interactive={false}
 				segment={titleSegment}
 				tagName="span"
 			/>
