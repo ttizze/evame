@@ -9,14 +9,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { authClient } from "@/lib/auth-client";
+import { useHydrated } from "@/lib/use-hydrated";
 import Toc, { useHasTableOfContents } from "./toc";
 
 export function SubHeader({ pageDetail }: { pageDetail: PageDetail }) {
+	const hydrated = useHydrated();
 	const locale = useLocale();
 	const [isTocOpen, setIsTocOpen] = useState(false);
 	const hasTocContent = useHasTableOfContents();
 	const { data: session } = authClient.useSession();
-	const currentUser = session?.user;
+	const currentUser = hydrated ? session?.user : undefined;
 	const isEditable = currentUser?.handle === pageDetail.user.handle;
 
 	// カスタムフックを使用 - SubHeaderの特殊な動作のため初期オフセットを考慮
