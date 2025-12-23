@@ -7,6 +7,7 @@ import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-bu
 import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { useHydrated } from "@/lib/use-hydrated";
 import { addTranslationFormAction } from "./action";
 
 interface AddTranslationFormProps {
@@ -18,9 +19,10 @@ export function AddTranslationForm({
 	segmentId,
 	onTranslationAdded,
 }: AddTranslationFormProps) {
+	const hydrated = useHydrated();
 	const locale = useLocale();
 	const { data: session } = authClient.useSession();
-	const currentUser = session?.user;
+	const currentUser = hydrated ? session?.user : undefined;
 	const formRef = useRef<HTMLFormElement>(null);
 	const [addTranslationState, addTranslationAction, isAddingTranslation] =
 		useActionState<ActionResponse, FormData>(addTranslationFormAction, {
