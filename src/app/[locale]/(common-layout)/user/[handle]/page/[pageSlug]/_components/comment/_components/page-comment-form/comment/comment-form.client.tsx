@@ -6,6 +6,7 @@ import { useState } from "react";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { useHydrated } from "@/lib/use-hydrated";
 
 type Hidden = Record<string, string | number | undefined>;
 
@@ -29,8 +30,10 @@ const Editor = dynamic(
 );
 
 export function CommentForm({ action, hidden, isPending, errorMsg }: Props) {
+	const hydrated = useHydrated();
 	const [content, setContent] = useState("");
 	const { data: session } = authClient.useSession();
+	const currentUser = hydrated ? session?.user : undefined;
 	return (
 		<>
 			<form action={action} className="space-y-4 relative">
@@ -42,7 +45,7 @@ export function CommentForm({ action, hidden, isPending, errorMsg }: Props) {
 						),
 				)}
 
-				{session?.user ? (
+				{currentUser ? (
 					<Editor
 						className="border border-input rounded-md px-2"
 						defaultValue={content}
@@ -61,13 +64,13 @@ export function CommentForm({ action, hidden, isPending, errorMsg }: Props) {
 					</div>
 				)}
 
-				{!session?.user && (
+				{!currentUser && (
 					<StartButton className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
 				)}
 
 				<Button
 					className="w-full"
-					disabled={isPending || !session?.user || content.length === 0}
+					disabled={isPending || !currentUser || content.length === 0}
 					type="submit"
 				>
 					{isPending ? "posting" : "post"}

@@ -5,6 +5,7 @@ import { CommentActionMenu } from "@/app/[locale]/(common-layout)/user/[handle]/
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
+import { useHydrated } from "@/lib/use-hydrated";
 import {
 	type CommentDeleteActionResponse,
 	deletePageCommentAction,
@@ -21,13 +22,14 @@ export function PageCommentItemClient({
 	pageId,
 	user,
 }: PageCommentItemClientProps) {
+	const hydrated = useHydrated();
 	const [_state, action, isPending] = useActionState<
 		CommentDeleteActionResponse,
 		FormData
 	>(deletePageCommentAction, { success: false });
 	const { data: session } = authClient.useSession();
 
-	if (session?.user.handle !== user.handle) return null;
+	if (!hydrated || session?.user.handle !== user.handle) return null;
 
 	return (
 		<CommentActionMenu>
