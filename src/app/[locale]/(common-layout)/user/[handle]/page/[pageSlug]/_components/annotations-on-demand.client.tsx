@@ -54,11 +54,16 @@ export function AnnotationsOnDemand({
 
 	const [contentEl, setContentEl] = useState<Element | null>(null);
 	const [byNumber, setByNumber] = useState<ByNumber>({});
+	const [activeWindow, setActiveWindow] = useState<{
+		from: number;
+		to: number;
+	} | null>(null);
 	const inFlightRef = useRef<Map<string, AbortController>>(new Map());
 	const rootsRef = useRef<Map<number, HTMLElement>>(new Map());
 	const inViewRef = useRef<Set<number>>(new Set());
 	const rafRef = useRef<number | null>(null);
 	const loadedIntervalsRef = useRef<Array<{ from: number; to: number }>>([]);
+	const activeWindowRef = useRef<{ from: number; to: number } | null>(null);
 
 	const resetKey = `${pageId}:${userLocale}:${enabledTypes.join("~")}`;
 
@@ -67,6 +72,8 @@ export function AnnotationsOnDemand({
 		for (const controller of inFlightRef.current.values()) controller.abort();
 		inFlightRef.current.clear();
 		setByNumber({});
+		setActiveWindow(null);
+		activeWindowRef.current = null;
 		loadedIntervalsRef.current = [];
 		setContentEl(null);
 		for (const root of rootsRef.current.values()) root.remove();
@@ -183,6 +190,18 @@ export function AnnotationsOnDemand({
 				for (const m of missing) {
 					void fetchRange(m.from, m.to);
 				}
+
+				// Virtualize annotation DOM: keep only near-viewport portals mounted.
+				const nextWindow = { from: need.from, to: need.to };
+				const prev = activeWindowRef.current;
+				if (
+					!prev ||
+					prev.from !== nextWindow.from ||
+					prev.to !== nextWindow.to
+				) {
+					activeWindowRef.current = nextWindow;
+					setActiveWindow(nextWindow);
+				}
 			});
 		};
 
@@ -227,9 +246,13 @@ export function AnnotationsOnDemand({
 
 	useEffect(() => {
 		if (!contentEl) return;
+		if (!activeWindow) return;
+
 		for (const [key, annotations] of Object.entries(byNumber)) {
 			const mainNumber = Number(key);
 			if (!Number.isFinite(mainNumber)) continue;
+			if (mainNumber < activeWindow.from || mainNumber > activeWindow.to)
+				continue;
 			if (!annotations || annotations.length === 0) continue;
 			if (rootsRef.current.has(mainNumber)) continue;
 
@@ -246,14 +269,25 @@ export function AnnotationsOnDemand({
 			const root = ensureAnnotationRoot(anchor);
 			rootsRef.current.set(mainNumber, root);
 		}
-	}, [byNumber, contentEl]);
+
+		// Remove offscreen roots to keep the DOM small.
+		for (const [mainNumber, root] of rootsRef.current.entries()) {
+			if (mainNumber < activeWindow.from || mainNumber > activeWindow.to) {
+				root.remove();
+				rootsRef.current.delete(mainNumber);
+			}
+		}
+	}, [activeWindow, byNumber, contentEl]);
 
 	const portals = useMemo(() => {
 		if (!contentEl) return [];
+		if (!activeWindow) return [];
 
 		return Object.entries(byNumber).flatMap(([k, annotations]) => {
 			const mainNumber = Number(k);
 			if (!Number.isFinite(mainNumber)) return [];
+			if (mainNumber < activeWindow.from || mainNumber > activeWindow.to)
+				return [];
 			if (!annotations || annotations.length === 0) return [];
 
 			const root = rootsRef.current.get(mainNumber);
@@ -297,7 +331,7 @@ export function AnnotationsOnDemand({
 			if (elements.length === 0) return [];
 			return [createPortal(elements, root)];
 		});
-	}, [byNumber, contentEl]);
+	}, [activeWindow, byNumber, contentEl]);
 
 	if (enabledTypes.length === 0) return null;
 	return <>{portals}</>;
