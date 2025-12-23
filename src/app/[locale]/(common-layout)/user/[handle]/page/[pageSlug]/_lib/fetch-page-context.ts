@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
+import {
+	fetchPageAnnotationTypes,
+	fetchPageDetail,
+} from "@/app/[locale]/_db/fetch-page-detail.server";
 import {
 	fetchPageViewCount,
 	fetchTranslationJobs,
@@ -10,7 +13,9 @@ import { createServerLogger } from "@/lib/logger.server";
 const logger = createServerLogger("fetch-page-context");
 
 export const fetchPageContext = cache(async (slug: string, locale: string) => {
-	const pageDetail = await fetchPageDetail(slug, locale);
+	const pageDetail = await fetchPageDetail(slug, locale, {
+		includeAnnotations: false,
+	});
 
 	if (!pageDetail) {
 		logger.warn({ slug, locale }, "Page not found in database");
@@ -47,11 +52,13 @@ export const fetchPageContext = cache(async (slug: string, locale: string) => {
 		fetchTranslationJobs(pageDetail.id),
 		fetchPageViewCount(pageDetail.id),
 	]);
+	const annotationTypes = await fetchPageAnnotationTypes(pageDetail.id);
 
 	return {
 		pageDetail,
 		title,
 		pageTranslationJobs,
 		pageViewCount,
+		annotationTypes,
 	};
 });

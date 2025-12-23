@@ -18,35 +18,14 @@ interface PageContentProps {
 }
 
 export async function PageContent({ pageData, locale }: PageContentProps) {
-	const { pageDetail, pageViewCount } = pageData;
+	const { pageDetail, pageViewCount, annotationTypes } = pageData;
 
-	// 複数のユニークな注釈タイプを収集
-	const annotationTypes = (() => {
-		const typeMap = new Map<string, { key: string; label: string }>();
-		for (const segment of pageDetail.content.segments) {
-			if (segment.annotations && segment.annotations.length > 0) {
-				for (const link of segment.annotations) {
-					const segType = link.annotationSegment?.segmentType;
-					if (segType?.key && segType?.label) {
-						// key (e.g. COMMENTARY) can have multiple labels, so we use label as unique token.
-						if (!typeMap.has(segType.label)) {
-							typeMap.set(segType.label, {
-								key: segType.key,
-								label: segType.label,
-							});
-						}
-					}
-				}
-			}
-		}
-		return Array.from(typeMap.values());
-	})();
 	logger.debug({ annotationTypes }, "collected annotation types");
 
 	return (
 		<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 			<PageBreadcrumb locale={locale} pageDetail={pageDetail} />
-			<ContentWithTranslations pageData={pageData} />
+			<ContentWithTranslations pageData={pageData} userLocale={locale} />
 			<ChildPages locale={locale} parentId={pageDetail.id} />
 			<div className="flex items-center gap-4">
 				<EyeIcon className="w-5 h-5" strokeWidth={1.5} />

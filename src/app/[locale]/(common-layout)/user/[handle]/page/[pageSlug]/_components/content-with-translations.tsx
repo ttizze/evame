@@ -3,15 +3,18 @@ import { mdastToReact } from "@/app/[locale]/(common-layout)/_components/mdast-t
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { fetchPageContext } from "../_lib/fetch-page-context";
+import { AnnotationsOnDemand } from "./annotations-on-demand.client";
 import { SubHeader } from "./sub-header";
 import { TranslationFormOnClick } from "./translation-form-on-click.client";
 
 interface ContentWithTranslationsProps {
 	pageData: Awaited<ReturnType<typeof fetchPageContext>>;
+	userLocale: string;
 }
 
 export async function ContentWithTranslations({
 	pageData,
+	userLocale,
 }: ContentWithTranslationsProps) {
 	if (!pageData) {
 		return notFound();
@@ -31,6 +34,11 @@ export async function ContentWithTranslations({
 			<PageTagList tag={pageDetail.tagPages.map((tagPage) => tagPage.tag)} />
 			<SubHeader pageDetail={pageDetail} />
 			<div className="js-content">{content}</div>
+			<AnnotationsOnDemand
+				pageId={pageDetail.id}
+				range={50}
+				userLocale={userLocale}
+			/>
 			<TranslationFormOnClick />
 		</>
 	);

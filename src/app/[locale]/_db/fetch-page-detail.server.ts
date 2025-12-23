@@ -459,7 +459,11 @@ async function fetchSegmentsByIds(
 /**
  * ページ詳細を取得
  */
-export async function fetchPageDetail(slug: string, locale: string) {
+export async function fetchPageDetail(
+	slug: string,
+	locale: string,
+	opts?: { includeAnnotations?: boolean },
+) {
 	// 1. ページ基本情報を取得
 	const page = await fetchPageBasicBySlug(slug);
 	if (!page) return null;
@@ -478,12 +482,10 @@ export async function fetchPageDetail(slug: string, locale: string) {
 		segments = await fetchSegments(page.id, locale, "COMMENTARY");
 	}
 
-	// 5. 注釈を追加
-	const segmentsWithAnnotations = await addAnnotations(
-		segments,
-		page.id,
-		locale,
-	);
+	const includeAnnotations = opts?.includeAnnotations ?? true;
+	const segmentsWithAnnotations = includeAnnotations
+		? await addAnnotations(segments, page.id, locale)
+		: segments.map((s) => ({ ...s, annotations: [] }));
 
 	return {
 		id: page.id,
@@ -502,4 +504,26 @@ export async function fetchPageDetail(slug: string, locale: string) {
 			segments: segmentsWithAnnotations,
 		},
 	};
+}
+
+export async function fetchPageAnnotationTypes(pageId: number) {
+	const rows = await db
+		.selectFrom("segmentAnnotationLinks as links")
+		.innerJoin("segments as mainSeg", "links.mainSegmentId", "mainSeg.id")
+		.innerJoin(
+			"segments as annotationSeg",
+			"links.annotationSegmentId",
+			"annotationSeg.id",
+		)
+		.innerJoin(
+			"segmentTypes as annotationType",
+			"annotationSeg.segmentTypeId",
+			"annotationType.id",
+		)
+		.select(["annotationType.key as key", "annotationType.label as label"])
+		.where("mainSeg.contentId", "=", pageId)
+		.distinct()
+		.execute();
+
+	return rows.map((r) => ({ key: r.key, label: r.label }));
 }
