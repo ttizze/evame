@@ -37,6 +37,7 @@
 	"exclude": [
 		"node_modules",
 		".next/types/validator.ts",
+		".next/dev/types/**",
 		"dist",
 		"build",
 		"scripts/convert-romn-to-md-old/**"

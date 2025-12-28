@@ -46,7 +46,7 @@ export async function PageContent({ pageData, locale }: PageContentProps) {
 	return (
 		<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 			<PageBreadcrumb locale={locale} pageDetail={pageDetail} />
-			<ContentWithTranslations pageData={pageData} />
+			<ContentWithTranslations locale={locale} pageData={pageData} />
 			<ChildPages locale={locale} parentId={pageDetail.id} />
 			<div className="flex items-center gap-4">
 				<EyeIcon className="w-5 h-5" strokeWidth={1.5} />

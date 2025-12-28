@@ -5,6 +5,7 @@
 ## アーキテクチャ・設計
 
 - **[PROJECT_ARCHITECTURE.md](./PROJECT_ARCHITECTURE.md)**: プロジェクトのアーキテクチャ、構造、開発ガイドライン
+- **[section-pagination-design.md](./section-pagination-design.md)**: 長文ページのセクション分割・無限スクロールの設計（取得API/責務/`meta`方針）
 
 ## 注釈機能
 
@@ -22,6 +23,5 @@
 
 - **[agent.md](./agent.md)**: AIエージェント向けのプロジェクト情報
 - **[CLAUDE.md](./CLAUDE.md)**: Claude向けのプロジェクト情報
-
 
 

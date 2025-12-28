@@ -2,10 +2,9 @@ import remarkEmbedder from "@remark-embedder/core";
 import oembedTransformer from "@remark-embedder/transformer-oembed";
 import type { StaticImport } from "next/dist/shared/lib/get-img-props";
 import Image from "next/image";
-import type { ReactElement } from "react";
-import { type ComponentType, createElement, type JSX } from "react";
+import type { ComponentType, JSX, ReactElement } from "react";
+import { createElement } from "react";
 import * as jsxRuntime from "react/jsx-runtime";
-import { Tweet as XPost } from "react-tweet";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeRaw from "rehype-raw";
 import rehypeReact from "rehype-react";
@@ -17,21 +16,9 @@ import type { Segment } from "@/app/[locale]/types";
 import type { JsonValue } from "@/db/types";
 import { WrapSegment } from "../wrap-segments/server";
 import { remarkTweet } from "./remark-tweet";
+import { SEGMENTABLE, TweetEmbed } from "./shared";
 
-// --------------
-const SEGMENTABLE = [
-	"p",
-	"h1",
-	"h2",
-	"h3",
-	"h4",
-	"h5",
-	"h6",
-	"li",
-	"td",
-	"th",
-	"blockquote",
-] as const satisfies readonly (keyof JSX.IntrinsicElements)[];
+// Note: server variant keeps rich plugins (link card / pretty code / next/image).
 
 interface ImgProps extends Omit<JSX.IntrinsicElements["img"], "src"> {
 	src?: string | StaticImport;
@@ -98,18 +85,13 @@ export async function mdastToReact<T extends Segment = Segment>({
 			createElement,
 			...jsxRuntime,
 			components: {
-				// image hydration → next/image
 				img: ImgComponent,
-				tweet: (props: { id: string }) => (
-					<span className="not-prose">
-						<XPost id={props.id} />
-					</span>
-				),
+				tweet: TweetEmbed,
 				...segmentComponents,
 			},
 		});
 
 	// Run plugins & stringify to React elements
 	const hast = await processor.run(mdast);
-	return processor.stringify(hast) as ReactElement;
+	return processor.stringify(hast) as unknown as ReactElement;
 }

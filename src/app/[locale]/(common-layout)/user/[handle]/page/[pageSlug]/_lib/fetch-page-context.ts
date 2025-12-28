@@ -1,23 +1,25 @@
 import { notFound } from "next/navigation";
 import { cache } from "react";
-import { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
 import {
 	fetchPageViewCount,
 	fetchTranslationJobs,
 } from "@/app/[locale]/_db/page-utility-queries.server";
+import { fetchPage } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_service/fetch-page.server";
 import { createServerLogger } from "@/lib/logger.server";
 
 const logger = createServerLogger("fetch-page-context");
 
 export const fetchPageContext = cache(async (slug: string, locale: string) => {
-	const pageDetail = await fetchPageDetail(slug, locale);
+	// 初期表示は `fetchPage` が「短いなら全文 / 長いなら section=0」を返す。
+	// 続きの section は `/api/page-sections` 経由でクライアントが取得する。
+	const pageDetail = await fetchPage(slug, locale);
 
 	if (!pageDetail) {
 		logger.warn({ slug, locale }, "Page not found in database");
 		return notFound();
 	}
 
-	const titleSegment = pageDetail?.content.segments.find((b) => b.number === 0);
+	const titleSegment = pageDetail.content.segments.find((b) => b.number === 0);
 	if (!titleSegment) {
 		logger.warn(
 			{

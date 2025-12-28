@@ -1,7 +1,7 @@
 import rehypeStringify from "rehype-stringify";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
-import type { Json } from "@/db/types";
+import type { JsonValue } from "@/db/types";
 
 /* -------------------------------------------------------------------------- */
 /*                               Public API                                   */
@@ -9,7 +9,7 @@ import type { Json } from "@/db/types";
 
 interface Params {
 	/** DB に入っている mdastJson (= Prisma.Json) */
-	mdastJson: Json;
+	mdastJson: JsonValue;
 }
 
 interface Result {
@@ -25,7 +25,16 @@ interface Result {
  * data 属性などをそのまま rehypeStringify が吐き出す形にしておく。
  */
 export async function mdastToHtml({ mdastJson }: Params): Promise<Result> {
-	if (!mdastJson || Object.keys(mdastJson).length === 0) {
+	if (!mdastJson) {
+		return { html: "" };
+	}
+	if (typeof mdastJson !== "object") {
+		return { html: String(mdastJson) };
+	}
+	if (Array.isArray(mdastJson)) {
+		return { html: "" };
+	}
+	if (Object.keys(mdastJson).length === 0) {
 		return { html: "" };
 	}
 

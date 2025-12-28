@@ -1,15 +1,31 @@
 /**
- * ページ詳細を取得
- * Kysely ORM版 - シンプル化
+ * ページ詳細取得のためのDBアクセス（Kysely）
+ *
+ * - ここは「DBクエリの部品」だけ置く（組み立て/用途別の返却形は service 側）
  */
 
 import { sql } from "kysely";
 import { db } from "@/db";
+import type { JsonValue } from "@/db/types";
 import { serverLogger } from "@/lib/logger.server";
 
 // ============================================
 // 内部型定義
 // ============================================
+
+type UserInfo = {
+	id: string;
+	name: string;
+	handle: string;
+	image: string;
+	createdAt: Date;
+	updatedAt: Date;
+	profile: string;
+	twitterHandle: string;
+	totalPoints: number;
+	isAi: boolean;
+	plan: string;
+};
 
 type SegmentWithTranslation = {
 	id: number;
@@ -32,32 +48,38 @@ type SegmentWithTranslation = {
 	} | null;
 };
 
-type UserInfo = {
-	id: string;
-	name: string;
-	handle: string;
-	image: string;
-	createdAt: Date;
-	updatedAt: Date;
-	profile: string;
-	twitterHandle: string;
-	totalPoints: number;
-	isAi: boolean;
-	plan: string;
-};
-
 type SegmentWithAnnotations = SegmentWithTranslation & {
 	annotations: Array<{ annotationSegment: SegmentWithTranslation }>;
 };
 
 // ============================================
-// 内部ヘルパー
+// 公開API（DB部品）
 // ============================================
 
-/**
- * ページ基本情報を取得（slugで）
- */
-async function fetchPageBasicBySlug(slug: string) {
+export async function fetchPageMdastJsonBySlug(slug: string) {
+	const result = await db
+		.selectFrom("pages")
+		.select(["pages.mdastJson"])
+		.where("pages.slug", "=", slug)
+		.executeTakeFirst();
+
+	return result?.mdastJson ?? null;
+}
+
+export async function fetchPageSectionSourceBySlug(
+	slug: string,
+): Promise<{ id: number; mdastJson: JsonValue } | null> {
+	const result = await db
+		.selectFrom("pages")
+		.select(["pages.id", "pages.mdastJson"])
+		.where("pages.slug", "=", slug)
+		.executeTakeFirst();
+
+	if (!result) return null;
+	return { id: result.id, mdastJson: result.mdastJson };
+}
+
+export async function fetchPageBasicBySlug(slug: string) {
 	const result = await db
 		.selectFrom("pages")
 		.innerJoin("users", "pages.userId", "users.id")
@@ -114,10 +136,7 @@ async function fetchPageBasicBySlug(slug: string) {
 	};
 }
 
-/**
- * タグを取得
- */
-async function fetchTags(pageId: number) {
+export async function fetchTags(pageId: number) {
 	const result = await db
 		.selectFrom("tagPages")
 		.innerJoin("tags", "tagPages.tagId", "tags.id")
@@ -128,10 +147,7 @@ async function fetchTags(pageId: number) {
 	return result.map((t) => ({ tag: { id: t.id, name: t.name } }));
 }
 
-/**
- * カウントを取得
- */
-async function fetchCounts(pageId: number) {
+export async function fetchCounts(pageId: number) {
 	const result = await db
 		.selectFrom("pages")
 		.select([
@@ -153,130 +169,18 @@ async function fetchCounts(pageId: number) {
 	};
 }
 
-/**
- * セグメントを取得（DISTINCT ONで最良の翻訳を1件のみ）
- */
-async function fetchSegments(
-	pageId: number,
-	locale: string,
-	segmentTypeKey?: "PRIMARY" | "COMMENTARY",
-): Promise<SegmentWithTranslation[]> {
-	// セグメント + 最良の翻訳を1クエリで取得
-	let query = db
-		.selectFrom("segments")
-		.innerJoin("segmentTypes", "segments.segmentTypeId", "segmentTypes.id")
-		.leftJoin(
-			// DISTINCT ON で各セグメントの最良翻訳を1件のみ
-			(eb) =>
-				eb
-					.selectFrom("segmentTranslations")
-					.innerJoin("users", "segmentTranslations.userId", "users.id")
-					.distinctOn("segmentTranslations.segmentId")
-					.select([
-						"segmentTranslations.id",
-						"segmentTranslations.segmentId",
-						"segmentTranslations.userId",
-						"segmentTranslations.locale",
-						"segmentTranslations.text",
-						"segmentTranslations.point",
-						"segmentTranslations.createdAt",
-						"users.name as userName",
-						"users.handle as userHandle",
-						"users.image as userImage",
-						"users.createdAt as userCreatedAt",
-						"users.updatedAt as userUpdatedAt",
-						"users.profile as userProfile",
-						"users.twitterHandle as userTwitterHandle",
-						"users.totalPoints as userTotalPoints",
-						"users.isAi as userIsAi",
-						"users.plan as userPlan",
-					])
-					.where("segmentTranslations.locale", "=", locale)
-					.orderBy("segmentTranslations.segmentId")
-					.orderBy("segmentTranslations.point", "desc")
-					.orderBy("segmentTranslations.createdAt", "desc")
-					.as("trans"),
-			(join) => join.onRef("trans.segmentId", "=", "segments.id"),
-		)
-		.select([
-			"segments.id",
-			"segments.contentId",
-			"segments.number",
-			"segments.text",
-			"segments.textAndOccurrenceHash",
-			"segments.createdAt",
-			"segments.segmentTypeId",
-			"segmentTypes.key as typeKey",
-			"segmentTypes.label as typeLabel",
-			"trans.id as transId",
-			"trans.segmentId as transSegmentId",
-			"trans.userId as transUserId",
-			"trans.locale as transLocale",
-			"trans.text as transText",
-			"trans.point as transPoint",
-			"trans.createdAt as transCreatedAt",
-			"trans.userName",
-			"trans.userHandle",
-			"trans.userImage",
-			"trans.userCreatedAt",
-			"trans.userUpdatedAt",
-			"trans.userProfile",
-			"trans.userTwitterHandle",
-			"trans.userTotalPoints",
-			"trans.userIsAi",
-			"trans.userPlan",
-		])
-		.where("segments.contentId", "=", pageId);
+export async function countSegmentsBySlug(slug: string): Promise<number> {
+	const result = await db
+		.selectFrom("pages")
+		.innerJoin("segments", "segments.contentId", "pages.id")
+		.select(({ fn }) => fn.countAll().as("count"))
+		.where("pages.slug", "=", slug)
+		.executeTakeFirst();
 
-	if (segmentTypeKey) {
-		query = query.where("segmentTypes.key", "=", segmentTypeKey);
-	}
-
-	const rows = await query.orderBy("segments.number", "asc").execute();
-
-	return rows.map((row) => ({
-		id: row.id,
-		contentId: row.contentId,
-		number: row.number,
-		text: row.text,
-		textAndOccurrenceHash: row.textAndOccurrenceHash,
-		createdAt: row.createdAt,
-		segmentTypeId: row.segmentTypeId,
-		segmentType: {
-			key: row.typeKey,
-			label: row.typeLabel,
-		},
-		segmentTranslation: row.transId
-			? {
-					id: row.transId,
-					segmentId: row.transSegmentId!,
-					userId: row.transUserId!,
-					locale: row.transLocale!,
-					text: row.transText!,
-					point: row.transPoint!,
-					createdAt: row.transCreatedAt!,
-					user: {
-						id: row.transUserId!,
-						name: row.userName!,
-						handle: row.userHandle!,
-						image: row.userImage!,
-						createdAt: row.userCreatedAt!,
-						updatedAt: row.userUpdatedAt!,
-						profile: row.userProfile!,
-						twitterHandle: row.userTwitterHandle!,
-						totalPoints: row.userTotalPoints!,
-						isAi: row.userIsAi!,
-						plan: row.userPlan!,
-					},
-				}
-			: null,
-	}));
+	return Number(result?.count ?? 0);
 }
 
-/**
- * セグメントに注釈を追加
- */
-async function addAnnotations(
+export async function addAnnotations(
 	segments: SegmentWithTranslation[],
 	pageId: number,
 	locale: string,
@@ -286,7 +190,6 @@ async function addAnnotations(
 		return segments.map((s) => ({ ...s, annotations: [] }));
 	}
 
-	// 注釈リンクを取得
 	const links = await db
 		.selectFrom("segmentAnnotationLinks")
 		.select(["mainSegmentId", "annotationSegmentId"])
@@ -301,14 +204,12 @@ async function addAnnotations(
 		return segments.map((s) => ({ ...s, annotations: [] }));
 	}
 
-	// 注釈セグメントを取得
 	const annotationSegments = await fetchSegmentsByIds(
 		annotationSegmentIds,
 		locale,
 	);
 	const annotationMap = new Map(annotationSegments.map((s) => [s.id, s]));
 
-	// リンクをMapに変換
 	const linksMap = new Map<number, number[]>();
 	for (const link of links) {
 		const existing = linksMap.get(link.mainSegmentId) || [];
@@ -338,9 +239,6 @@ async function addAnnotations(
 	});
 }
 
-/**
- * ID指定でセグメントを取得
- */
 async function fetchSegmentsByIds(
 	segmentIds: number[],
 	locale: string,
@@ -452,54 +350,241 @@ async function fetchSegmentsByIds(
 	}));
 }
 
-// ============================================
-// 公開API
-// ============================================
+export async function fetchSegmentsByNumbers(
+	pageId: number,
+	locale: string,
+	numbers: number[],
+): Promise<SegmentWithTranslation[]> {
+	if (numbers.length === 0) return [];
 
-/**
- * ページ詳細を取得
- */
-export async function fetchPageDetail(slug: string, locale: string) {
-	// 1. ページ基本情報を取得
+	const rows = await db
+		.selectFrom("segments")
+		.innerJoin("segmentTypes", "segments.segmentTypeId", "segmentTypes.id")
+		.leftJoin(
+			(eb) =>
+				eb
+					.selectFrom("segmentTranslations")
+					.innerJoin("users", "segmentTranslations.userId", "users.id")
+					.distinctOn("segmentTranslations.segmentId")
+					.select([
+						"segmentTranslations.id",
+						"segmentTranslations.segmentId",
+						"segmentTranslations.userId",
+						"segmentTranslations.locale",
+						"segmentTranslations.text",
+						"segmentTranslations.point",
+						"segmentTranslations.createdAt",
+						"users.name as userName",
+						"users.handle as userHandle",
+						"users.image as userImage",
+						"users.createdAt as userCreatedAt",
+						"users.updatedAt as userUpdatedAt",
+						"users.profile as userProfile",
+						"users.twitterHandle as userTwitterHandle",
+						"users.totalPoints as userTotalPoints",
+						"users.isAi as userIsAi",
+						"users.plan as userPlan",
+					])
+					.where("segmentTranslations.locale", "=", locale)
+					.orderBy("segmentTranslations.segmentId")
+					.orderBy("segmentTranslations.point", "desc")
+					.orderBy("segmentTranslations.createdAt", "desc")
+					.as("trans"),
+			(join) => join.onRef("trans.segmentId", "=", "segments.id"),
+		)
+		.select([
+			"segments.id",
+			"segments.contentId",
+			"segments.number",
+			"segments.text",
+			"segments.textAndOccurrenceHash",
+			"segments.createdAt",
+			"segments.segmentTypeId",
+			"segmentTypes.key as typeKey",
+			"segmentTypes.label as typeLabel",
+			"trans.id as transId",
+			"trans.segmentId as transSegmentId",
+			"trans.userId as transUserId",
+			"trans.locale as transLocale",
+			"trans.text as transText",
+			"trans.point as transPoint",
+			"trans.createdAt as transCreatedAt",
+			"trans.userName",
+			"trans.userHandle",
+			"trans.userImage",
+			"trans.userCreatedAt",
+			"trans.userUpdatedAt",
+			"trans.userProfile",
+			"trans.userTwitterHandle",
+			"trans.userTotalPoints",
+			"trans.userIsAi",
+			"trans.userPlan",
+		])
+		.where("segments.contentId", "=", pageId)
+		.where("segments.number", "in", numbers)
+		.orderBy("segments.number", "asc")
+		.execute();
+
+	return rows.map((row) => ({
+		id: row.id,
+		contentId: row.contentId,
+		number: row.number,
+		text: row.text,
+		textAndOccurrenceHash: row.textAndOccurrenceHash,
+		createdAt: row.createdAt,
+		segmentTypeId: row.segmentTypeId,
+		segmentType: {
+			key: row.typeKey,
+			label: row.typeLabel,
+		},
+		segmentTranslation: row.transId
+			? {
+					id: row.transId,
+					segmentId: row.transSegmentId!,
+					userId: row.transUserId!,
+					locale: row.transLocale!,
+					text: row.transText!,
+					point: row.transPoint!,
+					createdAt: row.transCreatedAt!,
+					user: {
+						id: row.transUserId!,
+						name: row.userName!,
+						handle: row.userHandle!,
+						image: row.userImage!,
+						createdAt: row.userCreatedAt!,
+						updatedAt: row.userUpdatedAt!,
+						profile: row.userProfile!,
+						twitterHandle: row.userTwitterHandle!,
+						totalPoints: row.userTotalPoints!,
+						isAi: row.userIsAi!,
+						plan: row.userPlan!,
+					},
+				}
+			: null,
+	}));
+}
+
+export async function fetchAllSegmentsByPageId(
+	pageId: number,
+	locale: string,
+): Promise<SegmentWithTranslation[]> {
+	const rows = await db
+		.selectFrom("segments")
+		.innerJoin("segmentTypes", "segments.segmentTypeId", "segmentTypes.id")
+		.leftJoin(
+			(eb) =>
+				eb
+					.selectFrom("segmentTranslations")
+					.innerJoin("users", "segmentTranslations.userId", "users.id")
+					.distinctOn("segmentTranslations.segmentId")
+					.select([
+						"segmentTranslations.id",
+						"segmentTranslations.segmentId",
+						"segmentTranslations.userId",
+						"segmentTranslations.locale",
+						"segmentTranslations.text",
+						"segmentTranslations.point",
+						"segmentTranslations.createdAt",
+						"users.name as userName",
+						"users.handle as userHandle",
+						"users.image as userImage",
+						"users.createdAt as userCreatedAt",
+						"users.updatedAt as userUpdatedAt",
+						"users.profile as userProfile",
+						"users.twitterHandle as userTwitterHandle",
+						"users.totalPoints as userTotalPoints",
+						"users.isAi as userIsAi",
+						"users.plan as userPlan",
+					])
+					.where("segmentTranslations.locale", "=", locale)
+					.orderBy("segmentTranslations.segmentId")
+					.orderBy("segmentTranslations.point", "desc")
+					.orderBy("segmentTranslations.createdAt", "desc")
+					.as("trans"),
+			(join) => join.onRef("trans.segmentId", "=", "segments.id"),
+		)
+		.select([
+			"segments.id",
+			"segments.contentId",
+			"segments.number",
+			"segments.text",
+			"segments.textAndOccurrenceHash",
+			"segments.createdAt",
+			"segments.segmentTypeId",
+			"segmentTypes.key as typeKey",
+			"segmentTypes.label as typeLabel",
+			"trans.id as transId",
+			"trans.segmentId as transSegmentId",
+			"trans.userId as transUserId",
+			"trans.locale as transLocale",
+			"trans.text as transText",
+			"trans.point as transPoint",
+			"trans.createdAt as transCreatedAt",
+			"trans.userName",
+			"trans.userHandle",
+			"trans.userImage",
+			"trans.userCreatedAt",
+			"trans.userUpdatedAt",
+			"trans.userProfile",
+			"trans.userTwitterHandle",
+			"trans.userTotalPoints",
+			"trans.userIsAi",
+			"trans.userPlan",
+		])
+		.where("segments.contentId", "=", pageId)
+		.orderBy("segments.number", "asc")
+		.execute();
+
+	return rows.map((row) => ({
+		id: row.id,
+		contentId: row.contentId,
+		number: row.number,
+		text: row.text,
+		textAndOccurrenceHash: row.textAndOccurrenceHash,
+		createdAt: row.createdAt,
+		segmentTypeId: row.segmentTypeId,
+		segmentType: {
+			key: row.typeKey,
+			label: row.typeLabel,
+		},
+		segmentTranslation: row.transId
+			? {
+					id: row.transId,
+					segmentId: row.transSegmentId!,
+					userId: row.transUserId!,
+					locale: row.transLocale!,
+					text: row.transText!,
+					point: row.transPoint!,
+					createdAt: row.transCreatedAt!,
+					user: {
+						id: row.transUserId!,
+						name: row.userName!,
+						handle: row.userHandle!,
+						image: row.userImage!,
+						createdAt: row.userCreatedAt!,
+						updatedAt: row.userUpdatedAt!,
+						profile: row.userProfile!,
+						twitterHandle: row.userTwitterHandle!,
+						totalPoints: row.userTotalPoints!,
+						isAi: row.userIsAi!,
+						plan: row.userPlan!,
+					},
+				}
+			: null,
+	}));
+}
+
+export async function fetchPageSsrSectionBySlug(slug: string): Promise<{
+	page: NonNullable<Awaited<ReturnType<typeof fetchPageBasicBySlug>>>;
+	tags: Awaited<ReturnType<typeof fetchTags>>;
+	counts: Awaited<ReturnType<typeof fetchCounts>>;
+} | null> {
 	const page = await fetchPageBasicBySlug(slug);
 	if (!page) return null;
 
-	// 2. タグとカウントを並列取得
 	const [tags, counts] = await Promise.all([
 		fetchTags(page.id),
 		fetchCounts(page.id),
 	]);
-
-	// 3. PRIMARYセグメントを取得
-	let segments = await fetchSegments(page.id, locale, "PRIMARY");
-
-	// 4. PRIMARYセグメントがない場合、COMMENTARYセグメントをフォールバック
-	if (segments.length === 0) {
-		segments = await fetchSegments(page.id, locale, "COMMENTARY");
-	}
-
-	// 5. 注釈を追加
-	const segmentsWithAnnotations = await addAnnotations(
-		segments,
-		page.id,
-		locale,
-	);
-
-	return {
-		id: page.id,
-		slug: page.slug,
-		createdAt: page.createdAt,
-		updatedAt: page.updatedAt,
-		status: page.status,
-		sourceLocale: page.sourceLocale,
-		parentId: page.parentId,
-		order: page.order,
-		mdastJson: page.mdastJson,
-		user: page.user,
-		tagPages: tags,
-		_count: counts,
-		content: {
-			segments: segmentsWithAnnotations,
-		},
-	};
+	return { page, tags, counts };
 }
