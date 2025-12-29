@@ -1,5 +1,6 @@
 "use client";
 import { type RefObject, useEffect, useRef, useState } from "react";
+import { subscribeScrollY } from "./scroll-y-store.client";
 
 interface UseHeaderScrollOptions {
 	// ヘッダーの初期オフセット位置（オプション、SubHeaderで使用）
@@ -31,65 +32,126 @@ export function useHeaderScroll(
 
 	const [isPinned, setIsPinned] = useState(false);
 	const [isVisible, setIsVisible] = useState(true);
-	const [lastScrollY, setLastScrollY] = useState(0);
 	const headerRef = useRef<HTMLDivElement>(null);
 	const [headerHeight, setHeaderHeight] = useState(0);
 	const [headerOffset, setHeaderOffset] = useState(initialOffset || 0);
 
+	// スクロールは高頻度なので、スクロール量などは state にせず ref で保持し、
+	// state 更新は「表示/固定」が切り替わったときだけに絞る。
+	const lastScrollYRef = useRef(0);
+	const headerOffsetRef = useRef<number>(initialOffset ?? 0);
+	const isPinnedRef = useRef(false);
+	const isVisibleRef = useRef(true);
+	const scrollThresholdRef = useRef(scrollThreshold);
+
+	const rafIdRef = useRef<number | null>(null);
+	const latestScrollYRef = useRef<number>(0);
+
 	useEffect(() => {
-		// ヘッダーの高さを測定
-		if (headerRef.current) {
+		scrollThresholdRef.current = scrollThreshold;
+	}, [scrollThreshold]);
+
+	useEffect(() => {
+		// 初期状態を揃える
+		lastScrollYRef.current = window.scrollY;
+		latestScrollYRef.current = window.scrollY;
+	}, []);
+
+	useEffect(() => {
+		const measureHeader = () => {
+			if (!headerRef.current) return;
+
 			setHeaderHeight(headerRef.current.offsetHeight);
 
-			// 初期オフセットが提供されていない場合、自動で計算
-			if (initialOffset === undefined) {
-				const offsetTop =
-					headerRef.current.getBoundingClientRect().top + window.scrollY;
-				setHeaderOffset(offsetTop);
-			}
-		}
-
-		// スクロールイベントハンドラ
-		const handleScroll = () => {
-			const currentScrollY = window.scrollY;
-
-			// スクロール方向を検出
-			const isScrollingDown = currentScrollY > lastScrollY;
-			const isScrollingUp = currentScrollY < lastScrollY;
-			const scrollDifference = Math.abs(currentScrollY - lastScrollY);
-
-			// ページ上部にいる場合、ヘッダーは固定しない
-			if (currentScrollY <= 0) {
-				setIsPinned(false);
-				setIsVisible(true);
-			}
-			// 初期オフセットより上にいる場合（SubHeaderの場合）
-			else if (headerOffset > 0 && currentScrollY < headerOffset) {
-				setIsPinned(false);
-				setIsVisible(true);
-			}
-			// 下にスクロールしている場合はヘッダーを隠す
-			else if (isScrollingDown && scrollDifference > scrollThreshold) {
-				setIsVisible(false);
-				setIsPinned(false);
-			}
-			// 上にスクロールしている場合はヘッダーを表示して固定
-			else if (isScrollingUp && scrollDifference > scrollThreshold) {
-				setIsVisible(true);
-				setIsPinned(true);
+			// initialOffset があればそれを優先、無ければ DOM から一度だけ計測
+			if (initialOffset !== undefined) {
+				headerOffsetRef.current = initialOffset;
+				setHeaderOffset(initialOffset);
+				return;
 			}
 
-			setLastScrollY(currentScrollY);
+			const offsetTop =
+				headerRef.current.getBoundingClientRect().top + window.scrollY;
+			headerOffsetRef.current = offsetTop;
+			setHeaderOffset(offsetTop);
 		};
 
-		// スクロールイベントリスナーを追加
-		window.addEventListener("scroll", handleScroll, { passive: true });
+		measureHeader();
+
+		// ヘッダーの高さが変わる場合に追従（メニュー展開など）
+		if (!headerRef.current || typeof ResizeObserver === "undefined") return;
+
+		const ro = new ResizeObserver(() => {
+			if (!headerRef.current) return;
+			setHeaderHeight(headerRef.current.offsetHeight);
+		});
+		ro.observe(headerRef.current);
+		return () => ro.disconnect();
+	}, [initialOffset]);
+
+	useEffect(() => {
+		const applyScrollState = (currentScrollY: number) => {
+			const last = lastScrollYRef.current;
+
+			const isScrollingDown = currentScrollY > last;
+			const isScrollingUp = currentScrollY < last;
+			const scrollDifference = Math.abs(currentScrollY - last);
+
+			let nextPinned = isPinnedRef.current;
+			let nextVisible = isVisibleRef.current;
+
+			if (currentScrollY <= 0) {
+				nextPinned = false;
+				nextVisible = true;
+			} else if (
+				headerOffsetRef.current > 0 &&
+				currentScrollY < headerOffsetRef.current
+			) {
+				nextPinned = false;
+				nextVisible = true;
+			} else if (
+				isScrollingDown &&
+				scrollDifference > scrollThresholdRef.current
+			) {
+				nextVisible = false;
+				nextPinned = false;
+			} else if (
+				isScrollingUp &&
+				scrollDifference > scrollThresholdRef.current
+			) {
+				nextVisible = true;
+				nextPinned = true;
+			}
+
+			if (nextPinned !== isPinnedRef.current) {
+				isPinnedRef.current = nextPinned;
+				setIsPinned(nextPinned);
+			}
+			if (nextVisible !== isVisibleRef.current) {
+				isVisibleRef.current = nextVisible;
+				setIsVisible(nextVisible);
+			}
+
+			lastScrollYRef.current = currentScrollY;
+		};
+
+		const unsubscribe = subscribeScrollY((scrollY) => {
+			latestScrollYRef.current = scrollY;
+			if (rafIdRef.current !== null) return;
+
+			rafIdRef.current = window.requestAnimationFrame(() => {
+				rafIdRef.current = null;
+				applyScrollState(latestScrollYRef.current);
+			});
+		});
 
 		return () => {
-			// クリーンアップ: イベントリスナーを削除
-			window.removeEventListener("scroll", handleScroll);
+			unsubscribe();
+			if (rafIdRef.current !== null) {
+				window.cancelAnimationFrame(rafIdRef.current);
+			}
 		};
-	}, [lastScrollY, headerOffset, initialOffset, scrollThreshold]);
+	}, []);
 
 	return {
 		headerRef,

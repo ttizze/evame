@@ -7,7 +7,7 @@ import {
 	type MockInstance,
 	vi,
 } from "vitest";
-import { extractTranslations } from "./extract-translations.server";
+import { extractTranslations } from "./extract-translations";
 
 describe("extractTranslations", () => {
 	let warnSpy: MockInstance<typeof console.warn>;

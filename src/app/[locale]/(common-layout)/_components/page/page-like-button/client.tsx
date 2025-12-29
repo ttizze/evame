@@ -1,7 +1,7 @@
 "use client";
 
 import { Heart, Loader2 } from "lucide-react";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { type PageLikeButtonState, togglePageLikeAction } from "./action";
@@ -52,9 +52,12 @@ export function PageLikeButtonClient({
 		// Trigger server action
 		formAction(formData);
 	};
-	if (actionState.success) {
-		mutate();
-	}
+
+	useEffect(() => {
+		if (actionState.success) {
+			void mutate();
+		}
+	}, [actionState.success, mutate]);
 
 	return (
 		<div className="flex items-center gap-2">

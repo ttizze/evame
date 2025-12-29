@@ -6,7 +6,7 @@ import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
-import type { Pagestatus } from "@/db/types";
+import type { PageStatus } from "@/db/types";
 import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import { updatePageStatus } from "./db/mutations.server";
 import { enqueuePageTranslation } from "./service/enqueue-page-translation.server";
@@ -46,14 +46,15 @@ export async function editPageStatusAction(
 	if (!currentUser?.id || page?.user.id !== currentUser.id) {
 		redirect("/auth/login" as Route);
 	}
-	await updatePageStatus(pageId, status as Pagestatus);
+	await updatePageStatus(pageId, status as PageStatus);
 
 	let translationJobs: TranslationJobForToast[] | undefined;
-	if (status === "PUBLIC") {
+	if (status === "PUBLIC" && targetLocales.length > 0) {
 		translationJobs = await enqueuePageTranslation({
 			currentUserId: currentUser.id,
 			pageId,
 			targetLocales,
+			aiModel: "gemini-2.5-flash-lite",
 		});
 	}
 	const basePath = `/user/${currentUser.handle}/page/${page.slug}`;

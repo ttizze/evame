@@ -19,7 +19,13 @@ import { mdastToReact } from "./server";
 // テスト用のセグメントバンドル
 const segments: Segment[] = Array.from(
 	{ length: 5 },
-	(_, i) => ({ number: i + 1 }) as Segment,
+	(_, i) =>
+		({
+			id: i + 1,
+			number: i + 1,
+			text: "",
+			segmentTranslation: null,
+		}) as Segment,
 );
 
 describe("mdastToReact", () => {

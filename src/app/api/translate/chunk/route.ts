@@ -1,21 +1,25 @@
 import { NextResponse } from "next/server";
+import { createServerLogger } from "@/lib/logger.server";
 import { revalidatePageForLocale } from "@/lib/revalidate-utils";
+import { withQstashVerification } from "../_utils/with-qstash-signature";
+import type { TranslateChunkParams } from "../types";
 import {
 	incrementTranslationProgress,
 	markJobFailed,
-} from "../_db/mutations.server";
-import { stepForChunk } from "../_lib/progress";
-import { translateChunk } from "../_lib/translate.server";
-import { withQstashVerification } from "../_lib/with-qstash-signature";
-import type { TranslateChunkParams } from "../types";
+} from "./_db/mutations.server";
+import { translateChunk } from "./_service/translate-chunk.server";
+import { formatErrorMessage } from "./_utils/format-error-message";
+import { stepForChunk } from "./_utils/progress";
+
+const logger = createServerLogger("translate-chunk-route");
 
 async function handler(req: Request) {
+	let params: TranslateChunkParams | null = null;
 	try {
-		const params = (await req.json()) as TranslateChunkParams;
+		params = (await req.json()) as TranslateChunkParams;
 
 		await translateChunk(
 			params.userId,
-			params.provider,
 			params.aiModel,
 			params.segments,
 			params.targetLocale,
@@ -37,10 +41,34 @@ async function handler(req: Request) {
 
 		return NextResponse.json({ ok: true });
 	} catch (error) {
-		console.error("/api/translate/chunk error:", error);
+		const rawErrorMessage =
+			error instanceof Error ? error.message : String(error);
+		const userFriendlyMessage = formatErrorMessage(error);
 
-		const body = (await req.clone().json()) as TranslateChunkParams;
-		await markJobFailed(body.translationJobId, 0);
+		// paramsが取得できている場合のみエラーを保存
+		if (params) {
+			logger.error(
+				{
+					translationJobId: params.translationJobId,
+					chunkIndex: params.chunkIndex,
+					error_name: error instanceof Error ? error.name : "Unknown",
+					error_message: rawErrorMessage,
+				},
+				"Translation chunk failed",
+			);
+
+			// ユーザー向けの簡潔なメッセージを保存
+			await markJobFailed(params.translationJobId, 0, userFriendlyMessage);
+		} else {
+			// paramsが取得できなかった場合（リクエストボディのパースエラーなど）
+			logger.error(
+				{
+					error_name: error instanceof Error ? error.name : "Unknown",
+					error_message: rawErrorMessage,
+				},
+				"Translation chunk failed (params not available)",
+			);
+		}
 
 		return NextResponse.json({ ok: false }, { status: 500 });
 	}

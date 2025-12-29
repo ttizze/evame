@@ -1,18 +1,23 @@
 import useSWR from "swr";
-import type { SanitizedUser } from "@/app/types";
-import type { TranslationVote } from "@/db/types.helpers";
 import type { TranslationWithInfo } from "../types";
 
 interface UseSegmentTranslationsParams {
 	segmentId: number;
 	userLocale: string;
 	enabled: boolean;
-	bestTranslationId: number;
+}
+
+type TranslationWithInfoApi = Omit<TranslationWithInfo, "createdAt"> & {
+	createdAt: string;
+};
+
+interface SegmentTranslationsResponseApi {
+	bestTranslation: TranslationWithInfoApi | null;
+	translations: TranslationWithInfoApi[];
 }
 
 interface SegmentTranslationsResponse {
-	bestTranslationCurrentUserVote: TranslationVote | null;
-	bestTranslationUser: SanitizedUser;
+	bestTranslation: TranslationWithInfo | null;
 	translations: TranslationWithInfo[];
 }
 
@@ -21,17 +26,29 @@ const fetcher = async (url: string): Promise<SegmentTranslationsResponse> => {
 	if (!response.ok) {
 		throw new Error("Failed to fetch translations");
 	}
-	return response.json();
+	const json = (await response.json()) as SegmentTranslationsResponseApi;
+
+	return {
+		bestTranslation: json.bestTranslation
+			? {
+					...json.bestTranslation,
+					createdAt: new Date(json.bestTranslation.createdAt),
+				}
+			: null,
+		translations: json.translations.map((t) => ({
+			...t,
+			createdAt: new Date(t.createdAt),
+		})),
+	};
 };
 
 export function useSegmentTranslations({
 	segmentId,
 	userLocale,
 	enabled,
-	bestTranslationId,
 }: UseSegmentTranslationsParams) {
 	const key = enabled
-		? `/api/segment-translations?segmentId=${segmentId}&userLocale=${userLocale}&bestTranslationId=${bestTranslationId}`
+		? `/api/segment-translations?segmentId=${segmentId}&userLocale=${userLocale}`
 		: null;
 
 	const { data, error, isLoading, mutate } =

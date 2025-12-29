@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { useHydrated } from "@/lib/use-hydrated";
 import { cn } from "@/lib/utils";
 import { LoginDialog } from "./login/_components/login-dialog.client";
 
@@ -17,10 +18,11 @@ export function StartButton({
 	text = "Start",
 	icon,
 }: StartButtonProps) {
+	const hydrated = useHydrated();
 	const { data: session } = authClient.useSession();
-	const isLoggedIn = !!session;
+	const isLoggedIn = hydrated && !!session;
 	if (isLoggedIn) {
-		return undefined;
+		return null;
 	}
 	return (
 		<LoginDialog

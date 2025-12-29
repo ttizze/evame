@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import type { Segmenttypekey } from "@/db/types";
+import type { SegmentTypeKey } from "@/db/types";
 
 /**
  * データベースをリセット（全テーブルをクリーンアップ）
@@ -22,7 +22,6 @@ export async function resetDatabase() {
 	await db.deleteFrom("pages").execute();
 	await db.deleteFrom("contents").execute();
 	await db.deleteFrom("userSettings").execute();
-	await db.deleteFrom("userCredentials").execute();
 	await db.deleteFrom("geminiApiKeys").execute();
 	await db.deleteFrom("follows").execute();
 	await db.deleteFrom("accounts").execute();
@@ -104,7 +103,7 @@ export async function setupMasterData() {
 /**
  * SegmentTypeのIDを取得（マスターデータから）
  */
-export async function getSegmentTypeId(key: Segmenttypekey): Promise<number> {
+export async function getSegmentTypeId(key: SegmentTypeKey): Promise<number> {
 	const segmentType = await db
 		.selectFrom("segmentTypes")
 		.selectAll()

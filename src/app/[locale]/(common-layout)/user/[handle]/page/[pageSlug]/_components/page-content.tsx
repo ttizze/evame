@@ -28,10 +28,9 @@ export async function PageContent({ pageData, locale }: PageContentProps) {
 				for (const link of segment.annotations) {
 					const segType = link.annotationSegment?.segmentType;
 					if (segType?.key && segType?.label) {
-						// key_label の組み合わせでユニーク判定（同じkeyでも異なるlabelは別タイプ）
-						const uniqueKey = `${segType.key}_${segType.label}`;
-						if (!typeMap.has(uniqueKey)) {
-							typeMap.set(uniqueKey, {
+						// key (e.g. COMMENTARY) can have multiple labels, so we use label as unique token.
+						if (!typeMap.has(segType.label)) {
+							typeMap.set(segType.label, {
 								key: segType.key,
 								label: segType.label,
 							});

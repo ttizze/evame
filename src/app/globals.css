@@ -162,6 +162,61 @@
 	content: none !important;
 }
 
+@layer utilities {
+	/* Segments: keep offscreen content out of layout/paint as much as possible */
+	.seg-cv {
+		content-visibility: auto;
+		contain-intrinsic-size: 1px 800px;
+		contain: layout paint style;
+	}
+
+	/* DisplayMode (source/user/both) without per-segment hydration */
+	html[data-display-mode="source"] .seg-tr {
+		display: none !important;
+	}
+	html[data-display-mode="source"] .seg-src {
+		display: block;
+	}
+
+	html[data-display-mode="user"] .seg-tr {
+		display: block;
+	}
+	html[data-display-mode="user"] .seg-src.seg-has-tr {
+		display: none;
+	}
+
+	html[data-display-mode="both"] .seg-tr {
+		display: block;
+	}
+	html[data-display-mode="both"] .seg-src {
+		display: block;
+	}
+	html[data-display-mode="both"] .seg-src.seg-has-tr {
+		color: rgb(209 213 219); /* text-gray-300 */
+	}
+	html.dark[data-display-mode="both"] .seg-src.seg-has-tr {
+		color: rgb(75 85 99); /* dark:text-gray-600 */
+	}
+
+	@supports selector(:has(img)) {
+		html[data-display-mode="user"] .seg-src.seg-has-tr:has(img) {
+			display: block;
+		}
+	}
+
+	/* Annotations visibility (fixed labels) */
+	/* Default: always hidden, regardless of DisplayMode selectors */
+	.seg-ann {
+		display: none !important;
+	}
+	html[data-annotations~="Atthakatha"] [data-annotation-type="Atthakatha"] {
+		display: block !important;
+	}
+	html[data-annotations~="Tika"] [data-annotation-type="Tika"] {
+		display: block !important;
+	}
+}
+
 body.virtual-keyboard-shown {
 	margin-top: var(--visual-viewport-offset-top, 0px);
 }

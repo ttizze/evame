@@ -31,9 +31,7 @@ export function FloatingControls({
 		parseAsArrayOf(parseAsString, "~").withDefault([]),
 	);
 
-	// key_label の組み合わせで一意に識別（URLセーフな区切り文字）
-	const getUniqueKey = (annotationType: AnnotationType) =>
-		`${annotationType.key}_${annotationType.label}`;
+	const getUniqueKey = (annotationType: AnnotationType) => annotationType.label;
 
 	const toggleAnnotationType = (annotationType: AnnotationType) => {
 		const uniqueKey = getUniqueKey(annotationType);

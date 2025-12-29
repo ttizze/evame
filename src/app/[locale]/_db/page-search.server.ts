@@ -6,7 +6,7 @@
 
 import { sql } from "kysely";
 import { db } from "@/db";
-import type { Pagestatus } from "@/db/types";
+import type { PageStatus } from "@/db/types";
 import type { PageForList } from "../types";
 import { fetchPagesByIds } from "./page-list.server";
 
@@ -24,7 +24,7 @@ type SearchResult = {
  */
 async function searchPageIdsByTitle(
 	query: string,
-	status: Pagestatus = "PUBLIC",
+	status: PageStatus = "PUBLIC",
 ): Promise<number[]> {
 	const result = await db
 		.selectFrom("segments")
@@ -69,7 +69,7 @@ export async function searchPagesByTitle(
  */
 async function searchPageIdsByTagName(
 	tagName: string,
-	status: Pagestatus = "PUBLIC",
+	status: PageStatus = "PUBLIC",
 ): Promise<number[]> {
 	const result = await db
 		.selectFrom("tagPages")

@@ -3,7 +3,7 @@
 import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import useSWR from "swr";
-import { WrapSegmentClient } from "@/app/[locale]/(common-layout)/_components/wrap-segments/client";
+import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { PageForTitle, SegmentForList } from "@/app/[locale]/types";
 import { Link } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
@@ -41,16 +41,12 @@ function PageLink({ page, titleSegment, className }: PageLinkProps) {
 
 	return (
 		<Link className={cn("block overflow-hidden", className)} href={pageLink}>
-			<WrapSegmentClient
+			<SegmentElement
+				className="line-clamp-1 break-all overflow-wrap-anywhere"
 				interactive={false}
 				segment={titleSegment}
 				tagName="span"
-				tagProps={{
-					className: "line-clamp-1 break-all overflow-wrap-anywhere",
-				}}
-			>
-				{titleSegment.text}
-			</WrapSegmentClient>
+			/>
 		</Link>
 	);
 }

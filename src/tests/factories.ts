@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { createId } from "@paralleldrive/cuid2";
 import type { Root as MdastRoot } from "mdast";
 import { db } from "@/db";
-import type { JsonValue, Pagestatus, Segmenttypekey } from "@/db/types";
+import type { JsonValue, PageStatus, SegmentTypeKey } from "@/db/types";
 import { getSegmentTypeId } from "./db-helpers";
 
 /**
@@ -37,7 +37,7 @@ export async function createUser(data?: {
 export async function createPage(data: {
 	userId: string;
 	slug: string;
-	status?: Pagestatus;
+	status?: PageStatus;
 	mdastJson?: unknown;
 	sourceLocale?: string;
 	parentId?: number;
@@ -72,7 +72,7 @@ export async function createSegment(data: {
 	number: number;
 	text: string;
 	textAndOccurrenceHash: string;
-	segmentTypeKey: Segmenttypekey;
+	segmentTypeKey: SegmentTypeKey;
 }) {
 	const segmentTypeId = await getSegmentTypeId(data.segmentTypeKey);
 
@@ -99,14 +99,14 @@ export async function createSegments(data: {
 		number: number;
 		text: string;
 		textAndOccurrenceHash: string;
-		segmentTypeKey: Segmenttypekey;
+		segmentTypeKey: SegmentTypeKey;
 	}>;
 }) {
 	const primarySegmentTypeId = await getSegmentTypeId("PRIMARY");
 	const commentarySegmentTypeId = await getSegmentTypeId("COMMENTARY");
 
 	// segmentTypeKeyに基づいてIDをマッピング
-	const segmentTypeIdMap: Record<Segmenttypekey, number> = {
+	const segmentTypeIdMap: Record<SegmentTypeKey, number> = {
 		PRIMARY: primarySegmentTypeId,
 		COMMENTARY: commentarySegmentTypeId,
 	};
@@ -131,14 +131,14 @@ export async function createSegments(data: {
 export async function createPageWithSegments(data: {
 	userId: string;
 	slug: string;
-	status?: Pagestatus;
+	status?: PageStatus;
 	mdastJson?: MdastRoot;
 	sourceLocale?: string;
 	segments: Array<{
 		number: number;
 		text: string;
 		textAndOccurrenceHash: string;
-		segmentTypeKey: Segmenttypekey;
+		segmentTypeKey: SegmentTypeKey;
 	}>;
 }) {
 	const page = await createPage({
@@ -181,7 +181,7 @@ export async function createSegmentAnnotationLink(data: {
 export async function createPageWithTags(data: {
 	userId: string;
 	slug: string;
-	status?: Pagestatus;
+	status?: PageStatus;
 	mdastJson?: unknown;
 	sourceLocale?: string;
 	tagNames: string[];
@@ -254,7 +254,7 @@ export async function createPageWithAnnotations(data: {
 		slug: data.mainPageSlug,
 		segments: data.mainPageSegments.map((seg) => ({
 			...seg,
-			segmentTypeKey: "PRIMARY" as Segmenttypekey,
+			segmentTypeKey: "PRIMARY" as SegmentTypeKey,
 		})),
 	});
 
@@ -270,7 +270,7 @@ export async function createPageWithAnnotations(data: {
 		contentId: annotationContent.id,
 		segments: data.annotationSegments.map((seg) => ({
 			...seg,
-			segmentTypeKey: "COMMENTARY" as Segmenttypekey,
+			segmentTypeKey: "COMMENTARY" as SegmentTypeKey,
 		})),
 	});
 

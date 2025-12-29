@@ -1,5 +1,5 @@
 import type { LocaleOption } from "@/app/_constants/locale";
-import type { Translationproofstatus } from "@/db/types";
+import type { TranslationProofStatus } from "@/db/types";
 
 export type LocaleStatus = "source" | "translated" | "untranslated";
 
@@ -7,7 +7,7 @@ export type LocaleStatus = "source" | "translated" | "untranslated";
 export interface LocaleOptionWithStatus extends LocaleOption {
 	status: LocaleStatus;
 	/** 翻訳済みの場合のみ付与される */
-	proofStatus?: Translationproofstatus;
+	proofStatus?: TranslationProofStatus;
 }
 
 /**
@@ -27,7 +27,7 @@ export function buildLocaleOptions({
 	existLocales: string[];
 	supported: LocaleOption[];
 	/** locale => proofStatus の対応表 */
-	proofStatusMap?: Record<string, Translationproofstatus>;
+	proofStatusMap?: Record<string, TranslationProofStatus>;
 }): LocaleOptionWithStatus[] {
 	/* name 解決を O(1) にするため Map 化 */
 	const nameMap = new Map(supported.map((o) => [o.code, o.name]));
@@ -35,7 +35,7 @@ export function buildLocaleOptions({
 	const toOption = (
 		code: string,
 		status: LocaleStatus,
-		proofStatus?: Translationproofstatus,
+		proofStatus?: TranslationProofStatus,
 	): LocaleOptionWithStatus => {
 		const base = {
 			code,

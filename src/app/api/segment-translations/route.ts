@@ -6,7 +6,6 @@ import { getCurrentUser } from "@/lib/auth-server";
 const schema = z.object({
 	segmentId: z.coerce.number().int(),
 	userLocale: z.string(),
-	bestTranslationId: z.coerce.number().int(),
 });
 
 export async function GET(req: NextRequest) {
@@ -17,7 +16,7 @@ export async function GET(req: NextRequest) {
 		return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
 	}
 
-	const { segmentId, userLocale, bestTranslationId } = validation.data;
+	const { segmentId, userLocale } = validation.data;
 	const currentUser = await getCurrentUser();
 
 	try {
@@ -57,9 +56,8 @@ export async function GET(req: NextRequest) {
 			.orderBy("st.createdAt", "desc")
 			.execute();
 
-		// best と others に分離
-		const best = allTranslations.find((t) => t.id === bestTranslationId);
-		const others = allTranslations.filter((t) => t.id !== bestTranslationId);
+		// ORDER BY により先頭が best
+		const [best, ...others] = allTranslations;
 
 		// 投票情報を抽出するヘルパー
 		const extractVote = (t: (typeof allTranslations)[number]) =>
@@ -72,20 +70,27 @@ export async function GET(req: NextRequest) {
 				: null;
 
 		return NextResponse.json({
-			bestTranslationCurrentUserVote: best ? extractVote(best) : null,
-			bestTranslationUser: best
+			bestTranslation: best
 				? {
-						id: best.userId,
-						name: best.name,
-						handle: best.handle,
-						image: best.image,
-						createdAt: best.userCreatedAt,
-						updatedAt: best.userUpdatedAt,
-						profile: best.profile,
-						twitterHandle: best.twitterHandle,
-						totalPoints: best.totalPoints,
-						isAi: best.isAi,
-						plan: best.plan,
+						id: best.id,
+						locale: best.locale,
+						text: best.text,
+						point: best.point,
+						createdAt: best.createdAt.toISOString(),
+						user: {
+							id: best.userId,
+							name: best.name,
+							handle: best.handle,
+							image: best.image,
+							createdAt: best.userCreatedAt,
+							updatedAt: best.userUpdatedAt,
+							profile: best.profile,
+							twitterHandle: best.twitterHandle,
+							totalPoints: best.totalPoints,
+							isAi: best.isAi,
+							plan: best.plan,
+						},
+						currentUserVote: extractVote(best),
 					}
 				: null,
 			translations: others.map((t) => ({

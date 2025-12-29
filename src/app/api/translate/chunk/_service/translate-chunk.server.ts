@@ -1,15 +1,14 @@
-import { supportedLocaleOptions } from "@/app/_constants/locale";
+import { createServerLogger } from "@/lib/logger.server";
+import type { SegmentElement } from "../../types";
 import { ensurePageLocaleTranslationProof } from "../_db/mutations.server";
-import { fetchGeminiApiKeyByUserId } from "../_db/queries.server";
-import { getGeminiModelResponse } from "../_services/gemini";
-import { getVertexAIModelResponse } from "../_services/vertexai";
-import type { SegmentElement, TranslationProvider } from "../types";
-import { extractTranslations } from "./extract-translations.server";
+import { extractTranslations } from "../_domain/extract-translations";
+import { getTranslatedText } from "./get-translated-text.server";
 import { saveTranslations } from "./save-translations.server";
+
+const logger = createServerLogger("translate-chunk");
 
 export async function translateChunk(
 	userId: string,
-	provider: TranslationProvider,
 	aiModel: string,
 	segments: SegmentElement[],
 	targetLocale: string,
@@ -27,7 +26,6 @@ export async function translateChunk(
 
 		const translatedText = await getTranslatedText(
 			userId,
-			provider,
 			aiModel,
 			pendingSegments,
 			targetLocale,
@@ -54,55 +52,17 @@ export async function translateChunk(
 				(seg) => !translatedNumbers.has(seg.number),
 			);
 		} else {
-			console.error("今回の試行では翻訳を抽出できませんでした。");
+			logger.error("今回の試行では翻訳を抽出できませんでした。");
 			// 部分的な翻訳が全く得られなかった場合でもリトライ回数以内なら繰り返す
 		}
 	}
 
 	if (pendingSegments.length > 0) {
 		// リトライ回数超過後も未翻訳要素が残っている場合はエラー処理
-		console.error("一部要素は翻訳できませんでした:", pendingSegments);
+		logger.error(
+			{ pending_count: pendingSegments.length },
+			"一部要素は翻訳できませんでした",
+		);
 		throw new Error("部分的な翻訳のみ完了し、残存要素は翻訳失敗しました。");
 	}
-}
-
-async function getTranslatedText(
-	userId: string,
-	provider: TranslationProvider,
-	aiModel: string,
-	segments: SegmentElement[],
-	targetLocale: string,
-	title: string,
-) {
-	// AIに送るのは number と text のペアのみ（id は不要）
-	const source_text = segments
-		.map((seg) => JSON.stringify({ number: seg.number, text: seg.text }))
-		.join("\n");
-	const targetLocaleName =
-		supportedLocaleOptions.find((sl) => sl.code === targetLocale)?.name ||
-		targetLocale;
-
-	if (provider === "gemini") {
-		const geminiApiKey = await fetchGeminiApiKeyByUserId(userId);
-		if (!geminiApiKey || geminiApiKey === "undefined") {
-			throw new Error(
-				"Gemini API key is not set. Page will not be translated.",
-			);
-		}
-		return await getGeminiModelResponse({
-			geminiApiKey,
-			model: aiModel,
-			title,
-			source_text,
-			target_locale: targetLocaleName,
-		});
-	}
-
-	// default Vertex AI
-	return await getVertexAIModelResponse(
-		aiModel,
-		title,
-		source_text,
-		targetLocaleName,
-	);
 }

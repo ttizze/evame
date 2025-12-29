@@ -1,6 +1,6 @@
 import { sql } from "kysely";
 import { db } from "@/db";
-import type { Pagestatus } from "@/db/types";
+import type { PageStatus } from "@/db/types";
 
 export async function fetchPaginatedOwnPages(
 	userId: string,
@@ -15,7 +15,7 @@ export async function fetchPaginatedOwnPages(
 	let baseQuery = db
 		.selectFrom("pages")
 		.where("userId", "=", userId)
-		.where("status", "in", ["PUBLIC", "DRAFT"] satisfies Pagestatus[]);
+		.where("status", "in", ["PUBLIC", "DRAFT"] satisfies PageStatus[]);
 
 	// searchTermがある場合、EXISTS句で該当するセグメントを持つページをフィルタリング
 	if (searchTerm) {

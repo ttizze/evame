@@ -5,7 +5,7 @@
 
 import type { ColumnType } from "kysely";
 
-export type Contentkind = "PAGE" | "PAGE_COMMENT";
+export type ContentKind = "PAGE" | "PAGE_COMMENT";
 
 export type Generated<T> =
 	T extends ColumnType<infer S, infer I, infer U>
@@ -30,26 +30,26 @@ export type JsonPrimitive = boolean | number | string | null;
 
 export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
-export type Notificationtype =
+export type NotificationType =
 	| "FOLLOW"
 	| "PAGE_COMMENT"
 	| "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE"
 	| "PAGE_LIKE"
 	| "PAGE_SEGMENT_TRANSLATION_VOTE";
 
-export type Pagestatus = "ARCHIVE" | "DRAFT" | "PUBLIC";
+export type PageStatus = "ARCHIVE" | "DRAFT" | "PUBLIC";
 
-export type Segmenttypekey = "COMMENTARY" | "PRIMARY";
+export type SegmentTypeKey = "COMMENTARY" | "PRIMARY";
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
-export type Translationproofstatus =
+export type TranslationProofStatus =
 	| "HUMAN_TOUCHED"
 	| "MACHINE_DRAFT"
 	| "PROOFREAD"
 	| "VALIDATED";
 
-export type Translationstatus =
+export type TranslationStatus =
 	| "COMPLETED"
 	| "FAILED"
 	| "IN_PROGRESS"
@@ -75,7 +75,7 @@ export interface Contents {
 	createdAt: Generated<Timestamp>;
 	id: Generated<number>;
 	importFileId: number | null;
-	kind: Contentkind;
+	kind: ContentKind;
 	updatedAt: Generated<Timestamp>;
 }
 
@@ -135,7 +135,7 @@ export interface Notifications {
 	pageId: number | null;
 	read: Generated<boolean>;
 	segmentTranslationId: number | null;
-	type: Notificationtype;
+	type: NotificationType;
 	userId: string;
 }
 
@@ -157,7 +157,7 @@ export interface PageLocaleTranslationProofs {
 	id: Generated<number>;
 	locale: string;
 	pageId: number;
-	translationProofStatus: Generated<Translationproofstatus>;
+	translationProofStatus: Generated<TranslationProofStatus>;
 }
 
 export interface Pages {
@@ -168,7 +168,7 @@ export interface Pages {
 	parentId: number | null;
 	slug: string;
 	sourceLocale: Generated<string>;
-	status: Generated<Pagestatus>;
+	status: Generated<PageStatus>;
 	updatedAt: Generated<Timestamp>;
 	userId: string;
 }
@@ -220,7 +220,7 @@ export interface SegmentTranslations {
 
 export interface SegmentTypes {
 	id: Generated<number>;
-	key: Segmenttypekey;
+	key: SegmentTypeKey;
 	label: string;
 }
 
@@ -253,7 +253,7 @@ export interface TranslationJobs {
 	locale: string;
 	pageId: number;
 	progress: Generated<number>;
-	status: Generated<Translationstatus>;
+	status: Generated<TranslationStatus>;
 	updatedAt: Generated<Timestamp>;
 	userId: string | null;
 }
@@ -263,12 +263,6 @@ export interface TranslationVotes {
 	isUpvote: boolean;
 	translationId: number;
 	updatedAt: Generated<Timestamp>;
-	userId: string;
-}
-
-export interface UserCredentials {
-	id: Generated<number>;
-	password: string;
 	userId: string;
 }
 
@@ -332,7 +326,6 @@ export interface DB {
 	tags: Tags;
 	translationJobs: TranslationJobs;
 	translationVotes: TranslationVotes;
-	userCredentials: UserCredentials;
 	users: Users;
 	userSettings: UserSettings;
 	verifications: Verifications;

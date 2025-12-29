@@ -1,7 +1,7 @@
 import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
 import { syncSegments } from "@/app/[locale]/_service/sync-segments";
 import { db } from "@/db";
-import type { JsonValue, Pagestatus } from "@/db/types";
+import type { JsonValue, PageStatus } from "@/db/types";
 import { createServerLogger } from "@/lib/logger.server";
 import { syncSegmentMetadataAndAnnotationLinks } from "../sync-segment-metadata-and-annotation-links";
 import { upsertPage } from "./db/mutations.server";
@@ -24,7 +24,7 @@ export async function upsertPageAndSegments(p: {
 	parentId: number | null;
 	order: number;
 	anchorContentId: number | null;
-	status: Pagestatus;
+	status: PageStatus;
 }) {
 	const logger = createServerLogger("upsert-page-and-segments", {
 		userId: p.userId,

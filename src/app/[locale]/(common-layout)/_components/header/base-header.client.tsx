@@ -117,6 +117,7 @@ export function BaseHeader({
 									currentHandle={currentUser.handle}
 									hasGeminiApiKey={hasGeminiApiKey}
 									localeSelectorClassName="w-[200px]"
+									userPlan={currentUser.plan}
 								/>
 								<DropdownMenuSeparator className="my-0" />
 								<DropdownMenuItem className="p-0 ">

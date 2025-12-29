@@ -1,7 +1,7 @@
 import { db } from "@/db";
-import type { Pagestatus } from "@/db/types";
+import type { PageStatus } from "@/db/types";
 
-export async function updatePageStatus(pageId: number, status: Pagestatus) {
+export async function updatePageStatus(pageId: number, status: PageStatus) {
 	const updated = await db
 		.updateTable("pages")
 		.set({ status })

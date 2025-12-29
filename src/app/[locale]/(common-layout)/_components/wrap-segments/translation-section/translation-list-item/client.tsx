@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
 import { authClient } from "@/lib/auth-client";
+import { useHydrated } from "@/lib/use-hydrated";
 import { VoteButtons } from "../vote-buttons/client";
 import { deleteTranslationAction } from "./action";
 
@@ -28,6 +29,7 @@ export function TranslationListItem({
 	onVoted,
 	onDeleted,
 }: TranslationItemProps) {
+	const hydrated = useHydrated();
 	const locale = useLocale();
 	const [_deleteTranslationState, action, isDeletingTranslation] =
 		useActionState(
@@ -42,7 +44,7 @@ export function TranslationListItem({
 		);
 
 	const { data: session } = authClient.useSession();
-	const currentUser = session?.user;
+	const currentUser = hydrated ? session?.user : undefined;
 	const isOwner = currentUser?.handle === translation.user.handle;
 
 	return (

@@ -14,7 +14,6 @@ interface TranslatePageParams {
 	aiModel: string;
 	locale: string;
 	userId: string;
-	provider: "gemini" | "vertex";
 }
 
 interface NewJobParams {
@@ -24,7 +23,6 @@ interface NewJobParams {
 	pageId: number;
 	pageCommentId: number | null;
 	annotationContentId: number | null;
-	provider: "gemini" | "vertex";
 	jobs: TranslationJobForToast[];
 }
 
@@ -42,7 +40,6 @@ async function createAndEnqueueJob(params: NewJobParams) {
 	params.jobs.push(job);
 
 	await enqueueTranslate({
-		provider: params.provider,
 		translationJobId: job.id,
 		aiModel: params.aiModel,
 		userId: params.userId,
@@ -79,7 +76,6 @@ export async function translatePage(
 		pageId,
 		pageCommentId: null,
 		annotationContentId: null,
-		provider: params.provider,
 		jobs,
 	});
 
@@ -93,7 +89,6 @@ export async function translatePage(
 			pageId,
 			pageCommentId: commentId,
 			annotationContentId: null,
-			provider: params.provider,
 			jobs,
 		});
 	}
@@ -110,7 +105,6 @@ export async function translatePage(
 			pageId,
 			pageCommentId: null,
 			annotationContentId: contentId,
-			provider: params.provider,
 			jobs,
 		});
 	}

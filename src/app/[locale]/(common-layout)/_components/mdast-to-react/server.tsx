@@ -52,16 +52,23 @@ const ImgComponent: ComponentType<ImgProps> = ({ src = "", ...props }) => (
 interface Params<T extends Segment = Segment> {
 	mdast: JsonValue;
 	segments: T[];
+	/**
+	 * If true, render translations as clickable buttons (`data-segment-id`) so
+	 * `TranslationFormOnClick` can open the vote/add UI.
+	 * If false, render translation text without a button (no click behavior).
+	 */
+	interactive?: boolean;
 }
 
 /** mdast(JSON) → React 要素 */
 export async function mdastToReact<T extends Segment = Segment>({
 	mdast,
 	segments,
+	interactive = true,
 }: Params<T>): Promise<ReactElement | null> {
 	if (!mdast || Object.keys(mdast).length === 0) return null;
 	const segmentComponents = Object.fromEntries(
-		SEGMENTABLE.map((tag) => [tag, WrapSegment(tag, segments)]),
+		SEGMENTABLE.map((tag) => [tag, WrapSegment(tag, segments, interactive)]),
 	);
 
 	const processor = unified()
