@@ -62,5 +62,5 @@ jobs:
         env:
           TZ: 'Asia/Tokyo'
         run: |
-          bunx prisma migrate dev && bunx prisma migrate deploy
+          bun run db:migrate && bun run seed
           bunx vitest
