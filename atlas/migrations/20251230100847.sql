@@ -1,15 +1,3 @@
--- Create "verifications" table
-CREATE TABLE "verifications" (
-  "id" text NOT NULL,
-  "identifier" text NOT NULL,
-  "value" text NOT NULL,
-  "expires_at" timestamp(3) NOT NULL,
-  "created_at" timestamp(3) NULL,
-  "updated_at" timestamp(3) NULL,
-  PRIMARY KEY ("id")
-);
--- Create enum type "notification_type"
-CREATE TYPE "notification_type" AS ENUM ('FOLLOW', 'PAGE_COMMENT', 'PAGE_LIKE', 'PAGE_SEGMENT_TRANSLATION_VOTE', 'PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE');
 -- Create enum type "page_status"
 CREATE TYPE "page_status" AS ENUM ('DRAFT', 'PUBLIC', 'ARCHIVE');
 -- Create enum type "segment_type_key"
@@ -18,7 +6,6 @@ CREATE TYPE "segment_type_key" AS ENUM ('PRIMARY', 'COMMENTARY');
 CREATE TYPE "translation_proof_status" AS ENUM ('MACHINE_DRAFT', 'HUMAN_TOUCHED', 'PROOFREAD', 'VALIDATED');
 -- Create enum type "translation_status"
 CREATE TYPE "translation_status" AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED');
--- Create "atlas_schema_revisions" table
 -- Create enum type "content_kind"
 CREATE TYPE "content_kind" AS ENUM ('PAGE', 'PAGE_COMMENT');
 -- Create "users" table
@@ -43,6 +30,18 @@ CREATE TABLE "users" (
 CREATE UNIQUE INDEX "users_email_key" ON "users" ("email");
 -- Create index "users_handle_key" to table: "users"
 CREATE UNIQUE INDEX "users_handle_key" ON "users" ("handle");
+-- Create "verifications" table
+CREATE TABLE "verifications" (
+  "id" text NOT NULL,
+  "identifier" text NOT NULL,
+  "value" text NOT NULL,
+  "expires_at" timestamp(3) NOT NULL,
+  "created_at" timestamp(3) NULL,
+  "updated_at" timestamp(3) NULL,
+  PRIMARY KEY ("id")
+);
+-- Create enum type "notification_type"
+CREATE TYPE "notification_type" AS ENUM ('FOLLOW', 'PAGE_COMMENT', 'PAGE_LIKE', 'PAGE_SEGMENT_TRANSLATION_VOTE', 'PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE');
 -- Create "accounts" table
 CREATE TABLE "accounts" (
   "user_id" text NOT NULL,

@@ -10,15 +10,24 @@ env "local" {
   url = "postgres://postgres:postgres@db.localtest.me:5434/main?search_path=public&sslmode=disable"
   dev = "docker://postgres/17/dev?search_path=public"
   src = "file://atlas/schema.sql"
+  migration {
+    dir = "file://atlas/migrations"
+  }
 }
 
 env "test" {
   url = "postgres://postgres:postgres@db.localtest.me:5435/main?search_path=public&sslmode=disable"
   dev = "docker://postgres/17/dev?search_path=public"
   src = "file://atlas/schema.sql"
+  migration {
+    dir = "file://atlas/migrations"
+  }
 }
 
 env "production" {
   url = "${var.database_url}&search_path=public"
   src = "file://atlas/schema.sql"
+  migration {
+    dir = "file://atlas/migrations"
+  }
 }
