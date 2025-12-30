@@ -11,10 +11,10 @@
 		"test": "vitest",
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
-		"db:diff": "npx @ariga/atlas migrate diff --env local",
-		"db:apply:local": "npx @ariga/atlas migrate apply --env local",
-		"db:apply:prod": "npx @ariga/atlas migrate apply --env production",
-		"db:status": "npx @ariga/atlas migrate status --env local",
+		"db:diff": "./node_modules/.bin/atlas migrate diff --env local",
+		"db:apply:local": "./node_modules/.bin/atlas migrate apply --env local",
+		"db:apply:prod": "./node_modules/.bin/atlas migrate apply --env production",
+		"db:status": "./node_modules/.bin/atlas migrate status --env local",
 		"db:reset": "bash scripts/reset-db.sh",
 		"db:codegen": "bun run kysely-codegen",
 		"init": "bun install && bun run db:apply:local && bun run seed",
@@ -141,7 +141,6 @@
 		"zod": "4.2.1"
 	},
 	"devDependencies": {
-		"@ariga/atlas": "^0.38.0",
 		"@biomejs/biome": "2.3.9",
 		"@eslint/eslintrc": "3.3.3",
 		"@eslint/js": "9.39.2",
