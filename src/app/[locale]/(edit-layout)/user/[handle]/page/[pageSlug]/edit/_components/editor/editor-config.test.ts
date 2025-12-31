@@ -26,6 +26,16 @@ describe("editor-config", () => {
 		it("keeps single <br> inside paragraph", () => {
 			expect(transform("foo<br>bar")).toBe("<p>foo<br>bar</p>");
 		});
+
+		it("keeps existing blockquote markup untouched", () => {
+			const html = "<blockquote><p>Quote text</p></blockquote>";
+			expect(transform(html)).toBe(html);
+		});
+
+		it("splits double <br> inside existing paragraphs without nesting", () => {
+			const html = "<p>foo<br><br>bar</p>";
+			expect(transform(html)).toBe("<p>foo</p><p>bar</p>");
+		});
 	});
 
 	describe("FileHandler onPaste", () => {
@@ -163,8 +173,7 @@ describe("editor-config", () => {
 
 		it("keeps paragraph with real content and converts consecutive br to paragraph break", () => {
 			const html = "<p>foo<br><br>bar</p>";
-			// 連続<br>で段落分割され、空段落は削除される
-			expect(transformFn(html)).toBe("<p><p>foo</p><p>bar</p></p>");
+			expect(transformFn(html)).toBe("<p>foo</p><p>bar</p>");
 		});
 	});
 });
