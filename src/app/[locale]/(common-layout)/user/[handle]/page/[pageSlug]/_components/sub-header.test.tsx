@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { vi } from "vitest";
 import type { PageDetail } from "@/app/[locale]/types";
 import { SubHeader } from "./sub-header";
-import * as TocModule from "./toc";
 
 // Mock the dependencies
 vi.mock("@/i18n/routing", () => ({
@@ -19,6 +18,12 @@ vi.mock("@/i18n/routing", () => ({
 }));
 
 interface TocProps {
+	items: Array<{
+		number: number;
+		depth: number;
+		sourceText: string;
+		translatedText: string | null;
+	}>;
 	onItemClick: () => void;
 }
 
@@ -35,7 +40,6 @@ vi.mock("./toc", () => ({
 			Table of Contents
 		</button>
 	),
-	useHasTableOfContents: vi.fn(),
 }));
 
 describe("SubHeader", () => {
@@ -51,17 +55,23 @@ describe("SubHeader", () => {
 			image: "/test-image.jpg",
 		},
 	} as unknown as PageDetail;
+	const tocItems = [
+		{
+			number: 1,
+			depth: 1,
+			sourceText: "Heading 1",
+			translatedText: null,
+		},
+	];
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	test("renders user information correctly", () => {
-		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(false);
-
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageDetail={mockPageDetail} />
+				<SubHeader pageDetail={mockPageDetail} tocItems={[]} />
 			</NextIntlClientProvider>,
 		);
 
@@ -70,11 +80,9 @@ describe("SubHeader", () => {
 	});
 
 	test("does not render TOC button when no TOC content", () => {
-		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(false);
-
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageDetail={mockPageDetail} />
+				<SubHeader pageDetail={mockPageDetail} tocItems={[]} />
 			</NextIntlClientProvider>,
 		);
 
@@ -82,11 +90,9 @@ describe("SubHeader", () => {
 	});
 
 	test("renders TOC button when TOC content exists", () => {
-		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(true);
-
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageDetail={mockPageDetail} />
+				<SubHeader pageDetail={mockPageDetail} tocItems={tocItems} />
 			</NextIntlClientProvider>,
 		);
 
@@ -94,11 +100,9 @@ describe("SubHeader", () => {
 	});
 
 	test("toggles TOC visibility when TOC button is clicked", () => {
-		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(true);
-
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageDetail={mockPageDetail} />
+				<SubHeader pageDetail={mockPageDetail} tocItems={tocItems} />
 			</NextIntlClientProvider>,
 		);
 
@@ -119,11 +123,9 @@ describe("SubHeader", () => {
 	});
 
 	test("closes TOC when a TOC item is clicked", () => {
-		vi.mocked(TocModule.useHasTableOfContents).mockReturnValue(true);
-
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageDetail={mockPageDetail} />
+				<SubHeader pageDetail={mockPageDetail} tocItems={tocItems} />
 			</NextIntlClientProvider>,
 		);
 

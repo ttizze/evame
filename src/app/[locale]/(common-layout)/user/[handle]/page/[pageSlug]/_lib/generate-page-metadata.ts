@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { mdastToText } from "@/app/[locale]/_domain/mdast-to-text";
+import type { fetchPageContext } from "../_service/fetch-page-context";
 import { buildAlternateLocales } from "./build-alternate-locales";
-import type { fetchPageContext } from "./fetch-page-context";
 
 interface GeneratePageMetadataParams {
 	pageData: Awaited<ReturnType<typeof fetchPageContext>>;

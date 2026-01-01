@@ -10,13 +10,20 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { authClient } from "@/lib/auth-client";
 import { useHydrated } from "@/lib/use-hydrated";
-import Toc, { useHasTableOfContents } from "./toc";
+import type { TocItem } from "../_domain/extract-toc-items";
+import Toc from "./toc";
 
-export function SubHeader({ pageDetail }: { pageDetail: PageDetail }) {
+export function SubHeader({
+	pageDetail,
+	tocItems,
+}: {
+	pageDetail: PageDetail;
+	tocItems: TocItem[];
+}) {
 	const hydrated = useHydrated();
 	const locale = useLocale();
 	const [isTocOpen, setIsTocOpen] = useState(false);
-	const hasTocContent = useHasTableOfContents();
+	const hasTocContent = tocItems.length > 0;
 	const { data: session } = authClient.useSession();
 	const currentUser = hydrated ? session?.user : undefined;
 	const isEditable = currentUser?.handle === pageDetail.user.handle;
@@ -52,7 +59,7 @@ export function SubHeader({ pageDetail }: { pageDetail: PageDetail }) {
           px-3 py-4 drop-shadow-xl dark:drop-shadow-[0_9px_7px_rgba(255,255,255,0.1)] 
           border border-border animate-in zoom-in-95 duration-200`}
 					>
-						<Toc onItemClick={() => setIsTocOpen(false)} />
+						<Toc items={tocItems} onItemClick={() => setIsTocOpen(false)} />
 					</div>
 				)}
 			</>

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { mdastToReact } from "@/app/[locale]/(common-layout)/_components/mdast-to-react/server";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
-import type { fetchPageContext } from "../_lib/fetch-page-context";
+import type { fetchPageContext } from "../_service/fetch-page-context";
 import { SubHeader } from "./sub-header";
 import { TranslationFormOnClick } from "./translation-form-on-click.client";
 
@@ -16,7 +16,7 @@ export async function ContentWithTranslations({
 	if (!pageData) {
 		return notFound();
 	}
-	const { pageDetail } = pageData;
+	const { pageDetail, tocItems } = pageData;
 
 	const titleSegment = pageDetail.content.segments.find((s) => s.number === 0);
 	const content = await mdastToReact({
@@ -29,7 +29,7 @@ export async function ContentWithTranslations({
 				{titleSegment ? <SegmentElement segment={titleSegment} /> : null}
 			</h1>
 			<PageTagList tag={pageDetail.tagPages.map((tagPage) => tagPage.tag)} />
-			<SubHeader pageDetail={pageDetail} />
+			<SubHeader pageDetail={pageDetail} tocItems={tocItems} />
 			<div className="js-content">{content}</div>
 			<TranslationFormOnClick />
 		</>
