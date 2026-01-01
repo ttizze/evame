@@ -19,7 +19,7 @@ vi.mock("@/i18n/routing", () => ({
 
 interface TocProps {
 	items: Array<{
-		number: number;
+		id: string;
 		depth: number;
 		sourceText: string;
 		translatedText: string | null;
@@ -57,7 +57,7 @@ describe("SubHeader", () => {
 	} as unknown as PageDetail;
 	const tocItems = [
 		{
-			number: 1,
+			id: "heading-1",
 			depth: 1,
 			sourceText: "Heading 1",
 			translatedText: null,

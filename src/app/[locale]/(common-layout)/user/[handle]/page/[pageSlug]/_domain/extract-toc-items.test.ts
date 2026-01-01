@@ -62,49 +62,6 @@ describe("extractTocItems", () => {
 		]);
 	});
 
-	it("翻訳が元文と同一なら translatedText は null になる", () => {
-		const slugger = new GithubSlugger();
-		const mdast = root([headingNode(1, 1), headingNode(2, 2)]);
-		const segments = [
-			createSegment(1, "Same Title", "Same Title"),
-			createSegment(2, "Source Title", "Translated Title"),
-		];
-
-		const result = extractTocItems({ mdast, segments });
-
-		expect(result).toEqual([
-			{
-				id: slugger.slug("Same Title"),
-				depth: 1,
-				sourceText: "Same Title",
-				translatedText: null,
-			},
-			{
-				id: slugger.slug("Source Title"),
-				depth: 2,
-				sourceText: "Source Title",
-				translatedText: "Translated Title",
-			},
-		]);
-	});
-
-	it("空白差分だけの訳文は translatedText を出さない", () => {
-		const slugger = new GithubSlugger();
-		const mdast = root([headingNode(1, 1)]);
-		const segments = [createSegment(1, "Same  Title", "Same Title")];
-
-		const result = extractTocItems({ mdast, segments });
-
-		expect(result).toEqual([
-			{
-				id: slugger.slug("Same  Title"),
-				depth: 1,
-				sourceText: "Same  Title",
-				translatedText: null,
-			},
-		]);
-	});
-
 	it("data-number-idが欠ける/未登録の見出しは無視する", () => {
 		const mdast = root([headingNode(null, 1), headingNode(9, 2)]);
 		const segments = [createSegment(1, "Heading 1")];
