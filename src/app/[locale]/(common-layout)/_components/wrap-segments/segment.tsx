@@ -47,7 +47,7 @@ export function SegmentElement({
 					{
 						...(tagProps as Record<string, unknown> | undefined),
 						// Avoid duplicate IDs (headings etc.)
-						id: undefined,
+						id: tagProps?.id ? `${tagProps.id}-tr` : undefined,
 						className:
 							`${baseClassName} seg-tr ${interactive ? "cursor-pointer select-text" : ""}`.trim(),
 						role: interactive ? "button" : undefined,

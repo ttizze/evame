@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import { fetchPageContext } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_lib/fetch-page-context";
+import { fetchPageContext } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_service/fetch-page-context";
 
 export const revalidate = 360000000;
 export async function GET(req: Request): Promise<Response> {

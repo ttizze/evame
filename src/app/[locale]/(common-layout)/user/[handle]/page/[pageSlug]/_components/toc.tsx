@@ -1,67 +1,59 @@
 "use client";
-import { useEffect, useState } from "react";
-import "tocbot/dist/tocbot.css";
+import type { TocItem } from "../_domain/extract-toc-items";
 
 export default function TableOfContents({
+	items,
 	onItemClick,
 }: {
+	items: TocItem[];
 	onItemClick: () => void;
 }) {
-	useEffect(() => {
-		let cancelled = false;
-		let destroy: (() => void) | null = null;
-
-		(async () => {
-			if (!document.querySelector(".js-content")) return;
-			const mod = await import("tocbot");
-			if (cancelled) return;
-
-			const tocbot = mod.default;
-			tocbot.init({
-				tocSelector: ".js-toc",
-				contentSelector: ".js-content",
-				headingSelector: "h1, h2, h3",
-				collapseDepth: 10,
-				orderedList: false,
-				hasInnerContainers: true,
-				headingLabelCallback: (text) => {
-					return text.length > 40 ? `${text.substring(0, 40)}...` : text;
-				},
-				onClick: (_e) => {
-					if (onItemClick) {
-						onItemClick();
-					}
-				},
-				scrollSmoothOffset: -70,
-			});
-
-			destroy = () => tocbot.destroy();
-		})().catch(() => {
-			// no-op: TOC is optional, avoid breaking the page if tocbot fails to load.
-		});
-
-		// Clean up on unmount
-		return () => {
-			cancelled = true;
-			destroy?.();
-		};
-	}, [onItemClick]);
-
-	return <nav className="js-toc" />;
+	return (
+		<nav aria-label="Table of contents" data-testid="toc">
+			<ol className="min-w-[200px] space-y-2 text-sm">
+				{items.map((item) => {
+					const padding = getPaddingClass(item.depth);
+					const hasTranslation = Boolean(item.translatedText);
+					const sourceLabel = truncateLabel(item.sourceText);
+					const translatedLabel = item.translatedText
+						? truncateLabel(item.translatedText)
+						: null;
+					return (
+						<li className={padding} key={item.id}>
+							<a
+								className={`block text-left w-full leading-snug hover:underline seg-src ${hasTranslation ? "seg-has-tr" : ""}`.trim()}
+								href={`#${item.id}`}
+								onClick={onItemClick}
+							>
+								{sourceLabel}
+							</a>
+							{translatedLabel ? (
+								<a
+									className="block text-left w-full leading-snug hover:underline seg-tr"
+									href={`#${item.id}-tr`}
+									onClick={onItemClick}
+								>
+									{translatedLabel}
+								</a>
+							) : null}
+						</li>
+					);
+				})}
+			</ol>
+		</nav>
+	);
 }
 
-export function useHasTableOfContents(): boolean {
-	const [hasHeadings, setHasHeadings] = useState(false);
+const MAX_LABEL_LENGTH = 40;
 
-	useEffect(() => {
-		const contentElement = document.querySelector(".js-content");
-		if (!contentElement) {
-			return;
-		}
+function getPaddingClass(depth: number): string {
+	if (depth <= 1) return "pl-0";
+	if (depth === 2) return "pl-3";
+	return "pl-6";
+}
 
-		const headings = contentElement.querySelectorAll("h1, h2, h3");
-		setHasHeadings(headings.length > 0);
-	}, []);
-
-	return hasHeadings;
+function truncateLabel(text: string): string {
+	return text.length > MAX_LABEL_LENGTH
+		? `${text.substring(0, MAX_LABEL_LENGTH)}...`
+		: text;
 }

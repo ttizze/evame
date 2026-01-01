@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { createServerLogger } from "@/lib/logger.server";
 import { PageContent } from "./_components/page-content";
-import { fetchPageContext } from "./_lib/fetch-page-context";
 import { generatePageMetadata } from "./_lib/generate-page-metadata";
+import { fetchPageContext } from "./_service/fetch-page-context";
 
 const logger = createServerLogger("page-view");
 
