@@ -1,7 +1,7 @@
 "use client";
 
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { sanitizeAndParseText } from "@/app/[locale]/_utils/sanitize-and-parse-text.client";
 
@@ -31,10 +31,6 @@ function ensureAnnotationRoot(afterEl: Element) {
 	return root;
 }
 
-function isValidNumberAttr(v: string | null): v is string {
-	return !!v && /^-?\d+$/.test(v);
-}
-
 export function AnnotationsOnDemand({
 	pageId,
 	userLocale,
@@ -50,81 +46,32 @@ export function AnnotationsOnDemand({
 			shallow: true,
 		}),
 	);
-	const enabledTypes = useMemo(() => types.filter(Boolean), [types]);
+	const enabledTypes = types.filter(Boolean);
+	const enabledTypesKey = enabledTypes.join("~");
 
 	const [contentEl, setContentEl] = useState<Element | null>(null);
 	const [byNumber, setByNumber] = useState<ByNumber>({});
-	const [activeWindow, setActiveWindow] = useState<{
-		from: number;
-		to: number;
-	} | null>(null);
 	const inFlightRef = useRef<Map<string, AbortController>>(new Map());
 	const rootsRef = useRef<Map<number, HTMLElement>>(new Map());
-	const inViewRef = useRef<Set<number>>(new Set());
-	const rafRef = useRef<number | null>(null);
-	const loadedIntervalsRef = useRef<Array<{ from: number; to: number }>>([]);
-	const activeWindowRef = useRef<{ from: number; to: number } | null>(null);
 
-	const resetKey = `${pageId}:${userLocale}:${enabledTypes.join("~")}`;
+	const resetKey = `${pageId}:${userLocale}:${enabledTypesKey}`;
 
 	useEffect(() => {
 		void resetKey;
 		for (const controller of inFlightRef.current.values()) controller.abort();
 		inFlightRef.current.clear();
 		setByNumber({});
-		setActiveWindow(null);
-		activeWindowRef.current = null;
-		loadedIntervalsRef.current = [];
 		setContentEl(null);
 		for (const root of rootsRef.current.values()) root.remove();
 		rootsRef.current.clear();
 	}, [resetKey]);
 
 	useEffect(() => {
-		if (enabledTypes.length === 0) return;
+		if (!enabledTypesKey) return;
 
-		const content = document.querySelector(".js-content");
-		if (!content) return;
-		setContentEl(content);
-
-		const mergeIntervals = (intervals: Array<{ from: number; to: number }>) => {
-			const sorted = [...intervals]
-				.map((x) => ({
-					from: Math.min(x.from, x.to),
-					to: Math.max(x.from, x.to),
-				}))
-				.sort((a, b) => a.from - b.from);
-			const merged: Array<{ from: number; to: number }> = [];
-			for (const cur of sorted) {
-				const last = merged.at(-1);
-				if (!last || cur.from > last.to + 1) merged.push(cur);
-				else last.to = Math.max(last.to, cur.to);
-			}
-			return merged;
-		};
-
-		const computeMissing = (
-			need: { from: number; to: number },
-			loaded: Array<{ from: number; to: number }>,
-		) => {
-			const needFrom = Math.min(need.from, need.to);
-			const needTo = Math.max(need.from, need.to);
-			const merged = mergeIntervals(loaded);
-			const missing: Array<{ from: number; to: number }> = [];
-			let cursor = needFrom;
-			for (const i of merged) {
-				if (i.to < cursor) continue;
-				if (i.from > needTo) break;
-				if (i.from > cursor) missing.push({ from: cursor, to: i.from - 1 });
-				cursor = Math.max(cursor, i.to + 1);
-				if (cursor > needTo) break;
-			}
-			if (cursor <= needTo) missing.push({ from: cursor, to: needTo });
-			return missing.filter((m) => m.to >= m.from);
-		};
-
+		let cancelled = false;
 		const fetchRange = async (from: number, to: number) => {
-			const requestKey = `${from}:${to}:${enabledTypes.join("~")}:${userLocale}`;
+			const requestKey = `${from}:${to}:${enabledTypesKey}:${userLocale}`;
 			if (inFlightRef.current.has(requestKey)) return;
 
 			const controller = new AbortController();
@@ -134,7 +81,7 @@ export function AnnotationsOnDemand({
 			url.searchParams.set("pageId", String(pageId));
 			url.searchParams.set("from", String(from));
 			url.searchParams.set("to", String(to));
-			url.searchParams.set("types", enabledTypes.join("~"));
+			url.searchParams.set("types", enabledTypesKey);
 			url.searchParams.set("userLocale", userLocale);
 
 			try {
@@ -156,11 +103,6 @@ export function AnnotationsOnDemand({
 					}
 					return next;
 				});
-
-				loadedIntervalsRef.current = mergeIntervals([
-					...loadedIntervalsRef.current,
-					{ from, to },
-				]);
 			} catch (error) {
 				// Abort is expected when toggling annotation types / route changes.
 				if (
@@ -177,82 +119,42 @@ export function AnnotationsOnDemand({
 			}
 		};
 
-		const schedule = () => {
-			if (rafRef.current !== null) return;
-			rafRef.current = window.requestAnimationFrame(() => {
-				rafRef.current = null;
-				const numbers = Array.from(inViewRef.current.values());
-				if (numbers.length === 0) return;
-				const min = Math.min(...numbers);
-				const max = Math.max(...numbers);
-				const need = { from: Math.max(0, min - range), to: max + range };
-				const missing = computeMissing(need, loadedIntervalsRef.current);
-				for (const m of missing) {
-					void fetchRange(m.from, m.to);
-				}
+		const run = () => {
+			if (cancelled) return;
+			const content = document.querySelector(".js-content");
+			if (!content) {
+				requestAnimationFrame(run);
+				return;
+			}
+			setContentEl(content);
 
-				// Virtualize annotation DOM: keep only near-viewport portals mounted.
-				const nextWindow = { from: need.from, to: need.to };
-				const prev = activeWindowRef.current;
-				if (
-					!prev ||
-					prev.from !== nextWindow.from ||
-					prev.to !== nextWindow.to
-				) {
-					activeWindowRef.current = nextWindow;
-					setActiveWindow(nextWindow);
-				}
-			});
+			const targets = content.querySelectorAll<HTMLElement>(
+				".seg-src[data-number-id]:not(.seg-ann), .seg-tr[data-number-id]:not(.seg-ann)",
+			);
+			const numbers = Array.from(targets)
+				.map((el) => Number(el.getAttribute("data-number-id")))
+				.filter((n) => Number.isFinite(n));
+			if (numbers.length === 0) return;
+			const min = Math.min(...numbers);
+			const max = Math.max(...numbers);
+			const from = Math.max(0, min - range);
+			const to = max + range;
+			void fetchRange(from, to);
 		};
 
-		const io = new IntersectionObserver(
-			(entries) => {
-				let changed = false;
-				for (const entry of entries) {
-					const el = entry.target as HTMLElement;
-					if (el.classList.contains("seg-ann")) continue;
-					const raw = el.getAttribute("data-number-id");
-					if (!isValidNumberAttr(raw)) continue;
-					const num = Number(raw);
-					if (!Number.isFinite(num)) continue;
-					if (entry.isIntersecting) {
-						if (!inViewRef.current.has(num)) {
-							inViewRef.current.add(num);
-							changed = true;
-						}
-					} else {
-						if (inViewRef.current.delete(num)) changed = true;
-					}
-				}
-				if (changed) schedule();
-			},
-			{ root: null, rootMargin: "800px 0px 800px 0px", threshold: 0 },
-		);
-
-		const targets = content.querySelectorAll<HTMLElement>(
-			".seg-src[data-number-id], .seg-tr[data-number-id]",
-		);
-		for (const el of targets) io.observe(el);
-
-		// Initial schedule (in case intersection doesn't fire immediately)
-		schedule();
+		run();
 
 		return () => {
-			io.disconnect();
-			if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-			rafRef.current = null;
+			cancelled = true;
 		};
-	}, [enabledTypes, pageId, range, userLocale]);
+	}, [enabledTypesKey, pageId, range, userLocale]);
 
 	useEffect(() => {
 		if (!contentEl) return;
-		if (!activeWindow) return;
 
 		for (const [key, annotations] of Object.entries(byNumber)) {
 			const mainNumber = Number(key);
 			if (!Number.isFinite(mainNumber)) continue;
-			if (mainNumber < activeWindow.from || mainNumber > activeWindow.to)
-				continue;
 			if (!annotations || annotations.length === 0) continue;
 			if (rootsRef.current.has(mainNumber)) continue;
 
@@ -269,60 +171,54 @@ export function AnnotationsOnDemand({
 			const root = ensureAnnotationRoot(anchor);
 			rootsRef.current.set(mainNumber, root);
 		}
+	}, [byNumber, contentEl]);
 
-		// Remove offscreen roots to keep the DOM small.
-		for (const [mainNumber, root] of rootsRef.current.entries()) {
-			if (mainNumber < activeWindow.from || mainNumber > activeWindow.to) {
-				root.remove();
-				rootsRef.current.delete(mainNumber);
-			}
-		}
-	}, [activeWindow, byNumber, contentEl]);
-
-	const portals = useMemo(() => {
-		if (!contentEl) return [];
-		if (!activeWindow) return [];
+	const portals = (() => {
+		const baseClassName = "block seg-cv";
+		const interactive = true;
 
 		return Object.entries(byNumber).flatMap(([k, annotations]) => {
 			const mainNumber = Number(k);
 			if (!Number.isFinite(mainNumber)) return [];
-			if (mainNumber < activeWindow.from || mainNumber > activeWindow.to)
-				return [];
 			if (!annotations || annotations.length === 0) return [];
 
 			const root = rootsRef.current.get(mainNumber);
 			if (!root) return [];
 
-			const elements = annotations.flatMap((a) => {
-				const typeKey = a.segmentType?.label ?? "";
+			const elements = annotations.flatMap((annotation) => {
+				const typeKey = annotation.segmentType?.label ?? "";
 				if (!typeKey) return [];
 
-				const base = "block seg-cv seg-ann hidden ml-4 text-sm leading-relaxed";
+				const aHasTr = annotation.segmentTranslation !== null;
+				const annotationBase =
+					`${baseClassName} seg-ann hidden ml-4 text-sm leading-relaxed`.trim();
+
 				const src = (
-					<div
-						className={`${base} seg-src ${a.segmentTranslation ? "seg-has-tr" : ""}`.trim()}
+					<span
+						className={`${annotationBase} seg-src ${aHasTr ? "seg-has-tr" : ""}`.trim()}
 						data-annotation-type={typeKey}
-						data-number-id={a.number}
-						key={`ann-src-${a.id}`}
+						data-number-id={annotation.number}
+						key={`ann-src-${annotation.id}`}
 					>
-						{sanitizeAndParseText(a.text ?? "")}
-					</div>
+						{sanitizeAndParseText(annotation.text ?? "")}
+					</span>
 				);
 
-				if (!a.segmentTranslation) return [src];
+				if (!aHasTr) return [src];
 
 				const tr = (
-					<button
-						className={`${base} seg-tr cursor-pointer select-text text-left`.trim()}
+					<span
+						className={`${annotationBase} seg-tr ${interactive ? "cursor-pointer select-text" : ""}`.trim()}
 						data-annotation-type={typeKey}
-						data-best-translation-id={a.segmentTranslation.id}
-						data-number-id={a.number}
-						data-segment-id={a.id}
-						key={`ann-tr-${a.id}`}
-						type="button"
+						data-best-translation-id={annotation.segmentTranslation?.id}
+						data-number-id={annotation.number}
+						data-segment-id={annotation.id}
+						key={`ann-tr-${annotation.id}`}
+						role={interactive ? "button" : undefined}
+						tabIndex={interactive ? 0 : undefined}
 					>
-						{sanitizeAndParseText(a.segmentTranslation.text ?? "")}
-					</button>
+						{sanitizeAndParseText(annotation.segmentTranslation?.text ?? "")}
+					</span>
 				);
 
 				return [src, tr];
@@ -331,8 +227,8 @@ export function AnnotationsOnDemand({
 			if (elements.length === 0) return [];
 			return [createPortal(elements, root)];
 		});
-	}, [activeWindow, byNumber, contentEl]);
+	})();
 
-	if (enabledTypes.length === 0) return null;
+	if (!enabledTypesKey) return null;
 	return <>{portals}</>;
 }

@@ -34,11 +34,7 @@ export async function ContentWithTranslations({
 			<PageTagList tag={pageDetail.tagPages.map((tagPage) => tagPage.tag)} />
 			<SubHeader pageDetail={pageDetail} />
 			<div className="js-content">{content}</div>
-			<AnnotationsOnDemand
-				pageId={pageDetail.id}
-				range={50}
-				userLocale={userLocale}
-			/>
+			<AnnotationsOnDemand pageId={pageDetail.id} userLocale={userLocale} />
 			<TranslationFormOnClick />
 		</>
 	);

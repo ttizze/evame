@@ -13,9 +13,7 @@ import { createServerLogger } from "@/lib/logger.server";
 const logger = createServerLogger("fetch-page-context");
 
 export const fetchPageContext = cache(async (slug: string, locale: string) => {
-	const pageDetail = await fetchPageDetail(slug, locale, {
-		includeAnnotations: false,
-	});
+	const pageDetail = await fetchPageDetail(slug, locale);
 
 	if (!pageDetail) {
 		logger.warn({ slug, locale }, "Page not found in database");
