@@ -54,13 +54,15 @@ export function SubHeader({
 				</Button>
 
 				{isTocOpen && (
-					<div
+					<button
 						className={`absolute right-0 top-full mt-2 z-50 bg-background rounded-xl
           px-3 py-4 drop-shadow-xl dark:drop-shadow-[0_9px_7px_rgba(255,255,255,0.1)] 
           border border-border animate-in zoom-in-95 duration-200`}
+						onClick={() => setIsTocOpen(false)}
+						type="button"
 					>
-						<Toc items={tocItems} onItemClick={() => setIsTocOpen(false)} />
-					</div>
+						<Toc items={tocItems} />
+					</button>
 				)}
 			</>
 		);

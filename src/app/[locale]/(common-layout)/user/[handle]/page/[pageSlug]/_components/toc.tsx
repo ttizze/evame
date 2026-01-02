@@ -1,13 +1,7 @@
 "use client";
 import type { TocItem } from "../_domain/extract-toc-items";
 
-export default function TableOfContents({
-	items,
-	onItemClick,
-}: {
-	items: TocItem[];
-	onItemClick: () => void;
-}) {
+export default function TableOfContents({ items }: { items: TocItem[] }) {
 	return (
 		<nav aria-label="Table of contents" data-testid="toc">
 			<ol className="min-w-[200px] space-y-2 text-sm">
@@ -23,7 +17,6 @@ export default function TableOfContents({
 							<a
 								className={`block text-left w-full leading-snug hover:underline seg-src ${hasTranslation ? "seg-has-tr" : ""}`.trim()}
 								href={`#${item.id}`}
-								onClick={onItemClick}
 							>
 								{sourceLabel}
 							</a>
@@ -31,7 +24,6 @@ export default function TableOfContents({
 								<a
 									className="block text-left w-full leading-snug hover:underline seg-tr"
 									href={`#${item.id}-tr`}
-									onClick={onItemClick}
 								>
 									{translatedLabel}
 								</a>
