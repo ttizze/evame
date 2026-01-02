@@ -4,13 +4,13 @@
 
 ## 目的
 - 常に最高の提案をする。
-- 可能な限り、より良いコードを書く。
+- 最もシンプルな方法で解決する
 - 無意味なコードは書かない。
 
 ## 実行環境
 - パッケージランナー: `bun`
 - フレームワーク: Next.js (App Router)
-- ORM/DB: Drizzle + PostgreSQL
+
 
 ## よく使うスクリプト
 - 依存関係/初期化: `bun run init`（依存インストール → Drizzle generate → migrate dev → seed）
@@ -31,6 +31,7 @@
 - useEffectはどうしても書かないとうまくいかない場合のみ書く。
 - mcpのcontext7を用い､裏取りをしてから実行する。
 - 不要なコードは削除する｡
+- 変更後にtypecheckとbiomeを実行してエラーがないことを確認する。
 
 ## 配置ポリシー
 
@@ -42,11 +43,6 @@
 - ファイル編集: `apply_patch` を使用（差分最小・一括反映）。
 - 調査/実行: `shell` を使用（出力は必要最小限に分割して取得）。
 - 計画管理: 必要に応じて `update_plan` で段階を明確化（単純作業では不要）。
-
-## DB と Drizzle
-- スキーマ変更時は `schema.ts` を更新 → `bunx drizzle-kit migrate dev`。
-- シードは `seed.ts`。`bun run seed` で実行。
-- 本番系のマイグレーションは `drizzle-kit migrate deploy` を使用（CI/デプロイ時）。
 
 ## セキュリティ/秘匿情報
 - `.env` のキーは外部に出さない。ログ/PR/エラーメッセージに含めない。

@@ -193,9 +193,20 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 	});
 
 	it("paragraphNumberToAnnotationSegmentIdsが空の場合、リンクは作成されない", async () => {
-		const { mainPage } = await createMainPageWithParagraphNumbers(["1"]);
+		const { mainPage, mainSegments } = await createMainPageWithParagraphNumbers(
+			["1"],
+		);
 		const { annotationContentId, annotationSegments } =
 			await createAnnotationContentWithSegments(["Ann"]);
+
+		// 既存リンクを作成
+		await db
+			.insertInto("segmentAnnotationLinks")
+			.values({
+				mainSegmentId: mainSegments[0].id,
+				annotationSegmentId: annotationSegments[0].id,
+			})
+			.execute();
 
 		await db
 			.transaction()

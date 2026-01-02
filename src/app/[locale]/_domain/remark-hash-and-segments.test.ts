@@ -173,4 +173,29 @@ describe("remarkHashAndSegments", () => {
 		expect(String(file)).toContain("Para text");
 		expect(String(file)).not.toContain("{para:3}");
 	});
+
+	it("chapter見出し（###）ごとに段落番号を区別する", async () => {
+		const md =
+			"### 1. Chapter\n\n{para:1} A\n\n{para:1} B\n\n### 2. Chapter\n\n{para:1} C";
+		const file = (await remark()
+			.use(remarkHashAndSegments())
+			.process(md)) as VFile & { data: { segments: SegmentDraft[] } };
+		const segs = file.data.segments as SegmentDraft[];
+		const paraSegs = segs.filter((s) => s.paragraphNumber);
+		expect(paraSegs.map((s) => s.paragraphNumber)).toEqual([
+			"1__ch1",
+			"1__ch1",
+			"1__ch2",
+		]);
+	});
+
+	it("chapter見出しが無い場合は段落番号にサフィックスを付けない", async () => {
+		const md = "{para:1} A\n\n{para:2} B";
+		const file = (await remark()
+			.use(remarkHashAndSegments())
+			.process(md)) as VFile & { data: { segments: SegmentDraft[] } };
+		const segs = file.data.segments as SegmentDraft[];
+		const paraSegs = segs.filter((s) => s.paragraphNumber);
+		expect(paraSegs.map((s) => s.paragraphNumber)).toEqual(["1", "2"]);
+	});
 });

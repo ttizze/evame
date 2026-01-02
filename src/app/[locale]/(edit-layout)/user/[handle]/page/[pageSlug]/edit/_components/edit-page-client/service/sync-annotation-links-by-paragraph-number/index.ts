@@ -2,7 +2,7 @@ import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
 import { createServerLogger } from "@/lib/logger.server";
 import {
 	createAnnotationLinks,
-	deleteAnnotationLinks,
+	deleteAnnotationLinksByContentId,
 } from "./db/mutations.server";
 import {
 	fetchPrimarySegmentsWithParagraphNumbers,
@@ -44,11 +44,14 @@ export async function syncAnnotationLinksByParagraphNumber(
 		return;
 	}
 
-	if (paragraphNumberToAnnotationSegmentIds.size === 0) {
+	if (!anchorContentId) {
 		return;
 	}
 
-	if (!anchorContentId) {
+	// 既存のアノテーションリンクを全削除（このコンテンツ配下）
+	await deleteAnnotationLinksByContentId(tx, contentId);
+
+	if (paragraphNumberToAnnotationSegmentIds.size === 0) {
 		return;
 	}
 
@@ -61,9 +64,6 @@ export async function syncAnnotationLinksByParagraphNumber(
 	// domainロジック: 段落番号 → PRIMARYセグメントIDのマッピングを作成
 	const paragraphNumberToPrimarySegmentId =
 		buildParagraphMapping(primarySegments);
-
-	// 既存のアノテーションリンクを削除
-	await deleteAnnotationLinks(tx, annotationSegmentIds);
 
 	// domainロジック: リンク作成データを構築
 	const { linksToCreate, failedLinks } = buildLinksToCreate(
