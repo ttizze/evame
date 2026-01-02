@@ -1,4 +1,5 @@
 import type { Html, Paragraph, Root, Text } from "mdast";
+import { toString as mdastToString } from "mdast-util-to-string";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 import { BLOCK_TYPE_TO_CLASS, isValidBlockType } from "./custom-block-types";
@@ -28,18 +29,14 @@ export const remarkCustomBlocks: Plugin<[], Root> = () => (tree: Root) => {
 	visit(tree, "paragraph", (paragraph: Paragraph, index, parent) => {
 		if (!parent || typeof index !== "number") return;
 
-		if (paragraph.children.length !== 1) return;
-		const onlyChild = paragraph.children[0];
-		if (!onlyChild || onlyChild.type !== "text") return;
-
-		const textNode = onlyChild as Text;
-		const value = textNode.value;
-
-		const blockMatch = /^::(\w+)\n([\s\S]*?)\n::$/m.exec(value);
+		// 段落全体を一括判定するためにテキストを抽出する
+		const rawText = mdastToString(paragraph, { includeImageAlt: false });
+		const blockMatch = /^::(\w+)\n([\s\S]*?)\n::$/m.exec(rawText);
 		if (!blockMatch) return;
 
-		const [, blockType, content] = blockMatch;
-		const transformed = transformCustomBlock(blockType, content.trim());
+		const [, blockType] = blockMatch;
+		// 記法に合致した段落だけ変換するために子ノードを整形する
+		const transformed = transformCustomBlockFromChildren(blockType, paragraph);
 		if (!transformed) return;
 
 		(parent.children as Paragraph[]).splice(index, 1, transformed);
@@ -50,6 +47,7 @@ export const remarkCustomBlocks: Plugin<[], Root> = () => (tree: Root) => {
 		if (!parent || typeof index !== "number") return;
 
 		const value = textNode.value;
+		// 1つのテキストノード内の記法をまとめて分解するために配列化する
 		const newParts = processInlineNotations(value);
 
 		// マッチが見つかった場合のみ置き換え
@@ -67,6 +65,7 @@ function processInlineNotations(value: string): Array<Text | Html> {
 	const parts: Array<Text | Html> = [];
 	let lastIndex = 0;
 
+	// 仕様の優先順を守って変換するためにマッチ順を固定する
 	// すべての特殊記法を一度に検出（優先順位: より具体的なパターンから）
 	// {pb:ed:n} → {note:...} → {pb:...} → {pb} の順で処理
 	const pattern =
@@ -85,6 +84,7 @@ function processInlineNotations(value: string): Array<Text | Html> {
 			}
 		}
 
+		// HTMLに落とし込むために記法ごとの属性や内容を組み立てる
 		// マッチタイプを判定してHTMLノードを追加
 		if (match[1] && match[2]) {
 			// {pb:ed:n}
@@ -121,6 +121,7 @@ function processInlineNotations(value: string): Array<Text | Html> {
 		return [];
 	}
 
+	// 末尾のテキストを落とさないために残りを追加する
 	// 残りのテキストを追加
 	if (lastIndex < value.length) {
 		const remaining = value.slice(lastIndex);
@@ -136,6 +137,7 @@ function processInlineNotations(value: string): Array<Text | Html> {
  * HTMLコンテンツをエスケープ
  */
 function escapeHtml(text: string): string {
+	// HTML本文として安全に扱うために文字参照へ変換する
 	return text
 		.replace(/&/g, "&amp;")
 		.replace(/</g, "&lt;")
@@ -148,6 +150,7 @@ function escapeHtml(text: string): string {
  * HTML属性値をエスケープ
  */
 function escapeHtmlAttribute(value: string): string {
+	// HTML属性として安全に扱うために文字参照へ変換する
 	return value
 		.replace(/&/g, "&amp;")
 		.replace(/</g, "&lt;")
@@ -156,17 +159,42 @@ function escapeHtmlAttribute(value: string): string {
 		.replace(/'/g, "&#39;");
 }
 
-function transformCustomBlock(
+function transformCustomBlockFromChildren(
 	blockType: string,
-	content: string,
+	paragraph: Paragraph,
 ): Paragraph | null {
 	if (!isValidBlockType(blockType)) {
 		return null;
 	}
 
+	const children = [...paragraph.children];
+	const prefixPattern = new RegExp(`^::${blockType}\\n`);
+	const suffixPattern = /\n::$/;
+	// ブロック記法の前後だけ削るために最初と最後のテキストを探す
+	const firstTextIndex = children.findIndex((child) => child.type === "text");
+	if (firstTextIndex === -1) return null;
+	const lastTextIndex =
+		children.length -
+		1 -
+		[...children].reverse().findIndex((child) => child.type === "text");
+	if (lastTextIndex < 0) return null;
+
+	// 余計な記法を取り除いて中身だけ残すために前後を置換する
+	(children[firstTextIndex] as Text).value = (
+		children[firstTextIndex] as Text
+	).value.replace(prefixPattern, "");
+	(children[lastTextIndex] as Text).value = (
+		children[lastTextIndex] as Text
+	).value.replace(suffixPattern, "");
+
+	// 空のテキストノードを残さないためにフィルタする
+	const cleanedChildren = children.filter(
+		(child) => !(child.type === "text" && child.value.length === 0),
+	);
+
 	return {
 		type: "paragraph",
-		children: [{ type: "text", value: content }],
+		children: cleanedChildren,
 		data: {
 			hProperties: {
 				class: BLOCK_TYPE_TO_CLASS[blockType],

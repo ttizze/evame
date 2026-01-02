@@ -171,7 +171,10 @@ function extractParagraphNumber(
 	stripParagraphNotationFromNode(node);
 	const cleanedText = text.slice(paraMatch[0].length);
 
-	return { paragraphNumber, cleanedText };
+	return {
+		paragraphNumber,
+		cleanedText,
+	};
 }
 
 /**
@@ -183,6 +186,7 @@ function createSegmentFromBlockNode(
 	number: number,
 	currentParagraphNumber: string | null,
 	occurrenceMap: Map<string, number>,
+	chapterIndex: number | null,
 ): { segment: SegmentDraft | null; updatedParagraphNumber: string | null } {
 	// ネストしたブロック要素は除外
 	if (hasNestedBlock(node)) {
@@ -202,10 +206,10 @@ function createSegmentFromBlockNode(
 	// 段落番号の抽出と更新
 	const { paragraphNumber: paragraphNumberFromBlock, cleanedText } =
 		extractParagraphNumber(text, node);
-	const updatedParagraphNumber =
-		paragraphNumberFromBlock ?? currentParagraphNumber;
-	const effectiveParagraphNumber =
-		paragraphNumberFromBlock ?? currentParagraphNumber;
+	const updatedParagraphNumber = paragraphNumberFromBlock
+		? appendChapterSuffix(paragraphNumberFromBlock, chapterIndex)
+		: currentParagraphNumber;
+	const effectiveParagraphNumber = updatedParagraphNumber;
 
 	// ページブレークの抽出
 	const pageBreaks = extractPageBreaksFromNode(node);
@@ -279,13 +283,20 @@ export const remarkHashAndSegments =
 		/* ── 1. 本文ブロック ─────────────── */
 		// 段落番号に基づいてセグメントをグループ化するため、現在の段落番号を追跡
 		let currentParagraphNumber: string | null = null;
+		let currentChapterIndex: number | null = null;
 
-		visit(tree, isBlockNode, (node) => {
+		visit(tree, isBlockNode, (node: BlockNode) => {
+			if (node.type === "heading" && node.depth === 3) {
+				currentChapterIndex = (currentChapterIndex ?? 0) + 1;
+				currentParagraphNumber = null;
+			}
+
 			const { segment, updatedParagraphNumber } = createSegmentFromBlockNode(
 				node,
 				number,
 				currentParagraphNumber,
 				occurrenceMap,
+				currentChapterIndex,
 			);
 			if (!segment) return;
 
@@ -294,3 +305,12 @@ export const remarkHashAndSegments =
 			number += 1;
 		});
 	};
+
+function appendChapterSuffix(
+	paragraphNumber: string,
+	chapterIndex: number | null,
+): string {
+	return chapterIndex
+		? `${paragraphNumber}__ch${chapterIndex}`
+		: paragraphNumber;
+}
