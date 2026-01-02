@@ -4,8 +4,8 @@ import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { getCurrentUser } from "@/lib/auth-server";
 import { PageContent } from "../_components/page-content";
 import { PreviewBanner } from "../_components/preview-banner";
-import { generatePageMetadata } from "../_lib/generate-page-metadata";
 import { fetchPageContext } from "../_service/fetch-page-context";
+import { generatePageMetadata } from "../_service/generate-page-metadata";
 
 type Params = Promise<{ locale: string; handle: string; pageSlug: string }>;
 
