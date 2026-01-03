@@ -19,9 +19,7 @@ interface FloatingControlsProps {
 }
 export function FloatingControls({
 	likeButton,
-	position = `fixed bottom-4 left-1/2 -translate-x-1/2
-              max-w-prose w-full 
-              duration-300 `,
+	position = `fixed bottom-4 left-1/2 -translate-x-1/2 duration-300 `,
 	alwaysVisible = false,
 	annotationTypes = [],
 }: FloatingControlsProps) {
@@ -44,7 +42,7 @@ export function FloatingControls({
 
 	/* --- Buttons --- */
 	const Buttons = (
-		<div className="flex gap-4 justify-center flex-wrap">
+		<div className="flex gap-4 justify-center">
 			<DisplayModeCycle afterClick={ignoreNextScroll} />
 
 			{annotationTypes.map((annotationType) => {
@@ -72,7 +70,7 @@ export function FloatingControls({
 	return (
 		<div
 			className={cn(
-				`${position} z-50 w-auto border rounded-full p-3 px-5   backdrop-blur-sm `,
+				`${position} z-50 w-auto border rounded-full py-3 px-5 backdrop-blur-sm `,
 				isVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0",
 			)}
 		>
