@@ -3,7 +3,7 @@ import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
-import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls.client";
+import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
 import { SortTabs } from "@/app/[locale]/(common-layout)/_components/sort-tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 

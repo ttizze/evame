@@ -1,6 +1,5 @@
 /* app/_components/display-mode-cycle.tsx */
 "use client";
-import { FileText } from "lucide-react";
 import { useDisplay } from "@/app/_context/display-provider";
 import { Button } from "@/components/ui/button";
 
@@ -9,7 +8,7 @@ interface Props {
 }
 
 export function DisplayModeCycle({ afterClick }: Props) {
-	const { mode, cycle, userLocale } = useDisplay(); // mode: "user" | "source" | "both"
+	const { mode, cycle, userLocale, sourceLocale } = useDisplay(); // mode: "user" | "source" | "both"
 
 	const handleClick = () => {
 		afterClick?.();
@@ -21,14 +20,16 @@ export function DisplayModeCycle({ afterClick }: Props) {
 		mode === "user" ? (
 			<span>{userLocale.toUpperCase()}</span>
 		) : mode === "source" ? (
-			<FileText className="w-5 h-5" />
+			<span>{sourceLocale.toUpperCase()}</span>
 		) : (
-			<span className="flex items-center gap-px scale-90">
+			<span className="flex items-center gap-1 scale-90">
 				<span className="text-[10px] leading-none">
 					{userLocale.toUpperCase()}
 				</span>
 				<span className="text-[10px] leading-none">/</span>
-				<FileText className="w-3 h-3" />
+				<span className="text-[10px] leading-none">
+					{sourceLocale.toUpperCase()}
+				</span>
 			</span>
 		);
 
@@ -43,9 +44,8 @@ export function DisplayModeCycle({ afterClick }: Props) {
 	return (
 		<Button
 			aria-label={label}
-			className="border h-10 w-10 rounded-full bg-background font-semibold text-xs"
+			className="border h-10  px-3 rounded-full bg-background font-semibold text-xs"
 			onClick={handleClick}
-			size="icon"
 			title={label}
 			variant="ghost"
 		>
