@@ -8,7 +8,7 @@ import {
 import Globe from "@/app/[locale]/(common-layout)/_components/about-section/problem-solution-section/components/globe.client";
 import { PageLikeButton } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/server";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
-import { FloatingControls } from "../../floating-controls.client";
+import { FloatingControls } from "../../floating-controls/floating-controls.client";
 import { fetchAboutPage } from "../_lib/fetch-about-page";
 import AboutSectionCard from "./components/about-section-card.server";
 import EditorMovie from "./components/editor-movie.server";

@@ -13,9 +13,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
 import { authClient } from "@/lib/auth-client";
-import { ModeToggle } from "../mode-toggle";
 import { useHeaderScroll } from "./hooks/use-header-scroll";
 import { LocaleSelector } from "./locale-selector/client";
+import { ModeToggle } from "./mode-toggle";
 
 interface BaseHeaderProps {
 	currentUser: SanitizedUser | undefined;

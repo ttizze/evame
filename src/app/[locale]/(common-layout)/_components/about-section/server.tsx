@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/lib/auth-server";
 import { StartButton } from "../../_components/start-button";
-import { FloatingControls } from "../floating-controls.client";
+import { FloatingControls } from "../floating-controls/floating-controls.client";
 import HeroSection from "./hero-section/server";
 import ProblemSolutionSection from "./problem-solution-section/server";
 export default async function AboutSection({

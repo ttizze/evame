@@ -1,5 +1,5 @@
 import { EyeIcon, MessageCircle } from "lucide-react";
-import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls.client";
+import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
 import { PageViewCounter } from "@/app/[locale]/(common-layout)/_components/page/page-view-counter/client";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
