@@ -72,7 +72,7 @@ export function FloatingControls({
 	return (
 		<div
 			className={cn(
-				`${position} z-50 w-auto border rounded-full p-3 px-5 bg-gray-50 dark:bg-gray-900 shadow-lg dark:shadow-gray-900`,
+				`${position} z-50 w-auto border rounded-full p-3 px-5   backdrop-blur-sm `,
 				isVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0",
 			)}
 		>
