@@ -34,7 +34,7 @@ describe("/api/segment-translations GET", () => {
 		expect(res.status).toBe(400);
 	});
 
-	it("ORDER BY の先頭を bestTranslation として返し、残りを translations に入れる", async () => {
+	it("ORDER BY の先頭が translations の先頭になる", async () => {
 		// Arrange
 		const currentUser = await createUser();
 		const bestUser = await createUser({ handle: "best", name: "Best User" });
@@ -109,16 +109,12 @@ describe("/api/segment-translations GET", () => {
 		expect(res.status).toBe(200);
 
 		const body = await res.json();
-		expect(body.bestTranslation?.id).toBe(bestTranslation.id);
-		expect(body.bestTranslation?.text).toBe("best");
-		expect(body.bestTranslation?.currentUserVote).toEqual({
-			isUpvote: true,
-			translationId: bestTranslation.id,
-			userId: currentUser.id,
-		});
-		expect(body.translations).toHaveLength(1);
-		expect(body.translations[0].id).toBe(otherTranslation.id);
-		expect(body.translations[0].text).toBe("other");
-		expect(body.translations[0].currentUserVote).toBeNull();
+		expect(body).toHaveLength(2);
+		expect(body[0].id).toBe(bestTranslation.id);
+		expect(body[0].text).toBe("best");
+		expect(body[0].currentUserVoteIsUpvote).toBe(true);
+		expect(body[1].id).toBe(otherTranslation.id);
+		expect(body[1].text).toBe("other");
+		expect(body[1].currentUserVoteIsUpvote).toBeNull();
 	});
 });

@@ -1,16 +1,4 @@
 import type { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
-import type {
-	SanitizedUser,
-	SegmentTranslation,
-	TranslationVote,
-} from "@/db/types.helpers";
-
-export type TranslationWithUser = SegmentTranslation & {
-	user: SanitizedUser;
-};
-export type TranslationWithInfo = TranslationWithUser & {
-	currentUserVote: TranslationVote | null; // null = 未投票
-};
 
 // fetchPageDetail の戻り値から型を推論
 export type PageDetail = NonNullable<

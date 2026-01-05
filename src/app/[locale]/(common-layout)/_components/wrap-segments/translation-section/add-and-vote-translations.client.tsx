@@ -2,10 +2,10 @@
 import { ChevronDown, ChevronUp, Languages } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useMemo, useState } from "react";
-import { useSegmentTranslations } from "@/app/[locale]/_hooks/use-segment-translations";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { AddTranslationForm } from "./add-translation-form/client";
+import { useSegmentTranslations } from "./hooks/use-segment-translations";
 import { TranslationListItem } from "./translation-list-item/client";
 import { VoteButtons } from "./vote-buttons/client";
 
@@ -28,7 +28,9 @@ export function AddAndVoteTranslations({
 		enabled: open,
 	});
 
-	const alternativeTranslations = data?.translations ?? [];
+	const translations = data ?? [];
+	const bestTranslation = translations[0];
+	const alternativeTranslations = translations.slice(1);
 
 	const displayedTranslations = useMemo(() => {
 		return showAll
@@ -43,7 +45,7 @@ export function AddAndVoteTranslations({
 
 	if (!open) return null;
 
-	if (isLoading || !data?.bestTranslation) {
+	if (isLoading) {
 		return (
 			<span className="w-full">
 				<span className="flex mt-2 items-center justify-end text-gray-500 text-sm">
@@ -68,17 +70,18 @@ export function AddAndVoteTranslations({
 			<span className="flex items-center justify-end gap-2">
 				<Link
 					className="no-underline!"
-					href={`/user/${data.bestTranslation.user?.handle}`}
+					href={`/user/${bestTranslation.userHandle}`}
 				>
 					<span className="text-sm text-gray-500 text-right flex items-center">
-						by: {data.bestTranslation.user?.name}
+						by: {bestTranslation.userName}
 					</span>
 				</Link>
 				<VoteButtons
+					key={bestTranslation.id}
 					onVoted={() => {
 						void mutate();
 					}}
-					translation={data.bestTranslation}
+					translation={bestTranslation}
 				/>
 			</span>
 			<span className="flex mt-2 items-center justify-end text-gray-500 text-sm">
