@@ -1,26 +1,7 @@
 import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
 
 /**
- * コンテンツのセグメントタイプを取得する
- * Kysely版に移行済み
- */
-export async function fetchSegmentTypeKey(
-	tx: TransactionClient,
-	contentId: number,
-): Promise<string | undefined> {
-	const currentSegment = await tx
-		.selectFrom("segments")
-		.innerJoin("segmentTypes", "segmentTypes.id", "segments.segmentTypeId")
-		.select("segmentTypes.key as segmentTypeKey")
-		.where("segments.contentId", "=", contentId)
-		.executeTakeFirst();
-
-	return currentSegment?.segmentTypeKey;
-}
-
-/**
  * 親ページのPRIMARYセグメントを取得（メタデータも取得して段落番号を取得）
- * Kysely版に移行済み
  */
 export async function fetchPrimarySegmentsWithParagraphNumbers(
 	tx: TransactionClient,
@@ -81,4 +62,49 @@ export async function fetchPrimarySegmentsWithParagraphNumbers(
 		number: segment.number,
 		metadata: metadataMap.get(segment.id) || [],
 	}));
+}
+
+/**
+ * 親ページの最初の段落番号の前にある最後のセグメントIDを取得
+ */
+export async function fetchLastSegmentBeforeFirstParagraphId(
+	tx: TransactionClient,
+	anchorContentId: number,
+): Promise<number | null> {
+	const paragraphNumberType = await tx
+		.selectFrom("segmentMetadataTypes")
+		.select("id")
+		.where("key", "=", "PARAGRAPH_NUMBER")
+		.executeTakeFirst();
+
+	if (!paragraphNumberType) {
+		return null;
+	}
+
+	const firstParagraph = await tx
+		.selectFrom("segments")
+		.innerJoin("segmentTypes", "segmentTypes.id", "segments.segmentTypeId")
+		.innerJoin("segmentMetadata", "segmentMetadata.segmentId", "segments.id")
+		.select(["segments.id", "segments.number"])
+		.where("segments.contentId", "=", anchorContentId)
+		.where("segmentTypes.key", "=", "PRIMARY")
+		.where("segmentMetadata.metadataTypeId", "=", paragraphNumberType.id)
+		.orderBy("segments.number")
+		.executeTakeFirst();
+
+	if (!firstParagraph) {
+		return null;
+	}
+
+	const row = await tx
+		.selectFrom("segments")
+		.innerJoin("segmentTypes", "segmentTypes.id", "segments.segmentTypeId")
+		.select("segments.id")
+		.where("segments.contentId", "=", anchorContentId)
+		.where("segmentTypes.key", "=", "PRIMARY")
+		.where("segments.number", "<", firstParagraph.number)
+		.orderBy("segments.number", "desc")
+		.executeTakeFirst();
+
+	return row?.id ?? null;
 }

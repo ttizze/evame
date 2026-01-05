@@ -20,7 +20,6 @@ export async function ensureRootPage(userId: string): Promise<number> {
 	await upsertPageAndSegments({
 		pageSlug: ROOT_SLUG,
 		userId,
-		title: ROOT_TITLE,
 		mdastJson: parsed.mdastJson,
 		sourceLocale: "pi",
 		segments: parsed.segments,

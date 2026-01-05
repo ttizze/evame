@@ -5,8 +5,8 @@ import {
 	deleteAnnotationLinksByContentId,
 } from "./db/mutations.server";
 import {
+	fetchLastSegmentBeforeFirstParagraphId,
 	fetchPrimarySegmentsWithParagraphNumbers,
-	fetchSegmentTypeKey,
 } from "./db/queries.server";
 import { buildLinksToCreate } from "./domain/build-links-to-create";
 import { buildParagraphMapping } from "./domain/build-paragraph-mapping";
@@ -24,25 +24,13 @@ export async function syncAnnotationLinksByParagraphNumber(
 	contentId: number,
 	paragraphNumberToAnnotationSegmentIds: Map<string, number[]>,
 	anchorContentId: number | null,
+	annotationSegmentsBeforeFirstParagraph: Array<number> | null = null,
 ): Promise<void> {
-	const annotationSegmentIds = Array.from(
-		paragraphNumberToAnnotationSegmentIds.values(),
-	).flat();
-
 	const logger = createServerLogger("sync-annotation-links", {
 		contentId,
 		anchorContentId,
-		annotationSegmentCount: annotationSegmentIds.length,
 		paragraphCount: paragraphNumberToAnnotationSegmentIds.size,
 	});
-
-	// 現在のコンテンツのセグメントタイプを確認
-	const segmentTypeKey = await fetchSegmentTypeKey(tx, contentId);
-
-	// COMMENTARYタイプでない場合は処理を終了（アノテーションリンクはCOMMENTARYのみ）
-	if (segmentTypeKey !== "COMMENTARY") {
-		return;
-	}
 
 	if (!anchorContentId) {
 		return;
@@ -51,7 +39,16 @@ export async function syncAnnotationLinksByParagraphNumber(
 	// 既存のアノテーションリンクを全削除（このコンテンツ配下）
 	await deleteAnnotationLinksByContentId(tx, contentId);
 
+	const prefaceLinks = await buildPrefaceLinks(
+		tx,
+		anchorContentId,
+		annotationSegmentsBeforeFirstParagraph,
+	);
+
 	if (paragraphNumberToAnnotationSegmentIds.size === 0) {
+		if (prefaceLinks.length > 0) {
+			await createAnnotationLinks(tx, prefaceLinks);
+		}
 		return;
 	}
 
@@ -70,11 +67,18 @@ export async function syncAnnotationLinksByParagraphNumber(
 		paragraphNumberToPrimarySegmentId,
 		paragraphNumberToAnnotationSegmentIds,
 	);
+	const allLinksToCreate =
+		prefaceLinks.length > 0
+			? [...linksToCreate, ...prefaceLinks]
+			: linksToCreate;
 
 	// アノテーションリンクを作成
-	if (linksToCreate.length > 0) {
-		await createAnnotationLinks(tx, linksToCreate);
+	if (allLinksToCreate.length > 0) {
+		await createAnnotationLinks(tx, allLinksToCreate);
 	} else {
+		const annotationSegmentIds = Array.from(
+			paragraphNumberToAnnotationSegmentIds.values(),
+		).flat();
 		const failedParagraphNumbers = failedLinks.map((f) => f.paragraphNumber);
 		const primaryParagraphNumbers = Array.from(
 			paragraphNumberToPrimarySegmentId.keys(),
@@ -88,6 +92,7 @@ export async function syncAnnotationLinksByParagraphNumber(
 				annotationSegmentCount: annotationSegmentIds.length,
 				primarySegmentCount: primarySegments.length,
 				failedLinksCount: failedLinks.length,
+				prefaceLinkCount: prefaceLinks.length,
 				primaryParagraphNumberCount: paragraphNumberToPrimarySegmentId.size,
 				annotationParagraphNumberCount:
 					paragraphNumberToAnnotationSegmentIds.size,
@@ -104,4 +109,28 @@ export async function syncAnnotationLinksByParagraphNumber(
 			"No annotation links to create - all links failed",
 		);
 	}
+}
+
+async function buildPrefaceLinks(
+	tx: TransactionClient,
+	anchorContentId: number,
+	annotationSegmentsBeforeFirstParagraph: Array<number> | null,
+): Promise<Array<{ mainSegmentId: number; annotationSegmentId: number }>> {
+	if (!annotationSegmentsBeforeFirstParagraph) {
+		return [];
+	}
+
+	const matchedMainSegmentId = await fetchLastSegmentBeforeFirstParagraphId(
+		tx,
+		anchorContentId,
+	);
+
+	if (!matchedMainSegmentId) {
+		return [];
+	}
+
+	return annotationSegmentsBeforeFirstParagraph.map((annotationSegmentId) => ({
+		mainSegmentId: matchedMainSegmentId,
+		annotationSegmentId,
+	}));
 }

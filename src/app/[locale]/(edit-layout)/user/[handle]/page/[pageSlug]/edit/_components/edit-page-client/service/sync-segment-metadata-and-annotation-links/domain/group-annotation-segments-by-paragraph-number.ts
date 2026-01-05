@@ -5,7 +5,7 @@
  * @param segments セグメントドラフトの配列
  * @returns 段落番号 → セグメントID配列のマッピング
  */
-export function groupByParagraphNumber(
+export function groupAnnotationSegmentsByParagraphNumber(
 	hashToSegmentId: Map<string, number>,
 	segments: Array<{ textAndOccurrenceHash: string; paragraphNumber?: string }>,
 ): Map<string, number[]> {

@@ -154,7 +154,7 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 		);
 	});
 
-	it("COMMENTARYタイプでない場合、リンクは作成されない", async () => {
+	it("COMMENTARYタイプでなくても、この関数単体ではリンクを作成する", async () => {
 		const { mainPage } = await createMainPageWithParagraphNumbers(["1"]);
 
 		const primaryContent = await db
@@ -162,7 +162,7 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			.values({ kind: "PAGE" })
 			.returningAll()
 			.executeTakeFirstOrThrow();
-		await db
+		const primarySegment = await db
 			.insertInto("segments")
 			.values({
 				contentId: primaryContent.id,
@@ -171,7 +171,8 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 				textAndOccurrenceHash: "hash-primary",
 				segmentTypeId: await getSegmentTypeId("PRIMARY"),
 			})
-			.execute();
+			.returningAll()
+			.executeTakeFirstOrThrow();
 
 		await db
 			.transaction()
@@ -179,7 +180,7 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 				syncAnnotationLinksByParagraphNumber(
 					tx,
 					primaryContent.id,
-					new Map([["1", [999]]]),
+					new Map([["1", [primarySegment.id]]]),
 					mainPage.id,
 				),
 			);
@@ -187,9 +188,9 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 		const links = await db
 			.selectFrom("segmentAnnotationLinks")
 			.selectAll()
-			.where("annotationSegmentId", "=", 999)
+			.where("annotationSegmentId", "=", primarySegment.id)
 			.execute();
-		expect(links).toHaveLength(0);
+		expect(links).toHaveLength(1);
 	});
 
 	it("paragraphNumberToAnnotationSegmentIdsが空の場合、リンクは作成されない", async () => {
@@ -356,5 +357,60 @@ describe("syncAnnotationLinksByParagraphNumber", () => {
 			.execute();
 		expect(links).toHaveLength(1);
 		expect(links[0].mainSegmentId).toBe(mainSegments[1].id);
+	});
+
+	it("最初の段落番号より前のアノテーションは直前のPRIMARYにリンクする", async () => {
+		const user = await createUser();
+		const mainPage = (await createPageWithSegments({
+			userId: user.id,
+			slug: "main-page-preface",
+			segments: [
+				{
+					number: 0,
+					text: "Preface",
+					textAndOccurrenceHash: "hash-main-preface",
+					segmentTypeKey: "PRIMARY",
+				},
+				{
+					number: 1,
+					text: "Main segment 1",
+					textAndOccurrenceHash: "hash-main-1",
+					segmentTypeKey: "PRIMARY",
+				},
+			],
+		})) as Page;
+		const mainSegments = await db
+			.selectFrom("segments")
+			.selectAll()
+			.where("contentId", "=", mainPage.id)
+			.orderBy("number")
+			.execute();
+
+		await addParagraphNumbersToSegments([
+			{ segmentId: mainSegments[1].id, paragraphNumber: "1" },
+		]);
+
+		const { annotationContentId, annotationSegments } =
+			await createAnnotationContentWithSegments(["Ann Preface"]);
+
+		await db
+			.transaction()
+			.execute(async (tx) =>
+				syncAnnotationLinksByParagraphNumber(
+					tx,
+					annotationContentId,
+					new Map(),
+					mainPage.id,
+					[annotationSegments[0].id],
+				),
+			);
+
+		const links = await db
+			.selectFrom("segmentAnnotationLinks")
+			.selectAll()
+			.where("annotationSegmentId", "=", annotationSegments[0].id)
+			.execute();
+		expect(links).toHaveLength(1);
+		expect(links[0].mainSegmentId).toBe(mainSegments[0].id);
 	});
 });

@@ -3,8 +3,10 @@ import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
 import { createServerLogger } from "@/lib/logger.server";
 import { syncAnnotationLinksByParagraphNumber } from "../sync-annotation-links-by-paragraph-number";
 import { syncSegmentMetadata } from "./db/mutations.server";
+import { fetchSegmentTypeKey } from "./db/queries.server";
+import { collectAnnotationSegmentsBeforeFirstParagraph } from "./domain/collect-annotation-segments-before-first-paragraph";
 import { collectMetadataDrafts } from "./domain/collect-metadata-drafts";
-import { groupByParagraphNumber } from "./domain/group-by-paragraph-number";
+import { groupAnnotationSegmentsByParagraphNumber } from "./domain/group-annotation-segments-by-paragraph-number";
 
 /**
  * SegmentDraft のメタデータを同期し、段落番号を使ってアノテーションリンクを作成する
@@ -38,17 +40,27 @@ export async function syncSegmentMetadataAndAnnotationLinks(
 	// domainロジック: メタデータドラフトを収集
 	const metadataDrafts = collectMetadataDrafts(hashToSegmentId, segments);
 
-	// domainロジック: 段落番号ごとにグループ化
-	const paragraphNumberToAnnotationSegmentIds = groupByParagraphNumber(
-		hashToSegmentId,
-		segments,
-	);
-
 	// db操作: メタデータを同期
 	await syncSegmentMetadata(tx, segmentIds, metadataDrafts);
 
-	// db操作: 段落番号がある場合、アノテーションリンクを作成
-	if (paragraphNumberToAnnotationSegmentIds.size > 0) {
+	// 現在のコンテンツのセグメントタイプを確認
+	const segmentTypeKey = await fetchSegmentTypeKey(tx, contentId);
+
+	// COMMENTARYタイプでない場合もしくはanchorContentIdがない場合は処理を終了（アノテーションリンクはCOMMENTARYのみ）
+	if (segmentTypeKey !== "COMMENTARY" || !anchorContentId) {
+		return;
+	}
+
+	// domainロジック: 段落番号ごとにグループ化
+	const paragraphNumberToAnnotationSegmentIds =
+		groupAnnotationSegmentsByParagraphNumber(hashToSegmentId, segments);
+	const annotationSegmentsBeforeFirstParagraph =
+		collectAnnotationSegmentsBeforeFirstParagraph(hashToSegmentId, segments);
+
+	if (
+		paragraphNumberToAnnotationSegmentIds.size > 0 ||
+		annotationSegmentsBeforeFirstParagraph
+	) {
 		const annotationSegmentIds = Array.from(
 			paragraphNumberToAnnotationSegmentIds.values(),
 		).flat();
@@ -66,6 +78,7 @@ export async function syncSegmentMetadataAndAnnotationLinks(
 			contentId,
 			paragraphNumberToAnnotationSegmentIds,
 			anchorContentId,
+			annotationSegmentsBeforeFirstParagraph,
 		);
 	}
 }
