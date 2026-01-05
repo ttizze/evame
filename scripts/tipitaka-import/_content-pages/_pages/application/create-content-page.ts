@@ -32,7 +32,7 @@ export async function createContentPage({
 		tipitakaFileMeta.dirSegments[tipitakaFileMeta.dirSegments.length - 1];
 	const { title } = parseDirSegment(lastSegment);
 
-	const mdast = await markdownToMdastWithSegments({
+	const { mdastJson, segments } = await markdownToMdastWithSegments({
 		header: title,
 		markdown: body,
 	});
@@ -46,10 +46,9 @@ export async function createContentPage({
 	await upsertPageAndSegments({
 		pageSlug: slug,
 		userId,
-		title,
-		mdastJson: mdast.mdastJson,
+		mdastJson,
 		sourceLocale: "pi",
-		segments: mdast.segments,
+		segments,
 		segmentTypeId,
 		parentId,
 		order,

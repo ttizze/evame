@@ -27,11 +27,13 @@ export async function processPageHtml(params: {
 		pageSlug: params.pageSlug,
 	});
 
+	const { title, html, ...pageParams } = params;
+
 	logger.debug({ htmlLength: params.html.length }, "Processing page HTML");
 
 	const { mdastJson, segments } = await htmlToMdastWithSegments({
-		header: params.title,
-		html: params.html,
+		header: title,
+		html,
 	});
 
 	logger.debug(
@@ -40,17 +42,9 @@ export async function processPageHtml(params: {
 	);
 
 	const updatedPage = await upsertPageAndSegments({
-		pageSlug: params.pageSlug,
-		userId: params.userId,
-		title: params.title,
+		...pageParams,
 		mdastJson,
-		sourceLocale: params.sourceLocale,
 		segments,
-		segmentTypeId: params.segmentTypeId,
-		parentId: params.parentId,
-		order: params.order,
-		anchorContentId: params.anchorContentId,
-		status: params.status,
 	});
 
 	logger.debug(

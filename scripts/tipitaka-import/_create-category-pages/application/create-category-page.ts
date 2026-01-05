@@ -28,7 +28,6 @@ export async function createCategoryPage({
 	await upsertPageAndSegments({
 		pageSlug: slug,
 		userId,
-		title,
 		mdastJson: mdast.mdastJson,
 		sourceLocale: "pi",
 		segments: mdast.segments,

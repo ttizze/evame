@@ -16,7 +16,6 @@ import { upsertPage } from "./db/mutations.server";
 export async function upsertPageAndSegments(p: {
 	pageSlug: string;
 	userId: string;
-	title: string;
 	mdastJson: JsonValue;
 	sourceLocale: string;
 	segments: SegmentDraft[];
