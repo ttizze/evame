@@ -30,6 +30,7 @@ export async function processPageHtml(params: {
 	const { title, html, ...pageParams } = params;
 
 	logger.debug({ htmlLength: params.html.length }, "Processing page HTML");
+	logger.debug({ html: params.html }, "Processing page HTML raw input");
 
 	const { mdastJson, segments } = await htmlToMdastWithSegments({
 		header: title,

@@ -21,7 +21,7 @@ export async function ensureRootPage(userId: string): Promise<number> {
 		pageSlug: ROOT_SLUG,
 		userId,
 		mdastJson: parsed.mdastJson,
-		sourceLocale: "pi",
+		sourceLocale: "en",
 		segments: parsed.segments,
 		segmentTypeId: null,
 		parentId: null,
