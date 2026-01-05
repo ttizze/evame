@@ -3,7 +3,7 @@ import { ThumbsDown, ThumbsUp } from "lucide-react";
 import Form from "next/form";
 import { useLocale } from "next-intl";
 import { useActionState, useOptimistic } from "react";
-import type { TranslationWithInfo } from "@/app/[locale]/types";
+import type { SegmentTranslation } from "@/lib/schemas/segment-translations";
 import {
 	type VoteTranslationActionResponse,
 	voteTranslationAction,
@@ -11,7 +11,7 @@ import {
 import { VoteButton } from "./vote-button";
 
 interface VoteButtonsProps {
-	translation: TranslationWithInfo;
+	translation: SegmentTranslation;
 	onVoted?: () => void;
 }
 
@@ -69,7 +69,7 @@ export function VoteButtons({ translation, onVoted }: VoteButtonsProps) {
 			success: true,
 			data: {
 				point: translation.point,
-				isUpvote: translation.currentUserVote?.isUpvote,
+				isUpvote: translation.currentUserVoteIsUpvote ?? undefined,
 			},
 		},
 	);
@@ -80,7 +80,7 @@ export function VoteButtons({ translation, onVoted }: VoteButtonsProps) {
 			? { point: serverState.data.point, isUpvote: serverState.data.isUpvote }
 			: {
 					point: translation.point,
-					isUpvote: translation.currentUserVote?.isUpvote,
+					isUpvote: translation.currentUserVoteIsUpvote ?? undefined,
 				};
 
 	// useOptimisticで楽観的更新を管理

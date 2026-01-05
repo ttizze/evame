@@ -3,7 +3,6 @@ import { EllipsisVertical, Trash2 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useActionState } from "react";
 import { sanitizeAndParseText } from "@/app/[locale]/_utils/sanitize-and-parse-text.client";
-import type { TranslationWithInfo } from "@/app/[locale]/types";
 import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,12 +13,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
 import { authClient } from "@/lib/auth-client";
+import type { SegmentTranslation } from "@/lib/schemas/segment-translations";
 import { useHydrated } from "@/lib/use-hydrated";
 import { VoteButtons } from "../vote-buttons/client";
 import { deleteTranslationAction } from "./action";
 
 interface TranslationItemProps {
-	translation: TranslationWithInfo;
+	translation: SegmentTranslation;
 	onVoted?: () => void;
 	onDeleted?: () => void;
 }
@@ -45,7 +45,7 @@ export function TranslationListItem({
 
 	const { data: session } = authClient.useSession();
 	const currentUser = hydrated ? session?.user : undefined;
-	const isOwner = currentUser?.handle === translation.user.handle;
+	const isOwner = currentUser?.handle === translation.userHandle;
 
 	return (
 		<span className="pl-4 mt-1 block">
@@ -87,10 +87,10 @@ export function TranslationListItem({
 			<span className="flex items-center justify-end">
 				<Link
 					className="no-underline! mr-2 flex  items-center"
-					href={`/user/${translation.user.handle}`}
+					href={`/user/${translation.userHandle}`}
 				>
 					<span className="text-sm text-gray-500 text-right flex justify-end items-center  ">
-						by: {translation.user.name}
+						by: {translation.userName}
 					</span>
 				</Link>
 				<VoteButtons

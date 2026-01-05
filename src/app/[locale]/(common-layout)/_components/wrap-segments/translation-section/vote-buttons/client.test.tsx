@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 // VoteButtons.test.tsx
 import React from "react";
 import { vi } from "vitest";
-import type { TranslationWithInfo } from "@/app/[locale]/types";
+import type { SegmentTranslation } from "@/lib/schemas/segment-translations";
 import { VoteButtons } from "./client";
 
 vi.mock("next-intl", () => ({
@@ -11,15 +11,27 @@ vi.mock("next-intl", () => ({
 
 const dummyTranslationUpvote = {
 	id: 1,
+	segmentId: 1,
+	locale: "en",
+	text: "hello",
 	point: 10,
-	currentUserVote: { isUpvote: true },
-} as TranslationWithInfo;
+	createdAt: "2024-01-01T00:00:00.000Z",
+	userName: "User",
+	userHandle: "user",
+	currentUserVoteIsUpvote: true,
+} as SegmentTranslation;
 
 const dummyTranslationDownvote = {
 	id: 2,
+	segmentId: 1,
+	locale: "en",
+	text: "world",
 	point: 5,
-	currentUserVote: { isUpvote: false },
-} as TranslationWithInfo;
+	createdAt: "2024-01-01T00:00:00.000Z",
+	userName: "User",
+	userHandle: "user",
+	currentUserVoteIsUpvote: false,
+} as SegmentTranslation;
 
 vi.mock("next/form", () => ({
 	__esModule: true,
