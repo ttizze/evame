@@ -13,6 +13,7 @@ export const X = Node.create({
 				default: null,
 				parseHTML: (el) => el.getAttribute("data-x-id"),
 				renderHTML: (attrs) => ({
+					"data-x-id": attrs.xId,
 					href: `https://x.com/i/web/status/${attrs.xId}`,
 					target: "_blank",
 					rel: "noopener noreferrer",
@@ -25,12 +26,10 @@ export const X = Node.create({
 	parseHTML() {
 		return [
 			{
-				tag: "a[href]",
+				tag: "a[data-x-id]",
 				priority: 1000, // ← Link より先に走るよう念押し
 				getAttrs: (dom) => {
-					const href = (dom as HTMLAnchorElement).href;
-
-					const id = href.match(/status\/(\d+)/)?.[1];
+					const id = (dom as HTMLAnchorElement).getAttribute("data-x-id");
 					return id ? { xId: id } : false;
 				},
 			},
