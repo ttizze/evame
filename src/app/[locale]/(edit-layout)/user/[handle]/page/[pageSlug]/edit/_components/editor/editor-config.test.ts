@@ -1,5 +1,38 @@
+import { generateJSON } from "@tiptap/core";
 import { describe, expect, it, vi } from "vitest";
 import { configureEditor } from "./editor-config";
+
+vi.mock("react-tweet", () => ({
+	Tweet: () => null,
+}));
+
+type ProseMirrorNode = {
+	type: string;
+	content?: ProseMirrorNode[];
+	text?: string;
+};
+
+function findFirstBlockquoteChildTypes(node: ProseMirrorNode): string[] | null {
+	if (node.type === "blockquote" && node.content) {
+		return node.content.map((child) => child.type);
+	}
+	if (!node.content) return null;
+	for (const child of node.content) {
+		const found = findFirstBlockquoteChildTypes(child);
+		if (found) return found;
+	}
+	return null;
+}
+
+function findFirstXNode(node: ProseMirrorNode): ProseMirrorNode | null {
+	if (node.type === "x") return node;
+	if (!node.content) return null;
+	for (const child of node.content) {
+		const found = findFirstXNode(child);
+		if (found) return found;
+	}
+	return null;
+}
 
 describe("editor-config", () => {
 	describe("transformPastedHTML", () => {
@@ -26,6 +59,23 @@ describe("editor-config", () => {
 		it("keeps single <br> inside paragraph", () => {
 			expect(transform("foo<br>bar")).toBe("<p>foo<br>bar</p>");
 		});
+	});
+
+	it("does not split blockquote when it contains normal links", () => {
+		const html =
+			'<blockquote><p>瞑想、英: <a href="https://example.com">meditation</a>、英: <a href="https://example.com/2">contemplation</a></p></blockquote>';
+		const { extensions } = configureEditor("", "");
+		const doc = generateJSON(html, extensions) as ProseMirrorNode;
+		const childTypes = findFirstBlockquoteChildTypes(doc);
+		expect(childTypes).toEqual(["paragraph"]);
+	});
+
+	it("parses x node only from data-x-id link", () => {
+		const html =
+			'<blockquote><p><a data-x-id="1234567890" href="https://x.com/i/web/status/1234567890">https://x.com/i/web/status/1234567890</a></p></blockquote>';
+		const { extensions } = configureEditor("", "");
+		const doc = generateJSON(html, extensions) as ProseMirrorNode;
+		expect(findFirstXNode(doc)).not.toBeNull();
 	});
 
 	describe("FileHandler onPaste", () => {
