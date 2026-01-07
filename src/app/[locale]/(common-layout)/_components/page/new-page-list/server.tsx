@@ -4,6 +4,7 @@ import { createLoader, parseAsInteger } from "nuqs/server";
 import { fetchPaginatedNewPageLists } from "@/app/[locale]/_db/page-list.server";
 import { PageListContainer } from "@/app/[locale]/(common-layout)/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
+import { PageLikeListClient } from "../page-like-button/like-list.client";
 import { PageList } from "../page-list.server";
 
 const searchParamsSchema = {
@@ -33,6 +34,7 @@ export default async function NewPageList({
 
 	return (
 		<PageListContainer icon={SparklesIcon} title="New Pages">
+			<PageLikeListClient pageIds={pageForLists.map((p) => p.id)} />
 			{pageForLists.map((PageForList, index) => (
 				<PageList
 					index={index}

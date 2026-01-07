@@ -154,6 +154,7 @@ function toPageForList(
 			segments: segment ? [segment] : [],
 		},
 		tagPages: tags.map((tag) => ({ tag })),
+		likeCount: row.likeCount,
 		_count: {
 			pageComments: row.commentCount,
 			children: row.childrenCount,
@@ -212,6 +213,7 @@ type PageRowWithRelations = {
 	// counts
 	commentCount: number;
 	childrenCount: number;
+	likeCount: number;
 };
 
 /**
@@ -284,7 +286,7 @@ function buildPageListQuery(locale: string) {
 						.as("trans"),
 				(join) => join.onRef("trans.segmentId", "=", "seg.id"),
 			)
-			.select([
+			.select((eb) => [
 				"pages.id",
 				"pages.slug",
 				"pages.createdAt",
@@ -331,14 +333,23 @@ function buildPageListQuery(locale: string) {
 				"trans.transUserIsAi",
 				"trans.transUserPlan",
 				// counts (サブクエリ)
-				sql<number>`(
-				SELECT COUNT(*)::int FROM page_comments 
-				WHERE page_id = pages.id AND is_deleted = false
-			)`.as("commentCount"),
-				sql<number>`(
-				SELECT COUNT(*)::int FROM pages AS c 
-				WHERE c.parent_id = pages.id AND c.status = 'PUBLIC'
-			)`.as("childrenCount"),
+				eb
+					.selectFrom("pageComments")
+					.select(eb.fn.countAll().as("count"))
+					.whereRef("pageComments.pageId", "=", "pages.id")
+					.where("pageComments.isDeleted", "=", false)
+					.as("commentCount"),
+				eb
+					.selectFrom("pages as c")
+					.select(eb.fn.countAll().as("count"))
+					.whereRef("c.parentId", "=", "pages.id")
+					.where("c.status", "=", "PUBLIC")
+					.as("childrenCount"),
+				eb
+					.selectFrom("likePages")
+					.select(eb.fn.countAll().as("count"))
+					.whereRef("likePages.pageId", "=", "pages.id")
+					.as("likeCount"),
 			])
 	);
 }
@@ -497,6 +508,7 @@ export async function fetchChildPages(
 			sourceLocale: row.sourceLocale,
 			parentId: row.parentId,
 			order: row.order,
+			likeCount: row.likeCount,
 			user: {
 				id: row.userId,
 				name: row.userName,

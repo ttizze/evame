@@ -3,7 +3,6 @@
  * Kysely ORM版 - シンプル化
  */
 
-import { sql } from "kysely";
 import { db } from "@/db";
 import { serverLogger } from "@/lib/logger.server";
 
@@ -134,15 +133,24 @@ async function fetchTags(pageId: number) {
 async function fetchCounts(pageId: number) {
 	const result = await db
 		.selectFrom("pages")
-		.select([
-			sql<number>`(
-				SELECT COUNT(*)::int FROM page_comments 
-				WHERE page_id = ${pageId} AND is_deleted = false
-			)`.as("pageComments"),
-			sql<number>`(
-				SELECT COUNT(*)::int FROM pages 
-				WHERE parent_id = ${pageId} AND status = 'PUBLIC'
-			)`.as("children"),
+		.select((eb) => [
+			eb
+				.selectFrom("pageComments")
+				.select(eb.fn.countAll<number>().as("count"))
+				.whereRef("pageComments.pageId", "=", "pages.id")
+				.where("pageComments.isDeleted", "=", false)
+				.as("pageComments"),
+			eb
+				.selectFrom("pages as c")
+				.select(eb.fn.countAll<number>().as("count"))
+				.whereRef("c.parentId", "=", "pages.id")
+				.where("c.status", "=", "PUBLIC")
+				.as("children"),
+			eb
+				.selectFrom("likePages")
+				.select(eb.fn.countAll<number>().as("count"))
+				.whereRef("likePages.pageId", "=", "pages.id")
+				.as("likeCount"),
 		])
 		.where("pages.id", "=", pageId)
 		.executeTakeFirst();
@@ -150,6 +158,7 @@ async function fetchCounts(pageId: number) {
 	return {
 		pageComments: result?.pageComments ?? 0,
 		children: result?.children ?? 0,
+		likeCount: result?.likeCount ?? 0,
 	};
 }
 
@@ -494,10 +503,14 @@ export async function fetchPageDetail(slug: string, locale: string) {
 		sourceLocale: page.sourceLocale,
 		parentId: page.parentId,
 		order: page.order,
+		likeCount: counts.likeCount,
 		mdastJson: page.mdastJson,
 		user: page.user,
 		tagPages: tags,
-		_count: counts,
+		_count: {
+			pageComments: counts.pageComments,
+			children: counts.children,
+		},
 		content: {
 			segments: segmentsWithAnnotations,
 		},

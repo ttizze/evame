@@ -1,63 +1,84 @@
 "use client";
 
 import { Heart, Loader2 } from "lucide-react";
-import { useActionState, useEffect } from "react";
+import { useActionState } from "react";
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { type PageLikeButtonState, togglePageLikeAction } from "./action";
+import { computeNextLikeState } from "./domain/like-state";
+import {
+	buildLikeStateKey,
+	fetchLikeStates,
+	type LikeState,
+} from "./service/like-api";
 
 type PageLikeButtonClientProps = {
 	pageId: number;
 	showCount?: boolean;
 	className?: string;
+	initialLikeCount: number;
+	initialLiked?: boolean;
 };
 
 export function PageLikeButtonClient({
 	pageId,
 	showCount,
 	className = "",
+	initialLikeCount,
+	initialLiked,
 }: PageLikeButtonClientProps) {
-	const fetcher = (url: string) =>
-		fetch(url, { credentials: "include" }).then((r) => {
-			if (!r.ok) throw new Error("failed");
-			return r.json() as Promise<{ liked: boolean; likeCount: number }>;
-		});
-	const { data, mutate, isLoading } = useSWR(
-		`/api/page-likes/${pageId}/state`,
-		fetcher,
+	const fallbackData = {
+		liked: initialLiked ?? false,
+		likeCount: initialLikeCount,
+	};
+
+	const swrKey = buildLikeStateKey(pageId);
+	const { data, mutate, isLoading } = useSWR<LikeState>(
+		swrKey,
+		async (url: string) => {
+			const res = await fetchLikeStates(url);
+			//pageIdでlikeStateを取り出す
+			const state = res.states[String(pageId)];
+			return state ?? fallbackData;
+		},
 		{
+			fallbackData,
 			revalidateOnFocus: false,
+			revalidateIfStale: false,
+			revalidateOnMount: false,
 		},
 	);
 
 	// Server action returns latest liked/count; prefer it when available
-	const [actionState, formAction, isPending] = useActionState<
+	const [_, formAction, isPending] = useActionState<
 		PageLikeButtonState,
 		FormData
-	>(togglePageLikeAction, { success: false });
-
-	type LikeState = { liked: boolean; likeCount: number };
+	>(
+		async (prevState, formData) => {
+			const result = await togglePageLikeAction(prevState, formData);
+			if (result.success) {
+				void mutate(result.data, { revalidate: false });
+			}
+			return result;
+		},
+		{ success: false },
+	);
 
 	const handleSubmit = (formData: FormData) => {
 		// Guard until initial state is loaded
 		if (!data) return;
+		if (data.liked === undefined) {
+			formAction(formData);
+			return;
+		}
 
 		// Compute and broadcast optimistic next state for all instances
-		const next: LikeState = {
-			liked: !data.liked,
-			likeCount: data.likeCount + (data.liked ? -1 : 1),
-		};
+		const next = computeNextLikeState(data);
 		mutate(next, { revalidate: false });
 
 		// Trigger server action
 		formAction(formData);
 	};
-
-	useEffect(() => {
-		if (actionState.success) {
-			void mutate();
-		}
-	}, [actionState.success, mutate]);
 
 	return (
 		<div className="flex items-center gap-2">

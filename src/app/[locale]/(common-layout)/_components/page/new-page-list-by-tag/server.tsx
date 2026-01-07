@@ -1,6 +1,7 @@
 import { SparklesIcon } from "lucide-react";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger } from "nuqs/server";
+import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list.client";
 import { PageList } from "@/app/[locale]/(common-layout)/_components/page/page-list.server";
 import { PageListContainer } from "@/app/[locale]/(common-layout)/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
@@ -47,6 +48,7 @@ export default async function NewPageListByTag({
 
 	return (
 		<PageListContainer icon={SparklesIcon} title={`${tagName}`}>
+			<PageLikeListClient pageIds={pageForLists.map((p) => p.id)} />
 			{pageForLists.map((PageForList, index) => (
 				<PageList
 					index={index}
