@@ -187,11 +187,42 @@ describe("editPageStatusAction", () => {
 			const formData = new FormData();
 			formData.append("pageId", page.id.toString());
 			formData.append("status", "PUBLIC");
+			formData.append("targetLocales", "");
 
 			const result = await editPageStatusAction({ success: false }, formData);
 
 			expect(result.success).toBe(true);
-			expect(result.success && result.data).toBeUndefined();
+			expect(enqueuePageTranslation).toHaveBeenCalledWith({
+				aiModel: "gemini-2.5-flash-lite",
+				currentUserId: user.id,
+				pageId: page.id,
+				targetLocales: ["en", "zh"],
+			});
+		});
+
+		it("targetLocalesが未指定の場合、デフォルトロケールで翻訳ジョブを作成する", async () => {
+			const user = await createUser({ handle: "testuser" });
+			const page = await createPage({
+				userId: user.id,
+				slug: "test-page",
+				status: "DRAFT",
+			});
+			mockCurrentUser(user);
+			vi.mocked(enqueuePageTranslation).mockResolvedValue([]);
+
+			const formData = new FormData();
+			formData.append("pageId", page.id.toString());
+			formData.append("status", "PUBLIC");
+
+			const result = await editPageStatusAction({ success: false }, formData);
+
+			expect(result.success).toBe(true);
+			expect(enqueuePageTranslation).toHaveBeenCalledWith({
+				aiModel: "gemini-2.5-flash-lite",
+				currentUserId: user.id,
+				pageId: page.id,
+				targetLocales: ["en", "zh"],
+			});
 		});
 	});
 });

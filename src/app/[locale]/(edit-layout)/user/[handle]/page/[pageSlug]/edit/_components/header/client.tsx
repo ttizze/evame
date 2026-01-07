@@ -144,7 +144,7 @@ export function EditHeader({
 	}, [isPending, isPublic]);
 
 	const [locales, setLocales] = useState<string[]>(
-		targetLocales ?? ["en", "zh"],
+		targetLocales.length > 0 ? targetLocales : ["en", "zh"],
 	);
 	// Determine selectable locale limit (premium users can select up to 4)
 	const maxSelectableLocales =
