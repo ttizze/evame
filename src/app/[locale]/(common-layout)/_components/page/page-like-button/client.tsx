@@ -1,7 +1,7 @@
 "use client";
 
 import { Heart, Loader2 } from "lucide-react";
-import { useActionState, useEffect } from "react";
+import { useActionState } from "react";
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { type PageLikeButtonState, togglePageLikeAction } from "./action";
@@ -50,11 +50,19 @@ export function PageLikeButtonClient({
 	);
 
 	// Server action returns latest liked/count; prefer it when available
-	const [actionState, formAction, isPending] = useActionState<
+	const [_, formAction, isPending] = useActionState<
 		PageLikeButtonState,
 		FormData
-	>(togglePageLikeAction, { success: false });
-	const actionData = actionState.success ? actionState.data : undefined;
+	>(
+		async (prevState, formData) => {
+			const result = await togglePageLikeAction(prevState, formData);
+			if (result.success) {
+				void mutate(result.data, { revalidate: false });
+			}
+			return result;
+		},
+		{ success: false },
+	);
 
 	const handleSubmit = (formData: FormData) => {
 		// Guard until initial state is loaded
@@ -71,16 +79,6 @@ export function PageLikeButtonClient({
 		// Trigger server action
 		formAction(formData);
 	};
-
-	useEffect(() => {
-		if (actionState.success) {
-			if (actionData) {
-				void mutate(actionData, { revalidate: false });
-				return;
-			}
-			void mutate();
-		}
-	}, [actionData, actionState.success, mutate]);
 
 	return (
 		<div className="flex items-center gap-2">
