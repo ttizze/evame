@@ -19,7 +19,7 @@ export function HelpPopover({ title, description }: HelpPopoverProps) {
 			<PopoverTrigger asChild>
 				<CircleHelp className="h-6 w-6 cursor-pointer" />
 			</PopoverTrigger>
-			<PopoverContent align="end" className="w-64 rounded-xl p-3 text-sm">
+			<PopoverContent align="center" className="w-64 rounded-xl p-3 text-sm">
 				<p className="font-semibold text-foreground">{title}</p>
 				<div className="mt-1 text-muted-foreground">{description}</div>
 			</PopoverContent>

@@ -49,11 +49,11 @@ export async function editPageStatusAction(
 	await updatePageStatus(pageId, status as PageStatus);
 
 	let translationJobs: TranslationJobForToast[] | undefined;
-	if (status === "PUBLIC" && targetLocales.length > 0) {
+	if (status === "PUBLIC") {
 		translationJobs = await enqueuePageTranslation({
 			currentUserId: currentUser.id,
 			pageId,
-			targetLocales,
+			targetLocales: targetLocales.length > 0 ? targetLocales : ["en", "zh"],
 			aiModel: "gemini-2.5-flash-lite",
 		});
 	}
