@@ -16,6 +16,7 @@ export type PageForList = Omit<PageDetail, "mdastJson" | "content"> & {
 	content: {
 		segments: SegmentForList[];
 	};
+	likeCount: number;
 };
 
 export type PageForTitle = Omit<PageForList, "tagPages" | "_count"> & {

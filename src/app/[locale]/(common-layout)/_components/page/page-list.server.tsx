@@ -104,7 +104,10 @@ export async function PageList({
 				<div className="flex items-center gap-2 justify-end">
 					<EyeIcon className="w-5 h-5" />
 					<span className="text-muted-foreground">{viewCount}</span>
-					<PageLikeButton pageId={PageForList.id} />
+					<PageLikeButton
+						initialLikeCount={PageForList.likeCount}
+						pageId={PageForList.id}
+					/>
 					<PageCommentButton
 						commentCount={PageForList._count?.pageComments ?? 0}
 						pageOwnerHandle={PageForList.user.handle}

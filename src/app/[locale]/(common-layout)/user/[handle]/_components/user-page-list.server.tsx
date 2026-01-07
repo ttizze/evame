@@ -4,6 +4,7 @@ import {
 	fetchPaginatedNewPageLists,
 	fetchPaginatedPopularPageLists,
 } from "@/app/[locale]/_db/page-list.server";
+import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list.client";
 import { PageList } from "@/app/[locale]/(common-layout)/_components/page/page-list.server";
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
 import { getCurrentUser } from "@/lib/auth-server";
@@ -53,6 +54,7 @@ export async function PageListServer({
 
 	return (
 		<>
+			<PageLikeListClient pageIds={pageForLists.map((p) => p.id)} />
 			<div className="">
 				{pageForLists.map((PageForList) => (
 					<PageList

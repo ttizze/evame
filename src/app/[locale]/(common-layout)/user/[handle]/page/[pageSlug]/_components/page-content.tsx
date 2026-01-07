@@ -55,7 +55,12 @@ export async function PageContent({ pageData, locale }: PageContentProps) {
 					initialCount={pageViewCount}
 					pageId={pageDetail.id}
 				/>
-				<PageLikeButtonClient className="" pageId={pageDetail.id} showCount />
+				<PageLikeButtonClient
+					className=""
+					initialLikeCount={pageDetail.likeCount}
+					pageId={pageDetail.id}
+					showCount
+				/>
 				<MessageCircle className="w-5 h-5" strokeWidth={1.5} />
 				<span className="text-muted-foreground">
 					{pageDetail._count?.pageComments || 0}
@@ -67,6 +72,7 @@ export async function PageContent({ pageData, locale }: PageContentProps) {
 				likeButton={
 					<PageLikeButtonClient
 						className="w-10 h-10 border rounded-full"
+						initialLikeCount={pageDetail.likeCount}
 						pageId={pageDetail.id}
 						showCount={false}
 					/>
