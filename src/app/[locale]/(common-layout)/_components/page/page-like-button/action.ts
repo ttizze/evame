@@ -4,21 +4,14 @@ import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
 import { togglePageLike } from "./db/mutations.server";
+import type { LikeState } from "./service/like-api";
 
 // フォームデータ用のスキーマ
 const schema = z.object({
 	pageId: z.coerce.number(),
 });
 
-export type PageLikeButtonState = ActionResponse<
-	{
-		liked: boolean;
-		likeCount: number;
-	},
-	{
-		pageId: number;
-	}
->;
+export type PageLikeButtonState = ActionResponse<LikeState, { pageId: number }>;
 
 export async function togglePageLikeAction(
 	_previousState: PageLikeButtonState,
