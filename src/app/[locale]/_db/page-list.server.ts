@@ -9,7 +9,7 @@
 import { sql } from "kysely";
 import { db } from "@/db";
 import type { PageStatus } from "@/db/types";
-import type { PageForList, PageForTitle, SegmentForList } from "../types";
+import type { PageForList, PageForTree, SegmentForList } from "../types";
 
 // ============================================
 // 内部型定義
@@ -88,77 +88,56 @@ function toPageForList(
 	row: PageRowWithRelations,
 	tags: { id: number; name: string }[],
 ): PageForList {
-	const segment: SegmentForList | null = row.segmentId
-		? {
-				id: row.segmentId,
-				contentId: row.id,
-				number: 0,
-				text: row.segmentText!,
-				textAndOccurrenceHash: row.segmentHash!,
-				createdAt: row.segmentCreatedAt!,
-				segmentTypeId: row.segmentTypeId!,
-				segmentType: {
-					key: row.segmentTypeKey!,
-					label: row.segmentTypeLabel!,
-				},
-				segmentTranslation: row.translationId
-					? {
-							id: row.translationId,
-							segmentId: row.segmentId,
-							userId: row.translationUserId!,
-							locale: row.translationLocale!,
-							text: row.translationText!,
-							point: row.translationPoint!,
-							createdAt: row.translationCreatedAt!,
-							user: {
-								id: row.translationUserId!,
-								name: row.transUserName!,
-								handle: row.transUserHandle!,
-								image: row.transUserImage!,
-								createdAt: row.transUserCreatedAt!,
-								updatedAt: row.transUserUpdatedAt!,
-								profile: row.transUserProfile!,
-								twitterHandle: row.transUserTwitterHandle!,
-								totalPoints: row.transUserTotalPoints!,
-								isAi: row.transUserIsAi!,
-								plan: row.transUserPlan!,
-							},
-						}
-					: null,
-			}
-		: null;
-
+	const segment: SegmentForList = {
+		id: row.segmentId,
+		contentId: row.id,
+		number: 0,
+		text: row.segmentText,
+		textAndOccurrenceHash: row.segmentHash,
+		createdAt: row.segmentCreatedAt,
+		segmentTypeId: row.segmentTypeId,
+		segmentTypeKey: row.segmentTypeKey,
+		segmentTypeLabel: row.segmentTypeLabel,
+		translationId: row.translationId ?? null,
+		translationText: row.translationText ?? null,
+	};
 	return {
 		id: row.id,
 		slug: row.slug,
 		createdAt: row.createdAt,
-		updatedAt: row.updatedAt,
 		status: row.status,
-		sourceLocale: row.sourceLocale,
+		userHandle: row.userHandle,
+		userName: row.userName,
+		userImage: row.userImage,
+		segments: [segment],
+		tags: tags.map((tag) => ({ id: tag.id, name: tag.name })),
+		likeCount: row.likeCount,
+		pageCommentsCount: row.commentCount,
+	};
+}
+
+function toPageForTree(row: PageRowWithRelations): PageForTree {
+	const segment: SegmentForList = {
+		id: row.segmentId,
+		contentId: row.id,
+		number: 0,
+		text: row.segmentText,
+		textAndOccurrenceHash: row.segmentHash,
+		createdAt: row.segmentCreatedAt,
+		segmentTypeId: row.segmentTypeId,
+		segmentTypeKey: row.segmentTypeKey,
+		segmentTypeLabel: row.segmentTypeLabel,
+		translationId: row.translationId ?? null,
+		translationText: row.translationText ?? null,
+	};
+	return {
+		id: row.id,
+		slug: row.slug,
 		parentId: row.parentId,
 		order: row.order,
-		user: {
-			id: row.userId,
-			name: row.userName,
-			handle: row.userHandle,
-			image: row.userImage,
-			createdAt: row.userCreatedAt,
-			updatedAt: row.userUpdatedAt,
-			profile: row.userProfile,
-			twitterHandle: row.userTwitterHandle,
-			totalPoints: row.userTotalPoints,
-			isAi: row.userIsAi,
-			plan: row.userPlan,
-		},
-		content: {
-			segments: segment ? [segment] : [],
-		},
-		tagPages: tags.map((tag) => ({ tag })),
-		likeCount: row.likeCount,
-		_count: {
-			pageComments: row.commentCount,
-			children: row.childrenCount,
-		},
+		userHandle: row.userHandle,
+		segments: [segment],
+		childrenCount: row.childrenCount,
 	};
 }
 
@@ -184,32 +163,16 @@ type PageRowWithRelations = {
 	userTotalPoints: number;
 	userIsAi: boolean;
 	userPlan: string;
-	// segment (nullable)
-	segmentId: number | null;
-	segmentText: string | null;
-	segmentHash: string | null;
-	segmentCreatedAt: Date | null;
-	segmentTypeId: number | null;
-	segmentTypeKey: string | null;
-	segmentTypeLabel: string | null;
+	segmentId: number;
+	segmentText: string;
+	segmentHash: string;
+	segmentCreatedAt: Date;
+	segmentTypeId: number;
+	segmentTypeKey: string;
+	segmentTypeLabel: string;
 	// translation (nullable)
 	translationId: number | null;
-	translationUserId: string | null;
-	translationLocale: string | null;
 	translationText: string | null;
-	translationPoint: number | null;
-	translationCreatedAt: Date | null;
-	// translation user (nullable)
-	transUserName: string | null;
-	transUserHandle: string | null;
-	transUserImage: string | null;
-	transUserCreatedAt: Date | null;
-	transUserUpdatedAt: Date | null;
-	transUserProfile: string | null;
-	transUserTwitterHandle: string | null;
-	transUserTotalPoints: number | null;
-	transUserIsAi: boolean | null;
-	transUserPlan: string | null;
 	// counts
 	commentCount: number;
 	childrenCount: number;
@@ -445,91 +408,54 @@ export async function fetchPaginatedPopularPageLists({
 	};
 }
 
+export type PageForTitleTree = PageForTree & { children: PageForTitleTree[] };
+
 /**
- * 子ページを取得
+ * 子ページツリーを取得
  */
-export async function fetchChildPages(
+export async function fetchChildPagesTree(
 	parentId: number,
 	locale: string,
-): Promise<PageForTitle[]> {
-	const rows = (await buildPageListQuery(locale)
-		.where("pages.status", "=", "PUBLIC")
-		.where("pages.parentId", "=", parentId)
-		.orderBy("pages.order", "asc")
-		.execute()) as PageRowWithRelations[];
+): Promise<PageForTitleTree[]> {
+	const childrenByParent = new Map<number, PageForTree[]>();
+	const seen = new Set<number>();
+	let frontier: number[] = [parentId];
 
-	return rows.map((row) => {
-		const segment: SegmentForList | null = row.segmentId
-			? {
-					id: row.segmentId,
-					contentId: row.id,
-					number: 0,
-					text: row.segmentText!,
-					textAndOccurrenceHash: row.segmentHash!,
-					createdAt: row.segmentCreatedAt!,
-					segmentTypeId: row.segmentTypeId!,
-					segmentType: {
-						key: row.segmentTypeKey!,
-						label: row.segmentTypeLabel!,
-					},
-					segmentTranslation: row.translationId
-						? {
-								id: row.translationId,
-								segmentId: row.segmentId,
-								userId: row.translationUserId!,
-								locale: row.translationLocale!,
-								text: row.translationText!,
-								point: row.translationPoint!,
-								createdAt: row.translationCreatedAt!,
-								user: {
-									id: row.translationUserId!,
-									name: row.transUserName!,
-									handle: row.transUserHandle!,
-									image: row.transUserImage!,
-									createdAt: row.transUserCreatedAt!,
-									updatedAt: row.transUserUpdatedAt!,
-									profile: row.transUserProfile!,
-									twitterHandle: row.transUserTwitterHandle!,
-									totalPoints: row.transUserTotalPoints!,
-									isAi: row.transUserIsAi!,
-									plan: row.transUserPlan!,
-								},
-							}
-						: null,
-				}
-			: null;
+	while (frontier.length > 0) {
+		const rows = (await buildPageListQuery(locale)
+			.where("pages.status", "=", "PUBLIC")
+			.where("pages.parentId", "in", frontier)
+			.orderBy("pages.order", "asc")
+			.execute()) as PageRowWithRelations[];
 
-		return {
-			id: row.id,
-			slug: row.slug,
-			createdAt: row.createdAt,
-			updatedAt: row.updatedAt,
-			status: row.status,
-			sourceLocale: row.sourceLocale,
-			parentId: row.parentId,
-			order: row.order,
-			likeCount: row.likeCount,
-			user: {
-				id: row.userId,
-				name: row.userName,
-				handle: row.userHandle,
-				image: row.userImage,
-				createdAt: row.userCreatedAt,
-				updatedAt: row.userUpdatedAt,
-				profile: row.userProfile,
-				twitterHandle: row.userTwitterHandle,
-				totalPoints: row.userTotalPoints,
-				isAi: row.userIsAi,
-				plan: row.userPlan,
-			},
-			content: {
-				segments: segment ? [segment] : [],
-			},
-			_count: {
-				children: row.childrenCount,
-			},
-		};
-	});
+		if (rows.length === 0) break;
+
+		const pages = rows.map(toPageForTree);
+		for (const page of pages) {
+			if (page.parentId === null) continue;
+			const list = childrenByParent.get(page.parentId) ?? [];
+			list.push(page);
+			childrenByParent.set(page.parentId, list);
+		}
+
+		const next: number[] = [];
+		for (const page of pages) {
+			if (seen.has(page.id)) continue;
+			seen.add(page.id);
+			next.push(page.id);
+		}
+		frontier = next;
+	}
+
+	const buildTree = (id: number): PageForTitleTree[] => {
+		const children = childrenByParent.get(id) ?? [];
+		return children.map((child) => ({
+			...child,
+			children: buildTree(child.id),
+		}));
+	};
+
+	return buildTree(parentId);
 }
 
 /**

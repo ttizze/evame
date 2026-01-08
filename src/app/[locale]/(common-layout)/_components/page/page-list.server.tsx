@@ -25,17 +25,17 @@ export async function PageList({
 	locale,
 }: PageListProps) {
 	const { props } = getImageProps({
-		src: PageForList.user.image,
+		src: PageForList.userImage,
 		alt: "",
 		width: 40,
 		height: 40,
 	});
 	// Get the title segment (which should be the first segment)
-	const titleSegment = PageForList.content.segments.find((s) => s.number === 0);
+	const titleSegment = PageForList.segments.find((s) => s.number === 0);
 	const _ogpImageUrl =
 		`${BASE_URL}/api/og?locale=${locale}` + `&slug=${PageForList.slug}`;
-	const pageLink = `/user/${PageForList.user.handle}/page/${PageForList.slug}`;
-	const userLink = `/user/${PageForList.user.handle}`;
+	const pageLink = `/user/${PageForList.userHandle}/page/${PageForList.slug}`;
+	const userLink = `/user/${PageForList.userHandle}`;
 	const viewCount = await fetchPageViewCount(PageForList.id);
 	return (
 		<article
@@ -80,7 +80,7 @@ export async function PageList({
 				</div>
 
 				{/* ─ row-2: タグリスト ─ */}
-				<PageTagList tag={PageForList.tagPages.map((t) => t.tag)} />
+				<PageTagList tag={PageForList.tags} />
 
 				{/* ─ row-3: ユーザ情報 + ボタン ─ */}
 				<div className="flex items-center gap-2">
@@ -88,11 +88,11 @@ export async function PageList({
 						<Avatar className="w-5 h-5 shrink-0">
 							<AvatarImage {...props} />
 							<AvatarFallback>
-								{PageForList.user.handle.charAt(0).toUpperCase()}
+								{PageForList.userHandle.charAt(0).toUpperCase()}
 							</AvatarFallback>
 						</Avatar>
 						<span className="text-xs text-gray-600 truncate">
-							{PageForList.user.name}
+							{PageForList.userName}
 						</span>
 					</Link>
 					<time className="text-xs text-muted-foreground whitespace-nowrap">
@@ -109,8 +109,8 @@ export async function PageList({
 						pageId={PageForList.id}
 					/>
 					<PageCommentButton
-						commentCount={PageForList._count?.pageComments ?? 0}
-						pageOwnerHandle={PageForList.user.handle}
+						commentCount={PageForList.pageCommentsCount}
+						pageOwnerHandle={PageForList.userHandle}
 						pageSlug={PageForList.slug}
 						showCount
 					/>

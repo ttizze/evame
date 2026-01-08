@@ -1,6 +1,6 @@
 import { createElement, Fragment, type JSX, type ReactNode } from "react";
 import { sanitizeAndParseText } from "@/app/[locale]/_utils/sanitize-and-parse-text.server";
-import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
+import type { Segment, SegmentForDetail } from "@/app/[locale]/types";
 
 /**
  * セグメント1つを「普通の props コンポーネント」として描画する（高階関数にしない）。
@@ -9,6 +9,15 @@ import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
  * - `interactive=true` のときだけ訳文を `data-segment-id` 付きボタンにする
  *   （`TranslationFormOnClick` がクリックでフォームを出す）
  */
+type SegmentElementProps = {
+	tagName?: keyof JSX.IntrinsicElements;
+	segment: Segment;
+	interactive?: boolean;
+	className?: string;
+	tagProps?: Record<string, unknown>;
+	children?: ReactNode;
+};
+
 export function SegmentElement({
 	tagName,
 	segment,
@@ -16,16 +25,18 @@ export function SegmentElement({
 	className,
 	tagProps,
 	children,
-}: {
-	tagName?: keyof JSX.IntrinsicElements;
-	segment: SegmentForDetail | SegmentForList;
-	interactive?: boolean;
-	className?: string;
-	tagProps?: Record<string, unknown>;
-	children?: ReactNode;
-}) {
+}: SegmentElementProps) {
 	const TagName = tagName ?? "span";
-	const hasTr = segment.segmentTranslation !== null;
+	const translation =
+		"segmentTranslation" in segment
+			? segment.segmentTranslation
+			: segment.translationId !== null
+				? {
+						id: segment.translationId,
+						text: segment.translationText,
+					}
+				: null;
+	const hasTr = translation !== null;
 	const baseClassName =
 		`${(tagProps?.className as string | undefined) ?? ""} ${className ?? ""} block seg-cv`.trim();
 
@@ -41,7 +52,7 @@ export function SegmentElement({
 
 	const translationEl = hasTr
 		? (() => {
-				const trText = segment.segmentTranslation?.text ?? "";
+				const trText = translation?.text ?? "";
 				return createElement(
 					TagName,
 					{
@@ -55,7 +66,7 @@ export function SegmentElement({
 						"data-number-id": segment.number,
 						...(interactive
 							? {
-									"data-best-translation-id": segment.segmentTranslation?.id,
+									"data-best-translation-id": translation?.id,
 									"data-segment-id": segment.id,
 								}
 							: null),

@@ -11,8 +11,10 @@ function makeSegment(overrides: Partial<SegmentForList> = {}): SegmentForList {
 		textAndOccurrenceHash: "hash",
 		createdAt: new Date(0),
 		segmentTypeId: 1,
-		segmentType: { key: "primary", label: "Primary" },
-		segmentTranslation: null,
+		segmentTypeKey: "primary",
+		segmentTypeLabel: "Primary",
+		translationId: null,
+		translationText: null,
 		...overrides,
 	};
 }

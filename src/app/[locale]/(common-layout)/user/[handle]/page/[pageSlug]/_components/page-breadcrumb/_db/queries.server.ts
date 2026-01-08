@@ -144,33 +144,9 @@ async function fetchTitleSegment(
 		textAndOccurrenceHash: row.textAndOccurrenceHash,
 		createdAt: row.createdAt,
 		segmentTypeId: row.segmentTypeId,
-		segmentType: {
-			key: row.typeKey,
-			label: row.typeLabel,
-		},
-		segmentTranslation: row.transId
-			? {
-					id: row.transId,
-					segmentId: row.transSegmentId!,
-					userId: row.transUserId!,
-					locale: row.transLocale!,
-					text: row.transText!,
-					point: row.transPoint!,
-					createdAt: row.transCreatedAt!,
-					user: {
-						id: row.transUserId!,
-						name: row.userName!,
-						handle: row.userHandle!,
-						image: row.userImage!,
-						createdAt: row.userCreatedAt!,
-						updatedAt: row.userUpdatedAt!,
-						profile: row.userProfile!,
-						twitterHandle: row.userTwitterHandle!,
-						totalPoints: row.userTotalPoints!,
-						isAi: row.userIsAi!,
-						plan: row.userPlan!,
-					},
-				}
-			: null,
+		segmentTypeKey: row.typeKey,
+		segmentTypeLabel: row.typeLabel,
+		translationId: row.transId ?? null,
+		translationText: row.transText ?? null,
 	};
 }
