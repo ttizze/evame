@@ -35,7 +35,3 @@ export async function fetchPageCommentsWithUserAndTranslations(
 	// 2. flatなコメントからツリーを構築してそのまま返却
 	return await buildCommentTree(flatComments);
 }
-
-export type PageCommentWithUserAndTranslations = Awaited<
-	ReturnType<typeof fetchPageCommentsWithUserAndTranslations>
->;

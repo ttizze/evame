@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 import { createElement } from "react";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
-import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
+import type { Segment } from "@/app/[locale]/types";
 
 /**
  * rehype-react 用アダプタ。
@@ -16,10 +16,10 @@ import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
  */
 export function WrapSegment<Tag extends keyof JSX.IntrinsicElements>(
 	Tag: Tag,
-	segments: (SegmentForDetail | SegmentForList)[],
+	segments: Segment[],
 	interactive: boolean = true,
 ) {
-	const segmentsMap = new Map<number, SegmentForDetail | SegmentForList>(
+	const segmentsMap = new Map<number, Segment>(
 		segments.map((s) => [s.number, s]),
 	);
 

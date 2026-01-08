@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
 import { SegmentElement } from "./segment";
 
-type SegmentTranslation = NonNullable<SegmentForList["segmentTranslation"]>;
+type SegmentTranslation = NonNullable<SegmentForDetail["segmentTranslation"]>;
 
 function makeTranslation(
 	overrides: Partial<SegmentTranslation> = {},
@@ -43,8 +43,10 @@ function makeListSegment(
 		textAndOccurrenceHash: "hash",
 		createdAt: new Date(0),
 		segmentTypeId: 1,
-		segmentType: { key: "primary", label: "Primary" },
-		segmentTranslation: null,
+		segmentTypeKey: "primary",
+		segmentTypeLabel: "Primary",
+		translationId: null,
+		translationText: null,
 		...overrides,
 	};
 }
@@ -54,6 +56,7 @@ function makeDetailSegment(
 ): SegmentForDetail {
 	return {
 		...makeListSegment(),
+		segmentType: { key: "primary", label: "Primary" },
 		annotations: [],
 		...overrides,
 	} as SegmentForDetail;
@@ -64,9 +67,30 @@ describe("SegmentElement", () => {
 		const { container } = render(
 			<SegmentElement
 				interactive={true}
-				segment={makeListSegment({
+				segment={makeDetailSegment({
 					id: 10,
-					segmentTranslation: makeTranslation({ id: 99, segmentId: 10 }),
+					segmentTranslation: {
+						id: 99,
+						segmentId: 10,
+						userId: "u1",
+						locale: "ja",
+						text: "translation",
+						point: 0,
+						createdAt: new Date(0),
+						user: {
+							id: "u1",
+							name: "User",
+							handle: "user",
+							image: "",
+							createdAt: new Date(0),
+							updatedAt: new Date(0),
+							profile: "",
+							twitterHandle: "",
+							totalPoints: 0,
+							isAi: false,
+							plan: "",
+						},
+					},
 				})}
 			/>,
 		);
@@ -86,7 +110,8 @@ describe("SegmentElement", () => {
 			<SegmentElement
 				interactive={false}
 				segment={makeListSegment({
-					segmentTranslation: makeTranslation({ id: 99 }),
+					translationId: 99,
+					translationText: "translation",
 				})}
 			/>,
 		);
@@ -105,7 +130,7 @@ describe("SegmentElement", () => {
 				segment={makeDetailSegment({
 					annotations: [
 						{
-							annotationSegment: makeListSegment({
+							annotationSegment: makeDetailSegment({
 								id: 200,
 								number: 200,
 								text: "ann-src",

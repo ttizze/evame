@@ -25,6 +25,7 @@ test("buildCommentTree should handle comments with segments", async () => {
 				segments: [
 					{
 						id: 1,
+						contentId: 1,
 						number: 0,
 						text: "s",
 						segmentTranslation: {
