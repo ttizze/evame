@@ -1,6 +1,7 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Viewport } from "next";
 import { BIZ_UDPGothic, Inter } from "next/font/google";
+import { setRequestLocale } from "next-intl/server";
 import { ThemeProvider } from "next-themes";
 import NextTopLoader from "nextjs-toploader";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
@@ -28,7 +29,8 @@ export default async function Layout(
 	props: LayoutProps<"/[locale]">,
 ): Promise<React.ReactNode> {
 	const { children, params } = props;
-	const resolvedParams = await params;
+	const { locale } = await params;
+	setRequestLocale(locale);
 
 	const gaTrackingId =
 		process.env.NODE_ENV === "production"
@@ -37,7 +39,7 @@ export default async function Layout(
 	return (
 		<html
 			className={`${inter.className} ${bizUDPGothic.variable}`}
-			lang={resolvedParams.locale}
+			lang={locale}
 			suppressHydrationWarning
 		>
 			<body className="transition-colors duration-300 antialiased">
