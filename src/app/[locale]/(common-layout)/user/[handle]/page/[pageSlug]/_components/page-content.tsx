@@ -77,6 +77,8 @@ export async function PageContent({ pageData, locale }: PageContentProps) {
 						showCount={false}
 					/>
 				}
+				sourceLocale={pageDetail.sourceLocale}
+				userLocale={locale}
 			/>
 
 			<div className="mt-8 space-y-4" id="comments">

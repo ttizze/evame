@@ -1,33 +1,15 @@
 /* app/_context/display-provider.client.tsx */
 "use client";
 
-import {
-	parseAsArrayOf,
-	parseAsString,
-	parseAsStringEnum,
-	useQueryState,
-} from "nuqs";
-import {
-	createContext,
-	type ReactNode,
-	useCallback,
-	useContext,
-	useEffect,
-	useState,
-} from "react";
-import type { DisplayMode, Pref } from "./display-types";
+import { createContext, type ReactNode, useContext, useState } from "react";
+export type DisplayMode = "user" | "source" | "both";
 
-function decideFromLocales(user: string, source: string): DisplayMode {
-	return user === source ? "source" : "user";
-}
+export const getNextDisplayMode = (mode: DisplayMode): DisplayMode =>
+	mode === "user" ? "source" : mode === "source" ? "both" : "user";
 
 type CtxShape = {
 	mode: DisplayMode;
-	userLocale: string;
-	sourceLocale: string;
 	cycle(): void;
-	/** ページ側から現在の sourceLocale を通知 */
-	setSourceLocale(locale: string): void;
 };
 
 const Ctx = createContext<CtxShape | null>(null);
@@ -35,98 +17,26 @@ const Ctx = createContext<CtxShape | null>(null);
 /* ---------------- Provider ---------------- */
 export function DisplayProvider({
 	children,
-	userLocale,
-	/** 最初に訪れたページの sourceLocale を渡す (app/layout では "mixed") */
-	initialSourceLocale = "mixed",
-	initialPref = "auto",
+	initialMode = "both",
 }: {
 	children: ReactNode;
-	userLocale: string;
-	initialSourceLocale?: string;
-	initialPref?: Pref;
+	initialMode?: DisplayMode;
 }) {
-	/* 1) Cookie → pref */
-	const [pref, setPref] = useState<Pref>(initialPref);
-	useEffect(() => {
-		const saved =
-			(document.cookie.match(/displayPref=(\w+)/)?.[1] as Pref) ?? "auto";
-		setPref(saved);
-	}, []);
+	/* 1) 表示モード */
+	const [mode, setMode] = useState<DisplayMode>(initialMode);
 
-	/* 2) sourceLocale はページごとに書き換わる */
-	const [sourceLocale, setSourceLocale] = useState(initialSourceLocale);
-
-	/* 3) URL ↔︎ queryMode */
-	const [queryMode, setQueryMode] = useQueryState(
-		"displayMode",
-		parseAsStringEnum<DisplayMode>(["user", "source", "both"]).withOptions({
-			shallow: true,
-		}),
-	);
-	const [annotationsQuery] = useQueryState(
-		"annotations",
-		parseAsArrayOf(parseAsString, "~").withDefault([]).withOptions({
-			shallow: true,
-		}),
-	);
-
-	/* 4) 現在の最終モード */
-	const fallback = decideFromLocales(userLocale, sourceLocale);
-	const mode: DisplayMode =
-		queryMode ??
-		(pref === "source"
-			? "source"
-			: pref === "user"
-				? "user"
-				: pref === "both"
-					? "both"
-					: fallback); // auto
-
-	/* 5) URL と Cookie を同期 */
-	useEffect(() => {
-		if (queryMode === mode) return;
-		if (pref === "auto" && mode === fallback) {
-			setQueryMode(null); // URL をクリーンに
-		} else {
-			setQueryMode(mode);
-		}
-	}, [queryMode, mode, pref, fallback, setQueryMode]);
-
-	/* 5.5) CSS 用に data-display-mode を同期 */
-	useEffect(() => {
-		document.documentElement.dataset.displayMode = mode;
-	}, [mode]);
-
-	/* 5.6) 注釈の表示切替用 (URL param -> DOM) */
-	useEffect(() => {
-		// Token list is `a~b~c` in URL; we sync to DOM for CSS selectors.
-		const tokens = annotationsQuery.filter(Boolean);
-		if (tokens.length === 0) {
-			delete document.documentElement.dataset.annotations;
-			return;
-		}
-		// NOTE: We intentionally do not traverse the DOM to toggle classes; visibility is handled by CSS.
-		document.documentElement.dataset.annotations = tokens.join(" ");
-	}, [annotationsQuery]);
-
-	/* 6) トグル */
-	const cycle = useCallback(() => {
-		const next =
-			mode === "user" ? "source" : mode === "source" ? "both" : "user";
-		setQueryMode(next);
-		window.cookieStore?.set({
-			name: "displayPref",
-			value: next,
-			path: "/",
-		});
-		setPref(next as Pref);
-	}, [mode, setQueryMode]);
+	/* 2) トグル */
+	const cycle = () => {
+		setMode(getNextDisplayMode(mode));
+	};
 
 	return (
-		<Ctx.Provider
-			value={{ mode, userLocale, sourceLocale, cycle, setSourceLocale }}
-		>
-			{children}
+		<Ctx.Provider value={{ mode, cycle }}>
+			{/* display: contents でレイアウトへの影響を避けつつ、状態は data 属性で伝える */}
+			{/* data-display-mode はグローバルCSSが参照して表示切替を行う */}
+			<div className="contents" data-display-mode={mode}>
+				{children}
+			</div>
 		</Ctx.Provider>
 	);
 }

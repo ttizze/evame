@@ -1,16 +1,38 @@
 /* app/_components/display-mode-cycle.tsx */
 "use client";
-import { useDisplay } from "@/app/_context/display-provider";
+import { parseAsStringEnum, useQueryState } from "nuqs";
+import type { DisplayMode } from "@/app/_context/display-provider";
+import {
+	getNextDisplayMode,
+	useDisplay,
+} from "@/app/_context/display-provider";
 import { Button } from "@/components/ui/button";
 
 interface Props {
 	afterClick?: () => void;
+	userLocale: string;
+	sourceLocale: string;
 }
 
-export function DisplayModeCycle({ afterClick }: Props) {
-	const { mode, cycle, userLocale, sourceLocale } = useDisplay(); // mode: "user" | "source" | "both"
+export function DisplayModeCycle({
+	afterClick,
+	userLocale,
+	sourceLocale,
+}: Props) {
+	const { mode, cycle } = useDisplay();
+	const [, setQueryModeInUrl] = useQueryState(
+		"displayMode",
+		parseAsStringEnum<DisplayMode>(["user", "source", "both"])
+			.withDefault("both")
+			.withOptions({
+				shallow: true,
+				clearOnDefault: false,
+			}),
+	);
 
 	const handleClick = () => {
+		const next = getNextDisplayMode(mode);
+		setQueryModeInUrl(next);
 		afterClick?.();
 		cycle(); // ③ 状態変更
 	};

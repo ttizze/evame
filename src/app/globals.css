@@ -171,35 +171,35 @@
 	}
 
 	/* DisplayMode (source/user/both) without per-segment hydration */
-	html[data-display-mode="source"] .seg-tr {
+	[data-display-mode="source"] .seg-tr {
 		display: none !important;
 	}
-	html[data-display-mode="source"] .seg-src {
+	[data-display-mode="source"] .seg-src {
 		display: block;
 	}
 
-	html[data-display-mode="user"] .seg-tr {
+	[data-display-mode="user"] .seg-tr {
 		display: block;
 	}
-	html[data-display-mode="user"] .seg-src.seg-has-tr {
+	[data-display-mode="user"] .seg-src.seg-has-tr {
 		display: none;
 	}
 
-	html[data-display-mode="both"] .seg-tr {
+	[data-display-mode="both"] .seg-tr {
 		display: block;
 	}
-	html[data-display-mode="both"] .seg-src {
+	[data-display-mode="both"] .seg-src {
 		display: block;
 	}
-	html[data-display-mode="both"] .seg-src.seg-has-tr {
+	[data-display-mode="both"] .seg-src.seg-has-tr {
 		color: rgb(209 213 219); /* text-gray-300 */
 	}
-	html.dark[data-display-mode="both"] .seg-src.seg-has-tr {
+	html.dark [data-display-mode="both"] .seg-src.seg-has-tr {
 		color: rgb(75 85 99); /* dark:text-gray-600 */
 	}
 
 	@supports selector(:has(img)) {
-		html[data-display-mode="user"] .seg-src.seg-has-tr:has(img) {
+		[data-display-mode="user"] .seg-src.seg-has-tr:has(img) {
 			display: block;
 		}
 	}

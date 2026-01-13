@@ -1,5 +1,6 @@
 "use client";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { parseAsString, useQueryStates } from "nuqs";
 import {
 	Pagination,
 	PaginationContent,
@@ -17,12 +18,22 @@ interface PaginationBarProps {
 
 export function PaginationBar({ totalPages, currentPage }: PaginationBarProps) {
 	const pathname = usePathname();
-	const searchParams = useSearchParams();
+	const [currentQuery] = useQueryStates({
+		page: parseAsString,
+		query: parseAsString,
+		category: parseAsString,
+		tagPage: parseAsString,
+		sort: parseAsString,
+		tab: parseAsString,
+		displayMode: parseAsString,
+		annotations: parseAsString,
+	});
+	const currentParams = Object.fromEntries(
+		Object.entries(currentQuery).filter(([, value]) => value != null),
+	);
 	if (totalPages <= 1) {
 		return null;
 	}
-
-	const currentParams = Object.fromEntries(searchParams.entries());
 
 	// 現在の URL の pathname と既存の searchParams をベースに、
 	// page パラメータだけを上書きするリンク用 URL オブジェクトを生成

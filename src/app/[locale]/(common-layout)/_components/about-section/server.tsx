@@ -12,7 +12,7 @@ export default async function AboutSection({
 }) {
 	const currentUser = await getCurrentUser();
 	if (topPage && currentUser) {
-		return <FloatingControls />;
+		return <FloatingControls sourceLocale="mixed" userLocale={locale} />;
 	}
 	return (
 		<div className="flex flex-col">
@@ -21,7 +21,7 @@ export default async function AboutSection({
 			<div className="mb-32 flex justify-center mt-10">
 				<StartButton className="w-60 h-12 text-xl" text="Get Started" />
 			</div>
-			<FloatingControls />
+			<FloatingControls sourceLocale="mixed" userLocale={locale} />
 		</div>
 	);
 }

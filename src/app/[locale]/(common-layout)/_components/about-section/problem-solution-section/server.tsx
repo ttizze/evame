@@ -82,6 +82,8 @@ export default async function ProblemSolutionSection({
 				/>
 			}
 			position="w-full flex justify-center"
+			sourceLocale={pageDetail.sourceLocale}
+			userLocale={locale}
 		/>,
 		<span key="component-6" />,
 	];

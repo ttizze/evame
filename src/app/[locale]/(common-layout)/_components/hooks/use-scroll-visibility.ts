@@ -14,7 +14,11 @@ export function useScrollVisibility(alwaysVisible = false) {
 	const visibleRef = useRef(true);
 	const latestY = useRef(0);
 
-	/** ボタンを押した瞬間のチラつきを防ぐ */
+	/**
+	 * ボタン押下直後はスクロールイベントが同フレームで発火しやすく、
+	 * 可視状態の切り替えが走ってフローティングUIがチラつくため、
+	 * 短時間だけスクロール判定を無効化して安定させる。
+	 */
 	const ignoreNextScroll = (ms = 100) => {
 		ignore.current = true;
 		setTimeout(() => {

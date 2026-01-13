@@ -1,5 +1,6 @@
 "use client";
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ShareDialog } from "../../user/[handle]/page/[pageSlug]/_components/share-dialog";
@@ -16,18 +17,32 @@ interface FloatingControlsProps {
 	position?: string;
 	alwaysVisible?: boolean;
 	annotationTypes?: AnnotationType[]; // List of annotation types
+	userLocale: string;
+	sourceLocale: string;
 }
 export function FloatingControls({
 	likeButton,
 	position = `fixed bottom-4 left-1/2 -translate-x-1/2 duration-300 `,
 	alwaysVisible = false,
 	annotationTypes = [],
+	userLocale,
+	sourceLocale,
 }: FloatingControlsProps) {
 	const { isVisible, ignoreNextScroll } = useScrollVisibility(alwaysVisible);
 	const [visibleAnnotations, setVisibleAnnotations] = useQueryState(
 		"annotations",
-		parseAsArrayOf(parseAsString, "~").withDefault([]),
+		parseAsArrayOf(parseAsString, "~")
+			.withDefault([])
+			.withOptions({ shallow: true }),
 	);
+	useEffect(() => {
+		const tokens = visibleAnnotations.filter(Boolean);
+		if (tokens.length === 0) {
+			delete document.documentElement.dataset.annotations;
+			return;
+		}
+		document.documentElement.dataset.annotations = tokens.join(" ");
+	}, [visibleAnnotations]);
 
 	const toggleAnnotationType = (annotationType: AnnotationType) => {
 		const uniqueKey = annotationType.label;
@@ -43,7 +58,11 @@ export function FloatingControls({
 	/* --- Buttons --- */
 	const Buttons = (
 		<div className="flex gap-4 justify-center">
-			<DisplayModeCycle afterClick={ignoreNextScroll} />
+			<DisplayModeCycle
+				afterClick={ignoreNextScroll}
+				sourceLocale={sourceLocale}
+				userLocale={userLocale}
+			/>
 
 			{annotationTypes.map((annotationType) => {
 				const uniqueKey = annotationType.label;
