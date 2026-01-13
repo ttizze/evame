@@ -27,7 +27,7 @@ export function DisplayProvider({
 
 	/* 2) トグル */
 	const cycle = () => {
-		setMode(getNextDisplayMode(mode));
+		setMode((prev) => getNextDisplayMode(prev));
 	};
 
 	return (

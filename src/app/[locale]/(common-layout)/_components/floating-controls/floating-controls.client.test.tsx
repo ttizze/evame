@@ -56,7 +56,7 @@ describe("FloatingControls", () => {
 		expect(screen.getByText("MIXED")).toBeInTheDocument();
 	});
 
-	it("条件: displayMode=User / 行動: クリック / 結果: Source→Bothへ循環する", async () => {
+	it("条件: displayMode=Both / 行動: クリック / 結果: Both→User→Source→Bothへ循環する", async () => {
 		render(<Harness />);
 
 		const user = userEvent.setup();
