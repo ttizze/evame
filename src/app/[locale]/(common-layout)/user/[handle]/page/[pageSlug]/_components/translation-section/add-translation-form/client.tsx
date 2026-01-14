@@ -3,11 +3,11 @@ import { ArrowUpFromLine } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useActionState, useRef } from "react";
 import TextareaAutosize from "react-textarea-autosize";
+import { useHydrated } from "@/app/_hooks/use-hydrated";
+import { authClient } from "@/app/[locale]/_service/auth-client";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
 import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
-import { useHydrated } from "@/lib/use-hydrated";
 import { addTranslationFormAction } from "./action";
 
 interface AddTranslationFormProps {

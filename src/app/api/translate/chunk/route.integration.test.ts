@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
 import { db } from "@/db";
-import { revalidatePageForLocale } from "@/lib/revalidate-utils";
 import { resetDatabase } from "@/tests/db-helpers";
 import {
 	createGeminiApiKey,
@@ -19,7 +19,7 @@ vi.mock("./_infra/gemini", () => ({
 	getGeminiModelResponse: vi.fn(),
 }));
 
-vi.mock("@/lib/revalidate-utils", () => ({
+vi.mock("@/app/_service/revalidate-utils", () => ({
 	revalidatePageForLocale: vi.fn(),
 }));
 

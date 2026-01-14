@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { getCurrentUser } from "@/app/_service/auth-server";
+import { segmentTranslationSchema } from "@/app/api/segment-translations/_domain/segment-translations";
 import { db } from "@/db";
-import { getCurrentUser } from "@/lib/auth-server";
-import { segmentTranslationSchema } from "@/lib/schemas/segment-translations";
 
 const schema = z.object({
 	segmentId: z.coerce.number().int(),

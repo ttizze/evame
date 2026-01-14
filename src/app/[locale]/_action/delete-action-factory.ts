@@ -3,8 +3,8 @@ import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { z } from "zod";
+import { revalidateAllLocales } from "@/app/_service/revalidate-utils";
 import type { ActionResponse } from "@/app/types";
-import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import {
 	type AuthDeps,
 	authAndValidate,

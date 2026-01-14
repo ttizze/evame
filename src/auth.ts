@@ -1,8 +1,8 @@
 import { createId } from "@paralleldrive/cuid2";
 import { betterAuth } from "better-auth";
 import { customSession, magicLink } from "better-auth/plugins";
-import { sendMagicLinkEmail } from "@/lib/resend.server";
 import { db } from "./db";
+import { sendMagicLinkEmail } from "./utils/send-magic-link-email.server";
 
 export const auth = betterAuth({
 	plugins: [

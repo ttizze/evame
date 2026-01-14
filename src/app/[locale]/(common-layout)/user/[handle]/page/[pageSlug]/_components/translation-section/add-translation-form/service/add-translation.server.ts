@@ -1,4 +1,4 @@
-import { revalidatePageForLocale } from "@/lib/revalidate-utils";
+import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
 import { addUserTranslation } from "../db/mutations.server";
 import { findPageBySegmentId } from "../db/queries.server";
 

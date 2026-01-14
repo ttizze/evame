@@ -2,9 +2,9 @@
 import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import { uploadImage } from "@/app/[locale]/_service/upload/upload-image";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/lib/auth-server";
 import { updateUserImage } from "../_db/mutations.server";
 
 export type UserImageEditState = ActionResponse<

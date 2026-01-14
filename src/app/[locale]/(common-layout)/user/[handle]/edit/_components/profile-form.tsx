@@ -4,11 +4,11 @@ import { Loader2, SaveIcon } from "lucide-react";
 import Image from "next/image";
 import { useActionState, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { authClient } from "@/app/[locale]/_service/auth-client";
 import type { SanitizedUser } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authClient } from "@/lib/auth-client";
 import { type UserEditState, userEditAction } from "./user-edit-action";
 import {
 	type UserImageEditState,

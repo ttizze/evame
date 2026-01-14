@@ -3,9 +3,9 @@ import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { getCurrentUser } from "@/app/_service/auth-server";
+import { parseFormData } from "@/app/[locale]/_utils/parse-form-data";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/lib/auth-server";
-import { parseFormData } from "@/lib/parse-form-data";
 import { updateUser } from "../_db/mutations.server";
 import reservedHandles from "./reserved-handles.json";
 

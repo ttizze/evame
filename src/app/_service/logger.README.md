@@ -14,7 +14,7 @@
 ### サーバー側（推奨）
 
 ```typescript
-import { createServerLogger } from "@/lib/logger.server";
+import { createServerLogger } from "@/app/_service/logger.server";
 
 const logger = createServerLogger("my-service");
 
@@ -317,4 +317,3 @@ export LOG_LEVEL=debug
 - 本番環境ではデフォルトで`LOG_LEVEL=info`を使用
 - トラブルシューティング時のみ`LOG_LEVEL=debug`に変更
 - リクエストIDを含めてログを追跡可能にする
-

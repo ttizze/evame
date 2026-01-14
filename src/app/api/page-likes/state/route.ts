@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import type { LikeState } from "@/app/api/page-likes/_types/like-state";
 import { db } from "@/db";
-import { getCurrentUser } from "@/lib/auth-server";
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const idsParam = searchParams.get("ids");

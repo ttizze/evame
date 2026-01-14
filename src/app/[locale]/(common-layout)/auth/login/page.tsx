@@ -1,7 +1,7 @@
 import type { Route } from "next";
 import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import { LoginDialog } from "@/app/[locale]/(common-layout)/_components/login/_components/login-dialog.client";
-import { getCurrentUser } from "@/lib/auth-server";
 
 export default async function LoginPage() {
 	const currentUser = await getCurrentUser();

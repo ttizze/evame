@@ -2,6 +2,7 @@
 
 import { BookOpenIcon, LogOutIcon } from "lucide-react";
 import { getImageProps } from "next/image";
+import { authClient } from "@/app/[locale]/_service/auth-client";
 import { LocaleSelector } from "@/app/[locale]/(common-layout)/_components/header/locale-selector/client";
 import { ModeToggle } from "@/app/[locale]/(common-layout)/_components/header/mode-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,7 +14,6 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
-import { authClient } from "@/lib/auth-client";
 
 interface UserMenuProps {
 	currentUser: { handle: string; name: string; image: string; plan: string };

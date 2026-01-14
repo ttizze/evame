@@ -9,7 +9,7 @@ import {
 import type { PageForList } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
 import { db } from "@/db";
-import { sanitizeUser } from "@/lib/sanitize-user";
+import { sanitizeUser } from "../_utils/sanitize-user";
 import type { Category } from "../constants";
 
 type Tag = {

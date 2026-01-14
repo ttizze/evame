@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 // VoteButtons.test.tsx
 import React from "react";
 import { vi } from "vitest";
-import type { SegmentTranslation } from "@/lib/schemas/segment-translations";
+import type { SegmentTranslation } from "@/app/api/segment-translations/_domain/segment-translations";
 import { VoteButtons } from "./client";
 
 vi.mock("next-intl", () => ({

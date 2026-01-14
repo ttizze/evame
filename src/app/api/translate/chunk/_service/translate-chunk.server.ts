@@ -1,4 +1,4 @@
-import { createServerLogger } from "@/lib/logger.server";
+import { createServerLogger } from "@/app/_service/logger.server";
 import type { SegmentElement } from "../../types";
 import { ensurePageLocaleTranslationProof } from "../_db/mutations.server";
 import { extractTranslations } from "../_domain/extract-translations";

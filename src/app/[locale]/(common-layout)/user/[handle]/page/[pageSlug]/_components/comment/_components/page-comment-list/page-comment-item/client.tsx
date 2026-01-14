@@ -1,11 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
+import { useHydrated } from "@/app/_hooks/use-hydrated";
+import { authClient } from "@/app/[locale]/_service/auth-client";
 import { CommentActionMenu } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-form/comment/comment-action-menu.client";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { authClient } from "@/lib/auth-client";
-import { useHydrated } from "@/lib/use-hydrated";
 import {
 	type CommentDeleteActionResponse,
 	deletePageCommentAction,

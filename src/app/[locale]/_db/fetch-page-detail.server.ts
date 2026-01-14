@@ -3,8 +3,8 @@
  * Kysely ORM版 - シンプル化
  */
 
+import { serverLogger } from "@/app/_service/logger.server";
 import { db } from "@/db";
-import { serverLogger } from "@/lib/logger.server";
 
 // ============================================
 // 内部型定義

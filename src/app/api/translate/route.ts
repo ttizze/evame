@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { revalidatePageForLocale } from "@/lib/revalidate-utils";
+import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
 import { orchestrateTranslation } from "./_service/orchestrate-translation.server";
 import { withQstashVerification } from "./_utils/with-qstash-signature";
 

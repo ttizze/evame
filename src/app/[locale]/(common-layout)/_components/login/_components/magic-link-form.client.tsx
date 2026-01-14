@@ -3,10 +3,10 @@
 import { CheckCircle, Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { z } from "zod";
+import { authClient } from "@/app/[locale]/_service/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { authClient } from "@/lib/auth-client";
 
 const schema = z.object({
 	email: z.string().email("Please enter a valid email address"),

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import { fetchNotificationRowsWithRelations } from "@/app/api/notifications/_db/queries.server";
-import { getCurrentUser } from "@/lib/auth-server";
 
 export async function GET() {
 	const user = await getCurrentUser();

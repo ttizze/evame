@@ -1,8 +1,8 @@
 import { EyeIcon, MessageCircle } from "lucide-react";
+import { createLogger } from "@/app/_service/logger";
 import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
-import { createLogger } from "@/lib/logger";
 import type { fetchPageContext } from "../_service/fetch-page-context";
 import { ChildPages } from "./child-pages/server";
 import { PageCommentForm } from "./comment/_components/page-comment-form/client";

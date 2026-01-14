@@ -1,9 +1,9 @@
 "use server";
 import { z } from "zod";
+import { revalidateAllLocales } from "@/app/_service/revalidate-utils";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { validateGeminiApiKey } from "@/app/api/translate/chunk/_infra/gemini";
 import type { ActionResponse } from "@/app/types";
-import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import { updateGeminiApiKey } from "./db/mutations.server";
 
 const geminiApiKeySchema = z.object({

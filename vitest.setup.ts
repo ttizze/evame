@@ -29,7 +29,7 @@ vi.mock("next/cache", () => ({
 	revalidatePath: vi.fn(),
 }));
 
-vi.mock("@/lib/auth-server", () => ({
+vi.mock("@/app/_service/auth-server", () => ({
 	getCurrentUser: vi.fn(),
 	getSession: vi.fn(),
 }));

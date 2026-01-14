@@ -3,10 +3,10 @@ import { Settings } from "lucide-react";
 import Image, { getImageProps } from "next/image";
 import { notFound } from "next/navigation";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
-import { getCurrentUser } from "@/lib/auth-server";
 import {
 	fetchFollowerList,
 	fetchFollowingList,

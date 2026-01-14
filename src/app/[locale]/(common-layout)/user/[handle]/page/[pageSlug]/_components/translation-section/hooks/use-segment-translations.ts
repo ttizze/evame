@@ -2,7 +2,7 @@ import useSWR from "swr";
 import {
 	type SegmentTranslation,
 	segmentTranslationSchema,
-} from "@/lib/schemas/segment-translations";
+} from "@/app/api/segment-translations/_domain/segment-translations";
 
 interface UseSegmentTranslationsParams {
 	segmentId: number;

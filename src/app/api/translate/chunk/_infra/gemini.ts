@@ -4,8 +4,8 @@ import {
 	HarmCategory,
 	SchemaType,
 } from "@google/generative-ai";
-import { decrypt } from "@/lib/encryption.server";
-import { createServerLogger } from "@/lib/logger.server";
+import { decrypt } from "@/app/_service/encryption.server";
+import { createServerLogger } from "@/app/_service/logger.server";
 import { generateSystemMessage } from "./generate-gemini-message";
 
 const MAX_RETRIES = 3;

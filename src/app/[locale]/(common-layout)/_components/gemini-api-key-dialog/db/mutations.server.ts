@@ -1,5 +1,5 @@
+import { encrypt } from "@/app/_service/encryption.server";
 import { db } from "@/db";
-import { encrypt } from "@/lib/encryption.server";
 
 /**
  * Gemini APIキーを更新

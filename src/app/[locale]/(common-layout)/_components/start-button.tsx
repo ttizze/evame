@@ -1,9 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useHydrated } from "@/app/_hooks/use-hydrated";
+import { authClient } from "@/app/[locale]/_service/auth-client";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
-import { useHydrated } from "@/lib/use-hydrated";
 import { cn } from "@/lib/utils";
 import { LoginDialog } from "./login/_components/login-dialog.client";
 
