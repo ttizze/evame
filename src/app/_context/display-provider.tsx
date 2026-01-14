@@ -6,12 +6,8 @@ import { createContext, type ReactNode, useContext, useState } from "react";
 const DISPLAY_MODES = ["user", "source", "both"] as const;
 export type DisplayMode = (typeof DISPLAY_MODES)[number];
 
-export const getNextDisplayMode = (mode: DisplayMode): DisplayMode =>
-	mode === "user" ? "source" : mode === "source" ? "both" : "user";
-
 type CtxShape = {
 	mode: DisplayMode;
-	cycle(): void;
 	setMode(next: DisplayMode): void;
 };
 
@@ -26,12 +22,8 @@ export function DisplayProvider({
 }) {
 	const [mode, setMode] = useState<DisplayMode>(initialMode);
 
-	const cycle = () => {
-		setMode((prev) => getNextDisplayMode(prev));
-	};
-
 	return (
-		<Ctx.Provider value={{ mode, cycle, setMode }}>
+		<Ctx.Provider value={{ mode, setMode }}>
 			<div className="contents" data-display-mode={mode}>
 				{children}
 			</div>

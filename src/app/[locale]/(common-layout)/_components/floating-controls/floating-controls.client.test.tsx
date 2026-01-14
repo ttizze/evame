@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -15,17 +15,6 @@ vi.mock("../hooks/use-scroll-visibility", () => ({
 		ignoreNextScroll: vi.fn(),
 	}),
 }));
-
-const cookieStoreValues = new Map<string, string>();
-const cookieStoreMock = {
-	get: vi.fn(async (name: string) => {
-		const value = cookieStoreValues.get(name);
-		return value ? { name, value } : undefined;
-	}),
-	set: vi.fn(async ({ name, value }: { name: string; value: string }) => {
-		cookieStoreValues.set(name, value);
-	}),
-};
 
 function Harness({
 	annotationTypes = [],
@@ -53,19 +42,13 @@ function Harness({
 
 beforeEach(() => {
 	delete document.documentElement.dataset.annotations;
-	cookieStoreValues.clear();
-	cookieStoreMock.get.mockClear();
-	cookieStoreMock.set.mockClear();
-	Object.defineProperty(window, "cookieStore", {
-		value: cookieStoreMock,
-		writable: true,
-	});
 });
 
 describe("FloatingControls", () => {
-	it("sourceLocale が mixed の時、初期表示で Original が表示される", async () => {
-		cookieStoreValues.set("displayMode", "source");
-		render(<Harness sourceLocale="mixed" />);
+	it("sourceLocale が mixed の時、URLクエリでsourceを指定すると Original が表示される", async () => {
+		render(
+			<Harness initialSearchParams="displayMode=source" sourceLocale="mixed" />,
+		);
 
 		await screen.findByRole("button", {
 			name: /Source only/i,
@@ -136,29 +119,8 @@ describe("FloatingControls", () => {
 		expect(document.documentElement.dataset.annotations).toBe("Note");
 	});
 
-	it("displayMode が both の時、ページ遷移してもモードが維持される", async () => {
-		const { rerender } = render(<Harness />);
-
-		const user = userEvent.setup();
-
-		await screen.findByRole("button", {
-			name: /Both languages/i,
-		});
-
-		await user.click(
-			await screen.findByRole("button", {
-				name: /Both languages/i,
-			}),
-		);
-		await screen.findByRole("button", {
-			name: /User language only/i,
-		});
-
-		await waitFor(() => {
-			expect(cookieStoreMock.set).toHaveBeenCalled();
-		});
-
-		rerender(<Harness />);
+	it("URLクエリでdisplayModeを指定すると、その値で初期表示される", async () => {
+		render(<Harness initialSearchParams="displayMode=user" />);
 
 		await screen.findByRole("button", {
 			name: /User language only/i,

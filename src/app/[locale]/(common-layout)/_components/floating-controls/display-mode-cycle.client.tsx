@@ -3,12 +3,11 @@
 import { FileText } from "lucide-react";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useEffect } from "react";
-import {
-	type DisplayMode,
-	getNextDisplayMode,
-	useDisplay,
-} from "@/app/_context/display-provider";
+import { type DisplayMode, useDisplay } from "@/app/_context/display-provider";
 import { Button } from "@/components/ui/button";
+
+const getNextDisplayMode = (mode: DisplayMode): DisplayMode =>
+	mode === "user" ? "source" : mode === "source" ? "both" : "user";
 
 interface Props {
 	afterClick?: () => void;
