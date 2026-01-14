@@ -2,10 +2,10 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DisplayModeRoot } from "@/app/[locale]/(common-layout)/_components/display-mode-root.client";
+import { DisplayProvider } from "@/app/_context/display-provider";
 import { FloatingControls } from "./floating-controls.client";
 
-vi.mock("../../user/[handle]/page/[pageSlug]/_components/share-dialog", () => ({
+vi.mock("./share-dialog", () => ({
 	ShareDialog: () => null,
 }));
 
@@ -40,13 +40,13 @@ function Harness({
 }) {
 	return (
 		<NuqsTestingAdapter searchParams={initialSearchParams}>
-			<DisplayModeRoot>
+			<DisplayProvider>
 				<FloatingControls
 					annotationTypes={annotationTypes}
 					sourceLocale={sourceLocale}
 					userLocale={userLocale}
 				/>
-			</DisplayModeRoot>
+			</DisplayProvider>
 		</NuqsTestingAdapter>
 	);
 }

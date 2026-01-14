@@ -1,11 +1,7 @@
 /* app/_components/display-mode-cycle.tsx */
 "use client";
 import { FileText } from "lucide-react";
-import { useQueryState } from "nuqs";
-import {
-	getDisplayModeQueryState,
-	getNextDisplayMode,
-} from "@/app/[locale]/(common-layout)/_utils/display-mode";
+import { useDisplay } from "@/app/_context/display-provider";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -19,10 +15,7 @@ export function DisplayModeCycle({
 	userLocale,
 	sourceLocale,
 }: Props) {
-	const [mode, setMode] = useQueryState(
-		"displayMode",
-		getDisplayModeQueryState().withDefault("both"),
-	);
+	const { mode, cycle } = useDisplay();
 
 	const sourceLabel =
 		sourceLocale === "mixed" ? (
@@ -36,8 +29,7 @@ export function DisplayModeCycle({
 		);
 
 	const handleClick = () => {
-		const next = getNextDisplayMode(mode);
-		setMode(next);
+		cycle();
 		afterClick?.();
 	};
 
