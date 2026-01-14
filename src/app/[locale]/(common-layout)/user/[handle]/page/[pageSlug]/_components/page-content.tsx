@@ -39,7 +39,9 @@ export async function PageContent({ pageData, locale }: PageContentProps) {
 				}
 			}
 		}
-		return Array.from(typeMap.values());
+		return Array.from(typeMap.values()).sort((a, b) => {
+			return a.label.localeCompare(b.label);
+		});
 	})();
 	logger.debug({ annotationTypes }, "collected annotation types");
 
