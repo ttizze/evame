@@ -4,6 +4,7 @@ import { Bell, Loader2 } from "lucide-react";
 import { getImageProps } from "next/image";
 import { startTransition, useActionState } from "react";
 import useSWR from "swr";
+import type { NotificationRowsWithRelations } from "@/app/api/notifications/_types/notification";
 import type { ActionResponse } from "@/app/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -14,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
 import { markNotificationAsReadAction } from "./action";
-import type { NotificationRowsWithRelations } from "./db/queries.server";
 export function NotificationsDropdownClient({
 	currentUserHandle,
 }: {

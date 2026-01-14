@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { createServerLogger } from "@/app/_service/logger.server";
 import { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
 import {
 	fetchPageViewCount,
 	fetchTranslationJobs,
 } from "@/app/[locale]/_db/page-utility-queries.server";
-import { createServerLogger } from "@/lib/logger.server";
 import { extractTocItems } from "../_domain/extract-toc-items";
 
 const logger = createServerLogger("fetch-page-context");

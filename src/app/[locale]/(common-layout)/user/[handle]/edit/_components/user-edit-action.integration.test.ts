@@ -12,7 +12,7 @@ import { userEditAction } from "./user-edit-action";
 await setupDbPerFile(import.meta.url);
 
 // 共有依存のみモック（外部認証システム）
-vi.mock("@/lib/auth-server", () => ({
+vi.mock("@/app/_service/auth-server", () => ({
 	getCurrentUser: vi.fn(),
 }));
 

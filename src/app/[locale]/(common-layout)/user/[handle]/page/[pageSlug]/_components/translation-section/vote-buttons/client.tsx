@@ -3,7 +3,7 @@ import { ThumbsDown, ThumbsUp } from "lucide-react";
 import Form from "next/form";
 import { useLocale } from "next-intl";
 import { useActionState, useOptimistic } from "react";
-import type { SegmentTranslation } from "@/lib/schemas/segment-translations";
+import type { SegmentTranslation } from "@/app/api/segment-translations/_domain/segment-translations";
 import {
 	type VoteTranslationActionResponse,
 	voteTranslationAction,

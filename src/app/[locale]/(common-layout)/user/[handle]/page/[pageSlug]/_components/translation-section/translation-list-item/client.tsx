@@ -2,7 +2,10 @@
 import { EllipsisVertical, Trash2 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { useActionState } from "react";
+import { useHydrated } from "@/app/_hooks/use-hydrated";
+import { authClient } from "@/app/[locale]/_service/auth-client";
 import { sanitizeAndParseText } from "@/app/[locale]/_utils/sanitize-and-parse-text.client";
+import type { SegmentTranslation } from "@/app/api/segment-translations/_domain/segment-translations";
 import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,9 +15,6 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
-import { authClient } from "@/lib/auth-client";
-import type { SegmentTranslation } from "@/lib/schemas/segment-translations";
-import { useHydrated } from "@/lib/use-hydrated";
 import { VoteButtons } from "../vote-buttons/client";
 import { deleteTranslationAction } from "./action";
 

@@ -1,6 +1,6 @@
+import { createServerLogger } from "@/app/_service/logger.server";
 import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
 import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
-import { createServerLogger } from "@/lib/logger.server";
 import { syncAnnotationLinksByParagraphNumber } from "../sync-annotation-links-by-paragraph-number";
 import { syncSegmentMetadata } from "./db/mutations.server";
 import { fetchSegmentTypeKey } from "./db/queries.server";

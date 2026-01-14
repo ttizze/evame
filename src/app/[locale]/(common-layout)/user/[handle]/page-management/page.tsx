@@ -2,8 +2,8 @@ import type { Route } from "next";
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getCurrentUser } from "@/lib/auth-server";
 
 const PageManagementTab = dynamic(
 	() =>

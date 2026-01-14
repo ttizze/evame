@@ -13,7 +13,7 @@ import { userImageEditAction } from "./user-image-edit-action";
 await setupDbPerFile(import.meta.url);
 
 // 共有依存のみモック
-vi.mock("@/lib/auth-server", () => ({
+vi.mock("@/app/_service/auth-server", () => ({
 	getCurrentUser: vi.fn(),
 }));
 vi.mock("@/app/[locale]/_service/upload/upload-image", () => ({

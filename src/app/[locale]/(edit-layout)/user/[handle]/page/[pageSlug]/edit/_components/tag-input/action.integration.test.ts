@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import { db } from "@/db";
-import { getCurrentUser } from "@/lib/auth-server";
 import { toSessionUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";

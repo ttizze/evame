@@ -3,10 +3,10 @@
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { getCurrentUser } from "@/app/_service/auth-server";
+import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
+import { parseFormData } from "@/app/[locale]/_utils/parse-form-data";
 import type { ActionResponse } from "@/app/types";
-import { getCurrentUser } from "@/lib/auth-server";
-import { parseFormData } from "@/lib/parse-form-data";
-import { revalidatePageForLocale } from "@/lib/revalidate-utils";
 import { findPageIdBySegmentTranslationId } from "../_db/queries.server";
 import {
 	createNotificationPageSegmentTranslationVote,

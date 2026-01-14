@@ -3,10 +3,10 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import { useHydrated } from "@/app/_hooks/use-hydrated";
+import { authClient } from "@/app/[locale]/_service/auth-client";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
-import { useHydrated } from "@/lib/use-hydrated";
 
 type Hidden = Record<string, string | number | undefined>;
 

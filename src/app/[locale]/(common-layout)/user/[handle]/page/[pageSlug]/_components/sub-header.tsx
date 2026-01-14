@@ -3,13 +3,13 @@ import { ChevronDown, List, PencilIcon } from "lucide-react";
 import { getImageProps } from "next/image";
 import { useLocale } from "next-intl";
 import { useState } from "react";
+import { useHydrated } from "@/app/_hooks/use-hydrated";
+import { authClient } from "@/app/[locale]/_service/auth-client";
 import { useHeaderScroll } from "@/app/[locale]/(common-layout)/_components/header/hooks/use-header-scroll";
 import type { PageDetail } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
-import { authClient } from "@/lib/auth-client";
-import { useHydrated } from "@/lib/use-hydrated";
 import type { TocItem } from "../_domain/extract-toc-items";
 import Toc from "./toc";
 

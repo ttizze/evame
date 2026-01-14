@@ -10,7 +10,7 @@ await setupDbPerFile(import.meta.url);
 
 // 共有依存（認証）のみモック
 const getCurrentUser = vi.fn();
-vi.mock("@/lib/auth-server", () => ({
+vi.mock("@/app/_service/auth-server", () => ({
 	getCurrentUser: (...args: unknown[]) => getCurrentUser(...args),
 }));
 

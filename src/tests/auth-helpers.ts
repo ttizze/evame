@@ -1,6 +1,6 @@
 import { vi } from "vitest";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import type { User } from "@/db/types.helpers";
-import { getCurrentUser } from "@/lib/auth-server";
 
 export type SessionUser = {
 	id: string;

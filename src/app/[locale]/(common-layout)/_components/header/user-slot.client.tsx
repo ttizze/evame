@@ -2,9 +2,9 @@
 
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
+import { authClient } from "@/app/[locale]/_service/auth-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/routing";
-import { authClient } from "@/lib/auth-client";
 import { StartButton } from "../start-button";
 import { LocaleSelector } from "./locale-selector/client";
 import { NewPageButton } from "./new-page-button";

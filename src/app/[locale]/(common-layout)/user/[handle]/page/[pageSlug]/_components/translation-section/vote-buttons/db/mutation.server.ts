@@ -1,8 +1,8 @@
 import type { Transaction } from "kysely";
 import { sql } from "kysely";
-import { calcProofStatus } from "@/app/[locale]/(common-layout)/_components/wrap-segments/translation-section/vote-buttons/_lib/translation-proof-status";
 import { db } from "@/db";
 import type { DB } from "@/db/types";
+import { calcProofStatus } from "../_lib/translation-proof-status";
 
 type VoteOutcome = {
 	finalIsUpvote: boolean | undefined;

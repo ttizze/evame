@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { createServerLogger } from "@/lib/logger.server";
+import { createServerLogger } from "@/app/_service/logger.server";
 import { PageContent } from "./_components/page-content";
 import { fetchPageContext } from "./_service/fetch-page-context";
 import { generatePageMetadata } from "./_service/generate-page-metadata";

@@ -11,7 +11,7 @@ import { deletePageCommentAction } from "./action";
 await setupDbPerFile(import.meta.url);
 
 // 共有依存のみモック
-vi.mock("@/lib/auth-server", () => ({
+vi.mock("@/app/_service/auth-server", () => ({
 	getCurrentUser: vi.fn(),
 }));
 

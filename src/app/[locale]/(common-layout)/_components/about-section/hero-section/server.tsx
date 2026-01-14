@@ -1,7 +1,7 @@
 import Image from "next/image";
-import { fetchAboutPage } from "@/app/[locale]/(common-layout)/_components/about-section/_lib/fetch-about-page";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
+import { fetchAboutPage } from "../service/fetch-about-page";
 
 const Icon = ({ className, ...rest }: { className: string }) => {
 	return (

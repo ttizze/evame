@@ -1,8 +1,8 @@
 "use server";
 import { z } from "zod";
+import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
-import { revalidatePageForLocale } from "@/lib/revalidate-utils";
 import { findPageIdBySegmentTranslationId } from "../_db/queries.server";
 import { deleteOwnTranslation } from "./db/mutations.server";
 

@@ -1,7 +1,7 @@
 import type { Route } from "next";
 import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import { db } from "@/db";
-import { getCurrentUser } from "@/lib/auth-server";
 
 /**
  * すべての通知を既読にする

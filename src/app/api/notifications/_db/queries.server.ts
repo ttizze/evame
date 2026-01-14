@@ -1,27 +1,5 @@
+import type { NotificationRowsWithRelations } from "@/app/api/notifications/_types/notification";
 import { db } from "@/db";
-
-// 通知の型定義（シンプルな構造で、必要なフィールドをオプショナルに）
-export type NotificationRowsWithRelations = {
-	id: number;
-	actorId: string;
-	actorHandle: string;
-	actorName: string;
-	actorImage: string;
-	read: boolean;
-	createdAt: Date;
-	type:
-		| "FOLLOW"
-		| "PAGE_LIKE"
-		| "PAGE_COMMENT"
-		| "PAGE_SEGMENT_TRANSLATION_VOTE"
-		| "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE";
-	// ページ関連のフィールド（PAGE_LIKE, PAGE_COMMENT, 翻訳投票で使用）
-	pageSlug: string | null;
-	pageOwnerHandle: string | null;
-	pageTitle: string | null;
-	// 翻訳関連のフィールド（翻訳投票で使用）
-	segmentTranslationText: string | null;
-};
 
 // 内部で使用するDB取得結果の型
 type NotificationRow = Awaited<

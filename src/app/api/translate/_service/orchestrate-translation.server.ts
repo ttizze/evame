@@ -14,7 +14,7 @@
 
 import { Client } from "@upstash/qstash";
 import { BASE_URL } from "@/app/_constants/base-url";
-import { createServerLogger } from "@/lib/logger.server";
+import { createServerLogger } from "@/app/_service/logger.server";
 import { markJobCompleted, markJobInProgress } from "../_db/mutations.server";
 import {
 	getAnnotationSegments,
