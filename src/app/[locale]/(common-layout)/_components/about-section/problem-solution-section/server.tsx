@@ -75,7 +75,7 @@ export default async function ProblemSolutionSection({
 			key="component-5"
 			likeButton={
 				<PageLikeButton
-					className="w-10 h-10 border rounded-full"
+					className="w-10 h-10 rounded-full"
 					initialLikeCount={pageDetail.likeCount}
 					pageId={pageDetail.id}
 					showCount={false}

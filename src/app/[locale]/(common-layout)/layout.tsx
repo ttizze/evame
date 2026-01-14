@@ -1,7 +1,7 @@
 import dynamic from "next/dynamic";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
-import { DisplayProvider } from "@/app/_context/display-provider";
+import { DisplayModeRoot } from "@/app/[locale]/(common-layout)/_components/display-mode-root.client";
 import { Footer } from "@/app/[locale]/(common-layout)/_components/footer";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -21,7 +21,7 @@ export default async function CommonLayout(props: LayoutProps<"/[locale]">) {
 
 	return (
 		<NextIntlClientProvider locale={locale} messages={messages}>
-			<DisplayProvider>
+			<DisplayModeRoot>
 				<Header />
 				<main className="mb-5 mt-3 md:mt-5 grow tracking-wider">
 					<div className="container mx-auto px-4 max-w-4xl">
@@ -29,7 +29,7 @@ export default async function CommonLayout(props: LayoutProps<"/[locale]">) {
 					</div>
 				</main>
 				<Footer />
-			</DisplayProvider>
+			</DisplayModeRoot>
 		</NextIntlClientProvider>
 	);
 }

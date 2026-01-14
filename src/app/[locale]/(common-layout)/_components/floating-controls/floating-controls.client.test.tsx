@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DisplayProvider } from "@/app/_context/display-provider";
+import { DisplayModeRoot } from "@/app/[locale]/(common-layout)/_components/display-mode-root.client";
 import { FloatingControls } from "./floating-controls.client";
 
 vi.mock("../../user/[handle]/page/[pageSlug]/_components/share-dialog", () => ({
@@ -16,47 +16,64 @@ vi.mock("../hooks/use-scroll-visibility", () => ({
 	}),
 }));
 
+const cookieStoreValues = new Map<string, string>();
+const cookieStoreMock = {
+	get: vi.fn(async (name: string) => {
+		const value = cookieStoreValues.get(name);
+		return value ? { name, value } : undefined;
+	}),
+	set: vi.fn(async ({ name, value }: { name: string; value: string }) => {
+		cookieStoreValues.set(name, value);
+	}),
+};
+
 function Harness({
 	annotationTypes = [],
-	initialMode,
 	initialSearchParams = "",
 	sourceLocale = "ja",
 	userLocale = "en",
 }: {
 	annotationTypes?: Array<{ key: string; label: string }>;
-	initialMode?: "user" | "source" | "both";
 	initialSearchParams?: string;
 	sourceLocale?: string;
 	userLocale?: string;
 }) {
 	return (
 		<NuqsTestingAdapter searchParams={initialSearchParams}>
-			<DisplayProvider initialMode={initialMode}>
+			<DisplayModeRoot>
 				<FloatingControls
 					annotationTypes={annotationTypes}
 					sourceLocale={sourceLocale}
 					userLocale={userLocale}
 				/>
-			</DisplayProvider>
+			</DisplayModeRoot>
 		</NuqsTestingAdapter>
 	);
 }
 
 beforeEach(() => {
 	delete document.documentElement.dataset.annotations;
+	cookieStoreValues.clear();
+	cookieStoreMock.get.mockClear();
+	cookieStoreMock.set.mockClear();
+	Object.defineProperty(window, "cookieStore", {
+		value: cookieStoreMock,
+		writable: true,
+	});
 });
 
 describe("FloatingControls", () => {
-	it("条件: sourceLocale=mixed / 行動: 初期表示 / 結果: MIXED が表示される", async () => {
-		render(<Harness initialMode="source" sourceLocale="mixed" />);
+	it("sourceLocale が mixed の時、初期表示で Original が表示される", async () => {
+		cookieStoreValues.set("displayMode", "source");
+		render(<Harness sourceLocale="mixed" />);
 
 		await screen.findByRole("button", {
 			name: /Source only/i,
 		});
-		expect(screen.getByText("MIXED")).toBeInTheDocument();
+		expect(screen.getByTestId("source-mixed-icon")).toBeInTheDocument();
 	});
 
-	it("条件: displayMode=Both / 行動: クリック / 結果: Both→User→Source→Bothへ循環する", async () => {
+	it("displayMode が both の時、クリックすると both→user→source→both に循環する", async () => {
 		render(<Harness />);
 
 		const user = userEvent.setup();
@@ -93,7 +110,7 @@ describe("FloatingControls", () => {
 		});
 	});
 
-	it("条件: 注釈ボタン / 行動: クリック / 結果: data-annotations が更新される", async () => {
+	it("注釈ボタンをクリックすると data-annotations が更新される", async () => {
 		render(
 			<Harness
 				annotationTypes={[
@@ -117,5 +134,34 @@ describe("FloatingControls", () => {
 
 		await user.click(await screen.findByRole("button", { name: "Commentary" }));
 		expect(document.documentElement.dataset.annotations).toBe("Note");
+	});
+
+	it("displayMode が both の時、ページ遷移してもモードが維持される", async () => {
+		const { rerender } = render(<Harness />);
+
+		const user = userEvent.setup();
+
+		await screen.findByRole("button", {
+			name: /Both languages/i,
+		});
+
+		await user.click(
+			await screen.findByRole("button", {
+				name: /Both languages/i,
+			}),
+		);
+		await screen.findByRole("button", {
+			name: /User language only/i,
+		});
+
+		await waitFor(() => {
+			expect(cookieStoreMock.set).toHaveBeenCalled();
+		});
+
+		rerender(<Harness />);
+
+		await screen.findByRole("button", {
+			name: /User language only/i,
+		});
 	});
 });

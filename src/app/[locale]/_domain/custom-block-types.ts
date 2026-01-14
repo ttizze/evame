@@ -14,9 +14,9 @@ export const GATHA_BLOCK_TYPES = [
 
 export const BLOCK_TYPES = ["indent", "unindented", "centre"] as const;
 
-export const HANGNUM_BLOCK_TYPE = "hangnum" as const;
+const HANGNUM_BLOCK_TYPE = "hangnum" as const;
 
-export const ALL_CUSTOM_BLOCK_TYPES = [
+const ALL_CUSTOM_BLOCK_TYPES = [
 	...GATHA_BLOCK_TYPES,
 	...BLOCK_TYPES,
 	HANGNUM_BLOCK_TYPE,

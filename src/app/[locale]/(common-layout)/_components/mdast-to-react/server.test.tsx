@@ -4,9 +4,6 @@ import { describe, expect, it, vi } from "vitest";
 import type { Segment } from "@/app/[locale]/types";
 import type { JsonValue } from "@/db/types";
 
-vi.mock("@/app/_context/display-provider", () => ({
-	useDisplay: () => ({ mode: "source" }), // ← dummy 値
-}));
 vi.mock("react-tweet", () => ({
 	Tweet: ({ id }: { id: string }) => (
 		<span data-testid={`tweet-${id}`}>Tweet ID: {id}</span>

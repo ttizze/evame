@@ -1,8 +1,8 @@
-export const MAX_CHUNK_SIZE = 10000;
+const MAX_CHUNK_SIZE = 10000;
 
 // モデルごとの最大チャンクサイズ（文字数）
 // 日本語は1文字あたり約1.5-2トークン、システムプロンプト分を考慮して安全マージンを確保
-export const MODEL_MAX_CHUNK_SIZES: Record<string, number> = {
+const MODEL_MAX_CHUNK_SIZES: Record<string, number> = {
 	// OpenAI GPT-5 models (272k-400k tokens context window)
 	// コンテキストウィンドウは大きいが、構造化出力の品質を保つためさらに控えめに設定
 	// 構造化出力では大量の配列要素を正確に生成するのが難しいため

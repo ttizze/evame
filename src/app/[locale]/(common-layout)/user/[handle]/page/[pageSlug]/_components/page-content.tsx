@@ -71,7 +71,7 @@ export async function PageContent({ pageData, locale }: PageContentProps) {
 				annotationTypes={annotationTypes}
 				likeButton={
 					<PageLikeButtonClient
-						className="w-10 h-10 border rounded-full"
+						className="w-10 h-10 rounded-full"
 						initialLikeCount={pageDetail.likeCount}
 						pageId={pageDetail.id}
 						showCount={false}

@@ -3,7 +3,7 @@ import { fetchAboutPage } from "@/app/[locale]/(common-layout)/_components/about
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 
-export const Icon = ({ className, ...rest }: { className: string }) => {
+const Icon = ({ className, ...rest }: { className: string }) => {
 	return (
 		<svg
 			className={className}

@@ -1,20 +1,6 @@
 import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
 
 /**
- * 既存のアノテーションリンクを削除する
- * Kysely版に移行済み
- */
-export async function deleteAnnotationLinks(
-	tx: TransactionClient,
-	annotationSegmentIds: number[],
-): Promise<void> {
-	await tx
-		.deleteFrom("segmentAnnotationLinks")
-		.where("annotationSegmentId", "in", annotationSegmentIds)
-		.execute();
-}
-
-/**
  * アノテーションコンテンツ配下のリンクを全削除する
  * Kysely版に移行済み
  */

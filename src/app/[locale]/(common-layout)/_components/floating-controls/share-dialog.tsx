@@ -2,6 +2,7 @@
 
 import { CopyIcon, Share } from "lucide-react";
 import Image from "next/image";
+import { useQueryState } from "nuqs";
 import { useState } from "react";
 import {
 	FacebookIcon,
@@ -11,7 +12,7 @@ import {
 	TwitterShareButton,
 } from "react-share";
 import { toast } from "sonner";
-import { useDisplay } from "@/app/_context/display-provider";
+import { getDisplayModeQueryState } from "@/app/[locale]/(common-layout)/_utils/display-mode";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -25,7 +26,10 @@ export function ShareDialog() {
 	const [isOpen, setIsOpen] = useState(false);
 
 	/* いま表示中のモードを取得 */
-	const { mode } = useDisplay();
+	const [mode] = useQueryState(
+		"displayMode",
+		getDisplayModeQueryState().withDefault("both"),
+	);
 
 	const shareTitle = typeof window !== "undefined" ? document.title : "";
 
@@ -41,7 +45,7 @@ export function ShareDialog() {
 		<Dialog onOpenChange={setIsOpen} open={isOpen}>
 			<DialogTrigger asChild>
 				<Button
-					className="h-10 w-10 rounded-full border bg-background"
+					className="h-10 w-10 rounded-full bg-background cursor-pointer"
 					size="icon"
 					variant="ghost"
 				>

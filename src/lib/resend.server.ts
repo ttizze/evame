@@ -2,7 +2,7 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.AUTH_RESEND_KEY);
 
-export async function resendSendEmail(
+async function resendSendEmail(
 	email: string,
 	subject: string,
 	html: string,

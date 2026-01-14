@@ -96,7 +96,7 @@ const REDACT_PATHS = [
 	"*.*.apiKey",
 ];
 
-export const logger = pino(
+const logger = pino(
 	{
 		level: getLogLevel(),
 		formatters: { level: (label) => ({ level: label }) },

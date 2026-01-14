@@ -63,7 +63,7 @@ export async function offsetSegmentNumbers(
 /**
  * セグメントを1つupsertする（存在すれば更新、存在しなければ作成）
  */
-export async function upsertSingleSegment(
+async function upsertSingleSegment(
 	tx: TransactionClient,
 	contentId: number,
 	segmentTypeId: number,
