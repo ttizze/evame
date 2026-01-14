@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { mdastToReact } from "@/app/[locale]/(common-layout)/_components/mdast-to-react/server";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { fetchPageContext } from "../_service/fetch-page-context";
+import { mdastToReact } from "./mdast-to-react/server";
 import { SubHeader } from "./sub-header";
 import { TranslationFormOnClick } from "./translation-form-on-click.client";
 

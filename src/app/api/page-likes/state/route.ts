@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import type { LikeState } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/service/like-api";
+import type { LikeState } from "@/app/api/page-likes/_types/like-state";
 import { db } from "@/db";
 import { getCurrentUser } from "@/lib/auth-server";
 export async function GET(request: Request) {

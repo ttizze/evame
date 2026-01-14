@@ -2,14 +2,11 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TranslationFormOnClick } from "./translation-form-on-click.client";
 
-vi.mock(
-	"@/app/[locale]/(common-layout)/_components/wrap-segments/translation-section/add-and-vote-translations.client",
-	() => ({
-		AddAndVoteTranslations: ({ segmentId }: { segmentId: number }) => (
-			<div data-testid="tr-ui">segment:{segmentId}</div>
-		),
-	}),
-);
+vi.mock("./translation-section/add-and-vote-translations.client", () => ({
+	AddAndVoteTranslations: ({ segmentId }: { segmentId: number }) => (
+		<div data-testid="tr-ui">segment:{segmentId}</div>
+	),
+}));
 
 describe("TranslationFormOnClick", () => {
 	test("data-segment-id のクリックで、その段のUIだけが開く（イベント委譲）", async () => {

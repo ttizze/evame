@@ -9,7 +9,7 @@ vi.mock("./share-dialog", () => ({
 	ShareDialog: () => null,
 }));
 
-vi.mock("../hooks/use-scroll-visibility", () => ({
+vi.mock("./hooks/use-scroll-visibility", () => ({
 	useScrollVisibility: () => ({
 		isVisible: true,
 		ignoreNextScroll: vi.fn(),

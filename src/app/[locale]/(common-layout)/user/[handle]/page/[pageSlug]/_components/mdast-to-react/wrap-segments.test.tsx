@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import type { SegmentForList } from "@/app/[locale]/types";
-import { WrapSegment } from "./server";
+import { WrapSegment } from "./wrap-segments";
 
 function makeSegment(overrides: Partial<SegmentForList> = {}): SegmentForList {
 	return {

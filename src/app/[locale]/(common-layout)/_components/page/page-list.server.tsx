@@ -2,7 +2,6 @@ import { EyeIcon } from "lucide-react";
 import { getImageProps } from "next/image";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { fetchPageViewCount } from "@/app/[locale]/_db/page-utility-queries.server";
-import { PageCommentButton } from "@/app/[locale]/(common-layout)/_components/page/page-comment-button/client";
 import { PageLikeButton } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/server";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
@@ -10,6 +9,7 @@ import type { PageForList } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
 import { PageActionsDropdown } from "./page-actions-dropdown/client";
+import { PageCommentButton } from "./page-list/page-comment-button.client";
 
 type PageListProps = {
 	PageForList: PageForList;

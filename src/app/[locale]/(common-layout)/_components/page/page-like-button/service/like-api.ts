@@ -1,12 +1,9 @@
-export type LikeState = {
-	liked: boolean;
-	likeCount: number;
-};
+import type {
+	LikeState,
+	LikeStatesResponse,
+} from "@/app/api/page-likes/_types/like-state";
 
-//pageIdをkeyとして、Stateの配列を返す
-export type LikeStatesResponse = {
-	states: Record<string, LikeState>;
-};
+export type { LikeState, LikeStatesResponse };
 
 export const buildLikeStateKey = (ids: number[] | number) => {
 	const list = Array.isArray(ids) ? ids : [ids];

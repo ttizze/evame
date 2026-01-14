@@ -7,13 +7,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { getCurrentUser } from "@/lib/auth-server";
-import { FollowButton } from "../user/[handle]/_components/follow-button";
-import { FollowStats } from "../user/[handle]/_components/follow-stats";
 import {
 	fetchFollowerList,
 	fetchFollowingList,
 	getFollowCounts,
-} from "../user/[handle]/_db/queries.server";
+} from "../_db/queries.server";
+import { FollowButton } from "./follow-button";
+import { FollowStats } from "./follow-stats";
 
 type FollowerRecord = Awaited<ReturnType<typeof fetchFollowerList>>[number];
 type FollowingRecord = Awaited<ReturnType<typeof fetchFollowingList>>[number];

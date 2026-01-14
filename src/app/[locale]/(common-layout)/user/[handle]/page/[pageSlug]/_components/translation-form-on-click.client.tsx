@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { AddAndVoteTranslations } from "@/app/[locale]/(common-layout)/_components/wrap-segments/translation-section/add-and-vote-translations.client";
+import { AddAndVoteTranslations } from "./translation-section/add-and-vote-translations.client";
 
 function ensureFormRoot(afterEl: Element) {
 	const existing = afterEl.nextElementSibling;
