@@ -23,10 +23,9 @@ import {
 
 export function ShareDialog() {
 	const [isOpen, setIsOpen] = useState(false);
-
-	/* いま表示中のモードを取得 */
 	const { mode } = useDisplay();
 
+	/* いま表示中のモードを取得 */
 	const shareTitle = typeof window !== "undefined" ? document.title : "";
 
 	/* 共有 URL を組み立て */
@@ -41,7 +40,7 @@ export function ShareDialog() {
 		<Dialog onOpenChange={setIsOpen} open={isOpen}>
 			<DialogTrigger asChild>
 				<Button
-					className="h-10 w-10 rounded-full border bg-background"
+					className="h-10 w-10 rounded-full bg-background cursor-pointer"
 					size="icon"
 					variant="ghost"
 				>

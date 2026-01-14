@@ -14,7 +14,7 @@ export const translationJobForToastSchema = z.object({
 	}),
 });
 
-export const translationJobForTranslationAPI = z.object({
+const translationJobForTranslationAPI = z.object({
 	id: z.number(),
 	locale: z.string(),
 	status: z.string(),

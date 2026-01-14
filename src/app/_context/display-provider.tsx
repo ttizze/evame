@@ -2,135 +2,124 @@
 "use client";
 
 import {
-	parseAsArrayOf,
-	parseAsString,
-	parseAsStringEnum,
-	useQueryState,
-} from "nuqs";
-import {
 	createContext,
 	type ReactNode,
-	useCallback,
 	useContext,
 	useEffect,
 	useState,
 } from "react";
-import type { DisplayMode, Pref } from "./display-types";
 
-function decideFromLocales(user: string, source: string): DisplayMode {
-	return user === source ? "source" : "user";
-}
+const DISPLAY_MODES = ["user", "source", "both"] as const;
+export type DisplayMode = (typeof DISPLAY_MODES)[number];
+
+const DISPLAY_MODE_COOKIE = "displayMode";
+const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
+
+const toDisplayMode = (value?: string | null): DisplayMode | undefined => {
+	if (!value) return;
+	return DISPLAY_MODES.includes(value as DisplayMode)
+		? (value as DisplayMode)
+		: undefined;
+};
+
+const getDisplayModeFromQuery = (): DisplayMode | undefined => {
+	if (typeof window === "undefined") return;
+	return toDisplayMode(
+		new URLSearchParams(window.location.search).get(DISPLAY_MODE_COOKIE),
+	);
+};
+
+const getDisplayModeFromCookie = async (): Promise<DisplayMode | undefined> => {
+	if (typeof window === "undefined") return;
+	if (!("cookieStore" in window)) return;
+	const value = await window.cookieStore.get(DISPLAY_MODE_COOKIE);
+	return toDisplayMode(value?.value);
+};
+
+const setDisplayModeCookie = (mode: DisplayMode) => {
+	if (typeof window === "undefined") return;
+	if (!("cookieStore" in window)) return;
+	window.cookieStore
+		.set({
+			name: DISPLAY_MODE_COOKIE,
+			value: mode,
+			path: "/",
+			expires: Date.now() + 1000 * COOKIE_MAX_AGE_SECONDS,
+			sameSite: "lax",
+		})
+		.catch(() => {});
+};
+
+export const getNextDisplayMode = (mode: DisplayMode): DisplayMode =>
+	mode === "user" ? "source" : mode === "source" ? "both" : "user";
 
 type CtxShape = {
 	mode: DisplayMode;
-	userLocale: string;
-	sourceLocale: string;
 	cycle(): void;
-	/** ページ側から現在の sourceLocale を通知 */
-	setSourceLocale(locale: string): void;
 };
 
 const Ctx = createContext<CtxShape | null>(null);
 
-/* ---------------- Provider ---------------- */
 export function DisplayProvider({
 	children,
-	userLocale,
-	/** 最初に訪れたページの sourceLocale を渡す (app/layout では "mixed") */
-	initialSourceLocale = "mixed",
-	initialPref = "auto",
+	initialMode = "both",
 }: {
 	children: ReactNode;
-	userLocale: string;
-	initialSourceLocale?: string;
-	initialPref?: Pref;
+	initialMode?: DisplayMode;
 }) {
-	/* 1) Cookie → pref */
-	const [pref, setPref] = useState<Pref>(initialPref);
+	const [mode, setMode] = useState<DisplayMode>(initialMode);
+	const [isReady, setIsReady] = useState(false);
+
 	useEffect(() => {
-		const saved =
-			(document.cookie.match(/displayPref=(\w+)/)?.[1] as Pref) ?? "auto";
-		setPref(saved);
-	}, []);
+		let active = true;
 
-	/* 2) sourceLocale はページごとに書き換わる */
-	const [sourceLocale, setSourceLocale] = useState(initialSourceLocale);
+		const syncMode = async () => {
+			const queryMode = getDisplayModeFromQuery();
+			if (!active) return;
+			if (queryMode) {
+				setMode(queryMode);
+				setIsReady(true);
+				setDisplayModeCookie(queryMode);
+				return;
+			}
 
-	/* 3) URL ↔︎ queryMode */
-	const [queryMode, setQueryMode] = useQueryState(
-		"displayMode",
-		parseAsStringEnum<DisplayMode>(["user", "source", "both"]).withOptions({
-			shallow: true,
-		}),
-	);
-	const [annotationsQuery] = useQueryState(
-		"annotations",
-		parseAsArrayOf(parseAsString, "~").withDefault([]).withOptions({
-			shallow: true,
-		}),
-	);
+			const cookieMode = await getDisplayModeFromCookie();
+			if (!active) return;
+			if (cookieMode) {
+				setMode(cookieMode);
+				setIsReady(true);
+				return;
+			}
 
-	/* 4) 現在の最終モード */
-	const fallback = decideFromLocales(userLocale, sourceLocale);
-	const mode: DisplayMode =
-		queryMode ??
-		(pref === "source"
-			? "source"
-			: pref === "user"
-				? "user"
-				: pref === "both"
-					? "both"
-					: fallback); // auto
+			setMode(initialMode);
+			setIsReady(true);
+		};
 
-	/* 5) URL と Cookie を同期 */
+		syncMode();
+
+		return () => {
+			active = false;
+		};
+	}, [initialMode]);
+
 	useEffect(() => {
-		if (queryMode === mode) return;
-		if (pref === "auto" && mode === fallback) {
-			setQueryMode(null); // URL をクリーンに
-		} else {
-			setQueryMode(mode);
-		}
-	}, [queryMode, mode, pref, fallback, setQueryMode]);
+		if (!isReady) return;
+		setDisplayModeCookie(mode);
+	}, [mode, isReady]);
 
-	/* 5.5) CSS 用に data-display-mode を同期 */
-	useEffect(() => {
-		document.documentElement.dataset.displayMode = mode;
-	}, [mode]);
-
-	/* 5.6) 注釈の表示切替用 (URL param -> DOM) */
-	useEffect(() => {
-		// Token list is `a~b~c` in URL; we sync to DOM for CSS selectors.
-		const tokens = annotationsQuery.filter(Boolean);
-		if (tokens.length === 0) {
-			delete document.documentElement.dataset.annotations;
-			return;
-		}
-		// NOTE: We intentionally do not traverse the DOM to toggle classes; visibility is handled by CSS.
-		document.documentElement.dataset.annotations = tokens.join(" ");
-	}, [annotationsQuery]);
-
-	/* 6) トグル */
-	const cycle = useCallback(() => {
-		const next =
-			mode === "user" ? "source" : mode === "source" ? "both" : "user";
-		setQueryMode(next);
-		window.cookieStore?.set({
-			name: "displayPref",
-			value: next,
-			path: "/",
-		});
-		setPref(next as Pref);
-	}, [mode, setQueryMode]);
+	const cycle = () => {
+		setMode((prev) => getNextDisplayMode(prev));
+	};
 
 	return (
-		<Ctx.Provider
-			value={{ mode, userLocale, sourceLocale, cycle, setSourceLocale }}
-		>
-			{children}
+		<Ctx.Provider value={{ mode, cycle }}>
+			<div className="contents" data-display-mode={mode}>
+				{children}
+			</div>
 		</Ctx.Provider>
 	);
 }
-/* ---------------- Hook ---------------- */
+
 export const useDisplay = () => {
 	const c = useContext(Ctx);
 	if (!c) throw new Error("useDisplay must be inside DisplayProvider");

@@ -1,18 +1,36 @@
 /* app/_components/display-mode-cycle.tsx */
 "use client";
+import { FileText } from "lucide-react";
 import { useDisplay } from "@/app/_context/display-provider";
 import { Button } from "@/components/ui/button";
 
 interface Props {
 	afterClick?: () => void;
+	userLocale: string;
+	sourceLocale: string;
 }
 
-export function DisplayModeCycle({ afterClick }: Props) {
-	const { mode, cycle, userLocale, sourceLocale } = useDisplay(); // mode: "user" | "source" | "both"
+export function DisplayModeCycle({
+	afterClick,
+	userLocale,
+	sourceLocale,
+}: Props) {
+	const { mode, cycle } = useDisplay();
+
+	const sourceLabel =
+		sourceLocale === "mixed" ? (
+			<FileText
+				aria-hidden
+				className="h-5 w-5"
+				data-testid="source-mixed-icon"
+			/>
+		) : (
+			<span>{sourceLocale.toUpperCase()}</span>
+		);
 
 	const handleClick = () => {
+		cycle();
 		afterClick?.();
-		cycle(); // ③ 状態変更
 	};
 
 	/* ボタン内部の表示内容 */
@@ -20,16 +38,14 @@ export function DisplayModeCycle({ afterClick }: Props) {
 		mode === "user" ? (
 			<span>{userLocale.toUpperCase()}</span>
 		) : mode === "source" ? (
-			<span>{sourceLocale.toUpperCase()}</span>
+			sourceLabel
 		) : (
 			<span className="flex items-center gap-1 scale-90">
 				<span className="text-[10px] leading-none">
 					{userLocale.toUpperCase()}
 				</span>
 				<span className="text-[10px] leading-none">/</span>
-				<span className="text-[10px] leading-none">
-					{sourceLocale.toUpperCase()}
-				</span>
+				<span className="text-[10px] leading-none">{sourceLabel}</span>
 			</span>
 		);
 
@@ -44,7 +60,7 @@ export function DisplayModeCycle({ afterClick }: Props) {
 	return (
 		<Button
 			aria-label={label}
-			className="border h-10  px-3 rounded-full bg-background font-semibold text-xs"
+			className="h-10 px-3 rounded-full bg-background font-semibold text-xs cursor-pointer hover:scale-100 active:scale-100"
 			onClick={handleClick}
 			title={label}
 			variant="ghost"

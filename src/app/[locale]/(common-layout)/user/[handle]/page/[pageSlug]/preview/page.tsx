@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { getCurrentUser } from "@/lib/auth-server";
 import { PageContent } from "../_components/page-content";
 import { PreviewBanner } from "../_components/preview-banner";
@@ -43,11 +42,9 @@ export default async function PreviewPage(
 
 	const data = await fetchPageContext(pageSlug, locale);
 	if (!data) return notFound();
-	const { pageDetail } = data;
 
 	return (
 		<>
-			<SourceLocaleBridge locale={pageDetail.sourceLocale} />
 			<PreviewBanner />
 			<PageContent locale={locale} pageData={data} />
 		</>

@@ -75,13 +75,15 @@ export default async function ProblemSolutionSection({
 			key="component-5"
 			likeButton={
 				<PageLikeButton
-					className="w-10 h-10 border rounded-full"
+					className="w-10 h-10 rounded-full"
 					initialLikeCount={pageDetail.likeCount}
 					pageId={pageDetail.id}
 					showCount={false}
 				/>
 			}
 			position="w-full flex justify-center"
+			sourceLocale={pageDetail.sourceLocale}
+			userLocale={locale}
 		/>,
 		<span key="component-6" />,
 	];

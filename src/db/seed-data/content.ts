@@ -208,5 +208,3 @@ También puedes recibir comentarios sobre la traducción de tus textos de todo e
 		],
 	},
 };
-
-export const ORDERED_LOCALES = ["en", "ja", "zh", "ko", "es"] as const;

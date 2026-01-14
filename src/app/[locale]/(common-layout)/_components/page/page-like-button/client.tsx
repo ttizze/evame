@@ -86,7 +86,7 @@ export function PageLikeButtonClient({
 				<input name="pageId" type="hidden" value={pageId} />
 				<Button
 					aria-label="Like"
-					className={`bg-background ${className}`}
+					className={`bg-background cursor-pointer ${className}`}
 					disabled={isPending || isLoading}
 					size="icon"
 					type="submit"

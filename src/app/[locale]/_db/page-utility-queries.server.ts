@@ -32,7 +32,6 @@ export async function fetchPageIdBySlug(slug: string) {
 
 /**
  * ページの閲覧数を取得
- * Kyselyに移行済み
  */
 export async function fetchPageViewCount(pageId: number): Promise<number> {
 	const result = await db
@@ -41,23 +40,4 @@ export async function fetchPageViewCount(pageId: number): Promise<number> {
 		.where("pageId", "=", pageId)
 		.executeTakeFirst();
 	return result?.count ?? 0;
-}
-
-/**
- * 複数ページの閲覧数を一括取得
- * Kyselyに移行済み
- */
-export async function fetchPageViewCounts(
-	pageIds: number[],
-): Promise<Record<number, number>> {
-	if (pageIds.length === 0) return {};
-	const views = await db
-		.selectFrom("pageViews")
-		.select(["pageId", "count"])
-		.where("pageId", "in", pageIds)
-		.execute();
-	return views.reduce<Record<number, number>>((acc, v) => {
-		acc[v.pageId] = v.count;
-		return acc;
-	}, {});
 }

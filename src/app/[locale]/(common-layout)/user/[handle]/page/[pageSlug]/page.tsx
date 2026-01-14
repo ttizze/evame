@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { SourceLocaleBridge } from "@/app/_context/source-locale-bridge.client";
 import { createServerLogger } from "@/lib/logger.server";
 import { PageContent } from "./_components/page-content";
 import { fetchPageContext } from "./_service/fetch-page-context";
@@ -58,10 +57,5 @@ export default async function Page(
 		return notFound();
 	}
 
-	return (
-		<>
-			<SourceLocaleBridge locale={pageDetail.sourceLocale} />
-			<PageContent locale={locale} pageData={data} />
-		</>
-	);
+	return <PageContent locale={locale} pageData={data} />;
 }

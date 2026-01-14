@@ -24,7 +24,7 @@ export type SegmentForList = {
 };
 
 // SegmentForDetail と SegmentForList のユニオン型
-export type SegmentForComment = Omit<SegmentForDetail, "annotations"> & {
+type SegmentForComment = Omit<SegmentForDetail, "annotations"> & {
 	annotations?: SegmentForDetail["annotations"];
 };
 export type Segment = SegmentForDetail | SegmentForComment | SegmentForList;

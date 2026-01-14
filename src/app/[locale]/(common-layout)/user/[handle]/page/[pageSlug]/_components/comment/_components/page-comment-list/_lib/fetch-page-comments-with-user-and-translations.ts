@@ -1,7 +1,4 @@
-import {
-	fetchPageCommentsWithSegments,
-	type PageCommentWithSegments,
-} from "../_db/queries.server";
+import type { PageCommentWithSegments } from "../_db/queries.server";
 
 export async function buildCommentTree(
 	flatComments: PageCommentWithSegments[],
@@ -23,15 +20,4 @@ export async function buildCommentTree(
 		}
 	}
 	return tree;
-}
-
-// メインの関数
-export async function fetchPageCommentsWithUserAndTranslations(
-	pageId: number,
-	locale: string,
-) {
-	const flatComments = await fetchPageCommentsWithSegments(pageId, locale);
-
-	// 2. flatなコメントからツリーを構築してそのまま返却
-	return await buildCommentTree(flatComments);
 }
