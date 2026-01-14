@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { DisplayProvider } from "@/app/_context/display-provider";
 import { Footer } from "@/app/[locale]/(common-layout)/_components/footer";
+import { TranslationFormOnClick } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/translation-form-on-click.client";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Header = dynamic(
@@ -28,6 +29,7 @@ export default async function CommonLayout(props: LayoutProps<"/[locale]">) {
 						{props.children}
 					</div>
 				</main>
+				<TranslationFormOnClick />
 				<Footer />
 			</DisplayProvider>
 		</NextIntlClientProvider>

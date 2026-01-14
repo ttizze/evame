@@ -4,7 +4,6 @@ import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/pag
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { fetchPageContext } from "../_service/fetch-page-context";
 import { SubHeader } from "./sub-header";
-import { TranslationFormOnClick } from "./translation-form-on-click.client";
 
 interface ContentWithTranslationsProps {
 	pageData: Awaited<ReturnType<typeof fetchPageContext>>;
@@ -31,7 +30,6 @@ export async function ContentWithTranslations({
 			<PageTagList tag={pageDetail.tagPages.map((tagPage) => tagPage.tag)} />
 			<SubHeader pageDetail={pageDetail} tocItems={tocItems} />
 			<div className="js-content">{content}</div>
-			<TranslationFormOnClick />
 		</>
 	);
 }

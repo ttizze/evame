@@ -44,6 +44,8 @@ export function TranslationFormOnClick() {
 	const [rootEl, setRootEl] = useState<HTMLElement | null>(null);
 
 	useEffect(() => {
+		const hasSegments = document.querySelector("[data-segment-id]");
+		if (!hasSegments) return;
 		const container = document.body;
 		const hadSelectionOnPointerDownRef = { current: false };
 
