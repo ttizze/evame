@@ -1,6 +1,6 @@
 "use client";
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useScrollVisibility } from "../hooks/use-scroll-visibility";
@@ -59,11 +59,13 @@ export function FloatingControls({
 	const Buttons = (
 		<div className="flex gap-6 justify-center">
 			<div className="flex flex-col items-center gap-1 group">
-				<DisplayModeCycle
-					afterClick={ignoreNextScroll}
-					sourceLocale={sourceLocale}
-					userLocale={userLocale}
-				/>
+				<Suspense fallback={null}>
+					<DisplayModeCycle
+						afterClick={ignoreNextScroll}
+						sourceLocale={sourceLocale}
+						userLocale={userLocale}
+					/>
+				</Suspense>
 				<span className="text-[10px] leading-none text-muted-foreground transition-colors group-hover:text-foreground">
 					View
 				</span>

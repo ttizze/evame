@@ -1,7 +1,13 @@
 /* app/_components/display-mode-cycle.tsx */
 "use client";
 import { FileText } from "lucide-react";
-import { useDisplay } from "@/app/_context/display-provider";
+import { parseAsStringEnum, useQueryState } from "nuqs";
+import { useEffect } from "react";
+import {
+	type DisplayMode,
+	getNextDisplayMode,
+	useDisplay,
+} from "@/app/_context/display-provider";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -15,7 +21,21 @@ export function DisplayModeCycle({
 	userLocale,
 	sourceLocale,
 }: Props) {
-	const { mode, cycle } = useDisplay();
+	const { mode: currentMode, setMode } = useDisplay();
+	const [mode, setQueryMode] = useQueryState(
+		"displayMode",
+		parseAsStringEnum<DisplayMode>(["user", "source", "both"]).withOptions({
+			shallow: true,
+		}),
+	);
+
+	useEffect(() => {
+		if (mode) {
+			setMode(mode);
+			return;
+		}
+		setQueryMode(currentMode);
+	}, [mode, setMode, setQueryMode, currentMode]);
 
 	const sourceLabel =
 		sourceLocale === "mixed" ? (
@@ -29,15 +49,18 @@ export function DisplayModeCycle({
 		);
 
 	const handleClick = () => {
-		cycle();
+		const current = mode ?? currentMode;
+		const next = getNextDisplayMode(current);
+		setQueryMode(next);
+		setMode(next);
 		afterClick?.();
 	};
 
 	/* ボタン内部の表示内容 */
 	const inner =
-		mode === "user" ? (
+		currentMode === "user" ? (
 			<span>{userLocale.toUpperCase()}</span>
-		) : mode === "source" ? (
+		) : currentMode === "source" ? (
 			sourceLabel
 		) : (
 			<span className="flex items-center gap-1 scale-90">
@@ -51,9 +74,9 @@ export function DisplayModeCycle({
 
 	/* アクセシブルラベル */
 	const label =
-		mode === "user"
+		currentMode === "user"
 			? "Currently: User language only (Click to change)"
-			: mode === "source"
+			: currentMode === "source"
 				? "Currently: Source only (Click to change)"
 				: "Currently: Both languages (Click to change)";
 
