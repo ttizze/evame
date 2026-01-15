@@ -30,8 +30,7 @@ export async function PageList({
 		width: 40,
 		height: 40,
 	});
-	// Get the title segment (which should be the first segment)
-	const titleSegment = PageForList.segments.find((s) => s.number === 0);
+	const { titleSegment } = PageForList;
 	const _ogpImageUrl =
 		`${BASE_URL}/api/og?locale=${locale}` + `&slug=${PageForList.slug}`;
 	const pageLink = `/user/${PageForList.userHandle}/page/${PageForList.slug}`;
@@ -61,14 +60,12 @@ export async function PageList({
 				{/* ─ row‑1: タイトル & オーナーアクション ─ */}
 				<div className="grid grid-cols-[1fr_auto] gap-2">
 					<Link className="block overflow-hidden" href={pageLink}>
-						{titleSegment ? (
-							<SegmentElement
-								className="line-clamp-1 break-all overflow-wrap-anywhere"
-								interactive={false}
-								segment={titleSegment}
-								tagName="span"
-							/>
-						) : null}
+						<SegmentElement
+							className="line-clamp-1 break-all overflow-wrap-anywhere"
+							interactive={false}
+							segment={titleSegment}
+							tagName="span"
+						/>
 					</Link>
 					{showOwnerActions && (
 						<PageActionsDropdown

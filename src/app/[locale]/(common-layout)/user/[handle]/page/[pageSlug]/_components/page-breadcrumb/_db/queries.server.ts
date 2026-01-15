@@ -1,5 +1,6 @@
+import { bestTranslationLiteSubquery } from "@/app/[locale]/_db/best-translation-subquery.server";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
-import type { SegmentForList } from "@/app/[locale]/types";
+import type { TitleSegment } from "@/app/[locale]/types";
 import type { SanitizedUser } from "@/app/types";
 import { db } from "@/db";
 
@@ -12,7 +13,7 @@ type ParentNode = {
 	parentId: number | null;
 	createdAt: string;
 	user: SanitizedUser;
-	content: { segments: SegmentForList[] };
+	content: { titleSegment: TitleSegment };
 	children: ParentNode[];
 };
 
@@ -29,7 +30,11 @@ export async function getParentChain(pageId: number, locale: string) {
 		}
 
 		// セグメント（number: 0のみ）を取得
-		const segments = await fetchTitleSegment(parent.id, locale);
+		const titleSegment = await fetchTitleSegment(
+			parent.id,
+			locale,
+			parent.user.id,
+		);
 
 		parentChain.unshift({
 			id: parent.id,
@@ -40,9 +45,7 @@ export async function getParentChain(pageId: number, locale: string) {
 			parentId: parent.parentId,
 			createdAt: parent.createdAt.toISOString(),
 			user: parent.user,
-			content: {
-				segments: segments ? [segments] : [],
-			},
+			content: { titleSegment },
 			children: [],
 		});
 
@@ -66,87 +69,37 @@ async function getParentId(pageId: number): Promise<number | null> {
 async function fetchTitleSegment(
 	pageId: number,
 	locale: string,
-): Promise<SegmentForList | null> {
+	pageOwnerId: string,
+): Promise<TitleSegment> {
 	const row = await db
 		.selectFrom("segments")
 		.innerJoin("segmentTypes", "segments.segmentTypeId", "segmentTypes.id")
 		.leftJoin(
 			(eb) =>
-				eb
-					.selectFrom("segmentTranslations")
-					.innerJoin("users", "segmentTranslations.userId", "users.id")
-					.distinctOn("segmentTranslations.segmentId")
-					.select([
-						"segmentTranslations.id",
-						"segmentTranslations.segmentId",
-						"segmentTranslations.userId",
-						"segmentTranslations.locale",
-						"segmentTranslations.text",
-						"segmentTranslations.point",
-						"segmentTranslations.createdAt",
-						"users.name as userName",
-						"users.handle as userHandle",
-						"users.image as userImage",
-						"users.createdAt as userCreatedAt",
-						"users.updatedAt as userUpdatedAt",
-						"users.profile as userProfile",
-						"users.twitterHandle as userTwitterHandle",
-						"users.totalPoints as userTotalPoints",
-						"users.isAi as userIsAi",
-						"users.plan as userPlan",
-					])
-					.where("segmentTranslations.locale", "=", locale)
-					.orderBy("segmentTranslations.segmentId")
-					.orderBy("segmentTranslations.point", "desc")
-					.orderBy("segmentTranslations.createdAt", "desc")
-					.as("trans"),
+				bestTranslationLiteSubquery(eb, {
+					locale,
+					ownerUserId: pageOwnerId,
+				}).as("trans"),
 			(join) => join.onRef("trans.segmentId", "=", "segments.id"),
 		)
 		.select([
-			"segments.id",
-			"segments.contentId",
-			"segments.number",
-			"segments.text",
-			"segments.textAndOccurrenceHash",
-			"segments.createdAt",
-			"segments.segmentTypeId",
-			"segmentTypes.key as typeKey",
-			"segmentTypes.label as typeLabel",
-			"trans.id as transId",
-			"trans.segmentId as transSegmentId",
-			"trans.userId as transUserId",
-			"trans.locale as transLocale",
-			"trans.text as transText",
-			"trans.point as transPoint",
-			"trans.createdAt as transCreatedAt",
-			"trans.userName",
-			"trans.userHandle",
-			"trans.userImage",
-			"trans.userCreatedAt",
-			"trans.userUpdatedAt",
-			"trans.userProfile",
-			"trans.userTwitterHandle",
-			"trans.userTotalPoints",
-			"trans.userIsAi",
-			"trans.userPlan",
+			"segments.id as id",
+			"segments.contentId as contentId",
+			"segments.number as number",
+			"segments.text as text",
+			"segments.textAndOccurrenceHash as textAndOccurrenceHash",
+			"segments.createdAt as createdAt",
+			"segments.segmentTypeId as segmentTypeId",
+			"segmentTypes.key as segmentTypeKey",
+			"segmentTypes.label as segmentTypeLabel",
+			"trans.id as translationId",
+			"trans.text as translationText",
 		])
 		.where("segments.contentId", "=", pageId)
 		.where("segments.number", "=", 0)
 		.executeTakeFirst();
 
-	if (!row) return null;
+	if (!row) throw new Error("Title segment not found");
 
-	return {
-		id: row.id,
-		contentId: row.contentId,
-		number: row.number,
-		text: row.text,
-		textAndOccurrenceHash: row.textAndOccurrenceHash,
-		createdAt: row.createdAt,
-		segmentTypeId: row.segmentTypeId,
-		segmentTypeKey: row.typeKey,
-		segmentTypeLabel: row.typeLabel,
-		translationId: row.transId ?? null,
-		translationText: row.transText ?? null,
-	};
+	return row;
 }

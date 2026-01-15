@@ -18,7 +18,8 @@
 			"!.turbo",
 			"!.vercel",
 			"!.cache",
-			"!dist"
+			"!dist",
+			"!.codex"
 		]
 	},
 	"assist": {

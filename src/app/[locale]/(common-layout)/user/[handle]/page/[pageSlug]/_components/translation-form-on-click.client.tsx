@@ -1,18 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AddAndVoteTranslations } from "./translation-section/add-and-vote-translations.client";
 
-function ensureFormRoot(afterEl: Element) {
-	const existing = afterEl.nextElementSibling;
-	if (
-		existing &&
-		existing instanceof HTMLElement &&
-		existing.dataset.trFormRoot
-	) {
-		return existing;
-	}
+/** Portal用rootを.seg-trの直後に確保（既存があれば再利用） */
+function ensureFormRoot(afterEl: Element): HTMLElement {
+	const next = afterEl.nextElementSibling;
+	if (next instanceof HTMLElement && next.dataset.trFormRoot) return next;
+
 	const root = document.createElement("div");
 	root.dataset.trFormRoot = "1";
 	root.className = "not-prose";
@@ -20,138 +16,117 @@ function ensureFormRoot(afterEl: Element) {
 	return root;
 }
 
+/** クリック位置がテキスト上かを判定（余白クリックを除外するため） */
+function isClickOnText(e: MouseEvent): boolean {
+	const d = document as Document & {
+		caretRangeFromPoint?: (x: number, y: number) => Range | null;
+		caretPositionFromPoint?: (
+			x: number,
+			y: number,
+		) => { offsetNode: Node | null } | null;
+	};
+	// jsdom等では API が無いのでチェックをスキップ
+	if (!d.caretRangeFromPoint && !d.caretPositionFromPoint) return true;
+
+	const range = d.caretRangeFromPoint?.(e.clientX, e.clientY);
+	if (range) return range.startContainer.nodeType === Node.TEXT_NODE;
+
+	const pos = d.caretPositionFromPoint?.(e.clientX, e.clientY);
+	return pos?.offsetNode?.nodeType === Node.TEXT_NODE;
+}
+
+function hasSelection(): boolean {
+	const sel = window.getSelection?.();
+	return !!sel && !sel.isCollapsed && sel.toString().length > 0;
+}
+
 /**
  * クリックした訳文の段だけ「投票/追加フォーム」を出すためのクライアント側ブリッジ。
  *
- * 目的:
- * - 段ごとに Client Component を置かず（水和を増やさず）、
- *   必要なときだけ重いUIを出す。
- *
  * 仕組み:
- * - 本文/コメントのセグメントは Server Component 側で静的にレンダする
- *   （`WrapSegment` が訳文ブロック（`.seg-tr`）に `data-segment-id` を付けて出す）。
- * - `document.body` に 1 本だけ click リスナーを付ける（イベント委譲）ことで、
- *   本文だけでなくコメント内の訳文ボタンも同じ挙動で拾える。
- * - クリックされた `.seg-tr` の直後に Portal 用の root を作り、
- *   そこへ `AddAndVoteTranslations` を `createPortal` で差し込む。
- *
- * 重要:
- * - `.seg-tr` はブロック要素なので、余白クリックまで拾うと体験が悪い。
- *   そのため「クリック位置が実際にテキスト上か」をチェックしてから開く。
+ * - document.body に1本だけ click リスナーを付ける（イベント委譲）
+ * - クリックされた .seg-tr の直後に Portal 用 root を作り AddAndVoteTranslations を差し込む
+ * - useRef で最新状態を保持し、リスナー再登録を防ぐ
  */
 export function TranslationFormOnClick() {
-	const [segmentId, setSegmentId] = useState<number | null>(null);
-	const [rootEl, setRootEl] = useState<HTMLElement | null>(null);
+	const [activeSegmentId, setActiveSegmentId] = useState<number | null>(null);
+	const stateRef = useRef<{
+		segmentId: number | null;
+		rootEl: HTMLElement | null;
+	}>({
+		segmentId: null,
+		rootEl: null,
+	});
 
 	useEffect(() => {
-		const container = document.body;
-		const hadSelectionOnPointerDownRef = { current: false };
+		let hadSelectionOnPointerDown = false;
 
-		const isClickOnText = (e: MouseEvent) => {
-			// Chrome: caretRangeFromPoint / Safari: caretRangeFromPoint
-			const d = document as Document & {
-				caretRangeFromPoint?: (x: number, y: number) => Range | null;
-				caretPositionFromPoint?: (
-					x: number,
-					y: number,
-				) => { offsetNode: Node | null } | null;
-			};
-
-			// jsdom や一部環境では API が無いので、その場合はチェックをスキップする。
-			if (!d.caretRangeFromPoint && !d.caretPositionFromPoint) return true;
-
-			const range = d.caretRangeFromPoint?.(e.clientX, e.clientY);
-			if (range) return range.startContainer.nodeType === Node.TEXT_NODE;
-
-			const pos = d.caretPositionFromPoint?.(e.clientX, e.clientY);
-			return pos?.offsetNode?.nodeType === Node.TEXT_NODE;
-		};
-
-		const getHasSelection = () => {
-			const sel = window.getSelection?.();
-			return !!sel && !sel.isCollapsed && sel.toString().length > 0;
-		};
-
-		const onPointerDown = () => {
-			// 「選択解除のためのクリック」でも UI が開くと邪魔なので、
-			// pointerdown 時点で選択があればこのクリックは無視する。
-			hadSelectionOnPointerDownRef.current = getHasSelection();
-		};
-
-		const onClick = async (e: MouseEvent) => {
-			const target = e.target instanceof Element ? e.target : null;
-			const el = target?.closest?.("[data-segment-id]") as HTMLElement | null;
-			if (!el) return;
-			if (!(container as HTMLElement).contains(el)) return;
-			// When segments are wrapped in a link, don't hijack the click (navigation should win).
-			if (el.closest("a")) return;
-			if (hadSelectionOnPointerDownRef.current) return;
-			if (getHasSelection()) return;
-			if (!isClickOnText(e)) return;
-
-			const segIdRaw = el.dataset.segmentId;
-			const segId = segIdRaw ? Number(segIdRaw) : NaN;
+		/** セグメントのトグル処理（開く/閉じる） */
+		const toggleSegment = (el: HTMLElement) => {
+			const segId = Number(el.dataset.segmentId);
 			if (!Number.isFinite(segId)) return;
 
-			// Toggle off when clicking the same translation again
-			if (segmentId === segId) {
-				setSegmentId(null);
-				setRootEl(null);
+			// 同じセグメントをクリック → 閉じる
+			if (stateRef.current.segmentId === segId) {
+				stateRef.current = { segmentId: null, rootEl: null };
+				setActiveSegmentId(null);
 				return;
 			}
 
 			const translationBlock = el.closest(".seg-tr");
 			if (!translationBlock) return;
-			setRootEl(ensureFormRoot(translationBlock));
-			setSegmentId(segId);
+
+			const rootEl = ensureFormRoot(translationBlock);
+			stateRef.current = { segmentId: segId, rootEl };
+			setActiveSegmentId(segId);
+		};
+
+		/** data-segment-id を持つ要素を取得（リンク内は除外） */
+		const getSegmentEl = (target: EventTarget | null): HTMLElement | null => {
+			if (!(target instanceof Element)) return null;
+			const el = target.closest("[data-segment-id]") as HTMLElement | null;
+			if (!el || el.closest("a")) return null;
+			return el;
+		};
+
+		const onPointerDown = () => {
+			hadSelectionOnPointerDown = hasSelection();
+		};
+
+		const onClick = (e: MouseEvent) => {
+			if (hadSelectionOnPointerDown || hasSelection()) return;
+			if (!isClickOnText(e)) return;
+
+			const el = getSegmentEl(e.target);
+			if (el) toggleSegment(el);
 		};
 
 		const onKeyDown = (e: KeyboardEvent) => {
 			if (e.key !== "Enter" && e.key !== " ") return;
 
-			const target = e.target instanceof Element ? e.target : null;
-			const el = target?.closest?.("[data-segment-id]") as HTMLElement | null;
+			const el = getSegmentEl(e.target);
 			if (!el) return;
-			if (!(container as HTMLElement).contains(el)) return;
-			// When segments are wrapped in a link, don't hijack keyboard activation.
-			if (el.closest("a")) return;
 
-			// Prevent page scroll on Space
 			if (e.key === " ") e.preventDefault();
-
-			const segIdRaw = el.dataset.segmentId;
-			const segId = segIdRaw ? Number(segIdRaw) : NaN;
-			if (!Number.isFinite(segId)) return;
-
-			if (segmentId === segId) {
-				setSegmentId(null);
-				setRootEl(null);
-				return;
-			}
-
-			const translationBlock = el.closest(".seg-tr");
-			if (!translationBlock) return;
-			setRootEl(ensureFormRoot(translationBlock));
-			setSegmentId(segId);
+			toggleSegment(el);
 		};
 
-		const listener = (e: Event) => {
-			void onClick(e as MouseEvent);
-		};
-		container.addEventListener("pointerdown", onPointerDown, true);
-		container.addEventListener("click", listener);
-		container.addEventListener("keydown", onKeyDown);
+		document.body.addEventListener("pointerdown", onPointerDown, true);
+		document.body.addEventListener("click", onClick);
+		document.body.addEventListener("keydown", onKeyDown);
+
 		return () => {
-			container.removeEventListener("pointerdown", onPointerDown, true);
-			container.removeEventListener("click", listener);
-			container.removeEventListener("keydown", onKeyDown);
+			document.body.removeEventListener("pointerdown", onPointerDown, true);
+			document.body.removeEventListener("click", onClick);
+			document.body.removeEventListener("keydown", onKeyDown);
 		};
-	}, [segmentId]);
+	}, []);
 
-	if (!segmentId || !rootEl) return null;
+	const { segmentId, rootEl } = stateRef.current;
+	if (!activeSegmentId || !rootEl) return null;
 
 	return createPortal(
-		<AddAndVoteTranslations open={true} segmentId={segmentId} />,
+		<AddAndVoteTranslations open segmentId={segmentId!} />,
 		rootEl,
 	);
 }

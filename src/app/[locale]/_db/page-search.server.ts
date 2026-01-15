@@ -8,12 +8,42 @@ import { sql } from "kysely";
 import { db } from "@/db";
 import type { PageStatus } from "@/db/types";
 import type { PageForList } from "../types";
-import { fetchPagesByIds } from "./page-list.server";
+import {
+	buildPageListQuery,
+	fetchTagsMap,
+	toPageForList,
+} from "./page-list.server";
 
 type SearchResult = {
 	pageForLists: PageForList[];
 	total: number;
 };
+
+/**
+ * 指定IDのページリストを取得（検索結果用）
+ */
+async function fetchPagesByIds(
+	pageIds: number[],
+	locale: string,
+): Promise<PageForList[]> {
+	if (pageIds.length === 0) return [];
+
+	const rows = await buildPageListQuery(locale)
+		.where("pages.id", "in", pageIds)
+		.execute();
+
+	const tagsMap = await fetchTagsMap(pageIds);
+
+	// 元の順序を保持
+	const rowMap = new Map(rows.map((r) => [r.id, r]));
+	return pageIds
+		.map((id) => {
+			const row = rowMap.get(id);
+			if (!row) return null;
+			return toPageForList(row, tagsMap.get(row.id) || []);
+		})
+		.filter((p): p is PageForList => p !== null);
+}
 
 // ============================================
 // タイトル検索

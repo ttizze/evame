@@ -1,6 +1,92 @@
+import { bestTranslationByCommentSubquery } from "@/app/[locale]/_db/best-translation-subquery.server";
 import { db } from "@/db";
 import type { JsonValue } from "@/db/types";
-import { fetchSegmentsForCommentIds } from "./helpers.server";
+
+/**
+ * 複数コメントのセグメントを取得（DISTINCT ONで最良の翻訳1件のみ）
+ */
+async function fetchSegmentsForCommentIds(
+	commentIds: number[],
+	locale: string,
+) {
+	if (commentIds.length === 0) return [];
+
+	const rows = await db
+		.selectFrom("segments")
+		.innerJoin("segmentTypes", "segments.segmentTypeId", "segmentTypes.id")
+		.leftJoin(bestTranslationByCommentSubquery(locale).as("trans"), (join) =>
+			join.onRef("trans.segmentId", "=", "segments.id"),
+		)
+		.select([
+			"segments.id",
+			"segments.contentId",
+			"segments.number",
+			"segments.text",
+			"segments.textAndOccurrenceHash",
+			"segments.createdAt",
+			"segments.segmentTypeId",
+			"segmentTypes.key as typeKey",
+			"segmentTypes.label as typeLabel",
+			"trans.id as transId",
+			"trans.segmentId as transSegmentId",
+			"trans.userId as transUserId",
+			"trans.locale as transLocale",
+			"trans.text as transText",
+			"trans.point as transPoint",
+			"trans.createdAt as transCreatedAt",
+			"trans.userName",
+			"trans.userHandle",
+			"trans.userImage",
+			"trans.userCreatedAt",
+			"trans.userUpdatedAt",
+			"trans.userProfile",
+			"trans.userTwitterHandle",
+			"trans.userTotalPoints",
+			"trans.userIsAi",
+			"trans.userPlan",
+		])
+		.where("segments.contentId", "in", commentIds)
+		.orderBy("segments.id")
+		.execute();
+
+	return rows.map((row) => ({
+		id: row.id,
+		contentId: row.contentId,
+		number: row.number,
+		text: row.text,
+		textAndOccurrenceHash: row.textAndOccurrenceHash,
+		createdAt: row.createdAt,
+		segmentTypeId: row.segmentTypeId,
+		segmentType: {
+			key: row.typeKey,
+			label: row.typeLabel,
+		},
+		segmentTranslation: row.transId
+			? {
+					id: row.transId,
+					segmentId: row.transSegmentId!,
+					userId: row.transUserId!,
+					locale: row.transLocale!,
+					text: row.transText!,
+					point: row.transPoint!,
+					createdAt: row.transCreatedAt!,
+					user: {
+						id: row.transUserId!,
+						name: row.userName!,
+						handle: row.userHandle!,
+						image: row.userImage!,
+						createdAt: row.userCreatedAt!,
+						updatedAt: row.userUpdatedAt!,
+						profile: row.userProfile!,
+						twitterHandle: row.userTwitterHandle!,
+						totalPoints: row.userTotalPoints!,
+						isAi: row.userIsAi!,
+						plan: row.userPlan!,
+					},
+				}
+			: null,
+	}));
+}
 
 // コメントとセグメントを結合する共通処理
 async function combineCommentsWithSegments(
@@ -51,7 +137,6 @@ async function combineCommentsWithSegments(
 
 /**
  * ページコメントとそのセグメントを取得
- * Kysely版に移行済み
  */
 export async function fetchPageCommentsWithSegments(
 	pageId: number,
@@ -114,7 +199,6 @@ export type PageCommentWithSegments = NonNullable<
 
 /**
  * トップレベル（親なし）コメント一覧を取得
- * Kysely版に移行済み
  */
 export async function listRootPageComments(
 	pageId: number,
