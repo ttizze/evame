@@ -2,96 +2,51 @@
 
 [日本語版はこちら](README.ja.md)
 
-Evame is an open-source project that helps people share knowledge by providing translations, footnotes and explanations for user-submitted texts. Our goal is to open doors to stories and ideas for everyone.
+Evame is a project for sharing user-submitted texts with translations, annotations, and explanations.
 
-## Repository Structure
+## Quick start (development)
 
-```
-/
-├── next/                         # Main web application
-│   ├── src/                      # Source code
-│   ├── drizzle/                   # Drizzle schema and migrations
-│   └── public/                   # Static files
-└── components/                   # Chrome extension (currently empty)
-```
-
-Most development happens inside `next/`. Shared UI components live in `next/src/components/ui`, while feature specific code is under `next/src/features`.
-
-## Tech Stack
-
-- TypeScript
-- Shadcn UI (Radix UI)
-- Tailwind CSS
-- Drizzle ORM with PostgreSQL
-- NextAuth for authentication
-- next-intl for i18n
-- TipTap editor
-- LLM based translation services
-
-## Current Features
-
-- Article submission
-- LLM powered translation
-- Saving and voting on translations
-- Reader mode with user translations
-
-## Features in Development
-
-- Improved layout for parallel translations
-- Footnotes
-- Highlighting
-- Multi-format support: HTML, PDF, EPUB, plain text
-- Chrome extension
-- Advanced NLP features such as dictionary lookups
-
-## Getting Started
-
-
-1. Clone this repository:
+1. Install dependencies
+   ```bash
+   bun install
    ```
-   git clone https://github.com/ttizze/evame.git
-   ```
-
-2. Install dependencies:
-   ```
-   cd evame
-   cd next
-   bun i
-   ```
-
-3. Create and set up the environment variables file:
-   ```
-
+2. Prepare environment variables
+   ```bash
    cp .env.example .env
    openssl rand -base64 32
    ```
-   Add the generated string to `.env`.
-4. Start Docker:
+   Put the generated string into `.env`.
+3. Start DB
    ```bash
    docker compose up -d
    ```
-5. Run database migrations and seed:
+4. Run migrations and seed
    ```bash
-   cd next
-   bunx drizzle-kit migrate dev
+   bun run db:migrate
    bun run seed
    ```
-6. Start the development server:
+5. Start dev server
    ```bash
    bun run dev
    ```
-7. Open `http://localhost:5173` in your browser.
+6. Open `http://localhost:3000`
 
-For local development you can log in at `/auth/login` using `dev@example.com` and `devpassword`. This shortcut is disabled in production.
+## Key links
 
-## Contributing
+- Entry: `docs/README.md`
+- Requirements: `docs/requirements.md`
+- Architecture: `docs/architecture.md`
+- Route colocation rules: `docs/architecture/conventions/route-colocation.md`
+- ADR: `docs/adr/README.md`
+- HowTo: `docs/howto/README.md`
+- AI context: `AI_CONTEXT.md`
+- AI rules: `AGENTS.md`
 
-We welcome contributions of all kinds. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+## Repo structure (summary)
 
-## License
+- `src/app`: Next.js App Router
+- `src/db`: DB connection, types, seed
+- `src/drizzle`: Schema and migrations
+- `src/components`: Shared UI
 
-This project is released under the MIT License. See [LICENSE](LICENSE) for details.
-
-## Contact
-
-Questions or suggestions? Open an issue or join our [Discord](https://discord.gg/2JfhZdu9zW).
+See `docs/architecture.md` for details.
