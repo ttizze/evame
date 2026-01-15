@@ -33,12 +33,7 @@ Evame は、ユーザー投稿テキストに翻訳・注釈・解説を付け�
 
 ## 主要リンク
 
-- 入口: `docs/README.md`
-- 要件: `docs/requirements.md`
-- 全体像: `docs/architecture.md`
-- ルート配置ルール: `docs/architecture/conventions/route-colocation.md`
-- ADR: `docs/adr/README.md`
-- HowTo: `docs/howto/README.md`
+- ドキュメント入口: `docs/README.md`
 - AI 向け前提: `AI_CONTEXT.md`
 - AI 運用ルール: `AGENTS.md`
 

@@ -33,12 +33,7 @@ Evame is a project for sharing user-submitted texts with translations, annotatio
 
 ## Key links
 
-- Entry: `docs/README.md`
-- Requirements: `docs/requirements.md`
-- Architecture: `docs/architecture.md`
-- Route colocation rules: `docs/architecture/conventions/route-colocation.md`
-- ADR: `docs/adr/README.md`
-- HowTo: `docs/howto/README.md`
+- Docs entry: `docs/README.md`
 - AI context: `AI_CONTEXT.md`
 - AI rules: `AGENTS.md`
 

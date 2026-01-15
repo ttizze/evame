@@ -23,11 +23,7 @@
 
 ## 入口
 
-- **要件**: `docs/requirements.md`
-- **アーキテクチャ**: `docs/architecture.md`
-- **規約**: `docs/architecture/conventions`
-- **ADR**: `docs/adr/README.md`
-- **HowTo**: `docs/howto/README.md`
+- 入口一覧は `docs/README.md#入口` を参照
 
 # 配置ポリシー
 
