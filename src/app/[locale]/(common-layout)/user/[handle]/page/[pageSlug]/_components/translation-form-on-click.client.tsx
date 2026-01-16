@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { AddAndVoteTranslations } from "@/app/[locale]/(common-layout)/_components/wrap-segments/translation-section/add-and-vote-translations.client";
@@ -42,8 +43,10 @@ function ensureFormRoot(afterEl: Element) {
 export function TranslationFormOnClick() {
 	const [segmentId, setSegmentId] = useState<number | null>(null);
 	const [rootEl, setRootEl] = useState<HTMLElement | null>(null);
+	const pathname = usePathname();
 
 	useEffect(() => {
+		void pathname;
 		const hasSegments = document.querySelector("[data-segment-id]");
 		if (!hasSegments) return;
 		const container = document.body;
@@ -148,7 +151,7 @@ export function TranslationFormOnClick() {
 			container.removeEventListener("click", listener);
 			container.removeEventListener("keydown", onKeyDown);
 		};
-	}, [segmentId]);
+	}, [segmentId, pathname]);
 
 	if (!segmentId || !rootEl) return null;
 
