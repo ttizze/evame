@@ -1,8 +1,16 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AddAndVoteTranslations } from "./translation-section/add-and-vote-translations.client";
+
+type ActiveState = {
+	segmentId: number | null;
+	rootEl: HTMLElement | null;
+};
+
+const emptyState: ActiveState = { segmentId: null, rootEl: null };
 
 /** Portal用rootを.seg-trの直後に確保（既存があれば再利用） */
 function ensureFormRoot(afterEl: Element): HTMLElement {
@@ -16,8 +24,8 @@ function ensureFormRoot(afterEl: Element): HTMLElement {
 	return root;
 }
 
-/** クリック位置がテキスト上かを判定（余白クリックを除外するため） */
-function isClickOnText(e: MouseEvent): boolean {
+const isClickOnText = (e: MouseEvent) => {
+	// Chrome: caretRangeFromPoint / Safari: caretPositionFromPoint
 	const d = document as Document & {
 		caretRangeFromPoint?: (x: number, y: number) => Range | null;
 		caretPositionFromPoint?: (
@@ -25,7 +33,8 @@ function isClickOnText(e: MouseEvent): boolean {
 			y: number,
 		) => { offsetNode: Node | null } | null;
 	};
-	// jsdom等では API が無いのでチェックをスキップ
+
+	// jsdom や一部環境では API が無いので、その場合はチェックをスキップする。
 	if (!d.caretRangeFromPoint && !d.caretPositionFromPoint) return true;
 
 	const range = d.caretRangeFromPoint?.(e.clientX, e.clientY);
@@ -33,11 +42,19 @@ function isClickOnText(e: MouseEvent): boolean {
 
 	const pos = d.caretPositionFromPoint?.(e.clientX, e.clientY);
 	return pos?.offsetNode?.nodeType === Node.TEXT_NODE;
-}
+};
 
 function hasSelection(): boolean {
 	const sel = window.getSelection?.();
 	return !!sel && !sel.isCollapsed && sel.toString().length > 0;
+}
+
+/** data-segment-id を持つ要素を取得（リンク内は除外） */
+function getSegmentEl(target: EventTarget | null): HTMLElement | null {
+	if (!(target instanceof Element)) return null;
+	const el = target.closest("[data-segment-id]") as HTMLElement | null;
+	if (!el || el.closest("a")) return null;
+	return el;
 }
 
 /**
@@ -49,14 +66,9 @@ function hasSelection(): boolean {
  * - useRef で最新状態を保持し、リスナー再登録を防ぐ
  */
 export function TranslationFormOnClick() {
-	const [activeSegmentId, setActiveSegmentId] = useState<number | null>(null);
-	const stateRef = useRef<{
-		segmentId: number | null;
-		rootEl: HTMLElement | null;
-	}>({
-		segmentId: null,
-		rootEl: null,
-	});
+	const [activeState, setActiveState] = useState<ActiveState>(emptyState);
+	const stateRef = useRef<ActiveState>(emptyState);
+	const pathname = usePathname();
 
 	useEffect(() => {
 		let hadSelectionOnPointerDown = false;
@@ -68,8 +80,8 @@ export function TranslationFormOnClick() {
 
 			// 同じセグメントをクリック → 閉じる
 			if (stateRef.current.segmentId === segId) {
-				stateRef.current = { segmentId: null, rootEl: null };
-				setActiveSegmentId(null);
+				stateRef.current = emptyState;
+				setActiveState(emptyState);
 				return;
 			}
 
@@ -77,16 +89,9 @@ export function TranslationFormOnClick() {
 			if (!translationBlock) return;
 
 			const rootEl = ensureFormRoot(translationBlock);
-			stateRef.current = { segmentId: segId, rootEl };
-			setActiveSegmentId(segId);
-		};
-
-		/** data-segment-id を持つ要素を取得（リンク内は除外） */
-		const getSegmentEl = (target: EventTarget | null): HTMLElement | null => {
-			if (!(target instanceof Element)) return null;
-			const el = target.closest("[data-segment-id]") as HTMLElement | null;
-			if (!el || el.closest("a")) return null;
-			return el;
+			const nextState = { segmentId: segId, rootEl };
+			stateRef.current = nextState;
+			setActiveState(nextState);
 		};
 
 		const onPointerDown = () => {
@@ -122,11 +127,16 @@ export function TranslationFormOnClick() {
 		};
 	}, []);
 
-	const { segmentId, rootEl } = stateRef.current;
-	if (!activeSegmentId || !rootEl) return null;
+	useEffect(() => {
+		void pathname;
+		stateRef.current = emptyState;
+		setActiveState(emptyState);
+	}, [pathname]);
+
+	if (!activeState.segmentId || !activeState.rootEl) return null;
 
 	return createPortal(
-		<AddAndVoteTranslations open segmentId={segmentId!} />,
-		rootEl,
+		<AddAndVoteTranslations open segmentId={activeState.segmentId} />,
+		activeState.rootEl,
 	);
 }
