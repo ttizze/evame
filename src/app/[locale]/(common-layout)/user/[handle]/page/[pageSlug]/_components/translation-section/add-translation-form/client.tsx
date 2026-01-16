@@ -60,6 +60,11 @@ export function AddTranslationForm({
 								{addTranslationState.zodErrors.text}
 							</p>
 						)}
+					{!addTranslationState.success && addTranslationState.message && (
+						<p className="text-red-500 text-sm">
+							{addTranslationState.message}
+						</p>
+					)}
 					<Button
 						className="rounded-xl"
 						disabled={isAddingTranslation || !currentUser}

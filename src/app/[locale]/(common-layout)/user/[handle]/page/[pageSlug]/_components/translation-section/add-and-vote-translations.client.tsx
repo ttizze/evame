@@ -1,7 +1,7 @@
 "use client";
 import { ChevronDown, ChevronUp, Languages } from "lucide-react";
 import { useLocale } from "next-intl";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import { AddTranslationForm } from "./add-translation-form/client";
@@ -32,11 +32,9 @@ export function AddAndVoteTranslations({
 	const bestTranslation = translations[0];
 	const alternativeTranslations = translations.slice(1);
 
-	const displayedTranslations = useMemo(() => {
-		return showAll
-			? alternativeTranslations
-			: alternativeTranslations.slice(0, INITIAL_DISPLAY_COUNT);
-	}, [alternativeTranslations, showAll]);
+	const displayedTranslations = showAll
+		? alternativeTranslations
+		: alternativeTranslations.slice(0, INITIAL_DISPLAY_COUNT);
 
 	const hasMoreTranslations =
 		alternativeTranslations.length > INITIAL_DISPLAY_COUNT;

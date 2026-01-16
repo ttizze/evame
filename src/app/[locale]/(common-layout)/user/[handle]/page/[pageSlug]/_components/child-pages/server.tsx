@@ -1,4 +1,4 @@
-import { fetchChildPagesTree } from "@/app/[locale]/_db/page-list.server";
+import { fetchChildPagesTree } from "@/app/[locale]/_db/page-tree.server";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { PageForTree } from "@/app/[locale]/types";
 import { Link } from "@/i18n/routing";
@@ -18,8 +18,7 @@ function PageLink({
 	page: PageForTree;
 	className?: string;
 }) {
-	const titleSegment = page.segments.find((s) => s.number === 0);
-	if (!titleSegment) return null;
+	const { titleSegment } = page;
 
 	const pageLink = `/user/${page.userHandle}/page/${page.slug}`;
 

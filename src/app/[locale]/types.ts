@@ -9,7 +9,7 @@ export type PageDetail = NonNullable<
 // PageDetail から実際のセグメント型を取得
 export type SegmentForDetail = PageDetail["content"]["segments"][number];
 
-export type SegmentForList = {
+export type TitleSegment = {
 	id: number;
 	contentId: number;
 	number: number;
@@ -23,11 +23,11 @@ export type SegmentForList = {
 	translationText: string | null;
 };
 
-// SegmentForDetail と SegmentForList のユニオン型
+// SegmentForDetail と TitleSegment のユニオン型
 type SegmentForComment = Omit<SegmentForDetail, "annotations"> & {
 	annotations?: SegmentForDetail["annotations"];
 };
-export type Segment = SegmentForDetail | SegmentForComment | SegmentForList;
+export type Segment = SegmentForDetail | SegmentForComment | TitleSegment;
 
 export type PageForList = {
 	id: number;
@@ -37,7 +37,7 @@ export type PageForList = {
 	userHandle: string;
 	userName: string;
 	userImage: string;
-	segments: SegmentForList[];
+	titleSegment: TitleSegment;
 	tags: Pick<Tag, "id" | "name">[];
 	likeCount: number;
 	pageCommentsCount: number;
@@ -49,6 +49,6 @@ export type PageForTree = {
 	parentId: number | null;
 	order: number;
 	userHandle: string;
-	segments: SegmentForList[];
+	titleSegment: TitleSegment;
 	childrenCount: number;
 };
