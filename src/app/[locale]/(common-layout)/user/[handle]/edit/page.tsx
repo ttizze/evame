@@ -3,9 +3,9 @@ import dynamic from "next/dynamic";
 import { notFound, redirect } from "next/navigation";
 import type React from "react";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getCurrentUser } from "@/lib/auth-server";
 
 const ProfileForm = dynamic(
 	() => import("./_components/profile-form").then((mod) => mod.ProfileForm),

@@ -2,10 +2,10 @@
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { revalidateAllLocales } from "@/app/_service/revalidate-utils";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
-import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import { upsertTags } from "./_db/mutations.server";
 
 const editPageTagsSchema = z.object({

@@ -79,3 +79,4 @@ tipitaka-md/
 tipitaka-xml/
 cst/
 *.db
+.codex/skills

@@ -3,8 +3,8 @@
 import { Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { FcGoogle } from "react-icons/fc";
+import { authClient } from "@/app/[locale]/_service/auth-client";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth-client";
 
 export function GoogleForm({ redirectTo }: { redirectTo: string }) {
 	const [error, setError] = useState<string | null>(null);

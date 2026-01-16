@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import type { SegmentForDetail, SegmentForList } from "@/app/[locale]/types";
+import type { SegmentForDetail, TitleSegment } from "@/app/[locale]/types";
 import { SegmentElement } from "./segment";
 
 type SegmentTranslation = NonNullable<SegmentForDetail["segmentTranslation"]>;
@@ -32,9 +32,7 @@ function makeTranslation(
 	};
 }
 
-function makeListSegment(
-	overrides: Partial<SegmentForList> = {},
-): SegmentForList {
+function makeListSegment(overrides: Partial<TitleSegment> = {}): TitleSegment {
 	return {
 		id: 1,
 		contentId: 1,

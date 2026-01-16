@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import {
 	fetchPaginatedNewPageLists,
 	fetchPaginatedPopularPageLists,
@@ -7,7 +8,6 @@ import {
 import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list.client";
 import { PageList } from "@/app/[locale]/(common-layout)/_components/page/page-list.server";
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
-import { getCurrentUser } from "@/lib/auth-server";
 
 interface PageListServerProps {
 	handle: string;

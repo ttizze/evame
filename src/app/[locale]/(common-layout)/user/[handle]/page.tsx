@@ -23,10 +23,7 @@ const DynamicPageList = dynamic(
 	},
 );
 const DynamicUserInfo = dynamic<{ handle: string }>(
-	() =>
-		import("@/app/[locale]/(common-layout)/_components/user-info.server").then(
-			(mod) => mod.UserInfo,
-		),
+	() => import("./_components/user-info.server").then((mod) => mod.UserInfo),
 	{
 		loading: () => <Skeleton className="h-[200px] w-full mb-4" />,
 	},

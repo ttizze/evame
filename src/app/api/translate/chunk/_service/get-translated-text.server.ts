@@ -1,5 +1,5 @@
 import { supportedLocaleOptions } from "@/app/_constants/locale";
-import { createServerLogger } from "@/lib/logger.server";
+import { createServerLogger } from "@/app/_service/logger.server";
 import type { SegmentElement } from "../../types";
 import {
 	fetchGeminiApiKeyByUserId,

@@ -1,8 +1,8 @@
 import type { Root as MdastRoot } from "mdast";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import { enqueueTranslate } from "@/app/[locale]/_infrastructure/qstash/enqueue-translate.server";
 import { db } from "@/db";
-import { getCurrentUser } from "@/lib/auth-server";
 import { toSessionUser } from "@/tests/auth-helpers";
 import { getSegmentTypeId, resetDatabase } from "@/tests/db-helpers";
 import {

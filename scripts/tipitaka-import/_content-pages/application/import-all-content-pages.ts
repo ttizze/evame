@@ -1,4 +1,4 @@
-import { createServerLogger } from "@/lib/logger.server";
+import { createServerLogger } from "@/app/_service/logger.server";
 import { parseDirSegment } from "../../domain/parse-dir-segment/parse-dir-segment";
 import type { TipitakaFileMeta } from "../../types";
 import { createContentPage } from "../_pages/application/create-content-page";

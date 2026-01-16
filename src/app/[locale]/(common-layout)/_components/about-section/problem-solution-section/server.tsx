@@ -5,13 +5,13 @@ import {
 	TrendingUp,
 	Users,
 } from "lucide-react";
-import Globe from "@/app/[locale]/(common-layout)/_components/about-section/problem-solution-section/components/globe.client";
 import { PageLikeButton } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/server";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { FloatingControls } from "../../floating-controls/floating-controls.client";
-import { fetchAboutPage } from "../_lib/fetch-about-page";
+import { fetchAboutPage } from "../service/fetch-about-page";
 import AboutSectionCard from "./components/about-section-card.server";
 import EditorMovie from "./components/editor-movie.server";
+import Globe from "./components/globe.client";
 import Reactions from "./components/reaction.client";
 import { SpreadOtherLanguage } from "./components/spread-other-language";
 export default async function ProblemSolutionSection({

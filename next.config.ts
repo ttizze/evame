@@ -29,7 +29,7 @@ const config: NextConfig = {
 	images: {
 		minimumCacheTTL: 2_678_400,
 		loader: "custom",
-		loaderFile: "./src/lib/cloudflare-loader.ts",
+		loaderFile: "./src/app/_service/cloudflare-loader.ts",
 
 		remotePatterns: [
 			{

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createServerLogger } from "@/lib/logger.server";
-import { revalidatePageForLocale } from "@/lib/revalidate-utils";
+import { createServerLogger } from "@/app/_service/logger.server";
+import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
 import { withQstashVerification } from "../_utils/with-qstash-signature";
 import type { TranslateChunkParams } from "../types";
 import {

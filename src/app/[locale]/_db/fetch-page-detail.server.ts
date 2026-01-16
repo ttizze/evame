@@ -3,8 +3,9 @@
  * Kysely ORM版 - シンプル化
  */
 
+import { serverLogger } from "@/app/_service/logger.server";
 import { db } from "@/db";
-import { serverLogger } from "@/lib/logger.server";
+import { bestTranslationSubquery } from "./best-translation-subquery.server";
 
 // ============================================
 // 内部型定義
@@ -168,6 +169,7 @@ async function fetchCounts(pageId: number) {
 async function fetchSegments(
 	pageId: number,
 	locale: string,
+	pageOwnerId: string,
 	segmentTypeKey?: "PRIMARY" | "COMMENTARY",
 ): Promise<SegmentWithTranslation[]> {
 	// セグメント + 最良の翻訳を1クエリで取得
@@ -175,36 +177,10 @@ async function fetchSegments(
 		.selectFrom("segments")
 		.innerJoin("segmentTypes", "segments.segmentTypeId", "segmentTypes.id")
 		.leftJoin(
-			// DISTINCT ON で各セグメントの最良翻訳を1件のみ
 			(eb) =>
-				eb
-					.selectFrom("segmentTranslations")
-					.innerJoin("users", "segmentTranslations.userId", "users.id")
-					.distinctOn("segmentTranslations.segmentId")
-					.select([
-						"segmentTranslations.id",
-						"segmentTranslations.segmentId",
-						"segmentTranslations.userId",
-						"segmentTranslations.locale",
-						"segmentTranslations.text",
-						"segmentTranslations.point",
-						"segmentTranslations.createdAt",
-						"users.name as userName",
-						"users.handle as userHandle",
-						"users.image as userImage",
-						"users.createdAt as userCreatedAt",
-						"users.updatedAt as userUpdatedAt",
-						"users.profile as userProfile",
-						"users.twitterHandle as userTwitterHandle",
-						"users.totalPoints as userTotalPoints",
-						"users.isAi as userIsAi",
-						"users.plan as userPlan",
-					])
-					.where("segmentTranslations.locale", "=", locale)
-					.orderBy("segmentTranslations.segmentId")
-					.orderBy("segmentTranslations.point", "desc")
-					.orderBy("segmentTranslations.createdAt", "desc")
-					.as("trans"),
+				bestTranslationSubquery(eb, { locale, ownerUserId: pageOwnerId }).as(
+					"trans",
+				),
 			(join) => join.onRef("trans.segmentId", "=", "segments.id"),
 		)
 		.select([
@@ -289,6 +265,7 @@ async function addAnnotations(
 	segments: SegmentWithTranslation[],
 	pageId: number,
 	locale: string,
+	pageOwnerId: string,
 ): Promise<SegmentWithAnnotations[]> {
 	const segmentIds = segments.map((s) => s.id);
 	if (segmentIds.length === 0) {
@@ -314,6 +291,7 @@ async function addAnnotations(
 	const annotationSegments = await fetchSegmentsByIds(
 		annotationSegmentIds,
 		locale,
+		pageOwnerId,
 	);
 	const annotationMap = new Map(annotationSegments.map((s) => [s.id, s]));
 
@@ -353,6 +331,7 @@ async function addAnnotations(
 async function fetchSegmentsByIds(
 	segmentIds: number[],
 	locale: string,
+	pageOwnerId: string,
 ): Promise<SegmentWithTranslation[]> {
 	if (segmentIds.length === 0) return [];
 
@@ -361,34 +340,9 @@ async function fetchSegmentsByIds(
 		.innerJoin("segmentTypes", "segments.segmentTypeId", "segmentTypes.id")
 		.leftJoin(
 			(eb) =>
-				eb
-					.selectFrom("segmentTranslations")
-					.innerJoin("users", "segmentTranslations.userId", "users.id")
-					.distinctOn("segmentTranslations.segmentId")
-					.select([
-						"segmentTranslations.id",
-						"segmentTranslations.segmentId",
-						"segmentTranslations.userId",
-						"segmentTranslations.locale",
-						"segmentTranslations.text",
-						"segmentTranslations.point",
-						"segmentTranslations.createdAt",
-						"users.name as userName",
-						"users.handle as userHandle",
-						"users.image as userImage",
-						"users.createdAt as userCreatedAt",
-						"users.updatedAt as userUpdatedAt",
-						"users.profile as userProfile",
-						"users.twitterHandle as userTwitterHandle",
-						"users.totalPoints as userTotalPoints",
-						"users.isAi as userIsAi",
-						"users.plan as userPlan",
-					])
-					.where("segmentTranslations.locale", "=", locale)
-					.orderBy("segmentTranslations.segmentId")
-					.orderBy("segmentTranslations.point", "desc")
-					.orderBy("segmentTranslations.createdAt", "desc")
-					.as("trans"),
+				bestTranslationSubquery(eb, { locale, ownerUserId: pageOwnerId }).as(
+					"trans",
+				),
 			(join) => join.onRef("trans.segmentId", "=", "segments.id"),
 		)
 		.select([
@@ -480,11 +434,11 @@ export async function fetchPageDetail(slug: string, locale: string) {
 	]);
 
 	// 3. PRIMARYセグメントを取得
-	let segments = await fetchSegments(page.id, locale, "PRIMARY");
+	let segments = await fetchSegments(page.id, locale, page.user.id, "PRIMARY");
 
 	// 4. PRIMARYセグメントがない場合、COMMENTARYセグメントをフォールバック
 	if (segments.length === 0) {
-		segments = await fetchSegments(page.id, locale, "COMMENTARY");
+		segments = await fetchSegments(page.id, locale, page.user.id, "COMMENTARY");
 	}
 
 	// 5. 注釈を追加
@@ -492,6 +446,7 @@ export async function fetchPageDetail(slug: string, locale: string) {
 		segments,
 		page.id,
 		locale,
+		page.user.id,
 	);
 
 	return {

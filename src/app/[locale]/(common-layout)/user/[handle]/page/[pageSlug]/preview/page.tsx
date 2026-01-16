@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth-server";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import { PageContent } from "../_components/page-content";
 import { PreviewBanner } from "../_components/preview-banner";
 import { fetchPageContext } from "../_service/fetch-page-context";

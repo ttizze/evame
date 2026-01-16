@@ -1,4 +1,4 @@
-import { createServerLogger } from "@/lib/logger.server";
+import { createServerLogger } from "@/app/_service/logger.server";
 import { importAllContentPages } from "./_content-pages/application/import-all-content-pages";
 import { createCategoryPages } from "./_create-category-pages/application/create-category-pages";
 import { setupInitialRequirements } from "./_initial-setup/application/setup-initial-requirements";

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { revalidateAllLocales } from "@/app/_service/revalidate-utils";
 import { db } from "@/db";
-import { revalidateAllLocales } from "@/lib/revalidate-utils";
 import { mockCurrentUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
@@ -13,7 +13,7 @@ import { enqueuePageTranslation } from "./service/enqueue-page-translation.serve
 await setupDbPerFile(import.meta.url);
 
 // 共有依存のみモック
-vi.mock("@/lib/auth-server", () => ({
+vi.mock("@/app/_service/auth-server", () => ({
 	getCurrentUser: vi.fn(),
 }));
 // 外部翻訳API呼び出しをモック
@@ -23,7 +23,7 @@ vi.mock(
 		enqueuePageTranslation: vi.fn(),
 	}),
 );
-vi.mock("@/lib/revalidate-utils", () => ({
+vi.mock("@/app/_service/revalidate-utils", () => ({
 	revalidateAllLocales: vi.fn(),
 }));
 

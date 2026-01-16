@@ -1,5 +1,5 @@
+import { createServerLogger } from "@/app/_service/logger.server";
 import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
-import { createServerLogger } from "@/lib/logger.server";
 import {
 	createAnnotationLinks,
 	deleteAnnotationLinksByContentId,

@@ -1,8 +1,8 @@
 "use client";
 
 import useSWR, { useSWRConfig } from "swr";
-import { authClient } from "@/lib/auth-client";
-import { useHydrated } from "@/lib/use-hydrated";
+import { useHydrated } from "@/app/_hooks/use-hydrated";
+import { authClient } from "@/app/[locale]/_service/auth-client";
 import {
 	buildLikeStateKey,
 	fetchLikeStates,

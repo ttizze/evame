@@ -1,6 +1,6 @@
+import { createServerLogger } from "@/app/_service/logger.server";
 import { htmlToMdastWithSegments } from "@/app/[locale]/_domain/html-to-mdast-with-segments";
 import type { PageStatus } from "@/db/types";
-import { createServerLogger } from "@/lib/logger.server";
 import { upsertPageAndSegments } from "../upsert-page-and-segments";
 
 /**

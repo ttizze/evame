@@ -4,8 +4,8 @@ import {
 	SchemaType,
 	VertexAI,
 } from "@google-cloud/vertexai";
-import { getAuthClient } from "@/lib/google-auth";
 import { generateSystemMessage } from "./generate-gemini-message";
+import { getAuthClient } from "./google-auth";
 
 const MAX_RETRIES = 3;
 export async function getVertexAIModelResponse(

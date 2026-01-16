@@ -5,10 +5,10 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import useSWR from "swr";
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
+import type { NotificationRowsWithRelations } from "@/app/api/notifications/_types/notification";
 // Mock SWR to control data and loading states per test
 import { mockUsers } from "@/tests/mock";
 import { NotificationsDropdownClient } from "./client";
-import type { NotificationRowsWithRelations } from "./db/queries.server";
 
 vi.mock("swr", () => ({ default: vi.fn() }));
 

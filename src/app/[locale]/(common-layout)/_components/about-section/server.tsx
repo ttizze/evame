@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/lib/auth-server";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import { StartButton } from "../../_components/start-button";
 import { FloatingControls } from "../floating-controls/floating-controls.client";
 import HeroSection from "./hero-section/server";
