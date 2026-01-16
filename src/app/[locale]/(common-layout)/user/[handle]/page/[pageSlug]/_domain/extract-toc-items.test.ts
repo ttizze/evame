@@ -31,17 +31,19 @@ const createSegment = (
 	}) as SegmentForDetail;
 
 describe("extractTocItems", () => {
-	it("深さ1-3の見出しだけを順序通りに抽出する", () => {
+	it("深さ1-4の見出しだけを順序通りに抽出する", () => {
 		const slugger = new GithubSlugger();
 		const mdast = root([
 			headingNode(1, 1),
 			headingNode(2, 2),
 			headingNode(3, 4),
+			headingNode(4, 5),
 		]);
 		const segments = [
 			createSegment(1, "Heading 1"),
 			createSegment(2, "Heading 2"),
 			createSegment(3, "Heading 3"),
+			createSegment(4, "Heading 4"),
 		];
 
 		const result = extractTocItems({ mdast, segments });
@@ -57,6 +59,12 @@ describe("extractTocItems", () => {
 				id: slugger.slug("Heading 2"),
 				depth: 2,
 				sourceText: "Heading 2",
+				translatedText: null,
+			},
+			{
+				id: slugger.slug("Heading 3"),
+				depth: 4,
+				sourceText: "Heading 3",
 				translatedText: null,
 			},
 		]);

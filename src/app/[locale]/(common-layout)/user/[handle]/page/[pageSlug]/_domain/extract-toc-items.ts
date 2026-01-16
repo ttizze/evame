@@ -9,7 +9,7 @@ export interface TocItem {
 	translatedText: string | null;
 }
 
-const MAX_TOC_DEPTH = 3;
+const MAX_TOC_DEPTH = 4;
 
 export function extractTocItems({
 	mdast,

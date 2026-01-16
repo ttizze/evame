@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import type { ReactNode } from "react";
 import { vi } from "vitest";
+import { DisplayProvider } from "@/app/_context/display-provider";
 import type { PageDetail } from "@/app/[locale]/types";
 import { SubHeader } from "./sub-header";
 
@@ -24,21 +25,16 @@ interface TocProps {
 		sourceText: string;
 		translatedText: string | null;
 	}>;
-	onItemClick: () => void;
 }
 
 vi.mock("./toc", () => ({
 	__esModule: true,
-	default: ({ onItemClick }: TocProps) => (
-		<button
-			data-testid="toc"
-			onClick={onItemClick}
-			onKeyDown={onItemClick}
-			onKeyUp={onItemClick}
-			type="button"
-		>
-			Table of Contents
-		</button>
+	default: (_props: TocProps) => (
+		<div data-testid="toc">
+			<button data-testid="toc-source" type="button">
+				Table of Contents
+			</button>
+		</div>
 	),
 }));
 
@@ -71,7 +67,9 @@ describe("SubHeader", () => {
 	test("renders user information correctly", () => {
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageDetail={mockPageDetail} tocItems={[]} />
+				<DisplayProvider>
+					<SubHeader pageDetail={mockPageDetail} tocItems={[]} />
+				</DisplayProvider>
 			</NextIntlClientProvider>,
 		);
 
@@ -82,7 +80,9 @@ describe("SubHeader", () => {
 	test("does not render TOC button when no TOC content", () => {
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageDetail={mockPageDetail} tocItems={[]} />
+				<DisplayProvider>
+					<SubHeader pageDetail={mockPageDetail} tocItems={[]} />
+				</DisplayProvider>
 			</NextIntlClientProvider>,
 		);
 
@@ -92,7 +92,9 @@ describe("SubHeader", () => {
 	test("renders TOC button when TOC content exists", () => {
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageDetail={mockPageDetail} tocItems={tocItems} />
+				<DisplayProvider>
+					<SubHeader pageDetail={mockPageDetail} tocItems={tocItems} />
+				</DisplayProvider>
 			</NextIntlClientProvider>,
 		);
 
@@ -102,7 +104,9 @@ describe("SubHeader", () => {
 	test("toggles TOC visibility when TOC button is clicked", () => {
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageDetail={mockPageDetail} tocItems={tocItems} />
+				<DisplayProvider>
+					<SubHeader pageDetail={mockPageDetail} tocItems={tocItems} />
+				</DisplayProvider>
 			</NextIntlClientProvider>,
 		);
 
@@ -122,10 +126,12 @@ describe("SubHeader", () => {
 		expect(screen.queryByTestId("toc")).not.toBeInTheDocument();
 	});
 
-	test("closes TOC when a TOC item is clicked", () => {
+	test("原文リンクをクリックしてもTOCは閉じない", () => {
 		render(
 			<NextIntlClientProvider locale="en">
-				<SubHeader pageDetail={mockPageDetail} tocItems={tocItems} />
+				<DisplayProvider>
+					<SubHeader pageDetail={mockPageDetail} tocItems={tocItems} />
+				</DisplayProvider>
 			</NextIntlClientProvider>,
 		);
 
@@ -134,9 +140,9 @@ describe("SubHeader", () => {
 		expect(screen.getByTestId("toc")).toBeInTheDocument();
 
 		// Click a TOC item
-		fireEvent.click(screen.getByTestId("toc"));
+		fireEvent.click(screen.getByTestId("toc-source"));
 
-		// TOC should be hidden
-		expect(screen.queryByTestId("toc")).not.toBeInTheDocument();
+		// TOC should remain visible
+		expect(screen.getByTestId("toc")).toBeInTheDocument();
 	});
 });
