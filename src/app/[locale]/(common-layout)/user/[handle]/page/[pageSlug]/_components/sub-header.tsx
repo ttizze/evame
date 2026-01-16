@@ -3,13 +3,21 @@ import { ChevronDown, List, PencilIcon } from "lucide-react";
 import { getImageProps } from "next/image";
 import { useLocale } from "next-intl";
 import { useState } from "react";
+import { useDisplay } from "@/app/_context/display-provider";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { useHeaderScroll } from "@/app/[locale]/(common-layout)/_components/header/hooks/use-header-scroll";
 import type { PageDetail } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+	Popover,
+	PopoverAnchor,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 import { Link } from "@/i18n/routing";
+import { cn } from "@/lib/utils";
 import type { TocItem } from "../_domain/extract-toc-items";
 import Toc from "./toc";
 
@@ -24,6 +32,7 @@ export function SubHeader({
 	const locale = useLocale();
 	const [isTocOpen, setIsTocOpen] = useState(false);
 	const hasTocContent = tocItems.length > 0;
+	const { mode } = useDisplay();
 	const { data: session } = authClient.useSession();
 	const currentUser = hydrated ? session?.user : undefined;
 	const isEditable = currentUser?.handle === pageDetail.user.handle;
@@ -35,36 +44,37 @@ export function SubHeader({
 		if (!hasTocContent) return null;
 
 		return (
-			<>
-				<Button
-					className={
-						"relative bg-background self-end flex items-center gap-1 rounded-full"
-					}
-					onClick={() => setIsTocOpen(!isTocOpen)}
-					title="Table of Contents"
-					variant="ghost"
+			<Popover onOpenChange={setIsTocOpen} open={isTocOpen}>
+				<PopoverAnchor asChild>
+					<span className="inline-flex">
+						<PopoverTrigger asChild>
+							<Button
+								aria-label="Table of Contents"
+								className="flex items-center gap-2 rounded-full text-sm"
+								title="Table of Contents"
+								variant="ghost"
+							>
+								<List className="size-5" />
+								<ChevronDown
+									className={cn(
+										"size-4 transition-transform duration-200",
+										isTocOpen && "rotate-180",
+									)}
+								/>
+							</Button>
+						</PopoverTrigger>
+					</span>
+				</PopoverAnchor>
+				<PopoverContent
+					align="end"
+					className="w-80 rounded-xl border border-border/70 bg-background p-4 shadow-lg dark:shadow-[0_9px_7px_rgba(255,255,255,0.1)] 
+					"
+					data-display-mode={mode}
+					onFocusOutside={(event) => event.preventDefault()}
 				>
-					<List className="h-5 w-5" />
-					<div
-						className="transition-transform duration-300 ease-in-out"
-						style={{ transform: isTocOpen ? "rotate(180deg)" : "rotate(0deg)" }}
-					>
-						<ChevronDown className="h-4 w-4" />
-					</div>
-				</Button>
-
-				{isTocOpen && (
-					<button
-						className={`absolute right-0 top-full mt-2 z-50 bg-background rounded-xl
-          px-3 py-4 drop-shadow-xl dark:drop-shadow-[0_9px_7px_rgba(255,255,255,0.1)] 
-          border border-border animate-in zoom-in-95 duration-200`}
-						onClick={() => setIsTocOpen(false)}
-						type="button"
-					>
-						<Toc items={tocItems} />
-					</button>
-				)}
-			</>
+					<Toc items={tocItems} />
+				</PopoverContent>
+			</Popover>
 		);
 	};
 	const { props } = getImageProps({
