@@ -1,8 +1,8 @@
 import { cleanup, render } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import TableOfContents from "./toc";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import Toc from "./toc";
 
-describe("TableOfContents", () => {
+describe("Toc", () => {
 	const items = [
 		{
 			id: "heading-1",
@@ -34,20 +34,20 @@ describe("TableOfContents", () => {
 		cleanup();
 	});
 
-	it("should render the TOC container", () => {
-		const { getByTestId } = render(<TableOfContents items={items} />);
+	it("TOCのコンテナが描画される", () => {
+		const { getByTestId } = render(<Toc items={items} />);
 		expect(getByTestId("toc")).toBeTruthy();
 	});
 
-	it("should call onItemClick when TOC item is clicked", async () => {
-		const { getByRole } = render(<TableOfContents items={items} />);
+	it("見出しリンクをクリックできる", async () => {
+		const { getByRole } = render(<Toc items={items} />);
 		const tocLink = getByRole("link", { name: /Heading 1/ });
 		tocLink.click();
 		expect(tocLink).toBeTruthy();
 	});
 
-	it("should truncate long heading text", () => {
-		const { getByText } = render(<TableOfContents items={items} />);
+	it("長い見出しが省略表示される", () => {
+		const { getByText } = render(<Toc items={items} />);
 		expect(
 			getByText("This is a very long heading text that sh..."),
 		).toBeInTheDocument();

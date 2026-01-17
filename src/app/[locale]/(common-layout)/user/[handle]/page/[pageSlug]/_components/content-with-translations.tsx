@@ -3,7 +3,7 @@ import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/pag
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { fetchPageContext } from "../_service/fetch-page-context";
 import { mdastToReact } from "./mdast-to-react/server";
-import { SubHeader } from "./sub-header";
+import { SubHeader } from "./sub-header/index.client";
 
 interface ContentWithTranslationsProps {
 	pageData: Awaited<ReturnType<typeof fetchPageContext>>;

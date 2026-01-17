@@ -4,9 +4,8 @@ import type { ReactNode } from "react";
 import { vi } from "vitest";
 import { DisplayProvider } from "@/app/_context/display-provider";
 import type { PageDetail } from "@/app/[locale]/types";
-import { SubHeader } from "./sub-header";
+import { SubHeader } from "./index.client";
 
-// Mock the dependencies
 vi.mock("@/i18n/routing", () => ({
 	Link: ({
 		children,
@@ -16,26 +15,6 @@ vi.mock("@/i18n/routing", () => ({
 		href: string;
 		className?: string;
 	}) => <a {...props}>{children}</a>,
-}));
-
-interface TocProps {
-	items: Array<{
-		id: string;
-		depth: number;
-		sourceText: string;
-		translatedText: string | null;
-	}>;
-}
-
-vi.mock("./toc", () => ({
-	__esModule: true,
-	default: (_props: TocProps) => (
-		<div data-testid="toc">
-			<button data-testid="toc-source" type="button">
-				Table of Contents
-			</button>
-		</div>
-	),
 }));
 
 describe("SubHeader", () => {
@@ -64,7 +43,7 @@ describe("SubHeader", () => {
 		vi.clearAllMocks();
 	});
 
-	test("renders user information correctly", () => {
+	test("ユーザー情報が表示される", () => {
 		render(
 			<NextIntlClientProvider locale="en">
 				<DisplayProvider>
@@ -77,7 +56,7 @@ describe("SubHeader", () => {
 		expect(screen.getByText("1/1/2023")).toBeInTheDocument();
 	});
 
-	test("does not render TOC button when no TOC content", () => {
+	test("TOCが空のときボタンが表示されない", () => {
 		render(
 			<NextIntlClientProvider locale="en">
 				<DisplayProvider>
@@ -89,7 +68,7 @@ describe("SubHeader", () => {
 		expect(screen.queryByTitle("Table of Contents")).not.toBeInTheDocument();
 	});
 
-	test("renders TOC button when TOC content exists", () => {
+	test("TOCがあるときボタンが表示される", () => {
 		render(
 			<NextIntlClientProvider locale="en">
 				<DisplayProvider>
@@ -101,7 +80,7 @@ describe("SubHeader", () => {
 		expect(screen.getByTitle("Table of Contents")).toBeInTheDocument();
 	});
 
-	test("toggles TOC visibility when TOC button is clicked", () => {
+	test("TOCボタンのクリックで表示が切り替わる", () => {
 		render(
 			<NextIntlClientProvider locale="en">
 				<DisplayProvider>
@@ -140,7 +119,7 @@ describe("SubHeader", () => {
 		expect(screen.getByTestId("toc")).toBeInTheDocument();
 
 		// Click a TOC item
-		fireEvent.click(screen.getByTestId("toc-source"));
+		fireEvent.click(screen.getByRole("link", { name: "Heading 1" }));
 
 		// TOC should remain visible
 		expect(screen.getByTestId("toc")).toBeInTheDocument();
