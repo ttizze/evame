@@ -4,6 +4,7 @@
  */
 
 import { serverLogger } from "@/app/_service/logger.server";
+import type { SegmentWithSegmentType } from "@/app/[locale]/types";
 import { db } from "@/db";
 import { bestTranslationSubquery } from "./best-translation-subquery.server";
 
@@ -11,43 +12,8 @@ import { bestTranslationSubquery } from "./best-translation-subquery.server";
 // 内部型定義
 // ============================================
 
-type SegmentWithTranslation = {
-	id: number;
-	contentId: number;
-	number: number;
-	text: string;
-	textAndOccurrenceHash: string;
-	createdAt: Date;
-	segmentTypeId: number;
-	segmentType: { key: string; label: string };
-	segmentTranslation: {
-		id: number;
-		segmentId: number;
-		userId: string;
-		locale: string;
-		text: string;
-		point: number;
-		createdAt: Date;
-		user: UserInfo;
-	} | null;
-};
-
-type UserInfo = {
-	id: string;
-	name: string;
-	handle: string;
-	image: string;
-	createdAt: Date;
-	updatedAt: Date;
-	profile: string;
-	twitterHandle: string;
-	totalPoints: number;
-	isAi: boolean;
-	plan: string;
-};
-
-type SegmentWithAnnotations = SegmentWithTranslation & {
-	annotations: Array<{ annotationSegment: SegmentWithTranslation }>;
+type SegmentWithAnnotations = SegmentWithSegmentType & {
+	annotations: Array<{ annotationSegment: SegmentWithSegmentType }>;
 };
 
 // ============================================
@@ -171,7 +137,7 @@ async function fetchSegments(
 	locale: string,
 	pageOwnerId: string,
 	segmentTypeKey?: "PRIMARY" | "COMMENTARY",
-): Promise<SegmentWithTranslation[]> {
+): Promise<SegmentWithSegmentType[]> {
 	// セグメント + 最良の翻訳を1クエリで取得
 	let query = db
 		.selectFrom("segments")
@@ -188,28 +154,9 @@ async function fetchSegments(
 			"segments.contentId",
 			"segments.number",
 			"segments.text",
-			"segments.textAndOccurrenceHash",
-			"segments.createdAt",
-			"segments.segmentTypeId",
-			"segmentTypes.key as typeKey",
-			"segmentTypes.label as typeLabel",
-			"trans.id as transId",
-			"trans.segmentId as transSegmentId",
-			"trans.userId as transUserId",
-			"trans.locale as transLocale",
-			"trans.text as transText",
-			"trans.point as transPoint",
-			"trans.createdAt as transCreatedAt",
-			"trans.userName",
-			"trans.userHandle",
-			"trans.userImage",
-			"trans.userCreatedAt",
-			"trans.userUpdatedAt",
-			"trans.userProfile",
-			"trans.userTwitterHandle",
-			"trans.userTotalPoints",
-			"trans.userIsAi",
-			"trans.userPlan",
+			"segmentTypes.key as segmentTypeKey",
+			"segmentTypes.label as segmentTypeLabel",
+			"trans.text as translationText",
 		])
 		.where("segments.contentId", "=", pageId);
 
@@ -217,52 +164,14 @@ async function fetchSegments(
 		query = query.where("segmentTypes.key", "=", segmentTypeKey);
 	}
 
-	const rows = await query.orderBy("segments.number", "asc").execute();
-
-	return rows.map((row) => ({
-		id: row.id,
-		contentId: row.contentId,
-		number: row.number,
-		text: row.text,
-		textAndOccurrenceHash: row.textAndOccurrenceHash,
-		createdAt: row.createdAt,
-		segmentTypeId: row.segmentTypeId,
-		segmentType: {
-			key: row.typeKey,
-			label: row.typeLabel,
-		},
-		segmentTranslation: row.transId
-			? {
-					id: row.transId,
-					segmentId: row.transSegmentId!,
-					userId: row.transUserId!,
-					locale: row.transLocale!,
-					text: row.transText!,
-					point: row.transPoint!,
-					createdAt: row.transCreatedAt!,
-					user: {
-						id: row.transUserId!,
-						name: row.userName!,
-						handle: row.userHandle!,
-						image: row.userImage!,
-						createdAt: row.userCreatedAt!,
-						updatedAt: row.userUpdatedAt!,
-						profile: row.userProfile!,
-						twitterHandle: row.userTwitterHandle!,
-						totalPoints: row.userTotalPoints!,
-						isAi: row.userIsAi!,
-						plan: row.userPlan!,
-					},
-				}
-			: null,
-	}));
+	return query.orderBy("segments.number", "asc").execute();
 }
 
 /**
  * セグメントに注釈を追加
  */
 async function addAnnotations(
-	segments: SegmentWithTranslation[],
+	segments: SegmentWithSegmentType[],
 	pageId: number,
 	locale: string,
 	pageOwnerId: string,
@@ -318,7 +227,7 @@ async function addAnnotations(
 				return { annotationSegment };
 			})
 			.filter(
-				(a): a is { annotationSegment: SegmentWithTranslation } => a !== null,
+				(a): a is { annotationSegment: SegmentWithSegmentType } => a !== null,
 			);
 
 		return { ...segment, annotations };
@@ -332,10 +241,10 @@ async function fetchSegmentsByIds(
 	segmentIds: number[],
 	locale: string,
 	pageOwnerId: string,
-): Promise<SegmentWithTranslation[]> {
+): Promise<SegmentWithSegmentType[]> {
 	if (segmentIds.length === 0) return [];
 
-	const rows = await db
+	return db
 		.selectFrom("segments")
 		.innerJoin("segmentTypes", "segments.segmentTypeId", "segmentTypes.id")
 		.leftJoin(
@@ -350,69 +259,12 @@ async function fetchSegmentsByIds(
 			"segments.contentId",
 			"segments.number",
 			"segments.text",
-			"segments.textAndOccurrenceHash",
-			"segments.createdAt",
-			"segments.segmentTypeId",
-			"segmentTypes.key as typeKey",
-			"segmentTypes.label as typeLabel",
-			"trans.id as transId",
-			"trans.segmentId as transSegmentId",
-			"trans.userId as transUserId",
-			"trans.locale as transLocale",
-			"trans.text as transText",
-			"trans.point as transPoint",
-			"trans.createdAt as transCreatedAt",
-			"trans.userName",
-			"trans.userHandle",
-			"trans.userImage",
-			"trans.userCreatedAt",
-			"trans.userUpdatedAt",
-			"trans.userProfile",
-			"trans.userTwitterHandle",
-			"trans.userTotalPoints",
-			"trans.userIsAi",
-			"trans.userPlan",
+			"segmentTypes.key as segmentTypeKey",
+			"segmentTypes.label as segmentTypeLabel",
+			"trans.text as translationText",
 		])
 		.where("segments.id", "in", segmentIds)
 		.execute();
-
-	return rows.map((row) => ({
-		id: row.id,
-		contentId: row.contentId,
-		number: row.number,
-		text: row.text,
-		textAndOccurrenceHash: row.textAndOccurrenceHash,
-		createdAt: row.createdAt,
-		segmentTypeId: row.segmentTypeId,
-		segmentType: {
-			key: row.typeKey,
-			label: row.typeLabel,
-		},
-		segmentTranslation: row.transId
-			? {
-					id: row.transId,
-					segmentId: row.transSegmentId!,
-					userId: row.transUserId!,
-					locale: row.transLocale!,
-					text: row.transText!,
-					point: row.transPoint!,
-					createdAt: row.transCreatedAt!,
-					user: {
-						id: row.transUserId!,
-						name: row.userName!,
-						handle: row.userHandle!,
-						image: row.userImage!,
-						createdAt: row.userCreatedAt!,
-						updatedAt: row.userUpdatedAt!,
-						profile: row.userProfile!,
-						twitterHandle: row.userTwitterHandle!,
-						totalPoints: row.userTotalPoints!,
-						isAi: row.userIsAi!,
-						plan: row.userPlan!,
-					},
-				}
-			: null,
-	}));
 }
 
 // ============================================

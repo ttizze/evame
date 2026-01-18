@@ -32,10 +32,15 @@ describe("SubHeader", () => {
 	} as unknown as PageDetail;
 	const tocItems = [
 		{
-			id: "heading-1",
-			depth: 1,
-			sourceText: "Heading 1",
-			translatedText: null,
+			anchorId: "heading-1",
+			level: 1,
+			segment: {
+				id: 1,
+				contentId: 1,
+				number: 1,
+				text: "Heading 1",
+				translationText: null,
+			},
 		},
 	];
 

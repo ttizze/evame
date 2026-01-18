@@ -8,12 +8,6 @@ function makeSegment(overrides: Partial<TitleSegment> = {}): TitleSegment {
 		contentId: 1,
 		number: 1,
 		text: "source",
-		textAndOccurrenceHash: "hash",
-		createdAt: new Date(0),
-		segmentTypeId: 1,
-		segmentTypeKey: "primary",
-		segmentTypeLabel: "Primary",
-		translationId: null,
 		translationText: null,
 		...overrides,
 	};

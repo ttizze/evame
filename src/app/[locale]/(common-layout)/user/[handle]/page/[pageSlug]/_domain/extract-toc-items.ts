@@ -1,12 +1,11 @@
 import GithubSlugger from "github-slugger";
-import type { SegmentForDetail } from "@/app/[locale]/types";
+import type { SegmentForDetail, TitleSegment } from "@/app/[locale]/types";
 import type { JsonObject, JsonValue } from "@/db/types";
 
 export interface TocItem {
-	id: string;
-	depth: number;
-	sourceText: string;
-	translatedText: string | null;
+	anchorId: string;
+	level: number;
+	segment: TitleSegment;
 }
 
 const MAX_TOC_DEPTH = 4;
@@ -61,23 +60,24 @@ export function extractTocItems({
 		if (typeof depthValue !== "number" || depthValue > MAX_TOC_DEPTH) {
 			return null;
 		}
-		const depth = depthValue;
+		const level = depthValue;
 
 		const number = parseDataNumberId(record);
 		if (number === null) return null;
 
 		const segment = segmentsMap.get(number);
-		const sourceText = segment?.text?.trim();
-		// トリム後に空文字になる見出しは除外する。
-		if (!sourceText) return null;
-
-		const translatedText = segment?.segmentTranslation?.text?.trim() ?? null;
+		if (!segment?.text?.trim()) return null;
 
 		return {
-			id: slugger.slug(sourceText),
-			depth,
-			sourceText,
-			translatedText,
+			anchorId: slugger.slug(segment.text),
+			level,
+			segment: {
+				id: segment.id,
+				contentId: segment.contentId,
+				number: segment.number,
+				text: segment.text,
+				translationText: segment.translationText,
+			},
 		};
 	}
 }

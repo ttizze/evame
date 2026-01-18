@@ -19,9 +19,10 @@ const segments: Segment[] = Array.from(
 	(_, i) =>
 		({
 			id: i + 1,
+			contentId: 1,
 			number: i + 1,
 			text: "",
-			segmentTranslation: null,
+			translationText: null,
 		}) as Segment,
 );
 

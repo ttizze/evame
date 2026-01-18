@@ -7,7 +7,7 @@ import type { fetchPageContext } from "../_service/fetch-page-context";
 import { ChildPages } from "./child-pages/server";
 import { PageCommentForm } from "./comment/_components/page-comment-form/client";
 import { ContentWithTranslations } from "./content-with-translations";
-import { PageBreadcrumb } from "./page-breadcrumb/server";
+import { PageNavigation } from "./page-navigation/server";
 import { PageViewCounter } from "./page-view-counter/client";
 
 const logger = createLogger("page-content");
@@ -26,15 +26,14 @@ export async function PageContent({ pageData, locale }: PageContentProps) {
 		for (const segment of pageDetail.content.segments) {
 			if (segment.annotations && segment.annotations.length > 0) {
 				for (const link of segment.annotations) {
-					const segType = link.annotationSegment?.segmentType;
-					if (segType?.key && segType?.label) {
-						// key (e.g. COMMENTARY) can have multiple labels, so we use label as unique token.
-						if (!typeMap.has(segType.label)) {
-							typeMap.set(segType.label, {
-								key: segType.key,
-								label: segType.label,
-							});
-						}
+					if (
+						link.annotationSegment?.segmentTypeKey &&
+						link.annotationSegment?.segmentTypeLabel
+					) {
+						typeMap.set(link.annotationSegment.segmentTypeLabel, {
+							key: link.annotationSegment.segmentTypeKey,
+							label: link.annotationSegment.segmentTypeLabel,
+						});
 					}
 				}
 			}
@@ -47,7 +46,7 @@ export async function PageContent({ pageData, locale }: PageContentProps) {
 
 	return (
 		<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
-			<PageBreadcrumb locale={locale} pageDetail={pageDetail} />
+			<PageNavigation locale={locale} pageId={pageDetail.id} />
 			<ContentWithTranslations pageData={pageData} />
 			<ChildPages locale={locale} parentId={pageDetail.id} />
 			<div className="flex items-center gap-4">

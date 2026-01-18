@@ -5,16 +5,26 @@ import Toc from "./toc";
 describe("Toc", () => {
 	const items = [
 		{
-			id: "heading-1",
-			depth: 1,
-			sourceText: "Heading 1",
-			translatedText: "見出し1",
+			anchorId: "heading-1",
+			level: 1,
+			segment: {
+				id: 1,
+				contentId: 1,
+				number: 1,
+				text: "Heading 1",
+				translationText: "見出し1",
+			},
 		},
 		{
-			id: "this-is-a-very-long-heading-text-that-should-be-truncated",
-			depth: 2,
-			sourceText: "This is a very long heading text that should be truncated",
-			translatedText: null,
+			anchorId: "this-is-a-very-long-heading-text-that-should-be-truncated",
+			level: 2,
+			segment: {
+				id: 2,
+				contentId: 1,
+				number: 2,
+				text: "This is a very long heading text that should be truncated",
+				translationText: null,
+			},
 		},
 	];
 
@@ -46,10 +56,10 @@ describe("Toc", () => {
 		expect(tocLink).toBeTruthy();
 	});
 
-	it("長い見出しが省略表示される", () => {
+	it("長い見出しが表示される", () => {
 		const { getByText } = render(<Toc items={items} />);
 		expect(
-			getByText("This is a very long heading text that sh..."),
+			getByText("This is a very long heading text that should be truncated"),
 		).toBeInTheDocument();
 	});
 });

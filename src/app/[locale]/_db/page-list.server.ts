@@ -94,12 +94,6 @@ function toTitleSegment(row: PageRow): TitleSegment {
 		contentId: row.id,
 		number: 0,
 		text: row.segmentText,
-		textAndOccurrenceHash: row.segmentHash,
-		createdAt: row.segmentCreatedAt,
-		segmentTypeId: row.segmentTypeId,
-		segmentTypeKey: row.segmentTypeKey,
-		segmentTypeLabel: row.segmentTypeLabel,
-		translationId: row.translationId ?? null,
 		translationText: row.translationText ?? null,
 	};
 }
@@ -137,21 +131,11 @@ export function buildPageListQuery(locale: string) {
 				(eb) =>
 					eb
 						.selectFrom("segments")
-						.innerJoin(
-							"segmentTypes",
-							"segments.segmentTypeId",
-							"segmentTypes.id",
-						)
 						.select([
 							"segments.id",
 							"segments.contentId",
 							"segments.text",
 							"segments.number",
-							"segments.textAndOccurrenceHash",
-							"segments.createdAt",
-							"segments.segmentTypeId",
-							"segmentTypes.key as typeKey",
-							"segmentTypes.label as typeLabel",
 						])
 						.where("segments.number", "=", 0)
 						.as("seg"),
@@ -173,13 +157,7 @@ export function buildPageListQuery(locale: string) {
 				// segment
 				"seg.id as segmentId",
 				"seg.text as segmentText",
-				"seg.textAndOccurrenceHash as segmentHash",
-				"seg.createdAt as segmentCreatedAt",
-				"seg.segmentTypeId as segmentTypeId",
-				"seg.typeKey as segmentTypeKey",
-				"seg.typeLabel as segmentTypeLabel",
 				// translation
-				"trans.id as translationId",
 				"trans.text as translationText",
 				// counts (サブクエリ)
 				eb
@@ -188,12 +166,6 @@ export function buildPageListQuery(locale: string) {
 					.whereRef("pageComments.pageId", "=", "pages.id")
 					.where("pageComments.isDeleted", "=", false)
 					.as("pageCommentsCount"),
-				eb
-					.selectFrom("pages as c")
-					.select(eb.fn.countAll().as("count"))
-					.whereRef("c.parentId", "=", "pages.id")
-					.where("c.status", "=", "PUBLIC")
-					.as("childrenCount"),
 				eb
 					.selectFrom("likePages")
 					.select(eb.fn.countAll().as("count"))

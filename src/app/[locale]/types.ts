@@ -1,4 +1,5 @@
 import type { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
+import type { PageStatus } from "@/db/types";
 import type { Tag } from "@/db/types.helpers";
 
 // fetchPageDetail の戻り値から型を推論
@@ -6,21 +7,24 @@ export type PageDetail = NonNullable<
 	Awaited<ReturnType<typeof fetchPageDetail>>
 >;
 
-// PageDetail から実際のセグメント型を取得
-export type SegmentForDetail = PageDetail["content"]["segments"][number];
-
-export type TitleSegment = {
+export type SegmentWithSegmentType = {
 	id: number;
 	contentId: number;
 	number: number;
 	text: string;
-	textAndOccurrenceHash: string;
-	createdAt: Date;
-	segmentTypeId: number;
+	translationText: string | null;
 	segmentTypeKey: string;
 	segmentTypeLabel: string;
-	translationId: number | null;
-	translationText: string | null;
+};
+export type TitleSegment = Omit<
+	SegmentWithSegmentType,
+	"segmentTypeKey" | "segmentTypeLabel"
+>;
+
+export type SegmentForDetail = SegmentWithSegmentType & {
+	annotations: Array<{
+		annotationSegment: SegmentWithSegmentType;
+	}>;
 };
 
 // SegmentForDetail と TitleSegment のユニオン型
@@ -33,7 +37,7 @@ export type PageForList = {
 	id: number;
 	slug: string;
 	createdAt: Date;
-	status: PageDetail["status"];
+	status: PageStatus;
 	userHandle: string;
 	userName: string;
 	userImage: string;
@@ -49,6 +53,7 @@ export type PageForTree = {
 	parentId: number | null;
 	order: number;
 	userHandle: string;
-	titleSegment: TitleSegment;
-	childrenCount: number;
+	titleSegmentId: number;
+	titleText: string;
+	titleTranslationText: string | null;
 };
