@@ -6,7 +6,6 @@ import {
 	fetchPageViewCount,
 	fetchTranslationJobs,
 } from "@/app/[locale]/_db/page-utility-queries.server";
-import { extractTocItems } from "../_domain/extract-toc-items";
 
 const logger = createServerLogger("fetch-page-context");
 
@@ -31,14 +30,9 @@ export const fetchPageContext = cache(async (slug: string, locale: string) => {
 		return notFound();
 	}
 
-	const raw = titleSegment.text;
-	const translated =
-		titleSegment.segmentTranslation?.text &&
-		titleSegment.segmentTranslation.text !== raw
-			? titleSegment.segmentTranslation.text
-			: null;
-
-	const title = translated ? `${raw} - ${translated}` : raw;
+	const title = titleSegment.translationText
+		? `${titleSegment.text} - ${titleSegment.translationText}`
+		: titleSegment.text;
 	if (pageDetail.status === "ARCHIVE") {
 		logger.info({ slug, pageId: pageDetail.id }, "Page is archived");
 		return notFound();
@@ -48,16 +42,10 @@ export const fetchPageContext = cache(async (slug: string, locale: string) => {
 		fetchTranslationJobs(pageDetail.id),
 		fetchPageViewCount(pageDetail.id),
 	]);
-	const tocItems = extractTocItems({
-		mdast: pageDetail.mdastJson,
-		segments: pageDetail.content.segments,
-	});
-
 	return {
 		pageDetail,
 		title,
 		pageTranslationJobs,
 		pageViewCount,
-		tocItems,
 	};
 });

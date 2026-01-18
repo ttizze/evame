@@ -25,9 +25,14 @@ const createSegment = (
 	translatedText: string | null = null,
 ): SegmentForDetail =>
 	({
+		id: number,
+		contentId: 1,
 		number,
 		text,
-		segmentTranslation: translatedText ? { text: translatedText } : null,
+		translationText: translatedText,
+		segmentTypeKey: "Primary",
+		segmentTypeLabel: "Primary",
+		annotations: [],
 	}) as SegmentForDetail;
 
 describe("extractTocItems", () => {
@@ -50,22 +55,37 @@ describe("extractTocItems", () => {
 
 		expect(result).toEqual([
 			{
-				id: slugger.slug("Heading 1"),
-				depth: 1,
-				sourceText: "Heading 1",
-				translatedText: null,
+				anchorId: slugger.slug("Heading 1"),
+				level: 1,
+				segment: {
+					id: 1,
+					contentId: 1,
+					number: 1,
+					text: "Heading 1",
+					translationText: null,
+				},
 			},
 			{
-				id: slugger.slug("Heading 2"),
-				depth: 2,
-				sourceText: "Heading 2",
-				translatedText: null,
+				anchorId: slugger.slug("Heading 2"),
+				level: 2,
+				segment: {
+					id: 2,
+					contentId: 1,
+					number: 2,
+					text: "Heading 2",
+					translationText: null,
+				},
 			},
 			{
-				id: slugger.slug("Heading 3"),
-				depth: 4,
-				sourceText: "Heading 3",
-				translatedText: null,
+				anchorId: slugger.slug("Heading 3"),
+				level: 4,
+				segment: {
+					id: 3,
+					contentId: 1,
+					number: 3,
+					text: "Heading 3",
+					translationText: null,
+				},
 			},
 		]);
 	});

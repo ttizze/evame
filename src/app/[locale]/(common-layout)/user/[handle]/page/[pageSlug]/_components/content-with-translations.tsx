@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
+import { extractTocItems } from "../_domain/extract-toc-items";
 import type { fetchPageContext } from "../_service/fetch-page-context";
 import { mdastToReact } from "./mdast-to-react/server";
-import { SubHeader } from "./sub-header";
+import { SubHeader } from "./sub-header/index.client";
 
 interface ContentWithTranslationsProps {
 	pageData: Awaited<ReturnType<typeof fetchPageContext>>;
@@ -15,9 +16,16 @@ export async function ContentWithTranslations({
 	if (!pageData) {
 		return notFound();
 	}
-	const { pageDetail, tocItems } = pageData;
+	const { pageDetail } = pageData;
+	const tocItems = extractTocItems({
+		mdast: pageDetail.mdastJson,
+		segments: pageDetail.content.segments,
+	});
 
 	const titleSegment = pageDetail.content.segments.find((s) => s.number === 0);
+	if (!titleSegment) {
+		return notFound();
+	}
 	const content = await mdastToReact({
 		mdast: pageDetail.mdastJson,
 		segments: pageDetail.content.segments,
@@ -25,7 +33,7 @@ export async function ContentWithTranslations({
 	return (
 		<>
 			<h1 className="mb-0! ">
-				{titleSegment ? <SegmentElement segment={titleSegment} /> : null}
+				<SegmentElement segment={titleSegment} />
 			</h1>
 			<PageTagList tag={pageDetail.tagPages.map((tagPage) => tagPage.tag)} />
 			<SubHeader pageDetail={pageDetail} tocItems={tocItems} />

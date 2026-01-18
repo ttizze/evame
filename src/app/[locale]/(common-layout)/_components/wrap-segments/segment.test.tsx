@@ -2,48 +2,12 @@ import { render } from "@testing-library/react";
 import type { SegmentForDetail, TitleSegment } from "@/app/[locale]/types";
 import { SegmentElement } from "./segment";
 
-type SegmentTranslation = NonNullable<SegmentForDetail["segmentTranslation"]>;
-
-function makeTranslation(
-	overrides: Partial<SegmentTranslation> = {},
-): SegmentTranslation {
-	return {
-		id: 99,
-		segmentId: 1,
-		userId: "u1",
-		locale: "ja",
-		text: "translation",
-		point: 0,
-		createdAt: new Date(0),
-		user: {
-			id: "u1",
-			name: "User",
-			handle: "user",
-			image: "",
-			createdAt: new Date(0),
-			updatedAt: new Date(0),
-			profile: "",
-			twitterHandle: "",
-			totalPoints: 0,
-			isAi: false,
-			plan: "",
-		},
-		...overrides,
-	};
-}
-
 function makeListSegment(overrides: Partial<TitleSegment> = {}): TitleSegment {
 	return {
 		id: 1,
 		contentId: 1,
 		number: 1,
 		text: "source",
-		textAndOccurrenceHash: "hash",
-		createdAt: new Date(0),
-		segmentTypeId: 1,
-		segmentTypeKey: "primary",
-		segmentTypeLabel: "Primary",
-		translationId: null,
 		translationText: null,
 		...overrides,
 	};
@@ -54,7 +18,8 @@ function makeDetailSegment(
 ): SegmentForDetail {
 	return {
 		...makeListSegment(),
-		segmentType: { key: "primary", label: "Primary" },
+		segmentTypeKey: "Primary",
+		segmentTypeLabel: "Primary",
 		annotations: [],
 		...overrides,
 	} as SegmentForDetail;
@@ -67,28 +32,7 @@ describe("SegmentElement", () => {
 				interactive={true}
 				segment={makeDetailSegment({
 					id: 10,
-					segmentTranslation: {
-						id: 99,
-						segmentId: 10,
-						userId: "u1",
-						locale: "ja",
-						text: "translation",
-						point: 0,
-						createdAt: new Date(0),
-						user: {
-							id: "u1",
-							name: "User",
-							handle: "user",
-							image: "",
-							createdAt: new Date(0),
-							updatedAt: new Date(0),
-							profile: "",
-							twitterHandle: "",
-							totalPoints: 0,
-							isAi: false,
-							plan: "",
-						},
-					},
+					translationText: "translation",
 				})}
 			/>,
 		);
@@ -97,7 +41,6 @@ describe("SegmentElement", () => {
 		const tr = container.querySelector(".seg-tr");
 		expect(tr).not.toBeNull();
 		expect(tr).toHaveAttribute("data-segment-id", "10");
-		expect(tr).toHaveAttribute("data-best-translation-id", "99");
 		expect(tr).toHaveAttribute("role", "button");
 		expect(tr).toHaveAttribute("tabindex", "0");
 		expect(tr).toHaveTextContent("translation");
@@ -108,7 +51,6 @@ describe("SegmentElement", () => {
 			<SegmentElement
 				interactive={false}
 				segment={makeListSegment({
-					translationId: 99,
 					translationText: "translation",
 				})}
 			/>,
@@ -132,12 +74,9 @@ describe("SegmentElement", () => {
 								id: 200,
 								number: 200,
 								text: "ann-src",
-								segmentType: { key: "atthakatha", label: "Atthakatha" },
-								segmentTranslation: makeTranslation({
-									id: 201,
-									segmentId: 200,
-									text: "ann-tr",
-								}),
+								segmentTypeKey: "Atthakatha",
+								segmentTypeLabel: "Atthakatha",
+								translationText: "ann-tr",
 							}),
 						},
 					],

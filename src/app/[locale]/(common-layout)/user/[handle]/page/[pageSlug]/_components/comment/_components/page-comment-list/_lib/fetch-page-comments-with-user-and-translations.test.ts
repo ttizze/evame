@@ -1,6 +1,5 @@
 import { expect, test } from "vitest";
 import { buildCommentTree } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/_lib/fetch-page-comments-with-user-and-translations";
-import { mockUsers } from "@/tests/mock";
 import type { PageCommentWithSegments } from "../_db/queries.server";
 
 test("buildCommentTree should handle comments with segments", async () => {
@@ -28,14 +27,7 @@ test("buildCommentTree should handle comments with segments", async () => {
 						contentId: 1,
 						number: 0,
 						text: "s",
-						segmentTranslation: {
-							id: 2,
-							locale: "en",
-							text: "B",
-							point: 2,
-							createdAt: new Date(),
-							user: mockUsers[0],
-						},
+						translationText: "B",
 					},
 				],
 			},
@@ -46,7 +38,7 @@ test("buildCommentTree should handle comments with segments", async () => {
 
 	expect(tree).toHaveLength(1);
 	expect(tree[0].id).toBe(1);
-	expect(tree[0].content.segments[0].segmentTranslation?.point).toBe(2);
+	expect(tree[0].content.segments[0].translationText).toBe("B");
 });
 
 test("parent–child nesting", async () => {
