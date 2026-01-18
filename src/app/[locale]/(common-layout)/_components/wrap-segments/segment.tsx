@@ -21,7 +21,7 @@ function SegmentPair({
 	tagProps,
 	children,
 }: SegmentElementProps) {
-	const hasTr = segment.translationText !== null;
+	const hasTr = segment.translationText != null;
 
 	return (
 		<>

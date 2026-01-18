@@ -16,6 +16,7 @@ function findPathToId(
 
 	function search(node: CollapsibleTreeNode): boolean {
 		if (node.id === targetId) {
+			path.add(node.id);
 			return true;
 		}
 		for (const child of node.children) {

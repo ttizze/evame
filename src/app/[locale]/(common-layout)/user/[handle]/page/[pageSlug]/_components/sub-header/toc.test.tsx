@@ -49,11 +49,10 @@ describe("Toc", () => {
 		expect(getByTestId("toc")).toBeTruthy();
 	});
 
-	it("見出しリンクをクリックできる", async () => {
+	it("見出しリンクが存在する", () => {
 		const { getByRole } = render(<Toc items={items} />);
 		const tocLink = getByRole("link", { name: /Heading 1/ });
-		tocLink.click();
-		expect(tocLink).toBeTruthy();
+		expect(tocLink).toHaveAttribute("href", "#heading-1");
 	});
 
 	it("長い見出しが表示される", () => {
