@@ -42,6 +42,7 @@ export function CollapsibleTreeList({
 
 	const renderNode = (node: CollapsibleTreeNode): ReactNode => (
 		<TreeNodeItem
+			isActive={node.id === activeId}
 			isOpen={openIds.has(node.id)}
 			key={node.id}
 			node={node}

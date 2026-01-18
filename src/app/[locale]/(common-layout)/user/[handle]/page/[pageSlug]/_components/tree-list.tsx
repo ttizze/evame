@@ -10,16 +10,27 @@ export type TreeNode = {
 interface TreeNodeItemProps {
 	node: TreeNode;
 	isOpen?: boolean;
+	isActive?: boolean;
 	renderChildren: (children: TreeNode[]) => ReactNode;
 }
+
+const activeStyles = "underline underline-offset-2";
 
 export function TreeNodeItem({
 	node,
 	isOpen = false,
+	isActive = false,
 	renderChildren,
 }: TreeNodeItemProps) {
 	if (node.children.length === 0) {
-		return <li>{node.label}</li>;
+		return (
+			<li
+				aria-current={isActive ? "page" : undefined}
+				className={isActive ? activeStyles : undefined}
+			>
+				{node.label}
+			</li>
+		);
 	}
 
 	return (
@@ -28,7 +39,10 @@ export function TreeNodeItem({
 				className="open:[&>summary>svg]:rotate-90 [&>summary>svg]:transition-transform [&>summary>svg]:duration-200 [&>summary>svg]:ease-in-out"
 				open={isOpen}
 			>
-				<summary className="cursor-pointer list-none flex items-center gap-1">
+				<summary
+					aria-current={isActive ? "page" : undefined}
+					className={`cursor-pointer list-none flex items-center gap-1 ${isActive ? activeStyles : ""}`}
+				>
 					<ChevronRight aria-hidden="true" className="size-4" />
 					<div className="flex-1">{node.label}</div>
 				</summary>
