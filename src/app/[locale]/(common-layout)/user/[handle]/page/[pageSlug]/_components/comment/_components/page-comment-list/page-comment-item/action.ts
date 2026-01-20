@@ -20,8 +20,4 @@ export const deletePageCommentAction = deleteActionFactory({
 
 	deleteById: ({ pageCommentId }, userId) =>
 		deletePageComment(pageCommentId, userId).then(() => {}),
-
-	buildRevalidatePaths: ({ pageId }, handle) => [
-		`/user/${handle}/page/${pageId}`,
-	],
 });

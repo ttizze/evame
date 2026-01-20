@@ -22,7 +22,7 @@ const Icon = ({ className, ...rest }: { className: string }) => {
 
 export default async function HeroSection({ locale }: { locale: string }) {
 	const topPageDetail = await fetchAboutPage(locale);
-	const [title, text] = topPageDetail.content.segments
+	const [title, text] = topPageDetail.segments
 		.filter((s) => s.number === 0 || s.number === 1)
 		.sort((a, b) => a.number - b.number);
 

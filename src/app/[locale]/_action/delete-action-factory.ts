@@ -1,9 +1,7 @@
 // lib/createDeleteAction.ts  ───────────────────────────────────────────
 import type { Route } from "next";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { z } from "zod";
-import { revalidateAllLocales } from "@/app/_service/revalidate-utils";
 import type { ActionResponse } from "@/app/types";
 import {
 	type AuthDeps,
@@ -14,23 +12,17 @@ import {
 // lib/createDeleteAction.ts  (抜粋)
 
 type DeleteDeps = AuthDeps & {
-	revalidatePath: typeof revalidatePath;
 	redirect: typeof redirect;
 };
 
 const defaultDeps: DeleteDeps = {
 	...authDefaultDeps,
-	revalidatePath,
 	redirect,
 };
 export function deleteActionFactory<TSchema extends z.ZodTypeAny>(
 	config: {
 		inputSchema: TSchema;
 		deleteById: (input: z.infer<TSchema>, userId: string) => Promise<void>;
-		buildRevalidatePaths?: (
-			input: z.infer<TSchema>,
-			userHandle: string,
-		) => string[];
 		buildSuccessRedirect?: (
 			input: z.infer<TSchema>,
 			userHandle: string,
@@ -38,12 +30,7 @@ export function deleteActionFactory<TSchema extends z.ZodTypeAny>(
 	},
 	deps: DeleteDeps = defaultDeps,
 ) {
-	const {
-		inputSchema,
-		deleteById,
-		buildRevalidatePaths = () => [],
-		buildSuccessRedirect,
-	} = config;
+	const { inputSchema, deleteById, buildSuccessRedirect } = config;
 	return async function deleteAction(
 		_prev: ActionResponse,
 		formData: FormData,
@@ -58,12 +45,7 @@ export function deleteActionFactory<TSchema extends z.ZodTypeAny>(
 		/** 2. 削除 */
 		await deleteById(data, currentUser.id);
 
-		/** 3. キャッシュ再検証 */
-		for (const p of buildRevalidatePaths(data, currentUser.handle)) {
-			revalidateAllLocales(p, deps.revalidatePath);
-		}
-
-		/** 4. リダイレクト */
+		/** 3. リダイレクト */
 		if (buildSuccessRedirect) {
 			deps.redirect(buildSuccessRedirect(data, currentUser.handle) as Route);
 		}

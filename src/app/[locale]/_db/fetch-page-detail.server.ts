@@ -3,6 +3,7 @@
  * Kysely ORM版 - シンプル化
  */
 
+import { cacheLife, cacheTag } from "next/cache";
 import { serverLogger } from "@/app/_service/logger.server";
 import type { SegmentWithSegmentType } from "@/app/[locale]/types";
 import { db } from "@/db";
@@ -24,7 +25,7 @@ type SegmentWithAnnotations = SegmentWithSegmentType & {
  * ページ基本情報を取得（slugで）
  */
 async function fetchPageBasicBySlug(slug: string) {
-	const result = await db
+	return await db
 		.selectFrom("pages")
 		.innerJoin("users", "pages.userId", "users.id")
 		.select([
@@ -41,43 +42,9 @@ async function fetchPageBasicBySlug(slug: string) {
 			"users.name as userName",
 			"users.handle as userHandle",
 			"users.image as userImage",
-			"users.createdAt as userCreatedAt",
-			"users.updatedAt as userUpdatedAt",
-			"users.profile as userProfile",
-			"users.twitterHandle as userTwitterHandle",
-			"users.totalPoints as userTotalPoints",
-			"users.isAi as userIsAi",
-			"users.plan as userPlan",
 		])
 		.where("pages.slug", "=", slug)
 		.executeTakeFirst();
-
-	if (!result) return null;
-
-	return {
-		id: result.id,
-		slug: result.slug,
-		createdAt: result.createdAt,
-		updatedAt: result.updatedAt,
-		status: result.status,
-		sourceLocale: result.sourceLocale,
-		parentId: result.parentId,
-		order: result.order,
-		mdastJson: result.mdastJson,
-		user: {
-			id: result.userId,
-			name: result.userName,
-			handle: result.userHandle,
-			image: result.userImage,
-			createdAt: result.userCreatedAt,
-			updatedAt: result.userUpdatedAt,
-			profile: result.userProfile,
-			twitterHandle: result.userTwitterHandle,
-			totalPoints: result.userTotalPoints,
-			isAi: result.userIsAi,
-			plan: result.userPlan,
-		},
-	};
 }
 
 /**
@@ -95,9 +62,9 @@ async function fetchTags(pageId: number) {
 }
 
 /**
- * カウントを取得
+ * カウントを取得（最新値が必要なのでキャッシュしない）
  */
-async function fetchCounts(pageId: number) {
+export async function fetchPageCounts(pageId: number) {
 	const result = await db
 		.selectFrom("pages")
 		.select((eb) => [
@@ -107,12 +74,6 @@ async function fetchCounts(pageId: number) {
 				.whereRef("pageComments.pageId", "=", "pages.id")
 				.where("pageComments.isDeleted", "=", false)
 				.as("pageComments"),
-			eb
-				.selectFrom("pages as c")
-				.select(eb.fn.countAll<number>().as("count"))
-				.whereRef("c.parentId", "=", "pages.id")
-				.where("c.status", "=", "PUBLIC")
-				.as("children"),
 			eb
 				.selectFrom("likePages")
 				.select(eb.fn.countAll<number>().as("count"))
@@ -124,7 +85,6 @@ async function fetchCounts(pageId: number) {
 
 	return {
 		pageComments: result?.pageComments ?? 0,
-		children: result?.children ?? 0,
 		likeCount: result?.likeCount ?? 0,
 	};
 }
@@ -275,51 +235,56 @@ async function fetchSegmentsByIds(
  * ページ詳細を取得
  */
 export async function fetchPageDetail(slug: string, locale: string) {
-	// 1. ページ基本情報を取得
+	"use cache";
+	cacheLife("max");
+
 	const page = await fetchPageBasicBySlug(slug);
-	if (!page) return null;
+	if (!page || page.status === "ARCHIVE") return null;
 
-	// 2. タグとカウントを並列取得
-	const [tags, counts] = await Promise.all([
-		fetchTags(page.id),
-		fetchCounts(page.id),
-	]);
+	cacheTag(`page:${page.id}`);
 
-	// 3. PRIMARYセグメントを取得
-	let segments = await fetchSegments(page.id, locale, page.user.id, "PRIMARY");
+	const tags = await fetchTags(page.id);
 
-	// 4. PRIMARYセグメントがない場合、COMMENTARYセグメントをフォールバック
+	// 1. PRIMARYセグメントを取得
+	let segments = await fetchSegments(page.id, locale, page.userId, "PRIMARY");
+
+	// 2. PRIMARYセグメントがない場合、COMMENTARYセグメントをフォールバック
 	if (segments.length === 0) {
-		segments = await fetchSegments(page.id, locale, page.user.id, "COMMENTARY");
+		segments = await fetchSegments(page.id, locale, page.userId, "COMMENTARY");
 	}
 
-	// 5. 注釈を追加
+	// 3. 注釈を追加
 	const segmentsWithAnnotations = await addAnnotations(
 		segments,
 		page.id,
 		locale,
-		page.user.id,
+		page.userId,
 	);
+
+	// 4. タイトルを生成
+	const titleSegment = segmentsWithAnnotations.find((s) => s.number === 0);
+	const title = titleSegment
+		? titleSegment.translationText
+			? `${titleSegment.text} - ${titleSegment.translationText}`
+			: titleSegment.text
+		: "";
 
 	return {
 		id: page.id,
 		slug: page.slug,
-		createdAt: page.createdAt,
-		updatedAt: page.updatedAt,
+		title,
 		status: page.status,
 		sourceLocale: page.sourceLocale,
 		parentId: page.parentId,
 		order: page.order,
-		likeCount: counts.likeCount,
 		mdastJson: page.mdastJson,
-		user: page.user,
+		segments: segmentsWithAnnotations,
+		createdAt: page.createdAt,
+		updatedAt: page.updatedAt,
+		userId: page.userId,
+		userName: page.userName,
+		userHandle: page.userHandle,
+		userImage: page.userImage,
 		tagPages: tags,
-		_count: {
-			pageComments: counts.pageComments,
-			children: counts.children,
-		},
-		content: {
-			segments: segmentsWithAnnotations,
-		},
 	};
 }

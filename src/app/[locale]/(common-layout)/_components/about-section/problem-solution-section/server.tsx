@@ -5,6 +5,7 @@ import {
 	TrendingUp,
 	Users,
 } from "lucide-react";
+import { fetchPageCounts } from "@/app/[locale]/_db/fetch-page-detail.server";
 import { PageLikeButton } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/server";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { FloatingControls } from "../../floating-controls/floating-controls.client";
@@ -20,12 +21,11 @@ export default async function ProblemSolutionSection({
 	locale: string;
 }) {
 	const pageDetail = await fetchAboutPage(locale);
+	const pageCounts = await fetchPageCounts(pageDetail.id);
 	// Get problem header (segment 2)
-	const problemHeader = pageDetail.content.segments.find(
-		(st) => st.number === 2,
-	);
+	const problemHeader = pageDetail.segments.find((st) => st.number === 2);
 	// Get problem cards (segments 3-14)
-	const problemCards = pageDetail.content.segments
+	const problemCards = pageDetail.segments
 		.filter((st) => st.number >= 3 && st.number <= 14)
 		.sort((a, b) => a.number - b.number);
 
@@ -76,7 +76,7 @@ export default async function ProblemSolutionSection({
 			likeButton={
 				<PageLikeButton
 					className="w-10 h-10 rounded-full"
-					initialLikeCount={pageDetail.likeCount}
+					initialLikeCount={pageCounts.likeCount}
 					pageId={pageDetail.id}
 					showCount={false}
 				/>

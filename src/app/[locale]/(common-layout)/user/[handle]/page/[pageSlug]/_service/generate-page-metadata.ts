@@ -1,34 +1,31 @@
 import type { Metadata } from "next";
 import { BASE_URL } from "@/app/_constants/base-url";
+import { fetchCompletedTranslationJobs } from "@/app/[locale]/_db/page-utility-queries.server";
 import { mdastToText } from "@/app/[locale]/_domain/mdast-to-text";
+import type { PageDetail } from "@/app/[locale]/types";
 import { buildAlternateLocales } from "../_domain/build-alternate-locales";
-import type { fetchPageContext } from "./fetch-page-context";
 
-interface GeneratePageMetadataParams {
-	pageData: Awaited<ReturnType<typeof fetchPageContext>>;
-	locale: string;
-	pageSlug: string;
-	isPreview?: boolean;
-}
-
-export async function generatePageMetadata({
-	pageData,
-	locale,
-	pageSlug,
-	isPreview = false,
-}: GeneratePageMetadataParams): Promise<Metadata> {
-	const { pageDetail, pageTranslationJobs, title } = pageData;
+export async function generatePageMetadata(
+	pageDetail: PageDetail,
+): Promise<Metadata> {
+	const { title, status, slug, sourceLocale } = pageDetail;
+	const isDraft = status !== "PUBLIC";
+	const completedTranslationJobs = await fetchCompletedTranslationJobs(
+		pageDetail.id,
+	);
 
 	const description = await mdastToText(pageDetail.mdastJson).then((text) =>
 		text.slice(0, 200),
 	);
-	const ogImageUrl = `${BASE_URL}/api/og?locale=${locale}&slug=${pageSlug}`;
-	const displayTitle = isPreview ? `${title} (Preview)` : title;
+	const ogImageUrl = `${BASE_URL}/api/og?locale=${sourceLocale}&slug=${slug}`;
+	const displayTitle = isDraft ? `${title} (Draft)` : title;
+	const canonicalUrl = `${BASE_URL}/${sourceLocale}/user/${pageDetail.userHandle}/page/${slug}`;
+	const translatedLocales = completedTranslationJobs.map((job) => job.locale);
 
 	return {
 		title: displayTitle,
 		description,
-		...(isPreview && { robots: { index: false, follow: false } }),
+		...(isDraft && { robots: { index: false, follow: false } }),
 		openGraph: {
 			type: "article",
 			title,
@@ -42,12 +39,13 @@ export async function generatePageMetadata({
 			images: [{ url: ogImageUrl, width: 1200, height: 630 }],
 		},
 		alternates: {
-			languages: buildAlternateLocales(
-				pageDetail,
-				pageTranslationJobs,
-				pageDetail.user.handle,
-				locale,
-			),
+			canonical: canonicalUrl,
+			...(translatedLocales.length > 0 && {
+				languages: buildAlternateLocales({
+					page: pageDetail,
+					translatedLocales,
+				}),
+			}),
 		},
 	};
 }

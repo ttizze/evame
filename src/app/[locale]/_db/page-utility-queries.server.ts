@@ -1,11 +1,14 @@
+import { cacheLife, cacheTag } from "next/cache";
 import { db } from "@/db";
 
 /**
  * ページの翻訳ジョブを取得（各localeの最新COMPLETEDのみ）
- * Kyselyに移行済み
  */
-export async function fetchTranslationJobs(pageId: number) {
-	// DISTINCT ONを使用して各localeの最新レコードを取得
+export async function fetchCompletedTranslationJobs(pageId: number) {
+	"use cache";
+	cacheLife("max");
+	cacheTag(`page-translation-jobs:${pageId}`);
+
 	return await db
 		.selectFrom("translationJobs")
 		.selectAll()
@@ -19,7 +22,6 @@ export async function fetchTranslationJobs(pageId: number) {
 
 /**
  * slugからページIDを取得
- * Kyselyに移行済み
  */
 export async function fetchPageIdBySlug(slug: string) {
 	const result = await db

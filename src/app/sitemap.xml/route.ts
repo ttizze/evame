@@ -29,6 +29,3 @@ export async function GET() {
 		headers: { "Content-Type": "application/xml" },
 	});
 }
-
-// 動的生成させたい場合は:
-export const dynamic = "force-dynamic";

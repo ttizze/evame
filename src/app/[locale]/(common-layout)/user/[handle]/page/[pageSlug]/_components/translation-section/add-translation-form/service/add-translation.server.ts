@@ -1,4 +1,3 @@
-import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
 import { addUserTranslation } from "../db/mutations.server";
 import { findPageBySegmentId } from "../db/queries.server";
 
@@ -21,9 +20,9 @@ export async function addTranslationService(
 	}
 
 	await addUserTranslation(segmentId, text, userId, locale);
-	await revalidatePageForLocale(page.id, locale);
 
 	return {
 		success: true as const,
+		pageId: page.id,
 	};
 }

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
 import { orchestrateTranslation } from "./_service/orchestrate-translation.server";
 import { withQstashVerification } from "./_utils/with-qstash-signature";
 
@@ -18,10 +17,6 @@ async function handler(req: Request) {
 	try {
 		const params = ParamsSchema.parse(await req.json());
 		const result = await orchestrateTranslation(params);
-
-		if (result.shouldRevalidate) {
-			await revalidatePageForLocale(params.pageId, params.targetLocale);
-		}
 
 		return NextResponse.json({ ok: result.ok }, { status: 201 });
 	} catch (error) {

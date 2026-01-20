@@ -1,8 +1,8 @@
 "use server";
 import type { Route } from "next";
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { revalidateAllLocales } from "@/app/_service/revalidate-utils";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
@@ -55,6 +55,6 @@ export async function editPageTagsAction(
 		redirect("/auth/login" as Route);
 	}
 	await upsertTags(tags, pageId);
-	revalidateAllLocales(`/user/${currentUser.handle}/page/${page.slug}/edit`);
+	updateTag(`page:${pageId}`);
 	return { success: true, data: undefined };
 }

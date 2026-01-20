@@ -1,6 +1,6 @@
 "use server";
+import { updateTag } from "next/cache";
 import { z } from "zod";
-import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
 import { findPageIdBySegmentTranslationId } from "../_db/queries.server";
@@ -8,7 +8,6 @@ import { deleteOwnTranslation } from "./db/mutations.server";
 
 const schema = z.object({
 	translationId: z.coerce.number(),
-	userLocale: z.string().min(1),
 });
 
 export async function deleteTranslationAction(
@@ -28,6 +27,6 @@ export async function deleteTranslationAction(
 	const pageId = await findPageIdBySegmentTranslationId(translationId);
 	await deleteOwnTranslation(currentUser.handle, translationId);
 	// Revalidate page for the current locale
-	await revalidatePageForLocale(pageId, data.userLocale);
+	updateTag(`page:${pageId}`);
 	return { success: true, data: undefined };
 }

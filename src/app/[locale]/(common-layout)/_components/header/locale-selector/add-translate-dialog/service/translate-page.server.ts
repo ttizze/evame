@@ -1,5 +1,6 @@
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
 import { fetchPageIdBySlug } from "@/app/[locale]/_db/page-utility-queries.server";
+import { hasSegmentsForContentId } from "@/app/[locale]/_db/segment-exists.server";
 import { enqueueTranslate } from "@/app/[locale]/_infrastructure/qstash/enqueue-translate.server";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
 import {
@@ -30,6 +31,13 @@ interface NewJobParams {
 
 /** 翻訳ジョブを作成しキューに投入する */
 async function createAndEnqueueJob(params: NewJobParams) {
+	const contentId =
+		params.annotationContentId ?? params.pageCommentId ?? params.pageId;
+	const hasSegments = await hasSegmentsForContentId(contentId);
+	if (!hasSegments) {
+		return;
+	}
+
 	const job = await createTranslationJob({
 		userId: params.userId,
 		aiModel: params.aiModel,

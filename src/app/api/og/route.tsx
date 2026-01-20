@@ -1,9 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
-import { fetchPageContext } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_service/fetch-page-context";
+import { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
 
-export const revalidate = 360000000;
 export async function GET(req: Request): Promise<Response> {
 	const { searchParams } = new URL(req.url);
 	const interFontSemiBold = await readFile(
@@ -15,14 +14,14 @@ export async function GET(req: Request): Promise<Response> {
 	const locale: string = searchParams.get("locale") || "en";
 	const slug: string = searchParams.get("slug") || "";
 
-	const [logoData, pageContext] = await Promise.all([
+	const [logoData, pageDetail] = await Promise.all([
 		readFile(join(process.cwd(), "public", "logo.png")),
-		fetchPageContext(slug, locale),
+		fetchPageDetail(slug, locale),
 	]);
 
 	const logoSrc = `data:image/png;base64,${Buffer.from(logoData).toString("base64")}`;
 
-	if (!pageContext) {
+	if (!pageDetail) {
 		return new ImageResponse(
 			<div tw="flex items-center justify-center w-full h-full bg-slate-100">
 				<p tw="text-6xl">Page Not Found</p>
@@ -33,8 +32,7 @@ export async function GET(req: Request): Promise<Response> {
 			},
 		);
 	}
-	const { pageDetail, title } = pageContext;
-	const pageOwner = pageDetail.user;
+	const { title } = pageDetail;
 
 	return new ImageResponse(
 		<div
@@ -50,11 +48,11 @@ export async function GET(req: Request): Promise<Response> {
 					<div tw="flex items-center">
 						{/* biome-ignore lint/performance/noImgElement: <> */}
 						<img
-							alt={pageOwner?.name}
-							src={pageOwner?.image}
+							alt={pageDetail?.userName}
+							src={pageDetail?.userImage}
 							tw="w-24 h-24 rounded-full mr-4"
 						/>
-						<p tw="text-6xl ">{pageOwner?.name}</p>
+						<p tw="text-6xl ">{pageDetail?.userName}</p>
 					</div>
 					{/* 右端にロゴ */}
 					{/* biome-ignore lint/performance/noImgElement: <> */}

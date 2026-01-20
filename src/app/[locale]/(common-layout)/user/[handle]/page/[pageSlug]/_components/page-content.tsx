@@ -1,53 +1,48 @@
 import { EyeIcon, MessageCircle } from "lucide-react";
-import { createLogger } from "@/app/_service/logger";
+import { fetchPageCounts } from "@/app/[locale]/_db/fetch-page-detail.server";
+import { fetchPageViewCount } from "@/app/[locale]/_db/page-utility-queries.server";
 import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
-import type { fetchPageContext } from "../_service/fetch-page-context";
+import type { PageDetail } from "@/app/[locale]/types";
 import { ChildPages } from "./child-pages/server";
 import { PageCommentForm } from "./comment/_components/page-comment-form/client";
 import { ContentWithTranslations } from "./content-with-translations";
 import { PageNavigation } from "./page-navigation/server";
 import { PageViewCounter } from "./page-view-counter/client";
 
-const logger = createLogger("page-content");
-
 interface PageContentProps {
-	pageData: Awaited<ReturnType<typeof fetchPageContext>>;
+	pageDetail: PageDetail;
 	locale: string;
 }
 
-export async function PageContent({ pageData, locale }: PageContentProps) {
-	const { pageDetail, pageViewCount } = pageData;
-
-	// 複数のユニークな注釈タイプを収集
-	const annotationTypes = (() => {
-		const typeMap = new Map<string, { key: string; label: string }>();
-		for (const segment of pageDetail.content.segments) {
-			if (segment.annotations && segment.annotations.length > 0) {
-				for (const link of segment.annotations) {
-					if (
-						link.annotationSegment?.segmentTypeKey &&
-						link.annotationSegment?.segmentTypeLabel
-					) {
-						typeMap.set(link.annotationSegment.segmentTypeLabel, {
-							key: link.annotationSegment.segmentTypeKey,
-							label: link.annotationSegment.segmentTypeLabel,
-						});
-					}
-				}
+function collectAnnotationTypes(segments: PageDetail["segments"]) {
+	const typeMap = new Map<string, { key: string; label: string }>();
+	for (const segment of segments) {
+		for (const link of segment.annotations ?? []) {
+			const { segmentTypeKey, segmentTypeLabel } = link.annotationSegment ?? {};
+			if (segmentTypeKey && segmentTypeLabel) {
+				typeMap.set(segmentTypeLabel, {
+					key: segmentTypeKey,
+					label: segmentTypeLabel,
+				});
 			}
 		}
-		return Array.from(typeMap.values()).sort((a, b) => {
-			return a.label.localeCompare(b.label);
-		});
-	})();
-	logger.debug({ annotationTypes }, "collected annotation types");
+	}
+	return Array.from(typeMap.values()).sort((a, b) =>
+		a.label.localeCompare(b.label),
+	);
+}
+
+export async function PageContent({ pageDetail, locale }: PageContentProps) {
+	const pageCounts = await fetchPageCounts(pageDetail.id);
+	const pageViewCount = await fetchPageViewCount(pageDetail.id);
+	const annotationTypes = collectAnnotationTypes(pageDetail.segments);
 
 	return (
 		<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
 			<PageNavigation locale={locale} pageId={pageDetail.id} />
-			<ContentWithTranslations pageData={pageData} />
+			<ContentWithTranslations pageDetail={pageDetail} />
 			<ChildPages locale={locale} parentId={pageDetail.id} />
 			<div className="flex items-center gap-4">
 				<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
@@ -58,14 +53,12 @@ export async function PageContent({ pageData, locale }: PageContentProps) {
 				/>
 				<PageLikeButtonClient
 					className=""
-					initialLikeCount={pageDetail.likeCount}
+					initialLikeCount={pageCounts.likeCount}
 					pageId={pageDetail.id}
 					showCount
 				/>
 				<MessageCircle className="w-5 h-5" strokeWidth={1.5} />
-				<span className="text-muted-foreground">
-					{pageDetail._count?.pageComments || 0}
-				</span>
+				<span className="text-muted-foreground">{pageCounts.pageComments}</span>
 			</div>
 
 			<FloatingControls
@@ -73,7 +66,7 @@ export async function PageContent({ pageData, locale }: PageContentProps) {
 				likeButton={
 					<PageLikeButtonClient
 						className="w-10 h-10 rounded-full"
-						initialLikeCount={pageDetail.likeCount}
+						initialLikeCount={pageCounts.likeCount}
 						pageId={pageDetail.id}
 						showCount={false}
 					/>

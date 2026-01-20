@@ -22,9 +22,6 @@ export type CommentActionResponse = ActionResponse<
 /* Success 用データ型 ───────────── */
 type CommentSuccessData = { translationJobs: TranslationJobForToast[] };
 
-/* create が内部で使う型（公開しない） */
-type CreateResult = CommentSuccessData & { revalidatePath: string };
-
 const inputSchema = z.object({
 	pageId: z.coerce.number(),
 	userLocale: z.string(),
@@ -37,7 +34,7 @@ export const commentAction = createActionFactory<
 	// 1. Input schema
 	typeof inputSchema,
 	// 2. TCreateResult
-	CreateResult,
+	CommentSuccessData,
 	// 3. TResponseData
 	CommentSuccessData
 >({
@@ -76,14 +73,10 @@ export const commentAction = createActionFactory<
 			success: true,
 			data: {
 				translationJobs: results,
-				revalidatePath: `/user/${page.user.handle}/page/${page.slug}`,
 			},
 		};
 	},
 
-	buildRevalidatePaths: (_input, _userHandle, result) => [
-		result.revalidatePath ?? "",
-	],
 	buildResponse: (result) => ({
 		success: true,
 		data: {

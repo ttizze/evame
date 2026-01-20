@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
 import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
 import {
@@ -19,10 +18,6 @@ vi.mock("./_infra/gemini", () => ({
 	getGeminiModelResponse: vi.fn(),
 }));
 
-vi.mock("@/app/_service/revalidate-utils", () => ({
-	revalidatePageForLocale: vi.fn(),
-}));
-
 vi.mock("../_utils/with-qstash-signature", () => ({
 	withQstashVerification: (handler: (req: NextRequest) => Promise<Response>) =>
 		handler,
@@ -34,7 +29,7 @@ describe("POST /api/translate/chunk", () => {
 		vi.clearAllMocks();
 	});
 
-	it("翻訳が成功した場合、progressが100になりrevalidateが呼ばれる", async () => {
+	it("翻訳が成功した場合、progressが100になる", async () => {
 		// Arrange
 		const user = await createUser();
 		const page = await createPageWithSegments({
@@ -125,11 +120,6 @@ describe("POST /api/translate/chunk", () => {
 			.where("locale", "=", "ja")
 			.execute();
 		expect(translations.length).toBeGreaterThan(0);
-
-		expect(revalidatePageForLocale).toHaveBeenCalledWith(
-			params.pageId,
-			params.targetLocale,
-		);
 	});
 
 	it("翻訳が失敗した場合、エラーメッセージがDBに保存され500を返す", async () => {
@@ -239,7 +229,7 @@ describe("POST /api/translate/chunk", () => {
 		expect(data).toEqual({ ok: false });
 	});
 
-	it("翻訳が成功しprogressが100未満の場合、revalidateは呼ばれない", async () => {
+	it("翻訳が成功しprogressが100未満の場合、IN_PROGRESSのままになる", async () => {
 		// Arrange
 		const user = await createUser();
 		const page = await createPageWithSegments({
@@ -322,7 +312,5 @@ describe("POST /api/translate/chunk", () => {
 			.executeTakeFirstOrThrow();
 		expect(updatedJob.status).toBe("IN_PROGRESS");
 		expect(updatedJob.progress).toBeLessThan(100);
-
-		expect(revalidatePageForLocale).not.toHaveBeenCalled();
 	});
 });

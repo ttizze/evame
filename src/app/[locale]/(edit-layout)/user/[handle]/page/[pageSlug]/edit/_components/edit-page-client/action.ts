@@ -1,5 +1,6 @@
 "use server";
 
+import { updateTag } from "next/cache";
 import { z } from "zod";
 import { createServerLogger } from "@/app/_service/logger.server";
 import { createActionFactory } from "@/app/[locale]/_action/create-action-factory";
@@ -57,7 +58,7 @@ export const editPageContentAction = createActionFactory<
 				.where("userId", "=", userId)
 				.executeTakeFirst();
 
-			await processPageHtml({
+			const updatedPage = await processPageHtml({
 				title,
 				html: pageContent,
 				pageSlug,
@@ -70,6 +71,8 @@ export const editPageContentAction = createActionFactory<
 				status: existingPage?.status ?? "DRAFT",
 			});
 
+			updateTag(`page:${updatedPage.id}`);
+
 			logger.debug({}, "Page saved successfully");
 
 			return {
@@ -81,10 +84,6 @@ export const editPageContentAction = createActionFactory<
 			throw error;
 		}
 	},
-
-	buildRevalidatePaths: (i, handle) => [
-		`/${i.userLocale}/user/${handle}/page/${i.pageSlug}`,
-	],
 
 	buildResponse: (_d) => ({ success: true, data: undefined }),
 });

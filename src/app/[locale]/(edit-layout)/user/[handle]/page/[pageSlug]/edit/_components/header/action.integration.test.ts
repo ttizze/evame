@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { revalidateAllLocales } from "@/app/_service/revalidate-utils";
 import { db } from "@/db";
 import { mockCurrentUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
@@ -23,10 +22,6 @@ vi.mock(
 		enqueuePageTranslation: vi.fn(),
 	}),
 );
-vi.mock("@/app/_service/revalidate-utils", () => ({
-	revalidateAllLocales: vi.fn(),
-}));
-
 describe("editPageStatusAction", () => {
 	beforeEach(async () => {
 		await resetDatabase();
@@ -141,10 +136,6 @@ describe("editPageStatusAction", () => {
 				pageId: page.id,
 				targetLocales: ["ja", "zh"],
 			});
-
-			expect(revalidateAllLocales).toHaveBeenCalledWith(
-				`/user/testuser/page/test-page`,
-			);
 		});
 
 		it("非PUBLICステータスの場合、翻訳ジョブは作成されない", async () => {
