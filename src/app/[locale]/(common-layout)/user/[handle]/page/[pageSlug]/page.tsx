@@ -42,7 +42,7 @@ export default function Page({
 }: PageProps<"/[locale]/user/[handle]/page/[pageSlug]">) {
 	return (
 		<Suspense fallback={<PageSkeleton />}>
-			{params.then(async ({ pageSlug, locale, handle }) => {
+			{params.then(async ({ pageSlug, locale }) => {
 				const pageDetail = await fetchPageDetail(pageSlug, locale);
 				if (!pageDetail) {
 					return notFound();
@@ -52,7 +52,7 @@ export default function Page({
 				const isDraft = pageDetail.status !== "PUBLIC";
 				if (isDraft) {
 					const currentUser = await getCurrentUser();
-					if (!currentUser || currentUser.handle !== handle) {
+					if (!currentUser || currentUser.handle !== pageDetail.userHandle) {
 						return notFound();
 					}
 				}
