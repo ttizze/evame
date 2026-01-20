@@ -126,7 +126,11 @@ export function EditorKeyboardMenu({ editor }: EditorKeyboardMenuProps) {
 								[value]: !prev[value],
 							}));
 						}}
-						onPointerDown={(e) => e.preventDefault()}
+						onPointerDown={(event) => {
+							if (event.pointerType === "mouse") {
+								event.preventDefault();
+							}
+						}}
 						title={label}
 						type="button"
 					>
