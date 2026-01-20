@@ -1,10 +1,9 @@
 "use client";
 
 import { Heart, Loader2 } from "lucide-react";
-import { useActionState } from "react";
-import useSWR from "swr";
+import { useServerMutation } from "@/app/_hooks/use-server-mutation";
 import { Button } from "@/components/ui/button";
-import { type PageLikeButtonState, togglePageLikeAction } from "./action";
+import { togglePageLikeAction } from "./action";
 import { computeNextLikeState } from "./domain/like-state";
 import {
 	buildLikeStateKey,
@@ -27,58 +26,26 @@ export function PageLikeButtonClient({
 	initialLikeCount,
 	initialLiked,
 }: PageLikeButtonClientProps) {
-	const fallbackData = {
+	const fallbackData: LikeState = {
 		liked: initialLiked ?? false,
 		likeCount: initialLikeCount,
 	};
 
-	const swrKey = buildLikeStateKey(pageId);
-	const { data, mutate, isLoading } = useSWR<LikeState>(
-		swrKey,
-		async (url: string) => {
+	const { data, isLoading, isPending, handleSubmit } = useServerMutation({
+		swrKey: buildLikeStateKey(pageId),
+		fetcher: async (url: string) => {
 			const res = await fetchLikeStates(url);
-			//pageIdでlikeStateを取り出す
 			const state = res.states[String(pageId)];
 			return state ?? fallbackData;
 		},
-		{
-			fallbackData,
-			revalidateOnFocus: false,
-			revalidateIfStale: false,
-			revalidateOnMount: false,
+		serverAction: togglePageLikeAction,
+		fallbackData,
+		onBeforeAction: (_, currentData) => {
+			if (currentData.liked === undefined) return currentData;
+			return computeNextLikeState(currentData);
 		},
-	);
-
-	// Server action returns latest liked/count; prefer it when available
-	const [_, formAction, isPending] = useActionState<
-		PageLikeButtonState,
-		FormData
-	>(
-		async (prevState, formData) => {
-			const result = await togglePageLikeAction(prevState, formData);
-			if (result.success) {
-				void mutate(result.data, { revalidate: false });
-			}
-			return result;
-		},
-		{ success: false },
-	);
-
-	const handleSubmit = (formData: FormData) => {
-		// Guard until initial state is loaded
-		if (!data) return;
-		if (data.liked === undefined) {
-			formAction(formData);
-			return;
-		}
-
-		// Compute and broadcast optimistic next state for all instances
-		const next = computeNextLikeState(data);
-		mutate(next, { revalidate: false });
-
-		// Trigger server action
-		formAction(formData);
-	};
+		transformActionResult: (actionData) => actionData,
+	});
 
 	return (
 		<div className="flex items-center gap-2">
