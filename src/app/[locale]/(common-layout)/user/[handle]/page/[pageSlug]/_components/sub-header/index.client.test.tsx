@@ -22,13 +22,9 @@ describe("SubHeader", () => {
 		createdAt: new Date("2023-01-01T00:00:00.000Z"),
 		slug: "test-page",
 		title: "Test Page",
-		content: "Test content",
-		translations: [],
-		user: {
-			handle: "testuser",
-			name: "Test User",
-			image: "/test-image.jpg",
-		},
+		userHandle: "testuser",
+		userName: "Test User",
+		userImage: "/test-image.jpg",
 	} as unknown as PageDetail;
 	const tocItems = [
 		{

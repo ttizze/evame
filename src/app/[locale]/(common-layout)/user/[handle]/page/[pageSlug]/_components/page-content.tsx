@@ -1,5 +1,6 @@
 import { EyeIcon, MessageCircle } from "lucide-react";
 import { fetchPageCounts } from "@/app/[locale]/_db/fetch-page-detail.server";
+import { fetchPageViewCount } from "@/app/[locale]/_db/page-utility-queries.server";
 import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
 import { PageCommentList } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/comment/_components/page-comment-list/server";
@@ -8,7 +9,7 @@ import { ChildPages } from "./child-pages/server";
 import { PageCommentForm } from "./comment/_components/page-comment-form/client";
 import { ContentWithTranslations } from "./content-with-translations";
 import { PageNavigation } from "./page-navigation/server";
-import { PageViewCounter } from "./page-view-counter";
+import { PageViewCounter } from "./page-view-counter/client";
 
 interface PageContentProps {
 	pageDetail: PageDetail;
@@ -35,6 +36,7 @@ function collectAnnotationTypes(segments: PageDetail["segments"]) {
 
 export async function PageContent({ pageDetail, locale }: PageContentProps) {
 	const pageCounts = await fetchPageCounts(pageDetail.id);
+	const pageViewCount = await fetchPageViewCount(pageDetail.id);
 	const annotationTypes = collectAnnotationTypes(pageDetail.segments);
 
 	return (
@@ -46,6 +48,7 @@ export async function PageContent({ pageDetail, locale }: PageContentProps) {
 				<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
 				<PageViewCounter
 					className="text-muted-foreground"
+					initialCount={pageViewCount}
 					pageId={pageDetail.id}
 				/>
 				<PageLikeButtonClient

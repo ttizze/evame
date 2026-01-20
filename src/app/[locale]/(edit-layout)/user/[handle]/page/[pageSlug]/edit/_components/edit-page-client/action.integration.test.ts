@@ -1,4 +1,4 @@
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCurrentUser } from "@/app/_service/auth-server";
 import { db } from "@/db";
@@ -73,9 +73,7 @@ describe("editPageContentAction", () => {
 		expect(updatedPage?.slug).toBe(page.slug);
 
 		// Assert: キャッシュ再検証が呼ばれる
-		expect(revalidatePath).toHaveBeenCalledWith(
-			`/${formData.get("userLocale")}/user/${user.handle}/page/${page.slug}`,
-		);
+		expect(updateTag).toHaveBeenCalledWith(`page:${page.id}`);
 	});
 
 	it("認証されていないユーザーがアクセスした場合、リダイレクトされる", async () => {

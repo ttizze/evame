@@ -1,4 +1,4 @@
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCurrentUser } from "@/app/_service/auth-server";
 import { db } from "@/db";
@@ -131,9 +131,7 @@ describe("editPageTagsAction", () => {
 		expect(tagNames).toEqual(["tag1", "tag2"]);
 
 		// Assert: キャッシュ再検証が呼ばれる
-		expect(revalidatePath).toHaveBeenCalledWith(
-			`/user/${user.handle}/page/${page.slug}/edit`,
-		);
+		expect(updateTag).toHaveBeenCalledWith(`page:${page.id}`);
 	});
 
 	it("既存のタグを更新した場合、古いタグが削除され新しいタグが保存される", async () => {
