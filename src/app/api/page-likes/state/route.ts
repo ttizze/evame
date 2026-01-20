@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/app/_service/auth-server";
 import type { LikeState } from "@/app/api/page-likes/_types/like-state";
+import { apiSuccess } from "@/app/types/api-response";
 import { db } from "@/db";
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 			.parse(idsParam) ?? [];
 
 	if (ids.length === 0) {
-		return NextResponse.json({ states: {} });
+		return apiSuccess({ states: {} });
 	}
 
 	const currentUser = await getCurrentUser();
@@ -53,5 +53,5 @@ export async function GET(request: Request) {
 		};
 	}
 
-	return NextResponse.json({ states });
+	return apiSuccess({ states });
 }

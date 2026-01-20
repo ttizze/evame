@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { z } from "zod";
 import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
+import { ApiErrors, apiSuccess } from "@/app/types/api-response";
 import { orchestrateTranslation } from "./_service/orchestrate-translation.server";
 import { withQstashVerification } from "./_utils/with-qstash-signature";
 
@@ -23,10 +23,10 @@ async function handler(req: Request) {
 			await revalidatePageForLocale(params.pageId, params.targetLocale);
 		}
 
-		return NextResponse.json({ ok: result.ok }, { status: 201 });
+		return apiSuccess({ ok: result.ok }, 201);
 	} catch (error) {
 		console.error("/api/translate error:", error);
-		return NextResponse.json({ ok: false }, { status: 500 });
+		return ApiErrors.internal("Translation failed");
 	}
 }
 

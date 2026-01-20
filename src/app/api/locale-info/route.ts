@@ -1,5 +1,6 @@
-import { type NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { z } from "zod";
+import { ApiErrors, apiSuccess } from "@/app/types/api-response";
 import { fetchLocaleInfoByPageSlug } from "./_db/queries.server";
 
 export async function GET(req: NextRequest) {
@@ -14,10 +15,7 @@ export async function GET(req: NextRequest) {
 	);
 
 	if (!parseResult.success) {
-		return NextResponse.json(
-			{ message: "pageSlug is required" },
-			{ status: 400 },
-		);
+		return ApiErrors.badRequest("pageSlug is required");
 	}
 
 	const { pageSlug } = parseResult.data;
@@ -25,8 +23,8 @@ export async function GET(req: NextRequest) {
 	/* ③ DB に問い合わせ */
 	const localeInfo = await fetchLocaleInfoByPageSlug(pageSlug);
 	if (!localeInfo) {
-		return NextResponse.json({ message: "page not found" }, { status: 404 });
+		return ApiErrors.notFound("page not found");
 	}
 
-	return NextResponse.json(localeInfo, { status: 200 });
+	return apiSuccess(localeInfo);
 }

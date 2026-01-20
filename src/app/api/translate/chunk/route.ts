@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { createServerLogger } from "@/app/_service/logger.server";
 import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
+import { ApiErrors, apiSuccess } from "@/app/types/api-response";
 import { withQstashVerification } from "../_utils/with-qstash-signature";
 import type { TranslateChunkParams } from "../types";
 import {
@@ -39,7 +39,7 @@ async function handler(req: Request) {
 			await revalidatePageForLocale(params.pageId, params.targetLocale);
 		}
 
-		return NextResponse.json({ ok: true });
+		return apiSuccess({ ok: true });
 	} catch (error) {
 		const rawErrorMessage =
 			error instanceof Error ? error.message : String(error);
@@ -70,7 +70,7 @@ async function handler(req: Request) {
 			);
 		}
 
-		return NextResponse.json({ ok: false }, { status: 500 });
+		return ApiErrors.internal("Translation chunk failed");
 	}
 }
 

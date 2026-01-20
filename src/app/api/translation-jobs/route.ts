@@ -1,25 +1,18 @@
-import { type NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { z } from "zod";
-import {
-	type TranslationJobForToast,
-	translationJobForToastSchema,
-} from "@/app/types/translation-job";
+import { translationJobForToastSchema } from "@/app/types/translation-job";
+import { ApiErrors, apiSuccess } from "@/app/types/api-response";
 import { fetchTranslationJobsByIds } from "./_db/queries.server";
 
-export async function GET(
-	request: NextRequest,
-): Promise<NextResponse<TranslationJobForToast[] | { message: string }>> {
+export async function GET(request: NextRequest) {
 	const ids = z
 		.array(z.coerce.number().int().positive())
 		.parse(new URL(request.url).searchParams.getAll("id"));
 	if (!ids.length) {
-		return NextResponse.json(
-			{ message: "at least one id query param is required" },
-			{ status: 400 },
-		);
+		return ApiErrors.badRequest("at least one id query param is required");
 	}
 
 	const rows = await fetchTranslationJobsByIds(ids);
 	const validatedRows = z.array(translationJobForToastSchema).parse(rows);
-	return NextResponse.json(validatedRows, { status: 200 });
+	return apiSuccess(validatedRows);
 }

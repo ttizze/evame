@@ -1,7 +1,8 @@
-import { type NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/app/_service/auth-server";
 import { segmentTranslationSchema } from "@/app/api/segment-translations/_domain/segment-translations";
+import { ApiErrors, apiSuccess } from "@/app/types/api-response";
 import { db } from "@/db";
 
 const schema = z.object({
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
 	const validation = schema.safeParse(Object.fromEntries(searchParams));
 
 	if (!validation.success) {
-		return NextResponse.json({ error: "Invalid parameters" }, { status: 400 });
+		return ApiErrors.validationError("Invalid parameters");
 	}
 
 	const { segmentId, userLocale } = validation.data;
@@ -72,12 +73,9 @@ export async function GET(req: NextRequest) {
 			.execute();
 
 		const response = segmentTranslationSchema.array().parse(translations);
-		return NextResponse.json(response);
+		return apiSuccess(response);
 	} catch (error) {
 		console.error("Error fetching translations:", error);
-		return NextResponse.json(
-			{ error: "Failed to fetch translations" },
-			{ status: 500 },
-		);
+		return ApiErrors.internal("Failed to fetch translations");
 	}
 }
