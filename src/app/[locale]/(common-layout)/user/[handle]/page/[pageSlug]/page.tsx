@@ -1,19 +1,30 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { createServerLogger } from "@/app/_service/logger.server";
+import { Suspense } from "react";
+import { getCurrentUser } from "@/app/_service/auth-server";
+import { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageContent } from "./_components/page-content";
-import { fetchPageContext } from "./_service/fetch-page-context";
+import { PreviewBanner } from "./_components/preview-banner";
 import { generatePageMetadata } from "./_service/generate-page-metadata";
 
-const logger = createServerLogger("page-view");
+function PageSkeleton() {
+	return (
+		<article className="w-full prose dark:prose-invert lg:prose-lg mx-auto mb-20">
+			<Skeleton className="h-10 w-3/4 mb-4" />
+			<Skeleton className="h-6 w-1/4 mb-8" />
+			<div className="space-y-4">
+				<Skeleton className="h-4 w-full" />
+				<Skeleton className="h-4 w-full" />
+				<Skeleton className="h-4 w-5/6" />
+				<Skeleton className="h-4 w-full" />
+				<Skeleton className="h-4 w-4/5" />
+			</div>
+		</article>
+	);
+}
 
 type Params = Promise<{ locale: string; handle: string; pageSlug: string }>;
-
-// Force static rendering for this route (no dynamic APIs allowed)
-export const dynamic = "force-static";
-// Optionally enable ISR; adjust as needed
-// Revalidate once per month (30 days = 2,592,000 seconds)
-export const revalidate = 2592000;
 
 export async function generateMetadata({
 	params,
@@ -21,41 +32,39 @@ export async function generateMetadata({
 	params: Params;
 }): Promise<Metadata> {
 	const { pageSlug, locale } = await params;
-	const data = await fetchPageContext(pageSlug, locale);
-	if (!data) return notFound();
+	const pageDetail = await fetchPageDetail(pageSlug, locale);
+	if (!pageDetail) return notFound();
 
-	return generatePageMetadata({
-		pageData: data,
-		locale,
-		pageSlug,
-		isPreview: false,
-	});
+	return generatePageMetadata(pageDetail);
 }
 
-export default async function Page(
-	props: PageProps<"/[locale]/user/[handle]/page/[pageSlug]">,
-) {
-	const { pageSlug, locale, handle } = await props.params;
-	const data = await fetchPageContext(pageSlug, locale);
-	if (!data) {
-		logger.warn({ pageSlug, locale, handle }, "Page context not found");
-		return notFound();
-	}
-	const { pageDetail } = data;
+export default function Page({
+	params,
+}: PageProps<"/[locale]/user/[handle]/page/[pageSlug]">) {
+	return (
+		<Suspense fallback={<PageSkeleton />}>
+			{params.then(async ({ pageSlug, locale, handle }) => {
+				const pageDetail = await fetchPageDetail(pageSlug, locale);
+				if (!pageDetail) {
+					return notFound();
+				}
 
-	// Public route only renders PUBLIC pages
-	if (pageDetail.status !== "PUBLIC") {
-		logger.warn(
-			{
-				pageSlug,
-				status: pageDetail.status,
-				pageId: pageDetail.id,
-				handle,
-			},
-			"Page status is not PUBLIC",
-		);
-		return notFound();
-	}
+				// 非公開ページはオーナーのみ閲覧可能
+				const isDraft = pageDetail.status !== "PUBLIC";
+				if (isDraft) {
+					const currentUser = await getCurrentUser();
+					if (!currentUser || currentUser.handle !== handle) {
+						return notFound();
+					}
+				}
 
-	return <PageContent locale={locale} pageData={data} />;
+				return (
+					<>
+						{isDraft && <PreviewBanner />}
+						<PageContent locale={locale} pageDetail={pageDetail} />
+					</>
+				);
+			})}
+		</Suspense>
+	);
 }

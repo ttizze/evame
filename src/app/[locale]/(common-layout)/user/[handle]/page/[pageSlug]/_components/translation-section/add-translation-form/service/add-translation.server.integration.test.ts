@@ -1,5 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
+import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
 import {
@@ -13,17 +12,12 @@ import { addTranslationService } from "./add-translation.server";
 
 await setupDbPerFile(import.meta.url);
 
-vi.mock("@/app/_service/revalidate-utils", () => ({
-	revalidatePageForLocale: vi.fn(),
-}));
-
 describe("addTranslationService", () => {
 	beforeEach(async () => {
 		await resetDatabase();
-		vi.clearAllMocks();
 	});
 
-	it("コメントの翻訳を追加するとページをリバリデーションする", async () => {
+	it("コメントの翻訳を追加できる", async () => {
 		// Arrange
 		const user = await createUser();
 		const page = await createPageWithSegments({
@@ -72,6 +66,5 @@ describe("addTranslationService", () => {
 			.executeTakeFirst();
 
 		expect(translation?.text).toBe("コメント翻訳");
-		expect(revalidatePageForLocale).toHaveBeenCalledWith(page.id, "ja");
 	});
 });

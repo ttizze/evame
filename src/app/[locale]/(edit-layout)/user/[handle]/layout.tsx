@@ -1,12 +1,17 @@
 import { NextIntlClientProvider } from "next-intl";
+import { Suspense } from "react";
 
-export default async function EditLayout(
-	props: LayoutProps<"/[locale]/user/[handle]">,
-): Promise<React.ReactNode> {
-	const { locale } = await props.params;
+export default function EditLayout({
+	params,
+	children,
+}: LayoutProps<"/[locale]/user/[handle]">): React.ReactNode {
 	return (
-		<NextIntlClientProvider locale={locale}>
-			{props.children}
-		</NextIntlClientProvider>
+		<Suspense fallback={null}>
+			{params.then(({ locale }) => (
+				<NextIntlClientProvider locale={locale}>
+					{children}
+				</NextIntlClientProvider>
+			))}
+		</Suspense>
 	);
 }

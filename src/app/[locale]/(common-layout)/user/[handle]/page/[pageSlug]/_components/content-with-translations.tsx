@@ -1,34 +1,30 @@
 import { notFound } from "next/navigation";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
+import type { PageDetail } from "@/app/[locale]/types";
 import { extractTocItems } from "../_domain/extract-toc-items";
-import type { fetchPageContext } from "../_service/fetch-page-context";
 import { mdastToReact } from "./mdast-to-react/server";
 import { SubHeader } from "./sub-header/index.client";
 
 interface ContentWithTranslationsProps {
-	pageData: Awaited<ReturnType<typeof fetchPageContext>>;
+	pageDetail: PageDetail;
 }
 
 export async function ContentWithTranslations({
-	pageData,
+	pageDetail,
 }: ContentWithTranslationsProps) {
-	if (!pageData) {
-		return notFound();
-	}
-	const { pageDetail } = pageData;
 	const tocItems = extractTocItems({
 		mdast: pageDetail.mdastJson,
-		segments: pageDetail.content.segments,
+		segments: pageDetail.segments,
 	});
 
-	const titleSegment = pageDetail.content.segments.find((s) => s.number === 0);
+	const titleSegment = pageDetail.segments.find((s) => s.number === 0);
 	if (!titleSegment) {
 		return notFound();
 	}
 	const content = await mdastToReact({
 		mdast: pageDetail.mdastJson,
-		segments: pageDetail.content.segments,
+		segments: pageDetail.segments,
 	});
 	return (
 		<>

@@ -1,10 +1,8 @@
 // lib/create-action-factory.ts
 
 import type { Route } from "next";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { z } from "zod";
-import { revalidateAllLocales } from "@/app/_service/revalidate-utils";
 import type { ActionResponse } from "@/app/types";
 import {
 	type AuthDeps,
@@ -14,13 +12,11 @@ import {
 
 /* ────────────── 共通依存 ────────────── */
 type CreateDeps = AuthDeps & {
-	revalidatePath: typeof revalidatePath;
 	redirect: typeof redirect;
 };
 
 const defaultDeps: CreateDeps = {
 	...authDefaultDeps,
-	revalidatePath,
 	redirect,
 };
 
@@ -41,13 +37,6 @@ export function createActionFactory<
 			deps: CreateDeps,
 		) => Promise<ActionResponse<TSuccess>>;
 
-		/** 成功時のみ再検証するパス */
-		buildRevalidatePaths?: (
-			input: z.infer<TSchema>,
-			userHandle: string,
-			result: TSuccess,
-		) => string[];
-
 		/** 成功時のみリダイレクト */
 		buildSuccessRedirect?: (
 			input: z.infer<TSchema>,
@@ -63,7 +52,6 @@ export function createActionFactory<
 	const {
 		inputSchema,
 		create,
-		buildRevalidatePaths = () => [],
 		buildSuccessRedirect,
 		buildResponse = (d) => ({ success: true, data: d as unknown as TPublic }),
 	} = config;
@@ -82,10 +70,7 @@ export function createActionFactory<
 		const res = await create(data, currentUser.id, deps);
 		if (!res.success) return res; // ← 失敗なら即返却
 
-		/* 3. キャッシュ再検証 & リダイレクト（成功時のみ） */
-		for (const p of buildRevalidatePaths(data, currentUser.handle, res.data)) {
-			revalidateAllLocales(p, deps.revalidatePath);
-		}
+		/* 3. リダイレクト（成功時のみ） */
 		if (buildSuccessRedirect) {
 			deps.redirect(
 				buildSuccessRedirect(data, currentUser.handle, res.data) as Route,

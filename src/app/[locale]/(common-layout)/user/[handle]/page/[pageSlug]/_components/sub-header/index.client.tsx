@@ -23,13 +23,13 @@ export function SubHeader({
 	const locale = useLocale();
 	const { data: session } = authClient.useSession();
 	const currentUser = hydrated ? session?.user : undefined;
-	const isEditable = currentUser?.handle === pageDetail.user.handle;
+	const isEditable = currentUser?.handle === pageDetail.userHandle;
 
 	// カスタムフックを使用 - SubHeaderの特殊な動作のため初期オフセットを考慮
 	const { headerRef, isPinned, isVisible, headerHeight } = useHeaderScroll();
 	const { props } = getImageProps({
-		src: pageDetail.user.image,
-		alt: pageDetail.user.name,
+		src: pageDetail.userImage,
+		alt: pageDetail.userName,
 		width: 40,
 		height: 40,
 	});
@@ -46,16 +46,16 @@ export function SubHeader({
 				>
 					<Link
 						className="flex items-center mr-2 no-underline! hover:text-gray-700"
-						href={`/user/${pageDetail.user.handle}`}
+						href={`/user/${pageDetail.userHandle}`}
 					>
 						<Avatar className="w-10 h-10 shrink-0 mr-3 ">
 							<AvatarImage {...props} />
 							<AvatarFallback>
-								{pageDetail.user.name.charAt(0).toUpperCase()}
+								{pageDetail.userName.charAt(0).toUpperCase()}
 							</AvatarFallback>
 						</Avatar>
 						<div className="flex flex-col">
-							<span className="text-sm">{pageDetail.user.name}</span>
+							<span className="text-sm">{pageDetail.userName}</span>
 							{!isPinned && (
 								<span className="text-xs text-gray-500">
 									<time>{pageDetail.createdAt.toLocaleDateString(locale)}</time>

@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import NextTopLoader from "nextjs-toploader";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type React from "react";
+import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { Toaster } from "@/components/ui/sonner";
 import "../globals.css";
 
@@ -24,6 +25,12 @@ export const viewport: Viewport = {
 	maximumScale: 1,
 	interactiveWidget: "resizes-content",
 };
+
+export async function generateStaticParams() {
+	return supportedLocaleOptions.map((locale) => ({
+		locale: locale.code,
+	}));
+}
 
 export default async function Layout(
 	props: LayoutProps<"/[locale]">,

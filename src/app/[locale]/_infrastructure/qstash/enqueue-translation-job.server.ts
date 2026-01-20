@@ -1,4 +1,5 @@
 import { createTranslationJob } from "@/app/[locale]/_db/mutations.server";
+import { hasSegmentsForContentId } from "@/app/[locale]/_db/segment-exists.server";
 import type { TranslationJobForTranslationAPI } from "@/app/types/translation-job";
 import { enqueueTranslate } from "./enqueue-translate.server";
 
@@ -18,6 +19,12 @@ export async function enqueueTranslationJob({
 	pageCommentId?: number | null;
 	annotationContentId?: number | null;
 }): Promise<TranslationJobForTranslationAPI[]> {
+	const contentId = annotationContentId ?? pageCommentId ?? pageId;
+	const hasSegments = await hasSegmentsForContentId(contentId);
+	if (!hasSegments) {
+		return [];
+	}
+
 	return Promise.all(
 		targetLocales.map(async (locale) => {
 			const job = await createTranslationJob({

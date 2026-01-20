@@ -1,6 +1,5 @@
 "use client";
 import { EllipsisVertical, Trash2 } from "lucide-react";
-import { useLocale } from "next-intl";
 import { useActionState } from "react";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
 import { authClient } from "@/app/[locale]/_service/auth-client";
@@ -30,7 +29,6 @@ export function TranslationListItem({
 	onDeleted,
 }: TranslationItemProps) {
 	const hydrated = useHydrated();
-	const locale = useLocale();
 	const [_deleteTranslationState, action, isDeletingTranslation] =
 		useActionState(
 			async (_prev: ActionResponse, formData: FormData) => {
@@ -63,7 +61,6 @@ export function TranslationListItem({
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="w-48">
 							<form action={action}>
-								<input name="userLocale" type="hidden" value={locale} />
 								<input
 									name="translationId"
 									type="hidden"

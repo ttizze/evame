@@ -1,10 +1,10 @@
 // app/serverActions/voteAction.ts
 "use server";
 import type { Route } from "next";
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getCurrentUser } from "@/app/_service/auth-server";
-import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
 import { parseFormData } from "@/app/[locale]/_utils/parse-form-data";
 import type { ActionResponse } from "@/app/types";
 import { findPageIdBySegmentTranslationId } from "../_db/queries.server";
@@ -16,7 +16,6 @@ import {
 const schema = z.object({
 	segmentTranslationId: z.coerce.number().int(),
 	isUpvote: z.string().transform((val) => val === "true"),
-	userLocale: z.string().min(1),
 });
 
 export type VoteTranslationActionResponse = ActionResponse<
@@ -59,6 +58,6 @@ export async function voteTranslationAction(
 	const pageId = await findPageIdBySegmentTranslationId(
 		parsedFormData.data.segmentTranslationId,
 	);
-	await revalidatePageForLocale(pageId, parsedFormData.data.userLocale);
+	updateTag(`page:${pageId}`);
 	return { success: true, data: { isUpvote, point } };
 }

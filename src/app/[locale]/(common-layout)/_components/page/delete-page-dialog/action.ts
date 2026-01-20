@@ -8,9 +8,4 @@ export const archivePageAction = deleteActionFactory({
 	}),
 	deleteById: ({ pageId }, userId) =>
 		archivePage(pageId, userId).then(() => {}),
-
-	buildRevalidatePaths: (_input, userHandle) => [
-		`/user/${userHandle}/page-management`,
-		`/user/${userHandle}`,
-	],
 });

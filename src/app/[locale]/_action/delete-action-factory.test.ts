@@ -28,7 +28,6 @@ describe("deleteActionFactory", () => {
 				{
 					inputSchema: schema,
 					deleteById: vi.fn(),
-					buildRevalidatePaths: () => ["/foo"],
 				},
 				//biome-ignore lint/suspicious/noExplicitAny: DI用
 				{} as any,
@@ -47,7 +46,7 @@ describe("deleteActionFactory", () => {
 	});
 
 	describe("削除成功時", () => {
-		it("削除 → キャッシュ再検証 → リダイレクトの順で実行する", async () => {
+		it("削除 → リダイレクトの順で実行する", async () => {
 			vi.mocked(authAndValidate).mockResolvedValue({
 				success: true,
 				currentUser: { id: "user1", handle: "testuser", plan: "free" },
@@ -55,7 +54,6 @@ describe("deleteActionFactory", () => {
 			});
 
 			const deps = {
-				revalidatePath: vi.fn(),
 				redirect: vi.fn(),
 				getCurrentUser: vi.fn(),
 				parseFormData: vi.fn(),
@@ -66,7 +64,6 @@ describe("deleteActionFactory", () => {
 				{
 					inputSchema: schema,
 					deleteById,
-					buildRevalidatePaths: () => ["/foo"],
 					buildSuccessRedirect: () => "/bar",
 				},
 				//biome-ignore lint/suspicious/noExplicitAny: DI用
@@ -76,7 +73,6 @@ describe("deleteActionFactory", () => {
 			await action({ success: true, data: undefined }, new FormData());
 
 			expect(deleteById).toHaveBeenCalledWith({ id: 10 }, "user1");
-			expect(deps.revalidatePath).toHaveBeenCalledWith("/foo");
 			expect(deps.redirect).toHaveBeenCalledWith("/bar");
 		});
 
@@ -88,7 +84,6 @@ describe("deleteActionFactory", () => {
 			});
 
 			const deps = {
-				revalidatePath: vi.fn(),
 				redirect: vi.fn(),
 				getCurrentUser: vi.fn(),
 				parseFormData: vi.fn(),
@@ -98,7 +93,6 @@ describe("deleteActionFactory", () => {
 				{
 					inputSchema: schema,
 					deleteById: vi.fn(),
-					buildRevalidatePaths: () => ["/foo"],
 					// buildSuccessRedirect を指定しない
 				},
 				//biome-ignore lint/suspicious/noExplicitAny: DI用

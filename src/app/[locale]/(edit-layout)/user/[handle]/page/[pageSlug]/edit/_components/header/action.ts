@@ -1,8 +1,8 @@
 "use server";
 import type { Route } from "next";
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { revalidateAllLocales } from "@/app/_service/revalidate-utils";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
@@ -47,6 +47,7 @@ export async function editPageStatusAction(
 		redirect("/auth/login" as Route);
 	}
 	await updatePageStatus(pageId, status as PageStatus);
+	updateTag(`page:${pageId}`);
 
 	let translationJobs: TranslationJobForToast[] | undefined;
 	if (status === "PUBLIC") {
@@ -57,9 +58,6 @@ export async function editPageStatusAction(
 			aiModel: "gemini-2.5-flash-lite",
 		});
 	}
-	const basePath = `/user/${currentUser.handle}/page/${page.slug}`;
-	revalidateAllLocales(basePath);
-
 	return {
 		success: true,
 		data: translationJobs?.length ? { translationJobs } : undefined,

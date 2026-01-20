@@ -1,6 +1,5 @@
 "use server";
 import { z } from "zod";
-import { revalidateAllLocales } from "@/app/_service/revalidate-utils";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import { validateGeminiApiKey } from "@/app/api/translate/chunk/_infra/gemini";
 import type { ActionResponse } from "@/app/types";
@@ -39,7 +38,6 @@ export async function updateGeminiApiKeyAction(
 		}
 	}
 	await updateGeminiApiKey(currentUser.id, geminiApiKey);
-	revalidateAllLocales("/");
 	return {
 		success: true,
 		data: undefined,

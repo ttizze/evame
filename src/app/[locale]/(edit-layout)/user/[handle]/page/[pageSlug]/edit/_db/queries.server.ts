@@ -2,63 +2,41 @@ import { db } from "@/db";
 
 /**
  * ページをタイトルとタグと共に取得
- * Kyselyに移行済み
  */
 export async function getPageWithTitleAndTagsBySlug(slug: string) {
-	// ページ基本情報を取得
 	const page = await db
 		.selectFrom("pages")
-		.selectAll()
-		.where("slug", "=", slug)
+		.innerJoin("contents", "pages.id", "contents.id")
+		.selectAll("pages")
+		.select(["contents.id as contentId"])
+		.where("pages.slug", "=", slug)
 		.executeTakeFirst();
 
-	if (!page) {
-		return null;
-	}
+	if (!page) return null;
 
-	// コンテンツ情報を取得（pages.id = contents.id）
-	const content = await db
-		.selectFrom("contents")
-		.selectAll()
-		.where("id", "=", page.id)
-		.executeTakeFirst();
-
-	if (!content) {
-		return null;
-	}
-
-	// セグメントを取得（number = 0のみ）
-	const segments = await db
-		.selectFrom("segments")
-		.selectAll()
-		.where("contentId", "=", content.id)
-		.where("number", "=", 0)
-		.execute();
-
-	// タグページとタグを取得
-	const tagPagesData = await db
-		.selectFrom("tagPages")
-		.innerJoin("tags", "tagPages.tagId", "tags.id")
-		.select(["tagPages.tagId", "tagPages.pageId", "tags.name as tagName"])
-		.where("tagPages.pageId", "=", page.id)
-		.execute();
-
-	// Prismaの構造に合わせてデータを整形
-	const tagPages = tagPagesData.map((tp) => ({
-		tagId: tp.tagId,
-		pageId: tp.pageId,
-		tag: {
-			name: tp.tagName,
-		},
-	}));
+	const [segments, tagPagesData] = await Promise.all([
+		db
+			.selectFrom("segments")
+			.selectAll()
+			.where("contentId", "=", page.id)
+			.where("number", "=", 0)
+			.execute(),
+		db
+			.selectFrom("tagPages")
+			.innerJoin("tags", "tagPages.tagId", "tags.id")
+			.select(["tagPages.tagId", "tagPages.pageId", "tags.name as tagName"])
+			.where("tagPages.pageId", "=", page.id)
+			.execute(),
+	]);
 
 	return {
 		...page,
-		content: {
-			...content,
-			segments,
-		},
-		tagPages,
+		segments,
+		tagPages: tagPagesData.map((tp) => ({
+			tagId: tp.tagId,
+			pageId: tp.pageId,
+			tag: { name: tp.tagName },
+		})),
 	};
 }
 export type PageWithTitleAndTags = Awaited<
@@ -67,7 +45,6 @@ export type PageWithTitleAndTags = Awaited<
 
 /**
  * 全タグを取得（使用数順）
- * Kyselyに移行済み
  */
 export async function getAllTagsWithCount() {
 	return await db
@@ -97,7 +74,6 @@ export type TagWithCount = Awaited<
 
 /**
  * ユーザーのターゲットロケールを取得
- * Kyselyに移行済み
  */
 export async function getUserTargetLocales(userId: string) {
 	const result = await db

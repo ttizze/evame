@@ -1,7 +1,6 @@
 "use client";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import Form from "next/form";
-import { useLocale } from "next-intl";
 import { useActionState, useOptimistic } from "react";
 import type { SegmentTranslation } from "@/app/api/segment-translations/_domain/segment-translations";
 import {
@@ -51,8 +50,6 @@ function calculateOptimisticVote(
 }
 
 export function VoteButtons({ translation, onVoted }: VoteButtonsProps) {
-	const locale = useLocale();
-
 	// サーバーからの実際の状態
 	const [serverState, formAction, isPending] = useActionState(
 		async (
@@ -101,7 +98,6 @@ export function VoteButtons({ translation, onVoted }: VoteButtonsProps) {
 	return (
 		<span className="flex h-full justify-end items-center">
 			<Form action={handleSubmit}>
-				<input name="userLocale" type="hidden" value={locale} />
 				<input
 					name="segmentTranslationId"
 					type="hidden"

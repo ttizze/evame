@@ -1,6 +1,6 @@
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { createServerLogger } from "@/app/_service/logger.server";
-import { revalidatePageForLocale } from "@/app/_service/revalidate-utils";
 import { withQstashVerification } from "../_utils/with-qstash-signature";
 import type { TranslateChunkParams } from "../types";
 import {
@@ -36,7 +36,8 @@ async function handler(req: Request) {
 
 		// If the job is completed, revalidate the page.
 		if (updated && updated.status === "COMPLETED") {
-			await revalidatePageForLocale(params.pageId, params.targetLocale);
+			revalidateTag(`page:${params.pageId}`, { expire: 0 });
+			revalidateTag(`page-translation-jobs:${params.pageId}`, { expire: 0 });
 		}
 
 		return NextResponse.json({ ok: true });

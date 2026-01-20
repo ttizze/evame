@@ -50,7 +50,7 @@ export async function orchestrateTranslation(params: TranslateJobParams) {
 	// If there is nothing to translate, finalize immediately.
 	if (totalChunks === 0) {
 		await markJobCompleted(params.translationJobId);
-		return { ok: true, shouldRevalidate: true };
+		return { ok: true };
 	}
 
 	// Mark job started only when there is work to do
@@ -86,5 +86,5 @@ export async function orchestrateTranslation(params: TranslateJobParams) {
 		}),
 	);
 
-	return { ok: true, shouldRevalidate: false };
+	return { ok: true };
 }

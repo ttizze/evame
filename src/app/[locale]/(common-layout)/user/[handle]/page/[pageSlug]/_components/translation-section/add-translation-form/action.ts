@@ -1,4 +1,5 @@
 "use server";
+import { updateTag } from "next/cache";
 import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
@@ -41,6 +42,8 @@ export async function addTranslationFormAction(
 			message: result.message,
 		};
 	}
+
+	updateTag(`page:${result.pageId}`);
 
 	return {
 		success: true,
