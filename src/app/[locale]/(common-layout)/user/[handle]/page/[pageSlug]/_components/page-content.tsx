@@ -10,6 +10,7 @@ import { PageCommentForm } from "./comment/_components/page-comment-form/client"
 import { ContentWithTranslations } from "./content-with-translations";
 import { PageNavigation } from "./page-navigation/server";
 import { PageViewCounter } from "./page-view-counter/client";
+import { PreviewBanner } from "./preview-banner";
 
 interface PageContentProps {
 	pageDetail: PageDetail;
@@ -38,9 +39,11 @@ export async function PageContent({ pageDetail, locale }: PageContentProps) {
 	const pageCounts = await fetchPageCounts(pageDetail.id);
 	const pageViewCount = await fetchPageViewCount(pageDetail.id);
 	const annotationTypes = collectAnnotationTypes(pageDetail.segments);
+	const isDraft = pageDetail.status !== "PUBLIC";
 
 	return (
 		<article className="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
+			{isDraft && <PreviewBanner />}
 			<PageNavigation locale={locale} pageId={pageDetail.id} />
 			<ContentWithTranslations pageDetail={pageDetail} />
 			<ChildPages locale={locale} parentId={pageDetail.id} />
