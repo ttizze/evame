@@ -120,9 +120,8 @@ export function EditHeader({
 		pageSlug: string;
 	}>();
 	// Build canonical view path explicitly using params
-	// For public pages, link to actual page; for drafts, link to preview
+	// For public and draft pages, link to the same page view
 	const viewHref = `/user/${handle}/page/${pageSlug}`;
-	const previewHref = `${viewHref}/preview`;
 	//editページはiphoneSafari対応のため､baseHeaderとは別でスクロール管理が必要
 	const { isVisible } = useHeaderVisibility();
 	const { toastJobs } = useTranslationJobs(
@@ -252,7 +251,7 @@ export function EditHeader({
 					)}
 					<Separator />
 					<Button asChild className={MENU_BUTTON_CLASSES} variant="ghost">
-						<Link href={(isPublic ? viewHref : previewHref) as Route}>
+						<Link href={viewHref as Route}>
 							<LinkIcon className={ICON_CLASSES} />
 							<span>{isPublic ? "View Page" : "Preview"}</span>
 						</Link>

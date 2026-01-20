@@ -45,7 +45,7 @@ export function PageActionsDropdown({
 			<DropdownMenuTrigger asChild>
 				<Button
 					aria-label="More options"
-					className={`h-8 w-6 p-0 ${className}`}
+					className={`h-8 w-6 cursor-pointer p-0 ${className}`}
 					variant="ghost"
 				>
 					<MoreVertical className="h-4 w-4" />
@@ -71,7 +71,7 @@ export function PageActionsDropdown({
 				</DropdownMenuItem>
 				<DropdownMenuItem>
 					<button
-						className="text-red-500 w-full text-left"
+						className="text-red-500 w-full text-left cursor-pointer"
 						onClick={() => {
 							setDeleteDialogOpen(true);
 						}}

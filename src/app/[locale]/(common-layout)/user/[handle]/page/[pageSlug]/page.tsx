@@ -5,7 +5,6 @@ import { getCurrentUser } from "@/app/_service/auth-server";
 import { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageContent } from "./_components/page-content";
-import { PreviewBanner } from "./_components/preview-banner";
 import { generatePageMetadata } from "./_service/generate-page-metadata";
 
 function PageSkeleton() {
@@ -58,12 +57,7 @@ export default function Page({
 					}
 				}
 
-				return (
-					<>
-						{isDraft && <PreviewBanner />}
-						<PageContent locale={locale} pageDetail={pageDetail} />
-					</>
-				);
+				return <PageContent locale={locale} pageDetail={pageDetail} />;
 			})}
 		</Suspense>
 	);

@@ -64,13 +64,7 @@ export function PageManagementTabClient({
 					<div className="flex border-b py-2 justify-between" key={page.id}>
 						<div>
 							{/* Draft/private pages should open preview for owners */}
-							<Link
-								href={
-									page.status === "PUBLIC"
-										? `/user/${handle}/page/${page.slug}`
-										: `/user/${handle}/page/${page.slug}/preview`
-								}
-							>
+							<Link href={`/user/${handle}/page/${page.slug}`}>
 								{page.title}
 							</Link>
 							<div className="flex gap-2 mt-2">
