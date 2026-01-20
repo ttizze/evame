@@ -1,10 +1,24 @@
+import { cacheLife, cacheTag } from "next/cache";
 import { notFound } from "next/navigation";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
-import type { PageDetail } from "@/app/[locale]/types";
+import type { PageDetail, SegmentWithSegmentType } from "@/app/[locale]/types";
+import type { JsonValue } from "@/db/types";
 import { extractTocItems } from "../_domain/extract-toc-items";
 import { mdastToReact } from "./mdast-to-react/server";
 import { SubHeader } from "./sub-header/index.client";
+
+async function getCachedContent(
+	pageId: number,
+	mdast: JsonValue,
+	segments: SegmentWithSegmentType[],
+) {
+	"use cache";
+	cacheLife("max");
+	cacheTag(`page:${pageId}`);
+
+	return mdastToReact({ mdast, segments });
+}
 
 interface ContentWithTranslationsProps {
 	pageDetail: PageDetail;
@@ -22,10 +36,11 @@ export async function ContentWithTranslations({
 	if (!titleSegment) {
 		return notFound();
 	}
-	const content = await mdastToReact({
-		mdast: pageDetail.mdastJson,
-		segments: pageDetail.segments,
-	});
+	const content = await getCachedContent(
+		pageDetail.id,
+		pageDetail.mdastJson,
+		pageDetail.segments,
+	);
 	return (
 		<>
 			<h1 className="mb-0! ">
