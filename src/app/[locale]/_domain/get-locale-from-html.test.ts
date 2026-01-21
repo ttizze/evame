@@ -1,13 +1,12 @@
 import { describe, expect, test } from "vitest";
 import { getLocaleFromHtml } from "./get-locale-from-html";
 
-// アプリがサポートしている21言語（src/app/_constants/locale.ts）
-const supportedLocales = [
+// francで検出可能な言語
+const detectableLocales = [
 	"en",
 	"zh",
 	"es",
 	"ar",
-	"id",
 	"pt",
 	"fr",
 	"ja",
@@ -17,14 +16,16 @@ const supportedLocales = [
 	"ko",
 	"tr",
 	"it",
-	"fa",
 	"th",
 	"pl",
 	"nl",
 	"tl",
 	"hi",
-	"pi",
 ];
+
+// francで検出不可の言語（userLocaleにフォールバック）
+// @see docs/adr/20260121-language-detection-library.md
+const undetectableLocales = ["id", "fa", "pi"];
 
 describe("getLocaleFromHtml", () => {
 	test("英語（長文）のコンテンツを正しく検出できるか", async () => {
@@ -108,20 +109,18 @@ describe("getLocaleFromHtml", () => {
 	});
 });
 
-describe("getLocaleFromHtml - サポート言語21言語の検出", () => {
-	// 各言語のテストデータ
+describe("getLocaleFromHtml - francで検出可能な18言語", () => {
 	const languageSamples: Record<string, string> = {
-		en: `<p>This is a longer sample text in English to test language detection capabilities.
-			The quick brown fox jumps over the lazy dog. Language detection requires sufficient
-			text to make accurate predictions.</p>`,
+		en: `<p>The United States of America is a country located in North America.
+			It consists of 50 states and various territories. The capital city is Washington D.C.
+			Programming is the process of creating instructions that tell a computer how to perform tasks.
+			The English language is widely spoken around the world and serves as a global lingua franca.</p>`,
 		zh: `<p>这是一段较长的中文测试文本，用于检测语言识别功能的准确性。中国是一个历史悠久的国家，
 			拥有丰富的文化遗产和传统。中文是世界上使用人数最多的语言之一。</p>`,
 		es: `<p>Este es un texto de prueba más largo en español para la detección de idiomas.
 			España es conocida por su rica cultura, su deliciosa gastronomía y su fascinante historia.</p>`,
 		ar: `<p>هذا نص اختباري طويل باللغة العربية لاختبار قدرات اكتشاف اللغة. اللغة العربية هي واحدة
 			من أقدم اللغات في العالم ولها تاريخ غني وثقافة عميقة.</p>`,
-		id: `<p>Ini adalah teks percobaan yang lebih panjang dalam bahasa Indonesia untuk menguji
-			kemampuan deteksi bahasa. Indonesia adalah negara kepulauan terbesar di dunia.</p>`,
 		pt: `<p>Este é um texto de teste mais longo em português para verificar a detecção de idioma.
 			Portugal é um país com uma história rica e uma cultura fascinante.</p>`,
 		fr: `<p>Ceci est un texte de test plus long en français pour vérifier la détection de langue.
@@ -140,8 +139,6 @@ describe("getLocaleFromHtml - サポート言語21言語の検出", () => {
 			Türkiye, zengin bir tarihe ve kültüre sahip bir ülkedir.</p>`,
 		it: `<p>Questo è un testo di prova più lungo in italiano per verificare il rilevamento della lingua.
 			L'Italia è conosciuta per la sua ricca cultura e la sua deliziosa cucina.</p>`,
-		fa: `<p>این یک متن آزمایشی طولانی‌تر به زبان فارسی برای بررسی قابلیت تشخیص زبان است. زبان فارسی
-			یکی از زبان‌های کهن جهان است و تاریخ و فرهنگ غنی دارد.</p>`,
 		th: `<p>นี่คือข้อความทดสอบที่ยาวขึ้นในภาษาไทยเพื่อตรวจสอบความสามารถในการตรวจจับภาษา
 			ประเทศไทยเป็นประเทศที่มีประวัติศาสตร์และวัฒนธรรมที่รุ่งเรือง</p>`,
 		pl: `<p>To jest dłuższy tekst testowy w języku polskim do sprawdzenia wykrywania języka.
@@ -152,16 +149,34 @@ describe("getLocaleFromHtml - サポート言語21言語の検出", () => {
 			makilala ang wika. Ang Pilipinas ay isang bansang may mayamang kasaysayan at kultura.</p>`,
 		hi: `<p>यह भाषा पहचान क्षमताओं का परीक्षण करने के लिए हिंदी में एक लंबा नमूना पाठ है।
 			भारत एक समृद्ध इतिहास और विविध संस्कृति वाला देश है।</p>`,
-		// パーリ語はサンスクリット語(sa)として検出され、コード内でpiに変換される
-		pi: `<p>Namo tassa bhagavato arahato sammāsambuddhassa. Evaṃ me sutaṃ ekaṃ samayaṃ bhagavā
-			sāvatthiyaṃ viharati jetavane anāthapiṇḍikassa ārāme.</p>`,
 	};
 
-	for (const locale of supportedLocales) {
+	for (const locale of detectableLocales) {
 		test(`${locale} を正しく検出できるか`, async () => {
 			const html = languageSamples[locale];
 			const detected = await getLocaleFromHtml(html, "en");
 			expect(detected).toBe(locale);
+		});
+	}
+});
+
+describe("getLocaleFromHtml - francで検出不可な言語（userLocaleにフォールバック）", () => {
+	const undetectableSamples: Record<string, string> = {
+		id: `<p>Ini adalah teks percobaan yang lebih panjang dalam bahasa Indonesia untuk menguji
+			kemampuan deteksi bahasa. Indonesia adalah negara kepulauan terbesar di dunia.</p>`,
+		fa: `<p>این یک متن آزمایشی طولانی‌تر به زبان فارسی برای بررسی قابلیت تشخیص زبان است. زبان فارسی
+			یکی از زبان‌های کهن جهان است و تاریخ و فرهنگ غنی دارد.</p>`,
+		pi: `<p>Namo tassa bhagavato arahato sammāsambuddhassa. Evaṃ me sutaṃ ekaṃ samayaṃ bhagavā
+			sāvatthiyaṃ viharati jetavane anāthapiṇḍikassa ārāme.</p>`,
+	};
+
+	for (const locale of undetectableLocales) {
+		test(`${locale} は検出不可のためuserLocaleにフォールバック`, async () => {
+			const html = undetectableSamples[locale];
+			const userLocale = "ja";
+			const detected = await getLocaleFromHtml(html, userLocale);
+			// francで検出できないためuserLocaleにフォールバック
+			expect(detected).toBe(userLocale);
 		});
 	}
 });
