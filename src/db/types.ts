@@ -245,6 +245,15 @@ export interface Tags {
 	name: string;
 }
 
+export interface TranslationContexts {
+	context: string;
+	createdAt: Generated<Timestamp>;
+	id: Generated<number>;
+	name: string;
+	updatedAt: Generated<Timestamp>;
+	userId: string;
+}
+
 export interface TranslationJobs {
 	aiModel: string;
 	createdAt: Generated<Timestamp>;
@@ -324,6 +333,7 @@ export interface DB {
 	sessions: Sessions;
 	tagPages: TagPages;
 	tags: Tags;
+	translationContexts: TranslationContexts;
 	translationJobs: TranslationJobs;
 	translationVotes: TranslationVotes;
 	users: Users;
