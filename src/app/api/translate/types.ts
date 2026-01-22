@@ -11,7 +11,7 @@ export type TranslatedElement = {
 	text: string;
 };
 
-/** ac	tion → /api/translate へ渡すパラメータ */
+/** action → /api/translate へ渡すパラメータ */
 export interface TranslateJobParams {
 	userId: string;
 	pageId: number;
@@ -20,6 +20,8 @@ export interface TranslateJobParams {
 	targetLocale: string;
 	pageCommentId: number | null;
 	annotationContentId: number | null;
+	/** ユーザー定義の翻訳コンテキスト（翻訳指示） */
+	translationContext: string;
 }
 
 /** /api/translate → /api/translate/chunk へ渡すパラメータ */

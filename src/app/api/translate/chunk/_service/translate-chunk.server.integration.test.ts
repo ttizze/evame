@@ -99,6 +99,7 @@ describe("translateChunk", () => {
 			"ja",
 			page.id,
 			"Test Page",
+			"",
 		);
 
 		// Assert: 翻訳結果がデータベースに保存されている（実際のDBで検証）
@@ -143,6 +144,7 @@ describe("translateChunk", () => {
 				"ja",
 				page.id,
 				"Test Page",
+				"",
 			),
 		).rejects.toThrow();
 
@@ -184,6 +186,7 @@ describe("translateChunk", () => {
 			"ja",
 			page.id,
 			"Test Page",
+			"",
 		);
 
 		// Assert: 翻訳結果がデータベースに保存されている（実際のDBで検証）
@@ -217,6 +220,7 @@ describe("translateChunk", () => {
 			"ja",
 			page.id,
 			"Test Page",
+			"",
 		);
 
 		// Assert: PageLocaleTranslationProofがMACHINE_DRAFTステータスで作成されている（実際のDBで検証）
@@ -262,6 +266,7 @@ describe("translateChunk", () => {
 			"ja",
 			page.id,
 			"Test Page",
+			"",
 		);
 
 		// Assert: 既存のレコードが保持され、ステータスが変更されていない（実際のDBで検証）

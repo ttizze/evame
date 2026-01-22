@@ -55,9 +55,13 @@ export async function authAndValidate<T extends z.ZodTypeAny>(
 	const parsed = await deps.parseFormData(schema, formData);
 	const logger = createServerLogger("auth-and-validate", { userId: user.id });
 	if (!parsed.success) {
-		// 機密情報漏洩を防ぐため、失敗したフィールド名のみをログに記録（入力値は含めない）
 		const failedFields = Object.keys(parsed.error.flatten().fieldErrors);
 		logger.warn({ failedFields }, "Zod validation errors");
+		// 開発環境では入力値もデバッグ出力
+		if (process.env.NODE_ENV === "development") {
+			const rawData = Object.fromEntries(formData.entries());
+			logger.debug({ rawData }, "Zod validation raw data");
+		}
 		return {
 			success: false,
 			zodErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,

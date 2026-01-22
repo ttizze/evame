@@ -47,6 +47,8 @@ async function createAndEnqueueJob(params: NewJobParams) {
 
 	params.jobs.push(job);
 
+	// TODO: translationContext をサポートする
+	// locale-selector からの翻訳でもユーザーの translationContext を選択できるようにする
 	await enqueueTranslate({
 		translationJobId: job.id,
 		aiModel: params.aiModel,
@@ -55,6 +57,7 @@ async function createAndEnqueueJob(params: NewJobParams) {
 		pageId: params.pageId,
 		pageCommentId: params.pageCommentId,
 		annotationContentId: params.annotationContentId,
+		translationContext: "",
 	});
 }
 

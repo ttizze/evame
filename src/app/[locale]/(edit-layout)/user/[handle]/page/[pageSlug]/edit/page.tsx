@@ -7,6 +7,7 @@ import { EditPageClient } from "./_components/edit-page-client";
 import {
 	getAllTagsWithCount,
 	getPageWithTitleAndTagsBySlug,
+	getTranslationContextsByUserId,
 	getUserTargetLocales,
 } from "./_db/queries.server";
 
@@ -31,12 +32,17 @@ export default function EditPage({
 					return notFound();
 				}
 
-				const [pageWithTitleAndTags, allTagsWithCount, targetLocales] =
-					await Promise.all([
-						getPageWithTitleAndTagsBySlug(pageSlug),
-						getAllTagsWithCount(),
-						getUserTargetLocales(currentUser.id),
-					]);
+				const [
+					pageWithTitleAndTags,
+					allTagsWithCount,
+					targetLocales,
+					translationContexts,
+				] = await Promise.all([
+					getPageWithTitleAndTagsBySlug(pageSlug),
+					getAllTagsWithCount(),
+					getUserTargetLocales(currentUser.id),
+					getTranslationContextsByUserId(currentUser.id),
+				]);
 
 				const { html } = await mdastToHtml({
 					mdastJson: pageWithTitleAndTags?.mdastJson ?? null,
@@ -51,6 +57,7 @@ export default function EditPage({
 						pageSlug={pageSlug}
 						pageWithTitleAndTags={pageWithTitleAndTags}
 						targetLocales={targetLocales}
+						translationContexts={translationContexts}
 						userLocale={locale}
 					/>
 				);

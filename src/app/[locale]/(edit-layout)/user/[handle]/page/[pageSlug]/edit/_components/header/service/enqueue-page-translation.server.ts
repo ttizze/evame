@@ -7,16 +7,19 @@ export async function enqueuePageTranslation({
 	pageId,
 	targetLocales,
 	aiModel,
+	translationContext,
 }: {
 	currentUserId: string;
 	pageId: number;
 	targetLocales: string[];
 	aiModel: string;
+	translationContext: string;
 }): Promise<TranslationJobForTranslationAPI[]> {
 	return enqueueTranslationJob({
 		currentUserId,
 		pageId,
 		targetLocales,
 		aiModel,
+		translationContext,
 	});
 }

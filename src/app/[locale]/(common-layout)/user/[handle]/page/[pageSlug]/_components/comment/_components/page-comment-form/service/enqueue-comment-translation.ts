@@ -21,5 +21,6 @@ export async function enqueueCommentTranslation({
 		targetLocales,
 		aiModel,
 		pageCommentId,
+		translationContext: "",
 	});
 }

@@ -46,6 +46,7 @@ const defaultProps = {
 	initialStatus: "PUBLIC" as const,
 	pageId: 123,
 	targetLocales: ["en", "zh"],
+	translationContexts: [],
 };
 
 beforeEach(() => {

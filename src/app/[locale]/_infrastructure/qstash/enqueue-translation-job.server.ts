@@ -11,6 +11,7 @@ export async function enqueueTranslationJob({
 	aiModel = "gemini-2.5-flash",
 	pageCommentId = null,
 	annotationContentId = null,
+	translationContext,
 }: {
 	currentUserId: string;
 	pageId: number;
@@ -18,6 +19,7 @@ export async function enqueueTranslationJob({
 	aiModel?: string;
 	pageCommentId?: number | null;
 	annotationContentId?: number | null;
+	translationContext: string;
 }): Promise<TranslationJobForTranslationAPI[]> {
 	const contentId = annotationContentId ?? pageCommentId ?? pageId;
 	const hasSegments = await hasSegmentsForContentId(contentId);
@@ -42,6 +44,7 @@ export async function enqueueTranslationJob({
 				targetLocale: locale,
 				pageCommentId,
 				annotationContentId,
+				translationContext,
 			});
 
 			return job;

@@ -25,6 +25,7 @@ async function handler(req: Request) {
 			params.targetLocale,
 			params.pageId,
 			params.title,
+			params.translationContext,
 		);
 
 		// Atomically increment progress based on this chunk's share

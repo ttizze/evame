@@ -11,6 +11,7 @@ const ParamsSchema = z.object({
 	targetLocale: z.string().min(1),
 	pageCommentId: z.number().int().positive().nullable(),
 	annotationContentId: z.number().int().positive().nullable(),
+	translationContext: z.string(),
 });
 
 async function handler(req: Request) {

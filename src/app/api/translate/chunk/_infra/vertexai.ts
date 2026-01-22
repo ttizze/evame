@@ -13,6 +13,7 @@ export async function getVertexAIModelResponse(
 	title: string,
 	source_text: string,
 	target_language: string,
+	translationContext: string,
 ) {
 	const authClient = await getAuthClient();
 	const vertexai = new VertexAI({
@@ -74,7 +75,12 @@ export async function getVertexAIModelResponse(
 	for (let retryCount = 0; retryCount < MAX_RETRIES; retryCount++) {
 		try {
 			const res = await modelConfig.generateContent(
-				generateSystemMessage(title, source_text, target_language),
+				generateSystemMessage(
+					title,
+					source_text,
+					target_language,
+					translationContext,
+				),
 			);
 			// ──────────────────────────────────────────────
 
