@@ -83,3 +83,15 @@ export async function getUserTargetLocales(userId: string) {
 		.executeTakeFirst();
 	return result?.targetLocales ?? ["en", "zh"];
 }
+
+/**
+ * ユーザーの翻訳コンテキストを取得
+ */
+export async function getTranslationContextsByUserId(userId: string) {
+	return db
+		.selectFrom("translationContexts")
+		.select(["id", "name", "context", "createdAt", "updatedAt"])
+		.where("userId", "=", userId)
+		.orderBy("updatedAt", "desc")
+		.execute();
+}

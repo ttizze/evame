@@ -19,6 +19,7 @@ export async function getTranslatedText(
 	segments: SegmentElement[],
 	targetLocale: string,
 	title: string,
+	translationContext: string,
 ) {
 	// AIに送るのは number と text のペアのみ（id は不要）
 	const source_text = segments
@@ -47,6 +48,7 @@ export async function getTranslatedText(
 			title,
 			source_text,
 			target_locale: targetLocaleName,
+			translationContext,
 		});
 	}
 
@@ -63,6 +65,7 @@ export async function getTranslatedText(
 			title,
 			source_text,
 			target_locale: targetLocaleName,
+			translationContext,
 		});
 	}
 
@@ -80,6 +83,7 @@ export async function getTranslatedText(
 			title,
 			source_text,
 			target_locale: targetLocaleName,
+			translationContext,
 		});
 	}
 
@@ -89,5 +93,6 @@ export async function getTranslatedText(
 		title,
 		source_text,
 		targetLocaleName,
+		translationContext,
 	);
 }

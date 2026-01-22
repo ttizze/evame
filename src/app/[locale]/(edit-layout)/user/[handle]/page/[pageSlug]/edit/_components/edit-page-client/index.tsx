@@ -13,6 +13,7 @@ import { useKeyboardVisible } from "../../_hooks/use-keyboard-visible";
 import { Editor } from "../editor/editor";
 import { EditorKeyboardMenu } from "../editor/editor-keyboard-menu";
 import { EditHeader } from "../header/client";
+import type { TranslationContext } from "../header/translation-settings/types";
 import { TagInput } from "../tag-input";
 import {
 	type EditPageContentActionState,
@@ -28,6 +29,7 @@ interface EditPageClientProps {
 	userLocale: string;
 	html: string;
 	targetLocales: string[];
+	translationContexts: TranslationContext[];
 }
 
 export function EditPageClient({
@@ -39,6 +41,7 @@ export function EditPageClient({
 	userLocale,
 	html,
 	targetLocales,
+	translationContexts,
 }: EditPageClientProps) {
 	const formRef = useRef<HTMLFormElement>(null);
 	const isKeyboardVisible = useKeyboardVisible();
@@ -102,10 +105,11 @@ export function EditPageClient({
 				initialStatus={pageWithTitleAndTags?.status || "DRAFT"}
 				pageId={pageWithTitleAndTags?.id}
 				targetLocales={targetLocales}
+				translationContexts={translationContexts}
 			/>
 			<main className="px-4 grow ">
 				<div
-					className="w-full max-w-3xl prose dark:prose-invert sm:prose lg:prose-lg 
+					className="w-full max-w-3xl prose dark:prose-invert sm:prose lg:prose-lg
         mx-auto  prose-headings:text-gray-700 dark:prose-headings:text-gray-200 text-gray-700 dark:text-gray-200 mb-5 mt-3 md:mt-5 tracking-wider"
 				>
 					<div className="">

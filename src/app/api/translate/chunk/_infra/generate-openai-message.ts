@@ -2,7 +2,15 @@ export function generateOpenAISystemMessage(
 	title: string,
 	source_text: string,
 	target_locale: string,
+	translationContext: string,
 ): string {
+	const contextSection = translationContext
+		? `
+5. User instructions: Follow these additional translation guidelines provided by the author:
+"${translationContext}"
+`
+		: "";
+
 	return `
 You are a skilled translator. Your task is to accurately translate the given text into beautiful and natural sentences in the target language. Please follow these guidelines:
 
@@ -10,7 +18,7 @@ You are a skilled translator. Your task is to accurately translate the given tex
 2. Preserve style: Keep a consistent writing style throughout to ensure the translation reads naturally as a single work.
 3. Context awareness: The provided sequence is a passage from one work. The number indicates the sentence's position within that work.
 4. Reader-friendly: While considering the document title, translate in a way that is easy for readers to understand and enjoy.
-
+${contextSection}
 Document title: ${title}
 
 Translate the following array of texts into ${target_locale}.

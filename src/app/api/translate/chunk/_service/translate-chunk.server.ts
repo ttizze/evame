@@ -14,6 +14,7 @@ export async function translateChunk(
 	targetLocale: string,
 	pageId: number,
 	title: string,
+	translationContext: string,
 ) {
 	// まだ翻訳が完了していないセグメント
 	let pendingSegments = [...segments];
@@ -30,6 +31,7 @@ export async function translateChunk(
 			pendingSegments,
 			targetLocale,
 			title,
+			translationContext,
 		);
 
 		// extractTranslationsでJSONパースを試し、失敗時は正規表現抽出

@@ -880,6 +880,36 @@ export const userSettings = pgTable(
 	],
 );
 
+export const translationContexts = pgTable(
+	"translation_contexts",
+	{
+		id: serial().primaryKey().notNull(),
+		userId: text("user_id").notNull(),
+		name: text().notNull(),
+		context: text().notNull(),
+		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
+			.defaultNow()
+			.notNull()
+			.$onUpdate(() => new Date()),
+	},
+	(table) => [
+		index("translation_contexts_user_id_idx").using(
+			"btree",
+			table.userId.asc().nullsLast(),
+		),
+		foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "translation_contexts_user_id_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("cascade"),
+	],
+);
+
 export const tagPages = pgTable(
 	"tag_pages",
 	{

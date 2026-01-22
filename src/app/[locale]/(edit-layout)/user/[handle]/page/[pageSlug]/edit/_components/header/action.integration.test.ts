@@ -135,6 +135,7 @@ describe("editPageStatusAction", () => {
 				currentUserId: user.id,
 				pageId: page.id,
 				targetLocales: ["ja", "zh"],
+				translationContext: "",
 			});
 		});
 
@@ -188,6 +189,7 @@ describe("editPageStatusAction", () => {
 				currentUserId: user.id,
 				pageId: page.id,
 				targetLocales: ["en", "zh"],
+				translationContext: "",
 			});
 		});
 
@@ -213,6 +215,76 @@ describe("editPageStatusAction", () => {
 				currentUserId: user.id,
 				pageId: page.id,
 				targetLocales: ["en", "zh"],
+				translationContext: "",
+			});
+		});
+
+		it("translationContextIdが指定された場合、コンテキストを含めて翻訳リクエストを送る", async () => {
+			const user = await createUser({ handle: "testuser" });
+			const page = await createPage({
+				userId: user.id,
+				slug: "test-page",
+				status: "DRAFT",
+			});
+
+			// Create a translation context
+			const context = await db
+				.insertInto("translationContexts")
+				.values({
+					userId: user.id,
+					name: "Formal Japanese",
+					context: "Use formal style. Keep technical terms in English.",
+				})
+				.returning(["id", "context"])
+				.executeTakeFirstOrThrow();
+
+			mockCurrentUser(user);
+			vi.mocked(enqueuePageTranslation).mockResolvedValue([]);
+
+			const formData = new FormData();
+			formData.append("pageId", page.id.toString());
+			formData.append("status", "PUBLIC");
+			formData.append("targetLocales", "ja,zh");
+			formData.append("translationContextId", context.id.toString());
+
+			const result = await editPageStatusAction({ success: false }, formData);
+
+			expect(result.success).toBe(true);
+			expect(enqueuePageTranslation).toHaveBeenCalledWith({
+				aiModel: "gemini-2.5-flash-lite",
+				currentUserId: user.id,
+				pageId: page.id,
+				targetLocales: ["ja", "zh"],
+				translationContext:
+					"Use formal style. Keep technical terms in English.",
+			});
+		});
+
+		it("存在しないtranslationContextIdが指定された場合、空のコンテキストで翻訳リクエストを送る", async () => {
+			const user = await createUser({ handle: "testuser" });
+			const page = await createPage({
+				userId: user.id,
+				slug: "test-page",
+				status: "DRAFT",
+			});
+			mockCurrentUser(user);
+			vi.mocked(enqueuePageTranslation).mockResolvedValue([]);
+
+			const formData = new FormData();
+			formData.append("pageId", page.id.toString());
+			formData.append("status", "PUBLIC");
+			formData.append("targetLocales", "ja");
+			formData.append("translationContextId", "99999");
+
+			const result = await editPageStatusAction({ success: false }, formData);
+
+			expect(result.success).toBe(true);
+			expect(enqueuePageTranslation).toHaveBeenCalledWith({
+				aiModel: "gemini-2.5-flash-lite",
+				currentUserId: user.id,
+				pageId: page.id,
+				targetLocales: ["ja"],
+				translationContext: "",
 			});
 		});
 	});

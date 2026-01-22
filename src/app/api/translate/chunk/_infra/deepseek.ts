@@ -21,12 +21,14 @@ export async function getDeepSeekModelResponse({
 	title,
 	source_text,
 	target_locale,
+	translationContext,
 }: {
 	apiKey: string;
 	model: string;
 	title: string;
 	source_text: string;
 	target_locale: string;
+	translationContext: string;
 }) {
 	// 入力JSON行数をカウント
 	const inputCount = source_text.split("\n").length;
@@ -45,7 +47,12 @@ export async function getDeepSeekModelResponse({
 				schemaName: "TranslationResponse",
 				schemaDescription:
 					"Array of translated text segments with their original numbers",
-				prompt: generateOpenAISystemMessage(title, source_text, target_locale),
+				prompt: generateOpenAISystemMessage(
+					title,
+					source_text,
+					target_locale,
+					translationContext,
+				),
 			});
 
 			if (!result.object || result.object.length === 0) {

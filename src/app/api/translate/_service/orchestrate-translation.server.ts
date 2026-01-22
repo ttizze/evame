@@ -75,6 +75,7 @@ export async function orchestrateTranslation(params: TranslateJobParams) {
 				title,
 				totalChunks,
 				chunkIndex: idx,
+				translationContext: params.translationContext,
 			};
 			return client.publishJSON({
 				url: `${publishBaseUrl}/api/translate/chunk`,

@@ -10,7 +10,7 @@ import {
 import type { Route } from "next";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { type ReactNode, useActionState, useMemo, useState } from "react";
+import { type ReactNode, useActionState, useState } from "react";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { UserMenu } from "@/app/[locale]/(common-layout)/_components/header/user-menu.client";
@@ -27,7 +27,8 @@ import { Link } from "@/i18n/routing";
 import { type EditPageStatusActionState, editPageStatusAction } from "./action";
 import { EditHelpPopover } from "./edit-help-popover.client";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
-import { LocaleMultiSelector } from "./locale-multi-selector/client";
+import { TranslationSettings } from "./translation-settings";
+import type { TranslationContext } from "./translation-settings/types";
 
 interface EditHeaderProps {
 	currentUser: SanitizedUser;
@@ -35,9 +36,10 @@ interface EditHeaderProps {
 	hasUnsavedChanges: boolean;
 	pageId: number | undefined;
 	targetLocales: string[];
+	translationContexts: TranslationContext[];
 }
 const BUTTON_BASE_CLASSES =
-	"flex items-center gap-2 rounded-full  transition-colors justify-start duration-200";
+	"flex items-center gap-2 rounded-full transition-colors justify-start duration-200";
 const MENU_BUTTON_CLASSES = `${BUTTON_BASE_CLASSES} text-sm px-3 py-2 cursor-pointer hover:bg-transparent disabled:opacity-50 disabled:pointer-events-none `;
 const ICON_CLASSES = "w-4 h-4";
 const ICON_SPIN_CLASSES = `${ICON_CLASSES} animate-spin`;
@@ -110,6 +112,7 @@ export function EditHeader({
 	hasUnsavedChanges,
 	pageId,
 	targetLocales,
+	translationContexts,
 }: EditHeaderProps) {
 	const [state, action, isPending] = useActionState<
 		EditPageStatusActionState,
@@ -131,16 +134,13 @@ export function EditHeader({
 
 	const isPublic = initialStatus === "PUBLIC";
 
-	const statusIcon = useMemo(() => {
-		if (isPending) {
-			return <Loader2 className={ICON_SPIN_CLASSES} />;
-		}
-		return isPublic ? (
-			<Globe className={ICON_CLASSES} />
-		) : (
-			<Lock className={ICON_CLASSES} />
-		);
-	}, [isPending, isPublic]);
+	const statusIcon = isPending ? (
+		<Loader2 className={ICON_SPIN_CLASSES} />
+	) : isPublic ? (
+		<Globe className={ICON_CLASSES} />
+	) : (
+		<Lock className={ICON_CLASSES} />
+	);
 
 	const [locales, setLocales] = useState<string[]>(
 		targetLocales.length > 0 ? targetLocales : ["en", "zh"],
@@ -149,6 +149,9 @@ export function EditHeader({
 	const maxSelectableLocales =
 		currentUser?.plan?.toLowerCase?.() === "premium" ? 4 : 2;
 	const [clickedStatus, setClickedStatus] = useState<"PUBLIC" | "DRAFT" | null>(
+		null,
+	);
+	const [selectedContextId, setSelectedContextId] = useState<number | null>(
 		null,
 	);
 
@@ -189,6 +192,11 @@ export function EditHeader({
 								type="hidden"
 								value={locales.join(",")}
 							/>
+							<input
+								name="translationContextId"
+								type="hidden"
+								value={selectedContextId ?? ""}
+							/>
 							<div className="flex justify-between items-center w-full">
 								<Button
 									className={MENU_BUTTON_CLASSES}
@@ -212,11 +220,13 @@ export function EditHeader({
 									)}
 								</Button>
 								{pageSlug && (
-									<LocaleMultiSelector
-										className="ml-2"
-										defaultValue={locales}
-										maxSelectable={maxSelectableLocales}
-										onChange={setLocales}
+									<TranslationSettings
+										initialContexts={translationContexts}
+										locales={locales}
+										maxSelectableLocales={maxSelectableLocales}
+										onContextChange={setSelectedContextId}
+										onLocalesChange={setLocales}
+										selectedContextId={selectedContextId}
 									/>
 								)}
 							</div>

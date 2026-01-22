@@ -21,6 +21,7 @@ import {
 	sessions,
 	tagPages,
 	tags,
+	translationContexts,
 	translationJobs,
 	translationVotes,
 	userSettings,
@@ -56,6 +57,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 		relationName: "notifications_userId_users_id",
 	}),
 	accounts: many(accounts),
+	translationContexts: many(translationContexts),
 	translationJobs: many(translationJobs),
 	sessions: many(sessions),
 	translationVotes: many(translationVotes),
@@ -314,6 +316,16 @@ export const userSettingsRelations = relations(userSettings, ({ one }) => ({
 		references: [users.id],
 	}),
 }));
+
+export const translationContextsRelations = relations(
+	translationContexts,
+	({ one }) => ({
+		user: one(users, {
+			fields: [translationContexts.userId],
+			references: [users.id],
+		}),
+	}),
+);
 
 export const tagPagesRelations = relations(tagPages, ({ one }) => ({
 	page: one(pages, {

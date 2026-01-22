@@ -17,12 +17,14 @@ export async function getGeminiModelResponse({
 	title,
 	source_text,
 	target_locale,
+	translationContext,
 }: {
 	geminiApiKey: string;
 	model: string;
 	title: string;
 	source_text: string;
 	target_locale: string;
+	translationContext: string;
 }) {
 	const decryptedApiKey = decrypt(geminiApiKey);
 	const genAI = new GoogleGenerativeAI(decryptedApiKey);
@@ -71,7 +73,12 @@ export async function getGeminiModelResponse({
 	for (let retryCount = 0; retryCount < MAX_RETRIES; retryCount++) {
 		try {
 			const result = await modelConfig.generateContent(
-				generateSystemMessage(title, source_text, target_locale),
+				generateSystemMessage(
+					title,
+					source_text,
+					target_locale,
+					translationContext,
+				),
 			);
 			return result.response.text();
 		} catch (error: unknown) {
