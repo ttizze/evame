@@ -54,8 +54,13 @@ export function ContextDialog({
 			onContextCreated(result.data);
 			toast.success("Context created");
 			onOpenChange(false);
-		} else if (result.message) {
-			toast.error(result.message);
+		} else if (!result.success) {
+			if (result.message) {
+				toast.error(result.message);
+			} else if (result.zodErrors) {
+				const errors = Object.values(result.zodErrors).flat().join(", ");
+				toast.error(errors);
+			}
 		}
 		return result;
 	};
@@ -69,8 +74,13 @@ export function ContextDialog({
 			onContextUpdated(result.data);
 			toast.success("Context updated");
 			onOpenChange(false);
-		} else if (result.message) {
-			toast.error(result.message);
+		} else if (!result.success) {
+			if (result.message) {
+				toast.error(result.message);
+			} else if (result.zodErrors) {
+				const errors = Object.values(result.zodErrors).flat().join(", ");
+				toast.error(errors);
+			}
 		}
 		return result;
 	};

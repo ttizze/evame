@@ -2,6 +2,7 @@
 
 import { LanguagesIcon } from "lucide-react";
 import Select, { type MultiValue } from "react-select";
+import { toast } from "sonner";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { cn } from "@/lib/utils";
 import { saveTargetLocalesAction } from "./action";
@@ -50,14 +51,19 @@ export function MultiLocaleSelect({
 	}));
 	const selectedOptions = options.filter((o) => value.includes(o.value));
 
-	const handleChange = (vals: MultiValue<{ value: string; label: string }>) => {
+	const handleChange = async (
+		vals: MultiValue<{ value: string; label: string }>,
+	) => {
 		const codes = vals.map((v) => v.value).slice(0, maxSelectable);
 		onChange(codes);
 		const formData = new FormData();
 		for (const code of codes) {
 			formData.append("locales", code);
 		}
-		saveTargetLocalesAction({ success: false }, formData);
+		const result = await saveTargetLocalesAction({ success: false }, formData);
+		if (!result.success && result.message) {
+			toast.error(result.message);
+		}
 	};
 
 	const isOptionDisabled = (option?: { value: string }) =>

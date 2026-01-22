@@ -60,6 +60,7 @@ export async function editPageStatusAction(
 				.selectFrom("translationContexts")
 				.select(["context"])
 				.where("id", "=", translationContextId)
+				.where("userId", "=", currentUser.id)
 				.executeTakeFirst();
 			translationContext = ctx?.context ?? "";
 		}
