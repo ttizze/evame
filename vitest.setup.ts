@@ -29,6 +29,8 @@ vi.mock("next/cache", () => ({
 	revalidatePath: vi.fn(),
 	revalidateTag: vi.fn(),
 	updateTag: vi.fn(),
+	cacheLife: vi.fn(),
+	cacheTag: vi.fn(),
 }));
 
 vi.mock("@/app/_service/auth-server", () => ({

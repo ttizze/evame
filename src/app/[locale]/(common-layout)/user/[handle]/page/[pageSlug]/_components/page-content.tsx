@@ -17,7 +17,7 @@ interface PageContentProps {
 	locale: string;
 }
 
-function collectAnnotationTypes(segments: PageDetail["segments"]) {
+async function collectAnnotationTypes(segments: PageDetail["segments"]) {
 	const typeMap = new Map<string, { key: string; label: string }>();
 	for (const segment of segments) {
 		for (const link of segment.annotations ?? []) {
@@ -36,9 +36,11 @@ function collectAnnotationTypes(segments: PageDetail["segments"]) {
 }
 
 export async function PageContent({ pageDetail, locale }: PageContentProps) {
-	const pageCounts = await fetchPageCounts(pageDetail.id);
-	const pageViewCount = await fetchPageViewCount(pageDetail.id);
-	const annotationTypes = collectAnnotationTypes(pageDetail.segments);
+	const [pageCounts, pageViewCount, annotationTypes] = await Promise.all([
+		fetchPageCounts(pageDetail.id),
+		fetchPageViewCount(pageDetail.id),
+		collectAnnotationTypes(pageDetail.segments),
+	]);
 	const isDraft = pageDetail.status !== "PUBLIC";
 
 	return (
