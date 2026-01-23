@@ -1,6 +1,6 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Viewport } from "next";
-import { BIZ_UDPGothic, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import { setRequestLocale } from "next-intl/server";
 import { ThemeProvider } from "next-themes";
 import NextTopLoader from "nextjs-toploader";
@@ -10,13 +10,10 @@ import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { Toaster } from "@/components/ui/sonner";
 import "../globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
-const bizUDPGothic = BIZ_UDPGothic({
-	weight: ["400", "700"],
+const inter = Inter({
 	subsets: ["latin"],
-	preload: true,
 	display: "swap",
-	variable: "--font-biz-udp-gothic",
+	variable: "--font-inter",
 });
 
 export const viewport: Viewport = {
@@ -44,11 +41,7 @@ export default async function Layout(
 			? (process.env.GOOGLE_ANALYTICS_ID ?? "")
 			: "";
 	return (
-		<html
-			className={`${inter.className} ${bizUDPGothic.variable}`}
-			lang={locale}
-			suppressHydrationWarning
-		>
+		<html className={inter.variable} lang={locale} suppressHydrationWarning>
 			<body className="transition-colors duration-300 antialiased">
 				{gaTrackingId && <GoogleAnalytics gaId={gaTrackingId} />}
 				{/* trickle(crawl) は setTimeout ループになりやすいので無効化 */}
