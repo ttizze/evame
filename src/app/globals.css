@@ -60,7 +60,9 @@
 }
 @theme {
 	/* フォント ------------------------------ */
-	--font-sans: var(--font-inter), sans-serif;
+	--font-sans: var(--font-inter), 
+		"Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP",
+		"BIZ UDPGothic", sans-serif;
 
 	/* サイズ ------------------------------ */
 	--size-container-2xl: 1400px; /* .container 2xl 幅 */
