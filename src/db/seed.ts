@@ -11,18 +11,13 @@ type LocaleKey = keyof typeof LOCALE_CONTENT;
 type SegmentKey =
 	| { kind: "heroHeader" }
 	| { kind: "heroText" }
-	| { kind: "ourProblemHeader" }
 	| { kind: "sectionHeader"; index: number }
 	| { kind: "sectionText"; index: number };
 
 const SEGMENT_KEYS: SegmentKey[] = (() => {
 	const sampleLocale = LOCALE_CONTENT.en;
 	const sectionsCount = sampleLocale.sections.length;
-	const keys: SegmentKey[] = [
-		{ kind: "heroHeader" },
-		{ kind: "heroText" },
-		{ kind: "ourProblemHeader" },
-	];
+	const keys: SegmentKey[] = [{ kind: "heroHeader" }, { kind: "heroText" }];
 	for (let i = 0; i < sectionsCount; i += 1) {
 		keys.push({ kind: "sectionHeader", index: i });
 		keys.push({ kind: "sectionText", index: i });
@@ -218,8 +213,6 @@ function getLocalizedText(locale: LocaleKey, key: SegmentKey): string {
 			return content.heroHeader;
 		case "heroText":
 			return content.heroText;
-		case "ourProblemHeader":
-			return content.ourProblemHeader;
 		case "sectionHeader":
 			if (!content.sections[key.index]) {
 				throw new Error(
