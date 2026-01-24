@@ -2,6 +2,7 @@ import Image from "next/image";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { fetchAboutPage } from "../service/fetch-about-page";
+import { HeroRays } from "./hero-rays";
 
 const Icon = ({ className, ...rest }: { className: string }) => {
 	return (
@@ -66,20 +67,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 						text="Start Now"
 					/>
 				</div>
-				<div className="relative  my-10 flex justify-center">
-					{/* 左 : 入力線  ----------------------------------- */}
-					<div className="absolute inset-0 input-rays" />
-
-					{/* 右 : 出力線（多色） ----------------------------- */}
-					<div className="absolute inset-0 output-rays" />
-					<Image
-						alt="Hero section image"
-						className="relative z-10 dark:invert"
-						height={100}
-						src="/favicon.svg"
-						width={100}
-					/>
-				</div>
+				<HeroRays />
 			</div>
 		</div>
 	);

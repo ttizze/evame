@@ -60,7 +60,9 @@
 }
 @theme {
 	/* フォント ------------------------------ */
-	--font-sans: var(--font-inter), sans-serif;
+	--font-sans: var(--font-inter), 
+		"Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP",
+		"BIZ UDPGothic", sans-serif;
 
 	/* サイズ ------------------------------ */
 	--size-container-2xl: 1400px; /* .container 2xl 幅 */
@@ -142,49 +144,20 @@
 	--ring: 212.7 26.8% 83.9%;
 }
 
-.input-rays {
-	clip-path: polygon(0 0, 46% 45%, 45% 55%, 0 100%);
-	background: repeating-conic-gradient(
-		from 0deg at 50% center,
-		currentColor 0deg,
-		currentColor 0.5deg,
-		transparent 0.5deg,
-		transparent 3deg
-	);
-	color: rgba(0, 0, 0, 0.4); /* デフォルト */
+.hero-rays {
+	color: rgba(0, 0, 0, 0.45);
+	--ray-red: rgba(255, 70, 70, 0.75);
+	--ray-green: rgba(70, 210, 120, 0.75);
+	--ray-blue: rgba(70, 130, 255, 0.75);
 }
 
-.dark .input-rays {
-	color: rgba(255, 255, 255, 0.8) !important; /* ダーク */
+.dark .hero-rays {
+	color: rgba(255, 255, 255, 0.75);
+	--ray-red: rgba(255, 90, 90, 0.8);
+	--ray-green: rgba(90, 235, 140, 0.8);
+	--ray-blue: rgba(120, 165, 255, 0.85);
 }
 
-/* ----- 右 (出力) ----- */
-.output-rays {
-	clip-path: polygon(54% 0, 100% 0, 100% 100%, 54% 100%);
-	/* 赤 */
-	background:
-		repeating-conic-gradient(
-			from -45deg at 50% center,
-			rgba(255, 0, 0, 0.5) 0deg,
-			rgba(255, 0, 0, 0.5) 1deg,
-			transparent 1deg,
-			transparent 20deg
-		),
-		repeating-conic-gradient(
-			from 0deg at 50% center,
-			rgba(0, 255, 0, 0.5) 0deg,
-			rgba(0, 255, 0, 0.5) 1deg,
-			transparent 1deg,
-			transparent 20deg
-		),
-		repeating-conic-gradient(
-			from 45deg at 50% center,
-			rgba(0, 100, 255, 0.5) 0deg,
-			rgba(0, 100, 255, 0.5) 1deg,
-			transparent 1deg,
-			transparent 20deg
-		);
-}
 
 .ProseMirror p.is-editor-empty:first-child::before {
 	color: #adb5bd;
