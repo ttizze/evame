@@ -38,6 +38,10 @@ export function Editor({
 		onUpdate: async ({ editor }) => {
 			onEditorUpdate?.(editor);
 		},
+		onFocus: ({ editor }) => {
+			// Force a transaction to ensure FloatingMenu evaluates shouldShow on first focus
+			editor.view.dispatch(editor.state.tr);
+		},
 		editorProps: {
 			...baseConfig.editorProps,
 			attributes: {
