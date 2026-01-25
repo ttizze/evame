@@ -3,7 +3,7 @@
 import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { useView } from "@/app/_context/display-provider";
+import { useView } from "@/app/_context/view-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Popover,

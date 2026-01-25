@@ -1,7 +1,7 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { Suspense } from "react";
-import { ViewProvider } from "@/app/_context/display-provider";
+import { ViewProvider } from "@/app/_context/view-provider";
 import { Footer } from "@/app/[locale]/(common-layout)/_components/footer";
 import { Header } from "@/app/[locale]/(common-layout)/_components/header/server";
 import { TranslationFormOnClick } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/translation-form-on-click.client";

@@ -11,7 +11,7 @@ import {
 	TwitterShareButton,
 } from "react-share";
 import { toast } from "sonner";
-import { useView } from "@/app/_context/display-provider";
+import { useView } from "@/app/_context/view-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
