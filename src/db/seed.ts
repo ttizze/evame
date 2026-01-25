@@ -8,22 +8,8 @@ import { LOCALE_CONTENT } from "./seed-data/content";
 
 type LocaleKey = keyof typeof LOCALE_CONTENT;
 
-type SegmentKey =
-	| { kind: "heroHeader" }
-	| { kind: "heroText" }
-	| { kind: "sectionHeader"; index: number }
-	| { kind: "sectionText"; index: number };
-
-const SEGMENT_KEYS: SegmentKey[] = (() => {
-	const sampleLocale = LOCALE_CONTENT.en;
-	const sectionsCount = sampleLocale.sections.length;
-	const keys: SegmentKey[] = [{ kind: "heroHeader" }, { kind: "heroText" }];
-	for (let i = 0; i < sectionsCount; i += 1) {
-		keys.push({ kind: "sectionHeader", index: i });
-		keys.push({ kind: "sectionText", index: i });
-	}
-	return keys;
-})();
+// sections配列のidリストを取得
+const SEGMENT_IDS: string[] = LOCALE_CONTENT.en.sections.map((s) => s.id);
 
 const EN_TRANSLATIONS: LocaleKey[] = ["ja", "zh", "ko", "es"];
 const JA_TRANSLATIONS: LocaleKey[] = ["en", "zh", "ko", "es"];
@@ -101,11 +87,19 @@ async function ensureEvameUser(): Promise<string> {
 	return result.id;
 }
 
+function getTextById(locale: LocaleKey, id: string): string {
+	const section = LOCALE_CONTENT[locale].sections.find((s) => s.id === id);
+	if (!section) {
+		throw new Error(`Section not found: ${id} for locale ${locale}`);
+	}
+	return section.text;
+}
+
 async function ensurePages(userId: string) {
 	const evameEnPageId = await upsertPage({
 		slug: "evame",
 		sourceLocale: "en",
-		content: LOCALE_CONTENT.en.heroHeader,
+		content: getTextById("en", "heroHeader"),
 		aiLocales: EN_TRANSLATIONS,
 		userId,
 	});
@@ -113,7 +107,7 @@ async function ensurePages(userId: string) {
 	const evameJaPageId = await upsertPage({
 		slug: "evame-ja",
 		sourceLocale: "ja",
-		content: LOCALE_CONTENT.ja.heroHeader,
+		content: getTextById("ja", "heroHeader"),
 		aiLocales: JA_TRANSLATIONS,
 		userId,
 	});
@@ -203,41 +197,14 @@ async function insertTranslationJobs(
 	}
 }
 
-function getLocalizedText(locale: LocaleKey, key: SegmentKey): string {
-	const content = LOCALE_CONTENT[locale];
-	if (!content) {
-		throw new Error(`Locale content not found for ${locale}`);
-	}
-	switch (key.kind) {
-		case "heroHeader":
-			return content.heroHeader;
-		case "heroText":
-			return content.heroText;
-		case "sectionHeader":
-			if (!content.sections[key.index]) {
-				throw new Error(
-					`Missing section header for locale ${locale} index ${key.index}`,
-				);
-			}
-			return content.sections[key.index].header;
-		case "sectionText":
-			if (!content.sections[key.index]) {
-				throw new Error(
-					`Missing section text for locale ${locale} index ${key.index}`,
-				);
-			}
-			return content.sections[key.index].text;
-	}
-}
-
 function buildSegmentsForLocale(
 	locale: LocaleKey,
 	translations: LocaleKey[],
 ): SegmentData[] {
-	return SEGMENT_KEYS.map((key, index) => {
-		const text = getLocalizedText(locale, key);
+	return SEGMENT_IDS.map((id, index) => {
+		const text = getTextById(locale, id);
 		const translationsMap = Object.fromEntries(
-			translations.map((target) => [target, getLocalizedText(target, key)]),
+			translations.map((target) => [target, getTextById(target, id)]),
 		);
 		return {
 			number: index,
@@ -254,6 +221,12 @@ async function upsertSegmentsWithTranslations(params: {
 	segmentTypeId: number;
 	userId: string;
 }) {
+	// 既存のセグメントを削除（古いデータをクリア）
+	await db
+		.deleteFrom("segments")
+		.where("contentId", "=", params.pageId)
+		.execute();
+
 	for (const segment of params.segments) {
 		const seg = await db
 			.insertInto("segments")

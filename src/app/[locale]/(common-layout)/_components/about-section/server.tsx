@@ -1,8 +1,13 @@
 import { getCurrentUser } from "@/app/_service/auth-server";
-import { StartButton } from "../../_components/start-button";
 import { FloatingControls } from "../floating-controls/floating-controls.client";
-import HeroSection from "./hero-section/server";
-import ProblemSolutionSection from "./problem-solution-section/server";
+import ReachFeature from "./components/features/reach";
+import ReadFeature from "./components/features/read";
+import RefineFeature from "./components/features/refine";
+import WriteFeature from "./components/features/write";
+import FinalCTA from "./components/final-cta";
+import FounderSection from "./components/founder-section";
+import HeroSection from "./components/hero-section/server";
+
 export default async function AboutSection({
 	locale,
 	topPage,
@@ -15,12 +20,14 @@ export default async function AboutSection({
 		return <FloatingControls sourceLocale="mixed" userLocale={locale} />;
 	}
 	return (
-		<div className="flex flex-col">
+		<div className="flex flex-col space-y-16 md:space-y-24">
 			<HeroSection locale={locale} />
-			<ProblemSolutionSection locale={locale} />
-			<div className="mb-32 flex justify-center mt-10">
-				<StartButton className="w-60 h-12 text-xl" text="Get Started" />
-			</div>
+			<FounderSection locale={locale} />
+			<WriteFeature locale={locale} />
+			<ReachFeature locale={locale} />
+			<RefineFeature locale={locale} />
+			<ReadFeature locale={locale} />
+			<FinalCTA locale={locale} />
 			<FloatingControls sourceLocale="mixed" userLocale={locale} />
 		</div>
 	);
