@@ -1,7 +1,7 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { Suspense } from "react";
-import { DisplayProvider } from "@/app/_context/display-provider";
+import { ViewProvider } from "@/app/_context/display-provider";
 import { Footer } from "@/app/[locale]/(common-layout)/_components/footer";
 import { Header } from "@/app/[locale]/(common-layout)/_components/header/server";
 import { TranslationFormOnClick } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/translation-form-on-click.client";
@@ -35,7 +35,7 @@ export default function CommonLayout({
 				const messages = await getMessages();
 				return (
 					<NextIntlClientProvider locale={locale} messages={messages}>
-						<DisplayProvider>
+						<ViewProvider>
 							<Header />
 							<main className="mb-5 mt-3 md:mt-5 grow tracking-wider">
 								<div className="container mx-auto px-4 max-w-4xl">
@@ -44,7 +44,7 @@ export default function CommonLayout({
 							</main>
 							<TranslationFormOnClick />
 							<Footer />
-						</DisplayProvider>
+						</ViewProvider>
 					</NextIntlClientProvider>
 				);
 			})}

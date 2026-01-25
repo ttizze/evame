@@ -3,9 +3,9 @@ import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import { Suspense, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { DisplayModeCycle } from "./display-mode-cycle.client";
 import { useScrollVisibility } from "./hooks/use-scroll-visibility";
 import { ShareDialog } from "./share-dialog";
+import { ViewCycle } from "./view-cycle.client";
 
 interface AnnotationType {
 	key: string;
@@ -60,7 +60,7 @@ export function FloatingControls({
 		<div className="flex gap-6 justify-center">
 			<div className="flex flex-col items-center gap-1 group">
 				<Suspense fallback={null}>
-					<DisplayModeCycle
+					<ViewCycle
 						afterClick={ignoreNextScroll}
 						sourceLocale={sourceLocale}
 						userLocale={userLocale}

@@ -11,7 +11,7 @@ import {
 	TwitterShareButton,
 } from "react-share";
 import { toast } from "sonner";
-import { useDisplay } from "@/app/_context/display-provider";
+import { useView } from "@/app/_context/display-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -23,7 +23,7 @@ import {
 
 export function ShareDialog() {
 	const [isOpen, setIsOpen] = useState(false);
-	const { mode } = useDisplay();
+	const { view } = useView();
 
 	/* いま表示中のモードを取得 */
 	const shareTitle = typeof window !== "undefined" ? document.title : "";
@@ -32,7 +32,7 @@ export function ShareDialog() {
 	const getShareUrl = () => {
 		if (typeof window === "undefined") return "";
 		const url = new URL(window.location.href);
-		url.searchParams.set("displayMode", mode);
+		url.searchParams.set("view", view);
 		return url.toString();
 	};
 

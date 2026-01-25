@@ -1,13 +1,13 @@
-/* app/_components/display-mode-cycle.tsx */
+/* app/_components/view-cycle.tsx */
 "use client";
 import { FileText } from "lucide-react";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useEffect } from "react";
-import { type DisplayMode, useDisplay } from "@/app/_context/display-provider";
+import { useView, type View } from "@/app/_context/display-provider";
 import { Button } from "@/components/ui/button";
 
-const getNextDisplayMode = (mode: DisplayMode): DisplayMode =>
-	mode === "user" ? "source" : mode === "source" ? "both" : "user";
+const getNextView = (view: View): View =>
+	view === "user" ? "source" : view === "source" ? "both" : "user";
 
 interface Props {
 	afterClick?: () => void;
@@ -15,26 +15,22 @@ interface Props {
 	sourceLocale: string;
 }
 
-export function DisplayModeCycle({
-	afterClick,
-	userLocale,
-	sourceLocale,
-}: Props) {
-	const { mode: currentMode, setMode } = useDisplay();
-	const [mode, setQueryMode] = useQueryState(
-		"displayMode",
-		parseAsStringEnum<DisplayMode>(["user", "source", "both"]).withOptions({
+export function ViewCycle({ afterClick, userLocale, sourceLocale }: Props) {
+	const { view: currentView, setView } = useView();
+	const [view, setQueryView] = useQueryState(
+		"view",
+		parseAsStringEnum<View>(["user", "source", "both"]).withOptions({
 			shallow: true,
 		}),
 	);
 
 	useEffect(() => {
-		if (mode) {
-			setMode(mode);
+		if (view) {
+			setView(view);
 			return;
 		}
-		setQueryMode(currentMode);
-	}, [mode, setMode, setQueryMode, currentMode]);
+		setQueryView(currentView);
+	}, [view, setView, setQueryView, currentView]);
 
 	const sourceLabel =
 		sourceLocale === "mixed" ? (
@@ -48,18 +44,18 @@ export function DisplayModeCycle({
 		);
 
 	const handleClick = () => {
-		const current = mode ?? currentMode;
-		const next = getNextDisplayMode(current);
-		setQueryMode(next);
-		setMode(next);
+		const current = view ?? currentView;
+		const next = getNextView(current);
+		setQueryView(next);
+		setView(next);
 		afterClick?.();
 	};
 
 	/* ボタン内部の表示内容 */
 	const inner =
-		currentMode === "user" ? (
+		currentView === "user" ? (
 			<span>{userLocale.toUpperCase()}</span>
-		) : currentMode === "source" ? (
+		) : currentView === "source" ? (
 			sourceLabel
 		) : (
 			<span className="flex items-center gap-1 scale-90">
@@ -73,9 +69,9 @@ export function DisplayModeCycle({
 
 	/* アクセシブルラベル */
 	const label =
-		currentMode === "user"
+		currentView === "user"
 			? "Currently: User language only (Click to change)"
-			: currentMode === "source"
+			: currentView === "source"
 				? "Currently: Source only (Click to change)"
 				: "Currently: Both languages (Click to change)";
 
