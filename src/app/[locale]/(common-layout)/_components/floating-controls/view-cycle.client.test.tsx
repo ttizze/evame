@@ -4,8 +4,8 @@ import { parseAsStringEnum, useQueryState } from "nuqs";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { Suspense } from "react";
 import { describe, expect, it, vi } from "vitest";
-import type { View } from "@/app/_context/display-provider";
-import { ViewProvider } from "@/app/_context/display-provider";
+import type { View } from "@/app/_context/view-provider";
+import { ViewProvider } from "@/app/_context/view-provider";
 import { ViewCycle } from "./view-cycle.client";
 
 function Harness({

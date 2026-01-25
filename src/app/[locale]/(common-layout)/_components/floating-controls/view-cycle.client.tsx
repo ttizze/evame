@@ -3,7 +3,7 @@
 import { FileText } from "lucide-react";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useEffect } from "react";
-import { useView, type View } from "@/app/_context/display-provider";
+import { useView, type View } from "@/app/_context/view-provider";
 import { Button } from "@/components/ui/button";
 
 const getNextView = (view: View): View =>

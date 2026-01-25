@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import type { ReactNode } from "react";
 import { vi } from "vitest";
-import { ViewProvider } from "@/app/_context/display-provider";
+import { ViewProvider } from "@/app/_context/view-provider";
 import type { PageDetail } from "@/app/[locale]/types";
 import { SubHeader } from "./index.client";
 
