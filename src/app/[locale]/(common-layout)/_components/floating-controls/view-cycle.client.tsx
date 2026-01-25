@@ -3,7 +3,7 @@
 import { FileText } from "lucide-react";
 import { parseAsStringEnum, useQueryState } from "nuqs";
 import { useEffect } from "react";
-import { type View, useView } from "@/app/_context/display-provider";
+import { useView, type View } from "@/app/_context/display-provider";
 import { Button } from "@/components/ui/button";
 
 const getNextView = (view: View): View =>
@@ -15,11 +15,7 @@ interface Props {
 	sourceLocale: string;
 }
 
-export function ViewCycle({
-	afterClick,
-	userLocale,
-	sourceLocale,
-}: Props) {
+export function ViewCycle({ afterClick, userLocale, sourceLocale }: Props) {
 	const { view: currentView, setView } = useView();
 	const [view, setQueryView] = useQueryState(
 		"view",

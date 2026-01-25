@@ -46,9 +46,7 @@ beforeEach(() => {
 
 describe("FloatingControls", () => {
 	it("sourceLocale が mixed の時、URLクエリでsourceを指定すると Original が表示される", async () => {
-		render(
-			<Harness initialSearchParams="view=source" sourceLocale="mixed" />,
-		);
+		render(<Harness initialSearchParams="view=source" sourceLocale="mixed" />);
 
 		await screen.findByRole("button", {
 			name: /Source only/i,

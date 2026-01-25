@@ -56,7 +56,10 @@ export function SpreadAnimation() {
 	const ringSizes = [radius * 2 + 24, radius * 2 + 8, radius * 2 - 8];
 
 	return (
-		<div className="relative w-full h-[420px] sm:h-[480px] flex items-center justify-center overflow-hidden rounded-xl" data-spread-container>
+		<div
+			className="relative w-full h-[420px] sm:h-[480px] flex items-center justify-center overflow-hidden rounded-xl"
+			data-spread-container
+		>
 			{LANGUAGES.map((lang, i) => {
 				const angle = (i * 360) / LANGUAGES.length;
 				const rad = (angle * Math.PI) / 180;

@@ -3,9 +3,9 @@ import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import { Suspense, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ViewCycle } from "./view-cycle.client";
 import { useScrollVisibility } from "./hooks/use-scroll-visibility";
 import { ShareDialog } from "./share-dialog";
+import { ViewCycle } from "./view-cycle.client";
 
 interface AnnotationType {
 	key: string;

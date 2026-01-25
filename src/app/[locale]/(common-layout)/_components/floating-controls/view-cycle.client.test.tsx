@@ -47,9 +47,7 @@ function QueryStateReader() {
 
 describe("ViewCycle", () => {
 	it("URL に view=source があると Source 表示になる", async () => {
-		render(
-			<Harness initialSearchParams="view=source" sourceLocale="mixed" />,
-		);
+		render(<Harness initialSearchParams="view=source" sourceLocale="mixed" />);
 
 		await screen.findByRole("button", {
 			name: /Source only/i,
