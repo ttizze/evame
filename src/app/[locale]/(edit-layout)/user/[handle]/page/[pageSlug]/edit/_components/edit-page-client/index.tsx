@@ -48,7 +48,7 @@ export function EditPageClient({
 	const [editorInstance, setEditorInstance] = useState<TiptapEditor | null>(
 		null,
 	);
-	const [editState, editAction, _isEditing] = useActionState<
+	const [editState, editAction, isSaving] = useActionState<
 		EditPageContentActionState,
 		FormData
 	>(editPageContentAction, { success: false });
@@ -103,6 +103,7 @@ export function EditPageClient({
 				currentUser={currentUser}
 				hasUnsavedChanges={hasUnsavedChanges}
 				initialStatus={pageWithTitleAndTags?.status || "DRAFT"}
+				isSaving={isSaving}
 				pageId={pageWithTitleAndTags?.id}
 				targetLocales={targetLocales}
 				translationContexts={translationContexts}
