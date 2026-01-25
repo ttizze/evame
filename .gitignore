@@ -80,3 +80,4 @@ tipitaka-xml/
 cst/
 *.db
 .codex/skills
+.claude/

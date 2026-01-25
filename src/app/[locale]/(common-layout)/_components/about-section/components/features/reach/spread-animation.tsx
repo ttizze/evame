@@ -1,37 +1,38 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
 const LANGUAGES = [
-	{ code: "jp", flag: "🇯🇵", name: "Japanese" },
-	{ code: "us", flag: "🇺🇸", name: "English" },
-	{ code: "kr", flag: "🇰🇷", name: "Korean" },
-	{ code: "fr", flag: "🇫🇷", name: "French" },
-	{ code: "es", flag: "🇪🇸", name: "Spanish" },
-	{ code: "de", flag: "🇩🇪", name: "German" },
-	{ code: "cn", flag: "🇨🇳", name: "Chinese" },
-	{ code: "it", flag: "🇮🇹", name: "Italian" },
+	{ code: "jp", flag: "jp", name: "Japanese" },
+	{ code: "us", flag: "us", name: "English" },
+	{ code: "kr", flag: "kr", name: "Korean" },
+	{ code: "fr", flag: "fr", name: "French" },
+	{ code: "es", flag: "es", name: "Spanish" },
+	{ code: "de", flag: "de", name: "German" },
+	{ code: "cn", flag: "cn", name: "Chinese" },
+	{ code: "it", flag: "it", name: "Italian" },
 ];
 
-// 中央バッジの直径 (= width = height)
-const CENTER_SIZE = 108; // 6rem (= w-24/h-24) 以内なら好みで
+const CENTER_SIZE = 108;
 
-export function SpreadOtherLanguage() {
+export function SpreadAnimation() {
 	const [animate, setAnimate] = useState(false);
 	const [radius, setRadius] = useState(160);
 
-	// window 幅で radius を動的計算（中央バッジ＋両サイド 16px マージンとアイコン幅を引く）
 	useEffect(() => {
 		const calc = () => {
-			const vw = window.innerWidth;
-			const icon = 48; // w-12
-			const margin = 16 * 2;
+			const container = document.querySelector("[data-spread-container]");
+			if (!container) return;
+			const containerWidth = container.clientWidth;
+			const badgeWidth = 60;
+			const margin = 16;
 			const r = Math.max(
-				70, // 最小
-				Math.min(160, (vw - CENTER_SIZE - icon - margin) / 2),
+				120,
+				Math.min(180, (containerWidth - CENTER_SIZE - badgeWidth - margin) / 2),
 			);
 			setRadius(r);
 		};
@@ -40,7 +41,6 @@ export function SpreadOtherLanguage() {
 		return () => window.removeEventListener("resize", calc);
 	}, []);
 
-	// アニメーション on / off
 	useEffect(() => {
 		const timer = setTimeout(() => setAnimate(true), 100);
 		const interval = setInterval(() => {
@@ -56,8 +56,7 @@ export function SpreadOtherLanguage() {
 	const ringSizes = [radius * 2 + 24, radius * 2 + 8, radius * 2 - 8];
 
 	return (
-		<div className="relative w-full h-[420px] sm:h-[480px] flex items-center justify-center overflow-hidden rounded-xl">
-			{/* 言語アイコン */}
+		<div className="relative w-full h-[420px] sm:h-[480px] flex items-center justify-center overflow-hidden rounded-xl" data-spread-container>
 			{LANGUAGES.map((lang, i) => {
 				const angle = (i * 360) / LANGUAGES.length;
 				const rad = (angle * Math.PI) / 180;
@@ -82,21 +81,24 @@ export function SpreadOtherLanguage() {
 						}}
 					>
 						<motion.div
-							className="z-10 flex items-center justify-center w-12 h-12 rounded-full border"
+							className="z-10 flex items-center justify-center w-9 h-9 rounded-full border overflow-hidden bg-white"
 							whileHover={{ scale: 1.1 }}
 						>
-							<span aria-label={lang.name} className="text-2xl" role="img">
-								{lang.flag}
-							</span>
+							<Image
+								alt={lang.name}
+								className="object-cover w-full h-full"
+								height={36}
+								src={`https://flagcdn.com/w80/${lang.flag}.png`}
+								width={36}
+							/>
 						</motion.div>
-						<Badge className="mt-2" variant="secondary">
+						<Badge className="mt-1 text-xs px-1.5 py-0" variant="secondary">
 							{lang.name}
 						</Badge>
 					</motion.div>
 				);
 			})}
 
-			{/* 中央カード：モバイルで横幅を縮小 */}
 			<Card className="relative z-20 shadow-lg w-32">
 				<CardContent className="p-4">
 					<div className="space-y-3">
@@ -111,7 +113,6 @@ export function SpreadOtherLanguage() {
 				</CardContent>
 			</Card>
 
-			{/* パルス円 */}
 			{ringSizes.map((size, idx) => (
 				<motion.div
 					animate={

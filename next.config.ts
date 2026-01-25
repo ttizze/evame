@@ -79,6 +79,12 @@ const config: NextConfig = {
 				port: "3000",
 				pathname: "/api/og",
 			},
+			{
+				protocol: "https",
+				hostname: "flagcdn.com",
+				port: "",
+				pathname: "/**",
+			},
 		],
 	},
 	async headers() {
