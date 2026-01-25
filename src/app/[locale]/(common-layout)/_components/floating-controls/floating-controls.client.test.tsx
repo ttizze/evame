@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { DisplayProvider } from "@/app/_context/display-provider";
+import { ViewProvider } from "@/app/_context/display-provider";
 import { FloatingControls } from "./floating-controls.client";
 
 vi.mock("./share-dialog", () => ({
@@ -29,13 +29,13 @@ function Harness({
 }) {
 	return (
 		<NuqsTestingAdapter searchParams={initialSearchParams}>
-			<DisplayProvider>
+			<ViewProvider>
 				<FloatingControls
 					annotationTypes={annotationTypes}
 					sourceLocale={sourceLocale}
 					userLocale={userLocale}
 				/>
-			</DisplayProvider>
+			</ViewProvider>
 		</NuqsTestingAdapter>
 	);
 }
@@ -47,7 +47,7 @@ beforeEach(() => {
 describe("FloatingControls", () => {
 	it("sourceLocale が mixed の時、URLクエリでsourceを指定すると Original が表示される", async () => {
 		render(
-			<Harness initialSearchParams="displayMode=source" sourceLocale="mixed" />,
+			<Harness initialSearchParams="view=source" sourceLocale="mixed" />,
 		);
 
 		await screen.findByRole("button", {
@@ -56,7 +56,7 @@ describe("FloatingControls", () => {
 		expect(screen.getByTestId("source-mixed-icon")).toBeInTheDocument();
 	});
 
-	it("displayMode が both の時、クリックすると both→user→source→both に循環する", async () => {
+	it("view が both の時、クリックすると both→user→source→both に循環する", async () => {
 		render(<Harness />);
 
 		const user = userEvent.setup();
@@ -119,8 +119,8 @@ describe("FloatingControls", () => {
 		expect(document.documentElement.dataset.annotations).toBe("Note");
 	});
 
-	it("URLクエリでdisplayModeを指定すると、その値で初期表示される", async () => {
-		render(<Harness initialSearchParams="displayMode=user" />);
+	it("URLクエリでviewを指定すると、その値で初期表示される", async () => {
+		render(<Harness initialSearchParams="view=user" />);
 
 		await screen.findByRole("button", {
 			name: /User language only/i,

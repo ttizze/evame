@@ -3,36 +3,36 @@
 
 import { createContext, type ReactNode, useContext, useState } from "react";
 
-const DISPLAY_MODES = ["user", "source", "both"] as const;
-export type DisplayMode = (typeof DISPLAY_MODES)[number];
+const VIEWS = ["user", "source", "both"] as const;
+export type View = (typeof VIEWS)[number];
 
 type CtxShape = {
-	mode: DisplayMode;
-	setMode(next: DisplayMode): void;
+	view: View;
+	setView(next: View): void;
 };
 
 const Ctx = createContext<CtxShape | null>(null);
 
-export function DisplayProvider({
+export function ViewProvider({
 	children,
-	initialMode = "both",
+	initialView = "both",
 }: {
 	children: ReactNode;
-	initialMode?: DisplayMode;
+	initialView?: View;
 }) {
-	const [mode, setMode] = useState<DisplayMode>(initialMode);
+	const [view, setView] = useState<View>(initialView);
 
 	return (
-		<Ctx.Provider value={{ mode, setMode }}>
-			<div className="contents" data-display-mode={mode}>
+		<Ctx.Provider value={{ view, setView }}>
+			<div className="contents" data-view={view}>
 				{children}
 			</div>
 		</Ctx.Provider>
 	);
 }
 
-export const useDisplay = () => {
+export const useView = () => {
 	const c = useContext(Ctx);
-	if (!c) throw new Error("useDisplay must be inside DisplayProvider");
+	if (!c) throw new Error("useView must be inside ViewProvider");
 	return c;
 };
