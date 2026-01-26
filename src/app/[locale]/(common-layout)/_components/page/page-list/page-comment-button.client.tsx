@@ -21,7 +21,7 @@ export function PageCommentButton({
 }: PageCommentButtonProps) {
 	return (
 		<div className="flex items-center gap-2">
-			<Link href={`/user/${pageOwnerHandle}/page/${pageSlug}#comments`}>
+			<Link href={`/${pageOwnerHandle}/${pageSlug}#comments`}>
 				<Button
 					aria-label="Comments"
 					className={`${className}`}

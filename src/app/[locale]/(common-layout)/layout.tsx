@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { DisplayProvider } from "@/app/_context/display-provider";
 import { Footer } from "@/app/[locale]/(common-layout)/_components/footer";
 import { Header } from "@/app/[locale]/(common-layout)/_components/header/server";
-import { TranslationFormOnClick } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_components/translation-form-on-click.client";
+import { TranslationFormOnClick } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-form-on-click.client";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function LayoutSkeleton() {

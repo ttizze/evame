@@ -50,7 +50,7 @@ describe("sitemap生成", () => {
 			const entries = await sitemap({ id: Promise.resolve(0) });
 
 			const pageEntry = entries.find((e) =>
-				e.url?.includes("/user/alice/page/my-page"),
+				e.url?.includes("/alice/my-page"),
 			);
 			expect(pageEntry).toBeTruthy();
 			// URLの構造を検証（ドメインに依存しない）

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { fetchPageViewCount } from "@/app/[locale]/_db/page-utility-queries.server";
-import { incrementPageView } from "@/app/[locale]/(common-layout)/user/[handle]/page/[pageSlug]/_db/mutations.server";
+import { incrementPageView } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_db/mutations.server";
 
 export async function POST(
 	_req: Request,
