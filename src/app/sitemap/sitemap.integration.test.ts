@@ -52,7 +52,7 @@ describe("sitemap生成", () => {
 			const pageEntry = entries.find((e) => e.url?.includes("/alice/my-page"));
 			expect(pageEntry).toBeTruthy();
 			// URLの構造を検証（ドメインに依存しない）
-			expect(pageEntry?.url).toMatch(/\/ja\/user\/alice\/page\/my-page$/);
+			expect(pageEntry?.url).toMatch(/\/ja\/alice\/my-page$/);
 		});
 
 		it("id=0のチャンクには静的ルートが含まれる", async () => {
