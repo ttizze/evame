@@ -4,52 +4,50 @@ import { parseAsStringEnum, useQueryState } from "nuqs";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { Suspense } from "react";
 import { describe, expect, it, vi } from "vitest";
-import type { DisplayMode } from "@/app/_context/display-provider";
-import { DisplayProvider } from "@/app/_context/display-provider";
-import { DisplayModeCycle } from "./display-mode-cycle.client";
+import type { View } from "@/app/_context/view-provider";
+import { ViewProvider } from "@/app/_context/view-provider";
+import { ViewCycle } from "./view-cycle.client";
 
 function Harness({
 	initialSearchParams = "",
-	initialMode = "both",
+	initialView = "both",
 	sourceLocale = "ja",
 	userLocale = "en",
 	afterClick,
 }: {
 	initialSearchParams?: string;
-	initialMode?: "user" | "source" | "both";
+	initialView?: "user" | "source" | "both";
 	sourceLocale?: string;
 	userLocale?: string;
 	afterClick?: () => void;
 }) {
 	return (
 		<NuqsTestingAdapter searchParams={initialSearchParams}>
-			<DisplayProvider initialMode={initialMode}>
+			<ViewProvider initialView={initialView}>
 				<Suspense fallback={null}>
 					<QueryStateReader />
-					<DisplayModeCycle
+					<ViewCycle
 						afterClick={afterClick}
 						sourceLocale={sourceLocale}
 						userLocale={userLocale}
 					/>
 				</Suspense>
-			</DisplayProvider>
+			</ViewProvider>
 		</NuqsTestingAdapter>
 	);
 }
 
 function QueryStateReader() {
-	const [mode] = useQueryState(
-		"displayMode",
-		parseAsStringEnum<DisplayMode>(["user", "source", "both"]),
+	const [view] = useQueryState(
+		"view",
+		parseAsStringEnum<View>(["user", "source", "both"]),
 	);
-	return <span data-testid="display-mode-query">{mode ?? "none"}</span>;
+	return <span data-testid="view-query">{view ?? "none"}</span>;
 }
 
-describe("DisplayModeCycle", () => {
-	it("URL に displayMode=source があると Source 表示になる", async () => {
-		render(
-			<Harness initialSearchParams="displayMode=source" sourceLocale="mixed" />,
-		);
+describe("ViewCycle", () => {
+	it("URL に view=source があると Source 表示になる", async () => {
+		render(<Harness initialSearchParams="view=source" sourceLocale="mixed" />);
 
 		await screen.findByRole("button", {
 			name: /Source only/i,
@@ -58,7 +56,7 @@ describe("DisplayModeCycle", () => {
 	});
 
 	it("クリックで both→user→source→both に循環する", async () => {
-		render(<Harness initialSearchParams="displayMode=both" />);
+		render(<Harness initialSearchParams="view=both" />);
 
 		const user = userEvent.setup();
 
@@ -108,8 +106,8 @@ describe("DisplayModeCycle", () => {
 		expect(afterClick).toHaveBeenCalledTimes(1);
 	});
 
-	it("クリックで URL の displayMode が更新される", async () => {
-		render(<Harness initialSearchParams="displayMode=both" />);
+	it("クリックで URL の view が更新される", async () => {
+		render(<Harness initialSearchParams="view=both" />);
 
 		const user = userEvent.setup();
 
@@ -120,7 +118,7 @@ describe("DisplayModeCycle", () => {
 		);
 
 		await waitFor(() => {
-			expect(screen.getByTestId("display-mode-query").textContent).toBe("user");
+			expect(screen.getByTestId("view-query").textContent).toBe("user");
 		});
 	});
 });

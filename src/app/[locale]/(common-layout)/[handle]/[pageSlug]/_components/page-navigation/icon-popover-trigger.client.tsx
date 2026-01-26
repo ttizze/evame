@@ -3,7 +3,7 @@
 import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { useDisplay } from "@/app/_context/display-provider";
+import { useView } from "@/app/_context/view-provider";
 import { Button } from "@/components/ui/button";
 import {
 	Popover,
@@ -28,7 +28,7 @@ export function IconPopoverTrigger({
 	align,
 }: IconPopoverTriggerProps) {
 	const [isOpen, setIsOpen] = useState(false);
-	const { mode } = useDisplay();
+	const { view } = useView();
 
 	return (
 		<Popover onOpenChange={setIsOpen} open={isOpen}>
@@ -54,7 +54,7 @@ export function IconPopoverTrigger({
 			<PopoverContent
 				align={align}
 				className="w-80 rounded-xl border border-border/70 bg-background p-4 shadow-lg dark:shadow-[0_9px_7px_rgba(255,255,255,0.1)]"
-				data-display-mode={mode}
+				data-view={view}
 				onFocusOutside={(event) => event.preventDefault()}
 			>
 				{children}
