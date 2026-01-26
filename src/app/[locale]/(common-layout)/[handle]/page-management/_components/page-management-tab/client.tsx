@@ -36,13 +36,13 @@ export function PageManagementTabClient({
 	const getStatusBadge = (status: PageStatus) => {
 		if (status === "PUBLIC") {
 			return (
-				<Badge className="w-16 text-center" variant="default">
+				<Badge className="text-center whitespace-nowrap" variant="default">
 					Public
 				</Badge>
 			);
 		}
 		return (
-			<Badge className="w-16 text-center" variant="outline">
+			<Badge className="text-center whitespace-nowrap" variant="outline">
 				Private
 			</Badge>
 		);
