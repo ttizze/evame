@@ -1,6 +1,9 @@
 import parse from "html-react-parser";
-import DOMPurify from "isomorphic-dompurify";
 import type { ReactNode } from "react";
+import rehypeParse from "rehype-parse";
+import rehypeSanitize from "rehype-sanitize";
+import rehypeStringify from "rehype-stringify";
+import { unified } from "unified";
 
 function normalizeInlineHtml(text: string): string {
 	// Avoid invalid nested block tags when this content is rendered inside
@@ -14,7 +17,13 @@ function normalizeInlineHtml(text: string): string {
 	return unwrappedBlockTags.replace(/(?:<br\s*\/?>\s*){3,}/gi, "<br /><br />");
 }
 
+const processor = unified()
+	.use(rehypeParse, { fragment: true })
+	.use(rehypeSanitize)
+	.use(rehypeStringify);
+
 export function sanitizeAndParseText(text: string): ReactNode {
-	const sanitized = DOMPurify.sanitize(normalizeInlineHtml(text));
+	const normalized = normalizeInlineHtml(text);
+	const sanitized = processor.processSync(normalized).toString();
 	return parse(sanitized);
 }
