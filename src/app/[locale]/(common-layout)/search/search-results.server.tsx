@@ -60,7 +60,7 @@ export function SearchResults({
 						{users.map((usr) => (
 							<div className="flex items-start p-4 rounded-lg" key={usr.handle}>
 								<div className="flex-1">
-									<a href={`/user/${usr.handle}`}>
+									<a href={`/${usr.handle}`}>
 										<h3 className="text-xl font-bold">{usr.name}</h3>
 										<span className="text-gray-500 text-sm">@{usr.handle}</span>
 									</a>
