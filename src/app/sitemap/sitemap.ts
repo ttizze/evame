@@ -47,7 +47,7 @@ export default async function sitemap({
 	/* ------- 動的ルート ------- */
 	const pageRoutes = pages.map((page: PageWithUserAndTranslation) => {
 		return {
-			url: `${BASE_URL}/${page.sourceLocale}/user/${page.user.handle}/page/${page.slug}`,
+			url: `${BASE_URL}/${page.sourceLocale}/${page.user.handle}/${page.slug}`,
 			lastModified: new Date(page.updatedAt),
 			changeFrequency: "daily" as const,
 			priority: 0.7,
@@ -55,7 +55,7 @@ export default async function sitemap({
 				languages: Object.fromEntries(
 					page.translationJobs.map((job) => [
 						job.locale,
-						`${BASE_URL}/${job.locale}/user/${page.user.handle}/page/${page.slug}`,
+						`${BASE_URL}/${job.locale}/${page.user.handle}/${page.slug}`,
 					]),
 				),
 			},

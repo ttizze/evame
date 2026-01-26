@@ -39,7 +39,7 @@ export const JobsView = ({ jobs }: { jobs: TranslationJobForToast[] }) => (
 					{statusIcon(j.status)}
 					<Link
 						className="capitalize  min-w-[48px] hover:underline cursor-pointer flex items-center"
-						href={`/${j.locale}/user/${j.page.user.handle}/page/${j.page.slug}`}
+						href={`/${j.locale}/${j.page.user.handle}/${j.page.slug}`}
 					>
 						<LinkIcon className="w-4 h-4 mr-1" />
 						{j.locale}

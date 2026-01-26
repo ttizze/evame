@@ -31,7 +31,7 @@ export default async function PopularUsersList({
 				return (
 					<Link
 						className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 transition-colors"
-						href={`/user/${user.handle}`}
+						href={`/${user.handle}`}
 						key={user.id}
 					>
 						<Avatar className="w-10 h-10">

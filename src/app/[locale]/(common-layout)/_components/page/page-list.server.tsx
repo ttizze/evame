@@ -33,8 +33,8 @@ export async function PageList({
 	const { titleSegment } = PageForList;
 	const _ogpImageUrl =
 		`${BASE_URL}/api/og?locale=${locale}` + `&slug=${PageForList.slug}`;
-	const pageLink = `/user/${PageForList.userHandle}/page/${PageForList.slug}`;
-	const userLink = `/user/${PageForList.userHandle}`;
+	const pageLink = `/${PageForList.userHandle}/${PageForList.slug}`;
+	const userLink = `/${PageForList.userHandle}`;
 	const viewCount = await fetchPageViewCount(PageForList.id);
 	return (
 		<article

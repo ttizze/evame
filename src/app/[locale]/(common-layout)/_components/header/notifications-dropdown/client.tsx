@@ -137,7 +137,7 @@ function NotificationContent({
 	const { actorHandle, actorName, actorImage, type } =
 		notificationRowsWithRelations;
 	const commonLink = (
-		<Link className="hover:underline font-bold" href={`/user/${actorHandle}`}>
+		<Link className="hover:underline font-bold" href={`/${actorHandle}`}>
 			{actorName}
 		</Link>
 	);
@@ -152,7 +152,7 @@ function NotificationContent({
 		return (
 			<Link
 				className="hover:underline font-bold"
-				href={`/user/${pageOwnerHandle}/page/${pageSlug}`}
+				href={`/${pageOwnerHandle}/${pageSlug}`}
 			>
 				{pageTitle}
 			</Link>
@@ -194,7 +194,7 @@ function NotificationContent({
 					<span className="text-gray-500"> on </span>
 					<Link
 						className="hover:underline font-bold"
-						href={`/user/${pageOwnerHandle}/page/${pageSlug}`}
+						href={`/${pageOwnerHandle}/${pageSlug}`}
 					>
 						{pageTitle}
 					</Link>
@@ -244,7 +244,7 @@ function NotificationAvatar({
 	return (
 		<Link
 			className="flex items-center mr-2 no-underline! hover:text-gray-700"
-			href={`/user/${actorHandle}`}
+			href={`/${actorHandle}`}
 		>
 			<Avatar className="w-10 h-10 shrink-0 mr-3">
 				<AvatarImage {...props} />

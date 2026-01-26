@@ -131,8 +131,8 @@
 - URL 同期は必要最小の Client Component に限定する
 - `useSearchParams` / `useQueryState` を使う場合は、使用箇所の直近に `Suspense` を置く
 
-## 表示モード同期（displayMode）
-- `displayMode` の URL 同期は UI 操作コンポーネント（例: `DisplayModeCycle`）に限定する
+## 表示モード同期（view）
+- `view` の URL 同期は UI 操作コンポーネント（例: `ViewCycle`）に限定する
 - provider は状態共有のみを担当し、副作用（URL/クッキー同期）を持たせない
 
 ## 運用ルール
