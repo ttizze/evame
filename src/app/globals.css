@@ -192,42 +192,42 @@
 		contain: layout paint style;
 	}
 
-	/* DisplayMode (source/user/both) without per-segment hydration */
-	[data-display-mode="source"] .seg-tr {
+	/* View (source/user/both) without per-segment hydration */
+	[data-view="source"] .seg-tr {
 		display: none !important;
 	}
-	[data-display-mode="source"] .seg-src {
+	[data-view="source"] .seg-src {
 		display: block;
 	}
 
-	[data-display-mode="user"] .seg-tr {
+	[data-view="user"] .seg-tr {
 		display: block;
 	}
-	[data-display-mode="user"] .seg-src.seg-has-tr {
+	[data-view="user"] .seg-src.seg-has-tr {
 		display: none;
 	}
 
-	[data-display-mode="both"] .seg-tr {
+	[data-view="both"] .seg-tr {
 		display: block;
 	}
-	[data-display-mode="both"] .seg-src {
+	[data-view="both"] .seg-src {
 		display: block;
 	}
-	[data-display-mode="both"] .seg-src.seg-has-tr {
+	[data-view="both"] .seg-src.seg-has-tr {
 		color: rgb(209 213 219); /* text-gray-300 */
 	}
-	html.dark [data-display-mode="both"] .seg-src.seg-has-tr {
+	html.dark [data-view="both"] .seg-src.seg-has-tr {
 		color: rgb(75 85 99); /* dark:text-gray-600 */
 	}
 
 	@supports selector(:has(img)) {
-		[data-display-mode="user"] .seg-src.seg-has-tr:has(img) {
+		[data-view="user"] .seg-src.seg-has-tr:has(img) {
 			display: block;
 		}
 	}
 
 	/* Annotations visibility (fixed labels) */
-	/* Default: always hidden, regardless of DisplayMode selectors */
+	/* Default: always hidden, regardless of View selectors */
 	.seg-ann {
 		display: none !important;
 	}

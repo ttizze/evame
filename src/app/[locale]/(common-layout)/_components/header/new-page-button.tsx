@@ -17,7 +17,7 @@ export const NewPageButton = ({ handle }: NewPageButtonProps) => {
 
 	const handleNewPage = () => {
 		setIsLoading(true);
-		router.push(`/${locale}/user/${handle}/page/${generateSlug()}/edit`);
+		router.push(`/${locale}/${handle}/${generateSlug()}/edit`);
 	};
 
 	return (

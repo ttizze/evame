@@ -2,7 +2,7 @@
 
 ## 最適化結果 (2026-01-23 計測)
 
-**測定ページ**: `/ja/user/evame/page/tipitaka?displayMode=both` (254子ページ)
+**測定ページ**: `/ja/user/evame/page/tipitaka?view=both` (254子ページ)
 
 ### 今回の変更
 
@@ -90,7 +90,7 @@
 - Next.js 16.1.1 (Turbopack)
 - ローカル開発環境 (dev mode)
 - PostgreSQL: Docker (Neon emulator) on localhost:5435
-- 測定ページ: `/ja/user/evame/page/tipitaka?displayMode=both` (13 segments)
+- 測定ページ: `/ja/user/evame/page/tipitaka?view=both` (13 segments)
 
 ## 最終測定結果
 
@@ -323,7 +323,7 @@ npm run dev
 
 # パフォーマンス測定 (Puppeteer)
 cd ~/.claude/skills/chrome-devtools/scripts
-node performance.js --url "http://localhost:3000/ja/user/evame/page/tipitaka?displayMode=both"
+node performance.js --url "http://localhost:3000/ja/user/evame/page/tipitaka?view=both"
 ```
 
 ## RSCシリアライゼーションボトルネックの特定と解決

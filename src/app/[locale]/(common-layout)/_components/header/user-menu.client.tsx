@@ -59,7 +59,7 @@ export function UserMenu({
 				<DropdownMenuItem className="p-0">
 					<Link
 						className="opacity-100 w-full rounded-none px-4 py-3  cursor-pointer hover:bg-accent hover:text-accent-foreground"
-						href={`/user/${currentUser.handle}`}
+						href={`/${currentUser.handle}`}
 					>
 						<div className="flex flex-col items-start">
 							{currentUser.name}
@@ -80,7 +80,7 @@ export function UserMenu({
 				<DropdownMenuItem className="p-0 ">
 					<Link
 						className="flex items-center opacity-100 w-full rounded-none gap-2 px-4 py-3 cursor-pointer hover:bg-accent hover:text-accent-foreground"
-						href={`/user/${currentUser.handle}/page-management`}
+						href={`/${currentUser.handle}/page-management`}
 					>
 						<BookOpenIcon className="w-4 h-4" />
 						Page Management
