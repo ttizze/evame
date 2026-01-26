@@ -26,9 +26,7 @@ export function PageBreadcrumb({
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
 								<Link
-									href={
-										`/${locale}/${node.userHandle}/${node.slug}` as Route
-									}
+									href={`/${locale}/${node.userHandle}/${node.slug}` as Route}
 								>
 									<SegmentElement
 										className="line-clamp-1 break-all overflow-wrap-anywhere"

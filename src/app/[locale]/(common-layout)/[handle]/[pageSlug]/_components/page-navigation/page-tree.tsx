@@ -11,10 +11,7 @@ import { IconPopoverTrigger } from "./icon-popover-trigger.client";
 
 export function PageLink({ node }: { node: PageForTree }) {
 	return (
-		<Link
-			className="hover:underline"
-			href={`/${node.userHandle}/${node.slug}`}
-		>
+		<Link className="hover:underline" href={`/${node.userHandle}/${node.slug}`}>
 			<SegmentElement
 				className="line-clamp-1 break-all overflow-wrap-anywhere"
 				interactive={false}

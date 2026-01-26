@@ -64,9 +64,7 @@ export function PageManagementTabClient({
 					<div className="flex border-b py-2 justify-between" key={page.id}>
 						<div>
 							{/* Draft/private pages should open preview for owners */}
-							<Link href={`/${handle}/${page.slug}`}>
-								{page.title}
-							</Link>
+							<Link href={`/${handle}/${page.slug}`}>{page.title}</Link>
 							<div className="flex gap-2 mt-2">
 								{getStatusBadge(page.status)}
 								{page.updatedAt}

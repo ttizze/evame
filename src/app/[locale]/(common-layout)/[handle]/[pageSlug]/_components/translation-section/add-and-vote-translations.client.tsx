@@ -66,10 +66,7 @@ export function AddAndVoteTranslations({
 	return (
 		<span className="w-full ">
 			<span className="flex items-center justify-end gap-2">
-				<Link
-					className="no-underline!"
-					href={`/${bestTranslation.userHandle}`}
-				>
+				<Link className="no-underline!" href={`/${bestTranslation.userHandle}`}>
 					<span className="text-sm text-gray-500 text-right flex items-center">
 						by: {bestTranslation.userName}
 					</span>
