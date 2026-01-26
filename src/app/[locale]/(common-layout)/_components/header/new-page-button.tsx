@@ -3,7 +3,7 @@
 import { Loader2, PencilIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
-import { useState } from "react";
+import { useTransition } from "react";
 import { generateSlug } from "@/app/[locale]/_utils/generate-slug";
 
 interface NewPageButtonProps {
@@ -13,21 +13,22 @@ interface NewPageButtonProps {
 export const NewPageButton = ({ handle }: NewPageButtonProps) => {
 	const router = useRouter();
 	const locale = useLocale();
-	const [isLoading, setIsLoading] = useState(false);
+	const [isPending, startTransition] = useTransition();
 
 	const handleNewPage = () => {
-		setIsLoading(true);
-		router.push(`/${locale}/${handle}/${generateSlug()}/edit`);
+		startTransition(() => {
+			router.push(`/${locale}/${handle}/${generateSlug()}/edit`);
+		});
 	};
 
 	return (
 		<button
 			className="cursor-pointer items-center"
-			disabled={isLoading}
+			disabled={isPending}
 			onClick={handleNewPage}
 			type="button"
 		>
-			{isLoading ? (
+			{isPending ? (
 				<Loader2 className="h-6 w-6 animate-spin" />
 			) : (
 				<PencilIcon className="h-6 w-6" />
