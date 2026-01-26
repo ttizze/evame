@@ -1,6 +1,6 @@
 "use client";
+import DOMPurify from "dompurify";
 import parse from "html-react-parser";
-import DOMPurify from "isomorphic-dompurify";
 
 function normalizeInlineHtml(text: string): string {
 	// Avoid invalid nested block tags when this content is rendered inside

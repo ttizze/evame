@@ -55,6 +55,7 @@
         "clsx": "2.1.1",
         "cmdk": "1.1.1",
         "cobe": "0.6.5",
+        "dompurify": "^3.0.0",
         "drizzle-orm": "^0.45.1",
         "embla-carousel-react": "8.6.0",
         "framer-motion": "12.29.0",
@@ -65,8 +66,6 @@
         "hast": "1.0.0",
         "hast-util-to-html": "9.0.5",
         "html-react-parser": "5.2.12",
-        "isomorphic-dompurify": "2.26.0",
-        "jsdom": "26.1.0",
         "kysely": "0.28.10",
         "linkify-react": "4.3.2",
         "lucide-react": "0.563.0",
@@ -127,6 +126,7 @@
         "@testing-library/jest-dom": "6.9.1",
         "@testing-library/react": "16.3.2",
         "@testing-library/user-event": "14.6.1",
+        "@types/dompurify": "^3.0.0",
         "@types/node": "25.0.10",
         "@types/react": "19.2.9",
         "@types/react-dom": "19.2.3",
@@ -141,6 +141,7 @@
         "eslint-plugin-react-hooks": "7.0.1",
         "fishery": "2.4.0",
         "jest-mock-extended": "4.0.0",
+        "jsdom": "26.1.0",
         "kysely-codegen": "0.19.0",
         "next-router-mock": "^1.0.5",
         "postcss": "8.5.6",
@@ -1280,6 +1281,8 @@
 
     "@types/deep-eql": ["@types/deep-eql@4.0.2", "", {}, "sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw=="],
 
+    "@types/dompurify": ["@types/dompurify@3.2.0", "", { "dependencies": { "dompurify": "*" } }, "sha512-Fgg31wv9QbLDA0SpTOXO3MaxySc4DKGLi8sna4/Utjo4r3ZRPdCt4UQee8BWr+Q5z21yifghREPJGYaEOEIACg=="],
+
     "@types/eslint": ["@types/eslint@9.6.1", "", { "dependencies": { "@types/estree": "*", "@types/json-schema": "*" } }, "sha512-FXx2pKgId/WyYo2jXw63kk7/+TY7u7AziEJxJAnSFzHlqTAS3Ync6SvgYAN/k4/PQpnnVuzoMuVnByKK2qp0ag=="],
 
     "@types/eslint-scope": ["@types/eslint-scope@3.7.7", "", { "dependencies": { "@types/eslint": "*", "@types/estree": "*" } }, "sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg=="],
@@ -2323,8 +2326,6 @@
     "isexe": ["isexe@2.0.0", "", {}, "sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw=="],
 
     "isobject": ["isobject@3.0.1", "", {}, "sha512-WhB9zCku7EGTj/HQQRz5aUQEUeoQZH2bWcltRErOpymJ4boYE6wL9Tbr23krRPSZ+C5zqNSrSw+Cc7sZZ4b7vg=="],
-
-    "isomorphic-dompurify": ["isomorphic-dompurify@2.26.0", "", { "dependencies": { "dompurify": "^3.2.6", "jsdom": "^26.1.0" } }, "sha512-nZmoK4wKdzPs5USq4JHBiimjdKSVAOm2T1KyDoadtMPNXYHxiENd19ou4iU/V4juFM6LVgYQnpxCYmxqNP4Obw=="],
 
     "isstream": ["isstream@0.1.2", "", {}, "sha512-Yljz7ffyPbrLpLngrMtZ7NduUgVvi6wG9RJ9IUcyCd59YQ911PBJphODUcbOVbqYfxe1wuYf/LJ8PauMRwsM/g=="],
 
