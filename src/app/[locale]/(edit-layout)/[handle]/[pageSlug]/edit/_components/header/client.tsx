@@ -1,6 +1,5 @@
 "use client";
 import {
-	Cloud,
 	CloudCheck,
 	Globe,
 	LanguagesIcon,
@@ -99,7 +98,7 @@ function SaveButton({ hasUnsavedChanges }: { hasUnsavedChanges: boolean }) {
 			variant="ghost"
 		>
 			{hasUnsavedChanges ? (
-				<Cloud className={ICON_CLASSES} />
+				<Loader2 className={ICON_SPIN_CLASSES} />
 			) : (
 				<CloudCheck className={ICON_CLASSES} data-testid="save-button-check" />
 			)}
