@@ -92,7 +92,10 @@ function EditHeaderShell({
 function SaveButton({
 	hasUnsavedChanges,
 	isSaving,
-}: { hasUnsavedChanges: boolean; isSaving: boolean }) {
+}: {
+	hasUnsavedChanges: boolean;
+	isSaving: boolean;
+}) {
 	return (
 		<Button
 			className="rounded-full hover:bg-secondary/80"
