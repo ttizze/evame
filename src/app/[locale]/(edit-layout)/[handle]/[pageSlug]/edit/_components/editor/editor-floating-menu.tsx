@@ -1,5 +1,6 @@
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import type { Editor } from "@tiptap/core";
+import type { EditorState } from "@tiptap/pm/state";
 import { FloatingMenu } from "@tiptap/react/menus";
 import {
 	Code,
@@ -76,6 +77,23 @@ const menuItems = [
 	},
 ];
 
+const shouldShowFloatingMenu = (editor: Editor, state: EditorState) => {
+	// 空のテキストブロックで、かつカーソルが行頭にある場合のみ表示
+	const { selection } = state;
+	if (!editor.view.hasFocus() || !selection.empty) {
+		return false;
+	}
+
+	const { $from } = selection;
+	const isAtLineStart = $from.parentOffset === 0;
+	const isEmptyTextBlock =
+		$from.parent.isTextblock &&
+		!$from.parent.type.spec.code &&
+		$from.parent.content.size === 0;
+
+	return isAtLineStart && isEmptyTextBlock;
+};
+
 export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
 	const containerRef = useRef(null);
 
@@ -88,16 +106,9 @@ export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
 					strategy: "fixed",
 					placement: "left",
 				}}
-				shouldShow={({ editor }) => {
-					// 空の段落で、かつカーソルが行の先頭にある場合のみ表示
-					return (
-						editor.isActive("paragraph") &&
-						editor.state.selection.empty &&
-						editor.state.selection.anchor === editor.state.selection.head &&
-						editor.state.selection.anchor ===
-							editor.state.doc.resolve(editor.state.selection.anchor).start()
-					);
-				}}
+				shouldShow={({ editor, state }) =>
+					shouldShowFloatingMenu(editor, state)
+				}
 			>
 				<div className="floating-menu">
 					<div ref={containerRef}>

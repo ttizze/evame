@@ -35,7 +35,6 @@ interface EditHeaderProps {
 	currentUser: SanitizedUser;
 	initialStatus: PageStatus;
 	hasUnsavedChanges: boolean;
-	isSaving: boolean;
 	pageId: number | undefined;
 	targetLocales: string[];
 	translationContexts: TranslationContext[];
@@ -89,25 +88,17 @@ function EditHeaderShell({
 	);
 }
 
-function SaveButton({
-	hasUnsavedChanges,
-	isSaving,
-}: {
-	hasUnsavedChanges: boolean;
-	isSaving: boolean;
-}) {
+function SaveButton({ hasUnsavedChanges }: { hasUnsavedChanges: boolean }) {
 	return (
 		<Button
 			className="rounded-full hover:bg-secondary/80"
 			data-testid="save-button"
-			disabled={!hasUnsavedChanges && !isSaving}
+			disabled={!hasUnsavedChanges}
 			size="sm"
 			type="submit"
 			variant="ghost"
 		>
-			{isSaving ? (
-				<Loader2 className={ICON_SPIN_CLASSES} />
-			) : hasUnsavedChanges ? (
+			{hasUnsavedChanges ? (
 				<Cloud className={ICON_CLASSES} />
 			) : (
 				<CloudCheck className={ICON_CLASSES} data-testid="save-button-check" />
@@ -120,7 +111,6 @@ export function EditHeader({
 	currentUser,
 	initialStatus,
 	hasUnsavedChanges,
-	isSaving,
 	pageId,
 	targetLocales,
 	translationContexts,
@@ -168,7 +158,7 @@ export function EditHeader({
 
 	const leftExtra = (
 		<>
-			<SaveButton hasUnsavedChanges={hasUnsavedChanges} isSaving={isSaving} />
+			<SaveButton hasUnsavedChanges={hasUnsavedChanges} />
 			<input name="status" type="hidden" value={initialStatus} />
 		</>
 	);
