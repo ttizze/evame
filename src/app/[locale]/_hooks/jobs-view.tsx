@@ -7,10 +7,13 @@ import {
 	XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import type { TranslationJobForToast } from "@/app/types/translation-job";
+import type {
+	TranslationJobForToast,
+	TranslationJobStatus,
+} from "@/app/types/translation-job";
 import { Progress } from "@/components/ui/progress";
 
-const statusIcon = (status: string) => {
+const statusIcon = (status: TranslationJobStatus) => {
 	switch (status) {
 		case "PENDING":
 			return (
@@ -34,11 +37,11 @@ export const JobsView = ({ jobs }: { jobs: TranslationJobForToast[] }) => (
 			Translation Jobs
 		</p>
 		{jobs.map((j) => (
-			<div className="mb-2 last:mb-0" key={j.locale}>
+			<div className="mb-2 last:mb-0" key={j.id}>
 				<span className="flex items-center gap-2">
 					{statusIcon(j.status)}
 					<Link
-						className="capitalize  min-w-[48px] hover:underline cursor-pointer flex items-center"
+						className="min-w-[48px] cursor-pointer flex items-center capitalize hover:underline"
 						href={`/${j.locale}/${j.page.user.handle}/${j.page.slug}`}
 					>
 						<LinkIcon className="w-4 h-4 mr-1" />

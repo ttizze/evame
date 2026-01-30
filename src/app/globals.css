@@ -145,17 +145,101 @@
 }
 
 .hero-rays {
-	color: rgba(0, 0, 0, 0.45);
-	--ray-red: rgba(255, 70, 70, 0.75);
-	--ray-green: rgba(70, 210, 120, 0.75);
-	--ray-blue: rgba(70, 130, 255, 0.75);
+	--hero-ray-incoming: rgba(0, 0, 0, 0.38);
+	filter: saturate(1.7) contrast(1.2) brightness(1.05);
 }
 
 .dark .hero-rays {
-	color: rgba(255, 255, 255, 0.75);
-	--ray-red: rgba(255, 90, 90, 0.8);
-	--ray-green: rgba(90, 235, 140, 0.8);
-	--ray-blue: rgba(120, 165, 255, 0.85);
+	--hero-ray-incoming: rgba(255, 255, 255, 0.75);
+	filter: saturate(1.8) contrast(1.25) brightness(1.08);
+}
+
+.hero-rays-flow-in {
+	stroke-dasharray: 160 280;
+	animation: hero-rays-flow-in 2.6s linear infinite;
+}
+
+.hero-rays-flow-out {
+	stroke-dasharray: 220 420;
+	animation: hero-rays-flow-out 3.2s linear infinite;
+}
+
+.hero-rays-drift-out {
+	transform-box: fill-box;
+	transform-origin: center;
+	animation: hero-rays-drift-out 3.4s ease-in-out infinite;
+}
+
+.hero-rays-drift-in {
+	transform-box: fill-box;
+	transform-origin: center;
+	animation: hero-rays-drift-in 2.8s ease-in-out infinite;
+}
+
+.hero-rays-glitter {
+	animation: hero-rays-glitter 1.6s ease-in-out infinite;
+}
+
+.hero-rays-neon-pulse {
+	animation: hero-rays-neon-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes hero-rays-flow-in {
+	to {
+		stroke-dashoffset: -420;
+	}
+}
+
+@keyframes hero-rays-flow-out {
+	to {
+		stroke-dashoffset: 520;
+	}
+}
+
+@keyframes hero-rays-drift-out {
+	0%,
+	100% {
+		transform: translateX(-10px);
+	}
+	50% {
+		transform: translateX(16px);
+	}
+}
+
+@keyframes hero-rays-drift-in {
+	0%,
+	100% {
+		transform: translateX(-18px);
+	}
+	50% {
+		transform: translateX(4px);
+	}
+}
+
+@keyframes hero-rays-glitter {
+	0%,
+	100% {
+		opacity: 0.45;
+	}
+	50% {
+		opacity: 1;
+	}
+}
+
+@keyframes hero-rays-neon-pulse {
+	0%,
+	100% {
+		opacity: 0.65;
+	}
+	45% {
+		opacity: 1;
+	}
+	52% {
+		opacity: 0.8;
+	}
+	60% {
+		opacity: 1;
+	}
 }
 
 

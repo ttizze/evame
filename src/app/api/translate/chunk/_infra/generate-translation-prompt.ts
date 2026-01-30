@@ -1,12 +1,12 @@
-export function generateOpenAISystemMessage(
+export function generateTranslationPrompt(
 	title: string,
-	source_text: string,
-	target_locale: string,
+	sourceText: string,
+	targetLocale: string,
 	translationContext: string,
 ): string {
 	const contextSection = translationContext
 		? `
-5. User instructions: Follow these additional translation guidelines provided by the author:
+6. User instructions: Follow these additional translation guidelines provided by the author:
 "${translationContext}"
 `
 		: "";
@@ -18,10 +18,12 @@ You are a skilled translator. Your task is to accurately translate the given tex
 2. Preserve style: Keep a consistent writing style throughout to ensure the translation reads naturally as a single work.
 3. Context awareness: The provided sequence is a passage from one work. The number indicates the sentence's position within that work.
 4. Reader-friendly: While considering the document title, translate in a way that is easy for readers to understand and enjoy.
+5. Proper nouns and titles: Do NOT use phonetic transliteration. If an established translation exists, use it. If not, translate based on meaning rather than sound.
+   - Example: "Silakkhandhavaggapali" should be translated as "戒蘊品" (meaning-based), NOT "シーラッカンダーヴァッガパリ" (phonetic).
 ${contextSection}
 Document title: ${title}
 
-Translate the following array of texts into ${target_locale}.
+Translate the following array of texts into ${targetLocale}.
 
 Important instructions:
 - Do not explain your process or self-reference.
@@ -55,9 +57,9 @@ Important instructions:
 - Preserve and output newline characters (\\n) as they are. It is important to maintain line breaks within the text.
 
 Input text:
-${source_text}
+${sourceText}
 
-Translate to ${target_locale} and output in the following format:
+Translate to ${targetLocale} and output in the following format:
 [
   {
     "number": 0,

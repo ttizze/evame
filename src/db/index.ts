@@ -23,7 +23,12 @@ function createDb(): KyselyDbWithPool {
 	const isLocal = new URL(connectionString).hostname === "db.localtest.me";
 	let pool: PoolType;
 	if (isLocal) {
-		pool = new PgPool({ connectionString });
+		pool = new PgPool({
+			connectionString,
+			max: 20,
+			idleTimeoutMillis: 30000,
+			connectionTimeoutMillis: 30000,
+		});
 	} else {
 		pool = new NeonPool({ connectionString });
 	}

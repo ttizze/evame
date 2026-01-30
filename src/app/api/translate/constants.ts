@@ -1,19 +1,18 @@
 const MAX_CHUNK_SIZE = 10000;
 
 // モデルごとの最大チャンクサイズ（文字数）
-// 日本語は1文字あたり約1.5-2トークン、システムプロンプト分を考慮して安全マージンを確保
+// gemini-2.0-flash: 出力8,192トークン上限 → 10,000文字
+// gemini-2.5-*: 出力65,535トークン上限 → 30,000文字
 const MODEL_MAX_CHUNK_SIZES: Record<string, number> = {
-	// OpenAI GPT-5 models (272k-400k tokens context window)
-	// コンテキストウィンドウは大きいが、構造化出力の品質を保つためさらに控えめに設定
-	// 構造化出力では大量の配列要素を正確に生成するのが難しいため
-	"gpt-5-nano-2025-08-07": 10000,
-	// DeepSeek models (64k tokens context window)
-	// 構造化出力の品質を保つため控えめに設定
-	"deepseek-reasoner": 10000, // Thinking mode
-	"deepseek-chat": 10000, // Standard mode
-	// Gemini models (1M tokens context window)
-	"gemini-2.5-flash": 10000,
-	"gemini-2.5-flash-lite": 10000,
+	// OpenAI GPT-5 models
+	"gpt-5-nano-2025-08-07": 30000,
+	// DeepSeek models
+	"deepseek-reasoner": 30000,
+	"deepseek-chat": 30000,
+	// Gemini 2.5 models (出力65,535トークン上限)
+	"gemini-2.5-flash": 30000,
+	"gemini-2.5-flash-lite": 30000,
+	// Gemini 2.0 models (出力8,192トークン上限)
 	"gemini-2.0-flash": 10000,
 };
 
