@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const TITLE_TEXT = "Welcome!";
 const CONTENT_TEXT = "Hello, world!";
@@ -10,13 +10,25 @@ function useTypewriter(
 	speed: number = 100,
 	startDelay: number = 0,
 	loopDelay: number = 3000,
+	enabled: boolean = true,
 ) {
 	const [displayText, setDisplayText] = useState("");
 	const [isTyping, setIsTyping] = useState(false);
 
 	useEffect(() => {
-		let timeout: NodeJS.Timeout;
+		if (!enabled) {
+			setDisplayText("");
+			setIsTyping(false);
+			return;
+		}
+
+		const timeouts: NodeJS.Timeout[] = [];
 		let charIndex = 0;
+
+		const schedule = (fn: () => void, delay: number) => {
+			const timeoutId = setTimeout(fn, delay);
+			timeouts.push(timeoutId);
+		};
 
 		const startTyping = () => {
 			setIsTyping(true);
@@ -26,10 +38,10 @@ function useTypewriter(
 				if (charIndex < text.length) {
 					setDisplayText(text.slice(0, charIndex + 1));
 					charIndex++;
-					timeout = setTimeout(typeNextChar, speed);
+					schedule(typeNextChar, speed);
 				} else {
 					setIsTyping(false);
-					timeout = setTimeout(() => {
+					schedule(() => {
 						charIndex = 0;
 						startTyping();
 					}, loopDelay);
@@ -38,29 +50,58 @@ function useTypewriter(
 			typeNextChar();
 		};
 
-		timeout = setTimeout(startTyping, startDelay);
+		schedule(startTyping, startDelay);
 
-		return () => clearTimeout(timeout);
-	}, [text, speed, startDelay, loopDelay]);
+		return () => {
+			timeouts.forEach((timeoutId) => {
+				clearTimeout(timeoutId);
+			});
+		};
+	}, [text, speed, startDelay, loopDelay, enabled]);
 
 	return { displayText, isTyping };
 }
 
 export function WriteCardUI() {
+	const containerRef = useRef<HTMLDivElement | null>(null);
+	const [isActive, setIsActive] = useState(false);
 	const { displayText: contentText, isTyping: isContentTyping } = useTypewriter(
 		CONTENT_TEXT,
 		80,
 		500,
+		2600,
+		isActive,
 	);
 
+	useEffect(() => {
+		const target = containerRef.current;
+		if (!target) return;
+
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				setIsActive(entry.isIntersecting);
+			},
+			{
+				rootMargin: "0px 0px -15% 0px",
+				threshold: 0.35,
+			},
+		);
+
+		observer.observe(target);
+		return () => observer.disconnect();
+	}, []);
+
 	return (
-		<div className="mt-5 p-4 rounded-xl bg-gray-100 dark:bg-zinc-800/50">
-			<div className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+		<div
+			className="mt-5 rounded-2xl border border-border/60 bg-background/70 p-4 shadow-sm"
+			ref={containerRef}
+		>
+			<div className="text-3xl md:text-4xl font-bold text-foreground mb-2">
 				{TITLE_TEXT}
 			</div>
-			<div className="text-lg text-slate-700 dark:text-slate-300 min-h-7">
+			<div className="text-lg text-muted-foreground min-h-7">
 				{contentText.length === 0 ? (
-					<span className="text-slate-400 dark:text-slate-500">
+					<span className="text-muted-foreground/70">
 						Write to the world...
 					</span>
 				) : (

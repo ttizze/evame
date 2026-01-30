@@ -267,7 +267,7 @@ const renderBurstAndSpark = (
 
 export const HeroRays = () => {
 	return (
-		<div className="relative my-10 flex h-[360px] items-center justify-center">
+		<div className="relative my-10 flex h-[360px] w-full max-w-4xl items-center justify-center overflow-hidden rounded-3xl">
 			<svg
 				aria-hidden="true"
 				className="absolute inset-0 h-full w-full hero-rays"

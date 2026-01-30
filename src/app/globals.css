@@ -276,6 +276,12 @@
 		contain: layout paint style;
 	}
 
+	.about-section .seg-cv {
+		content-visibility: visible;
+		contain-intrinsic-size: auto;
+		contain: none;
+	}
+
 	/* View (source/user/both) without per-segment hydration */
 	[data-view="source"] .seg-tr {
 		display: none !important;
