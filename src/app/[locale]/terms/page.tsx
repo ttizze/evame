@@ -1,5 +1,12 @@
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+	title: "Terms of Service | Evame",
+	description:
+		"Evame Terms of Service. Learn about user responsibilities, content licensing, and platform usage guidelines.",
+	robots: { index: true, follow: true },
+};
 
 export default function TermsPage() {
 	return (

@@ -3,6 +3,7 @@ import { BASE_URL } from "@/app/_constants/base-url";
 import {
 	countPublicPages,
 	fetchPagesWithUserAndTranslationChunk,
+	fetchPopularTags,
 	type PageWithUserAndTranslation,
 } from "@/app/_db/sitemap-queries.server";
 
@@ -28,17 +29,38 @@ export default async function sitemap({
 		offset,
 	});
 
-	const staticLocales = ["ja", "zh"] as const;
-	const staticRoutes = ["/", "/search", "/about"].map((route) => ({
-		url: `${BASE_URL}/en${route === "/" ? "" : route}`,
+	const supportedLocales = ["en", "ja", "zh", "ko", "es"] as const;
+	const defaultLocale = "en";
+
+	// 静的ルート
+	const staticPaths = ["/", "/search", "/about", "/new-pages"];
+	const staticRoutes = staticPaths.map((route) => ({
+		url: `${BASE_URL}/${defaultLocale}${route === "/" ? "" : route}`,
 		lastModified: new Date(),
 		changeFrequency: "monthly" as const,
 		priority: route === "/" ? 1 : 0.8,
 		alternates: {
 			languages: Object.fromEntries(
-				staticLocales.map((locale) => [
+				supportedLocales.map((locale) => [
 					locale,
 					`${BASE_URL}/${locale}${route === "/" ? "" : route}`,
+				]),
+			),
+		},
+	}));
+
+	// タグページ
+	const popularTags = await fetchPopularTags(50);
+	const tagRoutes = popularTags.map((tagName) => ({
+		url: `${BASE_URL}/${defaultLocale}/tag/${encodeURIComponent(tagName)}`,
+		lastModified: new Date(),
+		changeFrequency: "weekly" as const,
+		priority: 0.6,
+		alternates: {
+			languages: Object.fromEntries(
+				supportedLocales.map((locale) => [
+					locale,
+					`${BASE_URL}/${locale}/tag/${encodeURIComponent(tagName)}`,
 				]),
 			),
 		},
@@ -61,5 +83,7 @@ export default async function sitemap({
 			},
 		};
 	});
-	return resolvedId === 0 ? [...staticRoutes, ...pageRoutes] : pageRoutes;
+	return resolvedId === 0
+		? [...staticRoutes, ...tagRoutes, ...pageRoutes]
+		: pageRoutes;
 }

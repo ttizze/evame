@@ -1,5 +1,12 @@
-import type { Route } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+	title: "Privacy Policy | Evame",
+	description:
+		"Evame Privacy Policy. Learn how we collect, use, and protect your personal data.",
+	robots: { index: true, follow: true },
+};
 
 export default function PrivacyPolicyPage() {
 	return (
