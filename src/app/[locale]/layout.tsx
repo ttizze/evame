@@ -1,11 +1,12 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
-import type { Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { setRequestLocale } from "next-intl/server";
 import { ThemeProvider } from "next-themes";
 import NextTopLoader from "nextjs-toploader";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type React from "react";
+import { BASE_URL } from "@/app/_constants/base-url";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { Toaster } from "@/components/ui/sonner";
 import "../globals.css";
@@ -15,6 +16,10 @@ const inter = Inter({
 	display: "swap",
 	variable: "--font-inter",
 });
+
+export const metadata: Metadata = {
+	metadataBase: new URL(BASE_URL),
+};
 
 export const viewport: Viewport = {
 	width: "device-width",

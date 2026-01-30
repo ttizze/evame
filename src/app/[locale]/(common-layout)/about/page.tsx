@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type React from "react";
+import { buildAlternates } from "@/app/_lib/seo-helpers";
 import AboutSection from "@/app/[locale]/(common-layout)/_components/about-section/server";
 
 const metadataByLocale: Record<string, { title: string; description: string }> =
@@ -43,6 +44,7 @@ export async function generateMetadata(
 		description,
 		openGraph: { title, description },
 		twitter: { title, description },
+		alternates: buildAlternates(locale, "/about"),
 	};
 }
 

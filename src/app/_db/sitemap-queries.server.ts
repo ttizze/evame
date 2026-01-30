@@ -70,3 +70,19 @@ export async function fetchPagesWithUserAndTranslationChunk({
 		translationJobs: translationJobsMap.get(page.pageId) || [],
 	}));
 }
+
+export async function fetchPopularTags(limit = 50): Promise<string[]> {
+	const result = await db
+		.selectFrom("tagPages")
+		.innerJoin("tags", "tagPages.tagId", "tags.id")
+		.innerJoin("pages", "tagPages.pageId", "pages.id")
+		.select(["tags.name"])
+		.select(sql<number>`count(*)::int`.as("count"))
+		.where("pages.status", "=", "PUBLIC" satisfies PageStatus)
+		.groupBy("tags.name")
+		.orderBy("count", "desc")
+		.limit(limit)
+		.execute();
+
+	return result.map((r) => r.name);
+}

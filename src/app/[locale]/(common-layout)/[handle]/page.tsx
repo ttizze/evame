@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import { fetchUserByHandle } from "@/app/_db/queries.server";
+import { buildAlternates } from "@/app/_lib/seo-helpers";
 import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
 import { SortTabs } from "@/app/[locale]/(common-layout)/[handle]/_components/sort-tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,7 +23,7 @@ const DynamicPageList = dynamic(
 		),
 	},
 );
-const DynamicUserInfo = dynamic<{ handle: string }>(
+const DynamicUserInfo = dynamic<{ handle: string; locale: string }>(
 	() => import("./_components/user-info.server").then((mod) => mod.UserInfo),
 	{
 		loading: () => <Skeleton className="h-[200px] w-full mb-4" />,
@@ -34,7 +35,7 @@ export async function generateMetadata({
 }: {
 	params: Promise<{ locale: string; handle: string }>;
 }): Promise<Metadata> {
-	const { handle } = await params;
+	const { locale, handle } = await params;
 	if (!handle) {
 		return notFound();
 	}
@@ -42,7 +43,23 @@ export async function generateMetadata({
 	if (!pageOwner) {
 		return notFound();
 	}
-	return { title: pageOwner.name };
+	const title = `${pageOwner.name} (@${pageOwner.handle}) | Evame`;
+	const description =
+		pageOwner.profile ||
+		`${pageOwner.name}さんのEvameプロフィール。記事と翻訳をチェック。`;
+
+	return {
+		title,
+		description,
+		openGraph: {
+			title,
+			description,
+			type: "profile",
+			images: pageOwner.image ? [{ url: pageOwner.image }] : undefined,
+		},
+		twitter: { title, description },
+		alternates: buildAlternates(locale, `/${handle}`),
+	};
 }
 const searchParamsSchema = {
 	page: parseAsInteger.withDefault(1),
@@ -59,7 +76,7 @@ export default async function UserPage(
 	const { sort, page } = await loadSearchParams(props.searchParams);
 	return (
 		<>
-			<DynamicUserInfo handle={handle} />
+			<DynamicUserInfo handle={handle} locale={locale} />
 			<SortTabs defaultSort={sort} />
 			<DynamicPageList
 				handle={handle}

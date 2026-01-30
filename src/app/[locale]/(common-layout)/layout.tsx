@@ -5,6 +5,7 @@ import { ViewProvider } from "@/app/_context/view-provider";
 import { Footer } from "@/app/[locale]/(common-layout)/_components/footer";
 import { Header } from "@/app/[locale]/(common-layout)/_components/header/server";
 import { TranslationFormOnClick } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-form-on-click.client";
+import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function LayoutSkeleton() {
@@ -35,6 +36,8 @@ export default function CommonLayout({
 				const messages = await getMessages();
 				return (
 					<NextIntlClientProvider locale={locale} messages={messages}>
+						<OrganizationJsonLd />
+						<WebSiteJsonLd locale={locale} />
 						<ViewProvider>
 							<Header />
 							<main className="mb-5 mt-3 md:mt-5 grow tracking-wider">
