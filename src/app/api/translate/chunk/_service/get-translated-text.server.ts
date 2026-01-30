@@ -22,7 +22,7 @@ export async function getTranslatedText(
 	translationContext: string,
 ) {
 	// AIに送るのは number と text のペアのみ（id は不要）
-	const source_text = segments
+	const sourceText = segments
 		.map((seg) => JSON.stringify({ number: seg.number, text: seg.text }))
 		.join("\n");
 	const targetLocaleName =
@@ -46,8 +46,8 @@ export async function getTranslatedText(
 			geminiApiKey,
 			model: aiModel,
 			title,
-			source_text,
-			target_locale: targetLocaleName,
+			sourceText,
+			targetLocale: targetLocaleName,
 			translationContext,
 		});
 	}
@@ -63,8 +63,8 @@ export async function getTranslatedText(
 			apiKey: openaiApiKey,
 			model: aiModel,
 			title,
-			source_text,
-			target_locale: targetLocaleName,
+			sourceText,
+			targetLocale: targetLocaleName,
 			translationContext,
 		});
 	}
@@ -81,18 +81,18 @@ export async function getTranslatedText(
 			apiKey: deepseekApiKey,
 			model: aiModel,
 			title,
-			source_text,
-			target_locale: targetLocaleName,
+			sourceText,
+			targetLocale: targetLocaleName,
 			translationContext,
 		});
 	}
 
 	// default Vertex AI
-	return await getVertexAIModelResponse(
-		aiModel,
+	return await getVertexAIModelResponse({
+		model: aiModel,
 		title,
-		source_text,
-		targetLocaleName,
+		sourceText,
+		targetLocale: targetLocaleName,
 		translationContext,
-	);
+	});
 }

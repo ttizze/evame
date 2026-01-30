@@ -25,6 +25,16 @@ import {
 import { splitSegments } from "../_domain/split-segments";
 import type { TranslateChunkParams, TranslateJobParams } from "../types";
 
+const fetchSegments = async (params: TranslateJobParams) => {
+	if (params.annotationContentId) {
+		return await getAnnotationSegments(params.annotationContentId);
+	}
+	if (params.pageCommentId) {
+		return await getPageCommentSegments(params.pageCommentId);
+	}
+	return await getPageSegments(params.pageId);
+};
+
 export async function orchestrateTranslation(params: TranslateJobParams) {
 	const logger = createServerLogger("translate-orchestrator", {
 		translationJobId: params.translationJobId,
@@ -33,11 +43,7 @@ export async function orchestrateTranslation(params: TranslateJobParams) {
 		aiModel: params.aiModel,
 	});
 	// pageCommentId / annotationContentId に応じてセグメントを取得
-	const segments = params.annotationContentId
-		? await getAnnotationSegments(params.annotationContentId)
-		: params.pageCommentId
-			? await getPageCommentSegments(params.pageCommentId)
-			: await getPageSegments(params.pageId);
+	const segments = await fetchSegments(params);
 
 	// ページタイトルを取得（翻訳プロンプト用）
 	const title = (await getPageTitle(params.pageId)) ?? "";
@@ -61,6 +67,12 @@ export async function orchestrateTranslation(params: TranslateJobParams) {
 	const publishBaseUrl =
 		process.env.QSTASH_PUBLISH_BASE_URL?.trim() || BASE_URL;
 
+	// チャンクを遅延させて発行し、DB接続の圧迫を防ぐ
+	// ローカル環境では1秒間隔、本番では0秒（並列実行）
+	// QStashのdelayは秒単位
+	const isLocal = publishBaseUrl.includes("localhost");
+	const delayPerChunk = isLocal ? 1 : 0;
+
 	await Promise.all(
 		chunks.map((chunk, idx) => {
 			const body: TranslateChunkParams = {
@@ -81,8 +93,9 @@ export async function orchestrateTranslation(params: TranslateJobParams) {
 				url: `${publishBaseUrl}/api/translate/chunk`,
 				body,
 				deduplicationId: `translate-${params.translationJobId}-c${idx}`,
-				retries: 0, // API層でリトライ済みのため、QStashのリトライは不要
+				retries: 3, // QStash配信失敗時もリトライ
 				timeout: 240,
+				delay: idx * delayPerChunk, // チャンクを遅延させて発行
 			});
 		}),
 	);

@@ -69,4 +69,20 @@ some junk {"x": 1}
 		const result = extractTranslations(input);
 		expect(result).toEqual([]);
 	});
+
+	it("falls back to regex when JSON array has invalid types", () => {
+		// numberが文字列の場合、その要素はスキップされる
+		const input = JSON.stringify([
+			{ number: "1", text: "Hello" },
+			{ number: 2, text: "World" },
+		]);
+		const result = extractTranslations(input);
+		expect(result).toEqual([{ number: 2, text: "World" }]);
+	});
+
+	it("returns raw string when escape sequence is invalid", () => {
+		const input = '{"number": 1, "text": "invalid\\xsequence"}';
+		const result = extractTranslations(input);
+		expect(result).toEqual([{ number: 1, text: "invalid\\xsequence" }]);
+	});
 });

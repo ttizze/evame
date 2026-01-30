@@ -6,51 +6,68 @@ import {
 } from "@google/generative-ai";
 import { decrypt } from "@/app/_service/encryption.server";
 import { createServerLogger } from "@/app/_service/logger.server";
-import { generateSystemMessage } from "./generate-gemini-message";
+import { generateTranslationPrompt } from "./generate-translation-prompt";
 
 const MAX_RETRIES = 3;
 const logger = createServerLogger("gemini-translation");
+const safetySettings = [
+	{
+		category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+		threshold: HarmBlockThreshold.BLOCK_NONE,
+	},
+	{
+		category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+		threshold: HarmBlockThreshold.BLOCK_NONE,
+	},
+	{
+		category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+		threshold: HarmBlockThreshold.BLOCK_NONE,
+	},
+	{
+		category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+		threshold: HarmBlockThreshold.BLOCK_NONE,
+	},
+];
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const extractRetryDelayMs = (message: string) => {
+	const retryDelayMatch =
+		message.match(/retry in (\d+(?:\.\d+)?)s/i) ||
+		message.match(/retryDelay["']?\s*:\s*["']?(\d+(?:\.\d+)?)s/i);
+	if (!retryDelayMatch) return null;
+	const retryDelaySeconds = Number.parseFloat(retryDelayMatch[1]);
+	if (!Number.isFinite(retryDelaySeconds)) return null;
+	return Math.ceil(retryDelaySeconds * 1000) + 1000;
+};
 
 export async function getGeminiModelResponse({
 	geminiApiKey,
 	model,
 	title,
-	source_text,
-	target_locale,
+	sourceText,
+	targetLocale,
 	translationContext,
 }: {
 	geminiApiKey: string;
 	model: string;
 	title: string;
-	source_text: string;
-	target_locale: string;
+	sourceText: string;
+	targetLocale: string;
 	translationContext: string;
 }) {
 	const decryptedApiKey = decrypt(geminiApiKey);
 	const genAI = new GoogleGenerativeAI(decryptedApiKey);
-	const safetySetting = [
-		{
-			category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-			threshold: HarmBlockThreshold.BLOCK_NONE,
-		},
-		{
-			category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-			threshold: HarmBlockThreshold.BLOCK_NONE,
-		},
-		{
-			category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-			threshold: HarmBlockThreshold.BLOCK_NONE,
-		},
-		{
-			category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-			threshold: HarmBlockThreshold.BLOCK_NONE,
-		},
-	];
+	// モデルごとの出力トークン上限
+	// gemini-2.0-flash: 8,192, gemini-2.5-*: 65,535
+	const maxOutputTokens = model.startsWith("gemini-2.5") ? 65535 : 8192;
+
 	const modelConfig = genAI.getGenerativeModel({
-		model: model,
-		safetySettings: safetySetting,
+		model,
+		safetySettings,
 		generationConfig: {
 			responseMimeType: "application/json",
+			maxOutputTokens,
 			responseSchema: {
 				type: SchemaType.ARRAY,
 				items: {
@@ -73,40 +90,27 @@ export async function getGeminiModelResponse({
 	for (let retryCount = 0; retryCount < MAX_RETRIES; retryCount++) {
 		try {
 			const result = await modelConfig.generateContent(
-				generateSystemMessage(
+				generateTranslationPrompt(
 					title,
-					source_text,
-					target_locale,
+					sourceText,
+					targetLocale,
 					translationContext,
 				),
 			);
 			return result.response.text();
 		} catch (error: unknown) {
-			const typedError = error as Error & {
-				status?: number;
-				errorDetails?: unknown[];
-			};
+			const typedError = error as Error & { status?: number };
 			lastError = typedError;
 
 			// 429エラー（レート制限）の場合は、エラーレスポンスからretryDelayを抽出
 			let delay = 1000 * (retryCount + 1);
 			if (typedError.status === 429) {
-				// エラーメッセージからretryDelayを抽出
-				// パターン1: "Please retry in 24.775996888s."
-				// パターン2: "retryDelay": "24s"
-				const retryDelayMatch =
-					typedError.message.match(/retry in (\d+(?:\.\d+)?)s/i) ||
-					typedError.message.match(
-						/retryDelay["']?\s*:\s*["']?(\d+(?:\.\d+)?)s/i,
-					);
-				if (retryDelayMatch) {
-					const retryDelaySeconds = parseFloat(retryDelayMatch[1]);
-					// 安全マージンを追加（+1秒）
-					delay = Math.ceil(retryDelaySeconds * 1000) + 1000;
+				const retryDelayMs = extractRetryDelayMs(typedError.message);
+				if (retryDelayMs) {
+					delay = retryDelayMs;
 					logger.warn(
 						{
 							attempt: retryCount + 1,
-							retryDelaySeconds,
 							delaySeconds: delay / 1000,
 							model,
 						},
@@ -141,7 +145,7 @@ export async function getGeminiModelResponse({
 					{ delayMs: delay, delaySeconds: delay / 1000 },
 					"Retrying after delay",
 				);
-				await new Promise((resolve) => setTimeout(resolve, delay));
+				await sleep(delay);
 			}
 		}
 	}

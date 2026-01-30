@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { createServerLogger } from "@/app/_service/logger.server";
 import { orchestrateTranslation } from "./_service/orchestrate-translation.server";
 import { withQstashVerification } from "./_utils/with-qstash-signature";
+
+const logger = createServerLogger("translate-route");
 
 const ParamsSchema = z.object({
 	userId: z.string().min(1),
@@ -17,11 +20,15 @@ const ParamsSchema = z.object({
 async function handler(req: Request) {
 	try {
 		const params = ParamsSchema.parse(await req.json());
+		logger.info(
+			{ translationJobId: params.translationJobId, pageId: params.pageId },
+			"Orchestration started",
+		);
 		const result = await orchestrateTranslation(params);
 
 		return NextResponse.json({ ok: result.ok }, { status: 201 });
 	} catch (error) {
-		console.error("/api/translate error:", error);
+		logger.error({ error }, "Orchestration failed");
 		return NextResponse.json({ ok: false }, { status: 500 });
 	}
 }

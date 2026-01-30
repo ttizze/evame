@@ -81,3 +81,13 @@ cst/
 *.db
 .codex/skills
 .claude/
+.agents/
+.cursor/
+.opencode/
+.windsurf/
+.github/skills/
+.agent/
+.cline/
+.codebuddy/
+.commandcode/
+.con

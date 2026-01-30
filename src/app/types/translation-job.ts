@@ -1,9 +1,20 @@
 import { z } from "zod";
+import { translationStatus } from "@/drizzle/schema";
+
+export const translationJobStatusSchema = z.enum(translationStatus.enumValues);
+
+export type TranslationJobStatus = z.infer<typeof translationJobStatusSchema>;
+
+export function isTranslationJobTerminalStatus(
+	status: TranslationJobStatus,
+): boolean {
+	return status === "COMPLETED" || status === "FAILED";
+}
 
 export const translationJobForToastSchema = z.object({
 	id: z.number(),
 	locale: z.string(),
-	status: z.string(),
+	status: translationJobStatusSchema,
 	progress: z.number(),
 	error: z.string(),
 	page: z.object({
@@ -17,7 +28,7 @@ export const translationJobForToastSchema = z.object({
 const translationJobForTranslationAPI = z.object({
 	id: z.number(),
 	locale: z.string(),
-	status: z.string(),
+	status: translationJobStatusSchema,
 	progress: z.number(),
 	error: z.string(),
 	aiModel: z.string(),

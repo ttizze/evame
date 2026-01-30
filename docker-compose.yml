@@ -2,6 +2,7 @@ services:
   neon:
     image: postgres:17
     command: '-d 1'
+    shm_size: 1gb
     volumes:
       - db_data:/var/lib/postgresql/data
     ports:
@@ -28,6 +29,7 @@ services:
   test_neon:
     image: postgres:17
     command: '-d 1'
+    shm_size: 1gb
     volumes:
       - test_db_data:/var/lib/postgresql/data
     ports:

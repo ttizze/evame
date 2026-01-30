@@ -1,8 +1,14 @@
 "use client";
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
-import type { TranslationJobForToast } from "@/app/types/translation-job";
+import {
+	isTranslationJobTerminalStatus,
+	type TranslationJobForToast,
+} from "@/app/types/translation-job";
 import { JobsView } from "./jobs-view";
+
+const areJobsDone = (jobs: TranslationJobForToast[]) =>
+	jobs.every((job) => isTranslationJobTerminalStatus(job.status));
 
 export function useTranslationJobToast(jobs: TranslationJobForToast[]) {
 	const idRef = useRef<string | number>(undefined);
@@ -24,13 +30,9 @@ export function useTranslationJobToast(jobs: TranslationJobForToast[]) {
 	useEffect(() => {
 		if (!idRef.current || !jobs.length) return;
 
-		const allDone = jobs.every((j) =>
-			["COMPLETED", "FAILED"].includes(j.status),
-		);
-
 		toast(<JobsView jobs={jobs} />, {
 			id: idRef.current,
-			duration: allDone ? 3000 : Number.POSITIVE_INFINITY,
+			duration: areJobsDone(jobs) ? 3000 : Number.POSITIVE_INFINITY,
 			...toastStyle,
 			classNames: {
 				closeButton:
@@ -42,7 +44,7 @@ export function useTranslationJobToast(jobs: TranslationJobForToast[]) {
 	// 全完了後に ID をクリア
 	useEffect(() => {
 		if (!idRef.current) return;
-		if (jobs.every((j) => ["COMPLETED", "FAILED"].includes(j.status))) {
+		if (areJobsDone(jobs)) {
 			const t = setTimeout(() => {
 				idRef.current = undefined;
 			}, 3100);

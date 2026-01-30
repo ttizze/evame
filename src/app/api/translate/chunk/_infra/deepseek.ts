@@ -2,10 +2,12 @@ import { createDeepSeek } from "@ai-sdk/deepseek";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { createServerLogger } from "@/app/_service/logger.server";
-import { generateOpenAISystemMessage } from "./generate-openai-message";
+import { generateTranslationPrompt } from "./generate-translation-prompt";
 
 const MAX_RETRIES = 3;
 const logger = createServerLogger("deepseek-translation");
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // 翻訳結果のスキーマ（DeepSeekは配列を直接返す）
 const translationSchema = z.array(
@@ -19,19 +21,19 @@ export async function getDeepSeekModelResponse({
 	apiKey,
 	model,
 	title,
-	source_text,
-	target_locale,
+	sourceText,
+	targetLocale,
 	translationContext,
 }: {
 	apiKey: string;
 	model: string;
 	title: string;
-	source_text: string;
-	target_locale: string;
+	sourceText: string;
+	targetLocale: string;
 	translationContext: string;
 }) {
 	// 入力JSON行数をカウント
-	const inputCount = source_text.split("\n").length;
+	const inputLineCount = sourceText.split("\n").length;
 
 	const deepseek = createDeepSeek({
 		apiKey,
@@ -47,10 +49,10 @@ export async function getDeepSeekModelResponse({
 				schemaName: "TranslationResponse",
 				schemaDescription:
 					"Array of translated text segments with their original numbers",
-				prompt: generateOpenAISystemMessage(
+				prompt: generateTranslationPrompt(
 					title,
-					source_text,
-					target_locale,
+					sourceText,
+					targetLocale,
 					translationContext,
 				),
 			});
@@ -65,7 +67,7 @@ export async function getDeepSeekModelResponse({
 			logger.error(
 				{
 					attempt: retryCount + 1,
-					input_count: inputCount,
+					input_count: inputLineCount,
 					error_name: typedError.name,
 					error_message: typedError.message,
 					error_stack: typedError.stack,
@@ -76,11 +78,11 @@ export async function getDeepSeekModelResponse({
 
 			if (retryCount < MAX_RETRIES - 1) {
 				const delay = 1000 * (retryCount + 1);
-				await new Promise((resolve) => setTimeout(resolve, delay));
+				await sleep(delay);
 			}
 		}
 	}
 
-	logger.error({ input_count: inputCount }, "Max retries reached");
+	logger.error({ input_count: inputLineCount }, "Max retries reached");
 	throw lastError || new Error("DeepSeek translation failed after max retries");
 }
