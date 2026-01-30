@@ -65,7 +65,6 @@ export function SpreadAnimation() {
 				const rad = (angle * Math.PI) / 180;
 				const x = Math.cos(rad) * radius;
 				const y = Math.sin(rad) * radius;
-
 				return (
 					<motion.div
 						animate={
@@ -116,31 +115,33 @@ export function SpreadAnimation() {
 				</CardContent>
 			</Card>
 
-			{ringSizes.map((size, idx) => (
-				<motion.div
-					animate={
-						animate
-							? { width: size, height: size, opacity: 0, borderWidth: 0.5 }
-							: { width: size * 0.15, height: size * 0.15, opacity: 0.8 }
-					}
-					className={`absolute rounded-full border-2 ${
-						idx === 0
-							? "border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.45)]"
-							: idx === 1
-								? "border-green-500 shadow-[0_0_8px_rgba(34,197,94,0.45)]"
-								: "border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.45)]"
-					}`}
-					initial={{ width: size * 0.25, height: size * 0.25, opacity: 0.8 }}
-					key={size}
-					transition={{
-						duration: 2,
-						delay: idx * 0.25,
-						repeat: Number.POSITIVE_INFINITY,
-						repeatType: "loop",
-						ease: "easeOut",
-					}}
-				/>
-			))}
+			{ringSizes.map((size, idx) => {
+				const ringAnimate = animate
+					? { width: size, height: size, opacity: 0, borderWidth: 0.5 }
+					: { width: size * 0.15, height: size * 0.15, opacity: 0.8 };
+
+				return (
+					<motion.div
+						animate={ringAnimate}
+						className={`absolute rounded-full border-2 ${
+							idx === 0
+								? "border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.45)]"
+								: idx === 1
+									? "border-green-500 shadow-[0_0_8px_rgba(34,197,94,0.45)]"
+									: "border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.45)]"
+						}`}
+						initial={{ width: size * 0.25, height: size * 0.25, opacity: 0.8 }}
+						key={size}
+						transition={{
+							duration: 2,
+							delay: idx * 0.25,
+							repeat: Number.POSITIVE_INFINITY,
+							repeatType: "loop",
+							ease: "easeOut",
+						}}
+					/>
+				);
+			})}
 		</div>
 	);
 }

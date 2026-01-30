@@ -11,7 +11,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 		(s) => s.number === SEGMENT_NUMBER.heroHeader,
 	);
 	const text = topPageDetail.segments.find(
-		(s) => s.number === SEGMENT_NUMBER.heroText,
+		(s) => s.number === SEGMENT_NUMBER.heroDetail,
 	);
 
 	if (!title || !text) {
@@ -19,22 +19,24 @@ export default async function HeroSection({ locale }: { locale: string }) {
 	}
 
 	return (
-		<div className="relative overflow-hidden pt-10 flex flex-col items-center justify-center">
-			<div className="relative z-10 w-full">
-				<h1 className="text-2xl md:text-4xl font-bold mb-6 text-center">
-					<SegmentElement
-						className="w-full mb-2"
-						segment={title}
-						tagName="span"
-					/>
-				</h1>
-
-				<span className="text-xl mb-12 w-full text-center">
-					<SegmentElement className="mb-2" segment={text} tagName="span" />
-				</span>
-				<div className="mb-12 flex justify-center mt-10">
+		<section className="relative overflow-hidden py-16 md:py-24">
+			<div className="relative z-10 mx-auto w-full max-w-5xl px-6">
+				<div className="text-center">
+					<h1 className="text-3xl md:text-5xl font-semibold tracking-tight">
+						<SegmentElement className="w-full" segment={title} tagName="span" />
+					</h1>
+					<div className="mx-auto mt-6 h-px w-24 bg-gradient-to-r from-transparent via-foreground/40 to-transparent" />
+					<div className="mt-6">
+						<SegmentElement
+							className="mx-auto max-w-3xl text-base md:text-xl leading-relaxed"
+							segment={text}
+							tagName="p"
+						/>
+					</div>
+				</div>
+				<div className="mt-10 flex justify-center">
 					<StartButton
-						className="w-60 h-16 text-xl"
+						className="w-64 h-16 text-lg shadow-[0_18px_45px_rgba(15,23,42,0.18)]"
 						icon={
 							<Image
 								alt="Hero section image"
@@ -47,8 +49,10 @@ export default async function HeroSection({ locale }: { locale: string }) {
 						text="Start Writing"
 					/>
 				</div>
-				<HeroRays />
+				<div className="mt-10">
+					<HeroRays />
+				</div>
 			</div>
-		</div>
+		</section>
 	);
 }
