@@ -46,6 +46,12 @@ export async function UserInfo({
 	const followingList = await fetchFollowingList(pageOwner.id);
 
 	const profileUrl = `${BASE_URL}/${locale}/${pageOwner.handle}`;
+	const avatar = (
+		<Avatar className="w-20 h-20 md:w-24 md:h-24 not-prose">
+			<AvatarImage {...props} />
+			<AvatarFallback>{pageOwner.name.charAt(0).toUpperCase()}</AvatarFallback>
+		</Avatar>
+	);
 
 	return (
 		<>
@@ -59,14 +65,13 @@ export async function UserInfo({
 				<div className="pb-4">
 					<div className="flex w-full flex-col md:flex-row">
 						<div>
-							<Link href={`${pageOwner.image}`}>
-								<Avatar className="w-20 h-20 md:w-24 md:h-24 not-prose">
-									<AvatarImage {...props} />
-									<AvatarFallback>
-										{pageOwner.name.charAt(0).toUpperCase()}
-									</AvatarFallback>
-								</Avatar>
-							</Link>
+							{pageOwner.image ? (
+								<a href={pageOwner.image} rel="noreferrer" target="_blank">
+									{avatar}
+								</a>
+							) : (
+								avatar
+							)}
 						</div>
 						<div className="mt-2 md:mt-0 md:ml-4 flex items-center justify-between w-full">
 							<div>
