@@ -8,14 +8,14 @@ import {
 	createUser,
 } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
-import { getGeminiModelResponse } from "./_infra/gemini";
+import { getVertexAIModelResponse } from "./_infra/vertexai";
 import { POST } from "./route";
 
 await setupDbPerFile(import.meta.url);
 
-// 外部システムのみモック
-vi.mock("./_infra/gemini", () => ({
-	getGeminiModelResponse: vi.fn(),
+// 外部システムのみモック（Vertex AI）
+vi.mock("./_infra/vertexai", () => ({
+	getVertexAIModelResponse: vi.fn(),
 }));
 
 vi.mock("../_utils/with-qstash-signature", () => ({
@@ -66,7 +66,7 @@ describe("POST /api/translate/chunk", () => {
 			.returningAll()
 			.executeTakeFirstOrThrow();
 
-		vi.mocked(getGeminiModelResponse).mockResolvedValue(`
+		vi.mocked(getVertexAIModelResponse).mockResolvedValue(`
       [
         {"number": 0, "text": "こんにちは"}
       ]
@@ -164,7 +164,7 @@ describe("POST /api/translate/chunk", () => {
 			status?: number;
 		};
 		rateLimitError.status = 429;
-		vi.mocked(getGeminiModelResponse).mockRejectedValue(rateLimitError);
+		vi.mocked(getVertexAIModelResponse).mockRejectedValue(rateLimitError);
 
 		const params = {
 			translationJobId: translationJob.id,
@@ -266,7 +266,7 @@ describe("POST /api/translate/chunk", () => {
 			.returningAll()
 			.executeTakeFirstOrThrow();
 
-		vi.mocked(getGeminiModelResponse).mockResolvedValue(`
+		vi.mocked(getVertexAIModelResponse).mockResolvedValue(`
       [
         {"number": 0, "text": "こんにちは"}
       ]
