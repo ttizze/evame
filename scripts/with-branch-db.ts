@@ -59,6 +59,10 @@ export async function ensureDatabaseExists(
 async function main(): Promise<void> {
 	// Require DATABASE_URL and run target command with branch DB injected.
 	const commandArgs = process.argv.slice(2);
+	if (process.env.DB_BRANCH_MODE !== "1") {
+		console.error("DB_BRANCH_MODE=1 is required for branch DB commands");
+		process.exit(1);
+	}
 	const baseUrl = process.env.DATABASE_URL;
 	if (!baseUrl) {
 		console.error("DATABASE_URL is not defined");
