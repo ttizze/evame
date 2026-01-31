@@ -31,12 +31,21 @@ export function SettingsForm({ currentUser }: SettingsFormProps) {
 	useEffect(() => {
 		if (editState.success && editState.message) {
 			toast.success(editState.message);
-		} else if (
-			!editState.success &&
-			editState.message &&
-			!editState.zodErrors
-		) {
-			toast.error(editState.message);
+			return;
+		}
+		if (!editState.success) {
+			const errorMessage =
+				editState.zodErrors?.handle?.[0] ??
+				editState.zodErrors?.name?.[0] ??
+				editState.zodErrors?.profile?.[0] ??
+				editState.zodErrors?.twitterHandle?.[0];
+			if (errorMessage) {
+				toast.error(errorMessage);
+				return;
+			}
+			if (editState.message) {
+				toast.error(editState.message);
+			}
 		}
 	}, [editState]);
 
