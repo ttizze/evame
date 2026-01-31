@@ -10,6 +10,12 @@ DB_PASSWORD="${DB_PASSWORD:-postgres}"
 DB_NAME="${DB_NAME:-main}"
 BACKUP_FILE="${BACKUP_FILE:-database.bak}"
 
+if [ -n "${DATABASE_URL:-}" ]; then
+	read -r DB_HOST DB_PORT DB_USER DB_PASSWORD DB_NAME <<EOF
+$(node -e 'const u=new URL(process.env.DATABASE_URL);const host=u.hostname;const port=u.port||"5432";const user=decodeURIComponent(u.username||"");const pass=decodeURIComponent(u.password||"");const db=u.pathname.replace(/^\\//,"");console.log([host,port,user,pass,db].join("\\n"));')
+EOF
+fi
+
 # パスワードを環境変数に設定（psqlとpg_restoreで使用）
 export PGPASSWORD="$DB_PASSWORD"
 
@@ -40,9 +46,4 @@ pg_restore --verbose --no-acl --no-owner \
   -d "$DB_NAME" \
   "$BACKUP_FILE"
 
-# 3. Prismaマイグレーションを実行
-echo "🔧 Running Prisma migrations..."
-bunx prisma migrate dev
-
 echo "✅ Database reset complete!"
-
