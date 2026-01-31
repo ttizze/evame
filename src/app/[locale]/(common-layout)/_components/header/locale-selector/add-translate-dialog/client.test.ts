@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canTranslateWithoutGeminiApiKey } from "./can-translate";
+import { canTranslateWithoutGeminiApiKey } from "./client";
 
 describe("canTranslateWithoutGeminiApiKey", () => {
 	it("GeminiモデルでAPIキーがない場合は翻訳できない", () => {
