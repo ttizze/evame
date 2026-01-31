@@ -25,6 +25,13 @@ import {
 import { type TranslateActionState, translateAction } from "./action";
 import { DialogLocaleSelector } from "./dialog-locale-selector";
 
+export function canTranslateWithoutGeminiApiKey(
+	hasGeminiApiKey: boolean,
+	selectedModel: string,
+) {
+	return hasGeminiApiKey || !selectedModel.startsWith("gemini-");
+}
+
 type AddTranslateDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
@@ -55,6 +62,10 @@ export function AddTranslateDialog({
 	const isPremium = userPlan === "premium";
 	const [selectedModel, setSelectedModel] = useState("gemini-2.0-flash");
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
+	const canTranslate = canTranslateWithoutGeminiApiKey(
+		hasGeminiApiKey,
+		selectedModel,
+	);
 	const { toastJobs } = useTranslationJobs(
 		translateState.success ? (translateState.data?.translationJobs ?? []) : [],
 	);
@@ -118,7 +129,7 @@ export function AddTranslateDialog({
 								</Select>
 							</div>
 
-							{hasGeminiApiKey ? (
+							{canTranslate ? (
 								<form action={action}>
 									<input
 										name="targetLocale"

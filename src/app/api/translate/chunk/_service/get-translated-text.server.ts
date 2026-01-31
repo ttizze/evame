@@ -5,11 +5,11 @@ import {
 	fetchGeminiApiKeyByUserId,
 	fetchUserPlanByUserId,
 } from "../_db/queries.server";
+import { getProviderFromModel } from "../_domain/get-provider-from-model";
 import { getDeepSeekModelResponse } from "../_infra/deepseek";
 import { getGeminiModelResponse } from "../_infra/gemini";
 import { getOpenAIModelResponse } from "../_infra/openai";
 import { getVertexAIModelResponse } from "../_infra/vertexai";
-import { getProviderFromModel } from "../_utils/get-provider-from-model";
 
 const logger = createServerLogger("translate-chunk");
 

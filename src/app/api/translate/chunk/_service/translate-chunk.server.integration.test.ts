@@ -8,7 +8,7 @@ import {
 	createUser,
 } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
-import { getGeminiModelResponse } from "../_infra/gemini";
+import { getVertexAIModelResponse } from "../_infra/vertexai";
 
 await setupDbPerFile(import.meta.url);
 
@@ -24,9 +24,9 @@ if (process.env.DEBUG_TEST_DB === "1") {
 	);
 }
 
-// 外部システムのみモック（Gemini API）
-vi.mock("../_infra/gemini", () => ({
-	getGeminiModelResponse: vi.fn(),
+// 外部システムのみモック（Vertex AI）
+vi.mock("../_infra/vertexai", () => ({
+	getVertexAIModelResponse: vi.fn(),
 }));
 
 /**
@@ -83,8 +83,8 @@ describe("translateChunk", () => {
 		// Arrange: テスト用データを作成
 		const { user, page, segments } = await setupTranslationTest();
 
-		// Gemini APIのモック（正常レスポンス）
-		vi.mocked(getGeminiModelResponse).mockResolvedValue(`
+		// Vertex AIのモック（正常レスポンス）
+		vi.mocked(getVertexAIModelResponse).mockResolvedValue(`
       [
         {"number": 0, "text": "こんにちは"},
         {"number": 1, "text": "世界"}
@@ -132,14 +132,14 @@ describe("translateChunk", () => {
 			],
 		});
 
-		// Gemini APIのモック（何度呼んでも空配列を返す）
-		vi.mocked(getGeminiModelResponse).mockResolvedValue("[]");
+		// Vertex AIのモック（何度呼んでも空配列を返す）
+		vi.mocked(getVertexAIModelResponse).mockResolvedValue("[]");
 
 		// Act & Assert: エラーが発生する
 		await expect(
 			translateChunk(
 				user.id,
-				"test-model",
+				"gemini-2.5-flash-lite",
 				segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 				"ja",
 				page.id,
@@ -168,8 +168,8 @@ describe("translateChunk", () => {
 		// Arrange: テスト用データを作成
 		const { user, page, segments } = await setupTranslationTest();
 
-		// Gemini APIのモック（1回目: 空レスポンス, 2回目: 正常レスポンス）
-		vi.mocked(getGeminiModelResponse)
+		// Vertex AIのモック（1回目: 空レスポンス, 2回目: 正常レスポンス）
+		vi.mocked(getVertexAIModelResponse)
 			.mockResolvedValueOnce("[]")
 			.mockResolvedValueOnce(`
         [
@@ -181,7 +181,7 @@ describe("translateChunk", () => {
 		// Act
 		await translateChunk(
 			user.id,
-			"test-model",
+			"gemini-2.5-flash-lite",
 			segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 			"ja",
 			page.id,
@@ -204,8 +204,8 @@ describe("translateChunk", () => {
 		// Arrange: テスト用データを作成
 		const { user, page, segments } = await setupTranslationTest();
 
-		// Gemini APIのモック（正常レスポンス）
-		vi.mocked(getGeminiModelResponse).mockResolvedValue(
+		// Vertex AIのモック（正常レスポンス）
+		vi.mocked(getVertexAIModelResponse).mockResolvedValue(
 			`[
 				{"number": 0, "text": "こんにちは"},
 				{"number": 1, "text": "世界"}
@@ -215,7 +215,7 @@ describe("translateChunk", () => {
 		// Act
 		await translateChunk(
 			user.id,
-			"test-model",
+			"gemini-2.5-flash-lite",
 			segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 			"ja",
 			page.id,
@@ -250,8 +250,8 @@ describe("translateChunk", () => {
 			.returningAll()
 			.executeTakeFirstOrThrow();
 
-		// Gemini APIのモック（正常レスポンス）
-		vi.mocked(getGeminiModelResponse).mockResolvedValue(
+		// Vertex AIのモック（正常レスポンス）
+		vi.mocked(getVertexAIModelResponse).mockResolvedValue(
 			`[
 				{"number": 0, "text": "こんにちは"},
 				{"number": 1, "text": "世界"}
@@ -261,7 +261,7 @@ describe("translateChunk", () => {
 		// Act
 		await translateChunk(
 			user.id,
-			"test-model",
+			"gemini-2.5-flash-lite",
 			segments.map((s) => ({ id: s.id, number: s.number, text: s.text })),
 			"ja",
 			page.id,

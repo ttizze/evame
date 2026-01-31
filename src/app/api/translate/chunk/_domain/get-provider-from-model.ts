@@ -10,6 +10,9 @@ export function getProviderFromModel(
 	if (aiModel.startsWith("deepseek-")) {
 		return "deepseek";
 	}
+	if (aiModel.startsWith("gemini-")) {
+		return "vertex";
+	}
 	if (userPlan === "premium") {
 		return "vertex";
 	}
