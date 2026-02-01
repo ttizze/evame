@@ -18,6 +18,7 @@
 		"db:push": "bun run db:with-branch -- drizzle-kit push",
 		"db:studio": "bun run db:with-branch -- drizzle-kit studio",
 		"db:with-branch": "bun --env-file=.env tsx scripts/with-branch-db.ts",
+		"db:template:update": "bun --env-file=.env tsx scripts/update-template-db.ts",
 		"db:prod:migrate": "drizzle-kit migrate",
 		"db:prod:seed": "tsx src/db/seed.ts",
 		"init": "bun install && bun run db:migrate && bun run seed",

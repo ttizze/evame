@@ -91,3 +91,5 @@ cst/
 .codebuddy/
 .commandcode/
 .con
+.worktree/
+.worktrees/

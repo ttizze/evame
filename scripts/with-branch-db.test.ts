@@ -41,8 +41,8 @@ describe("with-branch-db", () => {
 
 		await ensureDatabaseExists(
 			"postgres://user:pass@db.localtest.me:5434/main",
-			"main",
 			"main__feature",
+			"main",
 		);
 
 		expect(lastConnectionString).toBe(
@@ -64,10 +64,27 @@ describe("with-branch-db", () => {
 
 		await ensureDatabaseExists(
 			"postgres://user:pass@db.localtest.me:5434/main",
-			"main",
 			"main__feature",
+			"main",
 		);
 
 		expect(queryMock).toHaveBeenCalledTimes(1);
+	});
+
+	it("テンプレートDB名を指定できる", async () => {
+		queryMock
+			.mockResolvedValueOnce({ rowCount: 0 })
+			.mockResolvedValueOnce({ rowCount: 0 });
+
+		await ensureDatabaseExists(
+			"postgres://user:pass@db.localtest.me:5434/main",
+			"main__feature",
+			"main_template",
+		);
+
+		expect(queryMock).toHaveBeenNthCalledWith(
+			2,
+			'CREATE DATABASE "main__feature" WITH TEMPLATE "main_template"',
+		);
 	});
 });
