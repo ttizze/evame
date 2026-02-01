@@ -1,5 +1,6 @@
 # lefthook設定ファイル
 # すべてのGitフックでbiomeを実行
+no_tty: true
 
 pre-commit:
   parallel: true
@@ -33,4 +34,3 @@ post-checkout:
   commands:
     biome:
       run: bun run biome
-
