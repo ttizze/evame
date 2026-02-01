@@ -69,6 +69,8 @@
         "kysely": "0.28.10",
         "linkify-react": "4.3.2",
         "lucide-react": "0.563.0",
+        "mdast-util-gfm": "^3.1.0",
+        "mdast-util-to-markdown": "^2.1.2",
         "nanoid": "5.1.6",
         "next": "16.1.4",
         "next-intl": "4.7.0",
