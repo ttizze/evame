@@ -11,9 +11,16 @@ DB_NAME="${DB_NAME:-main}"
 BACKUP_FILE="${BACKUP_FILE:-database.bak}"
 
 if [ -n "${DATABASE_URL:-}" ]; then
-	read -r DB_HOST DB_PORT DB_USER DB_PASSWORD DB_NAME <<EOF
-$(node -e 'const u=new URL(process.env.DATABASE_URL);const host=u.hostname;const port=u.port||"5432";const user=decodeURIComponent(u.username||"");const pass=decodeURIComponent(u.password||"");const db=u.pathname.replace(/^\\//,"");console.log([host,port,user,pass,db].join("\\n"));')
-EOF
+	mapfile -t db_parts < <(node -e 'const u=new URL(process.env.DATABASE_URL);const host=u.hostname;const port=u.port||"5432";const user=decodeURIComponent(u.username||"");const pass=decodeURIComponent(u.password||"");const db=u.pathname.replace(/^\\//,"");console.log([host,port,user,pass,db].join("\\n"));')
+	DB_HOST="${db_parts[0]}"
+	DB_PORT="${db_parts[1]}"
+	DB_USER="${db_parts[2]}"
+	DB_PASSWORD="${db_parts[3]}"
+	DB_NAME="${db_parts[4]}"
+	if [ -z "${DB_NAME:-}" ]; then
+		echo "DATABASE_URL にDB名が含まれていません"
+		exit 1
+	fi
 fi
 
 # パスワードを環境変数に設定（psqlとpg_restoreで使用）

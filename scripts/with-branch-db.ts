@@ -2,6 +2,10 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { Client } from "pg";
 
+function escapeIdentifier(value: string): string {
+	return `"${value.replace(/"/g, '""')}"`;
+}
+
 function getGitBranch(): string {
 	// Use current git branch name for DB naming; fallback when detached.
 	const result = spawnSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
@@ -48,7 +52,7 @@ export async function ensureDatabaseExists(
 		);
 		if (exists.rowCount === 0) {
 			await client.query(
-				`CREATE DATABASE "${targetName}" WITH TEMPLATE "${baseName}"`,
+				`CREATE DATABASE ${escapeIdentifier(targetName)} WITH TEMPLATE ${escapeIdentifier(baseName)}`,
 			);
 		}
 	} finally {
@@ -94,7 +98,17 @@ async function main(): Promise<void> {
 			DATABASE_URL: branchUrl.toString(),
 		},
 	});
-	process.exit(result.status ?? 0);
+	if (result.error) {
+		console.error(result.error);
+		process.exit(1);
+	}
+	if (result.status === null) {
+		if (result.signal) {
+			console.error(`Command terminated by signal ${result.signal}`);
+		}
+		process.exit(1);
+	}
+	process.exit(result.status);
 }
 
 const isDirectRun = process.argv[1]?.includes("with-branch-db");
