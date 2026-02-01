@@ -2,6 +2,12 @@
 
 import { DownloadIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ExportMarkdownButtonProps {
 	markdown: string;
@@ -26,6 +32,7 @@ export function ExportMarkdownButton({
 	const hasContent = markdown.trim().length > 0;
 	const baseName = toSafeFileName(title || slug);
 	const fileName = `${baseName}.md`;
+	const label = "Markdownを出力";
 
 	const handleClick = () => {
 		if (!hasContent) return;
@@ -43,15 +50,21 @@ export function ExportMarkdownButton({
 	};
 
 	return (
-		<Button
-			aria-label="Markdownを出力"
-			disabled={!hasContent}
-			onClick={handleClick}
-			size="sm"
-			variant="outline"
-		>
-			<DownloadIcon className="mr-2 h-4 w-4" />
-			Markdownを出力
-		</Button>
+		<TooltipProvider>
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<Button
+						aria-label={label}
+						disabled={!hasContent}
+						onClick={handleClick}
+						size="icon"
+						variant="ghost"
+					>
+						<DownloadIcon className="h-4 w-4" />
+					</Button>
+				</TooltipTrigger>
+				<TooltipContent>{label}</TooltipContent>
+			</Tooltip>
+		</TooltipProvider>
 	);
 }
