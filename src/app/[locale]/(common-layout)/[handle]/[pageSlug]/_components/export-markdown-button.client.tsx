@@ -57,7 +57,6 @@ export function ExportMarkdownButton({
 						aria-label={label}
 						disabled={!hasContent}
 						onClick={handleClick}
-						size="icon"
 						variant="ghost"
 					>
 						<DownloadIcon className="h-4 w-4" />
