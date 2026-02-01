@@ -32,7 +32,7 @@ export function ExportMarkdownButton({
 	const hasContent = markdown.trim().length > 0;
 	const baseName = toSafeFileName(title || slug);
 	const fileName = `${baseName}.md`;
-	const label = "Markdownを出力";
+	const label = "Export markdown";
 
 	const handleClick = () => {
 		if (!hasContent) return;
