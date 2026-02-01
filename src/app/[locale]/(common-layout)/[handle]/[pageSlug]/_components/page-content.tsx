@@ -79,7 +79,7 @@ export async function PageContent({ pageDetail, locale }: PageContentProps) {
 			<PageNavigation locale={locale} pageId={pageDetail.id} />
 			<ContentWithTranslations pageDetail={pageDetail} />
 			<ChildPages locale={locale} parentId={pageDetail.id} />
-			<div className="flex items-center gap-4">
+			<div className="flex flex-wrap items-center gap-4">
 				<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
 				<PageViewCounter
 					className="text-muted-foreground"

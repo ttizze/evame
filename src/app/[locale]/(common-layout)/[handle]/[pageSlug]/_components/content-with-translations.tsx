@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { mdastToMarkdown } from "@/app/[locale]/_domain/mdast-to-markdown";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { PageDetail } from "@/app/[locale]/types";
@@ -26,13 +27,18 @@ export async function ContentWithTranslations({
 		mdast: pageDetail.mdastJson,
 		segments: pageDetail.segments,
 	});
+	const markdown = mdastToMarkdown(pageDetail.mdastJson);
 	return (
 		<>
 			<h1 className="mb-0! ">
 				<SegmentElement segment={titleSegment} />
 			</h1>
 			<PageTagList tag={pageDetail.tagPages.map((tagPage) => tagPage.tag)} />
-			<SubHeader pageDetail={pageDetail} tocItems={tocItems} />
+			<SubHeader
+				markdown={markdown}
+				pageDetail={pageDetail}
+				tocItems={tocItems}
+			/>
 			<div className="js-content">{content}</div>
 		</>
 	);

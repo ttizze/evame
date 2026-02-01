@@ -10,14 +10,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import type { TocItem } from "../../_domain/extract-toc-items";
+import { ExportMarkdownButton } from "../export-markdown-button.client";
 import { TocTrigger } from "./toc-trigger";
 
 export function SubHeader({
 	pageDetail,
 	tocItems,
+	markdown,
 }: {
 	pageDetail: PageDetail;
 	tocItems: TocItem[];
+	markdown: string;
 }) {
 	const hydrated = useHydrated();
 	const locale = useLocale();
@@ -64,6 +67,11 @@ export function SubHeader({
 						</div>
 					</Link>
 					<div className="flex items-center gap-2">
+						<ExportMarkdownButton
+							markdown={markdown}
+							slug={pageDetail.slug}
+							title={pageDetail.title}
+						/>
 						{isEditable && (
 							<Link
 								href={`/${pageDetail.userHandle}/${pageDetail.slug}/edit`}
