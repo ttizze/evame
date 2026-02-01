@@ -48,7 +48,11 @@ describe("SubHeader", () => {
 		render(
 			<NextIntlClientProvider locale="en">
 				<ViewProvider>
-					<SubHeader pageDetail={mockPageDetail} tocItems={[]} />
+					<SubHeader
+						markdown="Hello"
+						pageDetail={mockPageDetail}
+						tocItems={[]}
+					/>
 				</ViewProvider>
 			</NextIntlClientProvider>,
 		);
@@ -61,7 +65,11 @@ describe("SubHeader", () => {
 		render(
 			<NextIntlClientProvider locale="en">
 				<ViewProvider>
-					<SubHeader pageDetail={mockPageDetail} tocItems={[]} />
+					<SubHeader
+						markdown="Hello"
+						pageDetail={mockPageDetail}
+						tocItems={[]}
+					/>
 				</ViewProvider>
 			</NextIntlClientProvider>,
 		);
@@ -73,7 +81,11 @@ describe("SubHeader", () => {
 		render(
 			<NextIntlClientProvider locale="en">
 				<ViewProvider>
-					<SubHeader pageDetail={mockPageDetail} tocItems={tocItems} />
+					<SubHeader
+						markdown="Hello"
+						pageDetail={mockPageDetail}
+						tocItems={tocItems}
+					/>
 				</ViewProvider>
 			</NextIntlClientProvider>,
 		);
@@ -85,7 +97,11 @@ describe("SubHeader", () => {
 		render(
 			<NextIntlClientProvider locale="en">
 				<ViewProvider>
-					<SubHeader pageDetail={mockPageDetail} tocItems={tocItems} />
+					<SubHeader
+						markdown="Hello"
+						pageDetail={mockPageDetail}
+						tocItems={tocItems}
+					/>
 				</ViewProvider>
 			</NextIntlClientProvider>,
 		);
@@ -110,7 +126,11 @@ describe("SubHeader", () => {
 		render(
 			<NextIntlClientProvider locale="en">
 				<ViewProvider>
-					<SubHeader pageDetail={mockPageDetail} tocItems={tocItems} />
+					<SubHeader
+						markdown="Hello"
+						pageDetail={mockPageDetail}
+						tocItems={tocItems}
+					/>
 				</ViewProvider>
 			</NextIntlClientProvider>,
 		);

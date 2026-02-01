@@ -2,7 +2,6 @@ import { EyeIcon, MessageCircle } from "lucide-react";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { fetchPageCounts } from "@/app/[locale]/_db/fetch-page-detail.server";
 import { fetchPageViewCount } from "@/app/[locale]/_db/page-utility-queries.server";
-import { mdastToMarkdown } from "@/app/[locale]/_domain/mdast-to-markdown";
 import { mdastToText } from "@/app/[locale]/_domain/mdast-to-text";
 import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
@@ -12,7 +11,6 @@ import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import { ChildPages } from "./child-pages/server";
 import { PageCommentForm } from "./comment/_components/page-comment-form/client";
 import { ContentWithTranslations } from "./content-with-translations";
-import { ExportMarkdownButton } from "./export-markdown-button.client";
 import { PageNavigation } from "./page-navigation/server";
 import { PageViewCounter } from "./page-view-counter/client";
 import { PreviewBanner } from "./preview-banner";
@@ -48,7 +46,6 @@ export async function PageContent({ pageDetail, locale }: PageContentProps) {
 			collectAnnotationTypes(pageDetail.segments),
 			mdastToText(pageDetail.mdastJson).then((text) => text.slice(0, 200)),
 		]);
-	const markdown = mdastToMarkdown(pageDetail.mdastJson);
 	const isDraft = pageDetail.status !== "PUBLIC";
 
 	const articleUrl = `${BASE_URL}/${pageDetail.sourceLocale}/${pageDetail.userHandle}/${pageDetail.slug}`;
@@ -97,11 +94,6 @@ export async function PageContent({ pageDetail, locale }: PageContentProps) {
 				/>
 				<MessageCircle className="w-5 h-5" strokeWidth={1.5} />
 				<span className="text-muted-foreground">{pageCounts.pageComments}</span>
-				<ExportMarkdownButton
-					markdown={markdown}
-					slug={pageDetail.slug}
-					title={pageDetail.title}
-				/>
 			</div>
 
 			<FloatingControls
