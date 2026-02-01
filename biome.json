@@ -19,7 +19,10 @@
 			"!.vercel",
 			"!.cache",
 			"!dist",
-			"!.codex"
+			"!.codex",
+			"!.claude",
+			"!.worktree",
+			"!.worktrees"
 		]
 	},
 	"assist": {

@@ -37,10 +37,10 @@ export function buildDatabaseName(baseName: string, branch: string): string {
 
 export async function ensureDatabaseExists(
 	databaseUrl: string,
-	baseName: string,
 	targetName: string,
+	templateName: string,
 ): Promise<void> {
-	// Create branch DB from base DB template using admin connection.
+	// Create branch DB from template DB using admin connection.
 	const adminUrl = new URL(databaseUrl);
 	adminUrl.pathname = "/postgres";
 	const client = new Client({ connectionString: adminUrl.toString() });
@@ -52,7 +52,7 @@ export async function ensureDatabaseExists(
 		);
 		if (exists.rowCount === 0) {
 			await client.query(
-				`CREATE DATABASE ${escapeIdentifier(targetName)} WITH TEMPLATE ${escapeIdentifier(baseName)}`,
+				`CREATE DATABASE ${escapeIdentifier(targetName)} WITH TEMPLATE ${escapeIdentifier(templateName)}`,
 			);
 		}
 	} finally {
@@ -79,12 +79,13 @@ async function main(): Promise<void> {
 		process.exit(1);
 	}
 
+	const templateDbName = process.env.DB_TEMPLATE_NAME?.trim() || baseDbName;
 	const branch = getGitBranch();
 	const branchDbName = buildDatabaseName(baseDbName, branch);
 	const branchUrl = new URL(baseUrl);
 	branchUrl.pathname = `/${branchDbName}`;
 
-	await ensureDatabaseExists(baseUrl, baseDbName, branchDbName);
+	await ensureDatabaseExists(baseUrl, branchDbName, templateDbName);
 
 	if (commandArgs.length === 0) {
 		process.stdout.write(branchUrl.toString());
