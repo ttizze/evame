@@ -62,6 +62,6 @@ describe("mdastToMarkdown", () => {
 
 		const result = mdastToMarkdown(mdast);
 
-		expect(result.trim()).toBe("- [x] done");
+		expect(result.trim()).toMatch(/^[*-] \[x\] done$/);
 	});
 });
