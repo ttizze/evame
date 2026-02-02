@@ -4,6 +4,10 @@
 - コマンド: `ANALYZE=true bun run build -- --webpack`
 - 結果: `/.next/analyze/nodejs.html`
 - 備考: ビルドはタイムアウトしたがレポートは生成された
+### 追加試行（2026-02-02）
+- コマンド: `ANALYZE=true bun run build`（Turbopack） / `ANALYZE=true bun run build -- --webpack`
+- 結果: どちらもタイムアウト（120s/180s/300s）でレポート未生成
+- 備考: Turbopack では bundle analyzer が非対応の警告が出る。`next experimental-analyze` か、より長いビルド時間が必要
 
 ## next/script 使用状況
 - `next/script` の使用: なし（`rg -n "next/script" src`）
