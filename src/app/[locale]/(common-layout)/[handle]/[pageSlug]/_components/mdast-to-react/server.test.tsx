@@ -10,6 +10,14 @@ vi.mock("react-tweet", () => ({
 	),
 }));
 
+vi.stubGlobal(
+	"fetch",
+	vi.fn().mockResolvedValue({
+		ok: true,
+		json: async () => [],
+	}),
+);
+
 // 2. その後で被テストモジュールをimport
 import { mdastToReact } from "./server";
 
