@@ -2,5 +2,45 @@
 	"HomePage": {
 		"title": "Hello world!",
 		"about": "Go to the about page"
+	},
+	"Footer": {
+		"about": "About",
+		"privacyPolicy": "Privacy Policy",
+		"termsOfService": "Terms of Service"
+	},
+	"Header": {
+		"HelpPopover": {
+			"translationHelp": {
+				"title": "使い方",
+				"description1": "原文と翻訳を縦に並べて読めます。画面下のフローティングコントローラーで表示を切り替えてください。",
+				"controllerLabel": "フローティングコントローラー",
+				"controllerButton": "EN / JA",
+				"controllerHint": "タップして切り替え",
+				"description2": "翻訳行をクリックするとパネルが開き、投票したり自分の訳を追加できます。ポイントの高い翻訳が上に表示されます。",
+				"panelLabel": "原文 / 翻訳",
+				"originalLine": "原文",
+				"translationLine": "翻訳行 ← クリック",
+				"by": "by:",
+				"otherTranslations": "他の翻訳",
+				"shortTranslation": "短い翻訳...",
+				"anotherTranslation": "別の翻訳...",
+				"addTranslation": "翻訳を追加..."
+			}
+		},
+		"TextStatusGuide": {
+			"title": "テキストの状態ガイド",
+			"sourceTitle": "原文",
+			"sourceDescription": "元の文章です。",
+			"machineDraftTitle": "機械下書き",
+			"machineDraftDescription": "AIが生成した翻訳です。",
+			"humanTouchedTitle": "人の手が入った",
+			"humanTouchedDescription": "いずれかの翻訳案に1件以上の「いいね」があります。",
+			"proofreadTitle": "校正済み",
+			"proofreadDescription": "すべての翻訳案に1件以上の「いいね」があります。",
+			"validatedTitle": "検証済み",
+			"validatedDescription": "すべての翻訳案に2件以上の「いいね」があります。",
+			"untranslatedTitle": "未翻訳",
+			"untranslatedDescription": "まだ翻訳されていません。"
+		}
 	}
 }

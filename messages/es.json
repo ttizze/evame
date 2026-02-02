@@ -1,0 +1,46 @@
+{
+	"HomePage": {
+		"title": "Hello world!",
+		"about": "Go to the about page"
+	},
+	"Footer": {
+		"about": "About",
+		"privacyPolicy": "Privacy Policy",
+		"termsOfService": "Terms of Service"
+	},
+	"Header": {
+		"HelpPopover": {
+			"translationHelp": {
+				"title": "Cómo usar",
+				"description1": "Lee las publicaciones con el original y la traducción apilados en vertical. Cambia la vista con el controlador flotante de abajo.",
+				"controllerLabel": "Controlador flotante",
+				"controllerButton": "EN / JA",
+				"controllerHint": "toca para cambiar",
+				"description2": "Haz clic en una línea de traducción para abrir el panel, votar o añadir la tuya. Las traducciones con más puntos se muestran arriba.",
+				"panelLabel": "Original / Traducción",
+				"originalLine": "Línea original",
+				"translationLine": "Línea de traducción ← clic",
+				"by": "por:",
+				"otherTranslations": "Otras traducciones",
+				"shortTranslation": "Traducción corta...",
+				"anotherTranslation": "Otra traducción...",
+				"addTranslation": "Añade tu traducción..."
+			}
+		},
+		"TextStatusGuide": {
+			"title": "Guía de estado del texto",
+			"sourceTitle": "Original",
+			"sourceDescription": "Contenido original.",
+			"machineDraftTitle": "Borrador automático",
+			"machineDraftDescription": "Traducción generada por IA.",
+			"humanTouchedTitle": "Revisión humana",
+			"humanTouchedDescription": "Al menos una opción de traducción tiene 1 o más votos.",
+			"proofreadTitle": "Revisado",
+			"proofreadDescription": "Todas las opciones de traducción tienen al menos 1 voto.",
+			"validatedTitle": "Validado",
+			"validatedDescription": "Todas las opciones de traducción tienen al menos 2 votos.",
+			"untranslatedTitle": "Sin traducir",
+			"untranslatedDescription": "Aún no se ha traducido."
+		}
+	}
+}

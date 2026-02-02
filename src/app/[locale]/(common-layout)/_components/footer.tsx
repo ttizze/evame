@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { FaDiscord, FaGithub } from "react-icons/fa";
 import { Link as LinkI18n } from "@/i18n/routing";
 
 export function Footer() {
+	const t = useTranslations("Footer");
 	return (
 		<footer className="mt-auto h-60 grid place-items-center">
 			<div className="w-full ">
@@ -11,19 +13,19 @@ export function Footer() {
 						className="hover:text-gray-900 dark:hover:text-white"
 						href="/about"
 					>
-						About
+						{t("about")}
 					</LinkI18n>
 					<LinkI18n
 						className="hover:text-gray-900 dark:hover:text-white"
 						href="/privacy"
 					>
-						Privacy Policy
+						{t("privacyPolicy")}
 					</LinkI18n>
 					<LinkI18n
 						className="hover:text-gray-900 dark:hover:text-white"
 						href="/terms"
 					>
-						Terms of Service
+						{t("termsOfService")}
 					</LinkI18n>
 					<Link
 						aria-label="GitHub"
