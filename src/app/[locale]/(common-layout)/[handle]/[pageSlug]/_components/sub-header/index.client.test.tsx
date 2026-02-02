@@ -1,8 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
+import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import type { ReactNode } from "react";
 import { vi } from "vitest";
-import { ViewProvider } from "@/app/_context/view-provider";
 import type { PageDetail } from "@/app/[locale]/types";
 import { SubHeader } from "./index.client";
 
@@ -46,15 +46,15 @@ describe("SubHeader", () => {
 
 	test("ユーザー情報が表示される", () => {
 		render(
-			<NextIntlClientProvider locale="en">
-				<ViewProvider>
+			<NuqsTestingAdapter>
+				<NextIntlClientProvider locale="en">
 					<SubHeader
 						markdown="Hello"
 						pageDetail={mockPageDetail}
 						tocItems={[]}
 					/>
-				</ViewProvider>
-			</NextIntlClientProvider>,
+				</NextIntlClientProvider>
+			</NuqsTestingAdapter>,
 		);
 
 		expect(screen.getByText("Test User")).toBeInTheDocument();
@@ -63,15 +63,15 @@ describe("SubHeader", () => {
 
 	test("TOCが空のときボタンが表示されない", () => {
 		render(
-			<NextIntlClientProvider locale="en">
-				<ViewProvider>
+			<NuqsTestingAdapter>
+				<NextIntlClientProvider locale="en">
 					<SubHeader
 						markdown="Hello"
 						pageDetail={mockPageDetail}
 						tocItems={[]}
 					/>
-				</ViewProvider>
-			</NextIntlClientProvider>,
+				</NextIntlClientProvider>
+			</NuqsTestingAdapter>,
 		);
 
 		expect(screen.queryByTitle("Table of Contents")).not.toBeInTheDocument();
@@ -79,15 +79,15 @@ describe("SubHeader", () => {
 
 	test("TOCがあるときボタンが表示される", () => {
 		render(
-			<NextIntlClientProvider locale="en">
-				<ViewProvider>
+			<NuqsTestingAdapter>
+				<NextIntlClientProvider locale="en">
 					<SubHeader
 						markdown="Hello"
 						pageDetail={mockPageDetail}
 						tocItems={tocItems}
 					/>
-				</ViewProvider>
-			</NextIntlClientProvider>,
+				</NextIntlClientProvider>
+			</NuqsTestingAdapter>,
 		);
 
 		expect(screen.getByTitle("Table of Contents")).toBeInTheDocument();
@@ -95,15 +95,15 @@ describe("SubHeader", () => {
 
 	test("TOCボタンのクリックで表示が切り替わる", () => {
 		render(
-			<NextIntlClientProvider locale="en">
-				<ViewProvider>
+			<NuqsTestingAdapter>
+				<NextIntlClientProvider locale="en">
 					<SubHeader
 						markdown="Hello"
 						pageDetail={mockPageDetail}
 						tocItems={tocItems}
 					/>
-				</ViewProvider>
-			</NextIntlClientProvider>,
+				</NextIntlClientProvider>
+			</NuqsTestingAdapter>,
 		);
 
 		// TOC should not be visible initially
@@ -124,15 +124,15 @@ describe("SubHeader", () => {
 
 	test("原文リンクをクリックしてもTOCは閉じない", () => {
 		render(
-			<NextIntlClientProvider locale="en">
-				<ViewProvider>
+			<NuqsTestingAdapter>
+				<NextIntlClientProvider locale="en">
 					<SubHeader
 						markdown="Hello"
 						pageDetail={mockPageDetail}
 						tocItems={tocItems}
 					/>
-				</ViewProvider>
-			</NextIntlClientProvider>,
+				</NextIntlClientProvider>
+			</NuqsTestingAdapter>,
 		);
 
 		// Open the TOC

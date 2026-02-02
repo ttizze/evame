@@ -1,9 +1,9 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { Suspense } from "react";
-import { ViewProvider } from "@/app/_context/view-provider";
 import { Footer } from "@/app/[locale]/(common-layout)/_components/footer";
 import { Header } from "@/app/[locale]/(common-layout)/_components/header/server";
+import { ViewScope } from "@/app/[locale]/(common-layout)/_components/view-scope.client";
 import { TranslationFormOnClick } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-form-on-click.client";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,7 +38,7 @@ export default function CommonLayout({
 					<NextIntlClientProvider locale={locale} messages={messages}>
 						<OrganizationJsonLd />
 						<WebSiteJsonLd locale={locale} />
-						<ViewProvider>
+						<ViewScope>
 							<Header />
 							<main className="mb-5 mt-3 md:mt-5 grow tracking-wider">
 								<div className="container mx-auto px-4 max-w-4xl">
@@ -47,7 +47,7 @@ export default function CommonLayout({
 							</main>
 							<TranslationFormOnClick />
 							<Footer />
-						</ViewProvider>
+						</ViewScope>
 					</NextIntlClientProvider>
 				);
 			})}

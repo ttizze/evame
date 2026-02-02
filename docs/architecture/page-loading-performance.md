@@ -85,6 +85,24 @@
 
 `/user/[handle]/page/[pageSlug]` ページの読み込みパフォーマンスに関する調査と最適化結果。
 
+---
+
+## トップページ（`/[locale]`）のFCP改善 (2026-02-02 計測)
+
+### 変更点
+1. About/リスト/タグ別リストを `Suspense` で分割ストリーミング
+2. view クエリの自動同期を廃止（初期URL書き換えを避ける）
+
+### ローカル本番相当（build + start）
+
+| 条件 | Desktop FCP | Mobile FCP |
+| --- | --- | --- |
+| baseline | 3262.4ms | 2804.8ms |
+| view query auto-sync off | 3153.6ms | 2664.0ms |
+| Suspense streaming | **1452.0ms** | **1541.6ms** |
+
+**結論**: `/[locale]` では server component が初期描画をブロックしていたため、`Suspense` 分割でストリーミングすると FCP が大きく改善する。
+
 ## 測定環境
 
 - Next.js 16.1.1 (Turbopack)
