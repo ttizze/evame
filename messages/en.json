@@ -1,6 +1,42 @@
 {
-	"HomePage": {
-		"title": "Hello world!",
-		"about": "Go to the about page"
+	"Footer": {
+		"about": "About",
+		"privacyPolicy": "Privacy Policy",
+		"termsOfService": "Terms of Service"
+	},
+	"Header": {
+		"HelpPopover": {
+			"translationHelp": {
+				"title": "How to Use",
+				"description1": "Read posts with original and translation stacked vertically. Switch the view with the floating controller at the bottom.",
+				"controllerLabel": "Floating Controller",
+				"controllerButton": "Original / Translation",
+				"controllerHint": "tap to switch",
+				"description2": "Click a translation line to open the panel and vote or add your own. Higher points translation will be displayed at the top.",
+				"panelLabel": "Original / Translation",
+				"originalLine": "Original line",
+				"translationLine": "Translation line <- click",
+				"by": "by:",
+				"otherTranslations": "Other translations",
+				"shortTranslation": "Short translation...",
+				"anotherTranslation": "Another translation...",
+				"addTranslation": "Add your translation..."
+			}
+		},
+		"TextStatusGuide": {
+			"title": "Text Status Guide",
+			"sourceTitle": "Source",
+			"sourceDescription": "Original content.",
+			"machineDraftTitle": "Machine Draft",
+			"machineDraftDescription": "AI-generated translation.",
+			"humanTouchedTitle": "Human Touched",
+			"humanTouchedDescription": "At least one translation option has 1 or more likes.",
+			"proofreadTitle": "Proofread",
+			"proofreadDescription": "All translation options have at least 1 like.",
+			"validatedTitle": "Validated",
+			"validatedDescription": "All translation options have at least 2 likes.",
+			"untranslatedTitle": "Untranslated",
+			"untranslatedDescription": "Not translated yet."
+		}
 	}
 }

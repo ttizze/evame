@@ -1,0 +1,42 @@
+{
+	"Footer": {
+		"about": "About",
+		"privacyPolicy": "Privacy Policy",
+		"termsOfService": "Terms of Service"
+	},
+	"Header": {
+		"HelpPopover": {
+			"translationHelp": {
+				"title": "사용 방법",
+				"description1": "원문과 번역문을 세로로 나란히 읽을 수 있습니다. 아래의 플로팅 컨트롤러로 보기를 전환하세요.",
+				"controllerLabel": "플로팅 컨트롤러",
+				"controllerButton": "원문 / 번역",
+				"controllerHint": "탭하여 전환",
+				"description2": "번역 줄을 클릭하면 패널이 열리고, 투표하거나 내 번역을 추가할 수 있습니다. 점수가 높은 번역이 위에 표시됩니다.",
+				"panelLabel": "원문 / 번역",
+				"originalLine": "원문 줄",
+				"translationLine": "번역 줄 ← 클릭",
+				"by": "작성자:",
+				"otherTranslations": "다른 번역",
+				"shortTranslation": "짧은 번역...",
+				"anotherTranslation": "다른 번역...",
+				"addTranslation": "번역 추가..."
+			}
+		},
+		"TextStatusGuide": {
+			"title": "텍스트 상태 가이드",
+			"sourceTitle": "원문",
+			"sourceDescription": "원본 콘텐츠입니다.",
+			"machineDraftTitle": "기계 초안",
+			"machineDraftDescription": "AI가 생성한 번역입니다.",
+			"humanTouchedTitle": "사람 손질",
+			"humanTouchedDescription": "번역 옵션 중 하나 이상에 1개 이상의 좋아요가 있습니다.",
+			"proofreadTitle": "교정됨",
+			"proofreadDescription": "모든 번역 옵션에 1개 이상의 좋아요가 있습니다.",
+			"validatedTitle": "검증됨",
+			"validatedDescription": "모든 번역 옵션에 2개 이상의 좋아요가 있습니다.",
+			"untranslatedTitle": "미번역",
+			"untranslatedDescription": "아직 번역되지 않았습니다."
+		}
+	}
+}

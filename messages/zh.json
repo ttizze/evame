@@ -1,0 +1,42 @@
+{
+	"Footer": {
+		"about": "About",
+		"privacyPolicy": "Privacy Policy",
+		"termsOfService": "Terms of Service"
+	},
+	"Header": {
+		"HelpPopover": {
+			"translationHelp": {
+				"title": "使用说明",
+				"description1": "原文与译文上下排列阅读。可用底部的悬浮控制器切换视图。",
+				"controllerLabel": "悬浮控制器",
+				"controllerButton": "原文 / 译文",
+				"controllerHint": "点击切换",
+				"description2": "点击译文行可打开面板，进行投票或添加自己的译文。得分更高的译文会显示在上方。",
+				"panelLabel": "原文 / 译文",
+				"originalLine": "原文行",
+				"translationLine": "译文行 ← 点击",
+				"by": "作者:",
+				"otherTranslations": "其他译文",
+				"shortTranslation": "短译文...",
+				"anotherTranslation": "另一条译文...",
+				"addTranslation": "添加你的译文..."
+			}
+		},
+		"TextStatusGuide": {
+			"title": "文本状态指南",
+			"sourceTitle": "原文",
+			"sourceDescription": "原始内容。",
+			"machineDraftTitle": "机器初稿",
+			"machineDraftDescription": "由 AI 生成的译文。",
+			"humanTouchedTitle": "人工完善",
+			"humanTouchedDescription": "至少有一条译文选项获得 1 个或以上赞。",
+			"proofreadTitle": "已校对",
+			"proofreadDescription": "所有译文选项至少获得 1 个赞。",
+			"validatedTitle": "已验证",
+			"validatedDescription": "所有译文选项至少获得 2 个赞。",
+			"untranslatedTitle": "未翻译",
+			"untranslatedDescription": "尚未翻译。"
+		}
+	}
+}

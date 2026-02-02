@@ -1,12 +1,14 @@
 "use client";
 
 import { ChevronDown, Info } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { TranslationProofStatusIcon } from "./translation-proof-status-icon.client";
 
 export function TextStatusGuide() {
 	const [showHelpSection, setShowHelpSection] = useState(false);
+	const t = useTranslations("Header.TextStatusGuide");
 
 	return (
 		<div className="px-3 py-2">
@@ -17,7 +19,7 @@ export function TextStatusGuide() {
 			>
 				<div className="flex items-center ">
 					<Info className="mr-2 h-3 w-3 shrink-0 opacity-50" />
-					<span>Text Status Guide</span>
+					<span>{t("title")}</span>
 				</div>
 				<ChevronDown
 					className={cn(
@@ -34,9 +36,9 @@ export function TextStatusGuide() {
 							proofStatus={undefined}
 						/>
 						<div className="flex-1 min-w-0">
-							<div className="font-medium text-sm">Source</div>
+							<div className="font-medium text-sm">{t("sourceTitle")}</div>
 							<div className="text-xs text-muted-foreground break-words whitespace-normal">
-								Original content.
+								{t("sourceDescription")}
 							</div>
 						</div>
 					</div>
@@ -47,9 +49,11 @@ export function TextStatusGuide() {
 							proofStatus="MACHINE_DRAFT"
 						/>
 						<div className="flex-1 min-w-0">
-							<div className="font-medium text-sm">Machine Draft</div>
+							<div className="font-medium text-sm">
+								{t("machineDraftTitle")}
+							</div>
 							<div className="text-xs text-muted-foreground break-words whitespace-normal">
-								AI-generated translation.
+								{t("machineDraftDescription")}
 							</div>
 						</div>
 					</div>
@@ -59,9 +63,11 @@ export function TextStatusGuide() {
 							proofStatus="HUMAN_TOUCHED"
 						/>
 						<div className="flex-1 min-w-0">
-							<div className="font-medium text-sm">Human Touched</div>
+							<div className="font-medium text-sm">
+								{t("humanTouchedTitle")}
+							</div>
 							<div className="text-xs text-muted-foreground break-words whitespace-normal">
-								At least one translation option has 1 or more likes.
+								{t("humanTouchedDescription")}
 							</div>
 						</div>
 					</div>
@@ -71,9 +77,9 @@ export function TextStatusGuide() {
 							proofStatus="PROOFREAD"
 						/>
 						<div className="flex-1 min-w-0">
-							<div className="font-medium text-sm">Proofread</div>
+							<div className="font-medium text-sm">{t("proofreadTitle")}</div>
 							<div className="text-xs text-muted-foreground break-words whitespace-normal">
-								All translation options have at least 1 like.
+								{t("proofreadDescription")}
 							</div>
 						</div>
 					</div>
@@ -83,9 +89,9 @@ export function TextStatusGuide() {
 							proofStatus="VALIDATED"
 						/>
 						<div className="flex-1 min-w-0">
-							<div className="font-medium text-sm">Validated</div>
+							<div className="font-medium text-sm">{t("validatedTitle")}</div>
 							<div className="text-xs text-muted-foreground break-words whitespace-normal">
-								All translation options have at least 2 likes.
+								{t("validatedDescription")}
 							</div>
 						</div>
 					</div>
@@ -95,9 +101,11 @@ export function TextStatusGuide() {
 							proofStatus={undefined}
 						/>
 						<div className="flex-1 min-w-0">
-							<div className="font-medium text-sm">Untranslated</div>
+							<div className="font-medium text-sm">
+								{t("untranslatedTitle")}
+							</div>
 							<div className="text-xs text-muted-foreground break-words whitespace-normal">
-								Not translated yet.
+								{t("untranslatedDescription")}
 							</div>
 						</div>
 					</div>

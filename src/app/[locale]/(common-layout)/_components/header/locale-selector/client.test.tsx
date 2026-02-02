@@ -14,13 +14,24 @@ if (typeof window.HTMLElement.prototype.scrollIntoView !== "function") {
 	window.HTMLElement.prototype.scrollIntoView = () => {};
 }
 // next-intl, next/navigation、supportedLocaleOptions をモック
-vi.mock(import("next-intl"), async (importOriginal) => {
-	const actual = await importOriginal();
-	return {
-		...actual,
-		useLocale: () => "en",
+const mockTranslations = () => {
+	const t = ((key: string) => key) as unknown as {
+		(key: string): string;
+		rich: (key: string) => string;
+		markup: (key: string) => string;
+		raw: (key: string) => string;
+		has: (key: string) => boolean;
 	};
-});
+	t.rich = (key) => key;
+	t.markup = (key) => key;
+	t.raw = (key) => key;
+	t.has = () => true;
+	return t;
+};
+vi.mock("next-intl", () => ({
+	useLocale: () => "en",
+	useTranslations: () => mockTranslations(),
+}));
 
 vi.mock("next/navigation", () => ({
 	useParams: () => ({ pageSlug: "test-page" }),
