@@ -1,9 +1,10 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
+import { useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { useView } from "@/app/_context/view-provider";
+import { viewQueryState } from "@/app/[locale]/(common-layout)/_components/view-query";
 import { Button } from "@/components/ui/button";
 import {
 	Popover,
@@ -28,7 +29,7 @@ export function IconPopoverTrigger({
 	align,
 }: IconPopoverTriggerProps) {
 	const [isOpen, setIsOpen] = useState(false);
-	const { view } = useView();
+	const [view] = useQueryState("view", viewQueryState);
 
 	return (
 		<Popover onOpenChange={setIsOpen} open={isOpen}>

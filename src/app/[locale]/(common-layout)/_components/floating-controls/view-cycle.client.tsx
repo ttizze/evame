@@ -1,9 +1,9 @@
 /* app/_components/view-cycle.tsx */
 "use client";
 import { FileText } from "lucide-react";
-import { parseAsStringEnum, useQueryState } from "nuqs";
-import { useEffect } from "react";
-import { useView, type View } from "@/app/_context/view-provider";
+import { useQueryState } from "nuqs";
+import type { View } from "@/app/_constants/view";
+import { viewQueryState } from "@/app/[locale]/(common-layout)/_components/view-query";
 import { Button } from "@/components/ui/button";
 
 const getNextView = (view: View): View =>
@@ -16,21 +16,7 @@ interface Props {
 }
 
 export function ViewCycle({ afterClick, userLocale, sourceLocale }: Props) {
-	const { view: currentView, setView } = useView();
-	const [view, setQueryView] = useQueryState(
-		"view",
-		parseAsStringEnum<View>(["user", "source", "both"]).withOptions({
-			shallow: true,
-		}),
-	);
-
-	useEffect(() => {
-		if (view) {
-			setView(view);
-			return;
-		}
-		setQueryView(currentView);
-	}, [view, setView, setQueryView, currentView]);
+	const [view, setQueryView] = useQueryState("view", viewQueryState);
 
 	const sourceLabel =
 		sourceLocale === "mixed" ? (
@@ -44,18 +30,16 @@ export function ViewCycle({ afterClick, userLocale, sourceLocale }: Props) {
 		);
 
 	const handleClick = () => {
-		const current = view ?? currentView;
-		const next = getNextView(current);
+		const next = getNextView(view);
 		setQueryView(next);
-		setView(next);
 		afterClick?.();
 	};
 
 	/* ボタン内部の表示内容 */
 	const inner =
-		currentView === "user" ? (
+		view === "user" ? (
 			<span>{userLocale.toUpperCase()}</span>
-		) : currentView === "source" ? (
+		) : view === "source" ? (
 			sourceLabel
 		) : (
 			<span className="flex items-center gap-1 scale-90">
@@ -69,9 +53,9 @@ export function ViewCycle({ afterClick, userLocale, sourceLocale }: Props) {
 
 	/* アクセシブルラベル */
 	const label =
-		currentView === "user"
+		view === "user"
 			? "Currently: User language only (Click to change)"
-			: currentView === "source"
+			: view === "source"
 				? "Currently: Source only (Click to change)"
 				: "Currently: Both languages (Click to change)";
 

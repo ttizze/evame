@@ -1,48 +1,40 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { parseAsStringEnum, useQueryState } from "nuqs";
+import { useQueryState } from "nuqs";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { Suspense } from "react";
 import { describe, expect, it, vi } from "vitest";
-import type { View } from "@/app/_context/view-provider";
-import { ViewProvider } from "@/app/_context/view-provider";
+import { viewQueryState } from "@/app/[locale]/(common-layout)/_components/view-query";
 import { ViewCycle } from "./view-cycle.client";
 
 function Harness({
 	initialSearchParams = "",
-	initialView = "both",
 	sourceLocale = "ja",
 	userLocale = "en",
 	afterClick,
 }: {
 	initialSearchParams?: string;
-	initialView?: "user" | "source" | "both";
 	sourceLocale?: string;
 	userLocale?: string;
 	afterClick?: () => void;
 }) {
 	return (
 		<NuqsTestingAdapter searchParams={initialSearchParams}>
-			<ViewProvider initialView={initialView}>
-				<Suspense fallback={null}>
-					<QueryStateReader />
-					<ViewCycle
-						afterClick={afterClick}
-						sourceLocale={sourceLocale}
-						userLocale={userLocale}
-					/>
-				</Suspense>
-			</ViewProvider>
+			<Suspense fallback={null}>
+				<QueryStateReader />
+				<ViewCycle
+					afterClick={afterClick}
+					sourceLocale={sourceLocale}
+					userLocale={userLocale}
+				/>
+			</Suspense>
 		</NuqsTestingAdapter>
 	);
 }
 
 function QueryStateReader() {
-	const [view] = useQueryState(
-		"view",
-		parseAsStringEnum<View>(["user", "source", "both"]),
-	);
-	return <span data-testid="view-query">{view ?? "none"}</span>;
+	const [view] = useQueryState("view", viewQueryState);
+	return <span data-testid="view-query">{view}</span>;
 }
 
 describe("ViewCycle", () => {

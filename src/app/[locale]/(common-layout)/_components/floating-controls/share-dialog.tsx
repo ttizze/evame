@@ -2,6 +2,7 @@
 
 import { CopyIcon, Share } from "lucide-react";
 import Image from "next/image";
+import { useQueryState } from "nuqs";
 import { useState } from "react";
 import {
 	FacebookIcon,
@@ -11,7 +12,7 @@ import {
 	TwitterShareButton,
 } from "react-share";
 import { toast } from "sonner";
-import { useView } from "@/app/_context/view-provider";
+import { viewQueryState } from "@/app/[locale]/(common-layout)/_components/view-query";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -23,7 +24,7 @@ import {
 
 export function ShareDialog() {
 	const [isOpen, setIsOpen] = useState(false);
-	const { view } = useView();
+	const [view] = useQueryState("view", viewQueryState);
 
 	/* いま表示中のモードを取得 */
 	const shareTitle = typeof window !== "undefined" ? document.title : "";
