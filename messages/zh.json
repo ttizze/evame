@@ -1,8 +1,4 @@
 {
-	"HomePage": {
-		"title": "Hello world!",
-		"about": "Go to the about page"
-	},
 	"Footer": {
 		"about": "About",
 		"privacyPolicy": "Privacy Policy",
@@ -14,13 +10,13 @@
 				"title": "使用说明",
 				"description1": "原文与译文上下排列阅读。可用底部的悬浮控制器切换视图。",
 				"controllerLabel": "悬浮控制器",
-				"controllerButton": "EN / JA",
+				"controllerButton": "原文 / 译文",
 				"controllerHint": "点击切换",
 				"description2": "点击译文行可打开面板，进行投票或添加自己的译文。得分更高的译文会显示在上方。",
 				"panelLabel": "原文 / 译文",
 				"originalLine": "原文行",
 				"translationLine": "译文行 ← 点击",
-				"by": "by:",
+				"by": "作者:",
 				"otherTranslations": "其他译文",
 				"shortTranslation": "短译文...",
 				"anotherTranslation": "另一条译文...",

@@ -1,8 +1,4 @@
 {
-	"HomePage": {
-		"title": "Hello world!",
-		"about": "Go to the about page"
-	},
 	"Footer": {
 		"about": "About",
 		"privacyPolicy": "Privacy Policy",
@@ -14,13 +10,13 @@
 				"title": "使い方",
 				"description1": "原文と翻訳を縦に並べて読めます。画面下のフローティングコントローラーで表示を切り替えてください。",
 				"controllerLabel": "フローティングコントローラー",
-				"controllerButton": "EN / JA",
+				"controllerButton": "原文 / 翻訳",
 				"controllerHint": "タップして切り替え",
 				"description2": "翻訳行をクリックするとパネルが開き、投票したり自分の訳を追加できます。ポイントの高い翻訳が上に表示されます。",
 				"panelLabel": "原文 / 翻訳",
 				"originalLine": "原文",
 				"translationLine": "翻訳行 ← クリック",
-				"by": "by:",
+				"by": "作成者:",
 				"otherTranslations": "他の翻訳",
 				"shortTranslation": "短い翻訳...",
 				"anotherTranslation": "別の翻訳...",

@@ -1,8 +1,4 @@
 {
-	"HomePage": {
-		"title": "Hello world!",
-		"about": "Go to the about page"
-	},
 	"Footer": {
 		"about": "About",
 		"privacyPolicy": "Privacy Policy",
@@ -14,7 +10,7 @@
 				"title": "Cómo usar",
 				"description1": "Lee las publicaciones con el original y la traducción apilados en vertical. Cambia la vista con el controlador flotante de abajo.",
 				"controllerLabel": "Controlador flotante",
-				"controllerButton": "EN / JA",
+				"controllerButton": "Original / Traducción",
 				"controllerHint": "toca para cambiar",
 				"description2": "Haz clic en una línea de traducción para abrir el panel, votar o añadir la tuya. Las traducciones con más puntos se muestran arriba.",
 				"panelLabel": "Original / Traducción",

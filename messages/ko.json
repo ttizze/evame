@@ -1,8 +1,4 @@
 {
-	"HomePage": {
-		"title": "Hello world!",
-		"about": "Go to the about page"
-	},
 	"Footer": {
 		"about": "About",
 		"privacyPolicy": "Privacy Policy",
@@ -14,13 +10,13 @@
 				"title": "사용 방법",
 				"description1": "원문과 번역문을 세로로 나란히 읽을 수 있습니다. 아래의 플로팅 컨트롤러로 보기를 전환하세요.",
 				"controllerLabel": "플로팅 컨트롤러",
-				"controllerButton": "EN / JA",
+				"controllerButton": "원문 / 번역",
 				"controllerHint": "탭하여 전환",
 				"description2": "번역 줄을 클릭하면 패널이 열리고, 투표하거나 내 번역을 추가할 수 있습니다. 점수가 높은 번역이 위에 표시됩니다.",
 				"panelLabel": "원문 / 번역",
 				"originalLine": "원문 줄",
 				"translationLine": "번역 줄 ← 클릭",
-				"by": "by:",
+				"by": "작성자:",
 				"otherTranslations": "다른 번역",
 				"shortTranslation": "짧은 번역...",
 				"anotherTranslation": "다른 번역...",
