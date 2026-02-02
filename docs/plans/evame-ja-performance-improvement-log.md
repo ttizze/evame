@@ -199,6 +199,59 @@
   - FCP: 2840ms
   - TTFB: 86.62ms
 
+## ローカル本番相当（SpreadAnimation の framer-motion を削除）
+- 実行日: 2026-02-02
+- 変更点: `src/app/[locale]/(common-layout)/_components/about-section/components/features/reach/spread-animation.tsx` を CSS アニメーション化
+- サーバーPID: 26584
+- サーバーログ: `/tmp/evame-start-framer-motion-off.log`
+- URL: `http://localhost:3000/ja`
+
+### Desktop 5-run 平均（framer-motion削除）
+- 計測コマンド: `/tmp/run-5-desktop.js`
+- 平均
+  - FCP: 1547.2ms
+  - TTFB: 184.12ms
+
+```json
+{
+  "runs": 5,
+  "average": {
+    "FCP": 1547.2,
+    "TTFB": 184.12000000476837
+  },
+  "results": [
+    { "run": 1, "fcp": 1300, "ttfb": 233.60000002384186, "url": "http://localhost:3000/ja" },
+    { "run": 2, "fcp": 1620, "ttfb": 182.4000000357628, "url": "http://localhost:3000/ja" },
+    { "run": 3, "fcp": 1348, "ttfb": 147.10000002384186, "url": "http://localhost:3000/ja" },
+    { "run": 4, "fcp": 2176, "ttfb": 233.89999997615814, "url": "http://localhost:3000/ja" },
+    { "run": 5, "fcp": 1292, "ttfb": 123.59999996423721, "url": "http://localhost:3000/ja" }
+  ]
+}
+```
+
+### Mobile 5-run 平均（framer-motion削除）
+- 計測コマンド: `/tmp/run-5-mobile-local.js`
+- 平均
+  - FCP: 1536.8ms
+  - TTFB: 186.44ms
+
+```json
+{
+  "runs": 5,
+  "average": {
+    "FCP": 1536.8,
+    "TTFB": 186.44000000953673
+  },
+  "results": [
+    { "run": 1, "fcp": 1052, "ttfb": 156.10000002384186, "url": "http://localhost:3000/ja" },
+    { "run": 2, "fcp": 1320, "ttfb": 144, "url": "http://localhost:3000/ja" },
+    { "run": 3, "fcp": 1656, "ttfb": 188.60000002384186, "url": "http://localhost:3000/ja" },
+    { "run": 4, "fcp": 2052, "ttfb": 228.69999998807907, "url": "http://localhost:3000/ja" },
+    { "run": 5, "fcp": 1604, "ttfb": 214.80000001192093, "url": "http://localhost:3000/ja" }
+  ]
+}
+```
+
 ```json
 {
   "runs": 5,

@@ -56,6 +56,7 @@
 | view query sync=off, prefetch=on, session=on | 3088.0 | 139.32 | 2764.8 | 121.30 |
 | final default（view query auto-sync off） | 3153.6 | 238.44 | 2664.0 | 127.34 |
 | Suspense streaming（About + lists） | 1452.0 | 193.52 | 1541.6 | 165.18 |
+| framer-motion削除（SpreadAnimation CSS化） | 1547.2 | 184.12 | 1536.8 | 186.44 |
 
 ### 原因はこれで
 - `/search` の prefetch を止めても FCP が安定して短縮されないため、**RSC prefetch は主因ではない**可能性が高い。
@@ -68,6 +69,7 @@
 ### こう改善された
 - `view` クエリの自動同期を廃止した最終状態で **FCP が改善**（Desktop 3262.4ms → 3153.6ms、Mobile 2804.8ms → 2664.0ms）。
 - `/[locale]` を Suspense で分割ストリーミングした結果、**FCP が大幅改善**（Desktop 3262.4ms → 1452.0ms、Mobile 2804.8ms → 1541.6ms）。
+- framer-motion削除は **Suspense分割と同等水準**（Desktop 1547.2ms / Mobile 1536.8ms）で、追加効果は限定的。
 
 ## 次の改善方針（実行予定）
 - 初期JSの発生源を特定（bundle analyzer / `next/script` / 初期チャンクの依存関係）
