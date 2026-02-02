@@ -1,9 +1,16 @@
 import { Link } from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extension-placeholder";
+import { Table } from "@tiptap/extension-table";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TaskItem } from "@tiptap/extension-task-item";
+import { TaskList } from "@tiptap/extension-task-list";
+import { Markdown } from "@tiptap/markdown";
 import { StarterKit } from "@tiptap/starter-kit";
 import { FileHandler } from "@tiptap-pro/extension-file-handler";
-import { Markdown } from "tiptap-markdown";
 import { CustomImage } from "./custom-image";
+import { PasteMarkdown } from "./extensions/paste-markdown";
 import { X } from "./extensions/x-embed";
 import { handleFileUpload } from "./use-file-upload";
 
@@ -12,7 +19,7 @@ export function configureEditor(initialContent: string, placeholder: string) {
 		immediatelyRender: false,
 		extensions: [
 			StarterKit.configure({
-				heading: { levels: [2, 3, 4] },
+				heading: { levels: [1, 2, 3, 4, 5, 6] },
 				code: {
 					HTMLAttributes: {
 						class: "bg-gray-200 dark:bg-gray-900 rounded-md p-1 text-sm",
@@ -20,12 +27,25 @@ export function configureEditor(initialContent: string, placeholder: string) {
 				},
 			}),
 			Markdown.configure({
-				html: true,
-				transformPastedText: true,
+				markedOptions: {
+					gfm: true,
+					breaks: false,
+				},
 			}),
 			Link.configure({
 				autolink: true,
 			}),
+			Table.configure({
+				resizable: true,
+			}),
+			TableRow,
+			TableHeader,
+			TableCell,
+			TaskList,
+			TaskItem.configure({
+				nested: true,
+			}),
+			PasteMarkdown,
 			Placeholder.configure({
 				placeholder: placeholder,
 			}),
