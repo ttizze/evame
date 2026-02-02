@@ -2,7 +2,6 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ViewProvider } from "@/app/_context/view-provider";
 import { FloatingControls } from "./floating-controls.client";
 
 vi.mock("./share-dialog", () => ({
@@ -29,13 +28,11 @@ function Harness({
 }) {
 	return (
 		<NuqsTestingAdapter searchParams={initialSearchParams}>
-			<ViewProvider>
-				<FloatingControls
-					annotationTypes={annotationTypes}
-					sourceLocale={sourceLocale}
-					userLocale={userLocale}
-				/>
-			</ViewProvider>
+			<FloatingControls
+				annotationTypes={annotationTypes}
+				sourceLocale={sourceLocale}
+				userLocale={userLocale}
+			/>
 		</NuqsTestingAdapter>
 	);
 }

@@ -1,34 +1,14 @@
+import { ArrowRightIcon } from "lucide-react";
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import { createLoader, parseAsString } from "nuqs/server";
-import type React from "react";
+import { type ReactNode, Suspense } from "react";
 import { buildAlternates } from "@/app/_lib/seo-helpers";
+import AboutSection from "@/app/[locale]/(common-layout)/_components/about-section/server";
+import NewPageList from "@/app/[locale]/(common-layout)/_components/page/new-page-list/server";
+import NewPageListByTag from "@/app/[locale]/(common-layout)/_components/page/new-page-list-by-tag/server";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/routing";
-
-const NewPageList = dynamic(
-	() =>
-		import(
-			"@/app/[locale]/(common-layout)/_components/page/new-page-list/server"
-		),
-	{
-		loading: () => <Skeleton className="h-[400px] w-full mb-10" />,
-	},
-);
-
-import { ArrowRightIcon } from "lucide-react";
-import AboutSection from "@/app/[locale]/(common-layout)/_components/about-section/server";
-
-const NewPageListByTag = dynamic(
-	() =>
-		import(
-			"@/app/[locale]/(common-layout)/_components/page/new-page-list-by-tag/server"
-		),
-	{
-		loading: () => <Skeleton className="h-[400px] w-full mb-10" />,
-	},
-);
 
 const metadataByLocale: Record<string, { title: string; description: string }> =
 	{
@@ -81,19 +61,27 @@ const searchParamsSchema = {
 };
 const loadSearchParams = createLoader(searchParamsSchema);
 
+function SectionSkeleton({ className }: { className: string }) {
+	return <Skeleton className={className} />;
+}
+
 export default async function HomePage(
 	props: PageProps<"/[locale]">,
-): Promise<React.ReactNode> {
+): Promise<ReactNode> {
 	const { locale } = await props.params;
 	await loadSearchParams(props.searchParams);
 	return (
 		<div className="flex flex-col gap-8 justify-between mb-12">
-			<AboutSection locale={locale} topPage={true} />
-			<NewPageList
-				locale={locale}
-				searchParams={props.searchParams}
-				showPagination={false}
-			/>
+			<Suspense fallback={<SectionSkeleton className="h-[480px] w-full" />}>
+				<AboutSection locale={locale} topPage={true} />
+			</Suspense>
+			<Suspense fallback={<SectionSkeleton className="h-[400px] w-full" />}>
+				<NewPageList
+					locale={locale}
+					searchParams={props.searchParams}
+					showPagination={false}
+				/>
+			</Suspense>
 			<div className="flex justify-center">
 				<Button className="rounded-full w-40 h-10" variant="default">
 					<Link className="flex items-center gap-2" href="/new-pages">
@@ -102,7 +90,9 @@ export default async function HomePage(
 				</Button>
 			</div>
 
-			<NewPageListByTag locale={locale} tagName="AI" />
+			<Suspense fallback={<SectionSkeleton className="h-[400px] w-full" />}>
+				<NewPageListByTag locale={locale} tagName="AI" />
+			</Suspense>
 			<div className="flex justify-center">
 				<Button className="rounded-full w-40 h-10" variant="default">
 					<Link className="flex items-center gap-2" href="/tag/AI">
@@ -111,7 +101,9 @@ export default async function HomePage(
 				</Button>
 			</div>
 
-			<NewPageListByTag locale={locale} tagName="Programming" />
+			<Suspense fallback={<SectionSkeleton className="h-[400px] w-full" />}>
+				<NewPageListByTag locale={locale} tagName="Programming" />
+			</Suspense>
 			<div className="flex justify-center">
 				<Button className="rounded-full w-40 h-10" variant="default">
 					<Link className="flex items-center gap-2" href="/tag/Programming">
@@ -120,7 +112,9 @@ export default async function HomePage(
 				</Button>
 			</div>
 
-			<NewPageListByTag locale={locale} tagName="Plurality" />
+			<Suspense fallback={<SectionSkeleton className="h-[400px] w-full" />}>
+				<NewPageListByTag locale={locale} tagName="Plurality" />
+			</Suspense>
 			<div className="flex justify-center">
 				<Button className="rounded-full w-40 h-10" variant="default">
 					<Link className="flex items-center gap-2" href="/tag/Plurality">
