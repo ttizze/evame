@@ -1,10 +1,11 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Image from "next/image";
+import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import styles from "./spread-animation.module.css";
 
 const LANGUAGES = [
 	{ code: "jp", flag: "jp", name: "Japanese" },
@@ -20,7 +21,6 @@ const LANGUAGES = [
 const CENTER_SIZE = 108;
 
 export function SpreadAnimation() {
-	const [animate, setAnimate] = useState(false);
 	const [radius, setRadius] = useState(160);
 
 	useEffect(() => {
@@ -41,18 +41,6 @@ export function SpreadAnimation() {
 		return () => window.removeEventListener("resize", calc);
 	}, []);
 
-	useEffect(() => {
-		const timer = setTimeout(() => setAnimate(true), 100);
-		const interval = setInterval(() => {
-			setAnimate(false);
-			setTimeout(() => setAnimate(true), 800);
-		}, 4000);
-		return () => {
-			clearTimeout(timer);
-			clearInterval(interval);
-		};
-	}, []);
-
 	const ringSizes = [radius * 2 + 24, radius * 2 + 8, radius * 2 - 8];
 
 	return (
@@ -66,26 +54,18 @@ export function SpreadAnimation() {
 				const x = Math.cos(rad) * radius;
 				const y = Math.sin(rad) * radius;
 				return (
-					<motion.div
-						animate={
-							animate
-								? { x, y, scale: 1, opacity: 1 }
-								: { scale: 0, opacity: 0 }
-						}
-						className="absolute flex flex-col items-center"
-						initial={{ x, y, scale: 0, opacity: 0 }}
+					<div
+						className={`absolute flex flex-col items-center ${styles.burstItem}`}
 						key={lang.code}
-						transition={{
-							duration: 0.7,
-							delay: i * 0.08,
-							type: "spring",
-							stiffness: 100,
-						}}
+						style={
+							{
+								"--x": `${x}px`,
+								"--y": `${y}px`,
+								animationDelay: `${i * 0.08}s`,
+							} as CSSProperties
+						}
 					>
-						<motion.div
-							className="z-10 flex items-center justify-center w-9 h-9 rounded-full border overflow-hidden bg-white"
-							whileHover={{ scale: 1.1 }}
-						>
+						<div className="z-10 flex items-center justify-center w-9 h-9 rounded-full border overflow-hidden bg-white transition-transform duration-150 hover:scale-110">
 							<Image
 								alt={lang.name}
 								className="object-cover w-full h-full"
@@ -93,11 +73,11 @@ export function SpreadAnimation() {
 								src={`https://flagcdn.com/w80/${lang.flag}.png`}
 								width={36}
 							/>
-						</motion.div>
+						</div>
 						<Badge className="mt-1 text-xs px-1.5 py-0" variant="secondary">
 							{lang.name}
 						</Badge>
-					</motion.div>
+					</div>
 				);
 			})}
 
@@ -115,33 +95,25 @@ export function SpreadAnimation() {
 				</CardContent>
 			</Card>
 
-			{ringSizes.map((size, idx) => {
-				const ringAnimate = animate
-					? { width: size, height: size, opacity: 0, borderWidth: 0.5 }
-					: { width: size * 0.15, height: size * 0.15, opacity: 0.8 };
-
-				return (
-					<motion.div
-						animate={ringAnimate}
-						className={`absolute rounded-full border-2 ${
-							idx === 0
-								? "border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.45)]"
-								: idx === 1
-									? "border-green-500 shadow-[0_0_8px_rgba(34,197,94,0.45)]"
-									: "border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.45)]"
-						}`}
-						initial={{ width: size * 0.25, height: size * 0.25, opacity: 0.8 }}
-						key={size}
-						transition={{
-							duration: 2,
-							delay: idx * 0.25,
-							repeat: Number.POSITIVE_INFINITY,
-							repeatType: "loop",
-							ease: "easeOut",
-						}}
-					/>
-				);
-			})}
+			{ringSizes.map((size, idx) => (
+				<div
+					className={`absolute rounded-full border-2 ${styles.ring} ${
+						idx === 0
+							? "border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.45)]"
+							: idx === 1
+								? "border-green-500 shadow-[0_0_8px_rgba(34,197,94,0.45)]"
+								: "border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.45)]"
+					}`}
+					key={size}
+					style={
+						{
+							width: size,
+							height: size,
+							animationDelay: `${idx * 0.25}s`,
+						} as CSSProperties
+					}
+				/>
+			))}
 		</div>
 	);
 }

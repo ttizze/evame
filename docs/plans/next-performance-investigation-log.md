@@ -4,6 +4,34 @@
 - コマンド: `ANALYZE=true bun run build -- --webpack`
 - 結果: `/.next/analyze/nodejs.html`
 - 備考: ビルドはタイムアウトしたがレポートは生成された
+### 追加試行（2026-02-02）
+- コマンド: `ANALYZE=true bun run build`（Turbopack） / `ANALYZE=true bun run build -- --webpack`
+- 結果: どちらもタイムアウト（120s/180s/300s）でレポート未生成
+- 備考: Turbopack では bundle analyzer が非対応の警告が出る。`next experimental-analyze` か、より長いビルド時間が必要
+
+## bundle analyzer (client.html / 初期JS)
+- 対象: `/.next/analyze/client.html`
+- entrypoint: `app/[locale]/(common-layout)/page`
+
+### 初期JS上位（gzip）
+- framer-motion（`static/chunks/6389-...`）約 36KB
+  - 発生源: `src/app/[locale]/(common-layout)/_components/about-section/components/features/reach/spread-animation.tsx`
+- zod v4（`static/chunks/8755-...`）約 26KB
+  - 発生源: `src/app/[locale]/(common-layout)/_components/login/_components/magic-link-form.client.tsx`（クライアントバリデーション）
+- react-share（`static/chunks/586-...`）約 20KB
+  - 発生源: `src/app/[locale]/(common-layout)/_components/floating-controls/share-dialog.tsx`
+- @radix-ui + @floating-ui（`static/chunks/1109-...`）約 20KB
+  - Dialog/Popover/Select 系の初期読み込み
+- react-remove-scroll + @radix-ui（`static/chunks/3549-...`）約 11KB
+  - Dialog 系に付随
+- better-auth client（`static/chunks/2467-...`）約 10KB
+  - 発生源: `authClient` 利用
+- tailwind-merge（`static/chunks/2985-...`）約 7.8KB
+- sonner（`static/chunks/4099-...`）約 9.2KB
+
+### 参考（entrypointに含まれるが gzip小）
+- react-icons/fc（`static/chunks/b091cbf2-...`）stat 744KB / gzip 820B
+  - 発生源: `src/app/[locale]/(common-layout)/_components/login/_components/google-form.client.tsx`
 
 ## next/script 使用状況
 - `next/script` の使用: なし（`rg -n "next/script" src`）

@@ -1,12 +1,19 @@
 import { z } from "zod";
-import { translationStatus } from "@/drizzle/schema";
+import type { TranslationStatus } from "@/db/types";
 
-export const translationJobStatusSchema = z.enum(translationStatus.enumValues);
+const translationStatusValues = [
+	"PENDING",
+	"IN_PROGRESS",
+	"COMPLETED",
+	"FAILED",
+] as const satisfies readonly TranslationStatus[];
+
+const translationJobStatusSchema = z.enum(translationStatusValues);
 
 export type TranslationJobStatus = z.infer<typeof translationJobStatusSchema>;
 
 export function isTranslationJobTerminalStatus(
-	status: TranslationJobStatus,
+	status: TranslationStatus,
 ): boolean {
 	return status === "COMPLETED" || status === "FAILED";
 }

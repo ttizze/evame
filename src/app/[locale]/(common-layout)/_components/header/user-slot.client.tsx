@@ -23,7 +23,7 @@ export function HeaderUserSlot() {
 	return (
 		<div className="flex items-center gap-4">
 			<TranslationHelpPopover />
-			<Link aria-label="Search for pages" href="/search">
+			<Link aria-label="Search for pages" href="/search" prefetch={false}>
 				<Search className="w-6 h-6 " />
 			</Link>
 

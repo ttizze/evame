@@ -191,6 +191,109 @@
     { "run": 5, "fcp": 2876, "ttfb": 182.4000000357628, "url": "http://localhost:3000/ja?view=both" }
   ]
 }
+
+### 本番 /ja HTML サイズ（curl）
+- 実行日: 2026-02-03
+- コマンド:
+  - `curl -s -o /dev/null -w "ttfb:%{time_starttransfer} size:%{size_download}\n" https://evame.tech/ja`
+- 結果:
+  - ttfb: 0.810825s
+  - size: 1,050,907 bytes
+
+### Headless 単発（waitUntil=load / リソース内訳）
+- 実行日: 2026-02-03
+- 計測コマンド:
+  - `node /home/tizze/.claude/skills/chrome-devtools/scripts/navigate.js --url https://evame.tech/ja --wait-until load --timeout 60000`
+  - `node /home/tizze/.claude/skills/chrome-devtools/scripts/evaluate.js --script "<summary script>"`
+- summary script:
+```js
+(() => {
+  const nav = performance.getEntriesByType('navigation')[0];
+  const paint = performance.getEntriesByType('paint');
+  const fcpEntry = paint.find((e) => e.name === 'first-contentful-paint');
+  const fcp = fcpEntry ? fcpEntry.startTime : null;
+  const resources = performance.getEntriesByType('resource');
+  const totalTransfer = resources.reduce((sum, r) => sum + (r.transferSize || 0), 0);
+  const jsResources = resources.filter(
+    (r) => r.initiatorType === 'script' || /\.js(\?|$)/.test(r.name)
+  );
+  const cssResources = resources.filter(
+    (r) => (r.initiatorType === 'link' || r.initiatorType === 'css') && /\.css(\?|$)/.test(r.name)
+  );
+  const totalJS = jsResources.reduce((sum, r) => sum + (r.transferSize || 0), 0);
+  const totalCSS = cssResources.reduce((sum, r) => sum + (r.transferSize || 0), 0);
+  const topJS = jsResources
+    .map((r) => ({ name: r.name, size: r.transferSize || 0, duration: r.duration }))
+    .sort((a, b) => b.size - a.size)
+    .slice(0, 5);
+
+  return {
+    nav: nav
+      ? {
+          requestStart: nav.requestStart,
+          responseStart: nav.responseStart,
+          domContentLoadedEventEnd: nav.domContentLoadedEventEnd,
+          loadEventEnd: nav.loadEventEnd,
+          transferSize: nav.transferSize,
+          encodedBodySize: nav.encodedBodySize,
+          decodedBodySize: nav.decodedBodySize
+        }
+      : null,
+    fcp,
+    totalTransfer,
+    totalJS,
+    totalCSS,
+    resourceCount: resources.length,
+    topJS
+  };
+})()
+```
+- 結果（JSON）
+```json
+{
+  "nav": {
+    "requestStart": 94,
+    "responseStart": 109,
+    "domContentLoadedEventEnd": 4265.300000011921,
+    "loadEventEnd": 4268.699999988079,
+    "transferSize": 136410,
+    "encodedBodySize": 136110,
+    "decodedBodySize": 1049641
+  },
+  "fcp": 744,
+  "totalTransfer": 613365,
+  "totalJS": 513521,
+  "totalCSS": 23082,
+  "resourceCount": 62,
+  "topJS": [
+    {
+      "name": "https://evame.tech/_next/static/chunks/87ee366f6e16979a.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 71871,
+      "duration": 264.4000000357628
+    },
+    {
+      "name": "https://evame.tech/_next/static/chunks/49fd86bc49fe6b74.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 71667,
+      "duration": 394.39999997615814
+    },
+    {
+      "name": "https://evame.tech/_next/static/chunks/78a45837e3349954.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 41099,
+      "duration": 312.19999998807907
+    },
+    {
+      "name": "https://evame.tech/_next/static/chunks/96fb083ac152a6ed.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 25631,
+      "duration": 274.39999997615814
+    },
+    {
+      "name": "https://evame.tech/_next/static/chunks/52ff6319c900b15a.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 23828,
+      "duration": 196.4000000357628
+    }
+  ]
+}
+```
 ```
 
 ### Mobile 5-run 平均（prefetch無効化）
@@ -198,6 +301,59 @@
 - 平均
   - FCP: 2840ms
   - TTFB: 86.62ms
+
+## ローカル本番相当（SpreadAnimation の framer-motion を削除）
+- 実行日: 2026-02-02
+- 変更点: `src/app/[locale]/(common-layout)/_components/about-section/components/features/reach/spread-animation.tsx` を CSS アニメーション化
+- サーバーPID: 26584
+- サーバーログ: `/tmp/evame-start-framer-motion-off.log`
+- URL: `http://localhost:3000/ja`
+
+### Desktop 5-run 平均（framer-motion削除）
+- 計測コマンド: `/tmp/run-5-desktop.js`
+- 平均
+  - FCP: 1547.2ms
+  - TTFB: 184.12ms
+
+```json
+{
+  "runs": 5,
+  "average": {
+    "FCP": 1547.2,
+    "TTFB": 184.12000000476837
+  },
+  "results": [
+    { "run": 1, "fcp": 1300, "ttfb": 233.60000002384186, "url": "http://localhost:3000/ja" },
+    { "run": 2, "fcp": 1620, "ttfb": 182.4000000357628, "url": "http://localhost:3000/ja" },
+    { "run": 3, "fcp": 1348, "ttfb": 147.10000002384186, "url": "http://localhost:3000/ja" },
+    { "run": 4, "fcp": 2176, "ttfb": 233.89999997615814, "url": "http://localhost:3000/ja" },
+    { "run": 5, "fcp": 1292, "ttfb": 123.59999996423721, "url": "http://localhost:3000/ja" }
+  ]
+}
+```
+
+### Mobile 5-run 平均（framer-motion削除）
+- 計測コマンド: `/tmp/run-5-mobile-local.js`
+- 平均
+  - FCP: 1536.8ms
+  - TTFB: 186.44ms
+
+```json
+{
+  "runs": 5,
+  "average": {
+    "FCP": 1536.8,
+    "TTFB": 186.44000000953673
+  },
+  "results": [
+    { "run": 1, "fcp": 1052, "ttfb": 156.10000002384186, "url": "http://localhost:3000/ja" },
+    { "run": 2, "fcp": 1320, "ttfb": 144, "url": "http://localhost:3000/ja" },
+    { "run": 3, "fcp": 1656, "ttfb": 188.60000002384186, "url": "http://localhost:3000/ja" },
+    { "run": 4, "fcp": 2052, "ttfb": 228.69999998807907, "url": "http://localhost:3000/ja" },
+    { "run": 5, "fcp": 1604, "ttfb": 214.80000001192093, "url": "http://localhost:3000/ja" }
+  ]
+}
+```
 
 ```json
 {
@@ -442,6 +598,138 @@
   ]
 }
 
+## ローカル本番相当（RSC/HTML payload 計測）
+- 実行日: 2026-02-02
+- ビルドログ: `/tmp/evame-build-20260202-205450.log`
+- サーバーログ: `/tmp/evame-start-20260202-205721.log`
+- URL: `http://localhost:3000/ja`
+- 計測ログ:
+  - `/tmp/evame-perf-rsc-20260202-210958/summary.json`
+  - `/tmp/evame-ja-section-sizes-20260202-211359/summary.json`
+
+### RSC/HTML/JS サイズ（5-run 平均）
+```json
+{
+  "navigation": {
+    "avg_transfer_bytes": 265851.2,
+    "avg_encoded_bytes": 265551.2
+  },
+  "rsc": {
+    "avg_count": 7.4,
+    "avg_bytes": 8741.2
+  },
+  "js": {
+    "avg_count": 30.6,
+    "avg_bytes": 445042.8
+  }
+}
+```
+
+### セクション別 HTML サイズ（outerHTML length / 5-run 平均）
+```json
+{
+  "about_section": {
+    "avg_size": 329216.6,
+    "avg_nodes": 2324
+  },
+  "lists": [
+    { "title": "New Pages", "avg_size": 20375.2, "avg_nodes": 162 },
+    { "title": "AI", "avg_size": 25650.0, "avg_nodes": 217 },
+    { "title": "Programming", "avg_size": 12361.4, "avg_nodes": 111 },
+    { "title": "Plurality", "avg_size": 22542.0, "avg_nodes": 201 }
+  ]
+}
+```
+
+## ローカル本番相当（AboutSection DOM 内訳）
+- 実行日: 2026-02-02
+- サーバーログ: `/tmp/evame-start-20260202-223240.log`
+- URL: `http://localhost:3000/ja`
+- 計測ログ:
+  - `/tmp/evame-ja-about-seg-counts.json`
+  - `/tmp/evame-ja-hero-size.json`
+
+### セグメント/DOM カウント
+```json
+{
+  "seg_src": 62,
+  "seg_tr": 52,
+  "seg_ann": 0,
+  "seg_cv": 114,
+  "svg_lines": 2044,
+  "hero_rays": 1,
+  "total_nodes": 3433
+}
+```
+
+### HeroSection サイズ（hero-rays SVG）
+```json
+{
+  "hero_svg_size": 291422,
+  "hero_svg_lines": 1968,
+  "hero_section_size": 294295,
+  "hero_section_nodes": 2041
+}
+```
+
+## 変更（HeroRays を外部SVG化 / light+dark）
+- 実行日: 2026-02-02
+- 変更点:
+  - `public/hero-rays-light.svg`
+  - `public/hero-rays-dark.svg`
+  - `src/app/[locale]/(common-layout)/_components/about-section/components/hero-section/hero-rays.tsx`
+  - `src/app/globals.css`
+
+## 本番 /ja TTFB 計測（curl）
+- 実行日: 2026-02-02
+- 計測元: CLI 環境から `https://evame.tech/ja`
+- コマンド:
+  - `curl -s -o /dev/null -w "ttfb:%{time_starttransfer}" https://evame.tech/ja`
+
+### 5-run 結果
+```
+run:1 ttfb:0.969258 total:3.977694 size:1050342 code:200
+run:2 ttfb:0.363140 total:3.240360 size:1051385 code:200
+run:3 ttfb:0.380522 total:3.201463 size:1050916 code:200
+run:4 ttfb:0.352536 total:3.273827 size:1051154 code:200
+run:5 ttfb:0.435525 total:3.158835 size:1050632 code:200
+```
+
+### レスポンスヘッダー抜粋
+```
+cache-control: public, max-age=0, must-revalidate
+server: Vercel
+x-nextjs-prerender: 1
+x-nextjs-stale-time: 300
+x-vercel-cache: HIT
+```
+
+## 本番 /ja（モバイルUA）重い原因の確認
+- 実行日: 2026-02-02
+- URL: `https://evame.tech/ja`
+- 計測ログ: `/tmp/evame-prod-mobile-heavy-20260202T143157/summary.json`
+
+### 5-run 平均（モバイルUA）
+```json
+{
+  "responseStart_avg": 37.14,
+  "domContentLoadedEventEnd_avg": 3081.32,
+  "loadEventEnd_avg": 3229.46,
+  "decodedBodySize_avg": 1050761.4,
+  "sizes_avg": {
+    "script": 501752.8,
+    "css": 88479.4,
+    "img": 7051.6,
+    "other": 13667.4
+  },
+  "longTasks_avg": {
+    "count": 5.4,
+    "totalDuration": 681,
+    "maxDuration": 210.4
+  }
+}
+```
+
 ### Mobile 5-run 平均
 {
   "runs": 5,
@@ -482,6 +770,91 @@
     }
   ]
 }
+
+### Headless 単発（waitUntil=load / リソース内訳）
+- 実行日: 2026-02-03
+- 計測コマンド:
+  - `node /home/tizze/.claude/skills/chrome-devtools/scripts/navigate.js --url https://evame.tech/ja --wait-until load --timeout 60000`
+  - `node /home/tizze/.claude/skills/chrome-devtools/scripts/evaluate.js --script "<summary script>"`
+- 結果（要約）
+  - FCP: 792ms
+  - DOMContentLoaded: 3153ms
+  - Load: 4523ms
+  - HTML decoded: 1.05MB
+  - JS transfer: 513KB
+  - CSS transfer: 23KB
+  - Resource count: 62
+
+```json
+{
+  "nav": {
+    "requestStart": 86.69999998807907,
+    "responseStart": 106.60000002384186,
+    "domContentLoadedEventEnd": 3153.100000023842,
+    "loadEventEnd": 4522.899999976158,
+    "transferSize": 136242,
+    "encodedBodySize": 135942,
+    "decodedBodySize": 1050906
+  },
+  "fcp": 792,
+  "totalTransfer": 613365,
+  "totalJS": 513521,
+  "totalCSS": 23082,
+  "resourceCount": 62,
+  "topJS": [
+    {
+      "name": "https://evame.tech/_next/static/chunks/87ee366f6e16979a.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 71871,
+      "duration": 196.80000001192093
+    },
+    {
+      "name": "https://evame.tech/_next/static/chunks/49fd86bc49fe6b74.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 71667,
+      "duration": 162
+    },
+    {
+      "name": "https://evame.tech/_next/static/chunks/78a45837e3349954.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 41099,
+      "duration": 185.0999999642372
+    },
+    {
+      "name": "https://evame.tech/_next/static/chunks/96fb083ac152a6ed.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 25631,
+      "duration": 155.30000001192093
+    },
+    {
+      "name": "https://evame.tech/_next/static/chunks/52ff6319c900b15a.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 23828,
+      "duration": 215.69999998807907
+    },
+    {
+      "name": "https://evame.tech/_next/static/chunks/4a8a4bab934f1d12.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 22798,
+      "duration": 212.70000004768372
+    },
+    {
+      "name": "https://evame.tech/_next/static/chunks/bf130ea74b760929.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 20452,
+      "duration": 134.20000004768372
+    },
+    {
+      "name": "https://evame.tech/_next/static/chunks/8c3f82779637e5a7.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 18570,
+      "duration": 171.30000001192093
+    },
+    {
+      "name": "https://evame.tech/_next/static/chunks/f243716ccc440942.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 16169,
+      "duration": 200.39999997615814
+    },
+    {
+      "name": "https://evame.tech/_next/static/chunks/a066762bac673052.js?dpl=dpl_7ENHvKCaYbpZMGEGpwo7G8ZVVHSA",
+      "size": 15176,
+      "duration": 179.30000001192093
+    }
+  ]
+}
+```
 
 ## ローカル本番相当（prefetch=off, session=off）
 - 実行日: 2026-02-02
