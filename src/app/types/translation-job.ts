@@ -9,6 +9,9 @@ const translationStatusValues = [
 ] as const satisfies readonly TranslationStatus[];
 
 const translationJobStatusSchema = z.enum(translationStatusValues);
+
+export type TranslationJobStatus = z.infer<typeof translationJobStatusSchema>;
+
 export function isTranslationJobTerminalStatus(
 	status: TranslationStatus,
 ): boolean {
