@@ -1,10 +1,10 @@
 "use client";
-import { Share } from "lucide-react";
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useScrollVisibility } from "./hooks/use-scroll-visibility";
+import { ShareDialog } from "./share-dialog";
 import { ViewCycle } from "./view-cycle.client";
 
 interface AnnotationType {
@@ -29,10 +29,6 @@ export function FloatingControls({
 	sourceLocale,
 }: FloatingControlsProps) {
 	const { isVisible, ignoreNextScroll } = useScrollVisibility(alwaysVisible);
-	const [shareDialog, setShareDialog] = useState<
-		typeof import("./share-dialog")["ShareDialog"] | null
-	>(null);
-	const [shouldOpenShareDialog, setShouldOpenShareDialog] = useState(false);
 	const [visibleAnnotations, setVisibleAnnotations] = useQueryState(
 		"annotations",
 		parseAsArrayOf(parseAsString, "~")
@@ -58,23 +54,6 @@ export function FloatingControls({
 		}
 		ignoreNextScroll();
 	};
-	const handleOpenShareDialog = async () => {
-		setShouldOpenShareDialog(true);
-		if (shareDialog) return;
-		const mod = await import("./share-dialog");
-		setShareDialog(() => mod.ShareDialog);
-	};
-	const shareTrigger = (
-		<Button
-			className="h-10 w-10 rounded-full bg-background cursor-pointer"
-			onClick={handleOpenShareDialog}
-			size="icon"
-			variant="ghost"
-		>
-			<Share className="h-5 w-5" />
-		</Button>
-	);
-	const ShareDialog = shareDialog;
 
 	/* --- Buttons --- */
 	const Buttons = (
@@ -118,11 +97,7 @@ export function FloatingControls({
 			)}
 
 			<div className="flex flex-col items-center gap-1 group">
-				{ShareDialog ? (
-					<ShareDialog defaultOpen={shouldOpenShareDialog} />
-				) : (
-					shareTrigger
-				)}
+				<ShareDialog />
 				<span className="text-[10px] leading-none text-muted-foreground transition-colors group-hover:text-foreground">
 					Share
 				</span>
