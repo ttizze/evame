@@ -1,4 +1,5 @@
 import { sql } from "kysely";
+import { cacheLife } from "next/cache";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { db } from "@/db";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
@@ -8,6 +9,9 @@ import { fetchAboutPage } from "../service/fetch-about-page";
 const LANGUAGE_COUNT = 18;
 
 async function fetchSocialProofStats() {
+	"use cache";
+	cacheLife("days");
+
 	const articlesResult = await db
 		.selectFrom("pages")
 		.select(sql<number>`count(*)::int`.as("count"))
