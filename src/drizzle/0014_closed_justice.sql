@@ -1,0 +1,2 @@
+CREATE INDEX "pages_status_created_at_idx" ON "pages" USING btree ("status","created_at");--> statement-breakpoint
+CREATE INDEX "pages_status_parent_id_created_at_idx" ON "pages" USING btree ("status","parent_id","created_at");

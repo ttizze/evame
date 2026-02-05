@@ -683,6 +683,17 @@ export const pages = pgTable(
 			"btree",
 			table.createdAt.asc().nullsLast(),
 		),
+		index("pages_status_created_at_idx").using(
+			"btree",
+			table.status.asc().nullsLast(),
+			table.createdAt.asc().nullsLast(),
+		),
+		index("pages_status_parent_id_created_at_idx").using(
+			"btree",
+			table.status.asc().nullsLast(),
+			table.parentId.asc().nullsLast(),
+			table.createdAt.asc().nullsLast(),
+		),
 		index("pages_parent_id_idx").using(
 			"btree",
 			table.parentId.asc().nullsLast(),
