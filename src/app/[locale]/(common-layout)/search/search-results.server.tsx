@@ -8,6 +8,7 @@ import type { Category } from "./constants";
 
 interface SearchResultsProps {
 	pageSummaries: PageForList[] | undefined;
+	pageViewCounts: Map<number, number>;
 	tags: Tag[] | undefined;
 	users: SanitizedUser[] | undefined;
 	totalPages: number;
@@ -18,6 +19,7 @@ interface SearchResultsProps {
 
 export function SearchResults({
 	pageSummaries,
+	pageViewCounts,
 	tags,
 	users,
 	totalPages,
@@ -49,7 +51,12 @@ export function SearchResults({
 							<PageLikeListClient pageIds={pageSummaries.map((p) => p.id)} />
 							<div className="space-y-4">
 								{pageSummaries.map((p) => (
-									<PageList key={p.id} locale={locale} PageForList={p} />
+									<PageList
+										key={p.id}
+										locale={locale}
+										PageForList={p}
+										viewCount={pageViewCounts.get(p.id) ?? 0}
+									/>
 								))}
 							</div>
 						</>
@@ -77,7 +84,12 @@ export function SearchResults({
 							<PageLikeListClient pageIds={pageSummaries.map((p) => p.id)} />
 							<div className="space-y-4">
 								{pageSummaries.map((p) => (
-									<PageList key={p.id} locale={locale} PageForList={p} />
+									<PageList
+										key={p.id}
+										locale={locale}
+										PageForList={p}
+										viewCount={pageViewCounts.get(p.id) ?? 0}
+									/>
 								))}
 							</div>
 						</>

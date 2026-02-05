@@ -1,7 +1,6 @@
 import { EyeIcon } from "lucide-react";
 import { getImageProps } from "next/image";
 import { BASE_URL } from "@/app/_constants/base-url";
-import { fetchPageViewCount } from "@/app/[locale]/_db/page-utility-queries.server";
 import { PageLikeButton } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/server";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
@@ -16,13 +15,15 @@ type PageListProps = {
 	showOwnerActions?: boolean;
 	index?: number;
 	locale: string;
+	viewCount: number;
 };
 
-export async function PageList({
+export function PageList({
 	PageForList,
 	showOwnerActions = false,
 	index,
 	locale,
+	viewCount,
 }: PageListProps) {
 	const { props } = getImageProps({
 		src: PageForList.userImage,
@@ -35,7 +36,6 @@ export async function PageList({
 		`${BASE_URL}/api/og?locale=${locale}` + `&slug=${PageForList.slug}`;
 	const pageLink = `/${PageForList.userHandle}/${PageForList.slug}`;
 	const userLink = `/${PageForList.userHandle}`;
-	const viewCount = await fetchPageViewCount(PageForList.id);
 	return (
 		<article
 			className={`grid gap-4 py-4 border-b last:border-b-0 ${

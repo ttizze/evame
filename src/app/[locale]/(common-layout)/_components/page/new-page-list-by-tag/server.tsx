@@ -2,6 +2,7 @@ import { ArrowRightIcon, SparklesIcon } from "lucide-react";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger } from "nuqs/server";
 import { Fragment } from "react";
+import { fetchPageViewCounts } from "@/app/[locale]/_db/page-utility-queries.server";
 import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list.client";
 import { PageList } from "@/app/[locale]/(common-layout)/_components/page/page-list.server";
 import { PageListContainer } from "@/app/[locale]/(common-layout)/_components/page/page-list-container/server";
@@ -38,6 +39,7 @@ interface TagPageListSectionProps {
 	currentPage: number;
 	totalPages: number;
 	showPagination: boolean;
+	viewCounts: Map<number, number>;
 }
 
 function TagPageListSection({
@@ -47,6 +49,7 @@ function TagPageListSection({
 	currentPage,
 	totalPages,
 	showPagination,
+	viewCounts,
 }: TagPageListSectionProps) {
 	if (pageForLists.length === 0) {
 		return null;
@@ -61,6 +64,7 @@ function TagPageListSection({
 					key={PageForList.id}
 					locale={locale}
 					PageForList={PageForList}
+					viewCount={viewCounts.get(PageForList.id) ?? 0}
 				/>
 			))}
 			{showPagination && totalPages > 1 && (
@@ -89,6 +93,7 @@ export default async function NewPageListByTag({
 			pageSize: 5,
 			locale,
 		});
+	const viewCounts = await fetchPageViewCounts(pageForLists.map((p) => p.id));
 
 	return (
 		<TagPageListSection
@@ -98,6 +103,7 @@ export default async function NewPageListByTag({
 			showPagination={showPagination}
 			tagName={tagName}
 			totalPages={totalPages}
+			viewCounts={viewCounts}
 		/>
 	);
 }
@@ -118,6 +124,10 @@ export async function NewPageListByTags({
 		pageSize,
 		locale,
 	});
+	const pageIds = tagPageLists.flatMap((list) =>
+		list.pageForLists.map((page) => page.id),
+	);
+	const viewCounts = await fetchPageViewCounts(pageIds);
 
 	return (
 		<>
@@ -130,6 +140,7 @@ export async function NewPageListByTags({
 						showPagination={false}
 						tagName={tagName}
 						totalPages={1}
+						viewCounts={viewCounts}
 					/>
 					<div className="flex justify-center">
 						<Button className="rounded-full w-40 h-10" variant="default">

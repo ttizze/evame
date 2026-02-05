@@ -5,6 +5,7 @@ import {
 	fetchPaginatedNewPageLists,
 	fetchPaginatedPopularPageLists,
 } from "@/app/[locale]/_db/page-list.server";
+import { fetchPageViewCounts } from "@/app/[locale]/_db/page-utility-queries.server";
 import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list.client";
 import { PageList } from "@/app/[locale]/(common-layout)/_components/page/page-list.server";
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
@@ -44,6 +45,7 @@ export async function PageListServer({
 		pageOwnerId: pageOwner.id,
 		locale,
 	});
+	const viewCounts = await fetchPageViewCounts(pageForLists.map((p) => p.id));
 	if (pageForLists.length === 0) {
 		return (
 			<p className="text-center text-gray-500 mt-10">
@@ -62,6 +64,7 @@ export async function PageListServer({
 						locale={locale}
 						PageForList={PageForList}
 						showOwnerActions={isOwner}
+						viewCount={viewCounts.get(PageForList.id) ?? 0}
 					/>
 				))}
 			</div>

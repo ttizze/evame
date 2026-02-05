@@ -2,6 +2,7 @@ import { SparklesIcon } from "lucide-react";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger } from "nuqs/server";
 import { fetchPaginatedNewPageLists } from "@/app/[locale]/_db/page-list.server";
+import { fetchPageViewCounts } from "@/app/[locale]/_db/page-utility-queries.server";
 import { PageListContainer } from "@/app/[locale]/(common-layout)/_components/page/page-list-container/server";
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
 import { PageLikeListClient } from "../page-like-button/like-list.client";
@@ -31,6 +32,7 @@ export default async function NewPageList({
 		pageSize: 5,
 		locale,
 	});
+	const viewCounts = await fetchPageViewCounts(pageForLists.map((p) => p.id));
 
 	return (
 		<PageListContainer icon={SparklesIcon} title="New Pages">
@@ -41,6 +43,7 @@ export default async function NewPageList({
 					key={PageForList.id}
 					locale={locale}
 					PageForList={PageForList}
+					viewCount={viewCounts.get(PageForList.id) ?? 0}
 				/>
 			))}
 			{showPagination && totalPages > 1 && (

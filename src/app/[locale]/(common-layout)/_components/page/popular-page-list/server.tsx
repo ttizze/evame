@@ -2,6 +2,7 @@ import { BookOpenIcon } from "lucide-react";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger } from "nuqs/server";
 import { fetchPaginatedPopularPageLists } from "@/app/[locale]/_db/page-list.server";
+import { fetchPageViewCounts } from "@/app/[locale]/_db/page-utility-queries.server";
 import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list.client";
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
 import { PageList } from "../page-list.server";
@@ -31,6 +32,7 @@ export default async function PopularPageList({
 		pageSize: 5,
 		locale,
 	});
+	const viewCounts = await fetchPageViewCounts(pageForLists.map((p) => p.id));
 
 	return (
 		<PageListContainer icon={BookOpenIcon} title="Popular Pages">
@@ -41,6 +43,7 @@ export default async function PopularPageList({
 					key={PageForList.id}
 					locale={locale}
 					PageForList={PageForList}
+					viewCount={viewCounts.get(PageForList.id) ?? 0}
 				/>
 			))}
 			{showPagination && totalPages > 1 && (

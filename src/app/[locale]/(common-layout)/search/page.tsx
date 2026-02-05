@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
 import type React from "react";
 import { buildAlternates } from "@/app/_lib/seo-helpers";
+import { fetchPageViewCounts } from "@/app/[locale]/_db/page-utility-queries.server";
 import { fetchSearchResults } from "./_db/queries.server";
 import { CATEGORIES, type Category } from "./constants";
 import { SearchPageClient } from "./search.client";
@@ -81,6 +82,9 @@ export default async function SearchPage(
 		locale,
 		tagPage,
 	});
+	const pageViewCounts = await fetchPageViewCounts(
+		pageSummaries?.map((summary) => summary.id) ?? [],
+	);
 
 	return (
 		<main>
@@ -93,6 +97,7 @@ export default async function SearchPage(
 							currentPage={page}
 							locale={locale}
 							pageSummaries={pageSummaries}
+							pageViewCounts={pageViewCounts}
 							tags={tags}
 							totalPages={totalPages}
 							users={users}

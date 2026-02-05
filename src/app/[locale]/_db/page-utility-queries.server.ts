@@ -43,3 +43,28 @@ export async function fetchPageViewCount(pageId: number): Promise<number> {
 		.executeTakeFirst();
 	return result?.count ?? 0;
 }
+
+/**
+ * ページの閲覧数をまとめて取得
+ */
+export async function fetchPageViewCounts(pageIds: number[]) {
+	const uniqueIds = Array.from(new Set(pageIds));
+	const counts = new Map<number, number>();
+	if (uniqueIds.length === 0) return counts;
+
+	for (const id of uniqueIds) {
+		counts.set(id, 0);
+	}
+
+	const rows = await db
+		.selectFrom("pageViews")
+		.select(["pageId", "count"])
+		.where("pageId", "in", uniqueIds)
+		.execute();
+
+	for (const row of rows) {
+		counts.set(row.pageId, row.count);
+	}
+
+	return counts;
+}
