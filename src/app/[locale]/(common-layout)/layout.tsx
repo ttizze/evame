@@ -6,22 +6,61 @@ import { Header } from "@/app/[locale]/(common-layout)/_components/header/server
 import { ViewScope } from "@/app/[locale]/(common-layout)/_components/view-scope.client";
 import { TranslationFormOnClick } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-form-on-click.client";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
-import { Skeleton } from "@/components/ui/skeleton";
 
 function LayoutSkeleton() {
 	return (
-		<div className="min-h-screen flex flex-col">
-			<header className="h-14 border-b flex items-center justify-between px-4">
-				<Skeleton className="h-8 w-20" />
-				<Skeleton className="h-8 w-8 rounded-full" />
-			</header>
-			<main className="mb-5 mt-3 md:mt-5 grow">
-				<div className="container mx-auto px-4 max-w-4xl">
-					<Skeleton className="h-8 w-3/4 mb-4" />
-					<Skeleton className="h-4 w-full mb-2" />
-					<Skeleton className="h-4 w-5/6" />
-				</div>
-			</main>
+		<div aria-hidden="true">
+			<svg
+				focusable="false"
+				height="640"
+				preserveAspectRatio="xMinYMin meet"
+				viewBox="0 0 360 640"
+				width="100%"
+				xmlns="http://www.w3.org/2000/svg"
+			>
+				<title>Loading layout</title>
+				<rect
+					fill="rgba(15, 23, 42, 0.12)"
+					height="1"
+					width="360"
+					x="0"
+					y="56"
+				/>
+				<rect
+					fill="rgba(15, 23, 42, 0.08)"
+					height="32"
+					rx="8"
+					width="80"
+					x="16"
+					y="12"
+				/>
+				<circle cx="328" cy="28" fill="rgba(15, 23, 42, 0.08)" r="16" />
+
+				<rect
+					fill="rgba(15, 23, 42, 0.08)"
+					height="28"
+					rx="6"
+					width="240"
+					x="16"
+					y="88"
+				/>
+				<rect
+					fill="rgba(15, 23, 42, 0.08)"
+					height="14"
+					rx="6"
+					width="328"
+					x="16"
+					y="132"
+				/>
+				<rect
+					fill="rgba(15, 23, 42, 0.08)"
+					height="14"
+					rx="6"
+					width="276"
+					x="16"
+					y="154"
+				/>
+			</svg>
 		</div>
 	);
 }
