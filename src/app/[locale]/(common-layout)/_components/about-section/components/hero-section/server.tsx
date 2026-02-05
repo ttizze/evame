@@ -1,12 +1,30 @@
 import Image from "next/image";
+import { serverLogger } from "@/app/_service/logger.server";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
 import { fetchAboutPage } from "../../service/fetch-about-page";
 import { HeroRays } from "./hero-rays";
 
+const perfLogger = serverLogger.child({ scope: "about-hero" });
+const isPerfLogEnabled = process.env.PERF_LOG === "1";
+
 export default async function HeroSection({ locale }: { locale: string }) {
-	const topPageDetail = await fetchAboutPage(locale);
+	let topPageDetail: Awaited<ReturnType<typeof fetchAboutPage>>;
+	if (isPerfLogEnabled) {
+		const start = performance.now();
+		topPageDetail = await fetchAboutPage(locale);
+		perfLogger.info(
+			{
+				event: "fetchAboutPage",
+				locale,
+				durationMs: Math.round(performance.now() - start),
+			},
+			"perf",
+		);
+	} else {
+		topPageDetail = await fetchAboutPage(locale);
+	}
 	const title = topPageDetail.segments.find(
 		(s) => s.number === SEGMENT_NUMBER.heroHeader,
 	);
