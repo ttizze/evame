@@ -69,7 +69,12 @@ describe("new-page-list-by-tag queries", () => {
 			return rankedOuterQuery;
 		});
 
-		fetchTagsMapMock.mockResolvedValue(new Map([[10, []], [11, []]]));
+		fetchTagsMapMock.mockResolvedValue(
+			new Map([
+				[10, []],
+				[11, []],
+			]),
+		);
 		toPageForListMock.mockImplementation((row: { id: number }) => ({
 			id: row.id,
 		}));

@@ -152,7 +152,9 @@ export async function fetchPublicNewestPageListsByTagsForTopPage(
 	const tagNames = params.tagNames;
 
 	cacheLife({ expire: 60 * 60 * 12 });
-	cacheTag(`top:new-page-lists-by-tags:${locale}:${pageSize}:${tagNames.join("|")}`);
+	cacheTag(
+		`top:new-page-lists-by-tags:${locale}:${pageSize}:${tagNames.join("|")}`,
+	);
 
 	return await fetchPublicNewestPageListsByTags({
 		tagNames,
