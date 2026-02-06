@@ -6,6 +6,7 @@ import { PageListContainer } from "@/app/[locale]/(common-layout)/_components/pa
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
 import { PageLikeListClient } from "../page-like-button/like-list.client";
 import { PageList } from "../page-list.server";
+import { fetchPaginatedNewPageListsForTopPage } from "./_db/queries.server";
 
 const searchParamsSchema = {
 	page: parseAsInteger.withDefault(1),
@@ -26,11 +27,17 @@ export default async function NewPageList({
 }: NewPageListProps) {
 	const { page } = await loadSearchParams(searchParams);
 
-	const { pageForLists, totalPages } = await fetchPaginatedNewPageLists({
-		page,
-		pageSize: 5,
-		locale,
-	});
+	const { pageForLists, totalPages } = showPagination
+		? await fetchPaginatedNewPageLists({
+				page,
+				pageSize: 5,
+				locale,
+			})
+		: await fetchPaginatedNewPageListsForTopPage({
+				page,
+				pageSize: 5,
+				locale,
+			});
 
 	return (
 		<PageListContainer icon={SparklesIcon} title="New Pages">

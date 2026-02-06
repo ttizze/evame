@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import {
 	fetchPaginatedPublicNewestPageListsByTag,
-	fetchPublicNewestPageListsByTags,
+	fetchPaginatedPublicNewestPageListsByTagForTopPage,
+	fetchPublicNewestPageListsByTagsForTopPage,
 } from "./_db/queries.server";
 
 const searchParamsSchema = {
@@ -82,13 +83,19 @@ export default async function NewPageListByTag({
 		? await loadSearchParams(searchParams)
 		: { page: 1 };
 
-	const { pageForLists, totalPages } =
-		await fetchPaginatedPublicNewestPageListsByTag({
-			tagName,
-			page,
-			pageSize: 5,
-			locale,
-		});
+	const { pageForLists, totalPages } = showPagination
+		? await fetchPaginatedPublicNewestPageListsByTag({
+				tagName,
+				page,
+				pageSize: 5,
+				locale,
+			})
+		: await fetchPaginatedPublicNewestPageListsByTagForTopPage({
+				tagName,
+				page,
+				pageSize: 5,
+				locale,
+			});
 
 	return (
 		<TagPageListSection
@@ -113,7 +120,7 @@ export async function NewPageListByTags({
 	tagNames,
 	pageSize = 5,
 }: NewPageListByTagsProps) {
-	const tagPageLists = await fetchPublicNewestPageListsByTags({
+	const tagPageLists = await fetchPublicNewestPageListsByTagsForTopPage({
 		tagNames,
 		pageSize,
 		locale,

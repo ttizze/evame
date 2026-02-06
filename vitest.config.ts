@@ -8,6 +8,7 @@ export default defineConfig({
 	test: {
 		globals: true,
 		slowTestThreshold: 1000,
+		exclude: ["**/.worktrees/**", "**/node_modules/**", "**/dist/**"],
 		env: {
 			// DATABASE_URLを空に設定して.envの値を上書き
 			DATABASE_URL: "",
