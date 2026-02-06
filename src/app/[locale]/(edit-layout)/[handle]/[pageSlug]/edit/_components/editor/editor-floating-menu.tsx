@@ -1,4 +1,4 @@
-import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
+import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import type { Editor } from "@tiptap/core";
 import type { EditorState } from "@tiptap/pm/state";
 import { FloatingMenu } from "@tiptap/react/menus";
@@ -78,7 +78,6 @@ const menuItems = [
 ];
 
 const shouldShowFloatingMenu = (editor: Editor, state: EditorState) => {
-	// 空のテキストブロックで、かつカーソルが行頭にある場合のみ表示
 	const { selection } = state;
 	if (!editor.view.hasFocus() || !selection.empty) {
 		return false;
@@ -95,7 +94,7 @@ const shouldShowFloatingMenu = (editor: Editor, state: EditorState) => {
 };
 
 export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
-	const containerRef = useRef(null);
+	const containerRef = useRef<HTMLDivElement | null>(null);
 
 	return (
 		<>
@@ -112,51 +111,62 @@ export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
 			>
 				<div className="floating-menu">
 					<div ref={containerRef}>
-						<DropdownMenuPrimitive.Root modal={false}>
-							<DropdownMenuPrimitive.Trigger className="flex h-10 w-10 items-center justify-center rounded-full border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground">
+						<MenuPrimitive.Root modal={false}>
+							<MenuPrimitive.Trigger
+								className="flex h-10 w-10 items-center justify-center rounded-full border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground"
+								nativeButton
+							>
 								<Plus className="h-5 w-5" />
-							</DropdownMenuPrimitive.Trigger>
-							<DropdownMenuPrimitive.Portal container={containerRef.current}>
-								<DropdownMenuPrimitive.Content
+							</MenuPrimitive.Trigger>
+
+							<MenuPrimitive.Portal
+								container={containerRef.current ?? undefined}
+							>
+								<MenuPrimitive.Positioner
 									align="start"
-									className="min-w-[12rem] overflow-hidden rounded-md border bg-popover p-2 text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2"
+									className="isolate z-50 outline-none"
 									side="right"
 									sideOffset={4}
 								>
-									{menuItems.map(({ value, icon: Icon, isActive, label }) => (
-										<DropdownMenuPrimitive.Item
-											className={cn(
-												"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
-												isActive(editor) && "bg-secondary",
-											)}
-											key={value}
-											onSelect={() => editorCommands[value](editor)}
+									<MenuPrimitive.Popup className="min-w-[12rem] overflow-hidden rounded-md border bg-popover p-2 text-popover-foreground shadow-md data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2">
+										{menuItems.map(({ value, icon: Icon, isActive, label }) => (
+											<MenuPrimitive.Item
+												className={cn(
+													"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
+													isActive(editor) && "bg-secondary",
+												)}
+												key={value}
+												onClick={() => editorCommands[value](editor)}
+											>
+												<Icon className="mr-2 h-5 w-5" />
+												<span>{label}</span>
+											</MenuPrimitive.Item>
+										))}
+										<MenuPrimitive.Item
+											className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground"
+											onClick={() =>
+												document.getElementById("imageUpload")?.click()
+											}
 										>
-											<Icon className="h-5 w-5 mr-2" />
-											<span>{label}</span>
-										</DropdownMenuPrimitive.Item>
-									))}
-									<DropdownMenuPrimitive.Item
-										className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground"
-										onSelect={() =>
-											document.getElementById("imageUpload")?.click()
-										}
-									>
-										<ImageIcon className="h-5 w-5 mr-2" />
-										<span>Image</span>
-									</DropdownMenuPrimitive.Item>
-								</DropdownMenuPrimitive.Content>
-							</DropdownMenuPrimitive.Portal>
-						</DropdownMenuPrimitive.Root>
+											<ImageIcon className="mr-2 h-5 w-5" />
+											<span>Image</span>
+										</MenuPrimitive.Item>
+									</MenuPrimitive.Popup>
+								</MenuPrimitive.Positioner>
+							</MenuPrimitive.Portal>
+						</MenuPrimitive.Root>
 					</div>
 				</div>
 			</FloatingMenu>
+
 			<input
 				accept="image/*"
 				id="imageUpload"
 				onChange={(e) => {
 					const file = e.target.files?.[0];
-					if (file) handleFileUpload(file, editor);
+					if (file) {
+						handleFileUpload(file, editor);
+					}
 				}}
 				style={{ display: "none" }}
 				type="file"
