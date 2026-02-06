@@ -236,7 +236,7 @@ async function fetchSegmentsByIds(
  */
 export async function fetchPageDetail(slug: string, locale: string) {
 	"use cache";
-	cacheLife({ expire: 60 * 60 * 12 });
+	cacheLife("max");
 
 	const page = await fetchPageBasicBySlug(slug);
 	if (!page || page.status === "ARCHIVE") return null;
