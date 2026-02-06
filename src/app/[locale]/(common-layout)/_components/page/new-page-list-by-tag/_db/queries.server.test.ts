@@ -1,11 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const cacheLifeMock = vi.fn();
-const cacheTagMock = vi.fn();
-const buildPageListQueryMock = vi.fn();
-const fetchTagsMapMock = vi.fn();
-const toPageForListMock = vi.fn();
-const selectFromMock = vi.fn();
+const {
+	cacheLifeMock,
+	cacheTagMock,
+	buildPageListQueryMock,
+	fetchTagsMapMock,
+	toPageForListMock,
+	selectFromMock,
+} = vi.hoisted(() => ({
+	cacheLifeMock: vi.fn(),
+	cacheTagMock: vi.fn(),
+	buildPageListQueryMock: vi.fn(),
+	fetchTagsMapMock: vi.fn(),
+	toPageForListMock: vi.fn(),
+	selectFromMock: vi.fn(),
+}));
 
 vi.mock("next/cache", () => ({
 	cacheLife: cacheLifeMock,

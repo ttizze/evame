@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const cacheLifeMock = vi.fn();
-const cacheTagMock = vi.fn();
-const fetchPageDetailMock = vi.fn();
-const notFoundMock = vi.fn();
+const { cacheLifeMock, cacheTagMock, fetchPageDetailMock, notFoundMock } =
+	vi.hoisted(() => ({
+		cacheLifeMock: vi.fn(),
+		cacheTagMock: vi.fn(),
+		fetchPageDetailMock: vi.fn(),
+		notFoundMock: vi.fn(),
+	}));
 
 vi.mock("next/cache", () => ({
 	cacheLife: cacheLifeMock,

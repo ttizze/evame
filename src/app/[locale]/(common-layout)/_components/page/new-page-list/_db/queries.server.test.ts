@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const fetchPaginatedNewPageListsMock = vi.fn();
-const cacheLifeMock = vi.fn();
-const cacheTagMock = vi.fn();
+const { fetchPaginatedNewPageListsMock, cacheLifeMock, cacheTagMock } =
+	vi.hoisted(() => ({
+		fetchPaginatedNewPageListsMock: vi.fn(),
+		cacheLifeMock: vi.fn(),
+		cacheTagMock: vi.fn(),
+	}));
 
 vi.mock("@/app/[locale]/_db/page-list.server", () => ({
 	fetchPaginatedNewPageLists: fetchPaginatedNewPageListsMock,
