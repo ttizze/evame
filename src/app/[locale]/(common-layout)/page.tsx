@@ -5,7 +5,7 @@ import { type ReactNode, Suspense } from "react";
 import { buildAlternates } from "@/app/_lib/seo-helpers";
 import AboutSection from "@/app/[locale]/(common-layout)/_components/about-section/server";
 import NewPageList from "@/app/[locale]/(common-layout)/_components/page/new-page-list/server";
-import { NewPageListByTags } from "@/app/[locale]/(common-layout)/_components/page/new-page-list-by-tag/server";
+import PopularPageList from "@/app/[locale]/(common-layout)/_components/page/popular-page-list/server";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/routing";
@@ -65,22 +65,11 @@ function SectionSkeleton({ className }: { className: string }) {
 	return <Skeleton className={className} />;
 }
 
-function TagSectionsSkeleton() {
-	return (
-		<div className="flex flex-col gap-8">
-			<SectionSkeleton className="h-[400px] w-full" />
-			<SectionSkeleton className="h-[400px] w-full" />
-			<SectionSkeleton className="h-[400px] w-full" />
-		</div>
-	);
-}
-
 export default async function HomePage(
 	props: PageProps<"/[locale]">,
 ): Promise<ReactNode> {
 	const { locale } = await props.params;
 	await loadSearchParams(props.searchParams);
-	const tagNames = ["AI", "Programming", "Plurality"];
 	return (
 		<div className="flex flex-col gap-8 justify-between mb-12">
 			<Suspense fallback={<SectionSkeleton className="h-[480px] w-full" />}>
@@ -101,8 +90,8 @@ export default async function HomePage(
 				</Button>
 			</div>
 
-			<Suspense fallback={<TagSectionsSkeleton />}>
-				<NewPageListByTags locale={locale} tagNames={tagNames} />
+			<Suspense fallback={<SectionSkeleton className="h-[400px] w-full" />}>
+				<PopularPageList locale={locale} searchParams={props.searchParams} />
 			</Suspense>
 		</div>
 	);
