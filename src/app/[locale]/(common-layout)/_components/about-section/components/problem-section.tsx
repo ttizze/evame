@@ -24,10 +24,10 @@ export default async function ProblemSection({ locale }: { locale: string }) {
 
 	return (
 		<AboutSectionContent>
-			<div className="relative">
+			<div className="relative overflow-x-clip">
 				<div
 					aria-hidden="true"
-					className="pointer-events-none absolute -left-28 -bottom-24 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(251,191,36,0.18),transparent_70%)] opacity-70 blur-3xl"
+					className="pointer-events-none absolute bottom-0 left-0 h-64 w-64 -translate-x-1/3 translate-y-1/3 rounded-full bg-[radial-gradient(circle,rgba(251,191,36,0.18),transparent_70%)] opacity-70 blur-2xl md:blur-3xl"
 				/>
 				<div className="relative">
 					<h2 className={ABOUT_SECTION_HEADING_CLASS}>

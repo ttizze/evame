@@ -60,47 +60,62 @@ export default async function ComparisonSection({
 			<h2 className={ABOUT_SECTION_HEADING_CLASS}>
 				<SegmentElement segment={headerSegment} tagName="span" />
 			</h2>
-			<div className="mt-8 overflow-x-auto">
-				<div className=" overflow-hidden rounded-2xl border border-border/60 bg-background/80">
-					<table className="w-full border-collapse text-left">
-						<thead className="bg-muted/30">
-							<tr>
-								<th className="py-4 pl-4 pr-4 text-xs font-semibold" />
-								<th className="py-4 px-4 text-xs font-semibold border-l border-border/60">
-									<SegmentElement segment={col1Segment} tagName="span" />
-								</th>
-								<th className="py-4 pl-4 text-xs font-semibold border-l border-border/60">
-									<SegmentElement segment={col2Segment} tagName="span" />
-								</th>
-							</tr>
-						</thead>
-						<tbody>
-							{rows.map((row, index) => (
-								<tr
-									className={[
-										index === 0 ? "" : "border-t border-border/60",
-										index % 2 === 1 ? "bg-muted/10" : "",
-									]
-										.filter(Boolean)
-										.join(" ")}
-									key={row.label.number}
-								>
-									<th
-										className="py-4 pl-4 pr-4 text-sm font-medium align-top"
-										scope="row"
-									>
-										<SegmentElement segment={row.label} tagName="span" />
+			<div className="relative mt-8">
+				<div
+					aria-hidden="true"
+					className="pointer-events-none absolute inset-y-0 left-0 z-20 w-6 bg-gradient-to-r from-background to-transparent md:hidden"
+				/>
+				<div
+					aria-hidden="true"
+					className="pointer-events-none absolute inset-y-0 right-0 z-20 w-6 bg-gradient-to-l from-background to-transparent md:hidden"
+				/>
+				<div className="-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-2 md:mx-0 md:px-0">
+					<div className="min-w-[44rem] overflow-hidden rounded-2xl border border-border/60 bg-background/80">
+						<table className="min-w-[44rem] w-full border-collapse text-left">
+							<thead className="bg-muted/30">
+								<tr>
+									<th className="sticky left-0 z-20 w-48 min-w-48 bg-muted/30 py-4 pl-4 pr-4 text-xs font-semibold backdrop-blur-sm" />
+									<th className="w-56 min-w-56 border-l border-border/60 px-4 py-4 text-xs font-semibold">
+										<SegmentElement segment={col1Segment} tagName="span" />
 									</th>
-									<td className="py-4 px-4 text-sm align-top border-l border-border/60">
-										<SegmentElement segment={row.evame} tagName="span" />
-									</td>
-									<td className="py-4 pl-4 text-sm align-top border-l border-border/60">
-										<SegmentElement segment={row.others} tagName="span" />
-									</td>
+									<th className="w-56 min-w-56 border-l border-border/60 px-4 py-4 text-xs font-semibold">
+										<SegmentElement segment={col2Segment} tagName="span" />
+									</th>
 								</tr>
-							))}
-						</tbody>
-					</table>
+							</thead>
+							<tbody>
+								{rows.map((row, index) => (
+									<tr
+										className={[
+											index === 0 ? "" : "border-t border-border/60",
+											index % 2 === 1 ? "bg-muted/10" : "",
+										]
+											.filter(Boolean)
+											.join(" ")}
+										key={row.label.number}
+									>
+										<th
+											className={[
+												"sticky left-0 z-10 w-48 min-w-48 py-4 pl-4 pr-4 text-sm font-medium align-top backdrop-blur-sm",
+												index % 2 === 1 ? "bg-muted/10" : "bg-background/95",
+											]
+												.filter(Boolean)
+												.join(" ")}
+											scope="row"
+										>
+											<SegmentElement segment={row.label} tagName="span" />
+										</th>
+										<td className="w-56 min-w-56 border-l border-border/60 px-4 py-4 text-sm align-top">
+											<SegmentElement segment={row.evame} tagName="span" />
+										</td>
+										<td className="w-56 min-w-56 border-l border-border/60 px-4 py-4 text-sm align-top">
+											<SegmentElement segment={row.others} tagName="span" />
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
 				</div>
 			</div>
 		</AboutSectionContent>

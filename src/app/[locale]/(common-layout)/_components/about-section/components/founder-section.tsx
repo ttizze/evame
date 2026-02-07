@@ -22,10 +22,10 @@ export default async function FounderSection({ locale }: { locale: string }) {
 
 	return (
 		<AboutSectionContent>
-			<div className="relative">
+			<div className="relative overflow-x-clip">
 				<div
 					aria-hidden="true"
-					className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.2),transparent_70%)] opacity-70 blur-3xl"
+					className="pointer-events-none absolute right-0 top-0 h-56 w-56 translate-x-1/3 -translate-y-1/3 rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.2),transparent_70%)] opacity-70 blur-2xl md:blur-3xl"
 				/>
 				<div className="relative">
 					<div className="flex items-center gap-3">
