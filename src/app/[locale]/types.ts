@@ -45,6 +45,7 @@ export type PageForList = {
 	tags: Pick<Tag, "id" | "name">[];
 	likeCount: number;
 	pageCommentsCount: number;
+	viewCount: number;
 };
 
 export type PageForTree = {
