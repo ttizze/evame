@@ -13,7 +13,7 @@ import {
 	Plus,
 	Quote,
 } from "lucide-react";
-import { useRef } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { handleFileUpload } from "./use-file-upload";
 
@@ -94,7 +94,9 @@ const shouldShowFloatingMenu = (editor: Editor, state: EditorState) => {
 };
 
 export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
-	const containerRef = useRef<HTMLDivElement | null>(null);
+	const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(
+		null,
+	);
 
 	return (
 		<>
@@ -110,7 +112,7 @@ export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
 				}
 			>
 				<div className="floating-menu">
-					<div ref={containerRef}>
+					<div ref={setPortalContainer}>
 						<MenuPrimitive.Root modal={false}>
 							<MenuPrimitive.Trigger
 								className="flex h-10 w-10 items-center justify-center rounded-full border bg-background text-muted-foreground hover:bg-secondary hover:text-foreground"
@@ -119,9 +121,7 @@ export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
 								<Plus className="h-5 w-5" />
 							</MenuPrimitive.Trigger>
 
-							<MenuPrimitive.Portal
-								container={containerRef.current ?? undefined}
-							>
+							<MenuPrimitive.Portal container={portalContainer ?? undefined}>
 								<MenuPrimitive.Positioner
 									align="start"
 									className="isolate z-50 outline-none"
