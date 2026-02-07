@@ -2,11 +2,12 @@ import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
 import { StartButton } from "../../start-button";
 import { fetchAboutPage } from "../service/fetch-about-page";
+import { AboutSectionContent } from "./layout";
 
 export default async function FinalCTA({ locale }: { locale: string }) {
 	const pageDetail = await fetchAboutPage(locale);
 	const headerSegment = pageDetail.segments.find(
-		(s) => s.number === SEGMENT_NUMBER.finalCTAHeader,
+		(segment) => segment.number === SEGMENT_NUMBER.finalCTAHeader,
 	);
 
 	if (!headerSegment) {
@@ -14,15 +15,16 @@ export default async function FinalCTA({ locale }: { locale: string }) {
 	}
 
 	return (
-		<section className="py-16 md:py-24">
-			<div className="mx-auto max-w-4xl px-6 text-center">
-				<p className="text-2xl md:text-4xl font-semibold leading-relaxed">
-					<SegmentElement segment={headerSegment} tagName="span" />
-				</p>
-				<div className="mt-12 flex justify-center">
-					<StartButton className="w-64 h-14 text-lg" text="Start Writing" />
-				</div>
+		<AboutSectionContent
+			containerClassName="max-w-4xl text-center"
+			withVerticalPadding={true}
+		>
+			<p className="text-2xl md:text-4xl font-semibold leading-relaxed">
+				<SegmentElement segment={headerSegment} tagName="span" />
+			</p>
+			<div className="mt-12 flex justify-center">
+				<StartButton className="w-64 h-14 text-lg" text="Start Writing" />
 			</div>
-		</section>
+		</AboutSectionContent>
 	);
 }
