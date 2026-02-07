@@ -66,14 +66,13 @@ function useEditorStore(editor: TiptapEditor) {
 				counterRef.current++;
 				cb();
 			};
-			editor.on("transaction", handler);
+			editor.on("selectionUpdate", handler);
 			return () => {
-				editor.off("transaction", handler);
+				editor.off("selectionUpdate", handler);
 			};
 		},
 		[editor],
 	);
-
 	useSyncExternalStore(subscribe, () => counterRef.current);
 }
 
