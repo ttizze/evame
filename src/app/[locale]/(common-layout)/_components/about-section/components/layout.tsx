@@ -5,7 +5,7 @@ export const ABOUT_SECTION_HEADING_CLASS =
 	"text-3xl md:text-4xl font-semibold tracking-tight";
 
 export const ABOUT_FEATURE_BASE_CLASS =
-	"relative flex flex-col gap-8 md:gap-12 items-center";
+	"relative flex flex-col gap-8 md:gap-12 items-center overflow-x-clip";
 
 export const ABOUT_FEATURE_PANEL_CLASS =
 	"rounded-2xl border border-border/60 bg-muted/40 p-6 md:p-8 shadow-inner";

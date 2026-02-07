@@ -15,7 +15,7 @@ export default async function WriteFeature({ locale }: { locale: string }) {
 
 	return (
 		<FeatureSection
-			decorationClassName="-right-20 -top-20 h-48 w-48 bg-[radial-gradient(circle,rgba(59,130,246,0.16),transparent_70%)]"
+			decorationClassName="right-0 top-0 h-48 w-48 translate-x-1/3 -translate-y-1/3 bg-[radial-gradient(circle,rgba(59,130,246,0.16),transparent_70%)]"
 			header={<SegmentElement segment={header} tagName="span" />}
 			panel={<WriteCardUI />}
 			text={<SegmentElement segment={text} tagName="span" />}

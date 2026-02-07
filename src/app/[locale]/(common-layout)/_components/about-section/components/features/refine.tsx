@@ -22,7 +22,7 @@ export default async function RefineFeature({ locale }: { locale: string }) {
 
 	return (
 		<FeatureSection
-			decorationClassName="-right-20 -bottom-20 h-48 w-48 bg-[radial-gradient(circle,rgba(244,114,182,0.18),transparent_70%)]"
+			decorationClassName="bottom-0 right-0 h-48 w-48 translate-x-1/3 translate-y-1/3 bg-[radial-gradient(circle,rgba(244,114,182,0.18),transparent_70%)]"
 			header={<SegmentElement segment={header} tagName="span" />}
 			hint={VOTE_HINT[locale] ?? VOTE_HINT.en}
 			panel={
