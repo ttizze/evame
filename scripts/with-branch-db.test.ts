@@ -18,7 +18,12 @@ vi.mock("pg", () => {
 	};
 });
 
-import { buildDatabaseName, ensureDatabaseExists } from "./with-branch-db";
+import {
+	buildDatabaseName,
+	ensureDatabaseExists,
+	hasMigrationArtifactChanges,
+	isMigrationArtifactPath,
+} from "./with-branch-db";
 
 describe("with-branch-db", () => {
 	beforeEach(() => {
@@ -86,5 +91,45 @@ describe("with-branch-db", () => {
 			2,
 			'CREATE DATABASE "main__feature" WITH TEMPLATE "main_template"',
 		);
+	});
+
+	it("マイグレーションSQLはブランチDB判定の対象になる", () => {
+		expect(isMigrationArtifactPath("src/drizzle/0015_new_table.sql")).toBe(
+			true,
+		);
+	});
+
+	it("スナップショットJSONはブランチDB判定の対象になる", () => {
+		expect(isMigrationArtifactPath("src/drizzle/meta/0015_snapshot.json")).toBe(
+			true,
+		);
+	});
+
+	it("ジャーナルJSONはブランチDB判定の対象になる", () => {
+		expect(isMigrationArtifactPath("src/drizzle/meta/_journal.json")).toBe(
+			true,
+		);
+	});
+
+	it("スキーマ定義だけの変更はブランチDB判定の対象にしない", () => {
+		expect(isMigrationArtifactPath("src/drizzle/schema.ts")).toBe(false);
+	});
+
+	it("対象ファイルがひとつでもあればブランチDBを使う", () => {
+		expect(
+			hasMigrationArtifactChanges([
+				"src/drizzle/schema.ts",
+				"src/drizzle/0015_new_table.sql",
+			]),
+		).toBe(true);
+	});
+
+	it("対象ファイルがなければブランチDBを使わない", () => {
+		expect(
+			hasMigrationArtifactChanges([
+				"src/drizzle/schema.ts",
+				"src/drizzle/relations.ts",
+			]),
+		).toBe(false);
 	});
 });

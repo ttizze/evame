@@ -2,6 +2,11 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { Client } from "pg";
 
+const migrationSqlPattern = /^src\/drizzle\/\d+_[^/]+\.sql$/;
+const migrationSnapshotPattern = /^src\/drizzle\/meta\/\d+_snapshot\.json$/;
+const migrationJournalPath = "src/drizzle/meta/_journal.json";
+const diffBaseCandidates = ["origin/main", "origin/master", "main", "master"];
+
 function escapeIdentifier(value: string): string {
 	return `"${value.replace(/"/g, '""')}"`;
 }
@@ -33,6 +38,85 @@ export function buildDatabaseName(baseName: string, branch: string): string {
 	const hash = createHash("sha256").update(rawName).digest("hex").slice(0, 10);
 	const trimmedBase = baseName.slice(0, Math.max(1, 63 - hash.length - 2));
 	return `${trimmedBase}__${hash}`;
+}
+
+export function isMigrationArtifactPath(filePath: string): boolean {
+	return (
+		migrationSqlPattern.test(filePath) ||
+		migrationSnapshotPattern.test(filePath) ||
+		filePath === migrationJournalPath
+	);
+}
+
+export function hasMigrationArtifactChanges(
+	filePaths: readonly string[],
+): boolean {
+	return filePaths.some((filePath) => isMigrationArtifactPath(filePath));
+}
+
+function runGitLines(args: string[]): string[] {
+	const result = spawnSync("git", args, {
+		encoding: "utf8",
+	});
+	if (result.status !== 0) {
+		return [];
+	}
+	return (result.stdout || "")
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter((line) => line.length > 0);
+}
+
+function resolveDiffBaseRef(): string | null {
+	for (const candidate of diffBaseCandidates) {
+		const result = spawnSync("git", ["rev-parse", "--verify", candidate], {
+			encoding: "utf8",
+			stdio: ["ignore", "ignore", "ignore"],
+		});
+		if (result.status === 0) {
+			return candidate;
+		}
+	}
+	return null;
+}
+
+function collectChangedDrizzlePaths(): string[] {
+	const changedPaths = new Set<string>();
+	const diffBaseRef = resolveDiffBaseRef();
+
+	if (diffBaseRef) {
+		for (const filePath of runGitLines([
+			"diff",
+			"--name-only",
+			`${diffBaseRef}...HEAD`,
+			"--",
+			"src/drizzle",
+		])) {
+			changedPaths.add(filePath);
+		}
+	}
+
+	for (const filePath of runGitLines([
+		"diff",
+		"--name-only",
+		"HEAD",
+		"--",
+		"src/drizzle",
+	])) {
+		changedPaths.add(filePath);
+	}
+
+	for (const filePath of runGitLines([
+		"ls-files",
+		"--others",
+		"--exclude-standard",
+		"--",
+		"src/drizzle",
+	])) {
+		changedPaths.add(filePath);
+	}
+
+	return [...changedPaths];
 }
 
 export async function ensureDatabaseExists(
@@ -80,15 +164,29 @@ async function main(): Promise<void> {
 	}
 
 	const templateDbName = process.env.DB_TEMPLATE_NAME?.trim() || baseDbName;
-	const branch = getGitBranch();
-	const branchDbName = buildDatabaseName(baseDbName, branch);
-	const branchUrl = new URL(baseUrl);
-	branchUrl.pathname = `/${branchDbName}`;
+	const shouldUseBranchDb = hasMigrationArtifactChanges(
+		collectChangedDrizzlePaths(),
+	);
+	const resolvedDatabaseUrl = shouldUseBranchDb
+		? (() => {
+				const branch = getGitBranch();
+				const branchDbName = buildDatabaseName(baseDbName, branch);
+				const branchUrl = new URL(baseUrl);
+				branchUrl.pathname = `/${branchDbName}`;
+				return branchUrl.toString();
+			})()
+		: baseUrl;
 
-	await ensureDatabaseExists(baseUrl, branchDbName, templateDbName);
+	if (shouldUseBranchDb) {
+		const targetDbName = new URL(resolvedDatabaseUrl).pathname.replace(
+			/^\//,
+			"",
+		);
+		await ensureDatabaseExists(baseUrl, targetDbName, templateDbName);
+	}
 
 	if (commandArgs.length === 0) {
-		process.stdout.write(branchUrl.toString());
+		process.stdout.write(resolvedDatabaseUrl);
 		return;
 	}
 
@@ -96,7 +194,7 @@ async function main(): Promise<void> {
 		stdio: "inherit",
 		env: {
 			...process.env,
-			DATABASE_URL: branchUrl.toString(),
+			DATABASE_URL: resolvedDatabaseUrl,
 		},
 	});
 	if (result.error) {

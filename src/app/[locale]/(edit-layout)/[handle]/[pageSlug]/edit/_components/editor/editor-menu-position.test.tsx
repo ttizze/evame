@@ -3,85 +3,81 @@ import { describe, expect, it, vi } from "vitest";
 import { EditorBubbleMenu } from "./editor-bubble-menu.client";
 import { EditorFloatingMenu } from "./editor-floating-menu";
 
-const { menuPortalSpy, menuPositionerSpy } = vi.hoisted(() => {
+const { menuPortalSpy } = vi.hoisted(() => {
 	return {
 		menuPortalSpy: vi.fn(),
-		menuPositionerSpy: vi.fn(),
 	};
 });
 
-vi.mock("@base-ui/react/menu", () => ({
-	Menu: {
-		Root: ({ children }: { children: React.ReactNode }) => (
-			<div data-testid="menu-root">{children}</div>
-		),
-		Trigger: ({
-			children,
-			nativeButton: _nativeButton,
-			...props
-		}: {
-			children: React.ReactNode;
-			nativeButton?: boolean;
-		} & React.ComponentProps<"button">) => (
+vi.mock("@radix-ui/react-dropdown-menu", () => ({
+	Root: ({ children }: { children: React.ReactNode }) => (
+		<div data-testid="menu-root">{children}</div>
+	),
+	Trigger: ({
+		asChild,
+		children,
+		...props
+	}: {
+		asChild?: boolean;
+		children: React.ReactNode;
+	} & React.ComponentProps<"button">) =>
+		asChild ? (
+			children
+		) : (
 			<button {...props} type="button">
 				{children}
 			</button>
 		),
-		Portal: ({
-			children,
-			container,
-		}: {
-			children: React.ReactNode;
-			container?: HTMLElement;
-		}) => {
-			menuPortalSpy(container);
-			return (
-				<div
-					data-has-container={container ? "true" : "false"}
-					data-testid="menu-portal"
-				>
-					{children}
-				</div>
-			);
-		},
-		Positioner: ({
-			children,
-			align,
-			side,
-			sideOffset,
-		}: {
-			children: React.ReactNode;
-			align?: string;
-			side?: string;
-			sideOffset?: number;
-		}) => {
-			menuPositionerSpy({ align, side, sideOffset });
-			return (
-				<div
-					data-align={align}
-					data-side={side}
-					data-side-offset={sideOffset}
-					data-testid="menu-positioner"
-				>
-					{children}
-				</div>
-			);
-		},
-		Popup: ({ children }: { children: React.ReactNode }) => (
-			<div data-testid="menu-popup">{children}</div>
-		),
-		Item: ({
-			children,
-			onClick,
-		}: {
-			children: React.ReactNode;
-			onClick?: () => void;
-		}) => (
-			<button onClick={onClick} type="button">
+	Portal: ({
+		children,
+		container,
+	}: {
+		children: React.ReactNode;
+		container?: HTMLElement;
+	}) => {
+		menuPortalSpy(container);
+		return (
+			<div
+				data-has-container={container ? "true" : "false"}
+				data-testid="menu-portal"
+			>
 				{children}
-			</button>
-		),
+			</div>
+		);
 	},
+	Content: ({
+		children,
+		align,
+		side,
+		sideOffset,
+	}: {
+		children: React.ReactNode;
+		align?: string;
+		side?: string;
+		sideOffset?: number;
+	}) => {
+		return (
+			<div
+				data-align={align}
+				data-side={side}
+				data-side-offset={sideOffset}
+				data-testid="menu-content"
+			>
+				{children}
+			</div>
+		);
+	},
+	Item: ({
+		children,
+		onSelect,
+	}: {
+		children: React.ReactNode;
+		onSelect?: () => void;
+	}) => (
+		<button onClick={onSelect} type="button">
+			{children}
+		</button>
+	),
 }));
 
 vi.mock("@tiptap/react/menus", () => ({
@@ -137,33 +133,33 @@ describe("editor menu position", () => {
 		);
 	});
 
-	it("FloatingMenuは右側開始でオフセット4のPositionerを使う", () => {
+	it("FloatingMenuは右側開始でオフセット4のContentを使う", () => {
 		render(<EditorFloatingMenu editor={createEditorMock() as never} />);
-		expect(screen.getByTestId("menu-positioner")).toHaveAttribute(
+		expect(screen.getByTestId("menu-content")).toHaveAttribute(
 			"data-side",
 			"right",
 		);
-		expect(screen.getByTestId("menu-positioner")).toHaveAttribute(
+		expect(screen.getByTestId("menu-content")).toHaveAttribute(
 			"data-align",
 			"start",
 		);
-		expect(screen.getByTestId("menu-positioner")).toHaveAttribute(
+		expect(screen.getByTestId("menu-content")).toHaveAttribute(
 			"data-side-offset",
 			"4",
 		);
 	});
 
-	it("BubbleMenuは下側開始でオフセット6のPositionerを使う", () => {
+	it("BubbleMenuは下側開始でオフセット6のContentを使う", () => {
 		render(<EditorBubbleMenu editor={createEditorMock() as never} />);
-		expect(screen.getByTestId("menu-positioner")).toHaveAttribute(
+		expect(screen.getByTestId("menu-content")).toHaveAttribute(
 			"data-side",
 			"bottom",
 		);
-		expect(screen.getByTestId("menu-positioner")).toHaveAttribute(
+		expect(screen.getByTestId("menu-content")).toHaveAttribute(
 			"data-align",
 			"start",
 		);
-		expect(screen.getByTestId("menu-positioner")).toHaveAttribute(
+		expect(screen.getByTestId("menu-content")).toHaveAttribute(
 			"data-side-offset",
 			"6",
 		);
