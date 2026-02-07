@@ -8,10 +8,10 @@ import { HeroRays } from "./hero-rays";
 export default async function HeroSection({ locale }: { locale: string }) {
 	const topPageDetail = await fetchAboutPage(locale);
 	const title = topPageDetail.segments.find(
-		(s) => s.number === SEGMENT_NUMBER.heroHeader,
+		(segment) => segment.number === SEGMENT_NUMBER.heroHeader,
 	);
 	const text = topPageDetail.segments.find(
-		(s) => s.number === SEGMENT_NUMBER.heroDetail,
+		(segment) => segment.number === SEGMENT_NUMBER.heroDetail,
 	);
 
 	if (!title || !text) {
@@ -25,7 +25,7 @@ export default async function HeroSection({ locale }: { locale: string }) {
 					<h1 className="text-3xl md:text-5xl font-semibold tracking-tight">
 						<SegmentElement className="w-full" segment={title} tagName="span" />
 					</h1>
-					<div className="mx-auto mt-6 h-px w-24 bg-gradient-to-r from-transparent via-foreground/40 to-transparent" />
+					<div className="mx-auto mt-6 h-px w-24 bg-linear-to-r from-transparent via-foreground/40 to-transparent" />
 					<div className="mt-6">
 						<SegmentElement
 							className="mx-auto max-w-3xl text-base md:text-xl leading-relaxed"
