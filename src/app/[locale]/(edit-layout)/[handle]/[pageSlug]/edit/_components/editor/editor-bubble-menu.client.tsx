@@ -1,6 +1,6 @@
 "use client";
 
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+import { Menu as MenuPrimitive } from "@base-ui/react/menu";
 import type { Editor as TiptapEditor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import type { LucideIcon } from "lucide-react";
@@ -20,7 +20,7 @@ import {
 	Strikethrough,
 	Type,
 } from "lucide-react";
-import { useRef, useSyncExternalStore } from "react";
+import { useCallback, useRef, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,7 +36,6 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-/* ---------- 定数はコンポーネント外で ---------- */
 const editorCommands: Record<string, (editor: TiptapEditor) => boolean> = {
 	regularText: (editor) => editor.chain().focus().setParagraph().run(),
 	h2: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
@@ -59,23 +58,28 @@ const headingIcons: Record<string | number, LucideIcon> = {
 	4: Heading4,
 };
 
-/* ---------- 外部ストア購読だけをフックに切り出す ---------- */
 function useEditorStore(editor: TiptapEditor) {
-	useSyncExternalStore(
-		(cb) => {
-			editor.on("selectionUpdate", cb);
-			editor.on("transaction", cb);
+	const counterRef = useRef(0);
+	const subscribe = useCallback(
+		(cb: () => void) => {
+			const handler = () => {
+				counterRef.current++;
+				cb();
+			};
+			editor.on("transaction", handler);
 			return () => {
-				editor.off("selectionUpdate", cb);
-				editor.off("transaction", cb);
+				editor.off("transaction", handler);
 			};
 		},
-		() => editor.state, // snapshot
+		[editor],
 	);
+
+	useSyncExternalStore(subscribe, () => counterRef.current);
 }
 
 export function EditorBubbleMenu({ editor }: { editor: TiptapEditor }) {
-	useEditorStore(editor); // これだけで再レンダーが走る
+	useEditorStore(editor);
+
 	const items = [
 		{
 			value: "bold",
@@ -133,60 +137,65 @@ export function EditorBubbleMenu({ editor }: { editor: TiptapEditor }) {
 			editor={editor}
 			shouldShow={() => !editor.state.selection.empty}
 		>
-			<div className="flex rounded-lg border bg-background shadow-md p-1 items-center">
+			<div className="flex items-center rounded-lg border bg-background p-1 shadow-md">
 				<TooltipProvider>
-					{/* Heading ドロップダウン */}
-					<DropdownMenu.Root modal={false}>
-						<DropdownMenu.Trigger
+					<MenuPrimitive.Root modal={false}>
+						<MenuPrimitive.Trigger
 							className={cn(
 								"flex h-8 w-9 items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground",
 								editor.isActive("heading") && "bg-secondary text-foreground",
 							)}
+							nativeButton
 						>
-							<HeadingIcon className="h-5 w-5 mr-0.5" />
+							<HeadingIcon className="mr-0.5 h-5 w-5" />
 							<ChevronDown className="h-3 w-3" />
-						</DropdownMenu.Trigger>
+						</MenuPrimitive.Trigger>
 
-						<DropdownMenu.Content
-							align="start"
-							className="p-2 z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-0 data-[side=top]:slide-in-from-bottom-2"
-							side="bottom"
-							sideOffset={6}
-						>
-							<DropdownMenu.Item
-								className={cn(
-									"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
-									!editor.isActive("heading") && "bg-secondary",
-								)}
-								onSelect={() => editorCommands.regularText(editor)}
+						<MenuPrimitive.Portal>
+							<MenuPrimitive.Positioner
+								align="start"
+								className="isolate z-50 outline-none"
+								side="bottom"
+								sideOffset={6}
 							>
-								<Type className="h-5 w-5 mr-2" />
-								<span>Regular text</span>
-							</DropdownMenu.Item>
-							{[2, 3, 4].map((level) => {
-								const Icon = headingIcons[level];
-								return (
-									<DropdownMenu.Item
+								<MenuPrimitive.Popup className="min-w-[8rem] overflow-hidden rounded-md border bg-popover p-2 text-popover-foreground shadow-md data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-0 data-[side=top]:slide-in-from-bottom-2">
+									<MenuPrimitive.Item
 										className={cn(
 											"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
-											editor.isActive("heading", { level }) && "bg-secondary",
+											!editor.isActive("heading") && "bg-secondary",
 										)}
-										key={level}
-										onSelect={() => editorCommands[`h${level}`](editor)}
+										onClick={() => editorCommands.regularText(editor)}
 									>
-										<Icon className="h-5 w-5 mr-2" /> Heading {level}
-									</DropdownMenu.Item>
-								);
-							})}
-						</DropdownMenu.Content>
-					</DropdownMenu.Root>
+										<Type className="mr-2 h-5 w-5" />
+										<span>Regular text</span>
+									</MenuPrimitive.Item>
+									{[2, 3, 4].map((level) => {
+										const Icon = headingIcons[level];
+										return (
+											<MenuPrimitive.Item
+												className={cn(
+													"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
+													editor.isActive("heading", { level }) &&
+														"bg-secondary",
+												)}
+												key={level}
+												onClick={() => editorCommands[`h${level}`](editor)}
+											>
+												<Icon className="mr-2 h-5 w-5" /> Heading {level}
+											</MenuPrimitive.Item>
+										);
+									})}
+								</MenuPrimitive.Popup>
+							</MenuPrimitive.Positioner>
+						</MenuPrimitive.Portal>
+					</MenuPrimitive.Root>
 
 					{items.map(({ value, icon: Icon, isActive, label }) => (
 						<Tooltip key={value}>
 							<TooltipTrigger asChild>
 								<button
 									className={cn(
-										"rounded-md h-8 w-8 mx-0.5 flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground",
+										"mx-0.5 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground",
 										isActive() && "bg-secondary text-foreground",
 									)}
 									onClick={() => editorCommands[value](editor)}
@@ -195,7 +204,7 @@ export function EditorBubbleMenu({ editor }: { editor: TiptapEditor }) {
 									<Icon className="h-5 w-5" />
 								</button>
 							</TooltipTrigger>
-							<TooltipContent className="px-3 py-3 bg-background border">
+							<TooltipContent className="border bg-background px-3 py-3">
 								{label}
 							</TooltipContent>
 						</Tooltip>
@@ -223,7 +232,7 @@ function LinkButton({ editor }: { editor: TiptapEditor }) {
 			<PopoverTrigger asChild>
 				<button
 					className={cn(
-						"rounded-md h-8 w-8 mx-0.5 flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground",
+						"mx-0.5 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground",
 						editor.isActive("link") && "bg-secondary text-foreground",
 					)}
 					type="button"
@@ -231,10 +240,10 @@ function LinkButton({ editor }: { editor: TiptapEditor }) {
 					<LinkIcon className="h-5 w-5" />
 				</button>
 			</PopoverTrigger>
-			<PopoverContent className="p-4 border bg-background rounded-xl">
+			<PopoverContent className="rounded-xl border bg-background p-4">
 				<div className="flex gap-2">
 					<Input
-						className="flex-1 px-2 py-1 border rounded-md"
+						className="flex-1 rounded-md border px-2 py-1"
 						defaultValue={editor.getAttributes("link").href ?? ""}
 						placeholder="URL"
 						ref={inputRef}
