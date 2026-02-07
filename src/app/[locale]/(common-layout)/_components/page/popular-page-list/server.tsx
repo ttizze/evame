@@ -6,6 +6,7 @@ import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/p
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
 import { PageList } from "../page-list.server";
 import { PageListContainer } from "../page-list-container/server";
+import { fetchPaginatedPopularPageListsForTopPage } from "./_db/queries.server";
 
 const searchParamsSchema = {
 	page: parseAsInteger.withDefault(1),
@@ -26,11 +27,17 @@ export default async function PopularPageList({
 }: PopularPageListProps) {
 	const { page } = await loadSearchParams(searchParams);
 
-	const { pageForLists, totalPages } = await fetchPaginatedPopularPageLists({
-		page,
-		pageSize: 5,
-		locale,
-	});
+	const { pageForLists, totalPages } = showPagination
+		? await fetchPaginatedPopularPageLists({
+				page,
+				pageSize: 5,
+				locale,
+			})
+		: await fetchPaginatedPopularPageListsForTopPage({
+				page,
+				pageSize: 5,
+				locale,
+			});
 
 	return (
 		<PageListContainer icon={BookOpenIcon} title="Popular Pages">

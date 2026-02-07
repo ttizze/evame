@@ -1,7 +1,6 @@
 import { EyeIcon } from "lucide-react";
 import { getImageProps } from "next/image";
 import { BASE_URL } from "@/app/_constants/base-url";
-import { fetchPageViewCount } from "@/app/[locale]/_db/page-utility-queries.server";
 import { PageLikeButton } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/server";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
@@ -35,7 +34,6 @@ export async function PageList({
 		`${BASE_URL}/api/og?locale=${locale}` + `&slug=${PageForList.slug}`;
 	const pageLink = `/${PageForList.userHandle}/${PageForList.slug}`;
 	const userLink = `/${PageForList.userHandle}`;
-	const viewCount = await fetchPageViewCount(PageForList.id);
 	return (
 		<article
 			className={`grid gap-4 py-4 border-b last:border-b-0 ${
@@ -100,7 +98,7 @@ export async function PageList({
 				{/* ③ アクション（いいね＋コメント） */}
 				<div className="flex items-center gap-2 justify-end">
 					<EyeIcon className="w-5 h-5" />
-					<span className="text-muted-foreground">{viewCount}</span>
+					<span className="text-muted-foreground">{PageForList.viewCount}</span>
 					<PageLikeButton
 						initialLikeCount={PageForList.likeCount}
 						pageId={PageForList.id}

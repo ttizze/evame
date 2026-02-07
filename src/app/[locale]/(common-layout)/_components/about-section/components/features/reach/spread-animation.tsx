@@ -8,14 +8,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import styles from "./spread-animation.module.css";
 
 const LANGUAGES = [
-	{ code: "jp", flag: "jp", name: "Japanese" },
-	{ code: "us", flag: "us", name: "English" },
-	{ code: "kr", flag: "kr", name: "Korean" },
-	{ code: "fr", flag: "fr", name: "French" },
-	{ code: "es", flag: "es", name: "Spanish" },
-	{ code: "de", flag: "de", name: "German" },
-	{ code: "cn", flag: "cn", name: "Chinese" },
-	{ code: "it", flag: "it", name: "Italian" },
+	{ code: "jp", flagPath: "/flags/jp.png", name: "Japanese" },
+	{ code: "us", flagPath: "/flags/us.png", name: "English" },
+	{ code: "kr", flagPath: "/flags/kr.png", name: "Korean" },
+	{ code: "fr", flagPath: "/flags/fr.png", name: "French" },
+	{ code: "es", flagPath: "/flags/es.png", name: "Spanish" },
+	{ code: "de", flagPath: "/flags/de.png", name: "German" },
+	{ code: "cn", flagPath: "/flags/cn.png", name: "Chinese" },
+	{ code: "it", flagPath: "/flags/it.png", name: "Italian" },
 ];
 
 const CENTER_SIZE = 108;
@@ -67,10 +67,10 @@ export function SpreadAnimation() {
 					>
 						<div className="z-10 flex items-center justify-center w-9 h-9 rounded-full border overflow-hidden bg-white transition-transform duration-150 hover:scale-110">
 							<Image
-								alt={lang.name}
+								alt={`${lang.name} flag`}
 								className="object-cover w-full h-full"
 								height={36}
-								src={`https://flagcdn.com/w80/${lang.flag}.png`}
+								src={lang.flagPath}
 								width={36}
 							/>
 						</div>

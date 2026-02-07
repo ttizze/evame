@@ -114,6 +114,7 @@ export function toPageForList(
 		tags: tags.map((tag) => ({ id: tag.id, name: tag.name })),
 		likeCount: Number(row.likeCount ?? 0),
 		pageCommentsCount: Number(row.pageCommentsCount ?? 0),
+		viewCount: Number(row.pageViewCount ?? 0),
 	};
 }
 
@@ -171,6 +172,11 @@ export function buildPageListQuery(locale: string) {
 					.select(eb.fn.countAll().as("count"))
 					.whereRef("likePages.pageId", "=", "pages.id")
 					.as("likeCount"),
+				eb
+					.selectFrom("pageViews")
+					.select("count")
+					.whereRef("pageViews.pageId", "=", "pages.id")
+					.as("pageViewCount"),
 			])
 	);
 }
