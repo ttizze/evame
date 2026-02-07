@@ -90,6 +90,8 @@ vi.mock("@tiptap/react/menus", () => ({
 }));
 
 function createEditorMock() {
+	const on = vi.fn();
+	const off = vi.fn();
 	const chainResult = {
 		focus: () => chainResult,
 		setParagraph: () => chainResult,
@@ -111,8 +113,8 @@ function createEditorMock() {
 		chain: () => chainResult,
 		getAttributes: () => ({}),
 		isActive: () => false,
-		off: vi.fn(),
-		on: vi.fn(),
+		off,
+		on,
 		state: {
 			selection: {
 				empty: false,
@@ -163,5 +165,20 @@ describe("editor menu position", () => {
 			"data-side-offset",
 			"6",
 		);
+	});
+
+	it("BubbleMenuはselectionUpdateのみを購読する", () => {
+		const editor = createEditorMock();
+		const { unmount } = render(<EditorBubbleMenu editor={editor as never} />);
+
+		const subscribedEvents = editor.on.mock.calls.map(([event]) => event);
+		expect(subscribedEvents).toContain("selectionUpdate");
+		expect(subscribedEvents).not.toContain("transaction");
+
+		unmount();
+
+		const unsubscribedEvents = editor.off.mock.calls.map(([event]) => event);
+		expect(unsubscribedEvents).toContain("selectionUpdate");
+		expect(unsubscribedEvents).not.toContain("transaction");
 	});
 });
