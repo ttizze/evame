@@ -1,3 +1,4 @@
+"use client";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import type { Editor } from "@tiptap/core";
 import type { EditorState } from "@tiptap/pm/state";
