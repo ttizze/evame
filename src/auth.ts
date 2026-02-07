@@ -12,23 +12,22 @@ export const auth = betterAuth({
 			},
 		}),
 		customSession(async ({ session }) => {
-			// ユーザー情報を取得（Kysely を使用）
-			const currentUser = await db
-				.selectFrom("users")
-				.selectAll()
-				.where("id", "=", session.userId)
-				.executeTakeFirst();
+			const [currentUser, geminiApiKey] = await Promise.all([
+				db
+					.selectFrom("users")
+					.selectAll()
+					.where("id", "=", session.userId)
+					.executeTakeFirst(),
+				db
+					.selectFrom("geminiApiKeys")
+					.selectAll()
+					.where("userId", "=", session.userId)
+					.executeTakeFirst(),
+			]);
 
 			if (!currentUser) {
 				throw new Error("User not found");
 			}
-
-			// Gemini APIキーを取得（Kysely を使用）
-			const geminiApiKey = await db
-				.selectFrom("geminiApiKeys")
-				.selectAll()
-				.where("userId", "=", session.userId)
-				.executeTakeFirst();
 
 			// Check if the user has a Gemini API key
 			const hasGeminiApiKey = !!(geminiApiKey && geminiApiKey.apiKey !== "");

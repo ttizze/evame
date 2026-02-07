@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/app/_service/auth-server";
+import { cookies } from "next/headers";
 import { FloatingControls } from "../floating-controls/floating-controls.client";
 import ComparisonSection from "./components/comparison-section";
 import FAQSection from "./components/faq-section";
@@ -19,9 +19,14 @@ export default async function AboutSection({
 	locale: string;
 	topPage: boolean;
 }) {
-	const currentUser = await getCurrentUser();
-	if (topPage && currentUser) {
-		return <FloatingControls sourceLocale="mixed" userLocale={locale} />;
+	if (topPage) {
+		const cookieStore = await cookies();
+		const hasSession =
+			cookieStore.has("better-auth.session_token") ||
+			cookieStore.has("__Secure-better-auth.session_token");
+		if (hasSession) {
+			return <FloatingControls sourceLocale="mixed" userLocale={locale} />;
+		}
 	}
 	return (
 		<div className="about-section flex flex-col space-y-16 md:space-y-24">
