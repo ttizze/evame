@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu as MenuPrimitive } from "@base-ui/react/menu";
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import type { Editor as TiptapEditor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import type { LucideIcon } from "lucide-react";
@@ -139,56 +139,55 @@ export function EditorBubbleMenu({ editor }: { editor: TiptapEditor }) {
 		>
 			<div className="flex items-center rounded-lg border bg-background p-1 shadow-md">
 				<TooltipProvider>
-					<MenuPrimitive.Root modal={false}>
-						<MenuPrimitive.Trigger
-							className={cn(
-								"flex h-8 w-9 items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground",
-								editor.isActive("heading") && "bg-secondary text-foreground",
-							)}
-							nativeButton
-						>
-							<HeadingIcon className="mr-0.5 h-5 w-5" />
-							<ChevronDown className="h-3 w-3" />
-						</MenuPrimitive.Trigger>
+					<DropdownMenuPrimitive.Root modal={false}>
+						<DropdownMenuPrimitive.Trigger asChild>
+							<button
+								className={cn(
+									"flex h-8 w-9 items-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground",
+									editor.isActive("heading") && "bg-secondary text-foreground",
+								)}
+								type="button"
+							>
+								<HeadingIcon className="mr-0.5 h-5 w-5" />
+								<ChevronDown className="h-3 w-3" />
+							</button>
+						</DropdownMenuPrimitive.Trigger>
 
-						<MenuPrimitive.Portal>
-							<MenuPrimitive.Positioner
+						<DropdownMenuPrimitive.Portal>
+							<DropdownMenuPrimitive.Content
 								align="start"
-								className="isolate z-50 outline-none"
+								className="isolate z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-2 text-popover-foreground shadow-md data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-0 data-[side=top]:slide-in-from-bottom-2"
 								side="bottom"
 								sideOffset={6}
 							>
-								<MenuPrimitive.Popup className="min-w-[8rem] overflow-hidden rounded-md border bg-popover p-2 text-popover-foreground shadow-md data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-1 data-[side=right]:slide-in-from-left-0 data-[side=top]:slide-in-from-bottom-2">
-									<MenuPrimitive.Item
-										className={cn(
-											"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
-											!editor.isActive("heading") && "bg-secondary",
-										)}
-										onClick={() => editorCommands.regularText(editor)}
-									>
-										<Type className="mr-2 h-5 w-5" />
-										<span>Regular text</span>
-									</MenuPrimitive.Item>
-									{[2, 3, 4].map((level) => {
-										const Icon = headingIcons[level];
-										return (
-											<MenuPrimitive.Item
-												className={cn(
-													"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
-													editor.isActive("heading", { level }) &&
-														"bg-secondary",
-												)}
-												key={level}
-												onClick={() => editorCommands[`h${level}`](editor)}
-											>
-												<Icon className="mr-2 h-5 w-5" /> Heading {level}
-											</MenuPrimitive.Item>
-										);
-									})}
-								</MenuPrimitive.Popup>
-							</MenuPrimitive.Positioner>
-						</MenuPrimitive.Portal>
-					</MenuPrimitive.Root>
+								<DropdownMenuPrimitive.Item
+									className={cn(
+										"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
+										!editor.isActive("heading") && "bg-secondary",
+									)}
+									onSelect={() => editorCommands.regularText(editor)}
+								>
+									<Type className="mr-2 h-5 w-5" />
+									<span>Regular text</span>
+								</DropdownMenuPrimitive.Item>
+								{[2, 3, 4].map((level) => {
+									const Icon = headingIcons[level];
+									return (
+										<DropdownMenuPrimitive.Item
+											className={cn(
+												"relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50",
+												editor.isActive("heading", { level }) && "bg-secondary",
+											)}
+											key={level}
+											onSelect={() => editorCommands[`h${level}`](editor)}
+										>
+											<Icon className="mr-2 h-5 w-5" /> Heading {level}
+										</DropdownMenuPrimitive.Item>
+									);
+								})}
+							</DropdownMenuPrimitive.Content>
+						</DropdownMenuPrimitive.Portal>
+					</DropdownMenuPrimitive.Root>
 
 					{items.map(({ value, icon: Icon, isActive, label }) => (
 						<Tooltip key={value}>
