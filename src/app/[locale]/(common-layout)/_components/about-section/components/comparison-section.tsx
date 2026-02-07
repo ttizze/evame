@@ -61,7 +61,7 @@ export default async function ComparisonSection({
 				<SegmentElement segment={headerSegment} tagName="span" />
 			</h2>
 			<div className="mt-8 overflow-x-auto">
-				<div className="min-w-[640px] overflow-hidden rounded-2xl border border-border/60 bg-background/80">
+				<div className=" overflow-hidden rounded-2xl border border-border/60 bg-background/80">
 					<table className="w-full border-collapse text-left">
 						<thead className="bg-muted/30">
 							<tr>
