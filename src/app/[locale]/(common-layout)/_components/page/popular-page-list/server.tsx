@@ -16,7 +16,7 @@ const loadSearchParams = createLoader(searchParamsSchema);
 
 interface PopularPageListProps {
 	locale: string;
-	searchParams: Promise<SearchParams>;
+	searchParams?: Promise<SearchParams>;
 	showPagination?: boolean;
 }
 
@@ -25,7 +25,7 @@ export default async function PopularPageList({
 	searchParams,
 	showPagination = false,
 }: PopularPageListProps) {
-	const { page } = await loadSearchParams(searchParams);
+	const page = searchParams ? (await loadSearchParams(searchParams)).page : 1;
 
 	const { pageForLists, totalPages } = showPagination
 		? await fetchPaginatedPopularPageLists({

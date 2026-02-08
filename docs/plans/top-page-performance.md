@@ -253,10 +253,46 @@ DATABASE_URL に `?pgbouncer=true` を追加、または Neon の pooler エン�
 **メリット**: コールドコネクションの遅延を削減
 **リスク**: 設定変更のみ
 
-## 7. 推奨実施順序
+## 7. 追加調査結果（2回目の調査）
 
-1. **案A**（構造変更）— Suspense fallback を即表示可能にする
-2. **案B**（auth 軽量化）— DB クエリ削減
-3. **案C**（並列化）— 全ページの auth 高速化
-4. **案D**（DB 接続）— インフラ改善
-5. 計測して効果を確認
+### 7.1 `cacheComponents: true` = Next.js 16 の PPR
+
+Next.js 16 では `experimental.ppr` が削除され、`cacheComponents: true` が PPR の後継。
+このプロジェクトでは既に有効（`next.config.ts:28`）。
+
+**PPR の動作**:
+- ネットワークリソースや動的 API に触れないコンポーネントは自動的に静的シェルに含まれる
+- 動的コンポーネントは `<Suspense>` でラップ → fallback が静的シェルに含まれ、動的部分はストリーミング
+
+### 7.2 真の原因: `searchParams` 参照によるページ全体の動的化
+
+**記事ページ**: `searchParams` を一切参照しない → 静的シェル生成 → CDN 即返し
+**トップページ**: `props.searchParams` を NewPageList/PopularPageList に渡していた → ページ全体が動的化 → 静的シェル未生成
+
+```
+// NG: searchParams に触れるとページ全体が動的化
+export default function HomePage(props) {
+  return <NewPageList searchParams={props.searchParams} />  // ← ここが原因
+}
+
+// OK: searchParams を参照しない
+const staticSearchParams = Promise.resolve({});
+export default function HomePage({ params }) {
+  return <NewPageList searchParams={staticSearchParams} />  // ← 静的シェル生成可能
+}
+```
+
+トップページでは `showPagination=false` なので searchParams は実質不要（常に page=1）。
+
+## 8. 実施済みの変更
+
+1. **案A**（構造変更）— `async function` → 同期 `function` + `params.then()` ✅
+2. **案B**（auth 軽量化）— `getCurrentUser()` → `cookies()` 存在チェック ✅
+3. **案C**（並列化）— `customSession` の DB クエリを `Promise.all` で並列化 ✅
+4. **案E**（searchParams 排除）— `props.searchParams` → `Promise.resolve({})` ✅
+
+## 9. 今後の確認事項
+
+- [ ] デプロイ後にトップページの TTFB を計測
+- [ ] ビルド出力で静的シェルが生成されているか確認
+- [ ] 記事ページとの速度差がなくなったか確認

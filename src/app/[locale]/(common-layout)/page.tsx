@@ -58,21 +58,19 @@ function SectionSkeleton({ className }: { className: string }) {
 	return <Skeleton className={className} />;
 }
 
-export default function HomePage(props: PageProps<"/[locale]">): ReactNode {
+export default function HomePage({
+	params,
+}: PageProps<"/[locale]">): ReactNode {
 	return (
 		<div className="flex flex-col gap-8 justify-between mb-12">
 			<Suspense fallback={<SectionSkeleton className="h-[480px] w-full" />}>
-				{props.params.then(({ locale }) => (
+				{params.then(({ locale }) => (
 					<AboutSection locale={locale} topPage={true} />
 				))}
 			</Suspense>
 			<Suspense fallback={<SectionSkeleton className="h-[400px] w-full" />}>
-				{props.params.then(({ locale }) => (
-					<NewPageList
-						locale={locale}
-						searchParams={props.searchParams}
-						showPagination={false}
-					/>
+				{params.then(({ locale }) => (
+					<NewPageList locale={locale} />
 				))}
 			</Suspense>
 			<div className="flex justify-center">
@@ -84,8 +82,8 @@ export default function HomePage(props: PageProps<"/[locale]">): ReactNode {
 			</div>
 
 			<Suspense fallback={<SectionSkeleton className="h-[400px] w-full" />}>
-				{props.params.then(({ locale }) => (
-					<PopularPageList locale={locale} searchParams={props.searchParams} />
+				{params.then(({ locale }) => (
+					<PopularPageList locale={locale} />
 				))}
 			</Suspense>
 		</div>
