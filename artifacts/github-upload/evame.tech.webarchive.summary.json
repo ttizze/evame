@@ -1,0 +1,234 @@
+{
+	"sourceFile": "evame.tech.webarchive",
+	"generatedAt": "2026-02-07T23:51:08Z",
+	"mainResource": {
+		"url": "https://evame.tech/ja",
+		"mimeType": "text/html",
+		"textEncoding": "utf-8"
+	},
+	"subresourceCount": 37,
+	"subresources": [
+		{
+			"index": 0,
+			"url": "https://evame.tech/_next/static/chunks/4a8a4bab934f1d12.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 1,
+			"url": "https://evame.tech/_next/static/chunks/2c49d0f1eda7a168.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 2,
+			"url": "https://evame.tech/_next/static/chunks/11feab0e782e6084.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 3,
+			"url": "https://evame.tech/_next/static/chunks/711be7185f88b164.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 4,
+			"url": "https://evame.tech/_next/static/chunks/1f0bf21551ac9c7a.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 5,
+			"url": "https://evame.tech/_next/static/chunks/turbopack-26e8dca3a11b39af.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 6,
+			"url": "https://evame.tech/_next/static/chunks/cdaf5990e701172b.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 7,
+			"url": "https://evame.tech/favicon.svg?w=64&q=75",
+			"mimeType": "image/svg+xml",
+			"textEncoding": "/Users/tomolld/Downloads/evame.tech.webarchive: Could not extract value, error: No value at that key path or invalid key path: WebSubresources.7.WebResourceTextEncodingName"
+		},
+		{
+			"index": 8,
+			"url": "https://evame.tech/_next/static/chunks/7b987e8f60b282b6.css?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "text/css",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 9,
+			"url": "https://evame.tech/_next/static/chunks/a6b478df0c5eb4d1.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 10,
+			"url": "https://evame.tech/_next/static/chunks/cd24519ec7a00ca4.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 11,
+			"url": "https://evame.tech/_next/static/chunks/bf130ea74b760929.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 12,
+			"url": "https://evame.tech/favicon.svg?w=32&q=75",
+			"mimeType": "image/svg+xml",
+			"textEncoding": "/Users/tomolld/Downloads/evame.tech.webarchive: Could not extract value, error: No value at that key path or invalid key path: WebSubresources.12.WebResourceTextEncodingName"
+		},
+		{
+			"index": 13,
+			"url": "https://evame.tech/_next/static/chunks/30ad0021a17db800.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 14,
+			"url": "https://evame.tech/_next/static/chunks/1df1ff267e38b1d1.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 15,
+			"url": "https://evame.tech/_next/static/chunks/6922d37aee91dff1.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 16,
+			"url": "https://evame.tech/hero-rays-dark.svg",
+			"mimeType": "image/svg+xml",
+			"textEncoding": "/Users/tomolld/Downloads/evame.tech.webarchive: Could not extract value, error: No value at that key path or invalid key path: WebSubresources.16.WebResourceTextEncodingName"
+		},
+		{
+			"index": 17,
+			"url": "https://evame.tech/_next/static/chunks/09ec68c5c1739e92.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 18,
+			"url": "https://evame.tech/_next/static/chunks/ab02e2c8a462eded.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 19,
+			"url": "https://evame.tech/_next/static/chunks/52ff6319c900b15a.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 20,
+			"url": "https://evame.tech/_next/static/chunks/0642895909c34e08.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 21,
+			"url": "https://evame.tech/_next/static/chunks/7f85f1e956d77e96.css?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "text/css",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 22,
+			"url": "https://evame.tech/_next/static/chunks/39d5ca1871dac1af.css?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "text/css",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 23,
+			"url": "https://evame.tech/favicon.svg?w=256&q=75",
+			"mimeType": "image/svg+xml",
+			"textEncoding": "/Users/tomolld/Downloads/evame.tech.webarchive: Could not extract value, error: No value at that key path or invalid key path: WebSubresources.23.WebResourceTextEncodingName"
+		},
+		{
+			"index": 24,
+			"url": "https://evame.tech/_next/static/chunks/83afb6a0347a96bd.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 25,
+			"url": "https://evame.tech/_next/static/chunks/3d6e3d322f08a87c.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 26,
+			"url": "https://evame.tech/_next/static/chunks/f65f0eb24dde9015.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 27,
+			"url": "https://evame.tech/_next/static/chunks/e0cd3f3f5960653d.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 28,
+			"url": "https://evame.tech/_next/static/chunks/74fd050ae974c016.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 29,
+			"url": "https://evame.tech/_next/static/chunks/fadb7b12de1e9afd.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 30,
+			"url": "https://evame.tech/_next/static/chunks/4a6ae07d079ed517.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 31,
+			"url": "https://evame.tech/_next/static/chunks/266bc8b528757019.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 32,
+			"url": "https://evame.tech/_next/static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+			"mimeType": "font/woff2",
+			"textEncoding": "/Users/tomolld/Downloads/evame.tech.webarchive: Could not extract value, error: No value at that key path or invalid key path: WebSubresources.32.WebResourceTextEncodingName"
+		},
+		{
+			"index": 33,
+			"url": "https://evame.tech/_next/static/chunks/4f62225d867ab5a6.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 34,
+			"url": "https://evame.tech/_next/static/chunks/1895f293d7be50b8.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 35,
+			"url": "https://evame.tech/_next/static/chunks/17d6a28b71a5360e.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		},
+		{
+			"index": 36,
+			"url": "https://evame.tech/_next/static/chunks/797206c05e3cb7ef.js?dpl=dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de",
+			"mimeType": "application/javascript",
+			"textEncoding": "utf-8"
+		}
+	]
+}

@@ -1,0 +1,6453 @@
+{
+	"log": {
+		"version": "1.2",
+		"creator": {
+			"name": "WebKit Web Inspector",
+			"version": "1.0"
+		},
+		"pages": [
+			{
+				"startedDateTime": "2026-02-07T23:43:19.652Z",
+				"id": "page_0",
+				"title": "https://evame.tech/ja",
+				"pageTimings": {
+					"onContentLoad": 180608.38604166202,
+					"onLoad": 180767.65708332823
+				}
+			}
+		],
+		"entries": [
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.530Z",
+				"time": 51.22120092710247,
+				"request": {
+					"method": "GET",
+					"url": "https://images.evame.tech/cdn-cgi/image/width=96,quality=75,format=auto/uploads/1724336202761-IMG_3907.jpeg",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "image/webp,image/avif,image/jxl,image/heic,image/heic-sequence,video/*;q=0.8,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "same-site"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "image"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "no-cors"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Priority",
+							"value": "u=5, i"
+						}
+					],
+					"queryString": [],
+					"headersSize": 83,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "image/avif"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "ETag",
+							"value": "\"cfQpmvWPBe5prsWNV5VuzY-_lLA93OdQxDKzFqt-e1DQ:2fcee9550a69b1a8d3bd0b31406839e9\""
+						},
+						{
+							"name": "Content-Security-Policy",
+							"value": "default-src 'none'; navigate-to 'none'; form-action 'none'; img-src data:;"
+						},
+						{
+							"name": "Age",
+							"value": "405"
+						},
+						{
+							"name": "Report-To",
+							"value": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=%2F2GwjPdaoneFUuQDsN3Xhc98itclEzUwanPKIEozrcThpcH7wA3eDpz1KYq4CMk5TXn%2BCMGl0mP9DnnqyGB3%2Fja1bEh%2B60fdZEf63JL%2F3p9s\"}]}"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "max-age=14400"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:43:21 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "2728"
+						},
+						{
+							"name": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"name": "Vary",
+							"value": "Accept"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Thu, 22 Aug 2024 14:16:43 GMT"
+						},
+						{
+							"name": "nel",
+							"value": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"
+						},
+						{
+							"name": "Server",
+							"value": "cloudflare"
+						},
+						{
+							"name": "cf-cache-status",
+							"value": "HIT"
+						},
+						{
+							"name": "cf-resized",
+							"value": "internal=ok/h q=0 n=56+33 c=3+30 v=2026.1.6 l=2728 f=false c2=0 wv=2026.2.0"
+						},
+						{
+							"name": "cf-ray",
+							"value": "9ca6bfbfcf4ad759-NRT"
+						}
+					],
+					"content": {
+						"size": 2728,
+						"mimeType": "image/avif",
+						"compression": -18,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 253,
+					"bodySize": 2746,
+					"_transferSize": 2999
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 11.53090009756852,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 39.62100131320767,
+					"receive": 0.06929951632628217
+				},
+				"serverIPAddress": "172.67.183.214",
+				"_serverPort": 443,
+				"connection": "3",
+				"_fetchType": "Network Load",
+				"_priority": "low"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.206Z",
+				"time": 0.014625002222601324,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/39d5ca1871dac1af.css?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "text/css; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"39d5ca1871dac1af.css\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "725"
+						},
+						{
+							"name": "ETag",
+							"value": "\"34de5c1f2f89d0ca141ad1c4c4806f94\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/39d5ca1871dac1af.css"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::ppb6p-1770507449712-29bf2b171f29"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "text/css",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.0065416679717600346,
+					"receive": 0.00808333425084129
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.193Z",
+				"time": 0.038541664252988994,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/7f85f1e956d77e96.css?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "text/css; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"7f85f1e956d77e96.css\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "18648"
+						},
+						{
+							"name": "ETag",
+							"value": "\"aaa0aad34506d37b63e805510fbc6774\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/7f85f1e956d77e96.css"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::bgfpf-1770507449701-24f153fd5523"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "text/css",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.02058333484455943,
+					"receive": 0.017958329408429563
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.192Z",
+				"time": 0.03800000558840111,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/7b987e8f60b282b6.css?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "text/css; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"7b987e8f60b282b6.css\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "767"
+						},
+						{
+							"name": "ETag",
+							"value": "\"8afe19ba247ab41dd68b6a899950e472\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/7b987e8f60b282b6.css"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::dv92z-1770507449878-eaabdefadf76"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "text/css",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.020375002350192517,
+					"receive": 0.017625003238208592
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.531Z",
+				"time": 45.73760927451076,
+				"request": {
+					"method": "GET",
+					"url": "https://lh3.googleusercontent.com/a/ACg8ocI7BqlK6yY0bl09eJc9J-4lN7YK59ZxZMts6-KVulMBRRRkadzZ=s96-c?w=***REDACTED***&q=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "image/webp,image/avif,image/jxl,image/heic,image/heic-sequence,video/*;q=0.8,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "cross-site"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "image"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "no-cors"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Priority",
+							"value": "u=5, i"
+						}
+					],
+					"queryString": [
+						{
+							"name": "w",
+							"value": "96"
+						},
+						{
+							"name": "q",
+							"value": "75"
+						}
+					],
+					"headersSize": 17,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Type",
+							"value": "image/jpeg"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline;filename=\"unnamed.jpg\""
+						},
+						{
+							"name": "Age",
+							"value": "349"
+						},
+						{
+							"name": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"name": "Access-Control-Expose-Headers",
+							"value": "Content-Length"
+						},
+						{
+							"name": "Expires",
+							"value": "Sun, 08 Feb 2026 23:37:32 GMT"
+						},
+						{
+							"name": "Timing-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=86400, no-transform"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:32 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "5879"
+						},
+						{
+							"name": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"name": "ETag",
+							"value": "\"v10a\""
+						},
+						{
+							"name": "Vary",
+							"value": "Origin"
+						},
+						{
+							"name": "Server",
+							"value": "fife"
+						},
+						{
+							"name": "Alt-Svc",
+							"value": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+						}
+					],
+					"content": {
+						"size": 5879,
+						"mimeType": "image/jpeg",
+						"compression": -3,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 22,
+					"bodySize": 5882,
+					"_transferSize": 5904
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 11.545348286745138,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 34.088176435034256,
+					"receive": 0.10408455273136497
+				},
+				"serverIPAddress": "142.251.118.132",
+				"_serverPort": 443,
+				"connection": "2",
+				"_fetchType": "Network Load",
+				"_priority": "low"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.528Z",
+				"time": 48.54909057030454,
+				"request": {
+					"method": "GET",
+					"url": "https://lh3.googleusercontent.com/a/ACg8ocLfMLE8bL3HaBEgH1UxAlzJOahrfvSL8HarCNyMn9pxmJHl8QM=s96-c?w=***REDACTED***&q=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "image/webp,image/avif,image/jxl,image/heic,image/heic-sequence,video/*;q=0.8,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "cross-site"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "image"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "no-cors"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Priority",
+							"value": "u=5, i"
+						}
+					],
+					"queryString": [
+						{
+							"name": "w",
+							"value": "96"
+						},
+						{
+							"name": "q",
+							"value": "75"
+						}
+					],
+					"headersSize": 17,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Type",
+							"value": "image/jpeg"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline;filename=\"unnamed.jpg\""
+						},
+						{
+							"name": "Age",
+							"value": "350"
+						},
+						{
+							"name": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"name": "Access-Control-Expose-Headers",
+							"value": "Content-Length"
+						},
+						{
+							"name": "Expires",
+							"value": "Sun, 08 Feb 2026 23:37:31 GMT"
+						},
+						{
+							"name": "Timing-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=86400, no-transform"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:31 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "5146"
+						},
+						{
+							"name": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"name": "ETag",
+							"value": "\"v28\""
+						},
+						{
+							"name": "Vary",
+							"value": "Origin"
+						},
+						{
+							"name": "Server",
+							"value": "fife"
+						},
+						{
+							"name": "Alt-Svc",
+							"value": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+						}
+					],
+					"content": {
+						"size": 5146,
+						"mimeType": "image/jpeg",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 32,
+					"bodySize": 5146,
+					"_transferSize": 5178
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 10.545598313910887,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 37.2996746955323,
+					"receive": 0.7038175608613528
+				},
+				"serverIPAddress": "142.251.118.132",
+				"_serverPort": 443,
+				"connection": "2",
+				"_fetchType": "Network Load",
+				"_priority": "low"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.205Z",
+				"time": 0.013166660210117698,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/4a8a4bab934f1d12.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"4a8a4bab934f1d12.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "22498"
+						},
+						{
+							"name": "ETag",
+							"value": "\"1f007e0f04a9d7abf0ef497dac36a321\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/4a8a4bab934f1d12.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::jjjlw-1770507449712-8337d4fda29a"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.0060416641645133495,
+					"receive": 0.007124996045604348
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.205Z",
+				"time": 0.014500001270789653,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/2c49d0f1eda7a168.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"2c49d0f1eda7a168.js\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "5624"
+						},
+						{
+							"name": "ETag",
+							"value": "\"91773f7dc46b3714393f438fc0874e81\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/2c49d0f1eda7a168.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::5v5lb-1770507449712-599513442dd1"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.00670833105687052,
+					"receive": 0.007791670213919133
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.205Z",
+				"time": 0.013000004400964826,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/0642895909c34e08.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"0642895909c34e08.js\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "2682"
+						},
+						{
+							"name": "ETag",
+							"value": "\"878843f6a6e45a52fb5e70d39b02799b\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/0642895909c34e08.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::428r5-1770507449712-798adc2011dc"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.006083333573769778,
+					"receive": 0.006916670827195048
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.205Z",
+				"time": 0.013916665920987725,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/bf130ea74b760929.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"bf130ea74b760929.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "20152"
+						},
+						{
+							"name": "ETag",
+							"value": "\"cf7ee727df9f674f72b078ebb734e39b\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/bf130ea74b760929.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::4wgkd-1770507449712-88bbdd833fc6"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.006000002031214535,
+					"receive": 0.00791666388977319
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.204Z",
+				"time": 0.013416669389698654,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/30ad0021a17db800.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"30ad0021a17db800.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "20946"
+						},
+						{
+							"name": "ETag",
+							"value": "\"a69d20d1ea196f7965884b3d901aea77\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/30ad0021a17db800.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::rs7hd-1770507449712-a7a2579d7792"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.006000002031214535,
+					"receive": 0.007416667358484119
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.204Z",
+				"time": 0.013708333426620811,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/83afb6a0347a96bd.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"83afb6a0347a96bd.js\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "15846"
+						},
+						{
+							"name": "ETag",
+							"value": "\"76145acde5f9489fae981f10823d86cb\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/83afb6a0347a96bd.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::r9zkb-1770507449714-fd94ea81081a"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.006083333573769778,
+					"receive": 0.007624999852851033
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.204Z",
+				"time": 0.013625001884065568,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/6922d37aee91dff1.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"6922d37aee91dff1.js\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "71745"
+						},
+						{
+							"name": "ETag",
+							"value": "\"b0dcb46cfc0a6e450478389beb37539a\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/6922d37aee91dff1.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::dv92z-1770507449712-808f64ae8e92"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.0063333354773931205,
+					"receive": 0.007291666406672448
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.204Z",
+				"time": 0.014916666259523481,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/1895f293d7be50b8.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"1895f293d7be50b8.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "6353"
+						},
+						{
+							"name": "ETag",
+							"value": "\"a237fabd87a3b078c32efe21711ba75e\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/1895f293d7be50b8.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::g7crt-1770507449711-60cad9963678"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.006666668923571706,
+					"receive": 0.008249997335951775
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.203Z",
+				"time": 0.015541671018581837,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/74fd050ae974c016.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"74fd050ae974c016.js\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "17733"
+						},
+						{
+							"name": "ETag",
+							"value": "\"a9dd84a3f4663b7718e55851692bfc8a\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/74fd050ae974c016.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::rqpjt-1770507449711-f52781ca241c"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.0065416679717600346,
+					"receive": 0.009000003046821803
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.203Z",
+				"time": 0.014166667824611068,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/17d6a28b71a5360e.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"17d6a28b71a5360e.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "11309"
+						},
+						{
+							"name": "ETag",
+							"value": "\"144ce2eed627299dae05c9b3c9a121fa\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/17d6a28b71a5360e.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::dv92z-1770507449710-f2dbc2c84387"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.006416667019948363,
+					"receive": 0.0077500008046627045
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.203Z",
+				"time": 0.01441666972823441,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/e0cd3f3f5960653d.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"e0cd3f3f5960653d.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "8434"
+						},
+						{
+							"name": "ETag",
+							"value": "\"3bc11911296df6b819a6a5128936681f\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/e0cd3f3f5960653d.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::2gdlv-1770507449710-609ee885d446"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.006666668923571706,
+					"receive": 0.0077500008046627045
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.203Z",
+				"time": 0.01712500670691952,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/11feab0e782e6084.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"11feab0e782e6084.js\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "11839"
+						},
+						{
+							"name": "ETag",
+							"value": "\"72652bb8e5738f1f0377fe9418484a2e\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/11feab0e782e6084.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::jjjlw-1770507449710-a0797865e698"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.006708338332828134,
+					"receive": 0.010416668374091387
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.202Z",
+				"time": 0.01587499718880281,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/4a6ae07d079ed517.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"4a6ae07d079ed517.js\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "9967"
+						},
+						{
+							"name": "ETag",
+							"value": "\"ecb18728a9602edee28be04df4760eb7\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/4a6ae07d079ed517.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::2hdrw-1770507449710-25be3d910a82"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.00670833105687052,
+					"receive": 0.009166666131932288
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.202Z",
+				"time": 0.01479166530771181,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/cdaf5990e701172b.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"cdaf5990e701172b.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "10656"
+						},
+						{
+							"name": "ETag",
+							"value": "\"e62555dba68fae05b882033d87905218\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/cdaf5990e701172b.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::2rqtx-1770507449709-4edefc319de1"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.006166665116325021,
+					"receive": 0.008625000191386789
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.202Z",
+				"time": 0.015124998753890395,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/4f62225d867ab5a6.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"4f62225d867ab5a6.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "13135"
+						},
+						{
+							"name": "ETag",
+							"value": "\"00c59485adba4bc38f34129038609c77\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/4f62225d867ab5a6.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::tt6d9-1770507449709-6dc57b8862c0"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.006416667019948363,
+					"receive": 0.008708331733942032
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.202Z",
+				"time": 0.018124999769497663,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/cd24519ec7a00ca4.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"cd24519ec7a00ca4.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "7134"
+						},
+						{
+							"name": "ETag",
+							"value": "\"28c83532bdfa151a8da3224e5e24f1b1\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/cd24519ec7a00ca4.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::2gqmd-1770507449709-d79221123fc8"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.010374998964834958,
+					"receive": 0.0077500008046627045
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.201Z",
+				"time": 0.015000005078036338,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/f65f0eb24dde9015.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"f65f0eb24dde9015.js\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "13308"
+						},
+						{
+							"name": "ETag",
+							"value": "\"4b61c302d864695d8c0ac51a24f1054f\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/f65f0eb24dde9015.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::hlpk9-1770507449709-e17558e314be"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.006791669875383377,
+					"receive": 0.008208335202652961
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.201Z",
+				"time": 0.015541663742624223,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/3d6e3d322f08a87c.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"3d6e3d322f08a87c.js\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "8863"
+						},
+						{
+							"name": "ETag",
+							"value": "\"c932b792121305a8bdd40ba04e45390a\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/3d6e3d322f08a87c.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::jjjlw-1770507449709-b2303d1da702"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.006666668923571706,
+					"receive": 0.008874994819052517
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.201Z",
+				"time": 0.016083329683169723,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/1f0bf21551ac9c7a.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"1f0bf21551ac9c7a.js\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "9966"
+						},
+						{
+							"name": "ETag",
+							"value": "\"a57eb636584bbdf38f36a0eecc8df58a\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/1f0bf21551ac9c7a.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::bgfpf-1770507449709-54b81ea24f8b"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.007374997949227691,
+					"receive": 0.008708331733942032
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.201Z",
+				"time": 0.015708334103692323,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/09ec68c5c1739e92.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"09ec68c5c1739e92.js\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "3630"
+						},
+						{
+							"name": "ETag",
+							"value": "\"2efde2e67e290e61aa59ff9851cf8a88\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/09ec68c5c1739e92.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::dv92z-1770507449705-fd93f7cc0a44"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.007208334864117205,
+					"receive": 0.008499999239575118
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.200Z",
+				"time": 0.018666665710043162,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/1df1ff267e38b1d1.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"1df1ff267e38b1d1.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "5122"
+						},
+						{
+							"name": "ETag",
+							"value": "\"346572fdbe502a1bef73212e00db06d4\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/1df1ff267e38b1d1.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::96tnd-1770507449705-810ddcafca1a"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.008374998287763447,
+					"receive": 0.010291667422279716
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.200Z",
+				"time": 0.017458332877140492,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/fadb7b12de1e9afd.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"fadb7b12de1e9afd.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "7992"
+						},
+						{
+							"name": "ETag",
+							"value": "\"940523d3598e0a0f55e2c2ce67fa445d\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/fadb7b12de1e9afd.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::bgfpf-1770507449705-6b64e9a508f0"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.00837500556372106,
+					"receive": 0.009083327313419431
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.200Z",
+				"time": 0.01804166822694242,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/266bc8b528757019.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"266bc8b528757019.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "618"
+						},
+						{
+							"name": "ETag",
+							"value": "\"a3bc43453d5f2f51eb22ad935c7ed426\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/266bc8b528757019.js"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::zvj2w-1770507449705-4082f18f54a0"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.008208335202652961,
+					"receive": 0.009833333024289459
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.200Z",
+				"time": 0.017791666323319077,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/turbopack-26e8dca3a11b39af.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"turbopack-26e8dca3a11b39af.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "4560"
+						},
+						{
+							"name": "ETag",
+							"value": "\"797a28f2746b0745ae35723e5d9abbb6\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/turbopack-26e8dca3a11b39af.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::dtdfp-1770507449705-979459823171"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.008041664841584861,
+					"receive": 0.009750001481734216
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.199Z",
+				"time": 0.020250001398380846,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/ab02e2c8a462eded.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"ab02e2c8a462eded.js\""
+						},
+						{
+							"name": "Age",
+							"value": "21857"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 17:33:11 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "7738"
+						},
+						{
+							"name": "ETag",
+							"value": "\"ea1ae1c2dd3f61f227607b7db017c7da\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/ab02e2c8a462eded.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::rz487-1770507449705-05d3fe85e637"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.009583331120666116,
+					"receive": 0.01066667027771473
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.199Z",
+				"time": 0.018666665710043162,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/52ff6319c900b15a.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"52ff6319c900b15a.js\""
+						},
+						{
+							"name": "Age",
+							"value": "21857"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 17:33:11 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "23528"
+						},
+						{
+							"name": "ETag",
+							"value": "\"71fa04cf13c4917b8aa8856519e20b21\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/52ff6319c900b15a.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::5v5lb-1770507449702-bb90a0b50778"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.008666669600643218,
+					"receive": 0.009999996109399945
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.199Z",
+				"time": 0.0221666632569395,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/a6b478df0c5eb4d1.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"a6b478df0c5eb4d1.js\""
+						},
+						{
+							"name": "Age",
+							"value": "27116"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 16:05:33 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "71369"
+						},
+						{
+							"name": "ETag",
+							"value": "\"39f76f26e84e4e080356546bb8c92ae0\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/a6b478df0c5eb4d1.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::jjjlw-1770507449702-893a439835d6"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.010708332411013544,
+					"receive": 0.011458330845925957
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.199Z",
+				"time": 0.024333334295079112,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/711be7185f88b164.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"711be7185f88b164.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "10938"
+						},
+						{
+							"name": "ETag",
+							"value": "\"dd99afc5a75f9ecb8ecad8c172956779\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/711be7185f88b164.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::gf82w-1770507449702-300142770f01"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.0113333371700719,
+					"receive": 0.012999997125007212
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.198Z",
+				"time": 0.026333334972150624,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/chunks/797206c05e3cb7ef.js?dpl=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [
+						{
+							"name": "dpl",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/javascript; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"797206c05e3cb7ef.js\""
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "8080"
+						},
+						{
+							"name": "ETag",
+							"value": "\"2848c44353dbcbb380027eb13a47a60d\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/chunks/797206c05e3cb7ef.js"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::sh5ql-1770507449702-054a5cf4aeb1"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "application/javascript",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.013500000932253897,
+					"receive": 0.012833334039896727
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.531Z",
+				"time": 45.404024043818936,
+				"request": {
+					"method": "GET",
+					"url": "https://lh3.googleusercontent.com/a/ACg8ocIXq0Ia5stvnVyyqfOsimXrDjiMsVycBSQ4mIT7t5QBuXANJk0=s96-c?w=***REDACTED***&q=***REDACTED***",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "image/webp,image/avif,image/jxl,image/heic,image/heic-sequence,video/*;q=0.8,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "cross-site"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "image"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "no-cors"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Priority",
+							"value": "u=5, i"
+						}
+					],
+					"queryString": [
+						{
+							"name": "w",
+							"value": "96"
+						},
+						{
+							"name": "q",
+							"value": "75"
+						}
+					],
+					"headersSize": 17,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Type",
+							"value": "image/png"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline;filename=\"unnamed.png\""
+						},
+						{
+							"name": "Age",
+							"value": "350"
+						},
+						{
+							"name": "X-XSS-Protection",
+							"value": "0"
+						},
+						{
+							"name": "Access-Control-Expose-Headers",
+							"value": "Content-Length"
+						},
+						{
+							"name": "Expires",
+							"value": "Sun, 08 Feb 2026 23:37:31 GMT"
+						},
+						{
+							"name": "Timing-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=86400, no-transform"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:31 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "800"
+						},
+						{
+							"name": "X-Content-Type-Options",
+							"value": "nosniff"
+						},
+						{
+							"name": "Vary",
+							"value": "Origin"
+						},
+						{
+							"name": "Server",
+							"value": "fife"
+						},
+						{
+							"name": "Alt-Svc",
+							"value": "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000"
+						}
+					],
+					"content": {
+						"size": 800,
+						"mimeType": "image/png",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 21,
+					"bodySize": 800,
+					"_transferSize": 821
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 12.060077337082475,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 32.88825739582535,
+					"receive": 0.45568931091111153
+				},
+				"serverIPAddress": "142.251.118.132",
+				"_serverPort": 443,
+				"connection": "2",
+				"_fetchType": "Network Load",
+				"_priority": "low"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.417Z",
+				"time": 31.730368551507127,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/favicon.svg?w=***REDACTED***&q=***REDACTED***",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "image/webp,image/avif,image/jxl,image/heic,image/heic-sequence,video/*;q=0.8,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "same-origin"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "image"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "no-cors"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Priority",
+							"value": "u=5, i"
+						}
+					],
+					"queryString": [
+						{
+							"name": "w",
+							"value": "256"
+						},
+						{
+							"name": "q",
+							"value": "75"
+						}
+					],
+					"headersSize": 41,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "image/svg+xml"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"favicon.svg\""
+						},
+						{
+							"name": "Age",
+							"value": "397"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:36:43 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=0, must-revalidate"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:43:21 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "554"
+						},
+						{
+							"name": "ETag",
+							"value": "\"7349fd379957237553cf0317596f8a8c\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/favicon.svg"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::f7b4q-1770507801436-44875d5950d0"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 1087,
+						"mimeType": "image/svg+xml",
+						"compression": 515,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 56,
+					"bodySize": 572,
+					"_transferSize": 628
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 4.501402756432071,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 27.144950567162596,
+					"receive": 0.08401522791245952
+				},
+				"serverIPAddress": "76.76.21.21",
+				"_serverPort": 443,
+				"connection": "1",
+				"_fetchType": "Network Load",
+				"_priority": "low"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.416Z",
+				"time": 31.61711272696266,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/favicon.svg?w=***REDACTED***&q=***REDACTED***",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "image/webp,image/avif,image/jxl,image/heic,image/heic-sequence,video/*;q=0.8,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "same-origin"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "image"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "no-cors"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Priority",
+							"value": "u=5, i"
+						}
+					],
+					"queryString": [
+						{
+							"name": "w",
+							"value": "32"
+						},
+						{
+							"name": "q",
+							"value": "75"
+						}
+					],
+					"headersSize": 40,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "image/svg+xml"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"favicon.svg\""
+						},
+						{
+							"name": "Age",
+							"value": "397"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:36:43 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=0, must-revalidate"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:43:21 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "554"
+						},
+						{
+							"name": "ETag",
+							"value": "\"7349fd379957237553cf0317596f8a8c\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/favicon.svg"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::hkf8l-1770507801436-cac40d6c26ad"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 1087,
+						"mimeType": "image/svg+xml",
+						"compression": 515,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 200,
+					"bodySize": 572,
+					"_transferSize": 772
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 3.458134160609916,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 28.048318563378416,
+					"receive": 0.11066000297432765
+				},
+				"serverIPAddress": "76.76.21.21",
+				"_serverPort": 443,
+				"connection": "1",
+				"_fetchType": "Network Load",
+				"_priority": "low"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.416Z",
+				"time": 32.10196453437675,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/favicon.svg?w=***REDACTED***&q=***REDACTED***",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "image/webp,image/avif,image/jxl,image/heic,image/heic-sequence,video/*;q=0.8,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "same-origin"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "image"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "no-cors"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Priority",
+							"value": "u=5, i"
+						}
+					],
+					"queryString": [
+						{
+							"name": "w",
+							"value": "64"
+						},
+						{
+							"name": "q",
+							"value": "75"
+						}
+					],
+					"headersSize": 41,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "image/svg+xml"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"favicon.svg\""
+						},
+						{
+							"name": "Age",
+							"value": "397"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 23:36:43 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=0, must-revalidate"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:43:21 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "554"
+						},
+						{
+							"name": "ETag",
+							"value": "\"7349fd379957237553cf0317596f8a8c\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/favicon.svg"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::prsj9-1770507801436-49a1a5af2e89"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 1087,
+						"mimeType": "image/svg+xml",
+						"compression": 515,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 59,
+					"bodySize": 572,
+					"_transferSize": 631
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 1.9615524433902465,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 30.095183734374586,
+					"receive": 0.04522835661191493
+				},
+				"serverIPAddress": "76.76.21.21",
+				"_serverPort": 443,
+				"connection": "1",
+				"_fetchType": "Network Load",
+				"_priority": "low"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.385Z",
+				"time": 27.734755523852073,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/hero-rays-dark.svg",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "image/webp,image/avif,image/jxl,image/heic,image/heic-sequence,video/*;q=0.8,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "same-origin"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "image"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "If-None-Match",
+							"value": "\"eee99e44d960f859841ef4a64959da91\""
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "no-cors"
+						},
+						{
+							"name": "If-Modified-Since",
+							"value": "Sat, 07 Feb 2026 17:45:29 GMT"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Priority",
+							"value": "u=5, i"
+						}
+					],
+					"queryString": [],
+					"headersSize": 91,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 304,
+					"statusText": "",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:43:21 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=0, must-revalidate"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::tt6d9-1770507801401-2d9559d69fb3"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "text/plain",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 67,
+					"bodySize": 0,
+					"_transferSize": 67
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 1.0144490952370688,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 26.664185294066556,
+					"receive": 0.056121134548448026
+				},
+				"serverIPAddress": "76.76.21.21",
+				"_serverPort": 443,
+				"connection": "1",
+				"_fetchType": "Memory Cache",
+				"_priority": "low"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:20.183Z",
+				"time": 0.05341666837921366,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/_next/static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [],
+					"queryString": [],
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "font/woff2"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline; filename=\"83afe278b6a6bb3c-s.p.3a6ba036.woff2\""
+						},
+						{
+							"name": "Age",
+							"value": "21122"
+						},
+						{
+							"name": "Last-Modified",
+							"value": "Sat, 07 Feb 2026 17:45:27 GMT"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public,max-age=31536000,immutable"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:37:29 GMT"
+						},
+						{
+							"name": "Content-Length",
+							"value": "48432"
+						},
+						{
+							"name": "ETag",
+							"value": "\"65850a373e258f1c897a2b3d75eb74de\""
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/_next/static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::2gqmd-1770507449695-f27f37192db7"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 0,
+						"mimeType": "font/woff2",
+						"compression": 0,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": -1,
+					"bodySize": -1
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 0,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 0.03270833258284256,
+					"receive": 0.020708335796371102
+				},
+				"_fetchType": "Memory Cache"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.666Z",
+				"time": 59.35351151856594,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/ja?_rsc=***REDACTED***",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "*/*"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "same-origin"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "cors"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "empty"
+						},
+						{
+							"name": "next-router-segment-prefetch",
+							"value": "/$d$locale/!KGNvbW1vbi1sYXlvdXQp/__PAGE__"
+						},
+						{
+							"name": "next-url",
+							"value": "/ja"
+						},
+						{
+							"name": "Priority",
+							"value": "u=5, i"
+						},
+						{
+							"name": "rsc",
+							"value": "1"
+						},
+						{
+							"name": "next-router-prefetch",
+							"value": "1"
+						},
+						{
+							"name": "x-deployment-id",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"queryString": [
+						{
+							"name": "_rsc",
+							"value": "1lp22"
+						}
+					],
+					"headersSize": 39,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "text/x-component"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline"
+						},
+						{
+							"name": "Age",
+							"value": "27463"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Link",
+							"value": "<https://evame.tech/en>; rel=\"alternate\"; hreflang=\"en\", <https://evame.tech/zh>; rel=\"alternate\"; hreflang=\"zh\", <https://evame.tech/es>; rel=\"alternate\"; hreflang=\"es\", <https://evame.tech/ar>; rel=\"alternate\"; hreflang=\"ar\", <https://evame.tech/id>; rel=\"alternate\"; hreflang=\"id\", <https://evame.tech/pt>; rel=\"alternate\"; hreflang=\"pt\", <https://evame.tech/fr>; rel=\"alternate\"; hreflang=\"fr\", <https://evame.tech/ja>; rel=\"alternate\"; hreflang=\"ja\", <https://evame.tech/ru>; rel=\"alternate\"; hreflang=\"ru\", <https://evame.tech/de>; rel=\"alternate\"; hreflang=\"de\", <https://evame.tech/vi>; rel=\"alternate\"; hreflang=\"vi\", <https://evame.tech/ko>; rel=\"alternate\"; hreflang=\"ko\", <https://evame.tech/tr>; rel=\"alternate\"; hreflang=\"tr\", <https://evame.tech/it>; rel=\"alternate\"; hreflang=\"it\", <https://evame.tech/fa>; rel=\"alternate\"; hreflang=\"fa\", <https://evame.tech/th>; rel=\"alternate\"; hreflang=\"th\", <https://evame.tech/pl>; rel=\"alternate\"; hreflang=\"pl\", <https://evame.tech/nl>; rel=\"alternate\"; hreflang=\"nl\", <https://evame.tech/tl>; rel=\"alternate\"; hreflang=\"tl\", <https://evame.tech/hi>; rel=\"alternate\"; hreflang=\"hi\", <https://evame.tech/pi>; rel=\"alternate\"; hreflang=\"pi\", <https://evame.tech/>; rel=\"alternate\"; hreflang=\"x-default\", </_next/static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\""
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=0, must-revalidate"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:43:21 GMT"
+						},
+						{
+							"name": "ETag",
+							"value": "W/\"460dc673b8dd95ea3f9c6213b494aa8e\""
+						},
+						{
+							"name": "Vary",
+							"value": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/ja.segments/$d$locale/!KGNvbW1vbi1sYXlvdXQp/__PAGE__.segment.rsc"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-nextjs-stale-time",
+							"value": "300"
+						},
+						{
+							"name": "x-nextjs-postponed",
+							"value": "2"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::f7b4q-1770507801683-928633773c15"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						},
+						{
+							"name": "x-nextjs-prerender",
+							"value": "1"
+						}
+					],
+					"content": {
+						"size": 3861,
+						"mimeType": "text/x-component",
+						"compression": 2559,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 144,
+					"bodySize": 1302,
+					"_transferSize": 1446
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 1.0049637712654658,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 58.24498528090771,
+					"receive": 0.10356246639275923
+				},
+				"serverIPAddress": "76.76.21.21",
+				"_serverPort": 443,
+				"connection": "1",
+				"_fetchType": "Network Load",
+				"_priority": "low"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.610Z",
+				"time": 59.0480056926026,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/ja?_rsc=***REDACTED***",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "*/*"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "same-origin"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "cors"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "empty"
+						},
+						{
+							"name": "next-router-segment-prefetch",
+							"value": "/$d$locale/!KGNvbW1vbi1sYXlvdXQp"
+						},
+						{
+							"name": "next-url",
+							"value": "/ja"
+						},
+						{
+							"name": "Priority",
+							"value": "u=5, i"
+						},
+						{
+							"name": "rsc",
+							"value": "1"
+						},
+						{
+							"name": "next-router-prefetch",
+							"value": "1"
+						},
+						{
+							"name": "x-deployment-id",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"queryString": [
+						{
+							"name": "_rsc",
+							"value": "1bfej"
+						}
+					],
+					"headersSize": 39,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "text/x-component"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline"
+						},
+						{
+							"name": "Age",
+							"value": "21472"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Link",
+							"value": "<https://evame.tech/en>; rel=\"alternate\"; hreflang=\"en\", <https://evame.tech/zh>; rel=\"alternate\"; hreflang=\"zh\", <https://evame.tech/es>; rel=\"alternate\"; hreflang=\"es\", <https://evame.tech/ar>; rel=\"alternate\"; hreflang=\"ar\", <https://evame.tech/id>; rel=\"alternate\"; hreflang=\"id\", <https://evame.tech/pt>; rel=\"alternate\"; hreflang=\"pt\", <https://evame.tech/fr>; rel=\"alternate\"; hreflang=\"fr\", <https://evame.tech/ja>; rel=\"alternate\"; hreflang=\"ja\", <https://evame.tech/ru>; rel=\"alternate\"; hreflang=\"ru\", <https://evame.tech/de>; rel=\"alternate\"; hreflang=\"de\", <https://evame.tech/vi>; rel=\"alternate\"; hreflang=\"vi\", <https://evame.tech/ko>; rel=\"alternate\"; hreflang=\"ko\", <https://evame.tech/tr>; rel=\"alternate\"; hreflang=\"tr\", <https://evame.tech/it>; rel=\"alternate\"; hreflang=\"it\", <https://evame.tech/fa>; rel=\"alternate\"; hreflang=\"fa\", <https://evame.tech/th>; rel=\"alternate\"; hreflang=\"th\", <https://evame.tech/pl>; rel=\"alternate\"; hreflang=\"pl\", <https://evame.tech/nl>; rel=\"alternate\"; hreflang=\"nl\", <https://evame.tech/tl>; rel=\"alternate\"; hreflang=\"tl\", <https://evame.tech/hi>; rel=\"alternate\"; hreflang=\"hi\", <https://evame.tech/pi>; rel=\"alternate\"; hreflang=\"pi\", <https://evame.tech/>; rel=\"alternate\"; hreflang=\"x-default\", </_next/static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\""
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=0, must-revalidate"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:43:21 GMT"
+						},
+						{
+							"name": "ETag",
+							"value": "W/\"fc105f151012daef842633ea6c428ca3\""
+						},
+						{
+							"name": "Vary",
+							"value": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/ja.segments/$d$locale/!KGNvbW1vbi1sYXlvdXQp.segment.rsc"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-nextjs-stale-time",
+							"value": "300"
+						},
+						{
+							"name": "x-nextjs-postponed",
+							"value": "2"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::f7b4q-1770507801630-2f1030ff7eea"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						},
+						{
+							"name": "x-nextjs-prerender",
+							"value": "1"
+						}
+					],
+					"content": {
+						"size": 20814,
+						"mimeType": "text/x-component",
+						"compression": 16457,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 165,
+					"bodySize": 4357,
+					"_transferSize": 4522
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 4.57885680225445,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 54.430132935522124,
+					"receive": 0.039015954826027155
+				},
+				"serverIPAddress": "76.76.21.21",
+				"_serverPort": 443,
+				"connection": "1",
+				"_fetchType": "Network Load",
+				"_priority": "low"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.609Z",
+				"time": 59.32309030322358,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/ja?_rsc=***REDACTED***",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "*/*"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "same-origin"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "cors"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "empty"
+						},
+						{
+							"name": "next-router-segment-prefetch",
+							"value": "/$d$locale"
+						},
+						{
+							"name": "next-url",
+							"value": "/ja"
+						},
+						{
+							"name": "Priority",
+							"value": "u=5, i"
+						},
+						{
+							"name": "rsc",
+							"value": "1"
+						},
+						{
+							"name": "next-router-prefetch",
+							"value": "1"
+						},
+						{
+							"name": "x-deployment-id",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"queryString": [
+						{
+							"name": "_rsc",
+							"value": "mubk0"
+						}
+					],
+					"headersSize": 39,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "text/x-component"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline"
+						},
+						{
+							"name": "Age",
+							"value": "21472"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Link",
+							"value": "<https://evame.tech/en>; rel=\"alternate\"; hreflang=\"en\", <https://evame.tech/zh>; rel=\"alternate\"; hreflang=\"zh\", <https://evame.tech/es>; rel=\"alternate\"; hreflang=\"es\", <https://evame.tech/ar>; rel=\"alternate\"; hreflang=\"ar\", <https://evame.tech/id>; rel=\"alternate\"; hreflang=\"id\", <https://evame.tech/pt>; rel=\"alternate\"; hreflang=\"pt\", <https://evame.tech/fr>; rel=\"alternate\"; hreflang=\"fr\", <https://evame.tech/ja>; rel=\"alternate\"; hreflang=\"ja\", <https://evame.tech/ru>; rel=\"alternate\"; hreflang=\"ru\", <https://evame.tech/de>; rel=\"alternate\"; hreflang=\"de\", <https://evame.tech/vi>; rel=\"alternate\"; hreflang=\"vi\", <https://evame.tech/ko>; rel=\"alternate\"; hreflang=\"ko\", <https://evame.tech/tr>; rel=\"alternate\"; hreflang=\"tr\", <https://evame.tech/it>; rel=\"alternate\"; hreflang=\"it\", <https://evame.tech/fa>; rel=\"alternate\"; hreflang=\"fa\", <https://evame.tech/th>; rel=\"alternate\"; hreflang=\"th\", <https://evame.tech/pl>; rel=\"alternate\"; hreflang=\"pl\", <https://evame.tech/nl>; rel=\"alternate\"; hreflang=\"nl\", <https://evame.tech/tl>; rel=\"alternate\"; hreflang=\"tl\", <https://evame.tech/hi>; rel=\"alternate\"; hreflang=\"hi\", <https://evame.tech/pi>; rel=\"alternate\"; hreflang=\"pi\", <https://evame.tech/>; rel=\"alternate\"; hreflang=\"x-default\", </_next/static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\""
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=0, must-revalidate"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:43:21 GMT"
+						},
+						{
+							"name": "ETag",
+							"value": "W/\"971544c1e3b642768c94f678867adc23\""
+						},
+						{
+							"name": "Vary",
+							"value": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/ja.segments/$d$locale.segment.rsc"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-nextjs-stale-time",
+							"value": "300"
+						},
+						{
+							"name": "x-nextjs-postponed",
+							"value": "2"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::dv92z-1770507801629-df1ab176068e"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						},
+						{
+							"name": "x-nextjs-prerender",
+							"value": "1"
+						}
+					],
+					"content": {
+						"size": 2745,
+						"mimeType": "text/x-component",
+						"compression": 1941,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 116,
+					"bodySize": 804,
+					"_transferSize": 920
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 4.570141180010978,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 54.682296453393064,
+					"receive": 0.07065266981953755
+				},
+				"serverIPAddress": "76.76.21.21",
+				"_serverPort": 443,
+				"connection": "1",
+				"_fetchType": "Network Load",
+				"_priority": "low"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.609Z",
+				"time": 53.1880716807791,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/ja?_rsc=***REDACTED***",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "*/*"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "same-origin"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "cors"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "empty"
+						},
+						{
+							"name": "next-router-segment-prefetch",
+							"value": "/_index"
+						},
+						{
+							"name": "next-url",
+							"value": "/ja"
+						},
+						{
+							"name": "Priority",
+							"value": "u=5, i"
+						},
+						{
+							"name": "rsc",
+							"value": "1"
+						},
+						{
+							"name": "next-router-prefetch",
+							"value": "1"
+						},
+						{
+							"name": "x-deployment-id",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"queryString": [
+						{
+							"name": "_rsc",
+							"value": "tqohb"
+						}
+					],
+					"headersSize": 39,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "text/x-component"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline"
+						},
+						{
+							"name": "Age",
+							"value": "21472"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Link",
+							"value": "<https://evame.tech/en>; rel=\"alternate\"; hreflang=\"en\", <https://evame.tech/zh>; rel=\"alternate\"; hreflang=\"zh\", <https://evame.tech/es>; rel=\"alternate\"; hreflang=\"es\", <https://evame.tech/ar>; rel=\"alternate\"; hreflang=\"ar\", <https://evame.tech/id>; rel=\"alternate\"; hreflang=\"id\", <https://evame.tech/pt>; rel=\"alternate\"; hreflang=\"pt\", <https://evame.tech/fr>; rel=\"alternate\"; hreflang=\"fr\", <https://evame.tech/ja>; rel=\"alternate\"; hreflang=\"ja\", <https://evame.tech/ru>; rel=\"alternate\"; hreflang=\"ru\", <https://evame.tech/de>; rel=\"alternate\"; hreflang=\"de\", <https://evame.tech/vi>; rel=\"alternate\"; hreflang=\"vi\", <https://evame.tech/ko>; rel=\"alternate\"; hreflang=\"ko\", <https://evame.tech/tr>; rel=\"alternate\"; hreflang=\"tr\", <https://evame.tech/it>; rel=\"alternate\"; hreflang=\"it\", <https://evame.tech/fa>; rel=\"alternate\"; hreflang=\"fa\", <https://evame.tech/th>; rel=\"alternate\"; hreflang=\"th\", <https://evame.tech/pl>; rel=\"alternate\"; hreflang=\"pl\", <https://evame.tech/nl>; rel=\"alternate\"; hreflang=\"nl\", <https://evame.tech/tl>; rel=\"alternate\"; hreflang=\"tl\", <https://evame.tech/hi>; rel=\"alternate\"; hreflang=\"hi\", <https://evame.tech/pi>; rel=\"alternate\"; hreflang=\"pi\", <https://evame.tech/>; rel=\"alternate\"; hreflang=\"x-default\", </_next/static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\""
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=0, must-revalidate"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:43:21 GMT"
+						},
+						{
+							"name": "ETag",
+							"value": "W/\"7f2e7974ecc1b4173267af38f62e7f35\""
+						},
+						{
+							"name": "Vary",
+							"value": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/ja.segments/_index.segment.rsc"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-nextjs-stale-time",
+							"value": "300"
+						},
+						{
+							"name": "x-nextjs-postponed",
+							"value": "2"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::428r5-1770507801629-2a1ca130e5ef"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						},
+						{
+							"name": "x-nextjs-prerender",
+							"value": "1"
+						}
+					],
+					"content": {
+						"size": 3318,
+						"mimeType": "text/x-component",
+						"compression": 2333,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 116,
+					"bodySize": 985,
+					"_transferSize": 1101
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 4.423793208843563,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 48.66818780283211,
+					"receive": 0.09609066910343245
+				},
+				"serverIPAddress": "76.76.21.21",
+				"_serverPort": 443,
+				"connection": "1",
+				"_fetchType": "Network Load",
+				"_priority": "low"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.609Z",
+				"time": 71.82491294224747,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/ja?_rsc=***REDACTED***",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "*/*"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "same-origin"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "cors"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "empty"
+						},
+						{
+							"name": "next-router-segment-prefetch",
+							"value": "/_head"
+						},
+						{
+							"name": "next-url",
+							"value": "/ja"
+						},
+						{
+							"name": "Priority",
+							"value": "u=5, i"
+						},
+						{
+							"name": "rsc",
+							"value": "1"
+						},
+						{
+							"name": "next-router-prefetch",
+							"value": "1"
+						},
+						{
+							"name": "x-deployment-id",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"queryString": [
+						{
+							"name": "_rsc",
+							"value": "7uv54"
+						}
+					],
+					"headersSize": 39,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "text/x-component"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline"
+						},
+						{
+							"name": "Age",
+							"value": "27463"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Link",
+							"value": "<https://evame.tech/en>; rel=\"alternate\"; hreflang=\"en\", <https://evame.tech/zh>; rel=\"alternate\"; hreflang=\"zh\", <https://evame.tech/es>; rel=\"alternate\"; hreflang=\"es\", <https://evame.tech/ar>; rel=\"alternate\"; hreflang=\"ar\", <https://evame.tech/id>; rel=\"alternate\"; hreflang=\"id\", <https://evame.tech/pt>; rel=\"alternate\"; hreflang=\"pt\", <https://evame.tech/fr>; rel=\"alternate\"; hreflang=\"fr\", <https://evame.tech/ja>; rel=\"alternate\"; hreflang=\"ja\", <https://evame.tech/ru>; rel=\"alternate\"; hreflang=\"ru\", <https://evame.tech/de>; rel=\"alternate\"; hreflang=\"de\", <https://evame.tech/vi>; rel=\"alternate\"; hreflang=\"vi\", <https://evame.tech/ko>; rel=\"alternate\"; hreflang=\"ko\", <https://evame.tech/tr>; rel=\"alternate\"; hreflang=\"tr\", <https://evame.tech/it>; rel=\"alternate\"; hreflang=\"it\", <https://evame.tech/fa>; rel=\"alternate\"; hreflang=\"fa\", <https://evame.tech/th>; rel=\"alternate\"; hreflang=\"th\", <https://evame.tech/pl>; rel=\"alternate\"; hreflang=\"pl\", <https://evame.tech/nl>; rel=\"alternate\"; hreflang=\"nl\", <https://evame.tech/tl>; rel=\"alternate\"; hreflang=\"tl\", <https://evame.tech/hi>; rel=\"alternate\"; hreflang=\"hi\", <https://evame.tech/pi>; rel=\"alternate\"; hreflang=\"pi\", <https://evame.tech/>; rel=\"alternate\"; hreflang=\"x-default\", </_next/static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\""
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=0, must-revalidate"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:43:21 GMT"
+						},
+						{
+							"name": "ETag",
+							"value": "W/\"8a3deac84e5f851906dc25ed6309e34d\""
+						},
+						{
+							"name": "Vary",
+							"value": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/ja.segments/_head.segment.rsc"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-nextjs-stale-time",
+							"value": "300"
+						},
+						{
+							"name": "x-nextjs-postponed",
+							"value": "2"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::f7b4q-1770507801629-d6b128ac0eaa"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						},
+						{
+							"name": "x-nextjs-prerender",
+							"value": "1"
+						}
+					],
+					"content": {
+						"size": 3042,
+						"mimeType": "text/x-component",
+						"compression": 2077,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 139,
+					"bodySize": 965,
+					"_transferSize": 1104
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 3.8964671693975106,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 67.84538621286629,
+					"receive": 0.08305955998366699
+				},
+				"serverIPAddress": "76.76.21.21",
+				"_serverPort": 443,
+				"connection": "1",
+				"_fetchType": "Network Load",
+				"_priority": "low"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.548Z",
+				"time": 52.25329570384929,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/ja?_rsc=***REDACTED***",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "*/*"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "same-origin"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "cors"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "empty"
+						},
+						{
+							"name": "next-router-segment-prefetch",
+							"value": "/_tree"
+						},
+						{
+							"name": "next-url",
+							"value": "/ja"
+						},
+						{
+							"name": "Priority",
+							"value": "u=5, i"
+						},
+						{
+							"name": "rsc",
+							"value": "1"
+						},
+						{
+							"name": "next-router-prefetch",
+							"value": "1"
+						},
+						{
+							"name": "x-deployment-id",
+							"value": "dpl_Cy3qpqn7CcBoS9dioBw98rRSs9de"
+						}
+					],
+					"queryString": [
+						{
+							"name": "_rsc",
+							"value": "eqsiv"
+						}
+					],
+					"headersSize": 39,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Link",
+							"value": "<https://evame.tech/en>; rel=\"alternate\"; hreflang=\"en\", <https://evame.tech/zh>; rel=\"alternate\"; hreflang=\"zh\", <https://evame.tech/es>; rel=\"alternate\"; hreflang=\"es\", <https://evame.tech/ar>; rel=\"alternate\"; hreflang=\"ar\", <https://evame.tech/id>; rel=\"alternate\"; hreflang=\"id\", <https://evame.tech/pt>; rel=\"alternate\"; hreflang=\"pt\", <https://evame.tech/fr>; rel=\"alternate\"; hreflang=\"fr\", <https://evame.tech/ja>; rel=\"alternate\"; hreflang=\"ja\", <https://evame.tech/ru>; rel=\"alternate\"; hreflang=\"ru\", <https://evame.tech/de>; rel=\"alternate\"; hreflang=\"de\", <https://evame.tech/vi>; rel=\"alternate\"; hreflang=\"vi\", <https://evame.tech/ko>; rel=\"alternate\"; hreflang=\"ko\", <https://evame.tech/tr>; rel=\"alternate\"; hreflang=\"tr\", <https://evame.tech/it>; rel=\"alternate\"; hreflang=\"it\", <https://evame.tech/fa>; rel=\"alternate\"; hreflang=\"fa\", <https://evame.tech/th>; rel=\"alternate\"; hreflang=\"th\", <https://evame.tech/pl>; rel=\"alternate\"; hreflang=\"pl\", <https://evame.tech/nl>; rel=\"alternate\"; hreflang=\"nl\", <https://evame.tech/tl>; rel=\"alternate\"; hreflang=\"tl\", <https://evame.tech/hi>; rel=\"alternate\"; hreflang=\"hi\", <https://evame.tech/pi>; rel=\"alternate\"; hreflang=\"pi\", <https://evame.tech/>; rel=\"alternate\"; hreflang=\"x-default\", </_next/static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\""
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=0, must-revalidate"
+						},
+						{
+							"name": "Accept-Ranges",
+							"value": "bytes"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline"
+						},
+						{
+							"name": "Content-Length",
+							"value": "927"
+						},
+						{
+							"name": "Vary",
+							"value": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:43:21 GMT"
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Age",
+							"value": "27464"
+						},
+						{
+							"name": "Content-Type",
+							"value": "text/x-component"
+						},
+						{
+							"name": "ETag",
+							"value": "\"239cb92c94dc37d708a3cda0ed0016d7\""
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::prsj9-1770507801565-638f6f0acfa5"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-nextjs-postponed",
+							"value": "2"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/ja.segments/_tree.segment.rsc"
+						},
+						{
+							"name": "x-nextjs-stale-time",
+							"value": "300"
+						},
+						{
+							"name": "x-nextjs-prerender",
+							"value": "1"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						}
+					],
+					"content": {
+						"size": 927,
+						"mimeType": "text/x-component",
+						"compression": -18,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 1340,
+					"bodySize": 945,
+					"_transferSize": 2285
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 1.3701238567591645,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 50.805932107323315,
+					"receive": 0.07723973976681009
+				},
+				"serverIPAddress": "76.76.21.21",
+				"_serverPort": 443,
+				"connection": "1",
+				"_fetchType": "Network Load",
+				"_priority": "low"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:21.494Z",
+				"time": 301.61393554590177,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/api/auth/get-session",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "*/*"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "same-origin"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "empty"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "cors"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Referer",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Priority",
+							"value": "u=3, i"
+						}
+					],
+					"queryString": [],
+					"headersSize": 38,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"name": "Age",
+							"value": "0"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=0, must-revalidate"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:43:21 GMT"
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "Vary",
+							"value": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "MISS"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/api/auth/[...all]"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::sin1::v4g4t-1770507801510-b83dcbc06543"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						}
+					],
+					"content": {
+						"size": 4,
+						"mimeType": "application/json",
+						"compression": -42,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 123,
+					"bodySize": 46,
+					"_transferSize": 169
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 1.0722296283347532,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 300.4804074225831,
+					"receive": 0.06129849498393014
+				},
+				"serverIPAddress": "76.76.21.21",
+				"_serverPort": 443,
+				"connection": "1",
+				"_fetchType": "Network Load",
+				"_priority": "medium"
+			},
+			{
+				"pageref": "page_0",
+				"startedDateTime": "2026-02-07T23:43:19.652Z",
+				"time": 1640.5382479861146,
+				"request": {
+					"method": "GET",
+					"url": "https://evame.tech/ja",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Accept",
+							"value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+						},
+						{
+							"name": "Sec-Fetch-Site",
+							"value": "none"
+						},
+						{
+							"name": "Sec-Fetch-Mode",
+							"value": "navigate"
+						},
+						{
+							"name": "User-Agent",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Accept-Language",
+							"value": "ja"
+						},
+						{
+							"name": "Accept-Encoding",
+							"value": "gzip, deflate, br"
+						},
+						{
+							"name": "Sec-Fetch-Dest",
+							"value": "document"
+						},
+						{
+							"name": "Priority",
+							"value": "u=0, i"
+						}
+					],
+					"queryString": [],
+					"headersSize": 25,
+					"bodySize": 0
+				},
+				"response": {
+					"status": 200,
+					"statusText": "",
+					"httpVersion": "HTTP/2",
+					"cookies": [],
+					"headers": [
+						{
+							"name": "Content-Type",
+							"value": "text/html; charset=utf-8"
+						},
+						{
+							"name": "Access-Control-Allow-Origin",
+							"value": "***REDACTED***"
+						},
+						{
+							"name": "Content-Disposition",
+							"value": "inline"
+						},
+						{
+							"name": "Age",
+							"value": "27466"
+						},
+						{
+							"name": "Content-Encoding",
+							"value": "br"
+						},
+						{
+							"name": "Link",
+							"value": "<https://evame.tech/en>; rel=\"alternate\"; hreflang=\"en\", <https://evame.tech/zh>; rel=\"alternate\"; hreflang=\"zh\", <https://evame.tech/es>; rel=\"alternate\"; hreflang=\"es\", <https://evame.tech/ar>; rel=\"alternate\"; hreflang=\"ar\", <https://evame.tech/id>; rel=\"alternate\"; hreflang=\"id\", <https://evame.tech/pt>; rel=\"alternate\"; hreflang=\"pt\", <https://evame.tech/fr>; rel=\"alternate\"; hreflang=\"fr\", <https://evame.tech/ja>; rel=\"alternate\"; hreflang=\"ja\", <https://evame.tech/ru>; rel=\"alternate\"; hreflang=\"ru\", <https://evame.tech/de>; rel=\"alternate\"; hreflang=\"de\", <https://evame.tech/vi>; rel=\"alternate\"; hreflang=\"vi\", <https://evame.tech/ko>; rel=\"alternate\"; hreflang=\"ko\", <https://evame.tech/tr>; rel=\"alternate\"; hreflang=\"tr\", <https://evame.tech/it>; rel=\"alternate\"; hreflang=\"it\", <https://evame.tech/fa>; rel=\"alternate\"; hreflang=\"fa\", <https://evame.tech/th>; rel=\"alternate\"; hreflang=\"th\", <https://evame.tech/pl>; rel=\"alternate\"; hreflang=\"pl\", <https://evame.tech/nl>; rel=\"alternate\"; hreflang=\"nl\", <https://evame.tech/tl>; rel=\"alternate\"; hreflang=\"tl\", <https://evame.tech/hi>; rel=\"alternate\"; hreflang=\"hi\", <https://evame.tech/pi>; rel=\"alternate\"; hreflang=\"pi\", <https://evame.tech/>; rel=\"alternate\"; hreflang=\"x-default\", </_next/static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2>; rel=preload; as=\"font\"; crossorigin=\"\"; type=\"font/woff2\""
+						},
+						{
+							"name": "Cache-Control",
+							"value": "public, max-age=0, must-revalidate"
+						},
+						{
+							"name": "Date",
+							"value": "Sat, 07 Feb 2026 23:43:19 GMT"
+						},
+						{
+							"name": "Vary",
+							"value": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch"
+						},
+						{
+							"name": "X-Frame-Options",
+							"value": "DENY"
+						},
+						{
+							"name": "x-matched-path",
+							"value": "/ja"
+						},
+						{
+							"name": "Server",
+							"value": "Vercel"
+						},
+						{
+							"name": "x-vercel-cache",
+							"value": "HIT"
+						},
+						{
+							"name": "x-nextjs-stale-time",
+							"value": "300"
+						},
+						{
+							"name": "x-vercel-id",
+							"value": "kix1::r9bcc-1770507799672-8068075e3475"
+						},
+						{
+							"name": "Strict-Transport-Security",
+							"value": "max-age=63072000"
+						},
+						{
+							"name": "x-nextjs-prerender",
+							"value": "1"
+						}
+					],
+					"content": {
+						"size": 234601,
+						"mimeType": "text/html",
+						"compression": 208063,
+						"text": "[REDACTED_CONTENT]"
+					},
+					"redirectURL": "",
+					"headersSize": 186,
+					"bodySize": 26538,
+					"_transferSize": 26724
+				},
+				"cache": {},
+				"timings": {
+					"blocked": 2.0433830213733017,
+					"dns": -1,
+					"connect": -1,
+					"ssl": -1,
+					"send": 0,
+					"wait": 83.00976151076611,
+					"receive": 1555.4851034539752
+				},
+				"serverIPAddress": "76.76.21.21",
+				"_serverPort": 443,
+				"connection": "1",
+				"_fetchType": "Network Load",
+				"_priority": "high"
+			}
+		]
+	}
+}
