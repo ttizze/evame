@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
-import { createPage, createUser } from "@/tests/factories";
+import {
+	createPage,
+	createPageWithSegments,
+	createUser,
+} from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { deletePage } from "./mutations.server";
 
@@ -68,5 +72,43 @@ describe("deletePage", () => {
 			.execute();
 
 		expect(movedPages).toHaveLength(0);
+	});
+
+	it("ページを削除すると関連するcontentsとsegmentsも削除される", async () => {
+		const user = await createUser();
+		const page = await createPageWithSegments({
+			userId: user.id,
+			slug: "delete-with-segments",
+			segments: [
+				{
+					number: 0,
+					text: "title",
+					textAndOccurrenceHash: "hash-title",
+					segmentTypeKey: "PRIMARY",
+				},
+				{
+					number: 1,
+					text: "body",
+					textAndOccurrenceHash: "hash-body",
+					segmentTypeKey: "PRIMARY",
+				},
+			],
+		});
+
+		await deletePage(page.id, user.id);
+
+		const remainingContent = await db
+			.selectFrom("contents")
+			.select("id")
+			.where("id", "=", page.id)
+			.executeTakeFirst();
+		expect(remainingContent).toBeUndefined();
+
+		const remainingSegments = await db
+			.selectFrom("segments")
+			.select("id")
+			.where("contentId", "=", page.id)
+			.execute();
+		expect(remainingSegments).toHaveLength(0);
 	});
 });

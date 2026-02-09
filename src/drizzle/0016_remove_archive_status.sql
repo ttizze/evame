@@ -25,7 +25,10 @@ FROM "pages"
 WHERE "pages"."status" = 'ARCHIVE'
 ON CONFLICT ("original_page_id") DO NOTHING;
 --> statement-breakpoint
-DELETE FROM "pages" WHERE "status" = 'ARCHIVE';
+DELETE FROM "contents"
+USING "pages"
+WHERE "contents"."id" = "pages"."id"
+	AND "pages"."status" = 'ARCHIVE';
 --> statement-breakpoint
 CREATE TYPE "page_status_new" AS ENUM('DRAFT', 'PUBLIC');
 --> statement-breakpoint

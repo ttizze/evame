@@ -1,7 +1,7 @@
 import { db } from "@/db";
 
 /**
- * ページを削除済みテーブルへ退避し、公開テーブルから削除する
+ * ページを削除済みテーブルへ退避し、関連データごと削除する
  */
 export async function deletePage(pageId: number, userId: string) {
 	return db.transaction().execute(async (trx) => {
@@ -33,7 +33,9 @@ export async function deletePage(pageId: number, userId: string) {
 			.returningAll()
 			.executeTakeFirstOrThrow();
 
-		await trx.deleteFrom("pages").where("id", "=", page.id).execute();
+		// pages.id は contents.id を参照しているため、
+		// contents を削除すると pages/segments も cascade で削除される。
+		await trx.deleteFrom("contents").where("id", "=", page.id).execute();
 
 		return movedPage;
 	});
