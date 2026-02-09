@@ -9,7 +9,7 @@
 - **要件**: `requirements.md`
 - **アーキテクチャ**: `architecture/architecture.md`
   - `architecture/cache-components-revalidation.md`: Cache Components のキャッシュタグ対応表
-- **規約**: `architecture/conventions`
+- **規約**: `architecture/conventions`: アーキテクチャ・設計・運用の規約
 - **ADR**: `adr/README.md`
 - **HowTo**: `howto/README.md`
 - **Plans**: `plans/README.md`
