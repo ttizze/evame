@@ -17,3 +17,9 @@ bun run seed
 ```bash
 bun run db:template:update
 ```
+
+`db:template:update` は、`DATABASE_URL` のDBを丸ごと `DB_TEMPLATE_NAME` のDBへ複製します（スキーマ・データ含む）。
+
+注意:
+- `DB_TEMPLATE_NAME` は `DATABASE_URL` のDB名と別名にしてください（同名だとエラーになります）
+- 実行時にコピー元DB/コピー先DBの接続は強制切断されます

@@ -1,50 +1,41 @@
-import { spawnSync } from "node:child_process";
 import { Client } from "pg";
 
 function escapeIdentifier(value: string): string {
 	return `"${value.replace(/"/g, '""')}"`;
 }
 
-function runCommand(
-	command: string,
-	args: string[],
-	env: NodeJS.ProcessEnv,
-): void {
-	const result = spawnSync(command, args, {
-		stdio: "inherit",
-		env,
-	});
-	if (result.error) {
-		console.error(result.error);
-		process.exit(1);
+function getDatabaseName(databaseUrl: string): string {
+	const name = new URL(databaseUrl).pathname.replace(/^\//, "");
+	if (!name) {
+		throw new Error("DATABASE_URL has no database name");
 	}
-	if (result.status === null) {
-		if (result.signal) {
-			console.error(`Command terminated by signal ${result.signal}`);
-		}
-		process.exit(1);
-	}
-	if (result.status !== 0) {
-		process.exit(result.status);
-	}
+	return name;
 }
 
-async function ensureTemplateDatabaseExists(
+async function recreateTemplateDatabaseFromBase(
 	databaseUrl: string,
 	templateName: string,
+	baseDatabaseName: string,
 ): Promise<void> {
 	const adminUrl = new URL(databaseUrl);
 	adminUrl.pathname = "/postgres";
 	const client = new Client({ connectionString: adminUrl.toString() });
 	await client.connect();
 	try {
-		const exists = await client.query(
-			"SELECT 1 FROM pg_database WHERE datname = $1",
+		await client.query(
+			"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()",
+			[baseDatabaseName],
+		);
+		await client.query(
+			"SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = $1 AND pid <> pg_backend_pid()",
 			[templateName],
 		);
-		if (exists.rowCount === 0) {
-			await client.query(`CREATE DATABASE ${escapeIdentifier(templateName)}`);
-		}
+		await client.query(
+			`DROP DATABASE IF EXISTS ${escapeIdentifier(templateName)}`,
+		);
+		await client.query(
+			`CREATE DATABASE ${escapeIdentifier(templateName)} WITH TEMPLATE ${escapeIdentifier(baseDatabaseName)}`,
+		);
 	} finally {
 		await client.end();
 	}
@@ -62,18 +53,19 @@ async function main(): Promise<void> {
 		process.exit(1);
 	}
 
-	await ensureTemplateDatabaseExists(baseUrl, templateName);
+	const baseDatabaseName = getDatabaseName(baseUrl);
+	if (templateName === baseDatabaseName) {
+		console.error(
+			"DB_TEMPLATE_NAME must be different from DATABASE_URL database",
+		);
+		process.exit(1);
+	}
 
-	const templateUrl = new URL(baseUrl);
-	templateUrl.pathname = `/${templateName}`;
-
-	const commandEnv = {
-		...process.env,
-		DATABASE_URL: templateUrl.toString(),
-	};
-
-	runCommand("drizzle-kit", ["migrate"], commandEnv);
-	runCommand("tsx", ["src/db/seed.ts"], commandEnv);
+	await recreateTemplateDatabaseFromBase(
+		baseUrl,
+		templateName,
+		baseDatabaseName,
+	);
 }
 
 main().catch((error) => {
