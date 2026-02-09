@@ -37,7 +37,7 @@ export type NotificationType =
 	| "PAGE_LIKE"
 	| "PAGE_SEGMENT_TRANSLATION_VOTE";
 
-export type PageStatus = "ARCHIVE" | "DRAFT" | "PUBLIC";
+export type PageStatus = "DRAFT" | "PUBLIC";
 
 export type SegmentTypeKey = "COMMENTARY" | "PRIMARY";
 
@@ -77,6 +77,20 @@ export interface Contents {
 	importFileId: number | null;
 	kind: ContentKind;
 	updatedAt: Generated<Timestamp>;
+}
+
+export interface DeletedPages {
+	createdAt: Timestamp;
+	deletedAt: Generated<Timestamp>;
+	mdastJson: Json;
+	order: number;
+	pageId: number;
+	parentId: number | null;
+	slug: string;
+	sourceLocale: string;
+	status: string;
+	updatedAt: Timestamp;
+	userId: string;
 }
 
 export interface DrizzleDrizzleMigrations {
@@ -120,11 +134,6 @@ export interface LikePages {
 	id: Generated<number>;
 	pageId: number;
 	userId: string | null;
-}
-
-export interface NeonControlPlaneEndpoints {
-	allowedIps: string | null;
-	endpointId: string;
 }
 
 export interface Notifications {
@@ -312,13 +321,13 @@ export interface Verifications {
 export interface DB {
 	accounts: Accounts;
 	contents: Contents;
+	deletedPages: DeletedPages;
 	"drizzle.DrizzleMigrations": DrizzleDrizzleMigrations;
 	follows: Follows;
 	geminiApiKeys: GeminiApiKeys;
 	importFiles: ImportFiles;
 	importRuns: ImportRuns;
 	likePages: LikePages;
-	"neonControlPlane.endpoints": NeonControlPlaneEndpoints;
 	notifications: Notifications;
 	pageComments: PageComments;
 	pageLocaleTranslationProofs: PageLocaleTranslationProofs;

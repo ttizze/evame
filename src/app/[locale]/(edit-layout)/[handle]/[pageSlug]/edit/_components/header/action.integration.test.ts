@@ -67,6 +67,19 @@ describe("editPageStatusAction", () => {
 			expect(result.success).toBe(false);
 			expect(!result.success && result.zodErrors?.status).toBeDefined();
 		});
+
+		it("ARCHIVEを指定した場合、バリデーションエラーを返す", async () => {
+			const user = await createUser();
+			mockCurrentUser(user);
+			const formData = new FormData();
+			formData.append("pageId", "1");
+			formData.append("status", "ARCHIVE");
+
+			const result = await editPageStatusAction({ success: false }, formData);
+
+			expect(result.success).toBe(false);
+			expect(!result.success && result.zodErrors?.status).toBeDefined();
+		});
 	});
 
 	describe("権限チェック", () => {

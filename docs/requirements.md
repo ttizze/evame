@@ -18,7 +18,7 @@
 - ページはセグメント（文書の分割単位）で管理する
 - セグメント種別は `PRIMARY` / `COMMENTARY`
 - ページは親子構造（`parentId`）と並び順（`order`）を持てる
-- ページ状態は `DRAFT` / `PUBLIC` / `ARCHIVE`
+- ページ状態は `DRAFT` / `PUBLIC`
 
 ### 翻訳
 - 翻訳はセグメント単位で登録する

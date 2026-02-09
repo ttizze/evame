@@ -24,7 +24,7 @@ export const notificationType = pgEnum("notification_type", [
 	"PAGE_SEGMENT_TRANSLATION_VOTE",
 	"PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE",
 ]);
-export const pageStatus = pgEnum("page_status", ["DRAFT", "PUBLIC", "ARCHIVE"]);
+export const pageStatus = pgEnum("page_status", ["DRAFT", "PUBLIC"]);
 export const segmentTypeKey = pgEnum("segment_type_key", [
 	"PRIMARY",
 	"COMMENTARY",
@@ -727,6 +727,38 @@ export const pages = pgTable(
 		})
 			.onUpdate("cascade")
 			.onDelete("cascade"),
+	],
+);
+
+export const deletedPages = pgTable(
+	"deleted_pages",
+	{
+		pageId: integer("page_id").primaryKey().notNull(),
+		slug: text().notNull(),
+		createdAt: timestamp("created_at", {
+			precision: 3,
+			mode: "date",
+		}).notNull(),
+		sourceLocale: text("source_locale").notNull(),
+		updatedAt: timestamp("updated_at", {
+			precision: 3,
+			mode: "date",
+		}).notNull(),
+		status: text().notNull(),
+		userId: text("user_id").notNull(),
+		mdastJson: jsonb("mdast_json").$type<MdastRoot>().notNull(),
+		order: integer().notNull(),
+		parentId: integer("parent_id"),
+		deletedAt: timestamp("deleted_at", { precision: 3, mode: "date" })
+			.defaultNow()
+			.notNull(),
+	},
+	(table) => [
+		index("deleted_pages_user_id_deleted_at_idx").using(
+			"btree",
+			table.userId.asc().nullsLast(),
+			table.deletedAt.asc().nullsLast(),
+		),
 	],
 );
 

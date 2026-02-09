@@ -44,7 +44,7 @@ page.tsx
 ```
 PUBLIC ページ  → 誰でもアクセス可能
 DRAFT ページ   → ?preview=true + オーナーのみ
-ARCHIVE ページ → fetchPageDetail が null を返す（404）
+削除済みページ → pages から除外済みのため fetchPageDetail が null を返す（404）
 ```
 
 ### 設計上のトレードオフ

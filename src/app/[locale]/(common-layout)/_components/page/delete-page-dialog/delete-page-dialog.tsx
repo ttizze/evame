@@ -12,7 +12,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { archivePageAction } from "./action";
+import { deletePageAction } from "./action";
 
 interface DeletePageDialogProps {
 	open: boolean;
@@ -25,18 +25,18 @@ export function DeletePageDialog({
 	onOpenChange,
 	pageId,
 }: DeletePageDialogProps) {
-	const [archiveState, archiveAction, isArchiving] = useActionState<
+	const [deleteState, deleteAction, isDeleting] = useActionState<
 		ActionResponse,
 		FormData
-	>(archivePageAction, { success: false });
+	>(deletePageAction, { success: false });
 	const router = useRouter();
 	useEffect(() => {
-		if (archiveState.success) {
-			toast.success(archiveState.message);
+		if (deleteState.success) {
+			toast.success(deleteState.message);
 			onOpenChange(false);
 			router.refresh();
 		}
-	}, [archiveState, onOpenChange, router]);
+	}, [deleteState, onOpenChange, router]);
 	return (
 		<Dialog onOpenChange={onOpenChange} open={open}>
 			<DialogContent>
@@ -59,15 +59,15 @@ export function DeletePageDialog({
 						>
 							Cancel
 						</Button>
-						<form action={archiveAction} className="w-1/2">
+						<form action={deleteAction} className="w-1/2">
 							<input name="pageId" type="hidden" value={pageId} />
 							<Button
 								className="w-full"
-								disabled={isArchiving}
+								disabled={isDeleting}
 								type="submit"
 								variant="destructive"
 							>
-								{isArchiving ? (
+								{isDeleting ? (
 									<Loader2 className="w-4 h-4 mr-2 animate-spin" />
 								) : (
 									<Trash className="w-4 h-4 mr-2" />

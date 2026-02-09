@@ -91,7 +91,7 @@ env: {
   - エントリーポイント（リクエスト受信、関数開始など）
   - 主要な分岐点（条件分岐、ループの開始/終了など）
   - 重要な処理の完了（データ取得完了、レンダリング完了など）
-- **INFO**: 重要なビジネスイベントのみ（例: アーカイブされたページへのアクセス、重要な状態変更）
+- **INFO**: 重要なビジネスイベントのみ（例: 削除済みページへのアクセス試行、重要な状態変更）
 - **WARN**: 異常な状態だが処理は継続できる（例: 期待しないステータス、データ不整合の可能性）
 - **ERROR**: エラーが発生したがアプリケーションは継続できる
 
@@ -105,7 +105,7 @@ env: {
 ✅ **記録する**:
 - エラーが発生した場合
 - 異常な状態（期待しない値、データ不整合など）
-- 重要なビジネスイベント（例: アーカイブされたページへのアクセス）
+- 重要なビジネスイベント（例: 削除済みページへのアクセス試行）
 - セキュリティ関連のイベント
 
 ❌ **記録しない**:
@@ -179,10 +179,13 @@ logger.debug({ pageSlug, locale, handle }, "Page view request received");
 
 // データ取得の開始と完了
 logger.debug({ pageSlug }, "Fetching page context");
-const data = await fetchPageContext(pageSlug, locale);
-logger.debug({ pageSlug, found: !!data }, "Page context fetched");
+const pageDetail = await fetchPageContext(pageSlug, locale);
+logger.debug({ pageSlug, found: !!pageDetail }, "Page context fetched");
 
-if (!data) {
+if (!pageDetail) {
+  // 重要なビジネスイベントのみ記録（INFOレベル）
+  logger.info({ pageSlug }, "Deleted or missing page requested");
+
   // 警告: データが見つからない（異常な状態）
   logger.warn({ pageSlug, locale, handle }, "Page context not found");
   return notFound();
@@ -195,10 +198,6 @@ if (pageDetail.status !== "PUBLIC") {
 }
 
 // 重要なビジネスイベントのみ記録（INFOレベル）
-if (pageDetail.status === "ARCHIVE") {
-  logger.info({ pageSlug, pageId: pageDetail.id }, "Archived page accessed");
-}
-
 // 処理完了
 logger.debug({ pageSlug }, "Page rendered successfully");
 ```

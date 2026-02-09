@@ -14,7 +14,7 @@ import { enqueuePageTranslation } from "./service/enqueue-page-translation.serve
 
 const editPageStatusSchema = z.object({
 	pageId: z.coerce.number().min(1),
-	status: z.enum(["DRAFT", "PUBLIC", "ARCHIVE"]),
+	status: z.enum(["DRAFT", "PUBLIC"]),
 	targetLocales: z
 		.string()
 		.optional()

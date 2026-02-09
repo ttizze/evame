@@ -106,6 +106,41 @@
 			"when": 1770275693057,
 			"tag": "0014_closed_justice",
 			"breakpoints": true
+		},
+		{
+			"idx": 15,
+			"version": "7",
+			"when": 1770570000000,
+			"tag": "0015_move_deleted_pages",
+			"breakpoints": true
+		},
+		{
+			"idx": 16,
+			"version": "7",
+			"when": 1770571000000,
+			"tag": "0016_remove_archive_status",
+			"breakpoints": true
+		},
+		{
+			"idx": 17,
+			"version": "7",
+			"when": 1770572000000,
+			"tag": "0017_deleted_pages_primary_key_to_original_page_id",
+			"breakpoints": true
+		},
+		{
+			"idx": 18,
+			"version": "7",
+			"when": 1770573000000,
+			"tag": "0018_drop_deleted_by_user_id",
+			"breakpoints": true
+		},
+		{
+			"idx": 19,
+			"version": "7",
+			"when": 1770574000000,
+			"tag": "0019_rename_deleted_pages_original_page_id_to_page_id",
+			"breakpoints": true
 		}
 	]
 }

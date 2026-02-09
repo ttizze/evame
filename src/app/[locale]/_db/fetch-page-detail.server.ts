@@ -239,7 +239,7 @@ export async function fetchPageDetail(slug: string, locale: string) {
 	cacheLife("max");
 
 	const page = await fetchPageBasicBySlug(slug);
-	if (!page || page.status === "ARCHIVE") return null;
+	if (!page) return null;
 
 	cacheTag(`page:${page.id}`);
 

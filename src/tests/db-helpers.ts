@@ -19,6 +19,7 @@ export async function resetDatabase() {
 	await db.deleteFrom("translationJobs").execute();
 	await db.deleteFrom("pageLocaleTranslationProofs").execute();
 	await db.deleteFrom("pageViews").execute();
+	await db.deleteFrom("deletedPages").execute();
 	await db.deleteFrom("pages").execute();
 	await db.deleteFrom("contents").execute();
 	await db.deleteFrom("userSettings").execute();
