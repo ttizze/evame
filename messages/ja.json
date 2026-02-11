@@ -38,5 +38,12 @@
 			"untranslatedTitle": "未翻訳",
 			"untranslatedDescription": "まだ翻訳されていません。"
 		}
+	},
+	"CookieConsent": {
+		"title": "Cookieを許可しますか？",
+		"description": "Evameではサービス提供と改善のためにCookieを使用します。",
+		"accept": "許可",
+		"decline": "許可しない",
+		"privacyLink": "プライバシーポリシー"
 	}
 }

@@ -38,5 +38,12 @@
 			"untranslatedTitle": "Untranslated",
 			"untranslatedDescription": "Not translated yet."
 		}
+	},
+	"CookieConsent": {
+		"title": "Allow cookies?",
+		"description": "We use cookies to provide and improve Evame.",
+		"accept": "Allow",
+		"decline": "Decline",
+		"privacyLink": "Privacy Policy"
 	}
 }

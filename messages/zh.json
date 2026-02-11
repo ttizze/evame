@@ -38,5 +38,12 @@
 			"untranslatedTitle": "未翻译",
 			"untranslatedDescription": "尚未翻译。"
 		}
+	},
+	"CookieConsent": {
+		"title": "是否允许 Cookie？",
+		"description": "我们使用 Cookie 来提供并改进 Evame。",
+		"accept": "允许",
+		"decline": "不允许",
+		"privacyLink": "隐私政策"
 	}
 }
