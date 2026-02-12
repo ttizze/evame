@@ -29,7 +29,8 @@
 		"mdast-json": "bunx tsx scripts/mdast-json.ts",
 		"tipitaka": "bun --env-file=.env scripts/tipitaka-import.ts",
 		"translate": "bunx tsx scripts/translate.ts",
-		"convert:romn": "bun scripts/convert-romn-to-md.ts"
+		"convert:romn": "bun scripts/convert-romn-to-md.ts",
+		"evame": "bun --env-file=.env tsx scripts/evame-cli/index.ts"
 	},
 	"dependencies": {
 		"@ai-sdk/deepseek": "^2.0.18",

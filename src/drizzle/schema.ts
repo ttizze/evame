@@ -1,4 +1,4 @@
-import { createId } from "@paralleldrive/cuid2";
+import { sql } from "drizzle-orm";
 import {
 	boolean,
 	foreignKey,
@@ -14,7 +14,6 @@ import {
 	unique,
 	uniqueIndex,
 } from "drizzle-orm/pg-core";
-import type { Root as MdastRoot } from "mdast";
 
 export const contentKind = pgEnum("content_kind", ["PAGE", "PAGE_COMMENT"]);
 export const notificationType = pgEnum("notification_type", [
@@ -42,26 +41,138 @@ export const translationStatus = pgEnum("translation_status", [
 	"FAILED",
 ]);
 
-export const verifications = pgTable("verifications", {
-	id: text().primaryKey().notNull(),
-	identifier: text().notNull(),
-	value: text().notNull(),
-	expiresAt: timestamp("expires_at", {
-		precision: 3,
-		mode: "date",
-	}).notNull(),
-	createdAt: timestamp("created_at", { precision: 3, mode: "date" }),
-	updatedAt: timestamp("updated_at", { precision: 3, mode: "date" }).$onUpdate(
-		() => new Date(),
-	),
-});
+export const accounts = pgTable(
+	"accounts",
+	{
+		userId: text("user_id").notNull(),
+		providerId: text("provider_id").notNull(),
+		accountId: text("account_id").notNull(),
+		refreshToken: text("refresh_token"),
+		accessToken: text("access_token"),
+		scope: text(),
+		idToken: text("id_token"),
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
+		id: text().primaryKey().notNull(),
+		password: text(),
+		refreshTokenExpiresAt: timestamp("refresh_token_expires_at", {
+			precision: 3,
+			mode: "string",
+		}),
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
+		accessTokenExpiresAt: timestamp("access_token_expires_at", {
+			precision: 3,
+			mode: "string",
+		}),
+	},
+	(table) => [
+		uniqueIndex("accounts_provider_accountId_key").using(
+			"btree",
+			table.providerId.asc().nullsLast().op("text_ops"),
+			table.accountId.asc().nullsLast().op("text_ops"),
+		),
+		foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "accounts_userId_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("cascade"),
+	],
+);
+
+export const contents = pgTable(
+	"contents",
+	{
+		id: serial().primaryKey().notNull(),
+		kind: contentKind().notNull(),
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
+		importFileId: integer("import_file_id"),
+	},
+	(table) => [
+		index("contents_kind_idx").using(
+			"btree",
+			table.kind.asc().nullsLast().op("enum_ops"),
+		),
+		foreignKey({
+			columns: [table.importFileId],
+			foreignColumns: [importFiles.id],
+			name: "contents_import_file_id_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("set null"),
+	],
+);
+
+export const personalAccessTokens = pgTable(
+	"personal_access_tokens",
+	{
+		id: serial().primaryKey().notNull(),
+		keyHash: text("key_hash").notNull(),
+		userId: text("user_id").notNull(),
+		name: text().default("").notNull(),
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.defaultNow()
+			.notNull(),
+		lastUsedAt: timestamp("last_used_at", { precision: 3, mode: "string" }),
+	},
+	(table) => [
+		uniqueIndex("personal_access_tokens_key_hash_key").using(
+			"btree",
+			table.keyHash.asc().nullsLast().op("text_ops"),
+		),
+		index("personal_access_tokens_user_id_idx").using(
+			"btree",
+			table.userId.asc().nullsLast().op("text_ops"),
+		),
+		foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "personal_access_tokens_user_id_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("cascade"),
+	],
+);
+
+export const importFiles = pgTable(
+	"import_files",
+	{
+		id: serial().primaryKey().notNull(),
+		importRunId: integer("import_run_id").notNull(),
+		path: text().notNull(),
+		checksum: text().notNull(),
+		status: text().default("PENDING").notNull(),
+		message: text().default("").notNull(),
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
+	},
+	(table) => [
+		foreignKey({
+			columns: [table.importRunId],
+			foreignColumns: [importRuns.id],
+			name: "import_files_import_run_id_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("cascade"),
+	],
+);
 
 export const follows = pgTable(
 	"follows",
 	{
 		id: serial().primaryKey().notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		followerId: text("follower_id").notNull(),
 		followingId: text("following_id").notNull(),
@@ -69,11 +180,11 @@ export const follows = pgTable(
 	(table) => [
 		index("follows_follower_id_idx").using(
 			"btree",
-			table.followerId.asc().nullsLast(),
+			table.followerId.asc().nullsLast().op("text_ops"),
 		),
 		index("follows_following_id_idx").using(
 			"btree",
-			table.followingId.asc().nullsLast(),
+			table.followingId.asc().nullsLast().op("text_ops"),
 		),
 		foreignKey({
 			columns: [table.followerId],
@@ -96,29 +207,64 @@ export const follows = pgTable(
 	],
 );
 
+export const geminiApiKeys = pgTable(
+	"gemini_api_keys",
+	{
+		id: serial().primaryKey().notNull(),
+		apiKey: text("api_key").default("").notNull(),
+		userId: text("user_id").notNull(),
+	},
+	(table) => [
+		index("gemini_api_keys_user_id_idx").using(
+			"btree",
+			table.userId.asc().nullsLast().op("text_ops"),
+		),
+		uniqueIndex("gemini_api_keys_user_id_key").using(
+			"btree",
+			table.userId.asc().nullsLast().op("text_ops"),
+		),
+		foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "gemini_api_keys_user_id_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("cascade"),
+	],
+);
+
+export const importRuns = pgTable("import_runs", {
+	id: serial().primaryKey().notNull(),
+	startedAt: timestamp("started_at", { precision: 3, mode: "string" })
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	finishedAt: timestamp("finished_at", { precision: 3, mode: "string" }),
+	status: text().default("RUNNING").notNull(),
+});
+
 export const likePages = pgTable(
 	"like_pages",
 	{
 		id: serial().primaryKey().notNull(),
 		pageId: integer("page_id").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		userId: text("user_id"),
 	},
 	(table) => [
 		index("like_pages_page_id_idx").using(
 			"btree",
-			table.pageId.asc().nullsLast(),
+			table.pageId.asc().nullsLast().op("int4_ops"),
 		),
 		index("like_pages_user_id_idx").using(
 			"btree",
-			table.userId.asc().nullsLast(),
+			table.userId.asc().nullsLast().op("text_ops"),
 		),
 		uniqueIndex("like_pages_user_id_page_id_key").using(
 			"btree",
-			table.userId.asc().nullsLast(),
-			table.pageId.asc().nullsLast(),
+			table.userId.asc().nullsLast().op("int4_ops"),
+			table.pageId.asc().nullsLast().op("int4_ops"),
 		),
 		foreignKey({
 			columns: [table.pageId],
@@ -137,91 +283,6 @@ export const likePages = pgTable(
 	],
 );
 
-export const importFiles = pgTable(
-	"import_files",
-	{
-		id: serial().primaryKey().notNull(),
-		importRunId: integer("import_run_id").notNull(),
-		path: text().notNull(),
-		checksum: text().notNull(),
-		status: text().default("PENDING").notNull(),
-		message: text().default("").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull(),
-	},
-	(table) => [
-		foreignKey({
-			columns: [table.importRunId],
-			foreignColumns: [importRuns.id],
-			name: "import_files_import_run_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-	],
-);
-
-export const contents = pgTable(
-	"contents",
-	{
-		id: serial().primaryKey().notNull(),
-		kind: contentKind().notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull()
-			.$onUpdate(() => new Date()),
-		importFileId: integer("import_file_id"),
-	},
-	(table) => [
-		index("contents_kind_idx").using("btree", table.kind.asc().nullsLast()),
-		foreignKey({
-			columns: [table.importFileId],
-			foreignColumns: [importFiles.id],
-			name: "contents_import_file_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("set null"),
-	],
-);
-
-export const geminiApiKeys = pgTable(
-	"gemini_api_keys",
-	{
-		id: serial().primaryKey().notNull(),
-		apiKey: text("api_key").default("").notNull(),
-		userId: text("user_id").notNull(),
-	},
-	(table) => [
-		index("gemini_api_keys_user_id_idx").using(
-			"btree",
-			table.userId.asc().nullsLast(),
-		),
-		uniqueIndex("gemini_api_keys_user_id_key").using(
-			"btree",
-			table.userId.asc().nullsLast(),
-		),
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "gemini_api_keys_user_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-	],
-);
-
-export const importRuns = pgTable("import_runs", {
-	id: serial().primaryKey().notNull(),
-	startedAt: timestamp("started_at", { precision: 3, mode: "date" })
-		.defaultNow()
-		.notNull(),
-	finishedAt: timestamp("finished_at", { precision: 3, mode: "date" }),
-	status: text().default("RUNNING").notNull(),
-});
-
 export const notifications = pgTable(
 	"notifications",
 	{
@@ -229,8 +290,8 @@ export const notifications = pgTable(
 		userId: text("user_id").notNull(),
 		type: notificationType().notNull(),
 		read: boolean().default(false).notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		actorId: text("actor_id").notNull(),
 		pageCommentId: integer("page_comment_id"),
@@ -240,11 +301,11 @@ export const notifications = pgTable(
 	(table) => [
 		index("notifications_actor_id_idx").using(
 			"btree",
-			table.actorId.asc().nullsLast(),
+			table.actorId.asc().nullsLast().op("text_ops"),
 		),
 		index("notifications_user_id_idx").using(
 			"btree",
-			table.userId.asc().nullsLast(),
+			table.userId.asc().nullsLast().op("text_ops"),
 		),
 		foreignKey({
 			columns: [table.actorId],
@@ -292,63 +353,19 @@ export const segmentTypes = pgTable(
 		key: segmentTypeKey().notNull(),
 	},
 	(table) => [
-		index("segment_types_key_idx").using("btree", table.key.asc().nullsLast()),
+		index("segment_types_key_idx").using(
+			"btree",
+			table.key.asc().nullsLast().op("enum_ops"),
+		),
 		uniqueIndex("segment_types_key_label_key").using(
 			"btree",
-			table.key.asc().nullsLast(),
-			table.label.asc().nullsLast(),
+			table.key.asc().nullsLast().op("text_ops"),
+			table.label.asc().nullsLast().op("text_ops"),
 		),
 		index("segment_types_label_idx").using(
 			"btree",
-			table.label.asc().nullsLast(),
+			table.label.asc().nullsLast().op("text_ops"),
 		),
-	],
-);
-
-export const accounts = pgTable(
-	"accounts",
-	{
-		userId: text("user_id").notNull(),
-		providerId: text("provider_id").notNull(),
-		accountId: text("account_id").notNull(),
-		refreshToken: text("refresh_token"),
-		accessToken: text("access_token"),
-		scope: text(),
-		idToken: text("id_token"),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull(),
-		id: text()
-			.$defaultFn(() => createId())
-			.primaryKey()
-			.notNull(),
-		password: text(),
-		refreshTokenExpiresAt: timestamp("refresh_token_expires_at", {
-			precision: 3,
-			mode: "date",
-		}),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull()
-			.$onUpdate(() => new Date()),
-		accessTokenExpiresAt: timestamp("access_token_expires_at", {
-			precision: 3,
-			mode: "date",
-		}),
-	},
-	(table) => [
-		uniqueIndex("accounts_provider_accountId_key").using(
-			"btree",
-			table.providerId.asc().nullsLast(),
-			table.accountId.asc().nullsLast(),
-		),
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "accounts_userId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
 	],
 );
 
@@ -363,18 +380,17 @@ export const translationJobs = pgTable(
 		status: translationStatus().default("PENDING").notNull(),
 		progress: integer().default(0).notNull(),
 		error: text().default("").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull()
-			.$onUpdate(() => new Date()),
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
 	},
 	(table) => [
 		index("translation_jobs_userId_idx").using(
 			"btree",
-			table.userId.asc().nullsLast(),
+			table.userId.asc().nullsLast().op("text_ops"),
 		),
 		foreignKey({
 			columns: [table.pageId],
@@ -390,6 +406,46 @@ export const translationJobs = pgTable(
 		})
 			.onUpdate("cascade")
 			.onDelete("set null"),
+	],
+);
+
+export const segmentTranslations = pgTable(
+	"segment_translations",
+	{
+		id: serial().primaryKey().notNull(),
+		segmentId: integer("segment_id").notNull(),
+		locale: text().notNull(),
+		text: text().notNull(),
+		point: integer().default(0).notNull(),
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
+		userId: text("user_id").notNull(),
+	},
+	(table) => [
+		index("segment_translations_segment_id_locale_idx").using(
+			"btree",
+			table.segmentId.asc().nullsLast().op("int4_ops"),
+			table.locale.asc().nullsLast().op("int4_ops"),
+		),
+		index("segment_translations_user_id_idx").using(
+			"btree",
+			table.userId.asc().nullsLast().op("text_ops"),
+		),
+		foreignKey({
+			columns: [table.segmentId],
+			foreignColumns: [segments.id],
+			name: "segment_translations_segment_id_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("cascade"),
+		foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "segment_translations_user_id_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("cascade"),
 	],
 );
 
@@ -410,222 +466,41 @@ export const pageViews = pgTable(
 	],
 );
 
-export const sessions = pgTable(
-	"sessions",
-	{
-		token: text().notNull(),
-		userId: text("user_id").notNull(),
-		expiresAt: timestamp("expires_at", {
-			precision: 3,
-			mode: "date",
-		}).notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull(),
-		id: text()
-			.$defaultFn(() => createId())
-			.primaryKey()
-			.notNull(),
-		ipAddress: text("ip_address"),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull()
-			.$onUpdate(() => new Date()),
-		userAgent: text("user_agent"),
-	},
-	(table) => [
-		uniqueIndex("sessions_token_key").using(
-			"btree",
-			table.token.asc().nullsLast(),
-		),
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "sessions_userId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-	],
-);
-
-export const tags = pgTable(
-	"tags",
-	{
-		id: serial().primaryKey().notNull(),
-		name: text().notNull(),
-	},
-	(table) => [
-		index("tags_name_idx").using("btree", table.name.asc().nullsLast()),
-		uniqueIndex("tags_name_key").using("btree", table.name.asc().nullsLast()),
-	],
-);
-
-export const pageLocaleTranslationProofs = pgTable(
-	"page_locale_translation_proofs",
-	{
-		id: serial().primaryKey().notNull(),
-		pageId: integer("page_id").notNull(),
-		locale: text().notNull(),
-		translationProofStatus: translationProofStatus("translation_proof_status")
-			.default("MACHINE_DRAFT")
-			.notNull(),
-	},
-	(table) => [
-		uniqueIndex("page_locale_translation_proofs_page_id_locale_key").using(
-			"btree",
-			table.pageId.asc().nullsLast(),
-			table.locale.asc().nullsLast(),
-		),
-		index("page_locale_translation_proofs_translation_proof_status_idx").using(
-			"btree",
-			table.translationProofStatus.asc().nullsLast(),
-		),
-		foreignKey({
-			columns: [table.pageId],
-			foreignColumns: [pages.id],
-			name: "page_locale_translation_proofs_page_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-	],
-);
-
-export const segmentMetadataTypes = pgTable(
-	"segment_metadata_types",
-	{
-		id: serial().primaryKey().notNull(),
-		key: text().notNull(),
-		label: text().notNull(),
-	},
-	(table) => [
-		uniqueIndex("segment_metadata_types_key_key").using(
-			"btree",
-			table.key.asc().nullsLast(),
-		),
-	],
-);
-
-export const translationVotes = pgTable(
-	"translation_votes",
-	{
-		translationId: integer("translation_id").notNull(),
-		userId: text("user_id").notNull(),
-		isUpvote: boolean("is_upvote").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull()
-			.$onUpdate(() => new Date()),
-	},
-	(table) => [
-		index("translation_votes_translation_id_idx").using(
-			"btree",
-			table.translationId.asc().nullsLast(),
-		),
-		uniqueIndex("translation_votes_translation_id_user_id_key").using(
-			"btree",
-			table.translationId.asc().nullsLast(),
-			table.userId.asc().nullsLast(),
-		),
-		index("translation_votes_user_id_idx").using(
-			"btree",
-			table.userId.asc().nullsLast(),
-		),
-		foreignKey({
-			columns: [table.translationId],
-			foreignColumns: [segmentTranslations.id],
-			name: "translation_votes_translation_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "translation_votes_user_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-	],
-);
-
-export const segmentTranslations = pgTable(
-	"segment_translations",
-	{
-		id: serial().primaryKey().notNull(),
-		segmentId: integer("segment_id").notNull(),
-		locale: text().notNull(),
-		text: text().notNull(),
-		point: integer().default(0).notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull(),
-		userId: text("user_id").notNull(),
-	},
-	(table) => [
-		index("segment_translations_segment_id_locale_idx").using(
-			"btree",
-			table.segmentId.asc().nullsLast(),
-			table.locale.asc().nullsLast(),
-		),
-		index("segment_translations_user_id_idx").using(
-			"btree",
-			table.userId.asc().nullsLast(),
-		),
-		foreignKey({
-			columns: [table.segmentId],
-			foreignColumns: [segments.id],
-			name: "segment_translations_segment_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "segment_translations_user_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-	],
-);
-
 export const pageComments = pgTable(
 	"page_comments",
 	{
 		id: integer().primaryKey().notNull(),
 		pageId: integer("page_id").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull()
-			.$onUpdate(() => new Date()),
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
 		locale: text().notNull(),
 		userId: text("user_id").notNull(),
 		parentId: integer("parent_id"),
-		mdastJson: jsonb("mdast_json").$type<MdastRoot>().notNull(),
+		mdastJson: jsonb("mdast_json").notNull(),
 		isDeleted: boolean("is_deleted").default(false).notNull(),
-		lastReplyAt: timestamp("last_reply_at", { precision: 3, mode: "date" }),
+		lastReplyAt: timestamp("last_reply_at", { precision: 3, mode: "string" }),
 		replyCount: integer("reply_count").default(0).notNull(),
 	},
 	(table) => [
 		index("page_comments_page_id_parent_id_created_at_idx").using(
 			"btree",
-			table.pageId.asc().nullsLast(),
-			table.parentId.asc().nullsLast(),
-			table.createdAt.asc().nullsLast(),
+			table.pageId.asc().nullsLast().op("timestamp_ops"),
+			table.parentId.asc().nullsLast().op("timestamp_ops"),
+			table.createdAt.asc().nullsLast().op("int4_ops"),
 		),
 		index("page_comments_parent_id_is_deleted_created_at_idx").using(
 			"btree",
-			table.parentId.asc().nullsLast(),
-			table.isDeleted.asc().nullsLast(),
-			table.createdAt.asc().nullsLast(),
+			table.parentId.asc().nullsLast().op("bool_ops"),
+			table.isDeleted.asc().nullsLast().op("bool_ops"),
+			table.createdAt.asc().nullsLast().op("int4_ops"),
 		),
 		index("page_comments_user_id_idx").using(
 			"btree",
-			table.userId.asc().nullsLast(),
+			table.userId.asc().nullsLast().op("text_ops"),
 		),
 		foreignKey({
 			columns: [table.id],
@@ -658,54 +533,233 @@ export const pageComments = pgTable(
 	],
 );
 
+export const sessions = pgTable(
+	"sessions",
+	{
+		token: text().notNull(),
+		userId: text("user_id").notNull(),
+		expiresAt: timestamp("expires_at", {
+			precision: 3,
+			mode: "string",
+		}).notNull(),
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
+		id: text().primaryKey().notNull(),
+		ipAddress: text("ip_address"),
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
+		userAgent: text("user_agent"),
+	},
+	(table) => [
+		uniqueIndex("sessions_token_key").using(
+			"btree",
+			table.token.asc().nullsLast().op("text_ops"),
+		),
+		foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "sessions_userId_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("cascade"),
+	],
+);
+
+export const pageLocaleTranslationProofs = pgTable(
+	"page_locale_translation_proofs",
+	{
+		id: serial().primaryKey().notNull(),
+		pageId: integer("page_id").notNull(),
+		locale: text().notNull(),
+		translationProofStatus: translationProofStatus("translation_proof_status")
+			.default("MACHINE_DRAFT")
+			.notNull(),
+	},
+	(table) => [
+		uniqueIndex("page_locale_translation_proofs_page_id_locale_key").using(
+			"btree",
+			table.pageId.asc().nullsLast().op("int4_ops"),
+			table.locale.asc().nullsLast().op("int4_ops"),
+		),
+		index("page_locale_translation_proofs_translation_proof_status_idx").using(
+			"btree",
+			table.translationProofStatus.asc().nullsLast().op("enum_ops"),
+		),
+		foreignKey({
+			columns: [table.pageId],
+			foreignColumns: [pages.id],
+			name: "page_locale_translation_proofs_page_id_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("cascade"),
+	],
+);
+
+export const segmentMetadataTypes = pgTable(
+	"segment_metadata_types",
+	{
+		id: serial().primaryKey().notNull(),
+		key: text().notNull(),
+		label: text().notNull(),
+	},
+	(table) => [
+		uniqueIndex("segment_metadata_types_key_key").using(
+			"btree",
+			table.key.asc().nullsLast().op("text_ops"),
+		),
+	],
+);
+
+export const tags = pgTable(
+	"tags",
+	{
+		id: serial().primaryKey().notNull(),
+		name: text().notNull(),
+	},
+	(table) => [
+		index("tags_name_idx").using(
+			"btree",
+			table.name.asc().nullsLast().op("text_ops"),
+		),
+		uniqueIndex("tags_name_key").using(
+			"btree",
+			table.name.asc().nullsLast().op("text_ops"),
+		),
+	],
+);
+
+export const translationContexts = pgTable(
+	"translation_contexts",
+	{
+		id: serial().primaryKey().notNull(),
+		userId: text("user_id").notNull(),
+		name: text().notNull(),
+		context: text().notNull(),
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.defaultNow()
+			.notNull(),
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+			.defaultNow()
+			.notNull(),
+	},
+	(table) => [
+		index("translation_contexts_user_id_idx").using(
+			"btree",
+			table.userId.asc().nullsLast().op("text_ops"),
+		),
+		foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "translation_contexts_user_id_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("cascade"),
+	],
+);
+
+export const translationVotes = pgTable(
+	"translation_votes",
+	{
+		translationId: integer("translation_id").notNull(),
+		userId: text("user_id").notNull(),
+		isUpvote: boolean("is_upvote").notNull(),
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
+	},
+	(table) => [
+		index("translation_votes_translation_id_idx").using(
+			"btree",
+			table.translationId.asc().nullsLast().op("int4_ops"),
+		),
+		uniqueIndex("translation_votes_translation_id_user_id_key").using(
+			"btree",
+			table.translationId.asc().nullsLast().op("int4_ops"),
+			table.userId.asc().nullsLast().op("int4_ops"),
+		),
+		index("translation_votes_user_id_idx").using(
+			"btree",
+			table.userId.asc().nullsLast().op("text_ops"),
+		),
+		foreignKey({
+			columns: [table.translationId],
+			foreignColumns: [segmentTranslations.id],
+			name: "translation_votes_translation_id_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("cascade"),
+		foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "translation_votes_user_id_fkey",
+		})
+			.onUpdate("cascade")
+			.onDelete("cascade"),
+	],
+);
+
 export const pages = pgTable(
 	"pages",
 	{
 		id: integer().primaryKey().notNull(),
 		slug: text().notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		sourceLocale: text("source_locale").default("unknown").notNull(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull()
-			.$onUpdate(() => new Date()),
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
 		status: pageStatus().default("DRAFT").notNull(),
 		userId: text("user_id").notNull(),
-		// mdast_json は mdast の Root 型として扱う
-		mdastJson: jsonb("mdast_json").$type<MdastRoot>().notNull(),
+		mdastJson: jsonb("mdast_json").notNull(),
 		order: integer().default(0).notNull(),
 		parentId: integer("parent_id"),
+		publishedAt: timestamp("published_at", { precision: 3, mode: "string" }),
+		archivedAt: timestamp("archived_at", { precision: 3, mode: "string" }),
 	},
 	(table) => [
 		index("pages_created_at_idx").using(
 			"btree",
-			table.createdAt.asc().nullsLast(),
-		),
-		index("pages_status_created_at_idx").using(
-			"btree",
-			table.status.asc().nullsLast(),
-			table.createdAt.asc().nullsLast(),
-		),
-		index("pages_status_parent_id_created_at_idx").using(
-			"btree",
-			table.status.asc().nullsLast(),
-			table.parentId.asc().nullsLast(),
-			table.createdAt.asc().nullsLast(),
+			table.createdAt.asc().nullsLast().op("timestamp_ops"),
 		),
 		index("pages_parent_id_idx").using(
 			"btree",
-			table.parentId.asc().nullsLast(),
+			table.parentId.asc().nullsLast().op("int4_ops"),
 		),
 		index("pages_parent_id_order_idx").using(
 			"btree",
-			table.parentId.asc().nullsLast(),
-			table.order.asc().nullsLast(),
+			table.parentId.asc().nullsLast().op("int4_ops"),
+			table.order.asc().nullsLast().op("int4_ops"),
 		),
-		index("pages_slug_idx").using("btree", table.slug.asc().nullsLast()),
-		uniqueIndex("pages_slug_key").using("btree", table.slug.asc().nullsLast()),
-		index("pages_user_id_idx").using("btree", table.userId.asc().nullsLast()),
+		index("pages_slug_idx").using(
+			"btree",
+			table.slug.asc().nullsLast().op("text_ops"),
+		),
+		uniqueIndex("pages_slug_key").using(
+			"btree",
+			table.slug.asc().nullsLast().op("text_ops"),
+		),
+		index("pages_status_created_at_idx").using(
+			"btree",
+			table.status.asc().nullsLast().op("enum_ops"),
+			table.createdAt.asc().nullsLast().op("enum_ops"),
+		),
+		index("pages_status_parent_id_created_at_idx").using(
+			"btree",
+			table.status.asc().nullsLast().op("enum_ops"),
+			table.parentId.asc().nullsLast().op("int4_ops"),
+			table.createdAt.asc().nullsLast().op("timestamp_ops"),
+		),
+		index("pages_user_id_idx").using(
+			"btree",
+			table.userId.asc().nullsLast().op("text_ops"),
+		),
 		foreignKey({
 			columns: [table.id],
 			foreignColumns: [contents.id],
@@ -738,29 +792,29 @@ export const segments = pgTable(
 		number: integer().notNull(),
 		text: text().notNull(),
 		textAndOccurrenceHash: text("text_and_occurrence_hash").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		segmentTypeId: integer("segment_type_id").notNull(),
 	},
 	(table) => [
 		index("segments_content_id_idx").using(
 			"btree",
-			table.contentId.asc().nullsLast(),
+			table.contentId.asc().nullsLast().op("int4_ops"),
 		),
 		uniqueIndex("segments_content_id_number_key").using(
 			"btree",
-			table.contentId.asc().nullsLast(),
-			table.number.asc().nullsLast(),
+			table.contentId.asc().nullsLast().op("int4_ops"),
+			table.number.asc().nullsLast().op("int4_ops"),
 		),
 		uniqueIndex("segments_content_id_text_and_occurrence_hash_key").using(
 			"btree",
-			table.contentId.asc().nullsLast(),
-			table.textAndOccurrenceHash.asc().nullsLast(),
+			table.contentId.asc().nullsLast().op("int4_ops"),
+			table.textAndOccurrenceHash.asc().nullsLast().op("int4_ops"),
 		),
 		index("segments_text_and_occurrence_hash_idx").using(
 			"btree",
-			table.textAndOccurrenceHash.asc().nullsLast(),
+			table.textAndOccurrenceHash.asc().nullsLast().op("text_ops"),
 		),
 		foreignKey({
 			columns: [table.contentId],
@@ -786,24 +840,24 @@ export const segmentMetadata = pgTable(
 		segmentId: integer("segment_id").notNull(),
 		metadataTypeId: integer("metadata_type_id").notNull(),
 		value: text().notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 	},
 	(table) => [
 		index("segment_metadata_metadata_type_id_idx").using(
 			"btree",
-			table.metadataTypeId.asc().nullsLast(),
+			table.metadataTypeId.asc().nullsLast().op("int4_ops"),
 		),
 		index("segment_metadata_segment_id_idx").using(
 			"btree",
-			table.segmentId.asc().nullsLast(),
+			table.segmentId.asc().nullsLast().op("int4_ops"),
 		),
 		uniqueIndex("segment_metadata_segment_id_metadata_type_id_value_key").using(
 			"btree",
-			table.segmentId.asc().nullsLast(),
-			table.metadataTypeId.asc().nullsLast(),
-			table.value.asc().nullsLast(),
+			table.segmentId.asc().nullsLast().op("int4_ops"),
+			table.metadataTypeId.asc().nullsLast().op("text_ops"),
+			table.value.asc().nullsLast().op("int4_ops"),
 		),
 		foreignKey({
 			columns: [table.metadataTypeId],
@@ -822,30 +876,36 @@ export const segmentMetadata = pgTable(
 	],
 );
 
+export const verifications = pgTable("verifications", {
+	id: text().primaryKey().notNull(),
+	identifier: text().notNull(),
+	value: text().notNull(),
+	expiresAt: timestamp("expires_at", {
+		precision: 3,
+		mode: "string",
+	}).notNull(),
+	createdAt: timestamp("created_at", { precision: 3, mode: "string" }),
+	updatedAt: timestamp("updated_at", { precision: 3, mode: "string" }),
+});
+
 export const users = pgTable(
 	"users",
 	{
 		image: text().default("https://evame.tech/avatar.png").notNull(),
 		plan: text().default("free").notNull(),
 		totalPoints: integer("total_points").default(0).notNull(),
-		isAI: boolean("is_ai").default(false).notNull(),
+		isAi: boolean("is_ai").default(false).notNull(),
 		provider: text().default("Credentials").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull()
-			.$onUpdate(() => new Date()),
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
 		name: text().default("new_user").notNull(),
-		handle: text()
-			.$defaultFn(() => createId())
-			.notNull(),
+		handle: text().notNull(),
 		profile: text().default("").notNull(),
-		id: text()
-			.$defaultFn(() => createId())
-			.primaryKey()
-			.notNull(),
+		id: text().primaryKey().notNull(),
 		email: text().notNull(),
 		twitterHandle: text("twitter_handle").default("").notNull(),
 		emailVerified: boolean("email_verified"),
@@ -853,11 +913,11 @@ export const users = pgTable(
 	(table) => [
 		uniqueIndex("users_email_key").using(
 			"btree",
-			table.email.asc().nullsLast(),
+			table.email.asc().nullsLast().op("text_ops"),
 		),
 		uniqueIndex("users_handle_key").using(
 			"btree",
-			table.handle.asc().nullsLast(),
+			table.handle.asc().nullsLast().op("text_ops"),
 		),
 	],
 );
@@ -868,18 +928,17 @@ export const userSettings = pgTable(
 		id: serial().primaryKey().notNull(),
 		userId: text("user_id").notNull(),
 		targetLocales: text("target_locales").array().default(["RAY"]).notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull()
-			.$onUpdate(() => new Date()),
+		updatedAt: timestamp("updated_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
+			.notNull(),
 	},
 	(table) => [
 		uniqueIndex("user_settings_user_id_key").using(
 			"btree",
-			table.userId.asc().nullsLast(),
+			table.userId.asc().nullsLast().op("text_ops"),
 		),
 		foreignKey({
 			columns: [table.userId],
@@ -888,36 +947,6 @@ export const userSettings = pgTable(
 		})
 			.onUpdate("cascade")
 			.onDelete("restrict"),
-	],
-);
-
-export const translationContexts = pgTable(
-	"translation_contexts",
-	{
-		id: serial().primaryKey().notNull(),
-		userId: text("user_id").notNull(),
-		name: text().notNull(),
-		context: text().notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull(),
-		updatedAt: timestamp("updated_at", { precision: 3, mode: "date" })
-			.defaultNow()
-			.notNull()
-			.$onUpdate(() => new Date()),
-	},
-	(table) => [
-		index("translation_contexts_user_id_idx").using(
-			"btree",
-			table.userId.asc().nullsLast(),
-		),
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "translation_contexts_user_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
 	],
 );
 
@@ -930,9 +959,12 @@ export const tagPages = pgTable(
 	(table) => [
 		index("tag_pages_pageId_idx").using(
 			"btree",
-			table.pageId.asc().nullsLast(),
+			table.pageId.asc().nullsLast().op("int4_ops"),
 		),
-		index("tag_pages_tagId_idx").using("btree", table.tagId.asc().nullsLast()),
+		index("tag_pages_tagId_idx").using(
+			"btree",
+			table.tagId.asc().nullsLast().op("int4_ops"),
+		),
 		foreignKey({
 			columns: [table.pageId],
 			foreignColumns: [pages.id],
@@ -959,18 +991,18 @@ export const segmentAnnotationLinks = pgTable(
 	{
 		mainSegmentId: integer("main_segment_id").notNull(),
 		annotationSegmentId: integer("annotation_segment_id").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "date" })
-			.defaultNow()
+		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
+			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 	},
 	(table) => [
 		index("segment_annotation_links_annotation_segment_id_idx").using(
 			"btree",
-			table.annotationSegmentId.asc().nullsLast(),
+			table.annotationSegmentId.asc().nullsLast().op("int4_ops"),
 		),
 		index("segment_annotation_links_main_segment_id_idx").using(
 			"btree",
-			table.mainSegmentId.asc().nullsLast(),
+			table.mainSegmentId.asc().nullsLast().op("int4_ops"),
 		),
 		foreignKey({
 			columns: [table.annotationSegmentId],

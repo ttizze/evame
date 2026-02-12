@@ -41,6 +41,8 @@ export async function createPage(data: {
 	mdastJson?: unknown;
 	sourceLocale?: string;
 	parentId?: number;
+	publishedAt?: Date | null;
+	archivedAt?: Date | null;
 }) {
 	const content = await db
 		.insertInto("contents")
@@ -58,6 +60,8 @@ export async function createPage(data: {
 			mdastJson: (data.mdastJson ?? {}) as JsonValue,
 			sourceLocale: data.sourceLocale ?? "en",
 			parentId: data.parentId ?? null,
+			publishedAt: data.publishedAt ?? null,
+			archivedAt: data.archivedAt ?? null,
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
@@ -365,4 +369,50 @@ export async function createPageComment(data: {
 		.returningAll()
 		.executeTakeFirstOrThrow();
 	return pageComment;
+}
+
+/**
+ * テスト用セッションを作成
+ */
+export async function createSession(data: {
+	userId: string;
+	token?: string;
+	expiresAt?: Date;
+}) {
+	const token = data.token ?? `session_${randomUUID().replace(/-/g, "")}`;
+	const session = await db
+		.insertInto("sessions")
+		.values({
+			id: createId(),
+			token,
+			userId: data.userId,
+			expiresAt: data.expiresAt ?? new Date(Date.now() + 1000 * 60 * 60 * 24),
+		})
+		.returningAll()
+		.executeTakeFirstOrThrow();
+	return session;
+}
+
+/**
+ * テスト用PATを作成
+ * plainKeyを返す（DB保存はSHA256ハッシュのみ）
+ */
+export async function createPersonalAccessToken(data: {
+	userId: string;
+	name?: string;
+}) {
+	const { createHash, randomBytes } = await import("node:crypto");
+	const plainKey = `evame_${randomBytes(24).toString("hex")}`;
+	const keyHash = createHash("sha256").update(plainKey).digest("hex");
+
+	const personalAccessToken = await db
+		.insertInto("personalAccessTokens")
+		.values({
+			keyHash,
+			userId: data.userId,
+			name: data.name ?? "test-key",
+		})
+		.returningAll()
+		.executeTakeFirstOrThrow();
+	return { ...personalAccessToken, plainKey };
 }

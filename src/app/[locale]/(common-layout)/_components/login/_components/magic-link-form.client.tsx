@@ -12,7 +12,7 @@ const schema = z.object({
 	email: z.string().email("Please enter a valid email address"),
 });
 
-export function MagicLinkForm() {
+export function MagicLinkForm({ redirectTo }: { redirectTo: string }) {
 	const [email, setEmail] = useState("");
 	const [sent, setSent] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export function MagicLinkForm() {
 			authClient.signIn
 				.magicLink({
 					email: v.data.email,
-					callbackURL: "/",
+					callbackURL: redirectTo,
 				})
 				.then(() => setSent(true))
 				.catch((e) => {

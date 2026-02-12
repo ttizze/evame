@@ -12,6 +12,7 @@ import {
 	pageLocaleTranslationProofs,
 	pages,
 	pageViews,
+	personalAccessTokens,
 	segmentAnnotationLinks,
 	segmentMetadata,
 	segmentMetadataTypes,
@@ -28,6 +29,72 @@ import {
 	users,
 } from "./schema";
 
+export const accountsRelations = relations(accounts, ({ one }) => ({
+	user: one(users, {
+		fields: [accounts.userId],
+		references: [users.id],
+	}),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+	accounts: many(accounts),
+	personalAccessTokens: many(personalAccessTokens),
+	follows_followerId: many(follows, {
+		relationName: "follows_followerId_users_id",
+	}),
+	follows_followingId: many(follows, {
+		relationName: "follows_followingId_users_id",
+	}),
+	geminiApiKeys: many(geminiApiKeys),
+	likePages: many(likePages),
+	notifications_actorId: many(notifications, {
+		relationName: "notifications_actorId_users_id",
+	}),
+	notifications_userId: many(notifications, {
+		relationName: "notifications_userId_users_id",
+	}),
+	translationJobs: many(translationJobs),
+	segmentTranslations: many(segmentTranslations),
+	pageComments: many(pageComments),
+	sessions: many(sessions),
+	translationContexts: many(translationContexts),
+	translationVotes: many(translationVotes),
+	pages: many(pages),
+	userSettings: many(userSettings),
+}));
+
+export const contentsRelations = relations(contents, ({ one, many }) => ({
+	importFile: one(importFiles, {
+		fields: [contents.importFileId],
+		references: [importFiles.id],
+	}),
+	pageComments: many(pageComments),
+	pages: many(pages),
+	segments: many(segments),
+}));
+
+export const importFilesRelations = relations(importFiles, ({ one, many }) => ({
+	contents: many(contents),
+	importRun: one(importRuns, {
+		fields: [importFiles.importRunId],
+		references: [importRuns.id],
+	}),
+}));
+
+export const personalAccessTokensRelations = relations(
+	personalAccessTokens,
+	({ one }) => ({
+		user: one(users, {
+			fields: [personalAccessTokens.userId],
+			references: [users.id],
+		}),
+	}),
+);
+
+export const importRunsRelations = relations(importRuns, ({ many }) => ({
+	importFiles: many(importFiles),
+}));
+
 export const followsRelations = relations(follows, ({ one }) => ({
 	user_followerId: one(users, {
 		fields: [follows.followerId],
@@ -41,30 +108,11 @@ export const followsRelations = relations(follows, ({ one }) => ({
 	}),
 }));
 
-export const usersRelations = relations(users, ({ many }) => ({
-	follows_followerId: many(follows, {
-		relationName: "follows_followerId_users_id",
+export const geminiApiKeysRelations = relations(geminiApiKeys, ({ one }) => ({
+	user: one(users, {
+		fields: [geminiApiKeys.userId],
+		references: [users.id],
 	}),
-	follows_followingId: many(follows, {
-		relationName: "follows_followingId_users_id",
-	}),
-	likePages: many(likePages),
-	geminiApiKeys: many(geminiApiKeys),
-	notifications_actorId: many(notifications, {
-		relationName: "notifications_actorId_users_id",
-	}),
-	notifications_userId: many(notifications, {
-		relationName: "notifications_userId_users_id",
-	}),
-	accounts: many(accounts),
-	translationContexts: many(translationContexts),
-	translationJobs: many(translationJobs),
-	sessions: many(sessions),
-	translationVotes: many(translationVotes),
-	segmentTranslations: many(segmentTranslations),
-	pageComments: many(pageComments),
-	pages: many(pages),
-	userSettings: many(userSettings),
 }));
 
 export const likePagesRelations = relations(likePages, ({ one }) => ({
@@ -83,8 +131,8 @@ export const pagesRelations = relations(pages, ({ one, many }) => ({
 	notifications: many(notifications),
 	translationJobs: many(translationJobs),
 	pageViews: many(pageViews),
-	pageLocaleTranslationProofs: many(pageLocaleTranslationProofs),
 	pageComments: many(pageComments),
+	pageLocaleTranslationProofs: many(pageLocaleTranslationProofs),
 	content: one(contents, {
 		fields: [pages.id],
 		references: [contents.id],
@@ -102,41 +150,6 @@ export const pagesRelations = relations(pages, ({ one, many }) => ({
 		references: [users.id],
 	}),
 	tagPages: many(tagPages),
-}));
-
-export const importFilesRelations = relations(importFiles, ({ one, many }) => ({
-	importRun: one(importRuns, {
-		fields: [importFiles.importRunId],
-		references: [importRuns.id],
-	}),
-	contents: many(contents),
-}));
-
-export const importRunsRelations = relations(importRuns, ({ many }) => ({
-	importFiles: many(importFiles),
-}));
-
-export const contentsRelations = relations(contents, ({ one, many }) => ({
-	importFile: one(importFiles, {
-		fields: [contents.importFileId],
-		references: [importFiles.id],
-	}),
-	pageComment: one(pageComments, {
-		fields: [contents.id],
-		references: [pageComments.id],
-	}),
-	page: one(pages, {
-		fields: [contents.id],
-		references: [pages.id],
-	}),
-	segments: many(segments),
-}));
-
-export const geminiApiKeysRelations = relations(geminiApiKeys, ({ one }) => ({
-	user: one(users, {
-		fields: [geminiApiKeys.userId],
-		references: [users.id],
-	}),
 }));
 
 export const notificationsRelations = relations(notifications, ({ one }) => ({
@@ -195,7 +208,6 @@ export const segmentTranslationsRelations = relations(
 	segmentTranslations,
 	({ one, many }) => ({
 		notifications: many(notifications),
-		translationVotes: many(translationVotes),
 		segment: one(segments, {
 			fields: [segmentTranslations.segmentId],
 			references: [segments.id],
@@ -204,15 +216,9 @@ export const segmentTranslationsRelations = relations(
 			fields: [segmentTranslations.userId],
 			references: [users.id],
 		}),
+		translationVotes: many(translationVotes),
 	}),
 );
-
-export const accountsRelations = relations(accounts, ({ one }) => ({
-	user: one(users, {
-		fields: [accounts.userId],
-		references: [users.id],
-	}),
-}));
 
 export const translationJobsRelations = relations(
 	translationJobs,
@@ -227,6 +233,25 @@ export const translationJobsRelations = relations(
 		}),
 	}),
 );
+
+export const segmentsRelations = relations(segments, ({ one, many }) => ({
+	segmentTranslations: many(segmentTranslations),
+	content: one(contents, {
+		fields: [segments.contentId],
+		references: [contents.id],
+	}),
+	segmentType: one(segmentTypes, {
+		fields: [segments.segmentTypeId],
+		references: [segmentTypes.id],
+	}),
+	segmentMetadata: many(segmentMetadata),
+	segmentAnnotationLinks_annotationSegmentId: many(segmentAnnotationLinks, {
+		relationName: "segmentAnnotationLinks_annotationSegmentId_segments_id",
+	}),
+	segmentAnnotationLinks_mainSegmentId: many(segmentAnnotationLinks, {
+		relationName: "segmentAnnotationLinks_mainSegmentId_segments_id",
+	}),
+}));
 
 export const pageViewsRelations = relations(pageViews, ({ one }) => ({
 	page: one(pages, {
@@ -252,6 +277,16 @@ export const pageLocaleTranslationProofsRelations = relations(
 	}),
 );
 
+export const translationContextsRelations = relations(
+	translationContexts,
+	({ one }) => ({
+		user: one(users, {
+			fields: [translationContexts.userId],
+			references: [users.id],
+		}),
+	}),
+);
+
 export const translationVotesRelations = relations(
 	translationVotes,
 	({ one }) => ({
@@ -265,25 +300,6 @@ export const translationVotesRelations = relations(
 		}),
 	}),
 );
-
-export const segmentsRelations = relations(segments, ({ one, many }) => ({
-	segmentTranslations: many(segmentTranslations),
-	content: one(contents, {
-		fields: [segments.contentId],
-		references: [contents.id],
-	}),
-	segmentType: one(segmentTypes, {
-		fields: [segments.segmentTypeId],
-		references: [segmentTypes.id],
-	}),
-	segmentMetadata: many(segmentMetadata),
-	segmentAnnotationLinks_annotationSegmentId: many(segmentAnnotationLinks, {
-		relationName: "segmentAnnotationLinks_annotationSegmentId_segments_id",
-	}),
-	segmentAnnotationLinks_mainSegmentId: many(segmentAnnotationLinks, {
-		relationName: "segmentAnnotationLinks_mainSegmentId_segments_id",
-	}),
-}));
 
 export const segmentTypesRelations = relations(segmentTypes, ({ many }) => ({
 	segments: many(segments),
@@ -316,16 +332,6 @@ export const userSettingsRelations = relations(userSettings, ({ one }) => ({
 		references: [users.id],
 	}),
 }));
-
-export const translationContextsRelations = relations(
-	translationContexts,
-	({ one }) => ({
-		user: one(users, {
-			fields: [translationContexts.userId],
-			references: [users.id],
-		}),
-	}),
-);
 
 export const tagPagesRelations = relations(tagPages, ({ one }) => ({
 	page: one(pages, {
