@@ -5,7 +5,7 @@ import { countPublicPages } from "@/app/_db/sitemap-queries.server";
 const CHUNK = 1_000;
 
 /**
- * Dynamic robots.txt generator.
+ * robots.txt generator.
  * Lists all generated sitemap chunk files: /sitemap/[id].xml  →  /sitemap/0.xml, /sitemap/1.xml, ...
  */
 export default async function robots(): Promise<MetadataRoute.Robots> {
@@ -26,6 +26,4 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
 	};
 }
 
-// Force dynamic so that BASE_URL and DB-driven counts are always respected.
-export const dynamic = "force-dynamic";
 export const revalidate = 36000;

@@ -9,6 +9,8 @@ import {
 
 const CHUNK = 1_000;
 
+export const revalidate = 3600;
+
 export async function generateSitemaps() {
 	const total = await countPublicPages();
 	// 少なくとも 1 チャンクは返す（id=0 は静的ルートも含めるため）

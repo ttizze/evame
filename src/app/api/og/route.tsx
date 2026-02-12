@@ -3,6 +3,11 @@ import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
 
+const OG_CACHE_CONTROL =
+	"public, max-age=0, s-maxage=86400, stale-while-revalidate=604800";
+const OG_NOT_FOUND_CACHE_CONTROL =
+	"public, max-age=0, s-maxage=60, stale-while-revalidate=600";
+
 export async function GET(req: Request): Promise<Response> {
 	const { searchParams } = new URL(req.url);
 	const interFontSemiBold = await readFile(
@@ -22,7 +27,7 @@ export async function GET(req: Request): Promise<Response> {
 	const logoSrc = `data:image/png;base64,${Buffer.from(logoData).toString("base64")}`;
 
 	if (!pageDetail) {
-		return new ImageResponse(
+		const res = new ImageResponse(
 			<div tw="flex items-center justify-center w-full h-full bg-slate-100">
 				<p tw="text-6xl">Page Not Found</p>
 			</div>,
@@ -31,10 +36,12 @@ export async function GET(req: Request): Promise<Response> {
 				height: 630,
 			},
 		);
+		res.headers.set("Cache-Control", OG_NOT_FOUND_CACHE_CONTROL);
+		return res;
 	}
 	const { title } = pageDetail;
 
-	return new ImageResponse(
+	const res = new ImageResponse(
 		<div
 			style={{
 				fontFamily: "Inter,BIZ UDPGothic",
@@ -87,4 +94,6 @@ export async function GET(req: Request): Promise<Response> {
 			],
 		},
 	);
+	res.headers.set("Cache-Control", OG_CACHE_CONTROL);
+	return res;
 }

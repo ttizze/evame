@@ -4,6 +4,9 @@ import { countPublicPages } from "@/app/_db/sitemap-queries.server";
 
 const CHUNK = 1_000;
 
+const SITEMAP_INDEX_CACHE_CONTROL =
+	"public, max-age=0, s-maxage=3600, stale-while-revalidate=86400";
+
 /**
  * GET /sitemap.xml
  * ───────────────────
@@ -26,6 +29,9 @@ export async function GET() {
     </sitemapindex>`;
 
 	return new NextResponse(xml, {
-		headers: { "Content-Type": "application/xml" },
+		headers: {
+			"Content-Type": "application/xml",
+			"Cache-Control": SITEMAP_INDEX_CACHE_CONTROL,
+		},
 	});
 }
