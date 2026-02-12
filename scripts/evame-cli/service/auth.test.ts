@@ -57,6 +57,9 @@ describe("evame-cli auth", () => {
 		const cwd = await createTempDir();
 		const env: NodeJS.ProcessEnv = {
 			...process.env,
+			// CI環境などで XDG_CONFIG_HOME がセットされていても、
+			// このテストケースでは「未設定」を明示してフォールバック挙動を検証する。
+			XDG_CONFIG_HOME: undefined,
 			HOME: join(cwd, "home"),
 		};
 		await saveAuthToken("token-from-file", env);
