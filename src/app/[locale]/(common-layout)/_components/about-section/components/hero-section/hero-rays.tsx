@@ -3,10 +3,6 @@ import Image from "next/image";
 export const HeroRays = () => {
 	return (
 		<div className="relative my-10 flex h-[360px] w-full max-w-4xl items-center justify-center overflow-hidden rounded-3xl">
-			<div
-				aria-hidden="true"
-				className="absolute inset-0 h-full w-full bg-[url('/hero-rays-light.svg')] bg-cover bg-center dark:bg-[url('/hero-rays-dark.svg')]"
-			/>
 			<Image
 				alt="Hero section image"
 				className="relative z-10 dark:invert"
