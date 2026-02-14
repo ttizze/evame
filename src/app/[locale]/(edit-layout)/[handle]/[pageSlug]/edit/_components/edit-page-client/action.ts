@@ -13,7 +13,12 @@ import { processPageHtml } from "./service/process-page-html";
 const formSchema = z.object({
 	pageSlug: z.string(),
 	userLocale: z.string(),
-	title: z.string().min(1).max(100),
+	// タイトルに改行が混ざると revision や表示の前提が崩れるため、保存時に正規化する。
+	// Enter はクライアント側で抑止しているが、ペースト等で混入し得るため server でも保証する。
+	title: z
+		.string()
+		.transform((s) => s.replace(/\r\n|\r|\n/g, " ").trim())
+		.pipe(z.string().min(1).max(100)),
 	pageContent: z.string().min(1),
 });
 
