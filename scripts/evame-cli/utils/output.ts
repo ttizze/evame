@@ -39,6 +39,8 @@ Usage:
   evame pull [--force]
   evame logout
   evame help
+  evame --help
+  evame -h
 
 Authentication:
   1) Use \`evame login\` for browser-based login

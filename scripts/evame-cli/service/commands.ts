@@ -23,6 +23,15 @@ export async function runCommand(
 ): Promise<number> {
 	// ルーティングだけを担当し、実処理は各コマンド関数に委譲する。
 	// command 未指定時は help 扱いにして、誤操作でも使い方へ戻せるようにする。
+	if (
+		command === "--help" ||
+		command === "-h" ||
+		args.includes("--help") ||
+		args.includes("-h")
+	) {
+		printHelp();
+		return 0;
+	}
 	switch (command) {
 		case "push":
 			return runPushCommand(args);
@@ -132,6 +141,11 @@ async function runLoginCommand(): Promise<number> {
 	await saveAuthToken(token, process.env);
 	console.log("Login successful.");
 	console.log(`Auth file: ${resolveAuthFilePath(process.env)}`);
+	console.log("");
+	console.log("Next:");
+	console.log("  evame pull [--force]");
+	console.log("  evame push [--dry-run]");
+	console.log("  evame help");
 	return 0;
 }
 
