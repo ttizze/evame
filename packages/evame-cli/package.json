@@ -1,0 +1,34 @@
+{
+  "name": "@reimei/evame-cli",
+  "version": "0.1.0",
+  "description": "Evame CLI (login/push/pull) for syncing Markdown via Evame Sync API.",
+  "license": "AGPL-3.0-only",
+  "bin": {
+    "evame": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ttizze/evame.git",
+    "directory": "packages/evame-cli"
+  },
+  "bugs": {
+    "url": "https://github.com/ttizze/evame/issues"
+  },
+  "homepage": "https://github.com/ttizze/evame",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bun build ../../scripts/evame-cli/index.ts --target=node --format=cjs --outdir dist --banner \"#!/usr/bin/env node\" --sourcemap=none",
+    "prepack": "bun run build"
+  }
+}
+
