@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { syncPushSchema } from "./schema";
 
 describe("syncPushSchema", () => {
-	it("slugは英数字/ハイフン/アンダースコアを受け付ける", () => {
+	it("slugは英数字/ハイフンを受け付ける", () => {
 		const parsed = syncPushSchema.safeParse({
 			inputs: [
 				{
@@ -13,7 +13,7 @@ describe("syncPushSchema", () => {
 					published_at: null,
 				},
 				{
-					slug: "slug_with_underscore-123",
+					slug: "slug-with-hyphen-123",
 					expected_revision: null,
 					title: "t",
 					body: "b",
@@ -22,6 +22,21 @@ describe("syncPushSchema", () => {
 			],
 		});
 		expect(parsed.success).toBe(true);
+	});
+
+	it("slugにアンダースコアがある場合は弾く", () => {
+		const parsed = syncPushSchema.safeParse({
+			inputs: [
+				{
+					slug: "bad_slug",
+					expected_revision: null,
+					title: "t",
+					body: "b",
+					published_at: null,
+				},
+			],
+		});
+		expect(parsed.success).toBe(false);
 	});
 
 	it("slugにスラッシュがある場合は弾く", () => {
