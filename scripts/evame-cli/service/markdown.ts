@@ -23,12 +23,6 @@ export async function collectMarkdownFiles(contentDir: string): Promise<
 	for (const filePath of files) {
 		// 同期IDの安定性のため、slug はファイル名から決定する。
 		const slug = filePathToSlug(filePath);
-		if (seenSlugs.has(slug)) {
-			throw new Error(
-				`Duplicate slug detected: ${slug} (same filename-derived slug).`,
-			);
-		}
-		seenSlugs.add(slug);
 
 		const markdown = await readFile(filePath, "utf8");
 		let parsed: ReturnType<typeof parseMarkdownDocument>;
@@ -40,6 +34,17 @@ export async function collectMarkdownFiles(contentDir: string): Promise<
 				cause: error,
 			});
 		}
+		if (parsed === null) {
+			// 同期対象外（published_at が無い/本文が空など）は無視する。
+			continue;
+		}
+
+		if (seenSlugs.has(slug)) {
+			throw new Error(
+				`Duplicate slug detected: ${slug} (same filename-derived slug).`,
+			);
+		}
+		seenSlugs.add(slug);
 		result.push({
 			slug,
 			title: parsed.title,
@@ -103,27 +108,33 @@ function parseMarkdownDocument(content: string): {
 	title: string;
 	body: string;
 	published_at: string | null;
-} {
+} | null {
 	// 改行コード差異で差分が出ないよう LF に統一する。
 	const normalized = content.replace(/\r\n/g, "\n");
 
 	const withFrontmatter = parseOptionalFrontmatter(normalized);
-	const attrs = withFrontmatter
-		? parseSimpleYaml(withFrontmatter.frontmatter)
-		: {};
-
-	// frontmatter直後の空行は本文から除外する。
-	const bodyRaw = withFrontmatter ? withFrontmatter.body : normalized;
-	const body =
-		withFrontmatter && bodyRaw.startsWith("\n") ? bodyRaw.slice(1) : bodyRaw;
-
-	const titleFromFrontmatter = attrs.title?.trim() ?? "";
-	const publishedAt = normalizePublishedAt(attrs.published_at);
-	if (titleFromFrontmatter) {
-		return { title: titleFromFrontmatter, body, published_at: publishedAt };
+	if (!withFrontmatter) {
+		// published_at の frontmatter を持たないファイルは同期対象外。
+		return null;
 	}
 
+	const attrs = parseSimpleYaml(withFrontmatter.frontmatter);
+	if (!("published_at" in attrs)) {
+		// frontmatter はあっても published_at が無いものは同期対象外。
+		return null;
+	}
+
+	// frontmatter直後の空行は本文から除外する。
+	const bodyRaw = withFrontmatter.body;
+	const body = bodyRaw.startsWith("\n") ? bodyRaw.slice(1) : bodyRaw;
+
+	const publishedAt = normalizePublishedAt(attrs.published_at);
 	const derived = deriveTitleFromBody(body);
+	if (!derived) {
+		// タイトルを導けない（本文が空など）ファイルは同期対象外。
+		return null;
+	}
+
 	return {
 		title: derived.title,
 		body: derived.body,
@@ -204,7 +215,9 @@ function normalizePublishedAt(input: string | undefined): string | null {
 	return date.toISOString();
 }
 
-function deriveTitleFromBody(body: string): { title: string; body: string } {
+function deriveTitleFromBody(
+	body: string,
+): { title: string; body: string } | null {
 	const lines = body.split("\n");
 	let index = 0;
 	while (index < lines.length) {
@@ -222,7 +235,8 @@ function deriveTitleFromBody(body: string): { title: string; body: string } {
 	}
 
 	if (index >= lines.length) {
-		throw new Error("title is required.");
+		// 本文が空のファイルは同期対象外。
+		return null;
 	}
 
 	const firstLine = lines[index] ?? "";
@@ -237,11 +251,8 @@ function deriveTitleFromBody(body: string): { title: string; body: string } {
 		return { title: h1, body: lines.join("\n") };
 	}
 
-	const title = extractFirstSentence(firstLine);
-	if (!title) {
-		throw new Error("title is required.");
-	}
-	return { title, body };
+	const title = firstLine.trim();
+	return title ? { title, body } : null;
 }
 
 function extractH1Title(line: string): string | null {
@@ -249,24 +260,4 @@ function extractH1Title(line: string): string | null {
 	if (!trimmed.startsWith("#") || trimmed.startsWith("##")) return null;
 	const title = trimmed.slice(1).trim();
 	return title ? title : null;
-}
-
-function extractFirstSentence(line: string): string {
-	const trimmed = line.trim();
-	if (!trimmed) return "";
-
-	const endings = ["。", ".", "!", "?", "！", "？"] as const;
-	let endIndex: number | null = null;
-	for (const ending of endings) {
-		const index = trimmed.indexOf(ending);
-		if (index === -1) continue;
-		const candidate = index + ending.length;
-		if (endIndex === null || candidate < endIndex) {
-			endIndex = candidate;
-		}
-	}
-
-	const extracted =
-		endIndex === null ? trimmed : trimmed.slice(0, Math.max(0, endIndex));
-	return extracted.trim();
 }
