@@ -2,15 +2,14 @@ import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { EVAME_DIR_NAME } from "../utils/constants";
 
-export async function collectMarkdownFiles(contentDir: string): Promise<{
-	files: Array<{
+export async function collectMarkdownFiles(contentDir: string): Promise<
+	Array<{
 		slug: string;
 		title: string;
 		body: string;
 		published_at: string | null;
-	}>;
-	skippedNoFrontmatterCount: number;
-}> {
+	}>
+> {
 	// content_dir 配下の Markdown を再帰的に収集する。
 	const files = await collectMarkdownPaths(contentDir);
 	const result: Array<{
@@ -20,17 +19,8 @@ export async function collectMarkdownFiles(contentDir: string): Promise<{
 		published_at: string | null;
 	}> = [];
 	const seenSlugs = new Set<string>();
-	let skippedNoFrontmatterCount = 0;
 
 	for (const filePath of files) {
-		const markdown = await readFile(filePath, "utf8");
-		const normalized = markdown.replace(/\r\n/g, "\n");
-		if (!normalized.startsWith("---\n")) {
-			// frontmatter が無いMarkdownは同期対象外として扱う（README等を誤同期しない）。
-			skippedNoFrontmatterCount += 1;
-			continue;
-		}
-
 		// 同期IDの安定性のため、slug はファイル名から決定する。
 		const slug = filePathToSlug(filePath);
 		if (seenSlugs.has(slug)) {
@@ -40,6 +30,7 @@ export async function collectMarkdownFiles(contentDir: string): Promise<{
 		}
 		seenSlugs.add(slug);
 
+		const markdown = await readFile(filePath, "utf8");
 		let parsed: ReturnType<typeof parseMarkdownDocument>;
 		try {
 			parsed = parseMarkdownDocument(markdown);
@@ -58,10 +49,7 @@ export async function collectMarkdownFiles(contentDir: string): Promise<{
 	}
 
 	// API送信順を安定化するため slug 昇順で返す。
-	return {
-		files: result.sort((a, b) => a.slug.localeCompare(b.slug)),
-		skippedNoFrontmatterCount,
-	};
+	return result.sort((a, b) => a.slug.localeCompare(b.slug));
 }
 
 function filePathToSlug(path: string): string {
@@ -118,28 +106,52 @@ function parseMarkdownDocument(content: string): {
 } {
 	// 改行コード差異で差分が出ないよう LF に統一する。
 	const normalized = content.replace(/\r\n/g, "\n");
-	if (!normalized.startsWith("---\n")) {
-		throw new Error("frontmatter is required (title is mandatory).");
-	}
 
-	const end = normalized.indexOf("\n---\n", 4);
-	if (end === -1) {
-		throw new Error("frontmatter closing delimiter (---) is missing.");
-	}
+	const withFrontmatter = parseOptionalFrontmatter(normalized);
+	const attrs = withFrontmatter
+		? parseSimpleYaml(withFrontmatter.frontmatter)
+		: {};
 
-	const frontmatter = normalized.slice(4, end);
-	const bodyRaw = normalized.slice(end + 5);
 	// frontmatter直後の空行は本文から除外する。
-	const body = bodyRaw.startsWith("\n") ? bodyRaw.slice(1) : bodyRaw;
-	const attrs = parseSimpleYaml(frontmatter);
+	const bodyRaw = withFrontmatter ? withFrontmatter.body : normalized;
+	const body =
+		withFrontmatter && bodyRaw.startsWith("\n") ? bodyRaw.slice(1) : bodyRaw;
 
-	const titleValue = attrs.title;
-	if (typeof titleValue !== "string" || titleValue.trim() === "") {
-		throw new Error("title is required.");
+	const titleFromFrontmatter = attrs.title?.trim() ?? "";
+	const publishedAt = normalizePublishedAt(attrs.published_at);
+	if (titleFromFrontmatter) {
+		return { title: titleFromFrontmatter, body, published_at: publishedAt };
 	}
 
-	const publishedAt = normalizePublishedAt(attrs.published_at);
-	return { title: titleValue.trim(), body, published_at: publishedAt };
+	const derived = deriveTitleFromBody(body);
+	return {
+		title: derived.title,
+		body: derived.body,
+		published_at: publishedAt,
+	};
+}
+
+function parseOptionalFrontmatter(
+	normalizedContent: string,
+): { frontmatter: string; body: string } | null {
+	if (!normalizedContent.startsWith("---\n")) return null;
+
+	const endMarker = "\n---\n";
+	const end = normalizedContent.indexOf(endMarker, 4);
+	if (end !== -1) {
+		return {
+			frontmatter: normalizedContent.slice(4, end),
+			body: normalizedContent.slice(end + endMarker.length),
+		};
+	}
+	if (normalizedContent.endsWith("\n---")) {
+		return {
+			frontmatter: normalizedContent.slice(4, -4),
+			body: "",
+		};
+	}
+
+	return null;
 }
 
 function parseSimpleYaml(text: string): Record<string, string> {
@@ -187,4 +199,71 @@ function normalizePublishedAt(input: string | undefined): string | null {
 		throw new Error(`Invalid published_at value: ${input}`);
 	}
 	return date.toISOString();
+}
+
+function deriveTitleFromBody(body: string): { title: string; body: string } {
+	const lines = body.split("\n");
+	let index = 0;
+	while (index < lines.length) {
+		const trimmed = lines[index]?.trim() ?? "";
+		if (!trimmed) {
+			index += 1;
+			continue;
+		}
+		// frontmatterではない先頭の区切り線はタイトル判定から除外する。
+		if (trimmed === "---" || trimmed === "***" || trimmed === "___") {
+			index += 1;
+			continue;
+		}
+		break;
+	}
+
+	if (index >= lines.length) {
+		throw new Error("title is required.");
+	}
+
+	const firstLine = lines[index] ?? "";
+	const h1 = extractH1Title(firstLine);
+	if (h1) {
+		// # 見出しを title に使う場合、本文からは削除して二重表示を避ける。
+		lines.splice(index, 1);
+		// 見出し直後の空行は本文から除外する。
+		if ((lines[index]?.trim() ?? "") === "") {
+			lines.splice(index, 1);
+		}
+		return { title: h1, body: lines.join("\n") };
+	}
+
+	const title = extractFirstSentence(firstLine);
+	if (!title) {
+		throw new Error("title is required.");
+	}
+	return { title, body };
+}
+
+function extractH1Title(line: string): string | null {
+	const trimmed = line.trim();
+	if (!trimmed.startsWith("#") || trimmed.startsWith("##")) return null;
+	const title = trimmed.slice(1).trim();
+	return title ? title : null;
+}
+
+function extractFirstSentence(line: string): string {
+	const trimmed = line.trim();
+	if (!trimmed) return "";
+
+	const endings = ["。", ".", "!", "?", "！", "？"] as const;
+	let endIndex: number | null = null;
+	for (const ending of endings) {
+		const index = trimmed.indexOf(ending);
+		if (index === -1) continue;
+		const candidate = index + ending.length;
+		if (endIndex === null || candidate < endIndex) {
+			endIndex = candidate;
+		}
+	}
+
+	const extracted =
+		endIndex === null ? trimmed : trimmed.slice(0, Math.max(0, endIndex));
+	return extracted.trim();
 }

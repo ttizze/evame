@@ -36,10 +36,9 @@ describe("evame-cli markdown", () => {
 			"utf8",
 		);
 
-		const collected = await collectMarkdownFiles(dir);
-		expect(collected.skippedNoFrontmatterCount).toBe(0);
-		expect(collected.files).toHaveLength(1);
-		expect(collected.files[0]).toEqual({
+		const files = await collectMarkdownFiles(dir);
+		expect(files).toHaveLength(1);
+		expect(files[0]).toEqual({
 			slug: "hello-world",
 			title: "Hello World",
 			body: "本文です。\n",
@@ -47,20 +46,39 @@ describe("evame-cli markdown", () => {
 		});
 	});
 
-	it("frontmatterが無いファイルは同期対象から除外する", async () => {
+	it("frontmatterが無くても先頭の # 見出しをタイトルとして扱う", async () => {
 		const dir = await createTempDir();
-		await writeFile(join(dir, "no-frontmatter.md"), "# hello\n", "utf8");
 		await writeFile(
-			join(dir, "with-frontmatter.md"),
-			["---", 'title: "With frontmatter"', "---", "", "本文です。", ""].join(
-				"\n",
-			),
+			join(dir, "hello.md"),
+			["# 見出しタイトル", "", "本文です。", ""].join("\n"),
 			"utf8",
 		);
 
-		const collected = await collectMarkdownFiles(dir);
-		expect(collected.files).toHaveLength(1);
-		expect(collected.files[0]?.slug).toBe("with-frontmatter");
-		expect(collected.skippedNoFrontmatterCount).toBe(1);
+		const files = await collectMarkdownFiles(dir);
+		expect(files).toHaveLength(1);
+		expect(files[0]).toEqual({
+			slug: "hello",
+			title: "見出しタイトル",
+			body: "本文です。\n",
+			published_at: null,
+		});
+	});
+
+	it("# 見出しが無い場合は最初の一文をタイトルにする", async () => {
+		const dir = await createTempDir();
+		await writeFile(
+			join(dir, "hello.md"),
+			["これは最初の一文です。これは二文目です。", ""].join("\n"),
+			"utf8",
+		);
+
+		const files = await collectMarkdownFiles(dir);
+		expect(files).toHaveLength(1);
+		expect(files[0]).toEqual({
+			slug: "hello",
+			title: "これは最初の一文です。",
+			body: "これは最初の一文です。これは二文目です。\n",
+			published_at: null,
+		});
 	});
 });
