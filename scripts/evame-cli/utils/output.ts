@@ -35,8 +35,10 @@ export function printHelp() {
 
 Usage:
   evame login
-  evame push [--dry-run]
-  evame pull [--force]
+  evame push
+  evame push --dry-run
+  evame pull
+  evame pull --force
   evame logout
   evame help
   evame --help

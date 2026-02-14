@@ -104,7 +104,9 @@ describe("evame-cli commands", () => {
 			expect(printed).toContain("Login successful.");
 			expect(printed).toContain("Next:");
 			expect(printed).toContain("evame push");
+			expect(printed).toContain("evame push --dry-run");
 			expect(printed).toContain("evame pull");
+			expect(printed).toContain("evame pull --force");
 		} finally {
 			logSpy.mockRestore();
 		}

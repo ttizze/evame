@@ -143,8 +143,10 @@ async function runLoginCommand(): Promise<number> {
 	console.log(`Auth file: ${resolveAuthFilePath(process.env)}`);
 	console.log("");
 	console.log("Next:");
-	console.log("  evame pull [--force]");
-	console.log("  evame push [--dry-run]");
+	console.log("  evame pull");
+	console.log("  evame pull --force");
+	console.log("  evame push");
+	console.log("  evame push --dry-run");
 	console.log("  evame help");
 	return 0;
 }
