@@ -2,14 +2,15 @@ import { readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { EVAME_DIR_NAME } from "../utils/constants";
 
-export async function collectMarkdownFiles(contentDir: string): Promise<
-	Array<{
+export async function collectMarkdownFiles(contentDir: string): Promise<{
+	files: Array<{
 		slug: string;
 		title: string;
 		body: string;
 		published_at: string | null;
-	}>
-> {
+	}>;
+	skippedNoFrontmatterCount: number;
+}> {
 	// content_dir 配下の Markdown を再帰的に収集する。
 	const files = await collectMarkdownPaths(contentDir);
 	const result: Array<{
@@ -19,8 +20,17 @@ export async function collectMarkdownFiles(contentDir: string): Promise<
 		published_at: string | null;
 	}> = [];
 	const seenSlugs = new Set<string>();
+	let skippedNoFrontmatterCount = 0;
 
 	for (const filePath of files) {
+		const markdown = await readFile(filePath, "utf8");
+		const normalized = markdown.replace(/\r\n/g, "\n");
+		if (!normalized.startsWith("---\n")) {
+			// frontmatter が無いMarkdownは同期対象外として扱う（README等を誤同期しない）。
+			skippedNoFrontmatterCount += 1;
+			continue;
+		}
+
 		// 同期IDの安定性のため、slug はファイル名から決定する。
 		const slug = filePathToSlug(filePath);
 		if (seenSlugs.has(slug)) {
@@ -30,7 +40,6 @@ export async function collectMarkdownFiles(contentDir: string): Promise<
 		}
 		seenSlugs.add(slug);
 
-		const markdown = await readFile(filePath, "utf8");
 		let parsed: ReturnType<typeof parseMarkdownDocument>;
 		try {
 			parsed = parseMarkdownDocument(markdown);
@@ -49,7 +58,10 @@ export async function collectMarkdownFiles(contentDir: string): Promise<
 	}
 
 	// API送信順を安定化するため slug 昇順で返す。
-	return result.sort((a, b) => a.slug.localeCompare(b.slug));
+	return {
+		files: result.sort((a, b) => a.slug.localeCompare(b.slug)),
+		skippedNoFrontmatterCount,
+	};
 }
 
 function filePathToSlug(path: string): string {
@@ -70,8 +82,24 @@ async function collectMarkdownPaths(dir: string): Promise<string[]> {
 async function walk(current: string, out: string[]): Promise<void> {
 	const entries = await readdir(current, { withFileTypes: true });
 	for (const entry of entries) {
-		// 管理ファイル置き場は同期対象外。
-		if (entry.name === EVAME_DIR_NAME) continue;
+		// 管理/依存物の置き場は同期対象外。
+		if (
+			entry.name === EVAME_DIR_NAME ||
+			entry.name === "node_modules" ||
+			entry.name === ".git" ||
+			entry.name === ".next" ||
+			entry.name === "tipitaka-xml" ||
+			entry.name === "tipitaka-md" ||
+			entry.name === "cst" ||
+			entry.name === "coverage" ||
+			entry.name === "playwright-report" ||
+			entry.name === "test-results" ||
+			entry.name === "dist" ||
+			entry.name === "build" ||
+			entry.name === "out"
+		) {
+			continue;
+		}
 		const fullPath = join(current, entry.name);
 		if (entry.isDirectory()) {
 			await walk(fullPath, out);

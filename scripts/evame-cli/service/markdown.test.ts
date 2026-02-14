@@ -36,9 +36,10 @@ describe("evame-cli markdown", () => {
 			"utf8",
 		);
 
-		const files = await collectMarkdownFiles(dir);
-		expect(files).toHaveLength(1);
-		expect(files[0]).toEqual({
+		const collected = await collectMarkdownFiles(dir);
+		expect(collected.skippedNoFrontmatterCount).toBe(0);
+		expect(collected.files).toHaveLength(1);
+		expect(collected.files[0]).toEqual({
 			slug: "hello-world",
 			title: "Hello World",
 			body: "本文です。\n",
@@ -46,15 +47,20 @@ describe("evame-cli markdown", () => {
 		});
 	});
 
-	it("frontmatterが無いファイルは原因のファイルパス付きでエラーになる", async () => {
+	it("frontmatterが無いファイルは同期対象から除外する", async () => {
 		const dir = await createTempDir();
 		await writeFile(join(dir, "no-frontmatter.md"), "# hello\n", "utf8");
+		await writeFile(
+			join(dir, "with-frontmatter.md"),
+			["---", 'title: "With frontmatter"', "---", "", "本文です。", ""].join(
+				"\n",
+			),
+			"utf8",
+		);
 
-		await expect(collectMarkdownFiles(dir)).rejects.toThrow(
-			/no-frontmatter\.md/,
-		);
-		await expect(collectMarkdownFiles(dir)).rejects.toThrow(
-			/frontmatter is required/,
-		);
+		const collected = await collectMarkdownFiles(dir);
+		expect(collected.files).toHaveLength(1);
+		expect(collected.files[0]?.slug).toBe("with-frontmatter");
+		expect(collected.skippedNoFrontmatterCount).toBe(1);
 	});
 });
