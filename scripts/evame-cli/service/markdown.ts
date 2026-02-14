@@ -31,7 +31,15 @@ export async function collectMarkdownFiles(contentDir: string): Promise<
 		seenSlugs.add(slug);
 
 		const markdown = await readFile(filePath, "utf8");
-		const parsed = parseMarkdownDocument(markdown);
+		let parsed: ReturnType<typeof parseMarkdownDocument>;
+		try {
+			parsed = parseMarkdownDocument(markdown);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : "Unknown error";
+			throw new Error(`Invalid markdown file: ${filePath}\n${message}`, {
+				cause: error,
+			});
+		}
 		result.push({
 			slug,
 			title: parsed.title,

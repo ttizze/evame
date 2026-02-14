@@ -45,4 +45,16 @@ describe("evame-cli markdown", () => {
 			published_at: "2024-01-01T00:00:00.000Z",
 		});
 	});
+
+	it("frontmatterが無いファイルは原因のファイルパス付きでエラーになる", async () => {
+		const dir = await createTempDir();
+		await writeFile(join(dir, "no-frontmatter.md"), "# hello\n", "utf8");
+
+		await expect(collectMarkdownFiles(dir)).rejects.toThrow(
+			/no-frontmatter\.md/,
+		);
+		await expect(collectMarkdownFiles(dir)).rejects.toThrow(
+			/frontmatter is required/,
+		);
+	});
 });
