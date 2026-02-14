@@ -76,5 +76,11 @@ describe("evame-cli state", () => {
 			"utf8",
 		);
 		expect(keptContent).toContain("ローカル編集");
+
+		const newContent = await readFile(join(contentDir, "new-post.md"), "utf8");
+		expect(newContent).toContain('published_at: "2024-01-01T00:00:00.000Z"');
+		expect(newContent).toContain("# New");
+		expect(newContent).toContain("new body");
+		expect(newContent).not.toContain("title:");
 	});
 });
