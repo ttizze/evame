@@ -1,5 +1,5 @@
 {
-	"name": "@reimei/evame-cli",
+	"name": "@reimei-inc/evame-cli",
 	"version": "0.1.0",
 	"description": "Evame CLI (login/push/pull) for syncing Markdown via Evame Sync API.",
 	"license": "AGPL-3.0-only",
