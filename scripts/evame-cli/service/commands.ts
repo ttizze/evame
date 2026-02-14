@@ -65,16 +65,16 @@ async function runPushCommand(args: string[]): Promise<number> {
 	const token = await loadAuthToken(process.env);
 	const state = await loadState(cwd);
 	const collected = await collectMarkdownFiles(contentDir);
+	if (collected.skippedNoFrontmatterCount > 0) {
+		console.log(
+			`Skipped ${collected.skippedNoFrontmatterCount} markdown files without frontmatter.`,
+		);
+	}
 	// state の revision を expected_revision に反映して楽観ロックを行う。
 	const payload = buildPushRequest(collected.files, state, dryRun);
 
 	if (payload.inputs.length === 0) {
 		console.log("No files to sync.");
-		if (collected.skippedNoFrontmatterCount > 0) {
-			console.log(
-				`Skipped ${collected.skippedNoFrontmatterCount} markdown files without frontmatter.`,
-			);
-		}
 		return 0;
 	}
 
