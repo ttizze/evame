@@ -11,6 +11,7 @@ import { remarkHashAndSegments } from "./remark-hash-and-segments";
 interface Params {
 	header?: string;
 	markdown: string;
+	autoUploadImages?: boolean;
 }
 
 interface Result {
@@ -27,12 +28,16 @@ interface Result {
 export async function markdownToMdastWithSegments({
 	header,
 	markdown,
+	autoUploadImages = true,
 }: Params): Promise<Result> {
 	const processor = unified()
 		.use(remarkParse) // Markdown → MDAST
 		.use(remarkCustomBlocks) // カスタムブロック記法の解釈
-		.use(remarkHashAndSegments(header)) // ハッシュ + Segment 生成
-		.use(remarkAutoUploadImages); // 画像の自動アップロード
+		.use(remarkHashAndSegments(header)); // ハッシュ + Segment 生成
+
+	if (autoUploadImages) {
+		processor.use(remarkAutoUploadImages); // 画像の自動アップロード
+	}
 
 	const file = new VFile({ value: markdown });
 	let tree = processor.parse(file); // MDAST

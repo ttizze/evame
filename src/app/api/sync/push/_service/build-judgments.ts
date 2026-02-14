@@ -11,13 +11,20 @@ import type { PushInput, SyncPushInput } from "./schema";
  * 全 input に対して判定を行い、結果を返す
  */
 export async function buildJudgments(userId: string, data: SyncPushInput) {
-	return await Promise.all(data.inputs.map((input) => judgeOne(userId, input)));
+	const dryRun = data.dry_run ?? false;
+	return await Promise.all(
+		data.inputs.map((input) => judgeOne(userId, input, { dryRun })),
+	);
 }
 
-async function judgeOne(userId: string, input: PushInput) {
+async function judgeOne(
+	userId: string,
+	input: PushInput,
+	options: { dryRun: boolean },
+) {
 	const [existingPage, canonicalIncoming] = await Promise.all([
 		findPageForSync(userId, input.slug),
-		buildCanonicalIncoming(input),
+		buildCanonicalIncoming(input, options),
 	]);
 	const currentRevision = await computeCurrentRevision(
 		input.slug,
@@ -49,10 +56,14 @@ async function judgeOne(userId: string, input: PushInput) {
 	};
 }
 
-async function buildCanonicalIncoming(input: PushInput) {
+async function buildCanonicalIncoming(
+	input: PushInput,
+	options: { dryRun: boolean },
+) {
 	const { mdastJson, segments } = await markdownToMdastWithSegments({
 		header: input.title,
 		markdown: input.body,
+		autoUploadImages: !options.dryRun,
 	});
 	const canonicalBody = mdastToMarkdown(mdastJson);
 	const publishedAt = input.published_at ?? null;
