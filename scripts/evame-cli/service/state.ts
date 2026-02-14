@@ -126,13 +126,11 @@ function toMarkdownDocument(page: {
 }): string {
 	// published_at はメタデータとして frontmatter に残し、title は本文の先頭見出しにする。
 	const parts: string[] = [];
-	if (page.published_at) {
-		parts.push(
-			["---", `published_at: ${JSON.stringify(page.published_at)}`, "---"].join(
-				"\n",
-			),
-		);
-	}
+	parts.push(
+		["---", `published_at: ${JSON.stringify(page.published_at)}`, "---"].join(
+			"\n",
+		),
+	);
 
 	const title = page.title.trim();
 	if (title) {

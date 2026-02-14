@@ -83,4 +83,34 @@ describe("evame-cli state", () => {
 		expect(newContent).toContain("new body");
 		expect(newContent).not.toContain("title:");
 	});
+
+	it("pullはpublished_atが無い場合もfrontmatterにnullを書き出す", async () => {
+		const cwd = await createTempDir();
+		const contentDir = join(cwd, "articles");
+
+		const pages = [
+			{
+				slug: "draft-post",
+				title: "Draft",
+				body: "draft body",
+				published_at: null,
+				revision: "server-draft-rev",
+			},
+		];
+
+		const initialState = { slugs: {} };
+
+		const result = await applyPullResultToLocal({
+			contentDir,
+			pages,
+			force: false,
+			state: initialState,
+		});
+
+		expect(result.writtenSlugs).toEqual(["draft-post"]);
+		const content = await readFile(join(contentDir, "draft-post.md"), "utf8");
+		expect(content).toContain("published_at: null");
+		expect(content).toContain("# Draft");
+		expect(content).toContain("draft body");
+	});
 });

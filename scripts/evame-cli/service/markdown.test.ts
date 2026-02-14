@@ -46,6 +46,33 @@ describe("evame-cli markdown", () => {
 		});
 	});
 
+	it("published_at: null は null として扱う", async () => {
+		const dir = await createTempDir();
+		await writeFile(
+			join(dir, "hello.md"),
+			[
+				"---",
+				"published_at: null",
+				"---",
+				"",
+				"# 見出しタイトル",
+				"",
+				"本文",
+				"",
+			].join("\n"),
+			"utf8",
+		);
+
+		const files = await collectMarkdownFiles(dir);
+		expect(files).toHaveLength(1);
+		expect(files[0]).toEqual({
+			slug: "hello",
+			title: "見出しタイトル",
+			body: "本文\n",
+			published_at: null,
+		});
+	});
+
 	it("frontmatterが無くても先頭の # 見出しをタイトルとして扱う", async () => {
 		const dir = await createTempDir();
 		await writeFile(

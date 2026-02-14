@@ -194,6 +194,9 @@ function parseYamlScalar(raw: string): string {
 function normalizePublishedAt(input: string | undefined): string | null {
 	// 未指定は null として扱い、指定時は ISO 文字列へ正規化する。
 	if (input === undefined || input === "") return null;
+	const trimmed = input.trim();
+	if (trimmed === "" || trimmed === "~") return null;
+	if (trimmed.toLowerCase() === "null") return null;
 	const date = new Date(input);
 	if (Number.isNaN(date.getTime())) {
 		throw new Error(`Invalid published_at value: ${input}`);
