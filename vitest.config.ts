@@ -32,7 +32,8 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "src"),
-			"next/server": path.resolve(__dirname, "node_modules/next/server.js"),
+			// Worktrees may not have a local `node_modules`; rely on Node resolution.
+			"next/server": "next/server.js",
 			"next/navigation": "next/navigation.js",
 		},
 	},
