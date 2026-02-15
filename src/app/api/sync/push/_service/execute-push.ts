@@ -5,7 +5,9 @@ import { upsertPageForSync } from "./db/mutations";
 /**
  * 判定結果に基づいてDB適用を行い、結果を返す
  *
- * 競合が1件でもある場合は全体を中断して conflict を返す。
+ * - 競合が1件でもある場合は、適用せずに conflict を返す。
+ * - 競合がない場合は slug ごとに適用する（全体トランザクションは張らない）。
+ *   - 大量同期時に「1件でも成功させたい」ため。
  */
 export async function executePush(
 	userId: string,
