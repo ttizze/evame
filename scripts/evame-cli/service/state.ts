@@ -124,12 +124,19 @@ function toMarkdownDocument(page: {
 	body: string;
 	published_at: string | null;
 }): string {
-	// frontmatter + 本文の最小構成で保存する。
-	const lines = ["---", `title: ${JSON.stringify(page.title)}`];
-	if (page.published_at) {
-		lines.push(`published_at: ${JSON.stringify(page.published_at)}`);
+	// frontmatter + H1(title) + 本文の最小構成で保存する。
+	// title は frontmatter ではなく本文先頭の `# ...` で表現する。
+	const title = page.title.trim();
+	if (!title) {
+		throw new Error("title is required.");
 	}
-	lines.push("---", "");
+
+	const frontmatterLines = ["---"];
+	if (page.published_at) {
+		frontmatterLines.push(`published_at: ${JSON.stringify(page.published_at)}`);
+	}
+	frontmatterLines.push("---");
+
 	const body = page.body.endsWith("\n") ? page.body : `${page.body}\n`;
-	return `${lines.join("\n")}\n${body}`;
+	return `${frontmatterLines.join("\n")}\n\n# ${title}\n\n${body}`;
 }

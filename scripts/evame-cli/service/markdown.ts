@@ -21,7 +21,15 @@ export async function collectMarkdownFiles(contentDir: string): Promise<
 	const seenSlugs = new Set<string>();
 
 	for (const filePath of files) {
+		const markdown = await readFile(filePath, "utf8");
+		const parsed = parseMarkdownDocument(markdown);
+		if (!parsed) {
+			// frontmatter無しのMarkdown（README等）は同期対象外として無視する。
+			continue;
+		}
+
 		// 同期IDの安定性のため、slug はファイル名から決定する。
+		// frontmatter無しのファイルは同期対象外なので、slug重複判定にも含めない。
 		const slug = filePathToSlug(filePath);
 		if (seenSlugs.has(slug)) {
 			throw new Error(
@@ -29,9 +37,6 @@ export async function collectMarkdownFiles(contentDir: string): Promise<
 			);
 		}
 		seenSlugs.add(slug);
-
-		const markdown = await readFile(filePath, "utf8");
-		const parsed = parseMarkdownDocument(markdown);
 		result.push({
 			slug,
 			title: parsed.title,
@@ -79,14 +84,15 @@ function parseMarkdownDocument(content: string): {
 	title: string;
 	body: string;
 	published_at: string | null;
-} {
+} | null {
 	// 改行コード差異で差分が出ないよう LF に統一する。
 	const normalized = content.replace(/\r\n/g, "\n");
 	if (!normalized.startsWith("---\n")) {
-		throw new Error("frontmatter is required (title is mandatory).");
+		return null;
 	}
 
-	const end = normalized.indexOf("\n---\n", 4);
+	// 空の frontmatter (`---\n---\n`) も許容するため、探索開始は 3 とする。
+	const end = normalized.indexOf("\n---\n", 3);
 	if (end === -1) {
 		throw new Error("frontmatter closing delimiter (---) is missing.");
 	}
@@ -94,16 +100,31 @@ function parseMarkdownDocument(content: string): {
 	const frontmatter = normalized.slice(4, end);
 	const bodyRaw = normalized.slice(end + 5);
 	// frontmatter直後の空行は本文から除外する。
-	const body = bodyRaw.startsWith("\n") ? bodyRaw.slice(1) : bodyRaw;
+	const rawBody = bodyRaw.startsWith("\n") ? bodyRaw.slice(1) : bodyRaw;
 	const attrs = parseSimpleYaml(frontmatter);
 
-	const titleValue = attrs.title;
-	if (typeof titleValue !== "string" || titleValue.trim() === "") {
+	const lines = rawBody.split("\n");
+	const startIndex = lines.findIndex((line) => line.trim() !== "");
+	if (startIndex === -1) {
 		throw new Error("title is required.");
 	}
 
+	const firstLine = lines[startIndex];
+	const h1Match = firstLine.match(/^#\s+(.+?)\s*$/);
+	const title = (h1Match ? h1Match[1] : firstLine).trim();
+	if (title === "") {
+		throw new Error("title is required.");
+	}
+
+	let bodyLines = lines.slice(startIndex + 1);
+	// タイトル直後の空行は本文から除外する。
+	if (bodyLines.length > 0 && bodyLines[0]?.trim() === "") {
+		bodyLines = bodyLines.slice(1);
+	}
+	const body = bodyLines.join("\n");
+
 	const publishedAt = normalizePublishedAt(attrs.published_at);
-	return { title: titleValue.trim(), body, published_at: publishedAt };
+	return { title, body, published_at: publishedAt };
 }
 
 function parseSimpleYaml(text: string): Record<string, string> {
