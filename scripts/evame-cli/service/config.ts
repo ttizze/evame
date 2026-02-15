@@ -1,19 +1,15 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
-import {
-	CONFIG_FILE_NAME,
-	CONTENT_DIR_CANDIDATES,
-	EVAME_DIR_NAME,
-} from "../utils/constants";
-import { fileExists, isDirectory } from "../utils/filesystem";
+import { join } from "node:path";
+import { CONFIG_FILE_NAME, EVAME_DIR_NAME } from "../utils/constants";
+import { fileExists } from "../utils/filesystem";
 
 export async function loadConfig(cwd: string) {
 	// プロジェクト単位の設定は .evame/config.json に置く。
 	const path = join(cwd, EVAME_DIR_NAME, CONFIG_FILE_NAME);
 	const exists = await fileExists(path);
 	if (!exists) {
-		// 初回実行をゼロ設定にするため、一般的な候補ディレクトリを自動検出する。
-		return { content_dir: await detectDefaultContentDir(cwd) };
+		// 実行ディレクトリをそのまま同期対象にする（ユーザーが明示的に変更可能）。
+		return { content_dir: "." };
 	}
 
 	const raw = await readFile(path, "utf8");
@@ -59,15 +55,4 @@ export async function saveConfig(
 		`${JSON.stringify({ content_dir: contentDir }, null, 2)}\n`,
 		"utf8",
 	);
-}
-
-async function detectDefaultContentDir(cwd: string): Promise<string> {
-	// 優先順に候補を探索し、最初に存在するディレクトリを採用する。
-	for (const candidate of CONTENT_DIR_CANDIDATES) {
-		const absolute = resolve(cwd, candidate);
-		if (await isDirectory(absolute)) {
-			return candidate;
-		}
-	}
-	return ".";
 }

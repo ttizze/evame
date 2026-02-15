@@ -76,6 +76,37 @@ describe("editPageContentAction", () => {
 		expect(updateTag).toHaveBeenCalledWith(`page:${page.id}`);
 	});
 
+	it("titleに改行が混ざっていても、保存時に改行が除去される", async () => {
+		// Arrange: 実際のユーザーとページを作成
+		const user = await createUser();
+		const page = await createPage({
+			userId: user.id,
+			slug: "test-page",
+		});
+
+		vi.mocked(getCurrentUser).mockResolvedValue(toSessionUser(user));
+
+		const formData = new FormData();
+		formData.append("pageSlug", page.slug);
+		formData.append("title", "Hello\nWorld");
+		formData.append("userLocale", "en");
+		formData.append("pageContent", "<p>Updated content</p>");
+
+		// Act
+		const result = await editPageContentAction({ success: false }, formData);
+
+		// Assert
+		expect(result.success).toBe(true);
+
+		const titleSegment = await db
+			.selectFrom("segments")
+			.select(["text"])
+			.where("contentId", "=", page.id)
+			.where("number", "=", 0)
+			.executeTakeFirstOrThrow();
+		expect(titleSegment.text).toBe("Hello World");
+	});
+
 	it("認証されていないユーザーがアクセスした場合、リダイレクトされる", async () => {
 		// Arrange: 認証されていない状態をモック
 		vi.mocked(getCurrentUser).mockResolvedValue(null);

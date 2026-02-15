@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -20,7 +20,39 @@ async function createTempDir() {
 }
 
 describe("evame-cli markdown", () => {
-	it("Markdownファイルからslug/title/body/published_atを抽出できる", async () => {
+	it("published_atを持つファイルだけを同期対象として収集する", async () => {
+		const dir = await createTempDir();
+		await writeFile(
+			join(dir, "sync.md"),
+			[
+				"---",
+				"published_at: null",
+				"---",
+				"",
+				"# タイトル",
+				"",
+				"本文です。",
+				"",
+			].join("\n"),
+			"utf8",
+		);
+		await writeFile(
+			join(dir, "ignore.md"),
+			["# 無視", "", "本文です。", ""].join("\n"),
+			"utf8",
+		);
+
+		const files = await collectMarkdownFiles(dir);
+		expect(files).toHaveLength(1);
+		expect(files[0]).toEqual({
+			slug: "sync",
+			title: "タイトル",
+			body: "本文です。\n",
+			published_at: null,
+		});
+	});
+
+	it("frontmatterのtitleは無視し、本文の # 見出しをタイトルとして扱う", async () => {
 		const dir = await createTempDir();
 		await writeFile(
 			join(dir, "hello-world.md"),
@@ -29,7 +61,7 @@ describe("evame-cli markdown", () => {
 				"published_at: 2024-01-01T09:00:00+09:00",
 				"---",
 				"",
-				"# Hello World",
+				"# 見出しタイトル",
 				"",
 				"本文です。",
 				"",
@@ -41,73 +73,46 @@ describe("evame-cli markdown", () => {
 		expect(files).toHaveLength(1);
 		expect(files[0]).toEqual({
 			slug: "hello-world",
-			title: "Hello World",
+			title: "見出しタイトル",
 			body: "本文です。\n",
 			published_at: "2024-01-01T00:00:00.000Z",
 		});
 	});
 
-	it("frontmatterが無いMarkdownは同期対象から除外する", async () => {
+	it("# 見出しが無い場合は冒頭の1行をタイトルにする", async () => {
 		const dir = await createTempDir();
 		await writeFile(
-			join(dir, "valid.md"),
-			["---", "---", "", "# Valid", "", "本文です。", ""].join("\n"),
-			"utf8",
-		);
-		await writeFile(join(dir, "README.md"), "# Not a page\n", "utf8");
-
-		const files = await collectMarkdownFiles(dir);
-		expect(files).toEqual([
-			{
-				slug: "valid",
-				title: "Valid",
-				body: "本文です。\n",
-				published_at: null,
-			},
-		]);
-	});
-
-	it("frontmatterが無いMarkdown同士でslugが重複してもエラーにしない", async () => {
-		const dir = await createTempDir();
-		await mkdir(join(dir, "a"), { recursive: true });
-		await mkdir(join(dir, "b"), { recursive: true });
-		await writeFile(join(dir, "a", "README.md"), "# A\n", "utf8");
-		await writeFile(join(dir, "b", "README.md"), "# B\n", "utf8");
-
-		await writeFile(
-			join(dir, "valid.md"),
-			["---", "---", "", "# Valid", "", "本文です。", ""].join("\n"),
+			join(dir, "hello.md"),
+			[
+				"---",
+				"published_at: null",
+				"---",
+				"",
+				"これは最初の一文です。これは二文目です。",
+				"",
+			].join("\n"),
 			"utf8",
 		);
 
 		const files = await collectMarkdownFiles(dir);
-		expect(files).toEqual([
-			{
-				slug: "valid",
-				title: "Valid",
-				body: "本文です。\n",
-				published_at: null,
-			},
-		]);
+		expect(files).toHaveLength(1);
+		expect(files[0]).toEqual({
+			slug: "hello",
+			title: "これは最初の一文です。これは二文目です。",
+			body: "これは最初の一文です。これは二文目です。\n",
+			published_at: null,
+		});
 	});
 
-	it("frontmatterがあるMarkdown同士でslugが重複するとエラーにする", async () => {
+	it("本文が空なら無視する", async () => {
 		const dir = await createTempDir();
-		await mkdir(join(dir, "a"), { recursive: true });
-		await mkdir(join(dir, "b"), { recursive: true });
 		await writeFile(
-			join(dir, "a", "dup.md"),
-			["---", "---", "", "# A", "", "a", ""].join("\n"),
-			"utf8",
-		);
-		await writeFile(
-			join(dir, "b", "dup.md"),
-			["---", "---", "", "# B", "", "b", ""].join("\n"),
+			join(dir, "empty.md"),
+			["---", "published_at: null", "---"].join("\n"),
 			"utf8",
 		);
 
-		await expect(collectMarkdownFiles(dir)).rejects.toThrow(
-			"Duplicate slug detected: dup",
-		);
+		const files = await collectMarkdownFiles(dir);
+		expect(files).toEqual([]);
 	});
 });

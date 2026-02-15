@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-const slugPattern = /^[0-9a-z-]{1,50}$/;
+const slugPattern = /^[0-9A-Za-z-]{1,200}$/;
 
 const pushInput = z.object({
-	slug: z.string().regex(slugPattern, "slug must match [0-9a-z-]{1,50}"),
+	slug: z.string().regex(slugPattern, "slug must match [0-9A-Za-z-]{1,200}"),
 	expected_revision: z.string().nullable(),
 	title: z.string().min(1),
 	body: z.string().max(1_000_000),

@@ -20,11 +20,11 @@ async function createTempDir() {
 }
 
 describe("evame-cli config", () => {
-	it("config未作成かつarticlesがあると既定で ./articles を使う", async () => {
+	it("config未作成なら既定で '.' を使う（候補ディレクトリは自動検出しない）", async () => {
 		const cwd = await createTempDir();
 		await mkdir(join(cwd, "articles"), { recursive: true });
 		const config = await loadConfig(cwd);
-		expect(config).toEqual({ content_dir: "./articles" });
+		expect(config).toEqual({ content_dir: "." });
 	});
 
 	it("config未作成で候補ディレクトリが無い場合は '.' を使う", async () => {
@@ -49,12 +49,12 @@ describe("evame-cli config", () => {
 		const result = await loadOrCreateConfig(cwd);
 
 		expect(result).toEqual({
-			config: { content_dir: "./articles" },
+			config: { content_dir: "." },
 			created: true,
 		});
 		await expect(
 			readFile(join(cwd, ".evame", "config.json"), "utf8"),
-		).resolves.toContain('"content_dir": "./articles"');
+		).resolves.toContain('"content_dir": "."');
 	});
 
 	it("config作成済みならそのまま返す", async () => {

@@ -68,7 +68,8 @@ export function EditPageClient({
 
 	const handleTitleChange = useCallback(
 		(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-			setTitle(e.target.value);
+			// ペースト等で改行が混ざってもタイトルに残さない（Enter は onKeyDown で抑止済み）。
+			setTitle(e.target.value.replace(/\r\n|\r|\n/g, " "));
 			setHasUnsavedChanges(true);
 			debouncedSubmit();
 		},

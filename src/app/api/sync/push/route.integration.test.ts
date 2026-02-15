@@ -1,9 +1,16 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { markdownToMdastWithSegments } from "@/app/[locale]/_domain/markdown-to-mdast-with-segments";
 import { mdastToMarkdown } from "@/app/[locale]/_domain/mdast-to-markdown";
+import { computeRevision } from "@/app/api/sync/_domain/compute-revision";
 import { db } from "@/db";
 import type { JsonValue } from "@/db/types";
 import { resetDatabase } from "@/tests/db-helpers";
-import { createPageWithSegments, createUser } from "@/tests/factories";
+import {
+	createPage,
+	createPageWithSegments,
+	createSegments,
+	createUser,
+} from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { buildJudgments } from "./_service/build-judgments";
 import { executePush } from "./_service/execute-push";
@@ -228,6 +235,68 @@ describe("Push API (service layer)", () => {
 			],
 		});
 
+		expect(result.status).toBe("no_change");
+		expect(result.results[0].action).toBe("NO_CHANGE");
+	});
+
+	it("pullのrevision（legacy）とcanonical化後のrevisionが違っても、内容が同じならno_changeになる", async () => {
+		const slug = "legacy-revision-post";
+		const legacyTitle = "Title\n";
+		const legacyBody = "*使ったモデル:&#x20;****o3***\\\n続き\n";
+		const publishedAt = null;
+
+		const page = await createPage({
+			userId,
+			slug,
+			status: "PUBLIC",
+			// jsonb カラムなので、テキストをそのまま入れたい場合は JSON 文字列として保存する。
+			mdastJson: JSON.stringify(legacyBody),
+			publishedAt,
+		});
+		await createSegments({
+			contentId: page.id,
+			segments: [
+				{
+					number: 0,
+					text: legacyTitle,
+					textAndOccurrenceHash: "h-0",
+					segmentTypeKey: "PRIMARY",
+				},
+			],
+		});
+
+		const legacyRevision = computeRevision({
+			slug,
+			title: legacyTitle,
+			body: legacyBody,
+			publishedAt,
+		});
+
+		const { mdastJson } = await markdownToMdastWithSegments({
+			header: legacyTitle.trim(),
+			markdown: legacyBody,
+			autoUploadImages: false,
+		});
+		const canonicalBody = mdastToMarkdown(mdastJson);
+		const canonicalRevision = computeRevision({
+			slug,
+			title: legacyTitle.trim(),
+			body: canonicalBody,
+			publishedAt,
+		});
+		expect(canonicalRevision).not.toBe(legacyRevision);
+
+		const result = await push(userId, {
+			inputs: [
+				{
+					slug,
+					expected_revision: legacyRevision,
+					title: legacyTitle.trim(),
+					body: legacyBody,
+					published_at: null,
+				},
+			],
+		});
 		expect(result.status).toBe("no_change");
 		expect(result.results[0].action).toBe("NO_CHANGE");
 	});

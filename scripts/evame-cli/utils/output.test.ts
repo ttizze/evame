@@ -20,6 +20,11 @@ describe("evame-cli output", () => {
 
 		expect(printed).toContain("Authentication:");
 		expect(printed).toContain("Use `evame login` for browser-based login");
+		// オプションはコピーしやすいよう、角括弧ではなく実行可能なコマンド行で示す。
+		expect(printed).toContain("evame push --dry-run");
+		expect(printed).toContain("evame pull --force");
+		expect(printed).not.toContain("push [--dry-run]");
+		expect(printed).not.toContain("pull [--force]");
 	});
 
 	it("push summaryは英語で表示される", () => {

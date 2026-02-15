@@ -35,10 +35,14 @@ export function printHelp() {
 
 Usage:
   evame login
-  evame push [--dry-run]
-  evame pull [--force]
+  evame push
+  evame push --dry-run
+  evame pull
+  evame pull --force
   evame logout
   evame help
+  evame --help
+  evame -h
 
 Authentication:
   1) Use \`evame login\` for browser-based login

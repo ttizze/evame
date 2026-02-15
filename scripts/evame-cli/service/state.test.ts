@@ -27,7 +27,7 @@ describe("evame-cli state", () => {
 
 		await writeFile(
 			join(contentDir, "keep-post.md"),
-			["---", "---", "", "# ローカル編集", "", "local", ""].join("\n"),
+			["---", 'title: "ローカル編集"', "---", "", "local", ""].join("\n"),
 			"utf8",
 		);
 
@@ -78,8 +78,39 @@ describe("evame-cli state", () => {
 		expect(keptContent).toContain("ローカル編集");
 
 		const newContent = await readFile(join(contentDir, "new-post.md"), "utf8");
-		expect(newContent).toContain("# New");
 		expect(newContent).toContain('published_at: "2024-01-01T00:00:00.000Z"');
+		expect(newContent).toContain("# New");
+		expect(newContent).toContain("new body");
 		expect(newContent).not.toContain("title:");
+	});
+
+	it("pullはpublished_atが無い場合もfrontmatterにnullを書き出す", async () => {
+		const cwd = await createTempDir();
+		const contentDir = join(cwd, "articles");
+
+		const pages = [
+			{
+				slug: "draft-post",
+				title: "Draft",
+				body: "draft body",
+				published_at: null,
+				revision: "server-draft-rev",
+			},
+		];
+
+		const initialState = { slugs: {} };
+
+		const result = await applyPullResultToLocal({
+			contentDir,
+			pages,
+			force: false,
+			state: initialState,
+		});
+
+		expect(result.writtenSlugs).toEqual(["draft-post"]);
+		const content = await readFile(join(contentDir, "draft-post.md"), "utf8");
+		expect(content).toContain("published_at: null");
+		expect(content).toContain("# Draft");
+		expect(content).toContain("draft body");
 	});
 });

@@ -11,26 +11,33 @@ import type { PushInput, SyncPushInput } from "./schema";
  * 全 input に対して判定を行い、結果を返す
  */
 export async function buildJudgments(userId: string, data: SyncPushInput) {
-	return await Promise.all(data.inputs.map((input) => judgeOne(userId, input)));
+	const dryRun = data.dry_run ?? false;
+	return await Promise.all(
+		data.inputs.map((input) => judgeOne(userId, input, { dryRun })),
+	);
 }
 
-async function judgeOne(userId: string, input: PushInput) {
+async function judgeOne(
+	userId: string,
+	input: PushInput,
+	options: { dryRun: boolean },
+) {
 	const [existingPage, canonicalIncoming] = await Promise.all([
 		findPageForSync(userId, input.slug),
-		buildCanonicalIncoming(input),
+		buildCanonicalIncoming(input, options),
 	]);
-	const currentRevision = await computeCurrentRevision(
+	const currentRevisions = await computeCurrentRevisions(
 		input.slug,
 		existingPage,
 	);
 
 	const expectedState = resolveExpectedState(
 		input.expected_revision,
-		currentRevision,
+		currentRevisions,
 	);
 	const sameContent =
-		currentRevision !== null
-			? canonicalIncoming.incomingRevision === currentRevision
+		currentRevisions.canonical !== null
+			? canonicalIncoming.incomingRevision === currentRevisions.canonical
 			: false;
 
 	const judgment = judgeSyncInput({
@@ -44,21 +51,26 @@ async function judgeOne(userId: string, input: PushInput) {
 		input,
 		judgment,
 		canonicalIncoming,
-		currentRevision: currentRevision ?? undefined,
+		currentRevision: currentRevisions.canonical ?? undefined,
 		existingPageId: existingPage?.id,
 	};
 }
 
-async function buildCanonicalIncoming(input: PushInput) {
+async function buildCanonicalIncoming(
+	input: PushInput,
+	options: { dryRun: boolean },
+) {
+	const title = input.title.trim();
 	const { mdastJson, segments } = await markdownToMdastWithSegments({
-		header: input.title,
+		header: title,
 		markdown: input.body,
+		autoUploadImages: !options.dryRun,
 	});
 	const canonicalBody = mdastToMarkdown(mdastJson);
 	const publishedAt = input.published_at ?? null;
 	const incomingRevision = computeRevision({
 		slug: input.slug,
-		title: input.title,
+		title,
 		body: canonicalBody,
 		publishedAt,
 	});
@@ -71,12 +83,12 @@ async function buildCanonicalIncoming(input: PushInput) {
 	};
 }
 
-async function computeCurrentRevision(
+async function computeCurrentRevisions(
 	slug: string,
 	existingPage: Awaited<ReturnType<typeof findPageForSync>>,
-): Promise<string | null> {
+): Promise<{ canonical: string | null; legacy: string | null }> {
 	if (!existingPage || existingPage.status === "ARCHIVE") {
-		return null;
+		return { canonical: null, legacy: null };
 	}
 
 	const title = (await findTitleSegmentText(existingPage.id)) ?? "";
@@ -84,13 +96,27 @@ async function computeCurrentRevision(
 	const publishedAt = existingPage.publishedAt
 		? new Date(existingPage.publishedAt)
 		: null;
-
-	return computeRevision({
+	const legacy = computeRevision({
 		slug,
 		title,
 		body,
 		publishedAt,
 	});
+
+	const { mdastJson } = await markdownToMdastWithSegments({
+		header: title.trim(),
+		markdown: body,
+		autoUploadImages: false,
+	});
+	const canonicalBody = mdastToMarkdown(mdastJson);
+	const canonical = computeRevision({
+		slug,
+		title: title.trim(),
+		body: canonicalBody,
+		publishedAt,
+	});
+
+	return { canonical, legacy };
 }
 
 function resolveServerState(
@@ -107,12 +133,21 @@ function resolveServerState(
 
 function resolveExpectedState(
 	expectedRevision: string | null,
-	currentRevision: string | null,
+	currentRevisions: { canonical: string | null; legacy: string | null },
 ): "NONE" | "MATCH" | "MISMATCH" {
 	if (expectedRevision === null) {
 		return "NONE";
 	}
-	if (currentRevision !== null && expectedRevision === currentRevision) {
+	if (
+		currentRevisions.canonical !== null &&
+		expectedRevision === currentRevisions.canonical
+	) {
+		return "MATCH";
+	}
+	if (
+		currentRevisions.legacy !== null &&
+		expectedRevision === currentRevisions.legacy
+	) {
 		return "MATCH";
 	}
 	return "MISMATCH";

@@ -21,16 +21,24 @@ export async function collectMarkdownFiles(contentDir: string): Promise<
 	const seenSlugs = new Set<string>();
 
 	for (const filePath of files) {
+		// 同期IDの安定性のため、slug はファイル名から決定する。
+		const slug = filePathToSlug(filePath);
+
 		const markdown = await readFile(filePath, "utf8");
-		const parsed = parseMarkdownDocument(markdown);
-		if (!parsed) {
-			// frontmatter無しのMarkdown（README等）は同期対象外として無視する。
+		let parsed: ReturnType<typeof parseMarkdownDocument>;
+		try {
+			parsed = parseMarkdownDocument(markdown);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : "Unknown error";
+			throw new Error(`Invalid markdown file: ${filePath}\n${message}`, {
+				cause: error,
+			});
+		}
+		if (parsed === null) {
+			// 同期対象外（published_at が無い/本文が空など）は無視する。
 			continue;
 		}
 
-		// 同期IDの安定性のため、slug はファイル名から決定する。
-		// frontmatter無しのファイルは同期対象外なので、slug重複判定にも含めない。
-		const slug = filePathToSlug(filePath);
 		if (seenSlugs.has(slug)) {
 			throw new Error(
 				`Duplicate slug detected: ${slug} (same filename-derived slug).`,
@@ -67,8 +75,24 @@ async function collectMarkdownPaths(dir: string): Promise<string[]> {
 async function walk(current: string, out: string[]): Promise<void> {
 	const entries = await readdir(current, { withFileTypes: true });
 	for (const entry of entries) {
-		// 管理ファイル置き場は同期対象外。
-		if (entry.name === EVAME_DIR_NAME) continue;
+		// 管理/依存物の置き場は同期対象外。
+		if (
+			entry.name === EVAME_DIR_NAME ||
+			entry.name === "node_modules" ||
+			entry.name === ".git" ||
+			entry.name === ".next" ||
+			entry.name === "tipitaka-xml" ||
+			entry.name === "tipitaka-md" ||
+			entry.name === "cst" ||
+			entry.name === "coverage" ||
+			entry.name === "playwright-report" ||
+			entry.name === "test-results" ||
+			entry.name === "dist" ||
+			entry.name === "build" ||
+			entry.name === "out"
+		) {
+			continue;
+		}
 		const fullPath = join(current, entry.name);
 		if (entry.isDirectory()) {
 			await walk(fullPath, out);
@@ -87,44 +111,58 @@ function parseMarkdownDocument(content: string): {
 } | null {
 	// 改行コード差異で差分が出ないよう LF に統一する。
 	const normalized = content.replace(/\r\n/g, "\n");
-	if (!normalized.startsWith("---\n")) {
+
+	const withFrontmatter = parseOptionalFrontmatter(normalized);
+	if (!withFrontmatter) {
+		// published_at の frontmatter を持たないファイルは同期対象外。
 		return null;
 	}
 
-	// 空の frontmatter (`---\n---\n`) も許容するため、探索開始は 3 とする。
-	const end = normalized.indexOf("\n---\n", 3);
-	if (end === -1) {
-		throw new Error("frontmatter closing delimiter (---) is missing.");
+	const attrs = parseSimpleYaml(withFrontmatter.frontmatter);
+	if (!("published_at" in attrs)) {
+		// frontmatter はあっても published_at が無いものは同期対象外。
+		return null;
 	}
 
-	const frontmatter = normalized.slice(4, end);
-	const bodyRaw = normalized.slice(end + 5);
 	// frontmatter直後の空行は本文から除外する。
-	const rawBody = bodyRaw.startsWith("\n") ? bodyRaw.slice(1) : bodyRaw;
-	const attrs = parseSimpleYaml(frontmatter);
-
-	const lines = rawBody.split("\n");
-	const startIndex = lines.findIndex((line) => line.trim() !== "");
-	if (startIndex === -1) {
-		throw new Error("title is required.");
-	}
-
-	const firstLine = lines[startIndex];
-	const h1Match = firstLine.match(/^#\s+(.+?)\s*$/);
-	const title = (h1Match ? h1Match[1] : firstLine).trim();
-	if (title === "") {
-		throw new Error("title is required.");
-	}
-
-	let bodyLines = lines.slice(startIndex + 1);
-	// タイトル直後の空行は本文から除外する。
-	if (bodyLines.length > 0 && bodyLines[0]?.trim() === "") {
-		bodyLines = bodyLines.slice(1);
-	}
-	const body = bodyLines.join("\n");
+	const bodyRaw = withFrontmatter.body;
+	const body = bodyRaw.startsWith("\n") ? bodyRaw.slice(1) : bodyRaw;
 
 	const publishedAt = normalizePublishedAt(attrs.published_at);
-	return { title, body, published_at: publishedAt };
+	const derived = deriveTitleFromBody(body);
+	if (!derived) {
+		// タイトルを導けない（本文が空など）ファイルは同期対象外。
+		return null;
+	}
+
+	return {
+		title: derived.title,
+		body: derived.body,
+		published_at: publishedAt,
+	};
+}
+
+function parseOptionalFrontmatter(
+	normalizedContent: string,
+): { frontmatter: string; body: string } | null {
+	if (!normalizedContent.startsWith("---\n")) return null;
+
+	const endMarker = "\n---\n";
+	const end = normalizedContent.indexOf(endMarker, 4);
+	if (end !== -1) {
+		return {
+			frontmatter: normalizedContent.slice(4, end),
+			body: normalizedContent.slice(end + endMarker.length),
+		};
+	}
+	if (normalizedContent.endsWith("\n---")) {
+		return {
+			frontmatter: normalizedContent.slice(4, -4),
+			body: "",
+		};
+	}
+
+	return null;
 }
 
 function parseSimpleYaml(text: string): Record<string, string> {
@@ -167,9 +205,59 @@ function parseYamlScalar(raw: string): string {
 function normalizePublishedAt(input: string | undefined): string | null {
 	// 未指定は null として扱い、指定時は ISO 文字列へ正規化する。
 	if (input === undefined || input === "") return null;
+	const trimmed = input.trim();
+	if (trimmed === "" || trimmed === "~") return null;
+	if (trimmed.toLowerCase() === "null") return null;
 	const date = new Date(input);
 	if (Number.isNaN(date.getTime())) {
 		throw new Error(`Invalid published_at value: ${input}`);
 	}
 	return date.toISOString();
+}
+
+function deriveTitleFromBody(
+	body: string,
+): { title: string; body: string } | null {
+	const lines = body.split("\n");
+	let index = 0;
+	while (index < lines.length) {
+		const trimmed = lines[index]?.trim() ?? "";
+		if (!trimmed) {
+			index += 1;
+			continue;
+		}
+		// frontmatterではない先頭の区切り線はタイトル判定から除外する。
+		if (trimmed === "---" || trimmed === "***" || trimmed === "___") {
+			index += 1;
+			continue;
+		}
+		break;
+	}
+
+	if (index >= lines.length) {
+		// 本文が空のファイルは同期対象外。
+		return null;
+	}
+
+	const firstLine = lines[index] ?? "";
+	const h1 = extractH1Title(firstLine);
+	if (h1) {
+		// # 見出しを title に使う場合、本文からは削除して二重表示を避ける。
+		lines.splice(index, 1);
+		// 見出し直後の空行は本文から除外する。
+		if ((lines[index]?.trim() ?? "") === "") {
+			lines.splice(index, 1);
+		}
+		return { title: h1, body: lines.join("\n") };
+	}
+
+	const title = firstLine.trim();
+	return title ? { title, body } : null;
+}
+
+function extractH1Title(line: string): string | null {
+	const trimmed = line.trim();
+	if (!trimmed.startsWith("#") || trimmed.startsWith("##")) return null;
+	const title = trimmed.slice(1).trim();
+	return title ? title : null;
 }
