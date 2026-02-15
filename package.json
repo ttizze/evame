@@ -24,12 +24,13 @@
 		"init": "bun install && bun run db:migrate && bun run seed",
 		"vercel-build": " (bun run db:prod:migrate || (echo '1st migrate failed; retrying in 8s' && sleep 8 && bun run db:prod:migrate )) && bun run db:prod:seed && next build",
 		"biome": "bunx @biomejs/biome check --write .",
-		"typecheck": "tsc --noEmit",
+		"typecheck": "next typegen && tsc --noEmit",
 		"seed": "bun run db:with-branch -- tsx src/db/seed.ts",
 		"mdast-json": "bunx tsx scripts/mdast-json.ts",
 		"tipitaka": "bun --env-file=.env scripts/tipitaka-import.ts",
 		"translate": "bunx tsx scripts/translate.ts",
-		"convert:romn": "bun scripts/convert-romn-to-md.ts"
+		"convert:romn": "bun scripts/convert-romn-to-md.ts",
+		"evame": "bun --env-file=.env tsx scripts/evame-cli/index.ts"
 	},
 	"dependencies": {
 		"@ai-sdk/deepseek": "^2.0.18",

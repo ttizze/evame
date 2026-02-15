@@ -23,6 +23,7 @@ export async function resetDatabase() {
 	await db.deleteFrom("contents").execute();
 	await db.deleteFrom("userSettings").execute();
 	await db.deleteFrom("geminiApiKeys").execute();
+	await db.deleteFrom("personalAccessTokens").execute();
 	await db.deleteFrom("follows").execute();
 	await db.deleteFrom("accounts").execute();
 	await db.deleteFrom("sessions").execute();

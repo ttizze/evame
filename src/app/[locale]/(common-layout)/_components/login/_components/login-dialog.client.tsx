@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { type ReactNode, useState } from "react";
 import {
 	Dialog,
@@ -35,6 +35,10 @@ export function LoginDialog({
 }: LoginDialogProps) {
 	const [open, setOpen] = useState(defaultOpen);
 	const pathname = usePathname();
+	const searchParams = useSearchParams();
+	const redirectTo = searchParams.toString()
+		? `${pathname}?${searchParams.toString()}`
+		: pathname;
 	return (
 		<Dialog onOpenChange={setOpen} open={open}>
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -49,12 +53,12 @@ export function LoginDialog({
 						</Link>
 					</DialogDescription>
 				</DialogTitle>
-				<GoogleForm redirectTo={pathname} />
+				<GoogleForm redirectTo={redirectTo} />
 				<Separator className="my-4" />
 				<div className="text-center text-sm text-gray-500 my-2">
 					Or continue with email
 				</div>
-				<MagicLinkForm />
+				<MagicLinkForm redirectTo={redirectTo} />
 				<div className="text-center text-sm text-gray-500 my-2">
 					Login means you agree to our{" "}
 					<Link className="underline" href="/terms">

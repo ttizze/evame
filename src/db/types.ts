@@ -71,6 +71,15 @@ export interface Accounts {
 	userId: string;
 }
 
+export interface PersonalAccessTokens {
+	createdAt: Generated<Timestamp>;
+	id: Generated<number>;
+	keyHash: string;
+	lastUsedAt: Timestamp | null;
+	name: Generated<string>;
+	userId: string;
+}
+
 export interface Contents {
 	createdAt: Generated<Timestamp>;
 	id: Generated<number>;
@@ -161,11 +170,13 @@ export interface PageLocaleTranslationProofs {
 }
 
 export interface Pages {
+	archivedAt: Timestamp | null;
 	createdAt: Generated<Timestamp>;
 	id: number;
 	mdastJson: Json;
 	order: Generated<number>;
 	parentId: number | null;
+	publishedAt: Timestamp | null;
 	slug: string;
 	sourceLocale: Generated<string>;
 	status: Generated<PageStatus>;
@@ -320,6 +331,7 @@ export interface DB {
 	likePages: LikePages;
 	"neonControlPlane.endpoints": NeonControlPlaneEndpoints;
 	notifications: Notifications;
+	personalAccessTokens: PersonalAccessTokens;
 	pageComments: PageComments;
 	pageLocaleTranslationProofs: PageLocaleTranslationProofs;
 	pages: Pages;

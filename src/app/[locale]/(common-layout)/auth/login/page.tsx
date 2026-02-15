@@ -3,10 +3,16 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/app/_service/auth-server";
 import { LoginDialog } from "@/app/[locale]/(common-layout)/_components/login/_components/login-dialog.client";
 
-export default async function LoginPage() {
+export default async function LoginPage(
+	props: PageProps<"/[locale]/auth/login">,
+) {
+	const searchParams = await props.searchParams;
+	const next = resolveNextPath(
+		typeof searchParams.next === "string" ? searchParams.next : null,
+	);
 	const currentUser = await getCurrentUser();
 	if (currentUser) {
-		redirect("/" as Route);
+		redirect(next);
 	}
 	return (
 		<div className="container mx-auto max-w-md py-8">
@@ -20,4 +26,12 @@ export default async function LoginPage() {
 			/>
 		</div>
 	);
+}
+
+function resolveNextPath(next: string | null): Route {
+	if (!next) return "/" as Route;
+	if (!next.startsWith("/") || next.startsWith("//")) {
+		return "/" as Route;
+	}
+	return next as Route;
 }

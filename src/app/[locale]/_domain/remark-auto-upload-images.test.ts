@@ -32,13 +32,25 @@ describe("remarkAutoUploadImages", () => {
 		vi.clearAllMocks();
 	});
 
-	describe("evame/uploads配下の画像", () => {
+	describe("自前ホストの画像", () => {
 		it("既にアップロード済みの画像はスキップする", async () => {
-			const md = "![alt](https://evame/uploads/already.jpg)";
+			const md = `
+![cf](https://images.evame.tech/uploads/already.jpg)
+![legacy](https://images.eveeve.org/uploads/already.jpg)
+![minio](http://localhost:9000/evame/uploads/already.jpg)
+`;
 
 			const vfile = await remark().use(remarkAutoUploadImages).process(md);
 
-			expect(vfile.toString()).toContain("https://evame/uploads/already.jpg");
+			expect(vfile.toString()).toContain(
+				"https://images.evame.tech/uploads/already.jpg",
+			);
+			expect(vfile.toString()).toContain(
+				"https://images.eveeve.org/uploads/already.jpg",
+			);
+			expect(vfile.toString()).toContain(
+				"http://localhost:9000/evame/uploads/already.jpg",
+			);
 			expect(fileFromUrl).not.toHaveBeenCalled();
 			expect(uploadImage).not.toHaveBeenCalled();
 		});
@@ -60,7 +72,7 @@ describe("remarkAutoUploadImages", () => {
 	describe("混在コンテンツ", () => {
 		it("ローカル画像はスキップし、外部画像のみアップロードする", async () => {
 			const md = `
-![local](https://evame/uploads/local.jpg)
+![local](https://images.evame.tech/uploads/local.jpg)
 ![remote1](https://foo.com/a.png)
 ![remote2](https://bar.com/b.png)
 `;
