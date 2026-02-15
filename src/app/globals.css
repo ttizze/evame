@@ -138,8 +138,8 @@
 	html.dark [data-view="both"] .seg-src.seg-has-tr {
 		color: rgb(75 85 99); /* dark:text-gray-600 */
 	}
-	/* Source (greyed out) should keep emphasis weight but not override color */
-	[data-view="both"] .seg-src.seg-has-tr :is(strong, b) {
+	/* 原文グレー表示中は typography の色指定に負けないよう、色は親から継承する */
+	[data-view="both"] .seg-src.seg-has-tr :is(strong, b, a) {
 		color: inherit;
 	}
 
