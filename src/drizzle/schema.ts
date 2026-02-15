@@ -71,8 +71,8 @@ export const accounts = pgTable(
 	(table) => [
 		uniqueIndex("accounts_provider_accountId_key").using(
 			"btree",
-			table.providerId.asc().nullsLast().op("text_ops"),
-			table.accountId.asc().nullsLast().op("text_ops"),
+			table.providerId.asc().nullsLast(),
+			table.accountId.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.userId],
@@ -98,10 +98,7 @@ export const contents = pgTable(
 		importFileId: integer("import_file_id"),
 	},
 	(table) => [
-		index("contents_kind_idx").using(
-			"btree",
-			table.kind.asc().nullsLast().op("enum_ops"),
-		),
+		index("contents_kind_idx").using("btree", table.kind.asc().nullsLast()),
 		foreignKey({
 			columns: [table.importFileId],
 			foreignColumns: [importFiles.id],
@@ -127,11 +124,11 @@ export const personalAccessTokens = pgTable(
 	(table) => [
 		uniqueIndex("personal_access_tokens_key_hash_key").using(
 			"btree",
-			table.keyHash.asc().nullsLast().op("text_ops"),
+			table.keyHash.asc().nullsLast(),
 		),
 		index("personal_access_tokens_user_id_idx").using(
 			"btree",
-			table.userId.asc().nullsLast().op("text_ops"),
+			table.userId.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.userId],
@@ -180,11 +177,11 @@ export const follows = pgTable(
 	(table) => [
 		index("follows_follower_id_idx").using(
 			"btree",
-			table.followerId.asc().nullsLast().op("text_ops"),
+			table.followerId.asc().nullsLast(),
 		),
 		index("follows_following_id_idx").using(
 			"btree",
-			table.followingId.asc().nullsLast().op("text_ops"),
+			table.followingId.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.followerId],
@@ -217,11 +214,11 @@ export const geminiApiKeys = pgTable(
 	(table) => [
 		index("gemini_api_keys_user_id_idx").using(
 			"btree",
-			table.userId.asc().nullsLast().op("text_ops"),
+			table.userId.asc().nullsLast(),
 		),
 		uniqueIndex("gemini_api_keys_user_id_key").using(
 			"btree",
-			table.userId.asc().nullsLast().op("text_ops"),
+			table.userId.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.userId],
@@ -255,16 +252,16 @@ export const likePages = pgTable(
 	(table) => [
 		index("like_pages_page_id_idx").using(
 			"btree",
-			table.pageId.asc().nullsLast().op("int4_ops"),
+			table.pageId.asc().nullsLast(),
 		),
 		index("like_pages_user_id_idx").using(
 			"btree",
-			table.userId.asc().nullsLast().op("text_ops"),
+			table.userId.asc().nullsLast(),
 		),
 		uniqueIndex("like_pages_user_id_page_id_key").using(
 			"btree",
-			table.userId.asc().nullsLast().op("int4_ops"),
-			table.pageId.asc().nullsLast().op("int4_ops"),
+			table.userId.asc().nullsLast(),
+			table.pageId.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.pageId],
@@ -301,11 +298,11 @@ export const notifications = pgTable(
 	(table) => [
 		index("notifications_actor_id_idx").using(
 			"btree",
-			table.actorId.asc().nullsLast().op("text_ops"),
+			table.actorId.asc().nullsLast(),
 		),
 		index("notifications_user_id_idx").using(
 			"btree",
-			table.userId.asc().nullsLast().op("text_ops"),
+			table.userId.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.actorId],
@@ -353,18 +350,15 @@ export const segmentTypes = pgTable(
 		key: segmentTypeKey().notNull(),
 	},
 	(table) => [
-		index("segment_types_key_idx").using(
-			"btree",
-			table.key.asc().nullsLast().op("enum_ops"),
-		),
+		index("segment_types_key_idx").using("btree", table.key.asc().nullsLast()),
 		uniqueIndex("segment_types_key_label_key").using(
 			"btree",
-			table.key.asc().nullsLast().op("text_ops"),
-			table.label.asc().nullsLast().op("text_ops"),
+			table.key.asc().nullsLast(),
+			table.label.asc().nullsLast(),
 		),
 		index("segment_types_label_idx").using(
 			"btree",
-			table.label.asc().nullsLast().op("text_ops"),
+			table.label.asc().nullsLast(),
 		),
 	],
 );
@@ -390,7 +384,7 @@ export const translationJobs = pgTable(
 	(table) => [
 		index("translation_jobs_userId_idx").using(
 			"btree",
-			table.userId.asc().nullsLast().op("text_ops"),
+			table.userId.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.pageId],
@@ -425,12 +419,12 @@ export const segmentTranslations = pgTable(
 	(table) => [
 		index("segment_translations_segment_id_locale_idx").using(
 			"btree",
-			table.segmentId.asc().nullsLast().op("int4_ops"),
-			table.locale.asc().nullsLast().op("int4_ops"),
+			table.segmentId.asc().nullsLast(),
+			table.locale.asc().nullsLast(),
 		),
 		index("segment_translations_user_id_idx").using(
 			"btree",
-			table.userId.asc().nullsLast().op("text_ops"),
+			table.userId.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.segmentId],
@@ -488,19 +482,19 @@ export const pageComments = pgTable(
 	(table) => [
 		index("page_comments_page_id_parent_id_created_at_idx").using(
 			"btree",
-			table.pageId.asc().nullsLast().op("timestamp_ops"),
-			table.parentId.asc().nullsLast().op("timestamp_ops"),
-			table.createdAt.asc().nullsLast().op("int4_ops"),
+			table.pageId.asc().nullsLast(),
+			table.parentId.asc().nullsLast(),
+			table.createdAt.asc().nullsLast(),
 		),
 		index("page_comments_parent_id_is_deleted_created_at_idx").using(
 			"btree",
-			table.parentId.asc().nullsLast().op("bool_ops"),
-			table.isDeleted.asc().nullsLast().op("bool_ops"),
-			table.createdAt.asc().nullsLast().op("int4_ops"),
+			table.parentId.asc().nullsLast(),
+			table.isDeleted.asc().nullsLast(),
+			table.createdAt.asc().nullsLast(),
 		),
 		index("page_comments_user_id_idx").using(
 			"btree",
-			table.userId.asc().nullsLast().op("text_ops"),
+			table.userId.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.id],
@@ -555,7 +549,7 @@ export const sessions = pgTable(
 	(table) => [
 		uniqueIndex("sessions_token_key").using(
 			"btree",
-			table.token.asc().nullsLast().op("text_ops"),
+			table.token.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.userId],
@@ -580,12 +574,12 @@ export const pageLocaleTranslationProofs = pgTable(
 	(table) => [
 		uniqueIndex("page_locale_translation_proofs_page_id_locale_key").using(
 			"btree",
-			table.pageId.asc().nullsLast().op("int4_ops"),
-			table.locale.asc().nullsLast().op("int4_ops"),
+			table.pageId.asc().nullsLast(),
+			table.locale.asc().nullsLast(),
 		),
 		index("page_locale_translation_proofs_translation_proof_status_idx").using(
 			"btree",
-			table.translationProofStatus.asc().nullsLast().op("enum_ops"),
+			table.translationProofStatus.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.pageId],
@@ -607,7 +601,7 @@ export const segmentMetadataTypes = pgTable(
 	(table) => [
 		uniqueIndex("segment_metadata_types_key_key").using(
 			"btree",
-			table.key.asc().nullsLast().op("text_ops"),
+			table.key.asc().nullsLast(),
 		),
 	],
 );
@@ -619,14 +613,8 @@ export const tags = pgTable(
 		name: text().notNull(),
 	},
 	(table) => [
-		index("tags_name_idx").using(
-			"btree",
-			table.name.asc().nullsLast().op("text_ops"),
-		),
-		uniqueIndex("tags_name_key").using(
-			"btree",
-			table.name.asc().nullsLast().op("text_ops"),
-		),
+		index("tags_name_idx").using("btree", table.name.asc().nullsLast()),
+		uniqueIndex("tags_name_key").using("btree", table.name.asc().nullsLast()),
 	],
 );
 
@@ -647,7 +635,7 @@ export const translationContexts = pgTable(
 	(table) => [
 		index("translation_contexts_user_id_idx").using(
 			"btree",
-			table.userId.asc().nullsLast().op("text_ops"),
+			table.userId.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.userId],
@@ -675,16 +663,16 @@ export const translationVotes = pgTable(
 	(table) => [
 		index("translation_votes_translation_id_idx").using(
 			"btree",
-			table.translationId.asc().nullsLast().op("int4_ops"),
+			table.translationId.asc().nullsLast(),
 		),
 		uniqueIndex("translation_votes_translation_id_user_id_key").using(
 			"btree",
-			table.translationId.asc().nullsLast().op("int4_ops"),
-			table.userId.asc().nullsLast().op("int4_ops"),
+			table.translationId.asc().nullsLast(),
+			table.userId.asc().nullsLast(),
 		),
 		index("translation_votes_user_id_idx").using(
 			"btree",
-			table.userId.asc().nullsLast().op("text_ops"),
+			table.userId.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.translationId],
@@ -726,40 +714,31 @@ export const pages = pgTable(
 	(table) => [
 		index("pages_created_at_idx").using(
 			"btree",
-			table.createdAt.asc().nullsLast().op("timestamp_ops"),
+			table.createdAt.asc().nullsLast(),
 		),
 		index("pages_parent_id_idx").using(
 			"btree",
-			table.parentId.asc().nullsLast().op("int4_ops"),
+			table.parentId.asc().nullsLast(),
 		),
 		index("pages_parent_id_order_idx").using(
 			"btree",
-			table.parentId.asc().nullsLast().op("int4_ops"),
-			table.order.asc().nullsLast().op("int4_ops"),
+			table.parentId.asc().nullsLast(),
+			table.order.asc().nullsLast(),
 		),
-		index("pages_slug_idx").using(
-			"btree",
-			table.slug.asc().nullsLast().op("text_ops"),
-		),
-		uniqueIndex("pages_slug_key").using(
-			"btree",
-			table.slug.asc().nullsLast().op("text_ops"),
-		),
+		index("pages_slug_idx").using("btree", table.slug.asc().nullsLast()),
+		uniqueIndex("pages_slug_key").using("btree", table.slug.asc().nullsLast()),
 		index("pages_status_created_at_idx").using(
 			"btree",
-			table.status.asc().nullsLast().op("enum_ops"),
-			table.createdAt.asc().nullsLast().op("enum_ops"),
+			table.status.asc().nullsLast(),
+			table.createdAt.asc().nullsLast(),
 		),
 		index("pages_status_parent_id_created_at_idx").using(
 			"btree",
-			table.status.asc().nullsLast().op("enum_ops"),
-			table.parentId.asc().nullsLast().op("int4_ops"),
-			table.createdAt.asc().nullsLast().op("timestamp_ops"),
+			table.status.asc().nullsLast(),
+			table.parentId.asc().nullsLast(),
+			table.createdAt.asc().nullsLast(),
 		),
-		index("pages_user_id_idx").using(
-			"btree",
-			table.userId.asc().nullsLast().op("text_ops"),
-		),
+		index("pages_user_id_idx").using("btree", table.userId.asc().nullsLast()),
 		foreignKey({
 			columns: [table.id],
 			foreignColumns: [contents.id],
@@ -800,21 +779,21 @@ export const segments = pgTable(
 	(table) => [
 		index("segments_content_id_idx").using(
 			"btree",
-			table.contentId.asc().nullsLast().op("int4_ops"),
+			table.contentId.asc().nullsLast(),
 		),
 		uniqueIndex("segments_content_id_number_key").using(
 			"btree",
-			table.contentId.asc().nullsLast().op("int4_ops"),
-			table.number.asc().nullsLast().op("int4_ops"),
+			table.contentId.asc().nullsLast(),
+			table.number.asc().nullsLast(),
 		),
 		uniqueIndex("segments_content_id_text_and_occurrence_hash_key").using(
 			"btree",
-			table.contentId.asc().nullsLast().op("int4_ops"),
-			table.textAndOccurrenceHash.asc().nullsLast().op("int4_ops"),
+			table.contentId.asc().nullsLast(),
+			table.textAndOccurrenceHash.asc().nullsLast(),
 		),
 		index("segments_text_and_occurrence_hash_idx").using(
 			"btree",
-			table.textAndOccurrenceHash.asc().nullsLast().op("text_ops"),
+			table.textAndOccurrenceHash.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.contentId],
@@ -847,17 +826,17 @@ export const segmentMetadata = pgTable(
 	(table) => [
 		index("segment_metadata_metadata_type_id_idx").using(
 			"btree",
-			table.metadataTypeId.asc().nullsLast().op("int4_ops"),
+			table.metadataTypeId.asc().nullsLast(),
 		),
 		index("segment_metadata_segment_id_idx").using(
 			"btree",
-			table.segmentId.asc().nullsLast().op("int4_ops"),
+			table.segmentId.asc().nullsLast(),
 		),
 		uniqueIndex("segment_metadata_segment_id_metadata_type_id_value_key").using(
 			"btree",
-			table.segmentId.asc().nullsLast().op("int4_ops"),
-			table.metadataTypeId.asc().nullsLast().op("text_ops"),
-			table.value.asc().nullsLast().op("int4_ops"),
+			table.segmentId.asc().nullsLast(),
+			table.metadataTypeId.asc().nullsLast(),
+			table.value.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.metadataTypeId],
@@ -913,11 +892,11 @@ export const users = pgTable(
 	(table) => [
 		uniqueIndex("users_email_key").using(
 			"btree",
-			table.email.asc().nullsLast().op("text_ops"),
+			table.email.asc().nullsLast(),
 		),
 		uniqueIndex("users_handle_key").using(
 			"btree",
-			table.handle.asc().nullsLast().op("text_ops"),
+			table.handle.asc().nullsLast(),
 		),
 	],
 );
@@ -938,7 +917,7 @@ export const userSettings = pgTable(
 	(table) => [
 		uniqueIndex("user_settings_user_id_key").using(
 			"btree",
-			table.userId.asc().nullsLast().op("text_ops"),
+			table.userId.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.userId],
@@ -959,12 +938,9 @@ export const tagPages = pgTable(
 	(table) => [
 		index("tag_pages_pageId_idx").using(
 			"btree",
-			table.pageId.asc().nullsLast().op("int4_ops"),
+			table.pageId.asc().nullsLast(),
 		),
-		index("tag_pages_tagId_idx").using(
-			"btree",
-			table.tagId.asc().nullsLast().op("int4_ops"),
-		),
+		index("tag_pages_tagId_idx").using("btree", table.tagId.asc().nullsLast()),
 		foreignKey({
 			columns: [table.pageId],
 			foreignColumns: [pages.id],
@@ -998,11 +974,11 @@ export const segmentAnnotationLinks = pgTable(
 	(table) => [
 		index("segment_annotation_links_annotation_segment_id_idx").using(
 			"btree",
-			table.annotationSegmentId.asc().nullsLast().op("int4_ops"),
+			table.annotationSegmentId.asc().nullsLast(),
 		),
 		index("segment_annotation_links_main_segment_id_idx").using(
 			"btree",
-			table.mainSegmentId.asc().nullsLast().op("int4_ops"),
+			table.mainSegmentId.asc().nullsLast(),
 		),
 		foreignKey({
 			columns: [table.annotationSegmentId],

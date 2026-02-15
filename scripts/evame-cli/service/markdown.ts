@@ -1,5 +1,5 @@
 import { readdir, readFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { basename, join, resolve } from "node:path";
 import { EVAME_DIR_NAME } from "../utils/constants";
 
 export async function collectMarkdownFiles(contentDir: string): Promise<
@@ -57,9 +57,9 @@ export async function collectMarkdownFiles(contentDir: string): Promise<
 	return result.sort((a, b) => a.slug.localeCompare(b.slug));
 }
 
-function filePathToSlug(path: string): string {
+function filePathToSlug(filePath: string): string {
 	// 拡張子を除いたファイル名を slug として扱う。
-	const fileName = path.split("/").at(-1) ?? path;
+	const fileName = basename(filePath);
 	const dot = fileName.lastIndexOf(".");
 	return dot === -1 ? fileName : fileName.slice(0, dot);
 }

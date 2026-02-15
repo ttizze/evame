@@ -122,18 +122,19 @@
 
 ## 4. API安定性（公開データ, 2025-11-13〜2026-02-11）
 
-- 重要: 各社で「インシデントの粒度」「公開件数上限」「対象サービス範囲」が異なるため、単純比較はできません。
+- 重要: 各社で「インシデントの粒度」「公開件数上限」「対象サービス範囲」が異なるため、事業者間で件数/重大度を単純比較しません。
 - 集計は公開ステータス/公開インシデントの取得可能範囲で行っています（最新50件上限のサービスあり）。
+- この表は「公開データが取れる範囲での参考情報」です。最終判断は SLA/契約/冗長化設計/自社監視の結果と合わせて行います。
 
 | 事業者/経路 | 公開データ観測 | 90日の観測結果（取得範囲） | メモ |
 | --- | --- | --- | --- |
 | OpenAI | `status.openai.com`（埋め込み履歴） | 58件（API関連っぽいタイトル 10件） | ChatGPT系も混在。API専用件数ではない |
 | Anthropic (Claude) | `status.claude.com/api/v2/incidents.json` | 50件中、Claude APIコンポーネント関連 34件（major/critical 8件） | APIが返す最新50件内での集計 |
 | Google (Vertex Gemini API) | `status.cloud.google.com/incidents.json` | Vertex Gemini APIを含む障害は取得全体で1件（2025-06-12〜06-13）、90日では0件 | GCP全体障害データの一部として公開 |
-| DeepSeek | `status.deepseek.com/api/v2/incidents.json` | API名を含む障害 8件（major/critical 4件） | 2025-11-25以降に集中 |
+| DeepSeek | `status.deepseek.com/api/v2/incidents.json` | API名を含む障害 8件（major/critical 4件） | 観測期間内では 2025-11-25〜2026-02-11 に集中（短期クラスター。長期傾向の断定は避ける） |
 | Moonshot (Kimi) | `status.moonshot.cn/api/v2/incidents.json` | 最新50件はすべて Search コンポーネント、Open API/API Service直接影響 0件 | API直接影響が0件という意味ではなく、最新50件の観測結果 |
 | OpenRouter | `status.openrouter.ai` | 90日 uptime 表示: Chat API 100%, Data API 99.93% | ルーティング層の可用性指標 |
-| xAI | `status.x.ai` | 自動取得でCloudflareブロック | 手動確認が必要 |
+| xAI | `status.x.ai` | 自動取得でCloudflareブロック | 2026-02-11時点でHTTP 403（Forbidden）。定量比較から除外 |
 
 ## 5. 業務利用の判断（実務向け）
 
@@ -240,6 +241,7 @@
 - 最優先候補: `AWS Bedrock` 経由
 - 理由: BedrockはSLAが公開され、DeepSeek直APIより業務運用の可用性設計（権限/監査/請求統合）がしやすい
 - 推奨構成: Bedrock主系（例 `us-east-1`）+ 別リージョン待機系（例 `us-west-2`）+ タイムアウト/再試行/サーキットブレーカ
+- 注意: Bedrock経由は直APIよりコストが上がる可能性があるため、見積もりの上で「追加コスト < ダウンタイム/運用コスト削減」のときに選ぶ
 
 ## 12. 追加の一次情報リンク
 

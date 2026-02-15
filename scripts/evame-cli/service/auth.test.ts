@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { chmod, mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -69,5 +69,36 @@ describe("evame-cli auth", () => {
 			"utf8",
 		);
 		expect(raw).toContain('"token": "token-from-file"');
+	});
+
+	it("authファイルはPOSIX環境で0600相当に固定される", async () => {
+		if (process.platform === "win32") return;
+		const cwd = await createTempDir();
+		const env: NodeJS.ProcessEnv = {
+			...process.env,
+			XDG_CONFIG_HOME: join(cwd, "xdg"),
+		};
+
+		await saveAuthToken("token-from-file", env);
+		const authPath = join(cwd, "xdg", "evame", "auth.json");
+		const mode = (await stat(authPath)).mode & 0o777;
+		expect(mode & 0o077).toBe(0);
+	});
+
+	it("authファイルが緩い権限でも読み込み時に0600へ修復する", async () => {
+		if (process.platform === "win32") return;
+		const cwd = await createTempDir();
+		const env: NodeJS.ProcessEnv = {
+			...process.env,
+			XDG_CONFIG_HOME: join(cwd, "xdg"),
+		};
+
+		await saveAuthToken("token-from-file", env);
+		const authPath = join(cwd, "xdg", "evame", "auth.json");
+		await chmod(authPath, 0o644);
+
+		await expect(loadAuthToken(env)).resolves.toBe("token-from-file");
+		const mode = (await stat(authPath)).mode & 0o777;
+		expect(mode & 0o077).toBe(0);
 	});
 });

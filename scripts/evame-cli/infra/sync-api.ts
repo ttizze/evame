@@ -15,13 +15,41 @@ async function parseApiResponse<T>(
 	apiName: "push" | "pull",
 ): Promise<T> {
 	// CLIで原因追跡しやすいよう、失敗時はレスポンス本文もエラーに含める。
-	const json = await response.json();
+	const raw = await response.text();
+	const contentType = response.headers.get("content-type") ?? "";
+	const shouldParseJson =
+		contentType.includes("application/json") ||
+		raw.trim().startsWith("{") ||
+		raw.trim().startsWith("[");
+
+	let parsed: unknown = raw;
+	if (shouldParseJson) {
+		try {
+			parsed = raw ? (JSON.parse(raw) as unknown) : null;
+		} catch (error) {
+			const snippet = raw.slice(0, 500);
+			throw new Error(
+				`${apiName} API error: ${response.status} (invalid JSON response)\n${snippet}`,
+				{ cause: error },
+			);
+		}
+	}
+
 	if (!response.ok) {
+		const detail =
+			typeof parsed === "string"
+				? parsed.slice(0, 500)
+				: JSON.stringify(parsed);
+		throw new Error(`${apiName} API error: ${response.status} ${detail}`);
+	}
+	if (!shouldParseJson) {
+		const snippet = raw.slice(0, 500);
 		throw new Error(
-			`${apiName} API error: ${response.status} ${JSON.stringify(json)}`,
+			`${apiName} API error: ${response.status} (non-JSON response)\n${snippet}`,
 		);
 	}
-	return json as T;
+
+	return parsed as T;
 }
 
 export async function requestPush(

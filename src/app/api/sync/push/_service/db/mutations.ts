@@ -12,7 +12,7 @@ export async function upsertPageForSync(params: {
 	status: PageStatus;
 }) {
 	return await db.transaction().execute(async (tx) => {
-		if (params.existingPageId) {
+		if (params.existingPageId !== undefined) {
 			await tx
 				.updateTable("pages")
 				.set({

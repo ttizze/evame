@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { CONFIG_FILE_NAME, EVAME_DIR_NAME } from "./constants";
 
 export function printPushSummary(
 	response: {
@@ -57,7 +58,7 @@ export function printContentDirInfo(
 	created: boolean,
 ) {
 	// 設定位置を毎回表示し、ユーザーが編集場所を迷わないようにする。
-	const configPath = join(cwd, ".evame", "config.json");
+	const configPath = join(cwd, EVAME_DIR_NAME, CONFIG_FILE_NAME);
 	if (created) {
 		console.log(`Created config file automatically: ${configPath}`);
 		console.log("Why: this file stores the default sync target for push/pull.");

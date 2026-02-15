@@ -1,4 +1,4 @@
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { chmod, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { AUTH_DIR_NAME, AUTH_FILE_NAME } from "../utils/constants";
@@ -28,11 +28,30 @@ export async function saveAuthToken(
 	// 親ディレクトリが無くても保存できるよう事前に作成する。
 	const authDirPath = resolveAuthDirPath(env);
 	await mkdir(authDirPath, { recursive: true });
+	const authFilePath = resolveAuthFilePath(env);
 	await writeFile(
-		resolveAuthFilePath(env),
+		authFilePath,
 		`${JSON.stringify({ token: token.trim() }, null, 2)}\n`,
 		"utf8",
 	);
+	// トークンは機密情報なので、POSIXでは権限を固定する。
+	// (Windowsはchmod意味が薄いので対象外)
+	if (process.platform !== "win32") {
+		try {
+			await chmod(authDirPath, 0o700);
+		} catch (error) {
+			throw new Error(`Failed to chmod auth dir: ${authDirPath}`, {
+				cause: error,
+			});
+		}
+		try {
+			await chmod(authFilePath, 0o600);
+		} catch (error) {
+			throw new Error(`Failed to chmod auth file: ${authFilePath}`, {
+				cause: error,
+			});
+		}
+	}
 }
 
 export async function clearAuthToken(
@@ -56,6 +75,21 @@ export async function loadAuthToken(
 	const exists = await fileExists(authPath);
 	if (!exists) {
 		throw new Error("No auth token found. Set EVAME_PAT or run `evame login`.");
+	}
+
+	// 誤って世界公開権限で保存されている場合は、読込み前に修復する。
+	if (process.platform !== "win32") {
+		const mode = (await stat(authPath)).mode & 0o777;
+		if ((mode & 0o077) !== 0) {
+			try {
+				await chmod(authPath, 0o600);
+			} catch (error) {
+				throw new Error(
+					`Auth token file permissions are too open: ${authPath}\nRun: chmod 600 ${authPath}`,
+					{ cause: error },
+				);
+			}
+		}
 	}
 
 	const raw = await readFile(authPath, "utf8");

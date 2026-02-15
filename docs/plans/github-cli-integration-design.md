@@ -43,13 +43,16 @@
 - 保存先（repo外）:
   - `$XDG_CONFIG_HOME/evame/auth.json`
   - または `~/.config/evame/auth.json`
+- セキュリティ:
+  - `auth.json` は **0600（ユーザーのみ）**、ディレクトリは **0700** を前提にする。
+  - CLIは保存/読込時に権限を固定し、緩い権限の場合は修復を試みる。修復できない場合はエラーにする。
 - `EVAME_PAT` が設定されている場合はファイルより優先。
 
 ### Markdown仕様
 - 1ファイル = 1slug（ファイル名がslug）
-- 必須frontmatter: `title`
-- 任意frontmatter: `published_at`
-- `body` はfrontmatter以降の本文
+- 必須frontmatter: `published_at`（ISO8601 or `null`）
+- `title` は本文先頭の `# ...`（無い場合は本文先頭の非空1行）。frontmatterの `title` は使わない
+- `body` はfrontmatter以降の本文（`title` に使った見出し行は本文から除外）
 
 ## DB実態との対応
 - `title`: `segments.number = 0` の `text`
