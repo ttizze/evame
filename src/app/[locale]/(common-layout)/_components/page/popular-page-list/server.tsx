@@ -38,6 +38,9 @@ export default async function PopularPageList({
 				pageSize: 5,
 				locale,
 			});
+	const liveViewCountPageIds = showPagination
+		? undefined
+		: pageForLists.map((pageForList) => pageForList.id);
 
 	return (
 		<PageListContainer icon={BookOpenIcon} title="Popular Pages">
@@ -46,6 +49,7 @@ export default async function PopularPageList({
 				<PageList
 					index={index}
 					key={PageForList.id}
+					liveViewCountPageIds={liveViewCountPageIds}
 					locale={locale}
 					PageForList={PageForList}
 				/>
