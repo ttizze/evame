@@ -9,12 +9,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
 import { PageActionsDropdown } from "./page-actions-dropdown/client";
 import { PageCommentButton } from "./page-list/page-comment-button.client";
+import { PageViewCount } from "./page-view-count.client";
 
 type PageListProps = {
 	PageForList: PageForList;
 	showOwnerActions?: boolean;
 	index?: number;
 	locale: string;
+	liveViewCountPageIds?: number[];
 };
 
 export async function PageList({
@@ -22,6 +24,7 @@ export async function PageList({
 	showOwnerActions = false,
 	index,
 	locale,
+	liveViewCountPageIds,
 }: PageListProps) {
 	const { props } = getImageProps({
 		src: PageForList.userImage,
@@ -98,7 +101,11 @@ export async function PageList({
 				{/* ③ アクション（いいね＋コメント） */}
 				<div className="flex items-center gap-2 justify-end">
 					<EyeIcon className="w-5 h-5" />
-					<span className="text-muted-foreground">{PageForList.viewCount}</span>
+					<PageViewCount
+						batchPageIds={liveViewCountPageIds}
+						initialCount={PageForList.viewCount}
+						pageId={PageForList.id}
+					/>
 					<PageLikeButton
 						initialLikeCount={PageForList.likeCount}
 						pageId={PageForList.id}
