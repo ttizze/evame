@@ -8,6 +8,8 @@
 			"!.vscode",
 			"!.next",
 			"!node_modules",
+			"!**/node_modules",
+			"!**/.svelte-kit",
 			"!**/*.css",
 			"!tipitaka-md",
 			"!tipitaka-md-nosplit",

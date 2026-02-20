@@ -5,7 +5,10 @@
 	"type": "module",
 	"scripts": {
 		"dev": "bun run db:with-branch -- next dev",
+		"dev:svelte": "cd apps/web-svelte && bun run dev",
+		"dev:svelte:cf": "cd apps/web-svelte && bun run dev:cf",
 		"build": "next build",
+		"build:svelte": "cd apps/web-svelte && bun run build",
 		"start": "next start",
 		"lint": "eslint .",
 		"test": "vitest",
@@ -25,6 +28,7 @@
 		"vercel-build": " (bun run db:prod:migrate || (echo '1st migrate failed; retrying in 8s' && sleep 8 && bun run db:prod:migrate )) && bun run db:prod:seed && next build",
 		"biome": "bunx @biomejs/biome check --write .",
 		"typecheck": "next typegen && tsc --noEmit",
+		"typecheck:svelte": "cd apps/web-svelte && bun run check",
 		"seed": "bun run db:with-branch -- tsx src/db/seed.ts",
 		"mdast-json": "bunx tsx scripts/mdast-json.ts",
 		"tipitaka": "bun --env-file=.env scripts/tipitaka-import.ts",

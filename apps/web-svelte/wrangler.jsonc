@@ -1,0 +1,19 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "evame-svelte",
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"compatibility_date": "2026-02-20",
+	"compatibility_flags": ["nodejs_compat", "nodejs_als"],
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	}
+	// Cloudflare KV を導入するタイミングで有効化する:
+	// "kv_namespaces": [
+	// 	{
+	// 		"binding": "MAINTENANCE_KV",
+	// 		"id": "REPLACE_WITH_PRODUCTION_KV_ID",
+	// 		"preview_id": "REPLACE_WITH_PREVIEW_KV_ID"
+	// 	}
+	// ]
+}

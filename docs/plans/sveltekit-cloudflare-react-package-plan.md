@@ -10,6 +10,12 @@
 - フレームワークは SvelteKit（`@sveltejs/adapter-cloudflare`）。
 - 本計画の対象は `package.json` に存在する React/Next/Vercel 依存すべて。
 
+## 実装進捗（2026-02-20）
+- フェーズ1の土台を追加済み（`apps/web-svelte`）。
+- Cloudflare adapter と `wrangler.jsonc` を設定済み。
+- 疎通用エンドポイント `apps/web-svelte/src/routes/api/health/+server.ts` を追加済み。
+- 既存Nextを壊さず並走できるよう、ルート `package.json` に Svelte実行スクリプトを追加済み。
+
 ## 調査サマリ（現行）
 - `react` 依存ファイル: 114
 - `next` 依存ファイル: 103
