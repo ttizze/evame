@@ -10,6 +10,7 @@
 			"!node_modules",
 			"!**/node_modules",
 			"!**/.svelte-kit",
+			"!**/.wrangler",
 			"!**/*.css",
 			"!tipitaka-md",
 			"!tipitaka-md-nosplit",

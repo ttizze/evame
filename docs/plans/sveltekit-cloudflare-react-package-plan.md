@@ -15,6 +15,22 @@
 - Cloudflare adapter と `wrangler.jsonc` を設定済み。
 - 疎通用エンドポイント `apps/web-svelte/src/routes/api/health/+server.ts` を追加済み。
 - 既存Nextを壊さず並走できるよう、ルート `package.json` に Svelte実行スクリプトを追加済み。
+- フェーズ2の API 境界移植を着手済み。以下を `+server.ts` 化:
+  - `locale-info`
+  - `notifications`
+  - `og`
+  - `page-likes/state`
+  - `page-views/[pageId]/increment`
+  - `segment-translations`
+  - `sentry-example-api`
+  - `sync/cli-login`
+  - `sync/pull`
+  - `sync/push`
+  - `translate`
+  - `translate/chunk`
+  - `translation-jobs`
+- QStash 署名検証を `@upstash/qstash` `Receiver.verify` ベースに置換済み（Svelte側）。
+- Cloudflare purge API 呼び出し（tag purge）を `translate/chunk` 完了時に接続済み（`CLOUDFLARE_ZONE_ID`/`CLOUDFLARE_API_TOKEN` がある場合のみ）。
 
 ## 調査サマリ（現行）
 - `react` 依存ファイル: 114

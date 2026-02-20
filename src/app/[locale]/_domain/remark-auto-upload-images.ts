@@ -8,7 +8,8 @@ import { fileFromUrl } from "../_utils/file-from-url";
 const limit = pLimit(5);
 
 export const remarkAutoUploadImages: Plugin<[]> = () => {
-	return async (tree: MdastRoot) => {
+	return async (tree: unknown) => {
+		const mdastTree = tree as MdastRoot;
 		// ここに来た時点で必ず MDAST
 		const tasks: Promise<void>[] = [];
 		const internalImageHosts = new Set<string>(
@@ -21,7 +22,7 @@ export const remarkAutoUploadImages: Plugin<[]> = () => {
 			),
 		);
 
-		visit(tree, "image", (node) => {
+		visit(mdastTree, "image", (node) => {
 			// 既に自前ホストの画像、またはローカル/プレースホルダはアップロードしない。
 			// (push/pullで差分が出ないことが最重要)
 			const url = node.url;

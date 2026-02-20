@@ -47,7 +47,7 @@ export async function markdownToMdastWithSegments({
 	removePosition(tree, { force: true });
 
 	return {
-		mdastJson: tree as JsonValue,
+		mdastJson: tree as unknown as JsonValue,
 		segments: (file.data as { segments: SegmentDraft[] }).segments,
 		file,
 	};
