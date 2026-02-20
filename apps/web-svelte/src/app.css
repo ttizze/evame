@@ -1,0 +1,41 @@
+:root {
+	color-scheme: light;
+	--bg: #f4f7fb;
+	--card: #ffffff;
+	--text: #101a2d;
+	--muted: #6a7892;
+	--border: #d7deea;
+	--accent: #0a4dff;
+	--accent-soft: #e6eeff;
+}
+
+:global(html.dark) {
+	color-scheme: dark;
+	--bg: #0b1020;
+	--card: #131a2d;
+	--text: #edf1ff;
+	--muted: #a4afc8;
+	--border: #2a3552;
+	--accent: #7ea1ff;
+	--accent-soft: #1d2b4f;
+}
+
+:global(*) {
+	box-sizing: border-box;
+}
+
+:global(body) {
+	margin: 0;
+	background: radial-gradient(
+			1200px 700px at 100% -15%,
+			color-mix(in oklab, var(--accent) 18%, transparent),
+			transparent 60%
+		),
+		var(--bg);
+	color: var(--text);
+	font-family: "IBM Plex Sans", "Noto Sans JP", "Hiragino Sans", sans-serif;
+}
+
+:global(a) {
+	color: inherit;
+}

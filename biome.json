@@ -12,6 +12,7 @@
 			"!**/.svelte-kit",
 			"!**/.wrangler",
 			"!**/*.css",
+			"!**/*.svelte",
 			"!tipitaka-md",
 			"!tipitaka-md-nosplit",
 			"!tipitaka-xml",
