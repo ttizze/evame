@@ -1,6 +1,5 @@
 "use client"; // Error boundaries must be Client Components
 
-import * as Sentry from "@sentry/nextjs";
 import { AlertCircle } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
@@ -16,7 +15,7 @@ export default function ErrorPage({
 }) {
 	// エラーをログに記録
 	useEffect(() => {
-		Sentry.captureException(error);
+		console.error(error);
 	}, [error]);
 
 	return (

@@ -17,7 +17,6 @@ export async function generatePageMetadata(
 	const description = await mdastToText(pageDetail.mdastJson).then((text) =>
 		text.slice(0, 200),
 	);
-	const ogImageUrl = `${BASE_URL}/api/og?locale=${sourceLocale}&slug=${slug}`;
 	const displayTitle = isDraft ? `${title} (Draft)` : title;
 	const canonicalUrl = `${BASE_URL}/${sourceLocale}/${pageDetail.userHandle}/${slug}`;
 	const translatedLocales = completedTranslationJobs.map((job) => job.locale);
@@ -30,13 +29,11 @@ export async function generatePageMetadata(
 			type: "article",
 			title,
 			description,
-			images: [{ url: ogImageUrl, width: 1200, height: 630 }],
 		},
 		twitter: {
 			card: "summary_large_image",
 			title,
 			description,
-			images: [{ url: ogImageUrl, width: 1200, height: 630 }],
 		},
 		alternates: {
 			canonical: canonicalUrl,

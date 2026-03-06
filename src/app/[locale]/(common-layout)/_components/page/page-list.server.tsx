@@ -1,6 +1,5 @@
 import { EyeIcon } from "lucide-react";
 import { getImageProps } from "next/image";
-import { BASE_URL } from "@/app/_constants/base-url";
 import { PageLikeButton } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/server";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
@@ -30,8 +29,6 @@ export async function PageList({
 		height: 40,
 	});
 	const { titleSegment } = PageForList;
-	const _ogpImageUrl =
-		`${BASE_URL}/api/og?locale=${locale}` + `&slug=${PageForList.slug}`;
 	const pageLink = `/${PageForList.userHandle}/${PageForList.slug}`;
 	const userLink = `/${PageForList.userHandle}`;
 	return (

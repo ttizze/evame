@@ -1,24 +1,9 @@
 import { queryByAttribute } from "@testing-library/dom";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { Segment } from "@/app/[locale]/types";
 import type { JsonValue } from "@/db/types";
 
-vi.mock("react-tweet", () => ({
-	Tweet: ({ id }: { id: string }) => (
-		<span data-testid={`tweet-${id}`}>Tweet ID: {id}</span>
-	),
-}));
-
-vi.stubGlobal(
-	"fetch",
-	vi.fn().mockResolvedValue({
-		ok: true,
-		json: async () => [],
-	}),
-);
-
-// 2. その後で被テストモジュールをimport
 import { mdastToReact } from "./server";
 
 // テスト用のセグメントバンドル
@@ -64,7 +49,7 @@ describe("mdastToReact", () => {
 		expect(screen.getByText("def")).toBeInTheDocument();
 	});
 
-	it("converts Twitter/X links to XPost components", async () => {
+	it("converts Twitter/X links to static X links", async () => {
 		const mdast: JsonValue = {
 			type: "root",
 			children: [
@@ -107,13 +92,16 @@ describe("mdastToReact", () => {
 		});
 		render(el);
 
-		// Twitterリンクが正しくXPostコンポーネントに変換されているか確認
-		expect(screen.getByTestId("tweet-1234567890")).toBeInTheDocument();
-		expect(screen.getByText("Tweet ID: 1234567890")).toBeInTheDocument();
-
-		// X.comリンクも同様に変換されているか確認
-		expect(screen.getByTestId("tweet-9876543210")).toBeInTheDocument();
-		expect(screen.getByText("Tweet ID: 9876543210")).toBeInTheDocument();
+		const xLinks = screen.getAllByText("View post on X");
+		expect(xLinks).toHaveLength(2);
+		expect(xLinks[0]).toHaveAttribute(
+			"href",
+			"https://x.com/i/web/status/1234567890",
+		);
+		expect(xLinks[1]).toHaveAttribute(
+			"href",
+			"https://x.com/i/web/status/9876543210",
+		);
 
 		// 通常のリンクはそのままaタグとして残っているか確認
 		expect(screen.getByText("Regular link")).toBeInTheDocument();

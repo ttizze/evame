@@ -42,7 +42,11 @@ export function TranslationListItem({
 		);
 
 	const { data: session } = authClient.useSession();
-	const currentUser = hydrated ? session?.user : undefined;
+	const currentUser = hydrated
+		? (session?.user as
+				| (NonNullable<typeof session>["user"] & { handle: string })
+				| undefined)
+		: undefined;
 	const isOwner = currentUser?.handle === translation.userHandle;
 
 	return (
