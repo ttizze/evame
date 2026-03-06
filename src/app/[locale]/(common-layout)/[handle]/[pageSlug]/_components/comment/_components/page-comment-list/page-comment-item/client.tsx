@@ -28,8 +28,11 @@ export function PageCommentItemClient({
 		FormData
 	>(deletePageCommentAction, { success: false });
 	const { data: session } = authClient.useSession();
+	const currentUser = session?.user as
+		| (NonNullable<typeof session>["user"] & { handle: string })
+		| undefined;
 
-	if (!hydrated || session?.user.handle !== user.handle) return null;
+	if (!hydrated || currentUser?.handle !== user.handle) return null;
 
 	return (
 		<CommentActionMenu>

@@ -25,7 +25,11 @@ export function SubHeader({
 	const hydrated = useHydrated();
 	const locale = useLocale();
 	const { data: session } = authClient.useSession();
-	const currentUser = hydrated ? session?.user : undefined;
+	const currentUser = hydrated
+		? (session?.user as
+				| (NonNullable<typeof session>["user"] & { handle: string })
+				| undefined)
+		: undefined;
 	const isEditable = currentUser?.handle === pageDetail.userHandle;
 
 	// カスタムフックを使用 - SubHeaderの特殊な動作のため初期オフセットを考慮

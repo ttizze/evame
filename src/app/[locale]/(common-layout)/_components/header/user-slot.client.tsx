@@ -17,7 +17,14 @@ export function HeaderUserSlot() {
 	useEffect(() => setHydrated(true), []);
 
 	const { data: session, isPending } = authClient.useSession();
-	const currentUser = session?.user;
+	const currentUser = session?.user as
+		| (NonNullable<typeof session>["user"] & {
+				handle: string;
+				hasGeminiApiKey: boolean;
+				plan: string;
+				image: string;
+		  })
+		| undefined;
 	const showLoading = !hydrated || isPending;
 
 	return (
@@ -48,7 +55,7 @@ export function HeaderUserSlot() {
 					<NewPageButton handle={currentUser.handle} />
 					<UserMenu
 						currentUser={currentUser}
-						hasGeminiApiKey={session?.user.hasGeminiApiKey}
+						hasGeminiApiKey={currentUser.hasGeminiApiKey}
 					/>
 				</>
 			)}

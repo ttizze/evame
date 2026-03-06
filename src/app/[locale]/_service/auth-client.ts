@@ -3,7 +3,6 @@ import {
 	magicLinkClient,
 } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
-import type { auth } from "@/auth";
 
 /**
  * baseURLを推論します。
@@ -30,7 +29,7 @@ function getBaseURL(): string | undefined {
 }
 
 export const authClient = createAuthClient({
-	plugins: [customSessionClient<typeof auth>(), magicLinkClient()],
+	plugins: [customSessionClient(), magicLinkClient()],
 	/** The base URL of the server (optional if you're using the same domain) */
 	baseURL: getBaseURL(),
 	/** The path to the auth API route */

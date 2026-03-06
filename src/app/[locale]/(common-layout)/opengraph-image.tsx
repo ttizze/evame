@@ -1,5 +1,3 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
 import { ImageResponse } from "next/og";
 
 export const size = {
@@ -9,21 +7,48 @@ export const size = {
 export const contentType = "image/png";
 
 export default async function Image() {
-	const logoData = await readFile(join(process.cwd(), "public", "logo.png"));
-	const logoSrc = `data:image/png;base64,${Buffer.from(logoData).toString("base64")}`;
-
 	return new ImageResponse(
 		<div
 			style={{
 				width: "100%",
 				height: "100%",
-				padding: "20px",
-				backgroundSize: "100% 100%",
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "center",
+				background:
+					"radial-gradient(circle at top, rgb(59, 130, 246), rgb(15, 23, 42) 60%)",
+				color: "white",
 			}}
-			tw="flex items-center justify-center"
 		>
-			{/* biome-ignore lint/performance/noImgElement: Using raw <img> is required for OG image generation. */}
-			<img alt="logo" src={logoSrc} />
+			<div
+				style={{
+					display: "flex",
+					flexDirection: "column",
+					alignItems: "center",
+					gap: "20px",
+				}}
+			>
+				<p
+					style={{
+						fontSize: 84,
+						fontWeight: 700,
+						letterSpacing: "0.08em",
+						margin: 0,
+						textTransform: "uppercase",
+					}}
+				>
+					Evame
+				</p>
+				<p
+					style={{
+						fontSize: 32,
+						margin: 0,
+						opacity: 0.86,
+					}}
+				>
+					Internet Without Language Barriers
+				</p>
+			</div>
 		</div>,
 		{
 			...size,

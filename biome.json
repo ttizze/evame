@@ -21,6 +21,8 @@
 			"!dist",
 			"!.codex",
 			"!.claude",
+			"!.open-next",
+			"!.wrangler",
 			"!.worktree",
 			"!.worktrees"
 		]

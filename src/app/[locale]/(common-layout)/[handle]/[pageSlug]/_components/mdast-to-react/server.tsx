@@ -1,16 +1,11 @@
-import remarkEmbedder from "@remark-embedder/core";
-import oembedTransformer from "@remark-embedder/transformer-oembed";
 import type { StaticImport } from "next/dist/shared/lib/get-img-props";
 import Image from "next/image";
 import type { ReactElement } from "react";
 import { type ComponentType, createElement, type JSX } from "react";
 import * as jsxRuntime from "react/jsx-runtime";
-import { Tweet as XPost } from "react-tweet";
-import rehypePrettyCode from "rehype-pretty-code";
 import rehypeRaw from "rehype-raw";
 import rehypeReact from "rehype-react";
 import rehypeSlug from "rehype-slug";
-import remarkLinkCard from "remark-link-card-plus";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import type { Segment } from "@/app/[locale]/types";
@@ -73,27 +68,9 @@ export async function mdastToReact<T extends Segment = Segment>({
 
 	const processor = unified()
 		.use(remarkTweet)
-		.use(remarkEmbedder, { transformers: [oembedTransformer] })
-		.use(remarkLinkCard, {
-			cache: false,
-			shortenUrl: true,
-			noFavicon: true,
-		})
 		.use(remarkRehype, { allowDangerousHtml: true }) // mdast → hast
 		.use(rehypeRaw) // parse raw HTML
 		.use(rehypeSlug) // add slug ids
-		.use(rehypePrettyCode, {
-			themes: {
-				// 2 つ書くと自動でダーク／ライト切替
-				light: "github-light",
-				dark: "github-dark",
-			},
-			keepBackground: true,
-			defaultLang: "typescript",
-			aliases: {
-				typescriptreact: "tsx",
-			},
-		})
 		.use(rehypeReact, {
 			createElement,
 			...jsxRuntime,
@@ -101,9 +78,11 @@ export async function mdastToReact<T extends Segment = Segment>({
 				// image hydration → next/image
 				img: ImgComponent,
 				tweet: (props: { id: string }) => (
-					<span className="not-prose">
-						<XPost id={props.id} />
-					</span>
+					<blockquote className="not-prose">
+						<a href={`https://x.com/i/web/status/${props.id}`}>
+							View post on X
+						</a>
+					</blockquote>
 				),
 				...segmentComponents,
 			},

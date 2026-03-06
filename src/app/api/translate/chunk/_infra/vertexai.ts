@@ -5,7 +5,7 @@ import {
 	VertexAI,
 } from "@google-cloud/vertexai";
 import { generateTranslationPrompt } from "./generate-translation-prompt";
-import { getAuthClient } from "./google-auth";
+import { getGoogleAuthOptions } from "./google-auth";
 
 const MAX_RETRIES = 3;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -44,20 +44,10 @@ export async function getVertexAIModelResponse({
 	targetLocale,
 	translationContext,
 }: VertexTranslationParams) {
-	const authClient = await getAuthClient();
 	const vertexai = new VertexAI({
 		project: process.env.GCP_PROJECT_ID,
 		location: process.env.GCP_REGION,
-		googleAuthOptions: {
-			// authClientが存在する場合（Vercel環境）はOIDCトークンを使用
-			// authClientがundefinedの場合（ローカル開発時）はauthClientを渡さず、
-			// VertexAIが自動的にApplication Default Credentialsを使用する
-			...(authClient && {
-				// biome-ignore lint/suspicious/noExplicitAny: <vertexaiの型がおかしい>
-				authClient: authClient as any,
-			}),
-			projectId: process.env.GCP_PROJECT_ID,
-		},
+		googleAuthOptions: getGoogleAuthOptions(),
 	});
 	// モデルごとの出力トークン上限
 	// gemini-2.0-flash: 8,192, gemini-2.5-*: 65,535

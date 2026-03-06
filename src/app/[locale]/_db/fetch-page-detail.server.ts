@@ -3,7 +3,6 @@
  * Kysely ORM版 - シンプル化
  */
 
-import { cacheLife, cacheTag } from "next/cache";
 import { serverLogger } from "@/app/_service/logger.server";
 import type { SegmentWithSegmentType } from "@/app/[locale]/types";
 import { db } from "@/db";
@@ -235,13 +234,8 @@ async function fetchSegmentsByIds(
  * ページ詳細を取得
  */
 export async function fetchPageDetail(slug: string, locale: string) {
-	"use cache";
-	cacheLife("max");
-
 	const page = await fetchPageBasicBySlug(slug);
 	if (!page || page.status === "ARCHIVE") return null;
-
-	cacheTag(`page:${page.id}`);
 
 	const tags = await fetchTags(page.id);
 

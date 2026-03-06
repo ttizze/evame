@@ -1,64 +1,55 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
+import { BASE_URL } from "@/app/_constants/base-url";
+import { fetchPageOgData } from "@/app/_db/fetch-page-og.server";
 import { getCurrentUser } from "@/app/_service/auth-server";
 import { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
-import { Skeleton } from "@/components/ui/skeleton";
-import { PageContent } from "./_components/page-content";
-import { generatePageMetadata } from "./_service/generate-page-metadata";
-
-function PageSkeleton() {
-	return (
-		<article className="w-full prose dark:prose-invert lg:prose-lg mx-auto mb-20">
-			<Skeleton className="h-10 w-3/4 mb-4" />
-			<Skeleton className="h-6 w-1/4 mb-8" />
-			<div className="space-y-4">
-				<Skeleton className="h-4 w-full" />
-				<Skeleton className="h-4 w-full" />
-				<Skeleton className="h-4 w-5/6" />
-				<Skeleton className="h-4 w-full" />
-				<Skeleton className="h-4 w-4/5" />
-			</div>
-		</article>
-	);
-}
-
-type Params = Promise<{ locale: string; handle: string; pageSlug: string }>;
+import { ContentWithTranslations } from "./_components/content-with-translations";
 
 export async function generateMetadata({
 	params,
 }: {
-	params: Params;
+	params: Promise<{ locale: string; handle: string; pageSlug: string }>;
 }): Promise<Metadata> {
 	const { pageSlug, locale } = await params;
-	const pageDetail = await fetchPageDetail(pageSlug, locale);
-	if (!pageDetail) return notFound();
+	const page = await fetchPageOgData(pageSlug, locale);
+	if (!page) return notFound();
+	const ogImageUrl = `${BASE_URL}/${locale}/opengraph-image-8p799s`;
 
-	return generatePageMetadata(pageDetail);
+	return {
+		title: page.title,
+		openGraph: {
+			title: page.title,
+			images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+		},
+		twitter: {
+			card: "summary_large_image",
+			title: page.title,
+			images: [{ url: ogImageUrl, width: 1200, height: 630 }],
+		},
+	};
 }
 
-export default function Page({
+export default async function Page({
 	params,
 }: PageProps<"/[locale]/[handle]/[pageSlug]">) {
+	const { pageSlug, locale } = await params;
+	const pageDetail = await fetchPageDetail(pageSlug, locale);
+	if (!pageDetail) {
+		return notFound();
+	}
+
+	const isDraft = pageDetail.status !== "PUBLIC";
+	if (isDraft) {
+		const currentUser = await getCurrentUser();
+		if (!currentUser || currentUser.handle !== pageDetail.userHandle) {
+			return notFound();
+		}
+	}
+
 	return (
-		<Suspense fallback={<PageSkeleton />}>
-			{params.then(async ({ pageSlug, locale }) => {
-				const pageDetail = await fetchPageDetail(pageSlug, locale);
-				if (!pageDetail) {
-					return notFound();
-				}
-
-				// 非公開ページはオーナーのみ閲覧可能
-				const isDraft = pageDetail.status !== "PUBLIC";
-				if (isDraft) {
-					const currentUser = await getCurrentUser();
-					if (!currentUser || currentUser.handle !== pageDetail.userHandle) {
-						return notFound();
-					}
-				}
-
-				return <PageContent locale={locale} pageDetail={pageDetail} />;
-			})}
-		</Suspense>
+		<article className="mx-auto mb-20 w-full prose lg:prose-lg dark:prose-invert">
+			<ContentWithTranslations pageDetail={pageDetail} />
+		</article>
 	);
 }
