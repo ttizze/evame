@@ -27,21 +27,26 @@ function getConnectionString() {
 	return connectionString;
 }
 
-function createDb(connectionString: string): KyselyDbWithPool {
+function isLocalDatabase(connectionString: string) {
 	const hostname = new URL(connectionString).hostname;
-	const pool =
+	return (
 		hostname === "db.localtest.me" ||
 		hostname === "localhost" ||
 		hostname === "127.0.0.1"
-			? new (
-					createRequire(import.meta.url)(pgModuleName) as typeof import("pg")
-				).Pool({
-					connectionString,
-					max: 20,
-					idleTimeoutMillis: 30000,
-					connectionTimeoutMillis: 30000,
-				})
-			: new NeonPool({ connectionString });
+	);
+}
+
+function createDb(connectionString: string): KyselyDbWithPool {
+	const pool = isLocalDatabase(connectionString)
+		? new (
+				createRequire(import.meta.url)(pgModuleName) as typeof import("pg")
+			).Pool({
+				connectionString,
+				max: 20,
+				idleTimeoutMillis: 30000,
+				connectionTimeoutMillis: 30000,
+			})
+		: new NeonPool({ connectionString });
 
 	const db = new Kysely<DB>({
 		dialect: new PostgresDialect({ pool }),
@@ -53,6 +58,11 @@ function createDb(connectionString: string): KyselyDbWithPool {
 
 function getDb(): KyselyDbWithPool {
 	const connectionString = getConnectionString();
+	if (!isLocalDatabase(connectionString)) {
+		// Cloudflare Workers では request 間で pool を共有すると
+		// I/O オブジェクトが前リクエストに紐づき、次のリクエストで壊れる。
+		return createDb(connectionString);
+	}
 
 	if (
 		!globalThis.__kyselyDb ||
