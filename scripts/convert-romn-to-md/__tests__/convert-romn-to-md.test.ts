@@ -2,7 +2,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-
+import type { Node } from "@xmldom/xmldom";
 import { DOMParser } from "@xmldom/xmldom";
 import { afterEach, describe, expect, test } from "vitest";
 import { getFileData } from "../books";
@@ -258,7 +258,10 @@ describe("convertXmlFileToMarkdownNoSplit", () => {
 
 		const parser = new DOMParser({ errorHandler: () => undefined });
 		const xmlContent = fs.readFileSync(sampleFile, "utf16le");
-		const document = parser.parseFromString(xmlContent, "application/xml");
+		const document = parser.parseFromString(
+			xmlContent.replace(/^\uFEFF/, ""),
+			"application/xml",
+		);
 		const body = document.getElementsByTagName("body").item(0);
 		expect(body).not.toBeNull();
 		if (!body) {

@@ -16,7 +16,10 @@ export async function convertXmlFileToMarkdown(
 ): Promise<void> {
 	const xmlContent = await fsPromises.readFile(filePath, "utf16le");
 	const parser = new DOMParser({ errorHandler: () => undefined });
-	const document = parser.parseFromString(xmlContent, "application/xml");
+	const document = parser.parseFromString(
+		xmlContent.replace(/^\uFEFF/, ""),
+		"application/xml",
+	);
 	const bodies = document.getElementsByTagName("body");
 	const body = bodies.item(0);
 	if (!body) throw new Error(`No <body> found in ${filePath}`);
