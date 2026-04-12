@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import type { Element } from "@xmldom/xmldom";
 import {
 	BLOCK_TYPES,
 	GATHA_BLOCK_TYPES,

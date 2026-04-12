@@ -1,3 +1,5 @@
+import type { Attr, Element, Node } from "@xmldom/xmldom";
+
 // 目的: TEI/TEI-like XML を扱う共通ユーティリティを提供する。
 // 処理: DOM の走査・整形・属性周りの共通処理をまとめて再利用しやすくする。
 
