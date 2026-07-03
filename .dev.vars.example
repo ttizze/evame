@@ -2,3 +2,5 @@
 # このファイルを .dev.vars にコピーして値を埋める (.dev.vars は gitignore 済み)
 NEXTJS_ENV=development
 # DATABASE_URL=postgres://...
+# Vertex AI 認証用のサービスアカウントキー (JSON 文字列)。未設定なら ADC を使う
+# GCP_SERVICE_ACCOUNT_KEY={"type":"service_account",...}

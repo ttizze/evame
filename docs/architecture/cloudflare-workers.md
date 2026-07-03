@@ -53,19 +53,22 @@ bun run cf-typegen # バインディングの型 (cloudflare-env.d.ts) を生成
 
 - **DB**: 本番は `@neondatabase/serverless`(fetch/WebSocket ベース)なので
   Workers でそのまま動く。`pg` はローカル (`db.localtest.me`) のみ。
-- **画像**: `next/image` は既に独自の Cloudflare Images loader
-  (`src/app/_service/cloudflare-loader.ts`) を使用。アップロードも R2 直行。
-- **proxy.ts**: `@vercel/edge-config` によるメンテナンスフラグは
-  `EDGE_CONFIG` がある環境(= Vercel)のみ動作し、Workers ではスキップされる。
-  Workers でも使いたければ KV に置き換える。
-- **sharp** (`upload-image.ts`): ネイティブバイナリのため workerd では動かない。
-  Workers 移行時はアップロード画像のリサイズを
+- **画像表示**: `next/image` は既に独自の Cloudflare Images loader
+  (`src/app/_service/cloudflare-loader.ts`) を使用。
+- **画像アップロード** (`upload-image.ts`): sharp(ネイティブバイナリのため
+  workerd 非対応)を
   [Cloudflare Images binding](https://developers.cloudflare.com/images/transform-images/bindings/)
-  へ置き換える必要がある。
-- **Vertex AI 認証** (`google-auth.ts`): `getVercelOidcToken()` は Vercel 専用。
-  Workers では GCP のサービスアカウントキー等に置き換える。
-- **Sentry**: `withSentryConfig`(ビルド時の sourcemap upload)はそのまま動くが、
-  サーバーサイドの実行時計測は Workers では
-  [`@sentry/cloudflare` + OpenNext 向け設定](https://docs.sentry.io/platforms/javascript/guides/cloudflare/frameworks/nextjs/)
-  への移行が必要。
+  (`IMAGES`) に置き換え済み。binding が無い環境では元画像をそのままアップロードする。
+  保存先は従来どおり R2 (S3 API 経由)。
+- **メンテナンスフラグ** (`proxy.ts`): Vercel Edge Config を Workers KV に置き換え済み。
+  使うには `wrangler kv namespace create MAINTENANCE_KV` で作成し、
+  `wrangler.jsonc` の `kv_namespaces` のコメントを外して id を設定する。
+  ON/OFF は `wrangler kv key put --binding=MAINTENANCE_KV maintenance true`(削除で解除)。
+  binding が無い環境では常に OFF。
+- **Vertex AI 認証** (`google-auth.ts`): Vercel OIDC をサービスアカウントキーに置き換え済み。
+  `wrangler secret put GCP_SERVICE_ACCOUNT_KEY` でキーの JSON を登録する。
+  未設定なら ADC(ローカル開発)にフォールバックする。
+- **Sentry**: `@sentry/nextjs` は OpenNext + Workers をそのままサポートしている
+  (`nodejs_compat` + `compatibility_date >= 2025-08-16` が条件。設定済み)。
+  <https://docs.sentry.io/platforms/javascript/guides/cloudflare/frameworks/nextjs/>
 - `runtime = "edge"` の指定は使用していない (OpenNext は edge runtime 非対応)。

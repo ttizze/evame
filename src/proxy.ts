@@ -1,4 +1,4 @@
-import { get } from "@vercel/edge-config";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { type NextRequest, NextResponse } from "next/server";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "@/i18n/routing";
@@ -7,17 +7,28 @@ const handleI18nRouting = createMiddleware(routing);
 
 /* ────────────────────────────────────────────── */
 /* ② メンテナンス判定 → true なら /maintenance へ */
-async function maintenanceGate(req: NextRequest) {
-	// Edge Config は Vercel 専用なので、接続文字列がある環境でのみ参照する
-	// (Cloudflare Workers など EDGE_CONFIG が無い環境ではスキップして通常フローへ)
-	if (process.env.EDGE_CONFIG) {
-		// Edge Config のキー名を好きに変えて OK
-		const isOn = await get<boolean>("maintenance");
+async function isMaintenanceOn(): Promise<boolean> {
+	try {
+		// Workers KV の MAINTENANCE_KV に "maintenance" キーを立てるとメンテナンスモードになる
+		// (wrangler.jsonc の kv_namespaces を有効化して運用する)
+		const { env } = getCloudflareContext();
+		const kv = (
+			env as {
+				MAINTENANCE_KV?: { get(key: string): Promise<string | null> };
+			}
+		).MAINTENANCE_KV;
+		const flag = await kv?.get("maintenance");
+		return flag === "true" || flag === "1";
+	} catch {
+		// Cloudflare 外 (プレーンな next dev / next start など) では常に OFF
+		return false;
+	}
+}
 
-		// フラグが立っていて、かつ自分自身へのループでなければ rewrite
-		if (isOn && !req.url.includes("/maintenance")) {
-			return NextResponse.rewrite(new URL("/maintenance", req.url));
-		}
+async function maintenanceGate(req: NextRequest) {
+	// フラグが立っていて、かつ自分自身へのループでなければ rewrite
+	if ((await isMaintenanceOn()) && !req.url.includes("/maintenance")) {
+		return NextResponse.rewrite(new URL("/maintenance", req.url));
 	}
 
 	// 通常フローへ

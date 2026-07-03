@@ -2,12 +2,26 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "evame",
 	"main": ".open-next/worker.js",
-	"compatibility_date": "2025-04-01",
+	// 2025-08-16 以降で https.request が有効になり @sentry/nextjs がそのまま動く
+	"compatibility_date": "2025-08-16",
 	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 	"assets": {
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
 	},
+	// 画像アップロード時のリサイズ・JPEG 変換 (sharp の置き換え)
+	"images": {
+		"binding": "IMAGES"
+	},
+	// メンテナンスモード用フラグ (Vercel Edge Config の置き換え)
+	// `wrangler kv namespace create MAINTENANCE_KV` で作成して id を埋めたら有効化する
+	// フラグ ON: `wrangler kv key put --binding=MAINTENANCE_KV maintenance true`
+	// "kv_namespaces": [
+	// 	{
+	// 		"binding": "MAINTENANCE_KV",
+	// 		"id": "<MAINTENANCE_KV_NAMESPACE_ID>"
+	// 	}
+	// ],
 	"observability": {
 		"enabled": true
 	},
