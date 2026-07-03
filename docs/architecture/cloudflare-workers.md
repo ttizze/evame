@@ -60,7 +60,7 @@ bun run cf-typegen # バインディングの型 (cloudflare-env.d.ts) を生成
   [Cloudflare Images binding](https://developers.cloudflare.com/images/transform-images/bindings/)
   (`IMAGES`) に置き換え済み。binding が無い環境では元画像をそのままアップロードする。
   保存先は従来どおり R2 (S3 API 経由)。
-- **メンテナンスフラグ** (`proxy.ts`): Vercel Edge Config を Workers KV に置き換え済み。
+- **メンテナンスフラグ** (`middleware.ts`): Vercel Edge Config を Workers KV に置き換え済み。
   使うには `wrangler kv namespace create MAINTENANCE_KV` で作成し、
   `wrangler.jsonc` の `kv_namespaces` のコメントを外して id を設定する。
   ON/OFF は `wrangler kv key put --binding=MAINTENANCE_KV maintenance true`(削除で解除)。

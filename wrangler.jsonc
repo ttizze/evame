@@ -5,6 +5,7 @@
 	// 2025-08-16 以降で https.request が有効になり @sentry/nextjs がそのまま動く
 	"compatibility_date": "2025-08-16",
 	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"minify": true,
 	"assets": {
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
