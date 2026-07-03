@@ -30,7 +30,9 @@ export function makeDb(): DrizzleDbWithPool {
 	}
 
 	// Neon serverless 環境
-	neonConfig.webSocketConstructor = WebSocket;
+	// Cloudflare Workers などネイティブ WebSocket がある環境ではそれを使い、
+	// Node.js では ws パッケージにフォールバックする
+	neonConfig.webSocketConstructor = globalThis.WebSocket ?? WebSocket;
 	return drizzleNeon(connectionString, { schema });
 }
 
