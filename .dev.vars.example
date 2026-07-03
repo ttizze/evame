@@ -1,0 +1,4 @@
+# `wrangler dev` / `opennextjs-cloudflare preview` 用の環境変数
+# このファイルを .dev.vars にコピーして値を埋める (.dev.vars は gitignore 済み)
+NEXTJS_ENV=development
+# DATABASE_URL=postgres://...

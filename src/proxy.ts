@@ -8,12 +8,16 @@ const handleI18nRouting = createMiddleware(routing);
 /* ────────────────────────────────────────────── */
 /* ② メンテナンス判定 → true なら /maintenance へ */
 async function maintenanceGate(req: NextRequest) {
-	// Edge Config のキー名を好きに変えて OK
-	const isOn = await get<boolean>("maintenance");
+	// Edge Config は Vercel 専用なので、接続文字列がある環境でのみ参照する
+	// (Cloudflare Workers など EDGE_CONFIG が無い環境ではスキップして通常フローへ)
+	if (process.env.EDGE_CONFIG) {
+		// Edge Config のキー名を好きに変えて OK
+		const isOn = await get<boolean>("maintenance");
 
-	// フラグが立っていて、かつ自分自身へのループでなければ rewrite
-	if (isOn && !req.url.includes("/maintenance")) {
-		return NextResponse.rewrite(new URL("/maintenance", req.url));
+		// フラグが立っていて、かつ自分自身へのループでなければ rewrite
+		if (isOn && !req.url.includes("/maintenance")) {
+			return NextResponse.rewrite(new URL("/maintenance", req.url));
+		}
 	}
 
 	// 通常フローへ

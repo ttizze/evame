@@ -1,7 +1,11 @@
 import withBundleAnalyzer from "@next/bundle-analyzer";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+
+// `next dev` 中に Cloudflare のバインディング (getCloudflareContext) を使えるようにする
+initOpenNextCloudflareForDev();
 
 const withNextIntl = createNextIntlPlugin();
 const analyzeBundles = withBundleAnalyzer({

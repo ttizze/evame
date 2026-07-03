@@ -1,0 +1,48 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "evame",
+	"main": ".open-next/worker.js",
+	"compatibility_date": "2025-04-01",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"observability": {
+		"enabled": true
+	},
+	// ISR/SSG の再検証を自分自身に投げるためのサービスバインディング
+	"services": [
+		{
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "evame"
+		}
+	],
+	// ISR / "use cache" のキャッシュ本体 (R2)
+	// 事前に `wrangler r2 bucket create evame-next-inc-cache` で作成しておく
+	"r2_buckets": [
+		{
+			"binding": "NEXT_INC_CACHE_R2_BUCKET",
+			"bucket_name": "evame-next-inc-cache"
+		}
+	],
+	// revalidateTag / ISR キュー用の Durable Objects
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "NEXT_CACHE_DO_QUEUE",
+				"class_name": "DOQueueHandler"
+			},
+			{
+				"name": "NEXT_TAG_CACHE_DO_SHARDED",
+				"class_name": "DOShardedTagCache"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": ["DOQueueHandler", "DOShardedTagCache"]
+		}
+	]
+}
