@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+	calculateChunkProgress,
 	calculateTranslationProgress,
 	isTranslationComplete,
+	stepForChunk,
 } from "./progress";
 
 describe("翻訳ジョブの進捗", () => {
@@ -19,5 +21,21 @@ describe("翻訳ジョブの進捗", () => {
 	it("翻訳対象が空なら即時完了として扱う", () => {
 		expect(isTranslationComplete(0, 0)).toBe(true);
 		expect(calculateTranslationProgress(0, 0)).toBe(100);
+	});
+
+	it("チャンク完了順に依存せず旧仕様の進捗を計算する", () => {
+		expect(stepForChunk(3, 0)).toBe(34);
+		expect(stepForChunk(3, 1)).toBe(33);
+		expect(calculateChunkProgress(3, [2, 0])).toBe(67);
+		expect(calculateChunkProgress(3, [0, 2, 2])).toBe(67);
+	});
+
+	it("100個を超えるチャンクでも進捗を100で止める", () => {
+		expect(
+			calculateChunkProgress(
+				101,
+				Array.from({ length: 101 }, (_, i) => i),
+			),
+		).toBe(100);
 	});
 });

@@ -24,15 +24,59 @@ export type UserRow = {
 	id: string;
 	email: string;
 	name: string;
+	handle: string;
+	profile: string;
+	total_points: number;
+	is_ai: number | boolean;
+	image: string;
+	plan: string;
+	provider: string;
+	twitter_handle: string;
+	email_verified: number | boolean | null;
 	created_at: string;
+	updated_at: string;
 };
 
 export type SessionRow = {
 	id: string;
+	token: string;
 	user_id: string;
-	token_hash: string;
 	expires_at: string;
+	ip_address: string | null;
+	user_agent: string | null;
 	created_at: string;
+	updated_at: string;
+};
+
+export type AccountRow = {
+	id: string;
+	user_id: string;
+	provider_id: string;
+	account_id: string;
+	refresh_token: string | null;
+	access_token: string | null;
+	scope: string | null;
+	id_token: string | null;
+	password: string | null;
+	refresh_token_expires_at: string | null;
+	access_token_expires_at: string | null;
+	created_at: string;
+	updated_at: string;
+};
+
+export type VerificationRow = {
+	id: string;
+	identifier: string;
+	value: string;
+	expires_at: string;
+	created_at: string | null;
+	updated_at: string | null;
+};
+
+export type GeminiApiKeyRow = {
+	id: number;
+	api_key: string;
+	user_id: string;
 };
 
 export type ScriptureRow = {
@@ -68,6 +112,12 @@ export type TranslationRow = {
 	updated_at: string;
 	owner_upvoted: number | boolean;
 	viewer_is_upvote?: number | boolean | null;
+	user_name: string;
+	user_handle: string;
+	user_profile: string;
+	user_is_ai: number | boolean;
+	user_total_points: number;
+	owned_by_viewer: number | boolean;
 };
 
 export type TranslationJobRow = {
@@ -90,14 +140,4 @@ export type TranslationVoteRow = {
 	is_upvote: number | boolean;
 	created_at: string;
 	updated_at: string;
-};
-
-export type MagicLinkTokenRow = {
-	id: string;
-	email: string;
-	token_hash: string;
-	expires_at: string;
-	used_at: string | null;
-	created_at: string;
-	request_ip_hash: string;
 };

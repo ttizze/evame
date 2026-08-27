@@ -1,30 +1,83 @@
+import { supportedLocales } from "@/domain/locales";
 import type { ProviderTranslationInput } from "./types";
 
-/**
- * 翻訳プロバイダーへ渡す指示を一箇所で組み立てる。
- * 原文の順序と number を維持させ、JSON以外の出力を受け取らない契約にする。
- */
+/** 旧Evameの翻訳指示を維持し、provider間で同じpromptを使う。 */
 export function generateTranslationPrompt(
 	input: ProviderTranslationInput,
 ): string {
-	const source = input.segments
+	const sourceText = input.segments
 		.map((segment) =>
 			JSON.stringify({ number: segment.number, text: segment.text }),
 		)
 		.join("\n");
-	const context = input.translationContext.trim();
+	const targetLocaleName =
+		supportedLocales.find((locale) => locale.code === input.targetLocale)
+			?.label ?? input.targetLocale;
+	const contextSection = input.translationContext
+		? `
+6. User instructions: Follow these additional translation guidelines provided by the author:
+"${input.translationContext}"
+`
+		: "";
 
-	return [
-		"You translate Buddhist scripture segments for a global multilingual reader.",
-		`Target locale: ${input.targetLocale}`,
-		`Scripture title: ${input.title || "(untitled)"}`,
-		context ? `Additional translator context:\n${context}` : "",
-		"Preserve the meaning, register, names, and segment boundaries. Do not add commentary.",
-		"Return only a JSON object with a translations array. Each item must have the original number and translated text.",
-		"Do not omit, reorder, duplicate, or invent segment numbers.",
-		"Source segments:",
-		source,
-	]
-		.filter((line) => line.length > 0)
-		.join("\n\n");
+	return `
+You are a skilled translator. Your task is to accurately translate the given text into beautiful and natural sentences in the target language. Please follow these guidelines:
+
+1. Maintain consistency: Use the same words for recurring terms with the same meaning to avoid confusing the reader.
+2. Preserve style: Keep a consistent writing style throughout to ensure the translation reads naturally as a single work.
+3. Context awareness: The provided sequence is a passage from one work. The number indicates the sentence's position within that work.
+4. Reader-friendly: While considering the document title, translate in a way that is easy for readers to understand and enjoy.
+5. Proper nouns and titles: Do NOT use phonetic transliteration. If an established translation exists, use it. If not, translate based on meaning rather than sound.
+   - Example: "Silakkhandhavaggapali" should be translated as "戒蘊品" (meaning-based), NOT "シーラッカンダーヴァッガパリ" (phonetic).
+${contextSection}
+Document title: ${input.title}
+
+Translate the following array of texts into ${targetLocaleName}.
+
+Important instructions:
+- Do not explain your process or self-reference.
+- DO NOT ask questions or suggest alternative approaches - translate immediately.
+- Present the translated result as a JSON array conforming to the following schema:
+
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "number": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "text": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "required": ["number", "text"]
+  }
+}
+
+- The "number" must exactly match the input value for each item (do not renumber). 0 is valid and typically used for titles.
+- The "text" should be a string containing the translation. If a paragraph consists of multiple sentences, include all sentences in a single string.
+- Ensure that each "text" field contains at least one character.
+- Maintain the original array structure and order as provided in the input. Output exactly one object for each input item.
+- DO NOT output incomplete objects or bare strings like "1230" or "1231". Each array element MUST be a complete object with both "number" and "text" properties.
+- Output ONLY the translated JSON array. No additional text or explanations.
+- Preserve and output newline characters (\\n) as they are. It is important to maintain line breaks within the text.
+
+Input text:
+${sourceText}
+
+Translate to ${targetLocaleName} and output in the following format:
+[
+  {
+    "number": 0,
+    "text": "Translated text for item 0"
+  },
+  {
+    "number": 1,
+    "text": "Translated text \\n for item 1"
+  },
+  ...
+]`;
 }

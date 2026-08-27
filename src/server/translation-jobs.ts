@@ -13,7 +13,6 @@ import {
 	parsePositiveId,
 	parseSupportedLocale,
 } from "../domain/vote";
-import { hashSessionToken, requireSessionUserInTransaction } from "./session";
 
 const TRANSLATION_JOB_STATUSES = [
 	"PENDING",
@@ -67,9 +66,9 @@ function parseOptionalScriptureId(value: unknown): number | null {
 	return parsePositiveId(value, "scriptureId");
 }
 
-function parseSessionToken(value: unknown): string {
+function parseUserId(value: unknown): string {
 	if (typeof value !== "string" || value.trim().length === 0) {
-		throw new InvalidInputError("セッショントークンが不正です");
+		throw new InvalidInputError("認証済みユーザーIDが不正です");
 	}
 	return value;
 }
@@ -126,7 +125,7 @@ export async function createTranslationJob(
 		throw new InvalidInputError("翻訳ジョブ入力が不正です");
 	}
 	const value = input as Record<string, unknown>;
-	const sessionToken = parseSessionToken(value.sessionToken);
+	const userId = parseUserId(value.userId);
 	const locale = parseSupportedLocale(value.locale);
 	const model = parseNonEmptyText(value.model, "model");
 	const scriptureId = parseOptionalScriptureId(value.scriptureId);
@@ -134,10 +133,7 @@ export async function createTranslationJob(
 		value.total === undefined
 			? 0
 			: parseNonNegativeInteger(value.total, "total");
-	const tokenHash = await hashSessionToken(sessionToken);
-
 	return db.transaction(async (transaction) => {
-		const user = await requireSessionUserInTransaction(transaction, tokenHash);
 		if (scriptureId !== null) {
 			const scripture = await transaction.get<{ id: number }>(
 				"SELECT id FROM scriptures WHERE id = ? LIMIT 1",
@@ -151,7 +147,7 @@ export async function createTranslationJob(
 			`INSERT INTO translation_jobs
 			 (id, scripture_id, locale, status, progress, total, error, model, requested_by)
 			 VALUES (?, ?, ?, 'PENDING', 0, ?, '', ?, ?)`,
-			[id, scriptureId, locale, total, model, user.id],
+			[id, scriptureId, locale, total, model, userId],
 		);
 		const row = await transaction.get<TranslationJobRow>(
 			`SELECT id, scripture_id, locale, status, progress, total, error,
@@ -173,11 +169,9 @@ export async function getTranslationJob(
 	}
 	const value = input as Record<string, unknown>;
 	const jobId = parseNonEmptyText(value.jobId, "jobId");
-	const sessionToken = parseSessionToken(value.sessionToken);
-	const tokenHash = await hashSessionToken(sessionToken);
+	const userId = parseUserId(value.userId);
 	return db.transaction(async (transaction) => {
-		const user = await requireSessionUserInTransaction(transaction, tokenHash);
-		return mapJob(await findOwnedJob(transaction, jobId, user.id));
+		return mapJob(await findOwnedJob(transaction, jobId, userId));
 	});
 }
 
@@ -190,7 +184,7 @@ export async function updateTranslationJob(
 	}
 	const value = input as Record<string, unknown>;
 	const jobId = parseNonEmptyText(value.jobId, "jobId");
-	const sessionToken = parseSessionToken(value.sessionToken);
+	const userId = parseUserId(value.userId);
 	const status = parseStatus(value.status);
 	const progress = parseNonNegativeInteger(value.progress, "progress");
 	const total = parseNonNegativeInteger(value.total, "total");
@@ -198,11 +192,8 @@ export async function updateTranslationJob(
 	if (progress > total && total !== 0) {
 		throw new InvalidInputError("progress は total 以下で指定してください");
 	}
-	const tokenHash = await hashSessionToken(sessionToken);
-
 	return db.transaction(async (transaction) => {
-		const user = await requireSessionUserInTransaction(transaction, tokenHash);
-		await findOwnedJob(transaction, jobId, user.id);
+		await findOwnedJob(transaction, jobId, userId);
 		await transaction.run(
 			`UPDATE translation_jobs
 			 SET status = ?, progress = ?, total = ?, error = ?,

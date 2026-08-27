@@ -17,9 +17,79 @@ function makePlan(): MigrationPlan {
 				id: "owner-1",
 				email: "owner@example.com",
 				name: "Owner",
+				handle: "owner",
+				profile: "Owner profile",
+				totalPoints: 10,
+				isAi: false,
+				image: "https://example.com/owner.png",
+				plan: "free",
+				provider: "Credentials",
+				twitterHandle: "",
+				emailVerified: true,
 				createdAt: "2025-01-01T00:00:00.000Z",
+				updatedAt: "2025-01-02T00:00:00.000Z",
 			},
 		],
+		accounts: [
+			{
+				id: "account-1",
+				userId: "owner-1",
+				providerId: "credentials",
+				accountId: "owner@example.com",
+				refreshToken: "ciphertext-refresh",
+				accessToken: null,
+				scope: null,
+				idToken: null,
+				password: null,
+				refreshTokenExpiresAt: null,
+				accessTokenExpiresAt: null,
+				createdAt: "2025-01-01T00:00:00.000Z",
+				updatedAt: "2025-01-02T00:00:00.000Z",
+			},
+		],
+		sessions: [
+			{
+				id: "session-1",
+				token: "session-value",
+				userId: "owner-1",
+				expiresAt: "2025-02-01T00:00:00.000Z",
+				ipAddress: null,
+				userAgent: "test-agent",
+				createdAt: "2025-01-01T00:00:00.000Z",
+				updatedAt: "2025-01-02T00:00:00.000Z",
+			},
+		],
+		verifications: [
+			{
+				id: "verification-1",
+				identifier: "owner@example.com",
+				value: "verification-value",
+				expiresAt: "2025-02-01T00:00:00.000Z",
+				createdAt: null,
+				updatedAt: null,
+			},
+		],
+		geminiApiKeys: [
+			{
+				id: 4,
+				userId: "owner-1",
+				apiKey: "ciphertext-gemini",
+			},
+		],
+		personalAccessTokens: [],
+		importRuns: [],
+		importFiles: [],
+		likePages: [],
+		notifications: [],
+		segmentTypes: [],
+		pageLocaleTranslationProofs: [],
+		segmentMetadataTypes: [],
+		tags: [],
+		translationContexts: [],
+		pageViews: [],
+		segmentMetadata: [],
+		userSettings: [],
+		tagPages: [],
 		scriptures: [
 			{
 				id: 1,
@@ -27,6 +97,7 @@ function makePlan(): MigrationPlan {
 				title: "Tipitaka",
 				sourceLocale: "pi",
 				ownerUserId: "owner-1",
+				importFileId: null,
 				parentId: null,
 				position: 0,
 				publishedAt: null,
@@ -36,9 +107,11 @@ function makePlan(): MigrationPlan {
 			{
 				id: 2,
 				scriptureId: 1,
+				segmentTypeId: 1,
 				kind: "PRIMARY",
 				position: 0,
 				sourceText: "Tipitaka",
+				textAndOccurrenceHash: "hash-2",
 				createdAt: "2025-01-01T00:00:00.000Z",
 			},
 		],
@@ -84,6 +157,24 @@ function makePlan(): MigrationPlan {
 		report: {
 			counts: {
 				users: 1,
+				accounts: 1,
+				sessions: 1,
+				verifications: 1,
+				geminiApiKeys: 1,
+				personalAccessTokens: 0,
+				importRuns: 0,
+				importFiles: 0,
+				likePages: 0,
+				notifications: 0,
+				segmentTypes: 0,
+				pageLocaleTranslationProofs: 0,
+				segmentMetadataTypes: 0,
+				tags: 0,
+				translationContexts: 0,
+				pageViews: 0,
+				segmentMetadata: 0,
+				userSettings: 0,
+				tagPages: 0,
 				scriptures: 1,
 				segments: 1,
 				translations: 1,
@@ -93,6 +184,24 @@ function makePlan(): MigrationPlan {
 			},
 			skipped: {
 				pages: 0,
+				accounts: 0,
+				sessions: 0,
+				verifications: 0,
+				geminiApiKeys: 0,
+				personalAccessTokens: 0,
+				importRuns: 0,
+				importFiles: 0,
+				likePages: 0,
+				notifications: 0,
+				segmentTypes: 0,
+				pageLocaleTranslationProofs: 0,
+				segmentMetadataTypes: 0,
+				tags: 0,
+				translationContexts: 0,
+				pageViews: 0,
+				segmentMetadata: 0,
+				userSettings: 0,
+				tagPages: 0,
 				segments: 0,
 				translations: 0,
 				translationJobs: 0,
@@ -109,9 +218,13 @@ describe("Turso migration target", () => {
 		const first = buildUpsertStatements(makePlan());
 		const second = buildUpsertStatements(makePlan());
 
-		expect(first).toHaveLength(6);
+		expect(first).toHaveLength(10);
 		expect(first.map(({ sql }) => sql)).toEqual([
 			expect.stringContaining("INSERT INTO users"),
+			expect.stringContaining("INSERT INTO accounts"),
+			expect.stringContaining("INSERT INTO sessions"),
+			expect.stringContaining("INSERT INTO verifications"),
+			expect.stringContaining("INSERT INTO gemini_api_keys"),
 			expect.stringContaining("INSERT INTO scriptures"),
 			expect.stringContaining("INSERT INTO segments"),
 			expect.stringContaining("INSERT INTO translation_jobs"),
@@ -120,9 +233,15 @@ describe("Turso migration target", () => {
 		]);
 		expect(first).toEqual(second);
 		expect(first[1]?.args).toContain("owner-1");
-		for (const { sql, args } of first) {
-			expect(sql).not.toMatch(/libsql|password|secret|token/i);
-			expect(args.join(" ")).not.toMatch(/turso|token|password|secret/i);
+		expect(first[1]?.args).toContain("ciphertext-refresh");
+		expect(first[2]?.args).toContain("session-value");
+		expect(first[4]?.args).toContain("ciphertext-gemini");
+		for (const { sql } of first) {
+			expect(sql).toMatch(/\?/);
+			expect(sql).not.toMatch(/libsql/i);
+			expect(sql).not.toContain("ciphertext-refresh");
+			expect(sql).not.toContain("session-value");
+			expect(sql).not.toContain("ciphertext-gemini");
 		}
 	});
 
@@ -133,6 +252,132 @@ describe("Turso migration target", () => {
 		}));
 		expect(chunkStatements(statements, 400)).toHaveLength(2);
 		expect(() => chunkStatements(statements, 0)).toThrow(/positive integer/);
+	});
+
+	it("補助表の行も依存順のparameterized upsertへ変換する", () => {
+		const plan = makePlan();
+		plan.personalAccessTokens = [
+			{
+				id: 1,
+				keyHash: "pat-hash",
+				userId: "owner-1",
+				name: "CLI",
+				createdAt: "2025-01-01T00:00:00.000Z",
+				lastUsedAt: null,
+			},
+		];
+		plan.importRuns = [
+			{
+				id: 1,
+				startedAt: "2025-01-01T00:00:00.000Z",
+				finishedAt: null,
+				status: "RUNNING",
+			},
+		];
+		plan.importFiles = [
+			{
+				id: 1,
+				importRunId: 1,
+				path: "tipitaka.json",
+				checksum: "checksum",
+				status: "COMPLETED",
+				message: "",
+				createdAt: "2025-01-01T00:00:00.000Z",
+			},
+		];
+		plan.likePages = [
+			{
+				id: 1,
+				pageId: 1,
+				createdAt: "2025-01-01T00:00:00.000Z",
+				userId: "owner-1",
+			},
+		];
+		plan.notifications = [
+			{
+				id: 1,
+				userId: "owner-1",
+				type: "PAGE_LIKE",
+				read: false,
+				createdAt: "2025-01-01T00:00:00.000Z",
+				actorId: "owner-1",
+				pageCommentId: 999,
+				pageId: 999,
+				segmentTranslationId: 999,
+			},
+		];
+		plan.segmentTypes = [{ id: 1, label: "本文", key: "PRIMARY" }];
+		plan.pageLocaleTranslationProofs = [
+			{ id: 1, pageId: 1, locale: "ja", translationProofStatus: "PROOFREAD" },
+		];
+		plan.segmentMetadataTypes = [{ id: 1, key: "edition", label: "Edition" }];
+		plan.tags = [{ id: 1, name: "sutta" }];
+		plan.translationContexts = [
+			{
+				id: 1,
+				userId: "owner-1",
+				name: "context",
+				context: "text",
+				createdAt: "2025-01-01T00:00:00.000Z",
+				updatedAt: "2025-01-01T00:00:00.000Z",
+			},
+		];
+		plan.pageViews = [{ pageId: 1, count: 3 }];
+		plan.segmentMetadata = [
+			{
+				id: 1,
+				segmentId: 2,
+				metadataTypeId: 1,
+				value: "PTS",
+				createdAt: "2025-01-01T00:00:00.000Z",
+			},
+		];
+		plan.userSettings = [
+			{
+				id: 1,
+				userId: "owner-1",
+				targetLocales: '["ja"]',
+				createdAt: "2025-01-01T00:00:00.000Z",
+				updatedAt: "2025-01-01T00:00:00.000Z",
+			},
+		];
+		plan.tagPages = [{ tagId: 1, pageId: 1 }];
+
+		const statements = buildUpsertStatements(plan);
+		const sql = statements.map((statement) => statement.sql);
+		expect(sql).toEqual(
+			expect.arrayContaining([
+				expect.stringContaining("INSERT INTO personal_access_tokens"),
+				expect.stringContaining("INSERT INTO import_runs"),
+				expect.stringContaining("INSERT INTO import_files"),
+				expect.stringContaining("INSERT INTO like_pages"),
+				expect.stringContaining("INSERT INTO notifications"),
+				expect.stringContaining("INSERT INTO segment_types"),
+				expect.stringContaining("INSERT INTO page_locale_translation_proofs"),
+				expect.stringContaining("INSERT INTO segment_metadata_types"),
+				expect.stringContaining("INSERT INTO tags"),
+				expect.stringContaining("INSERT INTO translation_contexts"),
+				expect.stringContaining("INSERT INTO page_views"),
+				expect.stringContaining("INSERT INTO segment_metadata"),
+				expect.stringContaining("INSERT INTO user_settings"),
+				expect.stringContaining("INSERT INTO tag_pages"),
+			]),
+		);
+		const pat = statements.find((statement) =>
+			statement.sql.includes("personal_access_tokens"),
+		);
+		expect(pat?.args).toEqual([
+			1,
+			"pat-hash",
+			"owner-1",
+			"CLI",
+			"2025-01-01T00:00:00.000Z",
+			null,
+		]);
+		for (const statement of statements) {
+			expect(statement.sql).not.toContain("pat-hash");
+			expect(statement.sql).toMatch(/\?/);
+		}
 	});
 
 	it("書き込み後に対象キーだけを件数照合する", async () => {
@@ -149,6 +394,10 @@ describe("Turso migration target", () => {
 							(
 								{
 									users: "users",
+									accounts: "accounts",
+									sessions: "sessions",
+									verifications: "verifications",
+									gemini_api_keys: "geminiApiKeys",
 									scriptures: "scriptures",
 									segments: "segments",
 									translations: "translations",
@@ -164,7 +413,7 @@ describe("Turso migration target", () => {
 		};
 
 		await applyMigrationPlan(target, plan, { batchSize: 2 });
-		expect(batches).toHaveLength(3);
+		expect(batches).toHaveLength(5);
 		expect(await verifyMigrationCounts(target, plan)).toEqual(
 			plan.report.counts,
 		);

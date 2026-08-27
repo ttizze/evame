@@ -50,11 +50,15 @@ export type TranslationJobRequest = {
 	locale: string;
 	model: string;
 	translationContext: string;
-	sessionToken: string;
+	userId: string;
 	idempotencyKey?: string;
 };
 
-export type TranslationProviderName = "openai" | "deepseek" | "gemini";
+export type TranslationProviderName =
+	| "openai"
+	| "deepseek"
+	| "gemini"
+	| "vertex";
 
 export type ProviderTranslationInput = {
 	model: string;
@@ -71,13 +75,19 @@ export type TranslationProvider = {
 export type TranslationProviderConfig = {
 	openaiApiKey?: string;
 	deepseekApiKey?: string;
-	geminiApiKey?: string;
+	/** Gemini providerの認証情報は、ジョブ作成者の復号済みキーを呼び出し時に渡す。 */
+	geminiApiKeyForUser?: (userId: string) => Promise<string | null>;
 	fetchImpl?: typeof fetch;
 	timeoutMs?: number;
 	/** テストまたは専用のAPIプロキシでのみ上書きする。 */
 	openaiBaseUrl?: string;
 	deepseekBaseUrl?: string;
 	geminiBaseUrl?: string;
+	vertexBaseUrl?: string;
+	vertexProjectId?: string;
+	vertexRegion?: string;
+	vertexServiceAccountEmail?: string;
+	vertexServiceAccountPrivateKey?: string;
 };
 
 export type TranslationQueueMessage =
@@ -110,15 +120,6 @@ export type TranslationQueue = {
 		message: TranslationQueueMessage,
 		options?: TranslationQueueSendOptions,
 	): Promise<void>;
-	/** Cloudflare Queues の sendBatch を使える binding だけが実装する。 */
-	sendBatch?(
-		messages: ReadonlyArray<{
-			body: TranslationQueueMessage;
-			contentType?: "json";
-			// Queue bindingの型差を吸収するため任意にする。
-			delaySeconds?: number;
-		}>,
-	): Promise<void>;
 };
 
 export type TranslationDatabase = TursoDatabase;
@@ -132,6 +133,7 @@ export type TranslationQueueMessageLike = {
 };
 
 export type TranslationMessageBatch = {
+	queue: string;
 	messages: readonly TranslationQueueMessageLike[];
 };
 
@@ -141,9 +143,15 @@ export type TranslationWorkerEnv = TranslationProviderConfig & {
 	AUTH_RESEND_KEY: string;
 	EMAIL_FROM: string;
 	APP_BASE_URL: string;
+	AUTH_SECRET: string;
+	AUTH_GOOGLE_ID: string;
+	AUTH_GOOGLE_SECRET: string;
 	TRANSLATION_QUEUE: TranslationQueue;
-	TRANSLATION_MAX_ATTEMPTS?: string;
 	OPENAI_API_KEY?: string;
 	DEEPSEEK_API_KEY?: string;
-	GEMINI_API_KEY?: string;
+	ENCRYPTION_KEY: string;
+	GCP_PROJECT_ID: string;
+	GCP_REGION: string;
+	GCP_SERVICE_ACCOUNT_EMAIL: string;
+	GCP_SERVICE_ACCOUNT_PRIVATE_KEY: string;
 };

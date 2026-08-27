@@ -107,10 +107,7 @@ export type RankedTranslation = {
 	ownerUpvoted?: boolean;
 };
 
-/**
- * 経典所有者の賛成票を最優先にし、その後 point、作成日時、IDの順で決定する。
- * IDを最後のキーにすることで同じ日時の行も順序が揺れない。
- */
+/** 経典所有者の賛成票を最優先にし、その後 point、作成日時の順で決定する。 */
 export function rankTranslations<T extends RankedTranslation>(
 	translations: readonly T[],
 ): T[] {
@@ -132,6 +129,6 @@ export function rankTranslations<T extends RankedTranslation>(
 			return rightTime - leftTime;
 		}
 
-		return right.id - left.id;
+		return 0;
 	});
 }

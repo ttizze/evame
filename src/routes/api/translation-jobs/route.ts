@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { getSessionTokenFromRequest } from "@/auth/cookies";
-import { DomainError, InvalidInputError, NotFoundError } from "@/domain/errors";
+import type { Auth } from "@/auth/auth";
+import { getSessionUser } from "@/auth/session";
+import {
+	DomainError,
+	InvalidInputError,
+	NotFoundError,
+	UnauthenticatedError,
+} from "@/domain/errors";
 import { getDatabase } from "@/server/runtime";
 import { getTranslationQueue } from "@/translation/runtime";
 import { createAndEnqueueTranslationJob } from "@/translation/service";
@@ -13,6 +19,7 @@ import { parseTranslationJobRequest } from "@/translation/validation";
 type JobDependencies = {
 	db: TranslationDatabase;
 	queue: TranslationQueue;
+	auth?: Auth;
 };
 
 function jsonResponse(body: unknown, status: number): Response {
@@ -34,15 +41,6 @@ function errorStatus(error: unknown): number {
 	return 503;
 }
 
-function authorizationToken(request: Request): string | null {
-	const authorization = request.headers.get("authorization");
-	if (authorization?.startsWith("Bearer ")) {
-		const token = authorization.slice("Bearer ".length).trim();
-		if (token) return token;
-	}
-	return getSessionTokenFromRequest(request);
-}
-
 async function requestBody(
 	request: Request,
 ): Promise<Record<string, unknown> | null> {
@@ -62,7 +60,6 @@ export async function handleCreateTranslationJob(
 ): Promise<Response> {
 	const body = await requestBody(request);
 	if (!body) return jsonResponse({ error: "invalid_request" }, 400);
-	const token = authorizationToken(request);
 	try {
 		const idempotencyHeader = request.headers.get("idempotency-key")?.trim();
 		if (
@@ -72,11 +69,13 @@ export async function handleCreateTranslationJob(
 		) {
 			throw new InvalidInputError("Idempotency-Keyがbodyと一致しません");
 		}
+		const user = await getSessionUser(request, dependencies.auth);
+		if (!user?.id) throw new UnauthenticatedError();
 		const parsed = parseTranslationJobRequest(
 			idempotencyHeader && body.idempotencyKey === undefined
 				? { ...body, idempotencyKey: idempotencyHeader }
 				: body,
-			token ?? undefined,
+			user.id,
 		);
 		const job = await createAndEnqueueTranslationJob(
 			dependencies.db,

@@ -20,6 +20,13 @@ export type TranslationCandidate = {
 	voteCount: number;
 	votedByViewer: boolean | null;
 	createdAt?: string;
+	userName: string;
+	userHandle: string;
+	userProfile: string;
+	userIsAi: boolean;
+	userTotalPoints: number;
+	ownedByViewer: boolean;
+	source?: "USER" | "AI";
 };
 
 export type ScriptureSegment = {

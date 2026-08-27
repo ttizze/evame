@@ -8,9 +8,7 @@ import {
 	ForbiddenError,
 	InvalidInputError,
 	NotFoundError,
-	UnauthenticatedError,
 } from "../domain/errors";
-import { hashSessionToken } from "./session";
 import {
 	createTranslationJob,
 	getTranslationJob,
@@ -18,13 +16,9 @@ import {
 } from "./translation-jobs";
 
 function createJobDb(
-	options: {
-		authenticated?: boolean;
-		scriptureExists?: boolean;
-		job?: Partial<TranslationJobRow>;
-	} = {},
+	options: { scriptureExists?: boolean; job?: Partial<TranslationJobRow> } = {},
 ) {
-	const token = "job-session";
+	const userId = "user-1";
 	const state = {
 		job: {
 			id: "job-1",
@@ -43,17 +37,6 @@ function createJobDb(
 	};
 	const db: TursoDatabase = {
 		async get<T>(sql: string, args = []) {
-			if (sql.includes("FROM sessions AS s")) {
-				if (options.authenticated === false) return undefined;
-				if (String(args[0]) !== (await hashSessionToken(token)))
-					return undefined;
-				return {
-					id: "user-1",
-					email: "user@example.com",
-					name: "User",
-					expires_at: "2099-01-01T00:00:00.000Z",
-				} as T;
-			}
 			if (sql.includes("SELECT id FROM scriptures")) {
 				return options.scriptureExists === false ? undefined : ({ id: 7 } as T);
 			}
@@ -93,14 +76,14 @@ function createJobDb(
 		},
 		async close() {},
 	};
-	return { db, state, token };
+	return { db, state, userId };
 }
 
 describe("翻訳ジョブserver function", () => {
 	test("作成したジョブをTEXTのIDで取得・更新できる", async () => {
-		const { db, state, token } = createJobDb();
+		const { db, state, userId } = createJobDb();
 		const created = await createTranslationJob(db, {
-			sessionToken: token,
+			userId,
 			locale: "ja",
 			model: "test-model",
 			scriptureId: 7,
@@ -110,12 +93,12 @@ describe("翻訳ジョブserver function", () => {
 		expect(created.id).toBe(state.job.id);
 		expect(typeof created.id).toBe("string");
 		expect(
-			await getTranslationJob(db, { jobId: created.id, sessionToken: token }),
+			await getTranslationJob(db, { jobId: created.id, userId }),
 		).toMatchObject({ id: created.id, requestedBy: "user-1" });
 		expect(
 			await updateTranslationJob(db, {
 				jobId: created.id,
-				sessionToken: token,
+				userId,
 				status: "COMPLETED",
 				progress: 2,
 				total: 2,
@@ -124,21 +107,21 @@ describe("翻訳ジョブserver function", () => {
 		).toMatchObject({ id: created.id, status: "COMPLETED", progress: 2 });
 	});
 
-	test("未認証・不存在・所有者違いを拒否する", async () => {
-		const unauthenticated = createJobDb({ authenticated: false });
+	test("不正なユーザーID・不存在・所有者違いを拒否する", async () => {
+		const unauthenticated = createJobDb();
 		await expect(
 			createTranslationJob(unauthenticated.db, {
-				sessionToken: unauthenticated.token,
+				userId: "",
 				locale: "ja",
 				model: "test-model",
 			}),
-		).rejects.toBeInstanceOf(UnauthenticatedError);
+		).rejects.toBeInstanceOf(InvalidInputError);
 
 		const missing = createJobDb();
 		await expect(
 			getTranslationJob(missing.db, {
 				jobId: "missing",
-				sessionToken: missing.token,
+				userId: missing.userId,
 			}),
 		).rejects.toBeInstanceOf(NotFoundError);
 
@@ -146,19 +129,19 @@ describe("翻訳ジョブserver function", () => {
 		await expect(
 			getTranslationJob(otherOwner.db, {
 				jobId: "job-1",
-				sessionToken: otherOwner.token,
+				userId: otherOwner.userId,
 			}),
 		).rejects.toBeInstanceOf(ForbiddenError);
 	});
 
 	test("不正なジョブID・経典ID・進捗を拒否する", async () => {
-		const { db, token } = createJobDb({ scriptureExists: false });
+		const { db, userId } = createJobDb({ scriptureExists: false });
 		await expect(
-			getTranslationJob(db, { jobId: " ", sessionToken: token }),
+			getTranslationJob(db, { jobId: " ", userId }),
 		).rejects.toBeInstanceOf(InvalidInputError);
 		await expect(
 			createTranslationJob(db, {
-				sessionToken: token,
+				userId,
 				locale: "ja",
 				model: "test-model",
 				scriptureId: 99,
@@ -166,7 +149,7 @@ describe("翻訳ジョブserver function", () => {
 		).rejects.toBeInstanceOf(NotFoundError);
 		await expect(
 			createTranslationJob(db, {
-				sessionToken: token,
+				userId,
 				locale: "eo",
 				model: "test-model",
 			}),
@@ -174,7 +157,7 @@ describe("翻訳ジョブserver function", () => {
 		await expect(
 			updateTranslationJob(db, {
 				jobId: "job-1",
-				sessionToken: token,
+				userId,
 				status: "IN_PROGRESS",
 				progress: 3,
 				total: 2,

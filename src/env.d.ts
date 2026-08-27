@@ -9,11 +9,17 @@ declare global {
 		AUTH_RESEND_KEY: string;
 		EMAIL_FROM: string;
 		APP_BASE_URL: string;
+		AUTH_SECRET: string;
+		AUTH_GOOGLE_ID: string;
+		AUTH_GOOGLE_SECRET: string;
 		TRANSLATION_QUEUE: Queue<TranslationQueueMessage>;
-		TRANSLATION_MAX_ATTEMPTS?: string;
+		ENCRYPTION_KEY: string;
+		GCP_PROJECT_ID: string;
+		GCP_REGION: string;
+		GCP_SERVICE_ACCOUNT_EMAIL: string;
+		GCP_SERVICE_ACCOUNT_PRIVATE_KEY: string;
 		OPENAI_API_KEY?: string;
 		DEEPSEEK_API_KEY?: string;
-		GEMINI_API_KEY?: string;
 	}
 
 	namespace Cloudflare {
@@ -23,11 +29,17 @@ declare global {
 			AUTH_RESEND_KEY: string;
 			EMAIL_FROM: string;
 			APP_BASE_URL: string;
+			AUTH_SECRET: string;
+			AUTH_GOOGLE_ID: string;
+			AUTH_GOOGLE_SECRET: string;
 			TRANSLATION_QUEUE: Queue<TranslationQueueMessage>;
-			TRANSLATION_MAX_ATTEMPTS?: string;
+			ENCRYPTION_KEY: string;
+			GCP_PROJECT_ID: string;
+			GCP_REGION: string;
+			GCP_SERVICE_ACCOUNT_EMAIL: string;
+			GCP_SERVICE_ACCOUNT_PRIVATE_KEY: string;
 			OPENAI_API_KEY?: string;
 			DEEPSEEK_API_KEY?: string;
-			GEMINI_API_KEY?: string;
 		}
 	}
 }

@@ -53,6 +53,12 @@ const detail: ScriptureDetail = {
 					text: "ものごとは心に導かれ、心を主とし、心から成る。\n汚れた心で語り、行うなら、苦しみはその人につき従う。",
 					voteCount: 12,
 					votedByViewer: false,
+					userName: "Translator One",
+					userHandle: "translator-one",
+					userProfile: "",
+					userIsAi: false,
+					userTotalPoints: 10,
+					ownedByViewer: true,
 				},
 				{
 					id: "translation-b",
@@ -60,6 +66,12 @@ const detail: ScriptureDetail = {
 					text: "すべては心を先として、心を最上とし、心によって作られる。",
 					voteCount: 8,
 					votedByViewer: true,
+					userName: "Translator Two",
+					userHandle: "translator-two",
+					userProfile: "",
+					userIsAi: false,
+					userTotalPoints: 8,
+					ownedByViewer: false,
 				},
 			],
 		},
@@ -71,6 +83,12 @@ const detail: ScriptureDetail = {
 			text: "ものごとは心に導かれ、心を主とし、心から成る。\n汚れた心で語り、行うなら、苦しみはその人につき従う。",
 			voteCount: 12,
 			votedByViewer: false,
+			userName: "Translator One",
+			userHandle: "translator-one",
+			userProfile: "",
+			userIsAi: false,
+			userTotalPoints: 10,
+			ownedByViewer: true,
 		},
 		{
 			id: "translation-b",
@@ -78,6 +96,12 @@ const detail: ScriptureDetail = {
 			text: "すべては心を先として、心を最上とし、心によって作られる。",
 			voteCount: 8,
 			votedByViewer: true,
+			userName: "Translator Two",
+			userHandle: "translator-two",
+			userProfile: "",
+			userIsAi: false,
+			userTotalPoints: 8,
+			ownedByViewer: false,
 		},
 	],
 	annotationLinks: [],
@@ -131,6 +155,15 @@ describe("ScriptureIndex", () => {
 		expect(
 			screen.getByText("公開されている仏典はまだありません。"),
 		).toBeInTheDocument();
+	});
+
+	it("一覧は既存画面と同じ番号付きの境界線行で表示する", () => {
+		render(<ScriptureIndex items={items} />);
+
+		const firstRow = screen.getAllByRole("article")[0];
+		expect(firstRow).toHaveClass("border-b");
+		expect(firstRow).not.toHaveClass("rounded-2xl");
+		expect(firstRow.querySelector("a > h2")).toHaveTextContent("法句経 1");
 	});
 });
 
@@ -186,6 +219,9 @@ describe("ScriptureReader", () => {
 		expect(screen.getByRole("status").textContent).toContain(
 			"投票するにはログインが必要です",
 		);
+		expect(
+			screen.getByRole("link", { name: "投票するにはログインが必要です。" }),
+		).toHaveAttribute("href", "/login?locale=ja&redirect=%2Fja%2Fdhammapada-1");
 	});
 
 	it("投票が成功すると対象候補の票数と状態を更新する", async () => {
@@ -234,6 +270,19 @@ describe("ScriptureReader", () => {
 		});
 	});
 
+	it("閲覧の表示切替と投票は既存shadcnコントロールの見た目を使う", () => {
+		render(
+			<ScriptureReader authenticated={true} detail={detail} onVote={vi.fn()} />,
+		);
+
+		expect(screen.getByRole("button", { name: "原文のみ" })).toHaveClass(
+			"border-input",
+		);
+		expect(
+			screen.getAllByRole("button", { name: "この訳に投票" })[0],
+		).toHaveClass("hover:bg-accent");
+	});
+
 	it("複数segmentの候補を混ぜず、リンクされたCOMMENTARYを注釈として表示する", () => {
 		const segmentedDetail: ScriptureDetail = {
 			...detail,
@@ -251,6 +300,12 @@ describe("ScriptureReader", () => {
 							text: "First translation",
 							voteCount: 4,
 							votedByViewer: null,
+							userName: "First translator",
+							userHandle: "first-translator",
+							userProfile: "",
+							userIsAi: false,
+							userTotalPoints: 4,
+							ownedByViewer: false,
 						},
 					],
 				},
@@ -273,6 +328,12 @@ describe("ScriptureReader", () => {
 							text: "Second translation",
 							voteCount: 2,
 							votedByViewer: null,
+							userName: "Second translator",
+							userHandle: "second-translator",
+							userProfile: "",
+							userIsAi: false,
+							userTotalPoints: 2,
+							ownedByViewer: false,
 						},
 					],
 				},
@@ -315,6 +376,137 @@ describe("ScriptureReader", () => {
 			within(secondSource as HTMLElement).queryByText("First translation"),
 		).not.toBeInTheDocument();
 	});
+
+	it("候補の作者情報とAIラベルを表示し、所有者だけに削除操作を出す", async () => {
+		const user = userEvent.setup();
+		const onDeleteTranslation = vi.fn().mockResolvedValue(undefined);
+		const authoredDetail: ScriptureDetail = {
+			...detail,
+			segments: detail.segments.map((segment) => ({
+				...segment,
+				translations: segment.translations.map((candidate, index) => ({
+					...candidate,
+					userName: index === 0 ? "Alice" : "Evame AI",
+					userHandle: index === 0 ? "alice" : "evame-ai",
+					userProfile: index === 0 ? "研究者" : "",
+					userIsAi: index === 1,
+					userTotalPoints: index === 0 ? 18 : 42,
+					ownedByViewer: index === 0,
+				})),
+			})),
+			translations: detail.translations.map((candidate, index) => ({
+				...candidate,
+				userName: index === 0 ? "Alice" : "Evame AI",
+				userHandle: index === 0 ? "alice" : "evame-ai",
+				userProfile: index === 0 ? "研究者" : "",
+				userIsAi: index === 1,
+				userTotalPoints: index === 0 ? 18 : 42,
+				ownedByViewer: index === 0,
+			})),
+		};
+
+		const { unmount } = render(
+			<ScriptureReader
+				authenticated={true}
+				detail={authoredDetail}
+				onDeleteTranslation={onDeleteTranslation}
+				onVote={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByText("作成者: Alice (@alice)")).toBeInTheDocument();
+		expect(
+			screen.getByText("作成者: Evame AI (@evame-ai)"),
+		).toBeInTheDocument();
+		expect(screen.getByText("(AI翻訳)")).toBeInTheDocument();
+		expect(screen.getAllByRole("button", { name: "削除" })).toHaveLength(1);
+
+		await user.click(screen.getByRole("button", { name: "削除" }));
+		expect(onDeleteTranslation).toHaveBeenCalledWith("translation-a");
+		expect(screen.queryByText(/ものごとは心に導かれ/)).not.toBeInTheDocument();
+
+		unmount();
+		render(
+			<ScriptureReader
+				authenticated={false}
+				detail={authoredDetail}
+				onDeleteTranslation={onDeleteTranslation}
+				onVote={vi.fn()}
+			/>,
+		);
+		expect(
+			screen.queryByRole("button", { name: "削除" }),
+		).not.toBeInTheDocument();
+	});
+
+	it("代替候補は初期3件に制限し、すべて表示と折りたたみを切り替える", async () => {
+		const user = userEvent.setup();
+		const candidates = Array.from({ length: 5 }, (_, index) => ({
+			...detail.segments[0].translations[0],
+			id: `translation-${index + 1}`,
+			text: index === 0 ? "Best translation" : `Alternative ${index}`,
+			voteCount: 10 - index,
+			ownedByViewer: false,
+		}));
+		const manyTranslationsDetail: ScriptureDetail = {
+			...detail,
+			segments: [
+				{
+					...detail.segments[0],
+					translations: candidates,
+				},
+			],
+			translations: candidates,
+		};
+
+		render(
+			<ScriptureReader
+				authenticated={true}
+				detail={manyTranslationsDetail}
+				onVote={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByText("Alternative 1")).toBeInTheDocument();
+		expect(screen.getByText("Alternative 3")).toBeInTheDocument();
+		expect(screen.queryByText("Alternative 4")).not.toBeInTheDocument();
+		const showAll = screen.getByRole("button", {
+			name: "すべての翻訳を表示",
+		});
+		expect(showAll).toHaveAttribute("aria-expanded", "false");
+		await user.click(showAll);
+		expect(screen.getByText("Alternative 4")).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "翻訳を折りたたむ" }),
+		).toHaveAttribute("aria-expanded", "true");
+	});
+
+	it("既存の5言語コピーを使い、未対応localeは英語へフォールバックする", () => {
+		render(
+			<ScriptureReader
+				authenticated={true}
+				detail={{ ...detail, displayLocale: "es" }}
+				locale="es"
+				onVote={vi.fn()}
+			/>,
+		);
+		expect(
+			screen.getByRole("heading", { name: "Traducciones candidatas" }),
+		).toBeInTheDocument();
+
+		const { unmount } = render(
+			<ScriptureReader
+				authenticated={true}
+				detail={{ ...detail, displayLocale: "ar" }}
+				locale="ar"
+				onVote={vi.fn()}
+			/>,
+		);
+		expect(
+			screen.getByRole("heading", { name: "Translation candidates" }),
+		).toBeInTheDocument();
+		unmount();
+	});
 });
 
 describe("TranslationForm", () => {
@@ -326,6 +518,12 @@ describe("TranslationForm", () => {
 			text: "The mind precedes all things.",
 			voteCount: 0,
 			votedByViewer: null,
+			userName: "Translator",
+			userHandle: "translator",
+			userProfile: "",
+			userIsAi: false,
+			userTotalPoints: 0,
+			ownedByViewer: true,
 		});
 		render(
 			<TranslationForm
@@ -368,8 +566,15 @@ describe("TranslationForm", () => {
 			screen.queryByRole("button", { name: "翻訳案を提出" }),
 		).not.toBeInTheDocument();
 		expect(
-			screen.getByText("翻訳案を提出するにはログインしてください。"),
+			screen.getByRole("link", {
+				name: "翻訳案を提出するにはログインしてください。",
+			}),
 		).toBeInTheDocument();
+		expect(
+			screen.getByRole("link", {
+				name: "翻訳案を提出するにはログインしてください。",
+			}),
+		).toHaveAttribute("href", "/login?locale=ja&redirect=%2Fja");
 	});
 });
 
@@ -446,5 +651,10 @@ describe("AiTranslationJob", () => {
 		expect(
 			screen.queryByRole("button", { name: "AI翻訳を開始" }),
 		).not.toBeInTheDocument();
+		expect(
+			screen.getByRole("link", {
+				name: "AI翻訳を利用するにはログインしてください。",
+			}),
+		).toHaveAttribute("href", "/login?locale=ja&redirect=%2Fja");
 	});
 });

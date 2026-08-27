@@ -12,7 +12,7 @@ describe("Resend HTTPメール送信", () => {
 			apiKey: "resend-secret",
 			from: "Digital Buddhism <noreply@example.com>",
 			email: "person@example.com",
-			link: "https://evame.example/api/auth/verify?token=opaque",
+			link: "https://evame.example/api/auth/magic-link/verify?token=opaque",
 			fetchImpl: fetchMock,
 		});
 
@@ -36,7 +36,7 @@ describe("Resend HTTPメール送信", () => {
 			"If you did not request this email, you can ignore it.",
 		);
 		expect(body.html).toContain(
-			"https://evame.example/api/auth/verify?token=opaque",
+			"https://evame.example/api/auth/magic-link/verify?token=opaque",
 		);
 	});
 
@@ -50,7 +50,7 @@ describe("Resend HTTPメール送信", () => {
 				apiKey: "resend-secret",
 				from: "Digital Buddhism <noreply@example.com>",
 				email: "person@example.com",
-				link: "https://evame.example/api/auth/verify?token=opaque",
+				link: "https://evame.example/api/auth/magic-link/verify?token=opaque",
 				fetchImpl: fetchMock,
 			}),
 		).rejects.toThrow("メール送信に失敗しました");

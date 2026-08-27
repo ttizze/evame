@@ -11,12 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as LocaleIndexRouteImport } from './routes/$locale/index'
 import { Route as LocaleSlugRouteImport } from './routes/$locale/$slug'
 import { Route as ApiTranslationJobsRouteRouteImport } from './routes/api/translation-jobs/route'
-import { Route as ApiAuthLogoutRouteImport } from './routes/api/auth/logout'
-import { Route as ApiAuthRequestRouteImport } from './routes/api/auth/request'
-import { Route as ApiAuthVerifyRouteImport } from './routes/api/auth/verify'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -26,6 +26,16 @@ const IndexRoute = IndexRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LocaleIndexRoute = LocaleIndexRouteImport.update({
@@ -43,95 +53,85 @@ const ApiTranslationJobsRouteRoute = ApiTranslationJobsRouteRouteImport.update({
   path: '/api/translation-jobs',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAuthLogoutRoute = ApiAuthLogoutRouteImport.update({
-  id: '/api/auth/logout',
-  path: '/api/auth/logout',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAuthRequestRoute = ApiAuthRequestRouteImport.update({
-  id: '/api/auth/request',
-  path: '/api/auth/request',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAuthVerifyRoute = ApiAuthVerifyRouteImport.update({
-  id: '/api/auth/verify',
-  path: '/api/auth/verify',
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/translation-jobs': typeof ApiTranslationJobsRouteRoute
   '/$locale/$slug': typeof LocaleSlugRoute
   '/$locale/': typeof LocaleIndexRoute
-  '/api/auth/logout': typeof ApiAuthLogoutRoute
-  '/api/auth/request': typeof ApiAuthRequestRoute
-  '/api/auth/verify': typeof ApiAuthVerifyRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/translation-jobs': typeof ApiTranslationJobsRouteRoute
   '/$locale/$slug': typeof LocaleSlugRoute
   '/$locale': typeof LocaleIndexRoute
-  '/api/auth/logout': typeof ApiAuthLogoutRoute
-  '/api/auth/request': typeof ApiAuthRequestRoute
-  '/api/auth/verify': typeof ApiAuthVerifyRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/translation-jobs': typeof ApiTranslationJobsRouteRoute
   '/$locale/$slug': typeof LocaleSlugRoute
   '/$locale/': typeof LocaleIndexRoute
-  '/api/auth/logout': typeof ApiAuthLogoutRoute
-  '/api/auth/request': typeof ApiAuthRequestRoute
-  '/api/auth/verify': typeof ApiAuthVerifyRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/api/translation-jobs'
     | '/$locale/$slug'
     | '/$locale/'
-    | '/api/auth/logout'
-    | '/api/auth/request'
-    | '/api/auth/verify'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/api/translation-jobs'
     | '/$locale/$slug'
     | '/$locale'
-    | '/api/auth/logout'
-    | '/api/auth/request'
-    | '/api/auth/verify'
+    | '/api/auth/$'
   id:
     | '__root__'
     | '/'
     | '/login'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/api/translation-jobs'
     | '/$locale/$slug'
     | '/$locale/'
-    | '/api/auth/logout'
-    | '/api/auth/request'
-    | '/api/auth/verify'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiTranslationJobsRouteRoute: typeof ApiTranslationJobsRouteRoute
   LocaleSlugRoute: typeof LocaleSlugRoute
   LocaleIndexRoute: typeof LocaleIndexRoute
-  ApiAuthLogoutRoute: typeof ApiAuthLogoutRoute
-  ApiAuthRequestRoute: typeof ApiAuthRequestRoute
-  ApiAuthVerifyRoute: typeof ApiAuthVerifyRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -148,6 +148,20 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$locale/': {
@@ -171,25 +185,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTranslationJobsRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/auth/logout': {
-      id: '/api/auth/logout'
-      path: '/api/auth/logout'
-      fullPath: '/api/auth/logout'
-      preLoaderRoute: typeof ApiAuthLogoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/request': {
-      id: '/api/auth/request'
-      path: '/api/auth/request'
-      fullPath: '/api/auth/request'
-      preLoaderRoute: typeof ApiAuthRequestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/auth/verify': {
-      id: '/api/auth/verify'
-      path: '/api/auth/verify'
-      fullPath: '/api/auth/verify'
-      preLoaderRoute: typeof ApiAuthVerifyRouteImport
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -198,12 +198,12 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiTranslationJobsRouteRoute: ApiTranslationJobsRouteRoute,
   LocaleSlugRoute: LocaleSlugRoute,
   LocaleIndexRoute: LocaleIndexRoute,
-  ApiAuthLogoutRoute: ApiAuthLogoutRoute,
-  ApiAuthRequestRoute: ApiAuthRequestRoute,
-  ApiAuthVerifyRoute: ApiAuthVerifyRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

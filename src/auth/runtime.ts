@@ -1,15 +1,15 @@
-import type { AuthService } from "./service";
+import type { Auth } from "./auth";
 
-let configuredService: AuthService | undefined;
+let configuredAuth: Auth | undefined;
 
-/** 起動時にDBアダプターを注入する。リクエストごとの秘密値は保持しない。 */
-export function configureAuthService(service: AuthService): void {
-	configuredService = service;
+/** Better AuthをTanStack Startのrouteへ注入する。Worker secretsはここへ保持しない。 */
+export function configureAuth(auth: Auth): void {
+	configuredAuth = auth;
 }
 
-export function getAuthService(): AuthService {
-	if (!configuredService) {
-		throw new Error("認証サービスが設定されていません");
+export function getAuth(): Auth {
+	if (!configuredAuth) {
+		throw new Error("認証が設定されていません");
 	}
-	return configuredService;
+	return configuredAuth;
 }

@@ -15,11 +15,6 @@ import {
 	parseTranslationInput,
 	rankTranslations,
 } from "../domain/vote";
-import {
-	getSessionUser,
-	hashSessionToken,
-	requireSessionUserInTransaction,
-} from "./session";
 
 export type TranslationCandidate = {
 	id: number;
@@ -34,44 +29,38 @@ export type TranslationCandidate = {
 	aiJobId: string | null;
 	ownerUpvoted: boolean;
 	votedByViewer: boolean | null;
+	userName: string;
+	userHandle: string;
+	userProfile: string;
+	userIsAi: boolean;
+	userTotalPoints: number;
+	ownedByViewer: boolean;
 };
 
 type ListTranslationsInput = {
 	segmentId: number;
 	locale: string;
-	sessionToken?: string | null;
+	viewerUserId: string | null;
 };
-
-async function readViewerId(
-	db: SqlExecutor,
-	sessionToken: unknown,
-): Promise<string | null> {
-	if (sessionToken === undefined || sessionToken === null) return null;
-	if (typeof sessionToken !== "string" || sessionToken.trim().length === 0) {
-		throw new InvalidInputError("セッショントークンが不正です");
-	}
-	const user = await getSessionUser(db, sessionToken);
-	return user?.id ?? null;
-}
 
 function parseListInput(input: unknown): ListTranslationsInput {
 	if (typeof input !== "object" || input === null || Array.isArray(input)) {
 		throw new InvalidInputError("翻訳検索条件が不正です");
 	}
 	const value = input as Record<string, unknown>;
-	const sessionToken = value.sessionToken;
+	const viewerUserId = value.viewerUserId;
 	if (
-		sessionToken !== undefined &&
-		sessionToken !== null &&
-		typeof sessionToken !== "string"
+		viewerUserId !== undefined &&
+		viewerUserId !== null &&
+		(typeof viewerUserId !== "string" || viewerUserId.trim().length === 0)
 	) {
-		throw new InvalidInputError("セッショントークンが不正です");
+		throw new InvalidInputError("認証済みユーザーIDが不正です");
 	}
 	return {
 		segmentId: parsePositiveId(value.segmentId, "segmentId"),
 		locale: parseSupportedLocale(value.locale),
-		sessionToken:
-			sessionToken === undefined || sessionToken === null ? null : sessionToken,
+		viewerUserId:
+			viewerUserId === undefined || viewerUserId === null ? null : viewerUserId,
 	};
 }
 
@@ -87,12 +76,38 @@ function mapTranslation(row: TranslationRow): TranslationCandidate {
 		throw new InvalidInputError("翻訳のsourceが不正です");
 	}
 	if (
+		typeof row.user_name !== "string" ||
+		typeof row.user_handle !== "string" ||
+		typeof row.user_profile !== "string"
+	) {
+		throw new InvalidInputError("翻訳作者情報が不正です");
+	}
+	if (
+		row.user_is_ai !== true &&
+		row.user_is_ai !== false &&
+		row.user_is_ai !== 0 &&
+		row.user_is_ai !== 1
+	) {
+		throw new InvalidInputError("翻訳作者のAI状態が不正です");
+	}
+	if (!Number.isSafeInteger(row.user_total_points)) {
+		throw new InvalidInputError("翻訳作者のポイントが不正です");
+	}
+	if (
 		row.owner_upvoted !== true &&
 		row.owner_upvoted !== false &&
 		row.owner_upvoted !== 0 &&
 		row.owner_upvoted !== 1
 	) {
 		throw new InvalidInputError("翻訳のowner vote状態が不正です");
+	}
+	if (
+		row.owned_by_viewer !== true &&
+		row.owned_by_viewer !== false &&
+		row.owned_by_viewer !== 0 &&
+		row.owned_by_viewer !== 1
+	) {
+		throw new InvalidInputError("翻訳の所有状態が不正です");
 	}
 	let votedByViewer: boolean | null = null;
 	if (row.viewer_is_upvote !== undefined && row.viewer_is_upvote !== null) {
@@ -117,6 +132,12 @@ function mapTranslation(row: TranslationRow): TranslationCandidate {
 		aiJobId: row.ai_job_id,
 		ownerUpvoted: row.owner_upvoted === true || row.owner_upvoted === 1,
 		votedByViewer,
+		userName: row.user_name,
+		userHandle: row.user_handle,
+		userProfile: row.user_profile,
+		userIsAi: row.user_is_ai === true || row.user_is_ai === 1,
+		userTotalPoints: row.user_total_points,
+		ownedByViewer: row.owned_by_viewer === true || row.owned_by_viewer === 1,
 	};
 }
 
@@ -131,11 +152,16 @@ export async function listTranslationsForSegments(
 	const rows = await db.all<TranslationRow>(
 		`SELECT t.id, t.segment_id, t.locale, t.text, t.point, t.created_at,
 				t.updated_at, t.user_id, t.source, t.ai_job_id,
+				author.name AS user_name, author.handle AS user_handle,
+				author.profile AS user_profile, author.is_ai AS user_is_ai,
+				author.total_points AS user_total_points,
 				CASE WHEN owner_vote.translation_id IS NULL THEN 0 ELSE 1 END AS owner_upvoted,
-				viewer_vote.is_upvote AS viewer_is_upvote
+				viewer_vote.is_upvote AS viewer_is_upvote,
+				CASE WHEN t.user_id = ? THEN 1 ELSE 0 END AS owned_by_viewer
 		 FROM translations AS t
 		 INNER JOIN segments AS s ON s.id = t.segment_id
 		 INNER JOIN scriptures AS scripture ON scripture.id = s.scripture_id
+		 INNER JOIN users AS author ON author.id = t.user_id
 		 LEFT JOIN translation_votes AS owner_vote
 			ON owner_vote.translation_id = t.id
 			AND owner_vote.user_id = scripture.owner_user_id
@@ -147,8 +173,8 @@ export async function listTranslationsForSegments(
 			AND t.locale = ?
 			AND scripture.published_at IS NOT NULL
 		 ORDER BY t.segment_id, owner_upvoted DESC, t.point DESC,
-			t.created_at DESC, t.id DESC`,
-		[viewerUserId, ...segmentIds, locale],
+			t.created_at DESC`,
+		[viewerUserId, viewerUserId, ...segmentIds, locale],
 	);
 	return rows.map(mapTranslation);
 }
@@ -157,8 +183,7 @@ export async function listTranslations(
 	db: SqlExecutor,
 	input: unknown,
 ): Promise<TranslationCandidate[]> {
-	const { segmentId, locale, sessionToken } = parseListInput(input);
-	const viewerUserId = await readViewerId(db, sessionToken);
+	const { segmentId, locale, viewerUserId } = parseListInput(input);
 	const segment = await db.get<{ id: number }>(
 		`SELECT segments.id
 		 FROM segments
@@ -178,7 +203,7 @@ type AddTranslationInput = {
 	segmentId: number;
 	locale: string;
 	text: string;
-	sessionToken: string;
+	userId: string;
 };
 
 function parseAddInput(input: unknown): AddTranslationInput {
@@ -186,17 +211,14 @@ function parseAddInput(input: unknown): AddTranslationInput {
 		throw new InvalidInputError("翻訳入力が不正です");
 	}
 	const value = input as Record<string, unknown>;
-	if (
-		typeof value.sessionToken !== "string" ||
-		value.sessionToken.trim().length === 0
-	) {
-		throw new InvalidInputError("セッショントークンが不正です");
+	if (typeof value.userId !== "string" || value.userId.trim().length === 0) {
+		throw new InvalidInputError("認証済みユーザーIDが不正です");
 	}
 	const translation = parseTranslationInput(value);
 	return {
 		...translation,
 		locale: parseSupportedLocale(translation.locale),
-		sessionToken: value.sessionToken,
+		userId: value.userId,
 	};
 }
 
@@ -213,10 +235,8 @@ export async function addTranslation(
 	input: unknown,
 ): Promise<TranslationCandidate> {
 	const request = parseAddInput(input);
-	const tokenHash = await hashSessionToken(request.sessionToken);
 
 	return db.transaction(async (transaction: SqlExecutor) => {
-		const user = await requireSessionUserInTransaction(transaction, tokenHash);
 		const segment = await transaction.get<{ id: number }>(
 			`SELECT segments.id
 			 FROM segments
@@ -231,13 +251,20 @@ export async function addTranslation(
 			`INSERT INTO translations
 			 (segment_id, locale, text, point, user_id, source, ai_job_id)
 			 VALUES (?, ?, ?, 0, ?, 'USER', NULL)`,
-			[request.segmentId, request.locale, request.text, user.id],
+			[request.segmentId, request.locale, request.text, request.userId],
 		);
 		const id = insertedId(result.lastInsertRowid);
 		const row = await transaction.get<TranslationRow>(
-			`SELECT id, segment_id, locale, text, point, created_at, updated_at, user_id, source, ai_job_id,
-				0 AS owner_upvoted
-			 FROM translations WHERE id = ? LIMIT 1`,
+			`SELECT translations.id, translations.segment_id, translations.locale,
+				translations.text, translations.point, translations.created_at,
+				translations.updated_at, translations.user_id, translations.source,
+				translations.ai_job_id,
+				0 AS owner_upvoted, author.name AS user_name, author.handle AS user_handle,
+				author.profile AS user_profile, author.is_ai AS user_is_ai,
+				author.total_points AS user_total_points, 1 AS owned_by_viewer
+			 FROM translations
+			 INNER JOIN users AS author ON author.id = translations.user_id
+			 WHERE translations.id = ? LIMIT 1`,
 			[id],
 		);
 		if (!row) throw new Error("作成した翻訳を取得できませんでした");
@@ -264,10 +291,8 @@ export async function addAiTranslation(
 	input: unknown,
 ): Promise<TranslationCandidate> {
 	const request = parseAiInput(input);
-	const tokenHash = await hashSessionToken(request.sessionToken);
 
 	return db.transaction(async (transaction: SqlExecutor) => {
-		const user = await requireSessionUserInTransaction(transaction, tokenHash);
 		const job = await transaction.get<{
 			id: string;
 			scripture_id: number | null;
@@ -285,7 +310,7 @@ export async function addAiTranslation(
 			[request.aiJobId],
 		);
 		if (!job) throw new NotFoundError("翻訳ジョブが見つかりません");
-		if (job.requested_by !== user.id) {
+		if (job.requested_by !== request.userId) {
 			throw new ForbiddenError("この翻訳ジョブには書き込めません");
 		}
 		if (job.locale !== request.locale) {
@@ -316,15 +341,22 @@ export async function addAiTranslation(
 				request.segmentId,
 				request.locale,
 				request.text,
-				user.id,
+				request.userId,
 				request.aiJobId,
 			],
 		);
 		const id = insertedId(result.lastInsertRowid);
 		const row = await transaction.get<TranslationRow>(
-			`SELECT id, segment_id, locale, text, point, created_at, updated_at, user_id, source, ai_job_id,
-				0 AS owner_upvoted
-			 FROM translations WHERE id = ? LIMIT 1`,
+			`SELECT translations.id, translations.segment_id, translations.locale,
+				translations.text, translations.point, translations.created_at,
+				translations.updated_at, translations.user_id, translations.source,
+				translations.ai_job_id,
+				0 AS owner_upvoted, author.name AS user_name, author.handle AS user_handle,
+				author.profile AS user_profile, author.is_ai AS user_is_ai,
+				author.total_points AS user_total_points, 1 AS owned_by_viewer
+			 FROM translations
+			 INNER JOIN users AS author ON author.id = translations.user_id
+			 WHERE translations.id = ? LIMIT 1`,
 			[id],
 		);
 		if (!row) throw new Error("作成した翻訳を取得できませんでした");
@@ -334,22 +366,18 @@ export async function addAiTranslation(
 
 export async function deleteTranslation(
 	db: TursoDatabase,
-	input: { translationId: unknown; sessionToken: unknown },
+	input: { translationId: unknown; userId: unknown },
 ): Promise<void> {
 	if (typeof input !== "object" || input === null) {
 		throw new InvalidInputError("削除入力が不正です");
 	}
-	if (
-		typeof input.sessionToken !== "string" ||
-		input.sessionToken.trim().length === 0
-	) {
-		throw new InvalidInputError("セッショントークンが不正です");
+	if (typeof input.userId !== "string" || input.userId.trim().length === 0) {
+		throw new InvalidInputError("認証済みユーザーIDが不正です");
 	}
 	const translationId = parsePositiveId(input.translationId, "translationId");
-	const tokenHash = await hashSessionToken(input.sessionToken);
+	const userId = input.userId;
 
 	await db.transaction(async (transaction: SqlExecutor) => {
-		const user = await requireSessionUserInTransaction(transaction, tokenHash);
 		const translation = await transaction.get<{ id: number; user_id: string }>(
 			`SELECT translations.id, translations.user_id
 			 FROM translations
@@ -360,7 +388,7 @@ export async function deleteTranslation(
 			[translationId],
 		);
 		if (!translation) throw new NotFoundError("翻訳が見つかりません");
-		if (translation.user_id !== user.id) {
+		if (translation.user_id !== userId) {
 			throw new ForbiddenError("この翻訳を削除する権限がありません");
 		}
 		await transaction.run("DELETE FROM translations WHERE id = ?", [

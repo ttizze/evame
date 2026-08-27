@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { getSessionTokenFromRequest } from "@/auth/cookies";
+import { getSessionUser } from "@/auth/session";
 import type {
 	ScriptureDetail,
 	ScriptureListItem,
@@ -20,9 +20,11 @@ import {
 	getScripture as readScripture,
 	listScriptures as readScriptures,
 } from "@/server/scriptures";
-import { getSessionUser } from "@/server/session";
 import { getTranslationJob as readTranslationJob } from "@/server/translation-jobs";
-import { addTranslation } from "@/server/translations";
+import {
+	addTranslation,
+	deleteTranslation as removeTranslation,
+} from "@/server/translations";
 import { voteTranslation as saveVote } from "@/server/votes";
 import { getTranslationQueue } from "@/translation/runtime";
 import { createAndEnqueueTranslationJob } from "@/translation/service";
@@ -46,16 +48,14 @@ const localeInput = z
 	.min(2)
 	.refine(isSupportedLocale, "対応していないlocaleです");
 
-function sessionToken(): string {
-	const token = getSessionTokenFromRequest(getRequest());
-	if (!token) {
-		throw new UnauthenticatedError();
-	}
-	return token;
+async function currentUserId(): Promise<string> {
+	const user = await getSessionUser(getRequest());
+	if (!user?.id) throw new UnauthenticatedError();
+	return user.id;
 }
 
-function optionalSessionToken(): string | null {
-	return getSessionTokenFromRequest(getRequest());
+async function optionalUserId(): Promise<string | null> {
+	return (await getSessionUser(getRequest()))?.id ?? null;
 }
 
 export function mapTranslationCandidate(
@@ -68,6 +68,13 @@ export function mapTranslationCandidate(
 		voteCount: candidate.point,
 		votedByViewer: candidate.votedByViewer,
 		createdAt: candidate.createdAt,
+		userName: candidate.userName,
+		userHandle: candidate.userHandle,
+		userProfile: candidate.userProfile,
+		userIsAi: candidate.userIsAi,
+		userTotalPoints: candidate.userTotalPoints,
+		ownedByViewer: candidate.ownedByViewer,
+		source: candidate.source,
 	};
 }
 
@@ -132,15 +139,15 @@ export const getScripture = createServerFn({ method: "GET" })
 	.validator(z.object({ slug: z.string().min(1), locale: localeInput }))
 	.handler(async ({ data }) => {
 		const db = getDatabase();
-		const token = optionalSessionToken();
+		const userId = await optionalUserId();
 		const detail = await readScripture(db, {
 			...data,
-			sessionToken: token,
+			viewerUserId: userId,
 		});
 		if (!detail) return null;
 		return {
 			...mapScriptureDetail(detail),
-			authenticated: token ? Boolean(await getSessionUser(db, token)) : false,
+			authenticated: userId !== null,
 		};
 	});
 
@@ -154,7 +161,7 @@ export const voteTranslation = createServerFn({ method: "POST" })
 	.handler(async ({ data }) => {
 		const result = await saveVote(getDatabase(), {
 			...data,
-			sessionToken: sessionToken(),
+			userId: await currentUserId(),
 		});
 		return {
 			voted: result.isUpvote,
@@ -173,9 +180,23 @@ export const createTranslation = createServerFn({ method: "POST" })
 	.handler(async ({ data }) => {
 		const candidate = await addTranslation(getDatabase(), {
 			...data,
-			sessionToken: sessionToken(),
+			userId: await currentUserId(),
 		});
 		return mapTranslationCandidate(candidate);
+	});
+
+export const deleteTranslation = createServerFn({ method: "POST" })
+	.validator(
+		z.object({
+			translationId: z.number().int().positive(),
+		}),
+	)
+	.handler(async ({ data }) => {
+		await removeTranslation(getDatabase(), {
+			translationId: data.translationId,
+			userId: await currentUserId(),
+		});
+		return { success: true } as const;
 	});
 
 export const createTranslationJob = createServerFn({ method: "POST" })
@@ -187,6 +208,7 @@ export const createTranslationJob = createServerFn({ method: "POST" })
 		}),
 	)
 	.handler(async ({ data }) => {
+		const userId = await currentUserId();
 		const request = parseTranslationJobRequest(
 			{
 				scriptureId: data.scriptureId,
@@ -194,7 +216,7 @@ export const createTranslationJob = createServerFn({ method: "POST" })
 				model: data.model ?? DEFAULT_TRANSLATION_MODEL,
 				translationContext: "",
 			},
-			sessionToken(),
+			userId,
 		);
 		const job = await createAndEnqueueTranslationJob(
 			getDatabase(),
@@ -209,7 +231,7 @@ export const getTranslationJob = createServerFn({ method: "GET" })
 	.handler(async ({ data }) => {
 		const job = await readTranslationJob(getDatabase(), {
 			...data,
-			sessionToken: sessionToken(),
+			userId: await currentUserId(),
 		});
 		return { id: job.id, status: job.status } satisfies TranslationJob;
 	});

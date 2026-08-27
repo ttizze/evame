@@ -5,12 +5,26 @@ import type {
 	SourceSnapshot,
 	SourceTranslationJob,
 	TargetAnnotationLink,
+	TargetImportFile,
+	TargetImportRun,
+	TargetLikePage,
+	TargetNotification,
+	TargetPageLocaleTranslationProof,
+	TargetPageView,
+	TargetPersonalAccessToken,
 	TargetScripture,
 	TargetSegment,
+	TargetSegmentMetadata,
+	TargetSegmentMetadataType,
+	TargetSegmentType,
+	TargetTag,
+	TargetTagPage,
 	TargetTranslation,
+	TargetTranslationContext,
 	TargetTranslationJob,
 	TargetTranslationVote,
 	TargetUser,
+	TargetUserSettings,
 } from "./types";
 
 const TIPITAKA_ROOT_SLUG = "tipitaka";
@@ -47,12 +61,15 @@ function isPublicPage(page: SourcePage): boolean {
 }
 
 /**
- * `tipitaka`を起点に、公開状態のPAGEだけを幅優先で選ぶ。
+ * 指定したroot slugを起点に、公開状態のPAGEだけを幅優先で選ぶ。
  *
  * ここをSQLの結果任せにしないことで、source adapterを差し替えても
  * PAGE_COMMENTや、別の公開ページが計画へ混ざらない。
  */
-export function selectPublicTipitakaPages(pages: SourcePage[]): SourcePage[] {
+export function selectPublicTipitakaPages(
+	pages: SourcePage[],
+	rootSlug = TIPITAKA_ROOT_SLUG,
+): SourcePage[] {
 	const childrenByParent = new Map<number, SourcePage[]>();
 	for (const page of pages) {
 		if (page.parentId === null) continue;
@@ -65,7 +82,7 @@ export function selectPublicTipitakaPages(pages: SourcePage[]): SourcePage[] {
 	}
 
 	const roots = pages
-		.filter((page) => isPublicPage(page) && page.slug === TIPITAKA_ROOT_SLUG)
+		.filter((page) => isPublicPage(page) && page.slug === rootSlug)
 		.sort(comparePages);
 	const selected: SourcePage[] = [];
 	const selectedIds = new Set<number>();
@@ -121,6 +138,7 @@ function mapScripture(
 		title: page.title?.trim() || page.slug,
 		sourceLocale: page.sourceLocale,
 		ownerUserId: page.ownerUserId ?? null,
+		importFileId: page.importFileId ?? null,
 		parentId:
 			page.parentId !== null && selectedPageIds.has(page.parentId)
 				? page.parentId
@@ -142,9 +160,11 @@ function mapSegment(
 	return {
 		id: segment.id,
 		scriptureId: segment.contentId,
+		segmentTypeId: segment.segmentTypeId,
 		kind,
 		position: segment.position,
 		sourceText: segment.sourceText,
+		textAndOccurrenceHash: segment.textAndOccurrenceHash,
 		createdAt: normalizeTimestamp(
 			segment.createdAt,
 			`segments.${segment.id}.created_at`,
@@ -196,16 +216,390 @@ function mapTranslationJob(
  * Source snapshotを新schemaのupsert可能な行集合へ変換する。
  * データベース書き込みは行わず、dry-runと実行時の件数照合で同じ計画を使う。
  */
-export function buildMigrationPlan(snapshot: SourceSnapshot): MigrationPlan {
+export function buildMigrationPlan(
+	snapshot: SourceSnapshot,
+	rootSlug = TIPITAKA_ROOT_SLUG,
+): MigrationPlan {
 	assertUniqueIds(snapshot.pages, "page");
 	assertUniqueIds(snapshot.segments, "segment");
 	assertUniqueIds(snapshot.translations, "translation");
 	assertUniqueIds(snapshot.translationJobs, "translation job");
 	assertUniqueIds(snapshot.users, "user");
+	assertUniqueIds(snapshot.accounts, "account");
+	assertUniqueIds(snapshot.sessions, "session");
+	assertUniqueIds(snapshot.verifications, "verification");
+	assertUniqueIds(snapshot.geminiApiKeys, "Gemini API key");
+	assertUniqueIds(snapshot.personalAccessTokens, "personal access token");
+	assertUniqueIds(snapshot.importRuns, "import run");
+	assertUniqueIds(snapshot.importFiles, "import file");
+	assertUniqueIds(snapshot.likePages, "page like");
+	assertUniqueIds(snapshot.notifications, "notification");
+	assertUniqueIds(snapshot.segmentTypes, "segment type");
+	assertUniqueIds(
+		snapshot.pageLocaleTranslationProofs,
+		"page locale translation proof",
+	);
+	assertUniqueIds(snapshot.segmentMetadataTypes, "segment metadata type");
+	assertUniqueIds(snapshot.tags, "tag");
+	assertUniqueIds(snapshot.translationContexts, "translation context");
+	assertUniqueIds(snapshot.segmentMetadata, "segment metadata");
+	assertUniqueIds(snapshot.userSettings, "user settings");
 
-	const pages = selectPublicTipitakaPages(snapshot.pages);
+	const pages = selectPublicTipitakaPages(snapshot.pages, rootSlug);
 	const pageIds = new Set(pages.map((page) => page.id));
 	const scriptures = pages.map((page) => mapScripture(page, pageIds));
+
+	const usersById = new Map(snapshot.users.map((user) => [user.id, user]));
+	const users: TargetUser[] = snapshot.users
+		.map((user) => ({
+			id: user.id,
+			email: user.email,
+			name: user.name,
+			handle: user.handle,
+			profile: user.profile,
+			totalPoints: user.totalPoints,
+			isAi: user.isAi,
+			image: user.image,
+			plan: user.plan,
+			provider: user.provider,
+			twitterHandle: user.twitterHandle,
+			emailVerified: user.emailVerified,
+			createdAt: normalizeTimestamp(
+				user.createdAt,
+				`users.${user.id}.created_at`,
+			),
+			updatedAt: normalizeTimestamp(
+				user.updatedAt,
+				`users.${user.id}.updated_at`,
+			),
+		}))
+		.sort((a, b) => a.id.localeCompare(b.id));
+
+	for (const account of snapshot.accounts) {
+		if (!usersById.has(account.userId)) {
+			throw new Error(
+				`Account user not found in source snapshot: ${account.userId}`,
+			);
+		}
+	}
+	for (const session of snapshot.sessions) {
+		if (!usersById.has(session.userId)) {
+			throw new Error(
+				`Session user not found in source snapshot: ${session.userId}`,
+			);
+		}
+	}
+	for (const geminiApiKey of snapshot.geminiApiKeys) {
+		if (!usersById.has(geminiApiKey.userId)) {
+			throw new Error(
+				`Gemini API key user not found in source snapshot: ${geminiApiKey.userId}`,
+			);
+		}
+	}
+	for (const token of snapshot.personalAccessTokens) {
+		if (!usersById.has(token.userId)) {
+			throw new Error(
+				`Personal access token user not found in source snapshot: ${token.userId}`,
+			);
+		}
+	}
+	for (const notification of snapshot.notifications) {
+		if (
+			!usersById.has(notification.userId) ||
+			!usersById.has(notification.actorId)
+		) {
+			throw new Error("Notification user not found in source snapshot");
+		}
+	}
+	for (const context of snapshot.translationContexts) {
+		if (!usersById.has(context.userId)) {
+			throw new Error(
+				`Translation context user not found in source snapshot: ${context.userId}`,
+			);
+		}
+	}
+	for (const settings of snapshot.userSettings) {
+		if (!usersById.has(settings.userId)) {
+			throw new Error(
+				`User settings user not found in source snapshot: ${settings.userId}`,
+			);
+		}
+	}
+	for (const like of snapshot.likePages) {
+		if (like.userId !== null && !usersById.has(like.userId)) {
+			throw new Error(
+				`Page like user not found in source snapshot: ${like.userId}`,
+			);
+		}
+	}
+
+	const accounts = snapshot.accounts
+		.map((account) => ({
+			id: account.id,
+			userId: account.userId,
+			providerId: account.providerId,
+			accountId: account.accountId,
+			refreshToken: account.refreshToken,
+			accessToken: account.accessToken,
+			scope: account.scope,
+			idToken: account.idToken,
+			password: account.password,
+			refreshTokenExpiresAt: normalizeOptionalTimestamp(
+				account.refreshTokenExpiresAt,
+				`accounts.${account.id}.refresh_token_expires_at`,
+			),
+			accessTokenExpiresAt: normalizeOptionalTimestamp(
+				account.accessTokenExpiresAt,
+				`accounts.${account.id}.access_token_expires_at`,
+			),
+			createdAt: normalizeTimestamp(
+				account.createdAt,
+				`accounts.${account.id}.created_at`,
+			),
+			updatedAt: normalizeTimestamp(
+				account.updatedAt,
+				`accounts.${account.id}.updated_at`,
+			),
+		}))
+		.sort((a, b) => a.id.localeCompare(b.id));
+
+	const sessions = snapshot.sessions
+		.map((session) => ({
+			id: session.id,
+			token: session.token,
+			userId: session.userId,
+			expiresAt: normalizeTimestamp(
+				session.expiresAt,
+				`sessions.${session.id}.expires_at`,
+			),
+			ipAddress: session.ipAddress,
+			userAgent: session.userAgent,
+			createdAt: normalizeTimestamp(
+				session.createdAt,
+				`sessions.${session.id}.created_at`,
+			),
+			updatedAt: normalizeTimestamp(
+				session.updatedAt,
+				`sessions.${session.id}.updated_at`,
+			),
+		}))
+		.sort((a, b) => a.id.localeCompare(b.id));
+
+	const verifications = snapshot.verifications
+		.map((verification) => ({
+			id: verification.id,
+			identifier: verification.identifier,
+			value: verification.value,
+			expiresAt: normalizeTimestamp(
+				verification.expiresAt,
+				`verifications.${verification.id}.expires_at`,
+			),
+			createdAt: normalizeOptionalTimestamp(
+				verification.createdAt,
+				`verifications.${verification.id}.created_at`,
+			),
+			updatedAt: normalizeOptionalTimestamp(
+				verification.updatedAt,
+				`verifications.${verification.id}.updated_at`,
+			),
+		}))
+		.sort((a, b) => a.id.localeCompare(b.id));
+
+	const geminiApiKeys = snapshot.geminiApiKeys
+		.map((apiKey) => ({
+			id: apiKey.id,
+			userId: apiKey.userId,
+			apiKey: apiKey.apiKey,
+		}))
+		.sort((a, b) => a.id - b.id);
+
+	const personalAccessTokens: TargetPersonalAccessToken[] =
+		snapshot.personalAccessTokens
+			.map((token) => ({
+				id: token.id,
+				keyHash: token.keyHash,
+				userId: token.userId,
+				name: token.name,
+				createdAt: normalizeTimestamp(
+					token.createdAt,
+					`personal_access_tokens.${token.id}.created_at`,
+				),
+				lastUsedAt: normalizeOptionalTimestamp(
+					token.lastUsedAt,
+					`personal_access_tokens.${token.id}.last_used_at`,
+				),
+			}))
+			.sort((a, b) => a.id - b.id);
+
+	const notifications: TargetNotification[] = snapshot.notifications
+		.map((notification) => ({
+			id: notification.id,
+			userId: notification.userId,
+			type: notification.type,
+			read: notification.read,
+			createdAt: normalizeTimestamp(
+				notification.createdAt,
+				`notifications.${notification.id}.created_at`,
+			),
+			actorId: notification.actorId,
+			pageCommentId: notification.pageCommentId,
+			pageId: notification.pageId,
+			segmentTranslationId: notification.segmentTranslationId,
+		}))
+		.sort((a, b) => a.id - b.id);
+
+	const segmentTypes: TargetSegmentType[] = snapshot.segmentTypes
+		.map((segmentType) => ({
+			id: segmentType.id,
+			label: segmentType.label,
+			key: segmentType.key,
+		}))
+		.sort((a, b) => a.id - b.id);
+
+	const segmentMetadataTypes: TargetSegmentMetadataType[] =
+		snapshot.segmentMetadataTypes
+			.map((metadataType) => ({
+				id: metadataType.id,
+				key: metadataType.key,
+				label: metadataType.label,
+			}))
+			.sort((a, b) => a.id - b.id);
+
+	const tags: TargetTag[] = snapshot.tags
+		.map((tag) => ({ id: tag.id, name: tag.name }))
+		.sort((a, b) => a.id - b.id);
+
+	const translationContexts: TargetTranslationContext[] =
+		snapshot.translationContexts
+			.map((context) => ({
+				id: context.id,
+				userId: context.userId,
+				name: context.name,
+				context: context.context,
+				createdAt: normalizeTimestamp(
+					context.createdAt,
+					`translation_contexts.${context.id}.created_at`,
+				),
+				updatedAt: normalizeTimestamp(
+					context.updatedAt,
+					`translation_contexts.${context.id}.updated_at`,
+				),
+			}))
+			.sort((a, b) => a.id - b.id);
+
+	const userSettings: TargetUserSettings[] = snapshot.userSettings
+		.map((settings) => ({
+			id: settings.id,
+			userId: settings.userId,
+			targetLocales: JSON.stringify(settings.targetLocales),
+			createdAt: normalizeTimestamp(
+				settings.createdAt,
+				`user_settings.${settings.id}.created_at`,
+			),
+			updatedAt: normalizeTimestamp(
+				settings.updatedAt,
+				`user_settings.${settings.id}.updated_at`,
+			),
+		}))
+		.sort((a, b) => a.id - b.id);
+
+	const selectedPageIds = pageIds;
+	const selectedImportFileIds = new Set(
+		pages.flatMap((page) =>
+			page.importFileId === null || page.importFileId === undefined
+				? []
+				: [page.importFileId],
+		),
+	);
+	for (const page of pages) {
+		if (
+			page.importFileId !== null &&
+			page.importFileId !== undefined &&
+			!snapshot.importFiles.some((file) => file.id === page.importFileId)
+		) {
+			throw new Error(
+				`Import file not found in source snapshot: ${page.importFileId}`,
+			);
+		}
+	}
+	const selectedImportFiles = snapshot.importFiles.filter((file) =>
+		selectedImportFileIds.has(file.id),
+	);
+	for (const file of selectedImportFiles) {
+		if (!snapshot.importRuns.some((run) => run.id === file.importRunId)) {
+			throw new Error(
+				`Import file run not found in source snapshot: ${file.importRunId}`,
+			);
+		}
+	}
+	const selectedImportRunIds = new Set(
+		selectedImportFiles.map((file) => file.importRunId),
+	);
+	const importRuns: TargetImportRun[] = snapshot.importRuns
+		.filter((run) => selectedImportRunIds.has(run.id))
+		.map((run) => ({
+			id: run.id,
+			startedAt: normalizeTimestamp(
+				run.startedAt,
+				`import_runs.${run.id}.started_at`,
+			),
+			finishedAt: normalizeOptionalTimestamp(
+				run.finishedAt,
+				`import_runs.${run.id}.finished_at`,
+			),
+			status: run.status,
+		}))
+		.sort((a, b) => a.id - b.id);
+	const importFiles: TargetImportFile[] = selectedImportFiles
+		.map((file) => ({
+			id: file.id,
+			importRunId: file.importRunId,
+			path: file.path,
+			checksum: file.checksum,
+			status: file.status,
+			message: file.message,
+			createdAt: normalizeTimestamp(
+				file.createdAt,
+				`import_files.${file.id}.created_at`,
+			),
+		}))
+		.sort((a, b) => a.id - b.id);
+
+	const likePages: TargetLikePage[] = snapshot.likePages
+		.filter((like) => selectedPageIds.has(like.pageId))
+		.map((like) => ({
+			id: like.id,
+			pageId: like.pageId,
+			createdAt: normalizeTimestamp(
+				like.createdAt,
+				`like_pages.${like.id}.created_at`,
+			),
+			userId: like.userId,
+		}))
+		.sort((a, b) => a.id - b.id);
+	assertUniqueIdentity(
+		likePages
+			.filter((like) => like.userId !== null)
+			.map((like) => `${like.userId}\u0000${like.pageId}`),
+		"page like",
+	);
+
+	const pageLocaleTranslationProofs: TargetPageLocaleTranslationProof[] =
+		snapshot.pageLocaleTranslationProofs
+			.filter((proof) => selectedPageIds.has(proof.pageId))
+			.map((proof) => ({
+				id: proof.id,
+				pageId: proof.pageId,
+				locale: proof.locale,
+				translationProofStatus: proof.translationProofStatus,
+			}))
+			.sort((a, b) => a.id - b.id);
+	assertUniqueIdentity(
+		pageLocaleTranslationProofs.map(
+			(proof) => `${proof.pageId}\u0000${proof.locale}`,
+		),
+		"page locale translation proof",
+	);
 
 	const selectedSegments = snapshot.segments.filter((segment) =>
 		pageIds.has(segment.contentId),
@@ -219,7 +613,56 @@ export function buildMigrationPlan(snapshot: SourceSnapshot): MigrationPlan {
 		);
 	const segmentIds = new Set(segments.map((segment) => segment.id));
 
-	const usersById = new Map(snapshot.users.map((user) => [user.id, user]));
+	const pageViews: TargetPageView[] = snapshot.pageViews
+		.filter((view) => selectedPageIds.has(view.pageId))
+		.map((view) => ({ pageId: view.pageId, count: view.count }))
+		.sort((a, b) => a.pageId - b.pageId);
+
+	const segmentMetadata: TargetSegmentMetadata[] = snapshot.segmentMetadata
+		.filter(
+			(metadata) =>
+				segmentIds.has(metadata.segmentId) &&
+				snapshot.segmentMetadataTypes.some(
+					(type) => type.id === metadata.metadataTypeId,
+				),
+		)
+		.map((metadata) => ({
+			id: metadata.id,
+			segmentId: metadata.segmentId,
+			metadataTypeId: metadata.metadataTypeId,
+			value: metadata.value,
+			createdAt: normalizeTimestamp(
+				metadata.createdAt,
+				`segment_metadata.${metadata.id}.created_at`,
+			),
+		}))
+		.sort((a, b) => a.id - b.id);
+	assertUniqueIdentity(
+		segmentMetadata.map(
+			(metadata) =>
+				`${metadata.segmentId}\u0000${metadata.metadataTypeId}\u0000${metadata.value}`,
+		),
+		"segment metadata",
+	);
+
+	const tagPages: TargetTagPage[] = snapshot.tagPages
+		.filter((tagPage) => selectedPageIds.has(tagPage.pageId))
+		.map((tagPage) => ({
+			tagId: tagPage.tagId,
+			pageId: tagPage.pageId,
+		}))
+		.sort((a, b) => a.tagId - b.tagId || a.pageId - b.pageId);
+	const tagIds = new Set(snapshot.tags.map((tag) => tag.id));
+	for (const tagPage of tagPages) {
+		if (!tagIds.has(tagPage.tagId)) {
+			throw new Error(`Tag not found in source snapshot: ${tagPage.tagId}`);
+		}
+	}
+	assertUniqueIdentity(
+		tagPages.map((tagPage) => `${tagPage.tagId}\u0000${tagPage.pageId}`),
+		"tag page",
+	);
+
 	for (const page of pages) {
 		if (page.ownerUserId && !usersById.has(page.ownerUserId)) {
 			throw new Error(
@@ -333,42 +776,6 @@ export function buildMigrationPlan(snapshot: SourceSnapshot): MigrationPlan {
 				a.translationId - b.translationId || a.userId.localeCompare(b.userId),
 		);
 
-	const voterIds = new Set(translationVotes.map((vote) => vote.userId));
-	const translationAuthorIds = new Set(
-		translations.map((translation) => translation.userId),
-	);
-	const requestedByIds = new Set(
-		selectedJobs.flatMap((job) =>
-			job.requestedBy && usersById.has(job.requestedBy)
-				? [job.requestedBy]
-				: [],
-		),
-	);
-	const scriptureOwnerIds = new Set(
-		pages.flatMap((page) =>
-			page.ownerUserId && usersById.has(page.ownerUserId)
-				? [page.ownerUserId]
-				: [],
-		),
-	);
-	const requiredUserIds = new Set([
-		...voterIds,
-		...translationAuthorIds,
-		...requestedByIds,
-		...scriptureOwnerIds,
-	]);
-	const users: TargetUser[] = snapshot.users
-		.filter((user) => requiredUserIds.has(user.id))
-		.map((user) => ({
-			id: user.id,
-			email: user.email,
-			name: user.name,
-			createdAt: normalizeTimestamp(
-				user.createdAt,
-				`users.${user.id}.created_at`,
-			),
-		}));
-
 	const selectedAnnotationLinks = snapshot.annotationLinks.filter(
 		(link) =>
 			segmentIds.has(link.mainSegmentId) &&
@@ -397,28 +804,87 @@ export function buildMigrationPlan(snapshot: SourceSnapshot): MigrationPlan {
 
 	const counts = {
 		users: users.length,
+		accounts: accounts.length,
+		sessions: sessions.length,
+		verifications: verifications.length,
+		geminiApiKeys: geminiApiKeys.length,
+		personalAccessTokens: personalAccessTokens.length,
+		importRuns: importRuns.length,
+		importFiles: importFiles.length,
+		likePages: likePages.length,
+		notifications: notifications.length,
+		segmentTypes: segmentTypes.length,
+		pageLocaleTranslationProofs: pageLocaleTranslationProofs.length,
+		segmentMetadataTypes: segmentMetadataTypes.length,
+		tags: tags.length,
+		translationContexts: translationContexts.length,
+		pageViews: pageViews.length,
+		segmentMetadata: segmentMetadata.length,
+		userSettings: userSettings.length,
+		tagPages: tagPages.length,
 		scriptures: scriptures.length,
 		segments: segments.length,
 		translations: translations.length,
 		translationJobs: translationJobs.length,
 		translationVotes: translationVotes.length,
 		annotationLinks: annotationLinks.length,
-	};
+	} as MigrationReport["counts"];
 	const report: MigrationReport = {
 		counts,
 		skipped: {
 			pages: snapshot.pages.length - scriptures.length,
+			accounts: snapshot.accounts.length - accounts.length,
+			sessions: snapshot.sessions.length - sessions.length,
+			verifications: snapshot.verifications.length - verifications.length,
+			geminiApiKeys: snapshot.geminiApiKeys.length - geminiApiKeys.length,
+			personalAccessTokens:
+				snapshot.personalAccessTokens.length - personalAccessTokens.length,
+			importRuns: snapshot.importRuns.length - importRuns.length,
+			importFiles: snapshot.importFiles.length - importFiles.length,
+			likePages: snapshot.likePages.length - likePages.length,
+			notifications: snapshot.notifications.length - notifications.length,
+			segmentTypes: snapshot.segmentTypes.length - segmentTypes.length,
+			pageLocaleTranslationProofs:
+				snapshot.pageLocaleTranslationProofs.length -
+				pageLocaleTranslationProofs.length,
+			segmentMetadataTypes:
+				snapshot.segmentMetadataTypes.length - segmentMetadataTypes.length,
+			tags: snapshot.tags.length - tags.length,
+			translationContexts:
+				snapshot.translationContexts.length - translationContexts.length,
+			pageViews: snapshot.pageViews.length - pageViews.length,
+			segmentMetadata: snapshot.segmentMetadata.length - segmentMetadata.length,
+			userSettings: snapshot.userSettings.length - userSettings.length,
+			tagPages: snapshot.tagPages.length - tagPages.length,
 			segments: snapshot.segments.length - segments.length,
 			translations: snapshot.translations.length - translations.length,
 			translationJobs: snapshot.translationJobs.length - translationJobs.length,
 			translationVotes: snapshot.votes.length - translationVotes.length,
 			users: snapshot.users.length - users.length,
 			annotationLinks: snapshot.annotationLinks.length - annotationLinks.length,
-		},
+		} as MigrationReport["skipped"],
 	};
 
 	return {
 		users,
+		accounts,
+		sessions,
+		verifications,
+		geminiApiKeys,
+		personalAccessTokens,
+		importRuns,
+		importFiles,
+		likePages,
+		notifications,
+		segmentTypes,
+		pageLocaleTranslationProofs,
+		segmentMetadataTypes,
+		tags,
+		translationContexts,
+		pageViews,
+		segmentMetadata,
+		userSettings,
+		tagPages,
 		scriptures,
 		segments,
 		translations,

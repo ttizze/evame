@@ -70,33 +70,41 @@ function makeSnapshot(): SourceSnapshot {
 			{
 				id: 10,
 				contentId: 2,
+				segmentTypeId: 1,
 				position: 0,
 				kind: "PRIMARY",
 				sourceText: "Sutta Piṭaka",
+				textAndOccurrenceHash: "hash-10",
 				createdAt: "2025-01-01T00:00:00.000Z",
 			},
 			{
 				id: 11,
 				contentId: 2,
+				segmentTypeId: 2,
 				position: 1,
 				kind: "COMMENTARY",
 				sourceText: "Commentary text",
+				textAndOccurrenceHash: "hash-11",
 				createdAt: "2025-01-01T00:00:00.000Z",
 			},
 			{
 				id: 12,
 				contentId: 5,
+				segmentTypeId: 1,
 				position: 1,
 				kind: "PRIMARY",
 				sourceText: "Comment text",
+				textAndOccurrenceHash: "hash-12",
 				createdAt: "2025-01-01T00:00:00.000Z",
 			},
 			{
 				id: 13,
 				contentId: 2,
+				segmentTypeId: 3,
 				position: 2,
 				kind: "OTHER",
 				sourceText: "Unsupported type",
+				textAndOccurrenceHash: "hash-13",
 				createdAt: "2025-01-01T00:00:00.000Z",
 			},
 		],
@@ -134,17 +142,53 @@ function makeSnapshot(): SourceSnapshot {
 				id: "voter-1",
 				email: "voter@example.com",
 				name: "Voter",
+				handle: "voter-one",
+				profile: "Voter profile",
+				totalPoints: 12,
 				isAi: false,
+				image: "https://example.com/voter.png",
+				plan: "free",
+				provider: "Credentials",
+				twitterHandle: "@voter-one",
+				emailVerified: true,
 				createdAt: "2025-01-01T00:00:00.000Z",
+				updatedAt: "2025-01-02T00:00:00.000Z",
 			},
 			{
 				id: "unused",
 				email: "unused@example.com",
 				name: "Unused",
+				handle: "unused-user",
+				profile: "Unused profile",
+				totalPoints: 0,
 				isAi: false,
+				image: "https://example.com/unused.png",
+				plan: "free",
+				provider: "Credentials",
+				twitterHandle: "",
+				emailVerified: null,
 				createdAt: "2025-01-01T00:00:00.000Z",
+				updatedAt: "2025-01-01T00:00:00.000Z",
 			},
 		],
+		accounts: [],
+		sessions: [],
+		verifications: [],
+		geminiApiKeys: [],
+		personalAccessTokens: [],
+		importRuns: [],
+		importFiles: [],
+		likePages: [],
+		notifications: [],
+		segmentTypes: [],
+		pageLocaleTranslationProofs: [],
+		segmentMetadataTypes: [],
+		tags: [],
+		translationContexts: [],
+		pageViews: [],
+		segmentMetadata: [],
+		userSettings: [],
+		tagPages: [],
 		votes: [
 			{
 				translationId: 100,
@@ -214,7 +258,7 @@ describe("buildMigrationPlan", () => {
 				updatedAt: "2025-01-03T00:00:00.000Z",
 			},
 		]);
-		expect(plan.users.map((row) => row.id)).toEqual(["voter-1"]);
+		expect(plan.users.map((row) => row.id)).toEqual(["unused", "voter-1"]);
 		expect(plan.annotationLinks).toEqual([
 			{
 				mainSegmentId: 10,
@@ -228,7 +272,25 @@ describe("buildMigrationPlan", () => {
 		const report = buildMigrationPlan(makeSnapshot()).report;
 
 		expect(report.counts).toEqual({
-			users: 1,
+			users: 2,
+			accounts: 0,
+			sessions: 0,
+			verifications: 0,
+			geminiApiKeys: 0,
+			personalAccessTokens: 0,
+			importRuns: 0,
+			importFiles: 0,
+			likePages: 0,
+			notifications: 0,
+			segmentTypes: 0,
+			pageLocaleTranslationProofs: 0,
+			segmentMetadataTypes: 0,
+			tags: 0,
+			translationContexts: 0,
+			pageViews: 0,
+			segmentMetadata: 0,
+			userSettings: 0,
+			tagPages: 0,
 			scriptures: 2,
 			segments: 2,
 			translations: 1,
@@ -242,7 +304,7 @@ describe("buildMigrationPlan", () => {
 			translations: 2,
 			translationJobs: 0,
 			translationVotes: 2,
-			users: 1,
+			users: 0,
 			annotationLinks: 1,
 		});
 	});
@@ -257,7 +319,76 @@ describe("buildMigrationPlan", () => {
 		expect(plan.segments).toEqual([]);
 		expect(plan.translations).toEqual([]);
 		expect(plan.translationVotes).toEqual([]);
-		expect(plan.users).toEqual([]);
+		expect(plan.users.map((user) => user.id)).toEqual(["unused", "voter-1"]);
+	});
+
+	it("指定した公開root slugから木を選び、空計画にしない", () => {
+		const snapshot = makeSnapshot();
+		snapshot.pages[0]!.slug = "sutta-root";
+
+		const plan = buildMigrationPlan(snapshot, "sutta-root");
+
+		expect(plan.scriptures.map((scripture) => scripture.id)).toEqual([1, 2]);
+		expect(plan.segments.map((segment) => segment.id)).toEqual([10, 11]);
+	});
+
+	it("記事と無関係なユーザーのBetter AuthとGemini keyを関係付きで保持する", () => {
+		const snapshot = makeSnapshot();
+		snapshot.accounts = [
+			{
+				id: "account-1",
+				userId: "unused",
+				providerId: "credentials",
+				accountId: "unused@example.com",
+				refreshToken: "ciphertext-refresh",
+				accessToken: null,
+				scope: null,
+				idToken: null,
+				password: null,
+				refreshTokenExpiresAt: null,
+				accessTokenExpiresAt: null,
+				createdAt: "2025-01-01T00:00:00.000Z",
+				updatedAt: "2025-01-02T00:00:00.000Z",
+			},
+		];
+		snapshot.sessions = [
+			{
+				id: "session-1",
+				token: "session-token",
+				userId: "unused",
+				expiresAt: "2025-02-01T00:00:00.000Z",
+				ipAddress: null,
+				userAgent: "test-agent",
+				createdAt: "2025-01-01T00:00:00.000Z",
+				updatedAt: "2025-01-02T00:00:00.000Z",
+			},
+		];
+		snapshot.verifications = [
+			{
+				id: "verification-1",
+				identifier: "unused@example.com",
+				value: "verification-value",
+				expiresAt: "2025-02-01T00:00:00.000Z",
+				createdAt: null,
+				updatedAt: null,
+			},
+		];
+		snapshot.geminiApiKeys = [
+			{ id: 1, userId: "unused", apiKey: "ciphertext-gemini" },
+		];
+
+		const plan = buildMigrationPlan(snapshot);
+
+		expect(plan.accounts).toMatchObject([
+			{ id: "account-1", userId: "unused" },
+		]);
+		expect(plan.sessions).toMatchObject([
+			{ id: "session-1", userId: "unused" },
+		]);
+		expect(plan.verifications).toMatchObject([{ id: "verification-1" }]);
+		expect(plan.geminiApiKeys).toEqual([
+			{ id: 1, userId: "unused", apiKey: "ciphertext-gemini" },
+		]);
 	});
 
 	it("scripture所有者とAI翻訳の対応を残し、未完了jobをFAILEDへ正規化する", () => {
@@ -268,8 +399,17 @@ describe("buildMigrationPlan", () => {
 			id: "ai-1",
 			email: "ai@example.com",
 			name: "AI Translator",
+			handle: "ai-translator",
+			profile: "AI",
+			totalPoints: 0,
 			isAi: true,
+			image: "https://example.com/ai.png",
+			plan: "free",
+			provider: "Credentials",
+			twitterHandle: "",
+			emailVerified: null,
 			createdAt: "2025-01-01T00:00:00.000Z",
+			updatedAt: "2025-01-01T00:00:00.000Z",
 		});
 		snapshot.translations.push({
 			id: 103,
@@ -314,6 +454,7 @@ describe("buildMigrationPlan", () => {
 		).toBe(true);
 		expect(plan.users.map((user) => user.id).sort()).toEqual([
 			"ai-1",
+			"unused",
 			"voter-1",
 		]);
 		expect(
@@ -351,5 +492,144 @@ describe("buildMigrationPlan", () => {
 			plan.translations.some((translation) => translation.id === 104),
 		).toBe(false);
 		expect(plan.report.skipped.translations).toBe(3);
+	});
+
+	it("非記事のglobal表を全件保持し、Tipitaka従属表だけを公開PAGEで絞る", () => {
+		const snapshot = makeSnapshot();
+		snapshot.pages[1]!.importFileId = 10;
+		snapshot.importRuns = [
+			{
+				id: 20,
+				startedAt: "2025-01-01T00:00:00.000Z",
+				finishedAt: "2025-01-01T01:00:00.000Z",
+				status: "COMPLETED",
+			},
+			{
+				id: 21,
+				startedAt: "2025-01-02T00:00:00.000Z",
+				finishedAt: null,
+				status: "RUNNING",
+			},
+		];
+		snapshot.importFiles = [
+			{
+				id: 10,
+				importRunId: 20,
+				path: "tipitaka.json",
+				checksum: "checksum-10",
+				status: "COMPLETED",
+				message: "",
+				createdAt: "2025-01-01T00:00:00.000Z",
+			},
+			{
+				id: 11,
+				importRunId: 21,
+				path: "article.json",
+				checksum: "checksum-11",
+				status: "COMPLETED",
+				message: "",
+				createdAt: "2025-01-02T00:00:00.000Z",
+			},
+		];
+		snapshot.personalAccessTokens = [
+			{
+				id: 1,
+				keyHash: "hash-token",
+				userId: "unused",
+				name: "CLI",
+				createdAt: "2025-01-01T00:00:00.000Z",
+				lastUsedAt: null,
+			},
+		];
+		snapshot.notifications = [
+			{
+				id: 1,
+				userId: "unused",
+				type: "PAGE_COMMENT",
+				read: false,
+				createdAt: "2025-01-01T00:00:00.000Z",
+				actorId: "voter-1",
+				pageCommentId: 999,
+				pageId: 999,
+				segmentTranslationId: 999,
+			},
+		];
+		snapshot.segmentTypes = [
+			{ id: 1, label: "本文", key: "PRIMARY" },
+			{ id: 2, label: "注釈", key: "COMMENTARY" },
+		];
+		snapshot.segmentMetadataTypes = [
+			{ id: 1, key: "edition", label: "Edition" },
+		];
+		snapshot.tags = [{ id: 1, name: "sutta" }];
+		snapshot.translationContexts = [
+			{
+				id: 1,
+				userId: "unused",
+				name: "context",
+				context: "preserve",
+				createdAt: "2025-01-01T00:00:00.000Z",
+				updatedAt: "2025-01-01T00:00:00.000Z",
+			},
+		];
+		snapshot.userSettings = [
+			{
+				id: 1,
+				userId: "unused",
+				targetLocales: ["ja", "en"],
+				createdAt: "2025-01-01T00:00:00.000Z",
+				updatedAt: "2025-01-01T00:00:00.000Z",
+			},
+		];
+		snapshot.likePages = [
+			{
+				id: 1,
+				pageId: 2,
+				createdAt: "2025-01-01T00:00:00.000Z",
+				userId: "unused",
+			},
+			{
+				id: 2,
+				pageId: 4,
+				createdAt: "2025-01-01T00:00:00.000Z",
+				userId: "unused",
+			},
+		];
+		snapshot.pageLocaleTranslationProofs = [
+			{ id: 1, pageId: 2, locale: "ja", translationProofStatus: "PROOFREAD" },
+			{ id: 2, pageId: 4, locale: "ja", translationProofStatus: "PROOFREAD" },
+		];
+		snapshot.pageViews = [
+			{ pageId: 2, count: 12 },
+			{ pageId: 4, count: 99 },
+		];
+		snapshot.segmentMetadata = [
+			{
+				id: 1,
+				segmentId: 10,
+				metadataTypeId: 1,
+				value: "PTS",
+				createdAt: "2025-01-01T00:00:00.000Z",
+			},
+		];
+		snapshot.tagPages = [{ tagId: 1, pageId: 2 }];
+
+		const plan = buildMigrationPlan(snapshot);
+
+		expect(plan.personalAccessTokens).toHaveLength(1);
+		expect(plan.notifications).toHaveLength(1);
+		expect(plan.importRuns.map((row) => row.id)).toEqual([20]);
+		expect(plan.importFiles.map((row) => row.id)).toEqual([10]);
+		expect(plan.likePages.map((row) => row.pageId)).toEqual([2]);
+		expect(plan.pageLocaleTranslationProofs.map((row) => row.pageId)).toEqual([
+			2,
+		]);
+		expect(plan.pageViews).toEqual([{ pageId: 2, count: 12 }]);
+		expect(plan.segmentMetadata).toHaveLength(1);
+		expect(plan.tagPages).toEqual([{ tagId: 1, pageId: 2 }]);
+		expect(plan.userSettings[0]?.targetLocales).toBe('["ja","en"]');
+		expect(plan.report.skipped.importRuns).toBe(1);
+		expect(plan.report.skipped.importFiles).toBe(1);
+		expect(plan.report.skipped.likePages).toBe(1);
 	});
 });

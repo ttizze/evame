@@ -8,7 +8,6 @@ import {
 	parseSupportedLocale,
 	rankTranslations,
 } from "../domain/vote";
-import { getSessionUser } from "./session";
 import {
 	listTranslationsForSegments,
 	type TranslationCandidate,
@@ -58,23 +57,23 @@ const LOCALE_LABELS: Readonly<Record<string, string>> = Object.fromEntries(
 
 function parseReadInput(input: unknown): {
 	locale: string;
-	sessionToken: string | null;
+	viewerUserId: string | null;
 } {
 	if (typeof input !== "object" || input === null || Array.isArray(input)) {
 		throw new InvalidInputError("経典の読み取り条件が不正です");
 	}
 	const value = input as Record<string, unknown>;
-	const sessionToken = value.sessionToken;
+	const viewerUserId = value.viewerUserId;
 	if (
-		sessionToken !== undefined &&
-		sessionToken !== null &&
-		(typeof sessionToken !== "string" || sessionToken.trim().length === 0)
+		viewerUserId !== undefined &&
+		viewerUserId !== null &&
+		(typeof viewerUserId !== "string" || viewerUserId.trim().length === 0)
 	) {
-		throw new InvalidInputError("セッショントークンが不正です");
+		throw new InvalidInputError("認証済みユーザーIDが不正です");
 	}
 	return {
 		locale: parseSupportedLocale(value.locale),
-		sessionToken: sessionToken === undefined ? null : sessionToken,
+		viewerUserId: viewerUserId === undefined ? null : viewerUserId,
 	};
 }
 
@@ -104,15 +103,6 @@ function hierarchyRows(rows: readonly ScriptureRow[]) {
 		title: normalizedTitle(row),
 		parent_id: row.parent_id,
 	}));
-}
-
-async function readViewerId(
-	db: SqlExecutor,
-	sessionToken: string | null,
-): Promise<string | null> {
-	if (sessionToken === null) return null;
-	const user = await getSessionUser(db, sessionToken);
-	return user?.id ?? null;
 }
 
 async function readPublishedScriptures(
@@ -197,6 +187,7 @@ async function availableLocales(
 
 async function readAnnotationLinks(
 	db: SqlExecutor,
+	scriptureId: number,
 	segmentIds: readonly number[],
 ): Promise<SegmentAnnotationLink[]> {
 	if (segmentIds.length === 0) return [];
@@ -206,18 +197,50 @@ async function readAnnotationLinks(
 		annotation_segment_id: number;
 		created_at: string;
 	}>(
-		`SELECT main_segment_id, annotation_segment_id, created_at
-		 FROM segment_annotation_links
-		 WHERE main_segment_id IN (${placeholders})
-			AND annotation_segment_id IN (${placeholders})
-		 ORDER BY main_segment_id, annotation_segment_id`,
-		[...segmentIds, ...segmentIds],
+		`SELECT link.main_segment_id, link.annotation_segment_id, link.created_at
+		 FROM segment_annotation_links AS link
+		 INNER JOIN segments AS main_segment
+			ON main_segment.id = link.main_segment_id
+		 INNER JOIN scriptures AS main_scripture
+			ON main_scripture.id = main_segment.scripture_id
+		 INNER JOIN segments AS annotation_segment
+			ON annotation_segment.id = link.annotation_segment_id
+		 INNER JOIN scriptures AS annotation_scripture
+			ON annotation_scripture.id = annotation_segment.scripture_id
+		 WHERE main_segment.scripture_id = ?
+			AND main_segment.id IN (${placeholders})
+			AND main_scripture.published_at IS NOT NULL
+			AND annotation_segment.kind = 'COMMENTARY'
+			AND annotation_scripture.published_at IS NOT NULL
+		 ORDER BY link.main_segment_id, link.annotation_segment_id`,
+		[scriptureId, ...segmentIds],
 	);
 	return rows.map((row) => ({
 		mainSegmentId: row.main_segment_id,
 		annotationSegmentId: row.annotation_segment_id,
 		createdAt: row.created_at,
 	}));
+}
+
+async function readAnnotationSegments(
+	db: SqlExecutor,
+	segmentIds: readonly number[],
+): Promise<SegmentRow[]> {
+	if (segmentIds.length === 0) return [];
+	const placeholders = segmentIds.map(() => "?").join(", ");
+	return db.all<SegmentRow>(
+		`SELECT annotation_segment.id, annotation_segment.scripture_id,
+				annotation_segment.kind, annotation_segment.position,
+				annotation_segment.source_text, annotation_segment.created_at
+		 FROM segments AS annotation_segment
+		 INNER JOIN scriptures AS annotation_scripture
+			ON annotation_scripture.id = annotation_segment.scripture_id
+		 WHERE annotation_segment.id IN (${placeholders})
+			AND annotation_segment.kind = 'COMMENTARY'
+			AND annotation_scripture.published_at IS NOT NULL
+		 ORDER BY annotation_segment.position, annotation_segment.id`,
+		segmentIds,
+	);
 }
 
 export async function getScripture(
@@ -229,19 +252,38 @@ export async function getScripture(
 	}
 	const value = input as Record<string, unknown>;
 	const slug = parseSlug(value.slug);
-	const { locale, sessionToken } = parseReadInput(value);
+	const { locale, viewerUserId } = parseReadInput(value);
 	const rows = await readPublishedScriptures(db);
 	const scripture = rows.find((row) => row.slug === slug);
 	if (!scripture) return null;
 
-	const viewerUserId = await readViewerId(db, sessionToken);
-	const segments = await db.all<SegmentRow>(
+	const mainSegments = await db.all<SegmentRow>(
 		`SELECT id, scripture_id, kind, position, source_text, created_at
 		 FROM segments
 		 WHERE scripture_id = ?
 		 ORDER BY position, id`,
 		[scripture.id],
 	);
+	const mainSegmentIds = mainSegments.map((segment) => segment.id);
+	const annotationLinks = await readAnnotationLinks(
+		db,
+		scripture.id,
+		mainSegmentIds,
+	);
+	const annotationSegmentIds = [
+		...new Set(annotationLinks.map((link) => link.annotationSegmentId)),
+	];
+	const linkedAnnotationSegments = await readAnnotationSegments(
+		db,
+		annotationSegmentIds,
+	);
+	const mainSegmentIdSet = new Set(mainSegmentIds);
+	const segments = [
+		...mainSegments,
+		...linkedAnnotationSegments.filter(
+			(segment) => !mainSegmentIdSet.has(segment.id),
+		),
+	];
 	const translations = await listTranslationsForSegments(
 		db,
 		segments.map((segment) => segment.id),
@@ -262,14 +304,13 @@ export async function getScripture(
 		translations: rankTranslations(translationsBySegment.get(segment.id) ?? []),
 	}));
 	const primarySegments = scriptureSegments.filter(
-		(segment) => segment.kind === "PRIMARY",
+		(segment) => mainSegmentIdSet.has(segment.id) && segment.kind === "PRIMARY",
+	);
+	const mainScriptureSegments = scriptureSegments.filter((segment) =>
+		mainSegmentIdSet.has(segment.id),
 	);
 	const sourceSegments =
-		primarySegments.length > 0 ? primarySegments : scriptureSegments;
-	const annotationLinks = await readAnnotationLinks(
-		db,
-		segments.map((segment) => segment.id),
-	);
+		primarySegments.length > 0 ? primarySegments : mainScriptureSegments;
 
 	return {
 		id: scripture.id,

@@ -2,6 +2,8 @@
 
 本書は、移行元 Evame からデジタル仏教へ移行した後のサービス境界を定義します。現行の正本は、仏典翻訳の閲覧、認証済みユーザーによる翻訳案の投稿と投票、AI 翻訳ジョブによる翻訳案の提案です。
 
+明示的に削除した機能を除き、移行元 Evame の既存仕様と観測可能な挙動は維持します。新 URL を正本とし、旧 URL の互換や redirect は提供しません。
+
 ## 目的
 
 - 仏典の原文と複数言語の翻訳を世界中の読者へ提供する
@@ -62,6 +64,7 @@
 - 認証済みユーザーは、許可された対象・ロケールに対して翻訳ジョブを作成できる
 - ジョブの状態は `PENDING` / `IN_PROGRESS` / `COMPLETED` / `FAILED` で管理する
 - ジョブは外部のキューまたは Worker の非同期処理から実行できる
+- provider routing は provider adapter の境界に閉じ、Gemini・OpenAI・DeepSeek と、既存の Vertex/provider routing 方針を設定に応じて選択する
 - 完了時は翻訳案を保存し、対象の読み取りキャッシュを無効化する
 - 失敗時は秘密値やプロンプトを公開せず、再実行可能な状態を記録する
 - 同じジョブの再送で翻訳案や課金対象の二重登録が起きないよう idempotent にする
@@ -85,13 +88,16 @@
 - `/$locale/$slug`: 仏典の原文・翻訳案・投票状態
 - `/login`: 認証画面
 - `src/routes/$locale/-scripture-data.ts` の serverFn: 仏典一覧・詳細取得、翻訳案投稿、投票、AI 翻訳ジョブの作成・状態取得
-- `/api/auth/request`、`/api/auth/verify`、`/api/auth/logout`: 認証 API
+- `/api/auth/*`: Better Auth の認証 API（catch-all route）
 - `/api/translation-jobs`: AI 翻訳ジョブを作成する POST API
+- `/sitemap.xml`: 公開済み仏典と 21 locale の公開 URL
+- `/robots.txt`: クロール規則と sitemap の場所
 
 実際の URL と serverFn/API の境界は TanStack Router のルート定義を正本とし、変更時はこの一覧を更新します。
 
 ## 権限とアクセス
 
+- 認証は Better Auth の境界で扱い、セッション検証を公開ページやクライアント表示の条件にしない
 - 公開済みの仏典と翻訳案は認証なしで閲覧できる
 - 翻訳案の投稿と AI 翻訳ジョブの作成は認証済みユーザーだけが行える
 - 投票の追加・取り消し・変更は認証済みユーザーだけが行える
@@ -126,6 +132,7 @@
 - 実行環境: Cloudflare Workers
 - データベース: Turso Database
 - DB クライアント: `@tursodatabase/serverless`
+- UI: React、Tailwind CSS、shadcn/ui
 - パッケージ管理: Bun
 - 開発環境: Nix flake と `just`
 
@@ -135,23 +142,38 @@ Cloudflare Workers のリクエスト処理では Node.js 専用 API（`fs`、`c
 
 - 読み取りページは静的生成またはキャッシュ可能なレスポンスを優先する
 - 投票、翻訳案投稿、AI ジョブなど認証が必要な処理だけを動的なサーバー境界に置く
-- `robots.txt` と `sitemap.xml` は公開済みの仏典だけを対象にする
-- ページのタイトル、canonical、OG 情報はロケールと仏典を反映する
+- `/robots.txt` は API と認証画面をクロール対象外にし、`/sitemap.xml` の場所を示す
+- `/sitemap.xml` は公開済み仏典の `/$locale/$slug` と、現行 21 locale の一覧だけを掲載する。非公開・未存在の仏典を含めない
+- `/$locale` と `/$locale/$slug` は現行 21 locale すべてに title と description を返す。移行元で既存の copy がある `en`、`ja`、`zh`、`ko`、`es` は各言語の copy を再利用し、追加 locale は未翻訳文を混在させず英語 copy へ明示的に fallback する
+- 公開ページには現在の URL の絶対 canonical、21 locale の `hreflang` alternate と `x-default` を設定する。旧 URL 互換や redirect は提供しない
+- 公開ページには `og:title`、`og:description`、`og:url`、`og:image` と X の `summary_large_image` card を設定する
+- 公開一覧と仏典詳細には schema.org の JSON-LD 構造化データを設定する。セッションや投票状態など個人別データは含めない
 - セッション、投票の内部 ID、プロンプト、秘密値を HTML やログに出力しない
+
+### Cloudflare の可観測性
+
+- Worker の Observability と invocation logs は Wrangler の設定で有効化し、エラー・レイテンシー・HTTP ステータスを Cloudflare の Logs で追跡する
+- 利用状況の集計は Cloudflare Analytics で行う。アプリケーションに解析用の秘密値を追加せず、個人を識別する値をイベントへ送らない
+- アプリケーションログは JSON の構造化ログとし、`event`、`requestId`、`route`、`status`、`durationMs`、`jobId` などの最小フィールドだけを記録する。メールアドレス、Cookie、認証トークン、DB URL、AI キー、プロンプト、翻訳本文は記録しない
+- Queue consumer は Wrangler の `max_retries` と `dead_letter_queue` を正本とする。再試行上限を超えたメッセージは DLQ で隔離し、本文や秘密値をログへ出さずにジョブ ID で原因を追跡する
 
 ## 環境変数
 
-`.env.example` は名前だけを示し、秘密値は空欄にします。最低限、次を実行環境ごとに設定します。
+`.env.example` は名前だけを示し、秘密値は空欄にします。現行 Worker の `TranslationWorkerEnv` と `createAuth` が受け取る環境変数は次のとおりです。
 
-- `TURSO_DATABASE_URL`
-- `TURSO_AUTH_TOKEN`
-- `APP_BASE_URL`
-- 認証プロバイダーのキー（利用する場合）
-- メール送信元: `EMAIL_FROM`
-- AI プロバイダーのキー: `OPENAI_API_KEY`、`DEEPSEEK_API_KEY`、`GEMINI_API_KEY`
-- 翻訳ジョブの再試行上限: `TRANSLATION_MAX_ATTEMPTS`
+- アプリケーションと DB: `APP_BASE_URL`、`TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`
+- 認証: `AUTH_SECRET`、`AUTH_RESEND_KEY`、`EMAIL_FROM`、`AUTH_GOOGLE_ID`、`AUTH_GOOGLE_SECRET`
+- AI provider routing: `OPENAI_API_KEY`、`DEEPSEEK_API_KEY`、`ENCRYPTION_KEY`、`GCP_PROJECT_ID`、`GCP_REGION`、`GCP_SERVICE_ACCOUNT_EMAIL`、`GCP_SERVICE_ACCOUNT_PRIVATE_KEY`
+
+`TURSO_AUTH_TOKEN`、`AUTH_SECRET`、`AUTH_RESEND_KEY`、`AUTH_GOOGLE_SECRET`、`OPENAI_API_KEY`、`DEEPSEEK_API_KEY`、`ENCRYPTION_KEY`、`GCP_SERVICE_ACCOUNT_PRIVATE_KEY` は秘密値として扱います。`GCP_SERVICE_ACCOUNT_PRIVATE_KEY` は PEM の秘密鍵で、`.env` や Wrangler secret へ登録する際に改行を `\\n` として保存しても Worker 側で実改行へ正規化します。鍵の内容をログ、HTML、Git、Nix store に出力しません。
+
+Gemini の API key はユーザー単位で暗号化して Turso Database に保存する既存仕様を使い、旧来の API key や access token の環境変数 fallback は提供しません。Vertex provider の認証には上記 GCP サービスアカウント項目を使います。
 
 ローカル開発と CI は専用の Turso Database を使います。本番データベースをテストやローカルのマイグレーション先にしません。翻訳ジョブのキューは Cloudflare Queues の `TRANSLATION_QUEUE` binding を使い、キュー名や consumer 設定は Wrangler で管理します。
+
+`TRANSLATION_QUEUE` は Cloudflare の binding であり、環境変数や Worker secret として登録しません。
+
+通常 Queue の consumer は `wrangler.jsonc` の `max_retries` を再試行上限として使います。上限に達したメッセージは同じ設定の dead-letter queue（DLQ）へ移送され、同一 Worker の DLQ consumer がジョブ ID を使って `FAILED` を記録した後に `ack` します。DLQ consumer はメッセージ本文や秘密値をログへ出力せず、アプリケーション環境変数で再試行回数を上書きしません。
 
 ## 検証
 

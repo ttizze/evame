@@ -12,6 +12,8 @@
 - DB: Turso Database
 - DB クライアント: `@tursodatabase/serverless`
 - UI: React + TypeScript
+- UI コンポーネント: Tailwind CSS + shadcn/ui
+- 認証: Better Auth のセッション境界
 - パッケージ管理: Bun
 - 開発環境: Nix flake
 - タスクランナー: `just`
@@ -54,12 +56,14 @@ src/
 ├── components/   # 複数ルートで使う UI
 ├── domain/       # 仏典、翻訳、投票、ジョブの純粋なルール
 ├── db/           # Turso Database クライアント、読み取り、更新、マイグレーション
+├── seo/          # locale metadata、canonical、sitemap、robots の生成
 └── styles/       # アプリケーションのスタイル
 ```
 
 - `routes`: HTTP 入出力、セッションの入口、画面の組み立てを担当する
 - `domain`: DB や Worker API に依存せず、投票可否・表示順・ジョブ状態を決める
 - `db`: Turso Database からデータを取得・更新する。表示用の業務判断は `domain` に置く
+- `seo`: URL、metadata、JSON-LD、公開 URL 一覧を決定論的に生成する。sitemap の公開判定は `published_at IS NOT NULL` の query に限定する
 - `components`: ルートに依存しない共有 UI を担当する
 
 依存は `routes → domain/db/components`、`db → @tursodatabase/serverless` の一方向とします。ブラウザに DB トークンや AI プロバイダーキーを渡しません。
@@ -121,7 +125,7 @@ AI 翻訳は同期リクエストに閉じ込めず、次の境界に分けま�
 
 1. 認証済みユーザーの serverFn/API が対象節・ロケールを検証し、`PENDING` ジョブを作る
 2. 作成したジョブ ID を冪等キーとして Cloudflare Queues の `TRANSLATION_QUEUE` binding へ投入する
-3. Worker のジョブ処理が AI プロバイダーを fetch ベースの adapter 経由で呼ぶ
+3. Worker のジョブ処理が provider routing に従い、Gemini・OpenAI・DeepSeek または既存の Vertex/provider adapter を fetch ベースの境界経由で呼ぶ
 4. 成功時に翻訳案と `COMPLETED` 状態を保存し、対象の読み取りキャッシュを無効化する
 5. 失敗時に秘密値やプロンプトを公開せず、`FAILED` と再実行情報を記録する
 
@@ -150,12 +154,24 @@ Wrangler のバインディングと環境変数は環境ごとに管理しま�
 - 投票・翻訳案投稿・ジョブ完了後は対象翻訳の表示順と本文だけを再取得または無効化する
 - ユーザーごとのレスポンスを共有キャッシュへ保存しない
 
-## SEO と可観測性
+## SEO
 
-- 公開済み仏典だけを sitemap に掲載する
-- ロケールごとに title、description、canonical を生成する
-- Worker のエラーと遅延は Cloudflare の可観測性で追跡する
-- DB クエリ、セッション、投票値、AI プロンプトに含まれる個人情報・秘密値をログへ出さない
+SEO の純粋な生成処理は `src/seo/metadata.ts` と `src/seo/sitemap.ts` に置き、HTTP の入出力は次の route に限定します。
+
+- `/$locale` と `/$locale/$slug` の `head` で locale 別 title、description、canonical、OG/X metadata を返す。既存 copy がある `en`、`ja`、`zh`、`ko`、`es` は各言語の文言を使い、追加 locale は英語 copy へ明示的に fallback する
+- 各公開ページに 21 locale の `hreflang` と `x-default` alternate を付ける。構造化データは TanStack Router の `{ "script:ld+json": object }` metadata descriptor で JSON-LD として出力する
+- `/sitemap.xml` は `published_at IS NOT NULL` の仏典だけを Turso Database から読み、各 locale の URL を XML で返す
+- `/robots.txt` は API とログイン画面を除外し、sitemap の絶対 URL を返す
+- OG image は公開静的 asset `/bg-ogp.png` を使い、セッション・投票状態・秘密値を metadata や JSON-LD に含めない
+- canonical は新 URL を正本とし、移行元 Evame の旧 URL redirect/互換層は持たない
+
+## Cloudflare の可観測性と Queue 運用
+
+- `wrangler.jsonc` の `observability.enabled` と `observability.logs` を Cloudflare Workers Observability の正本とする。Cloudflare Logs で invocation、エラー、ステータス、レイテンシーを検索する
+- 利用状況の集計は Cloudflare Analytics を使い、解析用の秘密値をアプリケーションへ追加しない。必要な集計は匿名の route/status 単位に限定する
+- アプリケーションのログは JSON の `event`、`requestId`、`route`、`status`、`durationMs`、`jobId` などに限定する。メール、Cookie、認証トークン、DB URL、AI キー、プロンプト、翻訳本文、投票値はログへ出さない
+- `TRANSLATION_QUEUE` consumer の `max_retries` と `dead_letter_queue` は Wrangler で管理する。再試行上限を超えたメッセージは `digital-buddhism-translations-dlq` に隔離し、DLQ の再投入前に job ID と失敗理由（秘密値を除く）を確認する
+- Queue の失敗は job の `FAILED` 状態と Cloudflare Logs の相関 ID で追跡し、DLQ の payload をそのままログへ出力しない
 
 ## 検証
 

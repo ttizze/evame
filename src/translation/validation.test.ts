@@ -13,14 +13,14 @@ describe("翻訳ジョブ入力検証", () => {
 				locale: "pt",
 				model: "gpt-5-nano-2025-08-07",
 				translationContext: "Use the established Buddhist terminology.",
-				sessionToken: "session",
+				userId: "user-1",
 			}),
 		).toEqual({
 			scriptureId: 42,
 			locale: "pt",
 			model: "gpt-5-nano-2025-08-07",
 			translationContext: "Use the established Buddhist terminology.",
-			sessionToken: "session",
+			userId: "user-1",
 		});
 	});
 
@@ -30,7 +30,7 @@ describe("翻訳ジョブ入力検証", () => {
 				scriptureId: 42,
 				locale: "pt-BR",
 				model: "gemini-2.0-flash",
-				sessionToken: "session",
+				userId: "user-1",
 			}),
 		).toThrow(InvalidInputError);
 		expect(() =>
@@ -55,7 +55,7 @@ describe("翻訳ジョブ入力検証", () => {
 				locale: "ja",
 				model: "gpt-5",
 				translationContext: "",
-				sessionToken: "session",
+				userId: "user-1",
 			}),
 		).toThrow(InvalidInputError);
 		expect(() =>
@@ -64,7 +64,7 @@ describe("翻訳ジョブ入力検証", () => {
 				locale: "ja",
 				model: "some-provider-model",
 				translationContext: "",
-				sessionToken: "session",
+				userId: "user-1",
 			}),
 		).toThrow(InvalidInputError);
 	});
@@ -77,7 +77,7 @@ describe("翻訳ジョブ入力検証", () => {
 					locale: "ja",
 					model,
 					translationContext: "",
-					sessionToken: "session",
+					userId: "user-1",
 				}),
 			).toThrow(InvalidInputError);
 		}

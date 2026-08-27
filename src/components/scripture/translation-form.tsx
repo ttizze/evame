@@ -1,4 +1,10 @@
+import { ArrowUpFromLine } from "lucide-react";
 import { type FormEvent, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { getScriptureCopy } from "./copy";
+import { buildLoginHref } from "./login-link";
 import type { TranslationCandidate } from "./types";
 
 type TranslationFormProps = {
@@ -11,39 +17,8 @@ type TranslationFormProps = {
 	}) => Promise<TranslationCandidate>;
 	uiLocale?: string;
 	fieldIdPrefix?: string;
+	loginHref?: string;
 };
-
-const copy = {
-	ja: {
-		headline: "翻訳案を提出",
-		description: "原文を確認し、選択した言語の訳文を共有できます。",
-		locale: "翻訳の言語",
-		text: "訳文",
-		placeholder: "訳文を入力",
-		help: "原文の意味を損なわない、読みやすい訳を心がけてください。",
-		submit: "翻訳案を提出",
-		submitting: "提出中…",
-		success: "翻訳案を提出しました。",
-		empty: "訳文を入力してください。",
-		error: "翻訳案を提出できませんでした。時間をおいてお試しください。",
-		login: "翻訳案を提出するにはログインしてください。",
-	},
-	en: {
-		headline: "Submit a translation",
-		description:
-			"Review the source and share a translation in the selected language.",
-		locale: "Translation language",
-		text: "Translation",
-		placeholder: "Write a translation",
-		help: "Aim for a clear translation that preserves the meaning of the source.",
-		submit: "Submit translation",
-		submitting: "Submitting…",
-		success: "Translation submitted.",
-		empty: "Enter a translation.",
-		error: "The translation could not be submitted. Please try again later.",
-		login: "Log in to submit a translation.",
-	},
-} as const;
 
 export function TranslationForm({
 	authenticated,
@@ -52,8 +27,11 @@ export function TranslationForm({
 	onCreateTranslation,
 	uiLocale = "ja",
 	fieldIdPrefix = "translation",
+	loginHref,
 }: TranslationFormProps) {
-	const labels = uiLocale.toLowerCase().startsWith("ja") ? copy.ja : copy.en;
+	const labels = getScriptureCopy(uiLocale);
+	const resolvedLoginHref =
+		loginHref ?? buildLoginHref(uiLocale, `/${uiLocale}`);
 	const [locale, setLocale] = useState(defaultLocale);
 	const [text, setText] = useState("");
 	const [pending, setPending] = useState(false);
@@ -65,8 +43,10 @@ export function TranslationForm({
 
 	if (!authenticated) {
 		return (
-			<p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-				{labels.login}
+			<p className="mt-4 px-4 text-sm text-muted-foreground">
+				<a className="underline underline-offset-4" href={resolvedLoginHref}>
+					{labels.formLogin}
+				</a>
 			</p>
 		);
 	}
@@ -75,7 +55,7 @@ export function TranslationForm({
 		event.preventDefault();
 		if (text.trim().length === 0) {
 			setError(true);
-			setMessage(labels.empty);
+			setMessage(labels.formEmpty);
 			return;
 		}
 
@@ -85,10 +65,10 @@ export function TranslationForm({
 		try {
 			await onCreateTranslation({ locale, text });
 			setText("");
-			setMessage(labels.success);
+			setMessage(labels.formSuccess);
 		} catch {
 			setError(true);
-			setMessage(labels.error);
+			setMessage(labels.formError);
 		} finally {
 			setPending(false);
 		}
@@ -97,28 +77,20 @@ export function TranslationForm({
 	return (
 		<form
 			aria-labelledby="translation-form-title"
-			className="rounded-2xl border border-slate-200 bg-slate-50 p-5 sm:p-6"
+			className="mt-4 px-4"
 			onSubmit={handleSubmit}
 		>
-			<h3
-				className="text-lg font-semibold text-slate-900"
-				id="translation-form-title"
-			>
-				{labels.headline}
+			<h3 className="text-base font-semibold" id="translation-form-title">
+				{labels.formHeadline}
 			</h3>
-			<p className="mt-1 text-sm leading-6 text-slate-600">
-				{labels.description}
+			<p className="mt-1 text-sm leading-6 text-muted-foreground">
+				{labels.formDescription}
 			</p>
 			<div className="mt-5 grid gap-4 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)]">
 				<div>
-					<label
-						className="text-sm font-medium text-slate-700"
-						htmlFor={localeFieldId}
-					>
-						{labels.locale}
-					</label>
+					<Label htmlFor={localeFieldId}>{labels.formLocale}</Label>
 					<select
-						className="mt-2 h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+						className="mt-2 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-1 focus-visible:ring-ring"
 						id={localeFieldId}
 						name="locale"
 						onChange={(event) => setLocale(event.target.value)}
@@ -132,39 +104,33 @@ export function TranslationForm({
 					</select>
 				</div>
 				<div>
-					<label
-						className="text-sm font-medium text-slate-700"
-						htmlFor={textFieldId}
-					>
-						{labels.text}
-					</label>
-					<textarea
+					<Label htmlFor={textFieldId}>{labels.formText}</Label>
+					<Textarea
 						aria-describedby={helpId}
-						className="mt-2 min-h-28 w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2 text-base leading-7 text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+						className="mt-2 min-h-28 resize-y text-base leading-7"
 						id={textFieldId}
 						name="text"
 						onChange={(event) => setText(event.target.value)}
-						placeholder={labels.placeholder}
+						placeholder={labels.formPlaceholder}
 						required
 						value={text}
 					/>
-					<p className="mt-1 text-xs text-slate-500" id={helpId}>
-						{labels.help}
+					<p className="mt-1 text-xs text-muted-foreground" id={helpId}>
+						{labels.formHelp}
 					</p>
 				</div>
 			</div>
 			<div className="mt-4 flex flex-wrap items-center gap-3">
-				<button
-					className="min-h-11 rounded-lg bg-slate-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
-					disabled={pending}
-					type="submit"
-				>
-					{pending ? labels.submitting : labels.submit}
-				</button>
+				<Button disabled={pending} type="submit">
+					<ArrowUpFromLine aria-hidden="true" className="h-4 w-4" />
+					{pending ? labels.formSubmitting : labels.formSubmit}
+				</Button>
 				{message ? (
 					<p
 						className={
-							error ? "text-sm text-red-700" : "text-sm text-slate-700"
+							error
+								? "text-sm text-destructive"
+								: "text-sm text-muted-foreground"
 						}
 						role={error ? "alert" : "status"}
 					>

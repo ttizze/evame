@@ -13,19 +13,26 @@ bunx wrangler login
 
 ## シークレットと変数
 
-Turso Database の認証トークン、認証プロバイダーの秘密値、AI プロバイダーのキーは Worker secret として登録します。
+`TranslationWorkerEnv` と `createAuth` が参照する名前だけを登録します。次の値は Worker secret として登録します。
 
 ```bash
 bunx wrangler secret put TURSO_AUTH_TOKEN
+bunx wrangler secret put AUTH_SECRET
 bunx wrangler secret put AUTH_RESEND_KEY
+bunx wrangler secret put AUTH_GOOGLE_SECRET
 bunx wrangler secret put OPENAI_API_KEY
 bunx wrangler secret put DEEPSEEK_API_KEY
-bunx wrangler secret put GEMINI_API_KEY
+bunx wrangler secret put ENCRYPTION_KEY
+bunx wrangler secret put GCP_SERVICE_ACCOUNT_PRIVATE_KEY
 ```
 
-`TURSO_DATABASE_URL`、`APP_BASE_URL`、`EMAIL_FROM`、公開ドメイン、`TRANSLATION_MAX_ATTEMPTS` など秘密ではない値は Worker の環境変数として設定します。環境変数名は [`docs/requirements.md`](../requirements.md) と `.env.example` を正本とします。
+`TURSO_DATABASE_URL`、`APP_BASE_URL`、`EMAIL_FROM`、`AUTH_GOOGLE_ID`、`GCP_PROJECT_ID`、`GCP_REGION`、`GCP_SERVICE_ACCOUNT_EMAIL` は Worker の非秘密変数として設定します。環境変数名は [`docs/requirements.md`](../requirements.md) と `.env.example` を正本とします。
 
-利用しない AI プロバイダーの secret は登録しません。値が必要な処理を有効にする場合だけ、対象環境へ登録します。Cloudflare Queues の名前や binding は secret ではなく Wrangler 設定で管理します。
+`GCP_SERVICE_ACCOUNT_PRIVATE_KEY` は PEM の秘密鍵です。`secret put` の入力プロンプトへ安全な経路で値を渡し、シェル履歴やログへ出力しません。値をファイルや環境変数から登録する場合も、PEM の実改行を保持するか、改行を `\\n` として保存してください。Worker の provider adapter が `\\n` を実改行へ戻します。秘密鍵 JSON 全体や秘密値をコマンド引数、Git、Nix storeへ置きません。
+
+Gemini の API key はユーザー単位で暗号化された Turso Database の値を使います。旧来の API key や access token は登録せず、環境変数 fallback もありません。
+
+利用しない AI プロバイダーの secret は登録しません。値が必要な処理を有効にする場合だけ、対象環境へ登録します。`TRANSLATION_QUEUE` は環境変数や secret ではなく Cloudflare binding なので、Wrangler 設定だけで管理します。
 
 ## 翻訳ジョブ用 Cloudflare Queues
 
@@ -41,11 +48,28 @@ bunx wrangler queues create digital-buddhism-translations-dlq
 [`wrangler.jsonc`](../../wrangler.jsonc) の Wrangler 設定には、次の関係を定義します。
 
 - producer binding: `TRANSLATION_QUEUE` → `digital-buddhism-translations`
-- consumer: `digital-buddhism-translations`
+- 通常 consumer: `digital-buddhism-translations`
 - dead-letter queue: `digital-buddhism-translations-dlq`
-- consumer の再試行回数・バッチサイズ・タイムアウト
+- 通常 consumer の `max_retries`、バッチサイズ、タイムアウト
+- DLQ consumer: `digital-buddhism-translations-dlq`（同一 Worker）
 
-設定後に `just deploy` を実行します。consumer は最大再試行回数を超えたメッセージを dead-letter queue へ送り、原因を Worker のログとジョブ状態で追跡します。キューの削除や名前変更は、未処理メッセージとデプロイ済み Worker の binding を確認してから行います。
+設定後に `just deploy` を実行します。通常 consumer は `wrangler.jsonc` の `max_retries` を超えたメッセージを dead-letter queue へ送り、同一 Worker の DLQ consumer がジョブ ID の状態を `FAILED` にして `ack` します。キューの削除や名前変更は、未処理メッセージとデプロイ済み Worker の binding を確認してから行います。
+
+### 再試行と DLQ の運用
+
+`wrangler.jsonc` の通常 consumer に設定した `max_retries` が同じメッセージの再試行上限です。処理失敗時はジョブ ID を相関キーにして再試行し、上限を超えたメッセージは `digital-buddhism-translations-dlq` に隔離します。同一 Worker の DLQ consumer は payload を再検証し、ジョブ ID の状態を `FAILED` に記録してからメッセージを `ack` します。これにより DLQ message 自体を再試行しません。DLQ を再投入する前に、対象ジョブが `FAILED` または再実行可能な状態であること、同じジョブ ID の二重登録が起きないことを確認します。メッセージ本文、AI プロンプト、認証情報をログや通知へコピーしません。
+
+## Observability・Logs・Analytics
+
+`wrangler.jsonc` の Observability 設定を Worker の可観測性の正本とします。デプロイ後は Cloudflare Dashboard の Workers > Observability で invocation logs、エラー、ステータス、レイテンシーを確認し、必要な短時間の調査だけ `bunx wrangler tail` で行います。Cloudflare Analytics では route/status 単位の匿名集計を確認し、アプリケーション側に解析用の秘密値や個人識別子を追加しません。
+
+アプリケーションログは JSON の次の最小フィールドだけを使います。
+
+```json
+{"event":"translation_job_failed","requestId":"request-id","route":"/api/translation-jobs","status":503,"durationMs":120,"jobId":"job-id"}
+```
+
+メールアドレス、Cookie、認証トークン、Turso の URL・トークン、AI provider key、プロンプト、翻訳本文、投票値、Queue payload はログへ出力しません。これらが混入したログを Cloudflare Logs や `wrangler tail` から転記しないでください。
 
 ## ビルドとデプロイ
 
@@ -68,4 +92,4 @@ just deploy
 bunx wrangler tail
 ```
 
-異常がある場合は Cloudflare のデプロイ履歴から直前の正常な Worker バージョンへ戻します。DB マイグレーションはアプリのロールバックより先に後方互換性を確認してください。
+異常がある場合は Cloudflare のデプロイ履歴から直前の正常な Worker バージョンへ戻します。Queue consumer の失敗は Cloudflare Logs、ジョブ状態、DLQ の件数を併せて確認します。DB マイグレーションはアプリのロールバックより先に後方互換性を確認してください。

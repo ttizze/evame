@@ -47,7 +47,7 @@ describe("翻訳ドメインの入力と順位", () => {
 		expect(parseLocale("EN_us")).toBe("en-us");
 	});
 
-	test("同じpointと日時の候補もIDで安定して並ぶ", () => {
+	test("同じpointと日時の候補は入力順を保つ", () => {
 		const candidates = [
 			{ id: 2, point: 1, createdAt: "2026-01-01T00:00:00.000Z" },
 			{ id: 3, point: 2, createdAt: "2026-01-01T00:00:00.000Z" },

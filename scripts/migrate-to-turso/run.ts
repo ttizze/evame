@@ -60,8 +60,9 @@ export async function runMigration(
 	}
 
 	try {
-		const snapshot = await source.load(options.rootSlug ?? "tipitaka");
-		const plan = buildMigrationPlan(snapshot);
+		const rootSlug = options.rootSlug ?? "tipitaka";
+		const snapshot = await source.load(rootSlug);
+		const plan = buildMigrationPlan(snapshot, rootSlug);
 		writeLine(stdout, {
 			mode: dryRun ? "dry-run" : "apply",
 			counts: plan.report.counts,

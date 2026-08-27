@@ -57,8 +57,8 @@ function parseJobId(value: unknown): string {
 	return id;
 }
 
-function parseSessionToken(value: unknown): string {
-	return requiredText(value, "sessionToken", 512);
+function parseUserId(value: unknown): string {
+	return requiredText(value, "userId", 512);
 }
 
 function parseSegment(value: unknown): TranslationSegment {
@@ -110,7 +110,7 @@ function parsePositiveInteger(value: unknown, fieldName: string): number {
 /** POSTで受け取る翻訳ジョブを、仏典セグメント専用の入力へ正規化する。 */
 export function parseTranslationJobRequest(
 	value: unknown,
-	sessionTokenOverride?: string,
+	userIdOverride?: string,
 ): TranslationJobRequest {
 	const object = recordInput(value, "翻訳ジョブ入力が不正です");
 	if (
@@ -127,9 +127,7 @@ export function parseTranslationJobRequest(
 	const localeValue = object.locale ?? object.targetLocale;
 	const locale = parseSupportedLocale(localeValue);
 	const model = parseModel(object.model ?? object.aiModel);
-	const sessionToken = parseSessionToken(
-		sessionTokenOverride ?? object.sessionToken,
-	);
+	const userId = parseUserId(userIdOverride ?? object.userId);
 	const rawIdempotencyKey = object.idempotencyKey;
 	const idempotencyKey =
 		rawIdempotencyKey === undefined ? undefined : parseJobId(rawIdempotencyKey);
@@ -139,7 +137,7 @@ export function parseTranslationJobRequest(
 		locale,
 		model,
 		translationContext: optionalContext(object.translationContext),
-		sessionToken,
+		userId,
 		...(idempotencyKey ? { idempotencyKey } : {}),
 	};
 }

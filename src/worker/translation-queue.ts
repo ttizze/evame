@@ -1,11 +1,15 @@
 import { DomainError, InvalidInputError, NotFoundError } from "@/domain/errors";
-import { markTranslationJobFailed } from "@/translation/persistence";
+import {
+	markTranslationJobFailed,
+	validateJobId,
+} from "@/translation/persistence";
 import { TranslationProviderError } from "@/translation/provider";
 import {
 	PartialTranslationError,
 	processTranslationChunk,
 	publicTranslationError,
 	startTranslationJob,
+	TranslationChunkBusyError,
 } from "@/translation/service";
 import type {
 	TranslationDatabase,
@@ -16,28 +20,16 @@ import type {
 } from "@/translation/types";
 import { parseTranslationQueueMessage } from "@/translation/validation";
 
-const DEFAULT_MAX_ATTEMPTS = 3;
+export const TRANSLATION_DEAD_LETTER_QUEUE_NAME =
+	"digital-buddhism-translations-dlq";
 
-export function parseMaxAttempts(value: unknown): number {
-	if (typeof value !== "string") return DEFAULT_MAX_ATTEMPTS;
-	const normalized = value.trim();
-	if (!/^\d+$/u.test(normalized)) return DEFAULT_MAX_ATTEMPTS;
-	const parsed = Number.parseInt(normalized, 10);
-	return Number.isSafeInteger(parsed) && parsed > 0
-		? parsed
-		: DEFAULT_MAX_ATTEMPTS;
+export function isTranslationDeadLetterQueue(queueName: string): boolean {
+	return queueName === TRANSLATION_DEAD_LETTER_QUEUE_NAME;
 }
 
-export function retryDelaySeconds(
-	attempts: number,
-	maxAttempts: number,
-): number | null {
-	if (
-		!Number.isSafeInteger(attempts) ||
-		attempts < 1 ||
-		attempts >= maxAttempts
-	)
-		return null;
+/** Queueの配送試行間隔。再試行上限はWranglerのmax_retriesへ委譲する。 */
+export function retryDelaySeconds(attempts: number): number {
+	if (!Number.isSafeInteger(attempts) || attempts < 1) return 1;
 	return Math.min(300, 2 ** (attempts - 1));
 }
 
@@ -62,10 +54,49 @@ function messageAttempts(message: TranslationQueueMessageLike): number {
 		: 1;
 }
 
+function jobIdFromPayload(value: unknown): string | null {
+	if (typeof value !== "object" || value === null || Array.isArray(value)) {
+		return null;
+	}
+	const candidate = (value as Record<string, unknown>).jobId;
+	if (typeof candidate !== "string") return null;
+	try {
+		return validateJobId(candidate);
+	} catch {
+		return null;
+	}
+}
+
 async function acknowledge(
 	message: TranslationQueueMessageLike,
 ): Promise<void> {
 	await message.ack();
+}
+
+async function failJob(
+	db: TranslationDatabase,
+	jobId: string | null,
+	errorMessage: string,
+): Promise<void> {
+	if (!jobId) return;
+	await markTranslationJobFailed(db, jobId, errorMessage);
+}
+
+async function handleDeadLetterMessages(
+	batch: TranslationMessageBatch,
+	db: TranslationDatabase,
+): Promise<void> {
+	for (const message of batch.messages) {
+		const jobId = jobIdFromPayload(message.body);
+		let reason = "翻訳Queueの再試行上限に達しました。";
+		try {
+			parseTranslationQueueMessage(message.body);
+		} catch {
+			reason = "翻訳Queue payloadが不正です。";
+		}
+		await failJob(db, jobId, reason);
+		await acknowledge(message);
+	}
 }
 
 /** Queue payloadを再検証し、失敗したchunkだけを再試行するconsumer本体。 */
@@ -75,16 +106,24 @@ export async function handleTranslationQueue(
 		db: TranslationDatabase;
 		queue: TranslationQueue;
 		providerConfig: TranslationProviderConfig;
-		maxAttempts?: number;
 	},
 ): Promise<void> {
-	const maxAttempts = dependencies.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
+	if (isTranslationDeadLetterQueue(batch.queue)) {
+		await handleDeadLetterMessages(batch, dependencies.db);
+		return;
+	}
+
 	for (const message of batch.messages) {
 		let payload: ReturnType<typeof parseTranslationQueueMessage>;
 		try {
 			payload = parseTranslationQueueMessage(message.body);
 		} catch {
-			// 不正な外部payloadは再試行しても直らないため、秘密値を含めず破棄する。
+			// 不正な外部payloadは再試行しても直らないため、jobIdだけ記録して破棄する。
+			await failJob(
+				dependencies.db,
+				jobIdFromPayload(message.body),
+				"翻訳Queue payloadが不正です。",
+			);
 			await acknowledge(message);
 			continue;
 		}
@@ -106,24 +145,27 @@ export async function handleTranslationQueue(
 			}
 			await acknowledge(message);
 		} catch (error) {
-			const attempts = messageAttempts(message);
-			const delaySeconds = isRetryable(error)
-				? retryDelaySeconds(attempts, maxAttempts)
-				: null;
-			if (delaySeconds !== null) {
-				await message.retry({ delaySeconds });
+			if (error instanceof TranslationChunkBusyError) {
+				// claimのlease期限後に同じpayloadを再配信し、途中クラッシュでも
+				// ENQUEUING/PROCESSING状態を永久に残さない。
+				await message.retry({
+					delaySeconds: error.retryAfterSeconds,
+				});
+				continue;
+			}
+			if (isRetryable(error)) {
+				// 再試行上限とDLQへの移送はWranglerへ委譲し、ここではackしない。
+				await message.retry({
+					delaySeconds: retryDelaySeconds(messageAttempts(message)),
+				});
 				continue;
 			}
 
-			try {
-				await markTranslationJobFailed(
-					dependencies.db,
-					payload.jobId,
-					publicTranslationError(error),
-				);
-			} catch {
-				// 失敗を記録できない場合でも、同じ毒性payloadを無限再試行しない。
-			}
+			await failJob(
+				dependencies.db,
+				payload.jobId,
+				publicTranslationError(error),
+			);
 			await acknowledge(message);
 		}
 	}

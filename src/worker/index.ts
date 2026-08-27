@@ -1,24 +1,37 @@
 import startEntry from "@tanstack/react-start/server-entry";
-import { sendMagicLinkEmail } from "@/auth/email";
-import { configureAuthService } from "@/auth/runtime";
-import { createAuthService } from "@/auth/service";
+import { createAuth } from "@/auth/auth";
+import { configureAuth } from "@/auth/runtime";
 import { createDatabase } from "@/db/client";
 import type { TursoDatabase } from "@/db/turso-types";
-import { createAuthStore } from "@/server/auth-store";
 import { configureDatabase } from "@/server/runtime";
+import { decryptLegacyGeminiApiKey } from "@/translation/credentials";
+import { getEncryptedGeminiApiKey } from "@/translation/persistence";
 import { configureTranslationQueue } from "@/translation/runtime";
 import type {
+	TranslationMessageBatch,
 	TranslationProviderConfig,
 	TranslationQueue,
 	TranslationWorkerEnv,
 } from "@/translation/types";
-import { handleTranslationQueue, parseMaxAttempts } from "./translation-queue";
+import { handleTranslationQueue } from "./translation-queue";
 
-function providerConfig(env: TranslationWorkerEnv): TranslationProviderConfig {
+function providerConfig(
+	env: TranslationWorkerEnv,
+	db: TursoDatabase,
+): TranslationProviderConfig {
 	return {
 		openaiApiKey: env.OPENAI_API_KEY,
 		deepseekApiKey: env.DEEPSEEK_API_KEY,
-		geminiApiKey: env.GEMINI_API_KEY,
+		geminiApiKeyForUser: async (userId) => {
+			const encrypted = await getEncryptedGeminiApiKey(db, userId);
+			return encrypted
+				? decryptLegacyGeminiApiKey(encrypted, env.ENCRYPTION_KEY)
+				: null;
+		},
+		vertexProjectId: env.GCP_PROJECT_ID,
+		vertexRegion: env.GCP_REGION,
+		vertexServiceAccountEmail: env.GCP_SERVICE_ACCOUNT_EMAIL,
+		vertexServiceAccountPrivateKey: env.GCP_SERVICE_ACCOUNT_PRIVATE_KEY,
 	};
 }
 
@@ -46,17 +59,19 @@ export function configureWorkerRuntime(
 	const queueBinding = env.TRANSLATION_QUEUE as unknown as TranslationQueue;
 	configureDatabase(database);
 	configureTranslationQueue(queueBinding);
-	configureAuthService(
-		createAuthService({
-			store: createAuthStore(database),
-			publicOrigin: env.APP_BASE_URL,
-			sendMagicLink: ({ email, link }) =>
-				sendMagicLinkEmail({
-					apiKey: env.AUTH_RESEND_KEY,
-					from: env.EMAIL_FROM,
-					email,
-					link,
-				}),
+	configureAuth(
+		createAuth({
+			database,
+			baseURL: env.APP_BASE_URL,
+			secret: env.AUTH_SECRET,
+			google: {
+				clientId: env.AUTH_GOOGLE_ID,
+				clientSecret: env.AUTH_GOOGLE_SECRET,
+			},
+			resend: {
+				apiKey: env.AUTH_RESEND_KEY,
+				from: env.EMAIL_FROM,
+			},
 		}),
 	);
 	workerRuntime = { database, queue: queueBinding };
@@ -73,22 +88,14 @@ export async function fetch(
 }
 
 export async function queue(
-	batch: {
-		messages: readonly {
-			body: unknown;
-			attempts?: number;
-			ack(): void | Promise<void>;
-			retry(options?: { delaySeconds?: number }): void | Promise<void>;
-		}[];
-	},
+	batch: TranslationMessageBatch,
 	env: TranslationWorkerEnv,
 ): Promise<void> {
 	const runtime = configureWorkerRuntime(env);
 	await handleTranslationQueue(batch, {
 		db: runtime.database,
 		queue: runtime.queue,
-		providerConfig: providerConfig(env),
-		maxAttempts: parseMaxAttempts(env.TRANSLATION_MAX_ATTEMPTS),
+		providerConfig: providerConfig(env, runtime.database),
 	});
 }
 

@@ -1,3 +1,6 @@
+import { Button } from "@/components/ui/button";
+import { getScriptureCopy } from "./copy";
+
 type LanguageSwitcherProps = {
 	locales: Array<{ code: string; label: string }>;
 	currentLocale: string;
@@ -10,32 +13,27 @@ export function LanguageSwitcher({
 	hrefForLocale,
 }: LanguageSwitcherProps) {
 	if (locales.length < 2) return null;
+	const labels = getScriptureCopy(currentLocale);
 
 	return (
 		<nav
-			aria-label="表示言語"
+			aria-label={labels.languageNavigation}
 			className="flex flex-wrap items-center gap-2 text-sm"
 		>
-			<span className="text-slate-500">Language</span>
+			<span className="text-muted-foreground">{labels.language}</span>
 			<ul className="flex flex-wrap items-center gap-1">
 				{locales.map((locale) => {
 					const isCurrent = locale.code === currentLocale;
 					return (
 						<li key={locale.code}>
 							{isCurrent ? (
-								<span
-									aria-current="page"
-									className="rounded-md bg-slate-900 px-2.5 py-1.5 font-medium text-white"
-								>
-									{locale.label}
-								</span>
+								<Button asChild size="sm" variant="default">
+									<span aria-current="page">{locale.label}</span>
+								</Button>
 							) : (
-								<a
-									className="rounded-md px-2.5 py-1.5 text-slate-600 underline-offset-4 hover:bg-slate-100 hover:text-slate-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
-									href={hrefForLocale(locale.code)}
-								>
-									{locale.label}
-								</a>
+								<Button asChild size="sm" variant="ghost">
+									<a href={hrefForLocale(locale.code)}>{locale.label}</a>
+								</Button>
 							)}
 						</li>
 					);

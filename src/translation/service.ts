@@ -1,14 +1,18 @@
 import { InvalidInputError, NotFoundError } from "@/domain/errors";
 import { splitTranslationSegments } from "./chunk";
 import {
+	claimTranslationJobChunk,
 	createTranslationJob,
+	ensureTranslationJobChunks,
 	getScriptureSegments,
 	getScriptureTitle,
 	getTranslationJobById,
+	getUserPlan,
 	markTranslationJobFailed,
 	readCompletedSegmentIds,
 	saveAiTranslations,
 	setTranslationJobTotal,
+	settleTranslationJobChunkClaim,
 	updateTranslationJobProgress,
 } from "./persistence";
 import {
@@ -33,6 +37,18 @@ export class PartialTranslationError extends Error {
 	constructor() {
 		super("一部のセグメントを翻訳できませんでした。");
 		this.name = "PartialTranslationError";
+	}
+}
+
+/** 別Workerがchunkのleaseを保持中で、期限後の再配信が必要な状態を表す。 */
+export class TranslationChunkBusyError extends Error {
+	readonly retryable = true;
+	readonly retryAfterSeconds: number;
+
+	constructor(retryAfterSeconds: number) {
+		super("翻訳chunkは別のWorkerが処理中です。");
+		this.name = "TranslationChunkBusyError";
+		this.retryAfterSeconds = retryAfterSeconds;
 	}
 }
 
@@ -113,23 +129,48 @@ export async function startTranslationJob(
 	const started = await setTranslationJobTotal(db, job.id, segments.length);
 	if (started.status === "COMPLETED" || chunks.length === 0) return started;
 	if (started.status === "FAILED") return started;
+	await ensureTranslationJobChunks(db, started.id, chunks.length);
 
-	const messages = chunks.map((chunk, index) => {
-		return chunkMessage(
+	for (const [index, chunk] of chunks.entries()) {
+		const claim = await claimTranslationJobChunk(
+			db,
+			started.id,
+			index,
+			"enqueue",
+		);
+		if (claim.state === "completed") continue;
+		if (claim.state === "busy") {
+			throw new TranslationChunkBusyError(claim.retryAfterSeconds);
+		}
+		const message = chunkMessage(
 			started,
 			chunk,
 			index,
 			chunks.length,
 			translationContext,
 		);
-	});
-	if (queue.sendBatch) {
-		await queue.sendBatch(
-			messages.map((body) => ({ body, contentType: "json" as const })),
-		);
-	} else {
-		for (const message of messages) {
+		try {
 			await queue.send(message, { contentType: "json" });
+			await settleTranslationJobChunkClaim(db, {
+				phase: "enqueue",
+				outcome: "sent",
+				jobId: started.id,
+				chunkIndex: index,
+				leaseToken: claim.leaseToken,
+			});
+		} catch (error) {
+			try {
+				await settleTranslationJobChunkClaim(db, {
+					phase: "enqueue",
+					outcome: "retry",
+					jobId: started.id,
+					chunkIndex: index,
+					leaseToken: claim.leaseToken,
+				});
+			} catch {
+				// Queue障害の元エラーを優先し、leaseの期限切れ回復に委ねる。
+			}
+			throw error;
 		}
 	}
 	return started;
@@ -181,42 +222,88 @@ export async function processTranslationChunk(
 	if (!job.requestedBy)
 		throw new InvalidInputError("翻訳ジョブのrequestedByがありません");
 
-	const provider = getProviderFromModel(job.model);
-	const raw = await requestTranslation(
-		{
-			provider,
-			model: job.model,
-			targetLocale: job.locale,
-			title: await getScriptureTitle(db, input.scriptureId),
-			segments: pendingSegments,
-			translationContext: input.translationContext,
-		},
-		providerConfig,
-	);
-	const results = uniquePendingResults(
-		parseTranslationResponse(raw),
-		pendingSegments,
-	);
-	if (results.length === 0) throw new PartialTranslationError();
-
-	await saveAiTranslations(db, {
-		jobId: job.id,
-		locale: job.locale,
-		requestedBy: job.requestedBy,
-		translations: results,
-		segments: pendingSegments,
-	});
-	const updated = await updateTranslationJobProgress(db, job.id);
-	const completedAfterSave = await readCompletedSegmentIds(
+	const claim = await claimTranslationJobChunk(
 		db,
 		job.id,
-		job.locale,
-		pendingSegments.map((segment) => segment.id),
+		input.chunkIndex,
+		"process",
 	);
-	if (pendingSegments.some((segment) => !completedAfterSave.has(segment.id))) {
-		throw new PartialTranslationError();
+	if (claim.state !== "claimed") {
+		if (claim.state === "busy") {
+			throw new TranslationChunkBusyError(claim.retryAfterSeconds);
+		}
+		return updateTranslationJobProgress(db, job.id);
 	}
-	return updated;
+
+	try {
+		const provider = getProviderFromModel(
+			job.model,
+			(await getUserPlan(db, job.requestedBy)) ?? undefined,
+		);
+		const userGeminiApiKey =
+			provider === "gemini" && providerConfig.geminiApiKeyForUser
+				? await providerConfig.geminiApiKeyForUser(job.requestedBy)
+				: undefined;
+		const raw = await requestTranslation(
+			{
+				provider,
+				...(userGeminiApiKey ? { apiKey: userGeminiApiKey } : {}),
+				model: job.model,
+				targetLocale: job.locale,
+				title: await getScriptureTitle(db, input.scriptureId),
+				segments: pendingSegments,
+				translationContext: input.translationContext,
+			},
+			providerConfig,
+		);
+		const results = uniquePendingResults(
+			parseTranslationResponse(raw),
+			pendingSegments,
+		);
+		if (results.length === 0) throw new PartialTranslationError();
+
+		await saveAiTranslations(db, {
+			jobId: job.id,
+			locale: job.locale,
+			model: job.model,
+			requestedBy: job.requestedBy,
+			translations: results,
+			segments: pendingSegments,
+		});
+		await settleTranslationJobChunkClaim(db, {
+			phase: "process",
+			outcome: "completed",
+			jobId: job.id,
+			chunkIndex: input.chunkIndex,
+			leaseToken: claim.leaseToken,
+		});
+		const updated = await updateTranslationJobProgress(db, job.id);
+		const completedAfterSave = await readCompletedSegmentIds(
+			db,
+			job.id,
+			job.locale,
+			pendingSegments.map((segment) => segment.id),
+		);
+		if (
+			pendingSegments.some((segment) => !completedAfterSave.has(segment.id))
+		) {
+			throw new PartialTranslationError();
+		}
+		return updated;
+	} catch (error) {
+		try {
+			await settleTranslationJobChunkClaim(db, {
+				phase: "process",
+				outcome: "retry",
+				jobId: job.id,
+				chunkIndex: input.chunkIndex,
+				leaseToken: claim.leaseToken,
+			});
+		} catch {
+			// leaseの期限切れで次のQueue配信がclaimを回復する。
+		}
+		throw error;
+	}
 }
 
 export function publicTranslationError(error: unknown): string {

@@ -8,14 +8,8 @@ import {
 	InvalidInputError,
 	NotFoundError,
 } from "@/domain/errors";
-import {
-	hashSessionToken,
-	requireSessionUserInTransaction,
-} from "@/server/session";
-import {
-	calculateTranslationProgress,
-	isTranslationComplete,
-} from "./progress";
+import { splitTranslationSegments } from "./chunk";
+import { calculateChunkProgress } from "./progress";
 import type {
 	TranslationJob,
 	TranslationResult,
@@ -131,17 +125,61 @@ async function readJob(
 	return mapTranslationJob(row);
 }
 
+/** 旧Evame互換のユーザープランを取得する。見つからない場合はfree扱いにする。 */
+export async function getUserPlan(
+	db: SqlExecutor,
+	userId: string,
+): Promise<string | null> {
+	const row = await db.get<{ plan: unknown }>(
+		"SELECT plan FROM users WHERE id = ? LIMIT 1",
+		[userId],
+	);
+	return typeof row?.plan === "string" ? row.plan : null;
+}
+
+/** 旧Evame互換の、暗号化されたユーザーGemini API keyを取得する。 */
+export async function getEncryptedGeminiApiKey(
+	db: SqlExecutor,
+	userId: string,
+): Promise<string | null> {
+	const row = await db.get<{ api_key: unknown }>(
+		"SELECT api_key FROM gemini_api_keys WHERE user_id = ? LIMIT 1",
+		[userId],
+	);
+	return typeof row?.api_key === "string" ? row.api_key : null;
+}
+
+/** AI翻訳のsource/user関係を維持するため、モデルごとのis_aiユーザーを冪等に取得する。 */
+export async function getOrCreateAiUser(
+	db: SqlExecutor,
+	model: string,
+): Promise<string> {
+	const existing = await db.get<{ id: unknown }>(
+		"SELECT id FROM users WHERE handle = ? LIMIT 1",
+		[model],
+	);
+	if (typeof existing?.id === "string" && existing.id.length > 0) {
+		return existing.id;
+	}
+
+	const id = globalThis.crypto.randomUUID();
+	await db.run(
+		`INSERT INTO users (id, email, name, handle, is_ai)
+			 VALUES (?, ?, ?, ?, 1)`,
+		[id, `${model}@ai.com`, model, model],
+	);
+	return id;
+}
+
 /** 認証済みのユーザーが作成したジョブを冪等に取得または作成する。 */
 export async function createTranslationJob(
 	db: TursoDatabase,
 	input: unknown,
 ): Promise<TranslationJob> {
 	const request = parseTranslationJobRequest(input);
-	const tokenHash = await hashSessionToken(request.sessionToken);
 	const id = request.idempotencyKey ?? globalThis.crypto.randomUUID();
 
 	return db.transaction(async (transaction) => {
-		const user = await requireSessionUserInTransaction(transaction, tokenHash);
 		const scripture = await transaction.get<{ id: number }>(
 			"SELECT id FROM scriptures WHERE id = ? AND published_at IS NOT NULL LIMIT 1",
 			[request.scriptureId],
@@ -153,7 +191,7 @@ export async function createTranslationJob(
 			 (id, scripture_id, locale, status, progress, total, error, model, requested_by)
 			 VALUES (?, ?, ?, 'PENDING', 0, 0, '', ?, ?)
 			 ON CONFLICT(id) DO NOTHING`,
-			[id, request.scriptureId, request.locale, request.model, user.id],
+			[id, request.scriptureId, request.locale, request.model, request.userId],
 		);
 		const row = await transaction.get<RawJobRow>(
 			`SELECT ${JOB_COLUMNS} FROM translation_jobs WHERE id = ? LIMIT 1`,
@@ -162,12 +200,12 @@ export async function createTranslationJob(
 		if (!row) throw new Error("作成した翻訳ジョブを取得できませんでした");
 		const job = mapTranslationJob(row);
 		if (
-			job.requestedBy !== user.id ||
+			job.requestedBy !== request.userId ||
 			job.scriptureId !== request.scriptureId ||
 			job.locale !== request.locale ||
 			job.model !== request.model
 		) {
-			if (job.requestedBy !== user.id) {
+			if (job.requestedBy !== request.userId) {
 				throw new ForbiddenError("この翻訳ジョブを操作する権限がありません");
 			}
 			throw new InvalidInputError("冪等性キーが別の翻訳条件に使用されています");
@@ -280,6 +318,195 @@ export async function setTranslationJobTotal(
 	});
 }
 
+const TRANSLATION_CHUNK_LEASE_MS = 10 * 60 * 1_000;
+
+function retryAfterSeconds(leaseUntil: string | null, now: number): number {
+	if (!leaseUntil) return 1;
+	const remaining = Date.parse(leaseUntil) - now;
+	if (!Number.isFinite(remaining) || remaining <= 0) return 1;
+	return Math.max(1, Math.ceil(remaining / 1_000));
+}
+
+export type TranslationJobChunkClaim =
+	| { state: "claimed"; leaseToken: string }
+	| { state: "busy"; retryAfterSeconds: number }
+	| { state: "completed" };
+
+/** rootの再配信とchunkの再配信が共有する、job単位の永続chunk行を準備する。 */
+export async function ensureTranslationJobChunks(
+	db: TursoDatabase,
+	jobId: string,
+	totalChunks: number,
+): Promise<void> {
+	const validatedJobId = validateJobId(jobId);
+	if (!Number.isSafeInteger(totalChunks) || totalChunks < 0) {
+		throw new InvalidInputError("totalChunks が不正です");
+	}
+	await db.transaction(async (transaction) => {
+		for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex += 1) {
+			await transaction.run(
+				`INSERT INTO translation_job_chunks
+					(job_id, chunk_index, status)
+					VALUES (?, ?, 'PENDING')
+					ON CONFLICT(job_id, chunk_index) DO NOTHING`,
+				[validatedJobId, chunkIndex],
+			);
+		}
+	});
+}
+
+/**
+ * Queue送信またはprovider実行の所有権を短いleaseで取得する。
+ * SQLiteの条件付きUPDATEをtransaction内で行うため、同時再配信は一方だけがclaimedになる。
+ */
+export async function claimTranslationJobChunk(
+	db: TursoDatabase,
+	jobId: string,
+	chunkIndex: number,
+	phase: "enqueue" | "process",
+): Promise<TranslationJobChunkClaim> {
+	const validatedJobId = validateJobId(jobId);
+	if (!Number.isSafeInteger(chunkIndex) || chunkIndex < 0) {
+		throw new InvalidInputError("chunkIndex が不正です");
+	}
+	if (phase !== "enqueue" && phase !== "process") {
+		throw new InvalidInputError("chunk claimのphaseが不正です");
+	}
+
+	return db.transaction(async (transaction) => {
+		const current = await transaction.get<{
+			status: string;
+			lease_until: string | null;
+		}>(
+			`SELECT status, lease_until
+			 FROM translation_job_chunks
+			 WHERE job_id = ? AND chunk_index = ?
+			 LIMIT 1`,
+			[validatedJobId, chunkIndex],
+		);
+		if (!current) throw new NotFoundError("翻訳chunkが見つかりません");
+		if (current.status === "COMPLETED") return { state: "completed" };
+
+		const nowTimestamp = Date.now();
+		const now = new Date(nowTimestamp).toISOString();
+		const leaseUntil = new Date(
+			nowTimestamp + TRANSLATION_CHUNK_LEASE_MS,
+		).toISOString();
+		const leaseToken = globalThis.crypto.randomUUID();
+		const activeLease =
+			typeof current.lease_until === "string" && current.lease_until > now;
+
+		if (phase === "enqueue") {
+			if (current.status === "ENQUEUED" || current.status === "PROCESSING") {
+				return { state: "completed" };
+			}
+			if (current.status === "ENQUEUING" && activeLease) {
+				return {
+					state: "busy",
+					retryAfterSeconds: retryAfterSeconds(
+						current.lease_until,
+						nowTimestamp,
+					),
+				};
+			}
+			if (current.status !== "PENDING" && current.status !== "ENQUEUING") {
+				throw new InvalidInputError("翻訳chunkのenqueue状態が不正です");
+			}
+			const result = await transaction.run(
+				`UPDATE translation_job_chunks
+				 SET status = 'ENQUEUING', lease_until = ?, lease_token = ?,
+					enqueue_attempts = enqueue_attempts + 1,
+					updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+				 WHERE job_id = ? AND chunk_index = ?
+					AND (
+						status = 'PENDING'
+						OR (status = 'ENQUEUING' AND (lease_until IS NULL OR lease_until <= ?))
+					)`,
+				[leaseUntil, leaseToken, validatedJobId, chunkIndex, now],
+			);
+			return result.changes === 1
+				? { state: "claimed", leaseToken }
+				: { state: "busy", retryAfterSeconds: 1 };
+		}
+
+		if (
+			current.status !== "PENDING" &&
+			current.status !== "ENQUEUING" &&
+			current.status !== "ENQUEUED" &&
+			current.status !== "PROCESSING"
+		) {
+			throw new InvalidInputError("翻訳chunkのprocess状態が不正です");
+		}
+		if (current.status === "PROCESSING" && activeLease) {
+			return {
+				state: "busy",
+				retryAfterSeconds: retryAfterSeconds(current.lease_until, nowTimestamp),
+			};
+		}
+		const result = await transaction.run(
+			`UPDATE translation_job_chunks
+			 SET status = 'PROCESSING', lease_until = ?, lease_token = ?,
+				processing_attempts = processing_attempts + 1,
+				updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+			 WHERE job_id = ? AND chunk_index = ?
+				AND (
+					status IN ('PENDING', 'ENQUEUING', 'ENQUEUED')
+					OR (status = 'PROCESSING' AND (lease_until IS NULL OR lease_until <= ?))
+				)`,
+			[leaseUntil, leaseToken, validatedJobId, chunkIndex, now],
+		);
+		return result.changes === 1
+			? { state: "claimed", leaseToken }
+			: { state: "busy", retryAfterSeconds: 1 };
+	});
+}
+
+/** claimを送信済み・再試行可能・処理完了の状態へ条件付きで確定する。 */
+export async function settleTranslationJobChunkClaim(
+	db: TursoDatabase,
+	input:
+		| {
+				phase: "enqueue";
+				outcome: "sent" | "retry";
+				jobId: string;
+				chunkIndex: number;
+				leaseToken: string;
+		  }
+		| {
+				phase: "process";
+				outcome: "completed" | "retry";
+				jobId: string;
+				chunkIndex: number;
+				leaseToken: string;
+		  },
+): Promise<void> {
+	const jobId = validateJobId(input.jobId);
+	if (!Number.isSafeInteger(input.chunkIndex) || input.chunkIndex < 0) {
+		throw new InvalidInputError("chunkIndex が不正です");
+	}
+	if (input.leaseToken.trim().length === 0) {
+		throw new InvalidInputError("chunk lease tokenが不正です");
+	}
+	const isEnqueue = input.phase === "enqueue";
+	const nextStatus =
+		input.outcome === "sent" || input.outcome === "completed"
+			? input.phase === "enqueue"
+				? "ENQUEUED"
+				: "COMPLETED"
+			: input.phase === "enqueue"
+				? "PENDING"
+				: "ENQUEUED";
+	const expectedStatus = isEnqueue ? "ENQUEUING" : "PROCESSING";
+	await db.run(
+		`UPDATE translation_job_chunks
+			 SET status = ?, lease_until = NULL, lease_token = NULL,
+				updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+			 WHERE job_id = ? AND chunk_index = ?
+				AND status = ? AND lease_token = ?`,
+		[nextStatus, jobId, input.chunkIndex, expectedStatus, input.leaseToken],
+	);
+}
+
 export async function readCompletedSegmentIds(
 	db: SqlExecutor,
 	jobId: string,
@@ -311,6 +538,7 @@ export async function readCompletedSegmentIds(
 type SaveAiTranslationInput = {
 	jobId: string;
 	locale: string;
+	model: string;
 	requestedBy: string | null;
 	translations: readonly TranslationResult[];
 	segments: readonly TranslationSegment[];
@@ -326,6 +554,7 @@ export async function saveAiTranslations(
 	);
 	return db.transaction(async (transaction) => {
 		let inserted = 0;
+		let aiUserId: string | undefined;
 		const seenNumbers = new Set<number>();
 		for (const translation of input.translations) {
 			if (seenNumbers.has(translation.number)) continue;
@@ -349,6 +578,7 @@ export async function saveAiTranslations(
 			if (!publishedSegment) {
 				throw new NotFoundError("AI翻訳対象の経典が公開されていません");
 			}
+			aiUserId ??= await getOrCreateAiUser(transaction, input.model);
 			const result = await transaction.run(
 				`INSERT INTO translations
 				 (segment_id, locale, text, point, user_id, source, ai_job_id)
@@ -370,7 +600,7 @@ export async function saveAiTranslations(
 					segment.id,
 					input.locale,
 					translation.text,
-					input.requestedBy,
+					aiUserId,
 					input.jobId,
 					segment.id,
 					input.jobId,
@@ -395,24 +625,45 @@ export async function updateTranslationJobProgress(
 		const current = await readJob(transaction, validateJobId(jobId));
 		if (current.status === "COMPLETED" || current.status === "FAILED")
 			return current;
-		const countRow = await transaction.get<{ count: unknown }>(
-			`SELECT COUNT(DISTINCT t.segment_id) AS count
-				 FROM translations AS t
-				 INNER JOIN segments AS s ON s.id = t.segment_id
-				 INNER JOIN scriptures AS scripture ON scripture.id = s.scripture_id
-				 WHERE t.ai_job_id = ? AND t.locale = ?
-					AND scripture.published_at IS NOT NULL`,
-			[jobId, current.locale],
+		const sourceSegments =
+			current.scriptureId === null
+				? []
+				: await getScriptureSegments(transaction, current.scriptureId);
+		const chunks = splitTranslationSegments(sourceSegments, current.model);
+		const completedRows = await transaction.all<{ segment_id: unknown }>(
+			`SELECT DISTINCT translations.segment_id
+				 FROM translations
+				 INNER JOIN segments ON segments.id = translations.segment_id
+				 INNER JOIN scriptures ON scriptures.id = segments.scripture_id
+				 WHERE translations.ai_job_id = ?
+					AND translations.locale = ?
+					AND segments.scripture_id = ?
+					AND scriptures.published_at IS NOT NULL`,
+			[jobId, current.locale, current.scriptureId],
 		);
-		const translatedCount = integer(countRow?.count ?? 0, "translated_count");
-		const completed = isTranslationComplete(translatedCount, current.total);
+		const completedIds = new Set(
+			completedRows.flatMap((row) => {
+				try {
+					const id = integer(row.segment_id, "segment_id");
+					return id > 0 ? [id] : [];
+				} catch {
+					return [];
+				}
+			}),
+		);
+		const completedChunkIndices = chunks.flatMap((chunk, index) =>
+			chunk.every((segment) => completedIds.has(segment.id)) ? [index] : [],
+		);
+		const completed =
+			chunks.length === 0 || completedChunkIndices.length === chunks.length;
+		const calculatedProgress = calculateChunkProgress(
+			chunks.length,
+			completedChunkIndices,
+		);
 		const nextStatus = completed ? "COMPLETED" : "IN_PROGRESS";
 		const nextProgress = completed
 			? 100
-			: Math.max(
-					current.progress,
-					calculateTranslationProgress(translatedCount, current.total),
-				);
+			: Math.max(current.progress, calculatedProgress);
 		await transaction.run(
 			`UPDATE translation_jobs
 			 SET status = ?, progress = ?,

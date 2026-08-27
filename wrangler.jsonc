@@ -5,7 +5,13 @@
 	"compatibility_flags": ["nodejs_compat"],
 	"main": "src/worker/index.ts",
 	"observability": {
-		"enabled": true
+		"enabled": true,
+		"logs": {
+			"enabled": true,
+			"invocation_logs": true,
+			"persist": true,
+			"head_sampling_rate": 1
+		}
 	},
 	"queues": {
 		"producers": [
@@ -21,6 +27,11 @@
 				"max_batch_timeout": 5,
 				"max_retries": 3,
 				"dead_letter_queue": "digital-buddhism-translations-dlq"
+			},
+			{
+				"queue": "digital-buddhism-translations-dlq",
+				"max_batch_size": 10,
+				"max_batch_timeout": 5
 			}
 		]
 	}

@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { SqlExecutor, TursoDatabase } from "../db/turso-types";
-import { NotFoundError, UnauthenticatedError } from "../domain/errors";
-import { hashSessionToken } from "./session";
+import { InvalidInputError, NotFoundError } from "../domain/errors";
 import { voteTranslation } from "./votes";
 
 function createVoteDb(
@@ -17,19 +16,8 @@ function createVoteDb(
 		published: options.published ?? true,
 		vote: options.previous,
 	};
-	const token = "valid-session";
 	const db: TursoDatabase = {
-		async get<T>(sql: string, args = []) {
-			if (sql.includes("FROM sessions AS s")) {
-				if (String(args[0]) !== (await hashSessionToken(token)))
-					return undefined;
-				return {
-					id: "user-1",
-					email: "person@example.com",
-					name: "Person",
-					expires_at: "2099-01-01T00:00:00.000Z",
-				} as T;
-			}
+		async get<T>(sql: string, _args = []) {
 			if (sql.includes("SELECT translations.id, translations.point")) {
 				return state.translationExists && state.published
 					? ({ id: 1, point: state.point } as T)
@@ -72,61 +60,61 @@ function createVoteDb(
 		},
 		async close() {},
 	};
-	return { db, state, token };
+	return { db, state, userId: "user-1" };
 }
 
 describe("翻訳投票server function", () => {
 	test("有効セッションの新規賛成票でpointと投票状態を更新する", async () => {
-		const { db, state, token } = createVoteDb();
+		const { db, state, userId } = createVoteDb();
 		expect(
 			await voteTranslation(db, {
 				translationId: 1,
 				isUpvote: true,
-				sessionToken: token,
+				userId,
 			}),
 		).toEqual({ translationId: 1, point: 1, isUpvote: true });
 		expect(state).toMatchObject({ point: 1, vote: true });
 	});
 
 	test("反対票から賛成票へ変更するとpointが2増える", async () => {
-		const { db, state, token } = createVoteDb({ previous: false });
+		const { db, state, userId } = createVoteDb({ previous: false });
 		const result = await voteTranslation(db, {
 			translationId: 1,
 			isUpvote: true,
-			sessionToken: token,
+			userId,
 		});
 		expect(result).toEqual({ translationId: 1, point: 2, isUpvote: true });
 		expect(state).toMatchObject({ point: 2, vote: true });
 	});
 
 	test("同じ賛成票を押すとpointを戻して投票を削除する", async () => {
-		const { db, state, token } = createVoteDb({ previous: true });
+		const { db, state, userId } = createVoteDb({ previous: true });
 		state.point = 1;
 		const result = await voteTranslation(db, {
 			translationId: 1,
 			isUpvote: true,
-			sessionToken: token,
+			userId,
 		});
 		expect(result).toEqual({ translationId: 1, point: 0, isUpvote: null });
 		expect(state).toMatchObject({ point: 0, vote: undefined });
 	});
 
-	test("未認証は投票できず、存在しない翻訳はnot foundになる", async () => {
+	test("ユーザーIDがない投票を拒否し、存在しない翻訳はnot foundになる", async () => {
 		const unauthenticated = createVoteDb();
 		await expect(
 			voteTranslation(unauthenticated.db, {
 				translationId: 1,
 				isUpvote: true,
-				sessionToken: "unknown-session",
+				userId: "",
 			}),
-		).rejects.toBeInstanceOf(UnauthenticatedError);
+		).rejects.toBeInstanceOf(InvalidInputError);
 
 		const missing = createVoteDb({ translationExists: false });
 		await expect(
 			voteTranslation(missing.db, {
 				translationId: 1,
 				isUpvote: true,
-				sessionToken: missing.token,
+				userId: missing.userId,
 			}),
 		).rejects.toBeInstanceOf(NotFoundError);
 	});
@@ -138,7 +126,7 @@ describe("翻訳投票server function", () => {
 			voteTranslation(unpublished.db, {
 				translationId: 1,
 				isUpvote: true,
-				sessionToken: unpublished.token,
+				userId: unpublished.userId,
 			}),
 		).rejects.toBeInstanceOf(NotFoundError);
 	});

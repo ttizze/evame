@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { Auth } from "@/auth/auth";
 import type { TursoDatabase } from "@/db/turso-types";
 import type { TranslationQueue } from "@/translation/types";
 import { handleCreateTranslationJob, Route } from "./route";
@@ -12,6 +13,9 @@ const dependencies = {
 
 describe("翻訳ジョブAPI", () => {
 	it("未認証の作成要求を受け付けない", async () => {
+		const auth = {
+			api: { getSession: async () => null },
+		} as unknown as Auth;
 		const response = await handleCreateTranslationJob(
 			new Request("https://example.com/api/translation-jobs", {
 				method: "POST",
@@ -22,11 +26,11 @@ describe("翻訳ジョブAPI", () => {
 					model: "gpt-5-nano-2025-08-07",
 				}),
 			}),
-			dependencies,
+			{ ...dependencies, auth },
 		);
 
-		expect(response.status).toBe(400);
-		expect(await response.json()).toEqual({ error: "invalid_input" });
+		expect(response.status).toBe(401);
+		expect(await response.json()).toEqual({ error: "unauthenticated" });
 	});
 
 	it("任意のジョブIDを公開GETで参照できない", () => {

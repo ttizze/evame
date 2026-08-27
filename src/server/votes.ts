@@ -5,12 +5,11 @@ import type {
 } from "../db/turso-types";
 import { InvalidInputError, NotFoundError } from "../domain/errors";
 import { parsePositiveId, resolveVoteTransition } from "../domain/vote";
-import { hashSessionToken, requireSessionUserInTransaction } from "./session";
 
 type VoteRequest = {
 	translationId: number;
 	isUpvote: boolean;
-	sessionToken: string;
+	userId: string;
 };
 
 export type TranslationVoteResult = {
@@ -24,11 +23,8 @@ function parseVoteRequest(input: unknown): VoteRequest {
 		throw new InvalidInputError("投票入力が不正です");
 	}
 	const value = input as Record<string, unknown>;
-	if (
-		typeof value.sessionToken !== "string" ||
-		value.sessionToken.trim().length === 0
-	) {
-		throw new InvalidInputError("セッショントークンが不正です");
+	if (typeof value.userId !== "string" || value.userId.trim().length === 0) {
+		throw new InvalidInputError("認証済みユーザーIDが不正です");
 	}
 	if (typeof value.isUpvote !== "boolean") {
 		throw new InvalidInputError("isUpvote は boolean で指定してください");
@@ -36,7 +32,7 @@ function parseVoteRequest(input: unknown): VoteRequest {
 	return {
 		translationId: parsePositiveId(value.translationId, "translationId"),
 		isUpvote: value.isUpvote,
-		sessionToken: value.sessionToken,
+		userId: value.userId,
 	};
 }
 
@@ -59,10 +55,8 @@ export async function voteTranslation(
 	input: unknown,
 ): Promise<TranslationVoteResult> {
 	const request = parseVoteRequest(input);
-	const tokenHash = await hashSessionToken(request.sessionToken);
 
 	return db.transaction(async (transaction: SqlExecutor) => {
-		const user = await requireSessionUserInTransaction(transaction, tokenHash);
 		const translation = await transaction.get<{ id: number; point: number }>(
 			`SELECT translations.id, translations.point
 			 FROM translations
@@ -76,10 +70,10 @@ export async function voteTranslation(
 
 		const previousVote = await transaction.get<TranslationVoteRow>(
 			`SELECT translation_id, user_id, is_upvote, created_at, updated_at
-			 FROM translation_votes
-			 WHERE translation_id = ? AND user_id = ?
-			 LIMIT 1`,
-			[request.translationId, user.id],
+				 FROM translation_votes
+				 WHERE translation_id = ? AND user_id = ?
+				 LIMIT 1`,
+			[request.translationId, request.userId],
 		);
 		const transition = resolveVoteTransition(
 			previousVote ? readVote(previousVote.is_upvote) : undefined,
@@ -89,21 +83,21 @@ export async function voteTranslation(
 		if (transition.action === "delete") {
 			await transaction.run(
 				"DELETE FROM translation_votes WHERE translation_id = ? AND user_id = ?",
-				[request.translationId, user.id],
+				[request.translationId, request.userId],
 			);
 		} else if (transition.action === "update") {
 			await transaction.run(
 				`UPDATE translation_votes
 				 SET is_upvote = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-				 WHERE translation_id = ? AND user_id = ?`,
-				[request.isUpvote ? 1 : 0, request.translationId, user.id],
+					WHERE translation_id = ? AND user_id = ?`,
+				[request.isUpvote ? 1 : 0, request.translationId, request.userId],
 			);
 		} else {
 			await transaction.run(
 				`INSERT INTO translation_votes
-				 (translation_id, user_id, is_upvote)
-				 VALUES (?, ?, ?)`,
-				[request.translationId, user.id, request.isUpvote ? 1 : 0],
+					 (translation_id, user_id, is_upvote)
+					 VALUES (?, ?, ?)`,
+				[request.translationId, request.userId, request.isUpvote ? 1 : 0],
 			);
 		}
 

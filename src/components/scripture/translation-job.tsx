@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import {
 	DEFAULT_TRANSLATION_MODEL,
 	TRANSLATION_MODELS,
 } from "@/translation/types";
+import { getScriptureCopy } from "./copy";
+import { buildLoginHref } from "./login-link";
 import type {
 	CreateTranslationJob,
 	GetTranslationJob,
@@ -16,56 +21,10 @@ type AiTranslationJobProps = {
 	locale: string;
 	createTranslationJob: CreateTranslationJob;
 	getTranslationJob: GetTranslationJob;
+	loginHref?: string;
 };
 
 const terminalStatuses = new Set<TranslationJobStatus>(["COMPLETED", "FAILED"]);
-
-const statusLabels: Record<string, Record<TranslationJobStatus, string>> = {
-	ja: {
-		PENDING: "待機中",
-		IN_PROGRESS: "処理中",
-		COMPLETED: "完了",
-		FAILED: "失敗",
-	},
-	en: {
-		PENDING: "Pending",
-		IN_PROGRESS: "In progress",
-		COMPLETED: "Completed",
-		FAILED: "Failed",
-	},
-};
-
-const copy = {
-	ja: {
-		title: "AI翻訳",
-		description: "この仏典を選択中の言語へ翻訳するジョブを開始します。",
-		model: "AIモデル",
-		start: "AI翻訳を開始",
-		retry: "AI翻訳を再試行",
-		starting: "開始中…",
-		progress: "進捗",
-		login: "AI翻訳を利用するにはログインしてください。",
-		statusError: "AI翻訳の状態を取得できませんでした。",
-		startError: "AI翻訳を開始できませんでした。時間をおいてお試しください。",
-	},
-	en: {
-		title: "AI translation",
-		description:
-			"Start a job to translate this scripture into the selected language.",
-		model: "Translation model",
-		start: "Start AI translation",
-		retry: "Retry AI translation",
-		starting: "Starting…",
-		progress: "Progress",
-		login: "Log in to use AI translation.",
-		statusError: "The AI translation status could not be loaded.",
-		startError: "AI translation could not be started. Please try again later.",
-	},
-} as const;
-
-function getStatusLabel(locale: string, status: TranslationJobStatus) {
-	return (statusLabels[locale] ?? statusLabels.en)[status];
-}
 
 export function AiTranslationJob({
 	authenticated,
@@ -73,12 +32,14 @@ export function AiTranslationJob({
 	locale,
 	createTranslationJob,
 	getTranslationJob,
+	loginHref,
 }: AiTranslationJobProps) {
 	const [job, setJob] = useState<TranslationJob | null>(null);
 	const [model, setModel] = useState<string>(DEFAULT_TRANSLATION_MODEL);
 	const [pending, setPending] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const labels = locale.toLowerCase().startsWith("ja") ? copy.ja : copy.en;
+	const labels = getScriptureCopy(locale);
+	const resolvedLoginHref = loginHref ?? buildLoginHref(locale, `/${locale}`);
 
 	useEffect(() => {
 		if (!job || terminalStatuses.has(job.status)) return;
@@ -96,7 +57,7 @@ export function AiTranslationJob({
 				}
 			} catch {
 				if (!cancelled) {
-					setError(labels.statusError);
+					setError(labels.jobStatusError);
 				}
 			}
 		};
@@ -106,7 +67,7 @@ export function AiTranslationJob({
 			cancelled = true;
 			if (timeoutId) clearTimeout(timeoutId);
 		};
-	}, [getTranslationJob, job, labels.statusError]);
+	}, [getTranslationJob, job, labels.jobStatusError]);
 
 	async function handleCreateJob() {
 		setPending(true);
@@ -120,7 +81,7 @@ export function AiTranslationJob({
 			const createdJob = await createTranslationJob(input);
 			setJob(createdJob);
 		} catch {
-			setError(labels.startError);
+			setError(labels.jobStartError);
 		} finally {
 			setPending(false);
 		}
@@ -128,41 +89,40 @@ export function AiTranslationJob({
 
 	if (!authenticated) {
 		return (
-			<p className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-				{labels.login}
+			<p className="mt-4 px-4 text-sm text-muted-foreground">
+				<a className="underline underline-offset-4" href={resolvedLoginHref}>
+					{labels.jobLogin}
+				</a>
 			</p>
 		);
 	}
 
-	const status = job ? getStatusLabel(locale, job.status) : null;
+	const status = job ? labels.status[job.status] : null;
+	const progress = job
+		? {
+				PENDING: 15,
+				IN_PROGRESS: 50,
+				COMPLETED: 100,
+				FAILED: 100,
+			}[job.status]
+		: 0;
 
 	return (
-		<section
-			aria-labelledby="ai-translation-title"
-			className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6"
-		>
-			<div className="flex flex-wrap items-start justify-between gap-4">
+		<section aria-labelledby="ai-translation-title" className="border-t pt-6">
+			<div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
 				<div>
-					<h3
-						className="text-lg font-semibold text-slate-900"
-						id="ai-translation-title"
-					>
-						{labels.title}
+					<h3 className="text-lg font-semibold" id="ai-translation-title">
+						{labels.jobTitle}
 					</h3>
-					<p className="mt-1 text-sm leading-6 text-slate-600">
-						{labels.description}
+					<p className="mt-1 text-sm leading-6 text-muted-foreground">
+						{labels.jobDescription}
 					</p>
 				</div>
 				<div>
-					<label
-						className="text-sm font-medium text-slate-700"
-						htmlFor="translation-model"
-					>
-						{labels.model}
-					</label>
+					<Label htmlFor="translation-model">{labels.jobModel}</Label>
 					<select
-						aria-label={labels.model}
-						className="mt-2 h-11 min-w-52 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+						aria-label={labels.jobModel}
+						className="mt-2 h-9 min-w-52 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none transition-colors focus-visible:ring-1 focus-visible:ring-ring"
 						id="translation-model"
 						onChange={(event) => setModel(event.target.value)}
 						value={model}
@@ -174,8 +134,8 @@ export function AiTranslationJob({
 						))}
 					</select>
 				</div>
-				<button
-					className="min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition-colors hover:border-slate-500 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
+				<Button
+					className="w-full sm:w-auto"
 					disabled={
 						pending || (job !== null && !terminalStatuses.has(job.status))
 					}
@@ -183,23 +143,33 @@ export function AiTranslationJob({
 					type="button"
 				>
 					{pending
-						? labels.starting
+						? labels.jobStarting
 						: job?.status === "FAILED"
-							? labels.retry
-							: labels.start}
-				</button>
+							? labels.jobRetry
+							: labels.jobStart}
+				</Button>
 			</div>
 			{job ? (
-				<p
-					aria-live="polite"
-					className="mt-4 text-sm text-slate-700"
-					role="status"
-				>
-					{labels.progress}: <strong>{status}</strong>
-				</p>
+				<div className="mt-6 space-y-2">
+					<div className="flex items-center justify-between gap-4 text-sm">
+						<p
+							aria-live="polite"
+							className="text-muted-foreground"
+							role="status"
+						>
+							{labels.jobProgress}
+						</p>
+						<strong>{status}</strong>
+					</div>
+					<Progress
+						aria-label={labels.jobProgress}
+						aria-valuetext={status ?? undefined}
+						value={progress}
+					/>
+				</div>
 			) : null}
 			{error ? (
-				<p className="mt-3 text-sm text-red-700" role="alert">
+				<p className="mt-3 text-sm text-destructive" role="alert">
 					{error}
 				</p>
 			) : null}

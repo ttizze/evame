@@ -7,6 +7,7 @@ const state = vi.hoisted(() => ({
 	listScriptures: vi.fn(),
 	getScripture: vi.fn(),
 	addTranslation: vi.fn(),
+	deleteTranslation: vi.fn(),
 	voteTranslation: vi.fn(),
 	createAndEnqueueTranslationJob: vi.fn(),
 	parseTranslationJobRequest: vi.fn(),
@@ -54,11 +55,12 @@ vi.mock("@/server/scriptures", () => ({
 	getScripture: state.getScripture,
 	listScriptures: state.listScriptures,
 }));
-vi.mock("@/server/session", () => ({
+vi.mock("@/auth/session", () => ({
 	getSessionUser: state.getSessionUser,
 }));
 vi.mock("@/server/translations", () => ({
 	addTranslation: state.addTranslation,
+	deleteTranslation: state.deleteTranslation,
 }));
 vi.mock("@/server/votes", () => ({
 	voteTranslation: state.voteTranslation,
@@ -79,6 +81,7 @@ vi.mock("@/translation/runtime", () => ({
 import {
 	createTranslation,
 	createTranslationJob,
+	deleteTranslation,
 	getScripture,
 	listScriptures,
 	mapScriptureDetail,
@@ -114,6 +117,12 @@ const serverDetail: ServerScriptureDetail = {
 					aiJobId: null,
 					ownerUpvoted: false,
 					votedByViewer: true,
+					userName: "Translator",
+					userHandle: "translator",
+					userProfile: "",
+					userIsAi: false,
+					userTotalPoints: 12,
+					ownedByViewer: false,
 				},
 			],
 		},
@@ -146,6 +155,12 @@ const serverDetail: ServerScriptureDetail = {
 			aiJobId: null,
 			ownerUpvoted: false,
 			votedByViewer: true,
+			userName: "Translator",
+			userHandle: "translator",
+			userProfile: "",
+			userIsAi: false,
+			userTotalPoints: 12,
+			ownedByViewer: false,
 		},
 	],
 	annotationLinks: [
@@ -238,7 +253,7 @@ describe("仏典ルートのserver function adapter", () => {
 		});
 	});
 
-	it("詳細結果を変換し、Cookieの有効なセッションを認証済みとして渡す", async () => {
+	it("詳細結果を変換し、Better Authの検証済みユーザーIDを渡す", async () => {
 		state.request = new Request("https://example.test/ja/runtime-source", {
 			headers: { cookie: "digital_buddhism_session=reader-token" },
 		});
@@ -252,7 +267,20 @@ describe("仏典ルートのserver function adapter", () => {
 			primarySegmentId: "70",
 			authenticated: true,
 			availableLocales: supportedLocales,
-			translations: [{ id: "700", voteCount: 4, votedByViewer: true }],
+			translations: [
+				{
+					id: "700",
+					voteCount: 4,
+					votedByViewer: true,
+					userName: "Translator",
+					userHandle: "translator",
+					userProfile: "",
+					userIsAi: false,
+					userTotalPoints: 12,
+					ownedByViewer: false,
+					source: "USER",
+				},
+			],
 			segments: [
 				{
 					id: "70",
@@ -269,21 +297,19 @@ describe("仏典ルートのserver function adapter", () => {
 				},
 			],
 		});
-		expect(state.getSessionUser).toHaveBeenCalledWith(
-			state.database,
-			"reader-token",
-		);
+		expect(state.getSessionUser).toHaveBeenCalledWith(state.request);
 		expect(state.getScripture).toHaveBeenCalledWith(state.database, {
 			locale: "ja",
-			sessionToken: "reader-token",
+			viewerUserId: "reader",
 			slug: "runtime-source",
 		});
 	});
 
-	it("認証Cookieをmutationへ渡し、CookieがなければDB mutationを呼ばない", async () => {
+	it("検証済みユーザーIDをmutationへ渡し、未認証ならDB mutationを呼ばない", async () => {
 		state.request = new Request("https://example.test/ja/runtime-source", {
 			headers: { cookie: "digital_buddhism_session=writer-token" },
 		});
+		state.getSessionUser.mockResolvedValue({ id: "writer" });
 		state.addTranslation.mockResolvedValue(serverDetail.translations[0]);
 
 		await createTranslation({
@@ -293,10 +319,11 @@ describe("仏典ルートのserver function adapter", () => {
 			locale: "ja",
 			segmentId: 70,
 			text: "新しい訳",
-			sessionToken: "writer-token",
+			userId: "writer",
 		});
 
 		state.request = new Request("https://example.test/ja/runtime-source");
+		state.getSessionUser.mockResolvedValue(null);
 		await expect(
 			createTranslation({
 				data: { locale: "ja", segmentId: 70, text: "拒否される訳" },
@@ -309,6 +336,7 @@ describe("仏典ルートのserver function adapter", () => {
 		state.request = new Request("https://example.test/ja/runtime-source", {
 			headers: { cookie: "digital_buddhism_session=voter-token" },
 		});
+		state.getSessionUser.mockResolvedValue({ id: "voter" });
 		state.voteTranslation.mockResolvedValue({
 			translationId: 700,
 			point: 5,
@@ -323,18 +351,41 @@ describe("仏典ルートのserver function adapter", () => {
 		expect(state.voteTranslation).toHaveBeenCalledWith(state.database, {
 			isUpvote: true,
 			translationId: 700,
-			sessionToken: "voter-token",
+			userId: "voter",
 		});
+	});
+
+	it("認証済みユーザーIDを候補削除へ渡し、未認証では呼び出さない", async () => {
+		state.request = new Request("https://example.test/ja/runtime-source", {
+			headers: { cookie: "digital_buddhism_session=owner-token" },
+		});
+		state.getSessionUser.mockResolvedValue({ id: "owner" });
+
+		await expect(
+			deleteTranslation({ data: { translationId: 700 } }),
+		).resolves.toEqual({ success: true });
+		expect(state.deleteTranslation).toHaveBeenCalledWith(state.database, {
+			translationId: 700,
+			userId: "owner",
+		});
+
+		state.request = new Request("https://example.test/ja/runtime-source");
+		state.getSessionUser.mockResolvedValue(null);
+		await expect(
+			deleteTranslation({ data: { translationId: 700 } }),
+		).rejects.toThrow("認証が必要です");
+		expect(state.deleteTranslation).toHaveBeenCalledTimes(1);
 	});
 
 	it("AI翻訳ジョブを既定モデルで公開APIへ渡し、Queue依存を注入する", async () => {
 		state.request = new Request("https://example.test/ja/runtime-source", {
 			headers: { cookie: "digital_buddhism_session=job-token" },
 		});
+		state.getSessionUser.mockResolvedValue({ id: "job-owner" });
 		state.parseTranslationJobRequest.mockImplementation(
-			(input: Record<string, unknown>, sessionToken: string) => ({
+			(input: Record<string, unknown>, userId: string) => ({
 				...input,
-				sessionToken,
+				userId,
 			}),
 		);
 		state.createAndEnqueueTranslationJob.mockResolvedValue({
@@ -353,7 +404,7 @@ describe("仏典ルートのserver function adapter", () => {
 				model: "gemini-2.0-flash",
 				translationContext: "",
 			},
-			"job-token",
+			"job-owner",
 		);
 		expect(state.createAndEnqueueTranslationJob).toHaveBeenCalledWith(
 			state.database,
@@ -363,7 +414,7 @@ describe("仏典ルートのserver function adapter", () => {
 				locale: "ja",
 				model: "gemini-2.0-flash",
 				translationContext: "",
-				sessionToken: "job-token",
+				userId: "job-owner",
 			},
 		);
 	});

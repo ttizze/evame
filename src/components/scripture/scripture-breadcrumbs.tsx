@@ -1,51 +1,54 @@
+import { Fragment } from "react";
+import {
+	Breadcrumb,
+	BreadcrumbItem,
+	BreadcrumbLink,
+	BreadcrumbList,
+	BreadcrumbPage,
+	BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { getScriptureCopy } from "./copy";
 import type { ScriptureBreadcrumbItem } from "./types";
 
 type ScriptureBreadcrumbsProps = {
 	items: ScriptureBreadcrumbItem[];
+	locale?: string;
 };
 
-export function ScriptureBreadcrumbs({ items }: ScriptureBreadcrumbsProps) {
+export function ScriptureBreadcrumbs({
+	items,
+	locale = "ja",
+}: ScriptureBreadcrumbsProps) {
 	if (items.length === 0) {
 		return null;
 	}
+	const labels = getScriptureCopy(locale);
 
 	return (
-		<nav aria-label="仏典の階層" className="mb-6 overflow-x-auto">
-			<ol className="flex min-w-max items-center gap-2 text-sm text-muted-foreground">
+		<Breadcrumb
+			aria-label={labels.scriptureHierarchy}
+			className="mb-6 overflow-x-auto"
+		>
+			<BreadcrumbList className="min-w-max">
 				{items.map((item, index) => {
 					const isCurrent = item.current ?? index === items.length - 1;
 
 					return (
-						<li
-							className="flex items-center gap-2"
+						<Fragment
 							key={`${item.href ?? item.label}-${item.current ? "current" : "ancestor"}`}
 						>
-							{index > 0 ? (
-								<span aria-hidden="true" className="text-slate-300">
-									/
-								</span>
-							) : null}
-							{isCurrent || !item.href ? (
-								<span
-									aria-current={isCurrent ? "page" : undefined}
-									className={
-										isCurrent ? "font-medium text-slate-900" : undefined
-									}
-								>
-									{item.label}
-								</span>
-							) : (
-								<a
-									className="rounded-sm underline-offset-4 hover:text-slate-900 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
-									href={item.href}
-								>
-									{item.label}
-								</a>
-							)}
-						</li>
+							<BreadcrumbItem>
+								{isCurrent || !item.href ? (
+									<BreadcrumbPage>{item.label}</BreadcrumbPage>
+								) : (
+									<BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
+								)}
+							</BreadcrumbItem>
+							{index < items.length - 1 ? <BreadcrumbSeparator /> : null}
+						</Fragment>
 					);
 				})}
-			</ol>
-		</nav>
+			</BreadcrumbList>
+		</Breadcrumb>
 	);
 }
