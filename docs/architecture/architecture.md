@@ -68,6 +68,12 @@ src/
 
 依存は `routes → domain/db/components`、`db → @tursodatabase/serverless` の一方向とします。ブラウザに DB トークンや AI プロバイダーキーを渡しません。
 
+### フロント移行境界
+
+`origin/main` の既存 UI コンポーネント、shadcn の配置、URLを正本として維持し、既存パス上で TanStack に適応します。既存ファイルの移動・複製・ディレクトリ再編は行いません。TanStack Router の `src/routes` には不可避な最小 route 定義だけを置き、UIコンポーネントは元の `src/app/[locale]/.../_components` から import します。
+
+閲覧 URL は旧 `/$locale/$handle/$pageSlug`、認証 URL は旧 `/$locale/auth/login` を維持し、新しい scripture 専用 URL は導入しません。
+
 ## データベース
 
 Turso Database の HTTP 接続を提供します。アプリケーションは `@tursodatabase/serverless` のクライアントをリクエスト境界で利用し、Postgres の接続プールや WebSocket に依存しません。
@@ -158,12 +164,12 @@ Wrangler のバインディングと環境変数は環境ごとに管理しま�
 
 SEO の純粋な生成処理は `src/seo/metadata.ts` と `src/seo/sitemap.ts` に置き、HTTP の入出力は次の route に限定します。
 
-- `/$locale` と `/$locale/$slug` の `head` で locale 別 title、description、canonical、OG/X metadata を返す。既存 copy がある `en`、`ja`、`zh`、`ko`、`es` は各言語の文言を使い、追加 locale は英語 copy へ明示的に fallback する
+- `/$locale` と `/$locale/$handle/$pageSlug` の `head` で locale 別 title、description、canonical、OG/X metadata を返す。既存 copy がある `en`、`ja`、`zh`、`ko`、`es` は各言語の文言を使い、追加 locale は英語 copy へ明示的に fallback する
 - 各公開ページに 21 locale の `hreflang` と `x-default` alternate を付ける。構造化データは TanStack Router の `{ "script:ld+json": object }` metadata descriptor で JSON-LD として出力する
 - `/sitemap.xml` は `published_at IS NOT NULL` の仏典だけを Turso Database から読み、各 locale の URL を XML で返す
 - `/robots.txt` は API とログイン画面を除外し、sitemap の絶対 URL を返す
 - OG image は公開静的 asset `/bg-ogp.png` を使い、セッション・投票状態・秘密値を metadata や JSON-LD に含めない
-- canonical は新 URL を正本とし、移行元 Evame の旧 URL redirect/互換層は持たない
+- canonical は移行元 Evame の URL を正本として維持し、新しい scripture 専用 URL や旧 URL redirect/互換層は持たない
 
 ## Cloudflare の可観測性と Queue 運用
 

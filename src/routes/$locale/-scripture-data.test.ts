@@ -94,6 +94,7 @@ const serverDetail: ServerScriptureDetail = {
 	slug: "runtime-source",
 	title: "Runtime source",
 	sourceLocale: "pi",
+	ownerHandle: "runtime-owner",
 	displayLocale: "ja",
 	hierarchy: ["Collection", "Runtime source"],
 	sourceText: "Pāli source from the server",
@@ -210,9 +211,10 @@ describe("仏典ルートのserver function adapter", () => {
 				slug: "runtime-slug",
 				title: "Runtime title",
 				sourceLocale: "pi",
+				ownerHandle: "runtime-owner",
 				hierarchy: ["Runtime collection"],
 				translationCount: 3,
-				href: "/ja/runtime-slug",
+				href: "/ja/runtime-owner/runtime-slug",
 			},
 		]);
 
@@ -221,9 +223,11 @@ describe("仏典ルートのserver function adapter", () => {
 				id: "42",
 				slug: "runtime-slug",
 				title: "Runtime title",
+				ownerHandle: "runtime-owner",
 				hierarchy: ["Runtime collection"],
 				translationCount: 3,
-				href: "/ja/runtime-slug",
+				href: "/ja/runtime-owner/runtime-slug",
+				paliTitle: "Runtime title",
 			},
 		]);
 		expect(state.listScriptures).toHaveBeenCalledWith(state.database, {

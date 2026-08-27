@@ -1,21 +1,30 @@
 import type { SqlExecutor } from "@/db/turso-types";
-import type { SupportedLocale } from "@/domain/locales";
+import { type SupportedLocale, supportedLocales } from "@/domain/locales";
 import { absoluteSiteUrl } from "./metadata";
 
 export function scripturePath(locale: SupportedLocale, slug: string): string {
 	return `/${encodeURIComponent(locale)}/${encodeURIComponent(slug)}`;
 }
 
+export function legacyScripturePath(
+	locale: SupportedLocale,
+	handle: string,
+	slug: string,
+): string {
+	return `/${encodeURIComponent(locale)}/${encodeURIComponent(handle)}/${encodeURIComponent(slug)}`;
+}
+
 export async function listPublishedScriptureSlugs(
 	db: Pick<SqlExecutor, "all">,
-): Promise<string[]> {
-	const rows = await db.all<{ slug: string }>(
-		`SELECT slug
+): Promise<Array<{ handle: string; slug: string }>> {
+	const rows = await db.all<{ handle: string; slug: string }>(
+		`SELECT scriptures.slug, users.handle AS handle
 		 FROM scriptures
-		 WHERE published_at IS NOT NULL
-		 ORDER BY position, id`,
+		 INNER JOIN users ON users.id = scriptures.owner_user_id
+		 WHERE scriptures.published_at IS NOT NULL
+		 ORDER BY scriptures.position, scriptures.id`,
 	);
-	return rows.map((row) => row.slug);
+	return rows;
 }
 
 function xmlEscape(value: string): string {
@@ -30,15 +39,18 @@ function xmlEscape(value: string): string {
 export function buildSitemapXml(input: {
 	origin: string;
 	locales: readonly SupportedLocale[];
-	slugs: readonly string[];
+	entries: ReadonlyArray<{ handle: string; slug: string }>;
 }): string {
 	const urls = [
 		...input.locales.map((locale) =>
 			absoluteSiteUrl(`/${locale}`, input.origin),
 		),
-		...input.slugs.flatMap((slug) =>
+		...input.entries.flatMap(({ handle, slug }) =>
 			input.locales.map((locale) =>
-				absoluteSiteUrl(scripturePath(locale, slug), input.origin),
+				absoluteSiteUrl(
+					legacyScripturePath(locale, handle, slug),
+					input.origin,
+				),
 			),
 		),
 	];
@@ -61,6 +73,7 @@ export function buildRobotsTxt(origin: string): string {
 		"Allow: /",
 		"Disallow: /api/",
 		"Disallow: /login",
+		...supportedLocales.map(({ code }) => `Disallow: /${code}/auth/login`),
 		`Sitemap: ${absoluteSiteUrl("/sitemap.xml", origin)}`,
 		"",
 	].join("\n");

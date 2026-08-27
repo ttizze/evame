@@ -470,6 +470,7 @@ describe("buildMigrationPlan", () => {
 				status: "IN_PROGRESS",
 				progress: 1,
 				error: "",
+				translationContext: "既存用語を優先する",
 				requestedBy: "voter-1",
 				createdAt: "2025-01-02T00:00:00.000Z",
 				updatedAt: "2025-01-02T00:00:00.000Z",
@@ -510,8 +511,14 @@ describe("buildMigrationPlan", () => {
 				status: "FAILED",
 				total: 2,
 				error: "Migrated incomplete translation job; rerun required.",
+				translationContext: "既存用語を優先する",
 			},
-			{ id: "56", status: "COMPLETED", requestedBy: null },
+			{
+				id: "56",
+				status: "COMPLETED",
+				requestedBy: null,
+				translationContext: "",
+			},
 		]);
 	});
 

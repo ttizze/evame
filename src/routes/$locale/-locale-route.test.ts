@@ -20,7 +20,7 @@ vi.mock("./-scripture-data", () => ({
 	voteTranslation: state.voteTranslation,
 }));
 
-import { Route as ScriptureDetailRoute } from "./$slug";
+import { Route as ScriptureDetailRoute } from "./$handle/$pageSlug";
 import { Route as ScriptureIndexRoute } from "./index";
 
 type Loader = (context: unknown) => unknown;
@@ -51,7 +51,7 @@ describe("locale付き経典routeのloader", () => {
 
 	it("詳細の未対応localeをnotFoundとして扱い、server functionを呼ばない", async () => {
 		const result = await runLoader(routeLoader(ScriptureDetailRoute), {
-			params: { locale: "pt-BR", slug: "source" },
+			params: { locale: "pt-BR", handle: "owner", pageSlug: "source" },
 		});
 
 		expect(isNotFound(result.error)).toBe(true);

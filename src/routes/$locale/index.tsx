@@ -1,5 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { ScriptureIndex } from "@/components/scripture/scripture-index";
+import { CommonLayout } from "@/app/[locale]/(common-layout)/layout";
+import HomePage from "@/app/[locale]/(common-layout)/page";
 import { isSupportedLocale } from "@/domain/locales";
 import { getSeoCopy } from "@/seo/copy";
 import { buildLocalizedHead } from "@/seo/metadata";
@@ -34,12 +35,8 @@ function LocaleIndexPage() {
 		: "en";
 
 	return (
-		<main className="min-h-screen bg-background px-4 py-8 text-foreground sm:px-6 sm:py-12">
-			<ScriptureIndex
-				availableLocales={[...supportedLocales]}
-				items={items}
-				locale={selectedLocale}
-			/>
-		</main>
+		<CommonLayout locale={selectedLocale}>
+			<HomePage items={items} locale={selectedLocale} />
+		</CommonLayout>
 	);
 }

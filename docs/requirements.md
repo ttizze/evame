@@ -2,7 +2,7 @@
 
 本書は、移行元 Evame からデジタル仏教へ移行した後のサービス境界を定義します。現行の正本は、仏典翻訳の閲覧、認証済みユーザーによる翻訳案の投稿と投票、AI 翻訳ジョブによる翻訳案の提案です。
 
-明示的に削除した機能を除き、移行元 Evame の既存仕様と観測可能な挙動は維持します。新 URL を正本とし、旧 URL の互換や redirect は提供しません。
+明示的に削除した機能を除き、移行元 Evame の既存仕様と観測可能な挙動は維持します。移行元の URL を正本として維持し、新しい scripture 専用 URL や旧 URL の互換・redirect は導入しません。
 
 ## 目的
 
@@ -85,15 +85,15 @@
 ## 画面と境界（代表）
 
 - `/$locale`: 仏典翻訳のトップ一覧
-- `/$locale/$slug`: 仏典の原文・翻訳案・投票状態
-- `/login`: 認証画面
+- `/$locale/$handle/$pageSlug`: 仏典の原文・翻訳案・投票状態
+- `/$locale/auth/login`: 認証画面
 - `src/routes/$locale/-scripture-data.ts` の serverFn: 仏典一覧・詳細取得、翻訳案投稿、投票、AI 翻訳ジョブの作成・状態取得
 - `/api/auth/*`: Better Auth の認証 API（catch-all route）
 - `/api/translation-jobs`: AI 翻訳ジョブを作成する POST API
 - `/sitemap.xml`: 公開済み仏典と 21 locale の公開 URL
 - `/robots.txt`: クロール規則と sitemap の場所
 
-実際の URL と serverFn/API の境界は TanStack Router のルート定義を正本とし、変更時はこの一覧を更新します。
+origin/main の既存 UI コンポーネント、shadcn の配置、URLを正本として維持します。既存ファイルの移動・複製・ディレクトリ再編は行わず、TanStack Router の `src/routes` には不可避な最小 route 定義だけを置き、元配置のコンポーネントを import します。実際の URL は上記の維持 URL を TanStack Router のルート境界で実装し、serverFn/API の境界とともに変更時はこの一覧を更新します。
 
 ## 権限とアクセス
 
@@ -143,9 +143,9 @@ Cloudflare Workers のリクエスト処理では Node.js 専用 API（`fs`、`c
 - 読み取りページは静的生成またはキャッシュ可能なレスポンスを優先する
 - 投票、翻訳案投稿、AI ジョブなど認証が必要な処理だけを動的なサーバー境界に置く
 - `/robots.txt` は API と認証画面をクロール対象外にし、`/sitemap.xml` の場所を示す
-- `/sitemap.xml` は公開済み仏典の `/$locale/$slug` と、現行 21 locale の一覧だけを掲載する。非公開・未存在の仏典を含めない
-- `/$locale` と `/$locale/$slug` は現行 21 locale すべてに title と description を返す。移行元で既存の copy がある `en`、`ja`、`zh`、`ko`、`es` は各言語の copy を再利用し、追加 locale は未翻訳文を混在させず英語 copy へ明示的に fallback する
-- 公開ページには現在の URL の絶対 canonical、21 locale の `hreflang` alternate と `x-default` を設定する。旧 URL 互換や redirect は提供しない
+- `/sitemap.xml` は公開済み仏典の `/$locale/$handle/$pageSlug` と、現行 21 locale の一覧だけを掲載する。非公開・未存在の仏典を含めない
+- `/$locale` と `/$locale/$handle/$pageSlug` は現行 21 locale すべてに title と description を返す。移行元で既存の copy がある `en`、`ja`、`zh`、`ko`、`es` は各言語の copy を再利用し、追加 locale は未翻訳文を混在させず英語 copy へ明示的に fallback する
+- 公開ページには現在の URL の絶対 canonical、21 locale の `hreflang` alternate と `x-default` を設定する。移行元の URL を正本として維持し、新しい scripture 専用 URL や旧 URL の互換・redirect は導入しない
 - 公開ページには `og:title`、`og:description`、`og:url`、`og:image` と X の `summary_large_image` card を設定する
 - 公開一覧と仏典詳細には schema.org の JSON-LD 構造化データを設定する。セッションや投票状態など個人別データは含めない
 - セッション、投票の内部 ID、プロンプト、秘密値を HTML やログに出力しない

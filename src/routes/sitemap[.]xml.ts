@@ -8,12 +8,12 @@ export const Route = createFileRoute("/sitemap.xml")({
 		handlers: {
 			GET: async ({ request }) => {
 				const origin = new URL(request.url).origin;
-				const slugs = await listPublishedScriptureSlugs(getDatabase());
+				const entries = await listPublishedScriptureSlugs(getDatabase());
 				return new Response(
 					buildSitemapXml({
 						origin,
 						locales: supportedLocales.map(({ code }) => code),
-						slugs,
+						entries,
 					}),
 					{
 						headers: {

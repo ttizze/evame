@@ -139,6 +139,7 @@ function makePlan(): MigrationPlan {
 				progress: 0,
 				total: 1,
 				error: "Migrated incomplete translation job; rerun required.",
+				translationContext: "既存用語を優先する",
 				requestedBy: "owner-1",
 				createdAt: "2025-01-01T00:00:00.000Z",
 				updatedAt: "2025-01-01T00:00:00.000Z",
@@ -236,6 +237,7 @@ describe("Turso migration target", () => {
 		expect(first[1]?.args).toContain("ciphertext-refresh");
 		expect(first[2]?.args).toContain("session-value");
 		expect(first[4]?.args).toContain("ciphertext-gemini");
+		expect(first[7]?.args).toContain("既存用語を優先する");
 		for (const { sql } of first) {
 			expect(sql).toMatch(/\?/);
 			expect(sql).not.toMatch(/libsql/i);

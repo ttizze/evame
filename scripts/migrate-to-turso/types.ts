@@ -222,6 +222,8 @@ export interface SourceTranslationJob {
 	pageId: number;
 	locale: string;
 	model: string;
+	/** 旧PostgreSQL sourceには列がないため、snapshotでは空文字へ補完する。 */
+	translationContext?: string;
 	status: SourceTranslationJobStatus;
 	progress: number;
 	error: string;
@@ -482,6 +484,7 @@ export interface TargetTranslationJob {
 	scriptureId: number | null;
 	locale: string;
 	model: string;
+	translationContext?: string;
 	status: TargetTranslationJobStatus;
 	progress: number;
 	total: number;

@@ -27,7 +27,9 @@ function getHandler(route: unknown): Handler {
 
 describe("SEO 用の公開 HTTP route", () => {
 	it("公開済み仏典だけを sitemap に含める", async () => {
-		state.db.all.mockResolvedValue([{ slug: "dhammapada" }]);
+		state.db.all.mockResolvedValue([
+			{ handle: "tipitaka", slug: "dhammapada" },
+		]);
 
 		const response = await getHandler(SitemapRoute)({
 			request: new Request("https://digital-buddhism.example/sitemap.xml"),
@@ -36,7 +38,7 @@ describe("SEO 用の公開 HTTP route", () => {
 		expect(response.status).toBe(200);
 		expect(response.headers.get("content-type")).toContain("application/xml");
 		expect(await response.text()).toContain(
-			"https://digital-buddhism.example/ja/dhammapada",
+			"https://digital-buddhism.example/ja/tipitaka/dhammapada",
 		);
 		expect(state.db.all).toHaveBeenCalledWith(
 			expect.stringContaining("published_at IS NOT NULL"),
@@ -49,8 +51,36 @@ describe("SEO 用の公開 HTTP route", () => {
 		});
 
 		expect(response.status).toBe(200);
-		expect(await response.text()).toBe(
-			"User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /login\nSitemap: https://digital-buddhism.example/sitemap.xml\n",
+		const body = await response.text();
+		expect(body).toContain("Disallow: /api/");
+		expect(body).toContain("Disallow: /login");
+		for (const locale of [
+			"en",
+			"zh",
+			"es",
+			"ar",
+			"id",
+			"pt",
+			"fr",
+			"ja",
+			"ru",
+			"de",
+			"vi",
+			"ko",
+			"tr",
+			"it",
+			"fa",
+			"th",
+			"pl",
+			"nl",
+			"tl",
+			"hi",
+			"pi",
+		]) {
+			expect(body).toContain(`Disallow: /${locale}/auth/login`);
+		}
+		expect(body).toContain(
+			"Sitemap: https://digital-buddhism.example/sitemap.xml",
 		);
 	});
 });

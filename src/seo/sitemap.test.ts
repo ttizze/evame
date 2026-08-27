@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { supportedLocales } from "@/domain/locales";
 import { buildRobotsTxt, buildSitemapXml } from "./sitemap";
 
 describe("公開仏典の sitemap", () => {
@@ -6,15 +7,18 @@ describe("公開仏典の sitemap", () => {
 		const xml = buildSitemapXml({
 			origin: "https://digital-buddhism.example/",
 			locales: ["en", "ja"],
-			slugs: ["dhammapada", "sutta & one"],
+			entries: [
+				{ handle: "tipitaka", slug: "dhammapada" },
+				{ handle: "researcher", slug: "sutta & one" },
+			],
 		});
 
 		expect(xml).toContain("<loc>https://digital-buddhism.example/en</loc>");
 		expect(xml).toContain(
-			"<loc>https://digital-buddhism.example/ja/dhammapada</loc>",
+			"<loc>https://digital-buddhism.example/ja/tipitaka/dhammapada</loc>",
 		);
 		expect(xml).toContain(
-			"https://digital-buddhism.example/en/sutta%20%26%20one",
+			"https://digital-buddhism.example/en/researcher/sutta%20%26%20one",
 		);
 		expect(xml).toContain(
 			'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"',
@@ -23,8 +27,14 @@ describe("公開仏典の sitemap", () => {
 	});
 
 	it("robots.txt から API と sitemap の場所を示す", () => {
-		expect(buildRobotsTxt("https://digital-buddhism.example/")).toBe(
-			"User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /login\nSitemap: https://digital-buddhism.example/sitemap.xml\n",
+		const body = buildRobotsTxt("https://digital-buddhism.example/");
+		expect(body).toContain("Disallow: /api/");
+		expect(body).toContain("Disallow: /login");
+		for (const { code } of supportedLocales) {
+			expect(body).toContain(`Disallow: /${code}/auth/login`);
+		}
+		expect(body).toContain(
+			"Sitemap: https://digital-buddhism.example/sitemap.xml",
 		);
 	});
 });

@@ -43,6 +43,7 @@ export type TranslationJob = {
 	requestedBy: string | null;
 	createdAt: string;
 	updatedAt: string;
+	translationContext: string;
 };
 
 export type TranslationJobRequest = {

@@ -197,6 +197,7 @@ function mapTranslationJob(
 		scriptureId: job.pageId,
 		locale: job.locale,
 		model: job.model,
+		translationContext: job.translationContext ?? "",
 		status,
 		progress: job.progress,
 		total,

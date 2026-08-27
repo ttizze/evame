@@ -2,8 +2,8 @@ import { describe, expect, test } from "vitest";
 import { migrateDatabase, migrations } from "./migrations";
 import type { SqlExecutor, TursoDatabase } from "./turso-types";
 
-function createMigrationDb() {
-	const applied: string[] = [];
+function createMigrationDb(initialApplied: readonly string[] = []) {
+	const applied: string[] = [...initialApplied];
 	const statements: string[] = [];
 	const executor: SqlExecutor = {
 		async get<T>(_sql: string, _args = []) {
@@ -39,7 +39,11 @@ describe("migrateDatabase", () => {
 		await migrateDatabase(db);
 		const firstRunStatementCount = statements.length;
 
-		expect(applied).toEqual(["0001_initial", "0002_translation_job_chunks"]);
+		expect(applied).toEqual([
+			"0001_initial",
+			"0002_translation_job_chunks",
+			"0003_translation_job_context",
+		]);
 		expect(
 			statements.some((sql) =>
 				sql.includes("CREATE TABLE IF NOT EXISTS users"),
@@ -57,7 +61,11 @@ describe("migrateDatabase", () => {
 		).toBe(true);
 
 		await migrateDatabase(db);
-		expect(applied).toEqual(["0001_initial", "0002_translation_job_chunks"]);
+		expect(applied).toEqual([
+			"0001_initial",
+			"0002_translation_job_chunks",
+			"0003_translation_job_context",
+		]);
 		expect(statements).toHaveLength(firstRunStatementCount + 1);
 	});
 
@@ -215,5 +223,39 @@ describe("migrateDatabase", () => {
 		expect(chunks).toContain(
 			"FOREIGN KEY (job_id) REFERENCES translation_jobs (id) ON DELETE CASCADE",
 		);
+	});
+
+	test("既存0001を変更せず、translation_jobsへ空文字fallback付きの列を追加する", () => {
+		const statements = migrations[2]?.statements ?? [];
+		expect(migrations[2]?.id).toBe("0003_translation_job_context");
+		expect(statements).toContain(
+			"ALTER TABLE translation_jobs ADD COLUMN translation_context TEXT NOT NULL DEFAULT ''",
+		);
+		expect(migrations[0]?.statements.join("\n")).not.toContain(
+			"translation_context TEXT",
+		);
+	});
+
+	test("schema_migrationsが0002までの本番DBには0003だけを追加適用する", async () => {
+		const { db, applied, statements } = createMigrationDb([
+			"0001_initial",
+			"0002_translation_job_chunks",
+		]);
+
+		await migrateDatabase(db);
+
+		expect(applied).toEqual([
+			"0001_initial",
+			"0002_translation_job_chunks",
+			"0003_translation_job_context",
+		]);
+		expect(statements).toContain(
+			"ALTER TABLE translation_jobs ADD COLUMN translation_context TEXT NOT NULL DEFAULT ''",
+		);
+		expect(
+			statements.filter((statement) =>
+				statement.includes("CREATE TABLE IF NOT EXISTS translation_jobs"),
+			),
+		).toHaveLength(0);
 	});
 });

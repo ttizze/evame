@@ -1,0 +1,18 @@
+export function HeroRays() {
+	return (
+		<div className="relative my-10 flex h-[360px] w-full max-w-4xl items-center justify-center overflow-hidden rounded-3xl bg-[radial-gradient(circle_at_center,rgba(175,220,255,0.18),transparent_58%)]">
+			<img
+				alt=""
+				aria-hidden="true"
+				className="relative z-10 dark:invert"
+				height={120}
+				src="/favicon.svg"
+				style={{
+					filter:
+						"drop-shadow(0 0 24px rgba(175, 220, 255, 0.7)) drop-shadow(0 0 52px rgba(255, 200, 230, 0.35))",
+				}}
+				width={120}
+			/>
+		</div>
+	);
+}

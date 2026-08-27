@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { TRANSLATION_DEAD_LETTER_QUEUE_NAME } from "./translation-queue";
 
 const config = JSON.parse(readFileSync("wrangler.jsonc", "utf8")) as {
+	triggers?: { crons?: string[] };
 	queues: {
 		producers: Array<{ binding: string; queue: string }>;
 		consumers: Array<{
@@ -14,6 +15,10 @@ const config = JSON.parse(readFileSync("wrangler.jsonc", "utf8")) as {
 };
 
 describe("Cloudflare Queueの設定", () => {
+	it("古いPENDING翻訳jobのreconcilerを定期実行するcronを持つ", () => {
+		expect(config.triggers?.crons).toContain("*/5 * * * *");
+	});
+
 	it("通常QueueをTRANSLATION_QUEUE producer bindingに割り当てる", () => {
 		expect(config.queues.producers).toContainEqual({
 			binding: "TRANSLATION_QUEUE",

@@ -10,22 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as LoginRouteImport } from './routes/login'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as LocaleIndexRouteImport } from './routes/$locale/index'
-import { Route as LocaleSlugRouteImport } from './routes/$locale/$slug'
+import { Route as LocaleAboutRouteImport } from './routes/$locale/about'
+import { Route as LocalePrivacyRouteImport } from './routes/$locale/privacy'
+import { Route as LocaleSearchRouteImport } from './routes/$locale/search'
+import { Route as LocaleTermsRouteImport } from './routes/$locale/terms'
 import { Route as ApiTranslationJobsRouteRouteImport } from './routes/api/translation-jobs/route'
+import { Route as LocaleHandlePageSlugRouteImport } from './routes/$locale/$handle/$pageSlug'
+import { Route as LocaleAuthLoginRouteImport } from './routes/$locale/auth/login'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
@@ -43,14 +42,39 @@ const LocaleIndexRoute = LocaleIndexRouteImport.update({
   path: '/$locale/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LocaleSlugRoute = LocaleSlugRouteImport.update({
-  id: '/$locale/$slug',
-  path: '/$locale/$slug',
+const LocaleAboutRoute = LocaleAboutRouteImport.update({
+  id: '/$locale/about',
+  path: '/$locale/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocalePrivacyRoute = LocalePrivacyRouteImport.update({
+  id: '/$locale/privacy',
+  path: '/$locale/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocaleSearchRoute = LocaleSearchRouteImport.update({
+  id: '/$locale/search',
+  path: '/$locale/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocaleTermsRoute = LocaleTermsRouteImport.update({
+  id: '/$locale/terms',
+  path: '/$locale/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTranslationJobsRouteRoute = ApiTranslationJobsRouteRouteImport.update({
   id: '/api/translation-jobs',
   path: '/api/translation-jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocaleHandlePageSlugRoute = LocaleHandlePageSlugRouteImport.update({
+  id: '/$locale/$handle/$pageSlug',
+  path: '/$locale/$handle/$pageSlug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocaleAuthLoginRoute = LocaleAuthLoginRouteImport.update({
+  id: '/$locale/auth/login',
+  path: '/$locale/auth/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
@@ -61,76 +85,104 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/translation-jobs': typeof ApiTranslationJobsRouteRoute
-  '/$locale/$slug': typeof LocaleSlugRoute
+  '/$locale/about': typeof LocaleAboutRoute
+  '/$locale/privacy': typeof LocalePrivacyRoute
+  '/$locale/search': typeof LocaleSearchRoute
+  '/$locale/terms': typeof LocaleTermsRoute
   '/$locale/': typeof LocaleIndexRoute
+  '/$locale/$handle/$pageSlug': typeof LocaleHandlePageSlugRoute
+  '/$locale/auth/login': typeof LocaleAuthLoginRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/translation-jobs': typeof ApiTranslationJobsRouteRoute
-  '/$locale/$slug': typeof LocaleSlugRoute
+  '/$locale/about': typeof LocaleAboutRoute
+  '/$locale/privacy': typeof LocalePrivacyRoute
+  '/$locale/search': typeof LocaleSearchRoute
+  '/$locale/terms': typeof LocaleTermsRoute
   '/$locale': typeof LocaleIndexRoute
+  '/$locale/$handle/$pageSlug': typeof LocaleHandlePageSlugRoute
+  '/$locale/auth/login': typeof LocaleAuthLoginRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/translation-jobs': typeof ApiTranslationJobsRouteRoute
-  '/$locale/$slug': typeof LocaleSlugRoute
+  '/$locale/about': typeof LocaleAboutRoute
+  '/$locale/privacy': typeof LocalePrivacyRoute
+  '/$locale/search': typeof LocaleSearchRoute
+  '/$locale/terms': typeof LocaleTermsRoute
   '/$locale/': typeof LocaleIndexRoute
+  '/$locale/$handle/$pageSlug': typeof LocaleHandlePageSlugRoute
+  '/$locale/auth/login': typeof LocaleAuthLoginRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/login'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/api/translation-jobs'
-    | '/$locale/$slug'
+    | '/$locale/about'
+    | '/$locale/privacy'
+    | '/$locale/search'
+    | '/$locale/terms'
     | '/$locale/'
+    | '/$locale/$handle/$pageSlug'
+    | '/$locale/auth/login'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/login'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/api/translation-jobs'
-    | '/$locale/$slug'
+    | '/$locale/about'
+    | '/$locale/privacy'
+    | '/$locale/search'
+    | '/$locale/terms'
     | '/$locale'
+    | '/$locale/$handle/$pageSlug'
+    | '/$locale/auth/login'
     | '/api/auth/$'
   id:
     | '__root__'
     | '/'
-    | '/login'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/api/translation-jobs'
-    | '/$locale/$slug'
+    | '/$locale/about'
+    | '/$locale/privacy'
+    | '/$locale/search'
+    | '/$locale/terms'
     | '/$locale/'
+    | '/$locale/$handle/$pageSlug'
+    | '/$locale/auth/login'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LoginRoute: typeof LoginRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiTranslationJobsRouteRoute: typeof ApiTranslationJobsRouteRoute
-  LocaleSlugRoute: typeof LocaleSlugRoute
+  LocaleAboutRoute: typeof LocaleAboutRoute
+  LocalePrivacyRoute: typeof LocalePrivacyRoute
+  LocaleSearchRoute: typeof LocaleSearchRoute
+  LocaleTermsRoute: typeof LocaleTermsRoute
   LocaleIndexRoute: typeof LocaleIndexRoute
+  LocaleHandlePageSlugRoute: typeof LocaleHandlePageSlugRoute
+  LocaleAuthLoginRoute: typeof LocaleAuthLoginRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -141,13 +193,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/robots.txt': {
@@ -171,11 +216,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$locale/$slug': {
-      id: '/$locale/$slug'
-      path: '/$locale/$slug'
-      fullPath: '/$locale/$slug'
-      preLoaderRoute: typeof LocaleSlugRouteImport
+    '/$locale/about': {
+      id: '/$locale/about'
+      path: '/$locale/about'
+      fullPath: '/$locale/about'
+      preLoaderRoute: typeof LocaleAboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/privacy': {
+      id: '/$locale/privacy'
+      path: '/$locale/privacy'
+      fullPath: '/$locale/privacy'
+      preLoaderRoute: typeof LocalePrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/search': {
+      id: '/$locale/search'
+      path: '/$locale/search'
+      fullPath: '/$locale/search'
+      preLoaderRoute: typeof LocaleSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/terms': {
+      id: '/$locale/terms'
+      path: '/$locale/terms'
+      fullPath: '/$locale/terms'
+      preLoaderRoute: typeof LocaleTermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/translation-jobs': {
@@ -183,6 +249,20 @@ declare module '@tanstack/react-router' {
       path: '/api/translation-jobs'
       fullPath: '/api/translation-jobs'
       preLoaderRoute: typeof ApiTranslationJobsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/$handle/$pageSlug': {
+      id: '/$locale/$handle/$pageSlug'
+      path: '/$locale/$handle/$pageSlug'
+      fullPath: '/$locale/$handle/$pageSlug'
+      preLoaderRoute: typeof LocaleHandlePageSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/auth/login': {
+      id: '/$locale/auth/login'
+      path: '/$locale/auth/login'
+      fullPath: '/$locale/auth/login'
+      preLoaderRoute: typeof LocaleAuthLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/$': {
@@ -197,12 +277,16 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LoginRoute: LoginRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiTranslationJobsRouteRoute: ApiTranslationJobsRouteRoute,
-  LocaleSlugRoute: LocaleSlugRoute,
+  LocaleAboutRoute: LocaleAboutRoute,
+  LocalePrivacyRoute: LocalePrivacyRoute,
+  LocaleSearchRoute: LocaleSearchRoute,
+  LocaleTermsRoute: LocaleTermsRoute,
   LocaleIndexRoute: LocaleIndexRoute,
+  LocaleHandlePageSlugRoute: LocaleHandlePageSlugRoute,
+  LocaleAuthLoginRoute: LocaleAuthLoginRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

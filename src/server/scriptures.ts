@@ -18,6 +18,7 @@ export type ScriptureListItem = {
 	slug: string;
 	title: string;
 	sourceLocale: string;
+	ownerHandle: string;
 	hierarchy: string[];
 	translationCount: number;
 	href: string;
@@ -42,6 +43,7 @@ export type ScriptureDetail = {
 	slug: string;
 	title: string;
 	sourceLocale: string;
+	ownerHandle: string;
 	displayLocale: string;
 	hierarchy: string[];
 	sourceText: string;
@@ -107,13 +109,16 @@ function hierarchyRows(rows: readonly ScriptureRow[]) {
 
 async function readPublishedScriptures(
 	db: SqlExecutor,
-): Promise<ScriptureRow[]> {
-	return db.all<ScriptureRow>(
-		`SELECT id, slug, title, source_locale, owner_user_id, parent_id,
-				position, published_at
+): Promise<Array<ScriptureRow & { owner_handle: string }>> {
+	return db.all<ScriptureRow & { owner_handle: string }>(
+		`SELECT scriptures.id, scriptures.slug, scriptures.title,
+				scriptures.source_locale, scriptures.owner_user_id,
+				scriptures.parent_id, scriptures.position, scriptures.published_at,
+				users.handle AS owner_handle
 		 FROM scriptures
-		 WHERE published_at IS NOT NULL
-		 ORDER BY position, id`,
+		 INNER JOIN users ON users.id = scriptures.owner_user_id
+		 WHERE scriptures.published_at IS NOT NULL
+		 ORDER BY scriptures.position, scriptures.id`,
 	);
 }
 
@@ -133,8 +138,8 @@ async function readTranslationCounts(
 }
 
 function listItem(
-	row: ScriptureRow,
-	rows: readonly ScriptureRow[],
+	row: ScriptureRow & { owner_handle: string },
+	rows: ReadonlyArray<ScriptureRow & { owner_handle: string }>,
 	translationCounts: ReadonlyMap<number, number>,
 	locale: string,
 ): ScriptureListItem {
@@ -143,9 +148,10 @@ function listItem(
 		slug: row.slug,
 		title: normalizedTitle(row),
 		sourceLocale: row.source_locale,
+		ownerHandle: row.owner_handle,
 		hierarchy: buildScriptureHierarchy(row, hierarchyRows(rows)),
 		translationCount: translationCounts.get(row.id) ?? 0,
-		href: `/${locale}/${row.slug}`,
+		href: `/${locale}/${row.owner_handle}/${row.slug}`,
 	};
 }
 
@@ -157,6 +163,68 @@ export async function listScriptures(
 	const rows = await readPublishedScriptures(db);
 	const translationCounts = await readTranslationCounts(db, locale);
 	return rows.map((row) => listItem(row, rows, translationCounts, locale));
+}
+
+function parseSearchInput(input: unknown): {
+	locale: string;
+	query: string;
+	category: "title" | "content";
+} {
+	if (typeof input !== "object" || input === null || Array.isArray(input)) {
+		throw new InvalidInputError("仏典の検索条件が不正です");
+	}
+	const value = input as Record<string, unknown>;
+	const query = value.query;
+	if (typeof query !== "string") {
+		throw new InvalidInputError("検索語が不正です");
+	}
+	const normalizedQuery = query.trim();
+	if (normalizedQuery.length > 200) {
+		throw new InvalidInputError("検索語が長すぎます");
+	}
+	const category = value.category ?? "title";
+	if (category !== "title" && category !== "content") {
+		throw new InvalidInputError("検索対象が不正です");
+	}
+	return {
+		locale: parseSupportedLocale(value.locale),
+		query: normalizedQuery,
+		category,
+	};
+}
+
+/** 公開済み仏典を題名・slug・公開本文から検索する。 */
+export async function searchScriptures(
+	db: SqlExecutor,
+	input: unknown,
+): Promise<ScriptureListItem[]> {
+	const { category, locale, query } = parseSearchInput(input);
+	if (query.length === 0) return [];
+
+	const pattern = `%${query}%`;
+	const searchCondition =
+		category === "title"
+			? "lower(scriptures.title) LIKE lower(?) OR lower(scriptures.slug) LIKE lower(?)"
+			: "lower(COALESCE(segments.source_text, '')) LIKE lower(?)";
+	const searchArguments = category === "title" ? [pattern, pattern] : [pattern];
+	const matchedRows = await db.all<{ id: number }>(
+		`SELECT DISTINCT scriptures.id
+		 FROM scriptures
+		 LEFT JOIN segments ON segments.scripture_id = scriptures.id
+		 WHERE scriptures.published_at IS NOT NULL
+			AND (${searchCondition})
+		 ORDER BY scriptures.position, scriptures.id`,
+		searchArguments,
+	);
+	if (matchedRows.length === 0) return [];
+
+	const rows = await readPublishedScriptures(db);
+	const matchedIds = new Set(matchedRows.map(({ id }) => id));
+	const matchedScriptures = rows.filter((row) => matchedIds.has(row.id));
+	const translationCounts = await readTranslationCounts(db, locale);
+	return matchedScriptures.map((row) =>
+		listItem(row, rows, translationCounts, locale),
+	);
 }
 
 function localeLabel(code: string): string {
@@ -317,6 +385,7 @@ export async function getScripture(
 		slug: scripture.slug,
 		title: normalizedTitle(scripture),
 		sourceLocale: scripture.source_locale,
+		ownerHandle: scripture.owner_handle,
 		displayLocale: locale,
 		hierarchy: buildScriptureHierarchy(scripture, hierarchyRows(rows)),
 		sourceText: sourceSegments

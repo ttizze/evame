@@ -40,9 +40,6 @@ export function buildLoginHref(
 	locale: string | undefined,
 	redirect: string | undefined,
 ): string {
-	const params = new URLSearchParams({
-		locale: normalizedLocale(locale),
-		redirect: normalizeRedirectPath(redirect),
-	});
-	return `/login?${params.toString()}`;
+	const next = encodeURIComponent(normalizeRedirectPath(redirect));
+	return `/${normalizedLocale(locale)}/auth/login?next=${next}`;
 }

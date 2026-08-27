@@ -7,6 +7,7 @@ import { configureDatabase } from "@/server/runtime";
 import { decryptLegacyGeminiApiKey } from "@/translation/credentials";
 import { getEncryptedGeminiApiKey } from "@/translation/persistence";
 import { configureTranslationQueue } from "@/translation/runtime";
+import { reconcilePendingTranslationJobs } from "@/translation/service";
 import type {
 	TranslationMessageBatch,
 	TranslationProviderConfig,
@@ -99,8 +100,22 @@ export async function queue(
 	});
 }
 
+/** 定期実行で、Queue送信失敗後の古いPENDING jobを再投入する。 */
+export async function scheduled(
+	_controller: ScheduledController,
+	env: TranslationWorkerEnv,
+): Promise<void> {
+	try {
+		const runtime = configureWorkerRuntime(env);
+		await reconcilePendingTranslationJobs(runtime.database, runtime.queue);
+	} catch {
+		// 次回cronで再実行する。DB/Queueの詳細はログやレスポンスへ出さない。
+	}
+}
+
 /** TanStack StartのHTTP入口を維持しながら、同じWorkerでQueue consumerも公開する。 */
 export default {
 	fetch,
 	queue,
+	scheduled,
 };

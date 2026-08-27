@@ -6,6 +6,7 @@ export type ScriptureListItem = {
 	id: string;
 	slug: string;
 	title: string;
+	ownerHandle?: string;
 	paliTitle?: string;
 	hierarchy: string[];
 	description?: string;
@@ -47,6 +48,7 @@ export type ScriptureDetail = {
 	id: string;
 	slug: string;
 	title: string;
+	ownerHandle?: string;
 	paliTitle?: string;
 	sourceLocale?: string;
 	displayLocale?: string;

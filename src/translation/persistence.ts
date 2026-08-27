@@ -18,7 +18,19 @@ import type {
 import { parseTranslationJobRequest } from "./validation";
 
 const JOB_COLUMNS = `id, scripture_id, locale, status, progress, total, error,
-	model, requested_by, created_at, updated_at`;
+	model, requested_by, created_at, updated_at, translation_context`;
+
+const PENDING_JOB_STALE_QUERY = `SELECT ${JOB_COLUMNS}
+	FROM translation_jobs
+	WHERE status = 'PENDING'
+		AND updated_at <= ?
+		AND EXISTS (
+			SELECT 1 FROM scriptures
+			WHERE scriptures.id = translation_jobs.scripture_id
+				AND scriptures.published_at IS NOT NULL
+		)
+	ORDER BY updated_at ASC, id ASC
+	LIMIT ?`;
 
 type RawJobRow = Omit<TranslationJobRow, keyof TranslationJobRow> & {
 	id: unknown;
@@ -32,6 +44,7 @@ type RawJobRow = Omit<TranslationJobRow, keyof TranslationJobRow> & {
 	requested_by: unknown;
 	created_at: unknown;
 	updated_at: unknown;
+	translation_context: unknown;
 };
 
 function integer(value: unknown, fieldName: string): number {
@@ -80,6 +93,16 @@ export function mapTranslationJob(
 	) {
 		throw new InvalidInputError("翻訳ジョブの時刻またはerrorが不正です");
 	}
+	const translationContext =
+		row.translation_context === null || row.translation_context === undefined
+			? ""
+			: typeof row.translation_context === "string"
+				? row.translation_context
+				: (() => {
+						throw new InvalidInputError(
+							"翻訳ジョブのtranslation_contextが不正です",
+						);
+					})();
 	const progress = integer(row.progress, "progress");
 	const total = integer(row.total, "total");
 	if (progress < 0 || progress > 100 || total < 0) {
@@ -104,6 +127,7 @@ export function mapTranslationJob(
 						})(),
 		createdAt: row.created_at,
 		updatedAt: row.updated_at,
+		translationContext,
 	};
 }
 
@@ -188,10 +212,18 @@ export async function createTranslationJob(
 
 		await transaction.run(
 			`INSERT INTO translation_jobs
-			 (id, scripture_id, locale, status, progress, total, error, model, requested_by)
-			 VALUES (?, ?, ?, 'PENDING', 0, 0, '', ?, ?)
+			 (id, scripture_id, locale, status, progress, total, error, model,
+			  requested_by, translation_context)
+			 VALUES (?, ?, ?, 'PENDING', 0, 0, '', ?, ?, ?)
 			 ON CONFLICT(id) DO NOTHING`,
-			[id, request.scriptureId, request.locale, request.model, request.userId],
+			[
+				id,
+				request.scriptureId,
+				request.locale,
+				request.model,
+				request.userId,
+				request.translationContext,
+			],
 		);
 		const row = await transaction.get<RawJobRow>(
 			`SELECT ${JOB_COLUMNS} FROM translation_jobs WHERE id = ? LIMIT 1`,
@@ -203,7 +235,8 @@ export async function createTranslationJob(
 			job.requestedBy !== request.userId ||
 			job.scriptureId !== request.scriptureId ||
 			job.locale !== request.locale ||
-			job.model !== request.model
+			job.model !== request.model ||
+			job.translationContext !== request.translationContext
 		) {
 			if (job.requestedBy !== request.userId) {
 				throw new ForbiddenError("この翻訳ジョブを操作する権限がありません");
@@ -231,6 +264,24 @@ export async function getTranslationJobById(
 	jobId: unknown,
 ): Promise<TranslationJob> {
 	return readJob(db, validateJobId(jobId));
+}
+
+/** Queueへ再投入する対象を、古いPENDING jobに限定して取得する。 */
+export async function listStalePendingTranslationJobs(
+	db: SqlExecutor,
+	staleBefore: string,
+	limit: number,
+): Promise<TranslationJobRow[]> {
+	if (typeof staleBefore !== "string" || staleBefore.trim().length === 0) {
+		throw new InvalidInputError("翻訳jobの期限境界が不正です");
+	}
+	if (!Number.isSafeInteger(limit) || limit < 1) {
+		throw new InvalidInputError("翻訳jobの取得上限が不正です");
+	}
+	return db.all<TranslationJobRow>(PENDING_JOB_STALE_QUERY, [
+		staleBefore,
+		limit,
+	]);
 }
 
 type SegmentRow = {

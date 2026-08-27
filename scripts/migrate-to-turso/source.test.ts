@@ -105,6 +105,7 @@ describe("loadSourceSnapshot", () => {
 								status: "IN_PROGRESS",
 								progress: 1,
 								error: "",
+								translation_context: "既存用語を優先する",
 								requested_by: "u1",
 								created_at: "2025-01-01T00:00:00.000Z",
 								updated_at: "2025-01-01T00:00:00.000Z",
@@ -289,6 +290,7 @@ describe("loadSourceSnapshot", () => {
 			id: 4,
 			pageId: 1,
 			requestedBy: "u1",
+			translationContext: "既存用語を優先する",
 			status: "IN_PROGRESS",
 		});
 		expect(sourceQueries.user).toContain("updated_at");
@@ -300,5 +302,6 @@ describe("loadSourceSnapshot", () => {
 		expect(sourceQueries.page).toContain("p.source_locale = 'pi'");
 		expect(sourceQueries.page).toContain("child.status = 'ARCHIVE'");
 		expect(sourceQueries.page).toContain("child.source_locale = 'pi'");
+		expect(sourceQueries.translationJob).toContain("translation_context");
 	});
 });

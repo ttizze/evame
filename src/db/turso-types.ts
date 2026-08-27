@@ -132,6 +132,8 @@ export type TranslationJobRow = {
 	requested_by: string | null;
 	created_at: string;
 	updated_at: string;
+	/** 0003以前の行を読む場合は未定義になり得るため、永続化境界で空文字へ補完する。 */
+	translation_context?: string;
 };
 
 export type TranslationVoteRow = {

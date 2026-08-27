@@ -19,6 +19,7 @@ import type {
 import {
 	getScripture as readScripture,
 	listScriptures as readScriptures,
+	searchScriptures as readSearchScriptures,
 } from "@/server/scriptures";
 import { getTranslationJob as readTranslationJob } from "@/server/translation-jobs";
 import {
@@ -85,6 +86,8 @@ export function mapScriptureListItem(
 		id: String(item.id),
 		slug: item.slug,
 		title: item.title,
+		ownerHandle: item.ownerHandle,
+		paliTitle: item.sourceLocale === "pi" ? item.title : undefined,
 		hierarchy: [...item.hierarchy],
 		translationCount: item.translationCount,
 		href: item.href,
@@ -101,6 +104,7 @@ export function mapScriptureDetail(
 		id: String(detail.id),
 		slug: detail.slug,
 		title: detail.title,
+		ownerHandle: detail.ownerHandle,
 		paliTitle: detail.sourceLocale === "pi" ? detail.title : undefined,
 		sourceLocale: detail.sourceLocale,
 		displayLocale: detail.displayLocale,
@@ -132,6 +136,19 @@ export const listScriptures = createServerFn({ method: "GET" })
 	.validator(z.object({ locale: localeInput }))
 	.handler(async ({ data }) => {
 		const items = await readScriptures(getDatabase(), data);
+		return items.map(mapScriptureListItem);
+	});
+
+export const searchScriptures = createServerFn({ method: "GET" })
+	.validator(
+		z.object({
+			locale: localeInput,
+			query: z.string().trim().max(200),
+			category: z.enum(["title", "content"]).default("title"),
+		}),
+	)
+	.handler(async ({ data }) => {
+		const items = await readSearchScriptures(getDatabase(), data);
 		return items.map(mapScriptureListItem);
 	});
 

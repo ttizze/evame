@@ -313,6 +313,12 @@ export const migrations = [
 			"CREATE INDEX IF NOT EXISTS translation_job_chunks_lease_idx ON translation_job_chunks (status, lease_until)",
 		],
 	},
+	{
+		id: "0003_translation_job_context",
+		statements: [
+			"ALTER TABLE translation_jobs ADD COLUMN translation_context TEXT NOT NULL DEFAULT ''",
+		],
+	},
 ] as const;
 
 export async function migrateDatabase(db: {

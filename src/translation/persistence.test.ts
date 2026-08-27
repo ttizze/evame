@@ -9,12 +9,40 @@ import {
 	getEncryptedGeminiApiKey,
 	getOrCreateAiUser,
 	getUserPlan,
+	listStalePendingTranslationJobs,
 	mapTranslationJob,
 	saveAiTranslations,
 	updateTranslationJobProgress,
 } from "./persistence";
 
 describe("翻訳ジョブ行の永続化境界", () => {
+	it("古いPENDINGかつ公開経典のjobだけを更新時刻順の上限付きで取得する", async () => {
+		let query = "";
+		let queryArgs: readonly unknown[] = [];
+		const db: SqlExecutor = {
+			async get<T>() {
+				return undefined as T | undefined;
+			},
+			async all<T>(sql: string, args = []) {
+				query = sql;
+				queryArgs = args;
+				return [] as T[];
+			},
+			async run() {
+				return { changes: 0, lastInsertRowid: undefined };
+			},
+		};
+
+		await listStalePendingTranslationJobs(db, "2026-01-01T00:05:00.000Z", 25);
+
+		expect(query).toContain("status = 'PENDING'");
+		expect(query).toContain("updated_at <= ?");
+		expect(query).toContain("published_at IS NOT NULL");
+		expect(query).toContain("ORDER BY updated_at ASC, id ASC");
+		expect(query).toContain("LIMIT ?");
+		expect(queryArgs).toEqual(["2026-01-01T00:05:00.000Z", 25]);
+	});
+
 	it("TEXTのジョブIDとnullableなrequested_byをアプリ型へ変換する", () => {
 		expect(
 			mapTranslationJob({
@@ -29,12 +57,32 @@ describe("翻訳ジョブ行の永続化境界", () => {
 				requested_by: null,
 				created_at: "2026-08-27T00:00:00.000Z",
 				updated_at: "2026-08-27T00:00:01.000Z",
+				translation_context: "既存用語を優先する",
 			}),
 		).toMatchObject({
 			id: "job-abc",
 			scriptureId: 42,
 			requestedBy: null,
+			translationContext: "既存用語を優先する",
 		});
+	});
+
+	it("0003以前のjob行では翻訳コンテキストを空文字へ補完する", () => {
+		expect(
+			mapTranslationJob({
+				id: "legacy-job",
+				scripture_id: 42,
+				locale: "pt-br",
+				status: "PENDING",
+				progress: 0,
+				total: 0,
+				error: "",
+				model: "gpt-5-nano-2025-08-07",
+				requested_by: null,
+				created_at: "2026-08-27T00:00:00.000Z",
+				updated_at: "2026-08-27T00:00:01.000Z",
+			}),
+		).toMatchObject({ translationContext: "" });
 	});
 
 	it("進捗が100を超える壊れたDB行を拒否する", () => {

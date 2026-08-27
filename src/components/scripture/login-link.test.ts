@@ -4,7 +4,7 @@ import { buildLoginHref, normalizeRedirectPath } from "./login-link";
 describe("翻訳操作のログイン導線", () => {
 	it("現在のlocaleと安全な戻り先をログインURLへ渡す", () => {
 		expect(buildLoginHref("ja-JP", "/ja/dhammapada-1?mode=both")).toBe(
-			"/login?locale=ja&redirect=%2Fja%2Fdhammapada-1%3Fmode%3Dboth",
+			"/ja/auth/login?next=%2Fja%2Fdhammapada-1%3Fmode%3Dboth",
 		);
 	});
 

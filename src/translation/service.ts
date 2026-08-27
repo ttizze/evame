@@ -8,6 +8,8 @@ import {
 	getScriptureTitle,
 	getTranslationJobById,
 	getUserPlan,
+	listStalePendingTranslationJobs,
+	mapTranslationJob,
 	markTranslationJobFailed,
 	readCompletedSegmentIds,
 	saveAiTranslations,
@@ -52,6 +54,97 @@ export class TranslationChunkBusyError extends Error {
 	}
 }
 
+export const TRANSLATION_JOB_RECONCILE_STALE_MS = 5 * 60 * 1_000;
+export const TRANSLATION_JOB_RECONCILE_BATCH_SIZE = 25;
+export const TRANSLATION_JOB_RECONCILE_TIME_BUDGET_MS = 10_000;
+
+type ReconcilePendingTranslationJobsOptions = {
+	now?: number;
+	clock?: () => number;
+	staleAfterMs?: number;
+	batchSize?: number;
+	timeBudgetMs?: number;
+};
+
+export type ReconcilePendingTranslationJobsResult = {
+	inspected: number;
+	enqueued: number;
+	failed: number;
+	timedOut: boolean;
+};
+
+/** Queue障害後に残った古いPENDING jobを、同じjob IDで再投入する。 */
+export async function reconcilePendingTranslationJobs(
+	db: TranslationDatabase,
+	queue: TranslationQueue,
+	options: ReconcilePendingTranslationJobsOptions = {},
+): Promise<ReconcilePendingTranslationJobsResult> {
+	const clock = options.clock ?? (() => options.now ?? Date.now());
+	const startedAt = options.now ?? clock();
+	const staleAfterMs =
+		options.staleAfterMs ?? TRANSLATION_JOB_RECONCILE_STALE_MS;
+	const batchSize = options.batchSize ?? TRANSLATION_JOB_RECONCILE_BATCH_SIZE;
+	const timeBudgetMs =
+		options.timeBudgetMs ?? TRANSLATION_JOB_RECONCILE_TIME_BUDGET_MS;
+	if (
+		!Number.isFinite(startedAt) ||
+		!Number.isFinite(staleAfterMs) ||
+		staleAfterMs < 0
+	) {
+		throw new InvalidInputError("翻訳jobの時刻境界が不正です");
+	}
+	if (!Number.isSafeInteger(batchSize) || batchSize < 1) {
+		throw new InvalidInputError("翻訳jobの取得上限が不正です");
+	}
+	if (!Number.isFinite(timeBudgetMs) || timeBudgetMs <= 0) {
+		throw new InvalidInputError("翻訳jobの処理時間上限が不正です");
+	}
+	const effectiveBatchSize = Math.min(
+		batchSize,
+		TRANSLATION_JOB_RECONCILE_BATCH_SIZE,
+	);
+
+	const rows = await listStalePendingTranslationJobs(
+		db,
+		new Date(startedAt - staleAfterMs).toISOString(),
+		effectiveBatchSize,
+	);
+	let inspected = 0;
+	let enqueued = 0;
+	let failed = 0;
+	let timedOut = false;
+	for (const row of rows.slice(0, effectiveBatchSize)) {
+		if (clock() - startedAt >= timeBudgetMs) {
+			timedOut = true;
+			break;
+		}
+		inspected += 1;
+		let job: TranslationJob;
+		try {
+			job = mapTranslationJob(row);
+		} catch {
+			failed += 1;
+			continue;
+		}
+		if (job.status !== "PENDING") continue;
+		try {
+			await queue.send(
+				{
+					kind: "translation-job",
+					jobId: job.id,
+					translationContext: job.translationContext,
+					idempotencyKey: job.id,
+				},
+				{ contentType: "json" },
+			);
+			enqueued += 1;
+		} catch {
+			failed += 1;
+		}
+	}
+	return { inspected, enqueued, failed, timedOut };
+}
+
 /** 認証済み入力からジョブを作成し、長時間処理をQueueへ委譲する。 */
 export async function createAndEnqueueTranslationJob(
 	db: TranslationDatabase,
@@ -64,7 +157,7 @@ export async function createAndEnqueueTranslationJob(
 			{
 				kind: "translation-job",
 				jobId: job.id,
-				translationContext: request.translationContext,
+				translationContext: job.translationContext,
 				// Queue message idとDBのidempotency keyを同じ値にする。
 				idempotencyKey: job.id,
 			},
@@ -78,9 +171,9 @@ export async function createAndEnqueueTranslationJob(
 				"翻訳Queueへの登録に失敗しました。",
 			);
 		} catch {
-			// Queue障害を隠さず、DB障害の詳細はレスポンスへ出さない。
+			// DB障害の詳細は公開せず、元のQueue障害をcauseへ保持して再試行を促す。
 		}
-		throw error;
+		throw new Error("翻訳Queueへの登録に失敗しました。", { cause: error });
 	}
 	return job;
 }

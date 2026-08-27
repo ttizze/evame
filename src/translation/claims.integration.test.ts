@@ -10,6 +10,7 @@ import type {
 } from "@/db/turso-types";
 import {
 	claimTranslationJobChunk,
+	createTranslationJob,
 	ensureTranslationJobChunks,
 } from "./persistence";
 import {
@@ -121,6 +122,47 @@ async function chunkStates(db: TursoDatabase, jobId: string) {
 }
 
 describe("翻訳Queueの永続claimとoutbox", () => {
+	it("インメモリSQLiteへ全migrationを適用すると旧jobのcontextは空文字になる", async () => {
+		const db = createSqliteDatabase();
+		try {
+			await seedTranslationJob(db, { id: "job-migration" });
+			await expect(
+				db.get<{ translation_context: string }>(
+					"SELECT translation_context FROM translation_jobs WHERE id = ?",
+					["job-migration"],
+				),
+			).resolves.toEqual({ translation_context: "" });
+		} finally {
+			await db.close();
+		}
+	});
+
+	it("実スキーマで新規jobの翻訳コンテキストを保存して読み戻す", async () => {
+		const db = createSqliteDatabase();
+		try {
+			await seedTranslationJob(db, { id: "job-existing" });
+			const context = "固有名詞は既存の用語集に合わせる";
+			const job = await createTranslationJob(db, {
+				scriptureId: 7,
+				locale: "ja",
+				model: "gemini-2.5-flash",
+				translationContext: context,
+				userId: "requester-1",
+				idempotencyKey: "job-context",
+			});
+
+			expect(job.translationContext).toBe(context);
+			await expect(
+				db.get<{ translation_context: string }>(
+					"SELECT translation_context FROM translation_jobs WHERE id = ?",
+					["job-context"],
+				),
+			).resolves.toEqual({ translation_context: context });
+		} finally {
+			await db.close();
+		}
+	});
+
 	it("部分enqueue後のroot再配信は投入済みchunkを重複送信しない", async () => {
 		const db = createSqliteDatabase();
 		try {

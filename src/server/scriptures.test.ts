@@ -45,6 +45,16 @@ function createScriptureDb(
 			position: 2,
 			published_at: null,
 		},
+		{
+			id: 5,
+			slug: "orphan",
+			title: "Orphan",
+			source_locale: "pi",
+			owner_user_id: null,
+			parent_id: null,
+			position: 4,
+			published_at: "2026-01-01T00:00:00.000Z",
+		},
 	];
 	const segments: SegmentRow[] = [
 		{
@@ -212,9 +222,15 @@ function createScriptureDb(
 				sql.includes("published_at IS NOT NULL") &&
 				!sql.includes("FROM translations AS t")
 			) {
-				return scriptures.filter(
-					(scripture) => scripture.published_at !== null,
-				) as T[];
+				return scriptures
+					.filter(
+						(scripture) =>
+							scripture.published_at !== null && scripture.owner_user_id,
+					)
+					.map((scripture) => ({
+						...scripture,
+						owner_handle: scripture.owner_user_id as string,
+					})) as T[];
 			}
 			if (sql.includes("COUNT(t.id) AS count")) {
 				return [{ scripture_id: 2, count: 3 }] as T[];
@@ -246,18 +262,20 @@ describe("経典読取server function", () => {
 				slug: "root",
 				title: "Root",
 				sourceLocale: "pi",
+				ownerHandle: "owner-1",
 				hierarchy: ["Root"],
 				translationCount: 0,
-				href: "/ja/root",
+				href: "/ja/owner-1/root",
 			},
 			{
 				id: 2,
 				slug: "child",
 				title: "Child",
 				sourceLocale: "pi",
+				ownerHandle: "owner-1",
 				hierarchy: ["Root", "Child"],
 				translationCount: 3,
-				href: "/ja/child",
+				href: "/ja/owner-1/child",
 			},
 		]);
 	});
@@ -274,6 +292,7 @@ describe("経典読取server function", () => {
 			id: 2,
 			slug: "child",
 			hierarchy: ["Root", "Child"],
+			ownerHandle: "owner-1",
 			displayLocale: "ja",
 			sourceText: "Source one",
 			availableLocales: [

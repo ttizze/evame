@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { getAuth } from "@/auth/runtime";
 import type { TranslationQueueMessage } from "@/translation/types";
-import { configureWorkerRuntime } from "./index";
+import worker, { configureWorkerRuntime } from "./index";
 
 describe("Worker runtime", () => {
+	it("scheduled入口を公開し、定期reconcilerを実行可能にする", () => {
+		expect(worker.scheduled).toBeTypeOf("function");
+	});
+
 	it("同一isolates内ではDB/Auth/Queue依存を再利用する", () => {
 		const queue = {
 			send: async (_message: TranslationQueueMessage) => undefined,

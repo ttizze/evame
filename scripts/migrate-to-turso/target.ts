@@ -299,8 +299,8 @@ ON CONFLICT (tag_id, page_id) DO UPDATE SET
 const UPSERT_TRANSLATION_JOBS_SQL = `
 INSERT INTO translation_jobs
   (id, scripture_id, locale, model, status, progress, total, error,
-   requested_by, created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+   requested_by, created_at, updated_at, translation_context)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT (id) DO UPDATE SET
   scripture_id = excluded.scripture_id,
   locale = excluded.locale,
@@ -311,7 +311,8 @@ ON CONFLICT (id) DO UPDATE SET
   error = excluded.error,
   requested_by = excluded.requested_by,
   created_at = excluded.created_at,
-  updated_at = excluded.updated_at
+  updated_at = excluded.updated_at,
+  translation_context = excluded.translation_context
 `;
 
 const UPSERT_TRANSLATIONS_SQL = `
@@ -589,6 +590,7 @@ function translationJobStatement(row: TargetTranslationJob): TursoStatement {
 		row.requestedBy,
 		row.createdAt,
 		row.updatedAt,
+		row.translationContext ?? "",
 	]);
 }
 

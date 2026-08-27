@@ -4,7 +4,11 @@ import type {
 	TranslationJobRow,
 	TursoDatabase,
 } from "@/db/turso-types";
-import { createAndEnqueueTranslationJob, startTranslationJob } from "./service";
+import {
+	createAndEnqueueTranslationJob,
+	reconcilePendingTranslationJobs,
+	startTranslationJob,
+} from "./service";
 import type {
 	TranslationJobRequest,
 	TranslationQueue,
@@ -12,7 +16,7 @@ import type {
 	TranslationQueueSendOptions,
 } from "./types";
 
-function createJobDatabase() {
+function createJobDatabase(options: { statusUpdateError?: Error } = {}) {
 	const state: { job: TranslationJobRow } = {
 		job: {
 			id: "job-1",
@@ -26,6 +30,7 @@ function createJobDatabase() {
 			requested_by: "user-1",
 			created_at: "2026-01-01T00:00:00.000Z",
 			updated_at: "2026-01-01T00:00:00.000Z",
+			translation_context: "",
 		},
 	};
 	const db: TursoDatabase = {
@@ -46,7 +51,13 @@ function createJobDatabase() {
 			}
 			return undefined;
 		},
-		async all<T>(_sql: string, _args = []) {
+		async all<T>(sql: string, _args = []) {
+			if (
+				sql.includes("status = 'PENDING'") &&
+				sql.includes("updated_at <= ?")
+			) {
+				return [state.job] as T[];
+			}
 			return [] as T[];
 		},
 		async run(sql: string, args = []) {
@@ -58,9 +69,11 @@ function createJobDatabase() {
 					locale: String(args[2]),
 					model: String(args[3]),
 					requested_by: String(args[4]),
+					translation_context: String(args[5] ?? ""),
 				};
 			}
 			if (sql.includes("SET status = 'FAILED'")) {
+				if (options.statusUpdateError) throw options.statusUpdateError;
 				state.job = {
 					...state.job,
 					status: "FAILED",
@@ -184,21 +197,253 @@ describe("翻訳ジョブ作成ユースケース", () => {
 		]);
 	});
 
-	it("Queue投入に失敗したらジョブをFAILEDにして元のエラーを返す", async () => {
+	it("保存した翻訳コンテキストを初回Queueと定期再投入で一致させる", async () => {
+		const { db } = createJobDatabase();
+		const messages: Extract<
+			TranslationQueueMessage,
+			{ kind: "translation-job" }
+		>[] = [];
+		const queue: TranslationQueue = {
+			send: async (message) => {
+				if (message.kind === "translation-job") messages.push(message);
+			},
+		};
+		const context = "固有名詞は既存の用語集に合わせる";
+
+		await createAndEnqueueTranslationJob(db, queue, {
+			...request,
+			translationContext: context,
+		});
+		await reconcilePendingTranslationJobs(db, queue, {
+			now: Date.parse("2026-01-01T00:10:00.000Z"),
+			staleAfterMs: 5 * 60 * 1_000,
+		});
+
+		expect(messages).toHaveLength(2);
+		expect(messages.map((message) => message.translationContext)).toEqual([
+			context,
+			context,
+		]);
+	});
+
+	it("Queue投入に失敗したらジョブをFAILEDにして秘密を含まないエラーを返す", async () => {
 		const { db, state } = createJobDatabase();
+		const queueError = new Error("queue-provider-secret");
 		const queue: TranslationQueue = {
 			send: async () => {
-				throw new Error("queue unavailable");
+				throw queueError;
 			},
 		};
 
 		await expect(
 			createAndEnqueueTranslationJob(db, queue, request),
-		).rejects.toThrow("queue unavailable");
+		).rejects.toMatchObject({
+			message: "翻訳Queueへの登録に失敗しました。",
+			cause: queueError,
+		});
 		expect(state.job).toMatchObject({
 			status: "FAILED",
 			error: "翻訳Queueへの登録に失敗しました。",
 		});
+	});
+
+	it("QueueとFAILED更新が同時に失敗しても秘密を公開せず、定期処理で自動再投入できる", async () => {
+		const queueError = new Error("queue-token-secret");
+		const statusUpdateError = new Error("DATABASE_URL=database-secret");
+		const { db, state } = createJobDatabase({ statusUpdateError });
+		let attempts = 0;
+		const queue: TranslationQueue = {
+			send: async () => {
+				attempts += 1;
+				if (attempts === 1) throw queueError;
+			},
+		};
+
+		const firstAttempt = createAndEnqueueTranslationJob(db, queue, request);
+		await expect(firstAttempt).rejects.toMatchObject({
+			message: "翻訳Queueへの登録に失敗しました。",
+			cause: queueError,
+		});
+		await expect(firstAttempt).rejects.not.toThrow("database-secret");
+		expect(state.job.status).toBe("PENDING");
+
+		await expect(
+			reconcilePendingTranslationJobs(db, queue, {
+				now: Date.parse("2026-01-01T00:10:00.000Z"),
+				staleAfterMs: 5 * 60 * 1_000,
+			}),
+		).resolves.toEqual({
+			inspected: 1,
+			enqueued: 1,
+			failed: 0,
+			timedOut: false,
+		});
+		expect(attempts).toBe(2);
+	});
+
+	it("1件の再投入失敗でも後続jobを処理し、次回実行へ残す", async () => {
+		const jobs: TranslationJobRow[] = [1, 2].map((id) => ({
+			id: `job-${id}`,
+			scripture_id: 7,
+			locale: "fr",
+			status: "PENDING",
+			progress: 0,
+			total: 0,
+			error: "",
+			model: "gemini-2.5-flash",
+			requested_by: "user-1",
+			created_at: "2026-01-01T00:00:00.000Z",
+			updated_at: "2026-01-01T00:00:00.000Z",
+		}));
+		const db: TursoDatabase = {
+			async get<T>() {
+				return undefined as T | undefined;
+			},
+			async all<T>() {
+				return jobs as T[];
+			},
+			async run() {
+				return { changes: 0, lastInsertRowid: undefined };
+			},
+			async transaction<T>(callback: (transaction: SqlExecutor) => Promise<T>) {
+				return callback(this);
+			},
+			async close() {},
+		};
+		const sent: string[] = [];
+		const queue: TranslationQueue = {
+			send: async (message) => {
+				if (message.kind !== "translation-job") return;
+				if (message.jobId === "job-1")
+					throw new Error("temporary queue failure");
+				sent.push(message.jobId);
+			},
+		};
+
+		await expect(
+			reconcilePendingTranslationJobs(db, queue, {
+				now: Date.parse("2026-01-01T00:10:00.000Z"),
+			}),
+		).resolves.toMatchObject({
+			inspected: 2,
+			enqueued: 1,
+			failed: 1,
+			timedOut: false,
+		});
+		expect(sent).toEqual(["job-2"]);
+	});
+
+	it("PENDING以外のjobを再投入しない", async () => {
+		const statuses = ["PENDING", "IN_PROGRESS", "COMPLETED", "FAILED"] as const;
+		const jobRows: TranslationJobRow[] = statuses.map((status, index) => ({
+			id: `job-${index}`,
+			scripture_id: 7,
+			locale: "fr",
+			status,
+			progress: status === "COMPLETED" ? 100 : 0,
+			total: status === "COMPLETED" ? 1 : 0,
+			error: "",
+			model: "gemini-2.5-flash",
+			requested_by: "user-1",
+			created_at: "2026-01-01T00:00:00.000Z",
+			updated_at: "2026-01-01T00:00:00.000Z",
+		}));
+		const db: TursoDatabase = {
+			async get<T>() {
+				return undefined as T | undefined;
+			},
+			async all<T>() {
+				return jobRows as T[];
+			},
+			async run() {
+				return { changes: 0, lastInsertRowid: undefined };
+			},
+			async transaction<T>(callback: (transaction: SqlExecutor) => Promise<T>) {
+				return callback(this);
+			},
+			async close() {},
+		};
+		const sent: string[] = [];
+
+		await expect(
+			reconcilePendingTranslationJobs(db, {
+				send: async (message) => {
+					if (message.kind === "translation-job") sent.push(message.jobId);
+				},
+			}),
+		).resolves.toMatchObject({ inspected: 4, enqueued: 1, failed: 0 });
+		expect(sent).toEqual(["job-0"]);
+	});
+
+	it("batch上限と時間境界を守り、未処理jobを次回へ委譲する", async () => {
+		const jobs: TranslationJobRow[] = [1, 2, 3].map((id) => ({
+			id: `job-${id}`,
+			scripture_id: 7,
+			locale: "fr",
+			status: "PENDING",
+			progress: 0,
+			total: 0,
+			error: "",
+			model: "gemini-2.5-flash",
+			requested_by: "user-1",
+			created_at: "2026-01-01T00:00:00.000Z",
+			updated_at: "2026-01-01T00:00:00.000Z",
+		}));
+		let clockCalls = 0;
+		const db: TursoDatabase = {
+			async get<T>() {
+				return undefined as T | undefined;
+			},
+			async all<T>() {
+				return jobs as T[];
+			},
+			async run() {
+				return { changes: 0, lastInsertRowid: undefined };
+			},
+			async transaction<T>(callback: (transaction: SqlExecutor) => Promise<T>) {
+				return callback(this);
+			},
+			async close() {},
+		};
+		const sent: string[] = [];
+		const now = Date.parse("2026-01-01T00:10:00.000Z");
+		const queue: TranslationQueue = {
+			send: async (message) => {
+				if (message.kind === "translation-job") sent.push(message.jobId);
+			},
+		};
+
+		await expect(
+			reconcilePendingTranslationJobs(db, queue, {
+				now,
+				batchSize: 2,
+				clock: () => now,
+			}),
+		).resolves.toMatchObject({
+			inspected: 2,
+			enqueued: 2,
+			timedOut: false,
+		});
+		expect(sent).toEqual(["job-1", "job-2"]);
+
+		sent.length = 0;
+		clockCalls = 0;
+		await expect(
+			reconcilePendingTranslationJobs(db, queue, {
+				now,
+				batchSize: 3,
+				timeBudgetMs: 500,
+				clock: () => {
+					clockCalls += 1;
+					return clockCalls < 2 ? now : now + 1_000;
+				},
+			}),
+		).resolves.toMatchObject({
+			inspected: 1,
+			enqueued: 1,
+			timedOut: true,
+		});
+		expect(sent).toEqual(["job-1"]);
 	});
 
 	it("101チャンクかつ合計256KB超でも各チャンクを個別送信する", async () => {
