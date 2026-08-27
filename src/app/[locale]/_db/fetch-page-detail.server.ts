@@ -3,7 +3,7 @@
  * Kysely ORM版 - シンプル化
  */
 
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { serverLogger } from "@/app/_service/logger.server";
 import type { SegmentWithSegmentType } from "@/app/[locale]/types";
 import { db } from "@/db";
@@ -235,69 +235,56 @@ async function fetchSegmentsByIds(
  * ページ詳細を取得
  */
 export async function fetchPageDetail(slug: string, locale: string) {
+	"use cache";
+	cacheLife("max");
+
 	const page = await fetchPageBasicBySlug(slug);
 	if (!page || page.status === "ARCHIVE") return null;
 
-	return await unstable_cache(
-		async () => {
-			const tags = await fetchTags(page.id);
+	cacheTag(`page:${page.id}`);
 
-			// 1. PRIMARYセグメントを取得
-			let segments = await fetchSegments(
-				page.id,
-				locale,
-				page.userId,
-				"PRIMARY",
-			);
+	const tags = await fetchTags(page.id);
 
-			// 2. PRIMARYセグメントがない場合、COMMENTARYセグメントをフォールバック
-			if (segments.length === 0) {
-				segments = await fetchSegments(
-					page.id,
-					locale,
-					page.userId,
-					"COMMENTARY",
-				);
-			}
+	// 1. PRIMARYセグメントを取得
+	let segments = await fetchSegments(page.id, locale, page.userId, "PRIMARY");
 
-			// 3. 注釈を追加
-			const segmentsWithAnnotations = await addAnnotations(
-				segments,
-				page.id,
-				locale,
-				page.userId,
-			);
+	// 2. PRIMARYセグメントがない場合、COMMENTARYセグメントをフォールバック
+	if (segments.length === 0) {
+		segments = await fetchSegments(page.id, locale, page.userId, "COMMENTARY");
+	}
 
-			// 4. タイトルを生成
-			const titleSegment = segmentsWithAnnotations.find((s) => s.number === 0);
-			const title = titleSegment
-				? titleSegment.translationText
-					? `${titleSegment.text} - ${titleSegment.translationText}`
-					: titleSegment.text
-				: "";
+	// 3. 注釈を追加
+	const segmentsWithAnnotations = await addAnnotations(
+		segments,
+		page.id,
+		locale,
+		page.userId,
+	);
 
-			return {
-				id: page.id,
-				slug: page.slug,
-				title,
-				status: page.status,
-				sourceLocale: page.sourceLocale,
-				parentId: page.parentId,
-				order: page.order,
-				mdastJson: page.mdastJson,
-				segments: segmentsWithAnnotations,
-				createdAt: page.createdAt,
-				updatedAt: page.updatedAt,
-				userId: page.userId,
-				userName: page.userName,
-				userHandle: page.userHandle,
-				userImage: page.userImage,
-				tagPages: tags,
-			};
-		},
-		["page-detail", String(page.id), locale],
-		{
-			tags: [`page:${page.id}`],
-		},
-	)();
+	// 4. タイトルを生成
+	const titleSegment = segmentsWithAnnotations.find((s) => s.number === 0);
+	const title = titleSegment
+		? titleSegment.translationText
+			? `${titleSegment.text} - ${titleSegment.translationText}`
+			: titleSegment.text
+		: "";
+
+	return {
+		id: page.id,
+		slug: page.slug,
+		title,
+		status: page.status,
+		sourceLocale: page.sourceLocale,
+		parentId: page.parentId,
+		order: page.order,
+		mdastJson: page.mdastJson,
+		segments: segmentsWithAnnotations,
+		createdAt: page.createdAt,
+		updatedAt: page.updatedAt,
+		userId: page.userId,
+		userName: page.userName,
+		userHandle: page.userHandle,
+		userImage: page.userImage,
+		tagPages: tags,
+	};
 }

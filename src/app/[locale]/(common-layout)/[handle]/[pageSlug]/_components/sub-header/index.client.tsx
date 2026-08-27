@@ -61,9 +61,7 @@ export function SubHeader({
 							<span className="text-sm">{pageDetail.userName}</span>
 							{!isPinned && (
 								<span className="text-xs text-gray-500">
-									<time>
-										{new Date(pageDetail.createdAt).toLocaleDateString(locale)}
-									</time>
+									<time>{pageDetail.createdAt.toLocaleDateString(locale)}</time>
 								</span>
 							)}
 						</div>

@@ -36,9 +36,6 @@ export function Editor({
 			onEditorCreate?.(editor);
 		},
 		onUpdate: async ({ editor }) => {
-			if (editorRef.current) {
-				editorRef.current.value = editor.getHTML();
-			}
 			onEditorUpdate?.(editor);
 		},
 		editorProps: {

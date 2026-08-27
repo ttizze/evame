@@ -1,30 +1,39 @@
 // lib/googleAuth.ts ----------------------------------------------------------
-import { type AuthClient, GoogleAuth } from "google-auth-library";
+import { getVercelOidcToken } from "@vercel/functions/oidc";
+import { ExternalAccountClient } from "google-auth-library";
 
 /**
- * GCP_SERVICE_ACCOUNT_KEY (サービスアカウントキーの JSON 文字列) が設定されていれば
- * それを使う。既存環境の Base64 形式 secret も Cloudflare 移行後にそのまま使える。
- * どちらも無ければ undefined を返して Application Default Credentials (ADC) に任せる。
- *
- * Cloudflare Workers では `wrangler secret put GCP_SERVICE_ACCOUNT_KEY` で登録する。
+ * Vercel環境ではOIDCトークンを使用し、ローカル開発ではundefinedを返して
+ * Application Default Credentials (ADC) を自動的に使用する
  */
-export async function getAuthClient(): Promise<AuthClient | undefined> {
-	const keyJson =
-		process.env.GCP_SERVICE_ACCOUNT_KEY ||
-		(process.env.GCP_SERVICE_ACCOUNT_CREDENTIALS_BASE64
-			? atob(process.env.GCP_SERVICE_ACCOUNT_CREDENTIALS_BASE64)
-			: undefined);
+export async function getAuthClient(): Promise<
+	ExternalAccountClient | undefined
+> {
+	// Vercel 環境でのみ OIDC を利用（環境変数の VERCEL_OIDC_TOKEN は無視）
+	const isVercel = process.env.VERCEL === "1" || process.env.VERCEL === "true";
+	const oidc = isVercel ? getVercelOidcToken() : undefined;
 
-	if (!keyJson) {
+	if (!oidc) {
 		// ローカル開発時: undefined を返すことで、VertexAI が自動的に
 		// Application Default Credentials を使用する
 		// 事前に `gcloud auth application-default login` を実行しておく
 		return undefined;
 	}
 
-	const auth = new GoogleAuth({
-		credentials: JSON.parse(keyJson),
-		scopes: ["https://www.googleapis.com/auth/cloud-platform"],
+	// Vercel 環境: OIDC トークンを使用
+	const client = ExternalAccountClient.fromJSON({
+		type: "external_account",
+		audience:
+			`//iam.googleapis.com/projects/${process.env.GCP_PROJECT_NUMBER}` +
+			`/locations/global/workloadIdentityPools/${process.env.GCP_WORKLOAD_IDENTITY_POOL_ID}` +
+			`/providers/${process.env.GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID}`,
+		subject_token_type: "urn:ietf:params:oauth:token-type:jwt",
+		token_url: "https://sts.googleapis.com/v1/token",
+		service_account_impersonation_url:
+			`https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/` +
+			`${process.env.GCP_SERVICE_ACCOUNT_EMAIL}:generateAccessToken`,
+		subject_token_supplier: { getSubjectToken: () => oidc },
 	});
-	return auth.getClient();
+	if (!client) throw new Error("authClient undefined");
+	return client;
 }

@@ -5,14 +5,6 @@ import { db } from "./db";
 import { sendMagicLinkEmail } from "./utils/send-magic-link-email.server";
 
 export const auth = betterAuth({
-	baseURL: {
-		allowedHosts: [
-			"evame.reimei.workers.dev",
-			"evame.tech",
-			"localhost",
-			"localhost:*",
-		],
-	},
 	plugins: [
 		magicLink({
 			sendMagicLink: async ({ email, token, url }) => {

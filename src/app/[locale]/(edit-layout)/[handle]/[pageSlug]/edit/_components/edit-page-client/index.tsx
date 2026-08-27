@@ -1,13 +1,7 @@
 "use client";
 
 import type { Editor as TiptapEditor } from "@tiptap/react";
-import {
-	useActionState,
-	useCallback,
-	useEffect,
-	useRef,
-	useState,
-} from "react";
+import { useActionState, useCallback, useRef, useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { useDebouncedCallback } from "use-debounce";
 import type { SanitizedUser } from "@/app/types";
@@ -54,23 +48,20 @@ export function EditPageClient({
 	const [editorInstance, setEditorInstance] = useState<TiptapEditor | null>(
 		null,
 	);
-	const [editState, editAction, isEditing] = useActionState<
+	const [editState, editAction, _isEditing] = useActionState<
 		EditPageContentActionState,
 		FormData
 	>(editPageContentAction, { success: false });
 	const [title, setTitle] = useState(initialTitle ?? "");
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-	const changeVersionRef = useRef(0);
-	const submittedChangeVersionRef = useRef<number | null>(null);
-	const completedChangeVersionRef = useRef<number | null>(null);
 
 	const debouncedSubmit = useDebouncedCallback(() => {
-		if (isEditing) return;
 		formRef.current?.requestSubmit();
+		setHasUnsavedChanges(false);
 	}, 3000);
 
-	const markAsChanged = useCallback(() => {
-		changeVersionRef.current += 1;
+	// Debounced change handler to prevent excessive state updates
+	const handleChange = useCallback(() => {
 		setHasUnsavedChanges(true);
 		debouncedSubmit();
 	}, [debouncedSubmit]);
@@ -79,33 +70,11 @@ export function EditPageClient({
 		(e: React.ChangeEvent<HTMLTextAreaElement>) => {
 			// ペースト等で改行が混ざってもタイトルに残さない（Enter は onKeyDown で抑止済み）。
 			setTitle(e.target.value.replace(/\r\n|\r|\n/g, " "));
-			markAsChanged();
+			setHasUnsavedChanges(true);
+			debouncedSubmit();
 		},
-		[markAsChanged],
+		[debouncedSubmit],
 	);
-	const handleSubmit = useCallback(() => {
-		debouncedSubmit.cancel();
-		submittedChangeVersionRef.current = changeVersionRef.current;
-	}, [debouncedSubmit]);
-
-	useEffect(() => {
-		if (isEditing || !editState.success) return;
-
-		const submittedChangeVersion = submittedChangeVersionRef.current;
-		if (
-			submittedChangeVersion === null ||
-			completedChangeVersionRef.current === submittedChangeVersion
-		) {
-			return;
-		}
-		completedChangeVersionRef.current = submittedChangeVersion;
-
-		if (changeVersionRef.current === submittedChangeVersion) {
-			setHasUnsavedChanges(false);
-			return;
-		}
-		debouncedSubmit();
-	}, [debouncedSubmit, editState, isEditing]);
 	// Handle Enter key in title textarea
 	const handleTitleKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -132,7 +101,6 @@ export function EditPageClient({
 			}}
 		>
 			<EditHeader
-				contentFormId="edit-page-content-form"
 				currentUser={currentUser}
 				hasUnsavedChanges={hasUnsavedChanges}
 				initialStatus={pageWithTitleAndTags?.status || "DRAFT"}
@@ -174,12 +142,7 @@ export function EditPageClient({
 							pageId={pageWithTitleAndTags?.id}
 						/>
 					</div>
-					<form
-						action={editAction}
-						id="edit-page-content-form"
-						onSubmit={handleSubmit}
-						ref={formRef}
-					>
+					<form action={editAction} ref={formRef}>
 						<input name="pageSlug" type="hidden" value={pageSlug} />
 						<input name="title" type="hidden" value={title} />
 						<input name="userLocale" type="hidden" value={userLocale} />
@@ -188,7 +151,7 @@ export function EditPageClient({
 							defaultValue={html}
 							name="pageContent"
 							onEditorCreate={setEditorInstance}
-							onEditorUpdate={markAsChanged}
+							onEditorUpdate={handleChange}
 							placeholder="Write to the world..."
 						/>
 					</form>

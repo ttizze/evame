@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { fetchPaginatedPopularPageLists } from "@/app/[locale]/_db/page-list.server";
 
 interface FetchTopPagePopularPageListsParams {
@@ -12,17 +12,13 @@ export async function fetchPaginatedPopularPageListsForTopPage({
 	page,
 	pageSize,
 }: FetchTopPagePopularPageListsParams) {
-	return await unstable_cache(
-		() =>
-			fetchPaginatedPopularPageLists({
-				locale,
-				page,
-				pageSize,
-			}),
-		["top:popular-page-list", locale, String(page), String(pageSize)],
-		{
-			revalidate: 60 * 60 * 12,
-			tags: [`top:popular-page-list:${locale}:${page}:${pageSize}`],
-		},
-	)();
+	"use cache";
+	cacheLife({ expire: 60 * 60 * 12 });
+	cacheTag(`top:popular-page-list:${locale}:${page}:${pageSize}`);
+
+	return await fetchPaginatedPopularPageLists({
+		locale,
+		page,
+		pageSize,
+	});
 }
