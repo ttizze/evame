@@ -1,3 +1,5 @@
+// @vitest-environment node
+
 import { DatabaseSync } from "node:sqlite";
 import { describe, expect, it, vi } from "vitest";
 import { migrateDatabase } from "@/db/migrations";
