@@ -33,7 +33,7 @@ function loadBooksJson(): Record<string, BookData> {
 	}
 	const raw = fs.readFileSync(BOOKS_JSON_PATH, "utf8");
 	const payload = JSON.parse(raw) as BooksJsonPayload;
-	if (!payload || !payload.data) {
+	if (!payload?.data) {
 		throw new Error("books.json の形式が不正です。");
 	}
 	return payload.data;
