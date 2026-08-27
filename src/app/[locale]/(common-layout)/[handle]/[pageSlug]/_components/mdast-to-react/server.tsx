@@ -12,6 +12,7 @@ import rehypeReact from "rehype-react";
 import rehypeSlug from "rehype-slug";
 import remarkLinkCard from "remark-link-card-plus";
 import remarkRehype from "remark-rehype";
+import { createHighlighter, createJavaScriptRegexEngine } from "shiki";
 import { unified } from "unified";
 import type { Segment } from "@/app/[locale]/types";
 import type { JsonValue } from "@/db/types";
@@ -83,6 +84,11 @@ export async function mdastToReact<T extends Segment = Segment>({
 		.use(rehypeRaw) // parse raw HTML
 		.use(rehypeSlug) // add slug ids
 		.use(rehypePrettyCode, {
+			getHighlighter: (options: Parameters<typeof createHighlighter>[0]) =>
+				createHighlighter({
+					...options,
+					engine: createJavaScriptRegexEngine({ forgiving: true }),
+				}),
 			themes: {
 				// 2 つ書くと自動でダーク／ライト切替
 				light: "github-light",

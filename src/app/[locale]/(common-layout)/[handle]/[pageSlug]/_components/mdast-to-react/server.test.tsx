@@ -35,6 +35,56 @@ const segments: Segment[] = Array.from(
 );
 
 describe("mdastToReact", () => {
+	it("WebAssemblyを実行できないWorkersでもコードブロックを描画できる", async () => {
+		const instantiate = vi
+			.spyOn(WebAssembly, "instantiate")
+			.mockRejectedValue(
+				new WebAssembly.CompileError(
+					"Wasm code generation disallowed by embedder",
+				),
+			);
+		const mdast: JsonValue = {
+			type: "root",
+			children: [
+				{
+					type: "code",
+					lang: "typescript",
+					value: "const answer: number = 42;",
+				},
+				{
+					type: "code",
+					lang: "bash",
+					value: "echo workers",
+				},
+				{
+					type: "code",
+					lang: "html",
+					value: "<p>Evame</p>",
+				},
+			],
+		};
+
+		try {
+			const el = await mdastToReact({ mdast, segments });
+			const { container } = render(el);
+
+			expect(container.querySelector("pre")).toHaveTextContent(
+				"const answer: number = 42;",
+			);
+			expect(
+				container.querySelector('code[data-language="typescript"] span'),
+			).toBeInTheDocument();
+			expect(
+				container.querySelector('code[data-language="bash"] span'),
+			).toBeInTheDocument();
+			expect(
+				container.querySelector('code[data-language="html"] span'),
+			).toBeInTheDocument();
+		} finally {
+			instantiate.mockRestore();
+		}
+	});
+
 	it("renders segments correctly", async () => {
 		const mdast: JsonValue = {
 			type: "root",
