@@ -1,14 +1,16 @@
 # パフォーマンス改善の測定手順
 
-変更の効果を比較できるように、同じ条件で「変更前」「変更後」を計測します。
+変更の効果を比較できるように、Cloudflare Workers と Turso Database を使う同じ条件で「変更前」「変更後」を計測します。
+
+ローカル計測では本番 DB を使わず、Turso Database の専用開発 DB と `.env` を使用します。
 
 ## 1. 変更ごとにログフォルダーを作る
 
-- 例: `/tmp/evame-perf/20260205-change-xx-<slug>/`
+- 例: `/tmp/digital-buddhism-perf/20260205-change-xx-<slug>/`
 - 変更前/後を分ける
 
 ```
-/tmp/evame-perf/20260205-change-xx-<slug>/
+/tmp/digital-buddhism-perf/20260205-change-xx-<slug>/
   before/
     build.log
     server.log
@@ -40,16 +42,16 @@
 
 ```bash
 CHANGE_ID=20260205-change-xx-<slug>
-LOG_ROOT=/tmp/evame-perf/$CHANGE_ID
+LOG_ROOT=/tmp/digital-buddhism-perf/$CHANGE_ID
 PORT=3105
 
 mkdir -p $LOG_ROOT/before
 
 # build
-bun run build > $LOG_ROOT/before/build.log 2>&1
+just build > $LOG_ROOT/before/build.log 2>&1
 
-# start
-PORT=$PORT PERF_LOG=1 bun run start > $LOG_ROOT/before/server.log 2>&1 &
+# start the local Worker-compatible server
+PORT=$PORT PERF_LOG=1 just dev > $LOG_ROOT/before/server.log 2>&1 &
 START_PID=$!
 
 # measure (5 runs)
@@ -88,4 +90,3 @@ kill $START_PID
 ### 目安
 - FCP/LCP が短縮されていれば体感改善に繋がる
 - TTFB が増えていればサーバー側の負荷増加の可能性あり
-

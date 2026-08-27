@@ -1,1 +1,0 @@
-DROP TABLE "_prisma_migrations" CASCADE;

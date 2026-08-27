@@ -7,7 +7,18 @@
 ## 実行環境
 
 - パッケージランナー: `bun`
-- フレームワーク: Next.js (App Router)
+- フレームワーク: TanStack Start / TanStack Router
+- 実行環境: Cloudflare Workers
+- データベース: Turso Database
+- DB クライアント: `@tursodatabase/serverless`（`@libsql/client` は使用しない）
+
+## プロダクト要件（現行正本）
+
+- グローバルな多言語サービスとして、現行の 21 locale を維持する。日本語中心にしない。
+- 仏典の閲覧、翻訳案のユーザー投稿、AI 翻訳 job、認証済みユーザーの翻訳投票を提供する。
+- 記事投稿と記事コメントは廃止する。独立した翻訳コメントは存在しない。
+- `COMMENTARY` 注釈 segment はデータとして保持する。
+- トップページは仏典翻訳の一覧とする。
 
 ## 作業手順
 
@@ -67,14 +78,14 @@
 | `domain` | 業務概念・業務ルール | 純粋関数。I/O依存を持ち込まない |
 | `service` | ユースケース実行 | 複数の domain を組み合わせ、`db` / `infra` を呼んで処理を完了させる |
 | `db` | DB接続してデータを返す/書くだけ。加工・判定ロジックを持たない | ファイル名は `queries.ts` / `mutations.ts`（接頭辞付き不可） |
-| `infra` | 外部サービスとの接続を担うラッパー（SDK呼び出し、API通信、キュー投入など） | 例: QStash, S3, メール送信 |
+| `infra` | 外部サービスとの接続を担うラッパー（SDK呼び出し、API通信、キュー投入など） | 例: Cloudflare Queues, S3, メール送信 |
 | `utils` | 業務語彙を含まない汎用処理 | — |
 
 ### infra の判定基準
 
 `infra` に置くのは **外部サービスのSDK/APIを直接呼び出すコードだけ**。判定は「`import` しているものが外部サービスのSDKか？」で行う。
 
-- **infra**: `@upstash/qstash`, `@aws-sdk/*`, `nodemailer` などの外部SDKを `import` して呼び出す。
+- **infra**: Cloudflare Queues、`@aws-sdk/*`、`nodemailer` などの外部 SDK/API を `import` して呼び出す。
 - **infra ではない**: DBからトークンを引いて照合する、ハッシュを比較する → これは `db` や `domain`。
 
 「認証」「通知」などの概念名で判断しない。実装が外部SDKを叩いているかどうかだけで判断する。
@@ -85,11 +96,11 @@
 - `utils`: 仕様変更の起点が技術仕様（URL/文字列/日時/HTTP/変換処理など）で、業務語彙を持たない。
 - 迷う場合は判断根拠を1行で共有して確認を取る。曖昧なまま `domain` に置かない。
 
-### App Router のルール
+### TanStack Start のルール
 
-- ルート直下（`route.ts` / `page.tsx` / `layout.tsx` と同階層）の補助ディレクトリは必ず `_` を付ける（例: `_db`, `_domain`, `_service`, `_infra`, `_utils`）。
-- `route.ts` / `page.tsx` / `layout.tsx` は境界責務だけを持つ（入出力、認証、レスポンス整形）。
-- 分岐を持つ純粋ロジックを境界ファイルに直書きしない。業務語彙 → `_domain`、汎用/技術補助 → `_utils`、ユースケース実行 → `_service`。
+- TanStack Router の route file は境界責務だけを持つ（入出力、認証、レスポンス整形）。
+- route file の loader/action から `domain` と `db` を呼び出し、画面固有の処理は route 近傍へ置く。
+- 分岐を持つ純粋ロジックを境界ファイルに直書きしない。業務語彙は `domain`、外部 API は `infra`、ユースケース実行は `service` に置く。
 
 ### 共通化のルール
 

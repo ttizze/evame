@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+.open-next/
+.wrangler/
 
 # Editor directories and files
 .vscode/*
@@ -53,6 +55,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel

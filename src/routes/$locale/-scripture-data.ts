@@ -1,0 +1,229 @@
+import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
+import { z } from "zod";
+import { getSessionTokenFromRequest } from "@/auth/cookies";
+import type {
+	ScriptureDetail,
+	ScriptureListItem,
+	TranslationCandidate,
+	TranslationJob,
+	VoteResult,
+} from "@/components/scripture/types";
+import { UnauthenticatedError } from "@/domain/errors";
+import { isSupportedLocale, supportedLocales } from "@/domain/locales";
+import { getDatabase } from "@/server/runtime";
+import type {
+	ScriptureDetail as ServerScriptureDetail,
+	ScriptureListItem as ServerScriptureListItem,
+} from "@/server/scriptures";
+import {
+	getScripture as readScripture,
+	listScriptures as readScriptures,
+} from "@/server/scriptures";
+import { getSessionUser } from "@/server/session";
+import { getTranslationJob as readTranslationJob } from "@/server/translation-jobs";
+import { addTranslation } from "@/server/translations";
+import { voteTranslation as saveVote } from "@/server/votes";
+import { getTranslationQueue } from "@/translation/runtime";
+import { createAndEnqueueTranslationJob } from "@/translation/service";
+import { DEFAULT_TRANSLATION_MODEL } from "@/translation/types";
+import { parseTranslationJobRequest } from "@/translation/validation";
+
+export { supportedLocales };
+
+export function mergeAvailableLocales(
+	databaseLocales: ReadonlyArray<{ code: string; label: string }>,
+): Array<{ code: string; label: string }> {
+	const locales = new Map<string, { code: string; label: string }>(
+		supportedLocales.map((locale) => [locale.code, { ...locale }]),
+	);
+	for (const locale of databaseLocales) {
+		if (!locales.has(locale.code)) {
+			locales.set(locale.code, { ...locale });
+		}
+	}
+	return [...locales.values()];
+}
+
+export function detectPreferredLocale(languages: readonly string[]): string {
+	for (const language of languages) {
+		const base = language.toLowerCase().split("-")[0];
+		if (supportedLocales.some((locale) => locale.code === base)) {
+			return base;
+		}
+	}
+	return "en";
+}
+
+const localeInput = z
+	.string()
+	.min(2)
+	.refine(isSupportedLocale, "対応していないlocaleです");
+
+function sessionToken(): string {
+	const token = getSessionTokenFromRequest(getRequest());
+	if (!token) {
+		throw new UnauthenticatedError();
+	}
+	return token;
+}
+
+function optionalSessionToken(): string | null {
+	return getSessionTokenFromRequest(getRequest());
+}
+
+export function mapTranslationCandidate(
+	candidate: ServerScriptureDetail["translations"][number],
+): TranslationCandidate {
+	return {
+		id: String(candidate.id),
+		locale: candidate.locale,
+		text: candidate.text,
+		voteCount: candidate.point,
+		votedByViewer: candidate.votedByViewer,
+		createdAt: candidate.createdAt,
+	};
+}
+
+export function mapScriptureListItem(
+	item: ServerScriptureListItem,
+): ScriptureListItem {
+	return {
+		id: String(item.id),
+		slug: item.slug,
+		title: item.title,
+		hierarchy: [...item.hierarchy],
+		translationCount: item.translationCount,
+		href: item.href,
+	};
+}
+
+export function mapScriptureDetail(
+	detail: ServerScriptureDetail,
+): ScriptureDetail {
+	const primarySegment = detail.segments.find(
+		(segment) => segment.kind === "PRIMARY",
+	);
+	return {
+		id: String(detail.id),
+		slug: detail.slug,
+		title: detail.title,
+		paliTitle: detail.sourceLocale === "pi" ? detail.title : undefined,
+		sourceLocale: detail.sourceLocale,
+		displayLocale: detail.displayLocale,
+		hierarchy: [...detail.hierarchy],
+		sourceText: detail.sourceText,
+		primarySegmentId: primarySegment
+			? String(primarySegment.id)
+			: detail.segments[0]
+				? String(detail.segments[0].id)
+				: undefined,
+		segments: detail.segments.map((segment) => ({
+			id: String(segment.id),
+			kind: segment.kind,
+			position: segment.position,
+			sourceText: segment.sourceText,
+			translations: segment.translations.map(mapTranslationCandidate),
+		})),
+		translations: detail.translations.map(mapTranslationCandidate),
+		annotationLinks: detail.annotationLinks.map((link) => ({
+			mainSegmentId: String(link.mainSegmentId),
+			annotationSegmentId: String(link.annotationSegmentId),
+			createdAt: link.createdAt,
+		})),
+		availableLocales: mergeAvailableLocales(detail.availableLocales),
+	};
+}
+
+export const listScriptures = createServerFn({ method: "GET" })
+	.validator(z.object({ locale: localeInput }))
+	.handler(async ({ data }) => {
+		const items = await readScriptures(getDatabase(), data);
+		return items.map(mapScriptureListItem);
+	});
+
+export const getScripture = createServerFn({ method: "GET" })
+	.validator(z.object({ slug: z.string().min(1), locale: localeInput }))
+	.handler(async ({ data }) => {
+		const db = getDatabase();
+		const token = optionalSessionToken();
+		const detail = await readScripture(db, {
+			...data,
+			sessionToken: token,
+		});
+		if (!detail) return null;
+		return {
+			...mapScriptureDetail(detail),
+			authenticated: token ? Boolean(await getSessionUser(db, token)) : false,
+		};
+	});
+
+export const voteTranslation = createServerFn({ method: "POST" })
+	.validator(
+		z.object({
+			translationId: z.number().int().positive(),
+			isUpvote: z.boolean(),
+		}),
+	)
+	.handler(async ({ data }) => {
+		const result = await saveVote(getDatabase(), {
+			...data,
+			sessionToken: sessionToken(),
+		});
+		return {
+			voted: result.isUpvote,
+			voteCount: result.point,
+		} satisfies VoteResult;
+	});
+
+export const createTranslation = createServerFn({ method: "POST" })
+	.validator(
+		z.object({
+			segmentId: z.number().int().positive(),
+			locale: localeInput,
+			text: z.string().trim().min(1),
+		}),
+	)
+	.handler(async ({ data }) => {
+		const candidate = await addTranslation(getDatabase(), {
+			...data,
+			sessionToken: sessionToken(),
+		});
+		return mapTranslationCandidate(candidate);
+	});
+
+export const createTranslationJob = createServerFn({ method: "POST" })
+	.validator(
+		z.object({
+			scriptureId: z.number().int().positive(),
+			locale: localeInput,
+			model: z.string().min(1).optional(),
+		}),
+	)
+	.handler(async ({ data }) => {
+		const request = parseTranslationJobRequest(
+			{
+				scriptureId: data.scriptureId,
+				locale: data.locale,
+				model: data.model ?? DEFAULT_TRANSLATION_MODEL,
+				translationContext: "",
+			},
+			sessionToken(),
+		);
+		const job = await createAndEnqueueTranslationJob(
+			getDatabase(),
+			getTranslationQueue(),
+			request,
+		);
+		return { id: job.id, status: job.status } satisfies TranslationJob;
+	});
+
+export const getTranslationJob = createServerFn({ method: "GET" })
+	.validator(z.object({ jobId: z.string().min(1) }))
+	.handler(async ({ data }) => {
+		const job = await readTranslationJob(getDatabase(), {
+			...data,
+			sessionToken: sessionToken(),
+		});
+		return { id: job.id, status: job.status } satisfies TranslationJob;
+	});

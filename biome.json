@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.5.10/schema.json",
 	"files": {
 		"includes": [
 			"**",
@@ -7,6 +7,8 @@
 			"!build",
 			"!.vscode",
 			"!.next",
+			"!.open-next",
+			"!.wrangler",
 			"!node_modules",
 			"!**/*.css",
 			"!tipitaka-md",
@@ -22,7 +24,9 @@
 			"!.codex",
 			"!.claude",
 			"!.worktree",
-			"!.worktrees"
+			"!.worktrees",
+			"!src/routeTree.gen.ts",
+			"!worker-configuration.d.ts"
 		]
 	},
 	"assist": {
@@ -35,7 +39,7 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
+			"preset": "recommended",
 			"correctness": {
 				"noUnusedImports": { "level": "warn", "fix": "safe" },
 				"useUniqueElementIds": "off"
