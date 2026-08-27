@@ -56,17 +56,21 @@ function comparePages(a: SourcePage, b: SourcePage): number {
 	return a.id - b.id;
 }
 
-function isPublicPage(page: SourcePage): boolean {
-	return page.contentKind === "PAGE" && page.status.toUpperCase() === "PUBLIC";
+function isTipitakaPage(page: SourcePage): boolean {
+	return (
+		page.contentKind === "PAGE" &&
+		page.status.toUpperCase() === "ARCHIVE" &&
+		page.sourceLocale.toLowerCase() === "pi"
+	);
 }
 
 /**
- * 指定したroot slugを起点に、公開状態のPAGEだけを幅優先で選ぶ。
+ * 指定したroot slugを起点に、ARCHIVEかつpiのPAGEだけを幅優先で選ぶ。
  *
  * ここをSQLの結果任せにしないことで、source adapterを差し替えても
- * PAGE_COMMENTや、別の公開ページが計画へ混ざらない。
+ * PAGE_COMMENTや、別状態・別localeのページが計画へ混ざらない。
  */
-export function selectPublicTipitakaPages(
+export function selectTipitakaPages(
 	pages: SourcePage[],
 	rootSlug = TIPITAKA_ROOT_SLUG,
 ): SourcePage[] {
@@ -82,7 +86,7 @@ export function selectPublicTipitakaPages(
 	}
 
 	const roots = pages
-		.filter((page) => isPublicPage(page) && page.slug === rootSlug)
+		.filter((page) => isTipitakaPage(page) && page.slug === rootSlug)
 		.sort(comparePages);
 	const selected: SourcePage[] = [];
 	const selectedIds = new Set<number>();
@@ -90,7 +94,7 @@ export function selectPublicTipitakaPages(
 
 	while (queue.length > 0) {
 		const page = queue.shift();
-		if (!page || selectedIds.has(page.id) || !isPublicPage(page)) continue;
+		if (!page || selectedIds.has(page.id) || !isTipitakaPage(page)) continue;
 
 		selectedIds.add(page.id);
 		selected.push(page);
@@ -245,7 +249,7 @@ export function buildMigrationPlan(
 	assertUniqueIds(snapshot.segmentMetadata, "segment metadata");
 	assertUniqueIds(snapshot.userSettings, "user settings");
 
-	const pages = selectPublicTipitakaPages(snapshot.pages, rootSlug);
+	const pages = selectTipitakaPages(snapshot.pages, rootSlug);
 	const pageIds = new Set(pages.map((page) => page.id));
 	const scriptures = pages.map((page) => mapScripture(page, pageIds));
 

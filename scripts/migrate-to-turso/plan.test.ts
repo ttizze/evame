@@ -13,7 +13,7 @@ function makeSnapshot(): SourceSnapshot {
 				sourceLocale: "pi",
 				parentId: null,
 				position: 0,
-				status: "PUBLIC",
+				status: "ARCHIVE",
 				publishedAt: "2025-01-01T00:00:00.000Z",
 				createdAt: "2025-01-01T00:00:00.000Z",
 			},
@@ -25,7 +25,7 @@ function makeSnapshot(): SourceSnapshot {
 				sourceLocale: "pi",
 				parentId: 1,
 				position: 1,
-				status: "PUBLIC",
+				status: "ARCHIVE",
 				publishedAt: "2025-01-01T00:00:00.000Z",
 				createdAt: "2025-01-01T00:00:00.000Z",
 			},
@@ -229,7 +229,7 @@ function makeSnapshot(): SourceSnapshot {
 }
 
 describe("buildMigrationPlan", () => {
-	it("PUBLICなTipitaka PAGEだけを残し、コメント由来行とOTHERを除外する", () => {
+	it("ARCHIVEかつpiのTipitaka PAGEだけを残し、コメント由来行とOTHERを除外する", () => {
 		const plan = buildMigrationPlan(makeSnapshot());
 
 		expect(plan.scriptures.map((row) => row.id)).toEqual([1, 2]);
@@ -309,7 +309,7 @@ describe("buildMigrationPlan", () => {
 		});
 	});
 
-	it("公開ルートがない場合は空計画にする", () => {
+	it("ARCHIVEかつpiのrootがない場合は空計画にする", () => {
 		const snapshot = makeSnapshot();
 		snapshot.pages = snapshot.pages.filter((page) => page.slug !== "tipitaka");
 
@@ -322,7 +322,48 @@ describe("buildMigrationPlan", () => {
 		expect(plan.users.map((user) => user.id)).toEqual(["unused", "voter-1"]);
 	});
 
-	it("指定した公開root slugから木を選び、空計画にしない", () => {
+	it("ARCHIVEかつpiのTipitaka root木だけを選び、PUBLIC記事を除外する", () => {
+		const snapshot = makeSnapshot();
+		snapshot.pages[0]!.status = "ARCHIVE";
+		snapshot.pages[0]!.sourceLocale = "pi";
+		snapshot.pages[0]!.publishedAt = null;
+		snapshot.pages[1]!.status = "ARCHIVE";
+		snapshot.pages[1]!.sourceLocale = "pi";
+		snapshot.pages.push({
+			id: 6,
+			contentKind: "PAGE",
+			slug: "public-article",
+			title: "Public article",
+			sourceLocale: "pi",
+			parentId: null,
+			position: 3,
+			status: "PUBLIC",
+			publishedAt: "2025-01-01T00:00:00.000Z",
+			createdAt: "2025-01-01T00:00:00.000Z",
+		});
+		snapshot.pages.push({
+			id: 7,
+			contentKind: "PAGE",
+			slug: "tipitaka-en-branch",
+			title: "English branch",
+			sourceLocale: "en",
+			parentId: 1,
+			position: 4,
+			status: "ARCHIVE",
+			publishedAt: "2025-01-01T00:00:00.000Z",
+			createdAt: "2025-01-01T00:00:00.000Z",
+		});
+
+		const plan = buildMigrationPlan(snapshot);
+
+		expect(plan.scriptures.map((scripture) => scripture.id)).toEqual([1, 2]);
+		expect(plan.scriptures[0]?.publishedAt).toBeNull();
+		expect(plan.scriptures.some((scripture) => scripture.id === 6)).toBe(false);
+		expect(plan.scriptures.some((scripture) => scripture.id === 7)).toBe(false);
+		expect(plan.segments.map((segment) => segment.id)).toEqual([10, 11]);
+	});
+
+	it("指定したARCHIVEかつpiのroot slugから木を選び、空計画にしない", () => {
 		const snapshot = makeSnapshot();
 		snapshot.pages[0]!.slug = "sutta-root";
 
@@ -494,7 +535,7 @@ describe("buildMigrationPlan", () => {
 		expect(plan.report.skipped.translations).toBe(3);
 	});
 
-	it("非記事のglobal表を全件保持し、Tipitaka従属表だけを公開PAGEで絞る", () => {
+	it("非記事のglobal表を全件保持し、Tipitaka従属表だけをARCHIVE + pi PAGEで絞る", () => {
 		const snapshot = makeSnapshot();
 		snapshot.pages[1]!.importFileId = 10;
 		snapshot.importRuns = [

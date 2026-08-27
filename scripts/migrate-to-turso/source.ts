@@ -13,8 +13,8 @@ export interface PostgresQueryClient {
 
 /**
  * すべてのsource queryで同じ再帰CTEを使う。
- * `contents.kind = PAGE` と `status = PUBLIC` を木の各階層で確認するため、
- * コメントcontentや非公開の枝が混ざらない。
+ * `contents.kind = PAGE`、`status = ARCHIVE`、`source_locale = pi` を木の各階層で
+ * 確認するため、一般記事やコメントcontent、別状態の枝が混ざらない。
  */
 const TIPITAKA_TREE_CTE = `
 WITH RECURSIVE tipitaka_tree AS (
@@ -33,7 +33,7 @@ WITH RECURSIVE tipitaka_tree AS (
     ARRAY[p.id] AS ancestor_ids
   FROM pages p
   INNER JOIN contents c ON c.id = p.id AND c.kind = 'PAGE'
-  WHERE p.slug = $1 AND p.status = 'PUBLIC'
+  WHERE p.slug = $1 AND p.status = 'ARCHIVE' AND p.source_locale = 'pi'
 
   UNION ALL
 
@@ -54,7 +54,8 @@ WITH RECURSIVE tipitaka_tree AS (
   INNER JOIN contents child_content
     ON child_content.id = child.id AND child_content.kind = 'PAGE'
   INNER JOIN tipitaka_tree parent ON parent.id = child.parent_id
-  WHERE child.status = 'PUBLIC'
+  WHERE child.status = 'ARCHIVE'
+    AND child.source_locale = 'pi'
     AND NOT child.id = ANY(parent.ancestor_ids)
 )
 `;
@@ -658,7 +659,7 @@ function requiredStringArray(row: PageRow, column: string): string[] {
 }
 
 /**
- * PostgreSQLの公開Tipitaka部分だけを一貫したSourceSnapshotへ読み込む。
+ * PostgreSQLのARCHIVE + pi Tipitaka部分だけを一貫したSourceSnapshotへ読み込む。
  * SQLはすべて固定文で、入力値はroot slugのプレースホルダだけに渡す。
  */
 export async function loadSourceSnapshot(

@@ -725,8 +725,8 @@ async function countByPairs(
 ): Promise<number> {
 	if (pairs.length === 0) return 0;
 	let count = 0;
-	for (let index = 0; index < pairs.length; index += 200) {
-		const chunk = pairs.slice(index, index + 200);
+	for (let index = 0; index < pairs.length; index += 50) {
+		const chunk = pairs.slice(index, index + 50);
 		const predicates = chunk
 			.map(() => `(${firstColumn} = ? AND ${secondColumn} = ?)`)
 			.join(" OR ");

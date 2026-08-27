@@ -254,6 +254,41 @@ describe("Turso migration target", () => {
 		expect(() => chunkStatements(statements, 0)).toThrow(/positive integer/);
 	});
 
+	it("annotation linkの件数照合をSQLiteの式深度を超えない50組単位で合算する", async () => {
+		const plan = makePlan();
+		plan.annotationLinks = Array.from({ length: 51 }, (_, index) => ({
+			mainSegmentId: 100 + index,
+			annotationSegmentId: 200 + index,
+			createdAt: "2025-01-01T00:00:00.000Z",
+		}));
+		plan.report.counts.annotationLinks = 51;
+		const pairSizes: number[] = [];
+		const target: TursoConnection = {
+			batch: async () => {},
+			all: async (sql, args = []) => {
+				const table = /FROM ([a-z_]+)/.exec(sql)?.[1];
+				if (
+					table === "segment_annotation_links" ||
+					table === "translation_votes" ||
+					table === "tag_pages"
+				) {
+					const pairSize = args.length / 2;
+					if (table === "segment_annotation_links") {
+						pairSizes.push(pairSize);
+						expect(pairSize).toBeLessThanOrEqual(50);
+					}
+					return { rows: [{ count: pairSize }] };
+				}
+				return { rows: [{ count: args.length }] };
+			},
+		};
+
+		expect(await verifyMigrationCounts(target, plan)).toEqual(
+			plan.report.counts,
+		);
+		expect(pairSizes).toEqual([50, 1]);
+	});
+
 	it("補助表の行も依存順のparameterized upsertへ変換する", () => {
 		const plan = makePlan();
 		plan.personalAccessTokens = [

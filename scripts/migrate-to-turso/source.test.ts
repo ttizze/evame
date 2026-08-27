@@ -56,7 +56,7 @@ describe("loadSourceSnapshot", () => {
 								import_file_id: null,
 								parent_id: null,
 								position: 0,
-								status: "PUBLIC",
+								status: "ARCHIVE",
 								published_at: "2025-01-01T00:00:00.000Z",
 								created_at: "2025-01-01T00:00:00.000Z",
 							},
@@ -296,5 +296,9 @@ describe("loadSourceSnapshot", () => {
 		expect(sourceQueries.session).toContain("token");
 		expect(sourceQueries.verification).toContain("value");
 		expect(sourceQueries.geminiApiKey).toContain("api_key");
+		expect(sourceQueries.page).toContain("p.status = 'ARCHIVE'");
+		expect(sourceQueries.page).toContain("p.source_locale = 'pi'");
+		expect(sourceQueries.page).toContain("child.status = 'ARCHIVE'");
+		expect(sourceQueries.page).toContain("child.source_locale = 'pi'");
 	});
 });
