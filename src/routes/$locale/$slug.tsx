@@ -7,7 +7,6 @@ import {
 	createTranslationJob,
 	getScripture,
 	getTranslationJob,
-	mergeAvailableLocales,
 	voteTranslation,
 } from "./-scripture-data";
 
@@ -55,12 +54,7 @@ function ScriptureDetailPage() {
 						},
 					})
 				}
-				detail={{
-					...detail,
-					availableLocales: mergeAvailableLocales(
-						detail.availableLocales ?? [],
-					),
-				}}
+				detail={detail}
 				getTranslationJob={(jobId) => getTranslationJob({ data: { jobId } })}
 				locale={locale}
 				onCreateTranslation={async (input) =>

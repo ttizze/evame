@@ -31,20 +31,6 @@ import { parseTranslationJobRequest } from "@/translation/validation";
 
 export { supportedLocales };
 
-export function mergeAvailableLocales(
-	databaseLocales: ReadonlyArray<{ code: string; label: string }>,
-): Array<{ code: string; label: string }> {
-	const locales = new Map<string, { code: string; label: string }>(
-		supportedLocales.map((locale) => [locale.code, { ...locale }]),
-	);
-	for (const locale of databaseLocales) {
-		if (!locales.has(locale.code)) {
-			locales.set(locale.code, { ...locale });
-		}
-	}
-	return [...locales.values()];
-}
-
 export function detectPreferredLocale(languages: readonly string[]): string {
 	for (const language of languages) {
 		const base = language.toLowerCase().split("-")[0];
@@ -131,7 +117,7 @@ export function mapScriptureDetail(
 			annotationSegmentId: String(link.annotationSegmentId),
 			createdAt: link.createdAt,
 		})),
-		availableLocales: mergeAvailableLocales(detail.availableLocales),
+		availableLocales: supportedLocales.map((locale) => ({ ...locale })),
 	};
 }
 

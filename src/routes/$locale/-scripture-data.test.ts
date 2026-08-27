@@ -82,7 +82,6 @@ import {
 	getScripture,
 	listScriptures,
 	mapScriptureDetail,
-	mergeAvailableLocales,
 	supportedLocales,
 	voteTranslation,
 } from "./-scripture-data";
@@ -189,15 +188,6 @@ describe("仏典ルートのserver function adapter", () => {
 		]);
 	});
 
-	it("DBのlocaleを21言語へ統合し、未知のlocaleも失わない", () => {
-		expect(
-			mergeAvailableLocales([
-				{ code: "ja", label: "DB label" },
-				{ code: "eo", label: "Esperanto" },
-			]),
-		).toEqual([...supportedLocales, { code: "eo", label: "Esperanto" }]);
-	});
-
 	it("サーバーの一覧結果だけをUI型へ変換し、固定サンプルを返さない", async () => {
 		state.listScriptures.mockResolvedValue([
 			{
@@ -261,6 +251,7 @@ describe("仏典ルートのserver function adapter", () => {
 			id: "7",
 			primarySegmentId: "70",
 			authenticated: true,
+			availableLocales: supportedLocales,
 			translations: [{ id: "700", voteCount: 4, votedByViewer: true }],
 			segments: [
 				{
