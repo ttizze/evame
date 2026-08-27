@@ -14,13 +14,19 @@ import type { auth } from "@/auth";
  * SSR時にbaseURLが未定義になることを防ぐため、常に値を設定します。
  */
 function getBaseURL(): string | undefined {
-	// 1. ブラウザ環境では、デプロイ先のoriginへ同一オリジンで送る
+	// 1. NEXT_PUBLIC_DOMAINが設定されている場合は優先
+	if (process.env.NEXT_PUBLIC_DOMAIN) {
+		return process.env.NEXT_PUBLIC_DOMAIN;
+	}
+
+	// 2. ブラウザ環境ではwindow.location.originを使用
 	if (typeof window !== "undefined") {
 		return window.location.origin;
 	}
 
-	// 2. SSRでは設定済みの公開ドメインを使う
-	return process.env.NEXT_PUBLIC_DOMAIN;
+	// 3. SSR時はundefinedを返す（better-authが自動推論を試みる）
+	// ただし、better-authの推奨に従い、可能な限り明示的に設定する
+	return undefined;
 }
 
 export const authClient = createAuthClient({

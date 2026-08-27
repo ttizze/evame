@@ -91,7 +91,7 @@ export async function PageList({
 						</span>
 					</Link>
 					<time className="text-xs text-muted-foreground whitespace-nowrap">
-						{new Date(PageForList.createdAt).toLocaleDateString(locale)}
+						{PageForList.createdAt.toLocaleDateString(locale)}
 					</time>
 				</div>
 

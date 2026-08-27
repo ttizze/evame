@@ -7,7 +7,6 @@
 			"!build",
 			"!.vscode",
 			"!.next",
-			"!.open-next",
 			"!node_modules",
 			"!**/*.css",
 			"!tipitaka-md",

@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import {
 	buildPageListQuery,
 	fetchTagsMap,
@@ -71,33 +71,21 @@ export async function fetchPaginatedPublicNewestPageListsByTag({
 export async function fetchPaginatedPublicNewestPageListsByTagForTopPage(
 	params: FetchPaginatedNewestPagesByTagParams,
 ) {
+	"use cache";
 	const tagName = params.tagName;
 	const page = params.page ?? 1;
 	const pageSize = params.pageSize ?? 5;
 	const locale = params.locale ?? "en";
 
-	return await unstable_cache(
-		() =>
-			fetchPaginatedPublicNewestPageListsByTag({
-				tagName,
-				page,
-				pageSize,
-				locale,
-			}),
-		[
-			"top:new-page-list-by-tag",
-			locale,
-			tagName,
-			String(page),
-			String(pageSize),
-		],
-		{
-			revalidate: 60 * 60 * 12,
-			tags: [
-				`top:new-page-list-by-tag:${locale}:${tagName}:${page}:${pageSize}`,
-			],
-		},
-	)();
+	cacheLife({ expire: 60 * 60 * 12 });
+	cacheTag(`top:new-page-list-by-tag:${locale}:${tagName}:${page}:${pageSize}`);
+
+	return await fetchPaginatedPublicNewestPageListsByTag({
+		tagName,
+		page,
+		pageSize,
+		locale,
+	});
 }
 
 export async function fetchPublicNewestPageListsByTags({
@@ -158,28 +146,19 @@ export async function fetchPublicNewestPageListsByTags({
 export async function fetchPublicNewestPageListsByTagsForTopPage(
 	params: FetchNewestPageListsByTagsParams,
 ) {
+	"use cache";
 	const locale = params.locale ?? "en";
 	const pageSize = params.pageSize ?? 5;
 	const tagNames = params.tagNames;
 
-	return await unstable_cache(
-		() =>
-			fetchPublicNewestPageListsByTags({
-				tagNames,
-				pageSize,
-				locale,
-			}),
-		[
-			"top:new-page-lists-by-tags",
-			locale,
-			String(pageSize),
-			tagNames.join("|"),
-		],
-		{
-			revalidate: 60 * 60 * 12,
-			tags: [
-				`top:new-page-lists-by-tags:${locale}:${pageSize}:${tagNames.join("|")}`,
-			],
-		},
-	)();
+	cacheLife({ expire: 60 * 60 * 12 });
+	cacheTag(
+		`top:new-page-lists-by-tags:${locale}:${pageSize}:${tagNames.join("|")}`,
+	);
+
+	return await fetchPublicNewestPageListsByTags({
+		tagNames,
+		pageSize,
+		locale,
+	});
 }

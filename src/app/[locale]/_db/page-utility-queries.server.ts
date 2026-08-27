@@ -1,26 +1,23 @@
-import { unstable_cache } from "next/cache";
+import { cacheLife, cacheTag } from "next/cache";
 import { db } from "@/db";
 
 /**
  * ページの翻訳ジョブを取得（各localeの最新COMPLETEDのみ）
  */
 export async function fetchCompletedTranslationJobs(pageId: number) {
-	return await unstable_cache(
-		() =>
-			db
-				.selectFrom("translationJobs")
-				.selectAll()
-				.distinctOn(["locale"])
-				.where("pageId", "=", pageId)
-				.where("status", "=", "COMPLETED")
-				.orderBy("locale")
-				.orderBy("createdAt", "desc")
-				.execute(),
-		["page-translation-jobs", String(pageId)],
-		{
-			tags: [`page-translation-jobs:${pageId}`],
-		},
-	)();
+	"use cache";
+	cacheLife("max");
+	cacheTag(`page-translation-jobs:${pageId}`);
+
+	return await db
+		.selectFrom("translationJobs")
+		.selectAll()
+		.distinctOn(["locale"])
+		.where("pageId", "=", pageId)
+		.where("status", "=", "COMPLETED")
+		.orderBy("locale")
+		.orderBy("createdAt", "desc")
+		.execute();
 }
 
 /**

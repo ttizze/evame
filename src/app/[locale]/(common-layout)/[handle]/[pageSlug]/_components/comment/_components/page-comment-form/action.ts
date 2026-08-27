@@ -42,7 +42,7 @@ export const commentAction = createActionFactory<
 	async create(input, currentUserId) {
 		const { content, pageId, parentId, userLocale, pageCommentId } = input;
 		const page = await getPageById(pageId);
-		if (!page?.user) {
+		if (!page || !page.user) {
 			return {
 				success: false,
 				message: "Page not found",

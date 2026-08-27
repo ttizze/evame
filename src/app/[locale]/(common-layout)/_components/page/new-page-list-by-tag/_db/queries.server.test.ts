@@ -1,13 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
-	unstableCacheMock,
+	cacheLifeMock,
+	cacheTagMock,
 	buildPageListQueryMock,
 	fetchTagsMapMock,
 	toPageForListMock,
 	selectFromMock,
 } = vi.hoisted(() => ({
-	unstableCacheMock: vi.fn(),
+	cacheLifeMock: vi.fn(),
+	cacheTagMock: vi.fn(),
 	buildPageListQueryMock: vi.fn(),
 	fetchTagsMapMock: vi.fn(),
 	toPageForListMock: vi.fn(),
@@ -15,7 +17,8 @@ const {
 }));
 
 vi.mock("next/cache", () => ({
-	unstable_cache: unstableCacheMock,
+	cacheLife: cacheLifeMock,
+	cacheTag: cacheTagMock,
 }));
 
 vi.mock("@/app/[locale]/_db/page-list.server", () => ({
@@ -39,7 +42,6 @@ import {
 describe("new-page-list-by-tag queries", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		unstableCacheMock.mockImplementation((callback) => callback);
 
 		const baseQuery = {
 			innerJoin: vi.fn().mockReturnThis(),
@@ -95,7 +97,8 @@ describe("new-page-list-by-tag queries", () => {
 			locale: "ja",
 		});
 
-		expect(unstableCacheMock).not.toHaveBeenCalled();
+		expect(cacheLifeMock).not.toHaveBeenCalled();
+		expect(cacheTagMock).not.toHaveBeenCalled();
 	});
 
 	it("トップページ向けタグ別一覧は12時間キャッシュ付きで取得する", async () => {
@@ -106,13 +109,9 @@ describe("new-page-list-by-tag queries", () => {
 			locale: "ja",
 		});
 
-		expect(unstableCacheMock).toHaveBeenCalledWith(
-			expect.any(Function),
-			["top:new-page-list-by-tag", "ja", "AI", "2", "5"],
-			{
-				revalidate: 43200,
-				tags: ["top:new-page-list-by-tag:ja:AI:2:5"],
-			},
+		expect(cacheLifeMock).toHaveBeenCalledWith({ expire: 43200 });
+		expect(cacheTagMock).toHaveBeenCalledWith(
+			"top:new-page-list-by-tag:ja:AI:2:5",
 		);
 	});
 
@@ -123,13 +122,9 @@ describe("new-page-list-by-tag queries", () => {
 			locale: "ja",
 		});
 
-		expect(unstableCacheMock).toHaveBeenCalledWith(
-			expect.any(Function),
-			["top:new-page-lists-by-tags", "ja", "5", "AI|Programming"],
-			{
-				revalidate: 43200,
-				tags: ["top:new-page-lists-by-tags:ja:5:AI|Programming"],
-			},
+		expect(cacheLifeMock).toHaveBeenCalledWith({ expire: 43200 });
+		expect(cacheTagMock).toHaveBeenCalledWith(
+			"top:new-page-lists-by-tags:ja:5:AI|Programming",
 		);
 	});
 });

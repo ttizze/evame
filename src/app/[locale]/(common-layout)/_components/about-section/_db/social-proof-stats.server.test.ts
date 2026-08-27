@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { unstableCacheMock, selectFromMock } = vi.hoisted(() => ({
-	unstableCacheMock: vi.fn(),
+const { cacheLifeMock, cacheTagMock, selectFromMock } = vi.hoisted(() => ({
+	cacheLifeMock: vi.fn(),
+	cacheTagMock: vi.fn(),
 	selectFromMock: vi.fn(),
 }));
 
 vi.mock("next/cache", () => ({
-	unstable_cache: unstableCacheMock,
+	cacheLife: cacheLifeMock,
+	cacheTag: cacheTagMock,
 }));
 
 vi.mock("@/db", () => ({
@@ -20,7 +22,6 @@ import { fetchSocialProofStats } from "./social-proof-stats.server";
 describe("fetchSocialProofStats", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		unstableCacheMock.mockImplementation((callback) => callback);
 
 		selectFromMock.mockImplementation((table: string) => {
 			const query = {
@@ -40,14 +41,8 @@ describe("fetchSocialProofStats", () => {
 	it("ソーシャルプルーフ統計を12時間キャッシュ付きで取得する", async () => {
 		const result = await fetchSocialProofStats();
 
-		expect(unstableCacheMock).toHaveBeenCalledWith(
-			expect.any(Function),
-			["top:social-proof-stats"],
-			{
-				revalidate: 43200,
-				tags: ["top:social-proof-stats"],
-			},
-		);
+		expect(cacheLifeMock).toHaveBeenCalledWith({ expire: 43200 });
+		expect(cacheTagMock).toHaveBeenCalledWith("top:social-proof-stats");
 		expect(selectFromMock).toHaveBeenCalledWith("pages");
 		expect(selectFromMock).toHaveBeenCalledWith("segmentTranslations");
 		expect(result).toEqual({

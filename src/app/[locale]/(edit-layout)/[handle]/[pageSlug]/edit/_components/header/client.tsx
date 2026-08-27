@@ -31,7 +31,6 @@ import { TranslationSettings } from "./translation-settings";
 import type { TranslationContext } from "./translation-settings/types";
 
 interface EditHeaderProps {
-	contentFormId: string;
 	currentUser: SanitizedUser;
 	initialStatus: PageStatus;
 	hasUnsavedChanges: boolean;
@@ -88,19 +87,12 @@ function EditHeaderShell({
 	);
 }
 
-function SaveButton({
-	contentFormId,
-	hasUnsavedChanges,
-}: {
-	contentFormId: string;
-	hasUnsavedChanges: boolean;
-}) {
+function SaveButton({ hasUnsavedChanges }: { hasUnsavedChanges: boolean }) {
 	return (
 		<Button
 			className="rounded-full hover:bg-secondary/80"
 			data-testid="save-button"
 			disabled={!hasUnsavedChanges}
-			form={contentFormId}
 			size="sm"
 			type="submit"
 			variant="ghost"
@@ -115,7 +107,6 @@ function SaveButton({
 }
 
 export function EditHeader({
-	contentFormId,
 	currentUser,
 	initialStatus,
 	hasUnsavedChanges,
@@ -166,10 +157,7 @@ export function EditHeader({
 
 	const leftExtra = (
 		<>
-			<SaveButton
-				contentFormId={contentFormId}
-				hasUnsavedChanges={hasUnsavedChanges}
-			/>
+			<SaveButton hasUnsavedChanges={hasUnsavedChanges} />
 			<input name="status" type="hidden" value={initialStatus} />
 		</>
 	);
