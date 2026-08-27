@@ -6,7 +6,7 @@ const cliPath = resolve(process.cwd(), "scripts/migrate-to-turso/cli.ts");
 
 describe("migrate-to-turso CLI", () => {
 	it("引数エラー時は秘密を含まない固定文面だけをstderrへ出す", () => {
-		const result = spawnSync(process.execPath, [cliPath, "--batch-size", "0"], {
+		const result = spawnSync("bun", [cliPath, "--batch-size", "0"], {
 			encoding: "utf8",
 			env: {
 				PATH: process.env.PATH,
