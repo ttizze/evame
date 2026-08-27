@@ -38,6 +38,9 @@ export default async function NewPageList({
 				pageSize: 5,
 				locale,
 			});
+	const liveViewCountPageIds = showPagination
+		? undefined
+		: pageForLists.map((pageForList) => pageForList.id);
 
 	return (
 		<PageListContainer icon={SparklesIcon} title="New Pages">
@@ -46,6 +49,7 @@ export default async function NewPageList({
 				<PageList
 					index={index}
 					key={PageForList.id}
+					liveViewCountPageIds={liveViewCountPageIds}
 					locale={locale}
 					PageForList={PageForList}
 				/>
