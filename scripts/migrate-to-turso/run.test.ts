@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { runMigration, safeErrorMessage } from "./run";
+import { runMigration } from "./run";
 import type { PostgresSource } from "./source";
 import type { TursoConnection } from "./target";
 import type { SourceSnapshot } from "./types";
@@ -55,19 +55,6 @@ function makeSource(): PostgresSource {
 }
 
 describe("runMigration", () => {
-	it("接続URLと秘密らしいエラー値をCLI向け文面から除去する", () => {
-		const message = safeErrorMessage(
-			new Error(
-				"request failed https://user:pass@example.test/db?authToken=secret&foo=value password=another-secret",
-			),
-		);
-
-		expect(message).not.toContain("pass@example");
-		expect(message).not.toContain("secret");
-		expect(message).not.toContain("another-secret");
-		expect(message).toContain("[redacted]");
-	});
-
 	it("dry-runではTurso接続と書き込みを行わず件数だけ報告する", async () => {
 		const source = makeSource();
 		const output: string[] = [];

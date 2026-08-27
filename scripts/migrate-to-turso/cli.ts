@@ -1,4 +1,4 @@
-import { runMigration, safeErrorMessage } from "./run";
+import { runMigration } from "./run";
 
 function parsePositiveInteger(value: string): number {
 	const parsed = Number(value);
@@ -50,8 +50,8 @@ export async function main(args: readonly string[] = process.argv.slice(2)) {
 }
 
 if (process.argv[1]?.endsWith("/migrate-to-turso/cli.ts")) {
-	void main().catch((error: unknown) => {
-		console.error(safeErrorMessage(error));
+	void main().catch(() => {
+		console.error("Migration failed");
 		process.exitCode = 1;
 	});
 }
