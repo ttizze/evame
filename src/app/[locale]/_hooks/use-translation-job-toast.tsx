@@ -10,12 +10,13 @@ import { JobsView } from "./jobs-view";
 const areJobsDone = (jobs: TranslationJobForToast[]) =>
 	jobs.every((job) => isTranslationJobTerminalStatus(job.status));
 
+const toastStyle = {
+	unstyled: true,
+	className: "w-72 rounded-xl border  p-4 shadow-xl",
+};
+
 export function useTranslationJobToast(jobs: TranslationJobForToast[]) {
 	const idRef = useRef<string | number>(undefined);
-	const toastStyle = {
-		unstyled: true,
-		className: "w-72 rounded-xl border  p-4 shadow-xl",
-	};
 	// 生成
 	useEffect(() => {
 		if (jobs.length && !idRef.current) {

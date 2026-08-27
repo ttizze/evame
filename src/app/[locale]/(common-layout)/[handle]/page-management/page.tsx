@@ -35,7 +35,7 @@ export default async function PageManagementPage(
 	props: PageProps<"/[locale]/[handle]/page-management">,
 ): Promise<React.ReactNode> {
 	const currentUser = await getCurrentUser();
-	if (!currentUser || !currentUser.id) {
+	if (!currentUser?.id) {
 		redirect("/auth/login" as Route);
 	}
 	const { locale } = await props.params;

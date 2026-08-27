@@ -42,6 +42,7 @@ function cleanupScrollContainer() {
 // テスト用のデフォルトProps
 const defaultProps = {
 	currentUser: mockUsers[0],
+	contentFormId: "edit-page-content-form",
 	hasUnsavedChanges: false,
 	initialStatus: "PUBLIC" as const,
 	pageId: 123,
@@ -78,6 +79,22 @@ describe("EditHeader", () => {
 			const saveButton = screen.getByTestId("save-button");
 			expect(saveButton).not.toBeDisabled();
 			expect(saveButton.querySelector(".animate-spin")).toBeTruthy();
+		});
+
+		it("未保存のまま保存ボタンを押すと指定された編集フォームを送信する", () => {
+			const onSubmit = vi.fn((event: { preventDefault(): void }) =>
+				event.preventDefault(),
+			);
+			render(
+				<>
+					<form id="edit-page-content-form" onSubmit={onSubmit} />
+					<EditHeader {...defaultProps} hasUnsavedChanges={true} />
+				</>,
+			);
+
+			fireEvent.click(screen.getByTestId("save-button"));
+
+			expect(onSubmit).toHaveBeenCalledTimes(1);
 		});
 	});
 
