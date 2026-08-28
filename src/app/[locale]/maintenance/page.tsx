@@ -1,7 +1,5 @@
 // app/maintenance/page.tsx
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
+export const metadata = {
 	title: "Site Under Maintenance | MySite",
 	description:
 		"We're performing scheduled maintenance. Please check back soon.",
