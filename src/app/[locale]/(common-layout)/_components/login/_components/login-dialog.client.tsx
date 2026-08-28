@@ -1,7 +1,8 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { useLocale } from "next-intl";
 import { type ReactNode, useState } from "react";
+import { useHydrated } from "@/app/_hooks/use-hydrated";
 import {
 	Dialog,
 	DialogContent,
@@ -10,7 +11,6 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { Link } from "@/i18n/routing";
 import { GoogleForm } from "./google-form.client";
 import { MagicLinkForm } from "./magic-link-form.client";
 
@@ -34,11 +34,11 @@ export function LoginDialog({
 	open: defaultOpen = false,
 }: LoginDialogProps) {
 	const [open, setOpen] = useState(defaultOpen);
-	const pathname = usePathname();
-	const searchParams = useSearchParams();
-	const redirectTo = searchParams.toString()
-		? `${pathname}?${searchParams.toString()}`
-		: pathname;
+	const locale = useLocale();
+	const hydrated = useHydrated();
+	const redirectTo = hydrated
+		? `${window.location.pathname}${window.location.search}`
+		: "/";
 	return (
 		<Dialog onOpenChange={setOpen} open={open}>
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
@@ -48,9 +48,9 @@ export function LoginDialog({
 					Login to Evame
 					<DialogDescription className="mt-2 flex flex-col items-center">
 						Evame is multilingual blog platform.
-						<Link className="underline" href="/about">
+						<a className="underline" href={`/${locale}/about`}>
 							Learn more
-						</Link>
+						</a>
 					</DialogDescription>
 				</DialogTitle>
 				<GoogleForm redirectTo={redirectTo} />
@@ -61,13 +61,13 @@ export function LoginDialog({
 				<MagicLinkForm redirectTo={redirectTo} />
 				<div className="text-center text-sm text-gray-500 my-2">
 					Login means you agree to our{" "}
-					<Link className="underline" href="/terms">
+					<a className="underline" href={`/${locale}/terms`}>
 						Terms of Service
-					</Link>{" "}
+					</a>{" "}
 					and{" "}
-					<Link className="underline" href="/privacy">
+					<a className="underline" href={`/${locale}/privacy`}>
 						Privacy Policy
-					</Link>
+					</a>
 				</div>
 			</DialogContent>
 		</Dialog>
