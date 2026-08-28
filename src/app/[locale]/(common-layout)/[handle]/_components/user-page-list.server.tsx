@@ -61,7 +61,6 @@ export async function PageListServer({
 						key={PageForList.id}
 						locale={locale}
 						PageForList={PageForList}
-						showOwnerActions={isOwner}
 					/>
 				))}
 			</div>

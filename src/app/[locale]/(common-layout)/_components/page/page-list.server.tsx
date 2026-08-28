@@ -7,22 +7,14 @@ import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-
 import type { PageForList } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/routing";
-import { PageActionsDropdown } from "./page-actions-dropdown/client";
-import { PageCommentButton } from "./page-list/page-comment-button.client";
 
 type PageListProps = {
 	PageForList: PageForList;
-	showOwnerActions?: boolean;
 	index?: number;
 	locale: string;
 };
 
-export async function PageList({
-	PageForList,
-	showOwnerActions = false,
-	index,
-	locale,
-}: PageListProps) {
+export async function PageList({ PageForList, index, locale }: PageListProps) {
 	const { props } = getImageProps({
 		src: PageForList.userImage,
 		alt: "",
@@ -50,13 +42,13 @@ export async function PageList({
 			{/* ───── 2) コンテンツ領域 ───── */}
 			{/**
 			 * コンテンツ領域は 3 行の Grid:
-			 *   row‑1: タイトル行（タイトル + 操作ドロップダウン）
+			 *   row‑1: タイトル行
 			 *   row‑2: タグ行
 			 *   row‑3: フッター行（ユーザ & 日付 & ボタン）
 			 */}
 			<div className="grid grid-rows-[auto_auto_auto_auto] gap-1 min-w-0">
-				{/* ─ row‑1: タイトル & オーナーアクション ─ */}
-				<div className="grid grid-cols-[1fr_auto] gap-2">
+				{/* ─ row‑1: タイトル ─ */}
+				<div>
 					<Link className="block overflow-hidden" href={pageLink}>
 						<SegmentElement
 							className="line-clamp-1 break-all overflow-wrap-anywhere"
@@ -65,13 +57,6 @@ export async function PageList({
 							tagName="span"
 						/>
 					</Link>
-					{showOwnerActions && (
-						<PageActionsDropdown
-							editPath={`${pageLink}/edit`}
-							pageId={PageForList.id}
-							status={PageForList.status}
-						/>
-					)}
 				</div>
 
 				{/* ─ row-2: タグリスト ─ */}
@@ -95,19 +80,13 @@ export async function PageList({
 					</time>
 				</div>
 
-				{/* ③ アクション（いいね＋コメント） */}
+				{/* ③ アクション（いいね） */}
 				<div className="flex items-center gap-2 justify-end">
 					<EyeIcon className="w-5 h-5" />
 					<span className="text-muted-foreground">{PageForList.viewCount}</span>
 					<PageLikeButton
 						initialLikeCount={PageForList.likeCount}
 						pageId={PageForList.id}
-					/>
-					<PageCommentButton
-						commentCount={PageForList.pageCommentsCount}
-						pageOwnerHandle={PageForList.userHandle}
-						pageSlug={PageForList.slug}
-						showCount
 					/>
 				</div>
 			</div>

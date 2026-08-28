@@ -69,12 +69,6 @@ export async function fetchPageCounts(pageId: number) {
 		.selectFrom("pages")
 		.select((eb) => [
 			eb
-				.selectFrom("pageComments")
-				.select(eb.fn.countAll<number>().as("count"))
-				.whereRef("pageComments.pageId", "=", "pages.id")
-				.where("pageComments.isDeleted", "=", false)
-				.as("pageComments"),
-			eb
 				.selectFrom("likePages")
 				.select(eb.fn.countAll<number>().as("count"))
 				.whereRef("likePages.pageId", "=", "pages.id")
@@ -84,7 +78,6 @@ export async function fetchPageCounts(pageId: number) {
 		.executeTakeFirst();
 
 	return {
-		pageComments: result?.pageComments ?? 0,
 		likeCount: result?.likeCount ?? 0,
 	};
 }

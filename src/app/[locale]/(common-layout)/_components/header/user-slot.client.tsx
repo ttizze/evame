@@ -7,7 +7,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/routing";
 import { StartButton } from "../start-button";
 import { LocaleSelector } from "./locale-selector/client";
-import { NewPageButton } from "./new-page-button";
 import { NotificationsDropdownClient } from "./notifications-dropdown/client";
 import { TranslationHelpPopover } from "./translation-help-popover.client";
 import { UserMenu } from "./user-menu.client";
@@ -45,7 +44,6 @@ export function HeaderUserSlot() {
 			) : (
 				<>
 					<NotificationsDropdownClient currentUserHandle={currentUser.handle} />
-					<NewPageButton handle={currentUser.handle} />
 					<UserMenu
 						currentUser={currentUser}
 						hasGeminiApiKey={session?.user.hasGeminiApiKey}

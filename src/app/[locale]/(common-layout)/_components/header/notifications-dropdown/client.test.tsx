@@ -34,20 +34,6 @@ vi.mock("@/i18n/routing", () => ({
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 const sampleNotifications: NotificationRowsWithRelations[] = [
 	{
-		id: 1,
-		actorId: "actor_1",
-		actorHandle: "john_doe",
-		actorName: "John Doe",
-		actorImage: "https://example.com/avatar1.png",
-		read: false,
-		createdAt: new Date("2023-01-01T00:00:00Z"),
-		type: "PAGE_COMMENT",
-		pageSlug: "page-slug-comment",
-		pageOwnerHandle: "page_owner",
-		pageTitle: "Commented Page Title",
-		segmentTranslationText: null,
-	},
-	{
 		id: 2,
 		actorId: "actor_2",
 		actorHandle: "jane_doe",
@@ -113,10 +99,10 @@ describe("NotificationsDropdownClient", () => {
 		const bellIcon = screen.getByTestId("bell-icon");
 		expect(bellIcon).toBeInTheDocument();
 
-		// Unread count equals 3 (id:1,3,4 are unread)
+		// Unread count equals 2 (id:3,4 are unread)
 		const unreadBadge = screen.getByTestId("unread-count");
 		expect(unreadBadge).toBeInTheDocument();
-		expect(unreadBadge).toHaveTextContent("3");
+		expect(unreadBadge).toHaveTextContent("2");
 	});
 
 	it("通知が存在しない場合は『No notifications』と表示される", async () => {
@@ -158,11 +144,6 @@ describe("NotificationsDropdownClient", () => {
 				screen.getByTestId("notifications-menu-content"),
 			).toBeInTheDocument();
 		});
-
-		// PAGE_COMMENT
-		expect(await screen.findByText("John Doe")).toBeInTheDocument();
-		expect(await screen.findByText("Commented Page Title")).toBeInTheDocument();
-		expect(await screen.findByText(/commented on/i)).toBeInTheDocument();
 
 		// PAGE_LIKE
 		expect(await screen.findByText("Jane Doe")).toBeInTheDocument();

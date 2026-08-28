@@ -86,7 +86,6 @@ describe("POST /api/translate/chunk", () => {
 			title: "Test Page",
 			totalChunks: 1,
 			chunkIndex: 0,
-			pageCommentId: null,
 			annotationContentId: null,
 		};
 
@@ -180,7 +179,6 @@ describe("POST /api/translate/chunk", () => {
 			title: "Test Page",
 			totalChunks: 1,
 			chunkIndex: 0,
-			pageCommentId: null,
 			annotationContentId: null,
 		};
 
@@ -286,7 +284,6 @@ describe("POST /api/translate/chunk", () => {
 			title: "Test Page",
 			totalChunks: 2,
 			chunkIndex: 0,
-			pageCommentId: null,
 			annotationContentId: null,
 		};
 

@@ -3,8 +3,8 @@ import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segmen
 import { syncSegments } from "@/app/[locale]/_service/sync-segments";
 import { db } from "@/db";
 import type { JsonValue, PageStatus } from "@/db/types";
-import { syncSegmentMetadataAndAnnotationLinks } from "../sync-segment-metadata-and-annotation-links";
 import { upsertPage } from "./db/mutations.server";
+import { syncSegmentMetadataAndAnnotationLinks } from "./sync-segment-metadata-and-annotation-links";
 /**
  * ページとセグメントをupsertする（ユースケースフロー）
  *

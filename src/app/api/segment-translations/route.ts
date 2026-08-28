@@ -22,13 +22,12 @@ export async function GET(req: NextRequest) {
 
 	try {
 		// 1クエリで全翻訳を取得
-		// ページとコメントの両方に対応するため、LEFT JOINでオーナーを取得
-		// ページオーナーのupvoteとコメントオーナーのupvoteを別々にJOINし、どちらかがあれば優先
+		// ページコンテンツの翻訳を取得し、ページオーナーのupvoteを優先
 		const translations = await db
 			.selectFrom("segmentTranslations as st")
 			.innerJoin("segments as s", "st.segmentId", "s.id")
+			.innerJoin("contents", "s.contentId", "contents.id")
 			.leftJoin("pages as p", "s.contentId", "p.id")
-			.leftJoin("pageComments as c", "s.contentId", "c.id")
 			.innerJoin("users as u", "st.userId", "u.id")
 			.leftJoin("translationVotes as tv", (join) =>
 				join
@@ -42,14 +41,7 @@ export async function GET(req: NextRequest) {
 					.onRef("pageOwnerTv.userId", "=", "p.userId")
 					.on("pageOwnerTv.isUpvote", "=", true),
 			)
-			// コメントオーナーのupvote
-			.leftJoin("translationVotes as commentOwnerTv", (join) =>
-				join
-					.onRef("commentOwnerTv.translationId", "=", "st.id")
-					.onRef("commentOwnerTv.userId", "=", "c.userId")
-					.on("commentOwnerTv.isUpvote", "=", true),
-			)
-			.select((eb) => [
+			.select([
 				"st.id",
 				"st.segmentId",
 				"st.locale",
@@ -59,13 +51,11 @@ export async function GET(req: NextRequest) {
 				"u.name as userName",
 				"u.handle as userHandle",
 				"tv.isUpvote as currentUserVoteIsUpvote",
-				// どちらかのオーナーがupvoteしていればtrue
-				eb.fn
-					.coalesce("pageOwnerTv.isUpvote", "commentOwnerTv.isUpvote")
-					.as("ownerUpvote"),
+				"pageOwnerTv.isUpvote as ownerUpvote",
 			])
 			.where("st.segmentId", "=", segmentId)
 			.where("st.locale", "=", userLocale)
+			.where("contents.kind", "=", "PAGE")
 			.orderBy("ownerUpvote", (ob) => ob.desc().nullsLast())
 			.orderBy("st.point", "desc")
 			.orderBy("st.createdAt", "desc")

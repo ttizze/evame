@@ -1,13 +1,9 @@
 "use client";
-import { PencilIcon } from "lucide-react";
 import { getImageProps } from "next/image";
 import { useLocale } from "next-intl";
-import { useHydrated } from "@/app/_hooks/use-hydrated";
-import { authClient } from "@/app/[locale]/_service/auth-client";
 import { useHeaderScroll } from "@/app/[locale]/(common-layout)/_components/header/hooks/use-header-scroll";
 import type { PageDetail } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
 import type { TocItem } from "../../_domain/extract-toc-items";
 import { ExportMarkdownButton } from "../export-markdown-button.client";
@@ -22,11 +18,7 @@ export function SubHeader({
 	tocItems: TocItem[];
 	markdown: string;
 }) {
-	const hydrated = useHydrated();
 	const locale = useLocale();
-	const { data: session } = authClient.useSession();
-	const currentUser = hydrated ? session?.user : undefined;
-	const isEditable = currentUser?.handle === pageDetail.userHandle;
 
 	// カスタムフックを使用 - SubHeaderの特殊な動作のため初期オフセットを考慮
 	const { headerRef, isPinned, isVisible, headerHeight } = useHeaderScroll();
@@ -72,16 +64,6 @@ export function SubHeader({
 							slug={pageDetail.slug}
 							title={pageDetail.title}
 						/>
-						{isEditable && (
-							<Link
-								href={`/${pageDetail.userHandle}/${pageDetail.slug}/edit`}
-								prefetch={false}
-							>
-								<Button variant="ghost">
-									<PencilIcon className="h-4 w-4" />
-								</Button>
-							</Link>
-						)}
 						<TocTrigger items={tocItems} />
 					</div>
 				</div>

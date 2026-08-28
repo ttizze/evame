@@ -18,7 +18,6 @@ import { createServerLogger } from "@/app/_service/logger.server";
 import { markJobCompleted, markJobInProgress } from "../_db/mutations.server";
 import {
 	getAnnotationSegments,
-	getPageCommentSegments,
 	getPageSegments,
 	getPageTitle,
 } from "../_db/queries.server";
@@ -28,9 +27,6 @@ import type { TranslateChunkParams, TranslateJobParams } from "../types";
 const fetchSegments = async (params: TranslateJobParams) => {
 	if (params.annotationContentId) {
 		return await getAnnotationSegments(params.annotationContentId);
-	}
-	if (params.pageCommentId) {
-		return await getPageCommentSegments(params.pageCommentId);
 	}
 	return await getPageSegments(params.pageId);
 };
@@ -42,7 +38,7 @@ export async function orchestrateTranslation(params: TranslateJobParams) {
 		targetLocale: params.targetLocale,
 		aiModel: params.aiModel,
 	});
-	// pageCommentId / annotationContentId に応じてセグメントを取得
+	// annotationContentId に応じて注釈またはページのセグメントを取得
 	const segments = await fetchSegments(params);
 
 	// ページタイトルを取得（翻訳プロンプト用）
@@ -81,7 +77,6 @@ export async function orchestrateTranslation(params: TranslateJobParams) {
 				userId: params.userId,
 				targetLocale: params.targetLocale,
 				pageId: params.pageId,
-				pageCommentId: params.pageCommentId,
 				annotationContentId: params.annotationContentId,
 				segments: chunk,
 				title,

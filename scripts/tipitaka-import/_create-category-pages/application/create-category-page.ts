@@ -1,7 +1,7 @@
 import { markdownToMdastWithSegments } from "@/app/[locale]/_domain/markdown-to-mdast-with-segments";
-import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/[handle]/[pageSlug]/edit/_components/edit-page-client/service/upsert-page-and-segments";
 import { db } from "@/db";
 import type { PageStatus } from "@/db/types";
+import { upsertPageAndSegments } from "../../application/upsert-page-and-segments";
 import { slugify } from "../../utils/slugify";
 
 interface CategoryPageParams {

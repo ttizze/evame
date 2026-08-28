@@ -69,14 +69,6 @@
 	--size-container-2xl: 1400px; /* .container 2xl 幅 */
 }
 
-.ProseMirror p.is-editor-empty:first-child::before {
-	color: #adb5bd;
-	content: attr(data-placeholder);
-	float: left;
-	height: 0;
-	pointer-events: none;
-}
-
 .prose {
 	word-break: break-word;
 }

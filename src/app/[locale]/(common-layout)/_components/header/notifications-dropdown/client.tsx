@@ -163,12 +163,6 @@ function NotificationContent({
 	let extraContent: React.ReactNode = null;
 
 	switch (type) {
-		case "PAGE_COMMENT": {
-			actionText = <span className="text-gray-500"> commented on </span>;
-			extraContent = getPageLink();
-			if (!extraContent) return null;
-			break;
-		}
 		case "PAGE_LIKE": {
 			actionText = <span className="text-gray-500"> liked your page </span>;
 			extraContent = getPageLink();
@@ -179,8 +173,7 @@ function NotificationContent({
 			actionText = <span className="text-gray-500"> followed you</span>;
 			break;
 		}
-		case "PAGE_SEGMENT_TRANSLATION_VOTE":
-		case "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE": {
+		case "PAGE_SEGMENT_TRANSLATION_VOTE": {
 			const votedText = notificationRowsWithRelations.segmentTranslationText;
 			const pageTitle = notificationRowsWithRelations.pageTitle;
 			const pageSlug = notificationRowsWithRelations.pageSlug;

@@ -12,7 +12,6 @@ const ParamsSchema = z.object({
 	translationJobId: z.number().int().positive(),
 	aiModel: z.string().min(1),
 	targetLocale: z.string().min(1),
-	pageCommentId: z.number().int().positive().nullable(),
 	annotationContentId: z.number().int().positive().nullable(),
 	translationContext: z.string(),
 });
