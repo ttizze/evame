@@ -63,6 +63,14 @@ export function AddAndVoteTranslations({
 		);
 	}
 
+	if (!bestTranslation) {
+		return (
+			<span className="w-full">
+				<AddTranslationForm onTranslationAdded={mutate} segmentId={segmentId} />
+			</span>
+		);
+	}
+
 	return (
 		<span className="w-full ">
 			<span className="flex items-center justify-end gap-2">
@@ -73,6 +81,7 @@ export function AddAndVoteTranslations({
 				</Link>
 				<VoteButtons
 					key={bestTranslation.id}
+					locale={userLocale}
 					onVoted={() => {
 						void mutate();
 					}}
@@ -85,6 +94,7 @@ export function AddAndVoteTranslations({
 			{displayedTranslations.map((displayedTranslation) => (
 				<TranslationListItem
 					key={displayedTranslation.id}
+					locale={userLocale}
 					onDeleted={() => {
 						void mutate();
 					}}

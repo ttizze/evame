@@ -1,10 +1,13 @@
-import { EyeIcon } from "lucide-react";
+import { EyeIcon, MessageCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import { BASE_URL } from "@/app/_constants/base-url";
 import type { PageDetail } from "@/app/[locale]/types";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
 import type { NavigationData, PageTitleTree } from "../_db/queries";
 import { ChildPages } from "./child-pages";
+import { PageCommentForm } from "./comment/_components/page-comment-form/client";
+import { PageCommentList } from "./comment/_components/page-comment-list/server";
+import type { PageCommentsData } from "./comment/data";
 import { ContentWithTranslations } from "./content-with-translations";
 import { PageNavigation } from "./page-navigation";
 import { PreviewBanner } from "./preview-banner";
@@ -36,6 +39,8 @@ export function PageContent({
 	likeButton,
 	pageViewCounter,
 	floatingControls,
+	comments,
+	commentCount,
 }: {
 	pageDetail: PageDetail;
 	locale: string;
@@ -45,6 +50,8 @@ export function PageContent({
 	likeButton: ReactNode;
 	pageViewCounter: ReactNode;
 	floatingControls: ReactNode;
+	comments: PageCommentsData["comments"];
+	commentCount: number;
 }) {
 	const isDraft = pageDetail.status !== "PUBLIC";
 
@@ -84,12 +91,20 @@ export function PageContent({
 			<ContentWithTranslations pageDetail={pageDetail} />
 			<ChildPages locale={locale} pages={childPages} />
 			<div className="flex flex-wrap items-center gap-4">
-				<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
+				<EyeIcon className="h-5 w-5" strokeWidth={1.5} />
 				{pageViewCounter}
 				{likeButton}
+				<MessageCircle className="h-5 w-5" strokeWidth={1.5} />
+				<span className="text-muted-foreground">{commentCount}</span>
 			</div>
 
 			{floatingControls}
+
+			<div className="mt-8 space-y-4" id="comments">
+				<h2 className="text-2xl font-bold not-prose">Comments</h2>
+				<PageCommentForm pageId={pageDetail.id} userLocale={locale} />
+				<PageCommentList comments={comments} userLocale={locale} />
+			</div>
 		</article>
 	);
 }

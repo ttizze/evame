@@ -31,8 +31,11 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			"@": path.resolve(__dirname, "src"),
-			"next/server": path.resolve(__dirname, "node_modules/next/server.js"),
+			"@": path.resolve(import.meta.dirname, "src"),
+			"next/server": path.resolve(
+				import.meta.dirname,
+				"node_modules/next/server.js",
+			),
 			"next/navigation": "next/navigation.js",
 		},
 	},

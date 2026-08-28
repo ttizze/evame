@@ -13,25 +13,37 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LocaleRouteImport } from './routes/$locale'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as LocaleIndexRouteImport } from './routes/$locale.index'
 import { Route as LocaleCommonRouteImport } from './routes/$locale._common'
+import { Route as LocaleEditRouteImport } from './routes/$locale._edit'
 import { Route as LocaleMaintenanceRouteImport } from './routes/$locale.maintenance'
 import { Route as LocalePrivacyRouteImport } from './routes/$locale.privacy'
 import { Route as LocaleTermsRouteImport } from './routes/$locale.terms'
 import { Route as ApiLocaleInfoRouteImport } from './routes/api/locale-info'
 import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
+import { Route as ApiOgRouteImport } from './routes/api/og'
 import { Route as ApiSegmentTranslationsRouteImport } from './routes/api/segment-translations'
+import { Route as ApiTranslateRouteImport } from './routes/api/translate'
 import { Route as ApiTranslationJobsRouteImport } from './routes/api/translation-jobs'
+import { Route as AuthLoginRouteImport } from './routes/auth.login'
+import { Route as LocaleCommonIndexRouteImport } from './routes/$locale._common.index'
 import { Route as LocaleCommonHandleRouteImport } from './routes/$locale._common.$handle'
 import { Route as LocaleCommonAboutRouteImport } from './routes/$locale._common.about'
 import { Route as LocaleCommonNewPagesRouteImport } from './routes/$locale._common.new-pages'
 import { Route as LocaleCommonSearchRouteImport } from './routes/$locale._common.search'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiPageLikesStateRouteImport } from './routes/api/page-likes/state'
+import { Route as ApiSyncCliLoginRouteImport } from './routes/api/sync/cli-login'
+import { Route as ApiSyncPullRouteImport } from './routes/api/sync/pull'
+import { Route as ApiSyncPushRouteImport } from './routes/api/sync/push'
+import { Route as ApiTranslateChunkRouteImport } from './routes/api/translate/chunk'
 import { Route as SitemapSitemapChar123idChar125DotxmlRouteImport } from './routes/sitemap/sitemap/{$id}[.]xml'
 import { Route as LocaleCommonHandlePageSlugRouteImport } from './routes/$locale._common.$handle.$pageSlug'
 import { Route as LocaleCommonHandleEditRouteImport } from './routes/$locale._common.$handle.edit'
+import { Route as LocaleCommonHandlePageManagementRouteImport } from './routes/$locale._common.$handle.page-management'
 import { Route as LocaleCommonAuthLoginRouteImport } from './routes/$locale._common.auth.login'
 import { Route as LocaleCommonTagTagNameRouteImport } from './routes/$locale._common.tag.$tagName'
+import { Route as ApiPageViewsPageIdIncrementRouteImport } from './routes/api/page-views/$pageId/increment'
+import { Route as LocaleEditHandlePageSlugEditRouteImport } from './routes/$locale._edit.$handle.$pageSlug.edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,13 +65,12 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LocaleIndexRoute = LocaleIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => LocaleRoute,
-} as any)
 const LocaleCommonRoute = LocaleCommonRouteImport.update({
   id: '/_common',
+  getParentRoute: () => LocaleRoute,
+} as any)
+const LocaleEditRoute = LocaleEditRouteImport.update({
+  id: '/_edit',
   getParentRoute: () => LocaleRoute,
 } as any)
 const LocaleMaintenanceRoute = LocaleMaintenanceRouteImport.update({
@@ -87,15 +98,35 @@ const ApiNotificationsRoute = ApiNotificationsRouteImport.update({
   path: '/api/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOgRoute = ApiOgRouteImport.update({
+  id: '/api/og',
+  path: '/api/og',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiSegmentTranslationsRoute = ApiSegmentTranslationsRouteImport.update({
   id: '/api/segment-translations',
   path: '/api/segment-translations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTranslateRoute = ApiTranslateRouteImport.update({
+  id: '/api/translate',
+  path: '/api/translate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTranslationJobsRoute = ApiTranslationJobsRouteImport.update({
   id: '/api/translation-jobs',
   path: '/api/translation-jobs',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocaleCommonIndexRoute = LocaleCommonIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LocaleCommonRoute,
 } as any)
 const LocaleCommonHandleRoute = LocaleCommonHandleRouteImport.update({
   id: '/$handle',
@@ -122,6 +153,31 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPageLikesStateRoute = ApiPageLikesStateRouteImport.update({
+  id: '/api/page-likes/state',
+  path: '/api/page-likes/state',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSyncCliLoginRoute = ApiSyncCliLoginRouteImport.update({
+  id: '/api/sync/cli-login',
+  path: '/api/sync/cli-login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSyncPullRoute = ApiSyncPullRouteImport.update({
+  id: '/api/sync/pull',
+  path: '/api/sync/pull',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSyncPushRoute = ApiSyncPushRouteImport.update({
+  id: '/api/sync/push',
+  path: '/api/sync/push',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTranslateChunkRoute = ApiTranslateChunkRouteImport.update({
+  id: '/chunk',
+  path: '/chunk',
+  getParentRoute: () => ApiTranslateRoute,
+} as any)
 const SitemapSitemapChar123idChar125DotxmlRoute =
   SitemapSitemapChar123idChar125DotxmlRouteImport.update({
     id: '/sitemap/sitemap/{$id}.xml',
@@ -139,6 +195,12 @@ const LocaleCommonHandleEditRoute = LocaleCommonHandleEditRouteImport.update({
   path: '/edit',
   getParentRoute: () => LocaleCommonHandleRoute,
 } as any)
+const LocaleCommonHandlePageManagementRoute =
+  LocaleCommonHandlePageManagementRouteImport.update({
+    id: '/page-management',
+    path: '/page-management',
+    getParentRoute: () => LocaleCommonHandleRoute,
+  } as any)
 const LocaleCommonAuthLoginRoute = LocaleCommonAuthLoginRouteImport.update({
   id: '/auth/login',
   path: '/auth/login',
@@ -149,6 +211,18 @@ const LocaleCommonTagTagNameRoute = LocaleCommonTagTagNameRouteImport.update({
   path: '/tag/$tagName',
   getParentRoute: () => LocaleCommonRoute,
 } as any)
+const ApiPageViewsPageIdIncrementRoute =
+  ApiPageViewsPageIdIncrementRouteImport.update({
+    id: '/api/page-views/$pageId/increment',
+    path: '/api/page-views/$pageId/increment',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LocaleEditHandlePageSlugEditRoute =
+  LocaleEditHandlePageSlugEditRouteImport.update({
+    id: '/$handle/$pageSlug/edit',
+    path: '/$handle/$pageSlug/edit',
+    getParentRoute: () => LocaleEditRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -160,42 +234,64 @@ export interface FileRoutesByFullPath {
   '/$locale/terms': typeof LocaleTermsRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
   '/api/notifications': typeof ApiNotificationsRoute
+  '/api/og': typeof ApiOgRoute
   '/api/segment-translations': typeof ApiSegmentTranslationsRoute
+  '/api/translate': typeof ApiTranslateRouteWithChildren
   '/api/translation-jobs': typeof ApiTranslationJobsRoute
-  '/$locale/': typeof LocaleIndexRoute
+  '/auth/login': typeof AuthLoginRoute
   '/$locale/$handle': typeof LocaleCommonHandleRouteWithChildren
   '/$locale/about': typeof LocaleCommonAboutRoute
   '/$locale/new-pages': typeof LocaleCommonNewPagesRoute
   '/$locale/search': typeof LocaleCommonSearchRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/page-likes/state': typeof ApiPageLikesStateRoute
+  '/api/sync/cli-login': typeof ApiSyncCliLoginRoute
+  '/api/sync/pull': typeof ApiSyncPullRoute
+  '/api/sync/push': typeof ApiSyncPushRoute
+  '/api/translate/chunk': typeof ApiTranslateChunkRoute
   '/sitemap/sitemap/{$id}.xml': typeof SitemapSitemapChar123idChar125DotxmlRoute
+  '/$locale/': typeof LocaleCommonIndexRoute
   '/$locale/$handle/$pageSlug': typeof LocaleCommonHandlePageSlugRoute
   '/$locale/$handle/edit': typeof LocaleCommonHandleEditRoute
+  '/$locale/$handle/page-management': typeof LocaleCommonHandlePageManagementRoute
   '/$locale/auth/login': typeof LocaleCommonAuthLoginRoute
   '/$locale/tag/$tagName': typeof LocaleCommonTagTagNameRoute
+  '/api/page-views/$pageId/increment': typeof ApiPageViewsPageIdIncrementRoute
+  '/$locale/$handle/$pageSlug/edit': typeof LocaleEditHandlePageSlugEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$locale': typeof LocaleCommonIndexRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/$locale': typeof LocaleIndexRoute
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
   '/api/notifications': typeof ApiNotificationsRoute
+  '/api/og': typeof ApiOgRoute
   '/api/segment-translations': typeof ApiSegmentTranslationsRoute
+  '/api/translate': typeof ApiTranslateRouteWithChildren
   '/api/translation-jobs': typeof ApiTranslationJobsRoute
+  '/auth/login': typeof AuthLoginRoute
   '/$locale/$handle': typeof LocaleCommonHandleRouteWithChildren
   '/$locale/about': typeof LocaleCommonAboutRoute
   '/$locale/new-pages': typeof LocaleCommonNewPagesRoute
   '/$locale/search': typeof LocaleCommonSearchRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/page-likes/state': typeof ApiPageLikesStateRoute
+  '/api/sync/cli-login': typeof ApiSyncCliLoginRoute
+  '/api/sync/pull': typeof ApiSyncPullRoute
+  '/api/sync/push': typeof ApiSyncPushRoute
+  '/api/translate/chunk': typeof ApiTranslateChunkRoute
   '/sitemap/sitemap/{$id}.xml': typeof SitemapSitemapChar123idChar125DotxmlRoute
   '/$locale/$handle/$pageSlug': typeof LocaleCommonHandlePageSlugRoute
   '/$locale/$handle/edit': typeof LocaleCommonHandleEditRoute
+  '/$locale/$handle/page-management': typeof LocaleCommonHandlePageManagementRoute
   '/$locale/auth/login': typeof LocaleCommonAuthLoginRoute
   '/$locale/tag/$tagName': typeof LocaleCommonTagTagNameRoute
+  '/api/page-views/$pageId/increment': typeof ApiPageViewsPageIdIncrementRoute
+  '/$locale/$handle/$pageSlug/edit': typeof LocaleEditHandlePageSlugEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -204,24 +300,36 @@ export interface FileRoutesById {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/$locale/_common': typeof LocaleCommonRouteWithChildren
+  '/$locale/_edit': typeof LocaleEditRouteWithChildren
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
   '/api/notifications': typeof ApiNotificationsRoute
+  '/api/og': typeof ApiOgRoute
   '/api/segment-translations': typeof ApiSegmentTranslationsRoute
+  '/api/translate': typeof ApiTranslateRouteWithChildren
   '/api/translation-jobs': typeof ApiTranslationJobsRoute
-  '/$locale/': typeof LocaleIndexRoute
+  '/auth/login': typeof AuthLoginRoute
   '/$locale/_common/$handle': typeof LocaleCommonHandleRouteWithChildren
   '/$locale/_common/about': typeof LocaleCommonAboutRoute
   '/$locale/_common/new-pages': typeof LocaleCommonNewPagesRoute
   '/$locale/_common/search': typeof LocaleCommonSearchRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/page-likes/state': typeof ApiPageLikesStateRoute
+  '/api/sync/cli-login': typeof ApiSyncCliLoginRoute
+  '/api/sync/pull': typeof ApiSyncPullRoute
+  '/api/sync/push': typeof ApiSyncPushRoute
+  '/api/translate/chunk': typeof ApiTranslateChunkRoute
   '/sitemap/sitemap/{$id}.xml': typeof SitemapSitemapChar123idChar125DotxmlRoute
+  '/$locale/_common/': typeof LocaleCommonIndexRoute
   '/$locale/_common/$handle/$pageSlug': typeof LocaleCommonHandlePageSlugRoute
   '/$locale/_common/$handle/edit': typeof LocaleCommonHandleEditRoute
+  '/$locale/_common/$handle/page-management': typeof LocaleCommonHandlePageManagementRoute
   '/$locale/_common/auth/login': typeof LocaleCommonAuthLoginRoute
   '/$locale/_common/tag/$tagName': typeof LocaleCommonTagTagNameRoute
+  '/api/page-views/$pageId/increment': typeof ApiPageViewsPageIdIncrementRoute
+  '/$locale/_edit/$handle/$pageSlug/edit': typeof LocaleEditHandlePageSlugEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -235,42 +343,64 @@ export interface FileRouteTypes {
     | '/$locale/terms'
     | '/api/locale-info'
     | '/api/notifications'
+    | '/api/og'
     | '/api/segment-translations'
+    | '/api/translate'
     | '/api/translation-jobs'
-    | '/$locale/'
+    | '/auth/login'
     | '/$locale/$handle'
     | '/$locale/about'
     | '/$locale/new-pages'
     | '/$locale/search'
     | '/api/auth/$'
+    | '/api/page-likes/state'
+    | '/api/sync/cli-login'
+    | '/api/sync/pull'
+    | '/api/sync/push'
+    | '/api/translate/chunk'
     | '/sitemap/sitemap/{$id}.xml'
+    | '/$locale/'
     | '/$locale/$handle/$pageSlug'
     | '/$locale/$handle/edit'
+    | '/$locale/$handle/page-management'
     | '/$locale/auth/login'
     | '/$locale/tag/$tagName'
+    | '/api/page-views/$pageId/increment'
+    | '/$locale/$handle/$pageSlug/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/$locale'
     | '/robots.txt'
     | '/sitemap.xml'
-    | '/$locale'
     | '/$locale/maintenance'
     | '/$locale/privacy'
     | '/$locale/terms'
     | '/api/locale-info'
     | '/api/notifications'
+    | '/api/og'
     | '/api/segment-translations'
+    | '/api/translate'
     | '/api/translation-jobs'
+    | '/auth/login'
     | '/$locale/$handle'
     | '/$locale/about'
     | '/$locale/new-pages'
     | '/$locale/search'
     | '/api/auth/$'
+    | '/api/page-likes/state'
+    | '/api/sync/cli-login'
+    | '/api/sync/pull'
+    | '/api/sync/push'
+    | '/api/translate/chunk'
     | '/sitemap/sitemap/{$id}.xml'
     | '/$locale/$handle/$pageSlug'
     | '/$locale/$handle/edit'
+    | '/$locale/$handle/page-management'
     | '/$locale/auth/login'
     | '/$locale/tag/$tagName'
+    | '/api/page-views/$pageId/increment'
+    | '/$locale/$handle/$pageSlug/edit'
   id:
     | '__root__'
     | '/'
@@ -278,24 +408,36 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap.xml'
     | '/$locale/_common'
+    | '/$locale/_edit'
     | '/$locale/maintenance'
     | '/$locale/privacy'
     | '/$locale/terms'
     | '/api/locale-info'
     | '/api/notifications'
+    | '/api/og'
     | '/api/segment-translations'
+    | '/api/translate'
     | '/api/translation-jobs'
-    | '/$locale/'
+    | '/auth/login'
     | '/$locale/_common/$handle'
     | '/$locale/_common/about'
     | '/$locale/_common/new-pages'
     | '/$locale/_common/search'
     | '/api/auth/$'
+    | '/api/page-likes/state'
+    | '/api/sync/cli-login'
+    | '/api/sync/pull'
+    | '/api/sync/push'
+    | '/api/translate/chunk'
     | '/sitemap/sitemap/{$id}.xml'
+    | '/$locale/_common/'
     | '/$locale/_common/$handle/$pageSlug'
     | '/$locale/_common/$handle/edit'
+    | '/$locale/_common/$handle/page-management'
     | '/$locale/_common/auth/login'
     | '/$locale/_common/tag/$tagName'
+    | '/api/page-views/$pageId/increment'
+    | '/$locale/_edit/$handle/$pageSlug/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -305,10 +447,18 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiLocaleInfoRoute: typeof ApiLocaleInfoRoute
   ApiNotificationsRoute: typeof ApiNotificationsRoute
+  ApiOgRoute: typeof ApiOgRoute
   ApiSegmentTranslationsRoute: typeof ApiSegmentTranslationsRoute
+  ApiTranslateRoute: typeof ApiTranslateRouteWithChildren
   ApiTranslationJobsRoute: typeof ApiTranslationJobsRoute
+  AuthLoginRoute: typeof AuthLoginRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiPageLikesStateRoute: typeof ApiPageLikesStateRoute
+  ApiSyncCliLoginRoute: typeof ApiSyncCliLoginRoute
+  ApiSyncPullRoute: typeof ApiSyncPullRoute
+  ApiSyncPushRoute: typeof ApiSyncPushRoute
   SitemapSitemapChar123idChar125DotxmlRoute: typeof SitemapSitemapChar123idChar125DotxmlRoute
+  ApiPageViewsPageIdIncrementRoute: typeof ApiPageViewsPageIdIncrementRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -341,18 +491,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$locale/': {
-      id: '/$locale/'
-      path: '/'
-      fullPath: '/$locale/'
-      preLoaderRoute: typeof LocaleIndexRouteImport
-      parentRoute: typeof LocaleRoute
-    }
     '/$locale/_common': {
       id: '/$locale/_common'
       path: ''
       fullPath: '/$locale'
       preLoaderRoute: typeof LocaleCommonRouteImport
+      parentRoute: typeof LocaleRoute
+    }
+    '/$locale/_edit': {
+      id: '/$locale/_edit'
+      path: ''
+      fullPath: '/$locale'
+      preLoaderRoute: typeof LocaleEditRouteImport
       parentRoute: typeof LocaleRoute
     }
     '/$locale/maintenance': {
@@ -390,11 +540,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/og': {
+      id: '/api/og'
+      path: '/api/og'
+      fullPath: '/api/og'
+      preLoaderRoute: typeof ApiOgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/segment-translations': {
       id: '/api/segment-translations'
       path: '/api/segment-translations'
       fullPath: '/api/segment-translations'
       preLoaderRoute: typeof ApiSegmentTranslationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/translate': {
+      id: '/api/translate'
+      path: '/api/translate'
+      fullPath: '/api/translate'
+      preLoaderRoute: typeof ApiTranslateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/translation-jobs': {
@@ -403,6 +567,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/translation-jobs'
       preLoaderRoute: typeof ApiTranslationJobsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/_common/': {
+      id: '/$locale/_common/'
+      path: '/'
+      fullPath: '/$locale/'
+      preLoaderRoute: typeof LocaleCommonIndexRouteImport
+      parentRoute: typeof LocaleCommonRoute
     }
     '/$locale/_common/$handle': {
       id: '/$locale/_common/$handle'
@@ -439,6 +617,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/page-likes/state': {
+      id: '/api/page-likes/state'
+      path: '/api/page-likes/state'
+      fullPath: '/api/page-likes/state'
+      preLoaderRoute: typeof ApiPageLikesStateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sync/cli-login': {
+      id: '/api/sync/cli-login'
+      path: '/api/sync/cli-login'
+      fullPath: '/api/sync/cli-login'
+      preLoaderRoute: typeof ApiSyncCliLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sync/pull': {
+      id: '/api/sync/pull'
+      path: '/api/sync/pull'
+      fullPath: '/api/sync/pull'
+      preLoaderRoute: typeof ApiSyncPullRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/sync/push': {
+      id: '/api/sync/push'
+      path: '/api/sync/push'
+      fullPath: '/api/sync/push'
+      preLoaderRoute: typeof ApiSyncPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/translate/chunk': {
+      id: '/api/translate/chunk'
+      path: '/chunk'
+      fullPath: '/api/translate/chunk'
+      preLoaderRoute: typeof ApiTranslateChunkRouteImport
+      parentRoute: typeof ApiTranslateRoute
+    }
     '/sitemap/sitemap/{$id}.xml': {
       id: '/sitemap/sitemap/{$id}.xml'
       path: '/sitemap/sitemap/{$id}.xml'
@@ -460,6 +673,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleCommonHandleEditRouteImport
       parentRoute: typeof LocaleCommonHandleRoute
     }
+    '/$locale/_common/$handle/page-management': {
+      id: '/$locale/_common/$handle/page-management'
+      path: '/page-management'
+      fullPath: '/$locale/$handle/page-management'
+      preLoaderRoute: typeof LocaleCommonHandlePageManagementRouteImport
+      parentRoute: typeof LocaleCommonHandleRoute
+    }
     '/$locale/_common/auth/login': {
       id: '/$locale/_common/auth/login'
       path: '/auth/login'
@@ -474,17 +694,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleCommonTagTagNameRouteImport
       parentRoute: typeof LocaleCommonRoute
     }
+    '/api/page-views/$pageId/increment': {
+      id: '/api/page-views/$pageId/increment'
+      path: '/api/page-views/$pageId/increment'
+      fullPath: '/api/page-views/$pageId/increment'
+      preLoaderRoute: typeof ApiPageViewsPageIdIncrementRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/_edit/$handle/$pageSlug/edit': {
+      id: '/$locale/_edit/$handle/$pageSlug/edit'
+      path: '/$handle/$pageSlug/edit'
+      fullPath: '/$locale/$handle/$pageSlug/edit'
+      preLoaderRoute: typeof LocaleEditHandlePageSlugEditRouteImport
+      parentRoute: typeof LocaleEditRoute
+    }
   }
 }
 
 interface LocaleCommonHandleRouteChildren {
   LocaleCommonHandlePageSlugRoute: typeof LocaleCommonHandlePageSlugRoute
   LocaleCommonHandleEditRoute: typeof LocaleCommonHandleEditRoute
+  LocaleCommonHandlePageManagementRoute: typeof LocaleCommonHandlePageManagementRoute
 }
 
 const LocaleCommonHandleRouteChildren: LocaleCommonHandleRouteChildren = {
   LocaleCommonHandlePageSlugRoute: LocaleCommonHandlePageSlugRoute,
   LocaleCommonHandleEditRoute: LocaleCommonHandleEditRoute,
+  LocaleCommonHandlePageManagementRoute: LocaleCommonHandlePageManagementRoute,
 }
 
 const LocaleCommonHandleRouteWithChildren =
@@ -495,6 +731,7 @@ interface LocaleCommonRouteChildren {
   LocaleCommonAboutRoute: typeof LocaleCommonAboutRoute
   LocaleCommonNewPagesRoute: typeof LocaleCommonNewPagesRoute
   LocaleCommonSearchRoute: typeof LocaleCommonSearchRoute
+  LocaleCommonIndexRoute: typeof LocaleCommonIndexRoute
   LocaleCommonAuthLoginRoute: typeof LocaleCommonAuthLoginRoute
   LocaleCommonTagTagNameRoute: typeof LocaleCommonTagTagNameRoute
 }
@@ -504,6 +741,7 @@ const LocaleCommonRouteChildren: LocaleCommonRouteChildren = {
   LocaleCommonAboutRoute: LocaleCommonAboutRoute,
   LocaleCommonNewPagesRoute: LocaleCommonNewPagesRoute,
   LocaleCommonSearchRoute: LocaleCommonSearchRoute,
+  LocaleCommonIndexRoute: LocaleCommonIndexRoute,
   LocaleCommonAuthLoginRoute: LocaleCommonAuthLoginRoute,
   LocaleCommonTagTagNameRoute: LocaleCommonTagTagNameRoute,
 }
@@ -512,24 +750,48 @@ const LocaleCommonRouteWithChildren = LocaleCommonRoute._addFileChildren(
   LocaleCommonRouteChildren,
 )
 
+interface LocaleEditRouteChildren {
+  LocaleEditHandlePageSlugEditRoute: typeof LocaleEditHandlePageSlugEditRoute
+}
+
+const LocaleEditRouteChildren: LocaleEditRouteChildren = {
+  LocaleEditHandlePageSlugEditRoute: LocaleEditHandlePageSlugEditRoute,
+}
+
+const LocaleEditRouteWithChildren = LocaleEditRoute._addFileChildren(
+  LocaleEditRouteChildren,
+)
+
 interface LocaleRouteChildren {
   LocaleCommonRoute: typeof LocaleCommonRouteWithChildren
+  LocaleEditRoute: typeof LocaleEditRouteWithChildren
   LocaleMaintenanceRoute: typeof LocaleMaintenanceRoute
   LocalePrivacyRoute: typeof LocalePrivacyRoute
   LocaleTermsRoute: typeof LocaleTermsRoute
-  LocaleIndexRoute: typeof LocaleIndexRoute
 }
 
 const LocaleRouteChildren: LocaleRouteChildren = {
   LocaleCommonRoute: LocaleCommonRouteWithChildren,
+  LocaleEditRoute: LocaleEditRouteWithChildren,
   LocaleMaintenanceRoute: LocaleMaintenanceRoute,
   LocalePrivacyRoute: LocalePrivacyRoute,
   LocaleTermsRoute: LocaleTermsRoute,
-  LocaleIndexRoute: LocaleIndexRoute,
 }
 
 const LocaleRouteWithChildren =
   LocaleRoute._addFileChildren(LocaleRouteChildren)
+
+interface ApiTranslateRouteChildren {
+  ApiTranslateChunkRoute: typeof ApiTranslateChunkRoute
+}
+
+const ApiTranslateRouteChildren: ApiTranslateRouteChildren = {
+  ApiTranslateChunkRoute: ApiTranslateChunkRoute,
+}
+
+const ApiTranslateRouteWithChildren = ApiTranslateRoute._addFileChildren(
+  ApiTranslateRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -538,21 +800,30 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiLocaleInfoRoute: ApiLocaleInfoRoute,
   ApiNotificationsRoute: ApiNotificationsRoute,
+  ApiOgRoute: ApiOgRoute,
   ApiSegmentTranslationsRoute: ApiSegmentTranslationsRoute,
+  ApiTranslateRoute: ApiTranslateRouteWithChildren,
   ApiTranslationJobsRoute: ApiTranslationJobsRoute,
+  AuthLoginRoute: AuthLoginRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  ApiPageLikesStateRoute: ApiPageLikesStateRoute,
+  ApiSyncCliLoginRoute: ApiSyncCliLoginRoute,
+  ApiSyncPullRoute: ApiSyncPullRoute,
+  ApiSyncPushRoute: ApiSyncPushRoute,
   SitemapSitemapChar123idChar125DotxmlRoute:
     SitemapSitemapChar123idChar125DotxmlRoute,
+  ApiPageViewsPageIdIncrementRoute: ApiPageViewsPageIdIncrementRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

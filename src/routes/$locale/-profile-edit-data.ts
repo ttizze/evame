@@ -1,11 +1,17 @@
 import { redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
 import {
 	getRequestHeaders,
 	setResponseHeader,
 } from "@tanstack/react-start/server";
+import { z } from "zod";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
+import { fetchUserByHandle } from "@/app/_db/queries.server";
+import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
+import {
+	updateProfileForUser,
+	updateProfileImageForUser,
+} from "@/app/[locale]/(common-layout)/[handle]/edit/_service/profile-edit";
 
 const locales = supportedLocaleOptions.map((option) => option.code);
 const localeSchema = z.string().refine((locale) => locales.includes(locale));
@@ -29,9 +35,6 @@ const profileEditFormInput = (value: unknown) => {
 };
 
 async function getCurrentUser() {
-	const { getCurrentUserFromHeaders } = await import(
-		"@/app/_service/current-user"
-	);
 	return getCurrentUserFromHeaders(new Headers(getRequestHeaders()));
 }
 
@@ -46,7 +49,6 @@ export const getProfileEditData = createServerFn({ method: "GET" })
 			throw redirect({ href: `/${data.locale}/auth/login` });
 		}
 
-		const { fetchUserByHandle } = await import("@/app/_db/queries.server");
 		const user = await fetchUserByHandle(currentUser.handle);
 		return user ? currentUser : null;
 	});
@@ -65,9 +67,6 @@ export const updateProfile = createServerFn({ method: "POST" })
 			throw redirect({ href: `/${locale}/auth/login` });
 		}
 
-		const { updateProfileForUser } = await import(
-			"@/app/[locale]/(common-layout)/[handle]/edit/_service/profile-edit"
-		);
 		const result = await updateProfileForUser(currentUser.id, data);
 		if (result.success && handle !== currentUser.handle) {
 			throw redirect({ href: `/${locale}/${handle}/edit` });
@@ -88,8 +87,5 @@ export const updateProfileImage = createServerFn({ method: "POST" })
 			throw redirect({ href: `/${locale}/auth/login` });
 		}
 
-		const { updateProfileImageForUser } = await import(
-			"@/app/[locale]/(common-layout)/[handle]/edit/_service/profile-edit"
-		);
 		return updateProfileImageForUser(currentUser.id, data);
 	});

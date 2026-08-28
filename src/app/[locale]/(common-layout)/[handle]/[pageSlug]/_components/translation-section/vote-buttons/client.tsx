@@ -8,6 +8,7 @@ import { VoteButton } from "./vote-button";
 interface VoteButtonsProps {
 	translation: SegmentTranslation;
 	onVoted?: () => void;
+	locale?: string;
 }
 
 type VoteState = {
@@ -47,7 +48,11 @@ function calculateOptimisticVote(
 	};
 }
 
-export function VoteButtons({ translation, onVoted }: VoteButtonsProps) {
+export function VoteButtons({
+	translation,
+	onVoted,
+	locale = "en",
+}: VoteButtonsProps) {
 	const [serverState, setServerState] = useState<VoteResponse>({
 		success: true,
 		data: {
@@ -94,7 +99,7 @@ export function VoteButtons({ translation, onVoted }: VoteButtonsProps) {
 				});
 
 				if (response.status === 401) {
-					window.location.assign("/auth/login");
+					window.location.assign(`/${locale}/auth/login`);
 					return;
 				}
 

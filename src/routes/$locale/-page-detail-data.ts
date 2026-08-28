@@ -1,7 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeaders } from "@tanstack/react-start/server";
+import {
+	getRequestHeaders,
+	setResponseHeader,
+} from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
+import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
+import { queryPageDetail } from "@/app/[locale]/_db/queries";
+import { loadPageContentData } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_service/load-page-content-data";
 
 const pageDetailInput = z.object({
 	locale: z
@@ -18,17 +24,8 @@ const pageDetailInput = z.object({
 export const getPageDetailData = createServerFn({ method: "GET" })
 	.validator(pageDetailInput)
 	.handler(async ({ data }) => {
-		const [
-			{ queryPageDetail },
-			{ getCurrentUserFromHeaders },
-			{ loadPageContentData },
-		] = await Promise.all([
-			import("@/app/[locale]/_db/queries"),
-			import("@/app/_service/current-user"),
-			import(
-				"@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_service/load-page-content-data"
-			),
-		]);
+		setResponseHeader("Cache-Control", "private, no-store");
+		setResponseHeader("Vary", "Cookie, Authorization");
 
 		const pageDetail = await queryPageDetail(data.pageSlug, data.locale);
 		if (!pageDetail || pageDetail.userHandle !== data.handle) return null;

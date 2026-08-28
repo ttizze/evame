@@ -71,10 +71,10 @@ export default async function UserPage(
 
 	return (
 		<ProfilePagePresentation
+			data={data}
 			floatingControls={
 				<FloatingControls sourceLocale="mixed" userLocale={locale} />
 			}
-			data={data}
 			locale={locale}
 			page={page}
 			sort={sort === "new" ? "new" : "popular"}

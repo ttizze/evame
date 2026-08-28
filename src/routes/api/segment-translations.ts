@@ -10,12 +10,18 @@ export const Route = createFileRoute("/api/segment-translations")({
 	server: {
 		handlers: {
 			GET: ({ request }) => getSegmentTranslations(request),
-			POST: async ({ request }) =>
-				(await postSegmentTranslation(request)).response,
-			PATCH: async ({ request }) =>
-				(await patchSegmentTranslationVote(request)).response,
-			DELETE: async ({ request }) =>
-				(await deleteSegmentTranslation(request)).response,
+			POST: async ({ request }) => {
+				const result = await postSegmentTranslation(request);
+				return result.response;
+			},
+			PATCH: async ({ request }) => {
+				const result = await patchSegmentTranslationVote(request);
+				return result.response;
+			},
+			DELETE: async ({ request }) => {
+				const result = await deleteSegmentTranslation(request);
+				return result.response;
+			},
 		},
 	},
 });

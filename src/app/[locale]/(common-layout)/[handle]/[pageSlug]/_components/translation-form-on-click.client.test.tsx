@@ -2,6 +2,19 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TranslationFormOnClick } from "./translation-form-on-click.client";
 
+const locationState = vi.hoisted(() => ({ pathname: "/" }));
+vi.mock("@tanstack/react-router", () => ({
+	useLocation: ({
+		select,
+	}: {
+		select: (location: { pathname: string }) => string;
+	}) => select(locationState),
+}));
+
+beforeEach(() => {
+	locationState.pathname = "/";
+});
+
 vi.mock("./translation-section/add-and-vote-translations.client", () => ({
 	AddAndVoteTranslations: ({ segmentId }: { segmentId: number }) => (
 		<div data-testid="tr-ui">segment:{segmentId}</div>
@@ -135,5 +148,32 @@ describe("TranslationFormOnClick", () => {
 		expect(el).not.toBeNull();
 		fireEvent.keyDown(el as HTMLElement, { key: "Enter" });
 		expect(screen.getByTestId("tr-ui")).toHaveTextContent("segment:123");
+	});
+
+	test("pathnameが変化すると開いているUIを閉じる", async () => {
+		const user = userEvent.setup();
+		const { rerender } = render(
+			<>
+				<button className="seg-tr" data-segment-id="123" type="button">
+					open
+				</button>
+				<TranslationFormOnClick />
+			</>,
+		);
+
+		await user.click(screen.getByText("open"));
+		expect(screen.getByTestId("tr-ui")).toBeInTheDocument();
+
+		locationState.pathname = "/next";
+		rerender(
+			<>
+				<button className="seg-tr" data-segment-id="123" type="button">
+					open
+				</button>
+				<TranslationFormOnClick />
+			</>,
+		);
+
+		expect(screen.queryByTestId("tr-ui")).toBeNull();
 	});
 });

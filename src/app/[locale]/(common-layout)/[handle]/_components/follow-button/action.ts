@@ -1,3 +1,4 @@
+import { redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import {
 	getRequestHeaders,
@@ -5,7 +6,13 @@ import {
 } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
+import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import type { ActionResponse } from "@/app/types";
+import {
+	createFollow,
+	createNotificationFollow,
+	deleteFollow,
+} from "./db/mutations.server";
 
 const followActionSchema = z.object({
 	targetUserId: z.string().min(1),
@@ -28,30 +35,22 @@ export type FollowActionResponse = ActionResponse<
 	}
 >;
 
-async function getCurrentUser() {
-	const { getCurrentUserFromHeaders } = await import(
-		"@/app/_service/current-user"
-	);
-	return getCurrentUserFromHeaders(new Headers(getRequestHeaders()));
-}
-
 export const followAction = createServerFn({ method: "POST" })
-	.inputValidator(followActionSchema)
+	.validator(followActionSchema)
 	.handler(async ({ data }): Promise<FollowActionResponse> => {
 		setResponseHeader("Cache-Control", "private, no-store");
 		setResponseHeader("Vary", "Cookie");
-		const currentUser = await getCurrentUser();
+		const currentUser = await getCurrentUserFromHeaders(
+			new Headers(getRequestHeaders()),
+		);
 
 		if (!currentUser) {
-			const { redirect } = await import("@tanstack/react-router");
 			throw redirect({ href: `/${data.locale}/auth/login` });
 		}
 		if (currentUser.id === data.targetUserId) {
 			return { success: false, message: "Cannot follow yourself" };
 		}
 
-		const { createFollow, createNotificationFollow, deleteFollow } =
-			await import("./db/mutations.server");
 		if (data.action === "follow") {
 			await createFollow(currentUser.id, data.targetUserId);
 			await createNotificationFollow(currentUser.id, data.targetUserId);

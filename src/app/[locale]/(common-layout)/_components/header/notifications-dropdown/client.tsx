@@ -178,11 +178,18 @@ function NotificationContent({
 			if (!extraContent) return null;
 			break;
 		}
+		case "PAGE_COMMENT": {
+			actionText = <span className="text-gray-500"> commented on </span>;
+			extraContent = getPageLink();
+			if (!extraContent) return null;
+			break;
+		}
 		case "FOLLOW": {
 			actionText = <span className="text-gray-500"> followed you</span>;
 			break;
 		}
-		case "PAGE_SEGMENT_TRANSLATION_VOTE": {
+		case "PAGE_SEGMENT_TRANSLATION_VOTE":
+		case "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE": {
 			const votedText = notificationRowsWithRelations.segmentTranslationText;
 			const pageTitle = notificationRowsWithRelations.pageTitle;
 			const pageSlug = notificationRowsWithRelations.pageSlug;
@@ -192,7 +199,7 @@ function NotificationContent({
 			actionText = <span className="text-gray-500"> voted for </span>;
 			extraContent = (
 				<>
-					<span className="">{votedText}</span>
+					<span>{votedText}</span>
 					<span className="text-gray-500"> on </span>
 					<Link
 						className="hover:underline font-bold"

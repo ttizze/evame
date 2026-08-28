@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
+import { fetchSearchResults } from "@/app/[locale]/(common-layout)/search/_db/queries";
 import { CATEGORIES } from "@/app/[locale]/(common-layout)/search/constants";
 
 const searchInput = z.object({
@@ -20,8 +21,5 @@ const searchInput = z.object({
 export const getSearchData = createServerFn({ method: "GET" })
 	.validator(searchInput)
 	.handler(async ({ data }) => {
-		const { fetchSearchResults } = await import(
-			"@/app/[locale]/(common-layout)/search/_db/queries"
-		);
 		return fetchSearchResults(data);
 	});

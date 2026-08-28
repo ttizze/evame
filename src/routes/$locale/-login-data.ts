@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
+import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 
 const locales = supportedLocaleOptions.map((option) => option.code);
 const loginInput = z.object({
@@ -13,23 +14,21 @@ const loginInput = z.object({
 	next: z.string().optional(),
 });
 
-function resolveNextPath(next: string | undefined) {
-	if (!next || !next.startsWith("/") || next.startsWith("//")) {
-		return "/";
-	}
-	return next;
-}
-
 export const getLoginData = createServerFn({ method: "GET" })
 	.validator(loginInput)
 	.handler(async ({ data }) => {
 		setResponseHeader("Cache-Control", "private, no-store");
 		setResponseHeader("Vary", "Cookie");
 
-		const { getCurrentUserFromHeaders } = await import(
-			"@/app/_service/current-user"
-		);
 		if (await getCurrentUserFromHeaders(new Headers(getRequestHeaders()))) {
-			throw redirect({ href: resolveNextPath(data.next) });
+			throw redirect({
+				href:
+					data.next?.startsWith("/") &&
+					!data.next.startsWith("//") &&
+					!data.next.includes("\\") &&
+					!/%(?:0a|0d|2f|5c)/iu.test(data.next)
+						? data.next
+						: "/",
+			});
 		}
 	});

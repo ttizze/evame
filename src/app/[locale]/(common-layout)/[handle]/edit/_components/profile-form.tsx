@@ -3,8 +3,6 @@
 import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, SaveIcon } from "lucide-react";
-import Image from "next/image";
-import { useLocale } from "next-intl";
 import {
 	type FormEvent,
 	useEffect,
@@ -29,15 +27,10 @@ import type {
 
 interface ProfileFormProps {
 	currentUser: SanitizedUser;
-	locale?: string;
+	locale: string;
 }
 
-export function ProfileForm({
-	currentUser,
-	locale: routeLocale,
-}: ProfileFormProps) {
-	const locale = useLocale();
-	const resolvedLocale = routeLocale ?? locale;
+export function ProfileForm({ currentUser, locale }: ProfileFormProps) {
 	const router = useRouter();
 	const updateProfileFn = useServerFn(updateProfile);
 	const updateProfileImageFn = useServerFn(updateProfileImage);
@@ -127,7 +120,7 @@ export function ProfileForm({
 
 		const formData = new FormData(event.currentTarget);
 		formData.set("image", file);
-		formData.set("locale", resolvedLocale);
+		formData.set("locale", locale);
 		startImageTransition(() => {
 			void (async () => {
 				const result = await updateProfileImageFn({ data: formData });
@@ -142,7 +135,7 @@ export function ProfileForm({
 	const handleProfileSubmit = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		const formData = new FormData(event.currentTarget);
-		formData.set("locale", resolvedLocale);
+		formData.set("locale", locale);
 		startEditTransition(() => {
 			void (async () => {
 				const result = await updateProfileFn({ data: formData });
@@ -168,7 +161,7 @@ export function ProfileForm({
 						onClick={handleImageClick}
 						type="button"
 					>
-						<Image
+						<img
 							alt="Profile"
 							className="transition-opacity group-hover:opacity-75"
 							height={160}

@@ -7,6 +7,7 @@ import { authClient } from "@/app/[locale]/_service/auth-client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StartButton } from "../start-button";
 import { LocaleSelector } from "./locale-selector/client";
+import { NewPageButton } from "./new-page-button";
 import { NotificationsDropdownClient } from "./notifications-dropdown/client";
 import { TranslationHelpPopover } from "./translation-help-popover.client";
 import { UserMenu } from "./user-menu.client";
@@ -52,6 +53,7 @@ export function HeaderUserSlot({ locale }: { locale: string }) {
 						currentUserHandle={currentUser.handle}
 						locale={locale}
 					/>
+					<NewPageButton handle={currentUser.handle} locale={locale} />
 					<UserMenu
 						currentUser={currentUser}
 						hasGeminiApiKey={session?.user.hasGeminiApiKey}

@@ -19,12 +19,14 @@ interface TranslationItemProps {
 	translation: SegmentTranslation;
 	onVoted?: () => void;
 	onDeleted?: () => void;
+	locale?: string;
 }
 
 export function TranslationListItem({
 	translation,
 	onVoted,
 	onDeleted,
+	locale = "en",
 }: TranslationItemProps) {
 	const hydrated = useHydrated();
 	const [isDeletingTranslation, setIsDeletingTranslation] = useState(false);
@@ -45,7 +47,7 @@ export function TranslationListItem({
 			});
 
 			if (response.status === 401) {
-				window.location.assign("/auth/login");
+				window.location.assign(`/${locale}/auth/login`);
 				return;
 			}
 
@@ -103,6 +105,7 @@ export function TranslationListItem({
 					</span>
 				</Link>
 				<VoteButtons
+					locale={locale}
 					onVoted={() => {
 						onVoted?.();
 					}}

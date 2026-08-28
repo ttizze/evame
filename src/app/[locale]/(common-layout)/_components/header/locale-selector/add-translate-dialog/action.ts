@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
+import { executeTranslateAction } from "./execute-translate-action.server";
 
 /* ───────── 型 ───────── */
 
@@ -21,8 +22,5 @@ export const translateAction = createServerFn({ method: "POST" })
 		return data;
 	})
 	.handler(async ({ data }) => {
-		const { executeTranslateAction } = await import(
-			"./execute-translate-action.server"
-		);
 		return executeTranslateAction(data);
 	});

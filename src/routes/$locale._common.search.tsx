@@ -6,14 +6,14 @@ import { SearchPagePresentation } from "@/app/[locale]/(common-layout)/search/pr
 import { getSearchData } from "./$locale/-search-data";
 
 const searchSchema = z.object({
-	category: z.enum(CATEGORIES).catch("title"),
-	page: z.coerce.number().int().positive().catch(1),
-	query: z.string().catch(""),
-	tagPage: z.enum(["true", "false"]).catch("false"),
+	category: z.enum(CATEGORIES).catch("title").default("title"),
+	page: z.coerce.number().int().positive().catch(1).default(1),
+	query: z.string().catch("").default(""),
+	tagPage: z.enum(["true", "false"]).catch("false").default("false"),
 });
 
 export const Route = createFileRoute("/$locale/_common/search")({
-	validateSearch: (search) => searchSchema.parse(search),
+	validateSearch: searchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: ({ deps, params }) =>
 		getSearchData({ data: { ...deps, locale: params.locale } }),

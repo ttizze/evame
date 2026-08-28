@@ -69,6 +69,34 @@ const sampleNotifications: NotificationRowsWithRelations[] = [
 		pageOwnerHandle: "user_of_page",
 		pageTitle: "Translated Page Title",
 	},
+	{
+		id: 5,
+		actorId: "actor_5",
+		actorHandle: "commenter",
+		actorName: "Commenter",
+		actorImage: "https://example.com/avatar5.png",
+		read: false,
+		createdAt: new Date("2023-01-05T00:00:00Z"),
+		type: "PAGE_COMMENT",
+		pageSlug: "page-slug-comment",
+		pageOwnerHandle: "page_owner_comment",
+		pageTitle: "Commented Page Title",
+		segmentTranslationText: null,
+	},
+	{
+		id: 6,
+		actorId: "actor_6",
+		actorHandle: "comment-translation-voter",
+		actorName: "Comment Translation Voter",
+		actorImage: "https://example.com/avatar6.png",
+		read: false,
+		createdAt: new Date("2023-01-06T00:00:00Z"),
+		type: "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE",
+		segmentTranslationText: "Comment Translation Text",
+		pageSlug: "page-slug-comment-translation",
+		pageOwnerHandle: "page_owner_comment_translation",
+		pageTitle: "Comment Translation Page Title",
+	},
 ];
 
 const user = userEvent.setup();
@@ -100,10 +128,10 @@ describe("NotificationsDropdownClient", () => {
 		const bellIcon = screen.getByTestId("bell-icon");
 		expect(bellIcon).toBeInTheDocument();
 
-		// Unread count equals 2 (id:3,4 are unread)
+		// Unread count equals 4 (id:3,4,5,6 are unread)
 		const unreadBadge = screen.getByTestId("unread-count");
 		expect(unreadBadge).toBeInTheDocument();
-		expect(unreadBadge).toHaveTextContent("2");
+		expect(unreadBadge).toHaveTextContent("4");
 	});
 
 	it("通知が存在しない場合は『No notifications』と表示される", async () => {
@@ -167,6 +195,21 @@ describe("NotificationsDropdownClient", () => {
 		expect(
 			await screen.findByText("Translated Page Title"),
 		).toBeInTheDocument();
-		expect(await screen.findByText(/voted for/i)).toBeInTheDocument();
+		expect(await screen.findAllByText(/voted for/i)).toHaveLength(2);
+		// PAGE_COMMENT
+		expect(await screen.findByText("Commenter")).toBeInTheDocument();
+		expect(await screen.findByText("Commented Page Title")).toBeInTheDocument();
+		expect(await screen.findByText(/commented on/i)).toBeInTheDocument();
+
+		// PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE
+		expect(
+			await screen.findByText("Comment Translation Voter"),
+		).toBeInTheDocument();
+		expect(
+			await screen.findByText("Comment Translation Text"),
+		).toBeInTheDocument();
+		expect(
+			await screen.findByText("Comment Translation Page Title"),
+		).toBeInTheDocument();
 	});
 });

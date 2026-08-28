@@ -24,6 +24,8 @@
             packages = with pkgs; [
               bun
               just
+              nodejs_22
+              typescript-language-server
             ];
           };
         }

@@ -6,14 +6,14 @@ import { ProfilePagePresentation } from "@/app/[locale]/(common-layout)/[handle]
 import { getHandleData } from "./$locale/-handle-data";
 
 const profileSearchSchema = z.object({
-	page: z.coerce.number().int().positive().catch(1),
-	query: z.string().catch(""),
-	tab: z.string().catch("home"),
-	sort: z.enum(["popular", "new"]).catch("popular"),
+	page: z.coerce.number().int().positive().catch(1).default(1),
+	query: z.string().catch("").default(""),
+	tab: z.string().catch("home").default("home"),
+	sort: z.enum(["popular", "new"]).catch("popular").default("popular"),
 });
 
 export const Route = createFileRoute("/$locale/_common/$handle")({
-	validateSearch: (search) => profileSearchSchema.parse(search),
+	validateSearch: profileSearchSchema,
 	loaderDeps: ({ search }) => ({ page: search.page, sort: search.sort }),
 	loader: async ({ deps, params }) => {
 		const data = await getHandleData({
@@ -69,12 +69,12 @@ function ProfileRoute() {
 
 	return (
 		<ProfilePagePresentation
+			data={data}
 			floatingControls={
 				<ClientOnly fallback={null}>
 					<FloatingControls sourceLocale="mixed" userLocale={locale} />
 				</ClientOnly>
 			}
-			data={data}
 			locale={locale}
 			page={search.page}
 			sort={search.sort}

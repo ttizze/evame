@@ -8,7 +8,7 @@ const loginSearch = z.object({
 });
 
 export const Route = createFileRoute("/$locale/_common/auth/login")({
-	validateSearch: (search) => loginSearch.parse(search),
+	validateSearch: loginSearch,
 	loaderDeps: ({ search }) => ({ next: search.next }),
 	loader: ({ deps, params }) =>
 		getLoginData({

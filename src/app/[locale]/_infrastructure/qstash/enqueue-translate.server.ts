@@ -6,6 +6,7 @@
  *                                  ↓
  *                            QStash → /api/translate/chunk ×N (並列)
  */
+import { Client } from "@upstash/qstash";
 import { BASE_URL } from "@/app/_constants/base-url";
 import type { TranslateJobParams } from "@/app/api/translate/types";
 
@@ -20,7 +21,6 @@ export async function enqueueTranslate(
 	body: TranslateJobParams,
 	options: Options = {},
 ) {
-	const { Client } = await import("@upstash/qstash");
 	const client = new Client({ token: process.env.QSTASH_TOKEN });
 
 	// When running QStash in a Docker container (dev), localhost inside the

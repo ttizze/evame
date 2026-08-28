@@ -1,19 +1,27 @@
 import { Link } from "@tanstack/react-router";
 import { EyeIcon } from "lucide-react";
 import { BASE_URL } from "@/app/_constants/base-url";
+import { PageActionsDropdown } from "@/app/[locale]/(common-layout)/_components/page/page-actions-dropdown/client";
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { PageForList } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PageCommentButton } from "./page-list/page-comment-button";
 
 type PageListProps = {
 	PageForList: PageForList;
+	showOwnerActions?: boolean;
 	index?: number;
 	locale: string;
 };
 
-export function PageList({ PageForList, index, locale }: PageListProps) {
+export function PageList({
+	PageForList,
+	showOwnerActions = false,
+	index,
+	locale,
+}: PageListProps) {
 	const { titleSegment } = PageForList;
 	const _ogpImageUrl =
 		`${BASE_URL}/api/og?locale=${locale}` + `&slug=${PageForList.slug}`;
@@ -38,8 +46,8 @@ export function PageList({ PageForList, index, locale }: PageListProps) {
 			 *   row‑3: フッター行（ユーザ & 日付 & ボタン）
 			 */}
 			<div className="grid grid-rows-[auto_auto_auto_auto] gap-1 min-w-0">
-				{/* ─ row‑1: タイトル ─ */}
-				<div>
+				{/* ─ row‑1: タイトル & オーナーアクション ─ */}
+				<div className="grid grid-cols-[1fr_auto] gap-2">
 					<Link
 						className="block overflow-hidden"
 						params={{
@@ -56,6 +64,15 @@ export function PageList({ PageForList, index, locale }: PageListProps) {
 							tagName="span"
 						/>
 					</Link>
+					{showOwnerActions && (
+						<PageActionsDropdown
+							handle={PageForList.userHandle}
+							locale={locale}
+							pageId={PageForList.id}
+							pageSlug={PageForList.slug}
+							status={PageForList.status}
+						/>
+					)}
 				</div>
 
 				{/* ─ row-2: タグリスト ─ */}
@@ -83,13 +100,20 @@ export function PageList({ PageForList, index, locale }: PageListProps) {
 					</time>
 				</div>
 
-				{/* ③ アクション（いいね） */}
-				<div className="flex items-center gap-2 justify-end">
-					<EyeIcon className="w-5 h-5" />
+				{/* ③ アクション（いいね＋コメント） */}
+				<div className="flex items-center justify-end gap-2">
+					<EyeIcon className="h-5 w-5" />
 					<span className="text-muted-foreground">{PageForList.viewCount}</span>
 					<PageLikeButtonClient
 						initialLikeCount={PageForList.likeCount}
 						pageId={PageForList.id}
+					/>
+					<PageCommentButton
+						commentCount={PageForList.pageCommentsCount}
+						locale={locale}
+						pageOwnerHandle={PageForList.userHandle}
+						pageSlug={PageForList.slug}
+						showCount
 					/>
 				</div>
 			</div>

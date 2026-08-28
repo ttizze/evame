@@ -5,11 +5,11 @@ import { TagPagesPresentation } from "@/app/[locale]/(common-layout)/tag/[tagNam
 import { getTagData } from "./$locale/-tag-data";
 
 const tagSearchSchema = z.object({
-	page: z.coerce.number().int().positive().catch(1),
+	page: z.coerce.number().int().positive().catch(1).default(1),
 });
 
 export const Route = createFileRoute("/$locale/_common/tag/$tagName")({
-	validateSearch: (search) => tagSearchSchema.parse(search),
+	validateSearch: tagSearchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: ({ deps, params }) =>
 		getTagData({

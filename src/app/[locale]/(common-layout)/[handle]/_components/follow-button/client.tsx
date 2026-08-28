@@ -28,9 +28,7 @@ export function FollowButtonClient({
 				data: {
 					action,
 					locale: String(formData.get("locale") ?? locale),
-					targetUserId: String(
-						formData.get("targetUserId") ?? targetUserId,
-					),
+					targetUserId: String(formData.get("targetUserId") ?? targetUserId),
 				},
 			});
 		},

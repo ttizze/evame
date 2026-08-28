@@ -3,7 +3,6 @@
 import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2, SaveIcon } from "lucide-react";
-import { useLocale } from "next-intl";
 import { type FormEvent, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { GeminiApiKeyDialog } from "@/app/[locale]/(common-layout)/_components/gemini-api-key-dialog/gemini-api-key-dialog";
@@ -16,15 +15,10 @@ import type { ProfileEditState } from "../_service/profile-edit";
 
 interface SettingsFormProps {
 	currentUser: SanitizedUser;
-	locale?: string;
+	locale: string;
 }
 
-export function SettingsForm({
-	currentUser,
-	locale: routeLocale,
-}: SettingsFormProps) {
-	const locale = useLocale();
-	const resolvedLocale = routeLocale ?? locale;
+export function SettingsForm({ currentUser, locale }: SettingsFormProps) {
 	const router = useRouter();
 	const updateProfileFn = useServerFn(updateProfile);
 	const [showHandleInput, setShowHandleInput] = useState(false);
@@ -64,7 +58,7 @@ export function SettingsForm({
 		if (!formData.has("handle")) {
 			formData.set("handle", currentUser.handle);
 		}
-		formData.set("locale", resolvedLocale);
+		formData.set("locale", locale);
 		startEditTransition(() => {
 			void (async () => {
 				const result = await updateProfileFn({ data: formData });

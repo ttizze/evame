@@ -1,6 +1,7 @@
 import { ClientOnly, createFileRoute, notFound } from "@tanstack/react-router";
 import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
+import { getPageComments } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/data";
 import {
 	collectAnnotationTypes,
 	PageContent,
@@ -13,7 +14,13 @@ export const Route = createFileRoute("/$locale/_common/$handle/$pageSlug")({
 	loader: async ({ params }) => {
 		const data = await getPageDetailData({ data: params });
 		if (!data) throw notFound();
-		return data;
+		const comments = await getPageComments({
+			data: {
+				pageId: data.pageDetail.id,
+				userLocale: params.locale,
+			},
+		});
+		return { ...data, comments };
 	},
 	head: ({ loaderData }) => {
 		if (!loaderData) return {};
@@ -68,6 +75,8 @@ function PageDetailRoute() {
 	return (
 		<PageContent
 			childPages={data.childPages}
+			commentCount={data.comments.count}
+			comments={data.comments.comments}
 			description={data.description}
 			floatingControls={
 				<ClientOnly fallback={null}>

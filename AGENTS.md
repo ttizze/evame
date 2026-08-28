@@ -7,7 +7,11 @@
 ## 実行環境
 
 - パッケージランナー: `bun`
-- フレームワーク: Next.js (App Router)
+- フレームワーク: TanStack Start
+- このリポジトリは Nix で管理する。
+- プロジェクトのツールチェーンコマンドを bare shell で実行しない。
+- エージェントや非対話シェルでは `.envrc` が読み込まれていると仮定しない。
+- `IN_NIX_SHELL` が未設定の場合は `nix develop --command <command>` でプロジェクトコマンドを実行する。
 
 ## 作業手順
 

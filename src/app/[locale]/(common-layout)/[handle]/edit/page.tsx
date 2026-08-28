@@ -25,7 +25,7 @@ export default async function UserEditPage(
 	props: PageProps<"/[locale]/[handle]/edit">,
 ): Promise<React.ReactNode> {
 	const currentUser = await getCurrentUser();
-	const { handle } = await props.params;
+	const { handle, locale } = await props.params;
 
 	if (!currentUser || currentUser.handle !== handle) {
 		redirect("/auth/login" as Route);
@@ -54,11 +54,11 @@ export default async function UserEditPage(
 				</TabsList>
 
 				<TabsContent value="profile">
-					<ProfileForm currentUser={currentUser} />
+					<ProfileForm currentUser={currentUser} locale={locale} />
 				</TabsContent>
 
 				<TabsContent value="settings">
-					<SettingsForm currentUser={currentUser} />
+					<SettingsForm currentUser={currentUser} locale={locale} />
 				</TabsContent>
 			</Tabs>
 		</div>

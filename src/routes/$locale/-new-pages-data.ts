@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
+import { fetchPaginatedNewPageLists } from "@/app/[locale]/_db/page-list.server";
 
 const newPagesInput = z.object({
 	locale: z
@@ -14,12 +15,8 @@ const newPagesInput = z.object({
 });
 
 export const getNewPagesData = createServerFn({ method: "GET" })
-	.inputValidator(newPagesInput)
+	.validator(newPagesInput)
 	.handler(async ({ data }) => {
-		// Keep the server-only database module out of the route/client bundle.
-		const { fetchPaginatedNewPageLists } = await import(
-			"@/app/[locale]/_db/page-list.server"
-		);
 		return fetchPaginatedNewPageLists({
 			locale: data.locale,
 			page: data.page,

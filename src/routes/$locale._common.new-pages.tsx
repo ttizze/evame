@@ -5,11 +5,11 @@ import { NewPagesPresentation } from "@/app/[locale]/(common-layout)/new-pages/p
 import { getNewPagesData } from "./$locale/-new-pages-data";
 
 const newPagesSearchSchema = z.object({
-	page: z.coerce.number().int().positive().catch(1),
+	page: z.coerce.number().int().positive().catch(1).default(1),
 });
 
 export const Route = createFileRoute("/$locale/_common/new-pages")({
-	validateSearch: (search) => newPagesSearchSchema.parse(search),
+	validateSearch: newPagesSearchSchema,
 	loaderDeps: ({ search }) => search,
 	loader: ({ deps, params }) =>
 		getNewPagesData({ data: { ...deps, locale: params.locale } }),

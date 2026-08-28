@@ -42,7 +42,7 @@ export function AddTranslationForm({
 			});
 
 			if (response.status === 401) {
-				window.location.assign("/auth/login");
+				window.location.assign(`/${locale}/auth/login`);
 				return;
 			}
 
