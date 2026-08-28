@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { parseFormData } from "@/app/[locale]/_utils/parse-form-data";
+import { findPageIdBySegmentTranslationId } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-section/_db/queries.server";
 import { addTranslationService } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-section/add-translation-form/service/add-translation.server";
+import {
+	createNotificationPageSegmentTranslationVote,
+	handleVote,
+} from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-section/vote-buttons/db/mutation.server";
 import { isSameOriginRequest } from "@/app/api/_utils/is-same-origin-request";
 import { db } from "@/db";
 import { segmentTranslationSchema } from "./_domain/segment-translations";
@@ -19,6 +24,11 @@ const postSchema = z.object({
 		.min(1, "Translation cannot be empty")
 		.max(30000, "Translation is too long")
 		.transform((val) => val.trim()),
+});
+
+const patchSchema = z.object({
+	segmentTranslationId: z.coerce.number().int(),
+	isUpvote: z.string().transform((val) => val === "true"),
 });
 
 export async function getSegmentTranslations(
@@ -139,5 +149,65 @@ export async function postSegmentTranslation(request: Request) {
 	return {
 		response: Response.json({ success: true }),
 		pageId: result.pageId,
+	};
+}
+
+export async function patchSegmentTranslationVote(request: Request) {
+	if (!isSameOriginRequest(request)) {
+		return {
+			response: Response.json({ error: "Forbidden" }, { status: 403 }),
+		};
+	}
+
+	const currentUser = await getCurrentUserFromHeaders(request.headers);
+	if (!currentUser) {
+		return {
+			response: Response.json({ error: "Unauthorized" }, { status: 401 }),
+		};
+	}
+
+	let formData: FormData;
+	try {
+		formData = await request.formData();
+	} catch {
+		return {
+			response: Response.json(
+				{ success: false, message: "Invalid form data" },
+				{ status: 400 },
+			),
+		};
+	}
+
+	const parsed = await parseFormData(patchSchema, formData);
+	if (!parsed.success) {
+		return {
+			response: Response.json(
+				{
+					success: false,
+					zodErrors: parsed.error.flatten().fieldErrors,
+				},
+				{ status: 400 },
+			),
+		};
+	}
+
+	const { segmentTranslationId, isUpvote } = parsed.data;
+	const result = await handleVote(
+		segmentTranslationId,
+		isUpvote,
+		currentUser.id,
+	);
+
+	if (result.data.isUpvote) {
+		await createNotificationPageSegmentTranslationVote(
+			segmentTranslationId,
+			currentUser.id,
+		);
+	}
+
+	const pageId = await findPageIdBySegmentTranslationId(segmentTranslationId);
+	return {
+		response: Response.json({ success: true, data: result.data }),
+		pageId,
 	};
 }

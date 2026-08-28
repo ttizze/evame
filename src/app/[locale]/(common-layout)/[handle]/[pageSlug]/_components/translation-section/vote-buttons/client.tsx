@@ -1,12 +1,8 @@
 "use client";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
-import Form from "next/form";
-import { useActionState, useOptimistic } from "react";
+import { type FormEvent, useOptimistic, useState, useTransition } from "react";
 import type { SegmentTranslation } from "@/app/api/segment-translations/_domain/segment-translations";
-import {
-	type VoteTranslationActionResponse,
-	voteTranslationAction,
-} from "./action";
+import type { ActionResponse } from "@/app/types";
 import { VoteButton } from "./vote-button";
 
 interface VoteButtonsProps {
@@ -18,6 +14,8 @@ type VoteState = {
 	point: number;
 	isUpvote: boolean | undefined;
 };
+
+type VoteResponse = ActionResponse<{ isUpvote?: boolean; point: number }>;
 
 /**
  * 投票の楽観的更新を計算
@@ -50,26 +48,14 @@ function calculateOptimisticVote(
 }
 
 export function VoteButtons({ translation, onVoted }: VoteButtonsProps) {
-	// サーバーからの実際の状態
-	const [serverState, formAction, isPending] = useActionState(
-		async (
-			prev: VoteTranslationActionResponse,
-			formData: FormData,
-		): Promise<VoteTranslationActionResponse> => {
-			const res = await voteTranslationAction(prev, formData);
-			if (res.success) {
-				onVoted?.();
-			}
-			return res;
+	const [serverState, setServerState] = useState<VoteResponse>({
+		success: true,
+		data: {
+			point: translation.point,
+			isUpvote: translation.currentUserVoteIsUpvote ?? undefined,
 		},
-		{
-			success: true,
-			data: {
-				point: translation.point,
-				isUpvote: translation.currentUserVoteIsUpvote ?? undefined,
-			},
-		},
-	);
+	});
+	const [isPending, startTransition] = useTransition();
 
 	// 現在の確定した状態を取得
 	const currentState: VoteState =
@@ -87,17 +73,45 @@ export function VoteButtons({ translation, onVoted }: VoteButtonsProps) {
 			calculateOptimisticVote(current, newVote),
 	);
 
-	const handleSubmit = async (formData: FormData) => {
+	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		const formData = new FormData(event.currentTarget);
+		const submitter = (event.nativeEvent as SubmitEvent).submitter;
+		if (submitter?.getAttribute("name") === "isUpvote") {
+			formData.set("isUpvote", submitter.getAttribute("value") ?? "");
+		}
 		const isUpvote = formData.get("isUpvote") === "true";
-		// 楽観的更新
-		addOptimistic(isUpvote);
-		// サーバーアクション実行
-		await formAction(formData);
+
+		startTransition(async () => {
+			// 楽観的更新
+			addOptimistic(isUpvote);
+
+			try {
+				const response = await fetch("/api/segment-translations", {
+					method: "PATCH",
+					body: formData,
+					credentials: "same-origin",
+				});
+
+				if (response.status === 401) {
+					window.location.assign("/auth/login");
+					return;
+				}
+
+				const body = (await response.json()) as VoteResponse;
+				setServerState(body);
+				if (response.ok && body.success) {
+					onVoted?.();
+				}
+			} catch {
+				setServerState({ success: false });
+			}
+		});
 	};
 
 	return (
 		<span className="flex h-full justify-end items-center">
-			<Form action={handleSubmit}>
+			<form onSubmit={handleSubmit}>
 				<input
 					name="segmentTranslationId"
 					type="hidden"
@@ -120,7 +134,7 @@ export function VoteButtons({ translation, onVoted }: VoteButtonsProps) {
 						{({ iconClass }) => <ThumbsDown className={iconClass} />}
 					</VoteButton>
 				</span>
-			</Form>
+			</form>
 		</span>
 	);
 }
