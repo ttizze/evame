@@ -1,7 +1,6 @@
 "use client";
 
 import { CopyIcon, Share } from "lucide-react";
-import Image from "next/image";
 import { useQueryState } from "nuqs";
 import { useState } from "react";
 import {
@@ -75,7 +74,7 @@ export function ShareDialog() {
 						</FacebookShareButton>
 
 						<TwitterShareButton title={shareTitle} url={getShareUrl()}>
-							<Image
+							<img
 								alt="X"
 								className="dark:invert"
 								height={32}
