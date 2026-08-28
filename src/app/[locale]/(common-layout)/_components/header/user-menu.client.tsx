@@ -1,7 +1,7 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import { LogOutIcon } from "lucide-react";
-import { getImageProps } from "next/image";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { LocaleSelector } from "@/app/[locale]/(common-layout)/_components/header/locale-selector/client";
 import { ModeToggle } from "@/app/[locale]/(common-layout)/_components/header/mode-toggle";
@@ -13,24 +13,18 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from "@/i18n/routing";
 
 interface UserMenuProps {
 	currentUser: { handle: string; name: string; image: string; plan: string };
 	hasGeminiApiKey?: boolean;
+	locale: string;
 }
 
 export function UserMenu({
 	currentUser,
 	hasGeminiApiKey = false,
+	locale,
 }: UserMenuProps) {
-	const { props } = getImageProps({
-		src: currentUser.image,
-		alt: currentUser.name,
-		width: 40,
-		height: 40,
-	});
-
 	const handleSignOut = async () => {
 		try {
 			await authClient.signOut({
@@ -49,7 +43,12 @@ export function UserMenu({
 		<DropdownMenu modal={false}>
 			<DropdownMenuTrigger>
 				<Avatar className="w-6 h-6 cursor-pointer">
-					<AvatarImage {...props} />
+					<AvatarImage
+						alt={currentUser.name}
+						height={40}
+						src={currentUser.image}
+						width={40}
+					/>
 					<AvatarFallback>
 						{currentUser.handle.charAt(0).toUpperCase()}
 					</AvatarFallback>
@@ -59,7 +58,8 @@ export function UserMenu({
 				<DropdownMenuItem className="p-0">
 					<Link
 						className="opacity-100 w-full rounded-none px-4 py-3  cursor-pointer hover:bg-accent hover:text-accent-foreground"
-						href={`/${currentUser.handle}`}
+						params={{ handle: currentUser.handle, locale }}
+						to="/$locale/$handle"
 					>
 						<div className="flex flex-col items-start">
 							{currentUser.name}

@@ -1,17 +1,17 @@
-import { notFound } from "next/navigation";
+import { use, useMemo } from "react";
 import { mdastToMarkdown } from "@/app/[locale]/_domain/mdast-to-markdown";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { PageDetail } from "@/app/[locale]/types";
 import { extractTocItems } from "../_domain/extract-toc-items";
-import { mdastToReact } from "./mdast-to-react/server";
-import { SubHeader } from "./sub-header/index.client";
+import { mdastToReact } from "./mdast-to-react";
+import { SubHeader } from "./sub-header";
 
 interface ContentWithTranslationsProps {
 	pageDetail: PageDetail;
 }
 
-export async function ContentWithTranslations({
+export function ContentWithTranslations({
 	pageDetail,
 }: ContentWithTranslationsProps) {
 	const tocItems = extractTocItems({
@@ -19,15 +19,21 @@ export async function ContentWithTranslations({
 		segments: pageDetail.segments,
 	});
 
-	const titleSegment = pageDetail.segments.find((s) => s.number === 0);
-	if (!titleSegment) {
-		return notFound();
-	}
-	const content = await mdastToReact({
-		mdast: pageDetail.mdastJson,
-		segments: pageDetail.segments,
-	});
+	const titleSegment = pageDetail.segments.find(
+		(segment) => segment.number === 0,
+	);
+
+	const contentPromise = useMemo(
+		() =>
+			mdastToReact({
+				mdast: pageDetail.mdastJson,
+				segments: pageDetail.segments,
+			}),
+		[pageDetail.mdastJson, pageDetail.segments],
+	);
+	const content = use(contentPromise);
 	const markdown = mdastToMarkdown(pageDetail.mdastJson);
+	if (!titleSegment) return null;
 	return (
 		<>
 			<h1 className="mb-0! ">

@@ -1,19 +1,15 @@
-import { ArrowRightIcon, SparklesIcon } from "lucide-react";
+import { ArrowRightIcon } from "lucide-react";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger } from "nuqs/server";
 import { Fragment } from "react";
-import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list.client";
-import { PageList } from "@/app/[locale]/(common-layout)/_components/page/page-list.server";
-import { PageListContainer } from "@/app/[locale]/(common-layout)/_components/page/page-list-container/server";
-import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
-import type { PageForList } from "@/app/[locale]/types";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/routing";
+import { fetchPaginatedPublicNewestPageListsByTag } from "./_db/queries";
 import {
-	fetchPaginatedPublicNewestPageListsByTag,
 	fetchPaginatedPublicNewestPageListsByTagForTopPage,
 	fetchPublicNewestPageListsByTagsForTopPage,
 } from "./_db/queries.server";
+import { NewPageListByTagPresentation } from "./presentation";
 
 const searchParamsSchema = {
 	page: parseAsInteger.withDefault(1),
@@ -30,47 +26,6 @@ interface NewPageListByTagProps {
 	 */
 	searchParams?: Promise<SearchParams>;
 	showPagination?: boolean;
-}
-
-interface TagPageListSectionProps {
-	locale: string;
-	tagName: string;
-	pageForLists: PageForList[];
-	currentPage: number;
-	totalPages: number;
-	showPagination: boolean;
-}
-
-function TagPageListSection({
-	locale,
-	tagName,
-	pageForLists,
-	currentPage,
-	totalPages,
-	showPagination,
-}: TagPageListSectionProps) {
-	if (pageForLists.length === 0) {
-		return null;
-	}
-
-	return (
-		<PageListContainer icon={SparklesIcon} title={`${tagName}`}>
-			<PageLikeListClient pageIds={pageForLists.map((p) => p.id)} />
-			{pageForLists.map((PageForList, index) => (
-				<PageList
-					index={index}
-					key={PageForList.id}
-					locale={locale}
-					PageForList={PageForList}
-				/>
-			))}
-			{showPagination && totalPages > 1 && (
-				<div className="mt-8 flex justify-center">
-					<PaginationBar currentPage={currentPage} totalPages={totalPages} />
-				</div>
-			)}
-		</PageListContainer>
-	);
 }
 
 export default async function NewPageListByTag({
@@ -98,7 +53,7 @@ export default async function NewPageListByTag({
 			});
 
 	return (
-		<TagPageListSection
+		<NewPageListByTagPresentation
 			currentPage={page}
 			locale={locale}
 			pageForLists={pageForLists}
@@ -130,7 +85,7 @@ export async function NewPageListByTags({
 		<>
 			{tagPageLists.map(({ tagName, pageForLists }) => (
 				<Fragment key={tagName}>
-					<TagPageListSection
+					<NewPageListByTagPresentation
 						currentPage={1}
 						locale={locale}
 						pageForLists={pageForLists}

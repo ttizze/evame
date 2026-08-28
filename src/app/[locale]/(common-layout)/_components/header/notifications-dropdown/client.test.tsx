@@ -12,17 +12,18 @@ import { NotificationsDropdownClient } from "./client";
 
 vi.mock("swr", () => ({ default: vi.fn() }));
 
-// Mock routing's Link to a simple anchor to avoid Next/intl runtime
-vi.mock("@/i18n/routing", () => ({
+// Mock TanStack Router's Link to a simple anchor for the isolated component test.
+vi.mock("@tanstack/react-router", () => ({
 	Link: ({
-		href,
+		to,
 		children,
 		...props
-	}: { href: string; children?: ReactNode } & Record<string, unknown>) => (
-		<a href={href} {...props}>
+	}: { to: string; children?: ReactNode } & Record<string, unknown>) => (
+		<a href={to} {...props}>
 			{children}
 		</a>
 	),
+	useParams: () => ({ locale: "en" }),
 }));
 
 const sampleNotifications: NotificationRowsWithRelations[] = [
@@ -89,7 +90,10 @@ describe("NotificationsDropdownClient", () => {
 		});
 
 		render(
-			<NotificationsDropdownClient currentUserHandle={mockUsers[0].handle} />,
+			<NotificationsDropdownClient
+				currentUserHandle={mockUsers[0].handle}
+				locale="en"
+			/>,
 		);
 
 		// Bell icon is visible
@@ -110,7 +114,10 @@ describe("NotificationsDropdownClient", () => {
 		});
 
 		render(
-			<NotificationsDropdownClient currentUserHandle={mockUsers[0].handle} />,
+			<NotificationsDropdownClient
+				currentUserHandle={mockUsers[0].handle}
+				locale="en"
+			/>,
 		);
 
 		const bellIcon = screen.getByTestId("bell-icon");
@@ -129,7 +136,10 @@ describe("NotificationsDropdownClient", () => {
 		});
 
 		render(
-			<NotificationsDropdownClient currentUserHandle={mockUsers[0].handle} />,
+			<NotificationsDropdownClient
+				currentUserHandle={mockUsers[0].handle}
+				locale="en"
+			/>,
 		);
 
 		const bellIcon = screen.getByTestId("bell-icon");

@@ -1,20 +1,19 @@
-import { getCurrentUser } from "@/app/_service/auth-server";
 import { FollowButtonClient } from "./client";
-import { isFollowing } from "./db/queries.server";
 
-interface FollowButtonProps {
+export function FollowButton({
+	isFollowing,
+	locale = "en",
+	targetUserId,
+}: {
+	isFollowing: boolean;
+	locale?: string;
 	targetUserId: string;
-}
-
-export async function FollowButton({ targetUserId }: FollowButtonProps) {
-	const currentUser = await getCurrentUser();
-	const isCurrentUserFollowing = currentUser?.id
-		? await isFollowing(currentUser.id, targetUserId)
-		: false;
+}) {
 	return (
 		<div>
 			<FollowButtonClient
-				isFollowing={isCurrentUserFollowing}
+				isFollowing={isFollowing}
+				locale={locale}
 				targetUserId={targetUserId}
 			/>
 		</div>

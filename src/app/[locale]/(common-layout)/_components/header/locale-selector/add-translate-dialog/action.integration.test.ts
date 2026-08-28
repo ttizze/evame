@@ -10,7 +10,7 @@ import {
 	createUser,
 } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
-import { translateAction } from "./action";
+import { executeTranslateAction } from "./execute-translate-action.server";
 
 await setupDbPerFile(import.meta.url);
 
@@ -44,7 +44,7 @@ describe("translateAction", () => {
 		// aiModelとtargetLocaleが必須だが、空文字列を送信
 
 		// Act
-		const result = await translateAction({ success: false }, invalidFormData);
+		const result = await executeTranslateAction(invalidFormData);
 
 		// Assert: バリデーションエラーが返される
 		expect(result.success).toBe(false);
@@ -61,7 +61,7 @@ describe("translateAction", () => {
 		formData.append("targetLocale", "en");
 
 		// Act & Assert: リダイレクトエラーが発生する
-		await expect(translateAction({ success: false }, formData)).rejects.toThrow(
+		await expect(executeTranslateAction(formData)).rejects.toThrow(
 			"NEXT_REDIRECT",
 		);
 	});
@@ -77,7 +77,7 @@ describe("translateAction", () => {
 		formData.append("targetLocale", "en");
 
 		// Act
-		const result = await translateAction({ success: false }, formData);
+		const result = await executeTranslateAction(formData);
 
 		// Assert: エラーメッセージが返される
 		expect(result.success).toBe(false);
@@ -114,7 +114,7 @@ describe("translateAction", () => {
 		formData.append("targetLocale", "ja");
 
 		// Act
-		const result = await translateAction({ success: false }, formData);
+		const result = await executeTranslateAction(formData);
 
 		// Assert: 成功レスポンスが返される
 		expect(result.success).toBe(true);
@@ -172,7 +172,7 @@ describe("translateAction", () => {
 		formData.append("targetLocale", "ja");
 
 		// Act
-		const result = await translateAction({ success: false }, formData);
+		const result = await executeTranslateAction(formData);
 
 		// Assert
 		expect(result.success).toBe(true);

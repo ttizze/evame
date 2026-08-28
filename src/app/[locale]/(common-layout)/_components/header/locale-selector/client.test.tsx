@@ -13,7 +13,7 @@ if (typeof global.ResizeObserver === "undefined") {
 if (typeof window.HTMLElement.prototype.scrollIntoView !== "function") {
 	window.HTMLElement.prototype.scrollIntoView = () => {};
 }
-// next-intl, next/navigation、supportedLocaleOptions をモック
+// next-intl and TanStack Router hooks are mocked for the isolated component test.
 const mockTranslations = () => {
 	const t = ((key: string) => key) as unknown as {
 		(key: string): string;
@@ -33,20 +33,15 @@ vi.mock("next-intl", () => ({
 	useTranslations: () => mockTranslations(),
 }));
 
-vi.mock("next/navigation", () => ({
-	useParams: () => ({ pageSlug: "test-page" }),
-	redirect: () => {},
-}));
-vi.mock("@/i18n/routing", () => ({
-	usePathname: () => "/test",
-}));
-
-const pushMock = vi.fn();
-vi.mock("./hooks/use-combined-router", () => ({
-	useCombinedRouter: () => ({
-		push: pushMock,
-		refresh: vi.fn(),
+const navigateMock = vi.hoisted(() => vi.fn());
+vi.mock("@tanstack/react-router", () => ({
+	useParams: () => ({ locale: "en", pageSlug: "test-page" }),
+	useLocation: () => ({
+		hash: "",
+		pathname: "/en/test",
+		searchStr: "",
 	}),
+	useNavigate: () => navigateMock,
 }));
 
 describe("LocaleSelector", () => {
@@ -81,7 +76,7 @@ describe("LocaleSelector", () => {
 		expect(englishElements.length).toBeGreaterThan(0);
 	});
 
-	it("calls router.push with the selected locale on command item select", async () => {
+	it("navigates to the selected locale on command item select", async () => {
 		const user = userEvent.setup();
 		render(
 			<LocaleSelector
@@ -98,5 +93,6 @@ describe("LocaleSelector", () => {
 		// "French" の選択肢が表示されるはず
 		const frenchOption = screen.getByText("Français");
 		await user.click(frenchOption);
+		expect(navigateMock).toHaveBeenCalledWith({ to: "/fr/test" });
 	});
 });

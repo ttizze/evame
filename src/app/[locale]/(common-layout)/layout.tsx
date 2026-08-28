@@ -2,8 +2,8 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { Suspense } from "react";
 import { Footer } from "@/app/[locale]/(common-layout)/_components/footer";
-import { Header } from "@/app/[locale]/(common-layout)/_components/header";
-import { ViewScope } from "@/app/[locale]/(common-layout)/_components/view-scope.client";
+import { Header } from "@/app/[locale]/(common-layout)/_components/header/server";
+import { ViewScope } from "@/app/[locale]/(common-layout)/_components/view-scope";
 import { TranslationFormOnClick } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-form-on-click.client";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
 

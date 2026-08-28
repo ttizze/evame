@@ -1,7 +1,7 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import { Bell, Loader2 } from "lucide-react";
-import { getImageProps } from "next/image";
 import useSWR from "swr";
 import type { NotificationRowsWithRelations } from "@/app/api/notifications/_types/notification";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,11 +11,12 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from "@/i18n/routing";
 export function NotificationsDropdownClient({
 	currentUserHandle,
+	locale,
 }: {
 	currentUserHandle: string;
+	locale: string;
 }) {
 	const { data, isLoading, mutate } = useSWR<{
 		notifications: NotificationRowsWithRelations[];
@@ -34,7 +35,7 @@ export function NotificationsDropdownClient({
 				credentials: "include",
 			}).then((response) => {
 				if (response.status === 401) {
-					window.location.assign("/auth/login");
+					window.location.assign(`/${locale}/auth/login`);
 				}
 			});
 			mutate(
@@ -94,6 +95,7 @@ export function NotificationsDropdownClient({
 								currentUserHandle={currentUserHandle}
 								index={index}
 								key={notificationRowWithRelations.id}
+								locale={locale}
 								notificationRowsWithRelations={notificationRowWithRelations}
 							/>
 						),
@@ -103,14 +105,15 @@ export function NotificationsDropdownClient({
 		</DropdownMenu>
 	);
 }
-
 function NotificationItem({
 	notificationRowsWithRelations,
 	currentUserHandle,
+	locale,
 	index,
 }: {
 	notificationRowsWithRelations: NotificationRowsWithRelations;
 	currentUserHandle: string;
+	locale: string;
 	index: number;
 }) {
 	return (
@@ -121,6 +124,7 @@ function NotificationItem({
 		>
 			<NotificationContent
 				currentUserHandle={currentUserHandle}
+				locale={locale}
 				notificationRowsWithRelations={notificationRowsWithRelations}
 			/>
 		</DropdownMenuItem>
@@ -128,14 +132,20 @@ function NotificationItem({
 }
 function NotificationContent({
 	notificationRowsWithRelations,
+	locale,
 }: {
 	notificationRowsWithRelations: NotificationRowsWithRelations;
 	currentUserHandle: string;
+	locale: string;
 }) {
 	const { actorHandle, actorName, actorImage, type } =
 		notificationRowsWithRelations;
 	const commonLink = (
-		<Link className="hover:underline font-bold" href={`/${actorHandle}`}>
+		<Link
+			className="hover:underline font-bold"
+			params={{ handle: actorHandle, locale }}
+			to="/$locale/$handle"
+		>
 			{actorName}
 		</Link>
 	);
@@ -150,7 +160,8 @@ function NotificationContent({
 		return (
 			<Link
 				className="hover:underline font-bold"
-				href={`/${pageOwnerHandle}/${pageSlug}`}
+				params={{ handle: pageOwnerHandle, locale, pageSlug }}
+				to="/$locale/$handle/$pageSlug"
 			>
 				{pageTitle}
 			</Link>
@@ -185,7 +196,8 @@ function NotificationContent({
 					<span className="text-gray-500"> on </span>
 					<Link
 						className="hover:underline font-bold"
-						href={`/${pageOwnerHandle}/${pageSlug}`}
+						params={{ handle: pageOwnerHandle, locale, pageSlug }}
+						to="/$locale/$handle/$pageSlug"
 					>
 						{pageTitle}
 					</Link>
@@ -204,6 +216,7 @@ function NotificationContent({
 				actorHandle={actorHandle}
 				actorImage={actorImage}
 				actorName={actorName}
+				locale={locale}
 			/>
 			<span className="flex flex-col">
 				<span>
@@ -221,24 +234,26 @@ function NotificationAvatar({
 	actorHandle,
 	actorImage,
 	actorName,
+	locale,
 }: {
 	actorHandle: string;
 	actorImage: string;
 	actorName: string;
+	locale: string;
 }) {
-	const { props } = getImageProps({
-		src: actorImage || "",
-		alt: actorName || "",
-		width: 40,
-		height: 40,
-	});
 	return (
 		<Link
 			className="flex items-center mr-2 no-underline! hover:text-gray-700"
-			href={`/${actorHandle}`}
+			params={{ handle: actorHandle, locale }}
+			to="/$locale/$handle"
 		>
 			<Avatar className="w-10 h-10 shrink-0 mr-3">
-				<AvatarImage {...props} />
+				<AvatarImage
+					alt={actorName || ""}
+					height={40}
+					src={actorImage || ""}
+					width={40}
+				/>
 				<AvatarFallback>
 					{(actorName || actorHandle).charAt(0).toUpperCase()}
 				</AvatarFallback>

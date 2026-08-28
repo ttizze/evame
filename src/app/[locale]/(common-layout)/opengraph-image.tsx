@@ -22,7 +22,6 @@ export default async function Image() {
 			}}
 			tw="flex items-center justify-center"
 		>
-			{/* biome-ignore lint/performance/noImgElement: Using raw <img> is required for OG image generation. */}
 			<img alt="logo" src={logoSrc} />
 		</div>,
 		{

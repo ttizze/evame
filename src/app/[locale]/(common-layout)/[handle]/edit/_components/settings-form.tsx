@@ -1,27 +1,36 @@
 "use client";
 
+import { useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { Loader2, SaveIcon } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { useLocale } from "next-intl";
+import { type FormEvent, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { GeminiApiKeyDialog } from "@/app/[locale]/(common-layout)/_components/gemini-api-key-dialog/gemini-api-key-dialog";
 import type { SanitizedUser } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { type UserEditState, userEditAction } from "./user-edit-action";
+import { updateProfile } from "@/routes/$locale/-profile-edit-data";
+import type { ProfileEditState } from "../_service/profile-edit";
 
 interface SettingsFormProps {
 	currentUser: SanitizedUser;
+	locale?: string;
 }
 
-export function SettingsForm({ currentUser }: SettingsFormProps) {
+export function SettingsForm({
+	currentUser,
+	locale: routeLocale,
+}: SettingsFormProps) {
+	const locale = useLocale();
+	const resolvedLocale = routeLocale ?? locale;
+	const router = useRouter();
+	const updateProfileFn = useServerFn(updateProfile);
 	const [showHandleInput, setShowHandleInput] = useState(false);
 	const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
-
-	const [editState, editAction, isEditPending] = useActionState<
-		UserEditState,
-		FormData
-	>(userEditAction, {
+	const [isEditPending, startEditTransition] = useTransition();
+	const [editState, setEditState] = useState<ProfileEditState>({
 		success: true,
 		data: {
 			name: currentUser.name,
@@ -49,8 +58,26 @@ export function SettingsForm({ currentUser }: SettingsFormProps) {
 		}
 	}, [editState]);
 
+	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		const formData = new FormData(event.currentTarget);
+		if (!formData.has("handle")) {
+			formData.set("handle", currentUser.handle);
+		}
+		formData.set("locale", resolvedLocale);
+		startEditTransition(() => {
+			void (async () => {
+				const result = await updateProfileFn({ data: formData });
+				setEditState(result);
+				if (result.success) {
+					await router.invalidate({ sync: true });
+				}
+			})();
+		});
+	};
+
 	return (
-		<form action={editAction} className="space-y-4">
+		<form className="space-y-4" onSubmit={handleSubmit}>
 			<input name="name" type="hidden" value={currentUser.name} />
 			{currentUser.profile && (
 				<input name="profile" type="hidden" value={currentUser.profile} />

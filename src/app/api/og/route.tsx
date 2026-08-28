@@ -53,7 +53,6 @@ export async function GET(req: Request): Promise<Response> {
 				<div tw="flex items-center justify-between w-full ">
 					{/* 左側のアバターと名前 */}
 					<div tw="flex items-center">
-						{/* biome-ignore lint/performance/noImgElement: <> */}
 						<img
 							alt={pageDetail?.userName}
 							src={pageDetail?.userImage}
@@ -62,7 +61,6 @@ export async function GET(req: Request): Promise<Response> {
 						<p tw="text-6xl ">{pageDetail?.userName}</p>
 					</div>
 					{/* 右端にロゴ */}
-					{/* biome-ignore lint/performance/noImgElement: <> */}
 					<img
 						alt="logo"
 						src={logoSrc}

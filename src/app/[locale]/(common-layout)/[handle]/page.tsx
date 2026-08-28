@@ -1,34 +1,12 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { createLoader, parseAsInteger, parseAsString } from "nuqs/server";
-import { fetchUserByHandle } from "@/app/_db/queries.server";
-import { buildAlternates } from "@/app/_lib/seo-helpers";
+import { getCurrentUser } from "@/app/_service/auth-server";
 import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
-import { SortTabs } from "@/app/[locale]/(common-layout)/[handle]/_components/sort-tabs";
-import { Skeleton } from "@/components/ui/skeleton";
-
-const DynamicPageList = dynamic(
-	() =>
-		import("./_components/user-page-list.server").then(
-			(mod) => mod.PageListServer,
-		),
-	{
-		loading: () => (
-			<div className="flex flex-col gap-4">
-				<Skeleton className="h-[100px] w-full" />
-				<Skeleton className="h-[100px] w-full" />
-				<Skeleton className="h-[100px] w-full" />
-			</div>
-		),
-	},
-);
-const DynamicUserInfo = dynamic<{ handle: string; locale: string }>(
-	() => import("./_components/user-info.server").then((mod) => mod.UserInfo),
-	{
-		loading: () => <Skeleton className="h-[200px] w-full mb-4" />,
-	},
-);
+import { fetchUserByHandle } from "./_db/queries";
+import { fetchProfilePage } from "./_service/profile";
+import { getProfileMetadata } from "./metadata";
+import { ProfilePagePresentation } from "./presentation";
 
 export async function generateMetadata({
 	params,
@@ -39,15 +17,16 @@ export async function generateMetadata({
 	if (!handle) {
 		return notFound();
 	}
+
 	const pageOwner = await fetchUserByHandle(handle);
 	if (!pageOwner) {
 		return notFound();
 	}
-	const title = `${pageOwner.name} (@${pageOwner.handle}) | Evame`;
-	const description =
-		pageOwner.profile ||
-		`${pageOwner.name}さんのEvameプロフィール。記事と翻訳をチェック。`;
 
+	const { title, description, image, alternates } = getProfileMetadata(
+		locale,
+		pageOwner,
+	);
 	return {
 		title,
 		description,
@@ -55,12 +34,13 @@ export async function generateMetadata({
 			title,
 			description,
 			type: "profile",
-			images: pageOwner.image ? [{ url: pageOwner.image }] : undefined,
+			images: image ? [{ url: image }] : undefined,
 		},
 		twitter: { title, description },
-		alternates: buildAlternates(locale, `/${handle}`),
+		alternates,
 	};
 }
+
 const searchParamsSchema = {
 	page: parseAsInteger.withDefault(1),
 	query: parseAsString.withDefault(""),
@@ -74,18 +54,30 @@ export default async function UserPage(
 ): Promise<React.ReactNode> {
 	const { handle, locale } = await props.params;
 	const { sort, page } = await loadSearchParams(props.searchParams);
+	const currentUser = await getCurrentUser();
+	const data = await fetchProfilePage({
+		currentUser: currentUser
+			? { handle: currentUser.handle, id: currentUser.id }
+			: null,
+		handle,
+		locale,
+		page,
+		sort: sort === "new" ? "new" : "popular",
+	});
+
+	if (!data) {
+		return notFound();
+	}
+
 	return (
-		<>
-			<DynamicUserInfo handle={handle} locale={locale} />
-			<SortTabs defaultSort={sort} />
-			<DynamicPageList
-				handle={handle}
-				locale={locale}
-				page={page}
-				showPagination={true}
-				sort={sort}
-			/>
-			<FloatingControls sourceLocale="mixed" userLocale={locale} />
-		</>
+		<ProfilePagePresentation
+			floatingControls={
+				<FloatingControls sourceLocale="mixed" userLocale={locale} />
+			}
+			data={data}
+			locale={locale}
+			page={page}
+			sort={sort === "new" ? "new" : "popular"}
+		/>
 	);
 }

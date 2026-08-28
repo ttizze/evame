@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { subscribeScrollY } from "@/app/[locale]/(common-layout)/_components/header/hooks/scroll-y-store.client";
+import { subscribeScrollY } from "@/app/[locale]/(common-layout)/_components/header/hooks/scroll-y-store";
 
 /**
  * 読み込み時に表示 → 下スクロールで非表示 → 上スクロールで再表示

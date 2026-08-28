@@ -2,9 +2,9 @@ import { BookOpenIcon } from "lucide-react";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger } from "nuqs/server";
 import { fetchPaginatedPopularPageLists } from "@/app/[locale]/_db/page-list.server";
-import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list.client";
+import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list";
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
-import { PageList } from "../page-list.server";
+import { PageList } from "../page-list";
 import { PageListContainer } from "../page-list-container/server";
 import { fetchPaginatedPopularPageListsForTopPage } from "./_db/queries.server";
 

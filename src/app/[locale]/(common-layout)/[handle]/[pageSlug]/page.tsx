@@ -3,9 +3,16 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { getCurrentUser } from "@/app/_service/auth-server";
 import { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
+import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
+import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageContent } from "./_components/page-content";
+import {
+	collectAnnotationTypes,
+	PageContent,
+} from "./_components/page-content";
+import { PageViewCounter } from "./_components/page-view-counter";
 import { generatePageMetadata } from "./_service/generate-page-metadata";
+import { loadPageContentData } from "./_service/load-page-content-data";
 
 function PageSkeleton() {
 	return (
@@ -57,7 +64,60 @@ export default function Page({
 					}
 				}
 
-				return <PageContent locale={locale} pageDetail={pageDetail} />;
+				if (!pageDetail.segments.some((segment) => segment.number === 0)) {
+					return notFound();
+				}
+
+				const {
+					pageDetail: preparedPageDetail,
+					pageCounts,
+					pageViewCount,
+					navigationData,
+					childPages,
+					description,
+				} = await loadPageContentData(pageDetail, locale);
+				const annotationTypes = collectAnnotationTypes(
+					preparedPageDetail.segments,
+				);
+
+				return (
+					<PageContent
+						childPages={childPages}
+						description={description}
+						floatingControls={
+							<FloatingControls
+								annotationTypes={annotationTypes}
+								likeButton={
+									<PageLikeButtonClient
+										className="w-10 h-10 rounded-full"
+										initialLikeCount={pageCounts.likeCount}
+										pageId={preparedPageDetail.id}
+										showCount={false}
+									/>
+								}
+								sourceLocale={preparedPageDetail.sourceLocale}
+								userLocale={locale}
+							/>
+						}
+						likeButton={
+							<PageLikeButtonClient
+								initialLikeCount={pageCounts.likeCount}
+								pageId={preparedPageDetail.id}
+								showCount
+							/>
+						}
+						locale={locale}
+						navigationData={navigationData}
+						pageDetail={preparedPageDetail}
+						pageViewCounter={
+							<PageViewCounter
+								className="text-muted-foreground"
+								initialCount={pageViewCount}
+								pageId={preparedPageDetail.id}
+							/>
+						}
+					/>
+				);
 			})}
 		</Suspense>
 	);
