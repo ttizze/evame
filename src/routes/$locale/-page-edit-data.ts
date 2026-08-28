@@ -44,7 +44,7 @@ export const getPageEditData = createServerFn({ method: "GET" })
 			data.pageSlug,
 		);
 		if (
-			!pageWithTitleAndTags ||
+			pageWithTitleAndTags &&
 			pageWithTitleAndTags.userId !== currentUser.id
 		) {
 			return null;
@@ -57,14 +57,14 @@ export const getPageEditData = createServerFn({ method: "GET" })
 				getTranslationContextsByUserId(currentUser.id),
 			]);
 		const { html } = await mdastToHtml({
-			mdastJson: pageWithTitleAndTags.mdastJson ?? null,
+			mdastJson: pageWithTitleAndTags?.mdastJson ?? null,
 		});
 
 		return {
 			allTagsWithCount,
 			currentUser,
 			html,
-			initialTitle: pageWithTitleAndTags.segments[0]?.text,
+			initialTitle: pageWithTitleAndTags?.segments[0]?.text,
 			pageSlug: data.pageSlug,
 			pageWithTitleAndTags,
 			targetLocales,

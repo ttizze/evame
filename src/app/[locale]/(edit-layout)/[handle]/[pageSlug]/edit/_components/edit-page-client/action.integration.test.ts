@@ -66,6 +66,31 @@ describe("editPageContent", () => {
 		expect(updatedPage?.slug).toBe(page.slug);
 	});
 
+	it("所有者が未作成のslugを保存すると新規ページを作成する", async () => {
+		const user = await createUser();
+		vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(toSessionUser(user));
+
+		const formData = new FormData();
+		formData.set("pageSlug", "new-page");
+		formData.set("title", "New Page");
+		formData.set("userLocale", "en");
+		formData.set("pageContent", "<p>New content</p>");
+
+		const result = await editPageContent({ data: formData });
+
+		expect(result.success).toBe(true);
+		const createdPage = await db
+			.selectFrom("pages")
+			.select(["slug", "userId", "status"])
+			.where("slug", "=", "new-page")
+			.executeTakeFirstOrThrow();
+		expect(createdPage).toEqual({
+			slug: "new-page",
+			userId: user.id,
+			status: "DRAFT",
+		});
+	});
+
 	it("タイトルに改行が混ざっていても保存時に空白へ正規化する", async () => {
 		const user = await createUser();
 		const page = await createPage({ userId: user.id, slug: "test-page" });

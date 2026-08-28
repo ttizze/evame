@@ -60,7 +60,7 @@ export const editPageContent = createServerFn({ method: "POST" })
 		}
 
 		const existingPage = await getPageWithTitleAndTagsBySlug(pageSlug);
-		if (!existingPage || existingPage.userId !== currentUser.id) {
+		if (existingPage && existingPage.userId !== currentUser.id) {
 			throw redirect({ href: `/${userLocale}/auth/login` });
 		}
 
@@ -78,10 +78,10 @@ export const editPageContent = createServerFn({ method: "POST" })
 				userId: currentUser.id,
 				sourceLocale,
 				segmentTypeId: null,
-				parentId: existingPage.parentId ?? null,
-				order: existingPage.order ?? 0,
+				parentId: existingPage?.parentId ?? null,
+				order: existingPage?.order ?? 0,
 				anchorContentId: null,
-				status: existingPage.status ?? "DRAFT",
+				status: existingPage?.status ?? "DRAFT",
 			});
 			return { success: true, data: undefined };
 		} catch (error) {

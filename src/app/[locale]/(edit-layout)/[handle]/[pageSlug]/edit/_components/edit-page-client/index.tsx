@@ -20,7 +20,7 @@ import { type EditPageContentActionState, editPageContent } from "./action";
 
 interface EditPageClientProps {
 	currentUser: SanitizedUser;
-	pageWithTitleAndTags: NonNullable<PageWithTitleAndTags>;
+	pageWithTitleAndTags: PageWithTitleAndTags;
 	allTagsWithCount: TagWithCount[];
 	initialTitle: string | undefined;
 	pageSlug: string;
@@ -114,10 +114,10 @@ export function EditPageClient({
 				currentUser={currentUser}
 				handle={handle}
 				hasUnsavedChanges={hasUnsavedChanges}
-				initialStatus={pageWithTitleAndTags.status || "DRAFT"}
+				initialStatus={pageWithTitleAndTags?.status || "DRAFT"}
 				isSaving={isEditing}
 				locale={userLocale}
-				pageId={pageWithTitleAndTags.id}
+				pageId={pageWithTitleAndTags?.id}
 				pageSlug={pageSlug}
 				targetLocales={targetLocales}
 				translationContexts={translationContexts}
@@ -145,10 +145,12 @@ export function EditPageClient({
 						)}
 						<TagInput
 							allTagsWithCount={allTagsWithCount}
-							initialTags={pageWithTitleAndTags.tagPages.map((tagPage) => ({
-								name: tagPage.tag.name,
-							}))}
-							pageId={pageWithTitleAndTags.id}
+							initialTags={
+								pageWithTitleAndTags?.tagPages.map((tagPage) => ({
+									name: tagPage.tag.name,
+								})) ?? []
+							}
+							pageId={pageWithTitleAndTags?.id}
 						/>
 					</div>
 					<form id="edit-page-form" onSubmit={handleSubmit} ref={formRef}>
