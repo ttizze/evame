@@ -1,8 +1,7 @@
 import { db } from "@/db";
 
 /**
- * セグメント翻訳IDから所属ページIDを取得する。
- * ページ本文だけでなくコメントのセグメントにも対応する。
+ * セグメント翻訳IDからページIDを取得
  */
 export async function findPageIdBySegmentTranslationId(
 	segmentTranslationId: number,
@@ -10,14 +9,14 @@ export async function findPageIdBySegmentTranslationId(
 	const result = await db
 		.selectFrom("segmentTranslations")
 		.innerJoin("segments", "segmentTranslations.segmentId", "segments.id")
-		.leftJoin("pages", "segments.contentId", "pages.id")
-		.leftJoin("pageComments", "segments.contentId", "pageComments.id")
-		.select((eb) =>
-			eb.fn.coalesce("pages.id", "pageComments.pageId").as("pageId"),
-		)
+		.innerJoin("pages", "segments.contentId", "pages.id")
+		.select("pages.id as pageId")
 		.where("segmentTranslations.id", "=", segmentTranslationId)
 		.executeTakeFirst();
 
-	if (!result?.pageId) throw new Error("Page not found");
-	return result.pageId;
+	const id = result?.pageId;
+	if (!id) {
+		throw new Error("Page not found");
+	}
+	return id;
 }

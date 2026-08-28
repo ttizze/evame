@@ -3,10 +3,7 @@ import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { parseFormData } from "@/app/[locale]/_utils/parse-form-data";
 import { findPageIdBySegmentTranslationId } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-section/_db/queries.server";
 import { addTranslationService } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-section/add-translation-form/service/add-translation.server";
-import {
-	createNotificationPageSegmentTranslationVote,
-	handleVote,
-} from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-section/vote-buttons/db/mutation.server";
+import { handleVote } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-section/vote-buttons/db/mutation.server";
 import { isSameOriginRequest } from "@/app/api/_utils/is-same-origin-request";
 import { db } from "@/db";
 import { deleteOwnTranslation } from "./_db/mutations.server";
@@ -51,13 +48,11 @@ export async function getSegmentTranslations(
 	const currentUser = await getCurrentUserFromHeaders(request.headers);
 
 	try {
-		// ページとコメントの両方に対応するため、オーナー情報をそれぞれ
-		// LEFT JOIN し、どちらかの upvote を優先する。
 		const translations = await db
 			.selectFrom("segmentTranslations as st")
 			.innerJoin("segments as s", "st.segmentId", "s.id")
+			.innerJoin("contents", "s.contentId", "contents.id")
 			.leftJoin("pages as p", "s.contentId", "p.id")
-			.leftJoin("pageComments as c", "s.contentId", "c.id")
 			.innerJoin("users as u", "st.userId", "u.id")
 			.leftJoin("translationVotes as tv", (join) =>
 				join
@@ -70,13 +65,7 @@ export async function getSegmentTranslations(
 					.onRef("pageOwnerTv.userId", "=", "p.userId")
 					.on("pageOwnerTv.isUpvote", "=", true),
 			)
-			.leftJoin("translationVotes as commentOwnerTv", (join) =>
-				join
-					.onRef("commentOwnerTv.translationId", "=", "st.id")
-					.onRef("commentOwnerTv.userId", "=", "c.userId")
-					.on("commentOwnerTv.isUpvote", "=", true),
-			)
-			.select((eb) => [
+			.select([
 				"st.id",
 				"st.segmentId",
 				"st.locale",
@@ -86,12 +75,11 @@ export async function getSegmentTranslations(
 				"u.name as userName",
 				"u.handle as userHandle",
 				"tv.isUpvote as currentUserVoteIsUpvote",
-				eb.fn
-					.coalesce("pageOwnerTv.isUpvote", "commentOwnerTv.isUpvote")
-					.as("ownerUpvote"),
+				"pageOwnerTv.isUpvote as ownerUpvote",
 			])
 			.where("st.segmentId", "=", segmentId)
 			.where("st.locale", "=", userLocale)
+			.where("contents.kind", "=", "PAGE")
 			.orderBy("ownerUpvote", (ob) => ob.desc().nullsLast())
 			.orderBy("st.point", "desc")
 			.orderBy("st.createdAt", "desc")
@@ -211,13 +199,6 @@ export async function patchSegmentTranslationVote(request: Request) {
 		isUpvote,
 		currentUser.id,
 	);
-
-	if (result.data.isUpvote) {
-		await createNotificationPageSegmentTranslationVote(
-			segmentTranslationId,
-			currentUser.id,
-		);
-	}
 
 	const pageId = await findPageIdBySegmentTranslationId(segmentTranslationId);
 	return {

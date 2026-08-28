@@ -11,7 +11,6 @@ const ParamsSchema = z.object({
 	aiModel: z.string().min(1),
 	targetLocale: z.string().min(1),
 	annotationContentId: z.number().int().positive().nullable(),
-	pageCommentId: z.number().int().positive().nullable(),
 	translationContext: z.string(),
 });
 

@@ -6,8 +6,6 @@ import { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
 import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { fetchPageCommentsWithSegments } from "./_components/comment/_components/page-comment-list/_db/queries.server";
-import { buildCommentTree } from "./_components/comment/_components/page-comment-list/_lib/fetch-page-comments-with-user-and-translations";
 import {
 	collectAnnotationTypes,
 	PageContent,
@@ -78,11 +76,6 @@ export default function Page({
 					childPages,
 					description,
 				} = await loadPageContentData(pageDetail, locale);
-				const pageComments = await fetchPageCommentsWithSegments(
-					preparedPageDetail.id,
-					locale,
-				);
-				const comments = buildCommentTree(pageComments);
 				const annotationTypes = collectAnnotationTypes(
 					preparedPageDetail.segments,
 				);
@@ -90,10 +83,6 @@ export default function Page({
 				return (
 					<PageContent
 						childPages={childPages}
-						commentCount={
-							pageComments.filter((comment) => !comment.isDeleted).length
-						}
-						comments={comments}
 						description={description}
 						floatingControls={
 							<FloatingControls

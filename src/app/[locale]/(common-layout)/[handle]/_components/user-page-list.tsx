@@ -35,7 +35,6 @@ export function UserPageList({
 						key={pageForList.id}
 						locale={locale}
 						PageForList={pageForList}
-						showOwnerActions={isOwner}
 					/>
 				))}
 			</div>

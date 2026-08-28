@@ -1,30 +1,19 @@
 import { Link } from "@tanstack/react-router";
 import { EyeIcon } from "lucide-react";
-import { BASE_URL } from "@/app/_constants/base-url";
-import { PageActionsDropdown } from "@/app/[locale]/(common-layout)/_components/page/page-actions-dropdown/client";
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { PageForList } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PageCommentButton } from "./page-list/page-comment-button";
 
 type PageListProps = {
 	PageForList: PageForList;
-	showOwnerActions?: boolean;
 	index?: number;
 	locale: string;
 };
 
-export function PageList({
-	PageForList,
-	showOwnerActions = false,
-	index,
-	locale,
-}: PageListProps) {
+export function PageList({ PageForList, index, locale }: PageListProps) {
 	const { titleSegment } = PageForList;
-	const _ogpImageUrl =
-		`${BASE_URL}/api/og?locale=${locale}` + `&slug=${PageForList.slug}`;
 	return (
 		<article
 			className={`grid gap-4 py-4 border-b last:border-b-0 ${
@@ -64,15 +53,6 @@ export function PageList({
 							tagName="span"
 						/>
 					</Link>
-					{showOwnerActions && (
-						<PageActionsDropdown
-							handle={PageForList.userHandle}
-							locale={locale}
-							pageId={PageForList.id}
-							pageSlug={PageForList.slug}
-							status={PageForList.status}
-						/>
-					)}
 				</div>
 
 				{/* ─ row-2: タグリスト ─ */}
@@ -100,20 +80,13 @@ export function PageList({
 					</time>
 				</div>
 
-				{/* ③ アクション（いいね＋コメント） */}
+				{/* ③ アクション（いいね） */}
 				<div className="flex items-center justify-end gap-2">
 					<EyeIcon className="h-5 w-5" />
 					<span className="text-muted-foreground">{PageForList.viewCount}</span>
 					<PageLikeButtonClient
 						initialLikeCount={PageForList.likeCount}
 						pageId={PageForList.id}
-					/>
-					<PageCommentButton
-						commentCount={PageForList.pageCommentsCount}
-						locale={locale}
-						pageOwnerHandle={PageForList.userHandle}
-						pageSlug={PageForList.slug}
-						showCount
 					/>
 				</div>
 			</div>

@@ -173,33 +173,3 @@ async function updateProofStatus(
 		)
 		.execute();
 }
-
-/** 翻訳作者への投票通知。コメント翻訳にはコメント通知種別を付ける。 */
-export async function createNotificationPageSegmentTranslationVote(
-	translationId: number,
-	actorId: string,
-) {
-	const segmentTranslation = await db
-		.selectFrom("segmentTranslations")
-		.innerJoin("segments", "segmentTranslations.segmentId", "segments.id")
-		.leftJoin("pageComments", "segments.contentId", "pageComments.id")
-		.select(["segmentTranslations.userId", "pageComments.id as pageCommentId"])
-		.where("segmentTranslations.id", "=", translationId)
-		.executeTakeFirst();
-
-	if (!segmentTranslation) return;
-
-	await db
-		.insertInto("notifications")
-		.values({
-			segmentTranslationId: translationId,
-			userId: segmentTranslation.userId,
-			actorId,
-			type:
-				segmentTranslation.pageCommentId === null
-					? "PAGE_SEGMENT_TRANSLATION_VOTE"
-					: "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE",
-			pageCommentId: segmentTranslation.pageCommentId,
-		})
-		.execute();
-}

@@ -62,18 +62,4 @@ describe("復元した画面ルートの登録", () => {
 	it("/en が共通レイアウトのホーム画面へマッチする", () => {
 		expectRouteToMatch("/en", "/$locale/_common/");
 	});
-
-	it("/en/example/page-management がページ管理画面へマッチする", () => {
-		expectRouteToMatch(
-			"/en/example/page-management",
-			"/$locale/_common/$handle/page-management",
-		);
-	});
-
-	it("/en/example/draft/edit が編集専用レイアウトへマッチする", () => {
-		expectRouteToMatch(
-			"/en/example/draft/edit",
-			"/$locale/_edit/$handle/$pageSlug/edit",
-		);
-	});
 });
