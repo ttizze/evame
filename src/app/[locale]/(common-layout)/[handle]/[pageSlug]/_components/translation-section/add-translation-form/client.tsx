@@ -1,14 +1,13 @@
 "use client";
 import { ArrowUpFromLine } from "lucide-react";
 import { useLocale } from "next-intl";
-import { useActionState, useRef } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
 import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
-import { addTranslationFormAction } from "./action";
 
 interface AddTranslationFormProps {
 	segmentId: number;
@@ -24,20 +23,56 @@ export function AddTranslationForm({
 	const { data: session } = authClient.useSession();
 	const currentUser = hydrated ? session?.user : undefined;
 	const formRef = useRef<HTMLFormElement>(null);
-	const [addTranslationState, addTranslationAction, isAddingTranslation] =
-		useActionState<ActionResponse, FormData>(addTranslationFormAction, {
+	const [addTranslationState, setAddTranslationState] =
+		useState<ActionResponse>({
 			success: false,
 		});
+	const [isAddingTranslation, setIsAddingTranslation] = useState(false);
 
-	// 成功時にコールバックを呼び出し、フォームをリセット
-	if (addTranslationState.success) {
-		onTranslationAdded?.();
-		formRef.current?.reset();
-	}
+	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		setIsAddingTranslation(true);
+		setAddTranslationState({ success: false });
+
+		try {
+			const response = await fetch("/api/segment-translations", {
+				method: "POST",
+				body: new FormData(event.currentTarget),
+				credentials: "same-origin",
+			});
+
+			if (response.status === 401) {
+				window.location.assign("/auth/login");
+				return;
+			}
+
+			const body = (await response.json()) as ActionResponse & {
+				error?: string;
+			};
+			if (!response.ok) {
+				setAddTranslationState({
+					success: false,
+					message: body.message ?? body.error,
+					zodErrors: "zodErrors" in body ? body.zodErrors : undefined,
+				});
+				return;
+			}
+
+			setAddTranslationState(body);
+			if (body.success) {
+				onTranslationAdded?.();
+				formRef.current?.reset();
+			}
+		} catch {
+			setAddTranslationState({ success: false });
+		} finally {
+			setIsAddingTranslation(false);
+		}
+	};
 
 	return (
 		<span className="mt-4 px-4 block">
-			<form action={addTranslationAction} ref={formRef}>
+			<form onSubmit={handleSubmit} ref={formRef}>
 				<input name="segmentId" type="hidden" value={segmentId} />
 				<input name="locale" type="hidden" value={locale} />
 				<span className="relative">

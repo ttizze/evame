@@ -19,6 +19,7 @@ import { Route as LocalePrivacyRouteImport } from './routes/$locale.privacy'
 import { Route as LocaleTermsRouteImport } from './routes/$locale.terms'
 import { Route as ApiLocaleInfoRouteImport } from './routes/api/locale-info'
 import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
+import { Route as ApiSegmentTranslationsRouteImport } from './routes/api/segment-translations'
 import { Route as ApiTranslationJobsRouteImport } from './routes/api/translation-jobs'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as SitemapSitemapChar123idChar125DotxmlRouteImport } from './routes/sitemap/sitemap/{$id}[.]xml'
@@ -73,6 +74,11 @@ const ApiNotificationsRoute = ApiNotificationsRouteImport.update({
   path: '/api/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSegmentTranslationsRoute = ApiSegmentTranslationsRouteImport.update({
+  id: '/api/segment-translations',
+  path: '/api/segment-translations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTranslationJobsRoute = ApiTranslationJobsRouteImport.update({
   id: '/api/translation-jobs',
   path: '/api/translation-jobs',
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/$locale/terms': typeof LocaleTermsRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
   '/api/notifications': typeof ApiNotificationsRoute
+  '/api/segment-translations': typeof ApiSegmentTranslationsRoute
   '/api/translation-jobs': typeof ApiTranslationJobsRoute
   '/$locale/': typeof LocaleIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/$locale/terms': typeof LocaleTermsRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
   '/api/notifications': typeof ApiNotificationsRoute
+  '/api/segment-translations': typeof ApiSegmentTranslationsRoute
   '/api/translation-jobs': typeof ApiTranslationJobsRoute
   '/$locale': typeof LocaleIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/$locale/terms': typeof LocaleTermsRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
   '/api/notifications': typeof ApiNotificationsRoute
+  '/api/segment-translations': typeof ApiSegmentTranslationsRoute
   '/api/translation-jobs': typeof ApiTranslationJobsRoute
   '/$locale/': typeof LocaleIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/$locale/terms'
     | '/api/locale-info'
     | '/api/notifications'
+    | '/api/segment-translations'
     | '/api/translation-jobs'
     | '/$locale/'
     | '/api/auth/$'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/$locale/terms'
     | '/api/locale-info'
     | '/api/notifications'
+    | '/api/segment-translations'
     | '/api/translation-jobs'
     | '/$locale'
     | '/api/auth/$'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/$locale/terms'
     | '/api/locale-info'
     | '/api/notifications'
+    | '/api/segment-translations'
     | '/api/translation-jobs'
     | '/$locale/'
     | '/api/auth/$'
@@ -189,6 +201,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiLocaleInfoRoute: typeof ApiLocaleInfoRoute
   ApiNotificationsRoute: typeof ApiNotificationsRoute
+  ApiSegmentTranslationsRoute: typeof ApiSegmentTranslationsRoute
   ApiTranslationJobsRoute: typeof ApiTranslationJobsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   SitemapSitemapChar123idChar125DotxmlRoute: typeof SitemapSitemapChar123idChar125DotxmlRoute
@@ -266,6 +279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiNotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/segment-translations': {
+      id: '/api/segment-translations'
+      path: '/api/segment-translations'
+      fullPath: '/api/segment-translations'
+      preLoaderRoute: typeof ApiSegmentTranslationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/translation-jobs': {
       id: '/api/translation-jobs'
       path: '/api/translation-jobs'
@@ -314,6 +334,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiLocaleInfoRoute: ApiLocaleInfoRoute,
   ApiNotificationsRoute: ApiNotificationsRoute,
+  ApiSegmentTranslationsRoute: ApiSegmentTranslationsRoute,
   ApiTranslationJobsRoute: ApiTranslationJobsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   SitemapSitemapChar123idChar125DotxmlRoute:

@@ -1,4 +1,5 @@
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
+import { isSameOriginRequest } from "@/app/api/_utils/is-same-origin-request";
 import { markAllNotificationAsRead } from "./_db/mutations.server";
 import { fetchNotificationRowsWithRelations } from "./_db/queries.server";
 
@@ -13,8 +14,7 @@ export async function getNotifications(request: Request): Promise<Response> {
 export async function markNotificationsAsRead(
 	request: Request,
 ): Promise<Response> {
-	const origin = request.headers.get("origin");
-	if (origin && origin !== new URL(request.url).origin) {
+	if (!isSameOriginRequest(request)) {
 		return Response.json({ error: "Forbidden" }, { status: 403 });
 	}
 
