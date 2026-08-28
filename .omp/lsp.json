@@ -1,0 +1,9 @@
+{
+	"servers": {
+		"typescript-language-server": {
+			"command": "nix",
+			"args": ["develop", "--command", "typescript-language-server", "--stdio"],
+			"warmupTimeoutMs": 120000
+		}
+	}
+}

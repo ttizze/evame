@@ -1,3 +1,5 @@
+@AGENTS.md
+
 # AGENTS.md
 常に日本語で返答する｡
 
