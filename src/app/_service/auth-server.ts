@@ -1,14 +1,7 @@
 import { headers } from "next/headers";
 
-import { auth } from "@/auth";
-
-async function getSession() {
-	return await auth.api.getSession({
-		headers: await headers(),
-	});
-}
+import { getCurrentUserFromHeaders } from "./current-user";
 
 export async function getCurrentUser() {
-	const session = await getSession();
-	return session?.user ?? null;
+	return getCurrentUserFromHeaders(new Headers(await headers()));
 }

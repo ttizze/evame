@@ -18,6 +18,7 @@ import { Route as LocaleMaintenanceRouteImport } from './routes/$locale.maintena
 import { Route as LocalePrivacyRouteImport } from './routes/$locale.privacy'
 import { Route as LocaleTermsRouteImport } from './routes/$locale.terms'
 import { Route as ApiLocaleInfoRouteImport } from './routes/api/locale-info'
+import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
 import { Route as ApiTranslationJobsRouteImport } from './routes/api/translation-jobs'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as SitemapSitemapChar123idChar125DotxmlRouteImport } from './routes/sitemap/sitemap/{$id}[.]xml'
@@ -67,6 +68,11 @@ const ApiLocaleInfoRoute = ApiLocaleInfoRouteImport.update({
   path: '/api/locale-info',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiNotificationsRoute = ApiNotificationsRouteImport.update({
+  id: '/api/notifications',
+  path: '/api/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTranslationJobsRoute = ApiTranslationJobsRouteImport.update({
   id: '/api/translation-jobs',
   path: '/api/translation-jobs',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
+  '/api/notifications': typeof ApiNotificationsRoute
   '/api/translation-jobs': typeof ApiTranslationJobsRoute
   '/$locale/': typeof LocaleIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
+  '/api/notifications': typeof ApiNotificationsRoute
   '/api/translation-jobs': typeof ApiTranslationJobsRoute
   '/$locale': typeof LocaleIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
+  '/api/notifications': typeof ApiNotificationsRoute
   '/api/translation-jobs': typeof ApiTranslationJobsRoute
   '/$locale/': typeof LocaleIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/$locale/privacy'
     | '/$locale/terms'
     | '/api/locale-info'
+    | '/api/notifications'
     | '/api/translation-jobs'
     | '/$locale/'
     | '/api/auth/$'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/$locale/privacy'
     | '/$locale/terms'
     | '/api/locale-info'
+    | '/api/notifications'
     | '/api/translation-jobs'
     | '/$locale'
     | '/api/auth/$'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/$locale/privacy'
     | '/$locale/terms'
     | '/api/locale-info'
+    | '/api/notifications'
     | '/api/translation-jobs'
     | '/$locale/'
     | '/api/auth/$'
@@ -176,6 +188,7 @@ export interface RootRouteChildren {
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiLocaleInfoRoute: typeof ApiLocaleInfoRoute
+  ApiNotificationsRoute: typeof ApiNotificationsRoute
   ApiTranslationJobsRoute: typeof ApiTranslationJobsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   SitemapSitemapChar123idChar125DotxmlRoute: typeof SitemapSitemapChar123idChar125DotxmlRoute
@@ -246,6 +259,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiLocaleInfoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/notifications': {
+      id: '/api/notifications'
+      path: '/api/notifications'
+      fullPath: '/api/notifications'
+      preLoaderRoute: typeof ApiNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/translation-jobs': {
       id: '/api/translation-jobs'
       path: '/api/translation-jobs'
@@ -293,6 +313,7 @@ const rootRouteChildren: RootRouteChildren = {
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiLocaleInfoRoute: ApiLocaleInfoRoute,
+  ApiNotificationsRoute: ApiNotificationsRoute,
   ApiTranslationJobsRoute: ApiTranslationJobsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   SitemapSitemapChar123idChar125DotxmlRoute:
