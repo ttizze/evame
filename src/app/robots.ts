@@ -8,7 +8,7 @@ const CHUNK = 1_000;
  * robots.txt generator.
  * Lists all generated sitemap chunk files: /sitemap/[id].xml  →  /sitemap/0.xml, /sitemap/1.xml, ...
  */
-export default async function robots(): Promise<MetadataRoute.Robots> {
+export default async function robots() {
 	const total = await countPublicPages();
 	// 少なくとも 1 本は出す（/sitemap/sitemap/0.xml）
 	const chunks = Math.max(1, Math.ceil(total / CHUNK));
@@ -23,7 +23,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
 			allow: "/",
 		},
 		sitemap: sitemaps,
-	};
+	} satisfies MetadataRoute.Robots;
 }
 
 export const revalidate = 36000;

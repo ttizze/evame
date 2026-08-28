@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LocaleRouteImport } from './routes/$locale'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as LocaleIndexRouteImport } from './routes/$locale.index'
 import { Route as LocaleMaintenanceRouteImport } from './routes/$locale.maintenance'
 import { Route as LocalePrivacyRouteImport } from './routes/$locale.privacy'
@@ -27,6 +28,11 @@ const IndexRoute = IndexRouteImport.update({
 const LocaleRoute = LocaleRouteImport.update({
   id: '/$locale',
   path: '/$locale',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LocaleIndexRoute = LocaleIndexRouteImport.update({
@@ -68,6 +74,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$locale': typeof LocaleRouteWithChildren
+  '/robots.txt': typeof RobotsDottxtRoute
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
@@ -90,6 +98,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$locale': typeof LocaleRouteWithChildren
+  '/robots.txt': typeof RobotsDottxtRoute
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$locale'
+    | '/robots.txt'
     | '/$locale/maintenance'
     | '/$locale/privacy'
     | '/$locale/terms'
@@ -113,6 +123,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/robots.txt'
     | '/$locale/maintenance'
     | '/$locale/privacy'
     | '/$locale/terms'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$locale'
+    | '/robots.txt'
     | '/$locale/maintenance'
     | '/$locale/privacy'
     | '/$locale/terms'
@@ -136,6 +148,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LocaleRoute: typeof LocaleRouteWithChildren
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   ApiLocaleInfoRoute: typeof ApiLocaleInfoRoute
   ApiTranslationJobsRoute: typeof ApiTranslationJobsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -155,6 +168,13 @@ declare module '@tanstack/react-router' {
       path: '/$locale'
       fullPath: '/$locale'
       preLoaderRoute: typeof LocaleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$locale/': {
@@ -229,6 +249,7 @@ const LocaleRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LocaleRoute: LocaleRouteWithChildren,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   ApiLocaleInfoRoute: ApiLocaleInfoRoute,
   ApiTranslationJobsRoute: ApiTranslationJobsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
