@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LocaleRouteImport } from './routes/$locale'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as LocaleIndexRouteImport } from './routes/$locale.index'
 import { Route as LocaleMaintenanceRouteImport } from './routes/$locale.maintenance'
 import { Route as LocalePrivacyRouteImport } from './routes/$locale.privacy'
@@ -19,6 +20,7 @@ import { Route as LocaleTermsRouteImport } from './routes/$locale.terms'
 import { Route as ApiLocaleInfoRouteImport } from './routes/api/locale-info'
 import { Route as ApiTranslationJobsRouteImport } from './routes/api/translation-jobs'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as SitemapSitemapChar123idChar125DotxmlRouteImport } from './routes/sitemap/sitemap/{$id}[.]xml'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -33,6 +35,11 @@ const LocaleRoute = LocaleRouteImport.update({
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LocaleIndexRoute = LocaleIndexRouteImport.update({
@@ -70,11 +77,18 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SitemapSitemapChar123idChar125DotxmlRoute =
+  SitemapSitemapChar123idChar125DotxmlRouteImport.update({
+    id: '/sitemap/sitemap/{$id}.xml',
+    path: '/sitemap/sitemap/{$id}.xml',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$locale': typeof LocaleRouteWithChildren
   '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
@@ -82,10 +96,12 @@ export interface FileRoutesByFullPath {
   '/api/translation-jobs': typeof ApiTranslationJobsRoute
   '/$locale/': typeof LocaleIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/sitemap/sitemap/{$id}.xml': typeof SitemapSitemapChar123idChar125DotxmlRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
@@ -93,12 +109,14 @@ export interface FileRoutesByTo {
   '/api/translation-jobs': typeof ApiTranslationJobsRoute
   '/$locale': typeof LocaleIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/sitemap/sitemap/{$id}.xml': typeof SitemapSitemapChar123idChar125DotxmlRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$locale': typeof LocaleRouteWithChildren
   '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
@@ -106,6 +124,7 @@ export interface FileRoutesById {
   '/api/translation-jobs': typeof ApiTranslationJobsRoute
   '/$locale/': typeof LocaleIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
+  '/sitemap/sitemap/{$id}.xml': typeof SitemapSitemapChar123idChar125DotxmlRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -113,6 +132,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$locale'
     | '/robots.txt'
+    | '/sitemap.xml'
     | '/$locale/maintenance'
     | '/$locale/privacy'
     | '/$locale/terms'
@@ -120,10 +140,12 @@ export interface FileRouteTypes {
     | '/api/translation-jobs'
     | '/$locale/'
     | '/api/auth/$'
+    | '/sitemap/sitemap/{$id}.xml'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/robots.txt'
+    | '/sitemap.xml'
     | '/$locale/maintenance'
     | '/$locale/privacy'
     | '/$locale/terms'
@@ -131,11 +153,13 @@ export interface FileRouteTypes {
     | '/api/translation-jobs'
     | '/$locale'
     | '/api/auth/$'
+    | '/sitemap/sitemap/{$id}.xml'
   id:
     | '__root__'
     | '/'
     | '/$locale'
     | '/robots.txt'
+    | '/sitemap.xml'
     | '/$locale/maintenance'
     | '/$locale/privacy'
     | '/$locale/terms'
@@ -143,15 +167,18 @@ export interface FileRouteTypes {
     | '/api/translation-jobs'
     | '/$locale/'
     | '/api/auth/$'
+    | '/sitemap/sitemap/{$id}.xml'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LocaleRoute: typeof LocaleRouteWithChildren
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiLocaleInfoRoute: typeof ApiLocaleInfoRoute
   ApiTranslationJobsRoute: typeof ApiTranslationJobsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  SitemapSitemapChar123idChar125DotxmlRoute: typeof SitemapSitemapChar123idChar125DotxmlRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -175,6 +202,13 @@ declare module '@tanstack/react-router' {
       path: '/robots.txt'
       fullPath: '/robots.txt'
       preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$locale/': {
@@ -226,6 +260,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sitemap/sitemap/{$id}.xml': {
+      id: '/sitemap/sitemap/{$id}.xml'
+      path: '/sitemap/sitemap/{$id}.xml'
+      fullPath: '/sitemap/sitemap/{$id}.xml'
+      preLoaderRoute: typeof SitemapSitemapChar123idChar125DotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -250,9 +291,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LocaleRoute: LocaleRouteWithChildren,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiLocaleInfoRoute: ApiLocaleInfoRoute,
   ApiTranslationJobsRoute: ApiTranslationJobsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
+  SitemapSitemapChar123idChar125DotxmlRoute:
+    SitemapSitemapChar123idChar125DotxmlRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

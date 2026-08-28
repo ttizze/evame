@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import { BASE_URL } from "@/app/_constants/base-url";
 import { countPublicPages } from "@/app/_db/sitemap-queries.server";
 
@@ -28,7 +27,7 @@ export async function GET() {
       ${sitemapItems}
     </sitemapindex>`;
 
-	return new NextResponse(xml, {
+	return new Response(xml, {
 		headers: {
 			"Content-Type": "application/xml",
 			"Cache-Control": SITEMAP_INDEX_CACHE_CONTROL,

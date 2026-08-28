@@ -19,11 +19,7 @@ export async function generateSitemaps() {
 	return Array.from({ length: chunks }, (_, id) => ({ id }));
 }
 
-export default async function sitemap({
-	id,
-}: {
-	id: Promise<number>;
-}): Promise<MetadataRoute.Sitemap> {
+export default async function sitemap({ id }: { id: Promise<number> }) {
 	const resolvedId = await id;
 	const offset = resolvedId * CHUNK;
 	const pages = await fetchPagesWithUserAndTranslationChunk({
@@ -85,7 +81,9 @@ export default async function sitemap({
 			},
 		};
 	});
-	return resolvedId === 0
-		? [...staticRoutes, ...tagRoutes, ...pageRoutes]
-		: pageRoutes;
+	return (
+		resolvedId === 0
+			? [...staticRoutes, ...tagRoutes, ...pageRoutes]
+			: pageRoutes
+	) satisfies MetadataRoute.Sitemap;
 }
