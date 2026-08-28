@@ -1,14 +1,12 @@
-import Image from "next/image";
-import { Link } from "@/i18n/routing";
 import { HeaderScroll } from "./header-scroll.client";
 import { HeaderUserSlot } from "./user-slot.client";
 
-export function Header() {
+export function Header({ locale }: { locale: string }) {
 	return (
 		<HeaderScroll>
 			<div className="flex items-center gap-4">
-				<Link className="flex items-center" href="/">
-					<Image
+				<a className="flex items-center" href={`/${locale}`}>
+					<img
 						alt="Evame"
 						aria-label="Evame Logo"
 						className="h-8 w-8 dark:invert md:hidden"
@@ -16,7 +14,7 @@ export function Header() {
 						src="/favicon.svg"
 						width={32}
 					/>
-					<Image
+					<img
 						alt="Evame"
 						aria-label="Evame Logo"
 						className="h-8 w-20 dark:invert hidden md:block"
@@ -24,7 +22,7 @@ export function Header() {
 						src="/logo.svg"
 						width={80}
 					/>
-				</Link>
+				</a>
 			</div>
 			<div className="flex items-center gap-4">
 				<HeaderUserSlot />
