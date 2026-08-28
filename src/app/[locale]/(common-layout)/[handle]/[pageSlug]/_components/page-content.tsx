@@ -1,7 +1,7 @@
 import { EyeIcon } from "lucide-react";
 import { BASE_URL } from "@/app/_constants/base-url";
-import { fetchPageCounts } from "@/app/[locale]/_db/fetch-page-detail.server";
 import { fetchPageViewCount } from "@/app/[locale]/_db/page-utility-queries.server";
+import { fetchPageCounts } from "@/app/[locale]/_db/queries";
 import { mdastToText } from "@/app/[locale]/_domain/mdast-to-text";
 import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
