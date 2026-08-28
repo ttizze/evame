@@ -12,11 +12,6 @@ import { NotificationsDropdownClient } from "./client";
 
 vi.mock("swr", () => ({ default: vi.fn() }));
 
-// Mock the action to avoid triggering real server code
-vi.mock("./action", () => ({
-	markNotificationAsReadAction: vi.fn(async () => ({ success: true })),
-}));
-
 // Mock routing's Link to a simple anchor to avoid Next/intl runtime
 vi.mock("@/i18n/routing", () => ({
 	Link: ({
@@ -30,8 +25,6 @@ vi.mock("@/i18n/routing", () => ({
 	),
 }));
 
-// Keep next/cache mocked if any code path references it
-vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 const sampleNotifications: NotificationRowsWithRelations[] = [
 	{
 		id: 2,
@@ -82,6 +75,10 @@ const user = userEvent.setup();
 describe("NotificationsDropdownClient", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => Response.json({ success: true })),
+		);
 	});
 
 	it("ベルアイコンと未読数バッジが表示される", async () => {

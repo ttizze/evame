@@ -2,10 +2,8 @@
 
 import { Bell, Loader2 } from "lucide-react";
 import { getImageProps } from "next/image";
-import { startTransition, useActionState } from "react";
 import useSWR from "swr";
 import type { NotificationRowsWithRelations } from "@/app/api/notifications/_types/notification";
-import type { ActionResponse } from "@/app/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -14,16 +12,11 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
-import { markNotificationAsReadAction } from "./action";
 export function NotificationsDropdownClient({
 	currentUserHandle,
 }: {
 	currentUserHandle: string;
 }) {
-	const [_markNotificationAsReadResponse, action, _isPending] = useActionState<
-		ActionResponse,
-		FormData
-	>(markNotificationAsReadAction, { success: false });
 	const { data, isLoading, mutate } = useSWR<{
 		notifications: NotificationRowsWithRelations[];
 	}>(
@@ -36,8 +29,13 @@ export function NotificationsDropdownClient({
 
 	const handleClick = (open: boolean) => {
 		if (open) {
-			startTransition(() => {
-				action(new FormData());
+			void fetch("/api/notifications", {
+				method: "POST",
+				credentials: "include",
+			}).then((response) => {
+				if (response.status === 401) {
+					window.location.assign("/auth/login");
+				}
 			});
 			mutate(
 				(prev) => {
