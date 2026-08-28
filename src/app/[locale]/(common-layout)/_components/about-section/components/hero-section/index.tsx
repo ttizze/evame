@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
@@ -41,8 +40,8 @@ export default function HeroSection({
 					<StartButton
 						className="w-64 h-16 text-lg shadow-[0_18px_45px_rgba(15,23,42,0.18)]"
 						icon={
-							<Image
-								alt="Hero section image"
+							<img
+								alt=""
 								className="invert dark:invert-0"
 								height={14}
 								src="/favicon.svg"

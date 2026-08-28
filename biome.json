@@ -40,6 +40,9 @@
 				"noUnusedImports": { "level": "warn", "fix": "safe" },
 				"useUniqueElementIds": "off"
 			},
+			"performance": {
+				"noImgElement": "off"
+			},
 			"style": {
 				"noNonNullAssertion": "off"
 			}

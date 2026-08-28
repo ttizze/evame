@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -66,7 +65,7 @@ export function SpreadAnimation() {
 						}
 					>
 						<div className="z-10 flex items-center justify-center w-9 h-9 rounded-full border overflow-hidden bg-white transition-transform duration-150 hover:scale-110">
-							<Image
+							<img
 								alt={`${lang.name} flag`}
 								className="object-cover w-full h-full"
 								height={36}
