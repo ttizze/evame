@@ -5,7 +5,7 @@ import { useHydrated } from "@/app/_hooks/use-hydrated";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { LoginDialog } from "./login/_components/login-dialog.client";
+import { LoginDialog } from "./login/_components/login-dialog";
 
 interface StartButtonProps {
 	className?: string;

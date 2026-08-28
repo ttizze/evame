@@ -1,4 +1,4 @@
-import { FloatingControls } from "../floating-controls/floating-controls.client";
+import type { ReactNode } from "react";
 import type { fetchSocialProofStats } from "./_db/social-proof-stats.server";
 import ComparisonSection from "./components/comparison-section";
 import FAQSection from "./components/faq-section";
@@ -17,10 +17,14 @@ export default function AboutSectionPresentation({
 	locale,
 	pageDetail,
 	stats,
+	readControls,
+	floatingControls,
 }: {
 	locale: string;
 	pageDetail: Awaited<ReturnType<typeof fetchAboutPage>>;
 	stats: Awaited<ReturnType<typeof fetchSocialProofStats>>;
+	readControls: ReactNode;
+	floatingControls: ReactNode;
 }) {
 	return (
 		<div className="about-section flex flex-col space-y-16 md:space-y-24">
@@ -31,11 +35,15 @@ export default function AboutSectionPresentation({
 			<WriteFeature pageDetail={pageDetail} />
 			<ReachFeature pageDetail={pageDetail} />
 			<RefineFeature locale={locale} pageDetail={pageDetail} />
-			<ReadFeature locale={locale} pageDetail={pageDetail} />
+			<ReadFeature
+				controls={readControls}
+				locale={locale}
+				pageDetail={pageDetail}
+			/>
 			<ComparisonSection pageDetail={pageDetail} />
 			<FAQSection pageDetail={pageDetail} />
 			<FinalCTA pageDetail={pageDetail} />
-			<FloatingControls sourceLocale="mixed" userLocale={locale} />
+			{floatingControls}
 		</div>
 	);
 }

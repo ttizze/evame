@@ -26,8 +26,19 @@ export default async function AboutSection({
 
 	return (
 		<AboutSectionPresentation
+			floatingControls={
+				<FloatingControls sourceLocale="mixed" userLocale={locale} />
+			}
 			locale={locale}
 			pageDetail={pageDetail}
+			readControls={
+				<FloatingControls
+					alwaysVisible={true}
+					position="w-full flex justify-center"
+					sourceLocale={pageDetail.sourceLocale}
+					userLocale={locale}
+				/>
+			}
 			stats={stats}
 		/>
 	);

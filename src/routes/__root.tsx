@@ -29,9 +29,11 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: ReactNode }) {
 	const locale = useRouterState({
-		select: (state) =>
-			state.matches.find((match) => match.routeId === "/$locale")?.params
-				.locale ?? "en",
+		select: (state) => {
+			const locale = state.matches.find((match) => match.routeId === "/$locale")
+				?.params.locale;
+			return typeof locale === "string" ? locale : "en";
+		},
 	});
 	const direction = locale === "ar" || locale === "fa" ? "rtl" : "ltr";
 

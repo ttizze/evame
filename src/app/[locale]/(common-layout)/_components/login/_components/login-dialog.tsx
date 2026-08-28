@@ -11,8 +11,8 @@ import {
 	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { GoogleForm } from "./google-form.client";
-import { MagicLinkForm } from "./magic-link-form.client";
+import { GoogleForm } from "./google-form";
+import { MagicLinkForm } from "./magic-link-form";
 
 interface LoginDialogProps {
 	/**

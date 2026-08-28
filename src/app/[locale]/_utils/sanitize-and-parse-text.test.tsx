@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { sanitizeAndParseText } from "./sanitize-and-parse-text.server";
+import { sanitizeAndParseText } from "./sanitize-and-parse-text";
 
 describe("sanitizeAndParseText", () => {
 	test("改行を <br> に変換して描画する", () => {

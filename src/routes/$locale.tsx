@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getCookie, setCookie } from "@tanstack/react-start/server";
 import { NextIntlClientProvider } from "next-intl";
 import { ThemeProvider } from "next-themes";
+import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { Toaster } from "@/components/ui/sonner";
 import enMessages from "../../messages/en.json";
@@ -49,10 +50,12 @@ function LocaleShell() {
 
 	return (
 		<NextIntlClientProvider locale={locale} messages={localeMessages}>
-			<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-				<Outlet />
-				<Toaster closeButton richColors />
-			</ThemeProvider>
+			<NuqsAdapter>
+				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+					<Outlet />
+					<Toaster closeButton richColors />
+				</ThemeProvider>
+			</NuqsAdapter>
 		</NextIntlClientProvider>
 	);
 }

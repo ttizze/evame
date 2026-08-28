@@ -1,6 +1,6 @@
+import type { ReactNode } from "react";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-import { FloatingControls } from "../../../floating-controls/floating-controls.client";
 import type { fetchAboutPage } from "../../service/fetch-about-page";
 import { FeatureSection, selectFeatureHeaderAndText } from "./feature-section";
 
@@ -15,9 +15,11 @@ const READ_HINT: Record<string, string> = {
 export default function ReadFeature({
 	locale,
 	pageDetail,
+	controls,
 }: {
 	locale: string;
 	pageDetail: Awaited<ReturnType<typeof fetchAboutPage>>;
+	controls: ReactNode;
 }) {
 	const featureContent = selectFeatureHeaderAndText({
 		pageDetail,
@@ -34,14 +36,7 @@ export default function ReadFeature({
 			direction="reverse"
 			header={<SegmentElement segment={header} tagName="span" />}
 			hint={READ_HINT[locale] ?? READ_HINT.en}
-			panel={
-				<FloatingControls
-					alwaysVisible={true}
-					position="w-full flex justify-center"
-					sourceLocale={pageDetail.sourceLocale}
-					userLocale={locale}
-				/>
-			}
+			panel={controls}
 			text={<SegmentElement segment={text} tagName="span" />}
 		/>
 	);
