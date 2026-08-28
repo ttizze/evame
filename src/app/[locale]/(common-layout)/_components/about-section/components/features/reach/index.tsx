@@ -1,11 +1,16 @@
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-import { FeatureSection, fetchFeatureHeaderAndText } from "../feature-section";
+import type { fetchAboutPage } from "../../../service/fetch-about-page";
+import { FeatureSection, selectFeatureHeaderAndText } from "../feature-section";
 import { SpreadAnimation } from "./spread-animation";
 
-export default async function ReachFeature({ locale }: { locale: string }) {
-	const featureContent = await fetchFeatureHeaderAndText({
-		locale,
+export default function ReachFeature({
+	pageDetail,
+}: {
+	pageDetail: Awaited<ReturnType<typeof fetchAboutPage>>;
+}) {
+	const featureContent = selectFeatureHeaderAndText({
+		pageDetail,
 		headerNumber: SEGMENT_NUMBER.reachHeader,
 		textNumber: SEGMENT_NUMBER.reachText,
 	});

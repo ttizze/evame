@@ -1,11 +1,18 @@
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-import { fetchSocialProofStats } from "../_db/social-proof-stats.server";
-import { fetchAboutPage } from "../service/fetch-about-page";
+import type { fetchSocialProofStats } from "../_db/social-proof-stats.server";
+import type { fetchAboutPage } from "../service/fetch-about-page";
 import { AboutSectionContent } from "./layout";
 
-export default async function SocialProofBar({ locale }: { locale: string }) {
-	const pageDetail = await fetchAboutPage(locale);
+export default function SocialProofBar({
+	locale,
+	pageDetail,
+	stats,
+}: {
+	locale: string;
+	pageDetail: Awaited<ReturnType<typeof fetchAboutPage>>;
+	stats: Awaited<ReturnType<typeof fetchSocialProofStats>>;
+}) {
 	const articlesLabel = pageDetail.segments.find(
 		(segment) => segment.number === SEGMENT_NUMBER.socialProofArticles,
 	);
@@ -20,7 +27,6 @@ export default async function SocialProofBar({ locale }: { locale: string }) {
 		return null;
 	}
 
-	const stats = await fetchSocialProofStats();
 	const formatNumber = new Intl.NumberFormat(locale);
 	const items = [
 		{ label: articlesLabel, value: stats.articles },

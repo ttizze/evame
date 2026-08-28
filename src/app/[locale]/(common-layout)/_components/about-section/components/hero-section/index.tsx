@@ -2,15 +2,18 @@ import Image from "next/image";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-import { fetchAboutPage } from "../../service/fetch-about-page";
+import type { fetchAboutPage } from "../../service/fetch-about-page";
 import { HeroRays } from "./hero-rays";
 
-export default async function HeroSection({ locale }: { locale: string }) {
-	const topPageDetail = await fetchAboutPage(locale);
-	const title = topPageDetail.segments.find(
+export default function HeroSection({
+	pageDetail,
+}: {
+	pageDetail: Awaited<ReturnType<typeof fetchAboutPage>>;
+}) {
+	const title = pageDetail.segments.find(
 		(segment) => segment.number === SEGMENT_NUMBER.heroHeader,
 	);
-	const text = topPageDetail.segments.find(
+	const text = pageDetail.segments.find(
 		(segment) => segment.number === SEGMENT_NUMBER.heroDetail,
 	);
 

@@ -1,7 +1,8 @@
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
 import { FloatingControls } from "../../../floating-controls/floating-controls.client";
-import { FeatureSection, fetchFeatureHeaderAndText } from "./feature-section";
+import type { fetchAboutPage } from "../../service/fetch-about-page";
+import { FeatureSection, selectFeatureHeaderAndText } from "./feature-section";
 
 const READ_HINT: Record<string, string> = {
 	ja: "表示を切り替えてみる ↓",
@@ -11,15 +12,21 @@ const READ_HINT: Record<string, string> = {
 	es: "Prueba cambiar la vista ↓",
 };
 
-export default async function ReadFeature({ locale }: { locale: string }) {
-	const featureContent = await fetchFeatureHeaderAndText({
-		locale,
+export default function ReadFeature({
+	locale,
+	pageDetail,
+}: {
+	locale: string;
+	pageDetail: Awaited<ReturnType<typeof fetchAboutPage>>;
+}) {
+	const featureContent = selectFeatureHeaderAndText({
+		pageDetail,
 		headerNumber: SEGMENT_NUMBER.readHeader,
 		textNumber: SEGMENT_NUMBER.readText,
 	});
 
 	if (!featureContent) return null;
-	const { pageDetail, header, text } = featureContent;
+	const { header, text } = featureContent;
 
 	return (
 		<FeatureSection

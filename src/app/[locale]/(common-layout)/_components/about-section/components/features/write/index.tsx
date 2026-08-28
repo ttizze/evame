@@ -1,11 +1,16 @@
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-import { FeatureSection, fetchFeatureHeaderAndText } from "../feature-section";
+import type { fetchAboutPage } from "../../../service/fetch-about-page";
+import { FeatureSection, selectFeatureHeaderAndText } from "../feature-section";
 import { WriteCardUI } from "./card-ui";
 
-export default async function WriteFeature({ locale }: { locale: string }) {
-	const featureContent = await fetchFeatureHeaderAndText({
-		locale,
+export default function WriteFeature({
+	pageDetail,
+}: {
+	pageDetail: Awaited<ReturnType<typeof fetchAboutPage>>;
+}) {
+	const featureContent = selectFeatureHeaderAndText({
+		pageDetail,
 		headerNumber: SEGMENT_NUMBER.writeHeader,
 		textNumber: SEGMENT_NUMBER.writeText,
 	});

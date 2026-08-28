@@ -1,20 +1,19 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { fetchAboutPage } from "../../service/fetch-about-page";
+import type { fetchAboutPage } from "../../service/fetch-about-page";
 import { ABOUT_FEATURE_BASE_CLASS, ABOUT_FEATURE_PANEL_CLASS } from "../layout";
 
 type FeatureDirection = "default" | "reverse";
 
-export async function fetchFeatureHeaderAndText({
-	locale,
+export function selectFeatureHeaderAndText({
+	pageDetail,
 	headerNumber,
 	textNumber,
 }: {
-	locale: string;
+	pageDetail: Awaited<ReturnType<typeof fetchAboutPage>>;
 	headerNumber: number;
 	textNumber: number;
 }) {
-	const pageDetail = await fetchAboutPage(locale);
 	const header = pageDetail.segments.find(
 		(segment) => segment.number === headerNumber,
 	);
@@ -26,7 +25,7 @@ export async function fetchFeatureHeaderAndText({
 		return null;
 	}
 
-	return { pageDetail, header, text };
+	return { header, text };
 }
 
 export function FeatureSection({
