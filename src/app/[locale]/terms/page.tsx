@@ -1,7 +1,4 @@
-import type { Metadata, Route } from "next";
-import Link from "next/link";
-
-export const metadata: Metadata = {
+export const metadata = {
 	title: "Terms of Service | Evame",
 	description:
 		"Evame Terms of Service. Learn about user responsibilities, content licensing, and platform usage guidelines.",
@@ -19,9 +16,9 @@ export default function TermsPage() {
 						These Terms of Service (“Terms”) govern your access to and use of
 						Evame (the “Service”). By clicking “I agree” or using the Service,
 						you accept these Terms and our{" "}
-						<Link className="text-blue-600" href="/privacy-policy">
+						<a className="text-blue-600" href="/privacy-policy">
 							Privacy Policy
-						</Link>
+						</a>
 						.
 					</p>
 					<p className="text-sm">
@@ -207,9 +204,9 @@ export default function TermsPage() {
 				</section>
 
 				<div className="mt-8">
-					<Link className="text-blue-600 hover:underline" href={"/" as Route}>
+					<a className="text-blue-600 hover:underline" href="/">
 						Return to Home
-					</Link>
+					</a>
 				</div>
 			</main>
 		</div>

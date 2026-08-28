@@ -1,7 +1,4 @@
-import type { Metadata, Route } from "next";
-import Link from "next/link";
-
-export const metadata: Metadata = {
+export const metadata = {
 	title: "Privacy Policy | Evame",
 	description:
 		"Evame Privacy Policy. Learn how we collect, use, and protect your personal data.",
@@ -188,9 +185,9 @@ export default function PrivacyPolicyPage() {
 				</section>
 
 				<div className="mt-8">
-					<Link className="text-blue-600 hover:underline" href={"/" as Route}>
+					<a className="text-blue-600 hover:underline" href="/">
 						Return to Home
-					</Link>
+					</a>
 				</div>
 			</main>
 		</div>
