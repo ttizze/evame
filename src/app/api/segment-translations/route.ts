@@ -1,5 +1,6 @@
 import { revalidateTag } from "next/cache";
 import {
+	deleteSegmentTranslation,
 	getSegmentTranslations,
 	patchSegmentTranslationVote,
 	postSegmentTranslation,
@@ -22,6 +23,14 @@ export async function PATCH(request: Request): Promise<Response> {
 	const result = await patchSegmentTranslationVote(request);
 	if (result.pageId !== undefined) {
 		// updateTag is limited to Server Actions; expire: 0 gives this route the same immediate invalidation.
+		revalidateTag(`page:${result.pageId}`, { expire: 0 });
+	}
+	return result.response;
+}
+
+export async function DELETE(request: Request): Promise<Response> {
+	const result = await deleteSegmentTranslation(request);
+	if (result.pageId !== undefined) {
 		revalidateTag(`page:${result.pageId}`, { expire: 0 });
 	}
 	return result.response;

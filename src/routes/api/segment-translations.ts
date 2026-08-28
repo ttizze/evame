@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
+	deleteSegmentTranslation,
 	getSegmentTranslations,
 	patchSegmentTranslationVote,
 	postSegmentTranslation,
@@ -13,6 +14,8 @@ export const Route = createFileRoute("/api/segment-translations")({
 				(await postSegmentTranslation(request)).response,
 			PATCH: async ({ request }) =>
 				(await patchSegmentTranslationVote(request)).response,
+			DELETE: async ({ request }) =>
+				(await deleteSegmentTranslation(request)).response,
 		},
 	},
 });

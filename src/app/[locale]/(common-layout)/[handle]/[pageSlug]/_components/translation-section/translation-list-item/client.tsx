@@ -1,11 +1,10 @@
 "use client";
 import { EllipsisVertical, Trash2 } from "lucide-react";
-import { useActionState } from "react";
+import { type FormEvent, useState } from "react";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { sanitizeAndParseText } from "@/app/[locale]/_utils/sanitize-and-parse-text.client";
 import type { SegmentTranslation } from "@/app/api/segment-translations/_domain/segment-translations";
-import type { ActionResponse } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -15,7 +14,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link } from "@/i18n/routing";
 import { VoteButtons } from "../vote-buttons/client";
-import { deleteTranslationAction } from "./action";
 
 interface TranslationItemProps {
 	translation: SegmentTranslation;
@@ -29,21 +27,35 @@ export function TranslationListItem({
 	onDeleted,
 }: TranslationItemProps) {
 	const hydrated = useHydrated();
-	const [_deleteTranslationState, action, isDeletingTranslation] =
-		useActionState(
-			async (_prev: ActionResponse, formData: FormData) => {
-				const res = await deleteTranslationAction(_prev, formData);
-				if (res.success) {
-					onDeleted?.();
-				}
-				return res;
-			},
-			{ success: false },
-		);
+	const [isDeletingTranslation, setIsDeletingTranslation] = useState(false);
 
 	const { data: session } = authClient.useSession();
 	const currentUser = hydrated ? session?.user : undefined;
 	const isOwner = currentUser?.handle === translation.userHandle;
+
+	const handleDelete = async (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		setIsDeletingTranslation(true);
+
+		try {
+			const response = await fetch("/api/segment-translations", {
+				method: "DELETE",
+				body: new FormData(event.currentTarget),
+				credentials: "same-origin",
+			});
+
+			if (response.status === 401) {
+				window.location.assign("/auth/login");
+				return;
+			}
+
+			if (response.ok) {
+				onDeleted?.();
+			}
+		} finally {
+			setIsDeletingTranslation(false);
+		}
+	};
 
 	return (
 		<span className="pl-4 mt-1 block">
@@ -60,7 +72,7 @@ export function TranslationListItem({
 							</Button>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end" className="w-48">
-							<form action={action}>
+							<form onSubmit={handleDelete}>
 								<input
 									name="translationId"
 									type="hidden"

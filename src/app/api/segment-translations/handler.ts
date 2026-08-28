@@ -9,6 +9,7 @@ import {
 } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-section/vote-buttons/db/mutation.server";
 import { isSameOriginRequest } from "@/app/api/_utils/is-same-origin-request";
 import { db } from "@/db";
+import { deleteOwnTranslation } from "./_db/mutations.server";
 import { segmentTranslationSchema } from "./_domain/segment-translations";
 
 const getSchema = z.object({
@@ -29,6 +30,10 @@ const postSchema = z.object({
 const patchSchema = z.object({
 	segmentTranslationId: z.coerce.number().int(),
 	isUpvote: z.string().transform((val) => val === "true"),
+});
+
+const deleteSchema = z.object({
+	translationId: z.coerce.number(),
 });
 
 export async function getSegmentTranslations(
@@ -208,6 +213,56 @@ export async function patchSegmentTranslationVote(request: Request) {
 	const pageId = await findPageIdBySegmentTranslationId(segmentTranslationId);
 	return {
 		response: Response.json({ success: true, data: result.data }),
+		pageId,
+	};
+}
+
+export async function deleteSegmentTranslation(request: Request) {
+	if (!isSameOriginRequest(request)) {
+		return {
+			response: Response.json({ error: "Forbidden" }, { status: 403 }),
+		};
+	}
+
+	const currentUser = await getCurrentUserFromHeaders(request.headers);
+	if (!currentUser) {
+		return {
+			response: Response.json({ error: "Unauthorized" }, { status: 401 }),
+		};
+	}
+
+	let formData: FormData;
+	try {
+		formData = await request.formData();
+	} catch {
+		return {
+			response: Response.json(
+				{ success: false, message: "Invalid form data" },
+				{ status: 400 },
+			),
+		};
+	}
+
+	const parsed = await parseFormData(deleteSchema, formData);
+	if (!parsed.success) {
+		return {
+			response: Response.json(
+				{
+					success: false,
+					zodErrors: parsed.error.flatten().fieldErrors,
+				},
+				{ status: 400 },
+			),
+		};
+	}
+
+	const { translationId } = parsed.data;
+	// Resolve page info BEFORE deletion, matching the former Server Action.
+	const pageId = await findPageIdBySegmentTranslationId(translationId);
+	await deleteOwnTranslation(currentUser.handle, translationId);
+
+	return {
+		response: Response.json({ success: true }),
 		pageId,
 	};
 }
