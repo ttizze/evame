@@ -5,6 +5,12 @@
 Evame is a project for sharing user-submitted texts with translations, annotations, and explanations.
 
 ## Quick start (development)
+Run all project toolchain commands below inside `nix develop`.
+Supported systems are Apple silicon macOS and aarch64/x86_64 Linux. Intel macOS is unsupported because the pinned nixpkgs release no longer supports `x86_64-darwin`.
+
+```bash
+nix develop
+```
 
 1. Install dependencies
    ```bash

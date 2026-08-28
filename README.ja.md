@@ -5,6 +5,12 @@
 Evame は、ユーザー投稿テキストに翻訳・注釈・解説を付けて共有するためのプロジェクトです。
 
 ## 最短で動かす（開発）
+以降のプロジェクトツールチェーンコマンドは、すべて `nix develop` 内で実行してください。
+対応環境は Apple silicon macOS と aarch64/x86_64 Linux です。Intel Mac は、固定している nixpkgs が `x86_64-darwin` のサポートを終了したため非対応です。
+
+```bash
+nix develop
+```
 
 1. 依存関係をインストール
    ```bash
