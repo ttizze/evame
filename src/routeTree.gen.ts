@@ -15,6 +15,7 @@ import { Route as LocaleIndexRouteImport } from './routes/$locale.index'
 import { Route as LocaleMaintenanceRouteImport } from './routes/$locale.maintenance'
 import { Route as LocalePrivacyRouteImport } from './routes/$locale.privacy'
 import { Route as LocaleTermsRouteImport } from './routes/$locale.terms'
+import { Route as ApiTranslationJobsRouteImport } from './routes/api/translation-jobs'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
@@ -47,6 +48,11 @@ const LocaleTermsRoute = LocaleTermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => LocaleRoute,
 } as any)
+const ApiTranslationJobsRoute = ApiTranslationJobsRouteImport.update({
+  id: '/api/translation-jobs',
+  path: '/api/translation-jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -59,6 +65,7 @@ export interface FileRoutesByFullPath {
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
+  '/api/translation-jobs': typeof ApiTranslationJobsRoute
   '/$locale/': typeof LocaleIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -67,6 +74,7 @@ export interface FileRoutesByTo {
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
+  '/api/translation-jobs': typeof ApiTranslationJobsRoute
   '/$locale': typeof LocaleIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -77,6 +85,7 @@ export interface FileRoutesById {
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
+  '/api/translation-jobs': typeof ApiTranslationJobsRoute
   '/$locale/': typeof LocaleIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/$locale/maintenance'
     | '/$locale/privacy'
     | '/$locale/terms'
+    | '/api/translation-jobs'
     | '/$locale/'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/$locale/maintenance'
     | '/$locale/privacy'
     | '/$locale/terms'
+    | '/api/translation-jobs'
     | '/$locale'
     | '/api/auth/$'
   id:
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/$locale/maintenance'
     | '/$locale/privacy'
     | '/$locale/terms'
+    | '/api/translation-jobs'
     | '/$locale/'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
@@ -112,6 +124,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LocaleRoute: typeof LocaleRouteWithChildren
+  ApiTranslationJobsRoute: typeof ApiTranslationJobsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -159,6 +172,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleTermsRouteImport
       parentRoute: typeof LocaleRoute
     }
+    '/api/translation-jobs': {
+      id: '/api/translation-jobs'
+      path: '/api/translation-jobs'
+      fullPath: '/api/translation-jobs'
+      preLoaderRoute: typeof ApiTranslationJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -189,6 +209,7 @@ const LocaleRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LocaleRoute: LocaleRouteWithChildren,
+  ApiTranslationJobsRoute: ApiTranslationJobsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
