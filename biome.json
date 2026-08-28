@@ -23,7 +23,8 @@
 			"!.codex",
 			"!.claude",
 			"!.worktree",
-			"!.worktrees"
+			"!.worktrees",
+			"!src/routeTree.gen.ts"
 		]
 	},
 	"assist": {
