@@ -7,9 +7,17 @@ import {
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import "@/app/globals.css";
+import {
+	RootErrorComponent,
+	RootNotFoundComponent,
+	RoutePendingComponent,
+} from "./-root-boundaries";
 
 export const Route = createRootRoute({
 	component: RootComponent,
+	errorComponent: RootErrorComponent,
+	notFoundComponent: RootNotFoundComponent,
+	pendingComponent: RoutePendingComponent,
 	head: () => ({
 		meta: [
 			{ charSet: "utf-8" },

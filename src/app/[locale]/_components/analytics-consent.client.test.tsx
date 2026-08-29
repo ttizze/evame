@@ -1,16 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	AnalyticsConsent,
 	analyticsConsentStorageKey,
 } from "./analytics-consent.client";
-
-vi.mock("@next/third-parties/google", () => ({
-	GoogleAnalytics: ({ gaId }: { gaId: string }) => (
-		<div data-ga-id={gaId} data-testid="google-analytics-script" />
-	),
-}));
 
 const message = {
 	title: "Analytics cookies",
@@ -21,6 +15,13 @@ const message = {
 };
 
 describe("AnalyticsConsent", () => {
+	afterEach(() => {
+		cleanup();
+		document.querySelectorAll("script").forEach((script) => {
+			script.remove();
+		});
+	});
+
 	beforeEach(() => {
 		window.localStorage.clear();
 	});
@@ -36,8 +37,8 @@ describe("AnalyticsConsent", () => {
 
 		expect(await screen.findByText(message.title)).toBeInTheDocument();
 		expect(
-			screen.queryByTestId("google-analytics-script"),
-		).not.toBeInTheDocument();
+			document.querySelector('script[src*="googletagmanager.com"]'),
+		).toBeNull();
 	});
 
 	it("GA ID が未設定でも同意未選択ならバナーを表示する", async () => {
@@ -45,8 +46,8 @@ describe("AnalyticsConsent", () => {
 
 		expect(await screen.findByText(message.title)).toBeInTheDocument();
 		expect(
-			screen.queryByTestId("google-analytics-script"),
-		).not.toBeInTheDocument();
+			document.querySelector('script[src*="googletagmanager.com"]'),
+		).toBeNull();
 	});
 
 	it("同意済みならGAタグを読み込む", async () => {
@@ -61,8 +62,15 @@ describe("AnalyticsConsent", () => {
 		);
 
 		await waitFor(() => {
-			expect(screen.getByTestId("google-analytics-script")).toBeInTheDocument();
+			expect(
+				document.querySelector(
+					'script[src="https://www.googletagmanager.com/gtag/js?id=G-TEST123"]',
+				),
+			).not.toBeNull();
 		});
+		expect(document.querySelector("script:not([src])")).toHaveTextContent(
+			"G-TEST123",
+		);
 		expect(screen.queryByText(message.title)).not.toBeInTheDocument();
 	});
 
@@ -81,8 +89,8 @@ describe("AnalyticsConsent", () => {
 			expect(screen.queryByText(message.title)).not.toBeInTheDocument();
 		});
 		expect(
-			screen.queryByTestId("google-analytics-script"),
-		).not.toBeInTheDocument();
+			document.querySelector('script[src*="googletagmanager.com"]'),
+		).toBeNull();
 	});
 
 	it("同意するを押すと保存してGAタグを読み込む", async () => {
@@ -103,7 +111,11 @@ describe("AnalyticsConsent", () => {
 			"accepted",
 		);
 		await waitFor(() => {
-			expect(screen.getByTestId("google-analytics-script")).toBeInTheDocument();
+			expect(
+				document.querySelector(
+					'script[src="https://www.googletagmanager.com/gtag/js?id=G-TEST123"]',
+				),
+			).not.toBeNull();
 		});
 		expect(screen.queryByText(message.title)).not.toBeInTheDocument();
 	});
@@ -126,8 +138,8 @@ describe("AnalyticsConsent", () => {
 			"rejected",
 		);
 		expect(
-			screen.queryByTestId("google-analytics-script"),
-		).not.toBeInTheDocument();
+			document.querySelector('script[src*="googletagmanager.com"]'),
+		).toBeNull();
 		expect(screen.queryByText(message.title)).not.toBeInTheDocument();
 	});
 });
