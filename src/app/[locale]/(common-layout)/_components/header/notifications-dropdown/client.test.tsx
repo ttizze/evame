@@ -1,4 +1,3 @@
-// NotificationsDropdownClient.test.tsx
 import "@testing-library/jest-dom";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -6,47 +5,22 @@ import type { ReactNode } from "react";
 import useSWR from "swr";
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import type { NotificationRowsWithRelations } from "@/app/api/notifications/_types/notification";
-// Mock SWR to control data and loading states per test
-import { mockUsers } from "@/tests/mock";
 import { NotificationsDropdownClient } from "./client";
 
 vi.mock("swr", () => ({ default: vi.fn() }));
-
-// Mock the action to avoid triggering real server code
-vi.mock("./action", () => ({
-	markNotificationAsReadAction: vi.fn(async () => ({ success: true })),
-}));
-
-// Mock routing's Link to a simple anchor to avoid Next/intl runtime
-vi.mock("@/i18n/routing", () => ({
+vi.mock("@tanstack/react-router", () => ({
 	Link: ({
-		href,
+		to,
 		children,
 		...props
-	}: { href: string; children?: ReactNode } & Record<string, unknown>) => (
-		<a href={href} {...props}>
+	}: { to: string; children?: ReactNode } & Record<string, unknown>) => (
+		<a href={to} {...props}>
 			{children}
 		</a>
 	),
 }));
 
-// Keep next/cache mocked if any code path references it
-vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 const sampleNotifications: NotificationRowsWithRelations[] = [
-	{
-		id: 1,
-		actorId: "actor_1",
-		actorHandle: "john_doe",
-		actorName: "John Doe",
-		actorImage: "https://example.com/avatar1.png",
-		read: false,
-		createdAt: new Date("2023-01-01T00:00:00Z"),
-		type: "PAGE_COMMENT",
-		pageSlug: "page-slug-comment",
-		pageOwnerHandle: "page_owner",
-		pageTitle: "Commented Page Title",
-		segmentTranslationText: null,
-	},
 	{
 		id: 2,
 		actorId: "actor_2",
@@ -96,27 +70,23 @@ const user = userEvent.setup();
 describe("NotificationsDropdownClient", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => Response.json({ success: true })),
+		);
 	});
 
-	it("ベルアイコンと未読数バッジが表示される", async () => {
+	it("ベルアイコンと未読数バッジが表示される", () => {
 		(useSWR as unknown as Mock).mockReturnValue({
 			data: { notifications: sampleNotifications },
 			isLoading: false,
 			mutate: vi.fn(),
 		});
 
-		render(
-			<NotificationsDropdownClient currentUserHandle={mockUsers[0].handle} />,
-		);
+		render(<NotificationsDropdownClient locale="en" />);
 
-		// Bell icon is visible
-		const bellIcon = screen.getByTestId("bell-icon");
-		expect(bellIcon).toBeInTheDocument();
-
-		// Unread count equals 3 (id:1,3,4 are unread)
-		const unreadBadge = screen.getByTestId("unread-count");
-		expect(unreadBadge).toBeInTheDocument();
-		expect(unreadBadge).toHaveTextContent("3");
+		expect(screen.getByTestId("bell-icon")).toBeInTheDocument();
+		expect(screen.getByTestId("unread-count")).toHaveTextContent("2");
 	});
 
 	it("通知が存在しない場合は『No notifications』と表示される", async () => {
@@ -126,15 +96,9 @@ describe("NotificationsDropdownClient", () => {
 			mutate: vi.fn(),
 		});
 
-		render(
-			<NotificationsDropdownClient currentUserHandle={mockUsers[0].handle} />,
-		);
+		render(<NotificationsDropdownClient locale="en" />);
 
-		const bellIcon = screen.getByTestId("bell-icon");
-		expect(bellIcon).toBeInTheDocument();
-		await user.click(bellIcon);
-
-		// The empty state message should be shown
+		await user.click(screen.getByTestId("bell-icon"));
 		expect(screen.getByText("No notifications")).toBeInTheDocument();
 	});
 
@@ -145,40 +109,22 @@ describe("NotificationsDropdownClient", () => {
 			mutate: vi.fn(),
 		});
 
-		render(
-			<NotificationsDropdownClient currentUserHandle={mockUsers[0].handle} />,
-		);
+		render(<NotificationsDropdownClient locale="en" />);
 
-		const bellIcon = screen.getByTestId("bell-icon");
-		expect(bellIcon).toBeInTheDocument();
-		await user.click(bellIcon);
-
+		await user.click(screen.getByTestId("bell-icon"));
 		await waitFor(() => {
 			expect(
 				screen.getByTestId("notifications-menu-content"),
 			).toBeInTheDocument();
 		});
 
-		// PAGE_COMMENT
-		expect(await screen.findByText("John Doe")).toBeInTheDocument();
-		expect(await screen.findByText("Commented Page Title")).toBeInTheDocument();
-		expect(await screen.findByText(/commented on/i)).toBeInTheDocument();
-
-		// PAGE_LIKE
-		expect(await screen.findByText("Jane Doe")).toBeInTheDocument();
-		expect(await screen.findByText("Liked Page Title")).toBeInTheDocument();
-		expect(await screen.findByText(/liked your page/i)).toBeInTheDocument();
-
-		// FOLLOW
-		expect(await screen.findByText("Bob Smith")).toBeInTheDocument();
-		expect(await screen.findByText(/followed you/i)).toBeInTheDocument();
-
-		// PAGE_SEGMENT_TRANSLATION_VOTE
-		expect(await screen.findByText("Alice Jones")).toBeInTheDocument();
-		expect(await screen.findByText("Translation Text")).toBeInTheDocument();
-		expect(
-			await screen.findByText("Translated Page Title"),
-		).toBeInTheDocument();
-		expect(await screen.findByText(/voted for/i)).toBeInTheDocument();
+		expect(screen.getByText("Jane Doe")).toBeInTheDocument();
+		expect(screen.getByText("Liked Page Title")).toBeInTheDocument();
+		expect(screen.getByText(/liked your page/i)).toBeInTheDocument();
+		expect(screen.getByText("Bob Smith")).toBeInTheDocument();
+		expect(screen.getByText(/followed you/i)).toBeInTheDocument();
+		expect(screen.getByText("Alice Jones")).toBeInTheDocument();
+		expect(screen.getByText("Translation Text")).toBeInTheDocument();
+		expect(screen.getByText("Translated Page Title")).toBeInTheDocument();
 	});
 });

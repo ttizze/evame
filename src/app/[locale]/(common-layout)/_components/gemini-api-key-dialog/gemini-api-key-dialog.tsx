@@ -1,4 +1,5 @@
 "use client";
+import { useServerFn } from "@tanstack/react-start";
 import { ArrowUpFromLine, ExternalLink, Loader2 } from "lucide-react";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
@@ -24,10 +25,19 @@ export function GeminiApiKeyDialog({
 	isOpen,
 	onOpenChange,
 }: GeminiApiKeyDialogProps) {
+	const updateGeminiApiKeyFn = useServerFn(updateGeminiApiKeyAction);
 	const [state, formAction, isPending] = useActionState<
 		GeminiApiKeyDialogState,
 		FormData
-	>(updateGeminiApiKeyAction, { success: false });
+	>(
+		async (_previousState, formData) =>
+			updateGeminiApiKeyFn({
+				data: {
+					geminiApiKey: String(formData.get("geminiApiKey") ?? ""),
+				},
+			}),
+		{ success: false },
+	);
 
 	useEffect(() => {
 		if (state.success) {

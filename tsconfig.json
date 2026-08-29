@@ -16,27 +16,13 @@
 		"isolatedModules": true,
 		"jsx": "react-jsx",
 		"incremental": true,
-		"plugins": [
-			{
-				"name": "next"
-			}
-		],
 		"paths": {
 			"@/*": ["./src/*"]
 		}
 	},
-	"include": [
-		"next-env.d.ts",
-		"**/*.ts",
-		"**/*.tsx",
-		".next/types/**/*.ts",
-		"src/app/[locale]/(common-layout)/auth/login/_components/google-form.tsx",
-		".next/dev/types/**/*.ts"
-	],
+	"include": ["**/*.ts", "**/*.tsx"],
 	"exclude": [
 		"node_modules",
-		".next/dev/**",
-		".next/types/validator.ts",
 		"dist",
 		"build",
 		"scripts/convert-romn-to-md-old/**"

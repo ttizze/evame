@@ -1,5 +1,5 @@
 "use client";
-import { usePathname } from "next/navigation";
+import { useLocation } from "@tanstack/react-router";
 import { parseAsString, useQueryStates } from "nuqs";
 import {
 	Pagination,
@@ -17,7 +17,7 @@ interface PaginationBarProps {
 }
 
 export function PaginationBar({ totalPages, currentPage }: PaginationBarProps) {
-	const pathname = usePathname();
+	const pathname = useLocation({ select: (location) => location.pathname });
 	const [currentQuery] = useQueryStates({
 		page: parseAsString,
 		query: parseAsString,
@@ -35,12 +35,14 @@ export function PaginationBar({ totalPages, currentPage }: PaginationBarProps) {
 		return null;
 	}
 
-	// 現在の URL の pathname と既存の searchParams をベースに、
-	// page パラメータだけを上書きするリンク用 URL オブジェクトを生成
-	const getPageUrl = (page: number) => ({
-		pathname,
-		query: { ...currentParams, page: page.toString() },
-	});
+	// 現在のpathnameとsearch paramsを保ち、pageだけを上書きする。
+	const getPageUrl = (page: number) => {
+		const params = new URLSearchParams(
+			Object.entries(currentParams).map(([key, value]) => [key, String(value)]),
+		);
+		params.set("page", page.toString());
+		return `${pathname}?${params.toString()}`;
+	};
 	return (
 		<Pagination className="mt-4">
 			<PaginationContent className="w-full justify-between">

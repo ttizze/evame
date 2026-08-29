@@ -1,31 +1,43 @@
 "use client";
 
+import { useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { Loader2, SaveIcon } from "lucide-react";
-import Image from "next/image";
-import { useActionState, useEffect, useRef } from "react";
+import {
+	type FormEvent,
+	useEffect,
+	useRef,
+	useState,
+	useTransition,
+} from "react";
 import { toast } from "sonner";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import type { SanitizedUser } from "@/app/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { type UserEditState, userEditAction } from "./user-edit-action";
 import {
-	type UserImageEditState,
-	userImageEditAction,
-} from "./user-image-edit-action";
+	updateProfile,
+	updateProfileImage,
+} from "@/routes/$locale/-profile-edit-data";
+import type {
+	ProfileEditState,
+	ProfileImageEditState,
+} from "../_service/profile-edit";
 
 interface ProfileFormProps {
 	currentUser: SanitizedUser;
+	locale: string;
 }
 
-export function ProfileForm({ currentUser }: ProfileFormProps) {
+export function ProfileForm({ currentUser, locale }: ProfileFormProps) {
+	const router = useRouter();
+	const updateProfileFn = useServerFn(updateProfile);
+	const updateProfileImageFn = useServerFn(updateProfileImage);
 	const fileInputRef = useRef<HTMLInputElement>(null);
-
-	const [editState, editAction, isEditPending] = useActionState<
-		UserEditState,
-		FormData
-	>(userEditAction, {
+	const [isEditPending, startEditTransition] = useTransition();
+	const [isImageUploading, startImageTransition] = useTransition();
+	const [editState, setEditState] = useState<ProfileEditState>({
 		success: true,
 		data: {
 			name: currentUser.name,
@@ -33,11 +45,7 @@ export function ProfileForm({ currentUser }: ProfileFormProps) {
 			twitterHandle: currentUser.twitterHandle || "",
 		},
 	});
-
-	const [imageState, imageAction, isImageUploading] = useActionState<
-		UserImageEditState,
-		FormData
-	>(userImageEditAction, {
+	const [imageState, setImageState] = useState<ProfileImageEditState>({
 		success: true,
 		data: {
 			imageUrl: currentUser.image,
@@ -53,14 +61,14 @@ export function ProfileForm({ currentUser }: ProfileFormProps) {
 			) {
 				toast.success(imageState.message);
 				await authClient.updateUser({
-					image: imageState.data?.imageUrl,
+					image: imageState.data.imageUrl,
 				});
 			} else if (!imageState.success && imageState.message) {
 				toast.error(imageState.message);
 			}
 		};
 
-		updateImageSession();
+		void updateImageSession();
 	}, [imageState]);
 
 	useEffect(() => {
@@ -88,33 +96,61 @@ export function ProfileForm({ currentUser }: ProfileFormProps) {
 			}
 		};
 
-		updateNameSession();
+		void updateNameSession();
 	}, [editState]);
 
 	const handleImageClick = () => {
 		fileInputRef.current?.click();
 	};
 
+	const handleImageSubmit = (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		const file = fileInputRef.current?.files?.[0];
+		if (!file) {
+			setImageState({ success: false, message: "No image provided" });
+			return;
+		}
+		if (file.size > 5 * 1024 * 1024) {
+			setImageState({
+				success: false,
+				message: "Image size exceeds 5MB limit. Please choose a smaller file.",
+			});
+			return;
+		}
+
+		const formData = new FormData(event.currentTarget);
+		formData.set("image", file);
+		formData.set("locale", locale);
+		startImageTransition(() => {
+			void (async () => {
+				const result = await updateProfileImageFn({ data: formData });
+				setImageState(result);
+				if (result.success) {
+					await router.invalidate({ sync: true });
+				}
+			})();
+		});
+	};
+
+	const handleProfileSubmit = (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		const formData = new FormData(event.currentTarget);
+		formData.set("locale", locale);
+		startEditTransition(() => {
+			void (async () => {
+				const result = await updateProfileFn({ data: formData });
+				setEditState(result);
+				if (result.success) {
+					await router.invalidate({ sync: true });
+				}
+			})();
+		});
+	};
+
 	return (
 		<div className="space-y-6">
 			{/* ---------- Avatar ---------- */}
-			<form
-				action={async (formData: FormData) => {
-					const file = fileInputRef.current?.files?.[0];
-					if (file) {
-						const MAX_SIZE = 5 * 1024 * 1024; // 5MB
-						if (file.size > MAX_SIZE) {
-							toast.error(
-								"Image size exceeds 5MB limit. Please choose a smaller file.",
-							);
-							return;
-						}
-						formData.set("image", file);
-						await imageAction(formData);
-					}
-				}}
-				className="space-y-4"
-			>
+			<form className="space-y-4" onSubmit={handleImageSubmit}>
 				<div className="mt-3">
 					<Label>Icon</Label>
 				</div>
@@ -125,7 +161,7 @@ export function ProfileForm({ currentUser }: ProfileFormProps) {
 						onClick={handleImageClick}
 						type="button"
 					>
-						<Image
+						<img
 							alt="Profile"
 							className="transition-opacity group-hover:opacity-75"
 							height={160}
@@ -145,10 +181,9 @@ export function ProfileForm({ currentUser }: ProfileFormProps) {
 					accept="image/*"
 					className="hidden"
 					name="image"
-					onChange={() => {
-						const form = fileInputRef.current?.form;
-						if (form) {
-							form.requestSubmit();
+					onChange={(event) => {
+						if (event.currentTarget.files?.[0]) {
+							event.currentTarget.form?.requestSubmit();
 						}
 					}}
 					ref={fileInputRef}
@@ -160,7 +195,7 @@ export function ProfileForm({ currentUser }: ProfileFormProps) {
 			</form>
 
 			{/* ---------- Profile info ---------- */}
-			<form action={editAction} className="space-y-4">
+			<form className="space-y-4" onSubmit={handleProfileSubmit}>
 				<input name="handle" type="hidden" value={currentUser.handle} />
 				<div>
 					<Label>Display Name</Label>

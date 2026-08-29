@@ -1,5 +1,4 @@
-import type { Route } from "next";
-import { redirect } from "next/navigation";
+import { redirect } from "@tanstack/react-router";
 import type { z } from "zod";
 import { getCurrentUser } from "@/app/_service/auth-server";
 import { createServerLogger } from "@/app/_service/logger.server";
@@ -7,29 +6,25 @@ import { parseFormData } from "@/app/[locale]/_utils/parse-form-data";
 export type AuthDeps = {
 	getCurrentUser: typeof getCurrentUser;
 	parseFormData: typeof parseFormData;
-	redirect: typeof redirect;
 };
 export const authDefaultDeps: AuthDeps = {
 	getCurrentUser,
 	parseFormData,
-	redirect,
 };
 
 export type RequireAuthDeps = {
 	getCurrentUser: typeof getCurrentUser;
-	redirect: typeof redirect;
 };
 
 const requireAuthDefaultDeps: RequireAuthDeps = {
 	getCurrentUser,
-	redirect,
 };
 
 export async function requireAuth(
 	deps: RequireAuthDeps = requireAuthDefaultDeps,
 ): Promise<{ id: string; handle: string; plan: string }> {
 	const user = await deps.getCurrentUser();
-	if (!user?.id) deps.redirect("/auth/login" as Route);
+	if (!user?.id) throw redirect({ href: "/auth/login" });
 
 	// userはnullではないことが保証されている
 	return { id: user.id, handle: user.handle, plan: user.plan };

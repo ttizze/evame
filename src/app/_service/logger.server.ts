@@ -1,11 +1,11 @@
 /**
  * サーバー側専用ロガー
- * Next.jsのサーバーコンポーネント、Server Actions、API Routesで使用
+ * TanStack Startのサーバー関数、ルート、APIハンドラーで使用
  *
  * Sentryとの統合が可能
  */
 
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from "@sentry/tanstackstart-react";
 import type { Logger } from "pino";
 import { createLogger } from "./logger";
 

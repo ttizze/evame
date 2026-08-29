@@ -3,10 +3,7 @@ import { fetchPageIdBySlug } from "@/app/[locale]/_db/page-utility-queries.serve
 import { hasSegmentsForContentId } from "@/app/[locale]/_db/segment-exists.server";
 import { enqueueTranslate } from "@/app/[locale]/_infrastructure/qstash/enqueue-translate.server";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
-import {
-	fetchAnnotationContentIdsForPage,
-	fetchPageCommentIds,
-} from "../db/queries.server";
+import { fetchAnnotationContentIdsForPage } from "../db/queries.server";
 
 /* ───────── 型 ───────── */
 
@@ -22,7 +19,6 @@ interface NewJobParams {
 	aiModel: string;
 	locale: string;
 	pageId: number;
-	pageCommentId: number | null;
 	annotationContentId: number | null;
 	jobs: TranslationJobForToast[];
 }
@@ -31,8 +27,7 @@ interface NewJobParams {
 
 /** 翻訳ジョブを作成しキューに投入する */
 async function createAndEnqueueJob(params: NewJobParams) {
-	const contentId =
-		params.annotationContentId ?? params.pageCommentId ?? params.pageId;
+	const contentId = params.annotationContentId ?? params.pageId;
 	const hasSegments = await hasSegmentsForContentId(contentId);
 	if (!hasSegments) {
 		return;
@@ -55,7 +50,6 @@ async function createAndEnqueueJob(params: NewJobParams) {
 		userId: params.userId,
 		targetLocale: params.locale,
 		pageId: params.pageId,
-		pageCommentId: params.pageCommentId,
 		annotationContentId: params.annotationContentId,
 		translationContext: "",
 	});
@@ -65,7 +59,7 @@ async function createAndEnqueueJob(params: NewJobParams) {
 
 /**
  * ページ全体の翻訳ジョブを作成する
- * - 本文、コメント、注釈それぞれのジョブを作成しキューに投入
+ * - 本文と注釈それぞれのジョブを作成しキューに投入
  */
 export async function translatePage(
 	params: TranslatePageParams,
@@ -85,24 +79,9 @@ export async function translatePage(
 		aiModel: params.aiModel,
 		locale: params.locale,
 		pageId,
-		pageCommentId: null,
 		annotationContentId: null,
 		jobs,
 	});
-
-	// ページコメントの翻訳ジョブ
-	const commentIds = await fetchPageCommentIds(pageId);
-	for (const commentId of commentIds) {
-		await createAndEnqueueJob({
-			userId: params.userId,
-			aiModel: params.aiModel,
-			locale: params.locale,
-			pageId,
-			pageCommentId: commentId,
-			annotationContentId: null,
-			jobs,
-		});
-	}
 
 	// 別コンテンツに属する注釈の翻訳ジョブ
 	// 親ページのジョブと revalidate を紐付けるため pageId はそのまま保持し、
@@ -114,7 +93,6 @@ export async function translatePage(
 			aiModel: params.aiModel,
 			locale: params.locale,
 			pageId,
-			pageCommentId: null,
 			annotationContentId: contentId,
 			jobs,
 		});

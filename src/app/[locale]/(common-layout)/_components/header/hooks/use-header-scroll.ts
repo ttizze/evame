@@ -1,6 +1,6 @@
 "use client";
 import { type RefObject, useEffect, useRef, useState } from "react";
-import { subscribeScrollY } from "./scroll-y-store.client";
+import { subscribeScrollY } from "./scroll-y-store";
 
 interface UseHeaderScrollOptions {
 	// ヘッダーの初期オフセット位置（オプション、SubHeaderで使用）

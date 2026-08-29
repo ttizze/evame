@@ -1,46 +1,50 @@
-"use server";
+import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeaders } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
-import { validateGeminiApiKey } from "@/app/api/translate/chunk/_infra/gemini";
 import type { ActionResponse } from "@/app/types";
-import { updateGeminiApiKey } from "./db/mutations.server";
 
 const geminiApiKeySchema = z.object({
 	geminiApiKey: z.string(),
 });
+
 export type GeminiApiKeyDialogState = ActionResponse<
 	undefined,
-	{
-		geminiApiKey: string;
-	}
+	{ geminiApiKey: string }
 >;
-export async function updateGeminiApiKeyAction(
-	_previousState: GeminiApiKeyDialogState,
-	formData: FormData,
-): Promise<GeminiApiKeyDialogState> {
-	const v = await authAndValidate(geminiApiKeySchema, formData);
-	if (!v.success) {
-		return {
-			success: false,
-			zodErrors: v.zodErrors,
-		};
-	}
-	const { currentUser, data } = v;
-	const { geminiApiKey } = data;
 
-	if (geminiApiKey && geminiApiKey.trim() !== "") {
-		const { isValid, errorMessage } = await validateGeminiApiKey(geminiApiKey);
-		if (!isValid) {
-			return {
-				success: false,
-				message: errorMessage || "Gemini API key validation failed",
-			};
+export const updateGeminiApiKeyAction = createServerFn({ method: "POST" })
+	.validator(geminiApiKeySchema)
+	.handler(async ({ data }): Promise<GeminiApiKeyDialogState> => {
+		const [
+			{ getCurrentUserFromHeaders },
+			{ validateGeminiApiKey },
+			{ updateGeminiApiKey },
+		] = await Promise.all([
+			import("@/app/_service/current-user"),
+			import("@/app/api/translate/chunk/_infra/gemini"),
+			import("./db/mutations.server"),
+		]);
+		const currentUser = await getCurrentUserFromHeaders(
+			new Headers(getRequestHeaders()),
+		);
+		if (!currentUser) {
+			return { success: false, message: "Unauthorized" };
 		}
-	}
-	await updateGeminiApiKey(currentUser.id, geminiApiKey);
-	return {
-		success: true,
-		data: undefined,
-		message: "Gemini API key updated successfully",
-	};
-}
+		const { geminiApiKey } = data;
+		if (geminiApiKey.trim() !== "") {
+			const { isValid, errorMessage } =
+				await validateGeminiApiKey(geminiApiKey);
+			if (!isValid) {
+				return {
+					success: false,
+					message: errorMessage || "Gemini API key validation failed",
+				};
+			}
+		}
+		await updateGeminiApiKey(currentUser.id, geminiApiKey);
+		return {
+			success: true,
+			data: undefined,
+			message: "Gemini API key updated successfully",
+		};
+	});

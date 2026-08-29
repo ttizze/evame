@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { htmlToMdastWithSegments } from "./html-to-mdast-with-segments";
 
 describe("htmlToMdastWithSegments", () => {
-	it("should convert simple HTML to MDAST with segments", async () => {
+	it("単純なHTMLをセグメント付きMDASTへ変換する", async () => {
 		const html = "<p>Hello World</p>";
 		const result = await htmlToMdastWithSegments({ html });
 
@@ -32,7 +32,7 @@ describe("htmlToMdastWithSegments", () => {
 		});
 	});
 
-	it("should handle multiple HTML paragraphs correctly", async () => {
+	it("複数のHTML段落を正しく処理する", async () => {
 		const html = "<p>First paragraph</p><p>Second paragraph</p>";
 		const result = await htmlToMdastWithSegments({ html });
 
@@ -49,7 +49,7 @@ describe("htmlToMdastWithSegments", () => {
 		});
 	});
 
-	it("should include header in segments when provided", async () => {
+	it("ヘッダー指定時にセグメントへ含める", async () => {
 		const header = "Document Title";
 		const html = "<p>Content paragraph</p>";
 		const result = await htmlToMdastWithSegments({ header, html });
@@ -67,7 +67,7 @@ describe("htmlToMdastWithSegments", () => {
 		});
 	});
 
-	it("should handle HTML with headings, lists, and other elements", async () => {
+	it("見出しやリストなどを含むHTMLを処理する", async () => {
 		const html = `
       <h1>Title</h1>
       <p>Introduction paragraph</p>
@@ -92,7 +92,7 @@ describe("htmlToMdastWithSegments", () => {
 		expect(numbers).toEqual([1, 2, 3, 4, 5]); // Starting from 1
 	});
 
-	it("should sanitize HTML by removing dangerous elements", async () => {
+	it("危険なHTML要素をサニタイズして除去する", async () => {
 		const html = '<p>Safe text</p><script>alert("danger")</script>';
 		const result = await htmlToMdastWithSegments({ html });
 
@@ -107,7 +107,7 @@ describe("htmlToMdastWithSegments", () => {
 		expect(result.segments[0].text).toBe("Safe text");
 	});
 
-	it("should handle empty HTML input", async () => {
+	it("空のHTML入力を処理する", async () => {
 		const html = "";
 		const result = await htmlToMdastWithSegments({ html });
 
@@ -118,7 +118,7 @@ describe("htmlToMdastWithSegments", () => {
 		});
 	});
 
-	it("should handle HTML with tables correctly", async () => {
+	it("表を含むHTMLを正しく処理する", async () => {
 		const html = `
       <table>
         <tr>
@@ -141,7 +141,7 @@ describe("htmlToMdastWithSegments", () => {
 		expect(tableTexts.some((text) => text.includes("Cell 2"))).toBeTruthy();
 	});
 
-	it("should generate unique hashes for identical texts appearing multiple times", async () => {
+	it("同じテキストが複数回現れても一意なハッシュを生成する", async () => {
 		const html = "<p>Repeated text</p><p>Repeated text</p>";
 		const result = await htmlToMdastWithSegments({ html });
 
@@ -154,13 +154,13 @@ describe("htmlToMdastWithSegments", () => {
 		);
 	});
 
-	it("should remove position data from the returned MDAST", async () => {
+	it("返却するMDASTからposition情報を除去する", async () => {
 		const html = "<p>Text with position data</p>";
 		const result = await htmlToMdastWithSegments({ html });
 
 		expect(JSON.stringify(result.mdastJson)).not.toMatch(/"position":/);
 	});
-	it("should properly convert Markdown-compatible HTML tags to MDAST", async () => {
+	it("Markdown互換のHTMLタグをMDASTへ変換する", async () => {
 		const html = `
       <h1>Heading 1</h1>
       <h2>Heading 2</h2>
@@ -279,7 +279,7 @@ describe("htmlToMdastWithSegments", () => {
 		expect(thematicBreakNodes.length).toBeGreaterThanOrEqual(1);
 	});
 
-	it("should handle style tags and other unsupported HTML elements", async () => {
+	it("styleタグなど未対応のHTML要素を処理する", async () => {
 		const html = `
       <p>Normal paragraph</p>
       <style>

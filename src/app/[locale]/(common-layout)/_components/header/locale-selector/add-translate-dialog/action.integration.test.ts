@@ -1,17 +1,16 @@
-import type { Root as MdastRoot } from "mdast";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getCurrentUser } from "@/app/_service/auth-server";
 import { enqueueTranslate } from "@/app/[locale]/_infrastructure/qstash/enqueue-translate.server";
 import { db } from "@/db";
 import { toSessionUser } from "@/tests/auth-helpers";
-import { getSegmentTypeId, resetDatabase } from "@/tests/db-helpers";
+import { resetDatabase } from "@/tests/db-helpers";
 import {
 	createPageWithAnnotations,
 	createPageWithSegments,
 	createUser,
 } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
-import { translateAction } from "./action";
+import { executeTranslateAction } from "./execute-translate-action.server";
 
 await setupDbPerFile(import.meta.url);
 
@@ -45,7 +44,7 @@ describe("translateAction", () => {
 		// aiModelとtargetLocaleが必須だが、空文字列を送信
 
 		// Act
-		const result = await translateAction({ success: false }, invalidFormData);
+		const result = await executeTranslateAction(invalidFormData);
 
 		// Assert: バリデーションエラーが返される
 		expect(result.success).toBe(false);
@@ -61,10 +60,19 @@ describe("translateAction", () => {
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
 
-		// Act & Assert: リダイレクトエラーが発生する
-		await expect(translateAction({ success: false }, formData)).rejects.toThrow(
-			"NEXT_REDIRECT",
+		// Act: TanStack RouterのredirectはResponseをthrowする
+		const redirectResponse = await executeTranslateAction(formData).catch(
+			(error: unknown) =>
+				error instanceof Response ? error : Promise.reject(error),
 		);
+
+		// Assert: ログイン画面へ307リダイレクトされる
+		expect(redirectResponse).toBeInstanceOf(Response);
+		if (!(redirectResponse instanceof Response)) {
+			throw new Error("リダイレクトされていません");
+		}
+		expect(redirectResponse.status).toBe(307);
+		expect(redirectResponse.headers.get("Location")).toBe("/auth/login");
 	});
 
 	it("存在しないページを翻訳しようとした場合、エラーメッセージを返す", async () => {
@@ -78,7 +86,7 @@ describe("translateAction", () => {
 		formData.append("targetLocale", "en");
 
 		// Act
-		const result = await translateAction({ success: false }, formData);
+		const result = await executeTranslateAction(formData);
 
 		// Assert: エラーメッセージが返される
 		expect(result.success).toBe(false);
@@ -115,7 +123,7 @@ describe("translateAction", () => {
 		formData.append("targetLocale", "ja");
 
 		// Act
-		const result = await translateAction({ success: false }, formData);
+		const result = await executeTranslateAction(formData);
 
 		// Assert: 成功レスポンスが返される
 		expect(result.success).toBe(true);
@@ -135,91 +143,6 @@ describe("translateAction", () => {
 
 		// Assert: キューにジョブがエンキューされている（外部システムのモック）
 		expect(enqueueTranslate).toHaveBeenCalledTimes(1);
-	});
-
-	it("ページにコメントがある場合、コメントも翻訳ジョブに含まれる", async () => {
-		// Arrange: 実際のユーザーとページ、コメントを作成
-		const user = await createUser();
-		const page = await createPageWithSegments({
-			userId: user.id,
-			slug: "test-page-with-comments",
-			segments: [
-				{
-					number: 0,
-					text: "Test Page Title",
-					textAndOccurrenceHash: "hash-title",
-					segmentTypeKey: "PRIMARY",
-				},
-				{
-					number: 1,
-					text: "First paragraph",
-					textAndOccurrenceHash: "hash-1",
-					segmentTypeKey: "PRIMARY",
-				},
-			],
-		});
-
-		// コメントを作成
-		const commentContent = await db
-			.insertInto("contents")
-			.values({ kind: "PAGE_COMMENT" })
-			.returningAll()
-			.executeTakeFirstOrThrow();
-		const segmentTypeId = await getSegmentTypeId("PRIMARY");
-		await db
-			.insertInto("segments")
-			.values({
-				contentId: commentContent.id,
-				number: 1,
-				text: "Comment text",
-				textAndOccurrenceHash: "hash-comment-1",
-				segmentTypeId,
-			})
-			.execute();
-		const mdastJson: MdastRoot = {
-			type: "root",
-			children: [],
-		};
-		await db
-			.insertInto("pageComments")
-			.values({
-				id: commentContent.id,
-				pageId: page.id,
-				userId: user.id,
-				mdastJson: JSON.stringify(mdastJson),
-				locale: "en",
-				parentId: null,
-				isDeleted: false,
-			})
-			.execute();
-
-		vi.mocked(getCurrentUser).mockResolvedValue(toSessionUser(user));
-
-		const formData = new FormData();
-		formData.append("pageSlug", page.slug);
-		formData.append("aiModel", "gemini-pro");
-		formData.append("targetLocale", "ja");
-
-		// Act
-		const result = await translateAction({ success: false }, formData);
-
-		// Assert: 成功レスポンスが返される
-		expect(result.success).toBe(true);
-		if (result.success) {
-			// ページ本体 + コメント = 2つの翻訳ジョブ
-			expect(result.data.translationJobs.length).toBeGreaterThanOrEqual(2);
-		}
-
-		// Assert: 複数の翻訳ジョブがデータベースに作成されている
-		const jobs = await db
-			.selectFrom("translationJobs")
-			.selectAll()
-			.where("pageId", "=", page.id)
-			.execute();
-		expect(jobs.length).toBeGreaterThanOrEqual(2);
-
-		// Assert: キューに複数のジョブがエンキューされている
-		expect(enqueueTranslate).toHaveBeenCalledTimes(jobs.length);
 	});
 
 	it("ページに注釈がある場合、注釈も翻訳ジョブに含まれる", async () => {
@@ -258,7 +181,7 @@ describe("translateAction", () => {
 		formData.append("targetLocale", "ja");
 
 		// Act
-		const result = await translateAction({ success: false }, formData);
+		const result = await executeTranslateAction(formData);
 
 		// Assert
 		expect(result.success).toBe(true);

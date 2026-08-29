@@ -10,12 +10,7 @@ type VoteOutcome = {
 	action: "create" | "update" | "delete";
 };
 
-/**
- * 投票結果を計算する
- * - 同じ投票が存在 → 削除
- * - 投票なし → 新規作成
- * - 反対の投票が存在 → 更新
- */
+/** 投票結果を計算する */
 function computeVoteOutcome(
 	previousIsUpvote: boolean | undefined,
 	newIsUpvote: boolean,
@@ -41,17 +36,12 @@ function computeVoteOutcome(
 	};
 }
 
-/* -------------------------------------------------------------------------- */
-/* Public API                                                                  */
-/* -------------------------------------------------------------------------- */
-
 export async function handleVote(
 	segmentTranslationId: number,
 	isUpvote: boolean,
 	currentUserId: string,
 ) {
 	return db.transaction().execute(async (tx) => {
-		// 投票処理と関連情報を同時に取得
 		const { finalIsUpvote } = await applyVote(
 			tx,
 			segmentTranslationId,
@@ -59,7 +49,6 @@ export async function handleVote(
 			currentUserId,
 		);
 
-		// 更新後のpoint と ページ情報を取得
 		const result = await tx
 			.selectFrom("segmentTranslations")
 			.innerJoin("segments", "segmentTranslations.segmentId", "segments.id")
@@ -77,7 +66,6 @@ export async function handleVote(
 			return { success: false, data: { isUpvote: undefined, point: 0 } };
 		}
 
-		// ページの場合のみproof statusを更新
 		if (result.pageId) {
 			await updateProofStatus(tx, result.pageId, result.locale);
 		}
@@ -89,9 +77,6 @@ export async function handleVote(
 	});
 }
 
-/**
- * 投票の適用とpoint更新を行う
- */
 async function applyVote(
 	tx: Transaction<DB>,
 	segmentTranslationId: number,
@@ -106,8 +91,6 @@ async function applyVote(
 		.executeTakeFirst();
 
 	const outcome = computeVoteOutcome(existingVote?.isUpvote, isUpvote);
-
-	// 投票テーブルの操作
 	if (outcome.action === "delete") {
 		await tx
 			.deleteFrom("translationVotes")
@@ -132,7 +115,6 @@ async function applyVote(
 			.execute();
 	}
 
-	// point更新
 	await tx
 		.updateTable("segmentTranslations")
 		.set({ point: sql`point + ${outcome.pointDelta}` })
@@ -142,10 +124,6 @@ async function applyVote(
 	return { finalIsUpvote: outcome.finalIsUpvote };
 }
 
-/**
- * ページのproof statusを更新する
- * 1クエリで全カウントを取得
- */
 async function updateProofStatus(
 	tx: Transaction<DB>,
 	pageId: number,
@@ -178,7 +156,6 @@ async function updateProofStatus(
 			segmentsWith1PlusVotes: 0,
 			segmentsWith2PlusVotes: 0,
 		};
-
 	if (totalSegments === 0) return;
 
 	const newStatus = calcProofStatus(
@@ -186,7 +163,6 @@ async function updateProofStatus(
 		segmentsWith1PlusVotes,
 		segmentsWith2PlusVotes,
 	);
-
 	await tx
 		.insertInto("pageLocaleTranslationProofs")
 		.values({ pageId, locale, translationProofStatus: newStatus })
@@ -199,13 +175,13 @@ async function updateProofStatus(
 }
 
 export async function createNotificationPageSegmentTranslationVote(
-	pageSegmentTranslationId: number,
+	translationId: number,
 	actorId: string,
 ) {
 	const segmentTranslation = await db
 		.selectFrom("segmentTranslations")
 		.select("userId")
-		.where("id", "=", pageSegmentTranslationId)
+		.where("id", "=", translationId)
 		.executeTakeFirst();
 
 	if (!segmentTranslation) return;
@@ -213,7 +189,7 @@ export async function createNotificationPageSegmentTranslationVote(
 	await db
 		.insertInto("notifications")
 		.values({
-			segmentTranslationId: pageSegmentTranslationId,
+			segmentTranslationId: translationId,
 			userId: segmentTranslation.userId,
 			actorId,
 			type: "PAGE_SEGMENT_TRANSLATION_VOTE",

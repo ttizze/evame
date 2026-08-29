@@ -1,14 +1,9 @@
-import { cacheLife, cacheTag } from "next/cache";
 import { db } from "@/db";
 
 /**
  * ページの翻訳ジョブを取得（各localeの最新COMPLETEDのみ）
  */
 export async function fetchCompletedTranslationJobs(pageId: number) {
-	"use cache";
-	cacheLife("max");
-	cacheTag(`page-translation-jobs:${pageId}`);
-
 	return await db
 		.selectFrom("translationJobs")
 		.selectAll()

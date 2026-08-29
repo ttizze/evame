@@ -90,7 +90,7 @@ services:
     ports:
       - "8080:8080"
     # Ensure the container can resolve the host machine as host.docker.internal
-    # so it can deliver webhooks to Next.js at http://host.docker.internal:3000
+    # so it can deliver webhooks to the TanStack Start server at http://host.docker.internal:3000
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

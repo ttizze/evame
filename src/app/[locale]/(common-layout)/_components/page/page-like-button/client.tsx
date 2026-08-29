@@ -1,5 +1,6 @@
 "use client";
 
+import { useServerFn } from "@tanstack/react-start";
 import { Heart, Loader2 } from "lucide-react";
 import { useActionState } from "react";
 import useSWR from "swr";
@@ -48,14 +49,17 @@ export function PageLikeButtonClient({
 			revalidateOnMount: false,
 		},
 	);
+	const togglePageLikeFn = useServerFn(togglePageLikeAction);
 
-	// Server action returns latest liked/count; prefer it when available
+	// The server function returns the latest liked/count; prefer it when available
 	const [_, formAction, isPending] = useActionState<
 		PageLikeButtonState,
 		FormData
 	>(
-		async (prevState, formData) => {
-			const result = await togglePageLikeAction(prevState, formData);
+		async (_previousState, formData) => {
+			const result = await togglePageLikeFn({
+				data: { pageId: Number(formData.get("pageId")) },
+			});
 			if (result.success) {
 				void mutate(result.data, { revalidate: false });
 			}
@@ -76,7 +80,7 @@ export function PageLikeButtonClient({
 		const next = computeNextLikeState(data);
 		mutate(next, { revalidate: false });
 
-		// Trigger server action
+		// Trigger the server function
 		formAction(formData);
 	};
 

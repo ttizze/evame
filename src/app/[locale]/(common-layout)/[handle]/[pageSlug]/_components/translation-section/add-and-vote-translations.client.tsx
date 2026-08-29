@@ -1,9 +1,9 @@
 "use client";
+import { Link } from "@tanstack/react-router";
 import { ChevronDown, ChevronUp, Languages } from "lucide-react";
-import { useLocale } from "next-intl";
 import { useState } from "react";
+import { useLocale } from "use-intl";
 import { Button } from "@/components/ui/button";
-import { Link } from "@/i18n/routing";
 import { AddTranslationForm } from "./add-translation-form/client";
 import { useSegmentTranslations } from "./hooks/use-segment-translations";
 import { TranslationListItem } from "./translation-list-item/client";
@@ -63,16 +63,29 @@ export function AddAndVoteTranslations({
 		);
 	}
 
+	if (!bestTranslation) {
+		return (
+			<span className="w-full">
+				<AddTranslationForm onTranslationAdded={mutate} segmentId={segmentId} />
+			</span>
+		);
+	}
+
 	return (
 		<span className="w-full ">
 			<span className="flex items-center justify-end gap-2">
-				<Link className="no-underline!" href={`/${bestTranslation.userHandle}`}>
+				<Link
+					className="no-underline!"
+					params={{ handle: bestTranslation.userHandle, locale: userLocale }}
+					to="/$locale/$handle"
+				>
 					<span className="text-sm text-gray-500 text-right flex items-center">
 						by: {bestTranslation.userName}
 					</span>
 				</Link>
 				<VoteButtons
 					key={bestTranslation.id}
+					locale={userLocale}
 					onVoted={() => {
 						void mutate();
 					}}
@@ -85,6 +98,7 @@ export function AddAndVoteTranslations({
 			{displayedTranslations.map((displayedTranslation) => (
 				<TranslationListItem
 					key={displayedTranslation.id}
+					locale={userLocale}
 					onDeleted={() => {
 						void mutate();
 					}}

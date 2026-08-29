@@ -1,11 +1,9 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
 import { Bell, Loader2 } from "lucide-react";
-import { getImageProps } from "next/image";
-import { startTransition, useActionState } from "react";
 import useSWR from "swr";
 import type { NotificationRowsWithRelations } from "@/app/api/notifications/_types/notification";
-import type { ActionResponse } from "@/app/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -13,17 +11,8 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from "@/i18n/routing";
-import { markNotificationAsReadAction } from "./action";
-export function NotificationsDropdownClient({
-	currentUserHandle,
-}: {
-	currentUserHandle: string;
-}) {
-	const [_markNotificationAsReadResponse, action, _isPending] = useActionState<
-		ActionResponse,
-		FormData
-	>(markNotificationAsReadAction, { success: false });
+
+export function NotificationsDropdownClient({ locale }: { locale: string }) {
 	const { data, isLoading, mutate } = useSWR<{
 		notifications: NotificationRowsWithRelations[];
 	}>(
@@ -35,28 +24,32 @@ export function NotificationsDropdownClient({
 	if (isLoading) return <Loader2 className="w-6 h-6 animate-spin" />;
 
 	const handleClick = (open: boolean) => {
-		if (open) {
-			startTransition(() => {
-				action(new FormData());
-			});
-			mutate(
-				(prev) => {
-					if (!prev) return prev;
-					return {
-						notifications: prev.notifications.map((n) => ({
-							...n,
-							read: true,
-						})),
-					};
-				},
-				{ revalidate: false },
-			);
-		}
+		if (!open) return;
+		void fetch("/api/notifications", {
+			method: "POST",
+			credentials: "include",
+		}).then((response) => {
+			if (response.status === 401) {
+				window.location.assign(`/${locale}/auth/login`);
+			}
+		});
+		mutate(
+			(prev) => {
+				if (!prev) return prev;
+				return {
+					notifications: prev.notifications.map((n) => ({
+						...n,
+						read: true,
+					})),
+				};
+			},
+			{ revalidate: false },
+		);
 	};
 	const unreadCount =
-		data?.notifications?.filter(
-			(notificationRowsWithRelations) => !notificationRowsWithRelations.read,
-		).length ?? 0;
+		data?.notifications?.filter((notification) => !notification.read).length ??
+		0;
+
 	return (
 		<DropdownMenu
 			data-testid="notifications-menu"
@@ -66,16 +59,14 @@ export function NotificationsDropdownClient({
 			<DropdownMenuTrigger asChild>
 				<div className="relative">
 					<Bell className="w-6 h-6 cursor-pointer" data-testid="bell-icon" />
-					{unreadCount
-						? unreadCount > 0 && (
-								<span
-									className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center"
-									data-testid="unread-count"
-								>
-									{unreadCount}
-								</span>
-							)
-						: null}
+					{unreadCount ? (
+						<span
+							className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center"
+							data-testid="unread-count"
+						>
+							{unreadCount}
+						</span>
+					) : null}
 				</div>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent
@@ -87,19 +78,14 @@ export function NotificationsDropdownClient({
 						No notifications
 					</DropdownMenuItem>
 				) : (
-					data.notifications.map(
-						(
-							notificationRowWithRelations: NotificationRowsWithRelations,
-							index: number,
-						) => (
-							<NotificationItem
-								currentUserHandle={currentUserHandle}
-								index={index}
-								key={notificationRowWithRelations.id}
-								notificationRowsWithRelations={notificationRowWithRelations}
-							/>
-						),
-					)
+					data.notifications.map((notification, index) => (
+						<NotificationItem
+							index={index}
+							key={notification.id}
+							locale={locale}
+							notificationRowsWithRelations={notification}
+						/>
+					))
 				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
@@ -108,11 +94,11 @@ export function NotificationsDropdownClient({
 
 function NotificationItem({
 	notificationRowsWithRelations,
-	currentUserHandle,
+	locale,
 	index,
 }: {
 	notificationRowsWithRelations: NotificationRowsWithRelations;
-	currentUserHandle: string;
+	locale: string;
 	index: number;
 }) {
 	return (
@@ -122,28 +108,33 @@ function NotificationItem({
 			} ${index === 0 ? "border-none" : ""}`}
 		>
 			<NotificationContent
-				currentUserHandle={currentUserHandle}
+				locale={locale}
 				notificationRowsWithRelations={notificationRowsWithRelations}
 			/>
 		</DropdownMenuItem>
 	);
 }
+
 function NotificationContent({
 	notificationRowsWithRelations,
+	locale,
 }: {
 	notificationRowsWithRelations: NotificationRowsWithRelations;
-	currentUserHandle: string;
+	locale: string;
 }) {
 	const { actorHandle, actorName, actorImage, type } =
 		notificationRowsWithRelations;
 	const commonLink = (
-		<Link className="hover:underline font-bold" href={`/${actorHandle}`}>
+		<Link
+			className="hover:underline font-bold"
+			params={{ handle: actorHandle, locale }}
+			to="/$locale/$handle"
+		>
 			{actorName}
 		</Link>
 	);
 	const commonDate = notificationRowsWithRelations.createdAt.toLocaleString();
 
-	// ページ情報を取得してリンクを生成する共通関数
 	const getPageLink = () => {
 		const pageTitle = notificationRowsWithRelations.pageTitle;
 		const pageSlug = notificationRowsWithRelations.pageSlug;
@@ -152,7 +143,8 @@ function NotificationContent({
 		return (
 			<Link
 				className="hover:underline font-bold"
-				href={`/${pageOwnerHandle}/${pageSlug}`}
+				params={{ handle: pageOwnerHandle, locale, pageSlug }}
+				to="/$locale/$handle/$pageSlug"
 			>
 				{pageTitle}
 			</Link>
@@ -163,24 +155,15 @@ function NotificationContent({
 	let extraContent: React.ReactNode = null;
 
 	switch (type) {
-		case "PAGE_COMMENT": {
-			actionText = <span className="text-gray-500"> commented on </span>;
-			extraContent = getPageLink();
-			if (!extraContent) return null;
-			break;
-		}
-		case "PAGE_LIKE": {
+		case "PAGE_LIKE":
 			actionText = <span className="text-gray-500"> liked your page </span>;
 			extraContent = getPageLink();
 			if (!extraContent) return null;
 			break;
-		}
-		case "FOLLOW": {
+		case "FOLLOW":
 			actionText = <span className="text-gray-500"> followed you</span>;
 			break;
-		}
-		case "PAGE_SEGMENT_TRANSLATION_VOTE":
-		case "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE": {
+		case "PAGE_SEGMENT_TRANSLATION_VOTE": {
 			const votedText = notificationRowsWithRelations.segmentTranslationText;
 			const pageTitle = notificationRowsWithRelations.pageTitle;
 			const pageSlug = notificationRowsWithRelations.pageSlug;
@@ -190,11 +173,12 @@ function NotificationContent({
 			actionText = <span className="text-gray-500"> voted for </span>;
 			extraContent = (
 				<>
-					<span className="">{votedText}</span>
+					<span>{votedText}</span>
 					<span className="text-gray-500"> on </span>
 					<Link
 						className="hover:underline font-bold"
-						href={`/${pageOwnerHandle}/${pageSlug}`}
+						params={{ handle: pageOwnerHandle, locale, pageSlug }}
+						to="/$locale/$handle/$pageSlug"
 					>
 						{pageTitle}
 					</Link>
@@ -202,7 +186,6 @@ function NotificationContent({
 			);
 			break;
 		}
-
 		default:
 			return <span>通知</span>;
 	}
@@ -213,6 +196,7 @@ function NotificationContent({
 				actorHandle={actorHandle}
 				actorImage={actorImage}
 				actorName={actorName}
+				locale={locale}
 			/>
 			<span className="flex flex-col">
 				<span>
@@ -230,24 +214,26 @@ function NotificationAvatar({
 	actorHandle,
 	actorImage,
 	actorName,
+	locale,
 }: {
 	actorHandle: string;
 	actorImage: string;
 	actorName: string;
+	locale: string;
 }) {
-	const { props } = getImageProps({
-		src: actorImage || "",
-		alt: actorName || "",
-		width: 40,
-		height: 40,
-	});
 	return (
 		<Link
 			className="flex items-center mr-2 no-underline! hover:text-gray-700"
-			href={`/${actorHandle}`}
+			params={{ handle: actorHandle, locale }}
+			to="/$locale/$handle"
 		>
 			<Avatar className="w-10 h-10 shrink-0 mr-3">
-				<AvatarImage {...props} />
+				<AvatarImage
+					alt={actorName || ""}
+					height={40}
+					src={actorImage || ""}
+					width={40}
+				/>
 				<AvatarFallback>
 					{(actorName || actorHandle).charAt(0).toUpperCase()}
 				</AvatarFallback>

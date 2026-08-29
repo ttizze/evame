@@ -1,6 +1,7 @@
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-import { FeatureSection, fetchFeatureHeaderAndText } from "./feature-section";
+import type { loadAboutPage } from "../../service/load-about-page";
+import { FeatureSection, selectFeatureHeaderAndText } from "./feature-section";
 
 const VOTE_HINT: Record<string, string> = {
 	ja: "訳文をクリックで投票を試す ↓",
@@ -10,9 +11,15 @@ const VOTE_HINT: Record<string, string> = {
 	es: "Haz clic en la traducción para votar ↓",
 };
 
-export default async function RefineFeature({ locale }: { locale: string }) {
-	const featureContent = await fetchFeatureHeaderAndText({
-		locale,
+export default function RefineFeature({
+	locale,
+	pageDetail,
+}: {
+	locale: string;
+	pageDetail: NonNullable<Awaited<ReturnType<typeof loadAboutPage>>>;
+}) {
+	const featureContent = selectFeatureHeaderAndText({
+		pageDetail,
 		headerNumber: SEGMENT_NUMBER.refineHeader,
 		textNumber: SEGMENT_NUMBER.refineText,
 	});

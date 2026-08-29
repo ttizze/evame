@@ -1,8 +1,9 @@
 "use client";
 
+import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
-import { useLocale } from "next-intl";
 import { useActionState, useState } from "react";
+import { useLocale } from "use-intl";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { GeminiApiKeyDialog } from "@/app/[locale]/(common-layout)/_components/gemini-api-key-dialog/gemini-api-key-dialog";
@@ -54,10 +55,13 @@ export function AddTranslateDialog({
 	} else {
 		throw new Error("pageSlug is required");
 	}
+	const translateActionFn = useServerFn(translateAction);
 	const [translateState, action, isTranslating] = useActionState<
 		TranslateActionState,
 		FormData
-	>(translateAction, { success: false });
+	>(async (_prev, formData) => translateActionFn({ data: formData }), {
+		success: false,
+	});
 	const [targetLocale, setTargetLocale] = useState(currentLocale);
 	const isPremium = userPlan === "premium";
 	const [selectedModel, setSelectedModel] = useState("gemini-2.0-flash");

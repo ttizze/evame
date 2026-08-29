@@ -1,5 +1,5 @@
 import type { JSX, ReactNode } from "react";
-import { sanitizeAndParseText } from "@/app/[locale]/_utils/sanitize-and-parse-text.server";
+import { sanitizeAndParseText } from "@/app/[locale]/_utils/sanitize-and-parse-text";
 import type { Segment } from "@/app/[locale]/types";
 
 type SegmentElementProps = {

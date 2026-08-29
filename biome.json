@@ -7,6 +7,7 @@
 			"!build",
 			"!.vscode",
 			"!.next",
+			"!.output",
 			"!node_modules",
 			"!**/*.css",
 			"!tipitaka-md",
@@ -22,7 +23,8 @@
 			"!.codex",
 			"!.claude",
 			"!.worktree",
-			"!.worktrees"
+			"!.worktrees",
+			"!src/routeTree.gen.ts"
 		]
 	},
 	"assist": {
@@ -39,6 +41,9 @@
 			"correctness": {
 				"noUnusedImports": { "level": "warn", "fix": "safe" },
 				"useUniqueElementIds": "off"
+			},
+			"performance": {
+				"noImgElement": "off"
 			},
 			"style": {
 				"noNonNullAssertion": "off"

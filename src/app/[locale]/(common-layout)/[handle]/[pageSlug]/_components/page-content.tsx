@@ -1,26 +1,15 @@
-import { EyeIcon, MessageCircle } from "lucide-react";
+import { EyeIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { BASE_URL } from "@/app/_constants/base-url";
-import { fetchPageCounts } from "@/app/[locale]/_db/fetch-page-detail.server";
-import { fetchPageViewCount } from "@/app/[locale]/_db/page-utility-queries.server";
-import { mdastToText } from "@/app/[locale]/_domain/mdast-to-text";
-import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
-import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
-import { PageCommentList } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/_components/page-comment-list/server";
 import type { PageDetail } from "@/app/[locale]/types";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
-import { ChildPages } from "./child-pages/server";
-import { PageCommentForm } from "./comment/_components/page-comment-form/client";
+import type { NavigationData, PageTitleTree } from "../_db/queries";
+import { ChildPages } from "./child-pages";
 import { ContentWithTranslations } from "./content-with-translations";
-import { PageNavigation } from "./page-navigation/server";
-import { PageViewCounter } from "./page-view-counter/client";
+import { PageNavigation } from "./page-navigation";
 import { PreviewBanner } from "./preview-banner";
 
-interface PageContentProps {
-	pageDetail: PageDetail;
-	locale: string;
-}
-
-async function collectAnnotationTypes(segments: PageDetail["segments"]) {
+export function collectAnnotationTypes(segments: PageDetail["segments"]) {
 	const typeMap = new Map<string, { key: string; label: string }>();
 	for (const segment of segments) {
 		for (const link of segment.annotations ?? []) {
@@ -38,15 +27,27 @@ async function collectAnnotationTypes(segments: PageDetail["segments"]) {
 	);
 }
 
-export async function PageContent({ pageDetail, locale }: PageContentProps) {
-	const [pageCounts, pageViewCount, annotationTypes, description] =
-		await Promise.all([
-			fetchPageCounts(pageDetail.id),
-			fetchPageViewCount(pageDetail.id),
-			collectAnnotationTypes(pageDetail.segments),
-			mdastToText(pageDetail.mdastJson).then((text) => text.slice(0, 200)),
-		]);
-	const isDraft = pageDetail.status !== "PUBLIC";
+export function PageContent({
+	pageDetail,
+	locale,
+	navigationData,
+	childPages,
+	description,
+	likeButton,
+	pageViewCounter,
+	floatingControls,
+}: {
+	pageDetail: PageDetail;
+	locale: string;
+	navigationData: NavigationData | null;
+	childPages: PageTitleTree[];
+	description: string;
+	likeButton: ReactNode;
+	pageViewCounter: ReactNode;
+	floatingControls: ReactNode;
+}) {
+	const isDraft =
+		pageDetail.status !== "PUBLIC" && !pageDetail.isPublishedTipitakaArchive;
 
 	const articleUrl = `${BASE_URL}/${pageDetail.sourceLocale}/${pageDetail.userHandle}/${pageDetail.slug}`;
 	const authorUrl = `${BASE_URL}/${pageDetail.sourceLocale}/${pageDetail.userHandle}`;
@@ -76,45 +77,20 @@ export async function PageContent({ pageDetail, locale }: PageContentProps) {
 				</>
 			)}
 			{isDraft && <PreviewBanner />}
-			<PageNavigation locale={locale} pageId={pageDetail.id} />
-			<ContentWithTranslations pageDetail={pageDetail} />
-			<ChildPages locale={locale} parentId={pageDetail.id} />
-			<div className="flex flex-wrap items-center gap-4">
-				<EyeIcon className="w-5 h-5" strokeWidth={1.5} />
-				<PageViewCounter
-					className="text-muted-foreground"
-					initialCount={pageViewCount}
-					pageId={pageDetail.id}
-				/>
-				<PageLikeButtonClient
-					className=""
-					initialLikeCount={pageCounts.likeCount}
-					pageId={pageDetail.id}
-					showCount
-				/>
-				<MessageCircle className="w-5 h-5" strokeWidth={1.5} />
-				<span className="text-muted-foreground">{pageCounts.pageComments}</span>
-			</div>
-
-			<FloatingControls
-				annotationTypes={annotationTypes}
-				likeButton={
-					<PageLikeButtonClient
-						className="w-10 h-10 rounded-full"
-						initialLikeCount={pageCounts.likeCount}
-						pageId={pageDetail.id}
-						showCount={false}
-					/>
-				}
-				sourceLocale={pageDetail.sourceLocale}
-				userLocale={locale}
+			<PageNavigation
+				data={navigationData}
+				locale={locale}
+				pageId={pageDetail.id}
 			/>
-
-			<div className="mt-8 space-y-4" id="comments">
-				<h2 className="text-2xl not-prose font-bold">Comments</h2>
-				<PageCommentForm pageId={pageDetail.id} userLocale={locale} />
-				<PageCommentList pageId={pageDetail.id} userLocale={locale} />
+			<ContentWithTranslations pageDetail={pageDetail} />
+			<ChildPages locale={locale} pages={childPages} />
+			<div className="flex flex-wrap items-center gap-4">
+				<EyeIcon className="h-5 w-5" strokeWidth={1.5} />
+				{pageViewCounter}
+				{likeButton}
 			</div>
+
+			{floatingControls}
 		</article>
 	);
 }

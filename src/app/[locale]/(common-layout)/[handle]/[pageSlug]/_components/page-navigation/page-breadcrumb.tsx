@@ -1,5 +1,3 @@
-import type { Route } from "next";
-import Link from "next/link";
 import { Fragment } from "react";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { PageForTree } from "@/app/[locale]/types";
@@ -25,9 +23,7 @@ export function PageBreadcrumb({
 					<Fragment key={node.id}>
 						<BreadcrumbItem>
 							<BreadcrumbLink asChild>
-								<Link
-									href={`/${locale}/${node.userHandle}/${node.slug}` as Route}
-								>
+								<a href={`/${locale}/${node.userHandle}/${node.slug}`}>
 									<SegmentElement
 										className="line-clamp-1 break-all overflow-wrap-anywhere"
 										interactive={false}
@@ -40,7 +36,7 @@ export function PageBreadcrumb({
 										}}
 										tagName="span"
 									/>
-								</Link>
+								</a>
 							</BreadcrumbLink>
 						</BreadcrumbItem>
 						{index < breadcrumb.length - 1 && <BreadcrumbSeparator />}

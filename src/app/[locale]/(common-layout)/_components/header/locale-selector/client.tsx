@@ -1,9 +1,9 @@
 "use client";
+import { useLocation, useNavigate, useParams } from "@tanstack/react-router";
 import { Check, ChevronDown } from "lucide-react";
-import { useParams } from "next/navigation";
-import { useLocale } from "next-intl";
 import { startTransition, useState } from "react";
 import useSWR from "swr";
+import { useLocale } from "use-intl";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,13 +22,11 @@ import {
 import { Separator } from "@/components/ui/separator";
 import type { TranslationProofStatus } from "@/db/types";
 import type { TranslationJob } from "@/db/types.helpers";
-import { usePathname } from "@/i18n/routing";
 import { cn } from "@/lib/utils";
 import { AddTranslateDialog } from "./add-translate-dialog/client";
-import { TranslationProofStatusIcon } from "./component/translation-proof-status-icon.client";
+import { TranslationProofStatusIcon } from "./component/translation-proof-status-icon";
 import { TextStatusGuide } from "./component/translation-status-guide.client";
 import { buildLocaleOptions } from "./domain/build-locale-options";
-import { useCombinedRouter } from "./hooks/use-combined-router";
 
 // Local types
 interface TranslationInfo {
@@ -69,16 +67,28 @@ export function LocaleSelector({
 }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const router = useCombinedRouter();
-	const pathname = usePathname();
+	const navigate = useNavigate();
+	const location = useLocation();
 	const targetLocale = useLocale();
-	const { pageSlug } = useParams<{
+	const { locale: routeLocale, pageSlug } = useParams({ strict: false }) as {
+		locale?: string;
 		pageSlug?: string;
-	}>();
+	};
+	const currentLocale = routeLocale ?? targetLocale;
 	const handleLocaleChange = (value: string) => {
 		setOpen(false);
 		startTransition(() => {
-			router.push(pathname, { locale: value });
+			const localePrefix = `/${currentLocale}`;
+			const pathWithoutLocale =
+				location.pathname === localePrefix ||
+				location.pathname === `${localePrefix}/`
+					? ""
+					: location.pathname.startsWith(`${localePrefix}/`)
+						? location.pathname.slice(localePrefix.length)
+						: location.pathname;
+			const nextPath = `/${value}${pathWithoutLocale}`;
+			const suffix = `${location.searchStr}${location.hash ? `#${location.hash}` : ""}`;
+			void navigate({ to: `${nextPath}${suffix}` });
 		});
 	};
 

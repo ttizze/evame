@@ -1,33 +1,32 @@
-import Link from "next/link";
-import { useTranslations } from "next-intl";
 import { FaDiscord, FaGithub } from "react-icons/fa";
-import { Link as LinkI18n } from "@/i18n/routing";
+import { useLocale, useTranslations } from "use-intl";
 
 export function Footer() {
+	const locale = useLocale();
 	const t = useTranslations("Footer");
 	return (
 		<footer className="mt-auto h-60 grid place-items-center">
 			<div className="w-full ">
 				<div className="flex justify-center items-center text-sm text-gray-600 dark:text-gray-300 gap-4">
-					<LinkI18n
+					<a
 						className="hover:text-gray-900 dark:hover:text-white"
-						href="/about"
+						href={`/${locale}/about`}
 					>
 						{t("about")}
-					</LinkI18n>
-					<LinkI18n
+					</a>
+					<a
 						className="hover:text-gray-900 dark:hover:text-white"
-						href="/privacy"
+						href={`/${locale}/privacy`}
 					>
 						{t("privacyPolicy")}
-					</LinkI18n>
-					<LinkI18n
+					</a>
+					<a
 						className="hover:text-gray-900 dark:hover:text-white"
-						href="/terms"
+						href={`/${locale}/terms`}
 					>
 						{t("termsOfService")}
-					</LinkI18n>
-					<Link
+					</a>
+					<a
 						aria-label="GitHub"
 						className="transition-colors"
 						href="https://github.com/ttizze/eveeve"
@@ -35,8 +34,8 @@ export function Footer() {
 						target="_blank"
 					>
 						<FaGithub size={24} />
-					</Link>
-					<Link
+					</a>
+					<a
 						aria-label="Discord"
 						className="transition-colors"
 						href="https://discord.gg/2JfhZdu9zW"
@@ -44,7 +43,7 @@ export function Footer() {
 						target="_blank"
 					>
 						<FaDiscord size={24} />
-					</Link>
+					</a>
 				</div>
 			</div>
 		</footer>

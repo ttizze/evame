@@ -1,5 +1,5 @@
 
-  You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, Radix UI and Tailwind.
+  You are an expert in TypeScript, Node.js, TanStack Start, TanStack Router, React, Shadcn UI, Radix UI and Tailwind.
   
   # Evame プロジェクトアーキテクチャガイド
 
@@ -18,20 +18,20 @@
 
 ## プロジェクト概要
 
-Evame はNext.js（App Router）を使用したWebアプリケーションで、モダンなUI/UX設計を採用しています。プロジェクトはモノレポ構造を採用しており、メインのアプリケーションコードは `next` ディレクトリに集約されています。
+Evame はTanStack Start（TanStack Router）を使用したWebアプリケーションで、モダンなUI/UX設計を採用しています。アプリケーションコードはリポジトリ直下の `src` ディレクトリにあります。
 
 ## 技術スタック
 
-- **フレームワーク**: Next.js 15 (App Router)
+- **フレームワーク**: TanStack Start (TanStack Router、Vite、Nitro)
 - **言語**: TypeScript
 - **UI コンポーネント**: 
   - Shadcn UI (Radix UI ベース)
   - React 19
 - **スタイリング**: Tailwind CSS
-- **データベース**: Drizzle ORM を使用した PostgreSQL
+- **データベース**: PostgreSQL（Kyselyをランタイム、Drizzleをスキーマ/マイグレーションに使用）
 - **認証**: better auth
-- **国際化**: next-intl
-- **状態管理**: React Server Components + nuqs (URL検索パラメータ管理)
+- **国際化**: use-intl
+- **状態管理**: TanStack Router + nuqs (URL検索パラメータ管理)
 - **エディタ**: TipTap
 
 ## ディレクトリ構造
@@ -40,32 +40,22 @@ Evame はNext.js（App Router）を使用したWebアプリケーションで、
 
 ```
 /
-├── next/                         # メインアプリケーションコード
-│   ├── src/                      # ソースコード
-│   │   ├── app/                  # Next.js App Router
-│   │   │   ├── [locale]/         # 国際化対応ルート
-│   │   │   │   ├── (common-layout)/ # 共通レイアウト
-│   │   │   │   ├── (edit-layout)/   # 編集用レイアウト
-│   │   │   │   ├── _components/     # ルート固有のコンポーネント
-│   │   │   │   └── _lib/            # ルート固有のユーティリティ
-│   │   │   ├── api/              # API ルート
-│   │   │   └── _db/              # データベース関連コード
-│   │   ├── components/           # 共有コンポーネント
-│   │   │   └── ui/               # UI コンポーネント (Shadcn UI)
-│   │   ├── features/             # 機能ごとのコード
-│   │   ├── lib/                  # ユーティリティ関数
-│   │   ├── types/                # 型定義
-│   │   └── i18n/                 # 国際化設定
-│   ├── drizzle/                   # Drizzle スキーマとマイグレーション
-│   └── public/                   # 静的ファイル
-└── components/                   # クロームエクステンション用コンポーネント（空）
+├── src/
+│   ├── routes/                   # TanStack Routerのルート境界
+│   ├── app/                      # 機能別コンポーネント、サービス、APIハンドラー
+│   ├── components/               # 共有コンポーネント
+│   │   └── ui/                   # UI コンポーネント (Shadcn UI)
+│   ├── db/                       # DB接続、型、シード
+│   ├── drizzle/                  # Drizzle スキーマとマイグレーション
+│   └── i18n/                     # 国際化設定
+└── public/                       # 静的ファイル
 ```
 
 ## 主要コンポーネント
 
 ### UI コンポーネント (Shadcn UI)
 
-`next/src/components/ui` ディレクトリには、Shadcn UI フレームワークに基づく再利用可能なUIコンポーネントがあります：
+`src/components/ui` ディレクトリには、Shadcn UI フレームワークに基づく再利用可能なUIコンポーネントがあります：
 
 - ボタン、入力フィールド、チェックボックスなどの基本要素
 - モーダル、ポップオーバー、ドロップダウンメニューなどの複合コンポーネント
@@ -75,32 +65,33 @@ Evame はNext.js（App Router）を使用したWebアプリケーションで、
 
 ### ルートと国際化
 
-アプリケーションは国際化に対応しており、`[locale]` パラメータを使用してルーティングされています。`next-intl` を使用して翻訳を管理しています。
+アプリケーションは国際化に対応しており、`$locale` パラメータを使用してTanStack Routerでルーティングされています。`use-intl` の `IntlProvider` と `useTranslations` を使用して翻訳を管理しています。
 
-- ルートパスには `[locale]` セグメントが含まれ、それぞれの言語に対応するサブルートがあります
-- 翻訳メッセージは `next/messages` ディレクトリにあります
+- ルートパスには `$locale` セグメントが含まれ、それぞれの言語に対応するサブルートがあります
+- 翻訳メッセージは `messages` ディレクトリにあります
 
 ### データベース
 
-データベースは Drizzle ORM を使用して管理されています：
+データベースは、ランタイムのクエリに Kysely、スキーマとマイグレーションに Drizzle を使用します：
 
-- スキーマ定義: `next/drizzle/schema.ts`
-- マイグレーション: `next/drizzle/migrations/`
-- シードスクリプト: `next/drizzle/seed.ts`
+- ランタイム接続: `src/db/index.ts`
+- スキーマ定義: `src/drizzle/schema.ts`
+- マイグレーション: `src/drizzle/`
+- シードスクリプト: `src/db/seed.ts`
 
 ### 認証
 
 認証は better auth を使用して実装されています：
 
-- 認証設定: `next/src/auth.ts`
+- 認証設定: `src/auth.ts`
 
 ## データフロー
 
-アプリケーションは主にReact Server Componentsを使用し、必要に合わせてClient Componentsを活用します：
+アプリケーションはTanStack Startのサーバー関数とReactコンポーネントを使用します：
 
-1. データ取得は主にサーバーコンポーネントで行われます
-2. ユーザーインタラクションが必要な場合は `"use client"` ディレクティブを使用してクライアントコンポーネントを作成します
-3. フォーム送信やデータ変更には Server Actions を使用します
+1. ルートの `loader` または `createServerFn` でデータを取得します
+2. ユーザーインタラクションが必要なコンポーネントでは、必要な場合に限りクライアント側のフックを使用します
+3. フォーム送信やデータ変更には `createServerFn` と `useServerFn` を使用します
 4. URL検索パラメータの状態管理には `nuqs` を使用します
 
 ## コンポーネント開発ガイドライン
@@ -109,9 +100,9 @@ Evame はNext.js（App Router）を使用したWebアプリケーションで、
 
 ### コンポーネントの配置
 
-1. **共有UI部品**: `next/src/components/ui/` - 基本的なUIコンポーネント
-2. **機能固有部品**: `next/src/features/{feature-name}/components/` - 特定の機能に関連するコンポーネント
-3. **ページ固有部品**: `next/src/app/[locale]/{route}/_components/` - 特定のページ/ルートに関連するコンポーネント
+1. **共有UI部品**: `src/components/ui/` - 基本的なUIコンポーネント
+2. **機能固有部品**: `src/app/[locale]/.../_components/` - 特定の機能に関連するコンポーネント
+3. **ルート固有部品**: `src/routes/` または主な呼び出し元に近い `src/app/.../_components/`
 
 ### コンポーネントの構造
 
@@ -152,57 +143,23 @@ export const ComponentName: FC<ComponentNameProps> = ({
 
 ### データ取得パターン
 
-1. **フォルダ構造**:
-   - コンポーネントがデータを必要とする場合、そのコンポーネントと同じディレクトリに `_db` ディレクトリを作成します
-   - 例: `components/project/new-project-list/_db/`
-
-2. **クエリファイル**:
-   - データ取得関数は `_db/queries.server.ts` ファイルに配置します
-   - 命名規則: `fetch{データ名}` (例: `fetchNewProjectsWithPagination`)
-   - これらの関数は常に非同期関数として実装します
-
-3. **サーバーコンポーネント**:
-   - データを取得するサーバーコンポーネントは通常 `server.tsx` ファイルに実装します
-   - データ取得とレンダリングを結合したコンポーネントとして機能します
-
-```typescript
-// コンポーネント例: new-project-list/server.tsx
-import { fetchNewProjectsWithPagination } from "./_db/queries.server";
-
-export default async function NewProjectList({ page, query }: Props) {
-  const { projectsWithRelations } = await fetchNewProjectsWithPagination(page, 10, query);
-  
-  return (
-    <ComponentToRenderData data={projectsWithRelations} />
-  );
-}
-```
-
-```typescript
-// クエリ例: _db/queries.server.ts
-import { db } from "@/drizzle";
-
-export async function fetchNewProjectsWithPagination(
-  page = 1,
-  pageSize = 10,
-  searchTerm = "",
-) {
-  // Drizzleを使用したデータ取得ロジック
-  const data = await db.select().from(someModel);
-  return { data };
-}
-```
+1. **ルートのデータ取得**:
+   - `src/routes` の `loader` から `createServerFn({ method: "GET" })` を呼び出します
+   - 入力は `.validator` で検証し、ルートに近い `_db` またはサービスからデータを取得します
+2. **DBクエリ**:
+   - DB接続は `@/db` の Kysely を使用します
+   - クエリは主な呼び出し元に近い `_db/queries.ts` または `queries.server.ts` に配置します
 
 ### ミューテーションパターン
 
 1. **フォルダ構造**:
    - ミューテーション（データ変更）が必要なコンポーネントは次のファイル構成を持ちます：
-     - `action.ts`: Server Action定義
+     - `action.ts`: サーバー関数定義
      - `client.tsx`: クライアントコンポーネント
      - `db/mutations.server.ts`: データベース操作
 
-2. **Server Action**:
-   - Server Actionは `action.ts` ファイルで定義し、先頭に `"use server"` ディレクティブを記述します
+2. **サーバー関数**:
+   - サーバー関数は `createServerFn` で定義し、入力を `.validator` で検証します
    - 入力バリデーションにはZodを使用します
    - アクション関数は命名規則: `{操作}Action` (例: `togglePageLikeAction`)
 
@@ -212,37 +169,40 @@ export async function fetchNewProjectsWithPagination(
 
 4. **クライアントコンポーネント**:
    - `"use client"` ディレクティブを持つコンポーネントは通常 `client.tsx` に実装します
-   - Server Actionを呼び出すフォームやボタンを含みます
+   - `useServerFn` でサーバー関数を呼び出すフォームやボタンを含みます
    - Optimistic UIの実装には `useOptimistic` を使用します
 
 ```typescript
 // action.ts
-"use server";
 
+import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeaders } from "@tanstack/react-start/server";
 import { z } from "zod";
+import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { togglePageLike } from "./db/mutations.server";
 
-const schema = z.object({ slug: z.string() });
+const schema = z.object({ pageId: z.number().int().positive() });
 
-export async function togglePageLikeAction(previousState, formData: FormData) {
-  const validation = schema.safeParse({ slug: formData.get("slug") });
-  if (!validation.success) {
-    return { success: false, zodErrors: validation.error.flatten().fieldErrors };
-  }
-  
-  // データベース操作
-  const result = await togglePageLike(validation.data.slug, { /* ... */ });
-  
-  return { success: true, data: result };
-}
+export const togglePageLikeAction = createServerFn({ method: "POST" })
+  .validator(schema)
+  .handler(async ({ data }) => {
+    const currentUser = await getCurrentUserFromHeaders(
+      new Headers(getRequestHeaders()),
+    );
+    if (!currentUser) return { success: false };
+    return {
+      success: true,
+      data: await togglePageLike(data.pageId, currentUser.id),
+    };
+  });
 ```
 
 ```typescript
 // db/mutations.server.ts
-import { db } from "@/drizzle";
+import { db } from "@/db";
 
-export async function togglePageLike(slug: string, identifier) {
-  // Drizzleを使用したデータベース操作
+export async function togglePageLike(pageId: number, currentUserId: string) {
+  // Kyselyを使用したデータベース操作
   // ...
   return { liked, likeCount };
 }
@@ -269,21 +229,13 @@ export function PageLikeButton({ liked, likeCount, slug }: Props) {
 
 ## 国際化対応
 
-1. メッセージを追加する場合は `next/messages/{locale}` ディレクトリ内の適切なファイルに追加します
+1. メッセージを追加する場合は `messages/{locale}.json` に追加します
 2. コンポーネント内でメッセージを使用する場合：
 
 ```typescript
-// サーバーコンポーネントの場合
-import { getTranslations } from "next-intl/server";
-
-export async function MyComponent() {
-  const t = await getTranslations("namespace");
-  return <div>{t("key")}</div>;
-}
-
-// クライアントコンポーネントの場合
+// IntlProvider配下のコンポーネント
 "use client";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 export function MyComponent() {
   const t = useTranslations("namespace");
@@ -292,8 +244,6 @@ export function MyComponent() {
 ```
 
 
-このガイドに従うことで、一貫性のあるコンポーネントを開発し、プロジェクト全体の整合性を維持することができます。 
+このガイドに従うことで、一貫性のあるコンポーネントを開発し、プロジェクト全体の整合性を維持することができます。
 
-
-  Follow Next.js docs for Data Fetching, Rendering, and Routing.
-  
+  Follow TanStack Start and TanStack Router docs for data fetching, rendering, and routing.

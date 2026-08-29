@@ -18,7 +18,6 @@ export interface TranslateJobParams {
 	translationJobId: number;
 	aiModel: string;
 	targetLocale: string;
-	pageCommentId: number | null;
 	annotationContentId: number | null;
 	/** ユーザー定義の翻訳コンテキスト（翻訳指示） */
 	translationContext: string;

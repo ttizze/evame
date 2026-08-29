@@ -1,50 +1,49 @@
-import { render, waitFor } from "@testing-library/react";
-import { useActionState } from "react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { toast } from "sonner";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockUsers } from "@/tests/mock";
 import { ProfileForm } from "./profile-form";
 
-vi.mock("react", async () => {
-	const actual = await vi.importActual<typeof import("react")>("react");
-	return {
-		...actual,
-		useActionState: vi.fn(),
-	};
-});
+const { invalidateMock, updateProfileImageMock, updateProfileMock } =
+	vi.hoisted(() => ({
+		invalidateMock: vi.fn(),
+		updateProfileImageMock: vi.fn(),
+		updateProfileMock: vi.fn(),
+	}));
+
+vi.mock("@tanstack/react-router", () => ({
+	useRouter: () => ({ invalidate: invalidateMock }),
+}));
+vi.mock("@tanstack/react-start", () => ({
+	useServerFn: (serverFn: unknown) => serverFn,
+}));
+vi.mock("@/routes/$locale/-profile-edit-data", () => ({
+	updateProfile: updateProfileMock,
+	updateProfileImage: updateProfileImageMock,
+}));
 vi.mock("sonner", () => ({
 	toast: { success: vi.fn(), error: vi.fn() },
 }));
 vi.mock("@/app/[locale]/_service/auth-client", () => ({
 	authClient: { updateUser: vi.fn() },
 }));
-vi.mock("next/image", () => ({
-	__esModule: true,
-	default: (props: { alt?: string; src?: string }) => {
-		const { alt = "", src = "", ...rest } = props;
-		return <span data-alt={alt} data-image="true" data-src={src} {...rest} />;
-	},
-}));
 
 describe("ProfileForm", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		updateProfileMock.mockResolvedValue({
+			success: false,
+			zodErrors: { name: ["名前が短すぎます"] },
+		});
 	});
 
 	it("バリデーションエラーがあるとき_最初のメッセージをtoastで表示する", async () => {
-		vi.mocked(useActionState)
-			.mockReturnValueOnce([
-				{ success: false, zodErrors: { name: ["名前が短すぎます"] } },
-				vi.fn(),
-				false,
-			])
-			.mockReturnValueOnce([
-				{ success: true, data: { imageUrl: mockUsers[0].image } },
-				vi.fn(),
-				false,
-			]);
+		render(<ProfileForm currentUser={mockUsers[0]} locale="en" />);
 
-		render(<ProfileForm currentUser={mockUsers[0]} />);
+		const saveButton = screen.getByRole("button", { name: "Save" });
+		const form = saveButton.closest("form");
+		expect(form).not.toBeNull();
+		fireEvent.submit(form as HTMLFormElement);
 
 		await waitFor(() => {
 			expect(toast.error).toHaveBeenCalledWith("名前が短すぎます");

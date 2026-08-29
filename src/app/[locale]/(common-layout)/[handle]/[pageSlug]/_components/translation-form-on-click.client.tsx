@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useLocation } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AddAndVoteTranslations } from "./translation-section/add-and-vote-translations.client";
@@ -68,7 +68,7 @@ function getSegmentEl(target: EventTarget | null): HTMLElement | null {
 export function TranslationFormOnClick() {
 	const [activeState, setActiveState] = useState<ActiveState>(emptyState);
 	const stateRef = useRef<ActiveState>(emptyState);
-	const pathname = usePathname();
+	const pathname = useLocation({ select: (location) => location.pathname });
 
 	useEffect(() => {
 		let hadSelectionOnPointerDown = false;

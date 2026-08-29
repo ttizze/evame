@@ -1,6 +1,5 @@
 "use client";
 
-import { GoogleAnalytics } from "@next/third-parties/google";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -36,6 +35,22 @@ export function AnalyticsConsent({
 		);
 	}, []);
 
+	useEffect(() => {
+		if (consent !== "accepted" || !gaTrackingId) return;
+
+		const externalScript = document.createElement("script");
+		externalScript.async = true;
+		externalScript.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaTrackingId)}`;
+		const configScript = document.createElement("script");
+		configScript.textContent = `window.dataLayer=window.dataLayer||[];window.gtag=function(){window.dataLayer.push(arguments)};window.gtag('js',new Date());window.gtag('config',${JSON.stringify(gaTrackingId).replaceAll("<", "\\u003c")});`;
+
+		document.head.append(externalScript, configScript);
+		return () => {
+			externalScript.remove();
+			configScript.remove();
+		};
+	}, [consent, gaTrackingId]);
+
 	const handleAccept = () => {
 		window.localStorage.setItem(analyticsConsentStorageKey, "accepted");
 		setConsent("accepted");
@@ -52,9 +67,6 @@ export function AnalyticsConsent({
 
 	return (
 		<>
-			{consent === "accepted" && gaTrackingId && (
-				<GoogleAnalytics gaId={gaTrackingId} />
-			)}
 			{consent === null && (
 				<div className="fixed inset-x-3 bottom-3 z-50 sm:inset-x-auto sm:right-3 sm:w-[420px] md:bottom-5 md:right-5">
 					<section
