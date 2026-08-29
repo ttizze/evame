@@ -76,6 +76,20 @@ describe("ホーム画面", () => {
 		]);
 		expect(screen.getByRole("link", { name: /More/ })).toBeInTheDocument();
 	});
+
+	it("Aboutページがなくても一覧を表示しAboutSectionだけ省略する", () => {
+		const { container } = render(
+			<HomePresentation data={{ ...data, pageDetail: null }} locale="en" />,
+		);
+
+		expect(screen.queryByTestId("about-section")).not.toBeInTheDocument();
+		expect(
+			[...container.querySelectorAll("[data-testid]")].map((element) =>
+				element.getAttribute("data-testid"),
+			),
+		).toEqual(["new-pages", "more-link", "popular-pages", "tipitaka-pages"]);
+		expect(screen.getByRole("link", { name: /More/ })).toBeInTheDocument();
+	});
 });
 
 describe("ホーム画面のメタデータ", () => {

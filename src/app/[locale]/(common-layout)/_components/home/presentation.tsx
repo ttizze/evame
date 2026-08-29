@@ -13,30 +13,32 @@ export function HomePresentation({
 	data,
 }: {
 	locale: string;
-	data: HomeData & { pageDetail: NonNullable<HomeData["pageDetail"]> };
+	data: HomeData;
 }) {
 	return (
 		<div className="flex flex-col gap-8 justify-between mb-12">
-			<AboutSectionPresentation
-				floatingControls={
-					<ClientOnly fallback={null}>
-						<FloatingControls sourceLocale="mixed" userLocale={locale} />
-					</ClientOnly>
-				}
-				locale={locale}
-				pageDetail={data.pageDetail}
-				readControls={
-					<ClientOnly fallback={null}>
-						<FloatingControls
-							alwaysVisible={true}
-							position="w-full flex justify-center"
-							sourceLocale={data.pageDetail.sourceLocale}
-							userLocale={locale}
-						/>
-					</ClientOnly>
-				}
-				stats={data.stats}
-			/>
+			{data.pageDetail ? (
+				<AboutSectionPresentation
+					floatingControls={
+						<ClientOnly fallback={null}>
+							<FloatingControls sourceLocale="mixed" userLocale={locale} />
+						</ClientOnly>
+					}
+					locale={locale}
+					pageDetail={data.pageDetail}
+					readControls={
+						<ClientOnly fallback={null}>
+							<FloatingControls
+								alwaysVisible={true}
+								position="w-full flex justify-center"
+								sourceLocale={data.pageDetail.sourceLocale}
+								userLocale={locale}
+							/>
+						</ClientOnly>
+					}
+					stats={data.stats}
+				/>
+			) : null}
 			<NewPageListPresentation
 				currentPage={1}
 				locale={locale}

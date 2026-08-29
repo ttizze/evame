@@ -1,4 +1,4 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { getHomeMetadata } from "@/app/[locale]/(common-layout)/_components/home/metadata";
 import { HomePresentation } from "@/app/[locale]/(common-layout)/_components/home/presentation";
 import { getIndexData } from "./$locale/-index-data";
@@ -6,11 +6,8 @@ import { getIndexData } from "./$locale/-index-data";
 export const Route = createFileRoute("/$locale/_common/")({
 	loader: async ({ params }) => {
 		const data = await getIndexData({ data: { locale: params.locale } });
-		if (!data.pageDetail) {
-			throw notFound();
-		}
 
-		return { ...data, pageDetail: data.pageDetail };
+		return data;
 	},
 	head: ({ params }) => {
 		const { title, description, alternates } = getHomeMetadata(params.locale);
