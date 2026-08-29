@@ -64,7 +64,7 @@ function LocaleShell() {
 		messages[consentMessageLocale as keyof typeof messages].CookieConsent;
 
 	return (
-		<IntlProvider locale={locale} messages={localeMessages}>
+		<IntlProvider locale={locale} messages={localeMessages} timeZone="UTC">
 			<NuqsAdapter>
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 					<ClientOnly fallback={null}>
