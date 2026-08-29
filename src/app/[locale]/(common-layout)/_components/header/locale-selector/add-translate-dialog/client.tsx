@@ -2,8 +2,8 @@
 
 import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
-import { useLocale } from "next-intl";
 import { useActionState, useState } from "react";
+import { useLocale } from "use-intl";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { GeminiApiKeyDialog } from "@/app/[locale]/(common-layout)/_components/gemini-api-key-dialog/gemini-api-key-dialog";

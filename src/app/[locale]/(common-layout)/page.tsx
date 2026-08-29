@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { ArrowRightIcon } from "lucide-react";
 import type { Metadata } from "next";
 import { type ReactNode, Suspense } from "react";
@@ -7,7 +8,6 @@ import NewPageList from "@/app/[locale]/(common-layout)/_components/page/new-pag
 import PopularPageList from "@/app/[locale]/(common-layout)/_components/page/popular-page-list/server";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "@/i18n/routing";
 
 const metadataByLocale: Record<string, { title: string; description: string }> =
 	{
@@ -73,13 +73,19 @@ export default function HomePage({
 					<NewPageList locale={locale} />
 				))}
 			</Suspense>
-			<div className="flex justify-center">
-				<Button className="rounded-full w-40 h-10" variant="default">
-					<Link className="flex items-center gap-2" href="/new-pages">
-						More <ArrowRightIcon className="w-4 h-4" />
-					</Link>
-				</Button>
-			</div>
+			{params.then(({ locale }) => (
+				<div className="flex justify-center">
+					<Button className="rounded-full w-40 h-10" variant="default">
+						<Link
+							className="flex items-center gap-2"
+							params={{ locale }}
+							to="/$locale/new-pages"
+						>
+							More <ArrowRightIcon className="w-4 h-4" />
+						</Link>
+					</Button>
+				</div>
+			))}
 
 			<Suspense fallback={<SectionSkeleton className="h-[400px] w-full" />}>
 				{params.then(({ locale }) => (

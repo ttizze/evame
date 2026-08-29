@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Hash } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale } from "use-intl";
 import type { Tag } from "@/db/types.helpers";
 
 type TagListProps = {

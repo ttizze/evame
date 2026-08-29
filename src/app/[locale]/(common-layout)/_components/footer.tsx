@@ -1,5 +1,5 @@
-import { useLocale, useTranslations } from "next-intl";
 import { FaDiscord, FaGithub } from "react-icons/fa";
+import { useLocale, useTranslations } from "use-intl";
 
 export function Footer() {
 	const locale = useLocale();

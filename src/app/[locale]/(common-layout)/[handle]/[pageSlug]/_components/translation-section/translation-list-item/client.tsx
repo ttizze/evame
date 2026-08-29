@@ -1,4 +1,5 @@
 "use client";
+import { Link } from "@tanstack/react-router";
 import { EllipsisVertical, Trash2 } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
@@ -12,7 +13,6 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from "@/i18n/routing";
 import { VoteButtons } from "../vote-buttons/client";
 
 interface TranslationItemProps {
@@ -98,7 +98,8 @@ export function TranslationListItem({
 			<span className="flex items-center justify-end">
 				<Link
 					className="no-underline! mr-2 flex  items-center"
-					href={`/${translation.userHandle}`}
+					params={{ handle: translation.userHandle, locale }}
+					to="/$locale/$handle"
 				>
 					<span className="text-sm text-gray-500 text-right flex justify-end items-center  ">
 						by: {translation.userName}

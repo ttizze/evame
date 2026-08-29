@@ -1,7 +1,7 @@
 "use client";
 
-import { useLocale } from "next-intl";
 import { type ReactNode, useState } from "react";
+import { useLocale } from "use-intl";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
 import {
 	Dialog,

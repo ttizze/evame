@@ -1,14 +1,16 @@
+import { Link } from "@tanstack/react-router";
 import { getImageProps } from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from "@/i18n/routing";
 import { fetchPopularUsers } from "./_db/queries.server";
 
 interface PopularUsersListProps {
 	limit: number;
+	locale: string;
 }
 
 export default async function PopularUsersList({
 	limit,
+	locale,
 }: PopularUsersListProps) {
 	// Fetch popular users based on follower count
 	const popularUsers = await fetchPopularUsers(limit);
@@ -31,8 +33,9 @@ export default async function PopularUsersList({
 				return (
 					<Link
 						className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 transition-colors"
-						href={`/${user.handle}`}
 						key={user.id}
+						params={{ handle: user.handle, locale }}
+						to="/$locale/$handle"
 					>
 						<Avatar className="w-10 h-10">
 							<AvatarImage {...props} />

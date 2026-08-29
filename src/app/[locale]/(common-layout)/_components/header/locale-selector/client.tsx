@@ -1,9 +1,9 @@
 "use client";
 import { useLocation, useNavigate, useParams } from "@tanstack/react-router";
 import { Check, ChevronDown } from "lucide-react";
-import { useLocale } from "next-intl";
 import { startTransition, useState } from "react";
 import useSWR from "swr";
+import { useLocale } from "use-intl";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { Button } from "@/components/ui/button";
 import {

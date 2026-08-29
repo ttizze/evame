@@ -1,4 +1,3 @@
-import type { redirect } from "next/navigation";
 import { describe, expect, it, vi } from "vitest";
 import { ZodError, z } from "zod";
 import {
@@ -9,30 +8,30 @@ import {
 } from "./auth-and-validate";
 
 /* ---------------- requireAuth ---------------- */
-const redirectMock = vi.fn().mockImplementation(() => {
-	throw new Error("redirect");
-}) as unknown as typeof redirect;
-
 describe("requireAuth", () => {
 	it("サインインしていない場合は /auth/login へリダイレクトする", async () => {
 		const deps: RequireAuthDeps = {
 			getCurrentUser: vi.fn().mockResolvedValue(null),
-			redirect: redirectMock,
 		};
 
-		await expect(requireAuth(deps)).rejects.toThrow("redirect");
-		expect(deps.redirect).toHaveBeenCalledWith("/auth/login");
+		const redirectResponse = await requireAuth(deps).catch((error: unknown) =>
+			error instanceof Response ? error : Promise.reject(error),
+		);
+		expect(redirectResponse).toBeInstanceOf(Response);
+		if (!(redirectResponse instanceof Response)) {
+			throw new Error("redirectされていません");
+		}
+		expect(redirectResponse.status).toBe(307);
+		expect(redirectResponse.headers.get("Location")).toBe("/auth/login");
 	});
 
 	it("サインイン済みなら id と handle を返す", async () => {
 		const deps: RequireAuthDeps = {
 			getCurrentUser: vi.fn().mockResolvedValue({ id: "u1", handle: "alice" }),
-			redirect: vi.fn() as unknown as typeof redirect,
 		};
 
 		const user = await requireAuth(deps);
 		expect(user).toEqual({ id: "u1", handle: "alice" });
-		expect(deps.redirect).not.toHaveBeenCalled();
 	});
 });
 
@@ -44,7 +43,6 @@ describe("authAndValidate", () => {
 	it("バリデーションエラー時は success:false を返す", async () => {
 		const deps: AuthDeps = {
 			getCurrentUser: vi.fn().mockResolvedValue({ id: "u1", handle: "alice" }),
-			redirect: redirectMock,
 			parseFormData: vi.fn().mockResolvedValue({
 				success: false,
 				error: new ZodError([]),
@@ -64,7 +62,6 @@ describe("authAndValidate", () => {
 
 		const deps: AuthDeps = {
 			getCurrentUser: vi.fn().mockResolvedValue({ id: "u1", handle: "alice" }),
-			redirect: vi.fn() as unknown as typeof redirect,
 			parseFormData: vi.fn().mockResolvedValue({
 				success: true,
 				data: { title: "hello" },

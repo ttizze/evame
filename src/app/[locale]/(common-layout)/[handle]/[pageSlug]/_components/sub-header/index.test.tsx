@@ -1,21 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { NextIntlClientProvider } from "next-intl";
 import { NuqsTestingAdapter } from "nuqs/adapters/testing";
-import type { ReactNode } from "react";
+import { IntlProvider } from "use-intl";
 import { vi } from "vitest";
 import type { PageDetail } from "@/app/[locale]/types";
 import { SubHeader } from "./index";
-
-vi.mock("@/i18n/routing", () => ({
-	Link: ({
-		children,
-		...props
-	}: {
-		children: ReactNode;
-		href: string;
-		className?: string;
-	}) => <a {...props}>{children}</a>,
-}));
 
 describe("SubHeader", () => {
 	const mockPageDetail = {
@@ -47,13 +35,13 @@ describe("SubHeader", () => {
 	test("ユーザー情報が表示される", () => {
 		render(
 			<NuqsTestingAdapter>
-				<NextIntlClientProvider locale="en">
+				<IntlProvider locale="en">
 					<SubHeader
 						markdown="Hello"
 						pageDetail={mockPageDetail}
 						tocItems={[]}
 					/>
-				</NextIntlClientProvider>
+				</IntlProvider>
 			</NuqsTestingAdapter>,
 		);
 
@@ -64,13 +52,13 @@ describe("SubHeader", () => {
 	test("TOCが空のときボタンが表示されない", () => {
 		render(
 			<NuqsTestingAdapter>
-				<NextIntlClientProvider locale="en">
+				<IntlProvider locale="en">
 					<SubHeader
 						markdown="Hello"
 						pageDetail={mockPageDetail}
 						tocItems={[]}
 					/>
-				</NextIntlClientProvider>
+				</IntlProvider>
 			</NuqsTestingAdapter>,
 		);
 
@@ -80,13 +68,13 @@ describe("SubHeader", () => {
 	test("TOCがあるときボタンが表示される", () => {
 		render(
 			<NuqsTestingAdapter>
-				<NextIntlClientProvider locale="en">
+				<IntlProvider locale="en">
 					<SubHeader
 						markdown="Hello"
 						pageDetail={mockPageDetail}
 						tocItems={tocItems}
 					/>
-				</NextIntlClientProvider>
+				</IntlProvider>
 			</NuqsTestingAdapter>,
 		);
 
@@ -96,13 +84,13 @@ describe("SubHeader", () => {
 	test("TOCボタンのクリックで表示が切り替わる", () => {
 		render(
 			<NuqsTestingAdapter>
-				<NextIntlClientProvider locale="en">
+				<IntlProvider locale="en">
 					<SubHeader
 						markdown="Hello"
 						pageDetail={mockPageDetail}
 						tocItems={tocItems}
 					/>
-				</NextIntlClientProvider>
+				</IntlProvider>
 			</NuqsTestingAdapter>,
 		);
 
@@ -125,13 +113,13 @@ describe("SubHeader", () => {
 	test("原文リンクをクリックしてもTOCは閉じない", () => {
 		render(
 			<NuqsTestingAdapter>
-				<NextIntlClientProvider locale="en">
+				<IntlProvider locale="en">
 					<SubHeader
 						markdown="Hello"
 						pageDetail={mockPageDetail}
 						tocItems={tocItems}
 					/>
-				</NextIntlClientProvider>
+				</IntlProvider>
 			</NuqsTestingAdapter>,
 		);
 

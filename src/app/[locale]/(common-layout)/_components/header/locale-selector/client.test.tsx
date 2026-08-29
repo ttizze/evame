@@ -13,7 +13,7 @@ if (typeof global.ResizeObserver === "undefined") {
 if (typeof window.HTMLElement.prototype.scrollIntoView !== "function") {
 	window.HTMLElement.prototype.scrollIntoView = () => {};
 }
-// next-intl and TanStack Router hooks are mocked for the isolated component test.
+// use-intl and TanStack Router hooks are mocked for the isolated component test.
 const mockTranslations = () => {
 	const t = ((key: string) => key) as unknown as {
 		(key: string): string;
@@ -28,7 +28,7 @@ const mockTranslations = () => {
 	t.has = () => true;
 	return t;
 };
-vi.mock("next-intl", () => ({
+vi.mock("use-intl", () => ({
 	useLocale: () => "en",
 	useTranslations: () => mockTranslations(),
 }));

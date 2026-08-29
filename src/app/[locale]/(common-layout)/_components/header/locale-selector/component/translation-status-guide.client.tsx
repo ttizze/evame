@@ -1,8 +1,8 @@
 "use client";
 
 import { ChevronDown, Info } from "lucide-react";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import { cn } from "@/lib/utils";
 import { TranslationProofStatusIcon } from "./translation-proof-status-icon";
 

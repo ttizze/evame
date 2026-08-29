@@ -1,8 +1,8 @@
 "use client";
 import { ArrowUpFromLine } from "lucide-react";
-import { useLocale } from "next-intl";
 import { type FormEvent, useRef, useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";
+import { useLocale } from "use-intl";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";

@@ -1,9 +1,9 @@
+import { Link } from "@tanstack/react-router";
 import { ArrowRightIcon } from "lucide-react";
 import type { SearchParams } from "nuqs/server";
 import { createLoader, parseAsInteger } from "nuqs/server";
 import { Fragment } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "@/i18n/routing";
 import { fetchPaginatedPublicNewestPageListsByTag } from "./_db/queries";
 import {
 	fetchPaginatedPublicNewestPageListsByTagForTopPage,
@@ -97,7 +97,8 @@ export async function NewPageListByTags({
 						<Button className="rounded-full w-40 h-10" variant="default">
 							<Link
 								className="flex items-center gap-2"
-								href={`/tag/${tagName}`}
+								params={{ locale, tagName }}
+								to="/$locale/tag/$tagName"
 							>
 								More <ArrowRightIcon className="w-4 h-4" />
 							</Link>
