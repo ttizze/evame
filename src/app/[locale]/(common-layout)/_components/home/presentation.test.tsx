@@ -13,7 +13,19 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 vi.mock("../about-section/presentation", () => ({
-	default: () => <section data-testid="about-section">About</section>,
+	default: ({ floatingControls }: { floatingControls: ReactNode }) => (
+		<section
+			data-has-floating-controls={String(Boolean(floatingControls))}
+			data-testid="about-section"
+		>
+			About
+			{floatingControls}
+		</section>
+	),
+}));
+
+vi.mock("../floating-controls/floating-controls.client", () => ({
+	FloatingControls: () => <div data-testid="floating-controls" />,
 }));
 
 vi.mock("../page/new-page-list/presentation", () => ({
@@ -37,6 +49,8 @@ import { HomePresentation } from "./presentation";
 const data: Parameters<typeof HomePresentation>[0]["data"] = {
 	pageDetail: {
 		id: 1,
+		isTipitakaPage: false,
+		isPublishedTipitakaArchive: false,
 		slug: "evame",
 		title: "Evame",
 		status: "PUBLIC",
@@ -69,11 +83,17 @@ describe("ホーム画面", () => {
 			),
 		).toEqual([
 			"about-section",
+			"floating-controls",
 			"new-pages",
 			"more-link",
 			"popular-pages",
 			"tipitaka-pages",
 		]);
+		expect(screen.getByTestId("about-section")).toHaveAttribute(
+			"data-has-floating-controls",
+			"false",
+		);
+		expect(screen.getAllByTestId("floating-controls")).toHaveLength(1);
 		expect(screen.getByRole("link", { name: /More/ })).toBeInTheDocument();
 	});
 
@@ -87,7 +107,14 @@ describe("ホーム画面", () => {
 			[...container.querySelectorAll("[data-testid]")].map((element) =>
 				element.getAttribute("data-testid"),
 			),
-		).toEqual(["new-pages", "more-link", "popular-pages", "tipitaka-pages"]);
+		).toEqual([
+			"floating-controls",
+			"new-pages",
+			"more-link",
+			"popular-pages",
+			"tipitaka-pages",
+		]);
+		expect(screen.getByTestId("floating-controls")).toBeInTheDocument();
 		expect(screen.getByRole("link", { name: /More/ })).toBeInTheDocument();
 	});
 });

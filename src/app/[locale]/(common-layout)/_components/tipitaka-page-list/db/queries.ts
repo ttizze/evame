@@ -9,10 +9,11 @@ import {
 } from "../domain/extract-tipitaka-page-tree";
 
 /**
- * Tipiṭaka の正本ページを起点に、公開 PAGE の子孫を取得する。
+ * Tipiṭaka の正本ページを起点に、公開対象 PAGE の子孫を取得する。
  *
  * ルート自身はインポート仕様上英語 (`sourceLocale = en`) なので一覧には含めず、
- * ルートから辿れる公開パーリ語 (`sourceLocale = pi`) ページだけを返す。
+ * ルートから辿れるパーリ語 (`sourceLocale = pi`) ページのうち、PUBLIC または
+ * 公開日時がある ARCHIVE を返す。
  */
 export async function fetchTipitakaPageTree(
 	locale: string,
@@ -25,7 +26,15 @@ export async function fetchTipitakaPageTree(
 		.where("pages.slug", "=", TIPITAKA_ROOT_SLUG)
 		.where("users.handle", "=", TIPITAKA_SYSTEM_USER_HANDLE)
 		.where("pages.parentId", "is", null)
-		.where("pages.status", "=", "PUBLIC")
+		.where((eb) =>
+			eb.or([
+				eb("pages.status", "=", "PUBLIC"),
+				eb.and([
+					eb("pages.status", "=", "ARCHIVE"),
+					eb("pages.publishedAt", "is not", null),
+				]),
+			]),
+		)
 		.where("contents.kind", "=", "PAGE")
 		.executeTakeFirst();
 
@@ -38,13 +47,22 @@ export async function fetchTipitakaPageTree(
 				.innerJoin("contents", "contents.id", "pages.id")
 				.innerJoin("users", "users.id", "pages.userId")
 				.where("pages.parentId", "=", rootPage.id)
-				.where("pages.status", "=", "PUBLIC")
+				.where((eb) =>
+					eb.or([
+						eb("pages.status", "=", "PUBLIC"),
+						eb.and([
+							eb("pages.status", "=", "ARCHIVE"),
+							eb("pages.publishedAt", "is not", null),
+						]),
+					]),
+				)
 				.where("contents.kind", "=", "PAGE")
 				.select([
 					"pages.id",
 					"pages.slug",
 					"pages.parentId",
 					"pages.order",
+					"pages.publishedAt",
 					"pages.sourceLocale",
 					"pages.status",
 					"contents.kind as contentKind",
@@ -61,13 +79,22 @@ export async function fetchTipitakaPageTree(
 							"pages.parentId",
 							"tipitakaDescendants.id",
 						)
-						.where("pages.status", "=", "PUBLIC")
+						.where((eb) =>
+							eb.or([
+								eb("pages.status", "=", "PUBLIC"),
+								eb.and([
+									eb("pages.status", "=", "ARCHIVE"),
+									eb("pages.publishedAt", "is not", null),
+								]),
+							]),
+						)
 						.where("contents.kind", "=", "PAGE")
 						.select([
 							"pages.id",
 							"pages.slug",
 							"pages.parentId",
 							"pages.order",
+							"pages.publishedAt",
 							"pages.sourceLocale",
 							"pages.status",
 							"contents.kind as contentKind",
@@ -90,6 +117,7 @@ export async function fetchTipitakaPageTree(
 			"tipitakaDescendants.slug",
 			"tipitakaDescendants.parentId",
 			"tipitakaDescendants.order",
+			"tipitakaDescendants.publishedAt",
 			"tipitakaDescendants.sourceLocale",
 			"tipitakaDescendants.status",
 			"tipitakaDescendants.contentKind",

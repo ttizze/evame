@@ -37,8 +37,8 @@ import { Route as ApiSyncPullRouteImport } from './routes/api/sync/pull'
 import { Route as ApiSyncPushRouteImport } from './routes/api/sync/push'
 import { Route as ApiTranslateChunkRouteImport } from './routes/api/translate/chunk'
 import { Route as SitemapSitemapChar123idChar125DotxmlRouteImport } from './routes/sitemap/sitemap/{$id}[.]xml'
-import { Route as LocaleCommonHandlePageSlugRouteImport } from './routes/$locale._common.$handle.$pageSlug'
 import { Route as LocaleCommonHandleEditRouteImport } from './routes/$locale._common.$handle.edit'
+import { Route as LocaleCommonHandlePageSlugRouteImport } from './routes/$locale._common.$handle_.$pageSlug'
 import { Route as LocaleCommonAuthLoginRouteImport } from './routes/$locale._common.auth.login'
 import { Route as LocaleCommonTagTagNameRouteImport } from './routes/$locale._common.tag.$tagName'
 import { Route as ApiPageViewsPageIdIncrementRouteImport } from './routes/api/page-views/$pageId/increment'
@@ -183,17 +183,17 @@ const SitemapSitemapChar123idChar125DotxmlRoute =
     path: '/sitemap/sitemap/{$id}.xml',
     getParentRoute: () => rootRouteImport,
   } as any)
-const LocaleCommonHandlePageSlugRoute =
-  LocaleCommonHandlePageSlugRouteImport.update({
-    id: '/$pageSlug',
-    path: '/$pageSlug',
-    getParentRoute: () => LocaleCommonHandleRoute,
-  } as any)
 const LocaleCommonHandleEditRoute = LocaleCommonHandleEditRouteImport.update({
   id: '/edit',
   path: '/edit',
   getParentRoute: () => LocaleCommonHandleRoute,
 } as any)
+const LocaleCommonHandlePageSlugRoute =
+  LocaleCommonHandlePageSlugRouteImport.update({
+    id: '/$handle_/$pageSlug',
+    path: '/$handle/$pageSlug',
+    getParentRoute: () => LocaleCommonRoute,
+  } as any)
 const LocaleCommonAuthLoginRoute = LocaleCommonAuthLoginRouteImport.update({
   id: '/auth/login',
   path: '/auth/login',
@@ -239,8 +239,8 @@ export interface FileRoutesByFullPath {
   '/api/translate/chunk': typeof ApiTranslateChunkRoute
   '/sitemap/sitemap/{$id}.xml': typeof SitemapSitemapChar123idChar125DotxmlRoute
   '/$locale/': typeof LocaleCommonIndexRoute
-  '/$locale/$handle/$pageSlug': typeof LocaleCommonHandlePageSlugRoute
   '/$locale/$handle/edit': typeof LocaleCommonHandleEditRoute
+  '/$locale/$handle/$pageSlug': typeof LocaleCommonHandlePageSlugRoute
   '/$locale/auth/login': typeof LocaleCommonAuthLoginRoute
   '/$locale/tag/$tagName': typeof LocaleCommonTagTagNameRoute
   '/api/page-views/$pageId/increment': typeof ApiPageViewsPageIdIncrementRoute
@@ -272,8 +272,8 @@ export interface FileRoutesByTo {
   '/api/sync/push': typeof ApiSyncPushRoute
   '/api/translate/chunk': typeof ApiTranslateChunkRoute
   '/sitemap/sitemap/{$id}.xml': typeof SitemapSitemapChar123idChar125DotxmlRoute
-  '/$locale/$handle/$pageSlug': typeof LocaleCommonHandlePageSlugRoute
   '/$locale/$handle/edit': typeof LocaleCommonHandleEditRoute
+  '/$locale/$handle/$pageSlug': typeof LocaleCommonHandlePageSlugRoute
   '/$locale/auth/login': typeof LocaleCommonAuthLoginRoute
   '/$locale/tag/$tagName': typeof LocaleCommonTagTagNameRoute
   '/api/page-views/$pageId/increment': typeof ApiPageViewsPageIdIncrementRoute
@@ -308,8 +308,8 @@ export interface FileRoutesById {
   '/api/translate/chunk': typeof ApiTranslateChunkRoute
   '/sitemap/sitemap/{$id}.xml': typeof SitemapSitemapChar123idChar125DotxmlRoute
   '/$locale/_common/': typeof LocaleCommonIndexRoute
-  '/$locale/_common/$handle/$pageSlug': typeof LocaleCommonHandlePageSlugRoute
   '/$locale/_common/$handle/edit': typeof LocaleCommonHandleEditRoute
+  '/$locale/_common/$handle_/$pageSlug': typeof LocaleCommonHandlePageSlugRoute
   '/$locale/_common/auth/login': typeof LocaleCommonAuthLoginRoute
   '/$locale/_common/tag/$tagName': typeof LocaleCommonTagTagNameRoute
   '/api/page-views/$pageId/increment': typeof ApiPageViewsPageIdIncrementRoute
@@ -344,8 +344,8 @@ export interface FileRouteTypes {
     | '/api/translate/chunk'
     | '/sitemap/sitemap/{$id}.xml'
     | '/$locale/'
-    | '/$locale/$handle/$pageSlug'
     | '/$locale/$handle/edit'
+    | '/$locale/$handle/$pageSlug'
     | '/$locale/auth/login'
     | '/$locale/tag/$tagName'
     | '/api/page-views/$pageId/increment'
@@ -377,8 +377,8 @@ export interface FileRouteTypes {
     | '/api/sync/push'
     | '/api/translate/chunk'
     | '/sitemap/sitemap/{$id}.xml'
-    | '/$locale/$handle/$pageSlug'
     | '/$locale/$handle/edit'
+    | '/$locale/$handle/$pageSlug'
     | '/$locale/auth/login'
     | '/$locale/tag/$tagName'
     | '/api/page-views/$pageId/increment'
@@ -412,8 +412,8 @@ export interface FileRouteTypes {
     | '/api/translate/chunk'
     | '/sitemap/sitemap/{$id}.xml'
     | '/$locale/_common/'
-    | '/$locale/_common/$handle/$pageSlug'
     | '/$locale/_common/$handle/edit'
+    | '/$locale/_common/$handle_/$pageSlug'
     | '/$locale/_common/auth/login'
     | '/$locale/_common/tag/$tagName'
     | '/api/page-views/$pageId/increment'
@@ -639,19 +639,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapSitemapChar123idChar125DotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$locale/_common/$handle/$pageSlug': {
-      id: '/$locale/_common/$handle/$pageSlug'
-      path: '/$pageSlug'
-      fullPath: '/$locale/$handle/$pageSlug'
-      preLoaderRoute: typeof LocaleCommonHandlePageSlugRouteImport
-      parentRoute: typeof LocaleCommonHandleRoute
-    }
     '/$locale/_common/$handle/edit': {
       id: '/$locale/_common/$handle/edit'
       path: '/edit'
       fullPath: '/$locale/$handle/edit'
       preLoaderRoute: typeof LocaleCommonHandleEditRouteImport
       parentRoute: typeof LocaleCommonHandleRoute
+    }
+    '/$locale/_common/$handle_/$pageSlug': {
+      id: '/$locale/_common/$handle_/$pageSlug'
+      path: '/$handle/$pageSlug'
+      fullPath: '/$locale/$handle/$pageSlug'
+      preLoaderRoute: typeof LocaleCommonHandlePageSlugRouteImport
+      parentRoute: typeof LocaleCommonRoute
     }
     '/$locale/_common/auth/login': {
       id: '/$locale/_common/auth/login'
@@ -678,12 +678,10 @@ declare module '@tanstack/react-router' {
 }
 
 interface LocaleCommonHandleRouteChildren {
-  LocaleCommonHandlePageSlugRoute: typeof LocaleCommonHandlePageSlugRoute
   LocaleCommonHandleEditRoute: typeof LocaleCommonHandleEditRoute
 }
 
 const LocaleCommonHandleRouteChildren: LocaleCommonHandleRouteChildren = {
-  LocaleCommonHandlePageSlugRoute: LocaleCommonHandlePageSlugRoute,
   LocaleCommonHandleEditRoute: LocaleCommonHandleEditRoute,
 }
 
@@ -696,6 +694,7 @@ interface LocaleCommonRouteChildren {
   LocaleCommonNewPagesRoute: typeof LocaleCommonNewPagesRoute
   LocaleCommonSearchRoute: typeof LocaleCommonSearchRoute
   LocaleCommonIndexRoute: typeof LocaleCommonIndexRoute
+  LocaleCommonHandlePageSlugRoute: typeof LocaleCommonHandlePageSlugRoute
   LocaleCommonAuthLoginRoute: typeof LocaleCommonAuthLoginRoute
   LocaleCommonTagTagNameRoute: typeof LocaleCommonTagTagNameRoute
 }
@@ -706,6 +705,7 @@ const LocaleCommonRouteChildren: LocaleCommonRouteChildren = {
   LocaleCommonNewPagesRoute: LocaleCommonNewPagesRoute,
   LocaleCommonSearchRoute: LocaleCommonSearchRoute,
   LocaleCommonIndexRoute: LocaleCommonIndexRoute,
+  LocaleCommonHandlePageSlugRoute: LocaleCommonHandlePageSlugRoute,
   LocaleCommonAuthLoginRoute: LocaleCommonAuthLoginRoute,
   LocaleCommonTagTagNameRoute: LocaleCommonTagTagNameRoute,
 }

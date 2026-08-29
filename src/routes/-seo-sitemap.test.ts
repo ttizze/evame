@@ -1,4 +1,8 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import {
+	countPublicPages,
+	fetchPagesWithUserAndTranslationChunk,
+} from "@/app/_db/sitemap-queries.server";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
@@ -61,5 +65,71 @@ describe("TanStack StartのSEOルート生成", () => {
 			"public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
 		);
 		expect(await response.text()).toContain("/ja/alice/my-page");
+	});
+
+	it("公開対象のTipiṭakaだけをチャンク数とサイトマップURLに含める", async () => {
+		const evame = await createUser({ handle: "evame" });
+		const other = await createUser({ handle: "other" });
+		const root = await createPage({
+			publishedAt: new Date("2026-01-01T00:00:00.000Z"),
+			slug: "tipitaka",
+			status: "ARCHIVE",
+			userId: evame.id,
+		});
+		await createPage({
+			parentId: root.id,
+			publishedAt: new Date("2026-01-01T00:00:00.000Z"),
+			slug: "visible-tipitaka",
+			sourceLocale: "pi",
+			status: "ARCHIVE",
+			userId: evame.id,
+		});
+		const hiddenParent = await createPage({
+			parentId: root.id,
+			slug: "hidden-parent",
+			status: "DRAFT",
+			userId: evame.id,
+		});
+		await createPage({
+			parentId: hiddenParent.id,
+			slug: "blocked-public-child",
+			sourceLocale: "pi",
+			status: "PUBLIC",
+			userId: evame.id,
+		});
+		await createPage({
+			publishedAt: new Date("2026-01-01T00:00:00.000Z"),
+			slug: "ordinary-archive",
+			status: "ARCHIVE",
+			userId: other.id,
+		});
+
+		expect(await countPublicPages()).toBe(2);
+		const entries = await generateSitemapEntries(0);
+		expect(entries.some((entry) => entry.url.endsWith("/evame/tipitaka"))).toBe(
+			true,
+		);
+		expect(
+			entries.some((entry) => entry.url.endsWith("/evame/visible-tipitaka")),
+		).toBe(true);
+		expect(
+			entries.some((entry) => entry.url.includes("blocked-public-child")),
+		).toBe(false);
+		expect(
+			entries.some((entry) => entry.url.includes("ordinary-archive")),
+		).toBe(false);
+
+		const firstChunk = await fetchPagesWithUserAndTranslationChunk({
+			limit: 1,
+			offset: 0,
+		});
+		const secondChunk = await fetchPagesWithUserAndTranslationChunk({
+			limit: 1,
+			offset: 1,
+		});
+		expect([firstChunk[0]?.slug, secondChunk[0]?.slug]).toEqual([
+			"tipitaka",
+			"visible-tipitaka",
+		]);
 	});
 });

@@ -46,7 +46,8 @@ export function PageContent({
 	pageViewCounter: ReactNode;
 	floatingControls: ReactNode;
 }) {
-	const isDraft = pageDetail.status !== "PUBLIC";
+	const isDraft =
+		pageDetail.status !== "PUBLIC" && !pageDetail.isPublishedTipitakaArchive;
 
 	const articleUrl = `${BASE_URL}/${pageDetail.sourceLocale}/${pageDetail.userHandle}/${pageDetail.slug}`;
 	const authorUrl = `${BASE_URL}/${pageDetail.sourceLocale}/${pageDetail.userHandle}`;

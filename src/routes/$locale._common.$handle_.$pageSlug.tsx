@@ -9,7 +9,7 @@ import { PageViewCounter } from "@/app/[locale]/(common-layout)/[handle]/[pageSl
 import { buildPageMetadata } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_service/page-metadata";
 import { getPageDetailData } from "./$locale/-page-detail-data";
 
-export const Route = createFileRoute("/$locale/_common/$handle/$pageSlug")({
+export const Route = createFileRoute("/$locale/_common/$handle_/$pageSlug")({
 	loader: async ({ params }) => {
 		const data = await getPageDetailData({ data: params });
 		if (!data) throw notFound();

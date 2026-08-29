@@ -19,11 +19,7 @@ export function HomePresentation({
 		<div className="flex flex-col gap-8 justify-between mb-12">
 			{data.pageDetail ? (
 				<AboutSectionPresentation
-					floatingControls={
-						<ClientOnly fallback={null}>
-							<FloatingControls sourceLocale="mixed" userLocale={locale} />
-						</ClientOnly>
-					}
+					floatingControls={null}
 					locale={locale}
 					pageDetail={data.pageDetail}
 					readControls={
@@ -39,6 +35,9 @@ export function HomePresentation({
 					stats={data.stats}
 				/>
 			) : null}
+			<ClientOnly fallback={null}>
+				<FloatingControls sourceLocale="mixed" userLocale={locale} />
+			</ClientOnly>
 			<NewPageListPresentation
 				currentPage={1}
 				locale={locale}

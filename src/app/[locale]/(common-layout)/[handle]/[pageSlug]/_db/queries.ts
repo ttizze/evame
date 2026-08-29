@@ -22,6 +22,7 @@ export type PageTitleTree = PageForTree & { children: PageTitleTree[] };
 export async function queryPageNavigationData(
 	pageId: number,
 	locale: string,
+	isTipitakaPage: boolean,
 ): Promise<NavigationData | null> {
 	// Step 1: 親チェーンを取得してルートを特定
 	const breadcrumb = await db
@@ -92,12 +93,32 @@ export async function queryPageNavigationData(
 					"pages.userId",
 				])
 				.where("pages.parentId", "=", rootNode.id)
-				.where("pages.status", "=", "PUBLIC")
+				.where((eb) =>
+					isTipitakaPage
+						? eb.or([
+								eb("pages.status", "=", "PUBLIC"),
+								eb.and([
+									eb("pages.status", "=", "ARCHIVE"),
+									eb("pages.publishedAt", "is not", null),
+								]),
+							])
+						: eb("pages.status", "=", "PUBLIC"),
+				)
 				.unionAll(
 					qb
 						.selectFrom("pages")
 						.innerJoin("descendants", "pages.parentId", "descendants.id")
-						.where("pages.status", "=", "PUBLIC")
+						.where((eb) =>
+							isTipitakaPage
+								? eb.or([
+										eb("pages.status", "=", "PUBLIC"),
+										eb.and([
+											eb("pages.status", "=", "ARCHIVE"),
+											eb("pages.publishedAt", "is not", null),
+										]),
+									])
+								: eb("pages.status", "=", "PUBLIC"),
+						)
 						.select([
 							"pages.id",
 							"pages.slug",
@@ -134,10 +155,11 @@ export async function queryPageNavigationData(
 	return { rootNode, treeNodes, breadcrumb };
 }
 
-/** 子ページの公開ツリーを取得（recursive CTEで1クエリ） */
+/** 子ページの公開対象ツリーを取得（recursive CTEで1クエリ） */
 export async function queryChildPagesTree(
 	parentId: number,
 	locale: string,
+	isTipitakaPage: boolean,
 ): Promise<PageTitleTree[]> {
 	const rows = await db
 		.withRecursive("descendants", (qb) =>
@@ -151,12 +173,32 @@ export async function queryChildPagesTree(
 					"pages.userId",
 				])
 				.where("pages.parentId", "=", parentId)
-				.where("pages.status", "=", "PUBLIC")
+				.where((eb) =>
+					isTipitakaPage
+						? eb.or([
+								eb("pages.status", "=", "PUBLIC"),
+								eb.and([
+									eb("pages.status", "=", "ARCHIVE"),
+									eb("pages.publishedAt", "is not", null),
+								]),
+							])
+						: eb("pages.status", "=", "PUBLIC"),
+				)
 				.unionAll(
 					qb
 						.selectFrom("pages")
 						.innerJoin("descendants", "pages.parentId", "descendants.id")
-						.where("pages.status", "=", "PUBLIC")
+						.where((eb) =>
+							isTipitakaPage
+								? eb.or([
+										eb("pages.status", "=", "PUBLIC"),
+										eb.and([
+											eb("pages.status", "=", "ARCHIVE"),
+											eb("pages.publishedAt", "is not", null),
+										]),
+									])
+								: eb("pages.status", "=", "PUBLIC"),
+						)
 						.select([
 							"pages.id",
 							"pages.slug",

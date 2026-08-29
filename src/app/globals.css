@@ -104,6 +104,12 @@
 		contain: none;
 	}
 
+	.tipitaka-tree .seg-cv {
+		content-visibility: visible;
+		contain-intrinsic-size: none;
+		contain: none;
+	}
+
 	/* View (source/user/both) without per-segment hydration */
 	[data-view="source"] .seg-tr {
 		display: none !important;

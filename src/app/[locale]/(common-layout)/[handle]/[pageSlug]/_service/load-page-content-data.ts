@@ -23,8 +23,8 @@ export async function loadPageContentData(
 	] = await Promise.all([
 		queryPageCounts(pageDetail.id),
 		queryPageViewCount(pageDetail.id),
-		queryPageNavigationData(pageDetail.id, locale),
-		queryChildPagesTree(pageDetail.id, locale),
+		queryPageNavigationData(pageDetail.id, locale, pageDetail.isTipitakaPage),
+		queryChildPagesTree(pageDetail.id, locale, pageDetail.isTipitakaPage),
 		queryCompletedTranslationLocales(pageDetail.id),
 		preparePageMdast(pageDetail.mdastJson),
 	]);

@@ -1,6 +1,11 @@
 import { serverLogger } from "@/app/_service/logger.server";
 import type { SegmentWithSegmentType } from "@/app/[locale]/types";
 import { db } from "@/db";
+import {
+	isPagePubliclyReadable,
+	TIPITAKA_ROOT_SLUG,
+	TIPITAKA_SYSTEM_USER_HANDLE,
+} from "../_domain/tipitaka-page-visibility";
 import { bestTranslationSubquery } from "./best-translation-subquery.server";
 
 type SegmentWithAnnotations = SegmentWithSegmentType & {
@@ -24,6 +29,7 @@ async function fetchPageBasicBySlug(slug: string) {
 			"pages.parentId",
 			"pages.order",
 			"pages.mdastJson",
+			"pages.publishedAt",
 			"users.id as userId",
 			"users.name as userName",
 			"users.handle as userHandle",
@@ -31,6 +37,70 @@ async function fetchPageBasicBySlug(slug: string) {
 		])
 		.where("pages.slug", "=", slug)
 		.executeTakeFirst();
+}
+
+async function queryTipitakaVisibility(pageId: number) {
+	const ancestors = await db
+		.withRecursive("ancestors", (qb) =>
+			qb
+				.selectFrom("pages")
+				.select([
+					"pages.id",
+					"pages.slug",
+					"pages.parentId",
+					"pages.publishedAt",
+					"pages.status",
+					"pages.userId",
+				])
+				.where("pages.id", "=", pageId)
+				.unionAll(
+					qb
+						.selectFrom("pages")
+						.innerJoin("ancestors", "pages.id", "ancestors.parentId")
+						.select([
+							"pages.id",
+							"pages.slug",
+							"pages.parentId",
+							"pages.publishedAt",
+							"pages.status",
+							"pages.userId",
+						]),
+				),
+		)
+		.selectFrom("ancestors")
+		.innerJoin("contents", "contents.id", "ancestors.id")
+		.innerJoin("users", "users.id", "ancestors.userId")
+		.select([
+			"ancestors.id",
+			"ancestors.slug",
+			"ancestors.parentId",
+			"ancestors.publishedAt",
+			"ancestors.status",
+			"contents.kind as contentKind",
+			"users.handle as userHandle",
+		])
+		.execute();
+
+	const isTipitakaPage = ancestors.some(
+		(ancestor) =>
+			ancestor.slug === TIPITAKA_ROOT_SLUG &&
+			ancestor.parentId === null &&
+			ancestor.contentKind === "PAGE" &&
+			ancestor.userHandle === TIPITAKA_SYSTEM_USER_HANDLE,
+	);
+
+	return {
+		isPubliclyReadable:
+			isTipitakaPage &&
+			ancestors.every((ancestor) =>
+				isPagePubliclyReadable({
+					isTipitakaPage: true,
+					publishedAt: ancestor.publishedAt,
+					status: ancestor.status,
+				}),
+			),
+		isTipitakaPage,
+	};
 }
 
 /**
@@ -211,7 +281,27 @@ async function fetchSegmentsByIds(
  */
 export async function queryPageDetail(slug: string, locale: string) {
 	const page = await fetchPageBasicBySlug(slug);
-	if (!page || page.status === "ARCHIVE") return null;
+	if (!page) return null;
+	if (page.status === "ARCHIVE" && page.publishedAt === null) return null;
+
+	const shouldCheckTipitakaVisibility =
+		page.status === "ARCHIVE" ||
+		page.slug === TIPITAKA_ROOT_SLUG ||
+		page.parentId !== null;
+	const tipitakaVisibility = shouldCheckTipitakaVisibility
+		? await queryTipitakaVisibility(page.id)
+		: { isPubliclyReadable: false, isTipitakaPage: false };
+	const { isTipitakaPage } = tipitakaVisibility;
+	if (
+		isTipitakaPage &&
+		page.status !== "DRAFT" &&
+		!tipitakaVisibility.isPubliclyReadable
+	) {
+		return null;
+	}
+	const isPublishedTipitakaArchive =
+		page.status === "ARCHIVE" && tipitakaVisibility.isPubliclyReadable;
+	if (page.status === "ARCHIVE" && !isPublishedTipitakaArchive) return null;
 
 	const tags = await fetchTags(page.id);
 
@@ -241,6 +331,8 @@ export async function queryPageDetail(slug: string, locale: string) {
 
 	return {
 		id: page.id,
+		isTipitakaPage,
+		isPublishedTipitakaArchive,
 		slug: page.slug,
 		title,
 		status: page.status,

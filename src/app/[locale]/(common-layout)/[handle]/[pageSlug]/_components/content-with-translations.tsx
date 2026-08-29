@@ -1,4 +1,4 @@
-import { use, useMemo } from "react";
+import { use } from "react";
 import { mdastToMarkdown } from "@/app/[locale]/_domain/mdast-to-markdown";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
@@ -10,6 +10,11 @@ import { SubHeader } from "./sub-header";
 interface ContentWithTranslationsProps {
 	pageDetail: PageDetail;
 }
+
+const contentPromises = new WeakMap<
+	PageDetail,
+	ReturnType<typeof mdastToReact>
+>();
 
 export function ContentWithTranslations({
 	pageDetail,
@@ -23,14 +28,14 @@ export function ContentWithTranslations({
 		(segment) => segment.number === 0,
 	);
 
-	const contentPromise = useMemo(
-		() =>
-			mdastToReact({
-				mdast: pageDetail.mdastJson,
-				segments: pageDetail.segments,
-			}),
-		[pageDetail.mdastJson, pageDetail.segments],
-	);
+	let contentPromise = contentPromises.get(pageDetail);
+	if (!contentPromise) {
+		contentPromise = mdastToReact({
+			mdast: pageDetail.mdastJson,
+			segments: pageDetail.segments,
+		});
+		contentPromises.set(pageDetail, contentPromise);
+	}
 	const content = use(contentPromise);
 	const markdown = mdastToMarkdown(pageDetail.mdastJson);
 	if (!titleSegment) return null;

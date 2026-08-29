@@ -14,7 +14,7 @@ export function TipitakaPageList({ locale, pages }: TipitakaPageListProps) {
 				Tipiṭaka
 			</h1>
 			{pages.length > 0 ? (
-				<nav aria-label="Tipiṭaka">
+				<nav aria-label="Tipiṭaka" className="tipitaka-tree">
 					<TipitakaTreeList locale={locale} nodes={pages} />
 				</nav>
 			) : null}

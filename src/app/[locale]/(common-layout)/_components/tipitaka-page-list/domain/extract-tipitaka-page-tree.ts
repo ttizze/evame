@@ -1,14 +1,15 @@
+import {
+	isPagePubliclyReadable,
+	TIPITAKA_SOURCE_LOCALE,
+} from "@/app/[locale]/_domain/tipitaka-page-visibility";
 import type { ContentKind, PageStatus } from "@/db/types";
-
-export const TIPITAKA_ROOT_SLUG = "tipitaka" as const;
-export const TIPITAKA_SYSTEM_USER_HANDLE = "evame" as const;
-export const TIPITAKA_SOURCE_LOCALE = "pi" as const;
 
 export type TipitakaPageRow = {
 	id: number;
 	slug: string;
 	parentId: number | null;
 	order: number;
+	publishedAt: Date | null;
 	userHandle: string;
 	titleSegmentId: number;
 	titleText: string;
@@ -31,11 +32,11 @@ export type TipitakaPageTreeNode = {
 };
 
 /**
- * ルート配下の公開パーリ語 PAGE だけを、DB の親子関係と順序で木にする。
+ * ルート配下の公開対象パーリ語 PAGE だけを、DB の親子関係と順序で木にする。
  *
  * SQL 側でも公開 PAGE を再帰的に辿るが、抽出条件をここでも明示しておく。
  * そのため、呼び出し側が別の取得元を渡した場合にも、トップに出す対象を
- * PUBLIC / PAGE / pi から逸脱させない。
+ * PUBLIC または公開日時がある ARCHIVE / PAGE / pi から逸脱させない。
  */
 export function extractTipitakaPageTree(
 	rows: readonly TipitakaPageRow[],
@@ -43,7 +44,11 @@ export function extractTipitakaPageTree(
 ): TipitakaPageTreeNode[] {
 	const eligibleRows = rows.filter(
 		(row) =>
-			row.status === "PUBLIC" &&
+			isPagePubliclyReadable({
+				isTipitakaPage: true,
+				publishedAt: row.publishedAt,
+				status: row.status,
+			}) &&
 			row.contentKind === "PAGE" &&
 			row.sourceLocale === TIPITAKA_SOURCE_LOCALE,
 	);
@@ -83,3 +88,9 @@ export function extractTipitakaPageTree(
 
 	return buildChildren(rootPageId, new Set([rootPageId]));
 }
+
+export {
+	TIPITAKA_ROOT_SLUG,
+	TIPITAKA_SOURCE_LOCALE,
+	TIPITAKA_SYSTEM_USER_HANDLE,
+} from "@/app/[locale]/_domain/tipitaka-page-visibility";

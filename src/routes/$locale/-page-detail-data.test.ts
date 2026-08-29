@@ -67,4 +67,21 @@ describe("getPageDetailData", () => {
 			"Cookie, Authorization",
 		);
 	});
+
+	it("公開日時があるTipiṭakaのARCHIVEページはログインなしで表示する", async () => {
+		queryPageDetailMock.mockResolvedValue({
+			isPublishedTipitakaArchive: true,
+			status: "ARCHIVE",
+			userHandle: "evame",
+			segments: [{ number: 0 }],
+		});
+		loadPageContentDataMock.mockResolvedValue({ pageDetail: { id: 1 } });
+
+		await expect(
+			getPageDetailData({
+				data: { locale: "ja", handle: "evame", pageSlug: "vinaya-pitaka" },
+			}),
+		).resolves.toEqual({ pageDetail: { id: 1 } });
+		expect(getCurrentUserFromHeadersMock).not.toHaveBeenCalled();
+	});
 });
