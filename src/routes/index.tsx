@@ -49,7 +49,7 @@ const getLocale = createServerFn({ method: "GET" }).handler(() => {
 					supportedLocale.toLowerCase() === matchedLocale.toLowerCase(),
 			) ?? defaultLocale;
 	} catch {
-		// next-intl also falls back to the default locale for malformed headers.
+		// malformed headers fall back to the default locale, matching the previous i18n behavior.
 	}
 
 	if (cookieLocale !== undefined && cookieLocale !== locale) {

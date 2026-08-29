@@ -1,4 +1,9 @@
-import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
+import {
+	ClientOnly,
+	createFileRoute,
+	notFound,
+	Outlet,
+} from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getCookie, setCookie } from "@tanstack/react-start/server";
 import { ThemeProvider } from "next-themes";
@@ -62,11 +67,13 @@ function LocaleShell() {
 		<IntlProvider locale={locale} messages={localeMessages}>
 			<NuqsAdapter>
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-					<AnalyticsConsent
-						gaTrackingId={gaTrackingId}
-						locale={locale}
-						message={consentMessages}
-					/>
+					<ClientOnly fallback={null}>
+						<AnalyticsConsent
+							gaTrackingId={gaTrackingId}
+							locale={locale}
+							message={consentMessages}
+						/>
+					</ClientOnly>
 					<Outlet />
 					<Toaster closeButton richColors />
 				</ThemeProvider>

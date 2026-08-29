@@ -47,7 +47,6 @@ function RootDocument({ children }: { children: ReactNode }) {
 
 	return (
 		<html dir={direction} lang={locale} suppressHydrationWarning>
-			{/* biome-ignore lint/style/noHeadElement: TanStack Start requires a document head. */}
 			<head>
 				<HeadContent />
 			</head>

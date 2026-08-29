@@ -24,7 +24,7 @@ export async function enqueueTranslate(
 	const client = new Client({ token: process.env.QSTASH_TOKEN });
 
 	// When running QStash in a Docker container (dev), localhost inside the
-	// container does not point to the host's Next.js server. Allow overriding
+	// container does not point to the host's TanStack Start server. Allow overriding
 	// the publish target with QSTASH_PUBLISH_BASE_URL (e.g. http://host.docker.internal:3000)
 	const publishBaseUrl =
 		process.env.QSTASH_PUBLISH_BASE_URL?.trim() || BASE_URL;

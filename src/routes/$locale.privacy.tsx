@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import PrivacyPolicyPage, { metadata } from "@/app/[locale]/privacy/page";
+import PrivacyPolicyPage, { metadata } from "./-privacy-policy-page";
 
 export const Route = createFileRoute("/$locale/privacy")({
 	component: PrivacyPolicyPage,

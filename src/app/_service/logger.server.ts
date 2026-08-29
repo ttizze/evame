@@ -1,6 +1,6 @@
 /**
  * サーバー側専用ロガー
- * Next.jsのサーバーコンポーネント、Server Actions、API Routesで使用
+ * TanStack Startのサーバー関数、ルート、APIハンドラーで使用
  *
  * Sentryとの統合が可能
  */

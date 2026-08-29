@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import MaintenancePage, { metadata } from "@/app/[locale]/maintenance/page";
+import MaintenancePage, { metadata } from "./-maintenance-page";
 
 export const Route = createFileRoute("/$locale/maintenance")({
 	component: MaintenancePage,

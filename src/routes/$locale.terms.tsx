@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import TermsPage, { metadata } from "@/app/[locale]/terms/page";
+import TermsPage, { metadata } from "./-terms-page";
 
 export const Route = createFileRoute("/$locale/terms")({
 	component: TermsPage,

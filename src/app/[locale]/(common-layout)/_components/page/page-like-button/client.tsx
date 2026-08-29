@@ -51,7 +51,7 @@ export function PageLikeButtonClient({
 	);
 	const togglePageLikeFn = useServerFn(togglePageLikeAction);
 
-	// Server action returns latest liked/count; prefer it when available
+	// The server function returns the latest liked/count; prefer it when available
 	const [_, formAction, isPending] = useActionState<
 		PageLikeButtonState,
 		FormData
@@ -80,7 +80,7 @@ export function PageLikeButtonClient({
 		const next = computeNextLikeState(data);
 		mutate(next, { revalidate: false });
 
-		// Trigger server action
+		// Trigger the server function
 		formAction(formData);
 	};
 

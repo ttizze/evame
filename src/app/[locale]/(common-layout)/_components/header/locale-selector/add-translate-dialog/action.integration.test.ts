@@ -60,10 +60,19 @@ describe("translateAction", () => {
 		formData.append("aiModel", "gemini-pro");
 		formData.append("targetLocale", "en");
 
-		// Act & Assert: リダイレクトエラーが発生する
-		await expect(executeTranslateAction(formData)).rejects.toThrow(
-			"NEXT_REDIRECT",
+		// Act: TanStack RouterのredirectはResponseをthrowする
+		const redirectResponse = await executeTranslateAction(formData).catch(
+			(error: unknown) =>
+				error instanceof Response ? error : Promise.reject(error),
 		);
+
+		// Assert: ログイン画面へ307リダイレクトされる
+		expect(redirectResponse).toBeInstanceOf(Response);
+		if (!(redirectResponse instanceof Response)) {
+			throw new Error("リダイレクトされていません");
+		}
+		expect(redirectResponse.status).toBe(307);
+		expect(redirectResponse.headers.get("Location")).toBe("/auth/login");
 	});
 
 	it("存在しないページを翻訳しようとした場合、エラーメッセージを返す", async () => {
