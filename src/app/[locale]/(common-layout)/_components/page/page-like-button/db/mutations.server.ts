@@ -8,7 +8,7 @@ import { db } from "@/db";
 export async function togglePageLike(pageId: number, currentUserId: string) {
 	const page = await db
 		.selectFrom("pages")
-		.select("id")
+		.select(["id", "userId"])
 		.where("id", "=", pageId)
 		.executeTakeFirst();
 
@@ -35,6 +35,15 @@ export async function togglePageLike(pageId: number, currentUserId: string) {
 			.values({
 				pageId: page.id,
 				userId: currentUserId,
+			})
+			.execute();
+		await db
+			.insertInto("notifications")
+			.values({
+				pageId: page.id,
+				userId: page.userId,
+				actorId: currentUserId,
+				type: "PAGE_LIKE",
 			})
 			.execute();
 		liked = true;

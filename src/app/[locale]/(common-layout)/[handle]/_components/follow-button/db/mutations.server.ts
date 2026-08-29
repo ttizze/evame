@@ -24,3 +24,19 @@ export async function deleteFollow(followerId: string, followingId: string) {
 		.executeTakeFirst();
 	return deleted;
 }
+
+export async function createNotificationFollow(
+	actorId: string,
+	userId: string,
+) {
+	const notification = await db
+		.insertInto("notifications")
+		.values({
+			userId,
+			type: "FOLLOW",
+			actorId,
+		})
+		.returningAll()
+		.executeTakeFirstOrThrow();
+	return notification;
+}

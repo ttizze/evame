@@ -18,6 +18,7 @@ import { Route as LocaleMaintenanceRouteImport } from './routes/$locale.maintena
 import { Route as LocalePrivacyRouteImport } from './routes/$locale.privacy'
 import { Route as LocaleTermsRouteImport } from './routes/$locale.terms'
 import { Route as ApiLocaleInfoRouteImport } from './routes/api/locale-info'
+import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
 import { Route as ApiOgRouteImport } from './routes/api/og'
 import { Route as ApiSegmentTranslationsRouteImport } from './routes/api/segment-translations'
 import { Route as ApiTranslateRouteImport } from './routes/api/translate'
@@ -83,6 +84,11 @@ const LocaleTermsRoute = LocaleTermsRouteImport.update({
 const ApiLocaleInfoRoute = ApiLocaleInfoRouteImport.update({
   id: '/api/locale-info',
   path: '/api/locale-info',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiNotificationsRoute = ApiNotificationsRouteImport.update({
+  id: '/api/notifications',
+  path: '/api/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiOgRoute = ApiOgRouteImport.update({
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
+  '/api/notifications': typeof ApiNotificationsRoute
   '/api/og': typeof ApiOgRoute
   '/api/segment-translations': typeof ApiSegmentTranslationsRoute
   '/api/translate': typeof ApiTranslateRouteWithChildren
@@ -240,6 +247,7 @@ export interface FileRoutesByTo {
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
+  '/api/notifications': typeof ApiNotificationsRoute
   '/api/og': typeof ApiOgRoute
   '/api/segment-translations': typeof ApiSegmentTranslationsRoute
   '/api/translate': typeof ApiTranslateRouteWithChildren
@@ -273,6 +281,7 @@ export interface FileRoutesById {
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
+  '/api/notifications': typeof ApiNotificationsRoute
   '/api/og': typeof ApiOgRoute
   '/api/segment-translations': typeof ApiSegmentTranslationsRoute
   '/api/translate': typeof ApiTranslateRouteWithChildren
@@ -307,6 +316,7 @@ export interface FileRouteTypes {
     | '/$locale/privacy'
     | '/$locale/terms'
     | '/api/locale-info'
+    | '/api/notifications'
     | '/api/og'
     | '/api/segment-translations'
     | '/api/translate'
@@ -339,6 +349,7 @@ export interface FileRouteTypes {
     | '/$locale/privacy'
     | '/$locale/terms'
     | '/api/locale-info'
+    | '/api/notifications'
     | '/api/og'
     | '/api/segment-translations'
     | '/api/translate'
@@ -371,6 +382,7 @@ export interface FileRouteTypes {
     | '/$locale/privacy'
     | '/$locale/terms'
     | '/api/locale-info'
+    | '/api/notifications'
     | '/api/og'
     | '/api/segment-translations'
     | '/api/translate'
@@ -401,6 +413,7 @@ export interface RootRouteChildren {
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiLocaleInfoRoute: typeof ApiLocaleInfoRoute
+  ApiNotificationsRoute: typeof ApiNotificationsRoute
   ApiOgRoute: typeof ApiOgRoute
   ApiSegmentTranslationsRoute: typeof ApiSegmentTranslationsRoute
   ApiTranslateRoute: typeof ApiTranslateRouteWithChildren
@@ -478,6 +491,13 @@ declare module '@tanstack/react-router' {
       path: '/api/locale-info'
       fullPath: '/api/locale-info'
       preLoaderRoute: typeof ApiLocaleInfoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/notifications': {
+      id: '/api/notifications'
+      path: '/api/notifications'
+      fullPath: '/api/notifications'
+      preLoaderRoute: typeof ApiNotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/og': {
@@ -709,6 +729,7 @@ const rootRouteChildren: RootRouteChildren = {
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiLocaleInfoRoute: ApiLocaleInfoRoute,
+  ApiNotificationsRoute: ApiNotificationsRoute,
   ApiOgRoute: ApiOgRoute,
   ApiSegmentTranslationsRoute: ApiSegmentTranslationsRoute,
   ApiTranslateRoute: ApiTranslateRouteWithChildren,

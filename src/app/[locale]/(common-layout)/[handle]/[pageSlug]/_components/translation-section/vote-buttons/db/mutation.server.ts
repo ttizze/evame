@@ -173,3 +173,26 @@ async function updateProofStatus(
 		)
 		.execute();
 }
+
+export async function createNotificationPageSegmentTranslationVote(
+	translationId: number,
+	actorId: string,
+) {
+	const segmentTranslation = await db
+		.selectFrom("segmentTranslations")
+		.select("userId")
+		.where("id", "=", translationId)
+		.executeTakeFirst();
+
+	if (!segmentTranslation) return;
+
+	await db
+		.insertInto("notifications")
+		.values({
+			segmentTranslationId: translationId,
+			userId: segmentTranslation.userId,
+			actorId,
+			type: "PAGE_SEGMENT_TRANSLATION_VOTE",
+		})
+		.execute();
+}

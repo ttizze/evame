@@ -3,7 +3,10 @@ import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { parseFormData } from "@/app/[locale]/_utils/parse-form-data";
 import { findPageIdBySegmentTranslationId } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-section/_db/queries.server";
 import { addTranslationService } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-section/add-translation-form/service/add-translation.server";
-import { handleVote } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-section/vote-buttons/db/mutation.server";
+import {
+	createNotificationPageSegmentTranslationVote,
+	handleVote,
+} from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/translation-section/vote-buttons/db/mutation.server";
 import { isSameOriginRequest } from "@/app/api/_utils/is-same-origin-request";
 import { db } from "@/db";
 import { deleteOwnTranslation } from "./_db/mutations.server";
@@ -199,6 +202,13 @@ export async function patchSegmentTranslationVote(request: Request) {
 		isUpvote,
 		currentUser.id,
 	);
+
+	if (result.data.isUpvote) {
+		await createNotificationPageSegmentTranslationVote(
+			segmentTranslationId,
+			currentUser.id,
+		);
+	}
 
 	const pageId = await findPageIdBySegmentTranslationId(segmentTranslationId);
 	return {
