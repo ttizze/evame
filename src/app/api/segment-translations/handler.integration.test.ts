@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPageWithSegments, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
-import { GET } from "./route";
+import { getSegmentTranslations } from "./handler";
 
 await setupDbPerFile(import.meta.url);
 
@@ -27,7 +27,7 @@ describe("/api/segment-translations GET", () => {
 		const req = new Request(
 			"http://localhost/api/segment-translations?segmentId=abc&userLocale=ja",
 		);
-		const res = await GET(req);
+		const res = await getSegmentTranslations(req);
 
 		// Assert
 		expect(res.status).toBe(400);
@@ -102,7 +102,7 @@ describe("/api/segment-translations GET", () => {
 		const req = new Request(
 			`http://localhost/api/segment-translations?segmentId=${segment.id}&userLocale=ja`,
 		);
-		const res = await GET(req);
+		const res = await getSegmentTranslations(req);
 
 		// Assert
 		expect(res.status).toBe(200);
@@ -186,7 +186,7 @@ describe("/api/segment-translations GET", () => {
 		const req = new Request(
 			`http://localhost/api/segment-translations?segmentId=${segment.id}&userLocale=ja`,
 		);
-		const res = await GET(req);
+		const res = await getSegmentTranslations(req);
 
 		// Assert
 		expect(res.status).toBe(200);

@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
@@ -8,8 +7,9 @@ import {
 	createUser,
 } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
+import { withQstashVerification } from "../_utils/with-qstash-signature";
 import { getVertexAIModelResponse } from "./_infra/vertexai";
-import { POST } from "./route";
+import { postTranslateChunk } from "./handler";
 
 await setupDbPerFile(import.meta.url);
 
@@ -19,9 +19,13 @@ vi.mock("./_infra/vertexai", () => ({
 }));
 
 vi.mock("../_utils/with-qstash-signature", () => ({
-	withQstashVerification: (handler: (req: NextRequest) => Promise<Response>) =>
+	withQstashVerification: (handler: (req: Request) => Promise<Response>) =>
 		handler,
 }));
+
+const verifiedPostTranslateChunk = withQstashVerification(
+	async (request) => (await postTranslateChunk(request)).response,
+);
 
 describe("POST /api/translate/chunk", () => {
 	beforeEach(async () => {
@@ -90,13 +94,13 @@ describe("POST /api/translate/chunk", () => {
 		};
 
 		// Act
-		const req = new NextRequest("http://localhost/api/translate/chunk", {
+		const req = new Request("http://localhost/api/translate/chunk", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(params),
 		});
 
-		const response = await POST(req);
+		const response = await verifiedPostTranslateChunk(req);
 		const data = await response.json();
 
 		// Assert
@@ -183,13 +187,13 @@ describe("POST /api/translate/chunk", () => {
 		};
 
 		// Act
-		const req = new NextRequest("http://localhost/api/translate/chunk", {
+		const req = new Request("http://localhost/api/translate/chunk", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(params),
 		});
 
-		const response = await POST(req);
+		const response = await verifiedPostTranslateChunk(req);
 		const data = await response.json();
 
 		// Assert
@@ -213,13 +217,13 @@ describe("POST /api/translate/chunk", () => {
 		const invalidJson = "{ invalid json }";
 
 		// Act
-		const req = new NextRequest("http://localhost/api/translate/chunk", {
+		const req = new Request("http://localhost/api/translate/chunk", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: invalidJson,
 		});
 
-		const response = await POST(req);
+		const response = await verifiedPostTranslateChunk(req);
 		const data = await response.json();
 
 		// Assert
@@ -288,13 +292,13 @@ describe("POST /api/translate/chunk", () => {
 		};
 
 		// Act
-		const req = new NextRequest("http://localhost/api/translate/chunk", {
+		const req = new Request("http://localhost/api/translate/chunk", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(params),
 		});
 
-		const response = await POST(req);
+		const response = await verifiedPostTranslateChunk(req);
 		const data = await response.json();
 
 		// Assert

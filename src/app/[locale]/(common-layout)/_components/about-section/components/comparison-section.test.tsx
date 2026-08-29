@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-import type { fetchAboutPage } from "../service/fetch-about-page";
+import type { loadAboutPage } from "../service/load-about-page";
 
 vi.mock(
 	"@/app/[locale]/(common-layout)/_components/wrap-segments/segment",
@@ -40,7 +40,7 @@ function buildAboutPageDetail() {
 			text,
 			translationText: null,
 		})),
-	} as Awaited<ReturnType<typeof fetchAboutPage>>;
+	} as NonNullable<Awaited<ReturnType<typeof loadAboutPage>>>;
 }
 
 describe("ComparisonSection", () => {

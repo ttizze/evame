@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import type { fetchAboutPage } from "../../service/fetch-about-page";
+import type { loadAboutPage } from "../../service/load-about-page";
 import { ABOUT_FEATURE_BASE_CLASS, ABOUT_FEATURE_PANEL_CLASS } from "../layout";
 
 type FeatureDirection = "default" | "reverse";
@@ -10,7 +10,7 @@ export function selectFeatureHeaderAndText({
 	headerNumber,
 	textNumber,
 }: {
-	pageDetail: Awaited<ReturnType<typeof fetchAboutPage>>;
+	pageDetail: NonNullable<Awaited<ReturnType<typeof loadAboutPage>>>;
 	headerNumber: number;
 	textNumber: number;
 }) {

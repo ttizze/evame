@@ -9,7 +9,7 @@ import { setupDbPerFile } from "@/tests/test-db-manager";
 import { buildJudgments } from "../push/_service/build-judgments";
 import { executePush } from "../push/_service/execute-push";
 import type { SyncPushInput } from "../push/_service/schema";
-import { GET } from "./route";
+import { getSyncPull } from "./handler";
 
 await setupDbPerFile(import.meta.url);
 
@@ -42,7 +42,7 @@ describe("Pull API", () => {
 			],
 		});
 
-		const response = await GET(
+		const response = await getSyncPull(
 			new Request("http://localhost/api/sync/pull", {
 				headers: { Authorization: authHeader },
 			}),
@@ -68,7 +68,7 @@ describe("Pull API", () => {
 			],
 		});
 
-		const response = await GET(
+		const response = await getSyncPull(
 			new Request("http://localhost/api/sync/pull", {
 				headers: { Authorization: authHeader },
 			}),
@@ -86,7 +86,7 @@ describe("Pull API", () => {
 			status: "ARCHIVE",
 		});
 
-		const response = await GET(
+		const response = await getSyncPull(
 			new Request("http://localhost/api/sync/pull", {
 				headers: { Authorization: authHeader },
 			}),

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { fetchSocialProofStats } from "./_db/social-proof-stats.server";
+import type { querySocialProofStats } from "./_db/queries";
 import ComparisonSection from "./components/comparison-section";
 import FAQSection from "./components/faq-section";
 import ReachFeature from "./components/features/reach";
@@ -11,7 +11,7 @@ import FounderSection from "./components/founder-section";
 import HeroSection from "./components/hero-section";
 import ProblemSection from "./components/problem-section";
 import SocialProofBar from "./components/social-proof-bar";
-import type { fetchAboutPage } from "./service/fetch-about-page";
+import type { loadAboutPage } from "./service/load-about-page";
 
 export default function AboutSectionPresentation({
 	locale,
@@ -21,8 +21,8 @@ export default function AboutSectionPresentation({
 	floatingControls,
 }: {
 	locale: string;
-	pageDetail: Awaited<ReturnType<typeof fetchAboutPage>>;
-	stats: Awaited<ReturnType<typeof fetchSocialProofStats>>;
+	pageDetail: NonNullable<Awaited<ReturnType<typeof loadAboutPage>>>;
+	stats: Awaited<ReturnType<typeof querySocialProofStats>>;
 	readControls: ReactNode;
 	floatingControls: ReactNode;
 }) {

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createSession, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
-import { GET } from "./route";
+import { getSyncCliLogin } from "./handler";
 
 const { getSessionMock } = vi.hoisted(() => ({ getSessionMock: vi.fn() }));
 vi.mock("@/auth", () => ({
@@ -22,7 +22,7 @@ describe("CLI Login API", () => {
 	});
 
 	it("redirect_uri が不正な場合は400を返す", async () => {
-		const response = await GET(
+		const response = await getSyncCliLogin(
 			new Request(
 				"http://localhost/api/sync/cli-login?redirect_uri=https://evil.com/callback",
 			),
@@ -33,7 +33,7 @@ describe("CLI Login API", () => {
 	it("未ログインの場合は /auth/login にリダイレクトする", async () => {
 		const callback = encodeURIComponent("http://127.0.0.1:45678/callback");
 		getSessionMock.mockResolvedValueOnce(null);
-		const response = await GET(
+		const response = await getSyncCliLogin(
 			new Request(
 				`http://localhost/api/sync/cli-login?redirect_uri=${callback}`,
 			),
@@ -51,7 +51,7 @@ describe("CLI Login API", () => {
 		const callback = encodeURIComponent("http://127.0.0.1:45678/callback");
 		getSessionMock.mockResolvedValueOnce({ session: { id: session.id } });
 
-		const response = await GET(
+		const response = await getSyncCliLogin(
 			new Request(
 				`http://localhost/api/sync/cli-login?redirect_uri=${callback}`,
 			),

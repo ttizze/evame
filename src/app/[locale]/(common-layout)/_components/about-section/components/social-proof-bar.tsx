@@ -1,7 +1,7 @@
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-import type { fetchSocialProofStats } from "../_db/social-proof-stats.server";
-import type { fetchAboutPage } from "../service/fetch-about-page";
+import type { querySocialProofStats } from "../_db/queries";
+import type { loadAboutPage } from "../service/load-about-page";
 import { AboutSectionContent } from "./layout";
 
 export default function SocialProofBar({
@@ -10,8 +10,8 @@ export default function SocialProofBar({
 	stats,
 }: {
 	locale: string;
-	pageDetail: Awaited<ReturnType<typeof fetchAboutPage>>;
-	stats: Awaited<ReturnType<typeof fetchSocialProofStats>>;
+	pageDetail: NonNullable<Awaited<ReturnType<typeof loadAboutPage>>>;
+	stats: Awaited<ReturnType<typeof querySocialProofStats>>;
 }) {
 	const articlesLabel = pageDetail.segments.find(
 		(segment) => segment.number === SEGMENT_NUMBER.socialProofArticles,

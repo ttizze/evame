@@ -1,12 +1,12 @@
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-import type { fetchAboutPage } from "../service/fetch-about-page";
+import type { loadAboutPage } from "../service/load-about-page";
 import { ABOUT_SECTION_HEADING_CLASS, AboutSectionContent } from "./layout";
 
 export default function FounderSection({
 	pageDetail,
 }: {
-	pageDetail: Awaited<ReturnType<typeof fetchAboutPage>>;
+	pageDetail: NonNullable<Awaited<ReturnType<typeof loadAboutPage>>>;
 }) {
 	const headerSegment = pageDetail.segments.find(
 		(segment) => segment.number === SEGMENT_NUMBER.founderStoryHeader,

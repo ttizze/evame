@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-import type { fetchAboutPage } from "../../service/fetch-about-page";
+import type { loadAboutPage } from "../../service/load-about-page";
 import { FeatureSection, selectFeatureHeaderAndText } from "./feature-section";
 
 const READ_HINT: Record<string, string> = {
@@ -18,7 +18,7 @@ export default function ReadFeature({
 	controls,
 }: {
 	locale: string;
-	pageDetail: Awaited<ReturnType<typeof fetchAboutPage>>;
+	pageDetail: NonNullable<Awaited<ReturnType<typeof loadAboutPage>>>;
 	controls: ReactNode;
 }) {
 	const featureContent = selectFeatureHeaderAndText({
