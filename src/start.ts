@@ -1,4 +1,8 @@
 import {
+	sentryGlobalFunctionMiddleware,
+	sentryGlobalRequestMiddleware,
+} from "@sentry/tanstackstart-react";
+import {
 	createCsrfMiddleware,
 	createMiddleware,
 	createStart,
@@ -30,5 +34,10 @@ const csrfMiddleware = createCsrfMiddleware({
 });
 
 export const startInstance = createStart(() => ({
-	requestMiddleware: [csrfMiddleware, maintenanceMiddleware],
+	requestMiddleware: [
+		sentryGlobalRequestMiddleware,
+		csrfMiddleware,
+		maintenanceMiddleware,
+	],
+	functionMiddleware: [sentryGlobalFunctionMiddleware],
 }));

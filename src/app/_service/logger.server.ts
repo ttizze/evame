@@ -5,7 +5,7 @@
  * Sentryとの統合が可能
  */
 
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from "@sentry/tanstackstart-react";
 import type { Logger } from "pino";
 import { createLogger } from "./logger";
 
