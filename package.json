@@ -9,6 +9,7 @@
 		"start": "node .output/server/index.mjs",
 		"lint": "bunx @biomejs/biome check .",
 		"test": "vitest",
+		"test:deployment": "node scripts/check-vercel-output.mjs",
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
 		"db:migrate": "bun run db:with-branch -- drizzle-kit migrate",

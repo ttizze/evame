@@ -7,11 +7,12 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
 	resolve: { tsconfigPaths: true },
+	ssr: { noExternal: true, external: ["sharp", "@vercel/og"] },
 	plugins: [
 		tailwindcss(),
 		tanstackStart(),
 		nitro({
-			noExternals: ["@sentry/tanstackstart-react"],
+			traceDeps: ["harfbuzzjs*"],
 			serverAssets: [
 				{
 					baseName: "og",

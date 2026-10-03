@@ -44,3 +44,6 @@ jobs:
         env:
           NITRO_PRESET: vercel
         run: nix develop --command bun run build
+
+      - name: Verify isolated deployment runtime
+        run: nix develop --command bun run test:deployment
