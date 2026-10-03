@@ -34,7 +34,15 @@ function createDb(): KyselyDbWithPool {
 	}
 
 	const db = new Kysely<DB>({
-		dialect: new PostgresDialect({ pool }),
+		dialect: new PostgresDialect({
+			// NeonのClient.connectはKyselyの制御用Clientと型が異なるため、
+			// 共通のPool APIを渡し、クエリー取消はPool経由で行う。
+			pool: {
+				connect: () => pool.connect(),
+				end: () => pool.end(),
+				options: pool.options,
+			},
+		}),
 		plugins: [new CamelCasePlugin()],
 	});
 

@@ -79,12 +79,12 @@ describe("復元した画面ルートの登録", () => {
 });
 
 describe("所有者向け画面のレイアウト", () => {
-	it.each([
-		"/en/example/edit",
-		"/en/example/page-management",
-	])("%s を開くとプロフィール本文に隠されず独立した画面へ遷移する", (pathname) => {
-		expect(
-			router.matchRoutes(pathname).map((match) => match.routeId),
-		).not.toContain("/$locale/_common/$handle");
-	});
+	it.each(["/en/example/edit", "/en/example/page-management"])(
+		"%s を開くとプロフィール本文に隠されず独立した画面へ遷移する",
+		(pathname) => {
+			expect(
+				router.matchRoutes(pathname).map((match) => match.routeId),
+			).not.toContain("/$locale/_common/$handle");
+		},
+	);
 });

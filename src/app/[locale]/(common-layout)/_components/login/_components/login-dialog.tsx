@@ -46,7 +46,11 @@ export function LoginDialog({
 					Login to Evame
 					<DialogDescription className="mt-2 flex flex-col items-center">
 						Evame is multilingual blog platform.
-						<a className="underline" href={`/${locale}/about`}>
+						<a
+							aria-label="Evame"
+							className="underline"
+							href={`/${locale}/about`}
+						>
 							Learn more
 						</a>
 					</DialogDescription>
