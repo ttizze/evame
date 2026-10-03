@@ -13,12 +13,8 @@ import {
 	pages,
 	pageViews,
 	personalAccessTokens,
-	segmentAnnotationLinks,
-	segmentMetadata,
-	segmentMetadataTypes,
 	segments,
 	segmentTranslations,
-	segmentTypes,
 	sessions,
 	tagPages,
 	tags,
@@ -240,17 +236,6 @@ export const segmentsRelations = relations(segments, ({ one, many }) => ({
 		fields: [segments.contentId],
 		references: [contents.id],
 	}),
-	segmentType: one(segmentTypes, {
-		fields: [segments.segmentTypeId],
-		references: [segmentTypes.id],
-	}),
-	segmentMetadata: many(segmentMetadata),
-	segmentAnnotationLinks_annotationSegmentId: many(segmentAnnotationLinks, {
-		relationName: "segmentAnnotationLinks_annotationSegmentId_segments_id",
-	}),
-	segmentAnnotationLinks_mainSegmentId: many(segmentAnnotationLinks, {
-		relationName: "segmentAnnotationLinks_mainSegmentId_segments_id",
-	}),
 }));
 
 export const pageViewsRelations = relations(pageViews, ({ one }) => ({
@@ -301,31 +286,6 @@ export const translationVotesRelations = relations(
 	}),
 );
 
-export const segmentTypesRelations = relations(segmentTypes, ({ many }) => ({
-	segments: many(segments),
-}));
-
-export const segmentMetadataRelations = relations(
-	segmentMetadata,
-	({ one }) => ({
-		segmentMetadataType: one(segmentMetadataTypes, {
-			fields: [segmentMetadata.metadataTypeId],
-			references: [segmentMetadataTypes.id],
-		}),
-		segment: one(segments, {
-			fields: [segmentMetadata.segmentId],
-			references: [segments.id],
-		}),
-	}),
-);
-
-export const segmentMetadataTypesRelations = relations(
-	segmentMetadataTypes,
-	({ many }) => ({
-		segmentMetadata: many(segmentMetadata),
-	}),
-);
-
 export const userSettingsRelations = relations(userSettings, ({ one }) => ({
 	user: one(users, {
 		fields: [userSettings.userId],
@@ -347,19 +307,3 @@ export const tagPagesRelations = relations(tagPages, ({ one }) => ({
 export const tagsRelations = relations(tags, ({ many }) => ({
 	tagPages: many(tagPages),
 }));
-
-export const segmentAnnotationLinksRelations = relations(
-	segmentAnnotationLinks,
-	({ one }) => ({
-		segment_annotationSegmentId: one(segments, {
-			fields: [segmentAnnotationLinks.annotationSegmentId],
-			references: [segments.id],
-			relationName: "segmentAnnotationLinks_annotationSegmentId_segments_id",
-		}),
-		segment_mainSegmentId: one(segments, {
-			fields: [segmentAnnotationLinks.mainSegmentId],
-			references: [segments.id],
-			relationName: "segmentAnnotationLinks_mainSegmentId_segments_id",
-		}),
-	}),
-);

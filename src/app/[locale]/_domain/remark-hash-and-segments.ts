@@ -15,10 +15,7 @@ import type { Data, VFile } from "vfile";
 import type { Segment } from "@/db/types.helpers";
 import { generateHashForText } from "../_utils/generate-hash-for-text";
 
-export type SegmentDraft = Omit<
-	Segment,
-	"id" | "contentId" | "createdAt" | "segmentTypeId"
->;
+export type SegmentDraft = Omit<Segment, "id" | "contentId" | "createdAt">;
 type BlockNode = Paragraph | Heading | ListItem | Blockquote | TableCell;
 const BLOCK_TYPES: ReadonlyArray<BlockNode["type"]> = [
 	"paragraph",

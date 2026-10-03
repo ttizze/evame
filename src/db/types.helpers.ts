@@ -84,18 +84,6 @@ export type LikePage = Selectable<DB["likePages"]>;
 export type NewLikePage = Insertable<DB["likePages"]>;
 export type LikePageUpdate = Updateable<DB["likePages"]>;
 
-// SegmentMetadata
-export type SegmentMetadata = Selectable<DB["segmentMetadata"]>;
-export type NewSegmentMetadata = Insertable<DB["segmentMetadata"]>;
-export type SegmentMetadataUpdate = Updateable<DB["segmentMetadata"]>;
-
-// SegmentAnnotationLink
-export type SegmentAnnotationLink = Selectable<DB["segmentAnnotationLinks"]>;
-export type NewSegmentAnnotationLink = Insertable<DB["segmentAnnotationLinks"]>;
-export type SegmentAnnotationLinkUpdate = Updateable<
-	DB["segmentAnnotationLinks"]
->;
-
 // ============================================
 // 派生型（ビジネスロジック用）
 // ============================================
