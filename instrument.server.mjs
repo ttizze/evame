@@ -1,4 +1,5 @@
 import * as Sentry from "@sentry/tanstackstart-react";
+import { isRedirect } from "@tanstack/react-router";
 
 if (process.env.NODE_ENV === "production") {
 	Sentry.init({
@@ -12,5 +13,8 @@ if (process.env.NODE_ENV === "production") {
 		],
 		enableLogs: true,
 		debug: false,
+		beforeSend(event, hint) {
+			return isRedirect(hint.originalException) ? null : event;
+		},
 	});
 }
