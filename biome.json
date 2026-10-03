@@ -6,7 +6,6 @@
 			"!bun.lockb",
 			"!build",
 			"!.vscode",
-			"!.next",
 			"!.output",
 			"!node_modules",
 			"!**/*.css",

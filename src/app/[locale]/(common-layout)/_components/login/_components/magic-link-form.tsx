@@ -1,5 +1,3 @@
-"use client";
-
 import { CheckCircle, Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { z } from "zod";

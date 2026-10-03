@@ -20,8 +20,10 @@ nix develop
    ```bash
    cp .env.example .env
    openssl rand -base64 32
+   openssl rand -hex 32
    ```
-   生成した文字列を `.env` に設定してください。
+   base64 の値を `BETTER_AUTH_SECRET`、hex の値を `ENCRYPTION_KEY` に設定してください。認証に使う Google・Resend と、`maintenance` を管理する Edge Config の接続情報も設定します。
+   公開サイトURLは `VITE_PUBLIC_DOMAIN`、画像ホストはサーバー側の `CF_IMAGE_HOST`、CLI の接続先は `EVAME_BASE_URL` を使います。
 3. DB を起動
    ```bash
    docker compose up -d
@@ -46,9 +48,9 @@ nix develop
 ## このリポジトリの構成（要約）
 
 - `src/routes`: TanStack Start のルート
-- `src/app`: 移行中の共有実装
+- `src/app`: ルートから使う機能実装
 - `src/db`: DB 接続・型・シード
 - `src/drizzle`: スキーマとマイグレーション
 - `src/components`: 共有 UI
 
-詳細は `docs/architecture.md` を参照してください。
+詳細は `docs/architecture/architecture.md` を参照してください。

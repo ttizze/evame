@@ -1,8 +1,8 @@
 import { remark } from "remark";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { uploadImage } from "../_service/upload/upload-image";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fileFromUrl } from "../_utils/file-from-url";
 import { remarkAutoUploadImages } from "./remark-auto-upload-images";
+import { uploadImage } from "./upload/upload-image";
 
 // 外部ファイルシステム・アップロードサービスをモック（共有依存）
 vi.mock("../_utils/file-from-url", () => {
@@ -20,7 +20,7 @@ vi.mock("../_utils/file-from-url", () => {
 	};
 });
 
-vi.mock("../_service/upload/upload-image", () => ({
+vi.mock("./upload/upload-image", () => ({
 	uploadImage: vi.fn(async () => ({
 		success: true,
 		data: { imageUrl: "https://evame/uploads/uploaded.jpg" },
@@ -28,11 +28,26 @@ vi.mock("../_service/upload/upload-image", () => ({
 }));
 
 describe("remarkAutoUploadImages", () => {
+	afterEach(() => {
+		vi.unstubAllEnvs();
+	});
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
 	describe("自前ホストの画像", () => {
+		it("設定した画像ホストのアップロード済み画像を再アップロードしない", async () => {
+			vi.stubEnv("CF_IMAGE_HOST", "images.example.test");
+			const md = "![custom](https://images.example.test/uploads/already.jpg)";
+
+			const vfile = await remark().use(remarkAutoUploadImages).process(md);
+
+			expect(vfile.toString()).toContain(
+				"https://images.example.test/uploads/already.jpg",
+			);
+			expect(fileFromUrl).not.toHaveBeenCalled();
+			expect(uploadImage).not.toHaveBeenCalled();
+		});
 		it("既にアップロード済みの画像はスキップする", async () => {
 			const md = `
 ![cf](https://images.evame.tech/uploads/already.jpg)

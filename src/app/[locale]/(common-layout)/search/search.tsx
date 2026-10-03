@@ -1,5 +1,3 @@
-"use client";
-
 import { Edit3, FileText, Hash, User } from "lucide-react";
 import { parseAsInteger, parseAsString, useQueryState } from "nuqs";
 import { useTransition } from "react";

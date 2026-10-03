@@ -1,4 +1,3 @@
-"use client";
 import { useLocale } from "use-intl";
 import { useHeaderScroll } from "@/app/[locale]/(common-layout)/_components/header/hooks/use-header-scroll";
 import type { PageDetail } from "@/app/[locale]/types";

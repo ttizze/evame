@@ -1,5 +1,4 @@
 /* app/_components/view-cycle.tsx */
-"use client";
 import { FileText } from "lucide-react";
 import { useQueryState } from "nuqs";
 import type { View } from "@/app/_constants/view";

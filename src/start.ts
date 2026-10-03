@@ -14,7 +14,7 @@ export const maintenanceMiddleware = createMiddleware().server(
 	async ({ next, pathname, request }) => {
 		if (!shouldCheckMaintenance(pathname)) return next();
 
-		// Edge Config障害は既存proxyと同じく上位のエラーハンドラへ伝播させる。
+		// Edge Config障害は上位のエラーハンドラへ伝播させる。
 		const isOn = await get<boolean>("maintenance");
 		if (!isOn) return next();
 

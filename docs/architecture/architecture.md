@@ -1,14 +1,15 @@
 # アーキテクチャ概要
 
-Evame は Next.js（App Router）を中心に構成された翻訳・注釈プラットフォームです。
+Evame は TanStack Start を使った翻訳・注釈プラットフォームです。
 本ドキュメントは「全体像」「主要コンポーネント」「依存関係」「データの流れ」を最短で理解するための入口です。
 
 ## 技術スタック（現行）
 
-- フレームワーク: Next.js 16（App Router）
+- フレームワーク: TanStack Start + TanStack Router
+- ビルド・サーバー: Vite + Nitro
 - 言語: TypeScript
 - UI: React 19 + Tailwind CSS + Radix UI 系コンポーネント
-- i18n: next-intl
+- i18n: use-intl
 - DB: PostgreSQL
 - DB アクセス: Kysely（ランタイム） + Drizzle（スキーマ/マイグレーション）
 - 認証: better-auth
@@ -18,7 +19,12 @@ Evame は Next.js（App Router）を中心に構成された翻訳・注釈プ�
 ```
 /
 ├── src/
-│   ├── app/                 # Next.js App Router
+│   ├── routes/              # 画面・API のルート境界と loader/head
+│   ├── app/                 # 機能ごとの UI・service/domain/db
+│   ├── router.tsx           # リクエストごとの Router 作成
+│   ├── start.ts             # リクエスト・Server Function middleware
+│   ├── server.ts            # サーバーエントリと Sentry
+│   ├── client.tsx           # ブラウザーの hydration
 │   ├── components/          # 共有 UI
 │   ├── db/                  # DB 接続・型・シード
 │   ├── drizzle/             # スキーマとマイグレーション
@@ -33,10 +39,17 @@ Evame は Next.js（App Router）を中心に構成された翻訳・注釈プ�
 
 ## 主要コンポーネントと責務
 
-### App Router（`src/app`）
-- 画面・ルート・API ルート（Route Handler）を管理
-- `src/app/[locale]` が多言語対応の基点
-- ルート内のコードはコロケーションルールで完結させる
+### ルート境界（`src/routes`）
+- `createFileRoute` で画面・API・sitemap・robots.txt を登録
+- `__root.tsx` が HTML、`HeadContent`、`Scripts` とエラー境界を管理
+- `$locale.tsx` が locale 検証、翻訳メッセージ、テーマなどの provider を管理
+- loader は Server Function を呼び、head は loader の結果や locale からメタデータを構成
+- `routeTree.gen.ts` は自動生成ファイルなので直接編集しない
+
+### 機能実装（`src/app`）
+- ルートが使用する UI・業務ロジック・DB 操作を管理
+- `[locale]` や `(common-layout)` は機能の配置名であり、URL を登録しない
+- API の handler と service/domain/db は `src/app/api` に置く
 
 ### 共有 UI（`src/components`）
 - 複数ルートから参照される UI を集約
@@ -56,14 +69,27 @@ Evame は Next.js（App Router）を中心に構成された翻訳・注釈プ�
 
 ### i18n
 - `src/i18n` に設定を集約
-- ルートは `src/app/[locale]` を基本とする
+- `$locale` を基本ルートとし、`IntlProvider` で翻訳メッセージとタイムゾーンを設定
+- `NEXT_LOCALE` cookie は移行前の言語設定を引き継ぐため維持する
 
 ## データの流れ（代表パターン）
 
-1. ルートコンポーネントが Server Component として描画
-2. 必要なデータ取得はルート配下の `service` または `_db` 経由で実行
-3. 取得結果を Server Component でレンダリング
-4. ユーザー操作が必要な箇所のみ Client Component を使用
+1. loader が `createServerFn` で定義した Server Function を呼ぶ
+2. Server Function 内で入力検証・認証を行い、service や DB 層からデータを取得
+3. 初回はサーバーで画面を描画し、ブラウザーで hydration。画面遷移時は同じ loader をブラウザーから実行
+4. 更新は POST の Server Function で認証・認可を検証し、成功後に必要な Router/SWR のデータを再取得
+
+通常のコンポーネントと loader はサーバー・ブラウザーの両方で動きます。DB 接続や秘密の環境変数は Server Function の handler または API handler 内でのみ使用します。ブラウザー API が必要な UI は `ClientOnly` で囲みます。
+
+## 実行・検証
+
+プロジェクトコマンドは Nix 環境で実行します。依存関係は `bun.lock` に固定します。
+
+- 開発: `bun run dev`（Vite、ポート 3000）
+- 本番ビルド: `bun run build`（Nitro の `.output` を生成）
+- 本番起動: `bun run start`（Node で `.output/server/index.mjs` を実行）
+- 検証: `bun run lint`、`bun run typecheck`、`bun run test --run`
+- Vercel: `vercel.json` の `tanstack-start` と Nitro の Vercel 出力を使用
 
 ## 依存方向（要約）
 

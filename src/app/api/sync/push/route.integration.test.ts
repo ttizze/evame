@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { markdownToMdastWithSegments } from "@/app/[locale]/_domain/markdown-to-mdast-with-segments";
 import { mdastToMarkdown } from "@/app/[locale]/_domain/mdast-to-markdown";
+import { markdownToMdastWithSegments } from "@/app/[locale]/_service/markdown-to-mdast-with-segments";
 import { computeRevision } from "@/app/api/sync/_domain/compute-revision";
 import { db } from "@/db";
 import type { JsonValue } from "@/db/types";

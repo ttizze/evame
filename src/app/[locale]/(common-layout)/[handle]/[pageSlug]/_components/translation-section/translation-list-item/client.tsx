@@ -1,4 +1,3 @@
-"use client";
 import { Link } from "@tanstack/react-router";
 import { EllipsisVertical, Trash2 } from "lucide-react";
 import { type FormEvent, useState } from "react";

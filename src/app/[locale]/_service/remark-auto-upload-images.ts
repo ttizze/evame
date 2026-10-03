@@ -2,8 +2,8 @@ import type { Root as MdastRoot } from "mdast";
 import pLimit from "p-limit";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
-import { uploadImage } from "../_service/upload/upload-image";
 import { fileFromUrl } from "../_utils/file-from-url";
+import { uploadImage } from "./upload/upload-image";
 
 const limit = pLimit(5);
 
@@ -15,7 +15,7 @@ export const remarkAutoUploadImages: Plugin<[]> = () => {
 			[
 				"images.evame.tech",
 				"images.eveeve.org",
-				process.env.NEXT_PUBLIC_CF_IMAGE_HOST?.trim(),
+				process.env.CF_IMAGE_HOST?.trim(),
 			].filter(
 				(host): host is string => typeof host === "string" && host !== "",
 			),

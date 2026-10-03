@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { markdownToMdastWithSegments } from "@/app/[locale]/_domain/markdown-to-mdast-with-segments";
+import { markdownToMdastWithSegments } from "@/app/[locale]/_service/markdown-to-mdast-with-segments";
 import { db } from "@/db";
 import type { PageStatus } from "@/db/types";
 import { upsertPageAndSegments } from "../../application/upsert-page-and-segments";
@@ -13,6 +13,7 @@ export async function ensureRootPage(userId: string): Promise<number> {
 	const markdownContent = await fs.readFile(readmePath, "utf-8");
 
 	const parsed = await markdownToMdastWithSegments({
+		autoUploadImages: true,
 		header: ROOT_TITLE,
 		markdown: markdownContent,
 	});

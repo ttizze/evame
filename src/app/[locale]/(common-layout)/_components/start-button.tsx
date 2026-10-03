@@ -1,5 +1,3 @@
-"use client";
-
 import type { ReactNode } from "react";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
 import { authClient } from "@/app/[locale]/_service/auth-client";

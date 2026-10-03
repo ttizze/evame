@@ -1,4 +1,4 @@
-import { markdownToMdastWithSegments } from "@/app/[locale]/_domain/markdown-to-mdast-with-segments";
+import { markdownToMdastWithSegments } from "@/app/[locale]/_service/markdown-to-mdast-with-segments";
 import { db } from "@/db";
 import type { PageStatus } from "@/db/types";
 import { upsertPageAndSegments } from "../../application/upsert-page-and-segments";
@@ -20,6 +20,7 @@ export async function createCategoryPage({
 	order,
 }: CategoryPageParams): Promise<number> {
 	const mdast = await markdownToMdastWithSegments({
+		autoUploadImages: true,
 		header: title,
 		markdown: "",
 	});

@@ -15,7 +15,7 @@
 ## 必読リンク
 - 作業ルール: `AGENTS.md`
 - 要件: `docs/requirements.md`
-- アーキテクチャ: `docs/architecture.md`
+- アーキテクチャ: `docs/architecture/architecture.md`
 - ルート配置ルール: `docs/architecture/conventions/route-colocation.md`
 
 ## 実装上の重要な制約（抜粋）

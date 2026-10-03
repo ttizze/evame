@@ -34,10 +34,6 @@ dist-ssr
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
 # production
 /build
 /.output/
@@ -54,13 +50,13 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 # Playwright
 node_modules/
@@ -70,7 +66,6 @@ node_modules/
 /playwright/.cache/
 database.bak
 
-.next
 # Sentry Config File
 .env.sentry-build-plugin
 

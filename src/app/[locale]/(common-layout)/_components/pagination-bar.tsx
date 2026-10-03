@@ -1,4 +1,3 @@
-"use client";
 import { useLocation } from "@tanstack/react-router";
 import { parseAsString, useQueryStates } from "nuqs";
 import {

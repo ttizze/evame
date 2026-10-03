@@ -1,5 +1,3 @@
-"use client";
-
 import { ChevronDown } from "lucide-react";
 import { useQueryState } from "nuqs";
 import type { ReactNode } from "react";

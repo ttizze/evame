@@ -1,4 +1,3 @@
-"use client";
 import { ArrowUpFromLine } from "lucide-react";
 import { type FormEvent, useRef, useState } from "react";
 import TextareaAutosize from "react-textarea-autosize";

@@ -1,5 +1,3 @@
-"use client";
-
 import { useServerFn } from "@tanstack/react-start";
 import { Heart, Loader2 } from "lucide-react";
 import { useActionState } from "react";

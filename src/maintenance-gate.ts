@@ -7,7 +7,7 @@ const MAINTENANCE_ROUTE = new RegExp(
 	"i",
 );
 const MAINTENANCE_MATCHER =
-	/^\/(?!api|_next|_vercel|privacy|terms|monitoring|sitemap(?:$|\/.*|\.xml)|.*\..*).*/;
+	/^\/(?!api|_serverFn(?:\/|$)|_vercel|privacy|terms|monitoring|sitemap(?:$|\/.*|\.xml)|.*\..*).*/;
 
 export function shouldCheckMaintenance(pathname: string): boolean {
 	return (

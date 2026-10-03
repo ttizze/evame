@@ -1,4 +1,3 @@
-"use client";
 import { Link } from "@tanstack/react-router";
 import { ChevronDown, ChevronUp, Languages } from "lucide-react";
 import { useState } from "react";

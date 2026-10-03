@@ -1,4 +1,3 @@
-"use client";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { type FormEvent, useOptimistic, useState, useTransition } from "react";
 import type { SegmentTranslation } from "@/app/api/segment-translations/_domain/segment-translations";

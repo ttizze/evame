@@ -1,4 +1,3 @@
-"use client";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowUpFromLine, ExternalLink, Loader2 } from "lucide-react";
 import { useActionState, useEffect } from "react";

@@ -1,4 +1,3 @@
-"use client";
 import { List } from "lucide-react";
 import type { TocItem } from "../../_domain/extract-toc-items";
 import { IconPopoverTrigger } from "../page-navigation/icon-popover-trigger";

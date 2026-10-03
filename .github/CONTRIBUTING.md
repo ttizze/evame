@@ -25,7 +25,7 @@ Evameプロジェクトへの関心をお寄せいただき、ありがとうご
 - コードは明確で読みやすくしてください。
 - 適切なコメントを追加してください。
 - 既存のコードスタイルに従ってください。
-- cd web && bun run check  でフォーマットを整えてください。
+- `nix develop` 内で `bun run biome`、`bun run typecheck`、`bun run test --run` を実行してください。
 
 
 

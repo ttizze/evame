@@ -5,13 +5,18 @@
 ## 基本方針
 - ルート配下で必要なコードを完結させる
 - ルート内の責務を `layer` ごとに分ける
-- `_` は **Next.js のルート除外用** に限定する
+- `src/routes` の補助ファイル・ディレクトリは `-` を付けて TanStack Router のルート生成から除外する
+- `src/app` の `_` 付きディレクトリは機能内の責務を表す。ルート登録は `src/routes` で行う
 - コンポーネント専用ロジックはそのコンポーネント配下へ置く
 - コンポーネントは責務ごとに分割し、分割したものは同一コンポーネント配下にまとめる
 
 ## ディレクトリ構造（例）
 
 ```
+src/routes/
+  $locale.route-a.tsx      # 入出力・loader・head・画面
+  $locale/
+    -route-a-data.ts       # createServerFn の入力検証・認証・データ取得
 src/app/[locale]/route-a/
   _components/            # route-a 専用の UI
     component-a/
@@ -25,7 +30,6 @@ src/app/[locale]/route-a/
   _service/               # route-a 専用のサービス
   _hooks/                 # route-a 専用の hooks
   _utils/                 # route-a 専用の純粋ヘルパー
-  page.tsx
 ```
 
 ## 各レイヤーの役割
@@ -50,7 +54,8 @@ src/app/[locale]/route-a/
 
 ## 配置ルール
 
-- **ルート直下**: `_components/`, `_db/`, `_domain/`, `_service/`, `_utils/` など（`_` 付き）
+- **`src/routes` の補助**: `-route-a-data.ts` や `-service/` など（`-` 付き）
+- **機能直下（`src/app`）**: `_components/`, `_db/`, `_domain/`, `_service/`, `_utils/` など（`_` 付き）
 - **コンポーネント配下**: `service/`, `domain/`, `db/`, `utils/`, `hooks/` など（`_` なし）
 - **サービス配下**: `domain/`, `db/` など（`_` なし）
 

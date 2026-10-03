@@ -1,5 +1,3 @@
-"use client";
-
 import { Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { FcGoogle } from "react-icons/fc";

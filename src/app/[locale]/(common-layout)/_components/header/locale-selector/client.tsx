@@ -1,4 +1,3 @@
-"use client";
 import { useLocation, useNavigate, useParams } from "@tanstack/react-router";
 import { Check, ChevronDown } from "lucide-react";
 import { startTransition, useState } from "react";

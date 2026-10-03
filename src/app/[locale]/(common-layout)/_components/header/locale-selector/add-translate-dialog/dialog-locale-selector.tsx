@@ -1,4 +1,3 @@
-"use client";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { useState } from "react";
 import { supportedLocaleOptions } from "@/app/_constants/locale";

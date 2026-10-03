@@ -9,7 +9,6 @@ describe("メンテナンスゲートの対象判定", () => {
 	it("既存のmatcher除外パスをメンテナンス判定から除外する", () => {
 		const excludedPaths = [
 			"/api/auth/session",
-			"/_next/static/chunk.js",
 			"/_vercel/trace",
 			"/privacy",
 			"/terms/license",
@@ -25,6 +24,13 @@ describe("メンテナンスゲートの対象判定", () => {
 		for (const pathname of excludedPaths) {
 			expect(shouldCheckMaintenance(pathname), pathname).toBe(false);
 		}
+	});
+
+	it("TanStack StartのServer Function通信をメンテナンス画面へ転送しない", () => {
+		expect(shouldCheckMaintenance("/_serverFn")).toBe(false);
+		expect(shouldCheckMaintenance("/_serverFn/locale-runtime")).toBe(false);
+		expect(shouldCheckMaintenance("/_serverFn/profile-update")).toBe(false);
+		expect(shouldCheckMaintenance("/_serverFn-guide")).toBe(true);
 	});
 
 	it("通常のページパスだけをメンテナンス判定の対象にする", () => {

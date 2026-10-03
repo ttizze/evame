@@ -1,5 +1,3 @@
-"use client";
-
 import { Link } from "@tanstack/react-router";
 import { Bell, Loader2 } from "lucide-react";
 import useSWR from "swr";

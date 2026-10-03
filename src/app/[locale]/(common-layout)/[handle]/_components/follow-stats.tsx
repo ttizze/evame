@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { FollowListDialog } from "./follow-list-dialog";
 

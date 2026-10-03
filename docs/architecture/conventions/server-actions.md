@@ -1,6 +1,6 @@
-# Server Actions 規約
+# Server Function 規約
 
-Server Action の認証・入力検証・返却形式を統一するための正本ドキュメント。
+TanStack Start の Server Function の認証・入力検証・返却形式を統一するための正本ドキュメント。
 
 ## 目的
 - Action ごとの実装揺れをなくす
@@ -10,9 +10,14 @@ Server Action の認証・入力検証・返却形式を統一するための正
 ## 適用範囲
 - `src/app/**/action.ts`
 - `src/app/[locale]/_action/*.ts`
+- `src/routes/**/-*-data.ts` の Server Function
 
 ## 基本原則
-- Action は「境界」のみ担当し、業務ロジックは service/domain/db に寄せる
+- `createServerFn` は「境界」のみ担当し、業務ロジックは service/domain/db に寄せる
+- 読み取りは GET、更新は POST とし、`.validator(...)` で入力を検証する
+- 秘密の環境変数・DB・認証処理は `.handler(...)` 内で使用する
+- クライアントの更新呼び出しには `useServerFn` を使い、リダイレクトを Router に処理させる
+- 更新後は `router.invalidate()` または対象の SWR cache を更新する
 - 入力は Zod で検証し、返却は `ActionResponse<T, U>` で統一する
 - 認証・バリデーションは共通ユーティリティを使い、手書き実装を増やさない
 
@@ -68,15 +73,14 @@ type ActionResponse<T, U> =
 - 予期しない障害のみ throw して上位に伝搬させる
 
 ## ナビゲーション API の扱い
-- `redirect` / `permanentRedirect` / `notFound` / `forbidden` / `unauthorized` を `try-catch` で握り潰さない
-- これらを含む処理を `catch` する必要がある場合は `unstable_rethrow` を使って再送出する
+- `@tanstack/react-router` の `redirect` / `notFound` を `try-catch` で握り潰さない
+- これらを含む処理を `catch` する必要がある場合は `isRedirect` / `isNotFound` で判定して再送出する
 - 成功時リダイレクトはドメイン処理成功後に実行する
 
 ## 実装テンプレート
 
 ```ts
-"use server";
-
+import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
@@ -85,21 +89,21 @@ const schema = z.object({
 	id: z.coerce.number(),
 });
 
-type State = ActionResponse<{ updated: boolean }, { id: number }>;
+export const updateAction = createServerFn({ method: "POST" })
+	.validator((value: unknown) => {
+		if (!(value instanceof FormData)) throw new Error("Expected FormData");
+		return value;
+	})
+	.handler(async ({ data: formData }): Promise<ActionResponse<{ updated: boolean }, { id: number }>> => {
+		const v = await authAndValidate(schema, formData);
+		if (!v.success) return { success: false, zodErrors: v.zodErrors };
 
-export async function updateAction(
-	_previousState: State,
-	formData: FormData,
-): Promise<State> {
-	const v = await authAndValidate(schema, formData);
-	if (!v.success) return { success: false, zodErrors: v.zodErrors };
+		const { currentUser, data } = v;
+		const result = await updateSomething(data.id, currentUser.id);
+		if (!result.success) return { success: false, message: result.message };
 
-	const { currentUser, data } = v;
-	const result = await updateSomething(data.id, currentUser.id);
-	if (!result.success) return { success: false, message: result.message };
-
-	return { success: true, data: { updated: true } };
-}
+		return { success: true, data: { updated: true } };
+	});
 ```
 
 ## テスト観点（最低限）

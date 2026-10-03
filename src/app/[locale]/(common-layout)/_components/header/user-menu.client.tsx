@@ -1,5 +1,3 @@
-"use client";
-
 import { Link } from "@tanstack/react-router";
 import { LogOutIcon } from "lucide-react";
 import { authClient } from "@/app/[locale]/_service/auth-client";

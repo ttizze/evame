@@ -1,4 +1,3 @@
-"use client";
 import type { ReactNode } from "react";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { TocItem } from "../../_domain/extract-toc-items";

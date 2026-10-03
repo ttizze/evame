@@ -1,5 +1,3 @@
-"use client";
-
 import { useQueryState } from "nuqs";
 import type { ReactNode } from "react";
 import { viewQueryState } from "@/app/[locale]/(common-layout)/_components/view-query";

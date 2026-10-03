@@ -1,5 +1,3 @@
-"use client";
-
 import { useServerFn } from "@tanstack/react-start";
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";

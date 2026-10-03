@@ -1,4 +1,3 @@
-"use client";
 import DOMPurify from "dompurify";
 import parse from "html-react-parser";
 

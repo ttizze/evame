@@ -1,5 +1,3 @@
-"use client";
-
 type Subscriber = (scrollY: number) => void;
 
 const subscribers = new Set<Subscriber>();

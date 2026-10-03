@@ -1,5 +1,3 @@
-"use client";
-
 import { type ReactNode, useState } from "react";
 import { useLocale } from "use-intl";
 import { useHydrated } from "@/app/_hooks/use-hydrated";

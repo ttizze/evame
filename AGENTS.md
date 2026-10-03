@@ -89,11 +89,14 @@
 - `utils`: 仕様変更の起点が技術仕様（URL/文字列/日時/HTTP/変換処理など）で、業務語彙を持たない。
 - 迷う場合は判断根拠を1行で共有して確認を取る。曖昧なまま `domain` に置かない。
 
-### App Router のルール
+### TanStack Start のルール
 
-- ルート直下（`route.ts` / `page.tsx` / `layout.tsx` と同階層）の補助ディレクトリは必ず `_` を付ける（例: `_db`, `_domain`, `_service`, `_infra`, `_utils`）。
-- `route.ts` / `page.tsx` / `layout.tsx` は境界責務だけを持つ（入出力、認証、レスポンス整形）。
+- `src/routes` に `createFileRoute` / `createRootRoute` のルート境界を置く。補助ファイル・ディレクトリは `-` を付けてルート生成から除外する。
+- `src/app` は機能実装の配置先であり、`[locale]` や `(common-layout)` は URL を登録しない。既存の `_db`, `_domain`, `_service`, `_infra`, `_utils` は機能内の責務を表す。
+- ルートファイルは境界責務だけを持つ（入出力、認証、loader、head、レスポンス整形）。
 - 分岐を持つ純粋ロジックを境界ファイルに直書きしない。業務語彙 → `_domain`、汎用/技術補助 → `_utils`、ユースケース実行 → `_service`。
+- DB や秘密の環境変数は Server Function の handler または API handler 内だけで使用する。loader と通常のコンポーネントはサーバー・ブラウザーの両方で動く。
+- `"use client"` / `"use server"` を境界指定として使わない。ブラウザー専用 UI は `ClientOnly`、サーバー処理は `createServerFn` または API handler を使用する。
 
 ### 共通化のルール
 

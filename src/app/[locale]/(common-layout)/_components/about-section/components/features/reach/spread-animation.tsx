@@ -1,5 +1,3 @@
-"use client";
-
 import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";

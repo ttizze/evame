@@ -20,8 +20,10 @@ nix develop
    ```bash
    cp .env.example .env
    openssl rand -base64 32
+   openssl rand -hex 32
    ```
-   Put the generated string into `.env`.
+   Set the base64 value as `BETTER_AUTH_SECRET` and the hex value as `ENCRYPTION_KEY`. Configure Google and Resend for authentication and the Edge Config connection containing the `maintenance` flag.
+   Use `VITE_PUBLIC_DOMAIN` for the public site URL, server-side `CF_IMAGE_HOST` for the image host, and `EVAME_BASE_URL` for the CLI endpoint.
 3. Start DB
    ```bash
    docker compose up -d
@@ -46,9 +48,9 @@ nix develop
 ## Repo structure (summary)
 
 - `src/routes`: TanStack Start routes
-- `src/app`: Shared implementation during the migration
+- `src/app`: Feature implementations used by the routes
 - `src/db`: DB connection, types, seed
 - `src/drizzle`: Schema and migrations
 - `src/components`: Shared UI
 
-See `docs/architecture.md` for details.
+See `docs/architecture/architecture.md` for details.
