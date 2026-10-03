@@ -91,10 +91,11 @@ try {
 	});
 	const uploadedBody = await uploaded.text();
 	assert.equal(uploaded.status, 200, uploadedBody);
-	assert.ok(
-		uploadedBody.includes("https://images.evame.tech/uploads/"),
-		uploadedBody,
-	);
+	const imageUrl = uploadedBody.match(/"https?:\/\/[^"]+"/)?.[0];
+	assert.ok(imageUrl, uploadedBody);
+	const uploadedUrl = new URL(JSON.parse(imageUrl));
+	assert.equal(uploadedUrl.origin, "https://images.evame.tech");
+	assert.ok(uploadedUrl.pathname.startsWith("/uploads/"), uploadedUrl.pathname);
 	console.log(
 		"WorkersランタイムでPNGをJPEGに変換し、R2へ画像をアップロードできる",
 	);
