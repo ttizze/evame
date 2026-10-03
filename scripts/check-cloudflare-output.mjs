@@ -141,6 +141,29 @@ try {
 	console.log(
 		"Workersランタイムで認証済みセッションを検証し、非公開記事の新規保存・更新・編集画面を確認できる",
 	);
+	const article = await worker.fetch(
+		`http://localhost/ja/${handle}/${pageSlug}`,
+		{ headers: { cookie } },
+	);
+	const articleHtml = await article.text();
+	assert.equal(article.status, 200, articleHtml);
+	assert.ok(
+		articleHtml.includes("Cloudflareで更新保存"),
+		"記事本文をSSRできる",
+	);
+	console.log("Workersランタイムで保存した記事の閲覧ページを表示できる");
+	await database.query("UPDATE pages SET status = 'PUBLIC' WHERE slug = $1", [
+		pageSlug,
+	]);
+	const publicArticle = await worker.fetch(
+		`http://localhost/ja/${handle}/${pageSlug}`,
+	);
+	const publicArticleHtml = await publicArticle.text();
+	assert.equal(publicArticle.status, 200, publicArticleHtml);
+	assert.ok(
+		publicArticleHtml.includes("Cloudflareで更新保存"),
+		"ログインせずに公開記事の本文を読める",
+	);
 	const image = await worker.fetch(
 		"http://localhost/api/og?slug=deployment-smoke-missing-page&locale=ja",
 	);

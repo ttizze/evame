@@ -17,7 +17,20 @@ export async function preparePageMdast(mdast: JsonValue): Promise<JsonValue> {
 
 	const processor = unified()
 		.use(remarkTweet)
-		.use(remarkEmbedder, { transformers: [oembedTransformer] })
+		// CommonJSのdefault exportはWorkersのESMビルドではオブジェクトになる。
+		.use(
+			typeof remarkEmbedder === "function"
+				? remarkEmbedder
+				: (remarkEmbedder as { default: typeof remarkEmbedder }).default,
+			{
+				transformers: [
+					"default" in oembedTransformer
+						? (oembedTransformer as { default: typeof oembedTransformer })
+								.default
+						: oembedTransformer,
+				],
+			},
+		)
 		.use(remarkLinkCard, {
 			cache: false,
 			shortenUrl: true,
