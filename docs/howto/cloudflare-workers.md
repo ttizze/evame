@@ -50,9 +50,9 @@ bun x wrangler deploy
 
 ## GitHub Actions の継続デプロイ
 
-`.github/workflows/ci.yaml` は `main` の push または `main` を対象にした手動実行で、Biome・typecheck・全テスト・ビルド・成果物テストの成功後に同じ成果物をデプロイする。並行デプロイは行わない。PR は検証だけを実行し、Sentry 送信を無効化する。
+`.github/workflows/ci.yaml` は `main` の push または `main` を対象にした手動実行で、Biome・typecheck・全テスト・ビルド・成果物テストの成功後に本番DBのマイグレーションを適用し、同じ成果物をデプロイする。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PR はローカルのテストDBで検証し、Sentry 送信を無効化する。
 
-リポジトリの Actions secrets に `CLOUDFLARE_API_TOKEN` と `SENTRY_AUTH_TOKEN` を設定する。Cloudflare のデプロイ先アカウントと Worker は `wrangler.jsonc` に定義する。既存のキャッシュ削除用トークンは Workers を更新できないため、デプロイ用には `evame-start` の更新・デプロイに必要な権限を持つトークンを使う。Sentry のアップロード用トークンは本番ビルドのステップだけに渡し、Worker secret には登録しない。
+リポジトリの Actions secrets に本番用の `DATABASE_URL`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番用 `DATABASE_URL` は `main` のマイグレーション・デプロイのステップだけに渡す。Cloudflare のデプロイ先アカウントと Worker は `wrangler.jsonc` に定義する。既存のキャッシュ削除用トークンは Workers を更新できないため、デプロイ用には `evame-start` の更新・デプロイに必要な権限を持つトークンを使う。Sentry のアップロード用トークンは本番ビルドのステップだけに渡し、Worker secret には登録しない。
 
 本番の `evame.tech/*` ルートは Cloudflare のゾーン側で `evame-start` に接続する。`wrangler.jsonc` に `routes` を指定せず、CIは既存Workerのバージョンだけを更新する。Wranglerはルートが未指定なら既存の接続を変更しないため、CIトークンにゾーンのルート更新権限を追加する必要はない。`images.evame.tech` はこのルートの対象に含めない。
 

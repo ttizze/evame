@@ -64,8 +64,11 @@ jobs:
       - name: Verify isolated deployment runtime
         run: nix develop --command bun run test:deployment
 
-      - name: Deploy Cloudflare Workers
+      - name: Migrate production database and deploy Cloudflare Workers
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: nix develop --command bun x wrangler deploy
+        run: |
+          nix develop --command bun run db:prod:migrate
+          nix develop --command bun x wrangler deploy
