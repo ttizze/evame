@@ -22,7 +22,7 @@ nix develop
    openssl rand -base64 32
    openssl rand -hex 32
    ```
-   base64 の値を `BETTER_AUTH_SECRET`、hex の値を `ENCRYPTION_KEY` に設定してください。認証に使う Google・Resend と、`maintenance` を管理する Edge Config の接続情報も設定します。
+   base64 の値を `BETTER_AUTH_SECRET`、hex の値を `ENCRYPTION_KEY` に設定してください。認証に使う Google・Resend も設定します。メンテナンスは `wrangler.jsonc` の `SETTINGS` KV binding の `maintenance`（JSON boolean）で切り替えます。
    公開サイトURLは `VITE_PUBLIC_DOMAIN`、画像ホストはサーバー側の `CF_IMAGE_HOST`、CLI の接続先は `EVAME_BASE_URL` を使います。
 3. DB を起動
    ```bash
@@ -42,6 +42,7 @@ nix develop
 ## 主要リンク
 
 - ドキュメント入口: `docs/README.md`
+- Cloudflare の運用手順: `docs/howto/cloudflare-workers.md`
 - AI 向け前提: `AI_CONTEXT.md`
 - AI 運用ルール: `AGENTS.md`
 

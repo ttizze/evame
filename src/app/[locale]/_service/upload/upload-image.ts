@@ -1,5 +1,5 @@
-import sharp from "sharp";
 import { uploadToR2 } from "@/app/[locale]/_infrastructure/upload/r2-client";
+import { transformImage } from "@/app/[locale]/_infrastructure/upload/transform-image";
 import type { ActionResponse } from "@/app/types";
 
 type UploadImageResult = ActionResponse<
@@ -21,21 +21,11 @@ export async function uploadImage(file: File): Promise<UploadImageResult> {
 		const processed: File =
 			file.type === "image/svg+xml"
 				? file // ベクタは変換不要
-				: await (async () => {
-						const buf = await sharp(Buffer.from(await file.arrayBuffer()))
-							.resize({ width: 2560, withoutEnlargement: true })
-							.jpeg({ quality: 80, mozjpeg: true })
-							.toBuffer();
-						// Convert Node.js Buffer -> ArrayBuffer to satisfy DOM File typing
-						const ab = (() => {
-							const arrayBuffer = new ArrayBuffer(buf.byteLength);
-							new Uint8Array(arrayBuffer).set(buf);
-							return arrayBuffer;
-						})();
-						return new File([ab], file.name.replace(/\.[^.]+$/, ".jpg"), {
-							type: "image/jpeg",
-						});
-					})();
+				: new File(
+						[await transformImage(file, 2560, 80)],
+						file.name.replace(/\.[^.]+$/, ".jpg"),
+						{ type: "image/jpeg" },
+					);
 
 		if (processed.size > maxSize) {
 			return {

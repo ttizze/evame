@@ -1,5 +1,5 @@
-import { ImageResponse } from "@vercel/og";
-import { useStorage as getNitroStorage } from "nitro/storage";
+import { env } from "cloudflare:workers";
+import { ImageResponse } from "@cloudflare/pages-plugin-vercel-og/api";
 import { fetchPageDetail } from "@/app/[locale]/_db/fetch-page-detail.server";
 
 const OG_CACHE_CONTROL =
@@ -7,24 +7,10 @@ const OG_CACHE_CONTROL =
 const OG_NOT_FOUND_CACHE_CONTROL =
 	"public, max-age=0, s-maxage=60, stale-while-revalidate=600";
 
-const ogAssets = getNitroStorage("assets/og");
-
 async function readOgAsset(assetName: string): Promise<ArrayBuffer> {
-	const asset = await ogAssets.getItemRaw<Uint8Array>(assetName);
-	if (asset == null) {
-		throw new Error(`Missing OG server asset: ${assetName}`);
-	}
-	if (asset instanceof ArrayBuffer) {
-		return asset;
-	}
-	if (ArrayBuffer.isView(asset)) {
-		return new Uint8Array(
-			asset.buffer,
-			asset.byteOffset,
-			asset.byteLength,
-		).slice().buffer;
-	}
-	throw new TypeError(`Invalid OG server asset: ${assetName}`);
+	const response = await env.ASSETS.fetch(`https://assets.local/${assetName}`);
+	if (!response.ok) throw new Error(`Missing OG server asset: ${assetName}`);
+	return response.arrayBuffer();
 }
 
 export async function getOgImage(request: Request): Promise<Response> {

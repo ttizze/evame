@@ -168,7 +168,10 @@ describe("TagInput", () => {
 			await user.keyboard("{enter}");
 
 			// 2つ目のタグを追加
-			await user.click(selectContainer);
+			await waitFor(() => {
+				expect(screen.getByRole("combobox")).toBeEnabled();
+			});
+			await user.click(screen.getByRole("combobox"));
 			await user.keyboard("anothertag");
 			await user.keyboard("{enter}");
 

@@ -6,7 +6,7 @@
 
 - **高速**: Pinoは非常に高速なログライブラリです
 - **構造化ログ**: JSON形式でログを出力（本番環境）
-- **開発体験**: 開発環境では`pino-pretty`で読みやすく表示
+- **開発体験**: Workers のコンソールで構造化ログを確認
 - **Sentry統合**: サーバー側ロガーはSentryと自動統合
 
 ## 基本的な使い方
@@ -232,7 +232,7 @@ if (shouldLog) {
 
 ## 開発環境での表示
 
-開発環境（`NODE_ENV=development`）では、自動的に`pino-pretty`で読みやすく表示されます。
+開発環境（`NODE_ENV=development`）でも構造化ログを出力します。Workers では Node の worker thread を使う transport は使用しません。
 パイプは不要です。
 
 本番環境で一時的にpretty表示したい場合は環境変数を使用：

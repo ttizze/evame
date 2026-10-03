@@ -1,8 +1,9 @@
-import * as Sentry from "@sentry/tanstackstart-react";
+import * as Sentry from "@sentry/react";
+import { SENTRY_DSN } from "./_utils/sentry-dsn";
 
 if (process.env.NODE_ENV === "production") {
 	Sentry.init({
-		dsn: "https://0cda4c09dab97bb05116614428effb0c@o4507906314207232.ingest.us.sentry.io/4508805630263296",
+		dsn: import.meta.env.VITE_SENTRY_DSN ?? SENTRY_DSN,
 		integrations: [
 			Sentry.replayIntegration(),
 			Sentry.browserProfilingIntegration(),
@@ -11,5 +12,6 @@ if (process.env.NODE_ENV === "production") {
 		replaysSessionSampleRate: 0.1,
 		replaysOnErrorSampleRate: 1.0,
 		debug: false,
+		tunnel: "/monitoring",
 	});
 }

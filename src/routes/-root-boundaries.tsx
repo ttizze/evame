@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/tanstackstart-react";
+import * as Sentry from "@sentry/react";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { AlertCircle } from "lucide-react";

@@ -2,7 +2,16 @@ name: CI
 
 on:
   pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   ci-check:
@@ -10,6 +19,8 @@ jobs:
     env:
       DATABASE_URL: postgres://postgres:postgres@db.localtest.me:5435/main
       TZ: Asia/Tokyo
+      SENTRY_DSN: ""
+      VITE_SENTRY_DSN: ""
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,10 +51,21 @@ jobs:
           nix develop --command bun run db:prod:seed
           nix develop --command bun run test --run
 
-      - name: Build TanStack Start for Vercel
+      - name: Build TanStack Start for Cloudflare Workers
         env:
-          NITRO_PRESET: vercel
-        run: nix develop --command bun run build
+          SENTRY_AUTH_TOKEN: ${{ github.ref == 'refs/heads/main' && secrets.SENTRY_AUTH_TOKEN || '' }}
+        run: |
+          if [[ "$GITHUB_REF" == "refs/heads/main" && "$GITHUB_EVENT_NAME" != "pull_request" ]]; then
+            nix develop --command env -u SENTRY_DSN -u VITE_SENTRY_DSN bun run build
+          else
+            nix develop --command bun run build
+          fi
 
       - name: Verify isolated deployment runtime
         run: nix develop --command bun run test:deployment
+
+      - name: Deploy Cloudflare Workers
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: nix develop --command bun x wrangler deploy
