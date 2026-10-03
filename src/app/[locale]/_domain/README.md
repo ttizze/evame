@@ -14,6 +14,9 @@
     5. `unist-util-remove-position` で `position` 情報を削除し軽量化
   - 出力: `mdastJson`, `segments`, `file(VFile)`
 
+- `../_service/html-to-mdast-with-segments.ts`: 編集画面とコメントから受け取るHTMLをサニタイズし、画像アップロード・セグメント抽出を行う。
+- `../_service/mdast-to-html.ts`: 編集loaderで保存済みMDASTからエディターの初期HTMLを生成する。
+
 ### セグメント抽出ロジック
 
 `remark-hash-and-segments.ts` が抽出処理の中核です。

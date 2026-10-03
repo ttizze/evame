@@ -1,3 +1,4 @@
+// NotificationsDropdownClient.test.tsx
 import "@testing-library/jest-dom";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -5,9 +6,12 @@ import type { ReactNode } from "react";
 import useSWR from "swr";
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import type { NotificationRowsWithRelations } from "@/app/api/notifications/_types/notification";
+// Mock SWR to control data and loading states per test
 import { NotificationsDropdownClient } from "./client";
 
 vi.mock("swr", () => ({ default: vi.fn() }));
+
+// Mock TanStack Router's Link to a simple anchor for the isolated component test.
 vi.mock("@tanstack/react-router", () => ({
 	Link: ({
 		to,
@@ -18,6 +22,7 @@ vi.mock("@tanstack/react-router", () => ({
 			{children}
 		</a>
 	),
+	useParams: () => ({ locale: "en" }),
 }));
 
 const sampleNotifications: NotificationRowsWithRelations[] = [
@@ -63,6 +68,34 @@ const sampleNotifications: NotificationRowsWithRelations[] = [
 		pageOwnerHandle: "user_of_page",
 		pageTitle: "Translated Page Title",
 	},
+	{
+		id: 5,
+		actorId: "actor_5",
+		actorHandle: "commenter",
+		actorName: "Commenter",
+		actorImage: "https://example.com/avatar5.png",
+		read: false,
+		createdAt: new Date("2023-01-05T00:00:00Z"),
+		type: "PAGE_COMMENT",
+		pageSlug: "page-slug-comment",
+		pageOwnerHandle: "page_owner_comment",
+		pageTitle: "Commented Page Title",
+		segmentTranslationText: null,
+	},
+	{
+		id: 6,
+		actorId: "actor_6",
+		actorHandle: "comment-translation-voter",
+		actorName: "Comment Translation Voter",
+		actorImage: "https://example.com/avatar6.png",
+		read: false,
+		createdAt: new Date("2023-01-06T00:00:00Z"),
+		type: "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE",
+		segmentTranslationText: "Comment Translation Text",
+		pageSlug: "page-slug-comment-translation",
+		pageOwnerHandle: "page_owner_comment_translation",
+		pageTitle: "Comment Translation Page Title",
+	},
 ];
 
 const user = userEvent.setup();
@@ -76,7 +109,7 @@ describe("NotificationsDropdownClient", () => {
 		);
 	});
 
-	it("ベルアイコンと未読数バッジが表示される", () => {
+	it("ベルアイコンと未読数バッジが表示される", async () => {
 		(useSWR as unknown as Mock).mockReturnValue({
 			data: { notifications: sampleNotifications },
 			isLoading: false,
@@ -85,8 +118,14 @@ describe("NotificationsDropdownClient", () => {
 
 		render(<NotificationsDropdownClient locale="en" />);
 
-		expect(screen.getByTestId("bell-icon")).toBeInTheDocument();
-		expect(screen.getByTestId("unread-count")).toHaveTextContent("2");
+		// Bell icon is visible
+		const bellIcon = screen.getByTestId("bell-icon");
+		expect(bellIcon).toBeInTheDocument();
+
+		// Unread count equals 4 (id:3,4,5,6 are unread)
+		const unreadBadge = screen.getByTestId("unread-count");
+		expect(unreadBadge).toBeInTheDocument();
+		expect(unreadBadge).toHaveTextContent("4");
 	});
 
 	it("通知が存在しない場合は『No notifications』と表示される", async () => {
@@ -98,7 +137,11 @@ describe("NotificationsDropdownClient", () => {
 
 		render(<NotificationsDropdownClient locale="en" />);
 
-		await user.click(screen.getByTestId("bell-icon"));
+		const bellIcon = screen.getByTestId("bell-icon");
+		expect(bellIcon).toBeInTheDocument();
+		await user.click(bellIcon);
+
+		// The empty state message should be shown
 		expect(screen.getByText("No notifications")).toBeInTheDocument();
 	});
 
@@ -111,20 +154,46 @@ describe("NotificationsDropdownClient", () => {
 
 		render(<NotificationsDropdownClient locale="en" />);
 
-		await user.click(screen.getByTestId("bell-icon"));
+		const bellIcon = screen.getByTestId("bell-icon");
+		expect(bellIcon).toBeInTheDocument();
+		await user.click(bellIcon);
+
 		await waitFor(() => {
 			expect(
 				screen.getByTestId("notifications-menu-content"),
 			).toBeInTheDocument();
 		});
 
-		expect(screen.getByText("Jane Doe")).toBeInTheDocument();
-		expect(screen.getByText("Liked Page Title")).toBeInTheDocument();
-		expect(screen.getByText(/liked your page/i)).toBeInTheDocument();
-		expect(screen.getByText("Bob Smith")).toBeInTheDocument();
-		expect(screen.getByText(/followed you/i)).toBeInTheDocument();
-		expect(screen.getByText("Alice Jones")).toBeInTheDocument();
-		expect(screen.getByText("Translation Text")).toBeInTheDocument();
-		expect(screen.getByText("Translated Page Title")).toBeInTheDocument();
+		// PAGE_LIKE
+		expect(await screen.findByText("Jane Doe")).toBeInTheDocument();
+		expect(await screen.findByText("Liked Page Title")).toBeInTheDocument();
+		expect(await screen.findByText(/liked your page/i)).toBeInTheDocument();
+
+		// FOLLOW
+		expect(await screen.findByText("Bob Smith")).toBeInTheDocument();
+		expect(await screen.findByText(/followed you/i)).toBeInTheDocument();
+
+		// PAGE_SEGMENT_TRANSLATION_VOTE
+		expect(await screen.findByText("Alice Jones")).toBeInTheDocument();
+		expect(await screen.findByText("Translation Text")).toBeInTheDocument();
+		expect(
+			await screen.findByText("Translated Page Title"),
+		).toBeInTheDocument();
+		expect(await screen.findAllByText(/voted for/i)).toHaveLength(2);
+		// PAGE_COMMENT
+		expect(await screen.findByText("Commenter")).toBeInTheDocument();
+		expect(await screen.findByText("Commented Page Title")).toBeInTheDocument();
+		expect(await screen.findByText(/commented on/i)).toBeInTheDocument();
+
+		// PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE
+		expect(
+			await screen.findByText("Comment Translation Voter"),
+		).toBeInTheDocument();
+		expect(
+			await screen.findByText("Comment Translation Text"),
+		).toBeInTheDocument();
+		expect(
+			await screen.findByText("Comment Translation Page Title"),
+		).toBeInTheDocument();
 	});
 });

@@ -113,6 +113,7 @@ export function toPageForList(
 		titleSegment: toTitleSegment(row),
 		tags: tags.map((tag) => ({ id: tag.id, name: tag.name })),
 		likeCount: Number(row.likeCount ?? 0),
+		pageCommentsCount: Number(row.pageCommentsCount ?? 0),
 		viewCount: Number(row.pageViewCount ?? 0),
 	};
 }
@@ -165,6 +166,12 @@ export function buildPageListQuery(locale: string) {
 					.select(eb.fn.countAll().as("count"))
 					.whereRef("likePages.pageId", "=", "pages.id")
 					.as("likeCount"),
+				eb
+					.selectFrom("pageComments")
+					.select(eb.fn.countAll().as("count"))
+					.whereRef("pageComments.pageId", "=", "pages.id")
+					.where("pageComments.isDeleted", "=", false)
+					.as("pageCommentsCount"),
 				eb
 					.selectFrom("pageViews")
 					.select("count")

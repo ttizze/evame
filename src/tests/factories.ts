@@ -373,3 +373,43 @@ export async function createPersonalAccessToken(data: {
 		.executeTakeFirstOrThrow();
 	return { ...personalAccessToken, plainKey };
 }
+
+export async function createPageComment(data: {
+	userId: string;
+	pageId: number;
+	locale?: string;
+	mdastJson?: unknown;
+	parentId?: number;
+	isDeleted?: boolean;
+}) {
+	const content = await db
+		.insertInto("contents")
+		.values({ kind: "PAGE_COMMENT" })
+		.returningAll()
+		.executeTakeFirstOrThrow();
+
+	const defaultMdastJson: MdastRoot = {
+		type: "root",
+		children: [
+			{
+				type: "paragraph",
+				children: [{ type: "text", value: "test comment" }],
+			},
+		],
+	};
+
+	const pageComment = await db
+		.insertInto("pageComments")
+		.values({
+			id: content.id,
+			userId: data.userId,
+			pageId: data.pageId,
+			locale: data.locale ?? "en",
+			mdastJson: (data.mdastJson ?? defaultMdastJson) as JsonValue,
+			parentId: data.parentId ?? null,
+			isDeleted: data.isDeleted ?? false,
+		})
+		.returningAll()
+		.executeTakeFirstOrThrow();
+	return pageComment;
+}

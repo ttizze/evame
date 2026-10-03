@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import { markdownToMdastWithSegments } from "@/app/[locale]/_service/markdown-to-mdast-with-segments";
+import { upsertPageAndSegments } from "@/app/[locale]/_service/upsert-page-and-segments";
 import type { PageStatus } from "@/db/types";
-import { upsertPageAndSegments } from "../../../application/upsert-page-and-segments";
 import { parseDirSegment } from "../../../domain/parse-dir-segment/parse-dir-segment";
 import type { TipitakaFileMeta } from "../../../types";
 import { slugify } from "../../../utils/slugify";

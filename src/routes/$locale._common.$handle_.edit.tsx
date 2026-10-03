@@ -4,7 +4,7 @@ import { SettingsForm } from "@/app/[locale]/(common-layout)/[handle]/edit/_comp
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getProfileEditData } from "./$locale/-profile-edit-data";
 
-export const Route = createFileRoute("/$locale/_common/$handle/edit")({
+export const Route = createFileRoute("/$locale/_common/$handle_/edit")({
 	loader: async ({ params }) => {
 		const currentUser = await getProfileEditData({
 			data: {

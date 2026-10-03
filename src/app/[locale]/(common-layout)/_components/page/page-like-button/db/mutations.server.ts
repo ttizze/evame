@@ -6,6 +6,7 @@ import { db } from "@/db";
  * Kysely版に移行済み
  */
 export async function togglePageLike(pageId: number, currentUserId: string) {
+	// ページを取得（通知作成のためにuserIdが必要）
 	const page = await db
 		.selectFrom("pages")
 		.select(["id", "userId"])

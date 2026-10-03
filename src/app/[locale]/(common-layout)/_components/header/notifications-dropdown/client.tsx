@@ -9,7 +9,6 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
 export function NotificationsDropdownClient({ locale }: { locale: string }) {
 	const { data, isLoading, mutate } = useSWR<{
 		notifications: NotificationRowsWithRelations[];
@@ -22,32 +21,33 @@ export function NotificationsDropdownClient({ locale }: { locale: string }) {
 	if (isLoading) return <Loader2 className="w-6 h-6 animate-spin" />;
 
 	const handleClick = (open: boolean) => {
-		if (!open) return;
-		void fetch("/api/notifications", {
-			method: "POST",
-			credentials: "include",
-		}).then((response) => {
-			if (response.status === 401) {
-				window.location.assign(`/${locale}/auth/login`);
-			}
-		});
-		mutate(
-			(prev) => {
-				if (!prev) return prev;
-				return {
-					notifications: prev.notifications.map((n) => ({
-						...n,
-						read: true,
-					})),
-				};
-			},
-			{ revalidate: false },
-		);
+		if (open) {
+			void fetch("/api/notifications", {
+				method: "POST",
+				credentials: "include",
+			}).then((response) => {
+				if (response.status === 401) {
+					window.location.assign(`/${locale}/auth/login`);
+				}
+			});
+			mutate(
+				(prev) => {
+					if (!prev) return prev;
+					return {
+						notifications: prev.notifications.map((n) => ({
+							...n,
+							read: true,
+						})),
+					};
+				},
+				{ revalidate: false },
+			);
+		}
 	};
 	const unreadCount =
-		data?.notifications?.filter((notification) => !notification.read).length ??
-		0;
-
+		data?.notifications?.filter(
+			(notificationRowsWithRelations) => !notificationRowsWithRelations.read,
+		).length ?? 0;
 	return (
 		<DropdownMenu
 			data-testid="notifications-menu"
@@ -57,14 +57,16 @@ export function NotificationsDropdownClient({ locale }: { locale: string }) {
 			<DropdownMenuTrigger asChild>
 				<div className="relative">
 					<Bell className="w-6 h-6 cursor-pointer" data-testid="bell-icon" />
-					{unreadCount ? (
-						<span
-							className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center"
-							data-testid="unread-count"
-						>
-							{unreadCount}
-						</span>
-					) : null}
+					{unreadCount
+						? unreadCount > 0 && (
+								<span
+									className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center"
+									data-testid="unread-count"
+								>
+									{unreadCount}
+								</span>
+							)
+						: null}
 				</div>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent
@@ -76,20 +78,24 @@ export function NotificationsDropdownClient({ locale }: { locale: string }) {
 						No notifications
 					</DropdownMenuItem>
 				) : (
-					data.notifications.map((notification, index) => (
-						<NotificationItem
-							index={index}
-							key={notification.id}
-							locale={locale}
-							notificationRowsWithRelations={notification}
-						/>
-					))
+					data.notifications.map(
+						(
+							notificationRowWithRelations: NotificationRowsWithRelations,
+							index: number,
+						) => (
+							<NotificationItem
+								index={index}
+								key={notificationRowWithRelations.id}
+								locale={locale}
+								notificationRowsWithRelations={notificationRowWithRelations}
+							/>
+						),
+					)
 				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);
 }
-
 function NotificationItem({
 	notificationRowsWithRelations,
 	locale,
@@ -112,7 +118,6 @@ function NotificationItem({
 		</DropdownMenuItem>
 	);
 }
-
 function NotificationContent({
 	notificationRowsWithRelations,
 	locale,
@@ -133,6 +138,7 @@ function NotificationContent({
 	);
 	const commonDate = notificationRowsWithRelations.createdAt.toLocaleString();
 
+	// ページ情報を取得してリンクを生成する共通関数
 	const getPageLink = () => {
 		const pageTitle = notificationRowsWithRelations.pageTitle;
 		const pageSlug = notificationRowsWithRelations.pageSlug;
@@ -153,15 +159,24 @@ function NotificationContent({
 	let extraContent: React.ReactNode = null;
 
 	switch (type) {
-		case "PAGE_LIKE":
+		case "PAGE_LIKE": {
 			actionText = <span className="text-gray-500"> liked your page </span>;
 			extraContent = getPageLink();
 			if (!extraContent) return null;
 			break;
-		case "FOLLOW":
+		}
+		case "PAGE_COMMENT": {
+			actionText = <span className="text-gray-500"> commented on </span>;
+			extraContent = getPageLink();
+			if (!extraContent) return null;
+			break;
+		}
+		case "FOLLOW": {
 			actionText = <span className="text-gray-500"> followed you</span>;
 			break;
-		case "PAGE_SEGMENT_TRANSLATION_VOTE": {
+		}
+		case "PAGE_SEGMENT_TRANSLATION_VOTE":
+		case "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE": {
 			const votedText = notificationRowsWithRelations.segmentTranslationText;
 			const pageTitle = notificationRowsWithRelations.pageTitle;
 			const pageSlug = notificationRowsWithRelations.pageSlug;
@@ -184,6 +199,7 @@ function NotificationContent({
 			);
 			break;
 		}
+
 		default:
 			return <span>通知</span>;
 	}

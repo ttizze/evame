@@ -44,6 +44,7 @@ export type PageForList = {
 	titleSegment: TitleSegment;
 	tags: Pick<Tag, "id" | "name">[];
 	likeCount: number;
+	pageCommentsCount: number;
 	viewCount: number;
 };
 

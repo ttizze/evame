@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { LogOutIcon } from "lucide-react";
+import { BookOpenIcon, LogOutIcon } from "lucide-react";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { LocaleSelector } from "@/app/[locale]/(common-layout)/_components/header/locale-selector/client";
 import { ModeToggle } from "@/app/[locale]/(common-layout)/_components/header/mode-toggle";
@@ -75,6 +75,16 @@ export function UserMenu({
 					userPlan={currentUser.plan}
 				/>
 				<DropdownMenuSeparator className="my-0" />
+				<DropdownMenuItem asChild>
+					<Link
+						className="flex gap-2 px-4 py-3"
+						params={{ locale, handle: currentUser.handle }}
+						to="/$locale/$handle/page-management"
+					>
+						<BookOpenIcon className="w-4 h-4" />
+						Page Management
+					</Link>
+				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
 					<ModeToggle />
 				</DropdownMenuItem>

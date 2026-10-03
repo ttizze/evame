@@ -1,7 +1,12 @@
+import { Link } from "@tanstack/react-router";
+import { PencilIcon } from "lucide-react";
 import { useLocale } from "use-intl";
+import { useHydrated } from "@/app/_hooks/use-hydrated";
+import { authClient } from "@/app/[locale]/_service/auth-client";
 import { useHeaderScroll } from "@/app/[locale]/(common-layout)/_components/header/hooks/use-header-scroll";
 import type { PageDetail } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import type { TocItem } from "../../_domain/extract-toc-items";
 import { ExportMarkdownButton } from "../export-markdown-button";
 import { TocTrigger } from "./toc-trigger";
@@ -16,6 +21,9 @@ export function SubHeader({
 	markdown: string;
 }) {
 	const locale = useLocale();
+	const hydrated = useHydrated();
+	const { data: session } = authClient.useSession();
+	const isEditable = hydrated && session?.user.handle === pageDetail.userHandle;
 
 	// カスタムフックを使用 - SubHeaderの特殊な動作のため初期オフセットを考慮
 	const { headerRef, isPinned, isVisible, headerHeight } = useHeaderScroll();
@@ -60,6 +68,21 @@ export function SubHeader({
 							slug={pageDetail.slug}
 							title={pageDetail.title}
 						/>
+						{isEditable && (
+							<Button asChild size="icon" variant="ghost">
+								<Link
+									aria-label="Edit page"
+									params={{
+										locale,
+										handle: pageDetail.userHandle,
+										pageSlug: pageDetail.slug,
+									}}
+									to="/$locale/$handle/$pageSlug/edit"
+								>
+									<PencilIcon className="h-5 w-5" />
+								</Link>
+							</Button>
+						)}
 						<TocTrigger items={tocItems} />
 					</div>
 				</div>

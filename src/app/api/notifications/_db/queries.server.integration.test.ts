@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
-import { createPageWithSegments, createUser } from "@/tests/factories";
+import {
+	createPageWithSegments,
+	createSegment,
+	createUser,
+} from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { fetchNotificationRowsWithRelations } from "./queries.server";
 
@@ -12,44 +16,74 @@ describe("fetchNotificationRowsWithRelations", () => {
 		await resetDatabase();
 	});
 
-	it("フォロー、ページいいね、ページ翻訳投票をページ情報付きで返す", async () => {
+	it("コメント通知2種を正しいページとアクター情報付きで返す", async () => {
 		const recipient = await createUser({ handle: "notification-recipient" });
-		const actor = await createUser({
-			handle: "notification-actor",
-			name: "Notification Actor",
-			image: "https://example.com/actor.png",
+		const pageOwner = await createUser({
+			handle: "notification-page-owner",
+			name: "Page Owner",
+		});
+		const commentActor = await createUser({
+			handle: "notification-comment-actor",
+			name: "Comment Actor",
+			image: "https://example.com/comment-actor.png",
+		});
+		const translationActor = await createUser({
+			handle: "notification-translation-actor",
+			name: "Translation Actor",
+			image: "https://example.com/translation-actor.png",
 		});
 		const page = await createPageWithSegments({
-			userId: recipient.id,
-			slug: "notification-page",
+			userId: pageOwner.id,
+			slug: "comment-notification-page",
 			segments: [
 				{
 					number: 0,
-					text: "Notification Page",
-					textAndOccurrenceHash: "notification-title",
+					text: "Comment Notification Page",
+					textAndOccurrenceHash: "comment-notification-title",
 					segmentTypeKey: "PRIMARY",
 				},
 				{
 					number: 1,
-					text: "Notification segment",
-					textAndOccurrenceHash: "notification-segment",
+					text: "Comment notification segment",
+					textAndOccurrenceHash: "comment-notification-segment",
 					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
-		const segment = await db
-			.selectFrom("segments")
-			.select("id")
-			.where("contentId", "=", page.id)
-			.where("number", "=", 1)
+
+		const commentContent = await db
+			.insertInto("contents")
+			.values({ kind: "PAGE_COMMENT" })
+			.returningAll()
 			.executeTakeFirstOrThrow();
+		const comment = await db
+			.insertInto("pageComments")
+			.values({
+				id: commentContent.id,
+				pageId: page.id,
+				locale: "en",
+				userId: commentActor.id,
+				parentId: null,
+				mdastJson: { type: "root", children: [] },
+				lastReplyAt: null,
+			})
+			.returningAll()
+			.executeTakeFirstOrThrow();
+
+		const segment = await createSegment({
+			contentId: comment.id,
+			number: 0,
+			text: "Comment notification comment",
+			textAndOccurrenceHash: "comment-notification-comment",
+			segmentTypeKey: "PRIMARY",
+		});
 		const translation = await db
 			.insertInto("segmentTranslations")
 			.values({
 				segmentId: segment.id,
 				locale: "ja",
-				text: "翻訳された通知セグメント",
-				userId: recipient.id,
+				text: "Comment translation",
+				userId: translationActor.id,
 			})
 			.returningAll()
 			.executeTakeFirstOrThrow();
@@ -59,19 +93,18 @@ describe("fetchNotificationRowsWithRelations", () => {
 			.values([
 				{
 					userId: recipient.id,
-					actorId: actor.id,
-					type: "FOLLOW",
+					actorId: commentActor.id,
+					type: "PAGE_COMMENT",
+					pageCommentId: comment.id,
+					pageId: null,
+					segmentTranslationId: null,
 				},
 				{
 					userId: recipient.id,
-					actorId: actor.id,
-					type: "PAGE_LIKE",
-					pageId: page.id,
-				},
-				{
-					userId: recipient.id,
-					actorId: actor.id,
-					type: "PAGE_SEGMENT_TRANSLATION_VOTE",
+					actorId: translationActor.id,
+					type: "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE",
+					pageCommentId: comment.id,
+					pageId: null,
 					segmentTranslationId: translation.id,
 				},
 			])
@@ -81,25 +114,30 @@ describe("fetchNotificationRowsWithRelations", () => {
 			recipient.handle,
 		);
 
-		expect(notifications).toHaveLength(3);
+		expect(notifications).toHaveLength(2);
 		expect(notifications).toEqual(
 			expect.arrayContaining([
 				expect.objectContaining({
-					type: "FOLLOW",
-					actorId: actor.id,
-					actorHandle: "notification-actor",
+					type: "PAGE_COMMENT",
+					actorId: commentActor.id,
+					actorHandle: "notification-comment-actor",
+					actorName: "Comment Actor",
+					actorImage: "https://example.com/comment-actor.png",
+					pageSlug: "comment-notification-page",
+					pageOwnerHandle: "notification-page-owner",
+					pageTitle: "Comment Notification Page",
+					segmentTranslationText: null,
 				}),
 				expect.objectContaining({
-					type: "PAGE_LIKE",
-					pageSlug: "notification-page",
-					pageOwnerHandle: "notification-recipient",
-					pageTitle: "Notification Page",
-				}),
-				expect.objectContaining({
-					type: "PAGE_SEGMENT_TRANSLATION_VOTE",
-					segmentTranslationText: "翻訳された通知セグメント",
-					pageSlug: "notification-page",
-					pageTitle: "Notification Page",
+					type: "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE",
+					actorId: translationActor.id,
+					actorHandle: "notification-translation-actor",
+					actorName: "Translation Actor",
+					actorImage: "https://example.com/translation-actor.png",
+					pageSlug: "comment-notification-page",
+					pageOwnerHandle: "notification-page-owner",
+					pageTitle: "Comment Notification Page",
+					segmentTranslationText: "Comment translation",
 				}),
 			]),
 		);

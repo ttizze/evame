@@ -51,6 +51,7 @@ async function createAndEnqueueJob(params: NewJobParams) {
 		targetLocale: params.locale,
 		pageId: params.pageId,
 		annotationContentId: params.annotationContentId,
+		pageCommentId: null,
 		translationContext: "",
 	});
 }

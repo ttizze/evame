@@ -98,3 +98,7 @@ Evame は TanStack Start を使った翻訳・注釈プラットフォームで�
 - `components` → `service` / `domain` / `db` / `utils`
 
 詳細は `docs/architecture/conventions/route-colocation.md` を参照してください。
+
+## 既存機能の維持
+
+移行では既存機能を維持する。記事作成・編集のTiptap UIは`src/app/[locale]/(edit-layout)`、URL境界と認証loaderは`src/routes`に置く。保存・公開・タグ・翻訳設定・画像アップロードはServer Functionsを使用する。コメント・返信・削除・翻訳・通知、ページ管理・公開状態の切替・削除も移行対象に含む。
