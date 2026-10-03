@@ -39,8 +39,6 @@ export type NotificationType =
 
 export type PageStatus = "ARCHIVE" | "DRAFT" | "PUBLIC";
 
-export type SegmentTypeKey = "COMMENTARY" | "PRIMARY";
-
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export type TranslationProofStatus =
@@ -189,32 +187,11 @@ export interface PageViews {
 	pageId: number;
 }
 
-export interface SegmentAnnotationLinks {
-	annotationSegmentId: number;
-	createdAt: Generated<Timestamp>;
-	mainSegmentId: number;
-}
-
-export interface SegmentMetadata {
-	createdAt: Generated<Timestamp>;
-	id: Generated<number>;
-	metadataTypeId: number;
-	segmentId: number;
-	value: string;
-}
-
-export interface SegmentMetadataTypes {
-	id: Generated<number>;
-	key: string;
-	label: string;
-}
-
 export interface Segments {
 	contentId: number;
 	createdAt: Generated<Timestamp>;
 	id: Generated<number>;
 	number: number;
-	segmentTypeId: number | null;
 	text: string;
 	textAndOccurrenceHash: string;
 }
@@ -227,12 +204,6 @@ export interface SegmentTranslations {
 	segmentId: number;
 	text: string;
 	userId: string;
-}
-
-export interface SegmentTypes {
-	id: Generated<number>;
-	key: SegmentTypeKey;
-	label: string;
 }
 
 export interface Sessions {
@@ -336,12 +307,8 @@ export interface DB {
 	pageLocaleTranslationProofs: PageLocaleTranslationProofs;
 	pages: Pages;
 	pageViews: PageViews;
-	segmentAnnotationLinks: SegmentAnnotationLinks;
-	segmentMetadata: SegmentMetadata;
-	segmentMetadataTypes: SegmentMetadataTypes;
 	segments: Segments;
 	segmentTranslations: SegmentTranslations;
-	segmentTypes: SegmentTypes;
 	sessions: Sessions;
 	tagPages: TagPages;
 	tags: Tags;

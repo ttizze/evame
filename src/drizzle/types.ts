@@ -84,28 +84,6 @@ export type UserSettingInsert = InferInsertModel<typeof schema.userSettings>;
 export type GeminiApiKey = InferSelectModel<typeof schema.geminiApiKeys>;
 export type GeminiApiKeyInsert = InferInsertModel<typeof schema.geminiApiKeys>;
 
-export type SegmentType = InferSelectModel<typeof schema.segmentTypes>;
-export type SegmentTypeInsert = InferInsertModel<typeof schema.segmentTypes>;
-
-export type SegmentMetadata = InferSelectModel<typeof schema.segmentMetadata>;
-export type SegmentMetadataInsert = InferInsertModel<
-	typeof schema.segmentMetadata
->;
-
-export type SegmentMetadataType = InferSelectModel<
-	typeof schema.segmentMetadataTypes
->;
-export type SegmentMetadataTypeInsert = InferInsertModel<
-	typeof schema.segmentMetadataTypes
->;
-
-export type SegmentAnnotationLink = InferSelectModel<
-	typeof schema.segmentAnnotationLinks
->;
-export type SegmentAnnotationLinkInsert = InferInsertModel<
-	typeof schema.segmentAnnotationLinks
->;
-
 export type ImportRun = InferSelectModel<typeof schema.importRuns>;
 export type ImportRunInsert = InferInsertModel<typeof schema.importRuns>;
 
@@ -120,7 +98,6 @@ export type ContentKind = (typeof schema.contentKind.enumValues)[number];
 export type NotificationType =
 	(typeof schema.notificationType.enumValues)[number];
 export type PageStatus = (typeof schema.pageStatus.enumValues)[number];
-export type SegmentTypeKey = (typeof schema.segmentTypeKey.enumValues)[number];
 export type TranslationProofStatus =
 	(typeof schema.translationProofStatus.enumValues)[number];
 export type TranslationStatus =

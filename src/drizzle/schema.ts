@@ -24,10 +24,6 @@ export const notificationType = pgEnum("notification_type", [
 	"PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE",
 ]);
 export const pageStatus = pgEnum("page_status", ["DRAFT", "PUBLIC", "ARCHIVE"]);
-export const segmentTypeKey = pgEnum("segment_type_key", [
-	"PRIMARY",
-	"COMMENTARY",
-]);
 export const translationProofStatus = pgEnum("translation_proof_status", [
 	"MACHINE_DRAFT",
 	"HUMAN_TOUCHED",
@@ -342,27 +338,6 @@ export const notifications = pgTable(
 	],
 );
 
-export const segmentTypes = pgTable(
-	"segment_types",
-	{
-		id: serial().primaryKey().notNull(),
-		label: text().notNull(),
-		key: segmentTypeKey().notNull(),
-	},
-	(table) => [
-		index("segment_types_key_idx").using("btree", table.key.asc().nullsLast()),
-		uniqueIndex("segment_types_key_label_key").using(
-			"btree",
-			table.key.asc().nullsLast(),
-			table.label.asc().nullsLast(),
-		),
-		index("segment_types_label_idx").using(
-			"btree",
-			table.label.asc().nullsLast(),
-		),
-	],
-);
-
 export const translationJobs = pgTable(
 	"translation_jobs",
 	{
@@ -591,21 +566,6 @@ export const pageLocaleTranslationProofs = pgTable(
 	],
 );
 
-export const segmentMetadataTypes = pgTable(
-	"segment_metadata_types",
-	{
-		id: serial().primaryKey().notNull(),
-		key: text().notNull(),
-		label: text().notNull(),
-	},
-	(table) => [
-		uniqueIndex("segment_metadata_types_key_key").using(
-			"btree",
-			table.key.asc().nullsLast(),
-		),
-	],
-);
-
 export const tags = pgTable(
 	"tags",
 	{
@@ -774,7 +734,6 @@ export const segments = pgTable(
 		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		segmentTypeId: integer("segment_type_id"),
 	},
 	(table) => [
 		index("segments_content_id_idx").using(
@@ -799,56 +758,6 @@ export const segments = pgTable(
 			columns: [table.contentId],
 			foreignColumns: [contents.id],
 			name: "segments_content_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.segmentTypeId],
-			foreignColumns: [segmentTypes.id],
-			name: "segments_segment_type_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("restrict"),
-	],
-);
-
-export const segmentMetadata = pgTable(
-	"segment_metadata",
-	{
-		id: serial().primaryKey().notNull(),
-		segmentId: integer("segment_id").notNull(),
-		metadataTypeId: integer("metadata_type_id").notNull(),
-		value: text().notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
-	},
-	(table) => [
-		index("segment_metadata_metadata_type_id_idx").using(
-			"btree",
-			table.metadataTypeId.asc().nullsLast(),
-		),
-		index("segment_metadata_segment_id_idx").using(
-			"btree",
-			table.segmentId.asc().nullsLast(),
-		),
-		uniqueIndex("segment_metadata_segment_id_metadata_type_id_value_key").using(
-			"btree",
-			table.segmentId.asc().nullsLast(),
-			table.metadataTypeId.asc().nullsLast(),
-			table.value.asc().nullsLast(),
-		),
-		foreignKey({
-			columns: [table.metadataTypeId],
-			foreignColumns: [segmentMetadataTypes.id],
-			name: "segment_metadata_metadata_type_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.segmentId],
-			foreignColumns: [segments.id],
-			name: "segment_metadata_segment_id_fkey",
 		})
 			.onUpdate("cascade")
 			.onDelete("cascade"),
@@ -958,45 +867,6 @@ export const tagPages = pgTable(
 		primaryKey({
 			columns: [table.tagId, table.pageId],
 			name: "tag_pages_pkey",
-		}),
-	],
-);
-
-export const segmentAnnotationLinks = pgTable(
-	"segment_annotation_links",
-	{
-		mainSegmentId: integer("main_segment_id").notNull(),
-		annotationSegmentId: integer("annotation_segment_id").notNull(),
-		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
-	},
-	(table) => [
-		index("segment_annotation_links_annotation_segment_id_idx").using(
-			"btree",
-			table.annotationSegmentId.asc().nullsLast(),
-		),
-		index("segment_annotation_links_main_segment_id_idx").using(
-			"btree",
-			table.mainSegmentId.asc().nullsLast(),
-		),
-		foreignKey({
-			columns: [table.annotationSegmentId],
-			foreignColumns: [segments.id],
-			name: "segment_annotation_links_annotation_segment_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.mainSegmentId],
-			foreignColumns: [segments.id],
-			name: "segment_annotation_links_main_segment_id_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		primaryKey({
-			columns: [table.mainSegmentId, table.annotationSegmentId],
-			name: "segment_annotation_links_pkey",
 		}),
 	],
 );
