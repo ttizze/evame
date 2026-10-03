@@ -96,6 +96,8 @@
 
 ### TanStack Start のルール
 
+- SSRする日付表示はタイムゾーンを明示する。記事の日付は共通のUTC表示を使い、サーバーとブラウザーの実行環境に依存させない。
+
 - `src/routes` に `createFileRoute` / `createRootRoute` のルート境界を置く。補助ファイル・ディレクトリは `-` を付けてルート生成から除外する。
 - `src/app` は機能実装の配置先であり、`[locale]` や `(common-layout)` は URL を登録しない。既存の `_db`, `_domain`, `_service`, `_infra`, `_utils` は機能内の責務を表す。
 - ルートファイルは境界責務だけを持つ（入出力、認証、loader、head、レスポンス整形）。
