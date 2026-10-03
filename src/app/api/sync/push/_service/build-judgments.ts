@@ -1,5 +1,5 @@
-import { markdownToMdastWithSegments } from "@/app/[locale]/_domain/markdown-to-mdast-with-segments";
 import { mdastToMarkdown } from "@/app/[locale]/_domain/mdast-to-markdown";
+import { markdownToMdastWithSegments } from "@/app/[locale]/_service/markdown-to-mdast-with-segments";
 import type { JsonValue } from "@/db/types";
 import { findTitleSegmentText } from "../../_db/queries";
 import { computeRevision } from "../../_domain/compute-revision";

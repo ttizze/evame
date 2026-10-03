@@ -2,9 +2,9 @@ import { sql } from "kysely";
 import { db } from "@/db";
 import type { JsonValue } from "@/db/types";
 
+/** コメント本文を消去済みプレースホルダーへ置き換える論理削除。 */
 export async function deletePageComment(pageCommentId: number, userId: string) {
 	return db.transaction().execute(async (tx) => {
-		// コメントを論理削除（本文は 'deleted' に、isDeleted を true）
 		const deletedMdast: JsonValue = {
 			type: "root",
 			children: [
@@ -17,12 +17,10 @@ export async function deletePageComment(pageCommentId: number, userId: string) {
 
 		const updated = await tx
 			.updateTable("pageComments")
-			.set({
-				isDeleted: true,
-				mdastJson: deletedMdast,
-			})
+			.set({ isDeleted: true, mdastJson: deletedMdast })
 			.where("id", "=", pageCommentId)
 			.where("userId", "=", userId)
+			.where("isDeleted", "=", false)
 			.returning(["parentId"])
 			.executeTakeFirst();
 
@@ -30,8 +28,7 @@ export async function deletePageComment(pageCommentId: number, userId: string) {
 			throw new Error("Comment not found or not owned by user");
 		}
 
-		// 親があれば、直下の返信数と最終返信時刻を再計算（isDeleted=false のみ対象）
-		if (updated.parentId) {
+		if (updated.parentId !== null) {
 			const stats = await tx
 				.selectFrom("pageComments")
 				.select([

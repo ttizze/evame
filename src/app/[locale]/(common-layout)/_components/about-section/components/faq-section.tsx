@@ -1,6 +1,6 @@
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-import { fetchAboutPage } from "../service/fetch-about-page";
+import type { loadAboutPage } from "../service/load-about-page";
 import { ABOUT_SECTION_HEADING_CLASS, AboutSectionContent } from "./layout";
 
 const FAQ_ITEMS = [
@@ -22,8 +22,11 @@ const FAQ_ITEMS = [
 	},
 ];
 
-export default async function FAQSection({ locale }: { locale: string }) {
-	const pageDetail = await fetchAboutPage(locale);
+export default function FAQSection({
+	pageDetail,
+}: {
+	pageDetail: NonNullable<Awaited<ReturnType<typeof loadAboutPage>>>;
+}) {
 	const headerSegment = pageDetail.segments.find(
 		(segment) => segment.number === SEGMENT_NUMBER.faqHeader,
 	);

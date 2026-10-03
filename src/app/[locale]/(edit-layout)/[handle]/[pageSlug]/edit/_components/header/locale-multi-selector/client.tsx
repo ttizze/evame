@@ -1,5 +1,4 @@
-"use client";
-
+import { useServerFn } from "@tanstack/react-start";
 import { ChevronDown, LanguagesIcon } from "lucide-react";
 import { useState, useTransition } from "react";
 import Select, { type MultiValue } from "react-select";
@@ -11,7 +10,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { saveTargetLocalesAction } from "./action";
+import { saveStandaloneTargetLocales } from "./action";
 
 interface LocaleMultiSelectorProps {
 	defaultValue?: string[];
@@ -30,20 +29,23 @@ export function LocaleMultiSelector({
 	const [selected, setSelected] = useState<string[]>(defaultValue);
 	const [open, setOpen] = useState(false);
 	const [_isSaving, startSaving] = useTransition();
-
-	const options = supportedLocaleOptions.map((o) => ({
-		value: o.code,
-		label: o.name,
+	const saveTargetLocalesFn = useServerFn(saveStandaloneTargetLocales);
+	const options = supportedLocaleOptions.map((option) => ({
+		value: option.code,
+		label: option.name,
 	}));
-	const selectedOptions = options.filter((o) => selected.includes(o.value));
+	const selectedOptions = options.filter((option) =>
+		selected.includes(option.value),
+	);
 
-	const handleChange = (vals: MultiValue<{ value: string; label: string }>) => {
-		const codes = vals.map((v) => v.value).slice(0, maxSelectable);
+	const handleChange = (
+		values: MultiValue<{ value: string; label: string }>,
+	) => {
+		const codes = values.map((value) => value.value).slice(0, maxSelectable);
 		setSelected(codes);
 		onChange?.(codes);
-
-		startSaving(() => {
-			saveTargetLocalesAction(codes);
+		startSaving(async () => {
+			await saveTargetLocalesFn({ data: codes });
 		});
 	};
 
@@ -51,7 +53,6 @@ export function LocaleMultiSelector({
 		selected.length >= maxSelectable && !selected.includes(option?.value ?? "");
 	const limitReached = selected.length >= maxSelectable;
 	const count = selected.length;
-
 	const selectClassNames = {
 		control: () =>
 			cn(
@@ -79,10 +80,6 @@ export function LocaleMultiSelector({
 				isFocused && !isDisabled && "bg-accent",
 			),
 	} as const;
-
-	const selectStyles = {
-		menuPortal: (base: Record<string, unknown>) => ({ ...base, zIndex: 9999 }),
-	};
 
 	return (
 		<Popover onOpenChange={setOpen} open={open}>
@@ -117,7 +114,7 @@ export function LocaleMultiSelector({
 					onChange={handleChange}
 					options={options}
 					placeholder={`Select locales (max ${maxSelectable})`}
-					styles={selectStyles}
+					styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
 					unstyled
 					value={selectedOptions}
 				/>

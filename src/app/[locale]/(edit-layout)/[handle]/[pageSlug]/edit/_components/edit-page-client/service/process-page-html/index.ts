@@ -1,7 +1,7 @@
 import { createServerLogger } from "@/app/_service/logger.server";
-import { htmlToMdastWithSegments } from "@/app/[locale]/_domain/html-to-mdast-with-segments";
+import { htmlToMdastWithSegments } from "@/app/[locale]/_service/html-to-mdast-with-segments";
+import { upsertPageAndSegments } from "@/app/[locale]/_service/upsert-page-and-segments";
 import type { PageStatus } from "@/db/types";
-import { upsertPageAndSegments } from "../upsert-page-and-segments";
 
 /**
  * ページのHTMLを処理してデータベースに保存する（ユースケースフロー）
@@ -30,7 +30,6 @@ export async function processPageHtml(params: {
 	const { title, html, ...pageParams } = params;
 
 	logger.debug({ htmlLength: params.html.length }, "Processing page HTML");
-	logger.debug({ html: params.html }, "Processing page HTML raw input");
 
 	const { mdastJson, segments } = await htmlToMdastWithSegments({
 		header: title,

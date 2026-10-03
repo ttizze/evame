@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { editPageTagsAction } from "./action";
+import { editPageTags } from "./action";
 import { TagInput } from "./index";
 
 // 外部システムのみモック（Server Action）
@@ -19,7 +19,7 @@ describe("TagInput", () => {
 	const user = userEvent.setup();
 
 	beforeEach(() => {
-		vi.mocked(editPageTagsAction).mockResolvedValue({
+		vi.mocked(editPageTags).mockReset().mockResolvedValue({
 			success: true,
 			data: undefined,
 		});
@@ -47,11 +47,7 @@ describe("TagInput", () => {
 			expect(screen.getByText("initial")).toBeInTheDocument();
 		});
 
-		it("新しいタグを追加した場合_フォーム送信がトリガーされる", async () => {
-			// Arrange
-			const mockRequestSubmit = vi.fn();
-			global.HTMLFormElement.prototype.requestSubmit = mockRequestSubmit;
-
+		it("新しいタグを追加すると更新関数へ最新タグを渡す", async () => {
 			render(
 				<TagInput
 					allTagsWithCount={mockAllTagsWithCount}
@@ -60,16 +56,20 @@ describe("TagInput", () => {
 				/>,
 			);
 
-			// Act
 			const selectContainer = screen.getByRole("combobox");
 			await user.click(selectContainer);
 			await user.keyboard("newtag");
 			await user.keyboard("{enter}");
 
-			// Assert: フォーム送信がトリガーされる
 			await waitFor(() => {
-				expect(mockRequestSubmit).toHaveBeenCalledTimes(1);
+				expect(editPageTags).toHaveBeenCalledTimes(1);
 			});
+			const request = vi.mocked(editPageTags).mock.calls[0]?.[0];
+			expect(request?.data).toBeInstanceOf(FormData);
+			if (!(request?.data instanceof FormData)) {
+				throw new Error("タグ更新の入力がFormDataではありません");
+			}
+			expect(request.data.get("tags")).toBe('["initial","newtag"]');
 		});
 	});
 
@@ -122,11 +122,7 @@ describe("TagInput", () => {
 			});
 		});
 
-		it("タグを削除した場合_フォーム送信がトリガーされる", async () => {
-			// Arrange
-			const mockRequestSubmit = vi.fn();
-			global.HTMLFormElement.prototype.requestSubmit = mockRequestSubmit;
-
+		it("タグを削除すると更新関数へ空のタグ一覧を渡す", async () => {
 			render(
 				<TagInput
 					allTagsWithCount={mockAllTagsWithCount}
@@ -135,7 +131,6 @@ describe("TagInput", () => {
 				/>,
 			);
 
-			// Act
 			const removeButtons = screen
 				.getAllByRole("button")
 				.filter((button) =>
@@ -143,10 +138,15 @@ describe("TagInput", () => {
 				);
 			await user.click(removeButtons[0]);
 
-			// Assert: フォーム送信がトリガーされる
 			await waitFor(() => {
-				expect(mockRequestSubmit).toHaveBeenCalledTimes(1);
+				expect(editPageTags).toHaveBeenCalledTimes(1);
 			});
+			const request = vi.mocked(editPageTags).mock.calls[0]?.[0];
+			expect(request?.data).toBeInstanceOf(FormData);
+			if (!(request?.data instanceof FormData)) {
+				throw new Error("タグ更新の入力がFormDataではありません");
+			}
+			expect(request.data.get("tags")).toBe("[]");
 		});
 	});
 

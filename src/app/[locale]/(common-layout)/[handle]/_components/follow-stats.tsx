@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { FollowListDialog } from "./follow-list-dialog";
 
@@ -14,6 +12,7 @@ interface FollowStatsProps {
 	followersCount: number;
 	followingList: User[];
 	followerList: User[];
+	locale: string;
 }
 
 export function FollowStats({
@@ -21,6 +20,7 @@ export function FollowStats({
 	followersCount,
 	followingList,
 	followerList,
+	locale,
 }: FollowStatsProps) {
 	const [openFollowing, setOpenFollowing] = useState(false);
 	const [openFollowers, setOpenFollowers] = useState(false);
@@ -53,6 +53,7 @@ export function FollowStats({
 			</button>
 
 			<FollowListDialog
+				locale={locale}
 				onOpenChange={setOpenFollowing}
 				open={openFollowing}
 				type="following"
@@ -60,6 +61,7 @@ export function FollowStats({
 			/>
 
 			<FollowListDialog
+				locale={locale}
 				onOpenChange={setOpenFollowers}
 				open={openFollowers}
 				type="followers"

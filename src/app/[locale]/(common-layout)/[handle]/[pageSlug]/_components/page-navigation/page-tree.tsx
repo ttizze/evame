@@ -1,17 +1,25 @@
 import { ListTree } from "lucide-react";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { PageForTree } from "@/app/[locale]/types";
-import { Link } from "@/i18n/routing";
-import type { PageTreeNode } from "./_db/queries.server";
+import type { PageTreeNode } from "../../_db/queries";
 import {
 	CollapsibleTreeList,
 	type CollapsibleTreeNode,
 } from "./collapsible-tree-list";
-import { IconPopoverTrigger } from "./icon-popover-trigger.client";
+import { IconPopoverTrigger } from "./icon-popover-trigger";
 
-export function PageLink({ node }: { node: PageForTree }) {
+export function PageLink({
+	node,
+	locale,
+}: {
+	node: PageForTree;
+	locale: string;
+}) {
 	return (
-		<Link className="hover:underline" href={`/${node.userHandle}/${node.slug}`}>
+		<a
+			className="hover:underline"
+			href={`/${locale}/${node.userHandle}/${node.slug}`}
+		>
 			<SegmentElement
 				className="line-clamp-1 break-all overflow-wrap-anywhere"
 				interactive={false}
@@ -24,17 +32,18 @@ export function PageLink({ node }: { node: PageForTree }) {
 				}}
 				tagName="span"
 			/>
-		</Link>
+		</a>
 	);
 }
 
 export function toCollapsibleTreeNodes(
 	nodes: PageTreeNode[],
+	locale: string,
 ): CollapsibleTreeNode[] {
 	return nodes.map((node) => ({
 		id: node.id,
-		label: <PageLink node={node} />,
-		children: toCollapsibleTreeNodes(node.children),
+		label: <PageLink locale={locale} node={node} />,
+		children: toCollapsibleTreeNodes(node.children, locale),
 	}));
 }
 
@@ -42,12 +51,14 @@ export function PageTree({
 	rootNode,
 	treeNodes,
 	currentPageId,
+	locale,
 }: {
 	rootNode: PageForTree;
 	treeNodes: PageTreeNode[];
 	currentPageId: number;
+	locale: string;
 }) {
-	const collapsibleNodes = toCollapsibleTreeNodes(treeNodes);
+	const collapsibleNodes = toCollapsibleTreeNodes(treeNodes, locale);
 
 	return (
 		<IconPopoverTrigger
@@ -57,7 +68,7 @@ export function PageTree({
 		>
 			<nav aria-label="Page tree">
 				<div className="mb-2 text-sm font-medium">
-					<PageLink node={rootNode} />
+					<PageLink locale={locale} node={rootNode} />
 				</div>
 				<CollapsibleTreeList
 					activeId={currentPageId}

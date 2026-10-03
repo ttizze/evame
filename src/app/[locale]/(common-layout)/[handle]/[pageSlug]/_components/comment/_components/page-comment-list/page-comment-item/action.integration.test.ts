@@ -1,7 +1,7 @@
-import { redirect } from "next/navigation";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { db } from "@/db";
-import { mockCurrentUser } from "@/tests/auth-helpers";
+import { toSessionUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createPageComment, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
@@ -11,8 +11,8 @@ import { deletePageCommentAction } from "./action";
 await setupDbPerFile(import.meta.url);
 
 // 共有依存のみモック
-vi.mock("@/app/_service/auth-server", () => ({
-	getCurrentUser: vi.fn(),
+vi.mock("@/app/_service/current-user", () => ({
+	getCurrentUserFromHeaders: vi.fn(),
 }));
 
 describe("deletePageCommentAction", () => {
@@ -23,15 +23,20 @@ describe("deletePageCommentAction", () => {
 
 	describe("認証チェック", () => {
 		it("未認証の場合、ログインページにリダイレクトする", async () => {
-			mockCurrentUser(null);
+			vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(null);
 			const formData = new FormData();
 			formData.append("pageCommentId", "1");
 			formData.append("pageId", "1");
 
 			await expect(
-				deletePageCommentAction({ success: false }, formData),
-			).rejects.toThrow(/NEXT_REDIRECT/);
-			expect(redirect).toHaveBeenCalledWith("/auth/login");
+				deletePageCommentAction({
+					data: {
+						pageCommentId: Number(formData.get("pageCommentId")),
+						pageId: Number(formData.get("pageId")),
+						locale: "en",
+					},
+				}),
+			).rejects.toMatchObject({ options: { href: "/en/auth/login" } });
 		});
 	});
 
@@ -43,16 +48,21 @@ describe("deletePageCommentAction", () => {
 				userId: user.id,
 				pageId: page.id,
 			});
-			mockCurrentUser(user);
+			vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(
+				toSessionUser(user),
+			);
 
 			const formData = new FormData();
 			formData.append("pageCommentId", comment.id.toString());
 			formData.append("pageId", page.id.toString());
 
-			const result = await deletePageCommentAction(
-				{ success: false },
-				formData,
-			);
+			const result = await deletePageCommentAction({
+				data: {
+					pageCommentId: Number(formData.get("pageCommentId")),
+					pageId: Number(formData.get("pageId")),
+					locale: "en",
+				},
+			});
 
 			expect(result.success).toBe(true);
 
@@ -79,14 +89,22 @@ describe("deletePageCommentAction", () => {
 				userId: owner.id,
 				pageId: page.id,
 			});
-			mockCurrentUser(otherUser);
+			vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(
+				toSessionUser(otherUser),
+			);
 
 			const formData = new FormData();
 			formData.append("pageCommentId", comment.id.toString());
 			formData.append("pageId", page.id.toString());
 
 			await expect(
-				deletePageCommentAction({ success: false }, formData),
+				deletePageCommentAction({
+					data: {
+						pageCommentId: Number(formData.get("pageCommentId")),
+						pageId: Number(formData.get("pageId")),
+						locale: "en",
+					},
+				}),
 			).rejects.toThrow("Comment not found or not owned by user");
 
 			const unchangedComment = await db
@@ -100,14 +118,22 @@ describe("deletePageCommentAction", () => {
 		it("存在しないコメントを削除しようとするとエラー", async () => {
 			const user = await createUser({ handle: "testuser" });
 			const page = await createPage({ userId: user.id, slug: "test-page" });
-			mockCurrentUser(user);
+			vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(
+				toSessionUser(user),
+			);
 
 			const formData = new FormData();
 			formData.append("pageCommentId", "999999");
 			formData.append("pageId", page.id.toString());
 
 			await expect(
-				deletePageCommentAction({ success: false }, formData),
+				deletePageCommentAction({
+					data: {
+						pageCommentId: Number(formData.get("pageCommentId")),
+						pageId: Number(formData.get("pageId")),
+						locale: "en",
+					},
+				}),
 			).rejects.toThrow("Comment not found or not owned by user");
 		});
 	});
@@ -132,13 +158,21 @@ describe("deletePageCommentAction", () => {
 				.where("id", "=", parent.id)
 				.execute();
 
-			mockCurrentUser(user);
+			vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(
+				toSessionUser(user),
+			);
 
 			const formData = new FormData();
 			formData.append("pageCommentId", reply.id.toString());
 			formData.append("pageId", page.id.toString());
 
-			await deletePageCommentAction({ success: false }, formData);
+			await deletePageCommentAction({
+				data: {
+					pageCommentId: Number(formData.get("pageCommentId")),
+					pageId: Number(formData.get("pageId")),
+					locale: "en",
+				},
+			});
 
 			const updatedParent = await db
 				.selectFrom("pageComments")
@@ -149,3 +183,17 @@ describe("deletePageCommentAction", () => {
 		});
 	});
 });
+
+vi.mock("@tanstack/react-start", () => ({
+	createServerFn: () => {
+		const builder = {
+			validator: () => builder,
+			handler: <T>(handler: T) => handler,
+		};
+		return builder;
+	},
+}));
+vi.mock("@tanstack/react-start/server", () => ({
+	getRequestHeaders: () => new Headers(),
+	setResponseHeader: vi.fn(),
+}));

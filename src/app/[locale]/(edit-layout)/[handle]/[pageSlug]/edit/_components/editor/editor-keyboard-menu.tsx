@@ -1,3 +1,4 @@
+import { useServerFn } from "@tanstack/react-start";
 import type { Editor as TiptapEditor } from "@tiptap/react";
 import {
 	Code,
@@ -12,7 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { handleFileUpload } from "./use-file-upload";
+import { handleFileUpload, uploadEditorImage } from "./use-file-upload";
 
 interface EditorKeyboardMenuProps {
 	editor: TiptapEditor;
@@ -33,6 +34,7 @@ const editorCommands: Record<string, (editor: TiptapEditor) => boolean> = {
 };
 
 export function EditorKeyboardMenu({ editor }: EditorKeyboardMenuProps) {
+	const uploadImage = useServerFn(uploadEditorImage);
 	const [activeStates, setActiveStates] = useState<Record<string, boolean>>({});
 	useEffect(() => {
 		const updateHandler = () => {
@@ -152,7 +154,7 @@ export function EditorKeyboardMenu({ editor }: EditorKeyboardMenuProps) {
 				id="keyboardImageUpload"
 				onChange={(e) => {
 					const file = e.target.files?.[0];
-					if (file) handleFileUpload(file, editor);
+					if (file) handleFileUpload(file, editor, uploadImage);
 				}}
 				style={{ display: "none" }}
 				type="file"

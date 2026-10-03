@@ -1,11 +1,10 @@
-"use client";
-
+import { useServerFn } from "@tanstack/react-start";
 import { LanguagesIcon } from "lucide-react";
 import Select, { type MultiValue } from "react-select";
 import { toast } from "sonner";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { cn } from "@/lib/utils";
-import { saveTargetLocalesAction } from "./action";
+import { saveTargetLocales } from "./action";
 
 interface MultiLocaleSelectProps {
 	value: string[];
@@ -45,25 +44,24 @@ export function MultiLocaleSelect({
 	onChange,
 	maxSelectable,
 }: MultiLocaleSelectProps) {
-	const options = supportedLocaleOptions.map((o) => ({
-		value: o.code,
-		label: o.name,
+	const saveTargetLocalesFn = useServerFn(saveTargetLocales);
+	const options = supportedLocaleOptions.map((option) => ({
+		value: option.code,
+		label: option.name,
 	}));
-	const selectedOptions = options.filter((o) => value.includes(o.value));
+	const selectedOptions = options.filter((option) =>
+		value.includes(option.value),
+	);
 
 	const handleChange = async (
-		vals: MultiValue<{ value: string; label: string }>,
+		values: MultiValue<{ value: string; label: string }>,
 	) => {
-		const codes = vals.map((v) => v.value).slice(0, maxSelectable);
+		const codes = values.map((value) => value.value).slice(0, maxSelectable);
 		onChange(codes);
 		const formData = new FormData();
-		for (const code of codes) {
-			formData.append("locales", code);
-		}
-		const result = await saveTargetLocalesAction({ success: false }, formData);
-		if (!result.success && result.message) {
-			toast.error(result.message);
-		}
+		for (const code of codes) formData.append("locales", code);
+		const result = await saveTargetLocalesFn({ data: formData });
+		if (!result.success && result.message) toast.error(result.message);
 	};
 
 	const isOptionDisabled = (option?: { value: string }) =>
@@ -89,9 +87,7 @@ export function MultiLocaleSelect({
 				onChange={handleChange}
 				options={options}
 				placeholder="Select languages..."
-				styles={{
-					menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-				}}
+				styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
 				unstyled
 				value={selectedOptions}
 			/>

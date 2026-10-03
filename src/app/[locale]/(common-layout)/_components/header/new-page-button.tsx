@@ -1,28 +1,31 @@
-"use client";
-
+import { useNavigate } from "@tanstack/react-router";
 import { Loader2, PencilIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
 import { useTransition } from "react";
 import { generateSlug } from "@/app/[locale]/_utils/generate-slug";
 
-interface NewPageButtonProps {
+export function NewPageButton({
+	handle,
+	locale,
+}: {
 	handle: string;
-}
-
-export const NewPageButton = ({ handle }: NewPageButtonProps) => {
-	const router = useRouter();
-	const locale = useLocale();
+	locale: string;
+}) {
+	const navigate = useNavigate();
 	const [isPending, startTransition] = useTransition();
 
 	const handleNewPage = () => {
+		const pageSlug = generateSlug();
 		startTransition(() => {
-			router.push(`/${locale}/${handle}/${generateSlug()}/edit`);
+			void navigate({
+				params: { handle, locale, pageSlug },
+				to: "/$locale/$handle/$pageSlug/edit",
+			});
 		});
 	};
 
 	return (
 		<button
+			aria-label="Create a new page"
 			className="cursor-pointer items-center"
 			disabled={isPending}
 			onClick={handleNewPage}
@@ -35,4 +38,4 @@ export const NewPageButton = ({ handle }: NewPageButtonProps) => {
 			)}
 		</button>
 	);
-};
+}

@@ -1,11 +1,7 @@
-"use client";
-
+import { Link } from "@tanstack/react-router";
 import { Bell, Loader2 } from "lucide-react";
-import { getImageProps } from "next/image";
-import { startTransition, useActionState } from "react";
 import useSWR from "swr";
 import type { NotificationRowsWithRelations } from "@/app/api/notifications/_types/notification";
-import type { ActionResponse } from "@/app/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
@@ -13,17 +9,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from "@/i18n/routing";
-import { markNotificationAsReadAction } from "./action";
-export function NotificationsDropdownClient({
-	currentUserHandle,
-}: {
-	currentUserHandle: string;
-}) {
-	const [_markNotificationAsReadResponse, action, _isPending] = useActionState<
-		ActionResponse,
-		FormData
-	>(markNotificationAsReadAction, { success: false });
+export function NotificationsDropdownClient({ locale }: { locale: string }) {
 	const { data, isLoading, mutate } = useSWR<{
 		notifications: NotificationRowsWithRelations[];
 	}>(
@@ -36,8 +22,13 @@ export function NotificationsDropdownClient({
 
 	const handleClick = (open: boolean) => {
 		if (open) {
-			startTransition(() => {
-				action(new FormData());
+			void fetch("/api/notifications", {
+				method: "POST",
+				credentials: "include",
+			}).then((response) => {
+				if (response.status === 401) {
+					window.location.assign(`/${locale}/auth/login`);
+				}
 			});
 			mutate(
 				(prev) => {
@@ -93,9 +84,9 @@ export function NotificationsDropdownClient({
 							index: number,
 						) => (
 							<NotificationItem
-								currentUserHandle={currentUserHandle}
 								index={index}
 								key={notificationRowWithRelations.id}
+								locale={locale}
 								notificationRowsWithRelations={notificationRowWithRelations}
 							/>
 						),
@@ -105,14 +96,13 @@ export function NotificationsDropdownClient({
 		</DropdownMenu>
 	);
 }
-
 function NotificationItem({
 	notificationRowsWithRelations,
-	currentUserHandle,
+	locale,
 	index,
 }: {
 	notificationRowsWithRelations: NotificationRowsWithRelations;
-	currentUserHandle: string;
+	locale: string;
 	index: number;
 }) {
 	return (
@@ -122,7 +112,7 @@ function NotificationItem({
 			} ${index === 0 ? "border-none" : ""}`}
 		>
 			<NotificationContent
-				currentUserHandle={currentUserHandle}
+				locale={locale}
 				notificationRowsWithRelations={notificationRowsWithRelations}
 			/>
 		</DropdownMenuItem>
@@ -130,14 +120,19 @@ function NotificationItem({
 }
 function NotificationContent({
 	notificationRowsWithRelations,
+	locale,
 }: {
 	notificationRowsWithRelations: NotificationRowsWithRelations;
-	currentUserHandle: string;
+	locale: string;
 }) {
 	const { actorHandle, actorName, actorImage, type } =
 		notificationRowsWithRelations;
 	const commonLink = (
-		<Link className="hover:underline font-bold" href={`/${actorHandle}`}>
+		<Link
+			className="hover:underline font-bold"
+			params={{ handle: actorHandle, locale }}
+			to="/$locale/$handle"
+		>
 			{actorName}
 		</Link>
 	);
@@ -152,7 +147,8 @@ function NotificationContent({
 		return (
 			<Link
 				className="hover:underline font-bold"
-				href={`/${pageOwnerHandle}/${pageSlug}`}
+				params={{ handle: pageOwnerHandle, locale, pageSlug }}
+				to="/$locale/$handle/$pageSlug"
 			>
 				{pageTitle}
 			</Link>
@@ -163,14 +159,14 @@ function NotificationContent({
 	let extraContent: React.ReactNode = null;
 
 	switch (type) {
-		case "PAGE_COMMENT": {
-			actionText = <span className="text-gray-500"> commented on </span>;
+		case "PAGE_LIKE": {
+			actionText = <span className="text-gray-500"> liked your page </span>;
 			extraContent = getPageLink();
 			if (!extraContent) return null;
 			break;
 		}
-		case "PAGE_LIKE": {
-			actionText = <span className="text-gray-500"> liked your page </span>;
+		case "PAGE_COMMENT": {
+			actionText = <span className="text-gray-500"> commented on </span>;
 			extraContent = getPageLink();
 			if (!extraContent) return null;
 			break;
@@ -190,11 +186,12 @@ function NotificationContent({
 			actionText = <span className="text-gray-500"> voted for </span>;
 			extraContent = (
 				<>
-					<span className="">{votedText}</span>
+					<span>{votedText}</span>
 					<span className="text-gray-500"> on </span>
 					<Link
 						className="hover:underline font-bold"
-						href={`/${pageOwnerHandle}/${pageSlug}`}
+						params={{ handle: pageOwnerHandle, locale, pageSlug }}
+						to="/$locale/$handle/$pageSlug"
 					>
 						{pageTitle}
 					</Link>
@@ -213,6 +210,7 @@ function NotificationContent({
 				actorHandle={actorHandle}
 				actorImage={actorImage}
 				actorName={actorName}
+				locale={locale}
 			/>
 			<span className="flex flex-col">
 				<span>
@@ -230,24 +228,26 @@ function NotificationAvatar({
 	actorHandle,
 	actorImage,
 	actorName,
+	locale,
 }: {
 	actorHandle: string;
 	actorImage: string;
 	actorName: string;
+	locale: string;
 }) {
-	const { props } = getImageProps({
-		src: actorImage || "",
-		alt: actorName || "",
-		width: 40,
-		height: 40,
-	});
 	return (
 		<Link
 			className="flex items-center mr-2 no-underline! hover:text-gray-700"
-			href={`/${actorHandle}`}
+			params={{ handle: actorHandle, locale }}
+			to="/$locale/$handle"
 		>
 			<Avatar className="w-10 h-10 shrink-0 mr-3">
-				<AvatarImage {...props} />
+				<AvatarImage
+					alt={actorName || ""}
+					height={40}
+					src={actorImage || ""}
+					width={40}
+				/>
 				<AvatarFallback>
 					{(actorName || actorHandle).charAt(0).toUpperCase()}
 				</AvatarFallback>

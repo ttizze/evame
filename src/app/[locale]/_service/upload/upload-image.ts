@@ -1,5 +1,3 @@
-"use server";
-
 import sharp from "sharp";
 import { uploadToR2 } from "@/app/[locale]/_infrastructure/upload/r2-client";
 import type { ActionResponse } from "@/app/types";

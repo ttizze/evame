@@ -1,0 +1,352 @@
+import { serverLogger } from "@/app/_service/logger.server";
+import type { SegmentWithSegmentType } from "@/app/[locale]/types";
+import { db } from "@/db";
+import {
+	isPagePubliclyReadable,
+	TIPITAKA_ROOT_SLUG,
+	TIPITAKA_SYSTEM_USER_HANDLE,
+} from "../_domain/tipitaka-page-visibility";
+import { bestTranslationSubquery } from "./best-translation-subquery.server";
+
+type SegmentWithAnnotations = SegmentWithSegmentType & {
+	annotations: Array<{ annotationSegment: SegmentWithSegmentType }>;
+};
+
+/**
+ * ページ基本情報を取得（slugで）
+ */
+async function fetchPageBasicBySlug(slug: string) {
+	return await db
+		.selectFrom("pages")
+		.innerJoin("users", "pages.userId", "users.id")
+		.select([
+			"pages.id",
+			"pages.slug",
+			"pages.createdAt",
+			"pages.updatedAt",
+			"pages.status",
+			"pages.sourceLocale",
+			"pages.parentId",
+			"pages.order",
+			"pages.mdastJson",
+			"pages.publishedAt",
+			"users.id as userId",
+			"users.name as userName",
+			"users.handle as userHandle",
+			"users.image as userImage",
+		])
+		.where("pages.slug", "=", slug)
+		.executeTakeFirst();
+}
+
+async function queryTipitakaVisibility(pageId: number) {
+	const ancestors = await db
+		.withRecursive("ancestors", (qb) =>
+			qb
+				.selectFrom("pages")
+				.select([
+					"pages.id",
+					"pages.slug",
+					"pages.parentId",
+					"pages.publishedAt",
+					"pages.status",
+					"pages.userId",
+				])
+				.where("pages.id", "=", pageId)
+				.unionAll(
+					qb
+						.selectFrom("pages")
+						.innerJoin("ancestors", "pages.id", "ancestors.parentId")
+						.select([
+							"pages.id",
+							"pages.slug",
+							"pages.parentId",
+							"pages.publishedAt",
+							"pages.status",
+							"pages.userId",
+						]),
+				),
+		)
+		.selectFrom("ancestors")
+		.innerJoin("contents", "contents.id", "ancestors.id")
+		.innerJoin("users", "users.id", "ancestors.userId")
+		.select([
+			"ancestors.id",
+			"ancestors.slug",
+			"ancestors.parentId",
+			"ancestors.publishedAt",
+			"ancestors.status",
+			"contents.kind as contentKind",
+			"users.handle as userHandle",
+		])
+		.execute();
+
+	const isTipitakaPage = ancestors.some(
+		(ancestor) =>
+			ancestor.slug === TIPITAKA_ROOT_SLUG &&
+			ancestor.parentId === null &&
+			ancestor.contentKind === "PAGE" &&
+			ancestor.userHandle === TIPITAKA_SYSTEM_USER_HANDLE,
+	);
+
+	return {
+		isPubliclyReadable:
+			isTipitakaPage &&
+			ancestors.every((ancestor) =>
+				isPagePubliclyReadable({
+					isTipitakaPage: true,
+					publishedAt: ancestor.publishedAt,
+					status: ancestor.status,
+				}),
+			),
+		isTipitakaPage,
+	};
+}
+
+/**
+ * タグを取得
+ */
+async function fetchTags(pageId: number) {
+	const result = await db
+		.selectFrom("tagPages")
+		.innerJoin("tags", "tagPages.tagId", "tags.id")
+		.select(["tags.id", "tags.name"])
+		.where("tagPages.pageId", "=", pageId)
+		.execute();
+
+	return result.map((t) => ({ tag: { id: t.id, name: t.name } }));
+}
+
+/**
+ * カウントを取得（最新値が必要なのでキャッシュしない）
+ */
+export async function fetchPageCounts(pageId: number) {
+	const result = await db
+		.selectFrom("pages")
+		.select((eb) => [
+			eb
+				.selectFrom("likePages")
+				.select(eb.fn.countAll<number>().as("count"))
+				.whereRef("likePages.pageId", "=", "pages.id")
+				.as("likeCount"),
+		])
+		.where("pages.id", "=", pageId)
+		.executeTakeFirst();
+
+	return {
+		likeCount: result?.likeCount ?? 0,
+	};
+}
+
+/**
+ * セグメントを取得（DISTINCT ONで最良の翻訳を1件のみ）
+ */
+async function fetchSegments(
+	pageId: number,
+	locale: string,
+	pageOwnerId: string,
+	segmentTypeKey?: "PRIMARY" | "COMMENTARY",
+): Promise<SegmentWithSegmentType[]> {
+	// セグメント + 最良の翻訳を1クエリで取得
+	let query = db
+		.selectFrom("segments")
+		.innerJoin("segmentTypes", "segments.segmentTypeId", "segmentTypes.id")
+		.leftJoin(
+			(eb) =>
+				bestTranslationSubquery(eb, { locale, ownerUserId: pageOwnerId }).as(
+					"trans",
+				),
+			(join) => join.onRef("trans.segmentId", "=", "segments.id"),
+		)
+		.select([
+			"segments.id",
+			"segments.contentId",
+			"segments.number",
+			"segments.text",
+			"segmentTypes.key as segmentTypeKey",
+			"segmentTypes.label as segmentTypeLabel",
+			"trans.text as translationText",
+		])
+		.where("segments.contentId", "=", pageId);
+
+	if (segmentTypeKey) {
+		query = query.where("segmentTypes.key", "=", segmentTypeKey);
+	}
+
+	return query.orderBy("segments.number", "asc").execute();
+}
+
+/**
+ * セグメントに注釈を追加
+ */
+async function addAnnotations(
+	segments: SegmentWithSegmentType[],
+	pageId: number,
+	locale: string,
+	pageOwnerId: string,
+): Promise<SegmentWithAnnotations[]> {
+	const segmentIds = segments.map((s) => s.id);
+	if (segmentIds.length === 0) {
+		return segments.map((s) => ({ ...s, annotations: [] }));
+	}
+
+	// 注釈リンクを取得
+	const links = await db
+		.selectFrom("segmentAnnotationLinks")
+		.select(["mainSegmentId", "annotationSegmentId"])
+		.where("mainSegmentId", "in", segmentIds)
+		.execute();
+
+	const annotationSegmentIds = [
+		...new Set(links.map((l) => l.annotationSegmentId)),
+	];
+
+	if (annotationSegmentIds.length === 0) {
+		return segments.map((s) => ({ ...s, annotations: [] }));
+	}
+
+	// 注釈セグメントを取得
+	const annotationSegments = await fetchSegmentsByIds(
+		annotationSegmentIds,
+		locale,
+		pageOwnerId,
+	);
+	const annotationMap = new Map(annotationSegments.map((s) => [s.id, s]));
+
+	// リンクをMapに変換
+	const linksMap = new Map<number, number[]>();
+	for (const link of links) {
+		const existing = linksMap.get(link.mainSegmentId) || [];
+		existing.push(link.annotationSegmentId);
+		linksMap.set(link.mainSegmentId, existing);
+	}
+
+	return segments.map((segment) => {
+		const annotationIds = linksMap.get(segment.id) || [];
+		const annotations = annotationIds
+			.map((id) => {
+				const annotationSegment = annotationMap.get(id);
+				if (!annotationSegment) {
+					serverLogger.warn(
+						{ annotationSegmentId: id, mainSegmentId: segment.id, pageId },
+						"Annotation segment not found, skipping",
+					);
+					return null;
+				}
+				return { annotationSegment };
+			})
+			.filter(
+				(a): a is { annotationSegment: SegmentWithSegmentType } => a !== null,
+			);
+
+		return { ...segment, annotations };
+	});
+}
+
+/**
+ * ID指定でセグメントを取得
+ */
+async function fetchSegmentsByIds(
+	segmentIds: number[],
+	locale: string,
+	pageOwnerId: string,
+): Promise<SegmentWithSegmentType[]> {
+	if (segmentIds.length === 0) return [];
+
+	return db
+		.selectFrom("segments")
+		.innerJoin("segmentTypes", "segments.segmentTypeId", "segmentTypes.id")
+		.leftJoin(
+			(eb) =>
+				bestTranslationSubquery(eb, { locale, ownerUserId: pageOwnerId }).as(
+					"trans",
+				),
+			(join) => join.onRef("trans.segmentId", "=", "segments.id"),
+		)
+		.select([
+			"segments.id",
+			"segments.contentId",
+			"segments.number",
+			"segments.text",
+			"segmentTypes.key as segmentTypeKey",
+			"segmentTypes.label as segmentTypeLabel",
+			"trans.text as translationText",
+		])
+		.where("segments.id", "in", segmentIds)
+		.execute();
+}
+
+/**
+ * ページ詳細を取得
+ */
+export async function queryPageDetail(slug: string, locale: string) {
+	const page = await fetchPageBasicBySlug(slug);
+	if (!page) return null;
+	if (page.status === "ARCHIVE" && page.publishedAt === null) return null;
+
+	const shouldCheckTipitakaVisibility =
+		page.status === "ARCHIVE" ||
+		page.slug === TIPITAKA_ROOT_SLUG ||
+		page.parentId !== null;
+	const tipitakaVisibility = shouldCheckTipitakaVisibility
+		? await queryTipitakaVisibility(page.id)
+		: { isPubliclyReadable: false, isTipitakaPage: false };
+	const { isTipitakaPage } = tipitakaVisibility;
+	if (
+		isTipitakaPage &&
+		page.status !== "DRAFT" &&
+		!tipitakaVisibility.isPubliclyReadable
+	) {
+		return null;
+	}
+	const isPublishedTipitakaArchive =
+		page.status === "ARCHIVE" && tipitakaVisibility.isPubliclyReadable;
+	if (page.status === "ARCHIVE" && !isPublishedTipitakaArchive) return null;
+
+	const tags = await fetchTags(page.id);
+
+	// 1. PRIMARYセグメントを取得
+	let segments = await fetchSegments(page.id, locale, page.userId, "PRIMARY");
+
+	// 2. PRIMARYセグメントがない場合、COMMENTARYセグメントをフォールバック
+	if (segments.length === 0) {
+		segments = await fetchSegments(page.id, locale, page.userId, "COMMENTARY");
+	}
+
+	// 3. 注釈を追加
+	const segmentsWithAnnotations = await addAnnotations(
+		segments,
+		page.id,
+		locale,
+		page.userId,
+	);
+
+	// 4. タイトルを生成
+	const titleSegment = segmentsWithAnnotations.find((s) => s.number === 0);
+	const title = titleSegment
+		? titleSegment.translationText
+			? `${titleSegment.text} - ${titleSegment.translationText}`
+			: titleSegment.text
+		: "";
+
+	return {
+		id: page.id,
+		isTipitakaPage,
+		isPublishedTipitakaArchive,
+		slug: page.slug,
+		title,
+		status: page.status,
+		sourceLocale: page.sourceLocale,
+		parentId: page.parentId,
+		order: page.order,
+		mdastJson: page.mdastJson,
+		segments: segmentsWithAnnotations,
+		createdAt: page.createdAt,
+		updatedAt: page.updatedAt,
+		userId: page.userId,
+		userName: page.userName,
+		userHandle: page.userHandle,
+		userImage: page.userImage,
+		tagPages: tags,
+	};
+}

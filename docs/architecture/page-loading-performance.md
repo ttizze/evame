@@ -1,4 +1,6 @@
-# ページ読み込みパフォーマンス
+# ページ読み込みパフォーマンス（Next.js 時代の計測記録）
+
+この文書は移行前の計測記録です。現在の TanStack Start の構成は `architecture.md`、データ更新は `cache-components-revalidation.md` を参照してください。ここに記載された Cache Components や Server Component は現行実装で使用しません。
 
 ## 最適化結果 (2026-01-23 計測)
 

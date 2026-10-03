@@ -38,11 +38,15 @@ export async function togglePageLike(pageId: number, currentUserId: string) {
 				userId: currentUserId,
 			})
 			.execute();
-		await createPageLikeNotification({
-			pageId: page.id,
-			targetUserId: page.userId,
-			actorId: currentUserId,
-		});
+		await db
+			.insertInto("notifications")
+			.values({
+				pageId: page.id,
+				userId: page.userId,
+				actorId: currentUserId,
+				type: "PAGE_LIKE",
+			})
+			.execute();
 		liked = true;
 	}
 
@@ -56,28 +60,4 @@ export async function togglePageLike(pageId: number, currentUserId: string) {
 	const likeCount = Number(result?.count ?? 0);
 
 	return { liked, likeCount };
-}
-
-/**
- * ページいいね通知を作成
- * Kysely版に移行済み
- */
-async function createPageLikeNotification({
-	pageId,
-	targetUserId,
-	actorId,
-}: {
-	pageId: number;
-	targetUserId: string;
-	actorId: string;
-}) {
-	await db
-		.insertInto("notifications")
-		.values({
-			pageId,
-			userId: targetUserId,
-			actorId,
-			type: "PAGE_LIKE",
-		})
-		.execute();
 }

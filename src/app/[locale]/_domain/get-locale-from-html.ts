@@ -1,3 +1,4 @@
+import { franc } from "franc";
 import type { Element, Root, Text } from "hast";
 import rehypeParse from "rehype-parse";
 import { unified } from "unified";
@@ -58,7 +59,6 @@ export async function getLocaleFromHtml(
 	const contents = extractTextFromBlockElements(processedTree);
 
 	try {
-		const { franc } = await import("franc");
 		const iso639_3 = franc(contents);
 
 		if (iso639_3 === "und") {

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 const { markdownToMdastWithSegmentsMock } = vi.hoisted(() => {
 	return { markdownToMdastWithSegmentsMock: vi.fn() };
 });
-vi.mock("@/app/[locale]/_domain/markdown-to-mdast-with-segments", () => {
+vi.mock("@/app/[locale]/_service/markdown-to-mdast-with-segments", () => {
 	return { markdownToMdastWithSegments: markdownToMdastWithSegmentsMock };
 });
 

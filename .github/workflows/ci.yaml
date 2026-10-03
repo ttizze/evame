@@ -7,43 +7,40 @@ on:
 jobs:
   ci-check:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgres://postgres:postgres@db.localtest.me:5435/main
+      TZ: Asia/Tokyo
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Setup Nix
+        uses: cachix/install-nix-action@v31
         with:
-          bun-version: 'latest'
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Start test database
         run: |
-          docker compose -f docker-compose.yml up -d test_neon
-          for i in {1..30}; do
-            if docker compose -f docker-compose.yml exec -T test_neon pg_isready -U postgres > /dev/null 2>&1; then
-              echo "Postgres is ready"
-              break
-            fi
-            sleep 2
-          done
-          docker compose -f docker-compose.yml ps
-
-      - name: Create .env
-        run: |
-          echo "TIPTAP_PRO_API_KEY=${{ secrets.TIPTAP_PRO_API_KEY }}" >> .env
-          echo "DATABASE_URL=postgres://postgres:postgres@db.localtest.me:5435/main" >> .env
+          docker compose up -d --wait test_neon
 
       - name: Install dependencies
         run: |
-          bun install
+          nix develop --command bun install --frozen-lockfile
 
       - name: Run Biome
         run: |
-          bun x biome ci .
+          nix develop --command bun x biome ci .
+
+      - name: Run Typecheck
+        run: nix develop --command bun run typecheck
 
       - name: Run Tests
-        env:
-          TZ: 'Asia/Tokyo'
         run: |
-          bun run db:migrate && bun run seed
-          bunx vitest
+          nix develop --command bun run db:prod:migrate
+          nix develop --command bun run db:prod:seed
+          nix develop --command bun run test --run
+
+      - name: Build TanStack Start for Vercel
+        env:
+          NITRO_PRESET: vercel
+        run: nix develop --command bun run build

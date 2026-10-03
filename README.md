@@ -5,6 +5,12 @@
 Evame is a project for sharing user-submitted texts with translations, annotations, and explanations.
 
 ## Quick start (development)
+Run all project toolchain commands below inside `nix develop`.
+Supported systems are Apple silicon macOS and aarch64/x86_64 Linux. Intel macOS is unsupported because the pinned nixpkgs release no longer supports `x86_64-darwin`.
+
+```bash
+nix develop
+```
 
 1. Install dependencies
    ```bash
@@ -14,8 +20,10 @@ Evame is a project for sharing user-submitted texts with translations, annotatio
    ```bash
    cp .env.example .env
    openssl rand -base64 32
+   openssl rand -hex 32
    ```
-   Put the generated string into `.env`.
+   Set the base64 value as `BETTER_AUTH_SECRET` and the hex value as `ENCRYPTION_KEY`. Configure Google and Resend for authentication and the Edge Config connection containing the `maintenance` flag.
+   Use `VITE_PUBLIC_DOMAIN` for the public site URL, server-side `CF_IMAGE_HOST` for the image host, and `EVAME_BASE_URL` for the CLI endpoint.
 3. Start DB
    ```bash
    docker compose up -d
@@ -39,9 +47,10 @@ Evame is a project for sharing user-submitted texts with translations, annotatio
 
 ## Repo structure (summary)
 
-- `src/app`: Next.js App Router
+- `src/routes`: TanStack Start routes
+- `src/app`: Feature implementations used by the routes
 - `src/db`: DB connection, types, seed
 - `src/drizzle`: Schema and migrations
 - `src/components`: Shared UI
 
-See `docs/architecture.md` for details.
+See `docs/architecture/architecture.md` for details.

@@ -162,16 +162,16 @@ export function buildPageListQuery(locale: string) {
 				"trans.text as translationText",
 				// counts (サブクエリ)
 				eb
+					.selectFrom("likePages")
+					.select(eb.fn.countAll().as("count"))
+					.whereRef("likePages.pageId", "=", "pages.id")
+					.as("likeCount"),
+				eb
 					.selectFrom("pageComments")
 					.select(eb.fn.countAll().as("count"))
 					.whereRef("pageComments.pageId", "=", "pages.id")
 					.where("pageComments.isDeleted", "=", false)
 					.as("pageCommentsCount"),
-				eb
-					.selectFrom("likePages")
-					.select(eb.fn.countAll().as("count"))
-					.whereRef("likePages.pageId", "=", "pages.id")
-					.as("likeCount"),
 				eb
 					.selectFrom("pageViews")
 					.select("count")

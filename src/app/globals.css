@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -62,19 +63,11 @@
 }
 @theme {
 	/* フォント ------------------------------ */
-	--font-sans: var(--font-inter), "Hiragino Kaku Gothic ProN", "Hiragino Sans",
+	--font-sans: "Inter Variable", "Hiragino Kaku Gothic ProN", "Hiragino Sans",
 		"Noto Sans JP", "BIZ UDPGothic", sans-serif;
 
 	/* サイズ ------------------------------ */
 	--size-container-2xl: 1400px; /* .container 2xl 幅 */
-}
-
-.ProseMirror p.is-editor-empty:first-child::before {
-	color: #adb5bd;
-	content: attr(data-placeholder);
-	float: left;
-	height: 0;
-	pointer-events: none;
 }
 
 .prose {
@@ -108,6 +101,12 @@
 	.about-section .seg-cv {
 		content-visibility: visible;
 		contain-intrinsic-size: auto;
+		contain: none;
+	}
+
+	.tipitaka-tree .seg-cv {
+		content-visibility: visible;
+		contain-intrinsic-size: none;
 		contain: none;
 	}
 

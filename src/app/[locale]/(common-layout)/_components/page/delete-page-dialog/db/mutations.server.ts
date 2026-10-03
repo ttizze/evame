@@ -1,9 +1,5 @@
 import { db } from "@/db";
 
-/**
- * ページをアーカイブ状態にする
- * Kysely版に移行済み
- */
 export async function archivePage(pageId: number, userId: string) {
 	const result = await db
 		.updateTable("pages")

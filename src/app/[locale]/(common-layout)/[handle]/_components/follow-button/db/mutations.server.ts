@@ -32,9 +32,9 @@ export async function createNotificationFollow(
 	const notification = await db
 		.insertInto("notifications")
 		.values({
-			userId: userId,
+			userId,
 			type: "FOLLOW",
-			actorId: actorId,
+			actorId,
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();

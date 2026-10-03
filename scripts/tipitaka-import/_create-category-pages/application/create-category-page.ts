@@ -1,5 +1,5 @@
-import { markdownToMdastWithSegments } from "@/app/[locale]/_domain/markdown-to-mdast-with-segments";
-import { upsertPageAndSegments } from "@/app/[locale]/(edit-layout)/[handle]/[pageSlug]/edit/_components/edit-page-client/service/upsert-page-and-segments";
+import { markdownToMdastWithSegments } from "@/app/[locale]/_service/markdown-to-mdast-with-segments";
+import { upsertPageAndSegments } from "@/app/[locale]/_service/upsert-page-and-segments";
 import { db } from "@/db";
 import type { PageStatus } from "@/db/types";
 import { slugify } from "../../utils/slugify";
@@ -20,6 +20,7 @@ export async function createCategoryPage({
 	order,
 }: CategoryPageParams): Promise<number> {
 	const mdast = await markdownToMdastWithSegments({
+		autoUploadImages: true,
 		header: title,
 		markdown: "",
 	});

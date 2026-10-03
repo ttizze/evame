@@ -1,12 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
-import {
-	createPageComment,
-	createPageWithSegments,
-	createSegment,
-	createUser,
-} from "@/tests/factories";
+import { createPageWithSegments, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { addTranslationService } from "./add-translation.server";
 
@@ -17,7 +12,7 @@ describe("addTranslationService", () => {
 		await resetDatabase();
 	});
 
-	it("コメントの翻訳を追加できる", async () => {
+	it("ページの翻訳を追加できる", async () => {
 		// Arrange
 		const user = await createUser();
 		const page = await createPageWithSegments({
@@ -33,24 +28,17 @@ describe("addTranslationService", () => {
 			],
 		});
 
-		const comment = await createPageComment({
-			userId: user.id,
-			pageId: page.id,
-			locale: "en",
-		});
-
-		const commentSegment = await createSegment({
-			contentId: comment.id,
-			number: 0,
-			text: "Comment text",
-			textAndOccurrenceHash: "comment-hash",
-			segmentTypeKey: "COMMENTARY",
-		});
+		const pageSegment = await db
+			.selectFrom("segments")
+			.selectAll()
+			.where("contentId", "=", page.id)
+			.where("number", "=", 0)
+			.executeTakeFirstOrThrow();
 
 		// Act
 		const result = await addTranslationService(
-			commentSegment.id,
-			"コメント翻訳",
+			pageSegment.id,
+			"ページ翻訳",
 			user.id,
 			"ja",
 		);
@@ -61,10 +49,10 @@ describe("addTranslationService", () => {
 		const translation = await db
 			.selectFrom("segmentTranslations")
 			.selectAll()
-			.where("segmentId", "=", commentSegment.id)
+			.where("segmentId", "=", pageSegment.id)
 			.where("locale", "=", "ja")
 			.executeTakeFirst();
 
-		expect(translation?.text).toBe("コメント翻訳");
+		expect(translation?.text).toBe("ページ翻訳");
 	});
 });

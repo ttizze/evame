@@ -12,25 +12,17 @@ export async function getPageSegments(pageId: number) {
 		.execute();
 }
 
-/** ページコメントのセグメントを取得（id, number, text） */
-/** Kyselyに移行済み */
-export async function getPageCommentSegments(pageCommentId: number) {
+/** ページ注釈またはコメントのセグメントを取得（id, number, text） */
+export async function getContentSegments(
+	contentId: number,
+	kind: "PAGE" | "PAGE_COMMENT",
+) {
 	return await db
 		.selectFrom("segments")
 		.innerJoin("contents", "segments.contentId", "contents.id")
-		.innerJoin("pageComments", "contents.id", "pageComments.id")
 		.select(["segments.id", "segments.number", "segments.text"])
-		.where("pageComments.id", "=", pageCommentId)
-		.execute();
-}
-
-/** 注釈コンテンツのセグメントを取得（id, number, text） */
-/** Kyselyに移行済み */
-export async function getAnnotationSegments(contentId: number) {
-	return await db
-		.selectFrom("segments")
-		.select(["id", "number", "text"])
 		.where("contentId", "=", contentId)
+		.where("contents.kind", "=", kind)
 		.execute();
 }
 

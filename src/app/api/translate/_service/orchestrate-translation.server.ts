@@ -17,23 +17,12 @@ import { BASE_URL } from "@/app/_constants/base-url";
 import { createServerLogger } from "@/app/_service/logger.server";
 import { markJobCompleted, markJobInProgress } from "../_db/mutations.server";
 import {
-	getAnnotationSegments,
-	getPageCommentSegments,
+	getContentSegments,
 	getPageSegments,
 	getPageTitle,
 } from "../_db/queries.server";
 import { splitSegments } from "../_domain/split-segments";
 import type { TranslateChunkParams, TranslateJobParams } from "../types";
-
-const fetchSegments = async (params: TranslateJobParams) => {
-	if (params.annotationContentId) {
-		return await getAnnotationSegments(params.annotationContentId);
-	}
-	if (params.pageCommentId) {
-		return await getPageCommentSegments(params.pageCommentId);
-	}
-	return await getPageSegments(params.pageId);
-};
 
 export async function orchestrateTranslation(params: TranslateJobParams) {
 	const logger = createServerLogger("translate-orchestrator", {
@@ -42,8 +31,12 @@ export async function orchestrateTranslation(params: TranslateJobParams) {
 		targetLocale: params.targetLocale,
 		aiModel: params.aiModel,
 	});
-	// pageCommentId / annotationContentId に応じてセグメントを取得
-	const segments = await fetchSegments(params);
+	// annotationContentId に応じて注釈またはページのセグメントを取得
+	const segments = params.annotationContentId
+		? await getContentSegments(params.annotationContentId, "PAGE")
+		: params.pageCommentId
+			? await getContentSegments(params.pageCommentId, "PAGE_COMMENT")
+			: await getPageSegments(params.pageId);
 
 	// ページタイトルを取得（翻訳プロンプト用）
 	const title = (await getPageTitle(params.pageId)) ?? "";
@@ -81,7 +74,6 @@ export async function orchestrateTranslation(params: TranslateJobParams) {
 				userId: params.userId,
 				targetLocale: params.targetLocale,
 				pageId: params.pageId,
-				pageCommentId: params.pageCommentId,
 				annotationContentId: params.annotationContentId,
 				segments: chunk,
 				title,

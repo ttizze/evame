@@ -1,38 +1,38 @@
-"use server";
+import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeaders } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
 import type { ActionResponse } from "@/app/types";
-import { togglePageLike } from "./db/mutations.server";
 import type { LikeState } from "./service/like-api";
 
-// フォームデータ用のスキーマ
 const schema = z.object({
-	pageId: z.coerce.number(),
+	pageId: z.number().int().positive(),
 });
 
 export type PageLikeButtonState = ActionResponse<LikeState, { pageId: number }>;
 
-export async function togglePageLikeAction(
-	_previousState: PageLikeButtonState,
-	formData: FormData,
-): Promise<PageLikeButtonState> {
-	const v = await authAndValidate(schema, formData);
-	if (!v.success) {
+export const togglePageLikeAction = createServerFn({ method: "POST" })
+	.validator(schema)
+	.handler(async ({ data }): Promise<PageLikeButtonState> => {
+		const [{ getCurrentUserFromHeaders }, { togglePageLike }] =
+			await Promise.all([
+				import("@/app/_service/current-user"),
+				import("./db/mutations.server"),
+			]);
+		const currentUser = await getCurrentUserFromHeaders(
+			new Headers(getRequestHeaders()),
+		);
+		if (!currentUser) {
+			return { success: false };
+		}
+		const { liked, likeCount } = await togglePageLike(
+			data.pageId,
+			currentUser.id,
+		);
 		return {
-			success: false,
-			zodErrors: v.zodErrors,
+			success: true,
+			data: {
+				liked,
+				likeCount,
+			},
 		};
-	}
-	const { currentUser, data } = await v;
-	const { liked, likeCount } = await togglePageLike(
-		data.pageId,
-		currentUser.id,
-	);
-	return {
-		success: true,
-		data: {
-			liked,
-			likeCount,
-		},
-	};
-}
+	});

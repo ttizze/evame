@@ -1,5 +1,3 @@
-"use client";
-
 import { type NodeViewProps, NodeViewWrapper } from "@tiptap/react";
 import { Tweet as XPost } from "react-tweet";
 

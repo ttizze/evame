@@ -1,14 +1,7 @@
 import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-
-const { fetchAboutPageMock } = vi.hoisted(() => ({
-	fetchAboutPageMock: vi.fn(),
-}));
-
-vi.mock("../service/fetch-about-page", () => ({
-	fetchAboutPage: fetchAboutPageMock,
-}));
+import type { loadAboutPage } from "../service/load-about-page";
 
 vi.mock(
 	"@/app/[locale]/(common-layout)/_components/wrap-segments/segment",
@@ -47,17 +40,14 @@ function buildAboutPageDetail() {
 			text,
 			translationText: null,
 		})),
-	};
+	} as NonNullable<Awaited<ReturnType<typeof loadAboutPage>>>;
 }
 
 describe("ComparisonSection", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-		fetchAboutPageMock.mockResolvedValue(buildAboutPageDetail());
-	});
-
-	it("モバイル向けに横スクロールできる最小幅のテーブルを持つ", async () => {
-		const view = await ComparisonSection({ locale: "ja" });
+	it("モバイル向けに横スクロールできる最小幅のテーブルを持つ", () => {
+		const view = ComparisonSection({
+			pageDetail: buildAboutPageDetail(),
+		});
 		const { container } = render(view);
 
 		const scrollArea = container.querySelector("div.overflow-x-auto");
@@ -67,8 +57,10 @@ describe("ComparisonSection", () => {
 		expect(table).toHaveClass("min-w-[44rem]");
 	});
 
-	it("行見出しを左に固定して横スクロール中も項目名を保持する", async () => {
-		const view = await ComparisonSection({ locale: "ja" });
+	it("行見出しを左に固定して横スクロール中も項目名を保持する", () => {
+		const view = ComparisonSection({
+			pageDetail: buildAboutPageDetail(),
+		});
 		render(view);
 
 		const rowHeader = screen.getByRole("rowheader", { name: "届く読者の数" });

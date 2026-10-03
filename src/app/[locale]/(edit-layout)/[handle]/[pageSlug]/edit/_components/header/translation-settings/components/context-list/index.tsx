@@ -1,13 +1,12 @@
-"use client";
-
+import { useServerFn } from "@tanstack/react-start";
 import { Loader2, MessageSquareText, Pencil, Plus, Trash2 } from "lucide-react";
-import { useActionState, useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { TranslationContext } from "../../types";
 import { ContextDialog } from "../context-dialog";
-import { type DeleteContextActionState, deleteContextAction } from "./action";
+import { type DeleteContextActionState, deleteContext } from "./action";
 
 interface ContextListProps {
 	initialContexts: TranslationContext[];
@@ -24,29 +23,30 @@ export function ContextList({
 	const [editingContext, setEditingContext] =
 		useState<TranslationContext | null>(null);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const [deleteState, setDeleteState] = useState<DeleteContextActionState>({
+		success: false,
+	});
+	const [isDeleting, startDeleting] = useTransition();
+	const deleteContextFn = useServerFn(deleteContext);
 
-	const handleDelete = async (
-		prev: DeleteContextActionState,
-		formData: FormData,
-	): Promise<DeleteContextActionState> => {
+	const handleDelete = (event: React.FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		const formData = new FormData(event.currentTarget);
 		const id = Number(formData.get("id"));
-		const result = await deleteContextAction(prev, formData);
-		if (result.success) {
-			setContexts((prev) => prev.filter((c) => c.id !== id));
-			if (selectedContextId === id) {
-				onContextChange(null);
+		startDeleting(async () => {
+			const result = await deleteContextFn({ data: formData });
+			setDeleteState(result);
+			if (result.success) {
+				setContexts((previous) =>
+					previous.filter((context) => context.id !== id),
+				);
+				if (selectedContextId === id) onContextChange(null);
+				toast.success("Context deleted");
+			} else if (result.message) {
+				toast.error(result.message);
 			}
-			toast.success("Context deleted");
-		} else if (result.message) {
-			toast.error(result.message);
-		}
-		return result;
+		});
 	};
-
-	const [, deleteAction, isDeleting] = useActionState<
-		DeleteContextActionState,
-		FormData
-	>(handleDelete, { success: false });
 
 	return (
 		<>
@@ -66,37 +66,39 @@ export function ContextList({
 					>
 						None
 					</button>
-					{contexts.map((ctx) => (
+					{contexts.map((context) => (
 						<div
 							className={cn(
 								"flex items-center gap-2 px-3 py-2 rounded-md hover:bg-accent group",
-								selectedContextId === ctx.id && "bg-accent",
+								selectedContextId === context.id && "bg-accent",
 							)}
-							key={ctx.id}
+							key={context.id}
 						>
 							<button
 								className="flex-1 min-w-0 text-left cursor-pointer"
-								onClick={() => onContextChange(ctx.id)}
+								onClick={() => onContextChange(context.id)}
 								type="button"
 							>
-								<div className="font-medium text-sm truncate">{ctx.name}</div>
+								<div className="font-medium text-sm truncate">
+									{context.name}
+								</div>
 								<div className="text-xs text-muted-foreground truncate">
-									{ctx.context}
+									{context.context}
 								</div>
 							</button>
 							<div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
 								<button
 									className="p-1 hover:bg-background rounded cursor-pointer"
 									onClick={() => {
-										setEditingContext(ctx);
+										setEditingContext(context);
 										setIsDialogOpen(true);
 									}}
 									type="button"
 								>
 									<Pencil className="size-4" />
 								</button>
-								<form action={deleteAction}>
-									<input name="id" type="hidden" value={ctx.id} />
+								<form onSubmit={handleDelete}>
+									<input name="id" type="hidden" value={context.id} />
 									<button
 										className="p-1 hover:bg-background rounded text-destructive cursor-pointer"
 										disabled={isDeleting}
@@ -113,6 +115,9 @@ export function ContextList({
 						</div>
 					))}
 				</div>
+				{!deleteState.success && deleteState.message && (
+					<p className="text-sm text-red-500">{deleteState.message}</p>
+				)}
 				<Button
 					className="w-full"
 					onClick={() => {
@@ -130,9 +135,13 @@ export function ContextList({
 			<ContextDialog
 				context={editingContext}
 				isOpen={isDialogOpen}
-				onContextCreated={(ctx) => setContexts((prev) => [...prev, ctx])}
-				onContextUpdated={(ctx) =>
-					setContexts((prev) => prev.map((c) => (c.id === ctx.id ? ctx : c)))
+				onContextCreated={(context) =>
+					setContexts((previous) => [...previous, context])
+				}
+				onContextUpdated={(context) =>
+					setContexts((previous) =>
+						previous.map((item) => (item.id === context.id ? context : item)),
+					)
 				}
 				onOpenChange={(open) => {
 					setIsDialogOpen(open);

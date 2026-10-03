@@ -1,27 +1,22 @@
-import { listRootPageComments } from "./_db/queries.server";
+import type { PageCommentWithSegments } from "./_db/queries.server";
 import PageCommentItem from "./page-comment-item/server";
 
-interface CommentListProps {
-	userLocale: string;
-	pageId: number;
-}
-
-export async function PageCommentList({
+export function PageCommentList({
+	comments,
 	userLocale,
-	pageId,
-}: CommentListProps) {
-	const roots = await listRootPageComments(pageId, userLocale);
+}: {
+	comments: PageCommentWithSegments[];
+	userLocale: string;
+}) {
 	return (
 		<div className="space-y-4">
-			{roots.map((pageComment) => {
-				return (
-					<PageCommentItem
-						key={pageComment.id}
-						pageComment={pageComment}
-						userLocale={userLocale}
-					/>
-				);
-			})}
+			{comments.map((pageComment) => (
+				<PageCommentItem
+					key={pageComment.id}
+					pageComment={pageComment}
+					userLocale={userLocale}
+				/>
+			))}
 		</div>
 	);
 }

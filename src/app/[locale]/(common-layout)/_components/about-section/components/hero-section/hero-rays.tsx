@@ -1,10 +1,8 @@
-import Image from "next/image";
-
 export const HeroRays = () => {
 	return (
 		<div className="relative my-10 flex h-[360px] w-full max-w-4xl items-center justify-center overflow-hidden rounded-3xl">
-			<Image
-				alt="Hero section image"
+			<img
+				alt="Evame"
 				className="relative z-10 dark:invert"
 				height={120}
 				src="/favicon.svg"

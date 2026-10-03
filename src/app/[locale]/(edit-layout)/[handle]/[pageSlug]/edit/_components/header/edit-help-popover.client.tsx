@@ -1,5 +1,3 @@
-"use client";
-
 import { HelpPopover } from "@/app/[locale]/(common-layout)/_components/header/help-popover.client";
 
 export function EditHelpPopover() {

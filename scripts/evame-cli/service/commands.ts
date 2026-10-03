@@ -56,10 +56,7 @@ async function runPushCommand(args: string[]): Promise<number> {
 	const cwd = process.cwd();
 	const { config, created } = await loadOrCreateConfig(cwd);
 	// CLI単体でも動作できるよう、環境変数が無ければ localhost を既定にする。
-	const baseUrl =
-		process.env.EVAME_BASE_URL ??
-		process.env.NEXT_PUBLIC_DOMAIN ??
-		"http://localhost:3000";
+	const baseUrl = process.env.EVAME_BASE_URL ?? "http://localhost:3000";
 	const contentDir = resolve(cwd, config.content_dir);
 	printContentDirInfo(cwd, contentDir, config.content_dir, created);
 	const token = await loadAuthToken(process.env);
@@ -94,10 +91,7 @@ async function runPullCommand(args: string[]): Promise<number> {
 	const cwd = process.cwd();
 	const { config, created } = await loadOrCreateConfig(cwd);
 	// push と同じ解決順で API ベースURLを決める。
-	const baseUrl =
-		process.env.EVAME_BASE_URL ??
-		process.env.NEXT_PUBLIC_DOMAIN ??
-		"http://localhost:3000";
+	const baseUrl = process.env.EVAME_BASE_URL ?? "http://localhost:3000";
 	const contentDir = resolve(cwd, config.content_dir);
 	printContentDirInfo(cwd, contentDir, config.content_dir, created);
 	const token = await loadAuthToken(process.env);
@@ -132,10 +126,7 @@ async function runLoginCommand(): Promise<number> {
 	const contentDir = resolve(cwd, config.content_dir);
 	printContentDirInfo(cwd, contentDir, config.content_dir, created);
 
-	const baseUrl =
-		process.env.EVAME_BASE_URL ??
-		process.env.NEXT_PUBLIC_DOMAIN ??
-		"http://localhost:3000";
+	const baseUrl = process.env.EVAME_BASE_URL ?? "http://localhost:3000";
 	// ブラウザ認証で受け取った token をローカルに保存する。
 	const token = await loginWithBrowser(baseUrl);
 	await saveAuthToken(token, process.env);

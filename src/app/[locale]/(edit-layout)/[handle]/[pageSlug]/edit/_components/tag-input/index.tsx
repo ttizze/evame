@@ -1,11 +1,10 @@
-"use client";
-
+import { useServerFn } from "@tanstack/react-start";
 import { X } from "lucide-react";
-import { useActionState, useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import CreatableSelect from "react-select/creatable";
 import { cn } from "@/lib/utils";
 import type { TagWithCount } from "../../_db/queries.server";
-import { type EditPageTagsActionState, editPageTagsAction } from "./action";
+import { type EditPageTagsActionState, editPageTags } from "./action";
 
 interface TagInputProps {
 	initialTags: { name: string }[];
@@ -25,32 +24,34 @@ export function TagInput({
 		initialTags.map((tag) => tag.name),
 	);
 	const formRef = useRef<HTMLFormElement>(null);
+	const [editState, setEditState] = useState<EditPageTagsActionState>({
+		success: false,
+	});
+	const [isPending, startSaving] = useTransition();
+	const editPageTagsFn = useServerFn(editPageTags);
 
-	const [editState, editAction, isPending] = useActionState<
-		EditPageTagsActionState,
-		FormData
-	>(editPageTagsAction, { success: false });
+	const submitTags = () => {
+		if (!pageId || !formRef.current) return;
+		const formData = new FormData(formRef.current);
+		startSaving(async () => {
+			setEditState(await editPageTagsFn({ data: formData }));
+		});
+	};
 
 	const handleCreateTag = (inputValue: string) => {
 		if (tags.length < 5) {
-			const updatedTags = [...tags, inputValue];
-			setTags(updatedTags);
-			setTimeout(() => {
-				formRef.current?.requestSubmit();
-			}, 0);
+			setTags([...tags, inputValue]);
+			setTimeout(submitTags, 0);
 		}
 	};
 
 	const handleRemoveTag = (tagToRemove: string) => {
-		const updatedTags = tags.filter((tag) => tag !== tagToRemove);
-		setTags(updatedTags);
-		setTimeout(() => {
-			formRef.current?.requestSubmit();
-		}, 0);
+		setTags(tags.filter((tag) => tag !== tagToRemove));
+		setTimeout(submitTags, 0);
 	};
 
 	return (
-		<form action={editAction} ref={formRef}>
+		<form onSubmit={(event) => event.preventDefault()} ref={formRef}>
 			<input name="pageId" type="hidden" value={pageId ?? ""} />
 			<input
 				data-testid="tags-input"
@@ -84,12 +85,12 @@ export function TagInput({
 						classNames={{
 							control: () =>
 								cn(
-									"border border-border px-4 w-30  rounded-full  bg-transparent cursor-pointer text-sm",
+									"border border-border px-4 w-30 rounded-full bg-transparent cursor-pointer text-sm",
 									isPending || (!pageId && "opacity-50 cursor-not-allowed"),
 								),
 							valueContainer: () => "w-full",
-							placeholder: () => " text-center flex items-center h-[32px]",
-							input: () => "m-0 p-0   h-[32px]",
+							placeholder: () => "text-center flex items-center h-[32px]",
+							input: () => "m-0 p-0 h-[32px]",
 							menu: () =>
 								"bg-popover border border-border rounded-lg mt-2 w-50 rounded-sm min-w-60",
 							option: (state) =>
@@ -98,17 +99,12 @@ export function TagInput({
 									state.isFocused && "bg-accent",
 								),
 						}}
-						components={{
-							DropdownIndicator,
-							IndicatorSeparator,
-						}}
+						components={{ DropdownIndicator, IndicatorSeparator }}
 						instanceId="tags-input"
 						isClearable
 						isDisabled={isPending || !pageId}
 						onChange={(newValue) => {
-							if (newValue?.value) {
-								handleCreateTag(newValue.value);
-							}
+							if (newValue?.value) handleCreateTag(newValue.value);
 						}}
 						options={allTagsWithCount
 							.filter((tag) => !tags.includes(tag.name))
@@ -117,18 +113,16 @@ export function TagInput({
 								label: `${tag.name} (${tag._count.pages})`,
 							}))}
 						placeholder="# Add tags"
-						styles={{
-							control: () => ({
-								height: "32px",
-							}),
-						}}
+						styles={{ control: () => ({ height: "32px" }) }}
 						unstyled
 						value={null}
 					/>
 				)}
 			</div>
 			{!editState.success && editState.zodErrors?.tags && (
-				<p className="text-sm text-red-500">{editState.zodErrors.tags}</p>
+				<p className="text-sm text-red-500">
+					{editState.zodErrors.tags.join(", ")}
+				</p>
 			)}
 			{!editState.success && editState.zodErrors?.pageId && (
 				<p className="text-sm text-red-500">Page not found</p>

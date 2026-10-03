@@ -1,12 +1,12 @@
 // app/components/FollowListDialog.tsx
 
+import { Link } from "@tanstack/react-router";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Link } from "@/i18n/routing";
 
 type followListUser = {
 	handle: string;
@@ -19,6 +19,7 @@ interface FollowListDialogProps {
 	onOpenChange: (open: boolean) => void;
 	type: "followers" | "following";
 	users: followListUser[];
+	locale: string;
 }
 
 export function FollowListDialog({
@@ -26,6 +27,7 @@ export function FollowListDialog({
 	onOpenChange,
 	type,
 	users,
+	locale,
 }: FollowListDialogProps) {
 	return (
 		<Dialog onOpenChange={onOpenChange} open={open}>
@@ -41,7 +43,11 @@ export function FollowListDialog({
 						<ul className="space-y-2">
 							{users.map((user) => (
 								<li key={user.handle}>
-									<Link className="underline" href={`/${user.handle}`}>
+									<Link
+										className="underline"
+										params={{ handle: user.handle, locale }}
+										to="/$locale/$handle"
+									>
 										{user.name} (@{user.handle})
 									</Link>
 								</li>

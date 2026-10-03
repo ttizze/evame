@@ -1,4 +1,3 @@
-"use client";
 import { parseAsArrayOf, parseAsString, useQueryState } from "nuqs";
 import { Suspense, useEffect } from "react";
 import { Button } from "@/components/ui/button";

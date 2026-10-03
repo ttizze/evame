@@ -5,7 +5,7 @@ import { vi } from "vitest";
 import type { SegmentTranslation } from "@/app/api/segment-translations/_domain/segment-translations";
 import { VoteButtons } from "./client";
 
-vi.mock("next-intl", () => ({
+vi.mock("use-intl", () => ({
 	useLocale: () => "en",
 }));
 
@@ -33,31 +33,12 @@ const dummyTranslationDownvote = {
 	currentUserVoteIsUpvote: false,
 } as SegmentTranslation;
 
-vi.mock("next/form", () => ({
-	__esModule: true,
-	default: function Form({
-		children,
-		...props
-	}: {
-		children: React.ReactNode;
-	}) {
-		return <form {...props}>{children}</form>;
-	},
-}));
-
 describe("VoteButtons コンポーネント", () => {
 	afterEach(() => {
 		vi.restoreAllMocks();
 	});
 
 	test("フォームと hidden input、アップ／ダウンボタンがレンダリングされる", () => {
-		// useActionState の戻り値をモック
-		vi.spyOn(React, "useActionState").mockReturnValue([
-			{ data: { isUpvote: true, point: 10 } },
-			vi.fn(),
-			false, // isVoting: false
-		]);
-
 		render(<VoteButtons translation={dummyTranslationUpvote} />);
 
 		// hidden input (voteTarget) の検証
@@ -76,12 +57,6 @@ describe("VoteButtons コンポーネント", () => {
 	});
 
 	test("アップボタンが正しい投票数とアクティブ状態のアイコンクラスを表示する", () => {
-		vi.spyOn(React, "useActionState").mockReturnValue([
-			{ data: { isUpvote: true, point: 10 } },
-			vi.fn(),
-			false,
-		]);
-
 		render(<VoteButtons translation={dummyTranslationUpvote} />);
 
 		const upvoteButton = screen.getByTestId("vote-up-button");
@@ -98,12 +73,6 @@ describe("VoteButtons コンポーネント", () => {
 	});
 
 	test("ダウンボタンがアクティブの場合、適切なアイコンクラスが付与され、voteCount は表示されない", () => {
-		vi.spyOn(React, "useActionState").mockReturnValue([
-			{ data: { isUpvote: false, point: 5 } },
-			vi.fn(),
-			false,
-		]);
-
 		render(<VoteButtons translation={dummyTranslationDownvote} />);
 
 		const downvoteButton = screen.getByTestId("vote-down-button");
@@ -121,11 +90,10 @@ describe("VoteButtons コンポーネント", () => {
 	});
 
 	test("isVoting が true の場合、全てのボタンが disabled になる", () => {
-		vi.spyOn(React, "useActionState").mockReturnValue([
-			{ data: { isUpvote: true, point: 10 } },
+		vi.spyOn(React, "useTransition").mockReturnValue([
+			true,
 			vi.fn(),
-			true, // isVoting: true
-		]);
+		] as ReturnType<typeof React.useTransition>);
 
 		render(<VoteButtons translation={dummyTranslationUpvote} />);
 

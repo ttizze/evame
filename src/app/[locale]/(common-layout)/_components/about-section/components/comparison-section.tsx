@@ -1,6 +1,6 @@
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-import { fetchAboutPage } from "../service/fetch-about-page";
+import type { loadAboutPage } from "../service/load-about-page";
 import { ABOUT_SECTION_HEADING_CLASS, AboutSectionContent } from "./layout";
 
 const COMPARISON_ROWS = [
@@ -21,12 +21,11 @@ const COMPARISON_ROWS = [
 	},
 ];
 
-export default async function ComparisonSection({
-	locale,
+export default function ComparisonSection({
+	pageDetail,
 }: {
-	locale: string;
+	pageDetail: NonNullable<Awaited<ReturnType<typeof loadAboutPage>>>;
 }) {
-	const pageDetail = await fetchAboutPage(locale);
 	const headerSegment = pageDetail.segments.find(
 		(segment) => segment.number === SEGMENT_NUMBER.comparisonHeader,
 	);

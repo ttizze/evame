@@ -1,7 +1,7 @@
-"use client";
-
+import { useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import type { Editor as TiptapEditor } from "@tiptap/react";
-import { useActionState, useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState, useTransition } from "react";
 import TextareaAutosize from "react-textarea-autosize";
 import { useDebouncedCallback } from "use-debounce";
 import type { SanitizedUser } from "@/app/types";
@@ -15,10 +15,7 @@ import { EditorKeyboardMenu } from "../editor/editor-keyboard-menu";
 import { EditHeader } from "../header/client";
 import type { TranslationContext } from "../header/translation-settings/types";
 import { TagInput } from "../tag-input";
-import {
-	type EditPageContentActionState,
-	editPageContentAction,
-} from "./action";
+import { type EditPageContentActionState, editPageContent } from "./action";
 
 interface EditPageClientProps {
 	currentUser: SanitizedUser;
@@ -30,6 +27,7 @@ interface EditPageClientProps {
 	html: string;
 	targetLocales: string[];
 	translationContexts: TranslationContext[];
+	handle: string;
 }
 
 export function EditPageClient({
@@ -42,25 +40,42 @@ export function EditPageClient({
 	html,
 	targetLocales,
 	translationContexts,
+	handle,
 }: EditPageClientProps) {
+	const router = useRouter();
 	const formRef = useRef<HTMLFormElement>(null);
 	const isKeyboardVisible = useKeyboardVisible();
 	const [editorInstance, setEditorInstance] = useState<TiptapEditor | null>(
 		null,
 	);
-	const [editState, editAction, _isEditing] = useActionState<
-		EditPageContentActionState,
-		FormData
-	>(editPageContentAction, { success: false });
+	const [editState, setEditState] = useState<EditPageContentActionState>({
+		success: false,
+	});
+	const [isEditing, startEditing] = useTransition();
+	const editPageContentFn = useServerFn(editPageContent);
 	const [title, setTitle] = useState(initialTitle ?? "");
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+	const handleSubmit = useCallback(
+		(event: React.FormEvent<HTMLFormElement>) => {
+			event.preventDefault();
+			const formData = new FormData(event.currentTarget);
+			startEditing(async () => {
+				const result = await editPageContentFn({ data: formData });
+				setEditState(result);
+				if (result.success) {
+					setHasUnsavedChanges(false);
+					await router.invalidate({ sync: true });
+				}
+			});
+		},
+		[editPageContentFn, router],
+	);
+
 	const debouncedSubmit = useDebouncedCallback(() => {
 		formRef.current?.requestSubmit();
-		setHasUnsavedChanges(false);
 	}, 3000);
 
-	// Debounced change handler to prevent excessive state updates
 	const handleChange = useCallback(() => {
 		setHasUnsavedChanges(true);
 		debouncedSubmit();
@@ -75,16 +90,12 @@ export function EditPageClient({
 		},
 		[debouncedSubmit],
 	);
-	// Handle Enter key in title textarea
+
 	const handleTitleKeyDown = useCallback(
 		(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-			// Move to editor when Enter is pressed without Shift key
 			if (e.key === "Enter") {
-				e.preventDefault(); // Prevent newline in title
-
-				// Focus the editor
+				e.preventDefault();
 				if (editorInstance) {
-					// Set focus to the editor
 					editorInstance.commands.focus("start");
 				}
 			}
@@ -102,19 +113,20 @@ export function EditPageClient({
 		>
 			<EditHeader
 				currentUser={currentUser}
+				handle={handle}
 				hasUnsavedChanges={hasUnsavedChanges}
 				initialStatus={pageWithTitleAndTags?.status || "DRAFT"}
+				isSaving={isEditing}
+				locale={userLocale}
 				pageId={pageWithTitleAndTags?.id}
+				pageSlug={pageSlug}
 				targetLocales={targetLocales}
 				translationContexts={translationContexts}
 			/>
 			<main className="px-4 grow ">
-				<div
-					className="w-full max-w-3xl prose dark:prose-invert sm:prose lg:prose-lg
-        mx-auto  prose-headings:text-gray-700 dark:prose-headings:text-gray-200 text-gray-700 dark:text-gray-200 mb-5 mt-3 md:mt-5 tracking-wider"
-				>
-					<div className="">
-						<h1 className="m-0! ">
+				<div className="w-full max-w-3xl prose dark:prose-invert sm:prose lg:prose-lg mx-auto prose-headings:text-gray-700 dark:prose-headings:text-gray-200 text-gray-700 dark:text-gray-200 mb-5 mt-3 md:mt-5 tracking-wider">
+					<div>
+						<h1 className="m-0!">
 							<TextareaAutosize
 								className="w-full outline-hidden bg-transparent resize-none overflow-hidden"
 								data-testid="title-input"
@@ -129,7 +141,7 @@ export function EditPageClient({
 						</h1>
 						{!editState.success && editState.zodErrors?.title && (
 							<p className="text-sm text-red-500">
-								{editState.zodErrors.title}
+								{editState.zodErrors.title.join(", ")}
 							</p>
 						)}
 						<TagInput
@@ -137,12 +149,12 @@ export function EditPageClient({
 							initialTags={
 								pageWithTitleAndTags?.tagPages.map((tagPage) => ({
 									name: tagPage.tag.name,
-								})) || []
+								})) ?? []
 							}
 							pageId={pageWithTitleAndTags?.id}
 						/>
 					</div>
-					<form action={editAction} ref={formRef}>
+					<form id="edit-page-form" onSubmit={handleSubmit} ref={formRef}>
 						<input name="pageSlug" type="hidden" value={pageSlug} />
 						<input name="title" type="hidden" value={title} />
 						<input name="userLocale" type="hidden" value={userLocale} />
@@ -157,7 +169,7 @@ export function EditPageClient({
 					</form>
 					{!editState.success && editState.zodErrors?.pageContent && (
 						<p className="text-sm text-red-500">
-							{editState.zodErrors.pageContent}
+							{editState.zodErrors.pageContent.join(", ")}
 						</p>
 					)}
 				</div>

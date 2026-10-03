@@ -1,5 +1,3 @@
-"use client";
-
 import { useQueryState } from "nuqs";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 

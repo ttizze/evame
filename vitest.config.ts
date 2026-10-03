@@ -25,15 +25,13 @@ export default defineConfig({
 		setupFiles: "./vitest.setup.ts",
 		server: {
 			deps: {
-				inline: ["next-auth", "next-intl", "react-tweet"],
+				inline: ["react-tweet"],
 			},
 		},
 	},
 	resolve: {
 		alias: {
-			"@": path.resolve(__dirname, "src"),
-			"next/server": path.resolve(__dirname, "node_modules/next/server.js"),
-			"next/navigation": "next/navigation.js",
+			"@": path.resolve(import.meta.dirname, "src"),
 		},
 	},
 });

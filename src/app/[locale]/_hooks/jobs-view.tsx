@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import {
 	CheckCircle2,
 	Hourglass,
@@ -6,7 +7,6 @@ import {
 	Loader2,
 	XCircle,
 } from "lucide-react";
-import Link from "next/link";
 import type {
 	TranslationJobForToast,
 	TranslationJobStatus,
@@ -42,7 +42,12 @@ export const JobsView = ({ jobs }: { jobs: TranslationJobForToast[] }) => (
 					{statusIcon(j.status)}
 					<Link
 						className="min-w-[48px] cursor-pointer flex items-center capitalize hover:underline"
-						href={`/${j.locale}/${j.page.user.handle}/${j.page.slug}`}
+						params={{
+							handle: j.page.user.handle,
+							locale: j.locale,
+							pageSlug: j.page.slug,
+						}}
+						to="/$locale/$handle/$pageSlug"
 					>
 						<LinkIcon className="w-4 h-4 mr-1" />
 						{j.locale}

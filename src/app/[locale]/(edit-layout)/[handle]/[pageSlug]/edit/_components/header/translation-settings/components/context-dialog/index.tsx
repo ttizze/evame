@@ -1,7 +1,6 @@
-"use client";
-
+import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,9 +17,9 @@ import { Textarea } from "@/components/ui/textarea";
 import type { TranslationContext } from "../../types";
 import {
 	type CreateContextActionState,
-	createContextAction,
+	createContext,
 	type UpdateContextActionState,
-	updateContextAction,
+	updateContext,
 } from "./action";
 
 const CONTEXT_MAX_LENGTH = 500;
@@ -29,7 +28,6 @@ interface ContextDialogProps {
 	isOpen: boolean;
 	onOpenChange: (open: boolean) => void;
 	context: TranslationContext | null;
-	/** Pre-filled name when creating from Creatable Select */
 	initialName?: string | null;
 	onContextCreated: (context: TranslationContext) => void;
 	onContextUpdated: (context: TranslationContext) => void;
@@ -44,64 +42,63 @@ export function ContextDialog({
 	onContextUpdated,
 }: ContextDialogProps) {
 	const [contextText, setContextText] = useState("");
-
-	const handleCreate = async (
-		prev: CreateContextActionState,
-		formData: FormData,
-	): Promise<CreateContextActionState> => {
-		const result = await createContextAction(prev, formData);
-		if (result.success && result.data) {
-			onContextCreated(result.data);
-			toast.success("Context created");
-			onOpenChange(false);
-		} else if (!result.success) {
-			if (result.message) {
-				toast.error(result.message);
-			} else if (result.zodErrors) {
-				const errors = Object.values(result.zodErrors).flat().join(", ");
-				toast.error(errors);
-			}
-		}
-		return result;
-	};
-
-	const handleUpdate = async (
-		prev: UpdateContextActionState,
-		formData: FormData,
-	): Promise<UpdateContextActionState> => {
-		const result = await updateContextAction(prev, formData);
-		if (result.success && result.data) {
-			onContextUpdated(result.data);
-			toast.success("Context updated");
-			onOpenChange(false);
-		} else if (!result.success) {
-			if (result.message) {
-				toast.error(result.message);
-			} else if (result.zodErrors) {
-				const errors = Object.values(result.zodErrors).flat().join(", ");
-				toast.error(errors);
-			}
-		}
-		return result;
-	};
-
-	const [, createAction, isCreating] = useActionState<
-		CreateContextActionState,
-		FormData
-	>(handleCreate, { success: false });
-
-	const [, updateAction, isUpdating] = useActionState<
-		UpdateContextActionState,
-		FormData
-	>(handleUpdate, { success: false });
+	const [createState, setCreateState] = useState<CreateContextActionState>({
+		success: false,
+	});
+	const [updateState, setUpdateState] = useState<UpdateContextActionState>({
+		success: false,
+	});
+	const [isCreating, startCreating] = useTransition();
+	const [isUpdating, startUpdating] = useTransition();
+	const createContextFn = useServerFn(createContext);
+	const updateContextFn = useServerFn(updateContext);
 
 	useEffect(() => {
-		if (isOpen) {
-			setContextText(context?.context ?? "");
-		}
+		if (isOpen) setContextText(context?.context ?? "");
 	}, [isOpen, context]);
 
+	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		const formData = new FormData(event.currentTarget);
+		if (context) {
+			startUpdating(async () => {
+				const result = await updateContextFn({ data: formData });
+				setUpdateState(result);
+				if (result.success && result.data) {
+					onContextUpdated(result.data);
+					toast.success("Context updated");
+					onOpenChange(false);
+				} else if (!result.success) {
+					toast.error(
+						result.message ??
+							Object.values(result.zodErrors ?? {})
+								.flat()
+								.join(", "),
+					);
+				}
+			});
+			return;
+		}
+		startCreating(async () => {
+			const result = await createContextFn({ data: formData });
+			setCreateState(result);
+			if (result.success && result.data) {
+				onContextCreated(result.data);
+				toast.success("Context created");
+				onOpenChange(false);
+			} else if (!result.success) {
+				toast.error(
+					result.message ??
+						Object.values(result.zodErrors ?? {})
+							.flat()
+							.join(", "),
+				);
+			}
+		});
+	};
+
 	const isPending = isCreating || isUpdating;
+	const errorState = context ? updateState : createState;
 
 	return (
 		<Dialog onOpenChange={onOpenChange} open={isOpen}>
@@ -112,10 +109,7 @@ export function ContextDialog({
 						Instructions for AI when translating your content.
 					</DialogDescription>
 				</DialogHeader>
-				<form
-					action={context ? updateAction : createAction}
-					className="space-y-4"
-				>
+				<form className="space-y-4" onSubmit={handleSubmit}>
 					{context && <input name="id" type="hidden" value={context.id} />}
 					<div className="space-y-2">
 						<Label htmlFor="contextName">Context Name</Label>
@@ -141,12 +135,15 @@ export function ContextDialog({
 							id="context"
 							maxLength={CONTEXT_MAX_LENGTH}
 							name="context"
-							onChange={(e) => setContextText(e.target.value)}
+							onChange={(event) => setContextText(event.target.value)}
 							placeholder="e.g., Use formal style. Keep technical terms in English."
 							required
 							rows={4}
 						/>
 					</div>
+					{!errorState.success && errorState.message && (
+						<p className="text-sm text-red-500">{errorState.message}</p>
+					)}
 					<DialogFooter>
 						<Button
 							onClick={() => onOpenChange(false)}

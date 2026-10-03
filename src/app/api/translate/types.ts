@@ -18,18 +18,18 @@ export interface TranslateJobParams {
 	translationJobId: number;
 	aiModel: string;
 	targetLocale: string;
-	pageCommentId: number | null;
 	annotationContentId: number | null;
+	pageCommentId: number | null;
 	/** ユーザー定義の翻訳コンテキスト（翻訳指示） */
 	translationContext: string;
 }
 
 /** /api/translate → /api/translate/chunk へ渡すパラメータ */
-export interface TranslateChunkParams extends TranslateJobParams {
+export type TranslateChunkParams = Omit<TranslateJobParams, "pageCommentId"> & {
 	/** チャンク分割後のセグメント（id, number, text を含む） */
 	segments: SegmentElement[];
 	/** ページタイトル（翻訳プロンプト用） */
 	title: string;
 	totalChunks: number;
 	chunkIndex: number;
-}
+};

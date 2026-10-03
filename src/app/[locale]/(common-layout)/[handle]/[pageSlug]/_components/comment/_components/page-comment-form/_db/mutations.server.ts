@@ -1,23 +1,19 @@
 import { db } from "@/db";
 
-/**
- * ページコメント通知を作成（DB操作のみ）
- * Kysely版に移行済み
- */
+/** ページコメント通知を作成する（DB操作のみ）。 */
 export async function createNotificationPageComment(
 	actorId: string,
 	userId: string,
 	pageCommentId: number,
 ) {
-	const notification = await db
+	return db
 		.insertInto("notifications")
 		.values({
-			userId: userId,
+			userId,
 			type: "PAGE_COMMENT",
 			pageCommentId,
-			actorId: actorId,
+			actorId,
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
-	return notification;
 }

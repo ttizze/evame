@@ -2,21 +2,15 @@ import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segmen
 import { syncSegments } from "@/app/[locale]/_service/sync-segments";
 import { db } from "@/db";
 import type { JsonValue } from "@/db/types";
+import type { PageComment } from "@/db/types.helpers";
 import {
 	createPageComment,
 	updatePageComment,
 	updateParentReplyCount,
 } from "./db/mutations.server";
 
-/**
- * ページコメントとセグメントをupsertする（ユースケースフロー）
- *
- * 処理の流れ:
- * 1. ページコメントを更新または新規作成
- * 2. 親コメントの返信数/最終返信時刻を更新（新規作成の場合のみ）
- * 3. セグメントを同期
- */
-export async function upsertPageCommentAndSegments(p: {
+/** ページコメント本文とセグメントを同じトランザクションで upsert する。 */
+export async function upsertPageCommentAndSegments(input: {
 	pageId: number;
 	pageCommentId?: number;
 	parentId?: number;
@@ -25,38 +19,33 @@ export async function upsertPageCommentAndSegments(p: {
 	mdastJson: JsonValue;
 	segments: SegmentDraft[];
 }) {
-	return await db.transaction().execute(async (tx) => {
-		let pageComment: Awaited<ReturnType<typeof updatePageComment>>;
+	return db.transaction().execute(async (tx) => {
+		let pageComment: PageComment;
 
-		if (p.pageCommentId) {
-			// 更新
+		if (input.pageCommentId !== undefined) {
 			pageComment = await updatePageComment(
 				tx,
-				p.pageCommentId,
-				p.currentUserId,
-				p.mdastJson,
-				p.sourceLocale,
+				input.pageCommentId,
+				input.currentUserId,
+				input.mdastJson,
+				input.sourceLocale,
 			);
 		} else {
-			// 新規作成
 			pageComment = await createPageComment(
 				tx,
-				p.pageId,
-				p.currentUserId,
-				p.mdastJson,
-				p.sourceLocale,
-				p.parentId ?? null,
+				input.pageId,
+				input.currentUserId,
+				input.mdastJson,
+				input.sourceLocale,
+				input.parentId ?? null,
 			);
 
-			// 親の直下返信数/最終返信時刻を更新（直下のみ）
-			if (p.parentId) {
-				await updateParentReplyCount(tx, p.parentId, pageComment.createdAt);
+			if (input.parentId !== undefined) {
+				await updateParentReplyCount(tx, input.parentId, pageComment.createdAt);
 			}
 		}
 
-		// セグメントを同期
-		await syncSegments(tx, pageComment.id, p.segments, null);
-
+		await syncSegments(tx, pageComment.id, input.segments, null);
 		return pageComment;
 	});
 }

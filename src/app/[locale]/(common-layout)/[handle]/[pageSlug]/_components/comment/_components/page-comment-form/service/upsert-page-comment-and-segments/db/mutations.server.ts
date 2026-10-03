@@ -3,9 +3,7 @@ import type { TransactionClient } from "@/app/[locale]/_service/sync-segments";
 import type { JsonValue } from "@/db/types";
 import type { PageComment } from "@/db/types.helpers";
 
-/**
- * ページコメントを更新する（DB操作のみ）
- */
+/** ページコメントを更新する（DB操作のみ） */
 export async function updatePageComment(
 	tx: TransactionClient,
 	pageCommentId: number,
@@ -15,12 +13,10 @@ export async function updatePageComment(
 ): Promise<PageComment> {
 	const updated = await tx
 		.updateTable("pageComments")
-		.set({
-			mdastJson,
-			locale,
-		})
+		.set({ mdastJson, locale })
 		.where("id", "=", pageCommentId)
 		.where("userId", "=", userId)
+		.where("isDeleted", "=", false)
 		.returningAll()
 		.executeTakeFirst();
 
@@ -31,9 +27,7 @@ export async function updatePageComment(
 	return updated;
 }
 
-/**
- * ページコメントを新規作成する（DB操作のみ）
- */
+/** ページコメントを新規作成する（DB操作のみ） */
 export async function createPageComment(
 	tx: TransactionClient,
 	pageId: number,
@@ -42,15 +36,13 @@ export async function createPageComment(
 	locale: string,
 	parentId: number | null,
 ): Promise<PageComment> {
-	// 1. content行を作成
 	const content = await tx
 		.insertInto("contents")
 		.values({ kind: "PAGE_COMMENT" })
 		.returning(["id"])
 		.executeTakeFirstOrThrow();
 
-	// 2. ページコメントを作成
-	const created = await tx
+	return tx
 		.insertInto("pageComments")
 		.values({
 			id: content.id,
@@ -62,13 +54,9 @@ export async function createPageComment(
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
-
-	return created;
 }
 
-/**
- * 親コメントの返信数と最終返信時刻を更新する（DB操作のみ）
- */
+/** 親コメントの返信数と最終返信時刻を更新する（DB操作のみ） */
 export async function updateParentReplyCount(
 	tx: TransactionClient,
 	parentId: number,
@@ -81,5 +69,6 @@ export async function updateParentReplyCount(
 			lastReplyAt,
 		})
 		.where("id", "=", parentId)
+		.where("isDeleted", "=", false)
 		.execute();
 }

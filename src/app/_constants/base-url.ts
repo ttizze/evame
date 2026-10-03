@@ -1,2 +1,3 @@
 export const BASE_URL =
-	process.env.NEXT_PUBLIC_DOMAIN ?? "http://localhost:3000";
+	import.meta.env.VITE_PUBLIC_DOMAIN ??
+	(import.meta.env.PROD ? "https://evame.tech" : "http://localhost:3000");

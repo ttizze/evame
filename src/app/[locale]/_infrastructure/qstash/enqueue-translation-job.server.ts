@@ -8,17 +8,17 @@ export async function enqueueTranslationJob({
 	currentUserId,
 	pageId,
 	targetLocales,
-	aiModel = "gemini-2.5-flash",
-	pageCommentId = null,
-	annotationContentId = null,
+	aiModel,
+	pageCommentId,
+	annotationContentId,
 	translationContext,
 }: {
 	currentUserId: string;
 	pageId: number;
 	targetLocales: string[];
-	aiModel?: string;
-	pageCommentId?: number | null;
-	annotationContentId?: number | null;
+	aiModel: string;
+	pageCommentId: number | null;
+	annotationContentId: number | null;
 	translationContext: string;
 }): Promise<TranslationJobForTranslationAPI[]> {
 	const contentId = annotationContentId ?? pageCommentId ?? pageId;

@@ -1,6 +1,7 @@
-import { htmlToMdastWithSegments } from "@/app/[locale]/_domain/html-to-mdast-with-segments";
+import { htmlToMdastWithSegments } from "@/app/[locale]/_service/html-to-mdast-with-segments";
 import { upsertPageCommentAndSegments } from "./upsert-page-comment-and-segments";
-export async function processPageCommentHtml(p: {
+
+export async function processPageCommentHtml(input: {
 	pageCommentId?: number;
 	parentId?: number;
 	commentHtml: string;
@@ -8,25 +9,18 @@ export async function processPageCommentHtml(p: {
 	currentUserId: string;
 	pageId: number;
 }) {
-	const {
-		pageCommentId,
-		commentHtml,
-		locale,
-		currentUserId,
-		pageId,
-		parentId,
-	} = p;
 	const { mdastJson, segments } = await htmlToMdastWithSegments({
-		html: commentHtml,
+		header: null,
+		html: input.commentHtml,
 	});
-	const pageComment = await upsertPageCommentAndSegments({
-		pageId,
-		pageCommentId,
-		currentUserId,
+
+	return upsertPageCommentAndSegments({
+		pageId: input.pageId,
+		pageCommentId: input.pageCommentId,
+		currentUserId: input.currentUserId,
 		mdastJson,
-		sourceLocale: locale,
+		sourceLocale: input.locale,
 		segments,
-		parentId,
+		parentId: input.parentId,
 	});
-	return pageComment;
 }

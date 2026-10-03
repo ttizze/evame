@@ -1,20 +1,6 @@
 import { db } from "@/db";
 
 /**
- * ページに紐づくコメントのID一覧を取得
- * Kysely版に移行済み
- */
-export async function fetchPageCommentIds(pageId: number): Promise<number[]> {
-	const comments = await db
-		.selectFrom("pageComments")
-		.select("id")
-		.where("pageId", "=", pageId)
-		.execute();
-
-	return comments.map((c) => c.id);
-}
-
-/**
  * 本文にリンクされた注釈のうち、別コンテンツに属するもののコンテンツID一覧を取得
  *
  * - Page と Content は 1:1 で ID が同じなので、mainSegment.contentId = pageId で本文を特定
@@ -38,10 +24,12 @@ export async function fetchAnnotationContentIdsForPage(
 			"segmentAnnotationLinks.annotationSegmentId",
 			"annotationSegment.id",
 		)
+		.innerJoin("contents", "annotationSegment.contentId", "contents.id")
 		.select("annotationSegment.contentId")
 		.distinct()
 		.where("mainSegment.contentId", "=", pageId)
 		.where("annotationSegment.contentId", "!=", pageId)
+		.where("contents.kind", "=", "PAGE")
 		.execute();
 
 	return result.map((row) => row.contentId);

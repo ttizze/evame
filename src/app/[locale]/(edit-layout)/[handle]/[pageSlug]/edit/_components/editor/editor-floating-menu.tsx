@@ -1,5 +1,5 @@
-"use client";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
+import { useServerFn } from "@tanstack/react-start";
 import type { Editor } from "@tiptap/core";
 import type { EditorState } from "@tiptap/pm/state";
 import { FloatingMenu } from "@tiptap/react/menus";
@@ -16,10 +16,15 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { handleFileUpload } from "./use-file-upload";
+import {
+	type EditorImageUpload,
+	handleFileUpload,
+	uploadEditorImage,
+} from "./use-file-upload";
 
 interface EditorFloatingMenuProps {
 	editor: Editor;
+	uploadImage?: EditorImageUpload;
 }
 
 const editorCommands: Record<string, (editor: Editor) => boolean> = {
@@ -94,7 +99,12 @@ const shouldShowFloatingMenu = (editor: Editor, state: EditorState) => {
 	return isAtLineStart && isEmptyTextBlock;
 };
 
-export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
+export function EditorFloatingMenu({
+	editor,
+	uploadImage,
+}: EditorFloatingMenuProps) {
+	const defaultUploadImage = useServerFn(uploadEditorImage);
+	const imageUpload = uploadImage ?? defaultUploadImage;
 	const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(
 		null,
 	);
@@ -168,7 +178,7 @@ export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
 				onChange={(e) => {
 					const file = e.target.files?.[0];
 					if (file) {
-						handleFileUpload(file, editor);
+						handleFileUpload(file, editor, imageUpload);
 					}
 				}}
 				style={{ display: "none" }}

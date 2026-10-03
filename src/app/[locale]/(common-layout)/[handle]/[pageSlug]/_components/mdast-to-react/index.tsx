@@ -1,0 +1,90 @@
+import type { ReactElement } from "react";
+import { type ComponentType, createElement, type JSX } from "react";
+import * as jsxRuntime from "react/jsx-runtime";
+import { Tweet as XPost } from "react-tweet";
+import rehypeRaw from "rehype-raw";
+import rehypeReact from "rehype-react";
+import rehypeSlug from "rehype-slug";
+import remarkRehype from "remark-rehype";
+import { unified } from "unified";
+import type { Segment } from "@/app/[locale]/types";
+import type { JsonValue } from "@/db/types";
+import { remarkTweet } from "./remark-tweet";
+import { WrapSegment } from "./wrap-segments";
+
+// --------------
+const SEGMENTABLE = [
+	"p",
+	"h1",
+	"h2",
+	"h3",
+	"h4",
+	"h5",
+	"h6",
+	"li",
+	"td",
+	"th",
+	"blockquote",
+] as const satisfies readonly (keyof JSX.IntrinsicElements)[];
+
+type ImgProps = Omit<JSX.IntrinsicElements["img"], "src"> & {
+	src?: string;
+};
+
+const ImgComponent: ComponentType<ImgProps> = ({ src = "", ...props }) => (
+	<img
+		{...props}
+		alt={props.alt ?? ""}
+		className="h-auto w-auto max-w-full"
+		height={props.height ?? 300}
+		src={src}
+		width={props.width ?? 300}
+	/>
+);
+
+interface Params<T extends Segment = Segment> {
+	mdast: JsonValue;
+	segments: T[];
+	/**
+	 * If true, render translations as clickable buttons (`data-segment-id`) so
+	 * `TranslationFormOnClick` can open the vote/add UI.
+	 * If false, render translation text without a button (no click behavior).
+	 */
+	interactive?: boolean;
+}
+
+/** mdast(JSON) → React 要素 */
+export async function mdastToReact<T extends Segment = Segment>({
+	mdast,
+	segments,
+	interactive = true,
+}: Params<T>): Promise<ReactElement | null> {
+	if (!mdast || Object.keys(mdast).length === 0) return null;
+	const segmentComponents = Object.fromEntries(
+		SEGMENTABLE.map((tag) => [tag, WrapSegment(tag, segments, interactive)]),
+	);
+
+	const processor = unified()
+		.use(remarkTweet)
+		.use(remarkRehype, { allowDangerousHtml: true }) // mdast → hast
+		.use(rehypeRaw) // parse raw HTML
+		.use(rehypeSlug) // add slug ids
+		.use(rehypeReact, {
+			createElement,
+			...jsxRuntime,
+			components: {
+				// Render markdown images without a framework-specific image loader.
+				img: ImgComponent,
+				tweet: (props: { id: string }) => (
+					<span className="not-prose">
+						<XPost id={props.id} />
+					</span>
+				),
+				...segmentComponents,
+			},
+		});
+
+	// Run plugins & stringify to React elements
+	const hast = await processor.run(mdast);
+	return processor.stringify(hast) as ReactElement;
+}

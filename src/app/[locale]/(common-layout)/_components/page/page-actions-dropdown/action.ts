@@ -1,37 +1,49 @@
-"use server";
+import { redirect } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import {
+	getRequestHeaders,
+	setResponseHeader,
+} from "@tanstack/react-start/server";
 import { z } from "zod";
-import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
+import { supportedLocaleOptions } from "@/app/_constants/locale";
+import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import type { ActionResponse } from "@/app/types";
 import { togglePagePublicStatus } from "./db/mutations.server";
 
 const togglePublishSchema = z.object({
-	pageId: z.coerce.number(),
+	pageId: z.number().int().positive(),
+	locale: z
+		.string()
+		.refine((locale) =>
+			supportedLocaleOptions.some((option) => option.code === locale),
+		),
 });
 
 export type TogglePublishState = ActionResponse<
-	void,
+	undefined,
 	{
 		pageId: number;
+		locale: string;
 	}
 >;
 
-export async function togglePublishAction(
-	_previousState: TogglePublishState,
-	formData: FormData,
-): Promise<TogglePublishState> {
-	const v = await authAndValidate(togglePublishSchema, formData);
-	if (!v.success) {
+export const togglePublishAction = createServerFn({ method: "POST" })
+	.validator(togglePublishSchema)
+	.handler(async ({ data }): Promise<TogglePublishState> => {
+		setResponseHeader("Cache-Control", "private, no-store");
+		setResponseHeader("Vary", "Cookie");
+
+		const currentUser = await getCurrentUserFromHeaders(
+			new Headers(getRequestHeaders()),
+		);
+		if (!currentUser) {
+			throw redirect({ href: `/${data.locale}/auth/login` });
+		}
+
+		await togglePagePublicStatus(data.pageId, currentUser.id);
 		return {
-			success: false,
-			zodErrors: v.zodErrors,
+			success: true,
+			data: undefined,
+			message: "Page status updated successfully",
 		};
-	}
-	const { currentUser, data } = v;
-	const { pageId } = data;
-	await togglePagePublicStatus(pageId, currentUser.id);
-	return {
-		success: true,
-		data: undefined,
-		message: "Page status updated successfully",
-	};
-}
+	});

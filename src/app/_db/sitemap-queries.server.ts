@@ -1,4 +1,8 @@
 import { sql } from "kysely";
+import {
+	TIPITAKA_ROOT_SLUG,
+	TIPITAKA_SYSTEM_USER_HANDLE,
+} from "@/app/[locale]/_domain/tipitaka-page-visibility";
 import { db } from "@/db";
 import type { PageStatus, TranslationStatus } from "@/db/types";
 
@@ -6,11 +10,94 @@ export type PageWithUserAndTranslation = Awaited<
 	ReturnType<typeof fetchPagesWithUserAndTranslationChunk>
 >[number];
 
-export async function countPublicPages() {
-	const result = await db
+function buildPublicSitemapPagesQuery() {
+	return db
+		.withRecursive("tipitakaPages", (qb) =>
+			qb
+				.selectFrom("pages")
+				.innerJoin("contents", "contents.id", "pages.id")
+				.innerJoin("users", "users.id", "pages.userId")
+				.select([
+					"pages.id",
+					"pages.parentId",
+					"pages.publishedAt",
+					"pages.status",
+				])
+				.where("pages.slug", "=", TIPITAKA_ROOT_SLUG)
+				.where("pages.parentId", "is", null)
+				.where("contents.kind", "=", "PAGE")
+				.where("users.handle", "=", TIPITAKA_SYSTEM_USER_HANDLE)
+				.unionAll(
+					qb
+						.selectFrom("pages")
+						.innerJoin("contents", "contents.id", "pages.id")
+						.innerJoin("tipitakaPages", "pages.parentId", "tipitakaPages.id")
+						.select([
+							"pages.id",
+							"pages.parentId",
+							"pages.publishedAt",
+							"pages.status",
+						])
+						.where("contents.kind", "=", "PAGE"),
+				),
+		)
+		.withRecursive("publicTipitakaPages", (qb) =>
+			qb
+				.selectFrom("tipitakaPages")
+				.select(["id", "parentId"])
+				.where("parentId", "is", null)
+				.where((eb) =>
+					eb.or([
+						eb("status", "=", "PUBLIC"),
+						eb.and([
+							eb("status", "=", "ARCHIVE"),
+							eb("publishedAt", "is not", null),
+						]),
+					]),
+				)
+				.unionAll(
+					qb
+						.selectFrom("tipitakaPages")
+						.innerJoin(
+							"publicTipitakaPages",
+							"tipitakaPages.parentId",
+							"publicTipitakaPages.id",
+						)
+						.select(["tipitakaPages.id", "tipitakaPages.parentId"])
+						.where((eb) =>
+							eb.or([
+								eb("tipitakaPages.status", "=", "PUBLIC"),
+								eb.and([
+									eb("tipitakaPages.status", "=", "ARCHIVE"),
+									eb("tipitakaPages.publishedAt", "is not", null),
+								]),
+							]),
+						),
+				),
+		)
 		.selectFrom("pages")
+		.where((eb) =>
+			eb.or([
+				eb.and([
+					eb("pages.status", "=", "PUBLIC" satisfies PageStatus),
+					eb(
+						"pages.id",
+						"not in",
+						eb.selectFrom("tipitakaPages").select("tipitakaPages.id"),
+					),
+				]),
+				eb(
+					"pages.id",
+					"in",
+					eb.selectFrom("publicTipitakaPages").select("publicTipitakaPages.id"),
+				),
+			]),
+		);
+}
+
+export async function countPublicPages() {
+	const result = await buildPublicSitemapPagesQuery()
 		.select(sql<number>`count(*)::int`.as("count"))
-		.where("status", "=", "PUBLIC" satisfies PageStatus)
 		.executeTakeFirst();
 	return Number(result?.count ?? 0);
 }
@@ -23,8 +110,7 @@ export async function fetchPagesWithUserAndTranslationChunk({
 	offset: number;
 }) {
 	// まずページとユーザーを取得
-	const pagesResult = await db
-		.selectFrom("pages")
+	const pagesResult = await buildPublicSitemapPagesQuery()
 		.innerJoin("users", "pages.userId", "users.id")
 		.select([
 			"pages.slug",
@@ -33,7 +119,7 @@ export async function fetchPagesWithUserAndTranslationChunk({
 			"pages.id as pageId",
 			"users.handle as userHandle",
 		])
-		.where("pages.status", "=", "PUBLIC" satisfies PageStatus)
+		.orderBy("pages.id", "asc")
 		.limit(limit)
 		.offset(offset)
 		.execute();

@@ -1,7 +1,8 @@
-"use server";
-
+import { redirect } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+import { getRequestHeaders } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { authAndValidate } from "@/app/[locale]/_action/auth-and-validate";
+import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import type { ActionResponse } from "@/app/types";
 import { db } from "@/db";
 import type { TranslationContext } from "../../types";
@@ -11,70 +12,96 @@ const createContextSchema = z.object({
 	context: z.string().min(1).max(500),
 });
 
-const updateContextSchema = z.object({
+const updateContextSchema = createContextSchema.extend({
 	id: z.coerce.number().min(1),
-	contextName: z.string().min(1).max(50),
-	context: z.string().min(1).max(500),
 });
 
 export type CreateContextActionState = ActionResponse<TranslationContext>;
 export type UpdateContextActionState = ActionResponse<TranslationContext>;
 
-export async function createContextAction(
-	_previousState: CreateContextActionState,
-	formData: FormData,
-): Promise<CreateContextActionState> {
-	const v = await authAndValidate(createContextSchema, formData);
-	if (!v.success) {
-		return { success: false, zodErrors: v.zodErrors };
+const formDataValidator = (value: unknown) => {
+	if (!(value instanceof FormData)) {
+		throw new Error("Expected FormData");
 	}
-	const { currentUser, data } = v;
+	return value;
+};
 
-	try {
-		const result = await db
-			.insertInto("translationContexts")
-			.values({
-				userId: currentUser.id,
-				name: data.contextName,
-				context: data.context,
-			})
-			.returning(["id", "name", "context"])
-			.executeTakeFirstOrThrow();
-
-		return { success: true, data: result };
-	} catch {
-		return { success: false, message: "Failed to create context" };
-	}
-}
-
-export async function updateContextAction(
-	_previousState: UpdateContextActionState,
-	formData: FormData,
-): Promise<UpdateContextActionState> {
-	const v = await authAndValidate(updateContextSchema, formData);
-	if (!v.success) {
-		return { success: false, zodErrors: v.zodErrors };
-	}
-	const { currentUser, data } = v;
-
-	try {
-		const result = await db
-			.updateTable("translationContexts")
-			.set({
-				name: data.contextName,
-				context: data.context,
-				updatedAt: new Date(),
-			})
-			.where("id", "=", data.id)
-			.where("userId", "=", currentUser.id)
-			.returning(["id", "name", "context"])
-			.executeTakeFirst();
-
-		if (!result) {
-			return { success: false, message: "Context not found" };
+export const createContext = createServerFn({ method: "POST" })
+	.validator(formDataValidator)
+	.handler(async ({ data: formData }): Promise<CreateContextActionState> => {
+		const parsed = createContextSchema.safeParse({
+			contextName: formData.get("contextName"),
+			context: formData.get("context"),
+		});
+		if (!parsed.success) {
+			return {
+				success: false,
+				zodErrors: parsed.error.flatten().fieldErrors,
+			};
 		}
-		return { success: true, data: result };
-	} catch {
-		return { success: false, message: "Failed to update context" };
-	}
-}
+
+		const currentUser = await getCurrentUserFromHeaders(
+			new Headers(getRequestHeaders()),
+		);
+		if (!currentUser?.id) {
+			throw redirect({ href: "/auth/login" });
+		}
+
+		try {
+			const result = await db
+				.insertInto("translationContexts")
+				.values({
+					userId: currentUser.id,
+					name: parsed.data.contextName,
+					context: parsed.data.context,
+				})
+				.returning(["id", "name", "context"])
+				.executeTakeFirstOrThrow();
+			return { success: true, data: result };
+		} catch {
+			return { success: false, message: "Failed to create context" };
+		}
+	});
+
+export const updateContext = createServerFn({ method: "POST" })
+	.validator(formDataValidator)
+	.handler(async ({ data: formData }): Promise<UpdateContextActionState> => {
+		const parsed = updateContextSchema.safeParse({
+			id: formData.get("id"),
+			contextName: formData.get("contextName"),
+			context: formData.get("context"),
+		});
+		if (!parsed.success) {
+			return {
+				success: false,
+				zodErrors: parsed.error.flatten().fieldErrors,
+			};
+		}
+
+		const currentUser = await getCurrentUserFromHeaders(
+			new Headers(getRequestHeaders()),
+		);
+		if (!currentUser?.id) {
+			throw redirect({ href: "/auth/login" });
+		}
+
+		try {
+			const result = await db
+				.updateTable("translationContexts")
+				.set({
+					name: parsed.data.contextName,
+					context: parsed.data.context,
+					updatedAt: new Date(),
+				})
+				.where("id", "=", parsed.data.id)
+				.where("userId", "=", currentUser.id)
+				.returning(["id", "name", "context"])
+				.executeTakeFirst();
+			if (!result) {
+				return { success: false, message: "Context not found" };
+			}
+			return { success: true, data: result };
+		} catch {
+			return { success: false, message: "Failed to update context" };
+		}
+	});
