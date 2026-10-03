@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from "react";
-import { useLocale } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
 import {
 	Dialog,
@@ -33,6 +33,7 @@ export function LoginDialog({
 }: LoginDialogProps) {
 	const [open, setOpen] = useState(defaultOpen);
 	const locale = useLocale();
+	const t = useTranslations("Footer");
 	const hydrated = useHydrated();
 	const redirectTo = hydrated
 		? `${window.location.pathname}${window.location.search}`
@@ -47,7 +48,7 @@ export function LoginDialog({
 					<DialogDescription className="mt-2 flex flex-col items-center">
 						Evame is multilingual blog platform.
 						<a className="underline" href={`/${locale}/about`}>
-							Learn more
+							{t("aboutEvame")}
 						</a>
 					</DialogDescription>
 				</DialogTitle>

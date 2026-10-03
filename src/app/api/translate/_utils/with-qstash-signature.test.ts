@@ -65,7 +65,7 @@ function createRequest(body: string, signature?: string): Request {
 	});
 }
 
-describe.sequential("withQstashVerification", () => {
+describe("withQstashVerification", { concurrent: false }, () => {
 	it("正しい署名ならhandlerが元のJSONボディを読み取れる", async () => {
 		await withQstashSigningKeys(
 			CURRENT_SIGNING_KEY,

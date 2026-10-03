@@ -1,6 +1,6 @@
 import { Pool as NeonPool } from "@neondatabase/serverless";
 import { CamelCasePlugin, Kysely, PostgresDialect } from "kysely";
-import { Pool as PgPool } from "pg";
+import { Client as PgClient, Pool as PgPool } from "pg";
 import type { DB } from "./types";
 
 type PoolType = NeonPool | PgPool;
@@ -34,7 +34,16 @@ function createDb(): KyselyDbWithPool {
 	}
 
 	const db = new Kysely<DB>({
-		dialect: new PostgresDialect({ pool }),
+		dialect: new PostgresDialect({
+			// NeonのClient.connectはKyselyの制御用Clientと型が異なるため、
+			// 共通のPool APIを渡し、ローカルの取消には独立接続を使う。
+			...(isLocal ? { controlClient: PgClient } : {}),
+			pool: {
+				connect: () => pool.connect(),
+				end: () => pool.end(),
+				options: pool.options,
+			},
+		}),
 		plugins: [new CamelCasePlugin()],
 	});
 

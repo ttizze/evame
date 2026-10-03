@@ -56,14 +56,13 @@ describe("TanStack Startのroot境界UI", () => {
 		expect(reset).toHaveBeenCalledOnce();
 	});
 
-	it.each([
-		null,
-		"読み込み失敗",
-		42,
-	])("Error以外の値 %s が投げられてもエラー画面を表示する", (error) => {
-		render(<RootErrorComponent error={error} reset={vi.fn()} />);
-		expect(screen.getByText("Error")).toBeInTheDocument();
-	});
+	it.each([null, "読み込み失敗", 42])(
+		"Error以外の値 %s が投げられてもエラー画面を表示する",
+		(error) => {
+			render(<RootErrorComponent error={error} reset={vi.fn()} />);
+			expect(screen.getByText("Error")).toBeInTheDocument();
+		},
+	);
 
 	it("404画面に英語ホームと検索へのリンクを表示する", () => {
 		render(<RootNotFoundComponent />);
