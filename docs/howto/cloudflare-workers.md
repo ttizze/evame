@@ -47,3 +47,11 @@ bun x wrangler deploy
 4. 切り替え後も Google ログイン、Tiptap 保存、画像、翻訳を確認する。Sentry の正常な認証リダイレクトや本文の中断がエラーにならないことを確認する。
 
 既存の Vercel デプロイは切り替え検証まで維持する。問題があれば Cloudflare のルートを元に戻し、既存の Vercel オリジンへ戻せる状態にしておく。継続デプロイの環境では Nix と Bun の lockfile を使い、`bun run deploy` を実行する。
+
+## GitHub Actions の継続デプロイ
+
+`.github/workflows/ci.yaml` は `main` の push または `main` を対象にした手動実行で、Biome・typecheck・全テスト・ビルド・成果物テストの成功後に同じ成果物をデプロイする。並行デプロイは行わない。PR は検証だけを実行し、Sentry 送信を無効化する。
+
+リポジトリの Actions secrets に `CLOUDFLARE_API_TOKEN` と `SENTRY_AUTH_TOKEN` を設定する。Cloudflare のデプロイ先アカウントと Worker は `wrangler.jsonc` に定義する。既存のキャッシュ削除用トークンは Workers を更新できないため、デプロイ用には `evame-start` の更新・デプロイに必要な権限を持つトークンを使う。Sentry のアップロード用トークンは本番ビルドのステップだけに渡し、Worker secret には登録しない。
+
+本番のルートを追加した際は `wrangler.jsonc` にも反映し、以降のデプロイで維持する。本番切り替え時は Worker の `SENTRY_DSN` と `SENTRY_ENVIRONMENT` を本番用に設定する。
