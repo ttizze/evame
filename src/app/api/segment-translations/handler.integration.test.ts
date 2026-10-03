@@ -47,7 +47,6 @@ describe("/api/segment-translations GET", () => {
 					number: 0,
 					text: "Hello",
 					textAndOccurrenceHash: "hash0",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -132,7 +131,6 @@ describe("/api/segment-translations GET", () => {
 					number: 0,
 					text: "Hello",
 					textAndOccurrenceHash: "hash0",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});

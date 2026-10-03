@@ -774,7 +774,7 @@ export const segments = pgTable(
 		createdAt: timestamp("created_at", { precision: 3, mode: "string" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
-		segmentTypeId: integer("segment_type_id").notNull(),
+		segmentTypeId: integer("segment_type_id"),
 	},
 	(table) => [
 		index("segments_content_id_idx").using(

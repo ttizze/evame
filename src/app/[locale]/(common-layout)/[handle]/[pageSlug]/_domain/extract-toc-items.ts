@@ -1,11 +1,11 @@
 import GithubSlugger from "github-slugger";
-import type { SegmentForDetail, TitleSegment } from "@/app/[locale]/types";
+import type { Segment } from "@/app/[locale]/types";
 import type { JsonObject, JsonValue } from "@/db/types";
 
 export interface TocItem {
 	anchorId: string;
 	level: number;
-	segment: TitleSegment;
+	segment: Segment;
 }
 
 const MAX_TOC_DEPTH = 4;
@@ -15,10 +15,10 @@ export function extractTocItems({
 	segments,
 }: {
 	mdast: JsonValue;
-	segments: SegmentForDetail[];
+	segments: Segment[];
 }): TocItem[] {
 	// セグメント番号で引けるようにして、見出しとセグメントを対応付ける。
-	const segmentsMap = new Map<number, SegmentForDetail>(
+	const segmentsMap = new Map<number, Segment>(
 		segments.map((segment) => [segment.number, segment]),
 	);
 	const items: TocItem[] = [];

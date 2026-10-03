@@ -109,7 +109,6 @@ export const commentAction = createServerFn({ method: "POST" })
 			pageId: data.pageId,
 			targetLocales: ["en", "zh"],
 			aiModel: "gemini-2.5-flash-lite",
-			annotationContentId: null,
 			translationContext: "",
 		});
 

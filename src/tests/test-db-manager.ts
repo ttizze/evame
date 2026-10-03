@@ -1,7 +1,6 @@
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { disposeDb } from "@/db";
-import { setupMasterData } from "./db-helpers";
 
 const BASE_URL = "postgres://postgres:postgres@db.localtest.me:5435/main";
 const SERVICE = "test_neon";
@@ -44,6 +43,5 @@ export async function setupDbPerFile(fileUrl: string): Promise<void> {
 	// マスターデータ投入
 	process.env.DATABASE_URL = dbUrl;
 	await resetAllClients();
-	await setupMasterData();
 	await resetAllClients();
 }

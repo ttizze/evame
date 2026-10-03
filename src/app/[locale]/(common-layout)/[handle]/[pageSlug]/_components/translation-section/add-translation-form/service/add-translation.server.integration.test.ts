@@ -23,7 +23,6 @@ describe("addTranslationService", () => {
 					number: 0,
 					text: "Title",
 					textAndOccurrenceHash: "hash0",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});

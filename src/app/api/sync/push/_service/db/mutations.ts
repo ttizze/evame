@@ -23,7 +23,7 @@ export async function upsertPageForSync(params: {
 				.where("id", "=", params.existingPageId)
 				.execute();
 
-			await syncSegments(tx, params.existingPageId, params.segments, null);
+			await syncSegments(tx, params.existingPageId, params.segments);
 			return { created: false };
 		}
 
@@ -46,7 +46,7 @@ export async function upsertPageForSync(params: {
 			})
 			.execute();
 
-		await syncSegments(tx, content.id, params.segments, null);
+		await syncSegments(tx, content.id, params.segments);
 		return { created: true };
 	});
 }

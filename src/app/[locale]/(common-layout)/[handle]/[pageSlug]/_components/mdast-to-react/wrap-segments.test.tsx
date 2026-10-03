@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
-import type { TitleSegment } from "@/app/[locale]/types";
+import type { Segment } from "@/app/[locale]/types";
 import { WrapSegment } from "./wrap-segments";
 
-function makeSegment(overrides: Partial<TitleSegment> = {}): TitleSegment {
+function makeSegment(overrides: Partial<Segment> = {}): Segment {
 	return {
 		id: 1,
 		contentId: 1,

@@ -37,7 +37,6 @@ async function setupTranslationTest(data?: {
 		number: number;
 		text: string;
 		textAndOccurrenceHash: string;
-		segmentTypeKey: "PRIMARY" | "COMMENTARY";
 	}>;
 }) {
 	const user = await createUser();
@@ -46,13 +45,11 @@ async function setupTranslationTest(data?: {
 			number: 0,
 			text: "Hello",
 			textAndOccurrenceHash: "hash0",
-			segmentTypeKey: "PRIMARY" as const,
 		},
 		{
 			number: 1,
 			text: "World",
 			textAndOccurrenceHash: "hash1",
-			segmentTypeKey: "PRIMARY" as const,
 		},
 	];
 	const page = await createPageWithSegments({
@@ -121,13 +118,11 @@ describe("translateChunk", () => {
 					number: 0,
 					text: "test",
 					textAndOccurrenceHash: "hash0",
-					segmentTypeKey: "PRIMARY",
 				},
 				{
 					number: 1,
 					text: "failed",
 					textAndOccurrenceHash: "hash1",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});

@@ -7,31 +7,13 @@ export type PageDetail = NonNullable<
 	Awaited<ReturnType<typeof fetchPageDetail>>
 >;
 
-export type SegmentWithSegmentType = {
+export type Segment = {
 	id: number;
 	contentId: number;
 	number: number;
 	text: string;
 	translationText: string | null;
-	segmentTypeKey: string;
-	segmentTypeLabel: string;
 };
-export type TitleSegment = Omit<
-	SegmentWithSegmentType,
-	"segmentTypeKey" | "segmentTypeLabel"
->;
-
-export type SegmentForDetail = SegmentWithSegmentType & {
-	annotations: Array<{
-		annotationSegment: SegmentWithSegmentType;
-	}>;
-};
-
-// SegmentForDetail と TitleSegment のユニオン型
-type SegmentForComment = Omit<SegmentForDetail, "annotations"> & {
-	annotations?: SegmentForDetail["annotations"];
-};
-export type Segment = SegmentForDetail | SegmentForComment | TitleSegment;
 
 export type PageForList = {
 	id: number;
@@ -41,7 +23,7 @@ export type PageForList = {
 	userHandle: string;
 	userName: string;
 	userImage: string;
-	titleSegment: TitleSegment;
+	titleSegment: Segment;
 	tags: Pick<Tag, "id" | "name">[];
 	likeCount: number;
 	pageCommentsCount: number;

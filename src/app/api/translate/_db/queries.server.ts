@@ -12,17 +12,14 @@ export async function getPageSegments(pageId: number) {
 		.execute();
 }
 
-/** ページ注釈またはコメントのセグメントを取得（id, number, text） */
-export async function getContentSegments(
-	contentId: number,
-	kind: "PAGE" | "PAGE_COMMENT",
-) {
+/** ページコメントのセグメントを取得（id, number, text） */
+export async function getPageCommentSegments(contentId: number) {
 	return await db
 		.selectFrom("segments")
 		.innerJoin("contents", "segments.contentId", "contents.id")
 		.select(["segments.id", "segments.number", "segments.text"])
 		.where("contentId", "=", contentId)
-		.where("contents.kind", "=", kind)
+		.where("contents.kind", "=", "PAGE_COMMENT")
 		.execute();
 }
 

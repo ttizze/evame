@@ -260,7 +260,6 @@ describe("Push API (service layer)", () => {
 					number: 0,
 					text: legacyTitle,
 					textAndOccurrenceHash: "h-0",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -311,7 +310,6 @@ describe("Push API (service layer)", () => {
 					number: 0,
 					text: "Archived",
 					textAndOccurrenceHash: "h-0",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});

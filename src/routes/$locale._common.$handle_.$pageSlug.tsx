@@ -2,10 +2,7 @@ import { ClientOnly, createFileRoute, notFound } from "@tanstack/react-router";
 import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
 import { getPageComments } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/data";
-import {
-	collectAnnotationTypes,
-	PageContent,
-} from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/page-content";
+import { PageContent } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/page-content";
 import { PageViewCounter } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/page-view-counter";
 import { buildPageMetadata } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_service/page-metadata";
 import { getPageDetailData } from "./$locale/-page-detail-data";
@@ -67,7 +64,6 @@ export const Route = createFileRoute("/$locale/_common/$handle_/$pageSlug")({
 function PageDetailRoute() {
 	const { locale } = Route.useParams();
 	const data = Route.useLoaderData();
-	const annotationTypes = collectAnnotationTypes(data.pageDetail.segments);
 
 	return (
 		<PageContent
@@ -78,7 +74,6 @@ function PageDetailRoute() {
 			floatingControls={
 				<ClientOnly fallback={null}>
 					<FloatingControls
-						annotationTypes={annotationTypes}
 						likeButton={
 							<PageLikeButtonClient
 								className="w-10 h-10 rounded-full"

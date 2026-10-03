@@ -26,7 +26,6 @@ describe("bestTranslationByPageSubquery", () => {
 					number: 0,
 					text: "Hello",
 					textAndOccurrenceHash: "hash0",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -97,7 +96,6 @@ describe("bestTranslationByPageSubquery", () => {
 					number: 0,
 					text: "Hello",
 					textAndOccurrenceHash: "hash0",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});

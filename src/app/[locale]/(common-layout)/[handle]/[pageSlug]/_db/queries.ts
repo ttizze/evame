@@ -22,7 +22,6 @@ export type PageTitleTree = PageForTree & { children: PageTitleTree[] };
 export async function queryPageNavigationData(
 	pageId: number,
 	locale: string,
-	isTipitakaPage: boolean,
 ): Promise<NavigationData | null> {
 	// Step 1: 親チェーンを取得してルートを特定
 	const breadcrumb = await db
@@ -93,32 +92,12 @@ export async function queryPageNavigationData(
 					"pages.userId",
 				])
 				.where("pages.parentId", "=", rootNode.id)
-				.where((eb) =>
-					isTipitakaPage
-						? eb.or([
-								eb("pages.status", "=", "PUBLIC"),
-								eb.and([
-									eb("pages.status", "=", "ARCHIVE"),
-									eb("pages.publishedAt", "is not", null),
-								]),
-							])
-						: eb("pages.status", "=", "PUBLIC"),
-				)
+				.where("pages.status", "=", "PUBLIC")
 				.unionAll(
 					qb
 						.selectFrom("pages")
 						.innerJoin("descendants", "pages.parentId", "descendants.id")
-						.where((eb) =>
-							isTipitakaPage
-								? eb.or([
-										eb("pages.status", "=", "PUBLIC"),
-										eb.and([
-											eb("pages.status", "=", "ARCHIVE"),
-											eb("pages.publishedAt", "is not", null),
-										]),
-									])
-								: eb("pages.status", "=", "PUBLIC"),
-						)
+						.where("pages.status", "=", "PUBLIC")
 						.select([
 							"pages.id",
 							"pages.slug",
@@ -159,7 +138,6 @@ export async function queryPageNavigationData(
 export async function queryChildPagesTree(
 	parentId: number,
 	locale: string,
-	isTipitakaPage: boolean,
 ): Promise<PageTitleTree[]> {
 	const rows = await db
 		.withRecursive("descendants", (qb) =>
@@ -173,32 +151,12 @@ export async function queryChildPagesTree(
 					"pages.userId",
 				])
 				.where("pages.parentId", "=", parentId)
-				.where((eb) =>
-					isTipitakaPage
-						? eb.or([
-								eb("pages.status", "=", "PUBLIC"),
-								eb.and([
-									eb("pages.status", "=", "ARCHIVE"),
-									eb("pages.publishedAt", "is not", null),
-								]),
-							])
-						: eb("pages.status", "=", "PUBLIC"),
-				)
+				.where("pages.status", "=", "PUBLIC")
 				.unionAll(
 					qb
 						.selectFrom("pages")
 						.innerJoin("descendants", "pages.parentId", "descendants.id")
-						.where((eb) =>
-							isTipitakaPage
-								? eb.or([
-										eb("pages.status", "=", "PUBLIC"),
-										eb.and([
-											eb("pages.status", "=", "ARCHIVE"),
-											eb("pages.publishedAt", "is not", null),
-										]),
-									])
-								: eb("pages.status", "=", "PUBLIC"),
-						)
+						.where("pages.status", "=", "PUBLIC")
 						.select([
 							"pages.id",
 							"pages.slug",

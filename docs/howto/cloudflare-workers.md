@@ -56,4 +56,6 @@ bun x wrangler deploy
 
 本番の `evame.tech/*` ルートは Cloudflare のゾーン側で `evame-start` に接続する。`wrangler.jsonc` に `routes` を指定せず、CIは既存Workerのバージョンだけを更新する。Wranglerはルートが未指定なら既存の接続を変更しないため、CIトークンにゾーンのルート更新権限を追加する必要はない。`images.evame.tech` はこのルートの対象に含めない。
 
+テーブル・カラムを廃止するときは、先に旧コードと共存できるDB変更と参照を外したコードをデプロイする。その本番反映を確認してから、次のマイグレーションでDB構造を削除する。CIはマイグレーションを先に実行するため、参照を外すコードとテーブル削除を同じデプロイにまとめない。
+
 本番切り替え時は Worker の `BETTER_AUTH_URL` を `https://evame.tech`、`SENTRY_DSN` と `SENTRY_ENVIRONMENT` を本番用に設定する。元のVercel向けDNSレコードを保持し、問題があればゾーン側のWorkerルートを外して戻す。

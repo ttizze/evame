@@ -16,7 +16,6 @@ const JA_TRANSLATIONS: LocaleKey[] = ["en", "zh", "ko", "es"];
 
 async function seed() {
 	// 必要なシードのみ挿入する
-	const primarySegmentTypeId = await ensurePrimarySegmentType();
 	const evameUserId = await ensureEvameUser();
 	const { evameEnPageId, evameJaPageId } = await ensurePages(evameUserId);
 
@@ -35,7 +34,6 @@ async function seed() {
 		await upsertSegmentsWithTranslations({
 			pageId,
 			segments,
-			segmentTypeId: primarySegmentTypeId,
 			userId: evameUserId,
 		});
 	}
@@ -48,20 +46,6 @@ interface SegmentData {
 	text: string;
 	textAndOccurrenceHash: string;
 	translations: Record<string, string>;
-}
-
-async function ensurePrimarySegmentType(): Promise<number> {
-	// PRIMARY がなければ作る。あれば ID を返す。
-	const result = await db
-		.insertInto("segmentTypes")
-		.values({ key: "PRIMARY", label: "Primary" })
-		.onConflict((oc) =>
-			oc.columns(["key", "label"]).doUpdateSet({ label: "Primary" }),
-		)
-		.returning("id")
-		.executeTakeFirstOrThrow();
-
-	return result.id;
 }
 
 async function ensureEvameUser(): Promise<string> {
@@ -218,7 +202,6 @@ function buildSegmentsForLocale(
 async function upsertSegmentsWithTranslations(params: {
 	pageId: number;
 	segments: SegmentData[];
-	segmentTypeId: number;
 	userId: string;
 }) {
 	// 既存のセグメントを削除（古いデータをクリア）
@@ -235,13 +218,11 @@ async function upsertSegmentsWithTranslations(params: {
 				number: segment.number,
 				text: segment.text,
 				textAndOccurrenceHash: segment.textAndOccurrenceHash,
-				segmentTypeId: params.segmentTypeId,
 			})
 			.onConflict((oc) =>
 				oc.columns(["contentId", "number"]).doUpdateSet({
 					text: segment.text,
 					textAndOccurrenceHash: segment.textAndOccurrenceHash,
-					segmentTypeId: params.segmentTypeId,
 				}),
 			)
 			.returning("id")

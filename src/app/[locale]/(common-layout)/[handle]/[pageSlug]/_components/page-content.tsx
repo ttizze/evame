@@ -12,24 +12,6 @@ import { ContentWithTranslations } from "./content-with-translations";
 import { PageNavigation } from "./page-navigation";
 import { PreviewBanner } from "./preview-banner";
 
-export function collectAnnotationTypes(segments: PageDetail["segments"]) {
-	const typeMap = new Map<string, { key: string; label: string }>();
-	for (const segment of segments) {
-		for (const link of segment.annotations ?? []) {
-			const { segmentTypeKey, segmentTypeLabel } = link.annotationSegment ?? {};
-			if (segmentTypeKey && segmentTypeLabel) {
-				typeMap.set(segmentTypeLabel, {
-					key: segmentTypeKey,
-					label: segmentTypeLabel,
-				});
-			}
-		}
-	}
-	return Array.from(typeMap.values()).sort((a, b) =>
-		a.label.localeCompare(b.label),
-	);
-}
-
 export function PageContent({
 	pageDetail,
 	locale,
@@ -53,8 +35,7 @@ export function PageContent({
 	comments: PageCommentsData["comments"];
 	commentCount: number;
 }) {
-	const isDraft =
-		pageDetail.status !== "PUBLIC" && !pageDetail.isPublishedTipitakaArchive;
+	const isDraft = pageDetail.status !== "PUBLIC";
 
 	const articleUrl = `${BASE_URL}/${pageDetail.sourceLocale}/${pageDetail.userHandle}/${pageDetail.slug}`;
 	const authorUrl = `${BASE_URL}/${pageDetail.sourceLocale}/${pageDetail.userHandle}`;

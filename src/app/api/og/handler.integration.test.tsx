@@ -95,7 +95,6 @@ describe("GET /api/og", () => {
 					number: 0,
 					text: "OG title",
 					textAndOccurrenceHash: "og-title",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -128,7 +127,6 @@ describe("GET /api/og", () => {
 					number: 0,
 					text: "Asset error",
 					textAndOccurrenceHash: "asset-error-title",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});

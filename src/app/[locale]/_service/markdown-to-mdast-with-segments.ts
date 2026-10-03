@@ -3,7 +3,6 @@ import { unified } from "unified";
 import { removePosition } from "unist-util-remove-position";
 import { VFile } from "vfile";
 import type { JsonValue } from "@/db/types";
-import { remarkCustomBlocks } from "../_domain/remark-custom-blocks";
 import type { SegmentDraft } from "../_domain/remark-hash-and-segments";
 import { remarkHashAndSegments } from "../_domain/remark-hash-and-segments";
 import { remarkAutoUploadImages } from "./remark-auto-upload-images";
@@ -23,7 +22,6 @@ export async function markdownToMdastWithSegments({
 }) {
 	const processor = unified()
 		.use(remarkParse) // Markdown → MDAST
-		.use(remarkCustomBlocks) // カスタムブロック記法の解釈
 		.use(remarkHashAndSegments(header)); // ハッシュ + Segment 生成
 
 	if (autoUploadImages) {

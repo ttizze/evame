@@ -2,8 +2,7 @@ import { randomUUID } from "node:crypto";
 import { createId } from "@paralleldrive/cuid2";
 import type { Root as MdastRoot } from "mdast";
 import { db } from "@/db";
-import type { JsonValue, PageStatus, SegmentTypeKey } from "@/db/types";
-import { getSegmentTypeId } from "./db-helpers";
+import type { JsonValue, PageStatus } from "@/db/types";
 
 /**
  * テスト用ユーザーを作成
@@ -76,10 +75,7 @@ export async function createSegment(data: {
 	number: number;
 	text: string;
 	textAndOccurrenceHash: string;
-	segmentTypeKey: SegmentTypeKey;
 }) {
-	const segmentTypeId = await getSegmentTypeId(data.segmentTypeKey);
-
 	const segment = await db
 		.insertInto("segments")
 		.values({
@@ -87,7 +83,6 @@ export async function createSegment(data: {
 			number: data.number,
 			text: data.text,
 			textAndOccurrenceHash: data.textAndOccurrenceHash,
-			segmentTypeId,
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
@@ -103,18 +98,8 @@ export async function createSegments(data: {
 		number: number;
 		text: string;
 		textAndOccurrenceHash: string;
-		segmentTypeKey: SegmentTypeKey;
 	}>;
 }) {
-	const primarySegmentTypeId = await getSegmentTypeId("PRIMARY");
-	const commentarySegmentTypeId = await getSegmentTypeId("COMMENTARY");
-
-	// segmentTypeKeyに基づいてIDをマッピング
-	const segmentTypeIdMap: Record<SegmentTypeKey, number> = {
-		PRIMARY: primarySegmentTypeId,
-		COMMENTARY: commentarySegmentTypeId,
-	};
-
 	await db
 		.insertInto("segments")
 		.values(
@@ -123,7 +108,6 @@ export async function createSegments(data: {
 				number: seg.number,
 				text: seg.text,
 				textAndOccurrenceHash: seg.textAndOccurrenceHash,
-				segmentTypeId: segmentTypeIdMap[seg.segmentTypeKey],
 			})),
 		)
 		.execute();
@@ -142,7 +126,6 @@ export async function createPageWithSegments(data: {
 		number: number;
 		text: string;
 		textAndOccurrenceHash: string;
-		segmentTypeKey: SegmentTypeKey;
 	}>;
 }) {
 	const page = await createPage({
@@ -159,24 +142,6 @@ export async function createPageWithSegments(data: {
 	});
 
 	return page;
-}
-
-/**
- * SegmentAnnotationLinkを作成（注釈セグメントを本文セグメントにリンク）
- */
-export async function createSegmentAnnotationLink(data: {
-	mainSegmentId: number;
-	annotationSegmentId: number;
-}) {
-	const link = await db
-		.insertInto("segmentAnnotationLinks")
-		.values({
-			mainSegmentId: data.mainSegmentId,
-			annotationSegmentId: data.annotationSegmentId,
-		})
-		.returningAll()
-		.executeTakeFirstOrThrow();
-	return link;
 }
 
 /**
@@ -232,82 +197,6 @@ export async function createPageWithTags(data: {
 		.execute();
 
 	return page;
-}
-
-/**
- * 注釈付きページを作成（メインページと注釈コンテンツ）
- */
-export async function createPageWithAnnotations(data: {
-	userId: string;
-	mainPageSlug: string;
-	mainPageSegments: Array<{
-		number: number;
-		text: string;
-		textAndOccurrenceHash: string;
-	}>;
-	annotationSegments: Array<{
-		number: number;
-		text: string;
-		textAndOccurrenceHash: string;
-		linkedToMainSegmentNumber: number; // どのメインセグメントにリンクするか
-	}>;
-}) {
-	// メインページを作成
-	const mainPage = await createPageWithSegments({
-		userId: data.userId,
-		slug: data.mainPageSlug,
-		segments: data.mainPageSegments.map((seg) => ({
-			...seg,
-			segmentTypeKey: "PRIMARY" as SegmentTypeKey,
-		})),
-	});
-
-	// 注釈コンテンツを作成
-	const annotationContent = await db
-		.insertInto("contents")
-		.values({ kind: "PAGE" })
-		.returningAll()
-		.executeTakeFirstOrThrow();
-
-	// 注釈セグメントを作成
-	await createSegments({
-		contentId: annotationContent.id,
-		segments: data.annotationSegments.map((seg) => ({
-			...seg,
-			segmentTypeKey: "COMMENTARY" as SegmentTypeKey,
-		})),
-	});
-
-	// 直接リンクを作成
-	for (const annotationSegment of data.annotationSegments) {
-		// メインセグメントを取得
-		const mainSegment = await db
-			.selectFrom("segments")
-			.selectAll()
-			.where("contentId", "=", mainPage.id)
-			.where("number", "=", annotationSegment.linkedToMainSegmentNumber)
-			.executeTakeFirst();
-
-		// 注釈セグメントを取得
-		const annSegment = await db
-			.selectFrom("segments")
-			.selectAll()
-			.where("contentId", "=", annotationContent.id)
-			.where("number", "=", annotationSegment.number)
-			.executeTakeFirst();
-
-		if (mainSegment && annSegment) {
-			await createSegmentAnnotationLink({
-				mainSegmentId: mainSegment.id,
-				annotationSegmentId: annSegment.id,
-			});
-		}
-	}
-
-	return {
-		mainPage,
-		annotationContent,
-	};
 }
 
 /**

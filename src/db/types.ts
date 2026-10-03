@@ -214,7 +214,7 @@ export interface Segments {
 	createdAt: Generated<Timestamp>;
 	id: Generated<number>;
 	number: number;
-	segmentTypeId: number;
+	segmentTypeId: number | null;
 	text: string;
 	textAndOccurrenceHash: string;
 }

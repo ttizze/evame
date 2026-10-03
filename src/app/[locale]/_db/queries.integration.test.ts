@@ -10,28 +10,14 @@ describe("queryPageDetail", () => {
 	beforeEach(async () => {
 		await resetDatabase();
 	});
-
-	it("非公開のTipiṭaka祖先を持つPUBLICページは直URLでも取得しない", async () => {
-		const user = await createUser({ handle: "evame" });
-		const root = await createPage({
+	it("公開日時があってもARCHIVEの記事を取得しない", async () => {
+		const user = await createUser();
+		await createPage({
 			publishedAt: new Date("2026-01-01T00:00:00.000Z"),
-			slug: "tipitaka",
+			slug: "archived-page",
 			status: "ARCHIVE",
 			userId: user.id,
 		});
-		const hiddenParent = await createPage({
-			parentId: root.id,
-			slug: "hidden-parent",
-			status: "DRAFT",
-			userId: user.id,
-		});
-		await createPage({
-			parentId: hiddenParent.id,
-			slug: "public-child",
-			status: "PUBLIC",
-			userId: user.id,
-		});
-
-		await expect(queryPageDetail("public-child", "ja")).resolves.toBeNull();
+		await expect(queryPageDetail("archived-page", "ja")).resolves.toBeNull();
 	});
 });

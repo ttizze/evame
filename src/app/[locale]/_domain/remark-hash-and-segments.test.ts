@@ -1,6 +1,7 @@
 import { remark } from "remark";
 import type { VFile } from "vfile";
 import { describe, expect, it } from "vitest";
+import { markdownToMdastWithSegments } from "../_service/markdown-to-mdast-with-segments";
 import {
 	remarkHashAndSegments,
 	type SegmentDraft,
@@ -160,42 +161,12 @@ describe("remarkHashAndSegments", () => {
 		expect(texts.some((t: string) => t.includes("image.jpg"))).toBe(false);
 	});
 
-	it("{para:n} 記号は段落番号として保存され、本文からは除去される", async () => {
-		const md = "{para:3} Para text";
-		const file = (await remark()
-			.use(remarkHashAndSegments())
-			.process(md)) as VFile & { data: { segments: SegmentDraft[] } };
-		const segs = file.data.segments as SegmentDraft[];
-		expect(segs[0]).toMatchObject({
-			text: "Para text",
-			paragraphNumber: "3",
+	it("段落番号の特殊記法を通常の本文として保持する", async () => {
+		const { segments } = await markdownToMdastWithSegments({
+			markdown: "{para:1} 本文",
+			header: "",
+			autoUploadImages: false,
 		});
-		expect(String(file)).toContain("Para text");
-		expect(String(file)).not.toContain("{para:3}");
-	});
-
-	it("chapter見出し（###）ごとに段落番号を区別する", async () => {
-		const md =
-			"### 1. Chapter\n\n{para:1} A\n\n{para:1} B\n\n### 2. Chapter\n\n{para:1} C";
-		const file = (await remark()
-			.use(remarkHashAndSegments())
-			.process(md)) as VFile & { data: { segments: SegmentDraft[] } };
-		const segs = file.data.segments as SegmentDraft[];
-		const paraSegs = segs.filter((s) => s.paragraphNumber);
-		expect(paraSegs.map((s) => s.paragraphNumber)).toEqual([
-			"1__ch1",
-			"1__ch1",
-			"1__ch2",
-		]);
-	});
-
-	it("chapter見出しが無い場合は段落番号にサフィックスを付けない", async () => {
-		const md = "{para:1} A\n\n{para:2} B";
-		const file = (await remark()
-			.use(remarkHashAndSegments())
-			.process(md)) as VFile & { data: { segments: SegmentDraft[] } };
-		const segs = file.data.segments as SegmentDraft[];
-		const paraSegs = segs.filter((s) => s.paragraphNumber);
-		expect(paraSegs.map((s) => s.paragraphNumber)).toEqual(["1", "2"]);
+		expect(segments[0]?.text).toBe("{para:1} 本文");
 	});
 });

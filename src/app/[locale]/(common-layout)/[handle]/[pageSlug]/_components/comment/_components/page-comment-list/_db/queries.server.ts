@@ -62,8 +62,6 @@ export type PageCommentSegment = {
 	contentId: number;
 	number: number;
 	text: string;
-	segmentTypeKey: string;
-	segmentTypeLabel: string;
 	translationText: string | null;
 };
 
@@ -87,7 +85,6 @@ async function fetchSegmentsForCommentIds(
 
 	return db
 		.selectFrom("segments")
-		.innerJoin("segmentTypes", "segments.segmentTypeId", "segmentTypes.id")
 		.leftJoin(bestTranslationByCommentSubquery(locale).as("trans"), (join) =>
 			join.onRef("trans.segmentId", "=", "segments.id"),
 		)
@@ -96,8 +93,6 @@ async function fetchSegmentsForCommentIds(
 			"segments.contentId",
 			"segments.number",
 			"segments.text",
-			"segmentTypes.key as segmentTypeKey",
-			"segmentTypes.label as segmentTypeLabel",
 			"trans.text as translationText",
 		])
 		.where("segments.contentId", "in", commentIds)

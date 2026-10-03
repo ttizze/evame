@@ -77,10 +77,8 @@ export const editPageContent = createServerFn({ method: "POST" })
 				pageSlug,
 				userId: currentUser.id,
 				sourceLocale,
-				segmentTypeId: null,
 				parentId: existingPage?.parentId ?? null,
 				order: existingPage?.order ?? 0,
-				anchorContentId: null,
 				status: existingPage?.status ?? "DRAFT",
 			});
 			return { success: true, data: undefined };

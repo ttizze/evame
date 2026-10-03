@@ -3,101 +3,39 @@ import { fetchPageIdBySlug } from "@/app/[locale]/_db/page-utility-queries.serve
 import { hasSegmentsForContentId } from "@/app/[locale]/_db/segment-exists.server";
 import { enqueueTranslate } from "@/app/[locale]/_infrastructure/qstash/enqueue-translate.server";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
-import { fetchAnnotationContentIdsForPage } from "../db/queries.server";
 
-/* ───────── 型 ───────── */
-
-interface TranslatePageParams {
+export async function translatePage({
+	pageSlug,
+	aiModel,
+	locale,
+	userId,
+}: {
 	pageSlug: string;
 	aiModel: string;
 	locale: string;
 	userId: string;
-}
-
-interface NewJobParams {
-	userId: string;
-	aiModel: string;
-	locale: string;
-	pageId: number;
-	annotationContentId: number | null;
-	jobs: TranslationJobForToast[];
-}
-
-/* ───────── ジョブ作成・キュー投入 ───────── */
-
-/** 翻訳ジョブを作成しキューに投入する */
-async function createAndEnqueueJob(params: NewJobParams) {
-	const contentId = params.annotationContentId ?? params.pageId;
-	const hasSegments = await hasSegmentsForContentId(contentId);
-	if (!hasSegments) {
-		return;
-	}
-
-	const job = await createTranslationJob({
-		userId: params.userId,
-		aiModel: params.aiModel,
-		locale: params.locale,
-		pageId: params.pageId,
-	});
-
-	params.jobs.push(job);
-
-	// TODO: translationContext をサポートする
-	// locale-selector からの翻訳でもユーザーの translationContext を選択できるようにする
-	await enqueueTranslate({
-		translationJobId: job.id,
-		aiModel: params.aiModel,
-		userId: params.userId,
-		targetLocale: params.locale,
-		pageId: params.pageId,
-		annotationContentId: params.annotationContentId,
-		pageCommentId: null,
-		translationContext: "",
-	});
-}
-
-/* ───────── ページ翻訳オーケストレーション ───────── */
-
-/**
- * ページ全体の翻訳ジョブを作成する
- * - 本文と注釈それぞれのジョブを作成しキューに投入
- */
-export async function translatePage(
-	params: TranslatePageParams,
-): Promise<
+}): Promise<
 	| { success: true; jobs: TranslationJobForToast[] }
 	| { success: false; message: string }
 > {
-	const page = await fetchPageIdBySlug(params.pageSlug);
+	const page = await fetchPageIdBySlug(pageSlug);
 	if (!page) return { success: false, message: "Page not found" };
-	const pageId = page.id;
-
-	const jobs: TranslationJobForToast[] = [];
-
-	// 本文の翻訳ジョブ
-	await createAndEnqueueJob({
-		userId: params.userId,
-		aiModel: params.aiModel,
-		locale: params.locale,
-		pageId,
-		annotationContentId: null,
-		jobs,
+	if (!(await hasSegmentsForContentId(page.id)))
+		return { success: true, jobs: [] };
+	const job = await createTranslationJob({
+		userId,
+		aiModel,
+		locale,
+		pageId: page.id,
 	});
-
-	// 別コンテンツに属する注釈の翻訳ジョブ
-	// 親ページのジョブと revalidate を紐付けるため pageId はそのまま保持し、
-	// 翻訳を書き込む対象コンテンツを特定するため annotationContentId を渡す
-	const annotationContentIds = await fetchAnnotationContentIdsForPage(pageId);
-	for (const contentId of annotationContentIds) {
-		await createAndEnqueueJob({
-			userId: params.userId,
-			aiModel: params.aiModel,
-			locale: params.locale,
-			pageId,
-			annotationContentId: contentId,
-			jobs,
-		});
-	}
-
-	return { success: true, jobs };
+	await enqueueTranslate({
+		translationJobId: job.id,
+		aiModel,
+		userId,
+		targetLocale: locale,
+		pageId: page.id,
+		pageCommentId: null,
+		translationContext: "",
+	});
+	return { success: true, jobs: [job] };
 }

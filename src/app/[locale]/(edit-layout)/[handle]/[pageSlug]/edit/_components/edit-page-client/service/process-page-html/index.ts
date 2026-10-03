@@ -16,10 +16,8 @@ export async function processPageHtml(params: {
 	pageSlug: string;
 	userId: string;
 	sourceLocale: string;
-	segmentTypeId: number | null;
 	parentId: number | null;
 	order: number;
-	anchorContentId: number | null;
 	status: PageStatus;
 }) {
 	const logger = createServerLogger("process-page-html", {

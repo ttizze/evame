@@ -11,8 +11,7 @@ export function buildPageMetadata({
 	description: string;
 	completedTranslationLocales: string[];
 }) {
-	const isDraft =
-		pageDetail.status !== "PUBLIC" && !pageDetail.isPublishedTipitakaArchive;
+	const isDraft = pageDetail.status !== "PUBLIC";
 	const ogImageUrl = `${BASE_URL}/api/og?locale=${pageDetail.sourceLocale}&slug=${pageDetail.slug}`;
 	const canonicalUrl = `${BASE_URL}/${pageDetail.sourceLocale}/${pageDetail.userHandle}/${pageDetail.slug}`;
 
