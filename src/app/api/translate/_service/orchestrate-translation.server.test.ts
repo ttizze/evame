@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
-	getContentSegmentsMock,
+	getPageCommentSegmentsMock,
 	getPageSegmentsMock,
 	getPageTitleMock,
 	markJobCompletedMock,
 	markJobInProgressMock,
 } = vi.hoisted(() => ({
-	getContentSegmentsMock: vi.fn(),
+	getPageCommentSegmentsMock: vi.fn(),
 	getPageSegmentsMock: vi.fn(),
 	getPageTitleMock: vi.fn(),
 	markJobCompletedMock: vi.fn(),
@@ -15,7 +15,7 @@ const {
 }));
 
 vi.mock("../_db/queries.server", () => ({
-	getContentSegments: getContentSegmentsMock,
+	getPageCommentSegments: getPageCommentSegmentsMock,
 	getPageSegments: getPageSegmentsMock,
 	getPageTitle: getPageTitleMock,
 }));
@@ -32,7 +32,7 @@ import { orchestrateTranslation } from "./orchestrate-translation.server";
 describe("翻訳ジョブの対象segment選択", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		getContentSegmentsMock.mockResolvedValue([]);
+		getPageCommentSegmentsMock.mockResolvedValue([]);
 		getPageTitleMock.mockResolvedValue("Page title");
 	});
 
@@ -43,12 +43,11 @@ describe("翻訳ジョブの対象segment選択", () => {
 			userId: "user-id",
 			pageId: 10,
 			targetLocale: "ja",
-			annotationContentId: null,
 			pageCommentId: 42,
 			translationContext: "",
 		});
 
-		expect(getContentSegmentsMock).toHaveBeenCalledWith(42, "PAGE_COMMENT");
+		expect(getPageCommentSegmentsMock).toHaveBeenCalledWith(42);
 		expect(getPageSegmentsMock).not.toHaveBeenCalled();
 		expect(markJobCompletedMock).toHaveBeenCalledWith(1);
 		expect(markJobInProgressMock).not.toHaveBeenCalled();

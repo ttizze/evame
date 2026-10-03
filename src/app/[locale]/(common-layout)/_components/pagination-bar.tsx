@@ -25,7 +25,6 @@ export function PaginationBar({ totalPages, currentPage }: PaginationBarProps) {
 		sort: parseAsString,
 		tab: parseAsString,
 		view: parseAsString,
-		annotations: parseAsString,
 	});
 	const currentParams = Object.fromEntries(
 		Object.entries(currentQuery).filter(([, value]) => value != null),

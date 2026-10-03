@@ -8,7 +8,7 @@
 
 import { db } from "@/db";
 import type { PageStatus } from "@/db/types";
-import type { PageForList, TitleSegment } from "../types";
+import type { PageForList, Segment } from "../types";
 import { bestTranslationByPagesSubquery } from "./best-translation-subquery.server";
 
 // ============================================
@@ -88,7 +88,7 @@ type PageRow = Awaited<
 	ReturnType<ReturnType<typeof buildPageListQuery>["execute"]>
 >[number];
 
-function toTitleSegment(row: PageRow): TitleSegment {
+function toTitleSegment(row: PageRow): Segment {
 	return {
 		id: row.segmentId,
 		contentId: row.id,

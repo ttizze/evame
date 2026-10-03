@@ -16,23 +16,17 @@ vi.mock("./hooks/use-scroll-visibility", () => ({
 }));
 
 function Harness({
-	annotationTypes = [],
 	initialSearchParams = "",
 	sourceLocale = "ja",
 	userLocale = "en",
 }: {
-	annotationTypes?: Array<{ key: string; label: string }>;
 	initialSearchParams?: string;
 	sourceLocale?: string;
 	userLocale?: string;
 }) {
 	return (
 		<NuqsTestingAdapter searchParams={initialSearchParams}>
-			<FloatingControls
-				annotationTypes={annotationTypes}
-				sourceLocale={sourceLocale}
-				userLocale={userLocale}
-			/>
+			<FloatingControls sourceLocale={sourceLocale} userLocale={userLocale} />
 		</NuqsTestingAdapter>
 	);
 }
@@ -88,37 +82,16 @@ describe("FloatingControls", () => {
 		});
 	});
 
-	it("注釈ボタンをクリックすると data-annotations が更新される", async () => {
-		render(
-			<Harness
-				annotationTypes={[
-					{ key: "COMMENT", label: "Commentary" },
-					{ key: "NOTE", label: "Note" },
-				]}
-			/>,
-		);
-
-		const user = userEvent.setup();
-
-		expect(document.documentElement.dataset.annotations).toBeUndefined();
-
-		await user.click(await screen.findByRole("button", { name: "Commentary" }));
-		expect(document.documentElement.dataset.annotations).toBe("Commentary");
-
-		await user.click(await screen.findByRole("button", { name: "Note" }));
-		expect(document.documentElement.dataset.annotations).toBe(
-			"Commentary Note",
-		);
-
-		await user.click(await screen.findByRole("button", { name: "Commentary" }));
-		expect(document.documentElement.dataset.annotations).toBe("Note");
-	});
-
 	it("URLクエリでviewを指定すると、その値で初期表示される", async () => {
 		render(<Harness initialSearchParams="view=user" />);
 
 		await screen.findByRole("button", {
 			name: /User language only/i,
 		});
+	});
+	it("注釈クエリが残っていても注釈表示状態を設定しない", async () => {
+		render(<Harness initialSearchParams="annotations=Atthakatha" />);
+		await screen.findByRole("button", { name: /Both languages/i });
+		expect(document.documentElement.dataset.annotations).toBeUndefined();
 	});
 });

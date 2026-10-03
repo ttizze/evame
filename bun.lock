@@ -129,11 +129,9 @@
         "@types/ws": "8.18.2",
         "@vercel/og": "1.0.3",
         "@vitejs/plugin-react": "6.1.1",
-        "@xmldom/xmldom": "0.9.12",
         "babel-plugin-react-compiler": "1.0.0",
         "bufferutil": "4.1.0",
         "drizzle-kit": "0.31.11",
-        "fast-glob": "3.3.3",
         "fishery": "2.4.0",
         "harfbuzzjs": "0.10.0",
         "jest-mock-extended": "4.0.1",
@@ -1144,8 +1142,6 @@
     "@vitest/spy": ["@vitest/spy@5.0.3", "", {}, "sha512-XhFysQTB8AZ+P4gMi+Lpo99vg2AZi0qKpaB9yXQl37+CaMEAPO3iH/wGVnSyL5MPERiLezpqTVtrR6UZH5GCXg=="],
 
     "@workflow/serde": ["@workflow/serde@4.1.0", "", {}, "sha512-pav4F2BoirECWR7Nf1TKt+2eETcBj7jj4cBefQ8VXQCA6NPkaKeLfj/zMgi+3zYV5ZIBT4GuUiphsj0/b9hPQQ=="],
-
-    "@xmldom/xmldom": ["@xmldom/xmldom@0.9.12", "", {}, "sha512-5AXjrcMClTryPe9LgZrygpB1lj7s0S9E0+W+AHaVKAVyHanafK86iPSvG5xHVSp/jC+VH1UXu0TAEmY279xH7A=="],
 
     "accepts": ["accepts@2.0.0", "", { "dependencies": { "mime-types": "^3.0.0", "negotiator": "^1.0.0" } }, "sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng=="],
 

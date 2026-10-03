@@ -99,7 +99,6 @@ export const editPageStatus = createServerFn({ method: "POST" })
 					: ["en", "zh"],
 			aiModel: "gemini-2.5-flash-lite",
 			pageCommentId: null,
-			annotationContentId: null,
 			translationContext,
 		});
 		return {

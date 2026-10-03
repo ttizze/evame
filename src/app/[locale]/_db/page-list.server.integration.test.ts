@@ -22,7 +22,6 @@ describe("fetchPaginatedNewPageLists", () => {
 					number: 0,
 					text: "Page title",
 					textAndOccurrenceHash: "page-title",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});

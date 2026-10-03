@@ -27,14 +27,9 @@ describe("syncSegments", () => {
 		];
 
 		// Act
-		const result = await db.transaction().execute(async (tx) => {
-			return await syncSegments(tx, page.id, drafts, null);
+		await db.transaction().execute(async (tx) => {
+			await syncSegments(tx, page.id, drafts);
 		});
-
-		// Assert: マッピングが正しく返される
-		expect(result.size).toBe(2);
-		expect(result.has("hash-title")).toBe(true);
-		expect(result.has("hash-p1")).toBe(true);
 
 		// Assert: DBにセグメントが作成されている
 		const createdSegments = await db
@@ -60,13 +55,11 @@ describe("syncSegments", () => {
 					number: 0,
 					text: "Title",
 					textAndOccurrenceHash: "hash-title",
-					segmentTypeKey: "PRIMARY",
 				},
 				{
 					number: 1,
 					text: "First paragraph",
 					textAndOccurrenceHash: "hash-p1",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -79,7 +72,7 @@ describe("syncSegments", () => {
 
 		// Act
 		await db.transaction().execute(async (tx) => {
-			return await syncSegments(tx, page.id, drafts, null);
+			await syncSegments(tx, page.id, drafts);
 		});
 
 		// Assert: 番号が更新されている
@@ -111,19 +104,16 @@ describe("syncSegments", () => {
 					number: 0,
 					text: "Title",
 					textAndOccurrenceHash: "hash-title",
-					segmentTypeKey: "PRIMARY",
 				},
 				{
 					number: 1,
 					text: "First paragraph",
 					textAndOccurrenceHash: "hash-p1",
-					segmentTypeKey: "PRIMARY",
 				},
 				{
 					number: 2,
 					text: "Second paragraph",
 					textAndOccurrenceHash: "hash-p2",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -136,7 +126,7 @@ describe("syncSegments", () => {
 
 		// Act
 		await db.transaction().execute(async (tx) => {
-			return await syncSegments(tx, page.id, drafts, null);
+			await syncSegments(tx, page.id, drafts);
 		});
 
 		// Assert: セグメントが2つに減っている
@@ -166,13 +156,11 @@ describe("syncSegments", () => {
 					number: 0,
 					text: "Title",
 					textAndOccurrenceHash: "hash-title",
-					segmentTypeKey: "PRIMARY",
 				},
 				{
 					number: 1,
 					text: "Old paragraph",
 					textAndOccurrenceHash: "hash-old",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -184,15 +172,9 @@ describe("syncSegments", () => {
 		];
 
 		// Act
-		const result = await db.transaction().execute(async (tx) => {
-			return await syncSegments(tx, page.id, drafts, null);
+		await db.transaction().execute(async (tx) => {
+			await syncSegments(tx, page.id, drafts);
 		});
-
-		// Assert: マッピングが正しい
-		expect(result.size).toBe(2);
-		expect(result.has("hash-new")).toBe(true);
-		expect(result.has("hash-title")).toBe(true);
-		expect(result.has("hash-old")).toBe(false);
 
 		// Assert: DBの状態を確認
 		const finalSegments = await db
@@ -234,18 +216,16 @@ describe("syncSegments", () => {
 					number: 0,
 					text: "Title",
 					textAndOccurrenceHash: "hash-title",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
 
 		// Act
-		const result = await db.transaction().execute(async (tx) => {
-			return await syncSegments(tx, page.id, [], null);
+		await db.transaction().execute(async (tx) => {
+			await syncSegments(tx, page.id, []);
 		});
 
 		// Assert
-		expect(result.size).toBe(0);
 
 		const remainingSegments = await db
 			.selectFrom("segments")
@@ -265,12 +245,10 @@ describe("syncSegments", () => {
 		];
 
 		// Act
-		const result = await db.transaction().execute(async (tx) => {
-			return await syncSegments(tx, page.id, drafts, null);
+		await db.transaction().execute(async (tx) => {
+			await syncSegments(tx, page.id, drafts);
 		});
 
 		// Assert
-		expect(result.size).toBe(1);
-		expect(result.has("hash-title")).toBe(true);
 	});
 });

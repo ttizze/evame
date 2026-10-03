@@ -68,9 +68,8 @@ describe("getPageDetailData", () => {
 		);
 	});
 
-	it("公開日時があるTipiṭakaのARCHIVEページはログインなしで表示する", async () => {
+	it("非公開記事をログインなしでは表示しない", async () => {
 		queryPageDetailMock.mockResolvedValue({
-			isPublishedTipitakaArchive: true,
 			status: "ARCHIVE",
 			userHandle: "evame",
 			segments: [{ number: 0 }],
@@ -79,9 +78,9 @@ describe("getPageDetailData", () => {
 
 		await expect(
 			getPageDetailData({
-				data: { locale: "ja", handle: "evame", pageSlug: "vinaya-pitaka" },
+				data: { locale: "ja", handle: "evame", pageSlug: "archived-page" },
 			}),
-		).resolves.toEqual({ pageDetail: { id: 1 } });
-		expect(getCurrentUserFromHeadersMock).not.toHaveBeenCalled();
+		).resolves.toBeNull();
+		expect(getCurrentUserFromHeadersMock).toHaveBeenCalled();
 	});
 });

@@ -3,21 +3,20 @@ import type { PageDetail } from "@/app/[locale]/types";
 import { buildPageMetadata } from "./page-metadata";
 
 describe("buildPageMetadata", () => {
-	it("公開日時があるTipiṭakaのARCHIVEページを下書き扱いしない", () => {
+	it("PUBLIC以外の記事を公開済みとして扱わない", () => {
 		const metadata = buildPageMetadata({
 			completedTranslationLocales: [],
-			description: "Tipiṭaka",
+			description: "記事",
 			pageDetail: {
-				isPublishedTipitakaArchive: true,
-				slug: "vinaya-pitaka",
-				sourceLocale: "pi",
-				status: "ARCHIVE",
-				title: "Vinayapiṭaka",
+				slug: "draft-page",
+				sourceLocale: "ja",
+				status: "DRAFT",
+				title: "記事タイトル",
 				userHandle: "evame",
 			} as PageDetail,
 		});
 
-		expect(metadata.isDraft).toBe(false);
-		expect(metadata.title).toBe("Vinayapiṭaka");
+		expect(metadata.isDraft).toBe(true);
+		expect(metadata.title).toBe("記事タイトル (Draft)");
 	});
 });

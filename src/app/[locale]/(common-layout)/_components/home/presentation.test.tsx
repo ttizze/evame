@@ -38,19 +38,11 @@ vi.mock("../page/popular-page-list/presentation", () => ({
 	),
 }));
 
-vi.mock("../tipitaka-page-list/tipitaka-page-list", () => ({
-	TipitakaPageList: () => (
-		<section data-testid="tipitaka-pages">Tipiṭaka</section>
-	),
-}));
-
 import { HomePresentation } from "./presentation";
 
 const data: Parameters<typeof HomePresentation>[0]["data"] = {
 	pageDetail: {
 		id: 1,
-		isTipitakaPage: false,
-		isPublishedTipitakaArchive: false,
 		slug: "evame",
 		title: "Evame",
 		status: "PUBLIC",
@@ -70,11 +62,10 @@ const data: Parameters<typeof HomePresentation>[0]["data"] = {
 	stats: { articles: 1, translations: 2, languages: 18 },
 	newPages: { pageForLists: [], totalPages: 0 },
 	popularPages: { pageForLists: [], totalPages: 0 },
-	tipitakaPages: [],
 };
 
 describe("ホーム画面", () => {
-	it("既存セクションを順番どおり表示しMoreリンクを維持する", () => {
+	it("Tipitaka一覧を表示せず通常の記事一覧とMoreリンクを維持する", () => {
 		const { container } = render(<HomePresentation data={data} locale="en" />);
 
 		expect(
@@ -87,7 +78,6 @@ describe("ホーム画面", () => {
 			"new-pages",
 			"more-link",
 			"popular-pages",
-			"tipitaka-pages",
 		]);
 		expect(screen.getByTestId("about-section")).toHaveAttribute(
 			"data-has-floating-controls",
@@ -107,13 +97,7 @@ describe("ホーム画面", () => {
 			[...container.querySelectorAll("[data-testid]")].map((element) =>
 				element.getAttribute("data-testid"),
 			),
-		).toEqual([
-			"floating-controls",
-			"new-pages",
-			"more-link",
-			"popular-pages",
-			"tipitaka-pages",
-		]);
+		).toEqual(["floating-controls", "new-pages", "more-link", "popular-pages"]);
 		expect(screen.getByTestId("floating-controls")).toBeInTheDocument();
 		expect(screen.getByRole("link", { name: /More/ })).toBeInTheDocument();
 	});

@@ -10,7 +10,6 @@ export async function enqueueTranslationJob({
 	targetLocales,
 	aiModel,
 	pageCommentId,
-	annotationContentId,
 	translationContext,
 }: {
 	currentUserId: string;
@@ -18,10 +17,9 @@ export async function enqueueTranslationJob({
 	targetLocales: string[];
 	aiModel: string;
 	pageCommentId: number | null;
-	annotationContentId: number | null;
 	translationContext: string;
 }): Promise<TranslationJobForTranslationAPI[]> {
-	const contentId = annotationContentId ?? pageCommentId ?? pageId;
+	const contentId = pageCommentId ?? pageId;
 	const hasSegments = await hasSegmentsForContentId(contentId);
 	if (!hasSegments) {
 		return [];
@@ -43,7 +41,6 @@ export async function enqueueTranslationJob({
 				pageId,
 				targetLocale: locale,
 				pageCommentId,
-				annotationContentId,
 				translationContext,
 			});
 

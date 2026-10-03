@@ -7,7 +7,6 @@ export type { TransactionClient } from "./types";
 import {
 	deleteStaleSegments,
 	fetchExistingSegments,
-	getSegmentTypeId,
 	offsetSegmentNumbers,
 	upsertSegmentBatch,
 } from "./db/mutations.server";
@@ -29,17 +28,9 @@ export async function syncSegments(
 	tx: TransactionClient,
 	contentId: number,
 	drafts: SegmentDraft[],
-	segmentTypeId: number | null,
-): Promise<Map<string, number>> {
-	// セグメントタイプIDを取得
-	const resolvedSegmentTypeId = await getSegmentTypeId(tx, segmentTypeId);
-
+): Promise<void> {
 	// 既存のセグメントを取得
-	const existingSegments = await fetchExistingSegments(
-		tx,
-		contentId,
-		resolvedSegmentTypeId,
-	);
+	const existingSegments = await fetchExistingSegments(tx, contentId);
 
 	// 既存セグメントのハッシュをセットとして保持（削除対象として開始）
 	const staleHashes = new Set(
@@ -48,32 +39,18 @@ export async function syncSegments(
 
 	// 既存セグメントの番号を一時的にオフセットして重複を回避
 	if (existingSegments.length > 0) {
-		await offsetSegmentNumbers(tx, contentId, resolvedSegmentTypeId);
+		await offsetSegmentNumbers(tx, contentId);
 	}
-
-	// ハッシュ → セグメントIDのマッピング（戻り値として使用）
-	const hashToSegmentId = new Map<string, number>();
 
 	// すべてのドラフトをバッチサイズごとに分割してupsert処理を実行
 	for (let i = 0; i < drafts.length; i += SEGMENT_UPSERT_CHUNK_SIZE) {
 		const chunk = drafts.slice(i, i + SEGMENT_UPSERT_CHUNK_SIZE);
 
-		const upsertedSegmentIds = await upsertSegmentBatch(
-			tx,
-			contentId,
-			resolvedSegmentTypeId,
-			chunk,
-		);
+		await upsertSegmentBatch(tx, contentId, chunk);
 
-		// 結果をマッピングに追加し、削除対象から除外
-		for (const [hash, segmentId] of upsertedSegmentIds) {
-			hashToSegmentId.set(hash, segmentId);
-			staleHashes.delete(hash);
-		}
+		for (const draft of chunk) staleHashes.delete(draft.textAndOccurrenceHash);
 	}
 
 	// ドラフトに含まれない既存セグメントを削除
-	await deleteStaleSegments(tx, contentId, resolvedSegmentTypeId, staleHashes);
-
-	return hashToSegmentId;
+	await deleteStaleSegments(tx, contentId, staleHashes);
 }

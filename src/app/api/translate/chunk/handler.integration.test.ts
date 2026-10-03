@@ -44,7 +44,6 @@ describe("POST /api/translate/chunk", () => {
 					number: 0,
 					text: "Hello",
 					textAndOccurrenceHash: "hash0",
-					segmentTypeKey: "PRIMARY" as const,
 				},
 			],
 		});
@@ -90,7 +89,6 @@ describe("POST /api/translate/chunk", () => {
 			title: "Test Page",
 			totalChunks: 1,
 			chunkIndex: 0,
-			annotationContentId: null,
 		};
 
 		// Act
@@ -136,7 +134,6 @@ describe("POST /api/translate/chunk", () => {
 					number: 0,
 					text: "Hello",
 					textAndOccurrenceHash: "hash0",
-					segmentTypeKey: "PRIMARY" as const,
 				},
 			],
 		});
@@ -183,7 +180,6 @@ describe("POST /api/translate/chunk", () => {
 			title: "Test Page",
 			totalChunks: 1,
 			chunkIndex: 0,
-			annotationContentId: null,
 		};
 
 		// Act
@@ -242,7 +238,6 @@ describe("POST /api/translate/chunk", () => {
 					number: 0,
 					text: "Hello",
 					textAndOccurrenceHash: "hash0",
-					segmentTypeKey: "PRIMARY" as const,
 				},
 			],
 		});
@@ -288,7 +283,6 @@ describe("POST /api/translate/chunk", () => {
 			title: "Test Page",
 			totalChunks: 2,
 			chunkIndex: 0,
-			annotationContentId: null,
 		};
 
 		// Act

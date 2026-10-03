@@ -1,6 +1,6 @@
 import GithubSlugger from "github-slugger";
 import { describe, expect, it } from "vitest";
-import type { SegmentForDetail } from "@/app/[locale]/types";
+import type { Segment } from "@/app/[locale]/types";
 import type { JsonValue } from "@/db/types";
 import { extractTocItems } from "./extract-toc-items";
 
@@ -23,17 +23,14 @@ const createSegment = (
 	number: number,
 	text: string,
 	translatedText: string | null = null,
-): SegmentForDetail =>
+): Segment =>
 	({
 		id: number,
 		contentId: 1,
 		number,
 		text,
 		translationText: translatedText,
-		segmentTypeKey: "Primary",
-		segmentTypeLabel: "Primary",
-		annotations: [],
-	}) as SegmentForDetail;
+	}) as Segment;
 
 describe("extractTocItems", () => {
 	it("深さ1-4の見出しだけを順序通りに抽出する", () => {

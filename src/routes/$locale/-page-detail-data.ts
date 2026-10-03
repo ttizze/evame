@@ -30,10 +30,7 @@ export const getPageDetailData = createServerFn({ method: "GET" })
 		const pageDetail = await queryPageDetail(data.pageSlug, data.locale);
 		if (!pageDetail || pageDetail.userHandle !== data.handle) return null;
 
-		if (
-			pageDetail.status !== "PUBLIC" &&
-			!pageDetail.isPublishedTipitakaArchive
-		) {
+		if (pageDetail.status !== "PUBLIC") {
 			const currentUser = await getCurrentUserFromHeaders(
 				new Headers(getRequestHeaders()),
 			);

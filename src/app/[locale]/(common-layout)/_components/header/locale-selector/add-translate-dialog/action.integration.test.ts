@@ -4,11 +4,7 @@ import { enqueueTranslate } from "@/app/[locale]/_infrastructure/qstash/enqueue-
 import { db } from "@/db";
 import { toSessionUser } from "@/tests/auth-helpers";
 import { resetDatabase } from "@/tests/db-helpers";
-import {
-	createPageWithAnnotations,
-	createPageWithSegments,
-	createUser,
-} from "@/tests/factories";
+import { createPageWithSegments, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { executeTranslateAction } from "./execute-translate-action.server";
 
@@ -104,13 +100,11 @@ describe("translateAction", () => {
 					number: 0,
 					text: "Test Page Title",
 					textAndOccurrenceHash: "hash-title",
-					segmentTypeKey: "PRIMARY",
 				},
 				{
 					number: 1,
 					text: "First paragraph",
 					textAndOccurrenceHash: "hash-1",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -143,64 +137,5 @@ describe("translateAction", () => {
 
 		// Assert: キューにジョブがエンキューされている（外部システムのモック）
 		expect(enqueueTranslate).toHaveBeenCalledTimes(1);
-	});
-
-	it("ページに注釈がある場合、注釈も翻訳ジョブに含まれる", async () => {
-		// Arrange: メインページと注釈を作成
-		const user = await createUser();
-		const { mainPage, annotationContent } = await createPageWithAnnotations({
-			userId: user.id,
-			mainPageSlug: "page-with-annotations",
-			mainPageSegments: [
-				{
-					number: 0,
-					text: "Page Title",
-					textAndOccurrenceHash: "hash-title",
-				},
-				{
-					number: 1,
-					text: "Main text",
-					textAndOccurrenceHash: "hash-main-1",
-				},
-			],
-			annotationSegments: [
-				{
-					number: 0,
-					text: "Annotation text",
-					textAndOccurrenceHash: "hash-anno-0",
-					linkedToMainSegmentNumber: 1,
-				},
-			],
-		});
-
-		vi.mocked(getCurrentUser).mockResolvedValue(toSessionUser(user));
-
-		const formData = new FormData();
-		formData.append("pageSlug", mainPage.slug);
-		formData.append("aiModel", "gemini-pro");
-		formData.append("targetLocale", "ja");
-
-		// Act
-		const result = await executeTranslateAction(formData);
-
-		// Assert
-		expect(result.success).toBe(true);
-		const jobs = await db
-			.selectFrom("translationJobs")
-			.selectAll()
-			.where("pageId", "=", mainPage.id)
-			.execute();
-		expect(jobs.length).toBeGreaterThanOrEqual(2);
-
-		const annotationCall = vi
-			.mocked(enqueueTranslate)
-			.mock.calls.find(
-				([body]) => body.annotationContentId === annotationContent.id,
-			);
-		expect(annotationCall?.[0]).toMatchObject({
-			annotationContentId: annotationContent.id,
-			pageId: mainPage.id,
-			targetLocale: "ja",
-		});
 	});
 });

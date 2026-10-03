@@ -1,6 +1,6 @@
 # アーキテクチャ概要
 
-Evame は TanStack Start を使った翻訳・注釈プラットフォームです。
+Evame は TanStack Start を使った翻訳プラットフォームです。
 本ドキュメントは「全体像」「主要コンポーネント」「依存関係」「データの流れ」を最短で理解するための入口です。
 
 ## 技術スタック（現行）
@@ -97,7 +97,7 @@ Evame は TanStack Start を使った翻訳・注釈プラットフォームで�
 
 画像アップロードは `src/app/[locale]/_service/upload/upload-image.ts` が Images binding で圧縮し、`_infrastructure/upload/r2-client.ts` が R2 binding に保存します。既存の `images.evame.tech` の URL を維持します。開発時は `src/app/api/uploads/handler.ts` がローカル R2 の画像を返します。OG の API 境界は `src/routes/api/og.tsx`、生成処理は `src/app/api/og/handler.tsx` に置き、Static Assets binding からフォントとロゴを読みます。
 
-画像の幅・品質・サイズ制限は upload service が決め、`_infrastructure/upload/transform-image.ts` の Images binding が変換します。Tipitaka の一括インポートは別環境で行うため、このリポジトリの取り込みCLIは廃止しました。既存の記事表示・編集は維持します。
+画像の幅・品質・サイズ制限は upload service が決め、`_infrastructure/upload/transform-image.ts` の Images binding が変換します。Tipitaka は別サイトで運用するため、Evameの専用一覧・公開条件の例外・XML変換/取り込みCLIは廃止しました。通常の記事表示・編集・階層ナビゲーションは維持します。
 
 翻訳の外部 API 呼び出しは `src/app/api/translate/chunk/_infra` に置きます。`google-auth.ts` が Workers の Web Crypto でサービスアカウントの JWT を署名し、`vertexai.ts` が Vertex AI REST API を実行します。呼び出し元の翻訳 service・プロンプト・安全設定・再試行は維持します。
 

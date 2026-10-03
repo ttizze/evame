@@ -6,7 +6,6 @@ import AboutSectionPresentation from "../about-section/presentation";
 import { FloatingControls } from "../floating-controls/floating-controls.client";
 import { NewPageListPresentation } from "../page/new-page-list/presentation";
 import { PopularPageListPresentation } from "../page/popular-page-list/presentation";
-import { TipitakaPageList } from "../tipitaka-page-list/tipitaka-page-list";
 
 export function HomePresentation({
 	locale,
@@ -63,7 +62,6 @@ export function HomePresentation({
 				showPagination={false}
 				totalPages={data.popularPages.totalPages}
 			/>
-			<TipitakaPageList locale={locale} pages={data.tipitakaPages} />
 		</div>
 	);
 }

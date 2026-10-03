@@ -40,13 +40,11 @@ describe("fetchNotificationRowsWithRelations", () => {
 					number: 0,
 					text: "Comment Notification Page",
 					textAndOccurrenceHash: "comment-notification-title",
-					segmentTypeKey: "PRIMARY",
 				},
 				{
 					number: 1,
 					text: "Comment notification segment",
 					textAndOccurrenceHash: "comment-notification-segment",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -75,7 +73,6 @@ describe("fetchNotificationRowsWithRelations", () => {
 			number: 0,
 			text: "Comment notification comment",
 			textAndOccurrenceHash: "comment-notification-comment",
-			segmentTypeKey: "PRIMARY",
 		});
 		const translation = await db
 			.insertInto("segmentTranslations")

@@ -81,8 +81,6 @@ async function walk(current: string, out: string[]): Promise<void> {
 			entry.name === "node_modules" ||
 			entry.name === ".git" ||
 			entry.name === ".next" ||
-			entry.name === "tipitaka-xml" ||
-			entry.name === "tipitaka-md" ||
 			entry.name === "cst" ||
 			entry.name === "coverage" ||
 			entry.name === "playwright-report" ||

@@ -32,8 +32,6 @@ describe("コメントツリー表示", () => {
 			contentId: 1,
 			number: 0,
 			text: "原文",
-			segmentTypeKey: "PRIMARY",
-			segmentTypeLabel: "本文",
 			translationText: "翻訳",
 		});
 		const tree = buildCommentTree([parent, comment(2, 1)]);

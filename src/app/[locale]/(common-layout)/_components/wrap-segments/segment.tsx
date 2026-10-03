@@ -13,7 +13,7 @@ type SegmentElementProps = {
 };
 
 /** src/tr ペアを描画する共通コンポーネント */
-function SegmentPair({
+export function SegmentElement({
 	tagName: Tag = "span",
 	segment,
 	interactive = true,
@@ -21,13 +21,16 @@ function SegmentPair({
 	tagProps,
 	children,
 }: SegmentElementProps) {
+	const baseClassName = [tagProps?.className, className, "block seg-cv"]
+		.filter(Boolean)
+		.join(" ");
 	const hasTr = segment.translationText != null;
 
 	return (
 		<>
 			<Tag
 				{...tagProps}
-				className={`${className} seg-src ${hasTr ? "seg-has-tr" : ""}`}
+				className={`${baseClassName} seg-src ${hasTr ? "seg-has-tr" : ""}`}
 				data-number-id={segment.number}
 			>
 				{children ?? sanitizeAndParseText(segment.text ?? "")}
@@ -35,7 +38,7 @@ function SegmentPair({
 			{hasTr && (
 				<Tag
 					{...tagProps}
-					className={`${className} seg-tr ${interactive ? "cursor-pointer select-text" : ""}`}
+					className={`${baseClassName} seg-tr ${interactive ? "cursor-pointer select-text" : ""}`}
 					data-number-id={segment.number}
 					id={tagProps?.id ? `${tagProps.id}-tr` : undefined}
 					{...(interactive && {
@@ -47,56 +50,6 @@ function SegmentPair({
 					{sanitizeAndParseText(segment.translationText ?? "")}
 				</Tag>
 			)}
-		</>
-	);
-}
-
-export function SegmentElement({
-	tagName = "span",
-	segment,
-	interactive = true,
-	className,
-	tagProps,
-	children,
-}: SegmentElementProps) {
-	const baseClassName = [tagProps?.className, className, "block seg-cv"]
-		.filter(Boolean)
-		.join(" ");
-
-	const annotations =
-		"annotations" in segment ? (segment.annotations ?? []) : [];
-
-	return (
-		<>
-			<SegmentPair
-				className={baseClassName}
-				interactive={interactive}
-				segment={segment}
-				tagName={tagName}
-				tagProps={tagProps}
-			>
-				{children}
-			</SegmentPair>
-
-			{annotations.map(({ annotationSegment: a }) => {
-				const typeKey = a?.segmentTypeLabel ?? a?.segmentTypeKey ?? "";
-				if (!typeKey) return null;
-
-				return (
-					<SegmentPair
-						className={`${baseClassName} seg-ann hidden ml-4 text-sm leading-relaxed`}
-						interactive={interactive}
-						key={`ann-${a.id}`}
-						segment={a}
-						tagName={tagName}
-						tagProps={{
-							...tagProps,
-							id: undefined,
-							"data-annotation-type": typeKey,
-						}}
-					/>
-				);
-			})}
 		</>
 	);
 }

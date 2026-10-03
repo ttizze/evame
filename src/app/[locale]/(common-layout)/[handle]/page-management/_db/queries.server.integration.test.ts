@@ -24,7 +24,6 @@ describe("fetchPaginatedOwnPages", () => {
 					number: 0,
 					text: "Public title",
 					textAndOccurrenceHash: "public-title",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -37,7 +36,6 @@ describe("fetchPaginatedOwnPages", () => {
 					number: 0,
 					text: "Draft title",
 					textAndOccurrenceHash: "draft-title",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -50,7 +48,6 @@ describe("fetchPaginatedOwnPages", () => {
 					number: 0,
 					text: "Archived title",
 					textAndOccurrenceHash: "archived-title",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -63,7 +60,6 @@ describe("fetchPaginatedOwnPages", () => {
 					number: 0,
 					text: "Other title",
 					textAndOccurrenceHash: "other-title",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -94,7 +90,6 @@ describe("fetchPaginatedOwnPages", () => {
 					number: 0,
 					text: "Matching title",
 					textAndOccurrenceHash: "owner-match",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -106,7 +101,6 @@ describe("fetchPaginatedOwnPages", () => {
 					number: 0,
 					text: "Matching title",
 					textAndOccurrenceHash: "other-match",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -140,7 +134,6 @@ describe("fetchPageViewCounts", () => {
 					number: 0,
 					text: "First title",
 					textAndOccurrenceHash: "first-title",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
@@ -152,7 +145,6 @@ describe("fetchPageViewCounts", () => {
 					number: 0,
 					text: "Second title",
 					textAndOccurrenceHash: "second-title",
-					segmentTypeKey: "PRIMARY",
 				},
 			],
 		});
