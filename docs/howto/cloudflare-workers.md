@@ -54,4 +54,6 @@ bun x wrangler deploy
 
 リポジトリの Actions secrets に `CLOUDFLARE_API_TOKEN` と `SENTRY_AUTH_TOKEN` を設定する。Cloudflare のデプロイ先アカウントと Worker は `wrangler.jsonc` に定義する。既存のキャッシュ削除用トークンは Workers を更新できないため、デプロイ用には `evame-start` の更新・デプロイに必要な権限を持つトークンを使う。Sentry のアップロード用トークンは本番ビルドのステップだけに渡し、Worker secret には登録しない。
 
-本番のルートを追加した際は `wrangler.jsonc` にも反映し、以降のデプロイで維持する。本番切り替え時は Worker の `SENTRY_DSN` と `SENTRY_ENVIRONMENT` を本番用に設定する。
+本番の `evame.tech/*` ルートは Cloudflare のゾーン側で `evame-start` に接続する。`wrangler.jsonc` に `routes` を指定せず、CIは既存Workerのバージョンだけを更新する。Wranglerはルートが未指定なら既存の接続を変更しないため、CIトークンにゾーンのルート更新権限を追加する必要はない。`images.evame.tech` はこのルートの対象に含めない。
+
+本番切り替え時は Worker の `BETTER_AUTH_URL` を `https://evame.tech`、`SENTRY_DSN` と `SENTRY_ENVIRONMENT` を本番用に設定する。元のVercel向けDNSレコードを保持し、問題があればゾーン側のWorkerルートを外して戻す。
