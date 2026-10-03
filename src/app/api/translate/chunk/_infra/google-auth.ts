@@ -1,39 +1,60 @@
-// lib/googleAuth.ts ----------------------------------------------------------
-import { getVercelOidcToken } from "@vercel/functions/oidc";
-import { ExternalAccountClient } from "google-auth-library";
+import { importPKCS8, SignJWT } from "jose";
 
-/**
- * Vercel環境ではOIDCトークンを使用し、ローカル開発ではundefinedを返して
- * Application Default Credentials (ADC) を自動的に使用する
- */
-export async function getAuthClient(): Promise<
-	ExternalAccountClient | undefined
-> {
-	// Vercel 環境でのみ OIDC を利用（環境変数の VERCEL_OIDC_TOKEN は無視）
-	const isVercel = process.env.VERCEL === "1" || process.env.VERCEL === "true";
-	const oidc = isVercel ? getVercelOidcToken() : undefined;
+let cachedToken: { value: string; expiresAt: number } | null = null;
 
-	if (!oidc) {
-		// ローカル開発時: undefined を返すことで、VertexAI が自動的に
-		// Application Default Credentials を使用する
-		// 事前に `gcloud auth application-default login` を実行しておく
-		return undefined;
+export async function getGoogleAccessToken(): Promise<string> {
+	if (cachedToken && cachedToken.expiresAt > Date.now())
+		return cachedToken.value;
+	let credentials: { client_email: string; private_key: string };
+	try {
+		credentials = JSON.parse(process.env.GCP_SERVICE_ACCOUNT_CREDENTIALS ?? "");
+		if (
+			typeof credentials.client_email !== "string" ||
+			!credentials.client_email ||
+			typeof credentials.private_key !== "string" ||
+			!credentials.private_key
+		)
+			throw new Error();
+	} catch {
+		throw new Error(
+			"GCP service account credentials are not configured correctly",
+		);
 	}
-
-	// Vercel 環境: OIDC トークンを使用
-	const client = ExternalAccountClient.fromJSON({
-		type: "external_account",
-		audience:
-			`//iam.googleapis.com/projects/${process.env.GCP_PROJECT_NUMBER}` +
-			`/locations/global/workloadIdentityPools/${process.env.GCP_WORKLOAD_IDENTITY_POOL_ID}` +
-			`/providers/${process.env.GCP_WORKLOAD_IDENTITY_POOL_PROVIDER_ID}`,
-		subject_token_type: "urn:ietf:params:oauth:token-type:jwt",
-		token_url: "https://sts.googleapis.com/v1/token",
-		service_account_impersonation_url:
-			`https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/` +
-			`${process.env.GCP_SERVICE_ACCOUNT_EMAIL}:generateAccessToken`,
-		subject_token_supplier: { getSubjectToken: () => oidc },
+	const key = await importPKCS8(credentials.private_key, "RS256");
+	const assertion = await new SignJWT({
+		scope: "https://www.googleapis.com/auth/cloud-platform",
+	})
+		.setProtectedHeader({ alg: "RS256" })
+		.setIssuer(credentials.client_email)
+		.setAudience("https://oauth2.googleapis.com/token")
+		.setIssuedAt()
+		.setExpirationTime("1h")
+		.sign(key);
+	const response = await fetch("https://oauth2.googleapis.com/token", {
+		method: "POST",
+		body: new URLSearchParams({
+			grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+			assertion,
+		}),
 	});
-	if (!client) throw new Error("authClient undefined");
-	return client;
+	if (!response.ok)
+		throw new Error(`Google authentication failed (${response.status})`);
+	const token = (await response.json()) as {
+		access_token: string;
+		expires_in: number;
+	};
+	if (
+		typeof token.access_token !== "string" ||
+		!token.access_token ||
+		typeof token.expires_in !== "number" ||
+		!Number.isFinite(token.expires_in) ||
+		token.expires_in <= 0
+	) {
+		throw new Error("Google authentication returned an invalid token");
+	}
+	cachedToken = {
+		value: token.access_token,
+		expiresAt: Date.now() + (token.expires_in - 60) * 1000,
+	};
+	return token.access_token;
 }

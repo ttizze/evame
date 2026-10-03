@@ -28,6 +28,13 @@ export default defineConfig({
 		},
 	},
 	resolve: {
+		alias: {
+			"@cloudflare/pages-plugin-vercel-og/api": "@vercel/og",
+			"cloudflare:workers": new URL(
+				"./src/tests/cloudflare.ts",
+				import.meta.url,
+			).pathname,
+		},
 		tsconfigPaths: true,
 	},
 });

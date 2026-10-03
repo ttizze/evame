@@ -1,0 +1,16 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "evame-start",
+	"account_id": "c7b7a7ae01fa84965620a5b3f7e79286",
+	"main": "src/server.ts",
+	"compatibility_date": "2026-10-03",
+	"compatibility_flags": ["nodejs_compat"],
+	"assets": { "binding": "ASSETS" },
+	"images": { "binding": "IMAGES" },
+	"version_metadata": { "binding": "CF_VERSION_METADATA" },
+	"r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "eveeve" }],
+	"kv_namespaces": [
+		{ "binding": "SETTINGS", "id": "e5faa34f97e44136a060e561e11f3d9d" }
+	],
+	"observability": { "enabled": true }
+}

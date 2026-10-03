@@ -9,22 +9,8 @@ const resolveLogLevel = () => {
 	return "debug";
 };
 
-export const createLogger = (service: string) => {
-	const level = resolveLogLevel();
-	const isDev = process.env.NODE_ENV !== "production";
-
-	return pino({
-		level,
+export const createLogger = (service: string) =>
+	pino({
+		level: resolveLogLevel(),
 		name: service,
-		transport: isDev
-			? {
-					target: "pino-pretty",
-					options: {
-						colorize: true,
-						translateTime: "SYS:standard",
-						ignore: "pid,hostname",
-					},
-				}
-			: undefined,
 	});
-};

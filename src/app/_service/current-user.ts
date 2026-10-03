@@ -1,6 +1,6 @@
-import { auth } from "@/auth";
+import { getAuth } from "@/auth";
 
 export async function getCurrentUserFromHeaders(headers: Headers) {
-	const session = await auth.api.getSession({ headers });
+	const session = await getAuth().api.getSession({ headers });
 	return session?.user ?? null;
 }

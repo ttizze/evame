@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { Pool as NeonPool } from "@neondatabase/serverless";
 import { CamelCasePlugin, Kysely, PostgresDialect } from "kysely";
 import { Client as PgClient, Pool as PgPool } from "pg";
@@ -10,7 +11,9 @@ declare global {
 	var __kyselyDb: KyselyDbWithPool | null;
 }
 
-function createDb(): KyselyDbWithPool {
+export const databaseScope = new AsyncLocalStorage<KyselyDbWithPool>();
+
+export function createDb(): KyselyDbWithPool {
 	const connectionString =
 		process.env.DATABASE_URL ||
 		(process.env.NODE_ENV === "test"
@@ -50,17 +53,22 @@ function createDb(): KyselyDbWithPool {
 	return Object.assign(db, { pool });
 }
 
-if (!globalThis.__kyselyDb) {
-	globalThis.__kyselyDb = createDb();
-}
-export let db: KyselyDbWithPool = globalThis.__kyselyDb;
+export const db = new Proxy({} as KyselyDbWithPool, {
+	get(_target, property) {
+		let current = databaseScope.getStore() ?? globalThis.__kyselyDb;
+		if (!current) {
+			current = createDb();
+			globalThis.__kyselyDb = current;
+		}
+		const value = Reflect.get(current, property);
+		// fnはcountなどのメソッドを持つ関数オブジェクトなのでbindで置き換えない。
+		return typeof value === "function" && property !== "fn"
+			? value.bind(current)
+			: value;
+	},
+});
 
 export async function disposeDb(): Promise<void> {
-	if (globalThis.__kyselyDb) {
-		if (typeof globalThis.__kyselyDb.destroy === "function") {
-			await globalThis.__kyselyDb.destroy();
-		}
-	}
-	globalThis.__kyselyDb = null;
-	db = globalThis.__kyselyDb = createDb();
+	await globalThis.__kyselyDb?.destroy();
+	globalThis.__kyselyDb = createDb();
 }

@@ -9,7 +9,6 @@ describe("メンテナンスゲートの対象判定", () => {
 	it("既存のmatcher除外パスをメンテナンス判定から除外する", () => {
 		const excludedPaths = [
 			"/api/auth/session",
-			"/_vercel/trace",
 			"/privacy",
 			"/terms/license",
 			"/monitoring/health",

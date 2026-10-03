@@ -3,9 +3,12 @@ import {
 	magicLinkClient,
 } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
-import type { auth } from "@/auth";
+import type { getAuth } from "@/auth";
 
 export const authClient = createAuthClient({
-	plugins: [customSessionClient<typeof auth>(), magicLinkClient()],
+	plugins: [
+		customSessionClient<ReturnType<typeof getAuth>>(),
+		magicLinkClient(),
+	],
 	baseURL: import.meta.env.VITE_PUBLIC_DOMAIN,
 });

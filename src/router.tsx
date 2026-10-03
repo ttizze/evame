@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/tanstackstart-react";
+import * as Sentry from "@sentry/react";
 import { createRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 

@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { getAuth } from "@/auth";
 import { findSessionTokenBySessionId } from "./_db/queries";
 import { buildLoginUrl, parseCliRedirectUri } from "./_utils/redirect-uri";
 
@@ -11,7 +11,7 @@ export async function getSyncCliLogin(request: Request): Promise<Response> {
 		return Response.json({ error: "Invalid redirect_uri" }, { status: 400 });
 	}
 
-	const session = await auth.api.getSession({
+	const session = await getAuth().api.getSession({
 		headers: request.headers,
 	});
 	if (!session?.session?.id) {

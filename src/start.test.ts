@@ -1,4 +1,3 @@
-import { sentryGlobalRequestMiddleware } from "@sentry/tanstackstart-react";
 import { csrfSymbol } from "@tanstack/react-start";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -6,9 +5,15 @@ const { readMaintenance } = vi.hoisted(() => ({
 	readMaintenance: vi.fn(),
 }));
 
-vi.mock("@vercel/edge-config", () => ({ get: readMaintenance }));
+vi.mock("cloudflare:workers", () => ({
+	env: { SETTINGS: { get: readMaintenance } },
+}));
 
-import { maintenanceMiddleware, startInstance } from "./start";
+import {
+	maintenanceMiddleware,
+	sentryMiddleware,
+	startInstance,
+} from "./start";
 
 type MaintenanceMiddlewareContext = Parameters<
 	NonNullable<typeof maintenanceMiddleware.options.server>
@@ -51,15 +56,12 @@ describe("TanStack Startのメンテナンスrequest middleware", () => {
 		readMaintenance.mockReset();
 	});
 
-	it("Sentryを先頭、server functionのCSRF検証をmaintenanceより前に登録する", async () => {
+	it("Server FunctionのSentry監視と、maintenanceより前のCSRF検証を登録する", async () => {
 		const options = await startInstance.getOptions();
-		const [
-			registeredSentryMiddleware,
-			csrfMiddleware,
-			registeredMaintenanceMiddleware,
-		] = options.requestMiddleware ?? [];
+		const [csrfMiddleware, registeredMaintenanceMiddleware] =
+			options.requestMiddleware ?? [];
 
-		expect(registeredSentryMiddleware).toBe(sentryGlobalRequestMiddleware);
+		expect(options.functionMiddleware).toEqual([sentryMiddleware]);
 		expect(csrfMiddleware).toBeDefined();
 		if (!csrfMiddleware) {
 			throw new Error("CSRF middlewareが登録されていません");
@@ -68,7 +70,7 @@ describe("TanStack Startのメンテナンスrequest middleware", () => {
 		expect(registeredMaintenanceMiddleware).toBe(maintenanceMiddleware);
 	});
 
-	it("APIやstaticなどのmatcher除外パスはEdge Configを読まずに通過する", async () => {
+	it("APIやstaticなどのmatcher除外パスはKVを読まずに通過する", async () => {
 		const { next, response, result } = await runMiddleware("/api/auth/session");
 
 		expect(readMaintenance).not.toHaveBeenCalled();
@@ -76,7 +78,7 @@ describe("TanStack Startのメンテナンスrequest middleware", () => {
 		expect(result).toMatchObject({ response });
 	});
 
-	it("maintenance route自身はEdge Configを読まずに通過する", async () => {
+	it("maintenance route自身はKVを読まずに通過する", async () => {
 		const { next, response, result } = await runMiddleware("/ja/maintenance");
 
 		expect(readMaintenance).not.toHaveBeenCalled();
@@ -89,7 +91,7 @@ describe("TanStack Startのメンテナンスrequest middleware", () => {
 
 		const { next, response, result } = await runMiddleware("/ja/about");
 
-		expect(readMaintenance).toHaveBeenCalledWith("maintenance");
+		expect(readMaintenance).toHaveBeenCalledWith("maintenance", "json");
 		expect(next).toHaveBeenCalledOnce();
 		expect(result).toMatchObject({ response });
 	});
@@ -112,8 +114,8 @@ describe("TanStack Startのメンテナンスrequest middleware", () => {
 		);
 	});
 
-	it("Edge Config障害時は既存どおりrequestを失敗させる", async () => {
-		const failure = new Error("Edge Config unavailable");
+	it("KV障害時は既存どおりrequestを失敗させる", async () => {
+		const failure = new Error("KV unavailable");
 		readMaintenance.mockRejectedValue(failure);
 
 		await expect(runMiddleware("/about")).rejects.toBe(failure);

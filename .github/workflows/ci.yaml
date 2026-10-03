@@ -40,9 +40,10 @@ jobs:
           nix develop --command bun run db:prod:seed
           nix develop --command bun run test --run
 
-      - name: Build TanStack Start for Vercel
+      - name: Build TanStack Start for Cloudflare Workers
         env:
-          NITRO_PRESET: vercel
+          SENTRY_DSN: ""
+          VITE_SENTRY_DSN: ""
         run: nix develop --command bun run build
 
       - name: Verify isolated deployment runtime

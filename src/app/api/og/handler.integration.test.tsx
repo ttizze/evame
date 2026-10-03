@@ -18,8 +18,17 @@ const { ogAssetStore, getItemRaw } = vi.hoisted(() => {
 });
 const ogAssetFixtures = new Map<string, Uint8Array>();
 
-vi.mock("nitro/storage", () => ({
-	useStorage: () => ({ getItemRaw }),
+vi.mock("cloudflare:workers", () => ({
+	env: {
+		ASSETS: {
+			fetch: async (url: string) => {
+				const asset = await getItemRaw(new URL(url).pathname.slice(1));
+				return new Response(asset ? asset.slice().buffer : null, {
+					status: asset ? 200 : 404,
+				});
+			},
+		},
+	},
 }));
 
 const assetPaths = {

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LocaleRouteImport } from './routes/$locale'
+import { Route as MonitoringRouteImport } from './routes/monitoring'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as LocaleCommonRouteImport } from './routes/$locale._common'
@@ -37,6 +38,7 @@ import { Route as ApiSyncCliLoginRouteImport } from './routes/api/sync/cli-login
 import { Route as ApiSyncPullRouteImport } from './routes/api/sync/pull'
 import { Route as ApiSyncPushRouteImport } from './routes/api/sync/push'
 import { Route as ApiTranslateChunkRouteImport } from './routes/api/translate/chunk'
+import { Route as ApiUploadsSplatRouteImport } from './routes/api/uploads/$'
 import { Route as SitemapSitemapChar123idChar125DotxmlRouteImport } from './routes/sitemap/sitemap/{$id}[.]xml'
 import { Route as LocaleCommonHandlePageSlugRouteImport } from './routes/$locale._common.$handle_.$pageSlug'
 import { Route as LocaleCommonHandleEditRouteImport } from './routes/$locale._common.$handle_.edit'
@@ -54,6 +56,11 @@ const IndexRoute = IndexRouteImport.update({
 const LocaleRoute = LocaleRouteImport.update({
   id: '/$locale',
   path: '/$locale',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MonitoringRoute = MonitoringRouteImport.update({
+  id: '/monitoring',
+  path: '/monitoring',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
@@ -184,6 +191,11 @@ const ApiTranslateChunkRoute = ApiTranslateChunkRouteImport.update({
   path: '/chunk',
   getParentRoute: () => ApiTranslateRoute,
 } as any)
+const ApiUploadsSplatRoute = ApiUploadsSplatRouteImport.update({
+  id: '/api/uploads/$',
+  path: '/api/uploads/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapSitemapChar123idChar125DotxmlRoute =
   SitemapSitemapChar123idChar125DotxmlRouteImport.update({
     id: '/sitemap/sitemap/{$id}.xml',
@@ -233,6 +245,7 @@ const LocaleEditHandlePageSlugEditRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$locale': typeof LocaleRouteWithChildren
+  '/monitoring': typeof MonitoringRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
@@ -256,6 +269,7 @@ export interface FileRoutesByFullPath {
   '/api/sync/pull': typeof ApiSyncPullRoute
   '/api/sync/push': typeof ApiSyncPushRoute
   '/api/translate/chunk': typeof ApiTranslateChunkRoute
+  '/api/uploads/$': typeof ApiUploadsSplatRoute
   '/sitemap/sitemap/{$id}.xml': typeof SitemapSitemapChar123idChar125DotxmlRoute
   '/$locale/': typeof LocaleCommonIndexRoute
   '/$locale/$handle/$pageSlug': typeof LocaleCommonHandlePageSlugRoute
@@ -269,6 +283,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$locale': typeof LocaleCommonIndexRoute
+  '/monitoring': typeof MonitoringRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
@@ -292,6 +307,7 @@ export interface FileRoutesByTo {
   '/api/sync/pull': typeof ApiSyncPullRoute
   '/api/sync/push': typeof ApiSyncPushRoute
   '/api/translate/chunk': typeof ApiTranslateChunkRoute
+  '/api/uploads/$': typeof ApiUploadsSplatRoute
   '/sitemap/sitemap/{$id}.xml': typeof SitemapSitemapChar123idChar125DotxmlRoute
   '/$locale/$handle/$pageSlug': typeof LocaleCommonHandlePageSlugRoute
   '/$locale/$handle/edit': typeof LocaleCommonHandleEditRoute
@@ -305,6 +321,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$locale': typeof LocaleRouteWithChildren
+  '/monitoring': typeof MonitoringRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/$locale/_common': typeof LocaleCommonRouteWithChildren
@@ -330,6 +347,7 @@ export interface FileRoutesById {
   '/api/sync/pull': typeof ApiSyncPullRoute
   '/api/sync/push': typeof ApiSyncPushRoute
   '/api/translate/chunk': typeof ApiTranslateChunkRoute
+  '/api/uploads/$': typeof ApiUploadsSplatRoute
   '/sitemap/sitemap/{$id}.xml': typeof SitemapSitemapChar123idChar125DotxmlRoute
   '/$locale/_common/': typeof LocaleCommonIndexRoute
   '/$locale/_common/$handle_/$pageSlug': typeof LocaleCommonHandlePageSlugRoute
@@ -345,6 +363,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/$locale'
+    | '/monitoring'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/$locale/maintenance'
@@ -368,6 +387,7 @@ export interface FileRouteTypes {
     | '/api/sync/pull'
     | '/api/sync/push'
     | '/api/translate/chunk'
+    | '/api/uploads/$'
     | '/sitemap/sitemap/{$id}.xml'
     | '/$locale/'
     | '/$locale/$handle/$pageSlug'
@@ -381,6 +401,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/$locale'
+    | '/monitoring'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/$locale/maintenance'
@@ -404,6 +425,7 @@ export interface FileRouteTypes {
     | '/api/sync/pull'
     | '/api/sync/push'
     | '/api/translate/chunk'
+    | '/api/uploads/$'
     | '/sitemap/sitemap/{$id}.xml'
     | '/$locale/$handle/$pageSlug'
     | '/$locale/$handle/edit'
@@ -416,6 +438,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/$locale'
+    | '/monitoring'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/$locale/_common'
@@ -441,6 +464,7 @@ export interface FileRouteTypes {
     | '/api/sync/pull'
     | '/api/sync/push'
     | '/api/translate/chunk'
+    | '/api/uploads/$'
     | '/sitemap/sitemap/{$id}.xml'
     | '/$locale/_common/'
     | '/$locale/_common/$handle_/$pageSlug'
@@ -455,6 +479,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LocaleRoute: typeof LocaleRouteWithChildren
+  MonitoringRoute: typeof MonitoringRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiLocaleInfoRoute: typeof ApiLocaleInfoRoute
@@ -470,6 +495,7 @@ export interface RootRouteChildren {
   ApiSyncCliLoginRoute: typeof ApiSyncCliLoginRoute
   ApiSyncPullRoute: typeof ApiSyncPullRoute
   ApiSyncPushRoute: typeof ApiSyncPushRoute
+  ApiUploadsSplatRoute: typeof ApiUploadsSplatRoute
   SitemapSitemapChar123idChar125DotxmlRoute: typeof SitemapSitemapChar123idChar125DotxmlRoute
   ApiPageViewsPageIdIncrementRoute: typeof ApiPageViewsPageIdIncrementRoute
 }
@@ -488,6 +514,13 @@ declare module '@tanstack/react-router' {
       path: '/$locale'
       fullPath: '/$locale'
       preLoaderRoute: typeof LocaleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/monitoring': {
+      id: '/monitoring'
+      path: '/monitoring'
+      fullPath: '/monitoring'
+      preLoaderRoute: typeof MonitoringRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/robots.txt': {
@@ -672,6 +705,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTranslateChunkRouteImport
       parentRoute: typeof ApiTranslateRoute
     }
+    '/api/uploads/$': {
+      id: '/api/uploads/$'
+      path: '/api/uploads/$'
+      fullPath: '/api/uploads/$'
+      preLoaderRoute: typeof ApiUploadsSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap/sitemap/{$id}.xml': {
       id: '/sitemap/sitemap/{$id}.xml'
       path: '/sitemap/sitemap/{$id}.xml'
@@ -807,6 +847,7 @@ const ApiTranslateRouteWithChildren = ApiTranslateRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LocaleRoute: LocaleRouteWithChildren,
+  MonitoringRoute: MonitoringRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiLocaleInfoRoute: ApiLocaleInfoRoute,
@@ -822,6 +863,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiSyncCliLoginRoute: ApiSyncCliLoginRoute,
   ApiSyncPullRoute: ApiSyncPullRoute,
   ApiSyncPushRoute: ApiSyncPushRoute,
+  ApiUploadsSplatRoute: ApiUploadsSplatRoute,
   SitemapSitemapChar123idChar125DotxmlRoute:
     SitemapSitemapChar123idChar125DotxmlRoute,
   ApiPageViewsPageIdIncrementRoute: ApiPageViewsPageIdIncrementRoute,

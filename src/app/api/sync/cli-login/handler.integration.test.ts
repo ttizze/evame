@@ -6,11 +6,11 @@ import { getSyncCliLogin } from "./handler";
 
 const { getSessionMock } = vi.hoisted(() => ({ getSessionMock: vi.fn() }));
 vi.mock("@/auth", () => ({
-	auth: {
+	getAuth: () => ({
 		api: {
 			getSession: getSessionMock,
 		},
-	},
+	}),
 }));
 
 await setupDbPerFile(import.meta.url);
