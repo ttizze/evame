@@ -6,6 +6,7 @@ import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/pag
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { PageForList } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { formatDate } from "../../_utils/format-date";
 import { PageCommentButton } from "./page-list/page-comment-button";
 
 type PageListProps = {
@@ -93,7 +94,7 @@ export function PageList({
 						</span>
 					</Link>
 					<time className="text-xs text-muted-foreground whitespace-nowrap">
-						{PageForList.createdAt.toLocaleDateString(locale)}
+						{formatDate(PageForList.createdAt, locale)}
 					</time>
 				</div>
 

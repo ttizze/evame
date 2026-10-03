@@ -4,6 +4,7 @@ import { useLocale } from "use-intl";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { useHeaderScroll } from "@/app/[locale]/(common-layout)/_components/header/hooks/use-header-scroll";
+import { formatDate } from "@/app/[locale]/(common-layout)/_utils/format-date";
 import type { PageDetail } from "@/app/[locale]/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -57,7 +58,7 @@ export function SubHeader({
 							<span className="text-sm">{pageDetail.userName}</span>
 							{!isPinned && (
 								<span className="text-xs text-gray-500">
-									<time>{pageDetail.createdAt.toLocaleDateString(locale)}</time>
+									<time>{formatDate(pageDetail.createdAt, locale)}</time>
 								</span>
 							)}
 						</div>
