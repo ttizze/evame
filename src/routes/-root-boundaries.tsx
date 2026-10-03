@@ -10,11 +10,6 @@ export function RootErrorComponent({ error, reset }: ErrorComponentProps) {
 		Sentry.captureException(error);
 	}, [error]);
 
-	const digest =
-		"digest" in error && typeof error.digest === "string"
-			? error.digest
-			: undefined;
-
 	return (
 		<div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
 			<div className="flex flex-col items-center justify-center space-y-6 text-center">
@@ -27,12 +22,6 @@ export function RootErrorComponent({ error, reset }: ErrorComponentProps) {
 						Error
 					</h1>
 					<p className="text-muted-foreground">Sorry, an error occurred.</p>
-					{digest && (
-						<p className="text-sm text-muted-foreground">
-							Error code:{" "}
-							<code className="rounded bg-muted px-1 py-0.5">{digest}</code>
-						</p>
-					)}
 				</div>
 
 				<div className="flex gap-2">

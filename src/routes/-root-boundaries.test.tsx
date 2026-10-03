@@ -41,16 +41,12 @@ describe("TanStack Startのroot境界UI", () => {
 
 		render(
 			<RootErrorComponent
-				error={Object.assign(new Error("読み込みに失敗しました"), {
-					digest: "error-123",
-				})}
+				error={new Error("読み込みに失敗しました")}
 				reset={reset}
 			/>,
 		);
 
 		expect(screen.getByText("Error")).toBeInTheDocument();
-		expect(screen.getByText("Error code:")).toBeInTheDocument();
-		expect(screen.getByText("error-123")).toBeInTheDocument();
 		expect(screen.getByRole("link", { name: "Go to home" })).toHaveAttribute(
 			"href",
 			"/",
@@ -58,6 +54,15 @@ describe("TanStack Startのroot境界UI", () => {
 
 		await user.click(screen.getByRole("button", { name: "Try again" }));
 		expect(reset).toHaveBeenCalledOnce();
+	});
+
+	it.each([
+		null,
+		"読み込み失敗",
+		42,
+	])("Error以外の値 %s が投げられてもエラー画面を表示する", (error) => {
+		render(<RootErrorComponent error={error} reset={vi.fn()} />);
+		expect(screen.getByText("Error")).toBeInTheDocument();
 	});
 
 	it("404画面に英語ホームと検索へのリンクを表示する", () => {
