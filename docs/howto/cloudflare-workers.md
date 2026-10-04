@@ -46,7 +46,7 @@ bun x wrangler deploy
 3. 全機能の認証と接続先が揃ってから `evame.tech` のルートを Worker に切り替える。既存の Cloudflare キャッシュ Worker とルートを先に確認する。
 4. 切り替え後も Google ログイン、Tiptap 保存、画像、翻訳を確認する。Sentry の正常な認証リダイレクトや本文の中断がエラーにならないことを確認する。
 
-既存の Vercel デプロイは切り替え検証まで維持する。問題があれば Cloudflare のルートを元に戻し、既存の Vercel オリジンへ戻せる状態にしておく。継続デプロイの環境では Nix と Bun の lockfile を使い、`bun run deploy` を実行する。
+切り替え検証後、旧Vercelプロジェクト `ttizzes-projects/evame` は廃止済み。`evame.tech` のDNSは、CloudflareでプロキシされたAレコードを予約アドレス `192.0.2.0` に向け、`evame.tech/*` を `evame-start` に接続する。Vercelをオリジンや切り戻し先として使わない。継続デプロイの環境では Nix と Bun の lockfile を使い、`bun run deploy` を実行する。
 
 ## GitHub Actions の継続デプロイ
 
@@ -58,4 +58,4 @@ bun x wrangler deploy
 
 テーブル・カラムを廃止するときは、先に旧コードと共存できるDB変更と参照を外したコードをデプロイする。その本番反映を確認してから、次のマイグレーションでDB構造を削除する。CIはマイグレーションを先に実行するため、参照を外すコードとテーブル削除を同じデプロイにまとめない。
 
-本番切り替え時は Worker の `BETTER_AUTH_URL` を `https://evame.tech`、`SENTRY_DSN` と `SENTRY_ENVIRONMENT` を本番用に設定する。元のVercel向けDNSレコードを保持し、問題があればゾーン側のWorkerルートを外して戻す。
+本番切り替え時は Worker の `BETTER_AUTH_URL` を `https://evame.tech`、`SENTRY_DSN` と `SENTRY_ENVIRONMENT` を本番用に設定する。Workerのロールバックは、戻すバージョンが現在のDB構造と互換な場合にだけ行う。DBマイグレーションはWorkerのロールバックでは戻らないため、テーブル削除などの非互換な変更後は、現在のDB構造に合わせた修正を前進デプロイする。NeonとUpstash QStashは本番で使うため、Vercelのホスティングプロジェクト廃止後もリソースと請求元のMarketplace連携を維持する。
