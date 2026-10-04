@@ -15,6 +15,7 @@
 - パッケージランナー: `bun`
 - フレームワーク: TanStack Start
 - ホスティング: Cloudflare Workers。R2・Images・KV・Static Assets は binding を使用する。
+- 旧Vercelのホスティングプロジェクトは廃止する。NeonとUpstash QStashのMarketplaceリソースは本番で使用するため維持する。
 - このリポジトリは Nix で管理する。
 - プロジェクトのツールチェーンコマンドを bare shell で実行しない。
 - エージェントや非対話シェルでは `.envrc` が読み込まれていると仮定しない。
