@@ -151,7 +151,12 @@ try {
 			throw new Error(`Invalid Turso upload setting: ${setting}`);
 	}
 	await target.execute("PRAGMA journal_mode=WAL");
-	await target.execute("PRAGMA wal_checkpoint(TRUNCATE)");
+	// native statementが保持する読み取りを閉じ、checkpoint専用の接続へ切り替える。
+	target.close();
+	await target.reconnect();
+	const checkpoint = await target.execute("PRAGMA wal_checkpoint(TRUNCATE)");
+	if (checkpoint.rows[0].busy !== 0)
+		throw new Error("Target database checkpoint did not complete");
 	await source.query("COMMIT");
 	console.log("All rows, foreign keys and database integrity verified");
 } catch (error) {
