@@ -41,3 +41,13 @@ bun scripts/migrate-postgres-to-turso.ts .data/turso-export.db
 6. 切り替え確認までNeonを保持する。Tursoへ新規書き込みが発生した後は、古いNeonへ接続だけ戻さない。書き込み差分を移すか、Turso上で修正を前進デプロイする。
 
 DB用のPostgreSQL依存は移行ツールの開発依存としてだけ残る。WorkersはNeonやPostgreSQLへ接続しない。
+
+## 本番移行の結果（2026-11-05）
+
+[#1123](https://github.com/ttizze/evame/pull/1123) を本番反映し、`evame-production-20261105`（既存の東京グループ `default`）へ切り替えた。WorkersとGitHub Actionsの接続設定はsecretsで管理する。
+
+停止中に取得した24テーブルの全行ハッシュ・件数を照合し、ローカルの外部キーと整合性を検証した。アップロード後も全テーブルの件数、CIからの外部キーチェック、Turso CLIの `integrity_check`（`ok`）を確認した。
+
+停止を解除して、既存記事の本文SSR、Googleログイン、Tiptapの非公開記事作成・編集・再読み込み・閲覧を確認した。確認記事がTursoに保存され、旧Neonには作成されていないことと、未ログインでは閲覧できないことも確認済み。
+
+旧Neonとローカルの最終スナップショットは保管し、QStashを維持する。切り替え後の更新先はTursoのみ。移行ツールはWALのcheckpoint前に接続を開き直し、ローカルSDKが保持する読み取りstatementによるロックを解消する。
