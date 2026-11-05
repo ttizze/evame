@@ -21,6 +21,12 @@ export default withSentry(
 			_env: typeof import("cloudflare:workers").env,
 			context: Pick<ExecutionContext, "waitUntil">,
 		) {
+			if (process.env.DATABASE_MIGRATION === "true") {
+				return new Response(null, {
+					status: 503,
+					headers: { ...securityHeaders, "Retry-After": "60" },
+				});
+			}
 			const database = createDb();
 			return databaseScope.run(database, async () => {
 				try {
