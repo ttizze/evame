@@ -53,7 +53,7 @@ export async function togglePageLike(pageId: number, currentUserId: string) {
 	// 更新後の最新のいいね数を取得する
 	const result = await db
 		.selectFrom("likePages")
-		.select(sql<number>`count(*)::int`.as("count"))
+		.select(sql<number>`count(*)`.as("count"))
 		.where("pageId", "=", page.id)
 		.executeTakeFirst();
 

@@ -92,3 +92,8 @@ cst/
 .worktree/
 .worktrees/
 .evame/
+
+# Local Turso data
+.data/
+*.db-wal
+*.db-shm

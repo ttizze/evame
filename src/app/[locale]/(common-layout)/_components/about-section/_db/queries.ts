@@ -7,7 +7,7 @@ const LANGUAGE_COUNT = 18;
 export async function querySocialProofStats() {
 	const articlesResult = await db
 		.selectFrom("pages")
-		.select(sql<number>`count(*)::int`.as("count"))
+		.select(sql<number>`count(*)`.as("count"))
 		.where("status", "=", "PUBLIC" satisfies PageStatus)
 		.where("parentId", "is", null)
 		.executeTakeFirst();
@@ -16,7 +16,7 @@ export async function querySocialProofStats() {
 		.selectFrom("segmentTranslations")
 		.innerJoin("segments", "segmentTranslations.segmentId", "segments.id")
 		.innerJoin("pages", "segments.contentId", "pages.id")
-		.select(sql<number>`count(*)::int`.as("count"))
+		.select(sql<number>`count(*)`.as("count"))
 		.where("pages.status", "=", "PUBLIC" satisfies PageStatus)
 		.where("pages.parentId", "is", null)
 		.executeTakeFirst();

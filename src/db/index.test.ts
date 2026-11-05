@@ -25,7 +25,7 @@ describe("リクエストごとのDB接続", () => {
 				[first, second].map((database) =>
 					databaseScope.run(database, async () => {
 						await new Promise((resolve) => setTimeout(resolve, 0));
-						expect(db.pool).toBe(database.pool);
+						expect(db.getExecutor()).toBe(database.getExecutor());
 					}),
 				),
 			);

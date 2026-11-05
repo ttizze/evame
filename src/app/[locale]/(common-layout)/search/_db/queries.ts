@@ -132,14 +132,14 @@ async function searchTags(
 		db
 			.selectFrom("tags")
 			.selectAll()
-			.where("name", "ilike", `%${query}%`)
+			.where(sql.ref<string>("searchName"), "like", `%${query.toLowerCase()}%`)
 			.limit(take)
 			.offset(skip)
 			.execute(),
 		db
 			.selectFrom("tags")
-			.select(sql<number>`count(*)::int`.as("count"))
-			.where("name", "ilike", `%${query}%`)
+			.select(sql<number>`count(*)`.as("count"))
+			.where(sql.ref<string>("searchName"), "like", `%${query.toLowerCase()}%`)
 			.executeTakeFirst(),
 	]);
 	return {
@@ -161,14 +161,14 @@ async function searchUsers(
 		db
 			.selectFrom("users")
 			.selectAll()
-			.where("name", "ilike", `%${query}%`)
+			.where(sql.ref<string>("searchName"), "like", `%${query.toLowerCase()}%`)
 			.limit(take)
 			.offset(skip)
 			.execute(),
 		db
 			.selectFrom("users")
-			.select(sql<number>`count(*)::int`.as("count"))
-			.where("name", "ilike", `%${query}%`)
+			.select(sql<number>`count(*)`.as("count"))
+			.where(sql.ref<string>("searchName"), "like", `%${query.toLowerCase()}%`)
 			.executeTakeFirst(),
 	]);
 	const sanitizedUsers = userResults.map((user) =>

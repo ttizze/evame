@@ -54,7 +54,7 @@ function createAuth(database: typeof db) {
 		// データベース設定（Kysely を直接使用）
 		database: {
 			db: database,
-			type: "postgres",
+			type: "sqlite",
 		},
 		user: {
 			modelName: "users",

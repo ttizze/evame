@@ -1,10 +1,10 @@
 import { sql } from "kysely";
-import { db } from "@/db";
+import { runTransaction } from "@/db/transaction";
 import type { JsonValue } from "@/db/types";
 
 /** コメント本文を消去済みプレースホルダーへ置き換える論理削除。 */
 export async function deletePageComment(pageCommentId: number, userId: string) {
-	return db.transaction().execute(async (tx) => {
+	return runTransaction(async (tx) => {
 		const deletedMdast: JsonValue = {
 			type: "root",
 			children: [
@@ -32,7 +32,7 @@ export async function deletePageComment(pageCommentId: number, userId: string) {
 			const stats = await tx
 				.selectFrom("pageComments")
 				.select([
-					sql<number>`count(*)::int`.as("replyCount"),
+					sql<number>`count(*)`.as("replyCount"),
 					sql<Date | null>`max(created_at)`.as("lastReplyAt"),
 				])
 				.where("parentId", "=", updated.parentId)

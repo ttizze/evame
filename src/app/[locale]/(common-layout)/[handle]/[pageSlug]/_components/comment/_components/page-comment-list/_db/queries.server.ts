@@ -1,3 +1,4 @@
+import { bestTranslationRank } from "@/app/[locale]/_db/best-translation-subquery.server";
 import { db } from "@/db";
 import type { JsonValue } from "@/db/types";
 
@@ -8,34 +9,36 @@ import type { JsonValue } from "@/db/types";
  */
 function bestTranslationByCommentSubquery(locale: string) {
 	return db
-		.selectFrom("segmentTranslations")
-		.innerJoin(
-			"segments as transSeg",
-			"segmentTranslations.segmentId",
-			"transSeg.id",
+		.selectFrom(
+			db
+				.selectFrom("segmentTranslations")
+				.innerJoin(
+					"segments as transSeg",
+					"segmentTranslations.segmentId",
+					"transSeg.id",
+				)
+				.innerJoin(
+					"pageComments as ownerComment",
+					"transSeg.contentId",
+					"ownerComment.id",
+				)
+				.leftJoin("translationVotes as ownerTv", (join) =>
+					join
+						.onRef("ownerTv.translationId", "=", "segmentTranslations.id")
+						.onRef("ownerTv.userId", "=", "ownerComment.userId")
+						.on("ownerTv.isUpvote", "=", true),
+				)
+				.select([
+					"segmentTranslations.id",
+					"segmentTranslations.segmentId",
+					"segmentTranslations.text",
+					bestTranslationRank.as("translationRank"),
+				])
+				.where("segmentTranslations.locale", "=", locale)
+				.as("rankedTranslations"),
 		)
-		.innerJoin(
-			"pageComments as ownerComment",
-			"transSeg.contentId",
-			"ownerComment.id",
-		)
-		.leftJoin("translationVotes as ownerTv", (join) =>
-			join
-				.onRef("ownerTv.translationId", "=", "segmentTranslations.id")
-				.onRef("ownerTv.userId", "=", "ownerComment.userId")
-				.on("ownerTv.isUpvote", "=", true),
-		)
-		.distinctOn("segmentTranslations.segmentId")
-		.select([
-			"segmentTranslations.id",
-			"segmentTranslations.segmentId",
-			"segmentTranslations.text",
-		])
-		.where("segmentTranslations.locale", "=", locale)
-		.orderBy("segmentTranslations.segmentId")
-		.orderBy("ownerTv.isUpvote", (ob) => ob.desc().nullsLast())
-		.orderBy("segmentTranslations.point", "desc")
-		.orderBy("segmentTranslations.createdAt", "desc");
+		.select(["id", "segmentId", "text"])
+		.where("translationRank", "=", 1);
 }
 
 type CommentRow = {

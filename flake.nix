@@ -18,12 +18,15 @@
         system:
         let
           pkgs = import nixpkgs { inherit system; };
+          libsqlServer = pkgs.callPackage ./nix/libsql-server.nix { };
         in
         {
           default = pkgs.mkShellNoCC {
             packages = with pkgs; [
               bun
               just
+              turso-cli
+              libsqlServer
               nodejs_22
               typescript-language-server
             ];

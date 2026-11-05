@@ -142,7 +142,7 @@ export function buildPageListQuery(locale: string) {
 						.as("seg"),
 				(join) => join.onRef("seg.contentId", "=", "pages.id"),
 			)
-			// 最良の翻訳 (DISTINCT ON で1件のみ)
+			// 最良の翻訳 (各段落の順位1位のみ)
 			.leftJoin(bestTranslationByPagesSubquery(locale).as("trans"), (join) =>
 				join.onRef("trans.segmentId", "=", "seg.id"),
 			)

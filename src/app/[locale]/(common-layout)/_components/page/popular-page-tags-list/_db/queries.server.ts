@@ -14,7 +14,7 @@ export async function fetchPopularTags(limit: number) {
 		.select([
 			"tags.id",
 			"tags.name",
-			sql<number>`count(tag_pages.page_id)::int`.as("pagesCount"),
+			sql<number>`count(tag_pages.page_id)`.as("pagesCount"),
 		])
 		.groupBy(["tags.id", "tags.name"])
 		.orderBy(sql`count(tag_pages.page_id)`, "desc")
