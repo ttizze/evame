@@ -2,7 +2,7 @@
 import { captureException, withSentry } from "@sentry/cloudflare";
 import { redirect } from "@tanstack/react-router";
 import handler from "@tanstack/react-start/server-entry";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createDb } from "./db";
 import server from "./server";
 
@@ -45,6 +45,32 @@ describe("WorkersのSentry監視", () => {
 		async (error) => {
 			const event = { type: undefined, message: "実際のエラー" };
 			expect(await beforeSend(event, { originalException: error })).toBe(event);
+		},
+	);
+});
+
+describe("DB移行中のリクエスト停止", () => {
+	afterEach(() => vi.unstubAllEnvs());
+
+	it.each([
+		["GET", "/ja"],
+		["GET", "/api/auth/get-session"],
+		["POST", "/api/translate/chunk"],
+		["POST", "/_serverFn/save-page"],
+	])(
+		"移行フラグが有効なら%s %sをDB接続前に503で止める",
+		async (method, path) => {
+			vi.stubEnv("DATABASE_MIGRATION", "true");
+			const response = await server.fetch(
+				new Request(`https://evame.test${path}`, { method }),
+				{} as typeof import("cloudflare:workers").env,
+				{ waitUntil: vi.fn() },
+			);
+			expect(response.status).toBe(503);
+			expect(response.headers.get("retry-after")).toBe("60");
+			expect(createDb).not.toHaveBeenCalled();
+			expect(handler.fetch).not.toHaveBeenCalled();
+			expect(captureException).not.toHaveBeenCalled();
 		},
 	);
 });
