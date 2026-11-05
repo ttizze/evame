@@ -1,5 +1,5 @@
 import { syncSegments } from "@/app/[locale]/_service/sync-segments";
-import { db } from "@/db";
+import { runTransaction } from "@/db/transaction";
 import type { JsonValue, PageStatus } from "@/db/types";
 
 export async function upsertPageForSync(params: {
@@ -11,7 +11,7 @@ export async function upsertPageForSync(params: {
 	publishedAt: Date | null;
 	status: PageStatus;
 }) {
-	return await db.transaction().execute(async (tx) => {
+	return await runTransaction(async (tx) => {
 		if (params.existingPageId !== undefined) {
 			await tx
 				.updateTable("pages")

@@ -10,7 +10,7 @@ export async function countPublicPages() {
 	const result = await db
 		.selectFrom("pages")
 		.where("pages.status", "=", "PUBLIC" satisfies PageStatus)
-		.select(sql<number>`count(*)::int`.as("count"))
+		.select(sql<number>`count(*)`.as("count"))
 		.executeTakeFirst();
 	return Number(result?.count ?? 0);
 }
@@ -78,7 +78,7 @@ export async function fetchPopularTags(limit = 50): Promise<string[]> {
 		.innerJoin("tags", "tagPages.tagId", "tags.id")
 		.innerJoin("pages", "tagPages.pageId", "pages.id")
 		.select(["tags.name"])
-		.select(sql<number>`count(*)::int`.as("count"))
+		.select(sql<number>`count(*)`.as("count"))
 		.where("pages.status", "=", "PUBLIC" satisfies PageStatus)
 		.groupBy("tags.name")
 		.orderBy("count", "desc")

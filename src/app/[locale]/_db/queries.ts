@@ -65,7 +65,7 @@ export async function fetchPageCounts(pageId: number) {
 }
 
 /**
- * セグメントを取得（DISTINCT ONで最良の翻訳を1件のみ）
+ * セグメントを取得（各段落の最良の翻訳を1件のみ）
  */
 async function fetchSegments(
 	pageId: number,

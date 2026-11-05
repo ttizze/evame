@@ -13,12 +13,12 @@ export async function getFollowCounts(userId: string) {
 	const [followersResult, followingResult] = await Promise.all([
 		db
 			.selectFrom("follows")
-			.select(sql<number>`count(*)::int`.as("count"))
+			.select(sql<number>`count(*)`.as("count"))
 			.where("followingId", "=", userId)
 			.executeTakeFirst(),
 		db
 			.selectFrom("follows")
-			.select(sql<number>`count(*)::int`.as("count"))
+			.select(sql<number>`count(*)`.as("count"))
 			.where("followerId", "=", userId)
 			.executeTakeFirst(),
 	]);

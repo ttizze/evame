@@ -18,11 +18,11 @@
 
 ## 環境変数と秘密値
 
-開発は `.env.example` を `.env` にコピーする。`bun run dev` はブランチ用の `DATABASE_URL` を Workers に渡すためプロセス環境変数を読み込む。`.dev.vars` を併用しない。`.env` と `.dev.vars` は Git に追加しない。
+開発は `.env.example` を `.env` にコピーする。`bun run db:dev` でローカルTursoを起動し、別のNixシェルでマイグレーションとseedを実行する。`bun run dev` は `TURSO_DATABASE_URL` と `TURSO_AUTH_TOKEN` を Workers に渡すためプロセス環境変数を読み込む。`.dev.vars` を併用しない。`.env` と `.dev.vars` は Git に追加しない。
 
 本番は Workers secrets に次を設定する。値を `wrangler.jsonc`、ビルド成果物、ログ、PR に含めない。
 
-- 認証・DB: `DATABASE_URL`、`BETTER_AUTH_SECRET`、`BETTER_AUTH_URL`、`AUTH_GOOGLE_ID`、`AUTH_GOOGLE_SECRET`、`AUTH_RESEND_KEY`、`EMAIL_FROM`、`ENCRYPTION_KEY`
+- 認証・DB: `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`BETTER_AUTH_SECRET`、`BETTER_AUTH_URL`、`AUTH_GOOGLE_ID`、`AUTH_GOOGLE_SECRET`、`AUTH_RESEND_KEY`、`EMAIL_FROM`、`ENCRYPTION_KEY`
 - 翻訳: `QSTASH_TOKEN`、`QSTASH_CURRENT_SIGNING_KEY`、`QSTASH_NEXT_SIGNING_KEY`、`QSTASH_PUBLISH_BASE_URL`、`GCP_PROJECT_ID`、`GCP_REGION`、`GCP_SERVICE_ACCOUNT_CREDENTIALS`。利用する場合は `OPENAI_API_KEY`、`DEEPSEEK_API_KEY` も設定する
 - 表示・監視: `CF_IMAGE_HOST`、`GOOGLE_ANALYTICS_ID`、`SENTRY_ENVIRONMENT`
 
@@ -52,10 +52,12 @@ bun x wrangler deploy
 
 `.github/workflows/ci.yaml` は `main` の push または `main` を対象にした手動実行で、Biome・typecheck・全テスト・ビルド・成果物テストの成功後に本番DBのマイグレーションを適用し、同じ成果物をデプロイする。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PR はローカルのテストDBで検証し、Sentry 送信を無効化する。
 
-リポジトリの Actions secrets に本番用の `DATABASE_URL`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番用 `DATABASE_URL` は `main` のマイグレーション・デプロイのステップだけに渡す。Cloudflare のデプロイ先アカウントと Worker は `wrangler.jsonc` に定義する。既存のキャッシュ削除用トークンは Workers を更新できないため、デプロイ用には `evame-start` の更新・デプロイに必要な権限を持つトークンを使う。Sentry のアップロード用トークンは本番ビルドのステップだけに渡し、Worker secret には登録しない。
+リポジトリの Actions secrets に本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番用のDB接続設定は `main` のマイグレーション・デプロイのステップだけに渡す。Cloudflare のデプロイ先アカウントと Worker は `wrangler.jsonc` に定義する。既存のキャッシュ削除用トークンは Workers を更新できないため、デプロイ用には `evame-start` の更新・デプロイに必要な権限を持つトークンを使う。Sentry のアップロード用トークンは本番ビルドのステップだけに渡し、Worker secret には登録しない。
 
 本番の `evame.tech/*` ルートは Cloudflare のゾーン側で `evame-start` に接続する。`wrangler.jsonc` に `routes` を指定せず、CIは既存Workerのバージョンだけを更新する。Wranglerはルートが未指定なら既存の接続を変更しないため、CIトークンにゾーンのルート更新権限を追加する必要はない。`images.evame.tech` はこのルートの対象に含めない。
 
 テーブル・カラムを廃止するときは、先に旧コードと共存できるDB変更と参照を外したコードをデプロイする。その本番反映を確認してから、次のマイグレーションでDB構造を削除する。CIはマイグレーションを先に実行するため、参照を外すコードとテーブル削除を同じデプロイにまとめない。
 
-本番切り替え時は Worker の `BETTER_AUTH_URL` を `https://evame.tech`、`SENTRY_DSN` と `SENTRY_ENVIRONMENT` を本番用に設定する。Workerのロールバックは、戻すバージョンが現在のDB構造と互換な場合にだけ行う。DBマイグレーションはWorkerのロールバックでは戻らないため、テーブル削除などの非互換な変更後は、現在のDB構造に合わせた修正を前進デプロイする。NeonとUpstash QStashは本番で使うため、Vercelのホスティングプロジェクト廃止後もリソースと請求元のMarketplace連携を維持する。
+本番切り替え時は Worker の `BETTER_AUTH_URL` を `https://evame.tech`、`SENTRY_DSN` と `SENTRY_ENVIRONMENT` を本番用に設定する。Workerのロールバックは、戻すバージョンが現在のDB構造と互換な場合にだけ行う。DBマイグレーションはWorkerのロールバックでは戻らないため、テーブル削除などの非互換な変更後は、現在のDB構造に合わせた修正を前進デプロイする。NeonはTursoへの本番切り替えと整合性確認が完了するまで保持する。Upstash QStashのリソースと請求元のMarketplace連携は維持する。
+
+DB切り替えの手順は [Turso移行](turso-migration.md) を参照する。

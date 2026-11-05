@@ -1,7 +1,7 @@
 import { createServerLogger } from "@/app/_service/logger.server";
 import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
 import { syncSegments } from "@/app/[locale]/_service/sync-segments";
-import { db } from "@/db";
+import { runTransaction } from "@/db/transaction";
 import type { JsonValue, PageStatus } from "@/db/types";
 import { upsertPage } from "./db/mutations.server";
 /**
@@ -35,7 +35,7 @@ export async function upsertPageAndSegments(p: {
 	);
 
 	try {
-		const result = await db.transaction().execute(async (tx) => {
+		const result = await runTransaction(async (tx) => {
 			// db操作: ページをupsert
 			const page = await upsertPage(tx, {
 				pageSlug: p.pageSlug,

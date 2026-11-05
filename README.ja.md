@@ -26,7 +26,7 @@ nix develop
    公開サイトURLは `VITE_PUBLIC_DOMAIN`、画像ホストはサーバー側の `CF_IMAGE_HOST`、CLI の接続先は `EVAME_BASE_URL` を使います。
 3. DB を起動
    ```bash
-   docker compose up -d
+   bun run db:dev
    ```
 4. マイグレーションとシード
    ```bash

@@ -1,6 +1,7 @@
 import { createId } from "@paralleldrive/cuid2";
 import { sql } from "kysely";
 import { db } from "@/db";
+import { runTransaction } from "@/db/transaction";
 import type { TranslationProofStatus, TranslationStatus } from "@/db/types";
 
 export async function getOrCreateAIUser(name: string): Promise<string> {
@@ -69,7 +70,7 @@ export async function incrementTranslationProgress(
 	translationJobId: number,
 	inc: number,
 ) {
-	return db.transaction().execute(async (tx) => {
+	return runTransaction(async (tx) => {
 		// 端末状態（COMPLETED/FAILED）や 100 到達後は増分しない
 		await tx
 			.updateTable("translationJobs")

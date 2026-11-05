@@ -1,59 +1,36 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { Pool as NeonPool } from "@neondatabase/serverless";
-import { CamelCasePlugin, Kysely, PostgresDialect } from "kysely";
-import { Client as PgClient, Pool as PgPool } from "pg";
+import { LibsqlDialect } from "@libsql/kysely-libsql";
+import { CamelCasePlugin, Kysely } from "kysely";
+import { SearchValuesPlugin } from "./search-values-plugin";
+import { TursoValueCodecPlugin } from "./turso-value-codec";
 import type { DB } from "./types";
 
-type PoolType = NeonPool | PgPool;
-type KyselyDbWithPool = Kysely<DB> & { pool: PoolType };
-
 declare global {
-	var __kyselyDb: KyselyDbWithPool | null;
+	var __kyselyDb: Kysely<DB> | null;
 }
 
-export const databaseScope = new AsyncLocalStorage<KyselyDbWithPool>();
+export const databaseScope = new AsyncLocalStorage<Kysely<DB>>();
 
-export function createDb(): KyselyDbWithPool {
-	const connectionString =
-		process.env.DATABASE_URL ||
-		(process.env.NODE_ENV === "test"
-			? "postgres://postgres:postgres@db.localtest.me:5435/main"
-			: "");
-	if (!connectionString) {
-		throw new Error("DATABASE_URL is not defined");
-	}
-
-	const isLocal = new URL(connectionString).hostname === "db.localtest.me";
-	let pool: PoolType;
-	if (isLocal) {
-		pool = new PgPool({
-			connectionString,
-			max: 20,
-			idleTimeoutMillis: 30000,
-			connectionTimeoutMillis: 30000,
-		});
-	} else {
-		pool = new NeonPool({ connectionString });
-	}
-
-	const db = new Kysely<DB>({
-		dialect: new PostgresDialect({
-			// NeonのClient.connectはKyselyの制御用Clientと型が異なるため、
-			// 共通のPool APIを渡し、ローカルの取消には独立接続を使う。
-			...(isLocal ? { controlClient: PgClient } : {}),
-			pool: {
-				connect: () => pool.connect(),
-				end: () => pool.end(),
-				options: pool.options,
-			},
+export function createDb(): Kysely<DB> {
+	const url =
+		process.env.TURSO_DATABASE_URL ||
+		(process.env.NODE_ENV === "test" ? "file::memory:" : "");
+	if (!url) throw new Error("TURSO_DATABASE_URL is not defined");
+	return new Kysely<DB>({
+		dialect: new LibsqlDialect({
+			url,
+			authToken: process.env.TURSO_AUTH_TOKEN,
+			...(url.startsWith("file:") ? { timeout: 0 } : {}),
 		}),
-		plugins: [new CamelCasePlugin()],
+		plugins: [
+			new CamelCasePlugin(),
+			new SearchValuesPlugin(),
+			new TursoValueCodecPlugin(),
+		],
 	});
-
-	return Object.assign(db, { pool });
 }
 
-export const db = new Proxy({} as KyselyDbWithPool, {
+export const db = new Proxy({} as Kysely<DB>, {
 	get(_target, property) {
 		let current = databaseScope.getStore() ?? globalThis.__kyselyDb;
 		if (!current) {
@@ -70,5 +47,5 @@ export const db = new Proxy({} as KyselyDbWithPool, {
 
 export async function disposeDb(): Promise<void> {
 	await globalThis.__kyselyDb?.destroy();
-	globalThis.__kyselyDb = createDb();
+	globalThis.__kyselyDb = null;
 }

@@ -1,3 +1,4 @@
+import { sql } from "kysely";
 import { db } from "@/db";
 
 /**
@@ -7,11 +8,27 @@ export async function fetchCompletedTranslationJobs(pageId: number) {
 	return await db
 		.selectFrom("translationJobs")
 		.selectAll()
-		.distinctOn(["locale"])
-		.where("pageId", "=", pageId)
-		.where("status", "=", "COMPLETED")
+		.where(
+			"id",
+			"in",
+			db
+				.selectFrom(
+					db
+						.selectFrom("translationJobs")
+						.select([
+							"id",
+							sql<number>`row_number() over (partition by locale order by created_at desc, id desc)`.as(
+								"jobRank",
+							),
+						])
+						.where("pageId", "=", pageId)
+						.where("status", "=", "COMPLETED")
+						.as("rankedJobs"),
+				)
+				.select("id")
+				.where("jobRank", "=", 1),
+		)
 		.orderBy("locale")
-		.orderBy("createdAt", "desc")
 		.execute();
 }
 

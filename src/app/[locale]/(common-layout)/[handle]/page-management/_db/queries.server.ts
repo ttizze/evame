@@ -39,7 +39,11 @@ export async function fetchPaginatedOwnPages(
 					.select(sql`1`.as("one"))
 					.whereRef("segments.contentId", "=", "pages.id")
 					.where("segments.number", "=", 0)
-					.where("segments.text", "ilike", `%${searchTerm}%`),
+					.where(
+						sql.ref<string>("segments.searchText"),
+						"like",
+						`%${searchTerm.toLowerCase()}%`,
+					),
 			),
 		);
 	}
@@ -51,7 +55,7 @@ export async function fetchPaginatedOwnPages(
 			.limit(pageSize)
 			.offset(skip)
 			.execute(),
-		baseQuery.select(sql<number>`count(*)::int`.as("count")).executeTakeFirst(),
+		baseQuery.select(sql<number>`count(*)`.as("count")).executeTakeFirst(),
 	]);
 
 	const totalCount = Number(totalCountResult?.count ?? 0);

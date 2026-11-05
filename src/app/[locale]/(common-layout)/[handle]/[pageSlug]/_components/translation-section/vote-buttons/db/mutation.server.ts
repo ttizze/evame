@@ -1,6 +1,7 @@
 import type { Transaction } from "kysely";
 import { sql } from "kysely";
 import { db } from "@/db";
+import { runTransaction } from "@/db/transaction";
 import type { DB } from "@/db/types";
 import { calcProofStatus } from "../_lib/translation-proof-status";
 
@@ -41,7 +42,7 @@ export async function handleVote(
 	isUpvote: boolean,
 	currentUserId: string,
 ) {
-	return db.transaction().execute(async (tx) => {
+	return runTransaction(async (tx) => {
 		const { finalIsUpvote } = await applyVote(
 			tx,
 			segmentTranslationId,
@@ -139,11 +140,11 @@ async function updateProofStatus(
 				.on("segmentTranslations.locale", "=", locale),
 		)
 		.select([
-			sql<number>`count(*)::int`.as("totalSegments"),
-			sql<number>`count(case when segment_translations.point >= 1 then 1 end)::int`.as(
+			sql<number>`count(*)`.as("totalSegments"),
+			sql<number>`count(case when segment_translations.point >= 1 then 1 end)`.as(
 				"segmentsWith1PlusVotes",
 			),
-			sql<number>`count(case when segment_translations.point >= 2 then 1 end)::int`.as(
+			sql<number>`count(case when segment_translations.point >= 2 then 1 end)`.as(
 				"segmentsWith2PlusVotes",
 			),
 		])

@@ -2,7 +2,7 @@
 
 [日本語版はこちら](README.ja.md)
 
-Evame is a project for sharing user-submitted texts with translations, annotations, and explanations.
+Evame is a project for sharing user-submitted texts with translations and comments.
 
 ## Quick start (development)
 Run all project toolchain commands below inside `nix develop`.
@@ -24,9 +24,9 @@ nix develop
    ```
    Set the base64 value as `BETTER_AUTH_SECRET` and the hex value as `ENCRYPTION_KEY`. Configure Google and Resend for authentication. Maintenance is controlled by the JSON boolean `maintenance` in the `SETTINGS` KV binding in `wrangler.jsonc`.
    Use `VITE_PUBLIC_DOMAIN` for the public site URL, server-side `CF_IMAGE_HOST` for the image host, and `EVAME_BASE_URL` for the CLI endpoint.
-3. Start DB
+3. Start the local Turso HTTP server (keep this terminal running; use another Nix shell for the next steps)
    ```bash
-   docker compose up -d
+   bun run db:dev
    ```
 4. Run migrations and seed
    ```bash

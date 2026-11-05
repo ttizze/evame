@@ -1,6 +1,6 @@
 import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
 import { syncSegments } from "@/app/[locale]/_service/sync-segments";
-import { db } from "@/db";
+import { runTransaction } from "@/db/transaction";
 import type { JsonValue } from "@/db/types";
 import type { PageComment } from "@/db/types.helpers";
 import {
@@ -19,7 +19,7 @@ export async function upsertPageCommentAndSegments(input: {
 	mdastJson: JsonValue;
 	segments: SegmentDraft[];
 }) {
-	return db.transaction().execute(async (tx) => {
+	return runTransaction(async (tx) => {
 		let pageComment: PageComment;
 
 		if (input.pageCommentId !== undefined) {

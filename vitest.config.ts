@@ -8,8 +8,11 @@ export default defineConfig({
 		slowTestThreshold: 1000,
 		exclude: ["**/.worktrees/**", "**/node_modules/**", "**/dist/**"],
 		env: {
-			// DATABASE_URLを空に設定して.envの値を上書き
-			DATABASE_URL: "",
+			// 本番の接続先をテストへ持ち込まない。
+			TURSO_DATABASE_URL: "",
+			TURSO_AUTH_TOKEN: "",
+			SENTRY_DSN: "",
+			VITE_SENTRY_DSN: "",
 			SESSION_SECRET: "test",
 			ENCRYPTION_KEY:
 				"2f9a0a1b3c4d5e6f7890123456789012345678901234567890abcdef123456",

@@ -265,7 +265,5 @@ seed()
 	})
 	.finally(async () => {
 		// プールを閉じる
-		if (db.pool) {
-			await db.pool.end();
-		}
+		await db.destroy();
 	});

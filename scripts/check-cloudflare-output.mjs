@@ -1,33 +1,55 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createHmac, randomUUID } from "node:crypto";
-import { readdir, readFile } from "node:fs/promises";
-import { Pool } from "pg";
+import { mkdir, readdir, readFile, rm } from "node:fs/promises";
+import { createClient } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
+import { migrate } from "drizzle-orm/libsql/migrator";
 import { unstable_dev } from "wrangler";
+import { startTursoServer } from "./turso-dev-server.mjs";
 
-const databaseUrl = "postgres://postgres:postgres@db.localtest.me:5435/main";
+await mkdir(".data", { recursive: true });
+const databasePath = `.data/deployment-${randomUUID()}.db`;
+const localDatabase = createClient({ url: `file:${databasePath}` });
+await migrate(drizzle(localDatabase), { migrationsFolder: "./src/drizzle" });
+localDatabase.close();
+execFileSync("bun", ["src/db/seed.ts"], {
+	env: {
+		...process.env,
+		TURSO_DATABASE_URL: `file:${databasePath}`,
+		TURSO_AUTH_TOKEN: "",
+		SENTRY_DSN: "",
+		VITE_SENTRY_DSN: "",
+	},
+	stdio: "pipe",
+});
+const tursoServer = await startTursoServer(databasePath, null);
+const databaseUrl = tursoServer.url;
 const authSecret = "deployment-smoke-test-secret-32-characters";
-const database = new Pool({ connectionString: databaseUrl });
+const database = createClient({ url: databaseUrl });
 const userId = randomUUID();
 const token = randomUUID();
 const handle = `worker-test-${userId}`;
 const pageSlug = `worker-test-${userId}`;
-const worker = await unstable_dev("dist/server/index.js", {
-	config: "dist/server/wrangler.json",
-	local: true,
-	persist: false,
-	logLevel: "error",
-	vars: {
-		SENTRY_DSN: "",
-		DATABASE_URL: databaseUrl,
-		BETTER_AUTH_SECRET: authSecret,
-		BETTER_AUTH_URL: "http://localhost",
-		AUTH_GOOGLE_ID: "deployment-smoke-google-id",
-		AUTH_GOOGLE_SECRET: "deployment-smoke-google-secret",
-		AUTH_RESEND_KEY: "re_deployment_smoke_test",
-	},
-	experimental: { disableExperimentalWarning: true, watch: false },
-});
+let worker;
 try {
+	worker = await unstable_dev("dist/server/index.js", {
+		config: "dist/server/wrangler.json",
+		local: true,
+		persist: false,
+		logLevel: "error",
+		vars: {
+			SENTRY_DSN: "",
+			TURSO_DATABASE_URL: databaseUrl,
+			TURSO_AUTH_TOKEN: "",
+			BETTER_AUTH_SECRET: authSecret,
+			BETTER_AUTH_URL: "http://localhost",
+			AUTH_GOOGLE_ID: "deployment-smoke-google-id",
+			AUTH_GOOGLE_SECRET: "deployment-smoke-google-secret",
+			AUTH_RESEND_KEY: "re_deployment_smoke_test",
+		},
+		experimental: { disableExperimentalWarning: true, watch: false },
+	});
 	for (let request = 0; request < 2; request++) {
 		const response = await worker.fetch(
 			"http://localhost/api/auth/get-session",
@@ -36,14 +58,14 @@ try {
 		assert.equal(await response.text(), "null");
 	}
 	console.log("Workersランタイムで認証APIを繰り返し呼び出せる");
-	await database.query(
-		"INSERT INTO users (id, name, handle, email) VALUES ($1, $2, $3, $4)",
-		[userId, "Worker Test", handle, `${userId}@example.test`],
-	);
-	await database.query(
-		"INSERT INTO sessions (id, token, user_id, expires_at) VALUES ($1, $2, $3, $4)",
-		[randomUUID(), token, userId, new Date(Date.now() + 3600000)],
-	);
+	await database.execute({
+		sql: "INSERT INTO users (id, name, handle, email) VALUES (?, ?, ?, ?)",
+		args: [userId, "Worker Test", handle, `${userId}@example.test`],
+	});
+	await database.execute({
+		sql: "INSERT INTO sessions (id, token, user_id, expires_at) VALUES (?, ?, ?, ?)",
+		args: [randomUUID(), token, userId, Date.now() + 3600000],
+	});
 	const cookie = `better-auth.session_token=${encodeURIComponent(`${token}.${createHmac("sha256", authSecret).update(token).digest("base64")}`)}`;
 	const session = await worker.fetch("http://localhost/api/auth/get-session", {
 		headers: { cookie },
@@ -118,10 +140,10 @@ try {
 		});
 		const savedBody = await saved.text();
 		assert.equal(saved.status, 200, savedBody);
-		const stored = await database.query(
-			"SELECT status, mdast_json FROM pages WHERE slug = $1",
-			[pageSlug],
-		);
+		const stored = await database.execute({
+			sql: "SELECT status, mdast_json FROM pages WHERE slug = ?",
+			args: [pageSlug],
+		});
 		assert.equal(stored.rows[0]?.status, "DRAFT", savedBody);
 		assert.ok(
 			JSON.stringify(stored.rows[0]?.mdast_json).includes(text),
@@ -152,9 +174,10 @@ try {
 		"記事本文をSSRできる",
 	);
 	console.log("Workersランタイムで保存した記事の閲覧ページを表示できる");
-	await database.query("UPDATE pages SET status = 'PUBLIC' WHERE slug = $1", [
-		pageSlug,
-	]);
+	await database.execute({
+		sql: "UPDATE pages SET status = 'PUBLIC' WHERE slug = ?",
+		args: [pageSlug],
+	});
 	const publicArticle = await worker.fetch(
 		`http://localhost/ja/${handle}/${pageSlug}`,
 	);
@@ -198,11 +221,9 @@ try {
 		"WorkersランタイムでホームをSSRし、日本語フォントとロゴを使ったOG画像を生成できる",
 	);
 } finally {
-	await worker.stop();
-	await database.query(
-		"DELETE FROM contents WHERE id IN (SELECT id FROM pages WHERE user_id = $1)",
-		[userId],
-	);
-	await database.query("DELETE FROM users WHERE id = $1", [userId]);
-	await database.end();
+	await worker?.stop();
+	database.close();
+	await tursoServer.stop();
+	for (const suffix of ["", "-wal", "-shm"])
+		await rm(databasePath + suffix, { force: true });
 }

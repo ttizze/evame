@@ -17,7 +17,7 @@ jobs:
   ci-check:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: postgres://postgres:postgres@db.localtest.me:5435/main
+      TURSO_DATABASE_URL: file:evame.db
       TZ: Asia/Tokyo
       SENTRY_DSN: ""
       VITE_SENTRY_DSN: ""
@@ -29,10 +29,6 @@ jobs:
         uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Start test database
-        run: |
-          docker compose up -d --wait test_neon
 
       - name: Install dependencies
         run: |
@@ -67,7 +63,8 @@ jobs:
       - name: Migrate production database and deploy Cloudflare Workers
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           nix develop --command bun run db:prod:migrate

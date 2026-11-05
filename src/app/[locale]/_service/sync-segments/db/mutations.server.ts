@@ -38,24 +38,22 @@ export async function upsertSegmentBatch(
 	contentId: number,
 	drafts: SegmentDraft[],
 ): Promise<void> {
-	await Promise.all(
-		drafts.map((draft) =>
-			tx
-				.insertInto("segments")
-				.values({
-					contentId,
-					text: draft.text,
-					number: draft.number,
-					textAndOccurrenceHash: draft.textAndOccurrenceHash,
-				})
-				.onConflict((oc) =>
-					oc
-						.columns(["contentId", "textAndOccurrenceHash"])
-						.doUpdateSet({ number: draft.number }),
-				)
-				.execute(),
-		),
-	);
+	await tx
+		.insertInto("segments")
+		.values(
+			drafts.map((draft) => ({
+				contentId,
+				text: draft.text,
+				number: draft.number,
+				textAndOccurrenceHash: draft.textAndOccurrenceHash,
+			})),
+		)
+		.onConflict((oc) =>
+			oc
+				.columns(["contentId", "textAndOccurrenceHash"])
+				.doUpdateSet({ number: sql`excluded.number` }),
+		)
+		.execute();
 }
 
 /**

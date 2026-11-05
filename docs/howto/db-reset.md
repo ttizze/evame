@@ -1,25 +1,10 @@
-# DB リセット
+# ローカルDBの初期化
 
-開発中のデータを初期化したい場合の手順です。
+すべてのコマンドを `nix develop` 内で実行する。開発用DBはワークツリー内の `evame.db`。Workersは `http://127.0.0.1:8081` のTurso開発サーバーへ接続する。
 
-```bash
-bun run db:reset
-bun run db:migrate
-bun run seed
-```
+1. `bun run dev` と `bun run db:dev` を停止する。
+2. 必要なデータを保持する場合は、`evame.db` と存在する `evame.db-wal` / `evame.db-shm` を同じバックアップ先へ移動する。
+3. `bun run db:dev` を起動する。空のDBが作成される。
+4. 別のNixシェルで `bun run db:migrate`、`bun run seed`、`bun run dev` を実行する。
 
-`db:reset` は `scripts/reset-db.sh` を実行します。
-
-## ブランチDB用テンプレートの更新
-
-ブランチDB作成時のテンプレートを更新したい場合は、`DB_TEMPLATE_NAME` を指定して以下を実行します。
-
-```bash
-bun run db:template:update
-```
-
-`db:template:update` は、`DATABASE_URL` のDBを丸ごと `DB_TEMPLATE_NAME` のDBへ複製します（スキーマ・データ含む）。
-
-注意:
-- `DB_TEMPLATE_NAME` は `DATABASE_URL` のDB名と別名にしてください（同名だとエラーになります）
-- 実行時にコピー元DB/コピー先DBの接続は強制切断されます
+本番TursoのURLやトークンを `.env` に設定して初期化しない。テストは `.data/tests` にファイルごとの独立したDBを作成し、本番の接続設定を使用しない。
