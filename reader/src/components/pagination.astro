@@ -1,13 +1,10 @@
 ---
-import { messages } from "@/i18n/messages";
-import { paginationUrl } from "./pagination-url";
+import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
 
 interface Props {
-	locale: string;
 	currentPage: number;
 	totalPages: number;
 }
-const { currentPage, totalPages, locale } = Astro.props;
-const t = (messages[locale as keyof typeof messages] ?? messages.en).Reader;
+const { currentPage, totalPages } = Astro.props;
 ---
-{totalPages > 1 && <nav class="flex justify-center items-center gap-6 py-6" aria-label={t.pagination}>{currentPage > 1 && <a aria-label={t.previous} rel="prev" href={paginationUrl(Astro.url.pathname,Astro.url.search,currentPage-1,"")}>←</a>}<span>{currentPage} / {totalPages}</span>{currentPage < totalPages && <a aria-label={t.next} rel="next" href={paginationUrl(Astro.url.pathname,Astro.url.search,currentPage+1,"")}>→</a>}</nav>}
+{totalPages > 1 && <div class="mt-8 flex justify-center"><PaginationBar currentPage={currentPage} totalPages={totalPages} pathname={Astro.url.pathname} search={Astro.url.search} /></div>}

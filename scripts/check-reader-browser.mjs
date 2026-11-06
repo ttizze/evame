@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { chromium, expect } from "@playwright/test";
+import { fromJSON } from "seroval";
 
 export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 	const browser = await chromium.launch();
@@ -41,7 +42,9 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		).toBeVisible();
 		await noScript.close();
 		console.log("JavaScript無効でも記事一覧・本文・表示モードを読める");
-		const context = await browser.newContext();
+		const context = await browser.newContext({
+			viewport: { width: 1280, height: 900 },
+		});
 		await context.route("**/*", (route) =>
 			new URL(route.request().url()).origin === baseUrl
 				? route.continue()
@@ -59,6 +62,15 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		]);
 		const page = await context.newPage();
 		const errors = [];
+		let homeRefreshes = 0;
+		page.on("response", (response) => {
+			const url = new URL(response.url());
+			if (
+				url.pathname === "/api/reader-data" &&
+				url.searchParams.get("path") === "/ja"
+			)
+				homeRefreshes++;
+		});
 		page.on("pageerror", (error) => errors.push(error.message));
 		page.on("console", (message) => {
 			if (
@@ -71,9 +83,69 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.getByRole("button", { name: "Create a new page" }),
 		).toBeVisible();
+		const consent = page.getByRole("region", {
+			name: "Cookieを許可しますか？",
+		});
+		await expect(consent).toBeVisible();
+		assert.equal(
+			await consent.evaluate(
+				(node) => getComputedStyle(node.parentElement).position,
+			),
+			"fixed",
+			"Cookieバーは画面右下に固定される",
+		);
+		await expect(consent).toContainText(
+			"Evameではサービス提供と改善のためにCookieを使用します。",
+		);
+		const consentBounds = await consent.boundingBox();
+		assert.equal(consentBounds.width, 420);
+		assert.equal(1280 - consentBounds.x - consentBounds.width, 20);
+		assert.equal(900 - consentBounds.y - consentBounds.height, 20);
+		const floating = page.locator(
+			'astro-island[component-export="ControlsIsland"] > div',
+		);
+		await expect(floating).toHaveCSS("position", "fixed");
+		await expect(floating).toHaveCSS("bottom", "16px");
+		await expect(page.locator("h1 svg.lucide-sparkles")).toBeVisible();
+		await expect(
+			page.locator("main article").first().locator("svg.lucide-eye"),
+		).toBeVisible();
+		await expect(page.getByRole("link", { name: "もっと見る" })).toHaveCSS(
+			"height",
+			"40px",
+		);
+		await expect(page.getByRole("link", { name: "もっと見る" })).not.toHaveCSS(
+			"background-color",
+			"rgba(0, 0, 0, 0)",
+		);
+		await page.screenshot({ path: "/tmp/evame-ui-restored-home-desktop.png" });
+		await page.setViewportSize({ width: 390, height: 844 });
+		await expect(consent).toBeVisible();
+		const mobileConsent = await consent.boundingBox();
+		assert.equal(mobileConsent.x, 12);
+		assert.equal(mobileConsent.width, 366);
+		assert.equal(844 - mobileConsent.y - mobileConsent.height, 12);
+		await page.screenshot({ path: "/tmp/evame-ui-restored-home-mobile.png" });
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await expect(
+			page
+				.locator("footer")
+				.getByRole("link", { name: "GitHub" })
+				.locator("svg"),
+		).toBeVisible();
+		await consent
+			.getByRole("button", { name: "許可しない", exact: true })
+			.click();
+		await expect
+			.poll(() => homeRefreshes, { timeout: 35000 })
+			.toBeGreaterThan(1);
+		console.log(
+			"本文HTMLを最初から配信しながら、トップの記事一覧の自動更新も維持する",
+		);
 		await expect(page.locator("#about-section")).toHaveCount(0);
 		await page.getByRole("button", { name: "Create a new page" }).click();
 		await page.waitForURL(/\/edit$/);
+		const newPageUrl = page.url().replace(/\/edit$/, "");
 		await page.getByTestId("title-input").fill("ブラウザー新規保存");
 		const editor = page.locator(".tiptap[contenteditable=true]");
 		await editor.fill("Tiptapのブラウザー入力を保存する");
@@ -136,13 +208,106 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.locator('astro-island[component-export="ArticleToolsIsland"]'),
 		).not.toHaveAttribute("ssr", "");
+		await page.locator("#comments").scrollIntoViewIfNeeded();
+		await expect(
+			page.locator("#comments .tiptap[contenteditable=true]").first(),
+		).toBeVisible();
+		await expect(
+			page.locator('[data-tweet-id="123456789"]').getByText("Tweet not found"),
+		).toBeVisible({ timeout: 15000 });
+		await page.evaluate(() => window.scrollTo(0, 0));
+		await expect(
+			page.locator("[data-article-header] > div").first(),
+		).not.toHaveCSS("position", "fixed");
+		await expect(
+			page
+				.locator('astro-island[component-export="PageLikeButtonClient"]')
+				.first()
+				.getByText("0", { exact: true }),
+		).toBeVisible();
+		await expect(
+			page
+				.getByRole("link", { name: "Markdownをダウンロード" })
+				.locator("svg.lucide-download"),
+		).toBeVisible();
+		await expect(
+			page
+				.getByRole("link", { name: "Edit page", exact: true })
+				.locator("svg.lucide-pencil"),
+		).toBeVisible();
+		const titleBounds = await page
+			.getByRole("heading", { name: "Workers保存テスト", exact: true })
+			.boundingBox();
+		const headerBounds = await page
+			.locator("[data-article-header]")
+			.boundingBox();
+		assert.ok(
+			titleBounds.y < headerBounds.y,
+			"タイトルの下に著者・目次を表示する",
+		);
+		await page.screenshot({
+			path: "/tmp/evame-ui-restored-article-desktop.png",
+		});
 		await page
 			.getByRole("button", { name: "Table of Contents", exact: true })
 			.click();
 		await expect(
 			page.getByRole("link", { name: "Workersの目次見出し", exact: true }),
 		).toBeVisible();
+		await expect(
+			page.getByRole("navigation", { name: "Table of contents" }).locator(".."),
+		).toHaveCSS("width", "320px");
+		await expect(
+			page.getByRole("navigation", { name: "Table of contents" }).locator(".."),
+		).toHaveCSS("opacity", "1");
+		await page.screenshot({ path: "/tmp/evame-ui-restored-toc-desktop.png" });
 		await page.keyboard.press("Escape");
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page
+			.getByRole("button", { name: "Table of Contents", exact: true })
+			.click();
+		await expect(
+			page.getByRole("link", { name: "Workersの目次見出し", exact: true }),
+		).toBeVisible();
+		await expect(
+			page.getByRole("navigation", { name: "Table of contents" }).locator(".."),
+		).toHaveCSS("opacity", "1");
+		assert.ok(
+			await page.evaluate(
+				() => document.documentElement.scrollWidth <= window.innerWidth,
+			),
+			"モバイルの目次は横にはみ出さない",
+		);
+		await page.screenshot({ path: "/tmp/evame-ui-restored-toc-mobile.png" });
+		await page
+			.getByRole("link", { name: "Workersの目次見出し", exact: true })
+			.click();
+		await expect(page).toHaveURL(/#workersの目次見出し|#workers%E3%81%AE/);
+		await page.keyboard.press("Escape");
+		await page.evaluate(() => window.scrollTo(0, 1000));
+		await expect(
+			page.locator("[data-article-header] > div").first(),
+		).toHaveClass(/-translate-y-full/);
+		await expect(floating).toHaveCSS("opacity", "0");
+		await page.evaluate(() => window.scrollTo(0, 700));
+		await expect(page.locator("[data-article-header] > div").first()).toHaveCSS(
+			"position",
+			"fixed",
+		);
+		await expect(floating).toHaveCSS("opacity", "1");
+		await page
+			.getByRole("button", { name: "Table of Contents", exact: true })
+			.click();
+		await expect(
+			page.getByRole("link", { name: "Workersの目次見出し", exact: true }),
+		).toBeVisible();
+		await page.screenshot({ path: "/tmp/evame-ui-restored-pinned-mobile.png" });
+		await page.keyboard.press("Escape");
+		await page.evaluate(() => window.scrollTo(0, 0));
+		await page.setViewportSize({ width: 1280, height: 900 });
+		console.log(
+			"アイコン・Cookieの位置・目次の幅とジャンプ・ヘッダーとフローティングバーのスクロール動作を維持する",
+		);
 		await expect(
 			page.locator('[data-tweet-id="123456789"]').getByText("Tweet not found"),
 		).toBeVisible({ timeout: 15000 });
@@ -295,6 +460,74 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		);
 		assert.equal(markdown.status(), 200);
 		assert.ok((await markdown.text()).includes("Cloudflareで更新保存"));
+		await page.goto(`${baseUrl}/ja/search?query=Workers&category=title`);
+		await expect(
+			page.locator('astro-island[component-export="SearchIsland"]'),
+		).not.toHaveAttribute("ssr", "");
+		await expect(
+			page.getByRole("tab", { name: "タイトル", exact: true }),
+		).toHaveAttribute("aria-selected", "true");
+		await page.getByRole("tab", { name: "本文", exact: true }).click();
+		await page
+			.getByRole("searchbox", { name: "検索", exact: true })
+			.fill("Cloudflare");
+		await expect(
+			page
+				.locator("main")
+				.getByRole("link", { name: "Workers保存テスト" })
+				.first(),
+		).toBeVisible();
+		await expect(page).toHaveURL(/category=content/);
+		await page.getByRole("tab", { name: "ユーザー", exact: true }).click();
+		await page
+			.getByRole("searchbox", { name: "検索", exact: true })
+			.fill("Worker Test");
+		await expect(
+			page.locator(`main a[href="/ja/${handle}"]`).first(),
+		).toBeVisible();
+		await page.screenshot({ path: "/tmp/evame-ui-restored-search.png" });
+		console.log("検索タブの切り替えと入力による検索結果の更新を維持する");
+		const draftResponse = await page.request.get(
+			`${baseUrl}/api/reader-data?${new URLSearchParams({ path: new URL(newPageUrl).pathname })}`,
+		);
+		const draft = fromJSON(await draftResponse.json());
+		const newPageId = draft.page.data.pageDetail.id;
+		const publishDraft = () =>
+			page.request.post(`${baseUrl}/api/reader-actions?action=pageStatus`, {
+				data: { locale: "ja", pageId: newPageId, operation: "togglePublish" },
+			});
+		assert.equal((await publishDraft()).status(), 200);
+		await page.goto(`${baseUrl}/ja/${handle}`);
+		const ownerCard = page.locator("main article").filter({
+			has: page.getByRole("link", {
+				name: "ブラウザー新規保存",
+				exact: true,
+			}),
+		});
+		await ownerCard
+			.getByRole("button", { name: "More options", exact: true })
+			.click();
+		await expect(
+			page.getByRole("menuitem", { name: "Edit", exact: true }),
+		).toHaveAttribute("href", `${new URL(newPageUrl).pathname}/edit`);
+		await page
+			.getByRole("button", { name: "Make Private", exact: true })
+			.click();
+		await expect(ownerCard).toHaveCount(0);
+		assert.equal((await publishDraft()).status(), 200);
+		await page.reload();
+		await ownerCard
+			.getByRole("button", { name: "More options", exact: true })
+			.click();
+		await page.getByRole("button", { name: "Delete", exact: true }).click();
+		await page
+			.getByRole("dialog", { name: "Delete Page" })
+			.getByRole("button", { name: "Delete", exact: true })
+			.click();
+		await expect(ownerCard).toHaveCount(0);
+		console.log(
+			"本人プロフィールの記事メニューから編集先・非公開化・削除を操作できる",
+		);
 		await page.screenshot({
 			path: "/tmp/evame-reader-profile.png",
 			fullPage: true,

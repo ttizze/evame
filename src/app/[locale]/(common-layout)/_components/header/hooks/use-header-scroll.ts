@@ -11,6 +11,7 @@ export function useHeaderScroll() {
 	// スクロールは高頻度なので、スクロール量などは state にせず ref で保持し、
 	// state 更新は「表示/固定」が切り替わったときだけに絞る。
 	const lastScrollYRef = useRef(0);
+	const headerOffsetRef = useRef(0);
 	const isPinnedRef = useRef(false);
 	const isVisibleRef = useRef(true);
 
@@ -28,6 +29,8 @@ export function useHeaderScroll() {
 			if (!headerRef.current) return;
 
 			setHeaderHeight(headerRef.current.offsetHeight);
+			headerOffsetRef.current =
+				headerRef.current.getBoundingClientRect().top + window.scrollY;
 		};
 
 		measureHeader();
@@ -55,6 +58,9 @@ export function useHeaderScroll() {
 			let nextVisible = isVisibleRef.current;
 
 			if (currentScrollY <= 0) {
+				nextPinned = false;
+				nextVisible = true;
+			} else if (currentScrollY < headerOffsetRef.current) {
 				nextPinned = false;
 				nextVisible = true;
 			} else if (isScrollingDown && scrollDifference > scrollThreshold) {

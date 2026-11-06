@@ -1,4 +1,3 @@
-import { redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import {
 	getRequestHeaders,
@@ -6,9 +5,8 @@ import {
 } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
-import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
+import { updatePageStatus } from "@/app/api/reader-actions/_service/update-page-status";
 import type { ActionResponse } from "@/app/types";
-import { togglePagePublicStatus } from "./db/mutations.server";
 
 const togglePublishSchema = z.object({
 	pageId: z.number().int().positive(),
@@ -33,17 +31,8 @@ export const togglePublishAction = createServerFn({ method: "POST" })
 		setResponseHeader("Cache-Control", "private, no-store");
 		setResponseHeader("Vary", "Cookie");
 
-		const currentUser = await getCurrentUserFromHeaders(
+		return updatePageStatus(
+			{ pageId: data.pageId, locale: data.locale, operation: "togglePublish" },
 			new Headers(getRequestHeaders()),
 		);
-		if (!currentUser) {
-			throw redirect({ href: `/${data.locale}/auth/login` });
-		}
-
-		await togglePagePublicStatus(data.pageId, currentUser.id);
-		return {
-			success: true,
-			data: undefined,
-			message: "Page status updated successfully",
-		};
 	});

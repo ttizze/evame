@@ -1,5 +1,3 @@
-import { useLocation } from "@tanstack/react-router";
-import { parseAsString, useQueryStates } from "nuqs";
 import {
 	Pagination,
 	PaginationContent,
@@ -13,31 +11,23 @@ import {
 interface PaginationBarProps {
 	totalPages: number;
 	currentPage: number;
+	pathname: string;
+	search: string;
 }
 
-export function PaginationBar({ totalPages, currentPage }: PaginationBarProps) {
-	const pathname = useLocation({ select: (location) => location.pathname });
-	const [currentQuery] = useQueryStates({
-		page: parseAsString,
-		query: parseAsString,
-		category: parseAsString,
-		tagPage: parseAsString,
-		sort: parseAsString,
-		tab: parseAsString,
-		view: parseAsString,
-	});
-	const currentParams = Object.fromEntries(
-		Object.entries(currentQuery).filter(([, value]) => value != null),
-	);
+export function PaginationBar({
+	totalPages,
+	currentPage,
+	pathname,
+	search,
+}: PaginationBarProps) {
 	if (totalPages <= 1) {
 		return null;
 	}
 
 	// 現在のpathnameとsearch paramsを保ち、pageだけを上書きする。
 	const getPageUrl = (page: number) => {
-		const params = new URLSearchParams(
-			Object.entries(currentParams).map(([key, value]) => [key, String(value)]),
-		);
+		const params = new URLSearchParams(search);
 		params.set("page", page.toString());
 		return `${pathname}?${params.toString()}`;
 	};

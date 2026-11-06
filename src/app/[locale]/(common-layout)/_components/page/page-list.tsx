@@ -1,24 +1,25 @@
-import { Link } from "@tanstack/react-router";
 import { EyeIcon } from "lucide-react";
-import { PageActionsDropdown } from "@/app/[locale]/(common-layout)/_components/page/page-actions-dropdown/client";
-import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
+import type { ReactNode } from "react";
 import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import type { PageForList } from "@/app/[locale]/types";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDate } from "../../_utils/format-date";
 import { PageCommentButton } from "./page-list/page-comment-button";
 
 type PageListProps = {
 	PageForList: PageForList;
-	showOwnerActions?: boolean;
-	index?: number;
+	ownerActions: ReactNode;
+	likeButton: ReactNode;
+	avatar: ReactNode;
+	index: number | null;
 	locale: string;
 };
 
 export function PageList({
 	PageForList,
-	showOwnerActions = false,
+	ownerActions,
+	likeButton,
+	avatar,
 	index,
 	locale,
 }: PageListProps) {
@@ -26,11 +27,11 @@ export function PageList({
 	return (
 		<article
 			className={`grid gap-4 py-4 border-b last:border-b-0 ${
-				index !== undefined ? "grid-cols-[max-content_1fr]" : "grid-cols-1"
+				index !== null ? "grid-cols-[max-content_1fr]" : "grid-cols-1"
 			}`}
 		>
 			{/* ───── 1) インデックス番号 ───── */}
-			{index !== undefined && (
+			{index !== null && (
 				<div className="text-lg font-medium text-muted-foreground self-start">
 					{index + 1}
 				</div>
@@ -46,14 +47,9 @@ export function PageList({
 			<div className="grid grid-rows-[auto_auto_auto_auto] gap-1 min-w-0">
 				{/* ─ row‑1: タイトル & オーナーアクション ─ */}
 				<div className="grid grid-cols-[1fr_auto] gap-2">
-					<Link
+					<a
 						className="block overflow-hidden"
-						params={{
-							handle: PageForList.userHandle,
-							locale,
-							pageSlug: PageForList.slug,
-						}}
-						to="/$locale/$handle/$pageSlug"
+						href={`/${locale}/${PageForList.userHandle}/${PageForList.slug}`}
 					>
 						<SegmentElement
 							className="line-clamp-1 break-all overflow-wrap-anywhere"
@@ -61,38 +57,24 @@ export function PageList({
 							segment={titleSegment}
 							tagName="span"
 						/>
-					</Link>
-					{showOwnerActions && (
-						<PageActionsDropdown
-							handle={PageForList.userHandle}
-							locale={locale}
-							pageId={PageForList.id}
-							pageSlug={PageForList.slug}
-							status={PageForList.status}
-						/>
-					)}
+					</a>
+					{ownerActions}
 				</div>
 
 				{/* ─ row-2: タグリスト ─ */}
-				<PageTagList tag={PageForList.tags} />
+				<PageTagList locale={locale} tag={PageForList.tags} />
 
 				{/* ─ row-3: ユーザ情報 + ボタン ─ */}
 				<div className="flex items-center gap-2">
-					<Link
+					<a
 						className="flex items-center gap-1 min-w-0"
-						params={{ handle: PageForList.userHandle, locale }}
-						to="/$locale/$handle"
+						href={`/${locale}/${PageForList.userHandle}`}
 					>
-						<Avatar className="w-5 h-5 shrink-0">
-							<AvatarImage alt="" src={PageForList.userImage} />
-							<AvatarFallback>
-								{PageForList.userHandle.charAt(0).toUpperCase()}
-							</AvatarFallback>
-						</Avatar>
+						{avatar}
 						<span className="text-xs text-gray-600 truncate">
 							{PageForList.userName}
 						</span>
-					</Link>
+					</a>
 					<time className="text-xs text-muted-foreground whitespace-nowrap">
 						{formatDate(PageForList.createdAt, locale)}
 					</time>
@@ -102,17 +84,12 @@ export function PageList({
 				<div className="flex items-center justify-end gap-2">
 					<EyeIcon className="h-5 w-5" />
 					<span className="text-muted-foreground">{PageForList.viewCount}</span>
-					<PageLikeButtonClient
-						initialLikeCount={PageForList.likeCount}
-						pageId={PageForList.id}
-						showCount={false}
-					/>
+					{likeButton}
 					<PageCommentButton
 						commentCount={PageForList.pageCommentsCount}
 						locale={locale}
 						pageOwnerHandle={PageForList.userHandle}
 						pageSlug={PageForList.slug}
-						showCount
 					/>
 				</div>
 			</div>

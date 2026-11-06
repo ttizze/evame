@@ -1,5 +1,8 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation, useRouter } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { EyeIcon } from "lucide-react";
+import { archivePageAction } from "@/app/[locale]/(common-layout)/_components/page/delete-page-dialog/action";
+import { togglePublishAction } from "@/app/[locale]/(common-layout)/_components/page/page-actions-dropdown/action";
 import { PageActionsDropdown } from "@/app/[locale]/(common-layout)/_components/page/page-actions-dropdown/client";
 import { PaginationBar } from "@/app/[locale]/(common-layout)/_components/pagination-bar";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +28,10 @@ export function PageManagementTabClient({
 	pageViewCounts: Record<number, number>;
 	onQueryChange: (query: string) => void;
 }) {
+	const { pathname, searchStr } = useLocation();
+	const router = useRouter();
+	const publish = useServerFn(togglePublishAction);
+	const archive = useServerFn(archivePageAction);
 	return (
 		<div className="space-y-4">
 			<Input
@@ -71,10 +78,12 @@ export function PageManagementTabClient({
 							</div>
 						</div>
 						<PageActionsDropdown
+							archive={() => archive({ data: { locale, pageId: page.id } })}
 							handle={handle}
 							locale={locale}
-							pageId={page.id}
+							onUpdated={() => void router.invalidate({ sync: true })}
 							pageSlug={page.slug}
+							publish={() => publish({ data: { locale, pageId: page.id } })}
 							status={page.status}
 						/>
 					</div>
@@ -82,7 +91,12 @@ export function PageManagementTabClient({
 			</div>
 
 			<div className="mt-4 flex justify-center">
-				<PaginationBar currentPage={currentPage} totalPages={totalPages} />
+				<PaginationBar
+					currentPage={currentPage}
+					pathname={pathname}
+					search={searchStr}
+					totalPages={totalPages}
+				/>
 			</div>
 		</div>
 	);

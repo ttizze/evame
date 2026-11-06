@@ -40,7 +40,7 @@ function CommonLayout() {
 				<ClientOnly fallback={null}>
 					<TranslationFormOnClick pathname={pathname} />
 				</ClientOnly>
-				<Footer />
+				<Footer locale={locale} />
 			</ViewScope>
 		</>
 	);

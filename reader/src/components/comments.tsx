@@ -6,6 +6,7 @@ import { PageCommentForm } from "@/app/[locale]/(common-layout)/[handle]/[pageSl
 import { PageCommentList } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/_components/page-comment-list/server";
 import { CommentUpdates } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/comment-updates";
 import type { PageCommentsData } from "@/app/api/_service/load-page-comments";
+import { Button } from "@/components/ui/button";
 import { paginationUrl } from "./pagination-url";
 import { IslandProviders } from "./providers";
 
@@ -63,27 +64,31 @@ function Comments({
 						className="not-prose flex justify-center items-center gap-4"
 					>
 						{page > 1 && (
-							<a
-								href={paginationUrl(pathname, search, page - 1, "#comments")}
-								onClick={(event) => {
-									event.preventDefault();
-									void setPage(page - 1);
-								}}
-							>
-								{t("previous")}
-							</a>
+							<Button asChild size="sm" variant="outline">
+								<a
+									href={paginationUrl(pathname, search, page - 1, "#comments")}
+									onClick={(event) => {
+										event.preventDefault();
+										void setPage(page - 1);
+									}}
+								>
+									{t("previous")}
+								</a>
+							</Button>
 						)}
 						<span>{t("page", { page, total: data.totalPages })}</span>
 						{page < data.totalPages && (
-							<a
-								href={paginationUrl(pathname, search, page + 1, "#comments")}
-								onClick={(event) => {
-									event.preventDefault();
-									void setPage(page + 1);
-								}}
-							>
-								{t("next")}
-							</a>
+							<Button asChild size="sm" variant="outline">
+								<a
+									href={paginationUrl(pathname, search, page + 1, "#comments")}
+									onClick={(event) => {
+										event.preventDefault();
+										void setPage(page + 1);
+									}}
+								>
+									{t("next")}
+								</a>
+							</Button>
 						)}
 					</nav>
 				)}
