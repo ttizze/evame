@@ -55,7 +55,9 @@ it("旧アセットの取得途中で失敗しても不完全な履歴を残さ�
 				{ cwd: directory },
 			),
 		).rejects.toThrow();
-		expect(await readdir(join(directory, ".data/reader-assets"))).toEqual([]);
+		expect(await readdir(join(directory, ".data/reader-assets/files"))).toEqual(
+			[],
+		);
 	} finally {
 		await new Promise<void>((resolve, reject) =>
 			server.close((error) => (error ? reject(error) : resolve())),
@@ -64,11 +66,17 @@ it("旧アセットの取得途中で失敗しても不完全な履歴を残さ�
 });
 
 it("30日以内の旧アセットと新アセットを残し、期限切れの旧アセットを削除する", async () => {
-	const cache = join(directory, ".data/reader-assets");
+	const state = join(directory, ".data/reader-assets");
+	const cache = join(state, "files");
 	await mkdir(cache, { recursive: true });
 	await writeFile(join(cache, "old.abcdefgh.css"), "old css");
 	await writeFile(join(cache, "expired.abcdefgh.js"), "expired");
 	const expired = new Date(Date.now() - 31 * 86400000);
+	await utimes(join(cache, "old.abcdefgh.css"), expired, expired);
+	await writeFile(
+		join(state, "active.json"),
+		JSON.stringify(["old.abcdefgh.css"]),
+	);
 	await utimes(join(cache, "expired.abcdefgh.js"), expired, expired);
 	await promisify(execFile)(process.execPath, [script, "http://127.0.0.1:9"], {
 		cwd: directory,

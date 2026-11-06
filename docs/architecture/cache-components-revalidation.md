@@ -40,7 +40,7 @@
 
 `bun run build` はAstroとTanStackを順にビルドする。Astroの `/_astro/*` はGatewayからReaderへ転送し、HTMLとアセットを同じWorkerバージョンで配信する。旧Reader互換のGatewayを先にデプロイし、次にReaderのHTMLとアセットを一緒に切り替える。途中で失敗しても旧ReaderのHTMLとアセットを維持する。DBスキーマ変更がある場合は後方互換のマイグレーションを先に行う。
 
-`bun run prepare:reader-assets` が過去30日間の公開アセットを新Readerの成果物へ含める。履歴は `.data/reader-assets` とmainのActions cacheに保持し、更新前のHTMLから旧JS/CSSを要求しても配信できるようにする。
+`bun run prepare:reader-assets` が配信終了から30日以内の旧アセットを新Readerの成果物へ含める。履歴は `.data/reader-assets` とmainのActions cacheに保持する。`deploy:workers` は両Workerの更新後だけ配信ファイルを確定し、旧ファイルの保持期間をその時点から数える。更新前のHTMLから旧JS/CSSを要求しても配信できるようにする。
 
 `bun run test:deployment` はローカルHTTP DBと2つのWorkerで、保存・編集・本文SSR・21言語のトップ・非公開化を検証する。`bun run test:deployment:browser` はChromiumでJavaScript無効の閲覧とログイン後の操作も検証する。翻訳キューはローカルの偽HTTPサーバーへ送信し、サーバー・ブラウザーのSentry送信を無効にする。
 

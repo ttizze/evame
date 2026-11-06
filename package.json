@@ -30,7 +30,8 @@
 		"evame": "bun --env-file=.env tsx scripts/evame-cli/index.ts",
 		"preview": "wrangler dev --config dist/server/wrangler.json --config reader/dist/server/wrangler.json",
 		"prepare:reader-assets": "node scripts/retain-reader-assets.mjs https://evame.tech",
-		"deploy": "bun run build && bun run prepare:reader-assets && wrangler deploy --config dist/server/wrangler.json && wrangler deploy --config reader/dist/server/wrangler.json",
+		"deploy:workers": "node scripts/deploy-workers.mjs",
+		"deploy": "bun run build && bun run prepare:reader-assets && bun run deploy:workers",
 		"db:dev": "bun scripts/dev-db.mjs",
 		"test:deployment:browser": "EVAME_BROWSER_TEST=true node scripts/check-cloudflare-output.mjs"
 	},

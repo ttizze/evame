@@ -3,15 +3,18 @@ import {
 	mkdir,
 	mkdtemp,
 	readdir,
+	readFile,
 	rename,
 	rm,
 	stat,
+	utimes,
 	writeFile,
 } from "node:fs/promises";
 import { join, relative } from "node:path";
 
 const origin = new URL(process.argv[2]).origin;
-const cacheDirectory = ".data/reader-assets";
+const stateDirectory = ".data/reader-assets";
+const cacheDirectory = join(stateDirectory, "files");
 const assetDirectory = "reader/dist/client/_astro";
 await mkdir(cacheDirectory, { recursive: true });
 
@@ -77,6 +80,30 @@ if ((await readdir(cacheDirectory)).length === 0) {
 	}
 }
 
+const nextFiles = (
+	await readdir(assetDirectory, { recursive: true, withFileTypes: true })
+)
+	.filter((entry) => entry.isFile())
+	.map((entry) => relative(assetDirectory, join(entry.parentPath, entry.name)));
+let activeFiles;
+try {
+	activeFiles = JSON.parse(
+		await readFile(join(stateDirectory, "active.json"), "utf8"),
+	);
+} catch (error) {
+	if (error.code !== "ENOENT") throw error;
+	activeFiles = (
+		await readdir(cacheDirectory, { recursive: true, withFileTypes: true })
+	)
+		.filter((entry) => entry.isFile())
+		.map((entry) =>
+			relative(cacheDirectory, join(entry.parentPath, entry.name)),
+		);
+}
+// 直前まで配信していたファイルは、ビルド時刻に関係なく切り替え後も保持する。
+const now = new Date();
+for (const path of activeFiles)
+	await utimes(join(cacheDirectory, path), now, now);
 await cp(assetDirectory, cacheDirectory, {
 	recursive: true,
 	preserveTimestamps: true,
@@ -98,4 +125,8 @@ await cp(cacheDirectory, assetDirectory, {
 	recursive: true,
 	preserveTimestamps: true,
 });
+await writeFile(
+	join(stateDirectory, "next.json"),
+	JSON.stringify({ active: nextFiles, retiring: activeFiles }),
+);
 console.log("Readerの新旧アセットを30日間保持する準備が完了しました");

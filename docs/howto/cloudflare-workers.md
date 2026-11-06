@@ -40,8 +40,7 @@ bun x wrangler secret bulk /absolute/path/to/worker-secrets.json
 bun run build
 bun run test:deployment
 bun run prepare:reader-assets
-bun x wrangler deploy --config dist/server/wrangler.json
-bun x wrangler deploy --config reader/dist/server/wrangler.json
+bun run deploy:workers
 ```
 
 ## 本番への切り替え
@@ -59,7 +58,7 @@ bun x wrangler deploy --config reader/dist/server/wrangler.json
 
 Astroの `/_astro/*` はGatewayへコピーせず、READER bindingからHTMLと同じReaderのStatic Assetsへ転送する。Gatewayを先に更新し、旧Readerでも動くAPIを維持してから、HTMLとアセットを1つのReaderバージョンとして切り替える。Gatewayの更新に失敗した場合はReaderを更新しない。Readerの更新に失敗した場合は旧Readerとそのアセットが引き続き動作するため、失敗したデプロイを再実行する。公開表示の切り戻しは互換性を確認したReaderバージョンへ行う。初回だけはGatewayから参照する前に非公開Readerを作成しておく。
 
-切り替え前のHTMLを開いているブラウザーのため、直近30日間のハッシュ付きアセットをReaderに残す。ビルド後の `prepare:reader-assets` が `.data/reader-assets` の履歴を成果物へ含め、CIはこのディレクトリをmainの成功したデプロイ間で保存・復元する。初回やCIキャッシュ消失時は公開トップ・そこから参照する公開ページとJS依存を取得して保持する。Cookieや認証情報は付けない。ビルド自体ではネットワーク取得せず、公開データ取得はデプロイ準備だけで行う。
+切り替え前のHTMLを開いているブラウザーのため、配信対象から外れた時点から30日間、旧ハッシュ付きアセットをReaderに残す。`prepare:reader-assets` は `.data/reader-assets/active.json` に記録した直前の配信ファイルを失効させず、過去の履歴を成果物へ含める。`deploy:workers` は両Workerの更新後だけ次の配信ファイルを確定し、失敗時は旧記録を維持する。CIは履歴をmainの成功したデプロイ間で保存・復元する。初回やCIキャッシュ消失時は公開トップ・そこから参照する公開ページとJS依存を認証なしで回収する。ビルド自体ではネットワーク取得しない。
 
 リポジトリのActions secretsに本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番用のDB接続設定は `main` のマイグレーションだけに渡す。Cloudflareのデプロイ先はそれぞれの `wrangler.jsonc` に定義する。デプロイ用のアカウントトークン `evame-github-deploy` は、Specified Workersで `evame-start` と `evame-reader` の両方にIndividual Workers Editor権限を設定する。片方だけでは新しいWorkerへのアクセスが拒否される。既存のキャッシュ削除用トークンはデプロイには使わない。Sentryのアップロード用トークンは本番ビルドだけに渡し、Worker secretには登録しない。
 
