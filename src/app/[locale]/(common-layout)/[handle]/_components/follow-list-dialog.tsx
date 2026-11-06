@@ -1,6 +1,5 @@
 // app/components/FollowListDialog.tsx
 
-import { Link } from "@tanstack/react-router";
 import {
 	Dialog,
 	DialogContent,
@@ -43,13 +42,9 @@ export function FollowListDialog({
 						<ul className="space-y-2">
 							{users.map((user) => (
 								<li key={user.handle}>
-									<Link
-										className="underline"
-										params={{ handle: user.handle, locale }}
-										to="/$locale/$handle"
-									>
+									<a className="underline" href={`/${locale}/${user.handle}`}>
 										{user.name} (@{user.handle})
-									</Link>
+									</a>
 								</li>
 							))}
 						</ul>

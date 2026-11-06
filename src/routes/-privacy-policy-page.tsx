@@ -1,10 +1,3 @@
-export const metadata = {
-	title: "Privacy Policy | Evame",
-	description:
-		"Evame Privacy Policy. Learn how we collect, use, and protect your personal data.",
-	robots: { index: true, follow: true },
-};
-
 export default function PrivacyPolicyPage() {
 	return (
 		<div className="min-h-screen bg-background">

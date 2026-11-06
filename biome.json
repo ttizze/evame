@@ -14,7 +14,9 @@
 			"!coverage",
 			"!.turbo",
 			"!.vercel",
-			"!.wrangler",
+			"!**/.wrangler",
+			"!**/.astro",
+			"!**/dist",
 			"!.cache",
 			"!dist",
 			"!.codex",
@@ -31,6 +33,19 @@
 			}
 		}
 	},
+	"overrides": [
+		{
+			"includes": ["**/*.astro"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noUnusedImports": "off",
+						"noUnusedVariables": "off"
+					}
+				}
+			}
+		}
+	],
 	"linter": {
 		"enabled": true,
 		"rules": {

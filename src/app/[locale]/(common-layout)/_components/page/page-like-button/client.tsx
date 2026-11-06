@@ -1,9 +1,9 @@
-import { useServerFn } from "@tanstack/react-start";
 import { Heart, Loader2 } from "lucide-react";
-import { useActionState } from "react";
+import { useTransition } from "react";
 import useSWR from "swr";
+import { useHydrated } from "@/app/_hooks/use-hydrated";
+import { callReaderAction } from "@/app/_service/reader-action";
 import { Button } from "@/components/ui/button";
-import { type PageLikeButtonState, togglePageLikeAction } from "./action";
 import { computeNextLikeState } from "./domain/like-state";
 import {
 	buildLikeStateKey,
@@ -11,34 +11,23 @@ import {
 	type LikeState,
 } from "./service/like-api";
 
-type PageLikeButtonClientProps = {
-	pageId: number;
-	showCount?: boolean;
-	className?: string;
-	initialLikeCount: number;
-	initialLiked?: boolean;
-};
-
 export function PageLikeButtonClient({
 	pageId,
 	showCount,
-	className = "",
 	initialLikeCount,
-	initialLiked,
-}: PageLikeButtonClientProps) {
-	const fallbackData = {
-		liked: initialLiked ?? false,
-		likeCount: initialLikeCount,
-	};
-
-	const swrKey = buildLikeStateKey(pageId);
+}: {
+	pageId: number;
+	showCount: boolean;
+	initialLikeCount: number;
+}) {
+	const hydrated = useHydrated();
+	const [isPending, startTransition] = useTransition();
+	const fallbackData = { liked: false, likeCount: initialLikeCount };
 	const { data, mutate, isLoading } = useSWR<LikeState>(
-		swrKey,
+		buildLikeStateKey(pageId),
 		async (url: string) => {
-			const res = await fetchLikeStates(url);
-			//pageIdでlikeStateを取り出す
-			const state = res.states[String(pageId)];
-			return state ?? fallbackData;
+			const result = await fetchLikeStates(url);
+			return result.states[String(pageId)] ?? fallbackData;
 		},
 		{
 			fallbackData,
@@ -47,65 +36,37 @@ export function PageLikeButtonClient({
 			revalidateOnMount: false,
 		},
 	);
-	const togglePageLikeFn = useServerFn(togglePageLikeAction);
-
-	// The server function returns the latest liked/count; prefer it when available
-	const [_, formAction, isPending] = useActionState<
-		PageLikeButtonState,
-		FormData
-	>(
-		async (_previousState, formData) => {
-			const result = await togglePageLikeFn({
-				data: { pageId: Number(formData.get("pageId")) },
-			});
-			if (result.success) {
-				void mutate(result.data, { revalidate: false });
-			}
-			return result;
-		},
-		{ success: false },
-	);
-
-	const handleSubmit = (formData: FormData) => {
-		// Guard until initial state is loaded
-		if (!data) return;
-		if (data.liked === undefined) {
-			formAction(formData);
-			return;
-		}
-
-		// Compute and broadcast optimistic next state for all instances
-		const next = computeNextLikeState(data);
-		mutate(next, { revalidate: false });
-
-		// Trigger the server function
-		formAction(formData);
-	};
-
+	const displayed = hydrated ? data : fallbackData;
 	return (
 		<div className="flex items-center gap-2">
-			<form action={handleSubmit}>
-				<input name="pageId" type="hidden" value={pageId} />
-				<Button
-					aria-label="Like"
-					className={`bg-background cursor-pointer ${className}`}
-					disabled={isPending || isLoading}
-					size="icon"
-					type="submit"
-					variant="ghost"
-				>
-					{isPending || isLoading ? (
-						<Loader2 className="h-5 w-5 rounded-full" />
-					) : (
-						<Heart
-							className={`h-5 w-5 rounded-full ${data?.liked ? "text-red-500" : ""}`}
-							fill={data?.liked ? "currentColor" : "none"}
-						/>
-					)}
-				</Button>
-			</form>
-			{showCount && data && (
-				<span className="text-muted-foreground">{data.likeCount}</span>
+			<Button
+				aria-label="Like"
+				className="bg-background cursor-pointer"
+				disabled={!hydrated || isPending || isLoading}
+				onClick={() => {
+					if (!data) return;
+					void mutate(computeNextLikeState(data), { revalidate: false });
+					startTransition(async () => {
+						const result = await callReaderAction("like", { pageId });
+						if (result.success)
+							await mutate(result.data, { revalidate: false });
+					});
+				}}
+				size="icon"
+				type="button"
+				variant="ghost"
+			>
+				{isPending || isLoading ? (
+					<Loader2 className="h-5 w-5 rounded-full" />
+				) : (
+					<Heart
+						className={`h-5 w-5 rounded-full ${displayed?.liked ? "text-red-500" : ""}`}
+						fill={displayed?.liked ? "currentColor" : "none"}
+					/>
+				)}
+			</Button>
+			{showCount && displayed && (
+				<span className="text-muted-foreground">{displayed.likeCount}</span>
 			)}
 		</div>
 	);

@@ -1,7 +1,7 @@
-import { useServerFn } from "@tanstack/react-start";
 import { useActionState } from "react";
+import { callReaderAction } from "@/app/_service/reader-action";
+import type { FollowActionResponse } from "@/app/api/reader-actions/_service/follow-user";
 import { Button } from "@/components/ui/button";
-import { type FollowActionResponse, followAction } from "./action";
 
 interface FollowButtonProps {
 	targetUserId: string;
@@ -14,7 +14,6 @@ export function FollowButtonClient({
 	isFollowing,
 	locale = "en",
 }: FollowButtonProps) {
-	const followActionFn = useServerFn(followAction);
 	const [state, formAction, isPending] = useActionState<
 		FollowActionResponse,
 		FormData
@@ -22,12 +21,10 @@ export function FollowButtonClient({
 		async (_previousState, formData) => {
 			const action =
 				formData.get("action") === "unFollow" ? "unFollow" : "follow";
-			return followActionFn({
-				data: {
-					action,
-					locale: String(formData.get("locale") ?? locale),
-					targetUserId: String(formData.get("targetUserId") ?? targetUserId),
-				},
+			return callReaderAction("follow", {
+				action,
+				locale: String(formData.get("locale") ?? locale),
+				targetUserId: String(formData.get("targetUserId") ?? targetUserId),
 			});
 		},
 		{ success: true, data: { isFollowing } },

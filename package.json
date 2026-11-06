@@ -3,9 +3,13 @@
 	"version": "0.1.0",
 	"private": true,
 	"type": "module",
+	"workspaces": [
+		"reader"
+	],
 	"scripts": {
-		"dev": "CLOUDFLARE_INCLUDE_PROCESS_ENV=true vite dev --config vite.config.ts --port 3000",
+		"dev": "node scripts/dev.mjs",
 		"build": "node scripts/build.mjs",
+		"check:reader": "astro check --root reader",
 		"lint": "bunx @biomejs/biome check .",
 		"test": "vitest",
 		"test:deployment": "node scripts/check-cloudflare-output.mjs",
@@ -24,9 +28,10 @@
 		"mdast-json": "bunx tsx scripts/mdast-json.ts",
 		"translate": "bunx tsx scripts/translate.ts",
 		"evame": "bun --env-file=.env tsx scripts/evame-cli/index.ts",
-		"preview": "vite preview",
-		"deploy": "bun run build && wrangler deploy",
-		"db:dev": "bun scripts/dev-db.mjs"
+		"preview": "wrangler dev --config dist/server/wrangler.json --config reader/dist/server/wrangler.json",
+		"deploy": "bun run build && wrangler deploy --config reader/dist/server/wrangler.json && wrangler deploy --config dist/server/wrangler.json",
+		"db:dev": "bun scripts/dev-db.mjs",
+		"test:deployment:browser": "EVAME_BROWSER_TEST=true node scripts/check-cloudflare-output.mjs"
 	},
 	"dependencies": {
 		"@ai-sdk/deepseek": "^3.0.58",
@@ -132,9 +137,11 @@
 		"zod": "4.6.5"
 	},
 	"devDependencies": {
+		"@astrojs/cloudflare": "^14.4.6",
+		"@astrojs/react": "^7.1.4",
 		"@biomejs/biome": "2.5.15",
-		"@cloudflare/vite-plugin": "^1.62.5",
-		"@cloudflare/workers-types": "^5.20261003.1",
+		"@cloudflare/vite-plugin": "^1.67.0",
+		"@cloudflare/workers-types": "^5.20261106.1",
 		"@playwright/test": "1.63.0",
 		"@sentry/vite-plugin": "^5.4.0",
 		"@tailwindcss/vite": "4.3.3",
@@ -150,11 +157,13 @@
 		"@types/react": "19.3.0",
 		"@types/react-dom": "19.3.0",
 		"@vercel/og": "1.0.3",
-		"@vitejs/plugin-react": "6.1.1",
+		"@vitejs/plugin-react": "^6.2.1",
+		"astro": "^7.4.7",
 		"babel-plugin-react-compiler": "1.0.0",
 		"drizzle-kit": "0.31.11",
 		"fishery": "2.4.0",
 		"harfbuzzjs": "0.10.0",
+		"html-dom-parser": "8.0.2",
 		"jest-mock-extended": "4.0.1",
 		"jsdom": "30.1.1",
 		"pg": "8.23.1",
@@ -163,9 +172,9 @@
 		"tailwindcss": "4.3.3",
 		"ts-prune": "^0.10.3",
 		"typescript": "7.0.2",
-		"vite": "8.3.2",
+		"vite": "^8.3.6",
 		"vitest": "5.0.3",
-		"wrangler": "^4.147.0"
+		"wrangler": "^4.158.0"
 	},
 	"overrides": {
 		"css-select": "4.3.0",

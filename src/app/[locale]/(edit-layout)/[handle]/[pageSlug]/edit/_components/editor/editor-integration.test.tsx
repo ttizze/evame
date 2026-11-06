@@ -3,9 +3,7 @@ import type { Editor as TiptapEditor } from "@tiptap/core";
 import { describe, expect, it, vi } from "vitest";
 import { Editor } from "./editor";
 
-vi.mock("@tanstack/react-start", () => ({ useServerFn: (fn: unknown) => fn }));
-vi.mock("./use-file-upload", () => ({
-	uploadEditorImage: vi.fn(),
+vi.mock("./handle-file-upload", () => ({
 	handleFileUpload: vi.fn(),
 }));
 vi.mock("react-tweet", () => ({ Tweet: () => null }));

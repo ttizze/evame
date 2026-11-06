@@ -57,6 +57,7 @@ yarn-error.log*
 
 # Cloudflare
 .wrangler
+.astro
 .dev.vars*
 
 # typescript

@@ -1,7 +1,6 @@
 import type { ReactElement } from "react";
 import { type ComponentType, createElement, type JSX } from "react";
 import * as jsxRuntime from "react/jsx-runtime";
-import { Tweet as XPost } from "react-tweet";
 import rehypeRaw from "rehype-raw";
 import rehypeReact from "rehype-react";
 import rehypeSlug from "rehype-slug";
@@ -45,6 +44,7 @@ const ImgComponent: ComponentType<ImgProps> = ({ src = "", ...props }) => (
 interface Params<T extends Segment = Segment> {
 	mdast: JsonValue;
 	segments: T[];
+	Tweet: ComponentType<{ id: string }>;
 	/**
 	 * If true, render translations as clickable buttons (`data-segment-id`) so
 	 * `TranslationFormOnClick` can open the vote/add UI.
@@ -54,11 +54,12 @@ interface Params<T extends Segment = Segment> {
 }
 
 /** mdast(JSON) → React 要素 */
-export async function mdastToReact<T extends Segment = Segment>({
+export function mdastToReact<T extends Segment = Segment>({
 	mdast,
 	segments,
+	Tweet,
 	interactive = true,
-}: Params<T>): Promise<ReactElement | null> {
+}: Params<T>): ReactElement | null {
 	if (!mdast || Object.keys(mdast).length === 0) return null;
 	const segmentComponents = Object.fromEntries(
 		SEGMENTABLE.map((tag) => [tag, WrapSegment(tag, segments, interactive)]),
@@ -77,7 +78,7 @@ export async function mdastToReact<T extends Segment = Segment>({
 				img: ImgComponent,
 				tweet: (props: { id: string }) => (
 					<span className="not-prose">
-						<XPost id={props.id} />
+						<Tweet id={props.id} />
 					</span>
 				),
 				...segmentComponents,
@@ -85,6 +86,6 @@ export async function mdastToReact<T extends Segment = Segment>({
 		});
 
 	// Run plugins & stringify to React elements
-	const hast = await processor.run(mdast);
+	const hast = processor.runSync(structuredClone(mdast));
 	return processor.stringify(hast) as ReactElement;
 }

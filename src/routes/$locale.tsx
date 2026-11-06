@@ -12,20 +12,9 @@ import { IntlProvider } from "use-intl";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { AnalyticsConsent } from "@/app/[locale]/_components/analytics-consent.client";
 import { Toaster } from "@/components/ui/sonner";
-import enMessages from "../../messages/en.json";
-import esMessages from "../../messages/es.json";
-import jaMessages from "../../messages/ja.json";
-import koMessages from "../../messages/ko.json";
-import zhMessages from "../../messages/zh.json";
+import { messages } from "@/i18n/messages";
 
 const locales = supportedLocaleOptions.map((locale) => locale.code);
-const messages = {
-	en: enMessages,
-	es: esMessages,
-	ja: jaMessages,
-	ko: koMessages,
-	zh: zhMessages,
-};
 const cookieConsentMessageLocales = new Set(["en", "ja", "es", "ko", "zh"]);
 
 const loadLocaleRuntimeData = createServerFn({ method: "GET" })

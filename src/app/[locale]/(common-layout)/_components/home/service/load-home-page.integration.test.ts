@@ -3,18 +3,17 @@ import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPageWithSegments, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
+import { loadSocialProofStats } from "../../about-section/service/load-social-proof-stats";
 import { loadHomePage } from "./load-home-page";
 
 vi.mock("../../about-section/service/load-social-proof-stats", () => ({
-	loadSocialProofStats: vi
-		.fn()
-		.mockResolvedValue({ articles: 6, translations: 12, languages: 18 }),
+	loadSocialProofStats: vi.fn(),
 }));
 
 await setupDbPerFile(import.meta.url);
 beforeEach(resetDatabase);
 
-it("ホームは新着・人気記事と共通タグだけを取得し件数は集計を再利用する", async () => {
+it("ホームは新着・人気記事と共通タグだけを取得する", async () => {
 	const owner = await createUser();
 	const page = await createPageWithSegments({
 		userId: owner.id,
@@ -39,9 +38,6 @@ it("ホームは新着・人気記事と共通タグだけを取得し件数は�
 	expect(home.newPages.pageForLists[0].tags).toEqual([
 		{ id: tag.id, name: "test" },
 	]);
-	expect([home.newPages.totalPages, home.popularPages.totalPages]).toEqual([
-		2, 2,
-	]);
 	expect(execute).toHaveBeenCalledTimes(3);
 
 	await db
@@ -50,7 +46,11 @@ it("ホームは新着・人気記事と共通タグだけを取得し件数は�
 		.where("id", "=", page.id)
 		.execute();
 	const updated = await loadHomePage("ja");
-	expect(updated.stats.articles).toBe(6);
 	expect(updated.newPages.pageForLists).toEqual([]);
 	expect(updated.popularPages.pageForLists).toEqual([]);
+});
+
+it("トップの新着・人気記事は件数集計を呼ばずに取得する", async () => {
+	await loadHomePage("ja");
+	expect(loadSocialProofStats).not.toHaveBeenCalled();
 });

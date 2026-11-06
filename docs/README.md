@@ -8,7 +8,7 @@
 
 - **要件**: `requirements.md`
 - **アーキテクチャ**: `architecture/architecture.md`
-  - `architecture/cache-components-revalidation.md`: TanStack Start のデータ更新とキャッシュ
+  - `architecture/cache-components-revalidation.md`: Astro公開HTMLとデータ更新
 - **規約**: `architecture/conventions`: アーキテクチャ・設計・運用の規約
 - **ADR**: `adr/README.md`
 - **HowTo**: `howto/README.md`

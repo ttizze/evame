@@ -56,5 +56,23 @@
 		"previous": "Comentarios anteriores",
 		"next": "Comentarios siguientes",
 		"page": "Página {page} de {total}"
+	},
+	"Reader": {
+		"newPages": "Artículos recientes",
+		"popularPages": "Artículos populares",
+		"more": "Ver más",
+		"comments": "Comentarios",
+		"downloadMarkdown": "Descargar Markdown",
+		"editProfile": "Editar perfil",
+		"search": "Buscar",
+		"category": "Categoría",
+		"title": "Título",
+		"content": "Contenido",
+		"tags": "Etiquetas",
+		"user": "Usuario",
+		"preview": "Vista previa",
+		"pagination": "Paginación",
+		"previous": "Anterior",
+		"next": "Siguiente"
 	}
 }

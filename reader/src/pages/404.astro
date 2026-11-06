@@ -1,0 +1,8 @@
+---
+import Layout from "../components/layout.astro";
+
+Astro.response.status = 404;
+Astro.cache.set(false);
+Astro.response.headers.set("Cache-Control", "private, no-store");
+---
+<Layout locale="en" title="404 | Evame" description="Page not found" canonical="https://evame.tech" gaTrackingId=""><h1 class="text-2xl font-bold">404</h1><a href="/">Home</a></Layout>

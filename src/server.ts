@@ -3,8 +3,9 @@ import { captureException, withSentry } from "@sentry/cloudflare";
 import { isRedirect } from "@tanstack/react-router";
 import handler from "@tanstack/react-start/server-entry";
 import { withSecurityHeaders } from "../security-headers";
-import { staticHomePaths } from "../static-home-paths";
 import { SENTRY_DSN } from "./_utils/sentry-dsn";
+import { shouldInvalidateReader } from "./app/_domain/reader-cache-policy";
+import { parseReaderRoute } from "./app/_domain/reader-route";
 import { createDb, databaseScope } from "./db";
 import { getMaintenancePath, shouldCheckMaintenance } from "./maintenance-gate";
 
@@ -32,8 +33,9 @@ export default withSentry(
 				);
 			}
 			const url = new URL(request.url);
-			const homeLocale = staticHomePaths.get(url.pathname);
-			const pathname = homeLocale ? `/${homeLocale}` : url.pathname;
+			const readerRoute = parseReaderRoute(url.pathname, url.search);
+			const pathname =
+				readerRoute?.kind === "home" ? `/${readerRoute.locale}` : url.pathname;
 			if (shouldCheckMaintenance(pathname)) {
 				const isOn = await env.SETTINGS.get<boolean>("maintenance", "json");
 				if (isOn) {
@@ -53,31 +55,51 @@ export default withSentry(
 				}
 			}
 			if (
-				homeLocale &&
+				readerRoute &&
 				(request.method === "GET" || request.method === "HEAD")
 			) {
-				const response = (await env.ASSETS.fetch(request.url, {
+				const readerUrl = new URL(request.url);
+				if (readerRoute.kind === "home")
+					readerUrl.pathname = `/${readerRoute.locale}`;
+				const response = (await env.READER.fetch(readerUrl.href, {
 					method: request.method,
 					headers: Object.fromEntries(request.headers),
 				})) as unknown as Response;
-				if (response.status !== 404) {
-					const secured = withSecurityHeaders(response);
-					secured.headers.append(
-						"Set-Cookie",
-						`NEXT_LOCALE=${homeLocale}; Path=/; SameSite=Lax`,
-					);
-					return secured;
-				}
+				const secured = withSecurityHeaders(response);
+				secured.headers.set("Cache-Control", "private, no-store");
+				secured.headers.delete("Cloudflare-CDN-Cache-Control");
+				secured.headers.delete("Cache-Tag");
+				secured.headers.append(
+					"Set-Cookie",
+					`NEXT_LOCALE=${readerRoute.locale}; Path=/; SameSite=Lax`,
+				);
+				return secured;
 			}
 			const database = createDb();
 			return databaseScope.run(database, async () => {
 				try {
 					const response = await handler.fetch(request);
+					if (
+						shouldInvalidateReader(
+							request.method,
+							url.pathname,
+							url.searchParams.get("action"),
+							response.status,
+							response.headers.get("X-Evame-Reader-Changed"),
+						)
+					) {
+						const purged = await env.READER.fetch(
+							"https://reader.internal/__invalidate",
+							{ method: "POST" },
+						);
+						if (!purged.ok) throw new Error("Reader cache invalidation failed");
+					}
 					const init = {
 						status: response.status,
 						statusText: response.statusText,
-						headers: response.headers,
+						headers: new Headers(response.headers),
 					};
+					init.headers.delete("X-Evame-Reader-Changed");
 					if (!response.body) {
 						await database.destroy();
 						return withSecurityHeaders(new Response(null, init));

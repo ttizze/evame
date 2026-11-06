@@ -1,6 +1,9 @@
 import { redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeaders } from "@tanstack/react-start/server";
+import {
+	getRequestHeaders,
+	setResponseHeader,
+} from "@tanstack/react-start/server";
 import { z } from "zod";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { createServerLogger } from "@/app/_service/logger.server";
@@ -81,6 +84,8 @@ export const editPageContent = createServerFn({ method: "POST" })
 				order: existingPage?.order ?? 0,
 				status: existingPage?.status ?? "DRAFT",
 			});
+			if (existingPage?.status !== "PUBLIC")
+				setResponseHeader("X-Evame-Reader-Changed", "false");
 			return { success: true, data: undefined };
 		} catch (error) {
 			logger.error({ err: error }, "Failed to save page");

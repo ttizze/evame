@@ -24,6 +24,8 @@
 	"exclude": [
 		"node_modules",
 		"dist",
+		"reader/dist",
+		"reader/.astro",
 		"build",
 		"scripts/convert-romn-to-md-old/**"
 	]

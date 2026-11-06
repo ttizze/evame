@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { Bell, Loader2 } from "lucide-react";
 import useSWR from "swr";
 import type { NotificationRowsWithRelations } from "@/app/api/notifications/_types/notification";
@@ -128,13 +127,9 @@ function NotificationContent({
 	const { actorHandle, actorName, actorImage, type } =
 		notificationRowsWithRelations;
 	const commonLink = (
-		<Link
-			className="hover:underline font-bold"
-			params={{ handle: actorHandle, locale }}
-			to="/$locale/$handle"
-		>
+		<a className="hover:underline font-bold" href={`/${locale}/${actorHandle}`}>
 			{actorName}
-		</Link>
+		</a>
 	);
 	const commonDate = notificationRowsWithRelations.createdAt.toLocaleString();
 
@@ -145,13 +140,12 @@ function NotificationContent({
 		const pageOwnerHandle = notificationRowsWithRelations.pageOwnerHandle;
 		if (!pageTitle || !pageSlug || !pageOwnerHandle) return null;
 		return (
-			<Link
+			<a
 				className="hover:underline font-bold"
-				params={{ handle: pageOwnerHandle, locale, pageSlug }}
-				to="/$locale/$handle/$pageSlug"
+				href={`/${locale}/${pageOwnerHandle}/${pageSlug}`}
 			>
 				{pageTitle}
-			</Link>
+			</a>
 		);
 	};
 
@@ -188,13 +182,12 @@ function NotificationContent({
 				<>
 					<span>{votedText}</span>
 					<span className="text-gray-500"> on </span>
-					<Link
+					<a
 						className="hover:underline font-bold"
-						params={{ handle: pageOwnerHandle, locale, pageSlug }}
-						to="/$locale/$handle/$pageSlug"
+						href={`/${locale}/${pageOwnerHandle}/${pageSlug}`}
 					>
 						{pageTitle}
-					</Link>
+					</a>
 				</>
 			);
 			break;
@@ -236,10 +229,9 @@ function NotificationAvatar({
 	locale: string;
 }) {
 	return (
-		<Link
+		<a
 			className="flex items-center mr-2 no-underline! hover:text-gray-700"
-			params={{ handle: actorHandle, locale }}
-			to="/$locale/$handle"
+			href={`/${locale}/${actorHandle}`}
 		>
 			<Avatar className="w-10 h-10 shrink-0 mr-3">
 				<AvatarImage
@@ -252,6 +244,6 @@ function NotificationAvatar({
 					{(actorName || actorHandle).charAt(0).toUpperCase()}
 				</AvatarFallback>
 			</Avatar>
-		</Link>
+		</a>
 	);
 }

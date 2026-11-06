@@ -56,5 +56,23 @@
 		"previous": "前のコメント",
 		"next": "次のコメント",
 		"page": "{page} / {total} ページ"
+	},
+	"Reader": {
+		"newPages": "新着記事",
+		"popularPages": "人気記事",
+		"more": "もっと見る",
+		"comments": "コメント",
+		"downloadMarkdown": "Markdownをダウンロード",
+		"editProfile": "プロフィールを編集",
+		"search": "検索",
+		"category": "検索対象",
+		"title": "タイトル",
+		"content": "本文",
+		"tags": "タグ",
+		"user": "ユーザー",
+		"preview": "プレビュー",
+		"pagination": "ページ切り替え",
+		"previous": "前へ",
+		"next": "次へ"
 	}
 }

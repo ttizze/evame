@@ -1,0 +1,32 @@
+---
+import "../../../src/app/globals.css";
+import { DEFAULT_VIEW } from "@/app/_constants/view";
+import { viewQueryState } from "@/app/[locale]/(common-layout)/_components/view-query";
+import { messages } from "@/i18n/messages";
+import { HeaderIsland } from "./header";
+import { TranslationsIsland } from "./translations";
+
+interface Props {
+	locale: string;
+	title: string;
+	description: string;
+	canonical: string;
+	gaTrackingId: string;
+}
+const { locale, title, description, canonical, gaTrackingId } = Astro.props;
+const t = (messages[locale as keyof typeof messages] ?? messages.en).Footer;
+const view =
+	viewQueryState.parse(Astro.url.searchParams.get("view") ?? "") ??
+	DEFAULT_VIEW;
+---
+<!doctype html>
+<html lang={locale} dir={locale === "ar" || locale === "fa" ? "rtl" : "ltr"}>
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>{title}</title><meta name="description" content={description} /><link rel="canonical" href={canonical} /><meta property="og:title" content={title} /><meta property="og:description" content={description} /><meta property="og:url" content={canonical} /><meta name="twitter:title" content={title} /><meta name="twitter:description" content={description} /><meta name="twitter:card" content="summary_large_image" /><link rel="icon" href="/favicon.svg" /><slot name="head" /></head>
+  <body class="antialiased min-h-screen flex flex-col" data-view={view}>
+    <HeaderIsland locale={locale} search={Astro.url.search} gaTrackingId={gaTrackingId} client:load />
+    <main class="container mx-auto max-w-4xl grow px-4 py-6"><slot /></main>
+    <footer class="py-16 flex flex-wrap justify-center gap-4 text-sm text-muted-foreground"><a href={`/${locale}/about`}>{t.about}</a><a href={`/${locale}/privacy`}>{t.privacyPolicy}</a><a href={`/${locale}/terms`}>{t.termsOfService}</a><a href="https://github.com/ttizze/eveeve">GitHub</a><a href="https://discord.gg/2JfhZdu9zW">Discord</a></footer>
+    <TranslationsIsland locale={locale} search={Astro.url.search} pathname={Astro.url.pathname} client:idle />
+  </body>
+</html>
+<style is:global>:root { --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif; }</style>

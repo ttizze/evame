@@ -1,9 +1,9 @@
-import { useLocation, useNavigate, useParams } from "@tanstack/react-router";
 import { Check, ChevronDown } from "lucide-react";
-import { startTransition, useState } from "react";
+import { useState } from "react";
 import useSWR from "swr";
 import { useLocale } from "use-intl";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
+import { parseReaderRoute } from "@/app/_domain/reader-route";
 import { Button } from "@/components/ui/button";
 import {
 	Command,
@@ -37,10 +37,6 @@ interface TranslationInfo {
 	}[];
 }
 
-// Helpers
-const buildSlugKey = ({ pageSlug }: { pageSlug?: string }) =>
-	pageSlug ? `pageSlug=${pageSlug}` : null;
-
 const fetchTranslation: (url: string) => Promise<TranslationInfo> = async (
 	url,
 ) => {
@@ -66,36 +62,24 @@ export function LocaleSelector({
 }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
 	const [dialogOpen, setDialogOpen] = useState(false);
-	const navigate = useNavigate();
-	const location = useLocation();
 	const targetLocale = useLocale();
-	const { locale: routeLocale, pageSlug } = useParams({ strict: false }) as {
-		locale?: string;
-		pageSlug?: string;
-	};
-	const currentLocale = routeLocale ?? targetLocale;
-	const handleLocaleChange = (value: string) => {
-		setOpen(false);
-		startTransition(() => {
-			const localePrefix = `/${currentLocale}`;
-			const pathWithoutLocale =
-				location.pathname === localePrefix ||
-				location.pathname === `${localePrefix}/`
-					? ""
-					: location.pathname.startsWith(`${localePrefix}/`)
-						? location.pathname.slice(localePrefix.length)
-						: location.pathname;
-			const nextPath = `/${value}${pathWithoutLocale}`;
-			const suffix = `${location.searchStr}${location.hash ? `#${location.hash}` : ""}`;
-			void navigate({ to: `${nextPath}${suffix}` });
-		});
-	};
+	const location = new URL(
+		typeof window === "undefined"
+			? `https://evame.tech/${targetLocale}`
+			: window.location.href,
+	);
+	const route = parseReaderRoute(location.pathname, location.search);
+	const pageSlug = route?.kind === "article" ? route.pageSlug : undefined;
+	const pathWithoutLocale = location.pathname
+		.replace(new RegExp(`^/${targetLocale}(?=/|$)`), "")
+		.replace(/\/$/, "");
 
 	const showIcons = Boolean(pageSlug);
 	const showAddNewButton = Boolean(pageSlug);
 
-	const slugKey = buildSlugKey({ pageSlug });
-	const apiUrl = slugKey ? `/api/locale-info?${slugKey}` : null;
+	const apiUrl = pageSlug
+		? `/api/locale-info?${new URLSearchParams({ pageSlug })}`
+		: null;
 
 	const { data } = useSWR(apiUrl, fetchTranslation);
 
@@ -163,24 +147,33 @@ export function LocaleSelector({
 							)}
 							<CommandEmpty>No locales found.</CommandEmpty>
 							<CommandGroup>
-								{localeOptionWithStatus.map((item) => (
-									<CommandItem
-										key={item.code}
-										onSelect={handleLocaleChange}
-										value={item.code}
-									>
-										{showIcons && sourceLocale && (
-											<TranslationProofStatusIcon
-												localeStatus={item.status}
-												proofStatus={item.proofStatus}
-											/>
-										)}
-										<span className="truncate grow">{item.name}</span>
-										{targetLocale === item.code && (
-											<Check className="ml-2 h-4 w-4" />
-										)}
-									</CommandItem>
-								))}
+								{localeOptionWithStatus.map((item) => {
+									const href = `/${item.code}${pathWithoutLocale}${location.search}${location.hash}`;
+									return (
+										<CommandItem
+											asChild
+											key={item.code}
+											onSelect={() => {
+												setOpen(false);
+												window.location.assign(href);
+											}}
+											value={item.code}
+										>
+											<a href={href}>
+												{showIcons && sourceLocale && (
+													<TranslationProofStatusIcon
+														localeStatus={item.status}
+														proofStatus={item.proofStatus}
+													/>
+												)}
+												<span className="truncate grow">{item.name}</span>
+												{targetLocale === item.code && (
+													<Check className="ml-2 h-4 w-4" />
+												)}
+											</a>
+										</CommandItem>
+									);
+								})}
 							</CommandGroup>
 						</CommandList>
 						{showAddNewButton && (

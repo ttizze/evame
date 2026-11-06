@@ -2,11 +2,13 @@ import {
 	createRootRoute,
 	HeadContent,
 	Outlet,
+	redirect,
 	Scripts,
 	useRouterState,
 } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import "@/app/globals.css";
+import { parseReaderRoute } from "@/app/_domain/reader-route";
 import {
 	RootErrorComponent,
 	RootNotFoundComponent,
@@ -14,6 +16,14 @@ import {
 } from "./-root-boundaries";
 
 export const Route = createRootRoute({
+	beforeLoad: ({ location }) => {
+		if (
+			typeof window !== "undefined" &&
+			parseReaderRoute(location.pathname, location.searchStr)
+		) {
+			throw redirect({ href: location.href, reloadDocument: true });
+		}
+	},
 	component: RootComponent,
 	errorComponent: RootErrorComponent,
 	notFoundComponent: RootNotFoundComponent,

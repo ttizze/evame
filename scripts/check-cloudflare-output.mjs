@@ -2,38 +2,14 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHmac, randomUUID } from "node:crypto";
 import { mkdir, readdir, readFile, rm } from "node:fs/promises";
+import { createServer } from "node:http";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
-import { fromCrossJSON, toJSONAsync } from "seroval";
-import { unstable_dev } from "wrangler";
+import { toJSONAsync } from "seroval";
+import { createTestHarness } from "wrangler";
+import { supportedLocaleOptions } from "../src/app/_constants/locale.ts";
 import { startTursoServer } from "./turso-dev-server.mjs";
-
-const staticLocales = (await readdir("dist/client", { withFileTypes: true }))
-	.filter((entry) => entry.isDirectory() && /^[a-z]{2}$/.test(entry.name))
-	.map((entry) => entry.name);
-assert.equal(staticLocales.length, 21, "全言語のトップを生成する");
-for (const locale of staticLocales) {
-	const html = await readFile(`dist/client/${locale}/index.html`, "utf8");
-	if (process.env.GOOGLE_ANALYTICS_ID)
-		assert.ok(
-			html.includes(process.env.GOOGLE_ANALYTICS_ID),
-			`${locale}: Analytics設定を静的HTMLにも保持する`,
-		);
-	assert.ok(
-		html.includes('data-sentry-component="HeroSection"'),
-		`${locale}: 説明文が静的HTMLに入っている`,
-	);
-	assert.ok(
-		!/Sorry, an error occurred|Error in renderToReadableStream/.test(html),
-		`${locale}: 静的生成が成功する`,
-	);
-	assert.ok(
-		!html.includes("better-auth.session_token="),
-		`${locale}: 個人のセッションを含めない`,
-	);
-}
-console.log("全21言語のトップに説明文を静的生成できる");
 
 await mkdir(".data", { recursive: true });
 const databasePath = `.data/deployment-${randomUUID()}.db`;
@@ -54,29 +30,51 @@ const tursoServer = await startTursoServer(databasePath, null);
 const databaseUrl = tursoServer.url;
 const authSecret = "deployment-smoke-test-secret-32-characters";
 const database = createClient({ url: databaseUrl });
+const queuedTranslations = [];
+const queueServer = createServer(async (request, response) => {
+	let body = "";
+	for await (const chunk of request) body += chunk;
+	queuedTranslations.push(JSON.parse(body));
+	response.setHeader("Content-Type", "application/json");
+	response.end(JSON.stringify({ messageId: randomUUID() }));
+});
+await new Promise((resolve) => queueServer.listen(0, "127.0.0.1", resolve));
+const queueUrl = `http://127.0.0.1:${queueServer.address().port}`;
+
 const userId = randomUUID();
 const token = randomUUID();
 const handle = `worker-test-${userId}`;
 const pageSlug = `worker-test-${userId}`;
 let worker;
+let harness;
 try {
-	worker = await unstable_dev("dist/server/index.js", {
-		config: "dist/server/wrangler.json",
-		local: true,
-		persist: false,
-		logLevel: "error",
-		vars: {
-			SENTRY_DSN: "",
-			TURSO_DATABASE_URL: databaseUrl,
-			TURSO_AUTH_TOKEN: "",
-			BETTER_AUTH_SECRET: authSecret,
-			BETTER_AUTH_URL: "http://localhost",
-			AUTH_GOOGLE_ID: "deployment-smoke-google-id",
-			AUTH_GOOGLE_SECRET: "deployment-smoke-google-secret",
-			AUTH_RESEND_KEY: "re_deployment_smoke_test",
-		},
-		experimental: { disableExperimentalWarning: true, watch: false },
+	harness = createTestHarness({
+		workers: [
+			{
+				configPath: "dist/server/wrangler.json",
+				secrets: {
+					SENTRY_DSN: "",
+					TURSO_DATABASE_URL: databaseUrl,
+					TURSO_AUTH_TOKEN: "",
+					BETTER_AUTH_SECRET: authSecret,
+					BETTER_AUTH_URL: "http://localhost",
+					AUTH_GOOGLE_ID: "deployment-smoke-google-id",
+					AUTH_GOOGLE_SECRET: "deployment-smoke-google-secret",
+					AUTH_RESEND_KEY: "re_deployment_smoke_test",
+					GOOGLE_ANALYTICS_ID: "G-0000000000",
+					QSTASH_TOKEN: "deployment-smoke-queue-token",
+					QSTASH_URL: queueUrl,
+					QSTASH_PUBLISH_BASE_URL: "https://example.test",
+				},
+			},
+			{
+				configPath: "reader/dist/server/wrangler.json",
+				secrets: { SENTRY_DSN: "" },
+			},
+		],
 	});
+	const { url: serverUrl } = await harness.listen();
+	worker = harness.getWorker("evame-start");
 	for (let request = 0; request < 2; request++) {
 		const response = await worker.fetch(
 			"http://localhost/api/auth/get-session",
@@ -111,17 +109,8 @@ try {
 			),
 		].map((match) => [match[2], match[1]]),
 	);
-	const homeFeedFunction = functions.getHomeFeed_createServerFn_handler;
-	assert.ok(homeFeedFunction, "最新記事取得のServer Functionが生成されている");
-	const homeFeedPayload = JSON.stringify(await toJSONAsync({ data: "ja" }));
-	const homeFeedUrl = `http://localhost/_serverFn/${homeFeedFunction}?${new URLSearchParams({ payload: homeFeedPayload })}`;
 	const editFunction = functions.editPageContent_createServerFn_handler;
 	assert.ok(editFunction, "記事保存のServer Functionが生成されている");
-	const uploadFunction = functions.uploadEditorImage_createServerFn_handler;
-	assert.ok(
-		uploadFunction,
-		"画像アップロードのServer Functionが生成されている",
-	);
 	const imageForm = new FormData();
 	imageForm.set(
 		"image",
@@ -130,7 +119,7 @@ try {
 		}),
 	);
 	const uploadRequest = new Request(
-		`http://localhost/_serverFn/${uploadFunction}`,
+		"http://localhost/api/reader-actions?action=uploadImage",
 		{
 			method: "POST",
 			headers: { cookie, origin: "http://localhost", "x-tsr-serverFn": "true" },
@@ -157,7 +146,10 @@ try {
 		form.set("pageSlug", pageSlug);
 		form.set("userLocale", "ja");
 		form.set("title", "Workers保存テスト");
-		form.set("pageContent", `<p>${text}</p>`);
+		form.set(
+			"pageContent",
+			`<p>${text}</p><p><a href="https://x.com/example/status/123456789">X</a></p>`,
+		);
 		// NodeとWranglerのUndiciでFormDataの実装が異なるため、HTTP本文として渡す。
 		const request = new Request(`http://localhost/_serverFn/${editFunction}`, {
 			method: "POST",
@@ -199,6 +191,14 @@ try {
 		{ headers: { cookie } },
 	);
 	const articleHtml = await article.text();
+	assert.ok(
+		articleHtml.includes('component-export="TweetsIsland"'),
+		"埋め込み用islandを含む",
+	);
+	assert.ok(
+		articleHtml.includes('data-tweet-id="123456789"'),
+		"埋め込みだけを独立したislandで起動する",
+	);
 	assert.equal(article.status, 200, articleHtml);
 	assert.ok(
 		articleHtml.includes("Cloudflareで更新保存"),
@@ -245,6 +245,10 @@ try {
 		});
 		commentIds.push(id);
 	}
+	await database.execute({
+		sql: "INSERT INTO segment_translations (segment_id, user_id, locale, text) SELECT id, ?, 'en', 'Existing English translation' FROM segments WHERE content_id = ? AND number = 1",
+		args: [userId, storedPage.rows[0].id],
+	});
 	const publicArticle = await worker.fetch(
 		`http://localhost/ja/${handle}/${pageSlug}`,
 	);
@@ -255,7 +259,7 @@ try {
 		"ログインせずに公開記事の本文を読める",
 	);
 	assert.ok(
-		publicArticleHtml.includes("comment-marker-01"),
+		publicArticleHtml.includes(">comment-marker-01<"),
 		"最初のコメントをSSRする",
 	);
 	assert.ok(
@@ -263,7 +267,9 @@ try {
 		"21件目のスレッドを初回に取得しない",
 	);
 	assert.ok(
-		publicArticleHtml.includes(`/ja/${handle}/${pageSlug}?page=2#comments`),
+		publicArticleHtml.includes(
+			`href="/ja/${handle}/${pageSlug}?page=2#comments"`,
+		),
 		"続きのコメントへのリンクを表示する",
 	);
 	const secondCommentPage = await worker.fetch(
@@ -272,11 +278,11 @@ try {
 	assert.equal(secondCommentPage.status, 200);
 	const secondCommentHtml = await secondCommentPage.text();
 	assert.ok(
-		secondCommentHtml.includes("comment-marker-21"),
+		secondCommentHtml.includes(">comment-marker-21<"),
 		"2ページ目で21件目のコメントを読める",
 	);
 	assert.ok(
-		secondCommentHtml.includes("reply-marker-last"),
+		secondCommentHtml.includes(">reply-marker-last<"),
 		"2ページ目のコメントに付いた返信も読める",
 	);
 	assert.ok(
@@ -296,64 +302,145 @@ try {
 		new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
 	);
 	console.log("WorkersランタイムでDBに接続し、OG画像をPNGで生成できる");
-	const home = await worker.fetch("http://localhost/ja");
-	assert.equal(home.status, 200);
-	const html = await home.text();
-	assert.ok(
-		html.includes('data-sentry-component="HeroSection"'),
-		"ホームの本文がSSRされている",
-	);
-	assert.ok(
-		!/Sorry, an error occurred|Error in renderToReadableStream/.test(html),
-		"ホームのSSRがエラーで中断されていない",
-	);
 
-	assert.ok(
-		!html.includes("Workers保存テスト"),
-		"通常記事のタイトルを静的HTMLに固定しない",
+	for (const { code: locale } of supportedLocaleOptions) {
+		const response = await worker.fetch("http://localhost/" + locale);
+		const html = await response.text();
+		assert.equal(response.status, 200, html.slice(0, 500));
+		assert.ok(
+			html.includes("astro-island"),
+			locale + ": AstroでHTMLを描画する",
+		);
+		assert.ok(
+			!html.includes("about-section"),
+			locale + ": トップに長い説明文を表示しない",
+		);
+		assert.ok(
+			html.includes("Workers保存テスト"),
+			locale + ": 最初のHTMLに記事一覧を含める",
+		);
+		assert.ok(
+			!html.includes("better-auth.session_token="),
+			locale + ": 認証セッションをHTMLに含めない",
+		);
+		assert.ok(
+			html.includes("G-0000000000"),
+			locale + ": Analytics設定を保持する",
+		);
+	}
+	console.log(
+		"全21言語で記事一覧を最初のAstro HTMLに含め、説明文をAboutに分離できる",
 	);
-	const feedResponse = await worker.fetch(homeFeedUrl, {
-		headers: {
-			"x-tsr-serverFn": "true",
-			accept: "application/json",
-			origin: "http://localhost",
-		},
-	});
-	assert.equal(feedResponse.status, 200);
-	assert.equal(feedResponse.headers.get("cache-control"), "private, no-store");
-	const feed = fromCrossJSON(await feedResponse.json(), {}).result;
+	const about = await worker.fetch("http://localhost/ja/about");
+	assert.equal(about.status, 200);
 	assert.ok(
-		feed.newPages.pageForLists.some((page) => page.slug === pageSlug),
-		"公開記事を表示後の取得で返す",
+		(await about.text()).includes("about-section"),
+		"Aboutで説明文を維持する",
 	);
-	await database.execute({
-		sql: "UPDATE pages SET status = 'DRAFT' WHERE slug = ?",
-		args: [pageSlug],
-	});
-	const updatedFeedResponse = await worker.fetch(homeFeedUrl, {
-		headers: {
-			"x-tsr-serverFn": "true",
-			accept: "application/json",
-			origin: "http://localhost",
+	if (process.env.EVAME_BROWSER_TEST === "true") {
+		const { checkReaderBrowser } = await import("./check-reader-browser.mjs");
+		await checkReaderBrowser(serverUrl.origin, cookie, handle, pageSlug);
+		assert.equal(
+			queuedTranslations.length,
+			4,
+			"コメント翻訳をローカルのキューへ投入する",
+		);
+	}
+	const publicEdit = new FormData();
+	publicEdit.set("pageSlug", pageSlug);
+	publicEdit.set("userLocale", "ja");
+	publicEdit.set("title", "Workers保存テスト");
+	publicEdit.set("pageContent", "<p>公開記事を更新した本文</p>");
+	const publicRequest = new Request(
+		`http://localhost/_serverFn/${editFunction}`,
+		{
+			method: "POST",
+			headers: { cookie, origin: "http://localhost", "x-tsr-serverFn": "true" },
+			body: publicEdit,
 		},
+	);
+	const publicSaved = await worker.fetch(publicRequest.url, {
+		method: "POST",
+		headers: Object.fromEntries(publicRequest.headers),
+		body: await publicRequest.arrayBuffer(),
 	});
-	assert.equal(updatedFeedResponse.status, 200);
-	const updatedFeed = fromCrossJSON(
-		await updatedFeedResponse.json(),
-		{},
-	).result;
+	assert.equal(publicSaved.status, 200);
+	const revised = await worker.fetch(
+		`http://localhost/ja/${handle}/${pageSlug}`,
+	);
+	assert.equal(revised.status, 200);
+	assert.ok(
+		(await revised.text()).includes("公開記事を更新した本文"),
+		"公開記事の保存後に本文HTMLを更新する",
+	);
+	const publishFunction = functions.togglePublishAction_createServerFn_handler;
+	assert.ok(publishFunction, "公開状態を変更するServer Functionが生成される");
+	const changed = await worker.fetch(
+		"http://localhost/_serverFn/" + publishFunction,
+		{
+			method: "POST",
+			headers: {
+				cookie,
+				origin: "http://localhost",
+				"x-tsr-serverFn": "true",
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(
+				await toJSONAsync({
+					data: { pageId: Number(storedPage.rows[0].id), locale: "ja" },
+				}),
+			),
+		},
+	);
+	assert.equal(changed.status, 200, await changed.text());
+	const hiddenArticle = await worker.fetch(
+		"http://localhost/ja/" + handle + "/" + pageSlug,
+	);
 	assert.equal(
-		updatedFeed.stats.articles,
-		feed.stats.articles,
-		"集計キャッシュを再利用する",
+		hiddenArticle.status,
+		404,
+		"非公開にした記事をキャッシュに残さない",
 	);
+	const updatedHome = await worker.fetch("http://localhost/ja");
+	assert.equal(updatedHome.status, 200);
 	assert.ok(
-		!updatedFeed.newPages.pageForLists.some((page) => page.slug === pageSlug),
-		"非公開にした記事を直ちに一覧から除外する",
+		!(await updatedHome.text()).includes("Workers保存テスト"),
+		"非公開にした記事を一覧から除外する",
 	);
 	console.log(
-		"静的トップと最新記事の取得を分け、非公開にした記事を一覧に残さない",
+		"非公開化のHTTP処理でAstroキャッシュを無効化し、本文と一覧を更新できる",
 	);
+	const archiveFunction = functions.archivePageAction_createServerFn_handler;
+	assert.ok(archiveFunction, "削除のServer Functionが生成される");
+	for (const [action, expectedStatus] of [
+		[publishFunction, 200],
+		[archiveFunction, 404],
+	]) {
+		const result = await worker.fetch(`http://localhost/_serverFn/${action}`, {
+			method: "POST",
+			headers: {
+				cookie,
+				origin: "http://localhost",
+				"x-tsr-serverFn": "true",
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(
+				await toJSONAsync({
+					data: { pageId: Number(storedPage.rows[0].id), locale: "ja" },
+				}),
+			),
+		});
+		assert.equal(result.status, 200);
+		const visible = await worker.fetch(
+			`http://localhost/ja/${handle}/${pageSlug}`,
+		);
+		assert.equal(
+			visible.status,
+			expectedStatus,
+			"削除後は本文の配信を停止する",
+		);
+	}
+	console.log("公開後の本文更新・再公開・削除のHTTP操作をHTMLへ反映できる");
 	const normalImage = await worker.fetch(
 		"http://localhost/api/og?slug=evame-ja&locale=ja",
 	);
@@ -366,18 +453,31 @@ try {
 	console.log(
 		"Workersランタイムで日本語フォントとロゴを使ったOG画像を生成できる",
 	);
-	await tursoServer.stop();
-	const withoutDb = await worker.fetch("http://localhost/ja", {
-		headers: { cookie },
-	});
-	assert.equal(withoutDb.status, 200);
-	assert.ok(
-		(await withoutDb.text()).includes('data-sentry-component="HeroSection"'),
-		"DB停止中も静的トップを返す",
-	);
-	console.log("DB停止中も認証Cookie付きで静的トップを表示できる");
+	const readerHome = await harness
+		.getWorker("evame-reader")
+		.fetch("http://localhost/ja");
+	if (readerHome.headers.get("X-Evame-Cache") === "supported") {
+		await tursoServer.stop();
+		const withoutDb = await worker.fetch("http://localhost/ja", {
+			headers: { cookie },
+		});
+		assert.equal(withoutDb.status, 200);
+		assert.ok(
+			(await withoutDb.text()).includes("astro-island"),
+			"DB停止中もキャッシュ済みのトップを返す",
+		);
+		console.log("DB停止中もキャッシュ済みのAstroトップを表示できる");
+	} else {
+		assert.equal(readerHome.headers.get("Cache-Control"), "private, no-store");
+		console.log(
+			"キャッシュ無効化APIのないローカル環境では共有キャッシュを使わない（実CDNの命中・無効化はCloudflare上で検証）",
+		);
+	}
 } finally {
-	await worker?.stop();
+	await harness?.close();
+	await new Promise((resolve, reject) =>
+		queueServer.close((error) => (error ? reject(error) : resolve())),
+	);
 	database.close();
 	await tursoServer.stop();
 	for (const suffix of ["", "-wal", "-shm"])

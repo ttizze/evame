@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { BookOpenIcon, LogOutIcon } from "lucide-react";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { LocaleSelector } from "@/app/[locale]/(common-layout)/_components/header/locale-selector/client";
@@ -54,10 +53,9 @@ export function UserMenu({
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="m-2 p-0 rounded-xl min-w-40">
 				<DropdownMenuItem className="p-0">
-					<Link
+					<a
 						className="opacity-100 w-full rounded-none px-4 py-3  cursor-pointer hover:bg-accent hover:text-accent-foreground"
-						params={{ handle: currentUser.handle, locale }}
-						to="/$locale/$handle"
+						href={`/${locale}/${currentUser.handle}`}
 					>
 						<div className="flex flex-col items-start">
 							{currentUser.name}
@@ -65,7 +63,7 @@ export function UserMenu({
 								@{currentUser.handle}
 							</span>
 						</div>
-					</Link>
+					</a>
 				</DropdownMenuItem>
 				<DropdownMenuSeparator className="my-0" />
 				<LocaleSelector
@@ -76,14 +74,13 @@ export function UserMenu({
 				/>
 				<DropdownMenuSeparator className="my-0" />
 				<DropdownMenuItem asChild>
-					<Link
+					<a
 						className="flex gap-2 px-4 py-3"
-						params={{ locale, handle: currentUser.handle }}
-						to="/$locale/$handle/page-management"
+						href={`/${locale}/${currentUser.handle}/page-management`}
 					>
 						<BookOpenIcon className="w-4 h-4" />
 						Page Management
-					</Link>
+					</a>
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
 					<ModeToggle />

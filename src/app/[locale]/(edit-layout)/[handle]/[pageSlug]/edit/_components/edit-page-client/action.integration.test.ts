@@ -1,3 +1,4 @@
+import { setResponseHeader } from "@tanstack/react-start/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { db } from "@/db";
@@ -21,6 +22,7 @@ vi.mock("@tanstack/react-start", () => ({
 }));
 vi.mock("@tanstack/react-start/server", () => ({
 	getRequestHeaders: () => new Headers(),
+	setResponseHeader: vi.fn(),
 }));
 
 await setupDbPerFile(import.meta.url);
@@ -79,6 +81,10 @@ describe("editPageContent", () => {
 		const result = await editPageContent({ data: formData });
 
 		expect(result.success).toBe(true);
+		expect(setResponseHeader).toHaveBeenCalledWith(
+			"X-Evame-Reader-Changed",
+			"false",
+		);
 		const createdPage = await db
 			.selectFrom("pages")
 			.select(["slug", "userId", "status"])

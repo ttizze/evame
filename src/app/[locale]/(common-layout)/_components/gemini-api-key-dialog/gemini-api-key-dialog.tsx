@@ -1,7 +1,8 @@
-import { useServerFn } from "@tanstack/react-start";
 import { ArrowUpFromLine, ExternalLink, Loader2 } from "lucide-react";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
+import { callReaderAction } from "@/app/_service/reader-action";
+import type { GeminiApiKeyDialogState } from "@/app/api/reader-actions/_service/update-gemini-key";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -10,10 +11,6 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-	type GeminiApiKeyDialogState,
-	updateGeminiApiKeyAction,
-} from "./action";
 
 interface GeminiApiKeyDialogProps {
 	isOpen: boolean;
@@ -24,16 +21,13 @@ export function GeminiApiKeyDialog({
 	isOpen,
 	onOpenChange,
 }: GeminiApiKeyDialogProps) {
-	const updateGeminiApiKeyFn = useServerFn(updateGeminiApiKeyAction);
 	const [state, formAction, isPending] = useActionState<
 		GeminiApiKeyDialogState,
 		FormData
 	>(
 		async (_previousState, formData) =>
-			updateGeminiApiKeyFn({
-				data: {
-					geminiApiKey: String(formData.get("geminiApiKey") ?? ""),
-				},
+			callReaderAction("geminiKey", {
+				geminiApiKey: String(formData.get("geminiApiKey") ?? ""),
 			}),
 		{ success: false },
 	);
