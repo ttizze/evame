@@ -164,6 +164,12 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(page.locator("#about-section")).toHaveCount(0);
 		await page.getByRole("button", { name: "Create a new page" }).click();
 		await page.waitForURL(/\/edit$/);
+		await page.goBack();
+		await expect(
+			page.getByRole("button", { name: "Create a new page" }),
+		).toBeEnabled();
+		await page.getByRole("button", { name: "Create a new page" }).click();
+		await page.waitForURL(/\/edit$/);
 		const newPageUrl = page.url().replace(/\/edit$/, "");
 		await page.getByTestId("title-input").fill("ブラウザー新規保存");
 		const editor = page.locator(".tiptap[contenteditable=true]");
@@ -306,9 +312,23 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.getByRole("navigation", { name: "Table of contents" }),
 		).toHaveCount(0);
+		// 見出しリンクのフォーカス移動・hashスクロールから独立して上下スクロールを検証する。
+		await page.goto(`${baseUrl}/ja/${handle}/${pageSlug}`);
 		await expect(
-			page.getByRole("button", { name: "Table of Contents", exact: true }),
-		).toBeFocused();
+			page.locator('astro-island[component-export="ArticleToolsIsland"]'),
+		).not.toHaveAttribute("ssr", "");
+		await page.locator("#comments").scrollIntoViewIfNeeded();
+		await expect(
+			page.locator("#comments .tiptap[contenteditable=true]").first(),
+		).toBeVisible();
+		await expect(
+			page.locator('[data-tweet-id="123456789"]').getByText("Tweet not found"),
+		).toBeVisible({ timeout: 15000 });
+		await page.evaluate(async () => {
+			await document.fonts.ready;
+			window.scrollTo(0, 0);
+		});
+		await expect(floating).toHaveCSS("opacity", "1");
 		await page.evaluate(() => window.scrollTo(0, 1000));
 		await expect(
 			page.locator("[data-article-header] > div").first(),
@@ -535,9 +555,10 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.getByRole("menuitem", { name: "Edit", exact: true }),
 		).toHaveAttribute("href", `${new URL(newPageUrl).pathname}/edit`);
-		await page
-			.getByRole("button", { name: "Make Private", exact: true })
-			.click();
+		await Promise.all([
+			page.waitForNavigation(),
+			page.getByRole("button", { name: "Make Private", exact: true }).click(),
+		]);
 		await expect(ownerCard).toHaveCount(0);
 		assert.equal((await publishDraft()).status(), 200);
 		await page.reload();
@@ -545,11 +566,17 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.getByRole("button", { name: "More options", exact: true })
 			.click();
 		await page.getByRole("button", { name: "Delete", exact: true }).click();
-		await page
-			.getByRole("dialog", { name: "Delete Page" })
-			.getByRole("button", { name: "Delete", exact: true })
-			.click();
+		await Promise.all([
+			page.waitForNavigation(),
+			page
+				.getByRole("dialog", { name: "Delete Page" })
+				.getByRole("button", { name: "Delete", exact: true })
+				.click(),
+		]);
 		await expect(ownerCard).toHaveCount(0);
+		await expect(
+			page.getByRole("link", { name: "プロフィールを編集", exact: true }),
+		).toBeVisible();
 		console.log(
 			"本人プロフィールの記事メニューから編集先・非公開化・削除を操作できる",
 		);
