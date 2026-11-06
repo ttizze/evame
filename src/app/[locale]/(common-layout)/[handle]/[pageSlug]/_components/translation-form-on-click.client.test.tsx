@@ -3,13 +3,6 @@ import userEvent from "@testing-library/user-event";
 import { TranslationFormOnClick } from "./translation-form-on-click.client";
 
 const locationState = vi.hoisted(() => ({ pathname: "/" }));
-vi.mock("@tanstack/react-router", () => ({
-	useLocation: ({
-		select,
-	}: {
-		select: (location: { pathname: string }) => string;
-	}) => select(locationState),
-}));
 
 beforeEach(() => {
 	locationState.pathname = "/";
@@ -29,7 +22,7 @@ describe("TranslationFormOnClick", () => {
 				<button className="seg-tr" data-segment-id="123" type="button">
 					open
 				</button>
-				<TranslationFormOnClick />
+				<TranslationFormOnClick pathname={locationState.pathname} />
 			</>,
 		);
 
@@ -48,7 +41,7 @@ describe("TranslationFormOnClick", () => {
 		render(
 			<>
 				<div className="seg-tr">noop</div>
-				<TranslationFormOnClick />
+				<TranslationFormOnClick pathname={locationState.pathname} />
 			</>,
 		);
 
@@ -63,7 +56,7 @@ describe("TranslationFormOnClick", () => {
 				<a className="seg-tr" data-segment-id="123" href="#x">
 					open
 				</a>
-				<TranslationFormOnClick />
+				<TranslationFormOnClick pathname={locationState.pathname} />
 			</>,
 		);
 
@@ -78,7 +71,7 @@ describe("TranslationFormOnClick", () => {
 				<button className="seg-tr" data-segment-id="123" type="button">
 					open
 				</button>
-				<TranslationFormOnClick />
+				<TranslationFormOnClick pathname={locationState.pathname} />
 			</>,
 		);
 
@@ -97,7 +90,7 @@ describe("TranslationFormOnClick", () => {
 				<button className="seg-tr" data-segment-id="123" type="button">
 					open
 				</button>
-				<TranslationFormOnClick />
+				<TranslationFormOnClick pathname={locationState.pathname} />
 			</>,
 		);
 
@@ -120,7 +113,7 @@ describe("TranslationFormOnClick", () => {
 				<a className="seg-tr" data-segment-id="123" href="#x">
 					open
 				</a>
-				<TranslationFormOnClick />
+				<TranslationFormOnClick pathname={locationState.pathname} />
 			</>,
 		);
 
@@ -137,7 +130,7 @@ describe("TranslationFormOnClick", () => {
 				<button className="seg-tr" data-segment-id="123" type="button">
 					open
 				</button>
-				<TranslationFormOnClick />
+				<TranslationFormOnClick pathname={locationState.pathname} />
 			</>,
 		);
 
@@ -157,7 +150,7 @@ describe("TranslationFormOnClick", () => {
 				<button className="seg-tr" data-segment-id="123" type="button">
 					open
 				</button>
-				<TranslationFormOnClick />
+				<TranslationFormOnClick pathname={locationState.pathname} />
 			</>,
 		);
 
@@ -170,7 +163,7 @@ describe("TranslationFormOnClick", () => {
 				<button className="seg-tr" data-segment-id="123" type="button">
 					open
 				</button>
-				<TranslationFormOnClick />
+				<TranslationFormOnClick pathname={locationState.pathname} />
 			</>,
 		);
 

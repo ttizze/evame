@@ -1,5 +1,9 @@
 declare module "cloudflare:workers" {
+	export const cache: import("@cloudflare/workers-types").CacheContext;
 	export const env: {
+		READER: import("@cloudflare/workers-types").Fetcher;
+		BACKEND: import("@cloudflare/workers-types").Fetcher;
+		SENTRY_DSN?: string;
 		SETTINGS: import("@cloudflare/workers-types").KVNamespace;
 		UPLOADS: import("@cloudflare/workers-types").R2Bucket;
 		IMAGES: import("@cloudflare/workers-types").ImagesBinding;

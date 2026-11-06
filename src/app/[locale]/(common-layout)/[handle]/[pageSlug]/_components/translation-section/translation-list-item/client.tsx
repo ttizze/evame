@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { EllipsisVertical, Trash2 } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
@@ -95,15 +94,14 @@ export function TranslationListItem({
 				)}
 			</span>
 			<span className="flex items-center justify-end">
-				<Link
+				<a
 					className="no-underline! mr-2 flex  items-center"
-					params={{ handle: translation.userHandle, locale }}
-					to="/$locale/$handle"
+					href={`/${locale}/${translation.userHandle}`}
 				>
 					<span className="text-sm text-gray-500 text-right flex justify-end items-center  ">
 						by: {translation.userName}
 					</span>
-				</Link>
+				</a>
 				<VoteButtons
 					locale={locale}
 					onVoted={() => {

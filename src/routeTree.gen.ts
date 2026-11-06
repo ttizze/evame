@@ -22,6 +22,11 @@ import { Route as LocaleTermsRouteImport } from './routes/$locale.terms'
 import { Route as ApiLocaleInfoRouteImport } from './routes/api/locale-info'
 import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
 import { Route as ApiOgRouteImport } from './routes/api/og'
+import { Route as ApiPageMarkdownRouteImport } from './routes/api/page-markdown'
+import { Route as ApiReaderActionsRouteImport } from './routes/api/reader-actions'
+import { Route as ApiReaderCommentsRouteImport } from './routes/api/reader-comments'
+import { Route as ApiReaderDataRouteImport } from './routes/api/reader-data'
+import { Route as ApiReaderStateRouteImport } from './routes/api/reader-state'
 import { Route as ApiSegmentTranslationsRouteImport } from './routes/api/segment-translations'
 import { Route as ApiSentryExampleApiRouteImport } from './routes/api/sentry-example-api'
 import { Route as ApiTranslateRouteImport } from './routes/api/translate'
@@ -109,6 +114,31 @@ const ApiNotificationsRoute = ApiNotificationsRouteImport.update({
 const ApiOgRoute = ApiOgRouteImport.update({
   id: '/api/og',
   path: '/api/og',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPageMarkdownRoute = ApiPageMarkdownRouteImport.update({
+  id: '/api/page-markdown',
+  path: '/api/page-markdown',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReaderActionsRoute = ApiReaderActionsRouteImport.update({
+  id: '/api/reader-actions',
+  path: '/api/reader-actions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReaderCommentsRoute = ApiReaderCommentsRouteImport.update({
+  id: '/api/reader-comments',
+  path: '/api/reader-comments',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReaderDataRoute = ApiReaderDataRouteImport.update({
+  id: '/api/reader-data',
+  path: '/api/reader-data',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReaderStateRoute = ApiReaderStateRouteImport.update({
+  id: '/api/reader-state',
+  path: '/api/reader-state',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiSegmentTranslationsRoute = ApiSegmentTranslationsRouteImport.update({
@@ -254,6 +284,11 @@ export interface FileRoutesByFullPath {
   '/api/locale-info': typeof ApiLocaleInfoRoute
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/og': typeof ApiOgRoute
+  '/api/page-markdown': typeof ApiPageMarkdownRoute
+  '/api/reader-actions': typeof ApiReaderActionsRoute
+  '/api/reader-comments': typeof ApiReaderCommentsRoute
+  '/api/reader-data': typeof ApiReaderDataRoute
+  '/api/reader-state': typeof ApiReaderStateRoute
   '/api/segment-translations': typeof ApiSegmentTranslationsRoute
   '/api/sentry-example-api': typeof ApiSentryExampleApiRoute
   '/api/translate': typeof ApiTranslateRouteWithChildren
@@ -292,6 +327,11 @@ export interface FileRoutesByTo {
   '/api/locale-info': typeof ApiLocaleInfoRoute
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/og': typeof ApiOgRoute
+  '/api/page-markdown': typeof ApiPageMarkdownRoute
+  '/api/reader-actions': typeof ApiReaderActionsRoute
+  '/api/reader-comments': typeof ApiReaderCommentsRoute
+  '/api/reader-data': typeof ApiReaderDataRoute
+  '/api/reader-state': typeof ApiReaderStateRoute
   '/api/segment-translations': typeof ApiSegmentTranslationsRoute
   '/api/sentry-example-api': typeof ApiSentryExampleApiRoute
   '/api/translate': typeof ApiTranslateRouteWithChildren
@@ -332,6 +372,11 @@ export interface FileRoutesById {
   '/api/locale-info': typeof ApiLocaleInfoRoute
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/og': typeof ApiOgRoute
+  '/api/page-markdown': typeof ApiPageMarkdownRoute
+  '/api/reader-actions': typeof ApiReaderActionsRoute
+  '/api/reader-comments': typeof ApiReaderCommentsRoute
+  '/api/reader-data': typeof ApiReaderDataRoute
+  '/api/reader-state': typeof ApiReaderStateRoute
   '/api/segment-translations': typeof ApiSegmentTranslationsRoute
   '/api/sentry-example-api': typeof ApiSentryExampleApiRoute
   '/api/translate': typeof ApiTranslateRouteWithChildren
@@ -372,6 +417,11 @@ export interface FileRouteTypes {
     | '/api/locale-info'
     | '/api/notifications'
     | '/api/og'
+    | '/api/page-markdown'
+    | '/api/reader-actions'
+    | '/api/reader-comments'
+    | '/api/reader-data'
+    | '/api/reader-state'
     | '/api/segment-translations'
     | '/api/sentry-example-api'
     | '/api/translate'
@@ -410,6 +460,11 @@ export interface FileRouteTypes {
     | '/api/locale-info'
     | '/api/notifications'
     | '/api/og'
+    | '/api/page-markdown'
+    | '/api/reader-actions'
+    | '/api/reader-comments'
+    | '/api/reader-data'
+    | '/api/reader-state'
     | '/api/segment-translations'
     | '/api/sentry-example-api'
     | '/api/translate'
@@ -449,6 +504,11 @@ export interface FileRouteTypes {
     | '/api/locale-info'
     | '/api/notifications'
     | '/api/og'
+    | '/api/page-markdown'
+    | '/api/reader-actions'
+    | '/api/reader-comments'
+    | '/api/reader-data'
+    | '/api/reader-state'
     | '/api/segment-translations'
     | '/api/sentry-example-api'
     | '/api/translate'
@@ -485,6 +545,11 @@ export interface RootRouteChildren {
   ApiLocaleInfoRoute: typeof ApiLocaleInfoRoute
   ApiNotificationsRoute: typeof ApiNotificationsRoute
   ApiOgRoute: typeof ApiOgRoute
+  ApiPageMarkdownRoute: typeof ApiPageMarkdownRoute
+  ApiReaderActionsRoute: typeof ApiReaderActionsRoute
+  ApiReaderCommentsRoute: typeof ApiReaderCommentsRoute
+  ApiReaderDataRoute: typeof ApiReaderDataRoute
+  ApiReaderStateRoute: typeof ApiReaderStateRoute
   ApiSegmentTranslationsRoute: typeof ApiSegmentTranslationsRoute
   ApiSentryExampleApiRoute: typeof ApiSentryExampleApiRoute
   ApiTranslateRoute: typeof ApiTranslateRouteWithChildren
@@ -591,6 +656,41 @@ declare module '@tanstack/react-router' {
       path: '/api/og'
       fullPath: '/api/og'
       preLoaderRoute: typeof ApiOgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/page-markdown': {
+      id: '/api/page-markdown'
+      path: '/api/page-markdown'
+      fullPath: '/api/page-markdown'
+      preLoaderRoute: typeof ApiPageMarkdownRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/reader-actions': {
+      id: '/api/reader-actions'
+      path: '/api/reader-actions'
+      fullPath: '/api/reader-actions'
+      preLoaderRoute: typeof ApiReaderActionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/reader-comments': {
+      id: '/api/reader-comments'
+      path: '/api/reader-comments'
+      fullPath: '/api/reader-comments'
+      preLoaderRoute: typeof ApiReaderCommentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/reader-data': {
+      id: '/api/reader-data'
+      path: '/api/reader-data'
+      fullPath: '/api/reader-data'
+      preLoaderRoute: typeof ApiReaderDataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/reader-state': {
+      id: '/api/reader-state'
+      path: '/api/reader-state'
+      fullPath: '/api/reader-state'
+      preLoaderRoute: typeof ApiReaderStateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/segment-translations': {
@@ -853,6 +953,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLocaleInfoRoute: ApiLocaleInfoRoute,
   ApiNotificationsRoute: ApiNotificationsRoute,
   ApiOgRoute: ApiOgRoute,
+  ApiPageMarkdownRoute: ApiPageMarkdownRoute,
+  ApiReaderActionsRoute: ApiReaderActionsRoute,
+  ApiReaderCommentsRoute: ApiReaderCommentsRoute,
+  ApiReaderDataRoute: ApiReaderDataRoute,
+  ApiReaderStateRoute: ApiReaderStateRoute,
   ApiSegmentTranslationsRoute: ApiSegmentTranslationsRoute,
   ApiSentryExampleApiRoute: ApiSentryExampleApiRoute,
   ApiTranslateRoute: ApiTranslateRouteWithChildren,

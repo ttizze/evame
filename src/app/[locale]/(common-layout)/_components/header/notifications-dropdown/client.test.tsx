@@ -2,7 +2,6 @@
 import "@testing-library/jest-dom";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
 import useSWR from "swr";
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import type { NotificationRowsWithRelations } from "@/app/api/notifications/_types/notification";
@@ -10,20 +9,6 @@ import type { NotificationRowsWithRelations } from "@/app/api/notifications/_typ
 import { NotificationsDropdownClient } from "./client";
 
 vi.mock("swr", () => ({ default: vi.fn() }));
-
-// Mock TanStack Router's Link to a simple anchor for the isolated component test.
-vi.mock("@tanstack/react-router", () => ({
-	Link: ({
-		to,
-		children,
-		...props
-	}: { to: string; children?: ReactNode } & Record<string, unknown>) => (
-		<a href={to} {...props}>
-			{children}
-		</a>
-	),
-	useParams: () => ({ locale: "en" }),
-}));
 
 const sampleNotifications: NotificationRowsWithRelations[] = [
 	{

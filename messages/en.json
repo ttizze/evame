@@ -56,5 +56,23 @@
 		"previous": "Previous comments",
 		"next": "Next comments",
 		"page": "Page {page} of {total}"
+	},
+	"Reader": {
+		"newPages": "New Pages",
+		"popularPages": "Popular Pages",
+		"more": "More",
+		"comments": "Comments",
+		"downloadMarkdown": "Download Markdown",
+		"editProfile": "Edit Profile",
+		"search": "Search",
+		"category": "Category",
+		"title": "Title",
+		"content": "Content",
+		"tags": "Tags",
+		"user": "User",
+		"preview": "Preview",
+		"pagination": "Pagination",
+		"previous": "Previous",
+		"next": "Next"
 	}
 }

@@ -1,5 +1,6 @@
 import { queryByAttribute } from "@testing-library/dom";
 import { render, screen } from "@testing-library/react";
+import { Tweet } from "react-tweet";
 import { describe, expect, it, vi } from "vitest";
 import type { Segment } from "@/app/[locale]/types";
 import type { JsonValue } from "@/db/types";
@@ -35,6 +36,29 @@ const segments: Segment[] = Array.from(
 );
 
 describe("mdastToReact", () => {
+	it("コメントの本文を同期的に描画し、元のASTを変更しない", () => {
+		const mdast: JsonValue = {
+			type: "root",
+			children: [
+				{
+					type: "paragraph",
+					children: [
+						{
+							type: "link",
+							url: "https://x.com/example/status/123456789",
+							children: [{ type: "text", value: "Tweet" }],
+						},
+					],
+				},
+			],
+		};
+		const before = structuredClone(mdast);
+		const result = mdastToReact({ Tweet, mdast, segments: [] });
+		expect(result).not.toBeInstanceOf(Promise);
+		expect(mdast).toEqual(before);
+		render(result as React.ReactElement);
+		expect(screen.getByTestId("tweet-123456789")).toBeInTheDocument();
+	});
 	it("renders segments correctly", async () => {
 		const mdast: JsonValue = {
 			type: "root",
@@ -53,10 +77,7 @@ describe("mdastToReact", () => {
 			],
 		};
 
-		const el = await mdastToReact({
-			mdast: mdast,
-			segments,
-		});
+		const el = await mdastToReact({ Tweet, mdast: mdast, segments });
 		render(el);
 
 		// セグメントが正しくレンダリングされているか確認
@@ -101,10 +122,7 @@ describe("mdastToReact", () => {
 			],
 		};
 
-		const el = await mdastToReact({
-			mdast: mdast,
-			segments,
-		});
+		const el = await mdastToReact({ Tweet, mdast: mdast, segments });
 		render(el);
 
 		// Twitterリンクが正しくXPostコンポーネントに変換されているか確認
@@ -173,10 +191,7 @@ describe("mdastToReact", () => {
 			],
 		};
 
-		const el = await mdastToReact({
-			mdast: mdast,
-			segments,
-		});
+		const el = await mdastToReact({ Tweet, mdast: mdast, segments });
 		const { container } = render(el);
 
 		const getByDataNumberId = (container: HTMLElement, id: number | string) =>

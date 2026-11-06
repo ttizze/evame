@@ -1,23 +1,33 @@
 # アーキテクチャ概要
 
-Evame は TanStack Start を使った翻訳プラットフォームです。
+Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳プラットフォームです。
 本ドキュメントは「全体像」「主要コンポーネント」「依存関係」「データの流れ」を最短で理解するための入口です。
 
 ## 技術スタック（現行）
 
-- フレームワーク: TanStack Start + TanStack Router
-- ビルド・サーバー: Vite + Nitro
+- 公開表示: Astro + React islands
+- 編集・管理: TanStack Start + TanStack Router + Tiptap
+- ビルド・サーバー: Vite + Cloudflare Workers
 - 言語: TypeScript
 - UI: React 19 + Tailwind CSS + Radix UI 系コンポーネント
 - i18n: use-intl
-- DB: PostgreSQL
+- DB: Turso（libSQL）
 - DB アクセス: Kysely（ランタイム） + Drizzle（スキーマ/マイグレーション）
 - 認証: better-auth
+
+## 公開表示と編集の分担
+
+`src/server.ts` が公開ルートをREADER bindingへ振り分け、`reader/src/pages/[...path].astro` が一覧・本文を含むHTMLを返す。公開HTMLはWorkers Cacheで最大1時間共有し、内容の変更後はReader自身のタグをpurgeする。初回のコールドミスではBACKEND bindingのAPIから取得し、キャッシュ命中時はDBもAstroも実行しない。ビルド時の全記事SSGではない。
+
+長いサービス説明と件数集計はAboutに移し、トップはログインの有無にかかわらず記事一覧を表示する。コメント、翻訳、いいね、通知などは必要な部分だけReact islandsで起動する。公開HTMLに認証情報や非公開データを混ぜない。下書きは所有者だけがprivateレスポンスでプレビューする。
+
+編集・ページ管理・ログインは既存のTanStack StartとTiptapを維持する。URL・階層表示・言語と表示モードを保持する。キャッシュの失敗時の挙動と実行環境の制限は [公開HTMLとデータ更新](cache-components-revalidation.md) を参照。
 
 ## リポジトリ構成（要約）
 
 ```
 /
+├── reader/                 # Astro公開画面とCloudflare Reader Worker
 ├── src/
 │   ├── routes/              # 画面・API のルート境界と loader/head
 │   ├── app/                 # 機能ごとの UI・service/domain/db
@@ -39,7 +49,10 @@ Evame は TanStack Start を使った翻訳プラットフォームです。
 
 ## 主要コンポーネントと責務
 
-### ルート境界（`src/routes`）
+### ルート境界（`reader/src/pages` / `src/routes`）
+
+- 公開画面はAstro、編集・管理・APIはTanStack Startで登録
+- 公開URLのTanStackルートは型付きリンクの登録を残し、ブラウザー遷移ではHTMLへ移動する
 - `createFileRoute` で画面・API・sitemap・robots.txt を登録
 - `__root.tsx` が HTML、`HeadContent`、`Scripts` とエラー境界を管理
 - `$locale.tsx` が locale 検証、翻訳メッセージ、テーマなどの provider を管理
@@ -85,15 +98,17 @@ Evame は TanStack Start を使った翻訳プラットフォームです。
 
 プロジェクトコマンドは Nix 環境で実行します。依存関係は `bun.lock` に固定します。
 
-- 開発: `bun run dev`（Vite、ポート 3000）
-- 本番ビルド: `bun run build`（Cloudflare の `dist/client` と `dist/server` を生成）
-- 本番相当のローカル起動: `bun run preview`（Workers ランタイム）
+- 開発: `bun run dev`（Astroをビルドし、Readerを3001、Gatewayを3000でまとめて起動する。共通の開発レジストリでservice bindingを接続。編集UIはHMR、公開UI変更後はコマンドを再起動する）
+- 本番ビルド: `bun run build`（`reader/dist` と `dist` を生成）
+- 本番相当のローカル起動: `bun run preview`（ビルド済みの2つのWorkers）
+- 成果物の検証起動: `bun run test:deployment`（ローカルHTTP DBと2つのWorkers）
 - デプロイ: `bun run deploy`（Cloudflare Workers と Static Assets）
-- 検証: `bun run lint`、`bun run typecheck`、`bun run test --run`
+- 検証: `bun run lint`、`bun run typecheck`、`bun run check:reader`、`bun run test --run`
+- ブラウザー検証: `bun x playwright install chromium` の後に `bun run test:deployment:browser`
 - デプロイ成果物の検証: `bun run test:deployment`（認証 API・記事保存と編集画面・画像アップロード・ホーム SSR・日本語 OG 画像）
 - バインディング: `wrangler.jsonc` に R2・Images・KV・Static Assets を定義。秘密値は Workers secrets で設定する
 
-`src/server.ts` がリクエストごとに DB を作り、本文ストリームの完了・中断時に閉じます。`src/db/index.ts` の AsyncLocalStorage が既存の DB 呼び出し元に同じリクエストの接続を渡します。`src/auth.ts` の Better Auth もその DB を使用し、異なるリクエスト間で接続を共有しません。Node の CLI とテストでは従来どおり DB を再利用します。
+`src/server.ts` がAPI・編集等のバックエンドリクエストごとに DB を作り、本文ストリームの完了・中断時に閉じます。`src/db/index.ts` の AsyncLocalStorage が既存の DB 呼び出し元に同じリクエストの接続を渡します。`src/auth.ts` の Better Auth もその DB を使用し、異なるリクエスト間で接続を共有しません。Node の CLI とテストでは従来どおり DB を再利用します。
 
 画像アップロードは `src/app/[locale]/_service/upload/upload-image.ts` が Images binding で圧縮し、`_infrastructure/upload/r2-client.ts` が R2 binding に保存します。既存の `images.evame.tech` の URL を維持します。開発時は `src/app/api/uploads/handler.ts` がローカル R2 の画像を返します。OG の API 境界は `src/routes/api/og.tsx`、生成処理は `src/app/api/og/handler.tsx` に置き、Static Assets binding からフォントとロゴを読みます。
 
@@ -111,4 +126,4 @@ Evame は TanStack Start を使った翻訳プラットフォームです。
 
 ## 既存機能の維持
 
-移行では既存機能を維持する。記事作成・編集のTiptap UIは`src/app/[locale]/(edit-layout)`、URL境界と認証loaderは`src/routes`に置く。保存・公開・タグ・翻訳設定・画像アップロードはServer Functionsを使用する。コメント・返信・削除・翻訳・通知、ページ管理・公開状態の切替・削除も移行対象に含む。
+移行では既存機能を維持する。記事作成・編集のTiptap UIは`src/app/[locale]/(edit-layout)`、URL境界と認証loaderは`src/routes`に置く。保存・公開・タグ・翻訳設定はServer Functionsを維持し、画像アップロードと公開画面の操作はAPIを使用する。コメント・返信・削除・翻訳・通知、ページ管理・公開状態の切替・削除も移行対象に含む。

@@ -1,0 +1,81 @@
+---
+import { cache, env } from "cloudflare:workers";
+import { fromJSON } from "seroval";
+import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list";
+import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
+import { messages } from "@/i18n/messages";
+import PrivacyPage from "@/routes/-privacy-policy-page";
+import TermsPage from "@/routes/-terms-page";
+import type { loadReaderData } from "../../../src/app/api/reader-data/_service/load-reader-data";
+import { AboutIsland } from "../components/about";
+import Article from "../components/article.astro";
+import { ControlsIsland } from "../components/controls";
+import Layout from "../components/layout.astro";
+import PageCard from "../components/page-card.astro";
+import Pagination from "../components/pagination.astro";
+import Profile from "../components/profile.astro";
+
+const url = new URL("/api/reader-data", Astro.url);
+url.searchParams.set("path", Astro.url.pathname);
+url.searchParams.set("search", Astro.url.search);
+const response = await env.BACKEND.fetch(url.href, {
+	headers: {
+		cookie: Astro.request.headers.get("cookie") ?? "",
+		authorization: Astro.request.headers.get("authorization") ?? "",
+	},
+});
+if (response.status === 404) return Astro.rewrite("/404");
+if (!response.ok)
+	throw new Error(`Reader data request failed: HTTP ${response.status}`);
+const { page: result, gaTrackingId } = fromJSON(await response.json()) as {
+	page: NonNullable<Awaited<ReturnType<typeof loadReaderData>>>;
+	gaTrackingId: string;
+};
+Astro.response.headers.set(
+	"Cache-Control",
+	"public, max-age=0, must-revalidate",
+);
+const supportsCache = typeof cache.purge === "function";
+Astro.response.headers.set(
+	"X-Evame-Cache",
+	supportsCache ? "supported" : "unsupported",
+);
+if (result.cacheable && supportsCache)
+	Astro.cache.set({ maxAge: 3600, tags: ["evame-reader"] });
+else {
+	Astro.cache.set(false);
+	Astro.response.headers.set("Cache-Control", "private, no-store");
+}
+const locale = result.locale;
+const metadata = result.metadata;
+const t = (messages[locale as keyof typeof messages] ?? messages.en).Reader;
+const pageIds =
+	result.kind === "home"
+		? [
+				...result.data.newPages.pageForLists,
+				...result.data.popularPages.pageForLists,
+			].map((page) => page.id)
+		: result.kind === "article"
+			? [result.data.pageDetail.id]
+			: result.kind === "new" ||
+					result.kind === "tag" ||
+					result.kind === "profile"
+				? result.data.pageForLists.map((page) => page.id)
+				: result.kind === "search"
+					? (result.data.pageSummaries?.map((page) => page.id) ?? [])
+					: [];
+---
+<Layout locale={locale} title={metadata.title} description={metadata.description} canonical={metadata.alternates.canonical} gaTrackingId={gaTrackingId}>
+  <Fragment slot="head">{Object.entries(metadata.alternates.languages).map(([lang, href]) => <link rel="alternate" hreflang={lang} href={href} />)}{("image" in metadata && metadata.image) && <meta property="og:image" content={metadata.image} />}{result.kind === "article" && !result.cacheable && <meta name="robots" content="noindex, nofollow" />}<meta property="og:type" content={result.kind === "article" ? "article" : result.kind === "profile" ? "profile" : "website"} /></Fragment>
+  <OrganizationJsonLd /><WebSiteJsonLd locale={locale} />
+  {result.kind === "home" && <div class="space-y-10"><section><h1 class="text-2xl font-semibold mb-4">{t.newPages}</h1>{result.data.newPages.pageForLists.map((page) => <PageCard page={page} locale={locale} />)}<a href={`/${locale}/new-pages`} class="inline-block rounded-full bg-primary text-primary-foreground px-6 py-2 mt-4">{t.more} →</a></section><section><h2 class="text-2xl font-semibold mb-4">{t.popularPages}</h2>{result.data.popularPages.pageForLists.map((page) => <PageCard page={page} locale={locale} />)}</section></div>}
+  {result.kind === "article" && <Article data={result.data} locale={locale} page={result.page} isPublic={result.cacheable} />}
+  {result.kind === "profile" && <Profile data={result.data} locale={locale} page={result.page} sort={result.sort} />}
+  {result.kind === "about" && result.data.pageDetail && <AboutIsland locale={locale} pageDetail={result.data.pageDetail} stats={result.data.stats} client:idle />}
+  {(result.kind === "new" || result.kind === "tag") && <><h1 class="text-2xl font-semibold mb-4">{result.kind === "tag" ? `#${result.tagName}` : t.newPages}</h1>{result.data.pageForLists.map((page) => <PageCard page={page} locale={locale} />)}<Pagination locale={locale} currentPage={result.page} totalPages={result.data.totalPages} /></>}
+  {result.kind === "search" && <><h1 class="text-2xl font-semibold mb-4">{t.search}</h1><form action={`/${locale}/search`} class="flex flex-wrap gap-3 mb-6"><input class="border rounded-xl p-2 grow" type="search" name="query" value={result.query} aria-label={t.search} />{result.tagPage === "true" && <input type="hidden" name="tagPage" value="true" />}<select class="border rounded-xl p-2" name="category" aria-label={t.category}>{(["title", "content", "tags", "user"] as const).map((value) => <option value={value} selected={value === result.category}>{t[value]}</option>)}</select><button class="border rounded-xl px-4 py-2" type="submit">{t.search}</button></form>{result.data.pageSummaries?.map((page) => <PageCard page={page} locale={locale} />)}{result.data.tags?.map((tag) => <p class="py-2"><a href={`/${locale}/tag/${encodeURIComponent(tag.name)}`}>#{tag.name}</a></p>)}{result.data.users?.map((user) => <p class="py-2"><a href={`/${locale}/${user.handle}`}>{user.name} (@{user.handle})</a></p>)}<Pagination locale={locale} currentPage={result.page} totalPages={result.data.totalPages} /></>}
+  {result.kind === "terms" && <TermsPage />}
+  {result.kind === "privacy" && <PrivacyPage />}
+  {result.kind !== "article" && <ControlsIsland locale={locale} sourceLocale="mixed" pageId={null} likeCount={0} client:idle />}
+  <PageLikeListClient pageIds={pageIds} client:idle />
+</Layout>

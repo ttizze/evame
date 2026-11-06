@@ -1,6 +1,4 @@
 import useSWR, { useSWRConfig } from "swr";
-import { useHydrated } from "@/app/_hooks/use-hydrated";
-import { authClient } from "@/app/[locale]/_service/auth-client";
 import {
 	buildLikeStateKey,
 	fetchLikeStates,
@@ -12,16 +10,13 @@ type PageLikeListClientProps = {
 };
 
 export function PageLikeListClient({ pageIds }: PageLikeListClientProps) {
-	const hydrated = useHydrated();
-	const { data: session } = authClient.useSession();
-	const isLoggedIn = hydrated && !!session;
 	const { mutate } = useSWRConfig();
 
 	const uniqueIds = Array.from(new Set(pageIds)).filter((id) => id > 0);
 	const idsKey = uniqueIds.join(",");
 
 	useSWR<LikeStatesResponse>(
-		isLoggedIn && idsKey ? buildLikeStateKey(uniqueIds) : null,
+		idsKey ? buildLikeStateKey(uniqueIds) : null,
 		fetchLikeStates,
 		{
 			revalidateOnFocus: false,

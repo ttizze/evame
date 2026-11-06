@@ -31,11 +31,11 @@ vi.mock("./db", async () => {
 
 const env = {
 	SETTINGS: { get: vi.fn().mockResolvedValue(false) },
-	ASSETS: { fetch: vi.fn() },
+	READER: { fetch: vi.fn() },
 };
 beforeEach(() => {
 	env.SETTINGS.get.mockReset().mockResolvedValue(false);
-	env.ASSETS.fetch
+	env.READER.fetch
 		.mockReset()
 		.mockResolvedValue(new Response("missing", { status: 404 }));
 });
@@ -204,30 +204,46 @@ describe("WorkersのDB接続の寿命", () => {
 	});
 });
 
-describe("静的生成したトップの配信", () => {
+describe("Astroへの表示の転送", () => {
+	it.each([
+		"/ja",
+		"/ja/",
+		"/ja/index.html",
+		"/ja.html",
+		"/ja/author/article",
+		"/ja/author",
+		"/ja/tag/test",
+	])("%sはゲートウェイでDBを開かずAstroへ渡す", async (path) => {
+		env.READER.fetch.mockResolvedValue(
+			new Response("reader html", {
+				headers: {
+					"Cache-Control": "public, max-age=3600",
+					"Cache-Tag": "evame-reader",
+					"Cloudflare-CDN-Cache-Control": "public, max-age=3600",
+				},
+			}),
+		);
+		const response = await server.fetch(
+			new Request("https://evame.test" + path, {
+				headers: { cookie: "test-session" },
+			}),
+			env as unknown as typeof import("cloudflare:workers").env,
+			{ waitUntil: vi.fn() },
+		);
+		expect(await response.text()).toBe("reader html");
+		expect(response.headers.get("x-frame-options")).toBe("DENY");
+		expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+		expect(response.headers.get("Cache-Tag")).toBeNull();
+		expect(response.headers.get("Set-Cookie")).toContain("NEXT_LOCALE=ja");
+		expect(createDb).not.toHaveBeenCalled();
+		expect(handler.fetch).not.toHaveBeenCalled();
+	});
 	it.each(["/ja", "/ja/", "/ja/index.html", "/ja.html"])(
-		"ログインCookie付きの%sにもDB接続せず静的HTMLを返す",
-		async (path) => {
-			env.ASSETS.fetch.mockResolvedValue(new Response("static home"));
-			const response = await server.fetch(
-				new Request(`https://evame.test${path}`, {
-					headers: { cookie: "better-auth.session_token=private-session" },
-				}),
-				env as unknown as typeof import("cloudflare:workers").env,
-				{ waitUntil: vi.fn() },
-			);
-			expect(await response.text()).toBe("static home");
-			expect(response.headers.get("x-frame-options")).toBe("DENY");
-			expect(createDb).not.toHaveBeenCalled();
-			expect(handler.fetch).not.toHaveBeenCalled();
-		},
-	);
-	it.each(["/ja", "/ja/", "/ja/index.html", "/ja.html"])(
-		"メンテナンス中は%sの静的HTMLを配信せずリダイレクトする",
+		"メンテナンス中は%sをAstroへ渡さない",
 		async (path) => {
 			env.SETTINGS.get.mockResolvedValue(true);
 			const response = await server.fetch(
-				new Request(`https://evame.test${path}`),
+				new Request("https://evame.test" + path),
 				env as unknown as typeof import("cloudflare:workers").env,
 				{ waitUntil: vi.fn() },
 			);
@@ -235,21 +251,96 @@ describe("静的生成したトップの配信", () => {
 			expect(response.headers.get("location")).toBe(
 				"https://evame.test/ja/maintenance",
 			);
-			expect(response.headers.get("x-frame-options")).toBe("DENY");
-			expect(env.ASSETS.fetch).not.toHaveBeenCalled();
+			expect(env.READER.fetch).not.toHaveBeenCalled();
 			expect(createDb).not.toHaveBeenCalled();
 		},
 	);
-	it("ビルド時に静的HTMLがまだなければSSRで生成できる", async () => {
-		vi.mocked(handler.fetch).mockResolvedValue(new Response("rendered home"));
-		const pending: Promise<unknown>[] = [];
+	it("Astroの404を旧記事画面へフォールバックしない", async () => {
 		const response = await server.fetch(
-			new Request("https://evame.test/ja"),
+			new Request("https://evame.test/ja/author/hidden"),
 			env as unknown as typeof import("cloudflare:workers").env,
-			{ waitUntil: (promise) => pending.push(promise) },
+			{ waitUntil: vi.fn() },
 		);
-		expect(env.ASSETS.fetch).toHaveBeenCalledOnce();
-		expect(await response.text()).toBe("rendered home");
+		expect(response.status).toBe(404);
+		expect(handler.fetch).not.toHaveBeenCalled();
+		expect(createDb).not.toHaveBeenCalled();
+	});
+});
+describe("公開HTMLの更新", () => {
+	it("更新処理はAstroのキャッシュ無効化を待ってから成功を返す", async () => {
+		const purge = Promise.withResolvers<Response>();
+		env.READER.fetch.mockReturnValue(purge.promise);
+		vi.mocked(handler.fetch).mockResolvedValue(new Response("saved"));
+		let finished = false;
+		const pending: Promise<unknown>[] = [];
+		const result = server
+			.fetch(
+				new Request("https://evame.test/_serverFn/save-page", {
+					method: "POST",
+				}),
+				env as unknown as typeof import("cloudflare:workers").env,
+				{ waitUntil: (p) => pending.push(p) },
+			)
+			.then((value) => {
+				finished = true;
+				return value;
+			});
+		await vi.waitFor(() => expect(env.READER.fetch).toHaveBeenCalled());
+		expect(finished).toBe(false);
+		purge.resolve(new Response(null, { status: 204 }));
+		expect(await (await result).text()).toBe("saved");
 		await Promise.all(pending);
+	});
+	it("下書きの保存は公開HTMLのキャッシュを破棄しない", async () => {
+		vi.mocked(handler.fetch).mockResolvedValue(
+			new Response(null, { headers: { "X-Evame-Reader-Changed": "false" } }),
+		);
+		await server.fetch(
+			new Request("https://evame.test/_serverFn/save-page", { method: "POST" }),
+			env as unknown as typeof import("cloudflare:workers").env,
+			{ waitUntil: vi.fn() },
+		);
+		expect(env.READER.fetch).not.toHaveBeenCalled();
+	});
+	it.each(["like", "geminiKey", "uploadImage"])(
+		"%sの操作は本文のキャッシュを破棄しない",
+		async (action) => {
+			vi.mocked(handler.fetch).mockResolvedValue(new Response(null));
+			await server.fetch(
+				new Request("https://evame.test/api/reader-actions?action=" + action, {
+					method: "POST",
+				}),
+				env as unknown as typeof import("cloudflare:workers").env,
+				{ waitUntil: vi.fn() },
+			);
+			expect(env.READER.fetch).not.toHaveBeenCalled();
+		},
+	);
+	it("権限不足で拒否した更新ではキャッシュを破棄しない", async () => {
+		vi.mocked(handler.fetch).mockResolvedValue(
+			new Response(null, { status: 403 }),
+		);
+		await server.fetch(
+			new Request("https://evame.test/_serverFn/save-page", { method: "POST" }),
+			env as unknown as typeof import("cloudflare:workers").env,
+			{ waitUntil: vi.fn() },
+		);
+		expect(env.READER.fetch).not.toHaveBeenCalled();
+	});
+	it("キャッシュ削除に失敗したら成功を返さずDB接続も閉じる", async () => {
+		env.READER.fetch.mockResolvedValue(new Response(null, { status: 503 }));
+		vi.mocked(handler.fetch).mockResolvedValue(new Response("saved"));
+		await expect(
+			server.fetch(
+				new Request("https://evame.test/_serverFn/save-page", {
+					method: "POST",
+				}),
+				env as unknown as typeof import("cloudflare:workers").env,
+				{ waitUntil: vi.fn() },
+			),
+		).rejects.toThrow("Reader cache invalidation failed");
+		expect(
+			vi.mocked(createDb).mock.results[0].value.destroy,
+		).toHaveBeenCalledOnce();
 	});
 });

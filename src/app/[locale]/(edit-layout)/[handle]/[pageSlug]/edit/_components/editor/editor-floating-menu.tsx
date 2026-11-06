@@ -1,5 +1,4 @@
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import { useServerFn } from "@tanstack/react-start";
 import type { Editor } from "@tiptap/core";
 import type { EditorState } from "@tiptap/pm/state";
 import { FloatingMenu } from "@tiptap/react/menus";
@@ -16,15 +15,10 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import {
-	type EditorImageUpload,
-	handleFileUpload,
-	uploadEditorImage,
-} from "./use-file-upload";
+import { handleFileUpload } from "./handle-file-upload";
 
 interface EditorFloatingMenuProps {
 	editor: Editor;
-	uploadImage?: EditorImageUpload;
 }
 
 const editorCommands: Record<string, (editor: Editor) => boolean> = {
@@ -99,12 +93,7 @@ const shouldShowFloatingMenu = (editor: Editor, state: EditorState) => {
 	return isAtLineStart && isEmptyTextBlock;
 };
 
-export function EditorFloatingMenu({
-	editor,
-	uploadImage,
-}: EditorFloatingMenuProps) {
-	const defaultUploadImage = useServerFn(uploadEditorImage);
-	const imageUpload = uploadImage ?? defaultUploadImage;
+export function EditorFloatingMenu({ editor }: EditorFloatingMenuProps) {
 	const [portalContainer, setPortalContainer] = useState<HTMLDivElement | null>(
 		null,
 	);
@@ -178,7 +167,7 @@ export function EditorFloatingMenu({
 				onChange={(e) => {
 					const file = e.target.files?.[0];
 					if (file) {
-						handleFileUpload(file, editor, imageUpload);
+						handleFileUpload(file, editor);
 					}
 				}}
 				style={{ display: "none" }}

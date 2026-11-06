@@ -1,4 +1,3 @@
-import { useLocation } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AddAndVoteTranslations } from "./translation-section/add-and-vote-translations.client";
@@ -63,10 +62,9 @@ function getSegmentEl(target: EventTarget | null): HTMLElement | null {
  * - クリックされた .seg-tr の直後に Portal 用 root を作り AddAndVoteTranslations を差し込む
  * - useRef で最新状態を保持し、リスナー再登録を防ぐ
  */
-export function TranslationFormOnClick() {
+export function TranslationFormOnClick({ pathname }: { pathname: string }) {
 	const [activeState, setActiveState] = useState<ActiveState>(emptyState);
 	const stateRef = useRef<ActiveState>(emptyState);
-	const pathname = useLocation({ select: (location) => location.pathname });
 
 	useEffect(() => {
 		let hadSelectionOnPointerDown = false;

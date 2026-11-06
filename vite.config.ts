@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import "dotenv/config";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import { sentryCloudflareVitePlugin } from "@sentry/cloudflare/vite";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
@@ -6,25 +6,12 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { serverHtmlParser } from "./html-parser-plugin";
 import { securityHeaders } from "./security-headers";
-import { supportedLocaleOptions } from "./src/app/_constants/locale";
-import { staticHomePaths } from "./static-home-paths";
-
-const serverHtmlParser = {
-	name: "server-html-parser",
-	resolveId: {
-		order: "pre" as const,
-		handler(source: string) {
-			if (source === "html-dom-parser")
-				return fileURLToPath(
-					import.meta.resolve("html-dom-parser/lib/server/html-to-dom"),
-				);
-		},
-	},
-};
 
 export default defineConfig({
 	resolve: { tsconfigPaths: true },
+	server: { proxy: { "/_astro": "http://localhost:3001" } },
 	optimizeDeps: { exclude: ["@cloudflare/pages-plugin-vercel-og"] },
 	environments: {
 		ssr: {
@@ -60,20 +47,11 @@ export default defineConfig({
 				assets: {
 					binding: "ASSETS",
 					html_handling: "drop-trailing-slash",
-					run_worker_first: [...staticHomePaths.keys()],
 				},
 			},
 		}),
 		tailwindcss(),
-		tanstackStart({
-			prerender: {
-				enabled: true,
-				autoStaticPathsDiscovery: false,
-				crawlLinks: false,
-				concurrency: 4,
-			},
-			pages: supportedLocaleOptions.map(({ code }) => ({ path: `/${code}` })),
-		}),
+		tanstackStart(),
 		viteReact(),
 		sentryCloudflareVitePlugin(),
 		sentryVitePlugin({

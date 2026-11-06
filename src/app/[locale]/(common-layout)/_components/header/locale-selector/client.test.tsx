@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LocaleSelector } from "./client";
 
 if (typeof global.ResizeObserver === "undefined") {
@@ -33,19 +33,12 @@ vi.mock("use-intl", () => ({
 	useTranslations: () => mockTranslations(),
 }));
 
-const navigateMock = vi.hoisted(() => vi.fn());
-vi.mock("@tanstack/react-router", () => ({
-	useParams: () => ({ locale: "en", pageSlug: "test-page" }),
-	useLocation: () => ({
-		hash: "",
-		pathname: "/en/test",
-		searchStr: "",
-	}),
-	useNavigate: () => navigateMock,
-}));
+beforeEach(() =>
+	window.history.replaceState(null, "", "/en/test?view=both#part"),
+);
 
 describe("LocaleSelector", () => {
-	it("renders button with the selected locale name and icon", () => {
+	it("現在の表示言語をボタンに表示する", () => {
 		render(
 			<LocaleSelector
 				currentHandle=""
@@ -58,7 +51,7 @@ describe("LocaleSelector", () => {
 		// selectedOption は "en" のため "English" が表示される
 		expect(screen.getByText("English")).toBeInTheDocument();
 	});
-	it("opens popover and displays locale options", async () => {
+	it("言語ボタンを押すと選択できる言語が表示される", async () => {
 		const user = await userEvent.setup();
 		render(
 			<LocaleSelector
@@ -76,7 +69,7 @@ describe("LocaleSelector", () => {
 		expect(englishElements.length).toBeGreaterThan(0);
 	});
 
-	it("navigates to the selected locale on command item select", async () => {
+	it("言語のリンクは現在のページ・表示モード・見出し位置を維持する", async () => {
 		const user = userEvent.setup();
 		render(
 			<LocaleSelector
@@ -92,7 +85,9 @@ describe("LocaleSelector", () => {
 
 		// "French" の選択肢が表示されるはず
 		const frenchOption = screen.getByText("Français");
-		await user.click(frenchOption);
-		expect(navigateMock).toHaveBeenCalledWith({ to: "/fr/test" });
+		expect(frenchOption.closest("a")).toHaveAttribute(
+			"href",
+			"/fr/test?view=both#part",
+		);
 	});
 });

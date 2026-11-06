@@ -1,10 +1,3 @@
-export const metadata = {
-	title: "Terms of Service | Evame",
-	description:
-		"Evame Terms of Service. Learn about user responsibilities, content licensing, and platform usage guidelines.",
-	robots: { index: true, follow: true },
-};
-
 export default function TermsPage() {
 	return (
 		<div className="min-h-screen bg-background">

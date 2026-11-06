@@ -1,11 +1,12 @@
-import { useServerFn } from "@tanstack/react-start";
 import { Loader2 } from "lucide-react";
 import { useActionState, useState } from "react";
 import { useLocale } from "use-intl";
+import { callReaderAction } from "@/app/_service/reader-action";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
 import { GeminiApiKeyDialog } from "@/app/[locale]/(common-layout)/_components/gemini-api-key-dialog/gemini-api-key-dialog";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
+import type { TranslateActionState } from "@/app/api/reader-actions/_service/translate-page";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -21,7 +22,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { type TranslateActionState, translateAction } from "./action";
 import { DialogLocaleSelector } from "./dialog-locale-selector";
 
 export function canTranslateWithoutGeminiApiKey(
@@ -53,11 +53,10 @@ export function AddTranslateDialog({
 	} else {
 		throw new Error("pageSlug is required");
 	}
-	const translateActionFn = useServerFn(translateAction);
 	const [translateState, action, isTranslating] = useActionState<
 		TranslateActionState,
 		FormData
-	>(async (_prev, formData) => translateActionFn({ data: formData }), {
+	>(async (_prev, formData) => callReaderAction("translate", formData), {
 		success: false,
 	});
 	const [targetLocale, setTargetLocale] = useState(currentLocale);

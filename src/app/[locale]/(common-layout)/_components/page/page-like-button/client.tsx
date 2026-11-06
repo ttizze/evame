@@ -1,9 +1,10 @@
-import { useServerFn } from "@tanstack/react-start";
 import { Heart, Loader2 } from "lucide-react";
 import { useActionState } from "react";
 import useSWR from "swr";
+import { useHydrated } from "@/app/_hooks/use-hydrated";
+import { callReaderAction } from "@/app/_service/reader-action";
+import type { PageLikeButtonState } from "@/app/api/reader-actions/_service/toggle-like";
 import { Button } from "@/components/ui/button";
-import { type PageLikeButtonState, togglePageLikeAction } from "./action";
 import { computeNextLikeState } from "./domain/like-state";
 import {
 	buildLikeStateKey,
@@ -26,6 +27,7 @@ export function PageLikeButtonClient({
 	initialLikeCount,
 	initialLiked,
 }: PageLikeButtonClientProps) {
+	const hydrated = useHydrated();
 	const fallbackData = {
 		liked: initialLiked ?? false,
 		likeCount: initialLikeCount,
@@ -47,7 +49,6 @@ export function PageLikeButtonClient({
 			revalidateOnMount: false,
 		},
 	);
-	const togglePageLikeFn = useServerFn(togglePageLikeAction);
 
 	// The server function returns the latest liked/count; prefer it when available
 	const [_, formAction, isPending] = useActionState<
@@ -55,8 +56,8 @@ export function PageLikeButtonClient({
 		FormData
 	>(
 		async (_previousState, formData) => {
-			const result = await togglePageLikeFn({
-				data: { pageId: Number(formData.get("pageId")) },
+			const result = await callReaderAction("like", {
+				pageId: Number(formData.get("pageId")),
 			});
 			if (result.success) {
 				void mutate(result.data, { revalidate: false });
@@ -66,6 +67,7 @@ export function PageLikeButtonClient({
 		{ success: false },
 	);
 
+	const displayed = hydrated ? data : fallbackData;
 	const handleSubmit = (formData: FormData) => {
 		// Guard until initial state is loaded
 		if (!data) return;
@@ -89,7 +91,7 @@ export function PageLikeButtonClient({
 				<Button
 					aria-label="Like"
 					className={`bg-background cursor-pointer ${className}`}
-					disabled={isPending || isLoading}
+					disabled={!hydrated || isPending || isLoading}
 					size="icon"
 					type="submit"
 					variant="ghost"
@@ -98,14 +100,14 @@ export function PageLikeButtonClient({
 						<Loader2 className="h-5 w-5 rounded-full" />
 					) : (
 						<Heart
-							className={`h-5 w-5 rounded-full ${data?.liked ? "text-red-500" : ""}`}
-							fill={data?.liked ? "currentColor" : "none"}
+							className={`h-5 w-5 rounded-full ${displayed?.liked ? "text-red-500" : ""}`}
+							fill={displayed?.liked ? "currentColor" : "none"}
 						/>
 					)}
 				</Button>
 			</form>
-			{showCount && data && (
-				<span className="text-muted-foreground">{data.likeCount}</span>
+			{showCount && displayed && (
+				<span className="text-muted-foreground">{displayed.likeCount}</span>
 			)}
 		</div>
 	);

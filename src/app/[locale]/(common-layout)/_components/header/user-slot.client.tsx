@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { authClient } from "@/app/[locale]/_service/auth-client";
@@ -21,14 +20,9 @@ export function HeaderUserSlot({ locale }: { locale: string }) {
 	return (
 		<div className="flex items-center gap-4">
 			<TranslationHelpPopover />
-			<Link
-				aria-label="Search for pages"
-				params={{ locale }}
-				preload={false}
-				to="/$locale/search"
-			>
+			<a aria-label="Search for pages" href={`/${locale}/search`}>
 				<Search className="w-6 h-6 " />
-			</Link>
+			</a>
 
 			{showLoading ? (
 				<div className="flex items-center gap-3">

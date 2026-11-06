@@ -40,7 +40,9 @@ jobs:
           nix develop --command bun x biome ci .
 
       - name: Run Typecheck
-        run: nix develop --command bun run typecheck
+        run: |
+          nix develop --command bun run typecheck
+          nix develop --command bun run check:reader
 
       - name: Run Tests
         run: |
@@ -48,17 +50,17 @@ jobs:
           nix develop --command bun run db:prod:seed
           nix develop --command bun run test --run
 
-      - name: Migrate production database for prerendering
+      - name: Migrate production database
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         env:
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
         run: nix develop --command bun run db:prod:migrate
 
-      - name: Build TanStack Start for Cloudflare Workers
+      - name: Build Astro and TanStack Start for Cloudflare Workers
         env:
-          TURSO_DATABASE_URL: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && secrets.TURSO_DATABASE_URL || 'file:evame.db' }}
-          TURSO_AUTH_TOKEN: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && secrets.TURSO_AUTH_TOKEN || '' }}
+          TURSO_DATABASE_URL: ""
+          TURSO_AUTH_TOKEN: ""
           SENTRY_AUTH_TOKEN: ${{ github.ref == 'refs/heads/main' && secrets.SENTRY_AUTH_TOKEN || '' }}
         run: |
           if [[ "$GITHUB_REF" == "refs/heads/main" && "$GITHUB_EVENT_NAME" != "pull_request" ]]; then
@@ -74,4 +76,6 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: nix develop --command bun x wrangler deploy
+        run: |
+          nix develop --command bun x wrangler deploy --config reader/dist/server/wrangler.json
+          nix develop --command bun x wrangler deploy --config dist/server/wrangler.json

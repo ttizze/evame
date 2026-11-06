@@ -5,17 +5,9 @@ import { StarterKit } from "@tiptap/starter-kit";
 import { Markdown } from "tiptap-markdown";
 import { CustomImage } from "./custom-image";
 import { X } from "./extensions/x-embed";
-import {
-	type EditorImageUpload,
-	handleFileUpload,
-	uploadEditorImage,
-} from "./use-file-upload";
+import { handleFileUpload } from "./handle-file-upload";
 
-export function configureEditor(
-	initialContent: string,
-	placeholder: string,
-	uploadImage: EditorImageUpload = uploadEditorImage,
-) {
+export function configureEditor(initialContent: string, placeholder: string) {
 	return {
 		immediatelyRender: false,
 		extensions: [
@@ -42,13 +34,13 @@ export function configureEditor(
 				],
 				onDrop: (currentEditor, files, pos) => {
 					for (const file of files) {
-						handleFileUpload(file, currentEditor, uploadImage, pos);
+						handleFileUpload(file, currentEditor, pos);
 					}
 				},
 				onPaste: (currentEditor, files, htmlContent) => {
 					for (const file of files) {
 						if (htmlContent) return false;
-						handleFileUpload(file, currentEditor, uploadImage);
+						handleFileUpload(file, currentEditor);
 					}
 				},
 			}),

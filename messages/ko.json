@@ -56,5 +56,23 @@
 		"previous": "이전 댓글",
 		"next": "다음 댓글",
 		"page": "{page} / {total} 페이지"
+	},
+	"Reader": {
+		"newPages": "새 글",
+		"popularPages": "인기 글",
+		"more": "더 보기",
+		"comments": "댓글",
+		"downloadMarkdown": "Markdown 다운로드",
+		"editProfile": "프로필 편집",
+		"search": "검색",
+		"category": "검색 대상",
+		"title": "제목",
+		"content": "본문",
+		"tags": "태그",
+		"user": "사용자",
+		"preview": "미리보기",
+		"pagination": "페이지 이동",
+		"previous": "이전",
+		"next": "다음"
 	}
 }

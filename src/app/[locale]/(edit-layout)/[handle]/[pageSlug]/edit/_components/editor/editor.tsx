@@ -1,11 +1,9 @@
-import { useServerFn } from "@tanstack/react-start";
 import type { Editor as TiptapEditor } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { useRef } from "react";
 import { EditorBubbleMenu } from "./editor-bubble-menu";
 import { configureEditor } from "./editor-config";
 import { EditorFloatingMenu } from "./editor-floating-menu";
-import { uploadEditorImage } from "./use-file-upload";
 
 export interface EditorProps {
 	defaultValue: string;
@@ -28,8 +26,7 @@ export function Editor({
 	showMenus = true,
 }: EditorProps) {
 	const editorRef = useRef<HTMLInputElement>(null);
-	const uploadImage = useServerFn(uploadEditorImage);
-	const baseConfig = configureEditor(defaultValue, placeholder, uploadImage);
+	const baseConfig = configureEditor(defaultValue, placeholder);
 	const editor = useEditor({
 		...baseConfig,
 		onCreate: ({ editor: createdEditor }) => {
@@ -53,9 +50,7 @@ export function Editor({
 	return (
 		<div>
 			{showMenus && editor && <EditorBubbleMenu editor={editor} />}
-			{showMenus && editor && (
-				<EditorFloatingMenu editor={editor} uploadImage={uploadImage} />
-			)}
+			{showMenus && editor && <EditorFloatingMenu editor={editor} />}
 			<EditorContent editor={editor} />
 			<input name={name} ref={editorRef} type="hidden" />
 		</div>

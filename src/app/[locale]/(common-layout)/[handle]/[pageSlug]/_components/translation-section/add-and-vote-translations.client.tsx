@@ -1,4 +1,3 @@
-import { Link } from "@tanstack/react-router";
 import { ChevronDown, ChevronUp, Languages } from "lucide-react";
 import { useState } from "react";
 import { useLocale } from "use-intl";
@@ -73,15 +72,14 @@ export function AddAndVoteTranslations({
 	return (
 		<span className="w-full ">
 			<span className="flex items-center justify-end gap-2">
-				<Link
+				<a
 					className="no-underline!"
-					params={{ handle: bestTranslation.userHandle, locale: userLocale }}
-					to="/$locale/$handle"
+					href={`/${userLocale}/${bestTranslation.userHandle}`}
 				>
 					<span className="text-sm text-gray-500 text-right flex items-center">
 						by: {bestTranslation.userName}
 					</span>
-				</Link>
+				</a>
 				<VoteButtons
 					key={bestTranslation.id}
 					locale={userLocale}

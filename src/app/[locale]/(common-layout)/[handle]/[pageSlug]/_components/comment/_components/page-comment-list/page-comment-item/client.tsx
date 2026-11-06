@@ -1,20 +1,18 @@
-import { useRouter } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { use, useActionState, useMemo } from "react";
+import { use, useActionState } from "react";
+import { Tweet } from "react-tweet";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
+import { callReaderAction } from "@/app/_service/reader-action";
 import { authClient } from "@/app/[locale]/_service/auth-client";
+import type { CommentDeleteActionResponse } from "@/app/api/reader-actions/_service/delete-comment";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { mdastToReact } from "../../../../mdast-to-react";
+import { CommentUpdates } from "../../../comment-updates";
 import { CommentActionMenu } from "../../page-comment-form/comment/comment-action-menu";
 import type { PageCommentWithSegments } from "../_db/queries.server";
 import { CommentRepliesToggle } from "./_components/comments-replies-toggle/client";
-import {
-	type CommentDeleteActionResponse,
-	deletePageCommentAction,
-} from "./action";
 
 export function PageCommentItemClient({
 	pageCommentId,
@@ -27,22 +25,19 @@ export function PageCommentItemClient({
 	locale: string;
 	userHandle: string;
 }) {
+	const updateComments = use(CommentUpdates);
 	const hydrated = useHydrated();
-	const router = useRouter();
-	const deleteActionFn = useServerFn(deletePageCommentAction);
 	const [state, formAction, isPending] = useActionState<
 		CommentDeleteActionResponse,
 		FormData
 	>(
 		async (_previousState, formData) => {
-			const result = await deleteActionFn({
-				data: {
-					locale: String(formData.get("locale") ?? locale),
-					pageCommentId: Number(formData.get("pageCommentId")),
-					pageId: Number(formData.get("pageId")),
-				},
+			const result = await callReaderAction("deleteComment", {
+				locale: String(formData.get("locale") ?? locale),
+				pageCommentId: Number(formData.get("pageCommentId")),
+				pageId: Number(formData.get("pageId")),
 			});
-			if (result.success) await router.invalidate({ sync: true });
+			if (result.success) await updateComments(null);
 			return result;
 		},
 		{ success: false },
@@ -54,7 +49,7 @@ export function PageCommentItemClient({
 	return (
 		<>
 			<CommentActionMenu>
-				<DropdownMenuItem asChild>
+				<DropdownMenuItem asChild onSelect={(event) => event.preventDefault()}>
 					<form action={formAction} className="w-full">
 						<input name="pageCommentId" type="hidden" value={pageCommentId} />
 						<input name="pageId" type="hidden" value={pageId} />
@@ -77,15 +72,11 @@ export function PageCommentItem({
 	pageComment: PageCommentWithSegments;
 	userLocale: string;
 }) {
-	const contentPromise = useMemo(
-		() =>
-			mdastToReact({
-				mdast: pageComment.mdastJson,
-				segments: pageComment.content.segments,
-			}),
-		[pageComment.content.segments, pageComment.mdastJson],
-	);
-	const content = use(contentPromise);
+	const content = mdastToReact({
+		Tweet,
+		mdast: pageComment.mdastJson,
+		segments: pageComment.content.segments,
+	});
 	const replies = pageComment.replies;
 
 	return (

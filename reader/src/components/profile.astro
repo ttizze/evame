@@ -1,0 +1,34 @@
+---
+import Linkify from "linkify-react";
+import { FollowStats } from "@/app/[locale]/(common-layout)/[handle]/_components/follow-stats";
+import { ProfilePageJsonLd } from "@/components/seo/json-ld";
+import { messages } from "@/i18n/messages";
+import type { loadReaderData } from "../../../src/app/api/reader-data/_service/load-reader-data";
+import PageCard from "./page-card.astro";
+import Pagination from "./pagination.astro";
+import { ProfileActionsIsland } from "./profile-actions";
+
+type Props = {
+	data: Extract<
+		NonNullable<Awaited<ReturnType<typeof loadReaderData>>>,
+		{ kind: "profile" }
+	>["data"];
+	locale: string;
+	page: number;
+	sort: "popular" | "new";
+};
+const { data, locale, page, sort } = Astro.props;
+const { pageOwner } = data;
+const sortUrl = (sort: "new" | "popular") => {
+	const params = new URLSearchParams(Astro.url.search);
+	params.set("sort", sort);
+	params.delete("page");
+	return `${Astro.url.pathname}?${params}`;
+};
+const t = (messages[locale as keyof typeof messages] ?? messages.en).Reader;
+---
+<ProfilePageJsonLd description={pageOwner.profile || undefined} image={pageOwner.image || undefined} name={pageOwner.name} url={`https://evame.tech/${locale}/${pageOwner.handle}`} />
+<section class="mb-8 space-y-4"><div class="flex items-center justify-between gap-4"><div class="flex items-center gap-4">{pageOwner.image && <a href={pageOwner.image}><img src={pageOwner.image} alt={pageOwner.name} width="80" height="80" class="rounded-full" /></a>}<div><h1 class="text-2xl font-bold">{pageOwner.name}</h1><p class="text-sm text-muted-foreground">@{pageOwner.handle}</p></div></div><ProfileActionsIsland locale={locale} handle={pageOwner.handle} userId={pageOwner.id} editLabel={t.editProfile} client:load /></div><FollowStats locale={locale} followerList={data.followerList} followingList={data.followingList} followersCount={data.followCounts.followers} followingCount={data.followCounts.following} client:visible /><div class="whitespace-pre-wrap"><Linkify options={{ className: "underline" }}>{pageOwner.profile}</Linkify></div>{pageOwner.twitterHandle && <a href={`https://x.com/${pageOwner.twitterHandle}`} rel="noreferrer" target="_blank">X @{pageOwner.twitterHandle}</a>}</section>
+<nav class="flex gap-4 py-4" aria-label="Sort"><a href={sortUrl("popular")} aria-current={sort === "popular" ? "page" : undefined}>{t.popularPages}</a><a href={sortUrl("new")} aria-current={sort === "new" ? "page" : undefined}>{t.newPages}</a></nav>
+{data.pageForLists.map((page) => <PageCard page={page} locale={locale} />)}
+<Pagination locale={locale} currentPage={page} totalPages={data.totalPages} />

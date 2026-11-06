@@ -1,9 +1,9 @@
-import { useRouter } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useActionState, useEffect, useRef } from "react";
+import { use, useActionState, useEffect, useRef } from "react";
+import { callReaderAction } from "@/app/_service/reader-action";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
-import { type CommentActionResponse, commentAction } from "./action";
+import type { CommentActionResponse } from "@/app/api/reader-actions/_service/add-comment";
+import { CommentUpdates } from "../../comment-updates";
 import { CommentForm } from "./comment/comment-form";
 
 function optionalNumber(value: FormDataEntryValue | null) {
@@ -23,31 +23,21 @@ export function PageCommentForm({
 	parentId?: number;
 	onReplySuccess?: () => void;
 }) {
-	const router = useRouter();
-	const commentActionFn = useServerFn(commentAction);
+	const updateComments = use(CommentUpdates);
 	const [state, formAction, isPending] = useActionState<
 		CommentActionResponse,
 		FormData
 	>(
 		async (_previousState, formData) => {
-			const result = await commentActionFn({
-				data: {
-					content: String(formData.get("content") ?? ""),
-					pageCommentId: optionalNumber(formData.get("pageCommentId")),
-					pageId: Number(formData.get("pageId")),
-					parentId: optionalNumber(formData.get("parentId")),
-					userLocale: String(formData.get("userLocale") ?? userLocale),
-				},
+			const result = await callReaderAction("comment", {
+				content: String(formData.get("content") ?? ""),
+				pageCommentId: optionalNumber(formData.get("pageCommentId")),
+				pageId: Number(formData.get("pageId")),
+				parentId: optionalNumber(formData.get("parentId")),
+				userLocale: String(formData.get("userLocale") ?? userLocale),
 			});
 			if (result.success) {
-				await router.invalidate({ sync: true });
-				const commentPage = result.data.commentPage;
-				if (commentPage !== null)
-					await router.navigate({
-						to: ".",
-						search: (previous) => ({ ...previous, page: commentPage }),
-						hash: "comments",
-					});
+				await updateComments(result.data.commentPage);
 			}
 			return result;
 		},

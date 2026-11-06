@@ -1,4 +1,9 @@
-import { ClientOnly, createFileRoute, Outlet } from "@tanstack/react-router";
+import {
+	ClientOnly,
+	createFileRoute,
+	Outlet,
+	useLocation,
+} from "@tanstack/react-router";
 import { Footer } from "@/app/[locale]/(common-layout)/_components/footer";
 import { HeaderFrame } from "@/app/[locale]/(common-layout)/_components/header";
 import { HeaderUserSlot } from "@/app/[locale]/(common-layout)/_components/header/user-slot.client";
@@ -12,6 +17,7 @@ export const Route = createFileRoute("/$locale/_common")({
 
 function CommonLayout() {
 	const { locale } = Route.useParams();
+	const pathname = useLocation({ select: (location) => location.pathname });
 
 	return (
 		<>
@@ -32,7 +38,7 @@ function CommonLayout() {
 					</div>
 				</main>
 				<ClientOnly fallback={null}>
-					<TranslationFormOnClick />
+					<TranslationFormOnClick pathname={pathname} />
 				</ClientOnly>
 				<Footer />
 			</ViewScope>
