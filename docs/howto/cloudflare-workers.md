@@ -1,10 +1,10 @@
 # Cloudflare Workers の運用
 
-全コマンドは `nix develop` 内で実行する。TanStack Start の Workers エントリーは `src/server.ts`。`bun run build` が Static Assets と Worker を `dist` に生成し、Wrangler は生成された設定をデプロイする。
+全コマンドは `nix develop` 内で実行する。TanStack Start の入口は `src/server.ts`、Astro Readerの入口は `reader/src/worker.ts`。`bun run build` がそれぞれのWorkerとStatic Assetsを `dist` と `reader/dist` に生成し、Wranglerは生成された設定をデプロイする。
 
 ## 接続先
 
-`wrangler.jsonc` の Worker 名は `evame-start`。既存の `evame` Worker は上書きしない。
+`wrangler.jsonc` のWorker名は `evame-start`、`reader/wrangler.jsonc` は `evame-reader`。既存の `evame` Workerは上書きしない。Readerはworkers.devとバージョンURLを公開せず、service binding経由で接続する。
 
 | binding | 接続先 | 用途 |
 | --- | --- | --- |
@@ -13,6 +13,9 @@
 | `IMAGES` | Cloudflare Images | 幅 2560 以下、JPEG quality 80 へ圧縮 |
 | `SETTINGS` | KV `evame-settings` | `maintenance` を JSON boolean で保存 |
 | `CF_VERSION_METADATA` | デプロイされた Worker の version | Sentry の release |
+| `READER` | `evame-reader` | 公開HTMLの配信とキャッシュ無効化 |
+
+Readerは `BACKEND` bindingから `evame-start` の公開データAPIを呼び、専用の `ASSETS` bindingで生成アセットを配信する。DB・認証の秘密値は `evame-start` だけに設定する。
 
 開発時の binding はローカルストレージを使う。画像は開発専用の `/api/uploads/$` で表示する。本番は従来の `https://images.evame.tech/` を使う。
 
@@ -36,7 +39,8 @@
 bun x wrangler secret bulk /absolute/path/to/worker-secrets.json
 bun run build
 bun run test:deployment
-bun x wrangler deploy
+bun x wrangler deploy --config dist/server/wrangler.json
+bun x wrangler deploy --config reader/dist/server/wrangler.json
 ```
 
 ## 本番への切り替え
@@ -50,9 +54,11 @@ bun x wrangler deploy
 
 ## GitHub Actions の継続デプロイ
 
-`.github/workflows/ci.yaml` は `main` の push または `main` を対象にした手動実行で、Biome・typecheck・全テスト・ビルド・成果物テストの成功後に本番DBのマイグレーションを適用し、同じ成果物をデプロイする。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PR はローカルのテストDBで検証し、Sentry 送信を無効化する。
+`.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テストの成功後、本番DBのマイグレーション、ビルド、成果物テスト、GatewayとReaderのデプロイを順に行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
 
-リポジトリの Actions secrets に本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番用のDB接続設定は `main` のマイグレーション・デプロイのステップだけに渡す。Cloudflare のデプロイ先アカウントと Worker は `wrangler.jsonc` に定義する。既存のキャッシュ削除用トークンは Workers を更新できないため、デプロイ用には `evame-start` の更新・デプロイに必要な権限を持つトークンを使う。Sentry のアップロード用トークンは本番ビルドのステップだけに渡し、Worker secret には登録しない。
+Astroの `/_astro/*` はGatewayへコピーせず、READER bindingからHTMLと同じReaderのStatic Assetsへ転送する。Gatewayを先に更新し、旧Readerでも動くAPIを維持してから、HTMLとアセットを1つのReaderバージョンとして切り替える。Gatewayの更新に失敗した場合はReaderを更新しない。Readerの更新に失敗した場合は旧Readerとそのアセットが引き続き動作するため、失敗したデプロイを再実行する。公開表示の切り戻しは互換性を確認したReaderバージョンへ行う。初回だけはGatewayから参照する前に非公開Readerを作成しておく。
+
+リポジトリのActions secretsに本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番用のDB接続設定は `main` のマイグレーションだけに渡す。Cloudflareのデプロイ先はそれぞれの `wrangler.jsonc` に定義する。デプロイ用のアカウントトークン `evame-github-deploy` は、Specified Workersで `evame-start` と `evame-reader` の両方にIndividual Workers Editor権限を設定する。片方だけでは新しいWorkerへのアクセスが拒否される。既存のキャッシュ削除用トークンはデプロイには使わない。Sentryのアップロード用トークンは本番ビルドだけに渡し、Worker secretには登録しない。
 
 本番の `evame.tech/*` ルートは Cloudflare のゾーン側で `evame-start` に接続する。`wrangler.jsonc` に `routes` を指定せず、CIは既存Workerのバージョンだけを更新する。Wranglerはルートが未指定なら既存の接続を変更しないため、CIトークンにゾーンのルート更新権限を追加する必要はない。`images.evame.tech` はこのルートの対象に含めない。
 

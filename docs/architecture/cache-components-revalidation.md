@@ -38,7 +38,7 @@
 
 ## ビルドとデプロイ
 
-`bun run build` はAstroとTanStackを順にビルドし、Astroのハッシュ付きアセットをGateway側へコピーする。Reader、Gatewayの順にデプロイする。DBスキーマ変更がある場合は後方互換のマイグレーションを先に行う。
+`bun run build` はAstroとTanStackを順にビルドする。Astroの `/_astro/*` はGatewayからReaderへ転送し、HTMLとアセットを同じWorkerバージョンで配信する。旧Reader互換のGatewayを先にデプロイし、次にReaderのHTMLとアセットを一緒に切り替える。途中で失敗しても旧ReaderのHTMLとアセットを維持する。DBスキーマ変更がある場合は後方互換のマイグレーションを先に行う。
 
 `bun run test:deployment` はローカルHTTP DBと2つのWorkerで、保存・編集・本文SSR・21言語のトップ・非公開化を検証する。`bun run test:deployment:browser` はChromiumでJavaScript無効の閲覧とログイン後の操作も検証する。翻訳キューはローカルの偽HTTPサーバーへ送信し、サーバー・ブラウザーのSentry送信を無効にする。
 

@@ -33,6 +33,17 @@ export default withSentry(
 				);
 			}
 			const url = new URL(request.url);
+			if (
+				url.pathname.startsWith("/_astro/") &&
+				(request.method === "GET" || request.method === "HEAD")
+			) {
+				return withSecurityHeaders(
+					(await env.READER.fetch(request.url, {
+						method: request.method,
+						headers: Object.fromEntries(request.headers),
+					})) as unknown as Response,
+				);
+			}
 			const readerRoute = parseReaderRoute(url.pathname, url.search);
 			const pathname =
 				readerRoute?.kind === "home" ? `/${readerRoute.locale}` : url.pathname;

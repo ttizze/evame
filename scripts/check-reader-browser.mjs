@@ -117,6 +117,21 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		console.log(
 			"コメントの2ページ目を直接開いて往復・再読み込みしても、URLと本文が一致する",
 		);
+		await page.goto(`${baseUrl}/ja/${handle}/${pageSlug}-child`);
+		await expect(
+			page.locator('astro-island[component-export="PageNavigationIsland"]'),
+		).not.toHaveAttribute("ssr", "");
+		await page.getByRole("button", { name: "page tree", exact: true }).click();
+		await expect(
+			page.getByRole("navigation", { name: "Page tree" }),
+		).toBeVisible();
+		await expect(
+			page
+				.getByRole("navigation", { name: "Page tree" })
+				.getByRole("link", { name: "Workers保存テスト" })
+				.first(),
+		).toBeVisible();
+		await page.keyboard.press("Escape");
 		await page.goto(`${baseUrl}/ja/${handle}/${pageSlug}`);
 		await expect(
 			page.locator('[data-tweet-id="123456789"]').getByText("Tweet not found"),

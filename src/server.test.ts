@@ -40,6 +40,32 @@ beforeEach(() => {
 		.mockResolvedValue(new Response("missing", { status: 404 }));
 });
 
+it.each(["GET", "HEAD"])(
+	"Astroの%sアセットをHTMLと同じReaderから配信し、DBや認証を起動しない",
+	async (method) => {
+		env.READER.fetch.mockResolvedValue(
+			new Response(method === "GET" ? "export {}" : null, {
+				headers: {
+					"Cache-Control": "public, max-age=31536000, immutable",
+					"Content-Type": "text/javascript",
+				},
+			}),
+		);
+		const response = await server.fetch(
+			new Request("https://evame.test/_astro/header.hash.js", { method }),
+			env as unknown as typeof import("cloudflare:workers").env,
+			{ waitUntil: vi.fn() },
+		);
+		expect(response.status).toBe(200);
+		expect(await response.text()).toBe(method === "GET" ? "export {}" : "");
+		expect(response.headers.get("Cache-Control")).toContain("immutable");
+		expect(response.headers.get("Set-Cookie")).toBeNull();
+		expect(env.READER.fetch).toHaveBeenCalled();
+		expect(createDb).not.toHaveBeenCalled();
+		expect(handler.fetch).not.toHaveBeenCalled();
+	},
+);
+
 let beforeSend: NonNullable<
 	NonNullable<ReturnType<Parameters<typeof withSentry>[0]>>["beforeSend"]
 >;
