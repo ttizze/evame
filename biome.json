@@ -14,7 +14,7 @@
 			"!coverage",
 			"!.turbo",
 			"!.vercel",
-			"!.wrangler",
+			"!**/.wrangler",
 			"!**/.astro",
 			"!**/dist",
 			"!.cache",

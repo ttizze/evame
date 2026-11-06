@@ -37,10 +37,6 @@ interface TranslationInfo {
 	}[];
 }
 
-// Helpers
-const buildSlugKey = ({ pageSlug }: { pageSlug?: string }) =>
-	pageSlug ? `pageSlug=${pageSlug}` : null;
-
 const fetchTranslation: (url: string) => Promise<TranslationInfo> = async (
 	url,
 ) => {
@@ -81,8 +77,9 @@ export function LocaleSelector({
 	const showIcons = Boolean(pageSlug);
 	const showAddNewButton = Boolean(pageSlug);
 
-	const slugKey = buildSlugKey({ pageSlug });
-	const apiUrl = slugKey ? `/api/locale-info?${slugKey}` : null;
+	const apiUrl = pageSlug
+		? `/api/locale-info?${new URLSearchParams({ pageSlug })}`
+		: null;
 
 	const { data } = useSWR(apiUrl, fetchTranslation);
 

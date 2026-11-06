@@ -144,19 +144,31 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			comments.getByText("ブラウザーから返信する", { exact: true }),
 		).toBeVisible();
-		await comments.getByRole("button", { name: "More options" }).last().click();
-		const deleted = page.waitForResponse(
-			(r) =>
-				r.url().includes("reader-actions?action=deleteComment") &&
-				r.request().method() === "POST",
-		);
-		await page.getByRole("button", { name: "Delete", exact: true }).click();
-		assert.equal((await deleted).status(), 200);
-		await expect(
-			comments
-				.locator(".seg-src")
-				.filter({ hasText: "ブラウザーからコメントを投稿" }),
-		).toHaveCount(0);
+		for (const [position, text] of [
+			["first", "comment-marker-21"],
+			["last", "ブラウザーからコメントを投稿"],
+		]) {
+			await comments
+				.getByRole("button", { name: "More options" })
+				[position]()
+				.click();
+			const deleted = page.waitForResponse(
+				(r) =>
+					r.url().includes("reader-actions?action=deleteComment") &&
+					r.request().method() === "POST",
+			);
+			await page.getByText("Delete", { exact: true }).click();
+			assert.equal((await deleted).status(), 200);
+			await expect(
+				comments.locator(".seg-src").filter({ hasText: text }),
+			).toHaveCount(0);
+			await expect(
+				page.getByRole("menuitem").filter({ hasText: "Delete" }),
+			).toHaveCount(0);
+			await expect(
+				comments.getByText("ブラウザーから返信する", { exact: true }),
+			).toBeVisible();
+		}
 		await page.goto(`${baseUrl}/en/${handle}/${pageSlug}?view=both`);
 		await expect(page.locator("body")).toHaveAttribute("data-view", "both");
 		const changeView = page.getByRole("button", {

@@ -26,7 +26,11 @@ function Controls({
 		<FloatingControls
 			likeButton={
 				pageId === null ? undefined : (
-					<PageLikeButtonClient initialLikeCount={likeCount} pageId={pageId} />
+					<PageLikeButtonClient
+						initialLikeCount={likeCount}
+						pageId={pageId}
+						showCount={false}
+					/>
 				)
 			}
 			sourceLocale={sourceLocale}

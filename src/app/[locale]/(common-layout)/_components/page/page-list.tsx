@@ -105,6 +105,7 @@ export function PageList({
 					<PageLikeButtonClient
 						initialLikeCount={PageForList.likeCount}
 						pageId={PageForList.id}
+						showCount={false}
 					/>
 					<PageCommentButton
 						commentCount={PageForList.pageCommentsCount}
