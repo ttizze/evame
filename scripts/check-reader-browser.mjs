@@ -82,8 +82,14 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		const page = await context.newPage();
 		const errors = [];
 		let homeRefreshes = 0;
-		page.on("response", (response) => {
+		page.on("response", async (response) => {
 			const url = new URL(response.url());
+			if (url.origin === baseUrl && response.status() >= 500)
+				console.error({
+					path: url.pathname + url.search,
+					status: response.status(),
+					body: await response.text().catch(() => "Response disposed"),
+				});
 			if (
 				url.pathname === "/api/reader-data" &&
 				url.searchParams.get("path") === "/ja"
@@ -384,7 +390,11 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.first()
 			.click();
 		const postedResponse = await posted;
-		assert.equal(postedResponse.status(), 200);
+		assert.equal(
+			postedResponse.status(),
+			200,
+			postedResponse.status() === 200 ? "" : await postedResponse.text(),
+		);
 		await expect(
 			comments.getByText("ブラウザーからコメントを投稿", { exact: true }),
 		).toBeVisible({ timeout: 15000 });

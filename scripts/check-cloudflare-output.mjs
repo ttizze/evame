@@ -527,11 +527,9 @@ try {
 		"DB停止中も初めて開くURLのトップ・本文・著者一覧を生成済みHTMLから表示できる",
 	);
 } catch (error) {
-	const errors = harness
-		?.getLogs()
-		.filter((log) => /error|fatal/i.test(log.level));
-	if (errors?.length)
-		console.error(JSON.stringify({ workerErrors: errors.slice(-20) }));
+	const logs = harness?.getLogs();
+	if (logs?.length)
+		console.error(JSON.stringify({ workerLogs: logs.slice(-20) }));
 	throw error;
 } finally {
 	await harness?.close();
