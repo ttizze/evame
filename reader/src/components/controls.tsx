@@ -39,9 +39,12 @@ function Controls({
 	);
 }
 
-export function ControlsIsland(props: Parameters<typeof Controls>[0]) {
+export function ControlsIsland({
+	search,
+	...props
+}: Parameters<typeof Controls>[0] & { search: string }) {
 	return (
-		<IslandProviders locale={props.locale}>
+		<IslandProviders locale={props.locale} search={search}>
 			<Controls {...props} />
 		</IslandProviders>
 	);

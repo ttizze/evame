@@ -147,29 +147,33 @@ export function LocaleSelector({
 							)}
 							<CommandEmpty>No locales found.</CommandEmpty>
 							<CommandGroup>
-								{localeOptionWithStatus.map((item) => (
-									<CommandItem
-										asChild
-										key={item.code}
-										onSelect={() => setOpen(false)}
-										value={item.code}
-									>
-										<a
-											href={`/${item.code}${pathWithoutLocale}${location.search}${location.hash}`}
+								{localeOptionWithStatus.map((item) => {
+									const href = `/${item.code}${pathWithoutLocale}${location.search}${location.hash}`;
+									return (
+										<CommandItem
+											asChild
+											key={item.code}
+											onSelect={() => {
+												setOpen(false);
+												window.location.assign(href);
+											}}
+											value={item.code}
 										>
-											{showIcons && sourceLocale && (
-												<TranslationProofStatusIcon
-													localeStatus={item.status}
-													proofStatus={item.proofStatus}
-												/>
-											)}
-											<span className="truncate grow">{item.name}</span>
-											{targetLocale === item.code && (
-												<Check className="ml-2 h-4 w-4" />
-											)}
-										</a>
-									</CommandItem>
-								))}
+											<a href={href}>
+												{showIcons && sourceLocale && (
+													<TranslationProofStatusIcon
+														localeStatus={item.status}
+														proofStatus={item.proofStatus}
+													/>
+												)}
+												<span className="truncate grow">{item.name}</span>
+												{targetLocale === item.code && (
+													<Check className="ml-2 h-4 w-4" />
+												)}
+											</a>
+										</CommandItem>
+									);
+								})}
 							</CommandGroup>
 						</CommandList>
 						{showAddNewButton && (

@@ -9,13 +9,15 @@ import { IslandProviders } from "./providers";
 
 export function HeaderIsland({
 	locale,
+	search,
 	gaTrackingId,
 }: {
 	locale: string;
+	search: string;
 	gaTrackingId: string;
 }) {
 	return (
-		<IslandProviders locale={locale}>
+		<IslandProviders locale={locale} search={search}>
 			<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 				<HeaderFrame
 					locale={locale}

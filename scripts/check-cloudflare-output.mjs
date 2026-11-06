@@ -259,7 +259,7 @@ try {
 		"ログインせずに公開記事の本文を読める",
 	);
 	assert.ok(
-		publicArticleHtml.includes("comment-marker-01"),
+		publicArticleHtml.includes(">comment-marker-01<"),
 		"最初のコメントをSSRする",
 	);
 	assert.ok(
@@ -278,11 +278,11 @@ try {
 	assert.equal(secondCommentPage.status, 200);
 	const secondCommentHtml = await secondCommentPage.text();
 	assert.ok(
-		secondCommentHtml.includes("comment-marker-21"),
+		secondCommentHtml.includes(">comment-marker-21<"),
 		"2ページ目で21件目のコメントを読める",
 	);
 	assert.ok(
-		secondCommentHtml.includes("reply-marker-last"),
+		secondCommentHtml.includes(">reply-marker-last<"),
 		"2ページ目のコメントに付いた返信も読める",
 	);
 	assert.ok(

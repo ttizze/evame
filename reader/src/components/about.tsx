@@ -5,14 +5,15 @@ import { IslandProviders } from "./providers";
 
 export function AboutIsland({
 	locale,
+	search,
 	pageDetail,
 	stats,
 }: Pick<
 	ComponentProps<typeof AboutSectionPresentation>,
 	"locale" | "pageDetail" | "stats"
->) {
+> & { search: string }) {
 	return (
-		<IslandProviders locale={locale}>
+		<IslandProviders locale={locale} search={search}>
 			<AboutSectionPresentation
 				floatingControls={null}
 				locale={locale}

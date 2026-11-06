@@ -31,6 +31,14 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 				.locator('[data-tweet-id="123456789"]')
 				.getByRole("link", { name: "X", exact: true }),
 		).toBeVisible();
+		await staticPage.goto(
+			`${baseUrl}/ja/${handle}/${pageSlug}?page=2#comments`,
+		);
+		await expect(
+			staticPage
+				.locator("#comments")
+				.getByText("comment-marker-21", { exact: true }),
+		).toBeVisible();
 		await noScript.close();
 		console.log("JavaScript無効でも記事一覧・本文・表示モードを読める");
 		const context = await browser.newContext();
@@ -82,6 +90,32 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.toContain("Tiptapのブラウザー入力を保存する");
 		console.log(
 			"ログイン済みトップから新規ページを開き、Tiptapで入力した本文を保存できる",
+		);
+		await page.goto(
+			`${baseUrl}/ja/${handle}/${pageSlug}?page=2&view=both#comments`,
+		);
+		const commentPages = page.locator("#comments");
+		await expect(
+			commentPages.getByText("comment-marker-21", { exact: true }),
+		).toBeVisible();
+		await expect(
+			commentPages.locator(".tiptap[contenteditable=true]").first(),
+		).toBeVisible();
+		await commentPages.getByRole("link", { name: "前のコメント" }).click();
+		await expect(
+			commentPages.getByText("comment-marker-01", { exact: true }),
+		).toBeVisible();
+		await commentPages.getByRole("link", { name: "次のコメント" }).click();
+		await expect(
+			commentPages.getByText("comment-marker-21", { exact: true }),
+		).toBeVisible();
+		await expect(page).toHaveURL(/page=2/);
+		await page.reload();
+		await expect(
+			commentPages.getByText("comment-marker-21", { exact: true }),
+		).toBeVisible();
+		console.log(
+			"コメントの2ページ目を直接開いて往復・再読み込みしても、URLと本文が一致する",
 		);
 		await page.goto(`${baseUrl}/ja/${handle}/${pageSlug}`);
 		await expect(
@@ -217,6 +251,19 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		assert.equal((await read).status(), 200);
 		await expect(page.getByTestId("notifications-menu-content")).toBeVisible();
 		await page.keyboard.press("Escape");
+		await page
+			.locator("header")
+			.getByRole("button", { name: "W", exact: true })
+			.click();
+		await page.getByTestId("locale-selector-button").click();
+		const localeSearch = page.getByPlaceholder("search...");
+		await localeSearch.fill("fr");
+		await localeSearch.press("ArrowDown");
+		await localeSearch.press("Enter");
+		await expect(page).toHaveURL(`${baseUrl}/fr/${handle}`);
+		console.log(
+			"言語選択をキーボードで確定すると、現在のページの選択言語へ移動する",
+		);
 
 		const markdown = await page.request.get(
 			`${baseUrl}/api/page-markdown?locale=ja&handle=${handle}&slug=${pageSlug}`,

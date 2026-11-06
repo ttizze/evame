@@ -26,7 +26,7 @@ function Comments({
 }) {
 	const [page, setPage] = useQueryState(
 		"page",
-		parseAsInteger.withDefault(initialPage).withOptions({ history: "push" }),
+		parseAsInteger.withDefault(1).withOptions({ history: "push" }),
 	);
 	const { data, mutate, isLoading } = useSWR(
 		["reader-comments", pageId, locale, page],
@@ -94,7 +94,7 @@ function Comments({
 
 export function CommentsIsland(props: Parameters<typeof Comments>[0]) {
 	return (
-		<IslandProviders locale={props.locale}>
+		<IslandProviders locale={props.locale} search={props.search}>
 			<Comments {...props} />
 		</IslandProviders>
 	);

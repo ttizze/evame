@@ -3,13 +3,15 @@ import { IslandProviders } from "./providers";
 
 export function TranslationsIsland({
 	locale,
+	search,
 	pathname,
 }: {
 	locale: string;
+	search: string;
 	pathname: string;
 }) {
 	return (
-		<IslandProviders locale={locale}>
+		<IslandProviders locale={locale} search={search}>
 			<TranslationFormOnClick pathname={pathname} />
 		</IslandProviders>
 	);
