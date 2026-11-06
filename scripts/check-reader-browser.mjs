@@ -535,6 +535,11 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		const draftResponse = await page.request.get(
 			`${baseUrl}/api/reader-data?${new URLSearchParams({ path: new URL(newPageUrl).pathname })}`,
 		);
+		assert.equal(
+			draftResponse.status(),
+			200,
+			"作成した下書きの閲覧データを取得できる",
+		);
 		const draft = fromJSON(await draftResponse.json());
 		const newPageId = draft.page.data.pageDetail.id;
 		const publishDraft = () =>
