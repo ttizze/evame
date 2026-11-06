@@ -16,6 +16,7 @@
 			"!.vercel",
 			"!**/.wrangler",
 			"!**/.astro",
+			"!**/.data",
 			"!**/dist",
 			"!.cache",
 			"!dist",
