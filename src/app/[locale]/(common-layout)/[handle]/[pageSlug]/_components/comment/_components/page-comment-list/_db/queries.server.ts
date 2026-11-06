@@ -1,45 +1,6 @@
-import { bestTranslationRank } from "@/app/[locale]/_db/best-translation-subquery.server";
+import { bestTranslationId } from "@/app/[locale]/_db/best-translation-subquery.server";
 import { db } from "@/db";
 import type { JsonValue } from "@/db/types";
-
-/**
- * コメント所有者の upvote を優先した翻訳を segment ごとに 1 件選ぶ。
- * ページ本文用の subquery とは異なり、segment.contentId が
- * pageComments.id を指す点だけが異なる。
- */
-function bestTranslationByCommentSubquery(locale: string) {
-	return db
-		.selectFrom(
-			db
-				.selectFrom("segmentTranslations")
-				.innerJoin(
-					"segments as transSeg",
-					"segmentTranslations.segmentId",
-					"transSeg.id",
-				)
-				.innerJoin(
-					"pageComments as ownerComment",
-					"transSeg.contentId",
-					"ownerComment.id",
-				)
-				.leftJoin("translationVotes as ownerTv", (join) =>
-					join
-						.onRef("ownerTv.translationId", "=", "segmentTranslations.id")
-						.onRef("ownerTv.userId", "=", "ownerComment.userId")
-						.on("ownerTv.isUpvote", "=", true),
-				)
-				.select([
-					"segmentTranslations.id",
-					"segmentTranslations.segmentId",
-					"segmentTranslations.text",
-					bestTranslationRank.as("translationRank"),
-				])
-				.where("segmentTranslations.locale", "=", locale)
-				.as("rankedTranslations"),
-		)
-		.select(["id", "segmentId", "text"])
-		.where("translationRank", "=", 1);
-}
 
 type CommentRow = {
 	id: number;
@@ -88,8 +49,19 @@ async function fetchSegmentsForCommentIds(
 
 	return db
 		.selectFrom("segments")
-		.leftJoin(bestTranslationByCommentSubquery(locale).as("trans"), (join) =>
-			join.onRef("trans.segmentId", "=", "segments.id"),
+		.innerJoin(
+			"pageComments as ownerComment",
+			"ownerComment.id",
+			"segments.contentId",
+		)
+		.leftJoin("segmentTranslations as trans", (join) =>
+			join.on("trans.id", "=", (eb) =>
+				bestTranslationId(
+					eb.ref("segments.id"),
+					eb.ref("ownerComment.userId"),
+					locale,
+				),
+			),
 		)
 		.select([
 			"segments.id",

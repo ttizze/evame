@@ -1,6 +1,6 @@
 import type { Segment } from "@/app/[locale]/types";
 import { db } from "@/db";
-import { bestTranslationSubquery } from "./best-translation-subquery.server";
+import { bestTranslationId } from "./best-translation-subquery.server";
 
 /**
  * ページ基本情報を取得（slugで）
@@ -75,12 +75,10 @@ async function fetchSegments(
 	// セグメント + 最良の翻訳を1クエリで取得
 	return await db
 		.selectFrom("segments")
-		.leftJoin(
-			(eb) =>
-				bestTranslationSubquery(eb, { locale, ownerUserId: pageOwnerId }).as(
-					"trans",
-				),
-			(join) => join.onRef("trans.segmentId", "=", "segments.id"),
+		.leftJoin("segmentTranslations as trans", (join) =>
+			join.on("trans.id", "=", (eb) =>
+				bestTranslationId(eb.ref("segments.id"), eb.val(pageOwnerId), locale),
+			),
 		)
 		.select([
 			"segments.id",

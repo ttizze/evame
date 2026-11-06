@@ -1,4 +1,4 @@
-import { bestTranslationByPagesSubquery } from "@/app/[locale]/_db/best-translation-subquery.server";
+import { bestTranslationId } from "@/app/[locale]/_db/best-translation-subquery.server";
 import type { PageForTree } from "@/app/[locale]/types";
 import { db } from "@/db";
 
@@ -11,8 +11,6 @@ export type NavigationData = {
 	treeNodes: PageTreeNode[];
 	breadcrumb: PageForTree[];
 };
-
-export type PageTitleTree = PageForTree & { children: PageTitleTree[] };
 
 /**
  * ページナビゲーションに必要なデータを1クエリで取得
@@ -55,13 +53,18 @@ export async function queryPageNavigationData(
 		)
 		.selectFrom("ancestors")
 		.innerJoin("users", "ancestors.userId", "users.id")
-		.innerJoin("segments", (join) =>
-			join
-				.onRef("segments.contentId", "=", "ancestors.id")
-				.on("segments.number", "=", 0),
-		)
-		.leftJoin(bestTranslationByPagesSubquery(locale).as("trans"), (join) =>
-			join.onRef("trans.segmentId", "=", "segments.id"),
+		// CTEの対象記事から引き、SQLiteが全段落の走査を外側に選ばないようにする。
+		.crossJoin("segments")
+		.whereRef("segments.contentId", "=", "ancestors.id")
+		.where("segments.number", "=", 0)
+		.leftJoin("segmentTranslations as trans", (join) =>
+			join.on("trans.id", "=", (eb) =>
+				bestTranslationId(
+					eb.ref("segments.id"),
+					eb.ref("ancestors.userId"),
+					locale,
+				),
+			),
 		)
 		.select([
 			"ancestors.id",
@@ -109,13 +112,18 @@ export async function queryPageNavigationData(
 		)
 		.selectFrom("descendants")
 		.innerJoin("users", "descendants.userId", "users.id")
-		.innerJoin("segments", (join) =>
-			join
-				.onRef("segments.contentId", "=", "descendants.id")
-				.on("segments.number", "=", 0),
-		)
-		.leftJoin(bestTranslationByPagesSubquery(locale).as("trans"), (join) =>
-			join.onRef("trans.segmentId", "=", "segments.id"),
+		// CTEの対象記事から引き、SQLiteが全段落の走査を外側に選ばないようにする。
+		.crossJoin("segments")
+		.whereRef("segments.contentId", "=", "descendants.id")
+		.where("segments.number", "=", 0)
+		.leftJoin("segmentTranslations as trans", (join) =>
+			join.on("trans.id", "=", (eb) =>
+				bestTranslationId(
+					eb.ref("segments.id"),
+					eb.ref("descendants.userId"),
+					locale,
+				),
+			),
 		)
 		.select([
 			"descendants.id",
@@ -138,7 +146,7 @@ export async function queryPageNavigationData(
 export async function queryChildPagesTree(
 	parentId: number,
 	locale: string,
-): Promise<PageTitleTree[]> {
+): Promise<PageTreeNode[]> {
 	const rows = await db
 		.withRecursive("descendants", (qb) =>
 			qb
@@ -168,13 +176,18 @@ export async function queryChildPagesTree(
 		)
 		.selectFrom("descendants")
 		.innerJoin("users", "descendants.userId", "users.id")
-		.innerJoin("segments", (join) =>
-			join
-				.onRef("segments.contentId", "=", "descendants.id")
-				.on("segments.number", "=", 0),
-		)
-		.leftJoin(bestTranslationByPagesSubquery(locale).as("trans"), (join) =>
-			join.onRef("trans.segmentId", "=", "segments.id"),
+		// CTEの対象記事から引き、SQLiteが全段落の走査を外側に選ばないようにする。
+		.crossJoin("segments")
+		.whereRef("segments.contentId", "=", "descendants.id")
+		.where("segments.number", "=", 0)
+		.leftJoin("segmentTranslations as trans", (join) =>
+			join.on("trans.id", "=", (eb) =>
+				bestTranslationId(
+					eb.ref("segments.id"),
+					eb.ref("descendants.userId"),
+					locale,
+				),
+			),
 		)
 		.select([
 			"descendants.id",
@@ -188,7 +201,7 @@ export async function queryChildPagesTree(
 		])
 		.execute();
 
-	return buildTitleTree(rows, parentId);
+	return buildTree(rows, parentId);
 }
 
 /** 最新値が必要なページのいいね数を取得 */
@@ -241,18 +254,5 @@ function buildTree(nodes: PageForTree[], parentId: number): PageTreeNode[] {
 	return children.map((child) => ({
 		...child,
 		children: buildTree(nodes, child.id),
-	}));
-}
-
-function buildTitleTree(
-	nodes: PageForTree[],
-	parentId: number,
-): PageTitleTree[] {
-	const children = nodes
-		.filter((node) => node.parentId === parentId)
-		.sort((a, b) => a.order - b.order);
-	return children.map((child) => ({
-		...child,
-		children: buildTitleTree(nodes, child.id),
 	}));
 }
