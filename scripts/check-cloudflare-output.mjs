@@ -15,6 +15,11 @@ const staticLocales = (await readdir("dist/client", { withFileTypes: true }))
 assert.equal(staticLocales.length, 21, "全言語のトップを生成する");
 for (const locale of staticLocales) {
 	const html = await readFile(`dist/client/${locale}/index.html`, "utf8");
+	if (process.env.GOOGLE_ANALYTICS_ID)
+		assert.ok(
+			html.includes(process.env.GOOGLE_ANALYTICS_ID),
+			`${locale}: Analytics設定を静的HTMLにも保持する`,
+		);
 	assert.ok(
 		html.includes('data-sentry-component="HeroSection"'),
 		`${locale}: 説明文が静的HTMLに入っている`,

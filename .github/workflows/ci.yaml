@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TURSO_DATABASE_URL: file:evame.db
+      GOOGLE_ANALYTICS_ID: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && secrets.GOOGLE_ANALYTICS_ID || 'G-0000000000' }}
       TZ: Asia/Tokyo
       SENTRY_DSN: ""
       VITE_SENTRY_DSN: ""

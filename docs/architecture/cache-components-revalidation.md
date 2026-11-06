@@ -6,7 +6,7 @@
 
 - `vite.config.ts` の TanStack Start prerender で全21言語のトップをビルド時に生成する。生成対象はトップのみで、記事本文・編集画面・個人の情報は含めない。
 - `src/server.ts` がメンテナンス・DB移行フラグを確認した後、Static Assets bindingからトップHTMLを返す。DB接続やSSRは不要。対応するURL一覧は `static-home-paths.ts` でViteのルーティング設定と共有する。
-- 説明文と翻訳はビルド時点のDB内容を使用し、再デプロイで更新する。CIのmainビルドは本番DB、PR・ローカルビルドは開発DBを使用する。`scripts/build.mjs` はファイルDBをビルド中だけHTTPで公開してWorkersから読めるようにする。
+- 説明文と翻訳はビルド時点のDB内容を使用し、再デプロイで更新する。CIのmainビルドは本番DBと本番のAnalytics設定、PRビルドは開発DBとテスト用Analytics設定を使用する。`scripts/build.mjs` はファイルDBをビルド中だけHTTPで公開してWorkersから読めるようにする。
 - 新着・人気記事・件数は `home/presentation.tsx` が `home/data.ts` のServer FunctionをSWRで取得する。表示時・フォーカス復帰時・表示中30秒ごとに更新する。記事の公開状態を静的HTMLに固定しない。件数集計だけは従来の30秒キャッシュを使用する。
 - ログイン表示は既存のClientOnlyと認証APIで取得する。静的HTMLにセッションを含めない。ロケールCookieは静的配信時も設定する。
 
