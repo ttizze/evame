@@ -47,6 +47,16 @@ it("公開内容が変わったら時刻を待たずに最新の生成元へ切�
 	expect(queries.fetchReaderCatalogSources).toHaveBeenCalledTimes(2);
 });
 
+it("最初のバッチで取得した生成元を後続言語の並行要求でも再利用する", async () => {
+	const { loadReaderCatalog } = await import("./load-reader-catalog");
+	await loadReaderCatalog("ja");
+	const results = [loadReaderCatalog("ja"), loadReaderCatalog("en")];
+	expect(
+		(await Promise.all(results)).map((result) => result.documents),
+	).toEqual([{ "/ja": "fixture" }, { "/en": "fixture" }]);
+	expect(queries.fetchReaderCatalogSources).toHaveBeenCalledOnce();
+});
+
 it("公開内容に変更がなくても1時間ごとに閲覧数と人気順を集計し直す", async () => {
 	const { loadReaderCatalog } = await import("./load-reader-catalog");
 	await loadReaderCatalog("ja");

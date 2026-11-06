@@ -1,11 +1,9 @@
 import { cache } from "cloudflare:workers";
-import { cf, finalize } from "@astrojs/cloudflare/fetch";
 import type {
 	ExecutionContext,
 	ScheduledController,
 } from "@cloudflare/workers-types";
 import { withSentry } from "@sentry/cloudflare";
-import { astro, FetchState } from "astro/fetch";
 import { SENTRY_DSN } from "../../src/_utils/sentry-dsn";
 import { supportedLocaleOptions } from "../../src/app/_constants/locale";
 import {
@@ -22,6 +20,12 @@ const readerLocales = [
 		.map((option) => option.code),
 ];
 
+async function purgeReaderCache() {
+	if (typeof cache.purge !== "function") return;
+	const purged = await cache.purge({ tags: ["evame-reader"] });
+	if (!purged.success) throw new Error("Reader cache invalidation failed");
+}
+
 export default withSentry(
 	(env) => ({
 		dsn: env.SENTRY_DSN ?? SENTRY_DSN,
@@ -34,23 +38,14 @@ export default withSentry(
 			_controller: ScheduledController,
 			env: typeof import("cloudflare:workers").env,
 		) {
-			let locale: string | null = null;
-			for (;;) {
-				const response = await env.SELF.fetch(
-					"https://reader.internal/__publish",
-					{
-						method: "POST",
-						headers: {
-							...(locale ? { "X-Evame-Reader-Locale": locale } : {}),
-						},
-					},
-				);
-				if (!response.ok)
-					throw new Error("Scheduled Reader publication failed");
-				locale = ((await response.json()) as { nextLocale: string | null })
-					.nextLocale;
-				if (locale === null) return;
-			}
+			const response = await env.SELF.fetch(
+				"https://reader.internal/__invalidate",
+				{
+					method: "POST",
+				},
+			);
+			if (!response.ok) throw new Error("Scheduled Reader publication failed");
+			await response.arrayBuffer();
 		},
 		async fetch(
 			request: Request,
@@ -58,20 +53,76 @@ export default withSentry(
 			context: ExecutionContext,
 		) {
 			const url = new URL(request.url);
+			const sinceHeader = request.headers.get("X-Evame-Reader-Since");
+			const sinceRevision = sinceHeader === null ? null : Number(sinceHeader);
+			if (
+				["/__invalidate", "/__publish"].includes(url.pathname) &&
+				sinceRevision !== null &&
+				(!Number.isSafeInteger(sinceRevision) || sinceRevision < 0)
+			)
+				return new Response(null, { status: 400 });
+			if (url.pathname === "/__purge") {
+				if (request.method !== "POST")
+					return new Response(null, { status: 405 });
+				await purgeReaderCache();
+				return new Response(null, { status: 204 });
+			}
+			if (
+				url.pathname === "/__invalidate" &&
+				request.method === "POST" &&
+				!request.headers.has("X-Evame-Reader-Batch") &&
+				!request.headers.has("X-Evame-Reader-Locale")
+			) {
+				const publicationId =
+					request.headers.get("X-Evame-Reader-Publication") ??
+					crypto.randomUUID();
+				async function publishBatch(locale: string) {
+					const response = await env.SELF.fetch(
+						"https://reader.internal/__invalidate",
+						{
+							method: "POST",
+							headers: {
+								"X-Evame-Reader-Locale": locale,
+								"X-Evame-Reader-Batch": "true",
+								"X-Evame-Reader-Defer-Purge": "true",
+								"X-Evame-Reader-Publication": publicationId,
+								...(sinceRevision === null
+									? {}
+									: { "X-Evame-Reader-Since": String(sinceRevision) }),
+							},
+						},
+					);
+					await response.arrayBuffer();
+					if (!response.ok) throw new Error("Reader publication failed");
+					return response.status === 202
+						? response.headers.get("X-Evame-Reader-Locale")
+						: null;
+				}
+				const firstBatch = publishBatch(readerLocales[0]);
+				const results = await Promise.allSettled(
+					readerLocales.map(async (locale, index) => {
+						const nextLocale = await firstBatch.catch((error) => {
+							if (index === 0) throw error;
+							return null;
+						});
+						if (index === 0 && nextLocale !== locale) return;
+						for (;;) {
+							if ((await publishBatch(locale)) !== locale) return;
+						}
+					}),
+				);
+				await purgeReaderCache();
+				for (const result of results)
+					if (result.status === "rejected") throw result.reason;
+				return new Response(null, { status: 204 });
+			}
 			if (["/__invalidate", "/__publish"].includes(url.pathname)) {
 				if (request.method !== "POST")
 					return new Response(null, { status: 405 });
-				let localeIndex = readerLocales.indexOf(
+				const localeIndex = readerLocales.indexOf(
 					request.headers.get("X-Evame-Reader-Locale") ?? readerLocales[0],
 				);
 				if (localeIndex < 0) return new Response(null, { status: 400 });
-				const sinceHeader = request.headers.get("X-Evame-Reader-Since");
-				const sinceRevision = sinceHeader === null ? null : Number(sinceHeader);
-				if (
-					sinceRevision !== null &&
-					(!Number.isSafeInteger(sinceRevision) || sinceRevision < 0)
-				)
-					return new Response(null, { status: 400 });
 				let result: Awaited<ReturnType<typeof publishReaderDocuments>> | null =
 					null;
 				const data = new Map<
@@ -80,7 +131,7 @@ export default withSentry(
 				>();
 				async function render(path: string) {
 					const pageUrl = new URL(path, "https://evame.tech");
-					const state = new FetchState(new Request(pageUrl));
+					let readerData: Response | null = null;
 					if (path !== "/404") {
 						const search = new URLSearchParams(pageUrl.search);
 						search.delete("view");
@@ -89,6 +140,9 @@ export default withSentry(
 						apiUrl.searchParams.set("search", search.toString());
 						let pending = data.get(apiUrl.href);
 						if (!pending) {
+							// 6件並行の各3表示で使う2ページだけを保持する。
+							const oldest = data.keys().next().value;
+							if (data.size >= 2 && oldest !== undefined) data.delete(oldest);
 							pending = env.BACKEND.fetch(apiUrl.href).then(
 								async (response) => ({
 									body: await response.arrayBuffer(),
@@ -98,12 +152,17 @@ export default withSentry(
 							data.set(apiUrl.href, pending);
 						}
 						const loaded = await pending;
-						state.locals.readerData = new Response(loaded.body.slice(0), {
+						readerData = new Response(loaded.body.slice(0), {
 							status: loaded.status,
 						});
 					}
-					const asset = await cf(state, env, context);
-					return asset ?? finalize(state, await astro(state));
+					const { renderReaderRequest } = await import("./render");
+					return renderReaderRequest(
+						new Request(pageUrl),
+						env,
+						context,
+						readerData,
+					);
 				}
 				let failure: { error: unknown } | null = null;
 				const publicationId =
@@ -163,16 +222,7 @@ export default withSentry(
 						} finally {
 							data.clear();
 						}
-						conflicts = 0;
-						if (
-							url.pathname === "/__publish" ||
-							request.headers.get("X-Evame-Reader-Batch") === "true"
-						)
-							break;
-						if (result.remaining === 0) {
-							if (localeIndex === readerLocales.length - 1) break;
-							localeIndex++;
-						}
+						break;
 					}
 				} catch (error) {
 					failure = { error };
@@ -181,12 +231,10 @@ export default withSentry(
 					? readerLocales[localeIndex]
 					: (readerLocales[localeIndex + 1] ?? null);
 				if (
-					typeof cache.purge === "function" &&
+					request.headers.get("X-Evame-Reader-Defer-Purge") !== "true" &&
 					(failure !== null || nextLocale === null)
 				) {
-					const purged = await cache.purge({ tags: ["evame-reader"] });
-					if (!purged.success)
-						throw new Error("Reader cache invalidation failed");
+					await purgeReaderCache();
 				}
 				if (failure !== null) throw failure.error;
 				return url.pathname === "/__invalidate"
@@ -235,12 +283,8 @@ export default withSentry(
 					);
 				}
 			}
-			const state = new FetchState(request);
-			const asset = await cf(state, env, context);
-			if (asset) return asset;
-			const response = finalize(state, await astro(state));
-			response.headers.set("X-Evame-HTML", "dynamic");
-			return response;
+			const { renderReaderRequest } = await import("./render");
+			return renderReaderRequest(request, env, context, null);
 		},
 	},
 );

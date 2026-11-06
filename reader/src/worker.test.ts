@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
 	backend: vi.fn(),
 	astro: vi.fn(),
 	sources: vi.fn(),
+	self: vi.fn(),
 }));
 vi.mock("cloudflare:workers", () => ({ cache: { purge: mocks.purge } }));
 vi.mock("@sentry/cloudflare", () => ({
@@ -28,11 +29,13 @@ import worker from "./worker";
 
 const env = {
 	CF_VERSION_METADATA: { id: "deployment-version" },
+	SELF: { fetch: mocks.self },
 	BACKEND: { fetch: mocks.backend },
 	READER_HTML: { get: mocks.get },
 } as unknown as typeof import("cloudflare:workers").env;
 const context = { waitUntil: vi.fn() } as unknown as ExecutionContext;
 beforeEach(() => {
+	mocks.self.mockReset().mockResolvedValue(new Response(null, { status: 204 }));
 	mocks.publication
 		.mockReset()
 		.mockResolvedValue({ remaining: 0, generated: 0 });
@@ -49,6 +52,153 @@ beforeEach(() => {
 		.mockImplementation(async () => new Response("所有者プレビュー"));
 });
 afterEach(() => vi.useRealTimers());
+
+it("毎時の再生成も全言語の内容更新へ渡し、デプロイ用の一括生成とは競合させない", async () => {
+	await worker.scheduled({} as Parameters<typeof worker.scheduled>[0], env);
+	expect(mocks.self).toHaveBeenCalledExactlyOnceWith(
+		"https://reader.internal/__invalidate",
+		{ method: "POST" },
+	);
+});
+
+it("デプロイ後のpurgeはReader自身が実行し、失敗したら完了を返さない", async () => {
+	mocks.purge.mockResolvedValue({ success: false });
+	await expect(
+		worker.fetch(
+			new Request("https://reader.internal/__purge", { method: "POST" }),
+			env,
+			context,
+		),
+	).rejects.toThrow("Reader cache invalidation failed");
+	expect(mocks.publication).not.toHaveBeenCalled();
+});
+
+it("最初のバッチ後に各言語を並行生成し、遅い言語の完了後に一度だけ共有キャッシュを消す", async () => {
+	const slow = Promise.withResolvers<Response>();
+	const self = mocks.self;
+	self.mockReset().mockImplementation(async (_url, options) => {
+		const locale = new Headers(options?.headers).get("X-Evame-Reader-Locale");
+		return locale === "en" ? slow.promise : new Response(null, { status: 204 });
+	});
+	let finished = false;
+	const result = worker
+		.fetch(
+			new Request("https://reader.internal/__invalidate", {
+				method: "POST",
+				headers: { "X-Evame-Reader-Since": "1" },
+			}),
+			env,
+			context,
+		)
+		.then((response) => {
+			finished = true;
+			return response;
+		});
+	await vi.waitFor(() => expect(self).toHaveBeenCalledTimes(21));
+	expect(finished).toBe(false);
+	expect(mocks.purge).not.toHaveBeenCalled();
+	for (const [, options] of self.mock.calls) {
+		expect(
+			new Headers(options?.headers).get("X-Evame-Reader-Defer-Purge"),
+		).toBe("true");
+	}
+	slow.resolve(new Response(null, { status: 204 }));
+	expect((await result).status).toBe(204);
+	expect(mocks.purge).toHaveBeenCalledOnce();
+});
+
+it("一言語が失敗しても他言語の書き込み完了を待ってからキャッシュを消しエラーにする", async () => {
+	const slow = Promise.withResolvers<Response>();
+	mocks.self.mockReset().mockImplementation(async (_url, options) => {
+		const locale = new Headers(options?.headers).get("X-Evame-Reader-Locale");
+		return locale === "en"
+			? slow.promise
+			: new Response(null, { status: locale === "zh" ? 500 : 204 });
+	});
+	const result = expect(
+		worker.fetch(
+			new Request("https://reader.internal/__invalidate", { method: "POST" }),
+			env,
+			context,
+		),
+	).rejects.toThrow("Reader publication failed");
+	await vi.waitFor(() => expect(env.SELF.fetch).toHaveBeenCalledTimes(21));
+	expect(mocks.purge).not.toHaveBeenCalled();
+	slow.resolve(new Response(null, { status: 204 }));
+	await result;
+	expect(mocks.purge).toHaveBeenCalledOnce();
+});
+
+it("並行生成の子バッチは最後の言語でもキャッシュを消さない", async () => {
+	await worker.fetch(
+		new Request("https://reader.internal/__invalidate", {
+			method: "POST",
+			headers: {
+				"X-Evame-Reader-Locale": "pi",
+				"X-Evame-Reader-Batch": "true",
+				"X-Evame-Reader-Defer-Purge": "true",
+			},
+		}),
+		env,
+		context,
+	);
+	expect(mocks.purge).not.toHaveBeenCalled();
+});
+
+it("最初の日本語バッチが完了するまでは後続言語を開始しない", async () => {
+	const first = Promise.withResolvers<Response>();
+	mocks.self.mockReturnValueOnce(first.promise);
+	const result = worker.fetch(
+		new Request("https://reader.internal/__invalidate", { method: "POST" }),
+		env,
+		context,
+	);
+	await vi.waitFor(() => expect(mocks.self).toHaveBeenCalledOnce());
+	expect(
+		new Headers(mocks.self.mock.calls[0][1].headers).get(
+			"X-Evame-Reader-Locale",
+		),
+	).toBe("ja");
+	first.resolve(new Response(null, { status: 204 }));
+	await result;
+	expect(mocks.self).toHaveBeenCalledTimes(21);
+});
+
+it("残件のある言語だけ次のバッチを続け、生成IDと保存前の版を引き継ぐ", async () => {
+	let japanese = 0;
+	mocks.self.mockReset().mockImplementation(async (_url, options) => {
+		const locale = new Headers(options.headers).get("X-Evame-Reader-Locale");
+		if (locale === "ja" && japanese++ === 0)
+			return new Response(null, {
+				status: 202,
+				headers: { "X-Evame-Reader-Locale": "ja" },
+			});
+		return locale === "ja"
+			? new Response(null, {
+					status: 202,
+					headers: { "X-Evame-Reader-Locale": "en" },
+				})
+			: new Response(null, { status: 204 });
+	});
+	await worker.fetch(
+		new Request("https://reader.internal/__invalidate", {
+			method: "POST",
+			headers: {
+				"X-Evame-Reader-Since": "5",
+				"X-Evame-Reader-Publication": "save-id",
+			},
+		}),
+		env,
+		context,
+	);
+	expect(mocks.self).toHaveBeenCalledTimes(22);
+	for (const [, options] of mocks.self.mock.calls) {
+		const headers = new Headers(options.headers);
+		expect(headers.get("X-Evame-Reader-Publication")).toBe("save-id");
+		expect(headers.get("X-Evame-Reader-Since")).toBe("5");
+	}
+	expect(mocks.purge).toHaveBeenCalledOnce();
+});
 
 it("保存前のDBの版より後に変わった生成元だけを、その言語の更新対象へ渡す", async () => {
 	mocks.sources.mockResolvedValue({ "/author/a": 2, "/author/b": 3 });
