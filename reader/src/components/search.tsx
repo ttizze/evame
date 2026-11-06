@@ -1,13 +1,9 @@
 import { Edit3, FileText, Hash, User } from "lucide-react";
-import {
-	parseAsInteger,
-	parseAsString,
-	parseAsStringLiteral,
-	useQueryStates,
-} from "nuqs";
+import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { fromJSON } from "seroval";
 import useSWR from "swr";
 import { useTranslations } from "use-intl";
+import { useHydrated } from "@/app/_hooks/use-hydrated";
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
 import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list";
 import { PageList } from "@/app/[locale]/(common-layout)/_components/page/page-list";
@@ -18,6 +14,7 @@ import type { loadReaderData } from "@/app/api/reader-data/_service/load-reader-
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserAvatar } from "@/components/user-avatar";
+import { readerPageQueryState } from "./pagination-url";
 import { IslandProviders } from "./providers";
 
 function Search({
@@ -31,10 +28,11 @@ function Search({
 	search: string;
 }) {
 	const { locale } = initialResult;
+	const hydrated = useHydrated();
 	const [state, setState] = useQueryStates({
 		query: parseAsString.withDefault(""),
 		category: parseAsStringLiteral(CATEGORIES).withDefault("title"),
-		page: parseAsInteger.withDefault(1),
+		page: readerPageQueryState,
 	});
 	const params = new URLSearchParams(search);
 	params.set("query", state.query);
@@ -81,6 +79,9 @@ function Search({
 					onSubmit={(event) => event.preventDefault()}
 				>
 					<input name="category" type="hidden" value={state.category} />
+					{initialResult.tagPage === "true" && (
+						<input name="tagPage" type="hidden" value="true" />
+					)}
 					<div className="relative">
 						<Input
 							aria-label={t("search")}
@@ -109,14 +110,24 @@ function Search({
 					<TabsList className="mb-6 border-b w-full flex rounded-full">
 						{CATEGORIES.map((category) => {
 							const Icon = icons[category];
+							const categoryParams = new URLSearchParams(params);
+							categoryParams.set("category", category);
+							categoryParams.set("page", "1");
 							return (
 								<TabsTrigger
+									asChild
 									className="flex-1 items-center justify-center rounded-full text-sm"
 									key={category}
 									value={category}
 								>
-									<Icon className="mr-1 h-4 w-4" />
-									{t(category)}
+									<a
+										href={`/${locale}/search?${categoryParams}`}
+										onClick={(event) => event.preventDefault()}
+										tabIndex={!hydrated || state.category === category ? 0 : -1}
+									>
+										<Icon className="mr-1 h-4 w-4" />
+										{t(category)}
+									</a>
 								</TabsTrigger>
 							);
 						})}

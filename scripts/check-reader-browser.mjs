@@ -40,6 +40,25 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 				.locator("#comments")
 				.getByText("comment-marker-21", { exact: true }),
 		).toBeVisible();
+		for (const pageNumber of ["0", "-1", "1.5", "2junk", "9007199254740992"]) {
+			await staticPage.goto(
+				`${baseUrl}/ja/search?query=Workers&category=title&page=${pageNumber}`,
+			);
+			await expect(
+				staticPage
+					.locator("main")
+					.getByRole("link", { name: "Workers保存テスト", exact: true })
+					.first(),
+			).toBeVisible();
+		}
+		await staticPage.getByRole("tab", { name: "本文", exact: true }).click();
+		await expect(staticPage).toHaveURL(/category=content/);
+		await expect(
+			staticPage
+				.locator("main")
+				.getByRole("link", { name: "Workers保存テスト", exact: true })
+				.first(),
+		).toBeVisible();
 		await noScript.close();
 		console.log("JavaScript無効でも記事一覧・本文・表示モードを読める");
 		const context = await browser.newContext({
@@ -284,6 +303,12 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.click();
 		await expect(page).toHaveURL(/#workersの目次見出し|#workers%E3%81%AE/);
 		await page.keyboard.press("Escape");
+		await expect(
+			page.getByRole("navigation", { name: "Table of contents" }),
+		).toHaveCount(0);
+		await expect(
+			page.getByRole("button", { name: "Table of Contents", exact: true }),
+		).toBeFocused();
 		await page.evaluate(() => window.scrollTo(0, 1000));
 		await expect(
 			page.locator("[data-article-header] > div").first(),

@@ -1,6 +1,11 @@
 import { supportedLocaleOptions } from "../_constants/locale";
 import { CATEGORIES } from "../[locale]/(common-layout)/search/constants";
 
+export function parseReaderPage(value: string | null) {
+	const page = Number(value ?? 1);
+	return Number.isSafeInteger(page) && page > 0 ? page : 1;
+}
+
 export function parseReaderRoute(pathname: string, search: string) {
 	let parts: string[];
 	try {
@@ -19,8 +24,7 @@ export function parseReaderRoute(pathname: string, search: string) {
 	)
 		return null;
 	const params = new URLSearchParams(search);
-	const value = Number(params.get("page") ?? 1);
-	const page = Number.isSafeInteger(value) && value > 0 ? value : 1;
+	const page = parseReaderPage(params.get("page"));
 	if (parts.length === 1 || (parts.length === 2 && parts[1] === "index.html"))
 		return { kind: "home" as const, locale };
 	if (

@@ -1,4 +1,4 @@
-import { parseAsInteger, useQueryState } from "nuqs";
+import { useQueryState } from "nuqs";
 import { useEffect } from "react";
 import useSWR from "swr";
 import { useTranslations } from "use-intl";
@@ -7,7 +7,7 @@ import { PageCommentList } from "@/app/[locale]/(common-layout)/[handle]/[pageSl
 import { CommentUpdates } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/comment-updates";
 import type { PageCommentsData } from "@/app/api/_service/load-page-comments";
 import { Button } from "@/components/ui/button";
-import { paginationUrl } from "./pagination-url";
+import { paginationUrl, readerPageQueryState } from "./pagination-url";
 import { IslandProviders } from "./providers";
 
 function Comments({
@@ -27,7 +27,7 @@ function Comments({
 }) {
 	const [page, setPage] = useQueryState(
 		"page",
-		parseAsInteger.withDefault(1).withOptions({ history: "push" }),
+		readerPageQueryState.withOptions({ history: "push" }),
 	);
 	const { data, mutate, isLoading } = useSWR(
 		["reader-comments", pageId, locale, page],
