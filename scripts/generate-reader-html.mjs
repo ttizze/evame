@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import pLimit from "p-limit";
 import { unstable_dev } from "wrangler";
+import { READER_PUBLICATION_CONCURRENCY } from "../reader-publication-concurrency.ts";
 import { supportedLocaleOptions } from "../src/app/_constants/locale.ts";
 
 const reader = JSON.parse(
@@ -91,17 +93,20 @@ try {
 			}
 		}
 		const firstBatch = generateBatch("ja");
+		const limit = pLimit(READER_PUBLICATION_CONCURRENCY);
 		const results = await Promise.allSettled(
-			supportedLocaleOptions.map(async ({ code: locale }) => {
-				const remaining = await firstBatch.catch((error) => {
-					if (locale === "ja") throw error;
-					return 0;
-				});
-				if (locale === "ja" && remaining === 0) return;
-				for (;;) {
-					if ((await generateBatch(locale)) === 0) return;
-				}
-			}),
+			supportedLocaleOptions.map(({ code: locale }) =>
+				limit(async () => {
+					const remaining = await firstBatch.catch((error) => {
+						if (locale === "ja") throw error;
+						return 0;
+					});
+					if (locale === "ja" && remaining === 0) return;
+					for (;;) {
+						if ((await generateBatch(locale)) === 0) return;
+					}
+				}),
+			),
 		);
 		const purged = await proxy.fetch("/__purge", { method: "POST" });
 		await purged.arrayBuffer();

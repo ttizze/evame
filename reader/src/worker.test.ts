@@ -53,6 +53,35 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 
+it("DB接続を使い切らないように同時に生成する言語を4つまでにする", async () => {
+	const release = Promise.withResolvers<void>();
+	let active = 0;
+	let maximum = 0;
+	mocks.self
+		.mockReset()
+		.mockResolvedValueOnce(new Response(null, { status: 204 }));
+	mocks.self.mockImplementation(async () => {
+		maximum = Math.max(maximum, ++active);
+		await release.promise;
+		active--;
+		return new Response(null, { status: 204 });
+	});
+	const done = worker.fetch(
+		new Request("https://reader.internal/__invalidate", { method: "POST" }),
+		env,
+		context,
+	);
+	await vi.waitFor(() =>
+		expect(mocks.self.mock.calls.length).toBeGreaterThanOrEqual(5),
+	);
+	const started = mocks.self.mock.calls.length;
+	release.resolve();
+	await done;
+	expect(started).toBe(5);
+	expect(maximum).toBe(4);
+	expect(mocks.self).toHaveBeenCalledTimes(21);
+});
+
 it("毎時の再生成も全言語の内容更新へ渡し、デプロイ用の一括生成とは競合させない", async () => {
 	await worker.scheduled({} as Parameters<typeof worker.scheduled>[0], env);
 	expect(mocks.self).toHaveBeenCalledExactlyOnceWith(

@@ -1,0 +1,1 @@
+export const READER_PUBLICATION_CONCURRENCY = 4;

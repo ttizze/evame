@@ -4,7 +4,9 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ fetch: vi.fn(), stop: vi.fn() }));
 vi.mock("wrangler", () => ({ unstable_dev: async () => mocks }));
 vi.mock("../src/app/_constants/locale.ts", () => ({
-	supportedLocaleOptions: [{ code: "ja" }, { code: "en" }],
+	supportedLocaleOptions: ["ja", "en", "zh", "es", "fr", "de"].map((code) => ({
+		code,
+	})),
 }));
 vi.mock("node:fs/promises", () => ({
 	readFile: async () =>
@@ -34,7 +36,9 @@ it("言語を並行生成し、全言語が終わってからキャッシュを�
 				: Response.json({ generated: 1, remaining: 0, nextLocale: null }),
 	);
 	const done = import("./generate-reader-html.mjs");
-	await vi.waitFor(() => expect(mocks.fetch).toHaveBeenCalledTimes(2));
+	await vi.waitFor(() =>
+		expect(mocks.fetch.mock.calls.length).toBeGreaterThanOrEqual(2),
+	);
 	expect(mocks.stop).not.toHaveBeenCalled();
 	slow.resolve(Response.json({ generated: 1, remaining: 0, nextLocale: "en" }));
 	await done;
@@ -77,10 +81,38 @@ it("一言語が失敗しても他言語を待ってからキャッシュを消�
 	const done = expect(import("./generate-reader-html.mjs")).rejects.toThrow(
 		"HTTP 400",
 	);
-	await vi.waitFor(() => expect(mocks.fetch).toHaveBeenCalledTimes(2));
+	await vi.waitFor(() =>
+		expect(mocks.fetch.mock.calls.length).toBeGreaterThanOrEqual(2),
+	);
 	expect(mocks.stop).not.toHaveBeenCalled();
 	slow.resolve(Response.json({ generated: 1, remaining: 0, nextLocale: null }));
 	await done;
 	expect(mocks.fetch.mock.calls.at(-1)?.[0]).toBe("/__purge");
 	expect(mocks.stop).toHaveBeenCalledOnce();
+});
+
+it("デプロイ時も4言語を上限にし、空いた枠で残りの言語を生成する", async () => {
+	const release = Promise.withResolvers<void>();
+	let active = 0;
+	let maximum = 0;
+	mocks.fetch.mockResolvedValueOnce(
+		Response.json({ generated: 1, remaining: 0, nextLocale: null }),
+	);
+	mocks.fetch.mockImplementation(async (path) => {
+		if (path === "/__purge") return new Response(null, { status: 204 });
+		maximum = Math.max(maximum, ++active);
+		await release.promise;
+		active--;
+		return Response.json({ generated: 1, remaining: 0, nextLocale: null });
+	});
+	const done = import("./generate-reader-html.mjs");
+	await vi.waitFor(() =>
+		expect(mocks.fetch.mock.calls.length).toBeGreaterThanOrEqual(5),
+	);
+	const started = mocks.fetch.mock.calls.length;
+	release.resolve();
+	await done;
+	expect(started).toBe(5);
+	expect(maximum).toBe(4);
+	expect(mocks.fetch).toHaveBeenCalledTimes(7);
 });

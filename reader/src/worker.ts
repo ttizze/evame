@@ -4,6 +4,8 @@ import type {
 	ScheduledController,
 } from "@cloudflare/workers-types";
 import { withSentry } from "@sentry/cloudflare";
+import pLimit from "p-limit";
+import { READER_PUBLICATION_CONCURRENCY } from "../../reader-publication-concurrency";
 import { SENTRY_DSN } from "../../src/_utils/sentry-dsn";
 import { supportedLocaleOptions } from "../../src/app/_constants/locale";
 import {
@@ -101,17 +103,20 @@ export default withSentry(
 						: null;
 				}
 				const firstBatch = publishBatch(readerLocales[0]);
+				const limit = pLimit(READER_PUBLICATION_CONCURRENCY);
 				const results = await Promise.allSettled(
-					readerLocales.map(async (locale, index) => {
-						const nextLocale = await firstBatch.catch((error) => {
-							if (index === 0) throw error;
-							return null;
-						});
-						if (index === 0 && nextLocale !== locale) return;
-						for (;;) {
-							if ((await publishBatch(locale)) !== locale) return;
-						}
-					}),
+					readerLocales.map((locale, index) =>
+						limit(async () => {
+							const nextLocale = await firstBatch.catch((error) => {
+								if (index === 0) throw error;
+								return null;
+							});
+							if (index === 0 && nextLocale !== locale) return;
+							for (;;) {
+								if ((await publishBatch(locale)) !== locale) return;
+							}
+						}),
+					),
 				);
 				await purgeReaderCache();
 				for (const result of results)
