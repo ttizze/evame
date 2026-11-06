@@ -20,6 +20,7 @@ const readerLocales = [
 		.map((option) => option.code),
 ];
 
+/** Reader自身のスコープで無効化を確定し、失敗時に保存成功を返さない。 */
 async function purgeReaderCache() {
 	if (typeof cache.purge !== "function") return;
 	const purged = await cache.purge({ tags: ["evame-reader"] });
@@ -76,6 +77,7 @@ export default withSentry(
 				const publicationId =
 					request.headers.get("X-Evame-Reader-Publication") ??
 					crypto.randomUUID();
+				/** 先行バッチと後続言語で、生成ID・本文転送の完了・継続位置の判定をそろえる。 */
 				async function publishBatch(locale: string) {
 					const response = await env.SELF.fetch(
 						"https://reader.internal/__invalidate",

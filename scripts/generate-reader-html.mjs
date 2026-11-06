@@ -52,6 +52,7 @@ try {
 	} else {
 		let total = 0;
 		const publicationId = randomUUID();
+		/** 公開操作を繰り返さず、HTML生成バッチだけを同じ生成IDで再試行する。 */
 		async function generateBatch(locale) {
 			let failures = 0;
 			for (;;) {
