@@ -186,12 +186,17 @@ try {
 	console.log(
 		"Workersランタイムで認証済みセッションを検証し、非公開記事の新規保存・更新・編集画面を確認できる",
 	);
-	await database.execute(
-		"UPDATE pages SET status = 'PUBLIC' WHERE slug = 'evame'",
+	const childContent = await database.execute(
+		"INSERT INTO contents (kind) VALUES ('PAGE') RETURNING id",
 	);
+	const childPageId = Number(childContent.rows[0].id);
 	await database.execute({
-		sql: "UPDATE pages SET parent_id = (SELECT id FROM pages WHERE slug = 'evame') WHERE slug = ?",
-		args: [pageSlug],
+		sql: "INSERT INTO pages (id, slug, source_locale, status, user_id, mdast_json, parent_id) SELECT ?, ?, source_locale, 'PUBLIC', user_id, mdast_json, id FROM pages WHERE slug = ?",
+		args: [childPageId, `${pageSlug}-child`, pageSlug],
+	});
+	await database.execute({
+		sql: "INSERT INTO segments (content_id, number, text, text_and_occurrence_hash) SELECT ?, number, text, text_and_occurrence_hash FROM segments WHERE content_id = (SELECT id FROM pages WHERE slug = ?)",
+		args: [childPageId, pageSlug],
 	});
 	const article = await worker.fetch(
 		`http://localhost/ja/${handle}/${pageSlug}`,
@@ -211,11 +216,21 @@ try {
 		articleHtml.includes("Cloudflareで更新保存"),
 		"記事本文をSSRできる",
 	);
-	assert.ok(
-		articleHtml.includes('aria-label="page tree"'),
-		"親記事のある記事で本文と階層ナビゲーションをSSRできる",
-	);
 	console.log("Workersランタイムで保存した記事の閲覧ページを表示できる");
+	const childArticle = await worker.fetch(
+		`http://localhost/ja/${handle}/${pageSlug}-child`,
+	);
+	const childArticleHtml = await childArticle.text();
+	assert.equal(childArticle.status, 200);
+	assert.ok(
+		childArticleHtml.includes("Cloudflareで更新保存"),
+		"親記事のある記事でも本文をSSRできる",
+	);
+	assert.ok(
+		childArticleHtml.includes('aria-label="page tree"'),
+		"親記事のある記事で階層ナビゲーションをSSRできる",
+	);
+	console.log("親記事のある記事で本文と階層ナビゲーションをSSRできる");
 	await database.execute({
 		sql: "UPDATE pages SET status = 'PUBLIC' WHERE slug = ?",
 		args: [pageSlug],
