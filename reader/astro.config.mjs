@@ -13,11 +13,6 @@ export default defineConfig({
 	adapter: cloudflare({ imageService: "passthrough" }),
 	integrations: [react()],
 	vite: {
-		define: {
-			__READER_BUILD_ID__: JSON.stringify(
-				process.env.GITHUB_SHA ?? "development",
-			),
-		},
 		envPrefix: ["PUBLIC_", "VITE_"],
 		resolve: {
 			alias: { "@": fileURLToPath(new URL("../src", import.meta.url)) },

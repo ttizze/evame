@@ -28,6 +28,9 @@ vi.mock("./db", async () => {
 		databaseScope: new AsyncLocalStorage(),
 	};
 });
+vi.mock("./db/queries", () => ({
+	fetchReaderRevision: vi.fn().mockResolvedValue({ revision: 1 }),
+}));
 
 const env = {
 	SETTINGS: { get: vi.fn().mockResolvedValue(false) },
@@ -312,6 +315,12 @@ describe("公開HTMLの更新", () => {
 		expect(
 			env.READER.fetch.mock.calls[1][1].headers["X-Evame-Reader-Locale"],
 		).toBe("en");
+		const publicationId =
+			env.READER.fetch.mock.calls[0][1].headers["X-Evame-Reader-Publication"];
+		expect(publicationId).toEqual(expect.any(String));
+		expect(
+			env.READER.fetch.mock.calls[1][1].headers["X-Evame-Reader-Publication"],
+		).toBe(publicationId);
 	});
 	it("更新処理はAstroのキャッシュ無効化を待ってから成功を返す", async () => {
 		const purge = Promise.withResolvers<Response>();

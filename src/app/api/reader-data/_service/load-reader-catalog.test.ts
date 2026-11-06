@@ -4,7 +4,12 @@ const queries = vi.hoisted(() => ({
 	fetchReaderRevision: vi.fn(),
 	fetchReaderCatalogSources: vi.fn(),
 }));
-vi.mock("../_db/queries", () => queries);
+vi.mock("../_db/queries", () => ({
+	fetchReaderCatalogSources: queries.fetchReaderCatalogSources,
+}));
+vi.mock("@/db/queries", () => ({
+	fetchReaderRevision: queries.fetchReaderRevision,
+}));
 vi.mock("../_domain/reader-documents", () => ({
 	buildReaderDocuments: (_source: unknown, locale: string) => ({
 		[`/${locale}`]: "fixture",

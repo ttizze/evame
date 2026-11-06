@@ -43,8 +43,11 @@ try {
 	for (const locale of locales)
 		if (!(await proxy.env.READER_HTML.head(`publication/${locale}.json`)))
 			missing.push(locale);
-	if (missing.length) {
-		const catalogs = JSON.parse(
+	const missingSources = !(await proxy.env.READER_HTML.head(
+		"publication/sources.json",
+	));
+	if (missing.length || missingSources) {
+		const { catalogs, sourceState } = JSON.parse(
 			execFileSync(
 				"bun",
 				[
@@ -52,19 +55,33 @@ try {
 					`
 			import { fetchReaderCatalogSources } from "./src/app/api/reader-data/_db/queries";
 			import { buildReaderDocuments } from "./src/app/api/reader-data/_domain/reader-documents";
+			import { readerDocumentSourcePath } from "./src/app/_domain/reader-document";
 			import { disposeDb } from "./src/db";
 			try {
 				const source = await fetchReaderCatalogSources();
-				console.log(JSON.stringify(${JSON.stringify(missing)}.map(locale => ({
+				const catalogs = ${JSON.stringify(missing)}.map(locale => ({
 					locale, revision: source.revision,
 					documents: Object.fromEntries(Object.entries(buildReaderDocuments(source, locale)).map(([path, hash]) => [path, "pending:deployment:bootstrap:" + hash]))
-				}))));
+				}));
+				const sources = Object.fromEntries(Object.entries({ ...buildReaderDocuments(source, "ja"), ...buildReaderDocuments(source, "en") }).map(([path, hash]) => [readerDocumentSourcePath(path), { hash, revision: source.revision }]));
+				console.log(JSON.stringify({ catalogs, sourceState: { revision: source.revision, sources } }));
 			} finally { await disposeDb(); }
 		`,
 				],
 				{ encoding: "utf8", maxBuffer: 32 * 1024 * 1024 },
 			),
 		);
+		if (missingSources) {
+			const saved = await proxy.env.READER_HTML.put(
+				"publication/sources.json",
+				JSON.stringify(sourceState),
+				{
+					onlyIf: new Headers({ "If-None-Match": "*" }),
+					httpMetadata: { contentType: "application/json" },
+				},
+			);
+			if (saved) console.log("全言語で共用する生成元の変更時期を初期化");
+		}
 		for (const { locale, revision, documents } of catalogs) {
 			const saved = await proxy.env.READER_HTML.put(
 				`publication/${locale}.json`,

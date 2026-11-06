@@ -1,5 +1,6 @@
 import { expect, it } from "vitest";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
+import { readerDocumentSourcePath } from "@/app/_domain/reader-document";
 import type { fetchReaderCatalogSources } from "../_db/queries";
 import { buildReaderDocuments } from "./reader-documents";
 
@@ -29,6 +30,26 @@ function sources(): Awaited<ReturnType<typeof fetchReaderCatalogSources>> {
 		],
 	};
 }
+
+it("日本語と他言語のAboutを区別しながら、全21言語の生成元を共用できる", () => {
+	const source = sources();
+	source.pages.push(
+		{ ...source.pages[0], id: 2, slug: "evame", revision: 2 },
+		{ ...source.pages[0], id: 3, slug: "evame-ja", revision: 3 },
+	);
+	const shared = Object.fromEntries(
+		Object.entries({
+			...buildReaderDocuments(source, "ja"),
+			...buildReaderDocuments(source, "en"),
+		}).map(([path, hash]) => [readerDocumentSourcePath(path), hash]),
+	);
+	for (const { code } of supportedLocaleOptions)
+		for (const [path, hash] of Object.entries(
+			buildReaderDocuments(source, code),
+		))
+			expect(shared[readerDocumentSourcePath(path)]).toBe(hash);
+	expect(shared["/about/evame"]).not.toBe(shared["/about/evame-ja"]);
+});
 
 it("記事・コメントの途中ページ・著者の並べ替え・タグを21言語の3表示で事前生成する", () => {
 	for (const { code } of supportedLocaleOptions)

@@ -2,16 +2,22 @@ import type {
 	R2Bucket,
 	Headers as WorkerHeaders,
 } from "@cloudflare/workers-types";
-import { readerDocumentKey } from "../../src/app/_domain/reader-document";
+import {
+	readerDocumentKey,
+	readerDocumentSourcePath,
+} from "../../src/app/_domain/reader-document";
 import { includePreviousReaderPaths } from "./publication-paths";
+import { putReaderObject } from "./put-object";
 
 export async function publishReaderDocuments(
 	bucket: R2Bucket,
-	buildId: string,
+	versionId: string,
 	catalog: { revision: number; documents: Record<string, string> },
 	render: (path: string) => Promise<Response>,
 	mode: "content" | "deployment",
 	locale: string,
+	publicationId: string,
+	changedSources: ReadonlySet<string> | null,
 ) {
 	const stateKey = `publication/${locale}.json`;
 	const stored = await bucket.get(stateKey);
@@ -29,18 +35,34 @@ export async function publishReaderDocuments(
 		Object.keys(previous),
 	);
 	const expected = Object.fromEntries(
-		Object.entries(hashes).map(([path, hash]) => [path, `${buildId}:${hash}`]),
+		Object.entries(hashes).map(([path, hash]) => [
+			path,
+			`${versionId}:${hash}`,
+		]),
 	);
 	const removed = Object.keys(previous).filter(
 		(path) => !Object.hasOwn(expected, path),
 	);
-	const changed = Object.keys(expected).filter((path) =>
-		mode === "deployment"
-			? previous[path] !== expected[path]
-			: previous[path]?.startsWith("pending:content:") ||
-				!previous[path]?.endsWith(`:${hashes[path]}`),
-	);
+	const changed = Object.keys(expected).filter((path) => {
+		if (mode === "deployment") return previous[path] !== expected[path];
+		if (previous[path]?.startsWith(`pending:content:${publicationId}:`))
+			return true;
+		const differs = !previous[path]?.endsWith(`:${hashes[path]}`);
+		if (changedSources === null)
+			return previous[path]?.startsWith("pending:content:") || differs;
+		let eligible = changedSources.has(readerDocumentSourcePath(path));
+		if (!eligible && !Object.hasOwn(catalog.documents, path)) {
+			const url = new URL(path, "https://evame.tech");
+			url.searchParams.delete("page");
+			eligible = changedSources.has(
+				readerDocumentSourcePath(url.pathname + url.search),
+			);
+		}
+		return eligible && (previous[path]?.startsWith("pending:") || differs);
+	});
 	const pending = [...removed, ...changed];
+	if (!pending.length && state.revision === catalog.revision)
+		return { remaining: 0, generated: 0 };
 	const batch = pending.slice(0, 96);
 	const next = { ...previous };
 	for (const path of changed) {
@@ -50,10 +72,11 @@ export async function publishReaderDocuments(
 			previous[path]?.endsWith(`:${hashes[path]}`)
 		)
 			continue;
-		next[path] = `pending:${mode}:${expected[path]}`;
+		next[path] = `pending:${mode}:${publicationId}:${expected[path]}`;
 	}
 	// 生成中のURLも先に登録し、後続の非公開化が必ず404を書き込めるようにする。
-	const registered = await bucket.put(
+	const registered = await putReaderObject(
+		bucket,
 		stateKey,
 		JSON.stringify({ revision: catalog.revision, documents: next }),
 		{
@@ -61,6 +84,7 @@ export async function publishReaderDocuments(
 				? { etagMatches: stored.etag }
 				: (new Headers({ "If-None-Match": "*" }) as unknown as WorkerHeaders),
 			httpMetadata: { contentType: "application/json" },
+			customMetadata: { version: versionId },
 		},
 	);
 	if (!registered) throw new Error("Reader publication superseded");
@@ -91,9 +115,17 @@ export async function publishReaderDocuments(
 				body.set(revision, html.byteLength);
 				const key = readerDocumentKey(path);
 				const current = await bucket.head(key);
+				// 本文のETagを先に読み、その後に公開一覧の所有権を確認する。
+				// 後続の生成が本文を置き換えた場合も、古い結果を書き戻さない。
+				const publication = await bucket.head(stateKey);
+				if (publication?.etag !== registered.etag) {
+					if (publication?.customMetadata?.version !== versionId)
+						throw new Error("Reader deployment superseded");
+					throw new Error("Reader publication superseded");
+				}
 				if (Number(current?.customMetadata?.revision ?? -1) > catalog.revision)
 					throw new Error("Reader publication superseded");
-				const saved = await bucket.put(key, body, {
+				const saved = await putReaderObject(bucket, key, body, {
 					onlyIf: current
 						? { etagMatches: current.etag }
 						: (new Headers({
@@ -113,12 +145,14 @@ export async function publishReaderDocuments(
 		for (const result of results)
 			if (result.status === "rejected") throw result.reason;
 	}
-	const saved = await bucket.put(
+	const saved = await putReaderObject(
+		bucket,
 		stateKey,
 		JSON.stringify({ revision: catalog.revision, documents: next }),
 		{
 			onlyIf: { etagMatches: registered.etag },
 			httpMetadata: { contentType: "application/json" },
+			customMetadata: { version: versionId },
 		},
 	);
 	if (!saved) throw new Error("Reader publication superseded");

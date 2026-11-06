@@ -13,6 +13,7 @@ import { supportedLocaleOptions } from "./app/_constants/locale";
 import { shouldInvalidateReader } from "./app/_domain/reader-cache-policy";
 import { parseReaderRoute } from "./app/_domain/reader-route";
 import { createDb, databaseScope } from "./db";
+import { fetchReaderRevision } from "./db/queries";
 import { getMaintenancePath, shouldCheckMaintenance } from "./maintenance-gate";
 
 // HTTPルートへ公開しない、Reader専用のサービス境界。
@@ -129,8 +130,18 @@ export default withSentry(
 			const database = createDb();
 			return databaseScope.run(database, async () => {
 				try {
+					const beforeRevision = shouldInvalidateReader(
+						request.method,
+						url.pathname,
+						url.searchParams.get("action"),
+						200,
+						null,
+					)
+						? (await fetchReaderRevision()).revision
+						: null;
 					const response = await handler.fetch(request);
 					if (
+						beforeRevision !== null &&
 						shouldInvalidateReader(
 							request.method,
 							url.pathname,
@@ -140,6 +151,7 @@ export default withSentry(
 						)
 					) {
 						let locale: string | null = null;
+						const publicationId = crypto.randomUUID();
 						for (;;) {
 							const published = await env.READER.fetch(
 								"https://reader.internal/__invalidate",
@@ -147,6 +159,8 @@ export default withSentry(
 									method: "POST",
 									headers: {
 										"X-Evame-Reader-Batch": "true",
+										"X-Evame-Reader-Publication": publicationId,
+										"X-Evame-Reader-Since": String(beforeRevision),
 										...(locale ? { "X-Evame-Reader-Locale": locale } : {}),
 									},
 								},

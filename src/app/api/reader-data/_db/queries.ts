@@ -3,14 +3,6 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/sqlite";
 import { querySocialProofStats } from "@/app/[locale]/(common-layout)/_components/about-section/_db/queries";
 import { db } from "@/db";
 
-export function fetchReaderRevision() {
-	return db
-		.selectFrom("readerRevisions")
-		.select("revision")
-		.where("key", "=", "*")
-		.executeTakeFirstOrThrow();
-}
-
 export async function fetchReaderCatalogSources() {
 	// 1つの読み取りSQLで同じDBスナップショットを取得し、書き込みロックを持たない。
 	return db

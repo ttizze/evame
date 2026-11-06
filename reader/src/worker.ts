@@ -13,8 +13,8 @@ import {
 	readerDocumentPath,
 } from "../../src/app/_domain/reader-document";
 import { publishReaderDocuments } from "./publication";
+import { updateReaderSources } from "./source-revisions";
 
-declare const __READER_BUILD_ID__: string;
 const readerLocales = [
 	"ja",
 	...supportedLocaleOptions
@@ -37,19 +37,19 @@ export default withSentry(
 			let locale: string | null = null;
 			for (;;) {
 				const response = await env.SELF.fetch(
-					"https://reader.internal/__invalidate",
+					"https://reader.internal/__publish",
 					{
 						method: "POST",
 						headers: {
-							"X-Evame-Reader-Batch": "true",
 							...(locale ? { "X-Evame-Reader-Locale": locale } : {}),
 						},
 					},
 				);
 				if (!response.ok)
 					throw new Error("Scheduled Reader publication failed");
-				if (response.status !== 202) return;
-				locale = response.headers.get("X-Evame-Reader-Locale");
+				locale = ((await response.json()) as { nextLocale: string | null })
+					.nextLocale;
+				if (locale === null) return;
 			}
 		},
 		async fetch(
@@ -65,6 +65,13 @@ export default withSentry(
 					request.headers.get("X-Evame-Reader-Locale") ?? readerLocales[0],
 				);
 				if (localeIndex < 0) return new Response(null, { status: 400 });
+				const sinceHeader = request.headers.get("X-Evame-Reader-Since");
+				const sinceRevision = sinceHeader === null ? null : Number(sinceHeader);
+				if (
+					sinceRevision !== null &&
+					(!Number.isSafeInteger(sinceRevision) || sinceRevision < 0)
+				)
+					return new Response(null, { status: 400 });
 				let result: Awaited<ReturnType<typeof publishReaderDocuments>> | null =
 					null;
 				const data = new Map<
@@ -99,6 +106,10 @@ export default withSentry(
 					return asset ?? finalize(state, await astro(state));
 				}
 				let failure: { error: unknown } | null = null;
+				const publicationId =
+					request.headers.get("X-Evame-Reader-Publication") ??
+					crypto.randomUUID();
+				let conflicts = 0;
 				try {
 					for (;;) {
 						const locale = readerLocales[localeIndex];
@@ -109,26 +120,50 @@ export default withSentry(
 						const catalog = (await response.json()) as {
 							revision: number;
 							documents: Record<string, string>;
+							sources: Record<string, string>;
 						};
 						try {
+							const sourceRevisions = await updateReaderSources(
+								env.READER_HTML,
+								catalog,
+							);
+							const changedSources =
+								sinceRevision === null
+									? null
+									: new Set(
+											Object.entries(sourceRevisions)
+												.filter(([, revision]) => revision > sinceRevision)
+												.map(([path]) => path),
+										);
 							result = await publishReaderDocuments(
 								env.READER_HTML,
-								__READER_BUILD_ID__,
+								env.CF_VERSION_METADATA.id,
 								catalog,
 								render,
 								url.pathname === "/__publish" ? "deployment" : "content",
 								locale,
+								publicationId,
+								changedSources,
 							);
 						} catch (error) {
 							if (
 								error instanceof Error &&
-								error.message === "Reader publication superseded"
-							)
+								error.message === "Reader publication superseded" &&
+								conflicts < 4
+							) {
+								await new Promise((resolve) =>
+									setTimeout(
+										resolve,
+										100 * 2 ** conflicts++ + Math.random() * 100,
+									),
+								);
 								continue;
+							}
 							throw error;
 						} finally {
 							data.clear();
 						}
+						conflicts = 0;
 						if (
 							url.pathname === "/__publish" ||
 							request.headers.get("X-Evame-Reader-Batch") === "true"
@@ -169,7 +204,9 @@ export default withSentry(
 				if (
 					object &&
 					(object.customMetadata?.status !== "404" ||
-						(!request.headers.has("Cookie") &&
+						(!/(?:^|;\s*)(?:__Secure-)?better-auth\.session_token=[^;\s]+/.test(
+							request.headers.get("Cookie") ?? "",
+						) &&
 							!request.headers.has("Authorization")))
 				) {
 					const supportsCache =

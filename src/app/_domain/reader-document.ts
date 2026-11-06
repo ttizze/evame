@@ -7,6 +7,16 @@ export function readerDocumentKey(path: string) {
 	return `html/${createHash("sha256").update(path).digest("hex")}`;
 }
 
+// 翻訳選択は全言語の版を含むため、生成元の変更時期は表示言語・表示モードで共用する。
+export function readerDocumentSourcePath(path: string) {
+	const url = new URL(path, "https://evame.tech");
+	const [, locale, ...parts] = url.pathname.split("/");
+	if (parts.join("/") === "about")
+		return locale === "ja" ? "/about/evame" : "/about/evame-ja";
+	url.searchParams.delete("view");
+	return `/${parts.join("/")}${url.search}`;
+}
+
 export function readerDocumentPath(pathname: string, search: string) {
 	const route = parseReaderRoute(pathname, search);
 	if (!route || route.kind === "search") return null;
