@@ -46,5 +46,11 @@
 		"accept": "許可",
 		"decline": "許可しない",
 		"privacyLink": "プライバシーポリシー"
+	},
+	"Comments": {
+		"pagination": "コメントのページ切り替え",
+		"previous": "前のコメント",
+		"next": "次のコメント",
+		"page": "{page} / {total} ページ"
 	}
 }

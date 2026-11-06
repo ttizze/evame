@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-import type { loadAboutPage } from "../service/load-about-page";
 
 vi.mock(
 	"@/app/[locale]/(common-layout)/_components/wrap-segments/segment",
@@ -33,6 +32,7 @@ function buildAboutPageDetail() {
 	];
 
 	return {
+		sourceLocale: "en",
 		segments: entries.map(([number, text], index) => ({
 			id: index + 1,
 			contentId: 1,
@@ -40,7 +40,7 @@ function buildAboutPageDetail() {
 			text,
 			translationText: null,
 		})),
-	} as NonNullable<Awaited<ReturnType<typeof loadAboutPage>>>;
+	};
 }
 
 describe("ComparisonSection", () => {

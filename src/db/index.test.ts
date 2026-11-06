@@ -3,6 +3,16 @@ import { describe, expect, it } from "vitest";
 import { createDb, databaseScope, db } from "./index";
 
 describe("リクエストごとのDB接続", () => {
+	it("ファイルDBは単一接続の制約を維持する", async () => {
+		const database = createDb();
+		try {
+			expect(database.getExecutor().adapter.supportsMultipleConnections).toBe(
+				false,
+			);
+		} finally {
+			await database.destroy();
+		}
+	});
 	it("リクエスト内で件数集計を含むKyselyの関数を使用できる", async () => {
 		const database = createDb();
 		try {

@@ -42,22 +42,8 @@ import { HomePresentation } from "./presentation";
 
 const data: Parameters<typeof HomePresentation>[0]["data"] = {
 	pageDetail: {
-		id: 1,
-		slug: "evame",
-		title: "Evame",
-		status: "PUBLIC",
 		sourceLocale: "en",
-		parentId: null,
-		order: 0,
-		mdastJson: null,
 		segments: [],
-		createdAt: new Date("2026-01-01"),
-		updatedAt: new Date("2026-01-01"),
-		userId: "user-id",
-		userName: "Evame",
-		userHandle: "evame",
-		userImage: "",
-		tagPages: [],
 	},
 	stats: { articles: 1, translations: 2, languages: 18 },
 	newPages: { pageForLists: [], totalPages: 0 },

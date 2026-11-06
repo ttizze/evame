@@ -86,7 +86,7 @@ export function PageCommentItem({
 		[pageComment.content.segments, pageComment.mdastJson],
 	);
 	const content = use(contentPromise);
-	const replies = pageComment.replies ?? [];
+	const replies = pageComment.replies;
 
 	return (
 		<div>
@@ -107,7 +107,9 @@ export function PageCommentItem({
 								{pageComment.user.name}
 							</span>
 							<span className="ml-2 text-sm text-muted-foreground">
-								{new Date(pageComment.createdAt).toLocaleString(userLocale)}
+								{new Date(pageComment.createdAt).toLocaleString(userLocale, {
+									timeZone: "UTC",
+								})}
 							</span>
 						</div>
 						<PageCommentItemClient

@@ -1,5 +1,6 @@
 // @vitest-environment node
-import { afterAll, expect, it } from "vitest";
+import { sql } from "kysely";
+import { afterAll, expect, it, vi } from "vitest";
 import { createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { startTursoServer } from "../../scripts/turso-dev-server.mjs";
@@ -15,6 +16,75 @@ process.env.TURSO_DATABASE_URL = server.url;
 afterAll(async () => {
 	await disposeDb();
 	await server.stop();
+});
+
+it("同じDBクライアントの独立したHTTPクエリを互いの応答待ちで止めない", async () => {
+	const originalFetch = globalThis.fetch;
+	const gate = Promise.withResolvers<void>();
+	let requests = 0;
+	const fetch = vi
+		.spyOn(globalThis, "fetch")
+		.mockImplementation(async (...args) => {
+			requests++;
+			await gate.promise;
+			return originalFetch(...args);
+		});
+	const database = createDb();
+	const queries = Promise.all([
+		sql<{ value: number }>`select 1 as value`.execute(database),
+		sql<{ value: number }>`select 2 as value`.execute(database),
+	]);
+	try {
+		await vi.waitFor(() => expect(requests).toBe(2), { timeout: 2000 });
+	} finally {
+		gate.resolve();
+		await queries;
+		await database.destroy();
+		fetch.mockRestore();
+	}
+	expect((await queries).map((result) => result.rows[0].value)).toEqual([1, 2]);
+});
+
+it("HTTPトランザクションの未確定の更新を別のクエリから読ませない", async () => {
+	const user = await createUser();
+	const database = createDb();
+	const ready = Promise.withResolvers<void>();
+	const release = Promise.withResolvers<void>();
+	const transaction = database.transaction().execute(async (tx) => {
+		await tx
+			.updateTable("users")
+			.set({ totalPoints: 100 })
+			.where("id", "=", user.id)
+			.execute();
+		ready.resolve();
+		await release.promise;
+	});
+	await ready.promise;
+	let visiblePoints: number | undefined;
+	const outside = database
+		.selectFrom("users")
+		.select("totalPoints")
+		.where("id", "=", user.id)
+		.executeTakeFirstOrThrow()
+		.then((row) => {
+			visiblePoints = row.totalPoints;
+		});
+	try {
+		await vi.waitFor(() => expect(visiblePoints).toBe(0), { timeout: 2000 });
+	} finally {
+		release.resolve();
+		await Promise.all([transaction, outside]);
+		await database.destroy();
+	}
+	expect(
+		(
+			await db
+				.selectFrom("users")
+				.select("totalPoints")
+				.where("id", "=", user.id)
+				.executeTakeFirstOrThrow()
+		).totalPoints,
+	).toBe(100);
 });
 
 it("HTTP接続でも存在しない記事への段落追加を外部キー制約で拒否する", async () => {

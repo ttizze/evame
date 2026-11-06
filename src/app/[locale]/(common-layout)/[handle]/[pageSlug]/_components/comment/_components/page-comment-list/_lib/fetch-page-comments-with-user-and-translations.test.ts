@@ -21,6 +21,7 @@ function comment(id: number, parentId: number | null): PageCommentWithSegments {
 			image: "https://example.com/image.jpg",
 		},
 		content: { segments: [] },
+		replies: [],
 	};
 }
 
@@ -38,7 +39,7 @@ describe("コメントツリー表示", () => {
 
 		expect(tree).toHaveLength(1);
 		expect(tree[0].content.segments[0]?.translationText).toBe("翻訳");
-		expect(tree[0].replies?.map((reply) => reply.id)).toEqual([2]);
+		expect(tree[0].replies.map((reply) => reply.id)).toEqual([2]);
 	});
 
 	it("存在しない親のコメントは公開トップレベルへ昇格しない", () => {

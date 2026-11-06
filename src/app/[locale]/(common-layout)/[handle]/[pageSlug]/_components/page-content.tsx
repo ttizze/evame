@@ -23,6 +23,7 @@ export function PageContent({
 	floatingControls,
 	comments,
 	commentCount,
+	commentPagination,
 }: {
 	pageDetail: PageDetail;
 	locale: string;
@@ -34,6 +35,7 @@ export function PageContent({
 	floatingControls: ReactNode;
 	comments: PageCommentsData["comments"];
 	commentCount: number;
+	commentPagination: ReactNode;
 }) {
 	const isDraft = pageDetail.status !== "PUBLIC";
 
@@ -86,6 +88,7 @@ export function PageContent({
 				<h2 className="text-2xl font-bold not-prose">Comments</h2>
 				<PageCommentForm pageId={pageDetail.id} userLocale={locale} />
 				<PageCommentList comments={comments} userLocale={locale} />
+				{commentPagination}
 			</div>
 		</article>
 	);

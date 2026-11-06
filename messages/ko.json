@@ -46,5 +46,11 @@
 		"accept": "허용",
 		"decline": "허용 안 함",
 		"privacyLink": "개인정보 처리방침"
+	},
+	"Comments": {
+		"pagination": "댓글 페이지",
+		"previous": "이전 댓글",
+		"next": "다음 댓글",
+		"page": "{page} / {total} 페이지"
 	}
 }

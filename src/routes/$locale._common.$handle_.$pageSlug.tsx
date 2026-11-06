@@ -1,6 +1,8 @@
 import { ClientOnly, createFileRoute, notFound } from "@tanstack/react-router";
+import { z } from "zod";
 import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
+import { CommentPagination } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/comment-pagination";
 import { getPageComments } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/data";
 import { PageContent } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/page-content";
 import { PageViewCounter } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/page-view-counter";
@@ -8,11 +10,19 @@ import { buildPageMetadata } from "@/app/[locale]/(common-layout)/[handle]/[page
 import { getPageDetailData } from "./$locale/-page-detail-data";
 
 export const Route = createFileRoute("/$locale/_common/$handle_/$pageSlug")({
-	loader: async ({ params }) => {
+	validateSearch: z.object({
+		page: z.coerce.number().int().positive().catch(1).optional(),
+	}),
+	loaderDeps: ({ search }) => ({ page: search.page ?? 1 }),
+	loader: async ({ params, deps }) => {
 		const data = await getPageDetailData({ data: params });
 		if (!data) throw notFound();
 		const comments = await getPageComments({
-			data: { pageId: data.pageDetail.id, userLocale: params.locale },
+			data: {
+				pageId: data.pageDetail.id,
+				userLocale: params.locale,
+				page: deps.page,
+			},
 		});
 		return { ...data, comments };
 	},
@@ -64,11 +74,18 @@ export const Route = createFileRoute("/$locale/_common/$handle_/$pageSlug")({
 function PageDetailRoute() {
 	const { locale } = Route.useParams();
 	const data = Route.useLoaderData();
+	const { page } = Route.useLoaderDeps();
 
 	return (
 		<PageContent
 			childPages={data.childPages}
 			commentCount={data.comments.count}
+			commentPagination={
+				<CommentPagination
+					currentPage={page}
+					totalPages={data.comments.totalPages}
+				/>
+			}
 			comments={data.comments.comments}
 			description={data.description}
 			floatingControls={

@@ -13,6 +13,7 @@ import { enqueueTranslationJob } from "@/app/[locale]/_infrastructure/qstash/enq
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { db } from "@/db";
+import { COMMENT_PAGE_SIZE } from "../../constants";
 import { createNotificationPageComment } from "./_db/mutations.server";
 import { processPageCommentHtml } from "./service/process-page-comment-html";
 
@@ -31,7 +32,7 @@ const commentActionInput = z.object({
 });
 
 export type CommentActionResponse = ActionResponse<
-	{ translationJobs: TranslationJobForToast[] },
+	{ translationJobs: TranslationJobForToast[]; commentPage: number | null },
 	{
 		pageId: number;
 		userLocale: string;
@@ -112,8 +113,27 @@ export const commentAction = createServerFn({ method: "POST" })
 			translationContext: "",
 		});
 
+		let commentPage: number | null = null;
+		if (data.parentId === undefined && data.pageCommentId === undefined) {
+			const roots = await db
+				.selectFrom("pageComments")
+				.select((eb) => eb.fn.countAll<number>().as("count"))
+				.where("pageId", "=", data.pageId)
+				.where("parentId", "is", null)
+				.where((eb) =>
+					eb.or([
+						eb("createdAt", "<", pageComment.createdAt),
+						eb.and([
+							eb("createdAt", "=", pageComment.createdAt),
+							eb("id", "<=", pageComment.id),
+						]),
+					]),
+				)
+				.executeTakeFirstOrThrow();
+			commentPage = Math.ceil(roots.count / COMMENT_PAGE_SIZE);
+		}
 		return {
 			success: true,
-			data: { translationJobs },
+			data: { translationJobs, commentPage },
 		};
 	});

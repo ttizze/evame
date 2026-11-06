@@ -1,8 +1,11 @@
-import type { PageCommentWithSegments } from "../_db/queries.server";
+import type {
+	PageComment,
+	PageCommentWithSegments,
+} from "../_db/queries.server";
 
 /** 平坦なコメント一覧を親子ツリーへ変換する。 */
 export function buildCommentTree(
-	flatComments: PageCommentWithSegments[],
+	flatComments: PageComment[],
 ): PageCommentWithSegments[] {
 	const commentMap = new Map<number, PageCommentWithSegments>();
 	for (const comment of flatComments) {
@@ -17,7 +20,7 @@ export function buildCommentTree(
 		}
 
 		const parent = commentMap.get(comment.parentId);
-		if (parent) parent.replies?.push(comment);
+		if (parent) parent.replies.push(comment);
 	}
 
 	return tree;
