@@ -82,8 +82,14 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		const page = await context.newPage();
 		const errors = [];
 		let homeRefreshes = 0;
-		page.on("response", (response) => {
+		page.on("response", async (response) => {
 			const url = new URL(response.url());
+			if (url.origin === baseUrl && response.status() >= 500)
+				console.error({
+					path: url.pathname + url.search,
+					status: response.status(),
+					body: await response.text().catch(() => "Response disposed"),
+				});
 			if (
 				url.pathname === "/api/reader-data" &&
 				url.searchParams.get("path") === "/ja"
@@ -384,7 +390,11 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.first()
 			.click();
 		const postedResponse = await posted;
-		assert.equal(postedResponse.status(), 200);
+		assert.equal(
+			postedResponse.status(),
+			200,
+			postedResponse.status() === 200 ? "" : await postedResponse.text(),
+		);
 		await expect(
 			comments.getByText("ブラウザーからコメントを投稿", { exact: true }),
 		).toBeVisible({ timeout: 15000 });
@@ -472,7 +482,8 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 				r.request().method() === "PATCH",
 		);
 		await page.getByTestId("vote-up-button").first().click();
-		assert.equal((await voted).status(), 200);
+		const votedResponse = await voted;
+		assert.equal(votedResponse.status(), 200, await votedResponse.text());
 		console.log(
 			"返信・コメント削除・表示モード変更・翻訳の追加と投票を操作できる",
 		);
@@ -564,10 +575,21 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.getByRole("menuitem", { name: "Edit", exact: true }),
 		).toHaveAttribute("href", `${new URL(newPageUrl).pathname}/edit`);
-		await Promise.all([
-			page.waitForNavigation(),
+		const hiddenResponse = page.waitForResponse(
+			(response) =>
+				response.url().includes("reader-actions?action=pageStatus") &&
+				response.request().method() === "POST",
+		);
+		const [hiddenNavigation] = await Promise.all([
+			page.waitForNavigation({ waitUntil: "domcontentloaded" }),
 			page.getByRole("button", { name: "Make Private", exact: true }).click(),
+			hiddenResponse.then(async (response) => {
+				const status = response.status();
+				assert.equal(status, 200, status === 200 ? "" : await response.text());
+			}),
 		]);
+		assert.equal(hiddenNavigation.status(), 200);
+		assert.equal(hiddenNavigation.headers()["x-evame-html"], "generated");
 		await expect(ownerCard).toHaveCount(0);
 		assert.equal((await publishDraft()).status(), 200);
 		await page.reload();
@@ -575,13 +597,24 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.getByRole("button", { name: "More options", exact: true })
 			.click();
 		await page.getByRole("button", { name: "Delete", exact: true }).click();
-		await Promise.all([
-			page.waitForNavigation(),
+		const deletedResponse = page.waitForResponse(
+			(response) =>
+				response.url().includes("reader-actions?action=pageStatus") &&
+				response.request().method() === "POST",
+		);
+		const [deletedNavigation] = await Promise.all([
+			page.waitForNavigation({ waitUntil: "domcontentloaded" }),
 			page
 				.getByRole("dialog", { name: "Delete Page" })
 				.getByRole("button", { name: "Delete", exact: true })
 				.click(),
+			deletedResponse.then(async (response) => {
+				const status = response.status();
+				assert.equal(status, 200, status === 200 ? "" : await response.text());
+			}),
 		]);
+		assert.equal(deletedNavigation.status(), 200);
+		assert.equal(deletedNavigation.headers()["x-evame-html"], "generated");
 		await expect(ownerCard).toHaveCount(0);
 		await expect(
 			page.getByRole("link", { name: "プロフィールを編集", exact: true }),

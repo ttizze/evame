@@ -150,26 +150,18 @@ export default withSentry(
 							response.headers.get("X-Evame-Reader-Changed"),
 						)
 					) {
-						let locale: string | null = null;
-						const publicationId = crypto.randomUUID();
-						for (;;) {
-							const published = await env.READER.fetch(
-								"https://reader.internal/__invalidate",
-								{
-									method: "POST",
-									headers: {
-										"X-Evame-Reader-Batch": "true",
-										"X-Evame-Reader-Publication": publicationId,
-										"X-Evame-Reader-Since": String(beforeRevision),
-										...(locale ? { "X-Evame-Reader-Locale": locale } : {}),
-									},
+						const published = await env.READER.fetch(
+							"https://reader.internal/__invalidate",
+							{
+								method: "POST",
+								headers: {
+									"X-Evame-Reader-Publication": crypto.randomUUID(),
+									"X-Evame-Reader-Since": String(beforeRevision),
 								},
-							);
-							if (!published.ok)
-								throw new Error("Reader cache invalidation failed");
-							if (published.status !== 202) break;
-							locale = published.headers.get("X-Evame-Reader-Locale");
-						}
+							},
+						);
+						if (!published.ok)
+							throw new Error("Reader cache invalidation failed");
 					}
 					const init = {
 						status: response.status,

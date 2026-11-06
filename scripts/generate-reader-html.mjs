@@ -1,7 +1,11 @@
+import { randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import pLimit from "p-limit";
 import { unstable_dev } from "wrangler";
+import { READER_PUBLICATION_CONCURRENCY } from "../reader-publication-concurrency.ts";
+import { supportedLocaleOptions } from "../src/app/_constants/locale.ts";
 
 const reader = JSON.parse(
 	await readFile("reader/dist/server/wrangler.json", "utf8"),
@@ -49,26 +53,66 @@ try {
 		console.log("非公開Readerへの認証済み接続を確認");
 	} else {
 		let total = 0;
-		let locale = null;
-		for (;;) {
-			const response = await proxy.fetch("/__publish", {
-				method: "POST",
-				headers: locale ? { "X-Evame-Reader-Locale": locale } : {},
-			});
-			if (!response.ok)
-				throw new Error(`HTML generation failed: HTTP ${response.status}`);
-			const { generated, remaining, nextLocale } = await response.json();
-			if (!Number.isSafeInteger(generated) || !Number.isSafeInteger(remaining))
-				throw new Error("Invalid HTML generation response");
-			total += generated;
-			console.log(
-				`公開HTMLを${total}件生成、${locale ?? "ja"}の残り${remaining}件`,
-			);
-			if (nextLocale === null) break;
-			if (typeof nextLocale !== "string")
-				throw new Error("Invalid publication locale");
-			locale = nextLocale;
+		const publicationId = randomUUID();
+		/** 公開操作を繰り返さず、HTML生成バッチだけを同じ生成IDで再試行する。 */
+		async function generateBatch(locale) {
+			let failures = 0;
+			for (;;) {
+				const response = await proxy.fetch("/__publish", {
+					method: "POST",
+					headers: {
+						"X-Evame-Reader-Locale": locale,
+						"X-Evame-Reader-Defer-Purge": "true",
+						"X-Evame-Reader-Publication": publicationId,
+					},
+				});
+				if (!response.ok) {
+					await response.arrayBuffer();
+					if (response.status >= 500 && failures < 8) {
+						await new Promise((resolve) =>
+							setTimeout(
+								resolve,
+								Math.min(30000, 1000 * 2 ** failures++) + Math.random() * 500,
+							),
+						);
+						continue;
+					}
+					throw new Error(`HTML generation failed: HTTP ${response.status}`);
+				}
+				const { generated, remaining, nextLocale } = await response.json();
+				if (
+					!Number.isSafeInteger(generated) ||
+					!Number.isSafeInteger(remaining)
+				)
+					throw new Error("Invalid HTML generation response");
+				total += generated;
+				console.log(`公開HTMLを${total}件生成、${locale}の残り${remaining}件`);
+				if (remaining > 0 && nextLocale !== locale)
+					throw new Error("Invalid publication locale");
+				return remaining;
+			}
 		}
+		const firstBatch = generateBatch("ja");
+		const limit = pLimit(READER_PUBLICATION_CONCURRENCY);
+		const results = await Promise.allSettled(
+			supportedLocaleOptions.map(({ code: locale }) =>
+				limit(async () => {
+					const remaining = await firstBatch.catch((error) => {
+						if (locale === "ja") throw error;
+						return 0;
+					});
+					if (locale === "ja" && remaining === 0) return;
+					for (;;) {
+						if ((await generateBatch(locale)) === 0) return;
+					}
+				}),
+			),
+		);
+		const purged = await proxy.fetch("/__purge", { method: "POST" });
+		await purged.arrayBuffer();
+		if (!purged.ok) throw new Error("Reader cache invalidation failed");
+		for (const result of results)
+			if (result.status === "rejected") throw result.reason;
 	}
 } finally {
 	await proxy?.stop();
