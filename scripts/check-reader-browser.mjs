@@ -565,10 +565,22 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.getByRole("menuitem", { name: "Edit", exact: true }),
 		).toHaveAttribute("href", `${new URL(newPageUrl).pathname}/edit`);
-		await Promise.all([
-			page.waitForNavigation(),
+		const hiddenResponse = page.waitForResponse(
+			(response) =>
+				response.url().includes("reader-actions?action=pageStatus") &&
+				response.request().method() === "POST",
+		);
+		const [hiddenNavigation] = await Promise.all([
+			page.waitForNavigation({ waitUntil: "domcontentloaded" }),
 			page.getByRole("button", { name: "Make Private", exact: true }).click(),
+			hiddenResponse.then(async (response) => {
+				const body = await response.text();
+				assert.equal(response.status(), 200, body);
+				assert.equal(JSON.parse(body).success, true, body);
+			}),
 		]);
+		assert.equal(hiddenNavigation.status(), 200);
+		assert.equal(hiddenNavigation.headers()["x-evame-html"], "generated");
 		await expect(ownerCard).toHaveCount(0);
 		assert.equal((await publishDraft()).status(), 200);
 		await page.reload();
@@ -576,13 +588,25 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.getByRole("button", { name: "More options", exact: true })
 			.click();
 		await page.getByRole("button", { name: "Delete", exact: true }).click();
-		await Promise.all([
-			page.waitForNavigation(),
+		const deletedResponse = page.waitForResponse(
+			(response) =>
+				response.url().includes("reader-actions?action=pageStatus") &&
+				response.request().method() === "POST",
+		);
+		const [deletedNavigation] = await Promise.all([
+			page.waitForNavigation({ waitUntil: "domcontentloaded" }),
 			page
 				.getByRole("dialog", { name: "Delete Page" })
 				.getByRole("button", { name: "Delete", exact: true })
 				.click(),
+			deletedResponse.then(async (response) => {
+				const body = await response.text();
+				assert.equal(response.status(), 200, body);
+				assert.equal(JSON.parse(body).success, true, body);
+			}),
 		]);
+		assert.equal(deletedNavigation.status(), 200);
+		assert.equal(deletedNavigation.headers()["x-evame-html"], "generated");
 		await expect(ownerCard).toHaveCount(0);
 		await expect(
 			page.getByRole("link", { name: "プロフィールを編集", exact: true }),
