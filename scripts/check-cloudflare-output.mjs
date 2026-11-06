@@ -186,6 +186,13 @@ try {
 	console.log(
 		"Workersランタイムで認証済みセッションを検証し、非公開記事の新規保存・更新・編集画面を確認できる",
 	);
+	await database.execute(
+		"UPDATE pages SET status = 'PUBLIC' WHERE slug = 'evame'",
+	);
+	await database.execute({
+		sql: "UPDATE pages SET parent_id = (SELECT id FROM pages WHERE slug = 'evame') WHERE slug = ?",
+		args: [pageSlug],
+	});
 	const article = await worker.fetch(
 		`http://localhost/ja/${handle}/${pageSlug}`,
 		{ headers: { cookie } },
@@ -203,6 +210,10 @@ try {
 	assert.ok(
 		articleHtml.includes("Cloudflareで更新保存"),
 		"記事本文をSSRできる",
+	);
+	assert.ok(
+		articleHtml.includes('aria-label="page tree"'),
+		"親記事のある記事で本文と階層ナビゲーションをSSRできる",
 	);
 	console.log("Workersランタイムで保存した記事の閲覧ページを表示できる");
 	await database.execute({
