@@ -1,4 +1,32 @@
+import { bestTranslationId } from "@/app/[locale]/_db/best-translation-subquery.server";
 import { db } from "@/db";
+
+export function queryAboutPage(pageSlug: string, locale: string) {
+	return db
+		.selectFrom("pages")
+		.leftJoin("segments", "segments.contentId", "pages.id")
+		.leftJoin("segmentTranslations as trans", (join) =>
+			join.on("trans.id", "=", (eb) =>
+				bestTranslationId(
+					eb.ref("segments.id").$notNull(),
+					eb.ref("pages.userId"),
+					locale,
+				),
+			),
+		)
+		.select([
+			"pages.sourceLocale",
+			"segments.id",
+			"segments.contentId",
+			"segments.number",
+			"segments.text",
+			"trans.text as translationText",
+		])
+		.where("pages.slug", "=", pageSlug)
+		.where("pages.status", "!=", "ARCHIVE")
+		.orderBy("segments.number", "asc")
+		.execute();
+}
 
 export function querySocialProofStats() {
 	return db

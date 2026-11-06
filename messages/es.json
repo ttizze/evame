@@ -46,5 +46,11 @@
 		"accept": "Permitir",
 		"decline": "No permitir",
 		"privacyLink": "Política de privacidad"
+	},
+	"Comments": {
+		"pagination": "Páginas de comentarios",
+		"previous": "Comentarios anteriores",
+		"next": "Comentarios siguientes",
+		"page": "Página {page} de {total}"
 	}
 }

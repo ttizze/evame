@@ -86,7 +86,7 @@ export function PageCommentItem({
 		[pageComment.content.segments, pageComment.mdastJson],
 	);
 	const content = use(contentPromise);
-	const replies = pageComment.replies ?? [];
+	const replies = pageComment.replies;
 
 	return (
 		<div>

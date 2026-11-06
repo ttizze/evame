@@ -7,12 +7,12 @@ import { z } from "zod";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { db } from "@/db";
-import type { PageCommentWithSegments } from "./_components/page-comment-list/_db/queries.server";
 import { fetchPageCommentsWithSegments } from "./_components/page-comment-list/_db/queries.server";
 import { buildCommentTree } from "./_components/page-comment-list/_lib/fetch-page-comments-with-user-and-translations";
 
 const commentDataInput = z.object({
 	pageId: z.number().int().positive(),
+	page: z.number().int().positive(),
 	userLocale: z
 		.string()
 		.refine(
@@ -22,10 +22,7 @@ const commentDataInput = z.object({
 		),
 });
 
-export type PageCommentsData = {
-	comments: PageCommentWithSegments[];
-	count: number;
-};
+export type PageCommentsData = Awaited<ReturnType<typeof getPageComments>>;
 
 /**
  * 公開ページのコメントを取得する。
@@ -36,7 +33,7 @@ export type PageCommentsData = {
  */
 export const getPageComments = createServerFn({ method: "GET" })
 	.validator(commentDataInput)
-	.handler(async ({ data }): Promise<PageCommentsData> => {
+	.handler(async ({ data }) => {
 		setResponseHeader("Cache-Control", "private, no-store");
 		setResponseHeader("Vary", "Cookie");
 
@@ -46,25 +43,25 @@ export const getPageComments = createServerFn({ method: "GET" })
 			.where("id", "=", data.pageId)
 			.executeTakeFirst();
 
-		if (!page) return { comments: [], count: 0 };
+		if (!page) return { comments: [], count: 0, totalPages: 0 };
 
 		if (page.status !== "PUBLIC") {
 			const currentUser = await getCurrentUserFromHeaders(
 				new Headers(getRequestHeaders()),
 			);
 			if (!currentUser || currentUser.id !== page.userId) {
-				return { comments: [], count: 0 };
+				return { comments: [], count: 0, totalPages: 0 };
 			}
 		}
 
-		const comments = await fetchPageCommentsWithSegments(
+		const { comments, count, totalPages } = await fetchPageCommentsWithSegments(
 			data.pageId,
 			data.userLocale,
+			data.page,
 		);
-		const tree = buildCommentTree(comments);
-
 		return {
-			comments: tree,
-			count: comments.filter((comment) => !comment.isDeleted).length,
+			comments: buildCommentTree(comments),
+			count,
+			totalPages,
 		};
 	});

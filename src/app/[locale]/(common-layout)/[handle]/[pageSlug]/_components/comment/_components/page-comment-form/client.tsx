@@ -39,7 +39,16 @@ export function PageCommentForm({
 					userLocale: String(formData.get("userLocale") ?? userLocale),
 				},
 			});
-			if (result.success) await router.invalidate({ sync: true });
+			if (result.success) {
+				await router.invalidate({ sync: true });
+				const commentPage = result.data.commentPage;
+				if (commentPage !== null)
+					await router.navigate({
+						to: ".",
+						search: (previous) => ({ ...previous, page: commentPage }),
+						hash: "comments",
+					});
+			}
 			return result;
 		},
 		{ success: false },

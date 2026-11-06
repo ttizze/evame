@@ -178,6 +178,42 @@ try {
 		sql: "UPDATE pages SET status = 'PUBLIC' WHERE slug = ?",
 		args: [pageSlug],
 	});
+	const storedPage = await database.execute({
+		sql: "SELECT id FROM pages WHERE slug = ?",
+		args: [pageSlug],
+	});
+	const commentIds = [];
+	for (let index = 0; index < 22; index++) {
+		const text =
+			index === 21
+				? "reply-marker-last"
+				: `comment-marker-${String(index + 1).padStart(2, "0")}`;
+		const content = await database.execute(
+			"INSERT INTO contents (kind) VALUES ('PAGE_COMMENT') RETURNING id",
+		);
+		const id = Number(content.rows[0].id);
+		await database.execute({
+			sql: "INSERT INTO page_comments (id, page_id, user_id, parent_id, locale, mdast_json, created_at) VALUES (?, ?, ?, ?, 'ja', ?, ?)",
+			args: [
+				id,
+				storedPage.rows[0].id,
+				userId,
+				index === 21 ? commentIds[20] : null,
+				JSON.stringify({
+					type: "root",
+					children: [
+						{ type: "paragraph", children: [{ type: "text", value: text }] },
+					],
+				}),
+				Date.UTC(2026, 0, 1, 0, 0, index),
+			],
+		});
+		await database.execute({
+			sql: "INSERT INTO segments (content_id, number, text, text_and_occurrence_hash) VALUES (?, 0, ?, ?)",
+			args: [id, text, text],
+		});
+		commentIds.push(id);
+	}
 	const publicArticle = await worker.fetch(
 		`http://localhost/ja/${handle}/${pageSlug}`,
 	);
@@ -186,6 +222,38 @@ try {
 	assert.ok(
 		publicArticleHtml.includes("Cloudflareで更新保存"),
 		"ログインせずに公開記事の本文を読める",
+	);
+	assert.ok(
+		publicArticleHtml.includes("comment-marker-01"),
+		"最初のコメントをSSRする",
+	);
+	assert.ok(
+		!publicArticleHtml.includes("comment-marker-21"),
+		"21件目のスレッドを初回に取得しない",
+	);
+	assert.ok(
+		publicArticleHtml.includes(`/ja/${handle}/${pageSlug}?page=2#comments`),
+		"続きのコメントへのリンクを表示する",
+	);
+	const secondCommentPage = await worker.fetch(
+		`http://localhost/ja/${handle}/${pageSlug}?page=2`,
+	);
+	assert.equal(secondCommentPage.status, 200);
+	const secondCommentHtml = await secondCommentPage.text();
+	assert.ok(
+		secondCommentHtml.includes("comment-marker-21"),
+		"2ページ目で21件目のコメントを読める",
+	);
+	assert.ok(
+		secondCommentHtml.includes("reply-marker-last"),
+		"2ページ目のコメントに付いた返信も読める",
+	);
+	assert.ok(
+		!secondCommentHtml.includes("comment-marker-01"),
+		"2ページ目では1ページ目のコメントを取得しない",
+	);
+	console.log(
+		"Workersランタイムで20件ずつコメントをSSRし、続きのページと返信も表示できる",
 	);
 	const image = await worker.fetch(
 		"http://localhost/api/og?slug=deployment-smoke-missing-page&locale=ja",

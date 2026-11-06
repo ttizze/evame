@@ -1,5 +1,5 @@
 import type { PageCommentWithSegments } from "./_db/queries.server";
-import PageCommentItem from "./page-comment-item/server";
+import { PageCommentItem } from "./page-comment-item/client";
 
 export function PageCommentList({
 	comments,
