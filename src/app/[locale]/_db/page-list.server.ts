@@ -120,16 +120,10 @@ export function buildPageListQuery(locale: string) {
 	);
 }
 
-export function fetchPageRows(
-	locale: string,
-	page: number,
-	pageSize: number,
-	pageOwnerId: string | null,
-	sort: "new" | "popular",
-) {
-	let selectedPages = db
+/** 一覧と件数で、タイトルのある公開ルート記事を同じ条件で選ぶ。 */
+function publicRootPages(pageOwnerId: string | null) {
+	let query = db
 		.selectFrom("pages")
-		.select("pages.id")
 		.where("pages.status", "=", "PUBLIC")
 		.where("pages.parentId", "is", null)
 		.where((eb) =>
@@ -143,8 +137,20 @@ export function fetchPageRows(
 		);
 
 	if (pageOwnerId) {
-		selectedPages = selectedPages.where("pages.userId", "=", pageOwnerId);
+		query = query.where("pages.userId", "=", pageOwnerId);
 	}
+	return query;
+}
+
+/** 表示対象を先に絞り、その記事の翻訳・著者・カウントだけを取得する。 */
+export function fetchPageRows(
+	locale: string,
+	page: number,
+	pageSize: number,
+	pageOwnerId: string | null,
+	sort: "new" | "popular",
+) {
+	let selectedPages = publicRootPages(pageOwnerId).select("pages.id");
 	if (sort === "popular") {
 		selectedPages = selectedPages.orderBy(
 			(eb) =>
@@ -165,6 +171,7 @@ export function fetchPageRows(
 	return query.orderBy("pages.createdAt", "desc").execute();
 }
 
+/** 一覧と同じ公開条件の総件数とタグを付けてページ分けする。 */
 export async function fetchPaginatedPageLists({
 	page,
 	pageSize,
@@ -179,17 +186,12 @@ export async function fetchPaginatedPageLists({
 	sort: "new" | "popular";
 }) {
 	const rows = await fetchPageRows(locale, page, pageSize, pageOwnerId, sort);
-	let countQuery = db
-		.selectFrom("pages")
-		.select((eb) => eb.fn.countAll<number>().as("count"))
-		.where("status", "=", "PUBLIC")
-		.where("parentId", "is", null);
-	if (pageOwnerId) countQuery = countQuery.where("userId", "=", pageOwnerId);
-
 	const pageIds = rows.map((r) => r.id);
 	const [tagsMap, total] = await Promise.all([
 		fetchTagsMap(pageIds),
-		countQuery.executeTakeFirstOrThrow(),
+		publicRootPages(pageOwnerId)
+			.select((eb) => eb.fn.countAll<number>().as("count"))
+			.executeTakeFirstOrThrow(),
 	]);
 
 	const pageForLists = rows.map((row) =>

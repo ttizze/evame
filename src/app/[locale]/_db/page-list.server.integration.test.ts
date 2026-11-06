@@ -116,7 +116,7 @@ describe("ページ一覧", () => {
 			expect(
 				results.map((result) => result.pageForLists.map((row) => row.slug)),
 			).toEqual([...slugs.map((slug) => [slug]), []]);
-			expect(results.map((result) => result.totalPages)).toEqual([4, 4, 4, 4]);
+			expect(results.map((result) => result.totalPages)).toEqual([3, 3, 3, 3]);
 		},
 	);
 
