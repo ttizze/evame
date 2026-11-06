@@ -208,6 +208,28 @@ try {
 		!/Sorry, an error occurred|Error in renderToReadableStream/.test(html),
 		"ホームのSSRがエラーで中断されていない",
 	);
+	assert.ok(html.includes("Workers保存テスト"), "公開記事をホームに表示する");
+	const articleCount = html.match(/tabular-nums text-foreground">([^<]+)/)?.[1];
+	assert.ok(articleCount, "公開記事件数がSSRされている");
+	await database.execute({
+		sql: "UPDATE pages SET status = 'DRAFT' WHERE slug = ?",
+		args: [pageSlug],
+	});
+	const updatedHome = await worker.fetch("http://localhost/ja");
+	assert.equal(updatedHome.status, 200);
+	const updatedHtml = await updatedHome.text();
+	assert.equal(
+		updatedHtml.match(/tabular-nums text-foreground">([^<]+)/)?.[1],
+		articleCount,
+		"公開件数はCache APIのキャッシュを再利用する",
+	);
+	assert.ok(
+		!updatedHtml.includes("Workers保存テスト"),
+		"件数をキャッシュしていても非公開にした記事はホームに表示しない",
+	);
+	console.log(
+		"Workersランタイムで件数のキャッシュと記事の公開状態を別々に更新できる",
+	);
 	const normalImage = await worker.fetch(
 		"http://localhost/api/og?slug=evame-ja&locale=ja",
 	);

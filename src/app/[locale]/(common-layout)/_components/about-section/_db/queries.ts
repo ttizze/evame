@@ -1,29 +1,27 @@
-import { sql } from "kysely";
 import { db } from "@/db";
-import type { PageStatus } from "@/db/types";
 
-const LANGUAGE_COUNT = 18;
-
-export async function querySocialProofStats() {
-	const articlesResult = await db
-		.selectFrom("pages")
-		.select(sql<number>`count(*)`.as("count"))
-		.where("status", "=", "PUBLIC" satisfies PageStatus)
-		.where("parentId", "is", null)
-		.executeTakeFirst();
-
-	const translationsResult = await db
-		.selectFrom("segmentTranslations")
-		.innerJoin("segments", "segmentTranslations.segmentId", "segments.id")
-		.innerJoin("pages", "segments.contentId", "pages.id")
-		.select(sql<number>`count(*)`.as("count"))
-		.where("pages.status", "=", "PUBLIC" satisfies PageStatus)
-		.where("pages.parentId", "is", null)
-		.executeTakeFirst();
-
-	return {
-		articles: Number(articlesResult?.count ?? 0),
-		translations: Number(translationsResult?.count ?? 0),
-		languages: LANGUAGE_COUNT,
-	};
+export function querySocialProofStats() {
+	return db
+		.selectNoFrom((eb) => [
+			eb
+				.selectFrom("pages")
+				.select(eb.fn.countAll<number>().as("count"))
+				.where("status", "=", "PUBLIC")
+				.where("parentId", "is", null)
+				.as("articles"),
+			eb
+				.selectFrom("segmentTranslations")
+				// 翻訳の存在する段落だけを辿り、未翻訳の全段落の走査を避ける。
+				.crossJoin("segments")
+				.crossJoin("pages")
+				.whereRef("segmentTranslations.segmentId", "=", "segments.id")
+				.whereRef("segments.contentId", "=", "pages.id")
+				.where("pages.status", "=", "PUBLIC")
+				.where("pages.parentId", "is", null)
+				.select(eb.fn.countAll<number>().as("count"))
+				.as("translations"),
+			eb.val(18).as("languages"),
+		])
+		.$narrowType<{ articles: number; translations: number }>()
+		.executeTakeFirstOrThrow();
 }

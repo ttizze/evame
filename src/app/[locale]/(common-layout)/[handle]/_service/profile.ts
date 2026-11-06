@@ -1,7 +1,4 @@
-import {
-	fetchPaginatedNewPageLists,
-	fetchPaginatedPopularPageLists,
-} from "@/app/[locale]/_db/page-list.server";
+import { fetchPaginatedPageLists } from "@/app/[locale]/_db/page-list.server";
 import type { PageForList } from "@/app/[locale]/types";
 import type { User } from "@/db/types.helpers";
 import {
@@ -44,10 +41,6 @@ export async function fetchProfilePage({
 		return null;
 	}
 
-	const fetchPageLists =
-		sort === "popular"
-			? fetchPaginatedPopularPageLists
-			: fetchPaginatedNewPageLists;
 	const [followCounts, followerList, followingList, following, pageLists] =
 		await Promise.all([
 			getFollowCounts(pageOwner.id),
@@ -56,11 +49,12 @@ export async function fetchProfilePage({
 			currentUser
 				? isFollowing(currentUser.id, pageOwner.id)
 				: Promise.resolve(false),
-			fetchPageLists({
+			fetchPaginatedPageLists({
 				locale,
 				page,
 				pageOwnerId: pageOwner.id,
 				pageSize: 5,
+				sort,
 			}),
 		]);
 

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
-import { fetchPaginatedNewPageLists } from "@/app/[locale]/_db/page-list.server";
+import { fetchPaginatedPageLists } from "@/app/[locale]/_db/page-list.server";
 
 const newPagesInput = z.object({
 	locale: z
@@ -17,9 +17,11 @@ const newPagesInput = z.object({
 export const getNewPagesData = createServerFn({ method: "GET" })
 	.validator(newPagesInput)
 	.handler(async ({ data }) => {
-		return fetchPaginatedNewPageLists({
+		return fetchPaginatedPageLists({
 			locale: data.locale,
 			page: data.page,
 			pageSize: 5,
+			pageOwnerId: null,
+			sort: "new",
 		});
 	});
