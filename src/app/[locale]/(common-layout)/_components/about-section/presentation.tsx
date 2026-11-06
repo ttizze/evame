@@ -22,7 +22,7 @@ export default function AboutSectionPresentation({
 }: {
 	locale: string;
 	pageDetail: NonNullable<Awaited<ReturnType<typeof loadAboutPage>>>;
-	stats: Awaited<ReturnType<typeof querySocialProofStats>>;
+	stats: Awaited<ReturnType<typeof querySocialProofStats>> | null;
 	readControls: ReactNode;
 	floatingControls: ReactNode;
 }) {

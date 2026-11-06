@@ -4,11 +4,7 @@ import { HomePresentation } from "@/app/[locale]/(common-layout)/_components/hom
 import { getIndexData } from "./$locale/-index-data";
 
 export const Route = createFileRoute("/$locale/_common/")({
-	loader: async ({ params }) => {
-		const data = await getIndexData({ data: { locale: params.locale } });
-
-		return data;
-	},
+	loader: ({ params }) => getIndexData({ data: { locale: params.locale } }),
 	head: ({ params }) => {
 		const { title, description, alternates } = getHomeMetadata(params.locale);
 
@@ -36,7 +32,7 @@ export const Route = createFileRoute("/$locale/_common/")({
 
 function LocaleIndex() {
 	const { locale } = Route.useParams();
-	const data = Route.useLoaderData();
+	const pageDetail = Route.useLoaderData();
 
-	return <HomePresentation data={data} locale={locale} />;
+	return <HomePresentation locale={locale} pageDetail={pageDetail} />;
 }

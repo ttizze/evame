@@ -1,4 +1,5 @@
 {
+	"Home": { "loadError": "无法加载最新文章。", "retry": "重试" },
 	"Footer": {
 		"aboutEvame": "关于 Evame",
 		"about": "About",

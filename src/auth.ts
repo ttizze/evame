@@ -8,8 +8,8 @@ function createAuth(database: typeof db) {
 	return betterAuth({
 		plugins: [
 			magicLink({
-				sendMagicLink: async ({ email, token, url }) => {
-					await sendMagicLinkEmail(email, url, token);
+				sendMagicLink: async ({ email, url }) => {
+					await sendMagicLinkEmail(email, url);
 				},
 			}),
 			customSession(async ({ session }) => {

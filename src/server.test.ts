@@ -2,7 +2,15 @@
 import { captureException, withSentry } from "@sentry/cloudflare";
 import { redirect } from "@tanstack/react-router";
 import handler from "@tanstack/react-start/server-entry";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import { createDb } from "./db";
 import server from "./server";
 
@@ -19,6 +27,17 @@ vi.mock("./db", async () => {
 		createDb: vi.fn(() => ({ destroy: vi.fn().mockResolvedValue(undefined) })),
 		databaseScope: new AsyncLocalStorage(),
 	};
+});
+
+const env = {
+	SETTINGS: { get: vi.fn().mockResolvedValue(false) },
+	ASSETS: { fetch: vi.fn() },
+};
+beforeEach(() => {
+	env.SETTINGS.get.mockReset().mockResolvedValue(false);
+	env.ASSETS.fetch
+		.mockReset()
+		.mockResolvedValue(new Response("missing", { status: 404 }));
 });
 
 let beforeSend: NonNullable<
@@ -63,7 +82,7 @@ describe("DB移行中のリクエスト停止", () => {
 			vi.stubEnv("DATABASE_MIGRATION", "true");
 			const response = await server.fetch(
 				new Request(`https://evame.test${path}`, { method }),
-				{} as typeof import("cloudflare:workers").env,
+				env as unknown as typeof import("cloudflare:workers").env,
 				{ waitUntil: vi.fn() },
 			);
 			expect(response.status).toBe(503);
@@ -89,7 +108,7 @@ describe("WorkersのDB接続の寿命", () => {
 		const pending: Promise<unknown>[] = [];
 		const response = await server.fetch(
 			new Request("https://evame.test"),
-			{} as typeof import("cloudflare:workers").env,
+			env as unknown as typeof import("cloudflare:workers").env,
 			{ waitUntil: (promise) => pending.push(promise) },
 		);
 		await response.body?.cancel(
@@ -115,7 +134,7 @@ describe("WorkersのDB接続の寿命", () => {
 		const pending: Promise<unknown>[] = [];
 		const response = await server.fetch(
 			new Request("https://evame.test"),
-			{} as typeof import("cloudflare:workers").env,
+			env as unknown as typeof import("cloudflare:workers").env,
 			{ waitUntil: (promise) => pending.push(promise) },
 		);
 		await expect(response.text()).rejects.toBe(error);
@@ -131,7 +150,7 @@ describe("WorkersのDB接続の寿命", () => {
 		);
 		const response = await server.fetch(
 			new Request("https://evame.test"),
-			{} as typeof import("cloudflare:workers").env,
+			env as unknown as typeof import("cloudflare:workers").env,
 			{ waitUntil: vi.fn() },
 		);
 		expect(response.status).toBe(307);
@@ -150,7 +169,7 @@ describe("WorkersのDB接続の寿命", () => {
 			[1, 2].map(() =>
 				server.fetch(
 					new Request("https://evame.test"),
-					{} as typeof import("cloudflare:workers").env,
+					env as unknown as typeof import("cloudflare:workers").env,
 					context,
 				),
 			),
@@ -175,12 +194,62 @@ describe("WorkersのDB接続の寿命", () => {
 		await expect(
 			server.fetch(
 				new Request("https://evame.test"),
-				{} as typeof import("cloudflare:workers").env,
+				env as unknown as typeof import("cloudflare:workers").env,
 				{ waitUntil: vi.fn() },
 			),
 		).rejects.toBe(error);
 		expect(
 			vi.mocked(createDb).mock.results[0].value.destroy,
 		).toHaveBeenCalledOnce();
+	});
+});
+
+describe("静的生成したトップの配信", () => {
+	it.each(["/ja", "/ja/", "/ja/index.html", "/ja.html"])(
+		"ログインCookie付きの%sにもDB接続せず静的HTMLを返す",
+		async (path) => {
+			env.ASSETS.fetch.mockResolvedValue(new Response("static home"));
+			const response = await server.fetch(
+				new Request(`https://evame.test${path}`, {
+					headers: { cookie: "better-auth.session_token=private-session" },
+				}),
+				env as unknown as typeof import("cloudflare:workers").env,
+				{ waitUntil: vi.fn() },
+			);
+			expect(await response.text()).toBe("static home");
+			expect(response.headers.get("x-frame-options")).toBe("DENY");
+			expect(createDb).not.toHaveBeenCalled();
+			expect(handler.fetch).not.toHaveBeenCalled();
+		},
+	);
+	it.each(["/ja", "/ja/", "/ja/index.html", "/ja.html"])(
+		"メンテナンス中は%sの静的HTMLを配信せずリダイレクトする",
+		async (path) => {
+			env.SETTINGS.get.mockResolvedValue(true);
+			const response = await server.fetch(
+				new Request(`https://evame.test${path}`),
+				env as unknown as typeof import("cloudflare:workers").env,
+				{ waitUntil: vi.fn() },
+			);
+			expect(response.status).toBe(307);
+			expect(response.headers.get("location")).toBe(
+				"https://evame.test/ja/maintenance",
+			);
+			expect(response.headers.get("x-frame-options")).toBe("DENY");
+			expect(env.ASSETS.fetch).not.toHaveBeenCalled();
+			expect(createDb).not.toHaveBeenCalled();
+		},
+	);
+	it("ビルド時に静的HTMLがまだなければSSRで生成できる", async () => {
+		vi.mocked(handler.fetch).mockResolvedValue(new Response("rendered home"));
+		const pending: Promise<unknown>[] = [];
+		const response = await server.fetch(
+			new Request("https://evame.test/ja"),
+			env as unknown as typeof import("cloudflare:workers").env,
+			{ waitUntil: (promise) => pending.push(promise) },
+		);
+		expect(env.ASSETS.fetch).toHaveBeenCalledOnce();
+		expect(await response.text()).toBe("rendered home");
+		await Promise.all(pending);
 	});
 });

@@ -1,4 +1,8 @@
 {
+	"Home": {
+		"loadError": "最新の記事を読み込めませんでした。",
+		"retry": "再試行"
+	},
 	"Footer": {
 		"aboutEvame": "Evameについて",
 		"about": "About",

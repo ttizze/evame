@@ -49,6 +49,8 @@ jobs:
 
       - name: Build TanStack Start for Cloudflare Workers
         env:
+          TURSO_DATABASE_URL: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && secrets.TURSO_DATABASE_URL || 'file:evame.db' }}
+          TURSO_AUTH_TOKEN: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && secrets.TURSO_AUTH_TOKEN || '' }}
           SENTRY_AUTH_TOKEN: ${{ github.ref == 'refs/heads/main' && secrets.SENTRY_AUTH_TOKEN || '' }}
         run: |
           if [[ "$GITHUB_REF" == "refs/heads/main" && "$GITHUB_EVENT_NAME" != "pull_request" ]]; then

@@ -5,8 +5,30 @@ import { mkdir, readdir, readFile, rm } from "node:fs/promises";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
+import { fromCrossJSON, toJSONAsync } from "seroval";
 import { unstable_dev } from "wrangler";
 import { startTursoServer } from "./turso-dev-server.mjs";
+
+const staticLocales = (await readdir("dist/client", { withFileTypes: true }))
+	.filter((entry) => entry.isDirectory() && /^[a-z]{2}$/.test(entry.name))
+	.map((entry) => entry.name);
+assert.equal(staticLocales.length, 21, "全言語のトップを生成する");
+for (const locale of staticLocales) {
+	const html = await readFile(`dist/client/${locale}/index.html`, "utf8");
+	assert.ok(
+		html.includes('data-sentry-component="HeroSection"'),
+		`${locale}: 説明文が静的HTMLに入っている`,
+	);
+	assert.ok(
+		!/Sorry, an error occurred|Error in renderToReadableStream/.test(html),
+		`${locale}: 静的生成が成功する`,
+	);
+	assert.ok(
+		!html.includes("better-auth.session_token="),
+		`${locale}: 個人のセッションを含めない`,
+	);
+}
+console.log("全21言語のトップに説明文を静的生成できる");
 
 await mkdir(".data", { recursive: true });
 const databasePath = `.data/deployment-${randomUUID()}.db`;
@@ -84,6 +106,10 @@ try {
 			),
 		].map((match) => [match[2], match[1]]),
 	);
+	const homeFeedFunction = functions.getHomeFeed_createServerFn_handler;
+	assert.ok(homeFeedFunction, "最新記事取得のServer Functionが生成されている");
+	const homeFeedPayload = JSON.stringify(await toJSONAsync({ data: "ja" }));
+	const homeFeedUrl = `http://localhost/_serverFn/${homeFeedFunction}?${new URLSearchParams({ payload: homeFeedPayload })}`;
 	const editFunction = functions.editPageContent_createServerFn_handler;
 	assert.ok(editFunction, "記事保存のServer Functionが生成されている");
 	const uploadFunction = functions.uploadEditorImage_createServerFn_handler;
@@ -276,27 +302,52 @@ try {
 		!/Sorry, an error occurred|Error in renderToReadableStream/.test(html),
 		"ホームのSSRがエラーで中断されていない",
 	);
-	assert.ok(html.includes("Workers保存テスト"), "公開記事をホームに表示する");
-	const articleCount = html.match(/tabular-nums text-foreground">([^<]+)/)?.[1];
-	assert.ok(articleCount, "公開記事件数がSSRされている");
+
+	assert.ok(
+		!html.includes("Workers保存テスト"),
+		"通常記事のタイトルを静的HTMLに固定しない",
+	);
+	const feedResponse = await worker.fetch(homeFeedUrl, {
+		headers: {
+			"x-tsr-serverFn": "true",
+			accept: "application/json",
+			origin: "http://localhost",
+		},
+	});
+	assert.equal(feedResponse.status, 200);
+	assert.equal(feedResponse.headers.get("cache-control"), "private, no-store");
+	const feed = fromCrossJSON(await feedResponse.json(), {}).result;
+	assert.ok(
+		feed.newPages.pageForLists.some((page) => page.slug === pageSlug),
+		"公開記事を表示後の取得で返す",
+	);
 	await database.execute({
 		sql: "UPDATE pages SET status = 'DRAFT' WHERE slug = ?",
 		args: [pageSlug],
 	});
-	const updatedHome = await worker.fetch("http://localhost/ja");
-	assert.equal(updatedHome.status, 200);
-	const updatedHtml = await updatedHome.text();
+	const updatedFeedResponse = await worker.fetch(homeFeedUrl, {
+		headers: {
+			"x-tsr-serverFn": "true",
+			accept: "application/json",
+			origin: "http://localhost",
+		},
+	});
+	assert.equal(updatedFeedResponse.status, 200);
+	const updatedFeed = fromCrossJSON(
+		await updatedFeedResponse.json(),
+		{},
+	).result;
 	assert.equal(
-		updatedHtml.match(/tabular-nums text-foreground">([^<]+)/)?.[1],
-		articleCount,
-		"公開件数はCache APIのキャッシュを再利用する",
+		updatedFeed.stats.articles,
+		feed.stats.articles,
+		"集計キャッシュを再利用する",
 	);
 	assert.ok(
-		!updatedHtml.includes("Workers保存テスト"),
-		"件数をキャッシュしていても非公開にした記事はホームに表示しない",
+		!updatedFeed.newPages.pageForLists.some((page) => page.slug === pageSlug),
+		"非公開にした記事を直ちに一覧から除外する",
 	);
 	console.log(
-		"Workersランタイムで件数のキャッシュと記事の公開状態を別々に更新できる",
+		"静的トップと最新記事の取得を分け、非公開にした記事を一覧に残さない",
 	);
 	const normalImage = await worker.fetch(
 		"http://localhost/api/og?slug=evame-ja&locale=ja",
@@ -308,8 +359,18 @@ try {
 		new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]),
 	);
 	console.log(
-		"WorkersランタイムでホームをSSRし、日本語フォントとロゴを使ったOG画像を生成できる",
+		"Workersランタイムで日本語フォントとロゴを使ったOG画像を生成できる",
 	);
+	await tursoServer.stop();
+	const withoutDb = await worker.fetch("http://localhost/ja", {
+		headers: { cookie },
+	});
+	assert.equal(withoutDb.status, 200);
+	assert.ok(
+		(await withoutDb.text()).includes('data-sentry-component="HeroSection"'),
+		"DB停止中も静的トップを返す",
+	);
+	console.log("DB停止中も認証Cookie付きで静的トップを表示できる");
 } finally {
 	await worker?.stop();
 	database.close();

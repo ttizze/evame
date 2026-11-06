@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "CLOUDFLARE_INCLUDE_PROCESS_ENV=true vite dev --config vite.config.ts --port 3000",
-		"build": "vite build --config vite.config.ts",
+		"build": "node scripts/build.mjs",
 		"lint": "bunx @biomejs/biome check .",
 		"test": "vitest",
 		"test:deployment": "node scripts/check-cloudflare-output.mjs",
@@ -157,14 +157,15 @@
 		"harfbuzzjs": "0.10.0",
 		"jest-mock-extended": "4.0.1",
 		"jsdom": "30.1.1",
+		"pg": "8.23.1",
 		"postcss": "8.5.28",
+		"seroval": "1.6.8",
 		"tailwindcss": "4.3.3",
 		"ts-prune": "^0.10.3",
 		"typescript": "7.0.2",
 		"vite": "8.3.2",
 		"vitest": "5.0.3",
-		"wrangler": "^4.147.0",
-		"pg": "8.23.1"
+		"wrangler": "^4.147.0"
 	},
 	"overrides": {
 		"css-select": "4.3.0",

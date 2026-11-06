@@ -5,9 +5,6 @@ import { createPageWithSegments, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
 import { loadHomePage } from "./load-home-page";
 
-vi.mock("../../about-section/service/load-about-page", () => ({
-	loadAboutPage: vi.fn().mockResolvedValue(null),
-}));
 vi.mock("../../about-section/service/load-social-proof-stats", () => ({
 	loadSocialProofStats: vi
 		.fn()

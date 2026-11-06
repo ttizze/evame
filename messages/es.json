@@ -1,4 +1,8 @@
 {
+	"Home": {
+		"loadError": "No se pudieron cargar los artículos recientes.",
+		"retry": "Reintentar"
+	},
 	"Footer": {
 		"aboutEvame": "Acerca de Evame",
 		"about": "About",

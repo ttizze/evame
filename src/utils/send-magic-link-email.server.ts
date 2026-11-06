@@ -1,33 +1,6 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.AUTH_RESEND_KEY);
-
-async function resendSendEmail(
-	email: string,
-	subject: string,
-	html: string,
-	from?: string,
-) {
-	const { data, error } = await resend.emails.send({
-		from: from || process.env.EMAIL_FROM || "noreply@mail.reimei.dev",
-		to: [email],
-		subject,
-		html,
-	});
-
-	if (error) {
-		console.error("Resend email error:", error);
-		throw new Error(`Failed to send email: ${error.message}`);
-	}
-
-	return data;
-}
-
-export async function sendMagicLinkEmail(
-	email: string,
-	magicLink: string,
-	_token: string,
-) {
+export async function sendMagicLinkEmail(email: string, magicLink: string) {
 	const emailHtml = `
     <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: sans-serif;">
       <h1 style="color: #333; text-align: center;">Sign in to Evame</h1>
@@ -47,5 +20,13 @@ export async function sendMagicLinkEmail(
     </div>
   `;
 
-	return resendSendEmail(email, "Sign in to Evame", emailHtml);
+	const resend = new Resend(process.env.AUTH_RESEND_KEY);
+	const { data, error } = await resend.emails.send({
+		from: process.env.EMAIL_FROM || "noreply@mail.reimei.dev",
+		to: [email],
+		subject: "Sign in to Evame",
+		html: emailHtml,
+	});
+	if (error) throw new Error(`Failed to send email: ${error.message}`);
+	return data;
 }

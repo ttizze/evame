@@ -7,6 +7,8 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { securityHeaders } from "./security-headers";
+import { supportedLocaleOptions } from "./src/app/_constants/locale";
+import { staticHomePaths } from "./static-home-paths";
 
 const serverHtmlParser = {
 	name: "server-html-parser",
@@ -52,9 +54,26 @@ export default defineConfig({
 					});
 			},
 		},
-		cloudflare({ viteEnvironment: { name: "ssr" } }),
+		cloudflare({
+			viteEnvironment: { name: "ssr" },
+			config: {
+				assets: {
+					binding: "ASSETS",
+					html_handling: "drop-trailing-slash",
+					run_worker_first: [...staticHomePaths.keys()],
+				},
+			},
+		}),
 		tailwindcss(),
-		tanstackStart(),
+		tanstackStart({
+			prerender: {
+				enabled: true,
+				autoStaticPathsDiscovery: false,
+				crawlLinks: false,
+				concurrency: 4,
+			},
+			pages: supportedLocaleOptions.map(({ code }) => ({ path: `/${code}` })),
+		}),
 		viteReact(),
 		sentryCloudflareVitePlugin(),
 		sentryVitePlugin({
