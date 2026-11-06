@@ -28,7 +28,10 @@ vi.mock("@astrojs/cloudflare/fetch", () => ({
 import worker from "./worker";
 
 const env = {
-	CF_VERSION_METADATA: { id: "deployment-version" },
+	CF_VERSION_METADATA: {
+		id: "deployment-version",
+		timestamp: "2026-11-06T00:00:00.000Z",
+	},
 	SELF: { fetch: mocks.self },
 	BACKEND: { fetch: mocks.backend },
 	READER_HTML: { get: mocks.get },
@@ -251,6 +254,9 @@ it("保存前のDBの版より後に変わった生成元だけを、その言�
 		context,
 	);
 	expect(mocks.publication.mock.calls[0]?.[7]).toEqual(new Set(["/author/b"]));
+	expect(mocks.publication.mock.calls[0]?.[8]).toBe(
+		env.CF_VERSION_METADATA.timestamp,
+	);
 });
 
 it("後続デプロイに置き換えられた旧Workerは再試行して新版を巻き戻さない", async () => {

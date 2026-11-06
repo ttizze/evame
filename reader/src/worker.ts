@@ -210,6 +210,7 @@ export default withSentry(
 								locale,
 								publicationId,
 								changedSources,
+								env.CF_VERSION_METADATA.timestamp,
 							);
 						} catch (error) {
 							if (

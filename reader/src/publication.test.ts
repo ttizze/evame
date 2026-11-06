@@ -6,6 +6,61 @@ import { readerDocumentKey } from "../../src/app/_domain/reader-document";
 import { publishReaderDocuments } from "./publication";
 import { updateReaderSources } from "./source-revisions";
 
+it.each(["deployment", "content"] as const)(
+	"新版が登録を済ませていたら旧Workerの%s生成は登録も本文も上書きしない",
+	async (mode) => {
+		const { bucket, objects } = storage();
+		const path = "/ja/author/article";
+		const catalog = { revision: 1, documents: { [path]: "same-source" } };
+		const resume = Promise.withResolvers<Response>();
+		const render = vi.fn(() => resume.promise);
+		const current = publishReaderDocuments(
+			bucket,
+			"new-version",
+			catalog,
+			render,
+			"content",
+			"ja",
+			"new-save",
+			null,
+			"2026-11-07T00:00:00.000Z",
+		);
+		await vi.waitFor(() => expect(render).toHaveBeenCalledOnce());
+		const oldRender = vi.fn(
+			async () =>
+				new Response("旧本文", { headers: { "X-Evame-Public": "true" } }),
+		);
+		const old = await publishReaderDocuments(
+			bucket,
+			"old-version",
+			catalog,
+			oldRender,
+			mode,
+			"ja",
+			"old-save",
+			null,
+			"2026-11-06T00:00:00.000Z",
+		).then(
+			() => null,
+			(error: unknown) => error,
+		);
+		resume.resolve(
+			new Response("新版の本文", { headers: { "X-Evame-Public": "true" } }),
+		);
+		const result = await current.then(
+			(value) => value,
+			(error: unknown) => error,
+		);
+		expect(old).toBeInstanceOf(Error);
+		expect((old as Error).message).toBe("Reader deployment superseded");
+		expect(oldRender).not.toHaveBeenCalled();
+		expect(result).toEqual({ generated: 1, remaining: 0 });
+		expect(
+			new TextDecoder().decode(objects.get(readerDocumentKey(path))?.bytes),
+		).toContain("新版の本文");
+	},
+);
+
 it("生成が失敗した記事Aの更新時期を全言語で共有し、後の保存Bには持ち込まない", async () => {
 	const { bucket } = storage();
 	const first = await updateReaderSources(bucket, {
@@ -33,6 +88,7 @@ it("生成が失敗した記事Aの更新時期を全言語で共有し、後の
 		"en",
 		"deploy",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	const render = vi.fn(async (path: string) =>
 		path.endsWith("/a")
@@ -52,6 +108,7 @@ it("生成が失敗した記事Aの更新時期を全言語で共有し、後の
 			"en",
 			"save-b",
 			new Set(["/author/b"]),
+			"2026-11-06T00:00:00.000Z",
 		),
 	).toEqual({ generated: 1, remaining: 0 });
 	expect(render).toHaveBeenCalledOnce();
@@ -114,6 +171,7 @@ it("一括生成が今回の変更を先に登録していても、保存成功�
 		"ja",
 		"deploy",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	await vi.waitFor(() => expect(render).toHaveBeenCalled());
 	expect(
@@ -127,6 +185,7 @@ it("一括生成が今回の変更を先に登録していても、保存成功�
 			"ja",
 			"save",
 			new Set(["/author/article"]),
+			"2026-11-06T00:00:00.000Z",
 		),
 	).toEqual({ generated: 1, remaining: 0 });
 	pending.resolve(
@@ -227,6 +286,7 @@ it.each([
 		"ja",
 		"save-a",
 		new Set(["/author/article"]),
+		"2026-11-06T00:00:00.000Z",
 	);
 	await vi.waitFor(() => expect(firstRender).toHaveBeenCalled());
 	const before = objects.get("publication/ja.json")?.etag;
@@ -240,6 +300,7 @@ it.each([
 		"ja",
 		"save-b",
 		new Set(["/author/article"]),
+		"2026-11-06T00:00:00.000Z",
 	);
 	await vi.waitFor(() => expect(secondRender).toHaveBeenCalled());
 	const unchanged = objects.get("publication/ja.json")?.etag === before;
@@ -270,6 +331,7 @@ it("同じDBの版でも、旧デプロイの遅い生成結果が新デプロ�
 		"ja",
 		"old-deploy",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	await vi.waitFor(() => expect(render).toHaveBeenCalled());
 	await publishReaderDocuments(
@@ -282,6 +344,7 @@ it("同じDBの版でも、旧デプロイの遅い生成結果が新デプロ�
 		"ja",
 		"new-deploy",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	previous.resolve(
 		new Response("旧版のHTML", { headers: { "X-Evame-Public": "true" } }),
@@ -307,6 +370,7 @@ it("記事Aの生成が失敗しても、無関係な記事Bの公開更新は�
 		"ja",
 		"deploy",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	const documents = { ...initial, "/ja/author/a": "edited-a" };
 	await expect(
@@ -319,6 +383,7 @@ it("記事Aの生成が失敗しても、無関係な記事Bの公開更新は�
 			"ja",
 			"save-a",
 			null,
+			"2026-11-06T00:00:00.000Z",
 		),
 	).rejects.toThrow("HTTP 500");
 	documents["/ja/author/b"] = "edited-b";
@@ -337,6 +402,7 @@ it("記事Aの生成が失敗しても、無関係な記事Bの公開更新は�
 			"ja",
 			"save-b",
 			new Set(["/author/b"]),
+			"2026-11-06T00:00:00.000Z",
 		),
 	).toEqual({ generated: 1, remaining: 0 });
 	expect(render).toHaveBeenCalledWith("/ja/author/b");
@@ -351,6 +417,7 @@ it("記事Aの生成が失敗しても、無関係な記事Bの公開更新は�
 			"ja",
 			"save-a",
 			null,
+			"2026-11-06T00:00:00.000Z",
 		),
 	).rejects.toThrow("HTTP 500");
 });
@@ -383,6 +450,7 @@ it.each([0, 1, 2])(
 					"ja",
 					"job",
 					null,
+					"2026-11-06T00:00:00.000Z",
 				),
 			).resolves.toEqual({ remaining: 0, generated: 1 });
 			await vi.runAllTimersAsync();
@@ -412,6 +480,7 @@ it("R2の書き込み制限が続く場合は再試行を打ち切り、保存�
 				"ja",
 				"job",
 				null,
+				"2026-11-06T00:00:00.000Z",
 			),
 		).rejects.toThrow("TooManyRequests");
 		await vi.runAllTimersAsync();
@@ -437,6 +506,7 @@ it("R2の書き込み制限以外のエラーは再試行しない", async () =>
 			"ja",
 			"job",
 			null,
+			"2026-11-06T00:00:00.000Z",
 		),
 	).rejects.toThrow("AccessDenied");
 	expect(bucket.put).toHaveBeenCalledOnce();
@@ -466,6 +536,7 @@ it("初回の公開更新でも全URLの生成が終わるまで残り件数を�
 			"ja",
 			"job",
 			null,
+			"2026-11-06T00:00:00.000Z",
 		),
 	).toEqual({ remaining: 9, generated: 96 });
 	expect(
@@ -478,6 +549,7 @@ it("初回の公開更新でも全URLの生成が終わるまで残り件数を�
 			"ja",
 			"job",
 			null,
+			"2026-11-06T00:00:00.000Z",
 		),
 	).toEqual({ remaining: 0, generated: 9 });
 	expect(render).toHaveBeenCalledTimes(105);
@@ -503,6 +575,7 @@ it("公開・更新処理でHTMLを保存し、再実行時は変更のない本
 			"ja",
 			"job",
 			null,
+			"2026-11-06T00:00:00.000Z",
 		),
 	).toEqual({ remaining: 0, generated: 1 });
 	expect(
@@ -520,6 +593,7 @@ it("公開・更新処理でHTMLを保存し、再実行時は変更のない本
 		"ja",
 		"job",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	expect(render).toHaveBeenCalledOnce();
 	expect(bucket.put).toHaveBeenCalledTimes(writes);
@@ -532,6 +606,7 @@ it("公開・更新処理でHTMLを保存し、再実行時は変更のない本
 		"ja",
 		"job",
 		new Set(["/author/article"]),
+		"2026-11-06T00:00:00.000Z",
 	);
 	expect(render).toHaveBeenCalledTimes(2);
 });
@@ -548,6 +623,7 @@ it("非公開化で旧HTMLを404へ置き換え、元に戻さない", async () 
 		"ja",
 		"job",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	const oldRender = Promise.withResolvers<Response>();
 	const render = vi.fn(() => oldRender.promise);
@@ -560,6 +636,7 @@ it("非公開化で旧HTMLを404へ置き換え、元に戻さない", async () 
 		"ja",
 		"job",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	await vi.waitFor(() => expect(render).toHaveBeenCalled());
 	await publishReaderDocuments(
@@ -571,6 +648,7 @@ it("非公開化で旧HTMLを404へ置き換え、元に戻さない", async () 
 		"ja",
 		"job",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	oldRender.resolve(
 		new Response("非公開化前の本文", { headers: { "X-Evame-Public": "true" } }),
@@ -599,6 +677,7 @@ it("初回のHTML生成中に非公開化しても、生成完了が遅れた旧
 		"ja",
 		"job",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	await vi.waitFor(() => expect(render).toHaveBeenCalled());
 	await publishReaderDocuments(
@@ -610,6 +689,7 @@ it("初回のHTML生成中に非公開化しても、生成完了が遅れた旧
 		"ja",
 		"job",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	oldRender.resolve(
 		new Response("旧本文", { headers: { "X-Evame-Public": "true" } }),
@@ -640,6 +720,7 @@ it.each([
 				"ja",
 				"job",
 				null,
+				"2026-11-06T00:00:00.000Z",
 			),
 		).rejects.toThrow();
 		expect(objects.has(readerDocumentKey("/ja/article"))).toBe(false);
@@ -661,6 +742,7 @@ it("デプロイで画面のコードが変わったら生成済みの本文も�
 		"ja",
 		"job",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	await publishReaderDocuments(
 		bucket,
@@ -671,6 +753,7 @@ it("デプロイで画面のコードが変わったら生成済みの本文も�
 		"ja",
 		"job",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	expect(render).toHaveBeenCalledTimes(2);
 });
@@ -696,6 +779,7 @@ it("コメントが減った後も以前の途中ページで本文を読め、�
 		"ja",
 		"job",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	await publishReaderDocuments(
 		bucket,
@@ -706,6 +790,7 @@ it("コメントが減った後も以前の途中ページで本文を読め、�
 		"ja",
 		"job",
 		new Set(["/author/article"]),
+		"2026-11-06T00:00:00.000Z",
 	);
 	expect(
 		objects.get(readerDocumentKey("/ja/author/article?page=2"))?.customMetadata
@@ -721,6 +806,7 @@ it("コメントが減った後も以前の途中ページで本文を読め、�
 		"ja",
 		"job",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	expect(
 		objects.get(readerDocumentKey("/ja/author/article?page=2"))?.customMetadata
@@ -750,6 +836,7 @@ it("デプロイの一括生成中も、通常の保存は変更した記事だ�
 				"ja",
 				"job",
 				null,
+				"2026-11-06T00:00:00.000Z",
 			)
 		).remaining,
 	).toBe(9);
@@ -765,6 +852,7 @@ it("デプロイの一括生成中も、通常の保存は変更した記事だ�
 			"ja",
 			"job",
 			null,
+			"2026-11-06T00:00:00.000Z",
 		),
 	).toEqual({ remaining: 0, generated: 1 });
 	expect(render.mock.calls.length - before).toBe(1);
@@ -779,6 +867,7 @@ it("デプロイの一括生成中も、通常の保存は変更した記事だ�
 				"ja",
 				"job",
 				null,
+				"2026-11-06T00:00:00.000Z",
 			)
 		).remaining,
 	).toBe(0);
@@ -796,6 +885,7 @@ it("同じ404本文を書き戻す古い生成処理でも、非公開化後の�
 		"ja",
 		"job",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	const entered = Promise.withResolvers<void>();
 	const resume = Promise.withResolvers<void>();
@@ -820,6 +910,7 @@ it("同じ404本文を書き戻す古い生成処理でも、非公開化後の�
 		"ja",
 		"job",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	await entered.promise;
 	await publishReaderDocuments(
@@ -831,6 +922,7 @@ it("同じ404本文を書き戻す古い生成処理でも、非公開化後の�
 		"ja",
 		"job",
 		null,
+		"2026-11-06T00:00:00.000Z",
 	);
 	resume.resolve();
 	await expect(old).rejects.toThrow("superseded");

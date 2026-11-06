@@ -18,9 +18,15 @@ export async function publishReaderDocuments(
 	locale: string,
 	publicationId: string,
 	changedSources: ReadonlySet<string> | null,
+	versionTimestamp: string,
 ) {
 	const stateKey = `publication/${locale}.json`;
 	const stored = await bucket.get(stateKey);
+	const uploadedAt = Date.parse(versionTimestamp);
+	if (!Number.isFinite(uploadedAt))
+		throw new Error("Reader version timestamp unavailable");
+	if (Date.parse(stored?.customMetadata?.timestamp ?? "") > uploadedAt)
+		throw new Error("Reader deployment superseded");
 	const state = stored
 		? await stored.json<{
 				revision: number;
@@ -84,7 +90,7 @@ export async function publishReaderDocuments(
 				? { etagMatches: stored.etag }
 				: (new Headers({ "If-None-Match": "*" }) as unknown as WorkerHeaders),
 			httpMetadata: { contentType: "application/json" },
-			customMetadata: { version: versionId },
+			customMetadata: { version: versionId, timestamp: versionTimestamp },
 		},
 	);
 	if (!registered) throw new Error("Reader publication superseded");
@@ -152,7 +158,7 @@ export async function publishReaderDocuments(
 		{
 			onlyIf: { etagMatches: registered.etag },
 			httpMetadata: { contentType: "application/json" },
-			customMetadata: { version: versionId },
+			customMetadata: { version: versionId, timestamp: versionTimestamp },
 		},
 	);
 	if (!saved) throw new Error("Reader publication superseded");
