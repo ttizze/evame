@@ -24,7 +24,7 @@ type Props = {
 	isPublic: boolean;
 };
 const { locale, data, page, isPublic } = Astro.props;
-const { pageDetail } = data;
+const { pageDetail, navigationData } = data;
 const t = (messages[locale as keyof typeof messages] ?? messages.en).Reader;
 const tocItems = extractTocItems({
 	mdast: pageDetail.mdastJson,
@@ -37,7 +37,7 @@ const downloadUrl = `/api/page-markdown?${new URLSearchParams({ locale, handle: 
 <article class="prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
   {!isPublic && <div class="not-prose rounded-xl bg-secondary px-4 py-2">{t.preview}</div>}
   {isPublic && <><ArticleJsonLd authorName={pageDetail.userName} authorUrl={authorUrl} datePublished={new Date(pageDetail.createdAt).toISOString()} dateModified={new Date(pageDetail.updatedAt).toISOString()} headline={pageDetail.title} description={data.description} image={`https://evame.tech/api/og?locale=${pageDetail.sourceLocale}&slug=${pageDetail.slug}`} inLanguage={pageDetail.sourceLocale} url={articleUrl} /><BreadcrumbJsonLd items={[{ name: "Home", url: `https://evame.tech/${locale}` }, { name: pageDetail.userName, url: authorUrl }, { name: pageDetail.title, url: articleUrl }]} /></>}
-  {data.navigationData && <PageNavigationIsland locale={locale} search={Astro.url.search} pageId={pageDetail.id} data={data.navigationData} client:idle />}
+  {navigationData && <PageNavigationIsland locale={locale} search={Astro.url.search} pageId={pageDetail.id} data={navigationData} client:idle />}
   <div class="not-prose flex items-center justify-between gap-4 py-4"><a class="flex items-center gap-3" href={`/${locale}/${pageDetail.userHandle}`}>{pageDetail.userImage && <img class="rounded-full" alt="" src={pageDetail.userImage} width="40" height="40" />}<span>{pageDetail.userName}<time class="block text-xs text-muted-foreground" datetime={new Date(pageDetail.createdAt).toISOString()}>{formatDate(pageDetail.createdAt, locale)}</time></span></a><div class="flex items-center gap-3"><a href={downloadUrl} aria-label={t.downloadMarkdown} download>↓ MD</a><ArticleToolsIsland locale={locale} handle={pageDetail.userHandle} slug={pageDetail.slug} tocItems={tocItems} client:load /></div></div>
   <StaticBody mdast={pageDetail.mdastJson} segments={pageDetail.segments} />
   <div class="not-prose flex flex-wrap gap-2 py-3">{pageDetail.tagPages.map(({ tag }) => <a class="rounded-full bg-secondary px-3 py-1 text-sm" href={`/${locale}/tag/${encodeURIComponent(tag.name)}`}>#{tag.name}</a>)}</div>
