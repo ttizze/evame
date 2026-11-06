@@ -1,10 +1,10 @@
-import type { PageTitleTree } from "../../_db/queries";
+import type { PageTreeNode } from "../../_db/queries";
 import { CollapsibleTreeList } from "../page-navigation/collapsible-tree-list";
 import { toCollapsibleTreeNodes } from "../page-navigation/page-tree";
 
 interface ChildPagesProps {
 	locale: string;
-	pages: PageTitleTree[];
+	pages: PageTreeNode[];
 }
 
 export function ChildPages({ locale, pages }: ChildPagesProps) {

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { BASE_URL } from "@/app/_constants/base-url";
 import type { PageDetail } from "@/app/[locale]/types";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/json-ld";
-import type { NavigationData, PageTitleTree } from "../_db/queries";
+import type { NavigationData, PageTreeNode } from "../_db/queries";
 import { ChildPages } from "./child-pages";
 import { PageCommentForm } from "./comment/_components/page-comment-form/client";
 import { PageCommentList } from "./comment/_components/page-comment-list/server";
@@ -27,7 +27,7 @@ export function PageContent({
 	pageDetail: PageDetail;
 	locale: string;
 	navigationData: NavigationData | null;
-	childPages: PageTitleTree[];
+	childPages: PageTreeNode[];
 	description: string;
 	likeButton: ReactNode;
 	pageViewCounter: ReactNode;

@@ -9,7 +9,7 @@
 import { db } from "@/db";
 import type { PageStatus } from "@/db/types";
 import type { PageForList, Segment } from "../types";
-import { bestTranslationByPagesSubquery } from "./best-translation-subquery.server";
+import { bestTranslationId } from "./best-translation-subquery.server";
 
 // ============================================
 // 内部型定義
@@ -143,8 +143,10 @@ export function buildPageListQuery(locale: string) {
 				(join) => join.onRef("seg.contentId", "=", "pages.id"),
 			)
 			// 最良の翻訳 (各段落の順位1位のみ)
-			.leftJoin(bestTranslationByPagesSubquery(locale).as("trans"), (join) =>
-				join.onRef("trans.segmentId", "=", "seg.id"),
+			.leftJoin("segmentTranslations as trans", (join) =>
+				join.on("trans.id", "=", (eb) =>
+					bestTranslationId(eb.ref("seg.id"), eb.ref("pages.userId"), locale),
+				),
 			)
 			.select((eb) => [
 				"pages.id",

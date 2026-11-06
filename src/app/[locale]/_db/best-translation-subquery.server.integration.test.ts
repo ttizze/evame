@@ -3,14 +3,74 @@ import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPageWithSegments, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
-import { bestTranslationByPagesSubquery } from "./best-translation-subquery.server";
+import { queryPageDetail } from "./queries";
 
 await setupDbPerFile(import.meta.url);
 
-describe("bestTranslationByPageSubquery", () => {
+describe("段落ごとの最良翻訳", () => {
 	beforeEach(async () => {
 		await resetDatabase();
 	});
+
+	it.each([false, true])(
+		"同点なら新しい日時、同じ日時なら大きいIDの翻訳を1件選ぶ（日時一致: %s）",
+		async (sameTime) => {
+			const owner = await createUser();
+			const page = await createPageWithSegments({
+				userId: owner.id,
+				slug: "tied-translations",
+				segments: [
+					{ number: 0, text: "Title", textAndOccurrenceHash: "title" },
+					{
+						number: 1,
+						text: "Without translation",
+						textAndOccurrenceHash: "body",
+					},
+				],
+			});
+			const segment = await db
+				.selectFrom("segments")
+				.select("id")
+				.where("contentId", "=", page.id)
+				.where("number", "=", 0)
+				.executeTakeFirstOrThrow();
+			await db
+				.insertInto("segmentTranslations")
+				.values([
+					{
+						segmentId: segment.id,
+						locale: "ja",
+						text: "古い翻訳",
+						point: 10,
+						userId: owner.id,
+						createdAt: new Date("2026-01-01T00:00:00Z"),
+					},
+					{
+						segmentId: segment.id,
+						locale: "ja",
+						text: "選ばれる翻訳",
+						point: 10,
+						userId: owner.id,
+						createdAt: new Date(
+							sameTime ? "2026-01-01T00:00:00Z" : "2026-02-01T00:00:00Z",
+						),
+					},
+					{
+						segmentId: segment.id,
+						locale: "en",
+						text: "別言語の高得点",
+						point: 1000,
+						userId: owner.id,
+						createdAt: new Date("2026-03-01T00:00:00Z"),
+					},
+				])
+				.execute();
+			const result = await queryPageDetail(page.slug, "ja");
+			expect(
+				result?.segments.map(({ translationText }) => translationText),
+			).toEqual(["選ばれる翻訳", null]);
+		},
+	);
 
 	it("ページオーナーがupvoteした翻訳を優先する", async () => {
 		// Arrange
@@ -74,12 +134,11 @@ describe("bestTranslationByPageSubquery", () => {
 			.execute();
 
 		// Act
-		const result = await bestTranslationByPagesSubquery("ja").execute();
+		const result = await queryPageDetail(page.slug, "ja");
 
 		// Assert
-		expect(result).toHaveLength(1);
-		expect(result[0].id).toBe(ownerUpvotedTranslation.id);
-		expect(result[0].text).toBe("オーナー推奨翻訳");
+		expect(result?.segments).toHaveLength(1);
+		expect(result?.segments[0].translationText).toBe("オーナー推奨翻訳");
 	});
 
 	it("オーナーのupvoteがない場合はポイント順", async () => {
@@ -108,7 +167,7 @@ describe("bestTranslationByPageSubquery", () => {
 			.executeTakeFirstOrThrow();
 
 		// 高ポイントの翻訳
-		const highPointTranslation = await db
+		await db
 			.insertInto("segmentTranslations")
 			.values({
 				segmentId: segment.id,
@@ -133,11 +192,10 @@ describe("bestTranslationByPageSubquery", () => {
 			.execute();
 
 		// Act
-		const result = await bestTranslationByPagesSubquery("ja").execute();
+		const result = await queryPageDetail(page.slug, "ja");
 
 		// Assert
-		expect(result).toHaveLength(1);
-		expect(result[0].id).toBe(highPointTranslation.id);
-		expect(result[0].text).toBe("高ポイント翻訳");
+		expect(result?.segments).toHaveLength(1);
+		expect(result?.segments[0].translationText).toBe("高ポイント翻訳");
 	});
 });
