@@ -1,13 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
-import {
-	fetchPaginatedNewPageLists,
-	fetchPaginatedPopularPageLists,
-} from "@/app/[locale]/_db/page-list.server";
-import { querySocialProofStats } from "@/app/[locale]/(common-layout)/_components/about-section/_db/queries";
-import { loadAboutPage } from "@/app/[locale]/(common-layout)/_components/about-section/service/load-about-page";
-import type { PageDetail, PageForList } from "@/app/[locale]/types";
+import { loadHomePage } from "@/app/[locale]/(common-layout)/_components/home/service/load-home-page";
 
 const indexInput = z.object({
 	locale: z
@@ -18,41 +12,8 @@ const indexInput = z.object({
 			"対応していないlocaleです",
 		),
 });
-type PaginatedPageLists = {
-	pageForLists: PageForList[];
-	totalPages: number;
-};
-
-type SocialProofStats = {
-	articles: number;
-	translations: number;
-	languages: number;
-};
-
-export type HomeData = {
-	pageDetail: PageDetail | null;
-	stats: SocialProofStats;
-	newPages: PaginatedPageLists;
-	popularPages: PaginatedPageLists;
-};
+export type HomeData = Awaited<ReturnType<typeof loadHomePage>>;
 
 export const getIndexData = createServerFn({ method: "GET" })
 	.validator(indexInput)
-	.handler(async ({ data }): Promise<HomeData> => {
-		const [pageDetail, stats, newPages, popularPages] = await Promise.all([
-			loadAboutPage(data.locale),
-			querySocialProofStats(),
-			fetchPaginatedNewPageLists({
-				locale: data.locale,
-				page: 1,
-				pageSize: 5,
-			}),
-			fetchPaginatedPopularPageLists({
-				locale: data.locale,
-				page: 1,
-				pageSize: 5,
-			}),
-		]);
-
-		return { pageDetail, stats, newPages, popularPages };
-	});
+	.handler(({ data }) => loadHomePage(data.locale));

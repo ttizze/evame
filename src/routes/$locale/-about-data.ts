@@ -15,17 +15,17 @@ const localeInput = z.object({
 export const getAboutData = createServerFn({ method: "GET" })
 	.validator(localeInput)
 	.handler(async ({ data }) => {
-		const [{ loadAboutPage }, { querySocialProofStats }] = await Promise.all([
+		const [{ loadAboutPage }, { loadSocialProofStats }] = await Promise.all([
 			import(
 				"@/app/[locale]/(common-layout)/_components/about-section/service/load-about-page"
 			),
 			import(
-				"@/app/[locale]/(common-layout)/_components/about-section/_db/queries"
+				"@/app/[locale]/(common-layout)/_components/about-section/service/load-social-proof-stats"
 			),
 		]);
 		const [pageDetail, stats] = await Promise.all([
 			loadAboutPage(data.locale),
-			querySocialProofStats(),
+			loadSocialProofStats(),
 		]);
 
 		return { pageDetail, stats };

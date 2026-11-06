@@ -7,29 +7,8 @@
  */
 
 import { db } from "@/db";
-import type { PageStatus } from "@/db/types";
-import type { PageForList, Segment } from "../types";
+import type { PageForList } from "../types";
 import { bestTranslationId } from "./best-translation-subquery.server";
-
-// ============================================
-// 内部型定義
-// ============================================
-
-type PageListParams = {
-	page: number;
-	pageSize: number;
-	pageOwnerId?: string;
-	locale: string;
-};
-
-type PaginatedResult = {
-	pageForLists: PageForList[];
-	totalPages: number;
-};
-
-// ============================================
-// 共通ヘルパー
-// ============================================
 
 /**
  * タグを取得してMapで返す
@@ -55,48 +34,11 @@ export async function fetchTagsMap(pageIds: number[]) {
 }
 
 /**
- * 総ページ数を取得
- */
-async function fetchTotalCount(
-	status: PageStatus,
-	parentId: number | null,
-	userId?: string,
-): Promise<number> {
-	let query = db
-		.selectFrom("pages")
-		.select((eb) => eb.fn.countAll().as("count"))
-		.where("status", "=", status);
-
-	if (parentId === null) {
-		query = query.where("parentId", "is", null);
-	} else {
-		query = query.where("parentId", "=", parentId);
-	}
-
-	if (userId) {
-		query = query.where("userId", "=", userId);
-	}
-
-	const result = await query.executeTakeFirst();
-	return Number(result?.count ?? 0);
-}
-
-/**
  * クエリ結果をPageForListに変換
  */
 type PageRow = Awaited<
 	ReturnType<ReturnType<typeof buildPageListQuery>["execute"]>
 >[number];
-
-function toTitleSegment(row: PageRow): Segment {
-	return {
-		id: row.segmentId,
-		contentId: row.id,
-		number: 0,
-		text: row.segmentText,
-		translationText: row.translationText ?? null,
-	};
-}
 
 export function toPageForList(
 	row: PageRow,
@@ -110,8 +52,14 @@ export function toPageForList(
 		userHandle: row.userHandle,
 		userName: row.userName,
 		userImage: row.userImage,
-		titleSegment: toTitleSegment(row),
-		tags: tags.map((tag) => ({ id: tag.id, name: tag.name })),
+		titleSegment: {
+			id: row.segmentId,
+			contentId: row.id,
+			number: 0,
+			text: row.segmentText,
+			translationText: row.translationText ?? null,
+		},
+		tags,
 		likeCount: Number(row.likeCount ?? 0),
 		pageCommentsCount: Number(row.pageCommentsCount ?? 0),
 		viewCount: Number(row.pageViewCount ?? 0),
@@ -128,19 +76,8 @@ export function buildPageListQuery(locale: string) {
 			.selectFrom("pages")
 			.innerJoin("users", "pages.userId", "users.id")
 			// タイトルセグメント (number = 0)
-			.innerJoin(
-				(eb) =>
-					eb
-						.selectFrom("segments")
-						.select([
-							"segments.id",
-							"segments.contentId",
-							"segments.text",
-							"segments.number",
-						])
-						.where("segments.number", "=", 0)
-						.as("seg"),
-				(join) => join.onRef("seg.contentId", "=", "pages.id"),
+			.innerJoin("segments as seg", (join) =>
+				join.onRef("seg.contentId", "=", "pages.id").on("seg.number", "=", 0),
 			)
 			// 最良の翻訳 (各段落の順位1位のみ)
 			.leftJoin("segmentTranslations as trans", (join) =>
@@ -183,82 +120,78 @@ export function buildPageListQuery(locale: string) {
 	);
 }
 
-// ============================================
-// 公開API
-// ============================================
-
-/**
- * 新着ページリストを取得
- */
-export async function fetchPaginatedNewPageLists({
-	page = 1,
-	pageSize = 9,
-	pageOwnerId,
-	locale = "en",
-}: PageListParams): Promise<PaginatedResult> {
-	const offset = (page - 1) * pageSize;
-
-	let query = buildPageListQuery(locale)
+/** 一覧と件数で、タイトルのある公開ルート記事を同じ条件で選ぶ。 */
+function publicRootPages(pageOwnerId: string | null) {
+	let query = db
+		.selectFrom("pages")
 		.where("pages.status", "=", "PUBLIC")
-		.where("pages.parentId", "is", null);
+		.where("pages.parentId", "is", null)
+		.where((eb) =>
+			eb.exists(
+				eb
+					.selectFrom("segments")
+					.select("segments.id")
+					.whereRef("segments.contentId", "=", "pages.id")
+					.where("segments.number", "=", 0),
+			),
+		);
 
 	if (pageOwnerId) {
 		query = query.where("pages.userId", "=", pageOwnerId);
 	}
-
-	const rows = await query
-		.orderBy("pages.createdAt", "desc")
-		.limit(pageSize)
-		.offset(offset)
-		.execute();
-
-	const pageIds = rows.map((r) => r.id);
-	const [tagsMap, total] = await Promise.all([
-		fetchTagsMap(pageIds),
-		fetchTotalCount("PUBLIC", null, pageOwnerId),
-	]);
-
-	const pageForLists = rows.map((row) =>
-		toPageForList(row, tagsMap.get(row.id) || []),
-	);
-
-	return {
-		pageForLists,
-		totalPages: Math.ceil(total / pageSize),
-	};
+	return query;
 }
 
-/**
- * 人気ページリストを取得
- */
-export async function fetchPaginatedPopularPageLists({
-	page = 1,
-	pageSize = 9,
-	pageOwnerId,
-	locale = "en",
-}: PageListParams): Promise<PaginatedResult> {
-	const offset = (page - 1) * pageSize;
-
-	let query = buildPageListQuery(locale)
-		.where("pages.status", "=", "PUBLIC")
-		.where("pages.parentId", "is", null);
-
-	if (pageOwnerId) {
-		query = query.where("pages.userId", "=", pageOwnerId);
+/** 表示対象を先に絞り、その記事の翻訳・著者・カウントだけを取得する。 */
+export function fetchPageRows(
+	locale: string,
+	page: number,
+	pageSize: number,
+	pageOwnerId: string | null,
+	sort: "new" | "popular",
+) {
+	let selectedPages = publicRootPages(pageOwnerId).select("pages.id");
+	if (sort === "popular") {
+		selectedPages = selectedPages.orderBy(
+			(eb) =>
+				eb
+					.selectFrom("likePages")
+					.select(eb.fn.countAll().as("count"))
+					.whereRef("likePages.pageId", "=", "pages.id"),
+			"desc",
+		);
 	}
-
-	// いいね数でソート（サブクエリ）
-	const rows = await query
-		.orderBy("likeCount", "desc")
+	// タイトル・翻訳・著者などの結合より先に表示対象を確定する。
+	const ids = selectedPages
 		.orderBy("pages.createdAt", "desc")
 		.limit(pageSize)
-		.offset(offset)
-		.execute();
+		.offset((page - 1) * pageSize);
+	let query = buildPageListQuery(locale).where("pages.id", "in", ids);
+	if (sort === "popular") query = query.orderBy("likeCount", "desc");
+	return query.orderBy("pages.createdAt", "desc").execute();
+}
 
+/** 一覧と同じ公開条件の総件数とタグを付けてページ分けする。 */
+export async function fetchPaginatedPageLists({
+	page,
+	pageSize,
+	pageOwnerId,
+	locale,
+	sort,
+}: {
+	page: number;
+	pageSize: number;
+	pageOwnerId: string | null;
+	locale: string;
+	sort: "new" | "popular";
+}) {
+	const rows = await fetchPageRows(locale, page, pageSize, pageOwnerId, sort);
 	const pageIds = rows.map((r) => r.id);
 	const [tagsMap, total] = await Promise.all([
 		fetchTagsMap(pageIds),
-		fetchTotalCount("PUBLIC", null, pageOwnerId),
+		publicRootPages(pageOwnerId)
+			.select((eb) => eb.fn.countAll<number>().as("count"))
+			.executeTakeFirstOrThrow(),
 	]);
 
 	const pageForLists = rows.map((row) =>
@@ -267,6 +200,6 @@ export async function fetchPaginatedPopularPageLists({
 
 	return {
 		pageForLists,
-		totalPages: Math.ceil(total / pageSize),
+		totalPages: Math.ceil(total.count / pageSize),
 	};
 }
