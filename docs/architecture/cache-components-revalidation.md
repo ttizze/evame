@@ -1,51 +1,58 @@
 # 公開HTMLとデータ更新
 
-## 公開ページ
+## 配信経路
 
-公開トップ・記事・著者・新着・タグ・検索・About・規約は `reader/` のAstroで描画する。最初のHTMLに一覧・本文・コメントを含める。トップの長い説明はAboutに移し、未ログインでも新着・人気記事を主役にする。
+公開トップ・記事・著者・新着・タグ・About・規約は、公開・更新時とデプロイ時にAstroでHTMLを事前生成し、非公開R2バケット `evame-reader-html` に保存する。本文・一覧・コメントを含む完成済みHTMLを返し、初めて開くURLやWorkers CacheのミスでもDB取得とAstroの描画を待たせない。Astroの `output: server` は生成処理と検索・下書きプレビューのために維持する。ビルド時のDB取得も、閲覧時に初めて生成する方式も、公開済みの生成対象URLには使わない。
 
-これはビルド時の全記事SSGではなく、初回リクエストでHTMLを生成してCloudflare Workers Cacheへ保存する構成。キャッシュ命中時はAstroもDBも実行されない。コールドミス時だけAstroからBACKEND bindingで `/api/reader-data` を呼ぶ。ビルドではDBを読まない。
+- `evame-start` は同一ドメインの入口。メンテナンス判定後、公開GET/HEADをDB接続なしでREADER bindingへ渡す。外側は `private, no-store` にし、言語Cookieとセキュリティヘッダーを付ける。
+- `evame-reader` は保存済みHTMLをR2から読み、Cloudflare Workers Cacheへ保存する。キャッシュ命中時はR2もDBもAstroも実行しない。キャッシュは失効・退避され得るため、永続HTMLの代わりにはしない。
+- `ReaderBackend` はGatewayの非公開WorkerEntrypoint。BACKEND bindingからだけ公開データと生成対象一覧を取得でき、ブラウザー向けHTTPルートには登録しない。
+- `reader/src/pages/[...path].astro` は通常の描画と生成で同じコンポーネントを使う。生成では認証ヘッダーを渡さず、同じデータを原文・翻訳・両方表示に再利用する。セッションCookieを含むレスポンスやprivateな結果を共有HTMLに保存しない。
 
-- `evame-start`: 同一ドメインの入口、メンテナンス判定、編集・管理、認証とAPI。公開GET/HEADはDB接続を作らずREADER bindingへ渡す。
-- `evame-reader`: Astro。BACKEND binding経由で公開データを取得する。workers.devとバージョンURLは公開しない。
-- `reader/src/pages/[...path].astro`: 安全な公開結果だけ `Astro.cache.set({maxAge:3600,tags:["evame-reader"]})` を設定する。
-- 下書きプレビューは所有者だけに表示し、検索と同様に共有キャッシュへ保存しない。セッションや所有者判定は共有HTMLに含めない。
-- Xの埋め込みは専用islandから、該当する要素がある場合だけ実装を読み込み、本文全体を起動しない。JavaScript無効時はリンクを表示する。
-- ヘッダーの認証表示、投稿、いいね、翻訳、通知などの操作部分だけをReact islandとして起動する。本文全体のhydrationは行わない。
-- Gatewayは外側のレスポンスを `private, no-store` にし、内部キャッシュ制御・タグを除去して言語Cookieを付ける。認証Cookie付きでも公開HTMLは共通で、個人の状態はprivate APIから取得する。
+生成対象は21言語の公開記事、実在するコメントの全ページ、新着・著者・タグの全ページ、著者の人気順と新着順、Aboutと規約。`view=user/source/both` もそれぞれ生成する。URLの既定値・不正値・追跡パラメーターは正規化し、同じ内容のHTMLを使う。検索、所有者の下書きプレビュー、存在しないページ番号など事前生成範囲外のURLは従来どおりリクエスト時に描画する。404は共有キャッシュへ保存せず、所有者のプレビューを隠さない。
 
-## 書き込みと無効化
+HTMLの `X-Evame-HTML: generated` / `dynamic` で配信経路を確認できる。生成済みHTMLでも、認証ヘッダー・コメント投稿・いいね・翻訳・通知などは従来のReact islandとprivate APIで動作する。トップの30秒更新、Cookieバー、フローティングバー、目次、アイコンを含む既存の表示と操作を維持する。
 
-`src/app/_domain/reader-cache-policy.ts` が無効化の対象を決め、`src/server.ts` が書き込み後にREADERの非公開POST `/__invalidate` を呼ぶ。Reader自身が `cache.purge({tags:["evame-reader"]})` を実行し、受付成功を待ってから保存レスポンスを返す。公開記事の編集・公開切替・削除、プロフィール・階層の変更、コメント、翻訳更新が対象となる。
+## 更新検出と公開
 
-下書きの自動保存、いいね、画像アップロード、Geminiキー設定では公開HTMLを無効化しない。いいね状態はSWRで更新する。翻訳の投入だけでは消さず、翻訳チャンクはジョブ完了時に無効化する。更新に失敗した操作も無効化しない。内部の変更判定ヘッダーはGatewayで除去する。
+`src/drizzle/0001_reader_publication.sql` のトリガーは、本文・段落・翻訳・コメント・タグ・公開状態・プロフィール・フォローの変更を、元の書き込みと同じDBトランザクションで `reader_revisions` へ記録する。認証セッションやAPIキーは対象にしない。階層の構造と見出しの版を本文の版から分け、本文だけの変更で同じツリー全体を再生成しない。
 
-無効化に失敗した場合は書き込み全体を再実行しない。成功レスポンスを返さずエラーを通知する。DBへの変更は完了している可能性がある。CloudflareのpurgeにはFree tier相当のレート制限（補充5回/分、バースト25回）があるため、高頻度の公開書き込みではこの制約に注意する。TTLによる失効も最大1時間で行う。purgeの成功は受付を意味し、世界中への反映にはCloudflare Instant Purgeの伝播時間がある。
+`src/app/api/reader-data/_db/queries.ts` は1回の読み取りSQLで整合した生成元を取得する。書き込みトランザクションを保持しない。`_service/load-reader-catalog.ts` がDBの版を照合して生成元を再利用し、`_domain/reader-documents.ts` は要求された言語のURLだけを返す。掲載記事・ページ数・階層・コメント著者・フォロー関係からURLごとの依存情報を作り、変更のない記事を再生成しない。Aboutの件数も生成時に最新DBから取得し、以前の短期キャッシュを永続HTMLへ固定しない。閲覧数・いいね・人気順は1時間ごとのCronで再集計・再生成し、ブラウザー側の即時更新も維持する。
 
-ローカルworkerdに `cache.purge` がない場合は共有キャッシュを明示的に無効にする。ローカルの成果物テストだけでは実CDNのHIT/purgeを証明できない。Cloudflare上で同じURLのMISS→HIT、無効化後の本文・一覧更新と非公開記事404を確認する。
+Gatewayは公開内容を変える操作の後にReaderの非公開 `/__invalidate` を呼ぶ。Readerは変更されたHTMLを生成し、非公開化・削除したURLは404へ置き換える。既存Gatewayには従来どおり204で完了を返す。バッチ対応Gatewayには途中経過を202で返し、Gatewayは次のバッチを要求する。全バッチとReader自身の `cache.purge({tags:["evame-reader"]})` の成功を待ってから、利用者へ保存成功を返す。下書きの自動保存、いいね、画像アップロード、Geminiキー、翻訳の投入だけでは公開HTMLを更新しない。
 
-## 操作データ
+`reader/src/publication.ts` がR2のHTMLと公開一覧を所有する。公開一覧は `publication/<locale>.json` に分け、1回に96件ずつ処理する。生成中のURLも先に公開一覧へ登録するため、初回生成中の非公開化でも必ず404を書き込める。DBの版とR2の条件付き書き込みで古い生成結果の上書きを防ぐ。同一の404本文でETagが変わらない場合も版が巻き戻らないよう、HTMLコメントにDBの版を含める。競合時は生成をやり直し、DBへの書き込みを再実行しない。生成に失敗したバッチは完了扱いにせず、再実行で再開できる。HTMLはR2内部だけで扱い、R2の公開ドメインは有効にしない。
 
-| データ | 所有者と更新 |
-| --- | --- |
-| コメント | Comments islandがSWRを所有。投稿・返信・削除後に対象ページを再取得し、静的な件数表示も更新 |
-| いいね | ページ内で一括取得し、API結果と楽観的更新をSWRへ反映 |
-| 段落の翻訳・投票 | 既存の翻訳APIとSWR。追加・削除・投票後に再取得 |
-| 通知 | 認証後に取得。既読操作後にSWRを更新 |
-| 編集・管理 | TanStack StartのServer FunctionとRouter loaderを維持 |
+生成・無効化に失敗した場合は保存成功を返さない。DBへの変更が完了している可能性はある。Cloudflare上のpurgeは受付成功と伝播に分かれるため、実CDNのMISS/HITと更新後の本文・非公開化を本番で確認する。ローカルworkerdにpurgeがない場合は共有キャッシュを無効にし、R2からの配信だけを検証する。
 
-`/api/reader-data`、`/api/reader-comments`、`/api/reader-state`、`/api/page-markdown`、`/api/reader-actions` はprivate/no-store。POSTは同一オリジン・認証・権限を検証する。DBと認証処理はAPI配下のserviceに置き、BrowserからServer Functionの実装を直接呼ばない。
+Gatewayが保存リクエストごとに生成IDを発行し、全バッチへ引き継ぐ。未完了の内容更新は同じ保存リクエストか一括生成で再試行し、別の記事の生成失敗を無関係な保存へ持ち込まない。R2の競合によるカタログ再取得も待機付きで最大5回に制限する。毎時の生成は一括生成の経路を使い、以前失敗したURLも再試行する。生成済み404は言語・解析用CookieがあってもDBなしで返し、認証Cookie・Authorizationを持つ要求だけ所有者プレビューの判定へ進む。
 
-## ビルドとデプロイ
+`src/db/queries.ts` の版取得はGatewayとカタログ取得で共用する。Gatewayは保存前のDBの版も全バッチへ渡す。`reader/src/source-revisions.ts` は全言語共通の生成元の変更時期を描画前に `publication/sources.json` へ記録し、保存開始後の差分だけを対象にする。日本語とその他のAboutだけは原文が異なるため分ける。以前失敗した記事がまだ生成されていない言語でも、後の保存がその失敗を引き受けない。一括生成に先に登録された今回の変更も、本文を生成してから保存成功を返す。`reader/src/put-object.ts` は公開一覧・本文・生成元で条件付き書き込みの再試行を共用する。どの書き込みでもETag条件を保持しなければ旧本文が復活するため、同じ処理に固定する。
 
-`bun run build` はAstroとTanStackを順にビルドする。Astroの `/_astro/*` はGatewayからReaderへ転送し、HTMLとアセットを同じWorkerバージョンで配信する。旧Reader互換のGatewayを先にデプロイし、次にReaderのHTMLとアセットを一緒に切り替える。途中で失敗しても旧ReaderのHTMLとアセットを維持する。DBスキーマ変更がある場合は後方互換のマイグレーションを先に行う。
+R2の同一キーへの書き込み制限（10058）は、登録・HTML保存・確定の3箇所で同じ条件付き書き込みを最大5回試行する。1秒以上の間隔を指数的に延ばし、競合相手が保存した場合はETag条件で停止する。権限不足など他のエラーは再試行しない。内容とDBの版に変更がない場合は、公開一覧にも書き込まない。
 
-`bun run prepare:reader-assets` が配信終了から30日以内の旧アセットを新Readerの成果物へ含める。履歴は `.data/reader-assets` とmainのActions cacheに保持する。`deploy:workers` は両Workerの更新後だけ配信ファイルを確定し、旧ファイルの保持期間をその時点から数える。更新前のHTMLから旧JS/CSSを要求しても配信できるようにする。
+## デプロイ
 
-`bun run test:deployment` はローカルHTTP DBと2つのWorkerで、保存・編集・本文SSR・21言語のトップ・非公開化を検証する。`bun run test:deployment:browser` はChromiumでJavaScript無効の閲覧とログイン後の操作も検証する。翻訳キューはローカルの偽HTTPサーバーへ送信し、サーバー・ブラウザーのSentry送信を無効にする。
+後方互換の本番DBマイグレーションを先に実行し、AstroとTanStackをビルドする。公開HTMLはデプロイ後に現在のDBから生成する。
 
-## 公式仕様
+初回切り替え時だけ、非公開R2バケットを作成し、マイグレーション後・Reader切り替え前に `bun run initialize:reader-html` を実行する。本番DBとCloudflareへの認証を環境変数・ローカル認証で渡す。各言語の未生成URLを `pending:deployment` として登録し、切り替え中の通常の記事保存が過去記事全件の生成を引き受けないようにする。既存の公開一覧は上書きせず、HTMLも公開しない。これは移行準備であり、以後のデプロイでは不要。
 
-- [Astro Islands](https://docs.astro.build/en/concepts/islands/)
+1. 旧Readerでも動くGatewayを先にデプロイする。
+2. Readerをデプロイし、新旧のHTMLが参照するJS/CSSを配信する。
+3. 両Workerの更新成功後にアセット履歴を確定する。旧アセットは配信終了から30日間保持する。
+4. `scripts/generate-reader-html.mjs` が認証済みのCloudflare remote binding経由で非公開 `/__publish` を繰り返し呼び、全URLを現在のコードで生成する。完了後にキャッシュを無効化する。
+
+コードだけの更新で、一般利用者の保存処理に全サイトの再生成を引き受けさせない。コンテンツ更新は内容の差分だけを生成し、コードの一括更新はデプロイ処理が担当する。生成中は既存HTMLを維持し、更新後のHTMLが参照するアセットを先に配信してリンク切れを防ぐ。HTML生成だけが失敗してもアセットの実際の配信履歴は保持し、Actions cacheにも保存する。
+
+コードの版は `CF_VERSION_METADATA.id` で判定する。GitHub Actionsの環境変数には依存せず、ローカルからの再デプロイでも新しいWorkerの版に合わせてHTMLを生成する。
+
+生成結果の保存時は本文のETagを読み、その後に公開一覧のETagとコードの版を確認する。後続のデプロイに所有権が移った場合は、旧Workerの生成を再試行せず中止する。同じDBの版を使うコード更新でも、進行中だった旧HTMLを新版のHTMLへ書き戻さない。
+
+## 検証
+
+ユニット・DBテストでURL正規化、差分対象、更新検出、初回生成と非公開化の競合、既存HTMLの更新競合、認証情報の除外を確認する。成果物テストは認証済みの保存・公開・編集・非公開化・削除に加え、DBを停止してから未訪問URLのトップ・本文・著者一覧を読む。JavaScript無効のコメント途中ページと、ログイン後の投稿・言語選択・Tiptap・既存UIはブラウザーで検証する。本番相当のローカル検証はサーバーとブラウザー両方のSentry送信を無効にする。
+
+- [Astro Cloudflareのカスタムfetch](https://docs.astro.build/en/guides/integrations-guide/cloudflare/)
+- [R2の整合性](https://developers.cloudflare.com/r2/reference/consistency/)
+- [R2 Workers APIと条件付き書き込み](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/)
 - [Cloudflare Workers Cache](https://developers.cloudflare.com/workers/cache/)
-- [purgeの範囲・伝播・制限](https://developers.cloudflare.com/workers/cache/purge/)

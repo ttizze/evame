@@ -1,6 +1,5 @@
 import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { SEGMENT_NUMBER } from "@/db/seed-data/content";
-import type { querySocialProofStats } from "../_db/queries";
 import type { loadAboutPage } from "../service/load-about-page";
 import { AboutSectionContent } from "./layout";
 
@@ -11,7 +10,7 @@ export default function SocialProofBar({
 }: {
 	locale: string;
 	pageDetail: NonNullable<Awaited<ReturnType<typeof loadAboutPage>>>;
-	stats: Awaited<ReturnType<typeof querySocialProofStats>>;
+	stats: { articles: number; translations: number; languages: number };
 }) {
 	const articlesLabel = pageDetail.segments.find(
 		(segment) => segment.number === SEGMENT_NUMBER.socialProofArticles,

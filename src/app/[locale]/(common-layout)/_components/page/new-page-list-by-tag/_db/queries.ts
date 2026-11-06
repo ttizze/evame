@@ -40,6 +40,7 @@ export async function fetchPaginatedPublicNewestPageListsByTag({
 			.where("tags.name", "=", tagName)
 			.where("pages.status", "=", "PUBLIC")
 			.orderBy("pages.createdAt", "desc")
+			.orderBy("pages.id", "desc")
 			.limit(pageSize)
 			.offset(offset)
 			.execute(),

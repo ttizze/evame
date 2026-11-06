@@ -28,6 +28,9 @@ vi.mock("./db", async () => {
 		databaseScope: new AsyncLocalStorage(),
 	};
 });
+vi.mock("./db/queries", () => ({
+	fetchReaderRevision: vi.fn().mockResolvedValue({ revision: 1 }),
+}));
 
 const env = {
 	SETTINGS: { get: vi.fn().mockResolvedValue(false) },
@@ -293,6 +296,32 @@ describe("Astroへの表示の転送", () => {
 	});
 });
 describe("公開HTMLの更新", () => {
+	it("HTML生成が複数バッチに分かれても、全バッチの完了前に保存成功を返さない", async () => {
+		env.READER.fetch
+			.mockResolvedValueOnce(
+				new Response(null, {
+					status: 202,
+					headers: { "X-Evame-Reader-Locale": "en" },
+				}),
+			)
+			.mockResolvedValueOnce(new Response(null, { status: 204 }));
+		vi.mocked(handler.fetch).mockResolvedValue(new Response(null));
+		await server.fetch(
+			new Request("https://evame.test/_serverFn/save-page", { method: "POST" }),
+			env as unknown as typeof import("cloudflare:workers").env,
+			{ waitUntil: vi.fn() },
+		);
+		expect(env.READER.fetch).toHaveBeenCalledTimes(2);
+		expect(
+			env.READER.fetch.mock.calls[1][1].headers["X-Evame-Reader-Locale"],
+		).toBe("en");
+		const publicationId =
+			env.READER.fetch.mock.calls[0][1].headers["X-Evame-Reader-Publication"];
+		expect(publicationId).toEqual(expect.any(String));
+		expect(
+			env.READER.fetch.mock.calls[1][1].headers["X-Evame-Reader-Publication"],
+		).toBe(publicationId);
+	});
 	it("更新処理はAstroのキャッシュ無効化を待ってから成功を返す", async () => {
 		const purge = Promise.withResolvers<Response>();
 		env.READER.fetch.mockReturnValue(purge.promise);

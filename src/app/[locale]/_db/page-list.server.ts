@@ -164,11 +164,15 @@ export function fetchPageRows(
 	// タイトル・翻訳・著者などの結合より先に表示対象を確定する。
 	const ids = selectedPages
 		.orderBy("pages.createdAt", "desc")
+		.orderBy("pages.id", "desc")
 		.limit(pageSize)
 		.offset((page - 1) * pageSize);
 	let query = buildPageListQuery(locale).where("pages.id", "in", ids);
 	if (sort === "popular") query = query.orderBy("likeCount", "desc");
-	return query.orderBy("pages.createdAt", "desc").execute();
+	return query
+		.orderBy("pages.createdAt", "desc")
+		.orderBy("pages.id", "desc")
+		.execute();
 }
 
 /** 一覧と同じ公開条件の総件数とタグを付けてページ分けする。 */

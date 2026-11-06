@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import type { querySocialProofStats } from "./_db/queries";
 import ComparisonSection from "./components/comparison-section";
 import FAQSection from "./components/faq-section";
 import ReachFeature from "./components/features/reach";
@@ -22,7 +21,7 @@ export default function AboutSectionPresentation({
 }: {
 	locale: string;
 	pageDetail: NonNullable<Awaited<ReturnType<typeof loadAboutPage>>>;
-	stats: Awaited<ReturnType<typeof querySocialProofStats>>;
+	stats: Parameters<typeof SocialProofBar>[0]["stats"];
 	readControls: ReactNode;
 	floatingControls: ReactNode;
 }) {

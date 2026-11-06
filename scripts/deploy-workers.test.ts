@@ -21,6 +21,11 @@ beforeEach(async () => {
 	directory = await mkdtemp(join(tmpdir(), "evame-deploy-workers-"));
 	await mkdir(join(directory, ".data/reader-assets"), { recursive: true });
 	await mkdir(join(directory, "bin"));
+	await mkdir(join(directory, "scripts"));
+	await writeFile(
+		join(directory, "scripts/generate-reader-html.mjs"),
+		'import {appendFile} from "node:fs/promises"; await appendFile("deployments", "generate-html\\n");',
+	);
 	await writeFile(
 		join(directory, ".data/reader-assets/active.json"),
 		'["old.js"]',
@@ -66,7 +71,11 @@ it("GatewayとReaderを順に更新してから配信中のアセットを確定
 	});
 	expect(
 		(await readFile(join(directory, "deployments"), "utf8")).trim().split("\n"),
-	).toEqual(["dist/server/wrangler.json", "reader/dist/server/wrangler.json"]);
+	).toEqual([
+		"dist/server/wrangler.json",
+		"reader/dist/server/wrangler.json",
+		"generate-html",
+	]);
 	expect(
 		await readFile(join(directory, ".data/reader-assets/active.json"), "utf8"),
 	).toBe('["new.js"]');
@@ -92,4 +101,23 @@ it("Readerの更新に失敗した場合は旧版の配信中アセットを維�
 	expect(
 		await readFile(join(directory, ".data/reader-assets/active.json"), "utf8"),
 	).toBe('["old.js"]');
+});
+
+it("HTML生成が失敗しても、更新が完了したWorkerのアセットの配信履歴を保持する", async () => {
+	await writeFile(
+		join(directory, "scripts/generate-reader-html.mjs"),
+		'throw new Error("HTML generation failed");',
+	);
+	await expect(
+		promisify(execFile)(process.execPath, [script], {
+			cwd: directory,
+			env: {
+				...process.env,
+				PATH: `${join(directory, "bin")}:${process.env.PATH}`,
+			},
+		}),
+	).rejects.toThrow();
+	expect(
+		await readFile(join(directory, ".data/reader-assets/active.json"), "utf8"),
+	).toBe('["new.js"]');
 });

@@ -1,13 +1,54 @@
-import type { ExecutionContext } from "@cloudflare/workers-types";
+import { WorkerEntrypoint } from "cloudflare:workers";
+import type {
+	ExecutionContext,
+	Request as WorkerRequest,
+	Response as WorkerResponse,
+} from "@cloudflare/workers-types";
 import { captureException, withSentry } from "@sentry/cloudflare";
 import { isRedirect } from "@tanstack/react-router";
 import handler from "@tanstack/react-start/server-entry";
 import { withSecurityHeaders } from "../security-headers";
 import { SENTRY_DSN } from "./_utils/sentry-dsn";
+import { supportedLocaleOptions } from "./app/_constants/locale";
 import { shouldInvalidateReader } from "./app/_domain/reader-cache-policy";
 import { parseReaderRoute } from "./app/_domain/reader-route";
 import { createDb, databaseScope } from "./db";
+import { fetchReaderRevision } from "./db/queries";
 import { getMaintenancePath, shouldCheckMaintenance } from "./maintenance-gate";
+
+// HTTPルートへ公開しない、Reader専用のサービス境界。
+export class ReaderBackend extends WorkerEntrypoint {
+	async fetch(workerRequest: WorkerRequest): Promise<WorkerResponse> {
+		const request = new Request(workerRequest.url, {
+			headers: Object.fromEntries(workerRequest.headers),
+		});
+		const database = createDb();
+		try {
+			return (await databaseScope.run(database, async () => {
+				const pathname = new URL(request.url).pathname;
+				if (pathname === "/__catalog") {
+					const locale =
+						new URL(request.url).searchParams.get("locale") ?? "en";
+					if (!supportedLocaleOptions.some((option) => option.code === locale))
+						return new Response(null, { status: 400 });
+					const { loadReaderCatalog } = await import(
+						"./app/api/reader-data/_service/load-reader-catalog"
+					);
+					return Response.json(await loadReaderCatalog(locale));
+				}
+				if (pathname === "/api/reader-data") {
+					const { getReaderData } = await import(
+						"./app/api/reader-data/handler"
+					);
+					return getReaderData(request);
+				}
+				return new Response(null, { status: 404 });
+			})) as unknown as WorkerResponse;
+		} finally {
+			await database.destroy();
+		}
+	}
+}
 
 export default withSentry(
 	(env) => ({
@@ -89,8 +130,18 @@ export default withSentry(
 			const database = createDb();
 			return databaseScope.run(database, async () => {
 				try {
+					const beforeRevision = shouldInvalidateReader(
+						request.method,
+						url.pathname,
+						url.searchParams.get("action"),
+						200,
+						null,
+					)
+						? (await fetchReaderRevision()).revision
+						: null;
 					const response = await handler.fetch(request);
 					if (
+						beforeRevision !== null &&
 						shouldInvalidateReader(
 							request.method,
 							url.pathname,
@@ -99,11 +150,26 @@ export default withSentry(
 							response.headers.get("X-Evame-Reader-Changed"),
 						)
 					) {
-						const purged = await env.READER.fetch(
-							"https://reader.internal/__invalidate",
-							{ method: "POST" },
-						);
-						if (!purged.ok) throw new Error("Reader cache invalidation failed");
+						let locale: string | null = null;
+						const publicationId = crypto.randomUUID();
+						for (;;) {
+							const published = await env.READER.fetch(
+								"https://reader.internal/__invalidate",
+								{
+									method: "POST",
+									headers: {
+										"X-Evame-Reader-Batch": "true",
+										"X-Evame-Reader-Publication": publicationId,
+										"X-Evame-Reader-Since": String(beforeRevision),
+										...(locale ? { "X-Evame-Reader-Locale": locale } : {}),
+									},
+								},
+							);
+							if (!published.ok)
+								throw new Error("Reader cache invalidation failed");
+							if (published.status !== 202) break;
+							locale = published.headers.get("X-Evame-Reader-Locale");
+						}
 					}
 					const init = {
 						status: response.status,

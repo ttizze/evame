@@ -1,8 +1,8 @@
 import { parseReaderRoute } from "@/app/_domain/reader-route";
 import { buildAlternates } from "@/app/_lib/seo-helpers";
 import { fetchPaginatedPageLists } from "@/app/[locale]/_db/page-list.server";
+import { querySocialProofStats } from "@/app/[locale]/(common-layout)/_components/about-section/_db/queries";
 import { loadAboutPage } from "@/app/[locale]/(common-layout)/_components/about-section/service/load-about-page";
-import { loadSocialProofStats } from "@/app/[locale]/(common-layout)/_components/about-section/service/load-social-proof-stats";
 import { getHomeMetadata } from "@/app/[locale]/(common-layout)/_components/home/metadata";
 import { loadHomePage } from "@/app/[locale]/(common-layout)/_components/home/service/load-home-page";
 import { fetchPaginatedPublicNewestPageListsByTag } from "@/app/[locale]/(common-layout)/_components/page/new-page-list-by-tag/_db/queries";
@@ -34,7 +34,7 @@ export async function loadReaderData(
 		case "about": {
 			const [pageDetail, stats] = await Promise.all([
 				loadAboutPage(route.locale),
-				loadSocialProofStats(),
+				querySocialProofStats().executeTakeFirstOrThrow(),
 			]);
 			const data = { pageDetail, stats };
 			return data.pageDetail

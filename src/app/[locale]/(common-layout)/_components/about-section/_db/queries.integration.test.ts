@@ -49,7 +49,7 @@ it("公開されたルート記事とその翻訳だけを1回のSQLで数える
 			.execute();
 	}
 	const execute = vi.spyOn(db.getExecutor(), "executeQuery");
-	expect(await querySocialProofStats()).toEqual({
+	expect(await querySocialProofStats().executeTakeFirstOrThrow()).toEqual({
 		articles: 2,
 		translations: 1,
 		languages: 18,
@@ -65,7 +65,7 @@ it("公開されたルート記事とその翻訳だけを1回のSQLで数える
 });
 
 it("記事も翻訳もない場合は件数をゼロで返す", async () => {
-	expect(await querySocialProofStats()).toEqual({
+	expect(await querySocialProofStats().executeTakeFirstOrThrow()).toEqual({
 		articles: 0,
 		translations: 0,
 		languages: 18,

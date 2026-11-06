@@ -1,6 +1,5 @@
 import { fileURLToPath } from "node:url";
 import cloudflare from "@astrojs/cloudflare";
-import { cacheCloudflare } from "@astrojs/cloudflare/cache";
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
@@ -13,7 +12,6 @@ export default defineConfig({
 	session: false,
 	adapter: cloudflare({ imageService: "passthrough" }),
 	integrations: [react()],
-	cache: { provider: cacheCloudflare() },
 	vite: {
 		envPrefix: ["PUBLIC_", "VITE_"],
 		resolve: {
