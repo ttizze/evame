@@ -134,6 +134,16 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await page.keyboard.press("Escape");
 		await page.goto(`${baseUrl}/ja/${handle}/${pageSlug}`);
 		await expect(
+			page.locator('astro-island[component-export="ArticleToolsIsland"]'),
+		).not.toHaveAttribute("ssr", "");
+		await page
+			.getByRole("button", { name: "Table of Contents", exact: true })
+			.click();
+		await expect(
+			page.getByRole("link", { name: "Workersの目次見出し", exact: true }),
+		).toBeVisible();
+		await page.keyboard.press("Escape");
+		await expect(
 			page.locator('[data-tweet-id="123456789"]').getByText("Tweet not found"),
 		).toBeVisible({ timeout: 15000 });
 		const like = page
