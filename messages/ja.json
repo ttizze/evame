@@ -65,14 +65,14 @@
 		"downloadMarkdown": "Markdownをダウンロード",
 		"editProfile": "プロフィールを編集",
 		"search": "検索",
-		"category": "検索対象",
 		"title": "タイトル",
 		"content": "本文",
 		"tags": "タグ",
 		"user": "ユーザー",
 		"preview": "プレビュー",
-		"pagination": "ページ切り替え",
-		"previous": "前へ",
-		"next": "次へ"
+		"noPages": "記事はまだありません。",
+		"noResults": "検索結果がありません。",
+		"loading": "読み込み中...",
+		"searchPlaceholder": "検索..."
 	}
 }

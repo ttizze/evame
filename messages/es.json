@@ -65,14 +65,14 @@
 		"downloadMarkdown": "Descargar Markdown",
 		"editProfile": "Editar perfil",
 		"search": "Buscar",
-		"category": "Categoría",
 		"title": "Título",
 		"content": "Contenido",
 		"tags": "Etiquetas",
 		"user": "Usuario",
 		"preview": "Vista previa",
-		"pagination": "Paginación",
-		"previous": "Anterior",
-		"next": "Siguiente"
+		"noPages": "Aún no hay artículos.",
+		"noResults": "No se encontraron resultados.",
+		"loading": "Cargando...",
+		"searchPlaceholder": "Buscar..."
 	}
 }

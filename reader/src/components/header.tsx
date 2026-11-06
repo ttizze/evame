@@ -11,18 +11,22 @@ export function HeaderIsland({
 	locale,
 	search,
 	gaTrackingId,
+	showHeader,
 }: {
 	locale: string;
 	search: string;
 	gaTrackingId: string;
+	showHeader: boolean;
 }) {
 	return (
 		<IslandProviders locale={locale} search={search}>
 			<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-				<HeaderFrame
-					locale={locale}
-					userSlot={<HeaderUserSlot locale={locale} />}
-				/>
+				{showHeader && (
+					<HeaderFrame
+						locale={locale}
+						userSlot={<HeaderUserSlot locale={locale} />}
+					/>
+				)}
 				<AnalyticsConsent
 					gaTrackingId={gaTrackingId}
 					locale={locale}

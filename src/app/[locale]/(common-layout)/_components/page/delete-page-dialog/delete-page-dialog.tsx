@@ -1,7 +1,5 @@
-import { useRouter } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Trash } from "lucide-react";
-import { useActionState, useEffect } from "react";
+import { useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,57 +10,38 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { type ArchivePageState, archivePageAction } from "./action";
+import type { ArchivePageState } from "./action";
 
 interface DeletePageDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	pageId: number;
-	locale: string;
+	archive: () => Promise<ArchivePageState>;
+	onDeleted: () => void;
 }
 
 export function DeletePageDialog({
 	open,
 	onOpenChange,
-	pageId,
-	locale,
+	archive,
+	onDeleted,
 }: DeletePageDialogProps) {
-	const router = useRouter();
-	const archivePageFn = useServerFn(archivePageAction);
-	const [archiveState, archiveAction, isArchiving] = useActionState<
-		ArchivePageState,
-		FormData
-	>(
-		async (_previousState, formData) => {
+	const [isArchiving, startArchiving] = useTransition();
+	const archiveAction = async () => {
+		startArchiving(async () => {
 			try {
-				return await archivePageFn({
-					data: {
-						locale,
-						pageId: Number(formData.get("pageId")),
-					},
-				});
+				const result = await archive();
+				if (result.success) {
+					toast.success(result.message);
+					onOpenChange(false);
+					onDeleted();
+				} else if (result.message) toast.error(result.message);
 			} catch (error) {
-				return {
-					success: false,
-					message:
-						error instanceof Error ? error.message : "Failed to delete page",
-				};
+				toast.error(
+					error instanceof Error ? error.message : "Failed to delete page",
+				);
 			}
-		},
-		{ success: false },
-	);
-
-	useEffect(() => {
-		if (archiveState.success) {
-			toast.success(archiveState.message);
-			onOpenChange(false);
-			void router.invalidate({ sync: true });
-			return;
-		}
-		if (archiveState.message) {
-			toast.error(archiveState.message);
-		}
-	}, [archiveState, onOpenChange, router]);
+		});
+	};
 
 	return (
 		<Dialog onOpenChange={onOpenChange} open={open}>
@@ -87,7 +66,6 @@ export function DeletePageDialog({
 							Cancel
 						</Button>
 						<form action={archiveAction} className="w-1/2">
-							<input name="pageId" type="hidden" value={pageId} />
 							<Button
 								className="w-full"
 								disabled={isArchiving}

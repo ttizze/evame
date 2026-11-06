@@ -1,9 +1,8 @@
 import { FaDiscord, FaGithub } from "react-icons/fa";
-import { useLocale, useTranslations } from "use-intl";
+import { messages } from "@/i18n/messages";
 
-export function Footer() {
-	const locale = useLocale();
-	const t = useTranslations("Footer");
+export function Footer({ locale }: { locale: string }) {
+	const t = (messages[locale as keyof typeof messages] ?? messages.en).Footer;
 	return (
 		<footer className="mt-auto h-60 grid place-items-center">
 			<div className="w-full ">
@@ -12,19 +11,19 @@ export function Footer() {
 						className="hover:text-gray-900 dark:hover:text-white"
 						href={`/${locale}/about`}
 					>
-						{t("about")}
+						{t.about}
 					</a>
 					<a
 						className="hover:text-gray-900 dark:hover:text-white"
 						href={`/${locale}/privacy`}
 					>
-						{t("privacyPolicy")}
+						{t.privacyPolicy}
 					</a>
 					<a
 						className="hover:text-gray-900 dark:hover:text-white"
 						href={`/${locale}/terms`}
 					>
-						{t("termsOfService")}
+						{t.termsOfService}
 					</a>
 					<a
 						aria-label="GitHub"

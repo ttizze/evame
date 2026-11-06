@@ -65,14 +65,14 @@
 		"downloadMarkdown": "下载Markdown",
 		"editProfile": "编辑个人资料",
 		"search": "搜索",
-		"category": "搜索类别",
 		"title": "标题",
 		"content": "正文",
 		"tags": "标签",
 		"user": "用户",
 		"preview": "预览",
-		"pagination": "分页",
-		"previous": "上一页",
-		"next": "下一页"
+		"noPages": "暂无文章。",
+		"noResults": "未找到结果。",
+		"loading": "加载中...",
+		"searchPlaceholder": "搜索..."
 	}
 }

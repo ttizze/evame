@@ -46,20 +46,18 @@ export function RootNotFoundComponent() {
 				The page you're looking for doesn't exist or has been moved.
 			</p>
 			<div className="flex gap-4">
-				<Link
+				<a
 					className="px-6 py-3 bg-primary text-primary-foreground rounded-full hover:opacity-90 transition-opacity"
-					params={{ locale: "en" }}
-					to="/$locale"
+					href="/en"
 				>
 					Go Home
-				</Link>
-				<Link
+				</a>
+				<a
 					className="px-6 py-3 border border-border rounded-full hover:bg-accent transition-colors"
-					params={{ locale: "en" }}
-					to="/$locale/search"
+					href="/en/search"
 				>
 					Search
-				</Link>
+				</a>
 			</div>
 		</div>
 	);

@@ -65,14 +65,14 @@
 		"downloadMarkdown": "Download Markdown",
 		"editProfile": "Edit Profile",
 		"search": "Search",
-		"category": "Category",
 		"title": "Title",
 		"content": "Content",
 		"tags": "Tags",
 		"user": "User",
 		"preview": "Preview",
-		"pagination": "Pagination",
-		"previous": "Previous",
-		"next": "Next"
+		"noPages": "No pages yet.",
+		"noResults": "No results found.",
+		"loading": "Loading...",
+		"searchPlaceholder": "Search..."
 	}
 }

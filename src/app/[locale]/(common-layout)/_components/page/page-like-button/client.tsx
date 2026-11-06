@@ -8,7 +8,7 @@ import { computeNextLikeState } from "./domain/like-state";
 import {
 	buildLikeStateKey,
 	fetchLikeStates,
-	type LikeState,
+	type LikeStatesResponse,
 } from "./service/like-api";
 
 export function PageLikeButtonClient({
@@ -23,20 +23,19 @@ export function PageLikeButtonClient({
 	const hydrated = useHydrated();
 	const [isPending, startTransition] = useTransition();
 	const fallbackData = { liked: false, likeCount: initialLikeCount };
-	const { data, mutate, isLoading } = useSWR<LikeState>(
+	const { data, mutate, isLoading } = useSWR<LikeStatesResponse>(
 		buildLikeStateKey(pageId),
-		async (url: string) => {
-			const result = await fetchLikeStates(url);
-			return result.states[String(pageId)] ?? fallbackData;
-		},
+		fetchLikeStates,
 		{
-			fallbackData,
+			fallbackData: { states: { [pageId]: fallbackData } },
 			revalidateOnFocus: false,
 			revalidateIfStale: false,
 			revalidateOnMount: false,
 		},
 	);
-	const displayed = hydrated ? data : fallbackData;
+	const displayed = hydrated
+		? (data?.states[pageId] ?? fallbackData)
+		: fallbackData;
 	return (
 		<div className="flex items-center gap-2">
 			<Button
@@ -44,12 +43,17 @@ export function PageLikeButtonClient({
 				className="bg-background cursor-pointer"
 				disabled={!hydrated || isPending || isLoading}
 				onClick={() => {
-					if (!data) return;
-					void mutate(computeNextLikeState(data), { revalidate: false });
+					void mutate(
+						{ states: { [pageId]: computeNextLikeState(displayed) } },
+						{ revalidate: false },
+					);
 					startTransition(async () => {
 						const result = await callReaderAction("like", { pageId });
 						if (result.success)
-							await mutate(result.data, { revalidate: false });
+							await mutate(
+								{ states: { [pageId]: result.data } },
+								{ revalidate: false },
+							);
 					});
 				}}
 				size="icon"

@@ -65,14 +65,14 @@
 		"downloadMarkdown": "Markdown 다운로드",
 		"editProfile": "프로필 편집",
 		"search": "검색",
-		"category": "검색 대상",
 		"title": "제목",
 		"content": "본문",
 		"tags": "태그",
 		"user": "사용자",
 		"preview": "미리보기",
-		"pagination": "페이지 이동",
-		"previous": "이전",
-		"next": "다음"
+		"noPages": "아직 글이 없습니다.",
+		"noResults": "검색 결과가 없습니다.",
+		"loading": "불러오는 중...",
+		"searchPlaceholder": "검색..."
 	}
 }

@@ -1,6 +1,8 @@
 ---
+import { EyeIcon, MessageCircle } from "lucide-react";
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
-import { formatDate } from "@/app/[locale]/(common-layout)/_utils/format-date";
+import { PageTagList } from "@/app/[locale]/(common-layout)/_components/page/page-tag-list";
+import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
 import { ChildPages } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/child-pages";
 import { PageViewCounter } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/page-view-counter";
 import { extractTocItems } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_domain/extract-toc-items";
@@ -32,19 +34,22 @@ const tocItems = extractTocItems({
 });
 const articleUrl = `https://evame.tech/${pageDetail.sourceLocale}/${pageDetail.userHandle}/${pageDetail.slug}`;
 const authorUrl = `https://evame.tech/${pageDetail.sourceLocale}/${pageDetail.userHandle}`;
-const downloadUrl = `/api/page-markdown?${new URLSearchParams({ locale, handle: pageDetail.userHandle, slug: pageDetail.slug })}`;
+const titleSegment = pageDetail.segments.find(
+	(segment) => segment.number === 0,
+);
 ---
-<article class="prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
-  {!isPublic && <div class="not-prose rounded-xl bg-secondary px-4 py-2">{t.preview}</div>}
+<article class="w-full prose dark:prose-invert prose-a:underline lg:prose-lg mx-auto mb-20">
+  {!isPublic && <div class="sticky top-0 z-50 w-full bg-secondary text-foreground rounded-xl"><div class="mx-auto max-w-5xl px-3 py-2 text-sm flex items-center justify-between"><span>{t.preview}</span></div></div>}
   {isPublic && <><ArticleJsonLd authorName={pageDetail.userName} authorUrl={authorUrl} datePublished={new Date(pageDetail.createdAt).toISOString()} dateModified={new Date(pageDetail.updatedAt).toISOString()} headline={pageDetail.title} description={data.description} image={`https://evame.tech/api/og?locale=${pageDetail.sourceLocale}&slug=${pageDetail.slug}`} inLanguage={pageDetail.sourceLocale} url={articleUrl} /><BreadcrumbJsonLd items={[{ name: "Home", url: `https://evame.tech/${locale}` }, { name: pageDetail.userName, url: authorUrl }, { name: pageDetail.title, url: articleUrl }]} /></>}
   {navigationData && <PageNavigationIsland locale={locale} search={Astro.url.search} pageId={pageDetail.id} data={navigationData} client:idle />}
-  <div class="not-prose flex items-center justify-between gap-4 py-4"><a class="flex items-center gap-3" href={`/${locale}/${pageDetail.userHandle}`}>{pageDetail.userImage && <img class="rounded-full" alt="" src={pageDetail.userImage} width="40" height="40" />}<span>{pageDetail.userName}<time class="block text-xs text-muted-foreground" datetime={new Date(pageDetail.createdAt).toISOString()}>{formatDate(pageDetail.createdAt, locale)}</time></span></a><div class="flex items-center gap-3"><a href={downloadUrl} aria-label={t.downloadMarkdown} download>↓ MD</a><ArticleToolsIsland locale={locale} search={Astro.url.search} handle={pageDetail.userHandle} slug={pageDetail.slug} tocItems={tocItems} client:load /></div></div>
+  {titleSegment && <h1 class="mb-0!"><SegmentElement segment={titleSegment} /></h1>}
+  <PageTagList locale={locale} tag={pageDetail.tagPages.map(({ tag }) => tag)} />
+  <ArticleToolsIsland locale={locale} search={Astro.url.search} handle={pageDetail.userHandle} slug={pageDetail.slug} name={pageDetail.userName} image={pageDetail.userImage} createdAt={pageDetail.createdAt} tocItems={tocItems} client:load />
   <StaticBody mdast={pageDetail.mdastJson} segments={pageDetail.segments} />
-  <div class="not-prose flex flex-wrap gap-2 py-3">{pageDetail.tagPages.map(({ tag }) => <a class="rounded-full bg-secondary px-3 py-1 text-sm" href={`/${locale}/tag/${encodeURIComponent(tag.name)}`}>#{tag.name}</a>)}</div>
   <ChildPages locale={locale} pages={data.childPages} client:visible />
-  <div class="not-prose flex items-center gap-4"><span>◉ <PageViewCounter pageId={pageDetail.id} initialCount={data.pageViewCount} client:load /></span><PageLikeButtonClient showCount pageId={pageDetail.id} initialLikeCount={data.pageCounts.likeCount} client:visible /><a href="#comments">↳ <span data-comment-count={pageDetail.id}>{data.comments.count}</span></a></div>
-  <section class="mt-8 space-y-4" id="comments"><h2>{t.comments}</h2><CommentsIsland search={Astro.url.search} pathname={Astro.url.pathname} locale={locale} pageId={pageDetail.id} initialPage={page} initialData={data.comments} client:visible /></section>
+  <div class="flex flex-wrap items-center gap-4"><EyeIcon className="h-5 w-5" strokeWidth={1.5} /><PageViewCounter pageId={pageDetail.id} initialCount={data.pageViewCount} client:load /><PageLikeButtonClient showCount={true} pageId={pageDetail.id} initialLikeCount={data.pageCounts.likeCount} client:visible /><MessageCircle className="h-5 w-5" strokeWidth={1.5} /><span class="text-muted-foreground" data-comment-count={pageDetail.id}>{data.comments.count}</span></div>
+  <ControlsIsland locale={locale} search={Astro.url.search} sourceLocale={pageDetail.sourceLocale} pageId={pageDetail.id} likeCount={data.pageCounts.likeCount} client:idle />
+  <section class="mt-8 space-y-4" id="comments"><h2 class="text-2xl font-bold not-prose">{t.comments}</h2><CommentsIsland search={Astro.url.search} pathname={Astro.url.pathname} locale={locale} pageId={pageDetail.id} initialPage={page} initialData={data.comments} client:visible /></section>
 </article>
-<ControlsIsland locale={locale} search={Astro.url.search} sourceLocale={pageDetail.sourceLocale} pageId={pageDetail.id} likeCount={data.pageCounts.likeCount} client:idle />
 
 <TweetsIsland client:idle />

@@ -1,19 +1,19 @@
 ---
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
-import { SegmentElement } from "@/app/[locale]/(common-layout)/_components/wrap-segments/segment";
-import { formatDate } from "@/app/[locale]/(common-layout)/_utils/format-date";
+import { PageList } from "@/app/[locale]/(common-layout)/_components/page/page-list";
 import type { PageForList } from "@/app/[locale]/types";
+import { UserAvatar } from "@/components/user-avatar";
+import { PageOwnerActionsIsland } from "./page-owner-actions";
 
 interface Props {
 	page: PageForList;
 	locale: string;
+	index: number | null;
 }
-const { page, locale } = Astro.props;
-const href = `/${locale}/${page.userHandle}/${page.slug}`;
+const { page, locale, index } = Astro.props;
 ---
-<article class="grid gap-2 py-5 border-b last:border-b-0">
-  <a class="block text-xl font-semibold hover:underline" href={href}><SegmentElement segment={page.titleSegment} interactive={false} /></a>
-  <div class="flex flex-wrap gap-2">{page.tags.map((tag) => <a class="rounded-full bg-secondary px-3 py-1 text-sm" href={`/${locale}/tag/${encodeURIComponent(tag.name)}`}>#{tag.name}</a>)}</div>
-  <div class="flex items-center gap-2 text-sm text-muted-foreground"><a href={`/${locale}/${page.userHandle}`} class="flex items-center gap-2">{page.userImage && <img src={page.userImage} width="20" height="20" loading="lazy" alt="" class="rounded-full" />}{page.userName}</a><time datetime={new Date(page.createdAt).toISOString()}>{formatDate(page.createdAt, locale)}</time></div>
-  <div class="flex items-center justify-end gap-4 text-muted-foreground"><span aria-label="Views">◉ {page.viewCount}</span><PageLikeButtonClient showCount pageId={page.id} initialLikeCount={page.likeCount} client:visible /><a href={`${href}#comments`} aria-label="Comments">↳ {page.pageCommentsCount}</a></div>
-</article>
+<PageList PageForList={page} locale={locale} index={index} likeButton={null} ownerActions={null} avatar={null}>
+  <UserAvatar slot="avatar" className="w-5 h-5 shrink-0" image={page.userImage} name={page.userHandle} client:visible />
+  <PageLikeButtonClient slot="like-button" showCount={false} pageId={page.id} initialLikeCount={page.likeCount} client:visible />
+  {index === null && <PageOwnerActionsIsland slot="owner-actions" locale={locale} handle={page.userHandle} pageId={page.id} slug={page.slug} status={page.status} client:load />}
+</PageList>
