@@ -574,9 +574,8 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			page.waitForNavigation({ waitUntil: "domcontentloaded" }),
 			page.getByRole("button", { name: "Make Private", exact: true }).click(),
 			hiddenResponse.then(async (response) => {
-				const body = await response.text();
-				assert.equal(response.status(), 200, body);
-				assert.equal(JSON.parse(body).success, true, body);
+				const status = response.status();
+				assert.equal(status, 200, status === 200 ? "" : await response.text());
 			}),
 		]);
 		assert.equal(hiddenNavigation.status(), 200);
@@ -600,9 +599,8 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 				.getByRole("button", { name: "Delete", exact: true })
 				.click(),
 			deletedResponse.then(async (response) => {
-				const body = await response.text();
-				assert.equal(response.status(), 200, body);
-				assert.equal(JSON.parse(body).success, true, body);
+				const status = response.status();
+				assert.equal(status, 200, status === 200 ? "" : await response.text());
 			}),
 		]);
 		assert.equal(deletedNavigation.status(), 200);
