@@ -20,3 +20,8 @@ for (const path of next.retiring)
 	await utimes(join(".data/reader-assets/files", path), now, now);
 await writeFile(nextPath, JSON.stringify(next.active));
 await rename(nextPath, ".data/reader-assets/active.json");
+
+// 新旧のHTMLが参照するアセットの配信・保持を確定してからHTML自体を更新する。
+execFileSync(process.execPath, ["scripts/generate-reader-html.mjs"], {
+	stdio: "inherit",
+});

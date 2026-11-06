@@ -275,6 +275,7 @@ export interface Verifications {
 }
 
 export interface DB {
+	readerRevisions: { key: string; revision: number };
 	accounts: Accounts;
 	contents: Contents;
 	follows: Follows;

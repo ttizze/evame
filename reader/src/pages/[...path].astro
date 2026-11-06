@@ -1,5 +1,5 @@
 ---
-import { cache, env } from "cloudflare:workers";
+import { env } from "cloudflare:workers";
 import { SparklesIcon } from "lucide-react";
 import { fromJSON } from "seroval";
 import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list";
@@ -21,12 +21,14 @@ import { SearchIsland } from "../components/search";
 const url = new URL("/api/reader-data", Astro.url);
 url.searchParams.set("path", Astro.url.pathname);
 url.searchParams.set("search", Astro.url.search);
-const response = await env.BACKEND.fetch(url.href, {
-	headers: {
-		cookie: Astro.request.headers.get("cookie") ?? "",
-		authorization: Astro.request.headers.get("authorization") ?? "",
-	},
-});
+const response =
+	Astro.locals.readerData ??
+	(await env.BACKEND.fetch(url.href, {
+		headers: {
+			cookie: Astro.request.headers.get("cookie") ?? "",
+			authorization: Astro.request.headers.get("authorization") ?? "",
+		},
+	}));
 if (response.status === 404) return Astro.rewrite("/404");
 if (!response.ok)
 	throw new Error(`Reader data request failed: HTTP ${response.status}`);
@@ -34,21 +36,9 @@ const { page: result, gaTrackingId } = fromJSON(await response.json()) as {
 	page: NonNullable<Awaited<ReturnType<typeof loadReaderData>>>;
 	gaTrackingId: string;
 };
-Astro.response.headers.set(
-	"Cache-Control",
-	"public, max-age=0, must-revalidate",
-);
-const supportsCache = typeof cache.purge === "function";
-Astro.response.headers.set(
-	"X-Evame-Cache",
-	supportsCache ? "supported" : "unsupported",
-);
-if (result.cacheable && supportsCache)
-	Astro.cache.set({ maxAge: 3600, tags: ["evame-reader"] });
-else {
-	Astro.cache.set(false);
-	Astro.response.headers.set("Cache-Control", "private, no-store");
-}
+Astro.cache.set(false);
+Astro.response.headers.set("Cache-Control", "private, no-store");
+if (result.cacheable) Astro.response.headers.set("X-Evame-Public", "true");
 const locale = result.locale;
 const metadata = result.metadata;
 const t = (messages[locale as keyof typeof messages] ?? messages.en).Reader;

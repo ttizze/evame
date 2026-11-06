@@ -50,6 +50,5 @@ export function querySocialProofStats() {
 				.as("translations"),
 			eb.val(18).as("languages"),
 		])
-		.$narrowType<{ articles: number; translations: number }>()
-		.executeTakeFirstOrThrow();
+		.$narrowType<{ articles: number; translations: number }>();
 }

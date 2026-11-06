@@ -410,6 +410,10 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.nth(1)
 			.click();
 		assert.equal((await replied).status(), 200);
+		await expect(comments.locator(".tiptap[contenteditable=true]")).toHaveCount(
+			1,
+			{ timeout: 15000 },
+		);
 		await expect(
 			comments.getByText("ブラウザーから返信する", { exact: true }),
 		).toBeVisible();

@@ -3,11 +3,11 @@ import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPageWithSegments, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
-import { loadSocialProofStats } from "../../about-section/service/load-social-proof-stats";
+import { querySocialProofStats } from "../../about-section/_db/queries";
 import { loadHomePage } from "./load-home-page";
 
-vi.mock("../../about-section/service/load-social-proof-stats", () => ({
-	loadSocialProofStats: vi.fn(),
+vi.mock("../../about-section/_db/queries", () => ({
+	querySocialProofStats: vi.fn(),
 }));
 
 await setupDbPerFile(import.meta.url);
@@ -52,5 +52,5 @@ it("ホームは新着・人気記事と共通タグだけを取得する", asyn
 
 it("トップの新着・人気記事は件数集計を呼ばずに取得する", async () => {
 	await loadHomePage("ja");
-	expect(loadSocialProofStats).not.toHaveBeenCalled();
+	expect(querySocialProofStats).not.toHaveBeenCalled();
 });

@@ -282,11 +282,30 @@ try {
 		sql: "INSERT INTO segment_translations (segment_id, user_id, locale, text) SELECT id, ?, 'en', 'Existing English translation' FROM segments WHERE content_id = ? AND number = 1",
 		args: [userId, storedPage.rows[0].id],
 	});
+	let publishLocale = null;
+	for (;;) {
+		const publishedHtml = await harness
+			.getWorker("evame-reader")
+			.fetch("https://reader.internal/__publish", {
+				method: "POST",
+				headers: publishLocale
+					? { "X-Evame-Reader-Locale": publishLocale }
+					: {},
+			});
+		assert.equal(publishedHtml.status, 200);
+		publishLocale = (await publishedHtml.json()).nextLocale;
+		if (publishLocale === null) break;
+	}
 	const publicArticle = await worker.fetch(
 		`http://localhost/ja/${handle}/${pageSlug}`,
 	);
 	const publicArticleHtml = await publicArticle.text();
 	assert.equal(publicArticle.status, 200, publicArticleHtml);
+	assert.equal(
+		publicArticle.headers.get("X-Evame-HTML"),
+		"generated",
+		"最初の閲覧から生成済みHTMLを返す",
+	);
 	assert.ok(
 		publicArticleHtml.includes("Cloudflareで更新保存"),
 		"ログインせずに公開記事の本文を読める",
@@ -486,26 +505,27 @@ try {
 	console.log(
 		"Workersランタイムで日本語フォントとロゴを使ったOG画像を生成できる",
 	);
-	const readerHome = await harness
-		.getWorker("evame-reader")
-		.fetch("http://localhost/ja");
-	if (readerHome.headers.get("X-Evame-Cache") === "supported") {
-		await tursoServer.stop();
-		const withoutDb = await worker.fetch("http://localhost/ja", {
+	await harness.getWorker("evame-reader").scheduled({ cron: "0 * * * *" });
+	await tursoServer.stop();
+	for (const path of [
+		"/ja",
+		"/fr?first-visit=true",
+		`/ja/${handle}/${pageSlug}-child?view=source`,
+		`/ja/${handle}?sort=new`,
+	]) {
+		const withoutDb = await worker.fetch(`http://localhost${path}`, {
 			headers: { cookie },
 		});
-		assert.equal(withoutDb.status, 200);
+		assert.equal(withoutDb.status, 200, path);
+		assert.equal(withoutDb.headers.get("X-Evame-HTML"), "generated", path);
 		assert.ok(
 			(await withoutDb.text()).includes("astro-island"),
-			"DB停止中もキャッシュ済みのトップを返す",
-		);
-		console.log("DB停止中もキャッシュ済みのAstroトップを表示できる");
-	} else {
-		assert.equal(readerHome.headers.get("Cache-Control"), "private, no-store");
-		console.log(
-			"キャッシュ無効化APIのないローカル環境では共有キャッシュを使わない（実CDNの命中・無効化はCloudflare上で検証）",
+			"DB停止中も未訪問URLの生成済みHTMLを返す",
 		);
 	}
+	console.log(
+		"DB停止中も初めて開くURLのトップ・本文・著者一覧を生成済みHTMLから表示できる",
+	);
 } finally {
 	await harness?.close();
 	await new Promise((resolve, reject) =>

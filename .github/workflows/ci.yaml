@@ -71,11 +71,17 @@ jobs:
 
       - name: Restore published Reader assets
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        uses: actions/cache@v5
+        uses: actions/cache/restore@v5
         with:
           path: .data/reader-assets
           key: reader-assets-v2-${{ runner.os }}-${{ github.sha }}-${{ github.run_attempt }}
           restore-keys: reader-assets-v2-${{ runner.os }}-
+
+      - name: Verify private Reader publication access
+        if: github.event_name == 'workflow_dispatch' || (github.ref == 'refs/heads/main' && github.event_name != 'pull_request')
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: nix develop --command node scripts/generate-reader-html.mjs --check-access
 
       - name: Retain published Reader assets
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
@@ -92,3 +98,10 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: nix develop --command bun run deploy:workers
+
+      - name: Save published Reader assets
+        if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && hashFiles('.data/reader-assets/active.json') != ''
+        uses: actions/cache/save@v5
+        with:
+          path: .data/reader-assets
+          key: reader-assets-v2-${{ runner.os }}-${{ github.sha }}-${{ github.run_attempt }}
