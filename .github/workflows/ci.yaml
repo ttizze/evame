@@ -48,6 +48,13 @@ jobs:
           nix develop --command bun run db:prod:seed
           nix develop --command bun run test --run
 
+      - name: Migrate production database for prerendering
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: nix develop --command bun run db:prod:migrate
+
       - name: Build TanStack Start for Cloudflare Workers
         env:
           TURSO_DATABASE_URL: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && secrets.TURSO_DATABASE_URL || 'file:evame.db' }}
@@ -63,12 +70,8 @@ jobs:
       - name: Verify isolated deployment runtime
         run: nix develop --command bun run test:deployment
 
-      - name: Migrate production database and deploy Cloudflare Workers
+      - name: Deploy Cloudflare Workers
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         env:
-          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          nix develop --command bun run db:prod:migrate
-          nix develop --command bun x wrangler deploy
+        run: nix develop --command bun x wrangler deploy
