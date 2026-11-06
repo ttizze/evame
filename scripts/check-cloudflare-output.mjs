@@ -148,7 +148,7 @@ try {
 		form.set("title", "Workers保存テスト");
 		form.set(
 			"pageContent",
-			`<p>${text}</p><p><a href="https://x.com/example/status/123456789">X</a></p>`,
+			`<h2>Workersの目次見出し</h2><p>${text}</p><p><a href="https://x.com/example/status/123456789">X</a></p>`,
 		);
 		// NodeとWranglerのUndiciでFormDataの実装が異なるため、HTTP本文として渡す。
 		const request = new Request(`http://localhost/_serverFn/${editFunction}`, {

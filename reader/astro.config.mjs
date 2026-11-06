@@ -15,6 +15,7 @@ export default defineConfig({
 	integrations: [react()],
 	cache: { provider: cacheCloudflare() },
 	vite: {
+		envPrefix: ["PUBLIC_", "VITE_"],
 		resolve: {
 			alias: { "@": fileURLToPath(new URL("../src", import.meta.url)) },
 		},
