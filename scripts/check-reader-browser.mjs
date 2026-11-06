@@ -472,7 +472,8 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 				r.request().method() === "PATCH",
 		);
 		await page.getByTestId("vote-up-button").first().click();
-		assert.equal((await voted).status(), 200);
+		const votedResponse = await voted;
+		assert.equal(votedResponse.status(), 200, await votedResponse.text());
 		console.log(
 			"返信・コメント削除・表示モード変更・翻訳の追加と投票を操作できる",
 		);

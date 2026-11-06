@@ -66,10 +66,10 @@ export async function publishReaderDocuments(
 	const batch = pending.slice(0, 96);
 	const next = { ...previous };
 	for (const path of changed) {
+		// 同じコードと生成元の保存は所有権を維持し、互いの描画を中断しない。
 		if (
-			mode === "deployment" &&
 			previous[path]?.startsWith("pending:content:") &&
-			previous[path]?.endsWith(`:${hashes[path]}`)
+			previous[path]?.endsWith(`:${expected[path]}`)
 		)
 			continue;
 		next[path] = `pending:${mode}:${publicationId}:${expected[path]}`;

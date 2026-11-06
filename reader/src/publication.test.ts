@@ -195,6 +195,64 @@ function storage() {
 	return { bucket: bucket as unknown as R2Bucket, objects };
 }
 
+it.each([
+	{
+		name: "同じコードと生成元の保存が重なっても未完了の所有権を奪い合わない",
+		version: "version",
+		mode: "content" as const,
+		same: true,
+	},
+	{
+		name: "コードが変わる一括生成は未完了の保存の所有権を必ず切り替える",
+		version: "next-version",
+		mode: "deployment" as const,
+		same: false,
+	},
+])("$name", async ({ version, mode, same }) => {
+	const { bucket, objects } = storage();
+	const firstGate = Promise.withResolvers<Response>();
+	const secondGate = Promise.withResolvers<Response>();
+	const firstRender = vi.fn(() => firstGate.promise);
+	const secondRender = vi.fn(() => secondGate.promise);
+	const catalog = {
+		revision: 2,
+		documents: { "/ja/author/article": "updated" },
+	};
+	const first = publishReaderDocuments(
+		bucket,
+		"version",
+		catalog,
+		firstRender,
+		"content",
+		"ja",
+		"save-a",
+		new Set(["/author/article"]),
+	);
+	await vi.waitFor(() => expect(firstRender).toHaveBeenCalled());
+	const before = objects.get("publication/ja.json")?.etag;
+	expect(before).toBeDefined();
+	const second = publishReaderDocuments(
+		bucket,
+		version,
+		catalog,
+		secondRender,
+		mode,
+		"ja",
+		"save-b",
+		new Set(["/author/article"]),
+	);
+	await vi.waitFor(() => expect(secondRender).toHaveBeenCalled());
+	const unchanged = objects.get("publication/ja.json")?.etag === before;
+	firstGate.resolve(
+		new Response("現在の本文", { headers: { "X-Evame-Public": "true" } }),
+	);
+	secondGate.resolve(
+		new Response("現在の本文", { headers: { "X-Evame-Public": "true" } }),
+	);
+	await Promise.allSettled([first, second]);
+	expect(unchanged).toBe(same);
+});
+
 it("同じDBの版でも、旧デプロイの遅い生成結果が新デプロイのHTMLを上書きしない", async () => {
 	const { bucket, objects } = storage();
 	const catalog = {
