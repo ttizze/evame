@@ -39,8 +39,8 @@ Readerは `BACKEND` bindingから `evame-start` の公開データAPIを呼び�
 bun x wrangler secret bulk /absolute/path/to/worker-secrets.json
 bun run build
 bun run test:deployment
-bun x wrangler deploy --config reader/dist/server/wrangler.json
 bun x wrangler deploy --config dist/server/wrangler.json
+bun x wrangler deploy --config reader/dist/server/wrangler.json
 ```
 
 ## 本番への切り替え
@@ -54,7 +54,9 @@ bun x wrangler deploy --config dist/server/wrangler.json
 
 ## GitHub Actions の継続デプロイ
 
-`.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テストの成功後、本番DBのマイグレーション、ビルド、成果物テスト、ReaderとGatewayのデプロイを順に行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
+`.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テストの成功後、本番DBのマイグレーション、ビルド、成果物テスト、GatewayとReaderのデプロイを順に行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
+
+Astroの `/_astro/*` はGatewayへコピーせず、READER bindingからHTMLと同じReaderのStatic Assetsへ転送する。Gatewayを先に更新し、旧Readerでも動くAPIを維持してから、HTMLとアセットを1つのReaderバージョンとして切り替える。Gatewayの更新に失敗した場合はReaderを更新しない。Readerの更新に失敗した場合は旧Readerとそのアセットが引き続き動作するため、失敗したデプロイを再実行する。公開表示の切り戻しは互換性を確認したReaderバージョンへ行う。初回だけはGatewayから参照する前に非公開Readerを作成しておく。
 
 リポジトリのActions secretsに本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番用のDB接続設定は `main` のマイグレーションだけに渡す。Cloudflareのデプロイ先はそれぞれの `wrangler.jsonc` に定義する。デプロイ用のアカウントトークン `evame-github-deploy` は、Specified Workersで `evame-start` と `evame-reader` の両方にIndividual Workers Editor権限を設定する。片方だけでは新しいWorkerへのアクセスが拒否される。既存のキャッシュ削除用トークンはデプロイには使わない。Sentryのアップロード用トークンは本番ビルドだけに渡し、Worker secretには登録しない。
 

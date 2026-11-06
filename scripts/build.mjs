@@ -1,5 +1,4 @@
 import { spawn } from "node:child_process";
-import { cp } from "node:fs/promises";
 
 for (const args of [
 	["x", "astro", "build", "--root", "reader"],
@@ -15,6 +14,3 @@ for (const args of [
 	});
 	if (code !== 0) process.exit(code);
 }
-await cp("reader/dist/client/_astro", "dist/client/_astro", {
-	recursive: true,
-});

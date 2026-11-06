@@ -29,7 +29,7 @@
 		"translate": "bunx tsx scripts/translate.ts",
 		"evame": "bun --env-file=.env tsx scripts/evame-cli/index.ts",
 		"preview": "wrangler dev --config dist/server/wrangler.json --config reader/dist/server/wrangler.json",
-		"deploy": "bun run build && wrangler deploy --config reader/dist/server/wrangler.json && wrangler deploy --config dist/server/wrangler.json",
+		"deploy": "bun run build && wrangler deploy --config dist/server/wrangler.json && wrangler deploy --config reader/dist/server/wrangler.json",
 		"db:dev": "bun scripts/dev-db.mjs",
 		"test:deployment:browser": "EVAME_BROWSER_TEST=true node scripts/check-cloudflare-output.mjs"
 	},

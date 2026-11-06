@@ -216,6 +216,13 @@ try {
 		articleHtml.includes("Cloudflareで更新保存"),
 		"記事本文をSSRできる",
 	);
+	const readerAssetPath = articleHtml.match(/component-url="([^"]+)"/)?.[1];
+	assert.ok(readerAssetPath?.startsWith("/_astro/"));
+	const readerAsset = await worker.fetch(`http://localhost${readerAssetPath}`);
+	assert.equal(readerAsset.status, 200, "GatewayからReaderのJSを取得できる");
+	assert.ok(readerAsset.headers.get("Content-Type")?.includes("javascript"));
+	assert.ok(readerAsset.headers.get("Cache-Control")?.includes("immutable"));
+	assert.equal(readerAsset.headers.get("Set-Cookie"), null);
 	console.log("Workersランタイムで保存した記事の閲覧ページを表示できる");
 	const childArticle = await worker.fetch(
 		`http://localhost/ja/${handle}/${pageSlug}-child`,
