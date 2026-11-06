@@ -3,12 +3,10 @@ import {
 	fetchTagsMap,
 	toPageForList,
 } from "@/app/[locale]/_db/page-list.server";
-import { loadAboutPage } from "../../about-section/service/load-about-page";
 import { loadSocialProofStats } from "../../about-section/service/load-social-proof-stats";
 
 export async function loadHomePage(locale: string) {
-	const [pageDetail, stats, newRows, popularRows] = await Promise.all([
-		loadAboutPage(locale),
+	const [stats, newRows, popularRows] = await Promise.all([
 		loadSocialProofStats(),
 		fetchPageRows(locale, 1, 5, null, "new"),
 		fetchPageRows(locale, 1, 5, null, "popular"),
@@ -18,7 +16,6 @@ export async function loadHomePage(locale: string) {
 	]);
 	const totalPages = Math.ceil(stats.articles / 5);
 	return {
-		pageDetail,
 		stats,
 		newPages: {
 			pageForLists: newRows.map((row) =>

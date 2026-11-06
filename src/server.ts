@@ -2,9 +2,11 @@ import type { ExecutionContext } from "@cloudflare/workers-types";
 import { captureException, withSentry } from "@sentry/cloudflare";
 import { isRedirect } from "@tanstack/react-router";
 import handler from "@tanstack/react-start/server-entry";
-import { securityHeaders } from "../security-headers";
+import { withSecurityHeaders } from "../security-headers";
+import { staticHomePaths } from "../static-home-paths";
 import { SENTRY_DSN } from "./_utils/sentry-dsn";
 import { createDb, databaseScope } from "./db";
+import { getMaintenancePath, shouldCheckMaintenance } from "./maintenance-gate";
 
 export default withSentry(
 	(env) => ({
@@ -18,30 +20,67 @@ export default withSentry(
 	{
 		async fetch(
 			request: Request,
-			_env: typeof import("cloudflare:workers").env,
+			env: typeof import("cloudflare:workers").env,
 			context: Pick<ExecutionContext, "waitUntil">,
 		) {
 			if (process.env.DATABASE_MIGRATION === "true") {
-				return new Response(null, {
-					status: 503,
-					headers: { ...securityHeaders, "Retry-After": "60" },
-				});
+				return withSecurityHeaders(
+					new Response(null, {
+						status: 503,
+						headers: { "Retry-After": "60" },
+					}),
+				);
+			}
+			const url = new URL(request.url);
+			const homeLocale = staticHomePaths.get(url.pathname);
+			const pathname = homeLocale ? `/${homeLocale}` : url.pathname;
+			if (shouldCheckMaintenance(pathname)) {
+				const isOn = await env.SETTINGS.get<boolean>("maintenance", "json");
+				if (isOn) {
+					return withSecurityHeaders(
+						Response.redirect(
+							new URL(
+								getMaintenancePath({
+									pathname,
+									cookieHeader: request.headers.get("cookie"),
+									acceptLanguage: request.headers.get("accept-language"),
+								}),
+								request.url,
+							),
+							307,
+						),
+					);
+				}
+			}
+			if (
+				homeLocale &&
+				(request.method === "GET" || request.method === "HEAD")
+			) {
+				const response = (await env.ASSETS.fetch(request.url, {
+					method: request.method,
+					headers: Object.fromEntries(request.headers),
+				})) as unknown as Response;
+				if (response.status !== 404) {
+					const secured = withSecurityHeaders(response);
+					secured.headers.append(
+						"Set-Cookie",
+						`NEXT_LOCALE=${homeLocale}; Path=/; SameSite=Lax`,
+					);
+					return secured;
+				}
 			}
 			const database = createDb();
 			return databaseScope.run(database, async () => {
 				try {
 					const response = await handler.fetch(request);
-					const headers = new Headers(response.headers);
-					for (const [name, value] of Object.entries(securityHeaders))
-						headers.set(name, value);
 					const init = {
 						status: response.status,
 						statusText: response.statusText,
-						headers,
+						headers: response.headers,
 					};
 					if (!response.body) {
 						await database.destroy();
-						return new Response(null, init);
+						return withSecurityHeaders(new Response(null, init));
 					}
 					const stream = new TransformStream();
 					context.waitUntil(
@@ -57,7 +96,7 @@ export default withSentry(
 							})
 							.finally(() => database.destroy()),
 					);
-					return new Response(stream.readable, init);
+					return withSecurityHeaders(new Response(stream.readable, init));
 				} catch (error) {
 					await database.destroy();
 					throw error;

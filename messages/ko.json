@@ -1,4 +1,8 @@
 {
+	"Home": {
+		"loadError": "최신 글을 불러오지 못했습니다.",
+		"retry": "다시 시도"
+	},
 	"Footer": {
 		"aboutEvame": "Evame 소개",
 		"about": "About",

@@ -135,6 +135,7 @@
         "jsdom": "30.1.1",
         "pg": "8.23.1",
         "postcss": "8.5.28",
+        "seroval": "1.6.8",
         "tailwindcss": "4.3.3",
         "ts-prune": "^0.10.3",
         "typescript": "7.0.2",

@@ -1,4 +1,8 @@
 {
+	"Home": {
+		"loadError": "Could not load the latest articles.",
+		"retry": "Try again"
+	},
 	"Footer": {
 		"aboutEvame": "About Evame",
 		"about": "About",
