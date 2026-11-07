@@ -181,6 +181,71 @@ describe("Markdownと画像の一括ダウンロード", () => {
 			await reader.close();
 		}
 	});
+	it("R2の取得例外でも原文と画像URLを残し、同じ画像を再取得せずレポートへ記録する", async () => {
+		const owner = await createUser();
+		getCurrentUser.mockResolvedValue(owner);
+		getImage.mockRejectedValue(new Error("R2 unavailable"));
+		for (const slug of ["first", "second"])
+			await createPage({
+				userId: owner.id,
+				slug,
+				mdastJson: {
+					type: "root",
+					children: [
+						{
+							type: "paragraph",
+							children: [
+								{ type: "text", value: "原文を守る" },
+								{
+									type: "image",
+									url: "https://images.evame.tech/uploads/error",
+									alt: "写真",
+								},
+							],
+						},
+					],
+				},
+			});
+		const response = await getPagesExport(
+			new Request("https://app.example.com/api/export-pages"),
+		);
+		const reader = new ZipReader(
+			new Uint8ArrayReader(new Uint8Array(await response.arrayBuffer())),
+			{ useWebWorkers: false },
+		);
+		try {
+			const entries = await reader.getEntries();
+			for (const document of entries.filter((entry) =>
+				entry.filename.startsWith("documents/"),
+			)) {
+				if (document.directory) throw new Error("文書がありません");
+				const markdown = await document.getData(new TextWriter());
+				expect(markdown).toContain("原文を守る");
+				expect(markdown).toContain("https://images.evame.tech/uploads/error");
+			}
+			const report = entries.find(
+				(entry) => entry.filename === "export-report.json",
+			);
+			if (!report || report.directory) throw new Error("レポートがありません");
+			expect(JSON.parse(await report.getData(new TextWriter()))).toMatchObject({
+				pages: 2,
+				images: 0,
+				warnings: [
+					{
+						reason: "image-unavailable",
+						image_url: "https://images.evame.tech/uploads/error",
+					},
+					{
+						reason: "image-unavailable",
+						image_url: "https://images.evame.tech/uploads/error",
+					},
+				],
+			});
+			expect(getImage).toHaveBeenCalledOnce();
+		} finally {
+			await reader.close();
+		}
+	});
 	it("空のアカウントも説明と件数を含むZIPとして書き出せる", async () => {
 		getCurrentUser.mockResolvedValue(await createUser());
 		const response = await getPagesExport(
@@ -214,18 +279,43 @@ describe("Markdownと画像の一括ダウンロード", () => {
 		);
 		await expect(response.arrayBuffer()).rejects.toThrow();
 	});
-	it("中止されたリクエストでは画像の取得を続けない", async () => {
-		const owner = await createUser();
-		getCurrentUser.mockResolvedValue(owner);
-		await createPage({ userId: owner.id, slug: "cancel-export" });
-		const controller = new AbortController();
-		controller.abort();
-		const response = await getPagesExport(
-			new Request("https://app.example.com/api/export-pages", {
-				signal: controller.signal,
-			}),
-		);
-		await expect(response.arrayBuffer()).rejects.toThrow();
-		expect(getImage).not.toHaveBeenCalled();
-	});
+	it.each(["開始前", "画像取得中"])(
+		"%sに中止されたリクエストでは書き出しを続けない",
+		async (phase) => {
+			const owner = await createUser();
+			getCurrentUser.mockResolvedValue(owner);
+			await createPage({
+				userId: owner.id,
+				slug: "cancel-export",
+				mdastJson: {
+					type: "root",
+					children: [
+						{
+							type: "paragraph",
+							children: [
+								{
+									type: "image",
+									url: "https://images.evame.tech/uploads/abort",
+									alt: "写真",
+								},
+							],
+						},
+					],
+				},
+			});
+			const controller = new AbortController();
+			if (phase === "開始前") controller.abort();
+			getImage.mockImplementation(async () => {
+				controller.abort();
+				throw controller.signal.reason;
+			});
+			const response = await getPagesExport(
+				new Request("https://app.example.com/api/export-pages", {
+					signal: controller.signal,
+				}),
+			);
+			await expect(response.arrayBuffer()).rejects.toThrow();
+			expect(getImage).toHaveBeenCalledTimes(phase === "開始前" ? 0 : 1);
+		},
+	);
 });

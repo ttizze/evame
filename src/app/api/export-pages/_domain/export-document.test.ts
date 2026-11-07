@@ -113,9 +113,42 @@ describe("文書のMarkdown書き出し", () => {
 		expect(exported.markdown).toContain("~~取り消し~~");
 		expect(exported.markdown).toMatch(/[-*] \[x\] 完了/);
 		expect(exported.markdown).toContain("![画像](../images/photo.jpg)");
-		expect(exported.markdown).toContain("[photo]: ../images/photo.jpg");
+		expect(exported.markdown).toContain("![参照](../images/photo.jpg)");
 		expect(tree).toEqual(original);
 		expect(metadata.tags).toEqual(["旅行", "日記"]);
+	});
+	it("画像と通常リンクが同じURLや参照定義を使っても、通常リンク先を変えない", () => {
+		const source = "https://images.evame.tech/uploads/a";
+		const tree = remark().parse(
+			`![写真][photo]\n\n[原本を開く][photo]\n\n[別リンク][other]\n\n![直接画像](${source})\n\n[photo]: ${source} "写真の題名"\n\n[other]: ${source}`,
+		);
+		const { markdown } = serializeExportPage(
+			metadata,
+			tree,
+			new Map([[source, "images/a.jpg"]]),
+		);
+		expect(markdown).toContain('![写真](../images/a.jpg "写真の題名")');
+		expect(markdown).toContain("![直接画像](../images/a.jpg)");
+		expect(markdown).toContain(`[photo]: ${source} "写真の題名"`);
+		expect(markdown).toContain(`[other]: ${source}`);
+	});
+	it("同じ参照名が複数ある場合はCommonMarkと同じく最初の定義を使う", () => {
+		const first = "https://images.evame.tech/uploads/first";
+		const second = "https://images.evame.tech/uploads/second";
+		const tree = remark().parse(
+			`![写真][photo]\n\n[photo]: ${first}\n\n[photo]: ${second}`,
+		);
+		expect(getExportImageUrls(tree)).toEqual([first]);
+		const { markdown } = serializeExportPage(
+			metadata,
+			tree,
+			new Map([
+				[first, "images/first.jpg"],
+				[second, "images/second.jpg"],
+			]),
+		);
+		expect(markdown).toContain("![写真](../images/first.jpg)");
+		expect(markdown).not.toContain("![写真](../images/second.jpg)");
 	});
 	it.each([
 		"../../private",

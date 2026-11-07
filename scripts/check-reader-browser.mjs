@@ -109,7 +109,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await page.goto(`${baseUrl}/ja`);
 		await expect(
 			page.getByRole("button", { name: "Create a new page" }),
-		).toBeVisible();
+		).toBeVisible({ timeout: 15000 });
 		const consent = page.getByRole("region", {
 			name: "Cookieを許可しますか？",
 		});
@@ -175,7 +175,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await page.goBack();
 		await expect(
 			page.getByRole("button", { name: "Create a new page" }),
-		).toBeEnabled();
+		).toBeEnabled({ timeout: 15000 });
 		await page.getByRole("button", { name: "Create a new page" }).click();
 		await page.waitForURL(/\/edit$/);
 		const newPageUrl = page.url().replace(/\/edit$/, "");

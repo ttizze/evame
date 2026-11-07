@@ -59,7 +59,10 @@ export async function createPagesExport(
 					continue;
 				}
 				if (!storedImages.has(key)) {
-					const image = await readExportImage(key);
+					const image = await readExportImage(key).catch(() => {
+						signal.throwIfAborted();
+						return null;
+					});
 					if (image) {
 						const path = await exportImageFilename(key, image.contentType);
 						await zip.add(path, image.body, { signal });

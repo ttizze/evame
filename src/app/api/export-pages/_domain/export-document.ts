@@ -1,4 +1,4 @@
-import type { Root } from "mdast";
+import type { Definition, Root } from "mdast";
 import rehypeParse from "rehype-parse";
 import rehypeStringify from "rehype-stringify";
 import { unified } from "unified";
@@ -66,7 +66,7 @@ export function getExportImageUrls(tree: Root): string[] {
 	visit(tree, (node) => {
 		if (
 			node.type === "image" ||
-			(node.type === "definition" && references.has(node.identifier))
+			(node.type === "definition" && references.delete(node.identifier))
 		)
 			urls.add(node.url);
 		if (node.type === "html")
@@ -120,10 +120,26 @@ export function serializeExportPage(
 	images: ReadonlyMap<string, string>,
 ) {
 	const exported = structuredClone(tree);
-	visit(exported, (node) => {
-		if (node.type === "image" || node.type === "definition") {
+	const definitions = new Map<string, Definition>();
+	visit(exported, "definition", (node) => {
+		if (!definitions.has(node.identifier))
+			definitions.set(node.identifier, node);
+	});
+	visit(exported, (node, index, parent) => {
+		if (node.type === "image") {
 			const path = images.get(node.url);
 			if (path) node.url = `../${path}`;
+		}
+		if (node.type === "imageReference") {
+			const definition = definitions.get(node.identifier);
+			const path = definition && images.get(definition.url);
+			if (definition && path && parent && index !== undefined)
+				parent.children[index] = {
+					type: "image",
+					url: `../${path}`,
+					alt: node.alt ?? null,
+					title: definition.title ?? null,
+				};
 		}
 		if (node.type === "html") node.value = htmlImages(node.value, images).html;
 	});
