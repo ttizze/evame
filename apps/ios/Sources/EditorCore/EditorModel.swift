@@ -1,41 +1,52 @@
 import Foundation
 import JavaScriptCore
 import Markdown
+import Synchronization
 
-/// UIKitへ依存しないモデル変換。JSContextは呼び出しごとに作り、文書や選択の可変状態を保持しない。
+/// UIKitへ依存しないモデル変換。実行環境だけを排他制御して再利用し、文書や選択は保持しない。
 enum EditorModel {
-  private static let scripts = ["EditorModel", "ReferenceDefinitions"].reduce(
-    into: [String: String]()
-  ) { scripts, name in
-    scripts[name] = Bundle.module.url(forResource: name, withExtension: "js")
-      .flatMap { try? String(contentsOf: $0, encoding: .utf8) }
-  }
+  enum Command: String { case backspace, indent, outdent }
+
+  private static let contexts = Mutex<[String: JSContext]>([:])
 
   static func referenceDefinitions(in source: String) throws -> String {
     guard source.contains("]:") else { return "" }
-    return try run("evameReferenceDefinitions", script: "ReferenceDefinitions", input: source)
+    return try run("evameReferenceDefinitions", script: "MarkdownModel", input: source)
   }
 
-  private static func run(_ function: String, script: String, input: String) throws -> String {
-    guard let script = scripts[script], let context = JSContext() else {
-      throw MarkdownDocument.EditError.invalidBlock
+  static func run(_ function: String, script: String, input: String) throws -> String {
+    try contexts.withLock { contexts in
+      let context: JSContext
+      if let cached = contexts[script] {
+        context = cached
+      } else {
+        guard let url = Bundle.module.url(forResource: script, withExtension: "js"),
+          let created = JSContext()
+        else { throw MarkdownDocument.EditError.invalidBlock }
+        created.evaluateScript(try String(contentsOf: url, encoding: .utf8))
+        guard created.exception == nil else { throw MarkdownDocument.EditError.invalidBlock }
+        contexts[script] = created
+        context = created
+      }
+      context.exception = nil
+      guard
+        let output = context.objectForKeyedSubscript(function)?.call(withArguments: [input])?
+          .toString(),
+        context.exception == nil
+      else { throw MarkdownDocument.EditError.invalidBlock }
+      return output
     }
-    context.evaluateScript(script)
-    guard context.exception == nil,
-      let output = context.objectForKeyedSubscript(function)?.call(withArguments: [input])?
-        .toString(),
-      context.exception == nil
-    else { throw MarkdownDocument.EditError.invalidBlock }
-    return output
   }
 
-  static func backspace(_ document: Document, path: [Int]) throws -> (
+  static func applying(_ command: Command, to document: Document, path: [Int]) throws -> (
     markup: Document, path: [Int], before: [any InlineMarkup]
   )? {
-    let input: [String: Any] = ["doc": try nodes(document, marks: [])[0], "path": path]
+    let input: [String: Any] = [
+      "command": command.rawValue, "doc": try nodes(document, marks: [])[0], "path": path,
+    ]
     let data = try JSONSerialization.data(withJSONObject: input)
     let json = String(decoding: data, as: UTF8.self)
-    let output = try run("evameBackspace", script: "EditorModel", input: json)
+    let output = try run("evameEditorCommand", script: "EditorModel", input: json)
     if output == "null" { return nil }
     guard let result = try JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any],
       let root = result["doc"] as? [String: Any], let path = result["path"] as? [Int],
@@ -82,13 +93,13 @@ enum EditorModel {
         return code.code.isEmpty ? [] : [["type": "text", "text": code.code, "marks": changed]]
       }
       return try node.children.flatMap { try nodes($0, marks: changed) }
-    case let image as Markdown.Image:
-      type = "image"
-      attributes = [
-        "src": image.source ?? "", "alt": image.plainText,
-        "evameAlt": try image.children.flatMap { try nodes($0, marks: []) },
+    case is Markdown.Image, is Table:
+      var result: [String: Any] = [
+        "type": node is Table ? "table" : "image",
+        "attrs": ["source": try MarkdownSource.serialize(node)],
       ]
-      attributes["title"] = image.title
+      if node is Markdown.Image { result["marks"] = marks }
+      return [result]
     case is SoftBreak, is LineBreak:
       type = "hard_break"
       attributes["soft"] = node is SoftBreak
@@ -112,7 +123,7 @@ enum EditorModel {
     case is ThematicBreak: type = "horizontal_rule"
     default: throw MarkdownDocument.EditError.invalidBlock
     }
-    if !(node is CodeBlock) && !(node is Markdown.Image) {
+    if !(node is CodeBlock) {
       content = try node.children.flatMap { try nodes($0, marks: []) }
     }
     var result: [String: Any] = ["type": type, "attrs": attributes, "content": content]
@@ -211,11 +222,15 @@ enum EditorModel {
     case "horizontal_rule": return ThematicBreak()
     case "text": return Markdown.Text(value["text"] as? String ?? "")
     case "hard_break": return attributes["soft"] as? Bool == true ? SoftBreak() : LineBreak()
-    case "image":
-      return Markdown.Image(
-        source: attributes["src"] as? String, title: attributes["title"] as? String,
-        [Markdown.Text]()
-      ).withUncheckedChildren(try inlines(attributes["evameAlt"] as? [[String: Any]] ?? []))
+    case "image", "table":
+      guard let source = attributes["source"] as? String,
+        let block = Document(parsing: source, options: [.disableSmartOpts]).child(at: 0)
+      else { throw MarkdownDocument.EditError.invalidBlock }
+      if value["type"] as? String == "table", block is Table { return block }
+      if value["type"] as? String == "image", let image = block.child(at: 0) as? Markdown.Image {
+        return image
+      }
+      throw MarkdownDocument.EditError.invalidBlock
     default: throw MarkdownDocument.EditError.invalidBlock
     }
   }

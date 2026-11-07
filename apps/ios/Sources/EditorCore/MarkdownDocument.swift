@@ -41,7 +41,9 @@ public struct MarkdownDocument {
         let contentRange = Self.byteRange(
           sourceRange, before: markup.followingSourceStart, bytes: bytes)
       else { return nil }
-      let lineStart = bytes[..<contentRange.lowerBound].lastIndex(of: 10).map { $0 + 1 } ?? 0
+      let lineStart =
+        bytes[..<contentRange.lowerBound].lastIndex { $0 == 10 || $0 == 13 }
+        .map { $0 + 1 } ?? 0
       var range =
         (bytes[lineStart..<contentRange.lowerBound].allSatisfy { $0 == 32 || $0 == 9 }
           ? lineStart : contentRange.lowerBound)..<contentRange.upperBound
@@ -50,7 +52,7 @@ public struct MarkdownDocument {
         let source = String(decoding: bytes[range], as: UTF8.self)
         if source.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("[") {
           var prefixLength = 0
-          for end in source.indices where source[end].isNewline {
+          for end in source.indices where MarkdownInput.isLineEnding(source[end]) {
             let prefix = String(source[...end])
             if Document(parsing: prefix, options: [.disableSmartOpts]).childCount == 0 {
               prefixLength = prefix.utf8.count
@@ -99,7 +101,9 @@ public struct MarkdownDocument {
       break
     default: throw EditError.invalidBlock
     }
-    if node is CodeBlock || (node is Table.Cell && node.range == nil) {
+    if node is CodeBlock || node is Table.Cell
+      || (node is Paragraph && (node.parent as? ListItem)?.checkbox != nil)
+    {
       let markup = try blocks[blockIndex].markup.replacingDescendant(at: path, with: replacement)
       return try replacingStructure(in: blockIndex, with: markup)
     }
@@ -126,13 +130,7 @@ public struct MarkdownDocument {
     }
     var content = try MarkdownSource.serialize(replacement).replacingOccurrences(
       of: "\n", with: "\n" + prefix)
-    if node is Table.Cell {
-      content =
-        String(raw.prefix { $0 == " " || $0 == "\t" }) + content
-        + String(raw.reversed().prefix { $0 == " " || $0 == "\t" }.reversed())
-    } else {
-      content += String(raw.reversed().prefix { $0.isNewline }.reversed())
-    }
+    content += String(raw.reversed().prefix(while: MarkdownInput.isLineEnding).reversed())
     var changed = self
     changed.edits[[blockIndex] + path] = (range, content, replacement, nil)
     return changed
@@ -144,7 +142,7 @@ public struct MarkdownDocument {
       throw EditError.invalidBlock
     }
     let trailingNewlines = String(
-      originalBlocks[index].source.reversed().prefix { $0.isNewline }.reversed())
+      originalBlocks[index].source.reversed().prefix(while: MarkdownInput.isLineEnding).reversed())
     let body = try MarkdownSource.serialize(markup)
     let definitions = try preservedDefinitions(in: index)
     let source = body + (definitions.isEmpty ? "" : "\n\n" + definitions) + trailingNewlines
@@ -267,7 +265,12 @@ public struct MarkdownDocument {
     _ range: SourceRange, before boundary: SourceLocation?, bytes: [UInt8]
   ) -> Range<Int>? {
     var starts = [0]
-    for (offset, byte) in bytes.enumerated() where byte == 10 { starts.append(offset + 1) }
+    for (offset, byte) in bytes.enumerated()
+    where byte == 10
+      || (byte == 13 && (offset + 1 == bytes.count || bytes[offset + 1] != 10))
+    {
+      starts.append(offset + 1)
+    }
     guard starts.indices.contains(range.lowerBound.line - 1),
       starts.indices.contains(range.upperBound.line - 1)
     else { return nil }
@@ -283,6 +286,14 @@ public struct MarkdownDocument {
 }
 
 extension Markup {
+  public var isEmptyTaskItemPlaceholder: Bool {
+    guard let paragraph = self as? Paragraph, paragraph.indexInParent == 0,
+      (paragraph.parent as? ListItem)?.checkbox != nil, paragraph.childCount == 1,
+      let text = paragraph.child(at: 0) as? Markdown.Text
+    else { return false }
+    return text.string == " "
+  }
+
   fileprivate var editableSourceRange: SourceRange? {
     guard let range else { return nil }
     if self is Heading, let content = child(at: 0)?.range,

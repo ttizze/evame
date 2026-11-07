@@ -4,6 +4,15 @@ import Testing
 
 @testable import EditorCore
 
+@Test(
+  "CommonMarkの行末でない区切り文字をまたいで太字の記法を入力できる",
+  arguments: ["\u{2028}", "\u{2029}", "\u{85}", "\u{b}", "\u{c}"])
+func shortcutAcrossUnicodeSeparator(_ separator: String) throws {
+  let input = "**前\(separator)後**"
+  let shortcut = try #require(MarkdownInput.inlineShortcut(in: input, before: input.utf16.count))
+  #expect((shortcut.markup as? Strong)?.plainText == "前\(separator)後")
+}
+
 @Test("日本語と絵文字の後へ入力した太字・斜体・取消線・コード・リンクを変換する")
 func inlineMarkdownInput() throws {
   for (source, expected) in [

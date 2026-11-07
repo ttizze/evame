@@ -35,6 +35,20 @@ func listIndentAndOutdent() throws {
   #expect(restored.document.source == source)
 }
 
+@Test(
+  "見出しやコードや表を含むリスト項目を字下げして戻しても内容と種類を保つ",
+  arguments: [
+    "- ## 見出し\n", "- ```swift\n  let value = 1\n  ```\n",
+    "- 子\n\n  | 見出し |\n  | --- |\n  | 内容 |\n",
+  ])
+func nonParagraphListIndent(_ item: String) throws {
+  let source = "- 親\n" + item
+  let indented = try MarkdownDocument(source: source).applying(.indent, in: 0, path: [1, 0])
+  let restored = try indented.document.applying(.outdent, in: 0, path: indented.path)
+  #expect(
+    Document(parsing: restored.document.source).format() == Document(parsing: source).format())
+}
+
 @Test("先頭のリスト項目は字下げせず一番外側の項目を字下げ解除すると段落へ戻る")
 func listBoundaries() throws {
   let document = MarkdownDocument(source: "- 一\n- 二\n")
@@ -42,6 +56,41 @@ func listBoundaries() throws {
   let lifted = try document.applying(.outdent, in: 0, path: [0, 0])
   #expect(lifted.document.source == "一\n\n- 二\n")
   #expect(lifted.path == [0])
+}
+
+@Test("番号付きリストの先頭や中央を解除しても後続項目の元の番号を保持する", arguments: [0, 1])
+func orderedListOutdentKeepsFollowingNumbers(_ item: Int) throws {
+  let result = try MarkdownDocument(source: "3. 一\n4. 二\n5. 三\n").applying(
+    .outdent, in: 0, path: [item, 0])
+  let parsed = Document(parsing: result.document.source)
+  let lists = parsed.children.compactMap { $0 as? OrderedList }
+  #expect(lists.last?.startIndex == (item == 0 ? 4 : 5))
+  #expect((parsed.child(at: item == 0 ? 0 : 1) as? Paragraph)?.plainText == (item == 0 ? "一" : "二"))
+}
+
+@Test("番号付きリストの中央の空項目で改行しても後続項目の元の番号を保持する")
+func emptyOrderedListReturnKeepsFollowingNumbers() throws {
+  let document = try MarkdownDocument(source: "3. 一\n4. 二\n5. 三\n").replacingInlines(
+    in: 0, path: [1, 0], with: [])
+  let result = try document.splittingBlock(in: 0, path: [1, 0], before: [], after: [])
+  let lists = Document(parsing: result.document.source).children.compactMap { $0 as? OrderedList }
+  #expect(lists.map(\.startIndex) == [3, 5])
+  let edited = try result.document.replacingInlines(
+    in: 0, path: result.path, with: [Markdown.Text("解除後")])
+  let reparsed = Document(parsing: edited.source)
+  #expect(reparsed.children.compactMap { ($0 as? OrderedList)?.startIndex } == [3, 5])
+  #expect((reparsed.child(at: 1) as? Paragraph)?.plainText == "解除後")
+  #expect(!edited.source.contains("<!---->"))
+}
+
+@Test("入れ子の番号付きリストの中央を解除しても残る子項目の番号を保持する")
+func nestedOrderedListOutdentKeepsFollowingNumbers() throws {
+  let result = try MarkdownDocument(source: "- 親\n\n  3. 一\n  4. 二\n  5. 三\n").applying(
+    .outdent, in: 0, path: [0, 1, 1, 0])
+  let parsed = Document(parsing: result.document.source)
+  let remaining = parsed.descendant(at: [0, 1, 1]) as? OrderedList
+  #expect(remaining?.startIndex == 5)
+  #expect((remaining?.child(at: 0)?.child(at: 0) as? Paragraph)?.plainText == "三")
 }
 
 @Test("見出しの文字を消してからリストへ変えても再入力できる")
@@ -105,6 +154,16 @@ func multilineStyledHeading() throws {
   #expect(result.document.source == "### **前 後**\n")
 }
 
+@Test(
+  "段落を見出し3へ変えてもCommonMarkの行末でない区切り文字を保持する",
+  arguments: ["\u{2028}", "\u{2029}", "\u{85}", "\u{b}", "\u{c}"])
+func headingPreservesUnicodeSeparator(_ separator: String) throws {
+  let original = "前\(separator)後"
+  let result = try MarkdownDocument(source: original).applying(.heading(3), in: 0, path: [])
+  #expect(
+    (Document(parsing: result.document.source).child(at: 0) as? Heading)?.plainText == original)
+}
+
 @Test("番号付きリストで改行すると番号を継続しチェックリストの新項目は未完了になる")
 func orderedAndTaskListReturn() throws {
   let ordered = try MarkdownDocument(source: "3. 最初\n4. 次\n").splittingBlock(
@@ -113,6 +172,27 @@ func orderedAndTaskListReturn() throws {
   let task = try MarkdownDocument(source: "- [x] 完了\n").splittingBlock(
     in: 0, path: [0, 0], before: [Markdown.Text("完了")], after: [Markdown.Text("次")])
   #expect(task.document.source == "- [x] 完了\n- [ ] 次\n")
+}
+
+@Test("チェック項目を空にしたり末尾で改行しても保存後のチェック状態を保持する")
+func emptyTaskItemKeepsCheckbox() throws {
+  let document = MarkdownDocument(source: "- [x] 完了\n")
+  let empty = try document.replacingInlines(in: 0, path: [0, 0], with: [])
+  let cleared = try #require(
+    Document(parsing: empty.source).child(at: 0)?.child(at: 0) as? ListItem)
+  #expect(cleared.checkbox == .checked)
+  let next = try document.splittingBlock(
+    in: 0, path: [0, 0], before: [Markdown.Text("完了")], after: [])
+  let list = try #require(Document(parsing: next.document.source).child(at: 0) as? UnorderedList)
+  #expect(list.listItems.map(\.checkbox) == [.checked, .unchecked])
+  let reopened = MarkdownDocument(source: next.document.source)
+  let paragraph = try #require(reopened.blocks[0].markup.child(at: 1)?.child(at: 0) as? Paragraph)
+  let left = try reopened.splittingBlock(
+    in: 0, path: [1, 0], before: Array(paragraph.inlineChildren), after: [])
+  #expect(!left.document.blockActions(in: 0, path: left.path).selected.contains(.checkList))
+  let backspace = try #require(try reopened.backspacingBlock(in: 0, path: [1, 0]))
+  let restored = Document(parsing: backspace.document.source)
+  #expect((restored.child(at: 0)?.child(at: 0)?.child(at: 0) as? Paragraph)?.plainText == "完了")
 }
 
 @Test(

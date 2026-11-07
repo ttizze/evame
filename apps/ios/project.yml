@@ -7,7 +7,7 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "4"
+    CURRENT_PROJECT_VERSION: "5"
     GENERATE_INFOPLIST_FILE: YES
     CODE_SIGNING_ALLOWED: NO
 packages:
@@ -46,12 +46,18 @@ targets:
         buildPhase: resources
     dependencies:
       - target: EvameEditorPrototype
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.evame.editor-prototype.NativeTests
   EditorUITests:
     type: bundle.ui-testing
     platform: iOS
     sources: [UITests]
     dependencies:
       - target: EvameEditorPrototype
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.evame.editor-prototype.EditorUITests
 schemes:
   EvameEditorPrototype:
     build:

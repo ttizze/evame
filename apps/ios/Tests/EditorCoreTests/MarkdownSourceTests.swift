@@ -3,6 +3,16 @@ import Testing
 
 @testable import EditorCore
 
+@Test("変換に失敗しても並行した別文書へエラーや本文を持ち越さない", arguments: 0..<16)
+func conversionFailureDoesNotLeak(_ index: Int) throws {
+  #expect(throws: MarkdownDocument.EditError.self) {
+    try EditorModel.run("evameMarkdownSource", script: "MarkdownModel", input: "{")
+  }
+  let text = "別文書\(index)*記号*"
+  let source = try MarkdownSource.serialize(Paragraph(Markdown.Text(text)))
+  #expect((Document(parsing: source).child(at: 0) as? Paragraph)?.plainText == text)
+}
+
 @Test(
   "入力した記号や行端の空白を文字のまま往復する",
   arguments: [
@@ -39,6 +49,22 @@ func destinationsAndTitles() throws {
   #expect((parsed.child(at: 0) as? Link)?.title == title)
   #expect((parsed.child(at: 1) as? Markdown.Image)?.source == destination)
   #expect((parsed.child(at: 1) as? Markdown.Image)?.title == title)
+}
+
+@Test(
+  "画像説明の文字と書式とリンクをCommonMarkの構造ごと保持する",
+  arguments: [
+    "![foo *bar*](/url)", "![foo **bar**](/url)", "![foo `bar`](/url)",
+    "![foo [bar](/link)](/url)", "![foo ![bar](/image)](/url)",
+  ])
+func imageAltText(_ source: String) throws {
+  let original = try #require(Document(parsing: source).child(at: 0) as? Paragraph)
+  let restored = Document(parsing: try MarkdownSource.serialize(original))
+  let image = try #require(restored.child(at: 0)?.child(at: 0) as? Markdown.Image)
+  let expected = try #require(original.child(at: 0) as? Markdown.Image)
+  #expect(image.hasSameStructure(as: expected))
+  #expect(image.plainText == expected.plainText)
+  #expect(image.source == expected.source)
 }
 
 @Test("コード内のバッククォートと空白をフェンスと混同しない", arguments: ["`内容`", "a``b", " 空白 ", "   ", "a * b"])

@@ -4,6 +4,19 @@ import Testing
 
 @testable import EditorCore
 
+@Test("画像のある段落を結合しても代替テキストと画像参照を保持する")
+func joinedImageAlternativeText() throws {
+  let document = MarkdownDocument(source: "前 ![foo `bar`](/image)\n\n後\n")
+  let result = try #require(try document.backspacingBlock(in: 1, path: []))
+  let paragraph = try #require(Document(parsing: result.document.source).child(at: 0) as? Paragraph)
+  let image = try #require(paragraph.child(at: 1) as? Markdown.Image)
+  #expect((image.child(at: 0) as? Markdown.Text)?.string == "foo ")
+  #expect((image.child(at: 1) as? InlineCode)?.code == "bar")
+  #expect(image.source == "/image")
+  #expect((paragraph.child(at: 0) as? Markdown.Text)?.string == "前 ")
+  #expect((paragraph.child(at: 2) as? Markdown.Text)?.string == "後")
+}
+
 @Test("リストや引用を解除しても内部のリンク定義を使う外側のリンクを壊さない")
 func backspaceKeepsDefinitionsInsideContainers() throws {
   for source in [

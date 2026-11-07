@@ -3,6 +3,10 @@ import Markdown
 
 /// 入力されたMarkdown記号だけを認識する。IMEや選択範囲の更新は入力欄が所有する。
 public enum MarkdownInput {
+  public static func isLineEnding(_ character: Character) -> Bool {
+    character == "\n" || character == "\r" || character == "\r\n"
+  }
+
   public static func inlineShortcut(in text: String, before caret: Int) -> (
     range: NSRange, markup: any InlineMarkup
   )? {
@@ -10,7 +14,7 @@ public enum MarkdownInput {
     let prefix = (text as NSString).substring(to: caret)
     guard let last = prefix.last, "*_~`)".contains(last) else { return nil }
     let start =
-      prefix.lastIndex(where: \.isNewline).map { prefix.index(after: $0) } ?? prefix.startIndex
+      prefix.lastIndex(where: isLineEnding).map { prefix.index(after: $0) } ?? prefix.startIndex
     let line = prefix[start...]
     let lineOffset = prefix.utf16.count - line.utf16.count
     for index in line.indices where "*_~`[!".contains(line[index]) {

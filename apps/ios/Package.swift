@@ -6,7 +6,7 @@ let package = Package(
   platforms: [.iOS(.v18), .macOS(.v15)],
   products: [.library(name: "EditorCore", targets: ["EditorCore"])],
   dependencies: [
-    .package(url: "https://github.com/swiftlang/swift-markdown.git", exact: "0.7.3")
+    .package(url: "https://github.com/swiftlang/swift-markdown.git", exact: "0.9.0")
   ],
   targets: [
     .target(

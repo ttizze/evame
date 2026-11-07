@@ -1,3 +1,5 @@
+import CoreText
+import EditorCore
 import Markdown
 import UIKit
 
@@ -15,6 +17,8 @@ enum RichTextCodec {
   static func attributed(_ markup: any Markup, font: UIFont) -> NSAttributedString {
     let result = NSMutableAttributedString()
     func append(_ node: any Markup, attributes: [NSAttributedString.Key: Any]) {
+      // 標準GFM writerの空チェック項目の埋め草は入力欄の文字にしない。原文は文書側に残す。
+      if node.isEmptyTaskItemPlaceholder { return }
       var attributes = attributes
       switch node {
       case let text as Markdown.Text:
@@ -61,7 +65,6 @@ enum RichTextCodec {
       attributes, range, _ in
       var traits = font.fontDescriptor.symbolicTraits
       if attributes[.editorStrong] as? Bool == true { traits.insert(.traitBold) }
-      if attributes[.editorEmphasis] as? Bool == true { traits.insert(.traitItalic) }
       let styledFont: UIFont
       if attributes[.editorCode] as? Bool == true {
         styledFont = .monospacedSystemFont(ofSize: font.pointSize, weight: .regular)
@@ -70,7 +73,15 @@ enum RichTextCodec {
           descriptor: font.fontDescriptor.withSymbolicTraits(traits) ?? font.fontDescriptor,
           size: font.pointSize)
       }
-      styled.addAttribute(.font, value: styledFont, range: range)
+      // italicの書体指定だけでは日本語の代替フォントが傾かないため、描画行列で傾ける。
+      let displayFont =
+        attributes[.editorEmphasis] as? Bool == true
+        ? UIFont(
+          descriptor: styledFont.fontDescriptor.withMatrix(
+            CGAffineTransform(a: 1, b: 0, c: 0.2, d: 1, tx: 0, ty: 0)),
+          size: font.pointSize)
+        : styledFont
+      styled.addAttribute(.font, value: displayFont, range: range)
     }
     return styled
   }
@@ -79,12 +90,19 @@ enum RichTextCodec {
     -> [NSAttributedString.Key: Any]
   {
     var attributes = source
-    let traits = (source[.font] as? UIFont)?.fontDescriptor.symbolicTraits ?? []
+    let sourceFont = source[.font] as? UIFont
+    let traits = sourceFont?.fontDescriptor.symbolicTraits ?? []
     let base = font.fontDescriptor.symbolicTraits
     for (key, trait): (NSAttributedString.Key, UIFontDescriptor.SymbolicTraits) in [
       (.editorStrong, .traitBold), (.editorEmphasis, .traitItalic), (.editorCode, .traitMonoSpace),
     ] where traits.contains(trait) && !base.contains(trait) {
       attributes[key] = true
+    }
+    if let sourceFont {
+      let matrix = CTFontGetMatrix(sourceFont)
+      if matrix.b == 0, matrix.c != 0, matrix.c != CTFontGetMatrix(font).c {
+        attributes[.editorEmphasis] = true
+      }
     }
     return attributes
   }
@@ -108,7 +126,10 @@ enum RichTextCodec {
             return
           }
           if keys[depth] == .editorCode {
-            result.append(InlineCode((text.string as NSString).substring(with: part)))
+            result += read(part, depth: depth + 1).map {
+              if let text = $0 as? Markdown.Text { return InlineCode(text.string) }
+              return $0
+            }
             return
           }
           if keys[depth] == .link {
@@ -140,25 +161,22 @@ enum RichTextCodec {
           pending = ""
         }
       }
-      let string = text.string as NSString
       var offset = range.location
-      while offset < NSMaxRange(range) {
-        let characterRange = string.rangeOfComposedCharacterSequence(at: offset)
-        let character = string.substring(with: characterRange)
+      for character in (text.string as NSString).substring(with: range) {
         if let image = text.attribute(.editorImage, at: offset, effectiveRange: nil)
           as? Markdown.Image
         {
           flush()
           result.append(image)
-        } else if character == "\n" {
+        } else if MarkdownInput.isLineEnding(character) {
           flush()
           result.append(
             text.attribute(.editorSoftBreak, at: offset, effectiveRange: nil) != nil
               ? SoftBreak() : LineBreak())
         } else {
-          pending += character
+          pending.append(character)
         }
-        offset = NSMaxRange(characterRange)
+        offset += character.utf16.count
       }
       flush()
       return result

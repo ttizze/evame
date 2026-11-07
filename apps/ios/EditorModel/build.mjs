@@ -8,15 +8,11 @@ const fixtures = new URL(
 	import.meta.url,
 );
 await mkdir(resources, { recursive: true });
-for (const name of [
-	"EditorModel",
-	"ReferenceDefinitions",
-	"ProseMirrorTests",
-]) {
+for (const name of ["EditorModel", "MarkdownModel", "ProseMirrorTests"]) {
 	const test = name === "ProseMirrorTests";
 	const entry = test
 		? fileURLToPath(new URL("prosemirror-commands.test.ts.txt", fixtures))
-		: `${directory}/${name === "EditorModel" ? "model" : "references"}.mjs`;
+		: `${directory}/${name === "EditorModel" ? "model" : "markdown"}.mjs`;
 	const result = await Bun.build({
 		entrypoints: [entry],
 		target: "browser",
@@ -73,6 +69,7 @@ const packages = new Set([
 	"prosemirror-schema-list",
 	"mdast-util-from-markdown",
 	"mdast-util-to-markdown",
+	"mdast-util-gfm",
 ]);
 const licenses = [];
 for (const name of packages) {

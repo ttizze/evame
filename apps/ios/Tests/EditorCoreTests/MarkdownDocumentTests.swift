@@ -4,6 +4,29 @@ import Testing
 
 @testable import EditorCore
 
+@Test(
+  "CRだけの改行やLFとCRLFが混在しても中央の段落だけを編集して前後を保持する",
+  arguments: ["p\r\rq\n\nr\n", "p\r\rq\r\rr\r", "p\r\n\r\nq\r\rr\n", "p\n\nq\r\n\r\nr\r"])
+func mixedLineEndingSourcePositions(_ source: String) throws {
+  let document = MarkdownDocument(source: source)
+  #expect(document.blocks.count == 3)
+  let changed = try document.replacingInlines(in: 1, path: [], with: [Markdown.Text("編集")])
+  #expect(changed.source == source.replacingOccurrences(of: "q", with: "編集"))
+  #expect(changed.blocks.compactMap { ($0.markup as? Paragraph)?.plainText } == ["p", "編集", "r"])
+}
+
+@Test(
+  "Unicodeの区切り文字を含む段落の後を編集しても元の本文と位置を保持する",
+  arguments: ["\u{2028}", "\u{2029}", "\u{85}", "\u{b}", "\u{c}"])
+func sourcePositionsAcrossUnicodeSeparator(_ separator: String) throws {
+  let document = MarkdownDocument(source: "前\(separator)後\n\n次\n")
+  let changed = try document.replacingInlines(in: 1, path: [], with: [Markdown.Text("編集")])
+  #expect(changed.source == "前\(separator)後\n\n編集\n")
+  let trailing = try MarkdownDocument(source: "末尾\(separator)").replacingInlines(
+    in: 0, path: [], with: [Markdown.Text("変更\(separator)")])
+  #expect(trailing.source == "変更\(separator)")
+}
+
 @Test("日本語と絵文字を含む原稿を開いて閉じても元のMarkdownを保持する")
 func unchangedJapaneseDocument() throws {
   let source = "\n# 日本語👩🏽‍💻\n\n本文 **太字**。\r\n\r\n末尾  \n"
@@ -80,7 +103,14 @@ func replaceTableCell() throws {
   let source = "| 名前 | 数 |\n| :--- | ---: |\n| 古い値 | **10** |\n"
   let changed = try MarkdownDocument(source: source).replacingNode(
     in: 0, path: [1, 0, 0], with: Table.Cell(Markdown.Text("新しい値")))
-  #expect(changed.source == source.replacingOccurrences(of: "古い値", with: "新しい値"))
+  let table = try #require(Document(parsing: changed.source).child(at: 0) as? Table)
+  #expect(table.columnAlignments == [.left, .right])
+  #expect((table.head.child(at: 0) as? Table.Cell)?.plainText == "名前")
+  #expect((table.head.child(at: 1) as? Table.Cell)?.plainText == "数")
+  let row = try #require(table.body.child(at: 0) as? Table.Row)
+  #expect((row.child(at: 0) as? Table.Cell)?.plainText == "新しい値")
+  let number = try #require(row.child(at: 1)?.child(at: 0) as? Strong)
+  #expect((number.child(at: 0) as? Markdown.Text)?.string == "10")
 }
 
 @Test("引用内の段落に改行を挿入しても引用の外へ出ない")

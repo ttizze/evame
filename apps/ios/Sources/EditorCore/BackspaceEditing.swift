@@ -8,6 +8,10 @@ extension MarkdownDocument {
       let node = blocks[index].markup.descendant(at: path),
       node is Paragraph || node is Heading || node is CodeBlock
     else { return nil }
+    if node.isEmptyTaskItemPlaceholder {
+      return try replacingInlines(in: index, path: path, with: []).backspacingBlock(
+        in: index, path: path)
+    }
     if node is Heading || node is CodeBlock {
       let result = try applying(.paragraph, in: index, path: path)
       return (result.document, index, result.path, [])
@@ -50,7 +54,8 @@ extension MarkdownDocument {
       guard let block = node as? any BlockMarkup else { throw EditError.invalidBlock }
       return block
     }
-    guard let result = try EditorModel.backspace(Document(parts), path: modelPath) else {
+    guard let result = try EditorModel.applying(.backspace, to: Document(parts), path: modelPath)
+    else {
       return nil
     }
     let single = result.markup.childCount == 1

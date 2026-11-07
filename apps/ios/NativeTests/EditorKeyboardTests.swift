@@ -287,7 +287,13 @@ func keyboardImageInsertion() throws {
   editor.insertImage(
     Markdown.Image(source: "assets/test.png", [Markdown.Text("写真")]), preview: preview,
     selection: NSRange(location: 1, length: 0))
-  #expect(try MarkdownSource.serialize(Paragraph(output)) == "前![写真](<assets/test.png>)後")
+  let parsed = try #require(
+    Document(parsing: MarkdownSource.serialize(Paragraph(output))).child(at: 0) as? Paragraph)
+  #expect((parsed.child(at: 0) as? Markdown.Text)?.string == "前")
+  let image = try #require(parsed.child(at: 1) as? Markdown.Image)
+  #expect(image.source == "assets/test.png")
+  #expect(image.plainText == "写真")
+  #expect((parsed.child(at: 2) as? Markdown.Text)?.string == "後")
   let attachment = try #require(
     editor.attributedText.attribute(.attachment, at: 1, effectiveRange: nil) as? NSTextAttachment)
   #expect(attachment.image === preview)

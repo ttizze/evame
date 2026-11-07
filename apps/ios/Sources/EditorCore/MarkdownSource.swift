@@ -1,158 +1,83 @@
 import Foundation
 import Markdown
 
-/// 編集した構造をCommonMark/GFMへ戻す。未編集範囲は文書側で原文を使う。
+/// Swiftの構造をMDASTへ渡す。記法の生成はWebと同じライブラリが担う。
 public enum MarkdownSource {
   public enum EncodingError: Error { case unsupportedMarkup, multilineTableCell }
 
   public static func serialize(_ markup: any Markup) throws -> String {
+    let data = try JSONSerialization.data(withJSONObject: node(markup))
+    return try EditorModel.run(
+      "evameMarkdownSource", script: "MarkdownModel", input: String(decoding: data, as: UTF8.self))
+  }
+
+  private static func node(_ markup: any Markup) throws -> [String: Any] {
+    var result: [String: Any]
     switch markup {
-    case let document as Document:
-      return try document.children.map(serialize).joined(separator: "\n\n")
-    case let quote as BlockQuote:
-      return try quote.children.map(serialize).joined(separator: "\n\n").components(
-        separatedBy: "\n"
-      ).map { "> " + $0 }.joined(separator: "\n")
-    case let list as any ListItemContainer:
-      return try list.listItems.enumerated().map { index, item in
-        let marker = (list as? OrderedList).map { "\($0.startIndex + UInt(index)). " } ?? "- "
-        let check = item.checkbox.map { $0 == .checked ? "[x] " : "[ ] " } ?? ""
-        var body = ""
-        for (offset, child) in item.children.enumerated() {
-          if offset > 0 {
-            // 1以外で始まる番号付きリストは、空行なしでは前の段落の続きになる。
-            let continuesList =
-              child is any ListItemContainer && ((child as? OrderedList)?.startIndex ?? 1) == 1
-            body += continuesList ? "\n" : "\n\n"
-          }
-          body += try serialize(child)
-        }
-        return marker + check
-          + body.replacingOccurrences(
-            of: "\n", with: "\n" + String(repeating: " ", count: marker.count))
-      }.joined(separator: "\n")
-    case is ThematicBreak:
-      return "---"
-    case let table as Table:
-      let rows = [Array(table.head.children)] + table.body.children.map { Array($0.children) }
-      var lines = try rows.map { row in
-        "| " + (try row.map { try inlineChildren($0, inTable: true) }.joined(separator: " | "))
-          + " |"
-      }
-      lines.insert(
-        "| "
-          + table.columnAlignments.map { alignment in
-            switch alignment {
-            case .left: ":---"
-            case .right: "---:"
-            case .center: ":---:"
-            default: "---"
-            }
-          }.joined(separator: " | ") + " |", at: 1)
-      return lines.joined(separator: "\n")
-    case let heading as Heading:
-      let content = try inlineChildren(heading, inTable: false)
-      if content.contains("\n") {
-        guard heading.level <= 2,
-          !heading.plainText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        else {
-          throw EncodingError.unsupportedMarkup
-        }
-        return content + "\n" + (heading.level == 1 ? "===" : "---")
-      }
-      return String(repeating: "#", count: heading.level) + " " + content
-    case let paragraph as Paragraph:
-      return try inlineChildren(paragraph, inTable: false)
-    case let cell as Table.Cell:
-      return try inlineChildren(cell, inTable: true)
+    case let text as Markdown.Text: return ["type": "text", "value": text.string]
+    case let code as InlineCode: return ["type": "inlineCode", "value": code.code]
+    case is SoftBreak: return ["type": "text", "value": "\n"]
+    case is LineBreak: return ["type": "break"]
     case let code as CodeBlock:
-      // 情報文字列にバッククォートがある場合はチルダを使い、本文中の連続記号より長くする。
-      let character = code.language?.contains("`") == true ? "~" : "`"
-      let runs = code.code.ranges(of: character == "`" ? /`+/ : /~+/).map { code.code[$0].count }
-      let fence = String(repeating: character, count: max(3, (runs.max() ?? 0) + 1))
-      let language =
-        code.language.map {
-          " "
-            + $0.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(
-              of: "&", with: "&amp;")
-        } ?? ""
-      return fence + language + "\n" + code.code
-        + (code.code.isEmpty || code.code.hasSuffix("\n") ? "" : "\n") + fence
-    default: throw EncodingError.unsupportedMarkup
-    }
-  }
-
-  private static func inlineChildren(_ markup: any Markup, inTable: Bool) throws -> String {
-    var content = try markup.children.map { try inline($0, inTable: inTable) }.joined()
-    if content.hasPrefix(" ") { content = "&#32;" + content.dropFirst() }
-    if content.hasSuffix(" ") { content = content.dropLast() + "&#32;" }
-    return content
-  }
-
-  private static func inline(_ markup: any Markup, inTable: Bool) throws -> String {
-    switch markup {
-    case let text as Markdown.Text:
-      var escaped = ""
-      for scalar in text.string.unicodeScalars {
-        if [9, 10, 13].contains(scalar.value) {
-          escaped += "&#\(scalar.value);"
-          continue
-        }
-        if (33...47).contains(scalar.value) || (58...64).contains(scalar.value)
-          || (91...96).contains(scalar.value) || (123...126).contains(scalar.value)
-        {
-          escaped += "\\"
-        }
-        escaped.unicodeScalars.append(scalar)
-      }
-      return escaped
-    case let code as InlineCode:
-      let runs = code.code.ranges(of: /`+/).map { code.code[$0].count }
-      let fence = String(repeating: "`", count: (runs.max() ?? 0) + 1)
-      let padding =
-        code.code.hasPrefix("`") || code.code.hasSuffix("`")
-          || (code.code.hasPrefix(" ") && code.code.hasSuffix(" ")
-            && !code.code.allSatisfy { $0 == " " })
-        ? " " : ""
-      let content = inTable ? code.code.replacingOccurrences(of: "|", with: "\\|") : code.code
-      return fence + padding + content + padding + fence
-    case is Strong: return "**" + (try inlineChildren(markup, inTable: inTable)) + "**"
-    case is Emphasis:
-      var depth = 0
-      var ancestor = markup.parent
-      while ancestor is Emphasis {
-        depth += 1
-        ancestor = ancestor?.parent
-      }
-      let delimiter = depth.isMultiple(of: 2) ? "*" : "_"
-      return delimiter + (try inlineChildren(markup, inTable: inTable)) + delimiter
-    case is Strikethrough: return "~~" + (try inlineChildren(markup, inTable: inTable)) + "~~"
-    case is SoftBreak, is LineBreak:
-      if inTable { throw EncodingError.multilineTableCell }
-      return markup is SoftBreak ? "\n" : "\\\n"
-    case let link as Link:
-      return "[" + (try inlineChildren(link, inTable: inTable)) + "]"
-        + destination(link.destination ?? "", title: link.title, inTable: inTable)
+      return [
+        "type": "code",
+        "value": code.code.hasSuffix("\n") ? String(code.code.dropLast()) : code.code,
+        "lang": code.language as Any? ?? NSNull(),
+      ]
+    case is ThematicBreak: return ["type": "thematicBreak"]
     case let image as Markdown.Image:
-      return "![" + (try inlineChildren(image, inTable: inTable)) + "]"
-        + destination(image.source ?? "", title: image.title, inTable: inTable)
+      result = [
+        "type": "image", "url": image.source ?? "", "title": image.title as Any? ?? NSNull(),
+      ]
+    case let link as Link:
+      result = [
+        "type": "link", "url": link.destination ?? "", "title": link.title as Any? ?? NSNull(),
+      ]
+    case let heading as Heading:
+      if heading.level > 2, containsBreak(heading) { throw EncodingError.unsupportedMarkup }
+      result = ["type": "heading", "depth": heading.level]
+    case let table as Table:
+      return [
+        "type": "table",
+        "align": table.columnAlignments.map { alignment -> Any in
+          switch alignment {
+          case .left: "left"
+          case .right: "right"
+          case .center: "center"
+          default: NSNull()
+          }
+        },
+        "children": try ([table.head as any Markup] + Array(table.body.children)).map(node),
+      ]
+    case is Table.Head, is Table.Row: result = ["type": "tableRow"]
+    case is Table.Cell:
+      if containsBreak(markup) { throw EncodingError.multilineTableCell }
+      result = ["type": "tableCell"]
+    case let list as OrderedList:
+      result = ["type": "list", "ordered": true, "start": list.startIndex, "spread": false]
+    case is UnorderedList: result = ["type": "list", "ordered": false, "spread": false]
+    case let item as ListItem:
+      result = [
+        "type": "listItem", "spread": false,
+        "checked": item.checkbox.map { $0 == .checked } as Any? ?? NSNull(),
+      ]
+    case is Document: result = ["type": "root"]
+    case is Paragraph: result = ["type": "paragraph"]
+    case is BlockQuote: result = ["type": "blockquote"]
+    case is Strong: result = ["type": "strong"]
+    case is Emphasis: result = ["type": "emphasis"]
+    case is Strikethrough: result = ["type": "delete"]
     default: throw EncodingError.unsupportedMarkup
     }
+    // 文書・引用の空段落を除き、隣接リストの分離を標準writerへ任せる。
+    // リスト項目の段落は標準GFMのチェック状態の出力に必要なので残す。
+    result["children"] = try markup.children.filter {
+      !((markup is Document || markup is BlockQuote) && $0 is Paragraph && $0.childCount == 0)
+    }.map(node)
+    return result
   }
 
-  private static func destination(_ url: String, title: String?, inTable: Bool) -> String {
-    var escaped = url.replacingOccurrences(of: "\\", with: "\\\\")
-      .replacingOccurrences(of: "<", with: "\\<").replacingOccurrences(of: ">", with: "\\>")
-      .replacingOccurrences(of: "\n", with: "%0A").replacingOccurrences(of: "\r", with: "%0D")
-      .replacingOccurrences(of: "&", with: "&amp;")
-    if inTable { escaped = escaped.replacingOccurrences(of: "|", with: "\\|") }
-    let suffix =
-      title.map {
-        " \""
-          + $0.replacingOccurrences(of: "\\", with: "\\\\")
-          .replacingOccurrences(of: "&", with: "&amp;").replacingOccurrences(of: "\"", with: "\\\"")
-          .replacingOccurrences(of: "|", with: inTable ? "\\|" : "|") + "\""
-      } ?? ""
-    return "(<" + escaped + ">" + suffix + ")"
+  private static func containsBreak(_ markup: any Markup) -> Bool {
+    markup is SoftBreak || markup is LineBreak || markup.children.contains(where: containsBreak)
   }
 }

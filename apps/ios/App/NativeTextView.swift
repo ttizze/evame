@@ -1,15 +1,15 @@
 import EditorCore
 import Markdown
 import UIKit
+import UniformTypeIdentifiers
 
 /// 選択・IME・UndoはUIKitに残し、確定した入力と操作結果を文書の所有者へ渡す。
 @MainActor
-final class NativeTextView: UITextView, UITextViewDelegate {
+final class NativeTextView: UITextView, UITextViewDelegate, UITextPasteDelegate {
   private var baseFont: UIFont
   private var onChange: ([any InlineMarkup]) -> Void
   private var onCommand: (NativeTextView, EditorKeyboardMenu.Command) -> Void
   private var allowsLineBreaks: Bool
-  private var allowsInlineFormatting: Bool
   private var committed: NSAttributedString
   private var typingUpdate:
     (range: NSRange, text: String, attributes: [NSAttributedString.Key: Any], pending: Bool)?
@@ -33,23 +33,115 @@ final class NativeTextView: UITextView, UITextViewDelegate {
     self.onChange = onChange
     self.onCommand = onCommand
     self.allowsLineBreaks = allowsLineBreaks
-    self.allowsInlineFormatting = allowsInlineFormatting
     committed = RichTextCodec.attributed(markup, font: font)
     super.init(frame: .zero, textContainer: nil)
+    allowsEditingTextAttributes = allowsInlineFormatting
     attributedText = committed
     delegate = self
+    pasteDelegate = self
     isScrollEnabled = false
     backgroundColor = .clear
     textContainerInset = UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
     adjustsFontForContentSizeCategory = true
     returnKeyType = allowsLineBreaks ? .default : .done
-    accessibilityLabel = (markup as? any PlainTextConvertibleMarkup)?.plainText
+    accessibilityLabel =
+      (markup.parent as? ListItem)?.checkbox != nil
+      ? String(localized: "チェック項目") : (markup as? any PlainTextConvertibleMarkup)?.plainText
     typingAttributes = [.font: font, .foregroundColor: UIColor.label]
     inputAccessoryView = EditorKeyboardMenu { [weak self] command in self?.perform(command) }
     updateMenu()
   }
 
   required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+  override func copy(_ sender: Any?) {
+    guard allowsEditingTextAttributes, selectedRange.length > 0 else {
+      super.copy(sender)
+      return
+    }
+    let selection = attributedText.attributedSubstring(from: selectedRange)
+    let exported = NSMutableAttributedString(attributedString: selection)
+    // RTFDは描画行列を保持しないため、書き出す値だけ標準の斜体書体へ戻す。
+    selection.enumerateAttributes(in: NSRange(location: 0, length: selection.length)) {
+      attributes, range, _ in
+      guard
+        RichTextCodec.formatAttributes(attributes, font: baseFont)[.editorEmphasis] as? Bool
+          == true
+      else { return }
+      let font = attributes[.font] as? UIFont ?? baseFont
+      let descriptor = font.fontDescriptor.withMatrix(.identity).withSymbolicTraits(
+        font.fontDescriptor.symbolicTraits.union(.traitItalic))
+      exported.addAttribute(
+        .font,
+        value: descriptor.map { UIFont(descriptor: $0, size: font.pointSize) }
+          ?? UIFont.italicSystemFont(ofSize: font.pointSize), range: range)
+    }
+    guard
+      let data = try? exported.data(
+        from: NSRange(location: 0, length: exported.length),
+        documentAttributes: [.documentType: NSAttributedString.DocumentType.rtfd])
+    else {
+      super.copy(sender)
+      return
+    }
+    UIPasteboard.general.items = [
+      [
+        UTType.flatRTFD.identifier: data, UTType.utf8PlainText.identifier: selection.string,
+      ]
+    ]
+  }
+
+  override func cut(_ sender: Any?) {
+    guard isEditable, markedTextRange == nil, selectedRange.length > 0,
+      !containsImage(in: selectedRange)
+    else { return }
+    copy(sender)
+    super.deleteBackward()
+  }
+
+  override func toggleItalics(_ sender: Any?) { toggleStyle(.editorEmphasis) }
+  override func toggleBoldface(_ sender: Any?) { toggleStyle(.editorStrong) }
+
+  override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+    if action == #selector(toggleUnderline(_:)) { return false }
+    if action == #selector(cut(_:)), containsImage(in: selectedRange) { return false }
+    return super.canPerformAction(action, withSender: sender)
+  }
+
+  func textPasteConfigurationSupporting(
+    _ textPasteConfigurationSupporting: any UITextPasteConfigurationSupporting,
+    performPasteOf attributedString: NSAttributedString, to textRange: UITextRange
+  ) -> UITextRange {
+    guard markedTextRange == nil, attributedString.length > 0,
+      allowsLineBreaks || !attributedString.string.contains(where: MarkdownInput.isLineEnding)
+    else { return textRange }
+    let input = NSMutableAttributedString(attributedString: attributedString)
+    let text = attributedString.string as NSString
+    for index in (0..<attributedString.length).reversed() {
+      if text.character(at: index) == 0xFFFC,
+        attributedString.attribute(.attachment, at: index, effectiveRange: nil) != nil,
+        attributedString.attribute(.editorImage, at: index, effectiveRange: nil) == nil
+      {
+        input.deleteCharacters(in: NSRange(location: index, length: 1))
+      }
+    }
+    guard input.length > 0 else { return textRange }
+    // システムが読み込んだ書式をMarkdownへ戻し、入力欄と同じ表示へ揃えて挿入する。
+    let replacement = RichTextCodec.attributed(
+      Paragraph(
+        allowsEditingTextAttributes
+          ? RichTextCodec.inlines(input, font: baseFont)
+          : [Markdown.Text(input.string)]), font: baseFont)
+    let range = NSRange(
+      location: offset(from: beginningOfDocument, to: textRange.start),
+      length: offset(from: textRange.start, to: textRange.end))
+    let changed = NSMutableAttributedString(attributedString: attributedText)
+    changed.replaceCharacters(in: range, with: replacement)
+    typingUpdate = nil
+    replaceText(
+      changed, selection: NSRange(location: range.location + replacement.length, length: 0))
+    return selectedTextRange ?? textRange
+  }
 
   override func deleteBackward() {
     if markedTextRange == nil, selectedRange == NSRange(location: 0, length: 0),
@@ -70,7 +162,7 @@ final class NativeTextView: UITextView, UITextViewDelegate {
     typingUpdate = nil
     baseFont = font
     self.allowsLineBreaks = allowsLineBreaks
-    self.allowsInlineFormatting = allowsInlineFormatting
+    allowsEditingTextAttributes = allowsInlineFormatting
     self.onCommand = onCommand
     self.onChange = onChange
     committed = RichTextCodec.attributed(markup, font: font)
@@ -80,7 +172,9 @@ final class NativeTextView: UITextView, UITextViewDelegate {
       location: location, length: min(selection.length, committed.length - location))
     typingAttributes = [.font: font, .foregroundColor: UIColor.label]
     returnKeyType = allowsLineBreaks ? .default : .done
-    accessibilityLabel = (markup as? any PlainTextConvertibleMarkup)?.plainText
+    accessibilityLabel =
+      (markup.parent as? ListItem)?.checkbox != nil
+      ? String(localized: "チェック項目") : (markup as? any PlainTextConvertibleMarkup)?.plainText
     invalidateIntrinsicContentSize()
     updateMenu()
   }
@@ -115,7 +209,7 @@ final class NativeTextView: UITextView, UITextViewDelegate {
       }
     }
     guard !attributedText.isEqual(to: committed) else { return }
-    if allowsInlineFormatting {
+    if allowsEditingTextAttributes {
       if !blockActions.enabled.isEmpty, let length = MarkdownInput.blockPrefix(in: text),
         !committed.string.hasPrefix((text as NSString).substring(to: length)),
         let result = try? MarkdownInput.block(
@@ -169,7 +263,9 @@ final class NativeTextView: UITextView, UITextViewDelegate {
   func textView(
     _ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String
   ) -> Bool {
-    if text == "\n", markedTextRange == nil, allowsInlineFormatting, !blockActions.enabled.isEmpty {
+    if text == "\n", markedTextRange == nil, allowsEditingTextAttributes,
+      !blockActions.enabled.isEmpty
+    {
       if range.location == attributedText.length, range.length == 0,
         self.text.range(of: #"\A```[^\s`]*\z"#, options: .regularExpression) != nil,
         let code = try? MarkdownInput.block(prefix: self.text + "\n", inlines: [])
@@ -197,7 +293,7 @@ final class NativeTextView: UITextView, UITextViewDelegate {
       resignFirstResponder()
       return false
     }
-    let allowed = allowsLineBreaks || !text.contains(where: \.isNewline)
+    let allowed = allowsLineBreaks || !text.contains(where: MarkdownInput.isLineEnding)
     if allowed && markedTextRange == nil {
       var attributes = currentTypingAttributes
       attributes.removeValue(forKey: .editorImage)
@@ -229,7 +325,7 @@ final class NativeTextView: UITextView, UITextViewDelegate {
   }
 
   func toggleStyle(_ key: NSAttributedString.Key) {
-    guard markedTextRange == nil, allowsInlineFormatting else { return }
+    guard markedTextRange == nil, allowsEditingTextAttributes else { return }
     guard key != .editorCode || !containsImage(in: selectedRange) else { return }
     let selection = selectedRange
     let current =
@@ -408,7 +504,7 @@ final class NativeTextView: UITextView, UITextViewDelegate {
       ) { [weak self] _ in self?.perform(.redo) },
     ]
     menu.update(
-      blockActions: blockActions, formats: formats, allowsInline: allowsInlineFormatting,
+      blockActions: blockActions, formats: formats, allowsInline: allowsEditingTextAttributes,
       canFormatCode: !containsImage(in: selectedRange),
       isComposing: markedTextRange != nil,
       moreMenu: UIMenu(children: [

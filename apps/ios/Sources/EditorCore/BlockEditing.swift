@@ -60,7 +60,8 @@ extension MarkdownDocument {
       func singleLine(_ markup: any Markup) -> any Markup {
         if markup is SoftBreak || markup is LineBreak { return Markdown.Text(" ") }
         if let text = markup as? Markdown.Text {
-          return Markdown.Text(String(text.string.map { $0.isNewline ? Character(" ") : $0 }))
+          return Markdown.Text(
+            String(text.string.map { MarkdownInput.isLineEnding($0) ? Character(" ") : $0 }))
         }
         return markup.withUncheckedChildren(markup.children.map(singleLine))
       }
@@ -107,78 +108,19 @@ extension MarkdownDocument {
         targetPath += [0, 0]
       }
     case .indent, .outdent:
-      guard let depth = listDepth,
-        let list = root.descendant(at: Array(path.prefix(depth))) as? any ListItemContainer
+      let document = (root as? Document) ?? Document([root as! any BlockMarkup])
+      let modelPath = root is Document ? path : [0] + path
+      guard
+        let result = try EditorModel.applying(
+          action == .indent ? .indent : .outdent, to: document, path: modelPath)
       else { throw EditError.invalidBlock }
-      let itemIndex = path[depth]
-      let items = Array(list.listItems)
-      let item = items[itemIndex]
-      let tail = Array(path.dropFirst(depth + 1))
-      target = Array(path.prefix(depth))
-      if action == .indent {
-        var siblings = items
-        var previous = Array(items[itemIndex - 1].children)
-        let nestedIndex: Int
-        let nestedItemIndex: Int
-        if let nested = previous.last as? any ListItemContainer,
-          (nested is OrderedList) == (list is OrderedList)
-        {
-          nestedIndex = previous.count - 1
-          nestedItemIndex = nested.childCount
-          previous[nestedIndex] = nested.withUncheckedChildren(Array(nested.children) + [item])
-        } else {
-          nestedIndex = previous.count
-          nestedItemIndex = 0
-          previous.append(list is OrderedList ? OrderedList([item]) : UnorderedList([item]))
-        }
-        siblings[itemIndex - 1] = items[itemIndex - 1].withUncheckedChildren(previous) as! ListItem
-        siblings.remove(at: itemIndex)
-        replacement = list.withUncheckedChildren(siblings)
-        targetPath = target + [itemIndex - 1, nestedIndex, nestedItemIndex] + tail
-      } else if depth >= 2,
-        let outer = root.descendant(at: Array(path.prefix(depth - 2))) as? any ListItemContainer
-      {
-        let parentIndex = path[depth - 2]
-        let nestedIndex = path[depth - 1]
-        var outerItems = Array(outer.children)
-        var parentChildren = Array(outerItems[parentIndex].children)
-        let before = Array(items.prefix(itemIndex))
-        if before.isEmpty {
-          parentChildren.remove(at: nestedIndex)
-        } else {
-          parentChildren[nestedIndex] = list.withUncheckedChildren(before)
-        }
-        outerItems[parentIndex] = outerItems[parentIndex].withUncheckedChildren(parentChildren)
-        let after = Array(items.dropFirst(itemIndex + 1))
-        let lifted =
-          after.isEmpty
-          ? item
-          : item.withUncheckedChildren(Array(item.children) + [list.withUncheckedChildren(after)])
-        outerItems.insert(lifted, at: parentIndex + 1)
-        target = Array(path.prefix(depth - 2))
-        replacement = outer.withUncheckedChildren(outerItems)
-        targetPath = target + [parentIndex + 1] + tail
-      } else {
-        var parts = [any BlockMarkup]()
-        if itemIndex > 0 {
-          parts.append(
-            list.withUncheckedChildren(items.prefix(itemIndex).map { $0 as any Markup })
-              as! any BlockMarkup)
-        }
-        let offset = parts.count
-        parts += item.blockChildren
-        if itemIndex + 1 < items.count {
-          var following = list.withUncheckedChildren(
-            items.suffix(from: itemIndex + 1).map { $0 as any Markup })
-          if var ordered = following as? OrderedList {
-            ordered.startIndex += UInt(itemIndex + 1)
-            following = ordered
-          }
-          parts.append(following as! any BlockMarkup)
-        }
-        replacement = Document(parts)
-        targetPath = target + [offset + (tail.first ?? 0)] + tail.dropFirst()
-      }
+      let single = result.markup.childCount == 1
+      return (
+        try replacingStructure(
+          in: index, with: single ? result.markup.child(at: 0)! : result.markup),
+        single ? Array(result.path.dropFirst()) : result.path
+      )
+
     }
     let changed = try root.replacingDescendant(at: target, with: replacement)
     let focus = replacementFocusPath(
@@ -201,7 +143,11 @@ extension MarkdownDocument {
       let childIndex = path.last, parentPath.count > 0,
       let list = root.descendant(at: Array(parentPath.dropLast())) as? any ListItemContainer
     {
-      if before.isEmpty && after.isEmpty {
+      let content = before + after
+      if (before.isEmpty && after.isEmpty)
+        || (node.isEmptyTaskItemPlaceholder && content.count == 1
+          && (content.first as? Markdown.Text)?.string == " ")
+      {
         let cleared = try replacingInlines(in: index, path: path, with: [])
         return try cleared.applying(.outdent, in: index, path: path)
       }
