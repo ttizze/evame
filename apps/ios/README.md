@@ -17,7 +17,7 @@ SwiftUIの画面にUIKitの`UITextView`を組み込んだ検証用アプリ。�
 - XcodeGenは既存の`flake.lock`で固定したNix環境から使う。
 - Swift依存は`Package.swift`と`Package.resolved`で固定する。生成したXcodeプロジェクトにも同じロックを渡す。
 - 構造の結合にはProseMirrorのモデル演算をJavaScriptCore上で使う。UIKitの画面とIMEを維持し、DOMやWebViewは作らない。依存は`EditorModel/package.json`と`bun.lock`に固定し、`scripts/ios.sh`から同じJSとライセンスを生成する。
-- CIはNix環境に合わせて`macos-26-arm64`を使い、`.github/workflows/ios.yml`から同じスクリプトを実行する。
+- CIはNix環境に合わせてArm64の`macos-26`を使い、`.github/workflows/ios.yml`から同じスクリプトを実行する。
 
 リポジトリのルートで実行する。スクリプトは必要に応じて`nix develop`へ入り直す。
 
