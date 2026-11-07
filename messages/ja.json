@@ -1,5 +1,10 @@
 {
+	"MagicLinkForm": {
+		"invalidEmail": "有効なメールアドレスを入力してください。",
+		"sendFailed": "ログインメールを送信できませんでした。もう一度お試しください。"
+	},
 	"Editor": {
+		"moveBlock": "ドラッグしてブロックを移動",
 		"saveFailed": "保存できませんでした。変更内容は画面に残っています。もう一度お試しください。",
 		"title": "タイトル",
 		"placeholder": "本文を書く…",

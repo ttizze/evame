@@ -1,5 +1,10 @@
 {
+	"MagicLinkForm": {
+		"invalidEmail": "请输入有效的电子邮件地址。",
+		"sendFailed": "登录邮件发送失败，请重试。"
+	},
 	"Editor": {
+		"moveBlock": "拖动以移动区块",
 		"saveFailed": "保存失败。修改仍保留在当前页面，请重试。",
 		"title": "标题",
 		"placeholder": "开始写作…",

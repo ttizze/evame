@@ -16,7 +16,8 @@ import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
 import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
 import { $getRoot, $getState, $nodesOfType } from "lexical";
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { BlockDragMenu } from "./block-drag-menu";
 import { EditorMenu } from "./editor-menu";
 import { ImagePlugin } from "./image-plugin";
 import { editorNodes, importMarkdown, markdownTransformers } from "./markdown";
@@ -41,6 +42,9 @@ export function Editor({
 	onChange: ((markdown: string) => void) | null;
 }) {
 	const input = useRef<HTMLInputElement>(null);
+	const [anchorElement, setAnchorElement] = useState<HTMLDivElement | null>(
+		null,
+	);
 	const currentMarkdown = useRef(defaultValue);
 	return (
 		<LexicalComposer
@@ -75,7 +79,10 @@ export function Editor({
 				},
 			}}
 		>
-			<div className="relative">
+			<div
+				className={showMenus ? "relative md:-ml-8 md:pl-8" : "relative"}
+				ref={showMenus ? setAnchorElement : null}
+			>
 				<RichTextPlugin
 					contentEditable={
 						<ContentEditable
@@ -84,7 +91,9 @@ export function Editor({
 							className={`${className} min-h-8 focus:outline-hidden`}
 							data-testid="lexical-editor"
 							placeholder={
-								<div className="pointer-events-none absolute top-0 left-0 text-muted-foreground">
+								<div
+									className={`pointer-events-none absolute top-0 left-0 text-muted-foreground ${showMenus ? "md:left-8" : ""}`}
+								>
 									{placeholder}
 								</div>
 							}
@@ -134,7 +143,12 @@ export function Editor({
 					onChange?.(markdown);
 				}}
 			/>
-			{showMenus && <EditorMenu />}
+			{showMenus && (
+				<>
+					<EditorMenu />
+					{anchorElement && <BlockDragMenu anchorElement={anchorElement} />}
+				</>
+			)}
 		</LexicalComposer>
 	);
 }

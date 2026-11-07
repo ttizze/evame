@@ -144,7 +144,10 @@ export function EditorMenu() {
 						block.getType() === "paragraph" &&
 						block.getTextContent() === "" &&
 						blockRect
-							? { top: blockRect.top, left: Math.max(0, blockRect.left - 48) }
+							? {
+									top: blockRect.top + blockRect.height / 2,
+									left: Math.max(0, blockRect.left - 48),
+								}
 							: null,
 				});
 			});
@@ -304,7 +307,7 @@ export function EditorMenu() {
 			)}
 			{view.floating && (
 				<div
-					className="fixed z-40 hidden md:block"
+					className="fixed z-40 -mt-5 hidden md:block"
 					data-testid="editor-floating-menu"
 					ref={setPortalContainer}
 					style={view.floating}
