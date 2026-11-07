@@ -11,6 +11,14 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
+export const readerCacheInvalidations = sqliteTable(
+	"reader_cache_invalidations",
+	{
+		tag: text().primaryKey().notNull(),
+		version: text().notNull(),
+	},
+);
+
 export const readerRevisions = sqliteTable(
 	"reader_revisions",
 	{ key: text().primaryKey().notNull(), revision: integer().notNull() },

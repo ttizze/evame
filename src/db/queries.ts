@@ -25,3 +25,7 @@ export async function fetchReaderChanges(since: number) {
  `.execute(db)
 	).rows;
 }
+
+export function fetchReaderCacheInvalidations() {
+	return db.selectFrom("readerCacheInvalidations").selectAll().execute();
+}

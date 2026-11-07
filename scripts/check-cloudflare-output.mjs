@@ -410,19 +410,26 @@ try {
 		},
 	);
 	const saveStarted = performance.now();
-	const publicSaved = await worker.fetch(publicRequest.url, {
-		method: "POST",
-		headers: Object.fromEntries(publicRequest.headers),
-		body: await publicRequest.arrayBuffer(),
-	});
-	assert.equal(publicSaved.status, 200);
+	const publicBody = await publicRequest.arrayBuffer();
+	const saves = await Promise.all(
+		[1, 2].map(() =>
+			worker.fetch(publicRequest.url, {
+				method: "POST",
+				headers: Object.fromEntries(publicRequest.headers),
+				body: publicBody.slice(0),
+			}),
+		),
+	);
+	for (const saved of saves) {
+		assert.equal(saved.status, 200, await saved.text());
+	}
 	const saveMs = performance.now() - saveStarted;
 	assert.ok(
 		saveMs < 30000,
 		`768記事以上の本文更新が30秒未満で完了する: ${Math.round(saveMs)}ms`,
 	);
 	console.log(
-		`154ページ以上の一覧がある状態で公開記事の保存: ${Math.round(saveMs)}ms`,
+		`154ページ以上の一覧がある状態で公開記事の同時保存2件: ${Math.round(saveMs)}ms`,
 	);
 	const revised = await worker.fetch(
 		`http://localhost/ja/${handle}/${pageSlug}`,

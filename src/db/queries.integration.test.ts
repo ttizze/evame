@@ -4,7 +4,15 @@ import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createSegment, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
-import { fetchReaderChanges, fetchReaderRevision } from "./queries";
+import {
+	deleteReaderCacheInvalidations,
+	storeReaderCacheInvalidations,
+} from "./mutations";
+import {
+	fetchReaderCacheInvalidations,
+	fetchReaderChanges,
+	fetchReaderRevision,
+} from "./queries";
 
 await setupDbPerFile(import.meta.url);
 beforeEach(resetDatabase);
@@ -285,4 +293,16 @@ it("タグ付き子記事の公開と非公開化はタグ一覧だけを無効�
 	expect(await changedSince(beforeDelete.revision)).toContain(
 		"tag:子記事のタグ",
 	);
+});
+
+it("失敗したキャッシュタグをDBへ残し古い成功通知で後続の変更を消さない", async () => {
+	await storeReaderCacheInvalidations(["tag-1", "tag-2"], "first");
+	const first = await fetchReaderCacheInvalidations();
+	await storeReaderCacheInvalidations(["tag-1"], "second");
+	await deleteReaderCacheInvalidations(first);
+	expect(await fetchReaderCacheInvalidations()).toEqual([
+		{ tag: "tag-1", version: "second" },
+	]);
+	await deleteReaderCacheInvalidations(await fetchReaderCacheInvalidations());
+	expect(await fetchReaderCacheInvalidations()).toEqual([]);
 });

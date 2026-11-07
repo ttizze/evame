@@ -1,3 +1,8 @@
+CREATE TABLE reader_cache_invalidations (
+  tag text PRIMARY KEY NOT NULL,
+  version text NOT NULL
+);
+--> statement-breakpoint
 CREATE INDEX reader_revisions_revision_idx ON reader_revisions (revision);
 --> statement-breakpoint
 CREATE TRIGGER reader_lists_pages_insert AFTER INSERT ON pages

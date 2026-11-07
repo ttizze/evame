@@ -12,6 +12,23 @@ import {
 	vi,
 } from "vitest";
 import { createDb } from "./db";
+
+const pendingInvalidations = vi.hoisted(() => new Map<string, string>());
+vi.mock("./db/mutations", () => ({
+	storeReaderCacheInvalidations: vi.fn(
+		async (tags: string[], version: string) => {
+			for (const tag of tags) pendingInvalidations.set(tag, version);
+		},
+	),
+	deleteReaderCacheInvalidations: vi.fn(
+		async (rows: { tag: string; version: string }[]) => {
+			for (const row of rows)
+				if (pendingInvalidations.get(row.tag) === row.version)
+					pendingInvalidations.delete(row.tag);
+		},
+	),
+}));
+
 import { fetchReaderChanges } from "./db/queries";
 import server from "./server";
 
@@ -32,6 +49,9 @@ vi.mock("./db", async () => {
 vi.mock("./db/queries", () => ({
 	fetchReaderRevision: vi.fn().mockResolvedValue({ revision: 1 }),
 	fetchReaderChanges: vi.fn().mockResolvedValue([{ key: "page:123" }]),
+	fetchReaderCacheInvalidations: vi.fn(async () =>
+		[...pendingInvalidations].map(([tag, version]) => ({ tag, version })),
+	),
 }));
 
 const env = {
@@ -39,6 +59,7 @@ const env = {
 	READER: { fetch: vi.fn() },
 };
 beforeEach(() => {
+	pendingInvalidations.clear();
 	vi.mocked(fetchReaderChanges).mockResolvedValue([{ key: "page:123" }]);
 	env.SETTINGS.get.mockReset().mockResolvedValue(false);
 	env.READER.fetch
@@ -339,6 +360,7 @@ describe("公開HTMLの更新", () => {
 		await Promise.all(pending);
 	});
 	it("下書きの保存は公開HTMLのキャッシュを破棄しない", async () => {
+		pendingInvalidations.set(`reader:${"a".repeat(64)}`, "previous-failure");
 		vi.mocked(handler.fetch).mockResolvedValue(
 			new Response(null, { headers: { "X-Evame-Reader-Changed": "false" } }),
 		);
@@ -401,4 +423,47 @@ it("公開データに変更がない保存ではReaderへ無効化を送らな�
 		{ waitUntil: vi.fn() },
 	);
 	expect(env.READER.fetch).not.toHaveBeenCalled();
+});
+
+it("キャッシュ削除に失敗した後は差分がない再試行でも保留タグを削除してから成功を返す", async () => {
+	vi.mocked(handler.fetch).mockResolvedValue(new Response(null));
+	env.READER.fetch.mockResolvedValue(new Response(null, { status: 503 }));
+	const request = () =>
+		new Request("https://evame.test/api/reader-actions?action=pageStatus", {
+			method: "POST",
+		});
+	await expect(
+		server.fetch(
+			request(),
+			env as unknown as typeof import("cloudflare:workers").env,
+			{ waitUntil: vi.fn() },
+		),
+	).rejects.toThrow("Reader cache invalidation failed");
+	expect(pendingInvalidations.size).toBe(1);
+	vi.mocked(fetchReaderChanges).mockResolvedValue([]);
+	vi.mocked(handler.fetch).mockResolvedValue(new Response(null));
+	env.READER.fetch.mockResolvedValue(new Response(null, { status: 204 }));
+	expect(
+		(
+			await server.fetch(
+				request(),
+				env as unknown as typeof import("cloudflare:workers").env,
+				{ waitUntil: vi.fn() },
+			)
+		).status,
+	).toBe(200);
+	expect(env.READER.fetch).toHaveBeenCalledTimes(2);
+	expect(pendingInvalidations.size).toBe(0);
+});
+it("翻訳チャンクが完了した場合も処理前の版から変更を取得しキャッシュを削除する", async () => {
+	vi.mocked(handler.fetch).mockResolvedValue(
+		new Response(null, { headers: { "X-Evame-Reader-Changed": "true" } }),
+	);
+	env.READER.fetch.mockResolvedValue(new Response(null, { status: 204 }));
+	await server.fetch(
+		new Request("https://evame.test/api/translate/chunk", { method: "POST" }),
+		env as unknown as typeof import("cloudflare:workers").env,
+		{ waitUntil: vi.fn() },
+	);
+	expect(env.READER.fetch).toHaveBeenCalledOnce();
 });

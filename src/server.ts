@@ -13,7 +13,15 @@ import { shouldInvalidateReader } from "./app/_domain/reader-cache-policy";
 import { readerCacheTags } from "./app/_domain/reader-cache-tags";
 import { parseReaderRoute } from "./app/_domain/reader-route";
 import { createDb, databaseScope } from "./db";
-import { fetchReaderChanges, fetchReaderRevision } from "./db/queries";
+import {
+	deleteReaderCacheInvalidations,
+	storeReaderCacheInvalidations,
+} from "./db/mutations";
+import {
+	fetchReaderCacheInvalidations,
+	fetchReaderChanges,
+	fetchReaderRevision,
+} from "./db/queries";
 import { getMaintenancePath, shouldCheckMaintenance } from "./maintenance-gate";
 
 // HTTPルートへ公開しない、Reader専用のサービス境界。
@@ -125,7 +133,7 @@ export default withSentry(
 						url.pathname,
 						url.searchParams.get("action"),
 						200,
-						null,
+						"true",
 					)
 						? (await fetchReaderRevision()).revision
 						: null;
@@ -141,19 +149,24 @@ export default withSentry(
 						)
 					) {
 						const changes = await fetchReaderChanges(beforeRevision);
-						if (changes.length > 0) {
+						if (changes.length > 0)
+							await storeReaderCacheInvalidations(
+								await readerCacheTags(changes.map((row) => row.key)),
+								crypto.randomUUID(),
+							);
+						const pending = await fetchReaderCacheInvalidations();
+						if (pending.length > 0) {
 							const purged = await env.READER.fetch(
 								"https://reader.internal/__invalidate",
 								{
 									method: "POST",
 									headers: { "Content-Type": "application/json" },
-									body: JSON.stringify({
-										tags: await readerCacheTags(changes.map((row) => row.key)),
-									}),
+									body: JSON.stringify({ tags: pending.map((row) => row.tag) }),
 								},
 							);
 							if (!purged.ok)
 								throw new Error("Reader cache invalidation failed");
+							await deleteReaderCacheInvalidations(pending);
 						}
 					}
 					const init = {
