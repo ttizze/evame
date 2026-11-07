@@ -47,7 +47,7 @@ it("HTTPSのPR環境で発行したログインリンクから安全なCookieを
 		cookies.some(
 			(cookie) =>
 				cookie.includes("__Secure-better-auth.session_token=") &&
-				cookie.includes("Secure"),
+				cookie.includes("; Secure"),
 		),
 	).toBe(true);
 	expect(cookies.every((value) => !/domain=/i.test(value))).toBe(true);
