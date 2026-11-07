@@ -9,11 +9,19 @@ import { isRedirect } from "@tanstack/react-router";
 import handler from "@tanstack/react-start/server-entry";
 import { withSecurityHeaders } from "../security-headers";
 import { SENTRY_DSN } from "./_utils/sentry-dsn";
-import { supportedLocaleOptions } from "./app/_constants/locale";
 import { shouldInvalidateReader } from "./app/_domain/reader-cache-policy";
+import { readerCacheTags } from "./app/_domain/reader-cache-tags";
 import { parseReaderRoute } from "./app/_domain/reader-route";
 import { createDb, databaseScope } from "./db";
-import { fetchReaderRevision } from "./db/queries";
+import {
+	deleteReaderCacheInvalidations,
+	storeReaderCacheInvalidations,
+} from "./db/mutations";
+import {
+	fetchReaderCacheInvalidations,
+	fetchReaderChanges,
+	fetchReaderRevision,
+} from "./db/queries";
 import { getMaintenancePath, shouldCheckMaintenance } from "./maintenance-gate";
 
 // HTTPルートへ公開しない、Reader専用のサービス境界。
@@ -26,16 +34,6 @@ export class ReaderBackend extends WorkerEntrypoint {
 		try {
 			return (await databaseScope.run(database, async () => {
 				const pathname = new URL(request.url).pathname;
-				if (pathname === "/__catalog") {
-					const locale =
-						new URL(request.url).searchParams.get("locale") ?? "en";
-					if (!supportedLocaleOptions.some((option) => option.code === locale))
-						return new Response(null, { status: 400 });
-					const { loadReaderCatalog } = await import(
-						"./app/api/reader-data/_service/load-reader-catalog"
-					);
-					return Response.json(await loadReaderCatalog(locale));
-				}
 				if (pathname === "/api/reader-data") {
 					const { getReaderData } = await import(
 						"./app/api/reader-data/handler"
@@ -135,7 +133,7 @@ export default withSentry(
 						url.pathname,
 						url.searchParams.get("action"),
 						200,
-						null,
+						"true",
 					)
 						? (await fetchReaderRevision()).revision
 						: null;
@@ -150,18 +148,26 @@ export default withSentry(
 							response.headers.get("X-Evame-Reader-Changed"),
 						)
 					) {
-						const published = await env.READER.fetch(
-							"https://reader.internal/__invalidate",
-							{
-								method: "POST",
-								headers: {
-									"X-Evame-Reader-Publication": crypto.randomUUID(),
-									"X-Evame-Reader-Since": String(beforeRevision),
+						const changes = await fetchReaderChanges(beforeRevision);
+						if (changes.length > 0)
+							await storeReaderCacheInvalidations(
+								await readerCacheTags(changes.map((row) => row.key)),
+								crypto.randomUUID(),
+							);
+						const pending = await fetchReaderCacheInvalidations();
+						if (pending.length > 0) {
+							const purged = await env.READER.fetch(
+								"https://reader.internal/__invalidate",
+								{
+									method: "POST",
+									headers: { "Content-Type": "application/json" },
+									body: JSON.stringify({ tags: pending.map((row) => row.tag) }),
 								},
-							},
-						);
-						if (!published.ok)
-							throw new Error("Reader cache invalidation failed");
+							);
+							if (!purged.ok)
+								throw new Error("Reader cache invalidation failed");
+							await deleteReaderCacheInvalidations(pending);
+						}
 					}
 					const init = {
 						status: response.status,

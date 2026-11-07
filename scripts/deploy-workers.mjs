@@ -8,8 +8,8 @@ if (!Array.isArray(next.active) || !Array.isArray(next.retiring))
 	throw new Error("prepare:reader-assetsで配信アセットを準備してください");
 
 for (const config of [
-	"dist/server/wrangler.json",
 	"reader/dist/server/wrangler.json",
+	"dist/server/wrangler.json",
 ])
 	execFileSync("bun", ["x", "wrangler", "deploy", "--config", config], {
 		stdio: "inherit",
@@ -21,7 +21,7 @@ for (const path of next.retiring)
 await writeFile(nextPath, JSON.stringify(next.active));
 await rename(nextPath, ".data/reader-assets/active.json");
 
-// 新旧のHTMLが参照するアセットの配信・保持を確定してからHTML自体を更新する。
-execFileSync(process.execPath, ["scripts/generate-reader-html.mjs"], {
+// コード変更でキャッシュ済みHTMLと表示がずれないようReader自身で無効化する。
+execFileSync(process.execPath, ["scripts/purge-reader-cache.mjs"], {
 	stdio: "inherit",
 });

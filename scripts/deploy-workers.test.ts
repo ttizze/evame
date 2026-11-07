@@ -23,8 +23,8 @@ beforeEach(async () => {
 	await mkdir(join(directory, "bin"));
 	await mkdir(join(directory, "scripts"));
 	await writeFile(
-		join(directory, "scripts/generate-reader-html.mjs"),
-		'import {appendFile} from "node:fs/promises"; await appendFile("deployments", "generate-html\\n");',
+		join(directory, "scripts/purge-reader-cache.mjs"),
+		'import {appendFile} from "node:fs/promises"; await appendFile("deployments", "purge-html\\n");',
 	);
 	await writeFile(
 		join(directory, ".data/reader-assets/active.json"),
@@ -60,7 +60,7 @@ it("準備したアセットの記録がなければWorkerを更新しない", a
 	await expect(readFile(join(directory, "deployments"))).rejects.toThrow();
 });
 
-it("GatewayとReaderを順に更新してから配信中のアセットを確定する", async () => {
+it("旧Gateway互換のReaderとGatewayを順に更新してから配信中のアセットを確定する", async () => {
 	const startedAt = Date.now();
 	await promisify(execFile)(process.execPath, [script], {
 		cwd: directory,
@@ -72,9 +72,9 @@ it("GatewayとReaderを順に更新してから配信中のアセットを確定
 	expect(
 		(await readFile(join(directory, "deployments"), "utf8")).trim().split("\n"),
 	).toEqual([
-		"dist/server/wrangler.json",
 		"reader/dist/server/wrangler.json",
-		"generate-html",
+		"dist/server/wrangler.json",
+		"purge-html",
 	]);
 	expect(
 		await readFile(join(directory, ".data/reader-assets/active.json"), "utf8"),
@@ -103,10 +103,10 @@ it("Readerの更新に失敗した場合は旧版の配信中アセットを維�
 	).toBe('["old.js"]');
 });
 
-it("HTML生成が失敗しても、更新が完了したWorkerのアセットの配信履歴を保持する", async () => {
+it("キャッシュ無効化が失敗しても、更新が完了したWorkerのアセットの配信履歴を保持する", async () => {
 	await writeFile(
-		join(directory, "scripts/generate-reader-html.mjs"),
-		'throw new Error("HTML generation failed");',
+		join(directory, "scripts/purge-reader-cache.mjs"),
+		'throw new Error("Reader purge failed");',
 	);
 	await expect(
 		promisify(execFile)(process.execPath, [script], {

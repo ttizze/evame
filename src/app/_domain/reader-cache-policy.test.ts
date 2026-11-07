@@ -13,10 +13,14 @@ it.each([400, 401, 403, 404, 405])(
 			shouldInvalidateReader("POST", "/_serverFn/example", null, status, null),
 		).toBe(false),
 );
-it.each(["/_serverFn/example", "/api/segment-translations", "/api/sync/push"])(
-	"%sの更新は公開HTMLを更新する",
-	(path) =>
-		expect(shouldInvalidateReader("POST", path, null, 200, null)).toBe(true),
+it.each([
+	"/_serverFn/example",
+	"/api/segment-translations",
+	"/api/sync/push",
+	"/api/auth/update-user",
+	"/api/auth/delete-user",
+])("%sの更新は公開HTMLを更新する", (path) =>
+	expect(shouldInvalidateReader("POST", path, null, 200, null)).toBe(true),
 );
 it("翻訳はチャンクごとに消さずジョブの完了時に公開HTMLを更新する", () => {
 	expect(

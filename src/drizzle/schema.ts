@@ -11,10 +11,19 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
-export const readerRevisions = sqliteTable("reader_revisions", {
-	key: text().primaryKey().notNull(),
-	revision: integer().notNull(),
-});
+export const readerCacheInvalidations = sqliteTable(
+	"reader_cache_invalidations",
+	{
+		tag: text().primaryKey().notNull(),
+		version: text().notNull(),
+	},
+);
+
+export const readerRevisions = sqliteTable(
+	"reader_revisions",
+	{ key: text().primaryKey().notNull(), revision: integer().notNull() },
+	(table) => [index("reader_revisions_revision_idx").on(table.revision)],
+);
 
 export const accounts = sqliteTable(
 	"accounts",

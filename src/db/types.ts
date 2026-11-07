@@ -275,6 +275,7 @@ export interface Verifications {
 }
 
 export interface DB {
+	readerCacheInvalidations: { tag: string; version: string };
 	readerRevisions: { key: string; revision: number };
 	accounts: Accounts;
 	contents: Contents;
