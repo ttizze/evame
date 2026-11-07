@@ -56,6 +56,16 @@ const currentUser = {
 };
 
 describe("getPageEditData", () => {
+	it("空オブジェクト形式で保存された既存の原稿を開ける", async () => {
+		getPageWithTitleAndTagsBySlugMock.mockResolvedValue({
+			userId: currentUser.id,
+			segments: [{ number: 0, text: "空の原稿" }],
+			mdastJson: {},
+		});
+		await expect(getPageEditData({ data: input })).resolves.toMatchObject({
+			markdown: "",
+		});
+	});
 	it("保存済み本文を変換できない場合は空の編集画面を返さない", async () => {
 		getPageWithTitleAndTagsBySlugMock.mockResolvedValue({
 			userId: currentUser.id,

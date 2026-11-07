@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { mdastToMarkdown } from "./mdast-to-markdown";
 
 describe("mdastToMarkdown", () => {
+	it("既存の空オブジェクト形式の原稿を空本文として変換する", () => {
+		expect(mdastToMarkdown({})).toBe("");
+	});
 	it("未対応ノードの変換失敗を空本文として返さず呼び出し元へ伝える", () => {
 		expect(() =>
 			mdastToMarkdown({
