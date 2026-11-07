@@ -61,6 +61,36 @@ describe("Push API (service layer)", () => {
 		expect(page?.status).toBe("PUBLIC");
 	});
 
+	it("既存本文を変換できない場合は版を判定せず元データを残す", async () => {
+		const mdastJson = {
+			type: "root",
+			children: [{ type: "unsupported-node", value: "残す本文" }],
+		};
+		const page = await createPage({
+			userId,
+			slug: "unsupported-post",
+			mdastJson,
+		});
+		await expect(
+			push(userId, {
+				inputs: [
+					{
+						slug: page.slug,
+						expected_revision: null,
+						title: "上書き",
+						body: "別の本文",
+					},
+				],
+			}),
+		).rejects.toThrow(/unsupported-node/);
+		const stored = await db
+			.selectFrom("pages")
+			.select("mdastJson")
+			.where("id", "=", page.id)
+			.executeTakeFirstOrThrow();
+		expect(stored.mdastJson).toEqual(mdastJson);
+	});
+
 	it("既存ページをexpected一致で更新するとappliedになる", async () => {
 		const createResult = await push(userId, {
 			inputs: [

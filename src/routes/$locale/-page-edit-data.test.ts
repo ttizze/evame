@@ -6,7 +6,6 @@ const {
 	getPageWithTitleAndTagsBySlugMock,
 	getTranslationContextsByUserIdMock,
 	getUserTargetLocalesMock,
-	mdastToHtmlMock,
 	setResponseHeaderMock,
 } = vi.hoisted(() => ({
 	getAllTagsWithCountMock: vi.fn(),
@@ -14,7 +13,6 @@ const {
 	getPageWithTitleAndTagsBySlugMock: vi.fn(),
 	getTranslationContextsByUserIdMock: vi.fn(),
 	getUserTargetLocalesMock: vi.fn(),
-	mdastToHtmlMock: vi.fn(),
 	setResponseHeaderMock: vi.fn(),
 }));
 
@@ -33,9 +31,6 @@ vi.mock("@tanstack/react-start", () => ({
 		};
 		return builder;
 	},
-}));
-vi.mock("@/app/[locale]/_service/mdast-to-html", () => ({
-	mdastToHtml: mdastToHtmlMock,
 }));
 vi.mock(
 	"@/app/[locale]/(edit-layout)/[handle]/[pageSlug]/edit/_db/queries.server",
@@ -61,13 +56,35 @@ const currentUser = {
 };
 
 describe("getPageEditData", () => {
+	it("空オブジェクト形式で保存された既存の原稿を開ける", async () => {
+		getPageWithTitleAndTagsBySlugMock.mockResolvedValue({
+			userId: currentUser.id,
+			segments: [{ number: 0, text: "空の原稿" }],
+			mdastJson: {},
+		});
+		await expect(getPageEditData({ data: input })).resolves.toMatchObject({
+			markdown: "",
+		});
+	});
+	it("保存済み本文を変換できない場合は空の編集画面を返さない", async () => {
+		getPageWithTitleAndTagsBySlugMock.mockResolvedValue({
+			userId: currentUser.id,
+			segments: [{ text: "タイトル" }],
+			mdastJson: {
+				type: "root",
+				children: [{ type: "unsupported-node", value: "既存の本文" }],
+			},
+		});
+		await expect(getPageEditData({ data: input })).rejects.toThrow(
+			/unsupported-node/,
+		);
+	});
 	beforeEach(() => {
 		vi.clearAllMocks();
 		getCurrentUserFromHeadersMock.mockResolvedValue(currentUser);
 		getAllTagsWithCountMock.mockResolvedValue([]);
 		getTranslationContextsByUserIdMock.mockResolvedValue([]);
 		getUserTargetLocalesMock.mockResolvedValue([]);
-		mdastToHtmlMock.mockResolvedValue({ html: "" });
 	});
 
 	it("本人が未作成のslugを開くと新規ページ用データを返す", async () => {
@@ -76,7 +93,7 @@ describe("getPageEditData", () => {
 		await expect(getPageEditData({ data: input })).resolves.toEqual({
 			allTagsWithCount: [],
 			currentUser,
-			html: "",
+			markdown: "",
 			initialTitle: undefined,
 			pageSlug: "new-page",
 			pageWithTitleAndTags: undefined,

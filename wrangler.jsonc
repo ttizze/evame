@@ -4,7 +4,11 @@
 	"account_id": "c7b7a7ae01fa84965620a5b3f7e79286",
 	"main": "src/server.ts",
 	"compatibility_date": "2026-10-03",
-	"compatibility_flags": ["nodejs_compat", "disable_nodejs_console_module"],
+	"compatibility_flags": [
+		"nodejs_compat",
+		"disable_nodejs_console_module",
+		"global_fetch_strictly_public"
+	],
 	"assets": { "binding": "ASSETS" },
 	"services": [{ "binding": "READER", "service": "evame-reader" }],
 	"images": { "binding": "IMAGES" },
@@ -13,5 +17,18 @@
 	"kv_namespaces": [
 		{ "binding": "SETTINGS", "id": "e5faa34f97e44136a060e561e11f3d9d" }
 	],
-	"observability": { "enabled": true }
+	"observability": { "enabled": true },
+	"previews": {
+		"images": { "binding": "IMAGES" },
+		"version_metadata": { "binding": "CF_VERSION_METADATA" },
+		"r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "eveeve" }],
+		"kv_namespaces": [
+			{ "binding": "SETTINGS", "id": "e5faa34f97e44136a060e561e11f3d9d" }
+		],
+		"vars": {
+			"SENTRY_DSN": "",
+			"SENTRY_ENVIRONMENT": "preview",
+			"GOOGLE_ANALYTICS_ID": "G-0000000000"
+		}
+	}
 }

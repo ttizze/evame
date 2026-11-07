@@ -43,6 +43,22 @@ bun run prepare:reader-assets
 bun run deploy:workers
 ```
 
+## PRのプレビュー
+
+同じリポジトリ内のPRは、既存のNix CIが成功すると `preview` jobでCloudflare標準の[Worker Previews](https://developers.cloudflare.com/workers/previews/get-started/)を自動更新する。GitHubのdeploymentリンクから開く。URLは `https://pr-<PR番号>-evame-start.reimei.workers.dev/ja`。PR #1140は `https://pr-1140-evame-start.reimei.workers.dev/ja/auth/login`。forkからのPRでは秘密値を渡さず、プレビューをデプロイしない。
+
+ログインはメールのリンクを使う。CIは `VITE_AUTH_GOOGLE_ENABLED=false` とプレビューの `VITE_PUBLIC_DOMAIN` を指定してビルドし、`BETTER_AUTH_URL` も同じoriginに揃える。Origin検証は有効のまま。本番はGoogle・メールの両方を維持する。
+
+GatewayとReaderのコードはPRごとに分かれる。DBは全プレビュー共用の専用Turso DB `evame-preview` を使い、本番データはコピーしない。プレビュー間では同じテストアカウント・文書を参照するため、DBスキーマの互換性がない複数PRの同時検証には使わない。画像のR2と読み取り専用maintenanceのKVは既存bindingを利用する。
+
+GitHub secret `EVAME_PREVIEW_SECRETS` に、専用DBの `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN`、専用の `BETTER_AUTH_SECRET` / `ENCRYPTION_KEY` / `PREVIEW_READER_SECRET`、送信用の `AUTH_RESEND_KEY` をJSONで登録する。翻訳などの外部サービスを試す場合は必要な秘密値も加える。値はソース・ログ・PRへ含めない。DBトークンはこのテストDBだけに限定し、更新時はsecretを差し替えてプレビューjobを再実行する。
+
+`scripts/preview-workers.mjs` は専用DBのマイグレーション・seed後、`evame-start` 配下の `reader-pr-<PR番号>` と `pr-<PR番号>` という2つの独立したPreviewへ順にデプロイする。本番ReaderのURLは非公開のまま維持するため、ReaderのPreviewも公開Preview URLを持つGateway側を親Workerとして使う。PRごとの通常Worker作成や本番デプロイは行わない。生成済みWrangler設定をそのまま使い、親Workerは `--worker-name`、動的URLはCLIの変数指定で渡す。秘密値ファイルだけを `.data/native-preview-pr-<PR番号>` に権限 `600` で作る。
+
+Cloudflareの[現在の制約](https://developers.cloudflare.com/workers/previews/resources/#limitations)では、Previewのservice bindingは接続先Workerの本番を呼ぶ。そのためプレビュー設定にservice bindingは追加せず、Gatewayは対応するReaderのPreview URLへ秘密ヘッダー付きで接続する。[`global_fetch_strictly_public`](https://developers.cloudflare.com/workers/runtime-apis/fetch/) を両Workerで有効にし、HTTP呼び出しを公開URLどおりにルーティングする。Readerは直接アクセスを拒否し、同じPRのGatewayのデータAPIから描画する。HTMLとアセットはReaderが所有する。本番は既存のservice bindingとキャッシュを維持し、プレビューではHTML共有キャッシュを無効にする。CIはデプロイ後に実URLの認証APIとReader HTMLを取得できることも確認する。
+
+CIの成功に加えて、実際のプレビューURLでログイン画面、Cookieによるセッション取得、記事の作成・編集・再読み込みを確認する。メール受信からの確認と、テスト用アカウントのセッションでの確認を区別して記録する。
+
 ## 本番への切り替え
 
 1. Biome・typecheck・全テスト・Workers 上の成果物テストを通す。

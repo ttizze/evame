@@ -24,6 +24,39 @@ beforeEach(async () => {
 	vi.mocked(enqueueTranslationJob).mockReset().mockResolvedValue([]);
 });
 
+it("LexicalのMarkdownコメントをGFMとして保存し、既存の翻訳ジョブへ渡す", async () => {
+	const user = await createUser();
+	const page = await createPage({
+		userId: user.id,
+		slug: "markdown-comment-page",
+	});
+	vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(toSessionUser(user));
+	const result = await commentAction(
+		{
+			pageId: page.id,
+			userLocale: "ja",
+			content: "~~コメント~~\n\n- [x] 完了",
+			contentFormat: "markdown",
+		},
+		new Headers(),
+	);
+	expect(result.success).toBe(true);
+	const stored = await db
+		.selectFrom("pageComments")
+		.select(["id", "mdastJson"])
+		.where("pageId", "=", page.id)
+		.executeTakeFirstOrThrow();
+	expect(stored.mdastJson).toMatchObject({
+		children: [
+			{ type: "paragraph", children: [{ type: "delete" }] },
+			{ type: "list", children: [{ checked: true }] },
+		],
+	});
+	expect(enqueueTranslationJob).toHaveBeenCalledWith(
+		expect.objectContaining({ pageId: page.id, pageCommentId: stored.id }),
+	);
+});
+
 it("21件目の新規コメントを投稿すると表示先の2ページ目を返す", async () => {
 	const user = await createUser();
 	const page = await createPage({ userId: user.id, slug: "new-comment-page" });

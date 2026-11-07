@@ -1,3 +1,4 @@
+import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import { removePosition } from "unist-util-remove-position";
@@ -22,6 +23,7 @@ export async function markdownToMdastWithSegments({
 }) {
 	const processor = unified()
 		.use(remarkParse) // Markdown → MDAST
+		.use(remarkGfm)
 		.use(remarkHashAndSegments(header)); // ハッシュ + Segment 生成
 
 	if (autoUploadImages) {

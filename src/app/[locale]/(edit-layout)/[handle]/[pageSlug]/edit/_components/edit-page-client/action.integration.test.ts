@@ -28,6 +28,27 @@ vi.mock("@tanstack/react-start/server", () => ({
 await setupDbPerFile(import.meta.url);
 
 describe("editPageContent", () => {
+	it("Markdownの本文をすべて削除してもタイトルを残して保存できる", async () => {
+		const user = await createUser();
+		const page = await createPage({ userId: user.id, slug: "empty-body" });
+		vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(toSessionUser(user));
+		const form = new FormData();
+		form.set("pageSlug", page.slug);
+		form.set("title", "タイトルだけの文書");
+		form.set("userLocale", "ja");
+		form.set("contentFormat", "markdown");
+		form.set("pageContent", "");
+		expect((await editPageContent({ data: form })).success).toBe(true);
+		expect(
+			(
+				await db
+					.selectFrom("pages")
+					.select("mdastJson")
+					.where("id", "=", page.id)
+					.executeTakeFirstOrThrow()
+			).mdastJson,
+		).toMatchObject({ type: "root", children: [] });
+	});
 	beforeEach(async () => {
 		await resetDatabase();
 		vi.clearAllMocks();
@@ -129,5 +150,83 @@ describe("editPageContent", () => {
 		formData.set("pageContent", "<p>Test content</p>");
 
 		await expect(editPageContent({ data: formData })).rejects.toBeDefined();
+	});
+
+	it("Markdownで保存したGFMを保ち、段落追加後も既存段落の翻訳と投票を引き継ぐ", async () => {
+		const user = await createUser();
+		const page = await createPage({ userId: user.id, slug: "markdown-page" });
+		vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(toSessionUser(user));
+		const form = new FormData();
+		form.set("pageSlug", page.slug);
+		form.set("title", "文書の見出し");
+		form.set("userLocale", "ja");
+		form.set("contentFormat", "markdown");
+		const body =
+			"残す段落\n\n~~取り消し~~\n\n- [x] 完了\n\n| 名前 | 値 |\n| --- | --- |\n| 本文 | 内容 |";
+		form.set("pageContent", body);
+		expect((await editPageContent({ data: form })).success).toBe(true);
+		const segment = await db
+			.selectFrom("segments")
+			.selectAll()
+			.where("contentId", "=", page.id)
+			.where("text", "=", "残す段落")
+			.executeTakeFirstOrThrow();
+		const translation = await db
+			.insertInto("segmentTranslations")
+			.values({
+				segmentId: segment.id,
+				userId: user.id,
+				locale: "en",
+				text: "Preserved paragraph",
+				point: 1,
+			})
+			.returningAll()
+			.executeTakeFirstOrThrow();
+		await db
+			.insertInto("translationVotes")
+			.values({
+				translationId: translation.id,
+				userId: user.id,
+				isUpvote: true,
+			})
+			.execute();
+		form.set("pageContent", `追加した段落\n\n${body}`);
+		expect((await editPageContent({ data: form })).success).toBe(true);
+		const stored = await db
+			.selectFrom("pages")
+			.select("mdastJson")
+			.where("id", "=", page.id)
+			.executeTakeFirstOrThrow();
+		expect(stored.mdastJson).toMatchObject({
+			children: [
+				{ type: "paragraph" },
+				{ type: "paragraph" },
+				{ type: "paragraph", children: [{ type: "delete" }] },
+				{ type: "list", children: [{ checked: true }] },
+				{ type: "table" },
+			],
+		});
+		expect(
+			await db
+				.selectFrom("segments")
+				.select(["id", "number"])
+				.where("contentId", "=", page.id)
+				.where("text", "=", "残す段落")
+				.executeTakeFirstOrThrow(),
+		).toEqual({ id: segment.id, number: 2 });
+		expect(
+			await db
+				.selectFrom("segmentTranslations")
+				.select("text")
+				.where("id", "=", translation.id)
+				.executeTakeFirstOrThrow(),
+		).toEqual({ text: "Preserved paragraph" });
+		expect(
+			await db
+				.selectFrom("translationVotes")
+				.select("isUpvote")
+				.where("translationId", "=", translation.id)
+				.executeTakeFirstOrThrow(),
+		).toEqual({ isUpvote: true });
 	});
 });

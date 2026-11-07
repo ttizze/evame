@@ -1,4 +1,40 @@
 {
+	"MagicLinkForm": {
+		"invalidEmail": "有効なメールアドレスを入力してください。",
+		"sendFailed": "ログインメールを送信できませんでした。もう一度お試しください。"
+	},
+	"Editor": {
+		"moveBlock": "ドラッグしてブロックを移動",
+		"saveFailed": "保存できませんでした。変更内容は画面に残っています。もう一度お試しください。",
+		"title": "タイトル",
+		"placeholder": "本文を書く…",
+		"commentPlaceholder": "コメントを書く…",
+		"post": "投稿",
+		"posting": "投稿中…",
+		"paragraph": "標準のテキスト",
+		"heading2": "見出し2",
+		"heading3": "見出し3",
+		"heading4": "見出し4",
+		"bold": "太字",
+		"italic": "斜体",
+		"strikethrough": "取り消し線",
+		"inlineCode": "インラインコード",
+		"codeBlock": "コードブロック",
+		"bulletList": "箇条書き",
+		"orderedList": "番号付きリスト",
+		"checkList": "チェックリスト",
+		"quote": "引用",
+		"image": "画像",
+		"table": "表",
+		"blockType": "ブロックの種類",
+		"insertBlock": "ブロックを追加",
+		"link": "リンク",
+		"linkUrl": "リンク先URL",
+		"applyLink": "リンクを適用",
+		"indent": "字下げ",
+		"outdent": "字下げを戻す",
+		"imageUploadFailed": "画像をアップロードできませんでした。もう一度お試しください。"
+	},
 	"Home": {
 		"loadError": "最新の記事を読み込めませんでした。",
 		"retry": "再試行"

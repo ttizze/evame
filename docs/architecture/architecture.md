@@ -6,7 +6,7 @@ Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳�
 ## 技術スタック（現行）
 
 - 公開表示: Astro + React islands
-- 編集・管理: TanStack Start + TanStack Router + Tiptap
+- 編集・管理: TanStack Start + TanStack Router + Lexical
 - ビルド・サーバー: Vite + Cloudflare Workers
 - 言語: TypeScript
 - UI: React 19 + Tailwind CSS + Radix UI 系コンポーネント
@@ -21,7 +21,7 @@ Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳�
 
 長いサービス説明と件数集計はAboutに移し、トップはログインの有無にかかわらず記事一覧を表示する。コメント、翻訳、いいね、通知などは必要な部分だけReact islandsで起動する。公開HTMLに認証情報や非公開データを混ぜない。下書きは所有者だけがprivateレスポンスでプレビューする。
 
-編集・ページ管理・ログインは既存のTanStack StartとTiptapを維持する。URL・階層表示・言語と表示モードを保持する。キャッシュの失敗時の挙動と実行環境の制限は [公開HTMLとデータ更新](cache-components-revalidation.md) を参照。
+編集・ページ管理・ログインはTanStack Startを使用する。本文編集はLexicalからMarkdownを送信し、サーバーでCommonMark/GFMとしてMDAST JSONへ変換してTursoへ保存する。既存文書はMDASTからMarkdownにして編集画面へ渡す。記事とコメントは`src/app/[locale]/_components/editor`のエディタを共有する。段落照合と翻訳・投票の引き継ぎ、公開時の翻訳開始を維持する。配信済みの旧フォームが送信するHTMLは形式指定なしの入力として受け付ける。URL・階層表示・言語と表示モードを保持する。キャッシュの失敗時の挙動と実行環境の制限は [公開HTMLとデータ更新](cache-components-revalidation.md) を参照。
 
 ## リポジトリ構成（要約）
 
@@ -126,4 +126,4 @@ Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳�
 
 ## 既存機能の維持
 
-移行では既存機能を維持する。記事作成・編集のTiptap UIは`src/app/[locale]/(edit-layout)`、URL境界と認証loaderは`src/routes`に置く。保存・公開・タグ・翻訳設定はServer Functionsを維持し、画像アップロードと公開画面の操作はAPIを使用する。コメント・返信・削除・翻訳・通知、ページ管理・公開状態の切替・削除も移行対象に含む。
+移行では既存機能を維持する。記事作成・編集画面は`src/app/[locale]/(edit-layout)`、記事とコメントの共通Lexical UIは`src/app/[locale]/_components/editor`、URL境界と認証loaderは`src/routes`に置く。保存・公開・タグ・翻訳設定はServer Functionsを維持し、画像アップロードと公開画面の操作はAPIを使用する。コメント・返信・削除・翻訳・通知、ページ管理・公開状態の切替・削除も移行対象に含む。

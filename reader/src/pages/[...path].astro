@@ -22,12 +22,13 @@ import { SearchIsland } from "../components/search";
 const url = new URL("/api/reader-data", Astro.url);
 url.searchParams.set("path", Astro.url.pathname);
 url.searchParams.set("search", Astro.url.search);
-const response = await env.BACKEND.fetch(url.href, {
-	headers: {
-		cookie: Astro.request.headers.get("cookie") ?? "",
-		authorization: Astro.request.headers.get("authorization") ?? "",
-	},
-});
+const backendHeaders = {
+	cookie: Astro.request.headers.get("cookie") ?? "",
+	authorization: Astro.request.headers.get("authorization") ?? "",
+};
+const response = env.PREVIEW_GATEWAY_ORIGIN
+	? await fetch(url.href, { headers: backendHeaders })
+	: await env.BACKEND.fetch(url.href, { headers: backendHeaders });
 if (response.status === 404) return Astro.rewrite("/404");
 if (!response.ok)
 	throw new Error(`Reader data request failed: HTTP ${response.status}`);
@@ -43,6 +44,7 @@ const tags = [
 const cacheTagHeader = tags.join(",");
 if (
 	result.cacheable &&
+	!env.PREVIEW_GATEWAY_ORIGIN &&
 	typeof cache?.purge === "function" &&
 	tags.length <= 1000 &&
 	cacheTagHeader.length <= 16384

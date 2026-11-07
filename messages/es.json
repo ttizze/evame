@@ -1,4 +1,40 @@
 {
+	"MagicLinkForm": {
+		"invalidEmail": "Introduce una dirección de correo electrónico válida.",
+		"sendFailed": "No se pudo enviar el correo de acceso. Inténtalo de nuevo."
+	},
+	"Editor": {
+		"moveBlock": "Arrastra para mover el bloque",
+		"saveFailed": "No se pudo guardar. Los cambios siguen en esta pantalla. Inténtalo de nuevo.",
+		"title": "Título",
+		"placeholder": "Escribe al mundo…",
+		"commentPlaceholder": "Escribe un comentario…",
+		"post": "Publicar",
+		"posting": "Publicando…",
+		"paragraph": "Texto normal",
+		"heading2": "Encabezado 2",
+		"heading3": "Encabezado 3",
+		"heading4": "Encabezado 4",
+		"bold": "Negrita",
+		"italic": "Cursiva",
+		"strikethrough": "Tachado",
+		"inlineCode": "Código en línea",
+		"codeBlock": "Bloque de código",
+		"bulletList": "Lista con viñetas",
+		"orderedList": "Lista numerada",
+		"checkList": "Lista de tareas",
+		"quote": "Cita",
+		"image": "Imagen",
+		"table": "Tabla",
+		"blockType": "Tipo de bloque",
+		"insertBlock": "Insertar bloque",
+		"link": "Enlace",
+		"linkUrl": "URL del enlace",
+		"applyLink": "Aplicar enlace",
+		"indent": "Aumentar sangría",
+		"outdent": "Reducir sangría",
+		"imageUploadFailed": "No se pudo subir la imagen. Inténtalo de nuevo."
+	},
 	"Home": {
 		"loadError": "No se pudieron cargar los artículos recientes.",
 		"retry": "Reintentar"

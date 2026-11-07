@@ -1,5 +1,6 @@
 import { CheckCircle, Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
+import { useTranslations } from "use-intl";
 import { z } from "zod";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { Button } from "@/components/ui/button";
@@ -7,13 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 const schema = z.object({
-	email: z.string().email("Please enter a valid email address"),
+	email: z.string().email(),
 });
 
+/** メールログインを要求し、API失敗と通信失敗のどちらでも再試行できる状態を保つ。 */
 export function MagicLinkForm({ redirectTo }: { redirectTo: string }) {
+	const t = useTranslations("MagicLinkForm");
 	const [email, setEmail] = useState("");
 	const [sent, setSent] = useState(false);
-	const [error, setError] = useState<string | null>(null);
+	const [error, setError] = useState<"invalidEmail" | "sendFailed" | null>(
+		null,
+	);
 	const [isPending, startTransition] = useTransition();
 
 	function handleSubmit(e: React.FormEvent) {
@@ -22,25 +27,24 @@ export function MagicLinkForm({ redirectTo }: { redirectTo: string }) {
 		// ── クライアント側バリデーション ──
 		const v = schema.safeParse({ email });
 		if (!v.success) {
-			setError(
-				v.error.flatten().fieldErrors.email?.[0] ?? "Invalid email address",
-			);
+			setError("invalidEmail");
 			return;
 		}
 
+		setError(null);
 		// ── 非同期処理を transition に載せる ──
-		startTransition(() =>
-			authClient.signIn
-				.magicLink({
+		startTransition(async () => {
+			try {
+				const result = await authClient.signIn.magicLink({
 					email: v.data.email,
 					callbackURL: redirectTo,
-				})
-				.then(() => setSent(true))
-				.catch((e) => {
-					setError("Failed to send magic link. Please try again.");
-					throw e;
-				}),
-		);
+				});
+				if (result.error) throw new Error(result.error.message);
+				setSent(true);
+			} catch {
+				setError("sendFailed");
+			}
+		});
 	}
 
 	if (sent) {
@@ -70,7 +74,7 @@ export function MagicLinkForm({ redirectTo }: { redirectTo: string }) {
 					type="email"
 					value={email}
 				/>
-				{error && <p className="text-sm text-destructive">{error}</p>}
+				{error && <p className="text-sm text-destructive">{t(error)}</p>}
 			</div>
 
 			<Button
