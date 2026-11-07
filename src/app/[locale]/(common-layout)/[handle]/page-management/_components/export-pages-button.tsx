@@ -10,6 +10,7 @@ export function ExportPagesButton() {
 	return (
 		<div className="mb-6 space-y-2">
 			<Button
+				className="gap-2"
 				disabled={preparing}
 				onClick={async () => {
 					setPreparing(true);
