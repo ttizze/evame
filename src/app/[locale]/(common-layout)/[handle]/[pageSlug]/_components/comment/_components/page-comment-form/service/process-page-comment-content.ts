@@ -1,6 +1,7 @@
 import { contentToMdastWithSegments } from "@/app/[locale]/_service/content-to-mdast-with-segments";
 import { upsertPageCommentAndSegments } from "./upsert-page-comment-and-segments";
 
+/** HTMLまたはMarkdownを共通本文へ変換し、コメントと照合用セグメントを保存する。 */
 export async function processPageCommentContent(input: {
 	pageCommentId?: number;
 	parentId?: number;

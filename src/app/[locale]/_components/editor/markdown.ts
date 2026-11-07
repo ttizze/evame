@@ -28,7 +28,6 @@ import {
 import {
 	$create,
 	$createParagraphNode,
-	$getRoot,
 	$getState,
 	$isElementNode,
 	$setState,
@@ -75,7 +74,7 @@ const image: Transformer = {
 	type: "text-match",
 	dependencies: [ImageNode],
 	importRegExp: /!\[/,
-	regExp: /!\[(?:\\.|[^\]])*\]\((?:\\.|[^)])*\)$/,
+	regExp: /!\[(?:\\.|[^\]\\])*\]\((?:\\.|[^)\\])*\)$/,
 	trigger: ")",
 	export: (node) => {
 		if (!(node instanceof ImageNode)) return null;
@@ -215,10 +214,7 @@ export const markdownTransformers: Transformer[] = [
 ];
 
 /** CommonMark/GFMのブロック境界をremarkで解析し、Lexicalへ取り込む。 */
-export function importMarkdown(
-	markdown: string,
-	container: ElementNode = $getRoot(),
-) {
+export function importMarkdown(markdown: string, container: ElementNode) {
 	container.clear();
 	const tree = parser.parse(markdown);
 	visit(tree, "html", (node, index, parent) => {

@@ -11,6 +11,7 @@ import { Tweet } from "react-tweet";
 import { getXPostId } from "@/app/[locale]/_domain/get-x-post-id";
 
 export const imageState = createState("image", {
+	/** 外部入力から画像の属性だけを取り出し、欠けた属性を正規化する。 */
 	parse: (value) => {
 		const image = value as Record<string, unknown> | null;
 		return {
@@ -37,6 +38,7 @@ export class ImageNode extends DecoratorNode<ReactNode> {
 	isInline() {
 		return true;
 	}
+	/** コピー時はエディタ内部の状態を通常の画像要素として渡す。 */
 	exportDOM() {
 		const image = $getState(this, imageState);
 		const element = document.createElement("img");
@@ -66,6 +68,7 @@ export class ImageNode extends DecoratorNode<ReactNode> {
 	}
 }
 
+/** 画像クリックをノード選択として扱い、削除キーで対象の画像だけを削除できるようにする。 */
 function ImageView({
 	nodeKey,
 	src,

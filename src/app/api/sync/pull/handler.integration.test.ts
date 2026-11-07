@@ -95,4 +95,22 @@ describe("Pull API", () => {
 		const json = await response.json();
 		expect(json.pages).toHaveLength(0);
 	});
+
+	it("保存済み本文を変換できない場合は空本文と版を同期しない", async () => {
+		await createPage({
+			userId,
+			slug: "unsupported-post",
+			mdastJson: {
+				type: "root",
+				children: [{ type: "unsupported-node", value: "残す本文" }],
+			},
+		});
+		await expect(
+			getSyncPull(
+				new Request("http://localhost/api/sync/pull", {
+					headers: { Authorization: authHeader },
+				}),
+			),
+		).rejects.toThrow(/unsupported-node/);
+	});
 });

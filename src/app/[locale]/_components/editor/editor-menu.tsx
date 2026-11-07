@@ -79,6 +79,7 @@ const formats = [
 	{ value: "code", icon: Code, label: "inlineCode" },
 ] as const;
 
+/** 選択範囲と空行に応じたツールバーを表示し、書式変更をLexicalの更新内で実行する。 */
 export function EditorMenu() {
 	const [editor] = useLexicalComposerContext();
 	const t = useTranslations("Editor");
@@ -157,6 +158,7 @@ export function EditorMenu() {
 		};
 	}, [editor]);
 
+	/** リストと表は専用コマンドを使い、それ以外は選択ブロックを変換する。 */
 	function applyBlock(value: (typeof blockItems)[number]["value"]) {
 		if (value === "bullet" || value === "number" || value === "check") {
 			editor.dispatchCommand(

@@ -15,7 +15,7 @@ import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
 import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
-import { $getState, $nodesOfType } from "lexical";
+import { $getRoot, $getState, $nodesOfType } from "lexical";
 import { useRef } from "react";
 import { EditorMenu } from "./editor-menu";
 import { ImagePlugin } from "./image-plugin";
@@ -24,6 +24,7 @@ import { ImageNode, imageState } from "./media-nodes";
 
 const linkMatchers = [createLinkMatcherWithRegExp(/https?:\/\/[^\s<>]+/)];
 
+/** 記事とコメントで共有するMarkdown入出力のエディタ。本文の変更だけを保存元へ通知する。 */
 export function Editor({
 	defaultValue,
 	name,
@@ -47,7 +48,7 @@ export function Editor({
 				namespace: "evame-editor",
 				nodes: editorNodes,
 				editorState: () => {
-					importMarkdown(currentMarkdown.current);
+					importMarkdown(currentMarkdown.current, $getRoot());
 					currentMarkdown.current =
 						$convertToMarkdownString(markdownTransformers);
 				},

@@ -1,3 +1,4 @@
+import { $isCodeNode } from "@lexical/code-core";
 import { $generateNodesFromDOM } from "@lexical/html";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $createQuoteNode } from "@lexical/rich-text";
@@ -5,6 +6,7 @@ import { $insertNodeToNearestRoot, mergeRegister } from "@lexical/utils";
 import {
 	$create,
 	$createRangeSelection,
+	$findMatchingParent,
 	$getNodeByKey,
 	$getSelection,
 	$isNodeSelection,
@@ -27,10 +29,12 @@ import { ImageNode, imageState, TweetNode, tweetState } from "./media-nodes";
 
 export const UPLOAD_IMAGE_COMMAND = createCommand<File>("UPLOAD_IMAGE");
 
+/** 貼り付け・ドロップと画像送信を扱い、コード中の貼り付けは文字列をそのまま挿入する。 */
 export function ImagePlugin() {
 	const [editor] = useLexicalComposerContext();
 	const t = useTranslations("Editor");
 	useEffect(() => {
+		/** 仮画像のノードを送信結果で更新する。失敗時は仮画像だけを除く。 */
 		async function upload(file: File) {
 			if (!file.type.startsWith("image/")) return;
 			let key = "";
@@ -70,6 +74,7 @@ export function ImagePlugin() {
 			}
 		}
 
+		/** 選択されたメディアノードの削除を通常の文字削除より先に処理する。 */
 		const removeSelected = (event: KeyboardEvent) => {
 			const selection = $getSelection();
 			if (!$isNodeSelection(selection)) return false;
@@ -127,6 +132,18 @@ export function ImagePlugin() {
 				(event) => {
 					if (!(event instanceof ClipboardEvent)) return false;
 					const clipboard = event.clipboardData;
+					const text = clipboard?.getData("text/plain") ?? "";
+					const selection = $getSelection();
+					if (
+						$isRangeSelection(selection) &&
+						text &&
+						(selection.hasFormat("code") ||
+							$findMatchingParent(selection.anchor.getNode(), $isCodeNode))
+					) {
+						event.preventDefault();
+						selection.insertRawText(text);
+						return true;
+					}
 					const files = Array.from(clipboard?.files ?? []).filter((file) =>
 						file.type.startsWith("image/"),
 					);
@@ -135,8 +152,6 @@ export function ImagePlugin() {
 						for (const file of files) void upload(file);
 						return true;
 					}
-					const text = clipboard?.getData("text/plain") ?? "";
-					const selection = $getSelection();
 					if (!$isRangeSelection(selection)) return false;
 					if (getXPostId(text.trim()) !== null) {
 						event.preventDefault();

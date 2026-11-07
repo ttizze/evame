@@ -22,6 +22,19 @@ import { editorNodes, importMarkdown, markdownTransformers } from "./markdown";
 import { ImageNode } from "./media-nodes";
 
 describe("LexicalとMarkdownの往復", () => {
+	it("画像ショートカットはエスケープされた括弧と未完了の長い入力を正しく判定する", () => {
+		const transformer = markdownTransformers.find(
+			(item) =>
+				item.type === "text-match" && item.dependencies.includes(ImageNode),
+		);
+		if (transformer?.type !== "text-match")
+			throw new Error("画像変換がありません");
+		expect(
+			transformer.regExp.test("![説明\\](https://example.com/a.png)"),
+		).toBe(false);
+		expect(transformer.regExp.test(`![${"\\".repeat(8192)}`)).toBe(false);
+		expect(transformer.regExp.test(`![](${"\\(".repeat(8192)}`)).toBe(false);
+	});
 	it("ツールバーで作った引用の本文を保存する", () => {
 		const editor = createEditor({
 			nodes: editorNodes,
@@ -116,7 +129,9 @@ describe("LexicalとMarkdownの往復", () => {
 					throw error;
 				},
 			});
-			editor.update(() => importMarkdown(markdown), { discrete: true });
+			editor.update(() => importMarkdown(markdown, $getRoot()), {
+				discrete: true,
+			});
 			const result = editor
 				.getEditorState()
 				.read(() => $convertToMarkdownString(markdownTransformers));

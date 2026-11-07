@@ -1,5 +1,12 @@
+import { $createCodeNode } from "@lexical/code-core";
 import { act, cleanup, render, waitFor } from "@testing-library/react";
-import { $getRoot, getNearestEditorFromDOMNode } from "lexical";
+import {
+	$createParagraphNode,
+	$createTextNode,
+	$getRoot,
+	getNearestEditorFromDOMNode,
+	PASTE_COMMAND,
+} from "lexical";
 import { IntlProvider } from "use-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { callReaderAction } from "@/app/_service/reader-action";
@@ -11,10 +18,62 @@ import { importMarkdown } from "./markdown";
 vi.mock("@/app/_service/reader-action", () => ({ callReaderAction: vi.fn() }));
 vi.mock("react-tweet", () => ({ Tweet: () => null }));
 
-afterEach(cleanup);
+afterEach(() => {
+	cleanup();
+	vi.unstubAllGlobals();
+});
 beforeEach(() => vi.clearAllMocks());
 
 describe("Lexicalの本文フォーム", () => {
+	for (const codeBlock of [true, false]) {
+		it(`${codeBlock ? "コードブロック" : "インラインコード"}への貼り付けでMarkdown記号を文字として保つ`, async () => {
+			const { container } = render(
+				<IntlProvider locale="ja" messages={messages.ja}>
+					<Editor
+						className=""
+						defaultValue=""
+						name="content"
+						onChange={null}
+						placeholder="本文"
+						showMenus={false}
+					/>
+				</IntlProvider>,
+			);
+			const element = container.querySelector('[contenteditable="true"]');
+			if (!element) throw new Error("本文がありません");
+			const editor = getNearestEditorFromDOMNode(element);
+			if (!editor) throw new Error("エディタがありません");
+			act(() =>
+				editor.update(
+					() => {
+						const text = $createTextNode("prefix ");
+						if (!codeBlock) text.toggleFormat("code");
+						const block = codeBlock
+							? $createCodeNode()
+							: $createParagraphNode();
+						$getRoot().clear().append(block.append(text));
+						text.selectEnd().format = text.getFormat();
+					},
+					{ discrete: true },
+				),
+			);
+			const event = new Event("paste", { cancelable: true });
+			Object.defineProperty(event, "clipboardData", {
+				value: {
+					files: [],
+					getData: (type: string) =>
+						type === "text/plain" ? 'const pattern = "**foo**";' : "",
+				},
+			});
+			vi.stubGlobal("ClipboardEvent", Event);
+			await act(async () => {
+				editor.dispatchCommand(PASTE_COMMAND, event as ClipboardEvent);
+			});
+			expect(
+				editor.getEditorState().read(() => $getRoot().getTextContent()),
+			).toContain('const pattern = "**foo**";');
+		});
+	}
 	it("文書を開いた直後の初期化だけでは保存を要求しない", async () => {
 		const onChange = vi.fn();
 		const { container } = render(
@@ -57,10 +116,12 @@ describe("Lexicalの本文フォーム", () => {
 		const editor = getNearestEditorFromDOMNode(editable);
 		if (!editor) throw new Error("エディタがありません");
 		act(() =>
-			editor.update(() => importMarkdown("一回目の編集"), { discrete: true }),
+			editor.update(() => importMarkdown("一回目の編集", $getRoot()), {
+				discrete: true,
+			}),
 		);
 		act(() =>
-			editor.update(() => importMarkdown("二回目の**編集**"), {
+			editor.update(() => importMarkdown("二回目の**編集**", $getRoot()), {
 				discrete: true,
 			}),
 		);

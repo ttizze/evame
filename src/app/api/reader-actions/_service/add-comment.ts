@@ -37,6 +37,7 @@ export type CommentActionResponse = ActionResponse<
 	}
 >;
 
+/** 閲覧権限とコメント所有者を検証して保存し、通知と翻訳を開始する。 */
 export async function commentAction(
 	input: z.input<typeof commentActionInput>,
 	requestHeaders: Headers,

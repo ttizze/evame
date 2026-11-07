@@ -56,6 +56,19 @@ const currentUser = {
 };
 
 describe("getPageEditData", () => {
+	it("保存済み本文を変換できない場合は空の編集画面を返さない", async () => {
+		getPageWithTitleAndTagsBySlugMock.mockResolvedValue({
+			userId: currentUser.id,
+			segments: [{ text: "タイトル" }],
+			mdastJson: {
+				type: "root",
+				children: [{ type: "unsupported-node", value: "既存の本文" }],
+			},
+		});
+		await expect(getPageEditData({ data: input })).rejects.toThrow(
+			/unsupported-node/,
+		);
+	});
 	beforeEach(() => {
 		vi.clearAllMocks();
 		getCurrentUserFromHeadersMock.mockResolvedValue(currentUser);

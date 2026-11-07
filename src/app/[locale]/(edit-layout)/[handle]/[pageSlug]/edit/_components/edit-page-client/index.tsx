@@ -29,6 +29,7 @@ interface EditPageClientProps {
 	handle: string;
 }
 
+/** タイトルとMarkdown本文の変更をまとめ、オンラインの保存状態を表示する。 */
 export function EditPageClient({
 	currentUser,
 	pageWithTitleAndTags,
@@ -59,6 +60,7 @@ export function EditPageClient({
 	const saving = useRef(false);
 	const changeVersion = useRef(0);
 
+	/** 保存を直列化し、送信中の追加入力は保存済みにせず次の送信へ回す。 */
 	function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		if (saving.current) return;
@@ -94,6 +96,7 @@ export function EditPageClient({
 		handleChange();
 	}
 
+	/** タイトルのEnterで改行せず、本文の先頭へカーソルを移す。 */
 	function handleTitleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
 		if (e.key === "Enter") {
 			e.preventDefault();

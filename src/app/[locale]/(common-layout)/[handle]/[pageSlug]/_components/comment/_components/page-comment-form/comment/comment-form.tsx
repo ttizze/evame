@@ -15,6 +15,7 @@ interface CommentFormProps {
 	errorMsg?: string[];
 }
 
+/** 認証状態に応じたコメント入力を表示し、Markdown本文をフォームへ渡す。 */
 export function CommentForm({
 	action,
 	hidden,
