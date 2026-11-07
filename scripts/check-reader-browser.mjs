@@ -181,6 +181,32 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		const editor = page.locator(
 			'[data-testid="lexical-editor"][contenteditable=true]',
 		);
+		await editor.click();
+		const insertBlock = page
+			.getByTestId("editor-floating-menu")
+			.getByRole("button", { name: "ブロックを追加" });
+		await expect(insertBlock).toBeVisible();
+		const emptyLine = await editor.locator("p").first().boundingBox();
+		const insertBox = await insertBlock.boundingBox();
+		const placeholderBox = await page
+			.getByText("本文を書く…", { exact: true })
+			.boundingBox();
+		assert.ok(emptyLine && insertBox && placeholderBox);
+		assert.ok(
+			Math.abs(placeholderBox.x - emptyLine.x) <= 1,
+			"プレースホルダーとカーソルの左端を揃える",
+		);
+		assert.ok(
+			Math.abs(
+				insertBox.y + insertBox.height / 2 - emptyLine.y - emptyLine.height / 2,
+			) <= 1,
+			"空行と＋ボタンの中央を揃える",
+		);
+		await insertBlock.click();
+		await expect(
+			page.getByRole("menuitem", { name: "見出し2", exact: true }),
+		).toBeVisible();
+		await page.keyboard.press("Escape");
 		await editor.fill("Lexicalのブラウザー入力を保存する");
 		await expect
 			.poll(
@@ -234,6 +260,52 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		});
 		await expect(editor.locator("h2")).toHaveText("GFMの見出し");
 		await expect(editor.locator("table")).toContainText("本文");
+		await editor.locator("h2").hover();
+		const dragHandle = page.getByTestId("editor-drag-handle");
+		await expect(dragHandle).toBeVisible();
+		const handleBox = await dragHandle.boundingBox();
+		const destination = await editor
+			.locator("p")
+			.filter({ hasText: "取り消し" })
+			.boundingBox();
+		assert.ok(handleBox && destination);
+		await page.mouse.move(
+			handleBox.x + handleBox.width / 2,
+			handleBox.y + handleBox.height / 2,
+		);
+		await page.mouse.down();
+		await page.mouse.move(
+			destination.x + 10,
+			destination.y + destination.height - 2,
+			{ steps: 12 },
+		);
+		await expect(page.getByTestId("editor-drop-line")).toHaveCSS(
+			"opacity",
+			"0.4",
+		);
+		await page.mouse.up();
+		await expect(editor.locator(":scope > *").first()).toHaveText("取り消し");
+		await editor.press("ControlOrMeta+z");
+		await expect(editor.locator(":scope > *").first()).toHaveText(
+			"GFMの見出し",
+		);
+		await editor.press("ControlOrMeta+Shift+z");
+		await expect(editor.locator(":scope > *").first()).toHaveText("取り消し");
+		const markdownUrl = new URL("/api/page-markdown", baseUrl);
+		markdownUrl.search = new URLSearchParams({
+			locale: "ja",
+			handle,
+			slug: new URL(newPageUrl).pathname.split("/").at(-1),
+		}).toString();
+		await expect
+			.poll(
+				async () => {
+					const response = await page.request.get(markdownUrl.href);
+					return response.text();
+				},
+				{ timeout: 20000 },
+			)
+			.toMatch(/^~~取り消し~~\n\n## GFMの見出し/);
 		await expect
 			.poll(
 				async () => {
@@ -245,11 +317,17 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.toContain("<table>");
 		await page.reload();
 		await expect(editor.locator("table")).toContainText("本文");
+		await expect(editor.locator(":scope > *").first()).toHaveText("取り消し");
+		console.log(
+			"マウスで見出しを並べ替え、Undo・Redo・保存・再読み込みでも順序と装飾を保つ",
+		);
 		await page.screenshot({
 			path: "/tmp/evame-lexical-editor-desktop.png",
 			fullPage: true,
 		});
 		await page.setViewportSize({ width: 390, height: 844 });
+		await editor.locator("h2").hover();
+		await expect(dragHandle).not.toBeVisible();
 		await page.screenshot({
 			path: "/tmp/evame-lexical-editor-mobile.png",
 			fullPage: true,

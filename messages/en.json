@@ -4,6 +4,7 @@
 		"sendFailed": "Failed to send magic link. Please try again."
 	},
 	"Editor": {
+		"moveBlock": "Drag to move block",
 		"saveFailed": "Could not save. Your changes are still on this screen. Please try again.",
 		"title": "Title",
 		"placeholder": "Write to the world…",

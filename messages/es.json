@@ -4,6 +4,7 @@
 		"sendFailed": "No se pudo enviar el correo de acceso. Inténtalo de nuevo."
 	},
 	"Editor": {
+		"moveBlock": "Arrastra para mover el bloque",
 		"saveFailed": "No se pudo guardar. Los cambios siguen en esta pantalla. Inténtalo de nuevo.",
 		"title": "Título",
 		"placeholder": "Escribe al mundo…",
