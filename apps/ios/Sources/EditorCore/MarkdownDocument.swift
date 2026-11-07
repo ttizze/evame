@@ -58,11 +58,15 @@ public struct MarkdownDocument {
     return Self(source: source + separator + block + "\n")
   }
 
-  public func replacingNode(in blockIndex: Int, path: [Int], with replacement: any Markup) throws
+  func replacingNode(in blockIndex: Int, path: [Int], with replacement: any Markup) throws
     -> Self
   {
     guard originalBlocks.indices.contains(blockIndex), originalBlocks[blockIndex].kind != .preserved
     else { throw EditError.invalidBlock }
+    if let edit = edits[[blockIndex]] {
+      let markup = try edit.markup.replacingDescendant(at: path, with: replacement)
+      return try replacingStructure(in: blockIndex, with: markup)
+    }
     var node = originalBlocks[blockIndex].markup
     for index in path {
       guard index >= 0, let child = node.child(at: index) else { throw EditError.invalidBlock }
@@ -102,6 +106,69 @@ public struct MarkdownDocument {
     var changed = self
     changed.edits[[blockIndex] + path] = (range, content, replacement)
     return changed
+  }
+
+  // 構造を変えたブロックのアドレスを固定し、空の項目も編集中は保持する。
+  func replacingStructure(in index: Int, with markup: any Markup) throws -> Self {
+    guard originalBlocks.indices.contains(index), originalBlocks[index].kind != .preserved else {
+      throw EditError.invalidBlock
+    }
+    let trailingNewlines = String(
+      originalBlocks[index].source.reversed().prefix { $0.isNewline }.reversed())
+    let source = try MarkdownSource.serialize(markup) + trailingNewlines
+    var changed = self
+    changed.edits = edits.filter { $0.key.first != index }
+    changed.edits[[index]] = (originalBlocks[index].range, source, markup)
+    return changed
+  }
+
+  public func replacingBlock(in index: Int, path: [Int], with markup: any Markup, focusPath: [Int])
+    throws
+    -> (document: Self, path: [Int])
+  {
+    guard markup is any BlockMarkup || markup is Document else { throw EditError.invalidBlock }
+    guard blocks.indices.contains(index) else { throw EditError.invalidBlock }
+    let current = blocks[index].markup
+    guard let target = current.descendant(at: path), target is any BlockMarkup || target is Document
+    else {
+      throw EditError.invalidBlock
+    }
+    if let list = markup as? UnorderedList, list.childCount == 1,
+      let task = list.child(at: 0) as? ListItem, task.checkbox != nil, path.count >= 2,
+      var item = current.descendant(at: Array(path.dropLast())) as? ListItem,
+      let childIndex = path.last, let paragraph = task.child(at: 0)
+    {
+      var children = Array(item.children)
+      children[childIndex] = paragraph
+      item.checkbox = task.checkbox
+      let root = try current.replacingDescendant(
+        at: Array(path.dropLast()), with: item.withUncheckedChildren(children))
+      return (try replacingStructure(in: index, with: root), path + focusPath.dropFirst(2))
+    }
+    let root = try current.replacingDescendant(at: path, with: markup)
+    return (
+      try replacingStructure(in: index, with: root),
+      replacementFocusPath(target: path, childPath: focusPath, splices: markup is Document)
+    )
+  }
+
+  public func replacingInlines(in index: Int, path: [Int], with inlines: [any InlineMarkup]) throws
+    -> Self
+  {
+    guard blocks.indices.contains(index), let node = blocks[index].markup.descendant(at: path)
+    else {
+      throw EditError.invalidBlock
+    }
+    let replacement: any Markup
+    switch node {
+    case let heading as Heading: replacement = Heading(level: heading.level, inlines)
+    case let code as CodeBlock:
+      replacement = CodeBlock(language: code.language, Paragraph(inlines).plainText)
+    case is Table.Cell: replacement = Table.Cell(inlines)
+    case is Paragraph: replacement = Paragraph(inlines)
+    default: throw EditError.invalidBlock
+    }
+    return try replacingNode(in: index, path: path, with: replacement)
   }
 
   private func applyingEdits(in range: Range<Int>) -> String {

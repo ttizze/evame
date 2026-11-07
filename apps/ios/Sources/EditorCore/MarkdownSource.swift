@@ -7,6 +7,44 @@ public enum MarkdownSource {
 
   public static func serialize(_ markup: any Markup) throws -> String {
     switch markup {
+    case let document as Document:
+      return try document.children.map(serialize).joined(separator: "\n\n")
+    case let quote as BlockQuote:
+      return try quote.children.map(serialize).joined(separator: "\n\n").components(
+        separatedBy: "\n"
+      ).map { "> " + $0 }.joined(separator: "\n")
+    case let list as any ListItemContainer:
+      return try list.listItems.enumerated().map { index, item in
+        let marker = (list as? OrderedList).map { "\($0.startIndex + UInt(index)). " } ?? "- "
+        let check = item.checkbox.map { $0 == .checked ? "[x] " : "[ ] " } ?? ""
+        var body = ""
+        for (offset, child) in item.children.enumerated() {
+          if offset > 0 { body += child is any ListItemContainer ? "\n" : "\n\n" }
+          body += try serialize(child)
+        }
+        return marker + check
+          + body.replacingOccurrences(
+            of: "\n", with: "\n" + String(repeating: " ", count: marker.count))
+      }.joined(separator: "\n")
+    case is ThematicBreak:
+      return "---"
+    case let table as Table:
+      let rows = [Array(table.head.children)] + table.body.children.map { Array($0.children) }
+      var lines = try rows.map { row in
+        "| " + (try row.map { try inlineChildren($0, inTable: true) }.joined(separator: " | "))
+          + " |"
+      }
+      lines.insert(
+        "| "
+          + table.columnAlignments.map { alignment in
+            switch alignment {
+            case .left: ":---"
+            case .right: "---:"
+            case .center: ":---:"
+            default: "---"
+            }
+          }.joined(separator: " | ") + " |", at: 1)
+      return lines.joined(separator: "\n")
     case let heading as Heading:
       let content = try inlineChildren(heading, inTable: false)
       if content.contains("\n") {
@@ -33,7 +71,10 @@ public enum MarkdownSource {
   }
 
   private static func inlineChildren(_ markup: any Markup, inTable: Bool) throws -> String {
-    try markup.children.map { try inline($0, inTable: inTable) }.joined()
+    var content = try markup.children.map { try inline($0, inTable: inTable) }.joined()
+    if content.hasPrefix(" ") { content = "&#32;" + content.dropFirst() }
+    if content.hasSuffix(" ") { content = content.dropLast() + "&#32;" }
+    return content
   }
 
   private static func inline(_ markup: any Markup, inTable: Bool) throws -> String {
@@ -48,9 +89,6 @@ public enum MarkdownSource {
         }
         escaped.unicodeScalars.append(scalar)
       }
-      // 行端の空白がインデントや意図しない改行にならないようにする。
-      if escaped.hasPrefix(" ") { escaped = "&#32;" + escaped.dropFirst() }
-      if escaped.hasSuffix(" ") { escaped = escaped.dropLast() + "&#32;" }
       return escaped
     case let code as InlineCode:
       let runs = code.code.ranges(of: /`+/).map { code.code[$0].count }

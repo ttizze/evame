@@ -75,7 +75,26 @@ enum RichTextCodec {
     return styled
   }
 
-  static func inlines(_ text: NSAttributedString) -> [any InlineMarkup] {
+  static func formatAttributes(_ source: [NSAttributedString.Key: Any], font: UIFont)
+    -> [NSAttributedString.Key: Any]
+  {
+    var attributes = source
+    let traits = (source[.font] as? UIFont)?.fontDescriptor.symbolicTraits ?? []
+    let base = font.fontDescriptor.symbolicTraits
+    for (key, trait): (NSAttributedString.Key, UIFontDescriptor.SymbolicTraits) in [
+      (.editorStrong, .traitBold), (.editorEmphasis, .traitItalic), (.editorCode, .traitMonoSpace),
+    ] where traits.contains(trait) && !base.contains(trait) {
+      attributes[key] = true
+    }
+    return attributes
+  }
+
+  static func inlines(_ source: NSAttributedString, font: UIFont) -> [any InlineMarkup] {
+    let text = NSMutableAttributedString(attributedString: source)
+    source.enumerateAttributes(in: NSRange(location: 0, length: source.length)) {
+      attributes, range, _ in
+      text.addAttributes(formatAttributes(attributes, font: font), range: range)
+    }
     let keys: [NSAttributedString.Key] = [
       .link, .editorStrong, .editorEmphasis, .strikethroughStyle, .editorCode,
     ]

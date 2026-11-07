@@ -11,7 +11,7 @@ func richTextRoundTrip() throws {
   let source = "**太字と*斜体***、[参照](https://example.com \"題名\")、![画像](assets/photo.png \"画像の題名\")"
   let paragraph = try #require(Document(parsing: source).child(at: 0) as? Paragraph)
   let text = RichTextCodec.attributed(paragraph, font: .preferredFont(forTextStyle: .body))
-  let restored = Paragraph(RichTextCodec.inlines(text))
+  let restored = Paragraph(RichTextCodec.inlines(text, font: .preferredFont(forTextStyle: .body)))
   let parsed = try #require(
     Document(parsing: MarkdownSource.serialize(restored)).child(at: 0) as? Paragraph)
   #expect(parsed.format() == paragraph.format())
@@ -25,7 +25,9 @@ func breaksAndCode() throws {
   let source = "日本語👋と`a * b`\n次の行  \n改行後"
   let paragraph = try #require(Document(parsing: source).child(at: 0) as? Paragraph)
   let text = RichTextCodec.attributed(paragraph, font: .preferredFont(forTextStyle: .body))
-  #expect(Paragraph(RichTextCodec.inlines(text)).format() == paragraph.format())
+  #expect(
+    Paragraph(RichTextCodec.inlines(text, font: .preferredFont(forTextStyle: .body))).format()
+      == paragraph.format())
 }
 
 @MainActor
@@ -33,7 +35,7 @@ func breaksAndCode() throws {
 func overlappingStyles() {
   let text = NSMutableAttributedString(string: "太字斜体", attributes: [.editorStrong: true])
   text.addAttribute(.editorEmphasis, value: true, range: NSRange(location: 2, length: 2))
-  let paragraph = Paragraph(RichTextCodec.inlines(text))
+  let paragraph = Paragraph(RichTextCodec.inlines(text, font: .preferredFont(forTextStyle: .body)))
   #expect(paragraph.childCount == 1)
   #expect(paragraph.child(at: 0) is Strong)
   #expect(paragraph.child(at: 0)?.child(at: 1) is Emphasis)
@@ -45,10 +47,8 @@ func markedTextDoesNotCommit() {
   var changes = [String]()
   let editor = NativeTextView(
     markup: Paragraph(Markdown.Text("")), font: .preferredFont(forTextStyle: .body),
-    allowsLineBreaks: true
-  ) {
-    changes.append(Paragraph($0).plainText)
-  }
+    allowsLineBreaks: true, allowsInlineFormatting: true, onCommand: { _, _ in },
+    onChange: { changes.append(Paragraph($0).plainText) })
   editor.setMarkedText("にほん", selectedRange: NSRange(location: 3, length: 0))
   editor.textViewDidChange(editor)
   #expect(changes.isEmpty)
@@ -66,8 +66,8 @@ func formattingUndoAndSelection() throws {
   window.rootViewController = controller
   let editor = NativeTextView(
     markup: Paragraph(Markdown.Text("日本語👩🏽‍💻")), font: .preferredFont(forTextStyle: .body),
-    allowsLineBreaks: true
-  ) { _ in }
+    allowsLineBreaks: true, allowsInlineFormatting: true, onCommand: { _, _ in }, onChange: { _ in }
+  )
   controller.view.addSubview(editor)
   window.makeKeyAndVisible()
   defer { window.isHidden = true }
@@ -95,8 +95,8 @@ func formattingUndoAndSelection() throws {
 func tableCellInput() {
   let editor = NativeTextView(
     markup: Table.Cell(Markdown.Text("セル")), font: .preferredFont(forTextStyle: .body),
-    allowsLineBreaks: false
-  ) { _ in }
+    allowsLineBreaks: false, allowsInlineFormatting: true, onCommand: { _, _ in },
+    onChange: { _ in })
   let selection = NSRange(location: 0, length: 0)
   #expect(!editor.textView(editor, shouldChangeTextIn: selection, replacementText: "次\nの行"))
   #expect(editor.textView(editor, shouldChangeTextIn: selection, replacementText: "日本語"))
@@ -107,7 +107,7 @@ func tableCellInput() {
 func pastedLink() throws {
   let url = try #require(URL(string: "https://example.com"))
   let text = NSAttributedString(string: "リンク", attributes: [.link: url, .strikethroughStyle: 0])
-  let paragraph = Paragraph(RichTextCodec.inlines(text))
+  let paragraph = Paragraph(RichTextCodec.inlines(text, font: .preferredFont(forTextStyle: .body)))
   let link = try #require(paragraph.child(at: 0) as? Link)
   #expect(link.destination == "https://example.com")
   #expect(link.child(at: 0) is Markdown.Text)
@@ -120,6 +120,6 @@ func adjacentLinkTitles() throws {
     Document(parsing: "[一](https://example.com \"題名1\")[二](https://example.com \"題名2\")").child(
       at: 0) as? Paragraph)
   let text = RichTextCodec.attributed(paragraph, font: .preferredFont(forTextStyle: .body))
-  let restored = Paragraph(RichTextCodec.inlines(text))
+  let restored = Paragraph(RichTextCodec.inlines(text, font: .preferredFont(forTextStyle: .body)))
   #expect(restored.children.compactMap { ($0 as? Link)?.title } == ["題名1", "題名2"])
 }

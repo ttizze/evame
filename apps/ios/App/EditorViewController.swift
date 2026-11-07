@@ -10,10 +10,11 @@ final class EditorViewController: UIViewController, PHPickerViewControllerDelega
   private let content = UIStackView()
   private let status = UILabel()
   private var assets: [String: UIImage] = [:]
+  private var photoInsertion: (editor: NativeTextView, selection: NSRange)?
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    title = String(localized: "編集の試作")
+    title = String(localized: "編集")
     view.backgroundColor = .systemBackground
     navigationItem.rightBarButtonItems = [
       UIBarButtonItem(
@@ -37,7 +38,7 @@ final class EditorViewController: UIViewController, PHPickerViewControllerDelega
                 + " |\n| --- | --- |\n| " + String(localized: "内容") + " | " + String(localized: "値")
                 + " |")
           },
-          UIAction(title: String(localized: "写真")) { [weak self] _ in self?.pickPhoto() },
+          UIAction(title: String(localized: "写真")) { [weak self] _ in self?.pickPhoto(into: nil) },
         ])),
     ]
     navigationItem.rightBarButtonItems?.first?.accessibilityLabel = String(localized: "Markdownを確認")
@@ -75,14 +76,14 @@ final class EditorViewController: UIViewController, PHPickerViewControllerDelega
   private func render() {
     for child in content.arrangedSubviews { child.removeFromSuperview() }
     let notice = UILabel()
-    notice.text = String(localized: "入力・選択・Undoを確認するための試作です。本文は保存・同期されません。")
+    notice.text = String(localized: "本文は保存・同期されません。")
     notice.font = .preferredFont(forTextStyle: .footnote)
     notice.textColor = .secondaryLabel
     notice.numberOfLines = 0
     content.addArrangedSubview(notice)
     status.font = .preferredFont(forTextStyle: .caption1)
     status.textColor = .secondaryLabel
-    status.text = String(localized: "検証用サンプル")
+    status.text = String(localized: "サンプル文書")
     content.addArrangedSubview(status)
     for (index, block) in document.blocks.enumerated() {
       if block.kind == .preserved {
@@ -105,13 +106,19 @@ final class EditorViewController: UIViewController, PHPickerViewControllerDelega
           UIAction { [weak self] _ in self?.showTable(at: index) }, for: .touchUpInside)
         content.addArrangedSubview(button)
       } else {
-        content.addArrangedSubview(renderNode(block.markup, blockIndex: index, path: []))
+        content.addArrangedSubview(
+          renderNode(block.markup, blockIndex: index, path: [], reusing: nil))
       }
     }
   }
 
-  private func renderNode(_ node: any Markup, blockIndex: Int, path: [Int]) -> UIView {
-    if node is Paragraph, node.childCount == 1, let image = node.child(at: 0) as? Markdown.Image {
+  private func renderNode(
+    _ node: any Markup, blockIndex: Int, path: [Int],
+    reusing input: (editor: NativeTextView, path: [Int], selection: NSRange, slot: UIStackView)?
+  ) -> UIView {
+    if input?.path != path, node is Paragraph, node.childCount == 1,
+      let image = node.child(at: 0) as? Markdown.Image
+    {
       let stack = UIStackView()
       stack.axis = .vertical
       stack.spacing = 8
@@ -129,38 +136,63 @@ final class EditorViewController: UIViewController, PHPickerViewControllerDelega
       stack.addArrangedSubview(caption)
       return stack
     }
-    if node is Paragraph || node is Heading || node is Table.Cell {
+    if node is Paragraph || node is Heading || node is Table.Cell || node is CodeBlock {
       let level = (node as? Heading)?.level
       let isCell = node is Table.Cell
+      let code = node as? CodeBlock
+      let style: UIFont.TextStyle =
+        switch level {
+        case 1: .largeTitle
+        case 2: .title1
+        case 3: .title2
+        case 4: .headline
+        case 5: .subheadline
+        case 6: .footnote
+        default: isCell && path.first == 0 ? .headline : .body
+        }
+      let preferred = UIFont.preferredFont(forTextStyle: style)
       let font: UIFont =
-        level == 1
-        ? .preferredFont(forTextStyle: .largeTitle)
-        : level != nil
-          ? .preferredFont(forTextStyle: .title2)
-          : isCell && path.first == 0
-            ? .preferredFont(forTextStyle: .headline) : .preferredFont(forTextStyle: .body)
-      // 見出し階層とセル種別だけを渡し、古い文書オブジェクトを閉じ込めない。
-      return NativeTextView(
-        markup: node, font: font, allowsLineBreaks: !isCell && (level.map { $0 <= 2 } ?? true)
-      ) {
-        [weak self] inlines in
-        let replacement: any Markup =
-          if let level { Heading(level: level, inlines) } else if isCell {
-            Table.Cell(inlines)
-          } else { Paragraph(inlines) }
-        self?.replace(blockIndex: blockIndex, path: path, with: replacement)
+        code != nil
+        ? .monospacedSystemFont(ofSize: 15, weight: .regular)
+        : level == nil
+          ? preferred
+          : UIFont(
+            descriptor: preferred.fontDescriptor.withSymbolicTraits(.traitBold)
+              ?? preferred.fontDescriptor, size: preferred.pointSize)
+      let markup: any Markup = code.map { Paragraph(Markdown.Text($0.code)) } ?? node
+      let allowsLineBreaks = !isCell && (level.map { $0 <= 2 } ?? true)
+      let onChange: ([any InlineMarkup]) -> Void = { [weak self] inlines in
+        guard let self else { return }
+        do {
+          document = try document.replacingInlines(in: blockIndex, path: path, with: inlines)
+          status.text = String(localized: "編集中（未保存）")
+        } catch { showError() }
       }
-    }
-    if let code = node as? CodeBlock {
-      let language = code.language
-      return NativeTextView(
-        markup: Paragraph(Markdown.Text(code.code)),
-        font: .monospacedSystemFont(ofSize: 15, weight: .regular), allowsLineBreaks: true
-      ) { [weak self] inlines in
-        self?.replace(
-          blockIndex: blockIndex, path: path,
-          with: CodeBlock(language: language, Paragraph(inlines).plainText))
+      let onCommand: (NativeTextView, EditorKeyboardMenu.Command) -> Void = {
+        [weak self] editor, command in
+        self?.handle(command, editor: editor, blockIndex: blockIndex, path: path)
       }
+      let editor: NativeTextView
+      if let input, input.path == path {
+        editor = input.editor
+        editor.rebind(
+          markup: markup, font: font, allowsLineBreaks: allowsLineBreaks,
+          allowsInlineFormatting: code == nil, selection: input.selection, onCommand: onCommand,
+          onChange: onChange)
+      } else {
+        editor = NativeTextView(
+          markup: markup, font: font, allowsLineBreaks: allowsLineBreaks,
+          allowsInlineFormatting: code == nil, onCommand: onCommand, onChange: onChange)
+      }
+      editor.blockActions = document.blockActions(in: blockIndex, path: path)
+      editor.attributedText.enumerateAttribute(
+        .editorImage, in: NSRange(location: 0, length: editor.attributedText.length)
+      ) { value, range, _ in
+        if let source = (value as? Markdown.Image)?.source, let image = assets[source] {
+          editor.setImagePreview(image, at: range.location)
+        }
+      }
+      return input?.path == path ? input!.slot : editor
     }
     if node is ThematicBreak {
       let divider = UIView()
@@ -170,14 +202,15 @@ final class EditorViewController: UIViewController, PHPickerViewControllerDelega
     }
     let stack = UIStackView()
     stack.axis = .vertical
-    stack.spacing = 4
+    stack.spacing = node is Document ? 12 : 4
     if node is BlockQuote {
       stack.isLayoutMarginsRelativeArrangement = true
       stack.layoutMargins = UIEdgeInsets(top: 4, left: 16, bottom: 4, right: 4)
       stack.backgroundColor = .secondarySystemBackground
     }
     for (index, child) in node.children.enumerated() {
-      let childView = renderNode(child, blockIndex: blockIndex, path: path + [index])
+      let childView = renderNode(
+        child, blockIndex: blockIndex, path: path + [index], reusing: input)
       if let item = child as? ListItem {
         let row = UIStackView()
         row.alignment = .firstBaseline
@@ -199,17 +232,102 @@ final class EditorViewController: UIViewController, PHPickerViewControllerDelega
     return stack
   }
 
-  private func replace(blockIndex: Int, path: [Int], with markup: any Markup) {
+  private func handle(
+    _ command: EditorKeyboardMenu.Command, editor: NativeTextView, blockIndex: Int, path: [Int]
+  ) {
     do {
-      document = try document.replacingNode(in: blockIndex, path: path, with: markup)
-      status.text = String(localized: "入力を反映（未保存）")
+      switch command {
+      case .block(let action):
+        let result = try document.applying(action, in: blockIndex, path: path)
+        changeStructure(
+          to: result.document, blockIndex: blockIndex, from: path, to: result.path,
+          editor: editor, selection: editor.selectedRange)
+      case .markdown(let markup, let suffix, let selection, let previous):
+        // Undoでは記法を入力した状態へ戻せるよう、変換直前の内容も保存する。
+        document = try document.replacingInlines(
+          in: blockIndex, path: path, with: previous)
+        let changed = try document.replacingBlock(
+          in: blockIndex, path: path, with: markup, focusPath: suffix)
+        changeStructure(
+          to: changed.document, blockIndex: blockIndex, from: path, to: changed.path,
+          editor: editor, selection: selection)
+      case .image: pickPhoto(into: editor)
+      case .split(let before, let after):
+        let result = try document.splittingBlock(
+          in: blockIndex, path: path, before: before, after: after)
+        changeStructure(
+          to: result.document, blockIndex: blockIndex, from: path, to: result.path,
+          editor: editor, selection: NSRange(location: 0, length: 0))
+      case .link: editLink(in: editor)
+      default: break
+      }
     } catch { showError() }
+  }
+
+  private func changeStructure(
+    to changed: MarkdownDocument, blockIndex: Int, from oldPath: [Int], to newPath: [Int],
+    editor: NativeTextView, selection: NSRange
+  ) {
+    let previous = document
+    let previousSelection = editor.selectedRange
+    editor.undoManager?.registerUndo(withTarget: self) { target in
+      target.changeStructure(
+        to: previous, blockIndex: blockIndex, from: newPath, to: oldPath,
+        editor: editor, selection: previousSelection)
+    }
+    document = changed
+    // 先頭の2行は説明と状態。変更したブロックだけを作り直して入力欄とUndoを引き継ぐ。
+    let previousView = content.arrangedSubviews[blockIndex + 2]
+    UIView.performWithoutAnimation {
+      let slot = UIStackView()
+      let replacement = renderNode(
+        document.blocks[blockIndex].markup, blockIndex: blockIndex, path: [],
+        reusing: (editor, newPath, selection, slot))
+      content.insertArrangedSubview(replacement, at: blockIndex + 2)
+      // 入力欄をウィンドウから外すと、改行中のUIKitがキーボードを閉じてしまう。
+      // 新しい配置を先に接続し、同じウィンドウ内で入力欄だけを移動する。
+      let parent = slot.superview as! UIStackView
+      let position = parent.arrangedSubviews.firstIndex(of: slot)!
+      parent.insertArrangedSubview(editor, at: position)
+      slot.removeFromSuperview()
+      if previousView !== editor { previousView.removeFromSuperview() }
+      view.layoutIfNeeded()
+      editor.becomeFirstResponder()
+    }
+    status.text = String(localized: "編集中（未保存）")
+  }
+
+  private func editLink(in editor: NativeTextView) {
+    let selection = editor.selectedRange
+    let current = editor.selectedLink?.destination
+    let alert = UIAlertController(
+      title: String(localized: "リンク"), message: nil, preferredStyle: .alert)
+    alert.addTextField { field in
+      field.placeholder = "URL"
+      field.text = current
+      field.keyboardType = .URL
+      field.autocapitalizationType = .none
+      field.autocorrectionType = .no
+    }
+    alert.addAction(
+      UIAlertAction(title: String(localized: "キャンセル"), style: .cancel) { _ in
+        editor.becomeFirstResponder()
+      })
+    alert.addAction(
+      UIAlertAction(title: String(localized: "適用"), style: .default) { [weak alert] _ in
+        editor.becomeFirstResponder()
+        editor.selectedRange = selection
+        editor.setLink(
+          alert?.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "")
+      })
+    navigationController?.topViewController?.present(alert, animated: true)
   }
 
   private func append(_ source: String) {
     view.endEditing(true)
     document = document.appending(source)
     render()
+    status.text = String(localized: "編集中（未保存）")
   }
 
   private func showTable(at index: Int) {
@@ -244,7 +362,7 @@ final class EditorViewController: UIViewController, PHPickerViewControllerDelega
       rowView.distribution = .fillEqually
       rowView.spacing = 1
       for (column, cell) in row.children.enumerated() {
-        let editor = renderNode(cell, blockIndex: index, path: path + [column])
+        let editor = renderNode(cell, blockIndex: index, path: path + [column], reusing: nil)
         if let text = editor as? UITextView, table.columnAlignments.indices.contains(column) {
           switch table.columnAlignments[column] {
           case .center: text.textAlignment = .center
@@ -263,36 +381,61 @@ final class EditorViewController: UIViewController, PHPickerViewControllerDelega
 
   private func showMarkdown() {
     view.endEditing(true)
-    let controller = UIViewController()
-    controller.title = "Markdown"
-    let text = UITextView()
-    text.isEditable = false
-    text.font = .monospacedSystemFont(ofSize: 14, weight: .regular)
-    text.text = document.source
-    controller.view = text
+    let controller = MarkdownSourceViewController(source: document.source) { [weak self] source in
+      self?.document = MarkdownDocument(source: source)
+      self?.render()
+      self?.status.text = String(localized: "編集中（未保存）")
+    }
     navigationController?.pushViewController(controller, animated: true)
   }
 
-  private func pickPhoto() {
+  private func pickPhoto(into editor: NativeTextView?) {
+    photoInsertion = editor.map { ($0, $0.selectedRange) }
     view.endEditing(true)
     var configuration = PHPickerConfiguration()
     configuration.filter = .images
     configuration.selectionLimit = 1
     let picker = PHPickerViewController(configuration: configuration)
     picker.delegate = self
-    present(picker, animated: true)
+    navigationController?.topViewController?.present(picker, animated: true)
   }
 
   func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
-    picker.dismiss(animated: true)
+    let insertion = photoInsertion
+    photoInsertion = nil
     guard let provider = results.first?.itemProvider, provider.canLoadObject(ofClass: UIImage.self)
-    else { return }
-    provider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
-      guard let image = object as? UIImage else { return }
+    else {
+      picker.dismiss(animated: true) { insertion?.editor.becomeFirstResponder() }
+      return
+    }
+    // 写真が読み込めるまでモーダルを保ち、選択位置の本文が先に編集されるのを防ぐ。
+    let loading = UIActivityIndicatorView(style: .large)
+    loading.center = CGPoint(x: picker.view.bounds.midX, y: picker.view.bounds.midY)
+    loading.autoresizingMask = [
+      .flexibleLeftMargin, .flexibleRightMargin, .flexibleTopMargin, .flexibleBottomMargin,
+    ]
+    loading.accessibilityLabel = String(localized: "画像を読み込み中")
+    picker.view.addSubview(loading)
+    loading.startAnimating()
+    provider.loadObject(ofClass: UIImage.self) { [weak self, weak picker] object, _ in
+      let image = object as? UIImage
       Task { @MainActor in
+        guard let self, let picker, picker.presentingViewController != nil, !picker.isBeingDismissed
+        else { return }
+        guard let image else {
+          picker.dismiss(animated: true) { self.showError() }
+          return
+        }
         let name = "assets/\(UUID().uuidString).png"
-        self?.assets[name] = image
-        self?.append("![\(String(localized: "写真"))](\(name))")
+        self.assets[name] = image
+        if let insertion {
+          insertion.editor.insertImage(
+            Markdown.Image(source: name, [Markdown.Text(String(localized: "写真"))]),
+            preview: image, selection: insertion.selection)
+        } else {
+          self.append("![\(String(localized: "写真"))](\(name))")
+        }
+        picker.dismiss(animated: true) { insertion?.editor.becomeFirstResponder() }
       }
     }
   }
@@ -302,6 +445,6 @@ final class EditorViewController: UIViewController, PHPickerViewControllerDelega
       title: String(localized: "編集を反映できませんでした"),
       message: String(localized: "原稿を保持しています。Markdown表示で内容を確認してください。"), preferredStyle: .alert)
     alert.addAction(UIAlertAction(title: "OK", style: .default))
-    present(alert, animated: true)
+    navigationController?.topViewController?.present(alert, animated: true)
   }
 }
