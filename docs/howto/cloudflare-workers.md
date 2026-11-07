@@ -45,22 +45,17 @@ bun run deploy:workers
 
 ## PRのプレビュー
 
-PR #1140は `https://evame-pr-1140.reimei.workers.dev/ja` で確認する。Gatewayは `evame-pr-1140`、Readerは `evame-reader-pr-1140`、DBは `evame-pr-1140` を使う。認証・暗号化の秘密値とDBトークンはプレビュー専用にし、DBにはマイグレーションと通常のseedだけを適用する。画像アップロード先のR2と、読み取り専用のmaintenance設定のKVは既存bindingを利用する。
+同じリポジトリ内のPRは、既存のNix CIが成功すると `preview` jobでCloudflare標準の[Worker Previews](https://developers.cloudflare.com/workers/previews/get-started/)を自動更新する。GitHubのdeploymentリンクから開く。URLは `https://pr-<PR番号>-evame-start.reimei.workers.dev/ja`。PR #1140は `https://pr-1140-evame-start.reimei.workers.dev/ja/auth/login`。forkからのPRでは秘密値を渡さず、プレビューをデプロイしない。
 
-この環境はメールのログインリンクで入る。Googleのコールバックを登録していない環境は、ビルド時に `VITE_AUTH_GOOGLE_ENABLED=false` を設定してメールログインだけを表示する。本番では既定のGoogle・メールの両方を維持する。プレビューの `BETTER_AUTH_URL` とビルド時の `VITE_PUBLIC_DOMAIN` は、上記のプレビューURLのoriginに揃える。Origin検証は無効にしない。
+ログインはメールのリンクを使う。CIは `VITE_AUTH_GOOGLE_ENABLED=false` とプレビューの `VITE_PUBLIC_DOMAIN` を指定してビルドし、`BETTER_AUTH_URL` も同じoriginに揃える。Origin検証は有効のまま。本番はGoogle・メールの両方を維持する。
 
-再ビルドはNix内で次を実行し、プレビュー用に生成した設定でReader、Gatewayの順に更新する。本番用の `deploy:workers` はプレビューの更新に使わない。
+GatewayとReaderのコードはPRごとに分かれる。DBは全プレビュー共用の専用Turso DB `evame-preview` を使い、本番データはコピーしない。プレビュー間では同じテストアカウント・文書を参照するため、DBスキーマの互換性がない複数PRの同時検証には使わない。画像のR2と読み取り専用maintenanceのKVは既存bindingを利用する。
 
-```bash
-nix develop --command env VITE_AUTH_GOOGLE_ENABLED=false VITE_PUBLIC_DOMAIN=https://evame-pr-1140.reimei.workers.dev SENTRY_DSN= VITE_SENTRY_DSN= GOOGLE_ANALYTICS_ID=G-0000000000 bun run build
-nix develop --command bun x wrangler deploy --config .data/preview-pr-1140/evame-reader-pr-1140.json --secrets-file .data/preview-pr-1140/reader-secrets.json
-nix develop --command bun x wrangler deploy --config .data/preview-pr-1140/evame-pr-1140.json --secrets-file .data/preview-pr-1140/secrets.json
-nix develop --command node .data/preview-pr-1140/purge-preview.mjs
-```
+GitHub secret `EVAME_PREVIEW_SECRETS` に、専用DBの `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN`、専用の `BETTER_AUTH_SECRET` / `ENCRYPTION_KEY` / `PREVIEW_READER_SECRET`、送信用の `AUTH_RESEND_KEY` をJSONで登録する。翻訳などの外部サービスを試す場合は必要な秘密値も加える。値はソース・ログ・PRへ含めない。DBトークンはこのテストDBだけに限定し、更新時はsecretを差し替えてプレビューjobを再実行する。
 
-この環境の `purge-preview.mjs` はプレビュー用のWorker名を使って既存の `scripts/purge-reader-cache.mjs` を実行し、更新前のHTMLキャッシュを無効化する。Wranglerのリモート呼び出しにはNode.jsを使う。
+`scripts/preview-workers.mjs` は専用DBのマイグレーション・seed後、`evame-start` 配下の `reader-pr-<PR番号>` と `pr-<PR番号>` という2つの独立したPreviewへ順にデプロイする。本番ReaderのURLは非公開のまま維持するため、ReaderのPreviewも公開Preview URLを持つGateway側を親Workerとして使う。PRごとの通常Worker作成や本番デプロイは行わない。生成済みWrangler設定をそのまま使い、親Workerは `--worker-name`、動的URLはCLIの変数指定で渡す。秘密値ファイルだけを `.data/native-preview-pr-<PR番号>` に権限 `600` で作る。
 
-`.data/preview-pr-1140` の秘密値は権限 `600` で保持し、Git・CIログ・PR本文へ含めない。初期のDBトークンの有効期限は7日間。継続利用する場合は専用DBのトークンを更新してGatewayへ反映する。PRのコードを変更したら、同じURLへ再ビルド・再デプロイして更新する。
+Cloudflareの[現在の制約](https://developers.cloudflare.com/workers/previews/resources/#limitations)では、Previewのservice bindingは接続先Workerの本番を呼ぶ。そのためプレビュー設定にservice bindingは追加せず、Gatewayは対応するReaderのPreview URLへ秘密ヘッダー付きで接続する。Readerは直接アクセスを拒否し、同じPRのGatewayのデータAPIから描画する。HTMLとアセットはReaderが所有する。本番は既存のservice bindingとキャッシュを維持し、プレビューではHTML共有キャッシュを無効にする。
 
 CIの成功に加えて、実際のプレビューURLでログイン画面、Cookieによるセッション取得、記事の作成・編集・再読み込みを確認する。メール受信からの確認と、テスト用アカウントのセッションでの確認を区別して記録する。
 

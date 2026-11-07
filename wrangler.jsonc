@@ -13,5 +13,18 @@
 	"kv_namespaces": [
 		{ "binding": "SETTINGS", "id": "e5faa34f97e44136a060e561e11f3d9d" }
 	],
-	"observability": { "enabled": true }
+	"observability": { "enabled": true },
+	"previews": {
+		"images": { "binding": "IMAGES" },
+		"version_metadata": { "binding": "CF_VERSION_METADATA" },
+		"r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "eveeve" }],
+		"kv_namespaces": [
+			{ "binding": "SETTINGS", "id": "e5faa34f97e44136a060e561e11f3d9d" }
+		],
+		"vars": {
+			"SENTRY_DSN": "",
+			"SENTRY_ENVIRONMENT": "preview",
+			"GOOGLE_ANALYTICS_ID": "G-0000000000"
+		}
+	}
 }

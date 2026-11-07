@@ -31,6 +31,7 @@
 		"preview": "wrangler dev --config dist/server/wrangler.json --config reader/dist/server/wrangler.json",
 		"prepare:reader-assets": "node scripts/retain-reader-assets.mjs https://evame-start.reimei.workers.dev",
 		"deploy:workers": "node scripts/deploy-workers.mjs",
+		"preview:workers": "node scripts/preview-workers.mjs",
 		"deploy": "bun run build && bun run prepare:reader-assets && bun run deploy:workers",
 		"db:dev": "bun scripts/dev-db.mjs",
 		"test:deployment:browser": "EVAME_BROWSER_TEST=true node scripts/check-cloudflare-output.mjs"

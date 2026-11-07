@@ -11,7 +11,12 @@ vi.mock("cloudflare:workers", () => ({ cache: { purge: mocks.purge } }));
 vi.mock("@sentry/cloudflare", () => ({
 	withSentry: (_options: unknown, handler: unknown) => handler,
 }));
-vi.mock("astro/fetch", () => ({ astro: mocks.astro, FetchState: class {} }));
+vi.mock("astro/fetch", () => ({
+	astro: mocks.astro,
+	FetchState: class {
+		constructor(readonly request: Request) {}
+	},
+}));
 vi.mock("@astrojs/cloudflare/fetch", () => ({
 	cf: mocks.asset,
 	finalize: (_state: unknown, response: Response) => response,
@@ -21,6 +26,45 @@ import worker from "./worker";
 
 const env = {} as typeof import("cloudflare:workers").env;
 const context = {} as ExecutionContext;
+const previewEnv = {
+	PREVIEW_GATEWAY_ORIGIN: "https://pr-1140-evame-start.reimei.workers.dev",
+	PREVIEW_READER_SECRET: "preview-reader-secret",
+} as typeof env;
+
+it.each([null, "wrong-secret"])(
+	"PRのReaderは秘密値が%sの直接アクセスを拒否する",
+	async (secret) => {
+		const response = await worker.fetch(
+			new Request("https://pr-1140-evame-reader.reimei.workers.dev/__purge", {
+				method: "POST",
+				headers: secret ? { "x-evame-preview-reader": secret } : {},
+			}),
+			previewEnv,
+			context,
+		);
+		expect(response.status).toBe(404);
+		expect(mocks.purge).not.toHaveBeenCalled();
+		expect(mocks.astro).not.toHaveBeenCalled();
+	},
+);
+
+it("PRのReaderはGatewayのURLとCookieで描画する", async () => {
+	await worker.fetch(
+		new Request("https://pr-1140-evame-reader.reimei.workers.dev/ja?page=2", {
+			headers: {
+				"x-evame-preview-reader": "preview-reader-secret",
+				cookie: "preview-session",
+			},
+		}),
+		previewEnv,
+		context,
+	);
+	const state = mocks.astro.mock.calls[0][0];
+	expect(state.request.url).toBe(
+		"https://pr-1140-evame-start.reimei.workers.dev/ja?page=2",
+	);
+	expect(state.request.headers.get("cookie")).toBe("preview-session");
+});
 beforeEach(() => {
 	mocks.purge.mockReset().mockResolvedValue({ success: true });
 	mocks.astro.mockReset().mockResolvedValue(new Response("本文SSR"));
