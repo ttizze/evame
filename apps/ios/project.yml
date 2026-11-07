@@ -8,7 +8,6 @@ settings:
     SWIFT_VERSION: "6.0"
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
-    TARGETED_DEVICE_FAMILY: "1"
     GENERATE_INFOPLIST_FILE: YES
     CODE_SIGNING_ALLOWED: NO
 packages:
@@ -24,6 +23,7 @@ targets:
         buildPhase: resources
     settings:
       base:
+        TARGETED_DEVICE_FAMILY: "1"
         PRODUCT_BUNDLE_IDENTIFIER: app.evame.editor-prototype
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_CFBundleDisplayName: Evame
