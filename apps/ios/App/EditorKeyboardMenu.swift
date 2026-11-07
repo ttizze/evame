@@ -8,7 +8,7 @@ final class EditorKeyboardMenu: UIView {
   enum Command {
     case block(MarkdownDocument.BlockAction)
     case format(NSAttributedString.Key)
-    case image, link, undo, redo, done
+    case image, link, undo, redo, done, backspace
     case markdown(any Markdown.Markup, [Int], NSRange, [any InlineMarkup])
     case split([any InlineMarkup], [any InlineMarkup])
   }

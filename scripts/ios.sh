@@ -21,6 +21,9 @@ if [[ "$1" == test && -z "${2:-}" ]]; then
   exit 2
 fi
 
+(cd apps/ios/EditorModel && bun install --frozen-lockfile)
+bun apps/ios/EditorModel/build.mjs
+
 xcodegen generate --spec apps/ios/project.yml
 resolved_dir=apps/ios/EvameEditorPrototype.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
 mkdir -p "$resolved_dir"

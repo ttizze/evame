@@ -6,7 +6,7 @@ SwiftUIの画面にUIKitの`UITextView`を組み込んだ検証用アプリ。�
 
 キーボード上には移行前Webと同じLucideアイコンで字下げ・字下げ解除・見出し2/3/4・太字・斜体・取消線・インラインコード・箇条書き・番号付きリスト・リンク・画像を直接並べる。高さ48ptの列を横スクロールでき、適用中の書式を強調する。その他メニューには段落・チェックリスト・引用・コードブロック・Undo/Redoを置く。表のセルや変換中の入力では使えない操作を無効にする。
 
-見出し・リスト・引用の接頭辞、言語付きコードフェンス、太字・斜体・取消線・コード・リンクなどのMarkdown記法を確定入力後に変換する。Returnで段落・リスト項目を分割し、空のリスト項目ではリストを抜ける。原文画面からはCommonMark/GFM全体を直接編集できる。
+見出し・リスト・引用の接頭辞、言語付きコードフェンス、太字・斜体・取消線・コード・リンクなどのMarkdown記法を確定入力後に変換する。Returnで段落・リスト項目を分割し、空のリスト項目ではリストを抜ける。先頭のBackspaceではリスト・引用・見出しの解除や前の段落との結合を行い、元の入力欄・カーソル・Undoを引き継ぐ。原文画面からはCommonMark/GFM全体を直接編集できる。
 
 ログイン・SQLite・同期・公開・書き出しは未実装。検証用の固定サンプルだけを扱い、本文と取り込んだ画像はメモリ上に置く。終了すると変更は消える。保存済みや同期済みとは表示しない。
 
@@ -16,6 +16,7 @@ SwiftUIの画面にUIKitの`UITextView`を組み込んだ検証用アプリ。�
 - XcodeとApple SDKはAppleの配布物を使う。`DEVELOPER_DIR`で選択し、スクリプトでバージョンを検証する。
 - XcodeGenは既存の`flake.lock`で固定したNix環境から使う。
 - Swift依存は`Package.swift`と`Package.resolved`で固定する。生成したXcodeプロジェクトにも同じロックを渡す。
+- 構造の結合にはProseMirrorのモデル演算をJavaScriptCore上で使う。UIKitの画面とIMEを維持し、DOMやWebViewは作らない。依存は`EditorModel/package.json`と`bun.lock`に固定し、`scripts/ios.sh`から同じJSとライセンスを生成する。
 - CIはNix環境に合わせて`macos-26-arm64`を使い、`.github/workflows/ios.yml`から同じスクリプトを実行する。
 
 リポジトリのルートで実行する。スクリプトは必要に応じて`nix develop`へ入り直す。
@@ -43,6 +44,7 @@ TestFlightへの配信には`Config/TestFlightExportOptions.plist`を使う。�
 
 - `Sources/EditorCore/MarkdownDocument.swift`: domain。原文の保持と編集範囲の置換。`App/EditorViewController.swift`から使う。空の段落への再入力中もアドレスを固定し、別の段落へ編集を誤反映しない。
 - `Sources/EditorCore/BlockEditing.swift`: domain。見出し・リスト・引用の変換、字下げ、Return時の分割と入力先の決定。文書を所有する`EditorViewController.swift`が結果を反映する。
+- `Sources/EditorCore/BackspaceEditing.swift`: domain。Backspace時の書式解除・結合範囲・入力先を決定する。`EditorModel.swift`がMarkdownとProseMirrorの不変モデルを変換し、`EditorModel/model.mjs`の結合演算を呼ぶ。文書の反映とUIKitのUndoは`EditorViewController.swift`が所有する。
 - `Sources/EditorCore/MarkdownSource.swift`と`MarkdownInput.swift`: utils。CommonMark/GFMの変換と入力記法の認識を担う。文書更新と入力欄の両方から使うためEditorCoreに置く。通常の入力は葉の原文だけを置換し、構造を変えた場合も他のトップレベルブロックや参照定義は保持する。
 - `App/NativeTextView.swift`: 入力・選択・IME・Undoを所有するUIKitの入力欄。未確定入力を文書へ反映せず、確定後に内容だけを画面側へ渡す。
 - `App/RichTextCodec.swift`: ネイティブ装飾とMarkdownのインライン要素の変換。入力欄とネイティブテストの近くに置く。
@@ -58,6 +60,16 @@ TestFlightへの配信には`Config/TestFlightExportOptions.plist`を使う。�
 ## 受入確認
 
 自動テストは原文の保持、編集箇所以外の保持、記号・URL・画像・表の変換、未確定入力、画面上の編集を検証する。実APIによる正規化済みMDASTの等価性や翻訳・投票の維持を証明するものではない。
+
+公式ケースは`Tests/EditorCoreTests/Fixtures/Upstream`へ全件を保存する。
+
+- CommonMark 0.31.2の652例とGFM 0.29-gfmの677例を使い、原文の保持と全編集可能な入力欄の保存・再解析を検証する。本文、入れ子の装飾、コード、URLと題名、番号、チェック状態、表の配置を比較する。空のTextとソース位置は内容に含めない。期待HTMLも原典どおり保存している。
+- ProseMirrorの操作テスト133件は、コミット`52a84a842774fadec3b167bcdbd56085ec6c85df`のテスト本体を変更せず、同梱するモデル演算と同じ依存版・JavaScriptCoreで実行する。macOSのEditorCoreテストとiOS SimulatorのNativeTestsの両方から同じ検証を呼ぶ。UIKitとの接続は、文字・選択範囲の削除、項目と段落の結合、Undo/Redo後のカーソル、継続入力、IME、画面操作のテストで確認する。
+- `scripts/ios-editor-fixtures.mjs`は出典のSHA-256とケース数を照合して再取得する。通常のテストは保存したケースを使い、ネットワークを必要としない。再取得は`nix develop --command node scripts/ios-editor-fixtures.mjs`。
+
+CommonMark仕様とGFM仕様のテストデータはJohn MacFarlaneとGitHubの貢献者によるもので、[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)に従う。出典は[CommonMark](https://spec.commonmark.org/0.31.2/spec.json)と[GFM](https://github.github.com/gfm/)。GFMのHTMLから全例を抽出し、表示用の空白・タブ表現を元の文字へ戻している。ProseMirrorのテストはMITライセンスで、原文の許諾表示を`Upstream/ProseMirror-LICENSE.txt`に保存し、アプリに含む依存のライセンスも`Resources/ProseMirror-LICENSES.txt`へ同梱する。
+
+`followingSourceStart`と`editableSourceRange`は文書の読み込みと葉の置換から使用する。Setext見出しの範囲が次の段落やリンク定義へ及ぶパーサーの位置情報を両方で補正し、隣の本文や参照URLを失わないよう同じ境界を使う。
 
 実機では次を確認してから、エディタ基盤と永続保存形式を確定する。
 

@@ -27,7 +27,7 @@ public struct MarkdownDocument {
     originalBlocks.enumerated().map { index, block in
       Block(
         markup: updatedMarkup(block.markup, address: [index]), kind: block.kind,
-        source: applyingEdits(in: block.range), range: block.range)
+        source: edits[[index]]?.source ?? applyingEdits(in: block.range), range: block.range)
     }
   }
 
@@ -36,8 +36,28 @@ public struct MarkdownDocument {
     let bytes = Array(source.utf8)
     originalBlocks = Document(parsing: source, options: [.disableSmartOpts]).children.compactMap {
       markup in
-      guard let sourceRange = markup.range, let range = Self.byteRange(sourceRange, bytes: bytes)
+      guard let sourceRange = markup.editableSourceRange,
+        let contentRange = Self.byteRange(
+          sourceRange, before: markup.followingSourceStart, bytes: bytes)
       else { return nil }
+      let lineStart = bytes[..<contentRange.lowerBound].lastIndex(of: 10).map { $0 + 1 } ?? 0
+      var range =
+        (bytes[lineStart..<contentRange.lowerBound].allSatisfy { $0 == 32 || $0 == 9 }
+          ? lineStart : contentRange.lowerBound)..<contentRange.upperBound
+      // Setext見出しの範囲に取り込まれた先行リンク定義は、見出しの編集対象から外す。
+      if markup is Heading {
+        let source = String(decoding: bytes[range], as: UTF8.self)
+        if source.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("[") {
+          var prefixLength = 0
+          for end in source.indices where source[end].isNewline {
+            let prefix = String(source[...end])
+            if Document(parsing: prefix, options: [.disableSmartOpts]).childCount == 0 {
+              prefixLength = prefix.utf8.count
+            }
+          }
+          range = (range.lowerBound + prefixLength)..<range.upperBound
+        }
+      }
       let raw = String(decoding: bytes[range], as: UTF8.self)
       let kind: Kind
       if raw.contains("[^") || !Self.canEdit(markup) {
@@ -78,10 +98,18 @@ public struct MarkdownDocument {
       break
     default: throw EditError.invalidBlock
     }
+    if node is CodeBlock || (node is Table.Cell && node.range == nil) {
+      let markup = try blocks[blockIndex].markup.replacingDescendant(at: path, with: replacement)
+      return try replacingStructure(in: blockIndex, with: markup)
+    }
     let bytes = Array(originalSource.utf8)
-    guard let sourceRange = node.range, let range = Self.byteRange(sourceRange, bytes: bytes) else {
+    guard let sourceRange = node.editableSourceRange,
+      let nodeRange = Self.byteRange(sourceRange, before: node.followingSourceStart, bytes: bytes)
+    else {
       throw EditError.invalidBlock
     }
+    let range = path.isEmpty ? originalBlocks[blockIndex].range : nodeRange
+    let raw = String(decoding: bytes[range], as: UTF8.self)
     var prefix = ""
     var ancestor = node.parent
     while let parent = ancestor {
@@ -98,10 +126,11 @@ public struct MarkdownDocument {
     var content = try MarkdownSource.serialize(replacement).replacingOccurrences(
       of: "\n", with: "\n" + prefix)
     if node is Table.Cell {
-      let raw = String(decoding: bytes[range], as: UTF8.self)
       content =
         String(raw.prefix { $0 == " " || $0 == "\t" }) + content
         + String(raw.reversed().prefix { $0 == " " || $0 == "\t" }.reversed())
+    } else {
+      content += String(raw.reversed().prefix { $0.isNewline }.reversed())
     }
     var changed = self
     changed.edits[[blockIndex] + path] = (range, content, replacement)
@@ -119,6 +148,24 @@ public struct MarkdownDocument {
     var changed = self
     changed.edits = edits.filter { $0.key.first != index }
     changed.edits[[index]] = (originalBlocks[index].range, source, markup)
+    return changed
+  }
+
+  // 削除したルートも編集中は空のDocumentとして残し、他の入力欄のアドレスを変えない。
+  func removingBlock(in index: Int) throws -> Self {
+    guard originalBlocks.indices.contains(index), originalBlocks[index].kind == .editable else {
+      throw EditError.invalidBlock
+    }
+    var lower = originalBlocks[index].range.lowerBound
+    if index > 0 {
+      let gap = Array(originalSource.utf8)[originalBlocks[index - 1].range.upperBound..<lower]
+      if gap.allSatisfy({ [9, 10, 13, 32].contains($0) }) {
+        lower = originalBlocks[index - 1].range.upperBound
+      }
+    }
+    var changed = self
+    changed.edits = edits.filter { $0.key.first != index }
+    changed.edits[[index]] = (lower..<originalBlocks[index].range.upperBound, "", Document())
     return changed
   }
 
@@ -204,15 +251,48 @@ public struct MarkdownDocument {
     }
   }
 
-  private static func byteRange(_ range: SourceRange, bytes: [UInt8]) -> Range<Int>? {
+  private static func byteRange(
+    _ range: SourceRange, before boundary: SourceLocation?, bytes: [UInt8]
+  ) -> Range<Int>? {
     var starts = [0]
     for (offset, byte) in bytes.enumerated() where byte == 10 { starts.append(offset + 1) }
     guard starts.indices.contains(range.lowerBound.line - 1),
       starts.indices.contains(range.upperBound.line - 1)
     else { return nil }
     let lower = starts[range.lowerBound.line - 1] + range.lowerBound.column - 1
-    let upper = starts[range.upperBound.line - 1] + range.upperBound.column - 1
+    var upper = starts[range.upperBound.line - 1] + range.upperBound.column - 1
+    if let boundary, starts.indices.contains(boundary.line - 1) {
+      let column = boundary.line > range.lowerBound.line ? 0 : boundary.column - 1
+      upper = min(upper, starts[boundary.line - 1] + column)
+    }
     guard lower >= 0, upper >= lower, upper <= bytes.count else { return nil }
     return lower..<upper
+  }
+}
+
+extension Markup {
+  fileprivate var editableSourceRange: SourceRange? {
+    guard let range else { return nil }
+    if self is Heading, let content = child(at: 0)?.range,
+      content.lowerBound.line > range.lowerBound.line
+    {
+      let start = SourceLocation(
+        line: content.lowerBound.line, column: range.lowerBound.column,
+        source: range.lowerBound.source)
+      return start..<range.upperBound
+    }
+    return range
+  }
+
+  // Setext見出しなどでパーサーの終了位置が次の兄弟へ及んでも、読み込みと編集の両方で本文を保護する。
+  fileprivate var followingSourceStart: SourceLocation? {
+    var node: any Markup = self
+    while let parent = node.parent {
+      if let following = parent.child(at: node.indexInParent + 1) {
+        return following.range?.lowerBound
+      }
+      node = parent
+    }
+    return nil
   }
 }

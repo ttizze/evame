@@ -10,7 +10,8 @@ let package = Package(
   ],
   targets: [
     .target(
-      name: "EditorCore", dependencies: [.product(name: "Markdown", package: "swift-markdown")]),
+      name: "EditorCore", dependencies: [.product(name: "Markdown", package: "swift-markdown")],
+      resources: [.process("Resources")]),
     .testTarget(
       name: "EditorCoreTests", dependencies: ["EditorCore"], resources: [.copy("Fixtures")]),
   ]

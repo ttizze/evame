@@ -109,6 +109,23 @@ final class EditorUITests: XCTestCase {
     XCTAssertTrue(source.contains("- one\n- two"), source)
   }
 
+  func test空のリスト項目をBackspaceで消して前の項目へ入力を続けられる() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    let heading = app.textViews["日本語の執筆 👩🏽‍💻"]
+    XCTAssertTrue(heading.waitForExistence(timeout: 10))
+    heading.tap()
+    app.typeText("\n- one\n")
+    app.typeText(XCUIKeyboardKey.delete.rawValue + "X")
+    XCTAssertTrue(app.buttons["editor.done"].isHittable)
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let source = app.textViews.firstMatch.value as? String ?? ""
+    XCTAssertTrue(source.contains("- oneX"), source)
+    XCTAssertFalse(source.contains("- one\n- X"), source)
+  }
+
   func test横スクロール先の画像ボタンから写真選択を開いてキャンセルしても入力を続けられる() {
     let app = XCUIApplication()
     app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]

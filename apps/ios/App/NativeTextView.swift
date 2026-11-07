@@ -51,6 +51,16 @@ final class NativeTextView: UITextView, UITextViewDelegate {
 
   required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
+  override func deleteBackward() {
+    if markedTextRange == nil, selectedRange == NSRange(location: 0, length: 0),
+      !blockActions.enabled.isEmpty
+    {
+      onCommand(self, .backspace)
+      return
+    }
+    super.deleteBackward()
+  }
+
   func rebind(
     markup: any Markup, font: UIFont, allowsLineBreaks: Bool, allowsInlineFormatting: Bool,
     selection: NSRange,

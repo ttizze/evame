@@ -7,7 +7,7 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "2"
+    CURRENT_PROJECT_VERSION: "3"
     GENERATE_INFOPLIST_FILE: YES
     CODE_SIGNING_ALLOWED: NO
 packages:
@@ -19,7 +19,7 @@ targets:
     platform: iOS
     sources:
       - App
-      - path: Tests/EditorCoreTests/Fixtures
+      - path: Tests/EditorCoreTests/Fixtures/round-trip.md
         buildPhase: resources
     settings:
       base:
@@ -36,7 +36,13 @@ targets:
   NativeTests:
     type: bundle.unit-test
     platform: iOS
-    sources: [NativeTests]
+    sources:
+      - NativeTests
+      - Tests/EditorCoreTests/ProseMirrorTests.swift
+      - path: Tests/EditorCoreTests/Fixtures/Upstream/ProseMirrorTests.js
+        buildPhase: resources
+      - path: Tests/EditorCoreTests/Fixtures/Upstream/prosemirror-cases.json
+        buildPhase: resources
     dependencies:
       - target: EvameEditorPrototype
   EditorUITests:

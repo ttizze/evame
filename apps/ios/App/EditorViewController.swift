@@ -240,7 +240,7 @@ final class EditorViewController: UIViewController, PHPickerViewControllerDelega
       case .block(let action):
         let result = try document.applying(action, in: blockIndex, path: path)
         changeStructure(
-          to: result.document, blockIndex: blockIndex, from: path, to: result.path,
+          to: result.document, from: (blockIndex, path), to: (blockIndex, result.path),
           editor: editor, selection: editor.selectedRange)
       case .markdown(let markup, let suffix, let selection, let previous):
         // Undoでは記法を入力した状態へ戻せるよう、変換直前の内容も保存する。
@@ -249,15 +249,23 @@ final class EditorViewController: UIViewController, PHPickerViewControllerDelega
         let changed = try document.replacingBlock(
           in: blockIndex, path: path, with: markup, focusPath: suffix)
         changeStructure(
-          to: changed.document, blockIndex: blockIndex, from: path, to: changed.path,
+          to: changed.document, from: (blockIndex, path), to: (blockIndex, changed.path),
           editor: editor, selection: selection)
       case .image: pickPhoto(into: editor)
       case .split(let before, let after):
         let result = try document.splittingBlock(
           in: blockIndex, path: path, before: before, after: after)
         changeStructure(
-          to: result.document, blockIndex: blockIndex, from: path, to: result.path,
+          to: result.document, from: (blockIndex, path), to: (blockIndex, result.path),
           editor: editor, selection: NSRange(location: 0, length: 0))
+      case .backspace:
+        guard let result = try document.backspacingBlock(in: blockIndex, path: path) else { return }
+        let offset = RichTextCodec.attributed(
+          Paragraph(result.before), font: .preferredFont(forTextStyle: .body)
+        ).length
+        changeStructure(
+          to: result.document, from: (blockIndex, path), to: (result.index, result.path),
+          editor: editor, selection: NSRange(location: offset, length: 0))
       case .link: editLink(in: editor)
       default: break
       }
@@ -265,32 +273,39 @@ final class EditorViewController: UIViewController, PHPickerViewControllerDelega
   }
 
   private func changeStructure(
-    to changed: MarkdownDocument, blockIndex: Int, from oldPath: [Int], to newPath: [Int],
+    to changed: MarkdownDocument, from previousAddress: (index: Int, path: [Int]),
+    to address: (index: Int, path: [Int]),
     editor: NativeTextView, selection: NSRange
   ) {
     let previous = document
     let previousSelection = editor.selectedRange
     editor.undoManager?.registerUndo(withTarget: self) { target in
       target.changeStructure(
-        to: previous, blockIndex: blockIndex, from: newPath, to: oldPath,
+        to: previous, from: address, to: previousAddress,
         editor: editor, selection: previousSelection)
     }
     document = changed
-    // 先頭の2行は説明と状態。変更したブロックだけを作り直して入力欄とUndoを引き継ぐ。
-    let previousView = content.arrangedSubviews[blockIndex + 2]
+    // 先頭の2行は説明と状態。変更した範囲を作り直して入力欄とUndoを引き継ぐ。
+    let indices =
+      min(previousAddress.index, address.index)...max(previousAddress.index, address.index)
+    let previousViews = indices.map { content.arrangedSubviews[$0 + 2] }
     UIView.performWithoutAnimation {
       let slot = UIStackView()
-      let replacement = renderNode(
-        document.blocks[blockIndex].markup, blockIndex: blockIndex, path: [],
-        reusing: (editor, newPath, selection, slot))
-      content.insertArrangedSubview(replacement, at: blockIndex + 2)
+      for (offset, index) in indices.enumerated() {
+        let markup = document.blocks[index].markup
+        let replacement = renderNode(
+          markup, blockIndex: index, path: [],
+          reusing: index == address.index ? (editor, address.path, selection, slot) : nil)
+        replacement.isHidden = markup is Document && markup.childCount == 0
+        content.insertArrangedSubview(replacement, at: indices.lowerBound + offset + 2)
+      }
       // 入力欄をウィンドウから外すと、改行中のUIKitがキーボードを閉じてしまう。
       // 新しい配置を先に接続し、同じウィンドウ内で入力欄だけを移動する。
       let parent = slot.superview as! UIStackView
       let position = parent.arrangedSubviews.firstIndex(of: slot)!
       parent.insertArrangedSubview(editor, at: position)
       slot.removeFromSuperview()
-      if previousView !== editor { previousView.removeFromSuperview() }
+      for previous in previousViews where previous !== editor { previous.removeFromSuperview() }
       view.layoutIfNeeded()
       editor.becomeFirstResponder()
     }

@@ -61,11 +61,18 @@ public enum MarkdownSource {
     case let cell as Table.Cell:
       return try inlineChildren(cell, inTable: true)
     case let code as CodeBlock:
-      // 最長の連続バッククォートより長いフェンスを選ぶ。
-      let runs = code.code.ranges(of: /`+/).map { code.code[$0].count }
-      let fence = String(repeating: "`", count: max(3, (runs.max() ?? 0) + 1))
-      return fence + (code.language ?? "") + "\n" + code.code
-        + (code.code.hasSuffix("\n") ? "" : "\n") + fence
+      // 情報文字列にバッククォートがある場合はチルダを使い、本文中の連続記号より長くする。
+      let character = code.language?.contains("`") == true ? "~" : "`"
+      let runs = code.code.ranges(of: character == "`" ? /`+/ : /~+/).map { code.code[$0].count }
+      let fence = String(repeating: character, count: max(3, (runs.max() ?? 0) + 1))
+      let language =
+        code.language.map {
+          " "
+            + $0.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(
+              of: "&", with: "&amp;")
+        } ?? ""
+      return fence + language + "\n" + code.code
+        + (code.code.isEmpty || code.code.hasSuffix("\n") ? "" : "\n") + fence
     default: throw EncodingError.unsupportedMarkup
     }
   }
@@ -82,8 +89,8 @@ public enum MarkdownSource {
     case let text as Markdown.Text:
       var escaped = ""
       for scalar in text.string.unicodeScalars {
-        if scalar.value == 9 {
-          escaped += "&#9;"
+        if [9, 10, 13].contains(scalar.value) {
+          escaped += "&#\(scalar.value);"
           continue
         }
         if (33...47).contains(scalar.value) || (58...64).contains(scalar.value)
@@ -105,7 +112,15 @@ public enum MarkdownSource {
       let content = inTable ? code.code.replacingOccurrences(of: "|", with: "\\|") : code.code
       return fence + padding + content + padding + fence
     case is Strong: return "**" + (try inlineChildren(markup, inTable: inTable)) + "**"
-    case is Emphasis: return "*" + (try inlineChildren(markup, inTable: inTable)) + "*"
+    case is Emphasis:
+      var depth = 0
+      var ancestor = markup.parent
+      while ancestor is Emphasis {
+        depth += 1
+        ancestor = ancestor?.parent
+      }
+      let delimiter = depth.isMultiple(of: 2) ? "*" : "_"
+      return delimiter + (try inlineChildren(markup, inTable: inTable)) + delimiter
     case is Strikethrough: return "~~" + (try inlineChildren(markup, inTable: inTable)) + "~~"
     case is SoftBreak, is LineBreak:
       if inTable { throw EncodingError.multilineTableCell }

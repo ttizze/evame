@@ -1,0 +1,111 @@
+import Markdown
+import Testing
+
+@testable import EditorCore
+
+@Test("段落の間にあるリンク定義をBackspaceの結合で消さない")
+func backspaceKeepsReferenceDefinitions() throws {
+  let source = "前\n\n[site]: https://example.com \"題名\"\n\n後\n\n[リンク][site]\n"
+  let result = try #require(try MarkdownDocument(source: source).backspacingBlock(in: 1, path: []))
+  #expect(result.document.source.contains("[site]: https://example.com \"題名\""))
+  let parsed = Document(parsing: result.document.source)
+  let link = try #require(parsed.child(at: parsed.childCount - 1)?.child(at: 0) as? Link)
+  #expect(link.destination == "https://example.com")
+  #expect(link.title == "題名")
+}
+
+@Test("段落を結合してもリンクの題名と入れ子の装飾と画像の説明を保持する")
+func backspacePreservesInlineStructure() throws {
+  for source in [
+    "[**前**](https://example.com \"題名\")", "_**_前_**_", "**`前`**",
+    "![**説明**](assets/photo.png \"画像題名\")",
+  ] {
+    let original = MarkdownDocument(source: source + "\n\n後\n")
+    let paragraph = try #require(original.blocks[0].markup as? Paragraph)
+    let expected = Paragraph(Array(paragraph.inlineChildren) + [Markdown.Text("後")])
+    let result = try #require(try original.backspacingBlock(in: 1, path: []))
+    #expect(
+      result.document.source == (try MarkdownSource.serialize(expected)) + "\n", "元の本文: \(source)")
+  }
+}
+
+@Test("段落の先頭でBackspaceを押すと前の段落へ結合し装飾と他の原文を保持する")
+func joinParagraphsBackward() throws {
+  let source = "前 **太字**\n\n後\n\n<div>保持</div>\n"
+  let result = try #require(try MarkdownDocument(source: source).backspacingBlock(in: 1, path: []))
+  #expect(result.document.source == "前 **太字**後\n\n<div>保持</div>\n")
+  #expect(result.index == 0)
+  #expect(result.path == [])
+  #expect(Paragraph(result.before).plainText == "前 太字")
+  let edited = try result.document.replacingInlines(
+    in: result.index, path: result.path, with: [Markdown.Text("再入力")])
+  #expect(edited.source == "再入力\n\n<div>保持</div>\n")
+}
+
+@Test("改行で作った同じブロック内の空段落をBackspaceで消して元へ戻る")
+func removeSplitParagraph() throws {
+  let split = try MarkdownDocument(source: "前\n\n次\n").splittingBlock(
+    in: 0, path: [], before: [Markdown.Text("前")], after: [])
+  let joined = try #require(try split.document.backspacingBlock(in: 0, path: split.path))
+  #expect(joined.document.source == "前\n\n次\n")
+  #expect(Paragraph(joined.before).plainText == "前")
+}
+
+@Test("リストの最初の項目でBackspaceを押すと本文を残してリストを解除する")
+func leaveListByBackspace() throws {
+  for source in ["- 本文\n- 次\n", "3. 本文\n4. 次\n", "- [x] 本文\n- [ ] 次\n"] {
+    let result = try #require(
+      try MarkdownDocument(source: source).backspacingBlock(in: 0, path: [0, 0]))
+    #expect(result.document.blocks[0].markup.descendant(at: result.path) is Paragraph)
+    #expect(!result.document.blockActions(in: 0, path: result.path).selected.contains(.bulletList))
+    #expect(!result.document.blockActions(in: 0, path: result.path).selected.contains(.orderedList))
+    #expect(!result.document.blockActions(in: 0, path: result.path).selected.contains(.checkList))
+    #expect(result.document.source.hasPrefix("本文\n"))
+    #expect(result.before.isEmpty)
+  }
+}
+
+@Test("リストの次の項目でBackspaceを押すと前の項目へ結合し入れ子を保持する")
+func joinListItemsBackward() throws {
+  let result = try #require(
+    try MarkdownDocument(source: "- 前\n- 後\n  - 子\n").backspacingBlock(in: 0, path: [1, 0]))
+  #expect(result.document.source == "- 前後\n  - 子\n")
+  #expect(result.path == [0, 0])
+  #expect(Paragraph(result.before).plainText == "前")
+}
+
+@Test("入れ子リストの先頭のBackspaceは一段だけ字下げを戻す")
+func liftNestedListBackward() throws {
+  let result = try #require(
+    try MarkdownDocument(source: "- 親\n  - 子\n- 次\n").backspacingBlock(in: 0, path: [0, 1, 0, 0]))
+  #expect(result.document.source == "- 親\n- 子\n- 次\n")
+  #expect(result.path == [1, 0])
+}
+
+@Test("見出しとコードの先頭では一回のBackspaceで文字を消さず段落へ戻す")
+func removeBlockFormatBackward() throws {
+  for source in ["## 本文\n", "```swift\n本文\n```\n"] {
+    let result = try #require(
+      try MarkdownDocument(source: source).backspacingBlock(in: 0, path: []))
+    #expect(result.document.blocks[0].markup.descendant(at: result.path) is Paragraph)
+    #expect(result.document.source.hasPrefix("本文"))
+    #expect(result.before.isEmpty)
+  }
+}
+
+@Test("引用の先頭でBackspaceを押すと最初の段落だけ引用の外へ戻す")
+func liftQuoteBackward() throws {
+  let result = try #require(
+    try MarkdownDocument(source: "> 最初\n>\n> 次\n").backspacingBlock(in: 0, path: [0]))
+  #expect(result.document.source == "最初\n\n> 次\n")
+}
+
+@Test("文書の先頭と表と保持したHTMLを越えるBackspaceでは原稿を変更しない")
+func backspaceBoundaries() throws {
+  #expect(try MarkdownDocument(source: "本文\n").backspacingBlock(in: 0, path: []) == nil)
+  for source in ["<div>保持</div>\n\n本文\n", "| 表 |\n| --- |\n\n本文\n"] {
+    let document = MarkdownDocument(source: source)
+    #expect(try document.backspacingBlock(in: 1, path: []) == nil)
+    #expect(document.source == source)
+  }
+}
