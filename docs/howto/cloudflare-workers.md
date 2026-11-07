@@ -55,7 +55,7 @@ GitHub secret `EVAME_PREVIEW_SECRETS` に、専用DBの `TURSO_DATABASE_URL` / `
 
 `scripts/preview-workers.mjs` は専用DBのマイグレーション・seed後、`evame-start` 配下の `reader-pr-<PR番号>` と `pr-<PR番号>` という2つの独立したPreviewへ順にデプロイする。本番ReaderのURLは非公開のまま維持するため、ReaderのPreviewも公開Preview URLを持つGateway側を親Workerとして使う。PRごとの通常Worker作成や本番デプロイは行わない。生成済みWrangler設定をそのまま使い、親Workerは `--worker-name`、動的URLはCLIの変数指定で渡す。秘密値ファイルだけを `.data/native-preview-pr-<PR番号>` に権限 `600` で作る。
 
-Cloudflareの[現在の制約](https://developers.cloudflare.com/workers/previews/resources/#limitations)では、Previewのservice bindingは接続先Workerの本番を呼ぶ。そのためプレビュー設定にservice bindingは追加せず、Gatewayは対応するReaderのPreview URLへ秘密ヘッダー付きで接続する。Readerは直接アクセスを拒否し、同じPRのGatewayのデータAPIから描画する。HTMLとアセットはReaderが所有する。本番は既存のservice bindingとキャッシュを維持し、プレビューではHTML共有キャッシュを無効にする。
+Cloudflareの[現在の制約](https://developers.cloudflare.com/workers/previews/resources/#limitations)では、Previewのservice bindingは接続先Workerの本番を呼ぶ。そのためプレビュー設定にservice bindingは追加せず、Gatewayは対応するReaderのPreview URLへ秘密ヘッダー付きで接続する。[`global_fetch_strictly_public`](https://developers.cloudflare.com/workers/runtime-apis/fetch/) を両Workerで有効にし、HTTP呼び出しを公開URLどおりにルーティングする。Readerは直接アクセスを拒否し、同じPRのGatewayのデータAPIから描画する。HTMLとアセットはReaderが所有する。本番は既存のservice bindingとキャッシュを維持し、プレビューではHTML共有キャッシュを無効にする。CIはデプロイ後に実URLの認証APIとReader HTMLを取得できることも確認する。
 
 CIの成功に加えて、実際のプレビューURLでログイン画面、Cookieによるセッション取得、記事の作成・編集・再読み込みを確認する。メール受信からの確認と、テスト用アカウントのセッションでの確認を区別して記録する。
 

@@ -135,3 +135,14 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           EVAME_PREVIEW_SECRETS: ${{ secrets.EVAME_PREVIEW_SECRETS }}
         run: nix develop --command bun run preview:workers
+      - name: Verify preview auth and Reader
+        run: |
+          nix develop --command bun -e '
+            for (const path of ["/api/auth/get-session", "/ja"]) {
+              const response = await fetch(process.env.VITE_PUBLIC_DOMAIN + path, { signal: AbortSignal.timeout(30000) });
+              if (response.status !== 200 || (path === "/ja" && response.headers.get("x-evame-html") !== "dynamic")) {
+                throw new Error(`Preview verification failed: ${path} (HTTP ${response.status})`);
+              }
+              await response.body?.cancel();
+            }
+          '
