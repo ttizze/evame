@@ -1,7 +1,7 @@
 import Foundation
 import Markdown
 
-/// 編集した葉だけをCommonMark/GFMへ戻す。コンテナと未編集範囲は原文を使う。
+/// 編集した構造をCommonMark/GFMへ戻す。未編集範囲は文書側で原文を使う。
 public enum MarkdownSource {
   public enum EncodingError: Error { case unsupportedMarkup, multilineTableCell }
 
@@ -82,6 +82,10 @@ public enum MarkdownSource {
     case let text as Markdown.Text:
       var escaped = ""
       for scalar in text.string.unicodeScalars {
+        if scalar.value == 9 {
+          escaped += "&#9;"
+          continue
+        }
         if (33...47).contains(scalar.value) || (58...64).contains(scalar.value)
           || (91...96).contains(scalar.value) || (123...126).contains(scalar.value)
         {

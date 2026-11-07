@@ -7,13 +7,23 @@ import Testing
   "入力した記号や行端の空白を文字のまま往復する",
   arguments: [
     "*装飾ではない*", "[文字](url)", "<b>&amp;</b>", "    行頭", "行末  ", "👩🏽‍💻と日本語", "# 見出しではない", "a | b",
-    "\\文字\\",
+    "\\文字\\", "\t本文", " \t本文", "\t", "本文\t",
   ])
 func literalText(_ text: String) throws {
   let source = try MarkdownSource.serialize(Paragraph(Markdown.Text(text)))
   let paragraph = try #require(Document(parsing: source).child(at: 0) as? Paragraph)
   #expect(paragraph.plainText == text)
   #expect(paragraph.childCount == 1)
+}
+
+@Test("改行後のタブもインデントコードへ変えず段落の文字として往復する")
+func literalTabAfterLineBreak() throws {
+  let source = try MarkdownSource.serialize(
+    Paragraph(Markdown.Text("前"), SoftBreak(), Markdown.Text("\t続き")))
+  let paragraph = try #require(Document(parsing: source).child(at: 0) as? Paragraph)
+  #expect(paragraph.childCount == 3)
+  #expect(paragraph.child(at: 1) is SoftBreak)
+  #expect((paragraph.child(at: 2) as? Markdown.Text)?.string == "\t続き")
 }
 
 @Test("リンクと画像のURLと題名を引用符や括弧ごと往復する")

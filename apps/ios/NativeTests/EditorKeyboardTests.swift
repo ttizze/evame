@@ -86,6 +86,45 @@ func typingBlockMarkdown() throws {
 }
 
 @MainActor
+@Test(
+  "記号で始まる既存の段落へ追記しても見出し・リスト・引用へ変換しない",
+  arguments: ["# 本文", "## 本文", "- 本文", "1. 本文", "> 本文", "[x] 本文"])
+func editingLiteralBlockPrefix(_ text: String) {
+  var converted = false
+  var output = [any InlineMarkup]()
+  let editor = NativeTextView(
+    markup: Paragraph(Markdown.Text(text)), font: .preferredFont(forTextStyle: .body),
+    allowsLineBreaks: true, allowsInlineFormatting: true,
+    onCommand: { _, command in
+      if case .markdown = command { converted = true }
+    }, onChange: { output = $0 })
+  editor.blockActions = MarkdownDocument(source: "本文").blockActions(in: 0, path: [])
+  editor.selectedRange = NSRange(location: editor.text.utf16.count, length: 0)
+  editor.insertText("追記")
+  editor.textViewDidChange(editor)
+  #expect(!converted)
+  #expect(Paragraph(output).plainText == text + "追記")
+}
+
+@MainActor
+@Test("既存の本文の先頭で見出し記法を完成させると見出しへ変換する")
+func completingBlockPrefix() {
+  var heading: Heading?
+  let editor = NativeTextView(
+    markup: Paragraph(Markdown.Text("#本文")), font: .preferredFont(forTextStyle: .body),
+    allowsLineBreaks: true, allowsInlineFormatting: true,
+    onCommand: { _, command in
+      if case .markdown(let markup, _, _, _) = command { heading = markup as? Heading }
+    }, onChange: { _ in })
+  editor.blockActions = MarkdownDocument(source: "本文").blockActions(in: 0, path: [])
+  editor.selectedRange = NSRange(location: 1, length: 0)
+  editor.insertText(" ")
+  editor.textViewDidChange(editor)
+  #expect(heading?.level == 1)
+  #expect(heading?.plainText == "本文")
+}
+
+@MainActor
 @Test("一文字ずつ打った太字記法は最後の記号まで待って太字へ変換する")
 func incrementalBoldMarkdown() throws {
   var output = [any InlineMarkup]()

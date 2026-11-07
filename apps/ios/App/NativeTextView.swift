@@ -107,6 +107,7 @@ final class NativeTextView: UITextView, UITextViewDelegate {
     guard !attributedText.isEqual(to: committed) else { return }
     if allowsInlineFormatting {
       if !blockActions.enabled.isEmpty, let length = MarkdownInput.blockPrefix(in: text),
+        !committed.string.hasPrefix((text as NSString).substring(to: length)),
         let result = try? MarkdownInput.block(
           prefix: (text as NSString).substring(to: length),
           inlines: RichTextCodec.inlines(
