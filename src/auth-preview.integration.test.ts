@@ -14,7 +14,9 @@ vi.stubEnv(
 	"preview-isolated-login-test-secret-32-characters",
 );
 await setupDbPerFile(import.meta.url);
-beforeEach(() => send.mockClear());
+beforeEach(() => {
+	send.mockClear();
+});
 afterAll(async () => {
 	await disposeDb();
 	vi.unstubAllEnvs();

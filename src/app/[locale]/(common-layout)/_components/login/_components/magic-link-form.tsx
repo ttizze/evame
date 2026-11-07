@@ -10,6 +10,7 @@ const schema = z.object({
 	email: z.string().email("Please enter a valid email address"),
 });
 
+/** メールログインを要求し、API失敗と通信失敗のどちらでも再試行できる状態を保つ。 */
 export function MagicLinkForm({ redirectTo }: { redirectTo: string }) {
 	const [email, setEmail] = useState("");
 	const [sent, setSent] = useState(false);
@@ -28,19 +29,20 @@ export function MagicLinkForm({ redirectTo }: { redirectTo: string }) {
 			return;
 		}
 
+		setError(null);
 		// ── 非同期処理を transition に載せる ──
-		startTransition(() =>
-			authClient.signIn
-				.magicLink({
+		startTransition(async () => {
+			try {
+				const result = await authClient.signIn.magicLink({
 					email: v.data.email,
 					callbackURL: redirectTo,
-				})
-				.then(() => setSent(true))
-				.catch((e) => {
-					setError("Failed to send magic link. Please try again.");
-					throw e;
-				}),
-		);
+				});
+				if (result.error) throw new Error(result.error.message);
+				setSent(true);
+			} catch {
+				setError("Failed to send magic link. Please try again.");
+			}
+		});
 	}
 
 	if (sent) {
