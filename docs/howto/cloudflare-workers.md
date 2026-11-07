@@ -55,7 +55,10 @@ PR #1140は `https://evame-pr-1140.reimei.workers.dev/ja` で確認する。Gate
 nix develop --command env VITE_AUTH_GOOGLE_ENABLED=false VITE_PUBLIC_DOMAIN=https://evame-pr-1140.reimei.workers.dev SENTRY_DSN= VITE_SENTRY_DSN= GOOGLE_ANALYTICS_ID=G-0000000000 bun run build
 nix develop --command bun x wrangler deploy --config .data/preview-pr-1140/evame-reader-pr-1140.json --secrets-file .data/preview-pr-1140/reader-secrets.json
 nix develop --command bun x wrangler deploy --config .data/preview-pr-1140/evame-pr-1140.json --secrets-file .data/preview-pr-1140/secrets.json
+nix develop --command node .data/preview-pr-1140/purge-preview.mjs
 ```
+
+この環境の `purge-preview.mjs` はプレビュー用のWorker名を使って既存の `scripts/purge-reader-cache.mjs` を実行し、更新前のHTMLキャッシュを無効化する。Wranglerのリモート呼び出しにはNode.jsを使う。
 
 `.data/preview-pr-1140` の秘密値は権限 `600` で保持し、Git・CIログ・PR本文へ含めない。初期のDBトークンの有効期限は7日間。継続利用する場合は専用DBのトークンを更新してGatewayへ反映する。PRのコードを変更したら、同じURLへ再ビルド・再デプロイして更新する。
 
