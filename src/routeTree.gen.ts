@@ -19,6 +19,7 @@ import { Route as LocaleEditRouteImport } from './routes/$locale._edit'
 import { Route as LocaleMaintenanceRouteImport } from './routes/$locale.maintenance'
 import { Route as LocalePrivacyRouteImport } from './routes/$locale.privacy'
 import { Route as LocaleTermsRouteImport } from './routes/$locale.terms'
+import { Route as ApiExportPagesRouteImport } from './routes/api/export-pages'
 import { Route as ApiLocaleInfoRouteImport } from './routes/api/locale-info'
 import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
 import { Route as ApiOgRouteImport } from './routes/api/og'
@@ -100,6 +101,11 @@ const LocaleTermsRoute = LocaleTermsRouteImport.update({
   id: '/terms',
   path: '/terms',
   getParentRoute: () => LocaleRoute,
+} as any)
+const ApiExportPagesRoute = ApiExportPagesRouteImport.update({
+  id: '/api/export-pages',
+  path: '/api/export-pages',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiLocaleInfoRoute = ApiLocaleInfoRouteImport.update({
   id: '/api/locale-info',
@@ -281,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
+  '/api/export-pages': typeof ApiExportPagesRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/og': typeof ApiOgRoute
@@ -324,6 +331,7 @@ export interface FileRoutesByTo {
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
+  '/api/export-pages': typeof ApiExportPagesRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/og': typeof ApiOgRoute
@@ -369,6 +377,7 @@ export interface FileRoutesById {
   '/$locale/maintenance': typeof LocaleMaintenanceRoute
   '/$locale/privacy': typeof LocalePrivacyRoute
   '/$locale/terms': typeof LocaleTermsRoute
+  '/api/export-pages': typeof ApiExportPagesRoute
   '/api/locale-info': typeof ApiLocaleInfoRoute
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/og': typeof ApiOgRoute
@@ -414,6 +423,7 @@ export interface FileRouteTypes {
     | '/$locale/maintenance'
     | '/$locale/privacy'
     | '/$locale/terms'
+    | '/api/export-pages'
     | '/api/locale-info'
     | '/api/notifications'
     | '/api/og'
@@ -457,6 +467,7 @@ export interface FileRouteTypes {
     | '/$locale/maintenance'
     | '/$locale/privacy'
     | '/$locale/terms'
+    | '/api/export-pages'
     | '/api/locale-info'
     | '/api/notifications'
     | '/api/og'
@@ -501,6 +512,7 @@ export interface FileRouteTypes {
     | '/$locale/maintenance'
     | '/$locale/privacy'
     | '/$locale/terms'
+    | '/api/export-pages'
     | '/api/locale-info'
     | '/api/notifications'
     | '/api/og'
@@ -542,6 +554,7 @@ export interface RootRouteChildren {
   MonitoringRoute: typeof MonitoringRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiExportPagesRoute: typeof ApiExportPagesRoute
   ApiLocaleInfoRoute: typeof ApiLocaleInfoRoute
   ApiNotificationsRoute: typeof ApiNotificationsRoute
   ApiOgRoute: typeof ApiOgRoute
@@ -636,6 +649,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$locale/terms'
       preLoaderRoute: typeof LocaleTermsRouteImport
       parentRoute: typeof LocaleRoute
+    }
+    '/api/export-pages': {
+      id: '/api/export-pages'
+      path: '/api/export-pages'
+      fullPath: '/api/export-pages'
+      preLoaderRoute: typeof ApiExportPagesRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/locale-info': {
       id: '/api/locale-info'
@@ -950,6 +970,7 @@ const rootRouteChildren: RootRouteChildren = {
   MonitoringRoute: MonitoringRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiExportPagesRoute: ApiExportPagesRoute,
   ApiLocaleInfoRoute: ApiLocaleInfoRoute,
   ApiNotificationsRoute: ApiNotificationsRoute,
   ApiOgRoute: ApiOgRoute,
