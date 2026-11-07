@@ -52,11 +52,15 @@ export function LoginDialog({
 						</a>
 					</DialogDescription>
 				</DialogTitle>
-				<GoogleForm redirectTo={redirectTo} />
-				<Separator className="my-4" />
-				<div className="text-center text-sm text-gray-500 my-2">
-					Or continue with email
-				</div>
+				{import.meta.env.VITE_AUTH_GOOGLE_ENABLED !== "false" && (
+					<>
+						<GoogleForm redirectTo={redirectTo} />
+						<Separator className="my-4" />
+						<div className="text-center text-sm text-gray-500 my-2">
+							Or continue with email
+						</div>
+					</>
+				)}
 				<MagicLinkForm redirectTo={redirectTo} />
 				<div className="text-center text-sm text-gray-500 my-2">
 					Login means you agree to our{" "}

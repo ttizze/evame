@@ -43,6 +43,24 @@ bun run prepare:reader-assets
 bun run deploy:workers
 ```
 
+## PRのプレビュー
+
+PR #1140は `https://evame-pr-1140.reimei.workers.dev/ja` で確認する。Gatewayは `evame-pr-1140`、Readerは `evame-reader-pr-1140`、DBは `evame-pr-1140` を使う。認証・暗号化の秘密値とDBトークンはプレビュー専用にし、DBにはマイグレーションと通常のseedだけを適用する。画像アップロード先のR2と、読み取り専用のmaintenance設定のKVは既存bindingを利用する。
+
+この環境はメールのログインリンクで入る。Googleのコールバックを登録していない環境は、ビルド時に `VITE_AUTH_GOOGLE_ENABLED=false` を設定してメールログインだけを表示する。本番では既定のGoogle・メールの両方を維持する。プレビューの `BETTER_AUTH_URL` とビルド時の `VITE_PUBLIC_DOMAIN` は、上記のプレビューURLのoriginに揃える。Origin検証は無効にしない。
+
+再ビルドはNix内で次を実行し、プレビュー用に生成した設定でReader、Gatewayの順に更新する。本番用の `deploy:workers` はプレビューの更新に使わない。
+
+```bash
+nix develop --command env VITE_AUTH_GOOGLE_ENABLED=false VITE_PUBLIC_DOMAIN=https://evame-pr-1140.reimei.workers.dev SENTRY_DSN= VITE_SENTRY_DSN= GOOGLE_ANALYTICS_ID=G-0000000000 bun run build
+nix develop --command bun x wrangler deploy --config .data/preview-pr-1140/evame-reader-pr-1140.json --secrets-file .data/preview-pr-1140/reader-secrets.json
+nix develop --command bun x wrangler deploy --config .data/preview-pr-1140/evame-pr-1140.json --secrets-file .data/preview-pr-1140/secrets.json
+```
+
+`.data/preview-pr-1140` の秘密値は権限 `600` で保持し、Git・CIログ・PR本文へ含めない。初期のDBトークンの有効期限は7日間。継続利用する場合は専用DBのトークンを更新してGatewayへ反映する。PRのコードを変更したら、同じURLへ再ビルド・再デプロイして更新する。
+
+CIの成功に加えて、実際のプレビューURLでログイン画面、Cookieによるセッション取得、記事の作成・編集・再読み込みを確認する。メール受信からの確認と、テスト用アカウントのセッションでの確認を区別して記録する。
+
 ## 本番への切り替え
 
 1. Biome・typecheck・全テスト・Workers 上の成果物テストを通す。
