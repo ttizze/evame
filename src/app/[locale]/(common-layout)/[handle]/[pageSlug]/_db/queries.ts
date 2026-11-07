@@ -17,12 +17,9 @@ export type NavigationData = {
  * - 親チェーン（パンくず用）
  * - ルートからの全子孫（ツリー用）
  */
-export async function queryPageNavigationData(
-	pageId: number,
-	locale: string,
-): Promise<NavigationData | null> {
+export async function queryPageNavigationData(pageId: number, locale: string) {
 	// Step 1: 親チェーンを取得してルートを特定
-	const breadcrumb = await db
+	const ancestorRows = await db
 		.withRecursive("ancestors", (qb) =>
 			qb
 				.selectFrom("pages")
@@ -53,14 +50,16 @@ export async function queryPageNavigationData(
 		)
 		.selectFrom("ancestors")
 		.innerJoin("users", "ancestors.userId", "users.id")
-		// CTEの対象記事から引き、SQLiteが全段落の走査を外側に選ばないようにする。
-		.crossJoin("segments")
-		.whereRef("segments.contentId", "=", "ancestors.id")
-		.where("segments.number", "=", 0)
+		// 見出しのない祖先も、後からナビゲーションへ追加される際の依存として保持する。
+		.leftJoin("segments", (join) =>
+			join
+				.onRef("segments.contentId", "=", "ancestors.id")
+				.on("segments.number", "=", 0),
+		)
 		.leftJoin("segmentTranslations as trans", (join) =>
 			join.on("trans.id", "=", (eb) =>
 				bestTranslationId(
-					eb.ref("segments.id"),
+					eb.ref("segments.id").$notNull(),
 					eb.ref("ancestors.userId"),
 					locale,
 				),
@@ -78,7 +77,19 @@ export async function queryPageNavigationData(
 		])
 		.execute();
 
-	if (breadcrumb.length === 0) return null;
+	const breadcrumb = ancestorRows.flatMap((row) =>
+		row.titleSegmentId === null || row.titleText === null
+			? []
+			: [
+					{
+						...row,
+						titleSegmentId: row.titleSegmentId,
+						titleText: row.titleText,
+					},
+				],
+	);
+	if (breadcrumb.length === 0)
+		return { navigationData: null, ancestors: ancestorRows };
 
 	const rootNode = breadcrumb[0];
 
@@ -139,7 +150,10 @@ export async function queryPageNavigationData(
 
 	const treeNodes = buildTree(descendantRows, rootNode.id);
 
-	return { rootNode, treeNodes, breadcrumb };
+	return {
+		navigationData: { rootNode, treeNodes, breadcrumb },
+		ancestors: ancestorRows,
+	};
 }
 
 /** 子ページの公開対象ツリーを取得（recursive CTEで1クエリ） */

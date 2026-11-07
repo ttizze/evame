@@ -13,21 +13,15 @@ export async function loadPageContentData(
 	pageDetail: PageDetail,
 	locale: string,
 ) {
-	const [
-		pageCounts,
-		pageViewCount,
-		navigationData,
-		childPages,
-		locales,
-		mdast,
-	] = await Promise.all([
-		queryPageCounts(pageDetail.id),
-		queryPageViewCount(pageDetail.id),
-		queryPageNavigationData(pageDetail.id, locale),
-		queryChildPagesTree(pageDetail.id, locale),
-		queryCompletedTranslationLocales(pageDetail.id),
-		preparePageMdast(pageDetail.mdastJson),
-	]);
+	const [pageCounts, pageViewCount, navigation, childPages, locales, mdast] =
+		await Promise.all([
+			queryPageCounts(pageDetail.id),
+			queryPageViewCount(pageDetail.id),
+			queryPageNavigationData(pageDetail.id, locale),
+			queryChildPagesTree(pageDetail.id, locale),
+			queryCompletedTranslationLocales(pageDetail.id),
+			preparePageMdast(pageDetail.mdastJson),
+		]);
 
 	const preparedPageDetail = { ...pageDetail, mdastJson: mdast };
 	const description = (await mdastToText(mdast)).slice(0, 200);
@@ -36,7 +30,11 @@ export async function loadPageContentData(
 		pageDetail: preparedPageDetail,
 		pageCounts,
 		pageViewCount,
-		navigationData,
+		navigationData: navigation.navigationData,
+		ancestorCacheKeys: navigation.ancestors.flatMap((ancestor) => [
+			`page:${ancestor.id}`,
+			`author:${ancestor.userHandle}`,
+		]),
 		childPages,
 		completedTranslationLocales: locales,
 		description,

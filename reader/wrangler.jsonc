@@ -7,21 +7,27 @@
 	"compatibility_flags": ["nodejs_compat", "disable_nodejs_console_module"],
 	"workers_dev": false,
 	"preview_urls": false,
-	"assets": { "binding": "ASSETS", "directory": "dist" },
+	"assets": {
+		"binding": "ASSETS",
+		"directory": "dist"
+	},
 	"services": [
 		{
 			"binding": "BACKEND",
 			"service": "evame-start",
 			"entrypoint": "ReaderBackend"
-		},
-		{ "binding": "SELF", "service": "evame-reader" }
+		}
 	],
-	"r2_buckets": [
-		{ "binding": "READER_HTML", "bucket_name": "evame-reader-html" }
-	],
-	"version_metadata": { "binding": "CF_VERSION_METADATA" },
-	"cache": { "enabled": true },
-	"limits": { "cpu_ms": 300000 },
-	"triggers": { "crons": ["0 * * * *"] },
-	"observability": { "enabled": true }
+	"version_metadata": {
+		"binding": "CF_VERSION_METADATA"
+	},
+	"cache": {
+		"enabled": true
+	},
+	"triggers": {
+		"crons": []
+	},
+	"observability": {
+		"enabled": true
+	}
 }

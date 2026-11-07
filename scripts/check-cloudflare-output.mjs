@@ -186,6 +186,18 @@ try {
 	console.log(
 		"Workersランタイムで認証済みセッションを検証し、非公開記事の新規保存・更新・編集画面を確認できる",
 	);
+	// 5件/ページで154ページある本番規模でも、保存時に一覧を再生成しない。
+	await database.batch(
+		[
+			"WITH RECURSIVE n(id) AS (SELECT -1 UNION ALL SELECT id-1 FROM n WHERE id > -768) INSERT INTO contents (id,kind) SELECT id,'PAGE' FROM n",
+			{
+				sql: "INSERT INTO pages (id,slug,source_locale,status,user_id,created_at,published_at,mdast_json) SELECT id,'load-test-' || (-id),'ja','PUBLIC',?,0,0,'{\"type\":\"root\",\"children\":[]}' FROM contents WHERE id < 0",
+				args: [userId],
+			},
+			"INSERT INTO segments (content_id,number,text,text_and_occurrence_hash) SELECT id,0,slug,slug FROM pages WHERE id < 0",
+		],
+		"write",
+	);
 	const childContent = await database.execute(
 		"INSERT INTO contents (kind) VALUES ('PAGE') RETURNING id",
 	);
@@ -282,20 +294,6 @@ try {
 		sql: "INSERT INTO segment_translations (segment_id, user_id, locale, text) SELECT id, ?, 'en', 'Existing English translation' FROM segments WHERE content_id = ? AND number = 1",
 		args: [userId, storedPage.rows[0].id],
 	});
-	let publishLocale = null;
-	for (;;) {
-		const publishedHtml = await harness
-			.getWorker("evame-reader")
-			.fetch("https://reader.internal/__publish", {
-				method: "POST",
-				headers: publishLocale
-					? { "X-Evame-Reader-Locale": publishLocale }
-					: {},
-			});
-		assert.equal(publishedHtml.status, 200);
-		publishLocale = (await publishedHtml.json()).nextLocale;
-		if (publishLocale === null) break;
-	}
 	const publicArticle = await worker.fetch(
 		`http://localhost/ja/${handle}/${pageSlug}`,
 	);
@@ -303,8 +301,8 @@ try {
 	assert.equal(publicArticle.status, 200, publicArticleHtml);
 	assert.equal(
 		publicArticle.headers.get("X-Evame-HTML"),
-		"generated",
-		"最初の閲覧から生成済みHTMLを返す",
+		"dynamic",
+		"事前生成せず最初の閲覧で本文をSSRする",
 	);
 	assert.ok(
 		publicArticleHtml.includes("Cloudflareで更新保存"),
@@ -411,12 +409,21 @@ try {
 			body: publicEdit,
 		},
 	);
+	const saveStarted = performance.now();
 	const publicSaved = await worker.fetch(publicRequest.url, {
 		method: "POST",
 		headers: Object.fromEntries(publicRequest.headers),
 		body: await publicRequest.arrayBuffer(),
 	});
 	assert.equal(publicSaved.status, 200);
+	const saveMs = performance.now() - saveStarted;
+	assert.ok(
+		saveMs < 30000,
+		`768記事以上の本文更新が30秒未満で完了する: ${Math.round(saveMs)}ms`,
+	);
+	console.log(
+		`154ページ以上の一覧がある状態で公開記事の保存: ${Math.round(saveMs)}ms`,
+	);
 	const revised = await worker.fetch(
 		`http://localhost/ja/${handle}/${pageSlug}`,
 	);
@@ -504,27 +511,6 @@ try {
 	);
 	console.log(
 		"Workersランタイムで日本語フォントとロゴを使ったOG画像を生成できる",
-	);
-	await harness.getWorker("evame-reader").scheduled({ cron: "0 * * * *" });
-	await tursoServer.stop();
-	for (const path of [
-		"/ja",
-		"/fr?first-visit=true",
-		`/ja/${handle}/${pageSlug}-child?view=source`,
-		`/ja/${handle}?sort=new`,
-	]) {
-		const withoutDb = await worker.fetch(`http://localhost${path}`, {
-			headers: { cookie },
-		});
-		assert.equal(withoutDb.status, 200, path);
-		assert.equal(withoutDb.headers.get("X-Evame-HTML"), "generated", path);
-		assert.ok(
-			(await withoutDb.text()).includes("astro-island"),
-			"DB停止中も未訪問URLの生成済みHTMLを返す",
-		);
-	}
-	console.log(
-		"DB停止中も初めて開くURLのトップ・本文・著者一覧を生成済みHTMLから表示できる",
 	);
 } catch (error) {
 	const logs = harness?.getLogs();

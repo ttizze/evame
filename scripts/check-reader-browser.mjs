@@ -589,7 +589,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			}),
 		]);
 		assert.equal(hiddenNavigation.status(), 200);
-		assert.equal(hiddenNavigation.headers()["x-evame-html"], "generated");
+		assert.equal(hiddenNavigation.headers()["x-evame-html"], "dynamic");
 		await expect(ownerCard).toHaveCount(0);
 		assert.equal((await publishDraft()).status(), 200);
 		await page.reload();
@@ -614,7 +614,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			}),
 		]);
 		assert.equal(deletedNavigation.status(), 200);
-		assert.equal(deletedNavigation.headers()["x-evame-html"], "generated");
+		assert.equal(deletedNavigation.headers()["x-evame-html"], "dynamic");
 		await expect(ownerCard).toHaveCount(0);
 		await expect(
 			page.getByRole("link", { name: "プロフィールを編集", exact: true }),

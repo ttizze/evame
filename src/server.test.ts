@@ -12,6 +12,7 @@ import {
 	vi,
 } from "vitest";
 import { createDb } from "./db";
+import { fetchReaderChanges } from "./db/queries";
 import server from "./server";
 
 vi.mock("@sentry/cloudflare", () => ({
@@ -30,6 +31,7 @@ vi.mock("./db", async () => {
 });
 vi.mock("./db/queries", () => ({
 	fetchReaderRevision: vi.fn().mockResolvedValue({ revision: 1 }),
+	fetchReaderChanges: vi.fn().mockResolvedValue([{ key: "page:123" }]),
 }));
 
 const env = {
@@ -37,6 +39,7 @@ const env = {
 	READER: { fetch: vi.fn() },
 };
 beforeEach(() => {
+	vi.mocked(fetchReaderChanges).mockResolvedValue([{ key: "page:123" }]);
 	env.SETTINGS.get.mockReset().mockResolvedValue(false);
 	env.READER.fetch
 		.mockReset()
@@ -296,7 +299,7 @@ describe("Astroへの表示の転送", () => {
 	});
 });
 describe("公開HTMLの更新", () => {
-	it("全言語の公開とキャッシュ無効化をReader自身へ依頼する", async () => {
+	it("記事数や言語数によらず変更対象のキャッシュ削除だけをReader自身へ一度依頼する", async () => {
 		env.READER.fetch.mockResolvedValue(new Response(null, { status: 204 }));
 		vi.mocked(handler.fetch).mockResolvedValue(new Response(null));
 		await server.fetch(
@@ -305,9 +308,10 @@ describe("公開HTMLの更新", () => {
 			{ waitUntil: vi.fn() },
 		);
 		expect(env.READER.fetch).toHaveBeenCalledOnce();
-		expect(env.READER.fetch.mock.calls[0][1].headers).toEqual({
-			"X-Evame-Reader-Publication": expect.any(String),
-			"X-Evame-Reader-Since": "1",
+		const init = env.READER.fetch.mock.calls[0][1];
+		expect(init.headers).toEqual({ "Content-Type": "application/json" });
+		expect(JSON.parse(init.body)).toEqual({
+			tags: [expect.stringMatching(/^reader:[a-f0-9]{64}$/)],
 		});
 	});
 	it("更新処理はAstroのキャッシュ無効化を待ってから成功を返す", async () => {
@@ -386,4 +390,15 @@ describe("公開HTMLの更新", () => {
 			vi.mocked(createDb).mock.results[0].value.destroy,
 		).toHaveBeenCalledOnce();
 	});
+});
+
+it("公開データに変更がない保存ではReaderへ無効化を送らない", async () => {
+	vi.mocked(fetchReaderChanges).mockResolvedValue([]);
+	vi.mocked(handler.fetch).mockResolvedValue(new Response(null));
+	await server.fetch(
+		new Request("https://evame.test/_serverFn/save-page", { method: "POST" }),
+		env as unknown as typeof import("cloudflare:workers").env,
+		{ waitUntil: vi.fn() },
+	);
+	expect(env.READER.fetch).not.toHaveBeenCalled();
 });

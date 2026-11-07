@@ -15,6 +15,13 @@
 			"when": 1793985325019,
 			"tag": "0001_reader_publication",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "6",
+			"when": 1794010000000,
+			"tag": "0002_reader_cache_dependencies",
+			"breakpoints": true
 		}
 	]
 }

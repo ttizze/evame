@@ -1,5 +1,5 @@
 ---
-import { env } from "cloudflare:workers";
+import { cache, env } from "cloudflare:workers";
 import { SparklesIcon } from "lucide-react";
 import { fromJSON } from "seroval";
 import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list";
@@ -7,6 +7,7 @@ import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
 import { messages } from "@/i18n/messages";
 import PrivacyPage from "@/routes/-privacy-policy-page";
 import TermsPage from "@/routes/-terms-page";
+import { readerCacheTags } from "../../../src/app/_domain/reader-cache-tags";
 import type { loadReaderData } from "../../../src/app/api/reader-data/_service/load-reader-data";
 import { AboutIsland } from "../components/about";
 import Article from "../components/article.astro";
@@ -21,14 +22,12 @@ import { SearchIsland } from "../components/search";
 const url = new URL("/api/reader-data", Astro.url);
 url.searchParams.set("path", Astro.url.pathname);
 url.searchParams.set("search", Astro.url.search);
-const response =
-	Astro.locals.readerData ??
-	(await env.BACKEND.fetch(url.href, {
-		headers: {
-			cookie: Astro.request.headers.get("cookie") ?? "",
-			authorization: Astro.request.headers.get("authorization") ?? "",
-		},
-	}));
+const response = await env.BACKEND.fetch(url.href, {
+	headers: {
+		cookie: Astro.request.headers.get("cookie") ?? "",
+		authorization: Astro.request.headers.get("authorization") ?? "",
+	},
+});
 if (response.status === 404) return Astro.rewrite("/404");
 if (!response.ok)
 	throw new Error(`Reader data request failed: HTTP ${response.status}`);
@@ -36,9 +35,32 @@ const { page: result, gaTrackingId } = fromJSON(await response.json()) as {
 	page: NonNullable<Awaited<ReturnType<typeof loadReaderData>>>;
 	gaTrackingId: string;
 };
-Astro.cache.set(false);
-Astro.response.headers.set("Cache-Control", "private, no-store");
-if (result.cacheable) Astro.response.headers.set("X-Evame-Public", "true");
+// 旧Backendとのローリング更新中は全体タグで安全に無効化する。
+const tags = [
+	"evame-reader",
+	...(await readerCacheTags(result.cacheKeys ?? [])),
+];
+const cacheTagHeader = tags.join(",");
+if (
+	result.cacheable &&
+	typeof cache?.purge === "function" &&
+	tags.length <= 1000 &&
+	cacheTagHeader.length <= 16384
+) {
+	Astro.cache.set({ maxAge: 3600, tags });
+	Astro.response.headers.set(
+		"Cache-Control",
+		"public, max-age=0, must-revalidate",
+	);
+	Astro.response.headers.set(
+		"Cloudflare-CDN-Cache-Control",
+		"public, max-age=3600",
+	);
+	Astro.response.headers.set("Cache-Tag", cacheTagHeader);
+} else {
+	Astro.cache.set(false);
+	Astro.response.headers.set("Cache-Control", "private, no-store");
+}
 const locale = result.locale;
 const metadata = result.metadata;
 const t = (messages[locale as keyof typeof messages] ?? messages.en).Reader;
