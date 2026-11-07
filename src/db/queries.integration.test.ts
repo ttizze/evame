@@ -230,3 +230,59 @@ it("変更キーは全記事走査ではなく更新版のインデックスで�
 		"reader_revisions_revision_idx",
 	);
 });
+
+it("タグ付き子記事の公開と非公開化はタグ一覧だけを無効化し新着一覧を維持する", async () => {
+	const user = await createUser();
+	const parent = await createPage({
+		userId: user.id,
+		slug: "tag-parent",
+		status: "PUBLIC",
+	});
+	const child = await createPage({
+		userId: user.id,
+		slug: "tag-child",
+		parentId: parent.id,
+		status: "DRAFT",
+	});
+	const tag = await db
+		.insertInto("tags")
+		.values({ name: "子記事のタグ" })
+		.returningAll()
+		.executeTakeFirstOrThrow();
+	await db
+		.insertInto("tagPages")
+		.values({ pageId: child.id, tagId: tag.id })
+		.execute();
+	for (const status of ["PUBLIC", "DRAFT"] as const) {
+		const { revision } = await fetchReaderRevision();
+		await db
+			.updateTable("pages")
+			.set({ status })
+			.where("id", "=", child.id)
+			.execute();
+		const keys = await changedSince(revision);
+		expect(keys).toContain("tag:子記事のタグ");
+		expect(keys).not.toContain("list:new");
+		expect(keys).not.toContain("list:home");
+	}
+	await db
+		.updateTable("pages")
+		.set({ status: "PUBLIC" })
+		.where("id", "=", child.id)
+		.execute();
+	const beforeTitle = await fetchReaderRevision();
+	await createSegment({
+		contentId: child.id,
+		number: 0,
+		text: "初めての見出し",
+		textAndOccurrenceHash: "first-title",
+	});
+	expect(await changedSince(beforeTitle.revision)).toContain(
+		"tag:子記事のタグ",
+	);
+	const beforeDelete = await fetchReaderRevision();
+	await db.deleteFrom("pages").where("id", "=", child.id).execute();
+	expect(await changedSince(beforeDelete.revision)).toContain(
+		"tag:子記事のタグ",
+	);
+});

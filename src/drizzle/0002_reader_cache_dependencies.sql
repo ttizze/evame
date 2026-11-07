@@ -4,7 +4,7 @@ CREATE TRIGGER reader_lists_pages_insert AFTER INSERT ON pages
 BEGIN
   UPDATE reader_revisions SET revision = revision + 1 WHERE key = '*';
   INSERT INTO reader_revisions (key, revision)
-    SELECT changed.key, counter.revision FROM (SELECT 'list:new' AS key WHERE NEW.parent_id IS NULL AND NEW.status = 'PUBLIC' UNION SELECT 'list:home' WHERE NEW.parent_id IS NULL AND NEW.status = 'PUBLIC' UNION SELECT 'profile:' || NEW.user_id WHERE NEW.parent_id IS NULL AND NEW.status = 'PUBLIC' UNION SELECT 'tag:' || tags.name FROM tag_pages JOIN tags ON tags.id = tag_pages.tag_id WHERE tag_pages.page_id = NEW.id AND NEW.parent_id IS NULL AND NEW.status = 'PUBLIC') AS changed CROSS JOIN reader_revisions AS counter
+    SELECT changed.key, counter.revision FROM (SELECT 'list:new' AS key WHERE NEW.parent_id IS NULL AND NEW.status = 'PUBLIC' UNION SELECT 'list:home' WHERE NEW.parent_id IS NULL AND NEW.status = 'PUBLIC' UNION SELECT 'profile:' || NEW.user_id WHERE NEW.parent_id IS NULL AND NEW.status = 'PUBLIC' UNION SELECT 'tag:' || tags.name FROM tag_pages JOIN tags ON tags.id = tag_pages.tag_id WHERE tag_pages.page_id = NEW.id AND NEW.status = 'PUBLIC') AS changed CROSS JOIN reader_revisions AS counter
     WHERE counter.key = '*' AND changed.key IS NOT NULL
     ON CONFLICT (key) DO UPDATE SET revision = excluded.revision;
 END;
@@ -13,7 +13,7 @@ CREATE TRIGGER reader_lists_pages_update AFTER UPDATE ON pages WHEN OLD.parent_i
 BEGIN
   UPDATE reader_revisions SET revision = revision + 1 WHERE key = '*';
   INSERT INTO reader_revisions (key, revision)
-    SELECT changed.key, counter.revision FROM (SELECT 'list:new' AS key WHERE OLD.parent_id IS NULL AND OLD.status = 'PUBLIC' UNION SELECT 'list:home' WHERE OLD.parent_id IS NULL AND OLD.status = 'PUBLIC' UNION SELECT 'profile:' || OLD.user_id WHERE OLD.parent_id IS NULL AND OLD.status = 'PUBLIC' UNION SELECT 'tag:' || tags.name FROM tag_pages JOIN tags ON tags.id = tag_pages.tag_id WHERE tag_pages.page_id = OLD.id AND OLD.parent_id IS NULL AND OLD.status = 'PUBLIC' UNION SELECT 'list:new' AS key WHERE NEW.parent_id IS NULL AND NEW.status = 'PUBLIC' UNION SELECT 'list:home' WHERE NEW.parent_id IS NULL AND NEW.status = 'PUBLIC' UNION SELECT 'profile:' || NEW.user_id WHERE NEW.parent_id IS NULL AND NEW.status = 'PUBLIC' UNION SELECT 'tag:' || tags.name FROM tag_pages JOIN tags ON tags.id = tag_pages.tag_id WHERE tag_pages.page_id = NEW.id AND NEW.parent_id IS NULL AND NEW.status = 'PUBLIC' UNION SELECT 'nav:' || OLD.parent_id UNION SELECT 'nav:' || NEW.parent_id) AS changed CROSS JOIN reader_revisions AS counter
+    SELECT changed.key, counter.revision FROM (SELECT 'list:new' AS key WHERE OLD.parent_id IS NULL AND OLD.status = 'PUBLIC' UNION SELECT 'list:home' WHERE OLD.parent_id IS NULL AND OLD.status = 'PUBLIC' UNION SELECT 'profile:' || OLD.user_id WHERE OLD.parent_id IS NULL AND OLD.status = 'PUBLIC' UNION SELECT 'tag:' || tags.name FROM tag_pages JOIN tags ON tags.id = tag_pages.tag_id WHERE tag_pages.page_id = OLD.id AND OLD.status = 'PUBLIC' UNION SELECT 'list:new' AS key WHERE NEW.parent_id IS NULL AND NEW.status = 'PUBLIC' UNION SELECT 'list:home' WHERE NEW.parent_id IS NULL AND NEW.status = 'PUBLIC' UNION SELECT 'profile:' || NEW.user_id WHERE NEW.parent_id IS NULL AND NEW.status = 'PUBLIC' UNION SELECT 'tag:' || tags.name FROM tag_pages JOIN tags ON tags.id = tag_pages.tag_id WHERE tag_pages.page_id = NEW.id AND NEW.status = 'PUBLIC' UNION SELECT 'nav:' || OLD.parent_id UNION SELECT 'nav:' || NEW.parent_id) AS changed CROSS JOIN reader_revisions AS counter
     WHERE counter.key = '*' AND changed.key IS NOT NULL
     ON CONFLICT (key) DO UPDATE SET revision = excluded.revision;
 END;
@@ -22,7 +22,7 @@ CREATE TRIGGER reader_lists_pages_delete BEFORE DELETE ON pages
 BEGIN
   UPDATE reader_revisions SET revision = revision + 1 WHERE key = '*';
   INSERT INTO reader_revisions (key, revision)
-    SELECT changed.key, counter.revision FROM (SELECT 'list:new' AS key WHERE OLD.parent_id IS NULL AND OLD.status = 'PUBLIC' UNION SELECT 'list:home' WHERE OLD.parent_id IS NULL AND OLD.status = 'PUBLIC' UNION SELECT 'profile:' || OLD.user_id WHERE OLD.parent_id IS NULL AND OLD.status = 'PUBLIC' UNION SELECT 'tag:' || tags.name FROM tag_pages JOIN tags ON tags.id = tag_pages.tag_id WHERE tag_pages.page_id = OLD.id AND OLD.parent_id IS NULL AND OLD.status = 'PUBLIC' UNION SELECT 'nav:' || OLD.parent_id) AS changed CROSS JOIN reader_revisions AS counter
+    SELECT changed.key, counter.revision FROM (SELECT 'list:new' AS key WHERE OLD.parent_id IS NULL AND OLD.status = 'PUBLIC' UNION SELECT 'list:home' WHERE OLD.parent_id IS NULL AND OLD.status = 'PUBLIC' UNION SELECT 'profile:' || OLD.user_id WHERE OLD.parent_id IS NULL AND OLD.status = 'PUBLIC' UNION SELECT 'tag:' || tags.name FROM tag_pages JOIN tags ON tags.id = tag_pages.tag_id WHERE tag_pages.page_id = OLD.id AND OLD.status = 'PUBLIC' UNION SELECT 'nav:' || OLD.parent_id) AS changed CROSS JOIN reader_revisions AS counter
     WHERE counter.key = '*' AND changed.key IS NOT NULL
     ON CONFLICT (key) DO UPDATE SET revision = excluded.revision;
 END;
@@ -130,7 +130,7 @@ CREATE TRIGGER reader_lists_title_insert AFTER INSERT ON segments WHEN NEW.numbe
 BEGIN
   UPDATE reader_revisions SET revision = revision + 1 WHERE key = '*';
   INSERT INTO reader_revisions (key, revision)
-    SELECT changed.key, counter.revision FROM (SELECT 'list:new' AS key FROM pages WHERE id = NEW.content_id AND status = 'PUBLIC' AND parent_id IS NULL UNION SELECT 'list:home' FROM pages WHERE id = NEW.content_id AND status = 'PUBLIC' AND parent_id IS NULL UNION SELECT 'profile:' || user_id FROM pages WHERE id = NEW.content_id AND status = 'PUBLIC' AND parent_id IS NULL UNION SELECT 'tag:' || name FROM tags JOIN tag_pages ON tag_pages.tag_id = tags.id JOIN pages ON pages.id = tag_pages.page_id WHERE pages.id = NEW.content_id AND pages.status = 'PUBLIC' AND pages.parent_id IS NULL) AS changed CROSS JOIN reader_revisions AS counter
+    SELECT changed.key, counter.revision FROM (SELECT 'list:new' AS key FROM pages WHERE id = NEW.content_id AND status = 'PUBLIC' AND parent_id IS NULL UNION SELECT 'list:home' FROM pages WHERE id = NEW.content_id AND status = 'PUBLIC' AND parent_id IS NULL UNION SELECT 'profile:' || user_id FROM pages WHERE id = NEW.content_id AND status = 'PUBLIC' AND parent_id IS NULL UNION SELECT 'tag:' || name FROM tags JOIN tag_pages ON tag_pages.tag_id = tags.id JOIN pages ON pages.id = tag_pages.page_id WHERE pages.id = NEW.content_id AND pages.status = 'PUBLIC') AS changed CROSS JOIN reader_revisions AS counter
     WHERE counter.key = '*' AND changed.key IS NOT NULL
     ON CONFLICT (key) DO UPDATE SET revision = excluded.revision;
 END;
@@ -139,7 +139,7 @@ CREATE TRIGGER reader_lists_title_delete BEFORE DELETE ON segments WHEN OLD.numb
 BEGIN
   UPDATE reader_revisions SET revision = revision + 1 WHERE key = '*';
   INSERT INTO reader_revisions (key, revision)
-    SELECT changed.key, counter.revision FROM (SELECT 'list:new' AS key FROM pages WHERE id = OLD.content_id AND status = 'PUBLIC' AND parent_id IS NULL UNION SELECT 'list:home' FROM pages WHERE id = OLD.content_id AND status = 'PUBLIC' AND parent_id IS NULL UNION SELECT 'profile:' || user_id FROM pages WHERE id = OLD.content_id AND status = 'PUBLIC' AND parent_id IS NULL UNION SELECT 'tag:' || name FROM tags JOIN tag_pages ON tag_pages.tag_id = tags.id JOIN pages ON pages.id = tag_pages.page_id WHERE pages.id = OLD.content_id AND pages.status = 'PUBLIC' AND pages.parent_id IS NULL) AS changed CROSS JOIN reader_revisions AS counter
+    SELECT changed.key, counter.revision FROM (SELECT 'list:new' AS key FROM pages WHERE id = OLD.content_id AND status = 'PUBLIC' AND parent_id IS NULL UNION SELECT 'list:home' FROM pages WHERE id = OLD.content_id AND status = 'PUBLIC' AND parent_id IS NULL UNION SELECT 'profile:' || user_id FROM pages WHERE id = OLD.content_id AND status = 'PUBLIC' AND parent_id IS NULL UNION SELECT 'tag:' || name FROM tags JOIN tag_pages ON tag_pages.tag_id = tags.id JOIN pages ON pages.id = tag_pages.page_id WHERE pages.id = OLD.content_id AND pages.status = 'PUBLIC') AS changed CROSS JOIN reader_revisions AS counter
     WHERE counter.key = '*' AND changed.key IS NOT NULL
     ON CONFLICT (key) DO UPDATE SET revision = excluded.revision;
 END;
