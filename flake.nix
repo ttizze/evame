@@ -20,7 +20,7 @@
           pkgs = import nixpkgs { inherit system; };
           libsqlServer = pkgs.callPackage ./nix/libsql-server.nix { };
         in
-        {
+        rec {
           default = pkgs.mkShellNoCC {
             packages =
               (with pkgs; [
@@ -32,6 +32,10 @@
                 typescript-language-server
               ])
               ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isDarwin [ pkgs.xcodegen ];
+          };
+          comrak = pkgs.mkShellNoCC {
+            inputsFrom = [ default ];
+            packages = [ pkgs.rustup ];
           };
         }
       );

@@ -95,6 +95,7 @@ cst/
 apps/ios/.build/
 apps/ios/*.xcodeproj/
 apps/ios/DerivedData/
+apps/ios/ComrakProbe/target/
 .evame/
 
 # Local Turso data

@@ -4,6 +4,9 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo_root"
 if [[ -z "${IN_NIX_SHELL:-}" ]]; then
+  if [[ "${1:-}" == comrak-probe ]]; then
+    exec nix develop .#comrak --command bash scripts/ios.sh "$@"
+  fi
   exec nix develop --command bash scripts/ios.sh "$@"
 fi
 
@@ -14,7 +17,11 @@ fi
 
 case "${1:-}" in
   generate|test) ;;
-  *) echo 'Usage: bash scripts/ios.sh generate | test <xcodebuild destination>' >&2; exit 2 ;;
+  comrak-probe)
+    bash apps/ios/ComrakProbe/run.sh "${2:?simulator UUID is required}"
+    exit
+    ;;
+  *) echo 'Usage: bash scripts/ios.sh generate | test <xcodebuild destination> | comrak-probe <simulator UUID>' >&2; exit 2 ;;
 esac
 if [[ "$1" == test && -z "${2:-}" ]]; then
   echo 'test にはシミュレータの destination が必要です。' >&2
