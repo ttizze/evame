@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import { chromium, expect } from "@playwright/test";
+import { TextWriter, Uint8ArrayReader, ZipReader } from "@zip.js/zip.js";
 import { fromJSON } from "seroval";
 
 export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
@@ -780,6 +782,57 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		assert.deepEqual(errors, [], "ブラウザーに未処理エラーがない");
 		console.log(
 			"本人プロフィール・Markdownダウンロードを維持し、ブラウザーの未処理エラーがない",
+		);
+		await page.goto(`${baseUrl}/ja/${handle}/page-management`);
+		const exportButton = page.getByRole("button", {
+			name: "Markdown＋画像を書き出す",
+			exact: true,
+		});
+		await expect(exportButton).toBeVisible();
+		const downloaded = page.waitForEvent("download", { timeout: 60000 });
+		await exportButton.click();
+		const download = await downloaded;
+		assert.equal(await download.failure(), null);
+		assert.equal(download.suggestedFilename(), "evame-export.zip");
+		const archivePath = await download.path();
+		assert.ok(archivePath);
+		const zip = new ZipReader(
+			new Uint8ArrayReader(new Uint8Array(await readFile(archivePath))),
+			{ useWebWorkers: false },
+		);
+		try {
+			const entries = await zip.getEntries();
+			assert.ok(
+				entries.filter((entry) => entry.filename.startsWith("documents/"))
+					.length > 768,
+				"管理画面の表示件数を超える全文書を書き出す",
+			);
+			const report = entries.find(
+				(entry) => entry.filename === "export-report.json",
+			);
+			assert.ok(report && !report.directory);
+			assert.equal(
+				JSON.parse(await report.getData(new TextWriter())).images,
+				1,
+			);
+		} finally {
+			await zip.close();
+		}
+		await expect(exportButton).toBeEnabled();
+		await page.screenshot({ path: "/tmp/evame-export-desktop.png" });
+		await page.setViewportSize({ width: 390, height: 844 });
+		await expect(exportButton).toBeVisible();
+		await page.screenshot({
+			path: "/tmp/evame-export-mobile.png",
+			fullPage: true,
+		});
+		assert.deepEqual(
+			errors,
+			[],
+			"書き出し画面にもブラウザーの未処理エラーがない",
+		);
+		console.log(
+			"文書管理画面からMarkdownと画像のZIPをダウンロードでき、デスクトップとモバイルで操作できる",
 		);
 		await context.close();
 	} finally {

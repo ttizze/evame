@@ -1,0 +1,231 @@
+// @vitest-environment node
+import {
+	TextWriter,
+	Uint8ArrayReader,
+	Uint8ArrayWriter,
+	ZipReader,
+} from "@zip.js/zip.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { resetDatabase } from "@/tests/db-helpers";
+import { createPage, createSegment, createUser } from "@/tests/factories";
+import { setupDbPerFile } from "@/tests/test-db-manager";
+
+const { getCurrentUser, getImage } = vi.hoisted(() => ({
+	getCurrentUser: vi.fn(),
+	getImage: vi.fn(),
+}));
+vi.mock("@/app/_service/current-user", () => ({
+	getCurrentUserFromHeaders: getCurrentUser,
+}));
+vi.mock("cloudflare:workers", () => ({ env: { UPLOADS: { get: getImage } } }));
+
+import { getPagesExport } from "./handler";
+
+await setupDbPerFile(import.meta.url);
+beforeEach(async () => {
+	await resetDatabase();
+	getCurrentUser.mockReset();
+	getImage.mockReset();
+});
+afterEach(() => vi.unstubAllEnvs());
+
+describe("Markdownと画像の一括ダウンロード", () => {
+	it("未ログインのリクエストにはZIPを作らず401を返す", async () => {
+		getCurrentUser.mockResolvedValue(null);
+		const response = await getPagesExport(
+			new Request("https://app.example.com/api/export-pages"),
+		);
+		expect(response.status).toBe(401);
+		expect(response.headers.get("cache-control")).toBe("private, no-store");
+		expect(getImage).not.toHaveBeenCalled();
+	});
+	it("自分の全文書を原文・メタデータ・重複しない画像で書き出し、欠けた画像を報告する", async () => {
+		const owner = await createUser();
+		const other = await createUser();
+		getCurrentUser.mockResolvedValue(owner);
+		const image = new Uint8Array([255, 216, 255, 217]);
+		getImage.mockImplementation(async (key: string) =>
+			key === "uploads/photo"
+				? {
+						body: new Blob([image]).stream(),
+						httpMetadata: { contentType: "image/jpeg" },
+					}
+				: null,
+		);
+		const pages = [];
+		for (const status of ["DRAFT", "PUBLIC", "ARCHIVE"] as const) {
+			const page = await createPage({
+				userId: owner.id,
+				slug: status,
+				status,
+				sourceLocale: "ja",
+				mdastJson: {
+					type: "root",
+					children: [
+						{
+							type: "paragraph",
+							children: [{ type: "text", value: `原文-${status}` }],
+						},
+						{
+							type: "paragraph",
+							children: [
+								{
+									type: "image",
+									url: "https://images.evame.tech/uploads/photo",
+									alt: "写真",
+								},
+							],
+						},
+						{
+							type: "paragraph",
+							children: [
+								{
+									type: "image",
+									url: "https://images.evame.tech/uploads/missing",
+									alt: "欠けた写真",
+								},
+							],
+						},
+						{
+							type: "paragraph",
+							children: [
+								{
+									type: "image",
+									url: "https://external.example/picture.png",
+									alt: "外部写真",
+								},
+							],
+						},
+					],
+				},
+			});
+			await createSegment({
+				contentId: page.id,
+				number: 0,
+				text: `原題-${status}`,
+				textAndOccurrenceHash: `${status}-title`,
+			});
+			pages.push(page);
+		}
+		await createPage({
+			userId: other.id,
+			slug: "another-user",
+			mdastJson: {
+				type: "root",
+				children: [
+					{
+						type: "paragraph",
+						children: [{ type: "text", value: "他人の文書" }],
+					},
+				],
+			},
+		});
+		const response = await getPagesExport(
+			new Request(
+				`https://app.example.com/api/export-pages?userId=${other.id}`,
+			),
+		);
+		expect(response.status).toBe(200);
+		expect(response.headers.get("content-type")).toBe("application/zip");
+		expect(response.headers.get("content-disposition")).toContain("attachment");
+		expect(response.headers.get("cache-control")).toBe("private, no-store");
+		expect(response.headers.get("vary")).toBe("Cookie, Authorization");
+		const reader = new ZipReader(
+			new Uint8ArrayReader(new Uint8Array(await response.arrayBuffer())),
+			{ useWebWorkers: false },
+		);
+		try {
+			const entries = await reader.getEntries();
+			const images = entries.filter((entry) =>
+				entry.filename.startsWith("images/"),
+			);
+			expect(images).toHaveLength(1);
+			expect(images[0].filename).toMatch(/^images\/[a-f0-9]{64}\.jpg$/);
+			if (images[0].directory)
+				throw new Error("画像がディレクトリになっています");
+			expect(await images[0].getData(new Uint8ArrayWriter())).toEqual(image);
+			const documents = entries.filter((entry) =>
+				entry.filename.startsWith("documents/"),
+			);
+			expect(documents).toHaveLength(3);
+			for (const page of pages) {
+				const entry = documents.find(
+					(item) => item.filename === `documents/${page.id}-${page.slug}.md`,
+				);
+				if (!entry || entry.directory) throw new Error("文書がありません");
+				const markdown = await entry.getData(new TextWriter());
+				expect(markdown).toContain(`原文-${page.status}`);
+				expect(markdown).toContain(`原題-${page.status}`);
+				expect(markdown).toContain(`../${images[0].filename}`);
+				expect(markdown).toContain("https://images.evame.tech/uploads/missing");
+				expect(markdown).toContain("https://external.example/picture.png");
+				expect(markdown).not.toContain("他人の文書");
+			}
+			const reportEntry = entries.find(
+				(entry) => entry.filename === "export-report.json",
+			);
+			if (!reportEntry || reportEntry.directory)
+				throw new Error("レポートがありません");
+			const report = JSON.parse(await reportEntry.getData(new TextWriter()));
+			expect(report.pages).toBe(3);
+			expect(report.images).toBe(1);
+			expect(report.warnings).toHaveLength(6);
+			expect(entries.some((entry) => entry.filename === "README.md")).toBe(
+				true,
+			);
+			expect(getImage.mock.calls.map(([key]) => key)).toEqual([
+				"uploads/photo",
+				"uploads/missing",
+			]);
+		} finally {
+			await reader.close();
+		}
+	});
+	it("空のアカウントも説明と件数を含むZIPとして書き出せる", async () => {
+		getCurrentUser.mockResolvedValue(await createUser());
+		const response = await getPagesExport(
+			new Request("https://app.example.com/api/export-pages"),
+		);
+		const reader = new ZipReader(
+			new Uint8ArrayReader(new Uint8Array(await response.arrayBuffer())),
+			{ useWebWorkers: false },
+		);
+		try {
+			expect(
+				(await reader.getEntries()).map((entry) => entry.filename),
+			).toEqual(["README.md", "export-report.json"]);
+		} finally {
+			await reader.close();
+		}
+	});
+	it("変換できない文書を空本文としてZIPに含めず、ダウンロードを失敗させる", async () => {
+		const owner = await createUser();
+		getCurrentUser.mockResolvedValue(owner);
+		await createPage({
+			userId: owner.id,
+			slug: "broken",
+			mdastJson: {
+				type: "root",
+				children: [{ type: "unknown-node", value: "保護する原文" }],
+			},
+		});
+		const response = await getPagesExport(
+			new Request("https://app.example.com/api/export-pages"),
+		);
+		await expect(response.arrayBuffer()).rejects.toThrow();
+	});
+	it("中止されたリクエストでは画像の取得を続けない", async () => {
+		const owner = await createUser();
+		getCurrentUser.mockResolvedValue(owner);
+		await createPage({ userId: owner.id, slug: "cancel-export" });
+		const controller = new AbortController();
+		controller.abort();
+		const response = await getPagesExport(
+			new Request("https://app.example.com/api/export-pages", {
+				signal: controller.signal,
+			}),
+		);
+		await expect(response.arrayBuffer()).rejects.toThrow();
+		expect(getImage).not.toHaveBeenCalled();
+	});
+});
