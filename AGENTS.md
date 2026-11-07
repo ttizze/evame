@@ -23,6 +23,7 @@
 - プロジェクトのツールチェーンコマンドを bare shell で実行しない。
 - エージェントや非対話シェルでは `.envrc` が読み込まれていると仮定しない。
 - `IN_NIX_SHELL` が未設定の場合は `nix develop --command <command>` でプロジェクトコマンドを実行する。
+- iPhoneアプリは同じリポジトリの`apps/ios`に置く。Apple SDKはXcodeを使い、プロジェクト生成と検証は`bash scripts/ios.sh`からNix環境内で実行する。
 
 ## 作業手順
 

@@ -32,7 +32,7 @@ it("認証APIがエラーを返した場合はメール送信成功にせず、�
 	expect(
 		screen.queryByText("Email sent successfully!"),
 	).not.toBeInTheDocument();
-	fireEvent.click(screen.getByRole("button", { name: "Send Email" }));
+	fireEvent.click(await screen.findByRole("button", { name: "Send Email" }));
 	expect(
 		await screen.findByText("Email sent successfully!"),
 	).toBeInTheDocument();

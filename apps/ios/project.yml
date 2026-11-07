@@ -1,0 +1,49 @@
+name: EvameEditorPrototype
+options:
+  developmentLanguage: ja
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    GENERATE_INFOPLIST_FILE: YES
+    CODE_SIGNING_ALLOWED: NO
+packages:
+  EvameEditor:
+    path: .
+targets:
+  EvameEditorPrototype:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - path: Tests/EditorCoreTests/Fixtures
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.evame.editor-prototype
+        INFOPLIST_KEY_CFBundleDisplayName: Evame Editor
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+    dependencies:
+      - package: EvameEditor
+        product: EditorCore
+  NativeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [NativeTests]
+    dependencies:
+      - target: EvameEditorPrototype
+  EditorUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: EvameEditorPrototype
+schemes:
+  EvameEditorPrototype:
+    build:
+      targets:
+        EvameEditorPrototype: all
+    test:
+      targets: [NativeTests, EditorUITests]

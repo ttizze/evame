@@ -22,14 +22,16 @@
         in
         {
           default = pkgs.mkShellNoCC {
-            packages = with pkgs; [
-              bun
-              just
-              turso-cli
-              libsqlServer
-              nodejs_24
-              typescript-language-server
-            ];
+            packages =
+              (with pkgs; [
+                bun
+                just
+                turso-cli
+                libsqlServer
+                nodejs_24
+                typescript-language-server
+              ])
+              ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isDarwin [ pkgs.xcodegen ];
           };
         }
       );

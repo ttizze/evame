@@ -92,6 +92,9 @@ cst/
 .con
 .worktree/
 .worktrees/
+apps/ios/.build/
+apps/ios/*.xcodeproj/
+apps/ios/DerivedData/
 .evame/
 
 # Local Turso data
