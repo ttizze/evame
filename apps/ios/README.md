@@ -29,7 +29,9 @@ bash scripts/ios.sh test 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
 nix develop --command xcrun swift test --package-path apps/ios --disable-automatic-resolution
 ```
 
-実機での入力評価では、生成したプロジェクトの署名設定を自分の開発チームに合わせ、`CODE_SIGNING_ALLOWED=YES`で実行する。チームIDや認証情報はリポジトリに保存しない。配布用のアプリ・署名設定ではない。
+実機での入力評価では、生成したプロジェクトの署名設定を自分の開発チームに合わせ、`CODE_SIGNING_ALLOWED=YES`で実行する。チームIDや認証情報はリポジトリに保存しない。
+
+TestFlightへの配信には`Config/TestFlightExportOptions.plist`を使う。アーカイブを作成し、ローカルへの書き出しで配布署名を検証してからアップロードする。署名とApp Store Connectの認証情報はKeychainとCLI引数から渡す。アイコンは`public/favicon.svg`を白背景・余白付きの1024px画像に描画したもの。
 
 ## 配置と責務
 
