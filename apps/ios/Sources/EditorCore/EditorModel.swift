@@ -4,26 +4,38 @@ import Markdown
 
 /// UIKitへ依存しないモデル変換。JSContextは呼び出しごとに作り、文書や選択の可変状態を保持しない。
 enum EditorModel {
-  private static let script = Bundle.module.url(
-    forResource: "EditorModel", withExtension: "js"
-  )
-  .flatMap { try? String(contentsOf: $0, encoding: .utf8) }
+  private static let scripts = ["EditorModel", "ReferenceDefinitions"].reduce(
+    into: [String: String]()
+  ) { scripts, name in
+    scripts[name] = Bundle.module.url(forResource: name, withExtension: "js")
+      .flatMap { try? String(contentsOf: $0, encoding: .utf8) }
+  }
+
+  static func referenceDefinitions(in source: String) throws -> String {
+    guard source.contains("]:") else { return "" }
+    return try run("evameReferenceDefinitions", script: "ReferenceDefinitions", input: source)
+  }
+
+  private static func run(_ function: String, script: String, input: String) throws -> String {
+    guard let script = scripts[script], let context = JSContext() else {
+      throw MarkdownDocument.EditError.invalidBlock
+    }
+    context.evaluateScript(script)
+    guard context.exception == nil,
+      let output = context.objectForKeyedSubscript(function)?.call(withArguments: [input])?
+        .toString(),
+      context.exception == nil
+    else { throw MarkdownDocument.EditError.invalidBlock }
+    return output
+  }
 
   static func backspace(_ document: Document, path: [Int]) throws -> (
     markup: Document, path: [Int], before: [any InlineMarkup]
   )? {
-    guard let script, let context = JSContext() else {
-      throw MarkdownDocument.EditError.invalidBlock
-    }
     let input: [String: Any] = ["doc": try nodes(document, marks: [])[0], "path": path]
     let data = try JSONSerialization.data(withJSONObject: input)
     let json = String(decoding: data, as: UTF8.self)
-    context.evaluateScript(script)
-    guard context.exception == nil,
-      let output = context.objectForKeyedSubscript("evameBackspace")?.call(withArguments: [json])?
-        .toString(),
-      context.exception == nil
-    else { throw MarkdownDocument.EditError.invalidBlock }
+    let output = try run("evameBackspace", script: "EditorModel", input: json)
     if output == "null" { return nil }
     guard let result = try JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any],
       let root = result["doc"] as? [String: Any], let path = result["path"] as? [Int],
@@ -109,18 +121,65 @@ enum EditorModel {
   }
 
   private static func inlines(_ values: [[String: Any]]) throws -> [any InlineMarkup] {
-    try values.map {
-      guard let inline = try markup($0) as? any InlineMarkup else {
-        throw MarkdownDocument.EditError.invalidBlock
+    let ordered = values.map { value in
+      var value = value
+      let layers = (value["marks"] as? [[String: Any]] ?? []).enumerated().flatMap { index, mark in
+        let levels = (mark["attrs"] as? [String: Any])?["evameLevels"] as? [Int] ?? []
+        return (levels.isEmpty ? [index] : levels).map { (level: $0, mark: mark) }
+      }.sorted { $0.level < $1.level }
+      value["marks"] = layers.map { layer in
+        var mark = layer.mark
+        var attributes = mark["attrs"] as? [String: Any] ?? [:]
+        attributes.removeValue(forKey: "evameLevels")
+        mark["attrs"] = attributes
+        return mark
       }
-      return inline
+      return value
     }
+    var result = [any InlineMarkup]()
+    var index = 0
+    while index < ordered.count {
+      guard let mark = (ordered[index]["marks"] as? [[String: Any]])?.first else {
+        guard let inline = try markup(ordered[index]) as? any InlineMarkup else {
+          throw MarkdownDocument.EditError.invalidBlock
+        }
+        result.append(inline)
+        index += 1
+        continue
+      }
+      // 内側の装飾が違っても、同じ外側のリンクや強調は一つの範囲として復元する。
+      var group = [[String: Any]]()
+      while index < ordered.count,
+        let marks = ordered[index]["marks"] as? [[String: Any]], let first = marks.first,
+        NSDictionary(dictionary: mark).isEqual(to: first)
+      {
+        var value = ordered[index]
+        value["marks"] = Array(marks.dropFirst())
+        group.append(value)
+        index += 1
+      }
+      let content = try inlines(group)
+      let attributes = mark["attrs"] as? [String: Any] ?? [:]
+      switch mark["type"] as? String {
+      case "em": result.append(Emphasis(content))
+      case "strong": result.append(Strong(content))
+      case "strike": result.append(Strikethrough(content))
+      case "code": result.append(InlineCode(Paragraph(content).plainText))
+      case "link":
+        result.append(
+          Link(
+            destination: attributes["href"] as? String, title: attributes["title"] as? String,
+            [Markdown.Text]()
+          ).withUncheckedChildren(content) as! Link)
+      default: throw MarkdownDocument.EditError.invalidBlock
+      }
+    }
+    return result
   }
 
   private static func markup(_ value: [String: Any]) throws -> any Markup {
     let attributes = value["attrs"] as? [String: Any] ?? [:]
     let children = value["content"] as? [[String: Any]] ?? []
-    let result: any Markup
     switch value["type"] as? String {
     case "doc", "blockquote", "list_item":
       let blocks = try children.map { child -> any BlockMarkup in
@@ -150,38 +209,14 @@ enum EditorModel {
       list.startIndex = UInt(attributes["order"] as? Int ?? 1)
       return list
     case "horizontal_rule": return ThematicBreak()
-    case "text": result = Markdown.Text(value["text"] as? String ?? "")
-    case "hard_break": result = attributes["soft"] as? Bool == true ? SoftBreak() : LineBreak()
+    case "text": return Markdown.Text(value["text"] as? String ?? "")
+    case "hard_break": return attributes["soft"] as? Bool == true ? SoftBreak() : LineBreak()
     case "image":
-      result = Markdown.Image(
+      return Markdown.Image(
         source: attributes["src"] as? String, title: attributes["title"] as? String,
         [Markdown.Text]()
       ).withUncheckedChildren(try inlines(attributes["evameAlt"] as? [[String: Any]] ?? []))
     default: throw MarkdownDocument.EditError.invalidBlock
     }
-    guard var inline = result as? any InlineMarkup else {
-      throw MarkdownDocument.EditError.invalidBlock
-    }
-    let layers = (value["marks"] as? [[String: Any]] ?? []).enumerated().flatMap { index, mark in
-      let levels = (mark["attrs"] as? [String: Any])?["evameLevels"] as? [Int] ?? []
-      return (levels.isEmpty ? [index] : levels).map { (level: $0, mark: mark) }
-    }.sorted { $0.level < $1.level }
-    for (_, mark) in layers.reversed() {
-      let attributes = mark["attrs"] as? [String: Any] ?? [:]
-      switch mark["type"] as? String {
-      case "em", "strong":
-        inline = mark["type"] as? String == "em" ? Emphasis(inline) : Strong(inline)
-      case "strike": inline = Strikethrough(inline)
-      case "code": inline = InlineCode((inline as? any PlainTextConvertibleMarkup)?.plainText ?? "")
-      case "link":
-        inline =
-          Link(
-            destination: attributes["href"] as? String, title: attributes["title"] as? String,
-            [Markdown.Text]()
-          ).withUncheckedChildren([inline]) as! Link
-      default: throw MarkdownDocument.EditError.invalidBlock
-      }
-    }
-    return inline
   }
 }

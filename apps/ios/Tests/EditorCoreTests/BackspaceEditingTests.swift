@@ -1,7 +1,36 @@
+import Foundation
 import Markdown
 import Testing
 
 @testable import EditorCore
+
+@Test("リストや引用を解除しても内部のリンク定義を使う外側のリンクを壊さない")
+func backspaceKeepsDefinitionsInsideContainers() throws {
+  for source in [
+    "- [site]: https://example.com \"題名\"\n  本文\n\n[リンク][site]\n",
+    "> [site]: https://example.com \"題名\"\n> 本文\n\n[リンク][site]\n",
+  ] {
+    let document = MarkdownDocument(source: "前\n\n" + source)
+    let path = document.blocks[1].markup is UnorderedList ? [0, 0] : [0]
+    let result = try #require(try document.backspacingBlock(in: 1, path: path))
+    let parsed = Document(parsing: result.document.source)
+    let link = try #require(parsed.child(at: parsed.childCount - 1)?.child(at: 0) as? Link)
+    #expect(link.destination == "https://example.com")
+    #expect(link.title == "題名")
+    let edited = try result.document.replacingInlines(
+      in: result.index, path: result.path, with: [Markdown.Text("再入力")])
+    let reopened = Document(parsing: edited.source)
+    #expect(
+      (reopened.child(at: reopened.childCount - 1)?.child(at: 0) as? Link)?.destination
+        == "https://example.com")
+    #expect(edited.source.components(separatedBy: "[site]:").count == 2)
+    let joined = try #require(try edited.backspacingBlock(in: result.index, path: result.path))
+    let merged = Document(parsing: joined.document.source)
+    #expect(
+      (merged.child(at: merged.childCount - 1)?.child(at: 0) as? Link)?.destination
+        == "https://example.com")
+  }
+}
 
 @Test("段落の間にあるリンク定義をBackspaceの結合で消さない")
 func backspaceKeepsReferenceDefinitions() throws {
@@ -18,6 +47,9 @@ func backspaceKeepsReferenceDefinitions() throws {
 func backspacePreservesInlineStructure() throws {
   for source in [
     "[**前**](https://example.com \"題名\")", "_**_前_**_", "**`前`**",
+    "[**前**と後](https://example.com \"題名\")", "**a *b* c**", "_a **_b_** c_",
+    "[一](https://example.com \"題名1\")[二](https://example.com \"題名2\")",
+    "**前![説明](assets/photo.png \"画像題名\")後**",
     "![**説明**](assets/photo.png \"画像題名\")",
   ] {
     let original = MarkdownDocument(source: source + "\n\n後\n")

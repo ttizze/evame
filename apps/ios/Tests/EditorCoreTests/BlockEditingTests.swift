@@ -72,6 +72,14 @@ func splitListItem() throws {
   #expect(result.document.source == "- 最初\n- 前\n- 後\n  - 子\n\n外側\n")
 }
 
+@Test("リスト内の見出しを途中で改行しても前半の見出し階層を保持する")
+func splitHeadingInList() throws {
+  let result = try MarkdownDocument(source: "- ## 前後\n").splittingBlock(
+    in: 0, path: [0, 0], before: [Markdown.Text("前")], after: [Markdown.Text("後")])
+  #expect(result.document.source == "- ## 前\n- 後\n")
+  #expect(result.path == [1, 0])
+}
+
 @Test("空のリストで改行するとリストを抜けて見出しの末尾では段落へ進む")
 func leaveListAndHeading() throws {
   let empty = try MarkdownDocument(source: "項目\n").applying(.bulletList, in: 0, path: [])
@@ -105,4 +113,29 @@ func orderedAndTaskListReturn() throws {
   let task = try MarkdownDocument(source: "- [x] 完了\n").splittingBlock(
     in: 0, path: [0, 0], before: [Markdown.Text("完了")], after: [Markdown.Text("次")])
   #expect(task.document.source == "- [x] 完了\n- [ ] 次\n")
+}
+
+@Test(
+  "入れ子のリストは文字のある項目の改行で深さを保ち空の項目の改行だけ一段戻る",
+  arguments: ["- 子", "3. 子", "- [x] 子"])
+func nestedListReturn(_ item: String) throws {
+  let document = MarkdownDocument(source: "- 親\n\n  \(item)\n")
+  let next = try document.splittingBlock(
+    in: 0, path: [0, 1, 0, 0], before: [Markdown.Text("子")], after: [])
+  #expect(next.path == [0, 1, 1, 0])
+  let root = try #require(next.document.blocks[0].markup as? UnorderedList)
+  let nested = try #require(root.descendant(at: [0, 1]) as? any ListItemContainer)
+  let items = Array(nested.listItems)
+  #expect(nested.childCount == 2)
+  #expect((items[0].child(at: 0) as? Paragraph)?.plainText == "子")
+  if let ordered = nested as? OrderedList { #expect(ordered.startIndex == 3) }
+  if item.contains("[x]") { #expect(items[1].checkbox == .unchecked) }
+  let reopened = Document(parsing: next.document.source)
+  let reopenedList = reopened.descendant(at: [0, 0, 1]) as? any ListItemContainer
+  #expect(reopenedList?.childCount == 2)
+  if item.hasPrefix("3.") { #expect((reopenedList as? OrderedList)?.startIndex == 3) }
+  let lifted = try next.document.splittingBlock(in: 0, path: next.path, before: [], after: [])
+  #expect(lifted.path == [1, 0])
+  #expect(lifted.document.blocks[0].markup.childCount == 2)
+  #expect(lifted.document.blocks[0].markup.descendant(at: [0, 1])?.childCount == 1)
 }

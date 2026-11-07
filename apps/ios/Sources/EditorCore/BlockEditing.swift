@@ -195,6 +195,8 @@ extension MarkdownDocument {
     else { throw EditError.invalidBlock }
     let root = blocks[index].markup
     let parentPath = Array(path.dropLast())
+    let beforeBlock: any BlockMarkup =
+      (node as? Heading).map { Heading(level: $0.level, before) } ?? Paragraph(before)
     if !path.isEmpty, let item = root.descendant(at: parentPath) as? ListItem,
       let childIndex = path.last, parentPath.count > 0,
       let list = root.descendant(at: Array(parentPath.dropLast())) as? any ListItemContainer
@@ -205,7 +207,7 @@ extension MarkdownDocument {
       }
       let children = Array(item.children)
       let first = item.withUncheckedChildren(
-        Array(children.prefix(childIndex)) + [Paragraph(before)])
+        Array(children.prefix(childIndex)) + [beforeBlock])
       let second = ListItem(
         checkbox: item.checkbox == nil ? nil : .unchecked,
         ([Paragraph(after)] + children.dropFirst(childIndex + 1)).map { $0 as! any BlockMarkup })
@@ -236,10 +238,8 @@ extension MarkdownDocument {
     if node is Heading, before.isEmpty && after.isEmpty {
       return try replacingBlock(in: index, path: path, with: Paragraph(), focusPath: [])
     }
-    let first: any BlockMarkup =
-      (node as? Heading).map { Heading(level: $0.level, before) } ?? Paragraph(before)
     return try replacingBlock(
-      in: index, path: path, with: Document([first, Paragraph(after)]), focusPath: [1])
+      in: index, path: path, with: Document([beforeBlock, Paragraph(after)]), focusPath: [1])
   }
 }
 

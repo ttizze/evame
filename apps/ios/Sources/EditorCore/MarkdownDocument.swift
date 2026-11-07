@@ -19,7 +19,8 @@ public struct MarkdownDocument {
   private let originalSource: String
   private let originalBlocks: [Block]
   // 編集セッション中は元のアドレスを固定する。空になった段落にも再入力できる。
-  private var edits: [[Int]: (range: Range<Int>, source: String, markup: any Markup)] = [:]
+  private var edits:
+    [[Int]: (range: Range<Int>, source: String, markup: any Markup, definitions: String?)] = [:]
 
   public var source: String { applyingEdits(in: 0..<originalSource.utf8.count) }
 
@@ -133,7 +134,7 @@ public struct MarkdownDocument {
       content += String(raw.reversed().prefix { $0.isNewline }.reversed())
     }
     var changed = self
-    changed.edits[[blockIndex] + path] = (range, content, replacement)
+    changed.edits[[blockIndex] + path] = (range, content, replacement, nil)
     return changed
   }
 
@@ -144,10 +145,12 @@ public struct MarkdownDocument {
     }
     let trailingNewlines = String(
       originalBlocks[index].source.reversed().prefix { $0.isNewline }.reversed())
-    let source = try MarkdownSource.serialize(markup) + trailingNewlines
+    let body = try MarkdownSource.serialize(markup)
+    let definitions = try preservedDefinitions(in: index)
+    let source = body + (definitions.isEmpty ? "" : "\n\n" + definitions) + trailingNewlines
     var changed = self
     changed.edits = edits.filter { $0.key.first != index }
-    changed.edits[[index]] = (originalBlocks[index].range, source, markup)
+    changed.edits[[index]] = (originalBlocks[index].range, source, markup, definitions)
     return changed
   }
 
@@ -164,9 +167,18 @@ public struct MarkdownDocument {
       }
     }
     var changed = self
+    let definitions = try preservedDefinitions(in: index)
     changed.edits = edits.filter { $0.key.first != index }
-    changed.edits[[index]] = (lower..<originalBlocks[index].range.upperBound, "", Document())
+    changed.edits[[index]] = (
+      lower..<originalBlocks[index].range.upperBound,
+      definitions.isEmpty ? "" : "\n\n" + definitions, Document(), definitions
+    )
     return changed
+  }
+
+  private func preservedDefinitions(in index: Int) throws -> String {
+    if let definitions = edits[[index]]?.definitions { return definitions }
+    return try EditorModel.referenceDefinitions(in: originalBlocks[index].source)
   }
 
   public func replacingBlock(in index: Int, path: [Int], with markup: any Markup, focusPath: [Int])

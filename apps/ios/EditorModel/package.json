@@ -4,6 +4,8 @@
 	"type": "module",
 	"devDependencies": {
 		"ist": "1.1.7",
+		"mdast-util-from-markdown": "2.1.0",
+		"mdast-util-to-markdown": "2.2.3",
 		"prosemirror-commands": "1.7.2",
 		"prosemirror-model": "1.25.12",
 		"prosemirror-schema-basic": "1.2.5",

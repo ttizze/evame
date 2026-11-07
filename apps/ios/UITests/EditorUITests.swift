@@ -2,6 +2,32 @@ import XCTest
 
 @MainActor
 final class EditorUITests: XCTestCase {
+  func test原文編集から戻った後は古い構造変更のUndoを残さない() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    let heading = app.textViews["日本語の執筆 👩🏽‍💻"]
+    XCTAssertTrue(heading.waitForExistence(timeout: 10))
+    heading.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.9)).tap()
+    app.typeText("\n")
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let source = app.textViews["editor.markdown-source"]
+    XCTAssertTrue(source.waitForExistence(timeout: 5))
+    source.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.02)).tap()
+    source.typeText("source-latest\n\n")
+    app.navigationBars.buttons["editor.source.done"].tap()
+    XCTAssertTrue(app.textViews["source-latest"].exists)
+    heading.tap()
+    let more = app.buttons["editor.more"]
+    let menu = app.scrollViews["editor.keyboard-actions"]
+    for _ in 0..<4 where !more.isHittable { menu.swipeLeft() }
+    more.tap()
+    let undo = app.buttons["元に戻す"]
+    XCTAssertTrue(undo.waitForExistence(timeout: 5))
+    XCTAssertFalse(undo.isEnabled)
+  }
+
   func test見出しを編集してMarkdown表示で確認する() {
     let app = XCUIApplication()
     app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
@@ -124,6 +150,23 @@ final class EditorUITests: XCTestCase {
     let source = app.textViews.firstMatch.value as? String ?? ""
     XCTAssertTrue(source.contains("- oneX"), source)
     XCTAssertFalse(source.contains("- one\n- X"), source)
+  }
+
+  func test入れ子のリストは文字のある項目の改行で深さを保ち空の項目の改行だけ一段戻る() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    let heading = app.textViews["日本語の執筆 👩🏽‍💻"]
+    XCTAssertTrue(heading.waitForExistence(timeout: 10))
+    heading.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.9)).tap()
+    app.typeText("\n- parent\nchild")
+    app.buttons["editor.indent"].tap()
+    app.typeText("\nnext\n\nouter")
+    XCTAssertTrue(app.buttons["editor.done"].isHittable)
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let source = app.textViews.firstMatch.value as? String ?? ""
+    XCTAssertTrue(source.contains("- parent\n  - child\n  - next\n- outer"), source)
   }
 
   func test横スクロール先の画像ボタンから写真選択を開いてキャンセルしても入力を続けられる() {

@@ -7,7 +7,7 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "3"
+    CURRENT_PROJECT_VERSION: "4"
     GENERATE_INFOPLIST_FILE: YES
     CODE_SIGNING_ALLOWED: NO
 packages:
@@ -39,6 +39,7 @@ targets:
     sources:
       - NativeTests
       - Tests/EditorCoreTests/ProseMirrorTests.swift
+      - Tests/EditorCoreTests/BackspaceEditingTests.swift
       - path: Tests/EditorCoreTests/Fixtures/Upstream/ProseMirrorTests.js
         buildPhase: resources
       - path: Tests/EditorCoreTests/Fixtures/Upstream/prosemirror-cases.json

@@ -11,7 +11,7 @@
 			"!**/.build",
 			"!**/DerivedData",
 			"!**/*.xcodeproj",
-			"!apps/ios/Sources/EditorCore/Resources/EditorModel.js",
+			"!apps/ios/Sources/EditorCore/Resources/*.js",
 			"!apps/ios/Tests/EditorCoreTests/Fixtures/Upstream",
 			"!**/*.css",
 			"!playwright-report",

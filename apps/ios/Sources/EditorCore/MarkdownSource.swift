@@ -19,7 +19,12 @@ public enum MarkdownSource {
         let check = item.checkbox.map { $0 == .checked ? "[x] " : "[ ] " } ?? ""
         var body = ""
         for (offset, child) in item.children.enumerated() {
-          if offset > 0 { body += child is any ListItemContainer ? "\n" : "\n\n" }
+          if offset > 0 {
+            // 1以外で始まる番号付きリストは、空行なしでは前の段落の続きになる。
+            let continuesList =
+              child is any ListItemContainer && ((child as? OrderedList)?.startIndex ?? 1) == 1
+            body += continuesList ? "\n" : "\n\n"
+          }
           body += try serialize(child)
         }
         return marker + check

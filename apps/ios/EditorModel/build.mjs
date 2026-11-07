@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 const directory = import.meta.dir;
@@ -8,10 +8,15 @@ const fixtures = new URL(
 	import.meta.url,
 );
 await mkdir(resources, { recursive: true });
-for (const test of [false, true]) {
+for (const name of [
+	"EditorModel",
+	"ReferenceDefinitions",
+	"ProseMirrorTests",
+]) {
+	const test = name === "ProseMirrorTests";
 	const entry = test
 		? fileURLToPath(new URL("prosemirror-commands.test.ts.txt", fixtures))
-		: `${directory}/model.mjs`;
+		: `${directory}/${name === "EditorModel" ? "model" : "references"}.mjs`;
 	const result = await Bun.build({
 		entrypoints: [entry],
 		target: "browser",
@@ -21,6 +26,12 @@ for (const test of [false, true]) {
 			{
 				name: "native-editor-tests",
 				setup(build) {
+					build.onResolve(
+						{ filter: /^decode-named-character-reference$/ },
+						() => ({
+							path: `${directory}/node_modules/decode-named-character-reference/index.js`,
+						}),
+					);
 					build.onResolve(
 						{ filter: /^(prosemirror-[\w-]+|ist)$/ },
 						({ path }) => ({ path: Bun.resolveSync(path, directory) }),
@@ -50,10 +61,7 @@ globalThis.evameReferenceResults = JSON.stringify(evameResults);
 	if (!result.success)
 		throw new AggregateError(result.logs, "編集モデルのビルドに失敗しました");
 	await writeFile(
-		new URL(
-			test ? "ProseMirrorTests.js" : "EditorModel.js",
-			test ? fixtures : resources,
-		),
+		new URL(`${name}.js`, test ? fixtures : resources),
 		await result.outputs[0].text(),
 	);
 }
@@ -63,6 +71,8 @@ const packages = new Set([
 	"prosemirror-state",
 	"prosemirror-schema-basic",
 	"prosemirror-schema-list",
+	"mdast-util-from-markdown",
+	"mdast-util-to-markdown",
 ]);
 const licenses = [];
 for (const name of packages) {
@@ -70,11 +80,15 @@ for (const name of packages) {
 	const pkg = JSON.parse(await readFile(`${root}/package.json`, "utf8"));
 	for (const dependency of Object.keys(pkg.dependencies ?? {}))
 		packages.add(dependency);
+	const file = (await readdir(root)).find((file) =>
+		/^licen[cs]e(?:\..+)?$/i.test(file),
+	);
+	if (!file) throw new Error(`${name}: ライセンス文書が見つかりません`);
 	licenses.push(
-		`${name} ${pkg.version}\n${await readFile(`${root}/LICENSE`, "utf8")}`,
+		`${name} ${pkg.version}\n${await readFile(`${root}/${file}`, "utf8")}`,
 	);
 }
 await writeFile(
-	new URL("ProseMirror-LICENSES.txt", resources),
+	new URL("EditorModel-LICENSES.txt", resources),
 	licenses.join("\n\n"),
 );
