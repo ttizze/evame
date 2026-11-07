@@ -1,4 +1,8 @@
 {
+	"MagicLinkForm": {
+		"invalidEmail": "Introduce una dirección de correo electrónico válida.",
+		"sendFailed": "No se pudo enviar el correo de acceso. Inténtalo de nuevo."
+	},
 	"Editor": {
 		"saveFailed": "No se pudo guardar. Los cambios siguen en esta pantalla. Inténtalo de nuevo.",
 		"title": "Título",
