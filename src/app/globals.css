@@ -326,3 +326,30 @@ body.virtual-keyboard-shown {
 	--radius-3xl: calc(var(--radius) + 12px);
 	--radius-4xl: calc(var(--radius) + 16px);
 }
+
+.editor-checklist-checked,
+.editor-checklist-unchecked {
+	position: relative;
+	list-style: none;
+	padding-left: 1.5em;
+	outline: none;
+}
+
+.editor-checklist-checked::before,
+.editor-checklist-unchecked::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0.3em;
+	width: 1em;
+	height: 1em;
+	border: 1px solid currentColor;
+	border-radius: 0.2em;
+	cursor: pointer;
+}
+
+.editor-checklist-checked::before {
+	content: "✓";
+	line-height: 1;
+	text-align: center;
+}

@@ -3,6 +3,7 @@ import { type ComponentType, createElement, type JSX } from "react";
 import * as jsxRuntime from "react/jsx-runtime";
 import rehypeRaw from "rehype-raw";
 import rehypeReact from "rehype-react";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import rehypeSlug from "rehype-slug";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
@@ -69,6 +70,31 @@ export function mdastToReact<T extends Segment = Segment>({
 		.use(remarkTweet)
 		.use(remarkRehype, { allowDangerousHtml: true }) // mdast → hast
 		.use(rehypeRaw) // parse raw HTML
+		.use(rehypeSanitize, {
+			...defaultSchema,
+			tagNames: [...(defaultSchema.tagNames ?? []), "tweet", "iframe"],
+			attributes: {
+				...defaultSchema.attributes,
+				"*": [
+					...(defaultSchema.attributes?.["*"] ?? []),
+					"className",
+					"style",
+					"dataNumberId",
+				],
+				tweet: ["dataTweetId"],
+				iframe: [
+					"src",
+					"title",
+					"width",
+					"height",
+					"allow",
+					"allowFullScreen",
+					"loading",
+					"referrerPolicy",
+					"frameBorder",
+				],
+			},
+		})
 		.use(rehypeSlug) // add slug ids
 		.use(rehypeReact, {
 			createElement,
@@ -76,9 +102,9 @@ export function mdastToReact<T extends Segment = Segment>({
 			components: {
 				// Render markdown images without a framework-specific image loader.
 				img: ImgComponent,
-				tweet: (props: { id: string }) => (
+				tweet: (props: { "data-tweet-id": string }) => (
 					<span className="not-prose">
-						<Tweet id={props.id} />
+						<Tweet id={props["data-tweet-id"]} />
 					</span>
 				),
 				...segmentComponents,

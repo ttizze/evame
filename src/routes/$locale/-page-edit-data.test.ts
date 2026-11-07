@@ -6,7 +6,6 @@ const {
 	getPageWithTitleAndTagsBySlugMock,
 	getTranslationContextsByUserIdMock,
 	getUserTargetLocalesMock,
-	mdastToHtmlMock,
 	setResponseHeaderMock,
 } = vi.hoisted(() => ({
 	getAllTagsWithCountMock: vi.fn(),
@@ -14,7 +13,6 @@ const {
 	getPageWithTitleAndTagsBySlugMock: vi.fn(),
 	getTranslationContextsByUserIdMock: vi.fn(),
 	getUserTargetLocalesMock: vi.fn(),
-	mdastToHtmlMock: vi.fn(),
 	setResponseHeaderMock: vi.fn(),
 }));
 
@@ -33,9 +31,6 @@ vi.mock("@tanstack/react-start", () => ({
 		};
 		return builder;
 	},
-}));
-vi.mock("@/app/[locale]/_service/mdast-to-html", () => ({
-	mdastToHtml: mdastToHtmlMock,
 }));
 vi.mock(
 	"@/app/[locale]/(edit-layout)/[handle]/[pageSlug]/edit/_db/queries.server",
@@ -67,7 +62,6 @@ describe("getPageEditData", () => {
 		getAllTagsWithCountMock.mockResolvedValue([]);
 		getTranslationContextsByUserIdMock.mockResolvedValue([]);
 		getUserTargetLocalesMock.mockResolvedValue([]);
-		mdastToHtmlMock.mockResolvedValue({ html: "" });
 	});
 
 	it("本人が未作成のslugを開くと新規ページ用データを返す", async () => {
@@ -76,7 +70,7 @@ describe("getPageEditData", () => {
 		await expect(getPageEditData({ data: input })).resolves.toEqual({
 			allTagsWithCount: [],
 			currentUser,
-			html: "",
+			markdown: "",
 			initialTitle: undefined,
 			pageSlug: "new-page",
 			pageWithTitleAndTags: undefined,

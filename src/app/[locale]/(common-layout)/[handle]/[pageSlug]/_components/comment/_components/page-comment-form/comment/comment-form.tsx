@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
+import { Editor } from "@/app/[locale]/_components/editor/editor";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
-import { Editor } from "@/app/[locale]/(edit-layout)/[handle]/[pageSlug]/edit/_components/editor/editor";
 import { Button } from "@/components/ui/button";
 
 type Hidden = Record<string, string | number | undefined>;
@@ -21,6 +22,7 @@ export function CommentForm({
 	errorMsg,
 }: CommentFormProps) {
 	const hydrated = useHydrated();
+	const t = useTranslations("Editor");
 	const [content, setContent] = useState("");
 	const { data: session } = authClient.useSession();
 	const currentUser = hydrated ? session?.user : undefined;
@@ -40,8 +42,8 @@ export function CommentForm({
 						className="rounded-md border border-input px-2"
 						defaultValue={content}
 						name="content"
-						onEditorUpdate={(editor) => setContent(editor?.getHTML() ?? "")}
-						placeholder="Say Hello!"
+						onChange={setContent}
+						placeholder={t("commentPlaceholder")}
 						showMenus={false}
 					/>
 				) : (
@@ -49,7 +51,7 @@ export function CommentForm({
 						aria-disabled="true"
 						className="rounded-md border border-input bg-muted px-2 py-3 opacity-50"
 					>
-						Say Hello!
+						{t("commentPlaceholder")}
 					</div>
 				)}
 
@@ -62,7 +64,7 @@ export function CommentForm({
 					disabled={isPending || !currentUser || content.length === 0}
 					type="submit"
 				>
-					{isPending ? "posting" : "post"}
+					{isPending ? t("posting") : t("post")}
 				</Button>
 			</form>
 			{errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}

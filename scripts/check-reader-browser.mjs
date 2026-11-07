@@ -178,8 +178,10 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await page.waitForURL(/\/edit$/);
 		const newPageUrl = page.url().replace(/\/edit$/, "");
 		await page.getByTestId("title-input").fill("ブラウザー新規保存");
-		const editor = page.locator(".tiptap[contenteditable=true]");
-		await editor.fill("Tiptapのブラウザー入力を保存する");
+		const editor = page.locator(
+			'[data-testid="lexical-editor"][contenteditable=true]',
+		);
+		await editor.fill("Lexicalのブラウザー入力を保存する");
 		await expect
 			.poll(
 				async () => {
@@ -190,9 +192,71 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 				},
 				{ timeout: 20000 },
 			)
-			.toContain("Tiptapのブラウザー入力を保存する");
+			.toContain("Lexicalのブラウザー入力を保存する");
 		console.log(
-			"ログイン済みトップから新規ページを開き、Tiptapで入力した本文を保存できる",
+			"ログイン済みトップから新規ページを開き、Lexicalで入力した本文を保存できる",
+		);
+		await editor.press("ControlOrMeta+A");
+		await page
+			.getByTestId("editor-bubble-menu")
+			.getByRole("button", { name: "太字", exact: true })
+			.click();
+		await expect(editor.locator("strong")).toContainText(
+			"Lexicalのブラウザー入力を保存する",
+		);
+		await expect
+			.poll(
+				async () => {
+					const response = await page.request.get(newPageUrl);
+					return response.text();
+				},
+				{ timeout: 20000 },
+			)
+			.toContain("<strong>Lexicalのブラウザー入力を保存する</strong>");
+		await page.reload();
+		await expect(editor.locator("strong")).toContainText(
+			"Lexicalのブラウザー入力を保存する",
+		);
+		await editor.fill("");
+		await editor.evaluate((element) => {
+			const data = new DataTransfer();
+			data.setData(
+				"text/plain",
+				"## GFMの見出し\n\n~~取り消し~~\n\n- [x] 完了\n\n| 名前 | 値 |\n| --- | --- |\n| 本文 | 内容 |",
+			);
+			element.dispatchEvent(
+				new ClipboardEvent("paste", {
+					clipboardData: data,
+					bubbles: true,
+					cancelable: true,
+				}),
+			);
+		});
+		await expect(editor.locator("h2")).toHaveText("GFMの見出し");
+		await expect(editor.locator("table")).toContainText("本文");
+		await expect
+			.poll(
+				async () => {
+					const response = await page.request.get(newPageUrl);
+					return response.text();
+				},
+				{ timeout: 20000 },
+			)
+			.toContain("<table>");
+		await page.reload();
+		await expect(editor.locator("table")).toContainText("本文");
+		await page.screenshot({
+			path: "/tmp/evame-lexical-editor-desktop.png",
+			fullPage: true,
+		});
+		await page.setViewportSize({ width: 390, height: 844 });
+		await page.screenshot({
+			path: "/tmp/evame-lexical-editor-mobile.png",
+			fullPage: true,
+		});
+		await page.setViewportSize({ width: 1280, height: 900 });
+		console.log(
+			"Lexicalの装飾操作とGFMの貼り付けを保存し、再読み込みしても維持できる",
 		);
 		await page.goto(
 			`${baseUrl}/ja/${handle}/${pageSlug}?page=2&view=both#comments`,
@@ -202,7 +266,9 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			commentPages.getByText("comment-marker-21", { exact: true }),
 		).toBeVisible();
 		await expect(
-			commentPages.locator(".tiptap[contenteditable=true]").first(),
+			commentPages
+				.locator('[data-testid="lexical-editor"][contenteditable=true]')
+				.first(),
 		).toBeVisible();
 		await commentPages.getByRole("link", { name: "前のコメント" }).click();
 		await expect(
@@ -241,7 +307,11 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		).not.toHaveAttribute("ssr", "");
 		await page.locator("#comments").scrollIntoViewIfNeeded();
 		await expect(
-			page.locator("#comments .tiptap[contenteditable=true]").first(),
+			page
+				.locator(
+					'#comments [data-testid="lexical-editor"][contenteditable=true]',
+				)
+				.first(),
 		).toBeVisible();
 		await expect(
 			page.locator('[data-tweet-id="123456789"]').getByText("Tweet not found"),
@@ -325,7 +395,11 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		).not.toHaveAttribute("ssr", "");
 		await page.locator("#comments").scrollIntoViewIfNeeded();
 		await expect(
-			page.locator("#comments .tiptap[contenteditable=true]").first(),
+			page
+				.locator(
+					'#comments [data-testid="lexical-editor"][contenteditable=true]',
+				)
+				.first(),
 		).toBeVisible();
 		await expect(
 			page.locator('[data-tweet-id="123456789"]').getByText("Tweet not found"),
@@ -377,7 +451,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		const comments = page.locator("#comments");
 		await comments.scrollIntoViewIfNeeded();
 		const commentEditor = comments
-			.locator(".tiptap[contenteditable=true]")
+			.locator('[data-testid="lexical-editor"][contenteditable=true]')
 			.first();
 		await commentEditor.fill("ブラウザーからコメントを投稿");
 		const posted = page.waitForResponse(
@@ -386,7 +460,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 				r.request().method() === "POST",
 		);
 		await comments
-			.getByRole("button", { name: "post", exact: true })
+			.getByRole("button", { name: "投稿", exact: true })
 			.first()
 			.click();
 		const postedResponse = await posted;
@@ -407,7 +481,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.first()
 			.click();
 		await comments
-			.locator(".tiptap[contenteditable=true]")
+			.locator('[data-testid="lexical-editor"][contenteditable=true]')
 			.nth(1)
 			.fill("ブラウザーから返信する");
 		const replied = page.waitForResponse(
@@ -416,14 +490,13 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 				r.request().method() === "POST",
 		);
 		await comments
-			.getByRole("button", { name: "post", exact: true })
+			.getByRole("button", { name: "投稿", exact: true })
 			.nth(1)
 			.click();
 		assert.equal((await replied).status(), 200);
-		await expect(comments.locator(".tiptap[contenteditable=true]")).toHaveCount(
-			1,
-			{ timeout: 15000 },
-		);
+		await expect(
+			comments.locator('[data-testid="lexical-editor"][contenteditable=true]'),
+		).toHaveCount(1, { timeout: 15000 });
 		await expect(
 			comments.getByText("ブラウザーから返信する", { exact: true }),
 		).toBeVisible();

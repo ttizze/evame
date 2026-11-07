@@ -31,6 +31,7 @@ export function PageCommentForm({
 		async (_previousState, formData) => {
 			const result = await callReaderAction("comment", {
 				content: String(formData.get("content") ?? ""),
+				contentFormat: "markdown",
 				pageCommentId: optionalNumber(formData.get("pageCommentId")),
 				pageId: Number(formData.get("pageId")),
 				parentId: optionalNumber(formData.get("parentId")),

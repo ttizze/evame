@@ -19,6 +19,7 @@ vi.stubGlobal(
 	}),
 );
 
+import { renderToStaticMarkup } from "react-dom/server";
 // 2. その後で被テストモジュールをimport
 import { mdastToReact } from "./index";
 
@@ -36,6 +37,28 @@ const segments: Segment[] = Array.from(
 );
 
 describe("mdastToReact", () => {
+	it("Markdown由来のHTMLでもスクリプトとイベント属性を公開HTMLへ出さない", () => {
+		const html = renderToStaticMarkup(
+			mdastToReact({
+				Tweet,
+				segments: [],
+				mdast: {
+					type: "root",
+					children: [
+						{
+							type: "html",
+							value:
+								'<script>alert(1)</script><img src="/safe.png" onerror="alert(2)"><p class="link-card">安全な本文</p>',
+						},
+					],
+				},
+			}),
+		);
+		expect(html).not.toContain("<script");
+		expect(html).not.toContain("onerror");
+		expect(html).toContain("安全な本文");
+		expect(html).toContain('class="link-card"');
+	});
 	it("コメントの本文を同期的に描画し、元のASTを変更しない", () => {
 		const mdast: JsonValue = {
 			type: "root",

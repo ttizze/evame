@@ -7,7 +7,7 @@ import {
 import { z } from "zod";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
-import { mdastToHtml } from "@/app/[locale]/_service/mdast-to-html";
+import { mdastToMarkdown } from "@/app/[locale]/_domain/mdast-to-markdown";
 import {
 	getAllTagsWithCount,
 	getPageWithTitleAndTagsBySlug,
@@ -56,14 +56,12 @@ export const getPageEditData = createServerFn({ method: "GET" })
 				getUserTargetLocales(currentUser.id),
 				getTranslationContextsByUserId(currentUser.id),
 			]);
-		const { html } = await mdastToHtml({
-			mdastJson: pageWithTitleAndTags?.mdastJson ?? null,
-		});
+		const markdown = mdastToMarkdown(pageWithTitleAndTags?.mdastJson ?? null);
 
 		return {
 			allTagsWithCount,
 			currentUser,
-			html,
+			markdown,
 			initialTitle: pageWithTitleAndTags?.segments[0]?.text,
 			pageSlug: data.pageSlug,
 			pageWithTitleAndTags,
