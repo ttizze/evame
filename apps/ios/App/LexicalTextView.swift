@@ -89,7 +89,9 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
       }
     }
     rendered = output.string
-    attributedText = output
+    // attributedTextへ代入すると選択が文末へ移り、UIKitが後から文末までスクロールする。
+    // 文字の保存先を置き換えて、スクロール位置を保ったまま選択だけを戻す。
+    textStorage.setAttributedString(output)
     if let selection = snapshot.selection {
       let start = unitStarts[selection.anchor.unit] + selection.anchor.offset
       let end = unitStarts[selection.focus.unit] + selection.focus.offset

@@ -97,6 +97,29 @@ final class EditorUITests: XCTestCase {
     XCTAssertTrue(source.hasPrefix("## 日本語の執筆 👩🏽‍💻menu\n"), source)
   }
 
+  func testキーボードの改行キーを押しても画面が文末へ飛ばずカーソルの次の行へ入力できる() {
+    tapEndOfHeading()
+    // 文書の途中にあるチェックボックスの位置で、画面のスクロールを確かめる。
+    let marker = app.buttons.matching(
+      NSPredicate(format: "identifier == %@ AND label == %@", "editor.checkbox", "完了")
+    ).firstMatch
+    XCTAssertTrue(marker.waitForExistence(timeout: 5))
+    let before = marker.frame.minY
+    let returnKey = app.keyboards.buttons.matching(
+      NSPredicate(format: "label IN %@", ["改行", "return", "Return"])
+    ).firstMatch
+    XCTAssertTrue(returnKey.waitForExistence(timeout: 5))
+    returnKey.tap()
+    app.typeText("after")
+    let screenshot = XCTAttachment(screenshot: app.screenshot())
+    screenshot.name = "見出しの末尾で改行キーを押して入力した直後"
+    screenshot.lifetime = .keepAlways
+    add(screenshot)
+    XCTAssertGreaterThanOrEqual(marker.frame.minY, before)
+    let source = markdown()
+    XCTAssertTrue(source.hasPrefix("# 日本語の執筆 👩🏽‍💻\n\nafter\n"), source)
+  }
+
   func testリスト記法で入力し改行すると次の項目を続けて書ける() {
     tapEndOfHeading()
     app.typeText("\n- one\ntwo")
