@@ -9,7 +9,7 @@ export function BlockDragMenu({
 }: {
 	anchorElement: HTMLElement;
 }) {
-	const menu = useRef<HTMLDivElement>(null);
+	const menu = useRef<HTMLButtonElement>(null);
 	const targetLine = useRef<HTMLDivElement>(null);
 	const t = useTranslations("Editor");
 	return (
@@ -17,15 +17,23 @@ export function BlockDragMenu({
 			anchorElem={anchorElement}
 			isOnMenu={(element) => menu.current?.contains(element) ?? false}
 			menuComponent={
-				<div
+				<button
+					aria-label={t("moveBlock")}
 					className="absolute top-0 left-0 z-30 h-7 w-6 cursor-grab select-none items-center justify-center rounded text-muted-foreground hover:bg-secondary active:cursor-grabbing max-md:hidden!"
 					data-testid="editor-drag-handle"
+					draggable
+					onDragStart={(event) => {
+						// Safariでもドロップを受け取れるよう、標準の文字列形式も添える。
+						event.dataTransfer.setData("text/plain", "");
+					}}
 					ref={menu}
 					style={{ display: "none" }}
+					tabIndex={-1}
 					title={t("moveBlock")}
+					type="button"
 				>
 					<GripVertical className="pointer-events-none h-4 w-4" />
-				</div>
+				</button>
 			}
 			menuRef={menu}
 			onElementChanged={(element) => {

@@ -83,8 +83,8 @@ jobs:
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: nix develop --command bun run prepare:reader-assets
 
-      - name: Install Chromium for browser regression checks
-        run: nix develop --command bun x playwright install --with-deps chromium
+      - name: Install Chromium and WebKit for browser regression checks
+        run: nix develop --command bun x playwright install --with-deps chromium webkit
 
       - name: Verify isolated deployment runtime and browser behavior
         run: nix develop --command bun run test:deployment:browser
