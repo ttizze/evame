@@ -35,7 +35,11 @@ import {
 	RichTextExtension,
 } from "@lexical/rich-text";
 import { $setBlocksType } from "@lexical/selection";
-import { $isTableNode, TableExtension } from "@lexical/table";
+import {
+	$isTableNode,
+	INSERT_TABLE_COMMAND,
+	TableExtension,
+} from "@lexical/table";
 import {
 	AbortController,
 	AbortSignal,
@@ -485,6 +489,14 @@ globalThis.evameEditorRequest = (json) => {
 					if ($isListItemNode(node)) node.toggleChecked();
 					break;
 				}
+				case "insertTable":
+					// PCのメニューと同じ、見出し行つきの3×3の表。
+					editor.dispatchCommand(INSERT_TABLE_COMMAND, {
+						rows: "3",
+						columns: "3",
+						includeHeaders: true,
+					});
+					break;
 				case "insertImage":
 					$getSelection()?.insertNodes([
 						$setState($create(ImageNode), imageState, {
@@ -493,11 +505,6 @@ globalThis.evameEditorRequest = (json) => {
 							title: null,
 						}),
 					]);
-					break;
-				case "appendMarkdown":
-					$getRoot().append(
-						...$generateNodesFromMarkdownString(input.markdown),
-					);
 					break;
 				case "setTableCell": {
 					const cell = units()

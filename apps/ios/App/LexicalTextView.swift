@@ -110,6 +110,10 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
 
   private func font(_ unit: LexicalDocument.Unit) -> UIFont {
     if unit.context.footnote != nil { return .systemFont(ofSize: 14) }
+    // Webの引用と同じく、斜体のやや太い文字にする。
+    if unit.context.quote > 0, unit.block?.type == "paragraph" {
+      return slanted(.systemFont(ofSize: Self.baseSize, weight: .medium))
+    }
     switch (unit.block?.type, unit.block?.level) {
     case ("heading", 1): return .systemFont(ofSize: 28, weight: .bold)
     case ("heading", 2): return .systemFont(ofSize: 24, weight: .bold)
@@ -130,13 +134,25 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
     paragraph.firstLineHeadIndent = indentation(unit)
     paragraph.headIndent = indentation(unit)
     paragraph.paragraphSpacing = unit.block?.type == "heading" ? 10 : 6
-    var attributes: [NSAttributedString.Key: Any] = [
-      .font: font(unit), .paragraphStyle: paragraph,
-      .foregroundColor: unit.context.quote > 0 || unit.context.footnote != nil
-        ? UIColor.secondaryLabel : UIColor.label,
-    ]
-    if unit.block?.type == "code" { attributes[.backgroundColor] = UIColor.tertiarySystemFill }
-    return attributes
+    var foreground = unit.context.footnote == nil ? UIColor.label : .secondaryLabel
+    if unit.block?.type == "code" {
+      // Webのコードブロックと同じく、濃い背景（重ねて描く）の内側に明るい文字を余白つきで置く。
+      paragraph.firstLineHeadIndent += 12
+      paragraph.headIndent += 12
+      paragraph.tailIndent = -12
+      paragraph.paragraphSpacingBefore = 10
+      paragraph.paragraphSpacing = 14
+      foreground = UIColor(white: 0.9, alpha: 1)
+    }
+    return [.font: font(unit), .paragraphStyle: paragraph, .foregroundColor: foreground]
+  }
+
+  /// 日本語の代替フォントにも斜体が効くよう、書体の指定ではなく描画行列で傾ける。
+  private func slanted(_ font: UIFont) -> UIFont {
+    UIFont(
+      descriptor: font.fontDescriptor.withMatrix(
+        CGAffineTransform(a: 1, b: 0, c: 0.2, d: 1, tx: 0, ty: 0)),
+      size: font.pointSize)
   }
 
   private func styled(_ attributes: [NSAttributedString.Key: Any], formats: [String], link: String?)
@@ -154,13 +170,7 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
     {
       font = UIFont(descriptor: descriptor, size: font.pointSize)
     }
-    // 日本語の代替フォントにも斜体が効くよう、書体の指定ではなく描画行列で傾ける。
-    if formats.contains("italic") {
-      font = UIFont(
-        descriptor: font.fontDescriptor.withMatrix(
-          CGAffineTransform(a: 1, b: 0, c: 0.2, d: 1, tx: 0, ty: 0)),
-        size: font.pointSize)
-    }
+    if formats.contains("italic") { font = slanted(font) }
     attributes[.font] = font
     if formats.contains("strikethrough") {
       attributes[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
@@ -308,12 +318,32 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
         let end = position(from: start, offset: length(unit))
       else { continue }
       let first = caretRect(for: start)
+      if unit.block?.type == "code" {
+        // 文字の後ろに描くため、入力欄の文字より下に重ねる。
+        let x = left + indentation(unit)
+        let background = UIView(
+          frame: CGRect(
+            x: x, y: first.minY - 8,
+            width: bounds.width - textContainerInset.right - textContainer.lineFragmentPadding - x,
+            height: caretRect(for: end).maxY - first.minY + 16))
+        background.backgroundColor = UIColor(red: 31 / 255, green: 41 / 255, blue: 55 / 255, alpha: 1)
+        background.layer.cornerRadius = 6
+        background.isUserInteractionEnabled = false
+        background.accessibilityIdentifier = "editor.code-block"
+        insertSubview(background, at: 0)
+        overlays.append(background)
+      }
       if unit.context.quote > 0 {
+        // 同じ引用の次の段落まで、段落の間隔も含めて線をつなげる。
+        let continues =
+          snapshot.units.indices.contains(index + 1)
+          && snapshot.units[index + 1].context.quote >= unit.context.quote
         let bar = UIView(
           frame: CGRect(
-            x: left + CGFloat(unit.context.quote - 1) * 16, y: first.minY, width: 3,
-            height: caretRect(for: end).maxY - first.minY))
-        bar.backgroundColor = .separator
+            x: left + CGFloat(unit.context.quote - 1) * 16, y: first.minY, width: 4,
+            height: caretRect(for: end).maxY - first.minY + (continues ? 6 : 0)))
+        bar.backgroundColor = .systemGray3
+        bar.accessibilityIdentifier = "editor.quote-bar"
         add(bar)
       }
       if unit.atomic?.type == "table", let range = textRange(from: start, to: end) {
@@ -406,10 +436,17 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
     edit([select(selectedRange), ["action": "command", "name": increase ? "indent" : "outdent"]])
   }
   func setLink(_ url: String) { edit([select(selectedRange), ["action": "link", "url": url]]) }
+  /// カーソルの位置に表を入れ、入れた表の表示単位を返す。
+  func insertTable() -> Int? {
+    edit([select(selectedRange), ["action": "insertTable"]])
+    guard let unit = snapshot.selection?.focus.unit,
+      snapshot.units.indices.contains(unit), snapshot.units[unit].atomic?.type == "table"
+    else { return nil }
+    return unit
+  }
   func insertImage(source: String, alt: String) {
     edit([select(selectedRange), ["action": "insertImage", "src": source, "alt": alt]])
   }
-  func appendMarkdown(_ markdown: String) { edit([["action": "appendMarkdown", "markdown": markdown]]) }
   func load(_ markdown: String) {
     edit([["action": "load", "markdown": markdown]])
     undoSteps.removeAll()

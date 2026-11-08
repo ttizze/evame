@@ -233,6 +233,19 @@ final class EditorUITests: XCTestCase {
     XCTAssertTrue(source.contains("- [x] 完了\n- [x] 未完了"), source)
   }
 
+  func testキーボードの表ボタンでカーソルの位置に表を入れてセルを入力できる() {
+    tapEndOfHeading()
+    menuButton("editor.insert-table").tap()
+    let cell = app.textFields.matching(identifier: "editor.table-cell").firstMatch
+    XCTAssertTrue(cell.waitForExistence(timeout: 5))
+    XCTAssertEqual(app.textFields.matching(identifier: "editor.table-cell").count, 9)
+    cell.tap()
+    app.typeText("項目")
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    let source = markdown()
+    XCTAssertTrue(source.hasPrefix("# 日本語の執筆 👩🏽‍💻\n\n| 項目"), source)
+  }
+
   func test表のセルを編集して本文へ戻っても変更を保持する() {
     let table = app.buttons["editor.table"]
     scrollTo(table)

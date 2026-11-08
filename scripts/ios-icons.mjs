@@ -21,6 +21,7 @@ for (const name of [
 	"link",
 	"type",
 	"list-todo",
+	"table",
 ]) {
 	const sourceName = name.startsWith("indent-") ? `list-${name}` : name;
 	const { __iconData } = await import(
@@ -53,7 +54,7 @@ for (const name of [
 	);
 	writeFileSync(
 		`${path}/Contents.json`,
-		`${JSON.stringify({ images: [{ filename: "icon.pdf", idiom: "universal" }], info: { author: "xcode", version: 1 }, properties: { "preserves-vector-representation": true, "template-rendering-intent": "template" } }, null, 2)}\n`,
+		`${JSON.stringify({ images: [{ filename: "icon.pdf", idiom: "universal" }], info: { author: "xcode", version: 1 }, properties: { "preserves-vector-representation": true, "template-rendering-intent": "template" } }, null, "\t")}\n`,
 	);
 }
 mkdirSync("apps/ios/App/Resources", { recursive: true });

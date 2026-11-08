@@ -72,27 +72,6 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
       UIBarButtonItem(
         image: UIImage(systemName: "doc.text.magnifyingglass"),
         primaryAction: UIAction { [weak self] _ in self?.showMarkdown() }),
-      UIBarButtonItem(
-        systemItem: .add,
-        menu: UIMenu(children: [
-          UIAction(title: String(localized: "段落")) { [weak self] _ in
-            self?.editor.appendMarkdown(String(localized: "新しい段落"))
-          },
-          UIAction(title: String(localized: "見出し")) { [weak self] _ in
-            self?.editor.appendMarkdown("## " + String(localized: "新しい見出し"))
-          },
-          UIAction(title: String(localized: "リスト")) { [weak self] _ in
-            self?.editor.appendMarkdown(
-              "- " + String(localized: "新しい項目") + "\n- " + String(localized: "次の項目"))
-          },
-          UIAction(title: String(localized: "表")) { [weak self] _ in
-            self?.editor.appendMarkdown(
-              "| " + String(localized: "見出し") + " | " + String(localized: "値")
-                + " |\n| --- | --- |\n| " + String(localized: "内容") + " | "
-                + String(localized: "値") + " |")
-          },
-          UIAction(title: String(localized: "写真")) { [weak self] _ in self?.pickPhoto() },
-        ])),
     ]
     navigationItem.rightBarButtonItems?.first?.accessibilityLabel = String(localized: "Markdownを確認")
     updateMenu()
@@ -193,6 +172,7 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
       ("番号付きリスト", "list-ordered", "ordered", { [weak self] in self?.editor.setBlock("number") }, { $0.listKind == "number" }),
       ("リンク", "link", "link", { [weak self] in self?.editLink() }, { $0.link != nil }),
       ("画像", "image", "image", { [weak self] in self?.pickPhoto() }, { _ in false }),
+      ("表", "table", "insert-table", { [weak self] in self?.insertTable() }, { _ in false }),
     ]
     for (label, icon, identifier, action, selected) in items {
       let button = UIButton(type: .system, primaryAction: UIAction { _ in action() })
@@ -256,7 +236,9 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
     }
     more.isEnabled = !composing
     more.menu = UIMenu(children: [
-      UIAction(title: String(localized: "段落")) { [weak self] _ in self?.editor.setBlock("paragraph") },
+      UIAction(title: String(localized: "標準のテキスト"), image: UIImage(named: "editor-type")) {
+        [weak self] _ in self?.editor.setBlock("paragraph")
+      },
       UIAction(title: String(localized: "チェックリスト"), image: UIImage(named: "editor-list-todo")) {
         [weak self] _ in self?.editor.setBlock("check")
       },
@@ -341,6 +323,12 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
         picker.dismiss(animated: true)
       }
     }
+  }
+
+  /// カーソルの位置に表を入れ、続けてセルを入力できるよう表の編集画面を開く。
+  private func insertTable() {
+    guard let unit = editor.insertTable() else { return }
+    showTable(unit)
   }
 
   private func showTable(_ unit: Int) {

@@ -418,6 +418,70 @@ struct LexicalEditorTests {
     #expect(editor.failure == nil)
   }
 
+  @Test("カーソルの位置にPCと同じ見出し行つきの3×3の表を入れる")
+  func insertTable() throws {
+    let fixture = try LexicalFixture("前の段落\n\n後の段落")
+    defer { fixture.window.isHidden = true }
+    let editor = fixture.editor
+    editor.selectedRange = NSRange(location: 4, length: 0)
+    let unit = try #require(editor.insertTable())
+    #expect(editor.snapshot.units.map { $0.atomic?.type } == [nil, "table", nil])
+    #expect(unit == 1)
+    #expect(editor.tableCells(unit).map(\.count) == [3, 3, 3])
+    #expect(fixture.markdown.hasPrefix("前の段落\n\n|"))
+    #expect(fixture.markdown.hasSuffix("|\n\n後の段落"))
+    #expect(editor.failure == nil)
+  }
+
+  @Test("コードブロックはWebと同じく、行の幅いっぱいの濃い背景に明るい等幅の文字で表示する")
+  func codeBlockLooks() throws {
+    let fixture = try LexicalFixture("前\n\n```\nlet a = 1\nlet b = 2\n```\n\n後")
+    defer { fixture.window.isHidden = true }
+    let editor = fixture.editor
+    editor.layoutIfNeeded()
+    var pending: [UIView] = [editor]
+    var background: UIView?
+    while let view = pending.popLast() {
+      if view.accessibilityIdentifier == "editor.code-block" { background = view }
+      pending += view.subviews
+    }
+    let block = try #require(background)
+    #expect(block.frame.width > editor.bounds.width - 60)
+    let start = try #require(editor.position(from: editor.beginningOfDocument, offset: 2))
+    let end = try #require(editor.position(from: start, offset: 19))
+    #expect(block.frame.minY <= editor.caretRect(for: start).minY)
+    #expect(block.frame.maxY >= editor.caretRect(for: end).maxY)
+    let color = try #require(
+      editor.attributedText.attribute(.foregroundColor, at: 2, effectiveRange: nil) as? UIColor)
+    var white: CGFloat = 0
+    color.getWhite(&white, alpha: nil)
+    #expect(white > 0.8)
+    #expect(editor.attributedText.attribute(.backgroundColor, at: 2, effectiveRange: nil) == nil)
+  }
+
+  @Test("引用はWebと同じく、本文と同じ濃さの斜体の文字と太い線で表示する")
+  func quoteLooks() throws {
+    let fixture = try LexicalFixture("前\n\n> 引用文")
+    defer { fixture.window.isHidden = true }
+    let editor = fixture.editor
+    editor.layoutIfNeeded()
+    let font = try #require(
+      editor.attributedText.attribute(.font, at: 2, effectiveRange: nil) as? UIFont)
+    // 傾きの行列はバイト列として入るため、属性があることで斜体を確かめる（通常の段落にはない）。
+    #expect(
+      font.fontDescriptor.fontAttributes[.init(rawValue: "NSCTFontMatrixAttribute")] != nil)
+    #expect(
+      editor.attributedText.attribute(.foregroundColor, at: 2, effectiveRange: nil) as? UIColor
+        == .label)
+    var pending: [UIView] = [editor]
+    var bar: UIView?
+    while let view = pending.popLast() {
+      if view.accessibilityIdentifier == "editor.quote-bar" { bar = view }
+      pending += view.subviews
+    }
+    #expect(try #require(bar).frame.width >= 4)
+  }
+
   @Test("表のセルをMarkdownで編集すると書式を含めて表へ反映する")
   func tableCell() throws {
     let fixture = try LexicalFixture("| 名前 | 値 |\n| --- | ---: |\n| a | b |")
