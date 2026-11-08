@@ -108,13 +108,13 @@ export function Editor({
 	return (
 		<LexicalExtensionComposer contentEditable={null} extension={extension}>
 			<div
-				className={showMenus ? "relative md:-ml-8 md:pl-8" : "relative"}
+				className={showMenus ? "relative md:-ml-8" : "relative"}
 				ref={showMenus ? setAnchorElement : null}
 			>
 				<ContentEditable
 					aria-label={placeholder}
 					aria-placeholder={placeholder}
-					className={`${className} min-h-8 focus:outline-hidden`}
+					className={`${className} min-h-8 focus:outline-hidden ${showMenus ? "md:pl-8" : ""}`}
 					data-testid="lexical-editor"
 					placeholder={
 						<div

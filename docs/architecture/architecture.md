@@ -104,7 +104,7 @@ Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳�
 - 成果物の検証起動: `bun run test:deployment`（ローカルHTTP DBと2つのWorkers）
 - デプロイ: `bun run deploy`（Cloudflare Workers と Static Assets）
 - 検証: `bun run lint`、`bun run typecheck`、`bun run check:reader`、`bun run test --run`
-- ブラウザー検証: `bun x playwright install chromium` の後に `bun run test:deployment:browser`
+- ブラウザー検証: `bun x playwright install --with-deps chromium webkit` の後に `bun run test:deployment:browser`
 - デプロイ成果物の検証: `bun run test:deployment`（認証 API・記事保存と編集画面・画像アップロード・ホーム SSR・日本語 OG 画像）
 - バインディング: `wrangler.jsonc` に R2・Images・KV・Static Assets を定義。秘密値は Workers secrets で設定する
 

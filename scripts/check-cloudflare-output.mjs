@@ -388,6 +388,8 @@ try {
 		"Aboutで説明文を維持する",
 	);
 	if (process.env.EVAME_BROWSER_TEST === "true") {
+		const { checkEditorDrag } = await import("./check-editor-drag.mjs");
+		await checkEditorDrag(serverUrl.origin, cookie);
 		const { checkReaderBrowser } = await import("./check-reader-browser.mjs");
 		await checkReaderBrowser(serverUrl.origin, cookie, handle, pageSlug);
 		assert.equal(
