@@ -8,11 +8,16 @@ import UIKit
 private final class LexicalFixture {
   let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
   let pasteboard = UIPasteboard.withUniqueName()
+  let store: LocalStore
   let editor: LexicalTextView
 
   init(_ markdown: String) throws {
+    let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    store = try LocalStore(directory: directory)
     editor = try LexicalTextView(
-      document: LexicalDocument(), markdown: markdown, pasteboard: pasteboard)
+      document: LexicalDocument(), markdown: markdown, pasteboard: pasteboard,
+      imageFile: store.imageFile)
     let controller = UIViewController()
     window.rootViewController = controller
     controller.view.addSubview(editor)
@@ -381,7 +386,7 @@ struct LexicalEditorTests {
     }
   }
 
-  @Test("選択した文字へリンクを付け、写真を挿入するとMarkdownの画像になる")
+  @Test("選択した文字へリンクを付け、端末に保存した写真を挿入するとMarkdownの画像として表示する")
   func linkAndImage() throws {
     let fixture = try LexicalFixture("リンク先")
     defer { fixture.window.isHidden = true }
@@ -390,9 +395,10 @@ struct LexicalEditorTests {
     editor.setLink("https://example.com")
     #expect(fixture.markdown == "[リンク先](https://example.com)")
     editor.selectedRange = NSRange(location: 4, length: 0)
-    editor.images["assets/photo.png"] = UIImage(systemName: "star")
-    editor.insertImage(source: "assets/photo.png", alt: "写真")
-    #expect(fixture.markdown.contains("![写真](assets/photo.png)"))
+    let source = try fixture.store.saveImage(
+      try #require(UIImage(systemName: "star")?.jpegData(compressionQuality: 0.8)))
+    editor.insertImage(source: source, alt: "写真")
+    #expect(fixture.markdown.contains("![写真](\(source))"))
     #expect(editor.attributedText.attribute(.attachment, at: 4, effectiveRange: nil) != nil)
     #expect(editor.failure == nil)
   }

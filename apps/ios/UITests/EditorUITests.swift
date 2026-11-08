@@ -6,19 +6,50 @@ final class EditorUITests: XCTestCase {
   private var app: XCUIApplication!
   private var editor: XCUIElement { app.textViews["editor.text"] }
 
+  private let language = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+
+  /// 端末の保存領域を空にして共通のテスト文書を入れ、一覧から開く。
   override func setUp() {
     continueAfterFailure = false
     app = XCUIApplication()
-    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launchArguments = language + ["-UITestResetStore", "-UITestSampleDocument"]
     app.launch()
+    let row = app.cells["documents.row"].firstMatch
+    XCTAssertTrue(row.waitForExistence(timeout: 10))
+    row.tap()
     XCTAssertTrue(editor.waitForExistence(timeout: 10))
   }
 
-  /// 先頭の見出しの右端を押して、カーソルを見出しの末尾へ置く。
+  /// 題名の下にある本文の先頭の見出しの右端を押して、カーソルを見出しの末尾へ置く。
   private func tapEndOfHeading() {
+    let title = app.textFields["editor.title"]
     editor.coordinate(withNormalizedOffset: .zero)
-      .withOffset(CGVector(dx: editor.frame.width - 24, dy: 32)).tap()
+      .withOffset(
+        CGVector(dx: editor.frame.width - 24, dy: title.frame.maxY - editor.frame.minY + 12 + 17)
+      ).tap()
     XCTAssertTrue(app.buttons["editor.done"].waitForExistence(timeout: 5))
+  }
+
+  func test新しい文書に題名と本文を書くと一覧に出てアプリを開き直しても残る() {
+    app.navigationBars.buttons["文書"].tap()
+    app.buttons["documents.new"].tap()
+    let title = app.textFields["editor.title"]
+    XCTAssertTrue(title.waitForExistence(timeout: 5))
+    title.tap()
+    title.typeText("初めての文書\n")
+    app.typeText("書いた本文")
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["文書"].tap()
+    XCTAssertTrue(app.cells.staticTexts["初めての文書"].waitForExistence(timeout: 5))
+
+    app.terminate()
+    app.launchArguments = language
+    app.launch()
+    let saved = app.cells.staticTexts["初めての文書"]
+    XCTAssertTrue(saved.waitForExistence(timeout: 10))
+    saved.tap()
+    XCTAssertEqual(app.textFields["editor.title"].value as? String, "初めての文書")
+    XCTAssertEqual(markdown().trimmingCharacters(in: .newlines), "書いた本文")
   }
 
   /// キーボードを閉じてMarkdown表示を開き、書き出されたMarkdownを返す。

@@ -13,8 +13,10 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
   private(set) var failure: Error? {
     didSet { if failure != nil { onFailure() } }
   }
-  /// 画像の表示に使う。写真から追加した画像と、URLから読み込んだ画像を名前で引く。
-  var images: [String: UIImage] = [:]
+  /// 表示した画像を参照名で引く。端末に保存した写真はファイルから、URLの画像は通信で読み込む。
+  private var images: [String: UIImage] = [:]
+  /// 端末に保存した写真の参照名からファイルを引く。端末の写真でなければnil。
+  private let imageFile: (String) -> URL?
   /// 文書・選択・書式が変わったことを画面の所有者へ伝える。
   var onChange: () -> Void = {}
   var onTableTap: (Int) -> Void = { _ in }
@@ -31,9 +33,13 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
   private var redoSteps = [Int]()
   private lazy var history = LexicalUndoManager(view: self)
 
-  init(document: LexicalDocument, markdown: String, pasteboard: UIPasteboard) throws {
+  init(
+    document: LexicalDocument, markdown: String, pasteboard: UIPasteboard,
+    imageFile: @escaping (String) -> URL?
+  ) throws {
     self.document = document
     self.pasteboard = pasteboard
+    self.imageFile = imageFile
     snapshot = try document.request(["action": "load", "markdown": markdown])
     // 本文を読み込めないまま空の編集画面を開くと、編集の続きで本文を失うため開かない。
     if let message = snapshot.failure { throw LexicalDocument.Failure.javascript(message) }
@@ -212,6 +218,9 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
     switch decorator.type {
     case "image":
       let src = decorator.src ?? ""
+      if images[src] == nil, let file = imageFile(src) {
+        images[src] = UIImage(contentsOfFile: file.path)
+      }
       if let image = images[src] {
         let scale = min(1, availableWidth / max(image.size.width, 1))
         attachment.image = image

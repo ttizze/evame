@@ -1,33 +1,57 @@
 import PhotosUI
 import UIKit
 
-/// Lexicalの文書を1つの入力欄で編集する画面。実アカウントや同期APIには接続しない。
+/// 端末に保存した文書を、題名の入力欄と1つの本文の入力欄で編集する画面。編集は少し待ってから端末へ保存する。
 @MainActor
-final class LexicalEditorViewController: UIViewController, PHPickerViewControllerDelegate {
+final class LexicalEditorViewController: UIViewController, PHPickerViewControllerDelegate,
+  UITextFieldDelegate
+{
+  private let store: LocalStore
+  private let document: StoredDocument
   private var editor: LexicalTextView!
+  private let titleField = UITextField()
   private let menu = UIStackView()
   private var menuButtons: [(UIButton, (LexicalDocument.Snapshot) -> Bool)] = []
   private let more = UIButton(type: .system)
+  private var pendingSave: Task<Void, Never>?
+
+  init(store: LocalStore, document: StoredDocument) {
+    self.store = store
+    self.document = document
+    super.init(nibName: nil, bundle: nil)
+  }
+
+  required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    title = String(localized: "編集")
-    navigationItem.prompt = String(localized: "本文は保存・同期されません。")
+    navigationItem.largeTitleDisplayMode = .never
     view.backgroundColor = .systemBackground
     do {
-      guard let url = Bundle.main.url(forResource: "round-trip", withExtension: "md") else {
-        throw CocoaError(.fileNoSuchFile)
-      }
       editor = try LexicalTextView(
-        document: LexicalDocument(), markdown: try String(contentsOf: url, encoding: .utf8),
-        pasteboard: .general)
+        document: LexicalDocument(), markdown: document.body, pasteboard: .general,
+        imageFile: store.imageFile)
     } catch {
       showError()
       return
     }
     editor.translatesAutoresizingMaskIntoConstraints = false
     editor.inputAccessoryView = keyboardMenu()
-    editor.onChange = { [weak self] in self?.updateMenu() }
+    // 題名は本文と一緒にスクロールするよう、本文の入力欄の上端に置く。
+    titleField.text = document.title
+    titleField.placeholder = String(localized: "タイトル")
+    titleField.font = .systemFont(ofSize: 28, weight: .bold)
+    titleField.returnKeyType = .next
+    titleField.accessibilityIdentifier = "editor.title"
+    titleField.delegate = self
+    titleField.addAction(
+      UIAction { [weak self] _ in self?.scheduleSave() }, for: .editingChanged)
+    editor.addSubview(titleField)
+    editor.textContainerInset.top = 16 + 44 + 12
+    editor.onChange = { [weak self] in
+      self?.updateMenu()
+      self?.scheduleSave()
+    }
     editor.onTableTap = { [weak self] unit in self?.showTable(unit) }
     editor.onFailure = { [weak self] in self?.showError() }
     view.addSubview(editor)
@@ -65,6 +89,57 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
     ]
     navigationItem.rightBarButtonItems?.first?.accessibilityLabel = String(localized: "Markdownを確認")
     updateMenu()
+    // アプリが裏へ回ったら、入力の途中でも保存する。画面が閉じれば登録も外れる。
+    NotificationCenter.default.addObserver(
+      self, selector: #selector(saveOnBackground),
+      name: UIApplication.didEnterBackgroundNotification, object: nil)
+  }
+
+  @objc private func saveOnBackground() { save() }
+
+  override func viewDidLayoutSubviews() {
+    super.viewDidLayoutSubviews()
+    guard let editor else { return }
+    let inset = editor.textContainerInset.left + editor.textContainer.lineFragmentPadding
+    titleField.frame = CGRect(x: inset, y: 16, width: editor.bounds.width - inset * 2, height: 44)
+  }
+
+  override func viewWillDisappear(_ animated: Bool) {
+    super.viewWillDisappear(animated)
+    save()
+  }
+
+  // MARK: 端末への保存
+
+  /// 入力が続く間は保存を待ち、止まってから端末へ保存する。
+  private func scheduleSave() {
+    pendingSave?.cancel()
+    pendingSave = Task { [weak self] in
+      try? await Task.sleep(for: .milliseconds(500))
+      guard !Task.isCancelled else { return }
+      self?.save()
+    }
+  }
+
+  private func save() {
+    pendingSave?.cancel()
+    pendingSave = nil
+    guard let editor else { return }
+    do {
+      try store.save(id: document.id, title: titleField.text ?? "", body: editor.snapshot.markdown)
+    } catch {
+      let alert = UIAlertController(
+        title: String(localized: "端末に保存できませんでした"), message: nil, preferredStyle: .alert)
+      alert.addAction(UIAlertAction(title: "OK", style: .default))
+      if presentedViewController == nil { present(alert, animated: true) }
+    }
+  }
+
+  /// 題名でReturnを押すと本文の先頭へ移る。
+  func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+    editor.becomeFirstResponder()
+    editor.selectedRange = NSRange(location: 0, length: 0)
+    return false
   }
 
   // MARK: キーボード上の書式メニュー
@@ -231,17 +306,16 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
     picker.view.addSubview(loading)
     loading.startAnimating()
     provider.loadObject(ofClass: UIImage.self) { [weak self, weak picker] object, _ in
-      let image = object as? UIImage
+      let data = (object as? UIImage)?.jpegData(compressionQuality: 0.9)
       Task { @MainActor in
         guard let self, let picker else { return }
-        guard let image else {
+        // 写真はアプリのファイル領域へコピーして保存し、写真ライブラリの権限に頼らない。
+        guard let data, let source = try? self.store.saveImage(data) else {
           picker.dismiss(animated: true) { self.showError() }
           return
         }
-        let name = "assets/\(UUID().uuidString).png"
-        self.editor.images[name] = image
         self.editor.selectedRange = selection
-        self.editor.insertImage(source: name, alt: String(localized: "写真"))
+        self.editor.insertImage(source: source, alt: String(localized: "写真"))
         picker.dismiss(animated: true)
       }
     }

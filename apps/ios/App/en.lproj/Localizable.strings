@@ -45,3 +45,12 @@
 "チェック項目" = "Checklist item";
 "完了" = "Done";
 "未完了" = "Not done";
+"タイトル" = "Title";
+"文書" = "Documents";
+"新しい文書" = "New document";
+"文書がありません" = "No documents";
+"無題" = "Untitled";
+"公開中" = "Published";
+"下書き" = "Draft";
+"端末に保存できませんでした" = "Couldn't save on this device";
+"端末の保存領域を開けませんでした" = "Couldn't open the storage on this device";
