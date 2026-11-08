@@ -61,7 +61,7 @@ nix develop --command bash scripts/ios.sh test-vditor \
 
 - `build.mjs`・`index.html`: Vditorのnpm同梱スクリプト・Lute・CSS・日本語辞書・アイコンと既存の公式例を`apps/ios/.build/vditor-web`へ配置する。CDNや外部APIへ接続せず、両環境が同じファイルを使う。キャッシュ、自動スペース・用語補正、数式や独自記法等は無効にし、安全化は有効にする。
 - `corpus.js`: 両ブラウザーとWKWebViewから呼ぶ同じ全例実行処理。Markdownの文法は実装しない。
-- `browser.spec.mjs`・`playwright.config.mjs`・`server.mjs`: 実ブラウザーの操作とHTML比較。テストサーバーはlocalhostだけで待ち受ける。ブラウザーレポートは`apps/ios/.build/vditor-browser-results`へ出力し、実行開始時にPlaywrightが初期化する。部分実行では前回の全例レポートも消える。
+- `browser.playwright.mjs`・`playwright.config.mjs`・`server.mjs`: 実ブラウザーの操作とHTML比較。Playwright専用のファイル名と`testMatch`を使い、Vitestの自動収集へ混ぜない。未達の条件はPlaywrightの実行で非0のまま残す。テストサーバーはlocalhostだけで待ち受ける。ブラウザーレポートは`apps/ios/.build/vditor-browser-results`へ出力し、実行開始時にPlaywrightが初期化する。部分実行では前回の全例レポートも消える。
 - `App.swift`・`WKTests.swift`・`UITests.swift`: 本体と別のiOSターゲット。全例レポートは実行ごとの新規UUIDディレクトリへ書き、ログの`VDITOR_WK_CORPUS`行へ出力先を示す。WKのテストは全例の実行・記録を検証し、意味の比較は下記レポート処理が担う。
 - `report.mjs`: Chromium・WebKit・WKWebViewの全件数、入力、保存結果の一致をアサートする。ブラウザーの各`corpus.json`とWKのJSONを指定する。
 - `../markdown-html.mjs`: LexicalのレポートとVditorの比較で共有する純粋なHTML正規化。異なる比較規則で候補の成績を変えないため、共通祖先へ置く。共有化前後で既存のLexicalレポート全体が一致することも検証した。

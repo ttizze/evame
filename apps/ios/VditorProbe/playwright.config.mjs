@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
 	testDir: ".",
-	testMatch: "browser.spec.mjs",
+	testMatch: "browser.playwright.mjs",
 	workers: 1,
 	retries: 0,
 	timeout: 60_000,
