@@ -495,6 +495,38 @@ struct LexicalEditorTests {
     #expect(sorted[0].frame.maxY >= sorted[1].frame.minY)
   }
 
+  @Test("メニューや「> 」の入力で作った引用も、読み込んだ引用と同じ斜体と太い線で表示する")
+  func createdQuoteLooks() throws {
+    for create in ["menu", "shortcut"] {
+      let fixture = try LexicalFixture("前\n\n引用文")
+      defer { fixture.window.isHidden = true }
+      let editor = fixture.editor
+      if create == "menu" {
+        editor.selectedRange = NSRange(location: 2, length: 0)
+        editor.setBlock("quote")
+      } else {
+        editor.selectedRange = NSRange(location: 2, length: 0)
+        editor.insertText(">")
+        editor.insertText(" ")
+      }
+      editor.layoutIfNeeded()
+      let start = editor.text.utf16.count - 3
+      let font = try #require(
+        editor.attributedText.attribute(.font, at: start, effectiveRange: nil) as? UIFont)
+      #expect(
+        font.fontDescriptor.fontAttributes[.init(rawValue: "NSCTFontMatrixAttribute")] != nil,
+        "\(create)")
+      var pending: [UIView] = [editor]
+      var bar: UIView?
+      while let view = pending.popLast() {
+        if view.accessibilityIdentifier == "editor.quote-bar" { bar = view }
+        pending += view.subviews
+      }
+      #expect(bar != nil, "\(create)")
+      #expect(fixture.markdown == "前\n\n> 引用文", "\(create)")
+    }
+  }
+
   @Test("引用はWebと同じく、本文と同じ濃さの斜体の文字と太い線で表示する")
   func quoteLooks() throws {
     let fixture = try LexicalFixture("前\n\n> 引用文")

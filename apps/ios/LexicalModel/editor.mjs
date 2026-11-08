@@ -147,6 +147,13 @@ function units() {
 				visit(node, context);
 			else if ($isQuoteNode(node) && node.isShadowRoot())
 				visit(node, { ...context, quote: context.quote + 1 });
+			// メニューや「> 」の入力で作った引用は段落を持たず、文字を直接持つ。読み込んだ引用と同じ表示にする。
+			else if ($isQuoteNode(node))
+				result.push({
+					node,
+					atomic: false,
+					context: { ...context, quote: context.quote + 1 },
+				});
 			else if (node instanceof FootnoteDefinitionNode)
 				visit(node, {
 					...context,

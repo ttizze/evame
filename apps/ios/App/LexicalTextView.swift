@@ -111,7 +111,7 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
   private func font(_ unit: LexicalDocument.Unit) -> UIFont {
     if unit.context.footnote != nil { return .systemFont(ofSize: 14) }
     // Webの引用と同じく、斜体のやや太い文字にする。
-    if unit.context.quote > 0, unit.block?.type == "paragraph" {
+    if unit.context.quote > 0, ["paragraph", "quote"].contains(unit.block?.type) {
       return slanted(.systemFont(ofSize: Self.baseSize, weight: .medium))
     }
     switch (unit.block?.type, unit.block?.level) {
