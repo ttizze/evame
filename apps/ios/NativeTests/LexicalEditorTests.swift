@@ -157,10 +157,10 @@ struct LexicalEditorTests {
       throw CocoaError(.featureUnsupported)
     }
     #expect(try box().accessibilityLabel == "牛乳")
-    #expect(try box().accessibilityValue == "未完了")
+    #expect(try box().accessibilityValue == String(localized: "未完了"))
     try box().sendActions(for: .touchUpInside)
     #expect(fixture.markdown == "- [x] 牛乳")
-    #expect(try box().accessibilityValue == "完了")
+    #expect(try box().accessibilityValue == String(localized: "完了"))
     #expect(fixture.editor.failure == nil)
   }
 
