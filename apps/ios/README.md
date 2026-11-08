@@ -11,7 +11,7 @@ UIKitの`UITextView`を使う検証用アプリ。最低対応OSは試作ではi
 - `App/LexicalTextView.swift`: 表示・入力・IME・選択・クリップボード・Undoを所有する入力欄。日本語の変換中はUIKitに任せてLexicalを変えず、確定した変更だけをカーソル位置を基準にした差分としてLexicalへ送る。Returnと段落・項目の先頭のBackspaceはLexicalのコマンドに任せる。Undo/RedoはUIKitの`undoManager`からLexicalの履歴へ1操作単位で送る。リストの記号・チェックボックス・引用の線・表の部品は文字の上に重ねて描き、チェックボックスと表は押せる。
 - `App/LexicalEditorViewController.swift`: 本文と一緒にスクロールする題名の入力欄、キーボード上の書式メニュー、リンク・写真・表のセル・Markdown原文の画面を持つ。題名と本文は入力が0.5秒止まったとき、画面を閉じるとき、アプリが裏へ回ったときに端末へ保存する。
 - `App/LocalStore.swift`: 文書をSQLite（iOS標準のSQLite3）、写真をアプリのファイル領域へ保存する。新しい文書はWebと同じ形（英小文字と数字の12文字）のslugで下書きとして作る。内容が変わったときだけ更新日時を進め、開いただけの整形（表の列幅など）は保存しない。写真は`local-image/<UUID>.jpg`として本文から参照し、写真ライブラリの権限に頼らない。
-- `App/DocumentListViewController.swift`: 最後に編集した順の一覧。題名・公開状態・更新日時を表示し、新しい文書を作る。
+- `App/DocumentListViewController.swift`: 最後に編集した順の一覧。題名・更新日時を表示し、新しい文書を作る。
 
 キーボード上には移行前Webと同じLucideアイコンで字下げ・字下げ解除・見出し2/3/4・太字・斜体・取消線・インラインコード・箇条書き・番号付きリスト・リンク・画像を直接並べ、適用中の書式を強調する。その他メニューには段落・チェックリスト・引用・コードブロック・Undo/Redoを置く。Markdown記法とURLの入力中の変換は、PCと共有する`src/app/[locale]/_components/editor/shortcuts.ts`（Lexical公式の`MdastShortcutsExtension`・`AutoLinkExtension`と区切り線の記法）で行う。Lexicalが操作を拒否した場合は、Lexicalが戻した後の文書へ表示を揃え、警告を出す。
 

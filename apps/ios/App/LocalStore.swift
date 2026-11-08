@@ -36,9 +36,14 @@ final class LocalStore {
     var handle: OpaquePointer?
     guard sqlite3_open(directory.appending(path: "documents.sqlite").path, &handle) == SQLITE_OK,
       let handle
-    else { throw StoreError.open }
+    else {
+      sqlite3_close(handle)
+      throw StoreError.open
+    }
     database = handle
     let applied = try version()
+    // 新しい版のアプリが作った保存形式へ、古いアプリから書き込まない。
+    guard applied <= Self.migrations.count else { throw StoreError.newerFormat }
     for (index, migration) in Self.migrations.enumerated() where index >= applied {
       try execute("BEGIN")
       do {
@@ -56,6 +61,7 @@ final class LocalStore {
 
   enum StoreError: Error {
     case open
+    case newerFormat
     case sqlite(String)
   }
 
@@ -77,7 +83,8 @@ final class LocalStore {
     try execute(
       "INSERT INTO documents (id, slug, title, body, updated_at) VALUES (?, ?, '', '', ?)",
       [id.uuidString, slug, Date().timeIntervalSince1970])
-    return try document(id: id)!
+    guard let document = try document(id: id) else { throw error() }
+    return document
   }
 
   /// 題名と本文を保存する。内容が変わったときだけ更新日時を進める。

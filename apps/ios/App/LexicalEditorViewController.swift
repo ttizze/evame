@@ -102,11 +102,7 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
       name: UIApplication.didEnterBackgroundNotification, object: nil)
   }
 
-  /// アプリが裏へ回ったら、表のセルなど入力中の欄も確定させてから保存する。
-  @objc private func saveOnBackground() {
-    navigationController?.view.endEditing(true)
-    save()
-  }
+  @objc private func saveOnBackground() { commitAndSave() }
 
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
@@ -117,6 +113,14 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
 
   override func viewWillDisappear(_ animated: Bool) {
     super.viewWillDisappear(animated)
+    commitAndSave()
+  }
+
+  /// 画面を閉じるときと裏へ回るときは、本文の変換中の文字や表のセルなど入力中の欄を確定させてから保存する。
+  /// 閉じた後に確定しても、その入力は保存されない。
+  private func commitAndSave() {
+    if editor?.markedTextRange != nil { editor.unmarkText() }
+    navigationController?.view.endEditing(true)
     save()
   }
 
