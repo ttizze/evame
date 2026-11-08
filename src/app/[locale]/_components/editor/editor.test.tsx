@@ -1,6 +1,7 @@
 import { $createCodeNode } from "@lexical/code-core";
 import { HorizontalRuleNode } from "@lexical/extension";
 import { $convertFromMarkdownString } from "@lexical/mdast";
+import { captureException } from "@sentry/react";
 import { act, cleanup, render, waitFor } from "@testing-library/react";
 import {
 	$createParagraphNode,
@@ -25,6 +26,25 @@ import { HtmlNode } from "./syntax-nodes";
 
 vi.mock("@/app/_service/reader-action", () => ({ callReaderAction: vi.fn() }));
 vi.mock("react-tweet", () => ({ Tweet: () => null }));
+vi.mock("@sentry/react", () => ({ captureException: vi.fn() }));
+// 初期の本文を読み込めない場合を再現するため、特定の本文だけ読み込みや読み込み後の変換で失敗させる。
+vi.mock("@lexical/mdast", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("@lexical/mdast")>();
+	const { $getEditor, TextNode } = await import("lexical");
+	return {
+		...actual,
+		$convertFromMarkdownString: (
+			...args: Parameters<typeof actual.$convertFromMarkdownString>
+		) => {
+			if (args[0] === "読み込めない本文") throw new Error("読み込み失敗");
+			if (args[0] === "変換で失敗する本文")
+				$getEditor().registerNodeTransform(TextNode, () => {
+					throw new Error("変換失敗");
+				});
+			return actual.$convertFromMarkdownString(...args);
+		},
+	};
+});
 
 afterEach(() => {
 	cleanup();
@@ -80,6 +100,47 @@ describe("Lexicalの本文フォーム", () => {
 			expect(
 				editor.getEditorState().read(() => $getRoot().getTextContent()),
 			).toContain('const pattern = "**foo**";');
+		});
+	}
+	it("編集中にLexicalが操作を拒否しても途中の変更を残さず、記録して次の編集を正しく反映する", () => {
+		const editor = renderEditor("本文");
+		act(() =>
+			editor.update(
+				() => {
+					$getRoot().append(
+						$createParagraphNode().append($createTextNode("途中")),
+					);
+					throw new Error("拒否");
+				},
+				{ discrete: true },
+			),
+		);
+		act(() =>
+			editor.update(
+				() =>
+					$getRoot().append(
+						$createParagraphNode().append($createTextNode("次")),
+					),
+				{ discrete: true },
+			),
+		);
+		const text = editor.read(() => $getRoot().getTextContent());
+		expect(text).toContain("次");
+		expect(text).not.toContain("途中");
+		expect(captureException).toHaveBeenCalledWith(
+			expect.objectContaining({ message: "拒否" }),
+		);
+	});
+	for (const [markdown, message] of [
+		["読み込めない本文", "読み込み失敗"],
+		["変換で失敗する本文", "変換失敗"],
+	]) {
+		it(`初期の本文の${message}では空の編集画面を出さず、画面のエラーにする`, () => {
+			const consoleError = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
+			expect(() => renderEditor(markdown)).toThrow(message);
+			consoleError.mockRestore();
 		});
 	}
 	it("文書を開いた直後の初期化だけでは保存を要求しない", async () => {

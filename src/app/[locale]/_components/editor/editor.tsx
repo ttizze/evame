@@ -11,9 +11,11 @@ import { LexicalExtensionComposer } from "@lexical/react/LexicalExtensionCompose
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextExtension } from "@lexical/rich-text";
 import { TableExtension } from "@lexical/table";
+import { captureException } from "@sentry/react";
 import {
 	$getState,
 	$nodesOfType,
+	$onUpdate,
 	configExtension,
 	defineExtension,
 } from "lexical";
@@ -46,6 +48,7 @@ export function Editor({
 		null,
 	);
 	const currentMarkdown = useRef(defaultValue);
+	const loaded = useRef(false);
 	// 拡張は編集画面の生成時に一度だけ作り、再描画でエディタを作り直さない。
 	const [extension] = useState(() =>
 		defineExtension({
@@ -54,9 +57,18 @@ export function Editor({
 			$initialEditorState: () => {
 				$convertFromMarkdownString(currentMarkdown.current);
 				currentMarkdown.current = $convertToMarkdownString();
+				// 読み込み後の変換まで終えて確定してから、読み込み済みとする。
+				$onUpdate(() => {
+					loaded.current = true;
+				});
 			},
+			// 例外を投げ返すと、Lexicalが途中まで変えた状態を確定済みの状態へ戻す後始末が飛ばされる。
+			// 編集中の拒否は記録してLexicalに戻させる。初期の本文を読み込めない場合は、
+			// 空の編集画面から保存して本文を失わないよう、画面のエラーにする。
 			onError: (error) => {
-				throw error;
+				if (!loaded.current) throw error;
+				console.error(error);
+				captureException(error);
 			},
 			theme: {
 				text: {
