@@ -100,6 +100,7 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
   /// 入力を失わないことを優先する。
   private func commitAndSave() {
     if editor?.markedTextRange != nil { editor.unmarkText() }
+    if titleField.markedTextRange != nil { titleField.unmarkText() }
     navigationController?.view.endEditing(true)
     save()
   }

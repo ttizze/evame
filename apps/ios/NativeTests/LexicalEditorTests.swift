@@ -459,6 +459,42 @@ struct LexicalEditorTests {
     #expect(editor.attributedText.attribute(.backgroundColor, at: 2, effectiveRange: nil) == nil)
   }
 
+  @Test("コードブロックで日本語を変換中に行が増えても、濃い背景が未確定の文字まで覆う")
+  func codeBlockWhileComposing() throws {
+    let fixture = try LexicalFixture("```\nlet a = 1\n```\n\n後")
+    defer { fixture.window.isHidden = true }
+    let editor = fixture.editor
+    editor.selectedRange = NSRange(location: 9, length: 0)
+    editor.setMarkedText(
+      String(repeating: "日本語のコメント", count: 6), selectedRange: NSRange(location: 0, length: 0))
+    editor.layoutIfNeeded()
+    var pending: [UIView] = [editor]
+    var background: UIView?
+    while let view = pending.popLast() {
+      if view.accessibilityIdentifier == "editor.code-block" { background = view }
+      pending += view.subviews
+    }
+    let marked = try #require(editor.markedTextRange)
+    #expect(try #require(background).frame.maxY >= editor.caretRect(for: marked.end).maxY)
+  }
+
+  @Test("引用の中の段落の間も、次が見出しでも線を途切れさせない")
+  func quoteBarContinues() throws {
+    let fixture = try LexicalFixture("> ## 引用の見出し\n>\n> 見出しの後の段落\n\n後")
+    defer { fixture.window.isHidden = true }
+    let editor = fixture.editor
+    editor.layoutIfNeeded()
+    var pending: [UIView] = [editor]
+    var bars: [UIView] = []
+    while let view = pending.popLast() {
+      if view.accessibilityIdentifier == "editor.quote-bar" { bars.append(view) }
+      pending += view.subviews
+    }
+    let sorted = bars.sorted { $0.frame.minY < $1.frame.minY }
+    #expect(sorted.count == 2)
+    #expect(sorted[0].frame.maxY >= sorted[1].frame.minY)
+  }
+
   @Test("引用はWebと同じく、本文と同じ濃さの斜体の文字と太い線で表示する")
   func quoteLooks() throws {
     let fixture = try LexicalFixture("前\n\n> 引用文")

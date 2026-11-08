@@ -67,6 +67,7 @@ struct EditorScreenTests {
     _ = title.becomeFirstResponder()
     title.setMarkedText("だいめい", selectedRange: NSRange(location: 4, length: 0))
     controller.viewWillDisappear(false)
+    #expect(title.markedTextRange == nil)
     #expect(try store.document(id: document.id)?.title == "だいめい")
   }
 

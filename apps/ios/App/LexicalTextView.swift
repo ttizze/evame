@@ -321,11 +321,18 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
       if unit.block?.type == "code" {
         // 文字の後ろに描くため、入力欄の文字より下に重ねる。
         let x = left + indentation(unit)
+        // 変換中の文字は表示単位の長さに含まれないため、この単位の中にあれば下端をその末尾まで伸ばす。
+        var bottom = caretRect(for: end).maxY
+        if let marked = markedTextRange, offset(from: start, to: marked.start) >= 0,
+          offset(from: marked.start, to: end) >= 0
+        {
+          bottom = max(bottom, caretRect(for: marked.end).maxY)
+        }
         let background = UIView(
           frame: CGRect(
             x: x, y: first.minY - 8,
             width: bounds.width - textContainerInset.right - textContainer.lineFragmentPadding - x,
-            height: caretRect(for: end).maxY - first.minY + 16))
+            height: bottom - first.minY + 16))
         background.backgroundColor = UIColor(red: 31 / 255, green: 41 / 255, blue: 55 / 255, alpha: 1)
         background.layer.cornerRadius = 6
         background.isUserInteractionEnabled = false
@@ -334,14 +341,18 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
         overlays.append(background)
       }
       if unit.context.quote > 0 {
-        // 同じ引用の次の段落まで、段落の間隔も含めて線をつなげる。
-        let continues =
-          snapshot.units.indices.contains(index + 1)
-          && snapshot.units[index + 1].context.quote >= unit.context.quote
+        // 同じ引用の次の単位があれば、段落の間隔も含めてその先頭まで線をつなげる。
+        var bottom = caretRect(for: end).maxY
+        if snapshot.units.indices.contains(index + 1),
+          snapshot.units[index + 1].context.quote >= unit.context.quote,
+          let next = position(from: beginningOfDocument, offset: unitStarts[index + 1])
+        {
+          bottom = max(bottom, caretRect(for: next).minY)
+        }
         let bar = UIView(
           frame: CGRect(
             x: left + CGFloat(unit.context.quote - 1) * 16, y: first.minY, width: 4,
-            height: caretRect(for: end).maxY - first.minY + (continues ? 6 : 0)))
+            height: bottom - first.minY))
         bar.backgroundColor = .systemGray3
         bar.accessibilityIdentifier = "editor.quote-bar"
         add(bar)
@@ -475,7 +486,12 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
 
   func textViewDidChange(_ textView: UITextView) {
     // 変換の開始・取り消しも画面へ伝え、変換中は書式ボタンを無効にする。
-    guard markedTextRange == nil, self.text != rendered else { return onChange() }
+    guard markedTextRange == nil, self.text != rendered else {
+      // 変換中の文字で行が増えても、コードブロックの背景などの重ねた表示を追いつかせる。
+      overlayWidth = 0
+      setNeedsLayout()
+      return onChange()
+    }
     // UIKitが反映した確定入力を、カーソル位置を基準に表示前の文字列との差分として取り出す。
     let old = rendered as NSString
     let new = self.text as NSString
