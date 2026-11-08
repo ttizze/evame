@@ -5,7 +5,6 @@ import {
 	$createQuoteNode,
 	$isHeadingNode,
 	$isQuoteNode,
-	type QuoteNode,
 } from "@lexical/rich-text";
 import { $setBlocksType } from "@lexical/selection";
 import { $findMatchingParent } from "@lexical/utils";
@@ -17,13 +16,11 @@ import {
 	type LexicalNode,
 } from "lexical";
 
-/** 段落を持つ引用（読み込んだ引用や、Returnで行を足した引用）。 */
-const $paragraphQuote = (node: LexicalNode) =>
-	$findMatchingParent(
-		node,
-		(parent): parent is QuoteNode =>
-			$isQuoteNode(parent) && parent.isShadowRoot(),
-	);
+/** いちばん内側の引用が段落を持つ引用（読み込んだ引用や、Returnで行を足した引用）なら返す。 */
+const $paragraphQuote = (node: LexicalNode) => {
+	const quote = $findMatchingParent(node, $isQuoteNode);
+	return quote?.isShadowRoot() ? quote : null;
+};
 
 /**
  * カーソルのあるブロックの種類。PCのメニューとiPhoneで同じ判定にする。

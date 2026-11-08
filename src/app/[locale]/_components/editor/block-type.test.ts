@@ -3,8 +3,17 @@ import {
 	$convertFromMarkdownString,
 	$convertToMarkdownString,
 } from "@lexical/mdast";
-import { RichTextExtension } from "@lexical/rich-text";
-import { $getRoot, defineExtension, type LexicalEditor } from "lexical";
+import {
+	$createQuoteNode,
+	$isQuoteNode,
+	RichTextExtension,
+} from "@lexical/rich-text";
+import {
+	$createTextNode,
+	$getRoot,
+	defineExtension,
+	type LexicalEditor,
+} from "lexical";
 import { describe, expect, it } from "vitest";
 import { $currentBlockType, $setBlockType } from "./block-type";
 import { MarkdownExtension } from "./markdown";
@@ -39,6 +48,24 @@ describe("ブロックの種類の変更", () => {
 		expect(editor.read(() => $currentBlockType())).toBe("quote");
 		apply(editor, "quote");
 		expect(markdown(editor)).toBe("一\n\n二");
+	});
+
+	it("引用の中で「> 」と打って作った入れ子の引用では、カーソルのある内側の引用だけを解除する", () => {
+		for (const type of ["quote", "paragraph"] as const) {
+			const editor = editorWith("> 一");
+			editor.update(
+				() => {
+					const outer = $getRoot().getFirstChild();
+					const inner = $createQuoteNode().append($createTextNode("二"));
+					if ($isQuoteNode(outer)) outer.append(inner);
+					inner.selectEnd();
+				},
+				{ discrete: true },
+			);
+			expect(markdown(editor), type).toBe("> 一\n>\n> > 二");
+			apply(editor, type);
+			expect(markdown(editor), type).toBe("> 一\n>\n> 二");
+		}
 	});
 
 	it("段落を持つ引用の中で標準のテキストを選んでも、引用を解除する", () => {

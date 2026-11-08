@@ -32,8 +32,7 @@ export const QuoteEnterExtension = defineExtension({
 				) as QuoteNode | null;
 				// 選択の両端が同じ引用の中にあるときだけ扱う。
 				if (
-					!quote ||
-					!quote.is(
+					!quote?.is(
 						$findMatchingParent(selection.focus.getNode(), $isQuoteNode),
 					)
 				)
