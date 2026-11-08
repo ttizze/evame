@@ -6,7 +6,7 @@ private let lexicalReportDirectory =
   ProcessInfo.processInfo.environment["EVAME_LEXICAL_REPORT_DIR"] ?? NSTemporaryDirectory()
   + "evame-lexical-reports-\(UUID().uuidString)"
 
-@Test("公式CommonMarkとGFMの全例を同じ入力から保存して比較する", arguments: lexicalModes + ["pc-same-writer"])
+@Test("公式CommonMarkとGFMの全例を同じ入力から保存して比較する", arguments: lexicalModes)
 func lexicalCorpus(_ mode: String) throws {
   #if SWIFT_PACKAGE
     let bundle = Bundle.module

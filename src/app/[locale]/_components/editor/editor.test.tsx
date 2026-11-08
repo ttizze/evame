@@ -1,4 +1,5 @@
 import { $createCodeNode } from "@lexical/code-core";
+import { $convertFromMarkdownString } from "@lexical/mdast";
 import { act, cleanup, render, waitFor } from "@testing-library/react";
 import {
 	$createParagraphNode,
@@ -13,7 +14,6 @@ import { callReaderAction } from "@/app/_service/reader-action";
 import { messages } from "@/i18n/messages";
 import { Editor } from "./editor";
 import { UPLOAD_IMAGE_COMMAND } from "./image-plugin";
-import { importMarkdown } from "./markdown";
 
 vi.mock("@/app/_service/reader-action", () => ({ callReaderAction: vi.fn() }));
 vi.mock("react-tweet", () => ({ Tweet: () => null }));
@@ -116,12 +116,12 @@ describe("Lexicalの本文フォーム", () => {
 		const editor = getNearestEditorFromDOMNode(editable);
 		if (!editor) throw new Error("エディタがありません");
 		act(() =>
-			editor.update(() => importMarkdown("一回目の編集", $getRoot()), {
+			editor.update(() => $convertFromMarkdownString("一回目の編集"), {
 				discrete: true,
 			}),
 		);
 		act(() =>
-			editor.update(() => importMarkdown("二回目の**編集**", $getRoot()), {
+			editor.update(() => $convertFromMarkdownString("二回目の**編集**"), {
 				discrete: true,
 			}),
 		);

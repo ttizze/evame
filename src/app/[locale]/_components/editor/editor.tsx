@@ -1,29 +1,33 @@
-import { $convertToMarkdownString } from "@lexical/markdown";
+import { TabIndentationExtension } from "@lexical/extension";
+import { HistoryExtension } from "@lexical/history";
 import {
-	AutoLinkPlugin,
+	AutoLinkExtension,
 	createLinkMatcherWithRegExp,
-} from "@lexical/react/LexicalAutoLinkPlugin";
-import { CheckListPlugin } from "@lexical/react/LexicalCheckListPlugin";
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
+	LinkExtension,
+} from "@lexical/link";
+import { CheckListExtension, ListExtension } from "@lexical/list";
+import {
+	$convertFromMarkdownString,
+	$convertToMarkdownString,
+	MdastShortcutsExtension,
+} from "@lexical/mdast";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
-import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
-import { ListPlugin } from "@lexical/react/LexicalListPlugin";
-import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
+import { LexicalExtensionComposer } from "@lexical/react/LexicalExtensionComposer";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { TabIndentationPlugin } from "@lexical/react/LexicalTabIndentationPlugin";
-import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
-import { $getRoot, $getState, $nodesOfType } from "lexical";
+import { RichTextExtension } from "@lexical/rich-text";
+import { TableExtension } from "@lexical/table";
+import {
+	$getState,
+	$nodesOfType,
+	configExtension,
+	defineExtension,
+} from "lexical";
 import { useRef, useState } from "react";
 import { BlockDragMenu } from "./block-drag-menu";
 import { EditorMenu } from "./editor-menu";
 import { ImagePlugin } from "./image-plugin";
-import { editorNodes, importMarkdown, markdownTransformers } from "./markdown";
+import { MarkdownExtension } from "./markdown";
 import { ImageNode, imageState } from "./media-nodes";
-
-const linkMatchers = [createLinkMatcherWithRegExp(/https?:\/\/[^\s<>]+/)];
 
 /** 記事とコメントで共有するMarkdown入出力のエディタ。本文の変更だけを保存元へ通知する。 */
 export function Editor({
@@ -46,60 +50,74 @@ export function Editor({
 		null,
 	);
 	const currentMarkdown = useRef(defaultValue);
+	// 拡張は編集画面の生成時に一度だけ作り、再描画でエディタを作り直さない。
+	const [extension] = useState(() =>
+		defineExtension({
+			name: "evame-editor",
+			namespace: "evame-editor",
+			$initialEditorState: () => {
+				$convertFromMarkdownString(currentMarkdown.current);
+				currentMarkdown.current = $convertToMarkdownString();
+			},
+			onError: (error) => {
+				throw error;
+			},
+			theme: {
+				text: {
+					bold: "font-bold",
+					italic: "italic",
+					strikethrough: "line-through",
+					code: "bg-gray-200 dark:bg-gray-900 rounded-md p-1 text-sm",
+				},
+				list: {
+					checklist: "list-none",
+					listitemChecked: "editor-checklist-checked",
+					listitemUnchecked: "editor-checklist-unchecked",
+					nested: { listitem: "list-none" },
+				},
+				table: "border-collapse",
+				tableScrollableWrapper: "overflow-x-auto",
+				tableCell: "border border-border px-3 py-2",
+				tableCellHeader: "font-semibold bg-muted",
+			},
+			dependencies: [
+				RichTextExtension,
+				HistoryExtension,
+				ListExtension,
+				CheckListExtension,
+				LinkExtension,
+				configExtension(AutoLinkExtension, {
+					matchers: [createLinkMatcherWithRegExp(/https?:\/\/[^\s<>]+/)],
+				}),
+				configExtension(TableExtension, {
+					hasCellBackgroundColor: false,
+					hasCellMerge: false,
+					hasHorizontalScroll: true,
+				}),
+				TabIndentationExtension,
+				MarkdownExtension,
+				MdastShortcutsExtension,
+			],
+		}),
+	);
 	return (
-		<LexicalComposer
-			initialConfig={{
-				namespace: "evame-editor",
-				nodes: editorNodes,
-				editorState: () => {
-					importMarkdown(currentMarkdown.current, $getRoot());
-					currentMarkdown.current =
-						$convertToMarkdownString(markdownTransformers);
-				},
-				onError: (error) => {
-					throw error;
-				},
-				theme: {
-					text: {
-						bold: "font-bold",
-						italic: "italic",
-						strikethrough: "line-through",
-						code: "bg-gray-200 dark:bg-gray-900 rounded-md p-1 text-sm",
-					},
-					list: {
-						checklist: "list-none",
-						listitemChecked: "editor-checklist-checked",
-						listitemUnchecked: "editor-checklist-unchecked",
-						nested: { listitem: "list-none" },
-					},
-					table: "border-collapse",
-					tableScrollableWrapper: "overflow-x-auto",
-					tableCell: "border border-border px-3 py-2",
-					tableCellHeader: "font-semibold bg-muted",
-				},
-			}}
-		>
+		<LexicalExtensionComposer contentEditable={null} extension={extension}>
 			<div
 				className={showMenus ? "relative md:-ml-8 md:pl-8" : "relative"}
 				ref={showMenus ? setAnchorElement : null}
 			>
-				<RichTextPlugin
-					contentEditable={
-						<ContentEditable
-							aria-label={placeholder}
-							aria-placeholder={placeholder}
-							className={`${className} min-h-8 focus:outline-hidden`}
-							data-testid="lexical-editor"
-							placeholder={
-								<div
-									className={`pointer-events-none absolute top-0 left-0 text-muted-foreground ${showMenus ? "md:left-8" : ""}`}
-								>
-									{placeholder}
-								</div>
-							}
-						/>
+				<ContentEditable
+					aria-label={placeholder}
+					aria-placeholder={placeholder}
+					className={`${className} min-h-8 focus:outline-hidden`}
+					data-testid="lexical-editor"
+					placeholder={
+						<div
+							className={`pointer-events-none absolute top-0 left-0 text-muted-foreground ${showMenus ? "md:left-8" : ""}`}
+						>
+							{placeholder}
+						</div>
 					}
-					ErrorBoundary={LexicalErrorBoundary}
 				/>
 				<input
 					name={name}
@@ -111,32 +129,23 @@ export function Editor({
 				/>
 				<input name="contentFormat" type="hidden" value="markdown" />
 			</div>
-			<HistoryPlugin />
-			<ListPlugin />
-			<CheckListPlugin />
-			<LinkPlugin />
-			<AutoLinkPlugin matchers={linkMatchers} />
-			<TablePlugin
-				hasCellBackgroundColor={false}
-				hasCellMerge={false}
-				hasHorizontalScroll
-			/>
-			<TabIndentationPlugin />
-			<MarkdownShortcutPlugin transformers={markdownTransformers} />
 			<ImagePlugin />
 			<OnChangePlugin
 				ignoreHistoryMergeTagChange={false}
 				ignoreSelectionChange
-				onChange={(state) => {
-					const markdown = state.read(() => {
-						if (
-							$nodesOfType(ImageNode).some(
-								(node) => $getState(node, imageState).src === "/loading.gif",
+				onChange={(state, editor) => {
+					const markdown = state.read(
+						() => {
+							if (
+								$nodesOfType(ImageNode).some(
+									(node) => $getState(node, imageState).src === "/loading.gif",
+								)
 							)
-						)
-							return null;
-						return $convertToMarkdownString(markdownTransformers);
-					});
+								return null;
+							return $convertToMarkdownString();
+						},
+						{ editor },
+					);
 					if (markdown === null || markdown === currentMarkdown.current) return;
 					currentMarkdown.current = markdown;
 					if (input.current) input.current.value = markdown;
@@ -149,6 +158,6 @@ export function Editor({
 					{anchorElement && <BlockDragMenu anchorElement={anchorElement} />}
 				</>
 			)}
-		</LexicalComposer>
+		</LexicalExtensionComposer>
 	);
 }

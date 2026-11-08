@@ -124,7 +124,7 @@ func lexicalFormats(_ mode: String) throws {
   #expect((plain["markdown"] as? String)?.trimmingCharacters(in: .newlines) == "日本語English")
 }
 
-@Test("リスト内のコードを保存しても外側へ移動しない", arguments: lexicalModes + ["pc-same-writer"])
+@Test("リスト内のコードを保存しても外側へ移動しない", arguments: lexicalModes)
 func lexicalNestedCode(_ mode: String) throws {
   let session = try LexicalSession(mode)
   let output = try session.request(["action": "load", "source": "- foo\n\n\t\tbar\n"])

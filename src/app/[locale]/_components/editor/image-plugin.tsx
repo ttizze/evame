@@ -1,7 +1,7 @@
 import { $isCodeNode } from "@lexical/code-core";
 import { $generateNodesFromDOM } from "@lexical/html";
+import { $generateNodesFromMarkdownString } from "@lexical/mdast";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $createQuoteNode } from "@lexical/rich-text";
 import { $insertNodeToNearestRoot, mergeRegister } from "@lexical/utils";
 import {
 	$create,
@@ -24,7 +24,6 @@ import { useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { callReaderAction } from "@/app/_service/reader-action";
 import { getXPostId } from "@/app/[locale]/_domain/get-x-post-id";
-import { importMarkdown } from "./markdown";
 import { ImageNode, imageState, TweetNode, tweetState } from "./media-nodes";
 
 export const UPLOAD_IMAGE_COMMAND = createCommand<File>("UPLOAD_IMAGE");
@@ -175,9 +174,7 @@ export function ImagePlugin() {
 					}
 					if (!text) return false;
 					event.preventDefault();
-					const container = $createQuoteNode();
-					importMarkdown(text, container);
-					selection.insertNodes(container.getChildren());
+					selection.insertNodes($generateNodesFromMarkdownString(text));
 					return true;
 				},
 				COMMAND_PRIORITY_HIGH,

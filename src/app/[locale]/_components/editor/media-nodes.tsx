@@ -138,31 +138,3 @@ export class TweetNode extends DecoratorNode<ReactNode> {
 		return { element };
 	}
 }
-
-export const sourceState = createState("markdown", {
-	parse: (value) => (typeof value === "string" ? value : ""),
-});
-
-/** Markdownで保持する未対応構文。読み込みだけで元の内容を消さない。 */
-export class MarkdownSourceNode extends DecoratorNode<ReactNode> {
-	isInline() {
-		return false;
-	}
-	$config() {
-		return this.config("markdown-source", {
-			extends: DecoratorNode,
-			stateConfigs: [{ flat: true, stateConfig: sourceState }],
-		});
-	}
-	createDOM() {
-		return document.createElement("div");
-	}
-	updateDOM() {
-		return false;
-	}
-	decorate() {
-		return (
-			<pre className="whitespace-pre-wrap">{$getState(this, sourceState)}</pre>
-		);
-	}
-}

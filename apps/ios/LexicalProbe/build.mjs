@@ -28,11 +28,6 @@ resolutions.set(
 	"decode-named-character-reference",
 	Bun.resolveSync("decode-named-character-reference", directory),
 );
-const writer = Bun.resolveSync("mdast-util-to-markdown", directory);
-const webWriter = Bun.resolveSync(
-	"mdast-util-to-markdown",
-	fileURLToPath(new URL("../../../", import.meta.url)),
-);
 for (const name of [
 	"lexical",
 	...(await readdir(`${directory}/node_modules/@lexical`)).map(
@@ -50,11 +45,9 @@ for (const name of [
 		resolutions.set(specifier, Bun.resolveSync(specifier, directory));
 	}
 }
-for (const mode of ["legacy", "mdast", "pc", "pc-same-writer"]) {
+for (const mode of ["legacy", "mdast", "pc"]) {
 	const result = await Bun.build({
-		entrypoints: [
-			`${directory}/${mode === "pc-same-writer" ? "pc" : mode}.mjs`,
-		],
+		entrypoints: [`${directory}/${mode}.mjs`],
 		target: "browser",
 		format: "iife",
 		conditions: ["development"],
@@ -66,11 +59,9 @@ for (const mode of ["legacy", "mdast", "pc", "pc-same-writer"]) {
 					build.onResolve(
 						{
 							filter:
-								/^(lexical$|@lexical\/|decode-named-character-reference$|mdast-util-to-markdown$)/,
+								/^(lexical$|@lexical\/|decode-named-character-reference$)/,
 						},
 						({ path }) => {
-							if (path === "mdast-util-to-markdown")
-								return { path: mode === "pc" ? webWriter : writer };
 							const resolved = resolutions.get(path);
 							if (!resolved)
 								throw new Error(`unresolved Lexical entry ${path}`);

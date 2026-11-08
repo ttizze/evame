@@ -24,7 +24,7 @@ const gfm = unified()
 	.use(remarkRehype, { allowDangerousHtml: true })
 	.use(rehypeStringify, { allowDangerousHtml: true });
 const summaries = [];
-for (const mode of ["legacy", "mdast", "pc", "pc-same-writer"]) {
+for (const mode of ["legacy", "mdast", "pc"]) {
 	const mac = JSON.parse(
 		readFileSync(join(macDirectory, `${mode}.json`), "utf8"),
 	);
