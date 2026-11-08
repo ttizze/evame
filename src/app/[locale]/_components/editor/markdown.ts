@@ -1,3 +1,4 @@
+import { ListNode } from "@lexical/list";
 import {
 	type FootnoteDefinition,
 	type FootnoteReference,
@@ -80,6 +81,21 @@ export const MarkdownExtension = defineExtension({
 								)
 									node.data = { ...node.data, block: true };
 							}),
+						(tree) =>
+							visit(tree, "listItem", (node) => {
+								// GFMでは記号の後に文字がないとチェック項目にならないため、
+								// 空のチェック項目は空白1文字の段落で書き出す。読み込みでは空の項目へ戻す。
+								const [paragraph] = node.children;
+								if (
+									node.checked != null &&
+									node.children.length === 1 &&
+									paragraph.type === "paragraph" &&
+									paragraph.children.length === 1 &&
+									paragraph.children[0].type === "text" &&
+									paragraph.children[0].value === " "
+								)
+									node.children = [];
+							}),
 					],
 				},
 			],
@@ -158,6 +174,29 @@ export const MarkdownExtension = defineExtension({
 				},
 			],
 			exportRules: [
+				{
+					type: ListNode,
+					$export: (_node: ListNode, context) => {
+						const output = context.next();
+						for (const list of output)
+							visit(list, "listItem", (item) => {
+								if (
+									item.checked != null &&
+									item.children.every(
+										(child) =>
+											child.type === "paragraph" && child.children.length === 0,
+									)
+								)
+									item.children = [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: " " }],
+										},
+									];
+							});
+						return output;
+					},
+				},
 				{
 					type: ImageNode,
 					$export: (node: ImageNode) => {

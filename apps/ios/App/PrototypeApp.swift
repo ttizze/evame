@@ -9,7 +9,7 @@ struct PrototypeApp: App {
 
 private struct PrototypeScreen: UIViewControllerRepresentable {
   func makeUIViewController(context: Context) -> UINavigationController {
-    UINavigationController(rootViewController: EditorViewController())
+    UINavigationController(rootViewController: LexicalEditorViewController())
   }
 
   func updateUIViewController(_ controller: UINavigationController, context: Context) {}

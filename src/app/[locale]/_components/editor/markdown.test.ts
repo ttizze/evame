@@ -1,5 +1,10 @@
 import { buildEditorFromExtensions } from "@lexical/extension";
 import {
+	$createListItemNode,
+	$createListNode,
+	ListItemNode,
+} from "@lexical/list";
+import {
 	$convertFromMarkdownString,
 	$convertToMarkdownString,
 } from "@lexical/mdast";
@@ -196,6 +201,28 @@ describe("LexicalとMarkdownの往復", () => {
 		expect(rendered(`${saved}\n\n[参照][ref]`)).toEqual(
 			rendered('本文\n\n[参照](https://example.com/target "題名")'),
 		);
+	});
+	it("空のチェック項目だけのリストを保存して読み込み直しても、チェック項目のまま空で開く", () => {
+		const editor = createMarkdownEditor();
+		editor.update(
+			() =>
+				$getRoot()
+					.clear()
+					.append($createListNode("check").append($createListItemNode(false))),
+			{ discrete: true },
+		);
+		const saved = editor.read(() => $convertToMarkdownString());
+		expect(JSON.stringify(rendered(saved))).toContain('"type":"checkbox"');
+		editor.update(() => $convertFromMarkdownString(saved), { discrete: true });
+		expect(
+			editor.read(() =>
+				$nodesOfType(ListItemNode).map((item) => [
+					item.getChecked(),
+					item.getTextContent(),
+				]),
+			),
+		).toEqual([[false, ""]]);
+		expect(editor.read(() => $convertToMarkdownString())).toBe(saved);
 	});
 	it("脚注の本文は段落として編集でき、編集した内容を保存する", () => {
 		const editor = createMarkdownEditor();

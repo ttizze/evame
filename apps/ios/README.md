@@ -1,14 +1,29 @@
 # iPhone編集画面の試作
 
-SwiftUIの画面にUIKitの`UITextView`を組み込んだ検証用アプリ。最低対応OSは試作ではiOS 18とする。本番アプリの対応OSやエディタ基盤を確定するものではない。
+UIKitの`UITextView`を使う検証用アプリ。最低対応OSは試作ではiOS 18とする。本番アプリの対応OSやエディタ基盤を確定するものではない。
 
-見出し、太字・斜体・取り消し線、リンク、リスト、引用、コード、画像の表示・取り込み、表の専用編集画面、Markdown原文の編集を試せる。脚注やHTMLなど見た目での編集に対応しないブロックは原文を保持する。
+## Lexicalの編集画面
 
-キーボード上には移行前Webと同じLucideアイコンで字下げ・字下げ解除・見出し2/3/4・太字・斜体・取消線・インラインコード・箇条書き・番号付きリスト・リンク・画像を直接並べる。高さ48ptの列を横スクロールでき、適用中の書式を強調する。その他メニューには段落・チェックリスト・引用・コードブロック・Undo/Redoを置く。表のセルや変換中の入力では使えない操作を無効にする。
+アプリの画面は`App/LexicalEditorViewController.swift`。文書全体を1つの`UITextView`に表示し、段落・リスト項目・引用・見出しをまたいで文字を選択・削除・コピーできる。文書と選択の正本はJavaScriptCore上のLexicalが持ち、PCと同じ`MarkdownExtension`（公式`@lexical/mdast`とEvameの画像・X埋め込み・HTML・脚注・参照定義の規則）でMarkdownを読み書きする。WebViewとDOMは使わない。
 
-見出し・リスト・引用の接頭辞、言語付きコードフェンス、太字・斜体・取消線・コード・リンクなどのMarkdown記法を確定入力後に変換する。Returnで段落・リスト項目を分割する。文字のある項目は同じ深さへ続け、空の項目だけ一段戻す。最も外側の空項目ではリストを抜ける。先頭のBackspaceではリスト・引用・見出しの解除や前の段落との結合を行い、元の入力欄・カーソル・Undoを引き継ぐ。原文画面からはCommonMark/GFM全体を直接編集できる。
+- `LexicalModel/editor.mjs`: headlessのLexical文書。表示単位（段落・項目などの文字の並び、または表・区切り線などの1文字の部品）と単位内の位置だけを画面とやり取りする。`LexicalModel/build.mjs`が`App/Resources/LexicalModel.js`と同梱依存のライセンス`App/Resources/LexicalModel-LICENSES.txt`を生成する。依存はルートの`package.json`と`bun.lock`で固定する。
+- `App/LexicalDocument.swift`: JSContextでモデルを動かし、要求と結果の形を定める。
+- `App/LexicalTextView.swift`: 表示・入力・IME・選択・クリップボード・Undoを所有する入力欄。日本語の変換中はUIKitに任せてLexicalを変えず、確定した変更だけをカーソル位置を基準にした差分としてLexicalへ送る。Returnと段落・項目の先頭のBackspaceはLexicalのコマンドに任せる。Undo/RedoはUIKitの`undoManager`からLexicalの履歴へ1操作単位で送る。リストの記号・チェックボックス・引用の線・表の部品は文字の上に重ねて描き、チェックボックスと表は押せる。
+- `App/LexicalEditorViewController.swift`: キーボード上の書式メニュー、リンク・写真・表のセル・Markdown原文の画面を持つ。
 
-ログイン・SQLite・同期・公開・書き出しは未実装。検証用の固定サンプルだけを扱い、本文と取り込んだ画像はメモリ上に置く。終了すると変更は消える。保存済みや同期済みとは表示しない。
+キーボード上には移行前Webと同じLucideアイコンで字下げ・字下げ解除・見出し2/3/4・太字・斜体・取消線・インラインコード・箇条書き・番号付きリスト・リンク・画像を直接並べ、適用中の書式を強調する。その他メニューには段落・チェックリスト・引用・コードブロック・Undo/Redoを置く。Markdown記法とURLの入力中の変換は、PCと共有する`src/app/[locale]/_components/editor/shortcuts.ts`（Lexical公式の`MdastShortcutsExtension`・`AutoLinkExtension`と区切り線の記法）で行う。Lexicalが操作を拒否した場合は、Lexicalが戻した後の文書へ表示を揃え、警告を出す。
+
+区切り線・画像などの直後でBackspaceを押すと、PCと同じくその部品を選択し、もう一度のBackspaceで消す。選択中の文字入力では置き換えない。GFMでは記号の後に文字のないチェック項目を書けないため、空のチェック項目は共有の`markdown.ts`で`- [ ] &#x20;`として保存し、空白1文字だけのチェック項目は空の項目として読み込む（PCも同じ）。
+
+Undoの単位はPCと同じLexicalの履歴に従い、続けて入力した文字はまとめて戻す。
+
+Lexical 0.53のheadlessでは、前に結合できるブロックがない位置のBackspaceがブラウザーの選択（`getWindow`）を測ろうとして例外になる（[meta/lexical#9849](https://github.com/meta/lexical/issues/9849)）。DOMのない環境では選択の取得がwindowを参照せず`null`を返すため、モデルでは空のwindowを渡して標準の`$collapseAtStart`へ進める。これで文書の先頭や引用の先頭でもリスト・引用を段落へ戻す。`LexicalProbe`の評価は未修正のLexicalの記録として赤のまま残す。JavaScriptCoreにない`AbortController`は`abort-controller`で補う。`setTimeout`もないため、Lexicalが連鎖した更新の回数を数え直す処理は、次の操作の要求の始めに実行する。ないままだと空白の入力などで更新が例外になり、入力欄とLexicalの文書がずれる。
+
+ログイン・SQLite・同期・公開は未実装。検証用の固定サンプルだけを扱い、本文と取り込んだ画像はメモリ上に置く。終了すると変更は消える。http(s)の画像は読み込んで幅に合わせて表示し、読み込めない間や失敗時は代替文字の札を表示する。画像の大きさの上限と縮小読み込みは未実装。iPhoneでのブロックのドラッグ並べ替え、表の行列の追加削除も未実装。
+
+## 旧エディター（削除予定）
+
+`App/EditorViewController.swift`・`NativeTextView.swift`・`RichTextCodec.swift`・`EditorKeyboardMenu.swift`、`Sources/EditorCore`、`EditorModel`は、ブロックごとの入力欄とProseMirrorのモデル演算による旧エディター。アプリの画面からは使っていない。Lexicalの編集画面を実機で確認したあと、テストと合わせて削除する。以下の「配置と責務」以降の大半はこの旧エディターの記録。
 
 ## 環境と実行
 

@@ -1,20 +1,10 @@
-import {
-	$createHorizontalRuleNode,
-	HorizontalRuleNode,
-	TabIndentationExtension,
-} from "@lexical/extension";
+import { TabIndentationExtension } from "@lexical/extension";
 import { HistoryExtension } from "@lexical/history";
-import {
-	AutoLinkExtension,
-	createLinkMatcherWithRegExp,
-	LinkExtension,
-} from "@lexical/link";
+import { LinkExtension } from "@lexical/link";
 import { CheckListExtension, ListExtension } from "@lexical/list";
-import { registerMarkdownShortcuts } from "@lexical/markdown";
 import {
 	$convertFromMarkdownString,
 	$convertToMarkdownString,
-	MdastShortcutsExtension,
 } from "@lexical/mdast";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalExtensionComposer } from "@lexical/react/LexicalExtensionComposer";
@@ -33,27 +23,7 @@ import { EditorMenu } from "./editor-menu";
 import { ImagePlugin } from "./image-plugin";
 import { MarkdownExtension } from "./markdown";
 import { ImageNode, imageState } from "./media-nodes";
-
-/** 公式のMarkdownショートカットにない区切り線を、行頭の`---`・`***`・`___`と空白で入れる。 */
-const HorizontalRuleShortcutExtension = defineExtension({
-	name: "evame-horizontal-rule-shortcut",
-	register: (editor) =>
-		registerMarkdownShortcuts(editor, [
-			{
-				type: "element",
-				dependencies: [HorizontalRuleNode],
-				regExp: /^(?:---|\*\*\*|___)\s$/,
-				// Lexical公式の例と同じく、記号だけの段落の前へ区切り線を入れて続きを入力できるようにする。
-				replace: (parent) => {
-					const line = $createHorizontalRuleNode();
-					if (parent.getNextSibling()) parent.replace(line);
-					else parent.insertBefore(line);
-					line.selectNext();
-				},
-				export: () => null,
-			},
-		]),
-});
+import { ShortcutsExtension } from "./shortcuts";
 
 /** 記事とコメントで共有するMarkdown入出力のエディタ。本文の変更だけを保存元へ通知する。 */
 export function Editor({
@@ -112,9 +82,6 @@ export function Editor({
 				ListExtension,
 				CheckListExtension,
 				LinkExtension,
-				configExtension(AutoLinkExtension, {
-					matchers: [createLinkMatcherWithRegExp(/https?:\/\/[^\s<>]+/)],
-				}),
 				configExtension(TableExtension, {
 					hasCellBackgroundColor: false,
 					hasCellMerge: false,
@@ -122,8 +89,7 @@ export function Editor({
 				}),
 				TabIndentationExtension,
 				MarkdownExtension,
-				MdastShortcutsExtension,
-				HorizontalRuleShortcutExtension,
+				ShortcutsExtension,
 			],
 		}),
 	);
