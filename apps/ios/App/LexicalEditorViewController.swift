@@ -117,7 +117,8 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
   }
 
   /// 画面を閉じるときと裏へ回るときは、本文の変換中の文字や表のセルなど入力中の欄を確定させてから保存する。
-  /// 閉じた後に確定しても、その入力は保存されない。
+  /// 閉じた後や強制終了の後に確定しても、その入力は保存されない。裏から戻るとキーボードは閉じているが、
+  /// 入力を失わないことを優先する。
   private func commitAndSave() {
     if editor?.markedTextRange != nil { editor.unmarkText() }
     navigationController?.view.endEditing(true)
