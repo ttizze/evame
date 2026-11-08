@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import htmlToDOM from "html-dom-parser";
 import rehypeStringify from "rehype-stringify";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
+import { htmlTree } from "../markdown-html.mjs";
 
 const [macDirectory, iosDirectory, output] = process.argv.slice(2);
 assert(
@@ -23,25 +23,6 @@ const gfm = unified()
 	.use(remarkGfm)
 	.use(remarkRehype, { allowDangerousHtml: true })
 	.use(rehypeStringify, { allowDangerousHtml: true });
-function htmlTree(html) {
-	function nodes(entries) {
-		return entries.map((node) =>
-			node.type === "text" || node.type === "comment"
-				? [node.type, node.data]
-				: [
-						node.type,
-						node.name,
-						Object.entries(node.attribs ?? {}).sort(([a], [b]) =>
-							a.localeCompare(b),
-						),
-						nodes(node.children ?? []),
-					],
-		);
-	}
-	// remark's fragment writer omits the final LF used by the official HTML fixtures.
-	return nodes(htmlToDOM(html.replace(/\n$/, "")));
-}
-
 const summaries = [];
 for (const mode of ["legacy", "mdast", "pc", "pc-same-writer"]) {
 	const mac = JSON.parse(

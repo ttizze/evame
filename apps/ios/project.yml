@@ -73,6 +73,39 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.evame.editor-prototype.LexicalProbeTests
+  VditorProbe:
+    type: application
+    platform: iOS
+    sources:
+      - VditorProbe/App.swift
+      - path: .build/vditor-web
+        optional: true
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        TARGETED_DEVICE_FAMILY: "1"
+        PRODUCT_BUNDLE_IDENTIFIER: app.evame.vditor-probe
+        INFOPLIST_KEY_CFBundleDisplayName: Vditor比較
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+  VditorWKTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [VditorProbe/WKTests.swift]
+    dependencies:
+      - target: VditorProbe
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.evame.vditor-probe.WKTests
+  VditorUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [VditorProbe/UITests.swift]
+    dependencies:
+      - target: VditorProbe
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.evame.vditor-probe.UITests
 schemes:
   EvameEditorPrototype:
     build:
@@ -86,3 +119,9 @@ schemes:
         EvameEditorPrototype: all
     test:
       targets: [LexicalProbeTests]
+  VditorProbe:
+    build:
+      targets:
+        VditorProbe: all
+    test:
+      targets: [VditorWKTests, VditorUITests]

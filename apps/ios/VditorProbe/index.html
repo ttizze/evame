@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+	<head>
+		<meta charset="utf-8" />
+		<meta content="width=device-width, initial-scale=1" name="viewport" />
+		<meta content="default-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; frame-src 'none'; media-src 'none'" http-equiv="Content-Security-Policy" />
+		<title>Vditor比較</title>
+		<link href="dist/index.css" rel="stylesheet" />
+		<style>body { margin: 0; } .vditor-reset { font-family: sans-serif; }</style>
+		<script src="dist/index.min.js"></script>
+		<script src="corpus.js"></script>
+		<script src="corpus-runner.js"></script>
+	</head>
+	<body>
+		<div id="editor"></div>
+		<script>
+			const cdn = new URL(".", location.href).href.replace(/\/$/, "");
+			window.ready = new Promise((resolve) => {
+				window.editor = new Vditor("editor", {
+					cdn, lang: "ja_JP", mode: "wysiwyg", height: "auto", minHeight: 200,
+					cache: { enable: false }, undoDelay: 10,
+					toolbar: ["bold", "italic", "strike", "list", "ordered-list", "check", "outdent", "indent", "undo", "redo", "link", "table"],
+					preview: {
+						hljs: { enable: false },
+						markdown: { autoSpace: false, fixTermTypo: false, toc: false, footnotes: false, mark: false, inlineMath: false, codeBlockPreview: false, mathBlockPreview: false, sanitize: true },
+						theme: { path: `${cdn}/dist/css/content-theme` },
+					},
+					after: () => resolve(true),
+				});
+			});
+		</script>
+	</body>
+</html>
