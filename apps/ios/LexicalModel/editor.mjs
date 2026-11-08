@@ -4,7 +4,6 @@ import {
 	$getLexicalContent,
 	$insertDataTransferForRichText,
 } from "@lexical/clipboard";
-import { $createCodeNode } from "@lexical/code-core";
 import {
 	buildEditorFromExtensions,
 	getExtensionDependencyFromEditor,
@@ -28,13 +27,10 @@ import {
 	$generateNodesFromMarkdownString,
 } from "@lexical/mdast";
 import {
-	$createHeadingNode,
-	$createQuoteNode,
 	$isHeadingNode,
 	$isQuoteNode,
 	RichTextExtension,
 } from "@lexical/rich-text";
-import { $setBlocksType } from "@lexical/selection";
 import {
 	$isTableNode,
 	INSERT_TABLE_COMMAND,
@@ -70,6 +66,7 @@ import {
 	REDO_COMMAND,
 	UNDO_COMMAND,
 } from "lexical";
+import { $setBlockType } from "../../../src/app/[locale]/_components/editor/block-type";
 import { MarkdownExtension } from "../../../src/app/[locale]/_components/editor/markdown";
 import {
 	ImageNode,
@@ -429,24 +426,7 @@ function setBlock(type) {
 		);
 		return;
 	}
-	const blocks = selection
-		.getNodes()
-		.map((node) =>
-			$isElementNode(node) && !node.isInline()
-				? node
-				: node.getTopLevelElement(),
-		);
-	const same = blocks.every((node) =>
-		type.startsWith("h")
-			? $isHeadingNode(node) && node.getTag() === type
-			: node?.getType() === type,
-	);
-	$setBlocksType(selection, () => {
-		if (same || type === "paragraph") return $createParagraphNode();
-		if (type === "quote") return $createQuoteNode();
-		if (type === "code") return $createCodeNode();
-		return $createHeadingNode(type);
-	});
+	$setBlockType(type);
 }
 
 const commands = {

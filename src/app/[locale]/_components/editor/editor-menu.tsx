@@ -1,23 +1,14 @@
-import { $createCodeNode } from "@lexical/code-core";
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import {
-	$isListNode,
 	INSERT_CHECK_LIST_COMMAND,
 	INSERT_ORDERED_LIST_COMMAND,
 	INSERT_UNORDERED_LIST_COMMAND,
 	REMOVE_LIST_COMMAND,
 } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import {
-	$createHeadingNode,
-	$createQuoteNode,
-	$isHeadingNode,
-} from "@lexical/rich-text";
-import { $setBlocksType } from "@lexical/selection";
 import { INSERT_TABLE_COMMAND } from "@lexical/table";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
-	$createParagraphNode,
 	$getRoot,
 	$getSelection,
 	$isRangeSelection,
@@ -58,6 +49,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { $currentBlockType, $setBlockType } from "./block-type";
 import { UPLOAD_IMAGE_COMMAND } from "./image-plugin";
 
 const blockItems = [
@@ -120,11 +112,7 @@ export function EditorMenu() {
 						? parent
 						: null;
 				setView({
-					block: $isHeadingNode(block)
-						? block.getTag()
-						: $isListNode(block)
-							? block.getListType()
-							: block.getType(),
+					block: $currentBlockType() ?? block.getType(),
 					formats: formats
 						.filter(({ value }) => selection.hasFormat(value))
 						.map(({ value }) => value),
@@ -175,17 +163,7 @@ export function EditorMenu() {
 				undefined,
 			);
 		} else {
-			editor.update(() => {
-				const selection = $getSelection();
-				if ($isRangeSelection(selection))
-					$setBlocksType(selection, () => {
-						if (view.block === value || value === "paragraph")
-							return $createParagraphNode();
-						if (value === "quote") return $createQuoteNode();
-						if (value === "code") return $createCodeNode();
-						return $createHeadingNode(value);
-					});
-			});
+			editor.update(() => $setBlockType(value));
 		}
 		editor.focus();
 	}

@@ -550,6 +550,23 @@ struct LexicalEditorTests {
     }
   }
 
+  @Test("Returnで行を足した引用も、メニューでもう一度引用を選ぶと入れ子にせず解除する")
+  func unquoteAfterReturn() throws {
+    let fixture = try LexicalFixture("引用文")
+    defer { fixture.window.isHidden = true }
+    let editor = fixture.editor
+    editor.selectedRange = NSRange(location: 0, length: 0)
+    editor.setBlock("quote")
+    editor.selectedRange = NSRange(location: 3, length: 0)
+    editor.insertText("\n")
+    editor.insertText("次の行")
+    #expect(fixture.markdown == "> 引用文\n>\n> 次の行")
+    editor.setBlock("quote")
+    #expect(fixture.markdown == "引用文\n\n次の行")
+    #expect(editor.snapshot.units.map(\.context.quote) == [0, 0])
+    #expect(editor.failure == nil)
+  }
+
   @Test("引用はWebと同じく、本文と同じ濃さの斜体の文字と太い線で表示する")
   func quoteLooks() throws {
     let fixture = try LexicalFixture("前\n\n> 引用文")
