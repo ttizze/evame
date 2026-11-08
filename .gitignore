@@ -96,6 +96,10 @@ apps/ios/.build/
 apps/ios/*.xcodeproj/
 apps/ios/DerivedData/
 apps/ios/ComrakProbe/target/
+apps/ios/LexicalProbe/.build/
+apps/ios/LexicalProbe/Swift/Generated/
+apps/ios/DerivedData-Lexical/
+apps/ios/TextualProbe/.build/
 .evame/
 
 # Local Turso data

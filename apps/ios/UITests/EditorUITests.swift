@@ -258,6 +258,7 @@ final class EditorUITests: XCTestCase {
     XCTAssertTrue(heading.waitForExistence(timeout: 10))
     heading.tap()
     let menu = app.scrollViews["editor.keyboard-actions"]
+    XCTAssertTrue(menu.waitForExistence(timeout: 10))
     let image = app.buttons["editor.image"]
     for _ in 0..<3 where !image.isHittable { menu.swipeLeft() }
     XCTAssertTrue(image.isHittable)

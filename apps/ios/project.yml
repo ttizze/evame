@@ -58,6 +58,21 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.evame.editor-prototype.EditorUITests
+  LexicalProbeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: LexicalProbe/Swift
+        excludes: [Generated]
+      - path: LexicalProbe/Swift/Generated
+        optional: true
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - target: EvameEditorPrototype
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.evame.editor-prototype.LexicalProbeTests
 schemes:
   EvameEditorPrototype:
     build:
@@ -65,3 +80,9 @@ schemes:
         EvameEditorPrototype: all
     test:
       targets: [NativeTests, EditorUITests]
+  LexicalProbe:
+    build:
+      targets:
+        EvameEditorPrototype: all
+    test:
+      targets: [LexicalProbeTests]

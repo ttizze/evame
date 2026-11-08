@@ -21,7 +21,15 @@ case "${1:-}" in
     bash apps/ios/ComrakProbe/run.sh "${2:?simulator UUID is required}"
     exit
     ;;
-  *) echo 'Usage: bash scripts/ios.sh generate | test <xcodebuild destination> | comrak-probe <simulator UUID>' >&2; exit 2 ;;
+  test-lexical)
+    bash apps/ios/LexicalProbe/run.sh "${2:?xcodebuild destination is required}"
+    exit
+    ;;
+  test-textual)
+    bash apps/ios/TextualProbe/run.sh
+    exit
+    ;;
+  *) echo 'Usage: bash scripts/ios.sh generate | test <xcodebuild destination> | comrak-probe <simulator UUID> | test-lexical <xcodebuild destination> | test-textual' >&2; exit 2 ;;
 esac
 if [[ "$1" == test && -z "${2:-}" ]]; then
   echo 'test にはシミュレータの destination が必要です。' >&2

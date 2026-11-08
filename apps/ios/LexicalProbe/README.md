@@ -1,0 +1,75 @@
+# Lexical JSをJavaScriptCoreとUIKitで評価する
+
+Lexical **0.53.0**を固定した独立した評価用テスト。WebView・DOMを作らず、JavaScriptCore内のモデルと既存のUIKit入力欄を接続する。アプリ本体のEditorCoreやPCの変換処理は変更していない。
+
+## 結果と判断
+
+2026-11-08、Xcode 26.6・iOS Simulator 26.5で検証した。入力、リストの改行、段落結合、選択、Undo/Redo、太字・斜体は動く。一方、3方式とも今回の設定ではMarkdown保存の全受け入れ条件を満たさない。**PCの独自変換をそのままiPhoneへ移す判断はしない。**
+
+| 比較経路 | CommonMarkのAST一致 | GFMのAST一致 | 合計 | 同じremark設定での保存前後のHTML構造一致 |
+| --- | ---: | ---: | ---: | ---: |
+| 標準 `@lexical/markdown` (`legacy`) | 356 / 652 | 378 / 677 | 734 / 1,329 | 723 / 1,329 |
+| 公式の実験的 `@lexical/mdast` (`mdast`) | 513 / 652 | 539 / 677 | 1,052 / 1,329 | 1,012 / 1,329 |
+| 現在のPC独自変換 (`pc`) | 532 / 652 | 545 / 677 | 1,077 / 1,329 | 1,091 / 1,329 |
+| PC変換のwriterだけ2.2.3へ揃える (`pc-same-writer`) | 532 / 652 | 545 / 677 | 1,077 / 1,329 | 1,091 / 1,329 |
+
+4経路の全例についてmacOSとiOSのレポートが完全一致した。ASTはSwift Markdown 0.9.0の解析結果を比較し、位置・記法・空のTextを除外する。**不一致数は不具合数ではなく、一致しても編集モデルでの保持は示さない。** 記法を通常の文字として素通しし、保存後だけ元の構造へ戻る例があるため、コードや画像ノードも別に検査する。HTML構造比較も描画ピクセルの比較ではなく、要素・属性・テキストの比較である。たとえばCommonMark例354はSwift側のASTに差があってもremarkでの表示は変わらず、画像説明の装飾もHTMLのalt文字列だけでは区別できない。
+
+HTML比較器自体を公式の期待HTMLとも比較した。CommonMarkは652 / 652一致、GFMは664 / 677一致。残る13例にはGFM 0.29と現在のremark-gfmの自動リンク等の違いがあるため、公式期待値との不一致を候補変換の不具合として数えない。HTMLをDOMへ解析して文字参照や空要素の表現を揃え、属性順序と最終LF1文字も正規化する。本文中の空白は保持する。
+
+## 切り分けできた問題
+
+- **PC独自変換の内容喪失**: `- foo\n\n\t\tbar\n`を保存すると、コードブロックがリストの外へ出る。PCではremarkで入れ子フェンスへ正規化した記法を標準transformerへ渡す接続になっており、取り込み時点でコードが外へ出る。PCの`mdast-util-to-markdown` 2.1.3を2.2.3へ揃えても再現するので、writerの版差だけでは説明できない。公式MDASTはモデルと保存後の構造を保持する。標準Markdown経路は元の記法を出力するため保存後の構造は保持するが、モデル上ではコードが外側の通常段落になる。保存往復と編集モデルの正しさも区別する。PC変換は実際の`src/app/[locale]/_components/editor/markdown.ts`を直接呼び、複製していない。
+- **未使用の参照定義**: 標準Markdownと公式MDASTの今回の設定では保存時に消える。保存後に新しい参照リンクを追加しても解決できない。PC独自変換はこのケースを保持する。
+- **機能設定の不足**: 公式MDASTのCommonMark/GFM拡張にはアプリ固有のImageNodeの対応付けがなく、画像URL・題名が失われる。標準Markdownの既定transformerにも表の対応がなく、セルのパイプを保存できない。これをパーサー単体のバグとは判断しない。HTMLのDOM変換も有効にしていない。
+- **画像の素通し**: 標準Markdownは`!`とLinkNodeに分けるため、保存後に画像として再解析できても画像ノードにはなっていない。画像の検査はこの経路も未達とする。PC経路は画像ノードと保存後のURL・題名を保持する。
+- **入力文字の保存**: 標準MarkdownとPC変換では、段落へ直接入力した4つの先頭空白やタブがコードブロックへ変わり、末尾空白も失われる。公式MDASTは今回の5入力を保持する。Unicode区切り文字・絵文字も別に確認する。
+- **DOM依存の文字削除**: `DELETE_CHARACTER_COMMAND`を文字位置で直接実行すると3方式とも`window object not found`になる。段落先頭の結合は動く。UIKitの実際の`deleteBackward()`で文字と絵文字を削除してLexicalへ反映する経路は成功する。DOMを偽装して失敗を隠していない。
+
+## 操作とネイティブ接続の範囲
+
+`OperationTests.swift`は19項目を3方式で実行する。リスト内コードの保存だけwriter版を揃えた対照経路も加え、58条件となる。入力、箇条書き・番号・入れ子・タスク項目のReturn、空項目の解除、字下げ、段落結合、UTF16選択、履歴、太字・斜体、画像、表、参照定義、異常後の復旧、別文書の分離、外側のリンクを保持した結合、文字の保存、コード入力欄の文脈を確認する。上記の未達条件はテストを赤のまま残し、成功扱いにしない。
+
+`UIKitTests.swift`は実際の`NativeTextView`を使い、次の**24条件**が成功した。
+
+- 実際の文字・絵文字・選択範囲の削除: 3方式。
+- 日本語の未確定入力中はモデルを更新せず、確定後に反映: 3方式。
+- Return後の次項目、UIKitのUndo/Redo、カーソル復元: 3方式。
+- 日本語・英字と太字併用の斜体適用・解除: 4入力 × 3方式。描画ピクセルが変わり、解除で戻ることを確認し、画像をテスト結果へ添付。
+- 装飾付きRTFDの実コピー・貼り付けとUndo/Redo: 3方式。
+
+これはテスト専用の1入力欄の接続であり、完成したアプリではない。入力の接続は文字・太字・斜体・取消線・コード・改行に限る。リンク・画像を含むネイティブ編集、複数ブロック選択、Markdown入力ショートカット、実キーボードからの候補操作、実機の全画面操作・性能・同期はこのProbeでは検証していない。表示側にも現行のSwift MarkdownとRichTextCodecを使うため、Swiftの接続を全廃できる証明ではない。
+
+既存のProseMirror公式133操作テストは現行EditorCore用であり、Lexicalへ移植・全件成功したとは扱わない。現行アプリの回帰検証は通常の`test`で別に行う。
+
+## 再実行
+
+リポジトリのルートから実行する。Bun・Swiftの依存は各lockfileに固定し、共通のiOS入口でXcodeの版を確認する。
+
+```sh
+nix develop --command bash scripts/ios.sh test-lexical \
+  'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
+```
+
+未達の受け入れ条件があるため、このコマンドは**非0終了**する。コンパイルに成功した場合はmacOSの検証が失敗してもiOSの検証まで実行する。DerivedDataは`apps/ios/.build/lexical-derived`の1つのキャッシュを再利用し、通常アプリのビルドと分ける。
+
+macOSの全例レポートはスクリプトが作る実行ごとの一時ディレクトリへ出力する。iOSはテストプロセスごとのUUID付きディレクトリを使い、以前のレポートが混ざらないようにする。macOS/iOS両方の出力先はログの`LEXICAL_CORPUS`行に表示する。そのディレクトリを指定すると、プラットフォーム間の一致とHTML比較を再検証できる。レポートとxcresultは失敗分析のため保持する。
+
+```sh
+nix develop --command bun apps/ios/LexicalProbe/report.mjs \
+  "$mac_report_dir" "$ios_report_dir" /tmp/evame-lexical-comparison.json
+```
+
+## 配置と標準API
+
+- `legacy.mjs`・`mdast.mjs`・`pc.mjs`: 各ライブラリのimport/export設定だけを持つ。`build.mjs`から同じ版のLexicalを1インスタンスに解決する。`pc-same-writer`はPCと同じentrypointでwriterだけ差し替える。
+- `editor.mjs`: 共通の公式拡張を設定する。Headless・RichText・List・CheckList・Link・Historyを有効にする。ブラウザーのない環境では履歴が既定で無効になるため、`HistoryExtension`へ`disabled: false`を明示する。AbortController/AbortSignalは既存の`abort-controller`を使い、独自実装しない。`pc`もPCの変換関数にProbe共通の操作設定を組み合わせた結果であり、ブラウザー版全体の動作ではない。番号保持を明示しており、表・自動リンク・入力ショートカット等のPCプラグインは再現していない。
+- `session.mjs`: テスト境界。JSContextごとに1つのエディターを所有し、公開APIで選択・コマンド・文書復元を行う。Markdownの文法・エスケープは実装しない。`fieldOffset`は選択のanchor/focusの両方から使い、ノード内位置を段落内UTF16位置と誤認してカーソルをずらさないため共有する。
+- `Swift/Session.swift`・`CorpusTests.swift`・`OperationTests.swift`: macOS/iOS共通の実行と検証。公式ケースは既存の`Tests/EditorCoreTests/Fixtures/Upstream`から生成時にコピーする。出典・ライセンスも既存の[説明](../README.md)に従う。
+- `markdownTextTraits`はモデル書式・斜体描画・貼り付けの検査から使う。Strong/Emphasisの入れ子順や`***`等の記法を固定せず、保存後の各文字が持つ書式を同じ基準で確認するため共有する。
+- `Swift/UIKitTests.swift`: テスト用UIKit接続。状態の反映と構造操作のUndoは入力欄を所有するfixtureへ集める。モデルのUndoとUIKitのUndoは別に検証する。
+- `report.mjs`: 検証レポートの追加分析。両プラットフォームの全件一致をアサートし、元の公式期待HTMLと保存前後のremark出力を別々に記録する。
+
+`@lexical/mdast`は0.53.0でも**experimental**であり、公式READMEは安定した本番APIとして`@lexical/markdown`を案内している。CommonMark/GFMの解析器が準拠していても、エディターのノードへの対応付け・保持・保存の契約は別に検証する。
+
+公式資料: [headless](https://lexical.dev/docs/packages/lexical-headless)、[Markdown](https://lexical.dev/docs/packages/lexical-markdown)、[0.53.0 MDAST README](https://github.com/facebook/lexical/blob/v0.53.0/packages/lexical-mdast/README.md)、[選択](https://lexical.dev/docs/concepts/selection)。

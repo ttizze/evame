@@ -14,6 +14,8 @@ SwiftUIの画面にUIKitの`UITextView`を組み込んだ検証用アプリ。�
 
 JavaScriptを使わない変換候補の[Comrak評価](ComrakProbe/README.md)は、既存アプリと分離して実行する。評価結果と未達の条件を記録しており、アプリの移行完了を示すものではない。
 
+[Lexical JS + JavaScriptCore/UIKitの評価](LexicalProbe/README.md)では、標準Markdown・公式MDAST・現在のPC独自変換を公式全例で比較する。[Textualの評価](TextualProbe/README.md)は、表示・選択APIと属性解析を確認し、編集エンジンとしては採用しない。いずれも本体のエディター移行とは分けている。
+
 - macOS、Xcode **26.6 (17F113)**、iOS Simulator **26.5**。
 - XcodeとApple SDKはAppleの配布物を使う。`DEVELOPER_DIR`で選択し、スクリプトでバージョンを検証する。
 - XcodeGenは既存の`flake.lock`で固定したNix環境から使う。
