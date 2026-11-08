@@ -3,7 +3,6 @@ import Testing
 
 @testable import EvameEditorPrototype
 
-@Suite(.serialized)
 @MainActor
 struct LocalStoreTests {
   private func directory() throws -> URL {
@@ -19,11 +18,10 @@ struct LocalStoreTests {
     #expect(document.slug.wholeMatch(of: /[0-9a-z]{12}/) != nil)
     #expect(document.title == "")
     #expect(document.body == "")
-    #expect(document.status == "DRAFT")
     #expect(try store.documents().map(\.id) == [document.id])
   }
 
-  @Test("題名と本文を保存すると端末の版が進み、同じ内容を保存しても進まない")
+  @Test("題名と本文を保存すると更新日時が進み、同じ内容を保存しても進まない")
   func saveDraft() throws {
     let store = try LocalStore(directory: directory())
     let document = try store.createDocument()
@@ -31,9 +29,9 @@ struct LocalStoreTests {
     let saved = try #require(try store.document(id: document.id))
     #expect(saved.title == "題名")
     #expect(saved.body == "本文")
-    #expect(saved.localVersion == document.localVersion + 1)
+    #expect(saved.updatedAt > document.updatedAt)
     try store.save(id: document.id, title: "題名", body: "本文")
-    #expect(try store.document(id: document.id)?.localVersion == saved.localVersion)
+    #expect(try store.document(id: document.id) == saved)
   }
 
   @Test("アプリを終了して開き直しても、保存した文書が残る")

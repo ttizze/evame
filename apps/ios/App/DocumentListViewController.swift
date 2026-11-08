@@ -26,18 +26,33 @@ final class DocumentListViewController: UITableViewController {
 
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
-    documents = (try? store.documents()) ?? []
+    // 読み取りに失敗したときは、文書がない状態と区別して伝える。
+    let message: String?
+    do {
+      documents = try store.documents()
+      message = documents.isEmpty ? String(localized: "文書がありません") : nil
+    } catch {
+      documents = []
+      message = String(localized: "端末の保存領域を開けませんでした")
+    }
     tableView.reloadData()
-    let empty = UILabel()
-    empty.text = String(localized: "文書がありません")
-    empty.textAlignment = .center
-    empty.textColor = .secondaryLabel
-    tableView.backgroundView = documents.isEmpty ? empty : nil
+    let label = UILabel()
+    label.text = message
+    label.textAlignment = .center
+    label.textColor = .secondaryLabel
+    label.numberOfLines = 0
+    tableView.backgroundView = message == nil ? nil : label
   }
 
   private func createDocument() {
-    guard let document = try? store.createDocument() else { return }
-    open(document)
+    do {
+      open(try store.createDocument())
+    } catch {
+      let alert = UIAlertController(
+        title: String(localized: "端末に保存できませんでした"), message: nil, preferredStyle: .alert)
+      alert.addAction(UIAlertAction(title: "OK", style: .default))
+      present(alert, animated: true)
+    }
   }
 
   private func open(_ document: StoredDocument) {
@@ -56,9 +71,7 @@ final class DocumentListViewController: UITableViewController {
     let cell = tableView.dequeueReusableCell(withIdentifier: "document", for: indexPath)
     var content = UIListContentConfiguration.subtitleCell()
     content.text = document.title.isEmpty ? String(localized: "無題") : document.title
-    content.secondaryText =
-      (document.status == "PUBLIC" ? String(localized: "公開中") : String(localized: "下書き"))
-      + " · " + document.updatedAt.formatted(date: .abbreviated, time: .shortened)
+    content.secondaryText = document.updatedAt.formatted(date: .abbreviated, time: .shortened)
     content.secondaryTextProperties.color = .secondaryLabel
     cell.contentConfiguration = content
     cell.accessoryType = .disclosureIndicator

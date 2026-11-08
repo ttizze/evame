@@ -26,19 +26,24 @@ private struct PrototypeScreen: UIViewControllerRepresentable {
   @MainActor
   private func openStore() throws -> LocalStore {
     let directory = URL.applicationSupportDirectory.appending(path: "Evame")
-    let arguments = ProcessInfo.processInfo.arguments
-    if arguments.contains("-UITestResetStore") {
-      try? FileManager.default.removeItem(at: directory)
-    }
+    #if DEBUG
+      // 配布版では保存領域を消す引数を受け付けない。
+      let arguments = ProcessInfo.processInfo.arguments
+      if arguments.contains("-UITestResetStore") {
+        try? FileManager.default.removeItem(at: directory)
+      }
+    #endif
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     let store = try LocalStore(directory: directory)
-    if arguments.contains("-UITestSampleDocument"),
-      let url = Bundle.main.url(forResource: "round-trip", withExtension: "md")
-    {
-      let document = try store.createDocument()
-      try store.save(
-        id: document.id, title: "共通テスト文書", body: try String(contentsOf: url, encoding: .utf8))
-    }
+    #if DEBUG
+      if arguments.contains("-UITestSampleDocument"),
+        let url = Bundle.main.url(forResource: "round-trip", withExtension: "md")
+      {
+        let document = try store.createDocument()
+        try store.save(
+          id: document.id, title: "共通テスト文書", body: try String(contentsOf: url, encoding: .utf8))
+      }
+    #endif
     return store
   }
 }

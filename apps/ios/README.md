@@ -10,7 +10,7 @@ UIKitの`UITextView`を使う検証用アプリ。最低対応OSは試作ではi
 - `App/LexicalDocument.swift`: JSContextでモデルを動かし、要求と結果の形を定める。
 - `App/LexicalTextView.swift`: 表示・入力・IME・選択・クリップボード・Undoを所有する入力欄。日本語の変換中はUIKitに任せてLexicalを変えず、確定した変更だけをカーソル位置を基準にした差分としてLexicalへ送る。Returnと段落・項目の先頭のBackspaceはLexicalのコマンドに任せる。Undo/RedoはUIKitの`undoManager`からLexicalの履歴へ1操作単位で送る。リストの記号・チェックボックス・引用の線・表の部品は文字の上に重ねて描き、チェックボックスと表は押せる。
 - `App/LexicalEditorViewController.swift`: 本文と一緒にスクロールする題名の入力欄、キーボード上の書式メニュー、リンク・写真・表のセル・Markdown原文の画面を持つ。題名と本文は入力が0.5秒止まったとき、画面を閉じるとき、アプリが裏へ回ったときに端末へ保存する。
-- `App/LocalStore.swift`: 文書をSQLite（iOS標準のSQLite3）、写真をアプリのファイル領域へ保存する。新しい文書はWebと同じ形（英小文字と数字の12文字）のslugで下書きとして作る。編集のたびに端末の版を進め、同期済みの版と比べて未同期かを判断する。写真は`local-image/<UUID>.jpg`として本文から参照し、写真ライブラリの権限に頼らない。
+- `App/LocalStore.swift`: 文書をSQLite（iOS標準のSQLite3）、写真をアプリのファイル領域へ保存する。新しい文書はWebと同じ形（英小文字と数字の12文字）のslugで下書きとして作る。内容が変わったときだけ更新日時を進め、開いただけの整形（表の列幅など）は保存しない。写真は`local-image/<UUID>.jpg`として本文から参照し、写真ライブラリの権限に頼らない。
 - `App/DocumentListViewController.swift`: 最後に編集した順の一覧。題名・公開状態・更新日時を表示し、新しい文書を作る。
 
 キーボード上には移行前Webと同じLucideアイコンで字下げ・字下げ解除・見出し2/3/4・太字・斜体・取消線・インラインコード・箇条書き・番号付きリスト・リンク・画像を直接並べ、適用中の書式を強調する。その他メニューには段落・チェックリスト・引用・コードブロック・Undo/Redoを置く。Markdown記法とURLの入力中の変換は、PCと共有する`src/app/[locale]/_components/editor/shortcuts.ts`（Lexical公式の`MdastShortcutsExtension`・`AutoLinkExtension`と区切り線の記法）で行う。Lexicalが操作を拒否した場合は、Lexicalが戻した後の文書へ表示を揃え、警告を出す。
@@ -21,7 +21,7 @@ Undoの単位はPCと同じLexicalの履歴に従い、続けて入力した文�
 
 Lexical 0.53のheadlessでは、前に結合できるブロックがない位置のBackspaceがブラウザーの選択（`getWindow`）を測ろうとして例外になる（[meta/lexical#9849](https://github.com/meta/lexical/issues/9849)）。DOMのない環境では選択の取得がwindowを参照せず`null`を返すため、モデルでは空のwindowを渡して標準の`$collapseAtStart`へ進める。これで文書の先頭や引用の先頭でもリスト・引用を段落へ戻す。`LexicalProbe`の評価は未修正のLexicalの記録として赤のまま残す。JavaScriptCoreにない`AbortController`は`abort-controller`で補う。`setTimeout`もないため、Lexicalが連鎖した更新の回数を数え直す処理は、次の操作の要求の始めに実行する。ないままだと空白の入力などで更新が例外になり、入力欄とLexicalの文書がずれる。
 
-ログイン・同期・公開は未実装（サーバー側のアプリ用APIは別PR）。UIテストは起動引数`-UITestResetStore`で保存領域を空にし、`-UITestSampleDocument`で共通テスト文書を入れて始める。http(s)の画像は読み込んで幅に合わせて表示し、読み込めない間や失敗時は代替文字の札を表示する。画像の大きさの上限と縮小読み込みは未実装。iPhoneでのブロックのドラッグ並べ替え、表の行列の追加削除も未実装。
+ログイン・同期・公開は未実装（サーバー側のアプリ用APIは別PR）。今の段階で作った文書はアカウントに属さない試作のデータで、ログインを入れるときの扱い（最初にログインしたアカウントへ属させるか）は未決定。計画書の「ログイン前の原稿作成は作らない」とは、ログインの導入で揃える。保存形式は`PRAGMA user_version`で版を記録し、同期で必要な列は移行で追加する。UIテストは起動引数`-UITestResetStore`で保存領域を空にし、`-UITestSampleDocument`で共通テスト文書を入れて始める。http(s)の画像は読み込んで幅に合わせて表示し、読み込めない間や失敗時は代替文字の札を表示する。画像の大きさの上限と縮小読み込みは未実装。iPhoneでのブロックのドラッグ並べ替え、表の行列の追加削除も未実装。
 
 ## 旧エディター（削除予定）
 

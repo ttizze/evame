@@ -395,11 +395,26 @@ struct LexicalEditorTests {
     editor.setLink("https://example.com")
     #expect(fixture.markdown == "[リンク先](https://example.com)")
     editor.selectedRange = NSRange(location: 4, length: 0)
-    let source = try fixture.store.saveImage(
-      try #require(UIImage(systemName: "star")?.jpegData(compressionQuality: 0.8)))
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 1
+    let photo = UIGraphicsImageRenderer(size: CGSize(width: 40, height: 30), format: format)
+      .image { context in
+        UIColor.red.setFill()
+        context.fill(CGRect(x: 0, y: 0, width: 40, height: 30))
+      }
+    let source = try fixture.store.saveImage(try #require(photo.jpegData(compressionQuality: 0.8)))
     editor.insertImage(source: source, alt: "写真")
     #expect(fixture.markdown.contains("![写真](\(source))"))
-    #expect(editor.attributedText.attribute(.attachment, at: 4, effectiveRange: nil) != nil)
+    let shown = { (view: LexicalTextView) in
+      (view.attributedText.attribute(.attachment, at: 4, effectiveRange: nil) as? NSTextAttachment)?
+        .image?.size
+    }
+    #expect(shown(editor) == CGSize(width: 40, height: 30))
+    // 保存した本文を開き直しても、写真をファイルから表示する。
+    let reopened = try LexicalTextView(
+      document: LexicalDocument(), markdown: editor.snapshot.markdown, pasteboard: fixture.pasteboard,
+      imageFile: fixture.store.imageFile)
+    #expect(shown(reopened) == CGSize(width: 40, height: 30))
     #expect(editor.failure == nil)
   }
 

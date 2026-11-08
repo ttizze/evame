@@ -14,6 +14,8 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
   private var menuButtons: [(UIButton, (LexicalDocument.Snapshot) -> Bool)] = []
   private let more = UIButton(type: .system)
   private var pendingSave: Task<Void, Never>?
+  /// 最後に保存した（または開いた直後の）題名と本文。開いただけの整形を利用者の変更として保存しない。
+  private var lastSaved: (title: String, body: String)?
 
   init(store: LocalStore, document: StoredDocument) {
     self.store = store
@@ -42,11 +44,16 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
     titleField.placeholder = String(localized: "タイトル")
     titleField.font = .systemFont(ofSize: 28, weight: .bold)
     titleField.returnKeyType = .next
+    titleField.accessibilityLabel = String(localized: "タイトル")
     titleField.accessibilityIdentifier = "editor.title"
     titleField.delegate = self
     titleField.addAction(
-      UIAction { [weak self] _ in self?.scheduleSave() }, for: .editingChanged)
+      UIAction { [weak self] _ in
+        // 変換中の題名は確定してから保存する。
+        if self?.titleField.markedTextRange == nil { self?.scheduleSave() }
+      }, for: .editingChanged)
     editor.addSubview(titleField)
+    lastSaved = (document.title, editor.snapshot.markdown)
     editor.textContainerInset.top = 16 + 44 + 12
     editor.onChange = { [weak self] in
       self?.updateMenu()
@@ -95,7 +102,11 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
       name: UIApplication.didEnterBackgroundNotification, object: nil)
   }
 
-  @objc private func saveOnBackground() { save() }
+  /// アプリが裏へ回ったら、表のセルなど入力中の欄も確定させてから保存する。
+  @objc private func saveOnBackground() {
+    navigationController?.view.endEditing(true)
+    save()
+  }
 
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
@@ -125,13 +136,19 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
     pendingSave?.cancel()
     pendingSave = nil
     guard let editor else { return }
+    let current = (title: titleField.text ?? "", body: editor.snapshot.markdown)
+    guard current.title != lastSaved?.title || current.body != lastSaved?.body else { return }
     do {
-      try store.save(id: document.id, title: titleField.text ?? "", body: editor.snapshot.markdown)
+      try store.save(id: document.id, title: current.title, body: current.body)
+      lastSaved = current
     } catch {
+      // 閉じていく画面ではなく、残る一覧の上に警告を出す。
+      let presenter = navigationController ?? self
+      guard presenter.presentedViewController == nil else { return }
       let alert = UIAlertController(
         title: String(localized: "端末に保存できませんでした"), message: nil, preferredStyle: .alert)
       alert.addAction(UIAlertAction(title: "OK", style: .default))
-      if presentedViewController == nil { present(alert, animated: true) }
+      presenter.present(alert, animated: true)
     }
   }
 
