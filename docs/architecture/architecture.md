@@ -108,6 +108,8 @@ Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳�
 - デプロイ成果物の検証: `bun run test:deployment`（認証 API・記事保存と編集画面・画像アップロード・ホーム SSR・日本語 OG 画像）
 - バインディング: `wrangler.jsonc` に R2・Images・KV・Static Assets を定義。秘密値は Workers secrets で設定する
 
+LinuxのWebKitが使うGSettingsスキーマは、`flake.nix`で固定したNixパッケージを`GSETTINGS_SCHEMA_DIR`へ設定します。Nix環境にスキーマがないと、通信プロセスが起動時に終了してページを読み込めません。
+
 `src/server.ts` がAPI・編集等のバックエンドリクエストごとに DB を作り、本文ストリームの完了・中断時に閉じます。`src/db/index.ts` の AsyncLocalStorage が既存の DB 呼び出し元に同じリクエストの接続を渡します。`src/auth.ts` の Better Auth もその DB を使用し、異なるリクエスト間で接続を共有しません。Node の CLI とテストでは従来どおり DB を再利用します。
 
 画像アップロードは `src/app/[locale]/_service/upload/upload-image.ts` が Images binding で圧縮し、`_infrastructure/upload/r2-client.ts` が R2 binding に保存します。既存の `images.evame.tech` の URL を維持します。開発時は `src/app/api/uploads/handler.ts` がローカル R2 の画像を返します。OG の API 境界は `src/routes/api/og.tsx`、生成処理は `src/app/api/og/handler.tsx` に置き、Static Assets binding からフォントとロゴを読みます。

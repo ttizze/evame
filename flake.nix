@@ -21,18 +21,24 @@
           libsqlServer = pkgs.callPackage ./nix/libsql-server.nix { };
         in
         rec {
-          default = pkgs.mkShellNoCC {
-            packages =
-              (with pkgs; [
-                bun
-                just
-                turso-cli
-                libsqlServer
-                nodejs_24
-                typescript-language-server
-              ])
-              ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isDarwin [ pkgs.xcodegen ];
-          };
+          default = pkgs.mkShellNoCC (
+            {
+              packages =
+                (with pkgs; [
+                  bun
+                  just
+                  turso-cli
+                  libsqlServer
+                  nodejs_24
+                  typescript-language-server
+                ])
+                ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isDarwin [ pkgs.xcodegen ];
+            }
+            // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+              # WebKitのLinux通信プロセスが参照するGSettingsスキーマを固定する。
+              GSETTINGS_SCHEMA_DIR = pkgs.glib.getSchemaPath pkgs.gsettings-desktop-schemas;
+            }
+          );
           comrak = pkgs.mkShellNoCC {
             inputsFrom = [ default ];
             packages = [ pkgs.rustup ];

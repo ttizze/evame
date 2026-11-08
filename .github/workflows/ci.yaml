@@ -87,8 +87,6 @@ jobs:
         run: nix develop --command bun x playwright install --with-deps chromium webkit
 
       - name: Verify isolated deployment runtime and browser behavior
-        env:
-          DEBUG: pw:browser
         run: nix develop --command bun run test:deployment:browser
 
       - name: Deploy Cloudflare Workers
