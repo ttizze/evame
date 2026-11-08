@@ -25,13 +25,19 @@ export const QuoteEnterExtension = defineExtension({
 			INSERT_PARAGRAPH_COMMAND,
 			() => {
 				const selection = $getSelection();
-				if (!$isRangeSelection(selection) || !selection.isCollapsed())
-					return false;
+				if (!$isRangeSelection(selection)) return false;
 				const quote = $findMatchingParent(
 					selection.anchor.getNode(),
 					$isQuoteNode,
 				) as QuoteNode | null;
-				if (!quote) return false;
+				// 選択の両端が同じ引用の中にあるときだけ扱う。
+				if (
+					!quote ||
+					!quote.is(
+						$findMatchingParent(selection.focus.getNode(), $isQuoteNode),
+					)
+				)
+					return false;
 				if (!quote.isShadowRoot()) {
 					if (quote.isEmpty()) {
 						const paragraph = $createParagraphNode();
@@ -44,8 +50,13 @@ export const QuoteEnterExtension = defineExtension({
 						...quote.getChildren(),
 					);
 					quote.append(paragraph).setIsShadowRoot(true);
+					// 改行の直後など引用そのものを指していた位置を、中身を移した段落へ付け替える。
+					for (const point of [selection.anchor, selection.focus])
+						if (point.key === quote.getKey())
+							point.set(paragraph.getKey(), point.offset, "element");
 					return false;
 				}
+				if (!selection.isCollapsed()) return false;
 				const block = $findMatchingParent(selection.anchor.getNode(), (node) =>
 					quote.is(node.getParent()),
 				);

@@ -10,6 +10,7 @@ import {
 	$getSelection,
 	$isRangeSelection,
 	defineExtension,
+	INSERT_LINE_BREAK_COMMAND,
 	INSERT_PARAGRAPH_COMMAND,
 	type LexicalEditor,
 } from "lexical";
@@ -62,6 +63,43 @@ describe("引用の中のReturn", () => {
 		enter(editor);
 		type(editor, "次の行");
 		expect(markdown(editor)).toBe("> 引用文\n>\n> 次の行");
+	});
+
+	it("作った引用で改行（Shift+Enter）した直後にReturnを押しても、同じ引用の中に次の行を作る", () => {
+		const editor = createEditor();
+		editor.update(
+			() => {
+				const text = $createTextNode("引用文");
+				$getRoot().clear().append($createQuoteNode().append(text));
+				text.selectEnd();
+			},
+			{ discrete: true },
+		);
+		editor.update(
+			() => editor.dispatchCommand(INSERT_LINE_BREAK_COMMAND, false),
+			{ discrete: true },
+		);
+		enter(editor);
+		type(editor, "次の行");
+		// 行末の改行はMarkdownで表せないため書き出しは標準に任せ、引用を抜けずに次の行が入ることを確かめる。
+		const lines = markdown(editor).split("\n");
+		expect(lines[0]).toBe("> 引用文");
+		expect(lines.at(-1)).toBe("> 次の行");
+		expect(lines.every((line) => line.startsWith(">"))).toBe(true);
+	});
+
+	it("作った引用で範囲を選んでReturnを押しても、引用を抜けずにその位置で分ける", () => {
+		const editor = createEditor();
+		editor.update(
+			() => {
+				const text = $createTextNode("前後の文字");
+				$getRoot().clear().append($createQuoteNode().append(text));
+				text.select(1, 2);
+			},
+			{ discrete: true },
+		);
+		enter(editor);
+		expect(markdown(editor)).toBe("> 前\n>\n> の文字");
 	});
 
 	it("読み込んだ引用の最後の空の行でReturnを押すと、引用を抜けて続きを書ける", () => {
