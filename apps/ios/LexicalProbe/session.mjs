@@ -2,6 +2,8 @@ import {
 	$getLexicalContent,
 	$insertDataTransferForRichText,
 } from "@lexical/clipboard";
+import { getExtensionDependencyFromEditor } from "@lexical/extension";
+import { HistoryExtension } from "@lexical/history";
 import {
 	$createLineBreakNode,
 	$createRangeSelection,
@@ -181,6 +183,8 @@ export function install(editor, importSource, exportSource) {
 			const focus = selection?.focus ? position(selection.focus) : null;
 			return JSON.stringify({
 				markdown: exportSource(),
+				undoDepth: getExtensionDependencyFromEditor(editor, HistoryExtension)
+					.output.historyState.value.undoStack.length,
 				text: root.getTextContent(),
 				root: editor.getEditorState().toJSON().root,
 				fields: entries.map(({ node, lists }) => ({

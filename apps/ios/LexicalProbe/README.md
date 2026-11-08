@@ -38,9 +38,17 @@ HTML比較器自体を公式の期待HTMLとも比較した。CommonMarkは652 /
 - 日本語・英字と太字併用の斜体適用・解除: 4入力 × 3方式。描画ピクセルが変わり、解除で戻ることを確認し、画像をテスト結果へ添付。
 - 装飾付きRTFDの実コピー・貼り付けとUndo/Redo: 3方式。
 
-`CrossBlockSelectionTests.swift`は、ブロックをまたぐ選択を6項目×3方式でモデルに対して検証する。段落とリスト項目にまたがる範囲の削除（前向き・後ろ向き）、見出し・段落・リスト項目にまたがる範囲の入力による置換と置換後のカーソル、削除のUndo/Redoによる構造と保存結果の復元、またいだ範囲のコピーと別段落への貼り付け、文字だけのクリップボードの貼り付けを確認する。2026-11-08にmacOSとiOS Simulator 26.5の両方で18条件すべて成功した。文字位置での直接の`DELETE_CHARACTER_COMMAND`はDOMを要求するが、範囲選択の削除はDOMなしで動く。コピーと貼り付けは`@lexical/clipboard`の公式関数を使う。標準の書き出しのうちHTMLだけはDOMを必要とするため、Lexical形式とプレーンテキストの2形式で受け渡す。UIKitの入力欄との接続はこのテストの対象外。
+`CrossBlockSelectionTests.swift`は、ブロックをまたぐ選択を6項目×3方式でモデルに対して検証する。段落とリスト項目にまたがる範囲の削除（前向き・後ろ向き）、見出し・段落・リスト項目にまたがる範囲の入力による置換と置換後のカーソル、削除のUndo/Redoによる構造と保存結果の復元、またいだ範囲のコピーと別段落への貼り付け、文字だけのクリップボードの貼り付けを確認する。2026-11-08にmacOSとiOS Simulator 26.5の両方で18条件すべて成功した。文字位置での直接の`DELETE_CHARACTER_COMMAND`はDOMを要求するが、範囲選択の削除はDOMなしで動く。コピーと貼り付けは`@lexical/clipboard`の公式関数を使う。標準の書き出しのうちHTMLだけはDOMを必要とするため、Lexical形式とプレーンテキストの2形式で受け渡す。UIKitとの接続は次の`DocumentTextViewTests.swift`で確認する。
 
-これはテスト専用の1入力欄の接続であり、完成したアプリではない。入力の接続は文字・太字・斜体・取消線・コード・改行に限る。リンク・画像を含むネイティブ編集、1つのUITextViewでのブロックをまたぐ選択とLexicalの接続、Markdown入力ショートカット、実キーボードからの候補操作、実機の全画面操作・性能・同期はこのProbeでは検証していない。表示側にも現行のSwift MarkdownとRichTextCodecを使うため、Swiftの接続を全廃できる証明ではない。
+`DocumentTextView.swift`は、文書全体を1つの`UITextView`に表示するテスト用の接続。Lexicalが文書と選択の正本を持ち、入力欄は段落・項目を改行で区切った表示と入力の受付だけを担う。日本語の変換中はUIKitに任せてLexicalを変えず、確定した変更だけをカーソル位置を基準にした差分としてLexicalの選択・入力・削除へ変換する。Returnと段落・項目の先頭のBackspaceはLexicalのコマンドへ送り、標準の動作に任せる。ただし文書の先頭では送らない。コピー・切り取り・貼り付けは前述の公式関数を通し、アプリ内ではLexical形式も渡す。Undo/RedoはUIKitの`undoManager`からLexicalの履歴へ1操作単位で送り、UIKitが文字に対して記録する履歴は使わない。1操作の件数は`HistoryExtension`の履歴が実際に増えた数で数え、何も変えない操作では記録しない。操作ごとにLexicalの文書と選択から表示を作り直す。Lexicalが操作を拒否した場合は例外を`failure`へ記録して直前の表示を保ち、各テストの最後に例外がないことを確認する。
+
+`DocumentTextViewTests.swift`は実際の`UITextView`で10項目×3方式の30条件を確認し、2026-11-08にiOS Simulator 26.5で9項目27条件が成功した。テストは名前付きの専用クリップボードを使い、端末共通のクリップボードを読み書きしない。成功したのは、段落とリスト項目にまたがる選択のBackspace、またいだ選択への日本語の未確定入力と確定、リスト項目のReturn、段落先頭のBackspaceによる結合、絵文字の削除と入力、またいだ範囲のコピーと貼り付け、切り取りと同じ位置への貼り付け、UIKitのUndo/Redo、何も変えない貼り付けの後のUndo。切り取った範囲を同じ位置へ貼り付けると、Lexicalは最後に貼り付けたリストへ後ろの文字を結合せず段落として残す（`RangeSelection.insertNodes`の標準動作。PCの貼り付けも同じ関数を通る）。文字は失わないが、元の構造とは異なる。
+
+**文書先頭のBackspace（未達）**: 文書の先頭にある引用でBackspaceを押しても、段落へ戻らない（文書の先頭のリスト項目も同じ扱いになる）。前に結合できるブロックがない位置では、Lexicalの`RangeSelection.deleteCharacter`がDOMの選択（`getWindow`）で削除範囲を広げようとし、headlessでは`window object not found`になる。前にブロックがある位置では例外にならず、段落同士の結合を確認した。前にブロックがある引用・リスト項目の先頭で解除されるか結合されるかは確認していない。DOMを偽装して隠すことはせず、テストを赤のまま残す。採用する場合は、この位置の扱いを別途設計する必要がある。
+
+表示は段落の種類と字下げの深さによる書体と字下げだけで、行内の書式、リストの記号、チェックボックス、画像、表、ブロックのドラッグ＆ドロップは描かない。テストはUIKitのAPIを直接呼ぶため、実キーボードでの変換候補の操作、選択ハンドルによる範囲選択、実機での性能は確認していない。
+
+`UIKitTests.swift`の接続はテスト専用の1入力欄であり、どちらの接続も完成したアプリではない。入力の接続は文字・太字・斜体・取消線・コード・改行に限る。リンク・画像を含むネイティブ編集、Markdown入力ショートカット、実キーボードからの候補操作、実機の全画面操作・性能・同期はこのProbeでは検証していない。表示側にも現行のSwift MarkdownとRichTextCodecを使うため、Swiftの接続を全廃できる証明ではない。
 
 既存のProseMirror公式133操作テストは現行EditorCore用であり、Lexicalへ移植・全件成功したとは扱わない。現行アプリの回帰検証は通常の`test`で別に行う。
 
@@ -69,6 +77,7 @@ nix develop --command bun apps/ios/LexicalProbe/report.mjs \
 - `session.mjs`: テスト境界。JSContextごとに1つのエディターを所有し、公開APIで選択・コマンド・文書復元・コピー・貼り付けを行う。入力欄内の選択とブロックをまたぐ選択は、同じ`select`で位置を検証して設定する。Markdownの文法・エスケープは実装しない。`fieldOffset`は選択のanchor/focusの両方から使い、ノード内位置を段落内UTF16位置と誤認してカーソルをずらさないため共有する。anchorとfocusはそれぞれが属する入力欄から位置を数える。
 - `Swift/Session.swift`・`CorpusTests.swift`・`OperationTests.swift`・`CrossBlockSelectionTests.swift`: macOS/iOS共通の実行と検証。公式ケースは既存の`Tests/EditorCoreTests/Fixtures/Upstream`から生成時にコピーする。出典・ライセンスも既存の[説明](../README.md)に従う。
 - `markdownTextTraits`はモデル書式・斜体描画・貼り付けの検査から使う。Strong/Emphasisの入れ子順や`***`等の記法を固定せず、保存後の各文字が持つ書式を同じ基準で確認するため共有する。
+- `Swift/DocumentTextView.swift`・`DocumentTextViewTests.swift`: 文書全体を1つの入力欄で編集するテスト用UIKit接続と、その検証。入力欄の位置とLexicalの段落内位置の変換、確定入力の差分取得、Undoの対応を同じ型に置く。
 - `Swift/UIKitTests.swift`: テスト用UIKit接続。状態の反映と構造操作のUndoは入力欄を所有するfixtureへ集める。モデルのUndoとUIKitのUndoは別に検証する。
 - `report.mjs`: 検証レポートの追加分析。両プラットフォームの全件一致をアサートし、元の公式期待HTMLと保存前後のremark出力を別々に記録する。
 
