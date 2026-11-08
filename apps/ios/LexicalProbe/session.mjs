@@ -1,4 +1,8 @@
 import {
+	$getLexicalContent,
+	$insertDataTransferForRichText,
+} from "@lexical/clipboard";
+import {
 	$createLineBreakNode,
 	$createRangeSelection,
 	$createTextNode,
@@ -64,13 +68,21 @@ function pointAt(node, offset) {
 	};
 }
 
-function selectField(index, start, end) {
-	const field = fields($getRoot())[index]?.node;
-	if (!field || start < 0 || end < start || end > field.getTextContentSize())
+function pointIn(position) {
+	const field = fields($getRoot())[position.field]?.node;
+	if (
+		!field ||
+		position.offset < 0 ||
+		position.offset > field.getTextContentSize()
+	)
 		throw new Error("invalid field selection");
+	return pointAt(field, position.offset);
+}
+
+function select(anchorPosition, focusPosition) {
 	const selection = $createRangeSelection();
-	const anchor = pointAt(field, start),
-		focus = pointAt(field, end);
+	const anchor = pointIn(anchorPosition),
+		focus = pointIn(focusPosition);
 	selection.anchor.set(anchor.key, anchor.offset, anchor.type);
 	selection.focus.set(focus.key, focus.offset, focus.type);
 	$setSelection(selection);
@@ -102,8 +114,21 @@ export function install(editor, importSource, exportSource) {
 				if (input.action === "load") {
 					editor.dispatchCommand(CLEAR_HISTORY_COMMAND);
 					importSource(input.source);
-				} else if (input.action === "select" || input.action === "restore")
-					selectField(input.field, input.start, input.end);
+				} else if (input.action === "select" || input.action === "restore") {
+					if (input.end < input.start)
+						throw new Error("invalid field selection");
+					select(
+						{ field: input.field, offset: input.start },
+						{ field: input.field, offset: input.end },
+					);
+				} else if (input.action === "selectAcross")
+					select(input.anchor, input.focus);
+				else if (input.action === "paste")
+					$insertDataTransferForRichText(
+						{ getData: (type) => input.clipboard[type] ?? "" },
+						$getSelection(),
+						editor,
+					);
 				else if (input.action === "insert")
 					$getSelection().insertText(input.text);
 				else if (input.action === "command") {
@@ -125,13 +150,14 @@ export function install(editor, importSource, exportSource) {
 							field.append(node);
 						}
 					}
-				} else if (input.action !== "read")
+				} else if (input.action !== "read" && input.action !== "copy")
 					throw new Error(`unknown action ${input.action}`);
 			},
 			{
 				discrete: true,
 				tag:
 					input.action === "insert" ||
+					input.action === "paste" ||
 					input.action === "command" ||
 					input.action === "replaceField"
 						? HISTORY_PUSH_TAG
@@ -142,13 +168,17 @@ export function install(editor, importSource, exportSource) {
 			const root = $getRoot();
 			const selection = $getSelection();
 			const entries = fields(root);
-			const selected = selection?.anchor
-				? entries.findIndex(
-						({ node }) =>
-							node.is(selection.anchor.getNode()) ||
-							node.isParentOf(selection.anchor.getNode()),
-					)
-				: -1;
+			const position = (point) => {
+				const field = entries.findIndex(
+					({ node }) =>
+						node.is(point.getNode()) || node.isParentOf(point.getNode()),
+				);
+				return field >= 0
+					? { field, offset: fieldOffset(entries[field].node, point) }
+					: null;
+			};
+			const anchor = selection?.anchor ? position(selection.anchor) : null;
+			const focus = selection?.focus ? position(selection.focus) : null;
 			return JSON.stringify({
 				markdown: exportSource(),
 				text: root.getTextContent(),
@@ -159,13 +189,22 @@ export function install(editor, importSource, exportSource) {
 					lists,
 				})),
 				selection:
-					selected >= 0
+					anchor && focus
 						? {
-								field: selected,
-								anchor: fieldOffset(entries[selected].node, selection.anchor),
-								focus: fieldOffset(entries[selected].node, selection.focus),
+								field: anchor.field,
+								anchor: anchor.offset,
+								focusField: focus.field,
+								focus: focus.offset,
 							}
 						: null,
+				// Lexical標準の書き出しのうちHTMLだけはDOMを必要とするため、残る2形式を同じ関数で生成する。
+				clipboard:
+					input.action === "copy"
+						? {
+								"application/x-lexical-editor": $getLexicalContent(editor),
+								"text/plain": selection.getTextContent(),
+							}
+						: undefined,
 			});
 		});
 	};

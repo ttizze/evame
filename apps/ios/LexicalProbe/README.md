@@ -38,7 +38,9 @@ HTML比較器自体を公式の期待HTMLとも比較した。CommonMarkは652 /
 - 日本語・英字と太字併用の斜体適用・解除: 4入力 × 3方式。描画ピクセルが変わり、解除で戻ることを確認し、画像をテスト結果へ添付。
 - 装飾付きRTFDの実コピー・貼り付けとUndo/Redo: 3方式。
 
-これはテスト専用の1入力欄の接続であり、完成したアプリではない。入力の接続は文字・太字・斜体・取消線・コード・改行に限る。リンク・画像を含むネイティブ編集、複数ブロック選択、Markdown入力ショートカット、実キーボードからの候補操作、実機の全画面操作・性能・同期はこのProbeでは検証していない。表示側にも現行のSwift MarkdownとRichTextCodecを使うため、Swiftの接続を全廃できる証明ではない。
+`CrossBlockSelectionTests.swift`は、ブロックをまたぐ選択を6項目×3方式でモデルに対して検証する。段落とリスト項目にまたがる範囲の削除（前向き・後ろ向き）、見出し・段落・リスト項目にまたがる範囲の入力による置換と置換後のカーソル、削除のUndo/Redoによる構造と保存結果の復元、またいだ範囲のコピーと別段落への貼り付け、文字だけのクリップボードの貼り付けを確認する。2026-11-08にmacOSとiOS Simulator 26.5の両方で18条件すべて成功した。文字位置での直接の`DELETE_CHARACTER_COMMAND`はDOMを要求するが、範囲選択の削除はDOMなしで動く。コピーと貼り付けは`@lexical/clipboard`の公式関数を使う。標準の書き出しのうちHTMLだけはDOMを必要とするため、Lexical形式とプレーンテキストの2形式で受け渡す。UIKitの入力欄との接続はこのテストの対象外。
+
+これはテスト専用の1入力欄の接続であり、完成したアプリではない。入力の接続は文字・太字・斜体・取消線・コード・改行に限る。リンク・画像を含むネイティブ編集、1つのUITextViewでのブロックをまたぐ選択とLexicalの接続、Markdown入力ショートカット、実キーボードからの候補操作、実機の全画面操作・性能・同期はこのProbeでは検証していない。表示側にも現行のSwift MarkdownとRichTextCodecを使うため、Swiftの接続を全廃できる証明ではない。
 
 既存のProseMirror公式133操作テストは現行EditorCore用であり、Lexicalへ移植・全件成功したとは扱わない。現行アプリの回帰検証は通常の`test`で別に行う。
 
@@ -64,8 +66,8 @@ nix develop --command bun apps/ios/LexicalProbe/report.mjs \
 
 - `legacy.mjs`・`mdast.mjs`・`pc.mjs`: 各ライブラリのimport/export設定だけを持つ。`build.mjs`から同じ版のLexicalを1インスタンスに解決する。`pc-same-writer`はPCと同じentrypointでwriterだけ差し替える。
 - `editor.mjs`: 共通の公式拡張を設定する。Headless・RichText・List・CheckList・Link・Historyを有効にする。ブラウザーのない環境では履歴が既定で無効になるため、`HistoryExtension`へ`disabled: false`を明示する。AbortController/AbortSignalは既存の`abort-controller`を使い、独自実装しない。`pc`もPCの変換関数にProbe共通の操作設定を組み合わせた結果であり、ブラウザー版全体の動作ではない。番号保持を明示しており、表・自動リンク・入力ショートカット等のPCプラグインは再現していない。
-- `session.mjs`: テスト境界。JSContextごとに1つのエディターを所有し、公開APIで選択・コマンド・文書復元を行う。Markdownの文法・エスケープは実装しない。`fieldOffset`は選択のanchor/focusの両方から使い、ノード内位置を段落内UTF16位置と誤認してカーソルをずらさないため共有する。
-- `Swift/Session.swift`・`CorpusTests.swift`・`OperationTests.swift`: macOS/iOS共通の実行と検証。公式ケースは既存の`Tests/EditorCoreTests/Fixtures/Upstream`から生成時にコピーする。出典・ライセンスも既存の[説明](../README.md)に従う。
+- `session.mjs`: テスト境界。JSContextごとに1つのエディターを所有し、公開APIで選択・コマンド・文書復元・コピー・貼り付けを行う。入力欄内の選択とブロックをまたぐ選択は、同じ`select`で位置を検証して設定する。Markdownの文法・エスケープは実装しない。`fieldOffset`は選択のanchor/focusの両方から使い、ノード内位置を段落内UTF16位置と誤認してカーソルをずらさないため共有する。anchorとfocusはそれぞれが属する入力欄から位置を数える。
+- `Swift/Session.swift`・`CorpusTests.swift`・`OperationTests.swift`・`CrossBlockSelectionTests.swift`: macOS/iOS共通の実行と検証。公式ケースは既存の`Tests/EditorCoreTests/Fixtures/Upstream`から生成時にコピーする。出典・ライセンスも既存の[説明](../README.md)に従う。
 - `markdownTextTraits`はモデル書式・斜体描画・貼り付けの検査から使う。Strong/Emphasisの入れ子順や`***`等の記法を固定せず、保存後の各文字が持つ書式を同じ基準で確認するため共有する。
 - `Swift/UIKitTests.swift`: テスト用UIKit接続。状態の反映と構造操作のUndoは入力欄を所有するfixtureへ集める。モデルのUndoとUIKitのUndoは別に検証する。
 - `report.mjs`: 検証レポートの追加分析。両プラットフォームの全件一致をアサートし、元の公式期待HTMLと保存前後のremark出力を別々に記録する。

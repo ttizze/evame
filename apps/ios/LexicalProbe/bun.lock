@@ -8,6 +8,7 @@
         "abort-controller": "3.0.0",
       },
       "devDependencies": {
+        "@lexical/clipboard": "0.53.0",
         "@lexical/code-core": "0.53.0",
         "@lexical/extension": "0.53.0",
         "@lexical/headless": "0.53.0",
