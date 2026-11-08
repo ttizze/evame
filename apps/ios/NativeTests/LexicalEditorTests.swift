@@ -527,6 +527,29 @@ struct LexicalEditorTests {
     }
   }
 
+  @Test("引用の中でReturnを押すと同じ引用に次の行を作り、空の行でもう一度押すと引用を抜ける")
+  func quoteReturn() throws {
+    for create in ["menu", "loaded"] {
+      let fixture = try LexicalFixture(create == "menu" ? "引用文" : "> 引用文")
+      defer { fixture.window.isHidden = true }
+      let editor = fixture.editor
+      if create == "menu" {
+        editor.selectedRange = NSRange(location: 0, length: 0)
+        editor.setBlock("quote")
+      }
+      editor.selectedRange = NSRange(location: 3, length: 0)
+      editor.insertText("\n")
+      editor.insertText("次の行")
+      #expect(fixture.markdown == "> 引用文\n>\n> 次の行", "\(create)")
+      #expect(editor.snapshot.units.map(\.context.quote) == [1, 1], "\(create)")
+      editor.insertText("\n")
+      editor.insertText("\n")
+      editor.insertText("外")
+      #expect(fixture.markdown == "> 引用文\n>\n> 次の行\n\n外", "\(create)")
+      #expect(editor.failure == nil, "\(create)")
+    }
+  }
+
   @Test("引用はWebと同じく、本文と同じ濃さの斜体の文字と太い線で表示する")
   func quoteLooks() throws {
     let fixture = try LexicalFixture("前\n\n> 引用文")

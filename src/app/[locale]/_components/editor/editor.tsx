@@ -25,6 +25,7 @@ import { EditorMenu } from "./editor-menu";
 import { ImagePlugin } from "./image-plugin";
 import { MarkdownExtension } from "./markdown";
 import { ImageNode, imageState } from "./media-nodes";
+import { QuoteEnterExtension } from "./quote-enter";
 import { ShortcutsExtension } from "./shortcuts";
 
 /** 記事とコメントで共有するMarkdown入出力のエディタ。本文の変更だけを保存元へ通知する。 */
@@ -102,6 +103,7 @@ export function Editor({
 				TabIndentationExtension,
 				MarkdownExtension,
 				ShortcutsExtension,
+				QuoteEnterExtension,
 			],
 		}),
 	);

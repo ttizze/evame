@@ -76,6 +76,7 @@ import {
 	imageState,
 	tweetState,
 } from "../../../src/app/[locale]/_components/editor/media-nodes";
+import { QuoteEnterExtension } from "../../../src/app/[locale]/_components/editor/quote-enter";
 import { ShortcutsExtension } from "../../../src/app/[locale]/_components/editor/shortcuts";
 import {
 	definitionState,
@@ -116,6 +117,7 @@ const editor = buildEditorFromExtensions(
 			}),
 			MarkdownExtension,
 			ShortcutsExtension,
+			QuoteEnterExtension,
 		],
 	}),
 );
