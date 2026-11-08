@@ -35,6 +35,8 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
     self.document = document
     self.pasteboard = pasteboard
     snapshot = try document.request(["action": "load", "markdown": markdown])
+    // 本文を読み込めないまま空の編集画面を開くと、編集の続きで本文を失うため開かない。
+    if let message = snapshot.failure { throw LexicalDocument.Failure.javascript(message) }
     super.init(frame: .zero, textContainer: nil)
     delegate = self
     accessibilityIdentifier = "editor.text"
