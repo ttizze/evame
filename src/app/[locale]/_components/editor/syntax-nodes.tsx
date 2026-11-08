@@ -5,7 +5,7 @@ export const htmlState = createState("html", {
 	parse: (value) => (typeof value === "string" ? value : ""),
 });
 
-/** 本文に書かれたHTML。値をそのまま保持して保存時に同じHTMLを書き出す。 */
+/** 文中に書かれたHTML。値をそのまま保持して保存時に同じHTMLを書き出す。 */
 export class HtmlNode extends DecoratorNode<ReactNode> {
 	$config() {
 		return this.config("html", {
@@ -27,6 +27,59 @@ export class HtmlNode extends DecoratorNode<ReactNode> {
 			<code className="rounded-md bg-muted px-1 text-sm">
 				{$getState(this, htmlState)}
 			</code>
+		);
+	}
+}
+
+/** 段落の外に書かれたHTML。前後のHTMLと1つの段落にまとめず、ブロックとして保つ。 */
+export class HtmlBlockNode extends HtmlNode {
+	$config() {
+		return this.config("html-block", { extends: HtmlNode });
+	}
+	isInline() {
+		return false;
+	}
+	createDOM() {
+		return document.createElement("div");
+	}
+}
+
+export const definitionState = createState("definition", {
+	parse: (value) => {
+		const definition = value as Record<string, unknown> | null;
+		return {
+			identifier:
+				typeof definition?.identifier === "string" ? definition.identifier : "",
+			label: typeof definition?.label === "string" ? definition.label : null,
+			url: typeof definition?.url === "string" ? definition.url : "",
+			title: typeof definition?.title === "string" ? definition.title : null,
+		};
+	},
+});
+
+/** 参照形式のリンク・画像の定義。表示には現れないが、後から書く参照のために保持する。 */
+export class DefinitionNode extends DecoratorNode<ReactNode> {
+	$config() {
+		return this.config("definition", {
+			extends: DecoratorNode,
+			stateConfigs: [{ flat: true, stateConfig: definitionState }],
+		});
+	}
+	isInline() {
+		return false;
+	}
+	createDOM() {
+		return document.createElement("div");
+	}
+	updateDOM() {
+		return false;
+	}
+	decorate() {
+		const { identifier, label, url } = $getState(this, definitionState);
+		return (
+			<p className="text-muted-foreground text-sm">
+				[{label ?? identifier}]: {url}
+			</p>
 		);
 	}
 }

@@ -15,25 +15,36 @@ import {
 	configExtension,
 	defineExtension,
 } from "lexical";
-import type { Image, ImageReference } from "mdast";
+import type { Definition, Image, ImageReference } from "mdast";
 import {
 	gfmFootnoteFromMarkdown,
 	gfmFootnoteToMarkdown,
 } from "mdast-util-gfm-footnote";
 import { gfmFootnote } from "micromark-extension-gfm-footnote";
+import { visit } from "unist-util-visit";
 import { getXPostId } from "@/app/[locale]/_domain/get-x-post-id";
 import { ImageNode, imageState, TweetNode, tweetState } from "./media-nodes";
 import {
+	DefinitionNode,
+	definitionState,
 	FootnoteDefinitionNode,
 	FootnoteReferenceNode,
 	footnoteState,
+	HtmlBlockNode,
 	HtmlNode,
 	htmlState,
 } from "./syntax-nodes";
 
+declare module "mdast" {
+	interface HtmlData {
+		/** 段落の外に書かれたHTMLかどうか。MDASTの型だけでは文中のHTMLと区別できない。 */
+		block?: boolean;
+	}
+}
+
 /**
  * 本文のMarkdownとLexicalの変換。CommonMark/GFMはLexical公式の`@lexical/mdast`に任せ、
- * 公式にないEvameの画像・X埋め込み・HTML・脚注の対応だけを足す。PCとiPhoneで共有する。
+ * 公式にないEvameの画像・X埋め込み・HTML・脚注・参照定義の対応だけを足す。PCとiPhoneで共有する。
  */
 export const MarkdownExtension = defineExtension({
 	name: "evame-markdown",
@@ -41,8 +52,10 @@ export const MarkdownExtension = defineExtension({
 		ImageNode,
 		TweetNode,
 		HtmlNode,
+		HtmlBlockNode,
 		FootnoteReferenceNode,
 		FootnoteDefinitionNode,
+		DefinitionNode,
 	],
 	dependencies: [
 		MdastCommonMarkExtension,
@@ -50,8 +63,29 @@ export const MarkdownExtension = defineExtension({
 		MdastShadowRootQuoteExtension,
 		configExtension(MdastExtension, {
 			micromarkExtensions: [gfmFootnote()],
-			mdastExtensions: [gfmFootnoteFromMarkdown()],
+			mdastExtensions: [
+				gfmFootnoteFromMarkdown(),
+				{
+					transforms: [
+						(tree) =>
+							visit(tree, "html", (node, _index, parent) => {
+								if (
+									parent &&
+									[
+										"root",
+										"blockquote",
+										"listItem",
+										"footnoteDefinition",
+									].includes(parent.type)
+								)
+									node.data = { ...node.data, block: true };
+							}),
+					],
+				},
+			],
 			toMarkdownExtensions: [gfmFootnoteToMarkdown()],
+			// 公式の行内ショートカットにない画像も、記法を閉じた時点で画像にする。
+			inlineShortcutTypes: ["image"],
 			importRules: [
 				{
 					type: "image",
@@ -90,7 +124,21 @@ export const MarkdownExtension = defineExtension({
 				{
 					type: "html",
 					$import: (node: Html) =>
-						$setState($create(HtmlNode), htmlState, node.value),
+						$setState(
+							$create(node.data?.block ? HtmlBlockNode : HtmlNode),
+							htmlState,
+							node.value,
+						),
+				},
+				{
+					type: "definition",
+					$import: (node: Definition) =>
+						$setState($create(DefinitionNode), definitionState, {
+							identifier: node.identifier,
+							label: node.label ?? null,
+							url: node.url,
+							title: node.title ?? null,
+						}),
 				},
 				{
 					type: "footnoteReference",
@@ -137,6 +185,13 @@ export const MarkdownExtension = defineExtension({
 					}),
 				},
 				{
+					type: DefinitionNode,
+					$export: (node: DefinitionNode) => ({
+						type: "definition",
+						...$getState(node, definitionState),
+					}),
+				},
+				{
 					type: FootnoteReferenceNode,
 					$export: (node: FootnoteReferenceNode) => ({
 						type: "footnoteReference",
@@ -148,7 +203,9 @@ export const MarkdownExtension = defineExtension({
 					$export: (node: FootnoteDefinitionNode, context) => ({
 						type: "footnoteDefinition",
 						...$getState(node, footnoteState),
-						children: context.exportBlocks(node),
+						children: context.exportChildren(
+							node,
+						) as FootnoteDefinition["children"],
 					}),
 				},
 			],

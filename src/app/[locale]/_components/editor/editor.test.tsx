@@ -1,11 +1,17 @@
 import { $createCodeNode } from "@lexical/code-core";
+import { HorizontalRuleNode } from "@lexical/extension";
 import { $convertFromMarkdownString } from "@lexical/mdast";
 import { act, cleanup, render, waitFor } from "@testing-library/react";
 import {
 	$createParagraphNode,
 	$createTextNode,
 	$getRoot,
+	$getSelection,
+	$nodesOfType,
+	COPY_COMMAND,
 	getNearestEditorFromDOMNode,
+	type Klass,
+	type LexicalNode,
 	PASTE_COMMAND,
 } from "lexical";
 import { IntlProvider } from "use-intl";
@@ -14,6 +20,8 @@ import { callReaderAction } from "@/app/_service/reader-action";
 import { messages } from "@/i18n/messages";
 import { Editor } from "./editor";
 import { UPLOAD_IMAGE_COMMAND } from "./image-plugin";
+import { ImageNode } from "./media-nodes";
+import { HtmlNode } from "./syntax-nodes";
 
 vi.mock("@/app/_service/reader-action", () => ({ callReaderAction: vi.fn() }));
 vi.mock("react-tweet", () => ({ Tweet: () => null }));
@@ -233,4 +241,97 @@ describe("Lexicalの本文フォーム", () => {
 		expect(container.querySelector('img[src="/loading.gif"]')).toBeNull();
 		alert.mockRestore();
 	});
+	for (const [name, typed, trigger, node] of [
+		[
+			"画像の記法を閉じると画像にする",
+			"![説明](https://example.com/a.png",
+			")",
+			ImageNode,
+		],
+		[
+			"行頭で---の後に空白を入力すると区切り線にする",
+			"---",
+			" ",
+			HorizontalRuleNode,
+		],
+	] as [string, string, string, Klass<LexicalNode>][]) {
+		it(name, async () => {
+			const editor = renderEditor("");
+			act(() =>
+				editor.update(
+					() => {
+						const paragraph = $createParagraphNode();
+						$getRoot().clear().append(paragraph);
+						paragraph.select();
+					},
+					{ discrete: true },
+				),
+			);
+			for (const text of [typed, trigger])
+				act(() =>
+					editor.update(() => $getSelection()?.insertText(text), {
+						discrete: true,
+					}),
+				);
+			expect(editor.read(() => $nodesOfType(node).length)).toBe(1);
+		});
+	}
+	it("行内のHTMLを含む本文をコピーして貼り付けてもHTMLを残す", async () => {
+		const editor = renderEditor("前<br>後");
+		const copied = new Map<string, string>();
+		// jsdomにないクリップボード・ドラッグのイベント型を、Lexicalの型判定用に補う。
+		vi.stubGlobal("ClipboardEvent", Event);
+		vi.stubGlobal("DragEvent", class extends Event {});
+		const copy = new Event("copy", { cancelable: true });
+		Object.defineProperty(copy, "clipboardData", {
+			value: {
+				setData: (type: string, value: string) => copied.set(type, value),
+			},
+		});
+		act(() => {
+			editor.update(() => $getRoot().select(0, 1), { discrete: true });
+			editor.dispatchCommand(COPY_COMMAND, copy as ClipboardEvent);
+			editor.update(
+				() => {
+					const paragraph = $createParagraphNode();
+					$getRoot().clear().append(paragraph);
+					paragraph.select();
+				},
+				{ discrete: true },
+			);
+		});
+		const paste = new Event("paste", { cancelable: true });
+		Object.defineProperty(paste, "clipboardData", {
+			value: {
+				files: [],
+				types: [...copied.keys()],
+				getData: (type: string) => copied.get(type) ?? "",
+			},
+		});
+		await act(async () => {
+			editor.dispatchCommand(PASTE_COMMAND, paste as ClipboardEvent);
+		});
+		expect(editor.read(() => $nodesOfType(HtmlNode).length)).toBe(1);
+		expect(editor.read(() => $getRoot().getTextContent())).toContain("前");
+	});
 });
+
+function renderEditor(defaultValue: string) {
+	const { container } = render(
+		<IntlProvider locale="ja" messages={messages.ja}>
+			<Editor
+				className=""
+				defaultValue={defaultValue}
+				name="content"
+				onChange={null}
+				placeholder="本文"
+				showMenus={false}
+			/>
+		</IntlProvider>,
+	);
+	const editable = container.querySelector('[contenteditable="true"]');
+	if (!editable) throw new Error("本文がありません");
+	const editor = getNearestEditorFromDOMNode(editable);
+	if (!editor) throw new Error("エディタがありません");
+	return editor;
+}

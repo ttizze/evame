@@ -152,6 +152,8 @@ export function ImagePlugin() {
 						return true;
 					}
 					if (!$isRangeSelection(selection)) return false;
+					// エディタ内でのコピーは、HTMLや脚注のノードを失わないLexical標準の貼り付けに任せる。
+					if (clipboard?.getData("application/x-lexical-editor")) return false;
 					if (getXPostId(text.trim()) !== null) {
 						event.preventDefault();
 						$insertNodeToNearestRoot(

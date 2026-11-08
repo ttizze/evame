@@ -27,8 +27,10 @@ import { describe, expect, it } from "vitest";
 import { MarkdownExtension } from "./markdown";
 import { ImageNode, TweetNode } from "./media-nodes";
 import {
+	DefinitionNode,
 	FootnoteDefinitionNode,
 	FootnoteReferenceNode,
+	HtmlBlockNode,
 	HtmlNode,
 } from "./syntax-nodes";
 
@@ -140,8 +142,16 @@ describe("LexicalとMarkdownの往復", () => {
 		[
 			"ブロックと行内のHTML",
 			"<details><summary>概要</summary>内容</details>\n\n文中の<kbd>Ctrl</kbd>と改行<br>の後",
-			// ブロックの<details>…</details>と、行内の<kbd>・</kbd>・<br>
-			[[HtmlNode, 4]],
+			[
+				[HtmlBlockNode, 1],
+				// 行内の<kbd>・</kbd>・<br>
+				[HtmlNode, 3],
+			],
+		],
+		[
+			"連続するブロックのHTML",
+			"<div>一つ目</div>\n\n<div>二つ目</div>",
+			[[HtmlBlockNode, 2]],
 		],
 		[
 			"脚注",
@@ -150,6 +160,16 @@ describe("LexicalとMarkdownの往復", () => {
 				[FootnoteReferenceNode, 2],
 				[FootnoteDefinitionNode, 2],
 			],
+		],
+		[
+			"HTMLを含む脚注",
+			"本文[^a]\n\n[^a]: 注\n\n    <div>注のHTML</div>",
+			[[HtmlBlockNode, 1]],
+		],
+		[
+			"使われていない参照定義",
+			'本文\n\n[ref]: https://example.com/target "題名"',
+			[[DefinitionNode, 1]],
 		],
 	] as [string, string, [Klass<LexicalNode>, number][]][]) {
 		it(`${name}を読み込み、保存し直しても表示される内容と構造を保つ`, () => {
@@ -163,6 +183,20 @@ describe("LexicalとMarkdownの往復", () => {
 			expect(rendered(saved)).toEqual(rendered(markdown));
 		});
 	}
+	it("使われていない参照定義を保存し、後から書いた参照リンクの宛先と題名に使える", () => {
+		const editor = createMarkdownEditor();
+		editor.update(
+			() =>
+				$convertFromMarkdownString(
+					'本文\n\n[ref]: https://example.com/target "題名"',
+				),
+			{ discrete: true },
+		);
+		const saved = editor.read(() => $convertToMarkdownString());
+		expect(rendered(`${saved}\n\n[参照][ref]`)).toEqual(
+			rendered('本文\n\n[参照](https://example.com/target "題名")'),
+		);
+	});
 	it("脚注の本文は段落として編集でき、編集した内容を保存する", () => {
 		const editor = createMarkdownEditor();
 		editor.update(() => $convertFromMarkdownString("本文[^a]\n\n[^a]: 注"), {
