@@ -71,6 +71,11 @@ export async function checkEditorDrag(baseUrl, cookie) {
 					target.y + target.height / 2,
 					{ steps: 12 },
 				);
+				// WebKitでもdropが届くよう、公式手順に合わせて終点へ2回移動する。
+				await page.mouse.move(
+					target.x + target.width / 2,
+					target.y + target.height / 2,
+				);
 				await page.mouse.up();
 				await expect(destination).toHaveValue(originalValue);
 				await expect(editor.locator("p").first()).toHaveText("最初の段落");
@@ -89,6 +94,10 @@ export async function checkEditorDrag(baseUrl, cookie) {
 					dropInGutter ? handleX : destination.x + 10,
 					destination.y + destination.height - 2,
 					{ steps: 12 },
+				);
+				await page.mouse.move(
+					dropInGutter ? handleX : destination.x + 10,
+					destination.y + destination.height - 2,
 				);
 				await expect(page.getByTestId("editor-drop-line")).toHaveCSS(
 					"opacity",
@@ -120,6 +129,10 @@ export async function checkEditorDrag(baseUrl, cookie) {
 				imageTarget.x + 10,
 				imageTarget.y + imageTarget.height - 2,
 				{ steps: 12 },
+			);
+			await page.mouse.move(
+				imageTarget.x + 10,
+				imageTarget.y + imageTarget.height - 2,
 			);
 			await page.mouse.up();
 			await expect(
