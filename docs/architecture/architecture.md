@@ -23,6 +23,8 @@ Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳�
 
 編集・ページ管理・ログインはTanStack Startを使用する。本文編集はLexicalからMarkdownを送信し、サーバーでCommonMark/GFMとしてMDAST JSONへ変換してTursoへ保存する。既存文書はMDASTからMarkdownにして編集画面へ渡す。記事とコメントは`src/app/[locale]/_components/editor`のエディタを共有する。段落照合と翻訳・投票の引き継ぎ、公開時の翻訳開始を維持する。配信済みの旧フォームが送信するHTMLは形式指定なしの入力として受け付ける。URL・階層表示・言語と表示モードを保持する。キャッシュの失敗時の挙動と実行環境の制限は [公開HTMLとデータ更新](cache-components-revalidation.md) を参照。
 
+Webのブロック操作は`block-editing.ts`で項目単位の種類変更と親子を含む移動を扱う。リストの変更と標準テキスト・見出しへの変換は、選択した項目と変換で分割される祖先を先に切り出して後続の番号を守り、変換自体はLexical標準APIを使う。リストと通常本文をまたぐTab操作もリスト項目を共通の移動処理へ通し、リスト項目の外にある通常ブロックの字下げは標準APIで扱う。`EditorMenu`はカーソルに最も近いリストの種類を表示して変更先の型をモデルへ伝え、`BlockDragMenu`は本文・左余白のマウス位置から各項目への移動と階層変更を実行する。通常ブロックの前後移動は最上位の親項目へ投影して種類を保ち、モデルとドロップ線が同じ移動先解決を使う。子リストの容器を独立した項目として選ばず、親を移動するときは子も含める。入力と保存は既存のCommonMark/GFM変換を使い、深さ別のマーカーはLexicalの`olDepth`・`ulDepth`テーマ設定で描画する。操作の比較元は[Notionの編集操作](https://www.notion.com/en-gb/help/writing-and-editing-basics)と[キーボード操作](https://www.notion.com/en-gb/help/keyboard-shortcuts)。
+
 記事の自動保存は`edit-page-client`が直列化し、保存結果の記事IDを公開メニューとタグ入力へ渡す。保存のたびにRouterのloaderを再実行せず、編集中の本文・選択・ドラッグを維持する。編集ルートのキャッシュは離脱時に破棄し、認証切れでログイン画面へ移った後も古い初期本文で開かない。Readerへのリンクは文書全体を切り替え、戻る操作で保存済みの編集内容を復元する。本文の先頭・末尾の余白はContentEditable内に収め、ブロックのドロップ先として扱う。
 
 ## リポジトリ構成（要約）

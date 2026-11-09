@@ -1,23 +1,10 @@
-import { $createCodeNode } from "@lexical/code-core";
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
-import {
-	$isListNode,
-	INSERT_CHECK_LIST_COMMAND,
-	INSERT_ORDERED_LIST_COMMAND,
-	INSERT_UNORDERED_LIST_COMMAND,
-	REMOVE_LIST_COMMAND,
-} from "@lexical/list";
+import { $isListNode } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import {
-	$createHeadingNode,
-	$createQuoteNode,
-	$isHeadingNode,
-} from "@lexical/rich-text";
-import { $setBlocksType } from "@lexical/selection";
+import { $isHeadingNode } from "@lexical/rich-text";
 import { INSERT_TABLE_COMMAND } from "@lexical/table";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
-	$createParagraphNode,
 	$getRoot,
 	$getSelection,
 	$isRangeSelection,
@@ -58,9 +45,10 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { listCommands, SET_TEXT_BLOCK_COMMAND } from "./block-editing";
 import { UPLOAD_IMAGE_COMMAND } from "./image-plugin";
 
-const blockItems = [
+export const blockItems = [
 	{ value: "paragraph", icon: Type, label: "paragraph" },
 	{ value: "h2", icon: Heading2, label: "heading2" },
 	{ value: "h3", icon: Heading3, label: "heading3" },
@@ -101,7 +89,10 @@ export function EditorMenu() {
 				const selection = $getSelection();
 				if (!$isRangeSelection(selection)) return;
 				const anchor = selection.anchor.getNode();
-				const block = anchor.getTopLevelElement() ?? $getRoot().getFirstChild();
+				const block =
+					anchor.getParents().find($isListNode) ??
+					anchor.getTopLevelElement() ??
+					$getRoot().getFirstChild();
 				if (!block) return;
 				const element = editor.getElementByKey(block.getKey());
 				const domSelection = window.getSelection();
@@ -161,31 +152,19 @@ export function EditorMenu() {
 		};
 	}, [editor]);
 
-	/** リストと表は専用コマンドを使い、それ以外は選択ブロックを変換する。 */
+	/** 型の変更はモデルへ伝え、メニュー操作後に本文へフォーカスを戻す。 */
 	function applyBlock(value: (typeof blockItems)[number]["value"]) {
 		if (value === "bullet" || value === "number" || value === "check") {
-			editor.dispatchCommand(
-				view.block === value
-					? REMOVE_LIST_COMMAND
-					: value === "bullet"
-						? INSERT_UNORDERED_LIST_COMMAND
-						: value === "number"
-							? INSERT_ORDERED_LIST_COMMAND
-							: INSERT_CHECK_LIST_COMMAND,
-				undefined,
-			);
+			const listCommand = listCommands.find(
+				({ type }) => type === value,
+			)?.command;
+			if (!listCommand) return;
+			editor.dispatchCommand(listCommand, undefined);
 		} else {
-			editor.update(() => {
-				const selection = $getSelection();
-				if ($isRangeSelection(selection))
-					$setBlocksType(selection, () => {
-						if (view.block === value || value === "paragraph")
-							return $createParagraphNode();
-						if (value === "quote") return $createQuoteNode();
-						if (value === "code") return $createCodeNode();
-						return $createHeadingNode(value);
-					});
-			});
+			editor.dispatchCommand(
+				SET_TEXT_BLOCK_COMMAND,
+				view.block === value ? "paragraph" : value,
+			);
 		}
 		editor.focus();
 	}

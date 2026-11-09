@@ -1,7 +1,6 @@
-import { TabIndentationExtension } from "@lexical/extension";
 import { HistoryExtension } from "@lexical/history";
 import { LinkExtension } from "@lexical/link";
-import { CheckListExtension, ListExtension } from "@lexical/list";
+import { CheckListExtension } from "@lexical/list";
 import {
 	$convertFromMarkdownString,
 	$convertToMarkdownString,
@@ -21,6 +20,7 @@ import {
 } from "lexical";
 import { useRef, useState } from "react";
 import { BlockDragMenu } from "./block-drag-menu";
+import { BlockEditingExtension } from "./block-editing";
 import { EditorMenu } from "./editor-menu";
 import { ImagePlugin } from "./image-plugin";
 import { MarkdownExtension } from "./markdown";
@@ -78,6 +78,21 @@ export function Editor({
 					code: "bg-gray-200 dark:bg-gray-900 rounded-md p-1 text-sm",
 				},
 				list: {
+					ol: "editor-list",
+					ul: "editor-list",
+					olDepth: [
+						"editor-list-decimal",
+						"editor-list-upper-alpha",
+						"editor-list-lower-alpha",
+						"editor-list-upper-roman",
+						"editor-list-lower-roman",
+					],
+					ulDepth: [
+						"editor-list-disc",
+						"editor-list-circle",
+						"editor-list-square",
+					],
+					listitem: "editor-list-item",
 					checklist: "list-none",
 					listitemChecked: "editor-checklist-checked",
 					listitemUnchecked: "editor-checklist-unchecked",
@@ -91,7 +106,7 @@ export function Editor({
 			dependencies: [
 				RichTextExtension,
 				HistoryExtension,
-				ListExtension,
+				BlockEditingExtension,
 				CheckListExtension,
 				LinkExtension,
 				configExtension(TableExtension, {
@@ -99,7 +114,6 @@ export function Editor({
 					hasCellMerge: false,
 					hasHorizontalScroll: true,
 				}),
-				TabIndentationExtension,
 				MarkdownExtension,
 				ShortcutsExtension,
 			],

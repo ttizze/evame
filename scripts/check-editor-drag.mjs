@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { chromium, expect, webkit } from "@playwright/test";
+import { checkEditorLists } from "./check-editor-lists.mjs";
 
 /** 保存の応答を返す場合も、マウスを離すまで実際のドラッグを保つ。 */
 async function beginDrag(page, start, destination) {
@@ -298,6 +299,7 @@ export async function checkEditorDrag(baseUrl, cookie) {
 			console.log(
 				`${browserType.name()}: 自動保存中のドラッグ、本文・左列と先頭・末尾への移動、画像移動、Undo・Redo・保存・再読み込み、タイトル・タグへの誤挿入防止を確認できる`,
 			);
+			await checkEditorLists(page);
 		} finally {
 			await browser.close();
 		}
