@@ -63,7 +63,12 @@ function EditHeaderShell({
 	return (
 		<header className="z-50 bg-background rounded-b-3xl max-w-3xl mx-auto py-2 md:py-4 px-2 md:px-6 lg:px-8 flex justify-between items-center">
 			<div className="flex items-center gap-4">
-				<Link className="flex items-center" params={{ locale }} to="/$locale">
+				<Link
+					className="flex items-center"
+					params={{ locale }}
+					reloadDocument
+					to="/$locale"
+				>
 					<img
 						alt="Evame"
 						aria-label="Evame Logo"
@@ -267,6 +272,7 @@ export function EditHeader({
 						<Button asChild className={MENU_BUTTON_CLASSES} variant="ghost">
 							<Link
 								params={{ handle, locale, pageSlug }}
+								reloadDocument
 								to="/$locale/$handle/$pageSlug"
 							>
 								<LinkIcon className={ICON_CLASSES} />

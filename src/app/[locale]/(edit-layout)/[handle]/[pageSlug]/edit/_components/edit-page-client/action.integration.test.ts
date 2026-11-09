@@ -80,7 +80,7 @@ describe("editPageContent", () => {
 
 		const result = await editPageContent({ data: formData });
 
-		expect(result.success).toBe(true);
+		expect(result).toEqual({ success: true, data: { pageId: page.id } });
 		const updatedPage = await db
 			.selectFrom("pages")
 			.selectAll()
@@ -108,14 +108,16 @@ describe("editPageContent", () => {
 		);
 		const createdPage = await db
 			.selectFrom("pages")
-			.select(["slug", "userId", "status"])
+			.select(["id", "slug", "userId", "status"])
 			.where("slug", "=", "new-page")
 			.executeTakeFirstOrThrow();
 		expect(createdPage).toEqual({
+			id: expect.any(Number),
 			slug: "new-page",
 			userId: user.id,
 			status: "DRAFT",
 		});
+		expect(result).toEqual({ success: true, data: { pageId: createdPage.id } });
 	});
 
 	it("タイトルに改行が混ざっていても保存時に空白へ正規化する", async () => {
