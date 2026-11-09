@@ -1,4 +1,40 @@
 {
+	"MagicLinkForm": {
+		"invalidEmail": "请输入有效的电子邮件地址。",
+		"sendFailed": "登录邮件发送失败，请重试。"
+	},
+	"Editor": {
+		"moveBlock": "拖动以移动区块",
+		"saveFailed": "保存失败。修改仍保留在当前页面，请重试。",
+		"title": "标题",
+		"placeholder": "开始写作…",
+		"commentPlaceholder": "写评论…",
+		"post": "发布",
+		"posting": "发布中…",
+		"paragraph": "普通文本",
+		"heading2": "二级标题",
+		"heading3": "三级标题",
+		"heading4": "四级标题",
+		"bold": "粗体",
+		"italic": "斜体",
+		"strikethrough": "删除线",
+		"inlineCode": "行内代码",
+		"codeBlock": "代码块",
+		"bulletList": "无序列表",
+		"orderedList": "有序列表",
+		"checkList": "任务列表",
+		"quote": "引用",
+		"image": "图片",
+		"table": "表格",
+		"blockType": "区块类型",
+		"insertBlock": "添加区块",
+		"link": "链接",
+		"linkUrl": "链接地址",
+		"applyLink": "应用链接",
+		"indent": "增加缩进",
+		"outdent": "减少缩进",
+		"imageUploadFailed": "图片上传失败，请重试。"
+	},
 	"Home": {
 		"loadError": "无法加载最新文章。",
 		"retry": "重试"

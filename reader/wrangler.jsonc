@@ -4,7 +4,11 @@
 	"account_id": "c7b7a7ae01fa84965620a5b3f7e79286",
 	"main": "src/worker.ts",
 	"compatibility_date": "2026-11-06",
-	"compatibility_flags": ["nodejs_compat", "disable_nodejs_console_module"],
+	"compatibility_flags": [
+		"nodejs_compat",
+		"disable_nodejs_console_module",
+		"global_fetch_strictly_public"
+	],
 	"workers_dev": false,
 	"preview_urls": false,
 	"assets": {
@@ -26,6 +30,11 @@
 	},
 	"triggers": {
 		"crons": []
+	},
+	"previews": {
+		"cache": { "enabled": false },
+		"version_metadata": { "binding": "CF_VERSION_METADATA" },
+		"vars": { "SENTRY_DSN": "", "SENTRY_ENVIRONMENT": "preview" }
 	},
 	"observability": {
 		"enabled": true

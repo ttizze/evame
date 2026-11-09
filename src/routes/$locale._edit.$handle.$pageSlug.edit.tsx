@@ -3,6 +3,7 @@ import { EditPageClient } from "@/app/[locale]/(edit-layout)/[handle]/[pageSlug]
 import { getPageEditData } from "./$locale/-page-edit-data";
 
 export const Route = createFileRoute("/$locale/_edit/$handle/$pageSlug/edit")({
+	gcTime: 0,
 	loader: async ({ params }) => {
 		const data = await getPageEditData({ data: params });
 		if (!data) {

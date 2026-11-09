@@ -58,6 +58,54 @@ const env = {
 	SETTINGS: { get: vi.fn().mockResolvedValue(false) },
 	READER: { fetch: vi.fn() },
 };
+it("PRのHTMLは同じPRのReaderへ送り、本番bindingを呼ばない", async () => {
+	const fetch = vi.fn().mockResolvedValue(new Response("プレビューの本文"));
+	vi.stubGlobal("fetch", fetch);
+	try {
+		const response = await server.fetch(
+			new Request("https://pr-1140-evame-start.reimei.workers.dev/ja?page=2", {
+				headers: {
+					cookie: "preview-session",
+					host: "pr-1140-evame-start.reimei.workers.dev",
+				},
+			}),
+			{
+				...env,
+				PREVIEW_READER_ORIGIN:
+					"https://pr-1140-evame-reader.reimei.workers.dev",
+				PREVIEW_READER_SECRET: "preview-reader-secret",
+			} as unknown as typeof import("cloudflare:workers").env,
+			{ waitUntil: vi.fn() },
+		);
+		expect(await response.text()).toBe("プレビューの本文");
+		expect(env.READER.fetch).not.toHaveBeenCalled();
+		const [url, init] = fetch.mock.calls[0];
+		expect(url).toBe(
+			"https://pr-1140-evame-reader.reimei.workers.dev/ja?page=2",
+		);
+		expect(new Headers(init.headers).get("cookie")).toBe("preview-session");
+		expect(new Headers(init.headers).get("host")).toBeNull();
+		expect(new Headers(init.headers).get("x-evame-preview-reader")).toBe(
+			"preview-reader-secret",
+		);
+	} finally {
+		vi.unstubAllGlobals();
+	}
+});
+
+it("PRのReader秘密値が欠けている場合は本番bindingへ接続しない", async () => {
+	await expect(
+		server.fetch(
+			new Request("https://preview.test/_astro/header.js"),
+			{
+				...env,
+				PREVIEW_READER_ORIGIN: "https://reader-preview.test",
+			} as unknown as typeof import("cloudflare:workers").env,
+			{ waitUntil: vi.fn() },
+		),
+	).rejects.toThrow("Preview Reader secret is required");
+	expect(env.READER.fetch).not.toHaveBeenCalled();
+});
 beforeEach(() => {
 	pendingInvalidations.clear();
 	vi.mocked(fetchReaderChanges).mockResolvedValue([{ key: "page:123" }]);

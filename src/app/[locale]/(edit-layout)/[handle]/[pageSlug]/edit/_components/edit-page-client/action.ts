@@ -7,10 +7,9 @@ import {
 import { z } from "zod";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { createServerLogger } from "@/app/_service/logger.server";
-import { getLocaleFromHtml } from "@/app/[locale]/_domain/get-locale-from-html";
 import { getPageWithTitleAndTagsBySlug } from "@/app/[locale]/(edit-layout)/[handle]/[pageSlug]/edit/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
-import { processPageHtml } from "./service/process-page-html";
+import { processPageContent } from "./service/process-page-content";
 
 const formSchema = z.object({
 	pageSlug: z.string().min(1),
@@ -19,11 +18,13 @@ const formSchema = z.object({
 		.string()
 		.transform((value) => value.replace(/\r\n|\r|\n/g, " ").trim())
 		.pipe(z.string().min(1).max(100)),
-	pageContent: z.string().min(1),
+	pageContent: z.string(),
+	// 配信済みの旧エディタから届くフォームは形式指定がなくHTMLを送る。
+	contentFormat: z.enum(["html", "markdown"]).default("html"),
 });
 
 export type EditPageContentActionState = ActionResponse<
-	undefined,
+	{ pageId: number },
 	z.input<typeof formSchema>
 >;
 
@@ -40,6 +41,7 @@ function parseFormData(formData: FormData) {
 		userLocale: formData.get("userLocale"),
 		title: formData.get("title"),
 		pageContent: formData.get("pageContent"),
+		contentFormat: formData.get("contentFormat") ?? undefined,
 	});
 }
 
@@ -54,7 +56,8 @@ export const editPageContent = createServerFn({ method: "POST" })
 			};
 		}
 
-		const { pageSlug, userLocale, title, pageContent } = parsed.data;
+		const { pageSlug, userLocale, title, pageContent, contentFormat } =
+			parsed.data;
 		const currentUser = await getCurrentUserFromHeaders(
 			new Headers(getRequestHeaders()),
 		);
@@ -73,20 +76,20 @@ export const editPageContent = createServerFn({ method: "POST" })
 			userLocale,
 		});
 		try {
-			const sourceLocale = await getLocaleFromHtml(pageContent, userLocale);
-			await processPageHtml({
+			const page = await processPageContent({
 				title,
-				html: pageContent,
+				content: pageContent,
+				contentFormat,
 				pageSlug,
 				userId: currentUser.id,
-				sourceLocale,
+				userLocale,
 				parentId: existingPage?.parentId ?? null,
 				order: existingPage?.order ?? 0,
 				status: existingPage?.status ?? "DRAFT",
 			});
 			if (existingPage?.status !== "PUBLIC")
 				setResponseHeader("X-Evame-Reader-Changed", "false");
-			return { success: true, data: undefined };
+			return { success: true, data: { pageId: page.id } };
 		} catch (error) {
 			logger.error({ err: error }, "Failed to save page");
 			return { success: false, message: "Failed to save page" };

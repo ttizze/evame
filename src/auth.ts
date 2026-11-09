@@ -4,6 +4,7 @@ import { customSession, magicLink } from "better-auth/plugins";
 import { databaseScope, db } from "./db";
 import { sendMagicLinkEmail } from "./utils/send-magic-link-email.server";
 
+/** 認証と独自セッションを同じDB接続へ揃え、Cookieを使うAPIのOrigin検証を維持する。 */
 function createAuth(database: typeof db) {
 	return betterAuth({
 		plugins: [
@@ -77,6 +78,8 @@ function createAuth(database: typeof db) {
 			modelName: "verifications",
 		},
 		advanced: {
+			// Better Authのtest環境でも、プレビューのOrigin検証を省略しない。
+			disableOriginCheck: false,
 			database: {
 				generateId: createId,
 			},

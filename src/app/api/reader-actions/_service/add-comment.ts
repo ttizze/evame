@@ -3,10 +3,9 @@ import { z } from "zod";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
-import { getLocaleFromHtml } from "@/app/[locale]/_domain/get-locale-from-html";
 import { enqueueTranslationJob } from "@/app/[locale]/_infrastructure/qstash/enqueue-translation-job.server";
 import { createNotificationPageComment } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/_components/page-comment-form/_db/mutations.server";
-import { processPageCommentHtml } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/_components/page-comment-form/service/process-page-comment-html";
+import { processPageCommentContent } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/_components/page-comment-form/service/process-page-comment-content";
 import { COMMENT_PAGE_SIZE } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/constants";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
@@ -22,6 +21,7 @@ const commentActionInput = z.object({
 			"対応していないlocaleです",
 		),
 	content: z.string().trim().min(1, "Comment cannot be empty"),
+	contentFormat: z.enum(["html", "markdown"]).default("html"),
 	parentId: z.number().int().positive().optional(),
 	pageCommentId: z.number().int().positive().optional(),
 });
@@ -37,6 +37,7 @@ export type CommentActionResponse = ActionResponse<
 	}
 >;
 
+/** 閲覧権限とコメント所有者を検証して保存し、通知と翻訳を開始する。 */
 export async function commentAction(
 	input: z.input<typeof commentActionInput>,
 	requestHeaders: Headers,
@@ -81,12 +82,12 @@ export async function commentAction(
 		}
 	}
 
-	const locale = await getLocaleFromHtml(data.content, data.userLocale);
-	const pageComment = await processPageCommentHtml({
+	const pageComment = await processPageCommentContent({
 		pageCommentId: data.pageCommentId,
 		parentId: data.parentId,
-		commentHtml: data.content,
-		locale,
+		content: data.content,
+		contentFormat: data.contentFormat,
+		userLocale: data.userLocale,
 		currentUserId: currentUser.id,
 		pageId: data.pageId,
 	});

@@ -56,6 +56,24 @@ describe("Pull API", () => {
 		expect(typeof json.pages[0].revision).toBe("string");
 	});
 
+	it("空オブジェクト形式の原稿があってもpull全体を失敗させない", async () => {
+		await createPage({ userId, slug: "empty-post", mdastJson: {} });
+		const response = await getSyncPull(
+			new Request("http://localhost/api/sync/pull", {
+				headers: { Authorization: authHeader },
+			}),
+		);
+		expect(response.status).toBe(200);
+		const data = await response.json();
+		expect(data.pages).toEqual([
+			expect.objectContaining({
+				slug: "empty-post",
+				body: "",
+				revision: expect.any(String),
+			}),
+		]);
+	});
+
 	it("titleはsegment#0のテキストを返す", async () => {
 		await push(userId, {
 			inputs: [
@@ -94,5 +112,23 @@ describe("Pull API", () => {
 		expect(response.status).toBe(200);
 		const json = await response.json();
 		expect(json.pages).toHaveLength(0);
+	});
+
+	it("保存済み本文を変換できない場合は空本文と版を同期しない", async () => {
+		await createPage({
+			userId,
+			slug: "unsupported-post",
+			mdastJson: {
+				type: "root",
+				children: [{ type: "unsupported-node", value: "残す本文" }],
+			},
+		});
+		await expect(
+			getSyncPull(
+				new Request("http://localhost/api/sync/pull", {
+					headers: { Authorization: authHeader },
+				}),
+			),
+		).rejects.toThrow(/unsupported-node/);
 	});
 });

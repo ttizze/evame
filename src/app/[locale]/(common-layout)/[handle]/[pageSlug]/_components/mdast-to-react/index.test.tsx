@@ -19,6 +19,7 @@ vi.stubGlobal(
 	}),
 );
 
+import { renderToStaticMarkup } from "react-dom/server";
 // 2. その後で被テストモジュールをimport
 import { mdastToReact } from "./index";
 
@@ -36,6 +37,158 @@ const segments: Segment[] = Array.from(
 );
 
 describe("mdastToReact", () => {
+	for (const [name, value, expected] of [
+		[
+			"脚注の属性が付いた外部リンクの遷移先を書き換えない",
+			'<a data-footnote-ref href="https://example.com/x">外部</a>',
+			'href="https://example.com/x"',
+		],
+		[
+			"DailymotionのoEmbedが返すプレーヤーを表示する",
+			'<iframe src="https://geo.dailymotion.com/player.html?video=x84sh87&"></iframe>',
+			'src="https://geo.dailymotion.com/player.html?video=x84sh87',
+		],
+	]) {
+		it(name, () => {
+			const html = renderToStaticMarkup(
+				mdastToReact({
+					Tweet,
+					segments: [],
+					mdast: { type: "root", children: [{ type: "html", value }] },
+				}),
+			);
+			expect(html).toContain(expected);
+		});
+	}
+
+	it("脚注とその戻り先のリンクは本文内の同じIDへ飛ぶ", () => {
+		const html = renderToStaticMarkup(
+			mdastToReact({
+				Tweet,
+				segments: [],
+				mdast: {
+					type: "root",
+					children: [
+						{
+							type: "paragraph",
+							children: [
+								{ type: "text", value: "本文" },
+								{
+									type: "footnoteReference",
+									identifier: "note",
+									label: "note",
+								},
+							],
+						},
+						{
+							type: "footnoteDefinition",
+							identifier: "note",
+							label: "note",
+							children: [
+								{
+									type: "paragraph",
+									children: [{ type: "text", value: "注釈" }],
+								},
+							],
+						},
+					],
+				},
+			}),
+		);
+		const targets = [...html.matchAll(/href="#([^"]+)"/g)].map(
+			(match) => match[1],
+		);
+		expect(targets).toHaveLength(2);
+		for (const target of targets) expect(html).toContain(`id="${target}"`);
+	});
+
+	it("任意のCSSで画面を覆う属性を落とし、リンクカードのクラスだけを保つ", () => {
+		const html = renderToStaticMarkup(
+			mdastToReact({
+				Tweet,
+				segments: [],
+				mdast: {
+					type: "root",
+					children: [
+						{
+							type: "html",
+							value:
+								'<div style="position:fixed;inset:0;z-index:2147483647" class="fixed inset-0 remark-link-card-plus__container"><a class="fixed remark-link-card-plus__card" href="https://example.com">本文</a></div>',
+						},
+					],
+				},
+			}),
+		);
+		expect(html).not.toContain("style=");
+		expect(html).not.toContain("inset-0");
+		expect(html).not.toContain("fixed");
+		expect(html).toContain('class="remark-link-card-plus__container"');
+		expect(html).toContain('class="remark-link-card-plus__card"');
+	});
+	it("許可したHTTPS動画埋め込みだけを表示し、任意の権限を与えない", () => {
+		const html = renderToStaticMarkup(
+			mdastToReact({
+				Tweet,
+				segments: [],
+				mdast: {
+					type: "root",
+					children: [
+						{
+							type: "html",
+							value:
+								'<iframe src="https://www.youtube.com/embed/abc" allow="camera;microphone"></iframe><iframe src="https://evil.example/embed/abc"></iframe><iframe src="http://www.youtube.com/embed/abc"></iframe><iframe src="https://www.youtube.com.evil.example/embed/abc"></iframe>',
+						},
+					],
+				},
+			}),
+		);
+		expect(html).toContain('src="https://www.youtube.com/embed/abc"');
+		expect(html).not.toContain("evil.example");
+		expect(html).not.toContain('src="http:');
+		expect(html).not.toContain("camera");
+		expect(html).not.toContain("microphone");
+	});
+	it("埋め込み先が同じホストでも相対階層で別のパスへ移動させない", () => {
+		const html = renderToStaticMarkup(
+			mdastToReact({
+				Tweet,
+				segments: [],
+				mdast: {
+					type: "root",
+					children: [
+						{
+							type: "html",
+							value:
+								'<iframe src="https://www.youtube.com/embed/../../redirect"></iframe><iframe src="https://player.vimeo.com/video/../redirect"></iframe>',
+						},
+					],
+				},
+			}),
+		);
+		expect(html).not.toContain("iframe");
+	});
+	it("Markdown由来のHTMLでもスクリプトとイベント属性を公開HTMLへ出さない", () => {
+		const html = renderToStaticMarkup(
+			mdastToReact({
+				Tweet,
+				segments: [],
+				mdast: {
+					type: "root",
+					children: [
+						{
+							type: "html",
+							value:
+								'<script>alert(1)</script><img src="/safe.png" onerror="alert(2)"><p class="link-card">安全な本文</p>',
+						},
+					],
+				},
+			}),
+		);
+		expect(html).not.toContain("<script");
+		expect(html).not.toContain("onerror");
+		expect(html).toContain("安全な本文");
+		expect(html).not.toContain('class="link-card"');
+	});
 	it("コメントの本文を同期的に描画し、元のASTを変更しない", () => {
 		const mdast: JsonValue = {
 			type: "root",

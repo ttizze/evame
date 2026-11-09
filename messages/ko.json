@@ -1,4 +1,40 @@
 {
+	"MagicLinkForm": {
+		"invalidEmail": "올바른 이메일 주소를 입력해 주세요.",
+		"sendFailed": "로그인 이메일을 보내지 못했습니다. 다시 시도해 주세요."
+	},
+	"Editor": {
+		"moveBlock": "드래그하여 블록 이동",
+		"saveFailed": "저장하지 못했습니다. 변경 내용은 화면에 남아 있습니다. 다시 시도해 주세요.",
+		"title": "제목",
+		"placeholder": "본문을 작성하세요…",
+		"commentPlaceholder": "댓글을 작성하세요…",
+		"post": "게시",
+		"posting": "게시 중…",
+		"paragraph": "일반 텍스트",
+		"heading2": "제목 2",
+		"heading3": "제목 3",
+		"heading4": "제목 4",
+		"bold": "굵게",
+		"italic": "기울임꼴",
+		"strikethrough": "취소선",
+		"inlineCode": "인라인 코드",
+		"codeBlock": "코드 블록",
+		"bulletList": "글머리 기호 목록",
+		"orderedList": "번호 목록",
+		"checkList": "체크리스트",
+		"quote": "인용",
+		"image": "이미지",
+		"table": "표",
+		"blockType": "블록 유형",
+		"insertBlock": "블록 추가",
+		"link": "링크",
+		"linkUrl": "링크 URL",
+		"applyLink": "링크 적용",
+		"indent": "들여쓰기",
+		"outdent": "내어쓰기",
+		"imageUploadFailed": "이미지를 업로드하지 못했습니다. 다시 시도해 주세요."
+	},
 	"Home": {
 		"loadError": "최신 글을 불러오지 못했습니다.",
 		"retry": "다시 시도"

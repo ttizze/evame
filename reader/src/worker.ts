@@ -18,6 +18,19 @@ export default withSentry(
 			env: typeof import("cloudflare:workers").env,
 			context: ExecutionContext,
 		) {
+			if (env.PREVIEW_GATEWAY_ORIGIN) {
+				if (
+					!env.PREVIEW_READER_SECRET ||
+					request.headers.get("x-evame-preview-reader") !==
+						env.PREVIEW_READER_SECRET
+				)
+					return new Response(null, { status: 404 });
+				const url = new URL(request.url);
+				const gateway = new URL(env.PREVIEW_GATEWAY_ORIGIN);
+				url.protocol = gateway.protocol;
+				url.host = gateway.host;
+				request = new Request(url, request);
+			}
 			const pathname = new URL(request.url).pathname;
 			if (pathname === "/__invalidate" || pathname === "/__purge") {
 				if (request.method !== "POST")
@@ -36,7 +49,7 @@ export default withSentry(
 						))
 				)
 					return new Response(null, { status: 400 });
-				if (typeof cache?.purge === "function") {
+				if (!env.PREVIEW_GATEWAY_ORIGIN && typeof cache?.purge === "function") {
 					for (let start = 0; start < tags.length; start += 100) {
 						const result = await cache.purge({
 							tags: tags.slice(start, start + 100),

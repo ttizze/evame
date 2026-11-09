@@ -8,6 +8,7 @@ import { captureException, withSentry } from "@sentry/cloudflare";
 import { isRedirect } from "@tanstack/react-router";
 import handler from "@tanstack/react-start/server-entry";
 import { withSecurityHeaders } from "../security-headers";
+import { fetchReader } from "./_infra/fetch-reader";
 import { SENTRY_DSN } from "./_utils/sentry-dsn";
 import { shouldInvalidateReader } from "./app/_domain/reader-cache-policy";
 import { readerCacheTags } from "./app/_domain/reader-cache-tags";
@@ -77,10 +78,17 @@ export default withSentry(
 				(request.method === "GET" || request.method === "HEAD")
 			) {
 				return withSecurityHeaders(
-					(await env.READER.fetch(request.url, {
-						method: request.method,
-						headers: Object.fromEntries(request.headers),
-					})) as unknown as Response,
+					await fetchReader(
+						request.url,
+						{
+							method: request.method,
+							headers: Object.fromEntries(request.headers),
+							body: null,
+						},
+						env.READER ?? null,
+						env.PREVIEW_READER_ORIGIN ?? null,
+						env.PREVIEW_READER_SECRET ?? null,
+					),
 				);
 			}
 			const readerRoute = parseReaderRoute(url.pathname, url.search);
@@ -111,10 +119,17 @@ export default withSentry(
 				const readerUrl = new URL(request.url);
 				if (readerRoute.kind === "home")
 					readerUrl.pathname = `/${readerRoute.locale}`;
-				const response = (await env.READER.fetch(readerUrl.href, {
-					method: request.method,
-					headers: Object.fromEntries(request.headers),
-				})) as unknown as Response;
+				const response = await fetchReader(
+					readerUrl.href,
+					{
+						method: request.method,
+						headers: Object.fromEntries(request.headers),
+						body: null,
+					},
+					env.READER ?? null,
+					env.PREVIEW_READER_ORIGIN ?? null,
+					env.PREVIEW_READER_SECRET ?? null,
+				);
 				const secured = withSecurityHeaders(response);
 				secured.headers.set("Cache-Control", "private, no-store");
 				secured.headers.delete("Cloudflare-CDN-Cache-Control");
@@ -156,13 +171,16 @@ export default withSentry(
 							);
 						const pending = await fetchReaderCacheInvalidations();
 						if (pending.length > 0) {
-							const purged = await env.READER.fetch(
+							const purged = await fetchReader(
 								"https://reader.internal/__invalidate",
 								{
 									method: "POST",
 									headers: { "Content-Type": "application/json" },
 									body: JSON.stringify({ tags: pending.map((row) => row.tag) }),
 								},
+								env.READER ?? null,
+								env.PREVIEW_READER_ORIGIN ?? null,
+								env.PREVIEW_READER_SECRET ?? null,
 							);
 							if (!purged.ok)
 								throw new Error("Reader cache invalidation failed");

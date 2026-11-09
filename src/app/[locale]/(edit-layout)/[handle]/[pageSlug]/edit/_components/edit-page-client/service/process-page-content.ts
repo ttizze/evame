@@ -1,48 +1,51 @@
 import { createServerLogger } from "@/app/_service/logger.server";
-import { htmlToMdastWithSegments } from "@/app/[locale]/_service/html-to-mdast-with-segments";
+import { contentToMdastWithSegments } from "@/app/[locale]/_service/content-to-mdast-with-segments";
 import { upsertPageAndSegments } from "@/app/[locale]/_service/upsert-page-and-segments";
 import type { PageStatus } from "@/db/types";
 
 /**
- * ページのHTMLを処理してデータベースに保存する（ユースケースフロー）
+ * ページの本文を解析し、既存の段落照合と同じ経路で保存する。
  *
  * 処理の流れ:
- * 1. HTML → MDAST + segments に変換
+ * 1. 本文 → MDAST + segments に変換
  * 2. ページとセグメントをデータベースに保存
  */
-export async function processPageHtml(params: {
+export async function processPageContent(params: {
 	title: string;
-	html: string;
+	content: string;
+	contentFormat: "html" | "markdown";
 	pageSlug: string;
 	userId: string;
-	sourceLocale: string;
+	userLocale: string;
 	parentId: number | null;
 	order: number;
 	status: PageStatus;
 }) {
-	const logger = createServerLogger("process-page-html", {
+	const logger = createServerLogger("process-page-content", {
 		userId: params.userId,
 		pageSlug: params.pageSlug,
 	});
 
-	const { title, html, ...pageParams } = params;
+	const { title, content, contentFormat, userLocale, ...pageParams } = params;
 
-	logger.debug({ htmlLength: params.html.length }, "Processing page HTML");
-
-	const { mdastJson, segments } = await htmlToMdastWithSegments({
-		header: title,
-		html,
-	});
+	const { mdastJson, segments, sourceLocale } =
+		await contentToMdastWithSegments({
+			header: title,
+			content,
+			contentFormat,
+			userLocale,
+		});
 
 	logger.debug(
 		{ segmentCount: segments.length },
-		"HTML converted to MDAST and segments",
+		"Content converted to MDAST and segments",
 	);
 
 	const updatedPage = await upsertPageAndSegments({
 		...pageParams,
 		mdastJson,
 		segments,
+		sourceLocale,
 	});
 
 	logger.debug(

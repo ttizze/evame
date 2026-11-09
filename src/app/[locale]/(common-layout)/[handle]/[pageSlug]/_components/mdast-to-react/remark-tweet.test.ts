@@ -20,7 +20,7 @@ it.each([
 		],
 	};
 	expect(unified().use(remarkTweet).runSync(tree).children).toEqual([
-		{ type: "html", value: '<tweet id="12345"></tweet>' },
+		{ type: "html", value: '<tweet data-tweet-id="12345"></tweet>' },
 	]);
 });
 it("文章に混ざったリンクや通常のURLはそのまま残す", () => {

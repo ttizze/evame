@@ -6,7 +6,7 @@ Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳�
 ## 技術スタック（現行）
 
 - 公開表示: Astro + React islands
-- 編集・管理: TanStack Start + TanStack Router + Tiptap
+- 編集・管理: TanStack Start + TanStack Router + Lexical
 - ビルド・サーバー: Vite + Cloudflare Workers
 - 言語: TypeScript
 - UI: React 19 + Tailwind CSS + Radix UI 系コンポーネント
@@ -21,7 +21,11 @@ Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳�
 
 長いサービス説明と件数集計はAboutに移し、トップはログインの有無にかかわらず記事一覧を表示する。コメント、翻訳、いいね、通知などは必要な部分だけReact islandsで起動する。公開HTMLに認証情報や非公開データを混ぜない。下書きは所有者だけがprivateレスポンスでプレビューする。
 
-編集・ページ管理・ログインは既存のTanStack StartとTiptapを維持する。URL・階層表示・言語と表示モードを保持する。キャッシュの失敗時の挙動と実行環境の制限は [公開HTMLとデータ更新](cache-components-revalidation.md) を参照。
+編集・ページ管理・ログインはTanStack Startを使用する。本文編集はLexicalからMarkdownを送信し、サーバーでCommonMark/GFMとしてMDAST JSONへ変換してTursoへ保存する。既存文書はMDASTからMarkdownにして編集画面へ渡す。記事とコメントは`src/app/[locale]/_components/editor`のエディタを共有する。段落照合と翻訳・投票の引き継ぎ、公開時の翻訳開始を維持する。配信済みの旧フォームが送信するHTMLは形式指定なしの入力として受け付ける。URL・階層表示・言語と表示モードを保持する。キャッシュの失敗時の挙動と実行環境の制限は [公開HTMLとデータ更新](cache-components-revalidation.md) を参照。
+
+Webのブロック操作は`block-editing.ts`で項目単位の種類変更と親子を含む移動を扱う。リストの変更と標準テキスト・見出しへの変換は、選択した項目と変換で分割される祖先を先に切り出して後続の番号を守り、変換自体はLexical標準APIを使う。リストと通常本文をまたぐTab操作もリスト項目を共通の移動処理へ通し、リスト項目の外にある通常ブロックの字下げは標準APIで扱う。`EditorMenu`はカーソルに最も近いリストの種類を表示して変更先の型をモデルへ伝え、`BlockDragMenu`は本文・左余白のマウス位置から各項目への移動と階層変更を実行する。通常ブロックの前後移動は最上位の親項目へ投影して種類を保ち、モデルとドロップ線が同じ移動先解決を使う。子リストの容器を独立した項目として選ばず、親を移動するときは子も含める。入力と保存は既存のCommonMark/GFM変換を使い、深さ別のマーカーはLexicalの`olDepth`・`ulDepth`テーマ設定で描画する。操作の比較元は[Notionの編集操作](https://www.notion.com/en-gb/help/writing-and-editing-basics)と[キーボード操作](https://www.notion.com/en-gb/help/keyboard-shortcuts)。
+
+記事の自動保存は`edit-page-client`が直列化し、保存結果の記事IDを公開メニューとタグ入力へ渡す。保存のたびにRouterのloaderを再実行せず、編集中の本文・選択・ドラッグを維持する。編集ルートのキャッシュは離脱時に破棄し、認証切れでログイン画面へ移った後も古い初期本文で開かない。Readerへのリンクは文書全体を切り替え、戻る操作で保存済みの編集内容を復元する。本文の先頭・末尾の余白はContentEditable内に収め、ブロックのドロップ先として扱う。
 
 ## リポジトリ構成（要約）
 
@@ -104,9 +108,11 @@ Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳�
 - 成果物の検証起動: `bun run test:deployment`（ローカルHTTP DBと2つのWorkers）
 - デプロイ: `bun run deploy`（Cloudflare Workers と Static Assets）
 - 検証: `bun run lint`、`bun run typecheck`、`bun run check:reader`、`bun run test --run`
-- ブラウザー検証: `bun x playwright install chromium` の後に `bun run test:deployment:browser`
+- ブラウザー検証: `bun x playwright install --with-deps chromium webkit` の後に `bun run test:deployment:browser`
 - デプロイ成果物の検証: `bun run test:deployment`（認証 API・記事保存と編集画面・画像アップロード・ホーム SSR・日本語 OG 画像）
 - バインディング: `wrangler.jsonc` に R2・Images・KV・Static Assets を定義。秘密値は Workers secrets で設定する
+
+LinuxのWebKitが使うGSettingsスキーマは、`flake.nix`で固定したNixパッケージを`GSETTINGS_SCHEMA_DIR`へ設定します。Nix環境にスキーマがないと、通信プロセスが起動時に終了してページを読み込めません。
 
 `src/server.ts` がAPI・編集等のバックエンドリクエストごとに DB を作り、本文ストリームの完了・中断時に閉じます。`src/db/index.ts` の AsyncLocalStorage が既存の DB 呼び出し元に同じリクエストの接続を渡します。`src/auth.ts` の Better Auth もその DB を使用し、異なるリクエスト間で接続を共有しません。Node の CLI とテストでは従来どおり DB を再利用します。
 
@@ -126,4 +132,4 @@ Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳�
 
 ## 既存機能の維持
 
-移行では既存機能を維持する。記事作成・編集のTiptap UIは`src/app/[locale]/(edit-layout)`、URL境界と認証loaderは`src/routes`に置く。保存・公開・タグ・翻訳設定はServer Functionsを維持し、画像アップロードと公開画面の操作はAPIを使用する。コメント・返信・削除・翻訳・通知、ページ管理・公開状態の切替・削除も移行対象に含む。
+移行では既存機能を維持する。記事作成・編集画面は`src/app/[locale]/(edit-layout)`、記事とコメントの共通Lexical UIは`src/app/[locale]/_components/editor`、URL境界と認証loaderは`src/routes`に置く。保存・公開・タグ・翻訳設定はServer Functionsを維持し、画像アップロードと公開画面の操作はAPIを使用する。コメント・返信・削除・翻訳・通知、ページ管理・公開状態の切替・削除も移行対象に含む。

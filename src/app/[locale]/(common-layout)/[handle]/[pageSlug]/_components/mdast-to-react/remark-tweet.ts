@@ -1,6 +1,7 @@
 import type { Paragraph, Root } from "mdast";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
+import { getXPostId } from "@/app/[locale]/_domain/get-x-post-id";
 
 /** 単独のX/Twitterリンクだけを埋め込みへ変換する。 */
 export const remarkTweet: Plugin<[], Root> = () => (tree: Root) => {
@@ -9,14 +10,11 @@ export const remarkTweet: Plugin<[], Root> = () => (tree: Root) => {
 			return;
 		const child = paragraph.children[0];
 		if (child?.type !== "link") return;
-		const id =
-			/https?:\/\/(?:mobile\.)?(?:twitter\.com|x\.com)\/(?:[^/]+\/status|i\/web\/status)\/(\d+)/i.exec(
-				child.url,
-			)?.[1];
+		const id = getXPostId(child.url);
 		if (!id) return;
 		parent.children.splice(index, 1, {
 			type: "html",
-			value: `<tweet id="${id}"></tweet>`,
+			value: `<tweet data-tweet-id="${id}"></tweet>`,
 		});
 	});
 };
