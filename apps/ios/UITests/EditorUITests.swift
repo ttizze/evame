@@ -34,13 +34,16 @@ final class EditorUITests: XCTestCase {
     tapEndOfHeading()
     app.typeText("裏へ回る前の入力")
     XCUIDevice.shared.press(.home)
+    XCTAssertTrue(
+      app.wait(for: .runningBackground, timeout: 5) || app.state == .runningBackgroundSuspended)
     app.terminate()
     app.launchArguments = language
     app.launch()
     let row = app.cells["documents.row"].firstMatch
     XCTAssertTrue(row.waitForExistence(timeout: 10))
     row.tap()
-    XCTAssertTrue(markdown().hasPrefix("# 日本語の執筆 👩🏽‍💻裏へ回る前の入力\n"))
+    let source = markdown()
+    XCTAssertTrue(source.hasPrefix("# 日本語の執筆 👩🏽‍💻裏へ回る前の入力\n"), source)
   }
 
   func test新しい文書に題名と本文を書くと一覧に出てアプリを開き直しても残る() {
