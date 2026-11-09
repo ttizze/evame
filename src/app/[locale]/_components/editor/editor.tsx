@@ -103,14 +103,14 @@ export function Editor({
 				<ContentEditable
 					aria-label={placeholder}
 					aria-placeholder={placeholder}
-					className={`${className} min-h-8 focus:outline-hidden ${showMenus ? "md:pl-8" : ""}`}
+					className={`${className} min-h-8 focus:outline-hidden ${showMenus ? "flow-root md:pl-8" : ""}`}
 					data-testid="lexical-editor"
 					placeholder={
-						<div
-							className={`pointer-events-none absolute top-0 left-0 text-muted-foreground ${showMenus ? "md:left-8" : ""}`}
+						<p
+							className={`pointer-events-none absolute top-0 left-0 text-muted-foreground ${showMenus ? "md:left-8" : "m-0!"}`}
 						>
 							{placeholder}
-						</div>
+						</p>
 					}
 				/>
 				<input
