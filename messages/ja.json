@@ -1,4 +1,28 @@
 {
+	"PublicationSettings": {
+		"title": "公開設定",
+		"openSettings": "公開設定: {status}",
+		"public": "公開中",
+		"private": "自分のみ",
+		"visibility": "公開範囲",
+		"publish": "公開する",
+		"publicHelp": "誰でも閲覧できます。保存した変更はすぐに公開ページへ反映されます。",
+		"privateHelp": "自分だけが閲覧できます。",
+		"translation": "翻訳",
+		"translate": "翻訳する",
+		"translationSettings": "翻訳設定",
+		"translationHelp": "公開するとき、または翻訳ボタンを押したときに翻訳します。",
+		"waitForSave": "最新の変更が保存されるまでお待ちください。",
+		"comments": "コメントを受け付ける",
+		"commentsHelp": "OFFにすると新規コメントと返信を停止します。既存コメントは引き続き表示されます。",
+		"preview": "プレビュー",
+		"copyLink": "リンクをコピー",
+		"copied": "リンクをコピーしました。",
+		"copyFailed": "リンクをコピーできませんでした。",
+		"failed": "設定を変更できませんでした。もう一度お試しください。",
+		"processing": "保存中…",
+		"save": "保存"
+	},
 	"PageExport": {
 		"button": "Markdown＋画像を書き出す",
 		"preparing": "書き出し中…",
@@ -100,7 +124,8 @@
 		"pagination": "コメントのページ切り替え",
 		"previous": "前のコメント",
 		"next": "次のコメント",
-		"page": "{page} / {total} ページ"
+		"page": "{page} / {total} ページ",
+		"closed": "コメントの受付を停止しています。既存コメントは引き続き閲覧できます。"
 	},
 	"Reader": {
 		"newPages": "新着記事",

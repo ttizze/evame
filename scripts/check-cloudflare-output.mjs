@@ -90,8 +90,14 @@ try {
 	}
 	console.log("Workersランタイムで認証APIを繰り返し呼び出せる");
 	await database.execute({
-		sql: "INSERT INTO users (id, name, handle, email) VALUES (?, ?, ?, ?)",
-		args: [userId, "Worker Test", handle, `${userId}@example.test`],
+		sql: "INSERT INTO users (id, name, search_name, handle, email) VALUES (?, ?, ?, ?, ?)",
+		args: [
+			userId,
+			"Worker Test",
+			"worker test",
+			handle,
+			`${userId}@example.test`,
+		],
 	});
 	await database.execute({
 		sql: "INSERT INTO sessions (id, token, user_id, expires_at) VALUES (?, ?, ?, ?)",

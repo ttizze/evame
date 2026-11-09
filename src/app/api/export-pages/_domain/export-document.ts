@@ -126,6 +126,7 @@ export function serializeExportPage(
 		title: string;
 		sourceLocale: string;
 		status: PageStatus;
+		commentsEnabled: boolean;
 		parentId: number | null;
 		publishedAt: Date | null;
 		createdAt: Date;
@@ -170,6 +171,7 @@ export function serializeExportPage(
 		title: page.title,
 		source_locale: page.sourceLocale,
 		status: page.status,
+		comments_enabled: page.commentsEnabled,
 		parent_id: page.parentId,
 		published_at: page.publishedAt?.toISOString() ?? null,
 		created_at: page.createdAt.toISOString(),

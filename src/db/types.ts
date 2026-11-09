@@ -152,6 +152,7 @@ export interface PageLocaleTranslationProofs {
 
 export interface Pages {
 	archivedAt: Timestamp | null;
+	commentsEnabled: Generated<boolean>;
 	createdAt: Generated<Timestamp>;
 	id: number;
 	mdastJson: Json;

@@ -1,4 +1,28 @@
 {
+	"PublicationSettings": {
+		"title": "发布设置",
+		"openSettings": "发布设置: {status}",
+		"public": "已公开",
+		"private": "仅自己",
+		"visibility": "可见范围",
+		"publish": "发布",
+		"publicHelp": "所有人都可以阅读。保存的修改会立即显示在公开页面上。",
+		"privateHelp": "仅自己可以阅读此页面。",
+		"translation": "翻译",
+		"translate": "翻译",
+		"translationSettings": "翻译设置",
+		"translationHelp": "发布或请求翻译时开始翻译。",
+		"waitForSave": "请等待最新修改保存完成。",
+		"comments": "允许评论",
+		"commentsHelp": "关闭后停止接收新评论和回复，已有评论仍会显示。",
+		"preview": "预览",
+		"copyLink": "复制链接",
+		"copied": "链接已复制。",
+		"copyFailed": "无法复制链接。",
+		"failed": "无法更新设置，请重试。",
+		"processing": "正在保存…",
+		"save": "保存"
+	},
 	"PageExport": {
 		"button": "导出 Markdown 和图片",
 		"preparing": "正在导出…",
@@ -100,7 +124,8 @@
 		"pagination": "评论分页",
 		"previous": "上一页评论",
 		"next": "下一页评论",
-		"page": "第 {page} 页，共 {total} 页"
+		"page": "第 {page} 页，共 {total} 页",
+		"closed": "评论已关闭，已有评论仍可阅读。"
 	},
 	"Reader": {
 		"newPages": "最新文章",

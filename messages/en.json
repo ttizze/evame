@@ -1,4 +1,28 @@
 {
+	"PublicationSettings": {
+		"title": "Publication settings",
+		"openSettings": "Publication settings: {status}",
+		"public": "Public",
+		"private": "Private",
+		"visibility": "Who can read",
+		"publish": "Publish",
+		"publicHelp": "Anyone can read this page. Saved edits appear immediately.",
+		"privateHelp": "Only you can read this page.",
+		"translation": "Translation",
+		"translate": "Translate",
+		"translationSettings": "Translation settings",
+		"translationHelp": "Translation starts when you publish or request it.",
+		"waitForSave": "Waiting for your latest changes to finish saving.",
+		"comments": "Allow comments",
+		"commentsHelp": "Turn off to stop new comments and replies. Existing comments remain visible.",
+		"preview": "Preview",
+		"copyLink": "Copy link",
+		"copied": "Link copied.",
+		"copyFailed": "Could not copy the link.",
+		"failed": "Could not update settings. Please try again.",
+		"processing": "Saving…",
+		"save": "Save"
+	},
 	"PageExport": {
 		"button": "Export Markdown and images",
 		"preparing": "Preparing export…",
@@ -100,7 +124,8 @@
 		"pagination": "Comment pages",
 		"previous": "Previous comments",
 		"next": "Next comments",
-		"page": "Page {page} of {total}"
+		"page": "Page {page} of {total}",
+		"closed": "Comments are closed. Existing comments are still available."
 	},
 	"Reader": {
 		"newPages": "New Pages",

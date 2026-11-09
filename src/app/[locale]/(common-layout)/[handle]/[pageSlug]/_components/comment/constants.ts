@@ -1,1 +1,2 @@
 export const COMMENT_PAGE_SIZE = 20;
+export const COMMENTS_CLOSED = "COMMENTS_CLOSED";

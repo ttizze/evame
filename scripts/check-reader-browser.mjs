@@ -692,14 +692,116 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		).toBeVisible();
 		await expect(page).toHaveURL(/category=content/);
 		await page.getByRole("tab", { name: "ユーザー", exact: true }).click();
+		await expect(page).toHaveURL(/category=user/);
+		const userSearch = page.waitForResponse((response) => {
+			const url = new URL(response.url());
+			const search = new URLSearchParams(url.searchParams.get("search") ?? "");
+			return (
+				url.pathname === "/api/reader-data" &&
+				search.get("category") === "user" &&
+				search.get("query") === "Worker Test"
+			);
+		});
 		await page
 			.getByRole("searchbox", { name: "検索", exact: true })
 			.fill("Worker Test");
+		const userSearchResponse = await userSearch;
+		assert.equal(userSearchResponse.status(), 200);
+		assert.ok(
+			fromJSON(await userSearchResponse.json()).page.data.users.some(
+				(user) => user.handle === handle,
+			),
+			"対象のユーザー検索応答に所有者を含む",
+		);
 		await expect(
 			page.locator(`main a[href="/ja/${handle}"]`).first(),
 		).toBeVisible();
 		await page.screenshot({ path: "/tmp/evame-ui-restored-search.png" });
 		console.log("検索タブの切り替えと入力による検索結果の更新を維持する");
+		const settingsData = await page.request.get(
+			`${baseUrl}/api/reader-data?${new URLSearchParams({ path: `/ja/${handle}/${pageSlug}` })}`,
+		);
+		const settingsPageId = fromJSON(await settingsData.json()).page.data
+			.pageDetail.id;
+		await page.goto(`${baseUrl}/ja/${handle}/${pageSlug}/edit`);
+		await page.getByRole("button", { name: "公開設定: 公開中" }).click();
+		await expect(
+			page.getByRole("heading", { name: "公開設定", exact: true }),
+		).toHaveCount(0);
+		await expect(
+			page.getByRole("link", { name: "プレビュー", exact: true }),
+		).toBeVisible();
+		const commentsSwitch = page.getByRole("switch", {
+			name: "コメントを受け付ける",
+		});
+		await expect(commentsSwitch).toBeChecked();
+		const stopped = page.waitForResponse(
+			(response) =>
+				response.url().includes("reader-actions?action=pageComments") &&
+				response.request().method() === "POST",
+		);
+		await commentsSwitch.click();
+		assert.equal((await (await stopped).json()).success, true);
+		await expect(commentsSwitch).not.toBeChecked();
+		await page.screenshot({ path: "/tmp/evame-publication-desktop.png" });
+		await page.setViewportSize({ width: 390, height: 844 });
+		await expect(commentsSwitch).toBeVisible();
+		await page.screenshot({ path: "/tmp/evame-publication-mobile.png" });
+		await page.reload();
+		await page.getByRole("button", { name: "公開設定: 公開中" }).click();
+		await expect(commentsSwitch).not.toBeChecked();
+		const closedUrl = `${baseUrl}/ja/${handle}/${pageSlug}#comments`;
+		const closedHtml = await page.request.get(closedUrl);
+		assert.ok(
+			(await closedHtml.text()).includes("コメントの受付を停止しています。"),
+			"JavaScript起動前のHTMLにも受付停止を反映する",
+		);
+		await page.goto(closedUrl);
+		const closedComments = page.locator("#comments");
+		await expect(closedComments.getByRole("status")).toContainText(
+			"コメントの受付を停止しています。",
+		);
+		await expect(
+			closedComments.getByText("comment-marker-01", { exact: true }),
+		).toBeVisible();
+		await expect(
+			closedComments.getByRole("button", { name: /^Reply/ }),
+		).toHaveCount(0);
+		await expect(
+			closedComments.locator('[data-testid="lexical-editor"]'),
+		).toHaveCount(0);
+		const rejectedComment = await page.request.post(
+			`${baseUrl}/api/reader-actions?action=comment`,
+			{
+				data: {
+					pageId: settingsPageId,
+					userLocale: "ja",
+					content: "<p>受付停止後の投稿</p>",
+				},
+			},
+		);
+		assert.deepEqual(await rejectedComment.json(), {
+			success: false,
+			message: "COMMENTS_CLOSED",
+		});
+		await page.goto(`${baseUrl}/ja/${handle}/${pageSlug}/edit`);
+		await page.getByRole("button", { name: "公開設定: 公開中" }).click();
+		await commentsSwitch.click();
+		await expect(commentsSwitch).toBeChecked();
+		await page.goto(closedUrl);
+		await expect(
+			page.locator('#comments [data-testid="lexical-editor"]').first(),
+		).toBeVisible({ timeout: 15000 });
+		await expect(
+			page
+				.locator("#comments")
+				.getByRole("button", { name: /^Reply/ })
+				.first(),
+		).toBeVisible();
+		await page.setViewportSize({ width: 1280, height: 900 });
+		console.log(
+			"公開設定でコメント受付をOFF・ONにでき、再読み込み・SSR・投稿拒否・既存コメントの閲覧を維持する",
+		);
 		const draftResponse = await page.request.get(
 			`${baseUrl}/api/reader-data?${new URLSearchParams({ path: new URL(newPageUrl).pathname })}`,
 		);

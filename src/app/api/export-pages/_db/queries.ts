@@ -19,6 +19,7 @@ export async function fetchExportPage(userId: string, pageId: number) {
 			"pages.mdastJson",
 			"pages.sourceLocale",
 			"pages.status",
+			"pages.commentsEnabled",
 			"pages.parentId",
 			"pages.publishedAt",
 			"pages.createdAt",

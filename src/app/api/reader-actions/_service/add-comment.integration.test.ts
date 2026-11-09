@@ -1,5 +1,6 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
+import { getLocaleFromHtml } from "@/app/[locale]/_domain/get-locale-from-html";
 import { enqueueTranslationJob } from "@/app/[locale]/_infrastructure/qstash/enqueue-translation-job.server";
 import { commentAction } from "@/app/api/reader-actions/_service/add-comment";
 import { db } from "@/db";
@@ -21,7 +22,129 @@ vi.mock(
 await setupDbPerFile(import.meta.url);
 beforeEach(async () => {
 	await resetDatabase();
+	vi.mocked(getLocaleFromHtml).mockReset().mockResolvedValue("ja");
 	vi.mocked(enqueueTranslationJob).mockReset().mockResolvedValue([]);
+});
+
+it.each([false, true])(
+	"本文の変換中に受付OFFが完了したら新規保存・通知・翻訳を止める（返信=%s）",
+	async (reply) => {
+		const owner = await createUser();
+		const user = await createUser();
+		const page = await createPage({
+			userId: owner.id,
+			slug: "comments-close-during-processing",
+		});
+		const root = await createPageComment({ userId: user.id, pageId: page.id });
+		vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(toSessionUser(user));
+		vi.mocked(getLocaleFromHtml).mockImplementationOnce(async () => {
+			await db
+				.updateTable("pages")
+				.set({ commentsEnabled: false })
+				.where("id", "=", page.id)
+				.execute();
+			return "ja";
+		});
+		const result = await commentAction(
+			{
+				pageId: page.id,
+				userLocale: "ja",
+				content: "<p>同時投稿</p>",
+				...(reply ? { parentId: root.id } : {}),
+			},
+			new Headers(),
+		);
+		expect(result).toMatchObject({
+			success: false,
+			message: "COMMENTS_CLOSED",
+		});
+		expect(
+			await db
+				.selectFrom("pageComments")
+				.select("id")
+				.where("pageId", "=", page.id)
+				.execute(),
+		).toEqual([{ id: root.id }]);
+		expect(
+			await db.selectFrom("notifications").select("id").execute(),
+		).toHaveLength(0);
+		expect(enqueueTranslationJob).not.toHaveBeenCalled();
+	},
+);
+
+it.each([false, true])(
+	"受付OFFでは新規コメント・返信を保存せず通知と翻訳も作らない（返信=%s）",
+	async (reply) => {
+		const owner = await createUser();
+		const user = await createUser();
+		const page = await createPage({
+			userId: owner.id,
+			slug: "comments-disabled",
+		});
+		const root = await createPageComment({ userId: user.id, pageId: page.id });
+		await db
+			.updateTable("pages")
+			.set({ commentsEnabled: false })
+			.where("id", "=", page.id)
+			.execute();
+		vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(toSessionUser(user));
+		expect(
+			await commentAction(
+				{
+					pageId: page.id,
+					userLocale: "ja",
+					content: "<p>受付停止後の投稿</p>",
+					...(reply ? { parentId: root.id } : {}),
+				},
+				new Headers(),
+			),
+		).toMatchObject({ success: false, message: "COMMENTS_CLOSED" });
+		expect(
+			await db
+				.selectFrom("pageComments")
+				.select("id")
+				.where("pageId", "=", page.id)
+				.execute(),
+		).toEqual([{ id: root.id }]);
+		expect(
+			await db.selectFrom("notifications").select("id").execute(),
+		).toHaveLength(0);
+		expect(enqueueTranslationJob).not.toHaveBeenCalled();
+	},
+);
+
+it("受付OFFでも自分の既存コメントは更新できる", async () => {
+	const user = await createUser();
+	const page = await createPage({
+		userId: user.id,
+		slug: "closed-comment-edit",
+	});
+	const comment = await createPageComment({ userId: user.id, pageId: page.id });
+	await db
+		.updateTable("pages")
+		.set({ commentsEnabled: false })
+		.where("id", "=", page.id)
+		.execute();
+	vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(toSessionUser(user));
+	expect(
+		await commentAction(
+			{
+				pageId: page.id,
+				pageCommentId: comment.id,
+				userLocale: "ja",
+				contentFormat: "markdown",
+				content: "自分のコメントを更新",
+			},
+			new Headers(),
+		),
+	).toMatchObject({ success: true });
+	expect(
+		await db
+			.selectFrom("pageComments")
+			.select("id")
+			.where("pageId", "=", page.id)
+			.execute(),
+	).toEqual([{ id: comment.id }]);
 });
 
 it("LexicalのMarkdownコメントをGFMとして保存し、既存の翻訳ジョブへ渡す", async () => {

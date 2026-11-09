@@ -8,6 +8,7 @@ import { followAction } from "@/app/api/reader-actions/_service/follow-user";
 import { togglePageLikeAction } from "@/app/api/reader-actions/_service/toggle-like";
 import { executeTranslateAction } from "@/app/api/reader-actions/_service/translate-page";
 import { updateGeminiApiKeyAction } from "@/app/api/reader-actions/_service/update-gemini-key";
+import { updatePageComments } from "@/app/api/reader-actions/_service/update-page-comments";
 import { updatePageStatus } from "@/app/api/reader-actions/_service/update-page-status";
 import { uploadEditorImage } from "@/app/api/reader-actions/_service/upload-image";
 
@@ -20,6 +21,7 @@ export type ReaderActions = {
 	follow: typeof followAction;
 	uploadImage: typeof uploadEditorImage;
 	pageStatus: typeof updatePageStatus;
+	pageComments: typeof updatePageComments;
 };
 
 const handlers = {
@@ -39,6 +41,8 @@ const handlers = {
 		uploadEditorImage(await request.formData(), request.headers),
 	pageStatus: async (request) =>
 		updatePageStatus(await request.json(), request.headers),
+	pageComments: async (request) =>
+		updatePageComments(await request.json(), request.headers),
 } satisfies Record<keyof ReaderActions, (request: Request) => Promise<unknown>>;
 
 export async function postReaderAction(request: Request) {

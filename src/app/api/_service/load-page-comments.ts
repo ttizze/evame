@@ -13,16 +13,17 @@ export async function loadPageComments(
 ) {
 	const page = await db
 		.selectFrom("pages")
-		.select(["status", "userId"])
+		.select(["status", "userId", "commentsEnabled"])
 		.where("id", "=", pageId)
 		.executeTakeFirst();
 
-	if (!page) return { comments: [], count: 0, totalPages: 0 };
+	if (!page)
+		return { comments: [], count: 0, totalPages: 0, commentsEnabled: false };
 
 	if (page.status !== "PUBLIC") {
 		const currentUser = await getCurrentUserFromHeaders(requestHeaders);
 		if (!currentUser || currentUser.id !== page.userId) {
-			return { comments: [], count: 0, totalPages: 0 };
+			return { comments: [], count: 0, totalPages: 0, commentsEnabled: false };
 		}
 	}
 
@@ -32,6 +33,7 @@ export async function loadPageComments(
 		pageNumber,
 	);
 	return {
+		commentsEnabled: page.commentsEnabled,
 		comments: buildCommentTree(comments),
 		count,
 		totalPages,
