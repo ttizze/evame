@@ -4,6 +4,12 @@ import { createHmac, randomUUID } from "node:crypto";
 import { mkdir, readdir, readFile, rm } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createClient } from "@libsql/client";
+import {
+	TextWriter,
+	Uint8ArrayReader,
+	Uint8ArrayWriter,
+	ZipReader,
+} from "@zip.js/zip.js";
 import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { toJSONAsync } from "seroval";
@@ -173,6 +179,82 @@ try {
 			"保存した本文がDBに入っている",
 		);
 	}
+	const exportContent = await database.execute(
+		"INSERT INTO contents (kind) VALUES ('PAGE') RETURNING id",
+	);
+	const exportId = Number(exportContent.rows[0].id);
+	await database.batch(
+		[
+			{
+				sql: "INSERT INTO pages (id,slug,source_locale,status,user_id,mdast_json) VALUES (?,?,'ja','ARCHIVE',?,?)",
+				args: [
+					exportId,
+					`export-${exportId}`,
+					userId,
+					JSON.stringify({
+						type: "root",
+						children: [
+							{
+								type: "paragraph",
+								children: [
+									{ type: "text", value: "アーカイブの原文" },
+									{ type: "image", url: uploadedUrl.href, alt: "保存済み画像" },
+								],
+							},
+						],
+					}),
+				],
+			},
+			{
+				sql: "INSERT INTO segments (content_id,number,text,text_and_occurrence_hash) VALUES (?,0,'書き出し確認',?)",
+				args: [exportId, randomUUID()],
+			},
+		],
+		"write",
+	);
+	assert.equal(
+		(await worker.fetch("http://localhost/api/export-pages")).status,
+		401,
+	);
+	const exportResponse = await worker.fetch(
+		"http://localhost/api/export-pages",
+		{ headers: { cookie } },
+	);
+	assert.equal(exportResponse.status, 200);
+	assert.equal(
+		exportResponse.headers.get("cache-control"),
+		"private, no-store",
+	);
+	const exportedZip = new ZipReader(
+		new Uint8ArrayReader(new Uint8Array(await exportResponse.arrayBuffer())),
+		{ useWebWorkers: false },
+	);
+	try {
+		const entries = await exportedZip.getEntries();
+		const document = entries.find(
+			(entry) =>
+				entry.filename === `documents/${exportId}-export-${exportId}.md`,
+		);
+		assert.ok(document && !document.directory);
+		const markdown = await document.getData(new TextWriter());
+		assert.ok(markdown.includes("アーカイブの原文"));
+		assert.ok(markdown.includes('status: "ARCHIVE"'));
+		const image = entries.find((entry) => entry.filename.startsWith("images/"));
+		assert.ok(image && !image.directory);
+		assert.ok(markdown.includes(`../${image.filename}`));
+		const imageBytes = await image.getData(new Uint8ArrayWriter());
+		assert.equal(imageBytes[0], 255);
+		assert.equal(imageBytes[1], 216);
+		assert.equal(
+			entries.filter((entry) => entry.filename.startsWith("documents/")).length,
+			2,
+		);
+	} finally {
+		await exportedZip.close();
+	}
+	console.log(
+		"Workersランタイムで非公開・アーカイブの原文とR2画像をストリームZIPへ書き出せる",
+	);
 	const editor = await worker.fetch(
 		`http://localhost/ja/${handle}/${pageSlug}/edit`,
 		{ headers: { cookie } },

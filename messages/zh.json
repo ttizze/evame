@@ -1,4 +1,13 @@
 {
+	"PageExport": {
+		"button": "导出 Markdown 和图片",
+		"preparing": "正在导出…",
+		"description": "将所有原文（包括私密和已归档文档）及已保存的图片下载为 ZIP 文件。",
+		"imageNote": "外部或无法获取的图片会保留原始链接，并记录在导出报告中。",
+		"done": "导出已完成。",
+		"failed": "导出失败，请重试。",
+		"signInRequired": "请重新登录后再次导出。"
+	},
 	"MagicLinkForm": {
 		"invalidEmail": "请输入有效的电子邮件地址。",
 		"sendFailed": "登录邮件发送失败，请重试。"
