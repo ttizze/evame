@@ -51,13 +51,20 @@ final class LexicalDocument {
     let runs: [Run]?
     let atomic: Decorator?
     let context: Context
+    let listItems: [ListItem]
   }
 
   struct Block: Decodable {
     let type: String
     let level: Int?
+  }
+
+  struct ListItem: Decodable {
     let checked: Bool?
-    let value: Int?
+    let value: Int
+    let depth: Int
+    let quote: Int
+    let footnote: Bool
   }
 
   struct Run: Decodable {

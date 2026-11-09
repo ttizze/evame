@@ -1,7 +1,5 @@
 import { TabIndentationExtension } from "@lexical/extension";
 import { HistoryExtension } from "@lexical/history";
-import { LinkExtension } from "@lexical/link";
-import { CheckListExtension, ListExtension } from "@lexical/list";
 import {
 	$convertFromMarkdownString,
 	$convertToMarkdownString,
@@ -9,7 +7,6 @@ import {
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalExtensionComposer } from "@lexical/react/LexicalExtensionComposer";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { RichTextExtension } from "@lexical/rich-text";
 import { TableExtension } from "@lexical/table";
 import { captureException } from "@sentry/react";
 import {
@@ -21,12 +18,10 @@ import {
 } from "lexical";
 import { useRef, useState } from "react";
 import { BlockDragMenu } from "./block-drag-menu";
+import { DocumentExtension } from "./document";
 import { EditorMenu } from "./editor-menu";
 import { ImagePlugin } from "./image-plugin";
-import { MarkdownExtension } from "./markdown";
 import { ImageNode, imageState } from "./media-nodes";
-import { QuoteEnterExtension } from "./quote-enter";
-import { ShortcutsExtension } from "./shortcuts";
 
 /** 記事とコメントで共有するMarkdown入出力のエディタ。本文の変更だけを保存元へ通知する。 */
 export function Editor({
@@ -90,20 +85,12 @@ export function Editor({
 				tableCellHeader: "font-semibold bg-muted",
 			},
 			dependencies: [
-				RichTextExtension,
 				HistoryExtension,
-				ListExtension,
-				CheckListExtension,
-				LinkExtension,
 				configExtension(TableExtension, {
-					hasCellBackgroundColor: false,
-					hasCellMerge: false,
 					hasHorizontalScroll: true,
 				}),
 				TabIndentationExtension,
-				MarkdownExtension,
-				ShortcutsExtension,
-				QuoteEnterExtension,
+				DocumentExtension,
 			],
 		}),
 	);

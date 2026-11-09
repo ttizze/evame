@@ -1,5 +1,10 @@
-import { $createCodeNode } from "@lexical/code-core";
-import { $isListNode } from "@lexical/list";
+import { $createCodeNode, $isCodeNode } from "@lexical/code-core";
+import {
+	$insertList,
+	$isListItemNode,
+	$isListNode,
+	$removeList,
+} from "@lexical/list";
 import {
 	$createHeadingNode,
 	$createQuoteNode,
@@ -13,14 +18,7 @@ import {
 	$getSelection,
 	$isParagraphNode,
 	$isRangeSelection,
-	type LexicalNode,
 } from "lexical";
-
-/** いちばん内側の引用が段落を持つ引用（読み込んだ引用や、Returnで行を足した引用）なら返す。 */
-const $paragraphQuote = (node: LexicalNode) => {
-	const quote = $findMatchingParent(node, $isQuoteNode);
-	return quote?.isShadowRoot() ? quote : null;
-};
 
 /**
  * カーソルのあるブロックの種類。PCのメニューとiPhoneで同じ判定にする。
@@ -30,10 +28,22 @@ export function $currentBlockType() {
 	const selection = $getSelection();
 	if (!$isRangeSelection(selection)) return null;
 	const anchor = selection.anchor.getNode();
-	const block = anchor.getTopLevelElement();
-	if ($isParagraphNode(block) && $paragraphQuote(anchor)) return "quote";
+	const block =
+		$findMatchingParent(
+			anchor,
+			(node) =>
+				$isParagraphNode(node) ||
+				$isHeadingNode(node) ||
+				$isCodeNode(node) ||
+				$isListItemNode(node),
+		) ?? anchor.getTopLevelElement();
+	if ($isParagraphNode(block) && $findMatchingParent(anchor, $isQuoteNode))
+		return "quote";
 	if ($isHeadingNode(block)) return block.getTag();
-	if ($isListNode(block)) return block.getListType();
+	if ($isListItemNode(block)) {
+		const list = block.getParentOrThrow();
+		if ($isListNode(list)) return list.getListType();
+	}
 	return block?.getType() ?? null;
 }
 
@@ -42,21 +52,41 @@ export function $currentBlockType() {
  * 段落を持つ引用の中で引用（段落なら標準のテキストも）を選ぶと、引用の中に引用を作らず引用を解除する。
  */
 export function $setBlockType(
-	type: "paragraph" | "h2" | "h3" | "h4" | "quote" | "code",
+	type:
+		| "paragraph"
+		| "h2"
+		| "h3"
+		| "h4"
+		| "quote"
+		| "code"
+		| "bullet"
+		| "number"
+		| "check",
 ) {
 	const selection = $getSelection();
 	if (!$isRangeSelection(selection)) return;
-	const quote = $paragraphQuote(selection.anchor.getNode());
+	const current = $currentBlockType();
+	if (type === "bullet" || type === "number" || type === "check") {
+		if (
+			$findMatchingParent(
+				selection.anchor.getNode(),
+				$isListNode,
+			)?.getListType() === type
+		)
+			$removeList();
+		else $insertList(type);
+		return;
+	}
+	const quote = $findMatchingParent(selection.anchor.getNode(), $isQuoteNode);
 	if (
 		quote &&
-		(type === "quote" ||
-			(type === "paragraph" && $currentBlockType() === "quote"))
+		(type === "quote" || (type === "paragraph" && current === "quote"))
 	) {
 		for (const child of quote.getChildren()) quote.insertBefore(child);
 		quote.remove();
 		return;
 	}
-	const same = $currentBlockType() === type;
+	const same = current === type;
 	$setBlocksType(selection, () => {
 		if (same || type === "paragraph") return $createParagraphNode();
 		if (type === "quote") return $createQuoteNode();

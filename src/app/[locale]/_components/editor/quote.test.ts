@@ -3,8 +3,13 @@ import {
 	$convertFromMarkdownString,
 	$convertToMarkdownString,
 } from "@lexical/mdast";
-import { $createQuoteNode, RichTextExtension } from "@lexical/rich-text";
 import {
+	$createQuoteNode,
+	$isQuoteNode,
+	RichTextExtension,
+} from "@lexical/rich-text";
+import {
+	$createParagraphNode,
 	$createTextNode,
 	$getRoot,
 	$getSelection,
@@ -15,14 +20,21 @@ import {
 	type LexicalEditor,
 } from "lexical";
 import { describe, expect, it } from "vitest";
+import { $setBlockType } from "./block-type";
 import { MarkdownExtension } from "./markdown";
-import { QuoteEnterExtension } from "./quote-enter";
+import { QuoteExtension } from "./quote";
+import { ShortcutsExtension } from "./shortcuts";
 
 function createEditor() {
 	return buildEditorFromExtensions(
 		defineExtension({
 			name: "quote-enter-test",
-			dependencies: [RichTextExtension, MarkdownExtension, QuoteEnterExtension],
+			dependencies: [
+				RichTextExtension,
+				MarkdownExtension,
+				ShortcutsExtension,
+				QuoteExtension,
+			],
 		}),
 	);
 }
@@ -50,6 +62,37 @@ const markdown = (editor: LexicalEditor) =>
 	editor.read(() => $convertToMarkdownString()).trim();
 
 describe("引用の中のReturn", () => {
+	it("読み込み・メニュー・Markdown入力の引用を、段落を持つ同じ構造に揃える", () => {
+		for (const origin of ["読み込み", "メニュー", "Markdown入力"]) {
+			const editor = createEditor();
+			editor.update(
+				() => {
+					if (origin === "読み込み") $convertFromMarkdownString("> 本文");
+					else {
+						const paragraph = $createParagraphNode();
+						$getRoot().clear().append(paragraph);
+						paragraph.select();
+					}
+				},
+				{ discrete: true },
+			);
+			if (origin === "メニュー")
+				editor.update(() => $setBlockType("quote"), { discrete: true });
+			if (origin === "Markdown入力") {
+				type(editor, ">");
+				type(editor, " ");
+			}
+			if (origin !== "読み込み") type(editor, "本文");
+			editor.read(() => {
+				const quote = $getRoot().getFirstChild();
+				if (!$isQuoteNode(quote))
+					throw new Error(`${origin}: 引用が作られていない`);
+				expect(quote.isShadowRoot(), origin).toBe(true);
+				expect(quote.getFirstChild()?.getType(), origin).toBe("paragraph");
+			});
+			expect(markdown(editor), origin).toBe("> 本文");
+		}
+	});
 	it("メニューや「> 」で作った引用でも、Returnで同じ引用の中に次の行を作る", () => {
 		const editor = createEditor();
 		editor.update(

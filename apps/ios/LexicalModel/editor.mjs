@@ -10,32 +10,16 @@ import {
 } from "@lexical/extension";
 import { HeadlessExtension } from "@lexical/headless";
 import { HistoryExtension } from "@lexical/history";
-import { $isLinkNode, LinkExtension, TOGGLE_LINK_COMMAND } from "@lexical/link";
-import {
-	$isListItemNode,
-	$isListNode,
-	CheckListExtension,
-	INSERT_CHECK_LIST_COMMAND,
-	INSERT_ORDERED_LIST_COMMAND,
-	INSERT_UNORDERED_LIST_COMMAND,
-	ListExtension,
-	REMOVE_LIST_COMMAND,
-} from "@lexical/list";
+import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
+import { $isListItemNode, $isListNode } from "@lexical/list";
 import {
 	$convertFromMarkdownString,
 	$convertToMarkdownString,
 	$generateNodesFromMarkdownString,
+	paragraphBreakState,
 } from "@lexical/mdast";
-import {
-	$isHeadingNode,
-	$isQuoteNode,
-	RichTextExtension,
-} from "@lexical/rich-text";
-import {
-	$isTableNode,
-	INSERT_TABLE_COMMAND,
-	TableExtension,
-} from "@lexical/table";
+import { $isHeadingNode, $isQuoteNode } from "@lexical/rich-text";
+import { $isTableNode, INSERT_TABLE_COMMAND } from "@lexical/table";
 import {
 	AbortController,
 	AbortSignal,
@@ -44,6 +28,7 @@ import {
 	$create,
 	$createParagraphNode,
 	$createRangeSelection,
+	$createTabNode,
 	$getRoot,
 	$getSelection,
 	$getState,
@@ -61,20 +46,19 @@ import {
 	defineExtension,
 	FORMAT_TEXT_COMMAND,
 	INDENT_CONTENT_COMMAND,
-	INSERT_PARAGRAPH_COMMAND,
+	KEY_ENTER_COMMAND,
 	OUTDENT_CONTENT_COMMAND,
 	REDO_COMMAND,
+	tokenizeRawText,
 	UNDO_COMMAND,
 } from "lexical";
 import { $setBlockType } from "../../../src/app/[locale]/_components/editor/block-type";
-import { MarkdownExtension } from "../../../src/app/[locale]/_components/editor/markdown";
+import { DocumentExtension } from "../../../src/app/[locale]/_components/editor/document";
 import {
 	ImageNode,
 	imageState,
 	tweetState,
 } from "../../../src/app/[locale]/_components/editor/media-nodes";
-import { QuoteEnterExtension } from "../../../src/app/[locale]/_components/editor/quote-enter";
-import { ShortcutsExtension } from "../../../src/app/[locale]/_components/editor/shortcuts";
 import {
 	definitionState,
 	FootnoteDefinitionNode,
@@ -102,19 +86,9 @@ const editor = buildEditorFromExtensions(
 		},
 		dependencies: [
 			HeadlessExtension,
-			RichTextExtension,
 			// ブラウザーのない環境では履歴が既定で無効になるため、明示して有効にする。
 			configExtension(HistoryExtension, { disabled: false }),
-			ListExtension,
-			CheckListExtension,
-			LinkExtension,
-			configExtension(TableExtension, {
-				hasCellBackgroundColor: false,
-				hasCellMerge: false,
-			}),
-			MarkdownExtension,
-			ShortcutsExtension,
-			QuoteEnterExtension,
+			DocumentExtension,
 		],
 	}),
 );
@@ -125,34 +99,44 @@ editor._window = {};
 
 const isAtomic = (node) =>
 	($isDecoratorNode(node) && !node.isInline()) || $isTableNode(node);
-const isInlineOnly = (node) =>
-	node
-		.getChildren()
-		.every((child) => !$isElementNode(child) || child.isInline());
-
-/** 文書を表示単位へ分ける。リスト・引用・脚注は入れ子の文脈として各単位に持たせる。 */
+/** 文書から表示単位を読む。本文ノードとリスト記号の所有者を分け、項目内の全段落を順番どおりに渡す。 */
 function units() {
 	const result = [];
 	function visit(container, context) {
+		const first = result.length;
+		let children = [];
+		const flush = () => {
+			if (children.length > 0) {
+				result.push({
+					node: container,
+					children,
+					atomic: false,
+					context,
+					listItems: [],
+				});
+				children = [];
+			}
+		};
 		for (const node of container.getChildren()) {
-			if (isAtomic(node)) result.push({ node, atomic: true, context });
+			if ($isLineBreakNode(node) && $getState(node, paragraphBreakState)) {
+				flush();
+				continue;
+			}
+			if (node.isInline()) {
+				children.push(node);
+				continue;
+			}
+			flush();
+			if (isAtomic(node))
+				result.push({ node, atomic: true, context, listItems: [] });
 			else if (!$isElementNode(node)) continue;
 			else if ($isListNode(node))
 				visit(node, {
 					...context,
 					lists: [...context.lists, { kind: node.getListType() }],
 				});
-			else if ($isListItemNode(node) && !isInlineOnly(node))
-				visit(node, context);
-			else if ($isQuoteNode(node) && node.isShadowRoot())
-				visit(node, { ...context, quote: context.quote + 1 });
-			// メニューや「> 」の入力で作った引用は段落を持たず、文字を直接持つ。読み込んだ引用と同じ表示にする。
 			else if ($isQuoteNode(node))
-				result.push({
-					node,
-					atomic: false,
-					context: { ...context, quote: context.quote + 1 },
-				});
+				visit(node, { ...context, quote: context.quote + 1 });
 			else if (node instanceof FootnoteDefinitionNode)
 				visit(node, {
 					...context,
@@ -160,22 +144,47 @@ function units() {
 						$getState(node, footnoteState),
 					),
 				});
-			else if (isInlineOnly(node))
-				result.push({ node, atomic: false, context });
 			else visit(node, context);
 		}
+		flush();
+		if (result.length === first && container.getChildrenSize() === 0)
+			result.push({
+				node: container,
+				children: [],
+				atomic: false,
+				context,
+				listItems: [],
+			});
+		if (
+			$isListItemNode(container) &&
+			!(
+				container.getChildrenSize() === 1 &&
+				$isListNode(container.getFirstChild())
+			) &&
+			result[first]
+		)
+			result[first].listItems.unshift({
+				node: container,
+				depth: context.lists.length,
+				quote: context.quote,
+				footnote: context.footnote !== null,
+			});
 	}
 	visit($getRoot(), { lists: [], quote: 0, footnote: null });
 	return result;
 }
 
 /** 表示単位の中の葉。文字はUTF16の長さ、改行・行内の装飾ノードは1文字として数える。 */
-function leaves(element, link = null, result = []) {
-	for (const child of element.getChildren()) {
+function leaves(children, link = null, result = []) {
+	for (const child of children) {
 		if ($isTextNode(child))
 			result.push({ node: child, size: child.getTextContentSize(), link });
 		else if ($isElementNode(child))
-			leaves(child, $isLinkNode(child) ? child.getURL() : link, result);
+			leaves(
+				child.getChildren(),
+				$isLinkNode(child) ? child.getURL() : link,
+				result,
+			);
 		else result.push({ node: child, size: 1, link });
 	}
 	return result;
@@ -196,7 +205,7 @@ function pointAt(position) {
 	}
 	let remaining = position.offset;
 	if (remaining < 0) throw new Error("invalid position");
-	const parts = leaves(node);
+	const parts = leaves(unit.children);
 	for (const leaf of parts) {
 		if ($isTextNode(leaf.node)) {
 			if (remaining <= leaf.size)
@@ -229,9 +238,18 @@ function positionOf(point, list) {
 				return { unit: index, offset: 0 };
 			continue;
 		}
-		if (!unit.node.is(node) && !unit.node.isParentOf(node)) continue;
+		if (unit.node.is(node)) {
+			const start = unit.children[0]?.getIndexWithinParent() ?? 0;
+			const end = unit.children.length
+				? unit.children.at(-1).getIndexWithinParent() + 1
+				: 0;
+			if (point.offset < start || point.offset > end) continue;
+		} else if (
+			!unit.children.some((child) => child.is(node) || child.isParentOf(node))
+		)
+			continue;
 		let offset = 0;
-		for (const leaf of leaves(unit.node)) {
+		for (const leaf of leaves(unit.children)) {
 			if (point.type === "text" && leaf.node.is(node))
 				return { unit: index, offset: offset + point.offset };
 			if (point.type === "element") {
@@ -297,8 +315,8 @@ function select(anchor, focus) {
 
 const FORMATS = ["bold", "italic", "strikethrough", "code"];
 
-function runs(element) {
-	return leaves(element).map(({ node, link }) => {
+function runs(children) {
+	return leaves(children).map(({ node, link }) => {
 		if ($isTextNode(node))
 			return {
 				text: node.getTextContent(),
@@ -326,12 +344,6 @@ function decorator(node) {
 function block(node) {
 	if ($isHeadingNode(node))
 		return { type: "heading", level: Number(node.getTag().slice(1)) };
-	if ($isListItemNode(node))
-		return {
-			type: "listitem",
-			checked: node.getChecked() ?? null,
-			value: node.getValue(),
-		};
 	return { type: node.getType() };
 }
 
@@ -341,7 +353,7 @@ function nodeRange(node, list) {
 		let offset = 0;
 		for (const leaf of unit.atomic
 			? [{ node: unit.node, size: 1 }]
-			: leaves(unit.node)) {
+			: leaves(unit.children)) {
 			if (leaf.node.is(node))
 				return {
 					anchor: { unit: index, offset },
@@ -358,10 +370,14 @@ function snapshot() {
 	const selection = $getSelection();
 	const range = $isRangeSelection(selection) ? selection : null;
 	const anchorNode = range?.anchor.getNode();
-	const blockNode = anchorNode
-		? list.find(
-				(unit) => unit.node.is(anchorNode) || unit.node.isParentOf(anchorNode),
-			)?.node
+	const rangePosition = range
+		? {
+				anchor: positionOf(range.anchor, list),
+				focus: positionOf(range.focus, list),
+			}
+		: null;
+	const blockNode = rangePosition
+		? list[rangePosition.anchor.unit]?.node
 		: null;
 	const linkNode = anchorNode
 		? [anchorNode, ...anchorNode.getParents()].find($isLinkNode)
@@ -369,8 +385,23 @@ function snapshot() {
 	return {
 		markdown: $convertToMarkdownString(),
 		undoDepth: history().undoStack.length,
-		units: list.map(({ node, atomic, context }) => {
-			if (!atomic) return { block: block(node), runs: runs(node), context };
+		units: list.map(({ node, children, atomic, context, listItems }) => {
+			const markers = listItems.map(
+				({ node: item, depth, quote, footnote }) => ({
+					checked: item.getChecked() ?? null,
+					value: item.getValue(),
+					depth,
+					quote,
+					footnote,
+				}),
+			);
+			if (!atomic)
+				return {
+					block: $isListItemNode(node) ? { type: "paragraph" } : block(node),
+					runs: runs(children),
+					context,
+					listItems: markers,
+				};
 			return {
 				atomic: $isTableNode(node)
 					? {
@@ -380,24 +411,21 @@ function snapshot() {
 						}
 					: decorator(node),
 				context,
+				listItems: markers,
 			};
 		}),
-		selection: range
-			? {
-					anchor: positionOf(range.anchor, list),
-					focus: positionOf(range.focus, list),
-				}
-			: $isNodeSelection(selection)
+		selection:
+			rangePosition ??
+			($isNodeSelection(selection)
 				? nodeRange(selection.getNodes()[0], list)
-				: null,
+				: null),
 		// 装飾ノードの選択中は、PCと同じく文字の入力で置き換えない。
 		nodeSelected: $isNodeSelection(selection),
 		formats: range ? FORMATS.filter((format) => range.hasFormat(format)) : [],
 		block: blockNode ? block(blockNode) : null,
-		listKind:
-			blockNode && $isListItemNode(blockNode)
-				? blockNode.getParentOrThrow().getListType()
-				: null,
+		listKind: rangePosition
+			? (list[rangePosition.anchor.unit]?.context.lists.at(-1)?.kind ?? null)
+			: null,
 		link: linkNode ? linkNode.getURL() : null,
 	};
 }
@@ -407,30 +435,8 @@ function history() {
 		.historyState.value;
 }
 
-function setBlock(type) {
-	const selection = $getSelection();
-	if (!$isRangeSelection(selection)) return;
-	if (type === "bullet" || type === "number" || type === "check") {
-		const anchor = selection.anchor.getNode();
-		const item = [anchor, ...anchor.getParents()].find($isListItemNode);
-		const current = item?.getParentOrThrow().getListType();
-		editor.dispatchCommand(
-			current === type
-				? REMOVE_LIST_COMMAND
-				: {
-						bullet: INSERT_UNORDERED_LIST_COMMAND,
-						number: INSERT_ORDERED_LIST_COMMAND,
-						check: INSERT_CHECK_LIST_COMMAND,
-					}[type],
-			undefined,
-		);
-		return;
-	}
-	$setBlockType(type);
-}
-
 const commands = {
-	enter: INSERT_PARAGRAPH_COMMAND,
+	enter: KEY_ENTER_COMMAND,
 	backspace: DELETE_CHARACTER_COMMAND,
 	indent: INDENT_CONTENT_COMMAND,
 	outdent: OUTDENT_CONTENT_COMMAND,
@@ -453,14 +459,34 @@ globalThis.evameEditorRequest = (json) => {
 					select(input.anchor, input.focus);
 					break;
 				case "insert":
-					$getSelection()?.insertText(input.text);
+					if (input.text === "") {
+						if (!$getSelection()?.isCollapsed())
+							editor.dispatchCommand(DELETE_CHARACTER_COMMAND, true);
+					} else
+						tokenizeRawText(input.text.replace(/\r\n?/g, "\n"), {
+							text: (text) => $getSelection()?.insertText(text),
+							tab: () => {
+								const selection = $getSelection();
+								if ($isRangeSelection(selection))
+									selection.insertNodes([
+										$createTabNode()
+											.setFormat(selection.format)
+											.setStyle(selection.style),
+									]);
+							},
+							linebreak: () => editor.dispatchCommand(KEY_ENTER_COMMAND, null),
+						});
 					break;
 				case "command": {
 					const command = commands[input.name];
 					if (!command) throw new Error(`unknown command ${input.name}`);
 					editor.dispatchCommand(
 						command,
-						input.name === "backspace" ? true : undefined,
+						input.name === "backspace"
+							? true
+							: input.name === "enter"
+								? null
+								: undefined,
 					);
 					break;
 				}
@@ -468,14 +494,14 @@ globalThis.evameEditorRequest = (json) => {
 					editor.dispatchCommand(FORMAT_TEXT_COMMAND, input.format);
 					break;
 				case "block":
-					setBlock(input.type);
+					$setBlockType(input.type);
 					break;
 				case "link":
 					editor.dispatchCommand(TOGGLE_LINK_COMMAND, input.url || null);
 					break;
 				case "toggleChecked": {
-					const { node } = units()[input.unit];
-					if ($isListItemNode(node)) node.toggleChecked();
+					const item = units()[input.unit].listItems[input.item];
+					item.node.toggleChecked();
 					break;
 				}
 				case "insertTable":

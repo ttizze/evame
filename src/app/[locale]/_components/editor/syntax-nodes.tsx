@@ -1,5 +1,29 @@
-import { $getState, createState, DecoratorNode, ElementNode } from "lexical";
+import { ListNode } from "@lexical/list";
+import { listMarkerState, orderedMarkerState } from "@lexical/mdast";
+import {
+	$createParagraphNode,
+	$getState,
+	createState,
+	DecoratorNode,
+	ElementNode,
+} from "lexical";
 import type { ReactNode } from "react";
+
+/** Markdownでは異なる記号の隣接リストは別のグループなので、自動結合で区切りを失わない。 */
+export class MarkdownListNode extends ListNode {
+	$config() {
+		return this.config("markdown-list", { extends: ListNode });
+	}
+	canMergeWith(next: ListNode) {
+		return (
+			super.canMergeWith(next) &&
+			($getState(this, listMarkerState) || "-") ===
+				($getState(next, listMarkerState) || "-") &&
+			($getState(this, orderedMarkerState) || ".") ===
+				($getState(next, orderedMarkerState) || ".")
+		);
+	}
+}
 
 export const htmlState = createState("html", {
 	parse: (value) => (typeof value === "string" ? value : ""),
@@ -123,6 +147,9 @@ export class FootnoteDefinitionNode extends ElementNode {
 	$config() {
 		return this.config("footnote-definition", {
 			extends: ElementNode,
+			$transform: (node: FootnoteDefinitionNode) => {
+				if (node.isEmpty()) node.append($createParagraphNode());
+			},
 			stateConfigs: [{ flat: true, stateConfig: footnoteState }],
 		});
 	}

@@ -25,6 +25,7 @@ import { gfmFootnote } from "micromark-extension-gfm-footnote";
 import { visit } from "unist-util-visit";
 import { getXPostId } from "@/app/[locale]/_domain/get-x-post-id";
 import { ImageNode, imageState, TweetNode, tweetState } from "./media-nodes";
+import { QuoteExtension } from "./quote";
 import {
 	DefinitionNode,
 	definitionState,
@@ -34,6 +35,7 @@ import {
 	HtmlBlockNode,
 	HtmlNode,
 	htmlState,
+	MarkdownListNode,
 } from "./syntax-nodes";
 
 declare module "mdast" {
@@ -45,11 +47,18 @@ declare module "mdast" {
 
 /**
  * 本文のMarkdownとLexicalの変換。CommonMark/GFMはLexical公式の`@lexical/mdast`に任せ、
- * 公式にないEvameの画像・X埋め込み・HTML・脚注・参照定義の対応だけを足す。PCとiPhoneで共有する。
+ * Evameの画像・X埋め込み・HTML・脚注・参照定義と空チェック項目の保持規則を足す。PCとiPhoneで共有する。
  */
 export const MarkdownExtension = defineExtension({
 	name: "evame-markdown",
 	nodes: [
+		MarkdownListNode,
+		{
+			replace: ListNode,
+			with: (node: ListNode) =>
+				new MarkdownListNode(node.getListType(), node.getStart()),
+			withKlass: MarkdownListNode,
+		},
 		ImageNode,
 		TweetNode,
 		HtmlNode,
@@ -59,6 +68,7 @@ export const MarkdownExtension = defineExtension({
 		DefinitionNode,
 	],
 	dependencies: [
+		QuoteExtension,
 		MdastCommonMarkExtension,
 		MdastGfmExtension,
 		MdastShadowRootQuoteExtension,
@@ -88,13 +98,12 @@ export const MarkdownExtension = defineExtension({
 								const [paragraph] = node.children;
 								if (
 									node.checked != null &&
-									node.children.length === 1 &&
 									paragraph.type === "paragraph" &&
 									paragraph.children.length === 1 &&
 									paragraph.children[0].type === "text" &&
 									paragraph.children[0].value === " "
 								)
-									node.children = [];
+									paragraph.children = [];
 							}),
 					],
 				},
@@ -180,19 +189,16 @@ export const MarkdownExtension = defineExtension({
 						const output = context.next();
 						for (const list of output)
 							visit(list, "listItem", (item) => {
-								if (
-									item.checked != null &&
-									item.children.every(
-										(child) =>
-											child.type === "paragraph" && child.children.length === 0,
-									)
-								)
-									item.children = [
-										{
-											type: "paragraph",
-											children: [{ type: "text", value: " " }],
-										},
-									];
+								if (item.checked == null) return;
+								const first = item.children[0];
+								if (first?.type === "paragraph") {
+									if (first.children.length === 0)
+										first.children = [{ type: "text", value: " " }];
+								} else
+									item.children.unshift({
+										type: "paragraph",
+										children: [{ type: "text", value: " " }],
+									});
 							});
 						return output;
 					},

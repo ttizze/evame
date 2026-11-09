@@ -111,7 +111,7 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
   private func font(_ unit: LexicalDocument.Unit) -> UIFont {
     if unit.context.footnote != nil { return .systemFont(ofSize: 14) }
     // Webの引用と同じく、斜体のやや太い文字にする。
-    if unit.context.quote > 0, ["paragraph", "quote"].contains(unit.block?.type) {
+    if unit.context.quote > 0, unit.block?.type == "paragraph" {
       return slanted(.systemFont(ofSize: Self.baseSize, weight: .medium))
     }
     switch (unit.block?.type, unit.block?.level) {
@@ -124,15 +124,14 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
     }
   }
 
-  private func indentation(_ unit: LexicalDocument.Unit) -> CGFloat {
-    CGFloat(unit.context.lists.count) * 28 + CGFloat(unit.context.quote) * 16
-      + (unit.context.footnote == nil ? 0 : 16)
+  private func indentation(lists: Int, quote: Int, footnote: Bool) -> CGFloat {
+    CGFloat(lists) * 28 + CGFloat(quote) * 16 + (footnote ? 16 : 0)
   }
 
   private func base(_ unit: LexicalDocument.Unit) -> [NSAttributedString.Key: Any] {
     let paragraph = NSMutableParagraphStyle()
-    paragraph.firstLineHeadIndent = indentation(unit)
-    paragraph.headIndent = indentation(unit)
+    paragraph.firstLineHeadIndent = indentation(lists: unit.context.lists.count, quote: unit.context.quote, footnote: unit.context.footnote != nil)
+    paragraph.headIndent = indentation(lists: unit.context.lists.count, quote: unit.context.quote, footnote: unit.context.footnote != nil)
     paragraph.paragraphSpacing = unit.block?.type == "heading" ? 10 : 6
     var foreground = unit.context.footnote == nil ? UIColor.label : .secondaryLabel
     if unit.block?.type == "code" {
@@ -320,7 +319,7 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
       let first = caretRect(for: start)
       if unit.block?.type == "code" {
         // 文字の後ろに描くため、入力欄の文字より下に重ねる。
-        let x = left + indentation(unit)
+        let x = left + indentation(lists: unit.context.lists.count, quote: unit.context.quote, footnote: unit.context.footnote != nil)
         // 変換中の文字は表示単位の長さに含まれないため、この単位の中にあれば下端をその末尾まで伸ばす。
         var bottom = caretRect(for: end).maxY
         if let marked = markedTextRange, offset(from: start, to: marked.start) >= 0,
@@ -366,28 +365,28 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
         button.frame = firstRect(for: range)
         add(button)
       }
-      guard unit.block?.type == "listitem", let list = unit.context.lists.last else { continue }
-      let frame = CGRect(x: left + indentation(unit) - 26, y: first.minY, width: 24, height: first.height)
-      if list.kind == "check" {
-        let checked = unit.block?.checked == true
-        let button = UIButton(
-          type: .system,
-          primaryAction: UIAction { [weak self] _ in self?.toggleChecked(index) })
-        button.setImage(UIImage(systemName: checked ? "checkmark.square.fill" : "square"), for: .normal)
-        button.accessibilityLabel = unit.runs?.compactMap(\.text).joined()
-        button.accessibilityValue = checked ? String(localized: "完了") : String(localized: "未完了")
-        button.accessibilityIdentifier = "editor.checkbox"
-        button.frame = frame
-        add(button)
-      } else {
-        let marker = UILabel(frame: frame)
-        marker.text =
-          list.kind == "number"
-          ? "\(unit.block?.value ?? 1)." : ["•", "◦", "▪"][(unit.context.lists.count - 1) % 3]
-        marker.font = font(unit)
-        marker.textAlignment = .right
-        marker.textColor = .secondaryLabel
-        add(marker)
+
+      for (itemIndex, item) in unit.listItems.enumerated() {
+        guard item.depth > 0, item.depth <= unit.context.lists.count else { continue }
+        let list = unit.context.lists[item.depth - 1]
+        let frame = CGRect(x: left + indentation(lists: item.depth, quote: item.quote, footnote: item.footnote) - 26, y: first.minY, width: 24, height: first.height)
+        if list.kind == "check" {
+          let checked = item.checked == true
+          let button = UIButton(type: .system, primaryAction: UIAction { [weak self] _ in self?.toggleChecked(index, item: itemIndex) })
+          button.setImage(UIImage(systemName: checked ? "checkmark.square.fill" : "square"), for: .normal)
+          button.accessibilityLabel = unit.runs?.compactMap(\.text).joined()
+          button.accessibilityValue = checked ? String(localized: "完了") : String(localized: "未完了")
+          button.accessibilityIdentifier = "editor.checkbox"
+          button.frame = frame
+          add(button)
+        } else {
+          let marker = UILabel(frame: frame)
+          marker.text = list.kind == "number" ? "\(item.value)." : ["•", "◦", "▪"][(item.depth - 1) % 3]
+          marker.font = font(unit)
+          marker.textAlignment = .right
+          marker.textColor = .secondaryLabel
+          add(marker)
+        }
       }
     }
   }
@@ -427,20 +426,6 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
     onChange()
   }
 
-  /// 確定した文字列で範囲を置き換える要求。改行はLexicalの段落分割として送る。
-  private func replacement(_ range: NSRange, with text: String) -> [[String: Any]] {
-    var requests = [select(range)]
-    if text.isEmpty {
-      if range.length > 0 { requests.append(["action": "command", "name": "backspace"]) }
-      return requests
-    }
-    for (index, part) in text.components(separatedBy: "\n").enumerated() {
-      if index > 0 { requests.append(["action": "command", "name": "enter"]) }
-      if !part.isEmpty { requests.append(["action": "insert", "text": part]) }
-    }
-    return requests
-  }
-
   func format(_ format: String) { edit([select(selectedRange), ["action": "format", "format": format]]) }
   func setBlock(_ type: String) { edit([select(selectedRange), ["action": "block", "type": type]]) }
   func indent(_ increase: Bool) {
@@ -471,7 +456,7 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
       ["action": "setTableCell", "unit": unit, "row": row, "column": column, "markdown": markdown]
     ])
   }
-  private func toggleChecked(_ unit: Int) { edit([["action": "toggleChecked", "unit": unit]]) }
+  private func toggleChecked(_ unit: Int, item: Int) { edit([["action": "toggleChecked", "unit": unit, "item": item]]) }
 
   override func toggleBoldface(_ sender: Any?) { format("bold") }
   override func toggleItalics(_ sender: Any?) { format("italic") }
@@ -480,7 +465,7 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
     _ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String
   ) -> Bool {
     guard text == "\n", markedTextRange == nil else { return true }
-    edit(replacement(range, with: text))
+    edit([select(range), ["action": "insert", "text": text]])
     return false
   }
 
@@ -514,7 +499,7 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
     let range = NSRange(location: prefix, length: old.length - suffix - prefix)
     let inserted = new.substring(
       with: NSRange(location: prefix, length: new.length - suffix - prefix))
-    edit(replacement(range, with: inserted.replacingOccurrences(of: "\u{2028}", with: "\n")))
+    edit([select(range), ["action": "insert", "text": inserted]])
   }
 
   func textViewDidChangeSelection(_ textView: UITextView) {
@@ -572,7 +557,7 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
   override func cut(_ sender: Any?) {
     // クリップボードへ書けなかった内容は消さない。
     guard selectedRange.length > 0, markedTextRange == nil, writeSelection() else { return }
-    edit(replacement(selectedRange, with: ""))
+    edit([select(selectedRange), ["action": "insert", "text": ""]])
   }
 
   override func paste(_ sender: Any?) {

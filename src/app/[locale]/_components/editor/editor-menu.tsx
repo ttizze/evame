@@ -1,10 +1,4 @@
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
-import {
-	INSERT_CHECK_LIST_COMMAND,
-	INSERT_ORDERED_LIST_COMMAND,
-	INSERT_UNORDERED_LIST_COMMAND,
-	REMOVE_LIST_COMMAND,
-} from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { INSERT_TABLE_COMMAND } from "@lexical/table";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -149,22 +143,9 @@ export function EditorMenu() {
 		};
 	}, [editor]);
 
-	/** リストと表は専用コマンドを使い、それ以外は選択ブロックを変換する。 */
+	/** 本文モデルが持つ共通のブロック切り替え規則を使う。 */
 	function applyBlock(value: (typeof blockItems)[number]["value"]) {
-		if (value === "bullet" || value === "number" || value === "check") {
-			editor.dispatchCommand(
-				view.block === value
-					? REMOVE_LIST_COMMAND
-					: value === "bullet"
-						? INSERT_UNORDERED_LIST_COMMAND
-						: value === "number"
-							? INSERT_ORDERED_LIST_COMMAND
-							: INSERT_CHECK_LIST_COMMAND,
-				undefined,
-			);
-		} else {
-			editor.update(() => $setBlockType(value));
-		}
+		editor.update(() => $setBlockType(value));
 		editor.focus();
 	}
 

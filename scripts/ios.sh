@@ -45,6 +45,7 @@ bun apps/ios/EditorModel/build.mjs
 # LexicalのモデルはPCのエディタと同じ依存をルートのロックファイルから使う。
 bun install --frozen-lockfile
 bun apps/ios/LexicalModel/build.mjs
+bun tests/editor-matrix.mjs
 
 xcodegen generate --spec apps/ios/project.yml
 resolved_dir=apps/ios/EvameEditorPrototype.xcodeproj/project.xcworkspace/xcshareddata/swiftpm

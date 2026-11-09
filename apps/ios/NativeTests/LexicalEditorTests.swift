@@ -5,7 +5,7 @@ import UIKit
 @testable import EvameEditorPrototype
 
 @MainActor
-private final class LexicalFixture {
+final class LexicalFixture {
   let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 390, height: 844))
   let pasteboard = UIPasteboard.withUniqueName()
   let store: LocalStore
@@ -62,7 +62,7 @@ struct LexicalEditorTests {
     let editor = fixture.editor
     #expect(editor.text.hasPrefix("日本語の執筆 👩🏽‍💻\n入力中の強調と斜体"))
     #expect(editor.snapshot.units.contains { $0.atomic?.type == "table" })
-    #expect(editor.snapshot.units.contains { $0.block?.checked == true })
+    #expect(editor.snapshot.units.contains { $0.listItems.last?.checked == true })
     // 表の列幅は書き出し時に揃えるため、セルの内容だけを確かめる。
     #expect(fixture.markdown.contains("| 日本語    | **100** |"))
     #expect(fixture.markdown.contains("[^note]: 脚注の内容。"))
@@ -139,7 +139,7 @@ struct LexicalEditorTests {
     editor.selectedRange = NSRange(location: 2, length: 0)
     editor.insertText("\n")
     editor.insertText("次")
-    #expect(editor.snapshot.units.map { $0.block?.type } == ["listitem", "listitem"])
+    #expect(editor.snapshot.units.map { $0.listItems.last?.depth } == [1, 1])
     editor.insertText("\n")
     editor.insertText("\n")
     #expect(editor.snapshot.units.last?.block?.type == "paragraph")
@@ -315,9 +315,9 @@ struct LexicalEditorTests {
     editor.selectedRange = NSRange(location: 2, length: 0)
     editor.insertText("\n")
     editor.setBlock("check")
-    #expect(editor.snapshot.units.last?.block?.checked == false)
+    #expect(editor.snapshot.units.last?.listItems.last?.checked == false)
     editor.load(editor.snapshot.markdown)
-    #expect(editor.snapshot.units.last?.block?.checked == false)
+    #expect(editor.snapshot.units.last?.listItems.last?.checked == false)
     #expect(editor.text == "本文\n")
     editor.selectedRange = NSRange(location: 3, length: 0)
     editor.insertText("買い物")
@@ -330,7 +330,7 @@ struct LexicalEditorTests {
     let fixture = try LexicalFixture("- [ ] 牛乳\n-")
     defer { fixture.window.isHidden = true }
     let editor = fixture.editor
-    #expect(editor.snapshot.units.map { $0.block?.checked } == [false, false])
+    #expect(editor.snapshot.units.map { $0.listItems.last?.checked } == [false, false])
     editor.selectedRange = NSRange(location: 3, length: 0)
     editor.insertText("買い物")
     #expect(fixture.markdown == "- [ ] 牛乳\n- [ ] 買い物")

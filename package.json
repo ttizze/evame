@@ -197,6 +197,8 @@
 		"@libsql/client": "0.18.0"
 	},
 	"patchedDependencies": {
-		"@vercel/og@1.0.3": "patches/@vercel%2Fog@1.0.3.patch"
+		"@vercel/og@1.0.3": "patches/@vercel%2Fog@1.0.3.patch",
+		"@lexical/list@0.53.0": "patches/@lexical%2Flist@0.53.0.patch",
+		"@lexical/mdast@0.53.0": "patches/@lexical%2Fmdast@0.53.0.patch"
 	}
 }

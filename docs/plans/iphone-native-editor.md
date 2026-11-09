@@ -133,6 +133,16 @@ SwiftUIを画面構成の基本候補とし、編集部分はUIKit/TextKitを含
 
 PCと同じ`src/app/[locale]/_components/editor/markdown.ts`をJavaScriptCoreで使う。CommonMark/GFMはLexical公式の`@lexical/mdast`に任せ、Evameの画像・X埋め込み・HTML・脚注・参照定義の対応だけを足す。iPhone独自の変換や、編集できない原文ブロックは作らない。
 
+編集中の本文はPC・iPhoneとも`editor/document.ts`のLexical拡張を使い、ブロック切り替えは`editor/block-type.ts`を共有する。引用は公式のshadow root構造（引用の中に段落・見出し・リスト等を持つ）に統一し、メニュー・Markdown入力・貼り付けでも読み込みと同じ構造にする。iPhoneのReturnも公式のキー操作から段落分割と記法確定へ進める。UIKitへ渡す表示単位はこの文書から取り出すもので、もう一つの編集モデルとして保持しない。サーバーの保存形式は引き続きMDAST JSONとし、Lexical JSONへ移行しない。
+
+Lexical 0.53.0の標準構成でも再現する保存時の欠落は、`patches/@lexical%2Fmdast@0.53.0.patch`と`patches/@lexical%2Flist@0.53.0.patch`で元の実装を修正する。内容は複数段落のリスト・記号が異なるリストの区切り・入れ子リスト後の本文順・空リンク・装飾内のソフト改行・コードの改行とタブ・生HTML末尾の改行・自動リンク直後の文字の保持。アプリ側へ別の変換器を重ねない。空チェック項目だけはGFMで保存可能な空白を入出力するアプリの方針として共有拡張で扱う。
+
+パッチはBunの`patchedDependencies`とロックファイルから適用する。パッケージ内のTypeScriptソース、型宣言、実際に使用する開発・本番ESMを含める。ESMの生成にはロック済みのesbuild 0.25.12（drizzle-kitの依存）を使い、各パッケージの`src/index.ts`を`bundle: true, packages: "external", platform: "browser", format: "esm"`、`define: { __DEV__: "true" | "false" }`でビルドする。本番だけminifyし、元のライセンスヘッダーを保持する。iPhone同梱モデルはその適用済み依存から`bash scripts/ios.sh generate`で再生成する。
+
+受け入れ確認は、固定済みCommonMark 0.31.2の652例とGFM 0.29の677例を実際の同梱モデルで保存・再読み込みし、独立したremarkの描画結果で本文・装飾・リンク・リスト・コードの空白を比較する。重複した装飾の順序やHTMLの通常空白の正規化は許容するため、公式HTMLとの完全一致を示すテストではない。ブロックの作成経路・カーソル位置・切り替え・Return・Backspaceの969操作は同じ入力と期待値をモデルと実際のUIKit入力欄で実行し、Undo/Redoと保存・再読み込みも確認する。既存のProseMirror 133操作は比較用の参照テストであり、Lexical/UIKitの全操作を検証した件数には含めない。
+
+UIKitの表示位置の計算は`LexicalTextView.swift`で本文の段落字下げ・コード背景・リスト記号の3箇所が使う。リストの深さ、引用の深さ、脚注内かだけを明示して同じ計算を使い、記号と本文の位置がずれる重複を防ぐ。
+
 参照形式のリンクと画像は、読み込み時に通常のリンクと画像へ解決する。参照定義は定義のノードとして保持し、後から書く参照にも使えるようにする。元の空白・記号の完全一致は保証しない。
 
 保存できない状態を黙ってプレーンテキストに変換しない。サーバーがMarkdownとして返せない情報は端末では保持できないため、サーバーとの契約で扱う（「取得」を参照）。

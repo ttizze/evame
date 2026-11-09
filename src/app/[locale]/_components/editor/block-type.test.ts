@@ -43,6 +43,11 @@ const markdown = (editor: LexicalEditor) =>
 	editor.read(() => $convertToMarkdownString()).trim();
 
 describe("ブロックの種類の変更", () => {
+	it("番号付きリストの中の箇条書きでは、内側のリストの種類を判定する", () => {
+		const editor = editorWith("1. 親\n   - 子");
+		expect(editor.read(() => $currentBlockType())).toBe("bullet");
+	});
+
 	it("段落を持つ引用の中で引用を選ぶと、引用の中に引用を作らず引用を解除する", () => {
 		const editor = editorWith("> 一\n>\n> 二");
 		expect(editor.read(() => $currentBlockType())).toBe("quote");
