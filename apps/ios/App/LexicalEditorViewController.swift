@@ -142,8 +142,7 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
 
   /// 題名でReturnを押すと本文の先頭へ移る。
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-    editor.becomeFirstResponder()
-    editor.selectedRange = NSRange(location: 0, length: 0)
+    resumeEditing(at: NSRange(location: 0, length: 0))
     return false
   }
 
@@ -265,6 +264,12 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
 
   // MARK: リンク・写真・表・原文
 
+  /// 入力フォーカスと選択位置を一緒に戻し、モーダルの操作後も同じ場所へ入力を続ける。
+  private func resumeEditing(at selection: NSRange) {
+    editor.becomeFirstResponder()
+    editor.selectedRange = selection
+  }
+
   private func editLink() {
     let selection = editor.selectedRange
     let alert = UIAlertController(
@@ -278,13 +283,12 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
     }
     alert.addAction(
       UIAlertAction(title: String(localized: "キャンセル"), style: .cancel) { [weak self] _ in
-        self?.editor.becomeFirstResponder()
+        self?.resumeEditing(at: selection)
       })
     alert.addAction(
       UIAlertAction(title: String(localized: "適用"), style: .default) { [weak self, weak alert] _ in
         guard let self else { return }
-        self.editor.becomeFirstResponder()
-        self.editor.selectedRange = selection
+        self.resumeEditing(at: selection)
         self.editor.setLink(
           alert?.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "")
       })
@@ -304,7 +308,9 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
     let selection = editor.selectedRange
     guard let provider = results.first?.itemProvider, provider.canLoadObject(ofClass: UIImage.self)
     else {
-      picker.dismiss(animated: true)
+      picker.dismiss(animated: true) { [weak self] in
+        self?.resumeEditing(at: selection)
+      }
       return
     }
     // 写真が読み込めるまでモーダルを保ち、選択位置の本文が先に編集されるのを防ぐ。
@@ -324,7 +330,10 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
         }
         self.editor.selectedRange = selection
         self.editor.insertImage(source: source, alt: String(localized: "写真"))
-        picker.dismiss(animated: true)
+        let insertedSelection = self.editor.selectedRange
+        picker.dismiss(animated: true) { [weak self] in
+          self?.resumeEditing(at: insertedSelection)
+        }
       }
     }
   }
