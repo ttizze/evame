@@ -13,6 +13,9 @@ struct StoredDocument: Equatable {
 /// 文書をSQLite、写真をアプリのファイル領域へ保存する。ネットワークの成否に関係なく、編集はここへ保存した時点で残る。
 @MainActor
 final class LocalStore {
+  /// 書き込み失敗時だけ、再編集・再試行のためにアプリ内で題名と本文を保持する。
+  private(set) var unsavedDrafts: [UUID: (title: String, body: String)] = [:]
+
   // 閉じる処理だけを終了時に行う。接続はメインスレッドからだけ使う。
   nonisolated(unsafe) private let database: OpaquePointer
   private let imageDirectory: URL
@@ -89,12 +92,18 @@ final class LocalStore {
 
   /// 題名と本文を保存する。内容が変わったときだけ更新日時を進める。
   func save(id: UUID, title: String, body: String) throws {
-    try execute(
-      """
-      UPDATE documents SET title = ?, body = ?, updated_at = ?
-      WHERE id = ? AND (title != ? OR body != ?)
-      """,
-      [title, body, Date().timeIntervalSince1970, id.uuidString, title, body])
+    do {
+      try execute(
+        """
+        UPDATE documents SET title = ?, body = ?, updated_at = ?
+        WHERE id = ? AND (title != ? OR body != ?)
+        """,
+        [title, body, Date().timeIntervalSince1970, id.uuidString, title, body])
+      unsavedDrafts.removeValue(forKey: id)
+    } catch {
+      unsavedDrafts[id] = (title, body)
+      throw error
+    }
   }
 
   /// 写真をファイルとして保存し、本文から参照する名前を返す。

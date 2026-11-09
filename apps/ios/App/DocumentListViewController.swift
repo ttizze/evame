@@ -70,8 +70,12 @@ final class DocumentListViewController: UITableViewController {
     let document = documents[indexPath.row]
     let cell = tableView.dequeueReusableCell(withIdentifier: "document", for: indexPath)
     var content = UIListContentConfiguration.subtitleCell()
-    content.text = document.title.isEmpty ? String(localized: "無題") : document.title
-    content.secondaryText = document.updatedAt.formatted(date: .abbreviated, time: .shortened)
+    let unsaved = store.unsavedDrafts[document.id]
+    let title = unsaved?.title ?? document.title
+    content.text = title.isEmpty ? String(localized: "無題") : title
+    content.secondaryText = unsaved == nil
+      ? document.updatedAt.formatted(date: .abbreviated, time: .shortened)
+      : String(localized: "未保存の変更があります")
     content.secondaryTextProperties.color = .secondaryLabel
     cell.contentConfiguration = content
     cell.accessoryType = .disclosureIndicator

@@ -127,3 +127,9 @@ CommonMark仕様とGFM仕様のテストデータはJohn MacFarlaneとGitHubの�
 ブロックをまたぐ選択、追加メニューによるブロック追加のUndo、表の行列の追加削除、外部画像のダウンロード、クリップボードからの画像取り込みは未実装。写真は追加メニューかキーボード上の画像ボタンから取り込む。本文入力はブロックごとのUIKit入力欄で検証する。これらを満たすまで完成した本番エディタとして扱わない。
 
 表のセルと3〜6段階目の見出しは1行の入力欄として扱う。見出しのReturnでは次の段落を作る。1・2段階目の複数行見出しはSetext形式で保持する。
+
+画面の保存処理だけを検証する場合も、同じ入口からXcodeのテスト対象を絞れます。
+
+```sh
+nix develop --command bash scripts/ios.sh test 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing:NativeTests/EditorScreenTests
+```

@@ -29,9 +29,10 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
     super.viewDidLoad()
     navigationItem.largeTitleDisplayMode = .never
     view.backgroundColor = .systemBackground
+    let unsaved = store.unsavedDrafts[document.id]
     do {
       editor = try LexicalTextView(
-        document: LexicalDocument(), markdown: document.body, pasteboard: .general,
+        document: LexicalDocument(), markdown: unsaved?.body ?? document.body, pasteboard: .general,
         imageFile: store.imageFile)
     } catch {
       showError()
@@ -40,7 +41,7 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
     editor.translatesAutoresizingMaskIntoConstraints = false
     editor.inputAccessoryView = keyboardMenu()
     // 題名は本文と一緒にスクロールするよう、本文の入力欄の上端に置く。
-    titleField.text = document.title
+    titleField.text = unsaved?.title ?? document.title
     titleField.placeholder = String(localized: "タイトル")
     titleField.font = .systemFont(ofSize: 28, weight: .bold)
     titleField.returnKeyType = .next
@@ -53,7 +54,7 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
         if self?.titleField.markedTextRange == nil { self?.scheduleSave() }
       }, for: .editingChanged)
     editor.addSubview(titleField)
-    lastSaved = (document.title, editor.snapshot.markdown)
+    lastSaved = unsaved == nil ? (document.title, editor.snapshot.markdown) : nil
     editor.textContainerInset.top = 16 + 44 + 12
     editor.onChange = { [weak self] in
       self?.updateMenu()
@@ -79,6 +80,7 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
     NotificationCenter.default.addObserver(
       self, selector: #selector(saveOnBackground),
       name: UIApplication.didEnterBackgroundNotification, object: nil)
+    if unsaved != nil { scheduleSave() }
   }
 
   @objc private func saveOnBackground() { commitAndSave() }
@@ -122,7 +124,7 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
     pendingSave = nil
     guard let editor else { return }
     let current = (title: titleField.text ?? "", body: editor.snapshot.markdown)
-    guard current.title != lastSaved?.title || current.body != lastSaved?.body else { return }
+    guard current.title != lastSaved?.title || current.body != lastSaved?.body || store.unsavedDrafts[document.id] != nil else { return }
     do {
       try store.save(id: document.id, title: current.title, body: current.body)
       lastSaved = current
@@ -131,7 +133,8 @@ final class LexicalEditorViewController: UIViewController, PHPickerViewControlle
       let presenter = navigationController ?? self
       guard presenter.presentedViewController == nil else { return }
       let alert = UIAlertController(
-        title: String(localized: "端末に保存できませんでした"), message: nil, preferredStyle: .alert)
+        title: String(localized: "端末に保存できませんでした"),
+        message: String(localized: "変更を一時的に保持しています。アプリを終了する前に、文書を開き直して保存を再試行してください。"), preferredStyle: .alert)
       alert.addAction(UIAlertAction(title: "OK", style: .default))
       presenter.present(alert, animated: true)
     }

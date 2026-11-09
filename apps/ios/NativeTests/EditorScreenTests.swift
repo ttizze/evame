@@ -1,4 +1,5 @@
 import Foundation
+import SQLite3
 import Testing
 import UIKit
 
@@ -10,6 +11,46 @@ struct EditorScreenTests {
     let url = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     return try LocalStore(directory: url)
+  }
+
+  @Test("保存失敗後に変更を戻した場合も、一覧から再編集して再試行できる", arguments: [false, true])
+  func failedSaveKeepsDraft(_ revert: Bool) throws {
+    let directory = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+    let store = try LocalStore(directory: directory)
+    let document = try store.createDocument()
+    let (controller, window) = openInWindow(store, document)
+    defer { window.isHidden = true }
+    let editor: UITextView = try #require(view("editor.text", in: controller.view))
+    let title: UITextField = try #require(view("editor.title", in: controller.view))
+    title.text = "未保存の題名"
+    editor.insertText("未保存の本文")
+    var blocker: OpaquePointer?
+    #expect(sqlite3_open(directory.appending(path: "documents.sqlite").path, &blocker) == SQLITE_OK)
+    defer { sqlite3_exec(blocker, "ROLLBACK", nil, nil, nil); sqlite3_close(blocker) }
+    #expect(sqlite3_exec(blocker, "BEGIN IMMEDIATE", nil, nil, nil) == SQLITE_OK)
+    // ウインドウの初回表示が完了する前でも、実際に閉じるときのライフサイクルを確実に送る。
+    controller.viewWillDisappear(false)
+    if revert {
+      title.text = ""
+      editor.selectedRange = NSRange(location: 0, length: editor.text.utf16.count)
+      editor.insertText("")
+      controller.viewWillDisappear(false)
+    }
+    let expectedTitle = revert ? "" : "未保存の題名"
+    let expectedBody = revert ? "" : "未保存の本文"
+    #expect(try store.document(id: document.id)?.body == "")
+    window.isHidden = true
+    let (reopened, reopenedWindow) = openInWindow(store, try #require(try store.document(id: document.id)))
+    defer { reopenedWindow.isHidden = true }
+    let restoredEditor: UITextView = try #require(view("editor.text", in: reopened.view))
+    let restoredTitle: UITextField = try #require(view("editor.title", in: reopened.view))
+    #expect(restoredTitle.text == expectedTitle)
+    #expect(restoredEditor.text == expectedBody)
+    #expect(sqlite3_exec(blocker, "ROLLBACK", nil, nil, nil) == SQLITE_OK)
+    reopened.viewWillDisappear(false)
+    #expect(try store.document(id: document.id)?.title == expectedTitle)
+    #expect(try store.document(id: document.id)?.body == expectedBody)
+    #expect(store.unsavedDrafts[document.id] == nil)
   }
 
   @Test("文書を開いて何も変えずに閉じても、本文の整形だけで保存せず更新日時も変わらない")

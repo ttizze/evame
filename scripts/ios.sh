@@ -33,7 +33,7 @@ case "${1:-}" in
     bash apps/ios/VditorProbe/run.sh "${2:?xcodebuild destination is required}"
     exit
     ;;
-  *) echo 'Usage: bash scripts/ios.sh generate | test <xcodebuild destination> | comrak-probe <simulator UUID> | test-lexical <xcodebuild destination> | test-textual | test-vditor <xcodebuild destination>' >&2; exit 2 ;;
+  *) echo 'Usage: bash scripts/ios.sh generate | test <xcodebuild destination> [xcodebuild options] | comrak-probe <simulator UUID> | test-lexical <xcodebuild destination> | test-textual | test-vditor <xcodebuild destination>' >&2; exit 2 ;;
 esac
 if [[ "$1" == test && -z "${2:-}" ]]; then
   echo 'test にはシミュレータの destination が必要です。' >&2
@@ -61,5 +61,5 @@ if [[ "$1" == test ]]; then
     -derivedDataPath apps/ios/DerivedData \
     -parallel-testing-enabled NO \
     -onlyUsePackageVersionsFromResolvedFile \
-    test
+    test "${@:3}"
 fi
