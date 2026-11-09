@@ -14,9 +14,9 @@ export class MarkdownListNode extends ListNode {
 	$config() {
 		return this.config("markdown-list", { extends: ListNode });
 	}
-	canMergeWith(next: ListNode) {
+	canMergeAdjacentList(next: ListNode) {
 		return (
-			super.canMergeWith(next) &&
+			super.canMergeAdjacentList(next) &&
 			($getState(this, listMarkerState) || "-") ===
 				($getState(next, listMarkerState) || "-") &&
 			($getState(this, orderedMarkerState) || ".") ===

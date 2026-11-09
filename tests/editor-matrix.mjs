@@ -162,6 +162,33 @@ export const projectionCases = [
 	},
 ];
 
+// 1つの項目内の段落境界でも、空行と入力位置を保持する。
+export const paragraphEditCases = ["delete", "enter", "backspace"].flatMap(
+	(action) =>
+		[0, 1, 2].map((unit) => {
+			const text = ["前半", "中間", "後半", "後の段落"];
+			let caret = { unit, offset: 0 };
+			if (action === "delete") text[unit] = "";
+			if (action === "enter") {
+				text.splice(unit + 1, 0, "");
+				caret = { unit: unit + 1, offset: 0 };
+			}
+			if (action === "backspace" && unit === 0)
+				text.splice(0, 3, "前半\n中間\n後半");
+			if (action === "backspace" && unit > 0) {
+				text.splice(unit - 1, 2, text[unit - 1] + text[unit]);
+				caret = { unit: unit - 1, offset: 2 };
+			}
+			return {
+				name: `${["先頭", "中間", "末尾"][unit]}の段落で${action}`,
+				action,
+				unit,
+				text,
+				caret,
+			};
+		}),
+);
+
 export const editingCases = [];
 for (const [sampleIndex, sample] of blockSamples.entries()) {
 	for (const origin of sampleIndex < 9
@@ -271,6 +298,10 @@ if (import.meta.main) {
 	await writeFile(
 		new URL("projection.json", directory),
 		JSON.stringify(projectionCases),
+	);
+	await writeFile(
+		new URL("paragraph-edits.json", directory),
+		JSON.stringify(paragraphEditCases),
 	);
 	console.log(
 		`EDITOR_MATRIX ${editingCases.length} cases, PROJECTION ${projectionCases.length} cases`,

@@ -52,7 +52,10 @@ import {
 	tokenizeRawText,
 	UNDO_COMMAND,
 } from "lexical";
-import { $setBlockType } from "../../../src/app/[locale]/_components/editor/block-type";
+import {
+	$currentBlockType,
+	$setBlockType,
+} from "../../../src/app/[locale]/_components/editor/block-type";
 import { DocumentExtension } from "../../../src/app/[locale]/_components/editor/document";
 import {
 	ImageNode,
@@ -105,11 +108,14 @@ function units() {
 	function visit(container, context) {
 		const first = result.length;
 		let children = [];
-		const flush = () => {
-			if (children.length > 0) {
+		let start = 0;
+		const flush = (end, force = false) => {
+			if (children.length > 0 || force) {
 				result.push({
 					node: container,
 					children,
+					start,
+					end,
 					atomic: false,
 					context,
 					listItems: [],
@@ -117,16 +123,25 @@ function units() {
 				children = [];
 			}
 		};
-		for (const node of container.getChildren()) {
-			if ($isLineBreakNode(node) && $getState(node, paragraphBreakState)) {
-				flush();
+		for (const [index, node] of container.getChildren().entries()) {
+			if (
+				$isListItemNode(container) &&
+				$isLineBreakNode(node) &&
+				$getState(node, paragraphBreakState)
+			) {
+				flush(
+					index,
+					index === 0 || node.getPreviousSibling()?.isInline() === true,
+				);
+				start = index + 1;
 				continue;
 			}
 			if (node.isInline()) {
 				children.push(node);
 				continue;
 			}
-			flush();
+			flush(index);
+			start = index + 1;
 			if (isAtomic(node))
 				result.push({ node, atomic: true, context, listItems: [] });
 			else if (!$isElementNode(node)) continue;
@@ -137,24 +152,19 @@ function units() {
 				});
 			else if ($isQuoteNode(node))
 				visit(node, { ...context, quote: context.quote + 1 });
-			else if (node instanceof FootnoteDefinitionNode)
-				visit(node, {
-					...context,
-					footnote: (({ identifier, label }) => label ?? identifier)(
-						$getState(node, footnoteState),
-					),
-				});
-			else visit(node, context);
+			else if (node instanceof FootnoteDefinitionNode) {
+				const { identifier, label } = $getState(node, footnoteState);
+				visit(node, { ...context, footnote: label ?? identifier });
+			} else visit(node, context);
 		}
-		flush();
-		if (result.length === first && container.getChildrenSize() === 0)
-			result.push({
-				node: container,
-				children: [],
-				atomic: false,
-				context,
-				listItems: [],
-			});
+		const last = container.getLastChild();
+		flush(
+			container.getChildrenSize(),
+			container.isEmpty() ||
+				($isListItemNode(container) &&
+					$isLineBreakNode(last) &&
+					$getState(last, paragraphBreakState)),
+		);
 		if (
 			$isListItemNode(container) &&
 			!(
@@ -226,7 +236,7 @@ function pointAt(position) {
 				offset: last.getIndexWithinParent() + 1,
 				type: "element",
 			}
-		: { key: node.getKey(), offset: 0, type: "element" };
+		: { key: node.getKey(), offset: unit.start, type: "element" };
 }
 
 /** Lexicalの位置を、それを含む表示単位と単位内の位置へ戻す。 */
@@ -239,11 +249,7 @@ function positionOf(point, list) {
 			continue;
 		}
 		if (unit.node.is(node)) {
-			const start = unit.children[0]?.getIndexWithinParent() ?? 0;
-			const end = unit.children.length
-				? unit.children.at(-1).getIndexWithinParent() + 1
-				: 0;
-			if (point.offset < start || point.offset > end) continue;
+			if (point.offset < unit.start || point.offset > unit.end) continue;
 		} else if (
 			!unit.children.some((child) => child.is(node) || child.isParentOf(node))
 		)
@@ -306,7 +312,7 @@ function select(anchor, focus) {
 	selection.anchor.set(a.key, a.offset, a.type);
 	selection.focus.set(f.key, f.offset, f.type);
 	const node = selection.anchor.getNode();
-	if (selection.isCollapsed() && $isTextNode(node)) {
+	if ($isTextNode(node)) {
 		selection.format = node.getFormat();
 		selection.style = node.getStyle();
 	}
@@ -376,15 +382,13 @@ function snapshot() {
 				focus: positionOf(range.focus, list),
 			}
 		: null;
-	const blockNode = rangePosition
-		? list[rangePosition.anchor.unit]?.node
-		: null;
 	const linkNode = anchorNode
 		? [anchorNode, ...anchorNode.getParents()].find($isLinkNode)
 		: null;
 	return {
 		markdown: $convertToMarkdownString(),
-		undoDepth: history().undoStack.length,
+		undoDepth: getExtensionDependencyFromEditor(editor, HistoryExtension).output
+			.historyState.value.undoStack.length,
 		units: list.map(({ node, children, atomic, context, listItems }) => {
 			const markers = listItems.map(
 				({ node: item, depth, quote, footnote }) => ({
@@ -422,17 +426,9 @@ function snapshot() {
 		// 装飾ノードの選択中は、PCと同じく文字の入力で置き換えない。
 		nodeSelected: $isNodeSelection(selection),
 		formats: range ? FORMATS.filter((format) => range.hasFormat(format)) : [],
-		block: blockNode ? block(blockNode) : null,
-		listKind: rangePosition
-			? (list[rangePosition.anchor.unit]?.context.lists.at(-1)?.kind ?? null)
-			: null,
+		blockType: $currentBlockType(),
 		link: linkNode ? linkNode.getURL() : null,
 	};
-}
-
-function history() {
-	return getExtensionDependencyFromEditor(editor, HistoryExtension).output
-		.historyState.value;
 }
 
 const commands = {

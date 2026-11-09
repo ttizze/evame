@@ -98,7 +98,7 @@ export const MarkdownExtension = defineExtension({
 								const [paragraph] = node.children;
 								if (
 									node.checked != null &&
-									paragraph.type === "paragraph" &&
+									paragraph?.type === "paragraph" &&
 									paragraph.children.length === 1 &&
 									paragraph.children[0].type === "text" &&
 									paragraph.children[0].value === " "

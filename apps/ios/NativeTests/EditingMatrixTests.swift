@@ -18,9 +18,77 @@ private let projectionData = try! Data(contentsOf: Bundle(for: EditingFixtureBun
   forResource: "projection", withExtension: "json", subdirectory: "EditingFixtures")!)
 private let projectionNames = (try! JSONSerialization.jsonObject(with: projectionData) as! [[String: Any]]).map { $0["name"] as! String }
 
+private let paragraphEditData = try! Data(contentsOf: Bundle(for: EditingFixtureBundle.self).url(
+  forResource: "paragraph-edits", withExtension: "json", subdirectory: "EditingFixtures")!)
+private let paragraphEditNames = (try! JSONSerialization.jsonObject(with: paragraphEditData) as! [[String: Any]]).map { $0["name"] as! String }
+
 @Suite(.serialized)
 @MainActor
 struct EditingMatrixTests {
+  @Test("リスト内の引用・コード・見出しへ入力しても書式メニューはPCと同じ種類を選択する", arguments: [
+    ["- > 引用", "quote"], ["- ```\n  code\n  ```", "code"], ["> ## 見出し", "h2"]
+  ])
+  func currentBlockType(_ sample: [String]) throws {
+    let fixture = try LexicalFixture(sample[0])
+    defer { fixture.window.isHidden = true }
+    fixture.editor.selectedRange = NSRange(location: 0, length: 0)
+    fixture.editor.insertText("追")
+    #expect(fixture.editor.snapshot.blockType == sample[1])
+    #expect(fixture.editor.failure == nil)
+  }
+
+  @Test("複数段落のリスト項目で空行・入力位置・Undo/Redoと保存を保つ", arguments: paragraphEditNames)
+  func paragraphEditing(_ name: String) throws {
+    let rows = try JSONSerialization.jsonObject(with: paragraphEditData) as! [[String: Any]]
+    let entry = try #require(rows.first { $0["name"] as? String == name })
+    let fixture = try LexicalFixture("- 前半\n\n  中間\n\n  後半\n\n後の段落")
+    defer { fixture.window.isHidden = true }
+    let editor = fixture.editor
+    let original = fixture.markdown
+    let unit = entry["unit"] as! Int
+    let action = entry["action"] as! String
+    editor.selectedRange = NSRange(location: unit * 3 + (action == "enter" ? 2 : 0), length: action == "delete" ? 2 : 0)
+    switch action {
+    case "delete": editor.insertText("")
+    case "enter": editor.insertText("\n")
+    default: editor.deleteBackward()
+    }
+    let text = (entry["text"] as! [String]).map { $0.replacingOccurrences(of: "\n", with: "\u{2028}") }
+    let caret = entry["caret"] as! [String: Int]
+    let location = text.prefix(caret["unit"]!).reduce(0) { $0 + $1.utf16.count + 1 } + caret["offset"]!
+    #expect(editor.text == text.joined(separator: "\n"))
+    #expect(editor.selectedRange == NSRange(location: location, length: 0))
+    let after = editor.text
+    editor.undoManager?.undo()
+    #expect(fixture.markdown == original)
+    editor.undoManager?.redo()
+    #expect(editor.text == after)
+    #expect(editor.selectedRange.location == location)
+    editor.insertText("追")
+    let edited = editor.text!
+    #expect((edited as NSString).substring(with: NSRange(location: location, length: 1)) == "追")
+    editor.load(fixture.markdown)
+    #expect(editor.text == edited)
+    #expect(editor.failure == nil)
+  }
+
+  @Test("複数行の太字を一度で解除し、入力・Undo/Redoと保存・再読み込みでも保つ")
+  func removeMultilineBold() throws {
+    let fixture = try LexicalFixture("**a\nb**")
+    defer { fixture.window.isHidden = true }
+    let editor = fixture.editor
+    editor.selectedRange = NSRange(location: 0, length: 3)
+    editor.format("bold")
+    #expect(fixture.markdown == "a\nb")
+    editor.undoManager?.undo()
+    #expect(fixture.markdown == "**a\nb**")
+    editor.undoManager?.redo()
+    #expect(fixture.markdown == "a\nb")
+    editor.load(fixture.markdown)
+    #expect(fixture.markdown == "a\nb")
+    #expect(editor.failure == nil)
+  }
+
   @Test("空の脚注も段落から書き始め、保存・再読み込み・Undo/Redoで本文を保つ")
   func emptyFootnote() throws {
     let fixture = try LexicalFixture("[^note]:")

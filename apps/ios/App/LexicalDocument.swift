@@ -35,8 +35,7 @@ final class LexicalDocument {
     let units: [Unit]
     let selection: Selection?
     let formats: [String]
-    let block: Block?
-    let listKind: String?
+    let blockType: String?
     let link: String?
     /// 装飾ノード（区切り線・画像など）を選択している。
     let nodeSelected: Bool
