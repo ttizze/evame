@@ -167,6 +167,32 @@ final class EditorUITests: XCTestCase {
     XCTAssertTrue(source.hasPrefix("# 日本語の執筆 👩🏽‍💻\n\nafter\n"), source)
   }
 
+  func test二つのコードブロックの片方で改行してスクロールしても本文を保つ() {
+    app.navigationBars.buttons["文書"].tap()
+    app.buttons["documents.new"].tap()
+    _ = markdown()
+    let source = app.textViews["editor.markdown-source"]
+    source.tap()
+    source.typeText("```\nfirst()\n```\n\n間の段落\n\n```\nsecond()\n```")
+    app.navigationBars.buttons["editor.source.done"].tap()
+    tapEndOfHeading()
+    for index in 0..<18 { app.typeText("\nline\(index)") }
+    let beforeScroll = XCTAttachment(screenshot: app.screenshot())
+    beforeScroll.name = "先のコードブロックで18行増やした直後"
+    beforeScroll.lifetime = .keepAlways
+    add(beforeScroll)
+    editor.swipeUp()
+    let afterScroll = XCTAttachment(screenshot: app.screenshot())
+    afterScroll.name = "後のコードブロックへスクロールした後"
+    afterScroll.lifetime = .keepAlways
+    add(afterScroll)
+    let saved = markdown()
+    XCTAssertTrue(saved.contains("first()\nline0\nline1"), saved)
+    XCTAssertTrue(saved.contains("line17\n```"), saved)
+    XCTAssertTrue(saved.contains("```\nsecond()\n```"), saved)
+    XCTAssertEqual(saved.components(separatedBy: "```").count, 5, saved)
+  }
+
   func testリスト記法で入力し改行すると次の項目を続けて書ける() {
     tapEndOfHeading()
     app.typeText("\n- one\ntwo")

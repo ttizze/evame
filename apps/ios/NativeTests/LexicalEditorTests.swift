@@ -457,6 +457,209 @@ struct LexicalEditorTests {
     color.getWhite(&white, alpha: nil)
     #expect(white > 0.8)
     #expect(editor.attributedText.attribute(.backgroundColor, at: 2, effectiveRange: nil) == nil)
+    editor.selectedRange = NSRange(location: 2, length: 0)
+    editor.setBlock("paragraph")
+    editor.layoutIfNeeded()
+    #expect(!editor.subviews.contains { $0.accessibilityIdentifier == "editor.code-block" })
+  }
+
+  /// 本文の文字からブロックの先頭と末尾のカーソル位置を求め、各背景が上下に同じ余白で囲むことを確かめる。
+  private func expectCodeBackgrounds(_ editor: LexicalTextView, phase: String) throws {
+    editor.layoutIfNeeded()
+    let backgrounds = editor.subviews.filter {
+      $0.accessibilityIdentifier == "editor.code-block"
+    }.sorted { $0.frame.minY < $1.frame.minY }
+    try #require(backgrounds.count == 2)
+    let separator = (editor.text as NSString).range(of: "\n間の段落\n")
+    try #require(separator.location != NSNotFound)
+    let ranges = [
+      NSRange(location: 0, length: separator.location),
+      NSRange(location: NSMaxRange(separator), length: editor.text.utf16.count - NSMaxRange(separator)),
+    ]
+    for (index, range) in ranges.enumerated() {
+      let start = try #require(editor.position(from: editor.beginningOfDocument, offset: range.location))
+      let end = try #require(editor.position(from: start, offset: range.length))
+      let first = editor.caretRect(for: start)
+      let last = editor.caretRect(for: end)
+      #expect(abs(backgrounds[index].frame.minY - (first.minY - 8)) < 1,
+        "\(phase)の\(index + 1)個目: 背景\(backgrounds[index].frame)、先頭\(first)")
+      #expect(abs(backgrounds[index].frame.maxY - (last.maxY + 8)) < 1,
+        "\(phase)の\(index + 1)個目: 背景\(backgrounds[index].frame)、末尾\(last)")
+    }
+  }
+
+  @Test("2つのコードブロックの片方で改行を繰り返してスクロールしても、両方の背景が文字を囲む")
+  func codeBlockBackgroundsFollowNewlines() throws {
+    let fixture = try LexicalFixture("```\nfirst()\n```\n\n間の段落\n\n```\nsecond()\n```")
+    defer { fixture.window.isHidden = true }
+    let editor = fixture.editor
+    editor.frame.size.height = 220
+    for label in ["first()", "second()"] {
+      let range = (editor.text as NSString).range(of: label)
+      editor.selectedRange = NSRange(location: NSMaxRange(range), length: 0)
+      for step in 0..<25 {
+        editor.insertText("line\(step)")
+        editor.insertText("\n")
+        editor.scrollRangeToVisible((editor.text as NSString).range(of: "second()"))
+        try expectCodeBackgrounds(editor, phase: "\(label)で\(step + 1)回改行後")
+      }
+      editor.undoManager?.undo()
+      try expectCodeBackgrounds(editor, phase: "改行のUndo後")
+      editor.undoManager?.redo()
+      try expectCodeBackgrounds(editor, phase: "改行のRedo後")
+      let image = UIGraphicsImageRenderer(bounds: editor.bounds).image {
+        editor.layer.render(in: $0.cgContext)
+      }
+      Attachment.record(image, named: "code-backgrounds-\(label)-newlines", as: .png)
+    }
+    #expect(editor.failure == nil)
+  }
+
+  @Test("コードブロックの空行で改行を続けて通常の段落へ抜けても、後のコード背景がずれない")
+  func codeBlockBackgroundAfterLeavingCode() throws {
+    let fixture = try LexicalFixture("```\nfirst()\n```\n\n間の段落\n\n```\nsecond()\n```")
+    defer { fixture.window.isHidden = true }
+    let editor = fixture.editor
+    editor.frame.size.height = 220
+    editor.selectedRange = NSRange(location: 7, length: 0)
+    for step in 0..<25 {
+      editor.insertText("\n")
+      editor.layoutIfNeeded()
+      editor.scrollRangeToVisible((editor.text as NSString).range(of: "second()"))
+      editor.layoutIfNeeded()
+      let backgrounds = editor.subviews.filter {
+        $0.accessibilityIdentifier == "editor.code-block"
+      }.sorted { $0.frame.minY < $1.frame.minY }
+      try #require(backgrounds.count == 2)
+      let range = (editor.text as NSString).range(of: "second()")
+      let start = try #require(editor.position(from: editor.beginningOfDocument, offset: range.location))
+      #expect(abs(backgrounds[1].frame.minY - (editor.caretRect(for: start).minY - 8)) < 1,
+        "\(step + 1)回改行後の後続コード背景")
+    }
+    #expect(fixture.markdown.hasPrefix("```\nfirst()\n```"))
+    #expect(editor.failure == nil)
+  }
+
+  @Test("片方のコードブロックで変換中の文字が増減しても、両方の背景が文字を囲む",
+    arguments: [String(repeating: "日本語のコメント", count: 12), "日本語\n次の行\nさらに次の行", "日"], [0, 7])
+  func codeBlockBackgroundsWhileComposing(_ composition: String, selectionLength: Int) throws {
+    for label in ["first()", "second()"] {
+      let fixture = try LexicalFixture("```\nfirst()\n```\n\n間の段落\n\n```\nsecond()\n```")
+      defer { fixture.window.isHidden = true }
+      let editor = fixture.editor
+      let original = editor.snapshot.markdown
+      let range = (editor.text as NSString).range(of: label)
+      editor.selectedRange = NSRange(location: NSMaxRange(range) - selectionLength, length: selectionLength)
+      editor.setMarkedText(composition, selectedRange: NSRange(location: composition.utf16.count, length: 0))
+      #expect(editor.snapshot.markdown == original)
+      try expectCodeBackgrounds(editor, phase: "\(label)で変換中")
+      if composition.count > 10, selectionLength == 0 {
+        let image = UIGraphicsImageRenderer(bounds: editor.bounds).image {
+          editor.layer.render(in: $0.cgContext)
+        }
+        Attachment.record(image, named: "code-backgrounds-\(label)-composing", as: .png)
+      }
+      editor.unmarkText()
+      try expectCodeBackgrounds(editor, phase: "変換確定後")
+      editor.undoManager?.undo()
+      try expectCodeBackgrounds(editor, phase: "変換確定のUndo後")
+      #expect(editor.snapshot.markdown == original)
+      editor.undoManager?.redo()
+      try expectCodeBackgrounds(editor, phase: "変換確定のRedo後")
+      #expect(editor.failure == nil)
+    }
+  }
+
+  @Test("本文をスクロールしても、チェックボックスは同じ部品のまま残る")
+  func checkboxSurvivesScroll() throws {
+    let paragraphs = (0..<60).map { "段落\($0)" }.joined(separator: "\n\n")
+    let fixture = try LexicalFixture("- [ ] 項目\n\n\(paragraphs)")
+    defer { fixture.window.isHidden = true }
+    let editor = fixture.editor
+    editor.layoutIfNeeded()
+    let checkbox = try #require(editor.subviews.first { $0.accessibilityIdentifier == "editor.checkbox" })
+    editor.setContentOffset(CGPoint(x: 0, y: 200), animated: false)
+    editor.layoutIfNeeded()
+    #expect(editor.contentOffset.y == 200)
+    #expect(editor.subviews.contains { $0 === checkbox })
+  }
+
+  /// 本文の文字の位置を探し、後続の引用線・リスト記号・表の部品がその文字に揃うことを確かめる。
+  private func expectDecorationsFollowText(_ editor: LexicalTextView, phase: String) throws {
+    editor.layoutIfNeeded()
+    func range(of text: String) throws -> UITextRange {
+      let found = (editor.text as NSString).range(of: text)
+      try #require(found.location != NSNotFound)
+      let start = try #require(editor.position(from: editor.beginningOfDocument, offset: found.location))
+      let end = try #require(editor.position(from: start, offset: found.length))
+      return try #require(editor.textRange(from: start, to: end))
+    }
+    let firstQuote = editor.caretRect(for: try range(of: "引用の一").start)
+    let secondQuote = editor.caretRect(for: try range(of: "引用の二").start)
+    let bars = editor.subviews.filter { $0.accessibilityIdentifier == "editor.quote-bar" }
+      .sorted { $0.frame.minY < $1.frame.minY }
+    try #require(bars.count == 2)
+    #expect(abs(bars[0].frame.minY - firstQuote.minY) < 1, "\(phase)の1つ目の引用線の先頭")
+    #expect(abs(bars[0].frame.maxY - secondQuote.minY) < 1, "\(phase)の1つ目の引用線の末尾")
+    #expect(abs(bars[1].frame.minY - secondQuote.minY) < 1, "\(phase)の2つ目の引用線の先頭")
+    let marker = try #require(editor.subviews.compactMap { $0 as? UILabel }.first { $0.text == "•" })
+    #expect(abs(marker.frame.minY - editor.caretRect(for: try range(of: "項目").start).minY) < 1,
+      "\(phase)のリスト記号")
+    let table = try #require(editor.subviews.first { $0.accessibilityIdentifier == "editor.table" })
+    #expect(abs(table.frame.minY - editor.firstRect(for: try range(of: "\u{FFFC}")).minY) < 1,
+      "\(phase)の表")
+  }
+
+  @Test("前の段落で変換や選択の置換をしても、後続の引用線・リスト記号・表が文字に揃う",
+    arguments: [String(repeating: "日本語のコメント", count: 12), "日本語\n次の行\nさらに次の行", "日"], [0, 1, 4])
+  func decorationsFollowComposition(_ composition: String, selectionLength: Int) throws {
+    let fixture = try LexicalFixture(
+      "先頭\n\n次の段落\n\n> 引用の一\n>\n> 引用の二\n\n- 項目\n\n| a | b |\n| - | - |\n| c | d |")
+    defer { fixture.window.isHidden = true }
+    let editor = fixture.editor
+    // 長さ4は先頭の段落から次の段落までまたぐ選択にする。
+    editor.selectedRange = NSRange(location: 1, length: selectionLength)
+    editor.setMarkedText(composition, selectedRange: NSRange(location: composition.utf16.count, length: 0))
+    try expectDecorationsFollowText(editor, phase: "変換中")
+    editor.unmarkText()
+    try expectDecorationsFollowText(editor, phase: "変換確定後")
+    editor.undoManager?.undo()
+    try expectDecorationsFollowText(editor, phase: "変換確定のUndo後")
+    #expect(editor.failure == nil)
+  }
+
+  @Test("引用の末尾で複数行になる文字を変換しても、引用線が変換中の文字の末尾まで届く",
+    arguments: [String(repeating: "日本語のコメント", count: 12), "日本語\n次の行\nさらに次の行"])
+  func quoteBarCoversComposition(_ composition: String) throws {
+    let fixture = try LexicalFixture("> 引用")
+    defer { fixture.window.isHidden = true }
+    let editor = fixture.editor
+    editor.selectedRange = NSRange(location: (editor.text as NSString).length, length: 0)
+    editor.setMarkedText(composition, selectedRange: NSRange(location: composition.utf16.count, length: 0))
+    editor.layoutIfNeeded()
+    let marked = try #require(editor.markedTextRange)
+    let bar = try #require(editor.subviews.first { $0.accessibilityIdentifier == "editor.quote-bar" })
+    #expect(bar.frame.maxY >= editor.caretRect(for: marked.end).maxY)
+  }
+
+  @Test("表の直前で複数行の文字を変換しても、表の編集ボタンが表の位置に残る")
+  func tableButtonStaysDuringComposition() throws {
+    let fixture = try LexicalFixture("前\n\n| a | b |\n| - | - |\n| c | d |")
+    defer { fixture.window.isHidden = true }
+    let editor = fixture.editor
+    let before = (editor.text as NSString).range(of: "\u{FFFC}")
+    try #require(before.location != NSNotFound)
+    editor.selectedRange = NSRange(location: before.location, length: 0)
+    let composition = "日本語\n次の行"
+    editor.setMarkedText(composition, selectedRange: NSRange(location: composition.utf16.count, length: 0))
+    try #require(editor.markedTextRange != nil)
+    editor.layoutIfNeeded()
+    let found = (editor.text as NSString).range(of: "\u{FFFC}")
+    let start = try #require(editor.position(from: editor.beginningOfDocument, offset: found.location))
+    let end = try #require(editor.position(from: start, offset: found.length))
+    let attachment = editor.firstRect(for: try #require(editor.textRange(from: start, to: end)))
+    let table = try #require(editor.subviews.first { $0.accessibilityIdentifier == "editor.table" })
+    #expect(abs(table.frame.minY - attachment.minY) < 1)
   }
 
   @Test("コードブロックで日本語を変換中に行が増えても、濃い背景が未確定の文字まで覆う")

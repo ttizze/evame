@@ -311,22 +311,43 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
     overlayWidth = bounds.width
     for overlay in overlays { overlay.removeFromSuperview() }
     overlays = []
+    let decoratedUnits = snapshot.units.enumerated().filter { _, unit in
+      unit.block?.type == "code" || unit.context.quote > 0
+        || unit.atomic?.type == "table" || !unit.listItems.isEmpty
+    }
+    guard !decoratedUnits.isEmpty else { return }
+    // 画面外の文字は推定位置のことがある。範囲ごとの位置取得で配置が動かないよう先に確定する。
+    if let textLayoutManager, let range = textLayoutManager.textContentManager?.documentRange {
+      textLayoutManager.ensureLayout(for: range)
+    }
     let left = textContainerInset.left + textContainer.lineFragmentPadding
-    for (index, unit) in snapshot.units.enumerated() {
-      guard let start = position(from: beginningOfDocument, offset: unitStarts[index]),
-        let end = position(from: start, offset: length(unit))
+    let markedStart = markedTextRange.map { offset(from: beginningOfDocument, to: $0.start) }
+    let markedLengthChange = textStorage.length - (rendered as NSString).length
+    // 未確定入力はUIKitだけが持つ。後続のブロックも、変換前の文書ではなく現在の表示位置へ合わせる。
+    func textPosition(at sourceOffset: Int) -> UITextPosition? {
+      let location: Int
+      if let markedStart, sourceOffset > markedStart {
+        location = max(markedStart, sourceOffset + markedLengthChange)
+      } else {
+        location = sourceOffset
+      }
+      return position(from: beginningOfDocument, offset: location)
+    }
+    for (index, unit) in decoratedUnits {
+      guard let start = textPosition(at: unitStarts[index]),
+        let end = textPosition(at: unitStarts[index] + length(unit))
       else { continue }
       let first = caretRect(for: start)
+      // 変換中の文字は表示単位の長さに含まれないため、この単位の中にあれば下端をその末尾まで伸ばす。
+      var bottom = caretRect(for: end).maxY
+      if let marked = markedTextRange, offset(from: start, to: marked.start) >= 0,
+        offset(from: marked.start, to: end) >= 0
+      {
+        bottom = max(bottom, caretRect(for: marked.end).maxY)
+      }
       if unit.block?.type == "code" {
         // 文字の後ろに描くため、入力欄の文字より下に重ねる。
         let x = left + indentation(lists: unit.context.lists.count, quote: unit.context.quote, footnote: unit.context.footnote != nil)
-        // 変換中の文字は表示単位の長さに含まれないため、この単位の中にあれば下端をその末尾まで伸ばす。
-        var bottom = caretRect(for: end).maxY
-        if let marked = markedTextRange, offset(from: start, to: marked.start) >= 0,
-          offset(from: marked.start, to: end) >= 0
-        {
-          bottom = max(bottom, caretRect(for: marked.end).maxY)
-        }
         let background = UIView(
           frame: CGRect(
             x: x, y: first.minY - 8,
@@ -341,10 +362,9 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
       }
       if unit.context.quote > 0 {
         // 同じ引用の次の単位があれば、段落の間隔も含めてその先頭まで線をつなげる。
-        var bottom = caretRect(for: end).maxY
         if snapshot.units.indices.contains(index + 1),
           snapshot.units[index + 1].context.quote >= unit.context.quote,
-          let next = position(from: beginningOfDocument, offset: unitStarts[index + 1])
+          let next = textPosition(at: unitStarts[index + 1])
         {
           bottom = max(bottom, caretRect(for: next).minY)
         }
@@ -356,8 +376,10 @@ final class LexicalTextView: UITextView, UITextViewDelegate {
         bar.accessibilityIdentifier = "editor.quote-bar"
         add(bar)
       }
-      if unit.atomic?.type == "table", let range = textRange(from: start, to: end) {
-        // 表は本文中では1つの部品として表示し、押すと表の編集画面を開く。
+      if unit.atomic?.type == "table", let attachment = position(from: end, offset: -1),
+        let range = textRange(from: attachment, to: end)
+      {
+        // 表は本文中では1つの部品として表示し、押すと表の編集画面を開く。直前の変換中の文字は範囲に含めない。
         let button = UIButton(
           type: .custom, primaryAction: UIAction { [weak self] _ in self?.onTableTap(index) })
         button.accessibilityLabel = String(localized: "表を編集")
