@@ -1,5 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { z } from "zod";
+import { ExportPagesButton } from "@/app/[locale]/(common-layout)/[handle]/page-management/_components/export-pages-button";
 import { PageManagementTabClient } from "@/app/[locale]/(common-layout)/[handle]/page-management/_components/page-management-tab/client";
 import { getPageManagementData } from "./$locale/-page-management-data";
 
@@ -39,6 +40,7 @@ function PageManagementRoute() {
 
 	return (
 		<div className="mx-auto max-w-4xl py-10">
+			<ExportPagesButton />
 			<PageManagementTabClient
 				currentPage={page}
 				handle={handle}

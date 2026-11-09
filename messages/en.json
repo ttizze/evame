@@ -1,4 +1,13 @@
 {
+	"PageExport": {
+		"button": "Export Markdown and images",
+		"preparing": "Preparing export…",
+		"description": "Download all your original documents, including private and archived documents, with stored images in a ZIP file.",
+		"imageNote": "External or unavailable images keep their original links and are listed in the export report.",
+		"done": "Your export is ready.",
+		"failed": "Export failed. Please try again.",
+		"signInRequired": "Please sign in again, then retry the export."
+	},
 	"MagicLinkForm": {
 		"invalidEmail": "Please enter a valid email address.",
 		"sendFailed": "Failed to send magic link. Please try again."
