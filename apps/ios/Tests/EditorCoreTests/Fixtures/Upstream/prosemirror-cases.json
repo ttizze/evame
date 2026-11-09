@@ -1,0 +1,667 @@
+[
+  {
+    "command": "joinBackward",
+    "name": "can join paragraphs",
+    "line": 38
+  },
+  {
+    "command": "joinBackward",
+    "name": "can join out of a nested node",
+    "line": 41
+  },
+  {
+    "command": "joinBackward",
+    "name": "moves a block into an adjacent wrapper",
+    "line": 45
+  },
+  {
+    "command": "joinBackward",
+    "name": "moves a block into an adjacent wrapper from another wrapper",
+    "line": 49
+  },
+  {
+    "command": "joinBackward",
+    "name": "joins the wrapper to a subsequent one if applicable",
+    "line": 53
+  },
+  {
+    "command": "joinBackward",
+    "name": "moves a block into a list item",
+    "line": 57
+  },
+  {
+    "command": "joinBackward",
+    "name": "joins lists",
+    "line": 61
+  },
+  {
+    "command": "joinBackward",
+    "name": "joins list items",
+    "line": 65
+  },
+  {
+    "command": "joinBackward",
+    "name": "lifts out of a list at the start",
+    "line": 69
+  },
+  {
+    "command": "joinBackward",
+    "name": "joins lists before and after",
+    "line": 72
+  },
+  {
+    "command": "joinBackward",
+    "name": "deletes leaf nodes before",
+    "line": 76
+  },
+  {
+    "command": "joinBackward",
+    "name": "lifts before it deletes",
+    "line": 79
+  },
+  {
+    "command": "joinBackward",
+    "name": "does nothing at start of doc",
+    "line": 82
+  },
+  {
+    "command": "joinBackward",
+    "name": "can join single-textblock-child nodes",
+    "line": 85
+  },
+  {
+    "command": "joinBackward",
+    "name": "doesn't return true on empty blocks that can't be deleted",
+    "line": 103
+  },
+  {
+    "command": "joinBackward",
+    "name": "doesn't join surrounding nodes of different types",
+    "line": 106
+  },
+  {
+    "command": "joinTextblockBackward",
+    "name": "can join paragraphs",
+    "line": 112
+  },
+  {
+    "command": "joinTextblockBackward",
+    "name": "can join if second block is wrapped",
+    "line": 115
+  },
+  {
+    "command": "joinTextblockBackward",
+    "name": "can join if first block is wrapped",
+    "line": 118
+  },
+  {
+    "command": "joinTextblockBackward",
+    "name": "does nothing at start of doc",
+    "line": 121
+  },
+  {
+    "command": "joinTextblockBackward",
+    "name": "can join if inside a nested block",
+    "line": 124
+  },
+  {
+    "command": "selectNodeBackward",
+    "name": "selects the node before the cut",
+    "line": 131
+  },
+  {
+    "command": "selectNodeBackward",
+    "name": "does nothing when not at the start of the textblock",
+    "line": 135
+  },
+  {
+    "command": "deleteSelection",
+    "name": "deletes part of a text node",
+    "line": 140
+  },
+  {
+    "command": "deleteSelection",
+    "name": "can delete across blocks",
+    "line": 143
+  },
+  {
+    "command": "deleteSelection",
+    "name": "deletes node selections",
+    "line": 146
+  },
+  {
+    "command": "deleteSelection",
+    "name": "moves selection after deleted node",
+    "line": 149
+  },
+  {
+    "command": "deleteSelection",
+    "name": "moves selection before deleted node at end",
+    "line": 153
+  },
+  {
+    "command": "joinForward",
+    "name": "joins two textblocks",
+    "line": 159
+  },
+  {
+    "command": "joinForward",
+    "name": "keeps type of second node when first is empty",
+    "line": 162
+  },
+  {
+    "command": "joinForward",
+    "name": "clears nodes from joined node that wouldn't be allowed in target node",
+    "line": 165
+  },
+  {
+    "command": "joinForward",
+    "name": "does nothing at the end of the document",
+    "line": 168
+  },
+  {
+    "command": "joinForward",
+    "name": "deletes a leaf node after the current block",
+    "line": 171
+  },
+  {
+    "command": "joinForward",
+    "name": "pulls the next block into the current list item",
+    "line": 174
+  },
+  {
+    "command": "joinForward",
+    "name": "joins two blocks inside of a list item",
+    "line": 178
+  },
+  {
+    "command": "joinForward",
+    "name": "pulls the next block into a blockquote",
+    "line": 182
+  },
+  {
+    "command": "joinForward",
+    "name": "joins two blockquotes",
+    "line": 186
+  },
+  {
+    "command": "joinForward",
+    "name": "pulls the next block outside of a wrapping blockquote",
+    "line": 190
+  },
+  {
+    "command": "joinForward",
+    "name": "joins two lists",
+    "line": 194
+  },
+  {
+    "command": "joinForward",
+    "name": "does nothing in a nested node at the end of the document",
+    "line": 198
+  },
+  {
+    "command": "joinForward",
+    "name": "deletes a leaf node at the end of the document",
+    "line": 202
+  },
+  {
+    "command": "joinForward",
+    "name": "moves before it deletes a leaf node",
+    "line": 206
+  },
+  {
+    "command": "joinForward",
+    "name": "does nothing when it can't join",
+    "line": 210
+  },
+  {
+    "command": "joinTextblockForward",
+    "name": "can join paragraphs",
+    "line": 216
+  },
+  {
+    "command": "joinTextblockForward",
+    "name": "can join if second block is wrapped",
+    "line": 219
+  },
+  {
+    "command": "joinTextblockForward",
+    "name": "can join if first block is wrapped",
+    "line": 222
+  },
+  {
+    "command": "joinTextblockForward",
+    "name": "does nothing at end of doc",
+    "line": 225
+  },
+  {
+    "command": "selectNodeForward",
+    "name": "selects the next node",
+    "line": 230
+  },
+  {
+    "command": "selectNodeForward",
+    "name": "does nothing at end of document",
+    "line": 234
+  },
+  {
+    "command": "joinUp",
+    "name": "joins identical parent blocks",
+    "line": 239
+  },
+  {
+    "command": "joinUp",
+    "name": "does nothing in the first block",
+    "line": 243
+  },
+  {
+    "command": "joinUp",
+    "name": "joins lists",
+    "line": 246
+  },
+  {
+    "command": "joinUp",
+    "name": "joins list items",
+    "line": 250
+  },
+  {
+    "command": "joinUp",
+    "name": "doesn't look at ancestors when a block is selected",
+    "line": 254
+  },
+  {
+    "command": "joinUp",
+    "name": "can join selected block nodes",
+    "line": 257
+  },
+  {
+    "command": "joinDown",
+    "name": "joins parent blocks",
+    "line": 263
+  },
+  {
+    "command": "joinDown",
+    "name": "doesn't join with the block before",
+    "line": 267
+  },
+  {
+    "command": "joinDown",
+    "name": "joins lists",
+    "line": 270
+  },
+  {
+    "command": "joinDown",
+    "name": "joins list items",
+    "line": 274
+  },
+  {
+    "command": "joinDown",
+    "name": "doesn't look at parent nodes of a selected node",
+    "line": 278
+  },
+  {
+    "command": "joinDown",
+    "name": "can join selected nodes",
+    "line": 281
+  },
+  {
+    "command": "lift",
+    "name": "lifts out of a parent block",
+    "line": 287
+  },
+  {
+    "command": "lift",
+    "name": "splits the parent block when necessary",
+    "line": 290
+  },
+  {
+    "command": "lift",
+    "name": "can lift out of a list",
+    "line": 294
+  },
+  {
+    "command": "lift",
+    "name": "does nothing for a top-level block",
+    "line": 297
+  },
+  {
+    "command": "lift",
+    "name": "lifts out of the innermost parent",
+    "line": 300
+  },
+  {
+    "command": "lift",
+    "name": "can lift a node selection",
+    "line": 304
+  },
+  {
+    "command": "lift",
+    "name": "lifts out of a nested list",
+    "line": 308
+  },
+  {
+    "command": "wrapIn",
+    "name": "can wrap a paragraph",
+    "line": 316
+  },
+  {
+    "command": "wrapIn",
+    "name": "wraps multiple pragraphs",
+    "line": 319
+  },
+  {
+    "command": "wrapIn",
+    "name": "wraps an already wrapped node",
+    "line": 323
+  },
+  {
+    "command": "wrapIn",
+    "name": "can wrap a node selection",
+    "line": 327
+  },
+  {
+    "command": "splitBlock",
+    "name": "splits a paragraph at the end",
+    "line": 333
+  },
+  {
+    "command": "splitBlock",
+    "name": "split a pragraph in the middle",
+    "line": 336
+  },
+  {
+    "command": "splitBlock",
+    "name": "splits a paragraph from a heading",
+    "line": 339
+  },
+  {
+    "command": "splitBlock",
+    "name": "splits a heading in two when in the middle",
+    "line": 342
+  },
+  {
+    "command": "splitBlock",
+    "name": "deletes selected content",
+    "line": 345
+  },
+  {
+    "command": "splitBlock",
+    "name": "splits a parent block when a node is selected",
+    "line": 348
+  },
+  {
+    "command": "splitBlock",
+    "name": "doesn't split the parent block when at the start",
+    "line": 352
+  },
+  {
+    "command": "splitBlock",
+    "name": "splits off a normal paragraph when splitting at the start of a textblock",
+    "line": 355
+  },
+  {
+    "command": "splitBlock",
+    "name": "splits a paragraph from a heading when a double heading isn't allowed",
+    "line": 377
+  },
+  {
+    "command": "splitBlock",
+    "name": "won't try to reset the type of an empty leftover when the schema forbids it",
+    "line": 384
+  },
+  {
+    "command": "splitBlock",
+    "name": "can split an inline node",
+    "line": 391
+  },
+  {
+    "command": "splitBlock",
+    "name": "prefers textblocks",
+    "line": 402
+  },
+  {
+    "command": "splitBlockAs",
+    "name": "splits to the appropriate type",
+    "line": 418
+  },
+  {
+    "command": "splitBlockAs",
+    "name": "passes an end-of-block flag",
+    "line": 422
+  },
+  {
+    "command": "splitBlockKeepMarks",
+    "name": "keeps marks when used after marked text",
+    "line": 429
+  },
+  {
+    "command": "splitBlockKeepMarks",
+    "name": "preserves the stored marks",
+    "line": 435
+  },
+  {
+    "command": "liftEmptyBlock",
+    "name": "splits the parent block when there are sibling before",
+    "line": 444
+  },
+  {
+    "command": "liftEmptyBlock",
+    "name": "lifts the last child out of its parent",
+    "line": 448
+  },
+  {
+    "command": "liftEmptyBlock",
+    "name": "lifts an only child",
+    "line": 452
+  },
+  {
+    "command": "liftEmptyBlock",
+    "name": "does not violate schema constraints",
+    "line": 456
+  },
+  {
+    "command": "liftEmptyBlock",
+    "name": "lifts out of a list",
+    "line": 459
+  },
+  {
+    "command": "createParagraphNear",
+    "name": "creates a paragraph before a selected node at the start of the doc",
+    "line": 465
+  },
+  {
+    "command": "createParagraphNear",
+    "name": "creates a paragraph after a lone selected node",
+    "line": 468
+  },
+  {
+    "command": "createParagraphNear",
+    "name": "creates a paragraph after selected nodes not at the start of the doc",
+    "line": 471
+  },
+  {
+    "command": "setBlockType",
+    "name": "can change the type of a paragraph",
+    "line": 480
+  },
+  {
+    "command": "setBlockType",
+    "name": "can change the type of a code block",
+    "line": 483
+  },
+  {
+    "command": "setBlockType",
+    "name": "can make a heading into a paragraph",
+    "line": 486
+  },
+  {
+    "command": "setBlockType",
+    "name": "preserves marks",
+    "line": 489
+  },
+  {
+    "command": "setBlockType",
+    "name": "acts on node selections",
+    "line": 492
+  },
+  {
+    "command": "setBlockType",
+    "name": "can make a block a code block",
+    "line": 495
+  },
+  {
+    "command": "setBlockType",
+    "name": "clears marks when necessary",
+    "line": 498
+  },
+  {
+    "command": "setBlockType",
+    "name": "acts on multiple blocks when possible",
+    "line": 501
+  },
+  {
+    "command": "setBlockType",
+    "name": "returns false when all textblocks in the selection are already this type",
+    "line": 505
+  },
+  {
+    "command": "setBlockType",
+    "name": "returns false when the selected blocks can't be changed",
+    "line": 508
+  },
+  {
+    "command": "selectParentNode",
+    "name": "selects the whole textblock",
+    "line": 513
+  },
+  {
+    "command": "selectParentNode",
+    "name": "goes one level up when on a block",
+    "line": 517
+  },
+  {
+    "command": "selectParentNode",
+    "name": "goes further up",
+    "line": 521
+  },
+  {
+    "command": "selectParentNode",
+    "name": "stops at the top level",
+    "line": 525
+  },
+  {
+    "command": "autoJoin",
+    "name": "joins lists when deleting a paragraph between them",
+    "line": 531
+  },
+  {
+    "command": "autoJoin",
+    "name": "doesn't join lists when deleting an item inside of them",
+    "line": 536
+  },
+  {
+    "command": "autoJoin",
+    "name": "joins lists when wrapping a paragraph after them in a list",
+    "line": 541
+  },
+  {
+    "command": "autoJoin",
+    "name": "joins lists when wrapping a paragraph between them in a list",
+    "line": 546
+  },
+  {
+    "command": "autoJoin",
+    "name": "joins lists when lifting a list between them",
+    "line": 551
+  },
+  {
+    "command": "toggleMark",
+    "name": "can add a mark",
+    "line": 561
+  },
+  {
+    "command": "toggleMark",
+    "name": "can stack marks",
+    "line": 566
+  },
+  {
+    "command": "toggleMark",
+    "name": "can remove marks",
+    "line": 571
+  },
+  {
+    "command": "toggleMark",
+    "name": "can toggle pending marks",
+    "line": 576
+  },
+  {
+    "command": "toggleMark",
+    "name": "skips whitespace at selection ends when adding marks",
+    "line": 586
+  },
+  {
+    "command": "toggleMark",
+    "name": "doesn't skip whitespace-only selections",
+    "line": 591
+  },
+  {
+    "command": "toggleMark",
+    "name": "includes whitespace when asked",
+    "line": 596
+  },
+  {
+    "command": "toggleMark",
+    "name": "can add marks with remove-when-present off",
+    "line": 601
+  },
+  {
+    "command": "toggleMark",
+    "name": "can remove marks with remove-when-present off",
+    "line": 608
+  },
+  {
+    "command": "toggleMark",
+    "name": "can remove marks with trailing space when remove-when-present is off",
+    "line": 613
+  },
+  {
+    "command": "toggleMark",
+    "name": "enters inline atoms by default",
+    "line": 633
+  },
+  {
+    "command": "toggleMark",
+    "name": "doesn't enter inline atoms to add a mark when told not to",
+    "line": 640
+  },
+  {
+    "command": "toggleMark",
+    "name": "can apply styles inside inline atoms",
+    "line": 647
+  },
+  {
+    "command": "toggleMark",
+    "name": "can add a mark even if already active inside an inline atom",
+    "line": 654
+  },
+  {
+    "command": "toggleMark",
+    "name": "doesn't enter inline atoms to remove a mark when told not to",
+    "line": 661
+  },
+  {
+    "command": "selectTextblockStart and selectTextblockEnd",
+    "name": "can move the cursor when the selection is empty",
+    "line": 670
+  },
+  {
+    "command": "selectTextblockStart and selectTextblockEnd",
+    "name": "can move the cursor when the selection is not empty",
+    "line": 678
+  },
+  {
+    "command": "selectTextblockStart and selectTextblockEnd",
+    "name": "can move the cursor when the selection crosses multiple text blocks",
+    "line": 686
+  }
+]

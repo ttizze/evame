@@ -1,0 +1,276 @@
+import XCTest
+
+@MainActor
+final class EditorUITests: XCTestCase {
+  func test空のチェック項目を再読み込みして入力やReturnで余分な空白や項目を増やさない() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let source = app.textViews["editor.markdown-source"]
+    XCTAssertTrue(source.waitForExistence(timeout: 5))
+    source.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.02)).tap()
+    source.typeText("\n\n- [ ] &#x20;\n- [ ] &#x20;\n\n")
+    app.navigationBars.buttons["editor.source.done"].tap()
+    let first = app.textViews.matching(
+      NSPredicate(format: "label == %@ AND value == %@", "チェック項目", "")
+    ).firstMatch
+    XCTAssertTrue(first.waitForExistence(timeout: 5))
+    XCTAssertEqual(first.value as? String, "")
+    first.tap()
+    app.typeText("買い物")
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    XCTAssertTrue((source.value as? String)?.contains("- [ ] 買い物") == true)
+    app.navigationBars.buttons["editor.source.done"].tap()
+    let second = app.textViews.matching(
+      NSPredicate(format: "label == %@ AND value == %@", "チェック項目", "")
+    ).firstMatch
+    XCTAssertTrue(second.waitForExistence(timeout: 5))
+    XCTAssertEqual(second.value as? String, "")
+    second.tap()
+    app.typeText("\n外側")
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let saved = source.value as? String ?? ""
+    XCTAssertTrue(saved.contains("- [ ] 買い物\n\n外側"), saved)
+    XCTAssertFalse(saved.contains("- [ ] 外側"), saved)
+  }
+
+  func test番号付きリストを字下げして戻した後も同じ項目へ入力できる() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    let item = app.textViews["次の項目"]
+    for _ in 0..<6 where !item.isHittable { app.swipeUp() }
+    XCTAssertTrue(item.isHittable)
+    item.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.9)).tap()
+    let indent = app.buttons["editor.indent"]
+    XCTAssertTrue(indent.isEnabled)
+    indent.tap()
+    let outdent = app.buttons["editor.outdent"]
+    XCTAssertTrue(outdent.isEnabled)
+    outdent.tap()
+    app.typeText("続き")
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let source = app.textViews.firstMatch.value as? String ?? ""
+    XCTAssertTrue(source.contains("3. 番号を保持\n4. 次の項目続き"), source)
+  }
+
+  func test斜体ボタンで日本語を入力して解除後の文字と区別できる() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    let heading = app.textViews["日本語の執筆 👩🏽‍💻"]
+    XCTAssertTrue(heading.waitForExistence(timeout: 10))
+    heading.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.9)).tap()
+    app.typeText("\n")
+    let italic = app.buttons["editor.italic"]
+    italic.tap()
+    XCTAssertTrue(italic.isSelected)
+    app.typeText("日本語italic")
+    italic.tap()
+    XCTAssertFalse(italic.isSelected)
+    app.typeText("通常plain")
+    let screenshot = XCTAttachment(screenshot: app.screenshot())
+    screenshot.name = "日本語と英字の斜体と解除後の通常文字"
+    screenshot.lifetime = .keepAlways
+    add(screenshot)
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let source = app.textViews.firstMatch.value as? String ?? ""
+    XCTAssertTrue(source.contains("*日本語italic*通常plain"), source)
+  }
+
+  func test原文編集から戻った後は古い構造変更のUndoを残さない() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    let heading = app.textViews["日本語の執筆 👩🏽‍💻"]
+    XCTAssertTrue(heading.waitForExistence(timeout: 10))
+    heading.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.9)).tap()
+    app.typeText("\n")
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let source = app.textViews["editor.markdown-source"]
+    XCTAssertTrue(source.waitForExistence(timeout: 5))
+    source.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.02)).tap()
+    source.typeText("source-latest\n\n")
+    app.navigationBars.buttons["editor.source.done"].tap()
+    XCTAssertTrue(app.textViews["source-latest"].exists)
+    heading.tap()
+    let more = app.buttons["editor.more"]
+    let menu = app.scrollViews["editor.keyboard-actions"]
+    for _ in 0..<4 where !more.isHittable { menu.swipeLeft() }
+    more.tap()
+    let undo = app.buttons["元に戻す"]
+    XCTAssertTrue(undo.waitForExistence(timeout: 5))
+    XCTAssertFalse(undo.isEnabled)
+  }
+
+  func test見出しを編集してMarkdown表示で確認する() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    let heading = app.textViews["日本語の執筆 👩🏽‍💻"]
+    XCTAssertTrue(heading.waitForExistence(timeout: 10))
+    heading.tap()
+    heading.typeText("test")
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    XCTAssertTrue(app.textViews.firstMatch.waitForExistence(timeout: 5))
+    XCTAssertTrue((app.textViews.firstMatch.value as? String)?.contains("test") == true)
+    XCTAssertTrue((app.textViews.firstMatch.value as? String)?.contains("[^note]: 脚注の内容。") == true)
+  }
+
+  func test表のセルを編集して本文へ戻っても変更を保持する() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    let button = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "表を編集")).firstMatch
+    for _ in 0..<6 where !button.isHittable { app.swipeUp() }
+    XCTAssertTrue(button.isHittable)
+    button.tap()
+    let cell = app.textViews["日本語"]
+    XCTAssertTrue(cell.waitForExistence(timeout: 5))
+    cell.tap()
+    cell.typeText("cell")
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    XCTAssertTrue((app.textViews.firstMatch.value as? String)?.contains("cell") == true)
+    XCTAssertTrue(
+      (app.textViews.firstMatch.value as? String)?.contains("| パイプ \\| | `code` |") == true)
+  }
+
+  func test見出しボタンで書式を変えても入力とMarkdown出力を続けられる() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    let heading = app.textViews["日本語の執筆 👩🏽‍💻"]
+    XCTAssertTrue(heading.waitForExistence(timeout: 10))
+    heading.tap()
+    app.buttons["editor.h2"].tap()
+    XCTAssertTrue(app.buttons["editor.h2"].isSelected)
+    app.typeText("menu")
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let source = app.textViews.firstMatch.value as? String ?? ""
+    XCTAssertTrue(source.hasPrefix("## "))
+    XCTAssertTrue(source.contains("menu"))
+    XCTAssertTrue(source.contains("[^note]: 脚注の内容。"))
+  }
+
+  func test太字を直接押して入力したMarkdown記法も装飾に変わる() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    let heading = app.textViews["日本語の執筆 👩🏽‍💻"]
+    XCTAssertTrue(heading.waitForExistence(timeout: 10))
+    heading.tap()
+    let bold = app.buttons["editor.bold"]
+    XCTAssertTrue(bold.isHittable)
+    let screenshot = XCTAttachment(screenshot: app.screenshot())
+    screenshot.name = "キーボード上の編集メニュー"
+    screenshot.lifetime = .keepAlways
+    add(screenshot)
+    bold.tap()
+    app.typeText("bold")
+    bold.tap()
+    app.typeText(" **markdown**")
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let source = app.textViews.firstMatch.value as? String ?? ""
+    XCTAssertTrue(source.contains("**bold**"), source)
+    XCTAssertTrue(source.contains("**markdown**"), source)
+    XCTAssertFalse(source.contains("\\*\\*markdown"))
+  }
+
+  func testMarkdown原文を直接編集して本文へ戻っても入力を保持する() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let source = app.textViews["editor.markdown-source"]
+    XCTAssertTrue(source.waitForExistence(timeout: 5))
+    source.tap()
+    source.typeText("\n\n## source-edit\n")
+    app.navigationBars.buttons["editor.source.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    XCTAssertTrue((source.value as? String)?.contains("## source-edit") == true)
+    XCTAssertTrue((source.value as? String)?.contains("[^note]: 脚注の内容。") == true)
+  }
+
+  func testリスト記法で入力し改行すると次の項目を続けて書ける() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    let heading = app.textViews["日本語の執筆 👩🏽‍💻"]
+    XCTAssertTrue(heading.waitForExistence(timeout: 10))
+    heading.tap()
+    app.typeText("\n- one\ntwo")
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let source = app.textViews.firstMatch.value as? String ?? ""
+    XCTAssertTrue(source.contains("- one\n- two"), source)
+  }
+
+  func test空のリスト項目をBackspaceで消して前の項目へ入力を続けられる() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    let heading = app.textViews["日本語の執筆 👩🏽‍💻"]
+    XCTAssertTrue(heading.waitForExistence(timeout: 10))
+    heading.tap()
+    app.typeText("\n- one\n")
+    app.typeText(XCUIKeyboardKey.delete.rawValue + "X")
+    XCTAssertTrue(app.buttons["editor.done"].isHittable)
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let source = app.textViews.firstMatch.value as? String ?? ""
+    XCTAssertTrue(source.contains("- oneX"), source)
+    XCTAssertFalse(source.contains("- one\n- X"), source)
+  }
+
+  func test入れ子のリストは文字のある項目の改行で深さを保ち空の項目の改行だけ一段戻る() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    let heading = app.textViews["日本語の執筆 👩🏽‍💻"]
+    XCTAssertTrue(heading.waitForExistence(timeout: 10))
+    heading.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.9)).tap()
+    app.typeText("\n- parent\nchild")
+    app.buttons["editor.indent"].tap()
+    app.typeText("\nnext\n\nouter")
+    XCTAssertTrue(app.buttons["editor.done"].isHittable)
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let source = app.textViews.firstMatch.value as? String ?? ""
+    XCTAssertTrue(source.contains("- parent\n  - child\n  - next\n- outer"), source)
+  }
+
+  func test横スクロール先の画像ボタンから写真選択を開いてキャンセルしても入力を続けられる() {
+    let app = XCUIApplication()
+    app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+    app.launch()
+    let heading = app.textViews["日本語の執筆 👩🏽‍💻"]
+    XCTAssertTrue(heading.waitForExistence(timeout: 10))
+    heading.tap()
+    let menu = app.scrollViews["editor.keyboard-actions"]
+    XCTAssertTrue(menu.waitForExistence(timeout: 10))
+    let image = app.buttons["editor.image"]
+    for _ in 0..<3 where !image.isHittable { menu.swipeLeft() }
+    XCTAssertTrue(image.isHittable)
+    image.tap()
+    let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["キャンセル", "Cancel"]))
+      .firstMatch
+    XCTAssertTrue(cancel.waitForExistence(timeout: 10))
+    cancel.tap()
+    XCTAssertTrue(app.buttons["editor.done"].waitForExistence(timeout: 5))
+    app.typeText("photocancel")
+    app.buttons["editor.done"].tap()
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    XCTAssertTrue((app.textViews.firstMatch.value as? String)?.contains("photocancel") == true)
+  }
+}

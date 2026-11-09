@@ -1,0 +1,8 @@
+{
+	"name": "evame-vditor-probe",
+	"private": true,
+	"type": "module",
+	"dependencies": {
+		"vditor": "4.0.1"
+	}
+}
