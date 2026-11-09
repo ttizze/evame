@@ -1,7 +1,7 @@
 import { $isCodeNode } from "@lexical/code-core";
 import { $generateNodesFromDOM } from "@lexical/html";
+import { $generateNodesFromMarkdownString } from "@lexical/mdast";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $createQuoteNode } from "@lexical/rich-text";
 import { $insertNodeToNearestRoot, mergeRegister } from "@lexical/utils";
 import {
 	$create,
@@ -24,8 +24,13 @@ import { useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { callReaderAction } from "@/app/_service/reader-action";
 import { getXPostId } from "@/app/[locale]/_domain/get-x-post-id";
-import { importMarkdown } from "./markdown";
-import { ImageNode, imageState, TweetNode, tweetState } from "./media-nodes";
+import {
+	ImageNode,
+	imageState,
+	TweetNode,
+	tweetState,
+	UPLOADING_IMAGE_SRC,
+} from "./media-nodes";
 
 export const UPLOAD_IMAGE_COMMAND = createCommand<File>("UPLOAD_IMAGE");
 
@@ -41,7 +46,7 @@ export function ImagePlugin() {
 			editor.update(
 				() => {
 					const image = $setState($create(ImageNode), imageState, {
-						src: "/loading.gif",
+						src: UPLOADING_IMAGE_SRC,
 						alt: file.name,
 						title: null,
 					});
@@ -153,6 +158,8 @@ export function ImagePlugin() {
 						return true;
 					}
 					if (!$isRangeSelection(selection)) return false;
+					// エディタ内でのコピーは、HTMLや脚注のノードを失わないLexical標準の貼り付けに任せる。
+					if (clipboard?.getData("application/x-lexical-editor")) return false;
 					if (getXPostId(text.trim()) !== null) {
 						event.preventDefault();
 						$insertNodeToNearestRoot(
@@ -175,9 +182,7 @@ export function ImagePlugin() {
 					}
 					if (!text) return false;
 					event.preventDefault();
-					const container = $createQuoteNode();
-					importMarkdown(text, container);
-					selection.insertNodes(container.getChildren());
+					selection.insertNodes($generateNodesFromMarkdownString(text));
 					return true;
 				},
 				COMMAND_PRIORITY_HIGH,

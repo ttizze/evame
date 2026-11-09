@@ -24,7 +24,7 @@ const formSchema = z.object({
 });
 
 export type EditPageContentActionState = ActionResponse<
-	undefined,
+	{ pageId: number },
 	z.input<typeof formSchema>
 >;
 
@@ -76,7 +76,7 @@ export const editPageContent = createServerFn({ method: "POST" })
 			userLocale,
 		});
 		try {
-			await processPageContent({
+			const page = await processPageContent({
 				title,
 				content: pageContent,
 				contentFormat,
@@ -89,7 +89,7 @@ export const editPageContent = createServerFn({ method: "POST" })
 			});
 			if (existingPage?.status !== "PUBLIC")
 				setResponseHeader("X-Evame-Reader-Changed", "false");
-			return { success: true, data: undefined };
+			return { success: true, data: { pageId: page.id } };
 		} catch (error) {
 			logger.error({ err: error }, "Failed to save page");
 			return { success: false, message: "Failed to save page" };

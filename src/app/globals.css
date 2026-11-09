@@ -327,6 +327,22 @@ body.virtual-keyboard-shown {
 	--radius-4xl: calc(var(--radius) + 16px);
 }
 
+.editor-list-decimal { list-style-type: decimal; }
+.editor-list-upper-alpha { list-style-type: upper-alpha; }
+.editor-list-lower-alpha { list-style-type: lower-alpha; }
+.editor-list-upper-roman { list-style-type: upper-roman; }
+.editor-list-lower-roman { list-style-type: lower-roman; }
+.editor-list-disc { list-style-type: disc; }
+.editor-list-circle { list-style-type: circle; }
+.editor-list-square { list-style-type: square; }
+.editor-list .editor-list { margin-block: 0; }
+.editor-list-item { margin-block: 0; }
+.editor-list-item::marker {
+	color: var(--listitem-marker-color, currentColor);
+	font-family: var(--listitem-marker-font-family, inherit);
+	font-size: var(--listitem-marker-font-size, inherit);
+}
+
 .editor-checklist-checked,
 .editor-checklist-unchecked {
 	position: relative;

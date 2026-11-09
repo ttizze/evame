@@ -1,4 +1,3 @@
-import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState, useTransition } from "react";
 import TextareaAutosize from "react-textarea-autosize";
@@ -42,7 +41,6 @@ export function EditPageClient({
 	translationContexts,
 	handle,
 }: EditPageClientProps) {
-	const router = useRouter();
 	const t = useTranslations("Editor");
 	const formRef = useRef<HTMLFormElement>(null);
 	const isKeyboardVisible = useKeyboardVisible();
@@ -52,6 +50,7 @@ export function EditPageClient({
 	const [isEditing, startEditing] = useTransition();
 	const editPageContentFn = useServerFn(editPageContent);
 	const [title, setTitle] = useState(initialTitle ?? "");
+	const [pageId, setPageId] = useState(pageWithTitleAndTags?.id);
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
 	const debouncedSubmit = useDebouncedCallback(() => {
@@ -65,6 +64,7 @@ export function EditPageClient({
 		event.preventDefault();
 		if (saving.current) return;
 		saving.current = true;
+		debouncedSubmit.cancel();
 		const version = changeVersion.current;
 		const formData = new FormData(event.currentTarget);
 		startEditing(async () => {
@@ -72,8 +72,8 @@ export function EditPageClient({
 				const result = await editPageContentFn({ data: formData });
 				setEditState(result);
 				if (result.success) {
+					setPageId(result.data.pageId);
 					setHasUnsavedChanges(changeVersion.current !== version);
-					await router.invalidate({ sync: true });
 				}
 			} catch {
 				setEditState({ success: false, message: "Failed to save page" });
@@ -130,7 +130,7 @@ export function EditPageClient({
 				initialStatus={pageWithTitleAndTags?.status || "DRAFT"}
 				isSaving={isEditing}
 				locale={userLocale}
-				pageId={pageWithTitleAndTags?.id}
+				pageId={pageId}
 				pageSlug={pageSlug}
 				targetLocales={targetLocales}
 				translationContexts={translationContexts}
@@ -163,7 +163,7 @@ export function EditPageClient({
 									name: tagPage.tag.name,
 								})) ?? []
 							}
-							pageId={pageWithTitleAndTags?.id}
+							pageId={pageId}
 						/>
 					</div>
 					<form id="edit-page-form" onSubmit={handleSubmit} ref={formRef}>

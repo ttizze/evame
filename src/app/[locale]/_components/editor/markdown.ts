@@ -1,313 +1,261 @@
-import { CodeNode } from "@lexical/code-core";
-import { AutoLinkNode, LinkNode } from "@lexical/link";
-import { ListItemNode, ListNode } from "@lexical/list";
+import { ListNode } from "@lexical/list";
 import {
-	$convertToMarkdownString,
-	$generateNodesFromMarkdownString,
-	CHECK_LIST,
-	HIGHLIGHT,
-	TRANSFORMERS,
-	type Transformer,
-} from "@lexical/markdown";
-import {
-	$createHorizontalRuleNode,
-	HorizontalRuleNode,
-} from "@lexical/react/LexicalHorizontalRuleNode";
-import { $createQuoteNode, HeadingNode, QuoteNode } from "@lexical/rich-text";
-import {
-	$createTableCellNode,
-	$createTableNode,
-	$createTableRowNode,
-	$isTableCellNode,
-	$isTableRowNode,
-	TableCellHeaderStates,
-	TableCellNode,
-	TableNode,
-	TableRowNode,
-} from "@lexical/table";
+	type FootnoteDefinition,
+	type FootnoteReference,
+	type Html,
+	MdastCommonMarkExtension,
+	MdastExtension,
+	MdastGfmExtension,
+	MdastShadowRootQuoteExtension,
+	type Paragraph,
+} from "@lexical/mdast";
 import {
 	$create,
-	$createParagraphNode,
 	$getState,
-	$isElementNode,
 	$setState,
-	type ElementNode,
+	configExtension,
+	defineExtension,
 } from "lexical";
-import type { Root } from "mdast";
-import { gfmToMarkdown } from "mdast-util-gfm";
-import { toMarkdown } from "mdast-util-to-markdown";
-import remarkGfm from "remark-gfm";
-import remarkParse from "remark-parse";
-import { unified } from "unified";
+import type { Definition, Image, ImageReference } from "mdast";
+import {
+	gfmFootnoteFromMarkdown,
+	gfmFootnoteToMarkdown,
+} from "mdast-util-gfm-footnote";
+import { gfmFootnote } from "micromark-extension-gfm-footnote";
 import { visit } from "unist-util-visit";
 import { getXPostId } from "@/app/[locale]/_domain/get-x-post-id";
 import {
 	ImageNode,
 	imageState,
-	MarkdownSourceNode,
-	sourceState,
 	TweetNode,
 	tweetState,
+	UPLOADING_IMAGE_SRC,
 } from "./media-nodes";
+import {
+	DefinitionNode,
+	definitionState,
+	FootnoteDefinitionNode,
+	FootnoteReferenceNode,
+	footnoteState,
+	HtmlBlockNode,
+	HtmlNode,
+	htmlState,
+} from "./syntax-nodes";
 
-const parser = unified().use(remarkParse).use(remarkGfm);
-const markdownOptions = { extensions: [gfmToMarkdown()] };
-
-export const editorNodes = [
-	HeadingNode,
-	QuoteNode,
-	CodeNode,
-	ListNode,
-	ListItemNode,
-	LinkNode,
-	AutoLinkNode,
-	TableNode,
-	TableRowNode,
-	TableCellNode,
-	ImageNode,
-	TweetNode,
-	MarkdownSourceNode,
-	HorizontalRuleNode,
-];
-
-const image: Transformer = {
-	type: "text-match",
-	dependencies: [ImageNode],
-	importRegExp: /!\[/,
-	regExp: /!\[(?:\\.|[^\]\\])*\]\((?:\\.|[^)\\])*\)$/,
-	trigger: ")",
-	export: (node) => {
-		if (!(node instanceof ImageNode)) return null;
-		const { src, alt, title } = $getState(node, imageState);
-		return toMarkdown(
-			{
-				type: "root",
-				children: [
-					{
-						type: "paragraph",
-						children: [{ type: "image", url: src, alt, title }],
-					},
-				],
-			},
-			markdownOptions,
-		).trim();
-	},
-	getEndIndex: (node, match) => {
-		const start = match.index ?? 0;
-		const first = parser.parse(node.getTextContent().slice(start)).children[0];
-		const image = first?.type === "paragraph" ? first.children[0] : null;
-		return image?.type === "image" && image.position?.end.offset !== undefined
-			? start + image.position.end.offset
-			: false;
-	},
-	replace: (node) => {
-		const first = parser.parse(node.getTextContent()).children[0];
-		if (first?.type !== "paragraph" || first.children[0]?.type !== "image")
-			return;
-		const { url, alt, title } = first.children[0];
-		node.replace(
-			$setState($create(ImageNode), imageState, {
-				src: url,
-				alt: alt ?? "",
-				title: title ?? null,
-			}),
-		);
-	},
-};
-
-const blocks: Transformer = {
-	type: "element",
-	dependencies: [TableNode, QuoteNode, MarkdownSourceNode, TweetNode],
-	regExp: /$a/,
-	replace: () => false,
-	export: (node, exportChildren) => {
-		if (node instanceof MarkdownSourceNode) return $getState(node, sourceState);
-		if (node instanceof TweetNode) return $getState(node, tweetState);
-		if (node instanceof QuoteNode)
-			return (
-				node
-					.getChildren()
-					.some((child) => $isElementNode(child) && !child.isInline())
-					? $convertToMarkdownString(markdownTransformers, node)
-					: exportChildren(node)
-			)
-				.split("\n")
-				.map((line) => (line ? `> ${line}` : ">"))
-				.join("\n");
-		if (!(node instanceof TableNode)) return null;
-		const rows = node.getChildren().filter($isTableRowNode);
-		const firstCells = rows[0]?.getChildren().filter($isTableCellNode) ?? [];
-		return toMarkdown(
-			{
-				type: "root",
-				children: [
-					{
-						type: "table",
-						align: firstCells.map((cell) => {
-							const paragraph = cell.getFirstChild();
-							const alignment = $isElementNode(paragraph)
-								? paragraph.getFormatType()
-								: null;
-							return alignment === "left" ||
-								alignment === "right" ||
-								alignment === "center"
-								? alignment
-								: null;
-						}),
-						children: rows.map((row) => ({
-							type: "tableRow",
-							children: row
-								.getChildren()
-								.filter($isTableCellNode)
-								.map((cell) => {
-									const content: Root["children"] = parser.parse(
-										$convertToMarkdownString(markdownTransformers, cell),
-									).children;
-									return {
-										type: "tableCell",
-										children: content.flatMap((part, index) => {
-											const nodes =
-												part.type === "paragraph"
-													? part.children.map((child) =>
-															child.type === "break"
-																? { type: "html" as const, value: "<br>" }
-																: child,
-														)
-													: [
-															{
-																type: "text" as const,
-																value: toMarkdown(
-																	{ type: "root", children: [part] },
-																	markdownOptions,
-																).trimEnd(),
-															},
-														];
-											return index
-												? [{ type: "html" as const, value: "<br>" }, ...nodes]
-												: nodes;
-										}),
-									};
-								}),
-						})),
-					},
-				],
-			},
-			markdownOptions,
-		).trim();
-	},
-};
-
-export const markdownTransformers: Transformer[] = [
-	blocks,
-	image,
-	CHECK_LIST,
-	{
-		type: "element",
-		dependencies: [HorizontalRuleNode],
-		regExp: /^(?:---|\*\*\*|___)\s$/,
-		replace: (parent) => {
-			parent.replace($createHorizontalRuleNode());
-		},
-		export: (node) => (node instanceof HorizontalRuleNode ? "---" : null),
-	},
-	...TRANSFORMERS.filter((transformer) => transformer !== HIGHLIGHT),
-];
-
-/** CommonMark/GFMのブロック境界をremarkで解析し、Lexicalへ取り込む。 */
-export function importMarkdown(markdown: string, container: ElementNode) {
-	container.clear();
-	const tree = parser.parse(markdown);
-	visit(tree, "html", (node, index, parent) => {
-		if (
-			parent &&
-			(parent.type === "paragraph" || parent.type === "tableCell") &&
-			typeof index === "number" &&
-			/^<br\s*\/?>$/i.test(node.value)
-		)
-			parent.children.splice(index, 1, { type: "break" });
-	});
-	for (const block of tree.children) {
-		const source = toMarkdown(
-			{ type: "root", children: [block] },
-			markdownOptions,
-		).trimEnd();
-		if (block.type === "thematicBreak") {
-			container.append($createHorizontalRuleNode());
-			continue;
-		}
-		if (block.type === "blockquote") {
-			const quote = $createQuoteNode();
-			importMarkdown(
-				toMarkdown({ type: "root", children: block.children }, markdownOptions),
-				quote,
-			);
-			container.append(quote);
-			continue;
-		}
-		if (block.type === "table") {
-			const table = $createTableNode();
-			for (const [rowIndex, row] of block.children.entries()) {
-				const tableRow = $createTableRowNode();
-				for (const [columnIndex, cell] of row.children.entries()) {
-					const tableCell = $createTableCellNode(
-						rowIndex === 0
-							? TableCellHeaderStates.ROW
-							: TableCellHeaderStates.NO_STATUS,
-					);
-					importMarkdown(
-						toMarkdown(
-							{
-								type: "root",
-								children: [{ type: "paragraph", children: cell.children }],
-							},
-							markdownOptions,
-						),
-						tableCell,
-					);
-					const align = block.align?.[columnIndex];
-					const paragraph = tableCell.getFirstChild();
-					if (align && $isElementNode(paragraph)) paragraph.setFormat(align);
-					tableRow.append(tableCell);
-				}
-				table.append(tableRow);
-			}
-			container.append(table);
-			continue;
-		}
-		if (
-			block.type === "paragraph" &&
-			block.children.length === 1 &&
-			block.children[0].type === "link" &&
-			getXPostId(block.children[0].url) !== null
-		) {
-			container.append(
-				$setState($create(TweetNode), tweetState, block.children[0].url),
-			);
-			continue;
-		}
-		let unsupported = false;
-		visit(block, (node) => {
-			if (
-				[
-					"html",
-					"definition",
-					"footnoteDefinition",
-					"footnoteReference",
-					"linkReference",
-					"imageReference",
-				].includes(node.type)
-			)
-				unsupported = true;
-		});
-		if (unsupported)
-			container.append(
-				$setState($create(MarkdownSourceNode), sourceState, source),
-			);
-		else
-			container.append(
-				...$generateNodesFromMarkdownString(source, markdownTransformers),
-			);
+declare module "mdast" {
+	interface HtmlData {
+		/** 段落の外に書かれたHTMLかどうか。MDASTの型だけでは文中のHTMLと区別できない。 */
+		block?: boolean;
 	}
-	if (container.getChildrenSize() === 0)
-		container.append($createParagraphNode());
 }
+
+/**
+ * 本文のMarkdownとLexicalの変換。CommonMark/GFMはLexical公式の`@lexical/mdast`に任せ、
+ * 公式にないEvameの画像・X埋め込み・HTML・脚注・参照定義の対応だけを足す。PCとiPhoneで共有する。
+ */
+export const MarkdownExtension = defineExtension({
+	name: "evame-markdown",
+	nodes: [
+		ImageNode,
+		TweetNode,
+		HtmlNode,
+		HtmlBlockNode,
+		FootnoteReferenceNode,
+		FootnoteDefinitionNode,
+		DefinitionNode,
+	],
+	dependencies: [
+		MdastCommonMarkExtension,
+		MdastGfmExtension,
+		MdastShadowRootQuoteExtension,
+		configExtension(MdastExtension, {
+			micromarkExtensions: [gfmFootnote()],
+			mdastExtensions: [
+				gfmFootnoteFromMarkdown(),
+				{
+					transforms: [
+						(tree) =>
+							visit(tree, "html", (node, _index, parent) => {
+								if (
+									parent &&
+									[
+										"root",
+										"blockquote",
+										"listItem",
+										"footnoteDefinition",
+									].includes(parent.type)
+								)
+									node.data = { ...node.data, block: true };
+							}),
+						(tree) =>
+							visit(tree, "listItem", (node) => {
+								// GFMでは記号の後に文字がないとチェック項目にならないため、
+								// 空のチェック項目は空白1文字の段落で書き出す。読み込みでは空の項目へ戻す。
+								const [paragraph] = node.children;
+								if (
+									node.checked != null &&
+									node.children.length === 1 &&
+									paragraph.type === "paragraph" &&
+									paragraph.children.length === 1 &&
+									paragraph.children[0].type === "text" &&
+									paragraph.children[0].value === " "
+								)
+									node.children = [];
+							}),
+					],
+				},
+			],
+			toMarkdownExtensions: [gfmFootnoteToMarkdown()],
+			// 公式の行内ショートカットにない画像も、記法を閉じた時点で画像にする。
+			inlineShortcutTypes: ["image"],
+			importRules: [
+				{
+					type: "image",
+					$import: (node: Image) =>
+						$setState($create(ImageNode), imageState, {
+							src: node.url,
+							alt: node.alt ?? "",
+							title: node.title ?? null,
+						}),
+				},
+				{
+					type: "imageReference",
+					$import: (node: ImageReference, context) => {
+						const definition = context.getDefinition(node.identifier);
+						return definition
+							? $setState($create(ImageNode), imageState, {
+									src: definition.url,
+									alt: node.alt ?? "",
+									title: definition.title ?? null,
+								})
+							: context.next();
+					},
+				},
+				{
+					// 表示側と同じく、Xの投稿URLだけの段落を埋め込みとして扱う。
+					type: "paragraph",
+					$import: (node: Paragraph, context) => {
+						const [link] = node.children;
+						return node.children.length === 1 &&
+							link?.type === "link" &&
+							getXPostId(link.url) !== null
+							? $setState($create(TweetNode), tweetState, link.url)
+							: context.next();
+					},
+				},
+				{
+					type: "html",
+					$import: (node: Html) =>
+						$setState(
+							$create(node.data?.block ? HtmlBlockNode : HtmlNode),
+							htmlState,
+							node.value,
+						),
+				},
+				{
+					type: "definition",
+					$import: (node: Definition) =>
+						$setState($create(DefinitionNode), definitionState, {
+							identifier: node.identifier,
+							label: node.label ?? null,
+							url: node.url,
+							title: node.title ?? null,
+						}),
+				},
+				{
+					type: "footnoteReference",
+					$import: (node: FootnoteReference) =>
+						$setState($create(FootnoteReferenceNode), footnoteState, {
+							identifier: node.identifier,
+							label: node.label ?? null,
+						}),
+				},
+				{
+					type: "footnoteDefinition",
+					$import: (node: FootnoteDefinition, context) =>
+						$setState($create(FootnoteDefinitionNode), footnoteState, {
+							identifier: node.identifier,
+							label: node.label ?? null,
+						}).append(...context.importChildren(node)),
+				},
+			],
+			exportRules: [
+				{
+					type: ListNode,
+					$export: (_node: ListNode, context) => {
+						const output = context.next();
+						for (const list of output)
+							visit(list, "listItem", (item) => {
+								if (
+									item.checked != null &&
+									item.children.every(
+										(child) =>
+											child.type === "paragraph" && child.children.length === 0,
+									)
+								)
+									item.children = [
+										{
+											type: "paragraph",
+											children: [{ type: "text", value: " " }],
+										},
+									];
+							});
+						return output;
+					},
+				},
+				{
+					type: ImageNode,
+					$export: (node: ImageNode) => {
+						const { src, alt, title } = $getState(node, imageState);
+						// Undoで戻った仮画像があっても、本文の保存は止めずに仮画像だけ除く。
+						if (src === UPLOADING_IMAGE_SRC) return [];
+						return { type: "image", url: src, alt, title };
+					},
+				},
+				{
+					type: TweetNode,
+					$export: (node: TweetNode) => {
+						const url = $getState(node, tweetState);
+						return {
+							type: "paragraph",
+							children: [
+								{ type: "link", url, children: [{ type: "text", value: url }] },
+							],
+						};
+					},
+				},
+				{
+					type: HtmlNode,
+					$export: (node: HtmlNode) => ({
+						type: "html",
+						value: $getState(node, htmlState),
+					}),
+				},
+				{
+					type: DefinitionNode,
+					$export: (node: DefinitionNode) => ({
+						type: "definition",
+						...$getState(node, definitionState),
+					}),
+				},
+				{
+					type: FootnoteReferenceNode,
+					$export: (node: FootnoteReferenceNode) => ({
+						type: "footnoteReference",
+						...$getState(node, footnoteState),
+					}),
+				},
+				{
+					type: FootnoteDefinitionNode,
+					$export: (node: FootnoteDefinitionNode, context) => ({
+						type: "footnoteDefinition",
+						...$getState(node, footnoteState),
+						children: context.exportChildren(
+							node,
+						) as FootnoteDefinition["children"],
+					}),
+				},
+			],
+		}),
+	],
+});

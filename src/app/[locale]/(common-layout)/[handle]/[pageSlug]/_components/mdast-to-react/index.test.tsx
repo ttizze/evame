@@ -37,6 +37,71 @@ const segments: Segment[] = Array.from(
 );
 
 describe("mdastToReact", () => {
+	for (const [name, value, expected] of [
+		[
+			"脚注の属性が付いた外部リンクの遷移先を書き換えない",
+			'<a data-footnote-ref href="https://example.com/x">外部</a>',
+			'href="https://example.com/x"',
+		],
+		[
+			"DailymotionのoEmbedが返すプレーヤーを表示する",
+			'<iframe src="https://geo.dailymotion.com/player.html?video=x84sh87&"></iframe>',
+			'src="https://geo.dailymotion.com/player.html?video=x84sh87',
+		],
+	]) {
+		it(name, () => {
+			const html = renderToStaticMarkup(
+				mdastToReact({
+					Tweet,
+					segments: [],
+					mdast: { type: "root", children: [{ type: "html", value }] },
+				}),
+			);
+			expect(html).toContain(expected);
+		});
+	}
+
+	it("脚注とその戻り先のリンクは本文内の同じIDへ飛ぶ", () => {
+		const html = renderToStaticMarkup(
+			mdastToReact({
+				Tweet,
+				segments: [],
+				mdast: {
+					type: "root",
+					children: [
+						{
+							type: "paragraph",
+							children: [
+								{ type: "text", value: "本文" },
+								{
+									type: "footnoteReference",
+									identifier: "note",
+									label: "note",
+								},
+							],
+						},
+						{
+							type: "footnoteDefinition",
+							identifier: "note",
+							label: "note",
+							children: [
+								{
+									type: "paragraph",
+									children: [{ type: "text", value: "注釈" }],
+								},
+							],
+						},
+					],
+				},
+			}),
+		);
+		const targets = [...html.matchAll(/href="#([^"]+)"/g)].map(
+			(match) => match[1],
+		);
+		expect(targets).toHaveLength(2);
+		for (const target of targets) expect(html).toContain(`id="${target}"`);
+	});
+
 	it("任意のCSSで画面を覆う属性を落とし、リンクカードのクラスだけを保つ", () => {
 		const html = renderToStaticMarkup(
 			mdastToReact({

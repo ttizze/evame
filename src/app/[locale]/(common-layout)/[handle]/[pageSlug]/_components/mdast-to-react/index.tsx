@@ -1,3 +1,4 @@
+import type { Root } from "hast";
 import type { ReactElement } from "react";
 import { type ComponentType, createElement, type JSX } from "react";
 import * as jsxRuntime from "react/jsx-runtime";
@@ -7,6 +8,7 @@ import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import rehypeSlug from "rehype-slug";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
+import { visit } from "unist-util-visit";
 import type { Segment } from "@/app/[locale]/types";
 import type { JsonValue } from "@/db/types";
 import { remarkTweet } from "./remark-tweet";
@@ -68,7 +70,8 @@ export function mdastToReact<T extends Segment = Segment>({
 
 	const processor = unified()
 		.use(remarkTweet)
-		.use(remarkRehype, { allowDangerousHtml: true }) // mdast → hast
+		// IDの接頭辞はサニタイズで付くため、ここでは付けず二重にしない。
+		.use(remarkRehype, { allowDangerousHtml: true, clobberPrefix: "" }) // mdast → hast
 		.use(rehypeRaw) // parse raw HTML
 		.use(rehypeSanitize, {
 			...defaultSchema,
@@ -111,13 +114,25 @@ export function mdastToReact<T extends Segment = Segment>({
 				iframe: [
 					[
 						"src",
-						/^https:\/\/(?:www\.youtube(?:-nocookie)?\.com\/embed\/[\w-]+|player\.vimeo\.com\/video\/\d+|open\.spotify\.com\/embed\/(?:track|album|playlist|artist|episode|show)\/[a-zA-Z\d]+|w\.soundcloud\.com\/player\/|www\.dailymotion\.com\/embed\/video\/[\w-]+)(?:\?[^\s"<>\\]*)?$/,
+						/^https:\/\/(?:www\.youtube(?:-nocookie)?\.com\/embed\/[\w-]+|player\.vimeo\.com\/video\/\d+|open\.spotify\.com\/embed\/(?:track|album|playlist|artist|episode|show)\/[a-zA-Z\d]+|w\.soundcloud\.com\/player\/|www\.dailymotion\.com\/embed\/video\/[\w-]+|geo\.dailymotion\.com\/player\.html)(?:\?[^\s"<>\\]*)?$/,
 					],
 					"title",
 					"width",
 					"height",
 				],
 			},
+		})
+		.use(() => (tree: Root) => {
+			// サニタイズはIDにだけ接頭辞を付けるので、脚注のリンク先を揃える。
+			visit(tree, "element", ({ properties }) => {
+				if (
+					typeof properties.href === "string" &&
+					properties.href.startsWith("#") &&
+					("dataFootnoteRef" in properties ||
+						"dataFootnoteBackref" in properties)
+				)
+					properties.href = `#user-content-${properties.href.slice(1)}`;
+			});
 		})
 		.use(rehypeSlug) // add slug ids
 		.use(rehypeReact, {

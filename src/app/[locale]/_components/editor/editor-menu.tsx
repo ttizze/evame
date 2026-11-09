@@ -1,23 +1,10 @@
-import { $createCodeNode } from "@lexical/code-core";
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
-import {
-	$isListNode,
-	INSERT_CHECK_LIST_COMMAND,
-	INSERT_ORDERED_LIST_COMMAND,
-	INSERT_UNORDERED_LIST_COMMAND,
-	REMOVE_LIST_COMMAND,
-} from "@lexical/list";
+import { $isListNode } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import {
-	$createHeadingNode,
-	$createQuoteNode,
-	$isHeadingNode,
-} from "@lexical/rich-text";
-import { $setBlocksType } from "@lexical/selection";
+import { $isHeadingNode } from "@lexical/rich-text";
 import { INSERT_TABLE_COMMAND } from "@lexical/table";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
-	$createParagraphNode,
 	$getRoot,
 	$getSelection,
 	$isRangeSelection,
@@ -49,6 +36,7 @@ import {
 	Type,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useTranslations } from "use-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,9 +46,10 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { listCommands, SET_TEXT_BLOCK_COMMAND } from "./block-editing";
 import { UPLOAD_IMAGE_COMMAND } from "./image-plugin";
 
-const blockItems = [
+export const blockItems = [
 	{ value: "paragraph", icon: Type, label: "paragraph" },
 	{ value: "h2", icon: Heading2, label: "heading2" },
 	{ value: "h3", icon: Heading3, label: "heading3" },
@@ -80,7 +69,7 @@ const formats = [
 ] as const;
 
 /** 選択範囲と空行に応じたツールバーを表示し、書式変更をLexicalの更新内で実行する。 */
-export function EditorMenu() {
+export function EditorMenu({ pageRoot }: { pageRoot: Element | null }) {
 	const [editor] = useLexicalComposerContext();
 	const t = useTranslations("Editor");
 	const imageInput = useRef<HTMLInputElement>(null);
@@ -101,7 +90,10 @@ export function EditorMenu() {
 				const selection = $getSelection();
 				if (!$isRangeSelection(selection)) return;
 				const anchor = selection.anchor.getNode();
-				const block = anchor.getTopLevelElement() ?? $getRoot().getFirstChild();
+				const block =
+					anchor.getParents().find($isListNode) ??
+					anchor.getTopLevelElement() ??
+					$getRoot().getFirstChild();
 				if (!block) return;
 				const element = editor.getElementByKey(block.getKey());
 				const domSelection = window.getSelection();
@@ -161,31 +153,19 @@ export function EditorMenu() {
 		};
 	}, [editor]);
 
-	/** リストと表は専用コマンドを使い、それ以外は選択ブロックを変換する。 */
+	/** 型の変更はモデルへ伝え、メニュー操作後に本文へフォーカスを戻す。 */
 	function applyBlock(value: (typeof blockItems)[number]["value"]) {
 		if (value === "bullet" || value === "number" || value === "check") {
-			editor.dispatchCommand(
-				view.block === value
-					? REMOVE_LIST_COMMAND
-					: value === "bullet"
-						? INSERT_UNORDERED_LIST_COMMAND
-						: value === "number"
-							? INSERT_ORDERED_LIST_COMMAND
-							: INSERT_CHECK_LIST_COMMAND,
-				undefined,
-			);
+			const listCommand = listCommands.find(
+				({ type }) => type === value,
+			)?.command;
+			if (!listCommand) return;
+			editor.dispatchCommand(listCommand, undefined);
 		} else {
-			editor.update(() => {
-				const selection = $getSelection();
-				if ($isRangeSelection(selection))
-					$setBlocksType(selection, () => {
-						if (view.block === value || value === "paragraph")
-							return $createParagraphNode();
-						if (value === "quote") return $createQuoteNode();
-						if (value === "code") return $createCodeNode();
-						return $createHeadingNode(value);
-					});
-			});
+			editor.dispatchCommand(
+				SET_TEXT_BLOCK_COMMAND,
+				view.block === value ? "paragraph" : value,
+			);
 		}
 		editor.focus();
 	}
@@ -366,72 +346,82 @@ export function EditorMenu() {
 					</DropdownMenu.Root>
 				</div>
 			)}
-			<footer className="fixed inset-x-0 bottom-0 z-40 flex h-12 overflow-x-auto border-t border-border bg-background md:hidden">
-				{[
-					{
-						icon: IndentIncrease,
-						command: INDENT_CONTENT_COMMAND,
-						label: "indent",
-					},
-					{
-						icon: IndentDecrease,
-						command: OUTDENT_CONTENT_COMMAND,
-						label: "outdent",
-					},
-				].map(({ icon: Icon, command, label }) => (
-					<button
-						aria-label={t(label)}
-						className="shrink-0 px-2"
-						key={label}
-						onClick={() => editor.dispatchCommand(command, undefined)}
-						onPointerDown={(event) => event.preventDefault()}
-						title={t(label)}
-						type="button"
+			{/* キーボードの開閉に追従する#rootの末尾に置き、固定配置のように隠れないようにする。 */}
+			{pageRoot &&
+				createPortal(
+					<footer
+						className="sticky bottom-0 z-40 flex h-12 w-full shrink-0 overflow-x-auto border-t border-border bg-background md:hidden"
+						data-testid="editor-keyboard-menu"
 					>
-						<Icon className="h-6 w-6" />
-					</button>
-				))}
-				{blockItems
-					.filter(({ value }) =>
-						["h2", "h3", "h4", "bullet", "number"].includes(value),
-					)
-					.map(({ value, icon: Icon, label }) => (
+						{[
+							{
+								icon: IndentIncrease,
+								command: INDENT_CONTENT_COMMAND,
+								label: "indent",
+							},
+							{
+								icon: IndentDecrease,
+								command: OUTDENT_CONTENT_COMMAND,
+								label: "outdent",
+							},
+						].map(({ icon: Icon, command, label }) => (
+							<button
+								aria-label={t(label)}
+								className="shrink-0 px-2"
+								key={label}
+								onClick={() => editor.dispatchCommand(command, undefined)}
+								onPointerDown={(event) => event.preventDefault()}
+								title={t(label)}
+								type="button"
+							>
+								<Icon className="h-6 w-6" />
+							</button>
+						))}
+						{blockItems
+							.filter(({ value }) =>
+								["h2", "h3", "h4", "bullet", "number"].includes(value),
+							)
+							.map(({ value, icon: Icon, label }) => (
+								<button
+									aria-label={t(label)}
+									aria-pressed={view.block === value}
+									className={cn(
+										"shrink-0 px-2",
+										view.block === value && "bg-secondary",
+									)}
+									key={value}
+									onClick={() => applyBlock(value)}
+									onPointerDown={(event) => event.preventDefault()}
+									title={t(label)}
+									type="button"
+								>
+									<Icon className="h-6 w-6" />
+								</button>
+							))}
 						<button
-							aria-label={t(label)}
-							aria-pressed={view.block === value}
-							className={cn(
-								"shrink-0 px-2",
-								view.block === value && "bg-secondary",
-							)}
-							key={value}
-							onClick={() => applyBlock(value)}
+							aria-label={t("inlineCode")}
+							className="shrink-0 px-2"
+							onClick={() =>
+								editor.dispatchCommand(FORMAT_TEXT_COMMAND, "code")
+							}
 							onPointerDown={(event) => event.preventDefault()}
-							title={t(label)}
+							title={t("inlineCode")}
 							type="button"
 						>
-							<Icon className="h-6 w-6" />
+							<Code className="h-6 w-6" />
 						</button>
-					))}
-				<button
-					aria-label={t("inlineCode")}
-					className="shrink-0 px-2"
-					onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "code")}
-					onPointerDown={(event) => event.preventDefault()}
-					title={t("inlineCode")}
-					type="button"
-				>
-					<Code className="h-6 w-6" />
-				</button>
-				<button
-					aria-label={t("image")}
-					className="shrink-0 px-2"
-					onClick={() => imageInput.current?.click()}
-					title={t("image")}
-					type="button"
-				>
-					<ImageIcon className="h-6 w-6" />
-				</button>
-			</footer>
+						<button
+							aria-label={t("image")}
+							className="shrink-0 px-2"
+							onClick={() => imageInput.current?.click()}
+							title={t("image")}
+							type="button"
+						>
+							<ImageIcon className="h-6 w-6" />
+						</button>
+					</footer>,
+					pageRoot,
+				)}
 			<input
 				accept="image/*"
 				aria-label={t("image")}

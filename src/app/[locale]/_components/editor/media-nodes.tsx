@@ -10,6 +10,9 @@ import type { ReactNode } from "react";
 import { Tweet } from "react-tweet";
 import { getXPostId } from "@/app/[locale]/_domain/get-x-post-id";
 
+/** 保存済みの本文に残る`/loading.gif`と区別し、送信中の仮画像だけを保存対象から外す。 */
+export const UPLOADING_IMAGE_SRC = "/loading.gif#uploading";
+
 export const imageState = createState("image", {
 	/** 外部入力から画像の属性だけを取り出し、欠けた属性を正規化する。 */
 	parse: (value) => {
@@ -136,33 +139,5 @@ export class TweetNode extends DecoratorNode<ReactNode> {
 		element.href = $getState(this, tweetState);
 		element.textContent = element.href;
 		return { element };
-	}
-}
-
-export const sourceState = createState("markdown", {
-	parse: (value) => (typeof value === "string" ? value : ""),
-});
-
-/** Markdownで保持する未対応構文。読み込みだけで元の内容を消さない。 */
-export class MarkdownSourceNode extends DecoratorNode<ReactNode> {
-	isInline() {
-		return false;
-	}
-	$config() {
-		return this.config("markdown-source", {
-			extends: DecoratorNode,
-			stateConfigs: [{ flat: true, stateConfig: sourceState }],
-		});
-	}
-	createDOM() {
-		return document.createElement("div");
-	}
-	updateDOM() {
-		return false;
-	}
-	decorate() {
-		return (
-			<pre className="whitespace-pre-wrap">{$getState(this, sourceState)}</pre>
-		);
 	}
 }
