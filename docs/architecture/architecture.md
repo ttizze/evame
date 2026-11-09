@@ -104,9 +104,11 @@ Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳�
 - 成果物の検証起動: `bun run test:deployment`（ローカルHTTP DBと2つのWorkers）
 - デプロイ: `bun run deploy`（Cloudflare Workers と Static Assets）
 - 検証: `bun run lint`、`bun run typecheck`、`bun run check:reader`、`bun run test --run`
-- ブラウザー検証: `bun x playwright install chromium` の後に `bun run test:deployment:browser`
+- ブラウザー検証: `bun x playwright install --with-deps chromium webkit` の後に `bun run test:deployment:browser`
 - デプロイ成果物の検証: `bun run test:deployment`（認証 API・記事保存と編集画面・画像アップロード・ホーム SSR・日本語 OG 画像）
 - バインディング: `wrangler.jsonc` に R2・Images・KV・Static Assets を定義。秘密値は Workers secrets で設定する
+
+LinuxのWebKitが使うGSettingsスキーマは、`flake.nix`で固定したNixパッケージを`GSETTINGS_SCHEMA_DIR`へ設定します。Nix環境にスキーマがないと、通信プロセスが起動時に終了してページを読み込めません。
 
 `src/server.ts` がAPI・編集等のバックエンドリクエストごとに DB を作り、本文ストリームの完了・中断時に閉じます。`src/db/index.ts` の AsyncLocalStorage が既存の DB 呼び出し元に同じリクエストの接続を渡します。`src/auth.ts` の Better Auth もその DB を使用し、異なるリクエスト間で接続を共有しません。Node の CLI とテストでは従来どおり DB を再利用します。
 
