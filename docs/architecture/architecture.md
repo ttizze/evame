@@ -23,6 +23,8 @@ Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳�
 
 編集・ページ管理・ログインはTanStack Startを使用する。本文編集はLexicalからMarkdownを送信し、サーバーでCommonMark/GFMとしてMDAST JSONへ変換してTursoへ保存する。既存文書はMDASTからMarkdownにして編集画面へ渡す。記事とコメントは`src/app/[locale]/_components/editor`のエディタを共有する。段落照合と翻訳・投票の引き継ぎ、公開時の翻訳開始を維持する。配信済みの旧フォームが送信するHTMLは形式指定なしの入力として受け付ける。URL・階層表示・言語と表示モードを保持する。キャッシュの失敗時の挙動と実行環境の制限は [公開HTMLとデータ更新](cache-components-revalidation.md) を参照。
 
+記事の自動保存は`edit-page-client`が直列化し、保存結果の記事IDを公開メニューとタグ入力へ渡す。保存のたびにRouterのloaderを再実行せず、編集中の本文・選択・ドラッグを維持する。編集ルートのキャッシュは離脱時に破棄し、認証切れでログイン画面へ移った後も古い初期本文で開かない。Readerへのリンクは文書全体を切り替え、戻る操作で保存済みの編集内容を復元する。本文の先頭・末尾の余白はContentEditable内に収め、ブロックのドロップ先として扱う。
+
 ## リポジトリ構成（要約）
 
 ```
