@@ -1,0 +1,23 @@
+[
+  {
+    "name": "commonmark-0.31.2.json",
+    "url": "https://spec.commonmark.org/0.31.2/spec.json",
+    "sha256": "d431b29d97b6f73e69d547109cf5081578fac931e72afe95639ebe766c1b2a20"
+  },
+  {
+    "name": "gfm-0.29.json",
+    "url": "https://github.github.com/gfm/",
+    "sourceSha256": "b153d814fdfc8624bb6da7449162c1cd707a637f7d1c1b636eb44b9cf63fa220",
+    "sha256": "9155a60483f32f4903874ce0991160c8dff917157215610f9b006ff8ffc5e7b9"
+  },
+  {
+    "name": "prosemirror-commands.test.ts.txt",
+    "url": "https://raw.githubusercontent.com/ProseMirror/prosemirror-commands/52a84a842774fadec3b167bcdbd56085ec6c85df/test/test-commands.ts",
+    "sha256": "fd0fbaaefad8846ffc39864f7c4c82d9fd9580220dc28f0bfe69f8a66172119f"
+  },
+  {
+    "name": "ProseMirror-LICENSE.txt",
+    "url": "https://raw.githubusercontent.com/ProseMirror/prosemirror-commands/52a84a842774fadec3b167bcdbd56085ec6c85df/LICENSE",
+    "sha256": "ef0b452ced6304db2ce78ca66de1fc7b97bab05bc1750c95df359ed3fe1d65c8"
+  }
+]

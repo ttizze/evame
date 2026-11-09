@@ -1,0 +1,127 @@
+name: EvameEditorPrototype
+options:
+  developmentLanguage: ja
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "5"
+    GENERATE_INFOPLIST_FILE: YES
+    CODE_SIGNING_ALLOWED: NO
+packages:
+  EvameEditor:
+    path: .
+targets:
+  EvameEditorPrototype:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - path: Tests/EditorCoreTests/Fixtures/round-trip.md
+        buildPhase: resources
+    settings:
+      base:
+        TARGETED_DEVICE_FAMILY: "1"
+        PRODUCT_BUNDLE_IDENTIFIER: app.evame.editor-prototype
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_CFBundleDisplayName: Evame
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
+    dependencies:
+      - package: EvameEditor
+        product: EditorCore
+  NativeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - NativeTests
+      - Tests/EditorCoreTests/ProseMirrorTests.swift
+      - Tests/EditorCoreTests/BackspaceEditingTests.swift
+      - path: Tests/EditorCoreTests/Fixtures/Upstream/ProseMirrorTests.js
+        buildPhase: resources
+      - path: Tests/EditorCoreTests/Fixtures/Upstream/prosemirror-cases.json
+        buildPhase: resources
+    dependencies:
+      - target: EvameEditorPrototype
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.evame.editor-prototype.NativeTests
+  EditorUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: EvameEditorPrototype
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.evame.editor-prototype.EditorUITests
+  LexicalProbeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: LexicalProbe/Swift
+        excludes: [Generated]
+      - path: LexicalProbe/Swift/Generated
+        optional: true
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - target: EvameEditorPrototype
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.evame.editor-prototype.LexicalProbeTests
+  VditorProbe:
+    type: application
+    platform: iOS
+    sources:
+      - VditorProbe/App.swift
+      - path: .build/vditor-web
+        optional: true
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        TARGETED_DEVICE_FAMILY: "1"
+        PRODUCT_BUNDLE_IDENTIFIER: app.evame.vditor-probe
+        INFOPLIST_KEY_CFBundleDisplayName: Vditor比較
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+  VditorWKTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [VditorProbe/WKTests.swift]
+    dependencies:
+      - target: VditorProbe
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.evame.vditor-probe.WKTests
+  VditorUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [VditorProbe/UITests.swift]
+    dependencies:
+      - target: VditorProbe
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.evame.vditor-probe.UITests
+schemes:
+  EvameEditorPrototype:
+    build:
+      targets:
+        EvameEditorPrototype: all
+    test:
+      targets: [NativeTests, EditorUITests]
+  LexicalProbe:
+    build:
+      targets:
+        EvameEditorPrototype: all
+    test:
+      targets: [LexicalProbeTests]
+  VditorProbe:
+    build:
+      targets:
+        VditorProbe: all
+    test:
+      targets: [VditorWKTests, VditorUITests]

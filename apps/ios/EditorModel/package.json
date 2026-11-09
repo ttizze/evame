@@ -1,0 +1,17 @@
+{
+	"name": "evame-ios-editor-model",
+	"private": true,
+	"type": "module",
+	"devDependencies": {
+		"ist": "1.1.7",
+		"mdast-util-from-markdown": "2.1.0",
+		"mdast-util-gfm": "3.1.0",
+		"mdast-util-to-markdown": "2.2.3",
+		"prosemirror-commands": "1.7.2",
+		"prosemirror-model": "1.25.12",
+		"prosemirror-schema-basic": "1.2.5",
+		"prosemirror-schema-list": "1.6.0",
+		"prosemirror-state": "1.4.4",
+		"prosemirror-test-builder": "1.1.1"
+	}
+}
