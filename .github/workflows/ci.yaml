@@ -106,13 +106,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Install Nix bootstrap prerequisites
-        run: apt-get update && apt-get install --no-install-recommends -y sudo xz-utils
+      - name: Prepare the container for Nix
+        run: |
+          apt-get update && apt-get install --no-install-recommends -y sudo xz-utils
+          chown -R root:root "$GITHUB_WORKSPACE" "$HOME"
       - uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Expose the container's root Nix profile
-        run: echo /root/.nix-profile/bin >> "$GITHUB_PATH"
       - run: nix develop --command bun install --frozen-lockfile
       - uses: actions/download-artifact@v8
         with:
