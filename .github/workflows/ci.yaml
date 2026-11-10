@@ -111,6 +111,8 @@ jobs:
       - uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Expose the container's root Nix profile
+        run: echo /root/.nix-profile/bin >> "$GITHUB_PATH"
       - run: nix develop --command bun install --frozen-lockfile
       - uses: actions/download-artifact@v8
         with:
