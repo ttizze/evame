@@ -57,11 +57,13 @@ if [[ "$1" == test ]]; then
   xcrun swift test --package-path apps/ios --disable-automatic-resolution
   mkdir -p apps/ios/DerivedData
   result_directory=$(mktemp -d apps/ios/DerivedData/test-result-XXXXXX)
+  # UI状態も扱うNativeテストは、従来どおりSimulator上の並列実行を無効にする。
   xcodebuild \
     -project apps/ios/EvameEditorPrototype.xcodeproj \
     -scheme EvameEditorPrototype \
     -destination "$2" \
     -derivedDataPath apps/ios/DerivedData \
+    -parallel-testing-enabled NO \
     -onlyUsePackageVersionsFromResolvedFile \
     test "${@:3}" -resultBundlePath "$result_directory/Run.xcresult"
   xcrun xcresulttool get test-results summary --path "$result_directory/Run.xcresult" > "$result_directory/summary.json"
