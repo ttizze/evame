@@ -25,6 +25,7 @@ import {
 type InputCodec = "json" | "stringArray" | "timestamp" | "boolean";
 
 const inputCodecs: Record<string, InputCodec> = {
+	comments_enabled: "boolean",
 	mdast_json: "json",
 	target_locales: "stringArray",
 	access_token_expires_at: "timestamp",
@@ -64,6 +65,7 @@ const dateResultColumns = new Set([
 ]);
 
 const booleanResultColumns = new Set([
+	"commentsEnabled",
 	"currentUserVoteIsUpvote",
 	"emailVerified",
 	"isAI",

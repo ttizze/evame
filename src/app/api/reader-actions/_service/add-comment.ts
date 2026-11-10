@@ -6,7 +6,10 @@ import { getPageById } from "@/app/[locale]/_db/queries.server";
 import { enqueueTranslationJob } from "@/app/[locale]/_infrastructure/qstash/enqueue-translation-job.server";
 import { createNotificationPageComment } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/_components/page-comment-form/_db/mutations.server";
 import { processPageCommentContent } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/_components/page-comment-form/service/process-page-comment-content";
-import { COMMENT_PAGE_SIZE } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/constants";
+import {
+	COMMENT_PAGE_SIZE,
+	COMMENTS_CLOSED,
+} from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/constants";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { db } from "@/db";
@@ -54,6 +57,8 @@ export async function commentAction(
 	if (page.status !== "PUBLIC" && page.user.id !== currentUser.id) {
 		return { success: false, message: "Page not found" };
 	}
+	if (!page.commentsEnabled && data.pageCommentId === undefined)
+		return { success: false, message: COMMENTS_CLOSED };
 
 	if (data.parentId !== undefined) {
 		const parent = await db
@@ -91,6 +96,7 @@ export async function commentAction(
 		currentUserId: currentUser.id,
 		pageId: data.pageId,
 	});
+	if (!pageComment) return { success: false, message: COMMENTS_CLOSED };
 
 	await createNotificationPageComment(
 		currentUser.id,

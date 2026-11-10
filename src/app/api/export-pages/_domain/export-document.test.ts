@@ -107,6 +107,7 @@ const metadata = {
 	title: '題名: "メモ"\n次の行',
 	sourceLocale: "ja",
 	status: "DRAFT" as const,
+	commentsEnabled: true,
 	parentId: null,
 	publishedAt: null,
 	createdAt: new Date("2026-01-01T00:00:00Z"),
@@ -131,6 +132,7 @@ describe("文書のMarkdown書き出し", () => {
 		expect(frontMatter(exported.markdown).attributes).toMatchObject({
 			title: metadata.title,
 			status: "DRAFT",
+			comments_enabled: true,
 			published_at: null,
 		});
 		expect(exported.markdown).toContain('status: "DRAFT"');

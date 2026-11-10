@@ -1,6 +1,7 @@
 import { MessageCirclePlus } from "lucide-react";
-import { useState } from "react";
+import { use, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { CommentUpdates } from "../../../../../comment-updates";
 import { PageCommentForm } from "../../../../page-comment-form/client";
 
 export function CommentRepliesToggle({
@@ -15,6 +16,8 @@ export function CommentRepliesToggle({
 	userLocale: string;
 }) {
 	const [isReplying, setIsReplying] = useState(false);
+	const { commentsEnabled } = use(CommentUpdates);
+	if (!commentsEnabled) return null;
 
 	return (
 		<div className="mt-2">

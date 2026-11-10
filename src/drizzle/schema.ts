@@ -612,6 +612,9 @@ export const pages = sqliteTable(
 	"pages",
 	{
 		id: integer().primaryKey().notNull(),
+		commentsEnabled: integer("comments_enabled", { mode: "boolean" })
+			.default(true)
+			.notNull(),
 		slug: text().notNull(),
 		createdAt: integer("created_at", { mode: "timestamp_ms" })
 			.default(sql`(CAST(unixepoch('subsec') * 1000 AS INTEGER))`)

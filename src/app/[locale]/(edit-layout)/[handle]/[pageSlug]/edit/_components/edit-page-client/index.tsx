@@ -127,6 +127,7 @@ export function EditPageClient({
 				currentUser={currentUser}
 				handle={handle}
 				hasUnsavedChanges={hasUnsavedChanges}
+				initialCommentsEnabled={pageWithTitleAndTags?.commentsEnabled ?? true}
 				initialStatus={pageWithTitleAndTags?.status || "DRAFT"}
 				isSaving={isEditing}
 				locale={userLocale}

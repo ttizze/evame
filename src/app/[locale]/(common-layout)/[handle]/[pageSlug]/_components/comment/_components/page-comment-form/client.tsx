@@ -1,9 +1,11 @@
 import { use, useActionState, useEffect, useRef } from "react";
+import { useTranslations } from "use-intl";
 import { callReaderAction } from "@/app/_service/reader-action";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
 import type { CommentActionResponse } from "@/app/api/reader-actions/_service/add-comment";
 import { CommentUpdates } from "../../comment-updates";
+import { COMMENTS_CLOSED } from "../../constants";
 import { CommentForm } from "./comment/comment-form";
 
 function optionalNumber(value: FormDataEntryValue | null) {
@@ -23,7 +25,8 @@ export function PageCommentForm({
 	parentId?: number;
 	onReplySuccess?: () => void;
 }) {
-	const updateComments = use(CommentUpdates);
+	const { refresh: updateComments } = use(CommentUpdates);
+	const t = useTranslations("Comments");
 	const [state, formAction, isPending] = useActionState<
 		CommentActionResponse,
 		FormData
@@ -37,8 +40,8 @@ export function PageCommentForm({
 				parentId: optionalNumber(formData.get("parentId")),
 				userLocale: String(formData.get("userLocale") ?? userLocale),
 			});
-			if (result.success) {
-				await updateComments(result.data.commentPage);
+			if (result.success || result.message === COMMENTS_CLOSED) {
+				await updateComments(result.success ? result.data.commentPage : null);
 			}
 			return result;
 		},
@@ -69,7 +72,11 @@ export function PageCommentForm({
 				hidden={{ pageId, parentId, userLocale }}
 				isPending={isPending}
 			/>
-			{state.message && <p className="text-sm text-red-500">{state.message}</p>}
+			{state.message && (
+				<p className="text-sm text-red-500">
+					{state.message === COMMENTS_CLOSED ? t("closed") : state.message}
+				</p>
+			)}
 		</div>
 	);
 }

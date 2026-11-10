@@ -1,4 +1,28 @@
 {
+	"PublicationSettings": {
+		"title": "Configuración de publicación",
+		"openSettings": "Configuración de publicación: {status}",
+		"public": "Público",
+		"private": "Privado",
+		"visibility": "Quién puede leer",
+		"publish": "Publicar",
+		"publicHelp": "Cualquiera puede leer esta página. Los cambios guardados se publican inmediatamente.",
+		"privateHelp": "Solo tú puedes leer esta página.",
+		"translation": "Traducción",
+		"translate": "Traducir",
+		"translationSettings": "Configuración de traducción",
+		"translationHelp": "La traducción comienza al publicar o solicitarla.",
+		"waitForSave": "Espera a que se guarden los últimos cambios.",
+		"comments": "Permitir comentarios",
+		"commentsHelp": "Desactiva para impedir nuevos comentarios y respuestas. Los comentarios existentes siguen visibles.",
+		"preview": "Vista previa",
+		"copyLink": "Copiar enlace",
+		"copied": "Enlace copiado.",
+		"copyFailed": "No se pudo copiar el enlace.",
+		"failed": "No se pudo actualizar la configuración. Inténtalo de nuevo.",
+		"processing": "Guardando…",
+		"save": "Guardar"
+	},
 	"PageExport": {
 		"button": "Exportar Markdown e imágenes",
 		"preparing": "Preparando exportación…",
@@ -100,7 +124,8 @@
 		"pagination": "Páginas de comentarios",
 		"previous": "Comentarios anteriores",
 		"next": "Comentarios siguientes",
-		"page": "Página {page} de {total}"
+		"page": "Página {page} de {total}",
+		"closed": "Los comentarios están cerrados. Los comentarios existentes siguen disponibles."
 	},
 	"Reader": {
 		"newPages": "Artículos recientes",

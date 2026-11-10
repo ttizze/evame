@@ -1,0 +1,1 @@
+ALTER TABLE `pages` ADD `comments_enabled` integer DEFAULT true NOT NULL;

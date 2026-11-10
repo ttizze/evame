@@ -25,7 +25,7 @@ export function PageCommentItemClient({
 	userHandle: string;
 	isDeleted: boolean;
 }) {
-	const updateComments = use(CommentUpdates);
+	const { refresh: updateComments } = use(CommentUpdates);
 	const hydrated = useHydrated();
 	const [message, setMessage] = useState<string | null>(null);
 	const [isPending, startTransition] = useTransition();

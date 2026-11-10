@@ -234,6 +234,14 @@ export async function checkEditorDrag(baseUrl, cookie) {
 			await page.goBack();
 			await expect(page).toHaveURL(editUrl);
 			await expect(title).toHaveValue("段落のドラッグ移動");
+			await page.getByRole("link", { name: "Evame Logo", exact: true }).click();
+			await page.waitForURL(`${baseUrl}/ja`);
+			await expect(
+				page.getByRole("heading", { name: "新着記事", exact: true }),
+			).toBeVisible();
+			await page.goBack();
+			await expect(page).toHaveURL(editUrl);
+			await expect(title).toHaveValue("段落のドラッグ移動");
 			await expect(editor.locator("p")).toHaveText([
 				"次の段落",
 				"",
@@ -241,8 +249,10 @@ export async function checkEditorDrag(baseUrl, cookie) {
 				"最後の段落",
 			]);
 			await expect(page.getByRole("combobox")).toBeEnabled();
-			await page.getByRole("button", { name: "Private", exact: true }).click();
-			await page.getByRole("link", { name: "Preview", exact: true }).click();
+			await page
+				.getByRole("button", { name: "公開設定: 自分のみ", exact: true })
+				.click();
+			await page.getByRole("link", { name: "プレビュー", exact: true }).click();
 			await page.waitForURL(editUrl.replace(/\/edit$/, ""));
 			await expect(
 				page.getByRole("link", { name: "Edit page", exact: true }),

@@ -42,6 +42,9 @@ function Comments({
 	);
 	const t = useTranslations("Comments");
 	const count = data?.count;
+	// Readerを先に切り替える間、旧Gatewayの応答では従来どおり受付ONにする。
+	const commentsEnabled =
+		data?.commentsEnabled ?? initialData.commentsEnabled ?? true;
 	useEffect(() => {
 		if (count !== undefined)
 			for (const node of document.querySelectorAll(
@@ -54,9 +57,15 @@ function Comments({
 		else await mutate();
 	};
 	return (
-		<CommentUpdates value={updateComments}>
+		<CommentUpdates value={{ refresh: updateComments, commentsEnabled }}>
 			<div aria-busy={isLoading}>
-				<PageCommentForm pageId={pageId} userLocale={locale} />
+				{commentsEnabled ? (
+					<PageCommentForm pageId={pageId} userLocale={locale} />
+				) : (
+					<p className="text-sm text-muted-foreground" role="status">
+						{t("closed")}
+					</p>
+				)}
 				<PageCommentList comments={data?.comments ?? []} userLocale={locale} />
 				{data && data.totalPages > 1 && (
 					<nav

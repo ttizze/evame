@@ -1,4 +1,5 @@
 import { LanguagesIcon, Settings2 } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { Button } from "@/components/ui/button";
 import {
 	Popover,
@@ -27,11 +28,12 @@ export function TranslationSettings({
 	onLocalesChange,
 	maxSelectableLocales,
 }: TranslationSettingsProps) {
+	const t = useTranslations("PublicationSettings");
 	return (
 		<Popover>
 			<PopoverTrigger asChild>
 				<Button
-					aria-label="Translation settings"
+					aria-label={t("translationSettings")}
 					className="h-8 px-3 flex items-center gap-1 rounded-full hover:bg-secondary/80"
 					size="sm"
 					variant="outline"

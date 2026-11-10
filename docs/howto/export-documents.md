@@ -12,7 +12,7 @@
 
 ## ZIPの内容
 
-- `documents/<文書ID>-<slug>.md`: 原文のMarkdown。タイトル、元のslug、言語、公開状態、親文書ID、公開・作成・更新日時、タグをYAML frontmatterに保存する。タイトルの変更でファイル名は変わらない。
+- `documents/<文書ID>-<slug>.md`: 原文のMarkdown。タイトル、元のslug、言語、公開状態、コメント受付、親文書ID、公開・作成・更新日時、タグをYAML frontmatterに保存する。タイトルの変更でファイル名は変わらない。
 - `images/`: 保存済み画像。Markdownからの参照は`../images/...`へ書き換える。
 - `export-report.json`: 文書と画像の件数、同梱できなかった画像、書き出し中に削除された文書ID。
 - `README.md`: 書き出し形式の説明。

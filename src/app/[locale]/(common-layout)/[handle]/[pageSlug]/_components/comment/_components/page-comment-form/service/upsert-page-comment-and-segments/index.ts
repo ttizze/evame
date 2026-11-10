@@ -8,6 +8,7 @@ import {
 	updatePageComment,
 	updateParentReplyCount,
 } from "./db/mutations.server";
+import { fetchCommentAcceptance } from "./db/queries";
 
 /** ページコメント本文とセグメントを同じトランザクションで upsert する。 */
 export async function upsertPageCommentAndSegments(input: {
@@ -31,6 +32,8 @@ export async function upsertPageCommentAndSegments(input: {
 				input.sourceLocale,
 			);
 		} else {
+			const page = await fetchCommentAcceptance(tx, input.pageId);
+			if (!page?.commentsEnabled) return null;
 			pageComment = await createPageComment(
 				tx,
 				input.pageId,
