@@ -255,8 +255,17 @@ export async function checkEditorDrag(baseUrl, cookie, browserTypes) {
 			await page.getByRole("link", { name: "プレビュー", exact: true }).click();
 			await page.waitForURL(editUrl.replace(/\/edit$/, ""));
 			await expect(
-				page.getByRole("link", { name: "Edit page", exact: true }),
+				page.getByRole("heading", { name: "段落のドラッグ移動", exact: true }),
 			).toBeVisible();
+			await expect(
+				page.getByRole("link", { name: "Edit page", exact: true }),
+			).toHaveCount(0);
+			await expect(page.locator("article .js-content p")).toHaveText([
+				"次の段落",
+				"",
+				"最初の段落",
+				"最後の段落",
+			]);
 			await page.goBack();
 			await expect(page).toHaveURL(editUrl);
 			await expect(title).toHaveValue("段落のドラッグ移動");
