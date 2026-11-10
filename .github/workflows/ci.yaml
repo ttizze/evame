@@ -92,16 +92,11 @@ jobs:
   browser:
     needs: build
     runs-on: ubuntu-latest
+    container: mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - suite: editor-chromium
-            browsers: chromium
-          - suite: editor-webkit
-            browsers: webkit
-          - suite: reader
-            browsers: chromium webkit
+        suite: [editor-chromium, editor-webkit, reader]
     env:
       SENTRY_DSN: ""
       VITE_SENTRY_DSN: ""
@@ -111,6 +106,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Install Nix bootstrap prerequisites
+        run: apt-get update && apt-get install --no-install-recommends -y sudo xz-utils
       - uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
@@ -120,7 +117,6 @@ jobs:
           name: workers
           path: ${{ runner.temp }}
       - run: tar -xf "$RUNNER_TEMP/workers.tar"
-      - run: nix develop --command bun x playwright install --with-deps ${{ matrix.browsers }}
       - run: nix develop --command bun run test:deployment:browser
 
   ci-check:

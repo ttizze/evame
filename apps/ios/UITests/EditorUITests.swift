@@ -1,12 +1,11 @@
 import XCTest
 
-/// 文書全体を1つの入力欄で編集する画面を、実際のキーボード入力とボタン操作で確かめる。
+/// 各テストで文書と入力欄を開き、同じキーボード・書式操作を使う。
 @MainActor
-final class EditorUITests: XCTestCase {
-  private var app: XCUIApplication!
-  private var editor: XCUIElement { app.textViews["editor.text"] }
-
-  private let language = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
+class EditorUITestCase: XCTestCase {
+  var app: XCUIApplication!
+  var editor: XCUIElement { app.textViews["editor.text"] }
+  let language = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
 
   /// 端末の保存領域を空にして共通のテスト文書を入れ、一覧から開く。
   override func setUp() {
@@ -21,7 +20,7 @@ final class EditorUITests: XCTestCase {
   }
 
   /// 題名の下にある本文の先頭の見出しの右端を押して、カーソルを見出しの末尾へ置く。
-  private func tapEndOfHeading() {
+  func tapEndOfHeading() {
     let title = app.textFields["editor.title"]
     editor.coordinate(withNormalizedOffset: .zero)
       .withOffset(
@@ -30,6 +29,32 @@ final class EditorUITests: XCTestCase {
     XCTAssertTrue(app.buttons["editor.done"].waitForExistence(timeout: 5))
   }
 
+  /// キーボードを閉じてMarkdown表示を開き、書き出されたMarkdownを返す。
+  func markdown() -> String {
+    if app.buttons["editor.done"].exists { app.buttons["editor.done"].tap() }
+    app.navigationBars.buttons["Markdownを確認"].tap()
+    let source = app.textViews["editor.markdown-source"]
+    XCTAssertTrue(source.waitForExistence(timeout: 5))
+    return source.value as? String ?? ""
+  }
+
+  /// 横にスクロールするキーボード上のメニューで、指定のボタンが押せる位置まで送る。
+  func menuButton(_ identifier: String) -> XCUIElement {
+    let button = app.buttons[identifier]
+    let menu = app.scrollViews["editor.keyboard-actions"]
+    for _ in 0..<4 where !button.isHittable { menu.swipeLeft() }
+    XCTAssertTrue(button.isHittable, identifier)
+    return button
+  }
+
+  func scrollTo(_ element: XCUIElement) {
+    for _ in 0..<8 where !element.isHittable { editor.swipeUp() }
+    XCTAssertTrue(element.isHittable)
+  }
+}
+
+/// 文字入力・書式と原稿の保存を確かめる。
+final class EditorWritingUITests: EditorUITestCase {
   func test入力したまま裏へ回ってアプリを終了しても本文が残る() {
     tapEndOfHeading()
     app.typeText("裏へ回る前の入力")
@@ -66,29 +91,6 @@ final class EditorUITests: XCTestCase {
     saved.tap()
     XCTAssertEqual(app.textFields["editor.title"].value as? String, "初めての文書")
     XCTAssertEqual(markdown().trimmingCharacters(in: .newlines), "書いた本文")
-  }
-
-  /// キーボードを閉じてMarkdown表示を開き、書き出されたMarkdownを返す。
-  private func markdown() -> String {
-    if app.buttons["editor.done"].exists { app.buttons["editor.done"].tap() }
-    app.navigationBars.buttons["Markdownを確認"].tap()
-    let source = app.textViews["editor.markdown-source"]
-    XCTAssertTrue(source.waitForExistence(timeout: 5))
-    return source.value as? String ?? ""
-  }
-
-  /// 横にスクロールするキーボード上のメニューで、指定のボタンが押せる位置まで送る。
-  private func menuButton(_ identifier: String) -> XCUIElement {
-    let button = app.buttons[identifier]
-    let menu = app.scrollViews["editor.keyboard-actions"]
-    for _ in 0..<4 where !button.isHittable { menu.swipeLeft() }
-    XCTAssertTrue(button.isHittable, identifier)
-    return button
-  }
-
-  private func scrollTo(_ element: XCUIElement) {
-    for _ in 0..<8 where !element.isHittable { editor.swipeUp() }
-    XCTAssertTrue(element.isHittable)
   }
 
   func test見出しの末尾に入力するとMarkdownの見出しへ反映し他の内容を保つ() {
@@ -134,16 +136,6 @@ final class EditorUITests: XCTestCase {
     XCTAssertTrue(source.contains("**bold** **markdown**"), source)
   }
 
-  func test見出しボタンで見出しの段階を変えて入力を続けられる() {
-    tapEndOfHeading()
-    let h2 = menuButton("editor.h2")
-    h2.tap()
-    XCTAssertTrue(h2.isSelected)
-    app.typeText("menu")
-    let source = markdown()
-    XCTAssertTrue(source.hasPrefix("## 日本語の執筆 👩🏽‍💻menu\n"), source)
-  }
-
   func testキーボードの改行キーを押しても画面が文末へ飛ばずカーソルの次の行へ入力できる() {
     tapEndOfHeading()
     // 文書の途中にあるチェックボックスの位置で、画面のスクロールを確かめる。
@@ -165,6 +157,61 @@ final class EditorUITests: XCTestCase {
     XCTAssertGreaterThanOrEqual(marker.frame.minY, before)
     let source = markdown()
     XCTAssertTrue(source.hasPrefix("# 日本語の執筆 👩🏽‍💻\n\nafter\n"), source)
+  }
+
+  func test段落の追加をUndoで戻しRedoでやり直せる() {
+    let original = editor.value as? String
+    tapEndOfHeading()
+    app.typeText("\n")
+    let added = editor.value as? String
+    XCTAssertNotEqual(added, original)
+    menuButton("editor.more").tap()
+    app.buttons["元に戻す"].tap()
+    XCTAssertEqual(editor.value as? String, original)
+    menuButton("editor.more").tap()
+    app.buttons["やり直す"].tap()
+    XCTAssertEqual(editor.value as? String, added)
+  }
+
+  func testMarkdown原文を編集して戻ると本文を置き換え古い変更をUndoで戻さない() {
+    tapEndOfHeading()
+    app.typeText("old")
+    _ = markdown()
+    let source = app.textViews["editor.markdown-source"]
+    source.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.02)).tap()
+    source.typeText("source-latest\n\n")
+    app.navigationBars.buttons["editor.source.done"].tap()
+    XCTAssertTrue((editor.value as? String)?.hasPrefix("source-latest\n") == true)
+    tapEndOfHeading()
+    menuButton("editor.more").tap()
+    let undo = app.buttons["元に戻す"]
+    XCTAssertTrue(undo.waitForExistence(timeout: 5))
+    XCTAssertFalse(undo.isEnabled)
+  }
+
+  func test写真の選択を開いてキャンセルしても入力を続けられる() {
+    tapEndOfHeading()
+    menuButton("editor.image").tap()
+    let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["キャンセル", "Cancel"]))
+      .firstMatch
+    XCTAssertTrue(cancel.waitForExistence(timeout: 10))
+    cancel.tap()
+    XCTAssertTrue(app.buttons["editor.done"].waitForExistence(timeout: 5))
+    app.typeText("photocancel")
+    XCTAssertTrue(markdown().hasPrefix("# 日本語の執筆 👩🏽‍💻photocancel\n"))
+  }
+}
+
+/// リスト・見出し・表などのブロック操作を確かめる。
+final class EditorBlockUITests: EditorUITestCase {
+  func test見出しボタンで見出しの段階を変えて入力を続けられる() {
+    tapEndOfHeading()
+    let h2 = menuButton("editor.h2")
+    h2.tap()
+    XCTAssertTrue(h2.isSelected)
+    app.typeText("menu")
+    let source = markdown()
+    XCTAssertTrue(source.hasPrefix("## 日本語の執筆 👩🏽‍💻menu\n"), source)
   }
 
   func test二つのコードブロックの片方で改行してスクロールしても本文を保つ() {
@@ -289,47 +336,5 @@ final class EditorUITests: XCTestCase {
     XCTAssertTrue(source.contains("| 日本語cell |"), source)
     XCTAssertTrue(source.contains("| パイプ \\| "), source)
     XCTAssertTrue(source.contains("---: |"), source)
-  }
-
-  func test段落の追加をUndoで戻しRedoでやり直せる() {
-    let original = editor.value as? String
-    tapEndOfHeading()
-    app.typeText("\n")
-    let added = editor.value as? String
-    XCTAssertNotEqual(added, original)
-    menuButton("editor.more").tap()
-    app.buttons["元に戻す"].tap()
-    XCTAssertEqual(editor.value as? String, original)
-    menuButton("editor.more").tap()
-    app.buttons["やり直す"].tap()
-    XCTAssertEqual(editor.value as? String, added)
-  }
-
-  func testMarkdown原文を編集して戻ると本文を置き換え古い変更をUndoで戻さない() {
-    tapEndOfHeading()
-    app.typeText("old")
-    _ = markdown()
-    let source = app.textViews["editor.markdown-source"]
-    source.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.02)).tap()
-    source.typeText("source-latest\n\n")
-    app.navigationBars.buttons["editor.source.done"].tap()
-    XCTAssertTrue((editor.value as? String)?.hasPrefix("source-latest\n") == true)
-    tapEndOfHeading()
-    menuButton("editor.more").tap()
-    let undo = app.buttons["元に戻す"]
-    XCTAssertTrue(undo.waitForExistence(timeout: 5))
-    XCTAssertFalse(undo.isEnabled)
-  }
-
-  func test写真の選択を開いてキャンセルしても入力を続けられる() {
-    tapEndOfHeading()
-    menuButton("editor.image").tap()
-    let cancel = app.buttons.matching(NSPredicate(format: "label IN %@", ["キャンセル", "Cancel"]))
-      .firstMatch
-    XCTAssertTrue(cancel.waitForExistence(timeout: 10))
-    cancel.tap()
-    XCTAssertTrue(app.buttons["editor.done"].waitForExistence(timeout: 5))
-    app.typeText("photocancel")
-    XCTAssertTrue(markdown().hasPrefix("# 日本語の執筆 👩🏽‍💻photocancel\n"))
   }
 }
