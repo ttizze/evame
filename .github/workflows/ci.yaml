@@ -108,6 +108,7 @@ jobs:
           persist-credentials: false
       - name: Prepare the container for Nix
         run: |
+          sed -i 's|http://security.ubuntu.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources
           apt-get update && apt-get install --no-install-recommends -y sudo xz-utils
           chown -R root:root "$GITHUB_WORKSPACE" "$HOME"
       - uses: cachix/install-nix-action@v31
