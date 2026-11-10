@@ -119,7 +119,11 @@ schemes:
       targets:
         EvameEditorPrototype: all
     test:
-      targets: [NativeTests, EditorUITests]
+      targets:
+        - name: NativeTests
+          parallelizable: true
+        - name: EditorUITests
+          parallelizable: true
   LexicalProbe:
     build:
       targets:

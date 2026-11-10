@@ -32,62 +32,14 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    runs-on: macos-26
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: cachix/install-nix-action@v31
-      - run: nix develop --command bash scripts/ios.sh build-for-testing 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
-      - run: git diff --exit-code -- apps/ios/Sources/EditorCore/Resources apps/ios/App/Resources/LexicalModel.js apps/ios/App/Resources/LexicalModel-LICENSES.txt apps/ios/Tests/EditorCoreTests/Fixtures/Upstream/ProseMirrorTests.js
-      - name: Archive test products with executable permissions
-        run: tar -C apps/ios/DerivedData/Build -cf "$RUNNER_TEMP/ios-tests.tar" Products
-      - uses: actions/upload-artifact@v7
-        with:
-          name: ios-tests
-          path: ${{ runner.temp }}/ios-tests.tar
-          if-no-files-found: error
-          compression-level: 1
-          overwrite: true
-          retention-days: 7
-
-  test:
-    needs: build
-    runs-on: macos-26
-    strategy:
-      fail-fast: false
-      matrix:
-        suite:
-          - NativeTests
-          - EditorUITests/EditorWritingUITests
-          - EditorUITests/EditorBlockUITests
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
-      SUITE: ${{ matrix.suite }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: cachix/install-nix-action@v31
-      - uses: actions/download-artifact@v8
-        with:
-          name: ios-tests
-          path: ${{ runner.temp }}
-      - run: |
-          mkdir -p apps/ios/DerivedData/Build
-          tar -C apps/ios/DerivedData/Build -xf "$RUNNER_TEMP/ios-tests.tar"
-      - name: Run the prebuilt tests
-        run: nix develop --command bash scripts/ios.sh test-without-building 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' "-only-testing:$SUITE" -parallel-testing-enabled NO
-
   editor:
-    needs: [build, test]
-    if: always()
-    runs-on: ubuntu-latest
+    runs-on: macos-26
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
     steps:
-      - env:
-          BUILD_RESULT: ${{ needs.build.result }}
-          TEST_RESULT: ${{ needs.test.result }}
-        run: test "$BUILD_RESULT" = success && test "$TEST_RESULT" = success
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+      - run: nix develop --command bash scripts/ios.sh test 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' -parallel-testing-enabled YES -parallel-testing-worker-count 3
+      - run: git diff --exit-code -- apps/ios/Sources/EditorCore/Resources apps/ios/App/Resources/LexicalModel.js apps/ios/App/Resources/LexicalModel-LICENSES.txt apps/ios/Tests/EditorCoreTests/Fixtures/Upstream/ProseMirrorTests.js
