@@ -38,9 +38,11 @@ vi.mock(
 		getAllTagsWithCount: getAllTagsWithCountMock,
 		getPageWithTitleAndTagsBySlug: getPageWithTitleAndTagsBySlugMock,
 		getTranslationContextsByUserId: getTranslationContextsByUserIdMock,
-		getUserTargetLocales: getUserTargetLocalesMock,
 	}),
 );
+vi.mock("@/app/_db/queries.server", () => ({
+	getUserTargetLocales: getUserTargetLocalesMock,
+}));
 
 const { getPageEditData } = await import("./-page-edit-data");
 

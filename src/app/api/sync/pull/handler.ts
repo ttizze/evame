@@ -1,8 +1,8 @@
 import { mdastToMarkdown } from "@/app/[locale]/_domain/mdast-to-markdown";
+import { authenticateToken } from "@/app/api/_service/authenticate-token";
 import type { JsonValue } from "@/db/types";
 import { findTitleSegmentText } from "../_db/queries";
 import { computeRevision } from "../_domain/compute-revision";
-import { authenticateToken } from "../_service/authenticate-token";
 import { listActivePagesForSync } from "./_db/queries";
 
 export async function getSyncPull(request: Request): Promise<Response> {

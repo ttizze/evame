@@ -84,6 +84,38 @@ describe("remarkAutoUploadImages", () => {
 		});
 	});
 
+	it("同じ中身の外部画像は送り直しても同じ保存先にし、中身が違えば別の保存先にする", async () => {
+		const md = "![ext](https://example.com/picture.png)";
+		await remark().use(remarkAutoUploadImages).process(md);
+		await remark().use(remarkAutoUploadImages).process(md);
+		const [first, second] = vi
+			.mocked(uploadImage)
+			.mock.calls.map(([, path]) => path);
+		expect(first).toMatch(/^external\/[0-9a-f]{64}$/);
+		expect(second).toBe(first);
+
+		vi.mocked(fileFromUrl).mockResolvedValueOnce(
+			new File([new Uint8Array([1, 2, 3])], "other.png", { type: "image/png" }),
+		);
+		await remark().use(remarkAutoUploadImages).process(md);
+		expect(vi.mocked(uploadImage).mock.calls[2][1]).not.toBe(first);
+	});
+
+	it("同じバイト列でもMIMEによって変換結果が変わる画像は別の保存先にする", async () => {
+		const bytes = new Uint8Array([255, 216, 255, 217]);
+		for (const type of ["image/jpeg", "image/svg+xml"]) {
+			vi.mocked(fileFromUrl).mockResolvedValueOnce(
+				new File([bytes], "photo", { type }),
+			);
+			await remark()
+				.use(remarkAutoUploadImages)
+				.process("![画像](https://example.com/photo)");
+		}
+		const paths = vi.mocked(uploadImage).mock.calls.map(([, path]) => path);
+		expect(paths).toHaveLength(2);
+		expect(paths[0]).not.toBe(paths[1]);
+	});
+
 	describe("混在コンテンツ", () => {
 		it("ローカル画像はスキップし、外部画像のみアップロードする", async () => {
 			const md = `

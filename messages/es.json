@@ -1,4 +1,10 @@
 {
+	"AppLogin": {
+		"title": "Permitir acceso a la app",
+		"description": "Permite que la app de Evame para iPhone lea y escriba tus documentos e imágenes y cambie su estado de publicación. Continúa solo si iniciaste sesión desde la app.",
+		"authorize": "Permitir y volver a la app",
+		"cancel": "Cancelar"
+	},
 	"PublicationSettings": {
 		"title": "Configuración de publicación",
 		"openSettings": "Configuración de publicación: {status}",

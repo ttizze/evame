@@ -1,4 +1,10 @@
 {
+	"AppLogin": {
+		"title": "允许应用访问",
+		"description": "允许 Evame iPhone 应用读取和编辑你的文档和图片，以及更改公开状态。仅当你主动从应用发起登录时才允许。",
+		"authorize": "允许并返回应用",
+		"cancel": "取消"
+	},
 	"PublicationSettings": {
 		"title": "发布设置",
 		"openSettings": "发布设置: {status}",

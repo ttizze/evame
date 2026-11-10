@@ -26,6 +26,7 @@ describe("Cloudflare Imagesで画像を圧縮してR2に保存する", () => {
 			new File([new Uint8Array(6 * 1024 * 1024)], "photo.png", {
 				type: "image/png",
 			}),
+			null,
 		);
 		expect(result).toMatchObject({
 			success: true,
@@ -40,13 +41,16 @@ describe("Cloudflare Imagesで画像を圧縮してR2に保存する", () => {
 	});
 	it("SVGは変換せず元のファイルを保存する", async () => {
 		const file = new File(["<svg/>"], "image.svg", { type: "image/svg+xml" });
-		await uploadImage(file);
+		await uploadImage(file, null);
 		expect(input).not.toHaveBeenCalled();
-		expect(upload).toHaveBeenCalledWith(file);
+		expect(upload).toHaveBeenCalledWith(file, null);
 	});
 	it("画像以外のファイルは保存しない", async () => {
 		expect(
-			await uploadImage(new File(["text"], "text.txt", { type: "text/plain" })),
+			await uploadImage(
+				new File(["text"], "text.txt", { type: "text/plain" }),
+				null,
+			),
 		).toMatchObject({ success: false });
 		expect(input).not.toHaveBeenCalled();
 		expect(upload).not.toHaveBeenCalled();
@@ -60,6 +64,7 @@ describe("Cloudflare Imagesで画像を圧縮してR2に保存する", () => {
 		expect(
 			await uploadImage(
 				new File(["image"], "photo.png", { type: "image/png" }),
+				null,
 			),
 		).toMatchObject({
 			success: false,

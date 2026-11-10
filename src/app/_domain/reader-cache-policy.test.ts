@@ -31,9 +31,17 @@ it("翻訳はチャンクごとに消さずジョブの完了時に公開HTMLを
 	).toBe(true);
 });
 it.each([
+	"/api/app/documents/abc123def456",
+	"/api/app/documents/abc123def456/status",
+])("アプリからの%sの更新は公開HTMLを更新する", (path) =>
+	expect(shouldInvalidateReader("PUT", path, null, 200, null)).toBe(true),
+);
+it.each([
 	"/api/auth/sign-out",
 	"/api/notifications",
 	"/api/page-views/1/increment",
+	"/api/app/images",
+	"/api/app/token",
 ])("%sの操作は本文のキャッシュを消さない", (path) =>
 	expect(shouldInvalidateReader("POST", path, null, 200, null)).toBe(false),
 );
