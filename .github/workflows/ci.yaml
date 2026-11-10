@@ -79,7 +79,7 @@ jobs:
           fi
 
       - name: Archive Workers build
-        run: tar -cf "$RUNNER_TEMP/workers.tar" dist reader/dist
+        run: tar --exclude='.dev.vars*' --exclude='.env*' -cf "$RUNNER_TEMP/workers.tar" dist reader/dist
       - uses: actions/upload-artifact@v7
         with:
           name: workers
