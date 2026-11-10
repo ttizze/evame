@@ -43,6 +43,7 @@
 - エージェントや非対話シェルでは `.envrc` が読み込まれていると仮定しない。
 - `IN_NIX_SHELL` が未設定の場合は `nix develop --command <command>` でプロジェクトコマンドを実行する。
 - Linuxのブラウザーテストに必要なGSettingsスキーマはNixで固定して供給し、ホストOSのスキーマ配置に依存しない。
+- CIの高速化は実行ログの所要時間から優先順位を決める。ビルドした同じ成果物を独立したDB・Simulatorの検証へ渡して並列化し、全テストの維持と失敗時の公開停止を確認する。短縮時間はGitHub Actions上で実測する。
 - iPhoneアプリは同じリポジトリの`apps/ios`に置く。Apple SDKはXcodeを使い、プロジェクト生成と検証は`bash scripts/ios.sh`からNix環境内で実行する。
 - iPhoneの表示・入力・IMEはUIKitを使う。PCと同じLexicalのJS版をJavaScriptCoreで使う構成を検証し、WebViewを使う構成と混同しない。headlessのモデル演算・Markdown往復・UIKitとの接続を検証する前に、採用・移行済みとして扱わない。
 - iPhoneの編集操作は移行前Webも比較元にする。キーボード上に太字を含む書式操作を直接表示し、Markdown記法による入力も維持する。日本語の未確定入力中には記法変換しない。
