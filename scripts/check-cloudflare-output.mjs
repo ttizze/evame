@@ -17,6 +17,12 @@ import { createTestHarness } from "wrangler";
 import { supportedLocaleOptions } from "../src/app/_constants/locale.ts";
 import { startTursoServer } from "./turso-dev-server.mjs";
 
+const browserSuite = process.env.EVAME_BROWSER_SUITE ?? "all";
+assert.ok(
+	["all", "editor-chromium", "editor-webkit", "reader"].includes(browserSuite),
+	`Unknown browser suite: ${browserSuite}`,
+);
+
 await mkdir(".data", { recursive: true });
 const databasePath = `.data/deployment-${randomUUID()}.db`;
 const localDatabase = createClient({ url: `file:${databasePath}` });
@@ -476,17 +482,29 @@ try {
 		"Aboutで説明文を維持する",
 	);
 	if (process.env.EVAME_BROWSER_TEST === "true") {
-		const { checkAppLogin } = await import("./check-app-login.mjs");
-		await checkAppLogin(serverUrl.origin, cookie);
-		const { checkEditorDrag } = await import("./check-editor-drag.mjs");
-		await checkEditorDrag(serverUrl.origin, cookie);
-		const { checkReaderBrowser } = await import("./check-reader-browser.mjs");
-		await checkReaderBrowser(serverUrl.origin, cookie, handle, pageSlug);
-		assert.equal(
-			queuedTranslations.length,
-			4,
-			"コメント翻訳をローカルのキューへ投入する",
-		);
+		const includeReader = browserSuite === "all" || browserSuite === "reader";
+		if (includeReader) {
+			const { checkAppLogin } = await import("./check-app-login.mjs");
+			await checkAppLogin(serverUrl.origin, cookie);
+		}
+		if (browserSuite !== "reader") {
+			const { chromium, webkit } = await import("@playwright/test");
+			const { checkEditorDrag } = await import("./check-editor-drag.mjs");
+			const browserTypes =
+				browserSuite === "all"
+					? [chromium, webkit]
+					: [browserSuite === "editor-chromium" ? chromium : webkit];
+			await checkEditorDrag(serverUrl.origin, cookie, browserTypes);
+		}
+		if (includeReader) {
+			const { checkReaderBrowser } = await import("./check-reader-browser.mjs");
+			await checkReaderBrowser(serverUrl.origin, cookie, handle, pageSlug);
+			assert.equal(
+				queuedTranslations.length,
+				4,
+				"コメント翻訳をローカルのキューへ投入する",
+			);
+		}
 	}
 	const publicEdit = new FormData();
 	publicEdit.set("pageSlug", pageSlug);

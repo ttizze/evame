@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { chromium, expect, webkit } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { checkEditorLists } from "./check-editor-lists.mjs";
 
 /** 保存の応答を返す場合も、マウスを離すまで実際のドラッグを保つ。 */
@@ -12,8 +12,8 @@ async function beginDrag(page, start, destination) {
 }
 
 /** 本文とハンドル列の両方へ、実際のマウス操作でブロックを移動する。 */
-export async function checkEditorDrag(baseUrl, cookie) {
-	for (const browserType of [chromium, webkit]) {
+export async function checkEditorDrag(baseUrl, cookie, browserTypes) {
+	for (const browserType of browserTypes) {
 		const browser = await browserType.launch();
 		try {
 			const context = await browser.newContext({

@@ -14,11 +14,10 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  ci-check:
+  checks:
     runs-on: ubuntu-latest
     env:
       TURSO_DATABASE_URL: file:evame.db
-      GOOGLE_ANALYTICS_ID: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && secrets.GOOGLE_ANALYTICS_ID || 'G-0000000000' }}
       TZ: Asia/Tokyo
       SENTRY_DSN: ""
       VITE_SENTRY_DSN: ""
@@ -52,13 +51,21 @@ jobs:
           nix develop --command bun run db:prod:seed
           nix develop --command bun run test --run
 
-      - name: Migrate production database
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        env:
-          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
-        run: nix develop --command bun run db:prod:migrate
-
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_ANALYTICS_ID: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && secrets.GOOGLE_ANALYTICS_ID || 'G-0000000000' }}
+      TZ: Asia/Tokyo
+      SENTRY_DSN: ""
+      VITE_SENTRY_DSN: ""
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - run: nix develop --command bun install --frozen-lockfile
       - name: Build Astro and TanStack Start for Cloudflare Workers
         env:
           TURSO_DATABASE_URL: ""
@@ -71,6 +78,88 @@ jobs:
             nix develop --command bun run build
           fi
 
+      - name: Archive Workers build
+        run: tar -cf "$RUNNER_TEMP/workers.tar" dist reader/dist
+      - uses: actions/upload-artifact@v7
+        with:
+          name: workers
+          path: ${{ runner.temp }}/workers.tar
+          if-no-files-found: error
+          compression-level: 1
+          overwrite: true
+          retention-days: 7
+
+  browser:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: editor-chromium
+            browsers: chromium
+          - suite: editor-webkit
+            browsers: webkit
+          - suite: reader
+            browsers: chromium webkit
+    env:
+      SENTRY_DSN: ""
+      VITE_SENTRY_DSN: ""
+      TZ: Asia/Tokyo
+      EVAME_BROWSER_SUITE: ${{ matrix.suite }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - run: nix develop --command bun install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          name: workers
+          path: ${{ runner.temp }}
+      - run: tar -xf "$RUNNER_TEMP/workers.tar"
+      - run: nix develop --command bun x playwright install --with-deps ${{ matrix.browsers }}
+      - run: nix develop --command bun run test:deployment:browser
+
+  ci-check:
+    needs: [checks, build, browser]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every check and browser suite to pass
+        env:
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
+        run: test "$CHECKS_RESULT" = success && test "$BUILD_RESULT" = success && test "$BROWSER_RESULT" = success
+      - uses: actions/checkout@v4
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install dependencies
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: nix develop --command bun install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          name: workers
+          path: ${{ runner.temp }}
+      - name: Restore verified Workers build
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        run: tar -xf "$RUNNER_TEMP/workers.tar"
+      - name: Migrate production database
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: nix develop --command bun run db:prod:migrate
+
       - name: Restore published Reader assets
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         uses: actions/cache/restore@v5
@@ -82,12 +171,6 @@ jobs:
       - name: Retain published Reader assets
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: nix develop --command bun run prepare:reader-assets
-
-      - name: Install Chromium and WebKit for browser regression checks
-        run: nix develop --command bun x playwright install --with-deps chromium webkit
-
-      - name: Verify isolated deployment runtime and browser behavior
-        run: nix develop --command bun run test:deployment:browser
 
       - name: Deploy Cloudflare Workers
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
@@ -141,6 +224,7 @@ jobs:
         run: nix develop --command bun run preview:workers
       - name: Verify preview auth and Reader
         run: |
+          # shellcheck disable=SC2016 # テンプレート展開はBunが行う。
           nix develop --command bun -e '
             for (const path of ["/api/auth/get-session", "/ja"]) {
               const response = await fetch(process.env.VITE_PUBLIC_DOMAIN + path, { signal: AbortSignal.timeout(30000) });
