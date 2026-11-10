@@ -11,7 +11,6 @@ on:
       - "package.json"
       - "bun.lock"
       - "scripts/ios.sh"
-      - "scripts/ios-test-shard.*"
       - "flake.*"
       - ".github/workflows/ios.yml"
   push:
@@ -25,7 +24,6 @@ on:
       - "package.json"
       - "bun.lock"
       - "scripts/ios.sh"
-      - "scripts/ios-test-shard.*"
       - "flake.*"
       - ".github/workflows/ios.yml"
   workflow_dispatch:
@@ -62,16 +60,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - suite: native
-          - suite: ui
-            shard: 0
-          - suite: ui
-            shard: 1
+        suite:
+          - NativeTests
+          - EditorUITests/EditorWritingUITests
+          - EditorUITests/EditorBlockUITests
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
       SUITE: ${{ matrix.suite }}
-      SHARD: ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -85,12 +80,7 @@ jobs:
           mkdir -p apps/ios/DerivedData/Build
           tar -C apps/ios/DerivedData/Build -xf "$RUNNER_TEMP/ios-tests.tar"
       - name: Run the prebuilt tests
-        run: |
-          if [[ "$SUITE" == native ]]; then
-            nix develop --command bash scripts/ios.sh test-without-building 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' -only-testing:NativeTests
-          else
-            nix develop --command bash scripts/ios.sh test-ui-shard 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' "$SHARD" 2
-          fi
+        run: nix develop --command bash scripts/ios.sh test-without-building 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' "-only-testing:$SUITE" -parallel-testing-enabled NO
 
   editor:
     needs: [build, test]
