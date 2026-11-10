@@ -25,6 +25,26 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 				.locator("article")
 				.getByText("Cloudflareで更新保存", { exact: true }),
 		).toBeVisible();
+		await expect(
+			staticPage
+				.locator("[data-blog-header]")
+				.getByRole("link", { name: "Worker Test", exact: true }),
+		).toHaveAttribute("href", `/ja/${handle}`);
+		await staticPage
+			.locator("[data-blog-header]")
+			.getByRole("link", { name: "記事", exact: true })
+			.click();
+		await expect(staticPage).toHaveURL(`${baseUrl}/ja/${handle}`);
+		await expect(
+			staticPage.getByRole("heading", { name: "Worker Test", exact: true }),
+		).toBeVisible();
+		await staticPage
+			.getByRole("link", { name: "Workers保存テスト", exact: true })
+			.first()
+			.click();
+		await expect(staticPage).toHaveURL(`${baseUrl}/ja/${handle}/${pageSlug}`);
+		await expect(staticPage.locator("[data-blog-header]")).toBeVisible();
+		await staticPage.goto(`${baseUrl}/ja/${handle}/${pageSlug}?view=both`);
 		await expect(staticPage.locator("body")).toHaveAttribute(
 			"data-view",
 			"both",
@@ -412,10 +432,15 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 				.locator("svg.lucide-download"),
 		).toBeVisible();
 		await expect(
-			page
-				.getByRole("link", { name: "Edit page", exact: true })
-				.locator("svg.lucide-pencil"),
-		).toBeVisible();
+			page.getByRole("link", { name: "Edit page", exact: true }),
+		).toHaveCount(0);
+		await expect(page.locator("[data-blog-header]")).toBeVisible();
+		await expect(
+			page.getByRole("button", { name: "Create a new page" }),
+		).toHaveCount(0);
+		await expect(
+			page.getByRole("button", { name: "アカウントメニュー" }),
+		).toHaveCount(0);
 		const titleBounds = await page
 			.getByRole("heading", { name: "Workers保存テスト", exact: true })
 			.boundingBox();
@@ -429,6 +454,16 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await page.screenshot({
 			path: "/tmp/evame-ui-restored-article-desktop.png",
 		});
+		await page.setViewportSize({ width: 390, height: 844 });
+		await expect(page.locator("[data-blog-header]")).toBeVisible();
+		assert.ok(
+			await page.evaluate(
+				() => document.documentElement.scrollWidth <= window.innerWidth,
+			),
+			"記事ページもモバイルで横にはみ出さない",
+		);
+		await page.screenshot({ path: "/tmp/evame-blog-article-mobile.png" });
+		await page.setViewportSize({ width: 1280, height: 900 });
 		await page
 			.getByRole("button", { name: "Table of Contents", exact: true })
 			.click();
@@ -644,7 +679,16 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await page.goto(`${baseUrl}/ja/${handle}`);
 		await expect(
 			page.getByRole("link", { name: "プロフィールを編集" }),
-		).toBeVisible({ timeout: 15000 });
+		).toHaveCount(0);
+		await expect(page.locator("[data-blog-header]")).toBeVisible();
+		await expect(
+			page.getByRole("button", { name: "More options", exact: true }),
+		).toHaveCount(0);
+		await page
+			.locator("[data-blog-footer]")
+			.getByRole("link", { name: "Evame", exact: true })
+			.click();
+		await expect(page).toHaveURL(`${baseUrl}/ja`);
 		const read = page.waitForResponse(
 			(r) =>
 				r.url().includes("/api/notifications") &&
@@ -656,8 +700,16 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await page.keyboard.press("Escape");
 		await page
 			.locator("header")
-			.getByRole("button", { name: "W", exact: true })
+			.getByRole("button", { name: "アカウントメニュー", exact: true })
 			.click();
+		await expect(
+			page.getByRole("menuitem", { name: "プロフィール・設定", exact: true }),
+		).toHaveAttribute("href", `/ja/${handle}/edit`);
+		await page.keyboard.press("Escape");
+		await page.goto(`${baseUrl}/ja/${handle}`);
+		await expect(
+			page.locator('astro-island[component-export="HeaderIsland"]'),
+		).not.toHaveAttribute("ssr", "");
 		await page.getByTestId("locale-selector-button").click();
 		const localeSearch = page.getByPlaceholder("search...");
 		await localeSearch.fill("fr");
@@ -802,23 +854,55 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		console.log(
 			"公開設定でコメント受付をOFF・ONにでき、再読み込み・SSR・投稿拒否・既存コメントの閲覧を維持する",
 		);
-		const draftResponse = await page.request.get(
-			`${baseUrl}/api/reader-data?${new URLSearchParams({ path: new URL(newPageUrl).pathname })}`,
+		await page.goto(
+			`${baseUrl}/ja/${handle}/page-management?query=${encodeURIComponent("ブラウザー新規保存")}`,
 		);
-		assert.equal(
-			draftResponse.status(),
-			200,
-			"作成した下書きの閲覧データを取得できる",
-		);
-		const draft = fromJSON(await draftResponse.json());
-		const newPageId = draft.page.data.pageDetail.id;
-		const publishDraft = () =>
-			page.request.post(`${baseUrl}/api/reader-actions?action=pageStatus`, {
-				data: { locale: "ja", pageId: newPageId, operation: "togglePublish" },
-			});
-		assert.equal((await publishDraft()).status(), 200);
+		await expect(
+			page.getByRole("button", { name: "アカウントメニュー", exact: true }),
+		).toBeVisible();
+		await page
+			.getByRole("list", { name: "記事管理", exact: true })
+			.getByRole("button", { name: "More options", exact: true })
+			.click();
+		await page
+			.getByRole("button", { name: "Make Public", exact: true })
+			.click();
+		await expect(
+			page
+				.getByRole("list", { name: "記事管理", exact: true })
+				.getByText("Public", { exact: true }),
+		).toBeVisible();
 		await page.goto(`${baseUrl}/ja/${handle}`);
-		const ownerCard = page.locator("main article").filter({
+		const blogCard = page.locator("main article").filter({
+			has: page.getByRole("link", {
+				name: "ブラウザー新規保存",
+				exact: true,
+			}),
+		});
+		await expect(blogCard).toBeVisible();
+		await expect(
+			blogCard.getByRole("button", { name: "More options", exact: true }),
+		).toHaveCount(0);
+		await page
+			.locator("[data-blog-footer]")
+			.getByRole("link", { name: "Evame", exact: true })
+			.click();
+		await page
+			.getByRole("button", { name: "アカウントメニュー", exact: true })
+			.click();
+		await page.getByRole("menuitem", { name: "記事管理", exact: true }).click();
+		await expect(
+			page.getByRole("button", { name: "アカウントメニュー", exact: true }),
+		).toBeVisible();
+		await page
+			.getByRole("textbox", { name: "Search pages" })
+			.fill("ブラウザー新規保存");
+		const managementList = page.getByRole("list", {
+			name: "記事管理",
+			exact: true,
+		});
+		await expect(managementList.getByRole("listitem")).toHaveCount(1);
+		const ownerCard = managementList.getByRole("listitem").filter({
 			has: page.getByRole("link", {
 				name: "ブラウザー新規保存",
 				exact: true,
@@ -832,33 +916,39 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		).toHaveAttribute("href", `${new URL(newPageUrl).pathname}/edit`);
 		const hiddenResponse = page.waitForResponse(
 			(response) =>
-				response.url().includes("reader-actions?action=pageStatus") &&
+				new URL(response.url()).pathname.startsWith("/_serverFn/") &&
 				response.request().method() === "POST",
 		);
-		const [hiddenNavigation] = await Promise.all([
-			page.waitForNavigation({ waitUntil: "domcontentloaded" }),
+		await Promise.all([
 			page.getByRole("button", { name: "Make Private", exact: true }).click(),
 			hiddenResponse.then(async (response) => {
 				const status = response.status();
 				assert.equal(status, 200, status === 200 ? "" : await response.text());
 			}),
 		]);
-		assert.equal(hiddenNavigation.status(), 200);
-		assert.equal(hiddenNavigation.headers()["x-evame-html"], "dynamic");
-		await expect(ownerCard).toHaveCount(0);
-		assert.equal((await publishDraft()).status(), 200);
-		await page.reload();
+		await expect(ownerCard.getByText("Private", { exact: true })).toBeVisible();
+		const hiddenBlog = await page.request.get(`${baseUrl}/ja/${handle}`);
+		assert.ok(
+			!(await hiddenBlog.text()).includes("ブラウザー新規保存"),
+			"管理で非公開にするとブログ一覧から消える",
+		);
+		await ownerCard
+			.getByRole("button", { name: "More options", exact: true })
+			.click();
+		await page
+			.getByRole("button", { name: "Make Public", exact: true })
+			.click();
+		await expect(ownerCard.getByText("Public", { exact: true })).toBeVisible();
 		await ownerCard
 			.getByRole("button", { name: "More options", exact: true })
 			.click();
 		await page.getByRole("button", { name: "Delete", exact: true }).click();
 		const deletedResponse = page.waitForResponse(
 			(response) =>
-				response.url().includes("reader-actions?action=pageStatus") &&
+				new URL(response.url()).pathname.startsWith("/_serverFn/") &&
 				response.request().method() === "POST",
 		);
-		const [deletedNavigation] = await Promise.all([
-			page.waitForNavigation({ waitUntil: "domcontentloaded" }),
+		await Promise.all([
 			page
 				.getByRole("dialog", { name: "Delete Page" })
 				.getByRole("button", { name: "Delete", exact: true })
@@ -868,19 +958,40 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 				assert.equal(status, 200, status === 200 ? "" : await response.text());
 			}),
 		]);
-		assert.equal(deletedNavigation.status(), 200);
-		assert.equal(deletedNavigation.headers()["x-evame-html"], "dynamic");
 		await expect(ownerCard).toHaveCount(0);
-		await expect(
-			page.getByRole("link", { name: "プロフィールを編集", exact: true }),
-		).toBeVisible();
+		await page.goto(`${baseUrl}/ja/${handle}`);
+		await expect(blogCard).toHaveCount(0);
+		await expect(page.locator("[data-blog-header]")).toBeVisible();
 		console.log(
-			"本人プロフィールの記事メニューから編集先・非公開化・削除を操作できる",
+			"ブログに管理操作を出さず、共通トップの記事管理から編集先・非公開化・削除を操作できる",
 		);
 		await page.screenshot({
 			path: "/tmp/evame-reader-profile.png",
 			fullPage: true,
 		});
+		await page.setViewportSize({ width: 390, height: 844 });
+		await expect(
+			page.locator('astro-island[component-export="HeaderIsland"]'),
+		).not.toHaveAttribute("ssr", "");
+		await page
+			.getByRole("button", { name: "ダークテーマに切り替える", exact: true })
+			.click();
+		await expect(page.locator("html")).toHaveClass(/dark/);
+		await page
+			.getByRole("button", { name: "ライトテーマに切り替える", exact: true })
+			.click();
+		await expect(page.locator("html")).not.toHaveClass(/dark/);
+		assert.ok(
+			await page.evaluate(
+				() => document.documentElement.scrollWidth <= window.innerWidth,
+			),
+			"ブログはモバイルで横にはみ出さない",
+		);
+		await page.screenshot({
+			path: "/tmp/evame-blog-mobile.png",
+			fullPage: true,
+		});
+		await page.setViewportSize({ width: 1280, height: 900 });
 		assert.deepEqual(errors, [], "ブラウザーに未処理エラーがない");
 		console.log(
 			"本人プロフィール・Markdownダウンロードを維持し、ブラウザーの未処理エラーがない",

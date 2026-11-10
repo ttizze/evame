@@ -171,7 +171,6 @@ function Search({
 											/>
 										}
 										locale={locale}
-										ownerActions={null}
 										PageForList={page}
 									/>
 								))}

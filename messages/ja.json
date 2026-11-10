@@ -1,4 +1,8 @@
 {
+	"Blog": {
+		"articles": "記事",
+		"navigation": "ブログのナビゲーション"
+	},
 	"AppLogin": {
 		"title": "アプリにアクセスを許可",
 		"description": "Evame iPhoneアプリに、あなたの文書と画像の読み書き、および公開状態の変更を許可します。自分でアプリからログインを始めた場合だけ許可してください。",
@@ -85,6 +89,11 @@
 		"termsOfService": "Terms of Service"
 	},
 	"Header": {
+		"lightTheme": "ライトテーマに切り替える",
+		"darkTheme": "ダークテーマに切り替える",
+		"accountMenu": "アカウントメニュー",
+		"settings": "プロフィール・設定",
+		"management": "記事管理",
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "使い方",
@@ -139,7 +148,6 @@
 		"more": "もっと見る",
 		"comments": "コメント",
 		"downloadMarkdown": "Markdownをダウンロード",
-		"editProfile": "プロフィールを編集",
 		"search": "検索",
 		"title": "タイトル",
 		"content": "本文",

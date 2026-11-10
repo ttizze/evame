@@ -1,4 +1,8 @@
 {
+	"Blog": {
+		"articles": "Articles",
+		"navigation": "Blog navigation"
+	},
 	"AppLogin": {
 		"title": "Allow app access",
 		"description": "Allow the Evame iPhone app to read and write your documents and images and change publication status. Only continue if you started signing in from the app.",
@@ -85,6 +89,11 @@
 		"termsOfService": "Terms of Service"
 	},
 	"Header": {
+		"lightTheme": "Switch to light theme",
+		"darkTheme": "Switch to dark theme",
+		"accountMenu": "Account menu",
+		"settings": "Profile and settings",
+		"management": "Manage articles",
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "How to Use",
@@ -139,7 +148,6 @@
 		"more": "More",
 		"comments": "Comments",
 		"downloadMarkdown": "Download Markdown",
-		"editProfile": "Edit Profile",
 		"search": "Search",
 		"title": "Title",
 		"content": "Content",

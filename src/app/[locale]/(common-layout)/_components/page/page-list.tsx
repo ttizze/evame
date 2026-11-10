@@ -8,7 +8,6 @@ import { PageCommentButton } from "./page-list/page-comment-button";
 
 type PageListProps = {
 	PageForList: PageForList;
-	ownerActions: ReactNode;
 	likeButton: ReactNode;
 	avatar: ReactNode;
 	index: number | null;
@@ -17,7 +16,6 @@ type PageListProps = {
 
 export function PageList({
 	PageForList,
-	ownerActions,
 	likeButton,
 	avatar,
 	index,
@@ -45,21 +43,18 @@ export function PageList({
 			 *   row‑3: フッター行（ユーザ & 日付 & ボタン）
 			 */}
 			<div className="grid grid-rows-[auto_auto_auto_auto] gap-1 min-w-0">
-				{/* ─ row‑1: タイトル & オーナーアクション ─ */}
-				<div className="grid grid-cols-[1fr_auto] gap-2">
-					<a
-						className="block overflow-hidden"
-						href={`/${locale}/${PageForList.userHandle}/${PageForList.slug}`}
-					>
-						<SegmentElement
-							className="line-clamp-1 break-all overflow-wrap-anywhere"
-							interactive={false}
-							segment={titleSegment}
-							tagName="span"
-						/>
-					</a>
-					{ownerActions}
-				</div>
+				{/* ─ row‑1: タイトル ─ */}
+				<a
+					className="block overflow-hidden"
+					href={`/${locale}/${PageForList.userHandle}/${PageForList.slug}`}
+				>
+					<SegmentElement
+						className="line-clamp-1 break-all overflow-wrap-anywhere"
+						interactive={false}
+						segment={titleSegment}
+						tagName="span"
+					/>
+				</a>
 
 				{/* ─ row-2: タグリスト ─ */}
 				<PageTagList locale={locale} tag={PageForList.tags} />

@@ -1,7 +1,5 @@
-import { DownloadIcon, PencilIcon } from "lucide-react";
+import { DownloadIcon } from "lucide-react";
 import { useTranslations } from "use-intl";
-import { useHydrated } from "@/app/_hooks/use-hydrated";
-import { authClient } from "@/app/[locale]/_service/auth-client";
 import { useHeaderScroll } from "@/app/[locale]/(common-layout)/_components/header/hooks/use-header-scroll";
 import { formatDate } from "@/app/[locale]/(common-layout)/_utils/format-date";
 import { TocTrigger } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/sub-header/toc-trigger";
@@ -33,8 +31,6 @@ function ArticleTools({
 	createdAt: Date;
 	tocItems: TocItem[];
 }) {
-	const { data: session } = authClient.useSession();
-	const hydrated = useHydrated();
 	const { headerRef, isPinned, isVisible, headerHeight } = useHeaderScroll();
 	const t = useTranslations("Reader");
 	const downloadUrl = `/api/page-markdown?${new URLSearchParams({ locale, handle, slug })}`;
@@ -87,16 +83,6 @@ function ArticleTools({
 								<TooltipContent>{t("downloadMarkdown")}</TooltipContent>
 							</Tooltip>
 						</TooltipProvider>
-						{hydrated && session?.user.handle === handle && (
-							<Button asChild size="icon" variant="ghost">
-								<a
-									aria-label="Edit page"
-									href={`/${locale}/${handle}/${slug}/edit`}
-								>
-									<PencilIcon className="h-5 w-5" />
-								</a>
-							</Button>
-						)}
 						<TocTrigger items={tocItems} />
 					</div>
 				</div>

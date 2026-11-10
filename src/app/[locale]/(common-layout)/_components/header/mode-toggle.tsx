@@ -1,12 +1,17 @@
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { forwardRef } from "react";
+import { useTranslations } from "use-intl";
+import { useHydrated } from "@/app/_hooks/use-hydrated";
 
 export const ModeToggle = forwardRef<HTMLButtonElement, { showText?: boolean }>(
 	(props, ref) => {
 		const { showText = true } = props;
-		const { theme, setTheme } = useTheme();
-		const isLight = theme === "light";
+		const { resolvedTheme, setTheme } = useTheme();
+		const hydrated = useHydrated();
+		const isLight = hydrated && resolvedTheme === "light";
+		const t = useTranslations("Header");
+		const label = t(isLight ? "darkTheme" : "lightTheme");
 
 		function toggleTheme() {
 			setTheme(isLight ? "dark" : "light");
@@ -14,7 +19,9 @@ export const ModeToggle = forwardRef<HTMLButtonElement, { showText?: boolean }>(
 
 		return (
 			<button
-				className="w-full gap-2 flex cursor-pointer items-center px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground"
+				aria-label={label}
+				className={`gap-2 flex cursor-pointer items-center hover:bg-accent hover:text-accent-foreground ${showText ? "w-full px-4 py-3 text-sm" : "h-9 w-9 shrink-0 justify-center rounded-full"}`}
+				disabled={!hydrated}
 				onClick={toggleTheme}
 				ref={ref}
 				type="button"
@@ -25,7 +32,7 @@ export const ModeToggle = forwardRef<HTMLButtonElement, { showText?: boolean }>(
 				<Moon
 					className={`w-4 h-4 ${isLight ? "hidden" : "rotate-0 scale-100"}`}
 				/>
-				{showText && <span>{isLight ? "Light Theme" : "Dark Theme"}</span>}
+				{showText && <span>{label}</span>}
 			</button>
 		);
 	},

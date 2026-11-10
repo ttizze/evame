@@ -65,6 +65,20 @@ if (
 }
 const locale = result.locale;
 const metadata = result.metadata;
+const blog =
+	result.kind === "profile"
+		? {
+				handle: result.data.pageOwner.handle,
+				name: result.data.pageOwner.name,
+				image: result.data.pageOwner.image,
+			}
+		: result.kind === "article"
+			? {
+					handle: result.data.pageDetail.userHandle,
+					name: result.data.pageDetail.userName,
+					image: result.data.pageDetail.userImage,
+				}
+			: null;
 const t = (messages[locale as keyof typeof messages] ?? messages.en).Reader;
 const pageIds =
 	result.kind === "article"
@@ -75,7 +89,7 @@ const pageIds =
 			? result.data.pageForLists.map((page) => page.id)
 			: [];
 ---
-<Layout locale={locale} title={metadata.title} description={metadata.description} canonical={metadata.alternates.canonical} gaTrackingId={gaTrackingId} commonLayout={result.kind !== "terms" && result.kind !== "privacy"}>
+<Layout blog={blog} locale={locale} title={metadata.title} description={metadata.description} canonical={metadata.alternates.canonical} gaTrackingId={gaTrackingId} commonLayout={result.kind !== "terms" && result.kind !== "privacy"}>
   <Fragment slot="head">{Object.entries(metadata.alternates.languages).map(([lang, href]) => <link rel="alternate" hreflang={lang} href={href} />)}{("image" in metadata && metadata.image) && <meta property="og:image" content={metadata.image} />}{result.kind === "article" && !result.cacheable && <meta name="robots" content="noindex, nofollow" />}<meta property="og:type" content={result.kind === "article" ? "article" : result.kind === "profile" ? "profile" : "website"} /></Fragment>
   <OrganizationJsonLd /><WebSiteJsonLd locale={locale} />
   {result.kind === "home" && <HomeFeedIsland locale={locale} initialData={result.data} client:load />}

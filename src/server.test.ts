@@ -477,7 +477,7 @@ it("キャッシュ削除に失敗した後は差分がない再試行でも保�
 	vi.mocked(handler.fetch).mockResolvedValue(new Response(null));
 	env.READER.fetch.mockResolvedValue(new Response(null, { status: 503 }));
 	const request = () =>
-		new Request("https://evame.test/api/reader-actions?action=pageStatus", {
+		new Request("https://evame.test/api/reader-actions?action=pageComments", {
 			method: "POST",
 		});
 	await expect(

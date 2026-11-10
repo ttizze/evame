@@ -7,7 +7,7 @@ import { messages } from "@/i18n/messages";
 import type { loadReaderData } from "../../../src/app/api/reader-data/_service/load-reader-data";
 import PageCard from "./page-card.astro";
 import Pagination from "./pagination.astro";
-import { ProfileActionsIsland } from "./profile-actions";
+import { ProfileFollowIsland } from "./profile-follow";
 import { ProfileSortIsland } from "./profile-sort";
 
 type Props = {
@@ -24,16 +24,16 @@ const { pageOwner } = data;
 const t = (messages[locale as keyof typeof messages] ?? messages.en).Reader;
 ---
 <ProfilePageJsonLd description={pageOwner.profile || undefined} image={pageOwner.image || undefined} name={pageOwner.name} url={`https://evame.tech/${locale}/${pageOwner.handle}`} />
-<div class="mb-8 py-4">
+<section class="mb-8 py-4">
  <div class="pb-4"><div class="flex w-full flex-col md:flex-row">
   <div>{pageOwner.image ? <a href={pageOwner.image} rel="noreferrer" target="_blank"><UserAvatar image={pageOwner.image} name={pageOwner.name} className="w-20 h-20 md:w-24 md:h-24 not-prose" client:visible /></a> : <UserAvatar image={null} name={pageOwner.name} className="w-20 h-20 md:w-24 md:h-24 not-prose" client:visible />}</div>
   <div class="mt-2 md:mt-0 md:ml-4 flex items-center justify-between w-full">
-   <div><p class="text-xl md:text-2xl font-bold not-prose">{pageOwner.name}</p><div><p class="text-sm text-gray-500 not-prose">@{pageOwner.handle}</p><FollowStats locale={locale} followerList={data.followerList} followingList={data.followingList} followersCount={data.followCounts.followers} followingCount={data.followCounts.following} client:visible /></div></div>
-   <ProfileActionsIsland locale={locale} handle={pageOwner.handle} userId={pageOwner.id} editLabel={t.editProfile} client:load />
+   <div><h1 class="text-xl md:text-2xl font-bold not-prose">{pageOwner.name}</h1><div><p class="text-sm text-gray-500 not-prose">@{pageOwner.handle}</p><FollowStats locale={locale} followerList={data.followerList} followingList={data.followingList} followersCount={data.followCounts.followers} followingCount={data.followCounts.following} client:visible /></div></div>
+   <ProfileFollowIsland locale={locale} userId={pageOwner.id} client:load />
   </div>
  </div></div>
  <div class="mt-4"><Linkify options={{ className: "underline" }}>{pageOwner.profile}</Linkify><div class="flex items-center gap-2 mt-6">{pageOwner.twitterHandle && <a href={`https://x.com/${pageOwner.twitterHandle}`} rel="noreferrer" target="_blank"><img alt="X" class="dark:invert" height="20" width="20" src="/x.svg" /></a>}</div></div>
-</div>
+</section>
 <ProfileSortIsland locale={locale} sort={sort} search={Astro.url.search} pathname={Astro.url.pathname} client:load />
 {data.pageForLists.length === 0 && <p class="text-center text-gray-500 mt-10">{t.noPages}</p>}
 <div>{data.pageForLists.map((page) => <PageCard page={page} locale={locale} index={null} />)}</div>

@@ -1,4 +1,5 @@
-import { BookOpenIcon, LogOutIcon } from "lucide-react";
+import { BookOpenIcon, LogOutIcon, SettingsIcon } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { LocaleSelector } from "@/app/[locale]/(common-layout)/_components/header/locale-selector/client";
 import { ModeToggle } from "@/app/[locale]/(common-layout)/_components/header/mode-toggle";
@@ -22,6 +23,7 @@ export function UserMenu({
 	hasGeminiApiKey = false,
 	locale,
 }: UserMenuProps) {
+	const t = useTranslations("Header");
 	const handleSignOut = async () => {
 		try {
 			await authClient.signOut({
@@ -38,7 +40,7 @@ export function UserMenu({
 
 	return (
 		<DropdownMenu modal={false}>
-			<DropdownMenuTrigger>
+			<DropdownMenuTrigger aria-label={t("accountMenu")}>
 				<Avatar className="w-6 h-6 cursor-pointer">
 					<AvatarImage
 						alt={currentUser.name}
@@ -76,10 +78,19 @@ export function UserMenu({
 				<DropdownMenuItem asChild>
 					<a
 						className="flex gap-2 px-4 py-3"
+						href={`/${locale}/${currentUser.handle}/edit`}
+					>
+						<SettingsIcon className="w-4 h-4" />
+						{t("settings")}
+					</a>
+				</DropdownMenuItem>
+				<DropdownMenuItem asChild>
+					<a
+						className="flex gap-2 px-4 py-3"
 						href={`/${locale}/${currentUser.handle}/page-management`}
 					>
 						<BookOpenIcon className="w-4 h-4" />
-						Page Management
+						{t("management")}
 					</a>
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>

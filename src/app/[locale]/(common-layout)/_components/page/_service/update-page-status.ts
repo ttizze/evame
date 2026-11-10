@@ -1,15 +1,15 @@
 import { redirect } from "@tanstack/react-router";
 import { z } from "zod";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
+import { localeSchema } from "@/app/_utils/locale-schema";
 import { archivePage } from "@/app/[locale]/(common-layout)/_components/page/delete-page-dialog/db/mutations.server";
 import { togglePagePublicStatus } from "@/app/[locale]/(common-layout)/_components/page/page-actions-dropdown/db/mutations.server";
 import type { ActionResponse } from "@/app/types";
-import { readerLocale } from "../../_domain/reader-locale";
 
 const input = z.object({
 	pageId: z.number().int().positive(),
 	operation: z.enum(["togglePublish", "archive"]),
-	locale: readerLocale,
+	locale: localeSchema,
 });
 export async function updatePageStatus(
 	data: z.input<typeof input>,
