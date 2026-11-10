@@ -15,6 +15,7 @@
 			"!apps/ios/LexicalProbe/Swift/Generated",
 			"!**/*.xcodeproj",
 			"!apps/ios/Sources/EditorCore/Resources/*.js",
+			"!apps/ios/App/Resources/LexicalModel.js",
 			"!apps/ios/Tests/EditorCoreTests/Fixtures/Upstream",
 			"!**/*.css",
 			"!playwright-report",

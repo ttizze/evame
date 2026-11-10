@@ -18,6 +18,7 @@ import {
 	$isRangeSelection,
 	$isTextNode,
 	$setSelection,
+	configExtension,
 	defineExtension,
 	HISTORY_PUSH_TAG,
 	INDENT_CONTENT_COMMAND,
@@ -25,6 +26,7 @@ import {
 	KEY_SPACE_COMMAND,
 	KEY_TAB_COMMAND,
 	OUTDENT_CONTENT_COMMAND,
+	REDO_COMMAND,
 	UNDO_COMMAND,
 } from "lexical";
 import remarkGfm from "remark-gfm";
@@ -40,7 +42,108 @@ import {
 	SET_TEXT_BLOCK_COMMAND,
 	TabEditingExtension,
 } from "./block-editing";
+import { DocumentExtension } from "./document";
 import { MarkdownExtension } from "./markdown";
+
+it("区切りの段落を下へ移してリストが結合しても子リストの後ろの親本文を残す", () => {
+	const editor = createListEditor(
+		"- - 子A\n\n  本文A\n\n区切り\n\n- - 子B\n\n  本文B",
+		"区切り",
+	);
+	editor.update(
+		() => {
+			const root = $getRoot();
+			$moveEditorBlock(
+				root.getChildren()[1].getKey(),
+				root.getLastChildOrThrow().getKey(),
+				"after",
+			);
+		},
+		{ discrete: true },
+	);
+	expect(rendered(editor.read($convertToMarkdownString))).toEqual(
+		rendered("- - 子A\n\n  本文A\n- - 子B\n\n  本文B\n\n区切り"),
+	);
+});
+
+it("子リストを本文の間に持つ親にも箇条書きのマーカーを表示する", () => {
+	const editor = buildEditorFromExtensions(
+		defineExtension({
+			name: "parent-marker",
+			theme: {
+				tableScrollableWrapper: "table",
+				list: { nested: { listitem: "hide-marker" } },
+			},
+			dependencies: [DocumentExtension],
+		}),
+	);
+	const style = document.createElement("style");
+	style.textContent = ".hide-marker { list-style-type: none; }";
+	document.head.append(style);
+	const root = document.createElement("div");
+	document.body.append(root);
+	editor.setRootElement(root);
+	try {
+		editor.update(
+			() => $convertFromMarkdownString("- 前半\n  - 子\n\n  後半"),
+			{ discrete: true },
+		);
+		const element = root.querySelector("li");
+		expect(element).not.toBeNull();
+		expect(getComputedStyle(element!).listStyleType).not.toBe("none");
+	} finally {
+		editor.setRootElement(null);
+		root.remove();
+		style.remove();
+	}
+});
+
+it.each([
+	[INSERT_ORDERED_LIST_COMMAND, "- 前半\n  1. 子\n\n  後半"],
+	[OUTDENT_CONTENT_COMMAND, "- 前半\n\n  後半\n\n- 子"],
+] as const)(
+	"親の前半・後半の間の子リストを変更しても親本文を保存・Undo・Redoで保つ（%s）",
+	async (command, expected) => {
+		const source = "- 前半\n  - 子\n\n  後半";
+		const editor = buildEditorFromExtensions(
+			defineExtension({
+				name: "list-parent-body",
+				theme: { tableScrollableWrapper: "table" },
+				dependencies: [
+					DocumentExtension,
+					configExtension(HistoryExtension, { disabled: false }),
+				],
+			}),
+		);
+		editor.update(
+			() => {
+				$convertFromMarkdownString(source);
+				$getRoot()
+					.getAllTextNodes()
+					.find((node) => node.getTextContent() === "子")
+					?.selectEnd();
+			},
+			{ discrete: true },
+		);
+		await editor.dispatchCommand(command, undefined);
+		expect(rendered(editor.read($convertToMarkdownString))).toEqual(
+			rendered(expected),
+		);
+		await editor.dispatchCommand(UNDO_COMMAND, undefined);
+		expect(rendered(editor.read($convertToMarkdownString))).toEqual(
+			rendered(source),
+		);
+		await editor.dispatchCommand(REDO_COMMAND, undefined);
+		expect(rendered(editor.read($convertToMarkdownString))).toEqual(
+			rendered(expected),
+		);
+		const saved = editor.read($convertToMarkdownString);
+		editor.update(() => $convertFromMarkdownString(saved), { discrete: true });
+		expect(rendered(editor.read($convertToMarkdownString))).toEqual(
+			rendered(expected),
+		);
+	},
+);
 
 it("入れ子で5.と空白を打って作った番号付きリストは5から保存する", async () => {
 	const editor = createListEditor("- 親\n  - 対象", "対象");
@@ -338,12 +441,7 @@ function createListEditor(markdown: string, text: string) {
 	const editor = buildEditorFromExtensions(
 		defineExtension({
 			name: "evame-block-editing-test",
-			dependencies: [
-				RichTextExtension,
-				MarkdownExtension,
-				BlockEditingExtension,
-				TabEditingExtension,
-			],
+			dependencies: [TabEditingExtension, DocumentExtension],
 		}),
 	);
 	editor.update(

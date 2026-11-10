@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/popover";
 import {
 	$getParentListItem,
+	$isListContainer,
 	$moveEditorBlock,
 	listCommands,
 } from "./block-editing";
@@ -81,10 +82,7 @@ export function BlockDragMenu({
 				} | null = null;
 				let distance = Infinity;
 				function visit(node: LexicalNode) {
-					if (
-						$isListNode(node) ||
-						($isListItemNode(node) && $isListNode(node.getFirstChild()))
-					) {
+					if ($isListNode(node) || $isListContainer(node)) {
 						if ($isElementNode(node))
 							for (const child of node.getChildren()) visit(child);
 					} else {
@@ -92,10 +90,13 @@ export function BlockDragMenu({
 						if (!element) return;
 						const rect = element.getBoundingClientRect();
 						const nextDistance = Math.max(rect.top - y, y - rect.bottom, 0);
-						if (rect.height && nextDistance < distance) {
+						if (rect.height && nextDistance <= distance) {
 							nearest = { key: node.getKey(), element, rect };
 							distance = nextDistance;
 						}
+						if ($isListItemNode(node))
+							for (const child of node.getChildren())
+								if ($isListNode(child)) visit(child);
 					}
 				}
 				for (const child of $getRoot().getChildren()) visit(child);
@@ -148,7 +149,7 @@ export function BlockDragMenu({
 				let bottom = target.rect.bottom;
 				if ($isListItemNode(node) && placement !== "before") {
 					let next = node.getNextSibling();
-					while ($isListItemNode(next) && $isListNode(next.getFirstChild())) {
+					while ($isListContainer(next)) {
 						const element = editor.getElementByKey(next.getKey());
 						if (element) bottom = element.getBoundingClientRect().bottom;
 						next = next.getNextSibling();
@@ -182,7 +183,8 @@ export function BlockDragMenu({
 			const target = targetAt(event.clientX, event.clientY);
 			hovered.current = target?.key ?? null;
 			const button = menu.current;
-			if (!button) return;
+			const root = editor.getRootElement();
+			if (!button || !root) return;
 			if (
 				!target ||
 				target.element.matches("p:empty, p:has(> br:only-child)")
@@ -194,8 +196,13 @@ export function BlockDragMenu({
 			const height =
 				Number.parseFloat(getComputedStyle(target.element).lineHeight) ||
 				target.rect.height;
+			// 子リストのハンドルが、同じ高さにある親のチェック欄や本文を覆わないよう左列へ揃える。
+			const left =
+				target.element.tagName === "LI"
+					? root.getBoundingClientRect().left
+					: target.rect.left;
 			button.style.display = "flex";
-			button.style.transform = `translate(${target.rect.left - anchor.left - (target.element.tagName === "LI" ? 48 : 28)}px, ${target.rect.top - anchor.top + (height - 28) / 2 + anchorElement.scrollTop}px)`;
+			button.style.transform = `translate(${left - anchor.left - 28}px, ${target.rect.top - anchor.top + (height - 28) / 2 + anchorElement.scrollTop}px)`;
 		}
 		function leave() {
 			if (!dragged.current && !menuOpen && menu.current)

@@ -3,14 +3,26 @@ name: iPhone editor
 on:
   pull_request:
     paths:
+      - "patches/**"
+      - "tests/editor-matrix.mjs"
       - "apps/ios/**"
+      - "src/app/*/_components/editor/**"
+      - "src/app/*/_domain/get-x-post-id.ts"
+      - "package.json"
+      - "bun.lock"
       - "scripts/ios.sh"
       - "flake.*"
       - ".github/workflows/ios.yml"
   push:
     branches: [main]
     paths:
+      - "patches/**"
+      - "tests/editor-matrix.mjs"
       - "apps/ios/**"
+      - "src/app/*/_components/editor/**"
+      - "src/app/*/_domain/get-x-post-id.ts"
+      - "package.json"
+      - "bun.lock"
       - "scripts/ios.sh"
       - "flake.*"
       - ".github/workflows/ios.yml"
@@ -30,4 +42,4 @@ jobs:
           persist-credentials: false
       - uses: cachix/install-nix-action@v31
       - run: nix develop --command bash scripts/ios.sh test 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
-      - run: git diff --exit-code -- apps/ios/Sources/EditorCore/Resources apps/ios/Tests/EditorCoreTests/Fixtures/Upstream/ProseMirrorTests.js
+      - run: git diff --exit-code -- apps/ios/Sources/EditorCore/Resources apps/ios/App/Resources/LexicalModel.js apps/ios/App/Resources/LexicalModel-LICENSES.txt apps/ios/Tests/EditorCoreTests/Fixtures/Upstream/ProseMirrorTests.js

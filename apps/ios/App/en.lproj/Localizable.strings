@@ -43,3 +43,16 @@
 "Markdown原文" = "Markdown source";
 "画像を読み込み中" = "Loading image";
 "チェック項目" = "Checklist item";
+"完了" = "Done";
+"未完了" = "Not done";
+"タイトル" = "Title";
+"文書" = "Documents";
+"新しい文書" = "New document";
+"文書がありません" = "No documents";
+"無題" = "Untitled";
+"端末に保存できませんでした" = "Couldn't save on this device";
+"端末の保存領域を開けませんでした" = "Couldn't open the storage on this device";
+"標準のテキスト" = "Regular text";
+
+"未保存の変更があります" = "Unsaved changes";
+"変更を一時的に保持しています。アプリを終了する前に、文書を開き直して保存を再試行してください。" = "Your changes are temporarily held in the app. Reopen the document to retry saving before you quit the app.";

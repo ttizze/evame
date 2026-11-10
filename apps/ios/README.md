@@ -1,14 +1,31 @@
 # iPhone編集画面の試作
 
-SwiftUIの画面にUIKitの`UITextView`を組み込んだ検証用アプリ。最低対応OSは試作ではiOS 18とする。本番アプリの対応OSやエディタ基盤を確定するものではない。
+UIKitの`UITextView`を使う検証用アプリ。最低対応OSは試作ではiOS 18とする。本番アプリの対応OSやエディタ基盤を確定するものではない。
 
-見出し、太字・斜体・取り消し線、リンク、リスト、引用、コード、画像の表示・取り込み、表の専用編集画面、Markdown原文の編集を試せる。脚注やHTMLなど見た目での編集に対応しないブロックは原文を保持する。
+## Lexicalの編集画面
 
-キーボード上には移行前Webと同じLucideアイコンで字下げ・字下げ解除・見出し2/3/4・太字・斜体・取消線・インラインコード・箇条書き・番号付きリスト・リンク・画像を直接並べる。高さ48ptの列を横スクロールでき、適用中の書式を強調する。その他メニューには段落・チェックリスト・引用・コードブロック・Undo/Redoを置く。表のセルや変換中の入力では使えない操作を無効にする。
+アプリは文書の一覧（`App/DocumentListViewController.swift`）から始まり、編集画面は`App/LexicalEditorViewController.swift`。文書全体を1つの`UITextView`に表示し、段落・リスト項目・引用・見出しをまたいで文字を選択・削除・コピーできる。文書と選択の正本はJavaScriptCore上のLexicalが持ち、PCと同じ`MarkdownExtension`（公式`@lexical/mdast`とEvameの画像・X埋め込み・HTML・脚注・参照定義の規則）でMarkdownを読み書きする。WebViewとDOMは使わない。
 
-見出し・リスト・引用の接頭辞、言語付きコードフェンス、太字・斜体・取消線・コード・リンクなどのMarkdown記法を確定入力後に変換する。Returnで段落・リスト項目を分割する。文字のある項目は同じ深さへ続け、空の項目だけ一段戻す。最も外側の空項目ではリストを抜ける。先頭のBackspaceではリスト・引用・見出しの解除や前の段落との結合を行い、元の入力欄・カーソル・Undoを引き継ぐ。原文画面からはCommonMark/GFM全体を直接編集できる。
+- `LexicalModel/editor.mjs`: headlessのLexical文書。表示単位（段落・項目などの文字の並び、または表・区切り線などの1文字の部品）と単位内の位置だけを画面とやり取りする。`LexicalModel/build.mjs`が`App/Resources/LexicalModel.js`と同梱依存のライセンス`App/Resources/LexicalModel-LICENSES.txt`を生成する。依存はルートの`package.json`と`bun.lock`で固定する。
+- `App/LexicalDocument.swift`: JSContextでモデルを動かし、要求と結果の形を定める。
+- `App/LexicalTextView.swift`: 表示・入力・IME・選択・クリップボード・Undoを所有する入力欄。日本語の変換中はUIKitに任せてLexicalを変えず、確定した変更だけをカーソル位置を基準にした差分としてLexicalへ送る。Returnと段落・項目の先頭のBackspaceはLexicalのコマンドに任せる。Undo/RedoはUIKitの`undoManager`からLexicalの履歴へ1操作単位で送る。リストの記号・チェックボックス・引用の線・表の部品は文字の上に重ねて描き、チェックボックスと表は押せる。
+- `App/LexicalEditorViewController.swift`: 本文と一緒にスクロールする題名の入力欄、キーボード上の書式メニュー、リンク・写真・表のセル・Markdown原文の画面を持つ。題名と本文は入力が0.5秒止まったとき、画面を閉じるとき、アプリが裏へ回ったときに端末へ保存する。
+- `App/LocalStore.swift`: 文書をSQLite（iOS標準のSQLite3）、写真をアプリのファイル領域へ保存する。新しい文書はWebと同じ形（英小文字と数字の12文字）のslugで下書きとして作る。内容が変わったときだけ更新日時を進め、開いただけの整形（表の列幅など）は保存しない。写真は`local-image/<UUID>.jpg`として本文から参照し、写真ライブラリの権限に頼らない。
+- `App/DocumentListViewController.swift`: 最後に編集した順の一覧。題名・更新日時を表示し、新しい文書を作る。
 
-ログイン・SQLite・同期・公開・書き出しは未実装。検証用の固定サンプルだけを扱い、本文と取り込んだ画像はメモリ上に置く。終了すると変更は消える。保存済みや同期済みとは表示しない。
+キーボード上には移行前Webと同じLucideアイコンで字下げ・字下げ解除・見出し2/3/4・太字・斜体・取消線・インラインコード・箇条書き・番号付きリスト・リンク・画像・表を直接並べ、適用中の書式を強調する。表はPCのメニューと同じ見出し行つきの3×3をカーソルの位置に入れ、続けて表の編集画面を開く。その他メニューには標準のテキスト（PCと同じ名前。見出し・引用などを普通の文字に戻す）・チェックリスト・引用・コードブロック・Undo/Redoを置く。引用はWebと同じく太い線と斜体、コードブロックは角丸の濃い背景に明るい等幅の文字で表示する。Markdown記法とURLの入力中の変換は、PCと共有する`src/app/[locale]/_components/editor/shortcuts.ts`（Lexical公式の`MdastShortcutsExtension`・`AutoLinkExtension`と区切り線の記法）で行う。Lexicalが操作を拒否した場合は、Lexicalが戻した後の文書へ表示を揃え、警告を出す。
+
+区切り線・画像などの直後でBackspaceを押すと、PCと同じくその部品を選択し、もう一度のBackspaceで消す。選択中の文字入力では置き換えない。GFMでは記号の後に文字のないチェック項目を書けないため、空のチェック項目は共有の`markdown.ts`で`- [ ] &#x20;`として保存し、空白1文字だけのチェック項目は空の項目として読み込む（PCも同じ）。
+
+Undoの単位はPCと同じLexicalの履歴に従い、続けて入力した文字はまとめて戻す。
+
+Lexical 0.53のheadlessでは、前に結合できるブロックがない位置のBackspaceがブラウザーの選択（`getWindow`）を測ろうとして例外になる（[meta/lexical#9849](https://github.com/meta/lexical/issues/9849)）。DOMのない環境では選択の取得がwindowを参照せず`null`を返すため、モデルでは空のwindowを渡して標準の`$collapseAtStart`へ進める。これで文書の先頭や引用の先頭でもリスト・引用を段落へ戻す。`LexicalProbe`の評価は未修正のLexicalの記録として赤のまま残す。JavaScriptCoreにない`AbortController`は`abort-controller`で補う。`setTimeout`もないため、Lexicalが連鎖した更新の回数を数え直す処理は、次の操作の要求の始めに実行する。ないままだと空白の入力などで更新が例外になり、入力欄とLexicalの文書がずれる。
+
+ログイン・同期・公開は未実装（サーバー側のアプリ用APIは別PR）。今の段階で作った文書はアカウントに属さない試作のデータで、計画書の「ログイン前の原稿作成は作らない」に合わせ、ログインの導入時に消す（利用者の決定）。保存形式は`PRAGMA user_version`で版を記録し、同期で必要な列は移行で追加する。UIテストは起動引数`-UITestResetStore`で保存領域を空にし、`-UITestSampleDocument`で共通テスト文書を入れて始める。http(s)の画像は読み込んで幅に合わせて表示し、読み込めない間や失敗時は代替文字の札を表示する。画像の大きさの上限と縮小読み込みは未実装。iPhoneでのブロックのドラッグ並べ替え、表の行列の追加削除も未実装。
+
+## 比較用の旧モデル
+
+旧Controllerは`NativeTests`へ、入力欄・Codec・メニューは`NativeTests`と`LexicalProbeTests`が共有する`TestSupport/Legacy`へ移し、アプリのソースと依存から外した。`Sources/EditorCore`と`EditorModel`は固定版ProseMirrorの操作と変換を比較するテストだけが使い、`ios.sh test`で生成する。以下の「配置と責務」以降はこの比較用実装の記録。実際のアプリの受け入れ検証は`LexicalModel`の公式全例、`EditingMatrixTests`のUIKit操作、`LexicalEditorTests`の貼り付け・IME・描画と`LexicalPerformanceTests`の代表文書で行う。
 
 ## 環境と実行
 
@@ -48,18 +65,18 @@ TestFlightへの配信には`Config/TestFlightExportOptions.plist`を使う。�
 
 ## 配置と責務
 
-- `Sources/EditorCore/MarkdownDocument.swift`: domain。原文の保持と編集範囲の置換。`App/EditorViewController.swift`から使う。空の段落への再入力中もアドレスを固定し、別の段落へ編集を誤反映しない。通常の入力は葉の原文だけを置換し、表のセルとチェック項目は記法の文脈を保つため、それぞれ表・リスト全体を標準ライブラリで書き出す。他のトップレベルブロックや参照定義は保持する。
+- `Sources/EditorCore/MarkdownDocument.swift`: domain。原文の保持と編集範囲の置換。`NativeTests/EditorViewController.swift`から使う。空の段落への再入力中もアドレスを固定し、別の段落へ編集を誤反映しない。通常の入力は葉の原文だけを置換し、表のセルとチェック項目は記法の文脈を保つため、それぞれ表・リスト全体を標準ライブラリで書き出す。他のトップレベルブロックや参照定義は保持する。
 - `Sources/EditorCore/BlockEditing.swift`: domain。見出し・リスト・引用の変換、字下げ、Return時の分割と入力先の決定。文書を所有する`EditorViewController.swift`が結果を反映する。
 - `Sources/EditorCore/BackspaceEditing.swift`: domain。Backspace時の書式解除・結合範囲・入力先を決定する。`EditorModel.swift`はutilsとしてMarkdownとProseMirrorの不変モデルを変換し、`EditorModel/model.mjs`の標準の結合・字下げ・字下げ解除コマンドを呼ぶ。リスト内の見出し・コードも扱い、表は専用画面で編集する内容を一つのブロックとして保持する。文書の反映とUIKitのUndoは`EditorViewController.swift`が所有する。
 - `Sources/EditorCore/MarkdownSource.swift`: utils。SwiftのASTをMDASTのデータ形状へ変換する。`EditorModel/markdown.mjs`がWebと同じ`mdast-util-to-markdown`とGFM拡張で記法を生成し、参照定義の抽出も同じ接続で行う。エスケープ、フェンス、リスト記法、表の区切りは自作しない。`MarkdownDocument.swift`と`MarkdownInput.swift`から使うためEditorCoreへ置く。
 - `Sources/EditorCore/MarkdownInput.swift`: utils。確定入力の記法とCommonMarkの行末を認識する。
-- `App/NativeTextView.swift`: 入力・選択・IME・Undoを所有するUIKitの入力欄。未確定入力を文書へ反映せず、確定後に内容だけを画面側へ渡す。
+- `TestSupport/Legacy/NativeTextView.swift`: 入力・選択・IME・Undoを所有するUIKitの入力欄。未確定入力を文書へ反映せず、確定後に内容だけを画面側へ渡す。
 - コピー・切り取りでは表示用の傾きを標準の斜体書体へ戻したRTFDと平文を渡す。貼り付けはUIKitの読み込み後に`RichTextCodec`で対応する書式へ揃え、同じ入力欄が挿入・選択・Undoを所有する。取り込めない添付だけを除き、前後の文字と対応する書式は貼り付ける。実際の`copy`・`cut`・`paste`を通し、書式・描画用フォント・Undo/Redoを確認する。クリップボードには独自形式を追加しない。
 - 等幅の複数行は行ごとのインラインコードと改行へ戻し、空行や行頭記号も保存・再解析で保持する。CommonMarkの行末であるCRLF・CRはLFへ揃え、それ以外のUnicodeの区切り文字は既存の段落や表のセルを編集しても文字のまま保持する。画像はクリップボードから復元できないため、画像を含む選択の切り取りを無効にして元の内容を残す。
-- `App/RichTextCodec.swift`: ネイティブ装飾とMarkdownのインライン要素の変換。入力欄とネイティブテストの近くに置く。
-- `App/EditorKeyboardMenu.swift`: `NativeTextView.swift`専用の横スクロールするキーボードアクセサリ。表示と操作イベントだけを持つ。
+- `TestSupport/Legacy/RichTextCodec.swift`: ネイティブ装飾とMarkdownのインライン要素の変換。入力欄とネイティブテストの近くに置く。
+- `TestSupport/Legacy/EditorKeyboardMenu.swift`: `NativeTextView.swift`専用の横スクロールするキーボードアクセサリ。表示と操作イベントだけを持つ。
 - `App/MarkdownSourceViewController.swift`: 原文の入力を所有し、確定した変更を親画面へ返す。
-- `App/EditorViewController.swift`: 編集文書と画像の状態を所有し、入力結果を反映する。表は比較候補のひとつとして専用画面で試す。
+- `NativeTests/EditorViewController.swift`: 編集文書と画像の状態を所有し、入力結果を反映する。表は比較候補のひとつとして専用画面で試す。
 - `Tests/EditorCoreTests/Fixtures/round-trip.md`: Webとの往復検証にも使う共通候補データ。実ユーザーの原稿や画像は含まない。
 
 `byteRange`は取り込みと編集置換の2箇所で使用する。UTF-8の列番号とSwift文字列の位置を別々に換算すると、日本語・絵文字の編集範囲を壊すため集約している。
@@ -110,3 +127,9 @@ CommonMark仕様とGFM仕様のテストデータはJohn MacFarlaneとGitHubの�
 ブロックをまたぐ選択、追加メニューによるブロック追加のUndo、表の行列の追加削除、外部画像のダウンロード、クリップボードからの画像取り込みは未実装。写真は追加メニューかキーボード上の画像ボタンから取り込む。本文入力はブロックごとのUIKit入力欄で検証する。これらを満たすまで完成した本番エディタとして扱わない。
 
 表のセルと3〜6段階目の見出しは1行の入力欄として扱う。見出しのReturnでは次の段落を作る。1・2段階目の複数行見出しはSetext形式で保持する。
+
+画面の保存処理だけを検証する場合も、同じ入口からXcodeのテスト対象を絞れます。
+
+```sh
+nix develop --command bash scripts/ios.sh test 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing:NativeTests/EditorScreenTests
+```

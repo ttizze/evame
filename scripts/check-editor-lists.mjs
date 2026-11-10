@@ -54,6 +54,134 @@ export async function checkEditorLists(page) {
 			{ startText, endText, offset },
 		);
 	}
+	for (const backward of [false, true]) {
+		await replaceMarkdown(
+			"- コピー親\n  - **子**\n\n前<br>後\n\n脚注[^n]\n\n[^n]: 注釈",
+		);
+		const expected = await page
+			.locator('input[name="pageContent"]')
+			.inputValue();
+		await editor.press("ControlOrMeta+a");
+		const copied = await editor.evaluate((root) => {
+			const data = new DataTransfer();
+			root.dispatchEvent(
+				new ClipboardEvent("copy", {
+					clipboardData: data,
+					bubbles: true,
+					cancelable: true,
+				}),
+			);
+			return [...data.types].map((type) => [type, data.getData(type)]);
+		});
+		assert.ok(
+			copied.some(
+				([type, value]) => type === "application/x-lexical-editor" && value,
+			),
+		);
+		await replaceMarkdown("- - 入れ子\n\n  元の本文");
+		const before = await page.locator('input[name="pageContent"]').inputValue();
+		await editor.press("ControlOrMeta+a");
+		if (backward) {
+			await editor.evaluate(() => {
+				const selection = window.getSelection();
+				selection.setBaseAndExtent(
+					selection.focusNode,
+					selection.focusOffset,
+					selection.anchorNode,
+					selection.anchorOffset,
+				);
+			});
+		}
+		await editor.evaluate((root, copied) => {
+			const data = new DataTransfer();
+			for (const [type, value] of copied) data.setData(type, value);
+			root.dispatchEvent(
+				new ClipboardEvent("paste", {
+					clipboardData: data,
+					bubbles: true,
+					cancelable: true,
+				}),
+			);
+		}, copied);
+		await expect
+			.poll(async () =>
+				rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			)
+			.toEqual(rendered(expected));
+		assert.match(
+			await page.locator('input[name="pageContent"]').inputValue(),
+			/前<br>後/,
+		);
+		await editor.press("ControlOrMeta+z");
+		await expect(page.locator('input[name="pageContent"]')).toHaveValue(before);
+		await editor.press("ControlOrMeta+Shift+z");
+		await expect(page.locator('input[name="pageContent"]')).toHaveValue(
+			expected,
+		);
+		await page
+			.getByTestId("save-button-check")
+			.waitFor({ state: "visible", timeout: 20000 });
+		await page.reload();
+		await expect
+			.poll(async () =>
+				rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			)
+			.toEqual(rendered(expected));
+		assert.match(
+			await page.locator('input[name="pageContent"]').inputValue(),
+			/前<br>後/,
+		);
+	}
+	await replaceMarkdown("- [ ] &#x20;\n\n  - 子\n\n  親本文");
+	const parentCheckbox = editor.getByRole("checkbox");
+	await parentCheckbox.click({ position: { x: 8, y: 14 } });
+	await expect(parentCheckbox).toHaveAttribute("aria-checked", "true");
+	await editor.press("ControlOrMeta+z");
+	await expect(parentCheckbox).toHaveAttribute("aria-checked", "false");
+	await editor.press("ControlOrMeta+Shift+z");
+	await expect(parentCheckbox).toHaveAttribute("aria-checked", "true");
+	await page
+		.getByTestId("save-button-check")
+		.waitFor({ state: "visible", timeout: 20000 });
+	await page.reload();
+	await expect(parentCheckbox).toHaveAttribute("aria-checked", "true");
+	await expect(editor.getByText("親本文", { exact: true })).toBeVisible();
+	await expect(editor.getByText("子", { exact: true })).toBeVisible();
+	console.log(
+		"内部コピーの全文置換と子リストから始まる親のチェック操作を保存・Undo/Redoまで確認した",
+	);
+	await replaceMarkdown(
+		"- [ ] 前\n- [ ] &#x20;\n\n  - [ ] 子\n\n  親本文\n- [ ] 後",
+	);
+	const checkItems = editor.getByRole("checkbox");
+	await expect(checkItems).toHaveCount(4);
+	await checkItems.nth(0).focus();
+	await page.keyboard.press("ArrowDown");
+	await expect(checkItems.nth(1)).toBeFocused();
+	await page.keyboard.press("Space");
+	await expect(checkItems.nth(1)).toHaveAttribute("aria-checked", "true");
+	await expect(checkItems.nth(2)).toHaveAttribute("aria-checked", "false");
+	for (const index of [2, 3]) {
+		await page.keyboard.press("ArrowDown");
+		await expect(checkItems.nth(index)).toBeFocused();
+	}
+	for (const index of [2, 1, 0]) {
+		await page.keyboard.press("ArrowUp");
+		await expect(checkItems.nth(index)).toBeFocused();
+	}
+	await editor.press("ControlOrMeta+z");
+	await expect(checkItems.nth(1)).toHaveAttribute("aria-checked", "false");
+	await editor.press("ControlOrMeta+Shift+z");
+	await expect(checkItems.nth(1)).toHaveAttribute("aria-checked", "true");
+	await page
+		.getByTestId("save-button-check")
+		.waitFor({ state: "visible", timeout: 20000 });
+	await page.reload();
+	await expect(checkItems.nth(1)).toHaveAttribute("aria-checked", "true");
+	await expect(checkItems.nth(2)).toHaveAttribute("aria-checked", "false");
+	console.log(
+		"親子のチェック項目を上下キーでたどり、Space・Undo/Redo・保存後も状態を保てる",
+	);
 	await editor.click();
 	await editor.press("ControlOrMeta+a");
 	await editor.press("Backspace");
@@ -129,7 +257,6 @@ export async function checkEditorLists(page) {
 		.click();
 	await expect(checkbox).toHaveAttribute("aria-checked", "true");
 	// 独立した本文として保存して開き直し、親子と兄弟の移動を調べる。
-	await replaceMarkdown("- 親A\n  1. 子A\n     - 孫A\n  2. 子B\n- 親B\n- 親C");
 	const leaf = (text) =>
 		editor
 			.getByText(text, { exact: true })
@@ -137,7 +264,11 @@ export async function checkEditorLists(page) {
 	async function drag(source, target, xOffset, after) {
 		await editor.getByText(source, { exact: true }).hover();
 		const handle = await page.getByTestId("editor-drag-handle").boundingBox();
-		const destination = await leaf(target).boundingBox();
+		const targetItem = leaf(target);
+		const destination = await ((await targetItem.count())
+			? targetItem
+			: editor.getByText(target, { exact: true })
+		).boundingBox();
 		assert.ok(handle && destination);
 		await page.mouse.move(
 			handle.x + handle.width / 2,
@@ -158,6 +289,57 @@ export async function checkEditorLists(page) {
 		await page.mouse.up();
 		return indicator;
 	}
+	for (const [bodyBefore, bodyAfter, source, target, parentText, tailText] of [
+		[
+			"- 前半\n  - 子A\n  - 子B\n\n  後半",
+			"- 前半\n  - 子B\n  - 子A\n\n  後半",
+			"子B",
+			"子A",
+			"前半",
+			"後半",
+		],
+		[
+			"- - 子A\n\n  本文A\n\n区切り\n\n- - 子B\n\n  本文B\n\n終端",
+			"- - 子A\n\n  本文A\n- - 子B\n\n  本文B\n\n区切り\n\n終端",
+			"区切り",
+			"終端",
+			"本文B",
+			"本文B",
+		],
+	]) {
+		await replaceMarkdown(bodyBefore);
+		console.log("親の前後の本文を持つ子リストのハンドル移動を確認する");
+		const parent = leaf(parentText);
+		await expect(parent).toHaveCSS("list-style-type", "disc");
+		await drag(source, target, 8, false);
+		await expect
+			.poll(async () =>
+				rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			)
+			.toEqual(rendered(bodyAfter));
+		await editor.press("ControlOrMeta+z");
+		await expect
+			.poll(async () =>
+				rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			)
+			.toEqual(rendered(bodyBefore));
+		await editor.press("ControlOrMeta+Shift+z");
+		await expect
+			.poll(async () =>
+				rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			)
+			.toEqual(rendered(bodyAfter));
+		await page
+			.getByTestId("save-button-check")
+			.waitFor({ state: "visible", timeout: 20000 });
+		await page.reload();
+		await expect(editor.getByText(tailText, { exact: true })).toBeVisible();
+		assert.deepEqual(
+			rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			rendered(bodyAfter),
+		);
+	}
+	await replaceMarkdown("- 親A\n  1. 子A\n     - 孫A\n  2. 子B\n- 親B\n- 親C");
 	await drag("子B", "子A", 8, false);
 	await expect(
 		editor.locator("ol").first().locator(":scope > li").first(),
@@ -374,10 +556,84 @@ export async function checkEditorLists(page) {
 		);
 	}
 
+	for (const [html, expected] of [
+		["<b>新しい本文</b>", "**新しい本文**"],
+		["<b>新しい本文</b><p>次の段落</p>", "**新しい本文**\n\n次の段落"],
+	]) {
+		const before = "- - 子\n\n  元の本文";
+		await replaceMarkdown(before);
+		await editor.click();
+		await editor.press("ControlOrMeta+a");
+		await editor.evaluate((element, value) => {
+			const data = new DataTransfer();
+			data.setData("text/html", value);
+			element.dispatchEvent(
+				new ClipboardEvent("paste", {
+					clipboardData: data,
+					bubbles: true,
+					cancelable: true,
+				}),
+			);
+		}, html);
+		await expect
+			.poll(async () =>
+				rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			)
+			.toEqual(rendered(expected));
+		await editor.press("ControlOrMeta+z");
+		await expect
+			.poll(async () =>
+				rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			)
+			.toEqual(rendered(before));
+		await editor.press("ControlOrMeta+Shift+z");
+		await page
+			.getByTestId("save-button-check")
+			.waitFor({ state: "visible", timeout: 20000 });
+		await page.reload();
+		assert.deepEqual(
+			rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			rendered(expected),
+		);
+	}
+
 	for (const [before, label, after] of [
+		["- 対象\n  - 子\n\n  後半", "標準のテキスト", "対象\n\n- 子\n\n後半"],
+		["- 対象\n  - 子\n\n  後半", "見出し2", "## 対象\n\n- 子\n\n後半"],
+		["- 対象\n  - 子\n\n  後半", "引用", "> 対象\n\n- 子\n\n後半"],
+		[
+			"- 対象\n  - 子\n\n  後半",
+			"コードブロック",
+			"```\n対象\n```\n\n- 子\n\n後半",
+		],
+		["- 前半\n  - 子\n\n  対象", "標準のテキスト", "前半\n\n- 子\n\n対象"],
+		["- 前半\n  - 子\n\n  対象", "見出し2", "前半\n\n- 子\n\n## 対象"],
+		["- 前半\n  - 子\n\n  対象", "引用", "前半\n\n- 子\n\n> 対象"],
+		[
+			"- 前半\n  - 子\n\n  対象",
+			"コードブロック",
+			"前半\n\n- 子\n\n```\n対象\n```",
+		],
 		["3. 前\n4. 対象\n5. 後", "標準のテキスト", "3. 前\n\n対象\n\n5. 後"],
 		["3. 親\n   - 対象\n4. 後", "標準のテキスト", "3. 親\n\n対象\n\n4. 後"],
 		["3. 親\n   - 対象\n4. 後", "見出し2", "3. 親\n\n## 対象\n\n4. 後"],
+		[
+			"1. - 子\n\n   親本文\n2. 対象\n3. 後",
+			"標準のテキスト",
+			"1. - 子\n\n   親本文\n\n対象\n\n3. 後",
+		],
+		[
+			"- 前半\n  - 対象\n\n  後半",
+			"標準のテキスト",
+			"- 前半\n\n  対象\n\n  後半",
+		],
+		["- 前半\n  - 対象\n\n  後半", "見出し2", "- 前半\n\n  ## 対象\n\n  後半"],
+		["- 前半\n  - 対象\n\n  後半", "引用", "- 前半\n\n  > 対象\n\n  後半"],
+		[
+			"- 前半\n  - 対象\n\n  後半",
+			"コードブロック",
+			"- 前半\n\n  ```\n  対象\n  ```\n\n  後半",
+		],
 	]) {
 		await replaceMarkdown(before);
 		await selectText("対象", "対象", null);
@@ -391,6 +647,18 @@ export async function checkEditorLists(page) {
 				rendered(await page.locator('input[name="pageContent"]').inputValue()),
 			)
 			.toEqual(rendered(after));
+		await editor.press("ControlOrMeta+z");
+		await expect
+			.poll(async () =>
+				rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			)
+			.toEqual(rendered(before));
+		await editor.press("ControlOrMeta+Shift+z");
+		await expect
+			.poll(async () =>
+				rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			)
+			.toEqual(rendered(after));
 		await page
 			.getByTestId("save-button-check")
 			.waitFor({ state: "visible", timeout: 20000 });
@@ -399,6 +667,34 @@ export async function checkEditorLists(page) {
 		assert.deepEqual(
 			rendered(await page.locator('input[name="pageContent"]').inputValue()),
 			rendered(after),
+		);
+	}
+	for (const [beforeBackspace, afterBackspace] of [
+		["- 前半\n  - 対象\n\n  後半", "- 前半\n\n  後半\n\n- 対象"],
+		["- 対象\n  - 子\n\n  後半", "対象\n\n- 子\n\n後半"],
+	]) {
+		await replaceMarkdown(beforeBackspace);
+		await selectText("対象", "対象", 0);
+		await editor.press("Backspace");
+		await expect
+			.poll(async () =>
+				rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			)
+			.toEqual(rendered(afterBackspace));
+		await editor.press("ControlOrMeta+z");
+		await expect
+			.poll(async () =>
+				rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			)
+			.toEqual(rendered(beforeBackspace));
+		await editor.press("ControlOrMeta+Shift+z");
+		await page
+			.getByTestId("save-button-check")
+			.waitFor({ state: "visible", timeout: 20000 });
+		await page.reload();
+		assert.deepEqual(
+			rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			rendered(afterBackspace),
 		);
 	}
 	await replaceMarkdown("- 親\n  - 前\n  - 対象");

@@ -16,22 +16,31 @@ import {
 	type ListType,
 } from "@lexical/list";
 import { CHECK_LIST, ORDERED_LIST, UNORDERED_LIST } from "@lexical/markdown";
+import { paragraphBreakState } from "@lexical/mdast";
 import { $createHeadingNode, $createQuoteNode } from "@lexical/rich-text";
-import { $setBlocksType } from "@lexical/selection";
+import {
+	$copyBlockFormatIndent,
+	$isAtEdgeOfElement,
+	$setBlocksType,
+} from "@lexical/selection";
 import { $findMatchingParent, $handleIndentAndOutdent } from "@lexical/utils";
 import {
 	$addUpdateTag,
 	$copyNode,
 	$createParagraphNode,
 	$getNodeByKey,
+	$getRoot,
 	$getSelection,
 	$getSiblingCaret,
+	$getState,
 	$isElementNode,
+	$isLineBreakNode,
 	$isParagraphNode,
 	$isRangeSelection,
 	$isRootOrShadowRoot,
 	$isTextNode,
 	$setPointFromCaret,
+	$setSelection,
 	COMMAND_PRIORITY_CRITICAL,
 	COMMAND_PRIORITY_HIGH,
 	COMMAND_PRIORITY_LOW,
@@ -46,7 +55,25 @@ import {
 	type LexicalNode,
 	mergeRegister,
 	OUTDENT_CONTENT_COMMAND,
+	ParagraphNode,
+	type PointType,
+	SELECTION_INSERT_CLIPBOARD_NODES_COMMAND,
 } from "lexical";
+
+/** 本文全体の貼り付けと、コード内への部分貼り付けの境界を揃える。 */
+export function $isEntireDocumentSelection(
+	collapsed: boolean,
+	anchor: PointType,
+	focus: PointType,
+) {
+	if (collapsed) return false;
+	const root = $getRoot();
+	const backward = focus.isBefore(anchor);
+	return (
+		$isAtEdgeOfElement(backward ? focus : anchor, root, "previous") &&
+		$isAtEdgeOfElement(backward ? anchor : focus, root, "next")
+	);
+}
 
 export const SET_TEXT_BLOCK_COMMAND = createCommand<
 	"paragraph" | "h2" | "h3" | "h4" | "quote" | "code"
@@ -58,11 +85,56 @@ export const listCommands = [
 	{ type: "check", command: INSERT_CHECK_LIST_COMMAND },
 ] as const;
 
+function $hasBodyBlocks(children: readonly LexicalNode[]) {
+	return children.some(
+		(node) =>
+			!node.isInline() ||
+			($isLineBreakNode(node) && $getState(node, paragraphBreakState)),
+	);
+}
+
+/** メニュー変換と標準Backspaceの両方が作る段落から、子ブロックと段落境界を戻す。 */
+function $splitParagraphBlocks(paragraph: ParagraphNode) {
+	if (!$hasBodyBlocks(paragraph.getChildren())) return;
+	let after: LexicalNode = paragraph;
+	let inline: ParagraphNode | null = paragraph;
+	for (const child of paragraph.getChildren()) {
+		if ($isLineBreakNode(child) && $getState(child, paragraphBreakState)) {
+			child.remove();
+			inline = null;
+		} else if (!child.isInline()) {
+			after.insertAfter(child);
+			after = child;
+			inline = null;
+		} else {
+			if (!inline) {
+				inline = $createParagraphNode();
+				$copyBlockFormatIndent(paragraph, inline);
+				after.insertAfter(inline);
+				after = inline;
+			}
+			if (!inline.is(child.getParent())) inline.append(child);
+		}
+	}
+	if (paragraph.isEmpty()) paragraph.remove();
+}
+
+/** 子リストだけを持つ専用容器。前後に本文を持つ項目とは区別する。 */
+export function $isListContainer(
+	node: LexicalNode | null,
+): node is ListItemNode {
+	return (
+		$isListItemNode(node) &&
+		node.getChildrenSize() === 1 &&
+		$isListNode(node.getFirstChild())
+	);
+}
+
 /** Lexicalでは子リストを直後の専用項目に保持する。親と一緒に扱う範囲をここで揃える。 */
 function $itemGroup(item: ListItemNode): LexicalNode[] {
 	const group: LexicalNode[] = [item];
 	let next = item.getNextSibling();
-	while ($isListItemNode(next) && $isListNode(next.getFirstChild())) {
+	while ($isListContainer(next)) {
 		group.push(next);
 		next = next.getNextSibling();
 	}
@@ -71,8 +143,7 @@ function $itemGroup(item: ListItemNode): LexicalNode[] {
 
 /** 子リストの容器を飛ばし、直前の実項目を親解決とTabの移動先で揃える。 */
 function $skipListContainers(node: LexicalNode | null) {
-	while ($isListItemNode(node) && $isListNode(node.getFirstChild()))
-		node = node.getPreviousSibling();
+	while ($isListContainer(node)) node = node.getPreviousSibling();
 	return $isListItemNode(node) ? node : null;
 }
 
@@ -80,13 +151,15 @@ function $skipListContainers(node: LexicalNode | null) {
 export function $getParentListItem(item: ListItemNode): ListItemNode | null {
 	const wrapper = item.getParent()?.getParent();
 	return $isListItemNode(wrapper)
-		? $skipListContainers(wrapper.getPreviousSibling())
+		? $isListContainer(wrapper)
+			? $skipListContainers(wrapper.getPreviousSibling())
+			: wrapper
 		: null;
 }
 
 function $insertListAfter(list: ListNode, next: ListNode) {
 	const parent = list.getParentOrThrow();
-	if ($isListItemNode(parent))
+	if ($isListContainer(parent))
 		parent.insertAfter($createListItemNode().append(next));
 	else list.insertAfter(next);
 }
@@ -94,7 +167,7 @@ function $insertListAfter(list: ListNode, next: ListNode) {
 function $removeEmptyList(list: ListNode) {
 	if (!list.isEmpty()) return;
 	const parent = list.getParent();
-	if ($isListItemNode(parent)) parent.remove();
+	if ($isListContainer(parent)) parent.remove();
 	else list.remove();
 }
 
@@ -147,8 +220,7 @@ function $normalizeListSelection() {
 		while (parent && !$isListItemNode(parent)) parent = parent.getParent();
 		if (!parent && !$isListNode(node) && !$isRootOrShadowRoot(node))
 			hasOtherBlocks = true;
-		if ($isListItemNode(parent) && !$isListNode(parent.getFirstChild()))
-			items.add(parent);
+		if ($isListItemNode(parent) && !$isListContainer(parent)) items.add(parent);
 	}
 	return { items: [...items], hasOtherBlocks };
 }
@@ -223,7 +295,7 @@ export function $moveEditorBlock(
 			if (placement === "after") $insertListAfter(isolatedTarget, moving);
 			else {
 				const parent = isolatedTarget.getParentOrThrow();
-				if ($isListItemNode(parent))
+				if ($isListContainer(parent))
 					parent.insertBefore($createListItemNode().append(moving));
 				else isolatedTarget.insertBefore(moving);
 			}
@@ -245,8 +317,54 @@ export const BlockEditingExtension = defineExtension({
 	register: (editor) =>
 		mergeRegister(
 			editor.registerCommand(
+				SELECTION_INSERT_CLIPBOARD_NODES_COMMAND,
+				({ nodes, selection }) => {
+					// 標準インポーターで有効なノードを復元してから、全文置換の挿入位置を準備する。
+					if (
+						nodes.length &&
+						$isRangeSelection(selection) &&
+						$isEntireDocumentSelection(
+							selection.isCollapsed(),
+							selection.anchor,
+							selection.focus,
+						)
+					) {
+						const root = $getRoot().clear();
+						selection.anchor.set(root.getKey(), 0, "element");
+						selection.focus.set(root.getKey(), 0, "element");
+						$setSelection(selection);
+					}
+					return false;
+				},
+				COMMAND_PRIORITY_HIGH,
+			),
+			editor.registerNodeTransform(ParagraphNode, $splitParagraphBlocks),
+			editor.registerCommand(
 				SET_TEXT_BLOCK_COMMAND,
 				(value) => {
+					$normalizeListSelection();
+					const selection = $getSelection();
+					if (!$isRangeSelection(selection)) return false;
+					const bodies = new Set(
+						selection
+							.getNodes()
+							.map((node) =>
+								$findMatchingParent(
+									node,
+									(node) => $isElementNode(node) && !node.isInline(),
+								),
+							)
+							.filter($isListItemNode),
+					);
+					// 標準のブロック変換へ渡す前に、親本文と選択外の子リストを別のブロックへ戻す。
+					for (const item of [...bodies].reverse()) {
+						if (!$hasBodyBlocks(item.getChildren())) continue;
+						$isolateItem(item);
+						const paragraph = $createParagraphNode();
+						$copyBlockFormatIndent(item, paragraph);
+						item.replace(paragraph, true);
+						$splitParagraphBlocks(paragraph);
+					}
 					const { items } = $normalizeListSelection();
 					// 標準の変換は最上位まで戻すため、祖先で分かれる後続の番号も先に守る。
 					const toIsolate = new Set(items);
@@ -255,8 +373,6 @@ export const BlockEditingExtension = defineExtension({
 						if (owner) toIsolate.add(owner);
 						$isolateItem(item);
 					}
-					const selection = $getSelection();
-					if (!$isRangeSelection(selection)) return false;
 					$setBlocksType(selection, () => {
 						if (value === "paragraph") return $createParagraphNode();
 						if (value === "quote") return $createQuoteNode();
@@ -330,10 +446,10 @@ export const BlockEditingExtension = defineExtension({
 									if (!previous) {
 										const list = item.getParentOrThrow();
 										const parent = list.getParentOrThrow();
-										const sibling = $isListItemNode(parent)
+										const sibling = $isListContainer(parent)
 											? parent.getPreviousSibling()
 											: list.getPreviousSibling();
-										const previousList = $isListItemNode(sibling)
+										const previousList = $isListContainer(sibling)
 											? sibling.getFirstChild()
 											: sibling;
 										if ($isListNode(previousList))
@@ -448,7 +564,7 @@ export const BlockEditingExtension = defineExtension({
 /** 記事の本文だけで使い、コメント欄ではTabキーのフォーカス移動を妨げない。 */
 export const TabEditingExtension = defineExtension({
 	name: "evame-tab-editing",
-	dependencies: [TabIndentationExtension],
+	dependencies: [BlockEditingExtension, TabIndentationExtension],
 	register: (editor) =>
 		editor.registerCommand(
 			KEY_TAB_COMMAND,
