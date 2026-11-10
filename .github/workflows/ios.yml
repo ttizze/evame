@@ -41,7 +41,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: cachix/install-nix-action@v31
-      - run: nix develop --command bash scripts/ios.sh test 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' -parallel-testing-enabled YES -parallel-testing-worker-count 2
+      - run: nix develop --command bash scripts/ios.sh test 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
       - run: git diff --exit-code -- apps/ios/Sources/EditorCore/Resources apps/ios/App/Resources/LexicalModel.js apps/ios/App/Resources/LexicalModel-LICENSES.txt apps/ios/Tests/EditorCoreTests/Fixtures/Upstream/ProseMirrorTests.js
       - name: Report runner resources
         if: always()
