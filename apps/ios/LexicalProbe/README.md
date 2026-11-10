@@ -1,6 +1,8 @@
 # Lexical JSをJavaScriptCoreとUIKitで評価する
 
-Lexical **0.53.0**を固定した独立した評価用テスト。WebView・DOMを作らず、JavaScriptCore内のモデルと既存のUIKit入力欄を接続する。アプリ本体のEditorCoreは変更していない。`pc`はPCのエディタと同じ`src/app/[locale]/_components/editor/markdown.ts`をそのまま読み込み、複製しない。
+Lexical **0.53.0**を固定した独立した評価用テスト。WebView・DOMを作らず、JavaScriptCore内のモデルと既存のUIKit入力欄を接続する。比較対象のEditorCoreはテストターゲットだけで使用する。`pc`はPCのエディタと同じ`src/app/[locale]/_components/editor/markdown.ts`をそのまま読み込み、複製しない。
+
+`pc`のLexical依存はルートのlockfileとBunパッチを使う。`legacy`と`mdast`はProbe自身のlockfileに固定した公式依存を使い、それぞれのJSコンテキスト内でLexicalの実体を1つに揃える。旧UIKit入力欄は比較テストのターゲットだけへ含める。
 
 ## 結果と判断
 

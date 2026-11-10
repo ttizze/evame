@@ -3,6 +3,8 @@ import Markdown
 import PhotosUI
 import UIKit
 
+@testable import EvameEditorPrototype
+
 /// 編集試作用の画面。実アカウントや同期APIには接続しない。
 @MainActor
 final class EditorViewController: UIViewController, PHPickerViewControllerDelegate {

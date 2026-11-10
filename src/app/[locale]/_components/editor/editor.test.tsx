@@ -1,6 +1,9 @@
 import { $createCodeNode } from "@lexical/code-core";
 import { HorizontalRuleNode } from "@lexical/extension";
-import { $convertFromMarkdownString } from "@lexical/mdast";
+import {
+	$convertFromMarkdownString,
+	$convertToMarkdownString,
+} from "@lexical/mdast";
 import { captureException } from "@sentry/react";
 import {
 	act,
@@ -15,12 +18,15 @@ import {
 	$createTextNode,
 	$getRoot,
 	$getSelection,
+	$isRangeSelection,
 	$nodesOfType,
 	COPY_COMMAND,
 	getNearestEditorFromDOMNode,
 	type Klass,
 	type LexicalNode,
 	PASTE_COMMAND,
+	REDO_COMMAND,
+	SELECT_ALL_COMMAND,
 	UNDO_COMMAND,
 } from "lexical";
 import { IntlProvider } from "use-intl";
@@ -57,10 +63,270 @@ vi.mock("@lexical/mdast", async (importOriginal) => {
 afterEach(() => {
 	cleanup();
 	vi.unstubAllGlobals();
+	Reflect.deleteProperty(Range.prototype, "getBoundingClientRect");
 });
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+	vi.clearAllMocks();
+	// JSDOMには範囲の配置計測がない。貼り付け内容はこの層で、実際の選択位置はブラウザーで確認する。
+	Object.defineProperty(Range.prototype, "getBoundingClientRect", {
+		configurable: true,
+		value: () => new DOMRect(),
+	});
+});
 
 describe("Lexicalの本文フォーム", () => {
+	it("前後のチェック項目から矢印で親へ移動し、Spaceで子リストと親本文を保って切り替える", async () => {
+		const editor = renderEditor(
+			"- [ ] 前\n- [ ] &#x20;\n\n  - [ ] 子\n\n  親本文\n- [ ] 後",
+		);
+		const items = editor
+			.getRootElement()
+			?.querySelectorAll<HTMLElement>('[role="checkbox"]');
+		if (items?.length !== 4) throw new Error("チェック項目が足りません");
+		items[0].focus();
+		await act(async () => {
+			fireEvent.keyDown(items[0], { key: "ArrowDown" });
+		});
+		expect(document.activeElement).toBe(items[1]);
+		await act(async () => {
+			fireEvent.keyDown(items[1], { key: " ", code: "Space" });
+		});
+		expect(items[1]).toHaveAttribute("aria-checked", "true");
+		expect(items[2]).toHaveAttribute("aria-checked", "false");
+		expect(editor.read($convertToMarkdownString)).toContain("親本文");
+		for (const index of [2, 3]) {
+			await act(async () => {
+				fireEvent.keyDown(items[index - 1], { key: "ArrowDown" });
+			});
+			expect(document.activeElement).toBe(items[index]);
+		}
+		for (const index of [2, 1, 0]) {
+			await act(async () => {
+				fireEvent.keyDown(items[index + 1], { key: "ArrowUp" });
+			});
+			expect(document.activeElement).toBe(items[index]);
+		}
+	});
+	it.each([
+		[false, "- コピー親\n  - **子**"],
+		[true, "- コピー親\n  - **子**"],
+		[false, "- コピー親\n  - **子**\n\n前<br>後\n\n脚注[^n]\n\n[^n]: 注釈"],
+		[true, "- コピー親\n  - **子**\n\n前<br>後\n\n脚注[^n]\n\n[^n]: 注釈"],
+	] as const)(
+		"別の編集欄で内部コピーしたリスト・HTML・脚注で全文を置き換えても階層を増やさない（逆向き=%s、%s）",
+		async (backward, markdown) => {
+			const source = renderEditor(markdown);
+			const expected = source.read($convertToMarkdownString);
+			const copied = new Map<string, string>();
+			vi.stubGlobal("ClipboardEvent", Event);
+			vi.stubGlobal("DragEvent", class extends Event {});
+			const copy = new Event("copy", { cancelable: true });
+			Object.defineProperty(copy, "clipboardData", {
+				value: {
+					setData: (type: string, value: string) => copied.set(type, value),
+				},
+			});
+			act(() =>
+				source.update(() => $getRoot().selectStart(), { discrete: true }),
+			);
+			await act(async () => {
+				source.dispatchCommand(
+					SELECT_ALL_COMMAND,
+					new KeyboardEvent("keydown", { key: "a", metaKey: true }),
+				);
+			});
+			await act(async () => {
+				source.dispatchCommand(COPY_COMMAND, copy as ClipboardEvent);
+			});
+			expect(copied.get("application/x-lexical-editor")).toBeTruthy();
+			const target = renderEditor("- - 入れ子\n\n  元の本文");
+			const before = target.read($convertToMarkdownString);
+			act(() =>
+				target.update(() => $getRoot().selectStart(), { discrete: true }),
+			);
+			await act(async () => {
+				target.dispatchCommand(
+					SELECT_ALL_COMMAND,
+					new KeyboardEvent("keydown", { key: "a", metaKey: true }),
+				);
+				if (backward)
+					target.update(
+						() => {
+							const selection = $getSelection();
+							if (!$isRangeSelection(selection))
+								throw new Error("選択がありません");
+							const { key, offset, type } = selection.anchor;
+							selection.anchor.set(
+								selection.focus.key,
+								selection.focus.offset,
+								selection.focus.type,
+							);
+							selection.focus.set(key, offset, type);
+						},
+						{ discrete: true },
+					);
+			});
+			const paste = new Event("paste", { cancelable: true });
+			Object.defineProperty(paste, "clipboardData", {
+				value: {
+					files: [],
+					types: [...copied.keys()],
+					getData: (type: string) => copied.get(type) ?? "",
+				},
+			});
+			await act(async () => {
+				target.dispatchCommand(PASTE_COMMAND, paste as ClipboardEvent);
+			});
+			expect(target.read($convertToMarkdownString)).toBe(expected);
+			await act(async () => {
+				target.dispatchCommand(UNDO_COMMAND, undefined);
+			});
+			expect(target.read($convertToMarkdownString)).toBe(before);
+			await act(async () => {
+				target.dispatchCommand(REDO_COMMAND, undefined);
+			});
+			expect(target.read($convertToMarkdownString)).toBe(expected);
+			const saved = target.read($convertToMarkdownString);
+			act(() =>
+				target.update(() => $convertFromMarkdownString(saved), {
+					discrete: true,
+				}),
+			);
+			expect(target.read($convertToMarkdownString)).toBe(expected);
+		},
+	);
+	it("子リストから始まる親のチェックボックスをクリックしても親本文を保持しUndo/Redoできる", async () => {
+		const editor = renderEditor("- [ ] &#x20;\n\n  - 子\n\n  親本文");
+		const checkbox = editor
+			.getRootElement()
+			?.querySelector('[role="checkbox"]');
+		if (!checkbox) throw new Error("チェック項目がありません");
+		const geometry = vi
+			.spyOn(checkbox, "getBoundingClientRect")
+			.mockReturnValue(new DOMRect(0, 0, 200, 80));
+		const original = window.getComputedStyle.bind(window);
+		const styles = vi
+			.spyOn(window, "getComputedStyle")
+			.mockImplementation((element, pseudo) => {
+				if (pseudo !== "::before") return original(element);
+				const style = document.createElement("span").style;
+				style.width = "20px";
+				return style;
+			});
+		try {
+			await act(async () => {
+				fireEvent.click(checkbox, { clientX: 8 });
+			});
+			expect(checkbox).toHaveAttribute("aria-checked", "true");
+			const saved = editor.read($convertToMarkdownString);
+			expect(saved).toContain("- [x]");
+			expect(saved).toContain("子");
+			expect(saved).toContain("親本文");
+			await act(async () => {
+				editor.dispatchCommand(UNDO_COMMAND, undefined);
+			});
+			expect(
+				editor.getRootElement()?.querySelector('[role="checkbox"]'),
+			).toHaveAttribute("aria-checked", "false");
+			await act(async () => {
+				editor.dispatchCommand(REDO_COMMAND, undefined);
+			});
+			expect(editor.read($convertToMarkdownString)).toBe(saved);
+			act(() =>
+				editor.update(() => $convertFromMarkdownString(saved), {
+					discrete: true,
+				}),
+			);
+			expect(
+				editor.getRootElement()?.querySelector('[role="checkbox"]'),
+			).toHaveAttribute("aria-checked", "true");
+		} finally {
+			geometry.mockRestore();
+			styles.mockRestore();
+		}
+	});
+	for (const [context, initial] of [
+		[
+			"入れ子リスト",
+			"- - 子A\n\n  本文A\n- - 子B\n\n  本文B\n\n区切り\n\n終端",
+		],
+		["コードブロック", "```\n古いコード\n```"],
+	] as const)
+		it.each([
+			[false, "text/plain", "- 親A\n  1. 子A\n- 親B", "- 親A\n  1. 子A\n- 親B"],
+			[true, "text/plain", "- 親A\n  1. 子A\n- 親B", "- 親A\n  1. 子A\n- 親B"],
+			[
+				false,
+				"text/html",
+				"<ul><li>親A<ol><li>子A</li></ol></li><li>親B</li></ul>",
+				"- 親A\n  1. 子A\n- 親B",
+			],
+			[
+				true,
+				"text/html",
+				"<ul><li>親A<ol><li>子A</li></ol></li><li>親B</li></ul>",
+				"- 親A\n  1. 子A\n- 親B",
+			],
+			[false, "text/html", "<b>新しい本文</b>", "**新しい本文**"],
+			[true, "text/html", "<b>新しい本文</b>", "**新しい本文**"],
+			[
+				false,
+				"text/html",
+				"<b>新しい本文</b><p>次の段落</p>",
+				"**新しい本文**\n\n次の段落",
+			],
+			[
+				true,
+				"text/html",
+				"<b>新しい本文</b><p>次の段落</p>",
+				"**新しい本文**\n\n次の段落",
+			],
+		] as const)(
+			`${context}の文書を全選択して貼っても古い階層を引き継がずUndo/Redoできる（逆向き=%s、%s）`,
+			async (backward, format, content, expected) => {
+				const editor = renderEditor(initial);
+				const before = editor.read($convertToMarkdownString);
+				await act(async () => {
+					editor.dispatchCommand(
+						SELECT_ALL_COMMAND,
+						new KeyboardEvent("keydown", { key: "a", metaKey: true }),
+					);
+					if (backward)
+						editor.update(() => {
+							const selection = $getSelection();
+							if (!$isRangeSelection(selection))
+								throw new Error("選択がありません");
+							const { key, offset, type } = selection.anchor;
+							selection.anchor.set(
+								selection.focus.key,
+								selection.focus.offset,
+								selection.focus.type,
+							);
+							selection.focus.set(key, offset, type);
+						});
+				});
+				const event = new Event("paste", { cancelable: true });
+				Object.defineProperty(event, "clipboardData", {
+					value: {
+						files: [],
+						getData: (type: string) => (type === format ? content : ""),
+					},
+				});
+				vi.stubGlobal("ClipboardEvent", Event);
+				await act(async () => {
+					editor.dispatchCommand(PASTE_COMMAND, event as ClipboardEvent);
+				});
+				expect(editor.read($convertToMarkdownString).trim()).toBe(expected);
+				await act(async () => {
+					editor.dispatchCommand(UNDO_COMMAND, undefined);
+				});
+				expect(editor.read($convertToMarkdownString)).toBe(before);
+				await act(async () => {
+					editor.dispatchCommand(REDO_COMMAND, undefined);
+				});
+				expect(editor.read($convertToMarkdownString).trim()).toBe(expected);
+			},
+		);
 	for (const codeBlock of [true, false]) {
 		it(`${codeBlock ? "コードブロック" : "インラインコード"}への貼り付けでMarkdown記号を文字として保つ`, async () => {
 			const { container } = render(

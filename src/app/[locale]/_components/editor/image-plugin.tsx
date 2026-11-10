@@ -1,3 +1,4 @@
+import { $insertGeneratedNodes } from "@lexical/clipboard";
 import { $isCodeNode } from "@lexical/code-core";
 import { $generateNodesFromDOM } from "@lexical/html";
 import { $generateNodesFromMarkdownString } from "@lexical/mdast";
@@ -18,12 +19,14 @@ import {
 	DROP_COMMAND,
 	KEY_BACKSPACE_COMMAND,
 	KEY_DELETE_COMMAND,
+	type LexicalNode,
 	PASTE_COMMAND,
 } from "lexical";
 import { useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { callReaderAction } from "@/app/_service/reader-action";
 import { getXPostId } from "@/app/[locale]/_domain/get-x-post-id";
+import { $isEntireDocumentSelection } from "./block-editing";
 import {
 	ImageNode,
 	imageState,
@@ -139,7 +142,15 @@ export function ImagePlugin() {
 					const clipboard = event.clipboardData;
 					const text = clipboard?.getData("text/plain") ?? "";
 					const selection = $getSelection();
+					const replaceDocument =
+						$isRangeSelection(selection) &&
+						$isEntireDocumentSelection(
+							selection.isCollapsed(),
+							selection.anchor,
+							selection.focus,
+						);
 					if (
+						!replaceDocument &&
 						$isRangeSelection(selection) &&
 						text &&
 						(selection.hasFormat("code") ||
@@ -168,8 +179,8 @@ export function ImagePlugin() {
 						return true;
 					}
 					const html = clipboard?.getData("text/html");
+					let nodes: LexicalNode[];
 					if (html) {
-						event.preventDefault();
 						const normalized = html
 							.replace(/(<br\b[^>]*>\s*){2,}/gi, "</p><p>")
 							.replace(/<p[^>]*>(?:\s|&nbsp;|<br\b[^>]*>)*<\/p>/gi, "");
@@ -177,12 +188,14 @@ export function ImagePlugin() {
 							normalized,
 							"text/html",
 						);
-						selection.insertNodes($generateNodesFromDOM(editor, dom));
-						return true;
+						nodes = $generateNodesFromDOM(editor, dom);
+					} else {
+						if (!text) return false;
+						nodes = $generateNodesFromMarkdownString(text);
 					}
-					if (!text) return false;
 					event.preventDefault();
-					selection.insertNodes($generateNodesFromMarkdownString(text));
+					if (!nodes.length) return true;
+					$insertGeneratedNodes(editor, nodes, selection);
 					return true;
 				},
 				COMMAND_PRIORITY_HIGH,

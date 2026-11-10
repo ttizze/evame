@@ -7,7 +7,7 @@ settings:
   base:
     SWIFT_VERSION: "6.0"
     MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "5"
+    CURRENT_PROJECT_VERSION: "13"
     GENERATE_INFOPLIST_FILE: YES
     CODE_SIGNING_ALLOWED: NO
 packages:
@@ -30,14 +30,16 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight
-    dependencies:
-      - package: EvameEditor
-        product: EditorCore
   NativeTests:
     type: bundle.unit-test
     platform: iOS
     sources:
       - NativeTests
+      - TestSupport/Legacy
+      - path: .build/EditingFixtures
+        optional: true
+        type: folder
+        buildPhase: resources
       - Tests/EditorCoreTests/ProseMirrorTests.swift
       - Tests/EditorCoreTests/BackspaceEditingTests.swift
       - path: Tests/EditorCoreTests/Fixtures/Upstream/ProseMirrorTests.js
@@ -46,6 +48,8 @@ targets:
         buildPhase: resources
     dependencies:
       - target: EvameEditorPrototype
+      - package: EvameEditor
+        product: EditorCore
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.evame.editor-prototype.NativeTests
@@ -62,6 +66,7 @@ targets:
     type: bundle.unit-test
     platform: iOS
     sources:
+      - TestSupport/Legacy
       - path: LexicalProbe/Swift
         excludes: [Generated]
       - path: LexicalProbe/Swift/Generated
@@ -70,6 +75,8 @@ targets:
         buildPhase: resources
     dependencies:
       - target: EvameEditorPrototype
+      - package: EvameEditor
+        product: EditorCore
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.evame.editor-prototype.LexicalProbeTests

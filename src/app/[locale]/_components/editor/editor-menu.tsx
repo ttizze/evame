@@ -1,7 +1,6 @@
 import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import { $isListNode } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $isHeadingNode } from "@lexical/rich-text";
 import { INSERT_TABLE_COMMAND } from "@lexical/table";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
@@ -46,7 +45,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { listCommands, SET_TEXT_BLOCK_COMMAND } from "./block-editing";
+import { $currentBlockType, $setBlockType } from "./block-type";
 import { UPLOAD_IMAGE_COMMAND } from "./image-plugin";
 
 export const blockItems = [
@@ -112,11 +111,7 @@ export function EditorMenu({ pageRoot }: { pageRoot: Element | null }) {
 						? parent
 						: null;
 				setView({
-					block: $isHeadingNode(block)
-						? block.getTag()
-						: $isListNode(block)
-							? block.getListType()
-							: block.getType(),
+					block: $currentBlockType() ?? block.getType(),
 					formats: formats
 						.filter(({ value }) => selection.hasFormat(value))
 						.map(({ value }) => value),
@@ -155,18 +150,7 @@ export function EditorMenu({ pageRoot }: { pageRoot: Element | null }) {
 
 	/** 型の変更はモデルへ伝え、メニュー操作後に本文へフォーカスを戻す。 */
 	function applyBlock(value: (typeof blockItems)[number]["value"]) {
-		if (value === "bullet" || value === "number" || value === "check") {
-			const listCommand = listCommands.find(
-				({ type }) => type === value,
-			)?.command;
-			if (!listCommand) return;
-			editor.dispatchCommand(listCommand, undefined);
-		} else {
-			editor.dispatchCommand(
-				SET_TEXT_BLOCK_COMMAND,
-				view.block === value ? "paragraph" : value,
-			);
-		}
+		editor.update(() => $setBlockType(value));
 		editor.focus();
 	}
 

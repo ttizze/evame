@@ -43,6 +43,7 @@
 		"@fontsource-variable/inter": "5.3.0",
 		"@formatjs/intl-localematcher": "0.9.0",
 		"@google/generative-ai": "0.24.1",
+		"@lexical/clipboard": "0.53.0",
 		"@lexical/code-core": "0.53.0",
 		"@lexical/extension": "0.53.0",
 		"@lexical/history": "0.53.0",
@@ -155,6 +156,7 @@
 		"@biomejs/biome": "2.5.15",
 		"@cloudflare/vite-plugin": "^1.67.0",
 		"@cloudflare/workers-types": "^5.20261106.1",
+		"@lexical/headless": "0.53.0",
 		"@playwright/test": "1.63.0",
 		"@sentry/vite-plugin": "^5.4.0",
 		"@tailwindcss/vite": "4.3.3",
@@ -171,6 +173,7 @@
 		"@types/react-dom": "19.3.0",
 		"@vercel/og": "1.0.3",
 		"@vitejs/plugin-react": "^6.2.1",
+		"abort-controller": "3.0.0",
 		"astro": "^7.4.7",
 		"babel-plugin-react-compiler": "1.0.0",
 		"drizzle-kit": "0.31.11",
@@ -196,6 +199,8 @@
 		"@libsql/client": "0.18.0"
 	},
 	"patchedDependencies": {
-		"@vercel/og@1.0.3": "patches/@vercel%2Fog@1.0.3.patch"
+		"@vercel/og@1.0.3": "patches/@vercel%2Fog@1.0.3.patch",
+		"@lexical/list@0.53.0": "patches/@lexical%2Flist@0.53.0.patch",
+		"@lexical/mdast@0.53.0": "patches/@lexical%2Fmdast@0.53.0.patch"
 	}
 }

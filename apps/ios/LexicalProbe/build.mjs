@@ -1,10 +1,5 @@
-import {
-	copyFile,
-	mkdir,
-	readdir,
-	readFile,
-	writeFile,
-} from "node:fs/promises";
+import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const directory = import.meta.dir;
@@ -15,7 +10,10 @@ const web = JSON.parse(
 const probe = JSON.parse(
 	await readFile(new URL("./package.json", import.meta.url), "utf8"),
 );
-for (const [name, version] of Object.entries(web.dependencies)) {
+for (const [name, version] of [
+	...Object.entries(web.dependencies),
+	...Object.entries(probe.devDependencies),
+]) {
 	if (
 		(name === "lexical" || name.startsWith("@lexical/")) &&
 		version !== probe.devDependencies.lexical
@@ -23,29 +21,14 @@ for (const [name, version] of Object.entries(web.dependencies)) {
 		throw new Error(`WebとProbeのLexical固定版が異なります: ${name}`);
 }
 await mkdir(generated, { recursive: true });
-const resolutions = new Map();
-resolutions.set(
-	"decode-named-character-reference",
-	Bun.resolveSync("decode-named-character-reference", directory),
-);
-for (const name of [
-	"lexical",
-	...(await readdir(`${directory}/node_modules/@lexical`)).map(
-		(name) => `@lexical/${name}`,
-	),
-]) {
-	const pkg = JSON.parse(
-		await readFile(`${directory}/node_modules/${name}/package.json`, "utf8"),
-	);
-	if (pkg.version !== probe.devDependencies.lexical)
-		throw new Error(`Probe内のLexical固定版が異なります: ${name}`);
-	for (const key of Object.keys(pkg.exports ?? { ".": pkg.main })) {
-		if (!key.startsWith(".") || key.includes("*")) continue;
-		const specifier = name + (key === "." ? "" : key.slice(1));
-		resolutions.set(specifier, Bun.resolveSync(specifier, directory));
-	}
-}
 for (const mode of ["legacy", "mdast", "pc"]) {
+	const resolutionDirectory =
+		mode === "pc"
+			? fileURLToPath(new URL("../../../", import.meta.url))
+			: directory;
+	const sdkDirectory = dirname(
+		Bun.resolveSync("@lexical/rich-text", resolutionDirectory),
+	);
 	const result = await Bun.build({
 		entrypoints: [`${directory}/${mode}.mjs`],
 		target: "browser",
@@ -61,12 +44,14 @@ for (const mode of ["legacy", "mdast", "pc"]) {
 							filter:
 								/^(lexical$|@lexical\/|decode-named-character-reference$)/,
 						},
-						({ path }) => {
-							const resolved = resolutions.get(path);
-							if (!resolved)
-								throw new Error(`unresolved Lexical entry ${path}`);
-							return { path: resolved };
-						},
+						({ path }) => ({
+							path: Bun.resolveSync(
+								path,
+								path === "decode-named-character-reference"
+									? directory
+									: sdkDirectory,
+							),
+						}),
 					);
 				},
 			},

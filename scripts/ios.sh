@@ -33,15 +33,17 @@ case "${1:-}" in
     bash apps/ios/VditorProbe/run.sh "${2:?xcodebuild destination is required}"
     exit
     ;;
-  *) echo 'Usage: bash scripts/ios.sh generate | test <xcodebuild destination> | comrak-probe <simulator UUID> | test-lexical <xcodebuild destination> | test-textual | test-vditor <xcodebuild destination>' >&2; exit 2 ;;
+  *) echo 'Usage: bash scripts/ios.sh generate | test <xcodebuild destination> [xcodebuild options] | comrak-probe <simulator UUID> | test-lexical <xcodebuild destination> | test-textual | test-vditor <xcodebuild destination>' >&2; exit 2 ;;
 esac
 if [[ "$1" == test && -z "${2:-}" ]]; then
   echo 'test にはシミュレータの destination が必要です。' >&2
   exit 2
 fi
 
-(cd apps/ios/EditorModel && bun install --frozen-lockfile)
-bun apps/ios/EditorModel/build.mjs
+# LexicalのモデルはPCのエディタと同じ依存をルートのロックファイルから使う。
+bun install --frozen-lockfile
+bun apps/ios/LexicalModel/build.mjs
+bun tests/editor-matrix.mjs
 
 xcodegen generate --spec apps/ios/project.yml
 resolved_dir=apps/ios/EvameEditorPrototype.xcodeproj/project.xcworkspace/xcshareddata/swiftpm
@@ -49,6 +51,9 @@ mkdir -p "$resolved_dir"
 cp apps/ios/Package.resolved "$resolved_dir/Package.resolved"
 
 if [[ "$1" == test ]]; then
+  # 旧モデルは比較用のテストだけが使い、アプリには含めない。
+  (cd apps/ios/EditorModel && bun install --frozen-lockfile)
+  bun apps/ios/EditorModel/build.mjs
   xcrun swift test --package-path apps/ios --disable-automatic-resolution
   xcodebuild \
     -project apps/ios/EvameEditorPrototype.xcodeproj \
@@ -57,5 +62,5 @@ if [[ "$1" == test ]]; then
     -derivedDataPath apps/ios/DerivedData \
     -parallel-testing-enabled NO \
     -onlyUsePackageVersionsFromResolvedFile \
-    test
+    test "${@:3}"
 fi

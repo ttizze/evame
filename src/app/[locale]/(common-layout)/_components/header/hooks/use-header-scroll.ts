@@ -11,26 +11,14 @@ export function useHeaderScroll() {
 	// スクロールは高頻度なので、スクロール量などは state にせず ref で保持し、
 	// state 更新は「表示/固定」が切り替わったときだけに絞る。
 	const lastScrollYRef = useRef(0);
-	const headerOffsetRef = useRef(0);
 	const isPinnedRef = useRef(false);
 	const isVisibleRef = useRef(true);
-
-	const rafIdRef = useRef<number | null>(null);
-	const latestScrollYRef = useRef<number>(0);
-
-	useEffect(() => {
-		// 初期状態を揃える
-		lastScrollYRef.current = window.scrollY;
-		latestScrollYRef.current = window.scrollY;
-	}, []);
 
 	useEffect(() => {
 		const measureHeader = () => {
 			if (!headerRef.current) return;
 
 			setHeaderHeight(headerRef.current.offsetHeight);
-			headerOffsetRef.current =
-				headerRef.current.getBoundingClientRect().top + window.scrollY;
 		};
 
 		measureHeader();
@@ -38,15 +26,13 @@ export function useHeaderScroll() {
 		// ヘッダーの高さが変わる場合に追従（メニュー展開など）
 		if (!headerRef.current || typeof ResizeObserver === "undefined") return;
 
-		const ro = new ResizeObserver(() => {
-			if (!headerRef.current) return;
-			setHeaderHeight(headerRef.current.offsetHeight);
-		});
+		const ro = new ResizeObserver(measureHeader);
 		ro.observe(headerRef.current);
 		return () => ro.disconnect();
 	}, []);
 
 	useEffect(() => {
+		lastScrollYRef.current = window.scrollY;
 		const applyScrollState = (currentScrollY: number) => {
 			const last = lastScrollYRef.current;
 
@@ -60,7 +46,10 @@ export function useHeaderScroll() {
 			if (currentScrollY <= 0) {
 				nextPinned = false;
 				nextVisible = true;
-			} else if (currentScrollY < headerOffsetRef.current) {
+			} else if (
+				headerRef.current &&
+				headerRef.current.getBoundingClientRect().top > 0
+			) {
 				nextPinned = false;
 				nextVisible = true;
 			} else if (isScrollingDown && scrollDifference > scrollThreshold) {
@@ -83,22 +72,7 @@ export function useHeaderScroll() {
 			lastScrollYRef.current = currentScrollY;
 		};
 
-		const unsubscribe = subscribeScrollY((scrollY) => {
-			latestScrollYRef.current = scrollY;
-			if (rafIdRef.current !== null) return;
-
-			rafIdRef.current = window.requestAnimationFrame(() => {
-				rafIdRef.current = null;
-				applyScrollState(latestScrollYRef.current);
-			});
-		});
-
-		return () => {
-			unsubscribe();
-			if (rafIdRef.current !== null) {
-				window.cancelAnimationFrame(rafIdRef.current);
-			}
-		};
+		return subscribeScrollY(applyScrollState);
 	}, []);
 
 	return {
