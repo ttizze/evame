@@ -73,18 +73,6 @@ export type TagWithCount = Awaited<
 >[number];
 
 /**
- * ユーザーのターゲットロケールを取得
- */
-export async function getUserTargetLocales(userId: string) {
-	const result = await db
-		.selectFrom("userSettings")
-		.select("targetLocales")
-		.where("userId", "=", userId)
-		.executeTakeFirst();
-	return result?.targetLocales ?? ["en", "zh"];
-}
-
-/**
  * ユーザーの翻訳コンテキストを取得
  */
 export async function getTranslationContextsByUserId(userId: string) {

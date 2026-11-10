@@ -1,4 +1,4 @@
-import { authenticateToken } from "../_service/authenticate-token";
+import { authenticateToken } from "@/app/api/_service/authenticate-token";
 import { buildJudgments } from "./_service/build-judgments";
 import { executePush } from "./_service/execute-push";
 import { syncPushSchema } from "./_service/schema";

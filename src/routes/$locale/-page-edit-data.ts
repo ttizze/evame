@@ -6,13 +6,13 @@ import {
 } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
+import { getUserTargetLocales } from "@/app/_db/queries.server";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { mdastToMarkdown } from "@/app/[locale]/_domain/mdast-to-markdown";
 import {
 	getAllTagsWithCount,
 	getPageWithTitleAndTagsBySlug,
 	getTranslationContextsByUserId,
-	getUserTargetLocales,
 } from "@/app/[locale]/(edit-layout)/[handle]/[pageSlug]/edit/_db/queries.server";
 
 const pageEditInput = z.object({

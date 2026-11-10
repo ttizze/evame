@@ -11,7 +11,10 @@ type UploadImageResult = ActionResponse<
 	}
 >;
 
-export async function uploadImage(file: File): Promise<UploadImageResult> {
+export async function uploadImage(
+	file: File,
+	path: string | null,
+): Promise<UploadImageResult> {
 	try {
 		if (!file.type.startsWith("image/")) {
 			return { success: false, message: "Please select a valid image file" };
@@ -33,7 +36,7 @@ export async function uploadImage(file: File): Promise<UploadImageResult> {
 				message: "Image must be < 5 MB after processing",
 			};
 		}
-		const imageUrl = await uploadToR2(processed);
+		const imageUrl = await uploadToR2(processed, path);
 
 		return {
 			success: true,

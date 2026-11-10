@@ -127,7 +127,7 @@ export async function updateProfileImageForUser(
 		};
 	}
 
-	const result = await uploadImage(file);
+	const result = await uploadImage(file, null);
 	if (!result.success || !result.data?.imageUrl) {
 		return {
 			success: false,

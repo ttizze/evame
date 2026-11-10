@@ -173,7 +173,7 @@ bunx vitest run src/app/api/sync/push/_domain/sync-judgment.test.ts
 
 # API
 bunx vitest run src/app/api/sync/cli-login/_utils/redirect-uri.test.ts
-bunx vitest run src/app/api/sync/_service/authenticate-token.test.ts
+bunx vitest run src/app/api/_service/authenticate-token.test.ts
 bunx vitest run src/app/api/sync/push/route.integration.test.ts
 bunx vitest run src/app/api/sync/pull/route.integration.test.ts
 bunx vitest run src/app/api/sync/cli-login/route.integration.test.ts

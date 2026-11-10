@@ -227,6 +227,24 @@ Markdownと画像をまとめて書き出し、画像リンクを相対パスに
 
 未実装のAPIや未検証の端末挙動が残る場合は、完了した機能と区別して報告する。
 
+## 付録: アプリ用API
+
+CLI・GitHub Actions向けの`/api/sync/*`は挙動を変えず、アプリ用に`/api/app/*`を分けた。同期APIの課題（版の判定と書き込みが別、本文の同期で公開状態が変わる、削除済み文書の復活、画像の重複）は、こちらの契約で解消する。公開済み文書の編集はWebと同じく保存時点で公開ページへ反映する。
+
+| API | 契約 |
+|---|---|
+| `GET /api/app/login?code_challenge=…` | システムの認証画面で開く。未ログインならWebのログインへ送り、戻った後に許可画面を表示し、本人が同一オリジンPOSTで許可した後だけ`evame-editor://auth?code=…`で5分間・一回限りのコードだけを返す（PKCE S256）。 |
+| `POST /api/app/token` | `{code, code_verifier}`を端末用トークン（期限なし、名前`iPhone`の個人用アクセストークン）に交換する。コードは照合の成否にかかわらず一度で使えなくなる。 |
+| `DELETE /api/app/token` | 要求に使った端末用トークンだけを失効させる。 |
+| `GET /api/app/documents` | `{documents: [{slug, title, body, status, revision}], failed: [{slug}]}`。アーカイブ以外の自分の文書を新しい順に返す。Markdownへ変換できない文書は`failed`へ分ける。 |
+| `PUT /api/app/documents/:slug` | `{title, body, expected_revision, locale}`。slugは端末で`[0-9a-z]`12文字以上を採番する（Webと同じ形）。版の確認と書き込みを同じトランザクションで行い、公開状態は変えない。新規は下書きで作る（201）。送った内容が現在と同じなら版が古くても変更なし（200、現在の文書）として応答喪失後の再送を回復できる。競合は409で`{reason, document}`を返す（`revision_mismatch`は現在の文書、`missing`・`slug_taken`は`null`、`archived`）。 |
+| `PUT /api/app/documents/:slug/status` | `{status: "PUBLIC" \| "DRAFT", expected_revision}`。公開するたびにWebと同じく保存済みの翻訳先へ翻訳を始める。翻訳の投入は状態の保存の後に行う。 |
+| `POST /api/app/images` | multipartの`id`（端末の画像のUUID）と`image`。保存先を利用者と画像IDで決めるため、送り直しても同じURLになり画像は増えない。 |
+
+Webでログイン済みでも、本人のハンドルと文書・画像の読み書き、公開状態の変更権限を表示して許可を求める。GETではコードを発行せず、認証済みの同一オリジンPOSTだけで一回限りのコードを発行する。画像IDは大文字・小文字を区別せず、サーバーで小文字にそろえる。新規文書のslugは端末の採番規則に従うが、既存のWeb・CLI文書は取得したslugを保って更新できる。
+
+版は題名・正規化後の本文・公開状態から計算する（Webでの公開・非公開も検知できる）。保存の変換はWebと同じ経路（画像の取り込み・言語判定・段落照合）で行い、外部への通信を含む変換はトランザクションの前に済ませる。公開中の文書の保存と公開状態の変更は公開ページのキャッシュを無効化し、下書きの保存は無効化しない。
+
 ## 付録: 現行の同期API
 
 ### 文書の取得
@@ -276,7 +294,7 @@ Markdownと画像をまとめて書き出し、画像リンクを相対パスに
 - `src/app/api/sync/push/_domain/sync-judgment.ts`
 - `src/app/api/sync/push/_service/db/mutations.ts`
 - `src/app/api/sync/_domain/compute-revision.ts`
-- `src/app/api/sync/_service/authenticate-token.ts`
+- `src/app/api/_service/authenticate-token.ts`
 - `src/app/api/sync/cli-login/_utils/redirect-uri.ts`
 - `src/app/api/reader-actions/handler.ts`
 - `src/app/api/reader-actions/_service/upload-image.ts`

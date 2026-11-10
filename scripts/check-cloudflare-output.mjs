@@ -476,6 +476,8 @@ try {
 		"Aboutで説明文を維持する",
 	);
 	if (process.env.EVAME_BROWSER_TEST === "true") {
+		const { checkAppLogin } = await import("./check-app-login.mjs");
+		await checkAppLogin(serverUrl.origin, cookie);
 		const { checkEditorDrag } = await import("./check-editor-drag.mjs");
 		await checkEditorDrag(serverUrl.origin, cookie);
 		const { checkReaderBrowser } = await import("./check-reader-browser.mjs");

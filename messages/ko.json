@@ -1,4 +1,10 @@
 {
+	"AppLogin": {
+		"title": "앱 접근 허용",
+		"description": "Evame iPhone 앱이 내 문서와 이미지를 읽고 쓰고 공개 상태를 변경하도록 허용합니다. 직접 앱에서 로그인을 시작한 경우에만 허용하세요.",
+		"authorize": "허용하고 앱으로 돌아가기",
+		"cancel": "취소"
+	},
 	"PublicationSettings": {
 		"title": "공개 설정",
 		"openSettings": "공개 설정: {status}",

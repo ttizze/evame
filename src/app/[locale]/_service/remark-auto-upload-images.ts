@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import type { Root as MdastRoot } from "mdast";
 import pLimit from "p-limit";
 import type { Plugin } from "unified";
@@ -57,7 +58,15 @@ export const remarkAutoUploadImages: Plugin<[]> = () => {
 			tasks.push(
 				limit(async () => {
 					const file = await fileFromUrl(url);
-					const result = await uploadImage(file);
+					// 同じ中身は同じ保存先にし、本文の送り直しで画像を増やさず、版も変えない。
+					const result = await uploadImage(
+						file,
+						`external/${createHash("sha256")
+							.update(file.type)
+							.update("\0")
+							.update(new Uint8Array(await file.arrayBuffer()))
+							.digest("hex")}`,
+					);
 					if (result.success) {
 						node.url = result.data.imageUrl;
 					} else {

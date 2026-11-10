@@ -1,4 +1,10 @@
 {
+	"AppLogin": {
+		"title": "Allow app access",
+		"description": "Allow the Evame iPhone app to read and write your documents and images and change publication status. Only continue if you started signing in from the app.",
+		"authorize": "Allow and return to app",
+		"cancel": "Cancel"
+	},
 	"PublicationSettings": {
 		"title": "Publication settings",
 		"openSettings": "Publication settings: {status}",

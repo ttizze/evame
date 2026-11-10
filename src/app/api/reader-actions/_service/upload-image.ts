@@ -18,5 +18,5 @@ export async function uploadEditorImage(
 	if (!(file instanceof File)) {
 		return { success: false, message: "Please select a valid image file" };
 	}
-	return uploadImage(file);
+	return uploadImage(file, null);
 }

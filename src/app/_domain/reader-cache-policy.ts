@@ -19,6 +19,7 @@ export function shouldInvalidateReader(
 	if (pathname === "/api/translate/chunk") return changed === "true";
 	return (
 		pathname.startsWith("/_serverFn/") ||
+		pathname.startsWith("/api/app/documents/") ||
 		[
 			"/api/segment-translations",
 			"/api/sync/push",

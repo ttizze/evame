@@ -34,12 +34,17 @@ export async function authenticateToken(
 	return null;
 }
 
+/** PATはハッシュだけを保存する。発行・照合・失効で同じ計算にするため1か所に置く。 */
+export function hashPersonalAccessToken(token: string) {
+	return createHash("sha256").update(token).digest("hex");
+}
+
 async function authenticatePat(
 	token: string,
 ): Promise<{ userId: string } | null> {
-	const keyHash = createHash("sha256").update(token).digest("hex");
-
-	const personalAccessToken = await findPersonalAccessTokenByHash(keyHash);
+	const personalAccessToken = await findPersonalAccessTokenByHash(
+		hashPersonalAccessToken(token),
+	);
 
 	if (!personalAccessToken) return null;
 

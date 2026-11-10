@@ -38,6 +38,10 @@ import { Route as LocaleCommonHandleRouteImport } from './routes/$locale._common
 import { Route as LocaleCommonAboutRouteImport } from './routes/$locale._common.about'
 import { Route as LocaleCommonNewPagesRouteImport } from './routes/$locale._common.new-pages'
 import { Route as LocaleCommonSearchRouteImport } from './routes/$locale._common.search'
+import { Route as ApiAppDocumentsRouteImport } from './routes/api/app/documents'
+import { Route as ApiAppImagesRouteImport } from './routes/api/app/images'
+import { Route as ApiAppLoginRouteImport } from './routes/api/app/login'
+import { Route as ApiAppTokenRouteImport } from './routes/api/app/token'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiPageLikesStateRouteImport } from './routes/api/page-likes/state'
 import { Route as ApiSyncCliLoginRouteImport } from './routes/api/sync/cli-login'
@@ -51,8 +55,10 @@ import { Route as LocaleCommonHandleEditRouteImport } from './routes/$locale._co
 import { Route as LocaleCommonHandlePageManagementRouteImport } from './routes/$locale._common.$handle_.page-management'
 import { Route as LocaleCommonAuthLoginRouteImport } from './routes/$locale._common.auth.login'
 import { Route as LocaleCommonTagTagNameRouteImport } from './routes/$locale._common.tag.$tagName'
+import { Route as ApiAppDocumentsSlugRouteImport } from './routes/api/app/documents.$slug'
 import { Route as ApiPageViewsPageIdIncrementRouteImport } from './routes/api/page-views/$pageId/increment'
 import { Route as LocaleEditHandlePageSlugEditRouteImport } from './routes/$locale._edit.$handle.$pageSlug.edit'
+import { Route as ApiAppDocumentsSlugStatusRouteImport } from './routes/api/app/documents.$slug.status'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -197,6 +203,26 @@ const LocaleCommonSearchRoute = LocaleCommonSearchRouteImport.update({
   path: '/search',
   getParentRoute: () => LocaleCommonRoute,
 } as any)
+const ApiAppDocumentsRoute = ApiAppDocumentsRouteImport.update({
+  id: '/api/app/documents',
+  path: '/api/app/documents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAppImagesRoute = ApiAppImagesRouteImport.update({
+  id: '/api/app/images',
+  path: '/api/app/images',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAppLoginRoute = ApiAppLoginRouteImport.update({
+  id: '/api/app/login',
+  path: '/api/app/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAppTokenRoute = ApiAppTokenRouteImport.update({
+  id: '/api/app/token',
+  path: '/api/app/token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   id: '/api/auth/$',
   path: '/api/auth/$',
@@ -265,6 +291,11 @@ const LocaleCommonTagTagNameRoute = LocaleCommonTagTagNameRouteImport.update({
   path: '/tag/$tagName',
   getParentRoute: () => LocaleCommonRoute,
 } as any)
+const ApiAppDocumentsSlugRoute = ApiAppDocumentsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ApiAppDocumentsRoute,
+} as any)
 const ApiPageViewsPageIdIncrementRoute =
   ApiPageViewsPageIdIncrementRouteImport.update({
     id: '/api/page-views/$pageId/increment',
@@ -276,6 +307,12 @@ const LocaleEditHandlePageSlugEditRoute =
     id: '/$handle/$pageSlug/edit',
     path: '/$handle/$pageSlug/edit',
     getParentRoute: () => LocaleEditRoute,
+  } as any)
+const ApiAppDocumentsSlugStatusRoute =
+  ApiAppDocumentsSlugStatusRouteImport.update({
+    id: '/status',
+    path: '/status',
+    getParentRoute: () => ApiAppDocumentsSlugRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -305,6 +342,10 @@ export interface FileRoutesByFullPath {
   '/$locale/about': typeof LocaleCommonAboutRoute
   '/$locale/new-pages': typeof LocaleCommonNewPagesRoute
   '/$locale/search': typeof LocaleCommonSearchRoute
+  '/api/app/documents': typeof ApiAppDocumentsRouteWithChildren
+  '/api/app/images': typeof ApiAppImagesRoute
+  '/api/app/login': typeof ApiAppLoginRoute
+  '/api/app/token': typeof ApiAppTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/page-likes/state': typeof ApiPageLikesStateRoute
   '/api/sync/cli-login': typeof ApiSyncCliLoginRoute
@@ -319,8 +360,10 @@ export interface FileRoutesByFullPath {
   '/$locale/$handle/page-management': typeof LocaleCommonHandlePageManagementRoute
   '/$locale/auth/login': typeof LocaleCommonAuthLoginRoute
   '/$locale/tag/$tagName': typeof LocaleCommonTagTagNameRoute
+  '/api/app/documents/$slug': typeof ApiAppDocumentsSlugRouteWithChildren
   '/api/page-views/$pageId/increment': typeof ApiPageViewsPageIdIncrementRoute
   '/$locale/$handle/$pageSlug/edit': typeof LocaleEditHandlePageSlugEditRoute
+  '/api/app/documents/$slug/status': typeof ApiAppDocumentsSlugStatusRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -349,6 +392,10 @@ export interface FileRoutesByTo {
   '/$locale/about': typeof LocaleCommonAboutRoute
   '/$locale/new-pages': typeof LocaleCommonNewPagesRoute
   '/$locale/search': typeof LocaleCommonSearchRoute
+  '/api/app/documents': typeof ApiAppDocumentsRouteWithChildren
+  '/api/app/images': typeof ApiAppImagesRoute
+  '/api/app/login': typeof ApiAppLoginRoute
+  '/api/app/token': typeof ApiAppTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/page-likes/state': typeof ApiPageLikesStateRoute
   '/api/sync/cli-login': typeof ApiSyncCliLoginRoute
@@ -362,8 +409,10 @@ export interface FileRoutesByTo {
   '/$locale/$handle/page-management': typeof LocaleCommonHandlePageManagementRoute
   '/$locale/auth/login': typeof LocaleCommonAuthLoginRoute
   '/$locale/tag/$tagName': typeof LocaleCommonTagTagNameRoute
+  '/api/app/documents/$slug': typeof ApiAppDocumentsSlugRouteWithChildren
   '/api/page-views/$pageId/increment': typeof ApiPageViewsPageIdIncrementRoute
   '/$locale/$handle/$pageSlug/edit': typeof LocaleEditHandlePageSlugEditRoute
+  '/api/app/documents/$slug/status': typeof ApiAppDocumentsSlugStatusRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -395,6 +444,10 @@ export interface FileRoutesById {
   '/$locale/_common/about': typeof LocaleCommonAboutRoute
   '/$locale/_common/new-pages': typeof LocaleCommonNewPagesRoute
   '/$locale/_common/search': typeof LocaleCommonSearchRoute
+  '/api/app/documents': typeof ApiAppDocumentsRouteWithChildren
+  '/api/app/images': typeof ApiAppImagesRoute
+  '/api/app/login': typeof ApiAppLoginRoute
+  '/api/app/token': typeof ApiAppTokenRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/page-likes/state': typeof ApiPageLikesStateRoute
   '/api/sync/cli-login': typeof ApiSyncCliLoginRoute
@@ -409,8 +462,10 @@ export interface FileRoutesById {
   '/$locale/_common/$handle_/page-management': typeof LocaleCommonHandlePageManagementRoute
   '/$locale/_common/auth/login': typeof LocaleCommonAuthLoginRoute
   '/$locale/_common/tag/$tagName': typeof LocaleCommonTagTagNameRoute
+  '/api/app/documents/$slug': typeof ApiAppDocumentsSlugRouteWithChildren
   '/api/page-views/$pageId/increment': typeof ApiPageViewsPageIdIncrementRoute
   '/$locale/_edit/$handle/$pageSlug/edit': typeof LocaleEditHandlePageSlugEditRoute
+  '/api/app/documents/$slug/status': typeof ApiAppDocumentsSlugStatusRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -441,6 +496,10 @@ export interface FileRouteTypes {
     | '/$locale/about'
     | '/$locale/new-pages'
     | '/$locale/search'
+    | '/api/app/documents'
+    | '/api/app/images'
+    | '/api/app/login'
+    | '/api/app/token'
     | '/api/auth/$'
     | '/api/page-likes/state'
     | '/api/sync/cli-login'
@@ -455,8 +514,10 @@ export interface FileRouteTypes {
     | '/$locale/$handle/page-management'
     | '/$locale/auth/login'
     | '/$locale/tag/$tagName'
+    | '/api/app/documents/$slug'
     | '/api/page-views/$pageId/increment'
     | '/$locale/$handle/$pageSlug/edit'
+    | '/api/app/documents/$slug/status'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -485,6 +546,10 @@ export interface FileRouteTypes {
     | '/$locale/about'
     | '/$locale/new-pages'
     | '/$locale/search'
+    | '/api/app/documents'
+    | '/api/app/images'
+    | '/api/app/login'
+    | '/api/app/token'
     | '/api/auth/$'
     | '/api/page-likes/state'
     | '/api/sync/cli-login'
@@ -498,8 +563,10 @@ export interface FileRouteTypes {
     | '/$locale/$handle/page-management'
     | '/$locale/auth/login'
     | '/$locale/tag/$tagName'
+    | '/api/app/documents/$slug'
     | '/api/page-views/$pageId/increment'
     | '/$locale/$handle/$pageSlug/edit'
+    | '/api/app/documents/$slug/status'
   id:
     | '__root__'
     | '/'
@@ -530,6 +597,10 @@ export interface FileRouteTypes {
     | '/$locale/_common/about'
     | '/$locale/_common/new-pages'
     | '/$locale/_common/search'
+    | '/api/app/documents'
+    | '/api/app/images'
+    | '/api/app/login'
+    | '/api/app/token'
     | '/api/auth/$'
     | '/api/page-likes/state'
     | '/api/sync/cli-login'
@@ -544,8 +615,10 @@ export interface FileRouteTypes {
     | '/$locale/_common/$handle_/page-management'
     | '/$locale/_common/auth/login'
     | '/$locale/_common/tag/$tagName'
+    | '/api/app/documents/$slug'
     | '/api/page-views/$pageId/increment'
     | '/$locale/_edit/$handle/$pageSlug/edit'
+    | '/api/app/documents/$slug/status'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -568,6 +641,10 @@ export interface RootRouteChildren {
   ApiTranslateRoute: typeof ApiTranslateRouteWithChildren
   ApiTranslationJobsRoute: typeof ApiTranslationJobsRoute
   AuthLoginRoute: typeof AuthLoginRoute
+  ApiAppDocumentsRoute: typeof ApiAppDocumentsRouteWithChildren
+  ApiAppImagesRoute: typeof ApiAppImagesRoute
+  ApiAppLoginRoute: typeof ApiAppLoginRoute
+  ApiAppTokenRoute: typeof ApiAppTokenRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiPageLikesStateRoute: typeof ApiPageLikesStateRoute
   ApiSyncCliLoginRoute: typeof ApiSyncCliLoginRoute
@@ -783,6 +860,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleCommonSearchRouteImport
       parentRoute: typeof LocaleCommonRoute
     }
+    '/api/app/documents': {
+      id: '/api/app/documents'
+      path: '/api/app/documents'
+      fullPath: '/api/app/documents'
+      preLoaderRoute: typeof ApiAppDocumentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/app/images': {
+      id: '/api/app/images'
+      path: '/api/app/images'
+      fullPath: '/api/app/images'
+      preLoaderRoute: typeof ApiAppImagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/app/login': {
+      id: '/api/app/login'
+      path: '/api/app/login'
+      fullPath: '/api/app/login'
+      preLoaderRoute: typeof ApiAppLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/app/token': {
+      id: '/api/app/token'
+      path: '/api/app/token'
+      fullPath: '/api/app/token'
+      preLoaderRoute: typeof ApiAppTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/$': {
       id: '/api/auth/$'
       path: '/api/auth/$'
@@ -874,6 +979,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleCommonTagTagNameRouteImport
       parentRoute: typeof LocaleCommonRoute
     }
+    '/api/app/documents/$slug': {
+      id: '/api/app/documents/$slug'
+      path: '/$slug'
+      fullPath: '/api/app/documents/$slug'
+      preLoaderRoute: typeof ApiAppDocumentsSlugRouteImport
+      parentRoute: typeof ApiAppDocumentsRoute
+    }
     '/api/page-views/$pageId/increment': {
       id: '/api/page-views/$pageId/increment'
       path: '/api/page-views/$pageId/increment'
@@ -887,6 +999,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/$locale/$handle/$pageSlug/edit'
       preLoaderRoute: typeof LocaleEditHandlePageSlugEditRouteImport
       parentRoute: typeof LocaleEditRoute
+    }
+    '/api/app/documents/$slug/status': {
+      id: '/api/app/documents/$slug/status'
+      path: '/status'
+      fullPath: '/api/app/documents/$slug/status'
+      preLoaderRoute: typeof ApiAppDocumentsSlugStatusRouteImport
+      parentRoute: typeof ApiAppDocumentsSlugRoute
     }
   }
 }
@@ -964,6 +1083,29 @@ const ApiTranslateRouteWithChildren = ApiTranslateRoute._addFileChildren(
   ApiTranslateRouteChildren,
 )
 
+interface ApiAppDocumentsSlugRouteChildren {
+  ApiAppDocumentsSlugStatusRoute: typeof ApiAppDocumentsSlugStatusRoute
+}
+
+const ApiAppDocumentsSlugRouteChildren: ApiAppDocumentsSlugRouteChildren = {
+  ApiAppDocumentsSlugStatusRoute: ApiAppDocumentsSlugStatusRoute,
+}
+
+const ApiAppDocumentsSlugRouteWithChildren =
+  ApiAppDocumentsSlugRoute._addFileChildren(ApiAppDocumentsSlugRouteChildren)
+
+interface ApiAppDocumentsRouteChildren {
+  ApiAppDocumentsSlugRoute: typeof ApiAppDocumentsSlugRouteWithChildren
+}
+
+const ApiAppDocumentsRouteChildren: ApiAppDocumentsRouteChildren = {
+  ApiAppDocumentsSlugRoute: ApiAppDocumentsSlugRouteWithChildren,
+}
+
+const ApiAppDocumentsRouteWithChildren = ApiAppDocumentsRoute._addFileChildren(
+  ApiAppDocumentsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LocaleRoute: LocaleRouteWithChildren,
@@ -984,6 +1126,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTranslateRoute: ApiTranslateRouteWithChildren,
   ApiTranslationJobsRoute: ApiTranslationJobsRoute,
   AuthLoginRoute: AuthLoginRoute,
+  ApiAppDocumentsRoute: ApiAppDocumentsRouteWithChildren,
+  ApiAppImagesRoute: ApiAppImagesRoute,
+  ApiAppLoginRoute: ApiAppLoginRoute,
+  ApiAppTokenRoute: ApiAppTokenRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiPageLikesStateRoute: ApiPageLikesStateRoute,
   ApiSyncCliLoginRoute: ApiSyncCliLoginRoute,
