@@ -41,6 +41,7 @@ JavaScriptを使わない変換候補の[Comrak評価](ComrakProbe/README.md)は
 - Markdownの解析には`swift-markdown` **0.9.0**を使う。Swift依存は`Package.swift`と`Package.resolved`で固定し、生成したXcodeプロジェクトにも同じロックを渡す。
 - 構造の結合にはProseMirrorのモデル演算をJavaScriptCore上で使う。UIKitの画面とIMEを維持し、DOMやWebViewは作らない。依存は`EditorModel/package.json`と`bun.lock`に固定し、`scripts/ios.sh`から同じJSとライセンスを生成する。
 - CIはNix環境に合わせてArm64の`macos-26`を使い、`.github/workflows/ios.yml`から同じスクリプトを実行する。
+- CIはCoreテストと`build-for-testing`を一度だけ実行し、`Build/Products`全体をtarで共有する。Native全件・ブロックUI・それ以外のUIを別々のMacで`test-without-building`し、同じXcode・OSで同一成果物を検証する。各MacのSimulator内は並列化しない。全群が成功したときだけ従来の`editor`チェックが成功する。
 
 リポジトリのルートで実行する。スクリプトは必要に応じて`nix develop`へ入り直す。
 
@@ -50,6 +51,15 @@ open apps/ios/EvameEditorPrototype.xcodeproj
 
 bash scripts/ios.sh test 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
 ```
+
+CIと同じくビルドと実行を分ける場合:
+
+```sh
+bash scripts/ios.sh build-for-testing 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
+bash scripts/ios.sh test-without-building 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
+```
+
+`test-without-building`は依存の再解決・生成・再ビルドをせず、`Build/Products`内の一つの`.xctestrun`と隣接するバンドルを使う。テスト未実行・スキップも失敗にする。ローカルの`test`は従来どおりCore・Native・UIをまとめて実行する。
 
 純粋ロジックだけの検証:
 

@@ -70,6 +70,8 @@ CIの成功に加えて、実際のプレビューURLでログイン画面、Coo
 
 ## GitHub Actions の継続デプロイ
 
+ビルド済みWorkersは一度だけ生成して全ブラウザー検証へ共有する。エディターはChromium・WebKitそれぞれでD&D・コピーとチェック操作・階層と並べ替え・書式変更の4群へ分け、Readerは独立して検証する。ジョブごとにDBを作成し、操作群ごとに新しいブラウザーコンテキストと記事を用意する。全群を維持し、失敗・キャンセル・スキップがあれば`ci-check`で本番デプロイとPRプレビューを止める。ローカルの`bun run test:deployment:browser`は既定で全群を実行する。1群だけ再現する場合は`EVAME_BROWSER_TYPE=webkit EVAME_BROWSER_SUITE=editor-lists-structure`のように指定する。
+
 `.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テストの成功後、本番DBのマイグレーション、ビルド、成果物テスト、GatewayとReaderのデプロイを順に行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
 
 Astroの `/_astro/*` はGatewayへコピーせず、READER bindingからHTMLと同じReaderのStatic Assetsへ転送する。Gatewayを先に更新し、旧Readerでも動くAPIを維持してから、HTMLとアセットを1つのReaderバージョンとして切り替える。Gatewayの更新に失敗した場合はReaderを更新しない。Readerの更新に失敗した場合は旧Readerとそのアセットが引き続き動作するため、失敗したデプロイを再実行する。公開表示の切り戻しは互換性を確認したReaderバージョンへ行う。初回だけはGatewayから参照する前に非公開Readerを作成しておく。

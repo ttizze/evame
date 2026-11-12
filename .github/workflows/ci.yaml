@@ -95,12 +95,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [editor-chromium, editor-webkit, reader]
+        browser: [chromium, webkit]
+        suite:
+          - editor-drag
+          - editor-lists-clipboard
+          - editor-lists-structure
+          - editor-lists-formatting
+        include:
+          - suite: reader
+            browser: chromium
     env:
       SENTRY_DSN: ""
       VITE_SENTRY_DSN: ""
       TZ: Asia/Tokyo
       EVAME_BROWSER_SUITE: ${{ matrix.suite }}
+      EVAME_BROWSER_TYPE: ${{ matrix.browser }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -120,7 +129,7 @@ jobs:
             --volume "$PWD:$PWD" --volume /nix/store:/nix/store:ro \
             --workdir "$PWD" \
             --env PATH --env GSETTINGS_SCHEMA_DIR --env TZ \
-            --env SENTRY_DSN --env VITE_SENTRY_DSN --env EVAME_BROWSER_SUITE \
+            --env SENTRY_DSN --env VITE_SENTRY_DSN --env EVAME_BROWSER_SUITE --env EVAME_BROWSER_TYPE \
             mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27 \
             bun run test:deployment:browser
 

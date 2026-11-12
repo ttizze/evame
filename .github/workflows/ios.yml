@@ -11,6 +11,8 @@ on:
       - "package.json"
       - "bun.lock"
       - "scripts/ios.sh"
+      - "scripts/ios.test.ts"
+      - ".github/workflows/ci.test.ts"
       - "flake.*"
       - ".github/workflows/ios.yml"
   push:
@@ -24,6 +26,8 @@ on:
       - "package.json"
       - "bun.lock"
       - "scripts/ios.sh"
+      - "scripts/ios.test.ts"
+      - ".github/workflows/ci.test.ts"
       - "flake.*"
       - ".github/workflows/ios.yml"
   workflow_dispatch:
@@ -32,7 +36,7 @@ permissions:
   contents: read
 
 jobs:
-  editor:
+  build:
     runs-on: macos-26
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
@@ -41,10 +45,74 @@ jobs:
         with:
           persist-credentials: false
       - uses: cachix/install-nix-action@v31
-      - run: nix develop --command bash scripts/ios.sh test 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
+      - run: nix develop --command bash scripts/ios.sh build-for-testing 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
       - run: git diff --exit-code -- apps/ios/Sources/EditorCore/Resources apps/ios/App/Resources/LexicalModel.js apps/ios/App/Resources/LexicalModel-LICENSES.txt apps/ios/Tests/EditorCoreTests/Fixtures/Upstream/ProseMirrorTests.js
       - name: Report runner resources
         if: always()
         run: |
           df -h .
           sysctl vm.swapusage
+      - name: Archive iPhone build
+        run: tar -cf "$RUNNER_TEMP/ios-tests.tar" -C apps/ios/DerivedData/Build Products
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ios-tests
+          path: ${{ runner.temp }}/ios-tests.tar
+          if-no-files-found: error
+          compression-level: 1
+          retention-days: 7
+
+  test:
+    needs: build
+    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: native
+            options: -only-testing:NativeTests
+          - suite: ui-blocks
+            options: -only-testing:EditorUITests/EditorBlockUITests
+          - suite: ui-other
+            options: -only-testing:EditorUITests -skip-testing:EditorUITests/EditorBlockUITests
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      TEST_OPTIONS: ${{ matrix.options }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+      - uses: actions/download-artifact@v8
+        with:
+          name: ios-tests
+          path: ${{ runner.temp }}
+      - name: Restore verified iPhone build
+        run: |
+          mkdir -p apps/ios/DerivedData/Build
+          tar -xf "$RUNNER_TEMP/ios-tests.tar" -C apps/ios/DerivedData/Build
+      - name: Run iPhone tests without rebuilding
+        run: nix develop --command bash scripts/ios.sh test-without-building 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' $TEST_OPTIONS
+      - name: Upload failed test results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-results-${{ matrix.suite }}
+          path: apps/ios/DerivedData/test-result-*
+          retention-days: 7
+      - name: Report runner resources
+        if: always()
+        run: |
+          df -h .
+          sysctl vm.swapusage
+
+  editor:
+    needs: [build, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every iPhone test suite to pass
+        env:
+          BUILD_RESULT: ${{ needs.build.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+        run: test "$BUILD_RESULT" = success && test "$TEST_RESULT" = success
