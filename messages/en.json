@@ -1,8 +1,4 @@
 {
-	"Blog": {
-		"articles": "Articles",
-		"navigation": "Blog navigation"
-	},
 	"AppLogin": {
 		"title": "Allow app access",
 		"description": "Allow the Evame iPhone app to read and write your documents and images and change publication status. Only continue if you started signing in from the app.",

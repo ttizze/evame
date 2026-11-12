@@ -30,7 +30,7 @@ vi.mock(
 	}),
 );
 
-it("ブログでは所有者名からブログトップへ戻れ、共通ロゴとログインを表示しない", () => {
+it("ブログでは左側だけ所有者名に替え、記事リンクを増やさず従来の右側を保つ", () => {
 	render(
 		<HeaderIsland
 			blog={{ handle: "alice", name: "開発ノート", image: null }}
@@ -44,10 +44,8 @@ it("ブログでは所有者名からブログトップへ戻れ、共通ロゴ�
 	expect(
 		header.getByRole("link", { name: "開発ノート" }).getAttribute("href"),
 	).toBe("/ja/alice");
-	expect(header.getByRole("link", { name: "記事" }).getAttribute("href")).toBe(
-		"/ja/alice",
-	);
-	expect(header.queryByRole("link", { name: "ログイン" })).toBeNull();
+	expect(header.queryByRole("link", { name: "記事" })).toBeNull();
+	expect(header.getByRole("link", { name: "ログイン" })).not.toBeNull();
 	expect(header.queryByRole("img", { name: /Evame/ })).toBeNull();
 });
 

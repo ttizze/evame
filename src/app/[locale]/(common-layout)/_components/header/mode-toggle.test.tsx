@@ -11,13 +11,13 @@ vi.mock("next-themes", () => ({
 }));
 
 it.each(["light", "dark"])(
-	"システム設定が%sのとき、名前付きのアイコンから反対のテーマへ切り替えられる",
+	"システム設定が%sのとき、メニューから反対のテーマへ切り替えられる",
 	async (resolvedTheme) => {
 		theme.resolvedTheme = resolvedTheme;
 		const user = userEvent.setup();
 		render(
 			<IntlProvider locale="ja" messages={messages.ja}>
-				<ModeToggle showText={false} />
+				<ModeToggle />
 			</IntlProvider>,
 		);
 		await user.click(

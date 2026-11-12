@@ -27,12 +27,12 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		).toBeVisible();
 		await expect(
 			staticPage
-				.locator("[data-blog-header]")
+				.locator("header")
 				.getByRole("link", { name: "Worker Test", exact: true }),
 		).toHaveAttribute("href", `/ja/${handle}`);
 		await staticPage
-			.locator("[data-blog-header]")
-			.getByRole("link", { name: "記事", exact: true })
+			.locator("header")
+			.getByRole("link", { name: "Worker Test", exact: true })
 			.click();
 		await expect(staticPage).toHaveURL(`${baseUrl}/ja/${handle}`);
 		await expect(
@@ -43,7 +43,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.first()
 			.click();
 		await expect(staticPage).toHaveURL(`${baseUrl}/ja/${handle}/${pageSlug}`);
-		await expect(staticPage.locator("[data-blog-header]")).toBeVisible();
+		await expect(staticPage.locator("header")).toBeVisible();
 		await staticPage.goto(`${baseUrl}/ja/${handle}/${pageSlug}?view=both`);
 		await expect(staticPage.locator("body")).toHaveAttribute(
 			"data-view",
@@ -130,6 +130,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.getByRole("button", { name: "Create a new page" }),
 		).toBeVisible({ timeout: 15000 });
+		const commonHeaderBounds = await page.locator("header").boundingBox();
 		const consent = page.getByRole("region", {
 			name: "Cookieを許可しますか？",
 		});
@@ -167,6 +168,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		);
 		await page.screenshot({ path: "/tmp/evame-ui-restored-home-desktop.png" });
 		await page.setViewportSize({ width: 390, height: 844 });
+		const commonMobileHeaderBounds = await page.locator("header").boundingBox();
 		await expect(consent).toBeVisible();
 		const mobileConsent = await consent.boundingBox();
 		assert.equal(mobileConsent.x, 12);
@@ -434,13 +436,32 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.getByRole("link", { name: "Edit page", exact: true }),
 		).toHaveCount(0);
-		await expect(page.locator("[data-blog-header]")).toBeVisible();
+		await expect(page.locator("header")).toBeVisible();
 		await expect(
 			page.getByRole("button", { name: "Create a new page" }),
-		).toHaveCount(0);
+		).toBeVisible();
 		await expect(
 			page.getByRole("button", { name: "アカウントメニュー" }),
+		).toBeVisible();
+		await expect(
+			page.locator("header").getByRole("link", { name: "記事", exact: true }),
 		).toHaveCount(0);
+		await expect(
+			page
+				.locator("header")
+				.getByRole("link", { name: "Worker Test", exact: true }),
+		).toHaveAttribute("href", `/ja/${handle}`);
+		await expect(
+			page
+				.locator("header")
+				.getByRole("link", { name: "Search for pages", exact: true }),
+		).toBeVisible();
+		const blogHeaderBounds = await page.locator("header").boundingBox();
+		assert.deepEqual(
+			blogHeaderBounds,
+			commonHeaderBounds,
+			"ブログでも元のヘッダーの位置・幅・高さを保つ",
+		);
 		const titleBounds = await page
 			.getByRole("heading", { name: "Workers保存テスト", exact: true })
 			.boundingBox();
@@ -455,7 +476,12 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			path: "/tmp/evame-ui-restored-article-desktop.png",
 		});
 		await page.setViewportSize({ width: 390, height: 844 });
-		await expect(page.locator("[data-blog-header]")).toBeVisible();
+		await expect(page.locator("header")).toBeVisible();
+		assert.deepEqual(
+			await page.locator("header").boundingBox(),
+			commonMobileHeaderBounds,
+			"モバイルでも元のヘッダーの位置・幅・高さを保つ",
+		);
 		assert.ok(
 			await page.evaluate(
 				() => document.documentElement.scrollWidth <= window.innerWidth,
@@ -680,7 +706,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.getByRole("link", { name: "プロフィールを編集" }),
 		).toHaveCount(0);
-		await expect(page.locator("[data-blog-header]")).toBeVisible();
+		await expect(page.locator("header")).toBeVisible();
 		await expect(
 			page.getByRole("button", { name: "More options", exact: true }),
 		).toHaveCount(0);
@@ -710,6 +736,9 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.locator('astro-island[component-export="HeaderIsland"]'),
 		).not.toHaveAttribute("ssr", "");
+		await page
+			.getByRole("button", { name: "アカウントメニュー", exact: true })
+			.click();
 		await page.getByTestId("locale-selector-button").click();
 		const localeSearch = page.getByPlaceholder("search...");
 		await localeSearch.fill("fr");
@@ -961,9 +990,9 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(ownerCard).toHaveCount(0);
 		await page.goto(`${baseUrl}/ja/${handle}`);
 		await expect(blogCard).toHaveCount(0);
-		await expect(page.locator("[data-blog-header]")).toBeVisible();
+		await expect(page.locator("header")).toBeVisible();
 		console.log(
-			"ブログに管理操作を出さず、共通トップの記事管理から編集先・非公開化・削除を操作できる",
+			"ブログのカードに管理操作を出さず、従来のアカウントメニューから記事管理を操作できる",
 		);
 		await page.screenshot({
 			path: "/tmp/evame-reader-profile.png",
@@ -974,13 +1003,21 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			page.locator('astro-island[component-export="HeaderIsland"]'),
 		).not.toHaveAttribute("ssr", "");
 		await page
+			.getByRole("button", { name: "アカウントメニュー", exact: true })
+			.click();
+		await page
 			.getByRole("button", { name: "ダークテーマに切り替える", exact: true })
 			.click();
 		await expect(page.locator("html")).toHaveClass(/dark/);
+		await page.keyboard.press("Escape");
+		await page
+			.getByRole("button", { name: "アカウントメニュー", exact: true })
+			.click();
 		await page
 			.getByRole("button", { name: "ライトテーマに切り替える", exact: true })
 			.click();
 		await expect(page.locator("html")).not.toHaveClass(/dark/);
+		await page.keyboard.press("Escape");
 		assert.ok(
 			await page.evaluate(
 				() => document.documentElement.scrollWidth <= window.innerWidth,

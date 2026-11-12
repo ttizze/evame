@@ -1,8 +1,4 @@
 {
-	"Blog": {
-		"articles": "Artículos",
-		"navigation": "Navegación del blog"
-	},
 	"AppLogin": {
 		"title": "Permitir acceso a la app",
 		"description": "Permite que la app de Evame para iPhone lea y escriba tus documentos e imágenes y cambie su estado de publicación. Continúa solo si iniciaste sesión desde la app.",
