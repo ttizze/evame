@@ -13,6 +13,7 @@ import {
 	CommandItem,
 	CommandList,
 } from "@/components/ui/command";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import {
 	Popover,
 	PopoverContent,
@@ -107,47 +108,66 @@ export function LocaleSelector({
 	const languageLabel = t("languageChange", {
 		language: selectedOption?.name ?? targetLocale,
 	});
+	const languageButton = (
+		<button
+			aria-label={inMenu ? undefined : languageLabel}
+			className={cn(
+				"flex justify-between items-center cursor-pointer hover:bg-accent hover:text-accent-foreground",
+				inMenu
+					? "w-[200px]"
+					: "px-4 py-2 border rounded-full w-[150px] max-md:size-6 max-md:p-0 max-md:border-0",
+			)}
+			data-testid="locale-selector-button"
+			title={inMenu ? undefined : languageLabel}
+			type="button"
+		>
+			<div className="flex min-w-0 items-center [&_svg]:shrink-0">
+				{!inMenu && <Languages className="h-6 w-6 md:hidden" />}
+				{showIcons && sourceLocale ? (
+					<span className={inMenu ? "contents" : "hidden md:contents"}>
+						<TranslationProofStatusIcon
+							localeStatus={selectedOption?.status ?? "untranslated"}
+							proofStatus={selectedOption?.proofStatus}
+						/>
+					</span>
+				) : inMenu ? (
+					<Languages className="h-4 w-4 mr-2" />
+				) : null}
+				<span className={cn("truncate", !inMenu && "hidden md:inline")}>
+					{selectedOption?.name ?? "Select"}
+				</span>
+			</div>
+			<ChevronDown
+				className={cn(
+					"ml-2 h-4 w-4 shrink-0 opacity-50 transition-transform",
+					!inMenu && "hidden md:block",
+					open && "rotate-180",
+				)}
+			/>
+		</button>
+	);
 
 	return (
 		<div>
 			<Popover onOpenChange={setOpen} open={open}>
 				<PopoverTrigger asChild>
-					<button
-						aria-label={inMenu ? undefined : languageLabel}
-						className={cn(
-							"flex justify-between items-center px-4 py-2 cursor-pointer hover:bg-accent hover:text-accent-foreground",
-							inMenu
-								? "w-[200px] rounded-none py-3 text-sm"
-								: "border rounded-full w-[150px] max-md:size-6 max-md:p-0 max-md:border-0",
-						)}
-						data-testid="locale-selector-button"
-						title={inMenu ? undefined : languageLabel}
-						type="button"
-					>
-						<div className="flex min-w-0 items-center [&_svg]:shrink-0">
-							{!inMenu && <Languages className="h-6 w-6 md:hidden" />}
-							{showIcons && sourceLocale ? (
-								<span className={inMenu ? "contents" : "hidden md:contents"}>
-									<TranslationProofStatusIcon
-										localeStatus={selectedOption?.status ?? "untranslated"}
-										proofStatus={selectedOption?.proofStatus}
-									/>
-								</span>
-							) : inMenu ? (
-								<Languages className="h-4 w-4 mr-2" />
-							) : null}
-							<span className={cn("truncate", !inMenu && "hidden md:inline")}>
-								{selectedOption?.name ?? "Select"}
-							</span>
-						</div>
-						<ChevronDown
-							className={cn(
-								"ml-2 h-4 w-4 shrink-0 opacity-50 transition-transform",
-								!inMenu && "hidden md:block",
-								open && "rotate-180",
-							)}
-						/>
-					</button>
+					{inMenu ? (
+						<DropdownMenuItem
+							asChild
+							className="rounded-none px-4 py-3 cursor-pointer"
+							onPointerLeave={(event) => {
+								if (open) event.preventDefault();
+							}}
+							onPointerMove={(event) => {
+								if (open) event.preventDefault();
+							}}
+							onSelect={(event) => event.preventDefault()}
+						>
+							{languageButton}
+						</DropdownMenuItem>
+					) : (
+						languageButton
+					)}
 				</PopoverTrigger>
 				<PopoverContent className="w-60 p-0  truncate" sideOffset={-4}>
 					<Command>

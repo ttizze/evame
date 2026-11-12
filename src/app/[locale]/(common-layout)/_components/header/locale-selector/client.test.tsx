@@ -58,7 +58,7 @@ describe("LocaleSelector", () => {
 			<LocaleSelector
 				currentHandle=""
 				hasGeminiApiKey={false}
-				inMenu
+				inMenu={false}
 				userPlan="free"
 			/>,
 		);

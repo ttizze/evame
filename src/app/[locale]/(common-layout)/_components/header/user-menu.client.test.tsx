@@ -101,6 +101,15 @@ function renderMenu() {
 
 beforeEach(() => {
 	vi.stubGlobal(
+		"ResizeObserver",
+		class {
+			observe() {}
+			unobserve() {}
+			disconnect() {}
+		},
+	);
+	window.HTMLElement.prototype.scrollIntoView = () => {};
+	vi.stubGlobal(
 		"fetch",
 		vi.fn(async (_url: string, init: RequestInit | undefined) =>
 			init?.method === "POST"
@@ -293,9 +302,32 @@ it("言語選択をログアウトのすぐ上に表示する", async () => {
 	const user = userEvent.setup();
 	renderMenu();
 	await user.click(screen.getByRole("button", { name: "アカウントメニュー" }));
-	const language = screen.getByRole("button", { name: "日本語" });
+	const language = screen.getByRole("menuitem", { name: "日本語" });
 	const logout = screen.getByRole("menuitem", { name: "Log out" });
 	expect(
 		[...screen.getByRole("menu").querySelectorAll("button")].slice(-2),
 	).toEqual([language, logout]);
+});
+
+it("アカウントから矢印キーで言語へ移動し、Enterで選択肢を開いてEscapeで戻れる", async () => {
+	const user = userEvent.setup();
+	renderMenu();
+	const account = screen.getByRole("button", { name: "アカウントメニュー" });
+	account.focus();
+	await user.keyboard("{ArrowDown}");
+	await screen.findByRole("menu");
+	await user.keyboard("{End}");
+	await waitFor(() =>
+		expect(screen.getByRole("menuitem", { name: "Log out" })).toHaveFocus(),
+	);
+	await user.keyboard("{ArrowUp}");
+	expect(screen.getByTestId("locale-selector-button")).toHaveFocus();
+	await user.keyboard("{Enter}");
+	expect(await screen.findByPlaceholderText("search...")).toHaveFocus();
+	await user.keyboard("{Escape}");
+	expect(screen.queryByPlaceholderText("search...")).toBeNull();
+	expect(screen.getByTestId("locale-selector-button")).toHaveFocus();
+	await user.keyboard("{Escape}");
+	expect(screen.queryByRole("menu")).toBeNull();
+	expect(account).toHaveFocus();
 });

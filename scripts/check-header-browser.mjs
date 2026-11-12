@@ -128,6 +128,7 @@ export async function checkHeaderBrowser(
 				await account.click();
 				const menu = page.getByRole("menu");
 				await expect(menu).toHaveCSS("opacity", "1");
+				await expect(menu).toHaveCSS("transform", "none");
 				if (kind === "article")
 					await expect(menu.getByTestId("source-icon")).toBeVisible();
 				const positions = [];
@@ -140,10 +141,7 @@ export async function checkHeaderBrowser(
 					"日本語",
 					"Log out",
 				]) {
-					const item = menu.getByRole(
-						name === "日本語" ? "button" : "menuitem",
-						{ name, exact: true },
-					);
+					const item = menu.getByRole("menuitem", { name, exact: true });
 					positions.push(
 						await item.evaluate((element) => {
 							const walker = document.createTreeWalker(
@@ -158,6 +156,8 @@ export async function checkHeaderBrowser(
 								if (!text.textContent.trim()) continue;
 								const range = document.createRange();
 								range.selectNodeContents(text);
+								// 字形の張り出しではなく、文字の配置開始位置を比較する。
+								range.collapse(true);
 								return range.getBoundingClientRect().x;
 							}
 							throw new Error("表示する項目名がない");
@@ -180,6 +180,54 @@ export async function checkHeaderBrowser(
 							? { x: 0, y: 0, width, height: 480 }
 							: { x: 256, y: 0, width: 768, height: 500 },
 				});
+				const language = menu.getByRole("menuitem", {
+					name: "日本語",
+					exact: true,
+				});
+				await page.keyboard.press("End");
+				await expect(
+					menu.getByRole("menuitem", { name: "Log out", exact: true }),
+				).toBeFocused();
+				await page.keyboard.press("ArrowUp");
+				await expect(language).toBeFocused();
+				await page.keyboard.press("Enter");
+				await expect(
+					page.getByPlaceholder("search...", { exact: true }),
+				).toBeFocused();
+				await page.keyboard.press("Escape");
+				await expect(language).toBeFocused();
+				await language.click();
+				const search = page.getByPlaceholder("search...", { exact: true });
+				await expect(search).toBeFocused();
+				const languageBox = await language.boundingBox();
+				await page.mouse.move(
+					languageBox.x + languageBox.width / 2 + 2,
+					languageBox.y + languageBox.height / 2,
+					{ steps: 2 },
+				);
+				await expect(search).toBeFocused();
+				const english = page.getByRole("option", {
+					name: "English",
+					exact: true,
+				});
+				await english.hover();
+				await expect(english).toBeVisible();
+				await english.click();
+				await expect(page).toHaveURL(
+					`${baseUrl}${path.replace(/^\/ja/, "/en")}`,
+				);
+				await expect(
+					page.getByRole("button", { name: "Account menu", exact: true }),
+				).toBeVisible();
+				await page.goto(`${baseUrl}${path}`);
+				await account.click();
+				await menu
+					.getByRole("menuitem", { name: "使い方", exact: true })
+					.click();
+				const help = page.getByRole("dialog", { name: "使い方", exact: true });
+				await help.hover();
+				await expect(help).toHaveAttribute("data-state", "open");
+				await page.keyboard.press("Escape");
 				await menu
 					.getByRole("menuitem", { name: "テーマ変更", exact: true })
 					.click();

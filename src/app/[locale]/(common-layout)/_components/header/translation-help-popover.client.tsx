@@ -90,6 +90,14 @@ export function TranslationHelpPopover({ inMenu }: { inMenu: boolean }) {
 				inMenu ? (
 					<DropdownMenuItem
 						className="gap-2 px-4 py-3 cursor-pointer"
+						onPointerLeave={(event) => {
+							if (event.currentTarget.dataset.state === "open")
+								event.preventDefault();
+						}}
+						onPointerMove={(event) => {
+							if (event.currentTarget.dataset.state === "open")
+								event.preventDefault();
+						}}
 						onSelect={(event) => event.preventDefault()}
 					>
 						<CircleHelp className="h-4 w-4" />
