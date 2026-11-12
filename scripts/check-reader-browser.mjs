@@ -223,19 +223,29 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		const editor = page.locator(
 			'[data-testid="lexical-editor"][contenteditable=true]',
 		);
-		await editor.click();
+		const firstBody = editor.locator(":scope > p").first();
+		await firstBody.click();
 		const insertBlock = page
 			.getByTestId("editor-floating-menu")
 			.getByRole("button", { name: "ブロックを追加" });
 		await expect(insertBlock).toBeVisible();
 		const emptyLine = await editor.locator("p").first().boundingBox();
 		const insertBox = await insertBlock.boundingBox();
-		const placeholderBox = await page
-			.getByText("本文を書く…", { exact: true })
-			.boundingBox();
-		assert.ok(emptyLine && insertBox && placeholderBox);
+		const placeholder = await firstBody.evaluate((element) => {
+			const style = getComputedStyle(element, "::before");
+			const parent = element.offsetParent;
+			return {
+				content: style.content,
+				x:
+					parent.getBoundingClientRect().x +
+					parent.clientLeft +
+					Number.parseFloat(style.left),
+			};
+		});
+		assert.ok(emptyLine && insertBox);
+		assert.equal(placeholder.content, '"本文を書く…"');
 		assert.ok(
-			Math.abs(placeholderBox.x - emptyLine.x) <= 1,
+			Math.abs(placeholder.x - emptyLine.x) <= 1,
 			"プレースホルダーとカーソルの左端を揃える",
 		);
 		assert.ok(
@@ -249,7 +259,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			page.getByRole("menuitem", { name: "見出し2", exact: true }),
 		).toBeVisible();
 		await page.keyboard.press("Escape");
-		await editor.fill("Lexicalのブラウザー入力を保存する");
+		await firstBody.fill("Lexicalのブラウザー入力を保存する");
 		await expect
 			.poll(
 				async () => {
@@ -264,7 +274,13 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		console.log(
 			"ログイン済みトップから新規ページを開き、Lexicalで入力した本文を保存できる",
 		);
-		await editor.press("ControlOrMeta+A");
+		await firstBody.evaluate((element) => {
+			const range = document.createRange();
+			range.selectNodeContents(element);
+			const selection = window.getSelection();
+			selection.removeAllRanges();
+			selection.addRange(range);
+		});
 		await page
 			.getByTestId("editor-bubble-menu")
 			.getByRole("button", { name: "太字", exact: true })
@@ -285,7 +301,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(editor.locator("strong")).toContainText(
 			"Lexicalのブラウザー入力を保存する",
 		);
-		await editor.fill("");
+		await firstBody.fill("");
 		await editor.evaluate((element) => {
 			const data = new DataTransfer();
 			data.setData(

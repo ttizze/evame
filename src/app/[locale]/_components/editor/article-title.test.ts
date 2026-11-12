@@ -21,6 +21,7 @@ import {
 	CONTROLLED_TEXT_INSERTION_COMMAND,
 	CUT_COMMAND,
 	DELETE_CHARACTER_COMMAND,
+	DELETE_LINE_COMMAND,
 	DELETE_WORD_COMMAND,
 	DRAGSTART_COMMAND,
 	DROP_COMMAND,
@@ -120,9 +121,13 @@ it("題名へ複数行の装飾付き文字を貼っても単一行の文字列�
 	expect(editor.read($convertToMarkdownString)).toBe("本文");
 });
 
-it.each([false, true])(
-	"本文だけを全文貼り替えると題名を残して古いリスト階層を除く（逆向き=%s）",
-	(backward) => {
+it.each(
+	[false, true].flatMap((backward) =>
+		[false, true].map((rootBoundary) => ({ backward, rootBoundary })),
+	),
+)(
+	"本文全体の貼り替えで題名を残して古いリスト階層を除く（$backward / root=$rootBoundary）",
+	({ backward, rootBoundary }) => {
 		const editor = createArticle("- 親\n  - 子");
 		editor.update(
 			() => {
@@ -130,6 +135,12 @@ it.each([false, true])(
 				const last = $getRoot().getLastChildOrThrow();
 				const start = { ...first.selectStart().anchor };
 				const end = last.selectEnd().anchor;
+				if (rootBoundary) {
+					start.key = $getRoot().getKey();
+					start.offset = 1;
+					start.type = "element";
+					end.set($getRoot().getKey(), $getRoot().getChildrenSize(), "element");
+				}
 				const selection = $createRangeSelection();
 				const anchor = backward ? end : start;
 				const focus = backward ? start : end;
@@ -148,6 +159,62 @@ it.each([false, true])(
 		expect(editor.read($convertToMarkdownString)).toBe(
 			"**置換**\n\n- [x] チェック",
 		);
+	},
+);
+
+it.each(
+	[DELETE_CHARACTER_COMMAND, DELETE_WORD_COMMAND, DELETE_LINE_COMMAND].flatMap(
+		(command) =>
+			[false, true].flatMap((backward) =>
+				[false, true].map((rootBoundary) => ({
+					command,
+					backward,
+					rootBoundary,
+				})),
+			),
+	),
+)(
+	"本文全体を削除すると題名を残して空段落へ戻る（$command / $backward / root=$rootBoundary）",
+	({ command, backward, rootBoundary }) => {
+		const editor = createArticle("- 親\n  - 子");
+		editor.update(
+			() => {
+				const root = $getRoot();
+				const selection = $createRangeSelection();
+				selection.anchor.set(
+					root.getKey(),
+					backward ? root.getChildrenSize() : 1,
+					"element",
+				);
+				selection.focus.set(
+					root.getKey(),
+					backward ? 1 : root.getChildrenSize(),
+					"element",
+				);
+				if (!rootBoundary) {
+					const start = { ...root.getChildren()[1].selectStart().anchor };
+					const end = root.getLastChildOrThrow().selectEnd().anchor;
+					const anchor = backward ? end : start;
+					const focus = backward ? start : end;
+					selection.anchor.set(anchor.key, anchor.offset, anchor.type);
+					selection.focus.set(focus.key, focus.offset, focus.type);
+				}
+				$setSelection(selection);
+				editor.dispatchCommand(command, backward);
+			},
+			{ discrete: true },
+		);
+		expect(editor.read($convertToMarkdownString)).toBe("");
+		expect(
+			editor.read(() =>
+				$getRoot()
+					.getChildren()
+					.map((node) => node.getType()),
+			),
+		).toEqual(["article-title", "paragraph"]);
+		expect(
+			editor.read(() => $getRoot().getFirstChildOrThrow().getTextContent()),
+		).toBe("題名");
 	},
 );
 

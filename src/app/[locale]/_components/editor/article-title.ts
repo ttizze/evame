@@ -118,8 +118,10 @@ export function $isEntireArticleBodySelection() {
 	return (
 		$isElementNode(firstBody) &&
 		$isElementNode(lastBody) &&
-		$isAtEdgeOfElement(start, firstBody, "previous") &&
-		$isAtEdgeOfElement(end, lastBody, "next")
+		((start.key === "root" && start.offset === 1) ||
+			$isAtEdgeOfElement(start, firstBody, "previous")) &&
+		((end.key === "root" && end.offset === $getRoot().getChildrenSize()) ||
+			$isAtEdgeOfElement(end, lastBody, "next"))
 	);
 }
 
@@ -425,6 +427,14 @@ export const ArticleTitleExtension = defineExtension({
 					command,
 					(backward) => {
 						if ($removeAcrossTitle()) return true;
+						if ($isEntireArticleBodySelection()) {
+							const root = $getRoot();
+							for (const node of root.getChildren().slice(1)) node.remove();
+							const paragraph = $createParagraphNode();
+							root.append(paragraph);
+							paragraph.selectStart();
+							return true;
+						}
 						const selection = $getSelection();
 						if (!$isRangeSelection(selection) || !selection.isCollapsed())
 							return false;
