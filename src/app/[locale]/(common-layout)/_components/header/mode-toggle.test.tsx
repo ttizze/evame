@@ -22,10 +22,7 @@ it.each(["light", "dark"])(
 		);
 		await user.click(
 			screen.getByRole("button", {
-				name:
-					resolvedTheme === "light"
-						? "ダークテーマに切り替える"
-						: "ライトテーマに切り替える",
+				name: resolvedTheme === "light" ? "ダークテーマ" : "ライトテーマ",
 			}),
 		);
 		expect(theme.setTheme).toHaveBeenLastCalledWith(

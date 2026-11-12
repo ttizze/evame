@@ -266,7 +266,7 @@ it("ユーザーメニューのテーマ項目をEnterで選ぶとメニュー�
 	renderMenu();
 	await user.click(screen.getByRole("button", { name: "アカウントメニュー" }));
 	const themeItem = screen.getByRole("menuitem", {
-		name: "ライトテーマに切り替える",
+		name: "ライトテーマ",
 	});
 	themeItem.focus();
 	await user.keyboard("{Enter}");
@@ -287,4 +287,15 @@ it("通知一覧から戻ると同じメニュー内に設定と使い方を表�
 		screen.getByRole("menuitem", { name: "プロフィール・設定" }),
 	).toBeVisible();
 	expect(screen.queryByText("Bob Smith")).toBeNull();
+});
+
+it("言語選択をログアウトのすぐ上に表示する", async () => {
+	const user = userEvent.setup();
+	renderMenu();
+	await user.click(screen.getByRole("button", { name: "アカウントメニュー" }));
+	const language = screen.getByRole("button", { name: "日本語" });
+	const logout = screen.getByRole("menuitem", { name: "Log out" });
+	expect(
+		[...screen.getByRole("menu").querySelectorAll("button")].slice(-2),
+	).toEqual([language, logout]);
 });

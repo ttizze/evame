@@ -85,8 +85,8 @@
 		"termsOfService": "Terms of Service"
 	},
 	"Header": {
-		"lightTheme": "切换到浅色主题",
-		"darkTheme": "切换到深色主题",
+		"lightTheme": "浅色主题",
+		"darkTheme": "深色主题",
 		"accountMenu": "账户菜单",
 		"settings": "个人资料与设置",
 		"management": "管理文章",

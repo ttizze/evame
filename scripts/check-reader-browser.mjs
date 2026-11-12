@@ -1079,7 +1079,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.getByRole("button", { name: "アカウントメニュー", exact: true })
 			.click();
 		await page
-			.getByRole("menuitem", { name: "ダークテーマに切り替える", exact: true })
+			.getByRole("menuitem", { name: "ダークテーマ", exact: true })
 			.click();
 		await expect(page.locator("html")).toHaveClass(/dark/);
 		await expect(page.getByRole("menu")).toHaveCount(0);
@@ -1087,7 +1087,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.getByRole("button", { name: "アカウントメニュー", exact: true })
 			.click();
 		await page
-			.getByRole("menuitem", { name: "ライトテーマに切り替える", exact: true })
+			.getByRole("menuitem", { name: "ライトテーマ", exact: true })
 			.click();
 		await expect(page.locator("html")).not.toHaveClass(/dark/);
 		await expect(page.getByRole("menu")).toHaveCount(0);
@@ -1107,6 +1107,13 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 				page.getByRole("menuitem", { name: "使い方", exact: true }),
 			).toBeVisible();
 			await expect(page.getByRole("menu")).toHaveCSS("opacity", "1");
+			assert.deepEqual(
+				(
+					await page.getByRole("menu").locator("button").allTextContents()
+				).slice(-2),
+				["日本語", "Log out"],
+				"言語選択をログアウトのすぐ上に表示する",
+			);
 			await page.screenshot({
 				path: `/tmp/evame-account-menu-mobile-${width}.png`,
 			});

@@ -225,13 +225,6 @@ export function UserMenu({
 						</DropdownMenuItem>
 						<TranslationHelpPopover inMenu />
 						<DropdownMenuSeparator className="my-0" />
-						<LocaleSelector
-							currentHandle={currentUser.handle}
-							hasGeminiApiKey={hasGeminiApiKey}
-							localeSelectorClassName="w-[200px]"
-							userPlan={currentUser.plan}
-						/>
-						<DropdownMenuSeparator className="my-0" />
 						<DropdownMenuItem asChild>
 							<a
 								className="flex gap-2 px-4 py-3"
@@ -253,6 +246,13 @@ export function UserMenu({
 						<DropdownMenuItem asChild>
 							<ModeToggle />
 						</DropdownMenuItem>
+						<LocaleSelector
+							currentHandle={currentUser.handle}
+							hasGeminiApiKey={hasGeminiApiKey}
+							localeSelectorClassName="w-[200px]"
+							userPlan={currentUser.plan}
+						/>
+						<DropdownMenuSeparator className="my-0" />
 						<DropdownMenuItem asChild>
 							<button
 								className="w-full gap-2 flex rounded-none cursor-pointer items-center px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground text-red-500"

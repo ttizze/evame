@@ -85,8 +85,8 @@
 		"termsOfService": "Terms of Service"
 	},
 	"Header": {
-		"lightTheme": "ライトテーマに切り替える",
-		"darkTheme": "ダークテーマに切り替える",
+		"lightTheme": "ライトテーマ",
+		"darkTheme": "ダークテーマ",
 		"accountMenu": "アカウントメニュー",
 		"settings": "プロフィール・設定",
 		"management": "記事管理",
