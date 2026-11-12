@@ -5,6 +5,20 @@
 		"authorize": "Permitir y volver a la app",
 		"cancel": "Cancelar"
 	},
+	"TagInput": {
+		"title": "Etiquetas",
+		"placeholder": "Añadir etiquetas",
+		"help": "Añade hasta 5 etiquetas.",
+		"removeTag": "Eliminar etiqueta {tag}",
+		"createTag": "Crear etiqueta «{tag}»",
+		"noOptions": "No hay etiquetas disponibles.",
+		"results": "{count, plural, one {# resultado disponible.} other {# resultados disponibles.}}",
+		"saving": "Guardando etiquetas…",
+		"saveFailed": "No se pudieron guardar las etiquetas. Inténtalo de nuevo.",
+		"invalidTags": "Usa de 1 a 15 caracteres por etiqueta, sin espacios ni símbolos, y un máximo de 5 etiquetas.",
+		"pageNotFound": "No se encontró la página.",
+		"retry": "Reintentar guardar las etiquetas"
+	},
 	"PublicationSettings": {
 		"title": "Configuración de publicación",
 		"openSettings": "Configuración de publicación: {status}",

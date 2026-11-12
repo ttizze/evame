@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { IntlProvider } from "use-intl";
@@ -7,14 +7,16 @@ import { messages } from "@/i18n/messages";
 import { mockUsers } from "@/tests/mock";
 import { EditHeader } from "./client";
 
-const { commentsAction, statusAction } = vi.hoisted(() => ({
+const { commentsAction, statusAction, tagsAction } = vi.hoisted(() => ({
 	commentsAction: vi.fn(),
 	statusAction: vi.fn(),
+	tagsAction: vi.fn(),
 }));
 vi.mock("@/app/_service/reader-action", () => ({
 	callReaderAction: commentsAction,
 }));
 vi.mock("./action", () => ({ editPageStatus: statusAction }));
+vi.mock("../tag-input/action", () => ({ editPageTags: tagsAction }));
 vi.mock("@tanstack/react-start", async (importOriginal) => ({
 	...(await importOriginal<typeof import("@tanstack/react-start")>()),
 	useServerFn: (fn: unknown) => fn,
@@ -49,11 +51,13 @@ function cleanupScrollContainer() {
 }
 
 const defaultProps = {
+	allTagsWithCount: [{ id: 1, name: "initial", _count: { pages: 1 } }],
 	currentUser: mockUsers[0],
 	handle: "test-user",
 	hasUnsavedChanges: false,
 	initialStatus: "PUBLIC" as const,
 	initialCommentsEnabled: true,
+	initialTags: [{ name: "initial" }],
 	isSaving: false,
 	locale: "en",
 	pageId: 123,
@@ -66,10 +70,126 @@ beforeEach(setupScrollContainer);
 beforeEach(() => {
 	commentsAction.mockReset();
 	statusAction.mockReset().mockResolvedValue({ success: true });
+	tagsAction.mockReset().mockResolvedValue({ success: true, data: undefined });
 });
 afterEach(cleanupScrollContainer);
 
 describe("EditHeader", () => {
+	it("公開範囲の後にタグを表示し、追加・削除したタグをメニューの再表示後も保つ", async () => {
+		const user = userEvent.setup();
+		render(<EditHeader {...defaultProps} />, { wrapper });
+		const trigger = screen.getByRole("button", {
+			name: "Publication settings: Public",
+		});
+		await user.click(trigger);
+		const visibility = screen.getByText("Who can read");
+		const tagsLabel = screen.getByText("Tags");
+		const translation = screen.getByText("Translation");
+		expect(
+			visibility.compareDocumentPosition(tagsLabel) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		expect(
+			tagsLabel.compareDocumentPosition(translation) &
+				Node.DOCUMENT_POSITION_FOLLOWING,
+		).toBeTruthy();
+		await user.click(screen.getByRole("combobox", { name: "Tags" }));
+		await user.keyboard("newtag{Enter}");
+		await waitFor(() => expect(tagsAction).toHaveBeenCalledOnce());
+		await waitFor(() =>
+			expect(screen.getByRole("combobox", { name: "Tags" })).toBeEnabled(),
+		);
+		const form = tagsAction.mock.calls[0][0].data as FormData;
+		expect(form.get("pageId")).toBe("123");
+		expect(form.get("tags")).toBe('["initial","newtag"]');
+		await user.keyboard("{Escape}");
+		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		expect(
+			screen.queryByRole("group", { name: "Tags" }),
+		).not.toBeInTheDocument();
+		await user.click(trigger);
+		expect(screen.getByText("initial")).toBeInTheDocument();
+		expect(screen.getByText("newtag")).toBeInTheDocument();
+		await user.click(
+			screen.getByRole("button", { name: "Remove tag initial" }),
+		);
+		await waitFor(() => expect(tagsAction).toHaveBeenCalledTimes(2));
+		await user.keyboard("{Escape}");
+		await user.click(trigger);
+		expect(screen.queryByText("initial")).not.toBeInTheDocument();
+		expect(screen.getByText("newtag")).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Remove tag newtag" }),
+		).toBeInTheDocument();
+	});
+	it("タグ保存中にメニューを閉じても保存状態を保ち、閉じたまま保存を完了できる", async () => {
+		const user = userEvent.setup();
+		let resolve!: (value: unknown) => void;
+		tagsAction.mockReturnValueOnce(
+			new Promise((done) => {
+				resolve = done;
+			}),
+		);
+		render(<EditHeader {...defaultProps} />, { wrapper });
+		const trigger = screen.getByRole("button", {
+			name: "Publication settings: Public",
+		});
+		await user.click(trigger);
+		await user.click(screen.getByRole("combobox", { name: "Tags" }));
+		await user.keyboard("newtag{Enter}");
+		await waitFor(() => expect(tagsAction).toHaveBeenCalledOnce());
+		await user.keyboard("{Escape}");
+		await user.click(trigger);
+		expect(screen.getByText("newtag")).toBeInTheDocument();
+		expect(screen.getByLabelText("Tags", { selector: "input" })).toBeDisabled();
+		expect(
+			screen.getByRole("button", { name: "Remove tag newtag" }),
+		).toBeDisabled();
+		expect(screen.getByRole("status")).toHaveTextContent("Saving tags…");
+		await user.keyboard("{Escape}");
+		await act(async () => resolve({ success: true, data: undefined }));
+		await user.click(trigger);
+		expect(screen.getByRole("combobox", { name: "Tags" })).toBeEnabled();
+		expect(screen.getByText("newtag")).toBeInTheDocument();
+		expect(screen.queryByText("Saving tags…")).not.toBeInTheDocument();
+	});
+	it.each(["失敗レスポンス", "通信例外"])(
+		"タグ保存の%sを再表示後も伝え、入力したタグを再試行で保存する",
+		async (failure) => {
+			const user = userEvent.setup();
+			if (failure === "失敗レスポンス")
+				tagsAction.mockResolvedValueOnce({ success: false });
+			else tagsAction.mockRejectedValueOnce(new Error("offline"));
+			render(<EditHeader {...defaultProps} />, { wrapper });
+			const trigger = screen.getByRole("button", {
+				name: "Publication settings: Public",
+			});
+			await user.click(trigger);
+			await user.click(screen.getByRole("combobox", { name: "Tags" }));
+			await user.keyboard("newtag{Enter}");
+			await waitFor(() =>
+				expect(screen.getByRole("alert")).toHaveTextContent(
+					"Could not save tags. Please try again.",
+				),
+			);
+			await user.keyboard("{Escape}");
+			await user.click(trigger);
+			expect(screen.getByText("newtag")).toBeInTheDocument();
+			expect(screen.getByRole("alert")).toHaveTextContent(
+				"Could not save tags. Please try again.",
+			);
+			await user.click(
+				screen.getByRole("button", { name: "Retry saving tags" }),
+			);
+			await waitFor(() => expect(tagsAction).toHaveBeenCalledTimes(2));
+			await waitFor(() =>
+				expect(screen.queryByRole("alert")).not.toBeInTheDocument(),
+			);
+			expect((tagsAction.mock.calls[1][0].data as FormData).get("tags")).toBe(
+				'["initial","newtag"]',
+			);
+		},
+	);
 	it.each(["PUBLIC", "DRAFT"] as const)(
 		"公開設定の見出しを省き、%sでも閲覧リンクは既存のプレビューとして表示する",
 		async (initialStatus) => {

@@ -26,6 +26,10 @@ import { useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { callReaderAction } from "@/app/_service/reader-action";
 import { getXPostId } from "@/app/[locale]/_domain/get-x-post-id";
+import {
+	$isArticleTitleSelection,
+	$isEntireArticleBodySelection,
+} from "./article-title";
 import { $isEntireDocumentSelection } from "./block-editing";
 import {
 	ImageNode,
@@ -95,6 +99,7 @@ export function ImagePlugin() {
 			editor.registerCommand(
 				UPLOAD_IMAGE_COMMAND,
 				(file) => {
+					if ($isArticleTitleSelection()) return true;
 					void upload(file);
 					return true;
 				},
@@ -118,6 +123,12 @@ export function ImagePlugin() {
 					);
 					if (!files.length) return false;
 					event.preventDefault();
+					if (
+						document
+							.elementFromPoint(event.clientX, event.clientY)
+							?.closest(".article-title")
+					)
+						return true;
 					const range = document.caretRangeFromPoint?.(
 						event.clientX,
 						event.clientY,
@@ -130,7 +141,8 @@ export function ImagePlugin() {
 						selection.applyDOMRange(range);
 						$setSelection(selection);
 					}
-					for (const file of files) void upload(file);
+					if (!$isArticleTitleSelection())
+						for (const file of files) void upload(file);
 					return true;
 				},
 				COMMAND_PRIORITY_HIGH,
@@ -151,6 +163,7 @@ export function ImagePlugin() {
 						);
 					if (
 						!replaceDocument &&
+						!$isEntireArticleBodySelection() &&
 						$isRangeSelection(selection) &&
 						text &&
 						(selection.hasFormat("code") ||

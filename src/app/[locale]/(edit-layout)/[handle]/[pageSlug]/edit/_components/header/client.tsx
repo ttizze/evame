@@ -27,6 +27,12 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import type { PageStatus } from "@/db/types";
+import type { TagWithCount } from "../../_db/queries.server";
+import { TagInput } from "../tag-input";
+import {
+	type EditPageTagsActionState,
+	editPageTags,
+} from "../tag-input/action";
 import { editPageStatus } from "./action";
 import { EditHelpPopover } from "./edit-help-popover.client";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
@@ -37,6 +43,8 @@ interface EditHeaderProps {
 	currentUser: SanitizedUser;
 	initialStatus: PageStatus;
 	initialCommentsEnabled: boolean;
+	initialTags: { name: string }[];
+	allTagsWithCount: TagWithCount[];
 	hasUnsavedChanges: boolean;
 	isSaving: boolean;
 	pageId: number | undefined;
@@ -82,6 +90,8 @@ export function EditHeader({
 	currentUser,
 	initialStatus,
 	initialCommentsEnabled,
+	initialTags,
+	allTagsWithCount,
 	hasUnsavedChanges,
 	isSaving,
 	pageId,
@@ -97,6 +107,13 @@ export function EditHeader({
 		initialCommentsEnabled,
 	);
 	const [jobs, setJobs] = useState<TranslationJobForToast[]>([]);
+	const [tags, setTags] = useState(initialTags.map((tag) => tag.name));
+	const [tagEditState, setTagEditState] = useState<EditPageTagsActionState>({
+		success: true,
+		data: undefined,
+	});
+	const [areTagsSaving, setAreTagsSaving] = useState(false);
+	const editPageTagsFn = useServerFn(editPageTags);
 	const [isPending, startTransition] = useTransition();
 	const editPageStatusFn = useServerFn(editPageStatus);
 	const [locales, setLocales] = useState<string[]>(
@@ -144,6 +161,23 @@ export function EditHeader({
 				toast.error(t("failed"));
 			}
 		});
+	};
+
+	const saveTags = async (nextTags: string[]) => {
+		if (!pageId || areTagsSaving) return;
+		setTags(nextTags);
+		setAreTagsSaving(true);
+		setTagEditState({ success: true, data: undefined });
+		const formData = new FormData();
+		formData.set("pageId", String(pageId));
+		formData.set("tags", JSON.stringify(nextTags));
+		try {
+			setTagEditState(await editPageTagsFn({ data: formData }));
+		} catch {
+			setTagEditState({ success: false });
+		} finally {
+			setAreTagsSaving(false);
+		}
 	};
 
 	const statusIcon = isProcessing ? (
@@ -241,6 +275,16 @@ export function EditHeader({
 										{t(isPublic ? "publicHelp" : "privateHelp")}
 									</p>
 								</div>
+								<Separator />
+								<TagInput
+									allTagsWithCount={allTagsWithCount}
+									editState={tagEditState}
+									isSaving={areTagsSaving}
+									onRetry={() => saveTags(tags)}
+									onTagsChange={saveTags}
+									pageId={pageId}
+									tags={tags}
+								/>
 								<Separator />
 								<div className="space-y-2">
 									<div className="flex items-center justify-between gap-2">

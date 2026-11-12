@@ -45,6 +45,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { $isArticleTitleSelection } from "./article-title";
 import { $currentBlockType, $setBlockType } from "./block-type";
 import { UPLOAD_IMAGE_COMMAND } from "./image-plugin";
 
@@ -77,6 +78,7 @@ export function EditorMenu({ pageRoot }: { pageRoot: Element | null }) {
 		null,
 	);
 	const [view, setView] = useState({
+		title: false,
 		block: "paragraph",
 		formats: [] as TextFormatType[],
 		href: "",
@@ -111,6 +113,7 @@ export function EditorMenu({ pageRoot }: { pageRoot: Element | null }) {
 						? parent
 						: null;
 				setView({
+					title: $isArticleTitleSelection(),
 					block: $currentBlockType() ?? block.getType(),
 					formats: formats
 						.filter(({ value }) => selection.hasFormat(value))
@@ -158,7 +161,7 @@ export function EditorMenu({ pageRoot }: { pageRoot: Element | null }) {
 		blockItems.find(({ value }) => value === view.block)?.icon ?? Type;
 	return (
 		<>
-			{view.bubble && (
+			{!view.title && view.bubble && (
 				<div
 					className="fixed z-50 flex items-center rounded-lg border bg-background p-1 shadow-md"
 					data-testid="editor-bubble-menu"
@@ -269,7 +272,7 @@ export function EditorMenu({ pageRoot }: { pageRoot: Element | null }) {
 					</Popover>
 				</div>
 			)}
-			{view.floating && (
+			{!view.title && view.floating && (
 				<div
 					className="fixed z-40 -mt-5 hidden md:block"
 					data-testid="editor-floating-menu"
@@ -332,6 +335,7 @@ export function EditorMenu({ pageRoot }: { pageRoot: Element | null }) {
 			)}
 			{/* キーボードの開閉に追従する#rootの末尾に置き、固定配置のように隠れないようにする。 */}
 			{pageRoot &&
+				!view.title &&
 				createPortal(
 					<footer
 						className="sticky bottom-0 z-40 flex h-12 w-full shrink-0 overflow-x-auto border-t border-border bg-background md:hidden"

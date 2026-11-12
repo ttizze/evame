@@ -4,22 +4,13 @@ import {
 	getRequestHeaders,
 	setResponseHeader,
 } from "@tanstack/react-start/server";
-import { z } from "zod";
-import { pageTitleSchema } from "@/app/_domain/page-title";
+import type { z } from "zod";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { createServerLogger } from "@/app/_service/logger.server";
 import { getPageWithTitleAndTagsBySlug } from "@/app/[locale]/(edit-layout)/[handle]/[pageSlug]/edit/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
+import { formSchema } from "./_domain/form-schema";
 import { processPageContent } from "./service/process-page-content";
-
-const formSchema = z.object({
-	pageSlug: z.string().min(1),
-	userLocale: z.string().min(1),
-	title: pageTitleSchema,
-	pageContent: z.string(),
-	// 配信済みの旧エディタから届くフォームは形式指定がなくHTMLを送る。
-	contentFormat: z.enum(["html", "markdown"]).default("html"),
-});
 
 export type EditPageContentActionState = ActionResponse<
 	{ pageId: number },
