@@ -122,7 +122,19 @@
 			"validatedDescription": "All translation options have at least 2 likes.",
 			"untranslatedTitle": "Untranslated",
 			"untranslatedDescription": "Not translated yet."
-		}
+		},
+		"notifications": "Notifications",
+		"backToAccount": "Back to account menu",
+		"unreadNotifications": "{count} unread notifications",
+		"notificationsEmpty": "No notifications",
+		"notificationsLoading": "Loading notifications…",
+		"notificationsRetry": "Unable to load notifications. Try again",
+		"notificationsReadError": "Unable to mark notifications as read",
+		"notificationLiked": "liked your page",
+		"notificationCommented": "commented on",
+		"notificationFollowed": "followed you",
+		"notificationVoted": "voted for",
+		"notificationOn": "on"
 	},
 	"CookieConsent": {
 		"title": "Allow cookies?",

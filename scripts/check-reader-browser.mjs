@@ -104,8 +104,14 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		const page = await context.newPage();
 		const errors = [];
 		let homeRefreshes = 0;
+		let notificationReads = 0;
 		page.on("response", async (response) => {
 			const url = new URL(response.url());
+			if (
+				url.pathname === "/api/notifications" &&
+				response.request().method() === "POST"
+			)
+				notificationReads++;
 			if (url.origin === baseUrl && response.status() >= 500)
 				console.error({
 					path: url.pathname + url.search,
@@ -130,6 +136,15 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.getByRole("button", { name: "Create a new page" }),
 		).toBeVisible({ timeout: 15000 });
+		await expect(page.locator("header").getByTestId("unread-count")).toHaveText(
+			"1",
+		);
+		await expect(
+			page
+				.locator("header")
+				.getByRole("button", { name: "使い方", exact: true }),
+		).toHaveCount(0);
+		await expect(page.locator("header svg.lucide-bell")).toHaveCount(0);
 		const commonHeaderBounds = await page.locator("header").boundingBox();
 		const consent = page.getByRole("region", {
 			name: "Cookieを許可しますか？",
@@ -168,6 +183,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		);
 		await page.screenshot({ path: "/tmp/evame-ui-restored-home-desktop.png" });
 		await page.setViewportSize({ width: 390, height: 844 });
+		await expect(page.locator("header")).toHaveCSS("padding-top", "8px");
 		const commonMobileHeaderBounds = await page.locator("header").boundingBox();
 		await expect(consent).toBeVisible();
 		const mobileConsent = await consent.boundingBox();
@@ -476,7 +492,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			path: "/tmp/evame-ui-restored-article-desktop.png",
 		});
 		await page.setViewportSize({ width: 390, height: 844 });
-		await expect(page.locator("header")).toBeVisible();
+		await expect(page.locator("header")).toHaveCSS("padding-top", "8px");
 		assert.deepEqual(
 			await page.locator("header").boundingBox(),
 			commonMobileHeaderBounds,
@@ -715,14 +731,37 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.getByRole("link", { name: "Evame", exact: true })
 			.click();
 		await expect(page).toHaveURL(`${baseUrl}/ja`);
+		await page
+			.getByRole("button", { name: "アカウントメニュー", exact: true })
+			.click();
+		await expect(
+			page.getByRole("menuitem", { name: "通知", exact: true }),
+		).toBeVisible();
+		await page.getByRole("menuitem", { name: "使い方", exact: true }).focus();
+		await page.keyboard.press("Enter");
+		await expect(
+			page.getByRole("dialog", { name: "使い方", exact: true }),
+		).toBeVisible();
+		assert.equal(
+			notificationReads,
+			0,
+			"アカウントと使い方を開くだけでは通知を既読にしない",
+		);
+		await page.keyboard.press("Escape");
 		const read = page.waitForResponse(
 			(r) =>
 				r.url().includes("/api/notifications") &&
 				r.request().method() === "POST",
 		);
-		await page.getByTestId("bell-icon").click();
+		await page.getByRole("menuitem", { name: "通知", exact: true }).click();
 		assert.equal((await read).status(), 200);
 		await expect(page.getByTestId("notifications-menu-content")).toBeVisible();
+		await expect(page.getByTestId("notifications-menu-content")).toContainText(
+			"通知確認ユーザー",
+		);
+		await expect(
+			page.locator("header").getByTestId("unread-count"),
+		).toHaveCount(0);
 		await page.keyboard.press("Escape");
 		await page
 			.locator("header")
@@ -1006,17 +1045,84 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.getByRole("button", { name: "アカウントメニュー", exact: true })
 			.click();
 		await page
-			.getByRole("button", { name: "ダークテーマに切り替える", exact: true })
+			.getByRole("menuitem", { name: "ダークテーマに切り替える", exact: true })
 			.click();
 		await expect(page.locator("html")).toHaveClass(/dark/);
-		await page.keyboard.press("Escape");
+		await expect(page.getByRole("menu")).toHaveCount(0);
 		await page
 			.getByRole("button", { name: "アカウントメニュー", exact: true })
 			.click();
 		await page
-			.getByRole("button", { name: "ライトテーマに切り替える", exact: true })
+			.getByRole("menuitem", { name: "ライトテーマに切り替える", exact: true })
 			.click();
 		await expect(page.locator("html")).not.toHaveClass(/dark/);
+		await expect(page.getByRole("menu")).toHaveCount(0);
+		await page
+			.getByRole("button", { name: "アカウントメニュー", exact: true })
+			.click();
+		await expect(
+			page.getByRole("menuitem", { name: "通知", exact: true }),
+		).toBeVisible();
+		await expect(
+			page.getByRole("menuitem", { name: "使い方", exact: true }),
+		).toBeVisible();
+		await expect(page.getByRole("menu")).toHaveCSS("opacity", "1");
+		await page.screenshot({ path: "/tmp/evame-account-menu-mobile.png" });
+		await page.getByRole("menuitem", { name: "通知", exact: true }).click();
+		await expect(page.getByTestId("notifications-menu-content")).toBeVisible();
+		await expect
+			.poll(
+				async () => {
+					const bounds = await page
+						.getByTestId("notifications-menu-content")
+						.boundingBox();
+					return (
+						bounds &&
+						bounds.x >= 0 &&
+						bounds.x + bounds.width <= 390 &&
+						bounds.y >= 0 &&
+						bounds.y + bounds.height <= 844
+					);
+				},
+				{ message: "通知へ切り替えた後、モバイルの画面内へ再配置する" },
+			)
+			.toBe(true);
+		await page.screenshot({ path: "/tmp/evame-notifications-mobile.png" });
+		await page
+			.getByRole("menuitem", { name: "アカウントメニューに戻る", exact: true })
+			.click();
+		await expect(
+			page.getByRole("menuitem", { name: "使い方", exact: true }),
+		).toBeVisible();
+		await page.keyboard.press("Escape");
+		let notificationsUnavailable = true;
+		const notificationsRoute = async (route) => {
+			if (route.request().method() === "GET" && notificationsUnavailable)
+				await route.fulfill({
+					status: 503,
+					contentType: "application/json",
+					body: "{}",
+				});
+			else await route.continue();
+		};
+		await page.route("**/api/notifications", notificationsRoute);
+		await page.reload();
+		await page
+			.getByRole("button", { name: "アカウントメニュー", exact: true })
+			.click();
+		await page.getByRole("menuitem", { name: "通知", exact: true }).click();
+		const notificationRetry = page.getByRole("menuitem", {
+			name: "通知を読み込めませんでした。再試行",
+			exact: true,
+		});
+		await expect(notificationRetry).toBeVisible();
+		notificationsUnavailable = false;
+		await notificationRetry.click();
+		await expect(page.getByTestId("notifications-menu-content")).toContainText(
+			"通知確認ユーザー",
+		);
+		await expect(page.getByTestId("notifications-menu-content")).toBeVisible();
+		await page.unroute("**/api/notifications", notificationsRoute);
 		await page.keyboard.press("Escape");
 		assert.ok(
 			await page.evaluate(

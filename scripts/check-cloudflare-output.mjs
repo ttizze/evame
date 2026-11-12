@@ -497,6 +497,19 @@ try {
 			await checkEditorDrag(serverUrl.origin, cookie, browserTypes);
 		}
 		if (includeReader) {
+			const notificationActorId = randomUUID();
+			await database.execute({
+				sql: "INSERT INTO users (id, name, search_name, handle, email) VALUES (?, '通知確認ユーザー', 'notification actor', ?, ?)",
+				args: [
+					notificationActorId,
+					`notification-${notificationActorId}`,
+					`${notificationActorId}@example.test`,
+				],
+			});
+			await database.execute({
+				sql: "INSERT INTO notifications (user_id, actor_id, type) VALUES (?, ?, 'FOLLOW')",
+				args: [userId, notificationActorId],
+			});
 			const { checkReaderBrowser } = await import("./check-reader-browser.mjs");
 			await checkReaderBrowser(serverUrl.origin, cookie, handle, pageSlug);
 			assert.equal(

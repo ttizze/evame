@@ -5,7 +5,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StartButton } from "../start-button";
 import { LocaleSelector } from "./locale-selector/client";
 import { NewPageButton } from "./new-page-button";
-import { NotificationsDropdownClient } from "./notifications-dropdown/client";
 import { TranslationHelpPopover } from "./translation-help-popover.client";
 import { UserMenu } from "./user-menu.client";
 
@@ -18,7 +17,9 @@ export function HeaderUserSlot({ locale }: { locale: string }) {
 
 	return (
 		<div className="flex items-center gap-4">
-			<TranslationHelpPopover />
+			{!showLoading && !currentUser && (
+				<TranslationHelpPopover inMenu={false} />
+			)}
 			<a aria-label="Search for pages" href={`/${locale}/search`}>
 				<Search className="w-6 h-6 " />
 			</a>
@@ -40,7 +41,6 @@ export function HeaderUserSlot({ locale }: { locale: string }) {
 				</>
 			) : (
 				<>
-					<NotificationsDropdownClient locale={locale} />
 					<NewPageButton handle={currentUser.handle} locale={locale} />
 					<UserMenu
 						currentUser={currentUser}

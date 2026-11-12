@@ -1,26 +1,33 @@
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { forwardRef } from "react";
+import { type ComponentPropsWithoutRef, forwardRef } from "react";
 import { useTranslations } from "use-intl";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
+import { cn } from "@/lib/utils";
 
-export const ModeToggle = forwardRef<HTMLButtonElement>((_, ref) => {
+export const ModeToggle = forwardRef<
+	HTMLButtonElement,
+	ComponentPropsWithoutRef<"button">
+>(({ onClick, className, ...props }, ref) => {
 	const { resolvedTheme, setTheme } = useTheme();
 	const hydrated = useHydrated();
 	const isLight = hydrated && resolvedTheme === "light";
 	const t = useTranslations("Header");
 	const label = t(isLight ? "darkTheme" : "lightTheme");
 
-	function toggleTheme() {
-		setTheme(isLight ? "dark" : "light");
-	}
-
 	return (
 		<button
+			{...props}
 			aria-label={label}
-			className="w-full gap-2 flex cursor-pointer items-center px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground"
-			disabled={!hydrated}
-			onClick={toggleTheme}
+			className={cn(
+				"w-full gap-2 flex cursor-pointer items-center px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground",
+				className,
+			)}
+			disabled={!hydrated || props.disabled}
+			onClick={(event) => {
+				onClick?.(event);
+				if (!event.defaultPrevented) setTheme(isLight ? "dark" : "light");
+			}}
 			ref={ref}
 			type="button"
 		>

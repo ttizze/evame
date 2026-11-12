@@ -1,4 +1,4 @@
-import { HelpPopover } from "@/app/[locale]/(common-layout)/_components/header/help-popover.client";
+import { HelpPopover } from "@/app/[locale]/_components/help-popover";
 
 export function EditHelpPopover() {
 	return (
@@ -39,6 +39,7 @@ export function EditHelpPopover() {
 				</div>
 			}
 			title="Editing Guide"
+			trigger={null}
 		/>
 	);
 }
