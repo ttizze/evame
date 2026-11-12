@@ -266,7 +266,7 @@ it("ユーザーメニューのテーマ項目をEnterで選ぶとメニュー�
 	renderMenu();
 	await user.click(screen.getByRole("button", { name: "アカウントメニュー" }));
 	const themeItem = screen.getByRole("menuitem", {
-		name: "ライトテーマ",
+		name: "テーマ変更",
 	});
 	themeItem.focus();
 	await user.keyboard("{Enter}");

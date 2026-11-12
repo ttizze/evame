@@ -85,8 +85,9 @@
 		"termsOfService": "Terms of Service"
 	},
 	"Header": {
-		"lightTheme": "Light theme",
-		"darkTheme": "Dark theme",
+		"themeChange": "Change theme",
+		"languageChange": "Change language: {language}",
+		"login": "Log in",
 		"accountMenu": "Account menu",
 		"settings": "Profile and settings",
 		"management": "Manage articles",

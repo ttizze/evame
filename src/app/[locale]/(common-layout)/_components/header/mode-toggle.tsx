@@ -13,14 +13,14 @@ export const ModeToggle = forwardRef<
 	const hydrated = useHydrated();
 	const isLight = hydrated && resolvedTheme === "light";
 	const t = useTranslations("Header");
-	const label = t(isLight ? "darkTheme" : "lightTheme");
+	const label = t("themeChange");
 
 	return (
 		<button
 			{...props}
 			aria-label={label}
 			className={cn(
-				"w-full gap-2 flex cursor-pointer items-center px-4 py-3 text-sm hover:bg-accent hover:text-accent-foreground",
+				"w-full gap-2 flex cursor-pointer items-center text-sm hover:bg-accent hover:text-accent-foreground",
 				className,
 			)}
 			disabled={!hydrated || props.disabled}

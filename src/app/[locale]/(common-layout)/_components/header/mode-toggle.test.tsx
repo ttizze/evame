@@ -22,7 +22,7 @@ it.each(["light", "dark"])(
 		);
 		await user.click(
 			screen.getByRole("button", {
-				name: resolvedTheme === "light" ? "ダークテーマ" : "ライトテーマ",
+				name: "テーマ変更",
 			}),
 		);
 		expect(theme.setTheme).toHaveBeenLastCalledWith(

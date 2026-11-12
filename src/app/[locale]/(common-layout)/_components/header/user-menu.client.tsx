@@ -243,13 +243,13 @@ export function UserMenu({
 								{t("management")}
 							</a>
 						</DropdownMenuItem>
-						<DropdownMenuItem asChild>
+						<DropdownMenuItem asChild className="px-4 py-3">
 							<ModeToggle />
 						</DropdownMenuItem>
 						<LocaleSelector
 							currentHandle={currentUser.handle}
 							hasGeminiApiKey={hasGeminiApiKey}
-							localeSelectorClassName="w-[200px]"
+							inMenu
 							userPlan={currentUser.plan}
 						/>
 						<DropdownMenuSeparator className="my-0" />

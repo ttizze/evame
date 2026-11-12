@@ -39,6 +39,7 @@ export default function HeroSection({
 				<div className="mt-10 flex justify-center">
 					<StartButton
 						className="w-64 h-16 text-lg shadow-[0_18px_45px_rgba(15,23,42,0.18)]"
+						compactOnMobile={false}
 						icon={
 							<img
 								alt=""

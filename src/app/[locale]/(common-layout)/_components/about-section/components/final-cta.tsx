@@ -26,7 +26,11 @@ export default function FinalCTA({
 				<SegmentElement segment={headerSegment} tagName="span" />
 			</p>
 			<div className="mt-12 flex justify-center">
-				<StartButton className="w-64 h-14 text-lg" text="Start Writing" />
+				<StartButton
+					className="w-64 h-14 text-lg"
+					compactOnMobile={false}
+					text="Start Writing"
+				/>
 			</div>
 		</AboutSectionContent>
 	);

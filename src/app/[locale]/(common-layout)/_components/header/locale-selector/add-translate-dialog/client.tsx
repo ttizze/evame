@@ -83,7 +83,7 @@ export function AddTranslateDialog({
 									Please log in to Add Translation
 								</DialogTitle>
 							</DialogHeader>
-							<StartButton />
+							<StartButton compactOnMobile={false} />
 						</div>
 					) : (
 						<>

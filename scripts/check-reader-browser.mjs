@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { chromium, expect } from "@playwright/test";
 import { TextWriter, Uint8ArrayReader, ZipReader } from "@zip.js/zip.js";
 import { fromJSON } from "seroval";
+import { checkHeaderBrowser } from "./check-header-browser.mjs";
 
 export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 	const browser = await chromium.launch();
@@ -83,6 +84,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		).toBeVisible();
 		await noScript.close();
 		console.log("JavaScript無効でも記事一覧・本文・表示モードを読める");
+		await checkHeaderBrowser(browser, baseUrl, cookie, handle, pageSlug);
 		const context = await browser.newContext({
 			viewport: { width: 1280, height: 900 },
 		});
@@ -1079,7 +1081,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.getByRole("button", { name: "アカウントメニュー", exact: true })
 			.click();
 		await page
-			.getByRole("menuitem", { name: "ダークテーマ", exact: true })
+			.getByRole("menuitem", { name: "テーマ変更", exact: true })
 			.click();
 		await expect(page.locator("html")).toHaveClass(/dark/);
 		await expect(page.getByRole("menu")).toHaveCount(0);
@@ -1087,7 +1089,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.getByRole("button", { name: "アカウントメニュー", exact: true })
 			.click();
 		await page
-			.getByRole("menuitem", { name: "ライトテーマ", exact: true })
+			.getByRole("menuitem", { name: "テーマ変更", exact: true })
 			.click();
 		await expect(page.locator("html")).not.toHaveClass(/dark/);
 		await expect(page.getByRole("menu")).toHaveCount(0);
