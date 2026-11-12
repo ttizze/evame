@@ -35,11 +35,14 @@ export function NotificationsList({
 			},
 			index,
 		) => {
+			const actorHref = `/${locale}/${actorHandle}`;
+			const pageHref = `/${locale}/${pageOwnerHandle}/${pageSlug}`;
 			const pageLink =
 				pageSlug && pageOwnerHandle && pageTitle ? (
 					<a
 						className="hover:underline font-bold"
-						href={`/${locale}/${pageOwnerHandle}/${pageSlug}`}
+						href={pageHref}
+						onClick={(event) => event.stopPropagation()}
 					>
 						{pageTitle}
 					</a>
@@ -80,10 +83,14 @@ export function NotificationsList({
 				<DropdownMenuItem
 					className={`flex items-center p-4 border-t rounded-none ${!read ? "bg-muted" : ""} ${index === 0 ? "border-none" : ""}`}
 					key={id}
+					onSelect={() =>
+						window.location.assign(type === "FOLLOW" ? actorHref : pageHref)
+					}
 				>
 					<a
 						className="flex items-center mr-2 no-underline! hover:text-gray-700"
-						href={`/${locale}/${actorHandle}`}
+						href={actorHref}
+						onClick={(event) => event.stopPropagation()}
 					>
 						<Avatar className="w-10 h-10 shrink-0 mr-3">
 							<AvatarImage
@@ -101,7 +108,8 @@ export function NotificationsList({
 						<span>
 							<a
 								className="hover:underline font-bold"
-								href={`/${locale}/${actorHandle}`}
+								href={actorHref}
+								onClick={(event) => event.stopPropagation()}
 							>
 								{actorName}
 							</a>
@@ -112,7 +120,10 @@ export function NotificationsList({
 							className="text-muted-foreground text-sm"
 							dateTime={new Date(createdAt).toISOString()}
 						>
-							{new Date(createdAt).toLocaleString(locale, { timeZone: "UTC" })}
+							{new Date(createdAt).toLocaleString(locale, {
+								timeZone: "UTC",
+								timeZoneName: "short",
+							})}
 						</time>
 					</span>
 				</DropdownMenuItem>

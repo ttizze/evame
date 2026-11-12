@@ -144,6 +144,7 @@ it("メニューの通知を開くと全種類の通知と記事へのリンク�
 	).toHaveAttribute("href", "/ja/alice/liked");
 	expect(screen.getByText("Translation Text")).toBeVisible();
 	expect(screen.getByText("Comment Translation Text")).toBeVisible();
+	expect(screen.getAllByText(/UTC$/)).toHaveLength(5);
 	await waitFor(() => expect(screen.queryByText("未読通知4件")).toBeNull());
 	expect(fetch).toHaveBeenCalledWith("/api/notifications", {
 		method: "POST",

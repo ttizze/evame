@@ -472,12 +472,11 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 				.locator("header")
 				.getByRole("link", { name: "Search for pages", exact: true }),
 		).toBeVisible();
-		const blogHeaderBounds = await page.locator("header").boundingBox();
-		assert.deepEqual(
-			blogHeaderBounds,
-			commonHeaderBounds,
-			"ブログでも元のヘッダーの位置・幅・高さを保つ",
-		);
+		await expect
+			.poll(() => page.locator("header").boundingBox(), {
+				message: "ブログでも元のヘッダーの位置・幅・高さを保つ",
+			})
+			.toEqual(commonHeaderBounds);
 		const titleBounds = await page
 			.getByRole("heading", { name: "Workers保存テスト", exact: true })
 			.boundingBox();
@@ -493,11 +492,11 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		});
 		await page.setViewportSize({ width: 390, height: 844 });
 		await expect(page.locator("header")).toHaveCSS("padding-top", "8px");
-		assert.deepEqual(
-			await page.locator("header").boundingBox(),
-			commonMobileHeaderBounds,
-			"モバイルでも元のヘッダーの位置・幅・高さを保つ",
-		);
+		await expect
+			.poll(() => page.locator("header").boundingBox(), {
+				message: "モバイルでも元のヘッダーの位置・幅・高さを保つ",
+			})
+			.toEqual(commonMobileHeaderBounds);
 		assert.ok(
 			await page.evaluate(
 				() => document.documentElement.scrollWidth <= window.innerWidth,
@@ -762,7 +761,40 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.locator("header").getByTestId("unread-count"),
 		).toHaveCount(0);
-		await page.keyboard.press("Escape");
+		const followNotification = page
+			.getByTestId("notifications-menu-content")
+			.getByRole("menuitem")
+			.filter({ hasText: "通知確認ユーザー" });
+		const actorProfile = await followNotification
+			.getByRole("link", { name: "通知確認ユーザー", exact: true })
+			.last()
+			.getAttribute("href");
+		await followNotification.focus();
+		await page.keyboard.press("Enter");
+		await expect(page).toHaveURL(`${baseUrl}${actorProfile}`);
+		await page.goto(`${baseUrl}/ja`);
+		await page
+			.getByRole("button", { name: "アカウントメニュー", exact: true })
+			.click();
+		await page.getByRole("menuitem", { name: "通知", exact: true }).click();
+		const articleNotification = page
+			.getByTestId("notifications-menu-content")
+			.getByRole("menuitem")
+			.filter({ hasText: "Workers保存テスト" })
+			.first();
+		await articleNotification
+			.getByRole("link", { name: "Worker Test", exact: true })
+			.last()
+			.click();
+		await expect(page).toHaveURL(`${baseUrl}/ja/${handle}`);
+		await page
+			.getByRole("button", { name: "アカウントメニュー", exact: true })
+			.click();
+		await page.getByRole("menuitem", { name: "通知", exact: true }).click();
+		await articleNotification.focus();
+		await page.keyboard.press("Space");
+		await expect(page).toHaveURL(`${baseUrl}/ja/${handle}/${pageSlug}`);
+		await page.goto(`${baseUrl}/ja`);
 		await page
 			.locator("header")
 			.getByRole("button", { name: "アカウントメニュー", exact: true })
@@ -995,6 +1027,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			}),
 		]);
 		await expect(ownerCard.getByText("Private", { exact: true })).toBeVisible();
+		await expect(page.getByRole("menu")).toHaveCount(0);
 		const hiddenBlog = await page.request.get(`${baseUrl}/ja/${handle}`);
 		assert.ok(
 			!(await hiddenBlog.text()).includes("ブラウザー新規保存"),
@@ -1007,6 +1040,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.getByRole("button", { name: "Make Public", exact: true })
 			.click();
 		await expect(ownerCard.getByText("Public", { exact: true })).toBeVisible();
+		await expect(page.getByRole("menu")).toHaveCount(0);
 		await ownerCard
 			.getByRole("button", { name: "More options", exact: true })
 			.click();
@@ -1057,44 +1091,72 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.click();
 		await expect(page.locator("html")).not.toHaveClass(/dark/);
 		await expect(page.getByRole("menu")).toHaveCount(0);
-		await page
-			.getByRole("button", { name: "アカウントメニュー", exact: true })
-			.click();
-		await expect(
-			page.getByRole("menuitem", { name: "通知", exact: true }),
-		).toBeVisible();
-		await expect(
-			page.getByRole("menuitem", { name: "使い方", exact: true }),
-		).toBeVisible();
-		await expect(page.getByRole("menu")).toHaveCSS("opacity", "1");
-		await page.screenshot({ path: "/tmp/evame-account-menu-mobile.png" });
-		await page.getByRole("menuitem", { name: "通知", exact: true }).click();
-		await expect(page.getByTestId("notifications-menu-content")).toBeVisible();
-		await expect
-			.poll(
-				async () => {
-					const bounds = await page
-						.getByTestId("notifications-menu-content")
-						.boundingBox();
-					return (
-						bounds &&
-						bounds.x >= 0 &&
-						bounds.x + bounds.width <= 390 &&
-						bounds.y >= 0 &&
-						bounds.y + bounds.height <= 844
-					);
-				},
-				{ message: "通知へ切り替えた後、モバイルの画面内へ再配置する" },
-			)
-			.toBe(true);
-		await page.screenshot({ path: "/tmp/evame-notifications-mobile.png" });
-		await page
-			.getByRole("menuitem", { name: "アカウントメニューに戻る", exact: true })
-			.click();
-		await expect(
-			page.getByRole("menuitem", { name: "使い方", exact: true }),
-		).toBeVisible();
-		await page.keyboard.press("Escape");
+		for (const width of [390, 320]) {
+			await page.setViewportSize({ width, height: 844 });
+			const scrollPosition = await page.evaluate(() => ({
+				x: window.scrollX,
+				y: window.scrollY,
+			}));
+			await page
+				.getByRole("button", { name: "アカウントメニュー", exact: true })
+				.click();
+			await expect(
+				page.getByRole("menuitem", { name: "通知", exact: true }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("menuitem", { name: "使い方", exact: true }),
+			).toBeVisible();
+			await expect(page.getByRole("menu")).toHaveCSS("opacity", "1");
+			await page.screenshot({
+				path: `/tmp/evame-account-menu-mobile-${width}.png`,
+			});
+			await page.getByRole("menuitem", { name: "通知", exact: true }).click();
+			await expect(
+				page.getByTestId("notifications-menu-content"),
+			).toBeVisible();
+			await expect
+				.poll(
+					async () => {
+						const bounds = await page
+							.getByTestId("notifications-menu-content")
+							.boundingBox();
+						return (
+							bounds &&
+							bounds.x >= 0 &&
+							bounds.x + bounds.width <= width &&
+							bounds.y >= 0 &&
+							bounds.y + bounds.height <= 844
+						);
+					},
+					{ message: "通知へ切り替えた後、モバイルの画面内へ再配置する" },
+				)
+				.toBe(true);
+			await expect
+				.poll(() =>
+					page.evaluate(() => ({ x: window.scrollX, y: window.scrollY })),
+				)
+				.toEqual(scrollPosition);
+			await page.screenshot({
+				path: `/tmp/evame-notifications-mobile-${width}.png`,
+			});
+			await page
+				.getByRole("menuitem", {
+					name: "アカウントメニューに戻る",
+					exact: true,
+				})
+				.click();
+			await expect(
+				page.getByRole("menuitem", { name: "使い方", exact: true }),
+			).toBeVisible();
+			await expect
+				.poll(() =>
+					page.evaluate(() => ({ x: window.scrollX, y: window.scrollY })),
+				)
+				.toEqual(scrollPosition);
+			await page.keyboard.press("Escape");
+			await expect(page.getByRole("menu")).toHaveCount(0);
+		}
+		await page.setViewportSize({ width: 390, height: 844 });
 		let notificationsUnavailable = true;
 		const notificationsRoute = async (route) => {
 			if (route.request().method() === "GET" && notificationsUnavailable)

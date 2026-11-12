@@ -164,7 +164,7 @@ export function UserMenu({
 							className="gap-2 px-4 py-3 cursor-pointer"
 							onSelect={(event) => {
 								event.preventDefault();
-								menuRef.current?.focus();
+								menuRef.current?.focus({ preventScroll: true });
 								setShowNotifications(false);
 							}}
 						>
@@ -181,7 +181,7 @@ export function UserMenu({
 							<DropdownMenuItem
 								onSelect={(event) => {
 									event.preventDefault();
-									menuRef.current?.focus();
+									menuRef.current?.focus({ preventScroll: true });
 									void readNotifications();
 								}}
 							>
@@ -215,7 +215,7 @@ export function UserMenu({
 							className="gap-2 px-4 py-3 cursor-pointer"
 							onSelect={(event) => {
 								event.preventDefault();
-								menuRef.current?.focus();
+								menuRef.current?.focus({ preventScroll: true });
 								setShowNotifications(true);
 								void readNotifications();
 							}}
