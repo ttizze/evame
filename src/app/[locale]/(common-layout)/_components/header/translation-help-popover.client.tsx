@@ -1,8 +1,9 @@
-import { ThumbsDown, ThumbsUp } from "lucide-react";
+import { CircleHelp, ThumbsDown, ThumbsUp } from "lucide-react";
 import { useTranslations } from "use-intl";
-import { HelpPopover } from "./help-popover.client";
+import { HelpPopover } from "@/app/[locale]/_components/help-popover";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
-export function TranslationHelpPopover() {
+export function TranslationHelpPopover({ inMenu }: { inMenu: boolean }) {
 	const t = useTranslations("Header.HelpPopover.translationHelp");
 	return (
 		<HelpPopover
@@ -85,6 +86,25 @@ export function TranslationHelpPopover() {
 				</div>
 			}
 			title={t("title")}
+			trigger={
+				inMenu ? (
+					<DropdownMenuItem
+						className="gap-2 px-4 py-3 cursor-pointer"
+						onPointerLeave={(event) => {
+							if (event.currentTarget.dataset.state === "open")
+								event.preventDefault();
+						}}
+						onPointerMove={(event) => {
+							if (event.currentTarget.dataset.state === "open")
+								event.preventDefault();
+						}}
+						onSelect={(event) => event.preventDefault()}
+					>
+						<CircleHelp className="h-4 w-4" />
+						{t("title")}
+					</DropdownMenuItem>
+				) : null
+			}
 		/>
 	);
 }

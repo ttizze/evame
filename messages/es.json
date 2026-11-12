@@ -85,6 +85,12 @@
 		"termsOfService": "Terms of Service"
 	},
 	"Header": {
+		"themeChange": "Cambiar tema",
+		"languageChange": "Cambiar idioma: {language}",
+		"login": "Iniciar sesión",
+		"accountMenu": "Menú de la cuenta",
+		"settings": "Perfil y configuración",
+		"management": "Gestionar artículos",
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "Cómo usar",
@@ -117,7 +123,19 @@
 			"validatedDescription": "Todas las opciones de traducción tienen al menos 2 votos.",
 			"untranslatedTitle": "Sin traducir",
 			"untranslatedDescription": "Aún no se ha traducido."
-		}
+		},
+		"notifications": "Notificaciones",
+		"backToAccount": "Volver al menú de cuenta",
+		"unreadNotifications": "{count} notificaciones sin leer",
+		"notificationsEmpty": "No hay notificaciones",
+		"notificationsLoading": "Cargando notificaciones…",
+		"notificationsRetry": "No se pudieron cargar las notificaciones. Reintentar",
+		"notificationsReadError": "No se pudieron marcar las notificaciones como leídas",
+		"notificationLiked": "le gustó tu página",
+		"notificationCommented": "comentó en",
+		"notificationFollowed": "te siguió",
+		"notificationVoted": "votó por",
+		"notificationOn": "en"
 	},
 	"CookieConsent": {
 		"title": "¿Permitir cookies?",
@@ -139,7 +157,6 @@
 		"more": "Ver más",
 		"comments": "Comentarios",
 		"downloadMarkdown": "Descargar Markdown",
-		"editProfile": "Editar perfil",
 		"search": "Buscar",
 		"title": "Título",
 		"content": "Contenido",

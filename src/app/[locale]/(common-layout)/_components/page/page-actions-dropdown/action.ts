@@ -4,17 +4,13 @@ import {
 	setResponseHeader,
 } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { supportedLocaleOptions } from "@/app/_constants/locale";
-import { updatePageStatus } from "@/app/api/reader-actions/_service/update-page-status";
+import { localeSchema } from "@/app/_utils/locale-schema";
 import type { ActionResponse } from "@/app/types";
+import { updatePageStatus } from "../_service/update-page-status";
 
 const togglePublishSchema = z.object({
 	pageId: z.number().int().positive(),
-	locale: z
-		.string()
-		.refine((locale) =>
-			supportedLocaleOptions.some((option) => option.code === locale),
-		),
+	locale: localeSchema,
 });
 
 export type TogglePublishState = ActionResponse<

@@ -85,6 +85,12 @@
 		"termsOfService": "Terms of Service"
 	},
 	"Header": {
+		"themeChange": "테마 변경",
+		"languageChange": "언어 변경: {language}",
+		"login": "로그인",
+		"accountMenu": "계정 메뉴",
+		"settings": "프로필 및 설정",
+		"management": "글 관리",
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "사용 방법",
@@ -117,7 +123,19 @@
 			"validatedDescription": "모든 번역 옵션에 2개 이상의 좋아요가 있습니다.",
 			"untranslatedTitle": "미번역",
 			"untranslatedDescription": "아직 번역되지 않았습니다."
-		}
+		},
+		"notifications": "알림",
+		"backToAccount": "계정 메뉴로 돌아가기",
+		"unreadNotifications": "읽지 않은 알림 {count}개",
+		"notificationsEmpty": "알림이 없습니다",
+		"notificationsLoading": "알림을 불러오는 중…",
+		"notificationsRetry": "알림을 불러올 수 없습니다. 다시 시도",
+		"notificationsReadError": "알림을 읽음으로 표시할 수 없습니다",
+		"notificationLiked": "님이 좋아요를 눌렀습니다:",
+		"notificationCommented": "님이 댓글을 남겼습니다:",
+		"notificationFollowed": "님이 팔로우했습니다",
+		"notificationVoted": "님이 투표했습니다:",
+		"notificationOn": "게시글:"
 	},
 	"CookieConsent": {
 		"title": "쿠키를 허용할까요?",
@@ -139,7 +157,6 @@
 		"more": "더 보기",
 		"comments": "댓글",
 		"downloadMarkdown": "Markdown 다운로드",
-		"editProfile": "프로필 편집",
 		"search": "검색",
 		"title": "제목",
 		"content": "본문",

@@ -85,6 +85,12 @@
 		"termsOfService": "Terms of Service"
 	},
 	"Header": {
+		"themeChange": "切换主题",
+		"languageChange": "切换语言：{language}",
+		"login": "登录",
+		"accountMenu": "账户菜单",
+		"settings": "个人资料与设置",
+		"management": "管理文章",
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "使用说明",
@@ -117,7 +123,19 @@
 			"validatedDescription": "所有译文选项至少获得 2 个赞。",
 			"untranslatedTitle": "未翻译",
 			"untranslatedDescription": "尚未翻译。"
-		}
+		},
+		"notifications": "通知",
+		"backToAccount": "返回账户菜单",
+		"unreadNotifications": "{count}条未读通知",
+		"notificationsEmpty": "暂无通知",
+		"notificationsLoading": "正在加载通知…",
+		"notificationsRetry": "无法加载通知。重试",
+		"notificationsReadError": "无法将通知标记为已读",
+		"notificationLiked": "赞了你的文章：",
+		"notificationCommented": "评论了：",
+		"notificationFollowed": "关注了你",
+		"notificationVoted": "投票支持：",
+		"notificationOn": "所在文章："
 	},
 	"CookieConsent": {
 		"title": "是否允许 Cookie？",
@@ -139,7 +157,6 @@
 		"more": "查看更多",
 		"comments": "评论",
 		"downloadMarkdown": "下载Markdown",
-		"editProfile": "编辑个人资料",
 		"search": "搜索",
 		"title": "标题",
 		"content": "正文",

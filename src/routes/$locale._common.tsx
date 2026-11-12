@@ -25,6 +25,7 @@ function CommonLayout() {
 			<WebSiteJsonLd locale={locale} />
 			<ViewScope>
 				<HeaderFrame
+					brand={null}
 					locale={locale}
 					userSlot={
 						<ClientOnly fallback={null}>

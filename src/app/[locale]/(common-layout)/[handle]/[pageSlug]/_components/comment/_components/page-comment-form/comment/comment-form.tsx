@@ -57,7 +57,10 @@ export function CommentForm({
 				)}
 
 				{!currentUser && (
-					<StartButton className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+					<StartButton
+						className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+						compactOnMobile={false}
+					/>
 				)}
 
 				<Button

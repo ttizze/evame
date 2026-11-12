@@ -1,11 +1,11 @@
 import { z } from "zod";
+import { localeSchema } from "@/app/_utils/locale-schema";
 import { mdastToMarkdown } from "@/app/[locale]/_domain/mdast-to-markdown";
 import { PRIVATE_RESPONSE_HEADERS } from "@/app/api/_utils/private-response-headers";
-import { readerLocale } from "../_domain/reader-locale";
 import { loadPageDetail } from "../_service/load-page-detail";
 
 const input = z.object({
-	locale: readerLocale.default("en"),
+	locale: localeSchema.default("en"),
 	handle: z.string().min(1),
 	slug: z.string().min(1),
 });

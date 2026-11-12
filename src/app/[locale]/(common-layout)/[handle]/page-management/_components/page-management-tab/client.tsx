@@ -1,6 +1,7 @@
 import { Link, useLocation, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { EyeIcon } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { archivePageAction } from "@/app/[locale]/(common-layout)/_components/page/delete-page-dialog/action";
 import { togglePublishAction } from "@/app/[locale]/(common-layout)/_components/page/page-actions-dropdown/action";
 import { PageActionsDropdown } from "@/app/[locale]/(common-layout)/_components/page/page-actions-dropdown/client";
@@ -30,6 +31,7 @@ export function PageManagementTabClient({
 }) {
 	const { pathname, searchStr } = useLocation();
 	const router = useRouter();
+	const t = useTranslations("Header");
 	const publish = useServerFn(togglePublishAction);
 	const archive = useServerFn(archivePageAction);
 	return (
@@ -42,9 +44,9 @@ export function PageManagementTabClient({
 				value={query}
 			/>
 
-			<div className="rounded-md">
+			<ul aria-label={t("management")} className="rounded-md">
 				{pagesWithTitle.map((page) => (
-					<div className="flex justify-between border-b py-2" key={page.id}>
+					<li className="flex justify-between border-b py-2" key={page.id}>
 						<div>
 							<Link
 								params={{ handle, locale, pageSlug: page.slug }}
@@ -86,9 +88,9 @@ export function PageManagementTabClient({
 							publish={() => publish({ data: { locale, pageId: page.id } })}
 							status={page.status}
 						/>
-					</div>
+					</li>
 				))}
-			</div>
+			</ul>
 
 			<div className="mt-4 flex justify-center">
 				<PaginationBar

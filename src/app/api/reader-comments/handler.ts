@@ -1,11 +1,11 @@
 import { z } from "zod";
+import { localeSchema } from "@/app/_utils/locale-schema";
 import { PRIVATE_RESPONSE_HEADERS } from "@/app/api/_utils/private-response-headers";
-import { readerLocale } from "../_domain/reader-locale";
 import { loadPageComments } from "../_service/load-page-comments";
 
 const input = z.object({
 	pageId: z.coerce.number().int().positive(),
-	locale: readerLocale.default("en"),
+	locale: localeSchema.default("en"),
 	page: z.coerce.number().int().positive().default(1),
 });
 

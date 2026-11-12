@@ -1,14 +1,14 @@
 import { redirect } from "@tanstack/react-router";
 import { z } from "zod";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
+import { localeSchema } from "@/app/_utils/locale-schema";
 import type { ActionResponse } from "@/app/types";
-import { readerLocale } from "../../_domain/reader-locale";
 import { setPageCommentsEnabled } from "../_db/mutations";
 
 const input = z.object({
 	pageId: z.number().int().positive(),
 	enabled: z.boolean(),
-	locale: readerLocale,
+	locale: localeSchema,
 });
 
 export async function updatePageComments(

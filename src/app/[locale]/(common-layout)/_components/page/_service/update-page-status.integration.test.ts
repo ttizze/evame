@@ -12,12 +12,12 @@ vi.mock("@/app/_service/current-user", () => ({
 	getCurrentUserFromHeaders: vi.fn(),
 }));
 
-describe("閲覧画面の記事管理", () => {
+describe("管理画面の記事管理", () => {
 	beforeEach(async () => {
 		await resetDatabase();
 		vi.clearAllMocks();
 	});
-	it("所有者がプロフィールから記事を非公開にして削除できる", async () => {
+	it("所有者が管理画面から記事を非公開にして削除できる", async () => {
 		const owner = await createUser();
 		const page = await createPage({
 			userId: owner.id,

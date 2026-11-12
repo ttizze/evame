@@ -43,6 +43,7 @@ describe("LocaleSelector", () => {
 			<LocaleSelector
 				currentHandle=""
 				hasGeminiApiKey={false}
+				inMenu={false}
 				userPlan="free"
 			/>,
 		);
@@ -57,6 +58,7 @@ describe("LocaleSelector", () => {
 			<LocaleSelector
 				currentHandle=""
 				hasGeminiApiKey={false}
+				inMenu={false}
 				userPlan="free"
 			/>,
 		);
@@ -75,6 +77,7 @@ describe("LocaleSelector", () => {
 			<LocaleSelector
 				currentHandle=""
 				hasGeminiApiKey={false}
+				inMenu={false}
 				userPlan="free"
 			/>,
 		);

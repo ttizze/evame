@@ -79,7 +79,6 @@ export function HomeFeedIsland({
 											/>
 										}
 										locale={locale}
-										ownerActions={null}
 										PageForList={page}
 									/>
 								))}
