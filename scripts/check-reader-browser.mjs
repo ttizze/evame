@@ -790,7 +790,9 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.getByRole("link", { name: "通知確認ユーザー", exact: true })
 			.last()
 			.getAttribute("href");
+		await page.mouse.move(0, 0);
 		await followNotification.focus();
+		await expect(followNotification).toBeFocused();
 		await page.keyboard.press("Enter");
 		await expect(page).toHaveURL(`${baseUrl}${actorProfile}`);
 		await page.goto(`${baseUrl}/ja`);
@@ -812,7 +814,9 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.getByRole("button", { name: "アカウントメニュー", exact: true })
 			.click();
 		await page.getByRole("menuitem", { name: "通知", exact: true }).click();
+		await page.mouse.move(0, 0);
 		await articleNotification.focus();
+		await expect(articleNotification).toBeFocused();
 		await page.keyboard.press("Space");
 		await expect(page).toHaveURL(`${baseUrl}/ja/${handle}/${pageSlug}`);
 		await page.goto(`${baseUrl}/ja`);
