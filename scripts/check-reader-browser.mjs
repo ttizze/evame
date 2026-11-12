@@ -224,6 +224,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			'[data-testid="lexical-editor"][contenteditable=true]',
 		);
 		const firstBody = editor.locator(":scope > p").first();
+		const bodyBlocks = editor.locator(":scope > :not(.article-title)");
 		await firstBody.click();
 		const insertBlock = page
 			.getByTestId("editor-floating-menu")
@@ -341,14 +342,16 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			"opacity",
 			"0.4",
 		);
-		await page.mouse.up();
-		await expect(editor.locator(":scope > *").first()).toHaveText("取り消し");
-		await editor.press("ControlOrMeta+z");
-		await expect(editor.locator(":scope > *").first()).toHaveText(
-			"GFMの見出し",
+		await page.mouse.move(
+			destination.x + 10,
+			destination.y + destination.height - 2,
 		);
+		await page.mouse.up();
+		await expect(bodyBlocks.first()).toHaveText("取り消し");
+		await editor.press("ControlOrMeta+z");
+		await expect(bodyBlocks.first()).toHaveText("GFMの見出し");
 		await editor.press("ControlOrMeta+Shift+z");
-		await expect(editor.locator(":scope > *").first()).toHaveText("取り消し");
+		await expect(bodyBlocks.first()).toHaveText("取り消し");
 		const markdownUrl = new URL("/api/page-markdown", baseUrl);
 		markdownUrl.search = new URLSearchParams({
 			locale: "ja",
@@ -375,7 +378,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.toContain("<table>");
 		await page.reload();
 		await expect(editor.locator("table")).toContainText("本文");
-		await expect(editor.locator(":scope > *").first()).toHaveText("取り消し");
+		await expect(bodyBlocks.first()).toHaveText("取り消し");
 		console.log(
 			"マウスで見出しを並べ替え、Undo・Redo・保存・再読み込みでも順序と装飾を保つ",
 		);
