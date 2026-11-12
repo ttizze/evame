@@ -75,6 +75,7 @@ else
     -onlyUsePackageVersionsFromResolvedFile
   )
 fi
+xcrun simctl list devices available
 if [[ "$1" == build-for-testing ]]; then
   xcodebuild "${xcodebuild_arguments[@]}" build-for-testing "${@:3}"
 else

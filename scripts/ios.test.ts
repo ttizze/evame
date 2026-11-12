@@ -44,6 +44,7 @@ exit "\${XCODE_STATUS:-0}"
 `,
 		xcrun: `#!/bin/bash
 printf "xcrun %s\n" "$*" >> "$CALLS"
+if [[ "$1" == simctl ]]; then exit "\${SIMCTL_STATUS:-0}"; fi
 if [[ "$1" == xcresulttool ]]; then printf '{"passedTests":%s,"skippedTests":%s}\n' "\${PASSED_TESTS:-1}" "\${SKIPPED_TESTS:-0}"; fi
 `,
 	};
@@ -110,6 +111,43 @@ it("受け取った同一成果物だけで検証し、依存解決・生成・�
 	expect(calls).not.toContain("xcodegen");
 	expect(calls).not.toContain("swift test");
 	expect(calls).not.toContain("-project");
+});
+
+it.each(["build-for-testing", "test", "test-without-building"])(
+	"CoreSimulatorの初回デバイス列挙が完了してから%sする",
+	async (mode) => {
+		const products = join(directory, "apps/ios/DerivedData/Build/Products");
+		await mkdir(products, { recursive: true });
+		await writeFile(join(products, "Evame.xctestrun"), "artifact");
+		await promisify(execFile)("bash", ["scripts/ios.sh", mode, destination], {
+			cwd: directory,
+			env: environment,
+		});
+		const calls = (await readFile(join(directory, "calls"), "utf8")).split(
+			"\n",
+		);
+		const simulator = calls.indexOf("xcrun simctl list devices available");
+		expect(simulator).toBeGreaterThanOrEqual(0);
+		expect(simulator).toBeLessThan(
+			calls.findIndex((command) => command.startsWith("xcodebuild ")),
+		);
+	},
+);
+
+it("CoreSimulatorの初期化が失敗したらテストを開始せず失敗する", async () => {
+	const products = join(directory, "apps/ios/DerivedData/Build/Products");
+	await mkdir(products, { recursive: true });
+	await writeFile(join(products, "Evame.xctestrun"), "artifact");
+	await expect(
+		promisify(execFile)(
+			"bash",
+			["scripts/ios.sh", "test-without-building", destination],
+			{ cwd: directory, env: { ...environment, SIMCTL_STATUS: "70" } },
+		),
+	).rejects.toThrow();
+	expect(await readFile(join(directory, "calls"), "utf8")).not.toContain(
+		"xcodebuild ",
+	);
 });
 
 it.each([
