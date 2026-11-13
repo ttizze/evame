@@ -94,8 +94,7 @@
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "How to Use",
-				"description1": "Read posts with original and translation stacked vertically. Switch the view with the floating controller at the bottom.",
-				"controllerLabel": "Floating Controller",
+				"description1": "Read posts with original and translation stacked vertically. Use the buttons at the bottom to change the view.",
 				"controllerButton": "Original / Translation",
 				"controllerHint": "tap to switch",
 				"description2": "Click a translation line to open the panel and vote or add your own. Higher points translation will be displayed at the top.",

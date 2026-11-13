@@ -94,8 +94,7 @@
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "使用说明",
-				"description1": "原文与译文上下排列阅读。可用底部的悬浮控制器切换视图。",
-				"controllerLabel": "悬浮控制器",
+				"description1": "原文与译文上下排列阅读。可用底部按钮切换视图。",
 				"controllerButton": "原文 / 译文",
 				"controllerHint": "点击切换",
 				"description2": "点击译文行可打开面板，进行投票或添加自己的译文。得分更高的译文会显示在上方。",

@@ -38,6 +38,21 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(staticPage).toHaveURL(`${baseUrl}/ja/${handle}`);
 		await expect(
 			staticPage.getByRole("heading", { name: "Worker Test", exact: true }),
+		).toHaveCount(0);
+		await expect(
+			staticPage.getByText(`@${handle}`, { exact: true }),
+		).toHaveCount(0);
+		await expect(
+			staticPage
+				.locator("main > div > section")
+				.first()
+				.locator('astro-island[component-export="UserAvatar"]'),
+		).toHaveCount(0);
+		await expect(
+			staticPage.getByRole("button", { name: "0 following", exact: true }),
+		).toBeVisible();
+		await expect(
+			staticPage.getByRole("button", { name: "0 followers", exact: true }),
 		).toBeVisible();
 		await staticPage
 			.getByRole("link", { name: "Workers保存テスト", exact: true })
@@ -723,6 +738,48 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.getByRole("link", { name: "プロフィールを編集" }),
 		).toHaveCount(0);
+		for (const width of [1280, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			await expect(
+				page
+					.locator("header")
+					.getByRole("link", { name: "Worker Test", exact: true }),
+			).toHaveAttribute("href", `/ja/${handle}`);
+			await expect(
+				page.getByRole("heading", { name: "Worker Test", exact: true }),
+			).toHaveCount(0);
+			await expect(page.getByText(`@${handle}`, { exact: true })).toHaveCount(
+				0,
+			);
+			await expect(
+				page
+					.locator("main > div > section")
+					.first()
+					.locator('astro-island[component-export="UserAvatar"]'),
+			).toHaveCount(0);
+			await expect(
+				page.getByRole("button", { name: "0 following", exact: true }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("button", { name: "0 followers", exact: true }),
+			).toBeVisible();
+			await expect(
+				page
+					.getByRole("link", { name: "Workers保存テスト", exact: true })
+					.first(),
+			).toBeVisible();
+		}
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await expect(
+			page.locator('astro-island[component-export="FollowStats"]'),
+		).not.toHaveAttribute("ssr", "");
+		await page
+			.getByRole("button", { name: "0 followers", exact: true })
+			.click();
+		await expect(
+			page.getByRole("dialog", { name: "Followers", exact: true }),
+		).toBeVisible();
+		await page.keyboard.press("Escape");
 		await expect(page.locator("header")).toBeVisible();
 		await expect(
 			page.getByRole("button", { name: "More options", exact: true }),
@@ -743,6 +800,9 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.getByRole("dialog", { name: "使い方", exact: true }),
 		).toBeVisible();
+		await expect(
+			page.getByRole("dialog", { name: "使い方", exact: true }),
+		).not.toContainText("フローティングコントローラー");
 		assert.equal(
 			notificationReads,
 			0,
