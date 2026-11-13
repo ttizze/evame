@@ -1,4 +1,7 @@
 {
+	"ShareDialog": {
+		"trigger": "Share"
+	},
 	"AppLogin": {
 		"title": "Allow app access",
 		"description": "Allow the Evame iPhone app to read and write your documents and images and change publication status. Only continue if you started signing in from the app.",
@@ -94,7 +97,8 @@
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "How to Use",
-				"description1": "Read posts with original and translation stacked vertically. Use the buttons at the bottom to change the view.",
+				"description1": "Read posts with original and translation stacked vertically. Switch the view with the floating controller at the bottom.",
+				"controllerLabel": "Floating Controller",
 				"controllerButton": "Original / Translation",
 				"controllerHint": "tap to switch",
 				"description2": "Click a translation line to open the panel and vote or add your own. Higher points translation will be displayed at the top.",

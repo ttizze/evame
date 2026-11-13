@@ -1,4 +1,7 @@
 {
+	"ShareDialog": {
+		"trigger": "Compartir"
+	},
 	"AppLogin": {
 		"title": "Permitir acceso a la app",
 		"description": "Permite que la app de Evame para iPhone lea y escriba tus documentos e imágenes y cambie su estado de publicación. Continúa solo si iniciaste sesión desde la app.",
@@ -94,7 +97,8 @@
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "Cómo usar",
-				"description1": "Lee las publicaciones con el original y la traducción apilados en vertical. Cambia la vista con los botones de abajo.",
+				"description1": "Lee las publicaciones con el original y la traducción apilados en vertical. Cambia la vista con el controlador flotante de abajo.",
+				"controllerLabel": "Controlador flotante",
 				"controllerButton": "Original / Traducción",
 				"controllerHint": "toca para cambiar",
 				"description2": "Haz clic en una línea de traducción para abrir el panel, votar o añadir la tuya. Las traducciones con más puntos se muestran arriba.",

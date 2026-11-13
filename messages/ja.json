@@ -1,4 +1,7 @@
 {
+	"ShareDialog": {
+		"trigger": "共有"
+	},
 	"AppLogin": {
 		"title": "アプリにアクセスを許可",
 		"description": "Evame iPhoneアプリに、あなたの文書と画像の読み書き、および公開状態の変更を許可します。自分でアプリからログインを始めた場合だけ許可してください。",
@@ -94,7 +97,8 @@
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "使い方",
-				"description1": "原文と翻訳を縦に並べて読めます。画面下のボタンで表示を切り替えられます。",
+				"description1": "原文と翻訳を縦に並べて読めます。画面下のフローティングコントローラーで表示を切り替えてください。",
+				"controllerLabel": "フローティングコントローラー",
 				"controllerButton": "原文 / 翻訳",
 				"controllerHint": "タップして切り替え",
 				"description2": "翻訳行をクリックするとパネルが開き、投票したり自分の訳を追加できます。ポイントの高い翻訳が上に表示されます。",

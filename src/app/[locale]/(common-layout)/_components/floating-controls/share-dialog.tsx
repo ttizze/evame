@@ -9,6 +9,7 @@ import {
 	TwitterShareButton,
 } from "react-share";
 import { toast } from "sonner";
+import { useTranslations } from "use-intl";
 import { viewQueryState } from "@/app/[locale]/(common-layout)/_components/view-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 
 export function ShareDialog() {
+	const t = useTranslations("ShareDialog");
 	const [isOpen, setIsOpen] = useState(false);
 	const [view] = useQueryState("view", viewQueryState);
 
@@ -38,6 +40,7 @@ export function ShareDialog() {
 		<Dialog onOpenChange={setIsOpen} open={isOpen}>
 			<DialogTrigger asChild>
 				<Button
+					aria-label={t("trigger")}
 					className="h-10 w-10 rounded-full bg-background cursor-pointer"
 					size="icon"
 					variant="ghost"

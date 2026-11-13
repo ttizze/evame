@@ -1,4 +1,7 @@
 {
+	"ShareDialog": {
+		"trigger": "공유"
+	},
 	"AppLogin": {
 		"title": "앱 접근 허용",
 		"description": "Evame iPhone 앱이 내 문서와 이미지를 읽고 쓰고 공개 상태를 변경하도록 허용합니다. 직접 앱에서 로그인을 시작한 경우에만 허용하세요.",
@@ -94,7 +97,8 @@
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "사용 방법",
-				"description1": "원문과 번역문을 세로로 나란히 읽을 수 있습니다. 아래 버튼으로 보기를 전환하세요.",
+				"description1": "원문과 번역문을 세로로 나란히 읽을 수 있습니다. 아래의 플로팅 컨트롤러로 보기를 전환하세요.",
+				"controllerLabel": "플로팅 컨트롤러",
 				"controllerButton": "원문 / 번역",
 				"controllerHint": "탭하여 전환",
 				"description2": "번역 줄을 클릭하면 패널이 열리고, 투표하거나 내 번역을 추가할 수 있습니다. 점수가 높은 번역이 위에 표시됩니다.",

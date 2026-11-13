@@ -504,6 +504,43 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			titleBounds.y < headerBounds.y,
 			"タイトルの下に著者・目次を表示する",
 		);
+		for (const viewport of [
+			{ width: 1280, height: 900 },
+			{ width: 390, height: 844 },
+		]) {
+			await page.setViewportSize(viewport);
+			await expect(floating).toHaveCSS("opacity", "1");
+			for (const label of ["View", "Like", "Share"]) {
+				await expect(floating.getByText(label, { exact: true })).toHaveCount(0);
+			}
+			await expect(floating.getByRole("button")).toHaveCount(3);
+			await expect(floating.locator("svg.lucide-heart")).toBeVisible();
+			await expect(floating.locator("svg.lucide-share")).toBeVisible();
+			await expect(
+				floating.getByRole("button", { name: /^Currently:/ }),
+			).toContainText("JA");
+			const share = floating.getByRole("button", { name: "共有", exact: true });
+			await expect(share).toHaveCSS("width", "40px");
+			await expect(share).toHaveCSS("height", "40px");
+			await share.focus();
+			await page.keyboard.press("Enter");
+			await expect(
+				page.getByRole("dialog", { name: "Share", exact: true }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("dialog").getByRole("img", { name: "X", exact: true }),
+			).toBeVisible();
+			await page.keyboard.press("Escape");
+			await expect(page.getByRole("dialog")).toHaveCount(0);
+			await expect(share).toBeFocused();
+			await page.screenshot({
+				path: `/tmp/evame-floating-labels-${viewport.width}.png`,
+			});
+		}
+		await page.setViewportSize({ width: 1280, height: 900 });
+		console.log(
+			"PC・スマホのバーでView・Like・Shareの文字を表示せず、アイコン・言語表示・共有のキーボード操作を維持する",
+		);
 		await page.screenshot({
 			path: "/tmp/evame-ui-restored-article-desktop.png",
 		});
@@ -800,9 +837,6 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.getByRole("dialog", { name: "使い方", exact: true }),
 		).toBeVisible();
-		await expect(
-			page.getByRole("dialog", { name: "使い方", exact: true }),
-		).not.toContainText("フローティングコントローラー");
 		assert.equal(
 			notificationReads,
 			0,

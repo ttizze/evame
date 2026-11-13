@@ -23,34 +23,15 @@ export function FloatingControls({
 	/* --- Buttons --- */
 	const Buttons = (
 		<div className="flex gap-6 justify-center">
-			<div className="flex flex-col items-center gap-1 group">
-				<Suspense fallback={null}>
-					<ViewCycle
-						afterClick={ignoreNextScroll}
-						sourceLocale={sourceLocale}
-						userLocale={userLocale}
-					/>
-				</Suspense>
-				<span className="text-[10px] leading-none text-muted-foreground transition-colors group-hover:text-foreground">
-					View
-				</span>
-			</div>
-
-			{likeButton && (
-				<div className="flex flex-col items-center gap-1 group">
-					<div className="h-10 w-10">{likeButton}</div>
-					<span className="text-[10px] leading-none text-muted-foreground transition-colors group-hover:text-foreground">
-						Like
-					</span>
-				</div>
-			)}
-
-			<div className="flex flex-col items-center gap-1 group">
-				<ShareDialog />
-				<span className="text-[10px] leading-none text-muted-foreground transition-colors group-hover:text-foreground">
-					Share
-				</span>
-			</div>
+			<Suspense fallback={null}>
+				<ViewCycle
+					afterClick={ignoreNextScroll}
+					sourceLocale={sourceLocale}
+					userLocale={userLocale}
+				/>
+			</Suspense>
+			{likeButton && <div className="h-10 w-10">{likeButton}</div>}
+			<ShareDialog />
 		</div>
 	);
 

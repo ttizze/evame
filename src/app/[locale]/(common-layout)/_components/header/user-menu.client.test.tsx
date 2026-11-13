@@ -181,9 +181,6 @@ it("使い方を開いても通知を既読にせず、Escapeで説明を閉じ�
 	expect(
 		await screen.findByRole("dialog", { name: "使い方" }),
 	).toHaveTextContent("原文と翻訳を縦に並べて読めます");
-	expect(screen.getByRole("dialog", { name: "使い方" })).not.toHaveTextContent(
-		"フローティングコントローラー",
-	);
 	await user.keyboard("{Escape}");
 	expect(screen.queryByRole("dialog", { name: "使い方" })).toBeNull();
 	expect(screen.getByRole("menuitem", { name: "通知" })).toBeVisible();
