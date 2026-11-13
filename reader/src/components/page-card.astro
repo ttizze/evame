@@ -1,9 +1,8 @@
 ---
-import { Heart, Loader2 } from "lucide-react";
 import { PageList } from "@/app/[locale]/(common-layout)/_components/page/page-list";
 import type { PageForList } from "@/app/[locale]/types";
-import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
+import { LikeButton } from "../../../shared/like-button";
 
 interface Props {
 	page: PageForList;
@@ -14,5 +13,5 @@ const { page, locale, index } = Astro.props;
 ---
 <PageList PageForList={page} locale={locale} index={index} likeButton={null} avatar={null}>
   <UserAvatar slot="avatar" className="w-5 h-5 shrink-0" image={page.userImage} name={page.userHandle} />
-  <div slot="like-button" class="flex items-center gap-2"><Button aria-label="Like" aria-pressed={false} className="bg-background cursor-pointer" data-like-page={page.id} disabled size="icon" type="button" variant="ghost"><Heart className="h-5 w-5 rounded-full" data-like-heart fill="none" /><span data-like-pending hidden><Loader2 className="h-5 w-5 rounded-full" /></span></Button></div>
+  <LikeButton slot="like-button" pageId={page.id} likeCount={null} liked={false} pending={false} disabled={true} onClick={null} />
 </PageList>

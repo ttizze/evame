@@ -558,7 +558,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await page.goto(`${baseUrl}/ja/${handle}/${pageSlug}-child`);
 		await expect(
 			page.locator('astro-island[component-export="PageNavigationIsland"]'),
-		).not.toHaveAttribute("ssr", "");
+		).toHaveAttribute("ssr", "");
 		await page.getByRole("button", { name: "page tree", exact: true }).click();
 		await expect(
 			page.getByRole("navigation", { name: "Page tree" }),
@@ -571,9 +571,9 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		).toBeVisible();
 		await page.keyboard.press("Escape");
 		await page.goto(`${baseUrl}/ja/${handle}/${pageSlug}`);
-		await expect(
-			page.locator('astro-island[component-export="ArticleToolsIsland"]'),
-		).not.toHaveAttribute("ssr", "");
+		await page.evaluate(() =>
+			customElements.whenDefined("evame-header-scroll").then(() => {}),
+		);
 		await page.locator("#comments").scrollIntoViewIfNeeded();
 		await expect(
 			page
@@ -589,12 +589,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.locator("[data-article-header] > div").first(),
 		).not.toHaveCSS("position", "fixed");
-		await expect(
-			page
-				.locator('astro-island[component-export="PageLikeButtonClient"]')
-				.first()
-				.getByText("0", { exact: true }),
-		).toBeVisible();
+		await expect(page.locator("[data-like-count]").first()).toBeVisible();
 		await expect(
 			page
 				.getByRole("link", { name: "Markdownをダウンロード" })
@@ -803,9 +798,9 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		).toHaveCount(0);
 		// 見出しリンクのフォーカス移動・hashスクロールから独立して上下スクロールを検証する。
 		await page.goto(`${baseUrl}/ja/${handle}/${pageSlug}`);
-		await expect(
-			page.locator('astro-island[component-export="ArticleToolsIsland"]'),
-		).not.toHaveAttribute("ssr", "");
+		await page.evaluate(() =>
+			customElements.whenDefined("evame-header-scroll").then(() => {}),
+		);
 		await page.locator("#comments").scrollIntoViewIfNeeded();
 		await expect(
 			page
@@ -863,7 +858,10 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		);
 		await like.click();
 		assert.equal((await liked).status(), 200);
-		await expect(like.locator("svg")).toHaveAttribute("fill", "currentColor");
+		await expect(like.locator("[data-like-heart]")).toHaveAttribute(
+			"fill",
+			"currentColor",
+		);
 		const comments = page.locator("#comments");
 		await comments.scrollIntoViewIfNeeded();
 		const commentEditor = comments
@@ -946,15 +944,13 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		const changeView = page.getByRole("button", {
 			name: "Currently: Both languages (Click to change)",
 		});
-		await page
-			.locator('astro-island[component-export="ControlsIsland"]:not([ssr])')
-			.waitFor({ state: "attached" });
+
 		await changeView.click();
 		await expect(page.locator("body")).toHaveAttribute("data-view", "user");
 		const segment = page.locator("article .js-content .seg-tr").first();
-		await page
-			.locator('astro-island[component-export="TranslationsIsland"]:not([ssr])')
-			.waitFor({ state: "attached" });
+		await page.evaluate(() =>
+			customElements.whenDefined("evame-translations").then(() => {}),
+		);
 		await segment.press("Enter");
 		const translation = page.getByPlaceholder("Or enter your translation...");
 		await translation.fill("ブラウザーから翻訳を追加");

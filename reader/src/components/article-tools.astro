@@ -1,0 +1,14 @@
+---
+import type { TocItem } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_domain/extract-toc-items";
+import { ArticleActionsIsland, ArticleToolsFrame } from "./article-tools";
+
+const { locale, createdAt, ...actions } = Astro.props as {
+	locale: string;
+	createdAt: Date;
+	search: string;
+	handle: string;
+	slug: string;
+	tocItems: TocItem[];
+};
+---
+<evame-header-scroll class="block" data-article-header><ArticleToolsFrame locale={locale} createdAt={createdAt} actions={null}><ArticleActionsIsland slot="actions" locale={locale} {...actions} client:interaction /></ArticleToolsFrame></evame-header-scroll>

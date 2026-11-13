@@ -11,7 +11,9 @@ class HeaderScroll extends HTMLElement {
 	private visible = true;
 
 	connectedCallback() {
-		const header = this.querySelector("header");
+		const header = this.querySelector<HTMLElement>(
+			"header,[data-scroll-header]",
+		);
 		if (!header) return;
 		this.header = header;
 		this.space = document.createElement("div");
@@ -51,15 +53,13 @@ class HeaderScroll extends HTMLElement {
 		this.visible = state.visible;
 		header.classList.toggle("-translate-y-full", !state.visible);
 		header.classList.toggle("translate-y-0", state.visible);
-		for (const name of [
-			"fixed",
-			"top-0",
-			"left-0",
-			"right-0",
-			"shadow-md",
-			"dark:shadow-gray-900",
-		])
+		for (const name of ["fixed", "top-0", "left-0", "right-0", "shadow-md"])
 			header.classList.toggle(name, state.pinned);
+		if (header.tagName === "HEADER")
+			header.classList.toggle("dark:shadow-gray-900", state.pinned);
+		header
+			.querySelector("[data-scroll-padding]")
+			?.classList.toggle("px-4", state.pinned);
 		if (this.space) this.space.hidden = !state.pinned;
 	};
 }

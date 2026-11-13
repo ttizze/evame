@@ -1,28 +1,12 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, expect, it, vi } from "vitest";
-import { ArticleToolsIsland } from "./article-tools";
-
-const scroll = vi.hoisted(() => ({ isPinned: false }));
-
-vi.mock(
-	"@/app/[locale]/(common-layout)/_components/header/hooks/use-header-scroll",
-	() => ({
-		useHeaderScroll: () => ({
-			headerRef: { current: null },
-			isPinned: scroll.isPinned,
-			isVisible: true,
-			headerHeight: 72,
-		}),
-	}),
-);
+import { afterEach, expect, it } from "vitest";
+import { ArticleActionsIsland, ArticleToolsFrame } from "./article-tools";
 
 const article = {
 	locale: "ja",
 	search: "",
 	handle: "alice",
 	slug: "notes",
-	name: "著者の名前",
-	image: null,
 	createdAt: new Date("2025-01-01T23:30:00-08:00"),
 	tocItems: [
 		{
@@ -39,13 +23,16 @@ const article = {
 	],
 };
 
-beforeEach(() => {
-	scroll.isPinned = false;
-});
 afterEach(cleanup);
 
 it("著者アイコンと名前を表示せず、代わりにUTCの日付を大きく表示する", () => {
-	const { container } = render(<ArticleToolsIsland {...article} />);
+	const { container } = render(
+		<ArticleToolsFrame
+			actions={null}
+			createdAt={article.createdAt}
+			locale={article.locale}
+		/>,
+	);
 	const date = screen.getByText("2025/1/2");
 	expect(date.tagName).toBe("TIME");
 	expect(date.getAttribute("datetime")).toBe("2025-01-02T07:30:00.000Z");
@@ -57,18 +44,6 @@ it("著者アイコンと名前を表示せず、代わりにUTCの日付を大�
 	expect(container.querySelector('[data-slot="avatar"]')).toBeNull();
 });
 
-it("上スクロールで固定したサブヘッダーにも著者ではなく日付を表示する", () => {
-	scroll.isPinned = true;
-	const { container } = render(<ArticleToolsIsland {...article} />);
-	expect(screen.getByText("2025/1/2").tagName).toBe("TIME");
-	expect(screen.queryByText("著者の名前")).toBeNull();
-	expect(
-		container
-			.querySelector("[data-article-header] > div")
-			?.classList.contains("fixed"),
-	).toBe(true);
-});
-
 it.each([
 	["ja", "2025/1/2"],
 	["en", "1/2/2025"],
@@ -76,14 +51,28 @@ it.each([
 	["ko", "2025. 1. 2."],
 	["zh", "2025/1/2"],
 ])("%sでもタイムゾーンを変えず日付を表示する", (locale, date) => {
-	render(<ArticleToolsIsland {...article} locale={locale} />);
+	render(
+		<ArticleToolsFrame
+			actions={null}
+			createdAt={article.createdAt}
+			locale={locale}
+		/>,
+	);
 	expect(screen.getByText(date).getAttribute("datetime")).toBe(
 		"2025-01-02T07:30:00.000Z",
 	);
 });
 
 it("Markdownのダウンロードと目次の開閉を維持する", () => {
-	render(<ArticleToolsIsland {...article} />);
+	render(
+		<ArticleActionsIsland
+			handle={article.handle}
+			locale={article.locale}
+			search={article.search}
+			slug={article.slug}
+			tocItems={article.tocItems}
+		/>,
+	);
 	expect(
 		screen
 			.getByRole("link", { name: "Markdownをダウンロード" })

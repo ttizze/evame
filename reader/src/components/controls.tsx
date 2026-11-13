@@ -1,21 +1,19 @@
 import { useQueryState } from "nuqs";
+import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
 import { FloatingControls } from "@/app/[locale]/(common-layout)/_components/floating-controls/floating-controls.client";
-import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
 import { viewQueryState } from "@/app/[locale]/(common-layout)/_components/view-query";
 import { IslandProviders } from "./providers";
 
 function Controls({
 	locale,
 	sourceLocale,
-	pageId,
-	likeCount,
+	likeButton,
 }: {
 	locale: string;
 	sourceLocale: string;
-	pageId: number | null;
-	likeCount: number;
+	likeButton: ReactNode;
 }) {
 	const [view] = useQueryState("view", viewQueryState);
 	const hydrated = useHydrated();
@@ -24,16 +22,8 @@ function Controls({
 	}, [hydrated, view]);
 	return (
 		<FloatingControls
-			alwaysVisible={pageId === null}
-			likeButton={
-				pageId === null ? undefined : (
-					<PageLikeButtonClient
-						initialLikeCount={likeCount}
-						pageId={pageId}
-						showCount={false}
-					/>
-				)
-			}
+			alwaysVisible
+			likeButton={likeButton}
 			sourceLocale={sourceLocale}
 			userLocale={locale}
 		/>

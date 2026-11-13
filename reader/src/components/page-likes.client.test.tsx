@@ -102,3 +102,60 @@ it("一覧から外れたら進行中の取得を中止する", () => {
 	document.body.replaceChildren();
 	expect(signal.aborted).toBe(true);
 });
+
+it("表示モードの起動でボタンが再作成されても、いいねの件数と送信中の状態を引き継ぐ", async () => {
+	fetchStates.mockResolvedValue(
+		Response.json({ states: { 7: { liked: false, likeCount: 12 } } }),
+	);
+	showCards();
+	const root = document.querySelector("evame-page-likes")!;
+	await vi.waitFor(() =>
+		expect(document.querySelector("button")?.disabled).toBe(false),
+	);
+	let complete!: (value: unknown) => void;
+	action.mockReturnValue(
+		new Promise((resolve) => {
+			complete = resolve;
+		}),
+	);
+	document.querySelector<HTMLButtonElement>("button")!.click();
+	root.innerHTML =
+		'<button data-like-page="7" disabled><svg data-like-heart fill="none"></svg><span data-like-pending hidden></span></button><span data-like-count="7">10</span>';
+	await vi.waitFor(() =>
+		expect(root.querySelector("[data-like-count]")?.textContent).toBe("13"),
+	);
+	expect(root.querySelector("button")?.disabled).toBe(true);
+	complete({ success: true, data: { liked: true, likeCount: 15 } });
+	await vi.waitFor(() =>
+		expect(root.querySelector("button")?.disabled).toBe(false),
+	);
+	expect(root.querySelector("[data-like-count]")?.textContent).toBe("15");
+});
+
+it("記事本文とバーのいいね件数を同時に更新し、失敗時は取得した件数へ戻す", async () => {
+	fetchStates.mockResolvedValue(
+		Response.json({ states: { 7: { liked: false, likeCount: 12 } } }),
+	);
+	showCards();
+	const count = document.createElement("span");
+	count.dataset.likeCount = "7";
+	count.textContent = "10";
+	document.querySelector("evame-page-likes")!.append(count);
+	await vi.waitFor(() => expect(count.textContent).toBe("12"));
+	let complete!: (value: unknown) => void;
+	action.mockReturnValueOnce(
+		new Promise((resolve) => {
+			complete = resolve;
+		}),
+	);
+	document.querySelector<HTMLButtonElement>("button")!.click();
+	expect(count.textContent).toBe("13");
+	complete({ success: false });
+	await vi.waitFor(() => expect(count.textContent).toBe("12"));
+	action.mockResolvedValueOnce({
+		success: true,
+		data: { liked: true, likeCount: 15 },
+	});
+	document.querySelector<HTMLButtonElement>("button")!.click();
+	await vi.waitFor(() => expect(count.textContent).toBe("15"));
+});

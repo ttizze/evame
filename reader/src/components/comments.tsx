@@ -1,14 +1,22 @@
 import { useQueryState } from "nuqs";
-import { useEffect } from "react";
+import { lazy, type ReactNode, Suspense, useEffect } from "react";
 import useSWR from "swr";
 import { useTranslations } from "use-intl";
+import { useHydrated } from "@/app/_hooks/use-hydrated";
 import { PageCommentForm } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/_components/page-comment-form/client";
-import { PageCommentList } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/_components/page-comment-list/server";
 import { CommentUpdates } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/comment-updates";
 import type { PageCommentsData } from "@/app/api/_service/load-page-comments";
 import { Button } from "@/components/ui/button";
 import { paginationUrl, readerPageQueryState } from "./pagination-url";
 import { IslandProviders } from "./providers";
+
+const PageCommentList = lazy(async () => ({
+	default: (
+		await import(
+			"@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/comment/_components/page-comment-list/server"
+		)
+	).PageCommentList,
+}));
 
 function Comments({
 	locale,
@@ -17,6 +25,7 @@ function Comments({
 	pathname,
 	initialPage,
 	initialData,
+	initialList,
 }: {
 	locale: string;
 	pageId: number;
@@ -24,7 +33,9 @@ function Comments({
 	pathname: string;
 	initialPage: number;
 	initialData: PageCommentsData;
+	initialList: ReactNode;
 }) {
+	const hydrated = useHydrated();
 	const [page, setPage] = useQueryState(
 		"page",
 		readerPageQueryState.withOptions({ history: "push" }),
@@ -66,7 +77,14 @@ function Comments({
 						{t("closed")}
 					</p>
 				)}
-				<PageCommentList comments={data?.comments ?? []} userLocale={locale} />
+				{!hydrated
+					? initialList
+					: data &&
+						data.comments.length > 0 && (
+							<Suspense fallback={initialList}>
+								<PageCommentList comments={data.comments} userLocale={locale} />
+							</Suspense>
+						)}
 				{data && data.totalPages > 1 && (
 					<nav
 						aria-label={t("pagination")}
