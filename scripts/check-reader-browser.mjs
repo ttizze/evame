@@ -820,7 +820,9 @@ export async function checkReaderBrowser(
 			.getByRole("link", { name: "通知確認ユーザー", exact: true })
 			.last()
 			.getAttribute("href");
+		await page.mouse.move(0, 0);
 		await followNotification.focus();
+		await expect(followNotification).toBeFocused();
 		await page.keyboard.press("Enter");
 		await expect(page).toHaveURL(`${baseUrl}${actorProfile}`);
 		await page.goto(`${baseUrl}/ja`);
