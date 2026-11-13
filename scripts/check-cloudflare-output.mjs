@@ -376,6 +376,8 @@ try {
 		articleHtml.includes("Cloudflareで更新保存"),
 		"記事本文をSSRできる",
 	);
+	const tocScript = articleHtml.match(/src="([^"]*toc\.astro[^"]*\.js)"/)?.[1];
+	assert.ok(tocScript, "目次のある記事だけで専用の開閉処理を配信する");
 	const readerAssetPath = articleHtml.match(/component-url="([^"]+)"/)?.[1];
 	assert.ok(readerAssetPath?.startsWith("/_astro/"));
 	const readerAsset = await worker.fetch(`http://localhost${readerAssetPath}`);
@@ -543,6 +545,10 @@ try {
 		assert.ok(
 			!html.includes('component-export="TranslationsIsland"'),
 			`${locale}: 段落を操作しないトップには翻訳フォームを配信しない`,
+		);
+		assert.ok(
+			!html.includes(tocScript),
+			`${locale}: トップに目次のコードを配信しない`,
 		);
 		const feed = await worker.fetch(
 			`http://localhost/api/home-feed?locale=${locale}`,
