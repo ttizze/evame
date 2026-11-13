@@ -1,0 +1,4 @@
+---
+const { pageIds } = Astro.props as { pageIds: number[] };
+---
+<evame-page-likes class="contents" data-page-ids={[...new Set(pageIds)].join(",")}><slot /></evame-page-likes>

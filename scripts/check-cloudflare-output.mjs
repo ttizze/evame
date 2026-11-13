@@ -71,6 +71,7 @@ const handle = `worker-test-${userId}`;
 const pageSlug = `worker-test-${userId}`;
 let worker;
 let harness;
+let emptyHome;
 try {
 	harness = createTestHarness({
 		workers: [
@@ -107,6 +108,18 @@ try {
 		assert.equal(await response.text(), "null");
 	}
 	console.log("Workersランタイムで認証APIを繰り返し呼び出せる");
+	if (
+		process.env.EVAME_BROWSER_TEST === "true" &&
+		["all", "reader"].includes(browserSuite)
+	) {
+		const { chromium, expect } = await import("@playwright/test");
+		const browser = await chromium.launch();
+		const page = await browser.newPage();
+		emptyHome = { browser, page };
+		await page.goto(`${serverUrl.origin}/ja`);
+		await page.waitForLoadState("networkidle");
+		await expect(page.locator("main article")).toHaveCount(0);
+	}
 	await database.execute({
 		sql: "INSERT INTO users (id, name, search_name, handle, email) VALUES (?, ?, ?, ?, ?)",
 		args: [
@@ -118,10 +131,39 @@ try {
 		],
 	});
 	await database.execute({
-		sql: "INSERT INTO sessions (id, token, user_id, expires_at) VALUES (?, ?, ?, ?)",
-		args: [randomUUID(), token, userId, Date.now() + 3600000],
+		sql: "INSERT INTO sessions (id, token, user_id, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+		args: [
+			randomUUID(),
+			token,
+			userId,
+			Date.now() + 5 * 24 * 60 * 60 * 1000,
+			Date.now() - 2 * 24 * 60 * 60 * 1000,
+			Date.now() - 2 * 24 * 60 * 60 * 1000,
+		],
 	});
 	const cookie = `better-auth.session_token=${encodeURIComponent(`${token}.${createHmac("sha256", authSecret).update(token).digest("base64")}`)}`;
+	const header = await worker.fetch(
+		"http://localhost/api/reader-header?locale=ja",
+		{ headers: { cookie } },
+	);
+	assert.equal(header.status, 200);
+	assert.equal((await header.json()).user.handle, handle);
+	assert.equal(header.headers.get("Cache-Control"), "private, no-store");
+	assert.ok(
+		header.headers
+			.getSetCookie()
+			.some((value) => value.startsWith("better-auth.session_token=")),
+		"Readerのヘッダー取得でもセッション延長Cookieを返す",
+	);
+	const renewedSession = await database.execute({
+		sql: "SELECT expires_at FROM sessions WHERE token = ?",
+		args: [token],
+	});
+	assert.ok(
+		Number(renewedSession.rows[0].expires_at) >
+			Date.now() + 6 * 24 * 60 * 60 * 1000,
+		"閲覧中のセッションを既存と同じ7日間へ延長する",
+	);
 	const session = await worker.fetch("http://localhost/api/auth/get-session", {
 		headers: { cookie },
 	});
@@ -360,6 +402,25 @@ try {
 		sql: "UPDATE pages SET status = 'PUBLIC' WHERE slug = ?",
 		args: [pageSlug],
 	});
+	if (emptyHome) {
+		const { expect } = await import("@playwright/test");
+		await emptyHome.page.evaluate(() =>
+			window.dispatchEvent(new Event("focus")),
+		);
+		await expect(
+			emptyHome.page.getByRole("link", { name: "Workers保存テスト" }).first(),
+		).toBeVisible();
+		await expect(
+			emptyHome.page
+				.locator("main article")
+				.first()
+				.getByRole("button", { name: "Like", exact: true }),
+		).toBeEnabled();
+		await emptyHome.browser.close();
+		console.log(
+			"記事が0件のトップからも自動更新で記事と操作可能ないいねを表示できる",
+		);
+	}
 	const storedPage = await database.execute({
 		sql: "SELECT id FROM pages WHERE slug = ?",
 		args: [pageSlug],
@@ -468,12 +529,34 @@ try {
 			locale + ": AstroでHTMLを描画する",
 		);
 		assert.ok(
-			!html.includes("about-section"),
+			!/<[a-z][^>]*\bclass="[^"]*\babout-section\b/.test(html),
 			locale + ": トップに長い説明文を表示しない",
 		);
 		assert.ok(
 			html.includes("Workers保存テスト"),
 			locale + ": 最初のHTMLに記事一覧を含める",
+		);
+		assert.ok(
+			!html.includes('component-export="HomeFeedIsland"'),
+			`${locale}: 一覧全体をhydrateしない`,
+		);
+		assert.ok(
+			!html.includes('component-export="TranslationsIsland"'),
+			`${locale}: 段落を操作しないトップには翻訳フォームを配信しない`,
+		);
+		const feed = await worker.fetch(
+			`http://localhost/api/home-feed?locale=${locale}`,
+		);
+		const feedHtml = await feed.text();
+		assert.equal(feed.status, 200, feedHtml.slice(0, 500));
+		assert.equal(feed.headers.get("cache-control"), "private, no-store");
+		assert.ok(
+			feedHtml.includes("data-home-pages") &&
+				feedHtml.includes("Workers保存テスト"),
+		);
+		assert.ok(
+			!feedHtml.includes("<html") && !feedHtml.includes("<header"),
+			`${locale}: 一覧のHTMLだけを更新する`,
 		);
 		assert.ok(
 			!html.includes("better-auth.session_token="),
@@ -487,6 +570,12 @@ try {
 	console.log(
 		"全21言語で記事一覧を最初のAstro HTMLに含め、説明文をAboutに分離できる",
 	);
+	for (const query of ["", "?locale=unknown", "?locale=ja%2F..%2Fen"]) {
+		assert.equal(
+			(await worker.fetch(`http://localhost/api/home-feed${query}`)).status,
+			400,
+		);
+	}
 	const about = await worker.fetch("http://localhost/ja/about");
 	assert.equal(about.status, 200);
 	assert.ok(
@@ -666,6 +755,7 @@ try {
 		console.error(JSON.stringify({ workerLogs: logs.slice(-20) }));
 	throw error;
 } finally {
+	await emptyHome?.browser.close();
 	await harness?.close();
 	await new Promise((resolve, reject) =>
 		queueServer.close((error) => (error ? reject(error) : resolve())),

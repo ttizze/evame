@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
+import { headerScrollState } from "../../../../../../../shared/header-scroll-state";
 import { subscribeScrollY } from "./scroll-y-store";
 
 export function useHeaderScroll() {
-	const scrollThreshold = 5;
 	const [isPinned, setIsPinned] = useState(false);
 	const [isVisible, setIsVisible] = useState(true);
 	const headerRef = useRef<HTMLDivElement>(null);
@@ -34,31 +34,13 @@ export function useHeaderScroll() {
 	useEffect(() => {
 		lastScrollYRef.current = window.scrollY;
 		const applyScrollState = (currentScrollY: number) => {
-			const last = lastScrollYRef.current;
-
-			const isScrollingDown = currentScrollY > last;
-			const isScrollingUp = currentScrollY < last;
-			const scrollDifference = Math.abs(currentScrollY - last);
-
-			let nextPinned = isPinnedRef.current;
-			let nextVisible = isVisibleRef.current;
-
-			if (currentScrollY <= 0) {
-				nextPinned = false;
-				nextVisible = true;
-			} else if (
-				headerRef.current &&
-				headerRef.current.getBoundingClientRect().top > 0
-			) {
-				nextPinned = false;
-				nextVisible = true;
-			} else if (isScrollingDown && scrollDifference > scrollThreshold) {
-				nextVisible = false;
-				nextPinned = false;
-			} else if (isScrollingUp && scrollDifference > scrollThreshold) {
-				nextVisible = true;
-				nextPinned = true;
-			}
+			const { pinned: nextPinned, visible: nextVisible } = headerScrollState(
+				currentScrollY,
+				lastScrollYRef.current,
+				headerRef.current?.getBoundingClientRect().top ?? 0,
+				isPinnedRef.current,
+				isVisibleRef.current,
+			);
 
 			if (nextPinned !== isPinnedRef.current) {
 				isPinnedRef.current = nextPinned;

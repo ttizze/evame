@@ -1,0 +1,17 @@
+---
+import { HeaderFrame } from "@/app/[locale]/(common-layout)/_components/header";
+import { UserAvatar } from "@/components/user-avatar";
+import HeaderActions from "./header-actions.astro";
+
+const { locale, search, blog } = Astro.props as {
+	locale: string;
+	search: string;
+	blog: { handle: string; name: string; image: string | null } | null;
+};
+---
+<evame-header-scroll class="contents">
+  {blog ? <HeaderFrame locale={locale} brand={null} userSlot={null}>
+    <a slot="brand" class="flex min-w-0 items-center gap-2 font-semibold" href={`/${locale}/${blog.handle}`}><span aria-hidden="true" class="contents"><UserAvatar className="h-8 w-8" image={blog.image} name={blog.name} /></span><span class="truncate">{blog.name}</span></a>
+    <HeaderActions slot="userSlot" locale={locale} search={search} />
+  </HeaderFrame> : <HeaderFrame locale={locale} brand={null} userSlot={null}><HeaderActions slot="userSlot" locale={locale} search={search} /></HeaderFrame>}
+</evame-header-scroll>

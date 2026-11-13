@@ -1,7 +1,10 @@
 {
 	"ShareDialog": {
-		"trigger": "공유"
+		"trigger": "공유",
+		"copyLink": "링크 복사",
+		"copied": "링크가 복사되었습니다"
 	},
+	"LoginMethods": { "continueWithEmail": "또는 이메일로 계속하기" },
 	"AppLogin": {
 		"title": "앱 접근 허용",
 		"description": "Evame iPhone 앱이 내 문서와 이미지를 읽고 쓰고 공개 상태를 변경하도록 허용합니다. 직접 앱에서 로그인을 시작한 경우에만 허용하세요.",

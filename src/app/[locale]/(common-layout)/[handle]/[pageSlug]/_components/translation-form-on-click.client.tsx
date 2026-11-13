@@ -1,6 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AddAndVoteTranslations } from "./translation-section/add-and-vote-translations.client";
+
+const AddAndVoteTranslations = lazy(async () => ({
+	default: (
+		await import("./translation-section/add-and-vote-translations.client")
+	).AddAndVoteTranslations,
+}));
 
 type ActiveState = {
 	segmentId: number | null;
@@ -132,7 +137,9 @@ export function TranslationFormOnClick({ pathname }: { pathname: string }) {
 	if (!activeState.segmentId || !activeState.rootEl) return null;
 
 	return createPortal(
-		<AddAndVoteTranslations open segmentId={activeState.segmentId} />,
+		<Suspense fallback={null}>
+			<AddAndVoteTranslations open segmentId={activeState.segmentId} />
+		</Suspense>,
 		activeState.rootEl,
 	);
 }

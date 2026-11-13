@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+	analyticsConsentStates,
+	analyticsConsentStorageKey,
+	createAnalyticsScripts,
+} from "../../../../shared/analytics-consent";
 
-export const analyticsConsentStorageKey = "evame.analytics-consent";
-const analyticsConsentStates = ["accepted", "rejected"] as const;
 type AnalyticsConsentState = (typeof analyticsConsentStates)[number];
 
 export function AnalyticsConsent({
@@ -36,16 +39,10 @@ export function AnalyticsConsent({
 	useEffect(() => {
 		if (consent !== "accepted" || !gaTrackingId) return;
 
-		const externalScript = document.createElement("script");
-		externalScript.async = true;
-		externalScript.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaTrackingId)}`;
-		const configScript = document.createElement("script");
-		configScript.textContent = `window.dataLayer=window.dataLayer||[];window.gtag=function(){window.dataLayer.push(arguments)};window.gtag('js',new Date());window.gtag('config',${JSON.stringify(gaTrackingId).replaceAll("<", "\\u003c")});`;
-
-		document.head.append(externalScript, configScript);
+		const scripts = createAnalyticsScripts(gaTrackingId);
+		document.head.append(...scripts);
 		return () => {
-			externalScript.remove();
-			configScript.remove();
+			for (const script of scripts) script.remove();
 		};
 	}, [consent, gaTrackingId]);
 

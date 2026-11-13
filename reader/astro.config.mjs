@@ -11,11 +11,66 @@ export default defineConfig({
 	publicDir: "../public",
 	session: false,
 	adapter: cloudflare({ imageService: "passthrough" }),
-	integrations: [react()],
+	integrations: [
+		react(),
+		{
+			name: "interaction",
+			hooks: {
+				"astro:config:setup": ({ addClientDirective }) => {
+					addClientDirective({
+						name: "interaction",
+						entrypoint: fileURLToPath(
+							new URL("./src/directives/interaction.ts", import.meta.url),
+						),
+					});
+				},
+			},
+		},
+	],
 	vite: {
 		envPrefix: ["PUBLIC_", "VITE_"],
 		resolve: {
 			alias: { "@": fileURLToPath(new URL("../src", import.meta.url)) },
+		},
+		environments: {
+			client: {
+				build: {
+					rolldownOptions: {
+						output: {
+							codeSplitting: {
+								// 初回に共有する依存だけをまとめ、フォームや本文処理は遅延チャンクに残す。
+								groups: [
+									{
+										name: "react",
+										test: /node_modules\/react\//,
+										priority: 30,
+									},
+									{
+										name: "monitoring",
+										test: (id) =>
+											id.endsWith("/src/instrument.client.ts") ||
+											/node_modules\/@sentry(?:-internal)?\//.test(id),
+										priority: 25,
+									},
+									{
+										name: "reader-native",
+										test: (id) => id.endsWith("/reader/src/client.ts"),
+										priority: 5,
+									},
+									{
+										name: "reader-interactions",
+										test: (id) =>
+											/\/reader\/src\/components\/(?:header-(?:guest|account)|controls)\.tsx$/.test(
+												id,
+											) || id.endsWith("/login/_components/login-methods.tsx"),
+										priority: 2,
+									},
+								],
+							},
+						},
+					},
+				},
+			},
 		},
 		plugins: [
 			tailwindcss(),

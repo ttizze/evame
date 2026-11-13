@@ -5,6 +5,7 @@ import { ProfilePageJsonLd } from "@/components/seo/json-ld";
 import { messages } from "@/i18n/messages";
 import type { loadReaderData } from "../../../src/app/api/reader-data/_service/load-reader-data";
 import PageCard from "./page-card.astro";
+import PageLikes from "./page-likes.astro";
 import Pagination from "./pagination.astro";
 import { ProfileFollowIsland } from "./profile-follow";
 import { ProfileSortIsland } from "./profile-sort";
@@ -32,5 +33,5 @@ const t = (messages[locale as keyof typeof messages] ?? messages.en).Reader;
 </section>
 <ProfileSortIsland locale={locale} sort={sort} search={Astro.url.search} pathname={Astro.url.pathname} client:load />
 {data.pageForLists.length === 0 && <p class="text-center text-gray-500 mt-10">{t.noPages}</p>}
-<div>{data.pageForLists.map((page) => <PageCard page={page} locale={locale} index={null} />)}</div>
+<PageLikes pageIds={data.pageForLists.map((page) => page.id)}><div>{data.pageForLists.map((page) => <PageCard page={page} locale={locale} index={null} />)}</div></PageLikes>
 <Pagination currentPage={page} totalPages={data.totalPages} />

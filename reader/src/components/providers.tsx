@@ -1,7 +1,8 @@
 import { NuqsAdapter } from "nuqs/adapters/react";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { IntlProvider } from "use-intl";
 import { messages } from "@/i18n/messages";
+import { acquireToaster } from "./toaster.client";
 
 export function IslandProviders({
 	locale,
@@ -12,6 +13,7 @@ export function IslandProviders({
 	search: string;
 	children: ReactNode;
 }) {
+	useEffect(acquireToaster, []);
 	return (
 		<IntlProvider
 			locale={locale}

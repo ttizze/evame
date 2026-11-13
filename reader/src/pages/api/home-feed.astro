@@ -1,0 +1,30 @@
+---
+import { fromJSON } from "seroval";
+import { supportedLocaleOptions } from "@/app/_constants/locale";
+import type { loadHomePage } from "@/app/[locale]/(common-layout)/_components/home/service/load-home-page";
+import HomePages from "../../components/home-pages.astro";
+import { fetchReaderData } from "../../infra/fetch-reader-data";
+
+export const partial = true;
+Astro.cache.set(false);
+Astro.response.headers.set("Cache-Control", "private, no-store");
+const locale = Astro.url.searchParams.get("locale");
+if (
+	!locale ||
+	!supportedLocaleOptions.some((option) => option.code === locale)
+) {
+	return new Response(null, { status: 400 });
+}
+const response = await fetchReaderData(
+	Astro.url.origin,
+	`/${locale}`,
+	"",
+	null,
+	null,
+);
+if (!response.ok) return new Response(null, { status: response.status });
+const result = fromJSON(await response.json()) as {
+	page: { data: Awaited<ReturnType<typeof loadHomePage>> };
+};
+---
+<HomePages locale={locale} data={result.page.data} />

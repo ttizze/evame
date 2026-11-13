@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { chromium, expect } from "@playwright/test";
+import { chromium, expect, webkit } from "@playwright/test";
 import { TextWriter, Uint8ArrayReader, ZipReader } from "@zip.js/zip.js";
 import { fromJSON } from "seroval";
 import { checkHeaderBrowser } from "./check-header-browser.mjs";
@@ -114,6 +114,12 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await noScript.close();
 		console.log("JavaScript無効でも記事一覧・本文・表示モードを読める");
 		await checkHeaderBrowser(browser, baseUrl, cookie, handle, pageSlug);
+		const safari = await webkit.launch();
+		try {
+			await checkHeaderBrowser(safari, baseUrl, cookie, handle, pageSlug);
+		} finally {
+			await safari.close();
+		}
 		const context = await browser.newContext({
 			viewport: { width: 1280, height: 900 },
 		});
@@ -134,6 +140,15 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		]);
 		const page = await context.newPage();
 		const errors = [];
+		const initialScripts = new Set();
+		const trackInitialScript = (request) => {
+			if (
+				request.resourceType() === "script" &&
+				new URL(request.url()).origin === baseUrl
+			)
+				initialScripts.add(request.url());
+		};
+		page.on("request", trackInitialScript);
 		let homeRefreshes = 0;
 		let notificationReads = 0;
 		page.on("response", async (response) => {
@@ -150,8 +165,8 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 					body: await response.text().catch(() => "Response disposed"),
 				});
 			if (
-				url.pathname === "/api/reader-data" &&
-				url.searchParams.get("path") === "/ja"
+				url.pathname === "/api/home-feed" &&
+				url.searchParams.get("locale") === "ja"
 			)
 				homeRefreshes++;
 		});
@@ -169,6 +184,29 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		).toBeVisible({ timeout: 15000 });
 		await expect(page.locator("header").getByTestId("unread-count")).toHaveText(
 			"1",
+		);
+		await page.waitForLoadState("networkidle");
+		page.off("request", trackInitialScript);
+		assert.ok(
+			initialScripts.size <= 8,
+			`トップの初回JSは8要求以内に収める: ${initialScripts.size}`,
+		);
+		assert.ok(
+			[...initialScripts].every((url) => !url.includes("reader-interactions")),
+			"トップの表示だけでメニュー・フォーム・React DOMを読み込まない",
+		);
+		const sessionLoads = await page.evaluate(() =>
+			performance
+				.getEntriesByType("resource")
+				.filter(
+					(entry) => new URL(entry.name).pathname === "/api/reader-header",
+				)
+				.map((entry) => entry.initiatorType),
+		);
+		assert.deepEqual(
+			sessionLoads,
+			["link"],
+			"個人用ヘッダーはHTMLから先行取得し、表示時には再取得しない",
 		);
 		await expect(
 			page
@@ -242,7 +280,59 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.click();
 		await expect
 			.poll(() => homeRefreshes, { timeout: 35000 })
-			.toBeGreaterThan(1);
+			.toBeGreaterThan(0);
+		await expect(
+			page.locator('astro-island[component-export="HomeFeedIsland"]'),
+		).toHaveCount(0);
+		await expect(page.locator("[data-home-pages] astro-island")).toHaveCount(0);
+		const firstLike = page
+			.locator("main article")
+			.first()
+			.getByRole("button", { name: "Like", exact: true });
+		await expect(firstLike).toBeEnabled();
+		const initialHomeVersion = await page
+			.locator("[data-home-pages]")
+			.getAttribute("data-home-version");
+		const homeLikedFill = await firstLike
+			.locator("svg.lucide-heart")
+			.getAttribute("fill");
+		const likeResponse = page.waitForResponse(
+			(response) =>
+				new URL(response.url()).pathname === "/api/reader-actions" &&
+				response.request().method() === "POST",
+		);
+		await firstLike.click();
+		assert.equal((await likeResponse).status(), 200);
+		await expect(firstLike.locator("svg.lucide-heart")).toHaveAttribute(
+			"fill",
+			homeLikedFill === "none" ? "currentColor" : "none",
+		);
+		await page.getByRole("heading", { name: "新着記事", exact: true }).click();
+		const refreshedFeed = page.waitForResponse(
+			(response) => new URL(response.url()).pathname === "/api/home-feed",
+		);
+		await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+		assert.equal((await refreshedFeed).status(), 200);
+		await expect(page.locator("[data-home-pages]")).not.toHaveAttribute(
+			"data-home-version",
+			initialHomeVersion,
+		);
+		await expect(firstLike).toBeEnabled();
+		await expect(firstLike.locator("svg.lucide-heart")).toHaveAttribute(
+			"fill",
+			homeLikedFill === "none" ? "currentColor" : "none",
+		);
+		const restoreHomeLike = page.waitForResponse(
+			(response) =>
+				new URL(response.url()).pathname === "/api/reader-actions" &&
+				response.request().method() === "POST",
+		);
+		await firstLike.click();
+		assert.equal((await restoreHomeLike).status(), 200);
+		await expect(firstLike.locator("svg.lucide-heart")).toHaveAttribute(
+			"fill",
+			homeLikedFill,
+		);
 		console.log(
 			"本文HTMLを最初から配信しながら、トップの記事一覧の自動更新も維持する",
 		);
@@ -972,7 +1062,12 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		);
 		await expect(
 			page.locator("header").getByTestId("unread-count"),
-		).toHaveCount(0);
+		).not.toBeVisible();
+		await expect(
+			page
+				.locator("header")
+				.getByRole("button", { name: "アカウントメニュー", exact: true }),
+		).not.toHaveAttribute("aria-describedby", /.+/);
 		const followNotification = page
 			.getByTestId("notifications-menu-content")
 			.getByRole("menuitem")
@@ -1021,12 +1116,14 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await page.keyboard.press("Escape");
 		await page.goto(`${baseUrl}/ja/${handle}`);
 		await expect(
-			page.locator('astro-island[component-export="HeaderIsland"]'),
-		).not.toHaveAttribute("ssr", "");
+			page
+				.locator("header")
+				.getByRole("button", { name: "アカウントメニュー", exact: true }),
+		).toBeVisible();
 		await page
 			.getByRole("button", { name: "アカウントメニュー", exact: true })
 			.click();
-		await page.getByTestId("locale-selector-button").click();
+		await page.getByRole("menu").getByTestId("locale-selector-button").click();
 		const localeSearch = page.getByPlaceholder("search...");
 		await localeSearch.fill("fr");
 		await localeSearch.press("ArrowDown");
@@ -1289,8 +1386,10 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		});
 		await page.setViewportSize({ width: 390, height: 844 });
 		await expect(
-			page.locator('astro-island[component-export="HeaderIsland"]'),
-		).not.toHaveAttribute("ssr", "");
+			page
+				.locator("header")
+				.getByRole("button", { name: "アカウントメニュー", exact: true }),
+		).toBeVisible();
 		await page
 			.getByRole("button", { name: "アカウントメニュー", exact: true })
 			.click();
@@ -1353,7 +1452,27 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 					},
 					{ message: "通知へ切り替えた後、モバイルの画面内へ再配置する" },
 				)
-				.toBe(true);
+				.toBe(true)
+				.catch(async (error) => {
+					console.error(
+						await page.evaluate(() => ({
+							viewport: { width: innerWidth, height: innerHeight },
+							scrollY,
+							header: document
+								.querySelector("header")
+								?.getBoundingClientRect()
+								.toJSON(),
+							menu: document
+								.querySelector('[data-testid="notifications-menu-content"]')
+								?.getBoundingClientRect()
+								.toJSON(),
+						})),
+					);
+					await page.screenshot({
+						path: `/tmp/evame-notifications-overflow-${width}.png`,
+					});
+					throw error;
+				});
 			await expect
 				.poll(() =>
 					page.evaluate(() => ({ x: window.scrollX, y: window.scrollY })),

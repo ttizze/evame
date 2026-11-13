@@ -27,6 +27,7 @@ import { Route as ApiPageMarkdownRouteImport } from './routes/api/page-markdown'
 import { Route as ApiReaderActionsRouteImport } from './routes/api/reader-actions'
 import { Route as ApiReaderCommentsRouteImport } from './routes/api/reader-comments'
 import { Route as ApiReaderDataRouteImport } from './routes/api/reader-data'
+import { Route as ApiReaderHeaderRouteImport } from './routes/api/reader-header'
 import { Route as ApiReaderStateRouteImport } from './routes/api/reader-state'
 import { Route as ApiSegmentTranslationsRouteImport } from './routes/api/segment-translations'
 import { Route as ApiSentryExampleApiRouteImport } from './routes/api/sentry-example-api'
@@ -146,6 +147,11 @@ const ApiReaderCommentsRoute = ApiReaderCommentsRouteImport.update({
 const ApiReaderDataRoute = ApiReaderDataRouteImport.update({
   id: '/api/reader-data',
   path: '/api/reader-data',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiReaderHeaderRoute = ApiReaderHeaderRouteImport.update({
+  id: '/api/reader-header',
+  path: '/api/reader-header',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiReaderStateRoute = ApiReaderStateRouteImport.update({
@@ -332,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/api/reader-actions': typeof ApiReaderActionsRoute
   '/api/reader-comments': typeof ApiReaderCommentsRoute
   '/api/reader-data': typeof ApiReaderDataRoute
+  '/api/reader-header': typeof ApiReaderHeaderRoute
   '/api/reader-state': typeof ApiReaderStateRoute
   '/api/segment-translations': typeof ApiSegmentTranslationsRoute
   '/api/sentry-example-api': typeof ApiSentryExampleApiRoute
@@ -382,6 +389,7 @@ export interface FileRoutesByTo {
   '/api/reader-actions': typeof ApiReaderActionsRoute
   '/api/reader-comments': typeof ApiReaderCommentsRoute
   '/api/reader-data': typeof ApiReaderDataRoute
+  '/api/reader-header': typeof ApiReaderHeaderRoute
   '/api/reader-state': typeof ApiReaderStateRoute
   '/api/segment-translations': typeof ApiSegmentTranslationsRoute
   '/api/sentry-example-api': typeof ApiSentryExampleApiRoute
@@ -434,6 +442,7 @@ export interface FileRoutesById {
   '/api/reader-actions': typeof ApiReaderActionsRoute
   '/api/reader-comments': typeof ApiReaderCommentsRoute
   '/api/reader-data': typeof ApiReaderDataRoute
+  '/api/reader-header': typeof ApiReaderHeaderRoute
   '/api/reader-state': typeof ApiReaderStateRoute
   '/api/segment-translations': typeof ApiSegmentTranslationsRoute
   '/api/sentry-example-api': typeof ApiSentryExampleApiRoute
@@ -486,6 +495,7 @@ export interface FileRouteTypes {
     | '/api/reader-actions'
     | '/api/reader-comments'
     | '/api/reader-data'
+    | '/api/reader-header'
     | '/api/reader-state'
     | '/api/segment-translations'
     | '/api/sentry-example-api'
@@ -536,6 +546,7 @@ export interface FileRouteTypes {
     | '/api/reader-actions'
     | '/api/reader-comments'
     | '/api/reader-data'
+    | '/api/reader-header'
     | '/api/reader-state'
     | '/api/segment-translations'
     | '/api/sentry-example-api'
@@ -587,6 +598,7 @@ export interface FileRouteTypes {
     | '/api/reader-actions'
     | '/api/reader-comments'
     | '/api/reader-data'
+    | '/api/reader-header'
     | '/api/reader-state'
     | '/api/segment-translations'
     | '/api/sentry-example-api'
@@ -635,6 +647,7 @@ export interface RootRouteChildren {
   ApiReaderActionsRoute: typeof ApiReaderActionsRoute
   ApiReaderCommentsRoute: typeof ApiReaderCommentsRoute
   ApiReaderDataRoute: typeof ApiReaderDataRoute
+  ApiReaderHeaderRoute: typeof ApiReaderHeaderRoute
   ApiReaderStateRoute: typeof ApiReaderStateRoute
   ApiSegmentTranslationsRoute: typeof ApiSegmentTranslationsRoute
   ApiSentryExampleApiRoute: typeof ApiSentryExampleApiRoute
@@ -781,6 +794,13 @@ declare module '@tanstack/react-router' {
       path: '/api/reader-data'
       fullPath: '/api/reader-data'
       preLoaderRoute: typeof ApiReaderDataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/reader-header': {
+      id: '/api/reader-header'
+      path: '/api/reader-header'
+      fullPath: '/api/reader-header'
+      preLoaderRoute: typeof ApiReaderHeaderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/reader-state': {
@@ -1120,6 +1140,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiReaderActionsRoute: ApiReaderActionsRoute,
   ApiReaderCommentsRoute: ApiReaderCommentsRoute,
   ApiReaderDataRoute: ApiReaderDataRoute,
+  ApiReaderHeaderRoute: ApiReaderHeaderRoute,
   ApiReaderStateRoute: ApiReaderStateRoute,
   ApiSegmentTranslationsRoute: ApiSegmentTranslationsRoute,
   ApiSentryExampleApiRoute: ApiSentryExampleApiRoute,

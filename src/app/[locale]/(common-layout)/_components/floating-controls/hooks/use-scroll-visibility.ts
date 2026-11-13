@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { subscribeScrollY } from "@/app/[locale]/(common-layout)/_components/header/hooks/scroll-y-store";
+import { floatingControlsVisible } from "../../../../../../../shared/floating-controls-visible";
 
 /**
  * 読み込み時に表示 → 下スクロールで非表示 → 上スクロールで再表示
@@ -32,9 +33,11 @@ export function useScrollVisibility(alwaysVisible = false) {
 		}
 
 		const apply = (cur: number) => {
-			const dir = cur - lastY.current; // +down / –up
-			// ② 上スクロール or 最上部近くなら表示
-			const next = dir <= 0 || cur < window.innerHeight * 0.03;
+			const next = floatingControlsVisible(
+				cur,
+				lastY.current,
+				window.innerHeight,
+			);
 
 			if (next !== visibleRef.current) {
 				visibleRef.current = next;

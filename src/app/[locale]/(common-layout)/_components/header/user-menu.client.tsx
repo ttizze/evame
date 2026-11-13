@@ -6,15 +6,13 @@ import {
 	LogOutIcon,
 	SettingsIcon,
 } from "lucide-react";
-import { useId, useRef, useState } from "react";
+import { type ReactElement, useId, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import { useTranslations } from "use-intl";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { LocaleSelector } from "@/app/[locale]/(common-layout)/_components/header/locale-selector/client";
-import { ModeToggle } from "@/app/[locale]/(common-layout)/_components/header/mode-toggle";
 import type { NotificationRowsWithRelations } from "@/app/api/notifications/_types/notification";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -23,6 +21,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { AccountMenuButton } from "../../../../../../shared/header/account-menu-button";
 import { NotificationsList } from "./notifications-list";
 import { TranslationHelpPopover } from "./translation-help-popover.client";
 
@@ -30,6 +29,9 @@ interface UserMenuProps {
 	currentUser: { handle: string; name: string; image: string; plan: string };
 	hasGeminiApiKey?: boolean;
 	locale: string;
+	initialUnreadCount: number;
+	defaultOpen: boolean;
+	themeControl: ReactElement;
 }
 
 async function fetchNotifications() {
@@ -46,19 +48,22 @@ export function UserMenu({
 	currentUser,
 	hasGeminiApiKey = false,
 	locale,
+	initialUnreadCount,
+	defaultOpen,
+	themeControl,
 }: UserMenuProps) {
 	const t = useTranslations("Header");
 	const unreadDescriptionId = useId();
 	const menuRef = useRef<HTMLDivElement>(null);
 	const [showNotifications, setShowNotifications] = useState(false);
 	const { data, error, isLoading, mutate } = useSWR(
-		"/api/notifications",
+		["/api/notifications", currentUser.handle],
 		fetchNotifications,
 		{ revalidateOnFocus: true },
 	);
 	const unreadCount =
 		data?.notifications.filter((notification) => !notification.read).length ??
-		0;
+		initialUnreadCount;
 	const readNotifications = async () => {
 		try {
 			await mutate(await fetchNotifications(), { revalidate: false });
@@ -108,41 +113,21 @@ export function UserMenu({
 
 	return (
 		<DropdownMenu
+			defaultOpen={defaultOpen}
 			modal={false}
 			onOpenChange={(open) => {
 				if (open) setShowNotifications(false);
 			}}
 		>
-			<DropdownMenuTrigger
-				aria-describedby={unreadCount > 0 ? unreadDescriptionId : undefined}
-				aria-label={t("accountMenu")}
-				className="relative"
-			>
-				<Avatar className="w-6 h-6 cursor-pointer">
-					<AvatarImage
-						alt={currentUser.name}
-						height={40}
-						src={currentUser.image}
-						width={40}
-					/>
-					<AvatarFallback>
-						{currentUser.handle.charAt(0).toUpperCase()}
-					</AvatarFallback>
-				</Avatar>
-				{unreadCount > 0 && (
-					<>
-						<span
-							aria-hidden="true"
-							className="absolute -right-2 -top-2 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] font-semibold leading-4"
-							data-testid="unread-count"
-						>
-							{unreadCount > 99 ? "99+" : unreadCount}
-						</span>
-						<span className="sr-only" id={unreadDescriptionId}>
-							{t("unreadNotifications", { count: unreadCount })}
-						</span>
-					</>
-				)}
+			<DropdownMenuTrigger asChild>
+				<AccountMenuButton
+					aria-label={t("accountMenu")}
+					descriptionId={unreadDescriptionId}
+					handle={currentUser.handle}
+					image={currentUser.image}
+					unreadCount={unreadCount}
+					unreadDescription={t("unreadNotifications", { count: unreadCount })}
+				/>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent
 				align="end"
@@ -156,6 +141,7 @@ export function UserMenu({
 					showNotifications ? "notifications-menu-content" : undefined
 				}
 				ref={menuRef}
+				updatePositionStrategy="always"
 			>
 				{showNotifications ? (
 					<>
@@ -244,7 +230,7 @@ export function UserMenu({
 							</a>
 						</DropdownMenuItem>
 						<DropdownMenuItem asChild className="px-4 py-3">
-							<ModeToggle />
+							{themeControl}
 						</DropdownMenuItem>
 						<LocaleSelector
 							currentHandle={currentUser.handle}

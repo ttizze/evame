@@ -24,6 +24,7 @@ function Controls({
 	}, [hydrated, view]);
 	return (
 		<FloatingControls
+			alwaysVisible={pageId === null}
 			likeButton={
 				pageId === null ? undefined : (
 					<PageLikeButtonClient

@@ -11,24 +11,24 @@ import { readerCacheTags } from "../../../src/app/_domain/reader-cache-tags";
 import type { loadReaderData } from "../../../src/app/api/reader-data/_service/load-reader-data";
 import { AboutIsland } from "../components/about";
 import Article from "../components/article.astro";
-import { ControlsIsland } from "../components/controls";
-import { HomeFeedIsland } from "../components/home";
+import FloatingControls from "../components/floating-controls.astro";
+import Home from "../components/home.astro";
 import Layout from "../components/layout.astro";
 import PageCard from "../components/page-card.astro";
+import PageLikes from "../components/page-likes.astro";
 import Pagination from "../components/pagination.astro";
 import Profile from "../components/profile.astro";
 import { SearchIsland } from "../components/search";
+import { TranslationsIsland } from "../components/translations";
+import { fetchReaderData } from "../infra/fetch-reader-data";
 
-const url = new URL("/api/reader-data", Astro.url);
-url.searchParams.set("path", Astro.url.pathname);
-url.searchParams.set("search", Astro.url.search);
-const backendHeaders = {
-	cookie: Astro.request.headers.get("cookie") ?? "",
-	authorization: Astro.request.headers.get("authorization") ?? "",
-};
-const response = env.PREVIEW_GATEWAY_ORIGIN
-	? await fetch(url.href, { headers: backendHeaders })
-	: await env.BACKEND.fetch(url.href, { headers: backendHeaders });
+const response = await fetchReaderData(
+	Astro.url.origin,
+	Astro.url.pathname,
+	Astro.url.search,
+	Astro.request.headers.get("cookie"),
+	Astro.request.headers.get("authorization"),
+);
 if (response.status === 404) return Astro.rewrite("/404");
 if (!response.ok)
 	throw new Error(`Reader data request failed: HTTP ${response.status}`);
@@ -80,26 +80,19 @@ const blog =
 				}
 			: null;
 const t = (messages[locale as keyof typeof messages] ?? messages.en).Reader;
-const pageIds =
-	result.kind === "article"
-		? [result.data.pageDetail.id]
-		: result.kind === "new" ||
-				result.kind === "tag" ||
-				result.kind === "profile"
-			? result.data.pageForLists.map((page) => page.id)
-			: [];
 ---
 <Layout blog={blog} locale={locale} title={metadata.title} description={metadata.description} canonical={metadata.alternates.canonical} gaTrackingId={gaTrackingId} commonLayout={result.kind !== "terms" && result.kind !== "privacy"}>
   <Fragment slot="head">{Object.entries(metadata.alternates.languages).map(([lang, href]) => <link rel="alternate" hreflang={lang} href={href} />)}{("image" in metadata && metadata.image) && <meta property="og:image" content={metadata.image} />}{result.kind === "article" && !result.cacheable && <meta name="robots" content="noindex, nofollow" />}<meta property="og:type" content={result.kind === "article" ? "article" : result.kind === "profile" ? "profile" : "website"} /></Fragment>
   <OrganizationJsonLd /><WebSiteJsonLd locale={locale} />
-  {result.kind === "home" && <HomeFeedIsland locale={locale} initialData={result.data} client:load />}
+  {result.kind === "home" && <Home locale={locale} data={result.data} />}
   {result.kind === "article" && <Article data={result.data} locale={locale} page={result.page} isPublic={result.cacheable} />}
   {result.kind === "profile" && <Profile data={result.data} locale={locale} page={result.page} sort={result.sort} />}
   {result.kind === "about" && result.data.pageDetail && <AboutIsland locale={locale} search={Astro.url.search} pageDetail={result.data.pageDetail} stats={result.data.stats} client:idle />}
-  {(result.kind === "new" || result.kind === "tag") && <div class="flex flex-col gap-8 mb-12"><section class="flex flex-col gap-4"><h1 class="text-2xl font-semibold mb-4 flex items-center gap-2"><SparklesIcon className="w-4 h-4" />{result.kind === "tag" ? result.tagName : t.newPages}</h1>{result.data.pageForLists.map((page, index) => <PageCard page={page} locale={locale} index={index} />)}<Pagination currentPage={result.page} totalPages={result.data.totalPages} /></section></div>}
+  {(result.kind === "new" || result.kind === "tag") && <PageLikes pageIds={result.data.pageForLists.map((page) => page.id)}><div class="flex flex-col gap-8 mb-12"><section class="flex flex-col gap-4"><h1 class="text-2xl font-semibold mb-4 flex items-center gap-2"><SparklesIcon className="w-4 h-4" />{result.kind === "tag" ? result.tagName : t.newPages}</h1>{result.data.pageForLists.map((page, index) => <PageCard page={page} locale={locale} index={index} />)}<Pagination currentPage={result.page} totalPages={result.data.totalPages} /></section></div></PageLikes>}
   {result.kind === "search" && <SearchIsland initialResult={result} search={Astro.url.search} client:load />}
   {result.kind === "terms" && <TermsPage />}
   {result.kind === "privacy" && <PrivacyPage />}
-  {result.kind !== "article" && result.kind !== "terms" && result.kind !== "privacy" && <ControlsIsland locale={locale} search={Astro.url.search} sourceLocale="mixed" pageId={null} likeCount={0} client:idle />}
-  {pageIds.length > 0 && <PageLikeListClient pageIds={pageIds} client:idle />}
+  {(result.kind === "article" || result.kind === "about") && <TranslationsIsland locale={locale} search={Astro.url.search} pathname={Astro.url.pathname} client:idle />}
+  {result.kind !== "article" && result.kind !== "terms" && result.kind !== "privacy" && <FloatingControls locale={locale} search={Astro.url.search} sourceLocale="mixed" pageId={null} likeCount={0} />}
+  {result.kind === "article" && <PageLikeListClient pageIds={[result.data.pageDetail.id]} client:load />}
 </Layout>

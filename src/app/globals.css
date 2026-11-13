@@ -1,5 +1,6 @@
 @import "tailwindcss" source("..");
 @source "../../reader/src";
+@source "../../shared";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/inter";

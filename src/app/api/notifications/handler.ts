@@ -1,8 +1,8 @@
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { isSameOriginRequest } from "@/app/api/_utils/is-same-origin-request";
 import { PRIVATE_RESPONSE_HEADERS } from "@/app/api/_utils/private-response-headers";
+import { fetchNotificationRowsWithRelations } from "../_db/notifications/queries";
 import { markAllNotificationAsRead } from "./_db/mutations.server";
-import { fetchNotificationRowsWithRelations } from "./_db/queries.server";
 
 export async function getNotifications(request: Request): Promise<Response> {
 	const user = await getCurrentUserFromHeaders(request.headers);

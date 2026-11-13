@@ -1,10 +1,8 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-	AnalyticsConsent,
-	analyticsConsentStorageKey,
-} from "./analytics-consent.client";
+import { analyticsConsentStorageKey } from "../../../../shared/analytics-consent";
+import { AnalyticsConsent } from "./analytics-consent.client";
 
 const message = {
 	title: "Analytics cookies",

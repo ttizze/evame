@@ -1,6 +1,8 @@
 import * as Sentry from "@sentry/react";
 import { SENTRY_DSN } from "./_utils/sentry-dsn";
 
+export { captureException } from "@sentry/react";
+
 if (typeof window !== "undefined" && process.env.NODE_ENV === "production") {
 	Sentry.init({
 		dsn: import.meta.env.VITE_SENTRY_DSN ?? SENTRY_DSN,

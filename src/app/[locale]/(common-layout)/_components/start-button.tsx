@@ -29,6 +29,7 @@ export function StartButton({
 	}
 	return (
 		<LoginDialog
+			defaultOpen={false}
 			trigger={
 				<Button
 					className={cn(
