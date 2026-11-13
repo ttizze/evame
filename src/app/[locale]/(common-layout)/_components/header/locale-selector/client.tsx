@@ -1,5 +1,5 @@
 import { Check, ChevronDown, Languages } from "lucide-react";
-import { lazy, Suspense, useState } from "react";
+import { lazy, type ReactNode, Suspense, useState } from "react";
 import useSWR from "swr";
 import { useLocale, useTranslations } from "use-intl";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
@@ -51,6 +51,7 @@ const fetchTranslation: (url: string) => Promise<TranslationInfo> = async (
 
 // Props
 interface LocaleSelectorProps {
+	statusIcon?: ReactNode;
 	inMenu: boolean;
 	currentHandle?: string;
 	hasGeminiApiKey: boolean;
@@ -59,6 +60,7 @@ interface LocaleSelectorProps {
 
 //TODO: radix uiのせいで開発環境のモバイルで文字がぼける iphoneではボケてない､その他実機でもボケてたら対応する
 export function LocaleSelector({
+	statusIcon,
 	inMenu,
 	currentHandle,
 	hasGeminiApiKey,
@@ -126,7 +128,9 @@ export function LocaleSelector({
 		>
 			<div className="flex min-w-0 items-center [&_svg]:shrink-0">
 				{!inMenu && <Languages className="h-6 w-6 md:hidden" />}
-				{showIcons && sourceLocale ? (
+				{statusIcon ? (
+					<span className="hidden md:contents">{statusIcon}</span>
+				) : showIcons && sourceLocale ? (
 					<span className={inMenu ? "contents" : "hidden md:contents"}>
 						<TranslationProofStatusIcon
 							localeStatus={selectedOption?.status ?? "untranslated"}

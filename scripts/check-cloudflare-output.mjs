@@ -220,7 +220,7 @@ try {
 		form.set("title", "Workers保存テスト");
 		form.set(
 			"pageContent",
-			`<h2>Workersの目次見出し</h2><p>${text}</p><p><a href="https://x.com/example/status/123456789">X</a></p>`,
+			`<h2>Workersの目次見出し</h2><p>${text}</p><p><a href="https://x.com/example/status/123456789">X</a></p><h3>親の目次見出し</h3><h4>子の目次見出し</h4>`,
 		);
 		// NodeとWranglerのUndiciでFormDataの実装が異なるため、HTTP本文として渡す。
 		const request = new Request(`http://localhost/_serverFn/${editFunction}`, {
@@ -364,18 +364,20 @@ try {
 	);
 	const articleHtml = await article.text();
 	assert.ok(
-		articleHtml.includes('component-export="TweetsIsland"'),
-		"埋め込み用islandを含む",
+		!articleHtml.includes('component-export="TweetsIsland"'),
+		"埋め込みは本文全体のReact起動を待たず必要なページだけで読み込む",
 	);
 	assert.ok(
 		articleHtml.includes('data-tweet-id="123456789"'),
-		"埋め込みだけを独立したislandで起動する",
+		"埋め込みの起動に必要なIDをHTMLに含める",
 	);
 	assert.equal(article.status, 200, articleHtml);
 	assert.ok(
 		articleHtml.includes("Cloudflareで更新保存"),
 		"記事本文をSSRできる",
 	);
+	const tocScript = articleHtml.match(/src="([^"]*toc\.astro[^"]*\.js)"/)?.[1];
+	assert.ok(tocScript, "目次のある記事だけで専用の開閉処理を配信する");
 	const readerAssetPath = articleHtml.match(/component-url="([^"]+)"/)?.[1];
 	assert.ok(readerAssetPath?.startsWith("/_astro/"));
 	const readerAsset = await worker.fetch(`http://localhost${readerAssetPath}`);
@@ -544,6 +546,10 @@ try {
 			!html.includes('component-export="TranslationsIsland"'),
 			`${locale}: 段落を操作しないトップには翻訳フォームを配信しない`,
 		);
+		assert.ok(
+			!html.includes(tocScript),
+			`${locale}: トップに目次のコードを配信しない`,
+		);
 		const feed = await worker.fetch(
 			`http://localhost/api/home-feed?locale=${locale}`,
 		);
@@ -624,6 +630,100 @@ try {
 				4,
 				"コメント翻訳をローカルのキューへ投入する",
 			);
+			// 通知・一覧・翻訳キューをほかの操作群へ持ち越さない専用の投稿者と記事。
+			const articleUserId = randomUUID();
+			const articleHandle = `article-${articleUserId}`;
+			const articleToken = randomUUID();
+			await database.batch(
+				[
+					{
+						sql: "INSERT INTO users (id,name,search_name,handle,email) VALUES (?, 'Article Test', 'Article Test', ?, ?)",
+						args: [
+							articleUserId,
+							articleHandle,
+							`${articleHandle}@example.test`,
+						],
+					},
+					{
+						sql: "INSERT INTO sessions (id,token,user_id,expires_at) VALUES (?,?,?,?)",
+						args: [
+							randomUUID(),
+							articleToken,
+							articleUserId,
+							Date.now() + 3600000,
+						],
+					},
+				],
+				"write",
+			);
+			let articleParentId = null;
+			for (const suffix of ["", "-child"]) {
+				const content = await database.execute(
+					"INSERT INTO contents (kind) VALUES ('PAGE') RETURNING id",
+				);
+				const id = Number(content.rows[0].id);
+				await database.execute({
+					sql: "INSERT INTO pages (id,slug,source_locale,status,user_id,mdast_json,parent_id) SELECT ?, ?, source_locale, 'PUBLIC', ?, mdast_json, ? FROM pages WHERE slug = ?",
+					args: [
+						id,
+						`${articleHandle}${suffix}`,
+						articleUserId,
+						articleParentId,
+						pageSlug,
+					],
+				});
+				await database.execute({
+					sql: "INSERT INTO segments (content_id,number,text,text_and_occurrence_hash) SELECT ?,number,text,text_and_occurrence_hash FROM segments WHERE content_id = (SELECT id FROM pages WHERE slug = ?)",
+					args: [id, pageSlug],
+				});
+				if (articleParentId === null) articleParentId = id;
+			}
+			await database.execute({
+				sql: "INSERT INTO segment_translations (segment_id,user_id,locale,text) SELECT id, ?, 'en', 'Existing English translation' FROM segments WHERE content_id = ? AND number = 1",
+				args: [articleUserId, articleParentId],
+			});
+			const articleCookie = `better-auth.session_token=${encodeURIComponent(`${articleToken}.${createHmac("sha256", authSecret).update(articleToken).digest("base64")}`)}`;
+			const queuedBeforeArticle = queuedTranslations.length;
+			try {
+				const { chromium, webkit } = await import("@playwright/test");
+				const { checkArticleBrowser } = await import(
+					"./check-article-browser.mjs"
+				);
+				for (const engine of [chromium, webkit]) {
+					const browser = await engine.launch();
+					try {
+						await checkArticleBrowser(
+							browser,
+							serverUrl.origin,
+							articleCookie,
+							articleHandle,
+							articleHandle,
+						);
+					} finally {
+						await browser.close();
+					}
+				}
+				assert.equal(
+					queuedTranslations.length - queuedBeforeArticle,
+					8,
+					"コメント4件それぞれの英語・中国語への翻訳ジョブ8件をキューへ投入する",
+				);
+			} finally {
+				await database.batch(
+					[
+						{
+							sql: "DELETE FROM contents WHERE id IN (SELECT id FROM page_comments WHERE user_id = ?)",
+							args: [articleUserId],
+						},
+						{
+							sql: "DELETE FROM contents WHERE id IN (SELECT id FROM pages WHERE user_id = ?)",
+							args: [articleUserId],
+						},
+						{ sql: "DELETE FROM users WHERE id = ?", args: [articleUserId] },
+					],
+					"write",
+				);
+			}
 		}
 	}
 	const publicEdit = new FormData();

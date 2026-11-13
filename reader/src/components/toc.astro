@@ -1,0 +1,26 @@
+---
+import { List } from "lucide-react";
+import Toc from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/sub-header/toc";
+import type { TocItem } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_domain/extract-toc-items";
+import { cn } from "@/lib/utils";
+import {
+	IconPopoverButton,
+	iconPopoverContentClass,
+	popoverContentClass,
+} from "../../../shared/icon-popover";
+
+const { items } = Astro.props as { items: TocItem[] };
+---
+<evame-toc class="contents">
+	<span class="inline-flex" data-reader-toc-anchor>
+		<IconPopoverButton icon={null} title="Table of Contents" type="button" aria-haspopup="dialog" aria-expanded={false} aria-controls="reader-toc" data-state="closed"><List slot="icon" className="size-5" /></IconPopoverButton>
+	</span>
+	<template>
+		<div data-reader-toc-positioner style="position:fixed;left:0;top:0;transform:translate(0,-200%);min-width:max-content">
+			<div id="reader-toc" role="dialog" tabindex="-1" data-state="open" class={cn(popoverContentClass, iconPopoverContentClass)} style="animation:none">
+				<Toc items={items} />
+			</div>
+		</div>
+	</template>
+</evame-toc>
+<script>import "./toc.client";</script>

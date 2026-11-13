@@ -1,4 +1,5 @@
 ---
+import { LikeButton } from "../../../shared/like-button";
 import { ControlsIsland } from "./controls";
 
 const props = Astro.props as {
@@ -6,10 +7,9 @@ const props = Astro.props as {
 	search: string;
 	sourceLocale: string;
 	pageId: number | null;
-	likeCount: number;
 };
 ---
-{props.pageId === null ? <evame-floating-controls class="contents"><ControlsIsland {...props} client:interaction /></evame-floating-controls> : <ControlsIsland {...props} client:idle />}
+<evame-floating-controls class="contents"><ControlsIsland locale={props.locale} search={props.search} sourceLocale={props.sourceLocale} likeButton={null} client:interaction>{props.pageId !== null && <LikeButton slot="like-button" pageId={props.pageId} likeCount={null} liked={false} pending={false} disabled={true} onClick={null} />}</ControlsIsland></evame-floating-controls>
 <style is:global>
   evame-floating-controls[data-hidden] > astro-island > div {
     --tw-translate-y: calc(var(--spacing) * 20);

@@ -1,9 +1,7 @@
 import { DownloadIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { useHeaderScroll } from "@/app/[locale]/(common-layout)/_components/header/hooks/use-header-scroll";
 import { formatDate } from "@/app/[locale]/(common-layout)/_utils/format-date";
-import { TocTrigger } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/sub-header/toc-trigger";
-import type { TocItem } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_domain/extract-toc-items";
 import { Button } from "@/components/ui/button";
 import {
 	Tooltip,
@@ -13,69 +11,70 @@ import {
 } from "@/components/ui/tooltip";
 import { IslandProviders } from "./providers";
 
-function ArticleTools({
+export function ArticleToolsFrame({
 	locale,
-	handle,
-	slug,
 	createdAt,
-	tocItems,
+	actions,
 }: {
 	locale: string;
-	handle: string;
-	slug: string;
 	createdAt: Date;
-	tocItems: TocItem[];
+	actions: ReactNode;
 }) {
-	const { headerRef, isPinned, isVisible, headerHeight } = useHeaderScroll();
-	const t = useTranslations("Reader");
-	const downloadUrl = `/api/page-markdown?${new URLSearchParams({ locale, handle, slug })}`;
 	return (
-		<div data-article-header ref={headerRef}>
+		<div
+			className="transition-all duration-300 z-999 bg-background py-4"
+			data-scroll-header
+		>
 			<div
-				className={`transition-all duration-300 z-999 ${!isVisible ? "-translate-y-full" : ""} ${isPinned ? "fixed top-0 left-0 right-0 shadow-md" : ""} bg-background py-4`}
+				className="prose dark:prose-invert sm:prose lg:prose-lg mx-auto flex items-center not-prose justify-between gap-4 relative"
+				data-scroll-padding
 			>
-				<div
-					className={`prose dark:prose-invert sm:prose lg:prose-lg mx-auto flex items-center not-prose justify-between gap-4 relative ${isPinned ? "px-4" : ""}`}
+				<time
+					className="whitespace-nowrap text-base font-medium tabular-nums text-muted-foreground md:text-lg"
+					dateTime={new Date(createdAt).toISOString()}
 				>
-					<time
-						className="whitespace-nowrap text-base font-medium tabular-nums text-muted-foreground md:text-lg"
-						dateTime={new Date(createdAt).toISOString()}
-					>
-						{formatDate(createdAt, locale)}
-					</time>
-					<div className="flex items-center gap-2">
-						<TooltipProvider>
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<Button
-										aria-label={t("downloadMarkdown")}
-										asChild
-										variant="ghost"
-									>
-										<a download href={downloadUrl}>
-											<DownloadIcon className="h-4 w-4" />
-										</a>
-									</Button>
-								</TooltipTrigger>
-								<TooltipContent>{t("downloadMarkdown")}</TooltipContent>
-							</Tooltip>
-						</TooltipProvider>
-						<TocTrigger items={tocItems} />
-					</div>
-				</div>
+					{formatDate(createdAt, locale)}
+				</time>
+				{actions}
 			</div>
-			{isPinned && <div style={{ height: `${headerHeight}px` }} />}
 		</div>
 	);
 }
 
-export function ArticleToolsIsland({
+function ArticleActions({
+	locale,
+	handle,
+	slug,
+}: {
+	locale: string;
+	handle: string;
+	slug: string;
+}) {
+	const t = useTranslations("Reader");
+	const downloadUrl = `/api/page-markdown?${new URLSearchParams({ locale, handle, slug })}`;
+	return (
+		<TooltipProvider>
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<Button aria-label={t("downloadMarkdown")} asChild variant="ghost">
+						<a data-reader-tooltip download href={downloadUrl}>
+							<DownloadIcon className="h-4 w-4" />
+						</a>
+					</Button>
+				</TooltipTrigger>
+				<TooltipContent>{t("downloadMarkdown")}</TooltipContent>
+			</Tooltip>
+		</TooltipProvider>
+	);
+}
+
+export function ArticleActionsIsland({
 	search,
 	...props
-}: Parameters<typeof ArticleTools>[0] & { search: string }) {
+}: Parameters<typeof ArticleActions>[0] & { search: string }) {
 	return (
 		<IslandProviders locale={props.locale} search={search}>
-			<ArticleTools {...props} />
+			<ArticleActions {...props} />
 		</IslandProviders>
 	);
 }

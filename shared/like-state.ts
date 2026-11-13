@@ -1,4 +1,4 @@
-import type { LikeState } from "../service/like-api";
+import type { LikeState } from "../src/app/api/page-likes/_types/like-state";
 
 export function computeNextLikeState(current: LikeState): LikeState {
 	return {

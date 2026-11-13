@@ -35,9 +35,26 @@ vi.mock(
 
 it.each([true, false, undefined])(
 	"受付状態=%sで既存コメントを表示し、旧Gatewayの応答では受付ONを維持する",
-	(commentsEnabled) => {
+	async (commentsEnabled) => {
 		const initialData = {
-			comments: [],
+			comments: [
+				{
+					id: 1,
+					pageId: 1,
+					userId: "owner",
+					parentId: null,
+					locale: "ja",
+					mdastJson: {},
+					createdAt: new Date("2026-01-01T00:00:00Z"),
+					updatedAt: new Date("2026-01-01T00:00:00Z"),
+					isDeleted: false,
+					lastReplyAt: null,
+					replyCount: 0,
+					user: { handle: "owner", name: "Owner", image: "" },
+					content: { segments: [] },
+					replies: [],
+				},
+			],
 			count: 1,
 			totalPages: 1,
 			...(commentsEnabled === undefined ? {} : { commentsEnabled }),
@@ -45,6 +62,7 @@ it.each([true, false, undefined])(
 		render(
 			<CommentsIsland
 				initialData={initialData}
+				initialList={<p>配信済みコメント</p>}
 				initialPage={1}
 				locale="ja"
 				pageId={1}
@@ -52,7 +70,7 @@ it.each([true, false, undefined])(
 				search=""
 			/>,
 		);
-		expect(screen.getByText("既存コメントの本文").textContent).toBe(
+		expect((await screen.findByText("既存コメントの本文")).textContent).toBe(
 			"既存コメントの本文",
 		);
 		if (commentsEnabled === false) {

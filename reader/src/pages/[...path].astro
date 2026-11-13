@@ -2,7 +2,6 @@
 import { cache, env } from "cloudflare:workers";
 import { SparklesIcon } from "lucide-react";
 import { fromJSON } from "seroval";
-import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
 import { messages } from "@/i18n/messages";
 import PrivacyPage from "@/routes/-privacy-policy-page";
@@ -19,7 +18,6 @@ import PageLikes from "../components/page-likes.astro";
 import Pagination from "../components/pagination.astro";
 import Profile from "../components/profile.astro";
 import { SearchIsland } from "../components/search";
-import { TranslationsIsland } from "../components/translations";
 import { fetchReaderData } from "../infra/fetch-reader-data";
 
 const response = await fetchReaderData(
@@ -92,7 +90,6 @@ const t = (messages[locale as keyof typeof messages] ?? messages.en).Reader;
   {result.kind === "search" && <SearchIsland initialResult={result} search={Astro.url.search} client:load />}
   {result.kind === "terms" && <TermsPage />}
   {result.kind === "privacy" && <PrivacyPage />}
-  {(result.kind === "article" || result.kind === "about") && <TranslationsIsland locale={locale} search={Astro.url.search} pathname={Astro.url.pathname} client:idle />}
-  {result.kind !== "article" && result.kind !== "terms" && result.kind !== "privacy" && <FloatingControls locale={locale} search={Astro.url.search} sourceLocale="mixed" pageId={null} likeCount={0} />}
-  {result.kind === "article" && <PageLikeListClient pageIds={[result.data.pageDetail.id]} client:load />}
+  {(result.kind === "article" || result.kind === "about") && <evame-translations class="contents" data-locale={locale} data-search={Astro.url.search}></evame-translations>}
+  {result.kind !== "article" && result.kind !== "terms" && result.kind !== "privacy" && <FloatingControls locale={locale} search={Astro.url.search} sourceLocale="mixed" pageId={null} />}
 </Layout>

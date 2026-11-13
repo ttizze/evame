@@ -1,0 +1,20 @@
+---
+import { TranslationProofStatusIcon } from "@/app/[locale]/(common-layout)/_components/header/locale-selector/component/translation-proof-status-icon";
+
+const { locale, pageSlug } = Astro.props as {
+	locale: string;
+	pageSlug: string;
+};
+const proofs = [
+	"MACHINE_DRAFT",
+	"HUMAN_TOUCHED",
+	"PROOFREAD",
+	"VALIDATED",
+] as const;
+---
+<evame-locale-status class="contents" data-locale={locale} data-page-slug={pageSlug}>
+  <span class="contents" data-locale-status-icon></span>
+  <template data-locale-status="source"><TranslationProofStatusIcon localeStatus="source" /></template>
+  <template data-locale-status="untranslated"><TranslationProofStatusIcon localeStatus="untranslated" /></template>
+  {proofs.map((proofStatus) => <template data-locale-status={proofStatus}><TranslationProofStatusIcon localeStatus="translated" proofStatus={proofStatus} /></template>)}
+</evame-locale-status>

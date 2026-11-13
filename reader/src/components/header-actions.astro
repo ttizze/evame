@@ -5,15 +5,15 @@ import { HeaderAccountFrame } from "../../../shared/header/account-frame";
 import { AccountMenuButton } from "../../../shared/header/account-menu-button";
 import { HeaderLoadingActions } from "../../../shared/header/loading-actions";
 import { ReaderGuestHeader } from "./header-guest";
+import LocaleStatus from "./locale-status.astro";
 
 const { locale, search } = Astro.props as { locale: string; search: string };
 const t = (messages[locale as keyof typeof messages] ?? messages.en).Header;
-const article =
-	parseReaderRoute(Astro.url.pathname, Astro.url.search)?.kind === "article";
+const route = parseReaderRoute(Astro.url.pathname, Astro.url.search);
 ---
 <evame-header-actions class="contents" data-locale={locale} data-search={search}>
   <div data-header-loading><HeaderLoadingActions locale={locale} /></div>
-  <div data-header-guest hidden>{article ? <ReaderGuestHeader locale={locale} search={search} client:idle /> : <ReaderGuestHeader locale={locale} search={search} client:interaction />}</div>
+  <div data-header-guest hidden><ReaderGuestHeader locale={locale} search={search} localeStatus={null} client:interaction>{route?.kind === "article" && <LocaleStatus slot="locale-status" locale={locale} pageSlug={route.pageSlug} />}</ReaderGuestHeader></div>
   <div data-header-account-root hidden></div>
   <template data-header-account-template><HeaderAccountFrame locale={locale} handle=""><AccountMenuButton data-header-account aria-label={t.accountMenu} aria-haspopup="menu" aria-expanded={false} handle="" image="" unreadCount={0} unreadDescription="" descriptionId="reader-unread" /></HeaderAccountFrame></template>
 </evame-header-actions>

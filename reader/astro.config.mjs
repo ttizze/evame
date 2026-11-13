@@ -58,11 +58,9 @@ export default defineConfig({
 										priority: 5,
 									},
 									{
-										name: "reader-interactions",
+										name: "reader-ui",
 										test: (id) =>
-											/\/reader\/src\/components\/(?:header-(?:guest|account)|controls)\.tsx$/.test(
-												id,
-											) || id.endsWith("/login/_components/login-methods.tsx"),
+											id.endsWith("/reader/src/components/providers.tsx"),
 										priority: 2,
 									},
 								],

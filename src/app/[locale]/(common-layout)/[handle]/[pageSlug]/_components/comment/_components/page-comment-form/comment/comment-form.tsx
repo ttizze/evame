@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
-import { Editor } from "@/app/[locale]/_components/editor/editor";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { StartButton } from "@/app/[locale]/(common-layout)/_components/start-button";
 import { Button } from "@/components/ui/button";
+
+const Editor = lazy(async () => ({
+	default: (await import("@/app/[locale]/_components/editor/editor")).Editor,
+}));
 
 type Hidden = Record<string, string | number | undefined>;
 
@@ -27,6 +30,14 @@ export function CommentForm({
 	const [content, setContent] = useState("");
 	const { data: session } = authClient.useSession();
 	const currentUser = hydrated ? session?.user : undefined;
+	const placeholder = (
+		<div
+			aria-disabled="true"
+			className="rounded-md border border-input bg-muted px-2 py-3 opacity-50"
+		>
+			{t("commentPlaceholder")}
+		</div>
+	);
 
 	return (
 		<>
@@ -39,22 +50,19 @@ export function CommentForm({
 				)}
 
 				{currentUser ? (
-					<Editor
-						articleTitle={null}
-						className="rounded-md border border-input px-2"
-						defaultValue={content}
-						name="content"
-						onChange={setContent}
-						placeholder={t("commentPlaceholder")}
-						showMenus={false}
-					/>
+					<Suspense fallback={placeholder}>
+						<Editor
+							articleTitle={null}
+							className="rounded-md border border-input px-2"
+							defaultValue={content}
+							name="content"
+							onChange={setContent}
+							placeholder={t("commentPlaceholder")}
+							showMenus={false}
+						/>
+					</Suspense>
 				) : (
-					<div
-						aria-disabled="true"
-						className="rounded-md border border-input bg-muted px-2 py-3 opacity-50"
-					>
-						{t("commentPlaceholder")}
-					</div>
+					placeholder
 				)}
 
 				{!currentUser && (
