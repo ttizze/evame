@@ -21,7 +21,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import { ArticleTitleNode } from "./article-title";
+import { $isArticleTitleNode } from "./article-title";
 import {
 	$getParentListItem,
 	$isListContainer,
@@ -37,7 +37,7 @@ export function $getBlockDropTarget(
 	placement: "before" | "after" | "inside",
 ) {
 	let target = $getNodeByKey(targetKey);
-	if (target instanceof ArticleTitleNode) return null;
+	if ($isArticleTitleNode(target)) return null;
 	if (!isListItemSource && placement !== "inside") {
 		while ($isListItemNode(target)) {
 			const owner = $getParentListItem(target);
@@ -78,7 +78,7 @@ export function BlockDragMenu({
 				return null;
 			return editor.read("latest", () => {
 				const title = $getRoot().getFirstChild();
-				if (title instanceof ArticleTitleNode) {
+				if ($isArticleTitleNode(title) && title) {
 					const titleBounds = editor
 						.getElementByKey(title.getKey())
 						?.getBoundingClientRect();
@@ -91,7 +91,7 @@ export function BlockDragMenu({
 				} | null = null;
 				let distance = Infinity;
 				function visit(node: LexicalNode) {
-					if (node instanceof ArticleTitleNode) return;
+					if ($isArticleTitleNode(node)) return;
 					if ($isListNode(node) || $isListContainer(node)) {
 						if ($isElementNode(node))
 							for (const child of node.getChildren()) visit(child);

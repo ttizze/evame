@@ -1,6 +1,7 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
+import { toast } from "sonner";
 import { IntlProvider } from "use-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { messages } from "@/i18n/messages";
@@ -75,6 +76,66 @@ beforeEach(() => {
 afterEach(cleanupScrollContainer);
 
 describe("EditHeader", () => {
+	it.each(["PUBLIC", "DRAFT"] as const)(
+		"タグ保存中と失敗後は%sからの公開・翻訳を止め、再試行の成功後に許可する",
+		async (initialStatus) => {
+			const user = userEvent.setup();
+			let resolve!: (value: unknown) => void;
+			tagsAction.mockReturnValueOnce(
+				new Promise((done) => {
+					resolve = done;
+				}),
+			);
+			render(<EditHeader {...defaultProps} initialStatus={initialStatus} />, {
+				wrapper,
+			});
+			await user.click(
+				screen.getByRole("button", {
+					name:
+						initialStatus === "PUBLIC"
+							? "Publication settings: Public"
+							: "Publication settings: Private",
+				}),
+			);
+			await user.click(
+				screen.getByRole("button", { name: "Remove tag initial" }),
+			);
+			await waitFor(() => expect(tagsAction).toHaveBeenCalledOnce());
+			const action = screen.getByRole("button", {
+				name: messages.en.PublicationSettings[
+					initialStatus === "PUBLIC" ? "translate" : "publish"
+				],
+			});
+			expect(action).toBeDisabled();
+			expect(statusAction).not.toHaveBeenCalled();
+			await act(async () => resolve({ success: false }));
+			expect(action).toBeDisabled();
+			expect(statusAction).not.toHaveBeenCalled();
+			await user.click(
+				screen.getByRole("button", { name: "Retry saving tags" }),
+			);
+			await waitFor(() => expect(action).toBeEnabled());
+			await user.click(action);
+			await waitFor(() => expect(statusAction).toHaveBeenCalledOnce());
+		},
+	);
+	it("タグ保存に失敗しても公開済み記事を非公開へ変更できる", async () => {
+		const user = userEvent.setup();
+		tagsAction.mockResolvedValueOnce({ success: false });
+		render(<EditHeader {...defaultProps} />, { wrapper });
+		await user.click(
+			screen.getByRole("button", { name: "Publication settings: Public" }),
+		);
+		await user.click(
+			screen.getByRole("button", { name: "Remove tag initial" }),
+		);
+		await screen.findByRole("alert");
+		await user.click(screen.getByRole("button", { name: /^Private$/ }));
+		await waitFor(() => expect(statusAction).toHaveBeenCalledOnce());
+		expect((statusAction.mock.calls[0][0].data as FormData).get("status")).toBe(
+			"DRAFT",
+		);
+	});
 	it("公開範囲の後にタグを表示し、追加・削除したタグをメニューの再表示後も保つ", async () => {
 		const user = userEvent.setup();
 		render(<EditHeader {...defaultProps} />, { wrapper });
@@ -157,6 +218,7 @@ describe("EditHeader", () => {
 		"タグ保存の%sを再表示後も伝え、入力したタグを再試行で保存する",
 		async (failure) => {
 			const user = userEvent.setup();
+			vi.mocked(toast.error).mockClear();
 			if (failure === "失敗レスポンス")
 				tagsAction.mockResolvedValueOnce({ success: false });
 			else tagsAction.mockRejectedValueOnce(new Error("offline"));
@@ -171,6 +233,9 @@ describe("EditHeader", () => {
 				expect(screen.getByRole("alert")).toHaveTextContent(
 					"Could not save tags. Please try again.",
 				),
+			);
+			expect(toast.error).toHaveBeenCalledWith(
+				"Could not save tags. Please try again.",
 			);
 			await user.keyboard("{Escape}");
 			await user.click(trigger);

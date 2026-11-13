@@ -71,6 +71,7 @@ afterEach(() => {
 });
 beforeEach(() => {
 	vi.clearAllMocks();
+	vi.stubGlobal("DragEvent", class extends Event {});
 	// JSDOMには範囲の配置計測がない。貼り付け内容はこの層で、実際の選択位置はブラウザーで確認する。
 	Object.defineProperty(Range.prototype, "getBoundingClientRect", {
 		configurable: true,
@@ -99,8 +100,10 @@ describe("Lexicalの本文フォーム", () => {
 		expect(container.querySelectorAll('[contenteditable="true"]')).toHaveLength(
 			1,
 		);
-		expect(getByTestId("title-input").tagName).toBe("H1");
-		const editor = getNearestEditorFromDOMNode(getByTestId("title-input"));
+		const title = getByTestId("lexical-editor").querySelector("h1");
+		expect(title?.tagName).toBe("H1");
+		if (!title) throw new Error("題名がありません");
+		const editor = getNearestEditorFromDOMNode(title);
 		if (!editor) throw new Error("エディタがありません");
 		act(() =>
 			editor.update(
@@ -126,7 +129,7 @@ describe("Lexicalの本文フォーム", () => {
 		const form = container.querySelector("form");
 		if (!form) throw new Error("フォームがありません");
 		expect(new FormData(form).get("title")).toBe("題名追記");
-		expect(new FormData(form).get("pageContent")).toBe("**本文**");
+		expect(new FormData(form).get("pageContent")).toBe("\n\n**本文**");
 	});
 	it("前後のチェック項目から矢印で親へ移動し、Spaceで子リストと親本文を保って切り替える", async () => {
 		const editor = renderEditor(
@@ -362,6 +365,7 @@ describe("Lexicalの本文フォーム", () => {
 				Object.defineProperty(event, "clipboardData", {
 					value: {
 						files: [],
+						types: [format],
 						getData: (type: string) => (type === format ? content : ""),
 					},
 				});
@@ -386,7 +390,7 @@ describe("Lexicalの本文フォーム", () => {
 		[false, "text/html", "<ul><li>親<ul><li>子</li></ul></li></ul>"],
 		[true, "text/html", "<ul><li>親<ul><li>子</li></ul></li></ul>"],
 	] as const)(
-		"題名を除くコード本文全体を貼り替えてUndo/Redoできる（逆向き=%s、%s）",
+		"題名を除くコード本文の選択へ標準のコード貼り付けを使いUndo/Redoできる（逆向き=%s、%s）",
 		async (backward, format, content) => {
 			const { getByTestId } = render(
 				<IntlProvider locale="ja" messages={messages.ja}>
@@ -422,6 +426,7 @@ describe("Lexicalの本文フォーム", () => {
 			Object.defineProperty(event, "clipboardData", {
 				value: {
 					files: [],
+					types: [format],
 					getData: (type: string) => (type === format ? content : ""),
 				},
 			});
@@ -429,8 +434,17 @@ describe("Lexicalの本文フォーム", () => {
 			await act(async () => {
 				editor.dispatchCommand(PASTE_COMMAND, event as ClipboardEvent);
 			});
-			expect(editor.read($convertToMarkdownString)).toBe("- 親\n  - 子");
-			expect(getByTestId("title-input")).toHaveTextContent("題名");
+			const after = editor.read($convertToMarkdownString);
+			editor.read(() => {
+				const code = $getRoot().getChildren()[1];
+				expect(code.getType()).toBe("code");
+				expect(code.getTextContent()).toBe(
+					format === "text/plain" ? content : "親\n\n子",
+				);
+			});
+			expect(
+				getByTestId("lexical-editor").querySelector("h1"),
+			).toHaveTextContent("題名");
 			await act(async () => {
 				editor.dispatchCommand(UNDO_COMMAND, undefined);
 			});
@@ -438,7 +452,7 @@ describe("Lexicalの本文フォーム", () => {
 			await act(async () => {
 				editor.dispatchCommand(REDO_COMMAND, undefined);
 			});
-			expect(editor.read($convertToMarkdownString)).toBe("- 親\n  - 子");
+			expect(editor.read($convertToMarkdownString)).toBe(after);
 		},
 	);
 	for (const codeBlock of [true, false]) {
@@ -478,6 +492,7 @@ describe("Lexicalの本文フォーム", () => {
 			Object.defineProperty(event, "clipboardData", {
 				value: {
 					files: [],
+					types: ["text/plain"],
 					getData: (type: string) =>
 						type === "text/plain" ? 'const pattern = "**foo**";' : "",
 				},

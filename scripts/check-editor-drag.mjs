@@ -44,7 +44,9 @@ export async function checkEditorDrag(baseUrl, cookie, browserTypes) {
 			await page.goto(`${baseUrl}/ja`);
 			await page.getByRole("button", { name: "Create a new page" }).click();
 			await page.waitForURL(/\/edit$/);
-			const title = page.getByTestId("title-input");
+			const title = page
+				.getByTestId("lexical-editor")
+				.locator(":scope > h1:first-child");
 			const editor = page.getByTestId("lexical-editor");
 			const publicationSettings = page.getByRole("button", {
 				name: "公開設定: 自分のみ",
@@ -184,9 +186,9 @@ export async function checkEditorDrag(baseUrl, cookie, browserTypes) {
 					"最後の段落",
 					"",
 				]);
-				await expect(editor.locator(":scope > :first-child")).toHaveAttribute(
-					"data-testid",
-					"title-input",
+				await expect(editor.locator(":scope > :first-child")).toHaveJSProperty(
+					"tagName",
+					"H1",
 				);
 			}
 			await publicationSettings.click();

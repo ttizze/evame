@@ -87,7 +87,7 @@ export function EditorMenu({ pageRoot }: { pageRoot: Element | null }) {
 	});
 	useEffect(() => {
 		const update = () =>
-			editor.getEditorState().read(() => {
+			editor.read("latest", () => {
 				const selection = $getSelection();
 				if (!$isRangeSelection(selection)) return;
 				const anchor = selection.anchor.getNode();

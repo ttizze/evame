@@ -219,12 +219,15 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await page.getByRole("button", { name: "Create a new page" }).click();
 		await page.waitForURL(/\/edit$/);
 		const newPageUrl = page.url().replace(/\/edit$/, "");
-		await page.getByTestId("title-input").fill("ブラウザー新規保存");
+		await page
+			.getByTestId("lexical-editor")
+			.locator(":scope > h1:first-child")
+			.fill("ブラウザー新規保存");
 		const editor = page.locator(
 			'[data-testid="lexical-editor"][contenteditable=true]',
 		);
 		const firstBody = editor.locator(":scope > p").first();
-		const bodyBlocks = editor.locator(":scope > :not(.article-title)");
+		const bodyBlocks = editor.locator(":scope > :not(:first-child)");
 		await firstBody.click();
 		const insertBlock = page
 			.getByTestId("editor-floating-menu")

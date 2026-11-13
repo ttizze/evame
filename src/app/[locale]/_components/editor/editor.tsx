@@ -2,24 +2,31 @@ import { HistoryExtension } from "@lexical/history";
 import {
 	$convertFromMarkdownString,
 	$convertToMarkdownString,
+	$generateNodesFromMarkdownString,
 } from "@lexical/mdast";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalExtensionComposer } from "@lexical/react/LexicalExtensionComposer";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
+import { $createHeadingNode } from "@lexical/rich-text";
 import { TableExtension } from "@lexical/table";
 import { captureException } from "@sentry/react";
 import {
-	$create,
 	$createTextNode,
+	$findMatchingParent,
+	$getEditor,
 	$getRoot,
+	$isRangeSelection,
 	$onUpdate,
 	configExtension,
 	defineExtension,
 } from "lexical";
 import { type CSSProperties, useRef, useState } from "react";
-import { ArticleTitleExtension, ArticleTitleNode } from "./article-title";
+import { ArticleTitleExtension } from "./article-title";
 import { BlockDragMenu } from "./block-drag-menu";
-import { TabEditingExtension } from "./block-editing";
+import {
+	$isEntireDocumentSelection,
+	TabEditingExtension,
+} from "./block-editing";
 import { DocumentExtension } from "./document";
 import { EditorMenu } from "./editor-menu";
 import { ImagePlugin } from "./image-plugin";
@@ -58,7 +65,7 @@ export function Editor({
 			$initialEditorState: () => {
 				$convertFromMarkdownString(currentMarkdown.current);
 				if (articleTitle) {
-					const title = $create(ArticleTitleNode).append(
+					const title = $createHeadingNode("h1").append(
 						$createTextNode(currentTitle.current),
 					);
 					const first = $getRoot().getFirstChild();
@@ -114,6 +121,38 @@ export function Editor({
 			},
 			dependencies: [
 				HistoryExtension,
+				configExtension(ClipboardImportExtension, {
+					$importMimeType: {
+						"text/plain": [
+							(text, selection, $next) => {
+								if (!$isRangeSelection(selection)) return $next();
+								const anchorCode = $findMatchingParent(
+									selection.anchor.getNode(),
+									$isCodeNode,
+								);
+								const focusCode = $findMatchingParent(
+									selection.focus.getNode(),
+									$isCodeNode,
+								);
+								if (
+									!$isEntireDocumentSelection(
+										selection.isCollapsed(),
+										selection.anchor,
+										selection.focus,
+									) &&
+									(selection.hasFormat("code") || anchorCode?.is(focusCode))
+								)
+									return $next();
+								$insertGeneratedNodes(
+									$getEditor(),
+									$generateNodesFromMarkdownString(text),
+									selection,
+								);
+								return true;
+							},
+						],
+					},
+				}),
 				...(articleTitle ? [ArticleTitleExtension] : []),
 				...(showMenus ? [TabEditingExtension] : []),
 				configExtension(TableExtension, {
@@ -214,3 +253,9 @@ export function Editor({
 		</LexicalExtensionComposer>
 	);
 }
+
+import {
+	$insertGeneratedNodes,
+	ClipboardImportExtension,
+} from "@lexical/clipboard";
+import { $isCodeNode } from "@lexical/code-core";
