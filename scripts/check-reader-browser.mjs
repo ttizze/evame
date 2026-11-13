@@ -5,7 +5,13 @@ import { TextWriter, Uint8ArrayReader, ZipReader } from "@zip.js/zip.js";
 import { fromJSON } from "seroval";
 import { checkHeaderBrowser } from "./check-header-browser.mjs";
 
-export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
+export async function checkReaderBrowser(
+	baseUrl,
+	cookie,
+	handle,
+	pageSlug,
+	subscriptionAuthorHandle,
+) {
 	const browser = await chromium.launch();
 	try {
 		const noScript = await browser.newContext({ javaScriptEnabled: false });
@@ -38,7 +44,10 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(staticPage).toHaveURL(`${baseUrl}/ja/${handle}`);
 		await expect(
 			staticPage.getByRole("heading", { name: "Worker Test", exact: true }),
-		).toBeVisible();
+		).toHaveCount(0);
+		await expect(
+			staticPage.locator("main").getByText(`@${handle}`, { exact: true }),
+		).toHaveCount(0);
 		await staticPage
 			.getByRole("link", { name: "Workers保存テスト", exact: true })
 			.first()
@@ -104,6 +113,46 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			},
 		]);
 		const page = await context.newPage();
+		for (const width of [1280, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			await page.goto(`${baseUrl}/ja/${subscriptionAuthorHandle}`);
+			await expect(
+				page
+					.locator("header")
+					.getByRole("link", { name: "通知確認ユーザー", exact: true }),
+			).toBeVisible();
+			await expect(
+				page
+					.locator("main")
+					.getByRole("heading", { name: "通知確認ユーザー", exact: true }),
+			).toHaveCount(0);
+			await expect(
+				page
+					.locator("main")
+					.getByText(`@${subscriptionAuthorHandle}`, { exact: true }),
+			).toHaveCount(0);
+			await expect(
+				page.locator("main").getByText(/Followers|Following/),
+			).toHaveCount(0);
+			await page
+				.getByRole("button", { name: "新着記事を受け取る", exact: true })
+				.click();
+			await expect(
+				page.getByRole("button", { name: "新着通知を解除", exact: true }),
+			).toBeEnabled();
+			await page.reload();
+			await page
+				.getByRole("button", { name: "新着通知を解除", exact: true })
+				.click();
+			await expect(
+				page.getByRole("button", { name: "新着記事を受け取る", exact: true }),
+			).toBeEnabled();
+			await page.reload();
+			await expect(
+				page.getByRole("button", { name: "新着記事を受け取る", exact: true }),
+			).toBeEnabled();
+		}
+		await page.setViewportSize({ width: 1280, height: 900 });
 		const errors = [];
 		let homeRefreshes = 0;
 		let notificationReads = 0;

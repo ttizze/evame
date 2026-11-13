@@ -250,6 +250,7 @@ export const notifications = sqliteTable(
 				"FOLLOW",
 				"PAGE_COMMENT",
 				"PAGE_LIKE",
+				"PAGE_PUBLISHED",
 				"PAGE_SEGMENT_TRANSLATION_VOTE",
 				"PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE",
 			],
@@ -266,7 +267,7 @@ export const notifications = sqliteTable(
 	(table) => [
 		check(
 			"notifications_enum_check",
-			sql`${table.type} IN ('FOLLOW', 'PAGE_COMMENT', 'PAGE_LIKE', 'PAGE_SEGMENT_TRANSLATION_VOTE', 'PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE')`,
+			sql`${table.type} IN ('FOLLOW', 'PAGE_COMMENT', 'PAGE_LIKE', 'PAGE_PUBLISHED', 'PAGE_SEGMENT_TRANSLATION_VOTE', 'PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE')`,
 		),
 		index("notifications_actor_id_idx").on(table.actorId),
 		index("notifications_user_id_idx").on(table.userId),
@@ -631,6 +632,9 @@ export const pages = sqliteTable(
 		order: integer().default(0).notNull(),
 		parentId: integer("parent_id"),
 		publishedAt: integer("published_at", { mode: "timestamp_ms" }),
+		publicationNotified: integer("publication_notified", { mode: "boolean" })
+			.default(false)
+			.notNull(),
 		archivedAt: integer("archived_at", { mode: "timestamp_ms" }),
 	},
 	(table) => [

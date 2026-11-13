@@ -94,8 +94,7 @@
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "使用说明",
-				"description1": "原文与译文上下排列阅读。可用底部的悬浮控制器切换视图。",
-				"controllerLabel": "悬浮控制器",
+				"description1": "原文与译文上下排列阅读。可用底部按钮切换视图。",
 				"controllerButton": "原文 / 译文",
 				"controllerHint": "点击切换",
 				"description2": "点击译文行可打开面板，进行投票或添加自己的译文。得分更高的译文会显示在上方。",
@@ -132,6 +131,7 @@
 		"notificationsRetry": "无法加载通知。重试",
 		"notificationsReadError": "无法将通知标记为已读",
 		"notificationLiked": "赞了你的文章：",
+		"notificationPublished": "发布了新文章：",
 		"notificationCommented": "评论了：",
 		"notificationFollowed": "关注了你",
 		"notificationVoted": "投票支持：",
@@ -152,6 +152,10 @@
 		"closed": "评论已关闭，已有评论仍可阅读。"
 	},
 	"Reader": {
+		"subscribe": "接收新文章通知",
+		"unsubscribe": "取消新文章通知",
+		"subscriptionHint": "新文章将通过站内通知告知。",
+		"subscriptionError": "保存失败，请重试。",
 		"newPages": "最新文章",
 		"popularPages": "热门文章",
 		"more": "查看更多",

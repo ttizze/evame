@@ -139,4 +139,53 @@ describe("fetchNotificationRowsWithRelations", () => {
 			]),
 		);
 	});
+
+	it("新着通知から公開中の親記事へ戻れ、非公開・削除した記事の題名は返さない", async () => {
+		const recipient = await createUser();
+		const author = await createUser();
+		const page = await createPageWithSegments({
+			userId: author.id,
+			slug: "new-article",
+			segments: [
+				{ number: 0, text: "新着記事", textAndOccurrenceHash: "new-title" },
+			],
+		});
+		await db
+			.insertInto("notifications")
+			.values({
+				userId: recipient.id,
+				actorId: author.id,
+				type: "PAGE_PUBLISHED",
+				pageId: page.id,
+			})
+			.execute();
+		expect(await fetchNotificationRowsWithRelations(recipient.handle)).toEqual([
+			expect.objectContaining({
+				type: "PAGE_PUBLISHED",
+				pageTitle: "新着記事",
+				pageSlug: page.slug,
+				pageOwnerHandle: author.handle,
+			}),
+		]);
+		await db
+			.updateTable("pages")
+			.set({ status: "DRAFT" })
+			.where("id", "=", page.id)
+			.execute();
+		expect(await fetchNotificationRowsWithRelations(recipient.handle)).toEqual(
+			[],
+		);
+		await db
+			.updateTable("pages")
+			.set({ status: "ARCHIVE" })
+			.where("id", "=", page.id)
+			.execute();
+		expect(await fetchNotificationRowsWithRelations(recipient.handle)).toEqual(
+			[],
+		);
+		await db.deleteFrom("pages").where("id", "=", page.id).execute();
+		expect(await fetchNotificationRowsWithRelations(recipient.handle)).toEqual(
+			[],
+		);
+	});
 });

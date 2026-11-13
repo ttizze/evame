@@ -1,3 +1,4 @@
+import { notifyPagePublication } from "@/app/_service/notify-page-publication";
 import { syncSegments } from "@/app/[locale]/_service/sync-segments";
 import { runTransaction } from "@/db/transaction";
 import type { JsonValue, PageStatus } from "@/db/types";
@@ -24,6 +25,7 @@ export async function upsertPageForSync(params: {
 				.execute();
 
 			await syncSegments(tx, params.existingPageId, params.segments);
+			await notifyPagePublication(tx, params.existingPageId);
 			return { created: false };
 		}
 
@@ -47,6 +49,7 @@ export async function upsertPageForSync(params: {
 			.execute();
 
 		await syncSegments(tx, content.id, params.segments);
+		await notifyPagePublication(tx, content.id);
 		return { created: true };
 	});
 }

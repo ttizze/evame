@@ -52,11 +52,14 @@ export function NotificationsList({
 			switch (type) {
 				case "PAGE_LIKE":
 				case "PAGE_COMMENT":
+				case "PAGE_PUBLISHED":
 					if (!pageLink) return null;
 					actionText = t(
 						type === "PAGE_LIKE"
 							? "notificationLiked"
-							: "notificationCommented",
+							: type === "PAGE_PUBLISHED"
+								? "notificationPublished"
+								: "notificationCommented",
 					);
 					extraContent = pageLink;
 					break;

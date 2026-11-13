@@ -3,11 +3,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
+import { notifyPagePublication } from "@/app/_service/notify-page-publication";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import { enqueueTranslationJob } from "@/app/[locale]/_infrastructure/qstash/enqueue-translation-job.server";
 import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { db } from "@/db";
+import { runTransaction } from "@/db/transaction";
 import type { PageStatus } from "@/db/types";
 import { updatePageStatus } from "./db/mutations.server";
 
@@ -71,10 +73,14 @@ export const editPageStatus = createServerFn({ method: "POST" })
 			throw redirect({ href: "/auth/login" });
 		}
 
-		await updatePageStatus(
-			parsed.data.pageId,
-			parsed.data.status as PageStatus,
-		);
+		await runTransaction(async (tx) => {
+			await updatePageStatus(
+				tx,
+				parsed.data.pageId,
+				parsed.data.status as PageStatus,
+			);
+			await notifyPagePublication(tx, parsed.data.pageId);
+		});
 		if (parsed.data.status !== "PUBLIC") {
 			return { success: true, data: undefined };
 		}

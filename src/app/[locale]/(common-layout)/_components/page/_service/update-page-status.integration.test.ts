@@ -63,6 +63,36 @@ describe("管理画面の記事管理", () => {
 			),
 		).rejects.toMatchObject({ options: { href: "/ja/auth/login" } });
 	});
+	it("管理画面で初めて公開した記事は購読者へ通知し、再公開では増やさない", async () => {
+		const owner = await createUser();
+		const subscriber = await createUser();
+		const page = await createPage({
+			userId: owner.id,
+			slug: "first-publication",
+			status: "DRAFT",
+		});
+		await db
+			.insertInto("follows")
+			.values({ followerId: subscriber.id, followingId: owner.id })
+			.execute();
+		vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(
+			toSessionUser(owner),
+		);
+		for (let operationIndex = 0; operationIndex < 3; operationIndex++) {
+			await updatePageStatus(
+				{ locale: "ja", pageId: page.id, operation: "togglePublish" },
+				new Headers(),
+			);
+		}
+		expect(
+			await db
+				.selectFrom("notifications")
+				.select(["userId", "type", "pageId"])
+				.execute(),
+		).toEqual([
+			{ userId: subscriber.id, type: "PAGE_PUBLISHED", pageId: page.id },
+		]);
+	});
 	it("他人の記事を非公開や削除にできない", async () => {
 		const owner = await createUser();
 		const other = await createUser();

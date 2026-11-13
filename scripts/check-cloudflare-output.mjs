@@ -511,7 +511,13 @@ try {
 				args: [userId, notificationActorId],
 			});
 			const { checkReaderBrowser } = await import("./check-reader-browser.mjs");
-			await checkReaderBrowser(serverUrl.origin, cookie, handle, pageSlug);
+			await checkReaderBrowser(
+				serverUrl.origin,
+				cookie,
+				handle,
+				pageSlug,
+				`notification-${notificationActorId}`,
+			);
 			assert.equal(
 				queuedTranslations.length,
 				4,
