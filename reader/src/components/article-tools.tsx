@@ -4,7 +4,6 @@ import { useHeaderScroll } from "@/app/[locale]/(common-layout)/_components/head
 import { formatDate } from "@/app/[locale]/(common-layout)/_utils/format-date";
 import { TocTrigger } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/sub-header/toc-trigger";
 import type { TocItem } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_domain/extract-toc-items";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
 	Tooltip,
@@ -18,16 +17,12 @@ function ArticleTools({
 	locale,
 	handle,
 	slug,
-	name,
-	image,
 	createdAt,
 	tocItems,
 }: {
 	locale: string;
 	handle: string;
 	slug: string;
-	name: string;
-	image: string | null;
 	createdAt: Date;
 	tocItems: TocItem[];
 }) {
@@ -40,32 +35,14 @@ function ArticleTools({
 				className={`transition-all duration-300 z-999 ${!isVisible ? "-translate-y-full" : ""} ${isPinned ? "fixed top-0 left-0 right-0 shadow-md" : ""} bg-background py-4`}
 			>
 				<div
-					className={`prose dark:prose-invert sm:prose lg:prose-lg mx-auto flex items-center not-prose justify-between relative ${isPinned ? "px-4" : ""}`}
+					className={`prose dark:prose-invert sm:prose lg:prose-lg mx-auto flex items-center not-prose justify-between gap-4 relative ${isPinned ? "px-4" : ""}`}
 				>
-					<a
-						className="flex items-center mr-2 no-underline! hover:text-gray-700"
-						href={`/${locale}/${handle}`}
+					<time
+						className="whitespace-nowrap text-base font-medium tabular-nums text-muted-foreground md:text-lg"
+						dateTime={new Date(createdAt).toISOString()}
 					>
-						<Avatar className="w-10 h-10 shrink-0 mr-3">
-							<AvatarImage
-								alt={name}
-								height={40}
-								src={image ?? undefined}
-								width={40}
-							/>
-							<AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
-						</Avatar>
-						<div className="flex flex-col">
-							<span className="text-sm">{name}</span>
-							{!isPinned && (
-								<span className="text-xs text-gray-500">
-									<time dateTime={new Date(createdAt).toISOString()}>
-										{formatDate(createdAt, locale)}
-									</time>
-								</span>
-							)}
-						</div>
-					</a>
+						{formatDate(createdAt, locale)}
+					</time>
 					<div className="flex items-center gap-2">
 						<TooltipProvider>
 							<Tooltip>

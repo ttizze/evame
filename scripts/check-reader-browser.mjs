@@ -31,6 +31,12 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 				.locator("header")
 				.getByRole("link", { name: "Worker Test", exact: true }),
 		).toHaveAttribute("href", `/ja/${handle}`);
+		await expect(
+			staticPage.locator("[data-article-header] time"),
+		).toBeVisible();
+		await expect(
+			staticPage.locator("[data-article-header]").getByText("Worker Test"),
+		).toHaveCount(0);
 		await staticPage
 			.locator("header")
 			.getByRole("link", { name: "Worker Test", exact: true })
@@ -54,6 +60,14 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			staticPage.getByRole("button", { name: "0 followers", exact: true }),
 		).toBeVisible();
+		const profileBannerBounds = await staticPage
+			.locator("header")
+			.boundingBox();
+		const profileContentBounds = await staticPage
+			.locator("main > div")
+			.boundingBox();
+		assert.equal(profileBannerBounds.x, profileContentBounds.x);
+		assert.equal(profileBannerBounds.width, profileContentBounds.width);
 		await staticPage
 			.getByRole("link", { name: "Workers保存テスト", exact: true })
 			.first()
@@ -163,6 +177,10 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		).toHaveCount(0);
 		await expect(page.locator("header svg.lucide-bell")).toHaveCount(0);
 		const commonHeaderBounds = await page.locator("header").boundingBox();
+		const commonContentBounds = await page.locator("main > div").boundingBox();
+		assert.equal(commonHeaderBounds.x, commonContentBounds.x);
+		assert.equal(commonHeaderBounds.width, commonContentBounds.width);
+		await expect(page.locator("header")).toHaveCSS("padding-left", "16px");
 		const consent = page.getByRole("region", {
 			name: "Cookieを許可しますか？",
 		});
@@ -202,6 +220,10 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await page.setViewportSize({ width: 390, height: 844 });
 		await expect(page.locator("header")).toHaveCSS("padding-top", "8px");
 		const commonMobileHeaderBounds = await page.locator("header").boundingBox();
+		const mobileContentBounds = await page.locator("main > div").boundingBox();
+		assert.equal(commonMobileHeaderBounds.x, mobileContentBounds.x);
+		assert.equal(commonMobileHeaderBounds.width, mobileContentBounds.width);
+		await expect(page.locator("header")).toHaveCSS("padding-left", "16px");
 		await expect(consent).toBeVisible();
 		const mobileConsent = await consent.boundingBox();
 		assert.equal(mobileConsent.x, 12);
@@ -524,13 +546,33 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.boundingBox();
 		assert.ok(
 			titleBounds.y < headerBounds.y,
-			"タイトルの下に著者・目次を表示する",
+			"タイトルの下に日付・目次を表示する",
+		);
+		const articleHeader = page.locator("[data-article-header]");
+		const articleDate = articleHeader.locator("time");
+		await expect(articleHeader.getByText("Worker Test")).toHaveCount(0);
+		await expect(articleHeader.locator('[data-slot="avatar"]')).toHaveCount(0);
+		await expect(
+			articleHeader.getByRole("link", { name: "Markdownをダウンロード" }),
+		).toBeVisible();
+		const initialDarkMode = await page.evaluate(() =>
+			document.documentElement.classList.contains("dark"),
 		);
 		for (const viewport of [
 			{ width: 1280, height: 900 },
 			{ width: 390, height: 844 },
 		]) {
 			await page.setViewportSize(viewport);
+			const bannerBounds = await page.locator("header").boundingBox();
+			const contentBounds = await page.locator("main > div").boundingBox();
+			assert.equal(bannerBounds.x, contentBounds.x);
+			assert.equal(bannerBounds.width, contentBounds.width);
+			await expect(page.locator("header")).toHaveCSS("padding-left", "16px");
+			await expect(articleDate).toBeVisible();
+			await expect(articleDate).toHaveCSS(
+				"font-size",
+				viewport.width >= 768 ? "18px" : "16px",
+			);
 			await expect(floating).toHaveCSS("opacity", "1");
 			for (const label of ["View", "Like", "Share"]) {
 				await expect(floating.getByText(label, { exact: true })).toHaveCount(0);
@@ -544,6 +586,55 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			const share = floating.getByRole("button", { name: "共有", exact: true });
 			await expect(share).toHaveCSS("width", "40px");
 			await expect(share).toHaveCSS("height", "40px");
+			await expect(floating).toHaveCSS("padding-left", "12px");
+			await expect(floating).toHaveCSS("padding-top", "8px");
+			await expect(floating).toHaveCSS("height", "58px");
+			assert.ok((await floating.boundingBox()).width < 220);
+			await page.evaluate(() => {
+				if (document.activeElement instanceof HTMLElement) {
+					document.activeElement.blur();
+				}
+			});
+			for (const theme of ["light", "dark"]) {
+				await page.evaluate((dark) => {
+					document.documentElement.classList.toggle("dark", dark);
+				}, theme === "dark");
+				await page.mouse.move(0, 0);
+				for (const button of await floating.getByRole("button").all()) {
+					await expect(button).toHaveCSS("height", "40px");
+					await expect(button).toHaveCSS(
+						"background-color",
+						"rgba(0, 0, 0, 0)",
+					);
+					assert.ok(
+						Number.parseFloat(
+							await button.evaluate(
+								(node) => getComputedStyle(node).borderRadius,
+							),
+						) >= 20,
+					);
+				}
+				await expect(floating).not.toHaveCSS(
+					"background-color",
+					"rgba(0, 0, 0, 0)",
+				);
+				await page.evaluate(async () => {
+					await Promise.all(
+						document.body
+							.getAnimations()
+							.map((animation) => animation.finished),
+					);
+				});
+				await page.screenshot({
+					path: `/tmp/evame-reader-refined-${viewport.width}-${theme}.png`,
+				});
+			}
+			await page.evaluate((dark) => {
+				document.documentElement.classList.toggle("dark", dark);
+			}, initialDarkMode);
+			await share.hover();
+			await expect(share).not.toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+			await page.mouse.move(0, 0);
 			await share.focus();
 			await page.keyboard.press("Enter");
 			await expect(
@@ -651,6 +742,9 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			"position",
 			"fixed",
 		);
+		await expect(articleDate).toBeVisible();
+		await expect(articleDate).toHaveCSS("font-size", "16px");
+		await expect(articleHeader.getByText("Worker Test")).toHaveCount(0);
 		await expect(floating).toHaveCSS("opacity", "1");
 		await page
 			.getByRole("button", { name: "Table of Contents", exact: true })
