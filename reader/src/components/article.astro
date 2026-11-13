@@ -44,7 +44,7 @@ const titleSegment = pageDetail.segments.find(
   {navigationData && <PageNavigationIsland locale={locale} search={Astro.url.search} pageId={pageDetail.id} data={navigationData} client:idle />}
   {titleSegment && <h1 class="mb-0!"><SegmentElement segment={titleSegment} /></h1>}
   <PageTagList locale={locale} tag={pageDetail.tagPages.map(({ tag }) => tag)} />
-  <ArticleToolsIsland locale={locale} search={Astro.url.search} handle={pageDetail.userHandle} slug={pageDetail.slug} name={pageDetail.userName} image={pageDetail.userImage} createdAt={pageDetail.createdAt} tocItems={tocItems} client:load />
+  <ArticleToolsIsland locale={locale} search={Astro.url.search} handle={pageDetail.userHandle} slug={pageDetail.slug} createdAt={pageDetail.createdAt} tocItems={tocItems} client:load />
   <StaticBody mdast={pageDetail.mdastJson} segments={pageDetail.segments} />
   <ChildPages locale={locale} pages={data.childPages} client:visible />
   <div class="flex flex-wrap items-center gap-4"><EyeIcon className="h-5 w-5" strokeWidth={1.5} /><PageViewCounter pageId={pageDetail.id} initialCount={data.pageViewCount} client:load /><PageLikeButtonClient showCount={true} pageId={pageDetail.id} initialLikeCount={data.pageCounts.likeCount} client:visible /><MessageCircle className="h-5 w-5" strokeWidth={1.5} /><span class="text-muted-foreground" data-comment-count={pageDetail.id}>{data.comments.count}</span></div>

@@ -64,3 +64,23 @@ it("共通トップではEvameのロゴとログインの入口を維持する",
 		screen.getAllByRole("img", { name: "Evame Logo" }).length,
 	).toBeGreaterThan(0);
 });
+
+it.each([null, { handle: "alice", name: "開発ノート", image: null }])(
+	"共通トップとブログのヘッダーを本文・一覧と同じ横幅と左右余白に揃える（%j）",
+	(blog) => {
+		render(
+			<HeaderIsland
+				blog={blog}
+				gaTrackingId=""
+				locale="ja"
+				search=""
+				showHeader
+			/>,
+		);
+		const header = screen.getByRole("banner");
+		expect(Array.from(header.classList)).toEqual(
+			expect.arrayContaining(["max-w-4xl", "px-4"]),
+		);
+		expect(header.classList.contains("max-w-3xl")).toBe(false);
+	},
+);
