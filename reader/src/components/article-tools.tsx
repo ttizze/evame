@@ -2,8 +2,6 @@ import { DownloadIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { formatDate } from "@/app/[locale]/(common-layout)/_utils/format-date";
-import { TocTrigger } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_components/sub-header/toc-trigger";
-import type { TocItem } from "@/app/[locale]/(common-layout)/[handle]/[pageSlug]/_domain/extract-toc-items";
 import { Button } from "@/components/ui/button";
 import {
 	Tooltip,
@@ -47,31 +45,26 @@ function ArticleActions({
 	locale,
 	handle,
 	slug,
-	tocItems,
 }: {
 	locale: string;
 	handle: string;
 	slug: string;
-	tocItems: TocItem[];
 }) {
 	const t = useTranslations("Reader");
 	const downloadUrl = `/api/page-markdown?${new URLSearchParams({ locale, handle, slug })}`;
 	return (
-		<div className="flex items-center gap-2">
-			<TooltipProvider>
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<Button aria-label={t("downloadMarkdown")} asChild variant="ghost">
-							<a data-reader-tooltip download href={downloadUrl}>
-								<DownloadIcon className="h-4 w-4" />
-							</a>
-						</Button>
-					</TooltipTrigger>
-					<TooltipContent>{t("downloadMarkdown")}</TooltipContent>
-				</Tooltip>
-			</TooltipProvider>
-			<TocTrigger items={tocItems} />
-		</div>
+		<TooltipProvider>
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<Button aria-label={t("downloadMarkdown")} asChild variant="ghost">
+						<a data-reader-tooltip download href={downloadUrl}>
+							<DownloadIcon className="h-4 w-4" />
+						</a>
+					</Button>
+				</TooltipTrigger>
+				<TooltipContent>{t("downloadMarkdown")}</TooltipContent>
+			</Tooltip>
+		</TooltipProvider>
 	);
 }
 

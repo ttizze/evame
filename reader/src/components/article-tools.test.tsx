@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, expect, it } from "vitest";
 import { ArticleActionsIsland, ArticleToolsFrame } from "./article-tools";
 
@@ -8,19 +8,6 @@ const article = {
 	handle: "alice",
 	slug: "notes",
 	createdAt: new Date("2025-01-01T23:30:00-08:00"),
-	tocItems: [
-		{
-			anchorId: "heading",
-			level: 2,
-			segment: {
-				id: 1,
-				contentId: 1,
-				number: 1,
-				text: "記事の見出し",
-				translationText: null,
-			},
-		},
-	],
 };
 
 afterEach(cleanup);
@@ -63,14 +50,13 @@ it.each([
 	);
 });
 
-it("Markdownのダウンロードと目次の開閉を維持する", () => {
+it("Markdownのダウンロード先を維持する", () => {
 	render(
 		<ArticleActionsIsland
 			handle={article.handle}
 			locale={article.locale}
 			search={article.search}
 			slug={article.slug}
-			tocItems={article.tocItems}
 		/>,
 	);
 	expect(
@@ -78,10 +64,4 @@ it("Markdownのダウンロードと目次の開閉を維持する", () => {
 			.getByRole("link", { name: "Markdownをダウンロード" })
 			.getAttribute("href"),
 	).toBe("/api/page-markdown?locale=ja&handle=alice&slug=notes");
-	fireEvent.click(screen.getByRole("button", { name: "Table of Contents" }));
-	expect(
-		screen.getByRole("link", { name: "記事の見出し" }).getAttribute("href"),
-	).toBe("#heading");
-	fireEvent.click(screen.getByRole("button", { name: "Table of Contents" }));
-	expect(screen.queryByRole("link", { name: "記事の見出し" })).toBeNull();
 });

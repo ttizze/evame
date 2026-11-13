@@ -19,7 +19,8 @@ export function HeaderUserSlot({ locale }: { locale: string }) {
 	const showLoading = !hydrated || isPending;
 
 	if (showLoading) return <HeaderLoadingActions locale={locale} />;
-	if (!currentUser) return <HeaderGuestActions locale={locale} />;
+	if (!currentUser)
+		return <HeaderGuestActions locale={locale} localeStatus={null} />;
 	return (
 		<HeaderAccountFrame handle={currentUser.handle} locale={locale}>
 			<Suspense fallback={<Skeleton className="h-8 w-8 rounded-full" />}>

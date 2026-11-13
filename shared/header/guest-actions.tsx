@@ -9,7 +9,7 @@ export function HeaderGuestActions({
 	localeStatus,
 }: {
 	locale: string;
-	localeStatus?: ReactNode;
+	localeStatus: ReactNode;
 }) {
 	return (
 		<div className="flex items-center gap-4">

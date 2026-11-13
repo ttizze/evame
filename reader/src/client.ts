@@ -10,6 +10,7 @@ import "./components/floating-controls.client";
 import "./components/home-feed.client";
 import "./components/translations.client";
 import "./components/tweets.client";
+import "./components/toc.client";
 
 import { initializeReaderTheme } from "./theme.client";
 

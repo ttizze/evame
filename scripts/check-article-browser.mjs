@@ -87,13 +87,68 @@ export async function checkArticleBrowser(
 				page.getByRole("navigation", { name: "Page tree", exact: true }),
 			).toBeVisible();
 			await page.keyboard.press("Escape");
+			await expect(
+				page.getByRole("navigation", { name: "Page tree", exact: true }),
+			).toBeHidden();
+			await expect(
+				page.getByRole("button", { name: "page tree", exact: true }),
+			).toBeFocused();
+			const toc = page.getByRole("button", {
+				name: "Table of Contents",
+				exact: true,
+			});
+			const articleActions = page.locator(
+				'astro-island[component-export="ArticleActionsIsland"]',
+			);
+			await expect(articleActions).toHaveAttribute("ssr", "");
+			const tocRequests = [];
+			const recordTocRequest = (request) => tocRequests.push(request.url());
+			page.on("request", recordTocRequest);
 			await page
 				.getByRole("button", { name: "Table of Contents", exact: true })
 				.click();
 			await expect(
 				page.getByRole("link", { name: "Workersの目次見出し", exact: true }),
 			).toBeVisible();
+			const panel = page.getByRole("dialog");
+			const summary = panel.locator("summary");
+			await expect(summary).toBeFocused();
+			await expect(
+				panel.getByRole("link", { name: "子の目次見出し", exact: true }),
+			).toBeHidden();
+			await page.keyboard.press("Enter");
+			const childHeading = panel.getByRole("link", {
+				name: "子の目次見出し",
+				exact: true,
+			});
+			await expect(childHeading).toBeVisible();
+			await childHeading.focus();
+			await page.keyboard.press("Tab");
+			await expect(panel.getByRole("link").first()).toBeFocused();
+			await page.keyboard.press("Shift+Tab");
+			await expect(childHeading).toBeFocused();
+			await expect(articleActions).toHaveAttribute("ssr", "");
+			page.off("request", recordTocRequest);
+			assert.deepEqual(
+				tocRequests.filter((url) => /\.js(?:\?|$)/.test(url)),
+				[],
+				"目次の初回操作で追加JavaScriptを取得しない",
+			);
+			await panel.evaluate(async (element) => {
+				await Promise.allSettled(
+					element.getAnimations().map((animation) => animation.finished),
+				);
+			});
+			await page.screenshot({
+				path: `/tmp/evame-toc-${browser.browserType().name()}-${width}.png`,
+			});
 			await page.keyboard.press("Escape");
+			await expect(panel).toBeHidden();
+			await expect(toc).toBeFocused();
+			await toc.click();
+			await expect(page.getByRole("dialog")).toBeVisible();
+			await page.locator("[data-article-header] time").click();
+			await expect(page.getByRole("dialog")).toBeHidden();
 			await page.evaluate(() => {
 				const gap = document.createElement("div");
 				gap.style.height = "1200px";
