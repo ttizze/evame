@@ -5,6 +5,7 @@ import { z } from "zod";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { getPageById } from "@/app/[locale]/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
+import { formDataValidator } from "../_utils/form-data-validator";
 import { upsertTags } from "./_db/mutations.server";
 
 const editPageTagsSchema = z.object({
@@ -36,13 +37,6 @@ export type EditPageTagsActionState = ActionResponse<
 	undefined,
 	{ pageId: number; tags: string[] }
 >;
-
-const formDataValidator = (value: unknown) => {
-	if (!(value instanceof FormData)) {
-		throw new Error("Expected FormData");
-	}
-	return value;
-};
 
 export const editPageTags = createServerFn({ method: "POST" })
 	.validator(formDataValidator)

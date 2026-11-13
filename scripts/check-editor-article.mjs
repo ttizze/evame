@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 
-export async function checkEditorArticle(page) {
+export async function checkEditorArticle(page, imageUrl) {
 	await expect(page.getByTestId("save-button-check")).toBeVisible({
 		timeout: 20000,
 	});
@@ -232,7 +232,6 @@ export async function checkEditorArticle(page) {
 		}
 	}
 	await page.setViewportSize({ width: 390, height: 900 });
-	const imageUrl = new URL("/logo.png", page.url()).href;
 	await replaceArticle(
 		`<h1>画像入り <a href="https://example.test/picture"><img src="${imageUrl}" alt="写真"></a></h1><p>last</p>`,
 		"text/html",

@@ -214,7 +214,7 @@ final class EditorBlockUITests: EditorUITestCase {
     XCTAssertTrue(source.hasPrefix("## 日本語の執筆 👩🏽‍💻menu\n"), source)
   }
 
-  func test二つのコードブロックの片方で改行してスクロールしても本文を保つ() {
+  func test二つのコードブロックの片方で改行してスクロールしても本文を保つ() throws {
     app.navigationBars.buttons["文書"].tap()
     app.buttons["documents.new"].tap()
     _ = markdown()
@@ -222,7 +222,12 @@ final class EditorBlockUITests: EditorUITestCase {
     source.tap()
     source.typeText("```\nfirst()\n```\n\n間の段落\n\n```\nsecond()\n```")
     app.navigationBars.buttons["editor.source.done"].tap()
-    tapEndOfHeading()
+    let codeBlocks = editor.otherElements.matching(identifier: "editor.code-block")
+    XCTAssertEqual(codeBlocks.count, 2)
+    let firstCodeBlock = try XCTUnwrap(
+      codeBlocks.allElementsBoundByIndex.min { $0.frame.minY < $1.frame.minY })
+    firstCodeBlock.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    XCTAssertTrue(app.buttons["editor.done"].waitForExistence(timeout: 5))
     for index in 0..<18 { app.typeText("\nline\(index)") }
     let beforeScroll = XCTAttachment(screenshot: app.screenshot())
     beforeScroll.name = "先のコードブロックで18行増やした直後"

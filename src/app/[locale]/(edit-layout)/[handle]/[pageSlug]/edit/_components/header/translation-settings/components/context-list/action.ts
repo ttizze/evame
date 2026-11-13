@@ -5,19 +5,13 @@ import { z } from "zod";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import type { ActionResponse } from "@/app/types";
 import { db } from "@/db";
+import { formDataValidator } from "../../../../_utils/form-data-validator";
 
 const deleteContextSchema = z.object({
 	id: z.coerce.number().min(1),
 });
 
 export type DeleteContextActionState = ActionResponse<boolean>;
-
-const formDataValidator = (value: unknown) => {
-	if (!(value instanceof FormData)) {
-		throw new Error("Expected FormData");
-	}
-	return value;
-};
 
 export const deleteContext = createServerFn({ method: "POST" })
 	.validator(formDataValidator)

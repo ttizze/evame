@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { runInNewContext } from "node:vm";
+import { Script } from "node:vm";
 import type { Root, RootContent } from "hast";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
@@ -8,7 +8,9 @@ import { unified } from "unified";
 import { removePosition } from "unist-util-remove-position";
 import { describe, expect, it } from "vitest";
 
-const source = readFileSync("apps/ios/App/Resources/LexicalModel.js", "utf8");
+const model = new Script(
+	readFileSync("apps/ios/App/Resources/LexicalModel.js", "utf8"),
+);
 const processor = unified()
 	.use(remarkParse)
 	.use(remarkGfm)
@@ -113,7 +115,7 @@ for (const [name, count] of [
 		for (const entry of cases)
 			it(`${entry.section ?? "GFM"}・例${entry.example}の内容を保存と再読み込みで保つ`, () => {
 				const context: Record<string, unknown> = {};
-				runInNewContext(source, context);
+				model.runInNewContext(context);
 				const request = (markdown: string) => {
 					const result = JSON.parse(
 						(context.evameEditorRequest as (json: string) => string)(

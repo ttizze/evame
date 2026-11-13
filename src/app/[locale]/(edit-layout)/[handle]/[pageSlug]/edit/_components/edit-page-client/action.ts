@@ -9,6 +9,7 @@ import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import { createServerLogger } from "@/app/_service/logger.server";
 import { getPageWithTitleAndTagsBySlug } from "@/app/[locale]/(edit-layout)/[handle]/[pageSlug]/edit/_db/queries.server";
 import type { ActionResponse } from "@/app/types";
+import { formDataValidator } from "../_utils/form-data-validator";
 import { formSchema } from "./_domain/form-schema";
 import { processPageContent } from "./service/process-page-content";
 
@@ -17,27 +18,16 @@ export type EditPageContentActionState = ActionResponse<
 	z.input<typeof formSchema>
 >;
 
-const formDataValidator = (value: unknown) => {
-	if (!(value instanceof FormData)) {
-		throw new Error("Expected FormData");
-	}
-	return value;
-};
-
-function parseFormData(formData: FormData) {
-	return formSchema.safeParse({
-		pageSlug: formData.get("pageSlug"),
-		userLocale: formData.get("userLocale"),
-		title: formData.get("title"),
-		pageContent: formData.get("pageContent"),
-		contentFormat: formData.get("contentFormat") ?? undefined,
-	});
-}
-
 export const editPageContent = createServerFn({ method: "POST" })
 	.validator(formDataValidator)
 	.handler(async ({ data: formData }): Promise<EditPageContentActionState> => {
-		const parsed = parseFormData(formData);
+		const parsed = formSchema.safeParse({
+			pageSlug: formData.get("pageSlug"),
+			userLocale: formData.get("userLocale"),
+			title: formData.get("title"),
+			pageContent: formData.get("pageContent"),
+			contentFormat: formData.get("contentFormat") ?? undefined,
+		});
 		if (!parsed.success) {
 			return {
 				success: false,

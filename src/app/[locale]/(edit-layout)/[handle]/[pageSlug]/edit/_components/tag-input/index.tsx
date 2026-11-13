@@ -6,9 +6,6 @@ import { cn } from "@/lib/utils";
 import type { TagWithCount } from "../../_db/queries.server";
 import type { EditPageTagsActionState } from "./action";
 
-const DropdownIndicator = () => null;
-const IndicatorSeparator = () => null;
-
 export function TagInput({
 	tags,
 	allTagsWithCount,
@@ -93,7 +90,7 @@ export function TagInput({
 								state.isFocused && "bg-accent",
 							),
 					}}
-					components={{ DropdownIndicator, IndicatorSeparator }}
+					components={{ DropdownIndicator: null, IndicatorSeparator: null }}
 					formatCreateLabel={(tag) => t("createTag", { tag })}
 					inputId="page-tags-input"
 					instanceId="page-tags-input"

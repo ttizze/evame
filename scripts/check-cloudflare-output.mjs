@@ -18,9 +18,21 @@ import { supportedLocaleOptions } from "../src/app/_constants/locale.ts";
 import { startTursoServer } from "./turso-dev-server.mjs";
 
 const browserSuite = process.env.EVAME_BROWSER_SUITE ?? "all";
+const browserType = process.env.EVAME_BROWSER_TYPE ?? "all";
 assert.ok(
-	["all", "editor-chromium", "editor-webkit", "reader"].includes(browserSuite),
+	[
+		"all",
+		"editor-drag",
+		"editor-lists-clipboard",
+		"editor-lists-structure",
+		"editor-lists-formatting",
+		"reader",
+	].includes(browserSuite),
 	`Unknown browser suite: ${browserSuite}`,
+);
+assert.ok(
+	["all", "chromium", "webkit"].includes(browserType),
+	`Unknown browser type: ${browserType}`,
 );
 
 await mkdir(".data", { recursive: true });
@@ -489,12 +501,18 @@ try {
 		}
 		if (browserSuite !== "reader") {
 			const { chromium, webkit } = await import("@playwright/test");
-			const { checkEditorDrag } = await import("./check-editor-drag.mjs");
+			const { checkEditorBrowser } = await import("./check-editor-browser.mjs");
 			const browserTypes =
-				browserSuite === "all"
+				browserType === "all"
 					? [chromium, webkit]
-					: [browserSuite === "editor-chromium" ? chromium : webkit];
-			await checkEditorDrag(serverUrl.origin, cookie, browserTypes);
+					: [browserType === "chromium" ? chromium : webkit];
+			await checkEditorBrowser(
+				serverUrl.origin,
+				cookie,
+				browserTypes,
+				browserSuite,
+				uploadedUrl.href,
+			);
 		}
 		if (includeReader) {
 			const notificationActorId = randomUUID();

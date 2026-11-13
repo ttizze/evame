@@ -4,6 +4,7 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import type { ActionResponse } from "@/app/types";
+import { formDataValidator } from "../../../../_utils/form-data-validator";
 import { updateUserTargetLocales } from "./db/mutations.server";
 
 const schema = z.object({
@@ -11,13 +12,6 @@ const schema = z.object({
 });
 
 export type SaveTargetLocalesActionState = ActionResponse<boolean>;
-
-const formDataValidator = (value: unknown) => {
-	if (!(value instanceof FormData)) {
-		throw new Error("Expected FormData");
-	}
-	return value;
-};
 
 export const saveTargetLocales = createServerFn({ method: "POST" })
 	.validator(formDataValidator)
