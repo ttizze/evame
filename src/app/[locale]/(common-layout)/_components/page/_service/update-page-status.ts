@@ -1,10 +1,12 @@
 import { redirect } from "@tanstack/react-router";
 import { z } from "zod";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
+import { notifyPagePublication } from "@/app/_service/notify-page-publication";
 import { localeSchema } from "@/app/_utils/locale-schema";
 import { archivePage } from "@/app/[locale]/(common-layout)/_components/page/delete-page-dialog/db/mutations.server";
 import { togglePagePublicStatus } from "@/app/[locale]/(common-layout)/_components/page/page-actions-dropdown/db/mutations.server";
 import type { ActionResponse } from "@/app/types";
+import { runTransaction } from "@/db/transaction";
 
 const input = z.object({
 	pageId: z.number().int().positive(),
@@ -19,7 +21,11 @@ export async function updatePageStatus(
 	const user = await getCurrentUserFromHeaders(requestHeaders);
 	if (!user) throw redirect({ href: `/${locale}/auth/login` });
 	if (operation === "archive") await archivePage(pageId, user.id);
-	else await togglePagePublicStatus(pageId, user.id);
+	else
+		await runTransaction(async (tx) => {
+			await togglePagePublicStatus(tx, pageId, user.id);
+			await notifyPagePublication(tx, pageId);
+		});
 	return {
 		success: true,
 		data: undefined,

@@ -2,12 +2,13 @@ import { redirect } from "@tanstack/react-router";
 import { z } from "zod";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
+import type { ActionResponse } from "@/app/types";
+import { runTransaction } from "@/db/transaction";
 import {
 	createFollow,
 	createNotificationFollow,
 	deleteFollow,
-} from "@/app/[locale]/(common-layout)/[handle]/_components/follow-button/db/mutations.server";
-import type { ActionResponse } from "@/app/types";
+} from "./follow-user/db/mutations.server";
 
 const followActionSchema = z.object({
 	targetUserId: z.string().min(1),
@@ -46,11 +47,16 @@ export async function followAction(
 	}
 
 	if (data.action === "follow") {
-		await createFollow(currentUser.id, data.targetUserId);
-		await createNotificationFollow(currentUser.id, data.targetUserId);
+		await runTransaction(async (tx) => {
+			const created = await createFollow(tx, currentUser.id, data.targetUserId);
+			if (created)
+				await createNotificationFollow(tx, currentUser.id, data.targetUserId);
+		});
 		return { success: true, data: { isFollowing: true } };
 	}
 
-	await deleteFollow(currentUser.id, data.targetUserId);
+	await runTransaction((tx) =>
+		deleteFollow(tx, currentUser.id, data.targetUserId),
+	);
 	return { success: true, data: { isFollowing: false } };
 }

@@ -172,6 +172,36 @@ it("通知がないときは空の表示を出す", async () => {
 	expect(await screen.findByText("通知はありません")).toBeVisible();
 });
 
+it("新着記事の通知から記事と解除操作のある著者ブログへ戻れる", async () => {
+	vi.mocked(fetch).mockImplementation(async () =>
+		Response.json({
+			notifications: [
+				{
+					...notifications[0],
+					type: "PAGE_PUBLISHED",
+					actorHandle: "author",
+					pageSlug: "new-article",
+					pageOwnerHandle: "author",
+					pageTitle: "新着の題名",
+				},
+			],
+		}),
+	);
+	const user = userEvent.setup();
+	renderMenu();
+	await user.click(screen.getByRole("button", { name: "アカウントメニュー" }));
+	await user.click(screen.getByRole("menuitem", { name: "通知" }));
+	expect(await screen.findByText("が新着記事を公開しました：")).toBeVisible();
+	expect(screen.getByRole("link", { name: "新着の題名" })).toHaveAttribute(
+		"href",
+		"/ja/author/new-article",
+	);
+	expect(screen.getByRole("link", { name: "Jane Doe" })).toHaveAttribute(
+		"href",
+		"/ja/author",
+	);
+});
+
 it("使い方を開いても通知を既読にせず、Escapeで説明を閉じてメニューへ戻れる", async () => {
 	const user = userEvent.setup();
 	renderMenu();
@@ -181,6 +211,9 @@ it("使い方を開いても通知を既読にせず、Escapeで説明を閉じ�
 	expect(
 		await screen.findByRole("dialog", { name: "使い方" }),
 	).toHaveTextContent("原文と翻訳を縦に並べて読めます");
+	expect(screen.getByRole("dialog", { name: "使い方" })).not.toHaveTextContent(
+		"フローティングコントローラー",
+	);
 	await user.keyboard("{Escape}");
 	expect(screen.queryByRole("dialog", { name: "使い方" })).toBeNull();
 	expect(screen.getByRole("menuitem", { name: "通知" })).toBeVisible();

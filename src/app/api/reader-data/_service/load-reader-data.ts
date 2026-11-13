@@ -141,9 +141,6 @@ export async function loadReaderData(
 							`user:${data.pageOwner.id}`,
 							`author:${data.pageOwner.handle}`,
 							...pageListCacheKeys(data.pageForLists),
-							...[...data.followerList, ...data.followingList].map(
-								(user) => `author:${user.handle}`,
-							),
 						],
 						cacheable: true,
 						data,

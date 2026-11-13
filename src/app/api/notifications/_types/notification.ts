@@ -9,6 +9,7 @@ export type NotificationRowsWithRelations = {
 	type:
 		| "FOLLOW"
 		| "PAGE_LIKE"
+		| "PAGE_PUBLISHED"
 		| "PAGE_COMMENT"
 		| "PAGE_SEGMENT_TRANSLATION_VOTE"
 		| "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE";

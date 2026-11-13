@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getUserTargetLocales } from "@/app/_db/queries.server";
+import { notifyPagePublication } from "@/app/_service/notify-page-publication";
 import { enqueueTranslationJob } from "@/app/[locale]/_infrastructure/qstash/enqueue-translation-job.server";
 import { authenticateToken } from "@/app/api/_service/authenticate-token";
 import { runTransaction } from "@/db/transaction";
@@ -54,6 +55,7 @@ export async function putAppDocumentStatus(
 				.set({ status })
 				.where("id", "=", page.id)
 				.execute();
+		await notifyPagePublication(tx, page.id);
 		return { document: incoming, pageId: page.id };
 	});
 

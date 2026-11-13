@@ -94,8 +94,7 @@
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "使い方",
-				"description1": "原文と翻訳を縦に並べて読めます。画面下のフローティングコントローラーで表示を切り替えてください。",
-				"controllerLabel": "フローティングコントローラー",
+				"description1": "原文と翻訳を縦に並べて読めます。画面下のボタンで表示を切り替えられます。",
 				"controllerButton": "原文 / 翻訳",
 				"controllerHint": "タップして切り替え",
 				"description2": "翻訳行をクリックするとパネルが開き、投票したり自分の訳を追加できます。ポイントの高い翻訳が上に表示されます。",
@@ -132,6 +131,7 @@
 		"notificationsRetry": "通知を読み込めませんでした。再試行",
 		"notificationsReadError": "通知を既読にできませんでした",
 		"notificationLiked": "がいいねしました：",
+		"notificationPublished": "が新着記事を公開しました：",
 		"notificationCommented": "がコメントしました：",
 		"notificationFollowed": "がフォローしました",
 		"notificationVoted": "が投票しました：",
@@ -152,6 +152,10 @@
 		"closed": "コメントの受付を停止しています。既存コメントは引き続き閲覧できます。"
 	},
 	"Reader": {
+		"subscribe": "新着記事を受け取る",
+		"unsubscribe": "新着通知を解除",
+		"subscriptionHint": "サイト内の通知でお知らせします。",
+		"subscriptionError": "保存に失敗しました。もう一度お試しください。",
 		"newPages": "新着記事",
 		"popularPages": "人気記事",
 		"more": "もっと見る",

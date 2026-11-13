@@ -1,4 +1,5 @@
 import { createServerLogger } from "@/app/_service/logger.server";
+import { notifyPagePublication } from "@/app/_service/notify-page-publication";
 import type { SegmentDraft } from "@/app/[locale]/_domain/remark-hash-and-segments";
 import { syncSegments } from "@/app/[locale]/_service/sync-segments";
 import { runTransaction } from "@/db/transaction";
@@ -49,6 +50,7 @@ export async function upsertPageAndSegments(p: {
 
 			// db操作: セグメントを同期
 			await syncSegments(tx, page.id, p.segments);
+			await notifyPagePublication(tx, page.id);
 
 			return page;
 		});

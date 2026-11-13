@@ -94,8 +94,7 @@
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "사용 방법",
-				"description1": "원문과 번역문을 세로로 나란히 읽을 수 있습니다. 아래의 플로팅 컨트롤러로 보기를 전환하세요.",
-				"controllerLabel": "플로팅 컨트롤러",
+				"description1": "원문과 번역문을 세로로 나란히 읽을 수 있습니다. 아래 버튼으로 보기를 전환하세요.",
 				"controllerButton": "원문 / 번역",
 				"controllerHint": "탭하여 전환",
 				"description2": "번역 줄을 클릭하면 패널이 열리고, 투표하거나 내 번역을 추가할 수 있습니다. 점수가 높은 번역이 위에 표시됩니다.",
@@ -132,6 +131,7 @@
 		"notificationsRetry": "알림을 불러올 수 없습니다. 다시 시도",
 		"notificationsReadError": "알림을 읽음으로 표시할 수 없습니다",
 		"notificationLiked": "님이 좋아요를 눌렀습니다:",
+		"notificationPublished": "님이 새 글을 게시했습니다:",
 		"notificationCommented": "님이 댓글을 남겼습니다:",
 		"notificationFollowed": "님이 팔로우했습니다",
 		"notificationVoted": "님이 투표했습니다:",
@@ -152,6 +152,10 @@
 		"closed": "댓글 접수가 중지되었습니다. 기존 댓글은 계속 볼 수 있습니다."
 	},
 	"Reader": {
+		"subscribe": "새 글 알림 받기",
+		"unsubscribe": "새 글 알림 해제",
+		"subscriptionHint": "사이트 내 알림으로 알려드립니다.",
+		"subscriptionError": "저장하지 못했습니다. 다시 시도해 주세요.",
 		"newPages": "새 글",
 		"popularPages": "인기 글",
 		"more": "더 보기",

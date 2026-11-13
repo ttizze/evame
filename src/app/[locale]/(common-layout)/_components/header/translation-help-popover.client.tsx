@@ -11,10 +11,7 @@ export function TranslationHelpPopover({ inMenu }: { inMenu: boolean }) {
 				<div className="space-y-3">
 					<p>{t("description1")}</p>
 					<div className="rounded-lg border border-foreground/10  px-3 py-2">
-						<p className="text-[11px] uppercase tracking-wide text-muted-foreground">
-							{t("controllerLabel")}
-						</p>
-						<div className="mt-2 flex items-center gap-2">
+						<div className="flex items-center gap-2">
 							<span className="rounded-full border border-foreground/15 px-3 py-1 text-xs font-semibold text-foreground">
 								{t("controllerButton")}
 							</span>

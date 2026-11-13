@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db";
+import { runTransaction } from "@/db/transaction";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
@@ -20,7 +21,9 @@ describe("togglePagePublicStatus", () => {
 			status: "PUBLIC",
 		});
 
-		const result = await togglePagePublicStatus(page.id, owner.id);
+		const result = await runTransaction((tx) =>
+			togglePagePublicStatus(tx, page.id, owner.id),
+		);
 
 		expect(result.status).toBe("DRAFT");
 	});
@@ -33,7 +36,9 @@ describe("togglePagePublicStatus", () => {
 			status: "DRAFT",
 		});
 
-		const result = await togglePagePublicStatus(page.id, owner.id);
+		const result = await runTransaction((tx) =>
+			togglePagePublicStatus(tx, page.id, owner.id),
+		);
 
 		expect(result.status).toBe("PUBLIC");
 	});
@@ -47,17 +52,17 @@ describe("togglePagePublicStatus", () => {
 			status: "PUBLIC",
 		});
 
-		await expect(togglePagePublicStatus(page.id, otherUser.id)).rejects.toThrow(
-			"Unauthorized",
-		);
+		await expect(
+			runTransaction((tx) => togglePagePublicStatus(tx, page.id, otherUser.id)),
+		).rejects.toThrow("Unauthorized");
 	});
 
 	it("存在しないページは切り替えられない", async () => {
 		const owner = await createUser();
 
-		await expect(togglePagePublicStatus(999999, owner.id)).rejects.toThrow(
-			"Page not found",
-		);
+		await expect(
+			runTransaction((tx) => togglePagePublicStatus(tx, 999999, owner.id)),
+		).rejects.toThrow("Page not found");
 	});
 
 	it("更新後のページをデータベースにも保存する", async () => {
@@ -68,7 +73,7 @@ describe("togglePagePublicStatus", () => {
 			status: "PUBLIC",
 		});
 
-		await togglePagePublicStatus(page.id, owner.id);
+		await runTransaction((tx) => togglePagePublicStatus(tx, page.id, owner.id));
 
 		const updatedPage = await db
 			.selectFrom("pages")

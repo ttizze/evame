@@ -39,6 +39,7 @@ async function fetchNotificationRows(currentUserHandle: string) {
 // ページデータ取得の共通処理
 async function fetchPageDataByPageIds(
 	pageIds: number[],
+	publicOnly: boolean,
 ): Promise<
 	Map<number, { pageSlug: string; pageOwnerHandle: string; pageTitle: string }>
 > {
@@ -59,6 +60,11 @@ async function fetchPageDataByPageIds(
 			"users.handle as userHandle",
 		])
 		.where("pages.id", "in", pageIds)
+		.$if(publicOnly, (query) =>
+			query
+				.where("pages.status", "=", "PUBLIC")
+				.where("pages.parentId", "is", null),
+		)
 		.execute();
 
 	const result = new Map<
@@ -90,7 +96,7 @@ async function fetchLikePageData(
 				.map((n) => n.pageId as number),
 		),
 	);
-	return fetchPageDataByPageIds(pageIds);
+	return fetchPageDataByPageIds(pageIds, false);
 }
 
 /**
@@ -118,7 +124,7 @@ async function fetchCommentPageData(
 		.execute();
 
 	const pageIds = Array.from(new Set(commentsWithPageIds.map((c) => c.pageId)));
-	const pageDataMap = await fetchPageDataByPageIds(pageIds);
+	const pageDataMap = await fetchPageDataByPageIds(pageIds, false);
 
 	const result = new Map<
 		number,
@@ -277,11 +283,22 @@ export async function fetchNotificationRowsWithRelations(
 ): Promise<NotificationRowsWithRelations[]> {
 	const notificationRows = await fetchNotificationRows(currentUserHandle);
 
-	const [likePageData, commentPageData, translationData] = await Promise.all([
-		fetchLikePageData(notificationRows),
-		fetchCommentPageData(notificationRows),
-		fetchTranslationData(notificationRows),
-	]);
+	const [likePageData, commentPageData, translationData, publicationPageData] =
+		await Promise.all([
+			fetchLikePageData(notificationRows),
+			fetchCommentPageData(notificationRows),
+			fetchTranslationData(notificationRows),
+			fetchPageDataByPageIds(
+				[
+					...new Set(
+						notificationRows.flatMap(({ type, pageId }) =>
+							type === "PAGE_PUBLISHED" && pageId !== null ? [pageId] : [],
+						),
+					),
+				],
+				true,
+			),
+		]);
 
 	return notificationRows
 		.map((notification): NotificationRowsWithRelations | null => {
@@ -306,6 +323,13 @@ export async function fetchNotificationRowsWithRelations(
 						: null;
 					if (!pageData) return null;
 					return buildNotification(base, "PAGE_LIKE", pageData);
+				}
+				case "PAGE_PUBLISHED": {
+					const pageData = notification.pageId
+						? publicationPageData.get(notification.pageId)
+						: null;
+					if (!pageData) return null;
+					return buildNotification(base, notification.type, pageData);
 				}
 
 				case "PAGE_COMMENT": {

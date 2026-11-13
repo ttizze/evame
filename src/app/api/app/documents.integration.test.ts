@@ -393,7 +393,12 @@ describe("アプリの文書API", () => {
 		expect(await kept()).toEqual(before);
 	});
 
-	it("取得した版で公開すると公開状態にして翻訳を始め、非公開に戻すと翻訳しない", async () => {
+	it("取得した版で公開すると翻訳と購読者への通知を始め、非公開に戻すと翻訳しない", async () => {
+		const subscriber = await createUser();
+		await db
+			.insertInto("follows")
+			.values({ followerId: subscriber.id, followingId: userId })
+			.execute();
 		const created = (await (
 			await save("status000001", {
 				title: "題",
@@ -412,6 +417,9 @@ describe("アプリの文書API", () => {
 		expect(publish.status).toBe(200);
 		const published = (await publish.json()) as AppDocument;
 		expect(published.status).toBe("PUBLIC");
+		expect(
+			await db.selectFrom("notifications").select(["userId", "type"]).execute(),
+		).toEqual([{ userId: subscriber.id, type: "PAGE_PUBLISHED" }]);
 		expect((await list()).documents).toEqual([published]);
 		expect(
 			vi

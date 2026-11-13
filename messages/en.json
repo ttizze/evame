@@ -94,8 +94,7 @@
 		"HelpPopover": {
 			"translationHelp": {
 				"title": "How to Use",
-				"description1": "Read posts with original and translation stacked vertically. Switch the view with the floating controller at the bottom.",
-				"controllerLabel": "Floating Controller",
+				"description1": "Read posts with original and translation stacked vertically. Use the buttons at the bottom to change the view.",
 				"controllerButton": "Original / Translation",
 				"controllerHint": "tap to switch",
 				"description2": "Click a translation line to open the panel and vote or add your own. Higher points translation will be displayed at the top.",
@@ -132,6 +131,7 @@
 		"notificationsRetry": "Unable to load notifications. Try again",
 		"notificationsReadError": "Unable to mark notifications as read",
 		"notificationLiked": "liked your page",
+		"notificationPublished": "published a new article:",
 		"notificationCommented": "commented on",
 		"notificationFollowed": "followed you",
 		"notificationVoted": "voted for",
@@ -152,6 +152,10 @@
 		"closed": "Comments are closed. Existing comments are still available."
 	},
 	"Reader": {
+		"subscribe": "Get new articles",
+		"unsubscribe": "Unsubscribe from new articles",
+		"subscriptionHint": "New articles appear in your site notifications.",
+		"subscriptionError": "Could not save. Please try again.",
 		"newPages": "New Pages",
 		"popularPages": "Popular Pages",
 		"more": "More",

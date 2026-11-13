@@ -23,8 +23,9 @@ it("自分の公開ブログにはプロフィール編集への入口を出さ�
 	expect(screen.queryByRole("button")).toBeNull();
 });
 
-it("他人のブログでは既存のフォロー状態を表示する", () => {
+it("他人のブログでは新着通知を解除できることを表示する", () => {
 	session.data = { user: { id: "bob", handle: "bob" } };
 	render(<ProfileFollowIsland locale="ja" userId="alice" />);
-	expect(screen.getByRole("button", { name: "Following" })).not.toBeNull();
+	expect(screen.getByRole("button", { name: "新着通知を解除" })).not.toBeNull();
+	expect(screen.getByText("サイト内の通知でお知らせします。")).not.toBeNull();
 });

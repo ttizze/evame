@@ -29,6 +29,7 @@ export type NotificationType =
 	| "PAGE_COMMENT"
 	| "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE"
 	| "PAGE_LIKE"
+	| "PAGE_PUBLISHED"
 	| "PAGE_SEGMENT_TRANSLATION_VOTE";
 
 export type PageStatus = "ARCHIVE" | "DRAFT" | "PUBLIC";
@@ -158,6 +159,7 @@ export interface Pages {
 	mdastJson: Json;
 	order: Generated<number>;
 	parentId: number | null;
+	publicationNotified: Generated<boolean>;
 	publishedAt: Timestamp | null;
 	slug: string;
 	sourceLocale: Generated<string>;
