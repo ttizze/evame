@@ -15,13 +15,17 @@ import {
 } from "@testing-library/react";
 import {
 	$createParagraphNode,
+	$createRangeSelection,
 	$createTextNode,
 	$getRoot,
 	$getSelection,
+	$isElementNode,
 	$isRangeSelection,
 	$nodesOfType,
+	$setSelection,
 	COPY_COMMAND,
 	getNearestEditorFromDOMNode,
+	INSERT_PARAGRAPH_COMMAND,
 	type Klass,
 	type LexicalNode,
 	PASTE_COMMAND,
@@ -67,6 +71,7 @@ afterEach(() => {
 });
 beforeEach(() => {
 	vi.clearAllMocks();
+	vi.stubGlobal("DragEvent", class extends Event {});
 	// JSDOMには範囲の配置計測がない。貼り付け内容はこの層で、実際の選択位置はブラウザーで確認する。
 	Object.defineProperty(Range.prototype, "getBoundingClientRect", {
 		configurable: true,
@@ -75,6 +80,57 @@ beforeEach(() => {
 });
 
 describe("Lexicalの本文フォーム", () => {
+	it("題名と本文を一つの編集面に置き、Returnで本文へ移り保存値と変更通知を分ける", async () => {
+		const onChange = vi.fn();
+		const { container, getByTestId } = render(
+			<IntlProvider locale="ja" messages={messages.ja}>
+				<form>
+					<Editor
+						articleTitle={{ defaultValue: "題名", placeholder: "タイトル" }}
+						className=""
+						defaultValue="**本文**"
+						name="pageContent"
+						onChange={onChange}
+						placeholder="本文"
+						showMenus={false}
+					/>
+				</form>
+			</IntlProvider>,
+		);
+		expect(container.querySelectorAll('[contenteditable="true"]')).toHaveLength(
+			1,
+		);
+		const title = getByTestId("lexical-editor").querySelector("h1");
+		expect(title?.tagName).toBe("H1");
+		if (!title) throw new Error("題名がありません");
+		const editor = getNearestEditorFromDOMNode(title);
+		if (!editor) throw new Error("エディタがありません");
+		act(() =>
+			editor.update(
+				() => {
+					const title = $getRoot().getFirstChildOrThrow();
+					title.selectEnd().insertText("追記");
+					editor.dispatchCommand(INSERT_PARAGRAPH_COMMAND, undefined);
+				},
+				{ discrete: true },
+			),
+		);
+		expect(editor.read(() => $getSelection()?.getTextContent())).toBe("");
+		expect(
+			editor.read(() => {
+				const selection = $getSelection();
+				return (
+					$isRangeSelection(selection) &&
+					selection.anchor.getNode().getTopLevelElement()?.getType()
+				);
+			}),
+		).toBe("paragraph");
+		await waitFor(() => expect(onChange).toHaveBeenCalled());
+		const form = container.querySelector("form");
+		if (!form) throw new Error("フォームがありません");
+		expect(new FormData(form).get("title")).toBe("題名追記");
+		expect(new FormData(form).get("pageContent")).toBe("\n\n**本文**");
+	});
 	it("前後のチェック項目から矢印で親へ移動し、Spaceで子リストと親本文を保って切り替える", async () => {
 		const editor = renderEditor(
 			"- [ ] 前\n- [ ] &#x20;\n\n  - [ ] 子\n\n  親本文\n- [ ] 後",
@@ -309,6 +365,7 @@ describe("Lexicalの本文フォーム", () => {
 				Object.defineProperty(event, "clipboardData", {
 					value: {
 						files: [],
+						types: [format],
 						getData: (type: string) => (type === format ? content : ""),
 					},
 				});
@@ -327,11 +384,83 @@ describe("Lexicalの本文フォーム", () => {
 				expect(editor.read($convertToMarkdownString).trim()).toBe(expected);
 			},
 		);
+	it.each([
+		[false, "text/plain", "- 親\n  - 子"],
+		[true, "text/plain", "- 親\n  - 子"],
+		[false, "text/html", "<ul><li>親<ul><li>子</li></ul></li></ul>"],
+		[true, "text/html", "<ul><li>親<ul><li>子</li></ul></li></ul>"],
+	] as const)(
+		"題名を除くコード本文の選択へ標準のコード貼り付けを使いUndo/Redoできる（逆向き=%s、%s）",
+		async (backward, format, content) => {
+			const { getByTestId } = render(
+				<IntlProvider locale="ja" messages={messages.ja}>
+					<Editor
+						articleTitle={{ defaultValue: "題名", placeholder: "タイトル" }}
+						className=""
+						defaultValue={"\x60\x60\x60\n古いコード\n\x60\x60\x60"}
+						name="content"
+						onChange={null}
+						placeholder="本文"
+						showMenus={false}
+					/>
+				</IntlProvider>,
+			);
+			const editor = getNearestEditorFromDOMNode(getByTestId("lexical-editor"));
+			if (!editor) throw new Error("エディタがありません");
+			const before = editor.read($convertToMarkdownString);
+			await act(async () => {
+				editor.update(() => {
+					const code = $getRoot().getChildren()[1];
+					if (!$isElementNode(code)) throw new Error("コードがありません");
+					const start = { ...code.selectStart().anchor };
+					const end = code.selectEnd().anchor;
+					const selection = $createRangeSelection();
+					const anchor = backward ? end : start;
+					const focus = backward ? start : end;
+					selection.anchor.set(anchor.key, anchor.offset, anchor.type);
+					selection.focus.set(focus.key, focus.offset, focus.type);
+					$setSelection(selection);
+				});
+			});
+			const event = new Event("paste", { cancelable: true });
+			Object.defineProperty(event, "clipboardData", {
+				value: {
+					files: [],
+					types: [format],
+					getData: (type: string) => (type === format ? content : ""),
+				},
+			});
+			vi.stubGlobal("ClipboardEvent", Event);
+			await act(async () => {
+				editor.dispatchCommand(PASTE_COMMAND, event as ClipboardEvent);
+			});
+			const after = editor.read($convertToMarkdownString);
+			editor.read(() => {
+				const code = $getRoot().getChildren()[1];
+				expect(code.getType()).toBe("code");
+				expect(code.getTextContent()).toBe(
+					format === "text/plain" ? content : "親\n\n子",
+				);
+			});
+			expect(
+				getByTestId("lexical-editor").querySelector("h1"),
+			).toHaveTextContent("題名");
+			await act(async () => {
+				editor.dispatchCommand(UNDO_COMMAND, undefined);
+			});
+			expect(editor.read($convertToMarkdownString)).toBe(before);
+			await act(async () => {
+				editor.dispatchCommand(REDO_COMMAND, undefined);
+			});
+			expect(editor.read($convertToMarkdownString)).toBe(after);
+		},
+	);
 	for (const codeBlock of [true, false]) {
 		it(`${codeBlock ? "コードブロック" : "インラインコード"}への貼り付けでMarkdown記号を文字として保つ`, async () => {
 			const { container } = render(
 				<IntlProvider locale="ja" messages={messages.ja}>
 					<Editor
+						articleTitle={null}
 						className=""
 						defaultValue=""
 						name="content"
@@ -363,6 +492,7 @@ describe("Lexicalの本文フォーム", () => {
 			Object.defineProperty(event, "clipboardData", {
 				value: {
 					files: [],
+					types: ["text/plain"],
 					getData: (type: string) =>
 						type === "text/plain" ? 'const pattern = "**foo**";' : "",
 				},
@@ -422,6 +552,7 @@ describe("Lexicalの本文フォーム", () => {
 		const { container } = render(
 			<IntlProvider locale="ja" messages={messages.ja}>
 				<Editor
+					articleTitle={null}
 					className=""
 					defaultValue={"本文\n"}
 					name="content"
@@ -449,7 +580,7 @@ describe("Lexicalの本文フォーム", () => {
 		const { container, rerender } = render(
 			<IntlProvider locale="ja" messages={messages.ja}>
 				<form>
-					<Editor {...props} defaultValue="最初の本文" />
+					<Editor articleTitle={null} {...props} defaultValue="最初の本文" />
 				</form>
 			</IntlProvider>,
 		);
@@ -476,7 +607,11 @@ describe("Lexicalの本文フォーム", () => {
 		rerender(
 			<IntlProvider locale="ja" messages={messages.ja}>
 				<form>
-					<Editor {...props} defaultValue="以前の保存結果" />
+					<Editor
+						articleTitle={null}
+						{...props}
+						defaultValue="以前の保存結果"
+					/>
 				</form>
 			</IntlProvider>,
 		);
@@ -501,6 +636,7 @@ describe("Lexicalの本文フォーム", () => {
 			<IntlProvider locale="ja" messages={messages.ja}>
 				<form>
 					<Editor
+						articleTitle={null}
 						className=""
 						defaultValue="本文"
 						name="content"
@@ -552,6 +688,7 @@ describe("Lexicalの本文フォーム", () => {
 			<IntlProvider locale="ja" messages={messages.ja}>
 				<form>
 					<Editor
+						articleTitle={null}
 						className=""
 						defaultValue={"![](/loading.gif)\n\n本文"}
 						name="content"
@@ -581,6 +718,7 @@ describe("Lexicalの本文フォーム", () => {
 		const { container } = render(
 			<IntlProvider locale="ja" messages={messages.ja}>
 				<Editor
+					articleTitle={null}
 					className=""
 					defaultValue="本文"
 					name="content"
@@ -616,6 +754,7 @@ describe("Lexicalの本文フォーム", () => {
 			<IntlProvider locale="ja" messages={messages.ja}>
 				<form>
 					<Editor
+						articleTitle={null}
 						className=""
 						defaultValue="本文"
 						name="content"
@@ -665,6 +804,7 @@ describe("Lexicalの本文フォーム", () => {
 		const { container } = render(
 			<IntlProvider locale="ja" messages={messages.ja}>
 				<Editor
+					articleTitle={null}
 					className=""
 					defaultValue="本文"
 					name="content"
@@ -769,6 +909,7 @@ function renderEditor(defaultValue: string) {
 	const { container } = render(
 		<IntlProvider locale="ja" messages={messages.ja}>
 			<Editor
+				articleTitle={null}
 				className=""
 				defaultValue={defaultValue}
 				name="content"

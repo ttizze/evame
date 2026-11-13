@@ -1,6 +1,5 @@
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState, useTransition } from "react";
-import TextareaAutosize from "react-textarea-autosize";
 import { useDebouncedCallback } from "use-debounce";
 import { useTranslations } from "use-intl";
 import { Editor } from "@/app/[locale]/_components/editor/editor";
@@ -12,7 +11,6 @@ import type {
 import { useKeyboardVisible } from "../../_hooks/use-keyboard-visible";
 import { EditHeader } from "../header/client";
 import type { TranslationContext } from "../header/translation-settings/types";
-import { TagInput } from "../tag-input";
 import { type EditPageContentActionState, editPageContent } from "./action";
 
 interface EditPageClientProps {
@@ -49,7 +47,6 @@ export function EditPageClient({
 	});
 	const [isEditing, startEditing] = useTransition();
 	const editPageContentFn = useServerFn(editPageContent);
-	const [title, setTitle] = useState(initialTitle ?? "");
 	const [pageId, setPageId] = useState(pageWithTitleAndTags?.id);
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -90,31 +87,6 @@ export function EditPageClient({
 		debouncedSubmit();
 	}
 
-	function handleTitleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-		// ペースト等で改行が混ざってもタイトルに残さない（Enter は onKeyDown で抑止済み）。
-		setTitle(e.target.value.replace(/\r\n|\r|\n/g, " "));
-		handleChange();
-	}
-
-	/** タイトルのEnterで改行せず、本文の先頭へカーソルを移す。 */
-	function handleTitleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-		if (e.key === "Enter") {
-			e.preventDefault();
-			const body = formRef.current?.querySelector<HTMLElement>(
-				'[contenteditable="true"]',
-			);
-			if (body) {
-				body.focus();
-				const range = document.createRange();
-				range.selectNodeContents(body);
-				range.collapse(true);
-				const selection = window.getSelection();
-				selection?.removeAllRanges();
-				selection?.addRange(range);
-			}
-		}
-	}
-
 	return (
 		<div
 			className={`overflow-y-scroll overflow-x-hidden flex flex-col ${isKeyboardVisible ? "overscroll-y-contain" : null}`}
@@ -124,11 +96,17 @@ export function EditPageClient({
 			}}
 		>
 			<EditHeader
+				allTagsWithCount={allTagsWithCount}
 				currentUser={currentUser}
 				handle={handle}
 				hasUnsavedChanges={hasUnsavedChanges}
 				initialCommentsEnabled={pageWithTitleAndTags?.commentsEnabled ?? true}
 				initialStatus={pageWithTitleAndTags?.status || "DRAFT"}
+				initialTags={
+					pageWithTitleAndTags?.tagPages.map(({ tag }) => ({
+						name: tag.name,
+					})) ?? []
+				}
 				isSaving={isEditing}
 				locale={userLocale}
 				pageId={pageId}
@@ -138,40 +116,14 @@ export function EditPageClient({
 			/>
 			<main className="px-4 md:px-12 grow">
 				<div className="w-full max-w-3xl prose dark:prose-invert sm:prose lg:prose-lg mx-auto prose-headings:text-gray-700 dark:prose-headings:text-gray-200 text-gray-700 dark:text-gray-200 mb-5 mt-3 md:mt-5 tracking-wider">
-					<div>
-						<h1 className="m-0!">
-							<TextareaAutosize
-								className="w-full outline-hidden bg-transparent resize-none overflow-hidden"
-								data-testid="title-input"
-								maxRows={10}
-								minRows={1}
-								name="title"
-								onChange={handleTitleChange}
-								onKeyDown={handleTitleKeyDown}
-								placeholder={t("title")}
-								value={title}
-							/>
-						</h1>
-						{!editState.success && editState.zodErrors?.title && (
-							<p className="text-sm text-red-500">
-								{editState.zodErrors.title.join(", ")}
-							</p>
-						)}
-						<TagInput
-							allTagsWithCount={allTagsWithCount}
-							initialTags={
-								pageWithTitleAndTags?.tagPages.map((tagPage) => ({
-									name: tagPage.tag.name,
-								})) ?? []
-							}
-							pageId={pageId}
-						/>
-					</div>
 					<form id="edit-page-form" onSubmit={handleSubmit} ref={formRef}>
 						<input name="pageSlug" type="hidden" value={pageSlug} />
-						<input name="title" type="hidden" value={title} />
 						<input name="userLocale" type="hidden" value={userLocale} />
 						<Editor
+							articleTitle={{
+								defaultValue: initialTitle ?? "",
+								placeholder: t("title"),
+							}}
 							className="outline-hidden"
 							defaultValue={markdown}
 							name="pageContent"
@@ -180,6 +132,11 @@ export function EditPageClient({
 							showMenus
 						/>
 					</form>
+					{!editState.success && editState.zodErrors?.title && (
+						<p className="text-sm text-red-500">
+							{editState.zodErrors.title.join(", ")}
+						</p>
+					)}
 					{!editState.success && editState.message && (
 						<p className="text-sm text-red-500" role="alert">
 							{t("saveFailed")}

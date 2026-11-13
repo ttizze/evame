@@ -8,6 +8,20 @@
 		"authorize": "許可してアプリに戻る",
 		"cancel": "キャンセル"
 	},
+	"TagInput": {
+		"title": "タグ",
+		"placeholder": "タグを追加",
+		"help": "タグは最大5個まで追加できます。",
+		"removeTag": "タグ「{tag}」を削除",
+		"createTag": "「{tag}」を作成",
+		"noOptions": "追加できるタグがありません。",
+		"results": "{count}件の候補があります。",
+		"saving": "タグを保存中…",
+		"saveFailed": "タグを保存できませんでした。もう一度お試しください。",
+		"invalidTags": "タグは1〜15文字、記号・空白なしで、最大5個まで指定できます。",
+		"pageNotFound": "記事が見つかりません。",
+		"retry": "タグの保存を再試行"
+	},
 	"PublicationSettings": {
 		"title": "公開設定",
 		"openSettings": "公開設定: {status}",

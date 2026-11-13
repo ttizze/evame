@@ -89,6 +89,34 @@ describe("editPageContent", () => {
 		expect(updatedPage?.slug).toBe(page.slug);
 	});
 
+	it.each(["", " \r\n\t "])(
+		"タイトルが空白だけならuntitledとして保存し、本文は維持する（%j）",
+		async (title) => {
+			const user = await createUser();
+			const page = await createPage({ userId: user.id, slug: "untitled-page" });
+			vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(
+				toSessionUser(user),
+			);
+			const form = new FormData();
+			form.set("pageSlug", page.slug);
+			form.set("title", title);
+			form.set("userLocale", "ja");
+			form.set("contentFormat", "markdown");
+			form.set("pageContent", "本文を残す");
+			expect((await editPageContent({ data: form })).success).toBe(true);
+			const segments = await db
+				.selectFrom("segments")
+				.select(["number", "text"])
+				.where("contentId", "=", page.id)
+				.orderBy("number")
+				.execute();
+			expect(segments).toMatchObject([
+				{ number: 0, text: "untitled" },
+				{ number: 1, text: "本文を残す" },
+			]);
+		},
+	);
+
 	it("所有者が未作成のslugを保存すると新規ページを作成する", async () => {
 		const user = await createUser();
 		vi.mocked(getCurrentUserFromHeaders).mockResolvedValue(toSessionUser(user));

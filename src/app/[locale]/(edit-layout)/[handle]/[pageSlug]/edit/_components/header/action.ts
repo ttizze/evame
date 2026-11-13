@@ -9,6 +9,7 @@ import type { ActionResponse } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
 import { db } from "@/db";
 import type { PageStatus } from "@/db/types";
+import { formDataValidator } from "../_utils/form-data-validator";
 import { updatePageStatus } from "./db/mutations.server";
 
 const editPageStatusSchema = z.object({
@@ -35,13 +36,6 @@ export type EditPageStatusActionState = ActionResponse<
 		translationContextId?: string;
 	}
 >;
-
-const formDataValidator = (value: unknown) => {
-	if (!(value instanceof FormData)) {
-		throw new Error("Expected FormData");
-	}
-	return value;
-};
 
 export const editPageStatus = createServerFn({ method: "POST" })
 	.validator(formDataValidator)

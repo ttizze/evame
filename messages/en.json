@@ -8,6 +8,20 @@
 		"authorize": "Allow and return to app",
 		"cancel": "Cancel"
 	},
+	"TagInput": {
+		"title": "Tags",
+		"placeholder": "Add tags",
+		"help": "Add up to 5 tags.",
+		"removeTag": "Remove tag {tag}",
+		"createTag": "Create tag “{tag}”",
+		"noOptions": "No tags available.",
+		"results": "{count, plural, one {# result available.} other {# results available.}}",
+		"saving": "Saving tags…",
+		"saveFailed": "Could not save tags. Please try again.",
+		"invalidTags": "Use 1–15 characters per tag, without spaces or symbols, and up to 5 tags.",
+		"pageNotFound": "Page not found.",
+		"retry": "Retry saving tags"
+	},
 	"PublicationSettings": {
 		"title": "Publication settings",
 		"openSettings": "Publication settings: {status}",

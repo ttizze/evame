@@ -5,6 +5,7 @@ const excludedTests = ["**/.worktrees/**", "**/node_modules/**", "**/dist/**"];
 const domTests = [
 	"**/*.{test,spec}.?(c|m)[jt]sx",
 	"**/block-editing.test.ts",
+	"**/article-title.test.ts",
 	"**/auth-client.test.ts",
 ];
 

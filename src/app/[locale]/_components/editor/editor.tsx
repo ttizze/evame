@@ -2,22 +2,38 @@ import { HistoryExtension } from "@lexical/history";
 import {
 	$convertFromMarkdownString,
 	$convertToMarkdownString,
+	$generateNodesFromMarkdownString,
 } from "@lexical/mdast";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalExtensionComposer } from "@lexical/react/LexicalExtensionComposer";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
+import { $createHeadingNode } from "@lexical/rich-text";
 import { TableExtension } from "@lexical/table";
 import { captureException } from "@sentry/react";
-import { $onUpdate, configExtension, defineExtension } from "lexical";
-import { useRef, useState } from "react";
+import {
+	$createTextNode,
+	$findMatchingParent,
+	$getEditor,
+	$getRoot,
+	$isRangeSelection,
+	$onUpdate,
+	configExtension,
+	defineExtension,
+} from "lexical";
+import { type CSSProperties, useRef, useState } from "react";
+import { ArticleTitleExtension } from "./article-title";
 import { BlockDragMenu } from "./block-drag-menu";
-import { TabEditingExtension } from "./block-editing";
+import {
+	$isEntireDocumentSelection,
+	TabEditingExtension,
+} from "./block-editing";
 import { DocumentExtension } from "./document";
 import { EditorMenu } from "./editor-menu";
 import { ImagePlugin } from "./image-plugin";
 
-/** 記事とコメントで共有するMarkdown入出力のエディタ。本文の変更だけを保存元へ通知する。 */
+/** 記事とコメントで共有するMarkdown入出力のエディタ。 */
 export function Editor({
+	articleTitle,
 	defaultValue,
 	name,
 	className,
@@ -25,6 +41,7 @@ export function Editor({
 	showMenus,
 	onChange,
 }: {
+	articleTitle: { defaultValue: string; placeholder: string } | null;
 	defaultValue: string;
 	name: string;
 	className: string;
@@ -33,6 +50,8 @@ export function Editor({
 	onChange: ((markdown: string) => void) | null;
 }) {
 	const input = useRef<HTMLInputElement>(null);
+	const titleInput = useRef<HTMLInputElement>(null);
+	const currentTitle = useRef(articleTitle?.defaultValue ?? "");
 	const [anchorElement, setAnchorElement] = useState<HTMLDivElement | null>(
 		null,
 	);
@@ -45,6 +64,14 @@ export function Editor({
 			namespace: "evame-editor",
 			$initialEditorState: () => {
 				$convertFromMarkdownString(currentMarkdown.current);
+				if (articleTitle) {
+					const title = $createHeadingNode("h1").append(
+						$createTextNode(currentTitle.current),
+					);
+					const first = $getRoot().getFirstChild();
+					if (first) first.insertBefore(title);
+					else $getRoot().append(title);
+				}
 				currentMarkdown.current = $convertToMarkdownString();
 				// 読み込み後の変換まで終えて確定してから、読み込み済みとする。
 				$onUpdate(() => {
@@ -94,6 +121,39 @@ export function Editor({
 			},
 			dependencies: [
 				HistoryExtension,
+				configExtension(ClipboardImportExtension, {
+					$importMimeType: {
+						"text/plain": [
+							(text, selection, $next) => {
+								if (!$isRangeSelection(selection)) return $next();
+								const anchorCode = $findMatchingParent(
+									selection.anchor.getNode(),
+									$isCodeNode,
+								);
+								const focusCode = $findMatchingParent(
+									selection.focus.getNode(),
+									$isCodeNode,
+								);
+								if (
+									!$isEntireDocumentSelection(
+										selection.isCollapsed(),
+										selection.anchor,
+										selection.focus,
+									) &&
+									(selection.hasFormat("code") || anchorCode?.is(focusCode))
+								)
+									return $next();
+								$insertGeneratedNodes(
+									$getEditor(),
+									$generateNodesFromMarkdownString(text),
+									selection,
+								);
+								return true;
+							},
+						],
+					},
+				}),
+				...(articleTitle ? [ArticleTitleExtension] : []),
 				...(showMenus ? [TabEditingExtension] : []),
 				configExtension(TableExtension, {
 					hasHorizontalScroll: true,
@@ -112,13 +172,28 @@ export function Editor({
 					aria-label={placeholder}
 					aria-placeholder={placeholder}
 					className={`${className} min-h-8 focus:outline-hidden ${showMenus ? "flow-root md:pl-8" : ""}`}
+					data-article-editor={articleTitle ? "true" : undefined}
 					data-testid="lexical-editor"
 					placeholder={
-						<p
-							className={`pointer-events-none absolute top-0 left-0 text-muted-foreground ${showMenus ? "md:left-8" : "m-0!"}`}
-						>
-							{placeholder}
-						</p>
+						articleTitle ? (
+							() => null
+						) : (
+							<p
+								className={`pointer-events-none absolute top-0 left-0 text-muted-foreground ${showMenus ? "md:left-8" : "m-0!"}`}
+							>
+								{placeholder}
+							</p>
+						)
+					}
+					style={
+						articleTitle
+							? ({
+									"--title-placeholder": JSON.stringify(
+										articleTitle.placeholder,
+									),
+									"--body-placeholder": JSON.stringify(placeholder),
+								} as CSSProperties)
+							: undefined
 					}
 				/>
 				<input
@@ -130,18 +205,42 @@ export function Editor({
 					type="hidden"
 				/>
 				<input name="contentFormat" type="hidden" value="markdown" />
+				{articleTitle && (
+					<input
+						name="title"
+						ref={(element) => {
+							titleInput.current = element;
+							if (element) element.value = currentTitle.current;
+						}}
+						type="hidden"
+					/>
+				)}
 			</div>
 			<ImagePlugin />
 			<OnChangePlugin
 				ignoreHistoryMergeTagChange={false}
 				ignoreSelectionChange
 				onChange={(state, editor) => {
-					const markdown = state.read(() => $convertToMarkdownString(), {
-						editor,
-					});
-					if (markdown === currentMarkdown.current) return;
+					const { markdown, title } = state.read(
+						() => ({
+							markdown: $convertToMarkdownString(),
+							title: articleTitle
+								? ($getRoot().getFirstChild()?.getTextContent() ?? "")
+								: "",
+						}),
+						{
+							editor,
+						},
+					);
+					if (
+						markdown === currentMarkdown.current &&
+						title === currentTitle.current
+					)
+						return;
 					currentMarkdown.current = markdown;
+					currentTitle.current = title;
 					if (input.current) input.current.value = markdown;
+					if (titleInput.current) titleInput.current.value = title;
 					onChange?.(markdown);
 				}}
 			/>
@@ -154,3 +253,9 @@ export function Editor({
 		</LexicalExtensionComposer>
 	);
 }
+
+import {
+	$insertGeneratedNodes,
+	ClipboardImportExtension,
+} from "@lexical/clipboard";
+import { $isCodeNode } from "@lexical/code-core";

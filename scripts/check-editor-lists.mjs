@@ -15,6 +15,7 @@ function rendered(markdown) {
 
 /** 記法の入力、Tabでの階層変更と項目単位のネイティブドラッグを保存後まで確認する。 */
 export async function checkEditorLists(page, group) {
+	await page.setViewportSize({ width: 1280, height: 900 });
 	const editor = page.getByTestId("lexical-editor");
 	async function replaceMarkdown(markdown) {
 		await editor.click();
@@ -29,7 +30,16 @@ export async function checkEditorLists(page, group) {
 					cancelable: true,
 				}),
 			);
-		}, markdown);
+		}, `# リスト操作の検証\n\n${markdown}`);
+		if (!markdown) await editor.press("Enter");
+		await expect(editor.locator(":scope > h1:first-child")).toHaveText(
+			"リスト操作の検証",
+		);
+		await expect
+			.poll(async () =>
+				rendered(await page.locator('input[name="pageContent"]').inputValue()),
+			)
+			.toEqual(rendered(markdown));
 	}
 	async function selectText(startText, endText, offset) {
 		await editor.evaluate(
@@ -225,9 +235,7 @@ export async function checkEditorLists(page, group) {
 			console.log(
 				"親子のチェック項目を上下キーでたどり、Space・Undo/Redo・保存後も状態を保てる",
 			);
-			await editor.click();
-			await editor.press("ControlOrMeta+a");
-			await editor.press("Backspace");
+			await replaceMarkdown("");
 			await editor.pressSequentially("- 親");
 			await editor.press("Enter");
 			await editor.press("Tab");
@@ -493,7 +501,10 @@ export async function checkEditorLists(page, group) {
 			for (const backward of [false, true]) {
 				await replaceMarkdown("- 対象\n-");
 				await editor.evaluate((root, reverse) => {
-					const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+					const walker = document.createTreeWalker(
+						root.querySelector("ul"),
+						NodeFilter.SHOW_TEXT,
+					);
 					const first = walker.nextNode();
 					const last = root.querySelector("ul > li:last-child");
 					if (!first || !last) throw new Error("選択する項目がありません");
@@ -616,7 +627,7 @@ export async function checkEditorLists(page, group) {
 				await editor.press("ControlOrMeta+a");
 				await editor.evaluate((element, value) => {
 					const data = new DataTransfer();
-					data.setData("text/html", value);
+					data.setData("text/html", `<h1>貼り付けた題名</h1>${value}`);
 					element.dispatchEvent(
 						new ClipboardEvent("paste", {
 							clipboardData: data,
@@ -625,6 +636,9 @@ export async function checkEditorLists(page, group) {
 						}),
 					);
 				}, html);
+				await expect(editor.locator(":scope > h1:first-child")).toHaveText(
+					"貼り付けた題名",
+				);
 				await expect
 					.poll(async () =>
 						rendered(
@@ -927,9 +941,7 @@ export async function checkEditorLists(page, group) {
 			await editor.press("Backspace");
 			await expect(checkbox).toHaveCount(1);
 			await expect(editor.getByText("確認", { exact: true })).toBeVisible();
-			await editor.click();
-			await editor.press("ControlOrMeta+a");
-			await editor.press("Backspace");
+			await replaceMarkdown("");
 			await editor.pressSequentially("1. 一段目");
 			for (const text of ["二段目", "三段目", "四段目", "五段目"]) {
 				await editor.press("Enter");

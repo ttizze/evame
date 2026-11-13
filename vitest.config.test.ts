@@ -26,6 +26,7 @@ it("DOM操作テストだけをjsdomへ割り当て、Node側と重複させな�
 	expect(dom?.test.include).toEqual([
 		"**/*.{test,spec}.?(c|m)[jt]sx",
 		"**/block-editing.test.ts",
+		"**/article-title.test.ts",
 		"**/auth-client.test.ts",
 	]);
 	for (const pattern of dom?.test.include ?? [])

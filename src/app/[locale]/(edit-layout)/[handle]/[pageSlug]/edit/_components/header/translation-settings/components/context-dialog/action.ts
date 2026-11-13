@@ -5,6 +5,7 @@ import { z } from "zod";
 import { getCurrentUserFromHeaders } from "@/app/_service/current-user";
 import type { ActionResponse } from "@/app/types";
 import { db } from "@/db";
+import { formDataValidator } from "../../../../_utils/form-data-validator";
 import type { TranslationContext } from "../../types";
 
 const createContextSchema = z.object({
@@ -18,13 +19,6 @@ const updateContextSchema = createContextSchema.extend({
 
 export type CreateContextActionState = ActionResponse<TranslationContext>;
 export type UpdateContextActionState = ActionResponse<TranslationContext>;
-
-const formDataValidator = (value: unknown) => {
-	if (!(value instanceof FormData)) {
-		throw new Error("Expected FormData");
-	}
-	return value;
-};
 
 export const createContext = createServerFn({ method: "POST" })
 	.validator(formDataValidator)

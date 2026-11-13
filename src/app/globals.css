@@ -327,6 +327,25 @@ body.virtual-keyboard-shown {
 	--radius-4xl: calc(var(--radius) + 16px);
 }
 
+[data-article-editor] > h1:first-child {
+	margin-block: 0 1rem;
+	min-height: 1.2em;
+}
+[data-article-editor] > h1:first-child:empty::before,
+[data-article-editor] > h1:first-child:has(> br:only-child)::before {
+	content: var(--title-placeholder);
+	color: var(--muted-foreground);
+	pointer-events: none;
+	position: absolute;
+}
+[data-article-editor] > h1:first-child + p:last-child:empty::before,
+[data-article-editor] > h1:first-child + p:last-child:has(> br:only-child)::before {
+	content: var(--body-placeholder);
+	color: var(--muted-foreground);
+	pointer-events: none;
+	position: absolute;
+}
+
 .editor-list-decimal { list-style-type: decimal; }
 .editor-list-upper-alpha { list-style-type: upper-alpha; }
 .editor-list-lower-alpha { list-style-type: lower-alpha; }

@@ -15,28 +15,40 @@ export async function checkEditorDrag(page) {
 	const context = page.context();
 	const baseUrl = new URL(page.url()).origin;
 	const sessionCookies = await context.cookies(baseUrl);
-	const title = page.getByTestId("title-input");
+	const title = page
+		.getByTestId("lexical-editor")
+		.locator(":scope > h1:first-child");
 	const editor = page.getByTestId("lexical-editor");
+	const publicationSettings = page.getByRole("button", {
+		name: "公開設定: 自分のみ",
+		exact: true,
+	});
 	for (const width of [390, 1280]) {
 		await page.setViewportSize({ width, height: 900 });
-		const row = await editor.locator("p").boundingBox();
-		const placeholder = await page
-			.getByText("本文を書く…", { exact: true })
-			.boundingBox();
-		assert.ok(row && placeholder);
-		assert.equal(
-			placeholder.x,
-			row.x,
-			"本文の案内文を空行のカーソル位置へ揃える",
-		);
-		assert.equal(
-			placeholder.y,
-			row.y,
-			"本文の案内文を空行のカーソル位置へ揃える",
-		);
+		await expect(editor.locator("p").first()).toBeVisible();
+		await expect
+			.poll(() =>
+				editor
+					.locator("p")
+					.first()
+					.evaluate((element) => {
+						const placeholder = getComputedStyle(element, "::before");
+						return {
+							content: placeholder.content,
+							position: placeholder.position,
+							pointerEvents: placeholder.pointerEvents,
+						};
+					}),
+			)
+			.toEqual({
+				content: '"本文を書く…"',
+				position: "absolute",
+				pointerEvents: "none",
+			});
 	}
 	// iPhoneでキーボードが開いた状態と同じく、表示領域の高さだけを縮める。
 	await page.setViewportSize({ width: 390, height: 900 });
+	await editor.locator("p").first().click();
 	await page.evaluate(() =>
 		document.documentElement.style.setProperty("--svh", "5px"),
 	);
@@ -73,7 +85,7 @@ export async function checkEditorDrag(page) {
 		} else await route.continue();
 	});
 	await title.fill("段落のドラッグ移動");
-	await editor.click();
+	await editor.locator("p").first().click();
 	await editor.evaluate((element) => {
 		const data = new DataTransfer();
 		data.setData(
@@ -116,13 +128,13 @@ export async function checkEditorDrag(page) {
 		"自動保存で編集画面や親ルートを再取得しない",
 	);
 	assert.equal(await editable.evaluate((element) => element.isConnected), true);
-	await expect(page.getByRole("combobox")).toBeEnabled();
+	await expect(publicationSettings).toBeEnabled();
 	await page.mouse.up();
 	await expect(editor.locator("p").first()).toHaveText("次の段落");
 	await editor.press("ControlOrMeta+z");
 	await expect(editor.locator("p").first()).toHaveText("最初の段落");
-	for (const destination of [title, page.getByRole("combobox")]) {
-		const originalValue = await destination.inputValue();
+	for (const destination of [title, publicationSettings]) {
+		const originalText = await destination.textContent();
 		await editor.locator("p").first().hover();
 		const start = await page.getByTestId("editor-drag-handle").boundingBox();
 		const target = await destination.boundingBox();
@@ -133,9 +145,61 @@ export async function checkEditorDrag(page) {
 			{ x: target.x + target.width / 2, y: target.y + target.height / 2 },
 		);
 		await page.mouse.up();
-		await expect(destination).toHaveValue(originalValue);
-		await expect(editor.locator("p").first()).toHaveText("最初の段落");
+		await expect(destination).toHaveText(originalText);
+		await expect(editor.locator("p")).toHaveText([
+			"最初の段落",
+			"次の段落",
+			"最後の段落",
+			"",
+		]);
+		await expect(editor.locator(":scope > :first-child")).toHaveJSProperty(
+			"tagName",
+			"H1",
+		);
 	}
+	await publicationSettings.click();
+	const tagInput = page.getByRole("combobox", {
+		name: "タグ",
+		exact: true,
+	});
+	await expect(tagInput).toBeEnabled();
+	await tagInput.fill("タグ保護");
+	await editor
+		.locator("p")
+		.first()
+		.hover({ position: { x: 4, y: 4 } });
+	const tagDragHandle = page.getByTestId("editor-drag-handle");
+	await expect(tagDragHandle).toBeVisible();
+	const tagTransfer = await page.evaluateHandle(() => new DataTransfer());
+	await tagDragHandle.dispatchEvent("dragstart", {
+		dataTransfer: tagTransfer,
+	});
+	assert.deepEqual(
+		await tagTransfer.evaluate((data) =>
+			[...data.types].map((type) => [type, data.getData(type)]),
+		),
+		[["text/plain", ""]],
+		"本文のドラッグデータをタグへ文字として挿入しない",
+	);
+	await tagInput.dispatchEvent("dragover", { dataTransfer: tagTransfer });
+	await tagInput.dispatchEvent("drop", { dataTransfer: tagTransfer });
+	await expect(tagInput).toHaveValue("タグ保護");
+	await expect(title).toHaveText("段落のドラッグ移動");
+	await expect(editor.locator("p")).toHaveText([
+		"最初の段落",
+		"次の段落",
+		"最後の段落",
+		"",
+	]);
+	await expect(
+		page.getByRole("button", { name: /^タグ「.+」を削除$/ }),
+	).toHaveCount(0);
+	await tagDragHandle.dispatchEvent("dragend", {
+		dataTransfer: tagTransfer,
+	});
+	await tagTransfer.dispose();
+	await page.keyboard.press("Escape");
+	await expect(tagInput).toHaveCount(0);
 	for (const dropInGutter of [false, true]) {
 		await editor.locator("p").first().hover();
 		const handle = page.getByTestId("editor-drag-handle");
@@ -200,7 +264,7 @@ export async function checkEditorDrag(page) {
 	await context.addCookies(sessionCookies);
 	await page.goBack();
 	await expect(page).toHaveURL(editUrl);
-	await expect(title).toHaveValue("段落のドラッグ移動");
+	await expect(title).toHaveText("段落のドラッグ移動");
 	await page.getByRole("link", { name: "Evame Logo", exact: true }).click();
 	await page.waitForURL(`${baseUrl}/ja`);
 	await expect(
@@ -208,17 +272,16 @@ export async function checkEditorDrag(page) {
 	).toBeVisible();
 	await page.goBack();
 	await expect(page).toHaveURL(editUrl);
-	await expect(title).toHaveValue("段落のドラッグ移動");
+	await expect(title).toHaveText("段落のドラッグ移動");
 	await expect(editor.locator("p")).toHaveText([
 		"次の段落",
 		"",
 		"最初の段落",
 		"最後の段落",
 	]);
-	await expect(page.getByRole("combobox")).toBeEnabled();
-	await page
-		.getByRole("button", { name: "公開設定: 自分のみ", exact: true })
-		.click();
+	await expect(tagInput).toHaveCount(0);
+	await expect(publicationSettings).toBeEnabled();
+	await publicationSettings.click();
 	await page.getByRole("link", { name: "プレビュー", exact: true }).click();
 	await page.waitForURL(editUrl.replace(/\/edit$/, ""));
 	await expect(
@@ -235,14 +298,15 @@ export async function checkEditorDrag(page) {
 	]);
 	await page.goBack();
 	await expect(page).toHaveURL(editUrl);
-	await expect(title).toHaveValue("段落のドラッグ移動");
+	await expect(title).toHaveText("段落のドラッグ移動");
 	await expect(editor.locator("p")).toHaveText([
 		"次の段落",
 		"",
 		"最初の段落",
 		"最後の段落",
 	]);
-	await expect(page.getByRole("combobox")).toBeEnabled();
+	await expect(tagInput).toHaveCount(0);
+	await expect(publicationSettings).toBeEnabled();
 	await page.reload();
 	await expect(editor.locator("p")).toHaveText([
 		"次の段落",
@@ -254,8 +318,14 @@ export async function checkEditorDrag(page) {
 	await expect(
 		editor.locator("p").nth(1).getByRole("img", { name: "移動する画像" }),
 	).toHaveAttribute("src", "/editor-drag-image.svg");
-	await expect(title).toHaveValue("段落のドラッグ移動");
-	await expect(page.getByTestId("tags-input")).toHaveValue("[]");
+	await expect(title).toHaveText("段落のドラッグ移動");
+	await publicationSettings.click();
+	await expect(tagInput).toBeEnabled();
+	await expect(
+		page.getByRole("button", { name: /^タグ「.+」を削除$/ }),
+	).toHaveCount(0);
+	await publicationSettings.click();
+	await expect(tagInput).toHaveCount(0);
 	// 先頭・末尾の余白も本文と同じドロップ先として扱う。
 	for (const moveToStart of [true, false]) {
 		const originalOrder = moveToStart

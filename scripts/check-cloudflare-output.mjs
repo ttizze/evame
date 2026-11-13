@@ -511,6 +511,7 @@ try {
 				cookie,
 				browserTypes,
 				browserSuite,
+				uploadedUrl.href,
 			);
 		}
 		if (includeReader) {

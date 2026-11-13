@@ -31,16 +31,28 @@ vi.mock("../header/client", () => ({
 			<button disabled={!pageId} type="button">
 				公開
 			</button>
+			<input aria-label="タグ" disabled={!pageId} />
 		</>
 	),
 }));
-vi.mock("../tag-input", () => ({
-	TagInput: ({ pageId }: { pageId: number | undefined }) => (
-		<input aria-label="タグ" disabled={!pageId} />
-	),
-}));
 vi.mock("@/app/[locale]/_components/editor/editor", () => ({
-	Editor: () => <input name="pageContent" readOnly value="本文" />,
+	Editor: ({
+		articleTitle,
+		onChange,
+	}: {
+		articleTitle: { defaultValue: string };
+		onChange: () => void;
+	}) => (
+		<>
+			<input
+				data-testid="title-input"
+				defaultValue={articleTitle.defaultValue}
+				name="title"
+				onChange={onChange}
+			/>
+			<input name="pageContent" readOnly value="本文" />
+		</>
+	),
 }));
 vi.mock("../../_hooks/use-keyboard-visible", () => ({
 	useKeyboardVisible: () => false,

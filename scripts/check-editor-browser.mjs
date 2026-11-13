@@ -1,8 +1,15 @@
 import assert from "node:assert/strict";
+import { checkEditorArticle } from "./check-editor-article.mjs";
 import { checkEditorDrag } from "./check-editor-drag.mjs";
 import { checkEditorLists } from "./check-editor-lists.mjs";
 
-export async function checkEditorBrowser(baseUrl, cookie, browserTypes, suite) {
+export async function checkEditorBrowser(
+	baseUrl,
+	cookie,
+	browserTypes,
+	suite,
+	imageUrl,
+) {
 	const suites = [
 		"editor-drag",
 		"editor-lists-clipboard",
@@ -46,9 +53,14 @@ export async function checkEditorBrowser(baseUrl, cookie, browserTypes, suite) {
 					await page.goto(`${baseUrl}/ja`);
 					await page.getByRole("button", { name: "Create a new page" }).click();
 					await page.waitForURL(/\/edit$/);
-					if (selected === "editor-drag") await checkEditorDrag(page);
-					else {
-						await page.getByTestId("title-input").fill("リスト操作の検証");
+					if (selected === "editor-drag") {
+						await checkEditorDrag(page);
+						await checkEditorArticle(page, imageUrl);
+					} else {
+						await page
+							.getByTestId("lexical-editor")
+							.locator(":scope > h1:first-child")
+							.fill("リスト操作の検証");
 						await checkEditorLists(
 							page,
 							selected.slice("editor-lists-".length),

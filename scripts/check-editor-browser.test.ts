@@ -1,19 +1,22 @@
 // @vitest-environment node
 import { beforeEach, expect, it, vi } from "vitest";
+import { checkEditorArticle } from "./check-editor-article.mjs";
 import { checkEditorBrowser } from "./check-editor-browser.mjs";
 import { checkEditorDrag } from "./check-editor-drag.mjs";
 import { checkEditorLists } from "./check-editor-lists.mjs";
 
+vi.mock("./check-editor-article.mjs", () => ({ checkEditorArticle: vi.fn() }));
 vi.mock("./check-editor-drag.mjs", () => ({ checkEditorDrag: vi.fn() }));
 vi.mock("./check-editor-lists.mjs", () => ({ checkEditorLists: vi.fn() }));
 beforeEach(() => vi.resetAllMocks());
 
 function browserFixture(name: string) {
 	const title = { fill: vi.fn() };
+	const editor = { locator: vi.fn(() => title) };
 	const page = {
 		goto: vi.fn(),
 		getByRole: vi.fn(() => ({ click: vi.fn() })),
-		getByTestId: vi.fn(() => title),
+		getByTestId: vi.fn(() => editor),
 		waitForURL: vi.fn(),
 	};
 	const context = {
@@ -26,6 +29,7 @@ function browserFixture(name: string) {
 	return {
 		type: { launch: vi.fn(async () => browser), name: () => name },
 		page,
+		editor,
 		title,
 		context,
 		browser,
@@ -40,8 +44,10 @@ it("全件実行では両ブラウザーでD&Dと全リスト操作群を一回�
 		"session=test=value",
 		[chromium.type, webkit.type],
 		"all",
+		"https://images.evame.tech/uploads/test",
 	);
 	expect(checkEditorDrag).toHaveBeenCalledTimes(2);
+	expect(checkEditorArticle).toHaveBeenCalledTimes(2);
 	expect(vi.mocked(checkEditorLists).mock.calls.map((call) => call[1])).toEqual(
 		[
 			"clipboard",
@@ -74,7 +80,10 @@ it.each(["clipboard", "structure", "formatting"])(
 	async (group) => {
 		const fixture = browserFixture("webkit");
 		vi.mocked(checkEditorLists).mockImplementationOnce(async () => {
-			expect(fixture.page.getByTestId).toHaveBeenCalledWith("title-input");
+			expect(fixture.page.getByTestId).toHaveBeenCalledWith("lexical-editor");
+			expect(fixture.editor.locator).toHaveBeenCalledWith(
+				":scope > h1:first-child",
+			);
 			expect(fixture.title.fill).toHaveBeenCalledExactlyOnceWith(
 				"リスト操作の検証",
 			);
@@ -84,6 +93,7 @@ it.each(["clipboard", "structure", "formatting"])(
 			"session=test",
 			[fixture.type],
 			`editor-lists-${group}`,
+			"https://images.evame.tech/uploads/test",
 		);
 		expect(checkEditorDrag).not.toHaveBeenCalled();
 		expect(checkEditorLists).toHaveBeenCalledExactlyOnceWith(
@@ -102,8 +112,13 @@ it("D&D操作群ではリスト操作を重複して実行しない", async () =
 		"session=test",
 		[fixture.type],
 		"editor-drag",
+		"https://images.evame.tech/uploads/test",
 	);
 	expect(checkEditorDrag).toHaveBeenCalledExactlyOnceWith(fixture.page);
+	expect(checkEditorArticle).toHaveBeenCalledExactlyOnceWith(
+		fixture.page,
+		"https://images.evame.tech/uploads/test",
+	);
 	expect(checkEditorLists).not.toHaveBeenCalled();
 });
 
@@ -116,6 +131,7 @@ it("検証が失敗してもブラウザーを閉じ、失敗を呼び出し元�
 			"session=test",
 			[fixture.type],
 			"editor-lists-structure",
+			"https://images.evame.tech/uploads/test",
 		),
 	).rejects.toThrow("保存に失敗");
 	expect(fixture.browser.close).toHaveBeenCalledOnce();

@@ -27,6 +27,12 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import type { PageStatus } from "@/db/types";
+import type { TagWithCount } from "../../_db/queries.server";
+import { TagInput } from "../tag-input";
+import {
+	type EditPageTagsActionState,
+	editPageTags,
+} from "../tag-input/action";
 import { editPageStatus } from "./action";
 import { EditHelpPopover } from "./edit-help-popover.client";
 import { useHeaderVisibility } from "./hooks/use-header-visibility";
@@ -37,6 +43,8 @@ interface EditHeaderProps {
 	currentUser: SanitizedUser;
 	initialStatus: PageStatus;
 	initialCommentsEnabled: boolean;
+	initialTags: { name: string }[];
+	allTagsWithCount: TagWithCount[];
 	hasUnsavedChanges: boolean;
 	isSaving: boolean;
 	pageId: number | undefined;
@@ -82,6 +90,8 @@ export function EditHeader({
 	currentUser,
 	initialStatus,
 	initialCommentsEnabled,
+	initialTags,
+	allTagsWithCount,
 	hasUnsavedChanges,
 	isSaving,
 	pageId,
@@ -92,11 +102,19 @@ export function EditHeader({
 	translationContexts,
 }: EditHeaderProps) {
 	const t = useTranslations("PublicationSettings");
+	const tagsT = useTranslations("TagInput");
 	const [status, setStatus] = useState<PageStatus>(initialStatus);
 	const [commentsEnabled, setCommentsEnabled] = useState(
 		initialCommentsEnabled,
 	);
 	const [jobs, setJobs] = useState<TranslationJobForToast[]>([]);
+	const [tags, setTags] = useState(initialTags.map((tag) => tag.name));
+	const [tagEditState, setTagEditState] = useState<EditPageTagsActionState>({
+		success: true,
+		data: undefined,
+	});
+	const [areTagsSaving, setAreTagsSaving] = useState(false);
+	const editPageTagsFn = useServerFn(editPageTags);
 	const [isPending, startTransition] = useTransition();
 	const editPageStatusFn = useServerFn(editPageStatus);
 	const [locales, setLocales] = useState<string[]>(
@@ -113,6 +131,7 @@ export function EditHeader({
 		currentUser.plan?.toLowerCase?.() === "premium" ? 4 : 2;
 	const isPublic = status === "PUBLIC";
 	const isProcessing = isPending || isSaving;
+	const hasUnsavedTags = areTagsSaving || !tagEditState.success;
 	const statusLabel = t(
 		isProcessing ? "processing" : isPublic ? "public" : "private",
 	);
@@ -121,7 +140,7 @@ export function EditHeader({
 		if (
 			!pageId ||
 			isProcessing ||
-			(nextStatus === "PUBLIC" && hasUnsavedChanges)
+			(nextStatus === "PUBLIC" && (hasUnsavedChanges || hasUnsavedTags))
 		)
 			return;
 		const formData = new FormData();
@@ -144,6 +163,26 @@ export function EditHeader({
 				toast.error(t("failed"));
 			}
 		});
+	};
+
+	const saveTags = async (nextTags: string[]) => {
+		if (!pageId || areTagsSaving) return;
+		setTags(nextTags);
+		setAreTagsSaving(true);
+		setTagEditState({ success: true, data: undefined });
+		const formData = new FormData();
+		formData.set("pageId", String(pageId));
+		formData.set("tags", JSON.stringify(nextTags));
+		try {
+			const result = await editPageTagsFn({ data: formData });
+			setTagEditState(result);
+			if (!result.success) toast.error(tagsT("saveFailed"));
+		} catch {
+			setTagEditState({ success: false });
+			toast.error(tagsT("saveFailed"));
+		} finally {
+			setAreTagsSaving(false);
+		}
 	};
 
 	const statusIcon = isProcessing ? (
@@ -228,7 +267,12 @@ export function EditHeader({
 										<Button
 											aria-pressed={isPublic}
 											className="flex-1 gap-2"
-											disabled={isPublic || isProcessing || hasUnsavedChanges}
+											disabled={
+												isPublic ||
+												isProcessing ||
+												hasUnsavedChanges ||
+												hasUnsavedTags
+											}
 											onClick={() => submitStatus("PUBLIC")}
 											type="button"
 											variant={isPublic ? "secondary" : "outline"}
@@ -241,6 +285,16 @@ export function EditHeader({
 										{t(isPublic ? "publicHelp" : "privateHelp")}
 									</p>
 								</div>
+								<Separator />
+								<TagInput
+									allTagsWithCount={allTagsWithCount}
+									editState={tagEditState}
+									isSaving={areTagsSaving}
+									onRetry={() => saveTags(tags)}
+									onTagsChange={saveTags}
+									pageId={pageId}
+									tags={tags}
+								/>
 								<Separator />
 								<div className="space-y-2">
 									<div className="flex items-center justify-between gap-2">
@@ -257,7 +311,10 @@ export function EditHeader({
 											<Button
 												className="gap-2"
 												disabled={
-													!isPublic || isProcessing || hasUnsavedChanges
+													!isPublic ||
+													isProcessing ||
+													hasUnsavedChanges ||
+													hasUnsavedTags
 												}
 												onClick={() => submitStatus("PUBLIC")}
 												size="sm"
@@ -270,7 +327,11 @@ export function EditHeader({
 										</div>
 									</div>
 									<p className="text-xs text-muted-foreground">
-										{t(hasUnsavedChanges ? "waitForSave" : "translationHelp")}
+										{t(
+											hasUnsavedChanges || hasUnsavedTags
+												? "waitForSave"
+												: "translationHelp",
+										)}
 									</p>
 								</div>
 								<Separator />

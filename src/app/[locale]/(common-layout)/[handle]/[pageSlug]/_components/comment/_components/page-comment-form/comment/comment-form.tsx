@@ -40,6 +40,7 @@ export function CommentForm({
 
 				{currentUser ? (
 					<Editor
+						articleTitle={null}
 						className="rounded-md border border-input px-2"
 						defaultValue={content}
 						name="content"

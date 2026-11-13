@@ -8,6 +8,20 @@
 		"authorize": "允许并返回应用",
 		"cancel": "取消"
 	},
+	"TagInput": {
+		"title": "标签",
+		"placeholder": "添加标签",
+		"help": "最多可添加5个标签。",
+		"removeTag": "移除标签{tag}",
+		"createTag": "创建标签“{tag}”",
+		"noOptions": "没有可添加的标签。",
+		"results": "共有{count}个候选标签。",
+		"saving": "正在保存标签…",
+		"saveFailed": "无法保存标签，请重试。",
+		"invalidTags": "每个标签需为1至15个字符，不能包含空格或符号，最多可添加5个。",
+		"pageNotFound": "找不到文章。",
+		"retry": "重试保存标签"
+	},
 	"PublicationSettings": {
 		"title": "发布设置",
 		"openSettings": "发布设置: {status}",
