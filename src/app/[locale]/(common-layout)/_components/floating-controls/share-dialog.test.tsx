@@ -1,7 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
+import { IntlProvider } from "use-intl";
 import { expect, it, vi } from "vitest";
+import { messages } from "@/i18n/messages";
 import { ShareDialog } from "./share-dialog";
 
 const sharePackage = vi.hoisted(() => ({ loads: 0 }));
@@ -25,9 +27,13 @@ vi.mock("nuqs", async (importOriginal) => ({
 
 it("Shareを押すまでSNSのライブラリを読み込まず、最初のクリックで共有先を開く", async () => {
 	const user = userEvent.setup();
-	render(<ShareDialog />);
+	render(
+		<IntlProvider locale="ja" messages={messages.ja}>
+			<ShareDialog />
+		</IntlProvider>,
+	);
 	expect(sharePackage.loads).toBe(0);
-	await user.click(screen.getByRole("button"));
+	await user.click(screen.getByRole("button", { name: "共有" }));
 	expect(await screen.findByRole("dialog", { name: "Share" })).toBeVisible();
 	expect(await screen.findByText("Facebook")).toBeVisible();
 	expect(sharePackage.loads).toBe(1);
