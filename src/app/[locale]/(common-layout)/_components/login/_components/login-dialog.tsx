@@ -27,7 +27,6 @@ export function LoginDialog({
 	return (
 		<Dialog defaultOpen={defaultOpen}>
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
-			{/* We set max-w because the underlying <Login /> already has its own container width. */}
 			<DialogContent className="max-w-md ">
 				<DialogTitle className="text-center font-bold text-2xl">
 					Login to Evame
