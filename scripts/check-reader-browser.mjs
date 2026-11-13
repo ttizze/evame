@@ -38,6 +38,21 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(staticPage).toHaveURL(`${baseUrl}/ja/${handle}`);
 		await expect(
 			staticPage.getByRole("heading", { name: "Worker Test", exact: true }),
+		).toHaveCount(0);
+		await expect(
+			staticPage.getByText(`@${handle}`, { exact: true }),
+		).toHaveCount(0);
+		await expect(
+			staticPage
+				.locator("main > div > section")
+				.first()
+				.locator('astro-island[component-export="UserAvatar"]'),
+		).toHaveCount(0);
+		await expect(
+			staticPage.getByRole("button", { name: "0 following", exact: true }),
+		).toBeVisible();
+		await expect(
+			staticPage.getByRole("button", { name: "0 followers", exact: true }),
 		).toBeVisible();
 		await staticPage
 			.getByRole("link", { name: "Workers保存テスト", exact: true })
@@ -489,6 +504,43 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			titleBounds.y < headerBounds.y,
 			"タイトルの下に著者・目次を表示する",
 		);
+		for (const viewport of [
+			{ width: 1280, height: 900 },
+			{ width: 390, height: 844 },
+		]) {
+			await page.setViewportSize(viewport);
+			await expect(floating).toHaveCSS("opacity", "1");
+			for (const label of ["View", "Like", "Share"]) {
+				await expect(floating.getByText(label, { exact: true })).toHaveCount(0);
+			}
+			await expect(floating.getByRole("button")).toHaveCount(3);
+			await expect(floating.locator("svg.lucide-heart")).toBeVisible();
+			await expect(floating.locator("svg.lucide-share")).toBeVisible();
+			await expect(
+				floating.getByRole("button", { name: /^Currently:/ }),
+			).toContainText("JA");
+			const share = floating.getByRole("button", { name: "共有", exact: true });
+			await expect(share).toHaveCSS("width", "40px");
+			await expect(share).toHaveCSS("height", "40px");
+			await share.focus();
+			await page.keyboard.press("Enter");
+			await expect(
+				page.getByRole("dialog", { name: "Share", exact: true }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("dialog").getByRole("img", { name: "X", exact: true }),
+			).toBeVisible();
+			await page.keyboard.press("Escape");
+			await expect(page.getByRole("dialog")).toHaveCount(0);
+			await expect(share).toBeFocused();
+			await page.screenshot({
+				path: `/tmp/evame-floating-labels-${viewport.width}.png`,
+			});
+		}
+		await page.setViewportSize({ width: 1280, height: 900 });
+		console.log(
+			"PC・スマホのバーでView・Like・Shareの文字を表示せず、アイコン・言語表示・共有のキーボード操作を維持する",
+		);
 		await page.screenshot({
 			path: "/tmp/evame-ui-restored-article-desktop.png",
 		});
@@ -723,6 +775,48 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.getByRole("link", { name: "プロフィールを編集" }),
 		).toHaveCount(0);
+		for (const width of [1280, 390]) {
+			await page.setViewportSize({ width, height: 900 });
+			await expect(
+				page
+					.locator("header")
+					.getByRole("link", { name: "Worker Test", exact: true }),
+			).toHaveAttribute("href", `/ja/${handle}`);
+			await expect(
+				page.getByRole("heading", { name: "Worker Test", exact: true }),
+			).toHaveCount(0);
+			await expect(page.getByText(`@${handle}`, { exact: true })).toHaveCount(
+				0,
+			);
+			await expect(
+				page
+					.locator("main > div > section")
+					.first()
+					.locator('astro-island[component-export="UserAvatar"]'),
+			).toHaveCount(0);
+			await expect(
+				page.getByRole("button", { name: "0 following", exact: true }),
+			).toBeVisible();
+			await expect(
+				page.getByRole("button", { name: "0 followers", exact: true }),
+			).toBeVisible();
+			await expect(
+				page
+					.getByRole("link", { name: "Workers保存テスト", exact: true })
+					.first(),
+			).toBeVisible();
+		}
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await expect(
+			page.locator('astro-island[component-export="FollowStats"]'),
+		).not.toHaveAttribute("ssr", "");
+		await page
+			.getByRole("button", { name: "0 followers", exact: true })
+			.click();
+		await expect(
+			page.getByRole("dialog", { name: "Followers", exact: true }),
+		).toBeVisible();
+		await page.keyboard.press("Escape");
 		await expect(page.locator("header")).toBeVisible();
 		await expect(
 			page.getByRole("button", { name: "More options", exact: true }),
