@@ -22,7 +22,7 @@ export function FloatingControls({
 
 	/* --- Buttons --- */
 	const Buttons = (
-		<div className="flex gap-6 justify-center">
+		<div className="flex items-center justify-center gap-2 [&_button]:h-10 [&_button]:min-w-10 [&_button]:rounded-full [&_button]:bg-transparent [&_button:hover]:bg-accent/60">
 			<Suspense fallback={null}>
 				<ViewCycle
 					afterClick={ignoreNextScroll}
@@ -38,7 +38,7 @@ export function FloatingControls({
 	return (
 		<div
 			className={cn(
-				`${position} z-50 w-auto border rounded-full py-3 px-9 backdrop-blur-sm `,
+				`${position} z-50 w-auto rounded-full border border-border/60 bg-background/90 px-3 py-2 shadow-sm backdrop-blur-sm `,
 				isVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0",
 			)}
 		>

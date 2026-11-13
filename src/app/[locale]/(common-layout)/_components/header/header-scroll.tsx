@@ -17,7 +17,7 @@ export function HeaderScroll({ children }: HeaderScrollProps) {
 					isPinned
 						? "fixed top-0 left-0 right-0 shadow-md dark:shadow-gray-900"
 						: ""
-				} max-w-3xl mx-auto py-2 md:py-4 px-2 md:px-6 lg:px-8 flex justify-between items-center`}
+				} max-w-4xl mx-auto py-2 md:py-4 px-4 flex justify-between items-center`}
 			>
 				{children}
 			</header>

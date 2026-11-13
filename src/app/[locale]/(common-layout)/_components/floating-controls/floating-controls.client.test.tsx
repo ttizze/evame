@@ -42,6 +42,30 @@ beforeEach(() => {
 });
 
 describe("FloatingControls", () => {
+	it("薄い外枠だけを残し、各ボタンの背景と角丸をバー内で揃える", async () => {
+		const { container } = render(
+			<Harness
+				likeButton={
+					<button aria-label="Like" className="bg-background" type="button" />
+				}
+			/>,
+		);
+		await screen.findByRole("button", { name: /Both languages/i });
+		expect(container.firstElementChild).toHaveClass(
+			"bg-background/90",
+			"px-3",
+			"py-2",
+			"shadow-sm",
+		);
+		expect(container.firstElementChild?.firstElementChild).toHaveClass(
+			"gap-2",
+			"[&_button]:h-10",
+			"[&_button]:min-w-10",
+			"[&_button]:bg-transparent",
+			"[&_button]:rounded-full",
+		);
+	});
+
 	it("View・Like・Shareの文字を表示せず、言語表示といいね操作を維持する", async () => {
 		const onLike = vi.fn();
 		render(
