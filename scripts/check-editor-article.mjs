@@ -17,20 +17,23 @@ export async function checkEditorArticle(page) {
 		name: "公開設定: 自分のみ",
 		exact: true,
 	});
-	async function replaceArticle(html) {
+	async function replaceArticle(content, format) {
 		await editor.focus();
 		await page.keyboard.press("ControlOrMeta+a");
-		await editor.evaluate((element, html) => {
-			const clipboard = new DataTransfer();
-			clipboard.setData("text/html", html);
-			element.dispatchEvent(
-				new ClipboardEvent("paste", {
-					clipboardData: clipboard,
-					bubbles: true,
-					cancelable: true,
-				}),
-			);
-		}, html);
+		await editor.evaluate(
+			(element, { content, format }) => {
+				const clipboard = new DataTransfer();
+				clipboard.setData(format, content);
+				element.dispatchEvent(
+					new ClipboardEvent("paste", {
+						clipboardData: clipboard,
+						bubbles: true,
+						cancelable: true,
+					}),
+				);
+			},
+			{ content, format },
+		);
 		await expect(title).toHaveCount(1);
 	}
 	for (const width of [390, 1280]) {
@@ -39,7 +42,7 @@ export async function checkEditorArticle(page) {
 		await expect(title).toBeVisible();
 		await expect(title).toHaveJSProperty("tagName", "H1");
 	}
-	await replaceArticle("<h1>Title</h1><p>Body</p>");
+	await replaceArticle("<h1>Title</h1><p>Body</p>", "text/html");
 	await title.evaluate((element) => {
 		const selection = window.getSelection();
 		selection.selectAllChildren(element);
@@ -71,7 +74,7 @@ export async function checkEditorArticle(page) {
 		await expect(markdown).toHaveValue(unchangedBody);
 	}
 	for (const backward of [false, true]) {
-		await replaceArticle("<h1>Title</h1><p>Body</p>");
+		await replaceArticle("<h1>Title</h1><p>Body</p>", "text/html");
 		await expect(titleValue).toHaveValue("Title");
 		await expect(body).toHaveText(["Body"]);
 		const target = backward ? body : title;
@@ -98,10 +101,11 @@ export async function checkEditorArticle(page) {
 		await expect(titleValue).toHaveValue("TitleBody");
 		await expect(markdown).toHaveValue("");
 	}
-	for (const kind of ["paste", "beforeinput"]) {
+	for (const kind of ["paste", "paste-beforeinput"]) {
 		for (const backward of [false, true]) {
 			await replaceArticle(
-				"<h1>Title</h1><p>leading</p><pre><code>abcdef</code></pre><p>last</p>",
+				"Title\n\nleading\n\n\x60\x60\x60\nabcdef\n\x60\x60\x60\n\nlast",
+				"text/plain",
 			);
 			await expect(titleValue).toHaveValue("Title");
 			const originalMarkdown = await markdown.inputValue();
@@ -133,23 +137,24 @@ export async function checkEditorArticle(page) {
 			await editor.evaluate((element, kind) => {
 				const clipboard = new DataTransfer();
 				clipboard.setData("text/plain", "X");
-				const event =
-					kind === "paste"
-						? new ClipboardEvent("paste", {
-								clipboardData: clipboard,
-								bubbles: true,
-								cancelable: true,
-							})
-						: new InputEvent("beforeinput", {
-								inputType: "insertFromPaste",
-								bubbles: true,
-								cancelable: true,
-							});
-				if (kind === "beforeinput")
-					Object.defineProperty(event, "dataTransfer", { value: clipboard });
-				element.dispatchEvent(event);
+				element.dispatchEvent(
+					new ClipboardEvent("paste", {
+						clipboardData: clipboard,
+						bubbles: true,
+						cancelable: true,
+					}),
+				);
+				if (kind === "paste-beforeinput") {
+					const input = new InputEvent("beforeinput", {
+						inputType: "insertFromPaste",
+						bubbles: true,
+						cancelable: true,
+					});
+					Object.defineProperty(input, "dataTransfer", { value: clipboard });
+					element.dispatchEvent(input);
+				}
 			}, kind);
-			await expect(titleValue).toHaveValue("TiXdef");
+			await expect(titleValue, kind).toHaveValue("TiXdef");
 			await expect(markdown).toHaveValue("last");
 			await page.keyboard.press("ControlOrMeta+z");
 			await expect(titleValue).toHaveValue("Title");
@@ -166,7 +171,7 @@ export async function checkEditorArticle(page) {
 	}
 	for (const bodyOnly of [false, true]) {
 		for (const backward of [false, true]) {
-			await replaceArticle("<h1>Title</h1><p>oldA</p><p>oldB</p>");
+			await replaceArticle("<h1>Title</h1><p>oldA</p><p>oldB</p>", "text/html");
 			await expect(markdown).toHaveValue("oldA\n\noldB");
 			await editor.evaluate(
 				(element, { bodyOnly, backward }) => {
@@ -230,6 +235,7 @@ export async function checkEditorArticle(page) {
 	const imageUrl = new URL("/logo.png", page.url()).href;
 	await replaceArticle(
 		`<h1>画像入り <a href="https://example.test/picture"><img src="${imageUrl}" alt="写真"></a></h1><p>last</p>`,
+		"text/html",
 	);
 	await expect(titleValue).toHaveValue("");
 	await expect(
