@@ -699,8 +699,8 @@ try {
 				}
 				assert.equal(
 					queuedTranslations.length - queuedBeforeArticle,
-					4,
-					"両ブラウザー・両画面幅のコメント4件を翻訳キューへ投入する",
+					8,
+					"コメント4件それぞれの英語・中国語への翻訳ジョブ8件をキューへ投入する",
 				);
 			} finally {
 				await database.batch(
