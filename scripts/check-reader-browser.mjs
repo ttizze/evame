@@ -120,6 +120,15 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		]);
 		const page = await context.newPage();
 		const errors = [];
+		const initialScripts = new Set();
+		const trackInitialScript = (request) => {
+			if (
+				request.resourceType() === "script" &&
+				new URL(request.url()).origin === baseUrl
+			)
+				initialScripts.add(request.url());
+		};
+		page.on("request", trackInitialScript);
 		let homeRefreshes = 0;
 		let notificationReads = 0;
 		page.on("response", async (response) => {
@@ -155,6 +164,25 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		).toBeVisible({ timeout: 15000 });
 		await expect(page.locator("header").getByTestId("unread-count")).toHaveText(
 			"1",
+		);
+		await page.waitForLoadState("networkidle");
+		page.off("request", trackInitialScript);
+		assert.ok(
+			initialScripts.size <= 20,
+			`トップの初回JSは20要求以内に収める: ${initialScripts.size}`,
+		);
+		const sessionLoads = await page.evaluate(() =>
+			performance
+				.getEntriesByType("resource")
+				.filter(
+					(entry) => new URL(entry.name).pathname === "/api/auth/get-session",
+				)
+				.map((entry) => entry.initiatorType),
+		);
+		assert.deepEqual(
+			sessionLoads,
+			["link"],
+			"認証はHTMLから先行取得し、ヘッダーの起動時には再取得しない",
 		);
 		await expect(
 			page

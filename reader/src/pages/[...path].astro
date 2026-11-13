@@ -18,6 +18,7 @@ import PageCard from "../components/page-card.astro";
 import Pagination from "../components/pagination.astro";
 import Profile from "../components/profile.astro";
 import { SearchIsland } from "../components/search";
+import { TranslationsIsland } from "../components/translations";
 import { fetchReaderData } from "../infra/fetch-reader-data";
 
 const response = await fetchReaderData(
@@ -98,6 +99,7 @@ const pageIds =
   {result.kind === "search" && <SearchIsland initialResult={result} search={Astro.url.search} client:load />}
   {result.kind === "terms" && <TermsPage />}
   {result.kind === "privacy" && <PrivacyPage />}
+  {(result.kind === "article" || result.kind === "about") && <TranslationsIsland locale={locale} search={Astro.url.search} pathname={Astro.url.pathname} client:idle />}
   {result.kind !== "article" && result.kind !== "terms" && result.kind !== "privacy" && <ControlsIsland locale={locale} search={Astro.url.search} sourceLocale="mixed" pageId={null} likeCount={0} client:idle />}
-  {pageIds.length > 0 && <PageLikeListClient pageIds={pageIds} client:idle />}
+  {pageIds.length > 0 && <PageLikeListClient pageIds={pageIds} client:load />}
 </Layout>

@@ -24,7 +24,7 @@ function LoginRoute() {
 	return (
 		<div className="container mx-auto max-w-md py-8">
 			<LoginDialog
-				open={true}
+				defaultOpen={true}
 				trigger={
 					<div className="h-96 flex items-center justify-center text-gray-500">
 						Click anywhere to open login dialog

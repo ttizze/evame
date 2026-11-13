@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import { lazy, Suspense } from "react";
 import { useHydrated } from "@/app/_hooks/use-hydrated";
 import { authClient } from "@/app/[locale]/_service/auth-client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -6,7 +7,10 @@ import { StartButton } from "../start-button";
 import { LocaleSelector } from "./locale-selector/client";
 import { NewPageButton } from "./new-page-button";
 import { TranslationHelpPopover } from "./translation-help-popover.client";
-import { UserMenu } from "./user-menu.client";
+
+const UserMenu = lazy(async () => ({
+	default: (await import("./user-menu.client")).UserMenu,
+}));
 
 export function HeaderUserSlot({ locale }: { locale: string }) {
 	const hydrated = useHydrated();
@@ -42,11 +46,13 @@ export function HeaderUserSlot({ locale }: { locale: string }) {
 			) : (
 				<>
 					<NewPageButton handle={currentUser.handle} locale={locale} />
-					<UserMenu
-						currentUser={currentUser}
-						hasGeminiApiKey={session?.user.hasGeminiApiKey}
-						locale={locale}
-					/>
+					<Suspense fallback={<Skeleton className="h-8 w-8 rounded-full" />}>
+						<UserMenu
+							currentUser={currentUser}
+							hasGeminiApiKey={session?.user.hasGeminiApiKey}
+							locale={locale}
+						/>
+					</Suspense>
 				</>
 			)}
 		</div>

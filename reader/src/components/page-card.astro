@@ -2,7 +2,7 @@
 import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
 import { PageList } from "@/app/[locale]/(common-layout)/_components/page/page-list";
 import type { PageForList } from "@/app/[locale]/types";
-import { UserAvatar } from "@/components/user-avatar";
+import PageAvatar from "./page-avatar.astro";
 
 interface Props {
 	page: PageForList;
@@ -12,6 +12,6 @@ interface Props {
 const { page, locale, index } = Astro.props;
 ---
 <PageList PageForList={page} locale={locale} index={index} likeButton={null} avatar={null}>
-  <UserAvatar slot="avatar" className="w-5 h-5 shrink-0" image={page.userImage} name={page.userHandle} client:visible />
-  <PageLikeButtonClient slot="like-button" showCount={false} pageId={page.id} initialLikeCount={page.likeCount} client:visible />
+  <PageAvatar slot="avatar" image={page.userImage} name={page.userHandle} />
+  <PageLikeButtonClient slot="like-button" showCount={false} pageId={page.id} initialLikeCount={page.likeCount} client:load />
 </PageList>

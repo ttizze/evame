@@ -1,0 +1,23 @@
+---
+import { Button } from "@/components/ui/button";
+import { messages } from "@/i18n/messages";
+
+const { locale, gaTrackingId } = Astro.props as {
+	locale: string;
+	gaTrackingId: string;
+};
+const message = (messages[locale as keyof typeof messages] ?? messages.en)
+	.CookieConsent;
+---
+<evame-analytics-consent hidden data-tracking-id={gaTrackingId}>
+  <div class="fixed inset-x-3 bottom-3 z-50 sm:inset-x-auto sm:right-3 sm:w-[420px] md:bottom-5 md:right-5">
+    <section aria-label={message.title} class="rounded-xl border bg-background/95 p-4 shadow-lg backdrop-blur">
+      <p class="font-semibold text-sm md:text-base">{message.title}</p>
+      <p class="mt-2 text-muted-foreground text-xs md:text-sm">{message.description} <a class="underline" href={`/${locale}/privacy`}>{message.privacyLink}</a></p>
+      <div class="mt-3 flex justify-end gap-2">
+        <Button data-consent="rejected" size="sm" type="button" variant="outline">{message.decline}</Button>
+        <Button data-consent="accepted" size="sm" type="button">{message.accept}</Button>
+      </div>
+    </section>
+  </div>
+</evame-analytics-consent>

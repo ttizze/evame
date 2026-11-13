@@ -11,9 +11,6 @@ vi.stubGlobal(
 	})),
 );
 
-vi.mock("@/app/[locale]/_components/analytics-consent.client", () => ({
-	AnalyticsConsent: () => null,
-}));
 vi.mock(
 	"@/app/[locale]/(common-layout)/_components/header/user-slot.client",
 	() => ({
@@ -34,7 +31,6 @@ it("ブログでは左側だけ所有者名に替え、記事リンクを増や�
 	render(
 		<HeaderIsland
 			blog={{ handle: "alice", name: "開発ノート", image: null }}
-			gaTrackingId=""
 			locale="ja"
 			search=""
 			showHeader
@@ -50,15 +46,7 @@ it("ブログでは左側だけ所有者名に替え、記事リンクを増や�
 });
 
 it("共通トップではEvameのロゴとログインの入口を維持する", () => {
-	render(
-		<HeaderIsland
-			blog={null}
-			gaTrackingId=""
-			locale="ja"
-			search=""
-			showHeader
-		/>,
-	);
+	render(<HeaderIsland blog={null} locale="ja" search="" showHeader />);
 	expect(screen.getByRole("link", { name: "ログイン" })).not.toBeNull();
 	expect(
 		screen.getAllByRole("img", { name: "Evame Logo" }).length,

@@ -6,7 +6,13 @@
 
 Gateway (`src/server.ts`) はメンテナンス判定後、公開GET/HEADをDB接続なしでReaderへ渡す。Gatewayの応答は言語Cookieを含むため `private, no-store` とし、共有HTMLのキャッシュはReaderだけが所有する。ReaderのHTMLは1時間キャッシュする。閲覧数・いいねの即時表示は既存のprivate APIとReact islandを維持する。人気順のSSRはキャッシュ期限で再取得する。
 
-トップは `reader/src/components/home.astro` と `home-pages.astro` で一覧を描画し、一覧全体のReact hydrationを行わない。`home-feed.client.ts` が30秒ごとにReaderの `/api/home-feed?locale=...` から最新の一覧HTMLを取得する。部分更新も同じ `home-pages.astro` とカードを使用し、いいね・アバターのislandを維持する。更新失敗時は表示済みHTMLを残して再試行を受け付け、一覧内で操作中のフォーカスを奪わない。部分更新は共有キャッシュへ保存しない。Gatewayはアセットと同じReaderへの転送経路を使い、DB接続と描画はReaderBackendとAstroが所有する。ログイン・段落の翻訳フォームは操作時に読み込む。
+トップは `reader/src/components/home.astro` と `home-pages.astro` で一覧を描画し、一覧全体のReact hydrationを行わない。`home-feed.client.ts` が30秒ごととウィンドウのフォーカス復帰時にReaderの `/api/home-feed?locale=...` から最新の一覧HTMLを取得する。部分更新も同じ `home-pages.astro` とカードを使用し、いいねのislandを維持する。同じ内容ならDOMを交換せず、更新失敗時は表示済みHTMLを残して再試行を受け付ける。一覧内で操作中のフォーカスは奪わない。部分更新は共有キャッシュへ保存しない。Gatewayはアセットと同じReaderへの転送経路を使い、DB接続と描画はReaderBackendとAstroが所有する。
+
+Cookieバーと一覧のアバターはAstroのHTMLと小さなcustom elementで動作し、Reactの起動を待たない。これらの初期化は `layout.astro` が所有し、記事が0件の初回表示から追加された場合も動作する。いいねは `client:load` で起動する。ログインはダイアログを直ちに開き、フォームを遅延読み込みする。共有先・段落の翻訳フォームも操作時に読み込み、アカウントメニューは認証済みと判明してから読み込む。翻訳の操作対象がない一覧には翻訳islandを配置しない。Sentryはヘッダーと独立したentryで、既存の計測・リプレイ設定を維持する。
+
+ヘッダーを持つページは `/api/auth/get-session` をHTMLのfetch preloadで先行取得する。Better Authと同じ `credentials: include` に合わせ、起動後はその応答を再利用する。共有HTMLへ認証結果を埋め込まず、ブラウザーごとに認証し、ブラウザーテストで二重取得がないことを確認する。
+
+`reader/astro.config.mjs` は初回表示で共有するReact・UI・認証・表示処理をまとめ、同じ処理を多数の小さなJSとして取得する往復を減らす。遅延読み込みするフォーム・本文処理を一括で初回チャンクへ取り込まない。Workers成果物のブラウザーテストで、ログイン済みトップの初回JSが20要求以内であることも確認する。
 
 `reader/src/pages/[...path].astro` は公開結果だけを共有キャッシュへ入れる。検索・下書きプレビュー・404はキャッシュしない。ローカルで `cache.purge` がない場合も共有キャッシュを無効にする。認証CookieをDB取得へ渡すのは所有者プレビューの判定のためであり、公開HTMLにセッション・個人情報を含めない。
 
@@ -47,7 +53,7 @@ JS/CSSはHTMLと同じReaderから配信する。旧HTMLが参照するハッシ
 
 ## 検証
 
-DBテストで本文・公開状態・タイトル翻訳・階層移動と削除・タグ削除・著者変更・フォロー解除を確認する。成果物テストは768件の追加記事がある状態でも公開記事を保存し、本文SSR、編集・公開・非公開化・削除を確認する。ブラウザーではTiptap、コメントと返信、言語選択、Cookieバー、浮動バー、目次、アイコン、プロフィール、JavaScript無効のコメント途中ページを確認する。ローカルのSentry送信はサーバーとブラウザーの両方で無効にする。
+DBテストで本文・公開状態・タイトル翻訳・階層移動と削除・タグ削除・著者変更・フォロー解除を確認する。成果物テストは768件の追加記事がある状態でも公開記事を保存し、本文SSR、編集・公開・非公開化・削除を確認する。ブラウザーではLexical、コメントと返信、言語選択、Cookieバー、浮動バー、目次、アイコン、プロフィール、JavaScript無効のコメント途中ページを確認する。ローカルのSentry送信はサーバーとブラウザーの両方で無効にする。
 
 実CDNのHITと対象別purgeはCloudflare上で検証する。対象記事・一覧の更新後に新しい本文や非公開状態が返り、無関係な記事のキャッシュが残ることを確認する。ローカルテストだけでCDN検証済みとはしない。
 

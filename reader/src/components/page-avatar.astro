@@ -1,0 +1,7 @@
+---
+const { image, name } = Astro.props as { image: string | null; name: string };
+---
+<evame-page-avatar class="relative flex h-5 w-5 shrink-0 overflow-hidden rounded-full">
+  <span class="flex h-full w-full items-center justify-center rounded-full bg-muted" aria-hidden={image ? "true" : undefined}>{name.charAt(0).toUpperCase()}</span>
+  {image && <img alt={name} src={image} width="20" height="20" loading="lazy" decoding="async" class="absolute inset-0 aspect-square h-full w-full" style="opacity:0" />}
+</evame-page-avatar>

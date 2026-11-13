@@ -27,7 +27,7 @@ const version = Array.from(
 ).join("");
 ---
 <div class="flex flex-col gap-8" data-home-pages data-home-version={version}>
-  <PageLikeListClient pageIds={pageIds} client:idle />
+  <PageLikeListClient pageIds={pageIds} client:load />
   {(["newPages", "popularPages"] as const).map((kind) => {
     const Icon = kind === "newPages" ? SparklesIcon : BookOpenIcon;
     const Heading = kind === "newPages" ? "h1" : "h2";
