@@ -136,8 +136,8 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 					body: await response.text().catch(() => "Response disposed"),
 				});
 			if (
-				url.pathname === "/api/reader-data" &&
-				url.searchParams.get("path") === "/ja"
+				url.pathname === "/api/home-feed" &&
+				url.searchParams.get("locale") === "ja"
 			)
 				homeRefreshes++;
 		});
@@ -220,7 +220,58 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 			.click();
 		await expect
 			.poll(() => homeRefreshes, { timeout: 35000 })
-			.toBeGreaterThan(1);
+			.toBeGreaterThan(0);
+		await expect(
+			page.locator('astro-island[component-export="HomeFeedIsland"]'),
+		).toHaveCount(0);
+		const firstLike = page
+			.locator("main article")
+			.first()
+			.getByRole("button", { name: "Like", exact: true });
+		await expect(firstLike).toBeEnabled();
+		const initialHomeVersion = await page
+			.locator("[data-home-pages]")
+			.getAttribute("data-home-version");
+		const homeLikedFill = await firstLike
+			.locator("svg.lucide-heart")
+			.getAttribute("fill");
+		const likeResponse = page.waitForResponse(
+			(response) =>
+				new URL(response.url()).pathname === "/api/reader-actions" &&
+				response.request().method() === "POST",
+		);
+		await firstLike.click();
+		assert.equal((await likeResponse).status(), 200);
+		await expect(firstLike.locator("svg.lucide-heart")).toHaveAttribute(
+			"fill",
+			homeLikedFill === "none" ? "currentColor" : "none",
+		);
+		await page.getByRole("heading", { name: "新着記事", exact: true }).click();
+		const refreshedFeed = page.waitForResponse(
+			(response) => new URL(response.url()).pathname === "/api/home-feed",
+		);
+		await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+		assert.equal((await refreshedFeed).status(), 200);
+		await expect(page.locator("[data-home-pages]")).not.toHaveAttribute(
+			"data-home-version",
+			initialHomeVersion,
+		);
+		await expect(firstLike).toBeEnabled();
+		await expect(firstLike.locator("svg.lucide-heart")).toHaveAttribute(
+			"fill",
+			homeLikedFill === "none" ? "currentColor" : "none",
+		);
+		const restoreHomeLike = page.waitForResponse(
+			(response) =>
+				new URL(response.url()).pathname === "/api/reader-actions" &&
+				response.request().method() === "POST",
+		);
+		await firstLike.click();
+		assert.equal((await restoreHomeLike).status(), 200);
+		await expect(firstLike.locator("svg.lucide-heart")).toHaveAttribute(
+			"fill",
+			homeLikedFill,
+		);
 		console.log(
 			"本文HTMLを最初から配信しながら、トップの記事一覧の自動更新も維持する",
 		);

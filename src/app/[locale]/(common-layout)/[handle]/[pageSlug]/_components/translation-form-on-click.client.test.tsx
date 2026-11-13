@@ -3,18 +3,26 @@ import userEvent from "@testing-library/user-event";
 import { TranslationFormOnClick } from "./translation-form-on-click.client";
 
 const locationState = vi.hoisted(() => ({ pathname: "/" }));
+const formLoaded = vi.hoisted(() => ({ count: 0 }));
 
 beforeEach(() => {
 	locationState.pathname = "/";
 });
 
-vi.mock("./translation-section/add-and-vote-translations.client", () => ({
-	AddAndVoteTranslations: ({ segmentId }: { segmentId: number }) => (
-		<div data-testid="tr-ui">segment:{segmentId}</div>
-	),
-}));
+vi.mock("./translation-section/add-and-vote-translations.client", () => {
+	formLoaded.count++;
+	return {
+		AddAndVoteTranslations: ({ segmentId }: { segmentId: number }) => (
+			<div data-testid="tr-ui">segment:{segmentId}</div>
+		),
+	};
+});
 
 describe("TranslationFormOnClick", () => {
+	test("段落を操作するまで翻訳フォームを読み込まない", () => {
+		render(<TranslationFormOnClick pathname="/ja" />);
+		expect(formLoaded.count).toBe(0);
+	});
 	test("data-segment-id のクリックで、その段のUIだけが開く（イベント委譲）", async () => {
 		const user = userEvent.setup();
 		const { container } = render(
@@ -28,7 +36,7 @@ describe("TranslationFormOnClick", () => {
 
 		await user.click(screen.getByText("open"));
 
-		expect(screen.getByTestId("tr-ui")).toHaveTextContent("segment:123");
+		expect(await screen.findByTestId("tr-ui")).toHaveTextContent("segment:123");
 
 		const block = container.querySelector(".seg-tr");
 		expect(block).not.toBeNull();

@@ -1,0 +1,19 @@
+---
+import type { loadHomePage } from "@/app/[locale]/(common-layout)/_components/home/service/load-home-page";
+import { Button } from "@/components/ui/button";
+import { messages } from "@/i18n/messages";
+import HomePages from "./home-pages.astro";
+
+const { locale, data } = Astro.props as {
+	locale: string;
+	data: Awaited<ReturnType<typeof loadHomePage>>;
+};
+const t = (messages[locale as keyof typeof messages] ?? messages.en).Home;
+---
+<evame-home-feed class="flex flex-col gap-8 justify-between mb-12" data-locale={locale}>
+  <p role="alert" data-home-error hidden>{t.loadError} <Button data-home-retry variant="outline">{t.retry}</Button></p>
+  <HomePages locale={locale} data={data} />
+</evame-home-feed>
+<script>
+  import "./home-feed.client";
+</script>

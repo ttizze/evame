@@ -141,6 +141,30 @@ it.each(["GET", "HEAD"])(
 	},
 );
 
+it("トップの部分更新HTMLをReaderへ渡し、GatewayのDBや認証を起動しない", async () => {
+	env.READER.fetch.mockResolvedValue(
+		new Response("<div data-home-pages>更新した一覧</div>", {
+			headers: {
+				"Cache-Control": "private, no-store",
+				"Content-Type": "text/html",
+			},
+		}),
+	);
+	const response = await server.fetch(
+		new Request("https://evame.test/api/home-feed?locale=ja"),
+		env as unknown as typeof import("cloudflare:workers").env,
+		{ waitUntil: vi.fn() },
+	);
+	expect(response.status).toBe(200);
+	expect(await response.text()).toContain("更新した一覧");
+	expect(env.READER.fetch.mock.calls[0][0]).toBe(
+		"https://evame.test/api/home-feed?locale=ja",
+	);
+	expect(createDb).not.toHaveBeenCalled();
+	expect(handler.fetch).not.toHaveBeenCalled();
+	expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+});
+
 let beforeSend: NonNullable<
 	NonNullable<ReturnType<Parameters<typeof withSentry>[0]>>["beforeSend"]
 >;

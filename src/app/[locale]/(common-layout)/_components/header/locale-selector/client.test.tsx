@@ -3,6 +3,12 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LocaleSelector } from "./client";
 
+const translationDialog = vi.hoisted(() => ({ loads: 0 }));
+vi.mock("./add-translate-dialog/client", async (importOriginal) => {
+	translationDialog.loads++;
+	return importOriginal();
+});
+
 if (typeof global.ResizeObserver === "undefined") {
 	global.ResizeObserver = class {
 		observe() {}
@@ -38,6 +44,17 @@ beforeEach(() =>
 );
 
 describe("LocaleSelector", () => {
+	it("記事以外の言語切り替えでは翻訳追加フォームを読み込まない", () => {
+		render(
+			<LocaleSelector
+				currentHandle=""
+				hasGeminiApiKey={false}
+				inMenu={false}
+				userPlan="free"
+			/>,
+		);
+		expect(translationDialog.loads).toBe(0);
+	});
 	it("現在の表示言語をボタンに表示する", () => {
 		render(
 			<LocaleSelector

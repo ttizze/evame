@@ -1,0 +1,42 @@
+---
+import { ArrowRightIcon, BookOpenIcon, SparklesIcon } from "lucide-react";
+import type { loadHomePage } from "@/app/[locale]/(common-layout)/_components/home/service/load-home-page";
+import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list";
+import { buttonVariants } from "@/components/ui/button";
+import { messages } from "@/i18n/messages";
+import { cn } from "@/lib/utils";
+import PageCard from "./page-card.astro";
+
+const { locale, data } = Astro.props as {
+	locale: string;
+	data: Awaited<ReturnType<typeof loadHomePage>>;
+};
+const t = (messages[locale as keyof typeof messages] ?? messages.en).Reader;
+const pageIds = [
+	...data.newPages.pageForLists,
+	...data.popularPages.pageForLists,
+].map((page) => page.id);
+const version = Array.from(
+	new Uint8Array(
+		await crypto.subtle.digest(
+			"SHA-256",
+			new TextEncoder().encode(JSON.stringify(data)),
+		),
+	),
+	(byte) => byte.toString(16).padStart(2, "0"),
+).join("");
+---
+<div class="flex flex-col gap-8" data-home-pages data-home-version={version}>
+  <PageLikeListClient pageIds={pageIds} client:idle />
+  {(["newPages", "popularPages"] as const).map((kind) => {
+    const Icon = kind === "newPages" ? SparklesIcon : BookOpenIcon;
+    const Heading = kind === "newPages" ? "h1" : "h2";
+    return <>
+      <section class="flex flex-col gap-4">
+        <Heading class="text-2xl font-semibold mb-4 flex items-center gap-2"><Icon className="w-4 h-4" />{t[kind]}</Heading>
+        {data[kind].pageForLists.map((page, index) => <PageCard page={page} locale={locale} index={index} />)}
+      </section>
+      {kind === "newPages" && <div class="flex justify-center"><a class={cn(buttonVariants(), "rounded-full h-10 w-40 gap-2")} href={`/${locale}/new-pages`}>{t.more}<ArrowRightIcon className="h-4 w-4" /></a></div>}
+    </>;
+  })}
+</div>

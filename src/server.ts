@@ -74,7 +74,8 @@ export default withSentry(
 			}
 			const url = new URL(request.url);
 			if (
-				url.pathname.startsWith("/_astro/") &&
+				(url.pathname.startsWith("/_astro/") ||
+					url.pathname === "/api/home-feed") &&
 				(request.method === "GET" || request.method === "HEAD")
 			) {
 				return withSecurityHeaders(

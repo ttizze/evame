@@ -1,5 +1,5 @@
 import { Check, ChevronDown, Languages } from "lucide-react";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import useSWR from "swr";
 import { useLocale, useTranslations } from "use-intl";
 import { supportedLocaleOptions } from "@/app/_constants/locale";
@@ -23,10 +23,13 @@ import { Separator } from "@/components/ui/separator";
 import type { TranslationProofStatus } from "@/db/types";
 import type { TranslationJob } from "@/db/types.helpers";
 import { cn } from "@/lib/utils";
-import { AddTranslateDialog } from "./add-translate-dialog/client";
 import { TranslationProofStatusIcon } from "./component/translation-proof-status-icon";
 import { TextStatusGuide } from "./component/translation-status-guide.client";
 import { buildLocaleOptions } from "./domain/build-locale-options";
+
+const AddTranslateDialog = lazy(async () => ({
+	default: (await import("./add-translate-dialog/client")).AddTranslateDialog,
+}));
 
 // Local types
 interface TranslationInfo {
@@ -228,14 +231,16 @@ export function LocaleSelector({
 				</PopoverContent>
 			</Popover>
 			{pageSlug && (
-				<AddTranslateDialog
-					currentHandle={currentHandle}
-					hasGeminiApiKey={hasGeminiApiKey}
-					onOpenChange={setDialogOpen}
-					open={dialogOpen}
-					pageSlug={pageSlug}
-					userPlan={userPlan}
-				/>
+				<Suspense fallback={null}>
+					<AddTranslateDialog
+						currentHandle={currentHandle}
+						hasGeminiApiKey={hasGeminiApiKey}
+						onOpenChange={setDialogOpen}
+						open={dialogOpen}
+						pageSlug={pageSlug}
+						userPlan={userPlan}
+					/>
+				</Suspense>
 			)}
 		</div>
 	);

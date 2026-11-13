@@ -4,7 +4,9 @@
 
 公開トップ・記事・著者・新着・タグ・About・規約はAstroで本文と一覧を最初のHTMLに含める。Cloudflare Workers Cacheに命中すればReaderの実行とDB取得を省略する。キャッシュミス時だけReaderから非公開のReaderBackendを呼び、DBを読み、Astroで描画する。HTMLのR2保存、全URLの事前生成、生成用Cron・Queueは使わない。画像用R2は維持する。
 
-Gateway (`src/server.ts`) はメンテナンス判定後、公開GET/HEADをDB接続なしでReaderへ渡す。Gatewayの応答は言語Cookieを含むため `private, no-store` とし、共有HTMLのキャッシュはReaderだけが所有する。ReaderのHTMLは1時間キャッシュする。閲覧数・いいねの即時表示とトップの30秒更新は既存のprivate APIとReact islandを維持する。人気順のSSRはキャッシュ期限で再取得する。
+Gateway (`src/server.ts`) はメンテナンス判定後、公開GET/HEADをDB接続なしでReaderへ渡す。Gatewayの応答は言語Cookieを含むため `private, no-store` とし、共有HTMLのキャッシュはReaderだけが所有する。ReaderのHTMLは1時間キャッシュする。閲覧数・いいねの即時表示は既存のprivate APIとReact islandを維持する。人気順のSSRはキャッシュ期限で再取得する。
+
+トップは `reader/src/components/home.astro` と `home-pages.astro` で一覧を描画し、一覧全体のReact hydrationを行わない。`home-feed.client.ts` が30秒ごとにReaderの `/api/home-feed?locale=...` から最新の一覧HTMLを取得する。部分更新も同じ `home-pages.astro` とカードを使用し、いいね・アバターのislandを維持する。更新失敗時は表示済みHTMLを残して再試行を受け付け、一覧内で操作中のフォーカスを奪わない。部分更新は共有キャッシュへ保存しない。Gatewayはアセットと同じReaderへの転送経路を使い、DB接続と描画はReaderBackendとAstroが所有する。ログイン・段落の翻訳フォームは操作時に読み込む。
 
 `reader/src/pages/[...path].astro` は公開結果だけを共有キャッシュへ入れる。検索・下書きプレビュー・404はキャッシュしない。ローカルで `cache.purge` がない場合も共有キャッシュを無効にする。認証CookieをDB取得へ渡すのは所有者プレビューの判定のためであり、公開HTMLにセッション・個人情報を含めない。
 

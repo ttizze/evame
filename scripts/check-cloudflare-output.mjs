@@ -476,6 +476,24 @@ try {
 			locale + ": 最初のHTMLに記事一覧を含める",
 		);
 		assert.ok(
+			!html.includes('component-export="HomeFeedIsland"'),
+			`${locale}: 一覧全体をhydrateしない`,
+		);
+		const feed = await worker.fetch(
+			`http://localhost/api/home-feed?locale=${locale}`,
+		);
+		const feedHtml = await feed.text();
+		assert.equal(feed.status, 200, feedHtml.slice(0, 500));
+		assert.equal(feed.headers.get("cache-control"), "private, no-store");
+		assert.ok(
+			feedHtml.includes("data-home-pages") &&
+				feedHtml.includes("Workers保存テスト"),
+		);
+		assert.ok(
+			!feedHtml.includes("<html") && !feedHtml.includes("<header"),
+			`${locale}: 一覧のHTMLだけを更新する`,
+		);
+		assert.ok(
 			!html.includes("better-auth.session_token="),
 			locale + ": 認証セッションをHTMLに含めない",
 		);
@@ -487,6 +505,12 @@ try {
 	console.log(
 		"全21言語で記事一覧を最初のAstro HTMLに含め、説明文をAboutに分離できる",
 	);
+	for (const query of ["", "?locale=unknown", "?locale=ja%2F..%2Fen"]) {
+		assert.equal(
+			(await worker.fetch(`http://localhost/api/home-feed${query}`)).status,
+			400,
+		);
+	}
 	const about = await worker.fetch("http://localhost/ja/about");
 	assert.equal(about.status, 200);
 	assert.ok(
