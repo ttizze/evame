@@ -2,6 +2,14 @@
 
 全コマンドは `nix develop` 内で実行する。TanStack Start の入口は `src/server.ts`、Astro Readerの入口は `reader/src/worker.ts`。`bun run build` がそれぞれのWorkerとStatic Assetsを `dist` と `reader/dist` に生成し、Wranglerは生成された設定をデプロイする。
 
+## CIのテスト実行
+
+ユニットテストはNodeとDOMの2プロジェクトに分ける。既定はNodeで、JSXを持つテストとDOMを使うエディター・認証クライアントのテストだけjsdomを起動する。全ファイルの実行とファイル間の隔離は維持する。iPhoneモデルの公式例・操作fixtureは、同じJavaScriptのコンパイル結果だけを再利用し、実行コンテキストは各例で新しく作る。
+
+通常のWebだけの変更ではiPhoneワークフローを起動しない。ルートの `package.json`・`bun.lock` だけがiPhoneの対象にかかる場合は、Linuxで同梱モデルとライセンスを再生成し、コミット済みの生成物との一致を確認する。一致したときだけMacでのビルドとSimulatorテストを省く。生成物の差分・差分判定失敗・判定未確定は成功にしない。
+
+iPhone本体・共有エディター・パッチ・操作fixture・Nix・iPhone検証設定の変更と手動実行では、Macでの全検証を維持する。所要時間はGitHub Actionsの `checks` とiPhone各ジョブで実測し、ローカル計測と区別する。
+
 ## 接続先
 
 `wrangler.jsonc` のWorker名は `evame-start`、`reader/wrangler.jsonc` は `evame-reader`。既存の `evame` Workerは上書きしない。Readerはworkers.devとバージョンURLを公開せず、service binding経由で接続する。
@@ -69,6 +77,8 @@ CIの成功に加えて、実際のプレビューURLでログイン画面、Coo
 切り替え検証後、旧Vercelプロジェクト `ttizzes-projects/evame` は廃止済み。`evame.tech` のDNSは、CloudflareでプロキシされたAレコードを予約アドレス `192.0.2.0` に向け、`evame.tech/*` を `evame-start` に接続する。Vercelをオリジンや切り戻し先として使わない。継続デプロイの環境では Nix と Bun の lockfile を使い、`bun run deploy` を実行する。
 
 ## GitHub Actions の継続デプロイ
+
+ビルド済みWorkersは一度だけ生成して全ブラウザー検証へ共有する。エディターはChromium・WebKitそれぞれでD&D・コピーとチェック操作・階層と並べ替え・書式変更の4群へ分け、Readerは独立して検証する。ジョブごとにDBを作成し、操作群ごとに新しいブラウザーコンテキストと記事を用意する。全群を維持し、失敗・キャンセル・スキップがあれば`ci-check`で本番デプロイとPRプレビューを止める。ローカルの`bun run test:deployment:browser`は既定で全群を実行する。1群だけ再現する場合は`EVAME_BROWSER_TYPE=webkit EVAME_BROWSER_SUITE=editor-lists-structure`のように指定する。
 
 `.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テストの成功後、本番DBのマイグレーション、ビルド、成果物テスト、GatewayとReaderのデプロイを順に行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
 

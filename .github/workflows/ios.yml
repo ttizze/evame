@@ -11,7 +11,11 @@ on:
       - "package.json"
       - "bun.lock"
       - "scripts/ios.sh"
+      - "scripts/ios.test.ts"
+      - ".github/workflows/ci.test.ts"
+      - ".github/workflows/ios.test.ts"
       - "flake.*"
+      - "nix/**"
       - ".github/workflows/ios.yml"
   push:
     branches: [main]
@@ -24,7 +28,11 @@ on:
       - "package.json"
       - "bun.lock"
       - "scripts/ios.sh"
+      - "scripts/ios.test.ts"
+      - ".github/workflows/ci.test.ts"
+      - ".github/workflows/ios.test.ts"
       - "flake.*"
+      - "nix/**"
       - ".github/workflows/ios.yml"
   workflow_dispatch:
 
@@ -32,7 +40,45 @@ permissions:
   contents: read
 
 jobs:
-  editor:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      required: ${{ steps.scope.outputs.required }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Detect iPhone source changes
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch || "$BASE_SHA" =~ ^0+$ ]]; then
+            echo 'required=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git diff --no-renames --name-only -z "$BASE_SHA" HEAD > "$RUNNER_TEMP/ios-changes"
+          required=false
+          while IFS= read -r -d '' path; do
+            case "$path" in
+              patches/*|tests/editor-matrix.mjs|apps/ios/*|src/app/*/_components/editor/*|src/app/*/_domain/get-x-post-id.ts|scripts/ios.sh|scripts/ios.test.ts|.github/workflows/ci.test.ts|.github/workflows/ios.test.ts|flake.*|nix/*|.github/workflows/ios.yml)
+                required=true ;;
+            esac
+          done < "$RUNNER_TEMP/ios-changes"
+          echo "required=$required" >> "$GITHUB_OUTPUT"
+      - uses: cachix/install-nix-action@v31
+        if: steps.scope.outputs.required == 'false'
+      - name: Verify generated iPhone model for dependency changes
+        if: steps.scope.outputs.required == 'false'
+        run: |
+          nix develop --command bun install --frozen-lockfile
+          nix develop --command bun apps/ios/LexicalModel/build.mjs
+          git diff --exit-code -- apps/ios/App/Resources/LexicalModel.js apps/ios/App/Resources/LexicalModel-LICENSES.txt
+
+  build:
+    needs: changes
+    if: needs.changes.outputs.required == 'true'
     runs-on: macos-26
     env:
       DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
@@ -41,10 +87,82 @@ jobs:
         with:
           persist-credentials: false
       - uses: cachix/install-nix-action@v31
-      - run: nix develop --command bash scripts/ios.sh test 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
+      - run: nix develop --command bash scripts/ios.sh build-for-testing 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5'
       - run: git diff --exit-code -- apps/ios/Sources/EditorCore/Resources apps/ios/App/Resources/LexicalModel.js apps/ios/App/Resources/LexicalModel-LICENSES.txt apps/ios/Tests/EditorCoreTests/Fixtures/Upstream/ProseMirrorTests.js
       - name: Report runner resources
         if: always()
         run: |
           df -h .
           sysctl vm.swapusage
+      - name: Archive iPhone build
+        run: tar -cf "$RUNNER_TEMP/ios-tests.tar" -C apps/ios/DerivedData/Build Products
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ios-tests
+          path: ${{ runner.temp }}/ios-tests.tar
+          if-no-files-found: error
+          compression-level: 1
+          retention-days: 7
+
+  test:
+    needs: build
+    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - suite: native
+            options: -only-testing:NativeTests
+          - suite: ui-blocks
+            options: -only-testing:EditorUITests/EditorBlockUITests
+          - suite: ui-other
+            options: -only-testing:EditorUITests -skip-testing:EditorUITests/EditorBlockUITests
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+      TEST_OPTIONS: ${{ matrix.options }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+      - uses: actions/download-artifact@v8
+        with:
+          name: ios-tests
+          path: ${{ runner.temp }}
+      - name: Restore verified iPhone build
+        run: |
+          mkdir -p apps/ios/DerivedData/Build
+          tar -xf "$RUNNER_TEMP/ios-tests.tar" -C apps/ios/DerivedData/Build
+      - name: Run iPhone tests without rebuilding
+        run: nix develop --command bash scripts/ios.sh test-without-building 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' $TEST_OPTIONS
+      - name: Upload failed test results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-results-${{ matrix.suite }}
+          path: apps/ios/DerivedData/test-result-*
+          retention-days: 7
+      - name: Report runner resources
+        if: always()
+        run: |
+          df -h .
+          sysctl vm.swapusage
+
+  editor:
+    needs: [changes, build, test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every iPhone test suite to pass
+        env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          IOS_REQUIRED: ${{ needs.changes.outputs.required }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          TEST_RESULT: ${{ needs.test.result }}
+        run: |
+          test "$CHANGES_RESULT" = success || exit 1
+          case "$IOS_REQUIRED" in
+            false) test "$BUILD_RESULT" = skipped && test "$TEST_RESULT" = skipped ;;
+            true) test "$BUILD_RESULT" = success && test "$TEST_RESULT" = success ;;
+            *) exit 1 ;;
+          esac
