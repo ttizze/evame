@@ -118,7 +118,7 @@ it("iPhoneを一度だけビルドし、別MacでNativeと全UIを直列実行�
 			step.uses?.startsWith("actions/download-artifact@"),
 		).with.name,
 	);
-	expect(jobs.editor.needs).toEqual(["build", "test"]);
+	expect(jobs.editor.needs).toEqual(["changes", "build", "test"]);
 	expect(jobs.editor.if).toBe("always()");
 	for (const result of ["failure", "cancelled", "skipped"]) {
 		for (const failed of ["BUILD_RESULT", "TEST_RESULT"]) {
@@ -126,6 +126,8 @@ it("iPhoneを一度だけビルドし、別MacでNativeと全UIを直列実行�
 				execFileSync("bash", ["-c", jobs.editor.steps[0].run], {
 					env: {
 						...process.env,
+						CHANGES_RESULT: "success",
+						IOS_REQUIRED: "true",
 						BUILD_RESULT: "success",
 						TEST_RESULT: "success",
 						[failed]: result,

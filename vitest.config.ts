@@ -1,12 +1,19 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
+const excludedTests = ["**/.worktrees/**", "**/node_modules/**", "**/dist/**"];
+const domTests = [
+	"**/*.{test,spec}.?(c|m)[jt]sx",
+	"**/block-editing.test.ts",
+	"**/auth-client.test.ts",
+];
+
 export default defineConfig({
 	plugins: [react()],
 	test: {
 		globals: true,
 		slowTestThreshold: 1000,
-		exclude: ["**/.worktrees/**", "**/node_modules/**", "**/dist/**"],
+		exclude: excludedTests,
 		env: {
 			// 本番の接続先をテストへ持ち込まない。
 			TURSO_DATABASE_URL: "",
@@ -22,7 +29,17 @@ export default defineConfig({
 			// 特定のテストでログを見たい場合は、ここで明示的に設定可能
 			// LOG_LEVEL: "debug",
 		},
-		environment: "jsdom",
+		environment: "node",
+		projects: [
+			{
+				extends: true,
+				test: { name: "node", exclude: [...excludedTests, ...domTests] },
+			},
+			{
+				extends: true,
+				test: { name: "dom", environment: "jsdom", include: domTests },
+			},
+		],
 		setupFiles: "./vitest.setup.ts",
 		server: {
 			deps: {

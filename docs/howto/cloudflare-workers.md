@@ -2,6 +2,14 @@
 
 全コマンドは `nix develop` 内で実行する。TanStack Start の入口は `src/server.ts`、Astro Readerの入口は `reader/src/worker.ts`。`bun run build` がそれぞれのWorkerとStatic Assetsを `dist` と `reader/dist` に生成し、Wranglerは生成された設定をデプロイする。
 
+## CIのテスト実行
+
+ユニットテストはNodeとDOMの2プロジェクトに分ける。既定はNodeで、JSXを持つテストとDOMを使うエディター・認証クライアントのテストだけjsdomを起動する。全ファイルの実行とファイル間の隔離は維持する。iPhoneモデルの公式例・操作fixtureは、同じJavaScriptのコンパイル結果だけを再利用し、実行コンテキストは各例で新しく作る。
+
+通常のWebだけの変更ではiPhoneワークフローを起動しない。ルートの `package.json`・`bun.lock` だけがiPhoneの対象にかかる場合は、Linuxで同梱モデルとライセンスを再生成し、コミット済みの生成物との一致を確認する。一致したときだけMacでのビルドとSimulatorテストを省く。生成物の差分・差分判定失敗・判定未確定は成功にしない。
+
+iPhone本体・共有エディター・パッチ・操作fixture・Nix・iPhone検証設定の変更と手動実行では、Macでの全検証を維持する。所要時間はGitHub Actionsの `checks` とiPhone各ジョブで実測し、ローカル計測と区別する。
+
 ## 接続先
 
 `wrangler.jsonc` のWorker名は `evame-start`、`reader/wrangler.jsonc` は `evame-reader`。既存の `evame` Workerは上書きしない。Readerはworkers.devとバージョンURLを公開せず、service binding経由で接続する。

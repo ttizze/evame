@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { runInNewContext } from "node:vm";
+import { Script } from "node:vm";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
@@ -8,7 +8,9 @@ import { removePosition } from "unist-util-remove-position";
 import { describe, expect, it } from "vitest";
 import { editingCases } from "../../../tests/editor-matrix.mjs";
 
-const source = readFileSync("apps/ios/App/Resources/LexicalModel.js", "utf8");
+const model = new Script(
+	readFileSync("apps/ios/App/Resources/LexicalModel.js", "utf8"),
+);
 const processor = unified()
 	.use(remarkParse)
 	.use(remarkGfm)
@@ -23,7 +25,7 @@ describe("iPhoneへ同梱する編集モデルの総当たり", () => {
 	for (const entry of editingCases)
 		it(`${entry.name}・保存とUndo/Redo`, () => {
 			const context: Record<string, unknown> = {};
-			runInNewContext(source, context);
+			model.runInNewContext(context);
 			const request = (input: Record<string, unknown>) => {
 				const output = JSON.parse(
 					(context.evameEditorRequest as (json: string) => string)(
