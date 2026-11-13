@@ -21,3 +21,5 @@ class PageViews extends HTMLElement {
 }
 
 customElements.define("evame-page-views", PageViews);
+
+export {};

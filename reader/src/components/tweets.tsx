@@ -3,5 +3,6 @@ import { Tweet } from "react-tweet";
 
 export function renderTweets(roots: HTMLElement[]) {
 	for (const container of roots)
-		createRoot(container).render(<Tweet id={container.dataset.tweetId!} />);
+		if (container.isConnected)
+			createRoot(container).render(<Tweet id={container.dataset.tweetId!} />);
 }
