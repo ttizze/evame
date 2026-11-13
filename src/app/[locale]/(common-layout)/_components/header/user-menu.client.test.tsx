@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { SWRConfig } from "swr";
 import { IntlProvider } from "use-intl";
 import { beforeEach, expect, it, vi } from "vitest";
+import { ModeToggle } from "@/app/[locale]/(common-layout)/_components/header/mode-toggle";
 import { messages } from "@/i18n/messages";
 import { UserMenu } from "./user-menu.client";
 
@@ -92,7 +93,10 @@ function renderMenu() {
 						image: "",
 						plan: "free",
 					}}
+					defaultOpen={false}
+					initialUnreadCount={0}
 					locale="ja"
+					themeControl={<ModeToggle />}
 				/>
 			</SWRConfig>
 		</IntlProvider>,

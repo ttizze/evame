@@ -1,11 +1,11 @@
 ---
 import { ArrowRightIcon, BookOpenIcon, SparklesIcon } from "lucide-react";
 import type { loadHomePage } from "@/app/[locale]/(common-layout)/_components/home/service/load-home-page";
-import { PageLikeListClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/like-list";
 import { buttonVariants } from "@/components/ui/button";
 import { messages } from "@/i18n/messages";
 import { cn } from "@/lib/utils";
 import PageCard from "./page-card.astro";
+import PageLikes from "./page-likes.astro";
 
 const { locale, data } = Astro.props as {
 	locale: string;
@@ -27,7 +27,7 @@ const version = Array.from(
 ).join("");
 ---
 <div class="flex flex-col gap-8" data-home-pages data-home-version={version}>
-  <PageLikeListClient pageIds={pageIds} client:load />
+  <PageLikes pageIds={pageIds}>
   {(["newPages", "popularPages"] as const).map((kind) => {
     const Icon = kind === "newPages" ? SparklesIcon : BookOpenIcon;
     const Heading = kind === "newPages" ? "h1" : "h2";
@@ -39,4 +39,5 @@ const version = Array.from(
       {kind === "newPages" && <div class="flex justify-center"><a class={cn(buttonVariants(), "rounded-full h-10 w-40 gap-2")} href={`/${locale}/new-pages`}>{t.more}<ArrowRightIcon className="h-4 w-4" /></a></div>}
     </>;
   })}
+  </PageLikes>
 </div>

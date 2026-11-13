@@ -50,8 +50,6 @@ class HomeFeed extends HTMLElement {
 					pages.dataset.homeVersion !== nextPages.dataset.homeVersion)
 			) {
 				pages.replaceWith(document.importNode(nextPages, true));
-				// 取り除いたAstro islandのReact/SWR購読も終了する。
-				document.dispatchEvent(new Event("astro:after-swap"));
 			}
 			error.hidden = true;
 		} catch {

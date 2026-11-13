@@ -1,6 +1,11 @@
 {
 	"ShareDialog": {
-		"trigger": "Compartir"
+		"trigger": "Compartir",
+		"copyLink": "Copiar enlace",
+		"copied": "Enlace copiado"
+	},
+	"LoginMethods": {
+		"continueWithEmail": "O continúa con tu correo electrónico"
 	},
 	"AppLogin": {
 		"title": "Permitir acceso a la app",

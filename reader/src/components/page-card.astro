@@ -1,8 +1,9 @@
 ---
-import { PageLikeButtonClient } from "@/app/[locale]/(common-layout)/_components/page/page-like-button/client";
+import { Heart, Loader2 } from "lucide-react";
 import { PageList } from "@/app/[locale]/(common-layout)/_components/page/page-list";
 import type { PageForList } from "@/app/[locale]/types";
-import PageAvatar from "./page-avatar.astro";
+import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/user-avatar";
 
 interface Props {
 	page: PageForList;
@@ -12,6 +13,6 @@ interface Props {
 const { page, locale, index } = Astro.props;
 ---
 <PageList PageForList={page} locale={locale} index={index} likeButton={null} avatar={null}>
-  <PageAvatar slot="avatar" image={page.userImage} name={page.userHandle} />
-  <PageLikeButtonClient slot="like-button" showCount={false} pageId={page.id} initialLikeCount={page.likeCount} client:load />
+  <UserAvatar slot="avatar" className="w-5 h-5 shrink-0" image={page.userImage} name={page.userHandle} />
+  <div slot="like-button" class="flex items-center gap-2"><Button aria-label="Like" aria-pressed={false} className="bg-background cursor-pointer" data-like-page={page.id} disabled size="icon" type="button" variant="ghost"><Heart className="h-5 w-5 rounded-full" data-like-heart fill="none" /><span data-like-pending hidden><Loader2 className="h-5 w-5 rounded-full" /></span></Button></div>
 </PageList>

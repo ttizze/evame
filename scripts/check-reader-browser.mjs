@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { chromium, expect } from "@playwright/test";
+import { chromium, expect, webkit } from "@playwright/test";
 import { TextWriter, Uint8ArrayReader, ZipReader } from "@zip.js/zip.js";
 import { fromJSON } from "seroval";
 import { checkHeaderBrowser } from "./check-header-browser.mjs";
@@ -100,6 +100,12 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await noScript.close();
 		console.log("JavaScript無効でも記事一覧・本文・表示モードを読める");
 		await checkHeaderBrowser(browser, baseUrl, cookie, handle, pageSlug);
+		const safari = await webkit.launch();
+		try {
+			await checkHeaderBrowser(safari, baseUrl, cookie, handle, pageSlug);
+		} finally {
+			await safari.close();
+		}
 		const context = await browser.newContext({
 			viewport: { width: 1280, height: 900 },
 		});
@@ -168,21 +174,25 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await page.waitForLoadState("networkidle");
 		page.off("request", trackInitialScript);
 		assert.ok(
-			initialScripts.size <= 20,
-			`トップの初回JSは20要求以内に収める: ${initialScripts.size}`,
+			initialScripts.size <= 8,
+			`トップの初回JSは8要求以内に収める: ${initialScripts.size}`,
+		);
+		assert.ok(
+			[...initialScripts].every((url) => !url.includes("reader-interactions")),
+			"トップの表示だけでメニュー・フォーム・React DOMを読み込まない",
 		);
 		const sessionLoads = await page.evaluate(() =>
 			performance
 				.getEntriesByType("resource")
 				.filter(
-					(entry) => new URL(entry.name).pathname === "/api/auth/get-session",
+					(entry) => new URL(entry.name).pathname === "/api/reader-header",
 				)
 				.map((entry) => entry.initiatorType),
 		);
 		assert.deepEqual(
 			sessionLoads,
 			["link"],
-			"認証はHTMLから先行取得し、ヘッダーの起動時には再取得しない",
+			"個人用ヘッダーはHTMLから先行取得し、表示時には再取得しない",
 		);
 		await expect(
 			page
@@ -252,6 +262,7 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await expect(
 			page.locator('astro-island[component-export="HomeFeedIsland"]'),
 		).toHaveCount(0);
+		await expect(page.locator("[data-home-pages] astro-island")).toHaveCount(0);
 		const firstLike = page
 			.locator("main article")
 			.first()
@@ -957,7 +968,12 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		);
 		await expect(
 			page.locator("header").getByTestId("unread-count"),
-		).toHaveCount(0);
+		).not.toBeVisible();
+		await expect(
+			page
+				.locator("header")
+				.getByRole("button", { name: "アカウントメニュー", exact: true }),
+		).not.toHaveAttribute("aria-describedby", /.+/);
 		const followNotification = page
 			.getByTestId("notifications-menu-content")
 			.getByRole("menuitem")
@@ -1006,12 +1022,14 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		await page.keyboard.press("Escape");
 		await page.goto(`${baseUrl}/ja/${handle}`);
 		await expect(
-			page.locator('astro-island[component-export="HeaderIsland"]'),
-		).not.toHaveAttribute("ssr", "");
+			page
+				.locator("header")
+				.getByRole("button", { name: "アカウントメニュー", exact: true }),
+		).toBeVisible();
 		await page
 			.getByRole("button", { name: "アカウントメニュー", exact: true })
 			.click();
-		await page.getByTestId("locale-selector-button").click();
+		await page.getByRole("menu").getByTestId("locale-selector-button").click();
 		const localeSearch = page.getByPlaceholder("search...");
 		await localeSearch.fill("fr");
 		await localeSearch.press("ArrowDown");
@@ -1274,8 +1292,10 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		});
 		await page.setViewportSize({ width: 390, height: 844 });
 		await expect(
-			page.locator('astro-island[component-export="HeaderIsland"]'),
-		).not.toHaveAttribute("ssr", "");
+			page
+				.locator("header")
+				.getByRole("button", { name: "アカウントメニュー", exact: true }),
+		).toBeVisible();
 		await page
 			.getByRole("button", { name: "アカウントメニュー", exact: true })
 			.click();
@@ -1338,7 +1358,27 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 					},
 					{ message: "通知へ切り替えた後、モバイルの画面内へ再配置する" },
 				)
-				.toBe(true);
+				.toBe(true)
+				.catch(async (error) => {
+					console.error(
+						await page.evaluate(() => ({
+							viewport: { width: innerWidth, height: innerHeight },
+							scrollY,
+							header: document
+								.querySelector("header")
+								?.getBoundingClientRect()
+								.toJSON(),
+							menu: document
+								.querySelector('[data-testid="notifications-menu-content"]')
+								?.getBoundingClientRect()
+								.toJSON(),
+						})),
+					);
+					await page.screenshot({
+						path: `/tmp/evame-notifications-overflow-${width}.png`,
+					});
+					throw error;
+				});
 			await expect
 				.poll(() =>
 					page.evaluate(() => ({ x: window.scrollX, y: window.scrollY })),

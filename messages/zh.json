@@ -1,7 +1,10 @@
 {
 	"ShareDialog": {
-		"trigger": "分享"
+		"trigger": "分享",
+		"copyLink": "复制链接",
+		"copied": "链接已复制"
 	},
+	"LoginMethods": { "continueWithEmail": "或使用电子邮件继续" },
 	"AppLogin": {
 		"title": "允许应用访问",
 		"description": "允许 Evame iPhone 应用读取和编辑你的文档和图片，以及更改公开状态。仅当你主动从应用发起登录时才允许。",

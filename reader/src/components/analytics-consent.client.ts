@@ -2,7 +2,7 @@ import {
 	analyticsConsentStates,
 	analyticsConsentStorageKey,
 	createAnalyticsScripts,
-} from "@/app/[locale]/_components/analytics-consent";
+} from "../../../shared/analytics-consent";
 
 class AnalyticsConsent extends HTMLElement {
 	private scripts: HTMLScriptElement[] = [];

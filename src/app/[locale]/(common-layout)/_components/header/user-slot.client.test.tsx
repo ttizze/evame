@@ -27,7 +27,9 @@ vi.mock("./user-menu.client", () => {
 });
 vi.mock("./locale-selector/client", () => ({ LocaleSelector: () => null }));
 vi.mock("../start-button", () => ({ StartButton: () => null }));
-vi.mock("./new-page-button", () => ({ NewPageButton: () => null }));
+vi.mock("../../../../../../shared/header/new-page-button", () => ({
+	NewPageButton: () => null,
+}));
 vi.mock("./translation-help-popover.client", () => ({
 	TranslationHelpPopover: () => null,
 }));

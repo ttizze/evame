@@ -65,7 +65,7 @@ export function LocaleSelector({
 	userPlan,
 }: LocaleSelectorProps) {
 	const [open, setOpen] = useState(false);
-	const [dialogOpen, setDialogOpen] = useState(false);
+	const [dialogOpen, setDialogOpen] = useState<boolean | null>(null);
 	const targetLocale = useLocale();
 	const t = useTranslations("Header");
 	const location = new URL(
@@ -230,7 +230,7 @@ export function LocaleSelector({
 					</Command>
 				</PopoverContent>
 			</Popover>
-			{pageSlug && (
+			{pageSlug && dialogOpen !== null && (
 				<Suspense fallback={null}>
 					<AddTranslateDialog
 						currentHandle={currentHandle}

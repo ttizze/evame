@@ -14,6 +14,3 @@ const t = (messages[locale as keyof typeof messages] ?? messages.en).Home;
   <p role="alert" data-home-error hidden>{t.loadError} <Button data-home-retry variant="outline">{t.retry}</Button></p>
   <HomePages locale={locale} data={data} />
 </evame-home-feed>
-<script>
-  import "./home-feed.client";
-</script>

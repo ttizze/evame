@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LocaleSelector } from "./client";
 
 const translationDialog = vi.hoisted(() => ({ loads: 0 }));
@@ -42,6 +42,7 @@ vi.mock("use-intl", () => ({
 beforeEach(() =>
 	window.history.replaceState(null, "", "/en/test?view=both#part"),
 );
+afterEach(() => vi.unstubAllGlobals());
 
 describe("LocaleSelector", () => {
 	it("記事以外の言語切り替えでは翻訳追加フォームを読み込まない", () => {
@@ -109,5 +110,38 @@ describe("LocaleSelector", () => {
 			"href",
 			"/fr/test?view=both#part",
 		);
+	});
+	it("記事でも翻訳追加ボタンを押すまでフォームを読み込まない", async () => {
+		window.history.replaceState(null, "", "/en/alice/article");
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () =>
+				Response.json({
+					sourceLocale: "en",
+					translationJobs: [],
+					translationProofs: [],
+				}),
+			),
+		);
+		render(
+			<LocaleSelector
+				currentHandle=""
+				hasGeminiApiKey={false}
+				inMenu={false}
+				userPlan="free"
+			/>,
+		);
+		await waitFor(() =>
+			expect(screen.getByTestId("source-icon")).toBeInTheDocument(),
+		);
+		expect(translationDialog.loads).toBe(0);
+		const user = userEvent.setup();
+		await user.click(screen.getByTestId("locale-selector-button"));
+		expect(translationDialog.loads).toBe(0);
+		await user.click(screen.getByRole("button", { name: "+ Add New" }));
+		expect(
+			await screen.findByText("Please log in to Add Translation"),
+		).toBeVisible();
+		expect(translationDialog.loads).toBe(1);
 	});
 });

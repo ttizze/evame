@@ -4,7 +4,7 @@ import {
 	analyticsConsentStates,
 	analyticsConsentStorageKey,
 	createAnalyticsScripts,
-} from "./analytics-consent";
+} from "../../../../shared/analytics-consent";
 
 type AnalyticsConsentState = (typeof analyticsConsentStates)[number];
 

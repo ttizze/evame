@@ -7,7 +7,10 @@ import {
 	createUser,
 } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
-import { fetchNotificationRowsWithRelations } from "./queries.server";
+import {
+	fetchNotificationRowsWithRelations,
+	fetchUnreadNotificationCount,
+} from "./queries";
 
 await setupDbPerFile(import.meta.url);
 
@@ -84,36 +87,118 @@ describe("fetchNotificationRowsWithRelations", () => {
 			})
 			.returningAll()
 			.executeTakeFirstOrThrow();
+		const pageSegment = await db
+			.selectFrom("segments")
+			.select("id")
+			.where("contentId", "=", page.id)
+			.where("number", "=", 1)
+			.executeTakeFirstOrThrow();
+		const pageTranslation = await db
+			.insertInto("segmentTranslations")
+			.values({
+				segmentId: pageSegment.id,
+				locale: "ja",
+				text: "本文の翻訳",
+				userId: translationActor.id,
+			})
+			.returningAll()
+			.executeTakeFirstOrThrow();
 
 		await db
 			.insertInto("notifications")
-			.values([
-				{
-					userId: recipient.id,
-					actorId: commentActor.id,
-					type: "PAGE_COMMENT",
-					pageCommentId: comment.id,
-					pageId: null,
-					segmentTranslationId: null,
-				},
-				{
-					userId: recipient.id,
-					actorId: translationActor.id,
-					type: "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE",
-					pageCommentId: comment.id,
-					pageId: null,
-					segmentTranslationId: translation.id,
-				},
-			])
+			.values(
+				(
+					[
+						{
+							userId: recipient.id,
+							actorId: commentActor.id,
+							type: "FOLLOW",
+							read: true,
+							pageId: null,
+							pageCommentId: null,
+							segmentTranslationId: null,
+						},
+						{
+							userId: recipient.id,
+							actorId: commentActor.id,
+							type: "PAGE_LIKE",
+							pageId: page.id,
+							pageCommentId: null,
+							segmentTranslationId: null,
+						},
+						{
+							userId: recipient.id,
+							actorId: translationActor.id,
+							type: "PAGE_SEGMENT_TRANSLATION_VOTE",
+							pageId: null,
+							pageCommentId: null,
+							segmentTranslationId: pageTranslation.id,
+						},
+						{
+							userId: recipient.id,
+							actorId: commentActor.id,
+							type: "PAGE_LIKE",
+							pageId: null,
+							pageCommentId: null,
+							segmentTranslationId: null,
+						},
+						{
+							userId: pageOwner.id,
+							actorId: commentActor.id,
+							type: "FOLLOW",
+							pageId: null,
+							pageCommentId: null,
+							segmentTranslationId: null,
+						},
+						{
+							userId: recipient.id,
+							actorId: commentActor.id,
+							type: "PAGE_COMMENT",
+							pageCommentId: comment.id,
+							pageId: null,
+							segmentTranslationId: null,
+						},
+						{
+							userId: recipient.id,
+							actorId: translationActor.id,
+							type: "PAGE_COMMENT_SEGMENT_TRANSLATION_VOTE",
+							pageCommentId: comment.id,
+							pageId: null,
+							segmentTranslationId: translation.id,
+						},
+					] as const
+				).map((notification) => ({ read: false, ...notification })),
+			)
 			.execute();
 
 		const notifications = await fetchNotificationRowsWithRelations(
 			recipient.handle,
 		);
 
-		expect(notifications).toHaveLength(2);
+		expect(notifications).toHaveLength(5);
+		expect(await fetchUnreadNotificationCount(recipient.handle)).toBe(4);
 		expect(notifications).toEqual(
 			expect.arrayContaining([
+				expect.objectContaining({
+					type: "FOLLOW",
+					read: true,
+					pageSlug: null,
+					pageTitle: null,
+					pageOwnerHandle: null,
+					segmentTranslationText: null,
+				}),
+				expect.objectContaining({
+					type: "PAGE_LIKE",
+					pageSlug: "comment-notification-page",
+					pageTitle: "Comment Notification Page",
+					segmentTranslationText: null,
+				}),
+				expect.objectContaining({
+					type: "PAGE_SEGMENT_TRANSLATION_VOTE",
+					pageSlug: "comment-notification-page",
+					pageTitle: "Comment Notification Page",
+					segmentTranslationText: "本文の翻訳",
+				}),
 				expect.objectContaining({
 					type: "PAGE_COMMENT",
 					actorId: commentActor.id,

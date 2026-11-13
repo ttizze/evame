@@ -131,10 +131,39 @@ try {
 		],
 	});
 	await database.execute({
-		sql: "INSERT INTO sessions (id, token, user_id, expires_at) VALUES (?, ?, ?, ?)",
-		args: [randomUUID(), token, userId, Date.now() + 3600000],
+		sql: "INSERT INTO sessions (id, token, user_id, expires_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
+		args: [
+			randomUUID(),
+			token,
+			userId,
+			Date.now() + 5 * 24 * 60 * 60 * 1000,
+			Date.now() - 2 * 24 * 60 * 60 * 1000,
+			Date.now() - 2 * 24 * 60 * 60 * 1000,
+		],
 	});
 	const cookie = `better-auth.session_token=${encodeURIComponent(`${token}.${createHmac("sha256", authSecret).update(token).digest("base64")}`)}`;
+	const header = await worker.fetch(
+		"http://localhost/api/reader-header?locale=ja",
+		{ headers: { cookie } },
+	);
+	assert.equal(header.status, 200);
+	assert.equal((await header.json()).user.handle, handle);
+	assert.equal(header.headers.get("Cache-Control"), "private, no-store");
+	assert.ok(
+		header.headers
+			.getSetCookie()
+			.some((value) => value.startsWith("better-auth.session_token=")),
+		"Readerのヘッダー取得でもセッション延長Cookieを返す",
+	);
+	const renewedSession = await database.execute({
+		sql: "SELECT expires_at FROM sessions WHERE token = ?",
+		args: [token],
+	});
+	assert.ok(
+		Number(renewedSession.rows[0].expires_at) >
+			Date.now() + 6 * 24 * 60 * 60 * 1000,
+		"閲覧中のセッションを既存と同じ7日間へ延長する",
+	);
 	const session = await worker.fetch("http://localhost/api/auth/get-session", {
 		headers: { cookie },
 	});
@@ -500,7 +529,7 @@ try {
 			locale + ": AstroでHTMLを描画する",
 		);
 		assert.ok(
-			!html.includes("about-section"),
+			!/<[a-z][^>]*\bclass="[^"]*\babout-section\b/.test(html),
 			locale + ": トップに長い説明文を表示しない",
 		);
 		assert.ok(

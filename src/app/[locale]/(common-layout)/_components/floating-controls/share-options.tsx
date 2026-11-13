@@ -8,10 +8,12 @@ import {
 	TwitterShareButton,
 } from "react-share";
 import { toast } from "sonner";
+import { useTranslations } from "use-intl";
 import { viewQueryState } from "@/app/[locale]/(common-layout)/_components/view-query";
 import { Button } from "@/components/ui/button";
 
 export default function ShareOptions() {
+	const t = useTranslations("ShareDialog");
 	const [view] = useQueryState("view", viewQueryState);
 	const url = new URL(window.location.href);
 	url.searchParams.set("view", view);
@@ -20,10 +22,11 @@ export default function ShareOptions() {
 		<div className="flex flex-col gap-6 mt-4">
 			<div className="flex justify-center space-x-4">
 				<Button
+					aria-label={t("copyLink")}
 					className="rounded-full"
 					onClick={() => {
 						navigator.clipboard.writeText(shareUrl);
-						toast.success("Copied to clipboard");
+						toast.success(t("copied"));
 					}}
 					size="icon"
 					variant="outline"

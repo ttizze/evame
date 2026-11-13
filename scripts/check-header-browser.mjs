@@ -30,6 +30,64 @@ export async function checkHeaderBrowser(
 					exact: true,
 				});
 				await expect(login).toBeVisible();
+				if (kind === "home" && width === 390) {
+					await expect
+						.poll(() =>
+							page.evaluate(() =>
+								performance
+									.getEntriesByType("resource")
+									.some(
+										(entry) =>
+											new URL(entry.name).pathname.startsWith(
+												"/_astro/monitoring.",
+											) && entry.decodedBodySize > 0,
+									),
+							),
+						)
+						.toBe(true);
+					const monitoringTiming = await page.evaluate(() => ({
+						paint: performance.getEntriesByName("first-contentful-paint")[0]
+							?.startTime,
+						sdk: performance
+							.getEntriesByType("resource")
+							.find((entry) =>
+								new URL(entry.name).pathname.startsWith("/_astro/monitoring."),
+							)?.startTime,
+					}));
+					if (monitoringTiming.paint !== undefined)
+						assert.ok(
+							monitoringTiming.sdk >= monitoringTiming.paint,
+							"本文の初回描画後に監視SDKを取得する",
+						);
+					await page.emulateMedia({ colorScheme: "dark" });
+					await expect(page.locator("html")).toHaveClass(/dark/);
+					await page.emulateMedia({ colorScheme: "light" });
+					await expect(page.locator("html")).toHaveClass(/light/);
+					const otherTab = await guest.newPage();
+					try {
+						await otherTab.goto(`${baseUrl}/ja`);
+						await otherTab.evaluate(() =>
+							localStorage.setItem("theme", "dark"),
+						);
+						await expect(page.locator("html")).toHaveClass(/dark/);
+						await otherTab.evaluate(() => localStorage.removeItem("theme"));
+						await expect(page.locator("html")).toHaveClass(/light/);
+					} finally {
+						await otherTab.close();
+					}
+					const avatar = page.locator("main evame-avatar").first();
+					const avatarImage = avatar.locator("img");
+					await avatar.scrollIntoViewIfNeeded();
+					await avatarImage.evaluate((image) => {
+						image.src =
+							'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="2" height="2"><rect width="2" height="2" fill="red"/></svg>';
+					});
+					await expect(avatarImage).toHaveCSS("opacity", "1");
+					await expect(avatar.locator("span")).not.toBeVisible();
+					await avatarImage.evaluate((image) => image.removeAttribute("src"));
+					await expect(avatar.locator("span")).toBeVisible();
+					await expect(avatarImage).toBeHidden();
+				}
 				if (kind === "article") {
 					await expect(header.getByTestId("source-icon")).toBeAttached();
 					if (width < 768)

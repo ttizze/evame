@@ -15,6 +15,7 @@ import { useTranslations } from "use-intl";
 import { callReaderAction } from "@/app/_service/reader-action";
 import { useTranslationJobToast } from "@/app/[locale]/_hooks/use-translation-job-toast";
 import { useTranslationJobs } from "@/app/[locale]/_hooks/use-translation-jobs";
+import { ModeToggle } from "@/app/[locale]/(common-layout)/_components/header/mode-toggle";
 import { UserMenu } from "@/app/[locale]/(common-layout)/_components/header/user-menu.client";
 import type { SanitizedUser } from "@/app/types";
 import type { TranslationJobForToast } from "@/app/types/translation-job";
@@ -412,8 +413,11 @@ export function EditHeader({
 					</div>
 					<UserMenu
 						currentUser={currentUser}
+						defaultOpen={false}
 						hasGeminiApiKey={false}
+						initialUnreadCount={0}
 						locale={locale}
+						themeControl={<ModeToggle />}
 					/>
 				</div>
 			</header>

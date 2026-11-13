@@ -53,6 +53,7 @@ it("通常環境ではGoogleとメールの両方のログインを維持する"
 	expect(
 		screen.getByRole("form", { name: "メールログイン" }),
 	).toBeInTheDocument();
+	expect(screen.getByText("またはメールで続ける")).toBeVisible();
 });
 
 it("ログイン用URLでは操作を待たずにダイアログとフォームを開く", async () => {

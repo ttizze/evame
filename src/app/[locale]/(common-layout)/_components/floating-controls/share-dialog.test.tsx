@@ -6,6 +6,9 @@ import { expect, it, vi } from "vitest";
 import { messages } from "@/i18n/messages";
 import { ShareDialog } from "./share-dialog";
 
+const copied = vi.hoisted(() => vi.fn());
+vi.mock("sonner", () => ({ toast: { success: copied } }));
+
 const sharePackage = vi.hoisted(() => ({ loads: 0 }));
 vi.mock("react-share", () => {
 	sharePackage.loads++;
@@ -37,4 +40,6 @@ it("Shareを押すまでSNSのライブラリを読み込まず、最初のク�
 	expect(await screen.findByRole("dialog", { name: "Share" })).toBeVisible();
 	expect(await screen.findByText("Facebook")).toBeVisible();
 	expect(sharePackage.loads).toBe(1);
+	await user.click(screen.getByRole("button", { name: "リンクをコピー" }));
+	expect(copied).toHaveBeenCalledWith("リンクをコピーしました");
 });

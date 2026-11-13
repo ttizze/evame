@@ -11,7 +11,22 @@ export default defineConfig({
 	publicDir: "../public",
 	session: false,
 	adapter: cloudflare({ imageService: "passthrough" }),
-	integrations: [react()],
+	integrations: [
+		react(),
+		{
+			name: "interaction",
+			hooks: {
+				"astro:config:setup": ({ addClientDirective }) => {
+					addClientDirective({
+						name: "interaction",
+						entrypoint: fileURLToPath(
+							new URL("./src/directives/interaction.ts", import.meta.url),
+						),
+					});
+				},
+			},
+		},
+	],
 	vite: {
 		envPrefix: ["PUBLIC_", "VITE_"],
 		resolve: {
@@ -27,58 +42,28 @@ export default defineConfig({
 								groups: [
 									{
 										name: "react",
-										test: /node_modules\/(?:react|react-dom|scheduler)\//,
+										test: /node_modules\/react\//,
 										priority: 30,
 									},
 									{
-										name: "icons",
-										test: /node_modules\/lucide-react\//,
-										priority: 20,
-									},
-									{
 										name: "monitoring",
-										test: /node_modules\/@sentry(?:-internal)?\//,
-										priority: 15,
-									},
-									{
-										name: "primitives",
-										test: /node_modules\/(?:@radix-ui|@floating-ui)\//,
-										priority: 10,
-									},
-									{
-										name: "reader-runtime",
 										test: (id) =>
-											id.endsWith("/src/i18n/messages.ts") ||
-											id.endsWith("/reader/src/components/providers.tsx") ||
-											/node_modules\/(?:swr|nuqs|use-intl|better-auth|@better-auth|clsx|tailwind-merge|class-variance-authority|nanostores|@nanostores)\//.test(
-												id,
-											),
+											id.endsWith("/src/instrument.client.ts") ||
+											/node_modules\/@sentry(?:-internal)?\//.test(id),
+										priority: 25,
+									},
+									{
+										name: "reader-native",
+										test: (id) => id.endsWith("/reader/src/client.ts"),
 										priority: 5,
 									},
 									{
-										name: "reader-ui",
+										name: "reader-interactions",
 										test: (id) =>
-											/src\/components\/ui\/(?:button|avatar|dialog|popover|dropdown-menu|separator|command)\.tsx$/.test(
+											/\/reader\/src\/components\/(?:header-(?:guest|account)|controls)\.tsx$/.test(
 												id,
-											) ||
-											[
-												"/_components/start-button.tsx",
-												"/_components/login/_components/login-dialog.tsx",
-												"/_components/header/translation-help-popover.client.tsx",
-											].some((path) => id.endsWith(path)),
-										priority: 4,
-									},
-									{
-										name: "reader-shared",
-										test: (id) =>
-											[
-												"/src/app/_hooks/use-hydrated.",
-												"/src/app/_service/reader-action.",
-												"/src/app/_domain/reader-route.",
-												"/src/app/[locale]/(common-layout)/_components/view-query.",
-												"/src/app/[locale]/(common-layout)/_components/header/hooks/",
-											].some((path) => id.includes(path)),
-										priority: 3,
+											) || id.endsWith("/login/_components/login-methods.tsx"),
+										priority: 2,
 									},
 								],
 							},

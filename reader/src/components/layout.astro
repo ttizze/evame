@@ -1,11 +1,12 @@
 ---
 import "../../../src/app/globals.css";
+import { ThemeProvider } from "next-themes";
 import { DEFAULT_VIEW } from "@/app/_constants/view";
 import { Footer } from "@/app/[locale]/(common-layout)/_components/footer";
 import { viewQueryState } from "@/app/[locale]/(common-layout)/_components/view-query";
 import { messages } from "@/i18n/messages";
 import AnalyticsConsent from "./analytics-consent.astro";
-import { HeaderIsland } from "./header";
+import Header from "./header.astro";
 
 interface Props {
 	locale: string;
@@ -33,17 +34,12 @@ const footer = (messages[locale as keyof typeof messages] ?? messages.en)
 ---
 <!doctype html>
 <html lang={locale} dir={locale === "ar" || locale === "fa" ? "rtl" : "ltr"}>
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>{title}</title><meta name="description" content={description} /><link rel="canonical" href={canonical} /><meta property="og:title" content={title} /><meta property="og:description" content={description} /><meta property="og:url" content={canonical} /><meta name="twitter:title" content={title} /><meta name="twitter:description" content={description} /><meta name="twitter:card" content="summary_large_image" /><link rel="icon" href="/favicon.svg" />{commonLayout && <link rel="preload" as="fetch" href="/api/auth/get-session" crossorigin="use-credentials" />}<slot name="head" /></head>
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>{title}</title><meta name="description" content={description} /><link rel="canonical" href={canonical} /><meta property="og:title" content={title} /><meta property="og:description" content={description} /><meta property="og:url" content={canonical} /><meta name="twitter:title" content={title} /><meta name="twitter:description" content={description} /><meta name="twitter:card" content="summary_large_image" /><link rel="icon" href="/favicon.svg" />{commonLayout && <link rel="preload" as="fetch" href={`/api/reader-header?${new URLSearchParams({ locale })}`} crossorigin="use-credentials" />}<slot name="head" /></head>
   <body class="transition-colors duration-300 antialiased" data-view={view}>
-    <HeaderIsland blog={blog} locale={locale} search={Astro.url.search} showHeader={commonLayout} client:load />
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem />
+    {commonLayout && <Header blog={blog} locale={locale} search={Astro.url.search} />}
     <AnalyticsConsent locale={locale} gaTrackingId={gaTrackingId} />
     {commonLayout ? <><main class="mb-5 mt-3 md:mt-5 grow tracking-wider"><div class="container mx-auto px-4 max-w-4xl"><slot /></div></main>{blog ? <footer class="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-4 border-t border-border/60 px-4 py-8 pb-32 text-sm text-muted-foreground" data-blog-footer><a class="hover:underline" href={`/${locale}/${blog.handle}`}>{blog.name}</a><div class="flex flex-wrap gap-4"><a class="hover:underline" href={`/${locale}/privacy`}>{footer.privacyPolicy}</a><a class="hover:underline" href={`/${locale}/terms`}>{footer.termsOfService}</a><a class="hover:underline" href={`/${locale}`}>Evame</a></div></footer> : <Footer locale={locale} />}</> : <slot />}
   </body>
 </html>
-<script>
-  import "./analytics-consent.client";
-  import "./page-avatar.client";
-</script>
-<script>
-  import "@/instrument.client";
-</script>
+<script src="../client.ts"></script>

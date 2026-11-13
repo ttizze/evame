@@ -1,0 +1,18 @@
+---
+import { ControlsIsland } from "./controls";
+
+const props = Astro.props as {
+	locale: string;
+	search: string;
+	sourceLocale: string;
+	pageId: number | null;
+	likeCount: number;
+};
+---
+{props.pageId === null ? <evame-floating-controls class="contents"><ControlsIsland {...props} client:interaction /></evame-floating-controls> : <ControlsIsland {...props} client:idle />}
+<style is:global>
+  evame-floating-controls[data-hidden] > astro-island > div {
+    --tw-translate-y: calc(var(--spacing) * 20);
+    opacity: 0;
+  }
+</style>

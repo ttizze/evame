@@ -1,7 +1,10 @@
 {
 	"ShareDialog": {
-		"trigger": "Share"
+		"trigger": "Share",
+		"copyLink": "Copy link",
+		"copied": "Link copied"
 	},
+	"LoginMethods": { "continueWithEmail": "Or continue with email" },
 	"AppLogin": {
 		"title": "Allow app access",
 		"description": "Allow the Evame iPhone app to read and write your documents and images and change publication status. Only continue if you started signing in from the app.",
