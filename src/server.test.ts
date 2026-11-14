@@ -30,11 +30,14 @@ vi.mock("./db/mutations", () => ({
 }));
 
 import { fetchReaderChanges } from "./db/queries";
-import server, { GatewayMonitoring } from "./server";
+import server, { GatewayMonitoring, ReaderBackend } from "./server";
 
 vi.mock("@sentry/cloudflare", () => ({
 	withSentry: vi.fn((_options: unknown, entry: unknown) => entry),
 	captureException: vi.fn(),
+}));
+vi.mock("./app/api/reader-data/handler", () => ({
+	getReaderData: vi.fn(async () => new Response("reader data")),
 }));
 vi.mock("@tanstack/react-start/server-entry", () => ({
 	default: { fetch: vi.fn() },
@@ -195,6 +198,17 @@ describe("WorkersのSentry監視", () => {
 
 describe("DB移行中のリクエスト停止", () => {
 	afterEach(() => vi.unstubAllEnvs());
+	it("Reader専用のDB接続も移行フラグだけで停止する", async () => {
+		vi.stubEnv("DATABASE_MIGRATION", "true");
+		const response = await ReaderBackend.prototype.fetch(
+			new Request(
+				"https://backend.internal/api/reader-data?path=/ja",
+			) as unknown as import("@cloudflare/workers-types").Request,
+		);
+		expect(response.status).toBe(503);
+		expect(response.headers.get("retry-after")).toBe("60");
+		expect(createDb).not.toHaveBeenCalled();
+	});
 
 	it.each([
 		["GET", "/ja"],

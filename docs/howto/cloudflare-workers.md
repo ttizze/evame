@@ -55,6 +55,28 @@ bun run prepare:reader-assets
 bun run deploy:workers
 ```
 
+## DB移行中の停止
+
+`DATABASE_MIGRATION` はGatewayとAppの両方へ同じ値を設定する。ReaderBackendはAppの値を参照し、DBを開く前に503を返す。Gatewayだけで停止してもAppの既存URLやQStash要求を止められず、AppだけではReaderの共有キャッシュに命中する公開HTMLを止められない。画面用KVの `maintenance` では代替しない。
+
+移行の開始前に、停止処理を備えた現行コードへ次の順で `true` を設定する。`secret put` は配信中のコードの設定を更新し、新しいアプリコードを先に配信しない。フラグは秘密値ではないが、通常のデプロイで消えない既存のWorkers secret運用を使う。
+
+```bash
+printf '%s' true | nix develop --command bun x wrangler secret put DATABASE_MIGRATION --config gateway/wrangler.jsonc
+printf '%s' true | nix develop --command bun x wrangler secret put DATABASE_MIGRATION --config wrangler.jsonc
+```
+
+公開URLの `/ja` とAppの `https://evame-start.reimei.workers.dev/api/auth/get-session` がともに503・`Retry-After: 60`を返すことを確認する。実行中のQStashジョブとDBへの書き込みが完了してから、[DB移行手順](turso-migration.md#本番切り替え)へ進む。停止中のQStash要求は503で再試行させる。
+
+移行と接続先の検証後、Appを先に再開してからGatewayを再開し、両方を `false` に揃える。
+
+```bash
+printf '%s' false | nix develop --command bun x wrangler secret put DATABASE_MIGRATION --config wrangler.jsonc
+printf '%s' false | nix develop --command bun x wrangler secret put DATABASE_MIGRATION --config gateway/wrangler.jsonc
+```
+
+公開HTML・認証・保存が再開していることを確認する。Readerへ別のフラグは追加しない。
+
 ## PRのプレビュー
 
 同じリポジトリ内のPRは、既存のNix CIが成功すると `preview` jobでCloudflare標準の[Worker Previews](https://developers.cloudflare.com/workers/previews/get-started/)を自動更新する。GitHubのdeploymentリンクから開く。URLは `https://pr-<PR番号>-evame-start.reimei.workers.dev/ja`。PR #1140は `https://pr-1140-evame-start.reimei.workers.dev/ja/auth/login`。forkからのPRでは秘密値を渡さず、プレビューをデプロイしない。

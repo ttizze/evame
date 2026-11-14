@@ -1,6 +1,7 @@
 import type { ExecutionContext } from "@cloudflare/workers-types";
 import { withSecurityHeaders } from "../../security-headers";
 import { fetchWorker } from "../../shared/fetch-worker";
+import { getMigrationResponse } from "../../shared/migration-response";
 import { fetchPublicReader } from "../../shared/public-reader";
 
 export default {
@@ -10,10 +11,8 @@ export default {
 		context: Pick<ExecutionContext, "waitUntil">,
 	) {
 		try {
-			if (env.DATABASE_MIGRATION === "true")
-				return withSecurityHeaders(
-					new Response(null, { status: 503, headers: { "Retry-After": "60" } }),
-				);
+			const migration = getMigrationResponse(env.DATABASE_MIGRATION);
+			if (migration) return migration;
 			const response = await fetchPublicReader(
 				request,
 				env.READER ?? null,

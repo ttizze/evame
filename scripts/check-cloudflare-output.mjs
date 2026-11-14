@@ -890,6 +890,35 @@ try {
 	console.log(
 		"Workersランタイムで日本語フォントとロゴを使ったOG画像を生成できる",
 	);
+
+	await harness.update((options) => ({
+		...options,
+		workers: options.workers.map((config) =>
+			config.configPath === "reader/dist/server/wrangler.json"
+				? config
+				: {
+						...config,
+						secrets: { ...config.secrets, DATABASE_MIGRATION: "true" },
+					},
+		),
+	}));
+	const stoppedGateway = harness.getWorker("evame-gateway");
+	for (const path of ["/ja", "/api/auth/get-session"]) {
+		const response = await stoppedGateway.fetch(`http://localhost${path}`);
+		assert.equal(response.status, 503);
+		assert.equal(response.headers.get("retry-after"), "60");
+	}
+	const readerEnv = await harness.getWorker("evame-reader").getEnv();
+	const stoppedBackend = await readerEnv.BACKEND.fetch(
+		"https://backend.internal/api/reader-data?path=/ja",
+	);
+	assert.equal(
+		stoppedBackend.status,
+		503,
+		"Reader専用のDB接続も移行フラグで停止する",
+	);
+	assert.equal(stoppedBackend.headers.get("retry-after"), "60");
+	console.log("DB移行中は公開HTML・API・Reader専用のDB接続を503で停止できる");
 } catch (error) {
 	const logs = harness?.getLogs();
 	if (logs?.length)

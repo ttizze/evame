@@ -13,6 +13,7 @@ import { isRedirect } from "@tanstack/react-router";
 import handler from "@tanstack/react-start/server-entry";
 import { withSecurityHeaders } from "../security-headers";
 import { fetchWorker } from "../shared/fetch-worker";
+import { getMigrationResponse } from "../shared/migration-response";
 import { restorePreviewRequest } from "../shared/preview-request";
 import { fetchPublicReader } from "../shared/public-reader";
 import { SENTRY_DSN } from "./_utils/sentry-dsn";
@@ -32,6 +33,8 @@ import {
 // HTTPルートへ公開しない、Reader専用のサービス境界。
 export class ReaderBackend extends WorkerEntrypoint {
 	async fetch(workerRequest: WorkerRequest): Promise<WorkerResponse> {
+		const migration = getMigrationResponse(process.env.DATABASE_MIGRATION);
+		if (migration) return migration as unknown as WorkerResponse;
 		const request = new Request(workerRequest.url, {
 			headers: Object.fromEntries(workerRequest.headers),
 		});
@@ -89,14 +92,8 @@ export default withSentry(sentryOptions, {
 		);
 		if (!restored) return new Response(null, { status: 404 });
 		request = restored;
-		if (process.env.DATABASE_MIGRATION === "true") {
-			return withSecurityHeaders(
-				new Response(null, {
-					status: 503,
-					headers: { "Retry-After": "60" },
-				}),
-			);
-		}
+		const migration = getMigrationResponse(process.env.DATABASE_MIGRATION);
+		if (migration) return migration;
 		const publicResponse = await fetchPublicReader(
 			request,
 			env.READER ?? null,
