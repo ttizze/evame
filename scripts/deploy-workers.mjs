@@ -10,10 +10,16 @@ if (!Array.isArray(next.active) || !Array.isArray(next.retiring))
 for (const config of [
 	"reader/dist/server/wrangler.json",
 	"dist/server/wrangler.json",
+	"gateway/dist/wrangler.json",
 ])
 	execFileSync("bun", ["x", "wrangler", "deploy", "--config", config], {
 		stdio: "inherit",
 	});
+
+// 既存の同じルートを再接続し、DNSや他ドメインの経路は変更しない。
+execFileSync(process.execPath, ["scripts/switch-gateway-route.mjs"], {
+	stdio: "inherit",
+});
 
 const now = new Date();
 for (const path of next.retiring)

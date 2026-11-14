@@ -2,7 +2,13 @@ declare module "cloudflare:workers" {
 	export const WorkerEntrypoint: typeof import("@cloudflare/workers-types").CloudflareWorkersModule.WorkerEntrypoint;
 	export const cache: import("@cloudflare/workers-types").CacheContext;
 	export const env: {
+		DATABASE_MIGRATION?: string;
 		PREVIEW_READER_ORIGIN?: string;
+		PREVIEW_APP_ORIGIN?: string;
+		APP: import("@cloudflare/workers-types").Fetcher;
+		MONITORING: {
+			report(error: Error, url: string, method: string): Promise<void>;
+		};
 		PREVIEW_GATEWAY_ORIGIN?: string;
 		PREVIEW_READER_SECRET?: string;
 		READER: import("@cloudflare/workers-types").Fetcher;

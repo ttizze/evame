@@ -30,7 +30,7 @@ vi.mock("./db/mutations", () => ({
 }));
 
 import { fetchReaderChanges } from "./db/queries";
-import server from "./server";
+import server, { GatewayMonitoring } from "./server";
 
 vi.mock("@sentry/cloudflare", () => ({
 	withSentry: vi.fn((_options: unknown, entry: unknown) => entry),
@@ -79,13 +79,13 @@ it("PRのHTMLは同じPRのReaderへ送り、本番bindingを呼ばない", asyn
 		);
 		expect(await response.text()).toBe("プレビューの本文");
 		expect(env.READER.fetch).not.toHaveBeenCalled();
-		const [url, init] = fetch.mock.calls[0];
-		expect(url).toBe(
+		const [forwarded] = fetch.mock.calls[0];
+		expect(forwarded.url).toBe(
 			"https://pr-1140-evame-reader.reimei.workers.dev/ja?page=2",
 		);
-		expect(new Headers(init.headers).get("cookie")).toBe("preview-session");
-		expect(new Headers(init.headers).get("host")).toBeNull();
-		expect(new Headers(init.headers).get("x-evame-preview-reader")).toBe(
+		expect(forwarded.headers.get("cookie")).toBe("preview-session");
+		expect(forwarded.headers.get("host")).toBeNull();
+		expect(forwarded.headers.get("x-evame-preview-reader")).toBe(
 			"preview-reader-secret",
 		);
 	} finally {
@@ -103,7 +103,7 @@ it("PRのReader秘密値が欠けている場合は本番bindingへ接続しな�
 			} as unknown as typeof import("cloudflare:workers").env,
 			{ waitUntil: vi.fn() },
 		),
-	).rejects.toThrow("Preview Reader secret is required");
+	).rejects.toThrow("Preview secret is required");
 	expect(env.READER.fetch).not.toHaveBeenCalled();
 });
 beforeEach(() => {
@@ -157,7 +157,7 @@ it("トップの部分更新HTMLをReaderへ渡し、GatewayのDBや認証を起
 	);
 	expect(response.status).toBe(200);
 	expect(await response.text()).toContain("更新した一覧");
-	expect(env.READER.fetch.mock.calls[0][0]).toBe(
+	expect(env.READER.fetch.mock.calls[0][0].url).toBe(
 		"https://evame.test/api/home-feed?locale=ja",
 	);
 	expect(createDb).not.toHaveBeenCalled();
@@ -401,9 +401,9 @@ describe("公開HTMLの更新", () => {
 			{ waitUntil: vi.fn() },
 		);
 		expect(env.READER.fetch).toHaveBeenCalledOnce();
-		const init = env.READER.fetch.mock.calls[0][1];
-		expect(init.headers).toEqual({ "Content-Type": "application/json" });
-		expect(JSON.parse(init.body)).toEqual({
+		const forwarded = env.READER.fetch.mock.calls[0][0];
+		expect(forwarded.headers.get("Content-Type")).toBe("application/json");
+		expect(await forwarded.json()).toEqual({
 			tags: [expect.stringMatching(/^reader:[a-f0-9]{64}$/)],
 		});
 	});
@@ -589,4 +589,13 @@ it("入口でもメンテナンス中は既存のメンテナンス画面へ移�
 		"https://evame.test/ja/maintenance",
 	);
 	expect(createDb).not.toHaveBeenCalled();
+});
+
+it("公開Gatewayのエラーは発生URLとメソッドを付けて既存のSentryへ送る", () => {
+	const error = new Error("gateway failed");
+	GatewayMonitoring.prototype.report(error, "https://evame.test/ja", "GET");
+	expect(captureException).toHaveBeenCalledWith(error, {
+		tags: { worker: "evame-gateway" },
+		contexts: { request: { url: "https://evame.test/ja", method: "GET" } },
+	});
 });

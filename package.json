@@ -28,7 +28,7 @@
 		"mdast-json": "bunx tsx scripts/mdast-json.ts",
 		"translate": "bunx tsx scripts/translate.ts",
 		"evame": "bun --env-file=.env tsx scripts/evame-cli/index.ts",
-		"preview": "wrangler dev --config dist/server/wrangler.json --config reader/dist/server/wrangler.json",
+		"preview": "wrangler dev --config gateway/dist/wrangler.json --config dist/server/wrangler.json --config reader/dist/server/wrangler.json",
 		"prepare:reader-assets": "node scripts/retain-reader-assets.mjs https://evame-start.reimei.workers.dev",
 		"deploy:workers": "node scripts/deploy-workers.mjs",
 		"preview:workers": "node scripts/preview-workers.mjs",

@@ -17,6 +17,19 @@ import { createTestHarness } from "wrangler";
 import { supportedLocaleOptions } from "../src/app/_constants/locale.ts";
 import { startTursoServer } from "./turso-dev-server.mjs";
 
+// 公開入口へ編集アプリや監視SDKを戻す変更を、配信する成果物で検出する。
+const gatewayBundle = await readFile("gateway/dist/worker.js");
+assert.ok(gatewayBundle.length <= 128 * 1024, "公開Gatewayは128KB以下に保つ");
+const gatewayMetadata = JSON.parse(
+	await readFile("gateway/dist/bundle-meta.json", "utf8"),
+);
+for (const path of Object.keys(gatewayMetadata.inputs))
+	assert.doesNotMatch(
+		path,
+		/@tanstack|@sentry|@libsql|react(?:-dom)?@|src\/db(?:\.ts|\/)/,
+		"公開Gatewayに編集・DB・Sentry SDKを含めない",
+	);
+
 const browserSuite = process.env.EVAME_BROWSER_SUITE ?? "all";
 const browserType = process.env.EVAME_BROWSER_TYPE ?? "all";
 assert.ok(
@@ -75,6 +88,7 @@ let emptyHome;
 try {
 	harness = createTestHarness({
 		workers: [
+			{ configPath: "gateway/dist/wrangler.json" },
 			{
 				configPath: "dist/server/wrangler.json",
 				secrets: {
@@ -99,7 +113,16 @@ try {
 		],
 	});
 	const { url: serverUrl } = await harness.listen();
-	worker = harness.getWorker("evame-start");
+	worker = harness.getWorker("evame-gateway");
+	const gatewayEnv = await worker.getEnv();
+	await gatewayEnv.MONITORING.report(
+		new Error("local-gateway-monitoring-check"),
+		"http://localhost/ja",
+		"GET",
+	);
+	console.log(
+		"公開Gatewayの監視RPCをWorkersランタイムで呼び出せる（Sentry送信は無効）",
+	);
 	for (let request = 0; request < 2; request++) {
 		const response = await worker.fetch(
 			"http://localhost/api/auth/get-session",
