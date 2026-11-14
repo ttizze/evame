@@ -17,6 +17,19 @@ import { createTestHarness } from "wrangler";
 import { supportedLocaleOptions } from "../src/app/_constants/locale.ts";
 import { startTursoServer } from "./turso-dev-server.mjs";
 
+// 公開入口へ編集アプリや監視SDKを戻す変更を、配信する成果物で検出する。
+const gatewayBundle = await readFile("gateway/dist/worker.js");
+assert.ok(gatewayBundle.length <= 128 * 1024, "公開Gatewayは128KB以下に保つ");
+const gatewayMetadata = JSON.parse(
+	await readFile("gateway/dist/bundle-meta.json", "utf8"),
+);
+for (const path of Object.keys(gatewayMetadata.inputs))
+	assert.doesNotMatch(
+		path,
+		/@tanstack|@sentry|@libsql|react(?:-dom)?@|src\/db(?:\.ts|\/)/,
+		"公開Gatewayに編集・DB・Sentry SDKを含めない",
+	);
+
 const browserSuite = process.env.EVAME_BROWSER_SUITE ?? "all";
 const browserType = process.env.EVAME_BROWSER_TYPE ?? "all";
 assert.ok(
@@ -75,6 +88,7 @@ let emptyHome;
 try {
 	harness = createTestHarness({
 		workers: [
+			{ configPath: "gateway/dist/wrangler.json" },
 			{
 				configPath: "dist/server/wrangler.json",
 				secrets: {
@@ -99,7 +113,16 @@ try {
 		],
 	});
 	const { url: serverUrl } = await harness.listen();
-	worker = harness.getWorker("evame-start");
+	worker = harness.getWorker("evame-gateway");
+	const gatewayEnv = await worker.getEnv();
+	await gatewayEnv.MONITORING.report(
+		new Error("local-gateway-monitoring-check"),
+		"http://localhost/ja",
+		"GET",
+	);
+	console.log(
+		"公開Gatewayの監視RPCをWorkersランタイムで呼び出せる（Sentry送信は無効）",
+	);
 	for (let request = 0; request < 2; request++) {
 		const response = await worker.fetch(
 			"http://localhost/api/auth/get-session",
@@ -142,6 +165,16 @@ try {
 		],
 	});
 	const cookie = `better-auth.session_token=${encodeURIComponent(`${token}.${createHmac("sha256", authSecret).update(token).digest("base64")}`)}`;
+	for (const method of ["GET", "HEAD"]) {
+		const redirect = await worker.fetch("http://localhost/?view=source", {
+			method,
+			headers: { cookie: "NEXT_LOCALE=ja" },
+			redirect: "manual",
+		});
+		assert.equal(redirect.status, 307);
+		assert.equal(redirect.headers.get("location"), "/ja?view=source");
+		assert.equal(redirect.headers.get("cache-control"), "private, no-store");
+	}
 	const header = await worker.fetch(
 		"http://localhost/api/reader-header?locale=ja",
 		{ headers: { cookie } },
@@ -364,6 +397,10 @@ try {
 	);
 	const articleHtml = await article.text();
 	assert.ok(
+		(articleHtml.match(/<link[^>]+rel="stylesheet"/g) ?? []).length === 1,
+		"記事の小さいCSSはHTMLに含め、大きい共通CSSだけを別に取得する",
+	);
+	assert.ok(
 		!articleHtml.includes('component-export="TweetsIsland"'),
 		"埋め込みは本文全体のReact起動を待たず必要なページだけで読み込む",
 	);
@@ -526,6 +563,10 @@ try {
 		const response = await worker.fetch("http://localhost/" + locale);
 		const html = await response.text();
 		assert.equal(response.status, 200, html.slice(0, 500));
+		assert.ok(
+			(html.match(/<link[^>]+rel="stylesheet"/g) ?? []).length === 1,
+			`${locale}: トップも大きい共通CSSだけを別に取得する`,
+		);
 		assert.ok(
 			html.includes("astro-island"),
 			locale + ": AstroでHTMLを描画する",
@@ -849,6 +890,35 @@ try {
 	console.log(
 		"Workersランタイムで日本語フォントとロゴを使ったOG画像を生成できる",
 	);
+
+	await harness.update((options) => ({
+		...options,
+		workers: options.workers.map((config) =>
+			config.configPath === "reader/dist/server/wrangler.json"
+				? config
+				: {
+						...config,
+						secrets: { ...config.secrets, DATABASE_MIGRATION: "true" },
+					},
+		),
+	}));
+	const stoppedGateway = harness.getWorker("evame-gateway");
+	for (const path of ["/ja", "/api/auth/get-session"]) {
+		const response = await stoppedGateway.fetch(`http://localhost${path}`);
+		assert.equal(response.status, 503);
+		assert.equal(response.headers.get("retry-after"), "60");
+	}
+	const readerEnv = await harness.getWorker("evame-reader").getEnv();
+	const stoppedBackend = await readerEnv.BACKEND.fetch(
+		"https://backend.internal/api/reader-data?path=/ja",
+	);
+	assert.equal(
+		stoppedBackend.status,
+		503,
+		"Reader専用のDB接続も移行フラグで停止する",
+	);
+	assert.equal(stoppedBackend.headers.get("retry-after"), "60");
+	console.log("DB移行中は公開HTML・API・Reader専用のDB接続を503で停止できる");
 } catch (error) {
 	const logs = harness?.getLogs();
 	if (logs?.length)

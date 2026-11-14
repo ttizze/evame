@@ -34,10 +34,10 @@ bun scripts/migrate-postgres-to-turso.ts .data/turso-export.db
 コピー先は公式の[SQLiteファイル要件](https://docs.turso.tech/api-reference/databases/upload)（WAL・4096バイトページ・auto_vacuum無効・UTF-8）を確認し、WALをチェックポイントしてからアップロードする。移行スクリプトがこの準備を行う。
 
 1. 試験移行したDBでログイン・記事作成/編集・本文SSR・翻訳・コメント・検索を検証する。
-2. 先にDB移行用の停止処理を現行Workersへ反映する。Workers secret `DATABASE_MIGRATION=true` でAPI・Server FunctionもDB接続前に503で停止する。画面だけを止めるKVの `maintenance` は使用しない。QStashの実行中ジョブが完了し、旧DBに実行中の書き込みがないことを確認してから、本番切り替え用スナップショットを新しいファイルへ再取得する。停止中のQStash要求は503で再試行させ、試験移行後の更新を取りこぼさない。
+2. 先にDB移行用の停止処理を現行Workersへ反映する。[Cloudflare運用の停止・再開手順](cloudflare-workers.md#db移行中の停止)に従い、Gateway→Appの順で両方にWorkers secret `DATABASE_MIGRATION=true` を設定する。公開HTML・API・Server Function・ReaderBackendをDB接続前に503で停止する。画面だけを止めるKVの `maintenance` は使用しない。QStashの実行中ジョブが完了し、旧DBに実行中の書き込みがないことを確認してから、本番切り替え用スナップショットを新しいファイルへ再取得する。停止中のQStash要求は503で再試行させ、試験移行後の更新を取りこぼさない。
 3. 新規Turso DBへ検証済みSQLiteファイルをインポートする。既存Turso DBを上書きしない。
 4. Workers secretsとGitHub Actions secretsの両方へ `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` を設定する。トークンをソース・出力へ含めない。
-5. コピー先に接続した隔離Workersで認証・保存・本文SSRを確認してから、この変更をデプロイする。`DATABASE_MIGRATION=false` に戻し、本番で既存記事の閲覧URL、ログイン、非公開記事の作成・編集、公開本文SSRを確認する。
+5. コピー先に接続した隔離Workersで認証・保存・本文SSRを確認してから、この変更をデプロイする。停止・再開手順に従ってApp→Gatewayの順に両方を `DATABASE_MIGRATION=false` に戻し、本番で既存記事の閲覧URL、ログイン、非公開記事の作成・編集、公開本文SSRを確認する。
 6. 切り替え確認までNeonを保持する。Tursoへ新規書き込みが発生した後は、古いNeonへ接続だけ戻さない。書き込み差分を移すか、Turso上で修正を前進デプロイする。
 
 DB用のPostgreSQL依存は移行ツールの開発依存としてだけ残る。WorkersはNeonやPostgreSQLへ接続しない。

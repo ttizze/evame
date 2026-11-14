@@ -72,7 +72,7 @@ it.each(["", "../main", "0"])(
 	},
 );
 
-it("専用DBを更新し、ReaderとGatewayをCloudflare標準の同じPRプレビューへ公開する", async () => {
+it("専用DBを更新し、Reader・編集アプリ・GatewayをCloudflare標準の同じPRプレビューへ公開する", async () => {
 	const result = await promisify(execFile)(process.execPath, [script], {
 		cwd: directory,
 		env: {
@@ -89,7 +89,8 @@ it("専用DBを更新し、ReaderとGatewayをCloudflare標準の同じPRプレ�
 		"run db:prod:migrate",
 		"run db:prod:seed",
 		"x wrangler preview --config reader/dist/server/wrangler.json --name reader-pr-1140 --worker-name evame-start --ignore-base-config --secrets-file .data/native-preview-pr-1140/reader-secrets.json --var PREVIEW_GATEWAY_ORIGIN:https://pr-1140-evame-start.reimei.workers.dev",
-		"x wrangler preview --config dist/server/wrangler.json --name pr-1140 --worker-name evame-start --ignore-base-config --secrets-file .data/native-preview-pr-1140/gateway-secrets.json --var PREVIEW_READER_ORIGIN:https://reader-pr-1140-evame-start.reimei.workers.dev --var BETTER_AUTH_URL:https://pr-1140-evame-start.reimei.workers.dev --var QSTASH_PUBLISH_BASE_URL:https://pr-1140-evame-start.reimei.workers.dev",
+		"x wrangler preview --config dist/server/wrangler.json --name app-pr-1140 --worker-name evame-start --ignore-base-config --secrets-file .data/native-preview-pr-1140/app-secrets.json --var PREVIEW_READER_ORIGIN:https://reader-pr-1140-evame-start.reimei.workers.dev --var PREVIEW_GATEWAY_ORIGIN:https://pr-1140-evame-start.reimei.workers.dev --var BETTER_AUTH_URL:https://pr-1140-evame-start.reimei.workers.dev --var QSTASH_PUBLISH_BASE_URL:https://pr-1140-evame-start.reimei.workers.dev",
+		"x wrangler preview --config gateway/dist/wrangler.json --name pr-1140 --worker-name evame-start --ignore-base-config --secrets-file .data/native-preview-pr-1140/gateway-secrets.json --var PREVIEW_READER_ORIGIN:https://reader-pr-1140-evame-start.reimei.workers.dev --var PREVIEW_APP_ORIGIN:https://app-pr-1140-evame-start.reimei.workers.dev",
 	]);
 	const reader = JSON.parse(
 		await readFile(
@@ -100,6 +101,13 @@ it("専用DBを更新し、ReaderとGatewayをCloudflare標準の同じPRプレ�
 	expect(reader).toEqual({
 		PREVIEW_READER_SECRET: secrets.PREVIEW_READER_SECRET,
 	});
+	const gateway = JSON.parse(
+		await readFile(
+			join(directory, ".data/native-preview-pr-1140/gateway-secrets.json"),
+			"utf8",
+		),
+	);
+	expect(gateway).toEqual(reader);
 	expect(result.stdout).not.toContain("test-database-token");
 });
 

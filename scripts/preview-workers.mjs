@@ -29,19 +29,21 @@ if (
 
 const previewName = `pr-${number}`;
 const gatewayOrigin = `https://${previewName}-evame-start.reimei.workers.dev`;
+const appOrigin = `https://app-${previewName}-evame-start.reimei.workers.dev`;
 const readerOrigin = `https://reader-${previewName}-evame-start.reimei.workers.dev`;
 const directory = `.data/native-preview-${previewName}`;
 await mkdir(directory, { recursive: true, mode: 0o700 });
 // URLは公開設定として渡し、古い固定URLの秘密値を引き継がない。
 delete secrets.BETTER_AUTH_URL;
-await writeFile(`${directory}/gateway-secrets.json`, JSON.stringify(secrets), {
+await writeFile(`${directory}/app-secrets.json`, JSON.stringify(secrets), {
 	mode: 0o600,
 });
-await writeFile(
-	`${directory}/reader-secrets.json`,
-	JSON.stringify({ PREVIEW_READER_SECRET: secrets.PREVIEW_READER_SECRET }),
-	{ mode: 0o600 },
-);
+for (const kind of ["reader", "gateway"])
+	await writeFile(
+		`${directory}/${kind}-secrets.json`,
+		JSON.stringify({ PREVIEW_READER_SECRET: secrets.PREVIEW_READER_SECRET }),
+		{ mode: 0o600 },
+	);
 
 for (const command of ["db:prod:migrate", "db:prod:seed"])
 	execFileSync("bun", ["run", command], {
@@ -53,7 +55,7 @@ for (const command of ["db:prod:migrate", "db:prod:seed"])
 		},
 	});
 
-// 非公開の本番Readerは公開せず、2つのPreviewを公開URLのある親Workerに作る。
+// 非公開の本番Readerは公開せず、3つのPreviewを公開URLのある親Workerに作る。
 for (const [kind, path, vars] of [
 	[
 		"reader",
@@ -61,13 +63,19 @@ for (const [kind, path, vars] of [
 		{ PREVIEW_GATEWAY_ORIGIN: gatewayOrigin },
 	],
 	[
-		"gateway",
+		"app",
 		"dist/server/wrangler.json",
 		{
 			PREVIEW_READER_ORIGIN: readerOrigin,
+			PREVIEW_GATEWAY_ORIGIN: gatewayOrigin,
 			BETTER_AUTH_URL: gatewayOrigin,
 			QSTASH_PUBLISH_BASE_URL: gatewayOrigin,
 		},
+	],
+	[
+		"gateway",
+		"gateway/dist/wrangler.json",
+		{ PREVIEW_READER_ORIGIN: readerOrigin, PREVIEW_APP_ORIGIN: appOrigin },
 	],
 ]) {
 	execFileSync(
@@ -79,7 +87,7 @@ for (const [kind, path, vars] of [
 			"--config",
 			path,
 			"--name",
-			kind === "reader" ? `reader-${previewName}` : previewName,
+			kind === "gateway" ? previewName : `${kind}-${previewName}`,
 			"--worker-name",
 			"evame-start",
 			"--ignore-base-config",

@@ -30,11 +30,14 @@ vi.mock("./db/mutations", () => ({
 }));
 
 import { fetchReaderChanges } from "./db/queries";
-import server from "./server";
+import server, { GatewayMonitoring, ReaderBackend } from "./server";
 
 vi.mock("@sentry/cloudflare", () => ({
 	withSentry: vi.fn((_options: unknown, entry: unknown) => entry),
 	captureException: vi.fn(),
+}));
+vi.mock("./app/api/reader-data/handler", () => ({
+	getReaderData: vi.fn(async () => new Response("reader data")),
 }));
 vi.mock("@tanstack/react-start/server-entry", () => ({
 	default: { fetch: vi.fn() },
@@ -79,13 +82,13 @@ it("PRのHTMLは同じPRのReaderへ送り、本番bindingを呼ばない", asyn
 		);
 		expect(await response.text()).toBe("プレビューの本文");
 		expect(env.READER.fetch).not.toHaveBeenCalled();
-		const [url, init] = fetch.mock.calls[0];
-		expect(url).toBe(
+		const [forwarded] = fetch.mock.calls[0];
+		expect(forwarded.url).toBe(
 			"https://pr-1140-evame-reader.reimei.workers.dev/ja?page=2",
 		);
-		expect(new Headers(init.headers).get("cookie")).toBe("preview-session");
-		expect(new Headers(init.headers).get("host")).toBeNull();
-		expect(new Headers(init.headers).get("x-evame-preview-reader")).toBe(
+		expect(forwarded.headers.get("cookie")).toBe("preview-session");
+		expect(forwarded.headers.get("host")).toBeNull();
+		expect(forwarded.headers.get("x-evame-preview-reader")).toBe(
 			"preview-reader-secret",
 		);
 	} finally {
@@ -103,7 +106,7 @@ it("PRのReader秘密値が欠けている場合は本番bindingへ接続しな�
 			} as unknown as typeof import("cloudflare:workers").env,
 			{ waitUntil: vi.fn() },
 		),
-	).rejects.toThrow("Preview Reader secret is required");
+	).rejects.toThrow("Preview secret is required");
 	expect(env.READER.fetch).not.toHaveBeenCalled();
 });
 beforeEach(() => {
@@ -157,7 +160,7 @@ it("トップの部分更新HTMLをReaderへ渡し、GatewayのDBや認証を起
 	);
 	expect(response.status).toBe(200);
 	expect(await response.text()).toContain("更新した一覧");
-	expect(env.READER.fetch.mock.calls[0][0]).toBe(
+	expect(env.READER.fetch.mock.calls[0][0].url).toBe(
 		"https://evame.test/api/home-feed?locale=ja",
 	);
 	expect(createDb).not.toHaveBeenCalled();
@@ -195,6 +198,17 @@ describe("WorkersのSentry監視", () => {
 
 describe("DB移行中のリクエスト停止", () => {
 	afterEach(() => vi.unstubAllEnvs());
+	it("Reader専用のDB接続も移行フラグだけで停止する", async () => {
+		vi.stubEnv("DATABASE_MIGRATION", "true");
+		const response = await ReaderBackend.prototype.fetch(
+			new Request(
+				"https://backend.internal/api/reader-data?path=/ja",
+			) as unknown as import("@cloudflare/workers-types").Request,
+		);
+		expect(response.status).toBe(503);
+		expect(response.headers.get("retry-after")).toBe("60");
+		expect(createDb).not.toHaveBeenCalled();
+	});
 
 	it.each([
 		["GET", "/ja"],
@@ -232,7 +246,7 @@ describe("WorkersのDB接続の寿命", () => {
 		);
 		const pending: Promise<unknown>[] = [];
 		const response = await server.fetch(
-			new Request("https://evame.test"),
+			new Request("https://evame.test/ja/auth/login"),
 			env as unknown as typeof import("cloudflare:workers").env,
 			{ waitUntil: (promise) => pending.push(promise) },
 		);
@@ -258,7 +272,7 @@ describe("WorkersのDB接続の寿命", () => {
 		);
 		const pending: Promise<unknown>[] = [];
 		const response = await server.fetch(
-			new Request("https://evame.test"),
+			new Request("https://evame.test/ja/auth/login"),
 			env as unknown as typeof import("cloudflare:workers").env,
 			{ waitUntil: (promise) => pending.push(promise) },
 		);
@@ -274,7 +288,7 @@ describe("WorkersのDB接続の寿命", () => {
 			Response.redirect("https://evame.test/ja", 307),
 		);
 		const response = await server.fetch(
-			new Request("https://evame.test"),
+			new Request("https://evame.test/ja/auth/login"),
 			env as unknown as typeof import("cloudflare:workers").env,
 			{ waitUntil: vi.fn() },
 		);
@@ -293,7 +307,7 @@ describe("WorkersのDB接続の寿命", () => {
 		const responses = await Promise.all(
 			[1, 2].map(() =>
 				server.fetch(
-					new Request("https://evame.test"),
+					new Request("https://evame.test/ja/auth/login"),
 					env as unknown as typeof import("cloudflare:workers").env,
 					context,
 				),
@@ -318,7 +332,7 @@ describe("WorkersのDB接続の寿命", () => {
 		vi.mocked(handler.fetch).mockRejectedValue(error);
 		await expect(
 			server.fetch(
-				new Request("https://evame.test"),
+				new Request("https://evame.test/ja/auth/login"),
 				env as unknown as typeof import("cloudflare:workers").env,
 				{ waitUntil: vi.fn() },
 			),
@@ -401,9 +415,9 @@ describe("公開HTMLの更新", () => {
 			{ waitUntil: vi.fn() },
 		);
 		expect(env.READER.fetch).toHaveBeenCalledOnce();
-		const init = env.READER.fetch.mock.calls[0][1];
-		expect(init.headers).toEqual({ "Content-Type": "application/json" });
-		expect(JSON.parse(init.body)).toEqual({
+		const forwarded = env.READER.fetch.mock.calls[0][0];
+		expect(forwarded.headers.get("Content-Type")).toBe("application/json");
+		expect(await forwarded.json()).toEqual({
 			tags: [expect.stringMatching(/^reader:[a-f0-9]{64}$/)],
 		});
 	});
@@ -538,4 +552,64 @@ it("翻訳チャンクが完了した場合も処理前の版から変更を取�
 		{ waitUntil: vi.fn() },
 	);
 	expect(env.READER.fetch).toHaveBeenCalledOnce();
+});
+
+it.each([
+	["GET", "NEXT_LOCALE=ja", "en", "/ja?view=source"],
+	["HEAD", "NEXT_LOCALE=es", "ja", "/es?view=source"],
+	["GET", "", "ja,en;q=0.8", "/ja?view=source"],
+])(
+	"入口の%sは言語と検索条件を維持し、DBとTanStackを起動せず移動する",
+	async (method, cookie, language, location) => {
+		const response = await server.fetch(
+			new Request("https://evame.test/?view=source", {
+				method,
+				headers: { cookie, "accept-language": language },
+			}),
+			env as unknown as typeof import("cloudflare:workers").env,
+			{ waitUntil: vi.fn() },
+		);
+		expect(response.status).toBe(307);
+		expect(response.headers.get("location")).toBe(location);
+		expect(createDb).not.toHaveBeenCalled();
+		expect(handler.fetch).not.toHaveBeenCalled();
+		expect(response.headers.get("cache-control")).toBe("private, no-store");
+	},
+);
+
+it("入口の古い言語Cookieを更新し、保存言語をほかの利用者へ共有しない", async () => {
+	const response = await server.fetch(
+		new Request("https://evame.test/", {
+			headers: { cookie: "NEXT_LOCALE=obsolete", "accept-language": "ja" },
+		}),
+		env as unknown as typeof import("cloudflare:workers").env,
+		{ waitUntil: vi.fn() },
+	);
+	expect(response.headers.get("location")).toBe("/ja");
+	expect(response.headers.get("set-cookie")).toContain("NEXT_LOCALE=ja");
+	expect(response.headers.get("cache-control")).toBe("private, no-store");
+	expect(response.headers.get("x-frame-options")).toBe("DENY");
+});
+it("入口でもメンテナンス中は既存のメンテナンス画面へ移動する", async () => {
+	env.SETTINGS.get.mockResolvedValue(true);
+	const response = await server.fetch(
+		new Request("https://evame.test/", {
+			headers: { cookie: "NEXT_LOCALE=ja" },
+		}),
+		env as unknown as typeof import("cloudflare:workers").env,
+		{ waitUntil: vi.fn() },
+	);
+	expect(response.headers.get("location")).toBe(
+		"https://evame.test/ja/maintenance",
+	);
+	expect(createDb).not.toHaveBeenCalled();
+});
+
+it("公開Gatewayのエラーは発生URLとメソッドを付けて既存のSentryへ送る", () => {
+	const error = new Error("gateway failed");
+	GatewayMonitoring.prototype.report(error, "https://evame.test/ja", "GET");
+	expect(captureException).toHaveBeenCalledWith(error, {
+		tags: { worker: "evame-gateway" },
+		contexts: { request: { url: "https://evame.test/ja", method: "GET" } },
+	});
 });

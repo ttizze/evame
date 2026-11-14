@@ -3,6 +3,7 @@ import { cf, finalize } from "@astrojs/cloudflare/fetch";
 import type { ExecutionContext } from "@cloudflare/workers-types";
 import { withSentry } from "@sentry/cloudflare";
 import { astro, FetchState } from "astro/fetch";
+import { restorePreviewRequest } from "../../shared/preview-request";
 import { SENTRY_DSN } from "../../src/_utils/sentry-dsn";
 
 export default withSentry(
@@ -18,19 +19,13 @@ export default withSentry(
 			env: typeof import("cloudflare:workers").env,
 			context: ExecutionContext,
 		) {
-			if (env.PREVIEW_GATEWAY_ORIGIN) {
-				if (
-					!env.PREVIEW_READER_SECRET ||
-					request.headers.get("x-evame-preview-reader") !==
-						env.PREVIEW_READER_SECRET
-				)
-					return new Response(null, { status: 404 });
-				const url = new URL(request.url);
-				const gateway = new URL(env.PREVIEW_GATEWAY_ORIGIN);
-				url.protocol = gateway.protocol;
-				url.host = gateway.host;
-				request = new Request(url, request);
-			}
+			const restored = restorePreviewRequest(
+				request,
+				env.PREVIEW_GATEWAY_ORIGIN ?? null,
+				env.PREVIEW_READER_SECRET ?? null,
+			);
+			if (!restored) return new Response(null, { status: 404 });
+			request = restored;
 			const pathname = new URL(request.url).pathname;
 			if (pathname === "/__invalidate" || pathname === "/__purge") {
 				if (request.method !== "POST")

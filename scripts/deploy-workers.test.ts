@@ -23,6 +23,10 @@ beforeEach(async () => {
 	await mkdir(join(directory, "bin"));
 	await mkdir(join(directory, "scripts"));
 	await writeFile(
+		join(directory, "scripts/switch-gateway-route.mjs"),
+		'import {appendFile} from "node:fs/promises"; await appendFile("deployments", "switch-route\\n");',
+	);
+	await writeFile(
 		join(directory, "scripts/purge-reader-cache.mjs"),
 		'import {appendFile} from "node:fs/promises"; await appendFile("deployments", "purge-html\\n");',
 	);
@@ -60,7 +64,7 @@ it("準備したアセットの記録がなければWorkerを更新しない", a
 	await expect(readFile(join(directory, "deployments"))).rejects.toThrow();
 });
 
-it("旧Gateway互換のReaderとGatewayを順に更新してから配信中のアセットを確定する", async () => {
+it("Reader・編集アプリ・公開Gatewayの順に更新してから配信中のアセットを確定する", async () => {
 	const startedAt = Date.now();
 	await promisify(execFile)(process.execPath, [script], {
 		cwd: directory,
@@ -74,6 +78,8 @@ it("旧Gateway互換のReaderとGatewayを順に更新してから配信中の�
 	).toEqual([
 		"reader/dist/server/wrangler.json",
 		"dist/server/wrangler.json",
+		"gateway/dist/wrangler.json",
+		"switch-route",
 		"purge-html",
 	]);
 	expect(
@@ -120,4 +126,26 @@ it("キャッシュ無効化が失敗しても、更新が完了したWorkerの�
 	expect(
 		await readFile(join(directory, ".data/reader-assets/active.json"), "utf8"),
 	).toBe('["new.js"]');
+});
+
+it("公開ルートの切り替えに失敗したらアセット履歴を確定せず、キャッシュを削除しない", async () => {
+	await writeFile(
+		join(directory, "scripts/switch-gateway-route.mjs"),
+		'throw new Error("Route switch failed");',
+	);
+	await expect(
+		promisify(execFile)(process.execPath, [script], {
+			cwd: directory,
+			env: {
+				...process.env,
+				PATH: `${join(directory, "bin")}:${process.env.PATH}`,
+			},
+		}),
+	).rejects.toThrow();
+	expect(
+		await readFile(join(directory, ".data/reader-assets/active.json"), "utf8"),
+	).toBe('["old.js"]');
+	expect(await readFile(join(directory, "deployments"), "utf8")).not.toContain(
+		"purge-html",
+	);
 });
