@@ -23,10 +23,6 @@ beforeEach(async () => {
 	await mkdir(join(directory, "bin"));
 	await mkdir(join(directory, "scripts"));
 	await writeFile(
-		join(directory, "scripts/switch-gateway-route.mjs"),
-		'import {appendFile} from "node:fs/promises"; await appendFile("deployments", "switch-route\\n");',
-	);
-	await writeFile(
 		join(directory, "scripts/purge-reader-cache.mjs"),
 		'import {appendFile} from "node:fs/promises"; await appendFile("deployments", "purge-html\\n");',
 	);
@@ -79,7 +75,6 @@ it("Reader・編集アプリ・公開Gatewayの順に更新してから配信中
 		"reader/dist/server/wrangler.json",
 		"dist/server/wrangler.json",
 		"gateway/dist/wrangler.json",
-		"switch-route",
 		"purge-html",
 	]);
 	expect(
@@ -128,24 +123,22 @@ it("キャッシュ無効化が失敗しても、更新が完了したWorkerの�
 	).toBe('["new.js"]');
 });
 
-it("公開ルートの切り替えに失敗したらアセット履歴を確定せず、キャッシュを削除しない", async () => {
+it("通常のデプロイでは公開ルートの変更権限を使わず、Worker更新とキャッシュ無効化を完了する", async () => {
 	await writeFile(
 		join(directory, "scripts/switch-gateway-route.mjs"),
 		'throw new Error("Route switch failed");',
 	);
-	await expect(
-		promisify(execFile)(process.execPath, [script], {
-			cwd: directory,
-			env: {
-				...process.env,
-				PATH: `${join(directory, "bin")}:${process.env.PATH}`,
-			},
-		}),
-	).rejects.toThrow();
+	await promisify(execFile)(process.execPath, [script], {
+		cwd: directory,
+		env: {
+			...process.env,
+			PATH: `${join(directory, "bin")}:${process.env.PATH}`,
+		},
+	});
 	expect(
 		await readFile(join(directory, ".data/reader-assets/active.json"), "utf8"),
-	).toBe('["old.js"]');
-	expect(await readFile(join(directory, "deployments"), "utf8")).not.toContain(
+	).toBe('["new.js"]');
+	expect(await readFile(join(directory, "deployments"), "utf8")).toContain(
 		"purge-html",
 	);
 });

@@ -16,11 +16,6 @@ for (const config of [
 		stdio: "inherit",
 	});
 
-// 既存の同じルートを再接続し、DNSや他ドメインの経路は変更しない。
-execFileSync(process.execPath, ["scripts/switch-gateway-route.mjs"], {
-	stdio: "inherit",
-});
-
 const now = new Date();
 for (const path of next.retiring)
 	await utimes(join(".data/reader-assets/files", path), now, now);
