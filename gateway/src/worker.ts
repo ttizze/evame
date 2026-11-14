@@ -32,14 +32,16 @@ export default {
 			);
 		} catch (error) {
 			console.error(error);
-			if (!env.PREVIEW_APP_ORIGIN)
+			if (!env.PREVIEW_APP_ORIGIN) {
+				const url = new URL(request.url);
 				context.waitUntil(
 					env.MONITORING.report(
 						error instanceof Error ? error : new Error(String(error)),
-						request.url,
+						`${url.origin}${url.pathname}`,
 						request.method,
 					).catch(console.error),
 				);
+			}
 			throw error;
 		}
 	},

@@ -109,15 +109,19 @@ it("プレビューの保存は同じPRのアプリへ送信し、本番binding�
 	expect(mockedFetch).toHaveBeenCalledOnce();
 	expect(env.APP.fetch).not.toHaveBeenCalled();
 });
-it("Readerの失敗を別の監視エントリーへ送り、元のエラーを維持する", async () => {
+it("Readerの失敗を監視へ送り、URLの認証パラメーターを含めず元のエラーを維持する", async () => {
 	vi.spyOn(console, "error").mockImplementation(() => {});
 	const error = new Error("reader failed");
 	env.READER.fetch.mockRejectedValue(error);
 	const pending: Promise<unknown>[] = [];
 	await expect(
-		gateway.fetch(new Request("https://evame.test/ja"), binding, {
-			waitUntil: (promise) => pending.push(promise),
-		}),
+		gateway.fetch(
+			new Request("https://evame.test/ja?token=should-not-log"),
+			binding,
+			{
+				waitUntil: (promise) => pending.push(promise),
+			},
+		),
 	).rejects.toBe(error);
 	await Promise.all(pending);
 	expect(env.MONITORING.report).toHaveBeenCalledWith(
