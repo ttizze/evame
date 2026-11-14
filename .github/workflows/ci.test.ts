@@ -154,10 +154,8 @@ it("CIの成果物から環境ファイルと秘密値を除外し、実行に�
 		"dist/server/index.js",
 		"dist/server/.vite/manifest.json",
 		"reader/dist/client/article.js",
-		"gateway/dist/worker.js",
 	];
 	const excluded = [
-		"gateway/dist/.dev.vars",
 		"dist/server/.dev.vars",
 		"dist/server/.dev.vars.preview",
 		"reader/dist/server/.dev.vars",
