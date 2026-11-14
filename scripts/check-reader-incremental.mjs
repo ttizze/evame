@@ -20,6 +20,19 @@ await migrate(drizzle(local), { migrationsFolder: "./src/drizzle" });
 local.close();
 const turso = await startTursoServer(databasePath, null);
 const database = createClient({ url: turso.url });
+// 固定版libSQLクライアントが使うプロトコルのURLだけを転送先にする。
+const databaseEndpoints = new Map(
+	[
+		"/v3-protobuf",
+		"/v3-protobuf/pipeline",
+		"/v3-protobuf/cursor",
+		"/v3",
+		"/v3/pipeline",
+		"/v3/cursor",
+		"/v2",
+		"/v2/pipeline",
+	].map((path) => [path, new URL(path, turso.url)]),
+);
 const userId = "incremental-study-user";
 const handle = "incremental-study";
 let entries = [];
@@ -39,6 +52,11 @@ const server = createServer(async (request, response) => {
 			invoked[url.searchParams.get("kind")]++;
 			response.writeHead(204).end();
 		} else {
+			const endpoint = databaseEndpoints.get(request.url);
+			if (!endpoint) {
+				response.writeHead(404).end();
+				return;
+			}
 			databaseRequests++;
 			const body = [];
 			for await (const chunk of request) body.push(chunk);
@@ -50,7 +68,8 @@ const server = createServer(async (request, response) => {
 				"content-length",
 			])
 				headers.delete(name);
-			const upstream = await fetch(new URL(request.url, turso.url), {
+			const upstream = await fetch(endpoint, {
+				redirect: "error",
 				method: request.method,
 				headers,
 				body: body.length ? Buffer.concat(body) : undefined,
@@ -79,6 +98,16 @@ const results = [];
 let previousEntries = [];
 let previousRevision = null;
 try {
+	for (const path of [
+		"//example.test/v3/pipeline",
+		"/unknown-database-endpoint",
+	])
+		assert.equal(
+			(await fetch(`${origin}${path}`, { method: "POST", body: "{}" })).status,
+			404,
+			"DBプロキシは別ホストや未知のエンドポイントへ転送しない",
+		);
+	assert.equal(databaseRequests, 0, "不正なURLはDB通信を起こさない");
 	await database.execute({
 		sql: "INSERT INTO users (id,name,search_name,handle,email) VALUES (?, '差分生成の著者', 'incremental study', ?, 'incremental@example.test')",
 		args: [userId, handle],
@@ -609,14 +638,14 @@ export default {async fetch(request,env,ctx){await fetch(${JSON.stringify(`${ori
 				`${directory}/visual.config.mjs`,
 				`
 import {defineConfig} from '@playwright/test';
-export default defineConfig({testDir:'.',testMatch:'visual.spec.mjs',workers:1,retries:0,
+export default defineConfig({testDir:'.',testMatch:'visual-check.mjs',workers:1,retries:0,
  updateSnapshots:'none',reporter:'list',outputDir:'./visual-results',
  projects:[{name:'chromium',use:{browserName:'chromium'}},{name:'webkit',use:{browserName:'webkit'}}],
  expect:{toHaveScreenshot:{maxDiffPixels:0}}});
 `,
 			);
 			await writeFile(
-				`${directory}/visual.spec.mjs`,
+				`${directory}/visual-check.mjs`,
 				`
 import {test,expect} from '@playwright/test';
 const origins=${JSON.stringify([baselineServer.url.href, singleServer.url.href, splitServer.url.href])};
