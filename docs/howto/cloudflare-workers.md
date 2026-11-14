@@ -108,15 +108,15 @@ CIの成功に加えて、実際のプレビューURLでログイン画面、Coo
 
 `.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テストの成功後、本番DBのマイグレーション、ビルド、成果物テスト、Reader・App・Gatewayのデプロイを順に行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
 
-Astroの `/_astro/*` はGatewayへコピーせず、READER bindingからHTMLと同じReaderのStatic Assetsへ転送する。`deploy:workers` はReader・App・Gatewayの順で更新し、全て成功してから `switch-gateway-route.mjs` で既存の `evame.tech/*` ルートをAppからGatewayへ再接続する。DNSと他のルートは変えない。既にGatewayへ接続済みなら更新せず、第三のWorkerが所有している場合は停止する。ルートの切り替え後に配信アセットの記録を確定し、Reader自身の共有HTMLキャッシュを無効化する。失敗時は再実行できる。AppのWorker名・本番の秘密値とReaderBackendへの接続先は維持する。
+Astroの `/_astro/*` はGatewayへコピーせず、READER bindingからHTMLと同じReaderのStatic Assetsへ転送する。`deploy:workers` はReader・App・Gatewayの順で更新し、全て成功してから配信アセットの記録を確定し、Reader自身の共有HTMLキャッシュを無効化する。通常のデプロイでは公開ルートを変更しない。失敗時は再実行できる。AppのWorker名・本番の秘密値とReaderBackendへの接続先は維持する。
 
-切り替え前のHTMLを開いているブラウザーのため、配信対象から外れた時点から30日間、旧ハッシュ付きアセットをReaderに残す。`prepare:reader-assets` は `.data/reader-assets/active.json` に記録した直前の配信ファイルを失効させず、過去の履歴を成果物へ含める。`deploy:workers` は3つのWorkerとルートの更新後だけ次の配信ファイルを確定し、失敗時は旧記録を維持する。CIは履歴をmainの成功したデプロイ間で保存・復元する。初回やCIキャッシュ消失時は公開トップ・そこから参照する公開ページとJS依存を認証なしで回収する。ビルド自体ではネットワーク取得しない。
+切り替え前のHTMLを開いているブラウザーのため、配信対象から外れた時点から30日間、旧ハッシュ付きアセットをReaderに残す。`prepare:reader-assets` は `.data/reader-assets/active.json` に記録した直前の配信ファイルを失効させず、過去の履歴を成果物へ含める。`deploy:workers` は3つのWorkerの更新後だけ次の配信ファイルを確定し、失敗時は旧記録を維持する。CIは履歴をmainの成功したデプロイ間で保存・復元する。初回やCIキャッシュ消失時は公開トップ・そこから参照する公開ページとJS依存を認証なしで回収する。ビルド自体ではネットワーク取得しない。
 
 回収元は公開ルートも維持するAppの `https://evame-start.reimei.workers.dev` とする。カスタムドメインのbot制限でCIの取得が拒否されるため、既存のWorker公開URLを使う。Readerのworkers.dev公開設定は無効のままにする。
 
-リポジトリのActions secretsに本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番用のDB接続設定は `main` のマイグレーションだけに渡す。Cloudflareのデプロイ先はそれぞれの `wrangler.jsonc` に定義する。デプロイ用のアカウントトークン `evame-github-deploy` は、Specified Workersで `evame-start`・`evame-reader`・`evame-gateway` にIndividual Workers Editor権限を設定する。新しいWorkerの作成権限と、ゾーン `evame.tech` だけのZone Read・Workers Routes Writeも必要になる。現在の2つのWorkerだけに限定されたトークンでは、新Gatewayの公開前に権限の追加が必要。既存のキャッシュ削除用トークンはデプロイには使わない。Sentryのアップロード用トークンは本番ビルドだけに渡し、Worker secretには登録しない。
+リポジトリのActions secretsに本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番用のDB接続設定は `main` のマイグレーションだけに渡す。Cloudflareのデプロイ先はそれぞれの `wrangler.jsonc` に定義する。デプロイ用のアカウントトークン `evame-github-deploy` は、Specified Workersで既存の `evame-start`・`evame-reader`・`evame-gateway` にIndividual Workers Editor権限を設定する。通常のデプロイにはWorkerの新規作成・Zone Read・Workers Routes Writeの権限は不要。既存のキャッシュ削除用トークンはデプロイには使わない。Sentryのアップロード用トークンは本番ビルドだけに渡し、Worker secretには登録しない。
 
-本番ルートの所有者は `scripts/switch-gateway-route.mjs` が管理する。Wrangler設定では `routes` を指定せず、既存の他Worker所有ルートを追加しようとして衝突するのを防ぐ。ルートの移行と確認には `CLOUDFLARE_API_TOKEN` を使う。プレビュー作成ではこのスクリプトを実行せず、本番の公開先を変更しない。`images.evame.tech` は対象に含めない。
+初回のGateway作成と本番ルートの切り替えはCLIで一度だけ行う。`scripts/switch-gateway-route.mjs` は既存の `evame.tech/*` ルートだけをAppからGatewayへ再接続する。既にGatewayへ接続済みなら更新せず、第三のWorkerが所有している場合は停止する。DNS・他のルート・`images.evame.tech` は変えない。切り替え用の `CLOUDFLARE_API_TOKEN` には対象ゾーンのZone Read・Workers Routes Writeが必要で、CI用トークンとは分ける。Wrangler設定では `routes` を指定せず、通常のデプロイで接続済みルートを維持する。プレビュー作成でも本番の公開先を変更しない。
 
 テーブル・カラムを廃止するときは、先に旧コードと共存できるDB変更と参照を外したコードをデプロイする。その本番反映を確認してから、次のマイグレーションでDB構造を削除する。CIはマイグレーションを先に実行するため、参照を外すコードとテーブル削除を同じデプロイにまとめない。
 
