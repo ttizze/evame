@@ -232,7 +232,7 @@ describe("WorkersのDB接続の寿命", () => {
 		);
 		const pending: Promise<unknown>[] = [];
 		const response = await server.fetch(
-			new Request("https://evame.test"),
+			new Request("https://evame.test/ja/auth/login"),
 			env as unknown as typeof import("cloudflare:workers").env,
 			{ waitUntil: (promise) => pending.push(promise) },
 		);
@@ -258,7 +258,7 @@ describe("WorkersのDB接続の寿命", () => {
 		);
 		const pending: Promise<unknown>[] = [];
 		const response = await server.fetch(
-			new Request("https://evame.test"),
+			new Request("https://evame.test/ja/auth/login"),
 			env as unknown as typeof import("cloudflare:workers").env,
 			{ waitUntil: (promise) => pending.push(promise) },
 		);
@@ -274,7 +274,7 @@ describe("WorkersのDB接続の寿命", () => {
 			Response.redirect("https://evame.test/ja", 307),
 		);
 		const response = await server.fetch(
-			new Request("https://evame.test"),
+			new Request("https://evame.test/ja/auth/login"),
 			env as unknown as typeof import("cloudflare:workers").env,
 			{ waitUntil: vi.fn() },
 		);
@@ -293,7 +293,7 @@ describe("WorkersのDB接続の寿命", () => {
 		const responses = await Promise.all(
 			[1, 2].map(() =>
 				server.fetch(
-					new Request("https://evame.test"),
+					new Request("https://evame.test/ja/auth/login"),
 					env as unknown as typeof import("cloudflare:workers").env,
 					context,
 				),
@@ -318,7 +318,7 @@ describe("WorkersのDB接続の寿命", () => {
 		vi.mocked(handler.fetch).mockRejectedValue(error);
 		await expect(
 			server.fetch(
-				new Request("https://evame.test"),
+				new Request("https://evame.test/ja/auth/login"),
 				env as unknown as typeof import("cloudflare:workers").env,
 				{ waitUntil: vi.fn() },
 			),
@@ -538,4 +538,55 @@ it("翻訳チャンクが完了した場合も処理前の版から変更を取�
 		{ waitUntil: vi.fn() },
 	);
 	expect(env.READER.fetch).toHaveBeenCalledOnce();
+});
+
+it.each([
+	["GET", "NEXT_LOCALE=ja", "en", "/ja?view=source"],
+	["HEAD", "NEXT_LOCALE=es", "ja", "/es?view=source"],
+	["GET", "", "ja,en;q=0.8", "/ja?view=source"],
+])(
+	"入口の%sは言語と検索条件を維持し、DBとTanStackを起動せず移動する",
+	async (method, cookie, language, location) => {
+		const response = await server.fetch(
+			new Request("https://evame.test/?view=source", {
+				method,
+				headers: { cookie, "accept-language": language },
+			}),
+			env as unknown as typeof import("cloudflare:workers").env,
+			{ waitUntil: vi.fn() },
+		);
+		expect(response.status).toBe(307);
+		expect(response.headers.get("location")).toBe(location);
+		expect(createDb).not.toHaveBeenCalled();
+		expect(handler.fetch).not.toHaveBeenCalled();
+		expect(response.headers.get("cache-control")).toBe("private, no-store");
+	},
+);
+
+it("入口の古い言語Cookieを更新し、保存言語をほかの利用者へ共有しない", async () => {
+	const response = await server.fetch(
+		new Request("https://evame.test/", {
+			headers: { cookie: "NEXT_LOCALE=obsolete", "accept-language": "ja" },
+		}),
+		env as unknown as typeof import("cloudflare:workers").env,
+		{ waitUntil: vi.fn() },
+	);
+	expect(response.headers.get("location")).toBe("/ja");
+	expect(response.headers.get("set-cookie")).toContain("NEXT_LOCALE=ja");
+	expect(response.headers.get("cache-control")).toBe("private, no-store");
+	expect(response.headers.get("x-frame-options")).toBe("DENY");
+});
+it("入口でもメンテナンス中は既存のメンテナンス画面へ移動する", async () => {
+	env.SETTINGS.get.mockResolvedValue(true);
+	const response = await server.fetch(
+		new Request("https://evame.test/", {
+			headers: { cookie: "NEXT_LOCALE=ja" },
+		}),
+		env as unknown as typeof import("cloudflare:workers").env,
+		{ waitUntil: vi.fn() },
+	);
+	expect(response.headers.get("location")).toBe(
+		"https://evame.test/ja/maintenance",
+	);
+	expect(createDb).not.toHaveBeenCalled();
 });

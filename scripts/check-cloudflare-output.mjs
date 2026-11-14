@@ -142,6 +142,16 @@ try {
 		],
 	});
 	const cookie = `better-auth.session_token=${encodeURIComponent(`${token}.${createHmac("sha256", authSecret).update(token).digest("base64")}`)}`;
+	for (const method of ["GET", "HEAD"]) {
+		const redirect = await worker.fetch("http://localhost/?view=source", {
+			method,
+			headers: { cookie: "NEXT_LOCALE=ja" },
+			redirect: "manual",
+		});
+		assert.equal(redirect.status, 307);
+		assert.equal(redirect.headers.get("location"), "/ja?view=source");
+		assert.equal(redirect.headers.get("cache-control"), "private, no-store");
+	}
 	const header = await worker.fetch(
 		"http://localhost/api/reader-header?locale=ja",
 		{ headers: { cookie } },

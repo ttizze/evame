@@ -9,10 +9,12 @@ import { isRedirect } from "@tanstack/react-router";
 import handler from "@tanstack/react-start/server-entry";
 import { withSecurityHeaders } from "../security-headers";
 import { fetchReader } from "./_infra/fetch-reader";
+import { getLocaleCookie } from "./_utils/locale-cookie";
 import { SENTRY_DSN } from "./_utils/sentry-dsn";
 import { shouldInvalidateReader } from "./app/_domain/reader-cache-policy";
 import { readerCacheTags } from "./app/_domain/reader-cache-tags";
 import { parseReaderRoute } from "./app/_domain/reader-route";
+import { resolveRootLocale } from "./app/_domain/root-locale";
 import { createDb, databaseScope } from "./db";
 import {
 	deleteReaderCacheInvalidations,
@@ -140,6 +142,28 @@ export default withSentry(
 					`NEXT_LOCALE=${readerRoute.locale}; Path=/; SameSite=Lax`,
 				);
 				return secured;
+			}
+			if (
+				url.pathname === "/" &&
+				(request.method === "GET" || request.method === "HEAD")
+			) {
+				const cookieLocale = getLocaleCookie(request.headers.get("cookie"));
+				const locale = resolveRootLocale(
+					cookieLocale,
+					request.headers.get("accept-language"),
+				);
+				const headers = new Headers({
+					Location: `/${locale}${url.search}`,
+					"Cache-Control": "private, no-store",
+				});
+				if (cookieLocale !== undefined && cookieLocale !== locale)
+					headers.append(
+						"Set-Cookie",
+						`NEXT_LOCALE=${locale}; Path=/; SameSite=Lax`,
+					);
+				return withSecurityHeaders(
+					new Response(null, { status: 307, headers }),
+				);
 			}
 			const database = createDb();
 			return databaseScope.run(database, async () => {
