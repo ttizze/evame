@@ -14,6 +14,8 @@
 
 次の比較では1 Workerを基本候補とし、コードのデプロイと記事内容の更新を分離する。必要なのは変更した公開物の生成・差し替えであり、Readerの現在のキャッシュ削除経路をそのまま残すことではない。公開物の永続保存とエッジキャッシュを使う方式も比較対象に含める。分割を残すのは、コールド時の実測などで必要と確認できた場合だけにする。
 
+追検証では、記事単位のR2差し替えで内容更新時の再デプロイを0回にした。Durable Objectは使わず、同じ記事への更新を1秒の枠でまとめ、待機中は最新の版を優先する。これは配信更新経路の検証結果であり、本番の保存APIへの接続や、DB保存・HTML生成を含む所要時間の測定は未完了。
+
 ## 現状との違い
 
 - 現在のSSRも本文・一覧を最初のHTMLに含む。ReaderのWorkers Cache命中時にはReaderの実行とDB取得を省略する。これは既存の仕組み。
@@ -89,6 +91,41 @@ nix develop --command node scripts/check-reader-static-edge.mjs .data/reader-inc
 
 いずれも少数のPreview計測。本番の保存応答時間、同時更新時の待ち時間、全地域での切り替え時間は未計測。Previewは検証後に削除済み。
 
+## 再デプロイを待たない配信更新
+
+```sh
+nix develop --command node scripts/check-reader-publication.mjs .data/reader-incremental-<UUID>
+```
+
+`scripts/reader-publication-worker.ts` は配信更新の検証専用。1 Workerを初回だけ配信し、以降は記事単位の生成済みHTMLをR2 bindingで差し替える。JS/CSS・画像は同じWorkerのStatic Assetsで配信する。生成HTMLを配る検証境界のため`scripts`に置き、実際の保存API・DB・編集アプリは公開しない。HTMLの公開用原稿を新設するものではない。
+
+```mermaid
+flowchart LR
+  Update[生成済みHTMLの更新処理] -->|認証付きAPI・1秒まとめ| Worker[公開用Worker ×1]
+  Browser[ブラウザー] --> Worker
+  Worker --> R2[R2 記事単位の版付きHTML]
+  Browser --> Assets[同じWorkerのStatic Assets JS・CSS・画像]
+```
+
+同じ記事の待機中の更新はWorker内でまとめ、1秒後に最新の版だけを書く。後から到着した古い版を優先しない。待機時間を更新ごとに延長せず、書き込み中に来た更新は次の枠へ送る。メモリ内の待機は永続キューではなく、保存完了まで成功応答を返さない。別Workerインスタンス間はR2の条件付き書き込みで競合を検知し、直近の書き込みから1秒未満なら待つ。競合・一時失敗は`Retry-After: 1`付きで返す。保存APIとの接続時には、未完了の更新を永続化し、再試行時の最新DB版から再生成する。調停用のDurable Object・Cron・Queueは追加しない。
+
+記事の言語別HTMLと版を1オブジェクトに入れ、R2の条件付きputで差し替える。非公開化は版付きの削除記録を残し、過去の生成結果では再公開できないようにする。版をオブジェクト本文にも入れるため、削除記録の更新でもETagが変わる。同じ版・同じ内容の再送は成功し、保存済みより古い版や、同じ版の違う内容は409とする。待機中に新しい版へまとまった要求は、その新しい版の永続化後に成功を返す。並行保存の競合後も最新の版の再送だけで収束することを、ローカルWorkersランタイムとCloudflare上で確認する。
+
+既存R2 bucketの中にUUID付きの専用prefixを作り、ダミー記事だけを入れる。更新APIは一時的な秘密値で認証する。検証後は今回のキー・Preview・秘密値ファイルを削除する。R2の本番オブジェクトや、本番Worker・ルートは変更しない。
+
+2026-11-14、1秒の待機を含む計測（5回ずつ、単位ms）:
+
+| 操作 | 保存応答の中央値 | 保存応答の範囲 | 送信開始から最初のGET確認までの中央値 |
+| --- | ---: | ---: | ---: |
+| 本文の差し替え | 1,253 | 1,236–1,271 | 1,439 |
+| 非公開化 | 1,235 | 1,212–1,364 | 1,453 |
+
+初回のコード配信と準備は5,136ms。各内容更新の再デプロイは0回。日本語・英語への後続GETはポーリングせず、最初の応答を検査する。両言語の確認完了は本文更新が中央値1,529ms、非公開化が1,520msだった。変更していない別の記事のETagも変わらないことを確認した。旧版による非公開化の取り消しを5回拒否し、並行保存後の再送も確認した。ローカルWorkersでは20件の同時更新が最新の版へまとまり、待機中の非公開化も優先されることを検証する。
+
+数字は前節と同じく、**生成済みHTMLの配信更新だけ**を測ったもの。DB保存・Astro描画・全地域での確認時間は含めない。HTML共有キャッシュは使わず、R2の読み取りで確認しているため、現行のキャッシュ命中時の閲覧より速いとは結論しない。保存APIと生成処理の接続、全URL・全操作の維持、共有キャッシュの整合性と閲覧速度を確認するまで本番へ切り替えない。
+
+画面比較は`scripts/compare-reader-html.mjs`を、既存の差分ビルド検証と今回のR2配信検証から共用する。複数利用箇所は`check-reader-incremental.mjs`と`check-reader-publication.mjs`で、基準画像の更新と比較時の上書き禁止が別々の実装でずれると、表示の違いを見逃すため共通化する。Chromium・WebKit、PC・モバイル幅のトップ・記事を、同じ静的HTMLのStatic Assets配信と比較する。
+
 ## 本番採用前に解決すること
 
 1. **内容更新とコード更新を分離する。** 保存・翻訳・コメントのたびに全サイトのmanifestを組み直してグローバルなデプロイを直列化する構成を基本にしない。公開物の差分更新と、コード変更によるテンプレート再生成を分けて計測する。
@@ -105,4 +142,6 @@ nix develop --command node scripts/check-reader-static-edge.mjs .data/reader-inc
 - [Static AssetsとWorker scriptの優先順](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/): ファイルが一致すればWorker実行前に返す。
 - [Static Assetsの直接アップロード](https://developers.cloudflare.com/workers/static-assets/direct-upload/): 変更ファイルだけを転送できるが、manifestは必要な全パスを含め、Workerバージョンへ関連付ける。
 - [Workers Cache](https://developers.cloudflare.com/workers/cache/): キャッシュ照合はWorkerの前で行われる。既存Readerも使用しているため、これ自体を新しい高速化とは扱わない。
+- [R2の整合性](https://developers.cloudflare.com/r2/reference/consistency/)、[条件付き書き込み](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/#conditional-operations): 更新完了後の読み取りとETag条件による差し替え。
+- [R2の制限](https://developers.cloudflare.com/r2/platform/limits/): 同じキーへの書き込み間隔を守り、競合時は最新の版を再試行する。
 - [Playwrightの画面比較](https://playwright.dev/docs/test-snapshots): 安定したスクリーンショットを待って比較する。

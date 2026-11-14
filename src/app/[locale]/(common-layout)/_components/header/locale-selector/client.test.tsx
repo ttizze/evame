@@ -87,6 +87,8 @@ describe("LocaleSelector", () => {
 		expect(await screen.findByText("日本語")).toBeInTheDocument();
 		const englishElements = screen.getAllByText("English");
 		expect(englishElements.length).toBeGreaterThan(0);
+		await user.keyboard("{Escape}");
+		await waitFor(() => expect(button).toHaveFocus());
 	});
 
 	it("言語のリンクは現在のページ・表示モード・見出し位置を維持する", async () => {
@@ -110,6 +112,8 @@ describe("LocaleSelector", () => {
 			"href",
 			"/fr/test?view=both#part",
 		);
+		await user.keyboard("{Escape}");
+		await waitFor(() => expect(button).toHaveFocus());
 	});
 	it("記事でも翻訳追加ボタンを押すまでフォームを読み込まない", async () => {
 		window.history.replaceState(null, "", "/en/alice/article");
@@ -123,7 +127,7 @@ describe("LocaleSelector", () => {
 				}),
 			),
 		);
-		render(
+		const { unmount } = render(
 			<LocaleSelector
 				currentHandle=""
 				hasGeminiApiKey={false}
@@ -143,5 +147,13 @@ describe("LocaleSelector", () => {
 			await screen.findByText("Please log in to Add Translation"),
 		).toBeVisible();
 		expect(translationDialog.loads).toBe(1);
+		// Radixのunmount後のフォーカス処理を、このDOM環境の破棄前に完了する。
+		vi.useFakeTimers();
+		try {
+			unmount();
+			await vi.runOnlyPendingTimersAsync();
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });

@@ -9,6 +9,7 @@ import { drizzle } from "drizzle-orm/libsql";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { fromJSON } from "seroval";
 import { createTestHarness } from "wrangler";
+import { compareReaderHtml } from "./compare-reader-html.mjs";
 import { startTursoServer } from "./turso-dev-server.mjs";
 
 // 実際のReaderを別ディレクトリへビルドする。本番の設定・DB・Workerは変更しない。
@@ -444,12 +445,26 @@ await disposeDb();
 			rendered: [...rendered],
 		};
 		results.push(result);
-		if (phase === "unchanged")
-			assert.deepEqual(
-				fetchedInputs,
-				[],
-				"変更がなければ本文データも再取得しない",
-			);
+		const articleInputs = ["/ja", `/ja/${handle}/first`, `/en/${handle}/first`];
+		const expectedInput = {
+			initial: { paths, requests: 47 },
+			unchanged: { paths: [], requests: 0 },
+			body: { paths: articleInputs, requests: 25 },
+			translation: { paths: articleInputs, requests: 25 },
+			comments: { paths: articleInputs, requests: 27 },
+			template: { paths: [], requests: 0 },
+			unpublish: { paths: ["/ja"], requests: 3 },
+		}[phase];
+		assert.deepEqual(
+			[...fetchedInputs].sort(),
+			[...expectedInput.paths].sort(),
+			`${phase}で変更に関係する入力だけを取得する`,
+		);
+		assert.equal(
+			result.inputDatabaseRequests,
+			expectedInput.requests,
+			`${phase}のDB通信回数が増えていない`,
+		);
 		previousEntries = entries;
 		previousRevision = revision;
 		console.log(JSON.stringify(result));
@@ -633,75 +648,11 @@ export default {async fetch(request,env,ctx){await fetch(${JSON.stringify(`${ori
 				single: { htmlWorkerInvocations: 0, apiWorkerInvocations: 1 },
 				split: { htmlWorkerInvocations: 0, apiWorkerInvocations: 2 },
 			};
-			// 公式のスクリーンショット比較で安定した描画を待つ。PNGのバイト列比較は使わない。
-			await writeFile(
-				`${directory}/visual.config.mjs`,
-				`
-import {defineConfig} from '@playwright/test';
-export default defineConfig({testDir:'.',testMatch:'visual-check.mjs',workers:1,retries:0,
- updateSnapshots:'none',reporter:'list',outputDir:'./visual-results',
- projects:[{name:'chromium',use:{browserName:'chromium'}},{name:'webkit',use:{browserName:'webkit'}}],
- expect:{toHaveScreenshot:{maxDiffPixels:0}}});
-`,
+			await compareReaderHtml(
+				directory,
+				[baselineServer.url.href, singleServer.url.href, splitServer.url.href],
+				["/ja", `/ja/${handle}/first`],
 			);
-			await writeFile(
-				`${directory}/visual-check.mjs`,
-				`
-import {test,expect} from '@playwright/test';
-const origins=${JSON.stringify([baselineServer.url.href, singleServer.url.href, splitServer.url.href])};
-const targets=process.env.READER_STUDY_VISUAL_MODE==='baseline'?origins.slice(0,1):origins.slice(1);
-for(const width of [1280,390])for(const path of ${JSON.stringify(["/ja", `/ja/${handle}/first`])}){
- test(width+' '+path+' の初回HTMLが既存SSRと一致する',async({browser})=>{
-  const context=await browser.newContext({viewport:{width,height:900},colorScheme:'light'});
-  // 初回HTMLだけを比較し、閲覧数の書き込みを起こさない。
-  await context.route('**/*',route=>route.request().resourceType()==='script'?route.abort():route.continue());
-  try{for(const origin of targets){
-   const page=await context.newPage();
-   const response=await page.goto(new URL(path,origin).href);
-   expect(response.status()).toBe(200);
-   await expect(page.locator('main')).toBeVisible();
-   await expect(page).toHaveScreenshot(width+'-'+path.replaceAll('/','_')+'.png');
-   await page.close();
-  }}finally{await context.close();}
- });
-}
-`,
-			);
-			for (const mode of ["baseline", "compare"]) {
-				const visual = spawn(
-					"bun",
-					[
-						"x",
-						"playwright",
-						"test",
-						"--config",
-						`${directory}/visual.config.mjs`,
-						...(mode === "baseline" ? ["--update-snapshots=all"] : []),
-					],
-					{
-						env: {
-							...process.env,
-							SENTRY_DSN: "",
-							VITE_SENTRY_DSN: "",
-							READER_STUDY_VISUAL_MODE: mode,
-						},
-						stdio: ["ignore", "pipe", "pipe"],
-					},
-				);
-				let visualLog = "";
-				visual.stdout.on("data", (data) => {
-					visualLog += data;
-				});
-				visual.stderr.on("data", (data) => {
-					visualLog += data;
-				});
-				const visualExit = await new Promise((resolve, reject) => {
-					visual.once("error", reject);
-					visual.once("exit", resolve);
-				});
-				await writeFile(`${directory}/visual-${mode}.log`, visualLog);
-				assert.equal(visualExit, 0, `${directory}/visual-${mode}.log`);
-			}
 			await singleHarness.close();
 			singleHarness = null;
 			await splitHarness.close();
