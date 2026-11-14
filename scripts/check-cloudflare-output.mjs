@@ -364,6 +364,10 @@ try {
 	);
 	const articleHtml = await article.text();
 	assert.ok(
+		(articleHtml.match(/<link[^>]+rel="stylesheet"/g) ?? []).length === 1,
+		"記事の小さいCSSはHTMLに含め、大きい共通CSSだけを別に取得する",
+	);
+	assert.ok(
 		!articleHtml.includes('component-export="TweetsIsland"'),
 		"埋め込みは本文全体のReact起動を待たず必要なページだけで読み込む",
 	);
@@ -526,6 +530,10 @@ try {
 		const response = await worker.fetch("http://localhost/" + locale);
 		const html = await response.text();
 		assert.equal(response.status, 200, html.slice(0, 500));
+		assert.ok(
+			(html.match(/<link[^>]+rel="stylesheet"/g) ?? []).length === 1,
+			`${locale}: トップも大きい共通CSSだけを別に取得する`,
+		);
 		assert.ok(
 			html.includes("astro-island"),
 			locale + ": AstroでHTMLを描画する",

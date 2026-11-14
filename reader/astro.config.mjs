@@ -28,6 +28,10 @@ export default defineConfig({
 		},
 	],
 	vite: {
+		build: {
+			assetsInlineLimit: (path, content) =>
+				path.endsWith(".css") ? content.length < 32768 : undefined,
+		},
 		envPrefix: ["PUBLIC_", "VITE_"],
 		resolve: {
 			alias: { "@": fileURLToPath(new URL("../src", import.meta.url)) },
