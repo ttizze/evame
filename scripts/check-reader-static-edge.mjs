@@ -86,18 +86,21 @@ try {
 		)?.[1];
 		assert.ok(deployment, "新しいデプロイ固有URLが返る");
 		await writeFile(`${directory}/${phase}.log`, output);
+		const observations = [];
+		const result = { phase, deployMilliseconds, status: null, observations };
+		results.push(result);
 		const unique = await fetch(`${deployment}/ja/incremental-study/first`, {
 			redirect: "manual",
 			cache: "no-store",
 			signal: AbortSignal.timeout(30000),
 		});
+		result.status = unique.status;
 		const expectedHtml = await unique.text();
 		assert.equal(unique.status, phase === "unpublish" ? 404 : 200);
 		if (phase === "initial") assert.ok(expectedHtml.includes("firstの本文"));
 		if (phase === "update")
 			assert.ok(expectedHtml.includes("edgeで更新した本文"));
 		// CLI完了と可変Preview URLの切り替わりを区別して計測する。
-		const observations = [];
 		for (;;) {
 			const response = await fetch(`${origin}/ja/incremental-study/first`, {
 				redirect: "manual",
@@ -127,13 +130,6 @@ try {
 			"dynamic-disabled",
 			"隔離Previewは実際のApp APIを呼び出さない",
 		);
-		const result = {
-			phase,
-			deployMilliseconds,
-			status: unique.status,
-			observations,
-		};
-		results.push(result);
 		console.log(JSON.stringify(result));
 	}
 } finally {
