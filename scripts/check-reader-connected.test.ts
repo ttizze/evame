@@ -162,6 +162,59 @@ it("Worker終了が失敗してもTurso停止と結果保存を試行する", as
 	expect(error).toBeInstanceOf(AggregateError);
 });
 
+it("前回中断の障害タグだけを回収し、通常の保留タグと版を残して初回保存する", async () => {
+	vi.stubEnv(
+		"CONNECTED_PREVIEW_ORIGIN",
+		"https://pr-1171-evame-start.reimei.workers.dev",
+	);
+	const { createClient: createSqliteClient } =
+		await vi.importActual<typeof import("@libsql/client")>("@libsql/client");
+	const database = createSqliteClient({ url: "file::memory:" });
+	try {
+		await database.execute(
+			"CREATE TABLE reader_cache_invalidations (tag TEXT PRIMARY KEY, version TEXT NOT NULL)",
+		);
+		for (const tag of ["reader:connected-purge-failure", "reader:pending"])
+			await database.execute({
+				sql: "INSERT INTO reader_cache_invalidations (tag,version) VALUES (?,?)",
+				args: [tag, "previous-version"],
+			});
+		createClient.mockReturnValue({
+			execute: (query: import("@libsql/client").InStatement) =>
+				(typeof query === "string" ? query : query.sql).includes(
+					"reader_cache_invalidations",
+				)
+					? database.execute(query)
+					: Promise.resolve({ rows: [] }),
+			close: vi.fn(),
+		});
+		readFile.mockResolvedValue(
+			`"${"0".repeat(64)}": { functionName: "editPageContent_createServerFn_handler" }`,
+		);
+		const { readdir } = await import("node:fs/promises");
+		vi.mocked(readdir).mockResolvedValue([
+			"server-fn-resolver-test.js",
+		] as never);
+		const send = vi.fn(async () => {
+			const pending = await database.execute(
+				"SELECT tag,version FROM reader_cache_invalidations ORDER BY tag",
+			);
+			expect(
+				pending.rows.map(({ tag, version }) => ({ tag, version })),
+			).toEqual([{ tag: "reader:pending", version: "previous-version" }]);
+			throw new Error("初回保存へ到達");
+		});
+		vi.stubGlobal("fetch", send);
+		await expect(import("./check-reader-connected.mjs")).rejects.toThrow(
+			"初回保存へ到達",
+		);
+		expect(send).toHaveBeenCalledOnce();
+	} finally {
+		database.close();
+		vi.unstubAllGlobals();
+	}
+});
+
 it("Cloudflare Previewでも差分なし保存で保留タグを回収する検証を実行する", async () => {
 	vi.stubEnv(
 		"CONNECTED_PREVIEW_ORIGIN",

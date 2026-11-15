@@ -40,6 +40,7 @@ let turso;
 let harness;
 const results = [];
 const userId = `connected-${id}`;
+const failureTag = "reader:connected-purge-failure";
 const handle = `connected-${id.slice(0, 8)}`;
 const slug = `記事-${id.slice(0, 8)}`;
 const origin = remote || "http://localhost";
@@ -144,6 +145,10 @@ try {
 		});
 		return response;
 	};
+	await database.execute({
+		sql: "DELETE FROM reader_cache_invalidations WHERE tag=?",
+		args: [failureTag],
+	});
 	assert.equal((await save("最初の原稿")).status, 200);
 	const page = await database.execute({
 		sql: "SELECT id FROM pages WHERE user_id=? AND slug=?",
@@ -197,7 +202,6 @@ try {
 		assert.ok((await response.text()).includes("保存応答の直後の本文"));
 	}
 	// 検証専用entrypointのpurgeを失敗させ、実保存APIの失敗と回復を通す。
-	const failureTag = "reader:connected-purge-failure";
 	const pendingTag = `reader:${createHash("sha256").update(`page:${pageId}`).digest("hex")}`;
 	await database.execute({
 		sql: "INSERT INTO reader_cache_invalidations (tag,version) VALUES (?,?)",
