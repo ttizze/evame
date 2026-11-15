@@ -16,6 +16,10 @@ export default async function setup(project: TestProject) {
 		const path = join(directory, "empty.db");
 		await prepareTestDatabase(path, false);
 		project.provide("testDatabasePath", path);
+		project.onTestsRerun(async () => {
+			await rm(path);
+			await prepareTestDatabase(path, false);
+		});
 	} catch (error) {
 		await rm(directory, { recursive: true, force: true });
 		throw error;
