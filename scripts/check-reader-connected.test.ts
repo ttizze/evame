@@ -23,6 +23,9 @@ vi.mock("@libsql/client", () => ({ createClient }));
 vi.mock("seroval", () => ({ toJSONAsync: vi.fn() }));
 vi.mock("wrangler", () => ({ createTestHarness }));
 vi.mock("./test-database.mjs", () => ({ copyTestDatabase }));
+vi.mock("./prepare-reader-connected.mjs", () => ({
+	prepareReaderConnected: async () => "dist/server/connected-wrangler.json",
+}));
 vi.mock("./turso-dev-server.mjs", () => ({ startTursoServer }));
 vi.mock("node:fs/promises", () => ({
 	mkdir,
@@ -146,7 +149,9 @@ it("Worker終了が失敗してもTurso停止と結果保存を試行する", as
 	expect(stop).toHaveBeenCalledOnce();
 	expect(createTestHarness).toHaveBeenCalledWith({
 		workers: [
-			expect.objectContaining({ configPath: "dist/server/wrangler.json" }),
+			expect.objectContaining({
+				configPath: "dist/server/connected-wrangler.json",
+			}),
 		],
 	});
 	expect(rm).not.toHaveBeenCalled();
@@ -165,8 +170,14 @@ it("Cloudflare Previewでも差分なし保存で保留タグを回収する検�
 	vi.stubEnv("EVAME_CONNECTED_BROWSER", "");
 	const execute = vi.fn().mockImplementation(async (query) => {
 		const sql = typeof query === "string" ? query : query.sql;
+		if (sql.startsWith("SELECT tag,version"))
+			return { rows: [{ tag: "pending", version: "pending-version" }] };
 		if (sql.startsWith("SELECT tag")) return { rows: [{ tag: "pending" }] };
-		return { rows: [{ id: 7, mdast_json: "{}", updated_at: 123 }] };
+		return {
+			rows: [
+				{ id: 7, mdast_json: "削除失敗後に回復する本文", updated_at: 123 },
+			],
+		};
 	});
 	createClient.mockReturnValue({ execute, close: vi.fn() });
 	const resolver = [
@@ -182,12 +193,17 @@ it("Cloudflare Previewでも差分なし保存で保留タグを回収する検�
 	readFile.mockResolvedValue(resolver);
 	const { readdir } = await import("node:fs/promises");
 	vi.mocked(readdir).mockResolvedValue(["server-fn-resolver-test.js"] as never);
-	const send = vi.fn(
-		async (_url: string | URL | Request) =>
-			new Response("保存応答の直後の本文", {
-				headers: { "X-Evame-HTML": "astro", "CF-Cache-Status": "HIT" },
-			}),
-	);
+	let saves = 0;
+	const send = vi.fn(async (url: string | URL | Request) => {
+		const save = new URL(String(url)).pathname.includes(
+			`/_serverFn/${"0".repeat(64)}`,
+		);
+		if (save) saves++;
+		return new Response("保存応答の直後の本文", {
+			status: save && saves === 3 ? 500 : 200,
+			headers: { "X-Evame-HTML": "astro", "CF-Cache-Status": "HIT" },
+		});
+	});
 	vi.stubGlobal("fetch", send);
 	try {
 		await expect(import("./check-reader-connected.mjs")).rejects.toThrow(
@@ -197,7 +213,8 @@ it("Cloudflare Previewでも差分なし保存で保留タグを回収する検�
 			execute.mock.calls.some(
 				([query]) =>
 					typeof query !== "string" &&
-					query.sql.startsWith("INSERT INTO reader_cache_invalidations"),
+					query.sql.startsWith("INSERT INTO reader_cache_invalidations") &&
+					query.args[0] === "reader:connected-purge-failure",
 			),
 		).toBe(true);
 		expect(

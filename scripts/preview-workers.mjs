@@ -1,5 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { appendFile, mkdir, writeFile } from "node:fs/promises";
+import { prepareReaderConnected } from "./prepare-reader-connected.mjs";
 
 const number = process.env.PR_NUMBER;
 if (!number || !/^[1-9]\d*$/.test(number))
@@ -54,7 +55,7 @@ execFileSync(
 		"wrangler",
 		"preview",
 		"--config",
-		"dist/server/wrangler.json",
+		await prepareReaderConnected("dist/server"),
 		"--name",
 		previewName,
 		"--worker-name",

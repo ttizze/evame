@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { createClient } from "@libsql/client";
 import { toJSONAsync } from "seroval";
 import { createTestHarness } from "wrangler";
+import { prepareReaderConnected } from "./prepare-reader-connected.mjs";
 import { copyTestDatabase } from "./test-database.mjs";
 import { startTursoServer } from "./turso-dev-server.mjs";
 
@@ -59,7 +60,7 @@ try {
 		harness = createTestHarness({
 			workers: [
 				{
-					configPath: "dist/server/wrangler.json",
+					configPath: await prepareReaderConnected("dist/server"),
 					secrets: {
 						TURSO_DATABASE_URL: turso.url,
 						TURSO_AUTH_TOKEN: "",
@@ -195,21 +196,63 @@ try {
 		assert.equal(response.status, 200);
 		assert.ok((await response.text()).includes("保存応答の直後の本文"));
 	}
-	// 以前の削除失敗を再現する。障害注入用の公開APIを追加せず、隔離DBにだけ保留版を記録する。
+	// 検証専用entrypointのpurgeを失敗させ、実保存APIの失敗と回復を通す。
+	const failureTag = "reader:connected-purge-failure";
 	const pendingTag = `reader:${createHash("sha256").update(`page:${pageId}`).digest("hex")}`;
 	await database.execute({
-		sql: "INSERT INTO reader_cache_invalidations (tag,version) VALUES (?,?) ON CONFLICT(tag) DO UPDATE SET version=excluded.version",
-		args: [pendingTag, randomUUID()],
+		sql: "INSERT INTO reader_cache_invalidations (tag,version) VALUES (?,?)",
+		args: [failureTag, randomUUID()],
 	});
+	let failed;
+	try {
+		failed = await save("削除失敗後に回復する本文", "回復を確認する題名");
+		assert.ok(
+			failed.status >= 500,
+			"キャッシュ削除が失敗した保存APIは成功を返さない",
+		);
+		await failed.arrayBuffer();
+		const pending = await database.execute({
+			sql: "SELECT tag,version FROM reader_cache_invalidations WHERE tag=?",
+			args: [pendingTag],
+		});
+		assert.equal(
+			pending.rows.length,
+			1,
+			"実保存で発生した保留タグが永続化される",
+		);
+		assert.ok(pending.rows[0].version);
+		if (remote) {
+			const stale = await request(path);
+			assert.equal(stale.headers.get("CF-Cache-Status"), "HIT");
+			const text = await stale.text();
+			assert.ok(
+				text.includes("保存応答の直後の本文"),
+				"削除失敗中は更新前のHTMLが残る",
+			);
+			assert.ok(!text.includes("削除失敗後に回復する本文"));
+		}
+	} finally {
+		await database.execute({
+			sql: "DELETE FROM reader_cache_invalidations WHERE tag=?",
+			args: [failureTag],
+		});
+	}
 	const beforeRetry = await database.execute({
 		sql: "SELECT mdast_json,updated_at FROM pages WHERE id=?",
 		args: [pageId],
 	});
-	const retried = await save("保存応答の直後の本文", "更新した題名");
-	assert.equal(retried.status, 200);
+	assert.ok(
+		String(beforeRetry.rows[0].mdast_json).includes("削除失敗後に回復する本文"),
+	);
+	const retried = await save("削除失敗後に回復する本文", "回復を確認する題名");
+	assert.equal(retried.status, 200, await retried.text());
 	assert.equal(
-		(await database.execute("SELECT tag FROM reader_cache_invalidations")).rows
-			.length,
+		(
+			await database.execute({
+				sql: "SELECT tag FROM reader_cache_invalidations WHERE tag=?",
+				args: [pendingTag],
+			})
+		).rows.length,
 		0,
 		"同内容の再保存で保留タグを回収する",
 	);
@@ -225,8 +268,14 @@ try {
 	);
 	const recovered = await request(path);
 	assert.equal(recovered.status, 200);
-	assert.ok((await recovered.text()).includes("保存応答の直後の本文"));
-	results.push({ operation: "pending-retry", retryStatus: retried.status });
+	const recoveredText = await recovered.text();
+	assert.ok(recoveredText.includes("削除失敗後に回復する本文"));
+	assert.ok(!recoveredText.includes("保存応答の直後の本文"));
+	results.push({
+		operation: "pending-retry",
+		failureStatus: failed.status,
+		retryStatus: retried.status,
+	});
 	for (const response of await Promise.all([
 		save("並行保存の本文A"),
 		save("並行保存の本文B"),
@@ -297,8 +346,70 @@ try {
 			}
 		}
 	}
-	await action("togglePublishAction_createServerFn_handler");
-	assert.equal((await request(path)).status, 404);
+	// キャッシュ登録待ちの古い公開レスポンスを、非公開化のpurge完了後に返す。
+	const beforeRace = await save("非公開化と競合する公開本文");
+	assert.equal(beforeRace.status, 200, await beforeRace.text());
+	await database.execute(
+		"CREATE TABLE IF NOT EXISTS reader_connected_barriers (id TEXT PRIMARY KEY, state TEXT NOT NULL)",
+	);
+	const barrierId = randomUUID();
+	await database.execute({
+		sql: "INSERT INTO reader_connected_barriers (id,state) VALUES (?,?)",
+		args: [barrierId, "waiting"],
+	});
+	const delayed = request(path, {
+		headers: { "X-Evame-Connected-Hold": barrierId },
+	}).then(async (response) => ({
+		status: response.status,
+		text: await response.text(),
+	}));
+	// finallyで障壁を必ず解除するまで未処理のrejectを作らない。
+	const delayedResult = delayed.catch((error) => ({ error }));
+	try {
+		const deadline = Date.now() + 45000;
+		while (true) {
+			const row = await database.execute({
+				sql: "SELECT state FROM reader_connected_barriers WHERE id=?",
+				args: [barrierId],
+			});
+			if (row.rows[0]?.state === "ready") break;
+			assert.ok(
+				Date.now() < deadline,
+				"公開HTMLの生成完了を待つ障壁へ到達する",
+			);
+			await new Promise((resolve) => setTimeout(resolve, 25));
+		}
+		await action("togglePublishAction_createServerFn_handler");
+		assert.equal(
+			(await request(path)).status,
+			404,
+			"遅いHTML応答を解放する前に非公開化が完了する",
+		);
+	} finally {
+		await database.execute({
+			sql: "UPDATE reader_connected_barriers SET state='released' WHERE id=?",
+			args: [barrierId],
+		});
+		await delayedResult;
+		await database.execute({
+			sql: "DELETE FROM reader_connected_barriers WHERE id=?",
+			args: [barrierId],
+		});
+	}
+	const result = await delayedResult;
+	if ("error" in result) throw result.error;
+	assert.equal(result.status, 200);
+	assert.ok(result.text.includes("非公開化と競合する公開本文"));
+	for (let index = 0; index < 3; index++) {
+		const after = await request(path);
+		assert.equal(
+			after.status,
+			404,
+			"非公開化後に完了した古い公開HTMLをキャッシュから再配信しない",
+		);
+		assert.ok(!(await after.text()).includes("非公開化と競合する公開本文"));
+	}
+	results.push({ operation: "late-cache-fill-after-unpublish", status: 404 });
 	assert.equal(
 		(await request(`/en/${handle}/${encodeURIComponent(slug)}?view=source`))
 			.status,

@@ -28,9 +28,18 @@ beforeEach(async () => {
 		await mkdtemp(join(tmpdir(), "evame-native-preview-")),
 	);
 	await mkdir(join(directory, "bin"));
+	await mkdir(join(directory, "dist/server/assets"), { recursive: true });
+	await writeFile(
+		join(directory, "dist/server/wrangler.json"),
+		JSON.stringify({ main: "index.js" }),
+	);
+	await writeFile(
+		join(directory, "dist/server/assets/db-test.js"),
+		"export { createDb as t };",
+	);
 	await writeFile(
 		join(directory, "bin/bun"),
-		'#!/bin/sh\nprintf "%s\\n" "$*" >> calls\nif test -f fail-worker && test "$5" = dist/server/wrangler.json; then exit 1; fi\n',
+		'#!/bin/sh\nprintf "%s\\n" "$*" >> calls\nif test -f fail-worker && test "$5" = dist/server/connected-wrangler.json; then exit 1; fi\n',
 		{ mode: 0o755 },
 	);
 });
@@ -91,7 +100,7 @@ it("専用DBを更新し、統合Workerの標準PRプレビューを一度だけ
 	).toEqual([
 		"run db:prod:migrate",
 		"run db:prod:seed",
-		"x wrangler preview --config dist/server/wrangler.json --name pr-1140 --worker-name evame-start --ignore-base-config --secrets-file .data/native-preview-pr-1140/app-secrets.json --var BETTER_AUTH_URL:https://pr-1140-evame-start.reimei.workers.dev --var QSTASH_PUBLISH_BASE_URL:https://pr-1140-evame-start.reimei.workers.dev",
+		"x wrangler preview --config dist/server/connected-wrangler.json --name pr-1140 --worker-name evame-start --ignore-base-config --secrets-file .data/native-preview-pr-1140/app-secrets.json --var BETTER_AUTH_URL:https://pr-1140-evame-start.reimei.workers.dev --var QSTASH_PUBLISH_BASE_URL:https://pr-1140-evame-start.reimei.workers.dev",
 	]);
 	const saved = JSON.parse(
 		await readFile(
