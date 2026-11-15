@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { appendFile, mkdir, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 
 const number = process.env.PR_NUMBER;
 if (!number || !/^[1-9]\d*$/.test(number))
@@ -33,6 +33,30 @@ const appOrigin = `https://app-${previewName}-evame-start.reimei.workers.dev`;
 const readerOrigin = `https://reader-${previewName}-evame-start.reimei.workers.dev`;
 const directory = `.data/native-preview-${previewName}`;
 await mkdir(directory, { recursive: true, mode: 0o700 });
+const publication = process.env.EVAME_READER_PUBLICATION === "true";
+const publicationVars = publication
+	? { READER_PUBLICATION_PREFIX: `reader-connected/${previewName}` }
+	: {};
+let readerConfig = "reader/dist/server/wrangler.json";
+if (publication) {
+	const reader = JSON.parse(await readFile(readerConfig, "utf8"));
+	const app = JSON.parse(await readFile("dist/server/wrangler.json", "utf8"));
+	const uploads = app.r2_buckets.find(
+		(binding) => binding.binding === "UPLOADS",
+	);
+	if (!uploads) throw new Error("Preview R2 binding is required");
+	readerConfig = "reader/dist/server/publication-preview.json";
+	await writeFile(
+		readerConfig,
+		JSON.stringify({
+			...reader,
+			previews: {
+				...reader.previews,
+				r2_buckets: [{ binding: "HTML", bucket_name: uploads.bucket_name }],
+			},
+		}),
+	);
+}
 // URLは公開設定として渡し、古い固定URLの秘密値を引き継がない。
 delete secrets.BETTER_AUTH_URL;
 await writeFile(`${directory}/app-secrets.json`, JSON.stringify(secrets), {
@@ -59,13 +83,14 @@ for (const command of ["db:prod:migrate", "db:prod:seed"])
 for (const [kind, path, vars] of [
 	[
 		"reader",
-		"reader/dist/server/wrangler.json",
-		{ PREVIEW_GATEWAY_ORIGIN: gatewayOrigin },
+		readerConfig,
+		{ PREVIEW_GATEWAY_ORIGIN: gatewayOrigin, ...publicationVars },
 	],
 	[
 		"app",
 		"dist/server/wrangler.json",
 		{
+			...publicationVars,
 			PREVIEW_READER_ORIGIN: readerOrigin,
 			PREVIEW_GATEWAY_ORIGIN: gatewayOrigin,
 			BETTER_AUTH_URL: gatewayOrigin,
@@ -101,6 +126,26 @@ for (const [kind, path, vars] of [
 		{ stdio: "inherit" },
 	);
 }
+if (publication) {
+	const started = Date.now();
+	for (;;) {
+		const response = await fetch(new URL("/__purge", readerOrigin), {
+			method: "POST",
+			headers: { "x-evame-preview-reader": secrets.PREVIEW_READER_SECRET },
+			signal: AbortSignal.timeout(30000),
+		});
+		await response.body?.cancel();
+		if (response.status === 204) break;
+		if (response.status !== 404 || Date.now() - started > 30000)
+			throw new Error(
+				`Preview HTML invalidation failed: HTTP ${response.status}`,
+			);
+		await new Promise((resolve) => setTimeout(resolve, 250));
+	}
+}
 if (process.env.GITHUB_OUTPUT)
-	await appendFile(process.env.GITHUB_OUTPUT, `url=${gatewayOrigin}\n`);
+	await appendFile(
+		process.env.GITHUB_OUTPUT,
+		`url=${gatewayOrigin}\nreader_url=${readerOrigin}\n`,
+	);
 console.log(`Preview: ${gatewayOrigin}/ja/auth/login`);

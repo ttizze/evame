@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import { createHmac, randomUUID } from "node:crypto";
 import { mkdir, readdir, readFile, rm } from "node:fs/promises";
 import { createServer } from "node:http";
@@ -10,11 +9,10 @@ import {
 	Uint8ArrayWriter,
 	ZipReader,
 } from "@zip.js/zip.js";
-import { drizzle } from "drizzle-orm/libsql";
-import { migrate } from "drizzle-orm/libsql/migrator";
 import { toJSONAsync } from "seroval";
 import { createTestHarness } from "wrangler";
 import { supportedLocaleOptions } from "../src/app/_constants/locale.ts";
+import { copyTestDatabase } from "./test-database.mjs";
 import { startTursoServer } from "./turso-dev-server.mjs";
 
 // 公開入口へ編集アプリや監視SDKを戻す変更を、配信する成果物で検出する。
@@ -50,19 +48,7 @@ assert.ok(
 
 await mkdir(".data", { recursive: true });
 const databasePath = `.data/deployment-${randomUUID()}.db`;
-const localDatabase = createClient({ url: `file:${databasePath}` });
-await migrate(drizzle(localDatabase), { migrationsFolder: "./src/drizzle" });
-localDatabase.close();
-execFileSync("bun", ["src/db/seed.ts"], {
-	env: {
-		...process.env,
-		TURSO_DATABASE_URL: `file:${databasePath}`,
-		TURSO_AUTH_TOKEN: "",
-		SENTRY_DSN: "",
-		VITE_SENTRY_DSN: "",
-	},
-	stdio: "pipe",
-});
+await copyTestDatabase(databasePath);
 const tursoServer = await startTursoServer(databasePath, null);
 const databaseUrl = tursoServer.url;
 const authSecret = "deployment-smoke-test-secret-32-characters";

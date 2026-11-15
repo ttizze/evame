@@ -13,6 +13,7 @@ export default defineConfig({
 	plugins: [react()],
 	test: {
 		globals: true,
+		globalSetup: "./src/tests/database-setup.ts",
 		slowTestThreshold: 1000,
 		exclude: excludedTests,
 		env: {
@@ -34,11 +35,20 @@ export default defineConfig({
 		projects: [
 			{
 				extends: true,
-				test: { name: "node", exclude: [...excludedTests, ...domTests] },
+				test: {
+					name: "node",
+					globalSetup: [],
+					exclude: [...excludedTests, ...domTests],
+				},
 			},
 			{
 				extends: true,
-				test: { name: "dom", environment: "jsdom", include: domTests },
+				test: {
+					name: "dom",
+					globalSetup: [],
+					environment: "jsdom",
+					include: domTests,
+				},
 			},
 		],
 		setupFiles: "./vitest.setup.ts",

@@ -128,3 +128,65 @@ it("Readerのプレビューに失敗したらGatewayを更新しない", async 
 		"--config dist/server/wrangler.json",
 	);
 });
+
+it("接続検証ではPreviewだけへHTML bindingと専用prefixを追加し、コード更新後にHTMLの世代を切り替える", async () => {
+	for (const path of ["reader/dist/server", "dist/server"])
+		await mkdir(join(directory, path), { recursive: true });
+	const reader = { previews: { vars: { SENTRY_DSN: "" } } };
+	await writeFile(
+		join(directory, "reader/dist/server/wrangler.json"),
+		JSON.stringify(reader),
+	);
+	await writeFile(
+		join(directory, "dist/server/wrangler.json"),
+		JSON.stringify({
+			r2_buckets: [{ binding: "UPLOADS", bucket_name: "test-bucket" }],
+		}),
+	);
+	await writeFile(
+		join(directory, "fetch.mjs"),
+		`import {writeFile} from 'node:fs/promises';globalThis.fetch=async(url,init)=>{await writeFile('cleanup',JSON.stringify({url:url.href,method:init.method,secret:init.headers['x-evame-preview-reader']}));return new Response(null,{status:204});};`,
+	);
+	await promisify(execFile)(
+		process.execPath,
+		["--import", join(directory, "fetch.mjs"), script],
+		{
+			cwd: directory,
+			env: {
+				...process.env,
+				PR_NUMBER: "1170",
+				EVAME_READER_PUBLICATION: "true",
+				EVAME_PREVIEW_SECRETS: JSON.stringify(secrets),
+				PATH: `${join(directory, "bin")}:${process.env.PATH}`,
+			},
+		},
+	);
+	expect(
+		JSON.parse(
+			await readFile(
+				join(directory, "reader/dist/server/wrangler.json"),
+				"utf8",
+			),
+		),
+	).toEqual(reader);
+	const config = JSON.parse(
+		await readFile(
+			join(directory, "reader/dist/server/publication-preview.json"),
+			"utf8",
+		),
+	);
+	expect(config.previews.r2_buckets).toEqual([
+		{ binding: "HTML", bucket_name: "test-bucket" },
+	]);
+	expect(config.r2_buckets).toBeUndefined();
+	expect(await readFile(join(directory, "calls"), "utf8")).toContain(
+		"READER_PUBLICATION_PREFIX:reader-connected/pr-1170",
+	);
+	expect(
+		JSON.parse(await readFile(join(directory, "cleanup"), "utf8")),
+	).toEqual({
+		url: "https://reader-pr-1170-evame-start.reimei.workers.dev/__purge",
+		method: "POST",
+		secret: secrets.PREVIEW_READER_SECRET,
+	});
+});

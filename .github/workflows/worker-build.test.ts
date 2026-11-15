@@ -29,6 +29,7 @@ it("全Workerの成果物を保存し、公開Gatewayの環境ファイルと秘
 		"gateway/dist/worker.js",
 		"gateway/dist/wrangler.json",
 		"gateway/dist/bundle-meta.json",
+		".data/browser-test.db",
 	];
 	const excluded = ["gateway/dist/.dev.vars", "gateway/dist/.env.preview"];
 	try {

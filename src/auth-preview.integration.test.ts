@@ -14,6 +14,7 @@ vi.stubEnv(
 	"preview-isolated-login-test-secret-32-characters",
 );
 await setupDbPerFile(import.meta.url);
+const { getAuth } = await import("./auth");
 beforeEach(() => {
 	send.mockClear();
 });
@@ -23,7 +24,6 @@ afterAll(async () => {
 });
 
 it("HTTPSのPR環境で発行したログインリンクから安全なCookieを設定して再ログインできる", async () => {
-	const { getAuth } = await import("./auth");
 	const auth = getAuth();
 	const response = await auth.handler(
 		new Request(`${origin}/api/auth/sign-in/magic-link`, {
@@ -65,7 +65,6 @@ it("HTTPSのPR環境で発行したログインリンクから安全なCookieを
 });
 
 it("Cookieがあるブラウザの別サイトOriginからPR環境のログインリンクを発行しない", async () => {
-	const { getAuth } = await import("./auth");
 	const response = await getAuth().handler(
 		new Request(`${origin}/api/auth/sign-in/magic-link`, {
 			method: "POST",

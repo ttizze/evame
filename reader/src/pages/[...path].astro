@@ -30,7 +30,12 @@ const response = await fetchReaderData(
 if (response.status === 404) return Astro.rewrite("/404");
 if (!response.ok)
 	throw new Error(`Reader data request failed: HTTP ${response.status}`);
-const { page: result, gaTrackingId } = fromJSON(await response.json()) as {
+const {
+	page: result,
+	gaTrackingId,
+	revision,
+} = fromJSON(await response.json()) as {
+	revision: number | null;
 	page: NonNullable<Awaited<ReturnType<typeof loadReaderData>>>;
 	gaTrackingId: string;
 };
@@ -40,6 +45,13 @@ const tags = [
 	...(await readerCacheTags(result.cacheKeys ?? [])),
 ];
 const cacheTagHeader = tags.join(",");
+if (env.READER_PUBLICATION_PREFIX && result.cacheable) {
+	Astro.response.headers.set(
+		"X-Publication-Tags",
+		tags.filter((tag) => tag !== "evame-reader").join(","),
+	);
+	Astro.response.headers.set("X-Publication-Revision", String(revision));
+}
 if (
 	result.cacheable &&
 	!env.PREVIEW_GATEWAY_ORIGIN &&
