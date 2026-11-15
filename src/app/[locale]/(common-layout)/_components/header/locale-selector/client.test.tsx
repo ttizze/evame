@@ -4,9 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { LocaleSelector } from "./client";
 
 const translationDialog = vi.hoisted(() => ({ loads: 0 }));
-vi.mock("./add-translate-dialog/client", async (importOriginal) => {
+vi.mock("./add-translate-dialog/client", () => {
 	translationDialog.loads++;
-	return importOriginal();
+	return {
+		AddTranslateDialog: ({ open }: { open: boolean }) =>
+			open ? <div aria-label="翻訳追加フォーム" role="dialog" /> : null,
+	};
 });
 
 if (typeof global.ResizeObserver === "undefined") {
@@ -144,7 +147,7 @@ describe("LocaleSelector", () => {
 		expect(translationDialog.loads).toBe(0);
 		await user.click(screen.getByRole("button", { name: "+ Add New" }));
 		expect(
-			await screen.findByText("Please log in to Add Translation"),
+			await screen.findByRole("dialog", { name: "翻訳追加フォーム" }),
 		).toBeVisible();
 		expect(translationDialog.loads).toBe(1);
 		// Radixのunmount後のフォーカス処理を、このDOM環境の破棄前に完了する。

@@ -48,6 +48,34 @@ beforeEach(async () => {
 	expect(response.status).toBe(204);
 });
 
+it("日本語のハンドルと記事名を公開・更新・非公開化して削除できる", async () => {
+	const group = "article:著者/記事";
+	const target = `https://example.test/__publication/${encodeURIComponent(group)}`;
+	const path = `/ja/${encodeURIComponent("著者")}/${encodeURIComponent("記事")}`;
+	for (const [revision, pages] of [
+		[1, { [path]: "本文" }],
+		[2, null],
+	] as const) {
+		const saved = await worker.fetch(target, {
+			method: "POST",
+			headers: { Authorization: `Bearer ${secret}` },
+			body: JSON.stringify({ revision, pages }),
+		});
+		expect(saved.status).toBe(204);
+		expect((await worker.fetch(`https://example.test${path}`)).status).toBe(
+			pages ? 200 : 404,
+		);
+	}
+	expect(
+		(
+			await worker.fetch(target, {
+				method: "DELETE",
+				headers: { Authorization: `Bearer ${secret}` },
+			})
+		).status,
+	).toBe(204);
+});
+
 it("同じWorkerのまま生成済みHTMLを差し替え日本語と英語へ反映する", async () => {
 	for (const revision of [1, 2]) {
 		const saved = await worker.fetch(endpoint, {

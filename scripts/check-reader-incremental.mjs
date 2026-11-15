@@ -193,6 +193,7 @@ export async function getStaticPaths() {
 }
 await fetch(${JSON.stringify(`${origin}/render`)} + '?path=' + encodeURIComponent(Astro.url.pathname));
 const { page: result, gaTrackingId } = fromJSON(Astro.props.payload) as {page: NonNullable<Awaited<ReturnType<typeof loadReaderData>>>;gaTrackingId: string;};
+const revision = null;
 ${source.slice(end)}`;
 	await mkdir(`${directory}/src/pages`, { recursive: true });
 	await writeFile(

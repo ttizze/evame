@@ -80,6 +80,8 @@ jobs:
 
       - name: Archive Workers build
         run: tar --exclude='.dev.vars*' --exclude='.env*' -cf "$RUNNER_TEMP/workers.tar" dist */dist
+      - name: Verify saving through Astro generation and R2 publication
+        run: nix develop --command node scripts/check-reader-connected.mjs
       - uses: actions/upload-artifact@v7
         with:
           name: workers
@@ -214,6 +216,7 @@ jobs:
       VITE_SENTRY_DSN: ""
       GOOGLE_ANALYTICS_ID: G-0000000000
       VITE_AUTH_GOOGLE_ENABLED: "false"
+      EVAME_READER_PUBLICATION: "true"
       VITE_PUBLIC_DOMAIN: https://pr-${{ github.event.number }}-evame-start.reimei.workers.dev
     steps:
       - uses: actions/checkout@v4
@@ -237,10 +240,38 @@ jobs:
           # shellcheck disable=SC2016 # テンプレート展開はBunが行う。
           nix develop --command bun -e '
             for (const path of ["/api/auth/get-session", "/ja"]) {
-              const response = await fetch(process.env.VITE_PUBLIC_DOMAIN + path, { signal: AbortSignal.timeout(30000) });
-              if (response.status !== 200 || (path === "/ja" && response.headers.get("x-evame-html") !== "dynamic")) {
-                throw new Error(`Preview verification failed: ${path} (HTTP ${response.status})`);
+              const started = Date.now();
+              for (;;) {
+                const response = await fetch(process.env.VITE_PUBLIC_DOMAIN + path, { signal: AbortSignal.timeout(30000) });
+                await response.body?.cancel();
+                if (response.status === 200 && (path !== "/ja" || response.headers.get("x-evame-html") === "publication")) break;
+                if (Date.now() - started > 30000) throw new Error(`Preview verification failed: ${path} (HTTP ${response.status})`);
+                await new Promise(resolve => setTimeout(resolve, 250));
               }
-              await response.body?.cancel();
             }
           '
+      - name: Verify connected publication on Cloudflare Preview
+        env:
+          EVAME_PREVIEW_SECRETS: ${{ secrets.EVAME_PREVIEW_SECRETS }}
+          CONNECTED_PREVIEW_ORIGIN: ${{ steps.deploy.outputs.url }}
+          CONNECTED_PREVIEW_READER_ORIGIN: ${{ steps.deploy.outputs.reader_url }}
+          EVAME_CONNECTED_BROWSER: "true"
+        run: |
+          nix develop --command docker run --rm --init --ipc=host \
+            --volume "$PWD:$PWD" --volume /nix/store:/nix/store:ro \
+            --workdir "$PWD" \
+            --env PATH --env GSETTINGS_SCHEMA_DIR --env SENTRY_DSN --env VITE_SENTRY_DSN \
+            --env EVAME_PREVIEW_SECRETS --env CONNECTED_PREVIEW_ORIGIN \
+            --env CONNECTED_PREVIEW_READER_ORIGIN --env EVAME_CONNECTED_BROWSER \
+            mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27 \
+            node scripts/check-reader-connected.mjs
+      - name: Upload connected publication verification
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: connected-publication
+          path: |
+            .data/reader-connected-*/result.json
+            .data/reader-connected-*/*.png
+          if-no-files-found: ignore
+          retention-days: 7

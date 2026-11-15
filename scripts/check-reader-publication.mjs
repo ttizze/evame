@@ -101,6 +101,7 @@ const headers = {
 const results = [];
 let ready = false;
 let setupMilliseconds;
+const cleanupFailures = [];
 
 // すべての更新で同じ計測・認証・HTTP失敗の記録を使い、保存途中の結果も残す。
 async function publish(phase, targetGroup, revision, pages) {
@@ -288,16 +289,22 @@ try {
 	try {
 		if (ready) {
 			for (const key of originalGroups.keys()) {
-				const response = await fetch(
-					`${origin}/__publication/${encodeURIComponent(key)}`,
-					{
-						method: "DELETE",
-						headers,
-						signal: AbortSignal.timeout(30000),
-					},
-				);
-				assert.equal(response.status, 204, "今回のR2 prefixだけを削除する");
-				await response.arrayBuffer();
+				try {
+					const response = await fetch(
+						`${origin}/__publication/${encodeURIComponent(key)}`,
+						{
+							method: "DELETE",
+							headers,
+							signal: AbortSignal.timeout(30000),
+						},
+					);
+					assert.equal(response.status, 204, "今回のR2 prefixだけを削除する");
+					await response.arrayBuffer();
+				} catch (error) {
+					cleanupFailures.push(
+						new Error(`R2の後片付け失敗: ${key}`, { cause: error }),
+					);
+				}
 			}
 		}
 	} finally {
@@ -325,6 +332,15 @@ try {
 				),
 			);
 			console.log(`検証結果: ${directory}/result.json`);
+			if (cleanupFailures.length) {
+				console.error(
+					new AggregateError(
+						cleanupFailures,
+						"R2の全グループの削除を試行しました",
+					),
+				);
+				process.exitCode = 1;
+			}
 		}
 	}
 }

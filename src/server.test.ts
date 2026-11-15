@@ -50,6 +50,9 @@ vi.mock("./db", async () => {
 	};
 });
 vi.mock("./db/queries", () => ({
+	fetchReaderPublicationPages: vi
+		.fn()
+		.mockResolvedValue([{ handle: "著者", slug: "記事", sourceLocale: "ja" }]),
 	fetchReaderRevision: vi.fn().mockResolvedValue({ revision: 1 }),
 	fetchReaderChanges: vi.fn().mockResolvedValue([{ key: "page:123" }]),
 	fetchReaderCacheInvalidations: vi.fn(async () =>
@@ -406,6 +409,44 @@ describe("Astroへの表示の転送", () => {
 	});
 });
 describe("公開HTMLの更新", () => {
+	it("隔離Previewの保存は失敗した配信更新も原文HTMLの生成と差し替えまで待つ", async () => {
+		const previewEnv = {
+			...env,
+			READER_PUBLICATION_PREFIX: "test/publication",
+		};
+		vi.mocked(handler.fetch).mockImplementation(async () => new Response(null));
+		env.READER.fetch.mockImplementation(
+			async () => new Response(null, { status: 503 }),
+		);
+		const request = () =>
+			new Request("https://evame.test/_serverFn/save-page", { method: "POST" });
+		await expect(
+			server.fetch(
+				request(),
+				previewEnv as unknown as typeof import("cloudflare:workers").env,
+				{ waitUntil: vi.fn() },
+			),
+		).rejects.toThrow();
+		expect(pendingInvalidations.has("publication:page:123")).toBe(true);
+		vi.mocked(fetchReaderChanges).mockResolvedValue([]);
+		env.READER.fetch.mockImplementation(
+			async () => new Response(null, { status: 204 }),
+		);
+		await server.fetch(
+			request(),
+			previewEnv as unknown as typeof import("cloudflare:workers").env,
+			{ waitUntil: vi.fn() },
+		);
+		const payload = await env.READER.fetch.mock.calls.at(-1)?.[0].json();
+		expect(payload).toEqual({
+			tags: [expect.stringMatching(/^reader:/)],
+			revision: 1,
+			paths: [
+				`/ja/${encodeURIComponent("著者")}/${encodeURIComponent("記事")}`,
+			],
+		});
+		expect(pendingInvalidations.size).toBe(0);
+	});
 	it("記事数や言語数によらず変更対象のキャッシュ削除だけをReader自身へ一度依頼する", async () => {
 		env.READER.fetch.mockResolvedValue(new Response(null, { status: 204 }));
 		vi.mocked(handler.fetch).mockResolvedValue(new Response(null));

@@ -14,7 +14,7 @@
 
 次の比較では1 Workerを基本候補とし、コードのデプロイと記事内容の更新を分離する。必要なのは変更した公開物の生成・差し替えであり、Readerの現在のキャッシュ削除経路をそのまま残すことではない。公開物の永続保存とエッジキャッシュを使う方式も比較対象に含める。分割を残すのは、コールド時の実測などで必要と確認できた場合だけにする。
 
-追検証では、記事単位のR2差し替えで内容更新時の再デプロイを0回にした。Durable Objectは使わず、同じ記事への更新を1秒の枠でまとめ、待機中は最新の版を優先する。これは配信更新経路の検証結果であり、本番の保存APIへの接続や、DB保存・HTML生成を含む所要時間の測定は未完了。
+追検証では、記事単位のR2差し替えで内容更新時の再デプロイを0回にした。Durable Objectは使わず、同じ記事への更新を1秒の枠でまとめ、待機中は最新の版を優先する。さらに実際の保存APIとAstro生成を隔離Previewで接続して検証する。本番切り替えと全地域の反映時間の測定は未完了。
 
 ## 現状との違い
 
@@ -127,6 +127,24 @@ flowchart LR
 画面比較は`scripts/compare-reader-html.mjs`を、既存の差分ビルド検証と今回のR2配信検証から共用する。複数利用箇所は`check-reader-incremental.mjs`と`check-reader-publication.mjs`で、基準画像の更新と比較時の上書き禁止が別々の実装でずれると、表示の違いを見逃すため共通化する。Chromium・WebKit、PC・モバイル幅のトップ・記事を、同じ静的HTMLのStatic Assets配信と比較する。
 
 ## 本番採用前に解決すること
+
+### 保存APIとの接続（2026-11-15）
+
+`READER_PUBLICATION_PREFIX`を設定した隔離Previewで、既存の保存APIからAstro生成・R2保存までを接続する。本番のWrangler設定にはこの値やHTML bindingを追加しない。
+
+- `src/server.ts`から使う`src/app/_service/update-reader-publication.ts`が、保存後の変更キーと保留中の処理を取得する。既存の`reader_cache_invalidations`に記事IDも記録し、差し替えに失敗した後はDB差分のない再保存でも最新DBから原文記事を生成する。成功後は照合した版だけを削除する。
+- `src/db/queries.ts`は変更されたIDの公開記事だけを取得するDB境界。記事の総数や全言語・全一覧ページを列挙しない。
+- `reader/src/infra/published-html.ts`はReaderのR2境界。既存のAstroと同じ依存タグに更新版を記録し、対象記事の原文を保存応答前に生成する。他言語・表示形式・コメントページ・一覧は次の閲覧で生成し、古いHTMLは返さない。URLのクエリをキーに含め、404・検索・所有者プレビュー・Set-Cookieを含む応答を保存しない。人気順は最大1時間で再取得する。
+- `shared/infra/reader-publication.ts`は検証WorkerとReaderから使う条件付き書き込み。複数利用箇所は`scripts/reader-publication-worker.ts`と`reader/src/infra/published-html.ts`で、版照合・1秒の集約・競合判定が別実装になると古い生成結果で巻き戻すため共有する。
+
+```sh
+SENTRY_DSN="" VITE_SENTRY_DSN="" nix develop --command bun run build
+nix develop --command node scripts/check-reader-connected.mjs
+```
+
+ローカルは新規DBと実際のWorkers成果物を使う。日本語記事名の保存・公開、保存直後のGET、他言語・表示形式・コメントページ、R2失敗後の再保存、並行保存、非公開化・所有者プレビュー・再公開・削除を確認する。CIは同じ検証をCloudflare標準Previewでも実行し、Chromium・WebKitとPC・モバイル幅で編集・自動保存・再読み込みを検査する。Previewのコード更新時と検証終了時に専用R2 prefixを削除する。
+
+R2のHTML再訪はDB・Astroを使わないが、依存タグの版をR2から照合する。従来のWorkers Cache命中より閲覧が速いという結論は出さない。全URL・全操作、実データ規模の遅延、保存後から全地域での可視性は引き続き本番切り替えの条件。
 
 1. **内容更新とコード更新を分離する。** 保存・翻訳・コメントのたびに全サイトのmanifestを組み直してグローバルなデプロイを直列化する構成を基本にしない。公開物の差分更新と、コード変更によるテンプレート再生成を分けて計測する。
 2. **公開物の更新完了を定義する。** 本文保存・非公開化・削除の成功時には新しい公開状態を返す。生成・差し替え失敗を永続化し、DBに差分のない再試行でも完了させる。同時保存の古い生成結果が新しい内容や非公開化を上書きしないことを検証する。

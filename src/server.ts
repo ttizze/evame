@@ -12,23 +12,14 @@ import {
 import { isRedirect } from "@tanstack/react-router";
 import handler from "@tanstack/react-start/server-entry";
 import { withSecurityHeaders } from "../security-headers";
-import { fetchWorker } from "../shared/fetch-worker";
 import { getMigrationResponse } from "../shared/migration-response";
 import { restorePreviewRequest } from "../shared/preview-request";
 import { fetchPublicReader } from "../shared/public-reader";
 import { SENTRY_DSN } from "./_utils/sentry-dsn";
 import { shouldInvalidateReader } from "./app/_domain/reader-cache-policy";
-import { readerCacheTags } from "./app/_domain/reader-cache-tags";
+import { updateReaderPublication } from "./app/_service/update-reader-publication";
 import { createDb, databaseScope } from "./db";
-import {
-	deleteReaderCacheInvalidations,
-	storeReaderCacheInvalidations,
-} from "./db/mutations";
-import {
-	fetchReaderCacheInvalidations,
-	fetchReaderChanges,
-	fetchReaderRevision,
-} from "./db/queries";
+import { fetchReaderChanges, fetchReaderRevision } from "./db/queries";
 
 // HTTPルートへ公開しない、Reader専用のサービス境界。
 export class ReaderBackend extends WorkerEntrypoint {
@@ -127,26 +118,7 @@ export default withSentry(sentryOptions, {
 					)
 				) {
 					const changes = await fetchReaderChanges(beforeRevision);
-					if (changes.length > 0)
-						await storeReaderCacheInvalidations(
-							await readerCacheTags(changes.map((row) => row.key)),
-							crypto.randomUUID(),
-						);
-					const pending = await fetchReaderCacheInvalidations();
-					if (pending.length > 0) {
-						const purged = await fetchWorker(
-							new Request("https://reader.internal/__invalidate", {
-								method: "POST",
-								headers: { "Content-Type": "application/json" },
-								body: JSON.stringify({ tags: pending.map((row) => row.tag) }),
-							}),
-							env.READER ?? null,
-							env.PREVIEW_READER_ORIGIN ?? null,
-							env.PREVIEW_READER_SECRET ?? null,
-						);
-						if (!purged.ok) throw new Error("Reader cache invalidation failed");
-						await deleteReaderCacheInvalidations(pending);
-					}
+					await updateReaderPublication(changes, env, url.origin);
 				}
 				const init = {
 					status: response.status,
