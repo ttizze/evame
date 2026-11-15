@@ -129,18 +129,17 @@ for (const [kind, path, vars] of [
 if (publication) {
 	const started = Date.now();
 	for (;;) {
-		const response = await fetch(
-			new URL("/__publication-cleanup", readerOrigin),
-			{
-				method: "POST",
-				headers: { "x-evame-preview-reader": secrets.PREVIEW_READER_SECRET },
-				signal: AbortSignal.timeout(30000),
-			},
-		);
+		const response = await fetch(new URL("/__purge", readerOrigin), {
+			method: "POST",
+			headers: { "x-evame-preview-reader": secrets.PREVIEW_READER_SECRET },
+			signal: AbortSignal.timeout(30000),
+		});
 		await response.body?.cancel();
 		if (response.status === 204) break;
 		if (response.status !== 404 || Date.now() - started > 30000)
-			throw new Error(`Preview HTML cleanup failed: HTTP ${response.status}`);
+			throw new Error(
+				`Preview HTML invalidation failed: HTTP ${response.status}`,
+			);
 		await new Promise((resolve) => setTimeout(resolve, 250));
 	}
 }

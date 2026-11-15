@@ -1,4 +1,4 @@
-import type { R2Bucket } from "@cloudflare/workers-types";
+import type { ExecutionContext, R2Bucket } from "@cloudflare/workers-types";
 import { schedulePublication } from "../../../shared/infra/reader-publication";
 import { parseReaderRoute } from "../../../src/app/_domain/reader-route";
 
@@ -18,6 +18,7 @@ export async function invalidatePublishedHtml(
 	prefix: string,
 	tags: readonly string[],
 	revision: number,
+	context: Pick<ExecutionContext, "waitUntil">,
 ) {
 	await Promise.all(
 		tags.map(async (tag) => {
@@ -29,6 +30,7 @@ export async function invalidatePublishedHtml(
 					revision,
 					String(revision),
 					String(revision),
+					context,
 				);
 				if (
 					status === 204 ||
@@ -52,6 +54,7 @@ export async function servePublishedHtml(
 	bucket: R2Bucket,
 	prefix: string,
 	render: (request: Request) => Promise<Response>,
+	context: Pick<ExecutionContext, "waitUntil">,
 ): Promise<Response> {
 	for (let attempt = 0; ; attempt++) {
 		try {
@@ -63,8 +66,19 @@ export async function servePublishedHtml(
 				!["GET", "HEAD"].includes(request.method)
 			)
 				return render(request);
+			const view = url.searchParams.get("view");
+			url.search = "";
+			if ("page" in route && route.page !== undefined && route.page > 1)
+				url.searchParams.set("page", String(route.page));
+			if (route.kind === "profile" && route.sort === "new")
+				url.searchParams.set("sort", route.sort);
+			if (view === "user" || view === "source")
+				url.searchParams.set("view", view);
+			// 全体無効化より前の生成結果は別世代のキーへ保存され、最新のHTMLを上書きしない。
+			const generation =
+				(await bucket.head(`${prefix}/generation`))?.etag ?? "initial";
 			// 人気順などDBの変更通知によらない表示も、既存SSRと同じく最大1時間で読み直す。
-			const key = `${prefix}/html/${Math.floor(Date.now() / 3600000)}/${encodeURIComponent(url.origin + url.pathname + url.search)}`;
+			const key = `${prefix}/html/${generation}/${Math.floor(Date.now() / 3600000)}/${encodeURIComponent(url.origin + url.pathname + url.search)}`;
 			const object = await bucket.get(key);
 			if (object) {
 				const record = await object.json<{
@@ -91,7 +105,9 @@ export async function servePublishedHtml(
 					});
 			}
 			// HEADでも保存するHTML全体を生成する。Cookie・認証ヘッダーは保存しない。
-			const response = await render(new Request(request, { method: "GET" }));
+			const response = await render(
+				new Request(new Request(url, request), { method: "GET" }),
+			);
 			const tagHeader = response.headers.get("X-Publication-Tags");
 			const revision = Number(response.headers.get("X-Publication-Revision"));
 			if (
@@ -125,9 +141,8 @@ export async function servePublishedHtml(
 				revision,
 				hash,
 				body,
+				context,
 			);
-			if (status === 409)
-				return servePublishedHtml(request, bucket, prefix, render);
 			if (status !== 204)
 				throw new Error(`公開HTMLの保存に失敗しました: HTTP ${status}`);
 			const latest = await Promise.all(

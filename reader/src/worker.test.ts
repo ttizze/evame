@@ -1,11 +1,15 @@
 // @vitest-environment node
-import type { ExecutionContext } from "@cloudflare/workers-types";
+import type { ExecutionContext, R2Bucket } from "@cloudflare/workers-types";
 import { beforeEach, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
 	purge: vi.fn(),
+	schedule: vi.fn(),
 	astro: vi.fn(),
 	asset: vi.fn(),
+}));
+vi.mock("../../shared/infra/reader-publication", () => ({
+	schedulePublication: mocks.schedule,
 }));
 vi.mock("cloudflare:workers", () => ({ cache: { purge: mocks.purge } }));
 vi.mock("@sentry/cloudflare", () => ({
@@ -25,7 +29,7 @@ vi.mock("@astrojs/cloudflare/fetch", () => ({
 import worker from "./worker";
 
 const env = {} as typeof import("cloudflare:workers").env;
-const context = {} as ExecutionContext;
+const context = { waitUntil: vi.fn() } as unknown as ExecutionContext;
 const previewEnv = {
 	PREVIEW_GATEWAY_ORIGIN: "https://pr-1140-evame-start.reimei.workers.dev",
 	PREVIEW_READER_SECRET: "preview-reader-secret",
@@ -66,12 +70,13 @@ it("PRのReaderはGatewayのURLとCookieで描画する", async () => {
 	expect(state.request.headers.get("cookie")).toBe("preview-session");
 });
 beforeEach(() => {
+	mocks.schedule.mockReset().mockResolvedValue(204);
 	mocks.purge.mockReset().mockResolvedValue({ success: true });
 	mocks.astro.mockReset().mockResolvedValue(new Response("本文SSR"));
 	mocks.asset.mockReset().mockResolvedValue(null);
 });
 it("保存後は指定された記事と一覧タグだけを削除しHTMLを生成しない", async () => {
-	const tags = ["reader:" + "a".repeat(64), "reader:" + "b".repeat(64)];
+	const tags = [`reader:${"a".repeat(64)}`, `reader:${"b".repeat(64)}`];
 	const response = await worker.fetch(
 		new Request("https://reader.internal/__invalidate", {
 			method: "POST",
@@ -131,7 +136,7 @@ it.each(["/__invalidate", "/__purge"])(
 		expect(
 			(
 				await worker.fetch(
-					new Request("https://reader.internal" + path),
+					new Request(`https://reader.internal${path}`),
 					env,
 					context,
 				)
@@ -151,4 +156,90 @@ it("不正なタグを無効化へ渡さない", async () => {
 	);
 	expect(response.status).toBe(400);
 	expect(mocks.purge).not.toHaveBeenCalled();
+});
+
+it.each(["/__purge", "/__invalidate"])(
+	"R2配信中も本文なしの %s でHTMLの世代を更新してタグの版を維持する",
+	async (path) => {
+		const bucket = {
+			put: vi.fn(),
+			delete: vi.fn(),
+		} as unknown as R2Bucket;
+		const response = await worker.fetch(
+			new Request(`https://reader.internal${path}`, { method: "POST" }),
+			{ ...env, HTML: bucket, READER_PUBLICATION_PREFIX: "test" },
+			context,
+		);
+		expect(response.status).toBe(204);
+		expect(bucket.put).toHaveBeenCalledExactlyOnceWith(
+			"test/generation",
+			expect.any(String),
+		);
+		expect(bucket.delete).not.toHaveBeenCalled();
+		expect(mocks.purge).toHaveBeenCalledExactlyOnceWith({
+			tags: ["evame-reader"],
+		});
+	},
+);
+
+it.each(["/\\evil.example/article", "//evil.example/article"])(
+	"別オリジンへ解決される無効化先 %s を拒否する",
+	async (path) => {
+		const response = await worker.fetch(
+			new Request("https://reader.internal/__invalidate", {
+				method: "POST",
+				body: JSON.stringify({ tags: [], revision: 1, paths: [path] }),
+			}),
+			{ ...env, HTML: {} as R2Bucket, READER_PUBLICATION_PREFIX: "test" },
+			context,
+		);
+		expect(response.status).toBe(400);
+		expect(mocks.astro).not.toHaveBeenCalled();
+	},
+);
+
+it("複数の再生成を最大4件ずつ並列に実行し重複したURLは1回だけ生成する", async () => {
+	const releases: (() => void)[] = [];
+	let active = 0;
+	let maximum = 0;
+	mocks.astro.mockImplementation(async () => {
+		active++;
+		maximum = Math.max(maximum, active);
+		await new Promise<void>((resolve) => releases.push(resolve));
+		active--;
+		return new Response("本文");
+	});
+	const response = worker.fetch(
+		new Request("https://reader.internal/__invalidate", {
+			method: "POST",
+			body: JSON.stringify({
+				tags: [],
+				revision: 1,
+				paths: [
+					"/ja/a/1",
+					"/ja/a/2",
+					"/ja/a/3",
+					"/ja/a/4",
+					"/ja/a/5",
+					"/ja/a/1",
+				],
+			}),
+		}),
+		{
+			...env,
+			HTML: {
+				head: async () => null,
+				get: async () => null,
+			} as unknown as R2Bucket,
+			READER_PUBLICATION_PREFIX: "test",
+		},
+		context,
+	);
+	await vi.waitFor(() => expect(releases).toHaveLength(4));
+	for (const release of releases.splice(0)) release();
+	await vi.waitFor(() => expect(releases).toHaveLength(1));
+	releases[0]();
+	expect((await response).status).toBe(204);
+	expect(maximum).toBe(4);
+	expect(mocks.astro).toHaveBeenCalledTimes(5);
 });

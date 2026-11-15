@@ -67,8 +67,16 @@ export default withSentry(
 						))
 				)
 					return new Response(null, { status: 400 });
-				if (env.READER_PUBLICATION_PREFIX) {
+				if (env.READER_PUBLICATION_PREFIX && !payload) {
 					if (!env.HTML) throw new Error("Publication R2 binding is required");
+					await env.HTML.put(
+						`${env.READER_PUBLICATION_PREFIX}/generation`,
+						crypto.randomUUID(),
+					);
+				} else if (env.READER_PUBLICATION_PREFIX) {
+					const bucket = env.HTML;
+					const prefix = env.READER_PUBLICATION_PREFIX;
+					if (!bucket) throw new Error("Publication R2 binding is required");
 					if (
 						!Number.isSafeInteger(parsed?.revision) ||
 						parsed.revision < 0 ||
@@ -77,26 +85,35 @@ export default withSentry(
 							(path: unknown) =>
 								typeof path !== "string" ||
 								!path.startsWith("/") ||
-								path.startsWith("//"),
+								path.startsWith("//") ||
+								new URL(path, request.url).origin !==
+									new URL(request.url).origin,
 						)
 					)
 						return new Response(null, { status: 400 });
 					await invalidatePublishedHtml(
-						env.HTML,
-						env.READER_PUBLICATION_PREFIX,
+						bucket,
+						prefix,
 						tags,
 						parsed.revision,
+						context,
 					);
-					for (const path of new Set<string>(parsed.paths)) {
-						const generated = await servePublishedHtml(
-							new Request(new URL(path, request.url)),
-							env.HTML,
-							env.READER_PUBLICATION_PREFIX,
-							render,
+					const paths = [...new Set<string>(parsed.paths)];
+					for (let start = 0; start < paths.length; start += 4) {
+						await Promise.all(
+							paths.slice(start, start + 4).map(async (path) => {
+								const generated = await servePublishedHtml(
+									new Request(new URL(path, request.url)),
+									bucket,
+									prefix,
+									render,
+									context,
+								);
+								await generated.body?.cancel();
+								if (generated.status !== 200 && generated.status !== 404)
+									throw new Error("公開HTMLの生成に失敗しました");
+							}),
 						);
-						if (generated.status !== 200 && generated.status !== 404)
-							throw new Error("公開HTMLの生成に失敗しました");
-						await generated.body?.cancel();
 					}
 				}
 				if (!env.PREVIEW_GATEWAY_ORIGIN && typeof cache?.purge === "function") {
@@ -117,6 +134,7 @@ export default withSentry(
 					env.HTML,
 					env.READER_PUBLICATION_PREFIX,
 					render,
+					context,
 				);
 			}
 			return render(request);

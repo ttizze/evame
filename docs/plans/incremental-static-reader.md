@@ -134,15 +134,15 @@ flowchart LR
 
 - `src/server.ts`から使う`src/app/_service/update-reader-publication.ts`が、保存後の変更キーと保留中の処理を取得する。既存の`reader_cache_invalidations`に記事IDも記録し、差し替えに失敗した後はDB差分のない再保存でも最新DBから原文記事を生成する。成功後は照合した版だけを削除する。
 - `src/db/queries.ts`は変更されたIDの公開記事だけを取得するDB境界。記事の総数や全言語・全一覧ページを列挙しない。
-- `reader/src/infra/published-html.ts`はReaderのR2境界。既存のAstroと同じ依存タグに更新版を記録し、対象記事の原文を保存応答前に生成する。他言語・表示形式・コメントページ・一覧は次の閲覧で生成し、古いHTMLは返さない。URLのクエリをキーに含め、404・検索・所有者プレビュー・Set-Cookieを含む応答を保存しない。人気順は最大1時間で再取得する。
-- `shared/infra/reader-publication.ts`は検証WorkerとReaderから使う条件付き書き込み。複数利用箇所は`scripts/reader-publication-worker.ts`と`reader/src/infra/published-html.ts`で、版照合・1秒の集約・競合判定が別実装になると古い生成結果で巻き戻すため共有する。
+- `reader/src/infra/published-html.ts`はReaderのR2境界。既存のAstroと同じ依存タグに更新版を記録し、対象記事の原文を保存応答前に生成する。他言語・表示形式・コメントページ・一覧は次の閲覧で生成し、古いHTMLは返さない。URLとAstroへ渡すクエリを正規化し、ページ番号・著者一覧の並び順・表示形式の有効な指定だけをキーへ含める。404・検索・所有者プレビュー・Set-Cookieを含む応答は保存しない。人気順は最大1時間で再取得する。
+- `shared/infra/reader-publication.ts`は検証WorkerとReaderから使う条件付き書き込み。複数利用箇所は`scripts/reader-publication-worker.ts`と`reader/src/infra/published-html.ts`で、版照合・1秒の集約・競合判定が別実装になると古い生成結果で巻き戻すため共有する。待機に合流する各リクエストも同じPromiseを自身のwaitUntilへ登録する。競合時は1秒後に最新DBから描画し直し、合計2回で失敗を返す。
 
 ```sh
 SENTRY_DSN="" VITE_SENTRY_DSN="" nix develop --command bun run build
 nix develop --command node scripts/check-reader-connected.mjs
 ```
 
-ローカルは新規DBと実際のWorkers成果物を使う。日本語記事名の保存・公開、保存直後のGET、他言語・表示形式・コメントページ、R2失敗後の再保存、並行保存、非公開化・所有者プレビュー・再公開・削除を確認する。CIは同じ検証をCloudflare標準Previewでも実行し、Chromium・WebKitとPC・モバイル幅で編集・自動保存・再読み込みを検査する。Previewのコード更新時と検証終了時に専用R2 prefixを削除する。
+ローカルは新規DBと実際のWorkers成果物を使う。日本語記事名の保存・公開、保存直後のGET、他言語・表示形式・コメントページ、R2失敗後の再保存、異なる本文の並行保存、非公開化・所有者プレビュー・再公開・削除を確認する。並行保存後はDBに確定した本文と公開HTMLが一致し、他方の本文を含まないことを検査する。CIは同じ検証をCloudflare標準Previewでも実行し、Chromium・WebKitとPC・モバイル幅で編集・自動保存・再読み込みを検査する。Previewのコード更新後の全体無効化ではR2の世代markerを更新し、そのETagをHTMLキーへ含める。無効化前に始まった生成が遅れて完了しても旧世代へ保存されるため、その後の閲覧には使われない。記事・一覧タグの版は保持する。原文記事の再生成は重複URLを除き最大4件ずつ実行し、同一origin以外のURLは拒否する。検証終了時だけ専用R2 prefixを削除する。後片付けは各処理の失敗後も続け、結果の保存まで試行して元の検証エラーと後片付けのエラーを報告する。
 
 R2のHTML再訪はDB・Astroを使わないが、依存タグの版をR2から照合する。従来のWorkers Cache命中より閲覧が速いという結論は出さない。全URL・全操作、実データ規模の遅延、保存後から全地域での可視性は引き続き本番切り替えの条件。
 

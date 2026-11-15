@@ -1,4 +1,4 @@
-import type { R2Bucket } from "@cloudflare/workers-types";
+import type { ExecutionContext, R2Bucket } from "@cloudflare/workers-types";
 
 // 待機中の更新は記事ごとに最新の版だけを残す。永続化の完了までは成功を返さない。
 const pending = new Map<
@@ -17,6 +17,7 @@ export function schedulePublication(
 	revision: number,
 	digest: string,
 	body: string,
+	context: Pick<ExecutionContext, "waitUntil">,
 ) {
 	const waiting = pending.get(key);
 	if (waiting) {
@@ -24,6 +25,7 @@ export function schedulePublication(
 			return Promise.resolve(409);
 		if (revision > waiting.revision)
 			Object.assign(waiting, { revision, digest, body });
+		context.waitUntil(waiting.promise);
 		return waiting.promise;
 	}
 	const { promise, resolve } = Promise.withResolvers<number>();
@@ -78,5 +80,6 @@ export function schedulePublication(
 			if (pending.get(key) === batch) pending.delete(key);
 		}
 	})();
+	context.waitUntil(promise);
 	return promise;
 }

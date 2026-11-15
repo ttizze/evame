@@ -129,7 +129,7 @@ it("Readerのプレビューに失敗したらGatewayを更新しない", async 
 	);
 });
 
-it("接続検証ではPreviewだけへHTML bindingと専用prefixを追加し、前回のHTMLを削除する", async () => {
+it("接続検証ではPreviewだけへHTML bindingと専用prefixを追加し、コード更新後にHTMLの世代を切り替える", async () => {
 	for (const path of ["reader/dist/server", "dist/server"])
 		await mkdir(join(directory, path), { recursive: true });
 	const reader = { previews: { vars: { SENTRY_DSN: "" } } };
@@ -185,7 +185,7 @@ it("接続検証ではPreviewだけへHTML bindingと専用prefixを追加し、
 	expect(
 		JSON.parse(await readFile(join(directory, "cleanup"), "utf8")),
 	).toEqual({
-		url: "https://reader-pr-1170-evame-start.reimei.workers.dev/__publication-cleanup",
+		url: "https://reader-pr-1170-evame-start.reimei.workers.dev/__purge",
 		method: "POST",
 		secret: secrets.PREVIEW_READER_SECRET,
 	});

@@ -13,13 +13,13 @@ vi.stubEnv(
 	"turso-login-test-secret-at-least-32-characters",
 );
 await setupDbPerFile(import.meta.url);
+const { getAuth } = await import("./auth");
 afterAll(async () => {
 	await disposeDb();
 	vi.unstubAllEnvs();
 });
 
 it("マジックリンクでログインし、SQLiteのセッションを再取得できる", async () => {
-	const { getAuth } = await import("./auth");
 	const auth = getAuth();
 	const signIn = await auth.handler(
 		new Request("http://localhost:3000/api/auth/sign-in/magic-link", {

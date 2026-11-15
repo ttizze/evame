@@ -49,6 +49,7 @@ const origin = remote ?? "http://localhost";
 let gateway;
 let publicationBucket;
 let browserOrigin = remote;
+let failure;
 try {
 	if (remote)
 		database = createClient({
@@ -225,7 +226,9 @@ try {
 		assert.ok((await response.text()).includes("保存応答の直後の本文"));
 	}
 	if (publicationBucket) {
-		const key = `${prefix}/html/${Math.floor(Date.now() / 3600000)}/${encodeURIComponent(origin + path)}`;
+		const generation =
+			(await publicationBucket.head(`${prefix}/generation`))?.etag ?? "initial";
+		const key = `${prefix}/html/${generation}/${Math.floor(Date.now() / 3600000)}/${encodeURIComponent(origin + path)}`;
 		const previous = await publicationBucket.get(key);
 		assert.ok(previous);
 		await publicationBucket.put(key, await previous.text(), {
@@ -246,11 +249,26 @@ try {
 		);
 	}
 	for (const response of await Promise.all([
-		save("並行保存の本文"),
-		save("並行保存の本文"),
+		save("並行保存の本文A"),
+		save("並行保存の本文B"),
 	]))
 		assert.equal(response.status, 200, await response.text());
-	assert.ok((await (await request(path)).text()).includes("並行保存の本文"));
+	const stored = await database.execute({
+		sql: "SELECT mdast_json FROM pages WHERE id=?",
+		args: [pageId],
+	});
+	const storedText = JSON.stringify(JSON.parse(stored.rows[0].mdast_json));
+	const confirmed = ["並行保存の本文A", "並行保存の本文B"].find((text) =>
+		storedText.includes(text),
+	);
+	assert.ok(confirmed, "DBに確定した並行保存の本文を取得する");
+	const html = await (await request(path)).text();
+	assert.ok(html.includes(confirmed), "公開HTMLがDBの確定本文と一致する");
+	assert.ok(
+		!html.includes(
+			confirmed === "並行保存の本文A" ? "並行保存の本文B" : "並行保存の本文A",
+		),
+	);
 	if (process.env.EVAME_CONNECTED_BROWSER === "true") {
 		const { chromium, webkit, expect } = await import("@playwright/test");
 		for (const type of [chromium, webkit]) {
@@ -274,7 +292,7 @@ try {
 					const editor = page.locator(
 						'[data-testid="lexical-editor"][contenteditable=true]',
 					);
-					await expect(editor).toContainText("並行保存の本文");
+					await expect(editor).toContainText(confirmed);
 					await editor.locator("p").last().click();
 					const text = `ブラウザーから保存-${type.name()}-${width}`;
 					const saved = page.waitForResponse(
@@ -318,19 +336,25 @@ try {
 	console.log(
 		"実際の保存・公開・並行保存・非公開化・削除をAstro生成とR2配信へ接続しました",
 	);
-} finally {
-	try {
+} catch (error) {
+	failure = error;
+}
+const cleanupErrors = [];
+for (const cleanup of [
+	async () => {
 		if (database)
 			await database.execute({
 				sql: "DELETE FROM users WHERE id=?",
 				args: [userId],
 			});
+	},
+	async () => {
 		if (
 			remote &&
 			process.env.CONNECTED_PREVIEW_READER_ORIGIN &&
 			previewSecrets?.PREVIEW_READER_SECRET
 		) {
-			const cleanup = await fetch(
+			const response = await fetch(
 				new URL(
 					"/__publication-cleanup",
 					process.env.CONNECTED_PREVIEW_READER_ORIGIN,
@@ -343,17 +367,38 @@ try {
 					signal: AbortSignal.timeout(30000),
 				},
 			);
-			assert.equal(cleanup.status, 204, "検証で保存したR2 prefixを片付ける");
+			assert.equal(response.status, 204, "検証で保存したR2 prefixを片付ける");
 		}
-	} finally {
+	},
+	async () => {
 		database?.close();
+	},
+	async () => {
 		await harness?.close();
+	},
+	async () => {
 		await turso?.stop();
+	},
+	async () => {
 		if (config) await rm(config, { force: true });
+	},
+	async () => {
 		await writeFile(
 			`${directory}/result.json`,
 			JSON.stringify({ results, remote: Boolean(remote) }, null, 2),
 		);
 		console.log(`検証結果: ${directory}/result.json`);
+	},
+]) {
+	try {
+		await cleanup();
+	} catch (error) {
+		cleanupErrors.push(error);
 	}
 }
+if (cleanupErrors.length)
+	throw new AggregateError(
+		failure ? [failure, ...cleanupErrors] : cleanupErrors,
+		"接続検証の後片付けに失敗しました",
+	);
+if (failure) throw failure;

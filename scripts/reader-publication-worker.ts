@@ -101,8 +101,14 @@ export default {
 				),
 				(byte) => byte.toString(16).padStart(2, "0"),
 			).join("");
-			const result = schedulePublication(env.HTML, key, revision, digest, body);
-			context.waitUntil(result);
+			const result = schedulePublication(
+				env.HTML,
+				key,
+				revision,
+				digest,
+				body,
+				context,
+			);
 			const status = await result;
 			return new Response(null, {
 				status,
