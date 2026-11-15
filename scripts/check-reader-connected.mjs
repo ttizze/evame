@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { createHmac, randomUUID } from "node:crypto";
+import { createHash, createHmac, randomUUID } from "node:crypto";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createClient } from "@libsql/client";
@@ -225,29 +225,83 @@ try {
 		assert.equal(response.status, 200);
 		assert.ok((await response.text()).includes("保存応答の直後の本文"));
 	}
+	// 自分の検証記事だけに将来版を入れ、古いDB版によるHTML生成をR2で拒否させる。
+	const failedTag = `reader:${createHash("sha256").update(`page:${pageId}`).digest("hex")}`;
 	if (publicationBucket) {
-		const generation =
-			(await publicationBucket.head(`${prefix}/generation`))?.etag ?? "initial";
-		const key = `${prefix}/html/${generation}/${Math.floor(Date.now() / 3600000)}/${encodeURIComponent(origin + path)}`;
-		const previous = await publicationBucket.get(key);
-		assert.ok(previous);
-		await publicationBucket.put(key, await previous.text(), {
-			customMetadata: { revision: "invalid" },
+		await publicationBucket.put(`${prefix}/tags/${failedTag}`, "failure", {
+			customMetadata: { revision: String(Number.MAX_SAFE_INTEGER) },
 		});
-		const failed = await save("失敗後に再送する本文");
-		assert.ok(failed.status >= 500, "R2保存の失敗を保存成功にしない");
-		assert.ok(
-			(await database.execute("SELECT tag FROM reader_cache_invalidations"))
-				.rows.length > 0,
+	} else {
+		const injected = await fetch(
+			new URL("/__invalidate", process.env.CONNECTED_PREVIEW_READER_ORIGIN),
+			{
+				method: "POST",
+				headers: {
+					"x-evame-preview-reader": previewSecrets.PREVIEW_READER_SECRET,
+				},
+				body: JSON.stringify({
+					tags: [failedTag],
+					revision: Number.MAX_SAFE_INTEGER,
+					paths: [],
+				}),
+				signal: AbortSignal.timeout(30000),
+			},
 		);
-		await publicationBucket.delete(key);
-		assert.equal((await save("失敗後に再送する本文")).status, 200);
-		assert.equal(
-			(await database.execute("SELECT tag FROM reader_cache_invalidations"))
-				.rows.length,
-			0,
-		);
+		assert.equal(injected.status, 204, "PreviewのR2へ生成障害を注入する");
 	}
+	const failed = await save("失敗後に再送する本文");
+	assert.ok(failed.status >= 500, "R2生成の失敗を保存成功にしない");
+	assert.ok(
+		(await database.execute("SELECT tag FROM reader_cache_invalidations")).rows
+			.length > 0,
+	);
+	const beforeRetry = await database.execute({
+		sql: "SELECT mdast_json,updated_at FROM pages WHERE id=?",
+		args: [pageId],
+	});
+	if (publicationBucket) {
+		await publicationBucket.delete(`${prefix}/tags/${failedTag}`);
+	} else {
+		const restored = await fetch(
+			new URL(
+				"/__publication-cleanup",
+				process.env.CONNECTED_PREVIEW_READER_ORIGIN,
+			),
+			{
+				method: "POST",
+				headers: {
+					"x-evame-preview-reader": previewSecrets.PREVIEW_READER_SECRET,
+				},
+				signal: AbortSignal.timeout(30000),
+			},
+		);
+		assert.equal(restored.status, 204, "隔離PreviewのR2から生成障害を取り除く");
+	}
+	const retried = await save("失敗後に再送する本文");
+	assert.equal(retried.status, 200);
+	assert.equal(
+		(await database.execute("SELECT tag FROM reader_cache_invalidations")).rows
+			.length,
+		0,
+	);
+	assert.deepEqual(
+		(
+			await database.execute({
+				sql: "SELECT mdast_json,updated_at FROM pages WHERE id=?",
+				args: [pageId],
+			})
+		).rows,
+		beforeRetry.rows,
+		"同内容の再保存では本文と更新日時を変えず保留中の配信を完了する",
+	);
+	const recovered = await request(path);
+	assert.equal(recovered.status, 200);
+	assert.ok((await recovered.text()).includes("失敗後に再送する本文"));
+	results.push({
+		operation: "failure-retry",
+		failedStatus: failed.status,
+		retryStatus: retried.status,
+	});
 	for (const response of await Promise.all([
 		save("並行保存の本文A"),
 		save("並行保存の本文B"),

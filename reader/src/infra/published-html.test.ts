@@ -55,6 +55,21 @@ beforeEach(() => {
 });
 afterEach(() => vi.restoreAllMocks());
 
+it("長い日本語URLもR2キーの上限内で保存し異なる記事を混同しない", async () => {
+	for (const suffix of ["前編", "後編"]) {
+		const longRequest = new Request(
+			`https://evame.test/ja/author/${encodeURIComponent("長い日本語の題名".repeat(60) + suffix)}`,
+		);
+		await servePublishedHtml(longRequest, bucket, "test", render, context);
+		await servePublishedHtml(longRequest, bucket, "test", render, context);
+	}
+	expect(render).toHaveBeenCalledTimes(2);
+	expect(records.size).toBe(2);
+	for (const key of records.keys()) {
+		expect(new TextEncoder().encode(key).byteLength).toBeLessThanOrEqual(1024);
+		expect(key.split("/").at(-1)).toMatch(/^[a-f0-9]{64}$/);
+	}
+});
 it("DB変更のない人気順も1時間を超えたHTMLを再利用しない", async () => {
 	const clock = vi.spyOn(Date, "now").mockReturnValue(3600000);
 	await servePublishedHtml(request, bucket, "test", render, context);

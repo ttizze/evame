@@ -161,3 +161,59 @@ it("Worker終了が失敗してもTurso停止と設定削除と結果保存を�
 	);
 	expect(error).toBeInstanceOf(AggregateError);
 });
+
+it("Cloudflare Previewでも生成失敗の検証を省略せず保存成功の誤報を検出する", async () => {
+	vi.stubEnv(
+		"CONNECTED_PREVIEW_ORIGIN",
+		"https://pr-1170-evame-start.reimei.workers.dev",
+	);
+	vi.stubEnv(
+		"CONNECTED_PREVIEW_READER_ORIGIN",
+		"https://reader-pr-1170-evame-start.reimei.workers.dev",
+	);
+	vi.stubEnv("EVAME_CONNECTED_BROWSER", "");
+	const secrets = JSON.parse(process.env.EVAME_PREVIEW_SECRETS ?? "{}");
+	vi.stubEnv(
+		"EVAME_PREVIEW_SECRETS",
+		JSON.stringify({ ...secrets, PREVIEW_READER_SECRET: "test-secret" }),
+	);
+	createClient.mockReturnValue({
+		execute: vi.fn().mockResolvedValue({ rows: [{ id: 7 }] }),
+		close: vi.fn(),
+	});
+	const names = ["editPageContent", "togglePublishAction", "archivePageAction"];
+	const resolver = names
+		.map(
+			(name, index) =>
+				`"${String(index).repeat(64)}": { functionName: "${name}_createServerFn_handler" }`,
+		)
+		.join(",");
+	readFile.mockResolvedValue(resolver);
+	const { readdir } = await import("node:fs/promises");
+	vi.mocked(readdir).mockResolvedValue(["server-fn-resolver-test.js"] as never);
+	const send = vi.fn(async (url: URL, init: RequestInit = {}) => {
+		if (new URL(url).pathname.startsWith("/__"))
+			return new Response(null, { status: 204 });
+		if (
+			init.body instanceof FormData &&
+			String(init.body.get("pageContent")).includes("並行保存")
+		)
+			throw new Error("失敗後の再試行の検証が省略された");
+		return new Response("保存応答の直後の本文", {
+			headers: { "X-Evame-HTML": "publication" },
+		});
+	});
+	vi.stubGlobal("fetch", send);
+	try {
+		await expect(import("./check-reader-connected.mjs")).rejects.toThrow(
+			"R2生成の失敗を保存成功にしない",
+		);
+		expect(
+			send.mock.calls.some(
+				([url]) => new URL(url).pathname === "/__invalidate",
+			),
+		).toBe(true);
+	} finally {
+		vi.unstubAllGlobals();
+	}
+});

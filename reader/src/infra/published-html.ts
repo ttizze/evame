@@ -78,7 +78,16 @@ export async function servePublishedHtml(
 			const generation =
 				(await bucket.head(`${prefix}/generation`))?.etag ?? "initial";
 			// 人気順などDBの変更通知によらない表示も、既存SSRと同じく最大1時間で読み直す。
-			const key = `${prefix}/html/${generation}/${Math.floor(Date.now() / 3600000)}/${encodeURIComponent(url.origin + url.pathname + url.search)}`;
+			const urlHash = Array.from(
+				new Uint8Array(
+					await crypto.subtle.digest(
+						"SHA-256",
+						new TextEncoder().encode(url.origin + url.pathname + url.search),
+					),
+				),
+				(byte) => byte.toString(16).padStart(2, "0"),
+			).join("");
+			const key = `${prefix}/html/${generation}/${Math.floor(Date.now() / 3600000)}/${urlHash}`;
 			const object = await bucket.get(key);
 			if (object) {
 				const record = await object.json<{

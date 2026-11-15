@@ -259,7 +259,7 @@ jobs:
         run: |
           nix develop --command docker run --rm --init --ipc=host \
             --volume "$PWD:$PWD" --volume /nix/store:/nix/store:ro \
-            --workdir "$PWD" \
+            --workdir "$PWD" --user "$(id -u):$(id -g)" \
             --env PATH --env GSETTINGS_SCHEMA_DIR --env SENTRY_DSN --env VITE_SENTRY_DSN \
             --env EVAME_PREVIEW_SECRETS --env CONNECTED_PREVIEW_ORIGIN \
             --env CONNECTED_PREVIEW_READER_ORIGIN --env EVAME_CONNECTED_BROWSER \
