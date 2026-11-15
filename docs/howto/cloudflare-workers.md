@@ -99,6 +99,8 @@ Astroのサーバー成果物とJS/CSSをルートの `dist` に含める。`dep
 
 Actions secretsには本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番DBはmainのマイグレーションだけに渡す。通常デプロイのトークンは既存の `evame-start` へのIndividual Workers Editor権限を使う。Sentryアップロード用トークンは本番ビルドだけに渡し、Worker secretには登録しない。
 
+本番切り替え前に、公開記事の保存頻度に対して共有キャッシュの削除枠が足りることを確認する。[native Workers Cacheのpurge](https://developers.cloudflare.com/workers/cache/purge/#rate-limits)は契約プランにかかわらず[Free枠](https://developers.cloudflare.com/cache/how-to/purge-cache/#availability-and-limits)（継続毎分5回、バケット25、1回100タグ）が適用される。現在のWeb自動保存は入力停止から3秒後に送信し、公開内容の変更ごとにpurgeするため、短時間のPreview成功だけでは継続編集時の運用を検証できない。保存失敗と再試行で制限を解決したことにはせず、配信方式と即時反映の条件を満たす対応が決まるまで本番切り替えを保留する。
+
 初回の本番ルート切り替えは `scripts/switch-public-route.mjs` で既存の `evame.tech/*` を `evame-gateway` から `evame-start` へ接続する。既に切り替え済みなら更新しない。未知のWorkerが所有する場合は停止する。切り替え用トークンには対象Zone Read・Workers Routes Writeが必要。DNS・画像配信・他のルートは変えない。単一Workerの公開・保存と旧JS/CSSの取得を本番で確認してから、旧Reader/GatewayのWorkerを削除する。
 
 DBマイグレーションはWorkerのデプロイ前に適用する。更新途中の旧コードとの後方互換性は要求しないが、既存文書・翻訳・投票と認証データは保持する。

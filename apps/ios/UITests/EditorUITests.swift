@@ -59,8 +59,12 @@ final class EditorWritingUITests: EditorUITestCase {
     tapEndOfHeading()
     app.typeText("裏へ回る前の入力")
     XCUIDevice.shared.press(.home)
-    XCTAssertTrue(
-      app.wait(for: .runningBackground, timeout: 5) || app.state == .runningBackgroundSuspended)
+    let background = XCTNSPredicateExpectation(
+      predicate: NSPredicate { _, _ in
+        let state = self.app.state
+        return state == .runningBackground || state == .runningBackgroundSuspended
+      }, object: nil)
+    XCTAssertEqual(XCTWaiter.wait(for: [background], timeout: 5), .completed)
     app.terminate()
     app.launchArguments = language
     app.launch()
