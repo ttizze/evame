@@ -18,4 +18,4 @@
 - [iPhoneアプリの実装指示](plans/iphone-native-editor.md)
 - [文書と画像の一括書き出し](howto/export-documents.md)
 - [公開設定とコメント受付](howto/publication-settings.md)
-- [差分静的生成とWorker統合の検証](plans/incremental-static-reader.md)
+- [公開表示の単一Worker統合](plans/incremental-static-reader.md)

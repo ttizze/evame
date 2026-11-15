@@ -11,7 +11,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, it } from "vitest";
 
-it("全Workerの成果物を保存し、公開Gatewayの環境ファイルと秘密値を含めない", () => {
+it("単一Workerの配信成果物だけを保存し、環境ファイルと秘密値を含めない", () => {
 	const command = execFileSync(
 		"bun",
 		[
@@ -22,16 +22,18 @@ it("全Workerの成果物を保存し、公開Gatewayの環境ファイルと秘
 		{ encoding: "utf8" },
 	).trim();
 	const directory = mkdtempSync(join(tmpdir(), "evame-worker-build-"));
-	const secret = "dummy-gateway-secret-for-archive-test";
+	const secret = "dummy-secret-for-archive-test";
 	const kept = [
 		"dist/server/index.js",
-		"reader/dist/client/article.js",
-		"gateway/dist/worker.js",
-		"gateway/dist/wrangler.json",
-		"gateway/dist/bundle-meta.json",
+		"dist/client/_astro/article.js",
+		"dist/server/wrangler.json",
 		".data/browser-test.db",
 	];
-	const excluded = ["gateway/dist/.dev.vars", "gateway/dist/.env.preview"];
+	const excluded = [
+		"dist/server/.dev.vars",
+		"dist/server/.env.preview",
+		"reader/dist/server/entry.mjs",
+	];
 	try {
 		for (const path of [...kept, ...excluded]) {
 			const file = join(directory, path);

@@ -22,7 +22,6 @@ const secrets = {
 	BETTER_AUTH_SECRET: "test-auth-secret",
 	ENCRYPTION_KEY: "test-encryption-key",
 	AUTH_RESEND_KEY: "test-mail-key",
-	PREVIEW_READER_SECRET: "test-reader-secret",
 };
 beforeEach(async () => {
 	directory = await realpath(
@@ -31,7 +30,7 @@ beforeEach(async () => {
 	await mkdir(join(directory, "bin"));
 	await writeFile(
 		join(directory, "bin/bun"),
-		'#!/bin/sh\nprintf "%s\\n" "$*" >> calls\nif test -f fail-reader && test "$5" = reader/dist/server/wrangler.json; then exit 1; fi\n',
+		'#!/bin/sh\nprintf "%s\\n" "$*" >> calls\nif test -f fail-worker && test "$5" = dist/server/wrangler.json; then exit 1; fi\n',
 		{ mode: 0o755 },
 	);
 });
@@ -72,121 +71,55 @@ it.each(["", "../main", "0"])(
 	},
 );
 
-it("専用DBを更新し、Reader・編集アプリ・GatewayをCloudflare標準の同じPRプレビューへ公開する", async () => {
+it("専用DBを更新し、統合Workerの標準PRプレビューを一度だけ公開する", async () => {
+	const output = join(directory, "output");
 	const result = await promisify(execFile)(process.execPath, [script], {
 		cwd: directory,
 		env: {
 			...process.env,
 			PR_NUMBER: "1140",
-			EVAME_PREVIEW_SECRETS: JSON.stringify(secrets),
+			GITHUB_OUTPUT: output,
+			EVAME_PREVIEW_SECRETS: JSON.stringify({
+				...secrets,
+				BETTER_AUTH_URL: "https://old.example",
+			}),
 			PATH: `${join(directory, "bin")}:${process.env.PATH}`,
 		},
 	});
-	const calls = (await readFile(join(directory, "calls"), "utf8"))
-		.trim()
-		.split("\n");
-	expect(calls).toEqual([
+	expect(
+		(await readFile(join(directory, "calls"), "utf8")).trim().split("\n"),
+	).toEqual([
 		"run db:prod:migrate",
 		"run db:prod:seed",
-		"x wrangler preview --config reader/dist/server/wrangler.json --name reader-pr-1140 --worker-name evame-start --ignore-base-config --secrets-file .data/native-preview-pr-1140/reader-secrets.json --var PREVIEW_GATEWAY_ORIGIN:https://pr-1140-evame-start.reimei.workers.dev",
-		"x wrangler preview --config dist/server/wrangler.json --name app-pr-1140 --worker-name evame-start --ignore-base-config --secrets-file .data/native-preview-pr-1140/app-secrets.json --var PREVIEW_READER_ORIGIN:https://reader-pr-1140-evame-start.reimei.workers.dev --var PREVIEW_GATEWAY_ORIGIN:https://pr-1140-evame-start.reimei.workers.dev --var BETTER_AUTH_URL:https://pr-1140-evame-start.reimei.workers.dev --var QSTASH_PUBLISH_BASE_URL:https://pr-1140-evame-start.reimei.workers.dev",
-		"x wrangler preview --config gateway/dist/wrangler.json --name pr-1140 --worker-name evame-start --ignore-base-config --secrets-file .data/native-preview-pr-1140/gateway-secrets.json --var PREVIEW_READER_ORIGIN:https://reader-pr-1140-evame-start.reimei.workers.dev --var PREVIEW_APP_ORIGIN:https://app-pr-1140-evame-start.reimei.workers.dev",
+		"x wrangler preview --config dist/server/wrangler.json --name pr-1140 --worker-name evame-start --ignore-base-config --secrets-file .data/native-preview-pr-1140/app-secrets.json --var BETTER_AUTH_URL:https://pr-1140-evame-start.reimei.workers.dev --var QSTASH_PUBLISH_BASE_URL:https://pr-1140-evame-start.reimei.workers.dev",
 	]);
-	const reader = JSON.parse(
+	const saved = JSON.parse(
 		await readFile(
-			join(directory, ".data/native-preview-pr-1140/reader-secrets.json"),
+			join(directory, ".data/native-preview-pr-1140/app-secrets.json"),
 			"utf8",
 		),
 	);
-	expect(reader).toEqual({
-		PREVIEW_READER_SECRET: secrets.PREVIEW_READER_SECRET,
-	});
-	const gateway = JSON.parse(
-		await readFile(
-			join(directory, ".data/native-preview-pr-1140/gateway-secrets.json"),
-			"utf8",
-		),
+	expect(saved).toEqual(secrets);
+	expect(await readFile(output, "utf8")).toBe(
+		"url=https://pr-1140-evame-start.reimei.workers.dev\n",
 	);
-	expect(gateway).toEqual(reader);
 	expect(result.stdout).not.toContain("test-database-token");
 });
 
-it("Readerのプレビューに失敗したらGatewayを更新しない", async () => {
-	await writeFile(join(directory, "fail-reader"), "");
+it("統合Workerのプレビュー失敗を成功として返さない", async () => {
+	await writeFile(join(directory, "fail-worker"), "");
+	const output = join(directory, "output");
 	await expect(
 		promisify(execFile)(process.execPath, [script], {
 			cwd: directory,
 			env: {
 				...process.env,
 				PR_NUMBER: "1140",
+				GITHUB_OUTPUT: output,
 				EVAME_PREVIEW_SECRETS: JSON.stringify(secrets),
 				PATH: `${join(directory, "bin")}:${process.env.PATH}`,
 			},
 		}),
 	).rejects.toThrow();
-	expect(await readFile(join(directory, "calls"), "utf8")).not.toContain(
-		"--config dist/server/wrangler.json",
-	);
-});
-
-it("接続検証ではPreviewだけへHTML bindingと専用prefixを追加し、コード更新後にHTMLの世代を切り替える", async () => {
-	for (const path of ["reader/dist/server", "dist/server"])
-		await mkdir(join(directory, path), { recursive: true });
-	const reader = { previews: { vars: { SENTRY_DSN: "" } } };
-	await writeFile(
-		join(directory, "reader/dist/server/wrangler.json"),
-		JSON.stringify(reader),
-	);
-	await writeFile(
-		join(directory, "dist/server/wrangler.json"),
-		JSON.stringify({
-			r2_buckets: [{ binding: "UPLOADS", bucket_name: "test-bucket" }],
-		}),
-	);
-	await writeFile(
-		join(directory, "fetch.mjs"),
-		`import {writeFile} from 'node:fs/promises';globalThis.fetch=async(url,init)=>{await writeFile('cleanup',JSON.stringify({url:url.href,method:init.method,secret:init.headers['x-evame-preview-reader']}));return new Response(null,{status:204});};`,
-	);
-	await promisify(execFile)(
-		process.execPath,
-		["--import", join(directory, "fetch.mjs"), script],
-		{
-			cwd: directory,
-			env: {
-				...process.env,
-				PR_NUMBER: "1170",
-				EVAME_READER_PUBLICATION: "true",
-				EVAME_PREVIEW_SECRETS: JSON.stringify(secrets),
-				PATH: `${join(directory, "bin")}:${process.env.PATH}`,
-			},
-		},
-	);
-	expect(
-		JSON.parse(
-			await readFile(
-				join(directory, "reader/dist/server/wrangler.json"),
-				"utf8",
-			),
-		),
-	).toEqual(reader);
-	const config = JSON.parse(
-		await readFile(
-			join(directory, "reader/dist/server/publication-preview.json"),
-			"utf8",
-		),
-	);
-	expect(config.previews.r2_buckets).toEqual([
-		{ binding: "HTML", bucket_name: "test-bucket" },
-	]);
-	expect(config.r2_buckets).toBeUndefined();
-	expect(await readFile(join(directory, "calls"), "utf8")).toContain(
-		"READER_PUBLICATION_PREFIX:reader-connected/pr-1170",
-	);
-	expect(
-		JSON.parse(await readFile(join(directory, "cleanup"), "utf8")),
-	).toEqual({
-		url: "https://reader-pr-1170-evame-start.reimei.workers.dev/__purge",
-		method: "POST",
-		secret: secrets.PREVIEW_READER_SECRET,
-	});
+	await expect(readFile(output)).rejects.toThrow();
 });

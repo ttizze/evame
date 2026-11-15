@@ -3,29 +3,28 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { unstable_dev } from "wrangler";
 
-const reader = JSON.parse(
-	await readFile("reader/dist/server/wrangler.json", "utf8"),
-);
-const gateway = JSON.parse(await readFile("dist/server/wrangler.json", "utf8"));
+const app = JSON.parse(await readFile("dist/server/wrangler.json", "utf8"));
 const directory = await mkdtemp(join(tmpdir(), "evame-reader-purge-"));
 const configPath = join(directory, "wrangler.json");
 const scriptPath = join(directory, "worker.mjs");
 await writeFile(
 	configPath,
 	JSON.stringify({
-		name: gateway.name,
-		account_id: reader.account_id,
-		compatibility_date: reader.compatibility_date,
-		services: [{ binding: "READER", service: reader.name }],
+		name: app.name,
+		account_id: app.account_id,
+		compatibility_date: app.compatibility_date,
+		services: [
+			{ binding: "PUBLIC_PAGES", service: app.name, entrypoint: "PublicPages" },
+		],
 	}),
 );
 await writeFile(
 	scriptPath,
-	"export default { fetch(request, env) { return env.READER.fetch(request); } };",
+	"export default { async fetch(request, env) { await env.PUBLIC_PAGES.clearCache(); return new Response(null, { status: 204 }); } };",
 );
 let proxy;
 try {
-	// 個別Worker権限で認証できる、既存Gateway名の一時プレビューを使う。
+	// 個別Worker権限で認証できる、統合Worker名の一時プレビューを使う。
 	// 本番スクリプト・公開URL・権限は変更しない。
 	proxy = await unstable_dev(scriptPath, {
 		config: configPath,
@@ -43,8 +42,8 @@ try {
 	});
 	const response = await proxy.fetch("/__purge", { method: "POST" });
 	await response.arrayBuffer();
-	if (!response.ok) throw new Error("Reader cache invalidation failed");
-	console.log("Readerの共有HTMLキャッシュを無効化");
+	if (!response.ok) throw new Error("Public HTML cache invalidation failed");
+	console.log("公開HTMLキャッシュを無効化");
 } finally {
 	await proxy?.stop();
 	await rm(directory, { recursive: true, force: true });

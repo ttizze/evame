@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash, createHmac, randomUUID } from "node:crypto";
-import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createClient } from "@libsql/client";
 import { toJSONAsync } from "seroval";
@@ -37,15 +37,12 @@ assert.ok(authSecret);
 let database;
 let turso;
 let harness;
-let config;
 const results = [];
 const userId = `connected-${id}`;
 const handle = `connected-${id.slice(0, 8)}`;
 const slug = `記事-${id.slice(0, 8)}`;
-const prefix = `reader-connected/${id}`;
-const origin = remote ?? "http://localhost";
-let gateway;
-let publicationBucket;
+const origin = remote || "http://localhost";
+let worker;
 let browserOrigin = remote;
 let failure;
 try {
@@ -59,22 +56,8 @@ try {
 		await copyTestDatabase(file);
 		turso = await startTursoServer(file, null);
 		database = createClient({ url: turso.url });
-		config = `reader/dist/server/connected-${id}.json`;
-		const base = JSON.parse(
-			await readFile("reader/dist/server/wrangler.json", "utf8"),
-		);
-		await writeFile(
-			config,
-			JSON.stringify({
-				...base,
-				r2_buckets: [
-					{ binding: "HTML", bucket_name: "reader-connected-local" },
-				],
-			}),
-		);
 		harness = createTestHarness({
 			workers: [
-				{ configPath: "gateway/dist/wrangler.json" },
 				{
 					configPath: "dist/server/wrangler.json",
 					secrets: {
@@ -86,18 +69,12 @@ try {
 						AUTH_GOOGLE_ID: "",
 						AUTH_GOOGLE_SECRET: "",
 						SENTRY_DSN: "",
-						READER_PUBLICATION_PREFIX: prefix,
 					},
-				},
-				{
-					configPath: config,
-					secrets: { SENTRY_DSN: "", READER_PUBLICATION_PREFIX: prefix },
 				},
 			],
 		});
 		browserOrigin = (await harness.listen()).url.origin;
-		gateway = harness.getWorker("evame-gateway");
-		publicationBucket = (await harness.getWorker("evame-reader").getEnv()).HTML;
+		worker = harness.getWorker("evame-start");
 	}
 	const token = randomUUID();
 	await database.execute({
@@ -123,7 +100,7 @@ try {
 				signal: AbortSignal.timeout(60000),
 			});
 		const outgoing = new Request(new URL(path, origin), init);
-		return gateway.fetch(outgoing.url, {
+		return worker.fetch(outgoing.url, {
 			method: outgoing.method,
 			headers: Object.fromEntries(outgoing.headers),
 			...(outgoing.body ? { body: await outgoing.arrayBuffer() } : {}),
@@ -199,7 +176,14 @@ try {
 		assert.equal(first.status, 200, await first.clone().text());
 		await first.arrayBuffer();
 		const second = await request(target);
-		assert.equal(second.headers.get("X-Evame-HTML"), "publication");
+		assert.equal(second.headers.get("X-Evame-HTML"), "astro");
+		if (remote) {
+			assert.equal(
+				second.headers.get("CF-Cache-Status"),
+				"HIT",
+				"Cloudflare上で同じWorkerの公開キャッシュへ命中する",
+			);
+		}
 		await second.arrayBuffer();
 	}
 	assert.equal(
@@ -211,64 +195,23 @@ try {
 		assert.equal(response.status, 200);
 		assert.ok((await response.text()).includes("保存応答の直後の本文"));
 	}
-	// 自分の検証記事だけに将来版を入れ、古いDB版によるHTML生成をR2で拒否させる。
-	const failedTag = `reader:${createHash("sha256").update(`page:${pageId}`).digest("hex")}`;
-	if (publicationBucket) {
-		await publicationBucket.put(`${prefix}/tags/${failedTag}`, "failure", {
-			customMetadata: { revision: String(Number.MAX_SAFE_INTEGER) },
-		});
-	} else {
-		const injected = await fetch(
-			new URL("/__invalidate", process.env.CONNECTED_PREVIEW_READER_ORIGIN),
-			{
-				method: "POST",
-				headers: {
-					"x-evame-preview-reader": previewSecrets.PREVIEW_READER_SECRET,
-				},
-				body: JSON.stringify({
-					tags: [failedTag],
-					revision: Number.MAX_SAFE_INTEGER,
-					paths: [],
-				}),
-				signal: AbortSignal.timeout(30000),
-			},
-		);
-		assert.equal(injected.status, 204, "PreviewのR2へ生成障害を注入する");
-	}
-	const failed = await save("失敗後に再送する本文");
-	assert.ok(failed.status >= 500, "R2生成の失敗を保存成功にしない");
-	assert.ok(
-		(await database.execute("SELECT tag FROM reader_cache_invalidations")).rows
-			.length > 0,
-	);
+	// 以前の削除失敗を再現する。障害注入用の公開APIを追加せず、隔離DBにだけ保留版を記録する。
+	const pendingTag = `reader:${createHash("sha256").update(`page:${pageId}`).digest("hex")}`;
+	await database.execute({
+		sql: "INSERT INTO reader_cache_invalidations (tag,version) VALUES (?,?) ON CONFLICT(tag) DO UPDATE SET version=excluded.version",
+		args: [pendingTag, randomUUID()],
+	});
 	const beforeRetry = await database.execute({
 		sql: "SELECT mdast_json,updated_at FROM pages WHERE id=?",
 		args: [pageId],
 	});
-	if (publicationBucket) {
-		await publicationBucket.delete(`${prefix}/tags/${failedTag}`);
-	} else {
-		const restored = await fetch(
-			new URL(
-				"/__publication-cleanup",
-				process.env.CONNECTED_PREVIEW_READER_ORIGIN,
-			),
-			{
-				method: "POST",
-				headers: {
-					"x-evame-preview-reader": previewSecrets.PREVIEW_READER_SECRET,
-				},
-				signal: AbortSignal.timeout(30000),
-			},
-		);
-		assert.equal(restored.status, 204, "隔離PreviewのR2から生成障害を取り除く");
-	}
-	const retried = await save("失敗後に再送する本文");
+	const retried = await save("保存応答の直後の本文", "更新した題名");
 	assert.equal(retried.status, 200);
 	assert.equal(
 		(await database.execute("SELECT tag FROM reader_cache_invalidations")).rows
 			.length,
 		0,
+		"同内容の再保存で保留タグを回収する",
 	);
 	assert.deepEqual(
 		(
@@ -278,16 +221,12 @@ try {
 			})
 		).rows,
 		beforeRetry.rows,
-		"同内容の再保存では本文と更新日時を変えず保留中の配信を完了する",
+		"同内容の再保存では本文と更新日時を変えず保留中のキャッシュ削除を完了する",
 	);
 	const recovered = await request(path);
 	assert.equal(recovered.status, 200);
-	assert.ok((await recovered.text()).includes("失敗後に再送する本文"));
-	results.push({
-		operation: "failure-retry",
-		failedStatus: failed.status,
-		retryStatus: retried.status,
-	});
+	assert.ok((await recovered.text()).includes("保存応答の直後の本文"));
+	results.push({ operation: "pending-retry", retryStatus: retried.status });
 	for (const response of await Promise.all([
 		save("並行保存の本文A"),
 		save("並行保存の本文B"),
@@ -368,13 +307,13 @@ try {
 	assert.ok(!(await (await request("/ja")).text()).includes("更新した題名"));
 	const draft = await request(path, { headers: { cookie } });
 	assert.equal(draft.status, 200);
-	assert.notEqual(draft.headers.get("X-Evame-HTML"), "publication");
+	assert.equal(draft.headers.get("Cache-Control"), "private, no-store");
 	await draft.arrayBuffer();
 	await action("togglePublishAction_createServerFn_handler");
 	await action("archivePageAction_createServerFn_handler");
 	assert.equal((await request(path)).status, 404);
 	console.log(
-		"実際の保存・公開・並行保存・非公開化・削除をAstro生成とR2配信へ接続しました",
+		"実際の保存・公開・並行保存・非公開化・削除を同じWorkerのAstro表示へ接続しました",
 	);
 } catch (error) {
 	failure = error;
@@ -389,28 +328,6 @@ for (const cleanup of [
 			});
 	},
 	async () => {
-		if (
-			remote &&
-			process.env.CONNECTED_PREVIEW_READER_ORIGIN &&
-			previewSecrets?.PREVIEW_READER_SECRET
-		) {
-			const response = await fetch(
-				new URL(
-					"/__publication-cleanup",
-					process.env.CONNECTED_PREVIEW_READER_ORIGIN,
-				),
-				{
-					method: "POST",
-					headers: {
-						"x-evame-preview-reader": previewSecrets.PREVIEW_READER_SECRET,
-					},
-					signal: AbortSignal.timeout(30000),
-				},
-			);
-			assert.equal(response.status, 204, "検証で保存したR2 prefixを片付ける");
-		}
-	},
-	async () => {
 		database?.close();
 	},
 	async () => {
@@ -418,9 +335,6 @@ for (const cleanup of [
 	},
 	async () => {
 		await turso?.stop();
-	},
-	async () => {
-		if (config) await rm(config, { force: true });
 	},
 	async () => {
 		await writeFile(

@@ -29,13 +29,3 @@ export async function fetchReaderChanges(since: number) {
 export function fetchReaderCacheInvalidations() {
 	return db.selectFrom("readerCacheInvalidations").selectAll().execute();
 }
-
-export function fetchReaderPublicationPages(ids: readonly number[]) {
-	return db
-		.selectFrom("pages")
-		.innerJoin("users", "users.id", "pages.userId")
-		.select(["users.handle", "pages.slug", "pages.sourceLocale"])
-		.where("pages.id", "in", ids)
-		.where("pages.status", "=", "PUBLIC")
-		.execute();
-}

@@ -15,7 +15,7 @@ import { join, relative } from "node:path";
 const origin = new URL(process.argv[2]).origin;
 const stateDirectory = ".data/reader-assets";
 const cacheDirectory = join(stateDirectory, "files");
-const assetDirectory = "reader/dist/client/_astro";
+const assetDirectory = "dist/client/_astro";
 await mkdir(cacheDirectory, { recursive: true });
 
 // CIの履歴がない最初の切り替えでも、直前の公開HTMLと依存アセットを残す。
@@ -129,4 +129,4 @@ await writeFile(
 	join(stateDirectory, "next.json"),
 	JSON.stringify({ active: nextFiles, retiring: activeFiles }),
 );
-console.log("Readerの新旧アセットを30日間保持する準備が完了しました");
+console.log("Astroの新旧アセットを30日間保持する準備が完了しました");

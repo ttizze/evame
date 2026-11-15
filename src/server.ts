@@ -1,4 +1,5 @@
-import { WorkerEntrypoint } from "cloudflare:workers";
+import { cache, WorkerEntrypoint } from "cloudflare:workers";
+import publicPages from "virtual:evame-public-pages";
 import type {
 	ExecutionContext,
 	Request as WorkerRequest,
@@ -13,7 +14,6 @@ import { isRedirect } from "@tanstack/react-router";
 import handler from "@tanstack/react-start/server-entry";
 import { withSecurityHeaders } from "../security-headers";
 import { getMigrationResponse } from "../shared/migration-response";
-import { restorePreviewRequest } from "../shared/preview-request";
 import { fetchPublicReader } from "../shared/public-reader";
 import { SENTRY_DSN } from "./_utils/sentry-dsn";
 import { shouldInvalidateReader } from "./app/_domain/reader-cache-policy";
@@ -21,29 +21,79 @@ import { updateReaderPublication } from "./app/_service/update-reader-publicatio
 import { createDb, databaseScope } from "./db";
 import { fetchReaderChanges, fetchReaderRevision } from "./db/queries";
 
-// HTTPルートへ公開しない、Reader専用のサービス境界。
-export class ReaderBackend extends WorkerEntrypoint {
+// 公開表示と編集の両方で、ストリーム完了・失敗・中断まで接続を保持する。
+async function withDatabase(
+	request: Request,
+	context: Pick<ExecutionContext, "waitUntil">,
+	fetchResponse: () => Promise<Response>,
+) {
+	const database = createDb();
+	return databaseScope.run(database, async () => {
+		try {
+			const response = await fetchResponse();
+			const init = {
+				status: response.status,
+				statusText: response.statusText,
+				headers: new Headers(response.headers),
+			};
+			init.headers.delete("X-Evame-Reader-Changed");
+			if (!response.body) {
+				await database.destroy();
+				return withSecurityHeaders(new Response(null, init));
+			}
+			const stream = new TransformStream();
+			context.waitUntil(
+				response.body
+					.pipeTo(stream.writable)
+					.catch((error) => {
+						if (
+							error !== undefined &&
+							!request.signal.aborted &&
+							!(error instanceof Error && error.name === "AbortError")
+						)
+							captureException(error);
+					})
+					.finally(() => database.destroy()),
+			);
+			return withSecurityHeaders(new Response(stream.readable, init));
+		} catch (error) {
+			await database.destroy();
+			throw error;
+		}
+	});
+}
+
+// 同じWorker内の公開HTMLだけにキャッシュを適用する。RPCによる削除も同じスコープで実行する。
+export class PublicPages extends WorkerEntrypoint<
+	typeof import("cloudflare:workers").env
+> {
 	async fetch(workerRequest: WorkerRequest): Promise<WorkerResponse> {
 		const migration = getMigrationResponse(process.env.DATABASE_MIGRATION);
 		if (migration) return migration as unknown as WorkerResponse;
-		const request = new Request(workerRequest.url, {
-			headers: Object.fromEntries(workerRequest.headers),
-		});
-		const database = createDb();
-		try {
-			return (await databaseScope.run(database, async () => {
-				const pathname = new URL(request.url).pathname;
-				if (pathname === "/api/reader-data") {
-					const { getReaderData } = await import(
-						"./app/api/reader-data/handler"
-					);
-					return getReaderData(request);
-				}
-				return new Response(null, { status: 404 });
-			})) as unknown as WorkerResponse;
-		} finally {
-			await database.destroy();
+		if (new URL(workerRequest.url).pathname.startsWith("/_astro/"))
+			return this.env.ASSETS.fetch(workerRequest);
+		const request = workerRequest as unknown as Request;
+		return withDatabase(request, this.ctx, () =>
+			publicPages.fetch(request, this.env, this.ctx),
+		) as unknown as Promise<WorkerResponse>;
+	}
+
+	async purge(tags: string[]) {
+		if (typeof cache?.purge !== "function") return;
+		for (let start = 0; start < tags.length; start += 100) {
+			const result = await cache.purge({
+				tags: tags.slice(start, start + 100),
+			});
+			if (!result.success)
+				throw new Error("Public HTML cache invalidation failed");
 		}
+	}
+
+	async clearCache() {
+		if (typeof cache?.purge !== "function") return;
+		const result = await cache.purge({ purgeEverything: true });
+		if (!result.success)
+			throw new Error("Public HTML cache invalidation failed");
 	}
 }
 
@@ -58,97 +108,55 @@ const sentryOptions = (env: {
 		isRedirect(hint.originalException) ? null : event,
 });
 
-export const GatewayMonitoring = withSentry(
-	sentryOptions,
-	class extends WorkerEntrypoint {
-		report(error: Error, url: string, method: string) {
-			captureException(error, {
-				tags: { worker: "evame-gateway" },
-				contexts: { request: { url, method } },
-			});
-		}
-	},
-);
-
 export default withSentry(sentryOptions, {
 	async fetch(
 		request: Request,
 		env: typeof import("cloudflare:workers").env,
-		context: Pick<ExecutionContext, "waitUntil">,
+		context: Pick<ExecutionContext, "waitUntil"> & {
+			exports: {
+				PublicPages: {
+					fetch(request: Request): Promise<Response>;
+					purge(tags: string[]): Promise<void>;
+				};
+			};
+		},
 	) {
-		const restored = restorePreviewRequest(
-			request,
-			env.PREVIEW_GATEWAY_ORIGIN ?? null,
-			env.PREVIEW_READER_SECRET ?? null,
-		);
-		if (!restored) return new Response(null, { status: 404 });
-		request = restored;
 		const migration = getMigrationResponse(process.env.DATABASE_MIGRATION);
 		if (migration) return migration;
 		const publicResponse = await fetchPublicReader(
 			request,
-			env.READER ?? null,
+			context.exports.PublicPages,
 			env.SETTINGS,
-			env.PREVIEW_READER_ORIGIN ?? null,
-			env.PREVIEW_READER_SECRET ?? null,
 		);
 		if (publicResponse) return publicResponse;
 		const url = new URL(request.url);
-		const database = createDb();
-		return databaseScope.run(database, async () => {
-			try {
-				const beforeRevision = shouldInvalidateReader(
+		return withDatabase(request, context, async () => {
+			const beforeRevision = shouldInvalidateReader(
+				request.method,
+				url.pathname,
+				url.searchParams.get("action"),
+				200,
+				"true",
+			)
+				? (await fetchReaderRevision()).revision
+				: null;
+			const response = await handler.fetch(request);
+			if (
+				beforeRevision !== null &&
+				shouldInvalidateReader(
 					request.method,
 					url.pathname,
 					url.searchParams.get("action"),
-					200,
-					"true",
+					response.status,
+					response.headers.get("X-Evame-Reader-Changed"),
 				)
-					? (await fetchReaderRevision()).revision
-					: null;
-				const response = await handler.fetch(request);
-				if (
-					beforeRevision !== null &&
-					shouldInvalidateReader(
-						request.method,
-						url.pathname,
-						url.searchParams.get("action"),
-						response.status,
-						response.headers.get("X-Evame-Reader-Changed"),
-					)
-				) {
-					const changes = await fetchReaderChanges(beforeRevision);
-					await updateReaderPublication(changes, env, url.origin);
-				}
-				const init = {
-					status: response.status,
-					statusText: response.statusText,
-					headers: new Headers(response.headers),
-				};
-				init.headers.delete("X-Evame-Reader-Changed");
-				if (!response.body) {
-					await database.destroy();
-					return withSecurityHeaders(new Response(null, init));
-				}
-				const stream = new TransformStream();
-				context.waitUntil(
-					response.body
-						.pipeTo(stream.writable)
-						.catch((error) => {
-							if (
-								error !== undefined &&
-								!request.signal.aborted &&
-								!(error instanceof Error && error.name === "AbortError")
-							)
-								captureException(error);
-						})
-						.finally(() => database.destroy()),
+			) {
+				const changes = await fetchReaderChanges(beforeRevision);
+				await updateReaderPublication(changes, (tags) =>
+					context.exports.PublicPages.purge(tags),
 				);
-				return withSecurityHeaders(new Response(stream.readable, init));
-			} catch (error) {
-				await database.destroy();
-				throw error;
 			}
+			return response;
 		});
 	},
 });

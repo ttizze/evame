@@ -1,4 +1,4 @@
-import type { Fetcher, KVNamespace } from "@cloudflare/workers-types";
+import type { KVNamespace } from "@cloudflare/workers-types";
 import { withSecurityHeaders } from "../security-headers";
 import { getLocaleCookie } from "../src/_utils/locale-cookie";
 import { parseReaderRoute } from "../src/app/_domain/reader-route";
@@ -7,15 +7,12 @@ import {
 	getMaintenancePath,
 	shouldCheckMaintenance,
 } from "../src/maintenance-gate";
-import { fetchWorker } from "./fetch-worker";
 
-// 公開Gatewayと開発・既存のApp URLで、公開ルートの振り分けとレスポンス規則を共有する。
+// 公開HTMLのloopbackと編集・APIを振り分け、利用者ごとのヘッダーは外側で付ける。
 export async function fetchPublicReader(
 	request: Request,
-	reader: Fetcher | null,
+	reader: { fetch(request: Request): Promise<Response> },
 	settings: KVNamespace,
-	previewOrigin: string | null,
-	previewSecret: string | null,
 ): Promise<Response | null> {
 	const url = new URL(request.url);
 	if (
@@ -23,9 +20,7 @@ export async function fetchPublicReader(
 			url.pathname === "/api/home-feed") &&
 		(request.method === "GET" || request.method === "HEAD")
 	) {
-		return withSecurityHeaders(
-			await fetchWorker(request, reader, previewOrigin, previewSecret),
-		);
+		return withSecurityHeaders(await reader.fetch(request));
 	}
 	const readerRoute = parseReaderRoute(url.pathname, url.search);
 	const pathname =
@@ -52,12 +47,7 @@ export async function fetchPublicReader(
 		const readerUrl = new URL(request.url);
 		if (readerRoute.kind === "home")
 			readerUrl.pathname = `/${readerRoute.locale}`;
-		const response = await fetchWorker(
-			new Request(readerUrl, request),
-			reader,
-			previewOrigin,
-			previewSecret,
-		);
+		const response = await reader.fetch(new Request(readerUrl, request));
 		const secured = withSecurityHeaders(response);
 		secured.headers.set("Cache-Control", "private, no-store");
 		secured.headers.delete("Cloudflare-CDN-Cache-Control");

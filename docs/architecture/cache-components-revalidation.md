@@ -2,11 +2,11 @@
 
 ## 配信経路
 
-公開トップ・記事・著者・新着・タグ・About・規約はAstroで本文と一覧を最初のHTMLに含める。Cloudflare Workers Cacheに命中すればReaderの実行とDB取得を省略する。キャッシュミス時だけReaderから非公開のReaderBackendを呼び、DBを読み、Astroで描画する。HTMLのR2保存、全URLの事前生成、生成用Cron・Queueは使わない。画像用R2は維持する。
+公開トップ・記事・著者・新着・タグ・About・規約はAstroで本文と一覧を最初のHTMLに含める。Cloudflare Workers Cacheに命中すればPublicPages entrypointの実行とDB取得を省略する。キャッシュミス時だけ同じWorker内でDBを読み、Astroで描画する。HTMLのR2保存、全URLの事前生成、生成用Cron・Queueは使わない。画像用R2は維持する。
 
-Gateway (`src/server.ts`) はメンテナンス判定後、公開GET/HEADをDB接続なしでReaderへ渡す。Gatewayの応答は言語Cookieを含むため `private, no-store` とし、共有HTMLのキャッシュはReaderだけが所有する。ReaderのHTMLは1時間キャッシュする。閲覧数・いいねの即時表示はprivate APIで取得する。人気順のSSRはキャッシュ期限で再取得する。
+`src/server.ts` はメンテナンス判定後、公開GET/HEADをDB接続なしで同じWorkerの `PublicPages` entrypointへ渡す。外側の応答は言語Cookieを含むため `private, no-store` とし、共有HTMLキャッシュは `PublicPages` だけで有効にする。HTMLは1時間キャッシュする。Reader専用WorkerとGateway専用Workerは置かない。閲覧数・いいねの即時表示はprivate APIで取得する。人気順のSSRはキャッシュ期限で再取得する。
 
-トップは `reader/src/components/home.astro` と `home-pages.astro` で一覧を描画し、一覧全体のReact hydrationを行わない。`home-feed.client.ts` が30秒ごととウィンドウのフォーカス復帰時にReaderの `/api/home-feed?locale=...` から最新の一覧HTMLを取得する。部分更新も同じ `home-pages.astro` とカードを使用する。同じ内容ならDOMを交換せず、更新失敗時は表示済みHTMLを残して再試行を受け付ける。一覧内で操作中のフォーカスは奪わない。部分更新は共有キャッシュへ保存しない。Gatewayはアセットと同じReaderへの転送経路を使い、DB接続と描画はReaderBackendとAstroが所有する。
+トップは `reader/src/components/home.astro` と `home-pages.astro` で一覧を描画し、一覧全体のReact hydrationを行わない。`home-feed.client.ts` が30秒ごととウィンドウのフォーカス復帰時にReaderの `/api/home-feed?locale=...` から最新の一覧HTMLを取得する。部分更新も同じ `home-pages.astro` とカードを使用する。同じ内容ならDOMを交換せず、更新失敗時は表示済みHTMLを残して再試行を受け付ける。一覧内で操作中のフォーカスは奪わない。部分更新は共有キャッシュへ保存しない。部分更新も同じWorker内でDBを読みAstroで描画する。
 
 Cookieバー・一覧のアバター・いいね・共通ヘッダー・トップの浮動バーのスクロール処理は、配信済みHTMLとcustom elementで動作する。`reader/src/client.ts` が初期化を所有し、記事が0件の初回表示から追加された場合も動作する。カードのいいねは `page-likes.client.ts` が一括取得し、同じ記事が新着と人気へ重複しても両方を更新する。本文のいいね・コメントなどは既存のReact islandを維持する。
 
@@ -38,24 +38,23 @@ Cookieバー・一覧のアバター・いいね・共通ヘッダー・トッ�
 
 本文だけの編集で、無関係な記事や新着の全ページを消さない。一覧の件数・順序が変わる場合は一覧グループをタグで無効化する。新着・著者一覧は親記事を対象にするが、タグ一覧は子記事の公開・非公開化・削除や見出しの追加も対象にする。154ページの新着一覧があっても154ページを列挙・生成しない。次に閲覧されたURLだけが再描画される。
 
-`src/db/queries.ts` はGatewayから使うDB読み取り境界。保存開始時の版より新しい変更キーをインデックスで取得し、階層変更のあった記事だけを再帰SQLで親方向へ辿る。移動前の親も記録するため、移動・削除後も古い階層を無効化できる。同時保存の変更が含まれる場合は両方を削除する。
+`src/db/queries.ts` は保存入口から使うDB読み取り境界。保存開始時の版より新しい変更キーをインデックスで取得し、階層変更のあった記事だけを再帰SQLで親方向へ辿る。移動前の親も記録するため、移動・削除後も古い階層を無効化できる。同時保存の変更が含まれる場合は両方を削除する。
 
 `load-reader-data.ts` は読み取った表示データに必要な依存キーを付ける。カードの掲載記事・著者、コメント著者、プロフィールのフォロー相手、階層の親を含み、空の一覧にもグループキーを付ける。タグ数がCloudflareの上限を超える応答は共有キャッシュへ入れない。
 
-`src/app/_domain/reader-cache-tags.ts` は読み取り側のAstroと書き込み側のGatewayで共用する純粋な変換。日本語・カンマ・大小文字を含むキーをSHA-256の固定長タグへ変換する。Cloudflareのタグ制約や大小文字を区別しない照合で別の対象が衝突しないよう、両方で同じ変換を使う。
+`src/app/_domain/reader-cache-tags.ts` は読み取り側のAstroと書き込み側の保存APIで共用する純粋な変換。日本語・カンマ・大小文字を含むキーをSHA-256の固定長タグへ変換する。Cloudflareのタグ制約や大小文字を区別しない照合で別の対象が衝突しないよう、両方で同じ変換を使う。
 
-Gatewayは保存後に変更キーを取得し、Readerの非公開 `/__invalidate` へタグだけを渡す。Reader自身が `cache.purge` を実行し、成功を待って保存成功を返す。無効化に失敗したら成功扱いにしない。削除要求の前に `reader_cache_invalidations` へ対象タグと要求の版を保存し、成功後にその版だけを消す。削除失敗後は、DBの差分がない再試行でも保留タグを再送する。古い要求の成功通知で、同じタグに重なった後続の変更を消さない。下書き保存ではReaderを呼ばず、保留タグは公開内容の更新を扱う次の操作で再送する。下書きの自動保存、画像アップロード、APIキー、翻訳の投入だけでは共有HTMLを削除しない。HTMLの生成は保存処理に含めない。
+保存後に変更キーを取得し、同じWorkerの `PublicPages.purge(tags)` をRPCで呼ぶ。同じキャッシュスコープで `cache.purge` を実行し、成功を待って保存成功を返す。無効化に失敗したら成功扱いにしない。削除要求の前に `reader_cache_invalidations` へ対象タグと要求の版を保存し、成功後にその版だけを消す。削除失敗後は、DBの差分がない再試行でも保留タグを再送する。古い要求の成功通知で、同じタグに重なった後続の変更を消さない。下書き保存では共有キャッシュを呼ばず、保留タグは公開内容の更新を扱う次の操作で再送する。下書きの自動保存、画像アップロード、APIキー、翻訳の投入だけでは共有HTMLを削除しない。HTMLの生成は保存処理に含めない。
 
 Workers Cacheのpurgeには、プランによらずFree枠の継続5要求/分・バースト25要求・1要求100対象という[上限](https://developers.cloudflare.com/workers/cache/purge/#rate-limits)がある。既存の全体purgeにも適用される制約で、対象別タグへの変更で回数上限自体は増えない。削除が拒否された場合も保留タグを残し、保存成功にしない。多人数による継続的な公開更新では、この上限を別途配信基盤の選定条件とする。
 
 ## デプロイ
 
-1. 後方互換のDBマイグレーションを先に実行する。
-2. 旧Gatewayに対応するReaderを先にデプロイする。旧Backendに依存キーがない間も全体タグを付け、旧Gatewayの本文なしの無効化要求を受け付ける。
-3. Gatewayをデプロイする。新Gatewayは対象タグだけを送る。
-4. 更新成功後にアセット履歴を確定し、`scripts/purge-reader-cache.mjs` から認証済みの一時プレビュー経由で非公開Readerのキャッシュを無効化する。HTMLは生成しない。
+1. DBマイグレーションを先に実行する。
+2. AstroとTanStack Startを含む `dist/server/wrangler.json` を `evame-start` へ1回デプロイする。
+3. 更新成功後にアセット履歴を確定し、`scripts/purge-reader-cache.mjs` から認証済み一時プレビュー経由で `PublicPages.clearCache()` を呼ぶ。HTMLは生成しない。
 
-JS/CSSはHTMLと同じReaderから配信する。旧HTMLが参照するハッシュ付きアセットも配信終了から30日間保持する。デプロイ用の全体無効化と、保存時の対象別無効化は用途が異なる。`evame-reader` 全体タグはローリング更新とデプロイ時の削除のために維持する。
+JS/CSSはHTMLと同じWorkerから配信する。旧HTMLが参照するハッシュ付きアセットも配信終了から30日間保持する。保存時は対象タグ、コード更新時はPublicPages全体を無効化する。全体タグは `evame-public`。ローカルで `cache.purge` が利用できない場合は共有HTMLキャッシュを無効にし、常に現在のDBから描画する。
 
 ## 検証
 

@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { cp, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const env = {
@@ -17,16 +18,11 @@ const buildCode = await new Promise((resolve, reject) => {
 	build.once("exit", resolve);
 });
 if (buildCode !== 0) process.exit(buildCode ?? 1);
-const children = [
-	[
-		"x",
-		"wrangler",
-		"dev",
-		"--config",
-		"reader/dist/server/wrangler.json",
-		"--port",
-		"3001",
-	],
+await rm(".data/dev-public", { recursive: true, force: true });
+await cp("public", ".data/dev-public", { recursive: true });
+await cp("reader/dist/client", ".data/dev-public", { recursive: true });
+const child = spawn(
+	"bun",
 	[
 		"x",
 		"vite",
@@ -37,25 +33,11 @@ const children = [
 		"3000",
 		...process.argv.slice(2),
 	],
-].map((args) => spawn("bun", args, { env, stdio: "inherit" }));
+	{ env, stdio: "inherit" },
+);
 for (const signal of ["SIGINT", "SIGTERM"])
-	process.once(signal, () => {
-		for (const child of children) child.kill(signal);
-	});
-try {
-	const codes = await Promise.all(
-		children.map(
-			(child) =>
-				new Promise((resolve, reject) => {
-					child.once("error", reject);
-					child.once("exit", (code) => {
-						for (const other of children) if (other !== child) other.kill();
-						resolve(code);
-					});
-				}),
-		),
-	);
-	process.exitCode = codes.find((code) => code !== null && code !== 0) ?? 0;
-} finally {
-	for (const child of children) child.kill();
-}
+	process.once(signal, () => child.kill(signal));
+process.exitCode = await new Promise((resolve, reject) => {
+	child.once("error", reject);
+	child.once("exit", (code) => resolve(code ?? 1));
+});

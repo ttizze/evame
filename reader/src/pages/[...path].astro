@@ -1,5 +1,5 @@
 ---
-import { cache, env } from "cloudflare:workers";
+import { cache } from "cloudflare:workers";
 import { SparklesIcon } from "lucide-react";
 import { fromJSON } from "seroval";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
@@ -30,31 +30,14 @@ const response = await fetchReaderData(
 if (response.status === 404) return Astro.rewrite("/404");
 if (!response.ok)
 	throw new Error(`Reader data request failed: HTTP ${response.status}`);
-const {
-	page: result,
-	gaTrackingId,
-	revision,
-} = fromJSON(await response.json()) as {
-	revision: number | null;
+const { page: result, gaTrackingId } = fromJSON(await response.json()) as {
 	page: NonNullable<Awaited<ReturnType<typeof loadReaderData>>>;
 	gaTrackingId: string;
 };
-// 旧Backendとのローリング更新中は全体タグで安全に無効化する。
-const tags = [
-	"evame-reader",
-	...(await readerCacheTags(result.cacheKeys ?? [])),
-];
+const tags = ["evame-public", ...(await readerCacheTags(result.cacheKeys))];
 const cacheTagHeader = tags.join(",");
-if (env.READER_PUBLICATION_PREFIX && result.cacheable) {
-	Astro.response.headers.set(
-		"X-Publication-Tags",
-		tags.filter((tag) => tag !== "evame-reader").join(","),
-	);
-	Astro.response.headers.set("X-Publication-Revision", String(revision));
-}
 if (
 	result.cacheable &&
-	!env.PREVIEW_GATEWAY_ORIGIN &&
 	typeof cache?.purge === "function" &&
 	tags.length <= 1000 &&
 	cacheTagHeader.length <= 16384

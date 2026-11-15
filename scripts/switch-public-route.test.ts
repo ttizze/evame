@@ -7,20 +7,15 @@ import { promisify } from "node:util";
 import { afterEach, beforeEach, expect, it } from "vitest";
 
 const script = fileURLToPath(
-	new URL("./switch-gateway-route.mjs", import.meta.url),
+	new URL("./switch-public-route.mjs", import.meta.url),
 );
 let directory: string;
 beforeEach(async () => {
-	directory = await mkdtemp(join(tmpdir(), "evame-gateway-route-"));
-	await mkdir(join(directory, "gateway/dist"), { recursive: true });
+	directory = await mkdtemp(join(tmpdir(), "evame-public-route-"));
 	await mkdir(join(directory, "dist/server"), { recursive: true });
 	await writeFile(
-		join(directory, "gateway/dist/wrangler.json"),
-		JSON.stringify({ name: "evame-gateway", account_id: "account" }),
-	);
-	await writeFile(
 		join(directory, "dist/server/wrangler.json"),
-		JSON.stringify({ name: "evame-start" }),
+		JSON.stringify({ name: "evame-start", account_id: "account" }),
 	);
 	await writeFile(
 		join(directory, "fetch.mjs"),
@@ -35,7 +30,7 @@ beforeEach(async () => {
 afterEach(async () => {
 	await rm(directory, { recursive: true, force: true });
 });
-it("既存の公開ルートだけを編集アプリからGatewayへ切り替える", async () => {
+it("既存の公開ルートだけをGatewayから統合Workerへ切り替える", async () => {
 	await promisify(execFile)(
 		process.execPath,
 		["--import", join(directory, "fetch.mjs"), script],
@@ -44,7 +39,7 @@ it("既存の公開ルートだけを編集アプリからGatewayへ切り替え
 			env: {
 				...process.env,
 				CLOUDFLARE_API_TOKEN: "test-token",
-				ROUTE_OWNER: "evame-start",
+				ROUTE_OWNER: "evame-gateway",
 			},
 		},
 	);
@@ -56,10 +51,10 @@ it("既存の公開ルートだけを編集アプリからGatewayへ切り替え
 	expect(calls[2]).toMatchObject({
 		url: "https://api.cloudflare.com/client/v4/zones/zone/workers/routes/route",
 		method: "PUT",
-		body: JSON.stringify({ pattern: "evame.tech/*", script: "evame-gateway" }),
+		body: JSON.stringify({ pattern: "evame.tech/*", script: "evame-start" }),
 	});
 });
-it.each(["evame-gateway", "another-worker"])(
+it.each(["evame-start", "another-worker"])(
 	"現在の接続先%sを上書きしない",
 	async (owner) => {
 		const result = promisify(execFile)(
@@ -74,7 +69,7 @@ it.each(["evame-gateway", "another-worker"])(
 				},
 			},
 		);
-		if (owner === "evame-gateway") await result;
+		if (owner === "evame-start") await result;
 		else await expect(result).rejects.toThrow();
 		expect(await readFile(join(directory, "calls"), "utf8")).not.toContain(
 			'"method":"PUT"',

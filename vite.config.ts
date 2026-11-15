@@ -9,9 +9,21 @@ import { defineConfig } from "vite";
 import { serverHtmlParser } from "./html-parser-plugin";
 import { securityHeaders } from "./security-headers";
 
-export default defineConfig({
-	resolve: { tsconfigPaths: true },
-	server: { proxy: { "/_astro": "http://localhost:3001" } },
+export default defineConfig(({ command }) => ({
+	publicDir: command === "serve" ? ".data/dev-public" : "public",
+	resolve: {
+		tsconfigPaths: true,
+		alias: {
+			"virtual:evame-public-pages": new URL(
+				"./reader/dist/server/entry.mjs",
+				import.meta.url,
+			).pathname,
+			"virtual:evame-reader-data": new URL(
+				"./src/app/api/reader-data/handler.ts",
+				import.meta.url,
+			).pathname,
+		},
+	},
 	optimizeDeps: { exclude: ["@cloudflare/pages-plugin-vercel-og"] },
 	environments: {
 		ssr: {
@@ -63,4 +75,4 @@ export default defineConfig({
 			sourcemaps: { assets: ["./dist/**"] },
 		}),
 	],
-});
+}));
