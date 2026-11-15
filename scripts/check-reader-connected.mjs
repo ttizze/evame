@@ -22,7 +22,10 @@ const databaseUrl =
 const databaseToken =
 	previewSecrets?.TURSO_AUTH_TOKEN ?? process.env.TURSO_AUTH_TOKEN;
 if (remote) {
-	assert.match(remote, /^https:\/\/[a-z0-9-]+\.workers\.dev$/);
+	assert.match(
+		remote,
+		/^https:\/\/pr-[1-9]\d*-evame-start\.[a-z0-9-]+\.workers\.dev$/,
+	);
 	assert.match(
 		databaseUrl ?? "",
 		/^libsql:\/\/evame-preview-[a-z0-9.-]+\.turso\.io$/,
