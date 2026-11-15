@@ -1,13 +1,11 @@
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import { createHash, createHmac, randomUUID } from "node:crypto";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
-import { migrate } from "drizzle-orm/libsql/migrator";
 import { toJSONAsync } from "seroval";
 import { createTestHarness } from "wrangler";
+import { copyTestDatabase } from "./test-database.mjs";
 import { startTursoServer } from "./turso-dev-server.mjs";
 
 const id = randomUUID();
@@ -58,21 +56,9 @@ try {
 		});
 	else {
 		const file = `${directory}/test.db`;
-		const local = createClient({ url: `file:${file}` });
-		await migrate(drizzle(local), { migrationsFolder: "src/drizzle" });
-		local.close();
+		await copyTestDatabase(file);
 		turso = await startTursoServer(file, null);
 		database = createClient({ url: turso.url });
-		execFileSync("bun", ["src/db/seed.ts"], {
-			env: {
-				...process.env,
-				TURSO_DATABASE_URL: turso.url,
-				TURSO_AUTH_TOKEN: "",
-				SENTRY_DSN: "",
-				VITE_SENTRY_DSN: "",
-			},
-			stdio: "pipe",
-		});
 		config = `reader/dist/server/connected-${id}.json`;
 		const base = JSON.parse(
 			await readFile("reader/dist/server/wrangler.json", "utf8"),

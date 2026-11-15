@@ -17,7 +17,6 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     env:
-      TURSO_DATABASE_URL: file:evame.db
       TZ: Asia/Tokyo
       SENTRY_DSN: ""
       VITE_SENTRY_DSN: ""
@@ -47,8 +46,6 @@ jobs:
 
       - name: Run Tests
         run: |
-          nix develop --command bun run db:prod:migrate
-          nix develop --command bun run db:prod:seed
           nix develop --command bun run test --run
 
   build:
@@ -78,9 +75,13 @@ jobs:
             nix develop --command bun run build
           fi
 
+      - name: Prepare browser test SQLite
+        run: nix develop --command node scripts/test-database.mjs .data/browser-test.db
       - name: Archive Workers build
-        run: tar --exclude='.dev.vars*' --exclude='.env*' -cf "$RUNNER_TEMP/workers.tar" dist */dist
+        run: tar --exclude='.dev.vars*' --exclude='.env*' -cf "$RUNNER_TEMP/workers.tar" dist */dist .data/browser-test.db
       - name: Verify saving through Astro generation and R2 publication
+        env:
+          EVAME_TEST_DATABASE_TEMPLATE: .data/browser-test.db
         run: nix develop --command node scripts/check-reader-connected.mjs
       - uses: actions/upload-artifact@v7
         with:
@@ -110,6 +111,7 @@ jobs:
       SENTRY_DSN: ""
       VITE_SENTRY_DSN: ""
       TZ: Asia/Tokyo
+      EVAME_TEST_DATABASE_TEMPLATE: .data/browser-test.db
       EVAME_BROWSER_SUITE: ${{ matrix.suite }}
       EVAME_BROWSER_TYPE: ${{ matrix.browser }}
     steps:
@@ -132,6 +134,7 @@ jobs:
             --workdir "$PWD" \
             --env PATH --env GSETTINGS_SCHEMA_DIR --env TZ \
             --env SENTRY_DSN --env VITE_SENTRY_DSN --env EVAME_BROWSER_SUITE --env EVAME_BROWSER_TYPE \
+            --env EVAME_TEST_DATABASE_TEMPLATE \
             mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27 \
             bun run test:deployment:browser
 

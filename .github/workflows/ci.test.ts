@@ -151,6 +151,7 @@ it("CIの成果物から環境ファイルと秘密値を除外し、実行に�
 	const directory = mkdtempSync(join(tmpdir(), "evame-archive-test-"));
 	const secret = "dummy-ci-secret-only-for-archive-regression";
 	const kept = [
+		".data/browser-test.db",
 		"dist/server/index.js",
 		"dist/server/.vite/manifest.json",
 		"reader/dist/client/article.js",
@@ -186,4 +187,39 @@ it("CIの成果物から環境ファイルと秘密値を除外し、実行に�
 	} finally {
 		rmSync(directory, { recursive: true, force: true });
 	}
+});
+
+it("ブラウザー全操作群はビルド時に一度だけ準備したSQLiteを成果物から受け取り、単体テストは空DBを使う", () => {
+	const workflow = workflows[0];
+	const steps = workflow.jobs.build.steps;
+	const prepare = steps.findIndex(
+		(step: { name: string }) => step.name === "Prepare browser test SQLite",
+	);
+	const archive = steps.findIndex(
+		(step: { name: string }) => step.name === "Archive Workers build",
+	);
+	const connected = steps.find(
+		(step: { name: string }) =>
+			step.name === "Verify saving through Astro generation and R2 publication",
+	);
+	expect(prepare).toBeGreaterThan(-1);
+	expect(prepare).toBeLessThan(archive);
+	expect(steps[prepare].run).toContain(
+		"scripts/test-database.mjs .data/browser-test.db",
+	);
+	expect(steps[archive].run).toContain(".data/browser-test.db");
+	expect(connected.env.EVAME_TEST_DATABASE_TEMPLATE).toBe(
+		".data/browser-test.db",
+	);
+	expect(workflow.jobs.browser.env.EVAME_TEST_DATABASE_TEMPLATE).toBe(
+		".data/browser-test.db",
+	);
+	expect(workflow.jobs.browser.steps.at(-1).run).toContain(
+		"--env EVAME_TEST_DATABASE_TEMPLATE",
+	);
+	const tests = workflow.jobs.checks.steps.find(
+		(step: { name: string }) => step.name === "Run Tests",
+	).run;
+	expect(tests).toContain("bun run test --run");
+	expect(tests).not.toMatch(/db:prod:(migrate|seed)/);
 });

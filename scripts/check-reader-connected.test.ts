@@ -2,6 +2,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 const {
 	createClient,
+	copyTestDatabase,
 	mkdir,
 	readFile,
 	rm,
@@ -16,14 +17,13 @@ const {
 	createTestHarness: vi.fn(),
 	startTursoServer: vi.fn(),
 	createClient: vi.fn(),
+	copyTestDatabase: vi.fn(),
 }));
 vi.mock("@libsql/client", () => ({ createClient }));
-vi.mock("drizzle-orm/libsql", () => ({ drizzle: vi.fn() }));
-vi.mock("drizzle-orm/libsql/migrator", () => ({ migrate: vi.fn() }));
 vi.mock("seroval", () => ({ toJSONAsync: vi.fn() }));
 vi.mock("wrangler", () => ({ createTestHarness }));
+vi.mock("./test-database.mjs", () => ({ copyTestDatabase }));
 vi.mock("./turso-dev-server.mjs", () => ({ startTursoServer }));
-vi.mock("node:child_process", () => ({ execFileSync: vi.fn() }));
 vi.mock("node:fs/promises", () => ({
 	mkdir,
 	readdir: vi.fn(),
@@ -38,6 +38,7 @@ beforeEach(() => {
 		throw new Error("Preview DBへの接続まで到達");
 	});
 	for (const mock of [
+		copyTestDatabase,
 		mkdir,
 		rm,
 		writeFile,
@@ -216,4 +217,13 @@ it("Cloudflare Previewでも生成失敗の検証を省略せず保存成功の�
 	} finally {
 		vi.unstubAllGlobals();
 	}
+});
+
+it("ローカル接続検証ではコピーが完了してからHTTPサーバーを起動する", async () => {
+	vi.stubEnv("CONNECTED_PREVIEW_ORIGIN", "");
+	copyTestDatabase.mockRejectedValue(new Error("DBコピー失敗"));
+	await expect(import("./check-reader-connected.mjs")).rejects.toThrow();
+	expect(copyTestDatabase).toHaveBeenCalledOnce();
+	expect(startTursoServer).not.toHaveBeenCalled();
+	expect(createClient).not.toHaveBeenCalled();
 });
