@@ -91,7 +91,7 @@ export class PublicPages extends WorkerEntrypoint<
 	async publish(changes: { key: string; revision: number }[]) {
 		await publishReaderChanges(
 			this.env.PUBLIC_HTML,
-			this.env.CF_VERSION_METADATA.id,
+			process.env.TURSO_DATABASE_URL ?? "",
 			changes,
 		);
 	}
@@ -136,6 +136,7 @@ export default withSentry(sentryOptions, {
 						input,
 						env.PUBLIC_HTML,
 						env.CF_VERSION_METADATA.id,
+						process.env.TURSO_DATABASE_URL ?? "",
 						async (renderRequest) => {
 							const source =
 								await context.exports.PublicPages.fetch(renderRequest);

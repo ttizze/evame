@@ -30,6 +30,7 @@ beforeEach(async () => {
 	const objects = await bucket.list();
 	await bucket.delete(objects.objects.map((row) => row.key));
 });
+const databaseUrl = "libsql://reader-test.turso.io";
 const request = new Request("https://evame.test/ja/author/article");
 const tags = await readerCacheTags(["page:1", "author:author"]);
 const render = vi.fn(async (_request: Request) => ({
@@ -40,7 +41,7 @@ const render = vi.fn(async (_request: Request) => ({
 }));
 beforeEach(() => render.mockClear());
 const serve = (input = request, build = "build-1") =>
-	fetchReaderHtml(input, bucket, build, render);
+	fetchReaderHtml(input, bucket, build, databaseUrl, render);
 
 it("保存した公開HTMLはDB取得やAstro生成なしで返す", async () => {
 	expect(await (await serve()).text()).toBe("公開本文");
@@ -51,7 +52,7 @@ it("保存した公開HTMLはDB取得やAstro生成なしで返す", async () =>
 });
 it("本文の変更記録があると古いHTMLを使わず最新の本文へ差し替える", async () => {
 	await serve();
-	await publishReaderChanges(bucket, "build-1", [
+	await publishReaderChanges(bucket, databaseUrl, [
 		{ key: "page:1", revision: 2 },
 	]);
 	render.mockResolvedValueOnce({
@@ -69,9 +70,21 @@ it("本文の変更記録があると古いHTMLを使わず最新の本文へ差
 	});
 	expect(await (await serve()).text()).toBe("更新した本文");
 });
+it("別のWorker版で非公開化した後に旧Workerへ戻しても本文を再配信しない", async () => {
+	await serve(request, "build-1");
+	await serve(request, "build-2");
+	await publishReaderChanges(bucket, databaseUrl, [
+		{ key: "page:1", revision: 2 },
+	]);
+	render.mockResolvedValueOnce({
+		revision: 2,
+		response: new Response("Not Found", { status: 404 }),
+	});
+	expect((await serve(request, "build-1")).status).toBe(404);
+});
 it("無関係な記事の変更では公開HTMLを再生成しない", async () => {
 	await serve();
-	await publishReaderChanges(bucket, "build-1", [
+	await publishReaderChanges(bucket, databaseUrl, [
 		{ key: "page:2", revision: 2 },
 	]);
 	expect((await serve()).headers.get("X-Evame-HTML-Cache")).toBe("HIT");
@@ -79,10 +92,10 @@ it("無関係な記事の変更では公開HTMLを再生成しない", async () 
 });
 it("新しい変更記録の後に古い記録が届いても非公開化を巻き戻さない", async () => {
 	await serve();
-	await publishReaderChanges(bucket, "build-1", [
+	await publishReaderChanges(bucket, databaseUrl, [
 		{ key: "page:1", revision: 3 },
 	]);
-	await publishReaderChanges(bucket, "build-1", [
+	await publishReaderChanges(bucket, databaseUrl, [
 		{ key: "page:1", revision: 2 },
 	]);
 	render.mockResolvedValueOnce({
@@ -107,7 +120,7 @@ it("非公開化より前に始まった遅いHTML生成が終わっても次の
 	});
 	const delayed = serve();
 	await vi.waitFor(() => expect(render).toHaveBeenCalledTimes(1));
-	await publishReaderChanges(bucket, "build-1", [
+	await publishReaderChanges(bucket, databaseUrl, [
 		{ key: "page:1", revision: 2 },
 	]);
 	release();
@@ -179,8 +192,8 @@ it("1時間より古いHTMLは更新記録の保持期限に依存せず再生�
 });
 it("変更記録の作成を再試行しても同じ版を重複保存しない", async () => {
 	const changes = [{ key: "page:1", revision: 2 }];
-	await publishReaderChanges(bucket, "build-1", changes);
-	await publishReaderChanges(bucket, "build-1", changes);
+	await publishReaderChanges(bucket, databaseUrl, changes);
+	await publishReaderChanges(bucket, databaseUrl, changes);
 	expect((await bucket.list({ prefix: "changes/" })).objects).toHaveLength(1);
 });
 it("変更記録を読み取れないときは古いHTMLのHITを返さない", async () => {
@@ -191,17 +204,57 @@ it("変更記録を読み取れないときは古いHTMLのHITを返さない", 
 		put: bucket.put.bind(bucket),
 	};
 	await expect(
-		fetchReaderHtml(request, broken, "build-1", render),
+		fetchReaderHtml(request, broken, "build-1", databaseUrl, render),
 	).rejects.toThrow("R2 unavailable");
 });
 
 it("別のPreviewへ届いた更新記録を公開HTMLへ適用しない", async () => {
 	await serve();
-	await publishReaderChanges(bucket, "another-preview", [
+	await publishReaderChanges(bucket, "libsql://another-preview.turso.io", [
 		{ key: "page:1", revision: 2 },
 	]);
 	expect((await serve()).headers.get("X-Evame-HTML-Cache")).toBe("HIT");
 	expect(render).toHaveBeenCalledTimes(1);
+});
+it("同じWorker版とURLでもDBが異なる場合はHTMLを共有しない", async () => {
+	await serve();
+	render.mockResolvedValueOnce({
+		revision: 0,
+		response: new Response("別のPreviewの本文", {
+			headers: { "Content-Type": "text/html", "Cache-Tag": tags.join(",") },
+		}),
+	});
+	const response = await fetchReaderHtml(
+		request,
+		bucket,
+		"build-1",
+		"libsql://another-preview.turso.io",
+		render,
+	);
+	expect(await response.text()).toBe("別のPreviewの本文");
+	expect(response.headers.get("X-Evame-HTML-Cache")).toBe("MISS");
+	expect(await (await serve()).text()).toBe("公開本文");
+});
+it("DBのURLをHTMLと変更記録のオブジェクトキーへ残さない", async () => {
+	await serve();
+	await publishReaderChanges(bucket, databaseUrl, [
+		{ key: "page:1", revision: 2 },
+	]);
+	const objects = (await bucket.list()).objects;
+	expect(objects.some((row) => row.key.startsWith("html/"))).toBe(true);
+	expect(objects.some((row) => row.key.startsWith("changes/"))).toBe(true);
+	for (const object of objects)
+		expect(object.key).not.toContain("reader-test.turso.io");
+});
+it("DBの識別情報がない場合はHTMLと変更記録を共有しない", async () => {
+	await expect(
+		fetchReaderHtml(request, bucket, "build-1", "", render),
+	).rejects.toThrow("TURSO_DATABASE_URL is not defined");
+	await expect(
+		publishReaderChanges(bucket, "", [{ key: "page:1", revision: 2 }]),
+	).rejects.toThrow("TURSO_DATABASE_URL is not defined");
+	expect(render).not.toHaveBeenCalled();
+	expect((await bucket.list()).objects).toHaveLength(0);
 });
 it("変更記録が一度の取得件数を超えたら見落としを避けて再生成する", async () => {
 	await serve();
@@ -216,6 +269,7 @@ it("変更記録が一度の取得件数を超えたら見落としを避けて�
 		request,
 		overflowing,
 		"build-1",
+		databaseUrl,
 		render,
 	);
 	expect(response.headers.get("X-Evame-HTML-Cache")).toBe("MISS");

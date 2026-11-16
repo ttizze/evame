@@ -94,13 +94,13 @@ GitHub secret `EVAME_PREVIEW_SECRETS` に専用DBの `TURSO_DATABASE_URL` / `TUR
 
 `.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テストの成功後、本番DBのマイグレーション、ビルド、成果物テスト、単一Workerのデプロイを行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
 
-Astroのサーバー成果物とJS/CSSをルートの `dist` に含める。`deploy:workers` は `dist/server/wrangler.json` を1回デプロイし、成功後に配信アセットの履歴を確定する。HTMLと更新記録のR2キーは `CF_VERSION_METADATA.id` で分離されるため、デプロイ後の一括purgeは不要。通常デプロイは公開ルートを変更しない。
+Astroのサーバー成果物とJS/CSSをルートの `dist` に含める。`deploy:workers` は `dist/server/wrangler.json` を1回デプロイし、成功後に配信アセットの履歴を確定する。HTMLのR2キーはDB URLのハッシュと `CF_VERSION_METADATA.id` で分離し、更新記録はDB URLのハッシュを使って同じDBの全Worker版で共有する。このため、デプロイ後の一括purgeは不要で、旧版へ戻しても新版での非公開化・削除が反映される。通常デプロイは公開ルートを変更しない。
 
 旧HTMLが参照するハッシュ付きJS/CSSを配信終了から30日間、同じWorkerのStatic Assetsへ残す。`prepare:reader-assets` は `.data/reader-assets/active.json` と過去の履歴を使い `dist/client/_astro` へ含める。デプロイ失敗時は旧記録を維持する。CIはmainの成功したデプロイ間で履歴を保存・復元する。初回や履歴消失時は公開HTMLとJS依存を認証なしで回収する。回収元はカスタムドメインのbot制限を避けるため `https://evame-start.reimei.workers.dev` を使う。ビルド自体ではネットワーク取得しない。
 
 Actions secretsには本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番DBはmainのマイグレーションだけに渡す。通常デプロイのトークンは既存の `evame-start` へのIndividual Workers Editor権限を使う。Sentryアップロード用トークンは本番ビルドだけに渡し、Worker secretには登録しない。
 
-本番切り替え前に `PUBLIC_HTML` のbucketを用意し、HTMLと変更記録を2日で削除するlifecycleを設定する。Previewは別bucketを使い、その内部もWorker versionで分離する。R2 bindingには公開ドメインを付けず、HTMLはWorker経由で配信する。
+本番切り替え前に `PUBLIC_HTML` のbucketを用意し、HTMLと変更記録を2日で削除するlifecycleを設定する。Previewは別bucketを使い、その内部もDB URLのハッシュで分離する。HTMLだけはさらにWorker versionで分離し、同じDBの変更記録をWorker versionで分割しない。R2 bindingには公開ドメインを付けず、HTMLはWorker経由で配信する。
 
 ```sh
 nix develop --command bun x wrangler r2 bucket create evame-public-html

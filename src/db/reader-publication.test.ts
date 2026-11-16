@@ -26,7 +26,7 @@ it("本文の変更と同じトランザクションで公開HTMLの更新を記
 			).toEqual({ key: "page:rollback", revision: 100 });
 			throw new Error("rollback");
 		}),
-	).rejects.toThrow("rollback");
+	).rejects.toThrow(/^rollback$/);
 	expect(
 		await db
 			.selectFrom("readerPublicationChanges")

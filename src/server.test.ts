@@ -13,6 +13,7 @@ import {
 	it,
 	vi,
 } from "vitest";
+import { readerCacheTags } from "./app/_domain/reader-cache-tags";
 import { createDb } from "./db";
 
 const pendingChanges = vi.hoisted(() => new Map<string, number>());
@@ -67,6 +68,7 @@ const env = {
 const publicBinding = { fetch: vi.fn(), publish: vi.fn() };
 const exports = { PublicPages: publicBinding };
 beforeEach(() => {
+	vi.stubEnv("TURSO_DATABASE_URL", "libsql://reader-test.turso.io");
 	pendingChanges.clear();
 	pendingChanges.set("page:123", 1);
 	env.PUBLIC_HTML.get.mockReset().mockResolvedValue(null);
@@ -614,14 +616,18 @@ describe("同じWorkerの公開HTMLとR2への更新記録", () => {
 		expect(createDb).not.toHaveBeenCalled();
 	});
 
-	it("公開入口自身がデプロイごとのR2更新記録を保存する", async () => {
+	it("公開入口自身がDBごとのR2更新記録を保存する", async () => {
 		const entry = new PublicPages(
 			{} as import("@cloudflare/workers-types").ExecutionContext,
 			env as unknown as typeof import("cloudflare:workers").env,
 		);
 		await entry.publish([{ key: "page:123", revision: 2 }]);
+		const [namespace, tag] = await readerCacheTags([
+			"libsql://reader-test.turso.io",
+			"page:123",
+		]);
 		expect(env.PUBLIC_HTML.put).toHaveBeenCalledWith(
-			expect.stringMatching(/^changes\/build-1\/0000000000000002\/reader:/),
+			`changes/${namespace}/0000000000000002/${tag}`,
 			"",
 			{ onlyIf: { etagDoesNotMatch: "*" } },
 		);

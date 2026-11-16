@@ -396,11 +396,37 @@ try {
 		"親記事のある記事で階層ナビゲーションをSSRできる",
 	);
 	console.log("親記事のある記事で本文と階層ナビゲーションをSSRできる");
-	await database.execute({
-		sql: "UPDATE pages SET status = 'PUBLIC' WHERE slug = ?",
+	const storedPage = await database.execute({
+		sql: "SELECT id FROM pages WHERE slug = ?",
 		args: [pageSlug],
 	});
+	const publishFunction = functions.togglePublishAction_createServerFn_handler;
+	assert.ok(publishFunction, "公開状態を変更するServer Functionが生成される");
+	const published = await worker.fetch(
+		"http://localhost/_serverFn/" + publishFunction,
+		{
+			method: "POST",
+			headers: {
+				cookie,
+				origin: "http://localhost",
+				"x-tsr-serverFn": "true",
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(
+				await toJSONAsync({
+					data: { pageId: Number(storedPage.rows[0].id), locale: "ja" },
+				}),
+			),
+		},
+	);
+	assert.equal(published.status, 200, await published.text());
 	if (emptyHome) {
+		const publishedHome = await fetch(`${serverUrl.origin}/ja`);
+		assert.equal(publishedHome.status, 200);
+		assert.ok(
+			(await publishedHome.text()).includes("Workers保存テスト"),
+			"公開APIの成功直後に、空だったトップのHTMLにも記事を反映する",
+		);
 		const { expect } = await import("@playwright/test");
 		await emptyHome.page.evaluate(() =>
 			window.dispatchEvent(new Event("focus")),
@@ -419,10 +445,6 @@ try {
 			"記事が0件のトップからも自動更新で記事と操作可能ないいねを表示できる",
 		);
 	}
-	const storedPage = await database.execute({
-		sql: "SELECT id FROM pages WHERE slug = ?",
-		args: [pageSlug],
-	});
 	const commentIds = [];
 	for (let index = 0; index < 22; index++) {
 		const text =
@@ -769,8 +791,6 @@ try {
 		(await revised.text()).includes("公開記事を更新した本文"),
 		"公開記事の保存後に本文HTMLを更新する",
 	);
-	const publishFunction = functions.togglePublishAction_createServerFn_handler;
-	assert.ok(publishFunction, "公開状態を変更するServer Functionが生成される");
 	const changed = await worker.fetch(
 		"http://localhost/_serverFn/" + publishFunction,
 		{
