@@ -6,13 +6,19 @@ Astroの公開表示とTanStack Startの編集・管理・APIを同じ `evame-st
 
 R2のHITではDB接続・Astro描画・Reactの起動を待たない。初回または変更後の閲覧時に、同じWorker内の `PublicPages` entrypointでAstro生成する。記事保存ごとのビルド・デプロイ、全URLの事前生成、生成用Cron・Queue・Durable Objectは導入しない。
 
+Astroの生成コードは `PublicPages.fetch`、TanStack Startの編集・APIコードは通常入口のDB処理内で動的に読み込む。R2のHIT時には両アプリのモジュールを起動しない。
+
 `reader/` はAstroソースと中間ビルドの配置先として残る。サーバーコードとJS/CSSはルートの `dist` へ取り込み、公開HTML・Astroアセット・編集・APIを1つのWorkerから配信する。
 
 ## 保存と更新の反映
 
 DB更新と同じtransactionで `reader_publication_changes` へ変更キーと単調増加する版を記録する。保存・公開・非公開・削除の実APIは、この保留行をR2の追記式変更記録へ反映してから成功を返す。完了後は取得したkeyとrevisionが一致する行だけを削除し、後続更新を残す。R2反映失敗は保存成功にせず、DB差分のない同内容の再保存でも保留行を回収する。
 
-HTMLには生成開始時刻・生成前のDB版・記事や一覧の依存タグを付ける。HIT判定はHTMLを取得し、その版より新しいR2変更記録を1回LISTして依存タグを照合する。関連変更がある場合やLISTの1000件上限を超えた場合は再生成する。HTMLは生成開始から1時間で失効する。古い通知は新しい通知を消さず、遅いHTML生成も次の閲覧で変更記録により除外する。HTMLのPUTはETagの条件付き更新で競合を防ぐ。
+閲覧はR2のGET一回でHTMLを返す。変更記録のLISTと依存タグの照合は保存側で行い、同じDBの全Worker版にある該当HTMLを、保存応答前に無効化する。LISTはmetadataだけを取得して全ページをたどり、無効化は最大8件ずつ実行する。本文の取得やAstro生成は保存側では行わない。
+
+コールドミスや期限切れでは、DB版の取得より先にR2へ生成中の枠を条件付きPUTする。保存側は生成中の枠も無効化し、生成完了時は取得した枠のETagと一致する場合だけHTMLを登録する。LIST後に生成が完了してETagが変わった場合は、保存側がHEADで現在の版と依存を確認し直す。これにより保存応答後の遅いfillと古い変更記録の再送が最新の公開・非公開を巻き戻さない。各PUTの本文にも異なる生成識別子を入れ、同内容の再生成でもETagが再利用されないようにする。
+
+完成したHTMLのDB版と依存タグはR2のcustom metadataへ置く。依存がmetadata上限を超える場合は、そのHTMLを全変更の無効化対象にする。HTMLは生成開始から1時間で失効する。変更記録の保存済み確認だけで完了扱いにせず、HTMLの無効化も毎回再試行する。保存完了前のR2失敗はDBの保留行を残す。`Server-Timing`でR2配信とmaintenanceの待ち時間を返し、接続検証の結果には保存とその後のGETの時間も残す。
 
 キーは `html/<DB URL hash>/<Worker version>/<URL hash>` と `changes/<DB URL hash>/<revision>/<tag hash>` とする。DB URLはSHA-256でハッシュ化し、URL自体をR2キーへ残さない。同じDBを使うWorkerは変更記録を共有し、新版で更新・非公開化・削除した後に旧版へ戻しても古いHTMLを再配信しない。異なるDBを使うPreview間ではHTMLと変更記録の両方を分離する。R2 lifecycleでは両prefixのオブジェクトを2日以降に削除し、HTMLの有効期間中に変更記録だけを消さない。
 

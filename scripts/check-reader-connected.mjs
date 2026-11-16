@@ -96,18 +96,32 @@ try {
 	});
 	const cookie = `${remote ? "__Secure-" : ""}better-auth.session_token=${encodeURIComponent(`${token}.${createHmac("sha256", authSecret).update(token).digest("base64")}`)}`;
 	const request = async (path, init = {}) => {
-		if (remote)
-			return fetch(new URL(path, origin), {
+		const started = performance.now();
+		let response;
+		if (remote) {
+			response = await fetch(new URL(path, origin), {
 				...init,
 				signal: AbortSignal.timeout(60000),
 			});
-		const outgoing = new Request(new URL(path, origin), init);
-		return worker.fetch(outgoing.url, {
-			method: outgoing.method,
-			headers: Object.fromEntries(outgoing.headers),
-			...(outgoing.body ? { body: await outgoing.arrayBuffer() } : {}),
-			redirect: "manual",
+		} else {
+			const outgoing = new Request(new URL(path, origin), init);
+			response = await worker.fetch(outgoing.url, {
+				method: outgoing.method,
+				headers: Object.fromEntries(outgoing.headers),
+				...(outgoing.body ? { body: await outgoing.arrayBuffer() } : {}),
+				redirect: "manual",
+			});
+		}
+		results.push({
+			operation: "request",
+			path,
+			method: init.method ?? "GET",
+			status: response.status,
+			cache: response.headers.get("X-Evame-HTML-Cache"),
+			timing: response.headers.get("Server-Timing"),
+			milliseconds: Math.round(performance.now() - started),
 		});
+		return response;
 	};
 	const resolverFile = (await readdir("dist/server/assets")).find(
 		(path) => path.includes("server-fn-resolver-") && path.endsWith(".js"),
