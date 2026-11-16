@@ -25,7 +25,7 @@ it("起動直後のR2のHITでAstroと編集アプリのモジュールを読み
 			CF_VERSION_METADATA: { id: "test" },
 			PUBLIC_HTML: {
 				get: async () => ({
-					customMetadata: { state: "ready", revision: "1" },
+					customMetadata: { state: "ready", revision: "1", generation: "test" },
 					json: async () => ({
 						startedAt: Date.now(),
 						headers: [["Content-Type", "text/html"]],

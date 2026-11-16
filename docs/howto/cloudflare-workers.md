@@ -106,9 +106,13 @@ Actions secretsには本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`C
 nix develop --command bun x wrangler r2 bucket create evame-public-html
 nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html expire-html html/ --expire-days 2
 nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html expire-changes changes/ --expire-days 2
+nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html expire-dependencies dependencies/ --expire-days 2
+nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html expire-pending pending/ --expire-days 2
 nix develop --command bun x wrangler r2 bucket create evame-public-html-preview
 nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html-preview expire-html html/ --expire-days 2
 nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html-preview expire-changes changes/ --expire-days 2
+nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html-preview expire-dependencies dependencies/ --expire-days 2
+nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html-preview expire-pending pending/ --expire-days 2
 ```
 
 bucket作成・lifecycle設定にはAccountのR2管理権限が必要。通常のWorker更新権限と区別する。保存APIはDB更新と同時に永続化した保留行をR2へ反映してから成功を返し、失敗後は同内容の保存でも再試行する。HTML保存の同時fillに伴う429だけは生成応答を返して保存を省略できるが、変更記録の読み書き失敗は成功扱いしない。設計と検証項目は[公開HTMLのR2保存](../plans/incremental-static-reader.md)を参照する。

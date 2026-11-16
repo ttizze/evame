@@ -54,7 +54,12 @@ it("公開HTMLのHITはR2のGET一回で返し変更記録をLISTしない", asy
 	await serve();
 	const get = vi.fn(bucket.get.bind(bucket));
 	const list = vi.fn(bucket.list.bind(bucket));
-	const instrumented = { get, list, put: bucket.put.bind(bucket) };
+	const instrumented = {
+		get,
+		list,
+		put: bucket.put.bind(bucket),
+		delete: bucket.delete.bind(bucket),
+	};
 	const response = await fetchReaderHtml(
 		request,
 		instrumented,
@@ -82,7 +87,7 @@ it("生成中の新しいURLを保存側が無効にし遅い本文の再登録�
 	});
 	const delayed = serve();
 	await started.promise;
-	const registered = await bucket.list({ prefix: "html/" });
+	const registered = await bucket.list({ prefix: "pending/" });
 	expect(registered.objects).toHaveLength(1);
 	await publishReaderChanges(bucket, databaseUrl, [
 		{ key: "page:1", revision: 2 },
@@ -256,6 +261,7 @@ it("保存側の無効化対象を読み取れないときは反映成功を返�
 		head: bucket.head.bind(bucket),
 		list: vi.fn().mockRejectedValue(new Error("R2 unavailable")),
 		put: bucket.put.bind(bucket),
+		delete: bucket.delete.bind(bucket),
 	};
 	await expect(
 		publishReaderChanges(broken, databaseUrl, [{ key: "page:1", revision: 2 }]),
@@ -312,22 +318,34 @@ it("DBの識別情報がない場合はHTMLと変更記録を共有しない", a
 });
 it("保存側はLISTの続きも取得して後半の公開HTMLを無効化する", async () => {
 	await serve();
-	const list = vi
-		.fn()
-		.mockResolvedValueOnce({ objects: [], truncated: true, cursor: "more" })
-		.mockResolvedValueOnce(
-			await bucket.list({ prefix: "html/", include: ["customMetadata"] }),
+	let paginated = false;
+	const list = vi.fn(async (options: Parameters<typeof bucket.list>[0]) => {
+		if (options?.prefix?.startsWith("dependencies/") && !paginated) {
+			paginated = true;
+			return {
+				objects: [],
+				truncated: true as const,
+				cursor: "more",
+				delimitedPrefixes: [],
+			};
+		}
+		return bucket.list(
+			options?.cursor === "more" ? { ...options, cursor: undefined } : options,
 		);
+	});
 	await publishReaderChanges(
 		{
 			head: bucket.head.bind(bucket),
 			list,
 			put: bucket.put.bind(bucket),
+			delete: bucket.delete.bind(bucket),
 		},
 		databaseUrl,
 		[{ key: "page:1", revision: 2 }],
 	);
-	expect(list.mock.calls[1][0].cursor).toBe("more");
+	expect(list.mock.calls.some(([options]) => options?.cursor === "more")).toBe(
+		true,
+	);
 	render.mockResolvedValueOnce({
 		revision: 2,
 		response: new Response("Not Found", { status: 404 }),
@@ -419,7 +437,12 @@ it("変更記録を保存済みでもHTMLの無効化に失敗したら再試行
 	const changes = [{ key: "page:1", revision: 2 }];
 	await expect(
 		publishReaderChanges(
-			{ head: bucket.head.bind(bucket), list: bucket.list.bind(bucket), put },
+			{
+				head: bucket.head.bind(bucket),
+				list: bucket.list.bind(bucket),
+				put,
+				delete: bucket.delete.bind(bucket),
+			},
 			databaseUrl,
 			changes,
 		),
@@ -456,7 +479,12 @@ it("無効化対象のLIST後に生成が完了しても古い本文を取りこ
 		return snapshot;
 	};
 	await publishReaderChanges(
-		{ head: bucket.head.bind(bucket), list, put: bucket.put.bind(bucket) },
+		{
+			head: bucket.head.bind(bucket),
+			list,
+			put: bucket.put.bind(bucket),
+			delete: bucket.delete.bind(bucket),
+		},
 		databaseUrl,
 		[{ key: "page:1", revision: 2 }],
 	);
@@ -469,35 +497,57 @@ it("無効化対象のLIST後に生成が完了しても古い本文を取りこ
 
 it("無効化対象のLIST後に新しい版が完成しても新しいHTMLを消さない", async () => {
 	await serve();
+	let replaced = false;
 	const list = async (...args: Parameters<typeof bucket.list>) => {
 		const snapshot = await bucket.list(...args);
-		const object = snapshot.objects[0];
-		const stored = await bucket.get(object.key);
+		if (replaced || snapshot.objects.length === 0) return snapshot;
+		replaced = true;
+		const reference = snapshot.objects[0];
+		const htmlKey = reference.customMetadata!.htmlKey;
+		const stored = await bucket.get(htmlKey);
 		const html = await stored!.json<Record<string, unknown>>();
+		const generation = crypto.randomUUID();
+		const [namespace] = await readerCacheTags([databaseUrl]);
+		for (const tag of tags)
+			await bucket.put(`dependencies/${namespace}/${tag}/${generation}`, "", {
+				customMetadata: { htmlKey, generation },
+			});
 		await bucket.put(
-			object.key,
+			htmlKey,
 			JSON.stringify({
 				...html,
-				generation: crypto.randomUUID(),
-				revision: 3,
+				generation,
 				body: "最新の本文",
 			}),
 			{
-				customMetadata: { state: "ready", revision: "3", tags: tags.join(",") },
+				customMetadata: { state: "ready", revision: "3", generation },
 			},
 		);
 		return snapshot;
 	};
 	await publishReaderChanges(
-		{ head: bucket.head.bind(bucket), list, put: bucket.put.bind(bucket) },
+		{
+			head: bucket.head.bind(bucket),
+			list,
+			put: bucket.put.bind(bucket),
+			delete: bucket.delete.bind(bucket),
+		},
 		databaseUrl,
 		[{ key: "page:1", revision: 2 }],
 	);
 	expect(await (await serve()).text()).toBe("最新の本文");
 	expect(render).toHaveBeenCalledTimes(1);
+	await publishReaderChanges(bucket, databaseUrl, [
+		{ key: "page:1", revision: 4 },
+	]);
+	render.mockResolvedValueOnce({
+		revision: 4,
+		response: new Response("Not Found", { status: 404 }),
+	});
+	expect((await serve()).status).toBe(404);
 });
 
-it("依存タグがR2のmetadata上限を超えても変更した本文を再生成する", async () => {
+it("依存タグが多くても各キーの索引から変更した本文を再生成する", async () => {
 	const largeTags = await readerCacheTags(
 		Array.from({ length: 40 }, (_, index) => `page:${index}`),
 	);
@@ -521,13 +571,112 @@ it("依存タグがR2のmetadata上限を超えても変更した本文を再生
 	expect((await serve()).status).toBe(404);
 });
 
-it("HTMLの登録に失敗したときは無効化できない生成を開始しない", async () => {
+it("生成中の登録に失敗したときは無効化できない生成を開始しない", async () => {
 	const broken = {
 		get: bucket.get.bind(bucket),
 		put: vi.fn().mockRejectedValue(new Error("R2 registration unavailable")),
+		delete: bucket.delete.bind(bucket),
 	};
 	await expect(
 		fetchReaderHtml(request, broken, "build-1", databaseUrl, render),
 	).rejects.toThrow("R2 registration unavailable");
 	expect(render).not.toHaveBeenCalled();
+});
+
+it("保存時は依存するURLと生成中のURLだけを調べHTML全体をLISTしない", async () => {
+	await serve();
+	const list = vi.fn(bucket.list.bind(bucket));
+	await publishReaderChanges(
+		{
+			head: bucket.head.bind(bucket),
+			list,
+			put: bucket.put.bind(bucket),
+			delete: bucket.delete.bind(bucket),
+		},
+		databaseUrl,
+		[{ key: "page:1", revision: 2 }],
+	);
+	expect(
+		list.mock.calls.some(([options]) => options?.prefix?.startsWith("html/")),
+	).toBe(false);
+	render.mockResolvedValueOnce({
+		revision: 2,
+		response: new Response("Not Found", { status: 404 }),
+	});
+	expect((await serve()).status).toBe(404);
+});
+
+it.each([
+	"429 Too Many Requests",
+	"put: The rate of requests exceeds the allowed maximum (10058)",
+])(
+	"HTMLの並行保存が%sでも閲覧を失敗させず次の生成で回復する",
+	async (message) => {
+		let limited = true;
+		const put = vi.fn(async (...args: Parameters<typeof bucket.put>) => {
+			if (args[0].startsWith("html/") && limited) {
+				limited = false;
+				throw new Error(message);
+			}
+			return bucket.put(...args);
+		});
+		const observed = {
+			get: bucket.get.bind(bucket),
+			put,
+			delete: bucket.delete.bind(bucket),
+		};
+		expect(
+			await (
+				await fetchReaderHtml(request, observed, "build-1", databaseUrl, render)
+			).text(),
+		).toBe("公開本文");
+		expect(
+			await (
+				await fetchReaderHtml(request, observed, "build-1", databaseUrl, render)
+			).text(),
+		).toBe("公開本文");
+		expect((await serve()).headers.get("X-Evame-HTML-Cache")).toBe("HIT");
+	},
+);
+
+it("無関係な公開HTMLが100件増えても保存のLISTとHEAD回数を増やさない", async () => {
+	await serve();
+	const [namespace, unrelatedTag] = await readerCacheTags([
+		databaseUrl,
+		"page:unrelated",
+	]);
+	const list = vi.fn(bucket.list.bind(bucket));
+	const head = vi.fn(bucket.head.bind(bucket));
+	const observed = {
+		list,
+		head,
+		put: bucket.put.bind(bucket),
+		delete: bucket.delete.bind(bucket),
+	};
+	await publishReaderChanges(observed, databaseUrl, [
+		{ key: "page:missing-a", revision: 2 },
+	]);
+	const counts = { list: list.mock.calls.length, head: head.mock.calls.length };
+	list.mockClear();
+	head.mockClear();
+	for (let index = 0; index < 100; index++) {
+		const generation = crypto.randomUUID();
+		const htmlKey = `html/${namespace}/other-build/${index}`;
+		await bucket.put(htmlKey, "unrelated", {
+			customMetadata: { state: "ready", revision: "1", generation },
+		});
+		await bucket.put(
+			`dependencies/${namespace}/${unrelatedTag}/${generation}`,
+			"",
+			{ customMetadata: { htmlKey, generation } },
+		);
+	}
+	await publishReaderChanges(observed, databaseUrl, [
+		{ key: "page:missing-b", revision: 3 },
+	]);
+	expect({
+		list: list.mock.calls.length,
+		head: head.mock.calls.length,
+	}).toEqual(counts);
+	expect((await serve()).headers.get("X-Evame-HTML-Cache")).toBe("HIT");
 });
