@@ -1,6 +1,6 @@
 # Cloudflare Workers の運用
 
-全コマンドは `nix develop` 内で実行する。公開Gatewayの入口は `gateway/src/worker.ts`、TanStack Startの編集・管理アプリは `src/server.ts`、Astro Readerは `reader/src/worker.ts`。`bun run build` が `gateway/dist`・`dist`・`reader/dist` に配信成果物を生成する。CI・ローカル検証・本番公開で同じ成果物を使う。
+全コマンドは `nix develop` 内で実行する。公開表示・TanStack Startの編集・APIの入口は `src/server.ts`。Astroのビルドは `reader/` に置き、`bun run build` がそのサーバーコードとJS/CSSを `dist` へ取り込む。デプロイするWorkerは `evame-start` の1つだけで、CI・ローカル検証・本番公開で同じ成果物を使う。
 
 ## CIのテスト実行
 
@@ -12,24 +12,20 @@ iPhone本体・共有エディター・パッチ・操作fixture・Nix・iPhone�
 
 ## 接続先
 
-`gateway/wrangler.jsonc` は `evame-gateway`、`wrangler.jsonc` は編集・管理の `evame-start`、`reader/wrangler.jsonc` は `evame-reader`。既存の `evame` Workerは上書きしない。Readerはworkers.devとバージョンURLを公開せず、service binding経由で接続する。
+ルートの `wrangler.jsonc` が `evame-start` を定義する。`reader/wrangler.jsonc` はAstroの中間ビルド専用でデプロイしない。Reader専用Worker・Gateway専用WorkerとWorker間のservice bindingは廃止する。
 
 | binding | 接続先 | 用途 |
 | --- | --- | --- |
-| `ASSETS` | Appの `dist/client` / Readerの `reader/dist/client` | 各Workerが所有するアセット |
-| `APP` | `evame-start` | 認証・API・編集・管理・Startアセット |
-| `MONITORING` | `evame-start.GatewayMonitoring` | Gatewayのエラーを既存Sentryへ送るRPC |
+| `ASSETS` | `dist/client` | Astroと編集画面のJS/CSS・静的ファイル |
 | `UPLOADS` | R2 `eveeve` | 既存の画像ストレージ |
-| `IMAGES` | Cloudflare Images | 幅 2560 以下、JPEG quality 80 へ圧縮 |
-| `SETTINGS` | KV `evame-settings` | `maintenance` を JSON boolean で保存 |
-| `CF_VERSION_METADATA` | デプロイされた Worker の version | Sentry の release |
-| `READER` | `evame-reader` | 公開HTMLの配信とキャッシュ無効化 |
+| `PUBLIC_HTML` | R2 `evame-public-html`（Previewは `evame-public-html-preview`） | 公開HTMLと追記式変更記録 |
+| `IMAGES` | Cloudflare Images | 幅2560以下、JPEG quality 80へ圧縮 |
+| `SETTINGS` | KV `evame-settings` | `maintenance` をJSON booleanで保存 |
+| `CF_VERSION_METADATA` | Workerのversion | Sentryのrelease、R2保存先の分離 |
 
-公開HTML・`/_astro/*`・`/api/home-feed` はGatewayからReaderへ直接渡す。GatewayにReact・TanStack・DB・Sentry SDKを同梱しない。エラーはCloudflareのログと監視RPCへ記録し、AppとReaderのSentry設定を維持する。`shared/public-reader.ts` をGatewayとAppで共有し、開発環境と既存の `evame-start` URLも同じ公開ルートを扱う。
+公開GET/HEADはR2の保存HTMLと変更記録を照合し、HIT時はDB接続とAstro描画を省略する。初回・変更後・1時間の有効期限切れは同じWorker内の `PublicPages` entrypointでAstro生成する。`/_astro/*` は同じWorkerのStatic Assets、`/api/home-feed` は保存しない部分更新応答として扱う。認証・編集・APIとSentryの設定は同じWorkerに維持する。
 
-Readerは `BACKEND` bindingから `evame-start` の公開データAPIを呼び、専用の `ASSETS` bindingで生成アセットを配信する。DB・認証の秘密値は `evame-start` だけに設定する。
-
-開発時の binding はローカルストレージを使う。画像は開発専用の `/api/uploads/$` で表示する。本番は従来の `https://images.evame.tech/` を使う。
+開発時のbindingはローカルストレージを使う。画像は開発専用の `/api/uploads/$` で表示する。本番は従来の `https://images.evame.tech/` を使う。
 
 ## 環境変数と秘密値
 
@@ -57,25 +53,19 @@ bun run deploy:workers
 
 ## DB移行中の停止
 
-`DATABASE_MIGRATION` はGatewayとAppの両方へ同じ値を設定する。ReaderBackendはAppの値を参照し、DBを開く前に503を返す。Gatewayだけで停止してもAppの既存URLやQStash要求を止められず、AppだけではReaderの共有キャッシュに命中する公開HTMLを止められない。画面用KVの `maintenance` では代替しない。
-
-移行の開始前に、停止処理を備えた現行コードへ次の順で `true` を設定する。`secret put` は配信中のコードの設定を更新し、新しいアプリコードを先に配信しない。フラグは秘密値ではないが、通常のデプロイで消えない既存のWorkers secret運用を使う。
+Workers secret `DATABASE_MIGRATION` は `evame-start` に設定する。通常入口と `PublicPages` の両方でDB・共有HTMLキャッシュの呼び出し前に停止を判定する。画面用KVの `maintenance` では代替しない。
 
 ```bash
-printf '%s' true | nix develop --command bun x wrangler secret put DATABASE_MIGRATION --config gateway/wrangler.jsonc
 printf '%s' true | nix develop --command bun x wrangler secret put DATABASE_MIGRATION --config wrangler.jsonc
 ```
 
-公開URLの `/ja` とAppの `https://evame-start.reimei.workers.dev/api/auth/get-session` がともに503・`Retry-After: 60`を返すことを確認する。実行中のQStashジョブとDBへの書き込みが完了してから、[DB移行手順](turso-migration.md#本番切り替え)へ進む。停止中のQStash要求は503で再試行させる。
+公開URLの `/ja` と `https://evame-start.reimei.workers.dev/api/auth/get-session` がともに503・`Retry-After: 60`を返すことを確認する。実行中のQStashジョブとDBへの書き込みが完了してから、[DB移行手順](turso-migration.md#本番切り替え)へ進む。停止中のQStash要求は503で再試行させる。
 
-移行と接続先の検証後、Appを先に再開してからGatewayを再開し、両方を `false` に揃える。
+移行と接続先の検証後、同じWorkerのsecretを `false` に戻し、公開HTML・認証・保存の再開を確認する。
 
 ```bash
 printf '%s' false | nix develop --command bun x wrangler secret put DATABASE_MIGRATION --config wrangler.jsonc
-printf '%s' false | nix develop --command bun x wrangler secret put DATABASE_MIGRATION --config gateway/wrangler.jsonc
 ```
-
-公開HTML・認証・保存が再開していることを確認する。Readerへ別のフラグは追加しない。
 
 ## PRのプレビュー
 
@@ -83,15 +73,11 @@ printf '%s' false | nix develop --command bun x wrangler secret put DATABASE_MIG
 
 ログインはメールのリンクを使う。CIは `VITE_AUTH_GOOGLE_ENABLED=false` とプレビューの `VITE_PUBLIC_DOMAIN` を指定してビルドし、`BETTER_AUTH_URL` も同じoriginに揃える。Origin検証は有効のまま。本番はGoogle・メールの両方を維持する。
 
-Gateway・App・ReaderのコードはPRごとに分かれる。DBは全プレビュー共用の専用Turso DB `evame-preview` を使い、本番データはコピーしない。プレビュー間では同じテストアカウント・文書を参照するため、DBスキーマの互換性がない複数PRの同時検証には使わない。画像のR2と読み取り専用maintenanceのKVは既存bindingを利用する。
+PRごとに1つの標準Worker Previewを使う。DBは全プレビュー共用の専用Turso DB `evame-preview` を使い、本番データはコピーしない。DBスキーマの互換性がない複数PRの同時検証には使わない。画像のR2と読み取り専用maintenanceのKVは既存bindingを利用する。
 
-GitHub secret `EVAME_PREVIEW_SECRETS` に、専用DBの `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN`、専用の `BETTER_AUTH_SECRET` / `ENCRYPTION_KEY` / `PREVIEW_READER_SECRET`、送信用の `AUTH_RESEND_KEY` をJSONで登録する。翻訳などの外部サービスを試す場合は必要な秘密値も加える。値はソース・ログ・PRへ含めない。DBトークンはこのテストDBだけに限定し、更新時はsecretを差し替えてプレビューjobを再実行する。
+GitHub secret `EVAME_PREVIEW_SECRETS` に専用DBの `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN`、専用の `BETTER_AUTH_SECRET` / `ENCRYPTION_KEY`、送信用の `AUTH_RESEND_KEY` をJSONで登録する。翻訳などを試す場合は必要な秘密値も加える。値はソース・ログ・PRへ含めない。
 
-`scripts/preview-workers.mjs` は専用DBのマイグレーション・seed後、`evame-start` 配下の `reader-pr-<PR番号>`・`app-pr-<PR番号>`・`pr-<PR番号>` という3つの独立したPreviewへ順にデプロイする。本番ReaderのURLは非公開のまま維持するため、ReaderのPreviewも公開Preview URLを持つGateway側を親Workerとして使う。PRごとの通常Worker作成や本番デプロイは行わない。生成済みWrangler設定をそのまま使い、親Workerは `--worker-name`、動的URLはCLIの変数指定で渡す。秘密値ファイルだけを `.data/native-preview-pr-<PR番号>` に権限 `600` で作る。
-
-Cloudflareの[現在の制約](https://developers.cloudflare.com/workers/previews/resources/#limitations)では、Previewのservice bindingは接続先Workerの本番を呼ぶ。そのためプレビュー設定にservice bindingは追加せず、Gatewayは対応するReaderとAppのPreview URLへ秘密ヘッダー付きで接続する。[`global_fetch_strictly_public`](https://developers.cloudflare.com/workers/runtime-apis/fetch/) を3つのWorkerで有効にし、HTTP呼び出しを公開URLどおりにルーティングする。ReaderとAppは秘密ヘッダーのない直接アクセスを拒否する。両方でURLをGatewayのoriginへ復元し、AppのPOSTも元の本文・Origin・Cookieで認証する。Readerは同じPRのGateway経由のデータAPIから描画する。DB・認証秘密値はAppだけに渡す。HTMLとアセットはReaderが所有する。本番は既存のservice bindingとキャッシュを維持し、プレビューではHTML共有キャッシュを無効にする。CIはデプロイ後に実URLの認証APIとReader HTMLを取得できることも確認する。
-
-CIの成功に加えて、実際のプレビューURLでログイン画面、Cookieによるセッション取得、記事の作成・編集・再読み込みを確認する。メール受信からの確認と、テスト用アカウントのセッションでの確認を区別して記録する。
+`scripts/preview-workers.mjs` は専用DBのマイグレーション・seed後、`evame-start` 配下の `pr-<PR番号>` をデプロイする。通常Workerは追加しない。生成済み設定を使い、専用の秘密値ファイルだけを `.data/native-preview-pr-<PR番号>` に権限 `600` で作る。公開表示も編集APIも同じPreview内で動作するため、service bindingが本番を向く制約を受けない。実URLでログイン・編集・再読み込みと公開/非公開・削除・保留タグの回収を検証する。
 
 ## 本番への切り替え
 
@@ -100,25 +86,36 @@ CIの成功に加えて、実際のプレビューURLでログイン画面、Coo
 3. 全機能の認証と接続先が揃ってから `evame.tech` のルートを Worker に切り替える。既存の Cloudflare キャッシュ Worker とルートを先に確認する。
 4. 切り替え後も Google ログイン、Lexical 保存、画像、翻訳を確認する。Sentry の正常な認証リダイレクトや本文の中断がエラーにならないことを確認する。
 
-切り替え検証後、旧Vercelプロジェクト `ttizzes-projects/evame` は廃止済み。`evame.tech` のDNSは、CloudflareでプロキシされたAレコードを予約アドレス `192.0.2.0` に向け、切り替え完了後の `evame.tech/*` は `evame-gateway` に接続する。Vercelをオリジンや切り戻し先として使わない。継続デプロイの環境では Nix と Bun の lockfile を使い、`bun run deploy` を実行する。
+切り替え検証後、旧Vercelプロジェクト `ttizzes-projects/evame` は廃止済み。`evame.tech` のDNSは、CloudflareでプロキシされたAレコードを予約アドレス `192.0.2.0` に向け、切り替え完了後の `evame.tech/*` は `evame-start` に接続する。Vercelをオリジンや切り戻し先として使わない。継続デプロイの環境では Nix と Bun の lockfile を使い、`bun run deploy` を実行する。
 
 ## GitHub Actions の継続デプロイ
 
 ビルド済みWorkersは一度だけ生成して全ブラウザー検証へ共有する。エディターはChromium・WebKitそれぞれでD&D・コピーとチェック操作・階層と並べ替え・書式変更の4群へ分け、Readerは独立して検証する。ジョブごとにDBを作成し、操作群ごとに新しいブラウザーコンテキストと記事を用意する。全群を維持し、失敗・キャンセル・スキップがあれば`ci-check`で本番デプロイとPRプレビューを止める。ローカルの`bun run test:deployment:browser`は既定で全群を実行する。1群だけ再現する場合は`EVAME_BROWSER_TYPE=webkit EVAME_BROWSER_SUITE=editor-lists-structure`のように指定する。
 
-`.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テストの成功後、本番DBのマイグレーション、ビルド、成果物テスト、Reader・App・Gatewayのデプロイを順に行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
+`.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テストの成功後、本番DBのマイグレーション、ビルド、成果物テスト、単一Workerのデプロイを行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
 
-Astroの `/_astro/*` はGatewayへコピーせず、READER bindingからHTMLと同じReaderのStatic Assetsへ転送する。`deploy:workers` はReader・App・Gatewayの順で更新し、全て成功してから配信アセットの記録を確定し、Reader自身の共有HTMLキャッシュを無効化する。通常のデプロイでは公開ルートを変更しない。失敗時は再実行できる。AppのWorker名・本番の秘密値とReaderBackendへの接続先は維持する。
+Astroのサーバー成果物とJS/CSSをルートの `dist` に含める。`deploy:workers` は `dist/server/wrangler.json` を1回デプロイし、成功後に配信アセットの履歴を確定する。HTMLのR2キーはDB URLのハッシュと `CF_VERSION_METADATA.id` で分離し、更新記録はDB URLのハッシュを使って同じDBの全Worker版で共有する。このため、デプロイ後の一括purgeは不要で、旧版へ戻しても新版での非公開化・削除が反映される。通常デプロイは公開ルートを変更しない。
 
-切り替え前のHTMLを開いているブラウザーのため、配信対象から外れた時点から30日間、旧ハッシュ付きアセットをReaderに残す。`prepare:reader-assets` は `.data/reader-assets/active.json` に記録した直前の配信ファイルを失効させず、過去の履歴を成果物へ含める。`deploy:workers` は3つのWorkerの更新後だけ次の配信ファイルを確定し、失敗時は旧記録を維持する。CIは履歴をmainの成功したデプロイ間で保存・復元する。初回やCIキャッシュ消失時は公開トップ・そこから参照する公開ページとJS依存を認証なしで回収する。ビルド自体ではネットワーク取得しない。
+旧HTMLが参照するハッシュ付きJS/CSSを配信終了から30日間、同じWorkerのStatic Assetsへ残す。`prepare:reader-assets` は `.data/reader-assets/active.json` と過去の履歴を使い `dist/client/_astro` へ含める。デプロイ失敗時は旧記録を維持する。CIはmainの成功したデプロイ間で履歴を保存・復元する。初回や履歴消失時は公開HTMLとJS依存を認証なしで回収する。回収元はカスタムドメインのbot制限を避けるため `https://evame-start.reimei.workers.dev` を使う。ビルド自体ではネットワーク取得しない。
 
-回収元は公開ルートも維持するAppの `https://evame-start.reimei.workers.dev` とする。カスタムドメインのbot制限でCIの取得が拒否されるため、既存のWorker公開URLを使う。Readerのworkers.dev公開設定は無効のままにする。
+Actions secretsには本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番DBはmainのマイグレーションだけに渡す。通常デプロイのトークンは既存の `evame-start` へのIndividual Workers Editor権限を使う。Sentryアップロード用トークンは本番ビルドだけに渡し、Worker secretには登録しない。
 
-リポジトリのActions secretsに本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番用のDB接続設定は `main` のマイグレーションだけに渡す。Cloudflareのデプロイ先はそれぞれの `wrangler.jsonc` に定義する。デプロイ用のアカウントトークン `evame-github-deploy` は、Specified Workersで既存の `evame-start`・`evame-reader`・`evame-gateway` にIndividual Workers Editor権限を設定する。通常のデプロイにはWorkerの新規作成・Zone Read・Workers Routes Writeの権限は不要。既存のキャッシュ削除用トークンはデプロイには使わない。Sentryのアップロード用トークンは本番ビルドだけに渡し、Worker secretには登録しない。
+本番切り替え前に `PUBLIC_HTML` のbucketを用意し、HTMLと変更記録を2日で削除するlifecycleを設定する。Previewは別bucketを使い、その内部もDB URLのハッシュで分離する。HTMLだけはさらにWorker versionで分離し、同じDBの変更記録をWorker versionで分割しない。R2 bindingには公開ドメインを付けず、HTMLはWorker経由で配信する。
 
-初回のGateway作成と本番ルートの切り替えはCLIで一度だけ行う。`scripts/switch-gateway-route.mjs` は既存の `evame.tech/*` ルートだけをAppからGatewayへ再接続する。既にGatewayへ接続済みなら更新せず、第三のWorkerが所有している場合は停止する。DNS・他のルート・`images.evame.tech` は変えない。切り替え用の `CLOUDFLARE_API_TOKEN` には対象ゾーンのZone Read・Workers Routes Writeが必要で、CI用トークンとは分ける。Wrangler設定では `routes` を指定せず、通常のデプロイで接続済みルートを維持する。プレビュー作成でも本番の公開先を変更しない。
+```sh
+nix develop --command bun x wrangler r2 bucket create evame-public-html
+nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html expire-html html/ --expire-days 2
+nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html expire-changes changes/ --expire-days 2
+nix develop --command bun x wrangler r2 bucket create evame-public-html-preview
+nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html-preview expire-html html/ --expire-days 2
+nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html-preview expire-changes changes/ --expire-days 2
+```
 
-テーブル・カラムを廃止するときは、先に旧コードと共存できるDB変更と参照を外したコードをデプロイする。その本番反映を確認してから、次のマイグレーションでDB構造を削除する。CIはマイグレーションを先に実行するため、参照を外すコードとテーブル削除を同じデプロイにまとめない。
+bucket作成・lifecycle設定にはAccountのR2管理権限が必要。通常のWorker更新権限と区別する。保存APIはDB更新と同時に永続化した保留行をR2へ反映してから成功を返し、失敗後は同内容の保存でも再試行する。HTML保存の同時fillに伴う429だけは生成応答を返して保存を省略できるが、変更記録の読み書き失敗は成功扱いしない。設計と検証項目は[公開HTMLのR2保存](../plans/incremental-static-reader.md)を参照する。
+
+初回の本番ルート切り替えは `scripts/switch-public-route.mjs` で既存の `evame.tech/*` を `evame-gateway` から `evame-start` へ接続する。既に切り替え済みなら更新しない。未知のWorkerが所有する場合は停止する。切り替え用トークンには対象Zone Read・Workers Routes Writeが必要。DNS・画像配信・他のルートは変えない。単一Workerの公開・保存と旧JS/CSSの取得を本番で確認してから、旧Reader/GatewayのWorkerを削除する。
+
+DBマイグレーションはWorkerのデプロイ前に適用する。更新途中の旧コードとの後方互換性は要求しないが、既存文書・翻訳・投票と認証データは保持する。
 
 本番切り替え時は Worker の `BETTER_AUTH_URL` を `https://evame.tech`、`SENTRY_DSN` と `SENTRY_ENVIRONMENT` を本番用に設定する。Workerのロールバックは、戻すバージョンが現在のDB構造と互換な場合にだけ行う。DBマイグレーションはWorkerのロールバックでは戻らないため、テーブル削除などの非互換な変更後は、現在のDB構造に合わせた修正を前進デプロイする。NeonはTursoへの本番切り替えと整合性確認が完了するまで保持する。Upstash QStashのリソースと請求元のMarketplace連携は維持する。
 

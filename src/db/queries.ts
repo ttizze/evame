@@ -9,33 +9,18 @@ export function fetchReaderRevision() {
 		.executeTakeFirstOrThrow();
 }
 
-/** 変更された階層だけを親方向へ辿る。移動前の親もDBトリガーが記録する。 */
-export async function fetchReaderChanges(since: number) {
+/** DB更新と同時に記録した保留行から、階層の祖先も含む配信依存を取得する。 */
+export async function fetchReaderPublicationChanges() {
 	return (
-		await sql<{ key: string }>`
-  WITH RECURSIVE changed AS (
-   SELECT key FROM reader_revisions WHERE revision > ${since} AND key != '*'
-  ), navigation(id) AS (
-   SELECT CAST(substr(key, 5) AS INTEGER) FROM changed WHERE key LIKE 'nav:%'
-   UNION SELECT pages.parent_id FROM pages JOIN navigation ON pages.id = navigation.id WHERE pages.parent_id IS NOT NULL
+		await sql<{ key: string; revision: number }>`
+  WITH RECURSIVE navigation(id, revision) AS (
+   SELECT CAST(substr(key, 5) AS INTEGER), revision FROM reader_publication_changes WHERE key LIKE 'nav:%'
+   UNION SELECT pages.parent_id, navigation.revision FROM pages JOIN navigation ON pages.id = navigation.id WHERE pages.parent_id IS NOT NULL
+  ), changes AS (
+   SELECT key, revision FROM reader_publication_changes
+   UNION SELECT 'tree:' || id, revision FROM navigation
   )
-  SELECT key FROM changed WHERE key NOT LIKE 'nav:%'
-  UNION SELECT 'tree:' || id FROM navigation
-  UNION SELECT 'about' WHERE EXISTS (SELECT 1 FROM changed)
+  SELECT key, MAX(revision) AS revision FROM changes GROUP BY key
  `.execute(db)
 	).rows;
-}
-
-export function fetchReaderCacheInvalidations() {
-	return db.selectFrom("readerCacheInvalidations").selectAll().execute();
-}
-
-export function fetchReaderPublicationPages(ids: readonly number[]) {
-	return db
-		.selectFrom("pages")
-		.innerJoin("users", "users.id", "pages.userId")
-		.select(["users.handle", "pages.slug", "pages.sourceLocale"])
-		.where("pages.id", "in", ids)
-		.where("pages.status", "=", "PUBLIC")
-		.execute();
 }

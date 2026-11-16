@@ -15,19 +15,6 @@ import { supportedLocaleOptions } from "../src/app/_constants/locale.ts";
 import { copyTestDatabase } from "./test-database.mjs";
 import { startTursoServer } from "./turso-dev-server.mjs";
 
-// 公開入口へ編集アプリや監視SDKを戻す変更を、配信する成果物で検出する。
-const gatewayBundle = await readFile("gateway/dist/worker.js");
-assert.ok(gatewayBundle.length <= 128 * 1024, "公開Gatewayは128KB以下に保つ");
-const gatewayMetadata = JSON.parse(
-	await readFile("gateway/dist/bundle-meta.json", "utf8"),
-);
-for (const path of Object.keys(gatewayMetadata.inputs))
-	assert.doesNotMatch(
-		path,
-		/@tanstack|@sentry|@libsql|react(?:-dom)?@|src\/db(?:\.ts|\/)/,
-		"公開Gatewayに編集・DB・Sentry SDKを含めない",
-	);
-
 const browserSuite = process.env.EVAME_BROWSER_SUITE ?? "all";
 const browserType = process.env.EVAME_BROWSER_TYPE ?? "all";
 assert.ok(
@@ -74,7 +61,6 @@ let emptyHome;
 try {
 	harness = createTestHarness({
 		workers: [
-			{ configPath: "gateway/dist/wrangler.json" },
 			{
 				configPath: "dist/server/wrangler.json",
 				secrets: {
@@ -92,23 +78,10 @@ try {
 					QSTASH_PUBLISH_BASE_URL: "https://example.test",
 				},
 			},
-			{
-				configPath: "reader/dist/server/wrangler.json",
-				secrets: { SENTRY_DSN: "" },
-			},
 		],
 	});
 	const { url: serverUrl } = await harness.listen();
-	worker = harness.getWorker("evame-gateway");
-	const gatewayEnv = await worker.getEnv();
-	await gatewayEnv.MONITORING.report(
-		new Error("local-gateway-monitoring-check"),
-		"http://localhost/ja",
-		"GET",
-	);
-	console.log(
-		"公開Gatewayの監視RPCをWorkersランタイムで呼び出せる（Sentry送信は無効）",
-	);
+	worker = harness.getWorker("evame-start");
 	for (let request = 0; request < 2; request++) {
 		const response = await worker.fetch(
 			"http://localhost/api/auth/get-session",
@@ -382,6 +355,7 @@ try {
 		{ headers: { cookie } },
 	);
 	const articleHtml = await article.text();
+	assert.equal(article.status, 200, articleHtml);
 	assert.ok(
 		(articleHtml.match(/<link[^>]+rel="stylesheet"/g) ?? []).length === 1,
 		"記事の小さいCSSはHTMLに含め、大きい共通CSSだけを別に取得する",
@@ -394,7 +368,6 @@ try {
 		articleHtml.includes('data-tweet-id="123456789"'),
 		"埋め込みの起動に必要なIDをHTMLに含める",
 	);
-	assert.equal(article.status, 200, articleHtml);
 	assert.ok(
 		articleHtml.includes("Cloudflareで更新保存"),
 		"記事本文をSSRできる",
@@ -404,7 +377,7 @@ try {
 	const readerAssetPath = articleHtml.match(/component-url="([^"]+)"/)?.[1];
 	assert.ok(readerAssetPath?.startsWith("/_astro/"));
 	const readerAsset = await worker.fetch(`http://localhost${readerAssetPath}`);
-	assert.equal(readerAsset.status, 200, "GatewayからReaderのJSを取得できる");
+	assert.equal(readerAsset.status, 200, "同じWorkerからAstroのJSを取得できる");
 	assert.ok(readerAsset.headers.get("Content-Type")?.includes("javascript"));
 	assert.ok(readerAsset.headers.get("Cache-Control")?.includes("immutable"));
 	assert.equal(readerAsset.headers.get("Set-Cookie"), null);
@@ -423,11 +396,37 @@ try {
 		"親記事のある記事で階層ナビゲーションをSSRできる",
 	);
 	console.log("親記事のある記事で本文と階層ナビゲーションをSSRできる");
-	await database.execute({
-		sql: "UPDATE pages SET status = 'PUBLIC' WHERE slug = ?",
+	const storedPage = await database.execute({
+		sql: "SELECT id FROM pages WHERE slug = ?",
 		args: [pageSlug],
 	});
+	const publishFunction = functions.togglePublishAction_createServerFn_handler;
+	assert.ok(publishFunction, "公開状態を変更するServer Functionが生成される");
+	const published = await worker.fetch(
+		"http://localhost/_serverFn/" + publishFunction,
+		{
+			method: "POST",
+			headers: {
+				cookie,
+				origin: "http://localhost",
+				"x-tsr-serverFn": "true",
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(
+				await toJSONAsync({
+					data: { pageId: Number(storedPage.rows[0].id), locale: "ja" },
+				}),
+			),
+		},
+	);
+	assert.equal(published.status, 200, await published.text());
 	if (emptyHome) {
+		const publishedHome = await fetch(`${serverUrl.origin}/ja`);
+		assert.equal(publishedHome.status, 200);
+		assert.ok(
+			(await publishedHome.text()).includes("Workers保存テスト"),
+			"公開APIの成功直後に、空だったトップのHTMLにも記事を反映する",
+		);
 		const { expect } = await import("@playwright/test");
 		await emptyHome.page.evaluate(() =>
 			window.dispatchEvent(new Event("focus")),
@@ -446,10 +445,6 @@ try {
 			"記事が0件のトップからも自動更新で記事と操作可能ないいねを表示できる",
 		);
 	}
-	const storedPage = await database.execute({
-		sql: "SELECT id FROM pages WHERE slug = ?",
-		args: [pageSlug],
-	});
 	const commentIds = [];
 	for (let index = 0; index < 22; index++) {
 		const text =
@@ -493,7 +488,7 @@ try {
 	assert.equal(publicArticle.status, 200, publicArticleHtml);
 	assert.equal(
 		publicArticle.headers.get("X-Evame-HTML"),
-		"dynamic",
+		"astro",
 		"事前生成せず最初の閲覧で本文をSSRする",
 	);
 	assert.ok(
@@ -796,8 +791,6 @@ try {
 		(await revised.text()).includes("公開記事を更新した本文"),
 		"公開記事の保存後に本文HTMLを更新する",
 	);
-	const publishFunction = functions.togglePublishAction_createServerFn_handler;
-	assert.ok(publishFunction, "公開状態を変更するServer Functionが生成される");
 	const changed = await worker.fetch(
 		"http://localhost/_serverFn/" + publishFunction,
 		{
@@ -879,32 +872,18 @@ try {
 
 	await harness.update((options) => ({
 		...options,
-		workers: options.workers.map((config) =>
-			config.configPath === "reader/dist/server/wrangler.json"
-				? config
-				: {
-						...config,
-						secrets: { ...config.secrets, DATABASE_MIGRATION: "true" },
-					},
-		),
+		workers: options.workers.map((config) => ({
+			...config,
+			secrets: { ...config.secrets, DATABASE_MIGRATION: "true" },
+		})),
 	}));
-	const stoppedGateway = harness.getWorker("evame-gateway");
+	const stoppedWorker = harness.getWorker("evame-start");
 	for (const path of ["/ja", "/api/auth/get-session"]) {
-		const response = await stoppedGateway.fetch(`http://localhost${path}`);
+		const response = await stoppedWorker.fetch(`http://localhost${path}`);
 		assert.equal(response.status, 503);
 		assert.equal(response.headers.get("retry-after"), "60");
 	}
-	const readerEnv = await harness.getWorker("evame-reader").getEnv();
-	const stoppedBackend = await readerEnv.BACKEND.fetch(
-		"https://backend.internal/api/reader-data?path=/ja",
-	);
-	assert.equal(
-		stoppedBackend.status,
-		503,
-		"Reader専用のDB接続も移行フラグで停止する",
-	);
-	assert.equal(stoppedBackend.headers.get("retry-after"), "60");
-	console.log("DB移行中は公開HTML・API・Reader専用のDB接続を503で停止できる");
+	console.log("DB移行中は公開HTMLとAPIを503で停止できる");
 } catch (error) {
 	const logs = harness?.getLogs();
 	if (logs?.length)

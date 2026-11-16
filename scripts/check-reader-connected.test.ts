@@ -23,6 +23,9 @@ vi.mock("@libsql/client", () => ({ createClient }));
 vi.mock("seroval", () => ({ toJSONAsync: vi.fn() }));
 vi.mock("wrangler", () => ({ createTestHarness }));
 vi.mock("./test-database.mjs", () => ({ copyTestDatabase }));
+vi.mock("./prepare-reader-connected.mjs", () => ({
+	prepareReaderConnected: async () => "dist/server/connected-wrangler.json",
+}));
 vi.mock("./turso-dev-server.mjs", () => ({ startTursoServer }));
 vi.mock("node:fs/promises", () => ({
 	mkdir,
@@ -88,19 +91,10 @@ it.each([
 	expect(createClient).not.toHaveBeenCalled();
 });
 
-it("ユーザー削除とDB終了が失敗してもR2削除と結果保存を試行し全失敗を報告する", async () => {
+it("ユーザー削除とDB終了が失敗しても結果保存を試行し全失敗を報告する", async () => {
 	vi.stubEnv(
 		"CONNECTED_PREVIEW_ORIGIN",
 		"https://pr-1170-evame-start.reimei.workers.dev",
-	);
-	vi.stubEnv(
-		"CONNECTED_PREVIEW_READER_ORIGIN",
-		"https://pr-1170-evame-reader.reimei.workers.dev",
-	);
-	const secrets = JSON.parse(process.env.EVAME_PREVIEW_SECRETS ?? "{}");
-	vi.stubEnv(
-		"EVAME_PREVIEW_SECRETS",
-		JSON.stringify({ ...secrets, PREVIEW_READER_SECRET: "test-secret" }),
 	);
 	const execute = vi
 		.fn()
@@ -120,7 +114,7 @@ it("ユーザー削除とDB終了が失敗してもR2削除と結果保存を試
 		const error = await import("./check-reader-connected.mjs").catch(
 			(error) => error,
 		);
-		expect(cleanup).toHaveBeenCalledOnce();
+		expect(cleanup).not.toHaveBeenCalled();
 		expect(writeFile).toHaveBeenCalledWith(
 			expect.stringContaining("result.json"),
 			expect.any(String),
@@ -136,7 +130,7 @@ it("ユーザー削除とDB終了が失敗してもR2削除と結果保存を試
 	}
 });
 
-it("Worker終了が失敗してもTurso停止と設定削除と結果保存を試行する", async () => {
+it("Worker終了が失敗してもTurso停止と結果保存を試行する", async () => {
 	vi.stubEnv("CONNECTED_PREVIEW_ORIGIN", "");
 	createClient.mockReturnValue({ execute: vi.fn(), close: vi.fn() });
 	const stop = vi.fn();
@@ -153,9 +147,14 @@ it("Worker終了が失敗してもTurso停止と設定削除と結果保存を�
 	);
 	expect(close).toHaveBeenCalledOnce();
 	expect(stop).toHaveBeenCalledOnce();
-	expect(rm).toHaveBeenCalledWith(expect.stringContaining("connected-"), {
-		force: true,
+	expect(createTestHarness).toHaveBeenCalledWith({
+		workers: [
+			expect.objectContaining({
+				configPath: "dist/server/connected-wrangler.json",
+			}),
+		],
 	});
+	expect(rm).not.toHaveBeenCalled();
 	expect(writeFile).toHaveBeenCalledWith(
 		expect.stringContaining("result.json"),
 		expect.any(String),
@@ -163,27 +162,82 @@ it("Worker終了が失敗してもTurso停止と設定削除と結果保存を�
 	expect(error).toBeInstanceOf(AggregateError);
 });
 
-it("Cloudflare Previewでも生成失敗の検証を省略せず保存成功の誤報を検出する", async () => {
+it("前回中断の障害キーだけを回収し、通常の保留キーと版を残して初回保存する", async () => {
+	vi.stubEnv(
+		"CONNECTED_PREVIEW_ORIGIN",
+		"https://pr-1171-evame-start.reimei.workers.dev",
+	);
+	const { createClient: createSqliteClient } =
+		await vi.importActual<typeof import("@libsql/client")>("@libsql/client");
+	const database = createSqliteClient({ url: "file::memory:" });
+	try {
+		await database.execute(
+			"CREATE TABLE reader_publication_changes (key TEXT PRIMARY KEY, revision INTEGER NOT NULL)",
+		);
+		for (const key of ["connected:publication-failure", "page:pending"])
+			await database.execute({
+				sql: "INSERT INTO reader_publication_changes (key,revision) VALUES (?,?)",
+				args: [key, 42],
+			});
+		createClient.mockReturnValue({
+			execute: (query: import("@libsql/client").InStatement) =>
+				(typeof query === "string" ? query : query.sql).includes(
+					"reader_publication_changes",
+				)
+					? database.execute(query)
+					: Promise.resolve({ rows: [] }),
+			close: vi.fn(),
+		});
+		readFile.mockResolvedValue(
+			`"${"0".repeat(64)}": { functionName: "editPageContent_createServerFn_handler" }`,
+		);
+		const { readdir } = await import("node:fs/promises");
+		vi.mocked(readdir).mockResolvedValue([
+			"server-fn-resolver-test.js",
+		] as never);
+		const send = vi.fn(async () => {
+			const pending = await database.execute(
+				"SELECT key,revision FROM reader_publication_changes ORDER BY key",
+			);
+			expect(
+				pending.rows.map(({ key, revision }) => ({ key, revision })),
+			).toEqual([{ key: "page:pending", revision: 42 }]);
+			throw new Error("初回保存へ到達");
+		});
+		vi.stubGlobal("fetch", send);
+		await expect(import("./check-reader-connected.mjs")).rejects.toThrow(
+			"初回保存へ到達",
+		);
+		expect(send).toHaveBeenCalledOnce();
+	} finally {
+		database.close();
+		vi.unstubAllGlobals();
+	}
+});
+
+it("Cloudflare Previewでも差分なし保存で保留キーを回収する検証を実行する", async () => {
 	vi.stubEnv(
 		"CONNECTED_PREVIEW_ORIGIN",
 		"https://pr-1170-evame-start.reimei.workers.dev",
 	);
-	vi.stubEnv(
-		"CONNECTED_PREVIEW_READER_ORIGIN",
-		"https://reader-pr-1170-evame-start.reimei.workers.dev",
-	);
 	vi.stubEnv("EVAME_CONNECTED_BROWSER", "");
-	const secrets = JSON.parse(process.env.EVAME_PREVIEW_SECRETS ?? "{}");
-	vi.stubEnv(
-		"EVAME_PREVIEW_SECRETS",
-		JSON.stringify({ ...secrets, PREVIEW_READER_SECRET: "test-secret" }),
-	);
-	createClient.mockReturnValue({
-		execute: vi.fn().mockResolvedValue({ rows: [{ id: 7 }] }),
-		close: vi.fn(),
+	const execute = vi.fn().mockImplementation(async (query) => {
+		const sql = typeof query === "string" ? query : query.sql;
+		if (sql.startsWith("SELECT key,revision"))
+			return { rows: [{ key: "pending", revision: 42 }] };
+		if (sql.startsWith("SELECT key")) return { rows: [{ key: "pending" }] };
+		return {
+			rows: [
+				{ id: 7, mdast_json: "反映失敗後に回復する本文", updated_at: 123 },
+			],
+		};
 	});
-	const names = ["editPageContent", "togglePublishAction", "archivePageAction"];
-	const resolver = names
+	createClient.mockReturnValue({ execute, close: vi.fn() });
+	const resolver = [
+		"editPageContent",
+		"togglePublishAction",
+		"archivePageAction",
+	]
 		.map(
 			(name, index) =>
 				`"${String(index).repeat(64)}": { functionName: "${name}_createServerFn_handler" }`,
@@ -192,28 +246,35 @@ it("Cloudflare Previewでも生成失敗の検証を省略せず保存成功の�
 	readFile.mockResolvedValue(resolver);
 	const { readdir } = await import("node:fs/promises");
 	vi.mocked(readdir).mockResolvedValue(["server-fn-resolver-test.js"] as never);
-	const send = vi.fn(async (url: URL, init: RequestInit = {}) => {
-		if (new URL(url).pathname.startsWith("/__"))
-			return new Response(null, { status: 204 });
-		if (
-			init.body instanceof FormData &&
-			String(init.body.get("pageContent")).includes("並行保存")
-		)
-			throw new Error("失敗後の再試行の検証が省略された");
+	let saves = 0;
+	const send = vi.fn(async (url: string | URL | Request) => {
+		const save = new URL(String(url)).pathname.includes(
+			`/_serverFn/${"0".repeat(64)}`,
+		);
+		if (save) saves++;
 		return new Response("保存応答の直後の本文", {
-			headers: { "X-Evame-HTML": "publication" },
+			status: save && saves === 3 ? 500 : 200,
+			headers: { "X-Evame-HTML": "astro", "X-Evame-HTML-Cache": "HIT" },
 		});
 	});
 	vi.stubGlobal("fetch", send);
 	try {
 		await expect(import("./check-reader-connected.mjs")).rejects.toThrow(
-			"R2生成の失敗を保存成功にしない",
+			"同内容の再保存で保留キーを回収する",
 		);
 		expect(
-			send.mock.calls.some(
-				([url]) => new URL(url).pathname === "/__invalidate",
+			execute.mock.calls.some(
+				([query]) =>
+					typeof query !== "string" &&
+					query.sql.startsWith("INSERT INTO reader_publication_changes") &&
+					query.args[0] === "connected:publication-failure",
 			),
 		).toBe(true);
+		expect(
+			send.mock.calls.some(([url]) =>
+				new URL(String(url)).pathname.startsWith("/__"),
+			),
+		).toBe(false);
 	} finally {
 		vi.unstubAllGlobals();
 	}

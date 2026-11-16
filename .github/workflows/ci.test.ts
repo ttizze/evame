@@ -25,7 +25,7 @@ const workflows = JSON.parse(
 	),
 );
 
-it("ChromiumとWebKitで全エディター操作群を重複なく検証し、Readerも残す", () => {
+it("ChromiumとWebKitで全エディター操作群とAstroの公開表示を検証する", () => {
 	const browser = workflows[0].jobs.browser;
 	expect(browser.needs).toBe("build");
 	expect(browser.strategy["fail-fast"]).toBe(false);
@@ -154,7 +154,7 @@ it("CIの成果物から環境ファイルと秘密値を除外し、実行に�
 		".data/browser-test.db",
 		"dist/server/index.js",
 		"dist/server/.vite/manifest.json",
-		"reader/dist/client/article.js",
+		"dist/client/_astro/article.js",
 	];
 	const excluded = [
 		"dist/server/.dev.vars",
@@ -200,7 +200,7 @@ it("ブラウザー全操作群はビルド時に一度だけ準備したSQLite�
 	);
 	const connected = steps.find(
 		(step: { name: string }) =>
-			step.name === "Verify saving through Astro generation and R2 publication",
+			step.name === "Verify saving and public HTML in one Worker",
 	);
 	expect(prepare).toBeGreaterThan(-1);
 	expect(prepare).toBeLessThan(archive);

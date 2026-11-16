@@ -2,21 +2,10 @@ declare module "cloudflare:workers" {
 	export const WorkerEntrypoint: typeof import("@cloudflare/workers-types").CloudflareWorkersModule.WorkerEntrypoint;
 	export const cache: import("@cloudflare/workers-types").CacheContext;
 	export const env: {
-		READER_PUBLICATION_PREFIX?: string;
-		HTML?: import("@cloudflare/workers-types").R2Bucket;
 		DATABASE_MIGRATION?: string;
-		PREVIEW_READER_ORIGIN?: string;
-		PREVIEW_APP_ORIGIN?: string;
-		APP: import("@cloudflare/workers-types").Fetcher;
-		MONITORING: {
-			report(error: Error, url: string, method: string): Promise<void>;
-		};
-		PREVIEW_GATEWAY_ORIGIN?: string;
-		PREVIEW_READER_SECRET?: string;
-		READER: import("@cloudflare/workers-types").Fetcher;
-		BACKEND: import("@cloudflare/workers-types").Fetcher;
 		SENTRY_DSN?: string;
 		SETTINGS: import("@cloudflare/workers-types").KVNamespace;
+		PUBLIC_HTML: import("@cloudflare/workers-types").R2Bucket;
 		UPLOADS: import("@cloudflare/workers-types").R2Bucket;
 		IMAGES: import("@cloudflare/workers-types").ImagesBinding;
 		ASSETS: import("@cloudflare/workers-types").Fetcher;

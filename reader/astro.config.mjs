@@ -75,6 +75,12 @@ export default defineConfig({
 			},
 		},
 		plugins: [
+			{
+				name: "application-data-boundary",
+				resolveId(id) {
+					if (id === "virtual:evame-reader-data") return { id, external: true };
+				},
+			},
 			tailwindcss(),
 			{
 				...serverHtmlParser,

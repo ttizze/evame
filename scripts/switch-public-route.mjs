@@ -1,8 +1,5 @@
 import { readFile } from "node:fs/promises";
 
-const gateway = JSON.parse(
-	await readFile("gateway/dist/wrangler.json", "utf8"),
-);
 const app = JSON.parse(await readFile("dist/server/wrangler.json", "utf8"));
 const token = process.env.CLOUDFLARE_API_TOKEN;
 if (!token)
@@ -27,7 +24,7 @@ async function requestCloudflare(path, method, body) {
 	return data.result;
 }
 const zones = await requestCloudflare(
-	`/zones?${new URLSearchParams({ name: "evame.tech", "account.id": gateway.account_id })}`,
+	`/zones?${new URLSearchParams({ name: "evame.tech", "account.id": app.account_id })}`,
 	"GET",
 	null,
 );
@@ -39,13 +36,13 @@ const routes = await requestCloudflare(
 );
 const route = routes.find((route) => route.pattern === "evame.tech/*");
 if (!route) throw new Error("Existing evame.tech/* route was not found");
-if (route.script !== gateway.name) {
-	if (route.script !== app.name)
+if (route.script !== app.name) {
+	if (route.script !== "evame-gateway")
 		throw new Error("Public route belongs to an unexpected Worker");
 	await requestCloudflare(
 		`/zones/${zones[0].id}/workers/routes/${route.id}`,
 		"PUT",
-		{ pattern: route.pattern, script: gateway.name },
+		{ pattern: route.pattern, script: app.name },
 	);
 }
-console.log(`Public route: evame.tech/* → ${gateway.name}`);
+console.log(`Public route: evame.tech/* → ${app.name}`);

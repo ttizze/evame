@@ -1,6 +1,6 @@
 import { withSecurityHeaders } from "../security-headers";
 
-// 公開入口・App・ReaderBackendで、DB接続前に返す停止応答を揃える。
+// 公開表示と編集・APIで、DB接続前に返す停止応答を揃える。
 export function getMigrationResponse(flag: string | undefined) {
 	return flag === "true"
 		? withSecurityHeaders(

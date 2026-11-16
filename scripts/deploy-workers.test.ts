@@ -40,7 +40,7 @@ beforeEach(async () => {
 	await utimes(join(directory, ".data/reader-assets/files/old.js"), old, old);
 	await writeFile(
 		join(directory, "bin/bun"),
-		'#!/bin/sh\nprintf "%s\\n" "$5" >> deployments\nif test -f fail-reader && test "$5" = reader/dist/server/wrangler.json; then exit 1; fi\n',
+		'#!/bin/sh\nprintf "%s\\n" "$5" >> deployments\nif test -f fail-worker && test "$5" = dist/server/wrangler.json; then exit 1; fi\n',
 		{ mode: 0o755 },
 	);
 });
@@ -60,7 +60,7 @@ it("準備したアセットの記録がなければWorkerを更新しない", a
 	await expect(readFile(join(directory, "deployments"))).rejects.toThrow();
 });
 
-it("Reader・編集アプリ・公開Gatewayの順に更新してから配信中のアセットを確定する", async () => {
+it("統合Workerを一度更新してから配信中のアセットを確定する", async () => {
 	const startedAt = Date.now();
 	await promisify(execFile)(process.execPath, [script], {
 		cwd: directory,
@@ -71,12 +71,7 @@ it("Reader・編集アプリ・公開Gatewayの順に更新してから配信中
 	});
 	expect(
 		(await readFile(join(directory, "deployments"), "utf8")).trim().split("\n"),
-	).toEqual([
-		"reader/dist/server/wrangler.json",
-		"dist/server/wrangler.json",
-		"gateway/dist/wrangler.json",
-		"purge-html",
-	]);
+	).toEqual(["dist/server/wrangler.json"]);
 	expect(
 		await readFile(join(directory, ".data/reader-assets/active.json"), "utf8"),
 	).toBe('["new.js"]');
@@ -88,8 +83,8 @@ it("Reader・編集アプリ・公開Gatewayの順に更新してから配信中
 	).toBeGreaterThanOrEqual(startedAt);
 });
 
-it("Readerの更新に失敗した場合は旧版の配信中アセットを維持する", async () => {
-	await writeFile(join(directory, "fail-reader"), "");
+it("統合Workerの更新に失敗した場合は旧版の配信中アセットを維持する", async () => {
+	await writeFile(join(directory, "fail-worker"), "");
 	await expect(
 		promisify(execFile)(process.execPath, [script], {
 			cwd: directory,
@@ -104,28 +99,9 @@ it("Readerの更新に失敗した場合は旧版の配信中アセットを維�
 	).toBe('["old.js"]');
 });
 
-it("キャッシュ無効化が失敗しても、更新が完了したWorkerのアセットの配信履歴を保持する", async () => {
+it("通常のデプロイではWorkerを更新して新しいHTML保存先へ切り替える", async () => {
 	await writeFile(
-		join(directory, "scripts/purge-reader-cache.mjs"),
-		'throw new Error("Reader purge failed");',
-	);
-	await expect(
-		promisify(execFile)(process.execPath, [script], {
-			cwd: directory,
-			env: {
-				...process.env,
-				PATH: `${join(directory, "bin")}:${process.env.PATH}`,
-			},
-		}),
-	).rejects.toThrow();
-	expect(
-		await readFile(join(directory, ".data/reader-assets/active.json"), "utf8"),
-	).toBe('["new.js"]');
-});
-
-it("通常のデプロイでは公開ルートの変更権限を使わず、Worker更新とキャッシュ無効化を完了する", async () => {
-	await writeFile(
-		join(directory, "scripts/switch-gateway-route.mjs"),
+		join(directory, "scripts/switch-public-route.mjs"),
 		'throw new Error("Route switch failed");',
 	);
 	await promisify(execFile)(process.execPath, [script], {
@@ -138,7 +114,7 @@ it("通常のデプロイでは公開ルートの変更権限を使わず、Work
 	expect(
 		await readFile(join(directory, ".data/reader-assets/active.json"), "utf8"),
 	).toBe('["new.js"]');
-	expect(await readFile(join(directory, "deployments"), "utf8")).toContain(
+	expect(await readFile(join(directory, "deployments"), "utf8")).not.toContain(
 		"purge-html",
 	);
 });

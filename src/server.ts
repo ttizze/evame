@@ -1,4 +1,5 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
+import publicPages from "virtual:evame-public-pages";
 import type {
 	ExecutionContext,
 	Request as WorkerRequest,
@@ -13,37 +14,86 @@ import { isRedirect } from "@tanstack/react-router";
 import handler from "@tanstack/react-start/server-entry";
 import { withSecurityHeaders } from "../security-headers";
 import { getMigrationResponse } from "../shared/migration-response";
-import { restorePreviewRequest } from "../shared/preview-request";
 import { fetchPublicReader } from "../shared/public-reader";
 import { SENTRY_DSN } from "./_utils/sentry-dsn";
 import { shouldInvalidateReader } from "./app/_domain/reader-cache-policy";
+import {
+	fetchReaderHtml,
+	publishReaderChanges,
+} from "./app/_infra/reader-html";
 import { updateReaderPublication } from "./app/_service/update-reader-publication";
 import { createDb, databaseScope } from "./db";
-import { fetchReaderChanges, fetchReaderRevision } from "./db/queries";
+import { fetchReaderRevision } from "./db/queries";
 
-// HTTPルートへ公開しない、Reader専用のサービス境界。
-export class ReaderBackend extends WorkerEntrypoint {
+// 公開表示と編集の両方で、ストリーム完了・失敗・中断まで接続を保持する。
+async function withDatabase(
+	request: Request,
+	context: Pick<ExecutionContext, "waitUntil">,
+	fetchResponse: () => Promise<Response>,
+) {
+	const database = createDb();
+	return databaseScope.run(database, async () => {
+		try {
+			const response = await fetchResponse();
+			const init = {
+				status: response.status,
+				statusText: response.statusText,
+				headers: new Headers(response.headers),
+			};
+			init.headers.delete("X-Evame-Reader-Changed");
+			if (!response.body) {
+				await database.destroy();
+				return withSecurityHeaders(new Response(null, init));
+			}
+			const stream = new TransformStream();
+			context.waitUntil(
+				response.body
+					.pipeTo(stream.writable)
+					.catch((error) => {
+						if (
+							error !== undefined &&
+							!request.signal.aborted &&
+							!(error instanceof Error && error.name === "AbortError")
+						)
+							captureException(error);
+					})
+					.finally(() => database.destroy()),
+			);
+			return withSecurityHeaders(new Response(stream.readable, init));
+		} catch (error) {
+			await database.destroy();
+			throw error;
+		}
+	});
+}
+
+// 同じWorker内のAstro生成境界。R2のHIT時にはこのDB接続を起動しない。
+export class PublicPages extends WorkerEntrypoint<
+	typeof import("cloudflare:workers").env
+> {
 	async fetch(workerRequest: WorkerRequest): Promise<WorkerResponse> {
 		const migration = getMigrationResponse(process.env.DATABASE_MIGRATION);
 		if (migration) return migration as unknown as WorkerResponse;
-		const request = new Request(workerRequest.url, {
-			headers: Object.fromEntries(workerRequest.headers),
-		});
-		const database = createDb();
-		try {
-			return (await databaseScope.run(database, async () => {
-				const pathname = new URL(request.url).pathname;
-				if (pathname === "/api/reader-data") {
-					const { getReaderData } = await import(
-						"./app/api/reader-data/handler"
-					);
-					return getReaderData(request);
-				}
-				return new Response(null, { status: 404 });
-			})) as unknown as WorkerResponse;
-		} finally {
-			await database.destroy();
-		}
+		if (new URL(workerRequest.url).pathname.startsWith("/_astro/"))
+			return this.env.ASSETS.fetch(workerRequest);
+		const request = workerRequest as unknown as Request;
+		return withDatabase(request, this.ctx, async () => {
+			if (new URL(request.url).pathname === "/api/home-feed")
+				return publicPages.fetch(request, this.env, this.ctx);
+			const { revision } = await fetchReaderRevision();
+			const source = await publicPages.fetch(request, this.env, this.ctx);
+			const response = new Response(source.body, source);
+			response.headers.set("X-Evame-Reader-Revision", String(revision));
+			return response;
+		}) as unknown as Promise<WorkerResponse>;
+	}
+
+	async publish(changes: { key: string; revision: number }[]) {
+		await publishReaderChanges(
+			this.env.PUBLIC_HTML,
+			process.env.TURSO_DATABASE_URL ?? "",
+			changes,
+		);
 	}
 }
 
@@ -58,97 +108,68 @@ const sentryOptions = (env: {
 		isRedirect(hint.originalException) ? null : event,
 });
 
-export const GatewayMonitoring = withSentry(
-	sentryOptions,
-	class extends WorkerEntrypoint {
-		report(error: Error, url: string, method: string) {
-			captureException(error, {
-				tags: { worker: "evame-gateway" },
-				contexts: { request: { url, method } },
-			});
-		}
-	},
-);
-
 export default withSentry(sentryOptions, {
 	async fetch(
 		request: Request,
 		env: typeof import("cloudflare:workers").env,
-		context: Pick<ExecutionContext, "waitUntil">,
+		context: Pick<ExecutionContext, "waitUntil"> & {
+			exports: {
+				PublicPages: {
+					fetch(request: Request): Promise<Response>;
+					publish(changes: { key: string; revision: number }[]): Promise<void>;
+				};
+			};
+		},
 	) {
-		const restored = restorePreviewRequest(
-			request,
-			env.PREVIEW_GATEWAY_ORIGIN ?? null,
-			env.PREVIEW_READER_SECRET ?? null,
-		);
-		if (!restored) return new Response(null, { status: 404 });
-		request = restored;
 		const migration = getMigrationResponse(process.env.DATABASE_MIGRATION);
 		if (migration) return migration;
 		const publicResponse = await fetchPublicReader(
 			request,
-			env.READER ?? null,
+			{
+				fetch: async (input: Request) => {
+					if (
+						new URL(input.url).pathname.startsWith("/_astro/") ||
+						new URL(input.url).pathname === "/api/home-feed"
+					)
+						return context.exports.PublicPages.fetch(input);
+					return fetchReaderHtml(
+						input,
+						env.PUBLIC_HTML,
+						env.CF_VERSION_METADATA.id,
+						process.env.TURSO_DATABASE_URL ?? "",
+						async (renderRequest) => {
+							const source =
+								await context.exports.PublicPages.fetch(renderRequest);
+							const response = new Response(source.body, source);
+							const revision = Number(
+								response.headers.get("X-Evame-Reader-Revision") ?? Number.NaN,
+							);
+							response.headers.delete("X-Evame-Reader-Revision");
+							return { revision, response };
+						},
+					);
+				},
+			},
 			env.SETTINGS,
-			env.PREVIEW_READER_ORIGIN ?? null,
-			env.PREVIEW_READER_SECRET ?? null,
 		);
 		if (publicResponse) return publicResponse;
 		const url = new URL(request.url);
-		const database = createDb();
-		return databaseScope.run(database, async () => {
-			try {
-				const beforeRevision = shouldInvalidateReader(
+		return withDatabase(request, context, async () => {
+			const response = await handler.fetch(request);
+			if (
+				shouldInvalidateReader(
 					request.method,
 					url.pathname,
 					url.searchParams.get("action"),
-					200,
+					response.status,
 					"true",
 				)
-					? (await fetchReaderRevision()).revision
-					: null;
-				const response = await handler.fetch(request);
-				if (
-					beforeRevision !== null &&
-					shouldInvalidateReader(
-						request.method,
-						url.pathname,
-						url.searchParams.get("action"),
-						response.status,
-						response.headers.get("X-Evame-Reader-Changed"),
-					)
-				) {
-					const changes = await fetchReaderChanges(beforeRevision);
-					await updateReaderPublication(changes, env, url.origin);
-				}
-				const init = {
-					status: response.status,
-					statusText: response.statusText,
-					headers: new Headers(response.headers),
-				};
-				init.headers.delete("X-Evame-Reader-Changed");
-				if (!response.body) {
-					await database.destroy();
-					return withSecurityHeaders(new Response(null, init));
-				}
-				const stream = new TransformStream();
-				context.waitUntil(
-					response.body
-						.pipeTo(stream.writable)
-						.catch((error) => {
-							if (
-								error !== undefined &&
-								!request.signal.aborted &&
-								!(error instanceof Error && error.name === "AbortError")
-							)
-								captureException(error);
-						})
-						.finally(() => database.destroy()),
+			) {
+				await updateReaderPublication((changes) =>
+					context.exports.PublicPages.publish(changes),
 				);
-				return withSecurityHeaders(new Response(stream.readable, init));
-			} catch (error) {
-				await database.destroy();
-				throw error;
 			}
+			return response;
 		});
 	},
 });

@@ -22,11 +22,11 @@ const script = fileURLToPath(
 let directory: string;
 beforeEach(async () => {
 	directory = await mkdtemp(join(tmpdir(), "evame-reader-assets-"));
-	await mkdir(join(directory, "reader/dist/client/_astro"), {
+	await mkdir(join(directory, "dist/client/_astro"), {
 		recursive: true,
 	});
 	await writeFile(
-		join(directory, "reader/dist/client/_astro/new.abcdefgh.js"),
+		join(directory, "dist/client/_astro/new.abcdefgh.js"),
 		"new asset",
 	);
 });
@@ -83,7 +83,7 @@ it("30日以内の旧アセットと新アセットを残し、期限切れの�
 	});
 	expect(
 		await readFile(
-			join(directory, "reader/dist/client/_astro/old.abcdefgh.css"),
+			join(directory, "dist/client/_astro/old.abcdefgh.css"),
 			"utf8",
 		),
 	).toBe("old css");
@@ -126,7 +126,7 @@ it("初回は公開HTMLとJSの依存先を取得し、旧HTMLから参照され
 		for (const name of ["old", "shared", "comments"])
 			expect(
 				await readFile(
-					join(directory, `reader/dist/client/_astro/${name}.abcdefgh.js`),
+					join(directory, `dist/client/_astro/${name}.abcdefgh.js`),
 					"utf8",
 				),
 			).toBe(resources.get(`/_astro/${name}.abcdefgh.js`));

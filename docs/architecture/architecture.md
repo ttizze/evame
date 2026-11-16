@@ -17,7 +17,7 @@ Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳�
 
 ## 公開表示と編集の分担
 
-`src/server.ts` が公開ルートをREADER bindingへ振り分け、`reader/src/pages/[...path].astro` が一覧・本文を含むHTMLを返す。公開HTMLはWorkers Cacheで最大1時間共有し、内容の変更後はReader自身のタグをpurgeする。初回のコールドミスではBACKEND bindingのAPIから取得し、キャッシュ命中時はDBもAstroも実行しない。ビルド時の全記事SSGではない。
+`src/server.ts` が公開表示・編集・APIを単一Workerで扱う。公開HTMLはR2から読み、保存済みの版より新しい関連変更がなければDB取得やAstro生成なしで返す。コールドミスや更新後は同じWorkerのPublicPages entrypointで`reader/src/pages/[...path].astro`を生成し、本文と一覧を含むHTMLをR2へ保存する。DB更新と同時に永続化した変更記録を保存応答前にR2へ反映し、公開・非公開・削除後の古いHTMLを使わせない。HTMLは生成開始から最大1時間で失効し、Workerの版ごとに保存先を分離する。
 
 長いサービス説明と件数集計はAboutに移し、トップはログインの有無にかかわらず記事一覧を表示する。コメント、翻訳、いいね、通知などは必要な部分だけReact islandsで起動する。公開HTMLに認証情報や非公開データを混ぜない。下書きは所有者だけがprivateレスポンスでプレビューする。
 
@@ -31,7 +31,7 @@ Webのブロック操作は`block-editing.ts`で項目単位の種類変更と�
 
 ```
 /
-├── reader/                 # Astro公開画面とCloudflare Reader Worker
+├── reader/                 # Astro公開画面（ルートの単一Workerへ統合）
 ├── src/
 │   ├── routes/              # 画面・API のルート境界と loader/head
 │   ├── app/                 # 機能ごとの UI・service/domain/db

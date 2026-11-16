@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { getReaderData } from "virtual:evame-reader-data";
 
 export function fetchReaderData(
 	origin: string,
@@ -11,7 +11,5 @@ export function fetchReaderData(
 	url.searchParams.set("path", pathname);
 	url.searchParams.set("search", search);
 	const headers = { cookie: cookie ?? "", authorization: authorization ?? "" };
-	return env.PREVIEW_GATEWAY_ORIGIN
-		? fetch(url.href, { headers })
-		: env.BACKEND.fetch(url.href, { headers });
+	return getReaderData(new Request(url, { headers }));
 }

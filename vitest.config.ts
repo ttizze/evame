@@ -60,6 +60,14 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
+			"virtual:evame-reader-data": new URL(
+				"./src/app/api/reader-data/handler.ts",
+				import.meta.url,
+			).pathname,
+			"virtual:evame-public-pages": new URL(
+				"./src/tests/public-pages.ts",
+				import.meta.url,
+			).pathname,
 			"@cloudflare/pages-plugin-vercel-og/api": "@vercel/og",
 			"cloudflare:workers": new URL(
 				"./src/tests/cloudflare.ts",

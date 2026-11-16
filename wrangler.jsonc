@@ -10,10 +10,15 @@
 		"global_fetch_strictly_public"
 	],
 	"assets": { "binding": "ASSETS" },
-	"services": [{ "binding": "READER", "service": "evame-reader" }],
+	"exports": {
+		"PublicPages": { "type": "worker" }
+	},
 	"images": { "binding": "IMAGES" },
 	"version_metadata": { "binding": "CF_VERSION_METADATA" },
-	"r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "eveeve" }],
+	"r2_buckets": [
+		{ "binding": "UPLOADS", "bucket_name": "eveeve" },
+		{ "binding": "PUBLIC_HTML", "bucket_name": "evame-public-html" }
+	],
 	"kv_namespaces": [
 		{ "binding": "SETTINGS", "id": "e5faa34f97e44136a060e561e11f3d9d" }
 	],
@@ -21,7 +26,10 @@
 	"previews": {
 		"images": { "binding": "IMAGES" },
 		"version_metadata": { "binding": "CF_VERSION_METADATA" },
-		"r2_buckets": [{ "binding": "UPLOADS", "bucket_name": "eveeve" }],
+		"r2_buckets": [
+			{ "binding": "UPLOADS", "bucket_name": "eveeve" },
+			{ "binding": "PUBLIC_HTML", "bucket_name": "evame-public-html-preview" }
+		],
 		"kv_namespaces": [
 			{ "binding": "SETTINGS", "id": "e5faa34f97e44136a060e561e11f3d9d" }
 		],
