@@ -355,6 +355,7 @@ try {
 		{ headers: { cookie } },
 	);
 	const articleHtml = await article.text();
+	assert.equal(article.status, 200, articleHtml);
 	assert.ok(
 		(articleHtml.match(/<link[^>]+rel="stylesheet"/g) ?? []).length === 1,
 		"記事の小さいCSSはHTMLに含め、大きい共通CSSだけを別に取得する",
@@ -367,7 +368,6 @@ try {
 		articleHtml.includes('data-tweet-id="123456789"'),
 		"埋め込みの起動に必要なIDをHTMLに含める",
 	);
-	assert.equal(article.status, 200, articleHtml);
 	assert.ok(
 		articleHtml.includes("Cloudflareで更新保存"),
 		"記事本文をSSRできる",

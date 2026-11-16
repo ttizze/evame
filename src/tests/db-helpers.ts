@@ -5,7 +5,6 @@ import { db } from "@/db";
  * 外部キー制約の順序に注意して削除
  */
 export async function resetDatabase() {
-	await db.deleteFrom("readerCacheInvalidations").execute();
 	// 外部キー制約の順序に注意して削除
 	await db.deleteFrom("translationVotes").execute();
 	await db.deleteFrom("segmentTranslations").execute();
@@ -26,5 +25,6 @@ export async function resetDatabase() {
 	await db.deleteFrom("accounts").execute();
 	await db.deleteFrom("sessions").execute();
 	await db.deleteFrom("users").execute();
+	await db.deleteFrom("readerPublicationChanges").execute();
 	// タグはマスターデータとして残す。
 }

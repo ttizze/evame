@@ -1,5 +1,4 @@
 ---
-import { cache } from "cloudflare:workers";
 import { SparklesIcon } from "lucide-react";
 import { fromJSON } from "seroval";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/json-ld";
@@ -36,24 +35,15 @@ const { page: result, gaTrackingId } = fromJSON(await response.json()) as {
 };
 const tags = ["evame-public", ...(await readerCacheTags(result.cacheKeys))];
 const cacheTagHeader = tags.join(",");
-if (
-	result.cacheable &&
-	typeof cache?.purge === "function" &&
-	tags.length <= 1000 &&
-	cacheTagHeader.length <= 16384
-) {
-	Astro.cache.set({ maxAge: 3600, tags });
+// R2で版を照合するため、Astro/Workersの別キャッシュを経由しない。
+Astro.cache.set(false);
+if (result.cacheable) {
 	Astro.response.headers.set(
 		"Cache-Control",
 		"public, max-age=0, must-revalidate",
 	);
-	Astro.response.headers.set(
-		"Cloudflare-CDN-Cache-Control",
-		"public, max-age=3600",
-	);
 	Astro.response.headers.set("Cache-Tag", cacheTagHeader);
 } else {
-	Astro.cache.set(false);
 	Astro.response.headers.set("Cache-Control", "private, no-store");
 }
 const locale = result.locale;

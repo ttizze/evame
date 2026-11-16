@@ -1,24 +1,17 @@
-import { sql } from "kysely";
 import { beforeEach, describe, expect, it } from "vitest";
 import { db } from "@/db";
 import { resetDatabase } from "@/tests/db-helpers";
 import { createPage, createSegment, createUser } from "@/tests/factories";
 import { setupDbPerFile } from "@/tests/test-db-manager";
-import {
-	deleteReaderCacheInvalidations,
-	storeReaderCacheInvalidations,
-} from "./mutations";
-import {
-	fetchReaderCacheInvalidations,
-	fetchReaderChanges,
-	fetchReaderRevision,
-} from "./queries";
+import { fetchReaderPublicationChanges, fetchReaderRevision } from "./queries";
 
 await setupDbPerFile(import.meta.url);
 beforeEach(resetDatabase);
 
 async function changedSince(revision: number) {
-	return (await fetchReaderChanges(revision)).map((row) => row.key);
+	return (await fetchReaderPublicationChanges())
+		.filter((row) => row.revision > revision)
+		.map((row) => row.key);
 }
 describe("Readerの対象別キャッシュ無効化", () => {
 	it("本文編集では対象記事だけを変更し新着一覧や無関係な記事を無効化しない", async () => {
@@ -228,17 +221,6 @@ describe("Readerの対象別キャッシュ無効化", () => {
 	});
 });
 
-it("変更キーは全記事走査ではなく更新版のインデックスで取得する", async () => {
-	const plan = await sql<{
-		detail: string;
-	}>`EXPLAIN QUERY PLAN SELECT key FROM reader_revisions WHERE revision > 10 AND key != '*'`.execute(
-		db,
-	);
-	expect(plan.rows.map((row) => row.detail).join("\n")).toContain(
-		"reader_revisions_revision_idx",
-	);
-});
-
 it("タグ付き子記事の公開と非公開化はタグ一覧だけを無効化し新着一覧を維持する", async () => {
 	const user = await createUser();
 	const parent = await createPage({
@@ -293,16 +275,4 @@ it("タグ付き子記事の公開と非公開化はタグ一覧だけを無効�
 	expect(await changedSince(beforeDelete.revision)).toContain(
 		"tag:子記事のタグ",
 	);
-});
-
-it("失敗したキャッシュタグをDBへ残し古い成功通知で後続の変更を消さない", async () => {
-	await storeReaderCacheInvalidations(["tag-1", "tag-2"], "first");
-	const first = await fetchReaderCacheInvalidations();
-	await storeReaderCacheInvalidations(["tag-1"], "second");
-	await deleteReaderCacheInvalidations(first);
-	expect(await fetchReaderCacheInvalidations()).toEqual([
-		{ tag: "tag-1", version: "second" },
-	]);
-	await deleteReaderCacheInvalidations(await fetchReaderCacheInvalidations());
-	expect(await fetchReaderCacheInvalidations()).toEqual([]);
 });

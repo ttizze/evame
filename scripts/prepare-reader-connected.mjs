@@ -26,11 +26,10 @@ import { ${databaseExport} as createDb } from ${JSON.stringify(`./assets/${datab
 export default worker;
 export class PublicPages extends WorkerEntrypoint {
  constructor(ctx, env) { super(ctx, env); this.application = new ApplicationPublicPages(ctx, env); }
- clearCache() { return this.application.clearCache(); }
- async purge(tags) {
-  if (tags.includes("reader:connected-purge-failure"))
-   throw new Error("Injected public HTML cache invalidation failure");
-  return this.application.purge(tags);
+ async publish(changes) {
+  if (changes.some((row) => row.key === "connected:publication-failure"))
+   throw new Error("Injected public HTML publication failure");
+  return this.application.publish(changes);
  }
  async fetch(request) {
   const response = await this.application.fetch(request);

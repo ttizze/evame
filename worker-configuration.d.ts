@@ -5,6 +5,7 @@ declare module "cloudflare:workers" {
 		DATABASE_MIGRATION?: string;
 		SENTRY_DSN?: string;
 		SETTINGS: import("@cloudflare/workers-types").KVNamespace;
+		PUBLIC_HTML: import("@cloudflare/workers-types").R2Bucket;
 		UPLOADS: import("@cloudflare/workers-types").R2Bucket;
 		IMAGES: import("@cloudflare/workers-types").ImagesBinding;
 		ASSETS: import("@cloudflare/workers-types").Fetcher;

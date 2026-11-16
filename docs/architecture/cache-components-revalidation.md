@@ -2,9 +2,9 @@
 
 ## 配信経路
 
-公開トップ・記事・著者・新着・タグ・About・規約はAstroで本文と一覧を最初のHTMLに含める。Cloudflare Workers Cacheに命中すればPublicPages entrypointの実行とDB取得を省略する。キャッシュミス時だけ同じWorker内でDBを読み、Astroで描画する。HTMLのR2保存、全URLの事前生成、生成用Cron・Queueは使わない。画像用R2は維持する。
+公開トップ・記事・著者・新着・タグ・About・規約はAstroで本文と一覧を最初のHTMLに含める。R2に有効なHTMLがあればPublicPages entrypointの実行とDB取得を省略する。HTMLがない場合や関連する変更記録があれば、同じWorker内でDBを読みAstroで描画する。全URLの事前生成・生成用Cron・Queueは使わない。画像用R2は維持する。
 
-`src/server.ts` はメンテナンス判定後、公開GET/HEADをDB接続なしで同じWorkerの `PublicPages` entrypointへ渡す。外側の応答は言語Cookieを含むため `private, no-store` とし、共有HTMLキャッシュは `PublicPages` だけで有効にする。HTMLは1時間キャッシュする。Reader専用WorkerとGateway専用Workerは置かない。閲覧数・いいねの即時表示はprivate APIで取得する。人気順のSSRはキャッシュ期限で再取得する。
+`src/server.ts` はメンテナンス判定後、公開GET/HEADを `src/app/_infra/reader-html.ts` へ渡す。HTML取得と変更記録の一覧取得で有効性を確認し、必要な場合だけ同じWorkerの `PublicPages` entrypointでDB接続・Astro生成を行う。外側の応答は言語Cookieを含むため `private, no-store` とする。R2のHTMLは生成開始から1時間で失効させる。Reader専用WorkerとGateway専用Workerは置かない。閲覧数・いいねの即時表示はprivate APIで取得する。人気順のSSRはキャッシュ期限で再取得する。
 
 トップは `reader/src/components/home.astro` と `home-pages.astro` で一覧を描画し、一覧全体のReact hydrationを行わない。`home-feed.client.ts` が30秒ごととウィンドウのフォーカス復帰時にReaderの `/api/home-feed?locale=...` から最新の一覧HTMLを取得する。部分更新も同じ `home-pages.astro` とカードを使用する。同じ内容ならDOMを交換せず、更新失敗時は表示済みHTMLを残して再試行を受け付ける。一覧内で操作中のフォーカスは奪わない。部分更新は共有キャッシュへ保存しない。部分更新も同じWorker内でDBを読みAstroで描画する。
 
@@ -20,11 +20,11 @@ Cookieバー・一覧のアバター・いいね・共通ヘッダー・トッ�
 
 共通の計測同意は `shared/analytics-consent.ts`、ヘッダーと浮動バーのスクロール判定は `shared/header-scroll-state.ts` と `shared/floating-controls-visible.ts` に置く。Readerのcustom elementと編集・管理側のReact実装という複数の利用箇所で、同意や表示条件がずれないよう純粋な処理だけを共有する。共有UIは `shared/header/*.tsx` を両方から使用し、寸法・アイコン・読み上げ名を揃える。
 
-`reader/src/pages/[...path].astro` は公開結果だけを共有キャッシュへ入れる。検索・下書きプレビュー・404はキャッシュしない。ローカルで `cache.purge` がない場合も共有キャッシュを無効にする。認証CookieをDB取得へ渡すのは所有者プレビューの判定のためであり、公開HTMLにセッション・個人情報を含めない。
+`reader/src/pages/[...path].astro` はAstro側の共有キャッシュを無効にし、公開結果に依存タグを付ける。R2へ保存するのは200 HTMLで、依存タグがあり、Set-Cookieとprivate/no-storeがない応答だけ。検索・下書きプレビュー・404は保存しない。認証CookieをDB取得へ渡すのは所有者プレビューの判定のためであり、公開HTMLにセッション・個人情報を含めない。
 
 ## 対象別の無効化
 
-`reader_revisions` は元の変更と同じDBトランザクションで変更キーを記録する。既存の `0001_reader_publication.sql` を保持し、`0002_reader_cache_dependencies.sql` で一覧の所属、変更前の親、タグ名、著者ハンドル、フォローの当事者を追加する。過去のマイグレーションや旧Workerの参照列は削除しない。
+`reader_revisions` は元の変更と同じDBトランザクションで変更キーを記録する。既存の `0001_reader_publication.sql` を保持し、`0002_reader_cache_dependencies.sql` で一覧の所属、変更前の親、タグ名、著者ハンドル、フォローの当事者を追加する。`0004_reader_r2_publication.sql` はR2反映用のoutboxを追加し、旧purge用の保留表を廃止する。過去のマイグレーション自体は保持する。
 
 | 変更 | 無効化対象 |
 | --- | --- |
@@ -38,29 +38,29 @@ Cookieバー・一覧のアバター・いいね・共通ヘッダー・トッ�
 
 本文だけの編集で、無関係な記事や新着の全ページを消さない。一覧の件数・順序が変わる場合は一覧グループをタグで無効化する。新着・著者一覧は親記事を対象にするが、タグ一覧は子記事の公開・非公開化・削除や見出しの追加も対象にする。154ページの新着一覧があっても154ページを列挙・生成しない。次に閲覧されたURLだけが再描画される。
 
-`src/db/queries.ts` は保存入口から使うDB読み取り境界。保存開始時の版より新しい変更キーをインデックスで取得し、階層変更のあった記事だけを再帰SQLで親方向へ辿る。移動前の親も記録するため、移動・削除後も古い階層を無効化できる。同時保存の変更が含まれる場合は両方を削除する。
+`src/db/queries.ts` は保存入口から使うDB読み取り境界。DB更新と同時にoutboxへ記録された変更キーを取得し、階層変更のあった記事だけを再帰SQLで親方向へ辿る。移動前の親も記録するため、移動・削除後も古い階層を無効化できる。R2へ反映したキーと版が一致する行だけを削除し、同時保存の後続変更を残す。
 
 `load-reader-data.ts` は読み取った表示データに必要な依存キーを付ける。カードの掲載記事・著者、コメント著者、プロフィールのフォロー相手、階層の親を含み、空の一覧にもグループキーを付ける。タグ数がCloudflareの上限を超える応答は共有キャッシュへ入れない。
 
 `src/app/_domain/reader-cache-tags.ts` は読み取り側のAstroと書き込み側の保存APIで共用する純粋な変換。日本語・カンマ・大小文字を含むキーをSHA-256の固定長タグへ変換する。Cloudflareのタグ制約や大小文字を区別しない照合で別の対象が衝突しないよう、両方で同じ変換を使う。
 
-保存後に変更キーを取得し、同じWorkerの `PublicPages.purge(tags)` をRPCで呼ぶ。同じキャッシュスコープで `cache.purge` を実行し、成功を待って保存成功を返す。無効化に失敗したら成功扱いにしない。削除要求の前に `reader_cache_invalidations` へ対象タグと要求の版を保存し、成功後にその版だけを消す。削除失敗後は、DBの差分がない再試行でも保留タグを再送する。古い要求の成功通知で、同じタグに重なった後続の変更を消さない。下書き保存では共有キャッシュを呼ばず、保留タグは公開内容の更新を扱う次の操作で再送する。下書きの自動保存、画像アップロード、APIキー、翻訳の投入だけでは共有HTMLを削除しない。HTMLの生成は保存処理に含めない。
+保存後にoutboxの変更キーと版を取得し、同じWorkerの `PublicPages.publish(changes)` をRPCで呼ぶ。`changes/<Worker version>/<revision>/<tag>` をR2へ追記し、成功を待って保存成功を返す。R2反映に失敗したらoutboxを残し、DB差分のない同内容再保存でも再送する。取得した版だけを完了扱いにするため、同じタグの後続変更を消さない。下書き保存・画像アップロード・APIキー・翻訳投入では公開HTMLを生成しない。
 
-Workers Cacheのpurgeには、プランによらずFree枠の継続5要求/分・バースト25要求・1要求100対象という[上限](https://developers.cloudflare.com/workers/cache/purge/#rate-limits)がある。既存の全体purgeにも適用される制約で、対象別タグへの変更で回数上限自体は増えない。削除が拒否された場合も保留タグを残し、保存成功にしない。多人数による継続的な公開更新では、この上限を別途配信基盤の選定条件とする。
+HTMLには生成前のDB版と依存タグを保存する。その版より新しい変更記録に対象タグがあれば再生成する。変更記録の取得件数が1,000件を超えた場合も再生成し、見落とした更新をHIT扱いにしない。古い生成の遅延完了や変更記録の到着順逆転で非公開化を巻き戻さない。条件付きPUTで同時生成の上書きを防ぐ。HTMLと変更記録はWorker versionで分離し、R2 lifecycleで2日後に回収する。
 
 ## デプロイ
 
 1. DBマイグレーションを先に実行する。
 2. AstroとTanStack Startを含む `dist/server/wrangler.json` を `evame-start` へ1回デプロイする。
-3. 更新成功後にアセット履歴を確定し、`scripts/purge-reader-cache.mjs` から認証済み一時プレビュー経由で `PublicPages.clearCache()` を呼ぶ。HTMLは生成しない。
+3. 更新成功後にアセット履歴を確定する。新Worker versionのR2保存先を使い、一括purgeやHTMLの事前生成は行わない。
 
-JS/CSSはHTMLと同じWorkerから配信する。旧HTMLが参照するハッシュ付きアセットも配信終了から30日間保持する。保存時は対象タグ、コード更新時はPublicPages全体を無効化する。全体タグは `evame-public`。ローカルで `cache.purge` が利用できない場合は共有HTMLキャッシュを無効にし、常に現在のDBから描画する。
+JS/CSSはHTMLと同じWorkerから配信する。旧HTMLが参照するハッシュ付きアセットも配信終了から30日間保持する。保存時は対象タグの変更記録を追記し、コード更新時はWorker versionでHTMLを分離する。R2 bucketとlifecycleの準備は[Cloudflare運用](../howto/cloudflare-workers.md)を参照する。
 
 ## 検証
 
 DBテストで本文・公開状態・タイトル翻訳・階層移動と削除・タグ削除・著者変更・フォロー解除を確認する。成果物テストは768件の追加記事がある状態でも公開記事を保存し、本文SSR、編集・公開・非公開化・削除を確認する。ブラウザーではLexical、コメントと返信、言語選択、Cookieバー、浮動バー、目次、アイコン、プロフィール、JavaScript無効のコメント途中ページを確認する。ローカルのSentry送信はサーバーとブラウザーの両方で無効にする。
 
-実CDNのHITと対象別purgeはCloudflare上で検証する。対象記事・一覧の更新後に新しい本文や非公開状態が返り、無関係な記事のキャッシュが残ることを確認する。ローカルテストだけでCDN検証済みとはしない。
+実R2のHITと対象別の変更反映はCloudflare上で検証する。対象記事・一覧の更新後に新しい本文や非公開状態が返り、無関係な記事のキャッシュが残ることを確認する。ローカルテストだけでCloudflare上の検証済みとはしない。
 
 ### トップのブラウザー計測（2026-11-13）
 

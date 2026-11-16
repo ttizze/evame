@@ -19,12 +19,12 @@ beforeEach(async () => {
 		JSON.stringify({
 			main: "index.mjs",
 			assets: { directory: "../client" },
-			exports: { PublicPages: { type: "worker", cache: { enabled: true } } },
+			exports: { PublicPages: { type: "worker" } },
 		}),
 	);
 	await writeFile(
 		join(directory, "index.mjs"),
-		`export default {}; class ApplicationPublicPages { async purge(tags) { return tags; } async fetch() { return new Response("古い公開本文"); } } export const PublicPages = new Proxy(ApplicationPublicPages, {construct(target, args) { return new target(...args); }});`,
+		`export default {}; class ApplicationPublicPages { async publish(changes) { return changes; } async fetch() { return new Response("古い公開本文"); } } export const PublicPages = new Proxy(ApplicationPublicPages, {construct(target, args) { return new target(...args); }});`,
 	);
 	await writeFile(
 		join(directory, "assets/db-test.mjs"),
@@ -39,18 +39,23 @@ it("本番成果物を保ち検証専用entrypointだけを差し替える", asy
 	const config = JSON.parse(await readFile(configPath, "utf8"));
 	expect(config.main).toBe("connected-worker.mjs");
 	expect(config.assets.directory).toBe("../client");
-	expect(config.exports.PublicPages.cache.enabled).toBe(true);
+	expect(config.exports.PublicPages).toEqual({ type: "worker" });
 	expect(await readFile(join(directory, "index.mjs"), "utf8")).toBe(original);
 });
 
-it("保留中の検証タグでpurgeを失敗させ、解除後は実entrypointを呼ぶ", async () => {
+it("保留中の検証キーでR2反映を失敗させ、解除後は実entrypointを呼ぶ", async () => {
 	await prepareReaderConnected(directory);
 	const { PublicPages } = await import(
 		pathToFileURL(join(directory, "connected-worker.mjs")).href
 	);
 	const entry = new PublicPages();
 	await expect(
-		entry.purge(["reader:page", "reader:connected-purge-failure"]),
-	).rejects.toThrow("Injected public HTML cache invalidation failure");
-	await expect(entry.purge(["reader:page"])).resolves.toEqual(["reader:page"]);
+		entry.publish([
+			{ key: "page:1", revision: 1 },
+			{ key: "connected:publication-failure", revision: 1 },
+		]),
+	).rejects.toThrow("Injected public HTML publication failure");
+	await expect(
+		entry.publish([{ key: "page:1", revision: 1 }]),
+	).resolves.toEqual([{ key: "page:1", revision: 1 }]);
 });

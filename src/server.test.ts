@@ -1,6 +1,5 @@
 // @vitest-environment node
 
-import { cache } from "cloudflare:workers";
 import publicPages from "virtual:evame-public-pages";
 import { captureException, withSentry } from "@sentry/cloudflare";
 import { redirect } from "@tanstack/react-router";
@@ -16,23 +15,17 @@ import {
 } from "vitest";
 import { createDb } from "./db";
 
-const pendingInvalidations = vi.hoisted(() => new Map<string, string>());
+const pendingChanges = vi.hoisted(() => new Map<string, number>());
 vi.mock("./db/mutations", () => ({
-	storeReaderCacheInvalidations: vi.fn(
-		async (tags: string[], version: string) => {
-			for (const tag of tags) pendingInvalidations.set(tag, version);
-		},
-	),
-	deleteReaderCacheInvalidations: vi.fn(
-		async (rows: { tag: string; version: string }[]) => {
+	deleteReaderPublicationChanges: vi.fn(
+		async (rows: { key: string; revision: number }[]) => {
 			for (const row of rows)
-				if (pendingInvalidations.get(row.tag) === row.version)
-					pendingInvalidations.delete(row.tag);
+				if (pendingChanges.get(row.key) === row.revision)
+					pendingChanges.delete(row.key);
 		},
 	),
 }));
 
-import { fetchReaderChanges } from "./db/queries";
 import server, { PublicPages } from "./server";
 
 vi.mock("@sentry/cloudflare", () => ({
@@ -55,22 +48,30 @@ vi.mock("./db", async () => {
 });
 vi.mock("./db/queries", () => ({
 	fetchReaderRevision: vi.fn().mockResolvedValue({ revision: 1 }),
-	fetchReaderChanges: vi.fn().mockResolvedValue([{ key: "page:123" }]),
-	fetchReaderCacheInvalidations: vi.fn(async () =>
-		[...pendingInvalidations].map(([tag, version]) => ({ tag, version })),
+	fetchReaderPublicationChanges: vi.fn(async () =>
+		[...pendingChanges].map(([key, revision]) => ({ key, revision })),
 	),
 }));
 
 const env = {
 	SETTINGS: { get: vi.fn().mockResolvedValue(false) },
 	ASSETS: { fetch: vi.fn() },
+	CF_VERSION_METADATA: { id: "build-1" },
+	PUBLIC_HTML: {
+		head: vi.fn().mockResolvedValue(null),
+		get: vi.fn().mockResolvedValue(null),
+		put: vi.fn().mockResolvedValue(null),
+		list: vi.fn().mockResolvedValue({ objects: [], truncated: false }),
+	},
 };
-const publicBinding = { fetch: vi.fn(), purge: vi.fn() };
+const publicBinding = { fetch: vi.fn(), publish: vi.fn() };
 const exports = { PublicPages: publicBinding };
 beforeEach(() => {
-	pendingInvalidations.clear();
-	publicBinding.purge.mockReset().mockResolvedValue(undefined);
-	vi.mocked(fetchReaderChanges).mockResolvedValue([{ key: "page:123" }]);
+	pendingChanges.clear();
+	pendingChanges.set("page:123", 1);
+	env.PUBLIC_HTML.get.mockReset().mockResolvedValue(null);
+	env.PUBLIC_HTML.put.mockReset().mockResolvedValue(null);
+	publicBinding.publish.mockReset().mockResolvedValue(undefined);
 	env.SETTINGS.get.mockReset().mockResolvedValue(false);
 	publicBinding.fetch
 		.mockReset()
@@ -103,7 +104,7 @@ it.each(["GET", "HEAD"])(
 	},
 );
 
-it("トップの部分更新HTMLをReaderへ渡し、GatewayのDBや認証を起動しない", async () => {
+it("トップの部分更新HTMLを公開入口へ渡し、編集側のDBや認証を起動しない", async () => {
 	publicBinding.fetch.mockResolvedValue(
 		new Response("<div data-home-pages>更新した一覧</div>", {
 			headers: {
@@ -371,22 +372,22 @@ describe("Astroへの表示の転送", () => {
 	});
 });
 describe("公開HTMLの更新", () => {
-	it("記事数や言語数によらず変更対象のキャッシュ削除だけを同じWorker内で一度削除する", async () => {
-		publicBinding.purge.mockResolvedValue(undefined);
+	it("記事数や言語数によらず変更対象の更新記録をR2へ一度だけ反映する", async () => {
+		publicBinding.publish.mockResolvedValue(undefined);
 		vi.mocked(handler.fetch).mockResolvedValue(new Response(null));
 		await server.fetch(
 			new Request("https://evame.test/_serverFn/save-page", { method: "POST" }),
 			env as unknown as typeof import("cloudflare:workers").env,
 			{ exports, waitUntil: vi.fn() },
 		);
-		expect(publicBinding.purge).toHaveBeenCalledOnce();
-		expect(publicBinding.purge).toHaveBeenCalledWith([
-			expect.stringMatching(/^reader:[a-f0-9]{64}$/),
+		expect(publicBinding.publish).toHaveBeenCalledOnce();
+		expect(publicBinding.publish).toHaveBeenCalledWith([
+			{ key: "page:123", revision: 1 },
 		]);
 	});
-	it("更新処理はAstroのキャッシュ無効化を待ってから成功を返す", async () => {
-		const purge = Promise.withResolvers<void>();
-		publicBinding.purge.mockReturnValue(purge.promise);
+	it("更新処理はAstroのR2への更新反映を待ってから成功を返す", async () => {
+		const publication = Promise.withResolvers<void>();
+		publicBinding.publish.mockReturnValue(publication.promise);
 		vi.mocked(handler.fetch).mockResolvedValue(new Response("saved"));
 		let finished = false;
 		const pending: Promise<unknown>[] = [];
@@ -402,14 +403,14 @@ describe("公開HTMLの更新", () => {
 				finished = true;
 				return value;
 			});
-		await vi.waitFor(() => expect(publicBinding.purge).toHaveBeenCalled());
+		await vi.waitFor(() => expect(publicBinding.publish).toHaveBeenCalled());
 		expect(finished).toBe(false);
-		purge.resolve();
+		publication.resolve();
 		expect(await (await result).text()).toBe("saved");
 		await Promise.all(pending);
 	});
-	it("下書きの保存は公開HTMLのキャッシュを破棄しない", async () => {
-		pendingInvalidations.set(`reader:${"a".repeat(64)}`, "previous-failure");
+	it("保留行のない下書き保存ではR2の更新記録を作らない", async () => {
+		pendingChanges.clear();
 		vi.mocked(handler.fetch).mockResolvedValue(
 			new Response(null, { headers: { "X-Evame-Reader-Changed": "false" } }),
 		);
@@ -418,7 +419,7 @@ describe("公開HTMLの更新", () => {
 			env as unknown as typeof import("cloudflare:workers").env,
 			{ exports, waitUntil: vi.fn() },
 		);
-		expect(publicBinding.purge).not.toHaveBeenCalled();
+		expect(publicBinding.publish).not.toHaveBeenCalled();
 	});
 	it.each(["like", "geminiKey", "uploadImage"])(
 		"%sの操作は本文のキャッシュを破棄しない",
@@ -431,7 +432,7 @@ describe("公開HTMLの更新", () => {
 				env as unknown as typeof import("cloudflare:workers").env,
 				{ exports, waitUntil: vi.fn() },
 			);
-			expect(publicBinding.purge).not.toHaveBeenCalled();
+			expect(publicBinding.publish).not.toHaveBeenCalled();
 		},
 	);
 	it("権限不足で拒否した更新ではキャッシュを破棄しない", async () => {
@@ -443,10 +444,10 @@ describe("公開HTMLの更新", () => {
 			env as unknown as typeof import("cloudflare:workers").env,
 			{ exports, waitUntil: vi.fn() },
 		);
-		expect(publicBinding.purge).not.toHaveBeenCalled();
+		expect(publicBinding.publish).not.toHaveBeenCalled();
 	});
-	it("キャッシュ削除に失敗したら成功を返さずDB接続も閉じる", async () => {
-		publicBinding.purge.mockRejectedValue(
+	it("R2への更新記録に失敗したら成功を返さずDB接続も閉じる", async () => {
+		publicBinding.publish.mockRejectedValue(
 			new Error("Public HTML cache invalidation failed"),
 		);
 		vi.mocked(handler.fetch).mockResolvedValue(new Response("saved"));
@@ -465,20 +466,20 @@ describe("公開HTMLの更新", () => {
 	});
 });
 
-it("公開データに変更がない保存ではキャッシュを削除しない", async () => {
-	vi.mocked(fetchReaderChanges).mockResolvedValue([]);
+it("保留行がない同内容の保存ではR2への反映を行わない", async () => {
+	pendingChanges.clear();
 	vi.mocked(handler.fetch).mockResolvedValue(new Response(null));
 	await server.fetch(
 		new Request("https://evame.test/_serverFn/save-page", { method: "POST" }),
 		env as unknown as typeof import("cloudflare:workers").env,
 		{ exports, waitUntil: vi.fn() },
 	);
-	expect(publicBinding.purge).not.toHaveBeenCalled();
+	expect(publicBinding.publish).not.toHaveBeenCalled();
 });
 
-it("キャッシュ削除に失敗した後は差分がない再試行でも保留タグを削除してから成功を返す", async () => {
+it("R2への更新記録に失敗した後は差分がない再試行でも保留行を削除してから成功を返す", async () => {
 	vi.mocked(handler.fetch).mockResolvedValue(new Response(null));
-	publicBinding.purge.mockRejectedValue(
+	publicBinding.publish.mockRejectedValue(
 		new Error("Public HTML cache invalidation failed"),
 	);
 	const request = () =>
@@ -492,10 +493,10 @@ it("キャッシュ削除に失敗した後は差分がない再試行でも保�
 			{ exports, waitUntil: vi.fn() },
 		),
 	).rejects.toThrow("Public HTML cache invalidation failed");
-	expect(pendingInvalidations.size).toBe(1);
-	vi.mocked(fetchReaderChanges).mockResolvedValue([]);
+	expect(pendingChanges.size).toBe(1);
+
 	vi.mocked(handler.fetch).mockResolvedValue(new Response(null));
-	publicBinding.purge.mockResolvedValue(undefined);
+	publicBinding.publish.mockResolvedValue(undefined);
 	expect(
 		(
 			await server.fetch(
@@ -505,20 +506,20 @@ it("キャッシュ削除に失敗した後は差分がない再試行でも保�
 			)
 		).status,
 	).toBe(200);
-	expect(publicBinding.purge).toHaveBeenCalledTimes(2);
-	expect(pendingInvalidations.size).toBe(0);
+	expect(publicBinding.publish).toHaveBeenCalledTimes(2);
+	expect(pendingChanges.size).toBe(0);
 });
-it("翻訳チャンクが完了した場合も処理前の版から変更を取得しキャッシュを削除する", async () => {
+it("翻訳チャンクが完了した場合もDBに残した変更をR2へ反映する", async () => {
 	vi.mocked(handler.fetch).mockResolvedValue(
 		new Response(null, { headers: { "X-Evame-Reader-Changed": "true" } }),
 	);
-	publicBinding.purge.mockResolvedValue(undefined);
+	publicBinding.publish.mockResolvedValue(undefined);
 	await server.fetch(
 		new Request("https://evame.test/api/translate/chunk", { method: "POST" }),
 		env as unknown as typeof import("cloudflare:workers").env,
 		{ exports, waitUntil: vi.fn() },
 	);
-	expect(publicBinding.purge).toHaveBeenCalledOnce();
+	expect(publicBinding.publish).toHaveBeenCalledOnce();
 });
 
 it.each([
@@ -572,10 +573,7 @@ it("入口でもメンテナンス中は既存のメンテナンス画面へ移�
 	expect(createDb).not.toHaveBeenCalled();
 });
 
-describe("同じWorkerの公開HTMLとキャッシュ削除", () => {
-	afterEach(() => {
-		Reflect.deleteProperty(cache, "purge");
-	});
+describe("同じWorkerの公開HTMLとR2への更新記録", () => {
 	it("Astroは同じリクエストのDBを使い、本文を転送してから接続を閉じる", async () => {
 		vi.mocked(publicPages.fetch).mockResolvedValue(new Response("Astro本文"));
 		const pending: Promise<unknown>[] = [];
@@ -615,29 +613,99 @@ describe("同じWorkerの公開HTMLとキャッシュ削除", () => {
 		).toBe("export {}");
 		expect(createDb).not.toHaveBeenCalled();
 	});
-	it("公開入口のキャッシュを100タグずつ削除し、失敗を呼出元へ返す", async () => {
-		cache.purge = vi
-			.fn()
-			.mockResolvedValueOnce({ success: true })
-			.mockResolvedValueOnce({ success: false });
-		const tags = Array.from({ length: 101 }, (_, i) => `tag-${i}`);
-		await expect(PublicPages.prototype.purge(tags)).rejects.toThrow(
-			"Public HTML cache invalidation failed",
+
+	it("公開入口自身がデプロイごとのR2更新記録を保存する", async () => {
+		const entry = new PublicPages(
+			{} as import("@cloudflare/workers-types").ExecutionContext,
+			env as unknown as typeof import("cloudflare:workers").env,
 		);
-		expect(cache.purge).toHaveBeenNthCalledWith(1, {
-			tags: tags.slice(0, 100),
-		});
-		expect(cache.purge).toHaveBeenNthCalledWith(2, { tags: tags.slice(100) });
+		await entry.publish([{ key: "page:123", revision: 2 }]);
+		expect(env.PUBLIC_HTML.put).toHaveBeenCalledWith(
+			expect.stringMatching(/^changes\/build-1\/0000000000000002\/reader:/),
+			"",
+			{ onlyIf: { etagDoesNotMatch: "*" } },
+		);
 	});
-	it("デプロイ後の全体削除も公開入口自身で実行する", async () => {
-		cache.purge = vi.fn().mockResolvedValue({ success: true });
-		await PublicPages.prototype.clearCache();
-		expect(cache.purge).toHaveBeenCalledWith({ purgeEverything: true });
-	});
-	it("cache.purge未対応のローカルではキャッシュ削除を呼び出さない", async () => {
-		Reflect.deleteProperty(cache, "purge");
+	it("R2に更新記録を保存できないときは呼び出し元へ失敗を返す", async () => {
+		env.PUBLIC_HTML.put.mockRejectedValue(new Error("R2 unavailable"));
+		const entry = new PublicPages(
+			{} as import("@cloudflare/workers-types").ExecutionContext,
+			env as unknown as typeof import("cloudflare:workers").env,
+		);
 		await expect(
-			PublicPages.prototype.purge(["reader:test"]),
-		).resolves.toBeUndefined();
+			entry.publish([{ key: "page:123", revision: 2 }]),
+		).rejects.toThrow("R2 unavailable");
 	});
+});
+
+it("R2に有効なHTMLがある場合はDB接続やAstro生成を起動しない", async () => {
+	env.PUBLIC_HTML.get.mockResolvedValue({
+		json: async () => ({
+			startedAt: Date.now(),
+			revision: 1,
+			tags: ["reader:test"],
+			headers: [["Content-Type", "text/html"]],
+			body: "R2本文",
+		}),
+	} as never);
+	const response = await server.fetch(
+		new Request("https://evame.test/ja/author/article"),
+		env as unknown as typeof import("cloudflare:workers").env,
+		{ exports, waitUntil: vi.fn() },
+	);
+	expect(await response.text()).toBe("R2本文");
+	expect(response.headers.get("X-Evame-HTML-Cache")).toBe("HIT");
+	expect(publicBinding.fetch).not.toHaveBeenCalled();
+	expect(createDb).not.toHaveBeenCalled();
+	expect(handler.fetch).not.toHaveBeenCalled();
+	expect(response.headers.get("x-frame-options")).toBe("DENY");
+	expect(response.headers.get("Set-Cookie")).toContain("NEXT_LOCALE=ja");
+});
+
+it("一覧の部分更新はDB版を取得せず内部用の版ヘッダーも返さない", async () => {
+	vi.mocked(publicPages.fetch).mockResolvedValue(
+		new Response("一覧", { headers: { "Content-Type": "text/html" } }),
+	);
+	const { fetchReaderRevision } = await import("./db/queries");
+	vi.mocked(fetchReaderRevision).mockClear();
+	const entry = new PublicPages({ waitUntil: vi.fn() } as never, env as never);
+	const response = await entry.fetch(
+		new Request("https://evame.test/api/home-feed?locale=ja") as never,
+	);
+	expect(response.headers.get("X-Evame-Reader-Revision")).toBeNull();
+	expect(fetchReaderRevision).not.toHaveBeenCalled();
+	await response.text();
+});
+
+it("Astroが変更不可のヘッダーを返しても生成したHTMLへ内部の版を付けられる", async () => {
+	const source = await fetch("data:text/html,public");
+	vi.mocked(publicPages.fetch).mockResolvedValueOnce(source);
+	const waiting: Promise<unknown>[] = [];
+	const entry = new PublicPages(
+		{
+			waitUntil: (promise: Promise<unknown>) => waiting.push(promise),
+		} as never,
+		env as never,
+	);
+	const response = await entry.fetch(
+		new Request("https://evame.test/ja") as never,
+	);
+	expect(response.status).toBe(200);
+	expect(response.headers.get("X-Evame-Reader-Revision")).toBe("1");
+	expect(await response.text()).toBe("public");
+	await Promise.all(waiting);
+});
+it("内部呼び出しが変更不可のヘッダーを返しても公開HTMLを返せる", async () => {
+	publicBinding.fetch.mockResolvedValueOnce(
+		await fetch("data:text/html,public"),
+	);
+	const response = await server.fetch(
+		new Request("https://evame.test/ja"),
+		env as never,
+		{ exports, waitUntil: vi.fn() },
+	);
+	expect(response.status).toBe(200);
+	expect(response.headers.get("X-Evame-Reader-Revision")).toBeNull();
+	expect(response.headers.get("X-Evame-HTML-Cache")).toBe("BYPASS");
+	expect(await response.text()).toBe("public");
 });

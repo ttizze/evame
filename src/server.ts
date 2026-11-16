@@ -1,4 +1,4 @@
-import { cache, WorkerEntrypoint } from "cloudflare:workers";
+import { WorkerEntrypoint } from "cloudflare:workers";
 import publicPages from "virtual:evame-public-pages";
 import type {
 	ExecutionContext,
@@ -17,9 +17,13 @@ import { getMigrationResponse } from "../shared/migration-response";
 import { fetchPublicReader } from "../shared/public-reader";
 import { SENTRY_DSN } from "./_utils/sentry-dsn";
 import { shouldInvalidateReader } from "./app/_domain/reader-cache-policy";
+import {
+	fetchReaderHtml,
+	publishReaderChanges,
+} from "./app/_infra/reader-html";
 import { updateReaderPublication } from "./app/_service/update-reader-publication";
 import { createDb, databaseScope } from "./db";
-import { fetchReaderChanges, fetchReaderRevision } from "./db/queries";
+import { fetchReaderRevision } from "./db/queries";
 
 // 公開表示と編集の両方で、ストリーム完了・失敗・中断まで接続を保持する。
 async function withDatabase(
@@ -63,7 +67,7 @@ async function withDatabase(
 	});
 }
 
-// 同じWorker内の公開HTMLだけにキャッシュを適用する。RPCによる削除も同じスコープで実行する。
+// 同じWorker内のAstro生成境界。R2のHIT時にはこのDB接続を起動しない。
 export class PublicPages extends WorkerEntrypoint<
 	typeof import("cloudflare:workers").env
 > {
@@ -73,27 +77,23 @@ export class PublicPages extends WorkerEntrypoint<
 		if (new URL(workerRequest.url).pathname.startsWith("/_astro/"))
 			return this.env.ASSETS.fetch(workerRequest);
 		const request = workerRequest as unknown as Request;
-		return withDatabase(request, this.ctx, () =>
-			publicPages.fetch(request, this.env, this.ctx),
-		) as unknown as Promise<WorkerResponse>;
+		return withDatabase(request, this.ctx, async () => {
+			if (new URL(request.url).pathname === "/api/home-feed")
+				return publicPages.fetch(request, this.env, this.ctx);
+			const { revision } = await fetchReaderRevision();
+			const source = await publicPages.fetch(request, this.env, this.ctx);
+			const response = new Response(source.body, source);
+			response.headers.set("X-Evame-Reader-Revision", String(revision));
+			return response;
+		}) as unknown as Promise<WorkerResponse>;
 	}
 
-	async purge(tags: string[]) {
-		if (typeof cache?.purge !== "function") return;
-		for (let start = 0; start < tags.length; start += 100) {
-			const result = await cache.purge({
-				tags: tags.slice(start, start + 100),
-			});
-			if (!result.success)
-				throw new Error("Public HTML cache invalidation failed");
-		}
-	}
-
-	async clearCache() {
-		if (typeof cache?.purge !== "function") return;
-		const result = await cache.purge({ purgeEverything: true });
-		if (!result.success)
-			throw new Error("Public HTML cache invalidation failed");
+	async publish(changes: { key: string; revision: number }[]) {
+		await publishReaderChanges(
+			this.env.PUBLIC_HTML,
+			this.env.CF_VERSION_METADATA.id,
+			changes,
+		);
 	}
 }
 
@@ -116,7 +116,7 @@ export default withSentry(sentryOptions, {
 			exports: {
 				PublicPages: {
 					fetch(request: Request): Promise<Response>;
-					purge(tags: string[]): Promise<void>;
+					publish(changes: { key: string; revision: number }[]): Promise<void>;
 				};
 			};
 		},
@@ -125,35 +125,47 @@ export default withSentry(sentryOptions, {
 		if (migration) return migration;
 		const publicResponse = await fetchPublicReader(
 			request,
-			context.exports.PublicPages,
+			{
+				fetch: async (input: Request) => {
+					if (
+						new URL(input.url).pathname.startsWith("/_astro/") ||
+						new URL(input.url).pathname === "/api/home-feed"
+					)
+						return context.exports.PublicPages.fetch(input);
+					return fetchReaderHtml(
+						input,
+						env.PUBLIC_HTML,
+						env.CF_VERSION_METADATA.id,
+						async (renderRequest) => {
+							const source =
+								await context.exports.PublicPages.fetch(renderRequest);
+							const response = new Response(source.body, source);
+							const revision = Number(
+								response.headers.get("X-Evame-Reader-Revision") ?? Number.NaN,
+							);
+							response.headers.delete("X-Evame-Reader-Revision");
+							return { revision, response };
+						},
+					);
+				},
+			},
 			env.SETTINGS,
 		);
 		if (publicResponse) return publicResponse;
 		const url = new URL(request.url);
 		return withDatabase(request, context, async () => {
-			const beforeRevision = shouldInvalidateReader(
-				request.method,
-				url.pathname,
-				url.searchParams.get("action"),
-				200,
-				"true",
-			)
-				? (await fetchReaderRevision()).revision
-				: null;
 			const response = await handler.fetch(request);
 			if (
-				beforeRevision !== null &&
 				shouldInvalidateReader(
 					request.method,
 					url.pathname,
 					url.searchParams.get("action"),
 					response.status,
-					response.headers.get("X-Evame-Reader-Changed"),
+					"true",
 				)
 			) {
-				const changes = await fetchReaderChanges(beforeRevision);
-				await updateReaderPublication(changes, (tags) =>
-					context.exports.PublicPages.purge(tags),
+				await updateReaderPublication((changes) =>
+					context.exports.PublicPages.publish(changes),
 				);
 			}
 			return response;

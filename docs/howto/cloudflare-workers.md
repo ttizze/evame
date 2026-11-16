@@ -18,11 +18,12 @@ iPhone本体・共有エディター・パッチ・操作fixture・Nix・iPhone�
 | --- | --- | --- |
 | `ASSETS` | `dist/client` | Astroと編集画面のJS/CSS・静的ファイル |
 | `UPLOADS` | R2 `eveeve` | 既存の画像ストレージ |
+| `PUBLIC_HTML` | R2 `evame-public-html`（Previewは `evame-public-html-preview`） | 公開HTMLと追記式変更記録 |
 | `IMAGES` | Cloudflare Images | 幅2560以下、JPEG quality 80へ圧縮 |
 | `SETTINGS` | KV `evame-settings` | `maintenance` をJSON booleanで保存 |
-| `CF_VERSION_METADATA` | Workerのversion | Sentryのrelease |
+| `CF_VERSION_METADATA` | Workerのversion | Sentryのrelease、R2保存先の分離 |
 
-公開GET/HEADと `/_astro/*`、`/api/home-feed` は同じWorker内の `PublicPages` entrypointへ渡す。共有HTMLキャッシュはこのentrypointだけで有効にする。HITではDB接続とAstro描画を省略し、cold missは直接DBを読みAstroで生成する。HTML用R2は使わない。認証・編集・APIとSentryの設定は同じWorkerに維持する。
+公開GET/HEADはR2の保存HTMLと変更記録を照合し、HIT時はDB接続とAstro描画を省略する。初回・変更後・1時間の有効期限切れは同じWorker内の `PublicPages` entrypointでAstro生成する。`/_astro/*` は同じWorkerのStatic Assets、`/api/home-feed` は保存しない部分更新応答として扱う。認証・編集・APIとSentryの設定は同じWorkerに維持する。
 
 開発時のbindingはローカルストレージを使う。画像は開発専用の `/api/uploads/$` で表示する。本番は従来の `https://images.evame.tech/` を使う。
 
@@ -93,13 +94,24 @@ GitHub secret `EVAME_PREVIEW_SECRETS` に専用DBの `TURSO_DATABASE_URL` / `TUR
 
 `.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テストの成功後、本番DBのマイグレーション、ビルド、成果物テスト、単一Workerのデプロイを行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
 
-Astroのサーバー成果物とJS/CSSをルートの `dist` に含める。`deploy:workers` は `dist/server/wrangler.json` を1回デプロイし、成功後に配信アセットの履歴を確定して `PublicPages.clearCache()` で共有HTMLを無効化する。公開HTTPのpurge APIは追加せず、認証済みWranglerの一時remote previewから同じWorkerのentrypointを呼ぶ。通常デプロイは公開ルートを変更しない。
+Astroのサーバー成果物とJS/CSSをルートの `dist` に含める。`deploy:workers` は `dist/server/wrangler.json` を1回デプロイし、成功後に配信アセットの履歴を確定する。HTMLと更新記録のR2キーは `CF_VERSION_METADATA.id` で分離されるため、デプロイ後の一括purgeは不要。通常デプロイは公開ルートを変更しない。
 
 旧HTMLが参照するハッシュ付きJS/CSSを配信終了から30日間、同じWorkerのStatic Assetsへ残す。`prepare:reader-assets` は `.data/reader-assets/active.json` と過去の履歴を使い `dist/client/_astro` へ含める。デプロイ失敗時は旧記録を維持する。CIはmainの成功したデプロイ間で履歴を保存・復元する。初回や履歴消失時は公開HTMLとJS依存を認証なしで回収する。回収元はカスタムドメインのbot制限を避けるため `https://evame-start.reimei.workers.dev` を使う。ビルド自体ではネットワーク取得しない。
 
 Actions secretsには本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番DBはmainのマイグレーションだけに渡す。通常デプロイのトークンは既存の `evame-start` へのIndividual Workers Editor権限を使う。Sentryアップロード用トークンは本番ビルドだけに渡し、Worker secretには登録しない。
 
-本番切り替え前に、公開記事の保存頻度に対して共有キャッシュの削除枠が足りることを確認する。[native Workers Cacheのpurge](https://developers.cloudflare.com/workers/cache/purge/#rate-limits)は契約プランにかかわらず[Free枠](https://developers.cloudflare.com/cache/how-to/purge-cache/#availability-and-limits)（継続毎分5回、バケット25、1回100タグ）が適用される。現在のWeb自動保存は入力停止から3秒後に送信し、公開内容の変更ごとにpurgeするため、短時間のPreview成功だけでは継続編集時の運用を検証できない。保存失敗と再試行で制限を解決したことにはせず、配信方式と即時反映の条件を満たす対応が決まるまで本番切り替えを保留する。
+本番切り替え前に `PUBLIC_HTML` のbucketを用意し、HTMLと変更記録を2日で削除するlifecycleを設定する。Previewは別bucketを使い、その内部もWorker versionで分離する。R2 bindingには公開ドメインを付けず、HTMLはWorker経由で配信する。
+
+```sh
+nix develop --command bun x wrangler r2 bucket create evame-public-html
+nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html expire-html html/ --expire-days 2
+nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html expire-changes changes/ --expire-days 2
+nix develop --command bun x wrangler r2 bucket create evame-public-html-preview
+nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html-preview expire-html html/ --expire-days 2
+nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html-preview expire-changes changes/ --expire-days 2
+```
+
+bucket作成・lifecycle設定にはAccountのR2管理権限が必要。通常のWorker更新権限と区別する。保存APIはDB更新と同時に永続化した保留行をR2へ反映してから成功を返し、失敗後は同内容の保存でも再試行する。HTML保存の同時fillに伴う429だけは生成応答を返して保存を省略できるが、変更記録の読み書き失敗は成功扱いしない。設計と検証項目は[公開HTMLのR2保存](../plans/incremental-static-reader.md)を参照する。
 
 初回の本番ルート切り替えは `scripts/switch-public-route.mjs` で既存の `evame.tech/*` を `evame-gateway` から `evame-start` へ接続する。既に切り替え済みなら更新しない。未知のWorkerが所有する場合は停止する。切り替え用トークンには対象Zone Read・Workers Routes Writeが必要。DNS・画像配信・他のルートは変えない。単一Workerの公開・保存と旧JS/CSSの取得を本番で確認してから、旧Reader/GatewayのWorkerを削除する。
 

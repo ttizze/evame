@@ -162,7 +162,7 @@ it("Worker終了が失敗してもTurso停止と結果保存を試行する", as
 	expect(error).toBeInstanceOf(AggregateError);
 });
 
-it("前回中断の障害タグだけを回収し、通常の保留タグと版を残して初回保存する", async () => {
+it("前回中断の障害キーだけを回収し、通常の保留キーと版を残して初回保存する", async () => {
 	vi.stubEnv(
 		"CONNECTED_PREVIEW_ORIGIN",
 		"https://pr-1171-evame-start.reimei.workers.dev",
@@ -172,17 +172,17 @@ it("前回中断の障害タグだけを回収し、通常の保留タグと版�
 	const database = createSqliteClient({ url: "file::memory:" });
 	try {
 		await database.execute(
-			"CREATE TABLE reader_cache_invalidations (tag TEXT PRIMARY KEY, version TEXT NOT NULL)",
+			"CREATE TABLE reader_publication_changes (key TEXT PRIMARY KEY, revision INTEGER NOT NULL)",
 		);
-		for (const tag of ["reader:connected-purge-failure", "reader:pending"])
+		for (const key of ["connected:publication-failure", "page:pending"])
 			await database.execute({
-				sql: "INSERT INTO reader_cache_invalidations (tag,version) VALUES (?,?)",
-				args: [tag, "previous-version"],
+				sql: "INSERT INTO reader_publication_changes (key,revision) VALUES (?,?)",
+				args: [key, 42],
 			});
 		createClient.mockReturnValue({
 			execute: (query: import("@libsql/client").InStatement) =>
 				(typeof query === "string" ? query : query.sql).includes(
-					"reader_cache_invalidations",
+					"reader_publication_changes",
 				)
 					? database.execute(query)
 					: Promise.resolve({ rows: [] }),
@@ -197,11 +197,11 @@ it("前回中断の障害タグだけを回収し、通常の保留タグと版�
 		] as never);
 		const send = vi.fn(async () => {
 			const pending = await database.execute(
-				"SELECT tag,version FROM reader_cache_invalidations ORDER BY tag",
+				"SELECT key,revision FROM reader_publication_changes ORDER BY key",
 			);
 			expect(
-				pending.rows.map(({ tag, version }) => ({ tag, version })),
-			).toEqual([{ tag: "reader:pending", version: "previous-version" }]);
+				pending.rows.map(({ key, revision }) => ({ key, revision })),
+			).toEqual([{ key: "page:pending", revision: 42 }]);
 			throw new Error("初回保存へ到達");
 		});
 		vi.stubGlobal("fetch", send);
@@ -215,7 +215,7 @@ it("前回中断の障害タグだけを回収し、通常の保留タグと版�
 	}
 });
 
-it("Cloudflare Previewでも差分なし保存で保留タグを回収する検証を実行する", async () => {
+it("Cloudflare Previewでも差分なし保存で保留キーを回収する検証を実行する", async () => {
 	vi.stubEnv(
 		"CONNECTED_PREVIEW_ORIGIN",
 		"https://pr-1170-evame-start.reimei.workers.dev",
@@ -223,12 +223,12 @@ it("Cloudflare Previewでも差分なし保存で保留タグを回収する検�
 	vi.stubEnv("EVAME_CONNECTED_BROWSER", "");
 	const execute = vi.fn().mockImplementation(async (query) => {
 		const sql = typeof query === "string" ? query : query.sql;
-		if (sql.startsWith("SELECT tag,version"))
-			return { rows: [{ tag: "pending", version: "pending-version" }] };
-		if (sql.startsWith("SELECT tag")) return { rows: [{ tag: "pending" }] };
+		if (sql.startsWith("SELECT key,revision"))
+			return { rows: [{ key: "pending", revision: 42 }] };
+		if (sql.startsWith("SELECT key")) return { rows: [{ key: "pending" }] };
 		return {
 			rows: [
-				{ id: 7, mdast_json: "削除失敗後に回復する本文", updated_at: 123 },
+				{ id: 7, mdast_json: "反映失敗後に回復する本文", updated_at: 123 },
 			],
 		};
 	});
@@ -254,20 +254,20 @@ it("Cloudflare Previewでも差分なし保存で保留タグを回収する検�
 		if (save) saves++;
 		return new Response("保存応答の直後の本文", {
 			status: save && saves === 3 ? 500 : 200,
-			headers: { "X-Evame-HTML": "astro", "CF-Cache-Status": "HIT" },
+			headers: { "X-Evame-HTML": "astro", "X-Evame-HTML-Cache": "HIT" },
 		});
 	});
 	vi.stubGlobal("fetch", send);
 	try {
 		await expect(import("./check-reader-connected.mjs")).rejects.toThrow(
-			"同内容の再保存で保留タグを回収する",
+			"同内容の再保存で保留キーを回収する",
 		);
 		expect(
 			execute.mock.calls.some(
 				([query]) =>
 					typeof query !== "string" &&
-					query.sql.startsWith("INSERT INTO reader_cache_invalidations") &&
-					query.args[0] === "reader:connected-purge-failure",
+					query.sql.startsWith("INSERT INTO reader_publication_changes") &&
+					query.args[0] === "connected:publication-failure",
 			),
 		).toBe(true);
 		expect(

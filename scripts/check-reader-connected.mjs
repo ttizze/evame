@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createHash, createHmac, randomUUID } from "node:crypto";
+import { createHmac, randomUUID } from "node:crypto";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createClient } from "@libsql/client";
@@ -40,7 +40,7 @@ let turso;
 let harness;
 const results = [];
 const userId = `connected-${id}`;
-const failureTag = "reader:connected-purge-failure";
+const failureKey = "connected:publication-failure";
 const handle = `connected-${id.slice(0, 8)}`;
 const slug = `記事-${id.slice(0, 8)}`;
 const origin = remote || "http://localhost";
@@ -146,8 +146,8 @@ try {
 		return response;
 	};
 	await database.execute({
-		sql: "DELETE FROM reader_cache_invalidations WHERE tag=?",
-		args: [failureTag],
+		sql: "DELETE FROM reader_publication_changes WHERE key=?",
+		args: [failureKey],
 	});
 	assert.equal((await save("最初の原稿")).status, 200);
 	const page = await database.execute({
@@ -183,13 +183,11 @@ try {
 		await first.arrayBuffer();
 		const second = await request(target);
 		assert.equal(second.headers.get("X-Evame-HTML"), "astro");
-		if (remote) {
-			assert.equal(
-				second.headers.get("CF-Cache-Status"),
-				"HIT",
-				"Cloudflare上で同じWorkerの公開キャッシュへ命中する",
-			);
-		}
+		assert.equal(
+			second.headers.get("X-Evame-HTML-Cache"),
+			"HIT",
+			"同じWorkerからR2に保存した公開HTMLへ命中する",
+		);
 		await second.arrayBuffer();
 	}
 	assert.equal(
@@ -201,44 +199,44 @@ try {
 		assert.equal(response.status, 200);
 		assert.ok((await response.text()).includes("保存応答の直後の本文"));
 	}
-	// 検証専用entrypointのpurgeを失敗させ、実保存APIの失敗と回復を通す。
-	const pendingTag = `reader:${createHash("sha256").update(`page:${pageId}`).digest("hex")}`;
+	// 検証専用entrypointのR2反映を失敗させ、実保存APIの失敗と回復を通す。
+	const pendingKey = `page:${pageId}`;
 	await database.execute({
-		sql: "INSERT INTO reader_cache_invalidations (tag,version) VALUES (?,?)",
-		args: [failureTag, randomUUID()],
+		sql: "INSERT INTO reader_publication_changes (key,revision) VALUES (?,(SELECT revision FROM reader_revisions WHERE key='*'))",
+		args: [failureKey],
 	});
 	let failed;
 	try {
-		failed = await save("削除失敗後に回復する本文", "回復を確認する題名");
+		failed = await save("反映失敗後に回復する本文", "回復を確認する題名");
 		assert.ok(
 			failed.status >= 500,
-			"キャッシュ削除が失敗した保存APIは成功を返さない",
+			"R2への更新記録の反映が失敗した保存APIは成功を返さない",
 		);
 		await failed.arrayBuffer();
 		const pending = await database.execute({
-			sql: "SELECT tag,version FROM reader_cache_invalidations WHERE tag=?",
-			args: [pendingTag],
+			sql: "SELECT key,revision FROM reader_publication_changes WHERE key=?",
+			args: [pendingKey],
 		});
 		assert.equal(
 			pending.rows.length,
 			1,
-			"実保存で発生した保留タグが永続化される",
+			"実保存で発生した保留キーが永続化される",
 		);
-		assert.ok(pending.rows[0].version);
-		if (remote) {
+		assert.ok(Number(pending.rows[0].revision) > 0);
+		{
 			const stale = await request(path);
-			assert.equal(stale.headers.get("CF-Cache-Status"), "HIT");
+			assert.equal(stale.headers.get("X-Evame-HTML-Cache"), "HIT");
 			const text = await stale.text();
 			assert.ok(
 				text.includes("保存応答の直後の本文"),
-				"削除失敗中は更新前のHTMLが残る",
+				"反映失敗中は更新前のHTMLが残る",
 			);
-			assert.ok(!text.includes("削除失敗後に回復する本文"));
+			assert.ok(!text.includes("反映失敗後に回復する本文"));
 		}
 	} finally {
 		await database.execute({
-			sql: "DELETE FROM reader_cache_invalidations WHERE tag=?",
-			args: [failureTag],
+			sql: "DELETE FROM reader_publication_changes WHERE key=?",
+			args: [failureKey],
 		});
 	}
 	const beforeRetry = await database.execute({
@@ -246,19 +244,19 @@ try {
 		args: [pageId],
 	});
 	assert.ok(
-		String(beforeRetry.rows[0].mdast_json).includes("削除失敗後に回復する本文"),
+		String(beforeRetry.rows[0].mdast_json).includes("反映失敗後に回復する本文"),
 	);
-	const retried = await save("削除失敗後に回復する本文", "回復を確認する題名");
+	const retried = await save("反映失敗後に回復する本文", "回復を確認する題名");
 	assert.equal(retried.status, 200, await retried.text());
 	assert.equal(
 		(
 			await database.execute({
-				sql: "SELECT tag FROM reader_cache_invalidations WHERE tag=?",
-				args: [pendingTag],
+				sql: "SELECT key FROM reader_publication_changes WHERE key=?",
+				args: [pendingKey],
 			})
 		).rows.length,
 		0,
-		"同内容の再保存で保留タグを回収する",
+		"同内容の再保存で保留キーを回収する",
 	);
 	assert.deepEqual(
 		(
@@ -268,12 +266,12 @@ try {
 			})
 		).rows,
 		beforeRetry.rows,
-		"同内容の再保存では本文と更新日時を変えず保留中のキャッシュ削除を完了する",
+		"同内容の再保存では本文と更新日時を変えず保留中のR2への更新記録の反映を完了する",
 	);
 	const recovered = await request(path);
 	assert.equal(recovered.status, 200);
 	const recoveredText = await recovered.text();
-	assert.ok(recoveredText.includes("削除失敗後に回復する本文"));
+	assert.ok(recoveredText.includes("反映失敗後に回復する本文"));
 	assert.ok(!recoveredText.includes("保存応答の直後の本文"));
 	results.push({
 		operation: "pending-retry",
@@ -350,7 +348,7 @@ try {
 			}
 		}
 	}
-	// キャッシュ登録待ちの古い公開レスポンスを、非公開化のpurge完了後に返す。
+	// キャッシュ登録待ちの古い公開レスポンスを、非公開化のR2反映完了後に返す。
 	const beforeRace = await save("非公開化と競合する公開本文");
 	assert.equal(beforeRace.status, 200, await beforeRace.text());
 	await database.execute(

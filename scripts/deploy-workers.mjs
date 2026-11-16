@@ -20,8 +20,3 @@ for (const path of next.retiring)
 	await utimes(join(".data/reader-assets/files", path), now, now);
 await writeFile(nextPath, JSON.stringify(next.active));
 await rename(nextPath, ".data/reader-assets/active.json");
-
-// コード変更でキャッシュ済みHTMLと表示がずれないよう同じWorkerの公開入口で無効化する。
-execFileSync(process.execPath, ["scripts/purge-reader-cache.mjs"], {
-	stdio: "inherit",
-});
