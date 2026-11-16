@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { createHmac, randomUUID } from "node:crypto";
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createClient } from "@libsql/client";
 import { toJSONAsync } from "seroval";
 import { createTestHarness } from "wrangler";
 import { prepareReaderConnected } from "./prepare-reader-connected.mjs";
+import { readServerFunctions } from "./server-functions.mjs";
 import { copyTestDatabase } from "./test-database.mjs";
 import { startTursoServer } from "./turso-dev-server.mjs";
 
@@ -123,18 +124,7 @@ try {
 		});
 		return response;
 	};
-	const resolverFile = (await readdir("dist/server/assets")).find(
-		(path) => path.includes("server-fn-resolver-") && path.endsWith(".js"),
-	);
-	assert.ok(resolverFile);
-	const resolver = await readFile(`dist/server/assets/${resolverFile}`, "utf8");
-	const functions = Object.fromEntries(
-		[
-			...resolver.matchAll(
-				/"([a-f0-9]{64})":\s*\{\s*functionName:\s*"([^"]+)"/g,
-			),
-		].map((match) => [match[2], match[1]]),
-	);
+	const functions = await readServerFunctions("dist/server/assets");
 	const edit = functions.editPageContent_createServerFn_handler;
 	assert.ok(edit);
 	const save = async (text, title = "配信接続の記事") => {

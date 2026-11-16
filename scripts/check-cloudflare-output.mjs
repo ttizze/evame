@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHmac, randomUUID } from "node:crypto";
-import { mkdir, readdir, readFile, rm } from "node:fs/promises";
+import { mkdir, readFile, rm } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createClient } from "@libsql/client";
 import {
@@ -12,6 +12,7 @@ import {
 import { toJSONAsync } from "seroval";
 import { createTestHarness } from "wrangler";
 import { supportedLocaleOptions } from "../src/app/_constants/locale.ts";
+import { readServerFunctions } from "./server-functions.mjs";
 import { copyTestDatabase } from "./test-database.mjs";
 import { startTursoServer } from "./turso-dev-server.mjs";
 
@@ -161,18 +162,7 @@ try {
 	});
 	assert.equal(session.status, 200);
 	assert.equal((await session.json()).user.id, userId);
-	const resolverFile = (await readdir("dist/server/assets")).find((name) =>
-		name.startsWith("__23tanstack-start-server-fn-resolver-"),
-	);
-	assert.ok(resolverFile, "Server Functionのmanifestが生成されている");
-	const resolver = await readFile(`dist/server/assets/${resolverFile}`, "utf8");
-	const functions = Object.fromEntries(
-		[
-			...resolver.matchAll(
-				/"([a-f0-9]{64})":\s*\{\s*functionName:\s*"([^"]+)"/g,
-			),
-		].map((match) => [match[2], match[1]]),
-	);
+	const functions = await readServerFunctions("dist/server/assets");
 	const editFunction = functions.editPageContent_createServerFn_handler;
 	assert.ok(editFunction, "記事保存のServer Functionが生成されている");
 	const imageForm = new FormData();
