@@ -1,5 +1,4 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
-import publicPages from "virtual:evame-public-pages";
 import type {
 	ExecutionContext,
 	Request as WorkerRequest,
@@ -11,7 +10,6 @@ import {
 	withSentry,
 } from "@sentry/cloudflare";
 import { isRedirect } from "@tanstack/react-router";
-import handler from "@tanstack/react-start/server-entry";
 import { withSecurityHeaders } from "../security-headers";
 import { getMigrationResponse } from "../shared/migration-response";
 import { fetchPublicReader } from "../shared/public-reader";
@@ -24,6 +22,13 @@ import {
 import { updateReaderPublication } from "./app/_service/update-reader-publication";
 import { createDb, databaseScope } from "./db";
 import { fetchReaderRevision } from "./db/queries";
+
+let publicPagesModule: Promise<
+	typeof import("virtual:evame-public-pages")
+> | null = null;
+let applicationModule: Promise<
+	typeof import("@tanstack/react-start/server-entry")
+> | null = null;
 
 // 公開表示と編集の両方で、ストリーム完了・失敗・中断まで接続を保持する。
 async function withDatabase(
@@ -78,6 +83,8 @@ export class PublicPages extends WorkerEntrypoint<
 			return this.env.ASSETS.fetch(workerRequest);
 		const request = workerRequest as unknown as Request;
 		return withDatabase(request, this.ctx, async () => {
+			publicPagesModule ??= import("virtual:evame-public-pages");
+			const { default: publicPages } = await publicPagesModule;
 			if (new URL(request.url).pathname === "/api/home-feed")
 				return publicPages.fetch(request, this.env, this.ctx);
 			const { revision } = await fetchReaderRevision();
@@ -155,6 +162,8 @@ export default withSentry(sentryOptions, {
 		if (publicResponse) return publicResponse;
 		const url = new URL(request.url);
 		return withDatabase(request, context, async () => {
+			applicationModule ??= import("@tanstack/react-start/server-entry");
+			const { default: handler } = await applicationModule;
 			const response = await handler.fetch(request);
 			if (
 				shouldInvalidateReader(

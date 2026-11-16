@@ -47,7 +47,30 @@ it("ChromiumとWebKitで全エディター操作群とAstroの公開表示を検
 			step.uses?.startsWith("actions/download-artifact@"),
 		).with.name,
 	).toBe("workers");
-	expect(browser.steps.at(-1).run).toContain("--env EVAME_BROWSER_TYPE");
+	expect(
+		browser.steps.find(
+			(step: { name: string }) =>
+				step.name === "Run prebuilt browsers with the Nix toolchain",
+		).run,
+	).toContain("--env EVAME_BROWSER_TYPE");
+});
+
+it("ブラウザー失敗のトレースをホストと同じ所有者で作り、失敗後もアップロードする", () => {
+	const browser = workflows[0].jobs.browser;
+	const command = browser.steps.find(
+		(step: { name: string }) =>
+			step.name === "Run prebuilt browsers with the Nix toolchain",
+	).run;
+	expect(command).toContain('--user "$(id -u):$(id -g)"');
+	expect(command).toContain("--env DEBUG");
+	expect(browser.env.DEBUG).toBe("pw:browser");
+	const artifact = browser.steps.find(
+		(step: { name: string }) => step.name === "Upload browser failure traces",
+	);
+	expect(artifact.if).toBe("always()");
+	expect(artifact.uses).toMatch(/^actions\/upload-artifact@/);
+	expect(artifact.with.path).toBe(".data/header-browser");
+	expect(artifact.with["include-hidden-files"]).toBe(true);
 });
 
 it("失敗・キャンセル・スキップした検証が一つでもあれば公開とプレビューを止める", () => {
@@ -214,9 +237,12 @@ it("ブラウザー全操作群はビルド時に一度だけ準備したSQLite�
 	expect(workflow.jobs.browser.env.EVAME_TEST_DATABASE_TEMPLATE).toBe(
 		".data/browser-test.db",
 	);
-	expect(workflow.jobs.browser.steps.at(-1).run).toContain(
-		"--env EVAME_TEST_DATABASE_TEMPLATE",
-	);
+	expect(
+		workflow.jobs.browser.steps.find(
+			(step: { name: string }) =>
+				step.name === "Run prebuilt browsers with the Nix toolchain",
+		).run,
+	).toContain("--env EVAME_TEST_DATABASE_TEMPLATE");
 	const tests = workflow.jobs.checks.steps.find(
 		(step: { name: string }) => step.name === "Run Tests",
 	).run;

@@ -114,6 +114,7 @@ jobs:
       EVAME_TEST_DATABASE_TEMPLATE: .data/browser-test.db
       EVAME_BROWSER_SUITE: ${{ matrix.suite }}
       EVAME_BROWSER_TYPE: ${{ matrix.browser }}
+      DEBUG: pw:browser
     steps:
       - uses: actions/checkout@v4
         with:
@@ -131,12 +132,21 @@ jobs:
         run: |
           nix develop --command docker run --rm --init --ipc=host \
             --volume "$PWD:$PWD" --volume /nix/store:/nix/store:ro \
-            --workdir "$PWD" \
+            --workdir "$PWD" --user "$(id -u):$(id -g)" \
             --env PATH --env GSETTINGS_SCHEMA_DIR --env TZ \
             --env SENTRY_DSN --env VITE_SENTRY_DSN --env EVAME_BROWSER_SUITE --env EVAME_BROWSER_TYPE \
-            --env EVAME_TEST_DATABASE_TEMPLATE \
+            --env EVAME_TEST_DATABASE_TEMPLATE --env DEBUG \
             mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27 \
             bun run test:deployment:browser
+      - name: Upload browser failure traces
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-traces-${{ matrix.suite }}-${{ matrix.browser }}
+          path: .data/header-browser
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
 
   ci-check:
     needs: [checks, build, browser]

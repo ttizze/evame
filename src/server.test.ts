@@ -63,6 +63,7 @@ const env = {
 		get: vi.fn().mockResolvedValue(null),
 		put: vi.fn().mockResolvedValue(null),
 		list: vi.fn().mockResolvedValue({ objects: [], truncated: false }),
+		delete: vi.fn().mockResolvedValue(undefined),
 	},
 };
 const publicBinding = { fetch: vi.fn(), publish: vi.fn() };
@@ -72,7 +73,10 @@ beforeEach(() => {
 	pendingChanges.clear();
 	pendingChanges.set("page:123", 1);
 	env.PUBLIC_HTML.get.mockReset().mockResolvedValue(null);
-	env.PUBLIC_HTML.put.mockReset().mockResolvedValue(null);
+	env.PUBLIC_HTML.put.mockReset().mockResolvedValue({
+		etag: "registration",
+		customMetadata: { state: "pending", revision: "0" },
+	});
 	publicBinding.publish.mockReset().mockResolvedValue(undefined);
 	env.SETTINGS.get.mockReset().mockResolvedValue(false);
 	publicBinding.fetch
@@ -646,6 +650,7 @@ describe("同じWorkerの公開HTMLとR2への更新記録", () => {
 
 it("R2に有効なHTMLがある場合はDB接続やAstro生成を起動しない", async () => {
 	env.PUBLIC_HTML.get.mockResolvedValue({
+		customMetadata: { state: "ready", revision: "1", generation: "test" },
 		json: async () => ({
 			startedAt: Date.now(),
 			revision: 1,

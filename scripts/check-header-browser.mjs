@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { mkdir } from "node:fs/promises";
 import { expect } from "@playwright/test";
 
 export async function checkHeaderBrowser(
@@ -9,8 +10,11 @@ export async function checkHeaderBrowser(
 	pageSlug,
 ) {
 	const engine = browser.browserType().name();
+	await mkdir(".data/header-browser", { recursive: true });
 	const guest = await browser.newContext({ colorScheme: "light" });
+	guest.setDefaultTimeout(30000);
 	try {
+		await guest.tracing.start({ screenshots: true, snapshots: true });
 		const page = await guest.newPage();
 		for (const [kind, path] of [
 			["home", "/ja"],
@@ -157,10 +161,15 @@ export async function checkHeaderBrowser(
 			}
 		}
 	} finally {
+		await guest.tracing
+			.stop({ path: `.data/header-browser/${engine}-guest.zip` })
+			.catch((error) => console.error("Header guest trace:", error));
 		await guest.close();
 	}
 	const member = await browser.newContext({ colorScheme: "light" });
+	member.setDefaultTimeout(30000);
 	try {
+		await member.tracing.start({ screenshots: true, snapshots: true });
 		const separator = cookie.indexOf("=");
 		await member.addCookies([
 			{
@@ -300,6 +309,9 @@ export async function checkHeaderBrowser(
 			}
 		}
 	} finally {
+		await member.tracing
+			.stop({ path: `.data/header-browser/${engine}-member.zip` })
+			.catch((error) => console.error("Header member trace:", error));
 		await member.close();
 	}
 	console.log(

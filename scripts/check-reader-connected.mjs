@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { createHmac, randomUUID } from "node:crypto";
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { createClient } from "@libsql/client";
 import { toJSONAsync } from "seroval";
 import { createTestHarness } from "wrangler";
 import { prepareReaderConnected } from "./prepare-reader-connected.mjs";
+import { readServerFunctions } from "./server-functions.mjs";
 import { copyTestDatabase } from "./test-database.mjs";
 import { startTursoServer } from "./turso-dev-server.mjs";
 
@@ -96,31 +97,34 @@ try {
 	});
 	const cookie = `${remote ? "__Secure-" : ""}better-auth.session_token=${encodeURIComponent(`${token}.${createHmac("sha256", authSecret).update(token).digest("base64")}`)}`;
 	const request = async (path, init = {}) => {
-		if (remote)
-			return fetch(new URL(path, origin), {
+		const started = performance.now();
+		let response;
+		if (remote) {
+			response = await fetch(new URL(path, origin), {
 				...init,
 				signal: AbortSignal.timeout(60000),
 			});
-		const outgoing = new Request(new URL(path, origin), init);
-		return worker.fetch(outgoing.url, {
-			method: outgoing.method,
-			headers: Object.fromEntries(outgoing.headers),
-			...(outgoing.body ? { body: await outgoing.arrayBuffer() } : {}),
-			redirect: "manual",
+		} else {
+			const outgoing = new Request(new URL(path, origin), init);
+			response = await worker.fetch(outgoing.url, {
+				method: outgoing.method,
+				headers: Object.fromEntries(outgoing.headers),
+				...(outgoing.body ? { body: await outgoing.arrayBuffer() } : {}),
+				redirect: "manual",
+			});
+		}
+		results.push({
+			operation: "request",
+			path,
+			method: init.method ?? "GET",
+			status: response.status,
+			cache: response.headers.get("X-Evame-HTML-Cache"),
+			timing: response.headers.get("Server-Timing"),
+			milliseconds: Math.round(performance.now() - started),
 		});
+		return response;
 	};
-	const resolverFile = (await readdir("dist/server/assets")).find(
-		(path) => path.includes("server-fn-resolver-") && path.endsWith(".js"),
-	);
-	assert.ok(resolverFile);
-	const resolver = await readFile(`dist/server/assets/${resolverFile}`, "utf8");
-	const functions = Object.fromEntries(
-		[
-			...resolver.matchAll(
-				/"([a-f0-9]{64})":\s*\{\s*functionName:\s*"([^"]+)"/g,
-			),
-		].map((match) => [match[2], match[1]]),
-	);
+	const functions = await readServerFunctions("dist/server/assets");
 	const edit = functions.editPageContent_createServerFn_handler;
 	assert.ok(edit);
 	const save = async (text, title = "配信接続の記事") => {

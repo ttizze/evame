@@ -25,8 +25,11 @@ export async function fetchPublicReader(
 	const readerRoute = parseReaderRoute(url.pathname, url.search);
 	const pathname =
 		readerRoute?.kind === "home" ? `/${readerRoute.locale}` : url.pathname;
+	let maintenanceDuration = 0;
 	if (shouldCheckMaintenance(pathname)) {
+		const started = performance.now();
 		const isOn = await settings.get<boolean>("maintenance", "json");
+		maintenanceDuration = performance.now() - started;
 		if (isOn) {
 			return withSecurityHeaders(
 				Response.redirect(
@@ -49,6 +52,10 @@ export async function fetchPublicReader(
 			readerUrl.pathname = `/${readerRoute.locale}`;
 		const response = await reader.fetch(new Request(readerUrl, request));
 		const secured = withSecurityHeaders(response);
+		secured.headers.append(
+			"Server-Timing",
+			`maintenance;dur=${maintenanceDuration.toFixed(1)}`,
+		);
 		secured.headers.set("Cache-Control", "private, no-store");
 		secured.headers.delete("Cloudflare-CDN-Cache-Control");
 		secured.headers.delete("Cache-Tag");

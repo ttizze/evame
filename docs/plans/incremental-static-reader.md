@@ -6,15 +6,21 @@ Astroの公開表示とTanStack Startの編集・管理・APIを同じ `evame-st
 
 R2のHITではDB接続・Astro描画・Reactの起動を待たない。初回または変更後の閲覧時に、同じWorker内の `PublicPages` entrypointでAstro生成する。記事保存ごとのビルド・デプロイ、全URLの事前生成、生成用Cron・Queue・Durable Objectは導入しない。
 
+Astroの生成コードは `PublicPages.fetch`、TanStack Startの編集・APIコードは通常入口のDB処理内で動的に読み込む。R2のHIT時には両アプリのモジュールを起動しない。
+
 `reader/` はAstroソースと中間ビルドの配置先として残る。サーバーコードとJS/CSSはルートの `dist` へ取り込み、公開HTML・Astroアセット・編集・APIを1つのWorkerから配信する。
 
 ## 保存と更新の反映
 
 DB更新と同じtransactionで `reader_publication_changes` へ変更キーと単調増加する版を記録する。保存・公開・非公開・削除の実APIは、この保留行をR2の追記式変更記録へ反映してから成功を返す。完了後は取得したkeyとrevisionが一致する行だけを削除し、後続更新を残す。R2反映失敗は保存成功にせず、DB差分のない同内容の再保存でも保留行を回収する。
 
-HTMLには生成開始時刻・生成前のDB版・記事や一覧の依存タグを付ける。HIT判定はHTMLを取得し、その版より新しいR2変更記録を1回LISTして依存タグを照合する。関連変更がある場合やLISTの1000件上限を超えた場合は再生成する。HTMLは生成開始から1時間で失効する。古い通知は新しい通知を消さず、遅いHTML生成も次の閲覧で変更記録により除外する。HTMLのPUTはETagの条件付き更新で競合を防ぐ。
+閲覧はR2のGET一回でHTMLを返す。保存側は、生成中の索引と、変更した依存キーの索引だけをLISTし、同じDBの全Worker版にある該当HTMLを保存応答前に無効化する。サイト全体のHTMLを走査しない。各索引のLISTはmetadataだけを取得して全ページをたどり、無効化は最大8件ずつ実行する。本文の取得やAstro生成は保存側では行わない。
 
-キーは `html/<DB URL hash>/<Worker version>/<URL hash>` と `changes/<DB URL hash>/<revision>/<tag hash>` とする。DB URLはSHA-256でハッシュ化し、URL自体をR2キーへ残さない。同じDBを使うWorkerは変更記録を共有し、新版で更新・非公開化・削除した後に旧版へ戻しても古いHTMLを再配信しない。異なるDBを使うPreview間ではHTMLと変更記録の両方を分離する。R2 lifecycleでは両prefixのオブジェクトを2日以降に削除し、HTMLの有効期間中に変更記録だけを消さない。
+コールドミスや期限切れでは、DB版の取得より先に固有キーの生成中索引を登録する。索引はHTMLキー・取得時のETag・版を持つ。同じHTMLキーへの生成前PUTは行わず、未キャッシュURLへの並行閲覧でも登録の書き込み制限を避ける。保存側は生成中索引が示すHTMLも無効化し、HTMLがまだない場合も条件付きで失効マーカーを作る。生成完了時は最初に取得したHTMLのETagと一致する場合、または未作成のままの場合だけ登録できる。これにより保存応答後の遅いfillと古い変更記録の再送が最新版を巻き戻さない。
+
+HTMLを登録する前に依存キーごとの完成済み索引を永続化し、登録後に生成中索引を削除する。保存側は生成中→完成済みの順に読み、索引の移動と重なっても変更を取りこぼさない。HTMLのmetadataはDB版と固有の生成識別子だけを持ち、索引と生成識別子が違う古い参照は回収する。同内容の再生成でも本文中の生成識別子が変わり、ETagの再利用を防ぐ。HTMLは生成開始から1時間で失効する。変更記録が保存済みでも無効化を再試行し、R2反映失敗はDBの保留行を残す。`Server-Timing`と接続検証の結果にR2・maintenance・保存後のGETの時間を残す。
+
+キーは `html/<DB URL hash>/<Worker version>/<URL hash>`、`changes/<DB URL hash>/<revision>/<tag hash>`、`pending/<DB URL hash>/<generation>`、`dependencies/<DB URL hash>/<tag hash>/<generation>` とする。DB URLをSHA-256でハッシュ化し、URL自体をR2キーへ残さない。同じDBのWorker版は変更記録と索引を共有し、旧版へ戻しても非公開化・削除を巻き戻さない。異なるDBを使うPreviewは全prefixで分離する。4prefixのlifecycleを2日とし、1時間有効なHTMLより先に索引や変更記録が失効しないようにする。
 
 保存の完了に全言語・全形式・一覧全ページのHTML生成を含めない。更新対象は実際の一覧条件に合わせ、新着・著者一覧の親記事と、子記事を含むタグ一覧を区別する。404・下書きプレビュー・検索・個人情報・認証Cookieを含む応答はR2へ共有保存しない。
 
