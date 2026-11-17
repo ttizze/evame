@@ -118,9 +118,9 @@ it("失敗・キャンセル・スキップした検証が一つでもあれば�
 	).toBeGreaterThan(0);
 });
 
-it("lint・型検査・4分割テスト・ビルドを依存なしで並列に開始する", () => {
+it("lint・型検査・ビルドと並行し、計測入力の確定だけを待って4分割テストを開始する", () => {
 	const jobs = workflows[0].jobs;
-	for (const name of ["lint", "typecheck", "test", "build"]) {
+	for (const name of ["lint", "typecheck", "build"]) {
 		expect(jobs[name].needs).toBeUndefined();
 		expect(
 			jobs[name].steps.some((step: { run: string }) =>
@@ -128,6 +128,9 @@ it("lint・型検査・4分割テスト・ビルドを依存なしで並列に�
 			),
 		).toBe(true);
 	}
+	expect(jobs["test-snapshot"]).toBeDefined();
+	expect(jobs["test-snapshot"].needs).toBeUndefined();
+	expect(jobs.test.needs).toBe("test-snapshot");
 	expect(jobs.test.strategy.matrix.shard).toEqual([1, 2, 3, 4]);
 	expect(jobs.test.strategy["fail-fast"]).toBe(false);
 	expect(
@@ -150,20 +153,39 @@ it("lint・型検査・4分割テスト・ビルドを依存なしで並列に�
 
 it("全シャードが同じ確定済み実測を使い、4件の結果を検証してから次回へ渡す", () => {
 	const jobs = workflows[0].jobs;
-	const restore = jobs.test.steps.find(
+	const snapshot = jobs["test-snapshot"];
+	expect(snapshot).toBeDefined();
+	const restore = snapshot.steps.find(
 		(step: { name: string }) => step.name === "Restore test duration snapshot",
 	);
 	const aggregate = jobs["test-results"];
-	const aggregateRestore = aggregate.steps.find(
-		(step: { name: string }) => step.name === "Restore test duration snapshot",
-	);
 	expect(restore.uses).toBe("actions/cache/restore@v5");
 	expect(restore.with["restore-keys"]).toBeUndefined();
 	expect(restore.with.path).toBe(".data/ci-test-durations.json");
-	expect(restore.with.key).toBe(aggregateRestore.with.key);
 	expect(restore.with.key).toContain(
 		"github.event.pull_request.base.sha || github.event.before || github.sha",
 	);
+	const upload = snapshot.steps.find((step: { uses: string }) =>
+		step.uses?.startsWith("actions/upload-artifact@"),
+	);
+	expect(upload.with.path).toBe(restore.with.path);
+	expect(upload.with["if-no-files-found"]).toBe("error");
+	expect(upload.with["include-hidden-files"]).toBe(true);
+	for (const job of [jobs.test, aggregate]) {
+		expect(
+			job.steps.some((step: { uses: string }) =>
+				step.uses?.startsWith("actions/cache/restore@"),
+			),
+		).toBe(false);
+		expect(
+			job.steps.find(
+				(step: { uses: string; with: { name: string } }) =>
+					step.uses?.startsWith("actions/download-artifact@") &&
+					step.with.name === upload.with.name,
+			).with.path,
+		).toBe(".data");
+	}
+	expect(upload.with.name.startsWith("unit-durations-")).toBe(false);
 	expect(
 		jobs.test.steps.find((step: { uses: string }) =>
 			step.uses?.startsWith("actions/upload-artifact@"),
@@ -176,8 +198,10 @@ it("全シャードが同じ確定済み実測を使い、4件の結果を検証
 		),
 	).toBe(false);
 	expect(
-		aggregate.steps.find((step: { uses: string }) =>
-			step.uses?.startsWith("actions/download-artifact@"),
+		aggregate.steps.find(
+			(step: { uses: string; with: { pattern: string } }) =>
+				step.uses?.startsWith("actions/download-artifact@") &&
+				step.with.pattern === "unit-durations-*",
 		).with,
 	).toMatchObject({
 		pattern: "unit-durations-*",
@@ -199,6 +223,46 @@ it("全シャードが同じ確定済み実測を使い、4件の結果を検証
 	expect(save.with.path).toBe(restore.with.path);
 	expect(save.with.key).toMatch(/\$\{\{ github\.sha \}\}$/);
 });
+
+it.each([
+	null,
+	JSON.stringify({
+		version: "cached",
+		results: [["test.ts", { duration: 123 }]],
+	}),
+])(
+	"キャッシュ未作成でも入力を確定し、既存の計測値%sは書き換えない",
+	(cached) => {
+		const snapshot = workflows[0].jobs["test-snapshot"];
+		expect(snapshot).toBeDefined();
+		const freeze = snapshot.steps.find(
+			(step: { name: string }) => step.name === "Freeze test duration snapshot",
+		).run;
+		const directory = mkdtempSync(join(tmpdir(), "evame-snapshot-test-"));
+		const path = join(directory, ".data/ci-test-durations.json");
+		try {
+			expect(freeze).toMatch(/^nix develop --command /);
+			const command = freeze.replace(/^nix develop --command /, "");
+			writeFileSync(
+				join(directory, "package.json"),
+				JSON.stringify({ devDependencies: { vitest: "5.0.3" } }),
+			);
+			if (cached !== null) {
+				mkdirSync(dirname(path), { recursive: true });
+				writeFileSync(path, cached);
+			}
+			execFileSync("bash", ["-c", command], { cwd: directory });
+			const frozen = readFileSync(path, "utf8");
+			if (cached === null)
+				expect(JSON.parse(frozen)).toEqual({ version: "5.0.3", results: [] });
+			else expect(frozen).toBe(cached);
+			execFileSync("bash", ["-c", command], { cwd: directory });
+			expect(readFileSync(path, "utf8")).toBe(frozen);
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
+	},
+);
 
 it("Preview専用ビルドは先に並列生成し、全検証後だけ同じ成果物を公開する", () => {
 	const jobs = workflows[0].jobs;

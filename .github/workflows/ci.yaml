@@ -70,7 +70,42 @@ jobs:
           nix develop --command bun run typecheck
           nix develop --command bun run check:reader
 
+  test-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Restore test duration snapshot
+        uses: actions/cache/restore@v5
+        with:
+          path: .data/ci-test-durations.json
+          key: unit-durations-v1-${{ runner.os }}-${{ hashFiles('bun.lock') }}-${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
+      - name: Freeze test duration snapshot
+        run: |
+          nix develop --command bun -e '
+            import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+            const path = ".data/ci-test-durations.json";
+            if (!existsSync(path)) {
+              const { devDependencies } = JSON.parse(readFileSync("package.json", "utf8"));
+              mkdirSync(".data", { recursive: true });
+              writeFileSync(path, JSON.stringify({ version: devDependencies.vitest, results: [] }) + "\n");
+            }
+          '
+      - uses: actions/upload-artifact@v7
+        with:
+          name: unit-duration-snapshot
+          path: .data/ci-test-durations.json
+          include-hidden-files: true
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 7
+
   test:
+    needs: test-snapshot
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -96,11 +131,10 @@ jobs:
           key: bun-downloads-v1-${{ runner.os }}-${{ hashFiles('bun.lock', 'flake.lock') }}
           restore-keys: bun-downloads-v1-${{ runner.os }}-
       - run: nix develop --command bun install --frozen-lockfile
-      - name: Restore test duration snapshot
-        uses: actions/cache/restore@v5
+      - uses: actions/download-artifact@v8
         with:
-          path: .data/ci-test-durations.json
-          key: unit-durations-v1-${{ runner.os }}-${{ hashFiles('bun.lock') }}-${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
+          name: unit-duration-snapshot
+          path: .data
       - name: Run Tests
         run: nix develop --command bun scripts/ci-tests.mjs --shard ${{ matrix.shard }}/4
 
@@ -123,11 +157,10 @@ jobs:
       - uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Restore test duration snapshot
-        uses: actions/cache/restore@v5
+      - uses: actions/download-artifact@v8
         with:
-          path: .data/ci-test-durations.json
-          key: unit-durations-v1-${{ runner.os }}-${{ hashFiles('bun.lock') }}-${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
+          name: unit-duration-snapshot
+          path: .data
       - uses: actions/download-artifact@v8
         with:
           pattern: unit-durations-*
