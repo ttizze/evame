@@ -73,7 +73,7 @@ it("ブラウザー失敗のトレースをホストと同じ所有者で作り�
 	expect(artifact.with["include-hidden-files"]).toBe(true);
 });
 
-it("失敗・キャンセル・スキップした検証が一つでもあれば公開とプレビューを止める", () => {
+it("失敗・キャンセル・スキップした検証が一つでもあればCIを不合格にする", () => {
 	const workflow = workflows[0];
 	const gate = workflow.jobs["ci-check"];
 	expect(gate.needs).toEqual(["checks", "build", "browser"]);
@@ -94,12 +94,7 @@ it("失敗・キャンセル・スキップした検証が一つでもあれば�
 			else expect(run).toThrow();
 		}
 	}
-	expect(workflow.jobs.preview.needs).toBe("ci-check");
-	expect(
-		gate.steps.findIndex(
-			(step: { name: string }) => step.name === "Deploy Cloudflare Workers",
-		),
-	).toBeGreaterThan(0);
+	expect(gate.steps).toHaveLength(1);
 });
 
 it("iPhoneを一度だけビルドし、別MacでNativeと全UIを直列実行する", () => {
