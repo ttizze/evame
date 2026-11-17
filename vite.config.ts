@@ -27,6 +27,7 @@ export default defineConfig(({ command }) => ({
 	optimizeDeps: { exclude: ["@cloudflare/pages-plugin-vercel-og"] },
 	environments: {
 		ssr: {
+			build: { minify: true },
 			optimizeDeps: {
 				exclude: ["@cloudflare/pages-plugin-vercel-og"],
 				rolldownOptions: {
