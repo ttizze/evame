@@ -24,6 +24,9 @@ export async function configureReaderStorage(configPath, preview) {
 	const lifecycle = await current.json();
 	if (!lifecycle.success || !Array.isArray(lifecycle.result?.rules))
 		throw new Error("Invalid R2 lifecycle response");
+	const deleteObjectsTransition = {
+		condition: { type: "Age", maxAge: 172800 },
+	};
 	const rules = lifecycle.result.rules.flatMap((rule) => {
 		const prefix = rule.conditions?.prefix ?? "";
 		if (
@@ -32,8 +35,13 @@ export async function configureReaderStorage(configPath, preview) {
 					retained.startsWith(prefix) || prefix.startsWith(retained),
 			)
 		)
-			return [rule];
-		const { deleteObjectsTransition, ...retained } = rule;
+			return [
+				["changes/", "pending/"].includes(prefix) &&
+				rule.deleteObjectsTransition
+					? { ...rule, deleteObjectsTransition }
+					: rule,
+			];
+		const { deleteObjectsTransition: removedDeletion, ...retained } = rule;
 		return retained.abortMultipartUploadsTransition ||
 			retained.storageClassTransitions?.length
 			? [retained]
@@ -47,15 +55,19 @@ export async function configureReaderStorage(configPath, preview) {
 					rule.conditions?.prefix === prefix &&
 					rule.deleteObjectsTransition,
 			)
-		)
-			rules.push({
-				id: `reader-expire-${prefix.slice(0, -1)}`,
+		) {
+			const id = `reader-expire-${prefix.slice(0, -1)}`;
+			const index = rules.findIndex((rule) => rule.id === id);
+			const rule = {
+				...rules[index],
+				id,
 				enabled: true,
 				conditions: { prefix },
-				deleteObjectsTransition: {
-					condition: { type: "Age", maxAge: 172800 },
-				},
-			});
+				deleteObjectsTransition,
+			};
+			if (index === -1) rules.push(rule);
+			else rules[index] = rule;
+		}
 	}
 	if (JSON.stringify(rules) !== JSON.stringify(lifecycle.result.rules)) {
 		const updated = await fetch(`${endpoint}/lifecycle`, {

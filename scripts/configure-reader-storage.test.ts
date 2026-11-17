@@ -187,3 +187,80 @@ it("保持設定の更新失敗を成功として返さない", async () => {
 		configureReaderStorage(join(directory, "wrangler.json"), false),
 	).rejects.toThrow("HTTP 403");
 });
+
+it.each([
+	{ type: "Age", maxAge: 31536000 },
+	{ type: "Age", maxAge: 60 },
+	{ type: "Date", date: "2027-01-01T00:00:00Z" },
+])("変更記録の既存削除条件を2日へ補正する: %j", async (condition) => {
+	const rules = [
+		{
+			id: "custom-changes",
+			enabled: true,
+			conditions: { prefix: "changes/" },
+			deleteObjectsTransition: { condition },
+			storageClassTransitions: [
+				{
+					condition: { type: "Age", maxAge: 30 },
+					storageClass: "InfrequentAccess",
+				},
+			],
+		},
+		{
+			id: "reader-expire-pending",
+			enabled: true,
+			conditions: { prefix: "pending/" },
+			deleteObjectsTransition: { condition: { type: "Age", maxAge: 172800 } },
+		},
+	];
+	request.mockImplementation(
+		async (_url, init) =>
+			new Response(
+				JSON.stringify({
+					success: true,
+					result: init?.method === "GET" ? { rules } : {},
+				}),
+			),
+	);
+	await configureReaderStorage(join(directory, "wrangler.json"), false);
+	const update = request.mock.calls.find(([, init]) => init?.method === "PUT");
+	expect(update).toBeDefined();
+	expect(JSON.parse(String(update?.[1]?.body)).rules).toEqual([
+		{
+			...rules[0],
+			deleteObjectsTransition: { condition: { type: "Age", maxAge: 172800 } },
+		},
+		rules[1],
+	]);
+});
+
+it("無効にされた管理用削除ルールを同じIDのまま再び有効にする", async () => {
+	const rules = ["changes/", "pending/"].map((prefix) => ({
+		id: `reader-expire-${prefix.slice(0, -1)}`,
+		enabled: false,
+		conditions: { prefix },
+		deleteObjectsTransition: { condition: { type: "Age", maxAge: 31536000 } },
+	}));
+	request.mockImplementation(
+		async (_url, init) =>
+			new Response(
+				JSON.stringify({
+					success: true,
+					result: init?.method === "GET" ? { rules } : {},
+				}),
+			),
+	);
+	await configureReaderStorage(join(directory, "wrangler.json"), false);
+	const update = request.mock.calls.find(([, init]) => init?.method === "PUT");
+	const updated = JSON.parse(String(update?.[1]?.body)).rules;
+	expect(updated).toEqual(
+		rules.map((rule) => ({
+			...rule,
+			enabled: true,
+			deleteObjectsTransition: { condition: { type: "Age", maxAge: 172800 } },
+		})),
+	);
+	expect(new Set(updated.map((rule: { id: string }) => rule.id)).size).toBe(
+		updated.length,
+	);
+});
