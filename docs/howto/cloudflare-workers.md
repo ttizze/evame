@@ -95,7 +95,7 @@ GitHub secret `EVAME_PREVIEW_SECRETS` に専用DBの `TURSO_DATABASE_URL` / `TUR
 
 `.github/workflows/ci.yaml` はBiome・typecheck・ビルド・単体テスト・ブラウザーテストと、SQLite・ローカルR2を使う保存／公開HTMLの接続検証だけを行う。mainとPRの両方でSentry送信・アップロードを無効化し、Cloudflare・Tursoなどのサービス認証を渡さない。CIの成果物と一緒に実際に検証したコミットSHAを `verified-source` へ記録する。
 
-`.github/workflows/publish.yaml` はCIの成功完了から起動する。同じCI runの `verified-source` を読み、mainではrunのhead SHA、PRでは元のbase・headを親に持つ検証済みマージコミットであることをGitHub APIで確認する。同じリポジトリの開いたPRだけをPreviewへ公開し、fork・更新済みPR・古いmainの結果は公開しない。checkoutは確認したSHAへ固定する。検証用ビルドは全ブラウザー群で共有し、公開側はSentry・Analytics・Preview URLなど各環境の設定を使って同じソースをビルドする。外部接続と認証はこの公開ワークフローだけで扱う。
+`.github/workflows/publish.yaml` はCIの成功完了から起動する。同じCI runの `verified-source` を読み、mainではrunのhead SHA、PRでは元のbase・headを親に持つ検証済みマージコミットであることをGitHub APIで確認する。同じリポジトリの開いたPRのうち、投稿者が人間のアカウントで、現在のリポジトリ権限がwrite・maintain・adminのものだけを自動Preview公開する。権限はGitHub APIで照会し、照会失敗時は公開を止める。Bot・権限のない投稿者・fork・更新済みPR・古いmainの結果は公開しない。checkoutは確認したSHAへ固定する。検証用ビルドは全ブラウザー群で共有し、公開側はSentry・Analytics・Preview URLなど各環境の設定を使って同じソースをビルドする。外部接続と認証はこの公開ワークフローだけで扱う。
 
 本番はSentryアップロード付きビルド、mainが更新されていないことの再確認、DBマイグレーション、R2アセット保存、Workerデプロイの順に実行する。PRは専用DB・認証秘密値で標準Previewを公開し、実URLの認証・Astro表示・保存・非公開化・削除・並行更新・R2失敗後の回復検証を維持する。本番同士・Preview同士の公開はそれぞれ直列化し、DB更新・R2保存に失敗した場合はWorkerをデプロイしない。公開の失敗はPublishの結果として報告し、CIの合否には混ぜない。新しい `workflow_run` ワークフローはmainへ入ってから有効になる。
 

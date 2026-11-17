@@ -237,6 +237,8 @@
 - `.env` のキーは外部に出さない。ログ/PR/エラーメッセージに含めない。
 - 機密値はダミー化・マスクして共有。
 - Gitへの書き込みが不要なCIのcheckoutは `persist-credentials: false` とし、ビルド処理へ不要なGit資格情報を残さない。
+- CI成功だけでPRコードへ公開用secretを渡さない。自動Preview公開は同一リポジトリの人間の投稿者に限定し、現在のwrite・maintain・admin権限をGitHub APIで確認する。Bot・権限不足・照会失敗時は公開しない。
+- ビルド後のDBファクトリを探す際はDBのProxyを起動しない。直接exportと名前空間exportの両方を検証し、候補のown propertyを確認してからファクトリを読む。
 
 ## 提案の仕方
 

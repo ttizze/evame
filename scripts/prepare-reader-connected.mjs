@@ -16,9 +16,10 @@ export async function prepareReaderConnected(directory) {
 import { WorkerEntrypoint } from "cloudflare:workers";
 import worker, { PublicPages as ApplicationPublicPages } from ${JSON.stringify(`./${config.main}`)};
 import * as databaseExports from ${JSON.stringify(`./assets/${databaseFile}`)};
-const databaseModule = Object.values(databaseExports).find((value) => typeof value?.createDb === "function");
-if (!databaseModule) throw new Error("Built database factory export is required");
-const { createDb } = databaseModule;
+const createDb = databaseExports.createDb ?? Object.values(databaseExports).find(
+ (value) => value !== null && typeof value === "object" && Object.hasOwn(value, "createDb") && typeof value.createDb === "function"
+)?.createDb;
+if (typeof createDb !== "function") throw new Error("Built database factory export is required");
 export default worker;
 export class PublicPages extends WorkerEntrypoint {
  constructor(ctx, env) { super(ctx, env); this.application = new ApplicationPublicPages(ctx, env); }

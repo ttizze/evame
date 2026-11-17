@@ -44,6 +44,9 @@ jobs:
               const { data: pr } = await github.rest.pulls.get({ ...context.repo, pull_number: original.number });
               if (pr.state !== "open" || pr.base.ref !== "main" || pr.head.repo.full_name !== repository || pr.head.sha !== run.head_sha) return;
               if (original.head.sha !== run.head_sha) throw new Error("CI head does not match PR revision");
+              if (pr.user.type !== "User") return;
+              const { data: author } = await github.rest.repos.getCollaboratorPermissionLevel({ ...context.repo, username: pr.user.login });
+              if (!["write", "maintain", "admin"].includes(author.permission)) return;
               const { data: commit } = await github.rest.repos.getCommit({ ...context.repo, ref: sha });
               if (commit.parents.length !== 2 || commit.parents[0].sha !== original.base.sha || commit.parents[1].sha !== run.head_sha)
                 throw new Error("Verified source is not the CI merge revision");

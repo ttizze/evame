@@ -129,6 +129,9 @@ async function resolvePublication({
 	currentHead = head,
 	state = "open",
 	parents = [base, head],
+	authorType = "User",
+	authorPermission = "write",
+	permissionStatus = 0,
 } = {}) {
 	expect(publish).toBeDefined();
 	const script = publish.jobs.revision.steps.find(
@@ -141,12 +144,20 @@ async function resolvePublication({
 				get: vi.fn(async () => ({
 					data: {
 						state,
+						user: { login: "contributor", type: authorType },
 						head: { sha: currentHead, repo: { full_name: repository } },
 						base: { ref: "main" },
 					},
 				})),
 			},
 			repos: {
+				getCollaboratorPermissionLevel: vi.fn(async () => {
+					if (permissionStatus)
+						throw Object.assign(new Error("Permission lookup failed"), {
+							status: permissionStatus,
+						});
+					return { data: { permission: authorPermission } };
+				}),
 				getCommit: vi.fn(async () => ({
 					data: { parents: parents.map((sha) => ({ sha })) },
 				})),
@@ -247,3 +258,43 @@ it("mainの成功CIと一致するコミットだけを本番へ渡し、古いC
 		resolvePublication({ event: "push", source: merge }),
 	).rejects.toThrow();
 });
+
+it.each(["write", "maintain", "admin"])(
+	"書き込み権限%sを持つ人の検証済みPRだけを自動公開する",
+	async (authorPermission) => {
+		const { outputs, github } = await resolvePublication({ authorPermission });
+		expect(outputs.target).toBe("preview");
+		expect(
+			github.rest.repos.getCollaboratorPermissionLevel,
+		).toHaveBeenCalledWith({
+			owner: "ttizze",
+			repo: "evame",
+			username: "contributor",
+		});
+	},
+);
+
+it.each([
+	{ authorType: "Bot" },
+	{ authorType: "" },
+	{ authorPermission: "read" },
+	{ authorPermission: "triage" },
+	{ authorPermission: "none" },
+	{ authorPermission: "unknown" },
+])(
+	"同一リポジトリでもBot・書き込み権限のない投稿者へ公開secretを渡さない: %j",
+	async (scenario) => {
+		const { outputs, github } = await resolvePublication(scenario);
+		expect(outputs).toEqual({});
+		expect(github.rest.repos.getCommit).not.toHaveBeenCalled();
+	},
+);
+
+it.each([403, 404])(
+	"投稿者の権限取得がHTTP %sで失敗したら公開を止める",
+	async (permissionStatus) => {
+		await expect(resolvePublication({ permissionStatus })).rejects.toThrow(
+			"Permission lookup failed",
+		);
+	},
+);
