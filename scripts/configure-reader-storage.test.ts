@@ -264,3 +264,78 @@ it("無効にされた管理用削除ルールを同じIDのまま再び有効�
 		updated.length,
 	);
 });
+it.each(["changes/", "pending/"])(
+	"管理用IDが%s以外に使われていても既存設定の適用範囲を変えない",
+	async (prefix) => {
+		const id = `reader-expire-${prefix.slice(0, -1)}`;
+		const rules = [
+			{
+				id,
+				enabled: true,
+				conditions: { prefix: "" },
+				abortMultipartUploadsTransition: {
+					condition: { type: "Age", maxAge: 604800 },
+				},
+			},
+			{
+				id: `${id}-1`,
+				enabled: true,
+				conditions: { prefix: "uploads/" },
+				deleteObjectsTransition: {
+					condition: { type: "Age", maxAge: 31536000 },
+				},
+			},
+		];
+		request.mockImplementation(
+			async (_url, init) =>
+				new Response(
+					JSON.stringify({
+						success: true,
+						result: init?.method === "GET" ? { rules } : {},
+					}),
+				),
+		);
+		await configureReaderStorage(join(directory, "wrangler.json"), false);
+		const update = request.mock.calls.find(
+			([, init]) => init?.method === "PUT",
+		);
+		const updated = JSON.parse(String(update?.[1]?.body)).rules;
+		expect(updated.slice(0, 2)).toEqual(rules);
+		expect(
+			updated.find((rule: { id: string }) => rule.id === `${id}-2`),
+		).toEqual({
+			id: `${id}-2`,
+			enabled: true,
+			conditions: { prefix },
+			deleteObjectsTransition: {
+				condition: { type: "Age", maxAge: 172800 },
+			},
+		});
+		expect(new Set(updated.map((rule: { id: string }) => rule.id)).size).toBe(
+			updated.length,
+		);
+		request.mockClear().mockImplementation(
+			async (_url, init) =>
+				new Response(
+					JSON.stringify({
+						success: true,
+						result:
+							init?.method === "GET"
+								? {
+										rules: updated.map((rule: { id: string }) =>
+											rule.id === `${id}-2`
+												? { ...rule, enabled: false }
+												: rule,
+										),
+									}
+								: {},
+					}),
+				),
+		);
+		await configureReaderStorage(join(directory, "wrangler.json"), false);
+		const reapplied = request.mock.calls.find(
+			([, init]) => init?.method === "PUT",
+		);
+		expect(JSON.parse(String(reapplied?.[1]?.body)).rules).toEqual(updated);
+	},
+);

@@ -56,8 +56,18 @@ export async function configureReaderStorage(configPath, preview) {
 					rule.deleteObjectsTransition,
 			)
 		) {
-			const id = `reader-expire-${prefix.slice(0, -1)}`;
-			const index = rules.findIndex((rule) => rule.id === id);
+			const baseId = `reader-expire-${prefix.slice(0, -1)}`;
+			let id = baseId;
+			let suffix = 1;
+			while (
+				rules.some(
+					(rule) => rule.id === id && rule.conditions?.prefix !== prefix,
+				)
+			)
+				id = `${baseId}-${suffix++}`;
+			const index = rules.findIndex(
+				(rule) => rule.id === id && rule.conditions?.prefix === prefix,
+			);
 			const rule = {
 				...rules[index],
 				id,

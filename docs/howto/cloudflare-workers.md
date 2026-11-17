@@ -47,7 +47,6 @@ iPhone本体・共有エディター・パッチ・操作fixture・Nix・iPhone�
 bun x wrangler secret bulk /absolute/path/to/worker-secrets.json
 bun run build
 bun run test:deployment
-bun run prepare:reader-assets
 bun run deploy:workers
 ```
 
