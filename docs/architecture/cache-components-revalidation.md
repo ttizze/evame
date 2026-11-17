@@ -50,9 +50,10 @@ HTMLには生成前のDB版と固有の生成識別子を保存する。DB取得
 
 ## デプロイ
 
-1. DBマイグレーションを先に実行する。
-2. AstroとTanStack Startを含む `dist/server/wrangler.json` を `evame-start` へ1回デプロイする。
-3. デプロイ前にハッシュ付きアセットをR2へ保存し、HTML・依存索引・アセットの削除lifecycleを外す。失敗時はデプロイしない。HTML保存先は維持し、一括purgeやHTMLの事前生成は行わない。
+1. バケット作成時の初期設定でHTML・依存索引・アセットの削除lifecycleを外す。
+2. DBマイグレーションを実行する。
+3. ハッシュ付きアセットをR2 bindingへ保存し、失敗時はデプロイしない。
+4. AstroとTanStack Startを含む `dist/server/wrangler.json` を `evame-start` へ1回デプロイする。HTML保存先は維持し、一括purgeやHTMLの事前生成は行わない。
 
 JS/CSSはHTMLと同じWorkerから配信する。現行Static Assetsが404を返す旧ハッシュ付きアセットはR2から取得し、保存HTMLと同じく削除期限を設けない。保存時は対象タグを無効化し、コード更新だけではHTMLを失効させない。固定文言・テンプレートを反映する場合は対象HTMLを明示的に削除して次のGETで生成する。R2 bucketとlifecycleの準備は[Cloudflare運用](../howto/cloudflare-workers.md)を参照する。
 

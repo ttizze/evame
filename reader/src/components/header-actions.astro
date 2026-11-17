@@ -13,7 +13,15 @@ const route = parseReaderRoute(Astro.url.pathname, Astro.url.search);
 ---
 <evame-header-actions class="contents" data-locale={locale} data-search={search}>
   <div data-header-loading><HeaderLoadingActions locale={locale} /></div>
-  <div data-header-guest hidden><ReaderGuestHeader locale={locale} search={search} localeStatus={null} client:interaction>{route?.kind === "article" && <LocaleStatus slot="locale-status" locale={locale} pageSlug={route.pageSlug} />}</ReaderGuestHeader></div>
+  <div data-header-guest hidden>
+    {route?.kind === "article" ? (
+      <ReaderGuestHeader locale={locale} search={search} localeStatus={null} client:interaction>
+        <LocaleStatus slot="locale-status" locale={locale} pageSlug={route.pageSlug} />
+      </ReaderGuestHeader>
+    ) : (
+      <ReaderGuestHeader locale={locale} search={search} localeStatus={null} client:interaction />
+    )}
+  </div>
   <div data-header-account-root hidden></div>
   <template data-header-account-template><HeaderAccountFrame locale={locale} handle=""><AccountMenuButton data-header-account aria-label={t.accountMenu} aria-haspopup="menu" aria-expanded={false} handle="" image="" unreadCount={0} unreadDescription="" descriptionId="reader-unread" /></HeaderAccountFrame></template>
 </evame-header-actions>

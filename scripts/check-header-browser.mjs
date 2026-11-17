@@ -16,6 +16,11 @@ export async function checkHeaderBrowser(
 	try {
 		await guest.tracing.start({ screenshots: true, snapshots: true });
 		const page = await guest.newPage();
+		const hydrationErrors = [];
+		page.on("pageerror", (error) => {
+			if (/hydration|Minified React error #418/i.test(error.message))
+				hydrationErrors.push(error.message);
+		});
 		for (const [kind, path] of [
 			["home", "/ja"],
 			["profile", `/ja/${handle}`],
@@ -160,6 +165,11 @@ export async function checkHeaderBrowser(
 				});
 			}
 		}
+		assert.deepEqual(
+			hydrationErrors,
+			[],
+			"ヘッダー起動時にサーバーとブラウザーのHTMLが一致する",
+		);
 	} finally {
 		await guest.tracing
 			.stop({ path: `.data/header-browser/${engine}-guest.zip` })

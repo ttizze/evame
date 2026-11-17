@@ -35,7 +35,11 @@ beforeEach(async () => {
 	);
 	await writeFile(
 		join(directory, "fake-fetch.mjs"),
-		'import { appendFile } from "node:fs/promises"; globalThis.fetch=async(url,init)=>{await appendFile("calls",init.method+" "+url+"\\n"); return new Response(JSON.stringify({success:true,result:{rules:[]}}));};',
+		'import { registerHooks } from "node:module";\nregisterHooks({resolve(specifier,context,nextResolve){\n if(specifier === "wrangler") return {url:new URL("./fake-wrangler.mjs",import.meta.url).href,shortCircuit:true};\n return nextResolve(specifier,context);\n}});',
+	);
+	await writeFile(
+		join(directory, "fake-wrangler.mjs"),
+		'import { appendFile, readFile } from "node:fs/promises";\nimport { existsSync } from "node:fs";\nexport async function getPlatformProxy({configPath}) {\n const config=JSON.parse(await readFile(configPath,"utf8"));\n return {env:{PUBLIC_HTML:{async put(key){\n await appendFile("calls","R2 "+config.r2_buckets[0].bucket_name+" PUT "+key+"\\n");\n if(existsSync("fail-assets"))throw new Error("R2 asset upload failed");\n }}},async dispose(){await appendFile("calls","R2 dispose\\n");}};\n}',
 	);
 	await mkdir(join(directory, "dist/server/assets"), { recursive: true });
 	await writeFile(
@@ -131,8 +135,8 @@ it("専用DBを更新し、統合Workerの標準PRプレビューを一度だけ
 	).toEqual([
 		"run db:prod:migrate",
 		"run db:prod:seed",
-		"GET https://api.cloudflare.com/client/v4/accounts/account/r2/buckets/preview/lifecycle",
-		"PUT https://api.cloudflare.com/client/v4/accounts/account/r2/buckets/preview/objects/assets/_astro/app.hash.js",
+		"R2 preview PUT assets/_astro/app.hash.js",
+		"R2 dispose",
 		"x wrangler preview --config dist/server/connected-wrangler.json --name pr-1140 --worker-name evame-start --ignore-base-config --secrets-file .data/native-preview-pr-1140/app-secrets.json --var BETTER_AUTH_URL:https://pr-1140-evame-start.reimei.workers.dev --var QSTASH_PUBLISH_BASE_URL:https://pr-1140-evame-start.reimei.workers.dev",
 	]);
 	const saved = JSON.parse(

@@ -28,7 +28,11 @@ beforeEach(async () => {
 	);
 	await writeFile(
 		join(directory, "fake-fetch.mjs"),
-		'import { appendFile, access } from "node:fs/promises"; globalThis.fetch = async (url,init) => { await appendFile("calls",init.method+" "+url+"\\n"); if(url.includes("/objects/")) { try { await access("fail-assets"); return new Response(null,{status:503}); } catch {} } return new Response(JSON.stringify({success:true,result:{rules:[]}})); };',
+		'import { registerHooks } from "node:module";\nregisterHooks({resolve(specifier,context,nextResolve){\n if(specifier === "wrangler") return {url:new URL("./fake-wrangler.mjs",import.meta.url).href,shortCircuit:true};\n return nextResolve(specifier,context);\n}});',
+	);
+	await writeFile(
+		join(directory, "fake-wrangler.mjs"),
+		'import { appendFile, readFile } from "node:fs/promises";\nimport { existsSync } from "node:fs";\nexport async function getPlatformProxy({configPath}) {\n const config=JSON.parse(await readFile(configPath,"utf8"));\n return {env:{PUBLIC_HTML:{async put(key){\n await appendFile("calls","R2 "+config.r2_buckets[0].bucket_name+" PUT "+key+"\\n");\n if(existsSync("fail-assets"))throw new Error("R2 asset upload failed");\n }}},async dispose(){await appendFile("calls","R2 dispose\\n");}};\n}',
 	);
 	await writeFile(
 		join(directory, "bin/bun"),
@@ -47,15 +51,15 @@ it("公開アセットをR2へ保存してから統合Workerを一度だけ更�
 			env: {
 				...process.env,
 				CLOUDFLARE_API_TOKEN: "storage-token",
-				PATH: join(directory, "bin") + ":" + process.env.PATH,
+				PATH: `${join(directory, "bin")}:${process.env.PATH}`,
 			},
 		},
 	);
 	expect(
 		(await readFile(join(directory, "calls"), "utf8")).trim().split("\n"),
 	).toEqual([
-		"GET https://api.cloudflare.com/client/v4/accounts/account/r2/buckets/production/lifecycle",
-		"PUT https://api.cloudflare.com/client/v4/accounts/account/r2/buckets/production/objects/assets/_astro/app.hash.js",
+		"R2 production PUT assets/_astro/app.hash.js",
+		"R2 dispose",
 		"x wrangler deploy --config dist/server/wrangler.json",
 	]);
 });
@@ -70,7 +74,7 @@ it("R2へのアセット保存に失敗したらWorkerを更新しない", async
 				env: {
 					...process.env,
 					CLOUDFLARE_API_TOKEN: "storage-token",
-					PATH: join(directory, "bin") + ":" + process.env.PATH,
+					PATH: `${join(directory, "bin")}:${process.env.PATH}`,
 				},
 			},
 		),
@@ -90,7 +94,7 @@ it("統合Workerの更新に失敗した場合も成功として返さない", a
 				env: {
 					...process.env,
 					CLOUDFLARE_API_TOKEN: "storage-token",
-					PATH: join(directory, "bin") + ":" + process.env.PATH,
+					PATH: `${join(directory, "bin")}:${process.env.PATH}`,
 				},
 			},
 		),
