@@ -4,11 +4,22 @@
 
 ## CIのテスト実行
 
-ユニットテストはNodeとDOMの2プロジェクトに分ける。既定はNodeで、JSXを持つテストとDOMを使うエディター・認証クライアントのテストだけjsdomを起動する。全ファイルの実行とファイル間の隔離は維持する。iPhoneモデルの公式例・操作fixtureは、同じJavaScriptのコンパイル結果だけを再利用し、実行コンテキストは各例で新しく作る。
+lint・型検査・ユニットテスト・ビルドは独立したジョブで並列実行し、Bunのダウンロードキャッシュを共有する。ユニットテストはNodeとDOMの2プロジェクトに分ける。既定はNodeで、JSXを持つテストとDOMを使うエディター・認証クライアントのテストだけjsdomを起動する。ファイル間の隔離は維持する。iPhoneモデルの公式例・操作fixtureは、同じJavaScriptのコンパイル結果だけを再利用し、実行コンテキストは各例で新しく作る。
+
+ユニットテストは4シャードへ分割する。PRではbase SHAからの差分をVitestの依存グラフでたどり、変更へ到達するテストと、ファイル読み取りなど静的に追跡できない経路を持つテストを実行する。設定・DB・スクリプト・非JavaScriptファイルの変更、削除・移動、差分やグラフの判定失敗では全件へ戻し、mainと手動実行も全件を維持する。
+
+全シャードは同じbase SHAに保存された実測時間を読み、時間の長いファイルから空きの多いシャードへ割り当てる。実測がないファイルは推定値を使い、キャッシュ未作成でも省略しない。各シャードは独立したVitestキャッシュと空DBを使う。`test-results` は依存インストールなしで4件の計測結果・割り当て・元スナップショットの一致を検証し、mainの成功結果だけを次回用に保存する。
+
+```sh
+nix develop --command bun scripts/ci-tests.mjs --shard 1/4
+nix develop --command bun scripts/ci-tests.mjs merge .data/ci-test-durations-{1,2,3,4}-of-4.json
+```
+
+`CI_TEST_BASE` が未指定なら全件を対象にする。計測入力は `.data/ci-test-durations.json`、出力は `.data/ci-test-durations-<番号>-of-<総数>.json`。それぞれ `CI_TEST_DURATIONS_INPUT`・`CI_TEST_DURATIONS_OUTPUT` で変更できる。
 
 通常のWebだけの変更ではiPhoneワークフローを起動しない。ルートの `package.json`・`bun.lock` だけがiPhoneの対象にかかる場合は、Linuxで同梱モデルとライセンスを再生成し、コミット済みの生成物との一致を確認する。一致したときだけMacでのビルドとSimulatorテストを省く。生成物の差分・差分判定失敗・判定未確定は成功にしない。
 
-iPhone本体・共有エディター・パッチ・操作fixture・Nix・iPhone検証設定の変更と手動実行では、Macでの全検証を維持する。所要時間はGitHub Actionsの `checks` とiPhone各ジョブで実測し、ローカル計測と区別する。
+iPhone本体・共有エディター・パッチ・操作fixture・Nix・iPhone検証設定の変更と手動実行では、Macでの全検証を維持する。所要時間はGitHub Actionsの各ジョブで実測し、ローカル計測と区別する。
 
 ## 接続先
 
@@ -70,7 +81,7 @@ printf '%s' false | nix develop --command bun x wrangler secret put DATABASE_MIG
 
 同じリポジトリ内のPRは、既存のNix CIが成功すると `preview` jobでCloudflare標準の[Worker Previews](https://developers.cloudflare.com/workers/previews/get-started/)を自動更新する。GitHubのdeploymentリンクから開く。URLは `https://pr-<PR番号>-evame-start.reimei.workers.dev/ja`。PR #1140は `https://pr-1140-evame-start.reimei.workers.dev/ja/auth/login`。forkからのPRでは秘密値を渡さず、プレビューをデプロイしない。
 
-ログインはメールのリンクを使う。CIは `VITE_AUTH_GOOGLE_ENABLED=false` とプレビューの `VITE_PUBLIC_DOMAIN` を指定してビルドし、`BETTER_AUTH_URL` も同じoriginに揃える。Origin検証は有効のまま。本番はGoogle・メールの両方を維持する。
+ログインはメールのリンクを使う。CIは `VITE_AUTH_GOOGLE_ENABLED=false` とプレビューの `VITE_PUBLIC_DOMAIN` を指定し、`preview-build` jobで検証と並行して先にビルドする。全検証成功後の `preview` jobはその成果物を取得して公開し、再ビルドしない。ローカルのブラウザーテストは別originを使うため、通常ビルドとは分ける。`BETTER_AUTH_URL` もプレビューと同じoriginに揃える。Origin検証は有効のまま。本番はGoogle・メールの両方を維持する。
 
 PRごとに1つの標準Worker Previewを使う。DBは全プレビュー共用の専用Turso DB `evame-preview` を使い、本番データはコピーしない。初回にシードを投入したDBを再利用し、通常のデプロイでは再投入・初期化しない。シードの更新が必要な場合だけ、専用DBを明示して別途実行する。DBスキーマの互換性がない複数PRの同時検証には使わない。画像は専用R2 `evame-uploads-preview`、公開HTMLは `evame-public-html-preview` に保存し、本番bucketへの読み書きは行わない。読み取り専用maintenanceのKVだけ既存bindingを利用する。
 
@@ -91,9 +102,9 @@ GitHub secret `EVAME_PREVIEW_SECRETS` に専用DBの `TURSO_DATABASE_URL` / `TUR
 
 ## GitHub Actions の継続デプロイ
 
-ビルド済みWorkersは一度だけ生成して全ブラウザー検証へ共有する。エディターはChromium・WebKitそれぞれでD&D・コピーとチェック操作・階層と並べ替え・書式変更の4群へ分け、Readerは独立して検証する。ジョブごとにDBを作成し、操作群ごとに新しいブラウザーコンテキストと記事を用意する。全群を維持し、失敗・キャンセル・スキップがあれば`ci-check`で本番デプロイとPRプレビューを止める。ローカルの`bun run test:deployment:browser`は既定で全群を実行する。1群だけ再現する場合は`EVAME_BROWSER_TYPE=webkit EVAME_BROWSER_SUITE=editor-lists-structure`のように指定する。
+ビルド済みWorkersとシード済みSQLiteは一度だけ生成して全ブラウザー検証へ共有する。エディターはChromium・WebKitそれぞれでD&D・コピーとチェック操作・階層と並べ替え・書式変更の4群へ分け、ヘッダーと記事も各ブラウザーの独立ジョブにする。ReaderはChromiumで独立して検証する。各ジョブはSQLiteの独立コピーを使い、操作群ごとに新しいブラウザーコンテキストと記事を用意する。全13群を維持し、失敗・キャンセル・スキップがあれば`ci-check`で本番デプロイとPRプレビューを止める。ローカルの`bun run test:deployment:browser`は既定で全群を実行する。1群だけ再現する場合は`EVAME_BROWSER_TYPE=webkit EVAME_BROWSER_SUITE=header`のように指定する。
 
-`.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テストの成功後、本番DBのマイグレーション、ビルド、成果物テスト、単一Workerのデプロイを行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
+`.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テスト・ビルド・成果物テストの成功後、本番DBのマイグレーションと単一Workerのデプロイを行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
 
 Astroのサーバー成果物とJS/CSSをルートの `dist` に含める。`deploy:workers` は公開アセットをR2へ保存してから `dist/server/wrangler.json` を1回デプロイする。HTMLのR2キーは `html/<DB URL hash>/<URL hash>` とし、同じDBの全Worker版でHTML・更新記録・依存索引を共有する。デプロイ後も保存HTMLを維持し、旧版へ戻しても新版での非公開化・削除が反映される。通常デプロイは公開ルートを変更しない。
 

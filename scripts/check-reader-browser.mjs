@@ -1,9 +1,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { chromium, expect, webkit } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import { TextWriter, Uint8ArrayReader, ZipReader } from "@zip.js/zip.js";
 import { fromJSON } from "seroval";
-import { checkHeaderBrowser } from "./check-header-browser.mjs";
 
 export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 	const browser = await chromium.launch();
@@ -113,13 +112,6 @@ export async function checkReaderBrowser(baseUrl, cookie, handle, pageSlug) {
 		).toBeVisible();
 		await noScript.close();
 		console.log("JavaScript無効でも記事一覧・本文・表示モードを読める");
-		await checkHeaderBrowser(browser, baseUrl, cookie, handle, pageSlug);
-		const safari = await webkit.launch();
-		try {
-			await checkHeaderBrowser(safari, baseUrl, cookie, handle, pageSlug);
-		} finally {
-			await safari.close();
-		}
 		const context = await browser.newContext({
 			viewport: { width: 1280, height: 900 },
 		});

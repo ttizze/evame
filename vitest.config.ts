@@ -13,6 +13,7 @@ export default defineConfig({
 	plugins: [react()],
 	test: {
 		globals: true,
+		isolate: true,
 		globalSetup: "./src/tests/database-setup.ts",
 		slowTestThreshold: 1000,
 		exclude: excludedTests,

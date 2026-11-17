@@ -26,6 +26,8 @@ assert.ok(
 		"editor-lists-structure",
 		"editor-lists-formatting",
 		"reader",
+		"header",
+		"article",
 	].includes(browserSuite),
 	`Unknown browser suite: ${browserSuite}`,
 );
@@ -607,18 +609,18 @@ try {
 		"Aboutで説明文を維持する",
 	);
 	if (process.env.EVAME_BROWSER_TEST === "true") {
+		const { chromium, webkit } = await import("@playwright/test");
+		const browserTypes =
+			browserType === "all"
+				? [chromium, webkit]
+				: [browserType === "chromium" ? chromium : webkit];
 		const includeReader = browserSuite === "all" || browserSuite === "reader";
 		if (includeReader) {
 			const { checkAppLogin } = await import("./check-app-login.mjs");
 			await checkAppLogin(serverUrl.origin, cookie);
 		}
-		if (browserSuite !== "reader") {
-			const { chromium, webkit } = await import("@playwright/test");
+		if (browserSuite === "all" || browserSuite.startsWith("editor-")) {
 			const { checkEditorBrowser } = await import("./check-editor-browser.mjs");
-			const browserTypes =
-				browserType === "all"
-					? [chromium, webkit]
-					: [browserType === "chromium" ? chromium : webkit];
 			await checkEditorBrowser(
 				serverUrl.origin,
 				cookie,
@@ -627,7 +629,7 @@ try {
 				uploadedUrl.href,
 			);
 		}
-		if (includeReader) {
+		if (includeReader || browserSuite === "header") {
 			const notificationActorId = randomUUID();
 			await database.execute({
 				sql: "INSERT INTO users (id, name, search_name, handle, email) VALUES (?, '通知確認ユーザー', 'notification actor', ?, ?)",
@@ -641,6 +643,21 @@ try {
 				sql: "INSERT INTO notifications (user_id, actor_id, type) VALUES (?, ?, 'FOLLOW')",
 				args: [userId, notificationActorId],
 			});
+			if (browserSuite === "all" || browserSuite === "header") {
+				const { checkPublicBrowser } = await import(
+					"./check-public-browser.mjs"
+				);
+				await checkPublicBrowser(
+					browserTypes,
+					"header",
+					serverUrl.origin,
+					cookie,
+					handle,
+					pageSlug,
+				);
+			}
+		}
+		if (includeReader) {
 			const { checkReaderBrowser } = await import("./check-reader-browser.mjs");
 			await checkReaderBrowser(serverUrl.origin, cookie, handle, pageSlug);
 			assert.equal(
@@ -648,7 +665,8 @@ try {
 				4,
 				"コメント翻訳をローカルのキューへ投入する",
 			);
-			// 通知・一覧・翻訳キューをほかの操作群へ持ち越さない専用の投稿者と記事。
+		}
+		if (browserSuite === "all" || browserSuite === "article") {
 			const articleUserId = randomUUID();
 			const articleHandle = `article-${articleUserId}`;
 			const articleToken = randomUUID();
@@ -703,28 +721,21 @@ try {
 			const articleCookie = `better-auth.session_token=${encodeURIComponent(`${articleToken}.${createHmac("sha256", authSecret).update(articleToken).digest("base64")}`)}`;
 			const queuedBeforeArticle = queuedTranslations.length;
 			try {
-				const { chromium, webkit } = await import("@playwright/test");
-				const { checkArticleBrowser } = await import(
-					"./check-article-browser.mjs"
+				const { checkPublicBrowser } = await import(
+					"./check-public-browser.mjs"
 				);
-				for (const engine of [chromium, webkit]) {
-					const browser = await engine.launch();
-					try {
-						await checkArticleBrowser(
-							browser,
-							serverUrl.origin,
-							articleCookie,
-							articleHandle,
-							articleHandle,
-						);
-					} finally {
-						await browser.close();
-					}
-				}
+				await checkPublicBrowser(
+					browserTypes,
+					"article",
+					serverUrl.origin,
+					articleCookie,
+					articleHandle,
+					articleHandle,
+				);
 				assert.equal(
 					queuedTranslations.length - queuedBeforeArticle,
-					8,
-					"コメント4件それぞれの英語・中国語への翻訳ジョブ8件をキューへ投入する",
+					browserTypes.length * 4,
+					"各ブラウザーのコメント2件を英語・中国語への翻訳キューへ投入する",
 				);
 			} finally {
 				await database.batch(
