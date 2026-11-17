@@ -28,11 +28,7 @@ beforeEach(async () => {
 	);
 	await writeFile(
 		join(directory, "fake-fetch.mjs"),
-		'import { registerHooks } from "node:module";\nregisterHooks({resolve(specifier,context,nextResolve){\n if(specifier === "wrangler") return {url:new URL("./fake-wrangler.mjs",import.meta.url).href,shortCircuit:true};\n return nextResolve(specifier,context);\n}});',
-	);
-	await writeFile(
-		join(directory, "fake-wrangler.mjs"),
-		'import { appendFile, readFile } from "node:fs/promises";\nimport { existsSync } from "node:fs";\nexport async function getPlatformProxy({configPath}) {\n const config=JSON.parse(await readFile(configPath,"utf8"));\n return {env:{PUBLIC_HTML:{async put(key){\n await appendFile("calls","R2 "+config.r2_buckets[0].bucket_name+" PUT "+key+"\\n");\n if(existsSync("fail-assets"))throw new Error("R2 asset upload failed");\n }}},async dispose(){await appendFile("calls","R2 dispose\\n");}};\n}',
+		'import { appendFile } from "node:fs/promises";\nimport { existsSync } from "node:fs";\nglobalThis.fetch = async (url) => {\n const [, bucket, key] = new URL(url).pathname.match(/\\/buckets\\/([^/]+)\\/objects\\/(.+)/);\n await appendFile("calls", "R2 " + bucket + " PUT " + decodeURIComponent(key) + "\\n");\n return Response.json({ success: !existsSync("fail-assets") }, { status: existsSync("fail-assets") ? 403 : 200 });\n};',
 	);
 	await writeFile(
 		join(directory, "bin/bun"),
@@ -59,7 +55,6 @@ it("公開アセットをR2へ保存してから統合Workerを一度だけ更�
 		(await readFile(join(directory, "calls"), "utf8")).trim().split("\n"),
 	).toEqual([
 		"R2 production PUT assets/_astro/app.hash.js",
-		"R2 dispose",
 		"x wrangler deploy --config dist/server/wrangler.json",
 	]);
 });

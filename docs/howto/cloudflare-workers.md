@@ -108,7 +108,7 @@ GitHub secret `EVAME_PREVIEW_SECRETS` に専用DBの `TURSO_DATABASE_URL` / `TUR
 
 Astroのサーバー成果物とJS/CSSをルートの `dist` に含める。`deploy:workers` は公開アセットをR2へ保存してから `dist/server/wrangler.json` を1回デプロイする。HTMLのR2キーは `html/<DB URL hash>/<URL hash>` とし、同じDBの全Worker版でHTML・更新記録・依存索引を共有する。デプロイ後も保存HTMLを維持し、旧版へ戻しても新版での非公開化・削除が反映される。通常デプロイは公開ルートを変更しない。
 
-`scripts/prepare-reader-storage.mjs` は本番と標準Previewで共用し、`dist/client/_astro` のアセットを `assets/_astro/` へR2 binding経由でMIMEとimmutable Cache-Control付きで保存する。通常デプロイではバケットの保持設定を変更しない。アップロード失敗時はデプロイしない。旧JS/CSSは削除期限を設けず、現行Static Assetsが404のとき同じWorkerのR2 bindingから配信する。CIのアセット履歴cacheは不要。ビルド自体ではネットワーク取得しない。
+`scripts/prepare-reader-storage.mjs` は本番と標準Previewで共用し、`dist/client/_astro` のアセットを `assets/_astro/` へCloudflare公式R2 REST APIでMIMEとimmutable Cache-Control付きで保存する。`CLOUDFLARE_API_TOKEN` を使い、未指定の場合は `bun x wrangler auth token --json` で既存のCLI認証を取得する。開発用のremote sessionや新規ログインは使用しない。本番とPreviewの専用バケットを維持し、通常デプロイではバケットの保持設定を変更しない。アップロード失敗時はデプロイしない。旧JS/CSSは削除期限を設けず、現行Static Assetsが404のとき同じWorkerのR2 bindingから配信する。CIのアセット履歴cacheは不要。ビルド自体ではネットワーク取得しない。
 
 Actions secretsには本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番DBはmainのマイグレーションだけに渡す。通常デプロイのトークンには既存の `evame-start` へのIndividual Workers Editor権限と、対象bucketのR2読み書き権限が必要。lifecycleの管理権限は初期設定にだけ使う。Sentryアップロード用トークンは本番ビルドだけに渡し、Worker secretには登録しない。
 
