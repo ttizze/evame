@@ -110,3 +110,10 @@ it("連続ドットを含むアセット名をR2 bindingでそのまま保存す
 	);
 	expect(request).not.toHaveBeenCalled();
 });
+
+it("APIトークン未指定でも既存のCLI認証でR2へ保存できる", async () => {
+	vi.stubEnv("CLOUDFLARE_API_TOKEN", undefined);
+	await prepareReaderStorage(join(directory, "wrangler.json"), false);
+	expect(put).toHaveBeenCalledTimes(2);
+	expect(dispose).toHaveBeenCalledOnce();
+});

@@ -9,11 +9,8 @@ export async function prepareReaderStorage(configPath, preview) {
 	const bucket = (
 		preview ? config.previews?.r2_buckets : config.r2_buckets
 	)?.find((row) => row.binding === "PUBLIC_HTML")?.bucket_name;
-	const token = process.env.CLOUDFLARE_API_TOKEN;
-	if (!config.account_id || !bucket || !token)
-		throw new Error(
-			"PUBLIC_HTML bucket, account and CLOUDFLARE_API_TOKEN are required",
-		);
+	if (!config.account_id || !bucket)
+		throw new Error("PUBLIC_HTML bucket and account are required");
 	const directory = resolve(
 		dirname(configPath),
 		config.assets.directory,
