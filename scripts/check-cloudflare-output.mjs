@@ -180,10 +180,11 @@ try {
 			body: imageForm,
 		},
 	);
+	const uploadBody = await uploadRequest.arrayBuffer();
 	const uploaded = await worker.fetch(uploadRequest.url, {
 		method: uploadRequest.method,
 		headers: Object.fromEntries(uploadRequest.headers),
-		body: await uploadRequest.arrayBuffer(),
+		body: uploadBody.slice(0),
 	});
 	const uploadedBody = await uploaded.text();
 	assert.equal(uploaded.status, 200, uploadedBody);
@@ -192,6 +193,11 @@ try {
 	const uploadedUrl = new URL(JSON.parse(imageUrl));
 	assert.equal(uploadedUrl.origin, "https://images.evame.tech");
 	assert.ok(uploadedUrl.pathname.startsWith("/uploads/"), uploadedUrl.pathname);
+	assert.equal(
+		(await worker.fetch(`http://localhost/api/uploads${uploadedUrl.pathname}`))
+			.status,
+		404,
+	);
 	console.log(
 		"WorkersランタイムでPNGをJPEGに変換し、R2へ画像をアップロードできる",
 	);
@@ -858,6 +864,42 @@ try {
 	);
 	console.log(
 		"Workersランタイムで日本語フォントとロゴを使ったOG画像を生成できる",
+	);
+
+	await harness.update((options) => ({
+		...options,
+		workers: options.workers.map((config) => ({
+			...config,
+			secrets: { ...config.secrets, CF_IMAGE_HOST: "" },
+		})),
+	}));
+	const previewWorker = harness.getWorker("evame-start");
+	const previewUpload = await previewWorker.fetch(uploadRequest.url, {
+		method: uploadRequest.method,
+		headers: Object.fromEntries(uploadRequest.headers),
+		body: uploadBody.slice(0),
+	});
+	const previewUploadBody = await previewUpload.text();
+	assert.equal(previewUpload.status, 200, previewUploadBody);
+	const previewImageUrl = previewUploadBody.match(
+		/"\/api\/uploads\/uploads\/[^"]+"/,
+	)?.[0];
+	assert.ok(previewImageUrl, previewUploadBody);
+	const previewImage = await previewWorker.fetch(
+		new URL(JSON.parse(previewImageUrl), "http://localhost").href,
+	);
+	assert.equal(previewImage.status, 200);
+	assert.equal(previewImage.headers.get("content-type"), "image/jpeg");
+	assert.equal(
+		previewImage.headers.get("content-security-policy"),
+		"default-src 'none'; sandbox",
+	);
+	assert.deepEqual(
+		new Uint8Array(await previewImage.arrayBuffer()).slice(0, 3),
+		new Uint8Array([255, 216, 255]),
+	);
+	console.log(
+		"Previewでは画像のアップロードと表示を同じWorkerのR2へ揃えられる",
 	);
 
 	await harness.update((options) => ({

@@ -17,7 +17,7 @@ iPhone本体・共有エディター・パッチ・操作fixture・Nix・iPhone�
 | binding | 接続先 | 用途 |
 | --- | --- | --- |
 | `ASSETS` | `dist/client` | Astroと編集画面のJS/CSS・静的ファイル |
-| `UPLOADS` | R2 `eveeve` | 既存の画像ストレージ |
+| `UPLOADS` | R2 `eveeve`（Previewは `evame-uploads-preview`） | 環境ごとに分離した画像ストレージ |
 | `PUBLIC_HTML` | R2 `evame-public-html`（Previewは `evame-public-html-preview`） | 公開HTMLと追記式変更記録 |
 | `IMAGES` | Cloudflare Images | 幅2560以下、JPEG quality 80へ圧縮 |
 | `SETTINGS` | KV `evame-settings` | `maintenance` をJSON booleanで保存 |
@@ -73,11 +73,13 @@ printf '%s' false | nix develop --command bun x wrangler secret put DATABASE_MIG
 
 ログインはメールのリンクを使う。CIは `VITE_AUTH_GOOGLE_ENABLED=false` とプレビューの `VITE_PUBLIC_DOMAIN` を指定してビルドし、`BETTER_AUTH_URL` も同じoriginに揃える。Origin検証は有効のまま。本番はGoogle・メールの両方を維持する。
 
-PRごとに1つの標準Worker Previewを使う。DBは全プレビュー共用の専用Turso DB `evame-preview` を使い、本番データはコピーしない。DBスキーマの互換性がない複数PRの同時検証には使わない。画像のR2と読み取り専用maintenanceのKVは既存bindingを利用する。
+PRごとに1つの標準Worker Previewを使う。DBは全プレビュー共用の専用Turso DB `evame-preview` を使い、本番データはコピーしない。初回にシードを投入したDBを再利用し、通常のデプロイでは再投入・初期化しない。シードの更新が必要な場合だけ、専用DBを明示して別途実行する。DBスキーマの互換性がない複数PRの同時検証には使わない。画像は専用R2 `evame-uploads-preview`、公開HTMLは `evame-public-html-preview` に保存し、本番bucketへの読み書きは行わない。読み取り専用maintenanceのKVだけ既存bindingを利用する。
+
+画像bucketは初回だけ `nix develop --command bun x wrangler r2 bucket create evame-uploads-preview` で作成する。公開ドメインは設定せず、Previewの `CF_IMAGE_HOST` を空文字にして同じWorkerの `/api/uploads/` から配信する。既存のPreview secretsに画像ホストが残っていても削除し、Preview設定を優先する。本番は既存の画像ドメインとbucketを維持する。分離前に保存した本番ドメインの画像URLは自動移行しない。CI内のシード済みSQLiteと、このリモートTurso DBは別のものとして扱う。
 
 GitHub secret `EVAME_PREVIEW_SECRETS` に専用DBの `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN`、専用の `BETTER_AUTH_SECRET` / `ENCRYPTION_KEY`、送信用の `AUTH_RESEND_KEY` をJSONで登録する。翻訳などを試す場合は必要な秘密値も加える。値はソース・ログ・PRへ含めない。
 
-`scripts/preview-workers.mjs` は専用DBのマイグレーション・seed後、`evame-start` 配下の `pr-<PR番号>` をデプロイする。通常Workerは追加しない。生成済み設定を使い、専用の秘密値ファイルだけを `.data/native-preview-pr-<PR番号>` に権限 `600` で作る。公開表示も編集APIも同じPreview内で動作するため、service bindingが本番を向く制約を受けない。実URLでログイン・編集・再読み込みと公開/非公開・削除・保留タグの回収を検証する。
+`scripts/preview-workers.mjs` は既存の専用DBへマイグレーションだけを適用した後、`evame-start` 配下の `pr-<PR番号>` をデプロイする。マイグレーションに失敗した場合はデプロイしない。通常Workerは追加しない。生成済み設定を使い、専用の秘密値ファイルだけを `.data/native-preview-pr-<PR番号>` に権限 `600` で作る。公開表示も編集APIも同じPreview内で動作するため、service bindingが本番を向く制約を受けない。実URLでログイン・編集・再読み込みと公開/非公開・削除・保留タグの回収を検証する。
 
 ## 本番への切り替え
 
