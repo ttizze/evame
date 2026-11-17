@@ -9,7 +9,7 @@ export async function uploadToR2(
 	await env.UPLOADS.put(key, await file.arrayBuffer(), {
 		httpMetadata: { contentType: file.type },
 	});
-	return import.meta.env.DEV
+	return import.meta.env.DEV || process.env.CF_IMAGE_HOST === ""
 		? `/api/uploads/${key}`
 		: `https://${process.env.CF_IMAGE_HOST || "images.evame.tech"}/${key}`;
 }

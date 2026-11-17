@@ -35,19 +35,19 @@ await mkdir(directory, { recursive: true, mode: 0o700 });
 // URLは公開設定として渡し、古い固定URLの秘密値を引き継がない。
 delete secrets.BETTER_AUTH_URL;
 delete secrets.PREVIEW_READER_SECRET;
+delete secrets.CF_IMAGE_HOST;
 await writeFile(`${directory}/app-secrets.json`, JSON.stringify(secrets), {
 	mode: 0o600,
 });
 
-for (const command of ["db:prod:migrate", "db:prod:seed"])
-	execFileSync("bun", ["run", command], {
-		stdio: "inherit",
-		env: {
-			...process.env,
-			TURSO_DATABASE_URL: secrets.TURSO_DATABASE_URL,
-			TURSO_AUTH_TOKEN: secrets.TURSO_AUTH_TOKEN,
-		},
-	});
+execFileSync("bun", ["run", "db:prod:migrate"], {
+	stdio: "inherit",
+	env: {
+		...process.env,
+		TURSO_DATABASE_URL: secrets.TURSO_DATABASE_URL,
+		TURSO_AUTH_TOKEN: secrets.TURSO_AUTH_TOKEN,
+	},
+});
 
 await prepareReaderStorage("dist/server/wrangler.json", true);
 

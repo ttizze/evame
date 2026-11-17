@@ -27,13 +27,14 @@
 		"images": { "binding": "IMAGES" },
 		"version_metadata": { "binding": "CF_VERSION_METADATA" },
 		"r2_buckets": [
-			{ "binding": "UPLOADS", "bucket_name": "eveeve" },
+			{ "binding": "UPLOADS", "bucket_name": "evame-uploads-preview" },
 			{ "binding": "PUBLIC_HTML", "bucket_name": "evame-public-html-preview" }
 		],
 		"kv_namespaces": [
 			{ "binding": "SETTINGS", "id": "e5faa34f97e44136a060e561e11f3d9d" }
 		],
 		"vars": {
+			"CF_IMAGE_HOST": "",
 			"SENTRY_DSN": "",
 			"SENTRY_ENVIRONMENT": "preview",
 			"GOOGLE_ANALYTICS_ID": "G-0000000000"

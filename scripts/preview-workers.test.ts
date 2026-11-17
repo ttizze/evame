@@ -110,7 +110,7 @@ it.each(["", "../main", "0"])(
 	},
 );
 
-it("専用DBを更新し、統合Workerの標準PRプレビューを一度だけ公開する", async () => {
+it("シード済みの専用DBを再利用し、マイグレーション後に標準PRプレビューを公開する", async () => {
 	const output = join(directory, "output");
 	const result = await promisify(execFile)(
 		process.execPath,
@@ -125,6 +125,7 @@ it("専用DBを更新し、統合Workerの標準PRプレビューを一度だけ
 				EVAME_PREVIEW_SECRETS: JSON.stringify({
 					...secrets,
 					BETTER_AUTH_URL: "https://old.example",
+					CF_IMAGE_HOST: "images.evame.tech",
 				}),
 				PATH: `${join(directory, "bin")}:${process.env.PATH}`,
 			},
@@ -134,7 +135,6 @@ it("専用DBを更新し、統合Workerの標準PRプレビューを一度だけ
 		(await readFile(join(directory, "calls"), "utf8")).trim().split("\n"),
 	).toEqual([
 		"run db:prod:migrate",
-		"run db:prod:seed",
 		"R2 preview PUT assets/_astro/app.hash.js",
 		"R2 dispose",
 		"x wrangler preview --config dist/server/connected-wrangler.json --name pr-1140 --worker-name evame-start --ignore-base-config --secrets-file .data/native-preview-pr-1140/app-secrets.json --var BETTER_AUTH_URL:https://pr-1140-evame-start.reimei.workers.dev --var QSTASH_PUBLISH_BASE_URL:https://pr-1140-evame-start.reimei.workers.dev",
@@ -150,6 +150,19 @@ it("専用DBを更新し、統合Workerの標準PRプレビューを一度だけ
 		"url=https://pr-1140-evame-start.reimei.workers.dev\n",
 	);
 	expect(result.stdout).not.toContain("test-database-token");
+});
+
+it("標準Previewの画像と公開HTMLを本番とは別のR2へ保存する", async () => {
+	const config = JSON.parse(
+		await readFile(new URL("../wrangler.jsonc", import.meta.url), "utf8"),
+	);
+	expect(config.previews.r2_buckets).toEqual([
+		{ binding: "UPLOADS", bucket_name: "evame-uploads-preview" },
+		{ binding: "PUBLIC_HTML", bucket_name: "evame-public-html-preview" },
+	]);
+	expect(config.previews.vars.CF_IMAGE_HOST).toBe("");
+	for (const bucket of config.previews.r2_buckets)
+		expect(config.r2_buckets).not.toContainEqual(bucket);
 });
 
 it("統合Workerのプレビュー失敗を成功として返さない", async () => {
