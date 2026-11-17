@@ -32,6 +32,8 @@ export class PublicPages extends WorkerEntrypoint {
   return this.application.publish(changes);
  }
  async fetch(request) {
+  if (new URL(request.url).pathname === "/_astro/connected-retained.js" && request.headers.get("X-Evame-Connected-Store-Asset") === "true")
+   await this.env.PUBLIC_HTML.put("assets/_astro/connected-retained.js", "export const retained = true;", {httpMetadata:{contentType:"text/javascript",cacheControl:"public, max-age=31536000, immutable"}});
   const response = await this.application.fetch(request);
   const id = request.headers.get("X-Evame-Connected-Hold");
   if (!id || !/^[a-f0-9-]{36}$/.test(id)) return response;

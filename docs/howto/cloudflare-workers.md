@@ -21,9 +21,9 @@ iPhone本体・共有エディター・パッチ・操作fixture・Nix・iPhone�
 | `PUBLIC_HTML` | R2 `evame-public-html`（Previewは `evame-public-html-preview`） | 公開HTMLと追記式変更記録 |
 | `IMAGES` | Cloudflare Images | 幅2560以下、JPEG quality 80へ圧縮 |
 | `SETTINGS` | KV `evame-settings` | `maintenance` をJSON booleanで保存 |
-| `CF_VERSION_METADATA` | Workerのversion | Sentryのrelease、R2保存先の分離 |
+| `CF_VERSION_METADATA` | Workerのversion | Sentryのrelease |
 
-公開GET/HEADはR2の保存HTMLと変更記録を照合し、HIT時はDB接続とAstro描画を省略する。初回・変更後・1時間の有効期限切れは同じWorker内の `PublicPages` entrypointでAstro生成する。`/_astro/*` は同じWorkerのStatic Assets、`/api/home-feed` は保存しない部分更新応答として扱う。認証・編集・APIとSentryの設定は同じWorkerに維持する。
+公開GET/HEADはR2 GET一回で保存HTMLを返し、HIT時はDB接続とAstro描画を省略する。初回・変更後は同じWorker内の `PublicPages` entrypointでAstro生成する。時間経過やWorkerデプロイでは失効させない。`/_astro/*` は同じWorkerのStatic Assetsを優先し、404ならR2の保存アセットを返す。`/api/home-feed` は保存しない部分更新応答として扱う。認証・編集・APIとSentryの設定は同じWorkerに維持する。
 
 開発時のbindingはローカルストレージを使う。画像は開発専用の `/api/uploads/$` で表示する。本番は従来の `https://images.evame.tech/` を使う。
 
@@ -47,7 +47,6 @@ iPhone本体・共有エディター・パッチ・操作fixture・Nix・iPhone�
 bun x wrangler secret bulk /absolute/path/to/worker-secrets.json
 bun run build
 bun run test:deployment
-bun run prepare:reader-assets
 bun run deploy:workers
 ```
 
@@ -96,26 +95,22 @@ GitHub secret `EVAME_PREVIEW_SECRETS` に専用DBの `TURSO_DATABASE_URL` / `TUR
 
 `.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テストの成功後、本番DBのマイグレーション、ビルド、成果物テスト、単一Workerのデプロイを行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
 
-Astroのサーバー成果物とJS/CSSをルートの `dist` に含める。`deploy:workers` は `dist/server/wrangler.json` を1回デプロイし、成功後に配信アセットの履歴を確定する。HTMLのR2キーはDB URLのハッシュと `CF_VERSION_METADATA.id` で分離し、更新記録はDB URLのハッシュを使って同じDBの全Worker版で共有する。このため、デプロイ後の一括purgeは不要で、旧版へ戻しても新版での非公開化・削除が反映される。通常デプロイは公開ルートを変更しない。
+Astroのサーバー成果物とJS/CSSをルートの `dist` に含める。`deploy:workers` は公開アセットをR2へ保存してから `dist/server/wrangler.json` を1回デプロイする。HTMLのR2キーは `html/<DB URL hash>/<URL hash>` とし、同じDBの全Worker版でHTML・更新記録・依存索引を共有する。デプロイ後も保存HTMLを維持し、旧版へ戻しても新版での非公開化・削除が反映される。通常デプロイは公開ルートを変更しない。
 
-旧HTMLが参照するハッシュ付きJS/CSSを配信終了から30日間、同じWorkerのStatic Assetsへ残す。`prepare:reader-assets` は `.data/reader-assets/active.json` と過去の履歴を使い `dist/client/_astro` へ含める。デプロイ失敗時は旧記録を維持する。CIはmainの成功したデプロイ間で履歴を保存・復元する。初回や履歴消失時は公開HTMLとJS依存を認証なしで回収する。回収元はカスタムドメインのbot制限を避けるため `https://evame-start.reimei.workers.dev` を使う。ビルド自体ではネットワーク取得しない。
+`scripts/prepare-reader-storage.mjs` は本番と標準Previewで共用し、`dist/client/_astro` のアセットを `assets/_astro/` へR2 binding経由でMIMEとimmutable Cache-Control付きで保存する。通常デプロイではバケットの保持設定を変更しない。アップロード失敗時はデプロイしない。旧JS/CSSは削除期限を設けず、現行Static Assetsが404のとき同じWorkerのR2 bindingから配信する。CIのアセット履歴cacheは不要。ビルド自体ではネットワーク取得しない。
 
-Actions secretsには本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番DBはmainのマイグレーションだけに渡す。通常デプロイのトークンは既存の `evame-start` へのIndividual Workers Editor権限を使う。Sentryアップロード用トークンは本番ビルドだけに渡し、Worker secretには登録しない。
+Actions secretsには本番用の `TURSO_DATABASE_URL`、`TURSO_AUTH_TOKEN`、`CLOUDFLARE_API_TOKEN`、`SENTRY_AUTH_TOKEN` を設定する。本番DBはmainのマイグレーションだけに渡す。通常デプロイのトークンには既存の `evame-start` へのIndividual Workers Editor権限と、対象bucketのR2読み書き権限が必要。lifecycleの管理権限は初期設定にだけ使う。Sentryアップロード用トークンは本番ビルドだけに渡し、Worker secretには登録しない。
 
-本番切り替え前に `PUBLIC_HTML` のbucketを用意し、HTMLと変更記録を2日で削除するlifecycleを設定する。Previewは別bucketを使い、その内部もDB URLのハッシュで分離する。HTMLだけはさらにWorker versionで分離し、同じDBの変更記録をWorker versionで分割しない。R2 bindingには公開ドメインを付けず、HTMLはWorker経由で配信する。
+本番切り替え前に `PUBLIC_HTML` のbucketを用意する。`changes/`と`pending/`だけを2日で回収し、`html/`・`dependencies/`・`assets/`に削除期限を設けない。バケット作成後に `scripts/configure-reader-storage.mjs` をR2管理権限で一度実行し、既存の削除ルールを補正する。multipartの中断や他prefixの掃除は維持し、全体の削除ルールを外す場合も `changes/` と `pending/` の2日回収を補完する。Previewは別bucketを使い、その内部もDB URLのハッシュで分離する。同じDBのHTMLと変更記録をWorker versionで分割しない。R2 bindingには公開ドメインを付けず、HTMLはWorker経由で配信する。
 
 ```sh
 nix develop --command bun x wrangler r2 bucket create evame-public-html
-nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html expire-html html/ --expire-days 2
-nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html expire-changes changes/ --expire-days 2
-nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html expire-dependencies dependencies/ --expire-days 2
-nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html expire-pending pending/ --expire-days 2
 nix develop --command bun x wrangler r2 bucket create evame-public-html-preview
-nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html-preview expire-html html/ --expire-days 2
-nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html-preview expire-changes changes/ --expire-days 2
-nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html-preview expire-dependencies dependencies/ --expire-days 2
-nix develop --command bun x wrangler r2 bucket lifecycle add evame-public-html-preview expire-pending pending/ --expire-days 2
+nix develop --command node scripts/configure-reader-storage.mjs dist/server/wrangler.json
+nix develop --command node scripts/configure-reader-storage.mjs dist/server/wrangler.json --preview
 ```
+
+固定文言やテンプレートの変更を既存HTMLへ反映するときは、対象URLの完全なURLをSHA-256したキー `html/<DB URL hash>/<URL hash>` を明示的に削除する。次のGETが最新版を生成する。通常のデプロイや記事更新で全HTMLを削除しない。
 
 bucket作成・lifecycle設定にはAccountのR2管理権限が必要。通常のWorker更新権限と区別する。保存APIはDB更新と同時に永続化した保留行をR2へ反映してから成功を返し、失敗後は同内容の保存でも再試行する。HTML保存の同時fillに伴う429だけは生成応答を返して保存を省略できるが、変更記録の読み書き失敗は成功扱いしない。設計と検証項目は[公開HTMLのR2保存](../plans/incremental-static-reader.md)を参照する。
 

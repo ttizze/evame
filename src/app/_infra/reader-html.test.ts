@@ -5,6 +5,7 @@ import type { R2Bucket } from "@cloudflare/workers-types";
 import { afterAll, beforeEach, expect, it, vi } from "vitest";
 import { getPlatformProxy } from "wrangler";
 import { readerCacheTags } from "../_domain/reader-cache-tags";
+import { fetchReaderAsset } from "./reader-asset";
 import { fetchReaderHtml, publishReaderChanges } from "./reader-html";
 
 const directory = await mkdtemp(join(tmpdir(), "evame-r2-"));
@@ -40,8 +41,8 @@ const render = vi.fn(async (_request: Request) => ({
 	}),
 }));
 beforeEach(() => render.mockClear());
-const serve = (input = request, build = "build-1") =>
-	fetchReaderHtml(input, bucket, build, databaseUrl, render);
+const serve = (input = request) =>
+	fetchReaderHtml(input, bucket, databaseUrl, render);
 
 it("保存した公開HTMLはDB取得やAstro生成なしで返す", async () => {
 	expect(await (await serve()).text()).toBe("公開本文");
@@ -63,7 +64,6 @@ it("公開HTMLのHITはR2のGET一回で返し変更記録をLISTしない", asy
 	const response = await fetchReaderHtml(
 		request,
 		instrumented,
-		"build-1",
 		databaseUrl,
 		render,
 	);
@@ -120,9 +120,9 @@ it("本文の変更記録があると古いHTMLを使わず最新の本文へ差
 	});
 	expect(await (await serve()).text()).toBe("更新した本文");
 });
-it("別のWorker版で非公開化した後に旧Workerへ戻しても本文を再配信しない", async () => {
-	await serve(request, "build-1");
-	await serve(request, "build-2");
+it("非公開化した後に同じURLへ戻っても本文を再配信しない", async () => {
+	await serve(request);
+	await serve(request);
 	await publishReaderChanges(bucket, databaseUrl, [
 		{ key: "page:1", revision: 2 },
 	]);
@@ -130,7 +130,7 @@ it("別のWorker版で非公開化した後に旧Workerへ戻しても本文を�
 		revision: 2,
 		response: new Response("Not Found", { status: 404 }),
 	});
-	expect((await serve(request, "build-1")).status).toBe(404);
+	expect((await serve(request)).status).toBe(404);
 });
 it("無関係な記事の変更では公開HTMLを再生成しない", async () => {
 	await serve();
@@ -231,20 +231,20 @@ it("HEADのコールドミスでもGETで本文を生成し次のGETへ空本文
 	expect(render.mock.calls[0]?.[0]?.method).toBe("GET");
 	expect(await (await serve()).text()).toBe("公開本文");
 });
-it("ビルドの版とURLのクエリが異なるHTMLを共有しない", async () => {
+it("URLのクエリが異なるHTMLは別々に保存する", async () => {
 	await serve();
 	await serve(new Request(`${request.url}?view=source`));
-	await serve(request, "build-2");
-	expect(render).toHaveBeenCalledTimes(3);
+	expect((await serve(request)).headers.get("X-Evame-HTML-Cache")).toBe("HIT");
+	expect(render).toHaveBeenCalledTimes(2);
 });
-it("1時間より古いHTMLは更新記録の保持期限に依存せず再生成する", async () => {
+it("1年経過しても表示データの変更がなければ保存HTMLを返す", async () => {
 	const now = Date.now();
 	const clock = vi.spyOn(Date, "now").mockReturnValue(now);
 	try {
 		await serve();
-		clock.mockReturnValue(now + 3600001);
-		await serve();
-		expect(render).toHaveBeenCalledTimes(2);
+		clock.mockReturnValue(now + 366 * 86400000);
+		expect((await serve()).headers.get("X-Evame-HTML-Cache")).toBe("HIT");
+		expect(render).toHaveBeenCalledTimes(1);
 	} finally {
 		clock.mockRestore();
 	}
@@ -276,7 +276,7 @@ it("別のPreviewへ届いた更新記録を公開HTMLへ適用しない", async
 	expect((await serve()).headers.get("X-Evame-HTML-Cache")).toBe("HIT");
 	expect(render).toHaveBeenCalledTimes(1);
 });
-it("同じWorker版とURLでもDBが異なる場合はHTMLを共有しない", async () => {
+it("同じURLでもDBが異なる場合はHTMLを共有しない", async () => {
 	await serve();
 	render.mockResolvedValueOnce({
 		revision: 0,
@@ -287,7 +287,6 @@ it("同じWorker版とURLでもDBが異なる場合はHTMLを共有しない", a
 	const response = await fetchReaderHtml(
 		request,
 		bucket,
-		"build-1",
 		"libsql://another-preview.turso.io",
 		render,
 	);
@@ -307,9 +306,9 @@ it("DBのURLをHTMLと変更記録のオブジェクトキーへ残さない", a
 		expect(object.key).not.toContain("reader-test.turso.io");
 });
 it("DBの識別情報がない場合はHTMLと変更記録を共有しない", async () => {
-	await expect(
-		fetchReaderHtml(request, bucket, "build-1", "", render),
-	).rejects.toThrow("TURSO_DATABASE_URL is not defined");
+	await expect(fetchReaderHtml(request, bucket, "", render)).rejects.toThrow(
+		"TURSO_DATABASE_URL is not defined",
+	);
 	await expect(
 		publishReaderChanges(bucket, "", [{ key: "page:1", revision: 2 }]),
 	).rejects.toThrow("TURSO_DATABASE_URL is not defined");
@@ -377,7 +376,7 @@ it("遅い旧HTMLの保存が並行した新HTMLを上書きしない", async ()
 	await old;
 	expect(await (await serve()).text()).toBe("新しい本文");
 });
-it("生成に時間がかかっても生成開始から1時間で保存HTMLを失効させる", async () => {
+it("生成に時間がかかっても保存後のHTMLに有効期限を設けない", async () => {
 	const now = Date.now();
 	const clock = vi.spyOn(Date, "now").mockReturnValue(now);
 	try {
@@ -392,8 +391,8 @@ it("生成に時間がかかっても生成開始から1時間で保存HTMLを�
 		});
 		await serve();
 		clock.mockReturnValue(now + 3600001);
-		await serve();
-		expect(render).toHaveBeenCalledTimes(2);
+		expect((await serve()).headers.get("X-Evame-HTML-Cache")).toBe("HIT");
+		expect(render).toHaveBeenCalledTimes(1);
 	} finally {
 		clock.mockRestore();
 	}
@@ -578,7 +577,7 @@ it("生成中の登録に失敗したときは無効化できない生成を開�
 		delete: bucket.delete.bind(bucket),
 	};
 	await expect(
-		fetchReaderHtml(request, broken, "build-1", databaseUrl, render),
+		fetchReaderHtml(request, broken, databaseUrl, render),
 	).rejects.toThrow("R2 registration unavailable");
 	expect(render).not.toHaveBeenCalled();
 });
@@ -627,12 +626,12 @@ it.each([
 		};
 		expect(
 			await (
-				await fetchReaderHtml(request, observed, "build-1", databaseUrl, render)
+				await fetchReaderHtml(request, observed, databaseUrl, render)
 			).text(),
 		).toBe("公開本文");
 		expect(
 			await (
-				await fetchReaderHtml(request, observed, "build-1", databaseUrl, render)
+				await fetchReaderHtml(request, observed, databaseUrl, render)
 			).text(),
 		).toBe("公開本文");
 		expect((await serve()).headers.get("X-Evame-HTML-Cache")).toBe("HIT");
@@ -679,4 +678,80 @@ it("無関係な公開HTMLが100件増えても保存のLISTとHEAD回数を増�
 		head: head.mock.calls.length,
 	}).toEqual(counts);
 	expect((await serve()).headers.get("X-Evame-HTML-Cache")).toBe("HIT");
+});
+
+it.each(["GET", "HEAD"])(
+	"旧HTMLの%sアセットをR2から元のContent-Typeで返す",
+	async (method) => {
+		await bucket.put("assets/_astro/old.js", "export {};", {
+			httpMetadata: {
+				contentType: "text/javascript",
+				cacheControl: "public, max-age=31536000, immutable",
+			},
+		});
+		const assets = {
+			fetch: vi.fn(async () => new Response("missing", { status: 404 })),
+		};
+		const response = await fetchReaderAsset(
+			new Request("https://evame.test/_astro/old.js", { method }),
+			assets,
+			bucket,
+		);
+		expect(response.status).toBe(200);
+		expect(await response.text()).toBe(method === "HEAD" ? "" : "export {};");
+		expect(response.headers.get("Content-Type")).toBe("text/javascript");
+		expect(response.headers.get("Cache-Control")).toContain("immutable");
+		expect(response.headers.get("Content-Length")).toBe("10");
+		expect(response.headers.get("ETag")).toBeTruthy();
+	},
+);
+it("現行アセットの配信ではR2を読まない", async () => {
+	const stored = { get: vi.fn(), head: vi.fn() };
+	const assets = { fetch: vi.fn(async () => new Response("current")) };
+	expect(
+		await (
+			await fetchReaderAsset(
+				new Request("https://evame.test/_astro/new.js"),
+				assets,
+				stored,
+			)
+		).text(),
+	).toBe("current");
+	expect(stored.get).not.toHaveBeenCalled();
+	expect(stored.head).not.toHaveBeenCalled();
+});
+it("R2にも存在しない旧アセットは404を返す", async () => {
+	expect(
+		(
+			await fetchReaderAsset(
+				new Request("https://evame.test/_astro/missing.js"),
+				{ fetch: async () => new Response("missing", { status: 404 }) },
+				bucket,
+			)
+		).status,
+	).toBe(404);
+});
+it("旧アセットのETagが一致すれば本文を送らない", async () => {
+	const object = await bucket.put("assets/_astro/old.js", "export {};");
+	const response = await fetchReaderAsset(
+		new Request("https://evame.test/_astro/old.js", {
+			headers: { "If-None-Match": object!.httpEtag },
+		}),
+		{ fetch: async () => new Response("missing", { status: 404 }) },
+		bucket,
+	);
+	expect(response.status).toBe(304);
+	expect(await response.text()).toBe("");
+});
+it("POSTではR2の旧アセットを返さない", async () => {
+	await bucket.put("assets/_astro/old.js", "export {};");
+	expect(
+		(
+			await fetchReaderAsset(
+				new Request("https://evame.test/_astro/old.js", { method: "POST" }),
+				{ fetch: async () => new Response("missing", { status: 404 }) },
+				bucket,
+			)
+		).status,
+	).toBe(404);
 });

@@ -185,30 +185,11 @@ jobs:
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
         run: nix develop --command bun run db:prod:migrate
 
-      - name: Restore published Reader assets
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        uses: actions/cache/restore@v5
-        with:
-          path: .data/reader-assets
-          key: reader-assets-v2-${{ runner.os }}-${{ github.sha }}-${{ github.run_attempt }}
-          restore-keys: reader-assets-v2-${{ runner.os }}-
-
-      - name: Retain published Reader assets
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        run: nix develop --command bun run prepare:reader-assets
-
       - name: Deploy Cloudflare Workers
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: nix develop --command bun run deploy:workers
-
-      - name: Save published Reader assets
-        if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && hashFiles('.data/reader-assets/active.json') != ''
-        uses: actions/cache/save@v5
-        with:
-          path: .data/reader-assets
-          key: reader-assets-v2-${{ runner.os }}-${{ github.sha }}-${{ github.run_attempt }}
 
   preview:
     needs: ci-check

@@ -4,7 +4,7 @@
 
 公開トップ・記事・著者・新着・タグ・About・規約はAstroで本文と一覧を最初のHTMLに含める。R2に有効なHTMLがあればPublicPages entrypointの実行とDB取得を省略する。HTMLがない場合や関連する変更記録があれば、同じWorker内でDBを読みAstroで描画する。全URLの事前生成・生成用Cron・Queueは使わない。画像用R2は維持する。
 
-`src/server.ts` はメンテナンス判定後、公開GET/HEADを `src/app/_infra/reader-html.ts` へ渡す。HTML取得と変更記録の一覧取得で有効性を確認し、必要な場合だけ同じWorkerの `PublicPages` entrypointでDB接続・Astro生成を行う。外側の応答は言語Cookieを含むため `private, no-store` とする。R2のHTMLは生成開始から1時間で失効させる。Reader専用WorkerとGateway専用Workerは置かない。閲覧数・いいねの即時表示はprivate APIで取得する。人気順のSSRはキャッシュ期限で再取得する。
+`src/server.ts` はメンテナンス判定後、公開GET/HEADを `src/app/_infra/reader-html.ts` へ渡す。R2 GET一回で保存HTMLを読み、必要な場合だけ同じWorkerの `PublicPages` entrypointでDB接続・Astro生成を行う。外側の応答は言語Cookieを含むため `private, no-store` とする。R2のHTMLは時間経過やWorkerデプロイでは失効させない。Reader専用WorkerとGateway専用Workerは置かない。閲覧数・いいねの即時表示はprivate APIで取得する。人気順はいいね数の降順、同数なら作成日時・IDの降順であり、いいね・解除・公開状態の変更を受けてhomeと著者一覧を無効化する。
 
 トップは `reader/src/components/home.astro` と `home-pages.astro` で一覧を描画し、一覧全体のReact hydrationを行わない。`home-feed.client.ts` が30秒ごととウィンドウのフォーカス復帰時にReaderの `/api/home-feed?locale=...` から最新の一覧HTMLを取得する。部分更新も同じ `home-pages.astro` とカードを使用する。同じ内容ならDOMを交換せず、更新失敗時は表示済みHTMLを残して再試行を受け付ける。一覧内で操作中のフォーカスは奪わない。部分更新は共有キャッシュへ保存しない。部分更新も同じWorker内でDBを読みAstroで描画する。
 
@@ -44,17 +44,18 @@ Cookieバー・一覧のアバター・いいね・共通ヘッダー・トッ�
 
 `src/app/_domain/reader-cache-tags.ts` は読み取り側のAstroと書き込み側の保存APIで共用する純粋な変換。日本語・カンマ・大小文字を含むキーをSHA-256の固定長タグへ変換する。Cloudflareのタグ制約や大小文字を区別しない照合で別の対象が衝突しないよう、両方で同じ変換を使う。
 
-保存後にoutboxの変更キーと版を取得し、同じWorkerの `PublicPages.publish(changes)` をRPCで呼ぶ。`changes/<Worker version>/<revision>/<tag>` をR2へ追記し、成功を待って保存成功を返す。R2反映に失敗したらoutboxを残し、DB差分のない同内容再保存でも再送する。取得した版だけを完了扱いにするため、同じタグの後続変更を消さない。下書き保存・画像アップロード・APIキー・翻訳投入では公開HTMLを生成しない。
+保存後にoutboxの変更キーと版を取得し、同じWorkerの `PublicPages.publish(changes)` をRPCで呼ぶ。`changes/<DB URL hash>/<revision>/<tag hash>` をR2へ追記し、成功を待って保存成功を返す。R2反映に失敗したらoutboxを残し、DB差分のない同内容再保存でも再送する。取得した版だけを完了扱いにするため、同じタグの後続変更を消さない。下書き保存・画像アップロード・APIキー・翻訳投入では公開HTMLを生成しない。
 
-HTMLには生成前のDB版と依存タグを保存する。その版より新しい変更記録に対象タグがあれば再生成する。変更記録の取得件数が1,000件を超えた場合も再生成し、見落とした更新をHIT扱いにしない。古い生成の遅延完了や変更記録の到着順逆転で非公開化を巻き戻さない。条件付きPUTで同時生成の上書きを防ぐ。HTMLと変更記録はWorker versionで分離し、R2 lifecycleで2日後に回収する。
+HTMLには生成前のDB版と固有の生成識別子を保存する。DB取得前に生成中索引を作り、依存キーごとの完成済み索引を保存してからHTMLを条件付きPUTし、生成中索引を削除する。保存側は生成中→該当依存キーの完成済み索引の順でLISTを全ページたどり、版・生成識別子・ETagを照合して対象だけを無効化する。通常のHITでLISTは行わない。古い生成の遅延完了や変更記録の到着順逆転でも最新本文・非公開化を巻き戻さない。HTMLと依存索引に削除期限は設けず、変更マーカーと生成中索引だけを2日で回収する。異なるDBは全prefixで分離する。
 
 ## デプロイ
 
-1. DBマイグレーションを先に実行する。
-2. AstroとTanStack Startを含む `dist/server/wrangler.json` を `evame-start` へ1回デプロイする。
-3. 更新成功後にアセット履歴を確定する。新Worker versionのR2保存先を使い、一括purgeやHTMLの事前生成は行わない。
+1. バケット作成時の初期設定でHTML・依存索引・アセットの削除lifecycleを外す。
+2. DBマイグレーションを実行する。
+3. ハッシュ付きアセットをR2 bindingへ保存し、失敗時はデプロイしない。
+4. AstroとTanStack Startを含む `dist/server/wrangler.json` を `evame-start` へ1回デプロイする。HTML保存先は維持し、一括purgeやHTMLの事前生成は行わない。
 
-JS/CSSはHTMLと同じWorkerから配信する。旧HTMLが参照するハッシュ付きアセットも配信終了から30日間保持する。保存時は対象タグの変更記録を追記し、コード更新時はWorker versionでHTMLを分離する。R2 bucketとlifecycleの準備は[Cloudflare運用](../howto/cloudflare-workers.md)を参照する。
+JS/CSSはHTMLと同じWorkerから配信する。現行Static Assetsが404を返す旧ハッシュ付きアセットはR2から取得し、保存HTMLと同じく削除期限を設けない。保存時は対象タグを無効化し、コード更新だけではHTMLを失効させない。固定文言・テンプレートを反映する場合は対象HTMLを明示的に削除して次のGETで生成する。R2 bucketとlifecycleの準備は[Cloudflare運用](../howto/cloudflare-workers.md)を参照する。
 
 ## 検証
 

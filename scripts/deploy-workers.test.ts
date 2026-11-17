@@ -1,14 +1,6 @@
 // @vitest-environment node
 import { execFile } from "node:child_process";
-import {
-	mkdir,
-	mkdtemp,
-	readFile,
-	rm,
-	stat,
-	utimes,
-	writeFile,
-} from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,102 +11,95 @@ const script = fileURLToPath(new URL("./deploy-workers.mjs", import.meta.url));
 let directory: string;
 beforeEach(async () => {
 	directory = await mkdtemp(join(tmpdir(), "evame-deploy-workers-"));
-	await mkdir(join(directory, ".data/reader-assets"), { recursive: true });
+	await mkdir(join(directory, "dist/server"), { recursive: true });
+	await mkdir(join(directory, "dist/client/_astro"), { recursive: true });
 	await mkdir(join(directory, "bin"));
-	await mkdir(join(directory, "scripts"));
 	await writeFile(
-		join(directory, "scripts/purge-reader-cache.mjs"),
-		'import {appendFile} from "node:fs/promises"; await appendFile("deployments", "purge-html\\n");',
+		join(directory, "dist/client/_astro/app.hash.js"),
+		"export {};",
 	);
 	await writeFile(
-		join(directory, ".data/reader-assets/active.json"),
-		'["old.js"]',
+		join(directory, "dist/server/wrangler.json"),
+		JSON.stringify({
+			account_id: "account",
+			assets: { directory: "../client" },
+			r2_buckets: [{ binding: "PUBLIC_HTML", bucket_name: "production" }],
+		}),
 	);
 	await writeFile(
-		join(directory, ".data/reader-assets/next.json"),
-		'{"active":["new.js"],"retiring":["old.js"]}',
+		join(directory, "fake-fetch.mjs"),
+		'import { registerHooks } from "node:module";\nregisterHooks({resolve(specifier,context,nextResolve){\n if(specifier === "wrangler") return {url:new URL("./fake-wrangler.mjs",import.meta.url).href,shortCircuit:true};\n return nextResolve(specifier,context);\n}});',
 	);
-	await mkdir(join(directory, ".data/reader-assets/files"));
-	await writeFile(join(directory, ".data/reader-assets/files/old.js"), "old");
-	const old = new Date(Date.now() - 31 * 86400000);
-	await utimes(join(directory, ".data/reader-assets/files/old.js"), old, old);
+	await writeFile(
+		join(directory, "fake-wrangler.mjs"),
+		'import { appendFile, readFile } from "node:fs/promises";\nimport { existsSync } from "node:fs";\nexport async function getPlatformProxy({configPath}) {\n const config=JSON.parse(await readFile(configPath,"utf8"));\n return {env:{PUBLIC_HTML:{async put(key){\n await appendFile("calls","R2 "+config.r2_buckets[0].bucket_name+" PUT "+key+"\\n");\n if(existsSync("fail-assets"))throw new Error("R2 asset upload failed");\n }}},async dispose(){await appendFile("calls","R2 dispose\\n");}};\n}',
+	);
 	await writeFile(
 		join(directory, "bin/bun"),
-		'#!/bin/sh\nprintf "%s\\n" "$5" >> deployments\nif test -f fail-worker && test "$5" = dist/server/wrangler.json; then exit 1; fi\n',
+		'#!/bin/sh\nprintf "%s\\n" "$*" >> calls\nif test -f fail-worker; then exit 1; fi\n',
 		{ mode: 0o755 },
 	);
 });
 afterEach(async () => rm(directory, { recursive: true, force: true }));
 
-it("準備したアセットの記録がなければWorkerを更新しない", async () => {
-	await rm(join(directory, ".data/reader-assets/next.json"));
-	await expect(
-		promisify(execFile)(process.execPath, [script], {
+it("公開アセットをR2へ保存してから統合Workerを一度だけ更新する", async () => {
+	await promisify(execFile)(
+		process.execPath,
+		["--import", join(directory, "fake-fetch.mjs"), script],
+		{
 			cwd: directory,
 			env: {
 				...process.env,
+				CLOUDFLARE_API_TOKEN: "storage-token",
 				PATH: `${join(directory, "bin")}:${process.env.PATH}`,
 			},
-		}),
-	).rejects.toThrow();
-	await expect(readFile(join(directory, "deployments"))).rejects.toThrow();
-});
-
-it("統合Workerを一度更新してから配信中のアセットを確定する", async () => {
-	const startedAt = Date.now();
-	await promisify(execFile)(process.execPath, [script], {
-		cwd: directory,
-		env: {
-			...process.env,
-			PATH: `${join(directory, "bin")}:${process.env.PATH}`,
 		},
-	});
+	);
 	expect(
-		(await readFile(join(directory, "deployments"), "utf8")).trim().split("\n"),
-	).toEqual(["dist/server/wrangler.json"]);
-	expect(
-		await readFile(join(directory, ".data/reader-assets/active.json"), "utf8"),
-	).toBe('["new.js"]');
-	await expect(
-		readFile(join(directory, ".data/reader-assets/next.json")),
-	).rejects.toThrow();
-	expect(
-		(await stat(join(directory, ".data/reader-assets/files/old.js"))).mtimeMs,
-	).toBeGreaterThanOrEqual(startedAt);
+		(await readFile(join(directory, "calls"), "utf8")).trim().split("\n"),
+	).toEqual([
+		"R2 production PUT assets/_astro/app.hash.js",
+		"R2 dispose",
+		"x wrangler deploy --config dist/server/wrangler.json",
+	]);
 });
-
-it("統合Workerの更新に失敗した場合は旧版の配信中アセットを維持する", async () => {
+it("R2へのアセット保存に失敗したらWorkerを更新しない", async () => {
+	await writeFile(join(directory, "fail-assets"), "");
+	await expect(
+		promisify(execFile)(
+			process.execPath,
+			["--import", join(directory, "fake-fetch.mjs"), script],
+			{
+				cwd: directory,
+				env: {
+					...process.env,
+					CLOUDFLARE_API_TOKEN: "storage-token",
+					PATH: `${join(directory, "bin")}:${process.env.PATH}`,
+				},
+			},
+		),
+	).rejects.toThrow("R2 asset upload failed");
+	expect(await readFile(join(directory, "calls"), "utf8")).not.toContain(
+		"wrangler deploy",
+	);
+});
+it("統合Workerの更新に失敗した場合も成功として返さない", async () => {
 	await writeFile(join(directory, "fail-worker"), "");
 	await expect(
-		promisify(execFile)(process.execPath, [script], {
-			cwd: directory,
-			env: {
-				...process.env,
-				PATH: `${join(directory, "bin")}:${process.env.PATH}`,
+		promisify(execFile)(
+			process.execPath,
+			["--import", join(directory, "fake-fetch.mjs"), script],
+			{
+				cwd: directory,
+				env: {
+					...process.env,
+					CLOUDFLARE_API_TOKEN: "storage-token",
+					PATH: `${join(directory, "bin")}:${process.env.PATH}`,
+				},
 			},
-		}),
+		),
 	).rejects.toThrow();
-	expect(
-		await readFile(join(directory, ".data/reader-assets/active.json"), "utf8"),
-	).toBe('["old.js"]');
-});
-
-it("通常のデプロイではWorkerを更新して新しいHTML保存先へ切り替える", async () => {
-	await writeFile(
-		join(directory, "scripts/switch-public-route.mjs"),
-		'throw new Error("Route switch failed");',
-	);
-	await promisify(execFile)(process.execPath, [script], {
-		cwd: directory,
-		env: {
-			...process.env,
-			PATH: `${join(directory, "bin")}:${process.env.PATH}`,
-		},
-	});
-	expect(
-		await readFile(join(directory, ".data/reader-assets/active.json"), "utf8"),
-	).toBe('["new.js"]');
-	expect(await readFile(join(directory, "deployments"), "utf8")).not.toContain(
-		"purge-html",
+	expect(await readFile(join(directory, "calls"), "utf8")).toContain(
+		"wrangler deploy",
 	);
 });

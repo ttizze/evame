@@ -427,7 +427,7 @@ describe("公開HTMLの更新", () => {
 		);
 		expect(publicBinding.publish).not.toHaveBeenCalled();
 	});
-	it.each(["like", "geminiKey", "uploadImage"])(
+	it.each(["geminiKey", "uploadImage"])(
 		"%sの操作は本文のキャッシュを破棄しない",
 		async (action) => {
 			vi.mocked(handler.fetch).mockResolvedValue(new Response(null));
@@ -441,6 +441,24 @@ describe("公開HTMLの更新", () => {
 			expect(publicBinding.publish).not.toHaveBeenCalled();
 		},
 	);
+	it("いいねの保存後は人気順の変更記録をR2へ反映する", async () => {
+		pendingChanges.clear();
+		pendingChanges.set("list:home", 2);
+		pendingChanges.set("profile:author", 2);
+		vi.mocked(handler.fetch).mockResolvedValue(new Response(null));
+		await server.fetch(
+			new Request("https://evame.test/api/reader-actions?action=like", {
+				method: "POST",
+			}),
+			env as never,
+			{ exports, waitUntil: vi.fn() },
+		);
+		expect(publicBinding.publish).toHaveBeenCalledWith([
+			{ key: "list:home", revision: 2 },
+			{ key: "profile:author", revision: 2 },
+		]);
+		expect(pendingChanges.size).toBe(0);
+	});
 	it("権限不足で拒否した更新ではキャッシュを破棄しない", async () => {
 		vi.mocked(handler.fetch).mockResolvedValue(
 			new Response(null, { status: 403 }),
@@ -648,30 +666,40 @@ describe("同じWorkerの公開HTMLとR2への更新記録", () => {
 	});
 });
 
-it("R2に有効なHTMLがある場合はDB接続やAstro生成を起動しない", async () => {
-	env.PUBLIC_HTML.get.mockResolvedValue({
-		customMetadata: { state: "ready", revision: "1", generation: "test" },
-		json: async () => ({
-			startedAt: Date.now(),
-			revision: 1,
-			tags: ["reader:test"],
-			headers: [["Content-Type", "text/html"]],
-			body: "R2本文",
-		}),
-	} as never);
-	const response = await server.fetch(
-		new Request("https://evame.test/ja/author/article"),
-		env as unknown as typeof import("cloudflare:workers").env,
-		{ exports, waitUntil: vi.fn() },
-	);
-	expect(await response.text()).toBe("R2本文");
-	expect(response.headers.get("X-Evame-HTML-Cache")).toBe("HIT");
-	expect(publicBinding.fetch).not.toHaveBeenCalled();
-	expect(createDb).not.toHaveBeenCalled();
-	expect(handler.fetch).not.toHaveBeenCalled();
-	expect(response.headers.get("x-frame-options")).toBe("DENY");
-	expect(response.headers.get("Set-Cookie")).toContain("NEXT_LOCALE=ja");
-});
+it.each(["build-1", "build-2"])(
+	"Workerの版%sでも保存HTMLを同じキーから返し、DB接続やAstro生成を起動しない",
+	async (version) => {
+		env.CF_VERSION_METADATA.id = version;
+		env.PUBLIC_HTML.get.mockResolvedValue({
+			customMetadata: { state: "ready", revision: "1", generation: "test" },
+			json: async () => ({
+				startedAt: Date.now(),
+				revision: 1,
+				tags: ["reader:test"],
+				headers: [["Content-Type", "text/html"]],
+				body: "R2本文",
+			}),
+		} as never);
+		const response = await server.fetch(
+			new Request("https://evame.test/ja/author/article"),
+			env as unknown as typeof import("cloudflare:workers").env,
+			{ exports, waitUntil: vi.fn() },
+		);
+		expect(await response.text()).toBe("R2本文");
+		const [namespace] = await readerCacheTags([
+			"libsql://reader-test.turso.io",
+		]);
+		expect(env.PUBLIC_HTML.get.mock.calls[0][0]).toMatch(
+			new RegExp("^html/" + namespace + "/[a-f0-9]+$"),
+		);
+		expect(response.headers.get("X-Evame-HTML-Cache")).toBe("HIT");
+		expect(publicBinding.fetch).not.toHaveBeenCalled();
+		expect(createDb).not.toHaveBeenCalled();
+		expect(handler.fetch).not.toHaveBeenCalled();
+		expect(response.headers.get("x-frame-options")).toBe("DENY");
+		expect(response.headers.get("Set-Cookie")).toContain("NEXT_LOCALE=ja");
+	},
+);
 
 it("一覧の部分更新はDB版を取得せず内部用の版ヘッダーも返さない", async () => {
 	vi.mocked(publicPages.fetch).mockResolvedValue(

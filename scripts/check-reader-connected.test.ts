@@ -195,7 +195,14 @@ it("前回中断の障害キーだけを回収し、通常の保留キーと版�
 		vi.mocked(readdir).mockResolvedValue([
 			"server-fn-resolver-test.js",
 		] as never);
-		const send = vi.fn(async () => {
+		const send = vi.fn(async (url: string | URL | Request) => {
+			if (new URL(String(url)).pathname === "/_astro/connected-retained.js")
+				return new Response("export const retained = true;", {
+					headers: {
+						"Content-Type": "text/javascript",
+						"Cache-Control": "public, max-age=31536000, immutable",
+					},
+				});
 			const pending = await database.execute(
 				"SELECT key,revision FROM reader_publication_changes ORDER BY key",
 			);
@@ -208,7 +215,11 @@ it("前回中断の障害キーだけを回収し、通常の保留キーと版�
 		await expect(import("./check-reader-connected.mjs")).rejects.toThrow(
 			"初回保存へ到達",
 		);
-		expect(send).toHaveBeenCalledOnce();
+		expect(
+			send.mock.calls.filter(([url]) =>
+				new URL(String(url)).pathname.startsWith("/_serverFn/"),
+			),
+		).toHaveLength(1);
 	} finally {
 		database.close();
 		vi.unstubAllGlobals();
@@ -248,6 +259,13 @@ it("Cloudflare Previewでも差分なし保存で保留キーを回収する検�
 	vi.mocked(readdir).mockResolvedValue(["server-fn-resolver-test.js"] as never);
 	let saves = 0;
 	const send = vi.fn(async (url: string | URL | Request) => {
+		if (new URL(String(url)).pathname === "/_astro/connected-retained.js")
+			return new Response("export const retained = true;", {
+				headers: {
+					"Content-Type": "text/javascript",
+					"Cache-Control": "public, max-age=31536000, immutable",
+				},
+			});
 		const save = new URL(String(url)).pathname.includes(
 			`/_serverFn/${"0".repeat(64)}`,
 		);

@@ -1,0 +1,341 @@
+// @vitest-environment node
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { configureReaderStorage } from "./configure-reader-storage.mjs";
+
+let directory: string;
+const request = vi.fn<typeof fetch>();
+beforeEach(async () => {
+	directory = await mkdtemp(join(tmpdir(), "reader-storage-config-"));
+	await writeFile(
+		join(directory, "wrangler.json"),
+		JSON.stringify({
+			account_id: "account",
+			r2_buckets: [{ binding: "PUBLIC_HTML", bucket_name: "production" }],
+			previews: {
+				r2_buckets: [{ binding: "PUBLIC_HTML", bucket_name: "preview" }],
+			},
+		}),
+	);
+	vi.stubEnv("CLOUDFLARE_API_TOKEN", "storage-token");
+	vi.stubGlobal("fetch", request);
+	request.mockReset().mockImplementation(
+		async (_url, init) =>
+			new Response(
+				JSON.stringify({
+					success: true,
+					result:
+						init?.method === "GET"
+							? {
+									rules: [
+										{
+											id: "html-expiry",
+											enabled: true,
+											conditions: { prefix: "html/" },
+											deleteObjectsTransition: {
+												condition: { type: "Age", maxAge: 172800 },
+											},
+										},
+										{
+											id: "index-expiry",
+											enabled: true,
+											conditions: { prefix: "dependencies/" },
+											deleteObjectsTransition: {
+												condition: { type: "Age", maxAge: 172800 },
+											},
+										},
+										{
+											id: "asset-expiry",
+											enabled: true,
+											conditions: { prefix: "assets/" },
+											deleteObjectsTransition: {
+												condition: { type: "Age", maxAge: 172800 },
+											},
+										},
+										{
+											id: "pending-expiry",
+											enabled: true,
+											conditions: { prefix: "pending/" },
+											deleteObjectsTransition: {
+												condition: { type: "Age", maxAge: 172800 },
+											},
+										},
+										{
+											id: "multipart",
+											enabled: true,
+											conditions: { prefix: "" },
+											abortMultipartUploadsTransition: {
+												condition: { maxAge: 604800, type: "Age" },
+											},
+										},
+									],
+								}
+							: {},
+				}),
+			),
+	);
+});
+afterEach(async () => {
+	vi.unstubAllEnvs();
+	vi.unstubAllGlobals();
+	await rm(directory, { recursive: true, force: true });
+});
+it.each([false, true])(
+	"初期設定で本番とPreviewの公開HTML・依存索引・アセットの削除を止める: %s",
+	async (preview) => {
+		await configureReaderStorage(join(directory, "wrangler.json"), preview);
+		expect(
+			request.mock.calls.every(([url]) =>
+				String(url).includes(`/buckets/${preview ? "preview" : "production"}/`),
+			),
+		).toBe(true);
+		const update = request.mock.calls.find(
+			([, init]) => init?.method === "PUT",
+		);
+		expect(
+			JSON.parse(String(update?.[1]?.body)).rules.map(
+				(row: { id: string }) => row.id,
+			),
+		).toEqual(["pending-expiry", "multipart", "reader-expire-changes"]);
+	},
+);
+it("保持設定の読み取り失敗を返す", async () => {
+	request.mockResolvedValue(
+		new Response(JSON.stringify({ success: false }), { status: 403 }),
+	);
+	await expect(
+		configureReaderStorage(join(directory, "wrangler.json"), false),
+	).rejects.toThrow("HTTP 403");
+	expect(request).toHaveBeenCalledTimes(1);
+});
+it("広い削除ルールを外しても変更記録と保留マーカーは2日で掃除する", async () => {
+	request.mockImplementation(
+		async (_url, init) =>
+			new Response(
+				JSON.stringify({
+					success: true,
+					result:
+						init?.method === "GET"
+							? {
+									rules: [
+										{
+											id: "all",
+											enabled: true,
+											conditions: { prefix: "" },
+											deleteObjectsTransition: {
+												condition: { type: "Age", maxAge: 1 },
+											},
+											abortMultipartUploadsTransition: {
+												condition: { maxAge: 604800, type: "Age" },
+											},
+										},
+									],
+								}
+							: {},
+				}),
+			),
+	);
+	await configureReaderStorage(join(directory, "wrangler.json"), false);
+	const update = request.mock.calls.find(
+		([, init]) => init?.method === "PUT" && typeof init.body === "string",
+	);
+	expect(JSON.parse(String(update?.[1]?.body)).rules).toEqual([
+		{
+			id: "all",
+			enabled: true,
+			conditions: { prefix: "" },
+			abortMultipartUploadsTransition: {
+				condition: { maxAge: 604800, type: "Age" },
+			},
+		},
+		...(["changes/", "pending/"] as const).map((prefix) => ({
+			id: `reader-expire-${prefix.slice(0, -1)}`,
+			enabled: true,
+			conditions: { prefix },
+			deleteObjectsTransition: {
+				condition: { type: "Age", maxAge: 172800 },
+			},
+		})),
+	]);
+});
+
+it("保持設定済みならバケットの設定を書き換えない", async () => {
+	const rules = [
+		...(["changes/", "pending/"] as const).map((prefix) => ({
+			id: prefix,
+			enabled: true,
+			conditions: { prefix },
+			deleteObjectsTransition: { condition: { type: "Age", maxAge: 172800 } },
+		})),
+	];
+	request.mockResolvedValue(
+		new Response(JSON.stringify({ success: true, result: { rules } })),
+	);
+	await configureReaderStorage(join(directory, "wrangler.json"), false);
+	expect(request).toHaveBeenCalledTimes(1);
+});
+it("保持設定の更新失敗を成功として返さない", async () => {
+	request
+		.mockImplementationOnce(
+			async () =>
+				new Response(JSON.stringify({ success: true, result: { rules: [] } })),
+		)
+		.mockResolvedValueOnce(new Response(null, { status: 403 }));
+	await expect(
+		configureReaderStorage(join(directory, "wrangler.json"), false),
+	).rejects.toThrow("HTTP 403");
+});
+
+it.each([
+	{ type: "Age", maxAge: 31536000 },
+	{ type: "Age", maxAge: 60 },
+	{ type: "Date", date: "2027-01-01T00:00:00Z" },
+])("変更記録の既存削除条件を2日へ補正する: %j", async (condition) => {
+	const rules = [
+		{
+			id: "custom-changes",
+			enabled: true,
+			conditions: { prefix: "changes/" },
+			deleteObjectsTransition: { condition },
+			storageClassTransitions: [
+				{
+					condition: { type: "Age", maxAge: 30 },
+					storageClass: "InfrequentAccess",
+				},
+			],
+		},
+		{
+			id: "reader-expire-pending",
+			enabled: true,
+			conditions: { prefix: "pending/" },
+			deleteObjectsTransition: { condition: { type: "Age", maxAge: 172800 } },
+		},
+	];
+	request.mockImplementation(
+		async (_url, init) =>
+			new Response(
+				JSON.stringify({
+					success: true,
+					result: init?.method === "GET" ? { rules } : {},
+				}),
+			),
+	);
+	await configureReaderStorage(join(directory, "wrangler.json"), false);
+	const update = request.mock.calls.find(([, init]) => init?.method === "PUT");
+	expect(update).toBeDefined();
+	expect(JSON.parse(String(update?.[1]?.body)).rules).toEqual([
+		{
+			...rules[0],
+			deleteObjectsTransition: { condition: { type: "Age", maxAge: 172800 } },
+		},
+		rules[1],
+	]);
+});
+
+it("無効にされた管理用削除ルールを同じIDのまま再び有効にする", async () => {
+	const rules = ["changes/", "pending/"].map((prefix) => ({
+		id: `reader-expire-${prefix.slice(0, -1)}`,
+		enabled: false,
+		conditions: { prefix },
+		deleteObjectsTransition: { condition: { type: "Age", maxAge: 31536000 } },
+	}));
+	request.mockImplementation(
+		async (_url, init) =>
+			new Response(
+				JSON.stringify({
+					success: true,
+					result: init?.method === "GET" ? { rules } : {},
+				}),
+			),
+	);
+	await configureReaderStorage(join(directory, "wrangler.json"), false);
+	const update = request.mock.calls.find(([, init]) => init?.method === "PUT");
+	const updated = JSON.parse(String(update?.[1]?.body)).rules;
+	expect(updated).toEqual(
+		rules.map((rule) => ({
+			...rule,
+			enabled: true,
+			deleteObjectsTransition: { condition: { type: "Age", maxAge: 172800 } },
+		})),
+	);
+	expect(new Set(updated.map((rule: { id: string }) => rule.id)).size).toBe(
+		updated.length,
+	);
+});
+it.each(["changes/", "pending/"])(
+	"管理用IDが%s以外に使われていても既存設定の適用範囲を変えない",
+	async (prefix) => {
+		const id = `reader-expire-${prefix.slice(0, -1)}`;
+		const rules = [
+			{
+				id,
+				enabled: true,
+				conditions: { prefix: "" },
+				abortMultipartUploadsTransition: {
+					condition: { type: "Age", maxAge: 604800 },
+				},
+			},
+			{
+				id: `${id}-1`,
+				enabled: true,
+				conditions: { prefix: "uploads/" },
+				deleteObjectsTransition: {
+					condition: { type: "Age", maxAge: 31536000 },
+				},
+			},
+		];
+		request.mockImplementation(
+			async (_url, init) =>
+				new Response(
+					JSON.stringify({
+						success: true,
+						result: init?.method === "GET" ? { rules } : {},
+					}),
+				),
+		);
+		await configureReaderStorage(join(directory, "wrangler.json"), false);
+		const update = request.mock.calls.find(
+			([, init]) => init?.method === "PUT",
+		);
+		const updated = JSON.parse(String(update?.[1]?.body)).rules;
+		expect(updated.slice(0, 2)).toEqual(rules);
+		expect(
+			updated.find((rule: { id: string }) => rule.id === `${id}-2`),
+		).toEqual({
+			id: `${id}-2`,
+			enabled: true,
+			conditions: { prefix },
+			deleteObjectsTransition: {
+				condition: { type: "Age", maxAge: 172800 },
+			},
+		});
+		expect(new Set(updated.map((rule: { id: string }) => rule.id)).size).toBe(
+			updated.length,
+		);
+		request.mockClear().mockImplementation(
+			async (_url, init) =>
+				new Response(
+					JSON.stringify({
+						success: true,
+						result:
+							init?.method === "GET"
+								? {
+										rules: updated.map((rule: { id: string }) =>
+											rule.id === `${id}-2`
+												? { ...rule, enabled: false }
+												: rule,
+										),
+									}
+								: {},
+					}),
+				),
+		);
+		await configureReaderStorage(join(directory, "wrangler.json"), false);
+		const reapplied = request.mock.calls.find(
+			([, init]) => init?.method === "PUT",
+		);
+		expect(JSON.parse(String(reapplied?.[1]?.body)).rules).toEqual(updated);
+	},
+);

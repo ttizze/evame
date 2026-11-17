@@ -124,13 +124,25 @@ try {
 		});
 		return response;
 	};
+	// 現行ASSETSに存在しない旧ハッシュの参照先を、ブラウザーキャッシュなしでR2から取得する。
+	await (
+		await request("/_astro/connected-retained.js", {
+			headers: { "X-Evame-Connected-Store-Asset": "true" },
+		})
+	).arrayBuffer();
+	const retainedAsset = await request("/_astro/connected-retained.js");
+	assert.equal(retainedAsset.status, 200);
+	assert.match(retainedAsset.headers.get("Content-Type") ?? "", /javascript/);
+	assert.match(retainedAsset.headers.get("Cache-Control") ?? "", /immutable/);
+	assert.equal(await retainedAsset.text(), "export const retained = true;");
+	results.push({ operation: "retained-asset-from-r2", status: 200 });
 	const functions = await readServerFunctions("dist/server/assets");
 	const edit = functions.editPageContent_createServerFn_handler;
 	assert.ok(edit);
-	const save = async (text, title = "配信接続の記事") => {
+	const save = async (text, title = "配信接続の記事", pageSlug = slug) => {
 		const form = new FormData();
 		for (const [key, value] of Object.entries({
-			pageSlug: slug,
+			pageSlug,
 			userLocale: "ja",
 			title,
 			pageContent: `<h2>検証する見出し</h2><p>${text}</p>`,
@@ -160,7 +172,7 @@ try {
 	});
 	const pageId = Number(page.rows[0].id);
 	const path = `/ja/${handle}/${encodeURIComponent(slug)}`;
-	const action = async (name) => {
+	const action = async (name, targetPageId = pageId) => {
 		assert.ok(functions[name]);
 		const response = await request(`/_serverFn/${functions[name]}`, {
 			method: "POST",
@@ -171,7 +183,7 @@ try {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify(
-				await toJSONAsync({ data: { pageId, locale: "ja" } }),
+				await toJSONAsync({ data: { pageId: targetPageId, locale: "ja" } }),
 			),
 		});
 		assert.equal(response.status, 200, await response.text());
@@ -303,6 +315,60 @@ try {
 			confirmed === "並行保存の本文A" ? "並行保存の本文B" : "並行保存の本文A",
 		),
 	);
+	// 人気順も保存済みHTMLを使い、いいね・解除の応答直後に並び替える。
+	const secondSlug = `比較記事-${id.slice(0, 8)}`;
+	assert.equal(
+		(await save("人気順の比較本文", "比較用の記事", secondSlug)).status,
+		200,
+	);
+	const secondPage = await database.execute({
+		sql: "SELECT id FROM pages WHERE user_id=? AND slug=?",
+		args: [userId, secondSlug],
+	});
+	await action(
+		"togglePublishAction_createServerFn_handler",
+		Number(secondPage.rows[0].id),
+	);
+	const profilePath = `/ja/${handle}?sort=popular`;
+	const profileBefore = await request(profilePath);
+	const beforeOrder = await profileBefore.text();
+	assert.ok(
+		beforeOrder.includes("比較用の記事") &&
+			beforeOrder.includes("配信接続の記事"),
+	);
+	assert.ok(
+		beforeOrder.indexOf("比較用の記事") < beforeOrder.indexOf("配信接続の記事"),
+	);
+	for (const target of [profilePath, "/ja"]) {
+		await (await request(target)).arrayBuffer();
+		const cached = await request(target);
+		assert.equal(cached.headers.get("X-Evame-HTML-Cache"), "HIT");
+		await cached.arrayBuffer();
+	}
+	for (const liked of [true, false]) {
+		const response = await request("/api/reader-actions?action=like", {
+			method: "POST",
+			headers: { cookie, origin, "Content-Type": "application/json" },
+			body: JSON.stringify({ pageId }),
+		});
+		assert.equal(response.status, 200, await response.clone().text());
+		assert.equal((await response.json()).data.liked, liked);
+		const updated = await request(profilePath);
+		assert.equal(updated.headers.get("X-Evame-HTML-Cache"), "MISS");
+		const html = await updated.text();
+		assert.ok(html.includes("比較用の記事") && html.includes("配信接続の記事"));
+		assert.equal(
+			html.indexOf("配信接続の記事") < html.indexOf("比較用の記事"),
+			liked,
+		);
+		const home = await request("/ja");
+		assert.equal(home.headers.get("X-Evame-HTML-Cache"), "MISS");
+		await home.arrayBuffer();
+		results.push({
+			operation: liked ? "popular-like" : "popular-unlike",
+			status: 200,
+		});
+	}
 	if (process.env.EVAME_CONNECTED_BROWSER === "true") {
 		const { chromium, webkit, expect } = await import("@playwright/test");
 		for (const type of [chromium, webkit]) {

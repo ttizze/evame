@@ -15,6 +15,7 @@ import { getMigrationResponse } from "../shared/migration-response";
 import { fetchPublicReader } from "../shared/public-reader";
 import { SENTRY_DSN } from "./_utils/sentry-dsn";
 import { shouldInvalidateReader } from "./app/_domain/reader-cache-policy";
+import { fetchReaderAsset } from "./app/_infra/reader-asset";
 import {
 	fetchReaderHtml,
 	publishReaderChanges,
@@ -79,9 +80,15 @@ export class PublicPages extends WorkerEntrypoint<
 	async fetch(workerRequest: WorkerRequest): Promise<WorkerResponse> {
 		const migration = getMigrationResponse(process.env.DATABASE_MIGRATION);
 		if (migration) return migration as unknown as WorkerResponse;
-		if (new URL(workerRequest.url).pathname.startsWith("/_astro/"))
-			return this.env.ASSETS.fetch(workerRequest);
 		const request = workerRequest as unknown as Request;
+		if (new URL(request.url).pathname.startsWith("/_astro/"))
+			return fetchReaderAsset(
+				request,
+				this.env.ASSETS as unknown as {
+					fetch(request: Request): Promise<Response>;
+				},
+				this.env.PUBLIC_HTML,
+			) as unknown as Promise<WorkerResponse>;
 		return withDatabase(request, this.ctx, async () => {
 			publicPagesModule ??= import("virtual:evame-public-pages");
 			const { default: publicPages } = await publicPagesModule;
@@ -142,7 +149,6 @@ export default withSentry(sentryOptions, {
 					return fetchReaderHtml(
 						input,
 						env.PUBLIC_HTML,
-						env.CF_VERSION_METADATA.id,
 						process.env.TURSO_DATABASE_URL ?? "",
 						async (renderRequest) => {
 							const source =
