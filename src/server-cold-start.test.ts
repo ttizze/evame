@@ -9,6 +9,18 @@ vi.mock("@tanstack/react-start/server-entry", () => {
 	loaded.push("TanStack Start");
 	return { default: { fetch: vi.fn() } };
 });
+vi.mock("./db", () => {
+	loaded.push("DB");
+	return { createDb: vi.fn(), databaseScope: { run: vi.fn() } };
+});
+vi.mock("./db/queries", () => {
+	loaded.push("DB queries");
+	return { fetchReaderRevision: vi.fn() };
+});
+vi.mock("./app/_service/update-reader-publication", () => {
+	loaded.push("publication");
+	return { updateReaderPublication: vi.fn() };
+});
 vi.mock("@sentry/cloudflare", () => ({
 	withSentry: (_options: unknown, entry: unknown) => entry,
 	captureException: vi.fn(),
@@ -16,7 +28,7 @@ vi.mock("@sentry/cloudflare", () => ({
 
 import server from "./server";
 
-it("起動直後のR2のHITでAstroと編集アプリのモジュールを読み込まない", async () => {
+it("起動直後のR2のHITでAstro・編集アプリ・DB・更新処理を読み込まない", async () => {
 	vi.stubEnv("TURSO_DATABASE_URL", "libsql://reader-test.turso.io");
 	const response = await server.fetch(
 		new Request("https://evame.test/ja"),

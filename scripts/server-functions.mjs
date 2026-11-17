@@ -11,7 +11,7 @@ export async function readServerFunctions(directory) {
 		sources.flatMap((source) =>
 			[
 				...source.matchAll(
-					/"([a-f0-9]{64})":\s*\{\s*functionName:\s*"([^"]+)"/g,
+					/"?([a-f0-9]{64})"?:\s*\{\s*functionName:\s*["`]([\w$]+)["`]/g,
 				),
 			].map((match) => [match[2], match[1]]),
 		),

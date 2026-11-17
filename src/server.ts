@@ -20,10 +20,8 @@ import {
 	fetchReaderHtml,
 	publishReaderChanges,
 } from "./app/_infra/reader-html";
-import { updateReaderPublication } from "./app/_service/update-reader-publication";
-import { createDb, databaseScope } from "./db";
-import { fetchReaderRevision } from "./db/queries";
 
+let databaseModule: Promise<typeof import("./db")> | null = null;
 let publicPagesModule: Promise<
 	typeof import("virtual:evame-public-pages")
 > | null = null;
@@ -37,6 +35,8 @@ async function withDatabase(
 	context: Pick<ExecutionContext, "waitUntil">,
 	fetchResponse: () => Promise<Response>,
 ) {
+	databaseModule ??= import("./db");
+	const { createDb, databaseScope } = await databaseModule;
 	const database = createDb();
 	return databaseScope.run(database, async () => {
 		try {
@@ -94,6 +94,7 @@ export class PublicPages extends WorkerEntrypoint<
 			const { default: publicPages } = await publicPagesModule;
 			if (new URL(request.url).pathname === "/api/home-feed")
 				return publicPages.fetch(request, this.env, this.ctx);
+			const { fetchReaderRevision } = await import("./db/queries");
 			const { revision } = await fetchReaderRevision();
 			const source = await publicPages.fetch(request, this.env, this.ctx);
 			const response = new Response(source.body, source);
@@ -180,6 +181,9 @@ export default withSentry(sentryOptions, {
 					"true",
 				)
 			) {
+				const { updateReaderPublication } = await import(
+					"./app/_service/update-reader-publication"
+				);
 				await updateReaderPublication((changes) =>
 					context.exports.PublicPages.publish(changes),
 				);

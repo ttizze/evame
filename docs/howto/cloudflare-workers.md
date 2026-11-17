@@ -1,6 +1,6 @@
 # Cloudflare Workers の運用
 
-全コマンドは `nix develop` 内で実行する。公開表示・TanStack Startの編集・APIの入口は `src/server.ts`。Astroのビルドは `reader/` に置き、`bun run build` がそのサーバーコードとJS/CSSを `dist` へ取り込む。デプロイするWorkerは `evame-start` の1つだけで、CI・ローカル検証・本番公開で同じ成果物を使う。
+全コマンドは `nix develop` 内で実行する。公開表示・TanStack Startの編集・APIの入口は `src/server.ts`。Astroのビルドは `reader/` に置き、`bun run build` がそのサーバーコードとJS/CSSを `dist` へ取り込む。デプロイするWorkerは `evame-start` の1つだけ。CIとローカルでは一度ビルドした成果物を検証し、公開ワークフローでは検証済みSHAから環境別にビルドする。
 
 ## CIのテスト実行
 
@@ -81,7 +81,7 @@ printf '%s' false | nix develop --command bun x wrangler secret put DATABASE_MIG
 
 同じリポジトリ内のPRは、既存のNix CIが成功すると `preview` jobでCloudflare標準の[Worker Previews](https://developers.cloudflare.com/workers/previews/get-started/)を自動更新する。GitHubのdeploymentリンクから開く。URLは `https://pr-<PR番号>-evame-start.reimei.workers.dev/ja`。PR #1140は `https://pr-1140-evame-start.reimei.workers.dev/ja/auth/login`。forkからのPRでは秘密値を渡さず、プレビューをデプロイしない。
 
-ログインはメールのリンクを使う。CIは `VITE_AUTH_GOOGLE_ENABLED=false` とプレビューの `VITE_PUBLIC_DOMAIN` を指定し、`preview-build` jobで検証と並行して先にビルドする。全検証成功後の `preview` jobはその成果物を取得して公開し、再ビルドしない。ローカルのブラウザーテストは別originを使うため、通常ビルドとは分ける。`BETTER_AUTH_URL` もプレビューと同じoriginに揃える。Origin検証は有効のまま。本番はGoogle・メールの両方を維持する。
+ログインはメールのリンクを使う。全検証成功後に `Publish` の `preview` jobが検証済みSHAを取得し、`VITE_AUTH_GOOGLE_ENABLED=false` とプレビューの `VITE_PUBLIC_DOMAIN` を指定してビルド・公開する。ローカルのブラウザーテストは別originを使うため、そのビルド成果物はPreviewへ転用しない。`BETTER_AUTH_URL` もプレビューと同じoriginに揃える。Origin検証は有効のまま。本番はGoogle・メールの両方を維持する。
 
 PRごとに1つの標準Worker Previewを使う。DBは全プレビュー共用の専用Turso DB `evame-preview` を使い、本番データはコピーしない。初回にシードを投入したDBを再利用し、通常のデプロイでは再投入・初期化しない。シードの更新が必要な場合だけ、専用DBを明示して別途実行する。DBスキーマの互換性がない複数PRの同時検証には使わない。画像は専用R2 `evame-uploads-preview`、公開HTMLは `evame-public-html-preview` に保存し、本番bucketへの読み書きは行わない。読み取り専用maintenanceのKVだけ既存bindingを利用する。
 
@@ -104,7 +104,11 @@ GitHub secret `EVAME_PREVIEW_SECRETS` に専用DBの `TURSO_DATABASE_URL` / `TUR
 
 ビルド済みWorkersとシード済みSQLiteは一度だけ生成して全ブラウザー検証へ共有する。エディターはChromium・WebKitそれぞれでD&D・コピーとチェック操作・階層と並べ替え・書式変更の4群へ分け、ヘッダーと記事も各ブラウザーの独立ジョブにする。ReaderはChromiumで独立して検証する。各ジョブはSQLiteの独立コピーを使い、操作群ごとに新しいブラウザーコンテキストと記事を用意する。全13群を維持し、失敗・キャンセル・スキップがあれば`ci-check`で本番デプロイとPRプレビューを止める。ローカルの`bun run test:deployment:browser`は既定で全群を実行する。1群だけ再現する場合は`EVAME_BROWSER_TYPE=webkit EVAME_BROWSER_SUITE=header`のように指定する。
 
-`.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テスト・ビルド・成果物テストの成功後、本番DBのマイグレーションと単一Workerのデプロイを行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
+`.github/workflows/ci.yaml` はBiome・typecheck・ビルド・単体テスト・ブラウザーテストと、SQLite・ローカルR2を使う保存／公開HTMLの接続検証だけを行う。mainとPRの両方でSentry送信・アップロードを無効化し、Cloudflare・Tursoなどのサービス認証を渡さない。CIの成果物と一緒に実際に検証したコミットSHAを `verified-source` へ記録する。
+
+`.github/workflows/publish.yaml` はCIの成功完了から起動する。同じCI runの `verified-source` を読み、mainではrunのhead SHA、PRでは元のbase・headを親に持つ検証済みマージコミットであることをGitHub APIで確認する。同じリポジトリの開いたPRのうち、投稿者が人間のアカウントで、現在のリポジトリ権限がwrite・maintain・adminのものだけを自動Preview公開する。権限はGitHub APIで照会し、照会失敗時は公開を止める。Bot・権限のない投稿者・fork・更新済みPR・古いmainの結果は公開しない。checkoutは確認したSHAへ固定する。検証用ビルドは全ブラウザー群で共有し、公開側はSentry・Analytics・Preview URLなど各環境の設定を使って同じソースをビルドする。外部接続と認証はこの公開ワークフローだけで扱う。
+
+本番はSentryアップロード付きビルド、mainが更新されていないことの再確認、DBマイグレーション、R2アセット保存、Workerデプロイの順に実行する。PRは専用DB・認証秘密値で標準Previewを公開し、実URLの認証・Astro表示・保存・非公開化・削除・並行更新・R2失敗後の回復検証を維持する。本番同士・Preview同士の公開はそれぞれ直列化し、DB更新・R2保存に失敗した場合はWorkerをデプロイしない。公開の失敗はPublishの結果として報告し、CIの合否には混ぜない。新しい `workflow_run` ワークフローはmainへ入ってから有効になる。
 
 Astroのサーバー成果物とJS/CSSをルートの `dist` に含める。`deploy:workers` は公開アセットをR2へ保存してから `dist/server/wrangler.json` を1回デプロイする。HTMLのR2キーは `html/<DB URL hash>/<URL hash>` とし、同じDBの全Worker版でHTML・更新記録・依存索引を共有する。デプロイ後も保存HTMLを維持し、旧版へ戻しても新版での非公開化・削除が反映される。通常デプロイは公開ルートを変更しない。
 
