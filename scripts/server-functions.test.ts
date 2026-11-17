@@ -21,3 +21,17 @@ it("遅延読み込みでチャンク名が変わってもServer Functionの名�
 		await rm(directory, { recursive: true, force: true });
 	}
 });
+
+it("最小化でテンプレート文字列になったServer Functionの名前とIDを取得する", async () => {
+	const directory = await mkdtemp(join(tmpdir(), "evame-functions-"));
+	try {
+		const id = "b".repeat(64);
+		await writeFile(
+			join(directory, "server-minified.js"),
+			`var manifest={${id}:{functionName:\`saveArticle\`,importer:()=>import(\`./action.js\`)}};`,
+		);
+		expect(await readServerFunctions(directory)).toEqual({ saveArticle: id });
+	} finally {
+		await rm(directory, { recursive: true, force: true });
+	}
+});

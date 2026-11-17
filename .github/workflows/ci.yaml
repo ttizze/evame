@@ -51,7 +51,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      GOOGLE_ANALYTICS_ID: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && secrets.GOOGLE_ANALYTICS_ID || 'G-0000000000' }}
+      GOOGLE_ANALYTICS_ID: G-0000000000
       TZ: Asia/Tokyo
       SENTRY_DSN: ""
       VITE_SENTRY_DSN: ""
@@ -67,13 +67,8 @@ jobs:
         env:
           TURSO_DATABASE_URL: ""
           TURSO_AUTH_TOKEN: ""
-          SENTRY_AUTH_TOKEN: ${{ github.ref == 'refs/heads/main' && secrets.SENTRY_AUTH_TOKEN || '' }}
-        run: |
-          if [[ "$GITHUB_REF" == "refs/heads/main" && "$GITHUB_EVENT_NAME" != "pull_request" ]]; then
-            nix develop --command env -u SENTRY_DSN -u VITE_SENTRY_DSN bun run build
-          else
-            nix develop --command bun run build
-          fi
+          SENTRY_AUTH_TOKEN: ""
+        run: nix develop --command bun run build
 
       - name: Prepare browser test SQLite
         run: nix develop --command node scripts/test-database.mjs .data/browser-test.db
@@ -89,6 +84,16 @@ jobs:
           path: ${{ runner.temp }}/workers.tar
           if-no-files-found: error
           compression-level: 1
+          overwrite: true
+          retention-days: 7
+
+      - name: Record verified source revision
+        run: git rev-parse HEAD > "$RUNNER_TEMP/source.sha"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: verified-source
+          path: ${{ runner.temp }}/source.sha
+          if-no-files-found: error
           overwrite: true
           retention-days: 7
 
@@ -159,112 +164,3 @@ jobs:
           BUILD_RESULT: ${{ needs.build.result }}
           BROWSER_RESULT: ${{ needs.browser.result }}
         run: test "$CHECKS_RESULT" = success && test "$BUILD_RESULT" = success && test "$BROWSER_RESULT" = success
-      - uses: actions/checkout@v4
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        with:
-          persist-credentials: false
-      - uses: cachix/install-nix-action@v31
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        with:
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install dependencies
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        run: nix develop --command bun install --frozen-lockfile
-      - uses: actions/download-artifact@v8
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        with:
-          name: workers
-          path: ${{ runner.temp }}
-      - name: Restore verified Workers build
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        run: tar -xf "$RUNNER_TEMP/workers.tar"
-      - name: Migrate production database
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        env:
-          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
-        run: nix develop --command bun run db:prod:migrate
-
-      - name: Deploy Cloudflare Workers
-        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: nix develop --command bun run deploy:workers
-
-  preview:
-    needs: ci-check
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    concurrency:
-      group: evame-preview
-      cancel-in-progress: false
-    environment:
-      name: preview
-      url: ${{ steps.deploy.outputs.url }}
-    permissions:
-      contents: read
-      deployments: write
-    env:
-      PR_NUMBER: ${{ github.event.number }}
-      SENTRY_DSN: ""
-      VITE_SENTRY_DSN: ""
-      GOOGLE_ANALYTICS_ID: G-0000000000
-      VITE_AUTH_GOOGLE_ENABLED: "false"
-      VITE_PUBLIC_DOMAIN: https://pr-${{ github.event.number }}-evame-start.reimei.workers.dev
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: cachix/install-nix-action@v31
-        with:
-          github_access_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Install dependencies
-        run: nix develop --command bun install --frozen-lockfile
-      - name: Build PR preview
-        run: nix develop --command bun run build
-      - name: Deploy native Cloudflare Previews
-        id: deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          EVAME_PREVIEW_SECRETS: ${{ secrets.EVAME_PREVIEW_SECRETS }}
-        run: nix develop --command bun run preview:workers
-      - name: Verify preview auth and Astro
-        run: |
-          # shellcheck disable=SC2016 # テンプレート展開はBunが行う。
-          nix develop --command bun -e '
-            for (const path of ["/api/auth/get-session", "/ja"]) {
-              const started = Date.now();
-              for (;;) {
-                const response = await fetch(process.env.VITE_PUBLIC_DOMAIN + path, { signal: AbortSignal.timeout(30000) });
-                await response.body?.cancel();
-                if (response.status === 200 && (path !== "/ja" || response.headers.get("x-evame-html") === "astro")) break;
-                if (Date.now() - started > 30000) throw new Error(`Preview verification failed: ${path} (HTTP ${response.status})`);
-                await new Promise(resolve => setTimeout(resolve, 250));
-              }
-            }
-          '
-      - name: Verify connected publication on Cloudflare Preview
-        env:
-          EVAME_PREVIEW_SECRETS: ${{ secrets.EVAME_PREVIEW_SECRETS }}
-          CONNECTED_PREVIEW_ORIGIN: ${{ steps.deploy.outputs.url }}
-          EVAME_CONNECTED_BROWSER: "true"
-        run: |
-          nix develop --command docker run --rm --init --ipc=host \
-            --volume "$PWD:$PWD" --volume /nix/store:/nix/store:ro \
-            --workdir "$PWD" --user "$(id -u):$(id -g)" \
-            --env PATH --env GSETTINGS_SCHEMA_DIR --env SENTRY_DSN --env VITE_SENTRY_DSN \
-            --env EVAME_PREVIEW_SECRETS --env CONNECTED_PREVIEW_ORIGIN \
-            --env EVAME_CONNECTED_BROWSER \
-            mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27 \
-            node scripts/check-reader-connected.mjs
-      - name: Upload connected publication verification
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: connected-publication
-          include-hidden-files: true
-          path: |
-            .data/reader-connected-*/result.json
-            .data/reader-connected-*/*.png
-          if-no-files-found: error
-          retention-days: 7

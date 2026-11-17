@@ -10,19 +10,16 @@ export async function prepareReaderConnected(directory) {
 		/^db-.*\.m?js$/.test(name),
 	);
 	if (!databaseFile) throw new Error("Built database module is required");
-	const databaseSource = await readFile(
-		join(directory, "assets", databaseFile),
-		"utf8",
-	);
-	const databaseExport = databaseSource.match(/createDb as (\w+)/)?.[1];
-	if (!databaseExport)
-		throw new Error("Built database factory export is required");
 	await writeFile(
 		join(directory, "connected-worker.mjs"),
 		`
 import { WorkerEntrypoint } from "cloudflare:workers";
 import worker, { PublicPages as ApplicationPublicPages } from ${JSON.stringify(`./${config.main}`)};
-import { ${databaseExport} as createDb } from ${JSON.stringify(`./assets/${databaseFile}`)};
+import * as databaseExports from ${JSON.stringify(`./assets/${databaseFile}`)};
+const createDb = databaseExports.createDb ?? Object.values(databaseExports).find(
+ (value) => value !== null && typeof value === "object" && Object.hasOwn(value, "createDb") && typeof value.createDb === "function"
+)?.createDb;
+if (typeof createDb !== "function") throw new Error("Built database factory export is required");
 export default worker;
 export class PublicPages extends WorkerEntrypoint {
  constructor(ctx, env) { super(ctx, env); this.application = new ApplicationPublicPages(ctx, env); }

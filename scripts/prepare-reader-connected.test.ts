@@ -28,7 +28,7 @@ beforeEach(async () => {
 	);
 	await writeFile(
 		join(directory, "assets/db-test.mjs"),
-		`function createDb() { throw new Error("不要なDB接続"); } export {createDb as t};`,
+		`const database = {createDb() { throw new Error("不要なDB接続"); }}; export {database as t};`,
 	);
 });
 afterEach(async () => rm(directory, { recursive: true, force: true }));
@@ -58,4 +58,37 @@ it("保留中の検証キーでR2反映を失敗させ、解除後は実entrypoi
 	await expect(
 		entry.publish([{ key: "page:1", revision: 1 }]),
 	).resolves.toEqual([{ key: "page:1", revision: 1 }]);
+});
+
+it.each(["namespace", "direct"])(
+	"DBの%s exportをProxyへ触れずに選び、接続検証の待機を解除する",
+	async (shape) => {
+		await writeFile(
+			join(directory, "assets/db-test.mjs"),
+			`const db = new Proxy({}, {get() { throw new Error("DBのProxyへ触れた"); }}); function createDb() { return {updateTable() { return {set() { return this; }, where() { return this; }, async execute() {} }; }, selectFrom() { return {select() { return this; }, where() { return this; }, async executeTakeFirst() { return {state:"released"}; } }; }, async destroy() {}}; } ${shape === "namespace" ? "const a = {get createDb() { return createDb; }}; export {db as a, a as r};" : "export {db as a, createDb};"}`,
+		);
+		await prepareReaderConnected(directory);
+		const { PublicPages } = await import(
+			pathToFileURL(join(directory, "connected-worker.mjs")).href
+		);
+		const response = await new PublicPages().fetch(
+			new Request("https://evame.test/ja", {
+				headers: {
+					"X-Evame-Connected-Hold": "00000000-0000-0000-0000-000000000000",
+				},
+			}),
+		);
+		expect(await response.text()).toBe("古い公開本文");
+	},
+);
+
+it("DBファクトリがない場合はProxyへの接続を試さず明示的に停止する", async () => {
+	await writeFile(
+		join(directory, "assets/db-test.mjs"),
+		`export const db = new Proxy({}, {get() { throw new Error("DBのProxyへ触れた"); }});`,
+	);
+	await prepareReaderConnected(directory);
+	await expect(
+		import(pathToFileURL(join(directory, "connected-worker.mjs")).href),
+	).rejects.toThrow("Built database factory export is required");
 });

@@ -93,7 +93,11 @@ GitHub secret `EVAME_PREVIEW_SECRETS` に専用DBの `TURSO_DATABASE_URL` / `TUR
 
 ビルド済みWorkersは一度だけ生成して全ブラウザー検証へ共有する。エディターはChromium・WebKitそれぞれでD&D・コピーとチェック操作・階層と並べ替え・書式変更の4群へ分け、Readerは独立して検証する。ジョブごとにDBを作成し、操作群ごとに新しいブラウザーコンテキストと記事を用意する。全群を維持し、失敗・キャンセル・スキップがあれば`ci-check`で本番デプロイとPRプレビューを止める。ローカルの`bun run test:deployment:browser`は既定で全群を実行する。1群だけ再現する場合は`EVAME_BROWSER_TYPE=webkit EVAME_BROWSER_SUITE=editor-lists-structure`のように指定する。
 
-`.github/workflows/ci.yaml` は `main` のpushまたは `main` を対象にした手動実行で、Biome・typecheck・全テストの成功後、本番DBのマイグレーション、ビルド、成果物テスト、単一Workerのデプロイを行う。マイグレーションに失敗した場合はデプロイしない。並行デプロイは行わない。PRはローカルのテストDBで検証し、Sentry送信を無効化する。
+`.github/workflows/ci.yaml` はBiome・typecheck・ビルド・単体テスト・ブラウザーテストと、SQLite・ローカルR2を使う保存／公開HTMLの接続検証だけを行う。mainとPRの両方でSentry送信・アップロードを無効化し、Cloudflare・Tursoなどのサービス認証を渡さない。CIの成果物と一緒に実際に検証したコミットSHAを `verified-source` へ記録する。
+
+`.github/workflows/publish.yaml` はCIの成功完了から起動する。同じCI runの `verified-source` を読み、mainではrunのhead SHA、PRでは元のbase・headを親に持つ検証済みマージコミットであることをGitHub APIで確認する。同じリポジトリの開いたPRのうち、投稿者が人間のアカウントで、現在のリポジトリ権限がwrite・maintain・adminのものだけを自動Preview公開する。権限はGitHub APIで照会し、照会失敗時は公開を止める。Bot・権限のない投稿者・fork・更新済みPR・古いmainの結果は公開しない。checkoutは確認したSHAへ固定する。検証用ビルドは全ブラウザー群で共有し、公開側はSentry・Analytics・Preview URLなど各環境の設定を使って同じソースをビルドする。外部接続と認証はこの公開ワークフローだけで扱う。
+
+本番はSentryアップロード付きビルド、mainが更新されていないことの再確認、DBマイグレーション、R2アセット保存、Workerデプロイの順に実行する。PRは専用DB・認証秘密値で標準Previewを公開し、実URLの認証・Astro表示・保存・非公開化・削除・並行更新・R2失敗後の回復検証を維持する。本番同士・Preview同士の公開はそれぞれ直列化し、DB更新・R2保存に失敗した場合はWorkerをデプロイしない。公開の失敗はPublishの結果として報告し、CIの合否には混ぜない。新しい `workflow_run` ワークフローはmainへ入ってから有効になる。
 
 Astroのサーバー成果物とJS/CSSをルートの `dist` に含める。`deploy:workers` は公開アセットをR2へ保存してから `dist/server/wrangler.json` を1回デプロイする。HTMLのR2キーは `html/<DB URL hash>/<URL hash>` とし、同じDBの全Worker版でHTML・更新記録・依存索引を共有する。デプロイ後も保存HTMLを維持し、旧版へ戻しても新版での非公開化・削除が反映される。通常デプロイは公開ルートを変更しない。
 

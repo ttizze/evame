@@ -1,0 +1,192 @@
+name: Publish
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  revision:
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    outputs:
+      target: ${{ steps.revision.outputs.target }}
+      sha: ${{ steps.revision.outputs.sha }}
+      pr: ${{ steps.revision.outputs.pr }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: verified-source
+          path: ${{ runner.temp }}/verified-source
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Resolve verified publication revision
+        id: revision
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const repository = `${context.repo.owner}/${context.repo.repo}`;
+            if (run.conclusion !== "success" || run.head_repository.full_name !== repository) return;
+            const sha = require("node:fs").readFileSync(`${process.env.RUNNER_TEMP}/verified-source/source.sha`, "utf8").trim();
+            if (!/^[a-f0-9]{40}$/.test(sha)) throw new Error("Invalid verified source revision");
+            if (run.event === "pull_request") {
+              if (run.pull_requests.length !== 1) return;
+              const original = run.pull_requests[0];
+              const { data: pr } = await github.rest.pulls.get({ ...context.repo, pull_number: original.number });
+              if (pr.state !== "open" || pr.base.ref !== "main" || pr.head.repo.full_name !== repository || pr.head.sha !== run.head_sha) return;
+              if (original.head.sha !== run.head_sha) throw new Error("CI head does not match PR revision");
+              if (pr.user.type !== "User") return;
+              const { data: author } = await github.rest.repos.getCollaboratorPermissionLevel({ ...context.repo, username: pr.user.login });
+              if (!["write", "maintain", "admin"].includes(author.permission)) return;
+              const { data: commit } = await github.rest.repos.getCommit({ ...context.repo, ref: sha });
+              if (commit.parents.length !== 2 || commit.parents[0].sha !== original.base.sha || commit.parents[1].sha !== run.head_sha)
+                throw new Error("Verified source is not the CI merge revision");
+              core.setOutput("target", "preview");
+              core.setOutput("sha", sha);
+              core.setOutput("pr", String(original.number));
+            } else if (["push", "workflow_dispatch"].includes(run.event) && run.head_branch === "main") {
+              if (sha !== run.head_sha) throw new Error("Verified source does not match CI revision");
+              const { data: branch } = await github.rest.repos.getBranch({ ...context.repo, branch: "main" });
+              if (branch.commit.sha !== sha) return;
+              core.setOutput("target", "production");
+              core.setOutput("sha", sha);
+            }
+
+  production:
+    needs: revision
+    if: needs.revision.outputs.target == 'production'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: evame-production
+      cancel-in-progress: false
+    env:
+      TZ: Asia/Tokyo
+      GOOGLE_ANALYTICS_ID: ${{ secrets.GOOGLE_ANALYTICS_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.revision.outputs.sha }}
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install dependencies
+        run: nix develop --command bun install --frozen-lockfile
+      - name: Build production Workers
+        env:
+          TURSO_DATABASE_URL: ""
+          TURSO_AUTH_TOKEN: ""
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: nix develop --command bun run build
+      - name: Confirm production revision is current
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { data: branch } = await github.rest.repos.getBranch({ ...context.repo, branch: "main" });
+            if (branch.commit.sha !== context.payload.workflow_run.head_sha)
+              throw new Error("main changed after verification; publish the new CI result instead");
+      - name: Migrate production database
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: nix develop --command bun run db:prod:migrate
+      - name: Deploy Cloudflare Workers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: nix develop --command bun run deploy:workers
+
+  preview:
+    needs: revision
+    if: needs.revision.outputs.target == 'preview'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: evame-preview
+      cancel-in-progress: false
+    environment:
+      name: preview
+      url: ${{ steps.deploy.outputs.url }}
+    permissions:
+      contents: read
+      deployments: write
+      pull-requests: read
+    env:
+      PR_NUMBER: ${{ needs.revision.outputs.pr }}
+      SENTRY_DSN: ""
+      VITE_SENTRY_DSN: ""
+      GOOGLE_ANALYTICS_ID: G-0000000000
+      VITE_AUTH_GOOGLE_ENABLED: "false"
+      VITE_PUBLIC_DOMAIN: https://pr-${{ needs.revision.outputs.pr }}-evame-start.reimei.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.revision.outputs.sha }}
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install dependencies
+        run: nix develop --command bun install --frozen-lockfile
+      - name: Build PR preview
+        run: nix develop --command bun run build
+      - name: Confirm PR revision is current
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({ ...context.repo, pull_number: Number(process.env.PR_NUMBER) });
+            if (pr.state !== "open" || pr.head.sha !== context.payload.workflow_run.head_sha)
+              throw new Error("PR changed after verification; publish the new CI result instead");
+      - name: Deploy native Cloudflare Previews
+        id: deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          EVAME_PREVIEW_SECRETS: ${{ secrets.EVAME_PREVIEW_SECRETS }}
+        run: nix develop --command bun run preview:workers
+      - name: Verify preview auth and Astro
+        run: |
+          # shellcheck disable=SC2016 # テンプレート展開はBunが行う。
+          nix develop --command bun -e '
+            for (const path of ["/api/auth/get-session", "/ja"]) {
+              const started = Date.now();
+              for (;;) {
+                const response = await fetch(process.env.VITE_PUBLIC_DOMAIN + path, { signal: AbortSignal.timeout(30000) });
+                await response.body?.cancel();
+                if (response.status === 200 && (path !== "/ja" || response.headers.get("x-evame-html") === "astro")) break;
+                if (Date.now() - started > 30000) throw new Error(`Preview verification failed: ${path} (HTTP ${response.status})`);
+                await new Promise(resolve => setTimeout(resolve, 250));
+              }
+            }
+          '
+      - name: Verify connected publication on Cloudflare Preview
+        env:
+          EVAME_PREVIEW_SECRETS: ${{ secrets.EVAME_PREVIEW_SECRETS }}
+          CONNECTED_PREVIEW_ORIGIN: ${{ steps.deploy.outputs.url }}
+          EVAME_CONNECTED_BROWSER: "true"
+        run: |
+          nix develop --command docker run --rm --init --ipc=host \
+            --volume "$PWD:$PWD" --volume /nix/store:/nix/store:ro \
+            --workdir "$PWD" --user "$(id -u):$(id -g)" \
+            --env PATH --env GSETTINGS_SCHEMA_DIR --env SENTRY_DSN --env VITE_SENTRY_DSN \
+            --env EVAME_PREVIEW_SECRETS --env CONNECTED_PREVIEW_ORIGIN \
+            --env EVAME_CONNECTED_BROWSER \
+            mcr.microsoft.com/playwright:v1.63.0-noble@sha256:eff16c30e6f3f4af0a03fa4b706120d5e9b0891c344a27d64559aff5900a4a27 \
+            node scripts/check-reader-connected.mjs
+      - name: Upload connected publication verification
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: connected-publication
+          include-hidden-files: true
+          path: |
+            .data/reader-connected-*/result.json
+            .data/reader-connected-*/*.png
+          if-no-files-found: error
+          retention-days: 7
