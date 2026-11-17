@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import { prepareReaderConnected } from "./prepare-reader-connected.mjs";
+import { prepareReaderStorage } from "./prepare-reader-storage.mjs";
 
 const number = process.env.PR_NUMBER;
 if (!number || !/^[1-9]\d*$/.test(number))
@@ -47,6 +48,8 @@ for (const command of ["db:prod:migrate", "db:prod:seed"])
 			TURSO_AUTH_TOKEN: secrets.TURSO_AUTH_TOKEN,
 		},
 	});
+
+await prepareReaderStorage("dist/server/wrangler.json", true);
 
 execFileSync(
 	"bun",

@@ -17,7 +17,7 @@ Evame は公開表示にAstro、編集・管理にTanStack Startを使う翻訳�
 
 ## 公開表示と編集の分担
 
-`src/server.ts` が公開表示・編集・APIを単一Workerで扱う。公開HTMLはR2から読み、保存済みの版より新しい関連変更がなければDB取得やAstro生成なしで返す。コールドミスや更新後は同じWorkerのPublicPages entrypointで`reader/src/pages/[...path].astro`を生成し、本文と一覧を含むHTMLをR2へ保存する。DB更新と同時に永続化した変更記録を保存応答前にR2へ反映し、公開・非公開・削除後の古いHTMLを使わせない。HTMLは生成開始から最大1時間で失効し、Workerの版ごとに保存先を分離する。
+`src/server.ts` が公開表示・編集・APIを単一Workerで扱う。公開HTMLはR2から読み、保存済みの版より新しい関連変更がなければDB取得やAstro生成なしで返す。コールドミスや更新後は同じWorkerのPublicPages entrypointで`reader/src/pages/[...path].astro`を生成し、本文と一覧を含むHTMLをR2へ保存する。DB更新と同時に永続化した変更記録を保存応答前にR2へ反映し、公開・非公開・削除後の古いHTMLを使わせない。HTMLに時間の有効期限を設けず、Workerをデプロイしても同じ保存先を使う。人気順もいいね・解除・公開状態の変更で無効化する。参照先のハッシュ付きアセットをデプロイ前にR2へ保存し、現行Static Assetsにない旧アセットも配信する。
 
 長いサービス説明と件数集計はAboutに移し、トップはログインの有無にかかわらず記事一覧を表示する。コメント、翻訳、いいね、通知などは必要な部分だけReact islandsで起動する。公開HTMLに認証情報や非公開データを混ぜない。下書きは所有者だけがprivateレスポンスでプレビューする。
 

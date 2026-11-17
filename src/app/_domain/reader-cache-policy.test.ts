@@ -45,7 +45,7 @@ it.each([
 ])("%sの操作は本文のキャッシュを消さない", (path) =>
 	expect(shouldInvalidateReader("POST", path, null, 200, null)).toBe(false),
 );
-it.each(["comment", "deleteComment", "follow"])(
+it.each(["comment", "deleteComment", "follow", "like"])(
 	"%sの結果を公開HTMLへ反映する",
 	(action) =>
 		expect(

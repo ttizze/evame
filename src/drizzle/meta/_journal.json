@@ -36,6 +36,13 @@
 			"when": 1794788325496,
 			"tag": "0004_reader_r2_publication",
 			"breakpoints": true
+		},
+		{
+			"idx": 5,
+			"version": "6",
+			"when": 1794878238884,
+			"tag": "0005_reader_popularity",
+			"breakpoints": true
 		}
 	]
 }

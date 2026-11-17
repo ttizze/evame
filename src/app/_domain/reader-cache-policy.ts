@@ -14,7 +14,7 @@ export function shouldInvalidateReader(
 	if (pathname === "/api/reader-actions")
 		return (
 			action !== null &&
-			!["like", "geminiKey", "uploadImage", "translate"].includes(action)
+			!["geminiKey", "uploadImage", "translate"].includes(action)
 		);
 	if (pathname === "/api/translate/chunk") return changed === "true";
 	return (

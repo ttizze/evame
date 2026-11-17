@@ -1,8 +1,6 @@
 import type { R2Bucket } from "@cloudflare/workers-types";
 import { readerCacheTags } from "../_domain/reader-cache-tags";
 
-const maxAge = 3_600_000;
-
 // 読み取りと更新記録で同じDBを識別し、URL自体をR2キーへ残さない。
 async function readerDatabaseNamespace(databaseUrl: string) {
 	if (!databaseUrl) throw new Error("TURSO_DATABASE_URL is not defined");
@@ -72,7 +70,6 @@ export async function publishReaderChanges(
 							const invalidated = await bucket.put(
 								target.htmlKey,
 								JSON.stringify({
-									startedAt: 0,
 									generation: crypto.randomUUID(),
 								}),
 								{
@@ -102,7 +99,6 @@ export async function publishReaderChanges(
 export async function fetchReaderHtml(
 	request: Request,
 	bucket: Pick<R2Bucket, "get" | "put" | "delete">,
-	build: string,
 	databaseUrl: string,
 	render: (
 		request: Request,
@@ -118,7 +114,7 @@ export async function fetchReaderHtml(
 	const hash = Array.from(new Uint8Array(digest), (byte) =>
 		byte.toString(16).padStart(2, "0"),
 	).join("");
-	const key = `html/${namespace}/${build}/${hash}`;
+	const key = `html/${namespace}/${hash}`;
 	const lookupStarted = performance.now();
 	const stored = await bucket.get(key);
 	if (
@@ -126,22 +122,19 @@ export async function fetchReaderHtml(
 		stored.customMetadata.generation
 	) {
 		const html = await stored.json<{
-			startedAt: number;
 			headers: [string, string][];
 			body: string;
 		}>();
-		if (Date.now() - html.startedAt < maxAge) {
-			const response = new Response(
-				request.method === "HEAD" ? null : html.body,
-				{ headers: html.headers },
-			);
-			response.headers.set("X-Evame-HTML-Cache", "HIT");
-			response.headers.set(
-				"Server-Timing",
-				`r2;dur=${(performance.now() - lookupStarted).toFixed(1)}`,
-			);
-			return response;
-		}
+		const response = new Response(
+			request.method === "HEAD" ? null : html.body,
+			{ headers: html.headers },
+		);
+		response.headers.set("X-Evame-HTML-Cache", "HIT");
+		response.headers.set(
+			"Server-Timing",
+			`r2;dur=${(performance.now() - lookupStarted).toFixed(1)}`,
+		);
+		return response;
 	}
 	// DBを読む前に固有キーで生成中の索引を登録する。同じHTMLへの登録PUTは不要。
 	const generation = crypto.randomUUID();
@@ -154,7 +147,6 @@ export async function fetchReaderHtml(
 		},
 	});
 	try {
-		const startedAt = Date.now();
 		const { revision, response: source } = await render(
 			request.method === "HEAD"
 				? new Request(request, { method: "GET" })
@@ -196,7 +188,6 @@ export async function fetchReaderHtml(
 					key,
 					JSON.stringify({
 						generation,
-						startedAt,
 						headers: [...response.headers],
 						body,
 					}),
