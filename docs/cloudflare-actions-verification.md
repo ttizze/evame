@@ -1,0 +1,1 @@
+この一時PRではCIからCloudflare Previewを公開し、GitHub Actionsの接続検証と成果物アップロードまで確認します。
