@@ -43,6 +43,41 @@ it("本番成果物を保ち検証専用entrypointだけを差し替える", asy
 	expect(await readFile(join(directory, "index.mjs"), "utf8")).toBe(original);
 });
 
+it("Previewの公開シグナルが違うリクエストはアプリの処理へ渡さない", async () => {
+	const signal = "a".repeat(40);
+	const origin = "https://pr-1175-evame-start.reimei.workers.dev";
+	const headers = { "x-evame-preview-signal": signal };
+	await writeFile(
+		join(directory, "index.mjs"),
+		`
+export default { async fetch() { return new Response("app", {status: 201}); } };
+export class PublicPages {}`,
+	);
+	await prepareReaderConnected(directory, signal);
+	const { default: worker } = await import(
+		pathToFileURL(join(directory, "connected-worker.mjs")).href
+	);
+	const marker = await worker.fetch(
+		new Request(`${origin}/evame-preview-signal.txt`),
+	);
+	expect(await marker.text()).toBe(`${signal}\n`);
+	expect(marker.headers.get("Cache-Control")).toBe("no-store");
+	const stale = await worker.fetch(
+		new Request(`${origin}/api`, {
+			method: "POST",
+			headers: { "x-evame-preview-signal": "b".repeat(40) },
+		}),
+	);
+	expect(stale.status).toBe(409);
+	expect(stale.headers.get("x-evame-preview-signal")).toBe(signal);
+	const current = await worker.fetch(
+		new Request(`${origin}/api`, { method: "POST", headers }),
+	);
+	expect(current.status).toBe(201);
+	expect(current.headers.get("x-evame-preview-signal")).toBe(signal);
+	expect(await current.text()).toBe("app");
+});
+
 it("保留中の検証キーでR2反映を失敗させ、解除後は実entrypointを呼ぶ", async () => {
 	await prepareReaderConnected(directory);
 	const { PublicPages } = await import(

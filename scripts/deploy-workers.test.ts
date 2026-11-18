@@ -28,11 +28,7 @@ beforeEach(async () => {
 	);
 	await writeFile(
 		join(directory, "fake-fetch.mjs"),
-		'import { registerHooks } from "node:module";\nregisterHooks({resolve(specifier,context,nextResolve){\n if(specifier === "wrangler") return {url:new URL("./fake-wrangler.mjs",import.meta.url).href,shortCircuit:true};\n return nextResolve(specifier,context);\n}});',
-	);
-	await writeFile(
-		join(directory, "fake-wrangler.mjs"),
-		'import { appendFile, readFile } from "node:fs/promises";\nimport { existsSync } from "node:fs";\nexport async function getPlatformProxy({configPath}) {\n const config=JSON.parse(await readFile(configPath,"utf8"));\n return {env:{PUBLIC_HTML:{async put(key){\n await appendFile("calls","R2 "+config.r2_buckets[0].bucket_name+" PUT "+key+"\\n");\n if(existsSync("fail-assets"))throw new Error("R2 asset upload failed");\n }}},async dispose(){await appendFile("calls","R2 dispose\\n");}};\n}',
+		'import { appendFile } from "node:fs/promises";\nimport { existsSync } from "node:fs";\nglobalThis.fetch = async (url) => {\n const [, bucket, key] = new URL(url).pathname.match(/\\/buckets\\/([^/]+)\\/objects\\/(.+)/);\n await appendFile("calls", "R2 " + bucket + " PUT " + decodeURIComponent(key) + "\\n");\n return Response.json({ success: !existsSync("fail-assets") }, { status: existsSync("fail-assets") ? 403 : 200 });\n};',
 	);
 	await writeFile(
 		join(directory, "bin/bun"),
@@ -59,7 +55,6 @@ it("公開アセットをR2へ保存してから統合Workerを一度だけ更�
 		(await readFile(join(directory, "calls"), "utf8")).trim().split("\n"),
 	).toEqual([
 		"R2 production PUT assets/_astro/app.hash.js",
-		"R2 dispose",
 		"x wrangler deploy --config dist/server/wrangler.json",
 	]);
 });
@@ -103,3 +98,72 @@ it("統合Workerの更新に失敗した場合も成功として返さない", a
 		"wrangler deploy",
 	);
 });
+
+it.each(["before-R2", "during-R2", "migration-fails", "success"])(
+	"本番公開が%sの場合にR2・DB・Workerを必要な段階まで更新する",
+	async (scenario) => {
+		const fetchMock = await readFile(join(directory, "fake-fetch.mjs"), "utf8");
+		await writeFile(
+			join(directory, "fake-fetch.mjs"),
+			`${fetchMock}
+const fetchAsset = globalThis.fetch;
+let checks = 0;
+globalThis.fetch = async (url) => {
+ const path = new URL(url).pathname;
+ if (!path.includes('/git/ref/heads/')) return fetchAsset(url);
+ const signal = path.endsWith('/cf-publish/main');
+ if (signal) checks++;
+ const newer = ${JSON.stringify(scenario)} === 'before-R2' || (${JSON.stringify(scenario)} === 'during-R2' && checks > 1);
+ await appendFile('calls', (signal ? 'signal' : 'main') + '\\n');
+ return Response.json({ object: { sha: signal ? (newer ? 'new-signal' : 'old-signal') : 'source' } });
+};`,
+		);
+		if (scenario === "migration-fails")
+			await writeFile(
+				join(directory, "bin/bun"),
+				'#!/bin/sh\nprintf "%s\\n" "$*" >> calls\nexit 1\n',
+				{ mode: 0o755 },
+			);
+		const deploy = promisify(execFile)(
+			process.execPath,
+			["--import", join(directory, "fake-fetch.mjs"), script],
+			{
+				cwd: directory,
+				env: {
+					...process.env,
+					PATH: `${join(directory, "bin")}:${process.env.PATH}`,
+					CLOUDFLARE_API_TOKEN: "storage-token",
+					TURSO_DATABASE_URL: "libsql://fixture.turso.io",
+					TURSO_AUTH_TOKEN: "fixture-db-token",
+					EVAME_WORKERS_PUBLICATION: JSON.stringify({
+						publication: { sha: "source", pr: null },
+						branch: "main",
+						head: "source",
+						signalBranch: "cf-publish/main",
+						signalSha: "old-signal",
+					}),
+				},
+			},
+		);
+		if (scenario === "success") await deploy;
+		else await expect(deploy).rejects.toThrow();
+		const expected = ["main", "signal"];
+		if (scenario !== "before-R2")
+			expected.push(
+				"R2 production PUT assets/_astro/app.hash.js",
+				"main",
+				"signal",
+			);
+		if (["migration-fails", "success"].includes(scenario))
+			expected.push("run db:prod:migrate");
+		if (scenario === "success")
+			expected.push(
+				"main",
+				"signal",
+				"x wrangler deploy --config dist/server/wrangler.json",
+			);
+		expect(
+			(await readFile(join(directory, "calls"), "utf8")).trim().split("\n"),
+		).toEqual(expected);
+	},
+);

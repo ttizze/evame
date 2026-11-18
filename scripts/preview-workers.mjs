@@ -1,11 +1,15 @@
 import { execFileSync } from "node:child_process";
-import { appendFile, mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
+import { confirmDeployment, previewOrigin } from "./cloudflare-build.mjs";
 import { prepareReaderConnected } from "./prepare-reader-connected.mjs";
 import { prepareReaderStorage } from "./prepare-reader-storage.mjs";
 
 const number = process.env.PR_NUMBER;
 if (!number || !/^[1-9]\d*$/.test(number))
 	throw new Error("PR_NUMBER is required");
+const mode = process.argv[2] ?? "both";
+if (!["both", "migrate", "deploy"].includes(mode))
+	throw new Error("Unknown Preview operation");
 let secrets;
 try {
 	secrets = JSON.parse(process.env.EVAME_PREVIEW_SECRETS ?? "null");
@@ -28,8 +32,19 @@ if (
 )
 	throw new Error("A dedicated evame-preview database is required");
 
+if (mode !== "deploy")
+	execFileSync("bun", ["run", "db:prod:migrate"], {
+		stdio: "inherit",
+		env: {
+			...process.env,
+			TURSO_DATABASE_URL: secrets.TURSO_DATABASE_URL,
+			TURSO_AUTH_TOKEN: secrets.TURSO_AUTH_TOKEN,
+		},
+	});
+if (mode === "migrate") process.exit(0);
+
 const previewName = `pr-${number}`;
-const origin = `https://${previewName}-evame-start.reimei.workers.dev`;
+const origin = previewOrigin(number);
 const directory = `.data/native-preview-${previewName}`;
 await mkdir(directory, { recursive: true, mode: 0o700 });
 // URLは公開設定として渡し、古い固定URLの秘密値を引き継がない。
@@ -40,16 +55,13 @@ await writeFile(`${directory}/app-secrets.json`, JSON.stringify(secrets), {
 	mode: 0o600,
 });
 
-execFileSync("bun", ["run", "db:prod:migrate"], {
-	stdio: "inherit",
-	env: {
-		...process.env,
-		TURSO_DATABASE_URL: secrets.TURSO_DATABASE_URL,
-		TURSO_AUTH_TOKEN: secrets.TURSO_AUTH_TOKEN,
-	},
-});
-
-await prepareReaderStorage("dist/server/wrangler.json", true);
+const deployment = JSON.parse(process.env.EVAME_WORKERS_PUBLICATION ?? "null");
+await prepareReaderStorage("dist/server/wrangler.json", true, deployment);
+const configPath = await prepareReaderConnected(
+	"dist/server",
+	deployment?.signalSha ?? null,
+);
+if (deployment) await confirmDeployment(deployment);
 
 execFileSync(
 	"bun",
@@ -58,7 +70,7 @@ execFileSync(
 		"wrangler",
 		"preview",
 		"--config",
-		await prepareReaderConnected("dist/server"),
+		configPath,
 		"--name",
 		previewName,
 		"--worker-name",
@@ -73,6 +85,4 @@ execFileSync(
 	],
 	{ stdio: "inherit" },
 );
-if (process.env.GITHUB_OUTPUT)
-	await appendFile(process.env.GITHUB_OUTPUT, `url=${origin}\n`);
 console.log(`Preview: ${origin}/ja/auth/login`);

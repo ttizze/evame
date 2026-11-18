@@ -35,11 +35,7 @@ beforeEach(async () => {
 	);
 	await writeFile(
 		join(directory, "fake-fetch.mjs"),
-		'import { registerHooks } from "node:module";\nregisterHooks({resolve(specifier,context,nextResolve){\n if(specifier === "wrangler") return {url:new URL("./fake-wrangler.mjs",import.meta.url).href,shortCircuit:true};\n return nextResolve(specifier,context);\n}});',
-	);
-	await writeFile(
-		join(directory, "fake-wrangler.mjs"),
-		'import { appendFile, readFile } from "node:fs/promises";\nimport { existsSync } from "node:fs";\nexport async function getPlatformProxy({configPath}) {\n const config=JSON.parse(await readFile(configPath,"utf8"));\n return {env:{PUBLIC_HTML:{async put(key){\n await appendFile("calls","R2 "+config.r2_buckets[0].bucket_name+" PUT "+key+"\\n");\n if(existsSync("fail-assets"))throw new Error("R2 asset upload failed");\n }}},async dispose(){await appendFile("calls","R2 dispose\\n");}};\n}',
+		'import { appendFile } from "node:fs/promises";\nimport { existsSync } from "node:fs";\nglobalThis.fetch = async (url) => {\n const [, bucket, key] = new URL(url).pathname.match(/\\/buckets\\/([^/]+)\\/objects\\/(.+)/);\n await appendFile("calls", "R2 " + bucket + " PUT " + decodeURIComponent(key) + "\\n");\n return Response.json({ success: !existsSync("fail-assets") }, { status: existsSync("fail-assets") ? 403 : 200 });\n};',
 	);
 	await mkdir(join(directory, "dist/server/assets"), { recursive: true });
 	await writeFile(
@@ -111,7 +107,6 @@ it.each(["", "../main", "0"])(
 );
 
 it("シード済みの専用DBを再利用し、マイグレーション後に標準PRプレビューを公開する", async () => {
-	const output = join(directory, "output");
 	const result = await promisify(execFile)(
 		process.execPath,
 		["--import", join(directory, "fake-fetch.mjs"), script],
@@ -121,7 +116,6 @@ it("シード済みの専用DBを再利用し、マイグレーション後に�
 				...process.env,
 				CLOUDFLARE_API_TOKEN: "storage-token",
 				PR_NUMBER: "1140",
-				GITHUB_OUTPUT: output,
 				EVAME_PREVIEW_SECRETS: JSON.stringify({
 					...secrets,
 					BETTER_AUTH_URL: "https://old.example",
@@ -136,7 +130,6 @@ it("シード済みの専用DBを再利用し、マイグレーション後に�
 	).toEqual([
 		"run db:prod:migrate",
 		"R2 preview PUT assets/_astro/app.hash.js",
-		"R2 dispose",
 		"x wrangler preview --config dist/server/connected-wrangler.json --name pr-1140 --worker-name evame-start --ignore-base-config --secrets-file .data/native-preview-pr-1140/app-secrets.json --var BETTER_AUTH_URL:https://pr-1140-evame-start.reimei.workers.dev --var QSTASH_PUBLISH_BASE_URL:https://pr-1140-evame-start.reimei.workers.dev",
 	]);
 	const saved = JSON.parse(
@@ -146,8 +139,8 @@ it("シード済みの専用DBを再利用し、マイグレーション後に�
 		),
 	);
 	expect(saved).toEqual(secrets);
-	expect(await readFile(output, "utf8")).toBe(
-		"url=https://pr-1140-evame-start.reimei.workers.dev\n",
+	expect(result.stdout).toContain(
+		"https://pr-1140-evame-start.reimei.workers.dev/ja/auth/login",
 	);
 	expect(result.stdout).not.toContain("test-database-token");
 });
@@ -167,7 +160,6 @@ it("標準Previewの画像と公開HTMLを本番とは別のR2へ保存する", 
 
 it("統合Workerのプレビュー失敗を成功として返さない", async () => {
 	await writeFile(join(directory, "fail-worker"), "");
-	const output = join(directory, "output");
 	await expect(
 		promisify(execFile)(
 			process.execPath,
@@ -178,12 +170,10 @@ it("統合Workerのプレビュー失敗を成功として返さない", async (
 					...process.env,
 					CLOUDFLARE_API_TOKEN: "storage-token",
 					PR_NUMBER: "1140",
-					GITHUB_OUTPUT: output,
 					EVAME_PREVIEW_SECRETS: JSON.stringify(secrets),
 					PATH: `${join(directory, "bin")}:${process.env.PATH}`,
 				},
 			},
 		),
 	).rejects.toThrow();
-	await expect(readFile(output)).rejects.toThrow();
 });

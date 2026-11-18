@@ -1,10 +1,14 @@
-import { mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { execFileSync } from "node:child_process";
+import { readdir, readFile } from "node:fs/promises";
 import { dirname, extname, join, relative, resolve } from "node:path";
-import { getPlatformProxy } from "wrangler";
+import { confirmDeployment } from "./cloudflare-build.mjs";
 
 // デプロイ前に参照アセットをR2へ保存し、旧HTMLからも取得できるようにする。
-export async function prepareReaderStorage(configPath, preview) {
+export async function prepareReaderStorage(
+	configPath,
+	preview,
+	deployment = null,
+) {
 	const config = JSON.parse(await readFile(configPath, "utf8"));
 	const bucket = (
 		preview ? config.previews?.r2_buckets : config.r2_buckets
@@ -39,48 +43,57 @@ export async function prepareReaderStorage(configPath, preview) {
 		".gif": "image/gif",
 		".ico": "image/x-icon",
 	};
-	const temporary = await mkdtemp(join(tmpdir(), "reader-assets-"));
-	try {
-		const proxyConfigPath = join(temporary, "wrangler.json");
-		await writeFile(
-			proxyConfigPath,
-			JSON.stringify({
-				name: config.name,
-				account_id: config.account_id,
-				compatibility_date: config.compatibility_date,
-				r2_buckets: [
-					{ binding: "PUBLIC_HTML", bucket_name: bucket, remote: true },
-				],
+	const credentials = process.env.CLOUDFLARE_API_TOKEN
+		? { type: "api_token", token: process.env.CLOUDFLARE_API_TOKEN }
+		: JSON.parse(
+				execFileSync("bun", ["x", "wrangler", "auth", "token", "--json"], {
+					encoding: "utf8",
+					stdio: ["ignore", "pipe", "pipe"],
+				}),
+			);
+	const authorization =
+		credentials.type === "api_key"
+			? { "X-Auth-Key": credentials.key, "X-Auth-Email": credentials.email }
+			: { Authorization: `Bearer ${credentials.token}` };
+	const endpoint =
+		"https://api.cloudflare.com/client/v4/accounts/" +
+		encodeURIComponent(config.account_id) +
+		"/r2/buckets/" +
+		encodeURIComponent(bucket) +
+		"/objects/";
+	if (deployment) await confirmDeployment(deployment);
+	for (let start = 0; start < files.length; start += 8) {
+		const uploaded = await Promise.allSettled(
+			files.slice(start, start + 8).map(async (entry) => {
+				const path = join(entry.parentPath, entry.name);
+				const key = `assets/_astro/${relative(directory, path).split("\\").join("/")}`;
+				const response = await fetch(
+					endpoint + key.split("/").map(encodeURIComponent).join("/"),
+					{
+						method: "PUT",
+						headers: {
+							...authorization,
+							"Content-Type":
+								types[extname(path)] ?? "application/octet-stream",
+							"Cache-Control": "public, max-age=31536000, immutable",
+						},
+						body: await readFile(path),
+					},
+				);
+				if (!response.ok)
+					throw new Error(
+						"R2 asset upload failed: " +
+							key +
+							" (HTTP " +
+							response.status +
+							")",
+					);
+				if ((await response.json()).success !== true)
+					throw new Error(`R2 asset upload failed: ${key}`);
 			}),
 		);
-		const proxy = await getPlatformProxy({
-			configPath: proxyConfigPath,
-			persist: false,
-		});
-		try {
-			for (let start = 0; start < files.length; start += 8) {
-				const uploaded = await Promise.allSettled(
-					files.slice(start, start + 8).map(async (entry) => {
-						const path = join(entry.parentPath, entry.name);
-						const key =
-							"assets/_astro/" +
-							relative(directory, path).split("\\").join("/");
-						await proxy.env.PUBLIC_HTML.put(key, await readFile(path), {
-							httpMetadata: {
-								contentType: types[extname(path)] ?? "application/octet-stream",
-								cacheControl: "public, max-age=31536000, immutable",
-							},
-						});
-					}),
-				);
-				for (const result of uploaded)
-					if (result.status === "rejected") throw result.reason;
-			}
-		} finally {
-			await proxy.dispose();
-		}
-	} finally {
-		await rm(temporary, { recursive: true, force: true });
+		for (const result of uploaded)
+			if (result.status === "rejected") throw result.reason;
 	}
 	console.log(`R2に公開アセット${files.length}件を保存しました: ${bucket}`);
 }

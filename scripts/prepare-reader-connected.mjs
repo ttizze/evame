@@ -1,8 +1,16 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import {
+	previewSignalHeader,
+	previewSignalPath,
+} from "./preview-deployment.mjs";
 
-// Previewとローカル成果物検証で同じ障害注入を使い、本番のentrypointは変更しない。
-export async function prepareReaderConnected(directory) {
+/**
+ * Previewとローカル成果物検証で同じ障害注入を使う。
+ * @param {string} directory
+ * @param {string | null} [signal]
+ */
+export async function prepareReaderConnected(directory, signal = null) {
 	const config = JSON.parse(
 		await readFile(join(directory, "wrangler.json"), "utf8"),
 	);
@@ -20,7 +28,28 @@ const createDb = databaseExports.createDb ?? Object.values(databaseExports).find
  (value) => value !== null && typeof value === "object" && Object.hasOwn(value, "createDb") && typeof value.createDb === "function"
 )?.createDb;
 if (typeof createDb !== "function") throw new Error("Built database factory export is required");
-export default worker;
+${
+	signal
+		? `
+const signal = ${JSON.stringify(signal)};
+const signalHeader = ${JSON.stringify(previewSignalHeader)};
+export default {
+ ...worker,
+ async fetch(request, env, ctx) {
+  if (new URL(request.url).pathname === ${JSON.stringify(previewSignalPath)})
+   return new Response(signal + "\\n", { headers: {"Cache-Control": "no-store"} });
+  const expected = request.headers.get(signalHeader);
+  if (expected !== null && expected !== signal)
+   return new Response("Preview deployment changed", {status: 409, headers: {[signalHeader]: signal, "Cache-Control": "no-store"}});
+  const response = await worker.fetch(request, env, ctx);
+  if (expected === null) return response;
+  const checked = new Response(response.body, response);
+  checked.headers.set(signalHeader, signal);
+  return checked;
+ }
+};`
+		: "export default worker;"
+}
 export class PublicPages extends WorkerEntrypoint {
  constructor(ctx, env) { super(ctx, env); this.application = new ApplicationPublicPages(ctx, env); }
  async publish(changes) {

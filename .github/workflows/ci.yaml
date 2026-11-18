@@ -1,4 +1,5 @@
 name: CI
+run-name: CI ${{ github.sha }}
 
 on:
   pull_request:
@@ -14,7 +15,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  checks:
+  lint:
     runs-on: ubuntu-latest
     env:
       TZ: Asia/Tokyo
@@ -31,6 +32,12 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Cache Bun downloads
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: bun-downloads-v1-${{ runner.os }}-${{ hashFiles('bun.lock', 'flake.lock') }}
+          restore-keys: bun-downloads-v1-${{ runner.os }}-
       - name: Install dependencies
         run: |
           nix develop --command bun install --frozen-lockfile
@@ -39,14 +46,134 @@ jobs:
         run: |
           nix develop --command bun x biome ci .
 
+  typecheck:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Tokyo
+      SENTRY_DSN: ""
+      VITE_SENTRY_DSN: ""
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cache Bun downloads
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: bun-downloads-v1-${{ runner.os }}-${{ hashFiles('bun.lock', 'flake.lock') }}
+          restore-keys: bun-downloads-v1-${{ runner.os }}-
+      - run: nix develop --command bun install --frozen-lockfile
       - name: Run Typecheck
         run: |
           nix develop --command bun run typecheck
           nix develop --command bun run check:reader
 
-      - name: Run Tests
+  test-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Restore test duration snapshot
+        uses: actions/cache/restore@v5
+        with:
+          path: .data/ci-test-durations.json
+          key: unit-durations-v1-${{ runner.os }}-${{ hashFiles('bun.lock') }}-${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
+      - name: Freeze test duration snapshot
         run: |
-          nix develop --command bun run test --run
+          nix develop --command bun -e '
+            import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+            const path = ".data/ci-test-durations.json";
+            if (!existsSync(path)) {
+              const { devDependencies } = JSON.parse(readFileSync("package.json", "utf8"));
+              mkdirSync(".data", { recursive: true });
+              writeFileSync(path, JSON.stringify({ version: devDependencies.vitest, results: [] }) + "\n");
+            }
+          '
+      - uses: actions/upload-artifact@v7
+        with:
+          name: unit-duration-snapshot
+          path: .data/ci-test-durations.json
+          include-hidden-files: true
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 7
+
+  test:
+    needs: test-snapshot
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    env:
+      TZ: Asia/Tokyo
+      SENTRY_DSN: ""
+      VITE_SENTRY_DSN: ""
+      CI_TEST_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cache Bun downloads
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: bun-downloads-v1-${{ runner.os }}-${{ hashFiles('bun.lock', 'flake.lock') }}
+          restore-keys: bun-downloads-v1-${{ runner.os }}-
+      - run: nix develop --command bun install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          name: unit-duration-snapshot
+          path: .data
+      - name: Run Tests
+        run: nix develop --command bun scripts/ci-tests.mjs --shard ${{ matrix.shard }}/4
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: unit-durations-${{ matrix.shard }}
+          path: .data/ci-test-durations-${{ matrix.shard }}-of-4.json
+          include-hidden-files: true
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 7
+
+  test-results:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/download-artifact@v8
+        with:
+          name: unit-duration-snapshot
+          path: .data
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: unit-durations-*
+          merge-multiple: true
+          path: .data
+      - name: Validate and merge test durations
+        run: nix develop --command bun scripts/ci-tests.mjs merge .data/ci-test-durations-{1,2,3,4}-of-4.json
+      - uses: actions/cache/save@v5
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          path: .data/ci-test-durations.json
+          key: unit-durations-v1-${{ runner.os }}-${{ hashFiles('bun.lock') }}-${{ github.sha }}
 
   build:
     runs-on: ubuntu-latest
@@ -62,6 +189,12 @@ jobs:
       - uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cache Bun downloads
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: bun-downloads-v1-${{ runner.os }}-${{ hashFiles('bun.lock', 'flake.lock') }}
+          restore-keys: bun-downloads-v1-${{ runner.os }}-
       - run: nix develop --command bun install --frozen-lockfile
       - name: Build Astro and TanStack Start for Cloudflare Workers
         env:
@@ -87,15 +220,8 @@ jobs:
           overwrite: true
           retention-days: 7
 
-      - name: Record verified source revision
-        run: git rev-parse HEAD > "$RUNNER_TEMP/source.sha"
-      - uses: actions/upload-artifact@v7
-        with:
-          name: verified-source
-          path: ${{ runner.temp }}/source.sha
-          if-no-files-found: error
-          overwrite: true
-          retention-days: 7
+      - name: Confirm the build used the revision in the CI run name
+        run: test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
 
   browser:
     needs: build
@@ -109,6 +235,8 @@ jobs:
           - editor-lists-clipboard
           - editor-lists-structure
           - editor-lists-formatting
+          - header
+          - article
         include:
           - suite: reader
             browser: chromium
@@ -127,6 +255,12 @@ jobs:
       - uses: cachix/install-nix-action@v31
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Cache Bun downloads
+        uses: actions/cache@v5
+        with:
+          path: ~/.bun/install/cache
+          key: bun-downloads-v1-${{ runner.os }}-${{ hashFiles('bun.lock', 'flake.lock') }}
+          restore-keys: bun-downloads-v1-${{ runner.os }}-
       - run: nix develop --command bun install --frozen-lockfile
       - uses: actions/download-artifact@v8
         with:
@@ -154,13 +288,31 @@ jobs:
           retention-days: 7
 
   ci-check:
-    needs: [checks, build, browser]
+    needs: [lint, typecheck, test-results, build, browser]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Require every check and browser suite to pass
         env:
-          CHECKS_RESULT: ${{ needs.checks.result }}
+          LINT_RESULT: ${{ needs.lint.result }}
+          TYPECHECK_RESULT: ${{ needs.typecheck.result }}
+          TEST_RESULT: ${{ needs.test-results.result }}
           BUILD_RESULT: ${{ needs.build.result }}
           BROWSER_RESULT: ${{ needs.browser.result }}
-        run: test "$CHECKS_RESULT" = success && test "$BUILD_RESULT" = success && test "$BROWSER_RESULT" = success
+        run: test "$LINT_RESULT" = success && test "$TYPECHECK_RESULT" = success && test "$TEST_RESULT" = success && test "$BUILD_RESULT" = success && test "$BROWSER_RESULT" = success
+      - name: Check PR author permission for Preview
+        id: preview-permission
+        if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.type == 'User'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { user } = context.payload.pull_request;
+            try {
+              const { data: { permission } } = await github.rest.repos.getCollaboratorPermissionLevel({ ...context.repo, username: user.login });
+              if (["write", "maintain", "admin"].includes(permission)) core.setOutput("allowed", "true");
+            } catch {
+              core.warning("Could not confirm permission to publish Preview");
+            }
+      - name: Authorize Workers Preview
+        if: steps.preview-permission.outputs.allowed == 'true'
+        run: ':'

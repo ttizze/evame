@@ -50,6 +50,7 @@ beforeEach(() => {
 	])
 		mock.mockReset();
 	readFile.mockReset().mockResolvedValue("{}");
+	vi.stubEnv("CONNECTED_PREVIEW_SIGNAL", "");
 	vi.spyOn(console, "log").mockImplementation(() => {});
 	vi.stubEnv(
 		"EVAME_PREVIEW_SECRETS",
@@ -77,6 +78,26 @@ it("アカウント名を含むCloudflareのPR Preview URLで接続検証を開�
 		url: "libsql://evame-preview-test.turso.io",
 		authToken: "preview-test-token",
 	});
+});
+
+it("固定URLが別の公開シグナルを返したらPreview DBに接続しない", async () => {
+	vi.stubEnv(
+		"CONNECTED_PREVIEW_ORIGIN",
+		"https://pr-1170-evame-start.reimei.workers.dev",
+	);
+	vi.stubEnv("CONNECTED_PREVIEW_SIGNAL", "a".repeat(40));
+	vi.stubGlobal(
+		"fetch",
+		vi.fn(async () => new Response("b".repeat(40))),
+	);
+	try {
+		await expect(import("./check-reader-connected.mjs")).rejects.toThrow(
+			"Cloudflare Preview deployment changed",
+		);
+		expect(createClient).not.toHaveBeenCalled();
+	} finally {
+		vi.unstubAllGlobals();
+	}
 });
 
 it.each([

@@ -10,7 +10,7 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 
 const workflows = JSON.parse(
 	execFileSync(
@@ -35,6 +35,8 @@ it("ChromiumとWebKitで全エディター操作群とAstroの公開表示を検
 		"editor-lists-clipboard",
 		"editor-lists-structure",
 		"editor-lists-formatting",
+		"header",
+		"article",
 	]);
 	expect(browser.strategy.matrix.include).toEqual([
 		{ suite: "reader", browser: "chromium" },
@@ -76,15 +78,29 @@ it("ブラウザー失敗のトレースをホストと同じ所有者で作り�
 it("失敗・キャンセル・スキップした検証が一つでもあればCIを不合格にする", () => {
 	const workflow = workflows[0];
 	const gate = workflow.jobs["ci-check"];
-	expect(gate.needs).toEqual(["checks", "build", "browser"]);
+	expect(gate.needs).toEqual([
+		"lint",
+		"typecheck",
+		"test-results",
+		"build",
+		"browser",
+	]);
 	expect(gate.if).toBe("always()");
 	for (const status of ["success", "failure", "cancelled", "skipped"]) {
-		for (const failed of ["CHECKS_RESULT", "BUILD_RESULT", "BROWSER_RESULT"]) {
+		for (const failed of [
+			"LINT_RESULT",
+			"TYPECHECK_RESULT",
+			"TEST_RESULT",
+			"BUILD_RESULT",
+			"BROWSER_RESULT",
+		]) {
 			const run = () =>
 				execFileSync("bash", ["-c", gate.steps[0].run], {
 					env: {
 						...process.env,
-						CHECKS_RESULT: "success",
+						LINT_RESULT: "success",
+						TYPECHECK_RESULT: "success",
+						TEST_RESULT: "success",
 						BUILD_RESULT: "success",
 						BROWSER_RESULT: "success",
 						[failed]: status,
@@ -94,7 +110,214 @@ it("失敗・キャンセル・スキップした検証が一つでもあればC
 			else expect(run).toThrow();
 		}
 	}
-	expect(gate.steps).toHaveLength(1);
+	expect(gate.steps[1].if).toContain(
+		"github.event.pull_request.head.repo.full_name == github.repository",
+	);
+	expect(gate.steps[2]).toMatchObject({
+		name: "Authorize Workers Preview",
+		if: "steps.preview-permission.outputs.allowed == 'true'",
+	});
+});
+
+it.each(["write", "maintain", "admin", "read", "error"])(
+	"PR投稿者の権限照会が%sなら許可対象だけに公開許可を記録する",
+	async (permission) => {
+		const core = { setOutput: vi.fn(), warning: vi.fn() };
+		const getCollaboratorPermissionLevel = vi.fn(async () => {
+			if (permission === "error") throw new Error("lookup failed");
+			return { data: { permission } };
+		});
+		const script = workflows[0].jobs["ci-check"].steps[1].with.script;
+		await new Function(
+			"context",
+			"github",
+			"core",
+			`return (async () => {${script}\n})()`,
+		)(
+			{
+				repo: { owner: "owner", repo: "repo" },
+				payload: { pull_request: { user: { login: "author" } } },
+			},
+			{ rest: { repos: { getCollaboratorPermissionLevel } } },
+			core,
+		);
+		expect(getCollaboratorPermissionLevel).toHaveBeenCalledExactlyOnceWith({
+			owner: "owner",
+			repo: "repo",
+			username: "author",
+		});
+		if (["read", "error"].includes(permission))
+			expect(core.setOutput).not.toHaveBeenCalled();
+		else
+			expect(core.setOutput).toHaveBeenCalledExactlyOnceWith("allowed", "true");
+	},
+);
+
+it("lint・型検査・ビルドと並行し、計測入力の確定だけを待って4分割テストを開始する", () => {
+	const jobs = workflows[0].jobs;
+	for (const name of ["lint", "typecheck", "build"]) {
+		expect(jobs[name].needs).toBeUndefined();
+		expect(
+			jobs[name].steps.some((step: { run: string }) =>
+				step.run?.includes("bun install --frozen-lockfile"),
+			),
+		).toBe(true);
+	}
+	expect(jobs["test-snapshot"]).toBeDefined();
+	expect(jobs["test-snapshot"].needs).toBeUndefined();
+	expect(jobs.test.needs).toBe("test-snapshot");
+	expect(jobs.test.strategy.matrix.shard).toEqual([1, 2, 3, 4]);
+	expect(jobs.test.strategy["fail-fast"]).toBe(false);
+	expect(
+		jobs.test.steps.some((step: { run: string }) =>
+			step.run?.includes("scripts/ci-tests.mjs"),
+		),
+	).toBe(true);
+	expect(jobs.test.steps[0].with["fetch-depth"]).toBe(0);
+	expect(
+		jobs.test.steps.find((step: { uses: string }) =>
+			step.uses?.startsWith("actions/upload-artifact@"),
+		).with["include-hidden-files"],
+	).toBe(true);
+	expect(
+		jobs.test.steps.find((step: { uses: string }) =>
+			step.uses?.startsWith("actions/upload-artifact@"),
+		).with.overwrite,
+	).toBe(true);
+});
+
+it("全シャードが同じ確定済み実測を使い、4件の結果を検証してから次回へ渡す", () => {
+	const jobs = workflows[0].jobs;
+	const snapshot = jobs["test-snapshot"];
+	expect(snapshot).toBeDefined();
+	const restore = snapshot.steps.find(
+		(step: { name: string }) => step.name === "Restore test duration snapshot",
+	);
+	const aggregate = jobs["test-results"];
+	expect(restore.uses).toBe("actions/cache/restore@v5");
+	expect(restore.with["restore-keys"]).toBeUndefined();
+	expect(restore.with.path).toBe(".data/ci-test-durations.json");
+	expect(restore.with.key).toContain(
+		"github.event.pull_request.base.sha || github.event.before || github.sha",
+	);
+	const upload = snapshot.steps.find((step: { uses: string }) =>
+		step.uses?.startsWith("actions/upload-artifact@"),
+	);
+	expect(upload.with.path).toBe(restore.with.path);
+	expect(upload.with["if-no-files-found"]).toBe("error");
+	expect(upload.with["include-hidden-files"]).toBe(true);
+	for (const job of [jobs.test, aggregate]) {
+		expect(
+			job.steps.some((step: { uses: string }) =>
+				step.uses?.startsWith("actions/cache/restore@"),
+			),
+		).toBe(false);
+		expect(
+			job.steps.find(
+				(step: { uses: string; with: { name: string } }) =>
+					step.uses?.startsWith("actions/download-artifact@") &&
+					step.with.name === upload.with.name,
+			).with.path,
+		).toBe(".data");
+	}
+	expect(upload.with.name.startsWith("unit-durations-")).toBe(false);
+	expect(
+		jobs.test.steps.find((step: { uses: string }) =>
+			step.uses?.startsWith("actions/upload-artifact@"),
+		).with.path,
+	).toMatch(/^\.data\/ci-test-durations-\$\{\{ matrix\.shard \}\}-of-4\.json$/);
+	expect(aggregate.needs).toBe("test");
+	expect(
+		aggregate.steps.some((step: { run: string }) =>
+			step.run?.includes("bun install"),
+		),
+	).toBe(false);
+	expect(
+		aggregate.steps.find(
+			(step: { uses: string; with: { pattern: string } }) =>
+				step.uses?.startsWith("actions/download-artifact@") &&
+				step.with.pattern === "unit-durations-*",
+		).with,
+	).toMatchObject({
+		pattern: "unit-durations-*",
+		"merge-multiple": true,
+		path: ".data",
+	});
+	expect(
+		aggregate.steps.find(
+			(step: { name: string }) =>
+				step.name === "Validate and merge test durations",
+		).run,
+	).toContain("merge .data/ci-test-durations-{1,2,3,4}-of-4.json");
+	const save = aggregate.steps.find(
+		(step: { uses: string }) => step.uses === "actions/cache/save@v5",
+	);
+	expect(save.if).toBe(
+		"github.ref == 'refs/heads/main' && github.event_name != 'pull_request'",
+	);
+	expect(save.with.path).toBe(restore.with.path);
+	expect(save.with.key).toMatch(/\$\{\{ github\.sha \}\}$/);
+});
+
+it.each([
+	null,
+	JSON.stringify({
+		version: "cached",
+		results: [["test.ts", { duration: 123 }]],
+	}),
+])(
+	"キャッシュ未作成でも入力を確定し、既存の計測値%sは書き換えない",
+	(cached) => {
+		const snapshot = workflows[0].jobs["test-snapshot"];
+		expect(snapshot).toBeDefined();
+		const freeze = snapshot.steps.find(
+			(step: { name: string }) => step.name === "Freeze test duration snapshot",
+		).run;
+		const directory = mkdtempSync(join(tmpdir(), "evame-snapshot-test-"));
+		const path = join(directory, ".data/ci-test-durations.json");
+		try {
+			expect(freeze).toMatch(/^nix develop --command /);
+			const command = freeze.replace(/^nix develop --command /, "");
+			writeFileSync(
+				join(directory, "package.json"),
+				JSON.stringify({ devDependencies: { vitest: "5.0.3" } }),
+			);
+			if (cached !== null) {
+				mkdirSync(dirname(path), { recursive: true });
+				writeFileSync(path, cached);
+			}
+			execFileSync("bash", ["-c", command], { cwd: directory });
+			const frozen = readFileSync(path, "utf8");
+			if (cached === null)
+				expect(JSON.parse(frozen)).toEqual({ version: "5.0.3", results: [] });
+			else expect(frozen).toBe(cached);
+			execFileSync("bash", ["-c", command], { cwd: directory });
+			expect(readFileSync(path, "utf8")).toBe(frozen);
+		} finally {
+			rmSync(directory, { recursive: true, force: true });
+		}
+	},
+);
+
+it("依存取得のキャッシュを各インストール前に復元する", () => {
+	for (const job of Object.values(workflows[0].jobs) as {
+		steps: {
+			uses?: string;
+			run?: string;
+			if?: string;
+			with?: Record<string, string>;
+		}[];
+	}[]) {
+		const installIndex = job.steps.findIndex((step) =>
+			step.run?.includes("bun install --frozen-lockfile"),
+		);
+		if (installIndex === -1) continue;
+		const cache = job.steps[installIndex - 1];
+		expect(cache.uses).toBe("actions/cache@v5");
+		expect(cache.with?.path).toBe("~/.bun/install/cache");
+		expect(cache.with?.key).toContain("hashFiles('bun.lock', 'flake.lock')");
+		expect(cache.if).toBe(job.steps[installIndex].if);
+	}
 });
 
 it("iPhoneを一度だけビルドし、別MacでNativeと全UIを直列実行する", () => {
@@ -156,16 +379,10 @@ it("iPhoneを一度だけビルドし、別MacでNativeと全UIを直列実行�
 	}
 });
 
-it("CIの成果物から環境ファイルと秘密値を除外し、実行に必要な隠しファイルも保持する", () => {
-	const command = execFileSync(
-		"bun",
-		[
-			"-e",
-			`console.log(Bun.YAML.parse(await Bun.file(process.argv[1]).text()).jobs.build.steps.find(step => step.name === "Archive Workers build").run)`,
-			fileURLToPath(new URL("./ci.yaml", import.meta.url)),
-		],
-		{ encoding: "utf8" },
-	).trim();
+it("Workers成果物から秘密値を除外し、実行に必要な隠しファイルも保持する", () => {
+	const command = workflows[0].jobs.build.steps.find(
+		(candidate: { name: string }) => candidate.name === "Archive Workers build",
+	).run;
 	const directory = mkdtempSync(join(tmpdir(), "evame-archive-test-"));
 	const secret = "dummy-ci-secret-only-for-archive-regression";
 	const kept = [
@@ -238,9 +455,9 @@ it("ブラウザー全操作群はビルド時に一度だけ準備したSQLite�
 				step.name === "Run prebuilt browsers with the Nix toolchain",
 		).run,
 	).toContain("--env EVAME_TEST_DATABASE_TEMPLATE");
-	const tests = workflow.jobs.checks.steps.find(
+	const tests = workflow.jobs.test.steps.find(
 		(step: { name: string }) => step.name === "Run Tests",
 	).run;
-	expect(tests).toContain("bun run test --run");
+	expect(tests).toContain("scripts/ci-tests.mjs");
 	expect(tests).not.toMatch(/db:prod:(migrate|seed)/);
 });
