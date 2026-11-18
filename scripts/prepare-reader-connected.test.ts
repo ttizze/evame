@@ -78,6 +78,37 @@ export class PublicPages {}`,
 	expect(await current.text()).toBe("app");
 });
 
+it("配信シグナルを指定した保存が例外で失敗しても同じPreviewの500として確認できる", async () => {
+	const signal = "a".repeat(40);
+	await writeFile(
+		join(directory, "index.mjs"),
+		`export default { async fetch() { throw new Error("R2への反映に失敗"); } };
+export class PublicPages {}`,
+	);
+	await prepareReaderConnected(directory, signal);
+	const { default: worker } = await import(
+		pathToFileURL(join(directory, "connected-worker.mjs")).href
+	);
+	const url = "https://pr-1175-evame-start.reimei.workers.dev/api";
+	const log = vi.spyOn(console, "error").mockImplementation(() => {});
+	try {
+		const response = await worker.fetch(
+			new Request(url, {
+				method: "POST",
+				headers: { "x-evame-preview-signal": signal },
+			}),
+		);
+		expect(response.status).toBe(500);
+		expect(response.headers.get("x-evame-preview-signal")).toBe(signal);
+		expect(log).toHaveBeenCalledOnce();
+		await expect(worker.fetch(new Request(url))).rejects.toThrow(
+			"R2への反映に失敗",
+		);
+	} finally {
+		log.mockRestore();
+	}
+});
+
 it("保留中の検証キーでR2反映を失敗させ、解除後は実entrypointを呼ぶ", async () => {
 	await prepareReaderConnected(directory);
 	const { PublicPages } = await import(

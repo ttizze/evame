@@ -69,6 +69,7 @@ it("CI成功後に環境別の順序でDBを更新しCloudflareに公開する",
 	);
 	expect(publish.jobs.preview.needs).toEqual(["revision", "signal"]);
 	const preview = publish.jobs.preview;
+	expect(preview.permissions).toEqual({ actions: "read", contents: "read" });
 	expect(preview.env.CONNECTED_PREVIEW_SIGNAL).toBe(
 		"${{ needs.signal.outputs.sha }}",
 	);
@@ -79,10 +80,71 @@ it("CI成功後に環境別の順序でDBを更新しCloudflareに公開する",
 	const connected = preview.steps.findIndex((step: { run: string }) =>
 		step.run?.includes("scripts/check-reader-connected.mjs"),
 	);
+	const download = preview.steps.findIndex((step: { uses?: string }) =>
+		step.uses?.startsWith("actions/download-artifact@"),
+	);
+	expect(download).toBeGreaterThan(0);
+	expect(preview.steps[download].with).toEqual({
+		name: "workers",
+		path: "${{ runner.temp }}",
+		"run-id": "${{ github.event.workflow_run.id }}",
+		"github-token": "${{ github.token }}",
+	});
+	const extract = preview.steps.findIndex((step: { run?: string }) =>
+		step.run?.includes('tar -xf "$RUNNER_TEMP/workers.tar" dist/server/assets'),
+	);
+	expect(extract).toBeGreaterThan(download);
+	expect(extract).toBeLessThan(connected);
 	expect(wait).toBeGreaterThan(0);
 	expect(connected).toBeGreaterThan(wait);
 	expect(preview.steps[connected].run).toContain('--user "$(id -u):$(id -g)"');
 	expect(preview.steps.at(-1).if).toBe("always()");
+});
+
+it("Preview DB更新がスキップされた本番公開でも、成功したシグナルの配信を待つ", () => {
+	expect(publish.jobs.production.if).toBe(
+		"${{ !cancelled() && needs.revision.result == 'success' && needs.revision.outputs.pr == '' && needs.signal.result == 'success' && needs.signal.outputs.sha != '' }}",
+	);
+});
+
+it("同じシグナルのPreviewビルドが失敗しても本番ビルドの成功を待つ", async () => {
+	const build = {
+		app: { slug: "cloudflare-workers-and-pages" },
+		name: "Workers Builds: evame-start",
+		status: "completed",
+	};
+	const preview = { ...build, conclusion: "failure" };
+	const unrelatedCheck = {
+		...build,
+		name: "Other build",
+		conclusion: "success",
+	};
+	const production = { ...build, conclusion: "success" };
+	const listForRef = vi
+		.fn()
+		.mockResolvedValueOnce({ data: { check_runs: [preview, unrelatedCheck] } })
+		.mockResolvedValueOnce({ data: { check_runs: [preview, production] } });
+	const wait = vi.fn();
+	const repository = { owner: "ttizze", repo: "evame" };
+	await new Function(
+		"github",
+		"context",
+		"process",
+		"require",
+		`return (async () => {${publish.jobs.production.steps[0].with.script}\n})()`,
+	)(
+		{ rest: { checks: { listForRef } } },
+		{ repo: repository },
+		{ env: { SIGNAL_SHA: "signal" } },
+		() => ({ setTimeout: wait }),
+	);
+	expect(listForRef).toHaveBeenCalledWith({
+		...repository,
+		ref: "signal",
+		filter: "all",
+	});
+	expect(listForRef).toHaveBeenCalledTimes(2);
+	expect(wait).toHaveBeenCalledExactlyOnceWith(15000);
 });
 
 it.each([
